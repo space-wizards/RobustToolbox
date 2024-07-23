@@ -305,10 +305,9 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public virtual EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default)
         {
-            var newEntity = CreateEntity(prototypeName, out _, overrides);
+            var newEntity = CreateEntity(prototypeName, out _, out var xform, overrides);
 
-            var xformComp = TransformQuery.GetComponent(newEntity);
-            _xforms.SetCoordinates(newEntity, xformComp, coordinates, rotation: rotation, unanchor: false);
+            _xforms.SetCoordinates(newEntity, xform, coordinates, rotation: rotation, unanchor: false);
             return newEntity;
         }
 
@@ -820,7 +819,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and loads components but does not do initialization.
         /// </summary>
-        internal virtual EntityUid CreateEntity(string? prototypeName, out MetaDataComponent metadata, IEntityLoadContext? context = null)
+        internal virtual EntityUid CreateEntity(string? prototypeName, out MetaDataComponent metadata, out TransformComponent xform, IEntityLoadContext? context = null)
         {
             if (prototypeName == null)
                 return AllocEntity(out metadata, out xform);
@@ -967,14 +966,6 @@ namespace Robust.Shared.GameObjects
         /// Raises an event locally on client or networked on server.
         /// </summary>
         public abstract void RaiseSharedEvent<T>(T message, ICommonSession? user = null) where T : EntityEventArgs;
-
-        /// <summary>
-        ///     Factory for generating a new EntityUid for an entity currently being created.
-        /// </summary>
-        internal EntityUid GenerateEntityUid()
-        {
-            return new EntityUid(NextEntityUid++, -1);
-        }
 
         /// <summary>
         /// Generates a unique network id and increments <see cref="NextNetworkId"/>

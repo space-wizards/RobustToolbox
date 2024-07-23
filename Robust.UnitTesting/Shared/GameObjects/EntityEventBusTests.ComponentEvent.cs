@@ -268,7 +268,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         [Test]
         public void CompEventLoop()
         {
-            var entUid = new EntityUid(7);
+            var entUid = new EntityUid(7, EntityUid.FirstUid.Version);
 
             var entManMock = new Mock<IEntityManager>();
             var compFacMock = new Mock<IComponentFactory>();

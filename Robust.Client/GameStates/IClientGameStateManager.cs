@@ -58,7 +58,7 @@ namespace Robust.Client.GameStates
         /// <summary>
         ///     This is called after the game state has been applied for the current tick.
         /// </summary>
-        event Action<GameStateAppliedArgs> GameStateApplied;
+        event Action<GameStateAppliedArgs>? GameStateApplied;
 
         /// <summary>
         ///     This is invoked whenever a pvs-leave message is received.

@@ -159,7 +159,6 @@ public sealed class MapLoaderSystem : EntitySystem
 
             var mapEnt = _mapSystem.GetMapOrInvalid(mapId);
             var xformQuery = _serverEntityManager.GetEntityQuery<TransformComponent>();
-            var mapEnt = _mapManager.GetMapEntityId(mapId);
 
             var rootEnts = new List<EntityUid>();
             // aeoeoeieioe content

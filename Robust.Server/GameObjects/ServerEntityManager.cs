@@ -86,7 +86,7 @@ namespace Robust.Server.GameObjects
             StartEntity(entity);
         }
 
-        internal override EntityUid CreateEntity(string? prototypeName, out MetaDataComponent metadata, IEntityLoadContext? context = null)
+        internal override EntityUid CreateEntity(string? prototypeName, out MetaDataComponent metadata, out TransformComponent xform, IEntityLoadContext? context = null)
         {
             if (prototypeName == null)
                 return base.CreateEntity(prototypeName, out metadata, out xform, context);

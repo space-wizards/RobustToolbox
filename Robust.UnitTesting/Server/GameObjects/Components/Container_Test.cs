@@ -173,7 +173,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         {
             var sim = SimulationFactory();
             var containerSys = sim.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
-            var mapEnt = new EntityUid(1);
+            var mapEnt = new EntityUid(1, EntityUid.FirstUid.Version);
             var entity = sim.SpawnEntity(null,_coords);
             var container = containerSys.MakeContainer<Container>(entity, "dummy");
 

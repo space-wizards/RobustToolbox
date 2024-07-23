@@ -16,6 +16,7 @@ using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using ComponentRegistry = Robust.Shared.Prototypes.ComponentRegistry;
 #if EXCEPTION_TOLERANCE
 using Robust.Shared.Exceptions;
 #endif
@@ -35,9 +36,6 @@ namespace Robust.Shared.GameObjects
 
         private const int TypeCapacity = 32;
         private const int EntityCapacity = 1024;
-        private const int NetComponentCapacity = 8;
-
-        private static readonly IComponentState DefaultComponentState = new ComponentState();
 
         private readonly HashSet<IComponent> _deleteSet = new(TypeCapacity);
 
@@ -363,7 +361,7 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, out T? comp))
                 return false;
 
-            RemoveComponentImmediate(uid, comp, CompIdx.Index<T>(), false, meta);
+            RemoveComponentImmediate(uid, comp, CompIdx.Index<T>(), terminating: false, archetypeChange: true, meta: meta);
             return true;
         }
 
@@ -374,7 +372,7 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, type, out var comp))
                 return false;
 
-            RemoveComponentImmediate(comp, uid, false, true, meta);
+            RemoveComponentImmediate(uid, comp, CompIdx.GetIndex(type), false, true, meta);
             return true;
         }
 
@@ -388,7 +386,7 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, netId, out var comp, meta))
                 return false;
 
-            RemoveComponentImmediate(comp, uid, false, true, meta);
+            RemoveComponentImmediate(uid, comp, CompIdx.GetIndex(comp.GetType()), false, true, meta);
             return true;
         }
 
@@ -396,7 +394,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
         {
-            RemoveComponentImmediate(component, uid, false, true, meta);
+            RemoveComponentImmediate(uid, component, CompIdx.GetIndex(component.GetType()), false, true, meta);
         }
 
         /// <inheritdoc />
@@ -444,7 +442,7 @@ namespace Robust.Shared.GameObjects
             for (var i = objComps.Length - 1; i >= 0; i--)
             {
                 var comp = (IComponent) objComps[i]!;
-                RemoveComponentImmediate(comp, uid, false, false, meta);
+                RemoveComponentImmediate(uid, comp, CompIdx.GetIndex(comp.GetType()), terminating: false, archetypeChange: false, meta);
             }
         }
 
@@ -460,7 +458,7 @@ namespace Robust.Shared.GameObjects
 
                 try
                 {
-                    RemoveComponentImmediate(comp, uid, true, false, meta);
+                    RemoveComponentImmediate(uid, comp, CompIdx.GetIndex(comp.GetType()), terminating: true, archetypeChange: false, meta);
                 }
                 catch (Exception exc)
                 {
@@ -518,15 +516,25 @@ namespace Robust.Shared.GameObjects
         {
             // I hate this but also didn't want the MetaQuery.GetComponent overhead.
             // and with archetypes we want to avoid moves at all costs.
-            RemoveComponentImmediate(component, uid, terminating, archetypeChange, metadata);
+            RemoveComponentImmediate(uid, component, CompIdx.GetIndex(component.GetType()), terminating: terminating, archetypeChange: archetypeChange, metadata);
         }
 
         /// <summary>
         /// Removes a component.
         /// </summary>
+        /// <param name="uid"></param>
+        /// <param name="component"></param>
+        /// <param name="idx"></param>
         /// <param name="terminating">Is the entity terminating.</param>
         /// <param name="archetypeChange">Should we handle the archetype change or is it being handled externally.</param>
-        private void RemoveComponentImmediate(IComponent component, EntityUid uid, bool terminating, bool archetypeChange, MetaDataComponent? meta = null)
+        /// <param name="meta"></param>
+        private void RemoveComponentImmediate(
+            EntityUid uid,
+            IComponent component,
+            CompIdx idx,
+            bool terminating,
+            bool archetypeChange,
+            MetaDataComponent? meta = null)
         {
             if (component.Deleted)
             {
@@ -559,7 +567,7 @@ namespace Robust.Shared.GameObjects
                 _runtimeLog.LogException(e, nameof(RemoveComponentImmediate));
             }
 #endif
-            DeleteComponent(uid, component, terminating, archetypeChange, meta);
+            DeleteComponent(uid, component, idx, terminating: terminating, archetypeChange: archetypeChange, meta);
         }
 
         /// <inheritdoc />
@@ -595,13 +603,13 @@ namespace Robust.Shared.GameObjects
                 _runtimeLog.LogException(e, nameof(CullRemovedComponents));
             }
 #endif
-                DeleteComponent(uid, component, false, true);
+                DeleteComponent(uid, component, CompIdx.GetIndex(component.GetType()), terminating: false, archetypeChange: true);
             }
 
             _deleteSet.Clear();
         }
 
-        private void DeleteComponent(EntityUid entityUid, IComponent component, bool terminating, bool archetypeChange, MetaDataComponent? metadata = null)
+        private void DeleteComponent(EntityUid entityUid, IComponent component, CompIdx idx, bool terminating, bool archetypeChange, MetaDataComponent? metadata = null)
         {
             if (!MetaQuery.ResolveInternal(entityUid, ref metadata))
                 return;
@@ -629,9 +637,9 @@ namespace Robust.Shared.GameObjects
 
             if (archetypeChange)
             {
-                DebugTools.Assert(_world.Has(entityUid, reg.Idx.Type));
-                if (_world.Has(entityUid, reg.Idx.Type))
-                    _world.Remove(entityUid, reg.Idx.Type);
+                DebugTools.Assert(_world.Has(entityUid, idx.Type));
+                if (_world.Has(entityUid, idx.Type))
+                    _world.Remove(entityUid, idx.Type);
             }
 
             DebugTools.Assert(_netMan.IsClient // Client side prediction can set LastComponentRemoved to some future tick,
@@ -928,11 +936,6 @@ namespace Robust.Shared.GameObjects
                 yield return comp;
             }
         }
-
-        /// <summary>
-        /// Internal variant of <see cref="GetComponents"/> that directly returns the actual component set.
-        /// </summary>
-        internal IReadOnlyCollection<IComponent> GetComponentsInternal(EntityUid uid) => _entCompIndex[uid];
 
         /// <inheritdoc />
         public int ComponentCount(EntityUid uid)

@@ -61,6 +61,9 @@ namespace Robust.Client.GameStates
         private readonly Dictionary<NetEntity, Dictionary<ushort, IComponentState?>> _outputData = new();
         private readonly List<(EntityUid, TransformComponent)> _queuedBroadphaseUpdates = new();
 
+        private readonly List<NetEntity> _created = new();
+        private readonly List<NetEntity> _detached = new();
+
         private readonly ObjectPool<Dictionary<ushort, IComponentState?>> _compDataPool =
             new DefaultObjectPool<Dictionary<ushort, IComponentState?>>(new DictPolicy<ushort, IComponentState?>(), 256);
 
@@ -552,7 +555,7 @@ namespace Robust.Client.GameStates
             var metaQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
             using var toRemove = new PooledList<IComponent>();
             using var toAdd = new PooledList<ushort>();
-            using var toAddStates = new PooledList<IComponentState>();
+            using var toAddStates = new PooledList<IComponentState?>();
 
             foreach (var entity in system.DirtyEntities)
             {
@@ -649,20 +652,22 @@ namespace Robust.Client.GameStates
 
                     if (toAdd.Count > 0)
                     {
+                        // TODO: Reduce archetype changes
                         for (var i = 0; i < toAdd.Count; i++)
                         {
                             var netId = toAdd[i];
                             var state = toAddStates[i];
                             var comp = _entityManager.AddComponent(entity, netId, meta);
 
-                        if (state != null)
-                        {
-                            var stateEv = new ComponentHandleState(state, null);
-                            _entities.EventBus.RaiseComponentEvent(entity, comp, ref stateEv);
-                        }
+                            if (state != null)
+                            {
+                                var stateEv = new ComponentHandleState(state, null);
+                                _entities.EventBus.RaiseComponentEvent(entity, comp, ref stateEv);
+                            }
 
-                        comp.ClearCreationTick(); // don't undo the re-adding.
-                        comp.LastModifiedTick = _timing.LastRealTick;
+                            comp.ClearCreationTick(); // don't undo the re-adding.
+                            comp.LastModifiedTick = _timing.LastRealTick;
+                        }
                     }
                 }
 

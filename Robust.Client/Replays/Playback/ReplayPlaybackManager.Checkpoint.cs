@@ -95,7 +95,7 @@ internal sealed partial class ReplayPlaybackManager
             if (metaState == null)
                 throw new MissingMetadataException(es.NetEntity);
 
-            uid = _entMan.CreateEntity(metaState.PrototypeId, out meta);
+            uid = _entMan.CreateEntity(metaState.PrototypeId, out meta, out _);
 
             // Client creates a client-side net entity for the newly created entity.
             // We need to clear this mapping before assigning the real net id.

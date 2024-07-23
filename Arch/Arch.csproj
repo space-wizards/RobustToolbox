@@ -76,6 +76,7 @@
     <PackageReference Include="Arch.LowLevel"/>
     <PackageReference Include="Collections.Pooled"/>
     <PackageReference Include="CommunityToolkit.HighPerformance"/>
+    <PackageReference Include="Microsoft.Extensions.ObjectPool" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe"/>
     <PackageReference Include="ZeroAllocJobScheduler"/>
   </ItemGroup>

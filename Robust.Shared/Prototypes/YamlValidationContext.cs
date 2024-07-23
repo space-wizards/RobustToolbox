@@ -49,7 +49,7 @@ internal sealed class YamlValidationContext : ISerializationContext, ITypeSerial
         if (node.Value == "invalid")
             return EntityUid.Invalid;
 
-        return EntityUid.Parse(node.Value);
+        return EntityUid.Parse(node.Value, EntityUid.FirstUid.Version.ToString());
     }
 
     [MustUseReturnValue]
@@ -57,6 +57,6 @@ internal sealed class YamlValidationContext : ISerializationContext, ITypeSerial
         bool skipHook,
         ISerializationContext? context = null)
     {
-        return new((int)source);
+        return new((int)source, EntityUid.FirstUid.Version);
     }
 }

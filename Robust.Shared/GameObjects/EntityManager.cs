@@ -25,6 +25,7 @@ using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using System.Runtime.CompilerServices;
+using Arch.Core.Extensions.Dangerous;
 using ComponentRegistry = Robust.Shared.Prototypes.ComponentRegistry;
 
 namespace Robust.Shared.GameObjects
@@ -348,8 +349,8 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<EntityUid> GetEntities()
         {
-            var ents = new List<Entity>();
-            _world.GetEntities(_archMetaQuery, ents);
+            using var ents = new PooledList<Entity>(_world.Size);
+            _world.GetEntities(_archMetaQuery, ents.Span);
 
             foreach (var entity in ents)
             {

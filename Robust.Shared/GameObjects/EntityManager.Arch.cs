@@ -103,7 +103,7 @@ public partial class EntityManager
     internal void AddComponentRange(EntityUid uid, PooledList<ComponentType> compTypes)
     {
         DebugTools.Assert(compTypes.Count > 0);
-        _world.AddRange(uid, compTypes);
+        _world.AddRange(uid, compTypes.Span);
     }
 
     internal void RemoveComponentRange(EntityUid uid, PooledList<ComponentType> compTypes)
@@ -111,4 +111,6 @@ public partial class EntityManager
         DebugTools.Assert(compTypes.Count > 0);
         _world.RemoveRange(uid, compTypes.Span);
     }
+
+    internal World GetWorld() => _world;
 }

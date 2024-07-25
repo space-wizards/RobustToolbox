@@ -223,7 +223,7 @@ namespace Robust.Shared.Prototypes
             var prototype = meta.EntityPrototype;
             var ctx = context as ISerializationContext;
             using var compTypes = new PooledList<ComponentType>();
-            using var addComps = new PooledList<IComponent>();
+            using var addComps = new PooledList<object>();
 
             if (prototype != null)
             {
@@ -280,10 +280,12 @@ namespace Robust.Shared.Prototypes
             if (addComps.Count > 0)
             {
                 entityManager.AddComponentRange(ent.Owner, compTypes);
+                var world = entityManager.GetWorld();
+                world.SetRange(ent.Owner, addComps.Span);
 
                 foreach (var comp in addComps)
                 {
-                    entityManager.AddComponent(ent.Owner, comp, ent.Comp);
+                    entityManager.AddComponent(ent.Owner, (IComponent) comp, ent.Comp);
                 }
             }
         }

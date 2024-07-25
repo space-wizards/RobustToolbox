@@ -175,7 +175,7 @@ public class ArchComponentAccessBenchmark
         private static readonly Consumer Consumer = new();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Update(Entity entity)
+        public void Update(EntityReference entity)
         {
             Consumer.Consume(entity);
         }

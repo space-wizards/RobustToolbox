@@ -349,12 +349,12 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<EntityUid> GetEntities()
         {
-            using var ents = new PooledList<Entity>(_world.Size);
+            using var ents = new PooledList<EntityReference>(_world.Size);
             _world.GetEntities(_archMetaQuery, ents.Span);
 
             foreach (var entity in ents)
             {
-                yield return EntityUid.FromArch(_world, entity);
+                yield return entity;
             }
         }
 

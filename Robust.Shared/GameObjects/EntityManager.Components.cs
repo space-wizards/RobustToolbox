@@ -1208,7 +1208,7 @@ namespace Robust.Shared.GameObjects
                     if (!includePaused && metas![i].EntityPaused)
                         continue;
 
-                    yield return (_world.Reference(chunk.Entities[i]), comp);
+                    yield return (chunk.EntityReferences[i], comp);
                 }
             }
         }

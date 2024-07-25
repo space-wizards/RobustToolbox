@@ -30,10 +30,10 @@ internal struct EntityEnumerator
 
     public bool MoveNext()
     {
-        if (_entityIndex >= _chunk.Entities.Length)
+        if (_entityIndex >= _chunk.EntityReferences.Length)
             return false;
 
-        Current = _chunk.Entities[_entityIndex];
+        Current = _chunk.EntityReferences[_entityIndex];
         _entityIndex++;
         return true;
     }

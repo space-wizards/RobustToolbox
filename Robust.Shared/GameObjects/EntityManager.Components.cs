@@ -1515,7 +1515,6 @@ namespace Robust.Shared.GameObjects
     public struct EntityQueryEnumerator<TComp1>
         where TComp1 : IComponent
     {
-        private readonly World _world;
         private ArchChunkEnumerator _chunkEnumerator;
         private int _index;
         private TComp1[] _comp1Array = default!;
@@ -1523,7 +1522,6 @@ namespace Robust.Shared.GameObjects
 
         public EntityQueryEnumerator(World world)
         {
-            _world = world;
             _chunkEnumerator = world.Query(new QueryDescription().WithAll<TComp1, MetaDataComponent>()).ChunkIterator(world).GetEnumerator();
             if (_chunkEnumerator.MoveNext())
             {
@@ -1554,8 +1552,7 @@ namespace Robust.Shared.GameObjects
             if (comp1.Deleted || meta.EntityPaused)
                 return false;
 
-            ref var ent = ref _chunkEnumerator.Current.Entity(_index);
-            uid = _world.Reference(ent);
+            uid = _chunkEnumerator.Current.EntityReference(_index);
             return true;
         }
 
@@ -1573,7 +1570,6 @@ namespace Robust.Shared.GameObjects
         where TComp1 : IComponent
         where TComp2 : IComponent
     {
-        private readonly World _world;
         private ArchChunkEnumerator _chunkEnumerator;
         private int _index;
         private TComp1[] _comp1Array = default!;
@@ -1582,7 +1578,6 @@ namespace Robust.Shared.GameObjects
 
         public EntityQueryEnumerator(World world)
         {
-            _world = world;
             _chunkEnumerator = world.Query(new QueryDescription().WithAll<TComp1, TComp2, MetaDataComponent>()).ChunkIterator(world).GetEnumerator();
             if (_chunkEnumerator.MoveNext())
             {
@@ -1615,8 +1610,7 @@ namespace Robust.Shared.GameObjects
             if (comp1.Deleted || comp2.Deleted || meta.EntityPaused)
                 return false;
 
-            ref var ent = ref _chunkEnumerator.Current.Entity(_index);
-            uid = _world.Reference(ent);
+            uid = _chunkEnumerator.Current.EntityReference(_index);
             return true;
         }
 
@@ -1635,7 +1629,6 @@ namespace Robust.Shared.GameObjects
         where TComp2 : IComponent
         where TComp3 : IComponent
     {
-        private readonly World _world;
         private ArchChunkEnumerator _chunkEnumerator;
         private int _index;
         private TComp1[] _comp1Array = default!;
@@ -1645,7 +1638,6 @@ namespace Robust.Shared.GameObjects
 
         public EntityQueryEnumerator(World world)
         {
-            _world = world;
             _chunkEnumerator = world.Query(new QueryDescription().WithAll<TComp1, TComp2, TComp3, MetaDataComponent>()).ChunkIterator(world).GetEnumerator();
             if (_chunkEnumerator.MoveNext())
             {
@@ -1683,8 +1675,7 @@ namespace Robust.Shared.GameObjects
             if (comp1.Deleted || comp2.Deleted || comp3.Deleted || meta.EntityPaused)
                 return false;
 
-            ref var ent = ref _chunkEnumerator.Current.Entity(_index);
-            uid = _world.Reference(ent);
+            uid = _chunkEnumerator.Current.EntityReference(_index);
             return true;
         }
 
@@ -1707,7 +1698,6 @@ namespace Robust.Shared.GameObjects
         where TComp3 : IComponent
         where TComp4 : IComponent
     {
-        private readonly World _world;
         private ArchChunkEnumerator _chunkEnumerator;
         private int _index;
         private TComp1[] _comp1Array = default!;
@@ -1718,7 +1708,6 @@ namespace Robust.Shared.GameObjects
 
         public EntityQueryEnumerator(World world)
         {
-            _world = world;
             _chunkEnumerator = world.Query(new QueryDescription().WithAll<TComp1, TComp2, TComp3, TComp4, MetaDataComponent>()).ChunkIterator(world).GetEnumerator();
             if (_chunkEnumerator.MoveNext())
             {
@@ -1759,8 +1748,7 @@ namespace Robust.Shared.GameObjects
             if (comp1.Deleted || comp2.Deleted || comp3.Deleted || comp4.Deleted || meta.EntityPaused)
                 return false;
 
-            ref var ent = ref _chunkEnumerator.Current.Entity(_index);
-            uid = _world.Reference(ent);
+            uid = _chunkEnumerator.Current.EntityReference(_index);
             return true;
         }
 
@@ -1785,14 +1773,12 @@ namespace Robust.Shared.GameObjects
     public struct AllEntityQueryEnumerator<TComp1>
         where TComp1 : IComponent
     {
-        private readonly World _world;
         private ArchChunkEnumerator _chunkEnumerator;
         private int _index;
         private TComp1[] _comp1Array = default!;
 
         public AllEntityQueryEnumerator(World world)
         {
-            _world = world;
             _chunkEnumerator = world.Query(new QueryDescription().WithAll<TComp1>()).ChunkIterator(world).GetEnumerator();
             if (_chunkEnumerator.MoveNext())
             {
@@ -1823,8 +1809,7 @@ namespace Robust.Shared.GameObjects
             if (comp1.Deleted)
                 return false;
 
-            ref var ent = ref _chunkEnumerator.Current.Entity(_index);
-            uid = _world.Reference(ent);
+            uid = _chunkEnumerator.Current.EntityReference(_index);
             return true;
         }
 
@@ -1842,7 +1827,6 @@ namespace Robust.Shared.GameObjects
         where TComp1 : IComponent
         where TComp2 : IComponent
     {
-        private readonly World _world;
         private ArchChunkEnumerator _chunkEnumerator;
         private int _index;
         private TComp1[] _comp1Array = default!;
@@ -1850,7 +1834,6 @@ namespace Robust.Shared.GameObjects
 
         public AllEntityQueryEnumerator(World world)
         {
-            _world = world;
             _chunkEnumerator = world.Query(new QueryDescription().WithAll<TComp1, TComp2>()).ChunkIterator(world).GetEnumerator();
             if (_chunkEnumerator.MoveNext())
             {
@@ -1884,8 +1867,7 @@ namespace Robust.Shared.GameObjects
             if (comp1.Deleted || comp2.Deleted)
                 return false;
 
-            ref var ent = ref _chunkEnumerator.Current.Entity(_index);
-            uid = _world.Reference(ent);
+            uid = _chunkEnumerator.Current.EntityReference(_index);
             return true;
         }
 
@@ -1904,7 +1886,6 @@ namespace Robust.Shared.GameObjects
         where TComp2 : IComponent
         where TComp3 : IComponent
     {
-        private readonly World _world;
         private ArchChunkEnumerator _chunkEnumerator;
         private int _index;
         private TComp1[] _comp1Array = default!;
@@ -1913,7 +1894,6 @@ namespace Robust.Shared.GameObjects
 
         public AllEntityQueryEnumerator(World world)
         {
-            _world = world;
             _chunkEnumerator = world.Query(new QueryDescription().WithAll<TComp1, TComp2, TComp3>()).ChunkIterator(world).GetEnumerator();
             if (_chunkEnumerator.MoveNext())
             {
@@ -1950,8 +1930,7 @@ namespace Robust.Shared.GameObjects
             if (comp1.Deleted || comp2.Deleted || comp3.Deleted)
                 return false;
 
-            ref var ent = ref _chunkEnumerator.Current.Entity(_index);
-            uid = _world.Reference(ent);
+            uid = _chunkEnumerator.Current.EntityReference(_index);
             return true;
         }
 
@@ -1974,7 +1953,6 @@ namespace Robust.Shared.GameObjects
         where TComp3 : IComponent
         where TComp4 : IComponent
     {
-        private readonly World _world;
         private ArchChunkEnumerator _chunkEnumerator;
         private int _index;
         private TComp1[] _comp1Array = default!;
@@ -1984,7 +1962,6 @@ namespace Robust.Shared.GameObjects
 
         public AllEntityQueryEnumerator(World world)
         {
-            _world = world;
             _chunkEnumerator = world.Query(new QueryDescription().WithAll<TComp1, TComp2, TComp3, TComp4>()).ChunkIterator(world).GetEnumerator();
             if (_chunkEnumerator.MoveNext())
             {
@@ -2024,8 +2001,7 @@ namespace Robust.Shared.GameObjects
             if (comp1.Deleted || comp2.Deleted || comp3.Deleted || comp4.Deleted)
                 return false;
 
-            ref var ent = ref _chunkEnumerator.Current.Entity(_index);
-            uid = _world.Reference(ent);
+            uid = _chunkEnumerator.Current.EntityReference(_index);
             return true;
         }
 

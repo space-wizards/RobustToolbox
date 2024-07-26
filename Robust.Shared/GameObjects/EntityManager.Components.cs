@@ -1515,6 +1515,9 @@ namespace Robust.Shared.GameObjects
     public struct EntityQueryEnumerator<TComp1>
         where TComp1 : IComponent
     {
+        private readonly World _world;
+        private readonly Query _query;
+
         private ArchChunkEnumerator _chunkEnumerator;
         private int _index;
         private TComp1[] _comp1Array = default!;
@@ -1522,7 +1525,14 @@ namespace Robust.Shared.GameObjects
 
         public EntityQueryEnumerator(World world)
         {
-            _chunkEnumerator = world.Query(new QueryDescription().WithAll<TComp1, MetaDataComponent>()).ChunkIterator(world).GetEnumerator();
+            _world = world;
+            _query = world.Query(new QueryDescription().WithAll<TComp1, MetaDataComponent>());
+            Reset();
+        }
+
+        public void Reset()
+        {
+            _chunkEnumerator = _query.ChunkIterator(_world).GetEnumerator();
             if (_chunkEnumerator.MoveNext())
             {
                 _index = _chunkEnumerator.Current.Size;
@@ -1532,7 +1542,19 @@ namespace Robust.Shared.GameObjects
 
         public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1)
         {
-            uid = default;
+            if (MoveNext(out comp1))
+            {
+                uid = _chunkEnumerator.Current.EntityReference(_index);
+                return true;
+            }
+
+            uid = EntityUid.Invalid;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext([NotNullWhen(true)] out TComp1? comp1)
+        {
             comp1 = default;
 
             if (--_index < 0)
@@ -1552,14 +1574,7 @@ namespace Robust.Shared.GameObjects
             if (comp1.Deleted || meta.EntityPaused)
                 return false;
 
-            uid = _chunkEnumerator.Current.EntityReference(_index);
             return true;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext([NotNullWhen(true)] out TComp1? comp1)
-        {
-            return MoveNext(out _, out comp1);
         }
     }
 
@@ -1586,9 +1601,21 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1,  [NotNullWhen(true)] out TComp2? comp2)
+        public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2)
         {
-            uid = default;
+            if (MoveNext(out comp1, out comp2))
+            {
+                uid = _chunkEnumerator.Current.EntityReference(_index);
+                return true;
+            }
+
+            uid = EntityUid.Invalid;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext([NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2)
+        {
             comp1 = default;
             comp2 = default;
 
@@ -1610,14 +1637,7 @@ namespace Robust.Shared.GameObjects
             if (comp1.Deleted || comp2.Deleted || meta.EntityPaused)
                 return false;
 
-            uid = _chunkEnumerator.Current.EntityReference(_index);
             return true;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext([NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2)
-        {
-            return MoveNext(out _, out comp1, out comp2);
         }
     }
 
@@ -1651,7 +1671,22 @@ namespace Robust.Shared.GameObjects
             [NotNullWhen(true)] out TComp2? comp2,
             [NotNullWhen(true)] out TComp3? comp3)
         {
-            uid = default;
+            if (MoveNext(out comp1, out comp2, out comp3))
+            {
+                uid = _chunkEnumerator.Current.EntityReference(_index);
+                return true;
+            }
+
+            uid = EntityUid.Invalid;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext(
+            [NotNullWhen(true)] out TComp1? comp1,
+            [NotNullWhen(true)] out TComp2? comp2,
+            [NotNullWhen(true)] out TComp3? comp3)
+        {
             comp1 = default;
             comp2 = default;
             comp3 = default;
@@ -1675,17 +1710,7 @@ namespace Robust.Shared.GameObjects
             if (comp1.Deleted || comp2.Deleted || comp3.Deleted || meta.EntityPaused)
                 return false;
 
-            uid = _chunkEnumerator.Current.EntityReference(_index);
             return true;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext(
-            [NotNullWhen(true)] out TComp1? comp1,
-            [NotNullWhen(true)] out TComp2? comp2,
-            [NotNullWhen(true)] out TComp3? comp3)
-        {
-            return MoveNext(out _, out comp1, out comp2, out comp3);
         }
     }
 
@@ -1722,7 +1747,23 @@ namespace Robust.Shared.GameObjects
             [NotNullWhen(true)] out TComp3? comp3,
             [NotNullWhen(true)] out TComp4? comp4)
         {
-            uid = default;
+            if (MoveNext(out comp1, out comp2, out comp3, out comp4))
+            {
+                uid = _chunkEnumerator.Current.EntityReference(_index);
+                return true;
+            }
+
+            uid = EntityUid.Invalid;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext(
+            [NotNullWhen(true)] out TComp1? comp1,
+            [NotNullWhen(true)] out TComp2? comp2,
+            [NotNullWhen(true)] out TComp3? comp3,
+            [NotNullWhen(true)] out TComp4? comp4)
+        {
             comp1 = default;
             comp2 = default;
             comp3 = default;
@@ -1748,18 +1789,7 @@ namespace Robust.Shared.GameObjects
             if (comp1.Deleted || comp2.Deleted || comp3.Deleted || comp4.Deleted || meta.EntityPaused)
                 return false;
 
-            uid = _chunkEnumerator.Current.EntityReference(_index);
             return true;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext(
-            [NotNullWhen(true)] out TComp1? comp1,
-            [NotNullWhen(true)] out TComp2? comp2,
-            [NotNullWhen(true)] out TComp3? comp3,
-            [NotNullWhen(true)] out TComp4? comp4)
-        {
-            return MoveNext(out _, out comp1, out comp2, out comp3, out comp4);
         }
     }
 
@@ -1773,13 +1803,24 @@ namespace Robust.Shared.GameObjects
     public struct AllEntityQueryEnumerator<TComp1>
         where TComp1 : IComponent
     {
+        private readonly World _world;
+        private readonly Query _query;
+
         private ArchChunkEnumerator _chunkEnumerator;
         private int _index;
         private TComp1[] _comp1Array = default!;
 
         public AllEntityQueryEnumerator(World world)
         {
-            _chunkEnumerator = world.Query(new QueryDescription().WithAll<TComp1>()).ChunkIterator(world).GetEnumerator();
+            _world = world;
+            _query = world.Query(new QueryDescription().WithAll<TComp1>());
+            Reset();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Reset()
+        {
+            _chunkEnumerator = _query.ChunkIterator(_world).GetEnumerator();
             if (_chunkEnumerator.MoveNext())
             {
                 _index = _chunkEnumerator.Current.Size;
@@ -1787,10 +1828,23 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext(out EntityUid uid, [NotNullWhen(true)]
             out TComp1? comp1)
         {
-            uid = default;
+            if (MoveNext(out comp1))
+            {
+                uid = _chunkEnumerator.Current.EntityReference(_index);
+                return true;
+            }
+
+            uid = EntityUid.Invalid;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext([NotNullWhen(true)] out TComp1? comp1)
+        {
             comp1 = default;
 
             if (--_index < 0)
@@ -1809,14 +1863,7 @@ namespace Robust.Shared.GameObjects
             if (comp1.Deleted)
                 return false;
 
-            uid = _chunkEnumerator.Current.EntityReference(_index);
             return true;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext([NotNullWhen(true)] out TComp1? comp1)
-        {
-            return MoveNext(out _, out comp1);
         }
     }
 
@@ -1846,7 +1893,19 @@ namespace Robust.Shared.GameObjects
             out TComp1? comp1,
             [NotNullWhen(true)] out TComp2? comp2)
         {
-            uid = default;
+            if (MoveNext(out comp1, out comp2))
+            {
+                uid = _chunkEnumerator.Current.EntityReference(_index);
+                return true;
+            }
+
+            uid = EntityUid.Invalid;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext([NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2)
+        {
             comp1 = default;
             comp2 = default;
 
@@ -1867,14 +1926,7 @@ namespace Robust.Shared.GameObjects
             if (comp1.Deleted || comp2.Deleted)
                 return false;
 
-            uid = _chunkEnumerator.Current.EntityReference(_index);
             return true;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext([NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2)
-        {
-            return MoveNext(out _, out comp1, out comp2);
         }
     }
 
@@ -1907,7 +1959,22 @@ namespace Robust.Shared.GameObjects
             [NotNullWhen(true)] out TComp2? comp2,
             [NotNullWhen(true)] out TComp3? comp3)
         {
-            uid = default;
+            if (MoveNext(out comp1, out comp2, out comp3))
+            {
+                uid = _chunkEnumerator.Current.EntityReference(_index);
+                return true;
+            }
+
+            uid = EntityUid.Invalid;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext(
+            [NotNullWhen(true)] out TComp1? comp1,
+            [NotNullWhen(true)] out TComp2? comp2,
+            [NotNullWhen(true)] out TComp3? comp3)
+        {
             comp1 = default;
             comp2 = default;
             comp3 = default;
@@ -1930,17 +1997,7 @@ namespace Robust.Shared.GameObjects
             if (comp1.Deleted || comp2.Deleted || comp3.Deleted)
                 return false;
 
-            uid = _chunkEnumerator.Current.EntityReference(_index);
             return true;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext(
-            [NotNullWhen(true)] out TComp1? comp1,
-            [NotNullWhen(true)] out TComp2? comp2,
-            [NotNullWhen(true)] out TComp3? comp3)
-        {
-            return MoveNext(out _, out comp1, out comp2, out comp3);
         }
     }
 
@@ -1976,7 +2033,23 @@ namespace Robust.Shared.GameObjects
             [NotNullWhen(true)] out TComp3? comp3,
             [NotNullWhen(true)] out TComp4? comp4)
         {
-            uid = default;
+            if (MoveNext(out comp1, out comp2, out comp3, out comp4))
+            {
+                uid = _chunkEnumerator.Current.EntityReference(_index);
+                return true;
+            }
+
+            uid = EntityUid.Invalid;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext(
+            [NotNullWhen(true)] out TComp1? comp1,
+            [NotNullWhen(true)] out TComp2? comp2,
+            [NotNullWhen(true)] out TComp3? comp3,
+            [NotNullWhen(true)] out TComp4? comp4)
+        {
             comp1 = default;
             comp2 = default;
             comp3 = default;
@@ -2001,18 +2074,7 @@ namespace Robust.Shared.GameObjects
             if (comp1.Deleted || comp2.Deleted || comp3.Deleted || comp4.Deleted)
                 return false;
 
-            uid = _chunkEnumerator.Current.EntityReference(_index);
             return true;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext(
-            [NotNullWhen(true)] out TComp1? comp1,
-            [NotNullWhen(true)] out TComp2? comp2,
-            [NotNullWhen(true)] out TComp3? comp3,
-            [NotNullWhen(true)] out TComp4? comp4)
-        {
-            return MoveNext(out _, out comp1, out comp2, out comp3, out comp4);
         }
     }
 

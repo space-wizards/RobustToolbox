@@ -112,5 +112,5 @@ public partial class EntityManager
         _world.RemoveRange(uid, compTypes.Span);
     }
 
-    internal World GetWorld() => _world;
+    public World GetWorld() => _world;
 }

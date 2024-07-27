@@ -1555,26 +1555,28 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext([NotNullWhen(true)] out TComp1? comp1)
         {
-            comp1 = default;
-
-            if (--_index < 0)
+            while (true)
             {
-                if (!_chunkEnumerator.MoveNext())
+                comp1 = default;
+
+                if (--_index < 0)
                 {
-                    return false;
+                    if (!_chunkEnumerator.MoveNext())
+                    {
+                        return false;
+                    }
+
+                    _index = _chunkEnumerator.Current.Size - 1;
+                    _chunkEnumerator.Current.GetArray(out _comp1Array, out _metaArray);
                 }
 
-                _index = _chunkEnumerator.Current.Size - 1;
-                _chunkEnumerator.Current.GetArray(out _comp1Array, out _metaArray);
+                comp1 = _comp1Array[_index];
+                var meta = _metaArray[_index];
+
+                if (comp1.Deleted || meta.EntityPaused) continue;
+
+                return true;
             }
-
-            comp1 = _comp1Array[_index];
-            var meta = _metaArray[_index];
-
-            if (comp1.Deleted || meta.EntityPaused)
-                return false;
-
-            return true;
         }
     }
 
@@ -1593,6 +1595,7 @@ namespace Robust.Shared.GameObjects
 
         public EntityQueryEnumerator(World world)
         {
+            Unsafe.SkipInit(out this);
             _chunkEnumerator = world.Query(new QueryDescription().WithAll<TComp1, TComp2, MetaDataComponent>()).ChunkIterator(world).GetEnumerator();
             if (_chunkEnumerator.MoveNext())
             {
@@ -1616,28 +1619,30 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext([NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2)
         {
-            comp1 = default;
-            comp2 = default;
-
-            if (--_index < 0)
+            while (true)
             {
-                if (!_chunkEnumerator.MoveNext())
+                comp1 = default;
+                comp2 = default;
+
+                if (--_index < 0)
                 {
-                    return false;
+                    if (!_chunkEnumerator.MoveNext())
+                    {
+                        return false;
+                    }
+
+                    _index = _chunkEnumerator.Current.Size - 1;
+                    _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array, out _metaArray);
                 }
 
-                _index = _chunkEnumerator.Current.Size - 1;
-                _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array, out _metaArray);
+                comp1 = _comp1Array[_index];
+                comp2 = _comp2Array[_index];
+                var meta = _metaArray[_index];
+
+                if (comp1.Deleted || comp2.Deleted || meta.EntityPaused) continue;
+
+                return true;
             }
-
-            comp1 = _comp1Array[_index];
-            comp2 = _comp2Array[_index];
-            var meta = _metaArray[_index];
-
-            if (comp1.Deleted || comp2.Deleted || meta.EntityPaused)
-                return false;
-
-            return true;
         }
     }
 
@@ -1687,30 +1692,32 @@ namespace Robust.Shared.GameObjects
             [NotNullWhen(true)] out TComp2? comp2,
             [NotNullWhen(true)] out TComp3? comp3)
         {
-            comp1 = default;
-            comp2 = default;
-            comp3 = default;
-
-            if (--_index < 0)
+            while (true)
             {
-                if (!_chunkEnumerator.MoveNext())
+                comp1 = default;
+                comp2 = default;
+                comp3 = default;
+
+                if (--_index < 0)
                 {
-                    return false;
+                    if (!_chunkEnumerator.MoveNext())
+                    {
+                        return false;
+                    }
+
+                    _index = _chunkEnumerator.Current.Size - 1;
+                    _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array, out _comp3Array, out _metaArray);
                 }
 
-                _index = _chunkEnumerator.Current.Size - 1;
-                _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array, out _comp3Array, out _metaArray);
+                comp1 = _comp1Array[_index];
+                comp2 = _comp2Array[_index];
+                comp3 = _comp3Array[_index];
+                var meta = _metaArray[_index];
+
+                if (comp1.Deleted || comp2.Deleted || comp3.Deleted || meta.EntityPaused) continue;
+
+                return true;
             }
-
-            comp1 = _comp1Array[_index];
-            comp2 = _comp2Array[_index];
-            comp3 = _comp3Array[_index];
-            var meta = _metaArray[_index];
-
-            if (comp1.Deleted || comp2.Deleted || comp3.Deleted || meta.EntityPaused)
-                return false;
-
-            return true;
         }
     }
 
@@ -1764,32 +1771,34 @@ namespace Robust.Shared.GameObjects
             [NotNullWhen(true)] out TComp3? comp3,
             [NotNullWhen(true)] out TComp4? comp4)
         {
-            comp1 = default;
-            comp2 = default;
-            comp3 = default;
-            comp4 = default;
-
-            if (--_index < 0)
+            while (true)
             {
-                if (!_chunkEnumerator.MoveNext())
+                comp1 = default;
+                comp2 = default;
+                comp3 = default;
+                comp4 = default;
+
+                if (--_index < 0)
                 {
-                    return false;
+                    if (!_chunkEnumerator.MoveNext())
+                    {
+                        return false;
+                    }
+
+                    _index = _chunkEnumerator.Current.Size - 1;
+                    _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array, out _comp3Array, out _comp4Array, out _metaArray);
                 }
 
-                _index = _chunkEnumerator.Current.Size - 1;
-                _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array, out _comp3Array, out _comp4Array, out _metaArray);
+                comp1 = _comp1Array[_index];
+                comp2 = _comp2Array[_index];
+                comp3 = _comp3Array[_index];
+                comp4 = _comp4Array[_index];
+                var meta = _metaArray[_index];
+
+                if (comp1.Deleted || comp2.Deleted || comp3.Deleted || comp4.Deleted || meta.EntityPaused) continue;
+
+                return true;
             }
-
-            comp1 = _comp1Array[_index];
-            comp2 = _comp2Array[_index];
-            comp3 = _comp3Array[_index];
-            comp4 = _comp4Array[_index];
-            var meta = _metaArray[_index];
-
-            if (comp1.Deleted || comp2.Deleted || comp3.Deleted || comp4.Deleted || meta.EntityPaused)
-                return false;
-
-            return true;
         }
     }
 
@@ -1803,28 +1812,22 @@ namespace Robust.Shared.GameObjects
     public struct AllEntityQueryEnumerator<TComp1>
         where TComp1 : IComponent
     {
-        private readonly World _world;
-        private readonly Query _query;
-
         private ArchChunkEnumerator _chunkEnumerator;
         private int _index;
-        private TComp1[] _comp1Array = default!;
+        private TComp1[] _comp1Array;
 
-        public AllEntityQueryEnumerator(World world)
+        internal AllEntityQueryEnumerator(World world)
         {
-            _world = world;
-            _query = world.Query(new QueryDescription().WithAll<TComp1>());
-            Reset();
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Reset()
-        {
-            _chunkEnumerator = _query.ChunkIterator(_world).GetEnumerator();
+            Unsafe.SkipInit(out this);
+            _chunkEnumerator = world.Query(new QueryDescription().WithAll<TComp1>()).ChunkIterator(world).GetEnumerator();
             if (_chunkEnumerator.MoveNext())
             {
                 _index = _chunkEnumerator.Current.Size;
                 _comp1Array = _chunkEnumerator.Current.GetArray<TComp1>();
+            }
+            else
+            {
+                _index = 0;
             }
         }
 
@@ -1845,25 +1848,26 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext([NotNullWhen(true)] out TComp1? comp1)
         {
-            comp1 = default;
-
-            if (--_index < 0)
+            while (true)
             {
-                if (!_chunkEnumerator.MoveNext())
+                if (--_index < 0)
                 {
-                    return false;
+                    if (!_chunkEnumerator.MoveNext())
+                    {
+                        comp1 = default;
+                        return false;
+                    }
+
+                    _index = _chunkEnumerator.Current.Size - 1;
+                    _comp1Array = _chunkEnumerator.Current.GetArray<TComp1>();
                 }
 
-                _index = _chunkEnumerator.Current.Size - 1;
-                _comp1Array = _chunkEnumerator.Current.GetArray<TComp1>();
+                comp1 = _comp1Array[_index];
+
+                if (comp1.Deleted) continue;
+
+                return true;
             }
-
-            comp1 = _comp1Array[_index];
-
-            if (comp1.Deleted)
-                return false;
-
-            return true;
         }
     }
 
@@ -1881,11 +1885,16 @@ namespace Robust.Shared.GameObjects
 
         public AllEntityQueryEnumerator(World world)
         {
+            Unsafe.SkipInit(out this);
             _chunkEnumerator = world.Query(new QueryDescription().WithAll<TComp1, TComp2>()).ChunkIterator(world).GetEnumerator();
             if (_chunkEnumerator.MoveNext())
             {
                 _index = _chunkEnumerator.Current.Size;
                 _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array);
+            }
+            else
+            {
+                _index = 0;
             }
         }
 
@@ -1906,27 +1915,32 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext([NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2)
         {
-            comp1 = default;
-            comp2 = default;
-
-            if (--_index < 0)
+            while (true)
             {
-                if (!_chunkEnumerator.MoveNext())
+                comp1 = default;
+                comp2 = default;
+
+                if (--_index < 0)
                 {
-                    return false;
+                    if (!_chunkEnumerator.MoveNext())
+                    {
+                        return false;
+                    }
+
+                    _index = _chunkEnumerator.Current.Size - 1;
+                    _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array);
                 }
 
-                _index = _chunkEnumerator.Current.Size - 1;
-                _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array);
+                comp1 = _comp1Array[_index];
+
+                if (comp1.Deleted) continue;
+
+                comp2 = _comp2Array[_index];
+
+                if (comp2.Deleted) continue;
+
+                return true;
             }
-
-            comp1 = _comp1Array[_index];
-            comp2 = _comp2Array[_index];
-
-            if (comp1.Deleted || comp2.Deleted)
-                return false;
-
-            return true;
         }
     }
 
@@ -1975,29 +1989,31 @@ namespace Robust.Shared.GameObjects
             [NotNullWhen(true)] out TComp2? comp2,
             [NotNullWhen(true)] out TComp3? comp3)
         {
-            comp1 = default;
-            comp2 = default;
-            comp3 = default;
-
-            if (--_index < 0)
+            while (true)
             {
-                if (!_chunkEnumerator.MoveNext())
+                comp1 = default;
+                comp2 = default;
+                comp3 = default;
+
+                if (--_index < 0)
                 {
-                    return false;
+                    if (!_chunkEnumerator.MoveNext())
+                    {
+                        return false;
+                    }
+
+                    _index = _chunkEnumerator.Current.Size - 1;
+                    _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array, out _comp3Array);
                 }
 
-                _index = _chunkEnumerator.Current.Size - 1;
-                _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array, out _comp3Array);
+                comp1 = _comp1Array[_index];
+                comp2 = _comp2Array[_index];
+                comp3 = _comp3Array[_index];
+
+                if (comp1.Deleted || comp2.Deleted || comp3.Deleted) continue;
+
+                return true;
             }
-
-            comp1 = _comp1Array[_index];
-            comp2 = _comp2Array[_index];
-            comp3 = _comp3Array[_index];
-
-            if (comp1.Deleted || comp2.Deleted || comp3.Deleted)
-                return false;
-
-            return true;
         }
     }
 
@@ -2050,31 +2066,33 @@ namespace Robust.Shared.GameObjects
             [NotNullWhen(true)] out TComp3? comp3,
             [NotNullWhen(true)] out TComp4? comp4)
         {
-            comp1 = default;
-            comp2 = default;
-            comp3 = default;
-            comp4 = default;
-
-            if (--_index < 0)
+            while (true)
             {
-                if (!_chunkEnumerator.MoveNext())
+                comp1 = default;
+                comp2 = default;
+                comp3 = default;
+                comp4 = default;
+
+                if (--_index < 0)
                 {
-                    return false;
+                    if (!_chunkEnumerator.MoveNext())
+                    {
+                        return false;
+                    }
+
+                    _index = _chunkEnumerator.Current.Size - 1;
+                    _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array, out _comp3Array, out _comp4Array);
                 }
 
-                _index = _chunkEnumerator.Current.Size - 1;
-                _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array, out _comp3Array, out _comp4Array);
+                comp1 = _comp1Array[_index];
+                comp2 = _comp2Array[_index];
+                comp3 = _comp3Array[_index];
+                comp4 = _comp4Array[_index];
+
+                if (comp1.Deleted || comp2.Deleted || comp3.Deleted || comp4.Deleted) continue;
+
+                return true;
             }
-
-            comp1 = _comp1Array[_index];
-            comp2 = _comp2Array[_index];
-            comp3 = _comp3Array[_index];
-            comp4 = _comp4Array[_index];
-
-            if (comp1.Deleted || comp2.Deleted || comp3.Deleted || comp4.Deleted)
-                return false;
-
-            return true;
         }
     }
 

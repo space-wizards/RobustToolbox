@@ -203,7 +203,7 @@ namespace Robust.Client.Graphics.Clyde
                     return resource.ClydeHandle;
                 }
 
-                Logger.Warning($"Can't load shader {path}\n");
+                _clydeSawmill.Warning($"Can't load shader {path}\n");
                 return default;
             }
 
@@ -345,13 +345,12 @@ namespace Robust.Client.Graphics.Clyde
                 return;
 
             // If this map has lighting disabled, return
-            var mapUid = _mapManager.GetMapEntityId(mapId);
+            var mapUid = _mapSystem.GetMapOrInvalid(mapId);
             if (!_entityManager.TryGetComponent<MapComponent>(mapUid, out var map) || !map.LightingEnabled)
             {
                 return;
             }
 
-            (PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot)[] lights;
             int count;
             Box2 expandedBounds;
             using (_prof.Group("LightsToRender"))
@@ -492,18 +491,18 @@ namespace Robust.Client.Graphics.Clyde
 
                     var offset = new Vector2(component.Radius, component.Radius);
 
-                    Matrix3 matrix;
+                    Matrix3x2 matrix;
                     if (mask == null)
                     {
-                        matrix = Matrix3.Identity;
+                        matrix = Matrix3x2.Identity;
                     }
                     else
                     {
                         // Only apply rotation if a mask is said, because else it doesn't matter.
-                        matrix = Matrix3.CreateRotation(rotation);
+                        matrix = Matrix3Helpers.CreateRotation(rotation);
                     }
 
-                    (matrix.R0C2, matrix.R1C2) = lightPos;
+                    (matrix.M31, matrix.M32) = lightPos;
 
                     _drawQuad(-offset, offset, matrix, lightShader);
                 }
@@ -541,7 +540,6 @@ namespace Robust.Client.Graphics.Clyde
             Clyde clyde,
             int count,
             int shadowCastingCount,
-            TransformSystem xformSystem,
             EntityQuery<TransformComponent> xforms,
             Box2 worldAABB) state,
             in ComponentTreeEntry<PointLightComponent> value)
@@ -554,7 +552,7 @@ namespace Robust.Client.Graphics.Clyde
                 return false;
 
             var (light, transform) = value;
-            var (lightPos, rot) = state.xformSystem.GetWorldPositionRotation(transform, state.xforms);
+            var (lightPos, rot) = state.clyde._transformSystem.GetWorldPositionRotation(transform, state.xforms);
             lightPos += rot.RotateVec(light.Offset);
             var circle = new Circle(lightPos, light.Radius);
 
@@ -600,16 +598,13 @@ namespace Robust.Client.Graphics.Clyde
             in Box2Rotated worldBounds,
             in Box2 worldAABB)
         {
-            var lightTreeSys = _entitySystemManager.GetEntitySystem<LightTreeSystem>();
-            var xformSystem = _entitySystemManager.GetEntitySystem<TransformSystem>();
-
             // Use worldbounds for this one as we only care if the light intersects our actual bounds
             var xforms = _entityManager.GetEntityQuery<TransformComponent>();
-            var state = (this, count: 0, shadowCastingCount: 0, xformSystem, xforms, worldAABB);
+            var state = (this, count: 0, shadowCastingCount: 0, xforms, worldAABB);
 
-            foreach (var (uid, comp) in lightTreeSys.GetIntersectingTrees(map, worldAABB))
+            foreach (var (uid, comp) in _lightTreeSystem.GetIntersectingTrees(map, worldAABB))
             {
-                var bounds = xformSystem.GetInvWorldMatrix(uid, xforms).TransformBox(worldBounds);
+                var bounds = _transformSystem.GetInvWorldMatrix(uid, xforms).TransformBox(worldBounds);
                 comp.Tree.QueryAabb(ref state, LightQuery, bounds);
             }
 
@@ -692,7 +687,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 // Blur horizontally to _wallBleedIntermediateRenderTarget1.
                 shader.SetUniformMaybe("direction", Vector2.UnitX);
-                _drawQuad(Vector2.Zero, viewport.Size, Matrix3.Identity, shader);
+                _drawQuad(Vector2.Zero, viewport.Size, Matrix3x2.Identity, shader);
 
                 SetTexture(TextureUnit.Texture0, viewport.LightBlurTarget.Texture);
 
@@ -700,7 +695,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 // Blur vertically to _wallBleedIntermediateRenderTarget2.
                 shader.SetUniformMaybe("direction", Vector2.UnitY);
-                _drawQuad(Vector2.Zero, viewport.Size, Matrix3.Identity, shader);
+                _drawQuad(Vector2.Zero, viewport.Size, Matrix3x2.Identity, shader);
 
                 SetTexture(TextureUnit.Texture0, viewport.LightRenderTarget.Texture);
             }
@@ -754,14 +749,14 @@ namespace Robust.Client.Graphics.Clyde
 
                 // Blur horizontally to _wallBleedIntermediateRenderTarget1.
                 shader.SetUniformMaybe("direction", Vector2.UnitX);
-                _drawQuad(Vector2.Zero, viewport.Size, Matrix3.Identity, shader);
+                _drawQuad(Vector2.Zero, viewport.Size, Matrix3x2.Identity, shader);
 
                 SetTexture(TextureUnit.Texture0, viewport.WallBleedIntermediateRenderTarget1.Texture);
                 BindRenderTargetFull(viewport.WallBleedIntermediateRenderTarget2);
 
                 // Blur vertically to _wallBleedIntermediateRenderTarget2.
                 shader.SetUniformMaybe("direction", Vector2.UnitY);
-                _drawQuad(Vector2.Zero, viewport.Size, Matrix3.Identity, shader);
+                _drawQuad(Vector2.Zero, viewport.Size, Matrix3x2.Identity, shader);
 
                 SetTexture(TextureUnit.Texture0, viewport.WallBleedIntermediateRenderTarget2.Texture);
             }
@@ -909,13 +904,13 @@ namespace Robust.Client.Graphics.Clyde
             // Second modification is that output must be fov-centred (difference-space)
             uZero -= fovCentre;
 
-            var clipToDiff = new Matrix3(in uX, in uY, in uZero);
+            var clipToDiff = new Matrix3x2(uX.X, uX.Y, uY.X, uY.Y, uZero.X, uZero.Y);
 
             fovShader.SetUniformMaybe("clipToDiff", clipToDiff);
-            _drawQuad(Vector2.Zero, Vector2.One, Matrix3.Identity, fovShader);
+            _drawQuad(Vector2.Zero, Vector2.One, Matrix3x2.Identity, fovShader);
         }
 
-        private void UpdateOcclusionGeometry(MapId map, Box2 expandedBounds, Matrix3 eyeTransform)
+        private void UpdateOcclusionGeometry(MapId map, Box2 expandedBounds, Matrix3x2 eyeTransform)
         {
             using var _ = _prof.Group("UpdateOcclusionGeometry");
             using var _p = DebugGroup(nameof(UpdateOcclusionGeometry));
@@ -941,18 +936,16 @@ namespace Robust.Client.Graphics.Clyde
             var imi = 0;
             var amiMax = _maxOccluders * 4;
 
-            var occluderSystem = _entitySystemManager.GetEntitySystem<OccluderSystem>();
-            var xformSystem = _entitySystemManager.GetEntitySystem<TransformSystem>();
             var xforms = _entityManager.GetEntityQuery<TransformComponent>();
 
             try
             {
-                foreach (var (uid, comp) in occluderSystem.GetIntersectingTrees(map, expandedBounds))
+                foreach (var (uid, comp) in _occluderSystem.GetIntersectingTrees(map, expandedBounds))
                 {
                     if (ami >= amiMax)
                         break;
 
-                    var treeBounds = xforms.GetComponent(uid).InvWorldMatrix.TransformBox(expandedBounds);
+                    var treeBounds = _transformSystem.GetInvWorldMatrix(uid).TransformBox(expandedBounds);
 
                     comp.Tree.QueryAabb((in ComponentTreeEntry<OccluderComponent> entry) =>
                     {
@@ -965,12 +958,12 @@ namespace Robust.Client.Graphics.Clyde
                         if (ami >= amiMax)
                             return false;
 
-                        var worldTransform = xformSystem.GetWorldMatrix(transform, xforms);
+                        var worldTransform = _transformSystem.GetWorldMatrix(transform, xforms);
                         var box = occluder.BoundingBox;
 
-                        var tl = worldTransform.Transform(box.TopLeft);
-                        var tr = worldTransform.Transform(box.TopRight);
-                        var br = worldTransform.Transform(box.BottomRight);
+                        var tl = Vector2.Transform(box.TopLeft, worldTransform);
+                        var tr = Vector2.Transform(box.TopRight, worldTransform);
+                        var br = Vector2.Transform(box.BottomRight, worldTransform);
                         var bl = tl + br - tr;
 
                         // Faces.
@@ -1010,9 +1003,9 @@ namespace Robust.Client.Graphics.Clyde
                         //
 
                         // Calculate delta positions from camera.
-                        var dTl = eyeTransform.Transform(tl);
-                        var dTr = eyeTransform.Transform(tr);
-                        var dBl = eyeTransform.Transform(bl);
+                        var dTl = Vector2.Transform(tl, eyeTransform);
+                        var dTr = Vector2.Transform(tr, eyeTransform);
+                        var dBl = Vector2.Transform(bl, eyeTransform);
                         var dBr = dBl + dTr - dTl;
 
                         // Get which neighbors are occluding.

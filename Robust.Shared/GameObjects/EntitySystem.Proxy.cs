@@ -8,7 +8,6 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
-using TerraFX.Interop.Windows;
 
 namespace Robust.Shared.GameObjects;
 
@@ -74,6 +73,15 @@ public partial class EntitySystem
     protected bool TerminatingOrDeleted(EntityUid uid, MetaDataComponent? metaData = null)
     {
         return LifeStage(uid, metaData) >= EntityLifeStage.Terminating;
+    }
+
+    /// <summary>
+    ///     Checks whether the entity is being or has been deleted (or never existed in the first place).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TerminatingOrDeleted(EntityUid? uid, MetaDataComponent? metaData = null)
+    {
+        return !uid.HasValue || TerminatingOrDeleted(uid.Value, metaData);
     }
 
     [Obsolete("Use override without the EntityQuery")]
@@ -431,6 +439,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;(EntityUid, out T)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [PreferNonGenericVariantFor(typeof(TransformComponent), typeof(MetaDataComponent))]
     protected bool TryComp<T>(EntityUid uid, [NotNullWhen(true)] out T? comp) where T : IComponent
     {
         return EntityManager.TryGetComponent(uid, out comp);
@@ -695,6 +704,13 @@ public partial class EntitySystem
     protected void QueueDel(EntityUid? uid)
     {
         EntityManager.QueueDeleteEntity(uid);
+    }
+
+    /// <inheritdoc cref="IEntityManager.TryQueueDeleteEntity(EntityUid?)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TryQueueDel(EntityUid? uid)
+    {
+        return EntityManager.TryQueueDeleteEntity(uid);
     }
 
     #endregion

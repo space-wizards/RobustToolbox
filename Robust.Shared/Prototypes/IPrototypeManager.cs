@@ -64,13 +64,24 @@ public interface IPrototypeManager
     /// <summary>
     /// Returns an <see cref="IEnumerable{T}"/> of all parents of a prototype of a certain kind.
     /// </summary>
-    IEnumerable<T> EnumerateParents<T>(string kind, bool includeSelf = false)
+    /// <remarks>
+    /// Note that this will skip abstract parents, even if the abstract parent may have concrete grand-parents.
+    /// </remarks>
+    IEnumerable<T> EnumerateParents<T>(T proto, bool includeSelf = false)
         where T : class, IPrototype, IInheritingPrototype;
 
-    /// <summary>
-    /// Returns an <see cref="IEnumerable{T}"/> of parents of a prototype of a certain kind.
-    /// </summary>
+    /// <inheritdoc cref="EnumerateParents{T}(T,bool)"/>
+    IEnumerable<T> EnumerateParents<T>(string id, bool includeSelf = false)
+        where T : class, IPrototype, IInheritingPrototype;
+
+    /// <inheritdoc cref="EnumerateParents{T}(T,bool)"/>
     IEnumerable<IPrototype> EnumerateParents(Type kind, string id, bool includeSelf = false);
+
+    /// <summary>
+    /// Variant of <see cref="EnumerateParents{T}(T,bool)"/> that includes abstract parents.
+    /// </summary>
+    IEnumerable<(string id, T?)> EnumerateAllParents<T>(string id, bool includeSelf = false)
+        where T : class, IPrototype, IInheritingPrototype;
 
     /// <summary>
     /// Returns all of the registered prototype kinds.
@@ -132,17 +143,20 @@ public interface IPrototypeManager
     /// </summary>
     FrozenDictionary<string, T> GetInstances<T>() where T : IPrototype;
 
-    /// <inheritdoc cref="TryIndex{T}(string, out T)"/>
-    bool TryIndex(EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype);
+    /// <inheritdoc cref="TryIndex{T}(ProtoId{T}, out T, bool)"/>
+    bool TryIndex(EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype,  bool logError = true);
 
-    /// <inheritdoc cref="TryIndex{T}(string, out T)"/>
-    bool TryIndex<T>(ProtoId<T> id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
+    /// <summary>
+    /// Attempt to retrieve the prototype corresponding to the given prototype id.
+    /// Unless otherwise specified, this will log an error if the id does not match any known prototype.
+    /// </summary>
+    bool TryIndex<T>(ProtoId<T> id, [NotNullWhen(true)] out T? prototype,  bool logError = true) where T : class, IPrototype;
 
-    /// <inheritdoc cref="TryIndex{T}(string, out T)"/>
-    bool TryIndex(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype);
+    /// <inheritdoc cref="TryIndex{T}(ProtoId{T}, out T, bool)"/>
+    bool TryIndex(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype,  bool logError = true);
 
-    /// <inheritdoc cref="TryIndex{T}(string, out T)"/>
-    bool TryIndex<T>(ProtoId<T>? id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
+    /// <inheritdoc cref="TryIndex{T}(ProtoId{T}, out T, bool)"/>
+    bool TryIndex<T>(ProtoId<T>? id, [NotNullWhen(true)] out T? prototype, bool logError = true) where T : class, IPrototype;
 
     bool HasMapping<T>(string id);
     bool TryGetMapping(Type kind, string id, [NotNullWhen(true)] out MappingDataNode? mappings);
@@ -399,6 +413,11 @@ public interface IPrototypeManager
     /// Tries to get a random prototype.
     /// </summary>
     bool TryGetRandom<T>(IRobustRandom random, [NotNullWhen(true)] out IPrototype? prototype) where T : class, IPrototype;
+
+    /// <summary>
+    /// Entity prototypes grouped by their categories.
+    /// </summary>
+    FrozenDictionary<ProtoId<EntityCategoryPrototype>, IReadOnlyList<EntityPrototype>> Categories { get; }
 }
 
 internal interface IPrototypeManagerInternal : IPrototypeManager

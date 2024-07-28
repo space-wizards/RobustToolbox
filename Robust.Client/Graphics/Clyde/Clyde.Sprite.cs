@@ -61,12 +61,11 @@ internal partial class Clyde
         var index = 0;
         var added = 0;
         var opts = new ParallelOptions { MaxDegreeOfParallelism = _parMan.ParallelProcessCount };
-        var xformSystem = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
 
-        foreach (var (treeOwner, comp) in _entitySystemManager.GetEntitySystem<SpriteTreeSystem>().GetIntersectingTrees(map, worldBounds))
+        foreach (var (treeOwner, comp) in _spriteTreeSystem.GetIntersectingTrees(map, worldBounds))
         {
             var treeXform = query.GetComponent(treeOwner);
-            var bounds = xformSystem.GetInvWorldMatrix(treeOwner).TransformBox(worldBounds);
+            var bounds = _transformSystem.GetInvWorldMatrix(treeOwner).TransformBox(worldBounds);
             DebugTools.Assert(treeXform.MapUid == treeXform.ParentUid || !treeXform.ParentUid.IsValid());
 
             treeData = treeData with

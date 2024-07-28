@@ -188,7 +188,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     if (!TryInitMainWindow(glSpec, out lastError))
                     {
-                        Logger.DebugS("clyde.win", $"OpenGL {glSpec.OpenGLVersion} unsupported: {lastError}");
+                        _sawmillWin.Debug($"OpenGL {glSpec.OpenGLVersion} unsupported: {lastError}");
                         continue;
                     }
 
@@ -199,7 +199,7 @@ namespace Robust.Client.Graphics.Clyde
             else
             {
                 if (!TryInitMainWindow(null, out lastError))
-                    Logger.DebugS("clyde.win", $"Failed to create window: {lastError}");
+                    _sawmillWin.Debug($"Failed to create window: {lastError}");
                 else
                     succeeded = true;
             }
@@ -230,8 +230,7 @@ namespace Robust.Client.Graphics.Clyde
                     }
                 }
 
-                Logger.FatalS("clyde.win",
-                    "Failed to create main game window! " +
+                _sawmillWin.Fatal("Failed to create main game window! " +
                     "This probably means your GPU is too old to run the game. " +
                     $"That or update your graphics drivers. {lastError}");
 

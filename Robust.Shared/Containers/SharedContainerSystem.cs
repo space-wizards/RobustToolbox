@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
@@ -12,6 +13,7 @@ using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Containers
@@ -24,6 +26,7 @@ namespace Robust.Shared.Containers
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
         [Dependency] private readonly SharedJointSystem _joint = default!;
+        [Dependency] private readonly IGameTiming _timing = default!;
 
         private EntityQuery<ContainerManagerComponent> _managerQuery;
         private EntityQuery<MapGridComponent> _gridQuery;
@@ -39,6 +42,7 @@ namespace Robust.Shared.Containers
             base.Initialize();
 
             SubscribeLocalEvent<EntParentChangedMessage>(OnParentChanged);
+            SubscribeLocalEvent<ContainerManagerComponent, ComponentInit>(OnInit);
             SubscribeLocalEvent<ContainerManagerComponent, ComponentStartup>(OnStartupValidation);
             SubscribeLocalEvent<ContainerManagerComponent, ComponentGetState>(OnContainerGetState);
             SubscribeLocalEvent<ContainerManagerComponent, ComponentRemove>(OnContainerManagerRemove);
@@ -50,6 +54,14 @@ namespace Robust.Shared.Containers
             PhysicsQuery = GetEntityQuery<PhysicsComponent>();
             JointQuery = GetEntityQuery<JointComponent>();
             TransformQuery = GetEntityQuery<TransformComponent>();
+        }
+
+        private void OnInit(Entity<ContainerManagerComponent> ent, ref ComponentInit args)
+        {
+            foreach (var (id, container) in ent.Comp.Containers)
+            {
+                container.Init(this, id, ent);
+            }
         }
 
         private void OnContainerGetState(EntityUid uid, ContainerManagerComponent component, ref ComponentGetState args)
@@ -101,16 +113,10 @@ namespace Robust.Shared.Containers
                 throw new ArgumentException($"Container with specified ID already exists: '{id}'");
 
             var container = _dynFactory.CreateInstanceUnchecked<T>(typeof(T), inject: false);
-            InitContainer(container, (uid, containerManager), id);
+            container.Init(this, id, (uid, containerManager));
             containerManager.Containers[id] = container;
             Dirty(uid, containerManager);
             return container;
-        }
-
-        protected void InitContainer(BaseContainer container, Entity<ContainerManagerComponent> containerEnt, string id)
-        {
-            DebugTools.AssertNull(container.ID);
-            ((container.Owner, container.Manager), container.ID) = (containerEnt, id);
         }
 
         public virtual void ShutdownContainer(BaseContainer container)
@@ -178,7 +184,13 @@ namespace Robust.Shared.Containers
                 return false;
             }
 
-            return containerManager.Containers.TryGetValue(id, out container);
+            if (!containerManager.Containers.TryGetValue(id, out container))
+                return false;
+
+            DebugTools.AssertEqual(container.ID, id);
+            DebugTools.AssertNotNull(container.Manager);
+            DebugTools.AssertNotEqual(container.Owner, EntityUid.Invalid);
+            return true;
         }
 
         [Obsolete("Use variant without skipExistCheck argument")]
@@ -647,7 +659,9 @@ namespace Robust.Shared.Containers
             if (!transform.Comp.ParentUid.IsValid()
                 || !TryGetContainingContainer(transform.Comp.ParentUid, out var container)
                 || !TryInsertIntoContainer(transform, container))
-                transform.Comp.AttachToGridOrMap();
+            {
+                _transform.AttachToGridOrMap(transform, transform.Comp);
+            }
         }
 
         private bool TryInsertIntoContainer(Entity<TransformComponent> transform, BaseContainer container)
@@ -688,6 +702,17 @@ namespace Robust.Shared.Containers
             // Eject entities from their parent container if the parent change is done via setting the transform.
             if (TryComp(message.OldParent, out ContainerManagerComponent? containerManager))
                 RemoveEntity(message.OldParent.Value, message.Entity, containerManager, message.Transform, meta,  reparent: false, force: true);
+        }
+
+        [Conditional("DEBUG"), Access(typeof(BaseContainer))]
+        public void AssertInContainer(EntityUid uid, BaseContainer container)
+        {
+            if (_timing.ApplyingState)
+                return; // Entity might not yet have had its state updated.
+
+            var flags = MetaData(uid).Flags;
+            DebugTools.Assert((flags & MetaDataFlags.InContainer) != 0,
+                $"Entity has bad container flags. Ent: {ToPrettyString(uid)}. Container: {container.ID}, Owner: {ToPrettyString(container.Owner)}");
         }
     }
 }

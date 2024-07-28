@@ -23,7 +23,7 @@ namespace Robust.Shared.GameObjects
     [Reflect(false), PublicAPI]
     public abstract partial class EntitySystem : IEntitySystem, IPostInjectInit
     {
-        [Dependency] protected readonly EntityManager EntityManager;
+        [Dependency] protected readonly EntityManager EntityManager = default!;
         [Dependency] protected readonly ILogManager LogManager = default!;
         [Dependency] private readonly ISharedPlayerManager _playerMan = default!;
         [Dependency] private readonly IReplayRecordingManager _replayMan = default!;
@@ -65,15 +65,13 @@ namespace Robust.Shared.GameObjects
         IEnumerable<Type> IEntitySystem.UpdatesAfter => UpdatesAfter;
         IEnumerable<Type> IEntitySystem.UpdatesBefore => UpdatesBefore;
 
-        protected EntitySystem() : this(default!) { }
-
-        protected EntitySystem(IEntityManager entityManager)
+        protected EntitySystem()
         {
-            EntityManager = (EntityManager)entityManager;
             Subs = new Subscriptions(this);
         }
 
         /// <inheritdoc />
+        [MustCallBase(true)]
         public virtual void Initialize() { }
 
         /// <inheritdoc />
@@ -81,12 +79,15 @@ namespace Robust.Shared.GameObjects
         /// Not ran on the client if prediction is disabled and
         /// <see cref="UpdatesOutsidePrediction"/> is false (the default).
         /// </remarks>
+        [MustCallBase(true)]
         public virtual void Update(float frameTime) { }
 
         /// <inheritdoc />
+        [MustCallBase(true)]
         public virtual void FrameUpdate(float frameTime) { }
 
         /// <inheritdoc />
+        [MustCallBase(true)]
         public virtual void Shutdown()
         {
             ShutdownSubscriptions();

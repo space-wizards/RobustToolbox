@@ -8,7 +8,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Player;
 
-internal sealed class CommonSession : ICommonSession
+internal sealed class CommonSession : ICommonSessionInternal
 {
     [ViewVariables]
     public EntityUid? AttachedEntity { get; set; }
@@ -17,10 +17,10 @@ internal sealed class CommonSession : ICommonSession
     public NetUserId UserId { get; }
 
     [ViewVariables]
-    public string Name { get; internal set; } = "<Unknown>";
+    public string Name { get; set; } = "<Unknown>";
 
     [ViewVariables]
-    public short Ping { get; internal set; }
+    public short Ping { get; set; }
 
     [ViewVariables]
     public DateTime ConnectedTime { get; set; }
@@ -43,9 +43,6 @@ internal sealed class CommonSession : ICommonSession
     public HashSet<EntityUid> ViewSubscriptions { get; } = new();
 
     [ViewVariables]
-    public int VisibilityMask { get; set; } = 1;
-
-    [ViewVariables]
     public LoginType AuthType => Channel?.AuthType ?? default;
 
     public override string ToString() => Name;
@@ -55,5 +52,30 @@ internal sealed class CommonSession : ICommonSession
         UserId = user;
         Name = name;
         Data = data;
+    }
+
+    public void SetStatus(SessionStatus status)
+    {
+        Status = status;
+    }
+
+    public void SetAttachedEntity(EntityUid? uid)
+    {
+        AttachedEntity = uid;
+    }
+
+    public void SetPing(short ping)
+    {
+        Ping = ping;
+    }
+
+    public void SetName(string name)
+    {
+        Name = name;
+    }
+
+    public void SetChannel(INetChannel channel)
+    {
+        Channel = channel;
     }
 }

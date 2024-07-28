@@ -47,11 +47,255 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Added obsoletion warning for `Control.Dispose()`. New code should not rely on it.
 
 ### Internal
 
 *None yet*
+
+
+## 229.0.0
+
+### Breaking changes
+
+* Fixes large entities causing entity spawn menu to break.
+* Made PhysicsHull an internal ref struct for some PolygonShape speedup.
+
+### New features
+
+* Audio ticks-per-second is now capped at 30 by default and controlled via `audio.tick_rate` cvar.
+* Add CreateWindow and CreateDisposableControl helpers for BUIs.
+* Add OnProtoReload virtual method to BUIs that gets called on prototype reloads.
+* Add RemoveData to AppearanceSystem data.
+
+
+## 228.0.0
+
+### Breaking changes
+
+* The `Color` struct's equality methods now check for exact equality. Use `MathHelper.CloseToPercent(Color, Color)` for the previous functionality.
+* Added a toolshed.nearby_limit cvar to limit the maximum range of the nearby command. Defaults to 200.
+
+### New features
+
+* Added command usage with types to Toolshed command help.
+* Add Text property to RichTextLabel.
+* Whitelist System.Net.IPEndPoint.
+* Add event for mass & angular inertia changes.
+* Add SpriteSystem.IsVisible for layers.
+* Add TryQueueDeleteEntity that checks if the entity is already deleted / queuedeleted first.
+
+### Bugfixes
+
+* Clients connecting to a server now always load prototype uploads after resource uploads, fixing ordering bugs that could cause various errors.
+
+
+## 227.0.0
+
+### Breaking changes
+
+* Add a `loop` arg to SpriteSystem.GetFrame in case you don't want to get a looping animation.
+* Remove obsolete VisibileSystem methods.
+
+### New features
+
+* Added `LocalizedEntityCommands`, which are console commands that have the ability to take entity system dependencies.
+* Added `BeginRegistrationRegion` to `IConsoleHost` to allow efficient bulk-registration of console commands.
+* Added `IConsoleHost.RegisterCommand` overload that takes an `IConsoleCommand`.
+* Added a `Finished` boolean to `AnimationCompletedEvent` which allows distinguishing if an animation was removed prematurely or completed naturally.
+* Add GetLocalTilesIntersecting for MapSystem.
+* Add an analyzer for methods that should call the base implementation and use it for EntitySystems.
+
+### Bugfixes
+
+* Fix loading replays if string package is compressed inside a zip.
+
+### Other
+
+* Tab completions containing spaces are now properly quoted, so the command will actually work properly once entered.
+* Mark EntityCoordinates.Offset as Pure so it shows as warnings if the variable is unused.
+* Networked events will always be processed in order even if late.
+
+
+## 226.3.0
+
+### New features
+
+* `System.Collections.IList` and `System.Collections.ICollection` are now sandbox safe, this fixes some collection expression cases.
+* The sandboxing system will now report the methods responsible for references to illegal items.
+
+
+## 226.2.0
+
+### New features
+
+* `Control.VisibilityChanged()` virtual function.
+* Add some System.Random methods for NextFloat and NextPolarVector2.
+
+### Bugfixes
+
+* Fixes ContainerSystem failing client-side debug asserts when an entity gets unanchored & inserted into a container on the same tick.
+* Remove potential race condition on server startup from invoking ThreadPool.SetMinThreads.
+
+### Other
+
+* Increase default value of res.rsi_atlas_size.
+* Fix internal networking logic.
+* Updates of `OutputPanel` contents caused by change in UI scale are now deferred until visible. Especially important to avoid updates from debug console.
+* Debug console is now limited to only keep `con.max_entries` entries.
+* Non-existent resources are cached by `IResourceCache.TryGetResource`. This avoids the game constantly trying to re-load non-existent resources in common patterns such as UI theme texture fallbacks.
+* Default IPv4 MTU has been lowered to 700.
+* Update Robust.LoaderApi.
+
+### Internal
+
+* Split out PVS serialization from compression and sending game states.
+* Turn broadphase contacts into an IParallelRobustJob and remove unnecessary GetMapEntityIds for every contact.
+
+
+## 226.1.0
+
+### New features
+
+* Add some GetLocalEntitiesIntersecting methods for `Entity<T>`.
+
+### Other
+
+* Fix internal networking logic
+
+
+## 226.0.0
+
+### Breaking changes
+
+* `IEventBus.RaiseComponentEvent` now requires an EntityUid argument.
+* The `AddedComponentEventArgs` and `RemovedComponentEventArgs` constructors are now internal
+
+### New features
+
+* Allow RequestScreenTexture to be set in overlays.
+
+### Bugfixes
+
+* Fix AnimationCompletedEvent not always going out.
+
+
+## 225.0.0
+
+### Breaking changes
+
+* `NetEntity.Parse` and `TryParse` will now fail to parse empty strings.
+* Try to prevent EventBus looping. This also caps the amount of directed component subscriptions for a particular component to 256.
+
+### New features
+
+* `IPrototypeManager.TryIndex` will now default to logging errors if passed an invalid prototype id struct (i,e., `EntProtoId` or `ProtoId<T>`). There is a new optional bool argument to disable logging errors.
+* `Eye` now allows its `Position` to be set directly. Please only do this with the `FixedEye` child type constructed manually.
+* Engine now respects the hub's `can_skip_build` parameter on info query, fixing an issue where the first hub advertisement fails due to ACZ taking too long.
+* Add GetSession & TryGetSession to ActorSystem.
+* Raise an event when an entity's name is changed.
+
+### Bugfixes
+
+* The `ent` toolshed command now takes `NetEntity` values, fixing parsing in practical uses.
+* Fix ComponentFactory test mocks.
+* Fix LookupFlags missing from a couple of EntityLookupSystem methods.
+
+### Other
+
+* Improved engine's Happy Eyeballs implementation, should result in more usage of IPv6 for HTTP APIs when available.
+* Remove CompIdx locks to improve performance inside Pvs at higher player counts.
+* Avoid a read lock in GetEntityQuery to also improve performance.
+* Mark `EntityManager.System<T>` as Pure.
+
+
+## 224.1.1
+
+### Bugfixes
+
+* Fixed UserInterfaceSystem sometimes throwing a key-not-found exception when trying to close UIs.
+
+
+## 224.1.0
+
+### New features
+
+* `ServerIntegrationInstance` has new methods for adding dummy player sessions for tests that require multiple players.
+* Linguini has been updated to v0.8.1. Errors will now be logged when a duplicate localization key is found.
+* Added `UserInterfaceSystem.SetUi()` for modifying the `InterfaceData` associated with some BUI.
+* Added the `EntityPrototypeView` control for spawning & rendering an entity prototype.
+
+### Bugfixes
+
+* Fix `UserInterfaceSystem` spamming client side errors when entities with UIs open are deleted while outside of PVS range.
+* Fix Toolshed's EnumTypeParse not working enum values with upercase characters.
+* Fixed `incmd` command not working due to an invalid cast.
+
+### Other
+
+* There have been various performance improvements to replay loading & playback.
+
+### Internal
+
+* Added `DummySession` and `DummyChannel` classes for use in integration tests and benchmarks to fool the server into thinking that there are multiple players connected.
+* Added `ICommonSessionInternal` and updated `CommonSession` so that the internal setters now go through that interface.
+
+## 224.0.1
+
+### Bugfixes
+
+* Fixes PVS throwing exceptions when invalid entities are passed to `ExpandPvsEvent`. Now it just logs an error.
+* Fixes BUIs not properly closing, resulting in invalid entities in `UserInterfaceUserComponent.OpenInterfaces`
+* Fixes an unknown/invalid prototype exception sometimes being thrown when running ``IPrototypeManager.ResolveResults()`
+
+
+## 224.0.0
+
+### Breaking changes
+
+* `Matrix3` has been replaced with `System.Numerics.Matrix3x2`. Various Matrix related methods have been turned into extension methods in the `Matrix3Helpers` class.
+* Engine `EntityCategory` prototype IDs have been changed to use CamelCase. I.e., `hideSpawnMenu` -> `HideSpawnMenu`
+* Prototypes can now be implicitly cast `ProtoId<T>` or `EntProtoId` ID structs. The new implicit cast might cause previous function calls to be ambiguous.
+
+### New features
+
+* `Array.Clear(Array)` is now available in the sandbox.
+* BUIs now use `ExpandPvsEvent`. I.e., if a player has a UI open, then the entity associated with that UI will always get sent to the player by the PVS system.
+* Added `cvar_subs` command for listing all subscribers to cvar changes
+* Entity categories have been reworked
+  * Each category now has a `HideSpawnMenu` field. The old `HideSpawnMenu` category is now just a normal category with that field set to true.
+  * Reworked category inheritance. Inheritance can now be disabled per category using a `Inheritable` field.
+  * Entity prototypes can now be automatically added to categories based on the components that they have, either by specifying components when defining the category in yml, or by adding the EntityCategoryAttribute to the component class.
+
+### Bugfixes
+
+* Fixed client-side BUI error log spam if an unknown entity has a UI open.
+* Fixed placement manager spawning entities with incorrect rotations.
+
+### Other
+
+* Added a try-catch block to BUI constructors, to avoid clients getting stuck in error loops while applying states.
+* Attempting to play sounds on terminating entities no longer logs an error.
+
+
+## 223.3.0
+
+### New features
+
+* Better exception logging for IRobustJob.
+* Add SetGridAudio helper for SharedAudioSystem.
+
+### Bugfixes
+
+* Fix placement manager not setting entity rotation correctly.
+* Fix grid-based audio not playing correctly.
+
+
+## 223.2.0
+
+### New features
+
+* Added several new `FormattedMessage` methods for better exception tolerance when parsing markup. Several existing methods have been marked as obsolete, with new renamed methods taking their place.
 
 
 ## 223.1.2

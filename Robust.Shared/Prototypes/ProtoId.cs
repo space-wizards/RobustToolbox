@@ -13,11 +13,17 @@ namespace Robust.Shared.Prototypes;
 /// </remarks>
 /// <remarks><seealso cref="EntProtoId"/> for an <see cref="EntityPrototype"/> alias.</remarks>
 [Serializable]
+[PreferOtherType(typeof(EntityPrototype), typeof(EntProtoId))]
 public readonly record struct ProtoId<T>(string Id) : IEquatable<string>, IComparable<ProtoId<T>> where T : class, IPrototype
 {
     public static implicit operator string(ProtoId<T> protoId)
     {
         return protoId.Id;
+    }
+
+    public static implicit operator ProtoId<T>(T proto)
+    {
+        return new ProtoId<T>(proto.ID);
     }
 
     public static implicit operator ProtoId<T>(string id)

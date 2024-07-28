@@ -5,7 +5,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects;
 
-[RegisterComponent, NetworkedComponent]
+[RegisterComponent]
 public sealed partial class ActiveUserInterfaceComponent : Component
 {
 }

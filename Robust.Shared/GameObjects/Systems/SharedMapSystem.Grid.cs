@@ -222,8 +222,8 @@ public abstract partial class SharedMapSystem
         }
 
         // Make sure we cleanup old map for moved grid stuff.
-        var oldMap = args.OldPosition.ToMap(EntityManager, _transform);
-        var oldMapUid = MapManager.GetMapEntityId(oldMap.MapId);
+        var oldMap = _transform.ToMapCoordinates(args.OldPosition);
+        var oldMapUid = GetMapOrInvalid(oldMap.MapId);
         if (component.MapProxy != DynamicTree.Proxy.Free && TryComp<MovedGridsComponent>(oldMapUid, out var oldMovedGrids))
         {
             oldMovedGrids.MovedGrids.Remove(uid);
@@ -909,6 +909,26 @@ public abstract partial class SharedMapSystem
         }
     }
 
+    public IEnumerable<TileRef> GetLocalTilesIntersecting(EntityUid uid, MapGridComponent grid, Circle localCircle, bool ignoreEmpty = true,
+        Predicate<TileRef>? predicate = null)
+    {
+        var aabb = new Box2(localCircle.Position.X - localCircle.Radius, localCircle.Position.Y - localCircle.Radius,
+            localCircle.Position.X + localCircle.Radius, localCircle.Position.Y + localCircle.Radius);
+
+        var tileEnumerator = GetLocalTilesEnumerator(uid, grid, aabb, ignoreEmpty, predicate);
+
+        while (tileEnumerator.MoveNext(out var tile))
+        {
+            var tileCenter = tile.GridIndices + grid.TileSizeHalfVector;
+            var direction = tileCenter - localCircle.Position;
+
+            if (direction.IsShorterThanOrEqualTo(localCircle.Radius))
+            {
+                yield return tile;
+            }
+        }
+    }
+
     public IEnumerable<TileRef> GetTilesIntersecting(EntityUid uid, MapGridComponent grid, Circle worldArea, bool ignoreEmpty = true,
         Predicate<TileRef>? predicate = null)
     {
@@ -1292,7 +1312,7 @@ public abstract partial class SharedMapSystem
     public Vector2 WorldToLocal(EntityUid uid, MapGridComponent grid, Vector2 posWorld)
     {
         var matrix = _transform.GetInvWorldMatrix(uid);
-        return matrix.Transform(posWorld);
+        return Vector2.Transform(posWorld, matrix);
     }
 
     public EntityCoordinates MapToGrid(EntityUid uid, MapCoordinates posWorld)
@@ -1306,7 +1326,7 @@ public abstract partial class SharedMapSystem
 
         if (!_gridQuery.TryGetComponent(uid, out var grid))
         {
-            return new EntityCoordinates(MapManager.GetMapEntityId(posWorld.MapId), new Vector2(posWorld.X, posWorld.Y));
+            return new EntityCoordinates(GetMapOrInvalid(posWorld.MapId), new Vector2(posWorld.X, posWorld.Y));
         }
 
         return new EntityCoordinates(uid, WorldToLocal(uid, grid, posWorld.Position));
@@ -1315,7 +1335,7 @@ public abstract partial class SharedMapSystem
     public Vector2 LocalToWorld(EntityUid uid, MapGridComponent grid, Vector2 posLocal)
     {
         var matrix = _transform.GetWorldMatrix(uid);
-        return matrix.Transform(posLocal);
+        return Vector2.Transform(posLocal, matrix);
     }
 
     public Vector2i WorldToTile(EntityUid uid, MapGridComponent grid, Vector2 posWorld)
@@ -1435,7 +1455,7 @@ public abstract partial class SharedMapSystem
         var locX = gridTile.X * grid.TileSize + (grid.TileSize / 2f);
         var locY = gridTile.Y * grid.TileSize + (grid.TileSize / 2f);
 
-        return _transform.GetWorldMatrix(uid).Transform(new Vector2(locX, locY));
+        return Vector2.Transform(new Vector2(locX, locY), _transform.GetWorldMatrix(uid));
     }
 
     public MapCoordinates GridTileToWorld(EntityUid uid, MapGridComponent grid, Vector2i gridTile)

@@ -22,6 +22,7 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
         [Dependency] private readonly SharedMapSystem _map = default!;
+        [Dependency] private readonly MetaDataSystem _metaData = default!;
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
         [Dependency] private readonly INetManager _netMan = default!;
         [Dependency] private readonly SharedContainerSystem _container = default!;
@@ -139,7 +140,7 @@ namespace Robust.Shared.GameObjects
 
             return xform.GridUid == null
                 ? new EntityCoordinates(xform.MapUid ?? xform.ParentUid, worldPos)
-                : new EntityCoordinates(xform.GridUid.Value, XformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix.Transform(worldPos));
+                : new EntityCoordinates(xform.GridUid.Value, Vector2.Transform(worldPos, XformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix));
         }
 
         public EntityCoordinates GetMoverCoordinates(EntityCoordinates coordinates, EntityQuery<TransformComponent> xformQuery)
@@ -176,11 +177,11 @@ namespace Robust.Shared.GameObjects
             DebugTools.Assert(!_mapManager.IsGrid(parentUid) && !_mapManager.IsMap(parentUid));
 
             // Not parented to grid so convert their pos back to the grid.
-            var worldPos = GetWorldMatrix(parentXform, XformQuery).Transform(coordinates.Position);
+            var worldPos = Vector2.Transform(coordinates.Position, GetWorldMatrix(parentXform, XformQuery));
 
             return parentXform.GridUid == null
                 ? new EntityCoordinates(mapId ?? parentUid, worldPos)
-                : new EntityCoordinates(parentXform.GridUid.Value, XformQuery.GetComponent(parentXform.GridUid.Value).InvLocalMatrix.Transform(worldPos));
+                : new EntityCoordinates(parentXform.GridUid.Value, Vector2.Transform(worldPos, XformQuery.GetComponent(parentXform.GridUid.Value).InvLocalMatrix));
         }
 
         /// <summary>
@@ -206,7 +207,7 @@ namespace Robust.Shared.GameObjects
 
             var coords = xform.GridUid == null
                 ? new EntityCoordinates(xform.MapUid ?? xform.ParentUid, pos)
-                : new EntityCoordinates(xform.GridUid.Value, XformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix.Transform(pos));
+                : new EntityCoordinates(xform.GridUid.Value, Vector2.Transform(pos, XformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix));
 
             return (coords, worldRot);
         }
@@ -294,7 +295,7 @@ namespace Robust.Shared.GameObjects
             // Finally, handle grid traversal. This is handled separately to avoid out-of-order move events.
             // I.e., if the traversal raises its own move event, this ensures that all the old move event handlers
             // have finished running first. Ideally this shouldn't be required, but this is here just in case
-            _traversal.CheckTraverse(ent.Owner, ent.Comp1);
+            _traversal.CheckTraverse(ent);
         }
     }
 
@@ -336,6 +337,8 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public readonly bool Anchored;
 
+        public readonly bool GridTraversal;
+
         /// <summary>
         ///     Constructs a new state snapshot of a TransformComponent.
         /// </summary>
@@ -343,13 +346,14 @@ namespace Robust.Shared.GameObjects
         /// <param name="rotation">Current direction offset of this entity.</param>
         /// <param name="parentId">Current parent transform of this entity.</param>
         /// <param name="noLocalRotation"></param>
-        public TransformComponentState(Vector2 localPosition, Angle rotation, NetEntity parentId, bool noLocalRotation, bool anchored)
+        public TransformComponentState(Vector2 localPosition, Angle rotation, NetEntity parentId, bool noLocalRotation, bool anchored, bool gridTraversal)
         {
             LocalPosition = localPosition;
             Rotation = rotation;
             ParentID = parentId;
             NoLocalRotation = noLocalRotation;
             Anchored = anchored;
+            GridTraversal = gridTraversal;
         }
     }
 }

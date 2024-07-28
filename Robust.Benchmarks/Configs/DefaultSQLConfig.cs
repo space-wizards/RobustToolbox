@@ -26,7 +26,8 @@ public sealed class DefaultSQLConfig : IConfig
 
     public IEnumerable<IExporter> GetExporters()
     {
-        yield return SQLExporter.Default;
+        //yield return SQLExporter.Default;
+        yield break;
     }
 
     public IEnumerable<IColumnProvider> GetColumnProviders() => DefaultConfig.Instance.GetColumnProviders();

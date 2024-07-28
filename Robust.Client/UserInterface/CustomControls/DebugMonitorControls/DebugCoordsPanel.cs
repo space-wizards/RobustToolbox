@@ -83,7 +83,7 @@ namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
                     }
                     else
                     {
-                        mouseGridPos = new EntityCoordinates(_mapManager.GetMapEntityId(mouseWorldMap.MapId),
+                        mouseGridPos = new EntityCoordinates(mapSystem.GetMapOrInvalid(mouseWorldMap.MapId),
                             mouseWorldMap.Position);
                         tile = new TileRef(EntityUid.Invalid,
                             mouseGridPos.ToVector2i(_entityManager, _mapManager, xformSystem), Tile.Empty);

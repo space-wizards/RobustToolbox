@@ -9,6 +9,7 @@ using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared;
 using Robust.Shared.Enums;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -367,7 +368,7 @@ namespace Robust.Client.Graphics.Clyde
                     _renderHandle.UseShader(entry.Sprite.PostShader);
                     CalcScreenMatrices(viewport.Size, out var proj, out var view);
                     _renderHandle.SetProjView(proj, view);
-                    _renderHandle.SetModelTransform(Matrix3.Identity);
+                    _renderHandle.SetModelTransform(Matrix3x2.Identity);
 
                     var rounded = roundedPos - entityPostRenderTarget.Size / 2;
 
@@ -513,7 +514,7 @@ namespace Robust.Client.Graphics.Clyde
 
                     if (_lightManager.Enabled && _lightManager.DrawHardFov && eye.DrawLight && eye.DrawFov)
                     {
-                        var mapUid = _mapManager.GetMapEntityId(eye.Position.MapId);
+                        var mapUid = _mapSystem.GetMap(eye.Position.MapId);
                         if (_entityManager.GetComponent<MapComponent>(mapUid).LightingEnabled)
                             ApplyFovToBuffer(viewport, eye);
                     }
@@ -530,7 +531,7 @@ namespace Robust.Client.Graphics.Clyde
                     // Because the math is wrong.
                     // So there are distortions from incorrect projection.
                     _renderHandle.UseShader(_fovDebugShaderInstance);
-                    _renderHandle.DrawingHandleScreen.SetTransform(Matrix3.Identity);
+                    _renderHandle.DrawingHandleScreen.SetTransform(Matrix3x2.Identity);
                     var pos = UIBox2.FromDimensions(viewport.Size / 2 - new Vector2(200, 200), new Vector2(400, 400));
                     _renderHandle.DrawingHandleScreen.DrawTextureRect(FovTexture, pos);
                 }
@@ -538,7 +539,7 @@ namespace Robust.Client.Graphics.Clyde
                 if (DebugLayers == ClydeDebugLayers.Light)
                 {
                     _renderHandle.UseShader(null);
-                    _renderHandle.DrawingHandleScreen.SetTransform(Matrix3.Identity);
+                    _renderHandle.DrawingHandleScreen.SetTransform(Matrix3x2.Identity);
                     _renderHandle.DrawingHandleScreen.DrawTextureRect(
                         viewport.WallBleedIntermediateRenderTarget2.Texture,
                         UIBox2.FromDimensions(Vector2.Zero, viewport.Size), new Color(1, 1, 1, 0.5f));

@@ -1,7 +1,47 @@
-﻿using Robust.Shared.Localization;
+﻿using Arch.Core;
+using Robust.Shared.Localization;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
+
+public record struct ArchEntity<T> : IFluentEntityUid
+    where T : IComponent?
+{
+    public EntityUid Owner;
+    public T Comp;
+    EntityUid IFluentEntityUid.FluentOwner => Owner;
+
+    internal Chunk Chunk;
+    internal int ChunkIndex;
+
+    public ArchEntity(EntityUid owner, T comp, Chunk chunk, int chunkIndex)
+    {
+        DebugTools.AssertOwner(owner, comp);
+
+        Owner = owner;
+        Comp = comp;
+        Chunk = chunk;
+        ChunkIndex = chunkIndex;
+    }
+
+    public static implicit operator EntityUid(ArchEntity<T> ent)
+    {
+        return ent.Owner;
+    }
+
+    public static implicit operator T(ArchEntity<T> ent)
+    {
+        return ent.Comp;
+    }
+
+    public readonly void Deconstruct(out EntityUid owner, out T comp)
+    {
+        owner = Owner;
+        comp = Comp;
+    }
+
+    public override int GetHashCode() => Owner.GetHashCode();
+}
 
 public record struct Entity<T> : IFluentEntityUid
     where T : IComponent?

@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Arch.Core;
+using Arch.Core.Extensions.Dangerous;
 using Arch.Core.Utils;
 using JetBrains.Annotations;
 using Robust.Shared.GameStates;
@@ -645,6 +646,85 @@ namespace Robust.Shared.GameObjects
             DebugTools.Assert(_netMan.IsClient // Client side prediction can set LastComponentRemoved to some future tick,
                               || metadata.EntityLastModifiedTick >= metadata.LastComponentRemoved);
         }
+
+        #region Entity<T>
+
+        public ArchEntity<T?> GetArchEntity<T>(EntityUid uid) where T : IComponent?
+        {
+            // TODO: Could be faster
+            var archetype = _world.GetArchetype(uid);
+            var slot = _world.GetSlot(uid);
+            var chunk = archetype.GetChunk(slot.Item2);
+            var index = slot.Item1;
+            T? comp = default;
+
+            if (chunk.Has<T>())
+            {
+                comp = chunk.Get<T>(index);
+            }
+
+            return new ArchEntity<T?>(uid, comp, chunk, index);
+        }
+
+        public bool TryComp<TComp, T>(ref ArchEntity<T> entity, [NotNullWhen(true)] out TComp? comp)
+            where T : IComponent?
+            where TComp : IComponent?
+        {
+            ref var chunk = ref entity.Chunk;
+            ref var index = ref entity.ChunkIndex;
+            ref var entRef = ref chunk.EntityReference(index);
+
+            // Check chunk isn't stale.
+            if ((EntityUid) entRef != entity.Owner)
+            {
+                if (!_world.IsAlive(entity.Owner))
+                {
+                    comp = default;
+                    return false;
+                }
+
+                // TODO: Could be faster
+                var archetype = _world.GetArchetype(entity.Owner);
+                var slot = _world.GetSlot(entity.Owner);
+                chunk = archetype.GetChunk(slot.Item2);
+                index = slot.Item1;
+            }
+
+            if (!chunk.Has<TComp>())
+            {
+                comp = default;
+                return false;
+            }
+
+            comp = chunk.Get<TComp>(index)!;
+            return true;
+        }
+
+        public bool HasComp<TComp, T>(ArchEntity<T> entity) where T : IComponent?
+            where TComp : IComponent?
+        {
+            ref var chunk = ref entity.Chunk;
+            ref var index = ref entity.ChunkIndex;
+            ref var entRef = ref chunk.EntityReference(index);
+
+            // Check chunk isn't stale.
+            if ((EntityUid) entRef != entity.Owner)
+            {
+                if (!_world.IsAlive(entity.Owner))
+                {
+                    return false;
+                }
+
+                var archetype = _world.GetArchetype(entity.Owner);
+                var slot = _world.GetSlot(entity.Owner);
+                chunk = archetype.GetChunk(slot.Item2);
+                index = slot.Item1;
+            }
+
+            return chunk.Has<TComp>();
+        }
+
+        #endregion
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

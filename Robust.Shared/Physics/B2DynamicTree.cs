@@ -19,6 +19,7 @@
  */
 
 // #define DEBUG_DYNAMIC_TREE
+#define B2_TREE_HEURISTIC
 
 using System;
 using System.Collections.Generic;
@@ -45,6 +46,9 @@ namespace Robust.Shared.Physics
     /// <typeparam name="T"></typeparam>
     public sealed class B2DynamicTree<T> : DynamicTree
     {
+        // TODO: Check array access are by ref
+        public const int B2_Bin_Count = 8;
+
         public delegate bool RayQueryCallback<TState>(ref TState state, Proxy proxy, in Vector2 hitPos, float distance);
 
         public delegate bool RayQueryCallback(Proxy proxy, in Vector2 hitPos, float distance);
@@ -154,22 +158,22 @@ namespace Robust.Shared.Physics
         /// <summary>
         /// Leaf indices for rebuild.
         /// </summary>
-        public int[] LeafIndices;
+        public Proxy[] LeafIndices = Array.Empty<Proxy>();
 
         /// <summary>
         /// Leaf bounding boxes for rebuild.
         /// </summary>
-        public Box2[] LeafBoxes;
+        public Box2[] LeafBoxes = Array.Empty<Box2>();
 
         /// <summary>
         /// Leaf bounding box centers for rebuild.
         /// </summary>
-        public Vector2[] LeafCenters;
+        public Vector2[] LeafCenters = Array.Empty<Vector2>();
 
         /// <summary>
         /// Bins for sorting during rebuild.
         /// </summary>
-        public int[] BinIndices;
+        public int[] BinIndices = Array.Empty<int>();
 
         /// <summary>
         /// Allocated space for rebuilding.
@@ -382,8 +386,8 @@ namespace Robust.Shared.Physics
             Proxy index = rootIndex;
             while (nodes[index].Height > 0)
             {
-                Proxy child1 = nodes[index].Child1;
-                Proxy child2 = nodes[index].Child2;
+                ref var child1 = ref nodes[index].Child1;
+                ref var child2 = ref nodes[index].Child2;
 
                 // Cost of creating a new parent for this node and the new leaf
                 float cost = directCost + inheritedCost;
@@ -831,7 +835,7 @@ namespace Robust.Shared.Physics
 
         public void MoveProxy(Proxy proxy, in Box2 aabb)
         {
-            Assert(b2AABB_IsValid(aabb));
+            Assert(aabb.IsValid());
             Assert(aabb.Right - aabb.Left < PhysicsConstants.Huge);
             Assert(aabb.Top - aabb.Bottom < PhysicsConstants.Huge);
             Assert(0 <= proxy && proxy < Capacity);
@@ -850,14 +854,14 @@ namespace Robust.Shared.Physics
             var nodes = _nodes;
             ref var node = ref _nodes[proxy];
 
-            Assert(b2AABB_IsValid(aabb));
+            Assert(aabb.IsValid());
             Assert(aabb.Right - aabb.Left < PhysicsConstants.Huge);
             Assert(aabb.Top - aabb.Bottom < PhysicsConstants.Huge);
             Assert(0 <= proxy && proxy < Capacity);
             Assert(node.IsLeaf);
 
             // Caller must ensure this
-            Assert(b2AABB_Contains(nodes[proxy].Aabb, aabb) == false);
+            Assert(!nodes[proxy].Aabb.Contains(aabb));
 
             node.Aabb = aabb;
 
@@ -976,11 +980,11 @@ namespace Robust.Shared.Physics
 	        }
 
 	        // Stage 1: find the best sibling for this node
-	        var leafAABB = _nodes[leaf].Aabb;
+	        ref var leafAABB = ref _nodes[leaf].Aabb;
 	        var sibling = FindBestSibling(leafAABB);
 
 	        // Stage 2: create a new parent for the leaf and sibling
-	        var oldParent = _nodes[sibling].Parent;
+	        ref var oldParent = ref _nodes[sibling].Parent;
 	        ref var node = ref AllocateNode(out var newParent);
 
 	        // warning: node pointer can change after allocation
@@ -1027,8 +1031,8 @@ namespace Robust.Shared.Physics
 		        var child1 = indexNode.Child1;
 		        var child2 = indexNode.Child2;
 
-                var childNode1 = nodes[child1];
-                var childNode2 = nodes[child2];
+                ref var childNode1 = ref nodes[child1];
+                ref var childNode2 = ref nodes[child2];
 
 		        Assert(child1 != Proxy.Free);
 		        Assert(child2 != Proxy.Free);
@@ -1164,8 +1168,8 @@ namespace Robust.Shared.Physics
                     a.Aabb = b.Aabb.Union(g.Aabb);
                     c.Aabb = a.Aabb.Union(f.Aabb);
 
-                    a.Height = Math.Max(b.Height, g.Height) + 1;
-                    c.Height = Math.Max(a.Height, f.Height) + 1;
+                    a.Height = (short) (Math.Max(b.Height, g.Height) + 1);
+                    c.Height = (short) (Math.Max(a.Height, f.Height) + 1);
                 }
                 else
                 {
@@ -1175,8 +1179,8 @@ namespace Robust.Shared.Physics
                     a.Aabb = b.Aabb.Union(f.Aabb);
                     c.Aabb = a.Aabb.Union(g.Aabb);
 
-                    a.Height = Math.Max(b.Height, f.Height) + 1;
-                    c.Height = Math.Max(a.Height, g.Height) + 1;
+                    a.Height = (short)(Math.Max(b.Height, f.Height) + 1);
+                    c.Height = (short)(Math.Max(a.Height, g.Height) + 1);
                 }
 
                 return iC;
@@ -1365,28 +1369,29 @@ namespace Robust.Shared.Physics
 
         #region Queries
 
-        public void Query(Box2 aabb, uint maskBits, b2TreeQueryCallbackFcn* callback, void* context)
-        {
-            var stack = new GrowableStack<Proxy>(stack);
-            int32_t stackCount = 0;
-            stack[stackCount++] = tree->root;
+        public delegate bool TreeQueryCallback(Proxy proxyId, T userData);
 
-            while (stackCount > 0)
+        public void Query(Box2 aabb, uint maskBits, TreeQueryCallback callback)
+        {
+            var stack = new GrowableStack<Proxy>(stackalloc Proxy[TreeStackSize]);
+            stack.Push(_root);
+
+            while (stack.GetCount() > 0)
             {
-                int32_t nodeId = stack[--stackCount];
+                var nodeId = stack.Pop();
                 if (nodeId == Proxy.Free)
                 {
                     continue;
                 }
 
-                const b2TreeNode* node = tree->nodes + nodeId;
+                ref var node = ref _nodes[nodeId];
 
-                if (b2AABB_Overlaps(node->aabb, aabb) && (node->categoryBits & maskBits) != 0)
+                if (node.Aabb.Intersects(aabb) && (node.CategoryBits & maskBits) != 0)
                 {
-                    if (b2IsLeaf(node))
+                    if (node.IsLeaf)
                     {
                         // callback to user code with proxy id
-                        bool proceed = callback(nodeId, node->userData, context);
+                        bool proceed = callback(nodeId, node.UserData);
                         if (proceed == false)
                         {
                             return;
@@ -1394,55 +1399,72 @@ namespace Robust.Shared.Physics
                     }
                     else
                     {
-                        Assert(stackCount < b2_treeStackSize - 1);
-                        if (stackCount < b2_treeStackSize - 1)
+                        Assert(stack.GetCount() < TreeStackSize - 1);
+                        if (stack.GetCount() < TreeStackSize - 1)
                         {
-                            stack[stackCount++] = node->child1;
-                            stack[stackCount++] = node->child2;
+                            stack.Push(node.Child1);
+                            stack.Push(node.Child2);
                         }
                     }
                 }
             }
         }
 
-        public void RayCast(const b2DynamicTree* tree, const b2RayCastInput* input, uint32_t maskBits,
-						   b2TreeRayCastCallbackFcn* callback, void* context)
+        public record struct RayCastInput
         {
-	        b2Vec2 p1 = input->origin;
-	        b2Vec2 d = input->translation;
+            /// Start point of the ray cast
+            public Vector2 Origin;
 
-	        b2Vec2 r = b2Normalize(d);
+            /// Translation of the ray cast
+            public Vector2 Translation;
+
+            /// The maximum fraction of the translation to consider, typically 1
+            public float MaxFraction;
+        }
+
+        /// This function receives clipped raycast input for a proxy. The function
+        /// returns the new ray fraction.
+        /// - return a value of 0 to terminate the ray cast
+        /// - return a value less than input->maxFraction to clip the ray
+        /// - return a value of input->maxFraction to continue the ray cast without clipping
+        public delegate float TreeRayCastCallback(RayCastInput input, Proxy proxy, T userData);
+
+        public void RayCast(RayCastInput input, uint maskBits, TreeRayCastCallback callback)
+        {
+	        var p1 = input.Origin;
+	        var d = input.Translation;
+
+	        var r = d.Normalized();
 
 	        // v is perpendicular to the segment.
-	        b2Vec2 v = b2CrossSV(1.0f, r);
-	        b2Vec2 abs_v = b2Abs(v);
+	        var v = Vector2Helpers.Cross(1.0f, r);
+	        var abs_v = Vector2.Abs(v);
 
 	        // Separating axis for segment (Gino, p80).
 	        // |dot(v, p1 - c)| > dot(|v|, h)
 
-	        float maxFraction = input->maxFraction;
+	        float maxFraction = input.MaxFraction;
 
-	        b2Vec2 p2 = b2MulAdd(p1, maxFraction, d);
+	        var p2 = Vector2Helpers.MulAdd(p1, maxFraction, d);
 
 	        // Build a bounding box for the segment.
-	        b2AABB segmentAABB = {b2Min(p1, p2), b2Max(p1, p2)};
+	        var segmentAABB = new Box2(Vector2.Min(p1, p2), Vector2.Max(p1, p2));
 
-	        int32_t stack[b2_treeStackSize];
-	        int32_t stackCount = 0;
-	        stack[stackCount++] = tree->root;
+            var stack = new GrowableStack<Proxy>(stackalloc Proxy[TreeStackSize]);
+            stack.Push(_root);
 
-	        b2RayCastInput subInput = *input;
+	        RayCastInput subInput = input;
 
-	        while (stackCount > 0)
+	        while (stack.GetCount() > 0)
 	        {
-		        int32_t nodeId = stack[--stackCount];
+		        var nodeId = stack.Pop();
 		        if (nodeId == Proxy.Free)
 		        {
 			        continue;
 		        }
 
-		        const b2TreeNode* node = tree->nodes + nodeId;
-		        if (b2AABB_Overlaps(node->aabb, segmentAABB) == false || (node->categoryBits & maskBits) == 0)
+		        ref var node = ref _nodes[nodeId];
+		        if (!node.Aabb.Intersects(segmentAABB) || (node.CategoryBits & maskBits) == 0)
 		        {
 			        continue;
 		        }
@@ -1450,20 +1472,20 @@ namespace Robust.Shared.Physics
 		        // Separating axis for segment (Gino, p80).
 		        // |dot(v, p1 - c)| > dot(|v|, h)
 		        // radius extension is added to the node in this case
-		        b2Vec2 c = b2AABB_Center(node->aabb);
-		        b2Vec2 h = b2AABB_Extents(node->aabb);
-		        float term1 = b2AbsFloat(b2Dot(v, b2Sub(p1, c)));
-		        float term2 = b2Dot(abs_v, h);
+		        var c = node.Aabb.Center;
+		        var h = node.Aabb.Extents;
+		        float term1 = MathF.Abs(Vector2.Dot(v, Vector2.Subtract(p1, c)));
+		        float term2 = Vector2.Dot(abs_v, h);
 		        if (term2 < term1)
 		        {
 			        continue;
 		        }
 
-		        if (b2IsLeaf(node))
+		        if (node.IsLeaf)
 		        {
-			        subInput.maxFraction = maxFraction;
+			        subInput.MaxFraction = maxFraction;
 
-			        float value = callback(&subInput, nodeId, node->userData, context);
+			        float value = callback(subInput, nodeId, node.UserData);
 
 			        if (value == 0.0f)
 			        {
@@ -1475,81 +1497,105 @@ namespace Robust.Shared.Physics
 			        {
 				        // Update segment bounding box.
 				        maxFraction = value;
-				        p2 = b2MulAdd(p1, maxFraction, d);
-				        segmentAABB.lowerBound = b2Min(p1, p2);
-				        segmentAABB.upperBound = b2Max(p1, p2);
+				        p2 =  Vector2Helpers.MulAdd(p1, maxFraction, d);
+				        segmentAABB.BottomLeft = Vector2.Min(p1, p2);
+				        segmentAABB.TopRight = Vector2.Max(p1, p2);
 			        }
 		        }
 		        else
 		        {
-			        Assert(stackCount < b2_treeStackSize - 1);
-			        if (stackCount < b2_treeStackSize - 1)
+			        Assert(stack.GetCount() < TreeStackSize - 1);
+			        if (stack.GetCount() < TreeStackSize - 1)
 			        {
 				        // TODO_ERIN just put one node on the stack, continue on a child node
 				        // TODO_ERIN test ordering children by nearest to ray origin
-				        stack[stackCount++] = node->child1;
-				        stack[stackCount++] = node->child2;
+                        stack.Push(node.Child1);
+                        stack.Push(node.Child2);
 			        }
 		        }
 	        }
         }
 
-        public void ShapeCast(const b2DynamicTree* tree, const b2ShapeCastInput* input, uint32_t maskBits,
-							         b2TreeShapeCastCallbackFcn* callback, void* context)
+        /// Low level shape cast input in generic form. This allows casting an arbitrary point
+        ///	cloud wrap with a radius. For example, a circle is a single point with a non-zero radius.
+        ///	A capsule is two points with a non-zero radius. A box is four points with a zero radius.
+        public record struct ShapeCastInput()
         {
-	        if (input->count == 0)
+            /// A point cloud to cast
+            public Vector2[] Points = new Vector2[PhysicsConstants.MaxPolygonVertices];
+
+            /// The number of points
+            public int Count;
+
+            /// The radius around the point cloud
+            public float Radius;
+
+            /// The translation of the shape cast
+            public Vector2 Translation;
+
+            /// The maximum fraction of the translation to consider, typically 1
+            public float MaxFraction;
+        }
+
+        /// This function receives clipped ray-cast input for a proxy. The function
+        /// returns the new ray fraction.
+        /// - return a value of 0 to terminate the ray-cast
+        /// - return a value less than input->maxFraction to clip the ray
+        /// - return a value of input->maxFraction to continue the ray cast without clipping
+        public delegate float TreeShapeCastCallback(ShapeCastInput input, Proxy proxy, T userData);
+
+        public void ShapeCast(ShapeCastInput input, uint maskBits, TreeShapeCastCallback callback)
+        {
+	        if (input.Count == 0)
 	        {
 		        return;
 	        }
 
-	        b2AABB originAABB = {input->points[0], input->points[0]};
-	        for (int i = 1; i < input->count; ++i)
+            var originAABB = new Box2(input.Points[0], input.Points[0]);
+	        for (int i = 1; i < input.Count; ++i)
 	        {
-		        originAABB.lowerBound = b2Min(originAABB.lowerBound, input->points[i]);
-		        originAABB.upperBound = b2Max(originAABB.upperBound, input->points[i]);
+		        originAABB.BottomLeft = Vector2.Min(originAABB.BottomLeft, input.Points[i]);
+		        originAABB.TopRight = Vector2.Max(originAABB.TopRight, input.Points[i]);
 	        }
 
-	        b2Vec2 radius = {input->radius, input->radius};
+	        var radius = new Vector2(input.Radius, input.Radius);
 
-	        originAABB.lowerBound = b2Sub(originAABB.lowerBound, radius);
-	        originAABB.upperBound = b2Add(originAABB.upperBound, radius);
+	        originAABB.BottomLeft = Vector2.Subtract(originAABB.BottomLeft, radius);
+	        originAABB.TopRight = Vector2.Add(originAABB.TopRight, radius);
 
-	        b2Vec2 p1 = b2AABB_Center(originAABB);
-	        b2Vec2 extension = b2AABB_Extents(originAABB);
+	        var p1 = originAABB.Center;
+	        var extension = originAABB.Extents;
 
 	        // v is perpendicular to the segment.
-	        b2Vec2 r = input->translation;
-	        b2Vec2 v = b2CrossSV(1.0f, r);
-	        b2Vec2 abs_v = b2Abs(v);
+	        var r = input.Translation;
+	        var v = Vector2Helpers.Cross(1.0f, r);
+	        var abs_v = Vector2.Abs(v);
 
 	        // Separating axis for segment (Gino, p80).
 	        // |dot(v, p1 - c)| > dot(|v|, h)
 
-	        float maxFraction = input->maxFraction;
+	        float maxFraction = input.MaxFraction;
 
 	        // Build total box for the shape cast
-	        b2Vec2 t = b2MulSV(maxFraction, input->translation);
-	        b2AABB totalAABB = {
-		        b2Min(originAABB.lowerBound, b2Add(originAABB.lowerBound, t)),
-		        b2Max(originAABB.upperBound, b2Add(originAABB.upperBound, t)),
-	        };
+	        var t = Vector2.Multiply(maxFraction, input.Translation);
+	        var totalAABB = new Box2(Vector2.Min(originAABB.BottomLeft, Vector2.Add(originAABB.BottomLeft, t)),
+		        Vector2.Max(originAABB.TopRight, Vector2.Add(originAABB.TopRight, t)));
 
-	        b2ShapeCastInput subInput = *input;
+	        ShapeCastInput subInput = input;
 
-	        int32_t stack[b2_treeStackSize];
-	        int32_t stackCount = 0;
-	        stack[stackCount++] = tree->root;
+            var stack = new GrowableStack<Proxy>(stackalloc Proxy[TreeStackSize]);
+            stack.Push(_root);
 
-	        while (stackCount > 0)
+	        while (stack.GetCount() > 0)
 	        {
-		        int32_t nodeId = stack[--stackCount];
+		        var nodeId = stack.Pop();
 		        if (nodeId == Proxy.Free)
 		        {
 			        continue;
 		        }
 
-		        const b2TreeNode* node = tree->nodes + nodeId;
-		        if (b2AABB_Overlaps(node->aabb, totalAABB) == false || (node->categoryBits & maskBits) == 0)
+                ref var node = ref _nodes[nodeId];
+		        if (!node.Aabb.Intersects(totalAABB) || (node.CategoryBits & maskBits) == 0)
 		        {
 			        continue;
 		        }
@@ -1557,20 +1603,20 @@ namespace Robust.Shared.Physics
 		        // Separating axis for segment (Gino, p80).
 		        // |dot(v, p1 - c)| > dot(|v|, h)
 		        // radius extension is added to the node in this case
-		        b2Vec2 c = b2AABB_Center(node->aabb);
-		        b2Vec2 h = b2Add(b2AABB_Extents(node->aabb), extension);
-		        float term1 = b2AbsFloat(b2Dot(v, b2Sub(p1, c)));
-		        float term2 = b2Dot(abs_v, h);
+		        var c = node.Aabb.Center;
+		        var h = Vector2.Add(node.Aabb.Extents, extension);
+		        float term1 = MathF.Abs(Vector2.Dot(v, Vector2.Subtract(p1, c)));
+		        float term2 = Vector2.Dot(abs_v, h);
 		        if (term2 < term1)
 		        {
 			        continue;
 		        }
 
-		        if (b2IsLeaf(node))
+		        if (node.IsLeaf)
 		        {
-			        subInput.maxFraction = maxFraction;
+			        subInput.MaxFraction = maxFraction;
 
-			        float value = callback(&subInput, nodeId, node->userData, context);
+			        float value = callback(subInput, nodeId, node.UserData);
 
 			        if (value == 0.0f)
 			        {
@@ -1582,38 +1628,27 @@ namespace Robust.Shared.Physics
 			        {
 				        // Update segment bounding box.
 				        maxFraction = value;
-				        t = b2MulSV(maxFraction, input->translation);
-				        totalAABB.lowerBound = b2Min(originAABB.lowerBound, b2Add(originAABB.lowerBound, t));
-				        totalAABB.upperBound = b2Max(originAABB.upperBound, b2Add(originAABB.upperBound, t));
+				        t = Vector2.Multiply(maxFraction, input.Translation);
+				        totalAABB.BottomLeft = Vector2.Min(originAABB.BottomLeft, Vector2.Add(originAABB.BottomLeft, t));
+				        totalAABB.TopRight = Vector2.Max(originAABB.TopRight, Vector2.Add(originAABB.TopRight, t));
 			        }
 		        }
 		        else
 		        {
-			        Assert(stackCount < b2_treeStackSize - 1);
-			        if (stackCount < b2_treeStackSize - 1)
+			        Assert(stack.GetCount() < TreeStackSize - 1);
+			        if (stack.GetCount() < TreeStackSize - 1)
 			        {
 				        // TODO_ERIN just put one node on the stack, continue on a child node
 				        // TODO_ERIN test ordering children by nearest to ray origin
-				        stack[stackCount++] = node->child1;
-				        stack[stackCount++] = node->child2;
+                        stack.Push(node.Child1);
+                        stack.Push(node.Child2);
 			        }
 		        }
 	        }
         }
 
-        private struct TreeBin
-        {
-            public Box2 aabb;
-            public int count;
-        }
 
-        private struct TreePlane
-        {
-            public Box2 leftAABB;
-            public Box2 rightAABB;
-            public int leftCount;
-            public int rightCount;
-        }
+#if !B2_TREE_HEURISTIC
 
         // Median split heuristic
         public int PartitionMid(int[] indices, Vector2[] centers, int count)
@@ -1729,99 +1764,112 @@ namespace Robust.Shared.Physics
             }
         }
 
+#else
+
+        private struct TreeBin
+        {
+            public Box2 aabb;
+            public int count;
+        }
+
+        private struct TreePlane
+        {
+            public Box2 leftAABB;
+            public Box2 rightAABB;
+            public int leftCount;
+            public int rightCount;
+        }
 
         // "On Fast Construction of SAH-based Bounding Volume Hierarchies" by Ingo Wald
         // Returns the left child count
-        public int PartitionSAH(int[] indices, int[] binIndices, Box2[] boxes, int count)
+        public int PartitionSAH(Proxy[] indices, int[] binIndices, Box2[] boxes, int count)
         {
 	        Assert(count > 0);
 
-	        b2TreeBin bins[B2_BIN_COUNT];
-	        b2TreePlane planes[B2_BIN_COUNT - 1];
+	        var bins = new TreeBin[B2_Bin_Count];
+	        var planes = new TreePlane[B2_Bin_Count - 1];
 
-	        b2Vec2 center = b2AABB_Center(boxes[0]);
-	        b2AABB centroidAABB;
-	        centroidAABB.lowerBound = center;
-	        centroidAABB.upperBound = center;
+	        var center = boxes[0].Center;
+            var centroidAABB = new Box2(center, center);
 
-	        for (int32_t i = 1; i < count; ++i)
+	        for (var i = 1; i < count; ++i)
 	        {
-		        center = b2AABB_Center(boxes[i]);
-		        centroidAABB.lowerBound = b2Min(centroidAABB.lowerBound, center);
-		        centroidAABB.upperBound = b2Max(centroidAABB.upperBound, center);
+		        center = boxes[i].Center;
+		        centroidAABB.BottomLeft = Vector2.Min(centroidAABB.BottomLeft, center);
+		        centroidAABB.TopRight = Vector2.Max(centroidAABB.TopRight, center);
 	        }
 
-	        b2Vec2 d = b2Sub(centroidAABB.upperBound, centroidAABB.lowerBound);
+	        var d = Vector2.Subtract(centroidAABB.TopRight, centroidAABB.BottomLeft);
 
 	        // Find longest axis
-	        int32_t axisIndex;
+	        int axisIndex;
 	        float invD;
-	        if (d.x > d.y)
+	        if (d.X > d.Y)
 	        {
 		        axisIndex = 0;
-		        invD = d.x;
+		        invD = d.X;
 	        }
 	        else
 	        {
 		        axisIndex = 1;
-		        invD = d.y;
+		        invD = d.Y;
 	        }
 
 	        invD = invD > 0.0f ? 1.0f / invD : 0.0f;
 
 	        // Initialize bin bounds and count
-	        for (int32_t i = 0; i < B2_BIN_COUNT; ++i)
+	        for (int i = 0; i < B2_Bin_Count; ++i)
 	        {
-		        bins[i].aabb.lowerBound = (b2Vec2){FLT_MAX, FLT_MAX};
-		        bins[i].aabb.upperBound = (b2Vec2){-FLT_MAX, -FLT_MAX};
+		        bins[i].aabb.BottomLeft = new Vector2(float.MaxValue, float.MaxValue);
+		        bins[i].aabb.TopRight = new Vector2(float.MinValue, float.MinValue);
 		        bins[i].count = 0;
 	        }
 
 	        // Assign boxes to bins and compute bin boxes
 	        // TODO_ERIN optimize
-	        float binCount = B2_BIN_COUNT;
-	        float lowerBoundArray[2] = {centroidAABB.lowerBound.x, centroidAABB.lowerBound.y};
+	        float binCount = B2_Bin_Count;
+	        var lowerBoundArray = new float[2] {centroidAABB.Left, centroidAABB.Bottom};
 	        float minC = lowerBoundArray[axisIndex];
-	        for (int32_t i = 0; i < count; ++i)
+	        for (var i = 0; i < count; ++i)
 	        {
-		        b2Vec2 c = b2AABB_Center(boxes[i]);
-		        float cArray[2] = {c.x, c.y};
-		        int32_t binIndex = (int32_t)(binCount * (cArray[axisIndex] - minC) * invD);
-		        binIndex = b2ClampInt(binIndex, 0, B2_BIN_COUNT - 1);
+		        var c = boxes[i].Center;
+		        var cArray = new float[2]{c.X, c.Y};
+		        var binIndex = (int)(binCount * (cArray[axisIndex] - minC) * invD);
+		        binIndex = Math.Clamp(binIndex, 0, B2_Bin_Count - 1);
 		        binIndices[i] = binIndex;
 		        bins[binIndex].count += 1;
-		        bins[binIndex].aabb = b2AABB_Union(bins[binIndex].aabb, boxes[i]);
+		        bins[binIndex].aabb = Box2.Union(bins[binIndex].aabb, boxes[i]);
 	        }
 
-	        int32_t planeCount = B2_BIN_COUNT - 1;
+	        var planeCount = B2_Bin_Count - 1;
 
 	        // Prepare all the left planes, candidates for left child
 	        planes[0].leftCount = bins[0].count;
 	        planes[0].leftAABB = bins[0].aabb;
-	        for (int32_t i = 1; i < planeCount; ++i)
+	        for (var i = 1; i < planeCount; ++i)
 	        {
 		        planes[i].leftCount = planes[i - 1].leftCount + bins[i].count;
-		        planes[i].leftAABB = b2AABB_Union(planes[i - 1].leftAABB, bins[i].aabb);
+		        planes[i].leftAABB = Box2.Union(planes[i - 1].leftAABB, bins[i].aabb);
 	        }
 
 	        // Prepare all the right planes, candidates for right child
 	        planes[planeCount - 1].rightCount = bins[planeCount].count;
 	        planes[planeCount - 1].rightAABB = bins[planeCount].aabb;
-	        for (int32_t i = planeCount - 2; i >= 0; --i)
+	        for (var i = planeCount - 2; i >= 0; --i)
 	        {
 		        planes[i].rightCount = planes[i + 1].rightCount + bins[i + 1].count;
-		        planes[i].rightAABB = b2AABB_Union(planes[i + 1].rightAABB, bins[i + 1].aabb);
+		        planes[i].rightAABB = Box2.Union(planes[i + 1].rightAABB, bins[i + 1].aabb);
 	        }
 
 	        // Find best split to minimize SAH
-	        float minCost = FLT_MAX;
-	        int32_t bestPlane = 0;
-	        for (int32_t i = 0; i < planeCount; ++i)
+	        float minCost = float.MaxValue;
+	        var bestPlane = 0;
+	        for (var i = 0; i < planeCount; ++i)
 	        {
-		        float leftArea = b2Perimeter(planes[i].leftAABB);
-		        float rightArea = b2Perimeter(planes[i].rightAABB);
-		        int32_t leftCount = planes[i].leftCount;
-		        int32_t rightCount = planes[i].rightCount;
+		        float leftArea = Box2.Perimeter(planes[i].leftAABB);
+		        float rightArea = Box2.Perimeter(planes[i].rightAABB);
+		        int leftCount = planes[i].leftCount;
+		        int rightCount = planes[i].rightCount;
 
 		        float cost = leftCount * leftArea + rightCount * rightArea;
 		        if (cost < minCost)
@@ -1834,7 +1882,7 @@ namespace Robust.Shared.Physics
 	        // Partition node indices and boxes using the Hoare partition scheme
 	        // https://en.wikipedia.org/wiki/Quicksort
 	        // https://nicholasvadivelu.com/2021/01/11/array-partition/
-	        int32_t i1 = 0, i2 = count;
+	        int i1 = 0, i2 = count;
 	        while (i1 < i2)
 	        {
 		        while (i1 < i2 && binIndices[i1] < bestPlane)
@@ -1851,14 +1899,14 @@ namespace Robust.Shared.Physics
 		        {
 			        // Swap indices
 			        {
-				        int32_t temp = indices[i1];
+				        var temp = indices[i1];
 				        indices[i1] = indices[i2 - 1];
 				        indices[i2 - 1] = temp;
 			        }
 
 			        // Swap boxes
 			        {
-				        b2AABB temp = boxes[i1];
+				        Box2 temp = boxes[i1];
 				        boxes[i1] = boxes[i2 - 1];
 				        boxes[i2 - 1] = temp;
 			        }
@@ -1879,15 +1927,17 @@ namespace Robust.Shared.Physics
 	        }
         }
 
+#endif
+
         private struct RebuildItem
         {
-            public int nodeIndex;
-            public int childCount;
+            public Proxy NodeIndex;
+            public int ChildCount;
 
             // Leaf indices
-            public int startIndex;
-            public int splitIndex;
-            public int endIndex;
+            public int StartIndex;
+            public int SplitIndex;
+            public int EndIndex;
         }
 
         // Returns root node index
@@ -1902,28 +1952,37 @@ namespace Robust.Shared.Physics
 		        return leafIndices[0];
 	        }
 
+#if !B2_TREE_HEURISTIC
             var leafCenters = LeafCenters;
+#else
+            var leafBoxes = LeafBoxes;
+            var binIndices = BinIndices;
+#endif
 
 	        var stack = new GrowableStack<RebuildItem>(stackalloc RebuildItem[TreeStackSize]);
 	        var top = 0;
-            var topNode = AllocateNode(out var topProxy);
+            AllocateNode(out var topProxy);
 
             stack.Push(new RebuildItem()
             {
-                nodeIndex = topProxy,
-                childCount = -1,
-                startIndex = 0,
-                endIndex = leafCount,
+                NodeIndex = topProxy,
+                ChildCount = -1,
+                StartIndex = 0,
+                EndIndex = leafCount,
+#if !B2_TREE_HEURISTIC
                 splitIndex = PartitionMid(leafIndices, leafCenters, leafCount),
+#else
+                SplitIndex = PartitionSAH(leafIndices, binIndices, leafBoxes, leafCount),
+#endif
             });
 
 	        while (true)
 	        {
-		        struct b2RebuildItem* item = stack + top;
+		        ref var item = ref stack[top];
 
-		        item->childCount += 1;
+		        item.ChildCount += 1;
 
-		        if (item->childCount == 2)
+		        if (item.ChildCount == 2)
 		        {
 			        // This internal node has both children established
 
@@ -1933,115 +1992,120 @@ namespace Robust.Shared.Physics
 				        break;
 			        }
 
-			        struct b2RebuildItem* parentItem = stack + (top - 1);
-			        b2TreeNode* parentNode = nodes + parentItem->nodeIndex;
+			        ref var parentItem = ref stack[top - 1];
+			        ref var parentNode = ref nodes[parentItem.NodeIndex];
 
-			        if (parentItem->childCount == 0)
+			        if (parentItem.ChildCount == 0)
 			        {
-				        Assert(parentNode->child1 == Proxy.Free);
-				        parentNode->child1 = item->nodeIndex;
+				        Assert(parentNode.Child1 == Proxy.Free);
+				        parentNode.Child1 = item.NodeIndex;
 			        }
 			        else
 			        {
-				        Assert(parentItem->childCount == 1);
-				        Assert(parentNode->child2 == Proxy.Free);
-				        parentNode->child2 = item->nodeIndex;
+				        Assert(parentItem.ChildCount == 1);
+				        Assert(parentNode.Child2 == Proxy.Free);
+				        parentNode.Child2 = item.NodeIndex;
 			        }
 
-			        b2TreeNode* node = nodes + item->nodeIndex;
+			        ref var node = ref nodes[item.NodeIndex];
 
-			        Assert(node->parent == Proxy.Free);
-			        node->parent = parentItem->nodeIndex;
+			        Assert(node.Parent == Proxy.Free);
+			        node.Parent = parentItem.NodeIndex;
 
-			        Assert(node->child1 != Proxy.Free);
-			        Assert(node->child2 != Proxy.Free);
-			        b2TreeNode* child1 = nodes + node->child1;
-			        b2TreeNode* child2 = nodes + node->child2;
+			        Assert(node.Child1 != Proxy.Free);
+			        Assert(node.Child2 != Proxy.Free);
+                    {
+                        ref var child1 = ref nodes[node.Child1];
+                        ref var child2 = ref nodes[node.Child2];
 
-			        node->aabb = b2AABB_Union(child1->aabb, child2->aabb);
-			        node.Height = 1 + b2MaxInt16(child1.Height, child2.Height);
-			        node->categoryBits = child1->categoryBits | child2->categoryBits;
+                        node.Aabb = Box2.Union(child1.Aabb, child2.Aabb);
+                        node.Height = (short) (1 + Math.Max(child1.Height, child2.Height));
+                        node.CategoryBits = child1.CategoryBits | child2.CategoryBits;
+                    }
 
 			        // Pop stack
 			        top -= 1;
 		        }
 		        else
 		        {
-			        int32_t startIndex, endIndex;
-			        if (item->childCount == 0)
+			        int startIndex, endIndex;
+			        if (item.ChildCount == 0)
 			        {
-				        startIndex = item->startIndex;
-				        endIndex = item->splitIndex;
+				        startIndex = item.StartIndex;
+				        endIndex = item.SplitIndex;
 			        }
 			        else
 			        {
-				        Assert(item->childCount == 1);
-				        startIndex = item->splitIndex;
-				        endIndex = item->endIndex;
+				        Assert(item.ChildCount == 1);
+				        startIndex = item.SplitIndex;
+				        endIndex = item.EndIndex;
 			        }
 
-			        int32_t count = endIndex - startIndex;
+			        int count = endIndex - startIndex;
 
 			        if (count == 1)
 			        {
-				        int32_t childIndex = leafIndices[startIndex];
-				        b2TreeNode* node = nodes + item->nodeIndex;
+				        var childIndex = leafIndices[startIndex];
+				        ref var node = ref nodes[item.NodeIndex];
 
-				        if (item->childCount == 0)
+				        if (item.ChildCount == 0)
 				        {
-					        Assert(node->child1 == Proxy.Free);
-					        node->child1 = childIndex;
+					        Assert(node.Child1 == Proxy.Free);
+					        node.Child1 = childIndex;
 				        }
 				        else
 				        {
-					        Assert(item->childCount == 1);
-					        Assert(node->child2 == Proxy.Free);
-					        node->child2 = childIndex;
+					        Assert(item.ChildCount == 1);
+					        Assert(node.Child2 == Proxy.Free);
+					        node.Child2 = childIndex;
 				        }
 
-				        b2TreeNode* childNode = nodes + childIndex;
-				        Assert(childNode->parent == Proxy.Free);
-				        childNode->parent = item->nodeIndex;
+				        ref var childNode = ref nodes[childIndex];
+				        Assert(childNode.Parent == Proxy.Free);
+				        childNode.Parent = item.NodeIndex;
 			        }
 			        else
 			        {
 				        Assert(count > 0);
-				        Assert(top < b2_treeStackSize);
+				        Assert(top < TreeStackSize);
 
 				        top += 1;
-				        struct b2RebuildItem* newItem = stack + top;
-				        newItem->nodeIndex = b2AllocateNode(tree);
-				        newItem->childCount = -1;
-				        newItem->startIndex = startIndex;
-				        newItem->endIndex = endIndex;
-        #if B2_TREE_HEURISTIC == 0
-				        newItem->splitIndex = b2PartitionMid(leafIndices + startIndex, leafCenters + startIndex, count);
+				        ref var newItem = ref stack[top];
+                        AllocateNode(out var nodeIndex);
+				        newItem.NodeIndex = nodeIndex;
+				        newItem.ChildCount = -1;
+				        newItem.StartIndex = startIndex;
+				        newItem.EndIndex = endIndex;
+        #if !B2_TREE_HEURISTIC
+				        newItem.SplitIndex = PartitionMid(leafIndices + startIndex, leafCenters + startIndex, count);
         #else
-				        newItem->splitIndex =
-					        b2PartitionSAH(leafIndices + startIndex, binIndices + startIndex, leafBoxes + startIndex, count);
+				        newItem.SplitIndex =
+					        PartitionSAH(leafIndices[startIndex..], binIndices[startIndex..], leafBoxes[startIndex..], count);
         #endif
-				        newItem->splitIndex += startIndex;
+				        newItem.SplitIndex += startIndex;
 			        }
 		        }
 	        }
 
-	        b2TreeNode* rootNode = nodes + stack[0].nodeIndex;
-	        Assert(rootNode->parent == Proxy.Free);
-	        Assert(rootNode->child1 != Proxy.Free);
-	        Assert(rootNode->child2 != Proxy.Free);
+	        ref var rootNode = ref nodes[stack[0].NodeIndex];
+	        Assert(rootNode.Parent == Proxy.Free);
+	        Assert(rootNode.Child1 != Proxy.Free);
+	        Assert(rootNode.Child2 != Proxy.Free);
 
-	        b2TreeNode* child1 = nodes + rootNode->child1;
-	        b2TreeNode* child2 = nodes + rootNode->child2;
+            {
+                ref var child1 = ref nodes[rootNode.Child1];
+                ref var child2 = ref nodes[rootNode.Child2];
 
-	        rootNode->aabb = b2AABB_Union(child1->aabb, child2->aabb);
-	        rootNode.Height = 1 + b2MaxInt16(child1.Height, child2.Height);
-	        rootNode->categoryBits = child1->categoryBits | child2->categoryBits;
+                rootNode.Aabb = Box2.Union(child1.Aabb, child2.Aabb);
+                rootNode.Height = (short) (1 + Math.Max(child1.Height, child2.Height));
+                rootNode.CategoryBits = child1.CategoryBits | child2.CategoryBits;
+            }
 
-	        return stack[0].nodeIndex;
+	        return stack[0].NodeIndex;
         }
 
         // Not safe to access tree during this operation because it may grow
-        public int b2DynamicTree_Rebuild(bool fullBuild)
+        public int Rebuild(bool fullBuild)
         {
 	        var proxyCount = ProxyCount;
 	        if (proxyCount == 0)
@@ -2056,24 +2120,32 @@ namespace Robust.Shared.Physics
 
                 Array.Resize(ref LeafIndices, newCapacity);
 
+#if !B2_TREE_HEURISTIC
                 Array.Resize(ref LeafCenters, newCapacity);
+#else
+                Array.Resize(ref LeafBoxes, newCapacity);
+                Array.Resize(ref BinIndices, newCapacity);
+#endif
 
 		        RebuildCapacity = newCapacity;
 	        }
 
 	        var leafCount = 0;
-	        var stack = new GrowableStack<int>(stackalloc int[TreeStackSize]);
-	        var stackCount = 0;
+	        var stack = new GrowableStack<Proxy>(stackalloc Proxy[TreeStackSize]);
 
 	        var nodeIndex = _root;
             var nodes = _nodes;
-	        ref var node = ref _nodes[nodeIndex];
+	        var node = _nodes[nodeIndex];
 
 	        // These are the nodes that get sorted to rebuild the tree.
 	        // I'm using indices because the node pool may grow during the build.
 	        var leafIndices = LeafIndices;
 
+#if !B2_TREE_HEURISTIC
             var leafCenters = LeafCenters;
+#else
+            var leafBoxes = LeafBoxes;
+#endif
 
 	        // Gather all proxy nodes that have grown and all internal nodes that haven't grown. Both are
 	        // considered leaves in the tree rebuild.
@@ -2082,56 +2154,56 @@ namespace Robust.Shared.Physics
 	        // this should be weighed against b2_aabbMargin
 	        while (true)
 	        {
-		        if (node.Height == 0 || (node->enlarged == false && fullBuild == false))
+		        if (node.Height == 0 || (!node.Enlarged && !fullBuild))
 		        {
 			        leafIndices[leafCount] = nodeIndex;
-        #if B2_TREE_HEURISTIC == 0
-			        leafCenters[leafCount] = b2AABB_Center(node->aabb);
+        #if !B2_TREE_HEURISTIC
+			        leafCenters[leafCount] = node.Aabb.Center;
         #else
-			        leafBoxes[leafCount] = node->aabb;
+			        leafBoxes[leafCount] = node.Aabb;
         #endif
 			        leafCount += 1;
 
 			        // Detach
-			        node->parent = Proxy.Free;
+			        node.Parent = Proxy.Free;
 		        }
 		        else
 		        {
-			        int32_t doomedNodeIndex = nodeIndex;
+			        var doomedNodeIndex = nodeIndex;
 
 			        // Handle children
-			        nodeIndex = node->child1;
+			        nodeIndex = node.Child1;
 
-			        Assert(stackCount < b2_treeStackSize);
-			        if (stackCount < b2_treeStackSize)
+			        Assert(stack.GetCount() < TreeStackSize);
+			        if (stack.GetCount() < TreeStackSize)
 			        {
-				        stack[stackCount++] = node->child2;
+                        stack.Push(node.Child2);
 			        }
 
-			        node = nodes + nodeIndex;
+			        node = nodes[nodeIndex];
 
 			        // Remove doomed node
-			        b2FreeNode(tree, doomedNodeIndex);
+			        FreeNode(doomedNodeIndex);
 
 			        continue;
 		        }
 
-		        if (stackCount == 0)
+		        if (stack.GetCount() == 0)
 		        {
 			        break;
 		        }
 
-		        nodeIndex = stack[--stackCount];
-		        node = nodes + nodeIndex;
+                nodeIndex = stack.Pop();
+		        node = nodes[nodeIndex];
 	        }
 
-        #if B2_VALIDATE == 1
-            int32_t capacity = Capacity;
+        #if B2_VALIDATE
+            int capacity = Capacity;
 	        for (int32_t i = 0; i < capacity; ++i)
 	        {
 		        if (nodes[i].Height >= 0)
 		        {
-			        Assert(nodes[i].Enlarged == false);
+			        Assert(!nodes[i].Enlarged);
 		        }
 	        }
         #endif
@@ -2291,15 +2363,15 @@ namespace Robust.Shared.Physics
 
             if (proxy == _root)
             {
-                Assert(tree->nodes[index].parent == Proxy.Free);
+                Assert(_nodes[proxy].Parent == Proxy.Free);
             }
 
-            const b2TreeNode* node = tree->nodes + index;
+            ref var node = ref _nodes[proxy];
 
-            int32_t child1 = node->child1;
-            int32_t child2 = node->child2;
+            var child1 = node.Child1;
+            var child2 = node.Child2;
 
-            if (b2IsLeaf(node))
+            if (node.IsLeaf)
             {
                 Assert(child1 == Proxy.Free);
                 Assert(child2 == Proxy.Free);
@@ -2307,34 +2379,35 @@ namespace Robust.Shared.Physics
                 return;
             }
 
-            Assert(0 <= child1 && child1 < tree->nodeCapacity);
-            Assert(0 <= child2 && child2 < tree->nodeCapacity);
+            Assert(0 <= child1 && child1 < Capacity);
+            Assert(0 <= child2 && child2 < Capacity);
 
-            Assert(tree->nodes[child1].parent == index);
-            Assert(tree->nodes[child2].parent == index);
+            Assert(_nodes[child1].Parent == proxy);
+            Assert(_nodes[child2].Parent == proxy);
 
-            if (tree->nodes[child1].enlarged || tree->nodes[child2].enlarged)
+            if (_nodes[child1].Enlarged || _nodes[child2].Enlarged)
             {
-                Assert(node->enlarged == true);
+                Assert(node.Enlarged);
             }
 
-            b2ValidateStructure(tree, child1);
-            b2ValidateStructure(tree, child2);
+            ValidateStructure(child1);
+            ValidateStructure(child2);
         }
 
+        [Conditional("DEBUG_DYNAMIC_TREE")]
         public void ValidateMetrics(Proxy proxy)
         {
-            if (index == Proxy.Free)
+            if (proxy == Proxy.Free)
             {
                 return;
             }
 
-            const b2TreeNode* node = tree->nodes + index;
+            ref var node = ref _nodes[proxy];
 
-            int32_t child1 = node->child1;
-            int32_t child2 = node->child2;
+            var child1 = node.Child1;
+            var child2 = node.Child2;
 
-            if (b2IsLeaf(node))
+            if (node.IsLeaf)
             {
                 Assert(child1 == Proxy.Free);
                 Assert(child2 == Proxy.Free);
@@ -2342,30 +2415,30 @@ namespace Robust.Shared.Physics
                 return;
             }
 
-            Assert(0 <= child1 && child1 < tree->nodeCapacity);
-            Assert(0 <= child2 && child2 < tree->nodeCapacity);
+            Assert(0 <= child1 && child1 < Capacity);
+            Assert(0 <= child2 && child2 < Capacity);
 
-            int32_t height1 = tree->nodes[child1].height;
-            int32_t height2 = tree->nodes[child2].height;
-            int32_t height;
-            height = 1 + b2MaxInt16(height1, height2);
+            var height1 = _nodes[child1].Height;
+            var height2 = _nodes[child2].Height;
+            int height;
+            height = 1 + Math.Max(height1, height2);
             Assert(node.Height == height);
 
             // b2AABB aabb = b2AABB_Union(tree->nodes[child1].aabb, tree->nodes[child2].aabb);
 
-            Assert(b2AABB_Contains(node->aabb, tree->nodes[child1].aabb));
-            Assert(b2AABB_Contains(node->aabb, tree->nodes[child2].aabb));
+            Assert(node.Aabb.Contains(_nodes[child1].Aabb));
+            Assert(node.Aabb.Contains(_nodes[child2].Aabb));
 
             // Assert(aabb.lowerBound.x == node->aabb.lowerBound.x);
             // Assert(aabb.lowerBound.y == node->aabb.lowerBound.y);
             // Assert(aabb.upperBound.x == node->aabb.upperBound.x);
             // Assert(aabb.upperBound.y == node->aabb.upperBound.y);
 
-            uint32_t categoryBits = tree->nodes[child1].categoryBits | tree->nodes[child2].categoryBits;
-            Assert(node->categoryBits == categoryBits);
+            uint categoryBits = _nodes[child1].CategoryBits | _nodes[child2].CategoryBits;
+            Assert(node.CategoryBits == categoryBits);
 
-            b2ValidateMetrics(tree, child1);
-            b2ValidateMetrics(tree, child2);
+            ValidateMetrics(child1);
+            ValidateMetrics(child2);
         }
 
         [Conditional("DEBUG_DYNAMIC_TREE")]
@@ -2376,23 +2449,23 @@ namespace Robust.Shared.Physics
                 return;
             }
 
-            ValidateStructure(tree, tree->root);
-            ValidateMetrics(tree, tree->root);
+            ValidateStructure(_root);
+            ValidateMetrics(_root);
 
-            int32_t freeCount = 0;
-            int32_t freeIndex = _freeList;
+            var freeCount = 0;
+            var freeIndex = _freeList;
             while (freeIndex != Proxy.Free)
             {
-                Assert(0 <= freeIndex && freeIndex < tree->nodeCapacity);
-                freeIndex = tree->nodes[freeIndex].next;
+                Assert(0 <= freeIndex && freeIndex < Capacity);
+                freeIndex = _nodes[freeIndex].Next;
                 ++freeCount;
             }
 
-            int32_t height = b2DynamicTree_GetHeight(tree);
-            int32_t computedHeight = b2DynamicTree_ComputeHeight(tree);
+            var height = Height;
+            var computedHeight = ComputeHeight();
             Assert(height == computedHeight);
 
-            Assert(tree->nodeCount + freeCount == tree->nodeCapacity);
+            Assert(NodeCount + freeCount == Capacity);
         }
 
         [Conditional("DEBUG_DYNAMIC_TREE")]

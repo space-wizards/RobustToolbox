@@ -26,6 +26,8 @@ namespace Robust.Shared.Utility
             _count = 0;
         }
 
+        internal ref T this[int index] => ref _stack[index];
+
         public void Push(in T element)
         {
             if (_count == _capacity)

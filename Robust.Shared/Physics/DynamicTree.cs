@@ -199,11 +199,11 @@ namespace Robust.Shared.Physics
 
             if (proxy == DynamicTree.Proxy.Free)
             {
-                proxy = _b2Tree.CreateProxy(newBox.Value, item);
+                proxy = _b2Tree.CreateProxy(newBox.Value, uint.MaxValue, item);
                 return true;
             }
 
-            return _b2Tree.MoveProxy(proxy, newBox.Value, Vector2.Zero);
+            return _b2Tree.MoveProxy(proxy, newBox.Value);
         }
 
         public void QueryAabb(QueryCallbackDelegate callback, Box2 aabb, bool approx = false)
@@ -349,9 +349,9 @@ namespace Robust.Shared.Physics
             }
 
             if (proxy == DynamicTree.Proxy.Free)
-                proxy = _b2Tree.CreateProxy(aabb.Value, item);
+                proxy = _b2Tree.CreateProxy(aabb.Value, uint.MaxValue, item);
             else
-                _b2Tree.MoveProxy(proxy, aabb.Value, Vector2.Zero);
+                _b2Tree.MoveProxy(proxy, aabb.Value);
         }
 
         [Conditional("DEBUG_DYNAMIC_TREE")]

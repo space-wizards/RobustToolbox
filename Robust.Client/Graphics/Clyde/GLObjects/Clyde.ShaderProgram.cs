@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using OpenToolkit.Graphics.OpenGL4;
@@ -416,6 +417,19 @@ namespace Robust.Client.Graphics.Clyde
                         _clyde.CheckGlError();
                     }
                 }
+            }
+
+            public void SetUniform(string uniformName, bool[] bools)
+            {
+                var uniformId = GetUniform(uniformName);
+                GL.Uniform1(uniformId, bools.Length, bools.Select(b => b ? 1 : 0).ToArray());
+                _clyde.CheckGlError();
+            }
+
+            public void SetUniform(int uniformName, bool[] bools)
+            {
+                var uniformId = GetUniform(uniformName);
+                GL.Uniform1(uniformId, bools.Length, bools.Select(b => b ? 1 : 0).ToArray());
             }
 
             public void SetUniformTexture(string uniformName, TextureUnit textureUnit)

@@ -25,11 +25,6 @@ public sealed class DynamicTreeBroadPhase : IBroadPhase
 
     public int Count => _tree.NodeCount;
 
-    public Box2 GetFatAabb(DynamicTree.Proxy proxy)
-    {
-        return _tree.GetFatAabb(proxy);
-    }
-
     public DynamicTree.Proxy AddProxy(ref FixtureProxy proxy)
     {
         var proxyId = _tree.CreateProxy(proxy.AABB, proxy);

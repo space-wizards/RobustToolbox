@@ -290,9 +290,9 @@ internal sealed class ParallelManager : IParallelManagerInternal
         /// </summary>
         public void Set()
         {
-            Interlocked.Decrement(ref PendingTasks);
-
-            if (PendingTasks <= 0)
+            // We should atomically get new value of PendingTasks
+            // as the result of Decrement call and use it to prevent data race.
+            if (Interlocked.Decrement(ref PendingTasks) <= 0)
                 Event.Set();
         }
     }

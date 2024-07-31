@@ -32,8 +32,12 @@ public sealed partial class AppearanceComponent : Component
     /// </remarks>
     [ViewVariables] internal bool UpdateQueued;
 
-    [DataField]
-    public Dictionary<Enum, object> AppearanceData = new();
+    [ViewVariables] internal Dictionary<Enum, object> AppearanceData = new();
+
+    /// <summary>
+    /// Whether or not the appearance needs to be updated.
+    /// </summary>
+    [DataField(readOnly: true)] public Dictionary<Enum, object> AppearanceDataInit = new();
 
     [Obsolete("Use SharedAppearanceSystem instead")]
     public bool TryGetData<T>(Enum key, [NotNullWhen(true)] out T data)

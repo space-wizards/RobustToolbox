@@ -43,10 +43,11 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix multithreading bug in ParallelTracker that caused the game to crash randomly.
 
 ### Other
 
+* Added obsoletion warning for `Control.Dispose()`. New code should not rely on it.
 * Reduced the default tickrate to 30 ticks.
 
 ### Internal

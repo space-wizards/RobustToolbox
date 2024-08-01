@@ -1053,9 +1053,6 @@ public abstract partial class SharedMapSystem
             compAABB = grid.LocalAABB.Intersect(localAABB);
         }
 
-        if (compAABB.IsEmpty())
-            return ChunkEnumerator.Empty;
-
         return new ChunkEnumerator(grid.Chunks, compAABB, grid.ChunkSize);
     }
 

@@ -34,10 +34,18 @@ public sealed partial class AppearanceComponent : Component
 
     [ViewVariables] internal Dictionary<Enum, object> AppearanceData = new();
 
+    private Dictionary<Enum, object>? _appearanceDataInit;
+
     /// <summary>
-    /// Whether or not the appearance needs to be updated.
+    /// Sets starting values for AppearanceData.
     /// </summary>
-    [DataField(readOnly: true)] public Dictionary<Enum, object> AppearanceDataInit = new();
+    /// <remarks>
+    /// Should only be filled in via prototype .yaml; subsequent data must be set via SharedAppearanceSystem.SetData().
+    /// </remarks>
+    [DataField(readOnly: true)] public Dictionary<Enum, object>? AppearanceDataInit {
+        get { return _appearanceDataInit; }
+        set { AppearanceData = value ?? AppearanceData; _appearanceDataInit = value; }
+    }
 
     [Obsolete("Use SharedAppearanceSystem instead")]
     public bool TryGetData<T>(Enum key, [NotNullWhen(true)] out T data)

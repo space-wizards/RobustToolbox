@@ -17,15 +17,6 @@ public abstract class SharedAppearanceSystem : EntitySystem
     {
         base.Initialize();
         SubscribeLocalEvent<AppearanceComponent, ComponentGetState>(OnAppearanceGetState);
-        SubscribeLocalEvent<AppearanceComponent, ComponentInit>(OnComponentInit);
-    }
-
-    private void OnComponentInit(EntityUid uid, AppearanceComponent component, ref ComponentInit args)
-    {
-        foreach(var (key, value) in component.AppearanceDataInit)
-        {
-            SetData(uid, key, value, component);
-        }
     }
 
     protected abstract void OnAppearanceGetState(EntityUid uid, AppearanceComponent component,

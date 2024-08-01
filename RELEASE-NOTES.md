@@ -42,8 +42,13 @@ END TEMPLATE-->
 * Added `SharedAppearanceSystem.AppendData`, which appends non-existing `AppearanceData` from one `AppearanceComponent` to another.
 * Added `AppearanceComponent.AppearanceDataInit`, which can be used to set initial `AppearanceData` entries in .yaml.
 
+### Bugfixes
+
+* Fix multithreading bug in ParallelTracker that caused the game to crash randomly.
+
 ### Other
 
+* Added obsoletion warning for `Control.Dispose()`. New code should not rely on it.
 * Serialization will now add type tags (`!type:<T>`) for necessary `NodeData` when writing (currently only for `object` nodes).
 
 ### Internal

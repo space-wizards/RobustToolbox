@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Reduced the default tickrate to 30 ticks.
 
 ### Internal
 

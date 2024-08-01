@@ -35,23 +35,20 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Obsolete method `AppearanceComponent.TryGetData` is now access-restricted to `SharedAppearanceSystem`; use `SharedAppearanceSystem.TryGetData` instead.
 
 ### New features
 
-*None yet*
-
-### Bugfixes
-
-*None yet*
+* Added `SharedAppearanceSystem.AppendData`, which appends non-existing `AppearanceData` from one `AppearanceComponent` to another.
+* Added `AppearanceComponent.AppearanceDataInit`, which can be used to set initial `AppearanceData` entries in .yaml.
 
 ### Other
 
-*None yet*
+* Serialization will now add type tags (`!type:<T>`) for necessary `NodeData` when writing (currently only for `object` nodes).
 
 ### Internal
 
-*None yet*
+* Added `ObjectSerializer`, which handles serialization of the generic `object` type.
 
 
 ## 229.0.0

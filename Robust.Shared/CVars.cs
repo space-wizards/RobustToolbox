@@ -289,7 +289,7 @@ namespace Robust.Shared
         /// This influences both how frequently game code processes, and how frequently updates are sent to clients.
         /// </summary>
         public static readonly CVarDef<int> NetTickrate =
-            CVarDef.Create("net.tickrate", 60, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+            CVarDef.Create("net.tickrate", 30, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
         /// Offset CurTime at server start by this amount (in seconds).

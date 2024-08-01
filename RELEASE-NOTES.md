@@ -48,6 +48,7 @@ END TEMPLATE-->
 ### Other
 
 * Added obsoletion warning for `Control.Dispose()`. New code should not rely on it.
+* Reduced the default tickrate to 30 ticks.
 
 ### Internal
 

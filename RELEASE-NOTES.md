@@ -49,6 +49,7 @@ END TEMPLATE-->
 ### Other
 
 * Added obsoletion warning for `Control.Dispose()`. New code should not rely on it.
+* Reduced the default tickrate to 30 ticks.
 * Serialization will now add type tags (`!type:<T>`) for necessary `NodeData` when writing (currently only for `object` nodes).
 
 ### Internal

@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added `BoundUserInterfaceExt.CreateRemovableControl` to replace `CreateDisposableControl`.
 
 ### Bugfixes
 
@@ -48,6 +48,7 @@ END TEMPLATE-->
 ### Other
 
 * Added obsoletion warning for `Control.Dispose()`. New code should not rely on it.
+* `BoundUserInterfaceExt.CreateDisposableControl` has been made obsolete.
 
 ### Internal
 

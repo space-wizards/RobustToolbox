@@ -49,6 +49,7 @@ END TEMPLATE-->
 
 * Added obsoletion warning for `Control.Dispose()`. New code should not rely on it.
 * Reduced the default tickrate to 30 ticks.
+* Encryption of network messages is now done concurrently to avoid spending main thread time. In profiles, this added up to ~8% of main thread time on RMC-14.
 
 ### Internal
 

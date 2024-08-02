@@ -619,7 +619,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// <summary>
     /// Sets a BUI state and networks it to all clients.
     /// </summary>
-    public void SetUiState(Entity<UserInterfaceComponent?> entity, Enum key, BoundUserInterfaceState? state)
+    public void SetUiState(Entity<UserInterfaceComponent?> entity, Enum key, IBoundUserInterfaceState? state)
     {
         if (!UIQuery.Resolve(entity.Owner, ref entity.Comp, false))
             return;

@@ -29,17 +29,17 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Legacy data, new BUIs should be using comp states.
         /// </summary>
-        public Dictionary<Enum, BoundUserInterfaceState> States = new();
+        public Dictionary<Enum, IBoundUserInterfaceState> States = new();
 
         [Serializable, NetSerializable]
         internal sealed class UserInterfaceComponentState(
             Dictionary<Enum, List<NetEntity>> actors,
-            Dictionary<Enum, BoundUserInterfaceState> states)
+            Dictionary<Enum, IBoundUserInterfaceState> states)
             : IComponentState
         {
             public Dictionary<Enum, List<NetEntity>> Actors = actors;
 
-            public Dictionary<Enum, BoundUserInterfaceState> States = states;
+            public Dictionary<Enum, IBoundUserInterfaceState> States = states;
         }
     }
 
@@ -84,8 +84,13 @@ namespace Robust.Shared.GameObjects
         public readonly BoundUserInterfaceMessage Message = message;
     }
 
+    public interface IBoundUserInterfaceState
+    {
+
+    }
+
     [NetSerializable, Serializable]
-    public abstract class BoundUserInterfaceState
+    public abstract class BoundUserInterfaceState : IBoundUserInterfaceState
     {
     }
 

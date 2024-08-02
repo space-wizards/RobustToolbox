@@ -11,6 +11,7 @@ using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Shapes;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
 
@@ -408,8 +409,7 @@ public sealed partial class EntityLookupSystem
         LookupFlags flags,
         EntityUid? ignored = null)
     {
-        var shape = new PolygonShape();
-        shape.Set(worldBounds);
+        var shape = new Polygon(worldBounds);
         var transform = Physics.Transform.Empty;
 
         return AnyEntitiesIntersecting(lookupUid, shape, transform, flags, ignored);
@@ -547,8 +547,7 @@ public sealed partial class EntityLookupSystem
         var mapUid = _map.GetMapOrInvalid(mapId);
 
         // Get grid entities
-        var shape = new PolygonShape();
-        shape.Set(worldBounds);
+        var shape = new Polygon(worldBounds);
 
         var state = (this, intersecting, shape, flags);
 
@@ -556,7 +555,7 @@ public sealed partial class EntityLookupSystem
         (EntityUid uid, MapGridComponent _,
             ref (EntityLookupSystem lookup,
                 HashSet<EntityUid> intersecting,
-                PolygonShape shape,
+                Polygon shape,
                 LookupFlags flags) tuple) =>
         {
             tuple.lookup.AddEntitiesIntersecting(uid, tuple.intersecting, tuple.shape, Physics.Transform.Empty, tuple.flags);
@@ -840,8 +839,7 @@ public sealed partial class EntityLookupSystem
         if (!_broadQuery.TryGetComponent(gridId, out var lookup))
             return;
 
-        var shape = new PolygonShape();
-        shape.SetAsBox(worldAABB);
+        var shape = new Polygon(worldAABB);
 
         AddEntitiesIntersecting(gridId, intersecting, shape, Physics.Transform.Empty, flags, lookup);
         AddContained(intersecting, flags);
@@ -852,8 +850,7 @@ public sealed partial class EntityLookupSystem
         if (!_broadQuery.TryGetComponent(gridId, out var lookup))
             return;
 
-        var shape = new PolygonShape();
-        shape.Set(worldBounds);
+        var shape = new Polygon(worldBounds);
 
         AddEntitiesIntersecting(gridId, intersecting, shape, Physics.Transform.Empty, flags, lookup);
         AddContained(intersecting, flags);

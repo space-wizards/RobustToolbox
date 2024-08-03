@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `ScrollbarContainer` now has new methods for handling the position of the scrollbar thumb. `SetScrollValueToPercentage` , `SetHScrollValueToPercentage` and `SetVScrollValueToPercentage`
 
 ### Bugfixes
 

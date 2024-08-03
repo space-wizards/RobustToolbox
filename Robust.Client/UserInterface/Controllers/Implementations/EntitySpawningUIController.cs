@@ -221,7 +221,7 @@ public sealed class EntitySpawningUIController : UIController
         });
 
         _window.PrototypeList.TotalItemCount = _shownEntities.Count;
-        _window.PrototypeScrollContainer.SetScrollValue(new Vector2(0, 0));
+        _window.PrototypeScrollContainer.SetScrollValue(0, 0);
         UpdateVisiblePrototypes();
     }
 

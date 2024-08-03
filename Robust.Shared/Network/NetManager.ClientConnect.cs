@@ -221,7 +221,8 @@ namespace Robust.Shared.Network
             _channels.Add(connection, channel);
             peer.AddChannel(channel);
 
-            _clientEncryption = encryption;
+            channel.Encryption = encryption;
+            SetupEncryptionChannel(channel);
         }
 
         private byte[] MakeAuthHash(byte[] sharedSecret, byte[] pkBytes)

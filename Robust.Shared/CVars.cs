@@ -382,6 +382,18 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> NetLidgrenLogError =
             CVarDef.Create("net.lidgren_log_error", true);
 
+        /// <summary>
+        /// If true, run network message encryption on another thread.
+        /// </summary>
+        public static readonly CVarDef<bool> NetEncryptionThread =
+            CVarDef.Create("net.encryption_thread", true);
+
+        /// <summary>
+        /// Outstanding buffer size used by <see cref="NetEncryptionThread"/>.
+        /// </summary>
+        public static readonly CVarDef<int> NetEncryptionThreadChannelSize =
+            CVarDef.Create("net.encryption_thread_channel_size", 16);
+
         /**
          * SUS
          */

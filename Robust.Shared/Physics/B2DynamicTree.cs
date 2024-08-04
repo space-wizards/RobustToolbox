@@ -106,7 +106,7 @@ namespace Robust.Shared.Physics
             public bool IsLeaf
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => Child2 == Proxy.Free;
+                get => Height == 0;
             }
 
             public bool IsFree
@@ -257,13 +257,13 @@ namespace Robust.Shared.Physics
             var l = Capacity - 1;
             for (var i = 0; i < l; i++, node = ref Unsafe.Add(ref node, 1))
             {
-                node.Parent = (Proxy) (i + 1);
+                node.Next = (Proxy) (i + 1);
                 node.Height = -1;
             }
 
             ref var lastNode = ref _nodes[^1];
 
-            lastNode.Parent = Proxy.Free;
+            lastNode.Next = Proxy.Free;
             lastNode.Height = -1;
         }
 
@@ -517,8 +517,6 @@ namespace Robust.Shared.Physics
         public void RotateNodes(Proxy iA)
         {
             Assert(iA != Proxy.Free);
-
-            var nodes = _nodes;
 
             ref var A = ref _nodes[iA];
 	        if (A.Height < 2)

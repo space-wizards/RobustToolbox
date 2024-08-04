@@ -14,7 +14,7 @@ public interface IBroadPhase
 
     DynamicTree.Proxy AddProxy(ref FixtureProxy proxy);
 
-    bool MoveProxy(DynamicTree.Proxy proxyId, in Box2 aabb);
+    void MoveProxy(DynamicTree.Proxy proxyId, in Box2 aabb);
 
     FixtureProxy? GetProxy(DynamicTree.Proxy proxy);
 

@@ -25,15 +25,20 @@ public sealed class DynamicTreeBroadPhase : IBroadPhase
 
     public int Count => _tree.NodeCount;
 
+    public Box2 GetFatAabb(DynamicTree.Proxy proxy)
+    {
+        return _tree.GetUserData(proxy)!.AABB;
+    }
+
     public DynamicTree.Proxy AddProxy(ref FixtureProxy proxy)
     {
-        var proxyId = _tree.CreateProxy(proxy.AABB, proxy);
+        var proxyId = _tree.CreateProxy(proxy.AABB, uint.MaxValue, proxy);
         return proxyId;
     }
 
-    public bool MoveProxy(DynamicTree.Proxy proxy, in Box2 aabb, Vector2 displacement)
+    public void MoveProxy(DynamicTree.Proxy proxy, in Box2 aabb)
     {
-        return _tree.MoveProxy(proxy, in aabb, displacement);
+        _tree.MoveProxy(proxy, in aabb);
     }
 
     public void RemoveProxy(DynamicTree.Proxy proxy)

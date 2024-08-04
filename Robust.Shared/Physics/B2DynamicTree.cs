@@ -267,6 +267,11 @@ namespace Robust.Shared.Physics
             lastNode.Height = -1;
         }
 
+        public Box2? GetFatAabb(Proxy proxy)
+        {
+            return _nodes[proxy].Aabb;
+        }
+
         /// <summary>Allocate a node from the pool. Grow the pool if necessary.</summary>
         /// <remarks>
         ///     If allocation occurs, references to <see cref="Node" />s will be invalid.

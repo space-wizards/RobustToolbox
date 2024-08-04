@@ -8,6 +8,7 @@ using Robust.Server.Debugging;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
 using Robust.Server.Physics;
+using Robust.Shared.ComponentTrees;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
 using Robust.Shared.ContentPack;
@@ -26,6 +27,7 @@ using Robust.Shared.Threading;
 using Robust.Shared.Utility;
 using InputSystem = Robust.Server.GameObjects.InputSystem;
 using MapSystem = Robust.Server.GameObjects.MapSystem;
+using PointLightComponent = Robust.Client.GameObjects.PointLightComponent;
 
 namespace Robust.UnitTesting
 {
@@ -126,8 +128,8 @@ namespace Robust.UnitTesting
             if (Project == UnitTestProject.Client)
             {
                 systems.LoadExtraSystemType<ClientMetaDataSystem>();
-                systems.LoadExtraSystemType<Robust.Server.Containers.ContainerSystem>();
-                systems.LoadExtraSystemType<Robust.Server.GameObjects.TransformSystem>();
+                systems.LoadExtraSystemType<ContainerSystem>();
+                systems.LoadExtraSystemType<Robust.Client.GameObjects.TransformSystem>();
                 systems.LoadExtraSystemType<Robust.Client.Physics.BroadPhaseSystem>();
                 systems.LoadExtraSystemType<Robust.Client.Physics.JointSystem>();
                 systems.LoadExtraSystemType<Robust.Client.Physics.PhysicsSystem>();
@@ -135,6 +137,12 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<PrototypeReloadSystem>();
                 systems.LoadExtraSystemType<Robust.Client.Debugging.DebugPhysicsSystem>();
                 systems.LoadExtraSystemType<Robust.Client.GameObjects.MapSystem>();
+                systems.LoadExtraSystemType<Robust.Client.GameObjects.PointLightSystem>();
+                systems.LoadExtraSystemType<LightTreeSystem>();
+                systems.LoadExtraSystemType<RecursiveMoveSystem>();
+                systems.LoadExtraSystemType<SpriteSystem>();
+                systems.LoadExtraSystemType<SpriteTreeSystem>();
+                systems.LoadExtraSystemType<GridChunkBoundsDebugSystem>();
             }
             else
             {
@@ -170,6 +178,11 @@ namespace Robust.UnitTesting
             {
                 compFactory.RegisterClass<MapSaveTileMapComponent>();
                 compFactory.RegisterClass<MapSaveIdComponent>();
+            }
+            else
+            {
+                compFactory.RegisterClass<PointLightComponent>();
+                compFactory.RegisterClass<SpriteComponent>();
             }
 
             deps.Resolve<IParallelManagerInternal>().Initialize();

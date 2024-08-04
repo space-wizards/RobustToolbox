@@ -1,4 +1,5 @@
 using System.Numerics;
+using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -14,6 +15,8 @@ namespace Robust.Client.Debugging
     {
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
+        [Dependency] private readonly TransformSystem _transform = default!;
+
 
         private bool _debugPositions;
         private bool _debugRotations;
@@ -35,7 +38,7 @@ namespace Robust.Client.Debugging
 
                 if (value && !_overlayManager.HasOverlay<EntityPositionOverlay>())
                 {
-                    _overlayManager.AddOverlay(new EntityPositionOverlay(_lookup, EntityManager));
+                    _overlayManager.AddOverlay(new EntityPositionOverlay(_lookup, EntityManager, _transform));
                 }
                 else
                 {
@@ -74,13 +77,15 @@ namespace Robust.Client.Debugging
         {
             private readonly EntityLookupSystem _lookup;
             private readonly IEntityManager _entityManager;
+            private readonly SharedTransformSystem _transform;
 
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-            public EntityPositionOverlay(EntityLookupSystem lookup, IEntityManager entityManager)
+            public EntityPositionOverlay(EntityLookupSystem lookup, IEntityManager entityManager, SharedTransformSystem transform)
             {
                 _lookup = lookup;
                 _entityManager = entityManager;
+                _transform = transform;
             }
 
             protected internal override void Draw(in OverlayDrawArgs args)
@@ -88,11 +93,10 @@ namespace Robust.Client.Debugging
                 const float stubLength = 0.25f;
 
                 var worldHandle = (DrawingHandleWorld) args.DrawingHandle;
-                var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
 
                 foreach (var entity in _lookup.GetEntitiesIntersecting(args.MapId, args.WorldBounds))
                 {
-                    var (center, worldRotation) = xformQuery.GetComponent(entity).GetWorldPositionRotation();
+                    var (center, worldRotation) = _transform.GetWorldPositionRotation(entity);
 
                     var xLine = worldRotation.RotateVec(Vector2.UnitX);
                     var yLine = worldRotation.RotateVec(Vector2.UnitY);

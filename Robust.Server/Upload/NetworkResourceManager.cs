@@ -27,7 +27,6 @@ public sealed class NetworkResourceManager : SharedNetworkResourceManager
     {
         base.Initialize();
 
-        _serverNetManager.Connected += ServerNetManagerOnConnected;
         _cfgManager.OnValueChanged(CVars.ResourceUploadingEnabled, value => Enabled = value, true);
         _cfgManager.OnValueChanged(CVars.ResourceUploadingLimitMb, value => SizeLimit = value, true);
     }
@@ -65,14 +64,14 @@ public sealed class NetworkResourceManager : SharedNetworkResourceManager
         OnResourceUploaded?.Invoke(session, msg);
     }
 
-    private void ServerNetManagerOnConnected(object? sender, NetChannelArgs e)
+    internal void SendToNewUser(INetChannel channel)
     {
         foreach (var (path, data) in ContentRoot.GetAllFiles())
         {
             var msg = new NetworkResourceUploadMessage();
             msg.RelativePath = path;
             msg.Data = data;
-            e.Channel.SendMessage(msg);
+            channel.SendMessage(msg);
         }
     }
 }

@@ -216,6 +216,8 @@ namespace Robust.Client.UserInterface
             {
                 foreach (var root in _roots)
                 {
+                    CheckRootUIScaleUpdate(root);
+
                     using (_prof.Group("Root"))
                     {
                         var totalUpdated = root.DoFrameUpdateRecursive(args);

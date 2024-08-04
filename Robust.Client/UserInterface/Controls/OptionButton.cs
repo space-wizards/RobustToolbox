@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Robust.Client.Graphics;
@@ -14,6 +14,7 @@ namespace Robust.Client.UserInterface.Controls
         public const string StyleClassOptionButton = "optionButton";
         public const string StyleClassPopup = "optionButtonPopup";
         public const string StyleClassOptionTriangle = "optionTriangle";
+        public const string StyleClassOptionsBackground = "optionButtonBackground";
         public readonly ScrollContainer OptionsScroll;
 
         private readonly List<ButtonData> _buttonData = new();
@@ -75,7 +76,12 @@ namespace Robust.Client.UserInterface.Controls
 
             _popup = new Popup()
             {
-                Children = { new PanelContainer(), OptionsScroll },
+                Children = {
+                    new PanelContainer {
+                        StyleClasses = { StyleClassOptionsBackground }
+                    },
+                    OptionsScroll
+                },
                 StyleClasses = { StyleClassPopup }
             };
             _popup.OnPopupHide += OnPopupHide;

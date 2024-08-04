@@ -203,7 +203,7 @@ namespace Robust.Client.Graphics.Clyde
                     return resource.ClydeHandle;
                 }
 
-                Logger.Warning($"Can't load shader {path}\n");
+                _clydeSawmill.Warning($"Can't load shader {path}\n");
                 return default;
             }
 
@@ -345,13 +345,12 @@ namespace Robust.Client.Graphics.Clyde
                 return;
 
             // If this map has lighting disabled, return
-            var mapUid = _mapManager.GetMapEntityId(mapId);
+            var mapUid = _mapSystem.GetMapOrInvalid(mapId);
             if (!_entityManager.TryGetComponent<MapComponent>(mapUid, out var map) || !map.LightingEnabled)
             {
                 return;
             }
 
-            (PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot)[] lights;
             int count;
             Box2 expandedBounds;
             using (_prof.Group("LightsToRender"))
@@ -541,7 +540,6 @@ namespace Robust.Client.Graphics.Clyde
             Clyde clyde,
             int count,
             int shadowCastingCount,
-            TransformSystem xformSystem,
             EntityQuery<TransformComponent> xforms,
             Box2 worldAABB) state,
             in ComponentTreeEntry<PointLightComponent> value)
@@ -554,7 +552,7 @@ namespace Robust.Client.Graphics.Clyde
                 return false;
 
             var (light, transform) = value;
-            var (lightPos, rot) = state.xformSystem.GetWorldPositionRotation(transform, state.xforms);
+            var (lightPos, rot) = state.clyde._transformSystem.GetWorldPositionRotation(transform, state.xforms);
             lightPos += rot.RotateVec(light.Offset);
             var circle = new Circle(lightPos, light.Radius);
 
@@ -600,16 +598,13 @@ namespace Robust.Client.Graphics.Clyde
             in Box2Rotated worldBounds,
             in Box2 worldAABB)
         {
-            var lightTreeSys = _entitySystemManager.GetEntitySystem<LightTreeSystem>();
-            var xformSystem = _entitySystemManager.GetEntitySystem<TransformSystem>();
-
             // Use worldbounds for this one as we only care if the light intersects our actual bounds
             var xforms = _entityManager.GetEntityQuery<TransformComponent>();
-            var state = (this, count: 0, shadowCastingCount: 0, xformSystem, xforms, worldAABB);
+            var state = (this, count: 0, shadowCastingCount: 0, xforms, worldAABB);
 
-            foreach (var (uid, comp) in lightTreeSys.GetIntersectingTrees(map, worldAABB))
+            foreach (var (uid, comp) in _lightTreeSystem.GetIntersectingTrees(map, worldAABB))
             {
-                var bounds = xformSystem.GetInvWorldMatrix(uid, xforms).TransformBox(worldBounds);
+                var bounds = _transformSystem.GetInvWorldMatrix(uid, xforms).TransformBox(worldBounds);
                 comp.Tree.QueryAabb(ref state, LightQuery, bounds);
             }
 
@@ -941,18 +936,16 @@ namespace Robust.Client.Graphics.Clyde
             var imi = 0;
             var amiMax = _maxOccluders * 4;
 
-            var occluderSystem = _entitySystemManager.GetEntitySystem<OccluderSystem>();
-            var xformSystem = _entitySystemManager.GetEntitySystem<TransformSystem>();
             var xforms = _entityManager.GetEntityQuery<TransformComponent>();
 
             try
             {
-                foreach (var (uid, comp) in occluderSystem.GetIntersectingTrees(map, expandedBounds))
+                foreach (var (uid, comp) in _occluderSystem.GetIntersectingTrees(map, expandedBounds))
                 {
                     if (ami >= amiMax)
                         break;
 
-                    var treeBounds = xforms.GetComponent(uid).InvWorldMatrix.TransformBox(expandedBounds);
+                    var treeBounds = _transformSystem.GetInvWorldMatrix(uid).TransformBox(expandedBounds);
 
                     comp.Tree.QueryAabb((in ComponentTreeEntry<OccluderComponent> entry) =>
                     {
@@ -965,7 +958,7 @@ namespace Robust.Client.Graphics.Clyde
                         if (ami >= amiMax)
                             return false;
 
-                        var worldTransform = xformSystem.GetWorldMatrix(transform, xforms);
+                        var worldTransform = _transformSystem.GetWorldMatrix(transform, xforms);
                         var box = occluder.BoundingBox;
 
                         var tl = Vector2.Transform(box.TopLeft, worldTransform);

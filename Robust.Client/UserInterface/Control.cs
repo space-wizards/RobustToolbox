@@ -212,9 +212,18 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        /// <summary>
+        /// Called when this control's visibility in the control tree changed.
+        /// </summary>
+        protected virtual void VisibilityChanged(bool newVisible)
+        {
+        }
+
         private void _propagateVisibilityChanged(bool newVisible)
         {
+            VisibilityChanged(newVisible);
             OnVisibilityChanged?.Invoke(this);
+
             if (!VisibleInTree)
             {
                 UserInterfaceManagerInternal.ControlHidden(this);
@@ -593,6 +602,7 @@ namespace Robust.Client.UserInterface
         ///     Dispose this control, its own scene control, and all its children.
         ///     Basically the big delete button.
         /// </summary>
+        [Obsolete("Controls should only be removed from UI tree instead of being disposed")]
         public void Dispose()
         {
             if (Disposed)
@@ -604,6 +614,7 @@ namespace Robust.Client.UserInterface
             Disposed = true;
         }
 
+        [Obsolete("Controls should only be removed from UI tree instead of being disposed")]
         protected virtual void Dispose(bool disposing)
         {
             if (!disposing)

@@ -232,6 +232,7 @@ namespace Robust.UnitTesting.Server
             container.Register<IParallelManagerInternal, TestingParallelManager>();
             // Needed for grid fixture debugging.
             container.Register<IConGroupController, ConGroupController>();
+            container.Register<EntityConsoleHost>();
 
             // I just wanted to load pvs system
             container.Register<IServerEntityManager, ServerEntityManager>();

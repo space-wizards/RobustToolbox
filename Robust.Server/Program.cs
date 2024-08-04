@@ -39,8 +39,6 @@ namespace Robust.Server
                 return;
             }
 
-            ThreadPool.SetMinThreads(Environment.ProcessorCount * 2, Environment.ProcessorCount);
-
             ParsedMain(parsed, contentStart, options);
         }
 

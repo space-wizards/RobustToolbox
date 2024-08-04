@@ -44,6 +44,7 @@ END TEMPLATE-->
 ### Bugfixes
 
 * Fix multithreading bug in ParallelTracker that caused the game to crash randomly.
+* Fixed IPv6-only hosts not working properly with built-in HTTP clients.
 
 ### Other
 

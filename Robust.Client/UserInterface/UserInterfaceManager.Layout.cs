@@ -53,44 +53,55 @@ internal sealed partial class UserInterfaceManager
             }
         }
 
-        public void Popup(string contents, string title = "Alert!", string clipboardButton = "Copy")
+        public void Popup(string contents, string title = "Alert!", bool clipboardButton = true)
         {
             var popup = new DefaultWindow
             {
-                Title = title,
+                Title = title
             };
 
             var label = new Label { Text = contents };
-            var copyButton = new Button
+
+            // Create a vertical box container to stack the elements vertically
+            var vBox = new BoxContainer
             {
-                Text = clipboardButton,
-                MinSize = new Vector2(100, 30),
+                Orientation = BoxContainer.LayoutOrientation.Vertical
             };
 
-            copyButton.OnPressed += _ =>
+            vBox.AddChild(label);
+
+            if (clipboardButton)
             {
-                _clipboard.SetText(contents);
-            };
+                var copyButton = new Button
+                {
+                    Text = "Copy",
+                    MinSize = new Vector2(100, 30)
+                };
 
-            var grid = new GridContainer
-            {
-                Columns = 1,
-                VSeparationOverride = 10,
-            };
+                copyButton.OnPressed += _ =>
+                {
+                    _clipboard.SetText(contents);
+                };
 
-            grid.AddChild(label);
+                // Create a horizontal box container to align the button to the right
+                var hBox = new BoxContainer
+                {
+                    Orientation = BoxContainer.LayoutOrientation.Horizontal
+                };
 
-            var buttonContainer = new GridContainer
-            {
-                Columns = 2,
-                HSeparationOverride = 10,
-            };
+                var spacer = new Control
+                {
+                    MinSize = new Vector2(0, 30), // This will grow to take available space
+                    HorizontalExpand = true
+                };
 
-            buttonContainer.AddChild(copyButton);
+                hBox.AddChild(spacer); // Spacer to push the button to the right
+                hBox.AddChild(copyButton);
 
-            grid.AddChild(buttonContainer);
+                vBox.AddChild(hBox); // Add the horizontal box to the vertical box
+            }
 
-            popup.Contents.AddChild(grid);
+            popup.Contents.AddChild(vBox); // Add the vertical box to the popup
 
             popup.OpenCentered();
         }

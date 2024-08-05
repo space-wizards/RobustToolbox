@@ -8,8 +8,15 @@ namespace Robust.Client.ViewVariables.Editors
 {
     internal sealed class VVPropEditorReference : VVPropEditor
     {
+        [Dependency] private readonly IClientViewVariablesManager _vvMan = default!;
+
         private object? _localValue;
         private ViewVariablesObjectSelector? _selector;
+
+        public VVPropEditorReference()
+        {
+            IoCManager.InjectDependencies(this);
+        }
 
         protected override Control MakeUI(object? value)
         {
@@ -36,14 +43,13 @@ namespace Robust.Client.ViewVariables.Editors
 
         private void ButtonOnOnPressed(BaseButton.ButtonEventArgs obj)
         {
-            var vvm = IoCManager.Resolve<IClientViewVariablesManager>();
             if (_selector != null)
             {
-                vvm.OpenVV(_selector);
+                _vvMan.OpenVV(_selector);
             }
             else if (_localValue != null)
             {
-                vvm.OpenVV(_localValue);
+                _vvMan.OpenVV(_localValue);
             }
         }
 

@@ -260,7 +260,12 @@ public sealed partial class SerializationManager
             return ValueDataNode.Null();
         }
 
-        return GetOrCreateWriteGenericDelegate(value, notNullableOverride)(value, alwaysWrite, context);
+        var node = GetOrCreateWriteGenericDelegate(value, notNullableOverride)(value, alwaysWrite, context);
+
+        if (typeof(T) == typeof(object))
+            node.Tag = "!type:" + value.GetType().Name;
+
+        return node;
     }
 
     public DataNode WriteValue<T>(ITypeWriter<T> writer, T value, bool alwaysWrite = false,

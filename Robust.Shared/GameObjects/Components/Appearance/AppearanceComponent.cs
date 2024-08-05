@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameStates;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects;
@@ -15,6 +16,7 @@ namespace Robust.Shared.GameObjects;
 ///     Visualization works client side with derivatives of the <see cref="Robust.Client.GameObjects.VisualizerSystem">VisualizerSystem</see> class and corresponding components.
 /// </summary>
 [RegisterComponent, NetworkedComponent]
+[Access(typeof(SharedAppearanceSystem))]
 public sealed partial class AppearanceComponent : Component
 {
     /// <summary>
@@ -31,6 +33,19 @@ public sealed partial class AppearanceComponent : Component
     [ViewVariables] internal bool UpdateQueued;
 
     [ViewVariables] internal Dictionary<Enum, object> AppearanceData = new();
+
+    private Dictionary<Enum, object>? _appearanceDataInit;
+
+    /// <summary>
+    /// Sets starting values for AppearanceData.
+    /// </summary>
+    /// <remarks>
+    /// Should only be filled in via prototype .yaml; subsequent data must be set via SharedAppearanceSystem.SetData().
+    /// </remarks>
+    [DataField(readOnly: true)] public Dictionary<Enum, object>? AppearanceDataInit {
+        get { return _appearanceDataInit; }
+        set { AppearanceData = value ?? AppearanceData; _appearanceDataInit = value; }
+    }
 
     [Obsolete("Use SharedAppearanceSystem instead")]
     public bool TryGetData<T>(Enum key, [NotNullWhen(true)] out T data)

@@ -43,6 +43,21 @@ END TEMPLATE-->
 
 ### Bugfixes
 
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 229.1.0
+
+### Bugfixes
+
 * Fix multithreading bug in ParallelTracker that caused the game to crash randomly.
 * Fixed IPv6-only hosts not working properly with built-in HTTP clients.
 
@@ -51,10 +66,6 @@ END TEMPLATE-->
 * Added obsoletion warning for `Control.Dispose()`. New code should not rely on it.
 * Reduced the default tickrate to 30 ticks.
 * Encryption of network messages is now done concurrently to avoid spending main thread time. In profiles, this added up to ~8% of main thread time on RMC-14.
-
-### Internal
-
-*None yet*
 
 
 ## 229.0.0

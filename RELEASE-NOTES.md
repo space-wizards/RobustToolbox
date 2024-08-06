@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix some teleportation commands not working in singleplayer or replays
 
 ### Other
 

@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added `InterpolatedStringHandlerArgumentAttribute` to the sandbox whitelist.
 
 ### Bugfixes
 

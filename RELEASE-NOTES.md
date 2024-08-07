@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed a bug where the client might not add entities to the broadphase/lookup components.
 
 ### Other
 

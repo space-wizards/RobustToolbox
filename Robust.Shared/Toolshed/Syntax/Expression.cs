@@ -74,6 +74,18 @@ public sealed class CommandRun
 
     public object? Invoke(object? input, IInvocationContext ctx, bool reportErrors = true)
     {
+        // TODO TOOLSHED
+        // improve error handling. Most expression invokers don't bother to check for errors.
+        // This especially applies to all map / emplace / sort commands.
+        // A simple error while enumerating entities could lock up the server.
+
+        if (ctx.GetErrors().Any())
+        {
+            // Attempt to prevent O(n^2) growth in errors due to people repeatedly evaluating expressions without
+            // checking for errors.
+            throw new Exception($"Improperly handled Toolshed errors");
+        }
+
         var ret = input;
         foreach (var (cmd, span) in Commands)
         {

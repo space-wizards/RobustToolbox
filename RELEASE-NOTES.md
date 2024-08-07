@@ -44,10 +44,11 @@ END TEMPLATE-->
 ### Bugfixes
 
 * Fixed a bug where the client might not add entities to the broadphase/lookup components.
+* Fixed  various toolshed commands not working, including `sort`, `sortdown` `join` (for strings), and `emplace`
 
 ### Other
 
-*None yet*
+* Toolshed command blocks now stop executing if previous errors were not handled / cleared.
 
 ### Internal
 

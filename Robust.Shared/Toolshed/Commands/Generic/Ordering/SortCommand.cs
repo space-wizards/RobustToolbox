@@ -5,11 +5,9 @@ using Robust.Shared.Toolshed.Syntax;
 
 namespace Robust.Shared.Toolshed.Commands.Generic.Ordering;
 
-[ToolshedCommand, MapLikeCommand]
+[ToolshedCommand]
 public sealed class SortCommand : ToolshedCommand
 {
-    public override Type[] TypeParameterParsers => new[] {typeof(Type)};
-
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<T> Sort<T>(
         [CommandInvocationContext] IInvocationContext ctx,

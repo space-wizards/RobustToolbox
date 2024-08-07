@@ -241,7 +241,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         Entity<TransformComponent, BroadphaseComponent> broadphase,
         Entity<PhysicsMapComponent> map)
     {
-        if (LifeStage(child) < EntityLifeStage.Initializing)
+        if (LifeStage(child) <= EntityLifeStage.PreInit)
             return;
 
         var xform = Transform(child);
@@ -266,15 +266,13 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
                 xform.Broadphase = null;
             }
-            else
+            else if (oldBroadphase != broadphase.Comp2)
             {
-                DebugTools.Assert(oldBroadphase != broadphase.Comp2);
                 RemoveFromEntityTree(xform.Broadphase.Value.Uid, oldBroadphase, ref oldPhysMap, child, xform);
             }
-
         }
 
-        DebugTools.AssertNull(xform.Broadphase);
+        DebugTools.Assert(xform.Broadphase is not {} x || x.Uid == broadphase.Owner && x.PhysicsMap == map.Owner);
         AddOrUpdateEntityTree(
             broadphase.Owner,
             broadphase.Comp2,

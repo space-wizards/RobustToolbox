@@ -192,7 +192,7 @@ public abstract partial class SharedTransformSystem
 
     #region Component Lifetime
 
-    private (EntityUid?, MapId) InitializeMapUid(EntityUid uid, TransformComponent xform)
+    internal (EntityUid?, MapId) InitializeMapUid(EntityUid uid, TransformComponent xform)
     {
         if (xform._mapIdInitialized)
             return (xform.MapUid, xform.MapID);

@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fix some teleportation commands not working in singleplayer or replays
+*None yet*
 
 ### Other
 
@@ -52,6 +52,17 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 229.1.1
+
+### Bugfixes
+
+* Fix some teleportation commands not working in singleplayer or replays
+
+### Other
+
+* Audio entity names now include the filepath of the audio being played if relevant for debugging.
 
 
 ## 229.1.0

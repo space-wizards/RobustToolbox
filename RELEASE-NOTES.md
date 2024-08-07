@@ -51,7 +51,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* `ClientGameStateManager` now only initialises or starts entities after their parents have already been initialized. There are also some new debug asserts to try ensure that this rule isn't broken elsewhere. 
 
 
 ## 229.1.1

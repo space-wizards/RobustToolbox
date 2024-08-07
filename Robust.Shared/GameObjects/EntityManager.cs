@@ -689,19 +689,23 @@ namespace Robust.Shared.GameObjects
             // lookups
 
             var maps = _entTraitDict[typeof(MapComponent)].Keys.ToArray();
-            foreach (var map in maps)
+
+            if (!_netMan.IsClient)
             {
-                try
+                foreach (var map in maps)
                 {
-                    DeleteEntity(map);
-                }
-                catch (Exception e)
-                {
-                    _sawmill.Log(LogLevel.Error, e,
-                        $"Caught exception while trying to delete map entity {ToPrettyString(map)}, this might corrupt the game state...");
+                    try
+                    {
+                        DeleteEntity(map);
+                    }
+                    catch (Exception e)
+                    {
+                        _sawmill.Log(LogLevel.Error, e,
+                            $"Caught exception while trying to delete map entity {ToPrettyString(map)}, this might corrupt the game state...");
 #if !EXCEPTION_TOLERANCE
-                    throw;
+                        throw;
 #endif
+                    }
                 }
             }
 
@@ -711,7 +715,8 @@ namespace Robust.Shared.GameObjects
             foreach (var (uid, comp) in ents)
             {
                 var meta = (MetaDataComponent) comp;
-                if (meta.EntityLifeStage >= EntityLifeStage.Terminating)
+                // Client should be relying upon server to actually delete entities and not trying to predict it here.
+                if (meta.EntityLifeStage >= EntityLifeStage.Terminating || (_netMan.IsClient && !IsClientSide(uid, meta)))
                     continue;
 
                 try

@@ -144,11 +144,8 @@ internal partial class UserInterfaceManager
     public void MouseMove(MouseMoveEventArgs mouseMoveEventArgs)
     {
         _resetTooltipTimer();
-        // Update which control is considered hovered.
-        var newHovered = MouseGetControl(mouseMoveEventArgs.Position);
-        SetHovered(newHovered);
 
-        var target = ControlFocused ?? newHovered;
+        var target = ControlFocused ?? CurrentlyHovered;
         if (target != null)
         {
             var pos = mouseMoveEventArgs.Position.Position;
@@ -164,7 +161,7 @@ internal partial class UserInterfaceManager
 
     public void UpdateHovered()
     {
-        var ctrl =  MouseGetControl(_inputManager.MouseScreenPosition);
+        var ctrl = MouseGetControl(_inputManager.MouseScreenPosition);
         SetHovered(ctrl);
     }
 

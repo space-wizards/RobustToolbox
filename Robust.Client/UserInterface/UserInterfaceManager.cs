@@ -215,6 +215,9 @@ namespace Robust.Client.UserInterface
         {
             using (_prof.Group("Update"))
             {
+                // Update hovered. Can't rely upon mouse movement due to New controls potentially coming up.
+                UpdateHovered();
+
                 foreach (var root in _roots)
                 {
                     CheckRootUIScaleUpdate(root);

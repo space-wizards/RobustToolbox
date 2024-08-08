@@ -44,8 +44,11 @@ namespace Robust.Client.Prototypes
 
         public override void LoadDefaultPrototypes(Dictionary<Type, HashSet<string>>? changed = null)
         {
-            LoadDirectory(new("/EnginePrototypes/"), changed: changed);
-            LoadDirectory(_controller.Options.PrototypeDirectory, changed: changed);
+            foreach (var directory in _controller.Options.PrototypeDirectories)
+            {
+                LoadDirectory(directory, changed: changed);
+            }
+
             ResolveResults();
         }
 

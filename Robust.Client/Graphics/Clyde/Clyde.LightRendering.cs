@@ -95,8 +95,6 @@ namespace Robust.Client.Graphics.Clyde
         private ClydeTexture FovTexture => _fovRenderTarget.Texture;
         private ClydeTexture ShadowTexture => _shadowRenderTarget.Texture;
 
-        private (PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot)[] _lightsToRenderList = default!;
-
         private LightCapacityComparer _lightCap = new();
         private ShadowCapacityComparer _shadowCap = new ShadowCapacityComparer();
 
@@ -351,6 +349,60 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
+            // Update all of the global stuff first e.g. eye matrix, occlusion, etc.
+            eye.GetViewMatrixNoOffset(out var eyeTransform, eye.Scale);
+
+            var passEv = new LightingPassEvent();
+            _entityManager.EventBus.RaiseEvent(EventSource.Local, passEv);
+            var expandedBounds = worldAABB;
+
+            foreach (var pass in passEv.Passes)
+            {
+                // TODO: Get the lights for this pass and expand the occlusion geometry.
+            }
+
+            UpdateOcclusionGeometry(mapId, expandedBounds, eyeTransform);
+
+            DrawFov(viewport, eye);
+        }
+
+        [ByRefEvent]
+        public record struct LightingPassEvent()
+        {
+            /// <summary>
+            /// Whether to draw the normal FOV.
+            /// </summary>
+            public bool DrawFov = true;
+
+            internal List<LightingPass> Passes = new();
+
+            public void Add(LightingPass pass)
+            {
+                Passes.Add(pass);
+            }
+        }
+
+        public record struct LightingPass()
+        {
+            public IRenderTarget Target;
+
+            public List<RenderLight> Lights = new();
+        }
+
+        /// <summary>
+        /// Light to be drawn to the render target.
+        /// </summary>
+        public record struct RenderLight
+        {
+            public Vector2 Position;
+            public float DistanceSquared;
+            public Angle Rotation;
+        }
+
+        private void DrawLightsAndFov(IRenderTarget target, MapId mapId, Box2Rotated worldBounds, Box2 worldAABB, IEye eye)
+        {
+
+
             int count;
             Box2 expandedBounds;
             using (_prof.Group("LightsToRender"))
@@ -358,11 +410,9 @@ namespace Robust.Client.Graphics.Clyde
                 (count, expandedBounds) = GetLightsToRender(mapId, worldBounds, worldAABB);
             }
 
-            eye.GetViewMatrixNoOffset(out var eyeTransform, eye.Scale);
 
-            UpdateOcclusionGeometry(mapId, expandedBounds, eyeTransform);
 
-            DrawFov(viewport, eye);
+
 
             if (!_lightManager.DrawLighting)
             {

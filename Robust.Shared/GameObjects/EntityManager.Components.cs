@@ -110,6 +110,7 @@ namespace Robust.Shared.GameObjects
             return dict.Count;
         }
 
+        [Obsolete("Use InitializeEntity")]
         public void InitializeComponents(EntityUid uid, MetaDataComponent? metadata = null)
         {
             DebugTools.AssertOwner(uid, metadata);
@@ -145,6 +146,7 @@ namespace Robust.Shared.GameObjects
             SetLifeStage(metadata, EntityLifeStage.Initialized);
         }
 
+        [Obsolete("Use StartEntity")]
         public void StartComponents(EntityUid uid)
         {
             // Startup() can modify _components

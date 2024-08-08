@@ -81,6 +81,7 @@ namespace Robust.Server.GameObjects
             InitializeEntity(entity, meta);
         }
 
+        [Obsolete("Use StartEntity")]
         void IServerEntityManagerInternal.FinishEntityStartup(EntityUid entity)
         {
             StartEntity(entity);

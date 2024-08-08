@@ -960,7 +960,7 @@ namespace Robust.Client.GameStates
 
             // Initialize and start the newly created entities.
             if (_toCreate.Count > 0)
-                InitializeAndStart(_toCreate);
+                InitializeAndStart(_toCreate, metas, xforms);
 
             _prof.WriteValue("State Size", ProfData.Int32(curSpan.Length));
             _prof.WriteValue("Entered PVS", ProfData.Int32(enteringPvs));
@@ -1188,7 +1188,10 @@ namespace Robust.Client.GameStates
             }
         }
 
-        private void InitializeAndStart(Dictionary<NetEntity, EntityState> toCreate)
+        private void InitializeAndStart(
+            Dictionary<NetEntity, EntityState> toCreate,
+            EntityQuery<MetaDataComponent> metas,
+            EntityQuery<TransformComponent> xforms)
         {
             _toStart.Clear();
 
@@ -1197,22 +1200,8 @@ namespace Robust.Client.GameStates
                 EntityUid entity = default;
                 foreach (var netEntity in toCreate.Keys)
                 {
-                    try
-                    {
-                        (entity, var meta) = _entityManager.GetEntityData(netEntity);
-                        _entities.InitializeEntity(entity, meta);
-                        _toStart.Add((entity, netEntity));
-                    }
-                    catch (Exception e)
-                    {
-                        _sawmill.Error($"Server entity threw in Init: nent={netEntity}, ent={_entities.ToPrettyString(entity)}");
-                        _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(InitializeAndStart)}");
-                        _toCreate.Remove(netEntity);
-                        _brokenEnts.Add(entity);
-#if !EXCEPTION_TOLERANCE
-                        throw;
-#endif
-                    }
+                    (entity, var meta) = _entityManager.GetEntityData(netEntity);
+                    InitializeRecursive(entity, meta, metas, xforms);
                 }
             }
 
@@ -1242,6 +1231,44 @@ namespace Robust.Client.GameStates
                 _entityManager.DeleteEntity(entity);
             }
             _brokenEnts.Clear();
+        }
+
+        private void InitializeRecursive(
+            EntityUid entity,
+            MetaDataComponent meta,
+            EntityQuery<MetaDataComponent> metas,
+            EntityQuery<TransformComponent> xforms)
+        {
+            var xform = xforms.GetComponent(entity);
+            if (xform.ParentUid is {Valid: true} parent)
+            {
+                var parentMeta = metas.GetComponent(parent);
+                if (parentMeta.EntityLifeStage < EntityLifeStage.Initialized)
+                    InitializeRecursive(parent, parentMeta, metas, xforms);
+            }
+
+            if (meta.EntityLifeStage >= EntityLifeStage.Initialized)
+            {
+                // Was probably already initialized because one of its children appeared earlier in the list.
+                DebugTools.AssertEqual(_toStart.Count(x => x.Item1 == entity), 1);
+                return;
+            }
+
+            try
+            {
+                _entities.InitializeEntity(entity, meta);
+                _toStart.Add((entity, meta.NetEntity));
+            }
+            catch (Exception e)
+            {
+                _sawmill.Error($"Server entity threw in Init: nent={meta.NetEntity}, ent={_entities.ToPrettyString(entity)}");
+                _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(InitializeAndStart)}");
+                _toCreate.Remove(meta.NetEntity);
+                _brokenEnts.Add(entity);
+#if !EXCEPTION_TOLERANCE
+                throw;
+#endif
+            }
         }
 
         private void HandleEntityState(EntityUid uid, NetEntity netEntity, MetaDataComponent meta, IEventBus bus, EntityState? curState,

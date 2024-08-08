@@ -240,7 +240,7 @@ public record struct UnknownCommandError(string Cmd) : IConError
 {
     public FormattedMessage DescribeInner()
     {
-        return FormattedMessage.FromMarkup($"Got unknown command {Cmd}.");
+        return FormattedMessage.FromUnformatted($"Got unknown command {Cmd}.");
     }
 
     public string? Expression { get; set; }
@@ -252,7 +252,7 @@ public record NoImplementationError(string Cmd, Type[] Types, string? SubCommand
 {
     public FormattedMessage DescribeInner()
     {
-        var msg = FormattedMessage.FromMarkup($"Could not find an implementation for {Cmd} given the input type {PipedType?.PrettyName() ?? "void"}.");
+        var msg = FormattedMessage.FromUnformatted($"Could not find an implementation for {Cmd} given the input type {PipedType?.PrettyName() ?? "void"}.");
         msg.PushNewline();
 
         var typeArgs = "";

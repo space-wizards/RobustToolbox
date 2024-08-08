@@ -16,7 +16,7 @@ namespace Robust.Shared.Toolshed;
 
 public sealed partial class ToolshedManager
 {
-    private readonly Dictionary<Type, ITypeParser> _consoleTypeParsers = new();
+    private readonly Dictionary<Type, ITypeParser?> _consoleTypeParsers = new();
     private readonly Dictionary<Type, Type> _genericTypeParsers = new();
     private readonly List<(Type, Type)> _constrainedParsers = new();
 
@@ -55,6 +55,14 @@ public sealed partial class ToolshedManager
         if (_consoleTypeParsers.TryGetValue(t, out var parser))
             return parser;
 
+        parser = FindParserForType(t);
+        _consoleTypeParsers.TryAdd(t, parser);
+        return parser;
+
+    }
+
+    private ITypeParser? FindParserForType(Type t)
+    {
         if (t.IsConstructedGenericType)
         {
             if (_genericTypeParsers.TryGetValue(t.GetGenericTypeDefinition(), out var genParser))
@@ -65,7 +73,6 @@ public sealed partial class ToolshedManager
 
                     var builtParser = (ITypeParser) _typeFactory.CreateInstanceUnchecked(concreteParser, true);
                     builtParser.PostInject();
-                    _consoleTypeParsers.Add(builtParser.Parses, builtParser);
                     return builtParser;
                 }
                 catch (SecurityException)
@@ -86,7 +93,6 @@ public sealed partial class ToolshedManager
 
                 var builtParser = (ITypeParser) _typeFactory.CreateInstanceUnchecked(concreteParser, true);
                 builtParser.PostInject();
-                _consoleTypeParsers.Add(builtParser.Parses, builtParser);
                 return builtParser;
             }
             catch (SecurityException)
@@ -181,17 +187,17 @@ public record UnparseableValueError(Type T) : IConError
 
         if (T.Constructable())
         {
-            var msg = FormattedMessage.FromMarkup(
+            var msg = FormattedMessage.FromUnformatted(
                 $"The type {T.PrettyName()} has no parser available and cannot be parsed.");
             msg.PushNewline();
             msg.AddText("Please contact a programmer with this error, they'd probably like to see it.");
             msg.PushNewline();
-            msg.AddMarkup("[bold][color=red]THIS IS A BUG.[/color][/bold]");
+            msg.AddMarkupOrThrow("[bold][color=red]THIS IS A BUG.[/color][/bold]");
             return msg;
         }
         else
         {
-            return FormattedMessage.FromMarkup($"The type {T.PrettyName()} cannot be parsed, as it cannot be constructed.");
+            return FormattedMessage.FromUnformatted($"The type {T.PrettyName()} cannot be parsed, as it cannot be constructed.");
         }
     }
 

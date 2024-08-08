@@ -64,7 +64,7 @@ public record InvalidQuantity(string Value) : IConError
 {
     public FormattedMessage DescribeInner()
     {
-        return FormattedMessage.FromMarkup(
+        return FormattedMessage.FromUnformatted(
             $"The value {Value} is not a valid quantity. Please input some decimal number, optionally with a % to indicate that it's a percentage.");
     }
 

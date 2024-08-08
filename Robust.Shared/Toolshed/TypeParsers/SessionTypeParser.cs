@@ -54,7 +54,7 @@ internal sealed class SessionTypeParser : TypeParser<ICommonSession>
     {
         public FormattedMessage DescribeInner()
         {
-            return FormattedMessage.FromMarkup(Loc.GetString("cmd-parse-failure-session", ("username", Username)));
+            return FormattedMessage.FromUnformatted(Loc.GetString("cmd-parse-failure-session", ("username", Username)));
         }
 
         public string? Expression { get; set; }

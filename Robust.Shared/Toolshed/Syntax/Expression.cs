@@ -170,7 +170,7 @@ public record struct ExpressionOfWrongType(Type Expected, Type Got, bool Once) :
 {
     public FormattedMessage DescribeInner()
     {
-        var msg = FormattedMessage.FromMarkup(
+        var msg = FormattedMessage.FromUnformatted(
             $"Expected an expression of type {Expected.PrettyName()}, but got {Got.PrettyName()}");
 
         if (Once)

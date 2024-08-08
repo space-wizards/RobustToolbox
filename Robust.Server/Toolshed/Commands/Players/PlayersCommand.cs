@@ -81,7 +81,7 @@ public record struct NoSuchPlayerError(string Username) : IConError
 {
     public FormattedMessage DescribeInner()
     {
-        return FormattedMessage.FromMarkup($"No player with the username/GUID {Username} could be found.");
+        return FormattedMessage.FromUnformatted($"No player with the username/GUID {Username} could be found.");
     }
 
     public string? Expression { get; set; }

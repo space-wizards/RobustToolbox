@@ -61,7 +61,7 @@ public record struct UnknownComponentError(string Component) : IConError
 {
     public FormattedMessage DescribeInner()
     {
-        var msg = FormattedMessage.FromMarkup(
+        var msg = FormattedMessage.FromUnformatted(
             $"Unknown component {Component}. For a list of all components, try types:components."
             );
         if (Component.EndsWith("component", true, CultureInfo.InvariantCulture))

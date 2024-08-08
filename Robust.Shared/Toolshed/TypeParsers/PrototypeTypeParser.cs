@@ -69,7 +69,7 @@ public record NotAValidPrototype(string Proto, string Kind) : IConError
 {
     public FormattedMessage DescribeInner()
     {
-        return FormattedMessage.FromMarkup($"{Proto} is not a valid {Kind} prototype");
+        return FormattedMessage.FromUnformatted($"{Proto} is not a valid {Kind} prototype");
     }
 
     public string? Expression { get; set; }

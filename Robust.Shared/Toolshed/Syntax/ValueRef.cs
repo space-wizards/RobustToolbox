@@ -103,8 +103,7 @@ public record BadVarTypeError(Type Got, Type Expected, string VarName) : IConErr
 {
     public FormattedMessage DescribeInner()
     {
-        return FormattedMessage.FromMarkupOrThrow(
-            $"Got unexpected type {Got.PrettyName()} in {VarName}, expected {Expected.PrettyName()}");
+        return FormattedMessage.FromUnformatted($"Got unexpected type {Got.PrettyName()} in {VarName}, expected {Expected.PrettyName()}");
     }
 
     public string? Expression { get; set; }

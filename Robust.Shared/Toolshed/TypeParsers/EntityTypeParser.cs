@@ -49,7 +49,7 @@ public record InvalidEntity(string Value) : IConError
 {
     public FormattedMessage DescribeInner()
     {
-        return FormattedMessage.FromMarkup($"Couldn't parse {Value} as an Entity.");
+        return FormattedMessage.FromUnformatted($"Couldn't parse {Value} as an Entity.");
     }
 
     public string? Expression { get; set; }
@@ -61,7 +61,7 @@ public record DeadEntity(EntityUid Entity) : IConError
 {
     public FormattedMessage DescribeInner()
     {
-        return FormattedMessage.FromMarkup($"The entity {Entity} does not exist.");
+        return FormattedMessage.FromUnformatted($"The entity {Entity} does not exist.");
     }
 
     public string? Expression { get; set; }

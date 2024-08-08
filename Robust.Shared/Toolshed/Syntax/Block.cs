@@ -134,7 +134,7 @@ public record struct MissingClosingBrace() : IConError
 {
     public FormattedMessage DescribeInner()
     {
-        return FormattedMessage.FromMarkup("Expected a closing brace.");
+        return FormattedMessage.FromUnformatted("Expected a closing brace.");
     }
 
     public string? Expression { get; set; }

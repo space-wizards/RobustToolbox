@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed toolshed commands failing to generate error messages when working with array types
 
 ### Other
 

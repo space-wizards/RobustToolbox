@@ -57,7 +57,7 @@ public record InvalidEnum<T>(string Value) : IConError
 {
     public FormattedMessage DescribeInner()
     {
-        var msg = FormattedMessage.FromMarkup($"The value {Value} is not a valid {typeof(T).PrettyName()}.");
+        var msg = FormattedMessage.FromUnformatted($"The value {Value} is not a valid {typeof(T).PrettyName()}.");
         msg.AddText($"Valid values are: {string.Join(", ", Enum.GetNames<T>())}");
         return msg;
     }

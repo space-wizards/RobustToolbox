@@ -26,7 +26,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     The last received state object sent from the server.
         /// </summary>
-        protected internal BoundUserInterfaceState? State { get; internal set; }
+        protected internal IBoundUserInterfaceState? State { get; internal set; }
 
         protected BoundUserInterface(EntityUid owner, Enum uiKey)
         {
@@ -45,11 +45,20 @@ namespace Robust.Shared.GameObjects
         {
         }
 
+        [Obsolete("Use the IBoundUserInterfaceState version")]
+        protected internal virtual void UpdateState(BoundUserInterfaceState state)
+        {
+        }
+
         /// <summary>
         ///     Invoked when the server uses <c>SetState</c>.
         /// </summary>
-        protected internal virtual void UpdateState(BoundUserInterfaceState state)
+        protected internal virtual void UpdateState(IBoundUserInterfaceState state)
         {
+            if (state is BoundUserInterfaceState bState)
+            {
+                UpdateState(bState);
+            }
         }
 
         /// <summary>

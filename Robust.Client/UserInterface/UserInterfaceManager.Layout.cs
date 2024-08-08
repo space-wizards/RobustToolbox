@@ -4,6 +4,7 @@ using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
@@ -53,19 +54,18 @@ internal sealed partial class UserInterfaceManager
             }
         }
 
-        public void Popup(string contents, string title = "Alert!", bool clipboardButton = true)
+        public void Popup(string contents, string? title = null, bool clipboardButton = true)
         {
             var popup = new DefaultWindow
             {
-                Title = title
+                Title = string.IsNullOrEmpty(title) ? Loc.GetString("popup-title") : title,
             };
 
             var label = new Label { Text = contents };
 
-            // Create a vertical box container to stack the elements vertically
             var vBox = new BoxContainer
             {
-                Orientation = BoxContainer.LayoutOrientation.Vertical
+                Orientation = BoxContainer.LayoutOrientation.Vertical,
             };
 
             vBox.AddChild(label);
@@ -74,8 +74,8 @@ internal sealed partial class UserInterfaceManager
             {
                 var copyButton = new Button
                 {
-                    Text = "Copy",
-                    MinSize = new Vector2(100, 30)
+                    Text = Loc.GetString("popup-copy-button"),
+                    HorizontalExpand = true,
                 };
 
                 copyButton.OnPressed += _ =>
@@ -83,25 +83,17 @@ internal sealed partial class UserInterfaceManager
                     _clipboard.SetText(contents);
                 };
 
-                // Create a horizontal box container to align the button to the right
                 var hBox = new BoxContainer
                 {
-                    Orientation = BoxContainer.LayoutOrientation.Horizontal
+                    Orientation = BoxContainer.LayoutOrientation.Horizontal,
+                    HorizontalAlignment = Control.HAlignment.Right,
                 };
 
-                var spacer = new Control
-                {
-                    MinSize = new Vector2(0, 30), // This will grow to take available space
-                    HorizontalExpand = true
-                };
-
-                hBox.AddChild(spacer); // Spacer to push the button to the right
                 hBox.AddChild(copyButton);
-
-                vBox.AddChild(hBox); // Add the horizontal box to the vertical box
+                vBox.AddChild(hBox);
             }
 
-            popup.Contents.AddChild(vBox); // Add the vertical box to the popup
+            popup.Contents.AddChild(vBox);
 
             popup.OpenCentered();
         }

@@ -586,7 +586,6 @@ public abstract partial class SharedMapSystem
             grid.ChunkDeletionHistory.Add((_timing.CurTick, chunk.Indices));
 
         chunk.Fixtures.Clear();
-        chunk.Fixtures.Clear();
         grid.Chunks.Remove(origin);
 
         if (grid.Chunks.Count == 0)

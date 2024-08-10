@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix tile enlargement not being applied for some EntityLookup queries.
 
 ### Other
 

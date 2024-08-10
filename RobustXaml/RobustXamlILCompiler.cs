@@ -105,7 +105,7 @@ namespace RobustXaml
                     {
 
                         var scopeField = context.RuntimeContext.ContextType.Fields.First(f =>
-                            f.Name == XamlAotCompiler.ContextNameScopeFieldName);
+                            f.Name == XamlCustomizations.ContextNameScopeFieldName);
                         var namescopeRegisterFunction = context.Configuration.TypeSystem
                             .FindType("Robust.Client.UserInterface.XAML.NameScope").Methods
                             .First(m => m.Name == "Register");
@@ -171,7 +171,7 @@ namespace RobustXaml
                     var dontAbsorb = codeGen.DefineLabel();
                     var end = codeGen.DefineLabel();
                     var contextScopeField = context.RuntimeContext.ContextType.Fields.First(f =>
-                        f.Name == XamlAotCompiler.ContextNameScopeFieldName);
+                        f.Name == XamlCustomizations.ContextNameScopeFieldName);
                     var controlNameScopeField = controlType.Fields.First(f => f.Name == "NameScope");
                     var nameScopeType = context.Configuration.TypeSystem
                         .FindType("Robust.Client.UserInterface.XAML.NameScope");

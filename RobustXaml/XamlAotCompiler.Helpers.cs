@@ -17,18 +17,6 @@ namespace RobustXaml
         static bool CheckXamlName(IResource r) => r.Name.ToLowerInvariant().EndsWith(".xaml")
                                                   || r.Name.ToLowerInvariant().EndsWith(".paml")
                                                   || r.Name.ToLowerInvariant().EndsWith(".axaml");
-
-        private static bool MatchThisCall(Collection<Instruction> instructions, int idx)
-        {
-            var i = instructions[idx];
-            // A "normal" way of passing `this` to a static method:
-
-            // ldarg.0
-            // call void [Avalonia.Markup.Xaml]Avalonia.Markup.Xaml.AvaloniaXamlLoader::Load(object)
-
-            return i.OpCode == OpCodes.Ldarg_0 || (i.OpCode == OpCodes.Ldarg && i.Operand?.Equals(0) == true);
-        }
-
         interface IResource : IFileSource
         {
             string Uri { get; }

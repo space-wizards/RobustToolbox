@@ -67,57 +67,23 @@ namespace RobustXaml
                 // Nothing to do
                 return null;
 
-            var xamlLanguage = new XamlLanguageTypeMappings(typeSystem)
-            {
-                XmlnsAttributes =
-                {
-                    typeSystem.GetType("Avalonia.Metadata.XmlnsDefinitionAttribute"),
-
-                },
-                ContentAttributes =
-                {
-                    typeSystem.GetType("Avalonia.Metadata.ContentAttribute")
-                },
-                UsableDuringInitializationAttributes =
-                {
-                    typeSystem.GetType("Robust.Client.UserInterface.XAML.UsableDuringInitializationAttribute")
-                },
-                DeferredContentPropertyAttributes =
-                {
-                    typeSystem.GetType("Robust.Client.UserInterface.XAML.DeferredContentAttribute")
-                },
-                RootObjectProvider = typeSystem.GetType("Robust.Client.UserInterface.XAML.ITestRootObjectProvider"),
-                UriContextProvider = typeSystem.GetType("Robust.Client.UserInterface.XAML.ITestUriContext"),
-                ProvideValueTarget = typeSystem.GetType("Robust.Client.UserInterface.XAML.ITestProvideValueTarget"),
-            };
-            var emitConfig = new XamlLanguageEmitMappings<IXamlILEmitter, XamlILNodeEmitResult>
-            {
-                ContextTypeBuilderCallback = (b,c) => EmitNameScopeField(xamlLanguage, typeSystem, b, c)
-            };
-
-            var transformerconfig = new TransformerConfiguration(
-                typeSystem,
-                typeSystem.TargetAssembly,
-                xamlLanguage,
-                XamlXmlnsMappings.Resolve(typeSystem, xamlLanguage), CustomValueConverter);
+            var xaml = new XamlCustomizations(typeSystem, typeSystem.TargetAssembly);
+            var lowLevel = new LowLevelCustomizations(typeSystem);
 
             var contextDef = new TypeDefinition("CompiledRobustXaml", "XamlIlContext",
                 TypeAttributes.Class, asm.MainModule.TypeSystem.Object);
             asm.MainModule.Types.Add(contextDef);
-            var contextClass = XamlILContextDefinition.GenerateContextClass(typeSystem.CreateTypeBuilder(contextDef), typeSystem,
-                xamlLanguage, emitConfig);
-
-            var compiler =
-                new RobustXamlILCompiler(transformerconfig, emitConfig, true);
+            var contextClass = XamlILContextDefinition.GenerateContextClass(
+                typeSystem.CreateTypeBuilder(contextDef), typeSystem,
+                xaml.TypeMappings, xaml.EmitMappings
+            );
 
             bool CompileGroup(IResourceGroup group)
             {
                 var typeDef = new TypeDefinition("CompiledRobustXaml", "!" + group.Name, TypeAttributes.Class,
                     asm.MainModule.TypeSystem.Object);
 
-                //typeDef.CustomAttributes.Add(new CustomAttribute(ed));
                 asm.MainModule.Types.Add(typeDef);
-                var builder = typeSystem.CreateTypeBuilder(typeDef);
 
                 foreach (var res in group.Resources.Where(CheckXamlName))
                 {
@@ -125,8 +91,8 @@ namespace RobustXaml
                     {
                         engine.LogMessage($"XAMLIL: {res.Name} -> {res.Uri}", MessageImportance.Low);
 
-                        var xaml = new StreamReader(new MemoryStream(res.FileContents)).ReadToEnd();
-                        var parsed = XDocumentXamlParser.Parse(xaml);
+                        var xamlText = new StreamReader(new MemoryStream(res.FileContents)).ReadToEnd();
+                        var parsed = XDocumentXamlParser.Parse(xamlText);
 
                         var initialRoot = (XamlAstObjectNode) parsed.Root;
 
@@ -146,16 +112,15 @@ namespace RobustXaml
                         if (classType == null)
                             throw new Exception($"Unable to find type '{classname}'");
 
-                        compiler.Transform(parsed);
+                        xaml.ILCompiler.Transform(parsed);
 
                         var populateName = $"Populate:{res.Name}";
 
                         var classTypeDefinition = typeSystem.GetTypeReference(classType).Resolve()!;
-
                         var populateBuilder = typeSystem.CreateTypeBuilder(classTypeDefinition);
 
-                        compiler.Compile(parsed, contextClass,
-                            compiler.DefinePopulateMethod(populateBuilder, parsed, populateName, true),
+                        xaml.ILCompiler.Compile(parsed, contextClass,
+                            xaml.ILCompiler.DefinePopulateMethod(populateBuilder, parsed, populateName, true),
                             null,
                             null,
                             (closureName, closureBaseType) =>
@@ -163,73 +128,16 @@ namespace RobustXaml
                             res.Uri, res
                         );
 
-                        //add compiled populate method
                         var compiledPopulateMethod = typeSystem.GetTypeReference(populateBuilder).Resolve().Methods
                             .First(m => m.Name == populateName);
 
-                        const string TrampolineName = "!XamlIlPopulateTrampoline";
-                        var trampoline = new MethodDefinition(TrampolineName,
-                            MethodAttributes.Static | MethodAttributes.Private, asm.MainModule.TypeSystem.Void);
-                        trampoline.Parameters.Add(new ParameterDefinition(classTypeDefinition));
-                        classTypeDefinition.Methods.Add(trampoline);
-
-                        trampoline.Body.Instructions.Add(Instruction.Create(OpCodes.Ldnull));
-                        trampoline.Body.Instructions.Add(Instruction.Create(OpCodes.Ldarg_0));
-                        trampoline.Body.Instructions.Add(Instruction.Create(OpCodes.Call, compiledPopulateMethod));
-                        trampoline.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
-
-                        var foundXamlLoader = false;
-                        // Find RobustXamlLoader.Load(this) and replace it with !XamlIlPopulateTrampoline(this)
-                        foreach (var method in classTypeDefinition.Methods
-                            .Where(m => !m.Attributes.HasFlag(MethodAttributes.Static)))
-                        {
-                            var i = method.Body.Instructions;
-                            for (var c = 1; c < i.Count; c++)
-                            {
-                                if (i[c].OpCode == OpCodes.Call)
-                                {
-                                    var op = i[c].Operand as MethodReference;
-
-                                    if (op != null
-                                        && op.Name == TrampolineName)
-                                    {
-                                        foundXamlLoader = true;
-                                        break;
-                                    }
-
-                                    if (op != null
-                                        && op.Name == "Load"
-                                        && op.Parameters.Count == 1
-                                        && op.Parameters[0].ParameterType.FullName == "System.Object"
-                                        && op.DeclaringType.FullName == "Robust.Client.UserInterface.XAML.RobustXamlLoader")
-                                    {
-                                        if (MatchThisCall(i, c - 1))
-                                        {
-                                            i[c].Operand = trampoline;
-                                            foundXamlLoader = true;
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        lowLevel.AddXamlMetadata(classTypeDefinition, new Uri(res.Uri), res.FilePath, xamlText);
+                        var foundXamlLoader = lowLevel.TrampolineCallsToXamlLoader(classTypeDefinition, compiledPopulateMethod);
 
                         if (!foundXamlLoader)
                         {
-                            var ctors = classTypeDefinition.GetConstructors()
-                                .Where(c => !c.IsStatic).ToList();
-                            // We can inject xaml loader into default constructor
-                            if (ctors.Count == 1 && ctors[0].Body.Instructions.Count(o=>o.OpCode != OpCodes.Nop) == 3)
-                            {
-                                var i = ctors[0].Body.Instructions;
-                                var retIdx = i.IndexOf(i.Last(x => x.OpCode == OpCodes.Ret));
-                                i.Insert(retIdx, Instruction.Create(OpCodes.Call, trampoline));
-                                i.Insert(retIdx, Instruction.Create(OpCodes.Ldarg_0));
-                            }
-                            else
-                            {
-                                throw new InvalidProgramException(
-                                    $"No call to RobustXamlLoader.Load(this) call found anywhere in the type {classType.FullName} and type seems to have custom constructors.");
-                            }
+                            throw new InvalidProgramException(
+                                $"No call to RobustXamlLoader.Load(this) call found anywhere in the type {classType.FullName} and type seems to have custom constructors.");
                         }
                     }
                     catch (Exception e)
@@ -249,125 +157,6 @@ namespace RobustXaml
             }
 
             return true;
-        }
-
-        private static bool CustomValueConverter(
-            AstTransformationContext context,
-            IXamlAstValueNode node,
-            IXamlType type,
-            out IXamlAstValueNode? result)
-        {
-            if (!(node is XamlAstTextNode textNode))
-            {
-                result = null;
-                return false;
-            }
-
-            var text = textNode.Text;
-            var types = context.GetRobustTypes();
-
-            if (type.Equals(types.Vector2))
-            {
-                var foo = MathParsing.Single2.Parse(text);
-
-                if (!foo.Success)
-                    throw new XamlLoadException($"Unable to parse \"{text}\" as a Vector2", node);
-
-                var (x, y) = foo.Value;
-
-                result = new RXamlSingleVecLikeConstAstNode(
-                    node,
-                    types.Vector2, types.Vector2ConstructorFull,
-                    types.Single, new[] {x, y});
-                return true;
-            }
-
-            if (type.Equals(types.Thickness))
-            {
-                var foo = MathParsing.Thickness.Parse(text);
-
-                if (!foo.Success)
-                    throw new XamlLoadException($"Unable to parse \"{text}\" as a Thickness", node);
-
-                var val = foo.Value;
-                float[] full;
-                if (val.Length == 1)
-                {
-                    var u = val[0];
-                    full = new[] {u, u, u, u};
-                }
-                else if (val.Length == 2)
-                {
-                    var h = val[0];
-                    var v = val[1];
-                    full = new[] {h, v, h, v};
-                }
-                else // 4
-                {
-                    full = val;
-                }
-
-                result = new RXamlSingleVecLikeConstAstNode(
-                    node,
-                    types.Thickness, types.ThicknessConstructorFull,
-                    types.Single, full);
-                return true;
-            }
-
-            if (type.Equals(types.Thickness))
-            {
-                var foo = MathParsing.Thickness.Parse(text);
-
-                if (!foo.Success)
-                    throw new XamlLoadException($"Unable to parse \"{text}\" as a Thickness", node);
-
-                var val = foo.Value;
-                float[] full;
-                if (val.Length == 1)
-                {
-                    var u = val[0];
-                    full = new[] {u, u, u, u};
-                }
-                else if (val.Length == 2)
-                {
-                    var h = val[0];
-                    var v = val[1];
-                    full = new[] {h, v, h, v};
-                }
-                else // 4
-                {
-                    full = val;
-                }
-
-                result = new RXamlSingleVecLikeConstAstNode(
-                    node,
-                    types.Thickness, types.ThicknessConstructorFull,
-                    types.Single, full);
-                return true;
-            }
-
-            if (type.Equals(types.Color))
-            {
-                // TODO: Interpret these colors at XAML compile time instead of at runtime.
-                result = new RXamlColorAstNode(node, types, text);
-                return true;
-            }
-
-            result = null;
-            return false;
-        }
-
-        public const string ContextNameScopeFieldName = "RobustNameScope";
-
-        private static void EmitNameScopeField(XamlLanguageTypeMappings xamlLanguage, CecilTypeSystem typeSystem, IXamlTypeBuilder<IXamlILEmitter> typeBuilder, IXamlILEmitter constructor)
-        {
-            var nameScopeType = typeSystem.FindType("Robust.Client.UserInterface.XAML.NameScope");
-            var field = typeBuilder.DefineField(nameScopeType,
-                ContextNameScopeFieldName, true, false);
-            constructor
-                .Ldarg_0()
-                .Newobj(nameScopeType.GetConstructor())
-                .Stfld(field);
         }
     }
 

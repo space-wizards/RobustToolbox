@@ -249,24 +249,36 @@ namespace Robust.Shared.Physics.Systems
 
                 // TODO: Need to handle grids colliding with non-grid entities with the same layer
                 // (nothing in SS14 does this yet).
+                var fixture = _fixturesQuery.Comp(gridUid);
+                var physics = _physicsQuery.Comp(gridUid);
 
                 var transform = _physicsSystem.GetPhysicsTransform(gridUid);
-                var state = (gridUid, grid, transform, worldMatrix, invWorldMatrix, _map, _physicsSystem, _transform, _physicsQuery, _xformQuery);
+                var state = (
+                    new Entity<FixturesComponent, MapGridComponent, PhysicsComponent>(gridUid, fixture, grid, physics),
+                    transform,
+                    worldMatrix,
+                    invWorldMatrix,
+                    _map,
+                    _physicsSystem,
+                    _transform,
+                    _fixturesQuery,
+                    _physicsQuery,
+                    _xformQuery);
 
                 _mapManager.FindGridsIntersecting(mapId, aabb, ref state,
                     static (EntityUid uid, MapGridComponent component,
-                        ref (EntityUid gridUid,
-                            MapGridComponent grid,
+                        ref (Entity<FixturesComponent, MapGridComponent, PhysicsComponent> grid,
                             Transform transform,
                             Matrix3x2 worldMatrix,
                             Matrix3x2 invWorldMatrix,
                             SharedMapSystem _map,
                             SharedPhysicsSystem _physicsSystem,
                             SharedTransformSystem xformSystem,
+                            EntityQuery<FixturesComponent> fixturesQuery,
                             EntityQuery<PhysicsComponent> physicsQuery,
                             EntityQuery<TransformComponent> xformQuery) tuple) =>
                     {
-                        if (tuple.gridUid == uid ||
+                        if (tuple.grid.Owner == uid ||
                         !tuple.xformQuery.TryGetComponent(uid, out var collidingXform))
                         {
                             return true;
@@ -277,38 +289,43 @@ namespace Robust.Shared.Physics.Systems
                         var otherTransform = tuple._physicsSystem.GetPhysicsTransform(uid);
 
                         // Get Grid2 AABB in grid1 ref
-                        var aabb1 = tuple.grid.LocalAABB.Intersect(tuple.invWorldMatrix.TransformBox(otherGridBounds));
+                        var aabb1 = tuple.grid.Comp2.LocalAABB.Intersect(tuple.invWorldMatrix.TransformBox(otherGridBounds));
 
                         // TODO: AddPair has a nasty check in there that's O(n) but that's also a general physics problem.
-                        var ourChunks = tuple._map.GetLocalMapChunks(tuple.gridUid, tuple.grid, aabb1);
-                        var physicsA = tuple.physicsQuery.GetComponent(tuple.gridUid);
+                        var ourChunks = tuple._map.GetLocalMapChunks(tuple.grid.Owner, tuple.grid, aabb1);
+                        var physicsA = tuple.grid.Comp3;
                         var physicsB = tuple.physicsQuery.GetComponent(uid);
+                        var fixturesB = tuple.fixturesQuery.Comp(uid);
 
                         // Only care about chunks on other grid overlapping us.
                         while (ourChunks.MoveNext(out var ourChunk))
                         {
                             var ourChunkWorld =
                                 tuple.worldMatrix.TransformBox(
-                                    ourChunk.CachedBounds.Translated(ourChunk.Indices * tuple.grid.ChunkSize));
+                                    ourChunk.CachedBounds.Translated(ourChunk.Indices * tuple.grid.Comp2.ChunkSize));
                             var ourChunkOtherRef = otherGridInvMatrix.TransformBox(ourChunkWorld);
                             var collidingChunks = tuple._map.GetLocalMapChunks(uid, component, ourChunkOtherRef);
 
                             while (collidingChunks.MoveNext(out var collidingChunk))
                             {
-                                foreach (var (ourId, fixture) in ourChunk.Fixtures)
+                                foreach (var ourId in ourChunk.Fixtures)
                                 {
+                                    var fixture = tuple.grid.Comp1.Fixtures[ourId];
+
                                     for (var i = 0; i < fixture.Shape.ChildCount; i++)
                                     {
                                         var fixAABB = fixture.Shape.ComputeAABB(tuple.transform, i);
 
-                                        foreach (var (otherId, otherFixture) in collidingChunk.Fixtures)
+                                        foreach (var otherId in collidingChunk.Fixtures)
                                         {
+                                            var otherFixture = fixturesB.Fixtures[otherId];
+
                                             for (var j = 0; j < otherFixture.Shape.ChildCount; j++)
                                             {
                                                 var otherAABB = otherFixture.Shape.ComputeAABB(otherTransform, j);
 
                                                 if (!fixAABB.Intersects(otherAABB)) continue;
-                                                tuple._physicsSystem.AddPair(tuple.gridUid, uid,
+                                                tuple._physicsSystem.AddPair(tuple.grid.Owner, uid,
                                                     ourId, otherId,
                                                     fixture, i,
                                                     otherFixture, j,

@@ -41,10 +41,7 @@ namespace Robust.Shared.Map
         /// </summary>
         public Box2i CachedBounds { get; set; }
 
-        /// <summary>
-        /// Physics fixtures that make up this grid chunk.
-        /// </summary>
-        public Dictionary<string, Fixture> Fixtures { get; } = new();
+        internal HashSet<string> Fixtures = new();
 
         /// <summary>
         /// The last game simulation tick that a tile on this chunk was modified.

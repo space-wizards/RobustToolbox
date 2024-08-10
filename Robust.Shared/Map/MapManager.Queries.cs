@@ -17,14 +17,16 @@ internal partial class MapManager
         ChunkEnumerator enumerator,
         IPhysShape shape,
         Transform shapeTransform,
-        EntityUid gridUid)
+        Entity<FixturesComponent> grid)
     {
-        var gridTransform = _physics.GetPhysicsTransform(gridUid);
+        var gridTransform = _physics.GetPhysicsTransform(grid);
 
         while (enumerator.MoveNext(out var chunk))
         {
-            foreach (var fixture in chunk.Fixtures.Values)
+            foreach (var id in chunk.Fixtures)
             {
+                var fixture = grid.Comp.Fixtures[id];
+
                 for (var j = 0; j < fixture.Shape.ChildCount; j++)
                 {
                     if (_manifolds.TestOverlap(shape, 0, fixture.Shape, j, shapeTransform, gridTransform))
@@ -135,7 +137,7 @@ internal partial class MapManager
                 if (!overlappingChunks.MoveNext(out _))
                     return true;
             }
-            else if (!state.MapManager.IsIntersecting(overlappingChunks, state.Shape, state.Transform, data.Uid))
+            else if (!state.MapManager.IsIntersecting(overlappingChunks, state.Shape, state.Transform, (data.Uid, data.Fixtures)))
             {
                 return true;
             }
@@ -186,7 +188,7 @@ internal partial class MapManager
                 if (!overlappingChunks.MoveNext(out _))
                     return true;
             }
-            else if (!state.MapManager.IsIntersecting(overlappingChunks, state.Shape, state.Transform, data.Uid))
+            else if (!state.MapManager.IsIntersecting(overlappingChunks, state.Shape, state.Transform, (data.Uid, data.Fixtures)))
             {
                 return true;
             }
@@ -368,7 +370,7 @@ internal partial class MapManager
         Box2 WorldAABB,
         IPhysShape Shape,
         Transform Transform,
-        B2DynamicTree<(EntityUid Uid, MapGridComponent Grid)> Tree,
+        B2DynamicTree<(EntityUid Uid, FixturesComponent Fixtures, MapGridComponent Grid)> Tree,
         SharedMapSystem MapSystem,
         MapManager MapManager,
         SharedTransformSystem TransformSystem,
@@ -380,7 +382,7 @@ internal partial class MapManager
         Box2 WorldAABB,
         IPhysShape Shape,
         Transform Transform,
-        B2DynamicTree<(EntityUid Uid, MapGridComponent Grid)> Tree,
+        B2DynamicTree<(EntityUid Uid, FixturesComponent Fixtures, MapGridComponent Grid)> Tree,
         SharedMapSystem MapSystem,
         MapManager MapManager,
         SharedTransformSystem TransformSystem,

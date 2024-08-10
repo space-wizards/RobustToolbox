@@ -93,11 +93,6 @@ namespace Robust.Shared.GameObjects
             foreach (var (chunk, rectangles) in mapChunks)
             {
                 UpdateFixture(uid, chunk, rectangles, body, manager, xform);
-
-                foreach (var (id, fixture) in chunk.Fixtures)
-                {
-                    fixtures[id] = fixture;
-                }
             }
 
             EntityManager.EventBus.RaiseLocalEvent(uid,new GridFixtureChangeEvent {NewFixtures = fixtures}, true);
@@ -157,8 +152,9 @@ namespace Robust.Shared.GameObjects
             // Check if we even need to issue an eventbus event
             var updated = false;
 
-            foreach (var (oldId, oldFixture) in chunk.Fixtures)
+            foreach (var oldId in chunk.Fixtures)
             {
+                var oldFixture = manager.Fixtures[oldId];
                 var existing = false;
 
                 // Handle deleted / updated fixtures
@@ -201,11 +197,11 @@ namespace Robust.Shared.GameObjects
                 if (existingFixture?.Shape is PolygonShape poly &&
                     poly.EqualsApprox((PolygonShape) fixture.Shape))
                 {
-                    chunk.Fixtures.Add(id, existingFixture);
+                    chunk.Fixtures.Add(id);
                     continue;
                 }
 
-                chunk.Fixtures.Add(id, fixture);
+                chunk.Fixtures.Add(id);
                 _fixtures.CreateFixture(uid, id, fixture, false, manager, body, xform);
             }
 

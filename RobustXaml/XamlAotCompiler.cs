@@ -15,7 +15,7 @@ using XamlX.Parsers;
 using XamlX.Transform;
 using XamlX.TypeSystem;
 
-namespace Robust.Build.Tasks
+namespace RobustXaml
 {
     /// <summary>
     /// Based on https://github.com/AvaloniaUI/Avalonia/blob/c85fa2b9977d251a31886c2534613b4730fbaeaf/src/Avalonia.Build.Tasks/XamlCompilerTaskExecutor.cs

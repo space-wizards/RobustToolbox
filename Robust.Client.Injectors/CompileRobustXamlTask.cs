@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
+using RobustXaml;
 
 namespace Robust.Build.Tasks
 {

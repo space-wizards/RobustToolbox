@@ -3,7 +3,7 @@ using Pidgin;
 using static Pidgin.Parser;
 
 
-namespace Robust.Build.Tasks
+namespace RobustXaml
 {
     public static class MathParsing
     {

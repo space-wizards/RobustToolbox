@@ -5,7 +5,7 @@ using Mono.Cecil.Cil;
 using Mono.Collections.Generic;
 using XamlX.TypeSystem;
 
-namespace Robust.Build.Tasks
+namespace RobustXaml
 {
     /// <summary>
     /// Helpers taken from:

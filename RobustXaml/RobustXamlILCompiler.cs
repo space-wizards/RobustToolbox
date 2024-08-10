@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Linq;
+﻿using System.Linq;
 using XamlX;
 using XamlX.Ast;
 using XamlX.Emit;
@@ -7,7 +6,7 @@ using XamlX.IL;
 using XamlX.Transform;
 using XamlX.TypeSystem;
 
-namespace Robust.Build.Tasks
+namespace RobustXaml
 {
     /// <summary>
     /// Emitters & Transformers based on:

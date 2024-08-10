@@ -12,7 +12,7 @@ namespace Robust.Build.Tasks
     /// - https://github.com/AvaloniaUI/Avalonia/blob/c85fa2b9977d251a31886c2534613b4730fbaeaf/src/Avalonia.Build.Tasks/XamlCompilerTaskExecutor.cs
     /// - https://github.com/AvaloniaUI/Avalonia/blob/c85fa2b9977d251a31886c2534613b4730fbaeaf/src/Avalonia.Build.Tasks/XamlCompilerTaskExecutor.Helpers.cs
     /// </summary>
-    public partial class XamlCompiler
+    public partial class XamlAotCompiler
     {
         static bool CheckXamlName(IResource r) => r.Name.ToLowerInvariant().EndsWith(".xaml")
                                                   || r.Name.ToLowerInvariant().EndsWith(".paml")

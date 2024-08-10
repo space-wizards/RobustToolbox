@@ -21,10 +21,10 @@ namespace Robust.Build.Tasks
     /// Based on https://github.com/AvaloniaUI/Avalonia/blob/c85fa2b9977d251a31886c2534613b4730fbaeaf/src/Avalonia.Build.Tasks/XamlCompilerTaskExecutor.cs
     /// Adjusted for our UI-Framework
     /// </summary>
-    public partial class XamlCompiler
+    public partial class XamlAotCompiler
     {
         public static (bool success, bool writtentofile) Compile(IBuildEngine engine, string input, string[] references,
-            string projectDirectory, string output, string strongNameKey)
+            string projectDirectory, string output, string? strongNameKey)
         {
             var typeSystem = new CecilTypeSystem(references
                 .Where(r => !r.ToLowerInvariant().EndsWith("robust.build.tasks.dll"))
@@ -149,16 +149,14 @@ namespace Robust.Build.Tasks
                         compiler.Transform(parsed);
 
                         var populateName = $"Populate:{res.Name}";
-                        var buildName = $"Build:{res.Name}";
 
-                        var classTypeDefinition = typeSystem.GetTypeReference(classType).Resolve();
+                        var classTypeDefinition = typeSystem.GetTypeReference(classType).Resolve()!;
 
                         var populateBuilder = typeSystem.CreateTypeBuilder(classTypeDefinition);
 
                         compiler.Compile(parsed, contextClass,
-                            compiler.DefinePopulateMethod(populateBuilder, parsed, populateName,
-                                classTypeDefinition == null),
-                            compiler.DefineBuildMethod(builder, parsed, buildName, true),
+                            compiler.DefinePopulateMethod(populateBuilder, parsed, populateName, true),
+                            null,
                             null,
                             (closureName, closureBaseType) =>
                                 populateBuilder.DefineSubType(closureBaseType, closureName, false),
@@ -257,7 +255,7 @@ namespace Robust.Build.Tasks
             AstTransformationContext context,
             IXamlAstValueNode node,
             IXamlType type,
-            out IXamlAstValueNode result)
+            out IXamlAstValueNode? result)
         {
             if (!(node is XamlAstTextNode textNode))
             {

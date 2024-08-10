@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="..\MSBuild\Robust.Engine.props" />
 
     <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     </PropertyGroup>
 
@@ -13,5 +13,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\XamlX\src\XamlX.IL.Cecil\XamlX.IL.Cecil.csproj" />
+      <ProjectReference Include="..\RobustXaml\RobustXaml.csproj" />
     </ItemGroup>
 </Project>

@@ -186,8 +186,16 @@ namespace Robust.Shared.GameObjects
             if (compReg.NetworkedFields.Length > 0 || fields.Length == 0)
                 return;
 
+            DebugTools.Assert(fields.Length <= 32);
+
+            if (fields.Length > 32)
+            {
+                // Components with more than 32 networked fields unsupported! Consider splitting it up or making a pr for 64-bit flags.
+                return;
+            }
+
             compReg.NetworkedFields = fields;
-            var lookup = new Dictionary<string, int>();
+            var lookup = new Dictionary<string, int>(fields.Length);
             var i = 0;
 
             foreach (var field in fields)

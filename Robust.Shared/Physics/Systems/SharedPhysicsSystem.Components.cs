@@ -25,6 +25,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
@@ -110,60 +111,66 @@ public partial class SharedPhysicsSystem
             }
 
             // Slowpath :(
-            var delta = new PhysicsDeltaState();
-            var data = delta.Fields;
+            uint fields = 0;
+            var data = new ValueList<object?>();
 
-            for (var i = 0; i < component.LastModifiedFields.Length; i++)
+            for (byte i = 0; i < component.LastModifiedFields.Length; i++)
             {
                 var lastUpdate = component.LastModifiedFields[i];
 
                 if (lastUpdate < args.FromTick)
                     continue;
 
+                fields |= (uint) (1 << i);
+
                 switch (i)
                 {
                     case 0:
-                        data.Add((0, component.CanCollide));
+                        data.Add(component.CanCollide);
                         break;
                     case 1:
-                        data.Add((1, component.BodyStatus));
+                        data.Add(component.BodyStatus);
                         break;
                     case 2:
-                        data.Add((2, component.BodyType));
+                        data.Add(component.BodyType);
                         break;
                     case 3:
-                        data.Add((3, component.SleepingAllowed));
+                        data.Add(component.SleepingAllowed);
                         break;
                     case 4:
-                        data.Add((4, component.FixedRotation));
+                        data.Add(component.FixedRotation);
                         break;
                     case 5:
-                        data.Add((5, component._friction));
+                        data.Add(component._friction);
                         break;
                     case 6:
-                        data.Add((6, component.Force));
+                        data.Add(component.Force);
                         break;
                     case 7:
-                        data.Add((7, component.Torque));
+                        data.Add(component.Torque);
                         break;
                     case 8:
-                        data.Add((8, component.LinearDamping));
+                        data.Add(component.LinearDamping);
                         break;
                     case 9:
-                        data.Add((9, component.AngularDamping));
+                        data.Add(component.AngularDamping);
                         break;
                     case 10:
-                        data.Add((10, component.AngularVelocity));
+                        data.Add(component.AngularVelocity);
                         break;
                     case 11:
-                        data.Add((11, component.LinearVelocity));
+                        data.Add(component.LinearVelocity);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
             }
 
-            args.State = delta;
+            args.State = new PhysicsDeltaState()
+            {
+                ModifiedFields = fields,
+                Fields = data.ToArray(),
+            };
             return;
         }
 
@@ -204,10 +211,18 @@ public partial class SharedPhysicsSystem
         }
         else if (args.Current is PhysicsDeltaState deltaState)
         {
-            var data = deltaState.Fields;
+            byte index = 0;
 
-            foreach (var (i, value) in data)
+            for (var i = 0; i < 12; i++)
             {
+                var field = 1 << i;
+
+                // Field not dirty
+                if ((deltaState.ModifiedFields & field) == 0x0)
+                    continue;
+
+                var value = deltaState.Fields[index];
+
                 switch (i)
                 {
                     case 0:
@@ -249,6 +264,8 @@ public partial class SharedPhysicsSystem
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
+
+                index++;
             }
         }
         else if (args.Current is PhysicsComponentState newState)

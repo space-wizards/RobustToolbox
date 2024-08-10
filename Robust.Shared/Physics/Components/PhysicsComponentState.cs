@@ -61,7 +61,8 @@ public record struct PhysicsVelocityDeltaState : IComponentDeltaState<PhysicsCom
 [Serializable, NetSerializable]
 public record struct PhysicsDeltaState() : IComponentDeltaState<PhysicsComponentState>
 {
-    public List<(int Index, object? Value)> Fields = new();
+    public uint ModifiedFields = 0;
+    public object?[] Fields = Array.Empty<object?>();
 
     public void ApplyToFullState(PhysicsComponentState fullState)
     {
@@ -77,9 +78,18 @@ public record struct PhysicsDeltaState() : IComponentDeltaState<PhysicsComponent
 
     private void ApplyTo(PhysicsComponentState state)
     {
-        foreach (var (index, value) in Fields)
+        byte index = 0;
+
+        for (var i = 0; i < 12; i++)
         {
-            switch (index)
+            var field = 1 << i;
+
+            if ((ModifiedFields & field) == 0x0)
+                continue;
+
+            var value = Fields[index];
+
+            switch (i)
             {
                 // See SharedPhysicsSystem.
                 // If there's an easy way to get a compreg here then we could debug assert.
@@ -122,6 +132,8 @@ public record struct PhysicsDeltaState() : IComponentDeltaState<PhysicsComponent
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+
+            index++;
         }
     }
 }

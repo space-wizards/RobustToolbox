@@ -262,7 +262,7 @@ public abstract partial class SharedMapSystem
 
                 foreach (var (index, chunkData) in delta.ChunkData)
                 {
-                    ApplyChunkData(uid, component, fixturesComp, index, chunkData, modifiedChunks);
+                    ApplyChunkData(uid, component, index, chunkData, modifiedChunks);
                 }
 
                 component.LastTileModifiedTick = delta.LastTileModifiedTick;
@@ -280,12 +280,12 @@ public abstract partial class SharedMapSystem
                 foreach (var index in component.Chunks.Keys)
                 {
                     if (!state.FullGridData.ContainsKey(index))
-                        ApplyChunkData(uid, component, fixturesComp, index, ChunkDatum.Empty, modifiedChunks);
+                        ApplyChunkData(uid, component, index, ChunkDatum.Empty, modifiedChunks);
                 }
 
                 foreach (var (index, data) in state.FullGridData)
                 {
-                    ApplyChunkData(uid, component, fixturesComp, index, new(data), modifiedChunks);
+                    ApplyChunkData(uid, component, index, new(data), modifiedChunks);
                 }
 
                 break;
@@ -293,6 +293,9 @@ public abstract partial class SharedMapSystem
             default:
                 return;
         }
+
+        RegenerateAabb(component);
+        OnGridBoundsChange(uid, component);
 
 #if DEBUG
         foreach (var chunk in component.Chunks.Values)
@@ -306,7 +309,6 @@ public abstract partial class SharedMapSystem
     private void ApplyChunkData(
         EntityUid uid,
         MapGridComponent component,
-        FixturesComponent fixtureComp,
         Vector2i index,
         ChunkDatum data,
         HashSet<MapChunk> modifiedChunks)
@@ -366,8 +368,6 @@ public abstract partial class SharedMapSystem
 
             if (data.Fixtures != null)
                 chunk.Fixtures.UnionWith(data.Fixtures);
-
-            OnGridBoundsChange(uid, component);
         }
 
         chunk.SuppressCollisionRegeneration = false;
@@ -650,6 +650,20 @@ public abstract partial class SharedMapSystem
             }
         }
 
+        RegenerateAabb(grid);
+
+        // May have been deleted from the bulk update above!
+        if (Deleted(uid))
+            return;
+
+        _physics.WakeBody(uid);
+        OnGridBoundsChange(uid, grid);
+        var ev = new RegenerateGridBoundsEvent(uid, chunkRectangles, removedChunks);
+        RaiseLocalEvent(ref ev);
+    }
+
+    private void RegenerateAabb(MapGridComponent grid)
+    {
         grid.LocalAABB = new Box2();
 
         foreach (var chunk in grid.Chunks.Values)
@@ -670,15 +684,6 @@ public abstract partial class SharedMapSystem
                 grid.LocalAABB = grid.LocalAABB.Union(gridBounds);
             }
         }
-
-        // May have been deleted from the bulk update above!
-        if (Deleted(uid))
-            return;
-
-        _physics.WakeBody(uid);
-        OnGridBoundsChange(uid, grid);
-        var ev = new RegenerateGridBoundsEvent(uid, chunkRectangles, removedChunks);
-        RaiseLocalEvent(ref ev);
     }
 
     /// <summary>

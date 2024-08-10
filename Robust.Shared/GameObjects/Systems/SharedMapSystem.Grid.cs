@@ -12,6 +12,7 @@ using Robust.Shared.Map.Events;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -245,6 +246,8 @@ public abstract partial class SharedMapSystem
     private void OnGridHandleState(EntityUid uid, MapGridComponent component, ref ComponentHandleState args)
     {
         HashSet<MapChunk> modifiedChunks;
+        var fixturesComp = _fixturesQuery.Comp(uid);
+
         switch (args.Current)
         {
             case MapGridComponentDeltaState delta:
@@ -259,7 +262,7 @@ public abstract partial class SharedMapSystem
 
                 foreach (var (index, chunkData) in delta.ChunkData)
                 {
-                    ApplyChunkData(uid, component, index, chunkData, modifiedChunks);
+                    ApplyChunkData(uid, component, fixturesComp, index, chunkData, modifiedChunks);
                 }
 
                 component.LastTileModifiedTick = delta.LastTileModifiedTick;
@@ -277,12 +280,12 @@ public abstract partial class SharedMapSystem
                 foreach (var index in component.Chunks.Keys)
                 {
                     if (!state.FullGridData.ContainsKey(index))
-                        ApplyChunkData(uid, component, index, ChunkDatum.Empty, modifiedChunks);
+                        ApplyChunkData(uid, component, fixturesComp, index, ChunkDatum.Empty, modifiedChunks);
                 }
 
                 foreach (var (index, data) in state.FullGridData)
                 {
-                    ApplyChunkData(uid, component, index, new(data), modifiedChunks);
+                    ApplyChunkData(uid, component, fixturesComp, index, new(data), modifiedChunks);
                 }
 
                 break;
@@ -303,6 +306,7 @@ public abstract partial class SharedMapSystem
     private void ApplyChunkData(
         EntityUid uid,
         MapGridComponent component,
+        FixturesComponent fixtureComp,
         Vector2i index,
         ChunkDatum data,
         HashSet<MapChunk> modifiedChunks)
@@ -356,10 +360,15 @@ public abstract partial class SharedMapSystem
             }
         }
 
-        chunk.Fixtures.Clear();
+        if (data.Fixtures != null && !chunk.Fixtures.SetEquals(data.Fixtures))
+        {
+            chunk.Fixtures.Clear();
 
-        if (data.Fixtures != null)
-            chunk.Fixtures.UnionWith(data.Fixtures);
+            if (data.Fixtures != null)
+                chunk.Fixtures.UnionWith(data.Fixtures);
+
+            OnGridBoundsChange(uid, component);
+        }
 
         chunk.SuppressCollisionRegeneration = false;
         if (shapeChanged)

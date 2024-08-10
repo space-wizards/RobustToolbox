@@ -40,10 +40,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Added `LocalizedEntityCommands`, which are console commands that have the ability to take entity system dependencies.
-* Added `BeginRegistrationRegion` to `IConsoleHost` to allow efficient bulk-registration of console commands.
-* Added `IConsoleHost.RegisterCommand` overload that takes an `IConsoleCommand`.
-* Added a `Finished` boolean to `AnimationCompletedEvent` which allows distinguishing if an animation was removed prematurely or completed naturally.
+* Added `InterpolatedStringHandlerArgumentAttribute` to the sandbox whitelist.
 
 ### Bugfixes
 
@@ -51,11 +48,106 @@ END TEMPLATE-->
 
 ### Other
 
-* Tab completions containing spaces are now properly quoted, so the command will actually work properly once entered.
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 229.1.2
+
+### Bugfixes
+
+* Fixed a bug where the client might not add entities to the broadphase/lookup components.
+
+
+## 229.1.1
+
+### Bugfixes
+
+* Fix some teleportation commands not working in singleplayer or replays
+
+### Other
+
+* Audio entity names now include the filepath of the audio being played if relevant for debugging.
+
+
+## 229.1.0
+
+### Bugfixes
+
+* Fix multithreading bug in ParallelTracker that caused the game to crash randomly.
+* Fixed IPv6-only hosts not working properly with built-in HTTP clients.
+
+### Other
+
+* Added obsoletion warning for `Control.Dispose()`. New code should not rely on it.
+* Reduced the default tickrate to 30 ticks.
+* Encryption of network messages is now done concurrently to avoid spending main thread time. In profiles, this added up to ~8% of main thread time on RMC-14.
+
+
+## 229.0.0
+
+### Breaking changes
+
+* Fixes large entities causing entity spawn menu to break.
+* Made PhysicsHull an internal ref struct for some PolygonShape speedup.
+
+### New features
+
+* Audio ticks-per-second is now capped at 30 by default and controlled via `audio.tick_rate` cvar.
+* Add CreateWindow and CreateDisposableControl helpers for BUIs.
+* Add OnProtoReload virtual method to BUIs that gets called on prototype reloads.
+* Add RemoveData to AppearanceSystem data.
+
+
+## 228.0.0
+
+### Breaking changes
+
+* The `Color` struct's equality methods now check for exact equality. Use `MathHelper.CloseToPercent(Color, Color)` for the previous functionality.
+* Added a toolshed.nearby_limit cvar to limit the maximum range of the nearby command. Defaults to 200.
+
+### New features
+
+* Added command usage with types to Toolshed command help.
+* Add Text property to RichTextLabel.
+* Whitelist System.Net.IPEndPoint.
+* Add event for mass & angular inertia changes.
+* Add SpriteSystem.IsVisible for layers.
+* Add TryQueueDeleteEntity that checks if the entity is already deleted / queuedeleted first.
+
+### Bugfixes
+
+* Clients connecting to a server now always load prototype uploads after resource uploads, fixing ordering bugs that could cause various errors.
+
+
+## 227.0.0
+
+### Breaking changes
+
+* Add a `loop` arg to SpriteSystem.GetFrame in case you don't want to get a looping animation.
+* Remove obsolete VisibileSystem methods.
+
+### New features
+
+* Added `LocalizedEntityCommands`, which are console commands that have the ability to take entity system dependencies.
+* Added `BeginRegistrationRegion` to `IConsoleHost` to allow efficient bulk-registration of console commands.
+* Added `IConsoleHost.RegisterCommand` overload that takes an `IConsoleCommand`.
+* Added a `Finished` boolean to `AnimationCompletedEvent` which allows distinguishing if an animation was removed prematurely or completed naturally.
+* Add GetLocalTilesIntersecting for MapSystem.
+* Add an analyzer for methods that should call the base implementation and use it for EntitySystems.
+
+### Bugfixes
+
+* Fix loading replays if string package is compressed inside a zip.
+
+### Other
+
+* Tab completions containing spaces are now properly quoted, so the command will actually work properly once entered.
+* Mark EntityCoordinates.Offset as Pure so it shows as warnings if the variable is unused.
+* Networked events will always be processed in order even if late.
 
 
 ## 226.3.0

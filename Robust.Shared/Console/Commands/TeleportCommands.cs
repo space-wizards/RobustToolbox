@@ -61,7 +61,7 @@ internal sealed class TeleportCommand : LocalizedEntityCommands
         else
         {
             var mapEnt = _map.GetMapEntityIdOrThrow(mapId);
-            _transform.SetWorldPosition(transform, position);
+            _transform.SetWorldPosition((entity, transform), position);
             _transform.SetParent(entity, transform, mapEnt);
         }
 
@@ -145,7 +145,7 @@ public sealed class TeleportToCommand : LocalizedEntityCommands
             return true;
         }
 
-        if (_players.Sessions.TryFirstOrDefault(x => x.Channel.UserName == str, out var session)
+        if (_players.TryGetSessionByUsername(str, out var session)
             && _entities.TryGetComponent(session.AttachedEntity, out transform))
         {
             victimUid = session.AttachedEntity;

@@ -55,7 +55,7 @@ public partial class SharedPhysicsSystem
         {
             if (component.BodyType != BodyType.Static)
             {
-                SetAwake(uid, component, true);
+                SetAwake((uid, component), true);
             }
         }
 
@@ -431,6 +431,9 @@ public partial class SharedPhysicsSystem
         if (!_fixturesQuery.Resolve(uid, ref manager))
             return;
 
+        var oldMass = body._mass;
+        var oldInertia = body._inertia;
+
         body._mass = 0.0f;
         body._invMass = 0.0f;
         body._inertia = 0.0f;
@@ -487,12 +490,18 @@ public partial class SharedPhysicsSystem
 
         // Update center of mass velocity.
         var comVelocityDiff = Vector2Helpers.Cross(body.AngularVelocity, localCenter - oldCenter);
-
+        
         if (comVelocityDiff != Vector2.Zero)
-        {
-            body.LinearVelocity += comVelocityDiff;
-            DirtyField(uid, body, nameof(PhysicsComponent.LinearVelocity));
-        }
+       	{
+       		body.LinearVelocity += comVelocityDiff;
+        	DirtyField(uid, body, nameof(PhysicsComponent.LinearVelocity));
+       	}
+
+        if (body._mass == oldMass && body._inertia == oldInertia && oldCenter == localCenter)
+            return;
+
+        var ev = new MassDataChangedEvent((uid, body, manager), oldMass, oldInertia, oldCenter);
+        RaiseLocalEvent(uid, ref ev);
     }
 
     public bool SetAngularVelocity(EntityUid uid, float value, bool dirty = true, FixturesComponent? manager = null, PhysicsComponent? body = null)
@@ -651,7 +660,7 @@ public partial class SharedPhysicsSystem
 
         if (body.BodyType == BodyType.Static)
         {
-            SetAwake(uid, body, false);
+            SetAwake((uid, body), false);
 
             if (body.LinearVelocity != Vector2.Zero)
             {
@@ -668,7 +677,7 @@ public partial class SharedPhysicsSystem
         // Even if it's dynamic if it can't collide then don't force it awake.
         else if (body.CanCollide)
         {
-            SetAwake(uid, body, true);
+            SetAwake((uid, body), true);
         }
 
         if (body.Torque != 0f)
@@ -742,7 +751,7 @@ public partial class SharedPhysicsSystem
         body.CanCollide = value;
 
         if (!value)
-            SetAwake(uid, body, false);
+            SetAwake((uid, body), false);
 
         if (body.Initialized)
         {
@@ -824,7 +833,7 @@ public partial class SharedPhysicsSystem
             return;
 
         if (!value)
-            SetAwake(uid, body, true);
+            SetAwake((uid, body), true);
 
         body.SleepingAllowed = value;
         DirtyField(uid, body, nameof(PhysicsComponent.SleepingAllowed));

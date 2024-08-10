@@ -143,14 +143,14 @@ namespace Robust.Shared.Map
                 return new Vector2i();
 
             var mapSystem = entityManager.System<SharedMapSystem>();
-            var gridIdOpt = GetGridUid(entityManager);
+            var gridIdOpt = transformSystem.GetGrid(this);
             if (gridIdOpt is { } gridId && gridId.IsValid())
             {
                 var grid = entityManager.GetComponent<MapGridComponent>(gridId);
                 return mapSystem.GetTileRef(gridId, grid, this).GridIndices;
             }
 
-            var vec = ToMapPos(entityManager, transformSystem);
+            var vec = transformSystem.ToMapCoordinates(this);
 
             return new Vector2i((int)MathF.Floor(vec.X), (int)MathF.Floor(vec.Y));
         }
@@ -334,8 +334,8 @@ namespace Robust.Shared.Map
                 return true;
             }
 
-            var mapCoordinates = ToMap(entityManager, transformSystem);
-            var otherMapCoordinates = otherCoordinates.ToMap(entityManager, transformSystem);
+            var mapCoordinates = transformSystem.ToMapCoordinates(this);
+            var otherMapCoordinates = transformSystem.ToMapCoordinates(otherCoordinates);
 
             if (mapCoordinates.MapId != otherMapCoordinates.MapId)
                 return false;

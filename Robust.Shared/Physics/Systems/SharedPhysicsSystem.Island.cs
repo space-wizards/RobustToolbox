@@ -5,7 +5,6 @@ using System.Numerics;
 using System.Threading.Tasks;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
@@ -690,7 +689,7 @@ public abstract partial class SharedPhysicsSystem
     /// </summary>
     /// <param name="island"></param>
     /// <returns></returns>
-    private bool InternalParallel(IslandData island)
+    private static bool InternalParallel(IslandData island)
     {
         // Should lone island most times as well.
         return island.Bodies.Count > 128 || island.Contacts.Count > 128 || island.Joints.Count > 128;
@@ -960,6 +959,8 @@ public abstract partial class SharedPhysicsSystem
         }
 
         // Cleanup
+        ArrayPool<Vector2>.Shared.Return(positions);
+        ArrayPool<float>.Shared.Return(angles);
         ArrayPool<ContactVelocityConstraint>.Shared.Return(velocityConstraints);
         ArrayPool<ContactPositionConstraint>.Shared.Return(positionConstraints);
     }
@@ -985,7 +986,7 @@ public abstract partial class SharedPhysicsSystem
 
             var solvedPosition = Vector2.Transform(adjustedPosition, parentInvMatrix);
             solvedPositions[offset + i] = solvedPosition - xform.LocalPosition;
-            solvedAngles[offset + i] = angles[i] - worldRot;
+            solvedAngles[offset + i] = angle - worldRot;
         }
     }
 

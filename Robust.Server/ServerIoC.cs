@@ -93,8 +93,10 @@ namespace Robust.Server
             deps.Register<IServerNetConfigurationManager, ServerNetConfigurationManager>();
             deps.Register<INetConfigurationManagerInternal, ServerNetConfigurationManager>();
             deps.Register<IGamePrototypeLoadManager, GamePrototypeLoadManager>();
+            deps.Register<GamePrototypeLoadManager>();
             deps.Register<NetworkResourceManager>();
             deps.Register<IHttpClientHolder, HttpClientHolder>();
+            deps.Register<UploadedContentManager>();
         }
     }
 }

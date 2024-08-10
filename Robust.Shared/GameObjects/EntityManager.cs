@@ -322,7 +322,7 @@ namespace Robust.Shared.GameObjects
                 return newEntity;
             }
 
-            var mapEnt = _mapManager.GetMapEntityId(coordinates.MapId);
+            var mapEnt = _mapSystem.GetMap(coordinates.MapId);
             if (!TryGetComponent(mapEnt, out TransformComponent? mapXform))
                 throw new ArgumentException($"Attempted to spawn entity on an invalid map. Coordinates: {coordinates}");
 
@@ -466,6 +466,21 @@ namespace Robust.Shared.GameObjects
             ent.Comp2.LastModifiedTick = CurrentTick;
             ent.Comp3.LastModifiedTick = CurrentTick;
             ent.Comp4.LastModifiedTick = CurrentTick;
+        }
+
+        public bool TryQueueDeleteEntity(EntityUid? uid)
+        {
+            if (uid == null)
+                return false;
+
+            if (Deleted(uid.Value))
+                return false;
+
+            if (!QueuedDeletionsSet.Add(uid.Value))
+                return false;
+
+            QueueDeleteEntity(uid);
+            return true;
         }
 
         /// <summary>

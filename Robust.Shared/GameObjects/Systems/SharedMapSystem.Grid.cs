@@ -222,8 +222,8 @@ public abstract partial class SharedMapSystem
         }
 
         // Make sure we cleanup old map for moved grid stuff.
-        var oldMap = args.OldPosition.ToMap(EntityManager, _transform);
-        var oldMapUid = MapManager.GetMapEntityId(oldMap.MapId);
+        var oldMap = _transform.ToMapCoordinates(args.OldPosition);
+        var oldMapUid = GetMapOrInvalid(oldMap.MapId);
         if (component.MapProxy != DynamicTree.Proxy.Free && TryComp<MovedGridsComponent>(oldMapUid, out var oldMovedGrids))
         {
             oldMovedGrids.MovedGrids.Remove(uid);
@@ -1053,9 +1053,6 @@ public abstract partial class SharedMapSystem
             compAABB = grid.LocalAABB.Intersect(localAABB);
         }
 
-        if (compAABB.IsEmpty())
-            return ChunkEnumerator.Empty;
-
         return new ChunkEnumerator(grid.Chunks, compAABB, grid.ChunkSize);
     }
 
@@ -1326,7 +1323,7 @@ public abstract partial class SharedMapSystem
 
         if (!_gridQuery.TryGetComponent(uid, out var grid))
         {
-            return new EntityCoordinates(MapManager.GetMapEntityId(posWorld.MapId), new Vector2(posWorld.X, posWorld.Y));
+            return new EntityCoordinates(GetMapOrInvalid(posWorld.MapId), new Vector2(posWorld.X, posWorld.Y));
         }
 
         return new EntityCoordinates(uid, WorldToLocal(uid, grid, posWorld.Position));

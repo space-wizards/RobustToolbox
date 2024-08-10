@@ -23,7 +23,7 @@ namespace Robust.Shared.GameObjects
     [Reflect(false), PublicAPI]
     public abstract partial class EntitySystem : IEntitySystem, IPostInjectInit
     {
-        [Dependency] protected readonly EntityManager EntityManager;
+        [Dependency] protected readonly EntityManager EntityManager = default!;
         [Dependency] protected readonly ILogManager LogManager = default!;
         [Dependency] private readonly ISharedPlayerManager _playerMan = default!;
         [Dependency] private readonly IReplayRecordingManager _replayMan = default!;
@@ -65,11 +65,8 @@ namespace Robust.Shared.GameObjects
         IEnumerable<Type> IEntitySystem.UpdatesAfter => UpdatesAfter;
         IEnumerable<Type> IEntitySystem.UpdatesBefore => UpdatesBefore;
 
-        protected EntitySystem() : this(default!) { }
-
-        protected EntitySystem(IEntityManager entityManager)
+        protected EntitySystem()
         {
-            EntityManager = (EntityManager)entityManager;
             Subs = new Subscriptions(this);
         }
 

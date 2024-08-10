@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix exceptions in client game state handling for grids.
 
 ### Other
 

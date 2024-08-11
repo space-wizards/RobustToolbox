@@ -32,7 +32,7 @@ namespace Robust.Shared.ContentPack
             String("short").ThenReturn(PrimitiveTypeCode.Int16);
 
         private static readonly Parser<char, PrimitiveTypeCode> UInt16TypeParser =
-            String("ushort").ThenReturn(PrimitiveTypeCode.UInt32);
+            String("ushort").ThenReturn(PrimitiveTypeCode.UInt16);
 
         private static readonly Parser<char, PrimitiveTypeCode> Int32TypeParser =
             String("int").ThenReturn(PrimitiveTypeCode.Int32);

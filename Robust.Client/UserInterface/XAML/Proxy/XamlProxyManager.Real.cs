@@ -1,21 +1,13 @@
-﻿using System;
+﻿#if TOOLS
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Reflection;
 using RobustXaml;
-using XamlX.IL;
 
 namespace Robust.Client.UserInterface.XAML.Proxy;
-
-public interface IXamlProxyManager
-{
-    void Initialize();
-    bool CanSetImplementation(string fileName);
-    void SetImplementation(string fileName, string fileContent);
-    bool Populate(Type t, object o);
-}
 
 public sealed class XamlProxyManager: IXamlProxyManager
 {
@@ -23,15 +15,15 @@ public sealed class XamlProxyManager: IXamlProxyManager
     [Dependency] IReflectionManager _reflectionManager = null!;
     [Dependency] ILogManager _logManager = null!;
 
-    ImplementationStorage _implementationStorage = null!;
+    XamlImplementationStorage _xamlImplementationStorage = null!;
 
     List<Assembly> _knownAssemblies = [];
-    XamlJitCompiler? _xamlJitCompiler = null;
+    XamlJitCompiler? _xamlJitCompiler;
 
     public void Initialize()
     {
         _sawmill = _logManager.GetSawmill("xamlproxy");
-        _implementationStorage = new ImplementationStorage(_sawmill, Compile);
+        _xamlImplementationStorage = new XamlImplementationStorage(_sawmill, Compile);
 
         AddAssemblies();
         _reflectionManager.OnAssemblyAdded += (_, _) => { AddAssemblies(); };
@@ -39,68 +31,45 @@ public sealed class XamlProxyManager: IXamlProxyManager
 
     public bool CanSetImplementation(string fileName)
     {
-#if !DEBUG
-        return false;
-#endif
-
-        return _implementationStorage.CanSetImplementation(fileName);
+        return _xamlImplementationStorage.CanSetImplementation(fileName);
     }
 
     public void SetImplementation(string fileName, string fileContent)
     {
-#if !DEBUG
-        return
-#endif
-        _implementationStorage.SetImplementation(fileName, fileContent);
+        _xamlImplementationStorage.SetImplementation(fileName, fileContent);
     }
 
     private void AddAssemblies()
     {
-#if !DEBUG
-        return;
-#endif
         foreach (var a in _reflectionManager.Assemblies)
         {
             if (!_knownAssemblies.Contains(a))
             {
                 _knownAssemblies.Add(a);
-                _implementationStorage.Add(a);
+                _xamlImplementationStorage.Add(a);
 
                 _xamlJitCompiler = null;
             }
         }
 
         // Always use the JITed versions on debug builds
-        _implementationStorage.ForceReloadAll();
+        _xamlImplementationStorage.ForceReloadAll();
     }
 
     public bool Populate(Type t, object o)
     {
-#if !DEBUG
-        return false;
-#endif
-        return _implementationStorage.Populate(t, o);
+        return _xamlImplementationStorage.Populate(t, o);
     }
 
     MethodInfo? Compile(Type t, Uri uri, string fileName, string content)
     {
-#if !DEBUG
-        throw new NotImplementedException("XamlProxyManager.Compile() should never be called on a release build");
-#endif
-        // TODO: Prevent races
         XamlJitCompiler xjit;
         lock(this)
         {
             xjit = _xamlJitCompiler ??= new XamlJitCompiler();
         }
 
-        var result = xjit.CompilePopulate(t, uri, fileName, content,
-            (assembly) =>
-            {
-                // no assertions yet
-                // TODO: Switch this to Cecil so we can run assertions.
-            }
-        );
+        var result = xjit.CompilePopulate(t, uri, fileName, content);
 
         if (result is XamlJitCompilerResult.Error e)
         {
@@ -116,3 +85,4 @@ public sealed class XamlProxyManager: IXamlProxyManager
         throw new InvalidOperationException($"totally unexpected result from compiler operation: {result}");
     }
 }
+#endif

@@ -1,4 +1,7 @@
-﻿using System;
+﻿#if DEBUG
+// PYREX NOTE: We refuse to compile this outside of DEBUG because it can be used to break the sandbox.
+
+using System;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
@@ -32,12 +35,12 @@ namespace RobustXaml
             Type t,
             Uri uri,
             string filePath,
-            string contents,
-            Action<Assembly> runLastMinuteAssertions)
+            string contents
+        )
         {
             try
             {
-                var result = CompilePopulateOrCrash(t, uri, filePath, contents, runLastMinuteAssertions);
+                var result = CompilePopulateOrCrash(t, uri, filePath, contents);
                 return new XamlJitCompilerResult.Success(result);
             }
             catch (Exception e)
@@ -55,8 +58,8 @@ namespace RobustXaml
             Type t,
             Uri uri,
             string filePath,
-            string contents,
-            Action<Assembly> runLastMinuteAssertions)
+            string contents
+        )
         {
 
             var xaml = new XamlCustomizations(_typeSystem, _typeSystem.FindAssembly(t.Assembly.FullName));
@@ -115,15 +118,6 @@ namespace RobustXaml
                 throw new NullReferenceException("populate method should have existed");
             }
 
-            // Here's where you can check your sandboxing.
-            //
-            // Sandboxing note: I'm not clear on whether creating an Assembly that references a type will load the
-            // static constructor of that type. If so, the sandboxing here is imperfect.
-            //
-            // So, to be safe, this should only be used in debug builds. (at least until SreTypeSystem is replaced
-            // with something that enforces an allowlist, emits Cecil, or both)
-            runLastMinuteAssertions(populateClass.Assembly);
-
             return implementation;
         }
 
@@ -136,3 +130,4 @@ public abstract record XamlJitCompilerResult
     public record Success(MethodInfo MethodInfo): XamlJitCompilerResult;
     public record Error(Exception Raw, string? Hint): XamlJitCompilerResult;
 }
+#endif

@@ -1,11 +1,12 @@
-﻿using System;
+﻿#if TOOLS
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Robust.Shared.Log;
 
 namespace Robust.Client.UserInterface.XAML.Proxy;
 
-internal sealed class ImplementationStorage
+internal sealed class XamlImplementationStorage
 {
     // For each filename: its last known Uri
     Dictionary<string, Uri> _fileUri = new();
@@ -25,7 +26,7 @@ internal sealed class ImplementationStorage
     ISawmill _sawmill;
     XamlJitDelegate _jitDelegate;
 
-    public ImplementationStorage(ISawmill sawmill, XamlJitDelegate jitDelegate)
+    public XamlImplementationStorage(ISawmill sawmill, XamlJitDelegate jitDelegate)
     {
         _sawmill = sawmill;
         _jitDelegate = jitDelegate;
@@ -114,3 +115,4 @@ internal sealed class ImplementationStorage
         return true;
     }
 }
+#endif

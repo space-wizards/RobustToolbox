@@ -12,6 +12,8 @@ namespace Robust.Client.UserInterface.XAML.Proxy;
 public interface IXamlProxyManager
 {
     void Initialize();
+    bool CanSetImplementation(string fileName);
+    void SetImplementation(string fileName, string fileContent);
     bool Populate(Type t, object o);
 }
 
@@ -33,6 +35,23 @@ public sealed class XamlProxyManager: IXamlProxyManager
 
         AddAssemblies();
         _reflectionManager.OnAssemblyAdded += (_, _) => { AddAssemblies(); };
+    }
+
+    public bool CanSetImplementation(string fileName)
+    {
+#if !DEBUG
+        return false;
+#endif
+
+        return _implementationStorage.CanSetImplementation(fileName);
+    }
+
+    public void SetImplementation(string fileName, string fileContent)
+    {
+#if !DEBUG
+        return
+#endif
+        _implementationStorage.SetImplementation(fileName, fileContent);
     }
 
     private void AddAssemblies()
@@ -60,8 +79,6 @@ public sealed class XamlProxyManager: IXamlProxyManager
 #if !DEBUG
         return false;
 #endif
-        _sawmill.Debug($"populate({t}, {o})");
-
         return _implementationStorage.Populate(t, o);
     }
 

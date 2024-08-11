@@ -149,6 +149,7 @@ namespace Robust.Client
             deps.Register<INetConfigurationManagerInternal, ClientNetConfigurationManager>();
             deps.Register<IXamlProxyManager, XamlProxyManager>();
             deps.Register<XamlProxyHelper, XamlProxyHelper>();
+            deps.Register<IXamlHotReloadManager, XamlHotReloadManager>();
             deps.Register<MarkupTagManager>();
         }
     }

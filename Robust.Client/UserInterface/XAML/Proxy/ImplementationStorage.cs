@@ -72,16 +72,23 @@ internal sealed class ImplementationStorage
         }
     }
 
+    public bool CanSetImplementation(string fileName)
+    {
+        return _fileTypes.ContainsKey(fileName);
+    }
+
     public void SetImplementation(string fileName, string fileContent)
     {
-        var uri =
-            _fileUri.GetValueOrDefault(fileName) ??
-            throw new NullReferenceException("file URI missing (this is a bug in ImplementationStorage)");
         if (!_fileTypes.TryGetValue(fileName, out var types))
         {
+            _sawmill.Info($"no changes to make for {fileName}");
             // TODO: Log that no files were associated with this name
             return;
         }
+
+        var uri =
+            _fileUri.GetValueOrDefault(fileName) ??
+            throw new NullReferenceException("file URI missing (this is a bug in ImplementationStorage)");
 
         foreach (var type in types)
         {
@@ -100,11 +107,9 @@ internal sealed class ImplementationStorage
         if (!_populateImplementations.TryGetValue(t, out var implementation))
         {
             // pop out if we never JITed anything
-            _sawmill.Debug($"no JITed implementation for {t}");
             return false;
         }
 
-        _sawmill.Debug($"using JITed implementation for {t}");
         implementation.Invoke(null, [null, o]);
         return true;
     }

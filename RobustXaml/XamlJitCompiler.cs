@@ -40,11 +40,11 @@ namespace RobustXaml
                 var result = CompilePopulateOrCrash(t, uri, filePath, contents, runLastMinuteAssertions);
                 return new XamlJitCompilerResult.Success(result);
             }
-            catch (XamlX.XamlParseException xpe)
+            catch (Exception e)
             {
                 return new XamlJitCompilerResult.Error(
-                    xpe,
-                    xpe.Message.StartsWith("Unable to resolve type")
+                    e,
+                    e.Message.StartsWith("Unable to resolve type")
                         ? "Is the type internal? (hot reloading can't handle that right now!)"
                         : null
                 );

@@ -55,6 +55,7 @@ namespace Robust.Client
         [Dependency] private readonly IResourceManagerInternal _resManager = default!;
         [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IXamlProxyManager _xamlProxyManager = default!;
+        [Dependency] private readonly IXamlHotReloadManager _xamlHotReloadManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         [Dependency] private readonly IClientNetManager _networkManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
@@ -174,6 +175,7 @@ namespace Robust.Client
             _prototypeManager.Initialize();
             _prototypeManager.LoadDefaultPrototypes();
             _xamlProxyManager.Initialize();
+            _xamlHotReloadManager.Initialize();
             _userInterfaceManager.Initialize();
             _eyeManager.Initialize();
             _entityManager.Initialize();

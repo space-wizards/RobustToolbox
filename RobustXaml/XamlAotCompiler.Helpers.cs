@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -14,9 +15,11 @@ namespace RobustXaml
     /// </summary>
     public partial class XamlAotCompiler
     {
-        static bool CheckXamlName(IResource r) => r.Name.ToLowerInvariant().EndsWith(".xaml")
-                                                  || r.Name.ToLowerInvariant().EndsWith(".paml")
-                                                  || r.Name.ToLowerInvariant().EndsWith(".axaml");
+        public static readonly ImmutableArray<string> NameSuffixes = [".xaml", ".paml", ".axaml"];
+
+        static bool CheckXamlName(IResource r) =>
+            NameSuffixes.Any(suffix => r.Name.ToLowerInvariant().EndsWith(suffix));
+
         interface IResource : IFileSource
         {
             string Uri { get; }

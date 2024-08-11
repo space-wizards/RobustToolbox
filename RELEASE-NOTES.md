@@ -39,14 +39,11 @@ END TEMPLATE-->
 
 ### New features
 
-* Added `InterpolatedStringHandlerArgumentAttribute` to the sandbox whitelist.
-* `IUserInterfaceManager.Popup()` popups now have a copy to clipboard button.
+*None yet*
 
 ### Bugfixes
 
-* Security fixes
-* Fix exception in `TimedDespawnComponent` spawning another `TimedDespawnComponent`.
-* Fixed pool memory leak in physics `SolveIsland`.
+*None yet*
 
 ### Other
 
@@ -55,6 +52,20 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 223.0.0
+
+### New features
+
+* Added `InterpolatedStringHandlerArgumentAttribute` to the sandbox whitelist.
+* `IUserInterfaceManager.Popup()` popups now have a copy to clipboard button.
+
+### Bugfixes
+
+* Security fixes
+* Fix exception in `TimedDespawnComponent` spawning another `TimedDespawnComponent`.
+* Fixed pool memory leak in physics `SolveIsland`.
 
 
 ## 229.1.2

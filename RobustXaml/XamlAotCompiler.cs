@@ -4,27 +4,41 @@ using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
 using Mono.Cecil;
-using Mono.Cecil.Cil;
-using Mono.Cecil.Rocks;
-using Pidgin;
 using XamlX;
 using XamlX.Ast;
-using XamlX.Emit;
 using XamlX.IL;
 using XamlX.Parsers;
-using XamlX.Transform;
 using XamlX.TypeSystem;
 
 namespace RobustXaml
 {
     /// <summary>
+    /// Within the scope of a Microsoft.Build.Framework build, load an assembly and perform AoT compilation of its
+    /// XAML resources.
+    ///
+    /// Also embed enough information to support future JIT attempts on those same resources.
+    ///
+    /// Code primarily by Paul Ritter, touched by Pyrex in 2024.
+    ///
     /// Based on https://github.com/AvaloniaUI/Avalonia/blob/c85fa2b9977d251a31886c2534613b4730fbaeaf/src/Avalonia.Build.Tasks/XamlCompilerTaskExecutor.cs
-    /// Adjusted for our UI-Framework
+    /// Adjusted for our UI Framework
     /// </summary>
     public partial class XamlAotCompiler
     {
+        /// <summary>
+        /// Update the assembly whose name is `input`, then save an updated assembly to `output` .
+        /// </summary>
+        /// <param name="engine">the Microsoft build engine (used for logging)</param>
+        /// <param name="input">the input assembly</param>
+        /// <param name="references">all the assemblies that the input Xaml is allowed to reference</param>
+        /// <param name="output">the place to put the output assembly</param>
+        /// <param name="strongNameKey">
+        ///   a file to use in order to generate a "strong name" for the assembly
+        ///   (https://learn.microsoft.com/en-us/dotnet/standard/assembly/strong-named)
+        /// </param>
+        /// <returns>true if this succeeds and true if the result was written `output`</returns>
         public static (bool success, bool writtentofile) Compile(IBuildEngine engine, string input, string[] references,
-            string projectDirectory, string output, string? strongNameKey)
+            string output, string? strongNameKey)
         {
             var typeSystem = new CecilTypeSystem(references
                 .Where(r => !r.ToLowerInvariant().EndsWith("robust.build.tasks.dll"))
@@ -58,14 +72,19 @@ namespace RobustXaml
 
         }
 
-        static bool? CompileCore(IBuildEngine engine, CecilTypeSystem typeSystem)
+        /// <summary>
+        /// Iterate through the resources in the XAML compiler's target assembly.
+        ///
+        /// For each, identify its affiliated class, invoke the AOT compiler, update the class to call into the
+        /// geneated code, and write down metadata for future JIT compiles.
+        /// </summary>
+        /// <param name="engine">the Microsoft build engine (for logging)</param>
+        /// <param name="typeSystem">the type system (which includes info about the target assembly)</param>
+        /// <returns>true if compilation succeeded in every case</returns>
+        static bool CompileCore(IBuildEngine engine, CecilTypeSystem typeSystem)
         {
             var asm = typeSystem.TargetAssemblyDefinition;
             var embrsc = new EmbeddedResources(asm);
-
-            if (embrsc.Resources.Count(CheckXamlName) == 0)
-                // Nothing to do
-                return null;
 
             var xaml = new XamlCustomizations(typeSystem, typeSystem.TargetAssembly);
             var lowLevel = new LowLevelCustomizations(typeSystem);
@@ -110,7 +129,7 @@ namespace RobustXaml
 
                         var classType = typeSystem.TargetAssembly.FindType(classname);
                         if (classType == null)
-                            throw new Exception($"Unable to find type '{classname}'");
+                            throw new InvalidProgramException($"Unable to find type '{classname}'");
 
                         xaml.ILCompiler.Transform(parsed);
 
@@ -153,13 +172,21 @@ namespace RobustXaml
             if (embrsc.Resources.Count(CheckXamlName) != 0)
             {
                 if (!CompileGroup(embrsc))
+                {
                     return false;
+                }
             }
 
             return true;
         }
     }
 
+    /// <summary>
+    /// This is IFileSource from XamlX, augmented with the other arguments that the XAML compiler wants.
+    ///
+    /// We store these later in the build process inside a XamlMetadataAttribute, in order to support
+    /// JIT compilation.
+    /// </summary>
     interface IResource : IFileSource
     {
         string Uri { get; }
@@ -168,6 +195,9 @@ namespace RobustXaml
 
     }
 
+    /// <summary>
+    /// A named collection of IResources.
+    /// </summary>
     interface IResourceGroup
     {
         string Name { get; }

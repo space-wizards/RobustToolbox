@@ -1,12 +1,15 @@
 ﻿namespace Robust.Client.UserInterface.XAML.Proxy
 {
-    // PYREX NOTE: This part of the hot reloading code sticks around regardless of whether we're doing a tools build
-    // or a regular build.
-    //
-    // Of course, we don't use it on a regular build, but including this and other hot reloading-specific structures
-    // means our content artifacts will support hot reloading even if compiled for release.
-    //
-    // (That is, only the client has to change.)
+    /// <summary>
+    /// Metadata to support JIT compilation of XAML resources for a type.
+    ///
+    /// We can feed XamlX data from this type, along with new content, to get new XAML
+    /// resources.
+    ///
+    /// This type is inert and is generated for release artifacts too, not just debug
+    /// artifacts. Released content should support hot reloading if loaded in a debug
+    /// client, but this is untested.
+    /// </summary>
     public sealed class XamlMetadataAttribute: System.Attribute
     {
         public readonly string Uri;

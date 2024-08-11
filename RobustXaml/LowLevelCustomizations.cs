@@ -8,8 +8,15 @@ using XamlX.TypeSystem;
 
 namespace RobustXaml
 {
-
-    public sealed class LowLevelCustomizations
+    /// <summary>
+    /// Paul Ritter wrote a lot of code that does low-level Cecil based patching
+    /// of AoT-compiled XamlX code.
+    ///
+    /// That's "fine" (it's not actually fine) -- this class just moves that all
+    /// to one place, and removes the extremely verbose Cecil-based type lookups
+    /// to a separate shared location.
+    /// </summary>
+    internal sealed class LowLevelCustomizations
     {
         public const string TrampolineName = "!XamlIlPopulateTrampoline";
         public const int ExpectedNMetadataArgs = 3;
@@ -28,6 +35,12 @@ namespace RobustXaml
         private readonly MethodReference _getTypeFromHandleMethod;
         private readonly MethodReference _xamlMetadataAttributeConstructor;
 
+        /// <summary>
+        /// Construct a large number of TypeDefinitions and MethodReferences
+        /// using the CecilTypeSystem.
+        /// </summary>
+        /// <param name="typeSystem">the CecilTypeSystem</param>
+        /// <exception cref="NullReferenceException">if some needed types were undefined</exception>
         public LowLevelCustomizations(CecilTypeSystem typeSystem)
         {
             _typeSystem = typeSystem;
@@ -76,16 +89,24 @@ namespace RobustXaml
             );
         }
 
+        /// <summary>
+        /// Creates a "trampoline" -- this is a method on the given subject which has the following general logic:
+        ///
+        /// <code>
+        /// void TrampolineName(Subject subject) {
+        ///   if (IoCManager.Resolve[XamlProxyHelper]().Populate(typeof(Subject), subject)) {
+        ///     return;
+        ///   }
+        ///   aotPopulateMethod(null, subject)
+        /// }
+        /// </code>
+        ///
+        /// </summary>
+        /// <param name="subject">the type to create a trampoline on</param>
+        /// <param name="aotPopulateMethod">the populate method to call if the XamlProxyHelper returns false</param>
+        /// <returns>the new trampoline method</returns>
         private MethodDefinition CreateTrampoline(TypeDefinition subject, MethodDefinition aotPopulateMethod)
         {
-            // generates on Container:
-            //
-            // void TrampolineName(Subject subject) {
-            //   if (IoCManager.Resolve<XamlProxyHelper>().Populate(typeof(Subject), subject)) {
-            //     return;
-            //   }
-            //   aotPopulateMethod(null, subject)
-            // }
             var trampoline = new MethodDefinition(
                 TrampolineName,
                 MethodAttributes.Static | MethodAttributes.Private,
@@ -112,6 +133,19 @@ namespace RobustXaml
             return trampoline;
         }
 
+        /// <summary>
+        /// Creates a trampoline on `subject`, then replaces calls to `RobustXamlLoader.Load` with calls
+        /// to the generated trampoline.
+        ///
+        /// This allows us to replace the implementation of Load at runtime.
+        ///
+        /// Return true if the patching succeeded. (If not, we couldn't find a place to change it.)
+        ///
+        /// The logic here actually has a few somewhat involved cases, again due to Paul Ritter.
+        /// </summary>
+        /// <param name="subject">the subject</param>
+        /// <param name="aotPopulateMethod">the populate method</param>
+        /// <returns>true</returns>
         public bool TrampolineCallsToXamlLoader(TypeDefinition subject, MethodDefinition aotPopulateMethod)
         {
             var trampoline = CreateTrampoline(subject, aotPopulateMethod);
@@ -181,10 +215,20 @@ namespace RobustXaml
             return i.OpCode == OpCodes.Ldarg_0 || (i.OpCode == OpCodes.Ldarg && i.Operand?.Equals(0) == true);
         }
 
+        /// <summary>
+        /// Add a XamlMetadataAttribute to a given type.
+        ///
+        /// This has all the info that we need to JIT a new implementation of Populate for that object
+        /// at runtime!
+        /// </summary>
+        /// <param name="subject">the subject type</param>
+        /// <param name="uri">the URI we generated</param>
+        /// <param name="filename">the filename</param>
+        /// <param name="content">the new content</param>
         public void AddXamlMetadata(TypeDefinition subject, Uri uri, string filename, string content)
         {
             var attribute = new CustomAttribute(_xamlMetadataAttributeConstructor);
-            var args = new string[ExpectedNMetadataArgs]
+            var args = new string[ExpectedNMetadataArgs]  // reference this so that changing the number is a compile error
             {
                 uri.ToString(), filename, content
             };

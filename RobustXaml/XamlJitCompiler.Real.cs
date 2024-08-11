@@ -1,5 +1,4 @@
 ﻿#if DEBUG
-// PYREX NOTE: We refuse to compile this outside of DEBUG because it can be used to break the sandbox.
 
 using System;
 using System.Reflection;
@@ -11,27 +10,59 @@ using XamlX.Parsers;
 
 namespace RobustXaml
 {
-
+    /// <summary>
+    /// A JIT compiler for Xaml.
+    ///
+    /// Uses System.Reflection.Emit, which can find types at runtime without looking for their assemblies on disk.
+    ///
+    /// The generated code doesn't respect the sandbox, so this is locked behind DEBUG. (since we're apparently
+    /// not given the option of locking it behind TOOLS.)
+    /// </summary>
     public sealed class XamlJitCompiler
     {
         private readonly SreTypeSystem _typeSystem;
 
         private static uint _assemblyId;
 
+        /// <summary>
+        /// Construct a XamlJitCompiler.
+        ///
+        /// No configuration is needed or possible.
+        ///
+        /// This is a pretty expensive function because it creates an SreTypeSystem, which requires going through
+        /// the loaded assembly list.
+        /// </summary>
         public XamlJitCompiler()
         {
-            // PYREX NOTE: This is extremely expensive to create
-            // So try to do it only when the assembly list changes!
             _typeSystem = new SreTypeSystem();
         }
 
+        /// <summary>
+        /// Generate a name for a new dynamic assembly.
+        ///
+        /// An effort is made to make the name unique. (even though I am not sure .NET requires this)
+        /// </summary>
+        /// <returns>the new name</returns>
         private static string GenerateAssemblyName()
         {
             return
                 $"{nameof(XamlJitCompiler)}_{Interlocked.Increment(ref _assemblyId)}";
         }
 
-        public XamlJitCompilerResult CompilePopulate(
+        /// <summary>
+        /// Compile the Populate method for `t`, using the given uri/path/contents.
+        ///
+        /// These values (except for contents) are generated during the AOT compile process.
+        ///
+        /// It is not enforced that they be the same after JIT -- the JITed code has no knowledge
+        /// of the state of the AOT'ed code -- but our code and documentation do assume that.
+        /// </summary>
+        /// <param name="t">the type whose Populate method should be generated</param>
+        /// <param name="uri">the Uri associated with the Control</param>
+        /// <param name="filePath">the resource file path for the control</param>
+        /// <param name="contents">the contents of the new XAML file</param>
+        /// <returns>Success or Failure depending on whether an error was thrown</returns>
+        public XamlJitCompilerResult Compile(
             Type t,
             Uri uri,
             string filePath,
@@ -40,7 +71,7 @@ namespace RobustXaml
         {
             try
             {
-                var result = CompilePopulateOrCrash(t, uri, filePath, contents);
+                var result = CompileOrCrash(t, uri, filePath, contents);
                 return new XamlJitCompilerResult.Success(result);
             }
             catch (Exception e)
@@ -54,7 +85,7 @@ namespace RobustXaml
             }
         }
 
-        private MethodInfo CompilePopulateOrCrash(
+        private MethodInfo CompileOrCrash(
             Type t,
             Uri uri,
             string filePath,
@@ -125,6 +156,13 @@ namespace RobustXaml
 }
 
 
+/// <summary>
+/// An enum containing either Success (with a MethodInfo) or Error.
+/// (with an Exception, and an optional hint for how to fix it)
+///
+/// It is not guaranteed that the Exception ever appeared on the stack.
+/// That is an implementation detail of XamlJitCompiler.Compile.
+/// </summary>
 public abstract record XamlJitCompilerResult
 {
     public record Success(MethodInfo MethodInfo): XamlJitCompilerResult;

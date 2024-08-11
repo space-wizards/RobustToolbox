@@ -10,12 +10,18 @@ using Robust.Shared.Log;
 
 namespace Robust.Client.UserInterface.XAML.Proxy
 {
-
+    /// <summary>
+    /// A stub implementation of XamlHotReloadManager.
+    ///
+    /// Its behavior is to do nothing.
+    /// </summary>
     internal sealed class XamlHotReloadManager : IXamlHotReloadManager
     {
+        /// <summary>
+        /// Do nothing.
+        /// </summary>
         public void Initialize()
         {
-            // This is a stub, so do nothing
         }
     }
 }

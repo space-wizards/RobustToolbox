@@ -8,6 +8,14 @@ namespace RobustXaml;
 /// </summary>
 public static class CecilExtensions
 {
+    /// <summary>
+    /// Specialize some generic parameters of a reference to a generic method. The return value
+    /// is a more monomorphized version.
+    /// </summary>
+    /// <param name="self">the original MethodReference</param>
+    /// <param name="arguments">the specialized arguments</param>
+    /// <returns>the monomorphic MethodReference</returns>
+    /// <exception cref="ArgumentException">if the number of passed arguments is wrong</exception>
     public static MethodReference MakeGenericMethod(this MethodReference self, params TypeReference[] arguments)
     {
         if (self.GenericParameters.Count != arguments.Length)

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
@@ -38,10 +37,12 @@ namespace Robust.Build.Tasks
             var msg = $"CompileRobustXamlTask -> AssemblyFile:{AssemblyFile}, ProjectDirectory:{ProjectDirectory}, OutputPath:{OutputPath}";
             BuildEngine.LogMessage(msg, MessageImportance.High);
 
-            var res = XamlAotCompiler.Compile(BuildEngine, input,
+            var res = XamlAotCompiler.Compile(
+                BuildEngine, input,
                 File.ReadAllLines(ReferencesFilePath).Where(l => !string.IsNullOrWhiteSpace(l)).ToArray(),
-                ProjectDirectory, OutputPath,
-                (SignAssembly && !DelaySign) ? AssemblyOriginatorKeyFile : null);
+                 OutputPath,
+                (SignAssembly && !DelaySign) ? AssemblyOriginatorKeyFile : null
+            );
             if (!res.success)
                 return false;
             if (!res.writtentofile)
@@ -78,9 +79,9 @@ namespace Robust.Build.Tasks
         public string AssemblyFile { get; set; } = null!;
 
         [Required]
-        public string OriginalCopyPath { get; set; } = null!;
+        public string? OriginalCopyPath { get; set; } = null;
 
-        public string OutputPath { get; set; } = null!;
+        public string? OutputPath { get; set; }
         public string UpdateBuildIndicator { get; set; } = null!;
 
         public string AssemblyOriginatorKeyFile { get; set; } = null!;

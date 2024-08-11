@@ -140,7 +140,7 @@ namespace Robust.Shared.ContentPack
             {
                 Process.Start(new ProcessStartInfo
                 {
-                    FileName = "explorer.exe",
+                    FileName = $"{Environment.GetEnvironmentVariable("SystemRoot")}\\explorer.exe",
                     Arguments = ".",
                     WorkingDirectory = fullPath,
                 });

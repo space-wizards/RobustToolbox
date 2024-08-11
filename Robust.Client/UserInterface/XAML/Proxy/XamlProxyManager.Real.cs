@@ -112,7 +112,7 @@ namespace Robust.Client.UserInterface.XAML.Proxy {
 
             if (result is XamlJitCompilerResult.Error e)
             {
-                _sawmill.Warning($"hot reloading-related error: {t.FullName}; {fileName}; {e.Raw} {e.Hint ?? ""}");
+                _sawmill.Info($"hot reloading failed: {t.FullName}; {fileName}; {e.Raw.Message} {e.Hint ?? ""}");
                 return null;
             }
 

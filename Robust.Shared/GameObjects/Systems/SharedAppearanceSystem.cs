@@ -37,7 +37,12 @@ public abstract class SharedAppearanceSystem : EntitySystem
     public void SetData(EntityUid uid, Enum key, object value, AppearanceComponent? component = null)
     {
         if (!Resolve(uid, ref component, false))
+        {
+#if DEBUG
+            Log.Error($"Trying to set AppearanceData for an entity({uid}) that does not have an {nameof(AppearanceComponent)}");
+#endif
             return;
+        }
 
         // If appearance data is changing due to server state application, the server's comp state is getting applied
         // anyways, so we can skip this.
@@ -64,7 +69,7 @@ public abstract class SharedAppearanceSystem : EntitySystem
             return;
 
         component.AppearanceData.Remove(key);
-        
+
         Dirty(uid, component);
         QueueUpdate(uid, component);
     }
@@ -78,6 +83,10 @@ public abstract class SharedAppearanceSystem : EntitySystem
             value = (T)objValue;
             return true;
         }
+
+#if DEBUG
+        Log.Error($"Trying to get AppearanceData from entity({uid}) that does not have an {nameof(AppearanceComponent)}");
+#endif
 
         value = default!;
         return false;

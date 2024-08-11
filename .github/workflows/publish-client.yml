@@ -33,10 +33,10 @@ jobs:
         mkdir "release/${{ steps.parse_version.outputs.version }}"
         mv release/*.zip "release/${{ steps.parse_version.outputs.version }}"
 
-    - name: Upload files to centcomm
+    - name: Upload files to Suns
       uses: appleboy/scp-action@master
       with:
-        host: centcomm.spacestation14.io
+        host: suns.spacestation14.com
         username: robust-build-push
         key: ${{ secrets.CENTCOMM_ROBUST_BUILDS_PUSH_KEY }}
         source: "release/${{ steps.parse_version.outputs.version }}"
@@ -46,7 +46,7 @@ jobs:
     - name: Update manifest JSON
       uses: appleboy/ssh-action@master
       with:
-        host: centcomm.spacestation14.io
+        host: suns.spacestation14.com
         username: robust-build-push
         key: ${{ secrets.CENTCOMM_ROBUST_BUILDS_PUSH_KEY }}
         script: /home/robust-build-push/push.ps1 ${{ steps.parse_version.outputs.version }}

@@ -26,7 +26,7 @@ namespace RobustXaml
         /// <summary>
         /// Create a bunch of resources related to SS14's particular dialect of XAML.
         /// </summary>
-        /// <param name="typeSystem">the type system for XamlI to use (both Cecil and Sre work)</param>
+        /// <param name="typeSystem">the type system for XamlX to use (both Cecil and Sre work)</param>
         /// <param name="defaultAssembly">the default assembly (presumably for unqualified names to be looked up in)</param>
         public XamlCustomizations(IXamlTypeSystem typeSystem, IXamlAssembly defaultAssembly)
         {

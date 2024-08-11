@@ -120,13 +120,25 @@ namespace Robust.Client.UserInterface.XAML.Proxy
                 var systemPath = contentRoot.ToRelativeSystemPath();
                 while (true)
                 {
-                    var files = Directory.GetFiles(systemPath);
+                    var files = Array.Empty<string>();
+                    try
+                    {
+                        files = Directory.GetFiles(systemPath);
+                    }
+                    catch (IOException) { }  // this is allowed to fail, and if so we just keep going up
+
                     if (files.Any(f => Path.GetFileName(f).Equals(MarkerFileName, StringComparison.InvariantCultureIgnoreCase)))
                     {
                         return systemPath;
                     }
 
-                    var newPath = Directory.GetParent(systemPath);
+                    DirectoryInfo? newPath = null;
+                    try
+                    {
+                        newPath = Directory.GetParent(systemPath);
+                    }
+                    catch (IOException) { } // ditto here. if we don't find it, we're in the wrong place
+
                     if (newPath == null)
                     {
                         break;

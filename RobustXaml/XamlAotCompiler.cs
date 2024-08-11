@@ -57,9 +57,7 @@ namespace RobustXaml
             }
 
             var compileRes = CompileCore(engine, typeSystem);
-            if (compileRes == null)
-                return (true, false);
-            if (compileRes == false)
+            if (!compileRes)
                 return (false, false);
 
             var writerParameters = new WriterParameters { WriteSymbols = asm.MainModule.HasSymbols };

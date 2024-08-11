@@ -39,7 +39,7 @@ public abstract class SharedAppearanceSystem : EntitySystem
         if (!Resolve(uid, ref component, false))
         {
 #if DEBUG
-            Log.Error($"Trying to set AppearanceData for an entity({uid}) that does not have an {nameof(AppearanceComponent)}");
+            Log.Warning($"Trying to set AppearanceData for an entity({uid}) that does not have an {nameof(AppearanceComponent)}");
 #endif
             return;
         }
@@ -85,7 +85,7 @@ public abstract class SharedAppearanceSystem : EntitySystem
         }
 
 #if DEBUG
-        Log.Error($"Trying to get AppearanceData from entity({uid}) that does not have an {nameof(AppearanceComponent)}");
+        Log.Warning($"Trying to get AppearanceData from entity({uid}) that does not have an {nameof(AppearanceComponent)}");
 #endif
 
         value = default!;

@@ -56,9 +56,6 @@ END TEMPLATE-->
 
 ## 230.0.0
 
-
-## 223.0.0
-
 ### New features
 
 * Added `InterpolatedStringHandlerArgumentAttribute` to the sandbox whitelist.

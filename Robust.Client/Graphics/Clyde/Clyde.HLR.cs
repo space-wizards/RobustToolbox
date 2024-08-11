@@ -516,7 +516,7 @@ namespace Robust.Client.Graphics.Clyde
                     {
                         var mapUid = _mapSystem.GetMap(eye.Position.MapId);
                         if (_entityManager.GetComponent<MapComponent>(mapUid).LightingEnabled)
-                            ApplyFovToBuffer(viewport, eye);
+                            ApplyFovToBuffer(viewport.RenderTarget, eye, viewport.RenderScale);
                     }
                 }
 

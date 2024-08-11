@@ -251,9 +251,17 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private LoadedRenderTarget RtToLoaded(RenderTargetBase rt)
+        private LoadedRenderTarget RtToLoaded(IRenderTarget target)
         {
-            return _renderTargets[rt.Handle];
+            switch (target)
+            {
+                case RenderTexture texture:
+                    return _renderTargets[texture.Handle];
+                case RenderTargetBase based:
+                    return _renderTargets[based.Handle];
+                default:
+                    throw new NotImplementedException();
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -154,13 +154,13 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
 
             if (HasRedundantTag(fieldSymbol))
             {
-                TryGetAttributeLocation(field, "DataField", out var location);
+                TryGetAttributeLocation(field, DataFieldAttributeName, out var location);
                 context.ReportDiagnostic(Diagnostic.Create(DataFieldRedundantTagRule, location, fieldSymbol.Name, type.Name));
             }
 
             if (HasVVReadWrite(fieldSymbol))
             {
-                TryGetAttributeLocation(field, "ViewVariables", out var location);
+                TryGetAttributeLocation(field, ViewVariablesAttributeName, out var location);
                 context.ReportDiagnostic(Diagnostic.Create(DataFieldNoVVReadWriteRule, location, fieldSymbol.Name, type.Name));
             }
         }

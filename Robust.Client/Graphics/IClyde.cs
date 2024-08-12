@@ -74,6 +74,8 @@ namespace Robust.Client.Graphics
         IRenderTexture CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
             TextureSampleParameters? sampleParameters = null, string? name = null);
 
+        IRenderTexture CreateLightRenderTarget(IClydeViewport viewport, string name);
+
         // Cursor API.
         /// <summary>
         ///     Gets a cursor object representing standard cursors that match the OS styling.

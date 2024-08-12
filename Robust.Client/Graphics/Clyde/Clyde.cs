@@ -32,7 +32,6 @@ namespace Robust.Client.Graphics.Clyde
     internal sealed partial class Clyde : IClydeInternal, IPostInjectInit, IEntityEventSubscriber
     {
         [Dependency] private readonly IClydeTileDefinitionManager _tileDefinitionManager = default!;
-        [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly ILightManager _lightManager = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
@@ -69,9 +68,7 @@ namespace Robust.Client.Graphics.Clyde
         private GLShaderProgram? _currentProgram;
 
         private float _lightResolutionScale = 0.5f;
-        private int _maxLights = 2048;
         private int _maxOccluders = 2048;
-        private int _maxShadowcastingLights = 128;
         private bool _enableSoftShadows = true;
 
         private bool _checkGLErrors;
@@ -105,7 +102,6 @@ namespace Robust.Client.Graphics.Clyde
             _cfg.OnValueChanged(CVars.LightResolutionScale, LightResolutionScaleChanged, true);
             _cfg.OnValueChanged(CVars.MaxShadowcastingLights, MaxShadowcastingLightsChanged, true);
             _cfg.OnValueChanged(CVars.LightSoftShadows, SoftShadowsChanged, true);
-            _cfg.OnValueChanged(CVars.MaxLightCount, MaxLightsChanged, true);
             _cfg.OnValueChanged(CVars.MaxOccluderCount, MaxOccludersChanged, true);
             // I can't be bothered to tear down and set these threads up in a cvar change handler.
 

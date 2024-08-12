@@ -1,40 +1,65 @@
 using System;
+using System.Collections.Generic;
+using System.Numerics;
 using Robust.Client.ComponentTrees;
 using Robust.Client.Graphics.Clyde;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects;
 
 public sealed class ClientLightingSystem : EntitySystem
 {
+    [Dependency] private readonly IConfigurationManager _cfgManager = default!;
     [Dependency] private readonly LightTreeSystem _lightTree = default!;
     [Dependency] private readonly SharedTransformSystem _xformSystem = default!;
 
-    private EntityQuery<TransformComponent> _xformQuery;
+    private List<RenderLight> _lights = new();
+
+    private LightComparer _comparer = new();
+
+    private int _maxShadowcastingLights;
+    private int _maxLights;
 
     public override void Initialize()
     {
         base.Initialize();
-        SubscribeLocalEvent<Clyde.LightingPassEvent>(OnLightingPass);
+
+        SubscribeLocalEvent<LightingPassEvent>(OnLightingPass);
+        Subs.CVar(_cfgManager, CVars.MaxLightCount, MaxLightsChanged, true);
+        Subs.CVar(_cfgManager, CVars.MaxShadowcastingLights, MaxShadowLightsChanged, true);
+    }
+
+    private void MaxShadowLightsChanged(int value)
+    {
+        _maxShadowcastingLights = value;
+        DebugTools.Assert(_maxLights >= _maxShadowcastingLights);
     }
 
     private void MaxLightsChanged(int value)
     {
         _maxLights = value;
-        _lightsToRenderList = new (PointLightComponent, Vector2, float , Angle)[value];
         DebugTools.Assert(_maxLights >= _maxShadowcastingLights);
     }
 
-    private void OnLightingPass(Clyde.LightingPassEvent ev)
+    private void OnLightingPass(ref LightingPassEvent ev)
     {
-        var pass = new Clyde.LightingPass();
+        _lights.Clear();
+
+        var pass = new LightingPass
+        {
+            Bind = true,
+            Target = ev.Viewport.LightRenderTarget,
+        };
 
         // Use worldbounds for this one as we only care if the light intersects our actual bounds
-        var state = (this, count: 0, shadowCastingCount: 0, _xformQuery, ev.WorldAabb);
+        var state = (this, _lights, count: 0, shadowCastingCount: 0, ev.WorldAabb);
 
         foreach (var (uid, comp) in _lightTree.GetIntersectingTrees(ev.MapId, ev.WorldAabb))
         {
@@ -49,41 +74,42 @@ public sealed class ClientLightingSystem : EntitySystem
 
             // First, partition the array based on whether the lights are shadow casting or not
             // (non shadow casting lights should be the first partition, shadow casting lights the second)
-            Array.Sort(_lightsToRenderList, 0, state.count, _lightCap);
-
-            // Next, sort just the shadow casting lights by distance.
-            Array.Sort(_lightsToRenderList, state.count - state.shadowCastingCount, state.shadowCastingCount, _shadowCap);
+            _lights.Sort(_comparer);
 
             // Then effectively delete the furthest lights, by setting the end of the array to exclude N
             // number of shadow casting lights (where N is the number above the max number per scene.)
             state.count -= state.shadowCastingCount - _maxShadowcastingLights;
         }
 
-        // When culling occluders later, we can't just remove any occluders outside the worldBounds.
-        // As they could still affect the shadows of (large) light sources.
-        // We expand the world bounds so that it encompasses the center of every light source.
-        // This should make it so no culled occluder can make a difference.
-        // (if the occluder is in the current lights at all, it's still not between the light and the world bounds).
-        var expandedBounds = worldAABB;
+        // TODO: NO FORGETTI
+        // _debugStats.TotalLights += state.count;
+        // _debugStats.ShadowLights += Math.Min(state.shadowCastingCount, _maxShadowcastingLights);
 
-        for (var i = 0; i < state.count; i++)
+        pass.SetClearColor(Color.FromSrgb(CompOrNull<MapLightComponent>(ev.Map)?.AmbientLightColor ?? Color.Black));
+
+        pass.Lights = _lights;
+        ev.Add(pass);
+    }
+
+    private sealed class LightComparer : IComparer<RenderLight>
+    {
+        public int MaxLights;
+        public Vector2 WorldPos;
+
+        public int Compare(RenderLight x, RenderLight y)
         {
-            expandedBounds = expandedBounds.ExtendToContain(_lightsToRenderList[i].pos);
+            if (x.CastShadows != y.CastShadows)
+                return x.CastShadows.CompareTo(y.CastShadows);
+
+            return x.Distance.CompareTo(y.Distance);
         }
-
-        _debugStats.TotalLights += state.count;
-        _debugStats.ShadowLights += Math.Min(state.shadowCastingCount, _maxShadowcastingLights);
-
-        pass.SetClearColor(CompOrNull<MapLightComponent>(ev.Map)?.AmbientLightColor);
-
-        ev.Passes.Add(pass);
     }
 
     private static bool LightQuery(ref (
-            Clyde clyde,
+            ClientLightingSystem system,
+            List<RenderLight> lights,
             int count,
             int shadowCastingCount,
-            EntityQuery<TransformComponent> xforms,
             Box2 worldAABB) state,
         in ComponentTreeEntry<PointLightComponent> value)
     {
@@ -91,11 +117,11 @@ public sealed class ClientLightingSystem : EntitySystem
         ref var shadowCount = ref state.shadowCastingCount;
 
         // If there are too many lights, exit the query
-        if (count >= state.clyde._maxLights)
+        if (count >= state.system._maxLights)
             return false;
 
         var (light, transform) = value;
-        var (lightPos, rot) = state.clyde._transformSystem.GetWorldPositionRotation(transform, state.xforms);
+        var (lightPos, rot) = state.system._xformSystem.GetWorldPositionRotation(transform);
         lightPos += rot.RotateVec(light.Offset);
         var circle = new Circle(lightPos, light.Radius);
 
@@ -108,8 +134,20 @@ public sealed class ClientLightingSystem : EntitySystem
         if (light.CastShadows)
             shadowCount++;
 
-        var distanceSquared = (state.worldAABB.Center - lightPos).LengthSquared();
-        state.clyde._lightsToRenderList[count++] = (light, lightPos, distanceSquared, rot);
+        state.lights.Add(new RenderLight()
+        {
+            Distance = (state.worldAABB.Center - lightPos).Length(),
+            CastShadows = light.CastShadows,
+            Color = light.Color,
+            Energy = light.Energy,
+            Mask = light.Mask,
+            Offset = light.Offset,
+            Position = lightPos,
+            Radius = light.Radius,
+            Rotation = rot,
+            Softness = light.Softness,
+            MaskAutoRotate = light.MaskAutoRotate,
+        });
 
         return true;
     }

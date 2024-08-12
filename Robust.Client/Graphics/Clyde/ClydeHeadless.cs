@@ -194,6 +194,11 @@ namespace Robust.Client.Graphics.Clyde
             return new DummyRenderTexture(size, new DummyTexture(size));
         }
 
+        public IRenderTexture CreateLightRenderTarget(IClydeViewport viewport, string name)
+        {
+            return new DummyRenderTexture(viewport.Size, new DummyTexture(viewport.Size));
+        }
+
         public ICursor GetStandardCursor(StandardCursorShape shape)
         {
             return new DummyCursor();

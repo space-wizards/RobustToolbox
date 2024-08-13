@@ -283,5 +283,24 @@ namespace Robust.Shared.Utility
             value = default;
             return false;
         }
+
+        public static bool HasMoreThan<T>(this IEnumerable<T> enumerable, int than)
+        {
+            if (enumerable.TryGetNonEnumeratedCount(out var count))
+                return count > than;
+
+            using var enumerator = enumerable.GetEnumerator();
+            checked
+            {
+                while (enumerator.MoveNext())
+                {
+                    than--;
+                    if (than < 0)
+                        return true;
+                }
+            }
+
+            return false;
+        }
     }
 }

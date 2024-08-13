@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Timing;
@@ -13,14 +14,15 @@ internal sealed class OverlayManager : IOverlayManagerInternal, IPostInjectInit
     [Dependency] private readonly ILogManager _logMan = default!;
 
     [ViewVariables]
-    private readonly Dictionary<Type, Overlay> _overlays = new Dictionary<Type, Overlay>();
+    private readonly Dictionary<Type, HashSet<Overlay>> _overlaysByTypeLookup = new Dictionary<Type, HashSet<Overlay>>();
+    private readonly HashSet<Overlay> _overlays = new HashSet<Overlay>();
     private ISawmill _logger = default!;
 
-    public IEnumerable<Overlay> AllOverlays => _overlays.Values;
+    public IEnumerable<Overlay> AllOverlays => _overlays;
 
     public void FrameUpdate(FrameEventArgs args)
     {
-        foreach (var overlay in _overlays.Values)
+        foreach (var overlay in _overlays)
         {
             overlay.FrameUpdate(args);
         }
@@ -28,9 +30,14 @@ internal sealed class OverlayManager : IOverlayManagerInternal, IPostInjectInit
 
     public bool AddOverlay(Overlay overlay)
     {
-        if (_overlays.ContainsKey(overlay.GetType()))
+        if (!_overlays.Add(overlay))
             return false;
-        _overlays.Add(overlay.GetType(), overlay);
+        var type = overlay.GetType();
+        if (!_overlaysByTypeLookup.TryGetValue(type, out var typeSet))
+        {
+            typeSet = new HashSet<Overlay>();
+        }
+        typeSet.Add(overlay);
         return true;
     }
 
@@ -42,7 +49,14 @@ internal sealed class OverlayManager : IOverlayManagerInternal, IPostInjectInit
             return false;
         }
 
-        return _overlays.Remove(overlayClass);
+        if (!_overlaysByTypeLookup.TryGetValue(overlayClass, out var typeSet))
+            return false;
+        foreach (var overlay in typeSet)
+        {
+            _overlays.Remove(overlay);
+        }
+        typeSet.Clear();
+        return true;
     }
 
     public bool RemoveOverlay<T>() where T : Overlay
@@ -52,7 +66,10 @@ internal sealed class OverlayManager : IOverlayManagerInternal, IPostInjectInit
 
     public bool RemoveOverlay(Overlay overlay)
     {
-        return _overlays.Remove(overlay.GetType());
+        if (!_overlays.Remove(overlay))
+            return false;
+        _overlaysByTypeLookup.GetValueOrDefault(overlay.GetType())?.Remove(overlay);
+        return true;
     }
 
     public bool TryGetOverlay(Type overlayClass, [NotNullWhen(true)] out Overlay? overlay)
@@ -64,29 +81,29 @@ internal sealed class OverlayManager : IOverlayManagerInternal, IPostInjectInit
             return false;
         }
 
-        return _overlays.TryGetValue(overlayClass, out overlay);
+        if (!_overlaysByTypeLookup.TryGetValue(overlayClass, out var typeSet))
+            return false;
+        overlay = typeSet.FirstOrDefault();
+        return overlay != null;
     }
 
     public bool TryGetOverlay<T>([NotNullWhen(true)] out T? overlay) where T : Overlay
     {
         overlay = null;
-        if (_overlays.TryGetValue(typeof(T), out Overlay? toReturn))
-        {
-            overlay = (T)toReturn;
-            return true;
-        }
-
-        return false;
+        if (!_overlaysByTypeLookup.TryGetValue(typeof(T), out var typeSet))
+            return false;
+        overlay = typeSet.FirstOrDefault() as T;
+        return overlay != null;
     }
 
     public Overlay GetOverlay(Type overlayClass)
     {
-        return _overlays[overlayClass];
+        return _overlaysByTypeLookup.GetValueOrDefault(overlayClass)?.FirstOrDefault() ?? throw new KeyNotFoundException($"Overlay of type {overlayClass} is not found");
     }
 
     public T GetOverlay<T>() where T : Overlay
     {
-        return (T)_overlays[typeof(T)];
+        return (T)GetOverlay(typeof(T));
     }
 
     public bool HasOverlay(Type overlayClass)
@@ -96,12 +113,17 @@ internal sealed class OverlayManager : IOverlayManagerInternal, IPostInjectInit
             _logger.Error($"HasOverlay was called with arg: {overlayClass}, which is not a subclass of Overlay!");
         }
 
-        return _overlays.ContainsKey(overlayClass);
+        return _overlaysByTypeLookup.GetValueOrDefault(overlayClass)?.Count > 0;
     }
 
     public bool HasOverlay<T>() where T : Overlay
     {
-        return _overlays.ContainsKey(typeof(T));
+        return _overlaysByTypeLookup.GetValueOrDefault(typeof(T))?.Count > 0;
+    }
+
+    public bool HasOverlay(Overlay overlay)
+    {
+        return _overlays.Contains(overlay);
     }
 
     void IPostInjectInit.PostInject()

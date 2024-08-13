@@ -22,6 +22,7 @@ public interface IOverlayManager
 
     bool HasOverlay(Type overlayClass);
     bool HasOverlay<T>() where T : Overlay;
+    bool HasOverlay(Overlay overlay);
 
     IEnumerable<Overlay> AllOverlays { get; }
 }

@@ -43,15 +43,64 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fix multithreading bug in ParallelTracker that caused the game to crash randomly.
+*None yet*
 
 ### Other
 
-* Added obsoletion warning for `Control.Dispose()`. New code should not rely on it.
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 230.0.1
+
+
+## 230.0.0
+
+### New features
+
+* Added `InterpolatedStringHandlerArgumentAttribute` to the sandbox whitelist.
+* `IUserInterfaceManager.Popup()` popups now have a copy to clipboard button.
+
+### Bugfixes
+
+* Security fixes
+* Fix exception in `TimedDespawnComponent` spawning another `TimedDespawnComponent`.
+* Fixed pool memory leak in physics `SolveIsland`.
+
+
+## 229.1.2
+
+### Bugfixes
+
+* Fixed a bug where the client might not add entities to the broadphase/lookup components.
+
+
+## 229.1.1
+
+### Bugfixes
+
+* Fix some teleportation commands not working in singleplayer or replays
+
+### Other
+
+* Audio entity names now include the filepath of the audio being played if relevant for debugging.
+
+
+## 229.1.0
+
+### Bugfixes
+
+* Fix multithreading bug in ParallelTracker that caused the game to crash randomly.
+* Fixed IPv6-only hosts not working properly with built-in HTTP clients.
+
+### Other
+
+* Added obsoletion warning for `Control.Dispose()`. New code should not rely on it.
+* Reduced the default tickrate to 30 ticks.
+* Encryption of network messages is now done concurrently to avoid spending main thread time. In profiles, this added up to ~8% of main thread time on RMC-14.
 
 
 ## 229.0.0

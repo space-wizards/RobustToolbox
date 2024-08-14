@@ -145,8 +145,6 @@ namespace Robust.Shared.Network
 
         public IReadOnlyDictionary<Type, long> MessageBandwidthUsage => _bandwidthUsage;
 
-        private NetEncryption? _clientEncryption;
-
         /// <inheritdoc />
         public bool IsServer { get; private set; }
 
@@ -226,6 +224,8 @@ namespace Robust.Shared.Network
 
         private bool _initialized;
 
+        private int _mainThreadId;
+
         public NetManager()
         {
             _strings = new StringTable(this);
@@ -243,6 +243,8 @@ namespace Robust.Shared.Network
             {
                 throw new InvalidOperationException("NetManager has already been initialized.");
             }
+
+            _mainThreadId = Environment.CurrentManagedThreadId;
 
             _strings.Sawmill = _logger;
 
@@ -787,6 +789,7 @@ namespace Robust.Shared.Network
             _channels.Add(sender, channel);
             peer.AddChannel(channel);
             channel.Encryption = encryption;
+            SetupEncryptionChannel(channel);
 
             _strings.SendFullTable(channel);
 
@@ -831,6 +834,7 @@ namespace Robust.Shared.Network
 #endif
             _channels.Remove(connection);
             peer.RemoveChannel(channel);
+            channel.EncryptionChannel?.Complete();
 
             if (IsClient)
             {
@@ -895,9 +899,7 @@ namespace Robust.Shared.Network
                 return true;
             }
 
-            var encryption = IsServer ? channel.Encryption : _clientEncryption;
-
-            encryption?.Decrypt(msg);
+            channel.Encryption?.Decrypt(msg);
 
             var id = msg.ReadByte();
 
@@ -1062,14 +1064,7 @@ namespace Robust.Shared.Network
             if (!(recipient is NetChannel channel))
                 throw new ArgumentException($"Not of type {typeof(NetChannel).FullName}", nameof(recipient));
 
-            var peer = channel.Connection.Peer;
-            var packet = BuildMessage(message, peer);
-
-            channel.Encryption?.Encrypt(packet);
-
-            var method = message.DeliveryMethod;
-            peer.SendMessage(packet, channel.Connection, method);
-            LogSend(message, method, packet);
+            CoreSendMessage(channel, message);
         }
 
         private static void LogSend(NetMessage message, NetDeliveryMethod method, NetOutgoingMessage packet)
@@ -1103,13 +1098,10 @@ namespace Robust.Shared.Network
             DebugTools.Assert(_netPeers[0].Channels.Count == 1);
 
             var peer = _netPeers[0];
-            var packet = BuildMessage(message, peer.Peer);
-            var method = message.DeliveryMethod;
 
-            _clientEncryption?.Encrypt(packet);
+            var channel = peer.Channels[0];
 
-            peer.Peer.SendMessage(packet, peer.ConnectionsWithChannels[0], method);
-            LogSend(message, method, packet);
+            CoreSendMessage(channel, message);
         }
 
         #endregion NetMessages

@@ -430,20 +430,23 @@ namespace Robust.Client.Graphics.Clyde
                 SetUniformDirect(uniformId, bools);
             }
 
-            private unsafe void SetUniformDirect(int slot, bool[] bools)
+            private void SetUniformDirect(int slot, bool[] bools)
             {
                 var intBools = new int[bools.Length];
 
-                fixed (bool* boolPtr = bools)
-                fixed (int* intPtr = intBools)
+                unsafe
                 {
-                    for (var i = 0; i < bools.Length; i++)
+                    fixed (bool* boolPtr = bools)
+                    fixed (int* intPtr = intBools)
                     {
-                        intPtr[i] = boolPtr[i] ? 1 : 0;
-                    }
+                        for (var i = 0; i < bools.Length; i++)
+                        {
+                            intPtr[i] = boolPtr[i] ? 1 : 0;
+                        }
 
-                    GL.Uniform1(slot, bools.Length, intPtr);
-                    _clyde.CheckGlError();
+                        GL.Uniform1(slot, bools.Length, intPtr);
+                        _clyde.CheckGlError();
+                    }
                 }
             }
 

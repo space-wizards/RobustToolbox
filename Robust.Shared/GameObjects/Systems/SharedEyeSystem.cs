@@ -31,9 +31,9 @@ public abstract class SharedEyeSystem : EntitySystem
     {
         var value = ent.Comp.Target;
 
-        if (value == null && TryComp(ent.Owner, out ActorComponent? actorComp))
+        if (value != null && TryComp(ent.Owner, out ActorComponent? actorComp))
         {
-            _views.RemoveViewSubscriber(ent.Comp.Target!.Value, actorComp.PlayerSession);
+            _views.RemoveViewSubscriber(value.Value, actorComp.PlayerSession);
         }
     }
 

@@ -6,22 +6,15 @@ namespace Robust.Server.GameObjects
     /// <summary>
     ///     Entity System that handles subscribing and unsubscribing to PVS views.
     /// </summary>
-    public sealed class ViewSubscriberSystem : EntitySystem
+    public sealed class ViewSubscriberSystem : SharedViewSubscriberSystem
     {
-        public override void Initialize()
-        {
-            base.Initialize();
-
-            SubscribeLocalEvent<ViewSubscriberComponent, ComponentShutdown>(OnViewSubscriberShutdown);
-        }
-
         /// <summary>
         ///     Subscribes the session to get PVS updates from the point of view of the specified entity.
         /// </summary>
-        public void AddViewSubscriber(EntityUid uid, ICommonSession session)
+        public override void AddViewSubscriber(EntityUid uid, ICommonSession session)
         {
             // If the entity doesn't have the component, it will be added.
-            var viewSubscriber = EntityManager.EnsureComponent<ViewSubscriberComponent>(uid);
+            var viewSubscriber = EntityManager.EnsureComponent<Shared.GameObjects.ViewSubscriberComponent>(uid);
 
             if (viewSubscriber.SubscribedSessions.Contains(session))
                 return; // Already subscribed, do nothing else.
@@ -35,9 +28,9 @@ namespace Robust.Server.GameObjects
         /// <summary>
         ///     Unsubscribes the session from getting PVS updates from the point of view of the specified entity.
         /// </summary>
-        public void RemoveViewSubscriber(EntityUid uid, ICommonSession session)
+        public override void RemoveViewSubscriber(EntityUid uid, ICommonSession session)
         {
-            if(!EntityManager.TryGetComponent(uid, out ViewSubscriberComponent? viewSubscriber))
+            if(!EntityManager.TryGetComponent(uid, out Shared.GameObjects.ViewSubscriberComponent? viewSubscriber))
                 return; // Entity didn't have any subscriptions, do nothing.
 
             if (!viewSubscriber.SubscribedSessions.Remove(session))
@@ -47,7 +40,7 @@ namespace Robust.Server.GameObjects
             RaiseLocalEvent(uid, new ViewSubscriberRemovedEvent(uid, session), true);
         }
 
-        private void OnViewSubscriberShutdown(EntityUid uid, ViewSubscriberComponent component, ComponentShutdown _)
+        protected override void OnViewSubscriberShutdown(EntityUid uid, ViewSubscriberComponent component, ComponentShutdown _)
         {
             foreach (var session in component.SubscribedSessions)
             {

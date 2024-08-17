@@ -735,8 +735,13 @@ namespace Robust.Shared.Maths
                 b = 0.0f;
             }
 
-            var m = Math.Abs(luminance - (0.30f * r + 0.59f * g + 0.11f * b));
-            return new Color(r + m, g + m, b + m, hcy.W);
+            var m = luminance - (0.30f * r + 0.59f * g + 0.11f * b);
+
+            var rN = Math.Max(r + m, 0);
+            var gN = Math.Max(g + m, 0);
+            var bN = Math.Max(b + m, 0);
+
+            return new Color(rN, gN, bN, hcy.W);
         }
 
         /// <summary>

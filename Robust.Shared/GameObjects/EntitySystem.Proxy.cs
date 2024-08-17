@@ -736,8 +736,8 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.SpawnAttachedTo" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected EntityUid SpawnAttachedTo(string? prototype, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
-        => EntityManager.SpawnAttachedTo(prototype, coordinates, overrides);
+    protected EntityUid SpawnAttachedTo(string? prototype, EntityCoordinates coordinates, ComponentRegistry? overrides = null, bool traversal = true)
+        => EntityManager.SpawnAttachedTo(prototype, coordinates, overrides, traversal: traversal);
 
     /// <inheritdoc cref="IEntityManager.SpawnAtPosition" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

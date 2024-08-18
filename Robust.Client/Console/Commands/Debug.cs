@@ -584,10 +584,14 @@ namespace Robust.Client.Console.Commands
             {
                 value = member?.GetValue(control);
             }
-            catch (Exception exception)
+            catch (TargetInvocationException exception)
             {
                 var exceptionToPrint = exception.InnerException ?? exception;
                 value = $"{exceptionToPrint.GetType()}: {exceptionToPrint.Message}";
+            }
+            catch (Exception exception)
+            {
+                value = $"{exception.GetType()}: {exception.Message}";
             }
             var o = value switch
             {

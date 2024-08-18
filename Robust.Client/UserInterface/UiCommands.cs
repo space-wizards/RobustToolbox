@@ -1,3 +1,4 @@
+using System.Linq;
 using Robust.Client.State;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
@@ -7,11 +8,12 @@ namespace Robust.Client.UserInterface
 {
     sealed class ChangeSceneCommpand : LocalizedCommands
     {
+        [Dependency] private readonly IReflectionManager _reflection = default!;
+
         public override string Command => "scene";
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var reflection = IoCManager.Resolve<IReflectionManager>();
-            var types = reflection.GetAllChildren(typeof(State.State));
+            var types = _reflection.GetAllChildren(typeof(State.State));
 
             foreach (var tryType in types)
             {
@@ -25,6 +27,14 @@ namespace Robust.Client.UserInterface
             }
 
             shell.WriteError($"No scene child class type ends with {args[0]}");
+        }
+
+        public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        {
+            if (args.Length != 1)
+                return CompletionResult.Empty;
+            var types = _reflection.GetAllChildren(typeof(State.State));
+            return CompletionResult.FromHintOptions(types.Select(x => x.Name), "[State name]");
         }
     }
 }

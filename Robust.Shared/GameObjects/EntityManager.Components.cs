@@ -297,6 +297,16 @@ namespace Robust.Shared.GameObjects
             return new CompInitializeHandle<T>(this, uid, newComponent, reg.Idx);
         }
 
+        public void AddComponent(
+            EntityUid uid,
+            EntityPrototype.ComponentRegistryEntry entry,
+            bool overwrite = false,
+            MetaDataComponent? metadata = null)
+        {
+            var copy = _componentFactory.GetComponent(entry);
+            AddComponent(uid, copy, overwrite, metadata);
+        }
+
         /// <inheritdoc />
         public void AddComponent<T>(EntityUid uid, T component, bool overwrite = false, MetaDataComponent? metadata = null) where T : IComponent
         {

@@ -12,7 +12,6 @@ namespace Robust.Shared.GameObjects;
 internal sealed class PrototypeReloadSystem : EntitySystem
 {
     [Dependency] private readonly IPrototypeManager _prototypes = default!;
-    [Dependency] private readonly IComponentFactory _componentFactory = default!;
 
     public override void Initialize()
     {
@@ -36,43 +35,62 @@ internal sealed class PrototypeReloadSystem : EntitySystem
         }
     }
 
+    private bool IsIgnored(EntityPrototype.ComponentRegistryEntry entry)
+    {
+        var compType = entry.Component.GetType();
+
+        if (compType == typeof(TransformComponent) || compType == typeof(MetaDataComponent))
+            return true;
+
+        return false;
+    }
+
     private void UpdateEntity(EntityUid entity, MetaDataComponent metaData, EntityPrototype newPrototype)
     {
         var oldPrototype = metaData.EntityPrototype;
+        var modified = false;
 
-        var oldPrototypeComponents = oldPrototype?.Components.Keys
-            .Where(n => n != "Transform" && n != "MetaData")
-            .Select(name => (name, _componentFactory.GetRegistration(name).Type))
-            .ToList() ?? new List<(string name, Type Type)>();
-
-        var newPrototypeComponents = newPrototype.Components.Keys
-            .Where(n => n != "Transform" && n != "MetaData")
-            .Select(name => (name, _componentFactory.GetRegistration(name).Type))
-            .ToList();
-
-        var ignoredComponents = new List<string>();
-
-        // Find components to be removed, and remove them
-        foreach (var (name, type) in oldPrototypeComponents.Except(newPrototypeComponents))
+        if (oldPrototype != null)
         {
-            if (newPrototype.Components.ContainsKey(name))
+            foreach (var oldComp in oldPrototype.Components)
             {
-                ignoredComponents.Add(name);
-                continue;
-            }
+                if (IsIgnored(oldComp.Value))
+                    continue;
 
-            RemComp(entity, type);
+                // Removed
+                if (!newPrototype.Components.TryGetValue(oldComp.Key, out var newComp))
+                {
+                    modified = true;
+                    RemComp(entity, oldComp.Value.Component.GetType());
+                    continue;
+                }
+
+                // Modified
+                if (!newComp.Mapping.Equals(oldComp.Value.Mapping))
+                {
+                    modified = true;
+                    EntityManager.AddComponent(entity, newComp, overwrite: true, metaData);
+                }
+            }
         }
 
-        EntityManager.CullRemovedComponents();
-
-        // Add new components
-        foreach (var (name, _) in newPrototypeComponents.Where(t => !ignoredComponents.Contains(t.name))
-                     .Except(oldPrototypeComponents))
+        foreach (var newComp in newPrototype.Components)
         {
-            var data = newPrototype.Components[name];
-            var component = _componentFactory.GetComponent(name);
-            EntityManager.AddComponent(entity, component);
+            if (IsIgnored(newComp.Value))
+                continue;
+
+            // Existing component, handled above
+            if (oldPrototype?.Components.ContainsKey(newComp.Key) == true)
+                continue;
+
+            // Added
+            modified = true;
+            EntityManager.AddComponent(entity, newComp.Value, overwrite: true, metadata: metaData);
+        }
+
+        if (modified)
+        {
+            EntityManager.CullRemovedComponents();
         }
 
         // Update entity metadata

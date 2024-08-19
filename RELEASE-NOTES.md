@@ -35,11 +35,11 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Prototype reloads now also re-apply modified components. For example this means sprite or physics changes are reflected on existing prototypes.
 
 ### New features
 
-*None yet*
+* AddComponent now has an overload for ComponentRegistryEntry.
 
 ### Bugfixes
 

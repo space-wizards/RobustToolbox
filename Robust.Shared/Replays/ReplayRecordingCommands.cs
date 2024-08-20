@@ -12,8 +12,8 @@ internal sealed class ReplayStartCommand : LocalizedCommands
     [Dependency] private readonly IResourceManager _resMan = default!;
 
     public override string Command => "replay_recording_start";
-    public override string Description => LocalizationManager.GetString($"cmd-replay-recording-start-desc");
-    public override string Help => LocalizationManager.GetString($"cmd-replay-recording-start-help");
+    public override string Description => Loc.GetString($"cmd-replay-recording-start-desc");
+    public override string Help => Loc.GetString($"cmd-replay-recording-start-help");
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
@@ -72,8 +72,8 @@ internal sealed class ReplayStopCommand : LocalizedCommands
     [Dependency] private readonly IReplayRecordingManager _replay = default!;
 
     public override string Command => "replay_recording_stop";
-    public override string Description => LocalizationManager.GetString($"cmd-replay-recording-stop-desc");
-    public override string Help => LocalizationManager.GetString($"cmd-replay-recording-stop-help");
+    public override string Description => Loc.GetString($"cmd-replay-recording-stop-desc");
+    public override string Help => Loc.GetString($"cmd-replay-recording-stop-help");
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
@@ -92,8 +92,8 @@ internal sealed class ReplayStatsCommand : LocalizedCommands
     [Dependency] private readonly IReplayRecordingManager _replay = default!;
 
     public override string Command => "replay_recording_stats";
-    public override string Description => LocalizationManager.GetString($"cmd-replay-recording-stats-desc");
-    public override string Help => LocalizationManager.GetString($"cmd-replay-recording-stats-help");
+    public override string Description => Loc.GetString($"cmd-replay-recording-stats-desc");
+    public override string Help => Loc.GetString($"cmd-replay-recording-stats-help");
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {

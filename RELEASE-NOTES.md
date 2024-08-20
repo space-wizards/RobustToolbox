@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* `LocalizedEntityCommands` are now not initialized inside `RobustUnitTest`, fixing guaranteed test failures.
 
 ### Other
 

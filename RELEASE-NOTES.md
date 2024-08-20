@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `LocalizedCommands` now has a `Loc` property that is the same as its `LocalizationManager` field, for brevity.
 
 ### Bugfixes
 

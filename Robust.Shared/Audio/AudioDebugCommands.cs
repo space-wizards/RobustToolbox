@@ -15,7 +15,7 @@ internal sealed class AudioDebugCommands : LocalizedCommands
     {
         if (args.Length != 1)
         {
-            shell.WriteError(Loc.GetString("cmd-invalid-arg-number-error"));
+            shell.WriteError(LocalizationManager.GetString("cmd-invalid-arg-number-error"));
             return;
         }
 
@@ -28,7 +28,7 @@ internal sealed class AudioDebugCommands : LocalizedCommands
     {
         if (args.Length == 1)
         {
-            return CompletionResult.FromHint(Loc.GetString("cmd-audio_length-arg-file-name"));
+            return CompletionResult.FromHint(LocalizationManager.GetString("cmd-audio_length-arg-file-name"));
         }
 
         return CompletionResult.Empty;

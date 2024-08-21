@@ -11,10 +11,7 @@ namespace Robust.Client.Replays.Commands;
 public abstract class BaseReplayCommand : LocalizedCommands
 {
     [Dependency] protected readonly IReplayPlaybackManager PlaybackManager = default!;
-
-    // This Loc property is identical to the one on the base type, but this one was here first.
-    // So we have to keep it for ABI compat.
-    protected new ILocalizationManager Loc => LocalizationManager;
+    protected ILocalizationManager Loc => LocalizationManager;
 
     public override string Description => Loc.GetString($"cmd-{Command.Replace('_','-')}-desc");
 

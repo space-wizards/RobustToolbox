@@ -14,7 +14,7 @@ public sealed class VfsListCommand : LocalizedCommands
     {
         if (args.Length > 1)
         {
-            shell.WriteError(Loc.GetString("cmd-vfs_ls-err-args"));
+            shell.WriteError(LocalizationManager.GetString("cmd-vfs_ls-err-args"));
             return;
         }
 
@@ -30,7 +30,7 @@ public sealed class VfsListCommand : LocalizedCommands
         if (args.Length == 1)
         {
             var opts = CompletionHelper.ContentDirPath(args[0], _resourceManager);
-            return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-vfs_ls-hint-path"));
+            return CompletionResult.FromHintOptions(opts, LocalizationManager.GetString("cmd-vfs_ls-hint-path"));
         }
 
         return CompletionResult.Empty;

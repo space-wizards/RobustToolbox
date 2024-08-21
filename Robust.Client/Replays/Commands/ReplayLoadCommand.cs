@@ -27,7 +27,7 @@ public sealed class ReplayLoadCommand : BaseReplayCommand
     {
         if (PlaybackManager.Replay != null)
         {
-            shell.WriteError(Loc.GetString("cmd-replay-error-already-loaded"));
+            shell.WriteError(LocalizationManager.GetString("cmd-replay-error-already-loaded"));
             return;
         }
 

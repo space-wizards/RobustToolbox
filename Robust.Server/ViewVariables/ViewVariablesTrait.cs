@@ -107,7 +107,7 @@ namespace Robust.Server.ViewVariables
 
                 // We don't blindly send any prototypes, we ONLY send prototypes for valid, registered variants.
                 if (typeof(IPrototype).IsAssignableFrom(valType)
-                    && IoCManager.Resolve<IPrototypeManager>().TryGetVariantFrom(valType, out var variant))
+                    && IoCManager.Resolve<IPrototypeManager>().TryGetKindFrom(valType, out var variant))
                 {
                     return new ViewVariablesBlobMembers.PrototypeReferenceToken()
                     {
@@ -161,7 +161,7 @@ namespace Robust.Server.ViewVariables
             {
                 var protoMan = IoCManager.Resolve<IPrototypeManager>();
 
-                if (protoMan.TryGetVariantFrom(type, out var variant))
+                if (protoMan.TryGetKindFrom(type, out var variant))
                     return new ViewVariablesBlobMembers.PrototypeReferenceToken()
                     {
                         ID = null, Variant = variant, Stringified = PrettyPrint.PrintUserFacing(null),

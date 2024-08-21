@@ -10,6 +10,7 @@ using Robust.Server.GameStates;
 using Robust.Server.Physics;
 using Robust.Shared.ComponentTrees;
 using Robust.Shared.Configuration;
+using Robust.Shared.Console;
 using Robust.Shared.Containers;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -164,6 +165,10 @@ namespace Robust.UnitTesting
 
             var entMan = deps.Resolve<IEntityManager>();
             var mapMan = deps.Resolve<IMapManager>();
+
+            // Avoid discovering EntityCommands since they may depend on systems
+            // that aren't available in a unit test context.
+            deps.Resolve<EntityConsoleHost>().DiscoverCommands = false;
 
             // Required components for the engine to work
             // Why are we still here? Just to suffer? Why can't we just use [RegisterComponent] magic?

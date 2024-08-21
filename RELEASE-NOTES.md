@@ -39,11 +39,12 @@ END TEMPLATE-->
 
 ### New features
 
-* Added `InterpolatedStringHandlerArgumentAttribute` to the sandbox whitelist.
+*None yet*
 
 ### Bugfixes
 
 * Fix tile enlargement not being applied for some EntityLookup queries.
+* `LocalizedEntityCommands` are now not initialized inside `RobustUnitTest`, fixing guaranteed test failures.
 
 ### Other
 
@@ -52,6 +53,23 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 230.0.1
+
+
+## 230.0.0
+
+### New features
+
+* Added `InterpolatedStringHandlerArgumentAttribute` to the sandbox whitelist.
+* `IUserInterfaceManager.Popup()` popups now have a copy to clipboard button.
+
+### Bugfixes
+
+* Security fixes
+* Fix exception in `TimedDespawnComponent` spawning another `TimedDespawnComponent`.
+* Fixed pool memory leak in physics `SolveIsland`.
 
 
 ## 229.1.2

@@ -47,7 +47,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
     /// </summary>
     public int OcclusionCollisionMask { get; set; }
 
-    public virtual float ZOffset { get; protected set; }
+    public virtual float ZOffset { get; set; }
 
     public override void Initialize()
     {

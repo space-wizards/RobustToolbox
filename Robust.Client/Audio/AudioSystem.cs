@@ -60,7 +60,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     public override float ZOffset
     {
         get => _zOffset;
-        protected set
+        set
         {
             _zOffset = value;
             _audio.SetZOffset(value);

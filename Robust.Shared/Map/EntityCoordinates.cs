@@ -15,7 +15,7 @@ namespace Robust.Shared.Map
     [PublicAPI]
     public readonly struct EntityCoordinates : IEquatable<EntityCoordinates>, ISpanFormattable
     {
-        public static readonly EntityCoordinates Invalid = new(EntityUid.Invalid, Vector2.Zero);
+        public static readonly EntityCoordinates Invalid = new(Vector2.Zero, EntityUid.Invalid);
 
         /// <summary>
         ///     ID of the entity that this position is relative to.
@@ -39,8 +39,8 @@ namespace Robust.Shared.Map
 
         public EntityCoordinates()
         {
-            EntityId = EntityUid.Invalid;
             Position = Vector2.Zero;
+            EntityId = EntityUid.Invalid;
         }
 
         /// <summary>
@@ -48,16 +48,35 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="entityId">ID of the entity that this position is relative to.</param>
         /// <param name="position">Position in the entity's local space.</param>
+        [Obsolete("Use EntityCoordinates(Vector2 position, EntityUid entityId) instead")]
         public EntityCoordinates(EntityUid entityId, Vector2 position)
         {
             EntityId = entityId;
             Position = position;
         }
 
+        /// <summary>
+        ///     Constructs a new instance of <see cref="EntityCoordinates"/>.
+        /// </summary>
+        /// <param name="entityId">ID of the entity that this position is relative to.</param>
+        /// <param name="position">Position in the entity's local space.</param>
+        public EntityCoordinates(Vector2 position, EntityUid entityId)
+        {
+            Position = position;
+            EntityId = entityId;
+        }
+
+        [Obsolete("Use EntityCoordinates(float x, float y, EntityUid entityId) instead")]
         public EntityCoordinates(EntityUid entityId, float x, float y)
         {
             EntityId = entityId;
             Position = new Vector2(x, y);
+        }
+
+        public EntityCoordinates(float x, float y, EntityUid entityId)
+        {
+            Position = new Vector2(x, y);
+            EntityId = entityId;
         }
 
         /// <summary>
@@ -163,7 +182,7 @@ namespace Robust.Shared.Map
         /// <returns>A new set of EntityCoordinates with the specified position and same <see cref="EntityId"/> as this one.</returns>
         public EntityCoordinates WithPosition(Vector2 newPosition)
         {
-            return new(EntityId, newPosition);
+            return new(newPosition, EntityId);
         }
 
         /// <summary>
@@ -251,7 +270,7 @@ namespace Robust.Shared.Map
         [Pure]
         public EntityCoordinates Offset(Vector2 position)
         {
-            return new(EntityId, Position + position);
+            return new(Position + position, EntityId);
         }
 
         /// <summary>
@@ -393,7 +412,7 @@ namespace Robust.Shared.Map
             if(left.EntityId != right.EntityId)
                 throw new ArgumentException("Can't sum EntityCoordinates with different relative entities.");
 
-            return new EntityCoordinates(left.EntityId, left.Position + right.Position);
+            return new EntityCoordinates(left.Position + right.Position, left.EntityId);
         }
 
         /// <summary>
@@ -405,7 +424,7 @@ namespace Robust.Shared.Map
             if(left.EntityId != right.EntityId)
                 throw new ArgumentException("Can't subtract EntityCoordinates with different relative entities.");
 
-            return new EntityCoordinates(left.EntityId, left.Position - right.Position);
+            return new EntityCoordinates(left.Position - right.Position, left.EntityId);
         }
 
         /// <summary>
@@ -417,7 +436,7 @@ namespace Robust.Shared.Map
             if(left.EntityId != right.EntityId)
                 throw new ArgumentException("Can't multiply EntityCoordinates with different relative entities.");
 
-            return new EntityCoordinates(left.EntityId, left.Position * right.Position);
+            return new EntityCoordinates(left.Position * right.Position, left.EntityId);
         }
 
         /// <summary>
@@ -426,7 +445,7 @@ namespace Robust.Shared.Map
         /// <exception cref="ArgumentException">When the relative entities aren't the same</exception>
         public static EntityCoordinates operator *(EntityCoordinates left, float right)
         {
-            return new(left.EntityId, left.Position * right);
+            return new(left.Position * right, left.EntityId);
         }
 
         /// <summary>
@@ -435,7 +454,7 @@ namespace Robust.Shared.Map
         /// <exception cref="ArgumentException">When the relative entities aren't the same</exception>
         public static EntityCoordinates operator *(EntityCoordinates left, int right)
         {
-            return new(left.EntityId, left.Position * right);
+            return new(left.Position * right, left.EntityId);
         }
 
         #endregion

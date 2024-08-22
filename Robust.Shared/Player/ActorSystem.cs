@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -23,7 +24,7 @@ public sealed class ActorSystem : EntitySystem
     }
 
     [PublicAPI]
-    public bool TryGetSession(EntityUid? uid, out ICommonSession? session)
+    public bool TryGetSession(EntityUid? uid, [NotNullWhen(true)] out ICommonSession? session)
     {
         if (TryComp(uid, out ActorComponent? actorComp))
         {

@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -348,34 +349,49 @@ internal sealed unsafe class SystemFontManagerDirectWrite : ISystemFontManagerIn
     {
         var array = new DWriteLocalizedString[stringList->GetCount()];
 
+        var stringPool = ArrayPool<char>.Shared.Rent(256);
+
         for (var i = 0; i < array.Length; i++)
         {
             uint length;
 
             ThrowIfFailed(stringList->GetStringLength((uint)i, &length), "IDWriteStringList::GetStringLength");
-            var arr = new char[length + 1];
-            fixed (char* pArr = arr)
-            {
-                ThrowIfFailed(stringList->GetString((uint)i, pArr, (uint)arr.Length), "IDWriteStringList::GetString");
-            }
-
-            var value = new string(arr, 0, (int)length);
-
-            ThrowIfFailed(stringList->GetLocaleNameLength((uint)i, &length), "IDWriteStringList::GetLocaleNameLength");
-            arr = new char[length + 1];
-            fixed (char* pArr = arr)
+            ExpandIfNecessary(ref stringPool, length + 1);
+            fixed (char* pArr = stringPool)
             {
                 ThrowIfFailed(
-                    stringList->GetLocaleName((uint)i, pArr, (uint)arr.Length),
+                    stringList->GetString((uint)i, pArr, (uint)stringPool.Length),
+                    "IDWriteStringList::GetString");
+            }
+
+            var value = new string(stringPool, 0, (int)length);
+
+            ThrowIfFailed(stringList->GetLocaleNameLength((uint)i, &length), "IDWriteStringList::GetLocaleNameLength");
+            ExpandIfNecessary(ref stringPool, length + 1);
+            fixed (char* pArr = stringPool)
+            {
+                ThrowIfFailed(
+                    stringList->GetLocaleName((uint)i, pArr, (uint)stringPool.Length),
                     "IDWriteStringList::GetLocaleName");
             }
 
-            var localeName = new string(arr, 0, (int)length);
+            var localeName = new string(stringPool, 0, (int)length);
 
             array[i] = new DWriteLocalizedString(value, localeName);
         }
 
+        ArrayPool<char>.Shared.Return(stringPool);
+
         return array;
+    }
+
+    private static void ExpandIfNecessary(ref char[] array, uint requiredLength)
+    {
+        if (requiredLength < array.Length)
+            return;
+
+        ArrayPool<char>.Shared.Return(array);
+        array = ArrayPool<char>.Shared.Rent(checked((int)requiredLength));
     }
 
     private static LocalizedStringSet StringsToSet(DWriteLocalizedString[] strings)

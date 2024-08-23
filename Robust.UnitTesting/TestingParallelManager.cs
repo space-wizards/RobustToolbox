@@ -26,6 +26,11 @@ public sealed class TestingParallelManager : IParallelManagerInternal
         return ev.WaitHandle;
     }
 
+    public void ProcessNow(IRobustJob job)
+    {
+        job.Execute();
+    }
+
     /// <inheritdoc/>
     public void ProcessNow(IParallelRobustJob jobs, int amount)
     {

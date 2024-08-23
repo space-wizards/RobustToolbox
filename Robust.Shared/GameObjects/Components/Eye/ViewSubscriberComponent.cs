@@ -5,7 +5,7 @@ namespace Robust.Shared.GameObjects;
 
 // Not networked because doesn't do anything on client.
 [RegisterComponent]
-public sealed partial class ViewSubscriberComponent : Component
+internal sealed partial class ViewSubscriberComponent : Component
 {
     internal readonly HashSet<ICommonSession> SubscribedSessions = new();
 }

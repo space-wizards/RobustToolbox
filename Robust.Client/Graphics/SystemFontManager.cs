@@ -77,6 +77,6 @@ internal sealed class SystemFontManager : ISystemFontManagerInternal, IPostInjec
     void IPostInjectInit.PostInject()
     {
         _sawmill = _logManager.GetSawmill("font.system");
-        _sawmill.Level = LogLevel.Verbose;
+        // _sawmill.Level = LogLevel.Verbose;
     }
 }

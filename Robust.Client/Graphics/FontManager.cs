@@ -1,16 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using JetBrains.Annotations;
 using Robust.Client.Utility;
-using Robust.Shared.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SharpFont;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using TerraFX.Interop.Windows;
 
 namespace Robust.Client.Graphics
 {
@@ -39,8 +38,13 @@ namespace Robust.Client.Graphics
             // Freetype directly operates on the font memory managed by us.
             // As such, the font data should be pinned in POH.
             var fontData = stream.CopyToPinnedArray();
-            var face = new Face(_library, fontData, index);
-            var handle = new FontFaceHandle(face);
+            return Load(new ArrayMemoryHandle(fontData), index);
+        }
+
+        public unsafe IFontFaceHandle Load(IFontMemoryHandle memory, int index = 0)
+        {
+            var face = new Face(_library, (nint) memory.GetData(), checked((int)memory.GetDataSize()), index);
+            var handle = new FontFaceHandle(face, memory);
             return handle;
         }
 
@@ -235,10 +239,13 @@ namespace Robust.Client.Graphics
 
         private sealed class FontFaceHandle : IFontFaceHandle
         {
+            // Keep this alive to avoid it being GC'd.
+            private readonly IFontMemoryHandle _memoryHandle;
             public Face Face { get; }
 
-            public FontFaceHandle(Face face)
+            public FontFaceHandle(Face face, IFontMemoryHandle memoryHandle)
             {
+                _memoryHandle = memoryHandle;
                 Face = face;
             }
         }
@@ -376,6 +383,33 @@ namespace Robust.Client.Graphics
         {
             public CharMetrics Metrics;
             public AtlasTexture? Texture;
+        }
+
+        private sealed class ArrayMemoryHandle(byte[] array) : IFontMemoryHandle
+        {
+            private GCHandle _gcHandle = GCHandle.Alloc(array, GCHandleType.Pinned);
+
+            public unsafe byte* GetData()
+            {
+                return (byte*) _gcHandle.AddrOfPinnedObject();
+            }
+
+            public IntPtr GetDataSize()
+            {
+                return array.Length;
+            }
+
+            public void Dispose()
+            {
+                _gcHandle.Free();
+                _gcHandle = default;
+                GC.SuppressFinalize(this);
+            }
+
+            ~ArrayMemoryHandle()
+            {
+                Dispose();
+            }
         }
     }
 }

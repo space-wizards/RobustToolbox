@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Log;
@@ -225,24 +226,49 @@ internal sealed unsafe class SystemFontManagerDirectWrite : ISystemFontManagerIn
             result = file->GetReferenceKey(&referenceKey, &referenceKeyLength);
             ThrowIfFailed(result, "IDWriteFontFile::GetReferenceKey");
 
-            IDWriteFontFileStream* stream;
-            result = loader->CreateStreamFromKey(referenceKey, referenceKeyLength, &stream);
-            ThrowIfFailed(result, "IDWriteFontFileLoader::CreateStreamFromKey");
-
-            using (var streamObject = new DirectWriteStream(stream))
+            IDWriteLocalFontFileLoader* localLoader;
+            result = loader->QueryInterface(__uuidof<IDWriteLocalFontFileLoader>(), (void**)&localLoader);
+            if (result.SUCCEEDED)
             {
-                // TODO: This sucks cuz if you have multiple fonts in one file,
-                // we'll be duplicating the data in memory every time.
-                // Not sure how to avoid this, as it needs a way to see if two IDWriteFontFile objects are identical.
-                //
-                // I can think of a few solutions, given DirectWrite's API:
-                // * Try to get the file path directly, by casting to an IDWriteLocalFontFileLoader.
-                //   This seems to work in practice for most fonts but it's probably an implementation detail.
-                // * Hash the file contents.
-                // * See if we can reference compare the pointers somehow? Probably not.
-                //
-                // I'm not sure how important this is for memory savings.
-                // You know come to think of it wouldn't it make sense if we mmapped the font files...
+                _sawmill.Verbose("Loading font face via memory mapped file...");
+
+                // We can get the local file path on disk. This means we can directly load it via mmap.
+                uint filePathLength;
+                ThrowIfFailed(
+                    localLoader->GetFilePathLengthFromKey(referenceKey, referenceKeyLength, &filePathLength),
+                    "IDWriteLocalFontFileLoader::GetFilePathLengthFromKey");
+                var filePath = new char[filePathLength + 1];
+                fixed (char* pFilePath = filePath)
+                {
+                    ThrowIfFailed(
+                        localLoader->GetFilePathFromKey(
+                            referenceKey,
+                            referenceKeyLength,
+                            pFilePath,
+                            (uint)filePath.Length),
+                        "IDWriteLocalFontFileLoader::GetFilePathFromKey");
+                }
+
+                var path = new string(filePath, 0, (int)filePathLength);
+
+                localLoader->Release();
+
+                return _fontManager.Load(new MemoryMappedFontMemoryHandle(path));
+            }
+            else
+            {
+                _sawmill.Verbose("Loading font face via stream...");
+
+                // DirectWrite doesn't give us anything to go with for this file, read it into regular memory.
+                // If the font file has multiple faces, which is possible, then this approach will duplicate memory.
+                // That sucks, but I'm really not sure whether there's any way around this short of
+                // comparing the memory contents by hashing to check equality.
+                // As I'm pretty sure we can't like reference equality check the font objects somehow.
+                IDWriteFontFileStream* stream;
+                result = loader->CreateStreamFromKey(referenceKey, referenceKeyLength, &stream);
+                ThrowIfFailed(result, "IDWriteFontFileLoader::CreateStreamFromKey");
+
+                using var streamObject = new DirectWriteStream(stream);
                 return _fontManager.Load(streamObject, (int)fontFace->GetFontFaceIndex());
             }
         }
@@ -554,5 +580,41 @@ internal sealed unsafe class SystemFontManagerDirectWrite : ISystemFontManagerIn
         /// </summary>
         public required string Primary;
         public required Dictionary<string, string> Values;
+    }
+
+    private sealed class MemoryMappedFontMemoryHandle : IFontMemoryHandle
+    {
+        private readonly MemoryMappedFile _mappedFile;
+        private readonly MemoryMappedViewAccessor _accessor;
+
+        public MemoryMappedFontMemoryHandle(string filePath)
+        {
+            _mappedFile = MemoryMappedFile.CreateFromFile(
+                filePath,
+                FileMode.Open,
+                null,
+                0,
+                MemoryMappedFileAccess.Read);
+
+            _accessor = _mappedFile.CreateViewAccessor(0, 0, MemoryMappedFileAccess.Read);
+        }
+
+        public byte* GetData()
+        {
+            byte* pointer = null;
+            _accessor.SafeMemoryMappedViewHandle.AcquirePointer(ref pointer);
+            return pointer;
+        }
+
+        public nint GetDataSize()
+        {
+            return (nint)_accessor.Capacity;
+        }
+
+        public void Dispose()
+        {
+            _accessor.Dispose();
+            _mappedFile.Dispose();
+        }
     }
 }

@@ -90,6 +90,7 @@ namespace Robust.Client
         [Dependency] private readonly IReplayPlaybackManager _replayPlayback = default!;
         [Dependency] private readonly IReplayRecordingManagerInternal _replayRecording = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly ISystemFontManagerInternal _systemFontManager = default!;
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -121,6 +122,7 @@ namespace Robust.Client
             _taskManager.Initialize();
             _parallelMgr.Initialize();
             _fontManager.SetFontDpi((uint)_configurationManager.GetCVar(CVars.DisplayFontDpi));
+            _systemFontManager.Initialize();
 
             // Load optional Robust modules.
             LoadOptionalRobustModules(displayMode, _resourceManifest!);

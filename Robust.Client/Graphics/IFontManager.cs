@@ -10,7 +10,7 @@ namespace Robust.Client.Graphics
     }
     internal interface IFontManagerInternal : IFontManager
     {
-        IFontFaceHandle Load(Stream stream);
+        IFontFaceHandle Load(Stream stream, int index = 0);
         IFontInstanceHandle MakeInstance(IFontFaceHandle handle, int size);
         void SetFontDpi(uint fontDpi);
     }

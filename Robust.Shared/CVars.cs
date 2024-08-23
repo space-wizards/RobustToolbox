@@ -1795,5 +1795,15 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> ToolshedNearbyEntitiesLimit =
             CVarDef.Create("toolshed.nearby_entities_limit", 5, CVar.SERVER | CVar.REPLICATED);
+
+        /*
+         * FONT
+         */
+
+        /// <summary>
+        /// If true, allow Windows "downloadable" fonts to be exposed to the system fonts API.
+        /// </summary>
+        public static readonly CVarDef<bool> FontWindowsDownloadable =
+            CVarDef.Create("font.windows_downloadable", false, CVar.CLIENTONLY | CVar.ARCHIVE);
     }
 }

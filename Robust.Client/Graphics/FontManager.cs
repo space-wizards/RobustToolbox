@@ -34,12 +34,12 @@ namespace Robust.Client.Graphics
             _library = new Library();
         }
 
-        public IFontFaceHandle Load(Stream stream)
+        public IFontFaceHandle Load(Stream stream, int index = 0)
         {
             // Freetype directly operates on the font memory managed by us.
             // As such, the font data should be pinned in POH.
             var fontData = stream.CopyToPinnedArray();
-            var face = new Face(_library, fontData, 0);
+            var face = new Face(_library, fontData, index);
             var handle = new FontFaceHandle(face);
             return handle;
         }

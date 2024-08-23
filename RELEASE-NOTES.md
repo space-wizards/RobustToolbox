@@ -54,6 +54,41 @@ END TEMPLATE-->
 *None yet*
 
 
+## 230.2.0
+
+### New features
+
+* Add ProcessNow for IRobustJob as a convenience method where you may not want to run a job in the background sometimes.
+* Add Vector2i helpers to all 8 neighbouring directions.
+
+### Other
+
+* Remove IThreadPoolWorkItem interface from IRobustJob.
+
+
+## 230.1.0
+
+### New features
+
+* You can now pass `bool[]` parameters to shaders.
+* Added `toolshed.nearby_entities_limit` CVar.
+* Fix `RichTextLabel.Text` to clear and reset the message properly in all cases.
+* `scene` command has tab completion now.
+* `devwindow` UI inspector property catches exceptions for read properties.
+* `SplitContainer.Flip()`
+
+### Bugfixes
+
+* Fix tile enlargement not being applied for some EntityLookup queries.
+* `LocalizedEntityCommands` are now not initialized inside `RobustUnitTest`, fixing guaranteed test failures.
+* Fixed issues with broadphase init breaking replays frequently.
+* Fix uploaded prototypes and resources for clients connecting to a server.
+
+### Other
+
+* Improved error reporting for DataField analyzer.
+
+
 ## 230.0.1
 
 

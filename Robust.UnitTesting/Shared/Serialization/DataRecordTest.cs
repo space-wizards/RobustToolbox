@@ -152,7 +152,7 @@ public sealed partial class DataRecordTest : SerializationTest
         var prototypes = IoCManager.Resolve<IPrototypeManager>();
         prototypes.Initialize();
 
-        Assert.That(prototypes.HasVariant("emptyTestPrototypeRecord"), Is.True);
+        Assert.That(prototypes.HasKind("emptyTestPrototypeRecord"), Is.True);
     }
 
     [Test]

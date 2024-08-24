@@ -56,9 +56,10 @@ namespace Robust.Build.Tasks
             IDictionary targetOutputs) => throw new NotSupportedException();
 
         // PYREX NOTE: This project was extremely null-unsafe before I touched it. I'm just marking what it did already
-        public bool ContinueOnError { get; } = default!;
-        public int LineNumberOfTaskNode { get; } = default!;
-        public int ColumnNumberOfTaskNode { get; } = default!;
-        public string ProjectFileOfTaskNode { get; } = default!;
+        // Here's the broken interface of IBuildEngine that we started with
+        public bool ContinueOnError => default;
+        public int LineNumberOfTaskNode => default;
+        public int ColumnNumberOfTaskNode => default;
+        public string ProjectFileOfTaskNode => null!;
     }
 }

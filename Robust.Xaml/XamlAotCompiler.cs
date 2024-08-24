@@ -24,7 +24,7 @@ namespace Robust.Xaml
     /// Based on https://github.com/AvaloniaUI/Avalonia/blob/c85fa2b9977d251a31886c2534613b4730fbaeaf/src/Avalonia.Build.Tasks/XamlCompilerTaskExecutor.cs
     /// Adjusted for our UI Framework
     /// </remarks>
-    public partial class XamlAotCompiler
+    internal partial class XamlAotCompiler
     {
         /// <summary>
         /// Update the assembly whose name is <paramref name="input" />, then

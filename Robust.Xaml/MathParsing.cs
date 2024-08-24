@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Robust.Xaml
 {
-    public static class MathParsing
+    internal static class MathParsing
     {
         private static float[]? ParseSingleArr(string input)
         {

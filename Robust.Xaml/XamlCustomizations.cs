@@ -14,7 +14,7 @@ namespace Robust.Xaml
     /// <remarks>
     /// This is a bunch of code primarily written by PJB that originally appeared in XamlAotCompiler.cs.
     /// </remarks>
-    public sealed class XamlCustomizations
+    internal sealed class XamlCustomizations
     {
         public const string ContextNameScopeFieldName = "RobustNameScope";
         public readonly IXamlTypeSystem TypeSystem;
@@ -211,7 +211,7 @@ namespace Robust.Xaml
         /// <summary>
         /// A trivial implementation of <see cref="IFileSource"/>.
         /// </summary>
-        class InternalFileSource: IFileSource
+        private class InternalFileSource: IFileSource
         {
             public string FilePath { get; }
             public byte[] FileContents { get; }

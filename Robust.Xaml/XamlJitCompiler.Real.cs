@@ -21,7 +21,7 @@ namespace Robust.Xaml
     /// behind DEBUG. (outside the client, we're apparently not given the
     /// option of locking it behind TOOLS.)
     /// </remarks>
-    public sealed class XamlJitCompiler
+    internal sealed class XamlJitCompiler
     {
         private readonly SreTypeSystem _typeSystem;
 

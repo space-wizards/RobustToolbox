@@ -7,7 +7,7 @@ namespace Robust.Xaml
     /// <summary>
     /// Source: https://github.com/jbevain/cecil/blob/master/Test/Mono.Cecil.Tests/Extensions.cs
     /// </summary>
-    public static class CecilExtensions
+    internal static class CecilExtensions
     {
         /// <summary>
         /// Specialize some generic parameters of a reference to a generic method. The return value

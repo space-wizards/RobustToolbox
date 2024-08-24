@@ -12,7 +12,7 @@ namespace Robust.Xaml
     /// - https://github.com/AvaloniaUI/Avalonia/blob/c85fa2b9977d251a31886c2534613b4730fbaeaf/src/Avalonia.Build.Tasks/XamlCompilerTaskExecutor.cs
     /// - https://github.com/AvaloniaUI/Avalonia/blob/c85fa2b9977d251a31886c2534613b4730fbaeaf/src/Avalonia.Build.Tasks/XamlCompilerTaskExecutor.Helpers.cs
     /// </remarks>
-    public partial class XamlAotCompiler
+    internal partial class XamlAotCompiler
     {
         private static readonly string[] NameSuffixes = {".xaml", ".paml", ".axaml"};
 

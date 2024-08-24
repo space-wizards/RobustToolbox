@@ -14,7 +14,7 @@ namespace Robust.Xaml
     /// - https://github.com/AvaloniaUI/Avalonia/blob/c85fa2b9977d251a31886c2534613b4730fbaeaf/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AddNameScopeRegistration.cs
     /// - https://github.com/AvaloniaUI/Avalonia/blob/afb8ae6f3c517dae912729511483995b16cb31af/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/IgnoredDirectivesTransformer.cs
     /// </summary>
-    public class RobustXamlILCompiler : XamlILCompiler
+    internal class RobustXamlILCompiler : XamlILCompiler
     {
         public RobustXamlILCompiler(TransformerConfiguration configuration, XamlLanguageEmitMappings<IXamlILEmitter, XamlILNodeEmitResult> emitMappings, bool fillWithDefaults) : base(configuration, emitMappings, fillWithDefaults)
         {

@@ -1,4 +1,6 @@
-﻿namespace Robust.Client.UserInterface.XAML.Proxy;
+﻿using System;
+
+namespace Robust.Client.UserInterface.XAML.Proxy;
 
 /// <summary>
 /// Metadata to support JIT compilation of XAML resources for a type.
@@ -11,6 +13,7 @@
 /// artifacts. Released content should support hot reloading if loaded in a debug
 /// client, but this is untested.
 /// </remarks>
+[AttributeUsage(validOn: AttributeTargets.Class, Inherited = false)]
 public sealed class XamlMetadataAttribute: System.Attribute
 {
     public readonly string Uri;

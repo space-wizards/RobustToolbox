@@ -32,15 +32,9 @@ internal sealed class XamlImplementationStorage
     private readonly Dictionary<string, string> _fileContent = new();
 
     /// <summary>
-    /// For each filename, we store the list of types interested in this file.
+    /// For each filename, we store the type interested in this file.
     /// </summary>
-    /// <remarks>
-    /// Multiple Controls can be associated with the same XAML file.
-    ///
-    /// At time of writing, for instance, StrippingMenu in Content has no *.xaml
-    /// file, and therefore it uses DefaultWindow.xaml.
-    /// </remarks>
-    private readonly Dictionary<string, List<Type>> _fileTypes = new();
+    private readonly Dictionary<string, Type> _fileType = new();
 
     /// <summary>
     /// For each type, store the JIT-compiled implementation of Populate.
@@ -131,9 +125,13 @@ internal sealed class XamlImplementationStorage
             _fileUri[fileName] = uri;
             _fileContent[fileName] = content;
 
-            List<Type> types;
-            _fileTypes[fileName] = (types = _fileTypes.GetValueOrDefault(fileName) ?? []);
-            types.Add(type);
+            if (!_fileType.TryAdd(fileName, type))
+            {
+                throw new InvalidProgramException(
+                    $"XamlImplementationStorage observed that two types were interested in the same Xaml filename: " +
+                    $"{fileName}. ({type.FullName} and {_fileType[fileName].FullName}). this is a bug in XamlAotCompiler"
+                );
+            }
         }
     }
 
@@ -163,7 +161,7 @@ internal sealed class XamlImplementationStorage
     /// <returns>true if not a no-op</returns>
     public bool CanSetImplementation(string fileName)
     {
-        return _fileTypes.ContainsKey(fileName);
+        return _fileType.ContainsKey(fileName);
     }
 
     /// <summary>
@@ -178,7 +176,7 @@ internal sealed class XamlImplementationStorage
     /// <param name="quiet">if true, then don't bother to log</param>
     public void SetImplementation(string fileName, string fileContent, bool quiet)
     {
-        if (!_fileTypes.TryGetValue(fileName, out var types))
+        if (!_fileType.TryGetValue(fileName, out var type))
         {
             _sawmill.Warning($"SetImplementation called with {fileName}, but no types care about its contents");
             return;
@@ -188,17 +186,14 @@ internal sealed class XamlImplementationStorage
             _fileUri.GetValueOrDefault(fileName) ??
             throw new InvalidProgramException("file URI missing (this is a bug in ImplementationStorage)");
 
-        foreach (var type in types)
+        if (!quiet)
         {
-            if (!quiet)
-            {
-                _sawmill.Debug($"replacing {fileName} for {type}");
-            }
-            var impl = _jitDelegate(type, uri, fileName, fileContent);
-            if (impl != null)
-            {
-                _populateImplementations[type] = impl;
-            }
+            _sawmill.Debug($"replacing {fileName} for {type}");
+        }
+        var impl = _jitDelegate(type, uri, fileName, fileContent);
+        if (impl != null)
+        {
+            _populateImplementations[type] = impl;
         }
         _fileContent[fileName] = fileContent;
     }

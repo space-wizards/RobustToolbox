@@ -40,6 +40,9 @@ namespace Robust.Client.UserInterface.XAML.Proxy
             }
 
             _sawmill.Info($"code location: {codeLocation}");
+
+            // must not be gc'ed or else it will stop reporting
+            // therefore: keep a reference
             _watcher = CreateWatcher(codeLocation);
         }
 
@@ -47,13 +50,6 @@ namespace Robust.Client.UserInterface.XAML.Proxy
         /// Create a file system watcher that identifies XAML changes in a given
         /// location.
         /// </summary>
-        /// <remarks>
-        /// The watcher must not be garbage collected or else monitoring will stop
-        /// and therefore we keep a reference to it.
-        ///
-        /// The watcher will notify the <see cref="IXamlProxyManager"/> each time the
-        /// implementation of one of its resources changes.
-        /// </remarks>
         /// <param name="location">the location (a real path on the OS file system)</param>
         /// <returns>the new watcher</returns>
         /// <exception cref="ArgumentOutOfRangeException">if <see cref="FileSystemWatcher"/> violates its type-related postconditions</exception>
@@ -111,14 +107,13 @@ namespace Robust.Client.UserInterface.XAML.Proxy
         /// Using the content roots of the project, infer the location of its code.
         /// </summary>
         /// <remarks>
-        /// To do this, ascend upwards until the solution file is found.
-        ///
         /// This kind of introspection is almost universally a bad idea, but we don't
         /// feasibly have other options, so I've buried it in a private method.
         /// </remarks>
         /// <returns>the inferred code location or null</returns>
         private string? InferCodeLocation()
         {
+            // ascend upwards from each content root until the solution file is found
             foreach (var contentRoot in _resources.GetContentRoots())
             {
                 var systemPath = contentRoot.ToRelativeSystemPath();
@@ -158,26 +153,22 @@ namespace Robust.Client.UserInterface.XAML.Proxy
         /// <summary>
         /// Infer the name of the resource file associated with the XAML item at the given path.
         /// </summary>
-        /// <remarks>
-        /// To do so, start with the name of the file and systematically add each super-directory until we reach
-        /// the inferred code location.
-        ///
-        /// For instance, for /home/pyrex/ss14/Content.Client/Instruments/UI/InstrumentMenu.xaml, the following names
-        /// will be tried:
-        ///
-        /// - InstrumentMenu.xaml
-        /// - UI.InstrumentMenu.xaml
-        /// - Instruments.UI.InstrumentMenu.xaml
-        /// - Content.Client.Instruments.UI.InstrumentMenu.xaml
-        ///
-        /// We terminate early when the predicate says that one of these names is wanted.
-        /// </remarks>
         /// <param name="codeLocation">the code location</param>
         /// <param name="realPath">the real path of the file</param>
         /// <param name="isDesired">a function returning true if something expects this file</param>
         /// <returns>the name of a desired resource that matches this file, or null</returns>
         private string? ResourceFileName(string codeLocation, string realPath, Predicate<string> isDesired)
         {
+            // start with the name of the file and systematically add each super-directory until we reach
+            // the inferred code location.
+            //
+            // for /home/pyrex/ss14/Content.Client/Instruments/UI/InstrumentMenu.xaml, the following names
+            // will be tried:
+            //
+            // - InstrumentMenu.xaml
+            // - UI.InstrumentMenu.xaml
+            // - Instruments.UI.InstrumentMenu.xaml
+            // - Content.Client.Instruments.UI.InstrumentMenu.xaml
             var resourceFileName = Path.GetFileName(realPath);
             var super = Directory.GetParent(realPath);
 
@@ -185,6 +176,7 @@ namespace Robust.Client.UserInterface.XAML.Proxy
 
             while (true)
             {
+                // did someone want it: OK, jump out
                 if (isDesired(resourceFileName))
                 {
                     return resourceFileName;

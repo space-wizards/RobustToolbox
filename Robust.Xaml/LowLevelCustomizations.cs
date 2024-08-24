@@ -44,16 +44,12 @@ namespace Robust.Xaml
         /// <summary>
         /// Create a <see cref="LowLevelCustomizations"/> object.
         /// </summary>
-        /// <remarks>
-        /// Construct and store a large number of <see cref="TypeDefinition" />
-        /// and <see cref="MethodReference" /> using the CecilTypeSystem.
-        ///
-        /// Future surgery on the assembly will look for, use, and replace these.
-        /// </remarks>
         /// <param name="typeSystem">the <see cref="CecilTypeSystem" /></param>
         /// <exception cref="NullReferenceException">if some needed types were undefined</exception>
         public LowLevelCustomizations(CecilTypeSystem typeSystem)
         {
+            // resolve every type that we look for or substitute in when doing surgery
+            // what a mess!
             _typeSystem = typeSystem;
             _asm = typeSystem.TargetAssemblyDefinition;
 
@@ -149,17 +145,14 @@ namespace Robust.Xaml
         /// calls to RobustXamlLoader.Load with calls to the generated trampoline.
         /// Returns true if the patching succeeded.
         /// </summary>
-        /// <remarks>
-        /// This allows us to replace the implementation of Load at runtime.
-        ///
-        /// The logic here actually has a few somewhat involved cases, again
-        /// due to Paul Ritter.
-        /// </remarks>
         /// <param name="subject">the subject</param>
         /// <param name="aotPopulateMethod">the populate method</param>
         /// <returns>true</returns>
         public bool TrampolineCallsToXamlLoader(TypeDefinition subject, MethodDefinition aotPopulateMethod)
         {
+            // PYREX NOTE: This logic is brittle and has a lot of cases
+            // I do not understand all of them, but I have faithfully ported them
+            // Paul Ritter wrote most of this
             var trampoline = CreateTrampoline(subject, aotPopulateMethod);
 
             var foundXamlLoader = false;

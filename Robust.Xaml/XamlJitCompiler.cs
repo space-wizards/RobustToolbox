@@ -1,6 +1,4 @@
-﻿#if DEBUG
-
-using System;
+﻿using System;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
@@ -16,10 +14,6 @@ namespace Robust.Xaml
     /// <remarks>
     /// Uses <see cref="System.Reflection.Emit"/>, which can find types
     /// at runtime without looking for their assemblies on disk.
-    ///
-    /// The generated code doesn't respect the sandbox, so this is locked
-    /// behind DEBUG. (outside the client, we're apparently not given the
-    /// option of locking it behind TOOLS.)
     /// </remarks>
     internal sealed class XamlJitCompiler
     {
@@ -45,13 +39,10 @@ namespace Robust.Xaml
         /// <summary>
         /// Generate a name for a new dynamic assembly.
         /// </summary>
-        /// <remarks>
-        /// An effort is made to make the name unique. (even though I am not
-        /// sure .NET requires this)
-        /// </remarks>
         /// <returns>the new name</returns>
         private static string GenerateAssemblyName()
         {
+            // make the name unique (even though C# possibly doesn't care)
             return
                 $"{nameof(XamlJitCompiler)}_{Interlocked.Increment(ref _assemblyId)}";
         }
@@ -199,4 +190,3 @@ namespace Robust.Xaml
         }
     }
 }
-#endif

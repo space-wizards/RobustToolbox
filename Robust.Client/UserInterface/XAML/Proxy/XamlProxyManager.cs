@@ -90,14 +90,9 @@ namespace Robust.Client.UserInterface.XAML.Proxy
         }
 
         /// <summary>
-        /// Calls <see cref="XamlJitCompiler.Compile"/> using the stored
+        /// Calls <see cref="XamlJitCompiler.Compile"/> using a stored
         /// <see cref="XamlJitCompiler"/> instance.
         /// </summary>
-        /// <remarks>
-        /// Lazily initializes <see cref="XamlJitCompiler" /> -- initializing it
-        /// is expensive, and initializing it on every individual assembly load
-        /// is quadratic.
-        /// </remarks>
         /// <param name="t">the <see cref="Type"/> that cares about this Xaml</param>
         /// <param name="uri">the <see cref="Uri" /> of this xaml (from the type's metadata)</param>
         /// <param name="fileName">the filename of this xaml (from the type's metadata)</param>
@@ -105,6 +100,8 @@ namespace Robust.Client.UserInterface.XAML.Proxy
         /// <returns>the MethodInfo for the new JITed implementation</returns>
         private MethodInfo? Compile(Type t, Uri uri, string fileName, string content)
         {
+            // initialize XamlJitCompiler lazily because constructing it has
+            // very high CPU cost
             XamlJitCompiler xjit;
             lock(this)
             {

@@ -69,6 +69,12 @@ namespace Robust.Xaml
             return splitItems;
         }
 
+        /// <summary>
+        /// Parse a vector of two floats separated by commas or spaces, such as
+        /// "1,2" or "1.5 2.5"
+        /// </summary>
+        /// <param name="s">the string representation of the vector</param>
+        /// <returns>the parsed floats, or null if parsing failed</returns>
         public static (float, float)? ParseVector2(string s)
         {
             var arr = ParseSingleArr(s);
@@ -84,6 +90,12 @@ namespace Robust.Xaml
             return null;
         }
 
+        /// <summary>
+        /// Parse a vector of one, two, or four floats separated by commas or
+        /// spaces, such as "1", "1e2,2e3" or ".1,.2,.3,.4"
+        /// </summary>
+        /// <param name="s">the string representation of the vector</param>
+        /// <returns>the parsed floats, or null if parsing failed</returns>
         public static float[]? ParseThickness(string s)
         {
             var arr = ParseSingleArr(s);

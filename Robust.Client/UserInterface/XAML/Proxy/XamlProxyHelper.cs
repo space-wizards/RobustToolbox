@@ -8,12 +8,7 @@ namespace Robust.Client.UserInterface.XAML.Proxy
     /// non-generic concrete type.
     /// </summary>
     /// <remarks>
-    /// Specializing an interface to use an argument of generic type doesn't work
-    /// super well in our sandbox, for whatever reason.
-    ///
-    /// This type doesn't have any conditional compilation associated with it --
-    /// in practice, its method is stubbed when <see cref="IXamlProxyManager" />'s
-    /// Populate method is stubbed.
+    /// (And none of the others, for security reasons.)
     /// </remarks>
     public sealed class XamlProxyHelper
     {

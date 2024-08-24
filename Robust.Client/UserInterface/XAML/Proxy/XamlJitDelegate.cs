@@ -14,4 +14,4 @@ namespace Robust.Client.UserInterface.XAML.Proxy;
 /// should not rethrow exceptions unless they have a strong reason to believe they
 /// will be caught.
 /// </remarks>
-delegate MethodInfo? XamlJitDelegate(Type type, Uri uri, string filename, string content);
+internal delegate MethodInfo? XamlJitDelegate(Type type, Uri uri, string filename, string content);

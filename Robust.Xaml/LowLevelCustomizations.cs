@@ -31,7 +31,7 @@ internal sealed class LowLevelCustomizations
     private readonly AssemblyDefinition _asm;
 
     private readonly TypeDefinition _iocManager;
-    private readonly TypeDefinition _xamlProxyHelper;
+    private readonly TypeDefinition _iXamlProxyHelper;
     private readonly TypeDefinition _systemType;
     private readonly TypeDefinition _stringType;
     private readonly TypeDefinition _xamlMetadataAttributeType;
@@ -58,17 +58,17 @@ internal sealed class LowLevelCustomizations
             ?? throw new NullReferenceException($"type must exist: {name}");
 
         _iocManager = ResolveType("Robust.Shared.IoC.IoCManager");
-        _xamlProxyHelper = ResolveType(
-            "Robust.Client.UserInterface.XAML.Proxy.XamlProxyHelper"
+        _iXamlProxyHelper = ResolveType(
+            "Robust.Client.UserInterface.XAML.Proxy.IXamlProxyHelper"
         );
         _resolveXamlProxyHelperMethod = _asm.MainModule.ImportReference(
             _iocManager.Methods
                 .First(m => m.Name == "Resolve")
-                .MakeGenericMethod(_xamlProxyHelper)
+                .MakeGenericMethod(_iXamlProxyHelper)
         );
 
         _populateMethod = _asm.MainModule.ImportReference(
-            _xamlProxyHelper.Methods
+            _iXamlProxyHelper.Methods
                 .First(m => m.Name == "Populate")
         );
 
@@ -128,7 +128,7 @@ internal sealed class LowLevelCustomizations
         Emit(Instruction.Create(OpCodes.Ldtoken, subject));
         Emit(Instruction.Create(OpCodes.Call, _getTypeFromHandleMethod));
         Emit(Instruction.Create(OpCodes.Ldarg_0));
-        Emit(Instruction.Create(OpCodes.Call, _populateMethod));
+        Emit(Instruction.Create(OpCodes.Callvirt, _populateMethod));
 
         var ret = Instruction.Create(OpCodes.Ret);
         Emit(Instruction.Create(OpCodes.Brtrue_S, ret));

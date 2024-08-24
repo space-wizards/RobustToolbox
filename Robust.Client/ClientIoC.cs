@@ -156,7 +156,7 @@ namespace Robust.Client
             deps.Register<IXamlHotReloadManager, XamlHotReloadManagerStub>();
 #endif
 
-            deps.Register<XamlProxyHelper, XamlProxyHelper>();
+            deps.Register<IXamlProxyHelper, XamlProxyHelper>();
             deps.Register<MarkupTagManager>();
         }
     }

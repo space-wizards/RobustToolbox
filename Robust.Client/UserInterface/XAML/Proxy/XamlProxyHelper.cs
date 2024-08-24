@@ -3,14 +3,7 @@ using Robust.Shared.IoC;
 
 namespace Robust.Client.UserInterface.XAML.Proxy;
 
-/// <summary>
-/// Reexport the Populate method of <see cref="IXamlProxyManager"/> from a
-/// non-generic concrete type.
-/// </summary>
-/// <remarks>
-/// (And none of the others, for security reasons.)
-/// </remarks>
-public sealed class XamlProxyHelper
+internal sealed class XamlProxyHelper: IXamlProxyHelper
 {
     [Dependency] private IXamlProxyManager _xamlProxyManager = default!;
 

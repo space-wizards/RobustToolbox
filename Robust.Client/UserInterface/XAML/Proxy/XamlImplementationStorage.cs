@@ -20,16 +20,16 @@ internal sealed class XamlImplementationStorage
     /// <remarks>
     /// When we compile the new implementation, we will use the same <see cref="Uri"/>.
     /// </remarks>
-    Dictionary<string, Uri> _fileUri = new();
+    private readonly Dictionary<string, Uri> _fileUri = new();
 
     /// <summary>
     /// For each filename, we store its last known content.
-    /// <summary>
+    /// </summary>
     /// <remarks>
     /// This is known even for AOT-compiled code -- therefore, we can use this table
     /// to convert an AOT-compiled Control to a JIT-compiled one.
     /// </remarks>
-    Dictionary<string, string> _fileContent = new();
+    private readonly Dictionary<string, string> _fileContent = new();
 
     /// <summary>
     /// For each filename, we store the list of types interested in this file.
@@ -40,7 +40,7 @@ internal sealed class XamlImplementationStorage
     /// At time of writing, for instance, StrippingMenu in Content has no *.xaml
     /// file, and therefore it uses DefaultWindow.xaml.
     /// </remarks>
-    Dictionary<string, List<Type>> _fileTypes = new();
+    private readonly Dictionary<string, List<Type>> _fileTypes = new();
 
     /// <summary>
     /// For each type, store the JIT-compiled implementation of Populate.
@@ -51,10 +51,10 @@ internal sealed class XamlImplementationStorage
     /// false instead. As an ultimate result, the AOT'ed implementation
     /// will be used.
     /// </remarks>
-    Dictionary<Type, MethodInfo> _populateImplementations = new();
+    private readonly Dictionary<Type, MethodInfo> _populateImplementations = new();
 
-    ISawmill _sawmill;
-    XamlJitDelegate _jitDelegate;
+    private readonly ISawmill _sawmill;
+    private readonly XamlJitDelegate _jitDelegate;
 
     /// <summary>
     /// Create the storage.

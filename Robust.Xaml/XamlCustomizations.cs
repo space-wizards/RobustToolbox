@@ -4,9 +4,8 @@ using XamlX.Emit;
 using XamlX.IL;
 using XamlX.Transform;
 using XamlX.TypeSystem;
-using Pidgin;
 
-namespace RobustXaml
+namespace Robust.Xaml
 {
 
     /// <summary>
@@ -129,10 +128,12 @@ namespace RobustXaml
 
             if (type.Equals(types.Vector2))
             {
-                var foo = MathParsing.Single2.Parse(text);
+                var foo = MathParsing.ParseVector2(text);
 
-                if (!foo.Success)
+                if (foo == null)
+                {
                     throw new XamlLoadException($"Unable to parse \"{text}\" as a Vector2", node);
+                }
 
                 var (x, y) = foo.Value;
 
@@ -147,46 +148,14 @@ namespace RobustXaml
 
             if (type.Equals(types.Thickness))
             {
-                var foo = MathParsing.Thickness.Parse(text);
+                var foo = MathParsing.ParseThickness(text);
 
-                if (!foo.Success)
+                if (foo == null)
+                {
                     throw new XamlLoadException($"Unable to parse \"{text}\" as a Thickness", node);
-
-                var val = foo.Value;
-                float[] full;
-                if (val.Length == 1)
-                {
-                    var u = val[0];
-                    full = new[] { u, u, u, u };
-                }
-                else if (val.Length == 2)
-                {
-                    var h = val[0];
-                    var v = val[1];
-                    full = new[] { h, v, h, v };
-                }
-                else // 4
-                {
-                    full = val;
                 }
 
-                result = new RXamlSingleVecLikeConstAstNode(
-                    node,
-                    types.Thickness,
-                    types.ThicknessConstructorFull,
-                    types.Single,
-                    full);
-                return true;
-            }
-
-            if (type.Equals(types.Thickness))
-            {
-                var foo = MathParsing.Thickness.Parse(text);
-
-                if (!foo.Success)
-                    throw new XamlLoadException($"Unable to parse \"{text}\" as a Thickness", node);
-
-                var val = foo.Value;
+                var val = foo;
                 float[] full;
                 if (val.Length == 1)
                 {
@@ -242,12 +211,16 @@ namespace RobustXaml
         /// <summary>
         /// A trivial implementation of <see cref="IFileSource"/>.
         /// </summary>
-        /// <param name="filePath">the path</param>
-        /// <param name="contents">the contents</param>
-        class InternalFileSource(string filePath, byte[] contents) : IFileSource
+        class InternalFileSource: IFileSource
         {
-            public string FilePath => filePath;
-            public byte[] FileContents => contents;
+            public string FilePath { get; }
+            public byte[] FileContents { get; }
+
+            public InternalFileSource(string filePath, byte[] contents)
+            {
+                FilePath = filePath;
+                FileContents = contents;
+            }
         }
     }
 }

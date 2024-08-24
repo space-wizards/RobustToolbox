@@ -6,7 +6,7 @@ using XamlX.Emit;
 using XamlX.IL;
 using XamlX.TypeSystem;
 
-namespace RobustXaml
+namespace Robust.Xaml
 {
     public abstract class RXamlVecLikeConstAstNode<T>
         : XamlAstNode, IXamlAstValueNode, IXamlAstILEmitableNode

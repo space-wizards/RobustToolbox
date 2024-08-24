@@ -10,7 +10,7 @@ using XamlX.IL;
 using XamlX.Parsers;
 using XamlX.TypeSystem;
 
-namespace RobustXaml
+namespace Robust.Xaml
 {
     /// <summary>
     /// Utility class: holds scope information for a Microsoft.Build.Framework

@@ -1,6 +1,6 @@
 ﻿using Microsoft.Build.Framework;
 
-namespace RobustXaml
+namespace Robust.Xaml
 {
     /// <summary>
     /// Taken from https://github.com/AvaloniaUI/Avalonia/blob/c85fa2b9977d251a31886c2534613b4730fbaeaf/src/Avalonia.Build.Tasks/Extensions.cs

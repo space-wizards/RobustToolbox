@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Robust.Shared.Log;
+using Robust.Xaml;
 
 namespace Robust.Client.UserInterface.XAML.Proxy;
 
@@ -65,7 +66,7 @@ internal sealed class XamlImplementationStorage
     /// <param name="sawmill">the (shared) logger</param>
     /// <param name="jitDelegate">
     ///     a delegate that calls the
-    ///     <see cref="RobustXaml.XamlJitCompiler"/>, possibly handling errors
+    ///     <see cref="XamlJitCompiler"/>, possibly handling errors
     /// </param>
     public XamlImplementationStorage(ISawmill sawmill, XamlJitDelegate jitDelegate)
     {

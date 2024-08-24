@@ -8,7 +8,7 @@ using System.Threading;
 using XamlX.IL;
 using XamlX.Parsers;
 
-namespace RobustXaml
+namespace Robust.Xaml
 {
     /// <summary>
     /// A JIT compiler for Xaml.
@@ -25,7 +25,7 @@ namespace RobustXaml
     {
         private readonly SreTypeSystem _typeSystem;
 
-        private static uint _assemblyId;
+        private static int _assemblyId;
 
         /// <summary>
         /// Construct a XamlJitCompiler.
@@ -152,7 +152,7 @@ namespace RobustXaml
 
             contextClassBuilder.CreateType();
 
-            var populateClass = populateClassRawBuilder.CreateType()!;
+            var populateClass = populateClassRawBuilder.CreateTypeInfo()!;
             var implementation = populateClass.GetMethod(populateName);
 
             if (implementation == null)
@@ -174,10 +174,29 @@ namespace RobustXaml
     /// It is not guaranteed that the <see cref="Exception" /> ever appeared on the stack.
     /// That is an implementation detail of <see cref="XamlJitCompiler.Compile"/>.
     /// </remarks>
-    public abstract record XamlJitCompilerResult
+    public abstract class XamlJitCompilerResult
     {
-        public record Success(MethodInfo MethodInfo): XamlJitCompilerResult;
-        public record Error(Exception Raw, string? Hint): XamlJitCompilerResult;
+        public class Success: XamlJitCompilerResult
+        {
+            public MethodInfo MethodInfo { get; }
+
+            public Success(MethodInfo methodInfo)
+            {
+                MethodInfo = methodInfo;
+            }
+        }
+
+        public class Error: XamlJitCompilerResult
+        {
+            public Exception Raw { get; }
+            public string? Hint { get; }
+
+            public Error(Exception raw, string? hint)
+            {
+                Raw = raw;
+                Hint = hint;
+            }
+        }
     }
 }
 #endif

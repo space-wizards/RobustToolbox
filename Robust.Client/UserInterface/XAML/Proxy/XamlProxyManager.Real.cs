@@ -5,7 +5,7 @@ using System.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Reflection;
-using RobustXaml;
+using Robust.Xaml;
 
 namespace Robust.Client.UserInterface.XAML.Proxy {
     /// <summary>

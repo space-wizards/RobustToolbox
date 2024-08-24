@@ -1,11 +1,12 @@
 ﻿#if TOOLS
 using System;
 using System.Reflection;
+using Robust.Xaml;
 
 namespace Robust.Client.UserInterface.XAML.Proxy;
 
 /// <summary>
-/// This callback has the approximate type of <see cref="RobustXaml.XamlJitCompiler.Compile"/>,
+/// This callback has the approximate type of <see cref="XamlJitCompiler.Compile"/>,
 /// but it has no error-signaling faculty.
 /// </summary>
 /// <remarks>

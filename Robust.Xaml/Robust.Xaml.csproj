@@ -1,20 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\MSBuild\Robust.Engine.props" />
-
   <PropertyGroup>
-    <IsPackable>false</IsPackable>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <NoWarn>CA1416</NoWarn>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>8.0</LangVersion>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Framework" Version="17.8.3" />
     <PackageReference Include="Mono.Cecil" Version="0.11.5" />
-    <PackageReference Include="Pidgin" Version="3.2.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\XamlX\src\XamlX.IL.Cecil\XamlX.IL.Cecil.csproj" />
   </ItemGroup>
+
 </Project>

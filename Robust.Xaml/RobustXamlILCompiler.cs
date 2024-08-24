@@ -6,7 +6,7 @@ using XamlX.IL;
 using XamlX.Transform;
 using XamlX.TypeSystem;
 
-namespace RobustXaml
+namespace Robust.Xaml
 {
     /// <summary>
     /// Emitters & Transformers based on:

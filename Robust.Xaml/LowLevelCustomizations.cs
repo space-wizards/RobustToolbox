@@ -6,7 +6,7 @@ using Mono.Cecil.Rocks;
 using Mono.Collections.Generic;
 using XamlX.TypeSystem;
 
-namespace RobustXaml
+namespace Robust.Xaml
 {
     /// <summary>
     /// Class that performs find/replace operations on IL in assemblies that contain

@@ -2,7 +2,7 @@
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
-using RobustXaml;
+using Robust.Xaml;
 
 namespace Robust.Build.Tasks
 {

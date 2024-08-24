@@ -3,7 +3,7 @@ using XamlX.Emit;
 using XamlX.IL;
 using XamlX.TypeSystem;
 
-namespace RobustXaml
+namespace Robust.Xaml
 {
     internal class RXamlColorAstNode
         : XamlAstNode, IXamlAstValueNode, IXamlAstILEmitableNode

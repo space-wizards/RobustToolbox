@@ -1,10 +1,9 @@
 ﻿using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using Mono.Cecil;
 using XamlX.TypeSystem;
 
-namespace RobustXaml
+namespace Robust.Xaml
 {
     /// <summary>
     /// Helpers taken from AvaloniaUI on GitHub.
@@ -15,7 +14,7 @@ namespace RobustXaml
     /// </remarks>
     public partial class XamlAotCompiler
     {
-        public static readonly ImmutableArray<string> NameSuffixes = [".xaml", ".paml", ".axaml"];
+        private static readonly string[] NameSuffixes = {".xaml", ".paml", ".axaml"};
 
         static bool CheckXamlName(IResource r) =>
             NameSuffixes.Any(suffix => r.Name.ToLowerInvariant().EndsWith(suffix));

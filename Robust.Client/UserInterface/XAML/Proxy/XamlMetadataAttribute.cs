@@ -2,14 +2,15 @@
 {
     /// <summary>
     /// Metadata to support JIT compilation of XAML resources for a type.
-    ///
+    /// </summary>
+    /// <remarks>
     /// We can feed XamlX data from this type, along with new content, to get new XAML
     /// resources.
     ///
     /// This type is inert and is generated for release artifacts too, not just debug
     /// artifacts. Released content should support hot reloading if loaded in a debug
     /// client, but this is untested.
-    /// </summary>
+    /// </remarks>
     public sealed class XamlMetadataAttribute: System.Attribute
     {
         public readonly string Uri;

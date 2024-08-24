@@ -12,12 +12,15 @@ namespace RobustXaml
 {
     /// <summary>
     /// A JIT compiler for Xaml.
-    ///
-    /// Uses System.Reflection.Emit, which can find types at runtime without looking for their assemblies on disk.
-    ///
-    /// The generated code doesn't respect the sandbox, so this is locked behind DEBUG. (since we're apparently
-    /// not given the option of locking it behind TOOLS.)
     /// </summary>
+    /// <remarks>
+    /// Uses <see cref="System.Reflection.Emit"/>, which can find types
+    /// at runtime without looking for their assemblies on disk.
+    ///
+    /// The generated code doesn't respect the sandbox, so this is locked
+    /// behind DEBUG. (outside the client, we're apparently not given the
+    /// option of locking it behind TOOLS.)
+    /// </remarks>
     public sealed class XamlJitCompiler
     {
         private readonly SreTypeSystem _typeSystem;
@@ -26,12 +29,14 @@ namespace RobustXaml
 
         /// <summary>
         /// Construct a XamlJitCompiler.
-        ///
+        /// </summary>
+        /// <remarks>
         /// No configuration is needed or possible.
         ///
-        /// This is a pretty expensive function because it creates an SreTypeSystem, which requires going through
-        /// the loaded assembly list.
-        /// </summary>
+        /// This is a pretty expensive function because it creates an
+        /// <see cref="SreTypeSystem"/>, which requires going through the loaded
+        /// assembly list.
+        /// </remarks>
         public XamlJitCompiler()
         {
             _typeSystem = new SreTypeSystem();
@@ -39,9 +44,11 @@ namespace RobustXaml
 
         /// <summary>
         /// Generate a name for a new dynamic assembly.
-        ///
-        /// An effort is made to make the name unique. (even though I am not sure .NET requires this)
         /// </summary>
+        /// <remarks>
+        /// An effort is made to make the name unique. (even though I am not
+        /// sure .NET requires this)
+        /// </remarks>
         /// <returns>the new name</returns>
         private static string GenerateAssemblyName()
         {
@@ -50,13 +57,17 @@ namespace RobustXaml
         }
 
         /// <summary>
-        /// Compile the Populate method for `t`, using the given uri/path/contents.
-        ///
-        /// These values (except for contents) are generated during the AOT compile process.
-        ///
-        /// It is not enforced that they be the same after JIT -- the JITed code has no knowledge
-        /// of the state of the AOT'ed code -- but our code and documentation do assume that.
+        /// Compile the Populate method for <paramref name="t" />, using the given
+        /// uri/path/contents.
         /// </summary>
+        /// <remarks>
+        /// These values (except for contents) are generated during the AOT compile
+        /// process.
+        ///
+        /// It is not enforced that they be the same after JIT -- the JITed code has
+        /// no knowledge of the state of the AOT'ed code -- but our code and
+        /// documentation do assume that.
+        /// </remarks>
         /// <param name="t">the type whose Populate method should be generated</param>
         /// <param name="uri">the Uri associated with the Control</param>
         /// <param name="filePath">the resource file path for the control</param>
@@ -153,19 +164,20 @@ namespace RobustXaml
         }
 
     }
-}
 
-
-/// <summary>
-/// An enum containing either Success (with a MethodInfo) or Error.
-/// (with an Exception, and an optional hint for how to fix it)
-///
-/// It is not guaranteed that the Exception ever appeared on the stack.
-/// That is an implementation detail of XamlJitCompiler.Compile.
-/// </summary>
-public abstract record XamlJitCompilerResult
-{
-    public record Success(MethodInfo MethodInfo): XamlJitCompilerResult;
-    public record Error(Exception Raw, string? Hint): XamlJitCompilerResult;
+    /// <summary>
+    /// An enum containing either <see cref="Success" /> (with a <see cref="MethodInfo" />)
+    /// or <see cref="Error" />. (with an <see cref="Exception" />, and an optional hint
+    /// for how to fix it)
+    /// </summary>
+    /// <remarks>
+    /// It is not guaranteed that the <see cref="Exception" /> ever appeared on the stack.
+    /// That is an implementation detail of <see cref="XamlJitCompiler.Compile"/>.
+    /// </remarks>
+    public abstract record XamlJitCompilerResult
+    {
+        public record Success(MethodInfo MethodInfo): XamlJitCompilerResult;
+        public record Error(Exception Raw, string? Hint): XamlJitCompilerResult;
+    }
 }
 #endif

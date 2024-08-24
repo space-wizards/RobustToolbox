@@ -10,10 +10,11 @@ namespace RobustXaml
 {
 
     /// <summary>
-    /// This is a bunch of code primarily written by PJB that originally appeared in XamlAotCompiler.cs.
-    ///
-    /// It now appears here because it's useful to both the AOT and the JIT compiler.
+    /// Shared XAML config info that both the AOT and JIT compiler can use.
     /// </summary>
+    /// <remarks>
+    /// This is a bunch of code primarily written by PJB that originally appeared in XamlAotCompiler.cs.
+    /// </remarks>
     public sealed class XamlCustomizations
     {
         public const string ContextNameScopeFieldName = "RobustNameScope";
@@ -24,10 +25,13 @@ namespace RobustXaml
         public readonly RobustXamlILCompiler ILCompiler;
 
         /// <summary>
-        /// Create a bunch of resources related to SS14's particular dialect of XAML.
+        /// Create and hold a bunch of resources related to SS14's particular dialect of XAML.
         /// </summary>
-        /// <param name="typeSystem">the type system for XamlX to use (both Cecil and Sre work)</param>
-        /// <param name="defaultAssembly">the default assembly (presumably for unqualified names to be looked up in)</param>
+        /// <param name="typeSystem">
+        ///     the type system for XamlX to use
+        ///     (both <see cref="CecilTypeSystem"/> and <see cref="CecilTypeSystem"/> work)
+        /// </param>
+        /// <param name="defaultAssembly">the default assembly (for unqualified names to be looked up in)</param>
         public XamlCustomizations(IXamlTypeSystem typeSystem, IXamlAssembly defaultAssembly)
         {
             TypeSystem = typeSystem;
@@ -70,9 +74,8 @@ namespace RobustXaml
         }
 
         /// <summary>
-        /// Create a field of type NameScope that contains a new NameScope.
-        ///
-        /// Alter the type's constructor to initialize that field.
+        /// Create a field of type NameScope that contains a new NameScope, then
+        /// alter the type's constructor to initialize that field.
         /// </summary>
         /// <param name="typeBuilder">the type to alter</param>
         /// <param name="constructor">the constructor to alter</param>
@@ -94,11 +97,15 @@ namespace RobustXaml
 
 
         /// <summary>
-        /// Convert a XamlAstTextNode to some other kind of node, if the purpose of the node appears to be
-        /// to represent one of various builtin types. (See, for instance, RXamlColorAstNode.)
+        /// Convert a <see cref="XamlAstTextNode"/> to some other kind of node,
+        /// if the purpose of the node appears to be to represent one of various
+        /// builtin types.
+        /// </summary>
+        /// <remarks>
+        /// (See, for instance, <see cref="RXamlColorAstNode"/>.)
         ///
         /// The arguments here come from an interface built into XamlX.
-        /// </summary>
+        /// </remarks>
         /// <param name="context">context object that holds the TransformerConfiguration</param>
         /// <param name="node">the node to consider rewriting</param>
         /// <param name="type">the type of that node</param>
@@ -218,20 +225,22 @@ namespace RobustXaml
         }
 
         /// <summary>
-        /// Wrap the filePath and contents from a XamlMetadataAttribute.
-        ///
-        /// This is handy for feeding the data to a XamlX compiler.
+        /// Wrap the <paramref name="filePath"/> and <paramref name="contents"/>
+        /// from a Xaml file or from a XamlMetadataAttribute.
         /// </summary>
+        /// <remarks>
+        /// This interface is the primary input format that XamlX expects.
+        /// </remarks>
         /// <param name="filePath">the resource file path</param>
         /// <param name="contents">the contents</param>
-        /// <returns></returns>
+        /// <returns>IFileSource</returns>
         public IFileSource CreateFileSource(string filePath, byte[] contents)
         {
             return new InternalFileSource(filePath, contents);
         }
 
         /// <summary>
-        /// A trivial implementation of IFileSource.
+        /// A trivial implementation of <see cref="IFileSource"/>.
         /// </summary>
         /// <param name="filePath">the path</param>
         /// <param name="contents">the contents</param>

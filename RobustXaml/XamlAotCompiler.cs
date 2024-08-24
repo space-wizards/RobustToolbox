@@ -13,30 +13,35 @@ using XamlX.TypeSystem;
 namespace RobustXaml
 {
     /// <summary>
-    /// Within the scope of a Microsoft.Build.Framework build, load an assembly and perform AoT compilation of its
-    /// XAML resources.
-    ///
+    /// Utility class: holds scope information for a Microsoft.Build.Framework
+    /// build in order to AOT-compile the XAML resources for an assembly.
+    /// </summary>
+    /// <remarks>
     /// Also embed enough information to support future JIT attempts on those same resources.
     ///
     /// Code primarily by Paul Ritter, touched by Pyrex in 2024.
     ///
     /// Based on https://github.com/AvaloniaUI/Avalonia/blob/c85fa2b9977d251a31886c2534613b4730fbaeaf/src/Avalonia.Build.Tasks/XamlCompilerTaskExecutor.cs
     /// Adjusted for our UI Framework
-    /// </summary>
+    /// </remarks>
     public partial class XamlAotCompiler
     {
         /// <summary>
-        /// Update the assembly whose name is `input`, then save an updated assembly to `output` .
+        /// Update the assembly whose name is <paramref name="input" />, then
+        /// save an updated assembly to <paramref name="output"/>.
         /// </summary>
         /// <param name="engine">the Microsoft build engine (used for logging)</param>
-        /// <param name="input">the input assembly</param>
+        /// <param name="input">the input assembly by name</param>
         /// <param name="references">all the assemblies that the input Xaml is allowed to reference</param>
         /// <param name="output">the place to put the output assembly</param>
         /// <param name="strongNameKey">
         ///   a file to use in order to generate a "strong name" for the assembly
         ///   (https://learn.microsoft.com/en-us/dotnet/standard/assembly/strong-named)
         /// </param>
-        /// <returns>true if this succeeds and true if the result was written `output`</returns>
+        /// <returns>
+        ///     true if this succeeds and
+        ///     true if the result was written to <paramref name="output"/>
+        /// </returns>
         public static (bool success, bool writtentofile) Compile(IBuildEngine engine, string input, string[] references,
             string output, string? strongNameKey)
         {
@@ -71,10 +76,9 @@ namespace RobustXaml
         }
 
         /// <summary>
-        /// Iterate through the resources in the XAML compiler's target assembly.
-        ///
-        /// For each, identify its affiliated class, invoke the AOT compiler, update the class to call into the
-        /// geneated code, and write down metadata for future JIT compiles.
+        /// For each XAML resource, identify its affiliated class, invoke the
+        /// AOT compiler, update the class to call into the generated code,
+        /// and write down metadata for future JIT compiles.
         /// </summary>
         /// <param name="engine">the Microsoft build engine (for logging)</param>
         /// <param name="typeSystem">the type system (which includes info about the target assembly)</param>
@@ -180,11 +184,13 @@ namespace RobustXaml
     }
 
     /// <summary>
-    /// This is IFileSource from XamlX, augmented with the other arguments that the XAML compiler wants.
-    ///
-    /// We store these later in the build process inside a XamlMetadataAttribute, in order to support
-    /// JIT compilation.
+    /// This is <see cref="IFileSource"/> from XamlX, augmented with the other
+    /// arguments that the XAML compiler wants.
     /// </summary>
+    /// <remarks>
+    /// We store these later in the build process inside a XamlMetadataAttribute,
+    /// in order to support JIT compilation.
+    /// </remarks>
     interface IResource : IFileSource
     {
         string Uri { get; }
@@ -194,7 +200,7 @@ namespace RobustXaml
     }
 
     /// <summary>
-    /// A named collection of IResources.
+    /// A named collection of <see cref="IResource"/>s.
     /// </summary>
     interface IResourceGroup
     {

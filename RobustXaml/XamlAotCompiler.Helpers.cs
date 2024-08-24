@@ -2,17 +2,17 @@
 using System.Collections.Immutable;
 using System.Linq;
 using Mono.Cecil;
-using Mono.Cecil.Cil;
-using Mono.Collections.Generic;
 using XamlX.TypeSystem;
 
 namespace RobustXaml
 {
     /// <summary>
-    /// Helpers taken from:
+    /// Helpers taken from AvaloniaUI on GitHub.
+    /// </summary>
+    /// <remarks>
     /// - https://github.com/AvaloniaUI/Avalonia/blob/c85fa2b9977d251a31886c2534613b4730fbaeaf/src/Avalonia.Build.Tasks/XamlCompilerTaskExecutor.cs
     /// - https://github.com/AvaloniaUI/Avalonia/blob/c85fa2b9977d251a31886c2534613b4730fbaeaf/src/Avalonia.Build.Tasks/XamlCompilerTaskExecutor.Helpers.cs
-    /// </summary>
+    /// </remarks>
     public partial class XamlAotCompiler
     {
         public static readonly ImmutableArray<string> NameSuffixes = [".xaml", ".paml", ".axaml"];

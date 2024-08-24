@@ -11,9 +11,11 @@ using Robust.Shared.Log;
 namespace Robust.Client.UserInterface.XAML.Proxy
 {
     /// <summary>
-    /// The real implementation of XamlHotReloadManager, whose behavior is described
-    /// in IXamlHotReloadManager.cs.
+    /// The real implementation of <see cref="IXamlHotReloadManager" />.
     /// </summary>
+    /// <remarks>
+    /// Its behavior is described there.
+    /// </remarks>
     internal sealed class XamlHotReloadManager : IXamlHotReloadManager
     {
         private const string MarkerFileName = "SpaceStation14.sln";
@@ -44,16 +46,17 @@ namespace Robust.Client.UserInterface.XAML.Proxy
         /// <summary>
         /// Create a file system watcher that identifies XAML changes in a given
         /// location.
-        ///
+        /// </summary>
+        /// <remarks>
         /// The watcher must not be garbage collected or else monitoring will stop
         /// and therefore we keep a reference to it.
         ///
-        /// The watcher will notify the IXamlProxyManager each time the implementation
-        /// of one of its resources changes.
-        /// </summary>
-        /// <param name="location">the location (a real path on the OS file sytsem)</param>
+        /// The watcher will notify the <see cref="IXamlProxyManager"/> each time the
+        /// implementation of one of its resources changes.
+        /// </remarks>
+        /// <param name="location">the location (a real path on the OS file system)</param>
         /// <returns>the new watcher</returns>
-        /// <exception cref="ArgumentOutOfRangeException">if FileSystemWatcher violates its type-related postconditions</exception>
+        /// <exception cref="ArgumentOutOfRangeException">if <see cref="FileSystemWatcher"/> violates its type-related postconditions</exception>
         private FileSystemWatcher CreateWatcher(string location)
         {
             var watcher = new FileSystemWatcher(location)
@@ -106,12 +109,13 @@ namespace Robust.Client.UserInterface.XAML.Proxy
 
         /// <summary>
         /// Using the content roots of the project, infer the location of its code.
-        ///
+        /// </summary>
+        /// <remarks>
         /// To do this, ascend upwards until the solution file is found.
         ///
         /// This kind of introspection is almost universally a bad idea, but we don't
         /// feasibly have other options, so I've buried it in a private method.
-        /// </summary>
+        /// </remarks>
         /// <returns>the inferred code location or null</returns>
         private string? InferCodeLocation()
         {
@@ -153,7 +157,8 @@ namespace Robust.Client.UserInterface.XAML.Proxy
 
         /// <summary>
         /// Infer the name of the resource file associated with the XAML item at the given path.
-        ///
+        /// </summary>
+        /// <remarks>
         /// To do so, start with the name of the file and systematically add each super-directory until we reach
         /// the inferred code location.
         ///
@@ -165,7 +170,8 @@ namespace Robust.Client.UserInterface.XAML.Proxy
         /// - Instruments.UI.InstrumentMenu.xaml
         /// - Content.Client.Instruments.UI.InstrumentMenu.xaml
         ///
-        /// </summary>
+        /// We terminate early when the predicate says that one of these names is wanted.
+        /// </remarks>
         /// <param name="codeLocation">the code location</param>
         /// <param name="realPath">the real path of the file</param>
         /// <param name="isDesired">a function returning true if something expects this file</param>

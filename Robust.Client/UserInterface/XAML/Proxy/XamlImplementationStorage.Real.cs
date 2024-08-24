@@ -8,56 +8,65 @@ namespace Robust.Client.UserInterface.XAML.Proxy;
 
 /// <summary>
 /// This is a utility class that tracks the relationship between resource file names,
-/// Xamlx-compatible Uris, Types that are interested in a given file, and implementations
-/// of Populate.
-///
-/// The specific relationships are documented below.
+/// Xamlx-compatible <see cref="Uri"/>s, <see cref="Type"/>s that are interested in a
+/// given file, and implementations of Populate.
 /// </summary>
 internal sealed class XamlImplementationStorage
 {
     /// <summary>
-    /// For each filename, we store its last known Uri.
-    ///
-    /// When we compile the new implementation, we will use the same Uri.
+    /// For each filename, we store its last known <see cref="Uri"/>.
     /// </summary>
+    /// <remarks>
+    /// When we compile the new implementation, we will use the same <see cref="Uri"/>.
+    /// </remarks>
     Dictionary<string, Uri> _fileUri = new();
 
     /// <summary>
     /// For each filename, we store its last known content.
-    ///
+    /// <summary>
+    /// <remarks>
     /// This is known even for AOT-compiled code -- therefore, we can use this table
     /// to convert an AOT-compiled Control to a JIT-compiled one.
-    /// </summary>
+    /// </remarks>
     Dictionary<string, string> _fileContent = new();
 
     /// <summary>
     /// For each filename, we store the list of types interested in this file.
-    ///
-    /// This may be more than one -- that is, multiple Controls can be associated
-    /// with the same XAML file.
-    ///
-    /// At time of writing, for instance, StrippingMenu has no *.xaml file, and
-    /// therefore it uses DefaultWindow.xaml.
     /// </summary>
+    /// <remarks>
+    /// Multiple Controls can be associated with the same XAML file.
+    ///
+    /// At time of writing, for instance, StrippingMenu in Content has no *.xaml
+    /// file, and therefore it uses DefaultWindow.xaml.
+    /// </remarks>
     Dictionary<string, List<Type>> _fileTypes = new();
 
     /// <summary>
     /// For each type, store the JIT-compiled implementation of Populate.
-    ///
-    /// Of course, if no such implementation exists, then the AOT-compiled
-    /// implementation will be used.
     /// </summary>
+    /// <remarks>
+    /// If no such implementation exists, then methods that would normally
+    /// find and call a JIT'ed implementation will do nothing and return
+    /// false instead. As an ultimate result, the AOT'ed implementation
+    /// will be used.
+    /// </remarks>
     Dictionary<Type, MethodInfo> _populateImplementations = new();
 
     ISawmill _sawmill;
     XamlJitDelegate _jitDelegate;
 
     /// <summary>
-    /// Create the storage. It would be weird to call this from any type other than
-    /// XamlHotReloadManager
+    /// Create the storage.
     /// </summary>
+    /// <remarks>
+    /// It would be weird to call this from any type outside of
+    /// <see cref="Robust.Client.UserInterface.XAML.Proxy" />.
+    /// </remarks>
     /// <param name="sawmill">the (shared) logger</param>
-    /// <param name="jitDelegate">a delegate that calls the XamlJitCompiler, possibly handling errors</param>
+    /// <param name="jitDelegate">
+    ///     a delegate that calls the
+    ///     <see cref="RobustXaml.XamlJitCompiler"/>, possibly handling errors
+    /// </param>
     public XamlImplementationStorage(ISawmill sawmill, XamlJitDelegate jitDelegate)
     {
         _sawmill = sawmill;
@@ -65,17 +74,18 @@ internal sealed class XamlImplementationStorage
     }
 
     /// <summary>
-    /// Inspect `a` for types that declare a XamlMetadataAttribute.
-    ///
+    /// Inspect <paramref name="assembly" /> for types that declare a <see cref="XamlMetadataAttribute"/>.
+    /// </summary>
+    /// <remarks>
     /// We can only do hot reloading if we know this basic information.
     ///
-    /// Note that even release-mode content artifacts contain this Attribute.
-    /// </summary>
-    /// <param name="a">the assembly</param>
-    /// <returns>an Enumerable of types with Xaml metadata</returns>
-    private IEnumerable<(Type, XamlMetadataAttribute)> TypesWithXamlMetadata(Assembly a)
+    /// Note that even release-mode content artifacts contain this attribute.
+    /// </remarks>
+    /// <param name="assembly">the assembly</param>
+    /// <returns>an IEnumerable of types with xaml metadata</returns>
+    private IEnumerable<(Type, XamlMetadataAttribute)> TypesWithXamlMetadata(Assembly assembly)
     {
-        foreach (var type in a.GetTypes())
+        foreach (var type in assembly.GetTypes())
         {
             if (type.GetCustomAttribute<XamlMetadataAttribute>() is not { } attr)
             {
@@ -88,17 +98,16 @@ internal sealed class XamlImplementationStorage
     }
 
     /// <summary>
-    /// Add all Xaml-affiliated types from Assembly `a` to this storage.
-    ///
-    /// For starters, we store what they're interested in and we store a copy of their
-    /// Xaml code. (We don't JIT anything.)
-    ///
-    /// But we do store enough info to JIT stuff if we want to!
+    /// Add all Xaml-annotated types from <paramref name="assembly" /> to this storage.
     /// </summary>
-    /// <param name="a">an assembly</param>
-    public void Add(Assembly a)
+    /// <remarks>
+    /// We don't JIT these types, but we store enough info that we could JIT
+    /// them if we wanted to.
+    /// </remarks>
+    /// <param name="assembly">an assembly</param>
+    public void Add(Assembly assembly)
     {
-        foreach (var (type, metadata) in TypesWithXamlMetadata(a))
+        foreach (var (type, metadata) in TypesWithXamlMetadata(assembly))
         {
             // this can fail, but if it does, that means something is _really_ wrong
             // with the compiler, or someone tried to write their own Xaml metadata
@@ -129,10 +138,12 @@ internal sealed class XamlImplementationStorage
 
     /// <summary>
     /// Quietly JIT every type with XAML metadata.
-    ///
-    /// This should have no visible effect except that the XamlJitDelegate may dump some
-    /// warnings into the terminal about cases where the hot reload failed.
     /// </summary>
+    /// <remarks>
+    /// This should have no visible effect except that the <see cref="XamlJitDelegate"/>
+    /// may dump some info messages into the terminal about cases where the
+    /// hot reload failed.
+    /// </remarks>
     public void ForceReloadAll()
     {
         foreach (var (fileName, fileContent) in _fileContent)
@@ -142,10 +153,11 @@ internal sealed class XamlImplementationStorage
     }
 
     /// <summary>
-    /// Return true if `SetImplementation(fileName)` would not be a no-op.
-    ///
-    /// (That is, if some type cares about the contents of `fileName`.)
+    /// Return true if calling <see cref="SetImplementation" /> on <paramref name="fileName" /> would not be a no-op.
     /// </summary>
+    /// <remarks>
+    /// That is: if some type cares about the contents of <paramref name="fileName" />.
+    /// </remarks>
     /// <param name="fileName">the filename</param>
     /// <returns>true if not a no-op</returns>
     public bool CanSetImplementation(string fileName)
@@ -154,10 +166,12 @@ internal sealed class XamlImplementationStorage
     }
 
     /// <summary>
-    /// Replace the implementation of `fileName` by JIT-ing `fileContent`.
-    ///
-    /// If nothing cares about the implementation of `fileName`, then this will do nothing.
+    /// Replace the implementation of <paramref name="fileName"/> by JIT-ing
+    /// <paramref name="fileContent"/>.
     /// </summary>
+    /// <remarks>
+    /// If nothing cares about the implementation of <paramref name="fileName"/>, then this will do nothing.
+    /// </remarks>
     /// <param name="fileName">the name of the file whose implementation should be replaced</param>
     /// <param name="fileContent">the new implementation</param>
     /// <param name="quiet">if true, then don't bother to log</param>
@@ -189,12 +203,12 @@ internal sealed class XamlImplementationStorage
     }
 
     /// <summary>
-    /// Call the JITed implementation of Populate on a XAML-associated object `o`.
+    /// Call the JITed implementation of Populate on a XAML-associated object <paramref name="o"/>.
     ///
     /// If no JITed implementation exists, return false.
     /// </summary>
-    /// <param name="t">the static type of `o`</param>
-    /// <param name="o">an instance of `t` (can be a subclass)</param>
+    /// <param name="t">the static type of <paramref name="o"/></param>
+    /// <param name="o">an instance of <paramref name="t"/> (can be a subclass)</param>
     /// <returns>true if a JITed implementation existed</returns>
     public bool Populate(Type t, object o)
     {

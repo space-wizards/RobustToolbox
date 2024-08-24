@@ -9,9 +9,7 @@ using RobustXaml;
 
 namespace Robust.Client.UserInterface.XAML.Proxy {
     /// <summary>
-    /// The real implementation of IXamlProxyManager.
-    ///
-    /// (See that interface for details.)
+    /// The real implementation of <see cref="IXamlProxyManager"/>.
     /// </summary>
     public sealed class XamlProxyManager: IXamlProxyManager
     {
@@ -37,7 +35,8 @@ namespace Robust.Client.UserInterface.XAML.Proxy {
         }
 
         /// <summary>
-        /// Return true if setting the implementation of fileName would not be a no-op.
+        /// Return true if setting the implementation of <paramref name="fileName" />
+        /// would not be a no-op.
         /// </summary>
         /// <param name="fileName">the file name</param>
         /// <returns>true or false</returns>
@@ -47,8 +46,8 @@ namespace Robust.Client.UserInterface.XAML.Proxy {
         }
 
         /// <summary>
-        /// Replace the implementation of fileName, failing silently if the new content
-        /// does not compile. (but still logging)
+        /// Replace the implementation of <paramref name="fileName" />, failing
+        /// silently if the new content does not compile. (but still logging)
         /// </summary>
         /// <param name="fileName">the file name</param>
         /// <param name="fileContent">the new content</param>
@@ -58,7 +57,8 @@ namespace Robust.Client.UserInterface.XAML.Proxy {
         }
 
         /// <summary>
-        /// Add all the types from all known assemblies, then force-JIT everything again.
+        /// Add all the types from all known assemblies, then force-JIT everything
+        /// again.
         /// </summary>
         private void AddAssemblies()
         {
@@ -78,10 +78,10 @@ namespace Robust.Client.UserInterface.XAML.Proxy {
         }
 
         /// <summary>
-        /// Populate `o` using the JIT compiler, if possible.
+        /// Populate <paramref name="o" /> using the JIT compiler, if possible.
         /// </summary>
-        /// <param name="t">the static type of `o`</param>
-        /// <param name="o">a `t` instance or subclass</param>
+        /// <param name="t">the static type of <paramref name="o" /></param>
+        /// <param name="o">a <paramref name="t" /> instance or subclass</param>
         /// <returns>true if there was a JITed implementation</returns>
         public bool Populate(Type t, object o)
         {
@@ -89,18 +89,20 @@ namespace Robust.Client.UserInterface.XAML.Proxy {
         }
 
         /// <summary>
-        /// Wrap XamlJitCompiler.Compile.
-        ///
-        /// Lazily initialize XamlJitCompiler -- initializing it is expensive, and initializing it on every
-        /// individual assembly load is quadratic.
+        /// Calls <see cref="XamlJitCompiler.Compile"/> using the stored
+        /// <see cref="XamlJitCompiler"/> instance.
         /// </summary>
-        /// <param name="t">the type that cares about this Xaml</param>
-        /// <param name="uri">the Uri of this xaml (from the type's metadata)</param>
+        /// <remarks>
+        /// Lazily initializes <see cref="XamlJitCompiler" /> -- initializing it
+        /// is expensive, and initializing it on every individual assembly load
+        /// is quadratic.
+        /// </remarks>
+        /// <param name="t">the <see cref="Type"/> that cares about this Xaml</param>
+        /// <param name="uri">the <see cref="Uri" /> of this xaml (from the type's metadata)</param>
         /// <param name="fileName">the filename of this xaml (from the type's metadata)</param>
         /// <param name="content">the new content of the xaml file</param>
-        /// <returns></returns>
-        /// <exception cref="InvalidOperationException">if XamlJitCompiler returns something other than success or failure</exception>
-        MethodInfo? Compile(Type t, Uri uri, string fileName, string content)
+        /// <returns>the MethodInfo for the new JITed implementation</returns>
+        private MethodInfo? Compile(Type t, Uri uri, string fileName, string content)
         {
             XamlJitCompiler xjit;
             lock(this)

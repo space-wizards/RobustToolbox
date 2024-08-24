@@ -4,7 +4,7 @@
 namespace Robust.Client.UserInterface.XAML.Proxy
 {
     /// <summary>
-    /// The stub implementation of XamlProxyManager.
+    /// The stub implementation of <see cref="IXamlProxyManager"/>.
     /// </summary>
     public sealed class XamlProxyManager: IXamlProxyManager
     {
@@ -16,8 +16,8 @@ namespace Robust.Client.UserInterface.XAML.Proxy
         }
 
         /// <summary>
-        /// Return false. Nothing is ever interested in a Xaml content update when hot reloading
-        /// is off.
+        /// Return false. Nothing is ever interested in a Xaml content update when
+        /// hot reloading is off.
         /// </summary>
         /// <param name="fileName">the filename</param>
         /// <returns>false</returns>
@@ -37,11 +37,12 @@ namespace Robust.Client.UserInterface.XAML.Proxy
 
         /// <summary>
         /// Return false.
-        ///
-        /// There will never be a JIT-ed implementation of Populate if hot reloading is off.
         /// </summary>
-        /// <param name="t">the static type of `o`</param>
-        /// <param name="o">an instance of `t` or a subclass</param>
+        /// <remarks>
+        /// There will never be a JIT-ed implementation of Populate if hot reloading is off.
+        /// </remarks>
+        /// <param name="t">the static type of <paramref name="o" /></param>
+        /// <param name="o">an instance of <paramref name="t" /> or a subclass</param>
         /// <returns>false</returns>
         public bool Populate(Type t, object o)
         {

@@ -9,13 +9,19 @@ using XamlX.TypeSystem;
 namespace RobustXaml
 {
     /// <summary>
+    /// Class that performs find/replace operations on IL in assemblies that contain
+    /// SS14 content.
+    /// </summary>
+    /// <remarks>
+    /// This code used to live in Robust.Client.Injectors.
+    ///
     /// Paul Ritter wrote a lot of code that does low-level Cecil based patching
     /// of AoT-compiled XamlX code.
     ///
     /// That's "fine" (it's not actually fine) -- this class just moves that all
     /// to one place, and removes the extremely verbose Cecil-based type lookups
     /// to a separate shared location.
-    /// </summary>
+    /// </remarks>
     internal sealed class LowLevelCustomizations
     {
         public const string TrampolineName = "!XamlIlPopulateTrampoline";
@@ -36,10 +42,15 @@ namespace RobustXaml
         private readonly MethodReference _xamlMetadataAttributeConstructor;
 
         /// <summary>
-        /// Construct a large number of TypeDefinitions and MethodReferences
-        /// using the CecilTypeSystem.
+        /// Create a <see cref="LowLevelCustomizations"/> object.
         /// </summary>
-        /// <param name="typeSystem">the CecilTypeSystem</param>
+        /// <remarks>
+        /// Construct and store a large number of <see cref="TypeDefinition" />
+        /// and <see cref="MethodReference" /> using the CecilTypeSystem.
+        ///
+        /// Future surgery on the assembly will look for, use, and replace these.
+        /// </remarks>
+        /// <param name="typeSystem">the <see cref="CecilTypeSystem" /></param>
         /// <exception cref="NullReferenceException">if some needed types were undefined</exception>
         public LowLevelCustomizations(CecilTypeSystem typeSystem)
         {
@@ -94,7 +105,7 @@ namespace RobustXaml
         ///
         /// <code>
         /// void TrampolineName(Subject subject) {
-        ///   if (IoCManager.Resolve[XamlProxyHelper]().Populate(typeof(Subject), subject)) {
+        ///   if (IoCManager.Resolve{XamlProxyHelper}().Populate(typeof(Subject), subject)) {
         ///     return;
         ///   }
         ///   aotPopulateMethod(null, subject)
@@ -103,7 +114,7 @@ namespace RobustXaml
         ///
         /// </summary>
         /// <param name="subject">the type to create a trampoline on</param>
-        /// <param name="aotPopulateMethod">the populate method to call if the XamlProxyHelper returns false</param>
+        /// <param name="aotPopulateMethod">the populate method to call if XamlProxyHelper's Populate method returns false</param>
         /// <returns>the new trampoline method</returns>
         private MethodDefinition CreateTrampoline(TypeDefinition subject, MethodDefinition aotPopulateMethod)
         {
@@ -134,15 +145,16 @@ namespace RobustXaml
         }
 
         /// <summary>
-        /// Creates a trampoline on `subject`, then replaces calls to `RobustXamlLoader.Load` with calls
-        /// to the generated trampoline.
-        ///
+        /// Creates a trampoline on <paramref name="subject" />, then replaces
+        /// calls to RobustXamlLoader.Load with calls to the generated trampoline.
+        /// Returns true if the patching succeeded.
+        /// </summary>
+        /// <remarks>
         /// This allows us to replace the implementation of Load at runtime.
         ///
-        /// Return true if the patching succeeded. (If not, we couldn't find a place to change it.)
-        ///
-        /// The logic here actually has a few somewhat involved cases, again due to Paul Ritter.
-        /// </summary>
+        /// The logic here actually has a few somewhat involved cases, again
+        /// due to Paul Ritter.
+        /// </remarks>
         /// <param name="subject">the subject</param>
         /// <param name="aotPopulateMethod">the populate method</param>
         /// <returns>true</returns>
@@ -216,10 +228,8 @@ namespace RobustXaml
         }
 
         /// <summary>
-        /// Add a XamlMetadataAttribute to a given type.
-        ///
-        /// This has all the info that we need to JIT a new implementation of Populate for that object
-        /// at runtime!
+        /// Add a XamlMetadataAttribute to a given type, containing all the compiler
+        /// parameters for its Populate method.
         /// </summary>
         /// <param name="subject">the subject type</param>
         /// <param name="uri">the URI we generated</param>

@@ -21,11 +21,24 @@ internal sealed class NearbyCommand : ToolshedCommand
             [CommandArgument] float range
         )
     {
-        var limit = _cfg.GetCVar(CVars.ToolshedNearbyLimit);
-        if (range > limit)
-            throw new ArgumentException($"Tried to query too many entities with nearby ({range})! Limit: {limit}. Change the {CVars.ToolshedNearbyLimit.Name} cvar to increase this at your own risk.");
+        var rangeLimit = _cfg.GetCVar(CVars.ToolshedNearbyLimit);
+        if (range > rangeLimit)
+            throw new ArgumentException($"Tried to query too big of a range with nearby ({range})! Limit: {rangeLimit}. Change the {CVars.ToolshedNearbyLimit.Name} cvar to increase this at your own risk.");
 
         _lookup ??= GetSys<EntityLookupSystem>();
-        return input.SelectMany(x => _lookup.GetEntitiesInRange(x, range)).Distinct();
+
+        var i = 0;
+        var entitiesLimit = _cfg.GetCVar(CVars.ToolshedNearbyEntitiesLimit);
+        return input.SelectMany(x =>
+            {
+                if (i++ > entitiesLimit)
+                {
+                    throw new ArgumentException(
+                        $"Too many entities were passed to nearby ({i})! Limit: {entitiesLimit}. Change the {CVars.ToolshedNearbyEntitiesLimit.Name} cvar to increase this at your own risk.");
+                }
+
+                return _lookup.GetEntitiesInRange(x, range);
+            })
+            .Distinct();
     }
 }

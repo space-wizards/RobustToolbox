@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Added `InterpolatedStringHandlerArgumentAttribute` to the sandbox whitelist.
+*None yet*
 
 ### Bugfixes
 
@@ -52,6 +52,58 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 230.2.0
+
+### New features
+
+* Add ProcessNow for IRobustJob as a convenience method where you may not want to run a job in the background sometimes.
+* Add Vector2i helpers to all 8 neighbouring directions.
+
+### Other
+
+* Remove IThreadPoolWorkItem interface from IRobustJob.
+
+
+## 230.1.0
+
+### New features
+
+* You can now pass `bool[]` parameters to shaders.
+* Added `toolshed.nearby_entities_limit` CVar.
+* Fix `RichTextLabel.Text` to clear and reset the message properly in all cases.
+* `scene` command has tab completion now.
+* `devwindow` UI inspector property catches exceptions for read properties.
+* `SplitContainer.Flip()`
+
+### Bugfixes
+
+* Fix tile enlargement not being applied for some EntityLookup queries.
+* `LocalizedEntityCommands` are now not initialized inside `RobustUnitTest`, fixing guaranteed test failures.
+* Fixed issues with broadphase init breaking replays frequently.
+* Fix uploaded prototypes and resources for clients connecting to a server.
+
+### Other
+
+* Improved error reporting for DataField analyzer.
+
+
+## 230.0.1
+
+
+## 230.0.0
+
+### New features
+
+* Added `InterpolatedStringHandlerArgumentAttribute` to the sandbox whitelist.
+* `IUserInterfaceManager.Popup()` popups now have a copy to clipboard button.
+
+### Bugfixes
+
+* Security fixes
+* Fix exception in `TimedDespawnComponent` spawning another `TimedDespawnComponent`.
+* Fixed pool memory leak in physics `SolveIsland`.
 
 
 ## 229.1.2

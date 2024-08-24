@@ -760,7 +760,7 @@ public sealed partial class EntityLookupSystem
         }
 
         var localAABB = GetLocalBounds(localTile, tileSize);
-        localAABB = localAABB.Enlarged(TileEnlargementRadius);
+        localAABB = localAABB.Enlarged(enlargement);
         GetLocalEntitiesIntersecting(gridUid, localAABB, intersecting, flags);
     }
 

@@ -31,6 +31,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using JetBrains.Annotations;
 using Microsoft.Extensions.ObjectPool;
@@ -791,27 +792,32 @@ public abstract partial class SharedPhysicsSystem
     [Pure]
     public ContactEnumerator GetContacts(Entity<FixturesComponent?> entity)
     {
-        if (!_fixturesQuery.Resolve(entity.Owner, ref entity.Comp))
-            return ContactEnumerator.Empty;
-
+        _fixturesQuery.Resolve(entity.Owner, ref entity.Comp);
         return new ContactEnumerator(entity.Comp);
     }
 }
 
 public record struct ContactEnumerator
 {
-    public static readonly ContactEnumerator Empty = new();
+    public static readonly ContactEnumerator Empty = new(null);
 
     private Dictionary<string, Fixture>.ValueCollection.Enumerator _fixtureEnumerator;
     private Dictionary<Fixture, Contact>.ValueCollection.Enumerator _contactEnumerator;
 
-    public ContactEnumerator(FixturesComponent fixtures)
+    public ContactEnumerator(FixturesComponent? fixtures)
     {
+        if (fixtures == null || fixtures.Fixtures.Count == 0)
+        {
+            this = Empty;
+            return;
+        }
+
         _fixtureEnumerator = fixtures.Fixtures.Values.GetEnumerator();
+        _fixtureEnumerator.MoveNext();
         _contactEnumerator = _fixtureEnumerator.Current.Contacts.Values.GetEnumerator();
     }
 
-    public bool MoveNext(out Contact? contact)
+    public bool MoveNext([NotNullWhen(true)] out Contact? contact)
     {
         if (!_contactEnumerator.MoveNext())
         {
@@ -822,6 +828,7 @@ public record struct ContactEnumerator
             }
 
             _contactEnumerator = _fixtureEnumerator.Current.Contacts.Values.GetEnumerator();
+            return MoveNext(out contact);
         }
 
         contact = _contactEnumerator.Current;

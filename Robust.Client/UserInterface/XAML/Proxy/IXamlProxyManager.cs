@@ -18,7 +18,7 @@ namespace Robust.Client.UserInterface.XAML.Proxy;
 /// one. <see cref="IXamlHotReloadManager" /> is an example of a service that calls into
 /// that functionality.
 /// </remarks>
-public interface IXamlProxyManager
+internal interface IXamlProxyManager
 {
     /// <summary>
     /// Initialize creates the <see cref="IXamlProxyManager"/>.

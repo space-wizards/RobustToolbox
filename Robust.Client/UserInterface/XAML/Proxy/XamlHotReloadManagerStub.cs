@@ -1,12 +1,10 @@
-﻿#if !TOOLS
-
-namespace Robust.Client.UserInterface.XAML.Proxy
+﻿namespace Robust.Client.UserInterface.XAML.Proxy
 {
     /// <summary>
     /// A stub implementation of <see cref="XamlHotReloadManager"/>. Its
     /// behavior is to do nothing.
     /// </summary>
-    internal sealed class XamlHotReloadManager : IXamlHotReloadManager
+    internal sealed class XamlHotReloadManagerStub : IXamlHotReloadManager
     {
         /// <summary>
         /// Do nothing.
@@ -16,4 +14,3 @@ namespace Robust.Client.UserInterface.XAML.Proxy
         }
     }
 }
-#endif

@@ -1,12 +1,11 @@
 ﻿using System;
 
-#if !TOOLS
 namespace Robust.Client.UserInterface.XAML.Proxy
 {
     /// <summary>
     /// The stub implementation of <see cref="IXamlProxyManager"/>.
     /// </summary>
-    public sealed class XamlProxyManager: IXamlProxyManager
+    public sealed class XamlProxyManagerStub: IXamlProxyManager
     {
         /// <summary>
         /// Do nothing.
@@ -50,6 +49,3 @@ namespace Robust.Client.UserInterface.XAML.Proxy
         }
     }
 }
-#endif
-
-

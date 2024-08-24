@@ -7,7 +7,8 @@ using Robust.Shared.Log;
 using Robust.Shared.Reflection;
 using Robust.Xaml;
 
-namespace Robust.Client.UserInterface.XAML.Proxy {
+namespace Robust.Client.UserInterface.XAML.Proxy
+{
     /// <summary>
     /// The real implementation of <see cref="IXamlProxyManager"/>.
     /// </summary>

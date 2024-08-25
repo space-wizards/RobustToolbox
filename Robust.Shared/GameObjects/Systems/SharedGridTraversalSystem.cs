@@ -27,12 +27,6 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
     public override void Initialize()
     {
         base.Initialize();
-        SubscribeLocalEvent<TransformStartupEvent>(OnStartup);
-    }
-
-    private void OnStartup(ref TransformStartupEvent ev)
-    {
-        CheckTraverse(ev.Entity);
     }
 
     internal void CheckTraverse(Entity<TransformComponent> entity)

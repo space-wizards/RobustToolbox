@@ -349,6 +349,29 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             // TODO: Need to suss this out
             return HashCode.Combine(EntityA, EntityB);
         }
+
+        /// <summary>
+        /// Gets the other ent for this contact.
+        /// </summary>
+        public EntityUid OtherEnt(EntityUid uid)
+        {
+            if (uid == EntityA)
+                return EntityB;
+            else if (uid == EntityB)
+                return EntityA;
+
+            throw new InvalidOperationException();
+        }
+
+        public (string Id, Fixture) OtherFixture(EntityUid uid)
+        {
+            if (uid == EntityA)
+                return (FixtureBId, FixtureB!);
+            else if (uid == EntityB)
+                return (FixtureAId, FixtureA!);
+
+            throw new InvalidOperationException();
+        }
     }
 
     [Flags]

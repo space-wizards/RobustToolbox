@@ -54,6 +54,27 @@ END TEMPLATE-->
 *None yet*
 
 
+## 231.0.0
+
+### Breaking changes
+
+* ViewSubscriber has been moved to shared; it doesn't actually do anything on the client but makes shared code easier.
+
+### New features
+
+* ContactEnumreator exists to iterate the contacts of a particular entity.
+* Add FixturesChangeComponent as a generic way to add and remove fixtures easily.
+* PointLightComponent enabling / disabling now has an attempt event if you wish to block it on content side.
+* There's an OpenScreenAt overload for screen-relative coordinates.
+* SpriteSystem has methods to get an entity's position in sprite terms.
+* EntityManager and ComponentFactory now have additional methods that interact with ComponentRegistry and ComponentRegistryEntry.
+
+### Bugfixes
+
+* Fix PrototypeFlags Add not actually working.
+* Fix BUIs going BRRT opening and closing repeatedly upon prediction. The closing now gets deferred to the update loop if it's still closed at the end of prediction.
+
+
 ## 230.2.0
 
 ### New features

@@ -15,7 +15,7 @@ namespace Robust.Shared.Map;
 
 internal partial class MapManager
 {
-    private static readonly PriorityQueue<Entity<MapGridComponent>> GridPriorityQueue = new(new GridComparer());
+    private static readonly Queue<(EntityUid, MapGridComponent)> GridPriorityQueue = new();
 
     private bool IsIntersecting(
         ChunkEnumerator enumerator,
@@ -113,8 +113,6 @@ internal partial class MapManager
 
         var worldAABB = shape.ComputeAABB(transform, 0);
 
-        GridPriorityQueue.Clear();
-
         var gridState = new GridQueryState(
             callback,
             worldAABB,
@@ -146,18 +144,18 @@ internal partial class MapManager
                 return true;
             }
 
-            if (data.Grid.Priority > 0)
-                GridPriorityQueue.Add(data);
+
+            if (data.Grid.Priority)
+                GridPriorityQueue.Enqueue(data);
             else
                 state.Callback(data.Uid, data.Grid);
 
             return true;
         }, worldAABB);
 
-        while (GridPriorityQueue.Count > 0)
+        while (GridPriorityQueue.TryDequeue(out var data))
         {
-            var data = GridPriorityQueue.Take();
-            callback(data.Owner, data.Comp);
+            callback(data.Item1, data.Item2);
         }
     }
 
@@ -173,8 +171,6 @@ internal partial class MapManager
         }
 
         var worldAABB = shape.ComputeAABB(transform, 0);
-
-        GridPriorityQueue.Clear();
 
         var gridState = new GridQueryState<TState>(
             callback,
@@ -208,9 +204,9 @@ internal partial class MapManager
                 return true;
             }
 
-            if (data.Grid.Priority > 0)
+            if (data.Grid.Priority)
             {
-                GridPriorityQueue.Add(data);
+                GridPriorityQueue.Enqueue(data);
                 return true;
             }
 
@@ -221,12 +217,10 @@ internal partial class MapManager
             return result;
         }, worldAABB);
 
-        while (GridPriorityQueue.Count > 0)
+        while (GridPriorityQueue.TryDequeue(out var data))
         {
-            var data = GridPriorityQueue.Take();
-
             var callbackState = gridState.State;
-            var result = gridState.Callback(data.Owner, data.Comp, ref callbackState);
+            var result = gridState.Callback(data.Item1, data.Item2, ref callbackState);
             gridState.State = callbackState;
 
             if(!result) break;

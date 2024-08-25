@@ -30,7 +30,10 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using JetBrains.Annotations;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
@@ -739,6 +742,96 @@ public abstract partial class SharedPhysicsSystem
         if (preventCollideMessage.Cancelled)
             return false;
 
+        return true;
+    }
+
+    /// <summary>
+    /// Will destroy all contacts and queue for rebuild.
+    /// Useful if you have one that may no longer be relevant and don't want to destroy it directly.
+    /// </summary>
+    public void RegenerateContacts(Entity<PhysicsComponent?> entity)
+    {
+        if (!PhysicsQuery.Resolve(entity.Owner, ref entity.Comp))
+            return;
+
+        _broadphase.RegenerateContacts(entity.Owner, entity.Comp);
+    }
+
+    /// <summary>
+    /// Returns the number of touching contacts this entity has.
+    /// </summary>
+    /// <param name="ignoredFixtureId">Fixture we should ignore if applicable</param>
+    [Pure]
+    public int GetTouchingContacts(Entity<FixturesComponent?> entity, string? ignoredFixtureId = null)
+    {
+        if (!_fixturesQuery.Resolve(entity.Owner, ref entity.Comp))
+            return 0;
+
+        var count = 0;
+
+        foreach (var (id, fixture) in entity.Comp.Fixtures)
+        {
+            if (ignoredFixtureId == id)
+                continue;
+
+            foreach (var contact in fixture.Contacts.Values)
+            {
+                if (!contact.IsTouching)
+                    continue;
+
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    /// <summary>
+    /// Returns all of this entity's contacts.
+    /// </summary>
+    [Pure]
+    public ContactEnumerator GetContacts(Entity<FixturesComponent?> entity)
+    {
+        _fixturesQuery.Resolve(entity.Owner, ref entity.Comp);
+        return new ContactEnumerator(entity.Comp);
+    }
+}
+
+public record struct ContactEnumerator
+{
+    public static readonly ContactEnumerator Empty = new(null);
+
+    private Dictionary<string, Fixture>.ValueCollection.Enumerator _fixtureEnumerator;
+    private Dictionary<Fixture, Contact>.ValueCollection.Enumerator _contactEnumerator;
+
+    public ContactEnumerator(FixturesComponent? fixtures)
+    {
+        if (fixtures == null || fixtures.Fixtures.Count == 0)
+        {
+            this = Empty;
+            return;
+        }
+
+        _fixtureEnumerator = fixtures.Fixtures.Values.GetEnumerator();
+        _fixtureEnumerator.MoveNext();
+        _contactEnumerator = _fixtureEnumerator.Current.Contacts.Values.GetEnumerator();
+    }
+
+    public bool MoveNext([NotNullWhen(true)] out Contact? contact)
+    {
+        if (!_contactEnumerator.MoveNext())
+        {
+            if (!_fixtureEnumerator.MoveNext())
+            {
+                contact = null;
+                return false;
+            }
+
+            _contactEnumerator = _fixtureEnumerator.Current.Contacts.Values.GetEnumerator();
+            return MoveNext(out contact);
+        }
+
+        contact = _contactEnumerator.Current;
         return true;
     }
 }

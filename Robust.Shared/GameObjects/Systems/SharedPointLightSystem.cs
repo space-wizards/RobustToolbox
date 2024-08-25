@@ -42,6 +42,12 @@ public abstract class SharedPointLightSystem : EntitySystem
         if (!ResolveLight(uid, ref comp) || enabled == comp.Enabled)
             return;
 
+        var attempt = new AttemptPointLightToggleEvent(enabled);
+        RaiseLocalEvent(uid, ref attempt);
+
+        if (attempt.Cancelled)
+            return;
+
         comp.Enabled = enabled;
         RaiseLocalEvent(uid, new PointLightToggleEvent(comp.Enabled));
         if (!Resolve(uid, ref meta))

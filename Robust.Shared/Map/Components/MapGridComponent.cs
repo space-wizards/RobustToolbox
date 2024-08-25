@@ -31,6 +31,9 @@ namespace Robust.Shared.Map.Components
 
         [DataField("chunkSize")] internal ushort ChunkSize = 16;
 
+        // Used for priority think in query. Useful for Z grid leveling, while grid is vehicle etc.
+        [DataField] internal int Priority;
+
         [ViewVariables]
         public int ChunkCount => Chunks.Count;
 
@@ -335,12 +338,17 @@ namespace Robust.Shared.Map.Components
     ///     Serialized state of a <see cref="MapGridComponentState"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    internal sealed class MapGridComponentState(ushort chunkSize, Dictionary<Vector2i, Tile[]> fullGridData, GameTick lastTileModifiedTick) : ComponentState
+    internal sealed class MapGridComponentState(ushort chunkSize,int priority, Dictionary<Vector2i, Tile[]> fullGridData, GameTick lastTileModifiedTick) : ComponentState
     {
         /// <summary>
         ///     The size of the chunks in the map grid.
         /// </summary>
         public ushort ChunkSize = chunkSize;
+
+        /// <summary>
+        ///     The priority of grid <see cref="MapGridComponent.Priority"/>
+        /// </summary>
+        public int Priority = priority;
 
         /// <summary>
         /// Networked chunk data containing the full grid state.
@@ -357,13 +365,18 @@ namespace Robust.Shared.Map.Components
     ///     Serialized state of a <see cref="MapGridComponentState"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    internal sealed class MapGridComponentDeltaState(ushort chunkSize, List<ChunkDatum>? chunkData, GameTick lastTileModifiedTick)
+    internal sealed class MapGridComponentDeltaState(ushort chunkSize,int priority, List<ChunkDatum>? chunkData, GameTick lastTileModifiedTick)
         : ComponentState, IComponentDeltaState<MapGridComponentState>
     {
         /// <summary>
         ///     The size of the chunks in the map grid.
         /// </summary>
         public readonly ushort ChunkSize = chunkSize;
+
+        /// <summary>
+        ///     The priority of grid <see cref="MapGridComponent.Priority"/>
+        /// </summary>
+        public readonly int Priority = priority;
 
         /// <summary>
         /// Networked chunk data.
@@ -378,6 +391,7 @@ namespace Robust.Shared.Map.Components
         public void ApplyToFullState(MapGridComponentState state)
         {
             state.ChunkSize = ChunkSize;
+            state.Priority = Priority;
 
             if (ChunkData == null)
                 return;
@@ -403,7 +417,7 @@ namespace Robust.Shared.Map.Components
                 Array.Copy(value, arr, value.Length);
             }
 
-            var newState = new MapGridComponentState(ChunkSize, fullGridData, LastTileModifiedTick);
+            var newState = new MapGridComponentState(ChunkSize, Priority, fullGridData, LastTileModifiedTick);
             ApplyToFullState(newState);
             return newState;
         }

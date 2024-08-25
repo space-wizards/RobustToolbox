@@ -3,16 +3,20 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Log;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Map.Enumerators;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map;
 
 internal partial class MapManager
 {
+    private static readonly PriorityQueue<Entity<MapGridComponent>> GridPriorityQueue = new(new GridComparer());
+
     private bool IsIntersecting(
         ChunkEnumerator enumerator,
         IPhysShape shape,
@@ -109,6 +113,8 @@ internal partial class MapManager
 
         var worldAABB = shape.ComputeAABB(transform, 0);
 
+        GridPriorityQueue.Clear();
+
         var gridState = new GridQueryState(
             callback,
             worldAABB,
@@ -140,10 +146,19 @@ internal partial class MapManager
                 return true;
             }
 
-            state.Callback(data.Uid, data.Grid);
+            if (data.Grid.Priority > 0)
+                GridPriorityQueue.Add(data);
+            else
+                state.Callback(data.Uid, data.Grid);
 
             return true;
         }, worldAABB);
+
+        while (GridPriorityQueue.Count > 0)
+        {
+            var data = GridPriorityQueue.Take();
+            callback(data.Owner, data.Comp);
+        }
     }
 
     public void FindGridsIntersecting<TState>(EntityUid mapEnt, IPhysShape shape, Transform transform,
@@ -158,6 +173,8 @@ internal partial class MapManager
         }
 
         var worldAABB = shape.ComputeAABB(transform, 0);
+
+        GridPriorityQueue.Clear();
 
         var gridState = new GridQueryState<TState>(
             callback,
@@ -191,12 +208,29 @@ internal partial class MapManager
                 return true;
             }
 
+            if (data.Grid.Priority > 0)
+            {
+                GridPriorityQueue.Add(data);
+                return true;
+            }
+
             var callbackState = state.State;
             var result = state.Callback(data.Uid, data.Grid, ref callbackState);
             state.State = callbackState;
 
             return result;
         }, worldAABB);
+
+        while (GridPriorityQueue.Count > 0)
+        {
+            var data = GridPriorityQueue.Take();
+
+            var callbackState = gridState.State;
+            var result = gridState.Callback(data.Owner, data.Comp, ref callbackState);
+            gridState.State = callbackState;
+
+            if(!result) break;
+        }
 
         // By-ref things
         state = gridState.State;
@@ -385,4 +419,12 @@ internal partial class MapManager
         MapManager MapManager,
         SharedTransformSystem TransformSystem,
         bool Approximate);
+}
+
+internal sealed class GridComparer : IComparer<Entity<MapGridComponent>>
+{
+    public int Compare(Entity<MapGridComponent> x, Entity<MapGridComponent> y)
+    {
+        return x.Comp.Priority.CompareTo(y.Comp.Priority);
+    }
 }

@@ -300,12 +300,11 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default, bool traversal = true)
+        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default)
         {
             var newEntity = CreateEntity(prototypeName, out _, overrides);
 
             var xformComp = TransformQuery.GetComponent(newEntity);
-            xformComp.GridTraversal = traversal;
             _xforms.SetCoordinates(newEntity, xformComp, coordinates, rotation: rotation, unanchor: false);
             return newEntity;
         }

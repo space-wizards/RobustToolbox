@@ -34,16 +34,19 @@ namespace Robust.Shared.GameObjects
         [Serializable, NetSerializable]
         internal sealed class UserInterfaceComponentState(
             Dictionary<Enum, List<NetEntity>> actors,
-            Dictionary<Enum, BoundUserInterfaceState> states)
+            Dictionary<Enum, BoundUserInterfaceState> states,
+            Dictionary<Enum, InterfaceData> data)
             : IComponentState
         {
             public Dictionary<Enum, List<NetEntity>> Actors = actors;
 
             public Dictionary<Enum, BoundUserInterfaceState> States = states;
+
+            public Dictionary<Enum, InterfaceData> Data = data;
         }
     }
 
-    [DataDefinition]
+    [DataDefinition, Serializable, NetSerializable]
     public sealed partial class InterfaceData
     {
         [DataField("type", required: true)]
@@ -65,6 +68,11 @@ namespace Robust.Shared.GameObjects
         /// </remarks>
         [DataField]
         public bool RequireInputValidation = true;
+
+        public InterfaceData(string type)
+        {
+            ClientType = type;
+        }
     }
 
     /// <summary>

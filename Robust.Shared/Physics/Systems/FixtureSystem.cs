@@ -116,6 +116,7 @@ namespace Robust.Shared.Physics.Systems
                 // Don't need to ResetMassData as FixtureUpdate already does it.
                 Dirty(uid, manager);
             }
+
             // TODO: Set newcontacts to true.
         }
 

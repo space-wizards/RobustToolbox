@@ -31,8 +31,6 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
-using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
@@ -258,7 +256,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             {
                 var manifold = Manifold;
                 Evaluate(ref manifold, bodyATransform, bodyBTransform);
-                IsTouching = manifold.PointCount > 0;
+
+                if (IsTouching)
+                    IsTouching = manifold.PointCount > 0;
             }
         }
 
@@ -348,6 +348,29 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         {
             // TODO: Need to suss this out
             return HashCode.Combine(EntityA, EntityB);
+        }
+
+        /// <summary>
+        /// Gets the other ent for this contact.
+        /// </summary>
+        public EntityUid OtherEnt(EntityUid uid)
+        {
+            if (uid == EntityA)
+                return EntityB;
+            else if (uid == EntityB)
+                return EntityA;
+
+            throw new InvalidOperationException();
+        }
+
+        public (string Id, Fixture) OtherFixture(EntityUid uid)
+        {
+            if (uid == EntityA)
+                return (FixtureBId, FixtureB!);
+            else if (uid == EntityB)
+                return (FixtureAId, FixtureA!);
+
+            throw new InvalidOperationException();
         }
     }
 

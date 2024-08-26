@@ -1135,6 +1135,34 @@ namespace Robust.Shared.GameObjects
             return comps;
         }
 
+        /// <inheritdoc />
+        public ComponentQueryEnumerator ComponentQueryEnumerator(ComponentRegistry registry)
+        {
+            if (registry.Count == 0)
+            {
+                return new ComponentQueryEnumerator(new Dictionary<EntityUid, IComponent>());
+            }
+
+            var comp1 = registry.First().Value;
+            var trait1 = _entTraitArray[_componentFactory.GetArrayIndex(comp1.Component.GetType())];
+
+            return new ComponentQueryEnumerator(trait1);
+        }
+
+        /// <inheritdoc />
+        public CompRegistryEntityEnumerator CompRegistryQueryEnumerator(ComponentRegistry registry)
+        {
+            if (registry.Count == 0)
+            {
+                return new CompRegistryEntityEnumerator(this, new Dictionary<EntityUid, IComponent>(), registry);
+            }
+
+            var comp1 = registry.First().Value;
+            var trait1 = _entTraitArray[_componentFactory.GetArrayIndex(comp1.Component.GetType())];
+
+            return new CompRegistryEntityEnumerator(this, trait1, registry);
+        }
+
         public AllEntityQueryEnumerator<TComp1> AllEntityQueryEnumerator<TComp1>()
         where TComp1 : IComponent
         {
@@ -1722,6 +1750,127 @@ namespace Robust.Shared.GameObjects
 
         #endregion
     }
+
+    #region ComponentRegistry Query
+
+    /// <summary>
+    /// Returns entities that match the ComponentRegistry.
+    /// </summary>
+    public struct CompRegistryEntityEnumerator : IDisposable
+    {
+        private IEntityManager _entManager;
+
+        private Dictionary<EntityUid, IComponent>.Enumerator _traitDict;
+        private ComponentRegistry _registry;
+
+        public CompRegistryEntityEnumerator(
+            IEntityManager entManager,
+            Dictionary<EntityUid, IComponent> traitDict, ComponentRegistry registry)
+        {
+            _entManager = entManager;
+            _traitDict = traitDict.GetEnumerator();
+            _registry = registry;
+        }
+
+        public bool MoveNext(out EntityUid uid)
+        {
+            while (true)
+            {
+                if (!_traitDict.MoveNext())
+                {
+                    uid = default;
+                    return false;
+                }
+
+                var current = _traitDict.Current;
+
+                if (current.Value.Deleted)
+                {
+                    continue;
+                }
+
+                var idx = -1;
+                var found = true;
+
+                foreach (var comp in _registry)
+                {
+                    idx++;
+
+                    // First one is us
+                    if (idx == 0)
+                        continue;
+
+                    if (!_entManager.TryGetComponent(current.Key, comp.Value.Component.GetType(), out var nextComp) ||
+                        nextComp.Deleted)
+                    {
+                        found = false;
+                        break;
+                    }
+                }
+
+                if (!found)
+                    continue;
+
+                uid = current.Key;
+                return true;
+            }
+        }
+
+        public void Dispose()
+        {
+            _traitDict.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Non-generic version of <see cref="AllEntityQueryEnumerator{TComp1}"/>
+    /// </summary>
+    public struct ComponentQueryEnumerator : IDisposable
+    {
+        private Dictionary<EntityUid, IComponent>.Enumerator _traitDict;
+
+        public ComponentQueryEnumerator(
+            Dictionary<EntityUid, IComponent> traitDict)
+        {
+            _traitDict = traitDict.GetEnumerator();
+        }
+
+        public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out IComponent? comp1)
+        {
+            while (true)
+            {
+                if (!_traitDict.MoveNext())
+                {
+                    uid = default;
+                    comp1 = default;
+                    return false;
+                }
+
+                var current = _traitDict.Current;
+
+                if (current.Value.Deleted)
+                {
+                    continue;
+                }
+
+                uid = current.Key;
+                comp1 = current.Value;
+                return true;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext([NotNullWhen(true)] out IComponent? comp1)
+        {
+            return MoveNext(out _, out comp1);
+        }
+
+        public void Dispose()
+        {
+            _traitDict.Dispose();
+        }
+    }
+    #endregion
 
     #region Query
 

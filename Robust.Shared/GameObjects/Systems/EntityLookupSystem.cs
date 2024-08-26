@@ -220,6 +220,11 @@ public sealed partial class EntityLookupSystem : EntitySystem
         var xform = Transform(broadphase.Owner);
         _transform.InitializeMapUid(broadphase.Owner, xform);
 
+        // If in broadphase then skip this for now because no physicsmap to init physics entities properly
+        // This mainly happens in replays or otherwise spawning grids in nullspace. PhysicsMap is getting dumped in box2c anyway
+        if (xform.MapUid == null)
+            return;
+
         if (!_mapQuery.TryGetComponent(xform.MapUid, out var physMap))
         {
             throw new InvalidOperationException(
@@ -272,7 +277,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
             }
         }
 
-        DebugTools.Assert(xform.Broadphase is not {} x || x.Uid == broadphase.Owner && x.PhysicsMap == map.Owner);
+        DebugTools.Assert(xform.Broadphase is not {} x || x.Uid == broadphase.Owner && (!x.CanCollide || x.PhysicsMap == map.Owner));
         AddOrUpdateEntityTree(
             broadphase.Owner,
             broadphase.Comp2,

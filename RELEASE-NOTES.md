@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 231.0.1
+
+### Other
+
+* Add better logging to failed PVS sends.
+
+
 ## 231.0.0
 
 ### Breaking changes

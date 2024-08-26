@@ -1054,6 +1054,7 @@ Types:
     DateTime: { All: True }
     DateTimeKind: { } # Enum
     DateTimeOffset: { All: True }
+    Decimal: { All: True }
     Delegate:
       Methods:
       - "System.Delegate Combine(System.Delegate, System.Delegate)"

@@ -99,7 +99,7 @@ public sealed partial class EntityLookupSystem
             {
                 var localTransform = state.Physics.GetRelativePhysicsTransform(state.Transform, uid);
                 var localAabb = state.Shape.ComputeAABB(localTransform, 0);
-                state.Lookup.AddEntitiesIntersecting(uid, state.Intersecting, state.Shape, localAabb, state.Transform, state.Flags);
+                state.Lookup.AddEntitiesIntersecting(uid, state.Intersecting, state.Shape, localAabb, localTransform, state.Flags);
                 return true;
             }, approx: true, includeMap: false);
 
@@ -107,7 +107,7 @@ public sealed partial class EntityLookupSystem
         var localTransform = state.Physics.GetRelativePhysicsTransform(state.Transform, mapUid);
         var localAabb = state.Shape.ComputeAABB(localTransform, 0);
 
-        AddEntitiesIntersecting(mapUid, intersecting, shape, localAabb, shapeTransform, flags);
+        AddEntitiesIntersecting(mapUid, intersecting, shape, localAabb, localTransform, flags);
         AddContained(intersecting, flags);
     }
 

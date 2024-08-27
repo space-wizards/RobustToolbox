@@ -96,6 +96,10 @@ public sealed partial class EntityLookupSystem : EntitySystem
     private EntityQuery<PhysicsMapComponent> _mapQuery;
     private EntityQuery<TransformComponent> _xformQuery;
 
+    /// <summary>
+    /// 1 x 1 polygons can overlap neighboring tiles (even without considering the polygon skin around them.
+    /// When querying for specific tile fixtures we shrink the bounds by this amount to avoid this overlap.
+    /// </summary>
     public const float TileEnlargementRadius = -PhysicsConstants.PolygonRadius * 4f;
 
     /// <summary>
@@ -107,7 +111,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
     /// Returns all non-grid entities. Consider using your own flags if you wish for a faster query.
     /// </summary>
     public const LookupFlags DefaultFlags = LookupFlags.All;
-    
+
     public override void Initialize()
     {
         base.Initialize();

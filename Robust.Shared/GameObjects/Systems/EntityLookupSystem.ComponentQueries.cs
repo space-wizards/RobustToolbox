@@ -121,17 +121,8 @@ public sealed partial class EntityLookupSystem
         if (!_broadQuery.Resolve(lookupUid, ref lookup))
             return;
 
-        PolygonShape lookupPoly;
-
-        if ((flags & LookupFlags.Approximate) == 0x0)
-        {
-            lookupPoly = new PolygonShape();
-            lookupPoly.SetAsBox(localAABB);
-        }
-        else
-        {
-            lookupPoly = _dummy;
-        }
+        var lookupPoly = new PolygonShape();
+        lookupPoly.SetAsBox(localAABB);
 
         AddEntitiesIntersecting(lookupUid, intersecting, lookupPoly, localAABB, Physics.Transform.Empty, flags, query, lookup);
     }

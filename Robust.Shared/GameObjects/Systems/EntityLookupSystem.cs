@@ -107,9 +107,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
     /// Returns all non-grid entities. Consider using your own flags if you wish for a faster query.
     /// </summary>
     public const LookupFlags DefaultFlags = LookupFlags.All;
-
-    private PolygonShape _dummy = new();
-
+    
     public override void Initialize()
     {
         base.Initialize();

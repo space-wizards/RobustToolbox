@@ -21,19 +21,21 @@ namespace Robust.UnitTesting.Shared
         private EntityUid GetPhysicsEntity(IEntityManager entManager, MapCoordinates spawnPos)
         {
             var ent = entManager.SpawnEntity(null, spawnPos);
-            var comp = entManager.AddComponent<PhysicsComponent>(ent);
+            var physics = entManager.AddComponent<PhysicsComponent>(ent);
             entManager.System<FixtureSystem>().TryCreateFixture(ent, new PhysShapeCircle(0.35f, Vector2.Zero), "fix1");
+            entManager.System<SharedPhysicsSystem>().SetCanCollide(ent, true, body: physics);
             return ent;
         }
 
         private Entity<MapGridComponent> SetupGrid(MapId mapId, SharedMapSystem mapSystem, IEntityManager entManager, IMapManager mapManager)
         {
-            mapSystem.CreateMap(mapId);
             var grid = mapManager.CreateGridEntity(mapId);
             entManager.System<SharedTransformSystem>().SetLocalPosition(grid.Owner, new Vector2(10f, 10f));
             mapSystem.SetTile(grid, Vector2i.Zero, new Tile(1));
             return grid;
         }
+
+        #region EntityUid
 
         private static readonly TestCaseData[] MapInRangeCases = new[]
         {
@@ -44,7 +46,17 @@ namespace Robust.UnitTesting.Shared
         private static readonly TestCaseData[] GridInRangeCases = new[]
         {
             new TestCaseData(new MapCoordinates(Vector2.One, _mapId), new MapCoordinates(Vector2.Zero, _mapId), 0.5f, false),
-            new TestCaseData(new MapCoordinates(new Vector2(10f, 10f), _mapId), new MapCoordinates(new Vector2(10f, 10f), _mapId), 0.5f, true),
+            new TestCaseData(new MapCoordinates(new Vector2(10f, 10f), _mapId), new MapCoordinates(new Vector2(9.5f, 9.5f), _mapId), 0.5f, true),
+            // Close but no cigar
+            new TestCaseData(new MapCoordinates(new Vector2(10f, 10f), _mapId), new MapCoordinates(new Vector2(9f, 9f), _mapId), 0.5f, false),
+        };
+
+        private static readonly TestCaseData[] GridNoFixtureInRangeCases = new[]
+        {
+            new TestCaseData(new MapCoordinates(Vector2.One, _mapId), new MapCoordinates(Vector2.Zero, _mapId), 0.5f, false),
+            new TestCaseData(new MapCoordinates(new Vector2(10f, 10f), _mapId), new MapCoordinates(new Vector2(9.5f, 9.5f), _mapId), 0.5f, false),
+            // Close but no cigar
+            new TestCaseData(new MapCoordinates(new Vector2(10f, 10f), _mapId), new MapCoordinates(new Vector2(9f, 9f), _mapId), 0.5f, false),
         };
 
         // Remember this test data is relative.
@@ -52,6 +64,14 @@ namespace Robust.UnitTesting.Shared
         {
             new TestCaseData(new MapCoordinates(Vector2.One, _mapId), Box2.UnitCentered, false),
             new TestCaseData(new MapCoordinates(new Vector2(10f, 10f), _mapId), Box2.UnitCentered, true),
+        };
+
+        private static readonly TestCaseData[] GridTileCases = new[]
+        {
+            new TestCaseData(new MapCoordinates(Vector2.One, _mapId), Vector2i.Zero, false),
+            new TestCaseData(new MapCoordinates(new Vector2(10f, 10f), _mapId), Vector2i.Zero, true),
+            // Need to make sure we don't pull out neighbor fixtures even if they barely touch our tile
+            new TestCaseData(new MapCoordinates(new Vector2(11f + 0.35f, 10f), _mapId), Vector2i.Zero, false),
         };
 
         [Test, TestCaseSource(nameof(MapInRangeCases))]
@@ -83,7 +103,7 @@ namespace Robust.UnitTesting.Shared
             var mapSystem = entManager.System<SharedMapSystem>();
 
             mapSystem.CreateMap(spawnPos.MapId);
-            var grid = mapManager.CreateGridEntity(spawnPos.MapId);
+            var grid = SetupGrid(spawnPos.MapId, mapSystem, entManager, mapManager);
             entManager.System<SharedTransformSystem>().SetLocalPosition(grid.Owner, new Vector2(10f, 10f));
 
             GetPhysicsEntity(entManager, spawnPos);
@@ -124,6 +144,7 @@ namespace Robust.UnitTesting.Shared
             var mapManager = server.Resolve<IMapManager>();
             var mapSystem = entManager.System<SharedMapSystem>();
 
+            mapSystem.CreateMap(spawnPos.MapId);
             var grid = SetupGrid(spawnPos.MapId, mapSystem, entManager, mapManager);
 
             GetPhysicsEntity(entManager, spawnPos);
@@ -134,7 +155,7 @@ namespace Robust.UnitTesting.Shared
             mapManager.DeleteMap(spawnPos.MapId);
         }
 
-        [Test, TestCaseSource(nameof(GridInRangeCases))]
+        [Test, TestCaseSource(nameof(GridNoFixtureInRangeCases))]
         public void TestGridNoFixtureInRange(MapCoordinates spawnPos, MapCoordinates queryPos, float range, bool result)
         {
             var sim = RobustServerSimulation.NewSimulation();
@@ -145,12 +166,107 @@ namespace Robust.UnitTesting.Shared
             var mapManager = server.Resolve<IMapManager>();
             var mapSystem = entManager.System<SharedMapSystem>();
 
+            mapSystem.CreateMap(spawnPos.MapId);
             var grid = SetupGrid(spawnPos.MapId, mapSystem, entManager, mapManager);
-
             var ent = entManager.SpawnEntity(null, spawnPos);
-            Assert.That(lookup.GetEntitiesInRange(queryPos.MapId, queryPos.Position, range).Count > 0, Is.EqualTo(result));
+            var entities = lookup.GetEntitiesInRange(queryPos.MapId, queryPos.Position, range);
+
+            Assert.That(entities.Count > 0, Is.EqualTo(result));
             mapManager.DeleteMap(spawnPos.MapId);
         }
+
+        #endregion
+
+        #region Entity
+
+        /*
+         * We double these tests just because these have slightly different codepaths at the moment.
+         *
+         */
+
+        /// <summary>
+        /// Tests Box2 local queries for a particular lookup ID.
+        /// </summary>
+        [Test, TestCaseSource(nameof(GridBox2Cases))]
+        public void TestEntityGridNoFixtureLocalIntersecting(MapCoordinates spawnPos, Box2 queryBounds, bool result)
+        {
+            var sim = RobustServerSimulation.NewSimulation();
+            var server = sim.InitializeInstance();
+
+            var lookup = server.Resolve<IEntitySystemManager>().GetEntitySystem<EntityLookupSystem>();
+            var entManager = server.Resolve<IEntityManager>();
+            var mapManager = server.Resolve<IMapManager>();
+            var mapSystem = entManager.System<SharedMapSystem>();
+
+            mapSystem.CreateMap(spawnPos.MapId);
+            var grid = SetupGrid(spawnPos.MapId, mapSystem, entManager, mapManager);
+
+            var ent = entManager.Spawn(null, spawnPos);
+            var entities = new HashSet<Entity<TransformComponent>>();
+            lookup.GetLocalEntitiesIntersecting(grid.Owner, queryBounds, entities);
+
+            Assert.That(entities.Count > 0, Is.EqualTo(result));
+            mapManager.DeleteMap(spawnPos.MapId);
+        }
+
+        /// <summary>
+        /// Tests Box2 local queries for a particular lookup ID.
+        /// </summary>
+        [Test, TestCaseSource(nameof(GridBox2Cases))]
+        public void TestEntityGridLocalIntersecting(MapCoordinates spawnPos, Box2 queryBounds, bool result)
+        {
+            var sim = RobustServerSimulation.NewSimulation();
+            var server = sim.InitializeInstance();
+
+            var lookup = server.Resolve<IEntitySystemManager>().GetEntitySystem<EntityLookupSystem>();
+            var entManager = server.Resolve<IEntityManager>();
+            var mapManager = server.Resolve<IMapManager>();
+            var mapSystem = entManager.System<SharedMapSystem>();
+
+            mapSystem.CreateMap(spawnPos.MapId);
+            var grid = SetupGrid(spawnPos.MapId, mapSystem, entManager, mapManager);
+
+            GetPhysicsEntity(entManager, spawnPos);
+            var entities = new HashSet<Entity<TransformComponent>>();
+            lookup.GetLocalEntitiesIntersecting(grid.Owner, queryBounds, entities);
+
+            Assert.That(entities.Count > 0, Is.EqualTo(result));
+            mapManager.DeleteMap(spawnPos.MapId);
+        }
+
+        /// <summary>
+        /// Tests Box2 local queries for a particular lookup ID.
+        /// </summary>
+        [Test, TestCaseSource(nameof(GridTileCases))]
+        public void TestEntityGridTileIntersecting(MapCoordinates spawnPos, Vector2i queryTile, bool result)
+        {
+            var sim = RobustServerSimulation.NewSimulation();
+            var server = sim.InitializeInstance();
+
+            var lookup = server.Resolve<IEntitySystemManager>().GetEntitySystem<EntityLookupSystem>();
+            var entManager = server.Resolve<IEntityManager>();
+            var mapManager = server.Resolve<IMapManager>();
+            var mapSystem = entManager.System<SharedMapSystem>();
+
+            mapSystem.CreateMap(spawnPos.MapId);
+            var grid = SetupGrid(spawnPos.MapId, mapSystem, entManager, mapManager);
+
+            var ent = GetPhysicsEntity(entManager, spawnPos);
+            var entities = new HashSet<Entity<TransformComponent>>();
+            lookup.GetLocalEntitiesIntersecting(grid.Owner, queryTile, entities);
+
+            Assert.That(entities.Count > 0, Is.EqualTo(result));
+            mapManager.DeleteMap(spawnPos.MapId);
+        }
+
+        #endregion
+
+        /*
+         * TODO: Add EntityUid tile test
+         * Fix copy-paste between them
+            - AnyEntitiesIntersecting
+            - Check huge area (UseBoundsQuery) works
+         */
 
         [Test]
         public void AnyIntersecting()

@@ -330,11 +330,11 @@ namespace Robust.UnitTesting.Shared
             var theMapSpotBeingUsed = new Box2(Vector2.Zero, Vector2.One);
             grid.Comp.SetTile(new Vector2i(), new Tile(1));
 
-            Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList().Count, Is.EqualTo(0));
+            Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList(), Is.Empty);
 
             // Setup and check it actually worked
             var dummy = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
-            Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList().Count, Is.EqualTo(1));
+            Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList(), Has.Count.EqualTo(1));
 
             var xform = entManager.GetComponent<TransformComponent>(dummy);
 

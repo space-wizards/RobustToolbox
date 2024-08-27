@@ -6,6 +6,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Shapes;
 
 namespace Robust.Shared.GameObjects;
 
@@ -25,8 +26,7 @@ public sealed partial class EntityLookupSystem
         if (!_broadQuery.Resolve(lookupUid, ref lookup))
             return;
 
-        var lookupPoly = new PolygonShape();
-        lookupPoly.SetAsBox(localAABB);
+        var lookupPoly = new Polygon(localAABB);
         AddEntitiesIntersecting(lookupUid, intersecting, lookupPoly, localAABB, Physics.Transform.Empty, flags, lookup);
     }
 
@@ -40,8 +40,7 @@ public sealed partial class EntityLookupSystem
         if (!_broadQuery.Resolve(lookupUid, ref lookup))
             return;
 
-        var shape = new PolygonShape();
-        shape.Set(localBounds);
+        var shape = new Polygon(localBounds);
         var localAABB = localBounds.CalcBoundingBox();
 
         AddEntitiesIntersecting(lookupUid, intersecting, shape, localAABB, Physics.Transform.Empty, flags);
@@ -56,8 +55,7 @@ public sealed partial class EntityLookupSystem
         if (!_broadQuery.Resolve(lookupUid, ref lookup))
             return false;
 
-        var shape = new PolygonShape();
-        shape.SetAsBox(localAABB);
+        var shape = new Polygon(localAABB);
         return AnyEntitiesIntersecting(lookupUid, shape, localAABB, Physics.Transform.Empty, flags, ignored, lookup);
     }
 

@@ -83,6 +83,7 @@ internal record struct Polygon : IPhysShape
 
     public Polygon(Vector2[] vertices)
     {
+        Unsafe.SkipInit(out this);
         var hull = PhysicsHull.ComputeHull(vertices, vertices.Length);
 
         if (hull.Count < 3)

@@ -10,6 +10,8 @@ AllowedVerifierErrors:
 - InterfaceMethodNotImplemented
 
 # EVERYTHING in these namespaces is allowed.
+# Note that, due to a historical bug in the sandbox, any namespace _prefixed_ with one of these
+# is also allowed. (For instance, RobustBats.X, or ContentFarm.Y)
 WhitelistedNamespaces:
 - Robust
 - Content

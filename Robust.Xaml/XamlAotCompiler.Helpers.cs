@@ -1,33 +1,23 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Mono.Cecil;
-using Mono.Cecil.Cil;
-using Mono.Collections.Generic;
 using XamlX.TypeSystem;
 
-namespace Robust.Build.Tasks
+namespace Robust.Xaml
 {
     /// <summary>
-    /// Helpers taken from:
+    /// Helpers taken from AvaloniaUI on GitHub.
+    /// </summary>
+    /// <remarks>
     /// - https://github.com/AvaloniaUI/Avalonia/blob/c85fa2b9977d251a31886c2534613b4730fbaeaf/src/Avalonia.Build.Tasks/XamlCompilerTaskExecutor.cs
     /// - https://github.com/AvaloniaUI/Avalonia/blob/c85fa2b9977d251a31886c2534613b4730fbaeaf/src/Avalonia.Build.Tasks/XamlCompilerTaskExecutor.Helpers.cs
-    /// </summary>
-    public partial class XamlCompiler
+    /// </remarks>
+    internal partial class XamlAotCompiler
     {
-        static bool CheckXamlName(IResource r) => r.Name.ToLowerInvariant().EndsWith(".xaml")
-                                                  || r.Name.ToLowerInvariant().EndsWith(".paml")
-                                                  || r.Name.ToLowerInvariant().EndsWith(".axaml");
+        private static readonly string[] NameSuffixes = {".xaml", ".paml", ".axaml"};
 
-        private static bool MatchThisCall(Collection<Instruction> instructions, int idx)
-        {
-            var i = instructions[idx];
-            // A "normal" way of passing `this` to a static method:
-
-            // ldarg.0
-            // call void [Avalonia.Markup.Xaml]Avalonia.Markup.Xaml.AvaloniaXamlLoader::Load(object)
-
-            return i.OpCode == OpCodes.Ldarg_0 || (i.OpCode == OpCodes.Ldarg && i.Operand?.Equals(0) == true);
-        }
+        static bool CheckXamlName(IResource r) =>
+            NameSuffixes.Any(suffix => r.Name.ToLowerInvariant().EndsWith(suffix));
 
         interface IResource : IFileSource
         {

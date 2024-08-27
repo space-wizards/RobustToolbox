@@ -26,6 +26,7 @@ using Robust.Client.Upload;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.RichText;
 using Robust.Client.UserInterface.Themes;
+using Robust.Client.UserInterface.XAML.Proxy;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
 using Robust.Shared;
@@ -146,6 +147,16 @@ namespace Robust.Client
             deps.Register<IConfigurationManagerInternal, ClientNetConfigurationManager>();
             deps.Register<IClientNetConfigurationManager, ClientNetConfigurationManager>();
             deps.Register<INetConfigurationManagerInternal, ClientNetConfigurationManager>();
+
+#if TOOLS
+            deps.Register<IXamlProxyManager, XamlProxyManager>();
+            deps.Register<IXamlHotReloadManager, XamlHotReloadManager>();
+#else
+            deps.Register<IXamlProxyManager, XamlProxyManagerStub>();
+            deps.Register<IXamlHotReloadManager, XamlHotReloadManagerStub>();
+#endif
+
+            deps.Register<IXamlProxyHelper, XamlProxyHelper>();
             deps.Register<MarkupTagManager>();
         }
     }

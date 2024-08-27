@@ -12,6 +12,7 @@ using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.BroadPhase;
 using Robust.Shared.Physics.Collision;
+using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
@@ -95,6 +96,10 @@ public sealed partial class EntityLookupSystem : EntitySystem
     private EntityQuery<PhysicsMapComponent> _mapQuery;
     private EntityQuery<TransformComponent> _xformQuery;
 
+    /// <summary>
+    /// 1 x 1 polygons can overlap neighboring tiles (even without considering the polygon skin around them.
+    /// When querying for specific tile fixtures we shrink the bounds by this amount to avoid this overlap.
+    /// </summary>
     public const float TileEnlargementRadius = -PhysicsConstants.PolygonRadius * 4f;
 
     /// <summary>

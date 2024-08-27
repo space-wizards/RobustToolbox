@@ -148,7 +148,7 @@ namespace Robust.Client
             deps.Register<IClientNetConfigurationManager, ClientNetConfigurationManager>();
             deps.Register<INetConfigurationManagerInternal, ClientNetConfigurationManager>();
 
-#if DEBUG
+#if TOOLS
             deps.Register<IXamlProxyManager, XamlProxyManager>();
             deps.Register<IXamlHotReloadManager, XamlHotReloadManager>();
 #else

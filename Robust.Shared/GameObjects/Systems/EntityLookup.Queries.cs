@@ -11,6 +11,7 @@ using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Shapes;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
 
@@ -408,8 +409,7 @@ public sealed partial class EntityLookupSystem
         var broadphaseInv = _transform.GetInvWorldMatrix(lookupUid);
 
         var localBounds = broadphaseInv.TransformBounds(worldBounds);
-        var shape = new PolygonShape();
-        shape.Set(localBounds);
+        var shape = new Polygon(localBounds);
 
         return AnyEntitiesIntersecting(lookupUid, shape, localBounds.CalcBoundingBox(), Physics.Transform.Empty, flags, ignored);
     }
@@ -546,8 +546,7 @@ public sealed partial class EntityLookupSystem
         var mapUid = _map.GetMapOrInvalid(mapId);
 
         // Get grid entities
-        var shape = new PolygonShape();
-        shape.Set(worldBounds);
+        var shape = new Polygon(worldBounds);
         var transform = Physics.Transform.Empty;
 
         var state = (this, _physics, intersecting, transform, shape, flags);
@@ -560,7 +559,7 @@ public sealed partial class EntityLookupSystem
                     SharedPhysicsSystem _physics,
                     HashSet<EntityUid> intersecting,
                     Transform transform,
-                    PolygonShape shape, LookupFlags flags) state) =>
+                    Polygon shape, LookupFlags flags) state) =>
             {
                 var localTransform = state._physics.GetRelativePhysicsTransform(state.transform, uid);
                 var localAabb = state.shape.ComputeAABB(localTransform, 0);
@@ -869,8 +868,7 @@ public sealed partial class EntityLookupSystem
             return;
 
         var localAABB = _transform.GetInvWorldMatrix(gridId).TransformBox(worldAABB);
-        var shape = new PolygonShape();
-        shape.SetAsBox(localAABB);
+        var shape = new Polygon(localAABB);
 
         AddEntitiesIntersecting(gridId, intersecting, shape, localAABB, Physics.Transform.Empty, flags, lookup);
         AddContained(intersecting, flags);
@@ -882,8 +880,7 @@ public sealed partial class EntityLookupSystem
             return;
 
         var localBounds = _transform.GetInvWorldMatrix(gridId).TransformBounds(worldBounds);
-        var shape = new PolygonShape();
-        shape.Set(localBounds);
+        var shape = new Polygon(localBounds);
 
         AddEntitiesIntersecting(gridId, intersecting, shape, localBounds.CalcBoundingBox(), Physics.Transform.Empty, flags, lookup);
         AddContained(intersecting, flags);

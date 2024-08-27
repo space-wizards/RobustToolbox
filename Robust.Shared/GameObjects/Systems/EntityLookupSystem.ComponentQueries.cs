@@ -10,6 +10,7 @@ using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Shapes;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
 using TerraFX.Interop.Windows;
@@ -121,8 +122,7 @@ public sealed partial class EntityLookupSystem
         if (!_broadQuery.Resolve(lookupUid, ref lookup))
             return;
 
-        var lookupPoly = new PolygonShape();
-        lookupPoly.SetAsBox(localAABB);
+        var lookupPoly = new Polygon(localAABB);
 
         AddEntitiesIntersecting(lookupUid, intersecting, lookupPoly, localAABB, Physics.Transform.Empty, flags, query, lookup);
     }
@@ -251,8 +251,7 @@ public sealed partial class EntityLookupSystem
         if (!_broadQuery.Resolve(lookupUid, ref lookup))
             return false;
 
-        var shape = new PolygonShape();
-        shape.SetAsBox(localAABB);
+        var shape = new Polygon(localAABB);
         var (lookupPos, lookupRot) = _transform.GetWorldPositionRotation(lookupUid);
         var transform = new Transform(lookupPos, lookupRot);
 
@@ -423,8 +422,7 @@ public sealed partial class EntityLookupSystem
 
     public bool AnyComponentsIntersecting(Type type, MapId mapId, Box2 worldAABB, EntityUid? ignored = null, LookupFlags flags = DefaultFlags)
     {
-        var shape = new PolygonShape();
-        shape.SetAsBox(worldAABB);
+        var shape = new Polygon(worldAABB);
         var transform = Physics.Transform.Empty;
 
         return AnyComponentsIntersecting(type, mapId, shape, transform, ignored, flags);
@@ -492,8 +490,7 @@ public sealed partial class EntityLookupSystem
         if (mapId == MapId.Nullspace)
             return;
 
-        var shape = new PolygonShape();
-        shape.SetAsBox(worldAABB);
+        var shape = new Polygon(worldAABB);
         var transform = Physics.Transform.Empty;
 
         GetEntitiesIntersecting(type, mapId, shape, transform, intersecting, flags);
@@ -503,8 +500,7 @@ public sealed partial class EntityLookupSystem
     {
         if (mapId == MapId.Nullspace) return;
 
-        var shape = new PolygonShape();
-        shape.SetAsBox(worldAABB);
+        var shape = new Polygon(worldAABB);
         var shapeTransform = Physics.Transform.Empty;
 
         GetEntitiesIntersecting(mapId, shape, shapeTransform, entities, flags);

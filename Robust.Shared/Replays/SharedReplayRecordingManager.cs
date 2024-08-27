@@ -49,6 +49,7 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
 
     public event Action<MappingDataNode, List<object>>? RecordingStarted;
     public event Action<MappingDataNode>? RecordingStopped;
+    public event Action<ReplayRecordingStopped>? RecordingStopped2;
     public event Action<ReplayRecordingFinished>? RecordingFinished;
 
     private ISawmill _sawmill = default!;
@@ -312,6 +313,7 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
 
         // File stream & compression context is always disposed from the worker task.
         _recState.WriteCommandChannel.Complete();
+        _recState.Done = true;
 
         _recState = null;
     }
@@ -373,6 +375,11 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
     {
         var yamlMetadata = new MappingDataNode();
         RecordingStopped?.Invoke(yamlMetadata);
+        RecordingStopped2?.Invoke(new ReplayRecordingStopped
+        {
+            Metadata = yamlMetadata,
+            Writer = new ReplayFileWriter(this, recState)
+        });
         var time = Timing.CurTime - recState.StartTime;
         yamlMetadata[MetaFinalKeyEndTick] = new ValueDataNode(Timing.CurTick.Value.ToString());
         yamlMetadata[MetaFinalKeyDuration] = new ValueDataNode(time.ToString());
@@ -384,6 +391,7 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
         // this just overwrites the previous yml with additional data.
         var document = new YamlDocument(yamlMetadata.ToYaml());
         WriteYaml(recState, ReplayZipFolder / FileMetaFinal, document);
+
         UpdateWriteTasks();
         Reset();
 
@@ -492,6 +500,8 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
         public long CompressedSize;
         public long UncompressedSize;
 
+        public bool Done;
+
         public RecordingState(
             ZipArchive zip,
             MemoryStream buffer,
@@ -516,6 +526,25 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
             StartTime = startTime;
             EndTime = endTime;
             WriteCommandChannel = writeCommandChannel;
+        }
+    }
+
+    private sealed class ReplayFileWriter(SharedReplayRecordingManager manager, RecordingState state)
+        : IReplayFileWriter
+    {
+        public ResPath BaseReplayPath => ReplayZipFolder;
+
+        public void WriteBytes(ResPath path, ReadOnlyMemory<byte> bytes, CompressionLevel compressionLevel)
+        {
+            CheckDisposed();
+
+            manager.WriteBytes(state, path, bytes, compressionLevel);
+        }
+
+        private void CheckDisposed()
+        {
+            if (state.Done)
+                throw new ObjectDisposedException(nameof(ReplayFileWriter));
         }
     }
 }

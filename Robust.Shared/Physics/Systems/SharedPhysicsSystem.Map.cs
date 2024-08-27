@@ -9,11 +9,8 @@ public partial class SharedPhysicsSystem
 {
     #region AddRemove
 
-    internal void AddAwakeBody(EntityUid uid, PhysicsComponent body, PhysicsMapComponent? map = null)
+    internal void AddAwakeBody(EntityUid uid, PhysicsComponent body)
     {
-        if (map == null)
-            return;
-
         if (!body.CanCollide)
         {
             Log.Error($"Tried to add non-colliding {ToPrettyString(uid)} as an awake body to map!");
@@ -29,25 +26,14 @@ public partial class SharedPhysicsSystem
         }
 
         DebugTools.Assert(body.Awake);
-        map.AwakeBodies.Add(body);
+        World.AwakeBodies.Add(body);
     }
 
-    internal void AddAwakeBody(EntityUid uid, PhysicsComponent body, EntityUid mapUid, PhysicsMapComponent? map = null)
+    internal void RemoveSleepBody(EntityUid uid, PhysicsComponent body)
     {
-        PhysMapQuery.Resolve(mapUid, ref map, false);
-        AddAwakeBody(uid, body, map);
+        World.AwakeBodies.Remove(body);
     }
 
-    internal void RemoveSleepBody(EntityUid uid, PhysicsComponent body, PhysicsMapComponent? map = null)
-    {
-        map?.AwakeBodies.Remove(body);
-    }
-
-    internal void RemoveSleepBody(EntityUid uid, PhysicsComponent body, EntityUid mapUid, PhysicsMapComponent? map = null)
-    {
-        PhysMapQuery.Resolve(mapUid, ref map, false);
-        RemoveSleepBody(uid, body, map);
-    }
 
     #endregion
 }

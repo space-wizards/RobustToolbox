@@ -35,7 +35,6 @@ namespace Robust.Shared.Physics.Systems
         private EntityQuery<MapGridComponent> _gridQuery;
         private EntityQuery<PhysicsComponent> _physicsQuery;
         private EntityQuery<TransformComponent> _xformQuery;
-        private EntityQuery<PhysicsMapComponent> _mapQuery;
 
         private float _broadphaseExpand;
 
@@ -64,7 +63,6 @@ namespace Robust.Shared.Physics.Systems
             _gridQuery = GetEntityQuery<MapGridComponent>();
             _physicsQuery = GetEntityQuery<PhysicsComponent>();
             _xformQuery = GetEntityQuery<TransformComponent>();
-            _mapQuery = GetEntityQuery<PhysicsMapComponent>();
 
             UpdatesOutsidePrediction = true;
             UpdatesAfter.Add(typeof(SharedTransformSystem));
@@ -84,19 +82,19 @@ namespace Robust.Shared.Physics.Systems
         /// Check the AABB for each moved broadphase fixture and add any colliding entities to the movebuffer in case.
         /// </summary>
         private void FindGridContacts(
-            PhysicsMapComponent component,
-            MapId mapId,
             HashSet<EntityUid> movedGrids,
             Dictionary<FixtureProxy, Box2> gridMoveBuffer)
         {
             // None moved this tick
             if (movedGrids.Count == 0) return;
 
+            var world = _physicsSystem.World;
+
             var mapBroadphase = _broadphaseQuery.GetComponent(_map.GetMapOrInvalid(mapId));
 
             // This is so that if we're on a broadphase that's moving (e.g. a grid) we need to make sure anything
             // we move over is getting checked for collisions, and putting it on the movebuffer is the easiest way to do so.
-            var moveBuffer = component.MoveBuffer;
+            var moveBuffer = world.MoveBuffer;
 
             foreach (var gridUid in movedGrids)
             {
@@ -143,27 +141,19 @@ namespace Robust.Shared.Physics.Systems
             }, enlargedAABB, true);
         }
 
-        [Obsolete("Use the overload with SharedPhysicsMapComponent")]
-        internal void FindNewContacts(MapId mapId)
-        {
-            if (!TryComp<PhysicsMapComponent>(_map.GetMapOrInvalid(mapId), out var physicsMap))
-                return;
-
-            FindNewContacts(physicsMap, mapId);
-        }
-
         /// <summary>
         /// Go through every single created, moved, or touched proxy on the map and try to find any new contacts that should be created.
         /// </summary>
-        internal void FindNewContacts(PhysicsMapComponent component, MapId mapId)
+        internal void FindNewContacts()
         {
-            var moveBuffer = component.MoveBuffer;
+            var moveBuffer = _physicsSystem.World.MoveBuffer;
+
             var mapUid = _map.GetMapOrInvalid(mapId);
             var movedGrids = Comp<MovedGridsComponent>(mapUid).MovedGrids;
             var gridMoveBuffer = new Dictionary<FixtureProxy, Box2>();
 
             // Find any entities being driven over that might need to be considered
-            FindGridContacts(component, mapId, movedGrids, gridMoveBuffer);
+            FindGridContacts(world, mapId, movedGrids, gridMoveBuffer);
 
             // There is some mariana trench levels of bullshit going on.
             // We essentially need to re-create Box2D's FindNewContacts but in a way that allows us to check every

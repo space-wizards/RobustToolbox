@@ -21,7 +21,6 @@ namespace Robust.Shared.Physics.Systems
     {
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
-        private EntityQuery<PhysicsMapComponent> _mapQuery;
         private EntityQuery<PhysicsComponent> _physicsQuery;
         private EntityQuery<FixturesComponent> _fixtureQuery;
 
@@ -32,7 +31,6 @@ namespace Robust.Shared.Physics.Systems
             SubscribeLocalEvent<FixturesComponent, ComponentShutdown>(OnShutdown);
             SubscribeLocalEvent<FixturesComponent, ComponentGetState>(OnGetState);
             SubscribeLocalEvent<FixturesComponent, ComponentHandleState>(OnHandleState);
-            _mapQuery = GetEntityQuery<PhysicsMapComponent>();
             _physicsQuery = GetEntityQuery<PhysicsComponent>();
             _fixtureQuery = GetEntityQuery<FixturesComponent>();
         }
@@ -188,8 +186,7 @@ namespace Robust.Shared.Physics.Systems
             if (_lookup.TryGetCurrentBroadphase(xform, out var broadphase))
             {
                 DebugTools.Assert(xform.MapUid == Transform(broadphase.Owner).MapUid);
-                _mapQuery.TryGetComponent(xform.MapUid, out var physicsMap);
-                _lookup.DestroyProxies(uid, fixtureId, fixture, xform, broadphase, physicsMap);
+                _lookup.DestroyProxies(uid, fixtureId, fixture, xform, broadphase);
             }
 
             if (updates)

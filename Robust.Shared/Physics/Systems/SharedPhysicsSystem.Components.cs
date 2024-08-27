@@ -463,8 +463,16 @@ public partial class SharedPhysicsSystem
             body.Awake = true;
         }
 
-        UpdateMapAwakeState(uid, body);
+        UpdateAwakeState(uid, body);
         Dirty(ent);
+    }
+
+    private void UpdateAwakeState(EntityUid uid, PhysicsComponent body)
+    {
+        if (body.Awake)
+            AddAwakeBody(uid, body);
+        else
+            RemoveSleepBody(uid, body);
     }
 
     public void TrySetBodyType(EntityUid uid, BodyType value, FixturesComponent? manager = null, PhysicsComponent? body = null, TransformComponent? xform = null)

@@ -154,11 +154,6 @@ public sealed partial class PhysicsComponent : Component
     internal float _inertia;
 
     /// <summary>
-    ///     Indicates whether this body ignores gravity
-    /// </summary>
-    [ViewVariables(VVAccess.ReadWrite)] public bool IgnoreGravity;
-
-    /// <summary>
     /// Inverse moment of inertia (1 / I).
     /// </summary>
     [ViewVariables(VVAccess.ReadWrite),

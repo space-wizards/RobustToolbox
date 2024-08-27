@@ -260,42 +260,39 @@ public abstract partial class SharedPhysicsSystem
     /// <summary>
     ///     Where the magic happens.
     /// </summary>
-    public void Step(EntityUid uid, PhysicsMapComponent component, float frameTime, bool prediction)
+    public void Step(float frameTime, bool prediction)
     {
         var invDt = frameTime > 0.0f ? 1.0f / frameTime : 0.0f;
-        var dtRatio = component._invDt0 * frameTime;
+        var dtRatio = World._invDt0 * frameTime;
 
         // Integrate velocities, solve velocity constraints, and do integration.
-        Solve(uid, component, frameTime, dtRatio, invDt, prediction);
+        Solve(frameTime, dtRatio, invDt, prediction);
 
         // TODO: SolveTOI
 
-        var updateAfterSolve = new PhysicsUpdateAfterMapSolveEvent(prediction, component, frameTime);
-        RaiseLocalEvent(ref updateAfterSolve);
-
         // Box2d recommends clearing (if you are) during fixed updates rather than variable if you are using it
-        if (!prediction && component.AutoClearForces)
-            ClearForces(component);
+        if (!prediction && World.AutoClearForces)
+            ClearForces();
 
-        component._invDt0 = invDt;
+        World._invDt0 = invDt;
     }
 
-    private void ClearForces(PhysicsMapComponent component)
+    private void ClearForces()
     {
-        foreach (var body in component.AwakeBodies)
+        foreach (var body in World.AwakeBodies)
         {
-            // TODO: Netsync
+            // TODO: Netsync (need delta fields pr).
             body.Force = Vector2.Zero;
             body.Torque = 0.0f;
         }
     }
 
-    private void Solve(EntityUid uid, PhysicsMapComponent component, float frameTime, float dtRatio, float invDt, bool prediction)
+    private void Solve(float frameTime, float dtRatio, float invDt, bool prediction)
     {
         // Build and simulated islands from awake bodies.
-        _bodyStack.EnsureCapacity(component.AwakeBodies.Count);
-        _islandSet.EnsureCapacity(component.AwakeBodies.Count);
-        _awakeBodyList.AddRange(component.AwakeBodies);
+        _bodyStack.EnsureCapacity(World.AwakeBodies.Count);
+        _islandSet.EnsureCapacity(World.AwakeBodies.Count);
+        _awakeBodyList.AddRange(World.AwakeBodies);
 
         var bodyQuery = GetEntityQuery<PhysicsComponent>();
         var metaQuery = GetEntityQuery<MetaDataComponent>();
@@ -326,7 +323,7 @@ public abstract partial class SharedPhysicsSystem
             if (!metaQuery.TryGetComponent(seedUid, out var metadata))
             {
                 Log.Error($"Found deleted entity {ToPrettyString(seedUid)} on map!");
-                RemoveSleepBody(seedUid, seed, component);
+                RemoveSleepBody(seedUid, seed);
                 continue;
             }
 
@@ -523,14 +520,14 @@ public abstract partial class SharedPhysicsSystem
             ReturnIsland(loneIsland);
         }
 
-        SolveIslands(uid, component, islands, frameTime, dtRatio, invDt, prediction);
+        SolveIslands(islands, frameTime, dtRatio, invDt, prediction);
 
         foreach (var island in islands)
         {
             ReturnIsland(island);
         }
 
-        Cleanup(component, frameTime);
+        Cleanup(frameTime);
     }
 
     private void ReturnIsland(IslandData island)
@@ -559,7 +556,7 @@ public abstract partial class SharedPhysicsSystem
         island.BrokenJoints.Clear();
     }
 
-    protected virtual void Cleanup(PhysicsMapComponent component, float frameTime)
+    protected virtual void Cleanup(float frameTime)
     {
         foreach (var body in _islandSet)
         {
@@ -578,11 +575,9 @@ public abstract partial class SharedPhysicsSystem
         _awakeBodyList.Clear();
     }
 
-    private void SolveIslands(EntityUid uid, PhysicsMapComponent component, List<IslandData> islands, float frameTime, float dtRatio, float invDt, bool prediction)
+    private void SolveIslands(List<IslandData> islands, float frameTime, float dtRatio, float invDt, bool prediction)
     {
         var iBegin = 0;
-        var gravity = _gravity.GetGravity(uid);
-
         var data = new SolverData(
             frameTime,
             dtRatio,
@@ -615,7 +610,7 @@ public abstract partial class SharedPhysicsSystem
         {
             ref var island = ref actualIslands[i];
             island.Offset = totalBodies;
-            UpdateLerpData(component, island.Bodies, xformQuery);
+            UpdateLerpData(island.Bodies, xformQuery);
 
 #if DEBUG
             RaiseLocalEvent(new IslandSolveMessage(island.Bodies));
@@ -648,14 +643,14 @@ public abstract partial class SharedPhysicsSystem
             if (!InternalParallel(island))
                 break;
 
-            SolveIsland(ref island, in data, options, gravity, prediction, solvedPositions, solvedAngles, linearVelocities, angularVelocities, sleepStatus);
+            SolveIsland(ref island, in data, options, prediction, solvedPositions, solvedAngles, linearVelocities, angularVelocities, sleepStatus);
             iBegin++;
         }
 
         Parallel.For(iBegin, actualIslands.Length, options, i =>
         {
             ref var island = ref actualIslands[i];
-            SolveIsland(ref island, in data, null, gravity, prediction, solvedPositions, solvedAngles, linearVelocities, angularVelocities, sleepStatus);
+            SolveIsland(ref island, in data, null, prediction, solvedPositions, solvedAngles, linearVelocities, angularVelocities, sleepStatus);
         });
 
         // Update data sequentially
@@ -679,7 +674,7 @@ public abstract partial class SharedPhysicsSystem
     /// If this is the first time a body has been updated this tick update its position for lerping.
     /// Due to substepping we have to check it every time.
     /// </summary>
-    protected virtual void UpdateLerpData(PhysicsMapComponent component, List<PhysicsComponent> bodies, EntityQuery<TransformComponent> xformQuery)
+    protected virtual void UpdateLerpData(List<PhysicsComponent> bodies, EntityQuery<TransformComponent> xformQuery)
     {
 
     }
@@ -702,7 +697,6 @@ public abstract partial class SharedPhysicsSystem
         ref IslandData island,
         in SolverData data,
         ParallelOptions? options,
-        Vector2 gravity,
         bool prediction,
         Vector2[] solvedPositions,
         float[] solvedAngles,
@@ -736,11 +730,7 @@ public abstract partial class SharedPhysicsSystem
             // if the body cannot move, nothing to do here
             if (body.BodyType == BodyType.Dynamic)
             {
-                if (body.IgnoreGravity)
-                    linearVelocity += body.Force * data.FrameTime * body.InvMass;
-                else
-                    linearVelocity += (gravity + body.Force * body.InvMass) * data.FrameTime;
-
+                linearVelocity += body.Force * data.FrameTime * body.InvMass;
                 angularVelocity += body.InvI * body.Torque * data.FrameTime;
 
                 linearVelocity *= Math.Clamp(1.0f - data.FrameTime * body.LinearDamping, 0.0f, 1.0f);

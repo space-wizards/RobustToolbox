@@ -114,9 +114,7 @@ public abstract partial class SharedMapSystem
     private void OnComponentAdd(EntityUid uid, MapComponent component, ComponentAdd args)
     {
         // ordered startups when
-        EnsureComp<PhysicsMapComponent>(uid);
         EnsureComp<GridTreeComponent>(uid);
-        EnsureComp<MovedGridsComponent>(uid);
     }
 
     private void OnCompInit(EntityUid uid, MapComponent component, ComponentInit args)

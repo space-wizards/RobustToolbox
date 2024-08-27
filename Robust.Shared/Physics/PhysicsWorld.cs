@@ -25,6 +25,12 @@ internal sealed class PhysicsWorld
     public readonly Dictionary<FixtureProxy, Box2> MoveBuffer = new();
 
     /// <summary>
+    /// Track moved grids to know if we need to run checks for them driving over entities.
+    /// </summary>
+    [ViewVariables]
+    public HashSet<EntityUid> MovedGrids = new();
+
+    /// <summary>
     ///     All awake bodies on this map.
     /// </summary>
     [ViewVariables]

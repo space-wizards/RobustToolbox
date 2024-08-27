@@ -68,12 +68,12 @@ namespace Robust.Client.Physics
         /// <summary>
         /// Flush all of our lerping data.
         /// </summary>
-        protected override void FinalStep(PhysicsMapComponent component)
+        protected override void FinalStep()
         {
-            base.FinalStep(component);
+            base.FinalStep();
             var xformQuery = GetEntityQuery<TransformComponent>();
 
-            foreach (var (uid, (parentUid, position, rotation)) in component.LerpData)
+            foreach (var (uid, (parentUid, position, rotation)) in World.LerpData)
             {
                 if (!xformQuery.TryGetComponent(uid, out var xform) ||
                     !parentUid.IsValid())
@@ -85,7 +85,7 @@ namespace Robust.Client.Physics
                 _transform.SetLocalPositionRotation(uid, xform.LocalPosition, xform.LocalRotation, xform);
             }
 
-            component.LerpData.Clear();
+            World.LerpData.Clear();
         }
     }
 }

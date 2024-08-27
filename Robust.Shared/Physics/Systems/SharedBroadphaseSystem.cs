@@ -38,6 +38,8 @@ namespace Robust.Shared.Physics.Systems
 
         private float _broadphaseExpand;
 
+        private Dictionary<FixtureProxy, Box2> _gridMoveBuffer = new();
+
         /*
          * Okay so Box2D has its own "MoveProxy" stuff so you can easily find new contacts when required.
          * Our problem is that we have nested broadphases (rather than being on separate maps) which makes this
@@ -82,15 +84,12 @@ namespace Robust.Shared.Physics.Systems
         /// Check the AABB for each moved broadphase fixture and add any colliding entities to the movebuffer in case.
         /// </summary>
         private void FindGridContacts(
-            HashSet<EntityUid> movedGrids,
-            Dictionary<FixtureProxy, Box2> gridMoveBuffer)
+            HashSet<EntityUid> movedGrids)
         {
             // None moved this tick
             if (movedGrids.Count == 0) return;
 
             var world = _physicsSystem.World;
-
-            var mapBroadphase = _broadphaseQuery.GetComponent(_map.GetMapOrInvalid(mapId));
 
             // This is so that if we're on a broadphase that's moving (e.g. a grid) we need to make sure anything
             // we move over is getting checked for collisions, and putting it on the movebuffer is the easiest way to do so.
@@ -101,16 +100,19 @@ namespace Robust.Shared.Physics.Systems
                 var grid = _gridQuery.GetComponent(gridUid);
                 var xform = _xformQuery.GetComponent(gridUid);
 
-                DebugTools.Assert(xform.MapID == mapId);
+                // Moved to nullspace?
+                if (!_broadphaseQuery.TryComp(xform.MapUid, out var mapBroadphase))
+                    continue;
+
                 var worldAABB = _transform.GetWorldMatrix(xform).TransformBox(grid.LocalAABB);
                 var enlargedAABB = worldAABB.Enlarged(_broadphaseExpand);
-                var state = (moveBuffer, gridMoveBuffer);
+                var state = (moveBuffer, _gridMoveBuffer);
 
                 QueryMapBroadphase(mapBroadphase.DynamicTree, ref state, enlargedAABB);
                 QueryMapBroadphase(mapBroadphase.StaticTree, ref state, enlargedAABB);
             }
 
-            foreach (var (proxy, worldAABB) in gridMoveBuffer)
+            foreach (var (proxy, worldAABB) in _gridMoveBuffer)
             {
                 moveBuffer[proxy] = worldAABB;
                 // If something is in our AABB then try grid traversal for it
@@ -148,12 +150,11 @@ namespace Robust.Shared.Physics.Systems
         {
             var moveBuffer = _physicsSystem.World.MoveBuffer;
 
-            var mapUid = _map.GetMapOrInvalid(mapId);
-            var movedGrids = Comp<MovedGridsComponent>(mapUid).MovedGrids;
-            var gridMoveBuffer = new Dictionary<FixtureProxy, Box2>();
+            var movedGrids = _physicsSystem.World.MovedGrids;
+            _gridMoveBuffer.Clear();
 
             // Find any entities being driven over that might need to be considered
-            FindGridContacts(world, mapId, movedGrids, gridMoveBuffer);
+            FindGridContacts(movedGrids);
 
             // There is some mariana trench levels of bullshit going on.
             // We essentially need to re-create Box2D's FindNewContacts but in a way that allows us to check every
@@ -165,73 +166,78 @@ namespace Robust.Shared.Physics.Systems
             // to cache a bunch of stuff to make up for it.
 
             // Handle grids first as they're not stored on map broadphase at all.
-            HandleGridCollisions(mapId, movedGrids);
+            HandleGridCollisions(movedGrids);
 
             // EZ
             if (moveBuffer.Count == 0)
                 return;
 
-            _contactJob.MapUid = _mapManager.GetMapEntityIdOrThrow(mapId);
-            _contactJob.MoveBuffer.Clear();
+            var mapQuery = EntityQueryEnumerator<MapComponent>();
 
-            foreach (var (proxy, aabb) in moveBuffer)
+            while (mapQuery.MoveNext(out var mapUid, out var mapComp))
             {
-                _contactJob.MoveBuffer.Add((proxy, aabb));
-            }
+                _contactJob.MapUid = _mapManager.GetMapEntityIdOrThrow(mapComp.MapId);
+                _contactJob.MoveBuffer.Clear();
 
-            for (var i = _contactJob.ContactBuffer.Count; i < _contactJob.MoveBuffer.Count; i++)
-            {
-                _contactJob.ContactBuffer.Add(new List<FixtureProxy>());
-            }
-
-            var count = moveBuffer.Count;
-
-            _parallel.ProcessNow(_contactJob, count);
-
-            for (var i = 0; i < count; i++)
-            {
-                var proxies = _contactJob.ContactBuffer[i];
-
-                if (proxies.Count == 0)
-                    continue;
-
-                var proxyA = _contactJob.MoveBuffer[i].Proxy;
-                var proxyABody = proxyA.Body;
-
-                _fixturesQuery.TryGetComponent(proxyA.Entity, out var manager);
-
-                foreach (var other in proxies)
+                foreach (var (proxy, aabb) in moveBuffer)
                 {
-                    var otherBody = other.Body;
-
-                    // Because we may be colliding with something asleep (due to the way grid movement works) need
-                    // to make sure the contact doesn't fail.
-                    // This is because we generate a contact across 2 different broadphases where both bodies aren't
-                    // moving locally but are moving in world-terms.
-                    if (proxyA.Fixture.Hard && other.Fixture.Hard &&
-                        (gridMoveBuffer.ContainsKey(proxyA) || gridMoveBuffer.ContainsKey(other)))
-                    {
-                        _physicsSystem.WakeBody(proxyA.Entity, force: true, manager: manager, body: proxyABody);
-                        _physicsSystem.WakeBody(other.Entity, force: true, body: otherBody);
-                    }
-
-                    _physicsSystem.AddPair(proxyA.FixtureId, other.FixtureId, proxyA, other);
+                    _contactJob.MoveBuffer.Add((proxy, aabb));
                 }
-            }
 
-            moveBuffer.Clear();
-            movedGrids.Clear();
+                for (var i = _contactJob.ContactBuffer.Count; i < _contactJob.MoveBuffer.Count; i++)
+                {
+                    _contactJob.ContactBuffer.Add(new List<FixtureProxy>());
+                }
+
+                var count = moveBuffer.Count;
+
+                _parallel.ProcessNow(_contactJob, count);
+
+                for (var i = 0; i < count; i++)
+                {
+                    var proxies = _contactJob.ContactBuffer[i];
+
+                    if (proxies.Count == 0)
+                        continue;
+
+                    var proxyA = _contactJob.MoveBuffer[i].Proxy;
+                    var proxyABody = proxyA.Body;
+
+                    _fixturesQuery.TryGetComponent(proxyA.Entity, out var manager);
+
+                    foreach (var other in proxies)
+                    {
+                        var otherBody = other.Body;
+
+                        // Because we may be colliding with something asleep (due to the way grid movement works) need
+                        // to make sure the contact doesn't fail.
+                        // This is because we generate a contact across 2 different broadphases where both bodies aren't
+                        // moving locally but are moving in world-terms.
+                        if (proxyA.Fixture.Hard && other.Fixture.Hard &&
+                            (_gridMoveBuffer.ContainsKey(proxyA) || _gridMoveBuffer.ContainsKey(other)))
+                        {
+                            _physicsSystem.WakeBody(proxyA.Entity, force: true, manager: manager, body: proxyABody);
+                            _physicsSystem.WakeBody(other.Entity, force: true, body: otherBody);
+                        }
+
+                        _physicsSystem.AddPair(proxyA.FixtureId, other.FixtureId, proxyA, other);
+                    }
+                }
+
+                moveBuffer.Clear();
+                movedGrids.Clear();
+            }
         }
 
-        private void HandleGridCollisions(
-            MapId mapId,
-            HashSet<EntityUid> movedGrids)
+        private void HandleGridCollisions(HashSet<EntityUid> movedGrids)
         {
             foreach (var gridUid in movedGrids)
             {
                 var grid = _gridQuery.GetComponent(gridUid);
                 var xform = _xformQuery.GetComponent(gridUid);
-                DebugTools.Assert(xform.MapID == mapId);
+
+                if (xform.MapID == MapId.Nullspace)
+                    continue;
 
                 var (worldPos, worldRot, worldMatrix, invWorldMatrix) = _transform.GetWorldPositionRotationMatrixWithInv(xform);
 
@@ -243,7 +249,7 @@ namespace Robust.Shared.Physics.Systems
                 var transform = _physicsSystem.GetPhysicsTransform(gridUid);
                 var state = (gridUid, grid, transform, worldMatrix, invWorldMatrix, _map, _physicsSystem, _transform, _physicsQuery, _xformQuery);
 
-                _mapManager.FindGridsIntersecting(mapId, aabb, ref state,
+                _mapManager.FindGridsIntersecting(xform.MapID, aabb, ref state,
                     static (EntityUid uid, MapGridComponent component,
                         ref (EntityUid gridUid,
                             MapGridComponent grid,
@@ -410,18 +416,14 @@ namespace Robust.Shared.Physics.Systems
         {
             foreach (var proxy in fixture.Proxies)
             {
-                AddToMoveBuffer(mapId, proxy, broadphaseMatrix.TransformBox(proxy.AABB));
+                AddToMoveBuffer(proxy, broadphaseMatrix.TransformBox(proxy.AABB));
             }
         }
 
-        private void AddToMoveBuffer(EntityUid mapId, FixtureProxy proxy, Box2 aabb)
+        private void AddToMoveBuffer(FixtureProxy proxy, Box2 aabb)
         {
-            if (!_mapQuery.TryGetComponent(mapId, out var physicsMap))
-                return;
-
             DebugTools.Assert(proxy.Body.CanCollide);
-
-            physicsMap.MoveBuffer[proxy] = aabb;
+            _physicsSystem.World.MoveBuffer[proxy] = aabb;
         }
 
         public void Refilter(EntityUid uid, Fixture fixture, TransformComponent? xform = null)

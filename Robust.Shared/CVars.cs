@@ -289,7 +289,7 @@ namespace Robust.Shared
         /// This influences both how frequently game code processes, and how frequently updates are sent to clients.
         /// </summary>
         public static readonly CVarDef<int> NetTickrate =
-            CVarDef.Create("net.tickrate", 60, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+            CVarDef.Create("net.tickrate", 30, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
         /// Offset CurTime at server start by this amount (in seconds).
@@ -381,6 +381,18 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> NetLidgrenLogError =
             CVarDef.Create("net.lidgren_log_error", true);
+
+        /// <summary>
+        /// If true, run network message encryption on another thread.
+        /// </summary>
+        public static readonly CVarDef<bool> NetEncryptionThread =
+            CVarDef.Create("net.encryption_thread", true);
+
+        /// <summary>
+        /// Outstanding buffer size used by <see cref="NetEncryptionThread"/>.
+        /// </summary>
+        public static readonly CVarDef<int> NetEncryptionThreadChannelSize =
+            CVarDef.Create("net.encryption_thread_channel_size", 16);
 
         /**
          * SUS
@@ -1776,5 +1788,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> ToolshedNearbyLimit =
             CVarDef.Create("toolshed.nearby_limit", 200, CVar.SERVER | CVar.REPLICATED);
+
+        /// <summary>
+        ///     The max amount of entities that can be passed to the nearby toolshed command.
+        ///     Any higher value will cause an exception.
+        /// </summary>
+        public static readonly CVarDef<int> ToolshedNearbyEntitiesLimit =
+            CVarDef.Create("toolshed.nearby_entities_limit", 5, CVar.SERVER | CVar.REPLICATED);
     }
 }

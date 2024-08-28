@@ -35,23 +35,26 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Obsolete method `AppearanceComponent.TryGetData` is now access-restricted to `SharedAppearanceSystem`; use `SharedAppearanceSystem.TryGetData` instead.
 
 ### New features
 
-*None yet*
+* Added `SharedAppearanceSystem.AppendData`, which appends non-existing `AppearanceData` from one `AppearanceComponent` to another.
+* Added `AppearanceComponent.AppearanceDataInit`, which can be used to set initial `AppearanceData` entries in .yaml.
 
 ### Bugfixes
 
-*None yet*
+* Fix multithreading bug in ParallelTracker that caused the game to crash randomly.
 
 ### Other
 
-*None yet*
+* Added obsoletion warning for `Control.Dispose()`. New code should not rely on it.
+* Reduced the default tickrate to 30 ticks.
+* Serialization will now add type tags (`!type:<T>`) for necessary `NodeData` when writing (currently only for `object` nodes).
 
 ### Internal
 
-*None yet*
+* Added `ObjectSerializer`, which handles serialization of the generic `object` type.
 
 
 ## 231.1.1

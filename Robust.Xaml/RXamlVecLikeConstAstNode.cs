@@ -6,9 +6,9 @@ using XamlX.Emit;
 using XamlX.IL;
 using XamlX.TypeSystem;
 
-namespace Robust.Build.Tasks
+namespace Robust.Xaml
 {
-    public abstract class RXamlVecLikeConstAstNode<T>
+    internal abstract class RXamlVecLikeConstAstNode<T>
         : XamlAstNode, IXamlAstValueNode, IXamlAstILEmitableNode
         where T : unmanaged
     {
@@ -47,7 +47,7 @@ namespace Robust.Build.Tasks
         }
     }
 
-    public sealed class RXamlSingleVecLikeConstAstNode : RXamlVecLikeConstAstNode<float>
+    internal sealed class RXamlSingleVecLikeConstAstNode : RXamlVecLikeConstAstNode<float>
     {
         public RXamlSingleVecLikeConstAstNode(
             IXamlLineInfo lineInfo,
@@ -69,7 +69,7 @@ namespace Robust.Build.Tasks
         }
     }
 
-    public sealed class RXamlInt32VecLikeConstAstNode : RXamlVecLikeConstAstNode<int>
+    internal sealed class RXamlInt32VecLikeConstAstNode : RXamlVecLikeConstAstNode<int>
     {
         public RXamlInt32VecLikeConstAstNode(
             IXamlLineInfo lineInfo,

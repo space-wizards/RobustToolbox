@@ -39,7 +39,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// <summary>
     /// Defer closing BUIs during state handling so client doesn't spam a BUI constantly during prediction.
     /// </summary>
-    private HashSet<BoundUserInterface> _queuedCloses = new();
+    private readonly List<BoundUserInterface> _queuedCloses = new();
 
     public override void Initialize()
     {
@@ -221,10 +221,15 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             }
         }
 
-        // If we're client we want this handled immediately.
         if (ent.Comp.ClientOpenInterfaces.TryGetValue(key, out var cBui))
         {
-            _queuedCloses.Add(cBui);
+            if (cBui.DeferredClose)
+                _queuedCloses.Add(cBui);
+            else
+            {
+                ent.Comp.ClientOpenInterfaces.Remove(key);
+                cBui.Dispose();
+            }
         }
 
         if (ent.Comp.Actors.Count == 0)
@@ -382,9 +387,10 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         }
 
         var attachedEnt = _player.LocalEntity;
+        var clientBuis = new ValueList<Enum>(ent.Comp.ClientOpenInterfaces.Keys);
 
         // Check if the UI is open by us, otherwise dispose of it.
-        foreach (var (key, bui) in ent.Comp.ClientOpenInterfaces)
+        foreach (var key in clientBuis)
         {
             if (ent.Comp.Actors.TryGetValue(key, out var actors) &&
                 (attachedEnt == null || actors.Contains(attachedEnt.Value)))
@@ -392,7 +398,15 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
                 continue;
             }
 
-            _queuedCloses.Add(bui);
+            var bui = ent.Comp.ClientOpenInterfaces[key];
+
+            if (bui.DeferredClose)
+                _queuedCloses.Add(bui);
+            else
+            {
+                ent.Comp.ClientOpenInterfaces.Remove(key);
+                bui.Dispose();
+            }
         }
 
         // update any states we have open
@@ -434,6 +448,15 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         // If it's out BUI open it up and apply the state, otherwise do nothing.
         var player = Player.LocalEntity;
 
+        // Existing BUI just keep it.
+        if (entity.Comp.ClientOpenInterfaces.TryGetValue(key, out var existing))
+        {
+            if (existing.DeferredClose)
+                _queuedCloses.Remove(existing);
+
+            return;
+        }
+
         if (player == null ||
             !entity.Comp.Actors.TryGetValue(key, out var actors) ||
             !actors.Contains(player.Value))
@@ -442,13 +465,6 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         }
 
         DebugTools.Assert(_netManager.IsClient);
-
-        // Existing BUI just keep it.
-        if (entity.Comp.ClientOpenInterfaces.TryGetValue(key, out var existing))
-        {
-            _queuedCloses.Remove(existing);
-            return;
-        }
 
         // Try-catch to try prevent error loops / bricked clients that constantly throw exceptions while applying game
         // states. E.g., stripping UI used to throw NREs in some instances while fetching the identity of unknown
@@ -941,7 +957,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         {
             foreach (var bui in _queuedCloses)
             {
-                if (TryComp(bui.Owner, out UserInterfaceComponent? uiComp))
+                if (UIQuery.TryComp(bui.Owner, out var uiComp))
                 {
                     uiComp.ClientOpenInterfaces.Remove(bui.UiKey);
                 }

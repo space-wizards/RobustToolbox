@@ -89,7 +89,7 @@ namespace Robust.Shared.Map
         public void FindGridsIntersecting(MapId mapId, IPhysShape shape, Transform transform,
             ref List<Entity<MapGridComponent>> grids, bool approx = Approximate, bool includeMap = IncludeMap);
 
-        public void FindGridsIntersecting(MapId mapId, PolygonShape shape, Transform transform, GridCallback callback,
+        public void FindGridsIntersecting(MapId mapId, IPhysShape shape, Transform transform, GridCallback callback,
             bool approx = Approximate, bool includeMap = IncludeMap);
 
         public void FindGridsIntersecting(MapId mapId, Box2 worldAABB, GridCallback callback, bool approx = Approximate,
@@ -116,7 +116,7 @@ namespace Robust.Shared.Map
 
         #region MapEnt
 
-        public void FindGridsIntersecting(EntityUid mapEnt, PolygonShape shape, Transform transform, GridCallback callback,
+        public void FindGridsIntersecting(EntityUid mapEnt, IPhysShape shape, Transform transform, GridCallback callback,
             bool approx = Approximate, bool includeMap = IncludeMap);
 
         public void FindGridsIntersecting<TState>(EntityUid mapEnt, IPhysShape shape, Transform transform,

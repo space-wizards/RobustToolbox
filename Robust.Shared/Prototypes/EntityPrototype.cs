@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
@@ -21,7 +22,7 @@ namespace Robust.Shared.Prototypes
     /// Prototype that represents game entities.
     /// </summary>
     [Prototype("entity", -1)]
-    public sealed partial class EntityPrototype : IPrototype, IInheritingPrototype, ISerializationHooks
+    public sealed partial class EntityPrototype : IPrototype, IInheritingPrototype, ISerializationHooks, IEquatable<EntityPrototype>
     {
         private ILocalizationManager _loc = default!;
 
@@ -295,7 +296,7 @@ namespace Robust.Shared.Prototypes
         public record ComponentRegistryEntry(IComponent Component, MappingDataNode Mapping);
 
         [DataDefinition]
-        public sealed partial class EntityPlacementProperties
+        public sealed partial class EntityPlacementProperties : IEquatable<EntityPlacementProperties>
         {
             public bool PlacementOverriden { get; private set; }
             public bool SnapOverriden { get; private set; }
@@ -338,6 +339,27 @@ namespace Robust.Shared.Prototypes
                     SnapOverriden = true;
                     _snapFlags = value;
                 }
+            }
+
+            public bool Equals(EntityPlacementProperties? other)
+            {
+                if (ReferenceEquals(null, other)) return false;
+                if (ReferenceEquals(this, other)) return true;
+                return _placementMode == other._placementMode &&
+                       _placementOffset.Equals(other._placementOffset) &&
+                       Equals(MountingPoints, other.MountingPoints) &&
+                       PlacementRange == other.PlacementRange &&
+                       _snapFlags.SetEquals(other._snapFlags);
+            }
+
+            public override bool Equals(object? obj)
+            {
+                return ReferenceEquals(this, obj) || obj is EntityPlacementProperties other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                return HashCode.Combine(_placementMode, _placementOffset, MountingPoints, PlacementRange, _snapFlags);
             }
         }
         /*private class PrototypeSerializationContext : YamlObjectSerializer.Context
@@ -407,9 +429,72 @@ namespace Robust.Shared.Prototypes
                 return prototype.DataCache.TryGetValue(field, out value);
             }
         }*/
+        public bool Equals(EntityPrototype? other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            var result = ID == other.ID &&
+                         Equals(_locPropertiesSet, other._locPropertiesSet) &&
+                         Equals(CategoriesInternal, other.CategoriesInternal) &&
+                         PlacementProperties.Equals(other.PlacementProperties) &&
+                         SetName == other.SetName &&
+                         SetDesc == other.SetDesc &&
+                         SetSuffix == other.SetSuffix &&
+                         CustomLocalizationID == other.CustomLocalizationID &&
+                         HideSpawnMenu == other.HideSpawnMenu &&
+                         MapSavable == other.MapSavable &&
+                         Abstract == other.Abstract;
+
+            if (!result)
+                return false;
+
+            if ((Parents == null && other.Parents != null) ||
+                (Parents != null && other.Parents == null))
+            {
+                return false;
+            }
+
+            if (Parents != null && other.Parents != null)
+            {
+                for (var i = 0; i < Parents.Length; i++)
+                {
+                    if (Parents[i] != other.Parents[i])
+                        return false;
+                }
+            }
+
+            return Components.Equals(other.Components);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return ReferenceEquals(this, obj) || obj is EntityPrototype other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = new HashCode();
+            hashCode.Add(_loc);
+            hashCode.Add(_locPropertiesSet);
+            hashCode.Add(CategoriesInternal);
+            hashCode.Add(PlacementProperties);
+            hashCode.Add(ID);
+            hashCode.Add(SetName);
+            hashCode.Add(SetDesc);
+            hashCode.Add(SetSuffix);
+            hashCode.Add(Categories);
+            hashCode.Add(CustomLocalizationID);
+            hashCode.Add(NoSpawn);
+            hashCode.Add(HideSpawnMenu);
+            hashCode.Add(MapSavable);
+            hashCode.Add(Parents);
+            hashCode.Add(Abstract);
+            hashCode.Add(Components);
+            return hashCode.ToHashCode();
+        }
     }
 
-    public sealed class ComponentRegistry : Dictionary<string, EntityPrototype.ComponentRegistryEntry>, IEntityLoadContext, ISerializationContext
+    public sealed class ComponentRegistry : Dictionary<string, EntityPrototype.ComponentRegistryEntry>, IEntityLoadContext, ISerializationContext, IEquatable<ComponentRegistry>
     {
         public ComponentRegistry()
         {
@@ -439,5 +524,37 @@ namespace Robust.Shared.Prototypes
 
         public SerializationManager.SerializerProvider SerializerProvider { get; } = new();
         public bool WritingReadingPrototypes { get; } = true;
+
+        public bool Equals(ComponentRegistry? other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+
+            if (other.Count != Count)
+                return false;
+
+            foreach (var (id, component) in this)
+            {
+                if (!other.TryGetValue(id, out var otherComponent))
+                    continue;
+
+                if (!component.Mapping.Equals(otherComponent.Mapping))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return ReferenceEquals(this, obj) || obj is ComponentRegistry other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(SerializerProvider, WritingReadingPrototypes);
+        }
     }
 }

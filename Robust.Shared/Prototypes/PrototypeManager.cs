@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Robust.Shared.Asynchronous;
+using Robust.Shared.Collections;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -366,11 +367,27 @@ namespace Robust.Shared.Prototypes
                 foreach (var id in modified[kind])
                 {
                     processQueue.Enqueue(id);
+
+                    // Add child nodes for updating
+                    if (kindData.Inheritance?.TryGetChildren(id, out var children) == true)
+                    {
+                        foreach (var child in children)
+                        {
+                            if (processQueue.Contains(child))
+                                continue;
+
+                            processQueue.Enqueue(child);
+                        }
+                    }
                 }
 
                 while (processQueue.TryDequeue(out var id))
                 {
                     var pushedSet = pushed.GetOrNew(kind);
+
+                    // Already been handled skip it.
+                    if (pushedSet.Contains(id))
+                        continue;
 
                     if (tree.TryGetParents(id, out var parents))
                     {
@@ -402,13 +419,15 @@ namespace Robust.Shared.Prototypes
                             kindData.Results[id]);
                     }
 
-
                     var prototype = TryReadPrototype(kind, id, kindData.Results[id], SerializationHookContext.DontSkipHooks);
                     if (prototype != null)
                     {
-                        kindData.UnfrozenInstances ??= kindData.Instances.ToDictionary();
-                        kindData.UnfrozenInstances[id] = prototype;
-                        modifiedKinds.Add(kindData);
+                        if (!kindData.Instances.TryGetValue(id, out var existing) || !existing.Equals(prototype))
+                        {
+                            kindData.UnfrozenInstances ??= kindData.Instances.ToDictionary();
+                            kindData.UnfrozenInstances[id] = prototype;
+                            modifiedKinds.Add(kindData);
+                        }
                     }
 
                     pushedSet.Add(id);
@@ -420,13 +439,40 @@ namespace Robust.Shared.Prototypes
                 UpdateCategories();
 #endif
 
-            //todo paul i hate it but i am not opening that can of worms in this refactor
-            var byType = modified
-                .ToDictionary(
-                    g => g.Key,
-                    g => new PrototypesReloadedEventArgs.PrototypeChangeSet(
-                        g.Value.Where(x => _kinds[g.Key].Instances.ContainsKey(x))
-                            .ToDictionary(a => a, a => _kinds[g.Key].Instances[a])));
+            var byType = new Dictionary<Type, PrototypesReloadedEventArgs.PrototypeChangeSet>();
+
+            foreach (var (type, pushedSet) in pushed)
+            {
+                var kindData = _kinds[type];
+                var set = new Dictionary<string, IPrototype>(pushedSet.Count);
+
+                foreach (var pId in pushedSet)
+                {
+                    if (!kindData.Instances.TryGetValue(pId, out var prototype))
+                        continue;
+
+                    set[pId] = prototype;
+                }
+
+                byType[type] = new PrototypesReloadedEventArgs.PrototypeChangeSet(set);
+            }
+
+            // Don't raise the event if types match.
+            var types = new ValueList<Type>(byType.Keys);
+
+            foreach (var type in types)
+            {
+                var set = byType[type];
+
+                if (set.Modified.Count == 0)
+                {
+                    byType.Remove(type);
+                }
+            }
+
+            // Nothing modified?
+            if (byType.Count == 0)
+                return;
 
             var modifiedTypes = new HashSet<Type>(byType.Keys);
             if (removed != null)

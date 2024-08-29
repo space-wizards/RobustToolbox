@@ -310,11 +310,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         foreach (var (weh, a) in ent.Comp.Interfaces)
         {
-            dataCopy[weh] = new InterfaceData(a.ClientType)
-            {
-                InteractionRange = a.InteractionRange,
-                RequireInputValidation = a.RequireInputValidation,
-            };
+            dataCopy[weh] = new InterfaceData(a);
         }
 
         args.State = new UserInterfaceComponent.UserInterfaceComponentState(actors, ent.Comp.States, dataCopy);
@@ -347,11 +343,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         foreach (var data in state.Data)
         {
-            ent.Comp.Interfaces[data.Key] = new(data.Value.ClientType)
-            {
-                InteractionRange = data.Value.InteractionRange,
-                RequireInputValidation = data.Value.RequireInputValidation,
-            };
+            ent.Comp.Interfaces[data.Key] = new(data.Value);
         }
 
         foreach (var key in ent.Comp.Actors.Keys)

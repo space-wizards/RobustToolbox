@@ -69,9 +69,11 @@ namespace Robust.Shared.GameObjects
         [DataField]
         public bool RequireInputValidation = true;
 
-        public InterfaceData(string type)
+        public InterfaceData(InterfaceData data)
         {
-            ClientType = type;
+            ClientType = data.ClientType;
+            InteractionRange = data.InteractionRange;
+            RequireInputValidation = data.RequireInputValidation;
         }
     }
 

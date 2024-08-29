@@ -19,7 +19,9 @@ internal sealed class DumpEventTablesCommand : LocalizedCommands
             return;
         }
 
-        if (!EntityUid.TryParse(args[0], out var entity) || !_entities.EntityExists(entity))
+        if (!NetEntity.TryParse(args[0], out var entityNet) ||
+            !_entities.TryGetEntity(entityNet, out var entity) ||
+            !_entities.EntityExists(entity))
         {
             shell.WriteError(Loc.GetString("cmd-dump_event_tables-error-entity"));
             return;
@@ -27,12 +29,12 @@ internal sealed class DumpEventTablesCommand : LocalizedCommands
 
         var eventBus = (EntityEventBus)_entities.EventBus;
 
-        var table = eventBus._entEventTables[entity];
+        var table = eventBus._entEventTables[entity.Value];
         foreach (var (evType, comps) in table.EventIndices)
         {
             shell.WriteLine($"{evType}:");
 
-            var idx = comps;
+            var idx = comps.Start;
             while (idx != -1)
             {
                 ref var entry = ref table.ComponentLists[idx];

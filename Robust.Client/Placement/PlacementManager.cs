@@ -20,6 +20,8 @@ using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.Log;
+using Direction = Robust.Shared.Maths.Direction;
+using Robust.Shared.Map.Components;
 
 namespace Robust.Client.Placement
 {
@@ -78,6 +80,10 @@ namespace Robust.Client.Placement
             private set
             {
                 _isActive = value;
+
+                if (CurrentPermission?.UseEditorContext is false)
+                    return;
+
                 SwitchEditorContext(value);
             }
         }
@@ -225,7 +231,7 @@ namespace Robust.Client.Placement
                         }
                     }))
                 .Bind(EngineKeyFunctions.EditorPlaceObject, new PointerStateInputCmdHandler(
-                    (session, coords, uid) =>
+                    (session, netCoords, nent) =>
                     {
                         if (!IsActive)
                             return false;
@@ -239,15 +245,15 @@ namespace Robust.Client.Placement
 
                         if (Eraser)
                         {
-                            if (HandleDeletion(coords))
+                            if (HandleDeletion(netCoords))
                                 return true;
 
-                            if (uid == EntityUid.Invalid)
+                            if (nent == EntityUid.Invalid)
                             {
                                 return false;
                             }
 
-                            HandleDeletion(uid);
+                            HandleDeletion(nent);
                         }
                         else
                         {
@@ -285,23 +291,17 @@ namespace Robust.Client.Placement
                     }, outsidePrediction: true))
                 .Register<PlacementManager>();
 
-            var localPlayer = PlayerManager.LocalPlayer;
-            localPlayer!.EntityAttached += OnEntityAttached;
+            PlayerManager.LocalPlayerDetached += OnDetached;
         }
 
         private void TearDownInput()
         {
             CommandBinds.Unregister<PlacementManager>();
-
-            if (PlayerManager.LocalPlayer != null)
-            {
-                PlayerManager.LocalPlayer.EntityAttached -= OnEntityAttached;
-            }
+            PlayerManager.LocalPlayerDetached -= OnDetached;
         }
 
-        private void OnEntityAttached(EntityAttachedEventArgs eventArgs)
+        private void OnDetached(EntityUid obj)
         {
-            // player attached to a new entity, basically disable the editor
             Clear();
         }
 
@@ -337,7 +337,7 @@ namespace Robust.Client.Placement
 
         private void HandleTileChanged(ref TileChangedEvent args)
         {
-            var coords = MapManager.GetGrid(args.NewTile.GridUid).GridTileToLocal(args.NewTile.GridIndices);
+            var coords = EntityManager.GetComponent<MapGridComponent>(args.NewTile.GridUid).GridTileToLocal(args.NewTile.GridIndices);
             _pendingTileChanges.RemoveAll(c => c.Item1 == coords);
         }
 
@@ -428,7 +428,7 @@ namespace Robust.Client.Placement
 
             var msg = new MsgPlacement();
             msg.PlaceType = PlacementManagerMessage.RequestEntRemove;
-            msg.EntityUid = entity;
+            msg.EntityUid = EntityManager.GetNetEntity(entity);
             _networkManager.ClientSendMessage(msg);
         }
 
@@ -436,7 +436,7 @@ namespace Robust.Client.Placement
         {
             var msg = new MsgPlacement();
             msg.PlaceType = PlacementManagerMessage.RequestRectRemove;
-            msg.EntityCoordinates = new EntityCoordinates(StartPoint.EntityId, rect.BottomLeft);
+            msg.NetCoordinates = new NetCoordinates(EntityManager.GetNetEntity(StartPoint.EntityId), rect.BottomLeft);
             msg.RectSize = rect.Size;
             _networkManager.ClientSendMessage(msg);
         }
@@ -500,7 +500,7 @@ namespace Robust.Client.Placement
         {
             // Try to get current map.
             var map = MapId.Nullspace;
-            if (EntityManager.TryGetComponent(PlayerManager.LocalPlayer?.ControlledEntity, out TransformComponent? xform))
+            if (EntityManager.TryGetComponent(PlayerManager.LocalEntity, out TransformComponent? xform))
             {
                 map = xform.MapID;
             }
@@ -517,7 +517,7 @@ namespace Robust.Client.Placement
 
         private bool CurrentEraserMouseCoordinates(out EntityCoordinates coordinates)
         {
-            var ent = PlayerManager.LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
+            var ent = PlayerManager.LocalEntity ?? EntityUid.Invalid;
             if (ent == EntityUid.Invalid)
             {
                 coordinates = new EntityCoordinates();
@@ -628,29 +628,29 @@ namespace Robust.Client.Placement
             return true;
         }
 
-        private void Render(DrawingHandleWorld handle)
+        private void Render(in OverlayDrawArgs args)
         {
             if (CurrentMode == null || !IsActive)
             {
                 if (EraserRect.HasValue)
                 {
-                    handle.UseShader(_drawingShader);
-                    handle.DrawRect(EraserRect.Value, new Color(255, 0, 0, 50));
-                    handle.UseShader(null);
+                    args.WorldHandle.UseShader(_drawingShader);
+                    args.WorldHandle.DrawRect(EraserRect.Value, new Color(255, 0, 0, 50));
+                    args.WorldHandle.UseShader(null);
                 }
                 return;
             }
 
-            CurrentMode.Render(handle);
+            CurrentMode.Render(args);
 
             if (CurrentPermission is not {Range: > 0} ||
                 !CurrentMode.RangeRequired ||
-                PlayerManager.LocalPlayer?.ControlledEntity is not {Valid: true} controlled)
+                PlayerManager.LocalEntity is not {Valid: true} controlled)
                 return;
 
             var worldPos = EntityManager.GetComponent<TransformComponent>(controlled).WorldPosition;
 
-            handle.DrawCircle(worldPos, CurrentPermission.Range, new Color(1, 1, 1, 0.25f));
+            args.WorldHandle.DrawCircle(worldPos, CurrentPermission.Range, new Color(1, 1, 1, 0.25f));
         }
 
         private void HandleStartPlacement(MsgPlacement msg)
@@ -758,7 +758,7 @@ namespace Robust.Client.Placement
                 // If we have actually placed something on a valid grid...
                 if (gridIdOpt is EntityUid gridId && gridId.IsValid())
                 {
-                    var grid = MapManager.GetGrid(gridId);
+                    var grid = EntityManager.GetComponent<MapGridComponent>(gridId);
 
                     // no point changing the tile to the same thing.
                     if (grid.GetTileRef(coordinates).Tile.TypeId == CurrentPermission.TileType)
@@ -790,7 +790,7 @@ namespace Robust.Client.Placement
                 message.EntityTemplateName = CurrentPermission.EntityType;
 
             // world x and y
-            message.EntityCoordinates = coordinates;
+            message.NetCoordinates = EntityManager.GetNetCoordinates(coordinates);
 
             message.DirRcv = Direction;
 

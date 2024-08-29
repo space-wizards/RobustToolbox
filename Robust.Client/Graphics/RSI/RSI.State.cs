@@ -1,6 +1,8 @@
 using System;
 using System.Linq;
 using Robust.Client.Utility;
+using Robust.Shared.Graphics;
+using Robust.Shared.Graphics.RSI;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -25,7 +27,7 @@ namespace Robust.Client.Graphics
             // 2D array for the texture to use for each animation frame at each direction.
             public readonly Texture[][] Icons;
 
-            internal State(Vector2i size, RSI rsi, StateId stateId, DirectionType direction, float[] delays, Texture[][] icons)
+            internal State(Vector2i size, RSI rsi, StateId stateId, RsiDirectionType rsiDirection, float[] delays, Texture[][] icons)
             {
                 DebugTools.Assert(size.X > 0);
                 DebugTools.Assert(size.Y > 0);
@@ -34,7 +36,7 @@ namespace Robust.Client.Graphics
                 Size = size;
                 RSI = rsi;
                 StateId = stateId;
-                Directions = direction;
+                RsiDirections = rsiDirection;
                 Delays = delays;
                 TotalDelay = delays.Sum();
                 Icons = icons;
@@ -63,7 +65,7 @@ namespace Robust.Client.Graphics
             /// <summary>
             ///     How many directions this state has.
             /// </summary>
-            public DirectionType Directions { get; }
+            public RsiDirectionType RsiDirections { get; }
 
             /// <summary>
             ///     The first frame of the "south" direction.
@@ -90,14 +92,14 @@ namespace Robust.Client.Graphics
 
             int IRsiStateLike.AnimationFrameCount => DelayCount;
 
-            public Texture GetFrame(Direction direction, int frame)
+            public Texture GetFrame(RsiDirection rsiDirection, int frame)
             {
-                return Icons[(int) direction][frame];
+                return Icons[(int) rsiDirection][frame];
             }
 
-            public Texture[] GetFrames(Direction direction)
+            public Texture[] GetFrames(RsiDirection rsiDirection)
             {
-                return Icons[(int) direction];
+                return Icons[(int) rsiDirection];
             }
 
             /// <summary>
@@ -124,52 +126,12 @@ namespace Robust.Client.Graphics
 
             Texture IDirectionalTextureProvider.TextureFor(Shared.Maths.Direction dir)
             {
-                if (Directions == DirectionType.Dir1)
+                if (RsiDirections == RsiDirectionType.Dir1)
                 {
                     return Frame0;
                 }
 
-                return GetFrame(dir.Convert(Directions), 0);
-            }
-
-            /// <summary>
-            ///     Specifies which types of directions an RSI state has.
-            /// </summary>
-            public enum DirectionType : byte
-            {
-                /// <summary>
-                ///     A single direction, namely South.
-                /// </summary>
-                Dir1,
-
-                /// <summary>
-                ///     4 cardinal directions.
-                /// </summary>
-                Dir4,
-
-                /// <summary>
-                ///     4 cardinal + 4 diagonal directions.
-                /// </summary>
-                Dir8,
-            }
-
-            /// <summary>
-            ///     Specifies a direction in an RSI state.
-            /// </summary>
-            /// <remarks>
-            ///     Value of the enum here matches the index used to store it in the icons array. If this ever changes, then
-            ///     <see cref="GameObjects.SpriteComponent.Layer._rsiDirectionMatrices"/> also needs to be updated.
-            /// </remarks>
-            public enum Direction : byte
-            {
-                South = 0,
-                North = 1,
-                East = 2,
-                West = 3,
-                SouthEast = 4,
-                SouthWest = 5,
-                NorthEast = 6,
-                NorthWest = 7,
+                return GetFrame(dir.Convert(RsiDirections), 0);
             }
         }
     }

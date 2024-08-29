@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
+using JetBrains.Annotations;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Maths
@@ -32,7 +33,7 @@ namespace Robust.Shared.Maths
         public readonly Vector2 BottomLeft => Origin + Rotation.RotateVec(Box.BottomLeft - Origin);
         public readonly Vector2 Center => Origin + Rotation.RotateVec((Box.BottomLeft + Box.TopRight)/2 - Origin);
 
-        public Matrix3 Transform => Matrix3.CreateTransform(Origin - Rotation.RotateVec(Origin), Rotation);
+        public Matrix3x2 Transform => Matrix3Helpers.CreateTransform(Origin - Rotation.RotateVec(Origin), Rotation);
 
         public Box2Rotated(Vector2 bottomLeft, Vector2 topRight)
             : this(new Box2(bottomLeft, topRight))
@@ -57,7 +58,17 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
-        /// calculates the smallest AABB that will encompass the rotated box. The AABB is in local space.
+        /// Enlarges the box by the specified value.
+        /// </summary>
+        [Pure]
+        public readonly Box2Rotated Enlarged(float value)
+        {
+            var box = Box.Enlarged(value);
+            return new Box2Rotated(box, Rotation, Origin);
+        }
+
+        /// <summary>
+        /// Calculates the smallest AABB that will encompass the rotated box. The AABB is in local space.
         /// </summary>
         public readonly Box2 CalcBoundingBox()
         {

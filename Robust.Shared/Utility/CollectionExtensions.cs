@@ -8,9 +8,27 @@ namespace Robust.Shared.Utility
 {
     public static class Extensions
     {
+        /// <summary>
+        /// Ensures that the specified array has the specified length.
+        /// </summary>
+        public static void EnsureLength<T>(ref T[] array, int length)
+        {
+            if (array.Length > length)
+                return;
+
+            Array.Resize(ref array, length);
+        }
+
         public static IList<T> Clone<T>(this IList<T> listToClone) where T : ICloneable
         {
-            return listToClone.Select(item => (T)item.Clone()).ToList();
+            var clone = new List<T>(listToClone.Count);
+
+            foreach (var value in listToClone)
+            {
+                clone.Add((T) value.Clone());
+            }
+
+            return clone;
         }
 
         /// <summary>
@@ -216,6 +234,17 @@ namespace Robust.Shared.Utility
             where TKey : notnull
         {
             ref var entry = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key, out var exists);
+            if (!exists)
+                entry = new TValue();
+
+            return entry!;
+        }
+
+        public static TValue GetOrNew<TKey, TValue>(this Dictionary<TKey, TValue> dict, TKey key, out bool exists)
+            where TValue : new()
+            where TKey : notnull
+        {
+            ref var entry = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, key, out exists);
             if (!exists)
                 entry = new TValue();
 

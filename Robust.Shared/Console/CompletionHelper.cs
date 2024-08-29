@@ -1,13 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
+using Robust.Shared.Audio;
+using Robust.Shared.Collections;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 
@@ -25,7 +26,34 @@ public static class CompletionHelper
     public static IEnumerable<CompletionOption> Booleans => new[]
         { new CompletionOption(bool.FalseString), new CompletionOption(bool.TrueString) };
 
-    public static IEnumerable<CompletionOption> ContentFilePath(string arg, IResourceManager res)
+    /// <summary>
+    /// Special-cased file handler for audio that accounts for serverside completion.
+    /// </summary>
+    public static IEnumerable<CompletionOption> AudioFilePath(string arg, IPrototypeManager protoManager,
+        IResourceManager res)
+    {
+        var resPath = GetUpdatedPath(arg);
+        var paths = new HashSet<string>();
+
+        foreach (var path in res.ContentGetDirectoryEntries(resPath))
+        {
+            paths.Add(path);
+        }
+
+        foreach (var audioProto in protoManager.EnumeratePrototypes<AudioMetadataPrototype>())
+        {
+            var hero = new ResPath(audioProto.ID);
+
+            if (!hero.TryRelativeTo(resPath, out _))
+                continue;
+
+            paths.Add(hero.GetNextSegment(resPath).ToString());
+        }
+
+        return GetPaths(resPath, paths, res);
+    }
+
+    private static ResPath GetUpdatedPath(string arg)
     {
         var curPath = arg;
         if (!curPath.StartsWith("/"))
@@ -33,12 +61,18 @@ public static class CompletionHelper
 
         var resPath = new ResPath(curPath);
 
-        if (!curPath.EndsWith("/")){
+        if (!curPath.EndsWith("/"))
+        {
             resPath /= "..";
             resPath = resPath.Clean();
         }
 
-        var options = res.ContentGetDirectoryEntries(resPath)
+        return resPath;
+    }
+
+    private static IEnumerable<CompletionOption> GetPaths(ResPath resPath, IEnumerable<string> inputs, IResourceManager res)
+    {
+        var options = inputs
             .OrderBy(c => c)
             .Select(c =>
             {
@@ -51,6 +85,12 @@ public static class CompletionHelper
             });
 
         return options;
+    }
+
+    public static IEnumerable<CompletionOption> ContentFilePath(string arg, IResourceManager res)
+    {
+        var resPath = GetUpdatedPath(arg);
+        return GetPaths(resPath, res.ContentGetDirectoryEntries(resPath), res);
     }
 
     public static IEnumerable<CompletionOption> ContentDirPath(string arg, IResourceManager res)
@@ -146,42 +186,49 @@ public static class CompletionHelper
 
     public static IEnumerable<CompletionOption> MapUids(IEntityManager? entManager = null)
     {
-        IoCManager.Resolve(ref entManager);
+        return Components<MapComponent>(string.Empty, entManager);
+    }
 
-        var query = entManager.AllEntityQueryEnumerator<MapComponent>();
-        while (query.MoveNext(out var uid, out _))
+    /// <summary>
+    /// Return all existing entities as possible completions. You should generally avoid using this unless you need to.
+    /// </summary>
+    public static IEnumerable<CompletionOption> NetEntities(string text, IEntityManager? entManager = null, int limit = 20)
+    {
+        if (!NetEntity.TryParse(text, out _))
+            yield break;
+
+        IoCManager.Resolve(ref entManager);
+        var query = entManager.AllEntityQueryEnumerator<MetaDataComponent>();
+
+        var i = 0;
+        while (i < limit && query.MoveNext(out var metadata))
         {
-            yield return new CompletionOption(uid.ToString());
+            var netString = metadata.NetEntity.ToString();
+            if (!netString.StartsWith(text))
+                continue;
+
+            i++;
+            yield return new CompletionOption(netString, metadata.EntityName);
         }
     }
 
-    public static IEnumerable<CompletionOption> EntityUids(string text, IEntityManager? entManager = null)
+    public static IEnumerable<CompletionOption> Components<T>(string text, IEntityManager? entManager = null, int limit = 20) where T : IComponent
     {
+        if (!NetEntity.TryParse(text, out _))
+            yield break;
+
         IoCManager.Resolve(ref entManager);
+        var query = entManager.AllEntityQueryEnumerator<T, MetaDataComponent>();
 
-        foreach (var ent in entManager.GetEntities())
+        var i = 0;
+        while (i < limit && query.MoveNext(out _, out var metadata))
         {
-            var entString = ent.ToString();
-
-            if (!entString.StartsWith(text))
+            var netString = metadata.NetEntity.ToString();
+            if (!netString.StartsWith(text))
                 continue;
 
-            yield return new CompletionOption(entString);
-        }
-    }
-
-    public static IEnumerable<CompletionOption> Components<T>(string text, IEntityManager? entManager = null) where T : Component
-    {
-        IoCManager.Resolve(ref entManager);
-
-        var query = entManager.AllEntityQueryEnumerator<T>();
-
-        while (query.MoveNext(out var uid, out _))
-        {
-            if (!uid.ToString().StartsWith(text))
-                continue;
-
-            yield return new CompletionOption(uid.ToString());
+            i++;
+            yield return new CompletionOption(netString, metadata.EntityName);
         }
     }
 }

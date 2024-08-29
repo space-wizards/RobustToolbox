@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 
 namespace Robust.Shared.Map.Enumerators;
 
-internal struct ChunkEnumerator
+internal ref struct ChunkEnumerator
 {
     private Dictionary<Vector2i, MapChunk> _chunks;
     private Vector2i _chunkLB;

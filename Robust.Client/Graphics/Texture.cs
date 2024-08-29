@@ -1,233 +1,112 @@
 using System;
 using System.IO;
 using JetBrains.Annotations;
+using Robust.Shared.Graphics;
+using Robust.Shared.Graphics.RSI;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
-using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using YamlDotNet.RepresentationModel;
 using Color = Robust.Shared.Maths.Color;
 
-namespace Robust.Client.Graphics
+namespace Robust.Client.Graphics;
+
+/// <summary>
+///     Contains a texture used for drawing things.
+/// </summary>
+[PublicAPI]
+public abstract class Texture : IRsiStateLike
 {
     /// <summary>
-    ///     Contains a texture used for drawing things.
+    ///     The width of the texture, in pixels.
     /// </summary>
-    [PublicAPI]
-    public abstract class Texture : IRsiStateLike
+    public int Width => Size.X;
+
+    /// <summary>
+    ///     The height of the texture, in pixels.
+    /// </summary>
+    public int Height => Size.Y;
+
+    /// <summary>
+    ///     The size of the texture, in pixels.
+    /// </summary>
+    public Vector2i Size { get; /*protected set;*/ }
+
+    public Color this[int x, int y] => this.GetPixel(x, y);
+
+    protected Texture(Vector2i size)
     {
-        /// <summary>
-        ///     The width of the texture, in pixels.
-        /// </summary>
-        public int Width => Size.X;
+        Size = size;
+    }
 
-        /// <summary>
-        ///     The height of the texture, in pixels.
-        /// </summary>
-        public int Height => Size.Y;
+    Texture IDirectionalTextureProvider.Default => this;
 
-        /// <summary>
-        ///     The size of the texture, in pixels.
-        /// </summary>
-        public Vector2i Size { get; /*protected set;*/ }
+    Texture IDirectionalTextureProvider.TextureFor(Direction dir)
+    {
+        return this;
+    }
 
-        public Color this[int x, int y] => this.GetPixel(x, y);
+    RsiDirectionType IRsiStateLike.RsiDirections => RsiDirectionType.Dir1;
+    bool IRsiStateLike.IsAnimated => false;
+    int IRsiStateLike.AnimationFrameCount => 0;
 
-        protected Texture(Vector2i size)
-        {
-            Size = size;
-        }
+    float IRsiStateLike.GetDelay(int frame)
+    {
+        if (frame != 0)
+            throw new IndexOutOfRangeException();
 
-        public static Texture Transparent =>
-            IoCManager.Resolve<IClydeInternal>().GetStockTexture(ClydeStockTexture.Transparent);
+        return 0;
+    }
 
-        public static Texture White =>
-            IoCManager.Resolve<IClydeInternal>().GetStockTexture(ClydeStockTexture.White);
+    Texture IRsiStateLike.GetFrame(RsiDirection dir, int frame)
+    {
+        if (frame != 0)
+            throw new IndexOutOfRangeException();
 
-        public static Texture Black =>
-            IoCManager.Resolve<IClydeInternal>().GetStockTexture(ClydeStockTexture.Black);
+        return this;
+    }
 
-        /// <summary>
-        ///     Loads a new texture an existing image.
-        /// </summary>
-        /// <param name="image">The image to load.</param>
-        /// <param name="name">The "name" of this texture. This can be referred to later to aid debugging.</param>
-        /// <param name="loadParameters">
-        ///     Parameters that influence the loading of textures.
-        ///     Defaults to <see cref="TextureLoadParameters.Default"/> if <c>null</c>.
-        /// </param>
-        /// <typeparam name="T">The type of pixels of the image. At the moment, images must be <see cref="Rgba32"/>.</typeparam>
-        public static Texture LoadFromImage<T>(Image<T> image, string? name = null,
-            TextureLoadParameters? loadParameters = null) where T : unmanaged, IPixel<T>
-        {
-            var manager = IoCManager.Resolve<IClyde>();
-            return manager.LoadTextureFromImage(image, name, loadParameters);
-        }
+    public abstract Color GetPixel(int x, int y);
 
-        /// <summary>
-        ///     Loads an image from a stream containing PNG data.
-        /// </summary>
-        /// <param name="stream">The stream to load the image from.</param>
-        /// <param name="name">The "name" of this texture. This can be referred to later to aid debugging.</param>
-        /// <param name="loadParameters">
-        ///     Parameters that influence the loading of textures.
-        ///     Defaults to <see cref="TextureLoadParameters.Default"/> if <c>null</c>.
-        /// </param>
-        public static Texture LoadFromPNGStream(Stream stream, string? name = null,
-            TextureLoadParameters? loadParameters = null)
-        {
-            var manager = IoCManager.Resolve<IClyde>();
-            return manager.LoadTextureFromPNGStream(stream, name, loadParameters);
-        }
+    public static Texture Transparent =>
+                IoCManager.Resolve<IClydeInternal>().GetStockTexture(ClydeStockTexture.Transparent);
 
-        Texture IDirectionalTextureProvider.Default => this;
+    public static Texture White =>
+        IoCManager.Resolve<IClydeInternal>().GetStockTexture(ClydeStockTexture.White);
 
-        Texture IDirectionalTextureProvider.TextureFor(Direction dir)
-        {
-            return this;
-        }
+    public static Texture Black =>
+        IoCManager.Resolve<IClydeInternal>().GetStockTexture(ClydeStockTexture.Black);
 
-        RSI.State.DirectionType IRsiStateLike.Directions => RSI.State.DirectionType.Dir1;
-        bool IRsiStateLike.IsAnimated => false;
-        int IRsiStateLike.AnimationFrameCount => 0;
-
-        float IRsiStateLike.GetDelay(int frame)
-        {
-            if (frame != 0)
-                throw new IndexOutOfRangeException();
-
-            return 0;
-        }
-
-        Texture IRsiStateLike.GetFrame(RSI.State.Direction dir, int frame)
-        {
-            if (frame != 0)
-                throw new IndexOutOfRangeException();
-
-            return this;
-        }
-
-        public abstract Color GetPixel(int x, int y);
+    /// <summary>
+    ///     Loads a new texture an existing image.
+    /// </summary>
+    /// <param name="image">The image to load.</param>
+    /// <param name="name">The "name" of this texture. This can be referred to later to aid debugging.</param>
+    /// <param name="loadParameters">
+    ///     Parameters that influence the loading of textures.
+    ///     Defaults to <see cref="Robust.Client.Graphics.TextureLoadParameters.Default"/> if <c>null</c>.
+    /// </param>
+    /// <typeparam name="T">The type of pixels of the image. At the moment, images must be <see cref="Rgba32"/>.</typeparam>
+    public static Texture LoadFromImage<T>(Image<T> image, string? name = null,
+        TextureLoadParameters? loadParameters = null) where T : unmanaged, IPixel<T>
+    {
+        var manager = IoCManager.Resolve<IClyde>();
+        return manager.LoadTextureFromImage(image, name, loadParameters);
     }
 
     /// <summary>
-    ///     Flags for loading of textures.
+    ///     Loads an image from a stream containing PNG data.
     /// </summary>
-    [PublicAPI]
-    public struct TextureLoadParameters
+    /// <param name="stream">The stream to load the image from.</param>
+    /// <param name="name">The "name" of this texture. This can be referred to later to aid debugging.</param>
+    /// <param name="loadParameters">
+    ///     Parameters that influence the loading of textures.
+    ///     Defaults to <see cref="Robust.Client.Graphics.TextureLoadParameters.Default"/> if <c>null</c>.
+    /// </param>
+    public static Texture LoadFromPNGStream(Stream stream, string? name = null,
+        TextureLoadParameters? loadParameters = null)
     {
-        /// <summary>
-        ///     The default sampling parameters for the texture.
-        /// </summary>
-        public TextureSampleParameters SampleParameters { get; set; }
-
-        /// <summary>
-        ///     If true, the image data will be treated as sRGB.
-        /// </summary>
-        public bool Srgb { get; set; }
-
-        public static TextureLoadParameters FromYaml(YamlMappingNode yaml)
-        {
-            var loadParams = Default;
-            if (yaml.TryGetNode("sample", out YamlMappingNode? sampleNode))
-            {
-                loadParams.SampleParameters = TextureSampleParameters.FromYaml(sampleNode);
-            }
-
-            if (yaml.TryGetNode("srgb", out var srgb))
-            {
-                loadParams.Srgb = srgb.AsBool();
-            }
-
-            return loadParams;
-        }
-
-        public static readonly TextureLoadParameters Default = new()
-        {
-            SampleParameters = TextureSampleParameters.Default,
-            Srgb = true
-        };
-    }
-
-    /// <summary>
-    ///     Sample flags for textures.
-    ///     These are separate from <see cref="TextureLoadParameters"/>,
-    ///     because it is possible to create "proxies" to existing textures
-    ///     with different sampling parameters than the base texture.
-    /// </summary>
-    [PublicAPI]
-    public struct TextureSampleParameters
-    {
-        // NOTE: If somebody is gonna add support for 3D/1D textures, change this doc comment.
-        // See the note on this page for why: https://www.khronos.org/opengl/wiki/Sampler_Object#Filtering
-        /// <summary>
-        ///     If true, use bi-linear texture filtering if the texture cannot be rendered 1:1
-        /// </summary>
-        public bool Filter { get; set; }
-
-        /// <summary>
-        ///     Controls how to wrap the texture if texture coordinates outside 0-1 are accessed.
-        /// </summary>
-        public TextureWrapMode WrapMode { get; set; }
-
-        public static TextureSampleParameters FromYaml(YamlMappingNode node)
-        {
-            var wrap = TextureWrapMode.None;
-            var filter = false;
-
-            if (node.TryGetNode("filter", out var filterNode))
-            {
-                filter = filterNode.AsBool();
-            }
-
-            if (node.TryGetNode("wrap", out var wrapNode))
-            {
-                switch (wrapNode.AsString())
-                {
-                    case "none":
-                        wrap = TextureWrapMode.None;
-                        break;
-                    case "repeat":
-                        wrap = TextureWrapMode.Repeat;
-                        break;
-                    case "mirrored_repeat":
-                        wrap = TextureWrapMode.MirroredRepeat;
-                        break;
-                    default:
-                        throw new ArgumentException("Not a valid wrap mode.");
-                }
-            }
-
-            return new TextureSampleParameters {Filter = filter, WrapMode = wrap};
-        }
-
-        public static readonly TextureSampleParameters Default = new()
-        {
-            Filter = false,
-            WrapMode = TextureWrapMode.None
-        };
-    }
-
-    /// <summary>
-    ///     Controls behavior when reading texture coordinates outside 0-1, which usually wraps the texture somehow.
-    /// </summary>
-    [PublicAPI]
-    public enum TextureWrapMode : byte
-    {
-        /// <summary>
-        ///     Do not wrap, instead clamp to edge.
-        /// </summary>
-        None = 0,
-
-        /// <summary>
-        ///     Repeat the texture.
-        /// </summary>
-        Repeat,
-
-        /// <summary>
-        ///     Repeat the texture mirrored.
-        /// </summary>
-        MirroredRepeat,
+        var manager = IoCManager.Resolve<IClyde>();
+        return manager.LoadTextureFromPNGStream(stream, name, loadParameters);
     }
 }

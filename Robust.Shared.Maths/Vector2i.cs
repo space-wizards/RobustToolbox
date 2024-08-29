@@ -10,7 +10,14 @@ namespace Robust.Shared.Maths
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
     // ReSharper disable once InconsistentNaming
-    public struct Vector2i : IEquatable<Vector2i>, ISpanFormattable
+    public struct Vector2i :
+        IEquatable<Vector2i>,
+        ISpanFormattable,
+        IAdditionOperators<Vector2i, Vector2i, Vector2i>,
+        ISubtractionOperators<Vector2i, Vector2i, Vector2i>,
+        IMultiplyOperators<Vector2i, Vector2i, Vector2i>,
+        IMultiplyOperators<Vector2i, int, Vector2i>,
+        IComparisonOperators<Vector2i, Vector2i, bool>
     {
         public static readonly Vector2i Zero = (0, 0);
         public static readonly Vector2i One = (1, 1);
@@ -19,6 +26,11 @@ namespace Robust.Shared.Maths
         public static readonly Vector2i Down = (0, -1);
         public static readonly Vector2i Left = (-1, 0);
         public static readonly Vector2i Right = (1, 0);
+
+        public static readonly Vector2i DownLeft = (-1, -1);
+        public static readonly Vector2i DownRight = (1, -1);
+        public static readonly Vector2i UpRight = (1, 1);
+        public static readonly Vector2i UpLeft = (-1, 1);
 
         /// <summary>
         /// The X component of the Vector2i.
@@ -100,6 +112,11 @@ namespace Robust.Shared.Maths
             {
                 return (X * 397) ^ Y;
             }
+        }
+
+        public Vector2i Rotate(Angle angle)
+        {
+            return (Vector2i) angle.RotateVec(this);
         }
 
         public static Vector2i operator -(Vector2i a, Vector2i b)
@@ -212,6 +229,26 @@ namespace Robust.Shared.Maths
                 destination,
                 out charsWritten,
                 $"({X}, {Y})");
+        }
+
+        public static bool operator >(Vector2i left, Vector2i right)
+        {
+            return left.LengthSquared > right.LengthSquared;
+        }
+
+        public static bool operator >=(Vector2i left, Vector2i right)
+        {
+            return left.LengthSquared >= right.LengthSquared;
+        }
+
+        public static bool operator <(Vector2i left, Vector2i right)
+        {
+            return left.LengthSquared < right.LengthSquared;
+        }
+
+        public static bool operator <=(Vector2i left, Vector2i right)
+        {
+            return left.LengthSquared <= right.LengthSquared;
         }
     }
 }

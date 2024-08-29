@@ -1,12 +1,15 @@
 ﻿using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.ContentPack;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Localization;
@@ -17,6 +20,7 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Value;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Prototypes
@@ -29,6 +33,12 @@ namespace Robust.Shared.Prototypes
         [Dependency] private readonly ISerializationManager _serializationManager = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
         [Dependency] private readonly ILocalizationManager _locMan = default!;
+        [Dependency] private readonly IComponentFactory _factory = default!;
+        [Dependency] private readonly IEntityManager _entMan = default!;
+        [Dependency] private readonly IRobustRandom _random = default!;
+
+        private readonly Dictionary<string, Dictionary<string, MappingDataNode>> _prototypeDataCache = new();
+        private EntityDiffContext _context = new();
 
         private readonly Dictionary<string, Type> _kindNames = new();
         private readonly Dictionary<Type, int> _kindPriorities = new();
@@ -40,21 +50,20 @@ namespace Robust.Shared.Prototypes
 
         #region IPrototypeManager members
 
-        private readonly Dictionary<Type, KindData> _kinds = new();
+        private FrozenDictionary<Type, KindData> _kinds = FrozenDictionary<Type, KindData>.Empty;
 
         private readonly HashSet<string> _ignoredPrototypeTypes = new();
 
         public virtual void Initialize()
         {
             if (_initialized)
-            {
-                throw new InvalidOperationException($"{nameof(PrototypeManager)} has already been initialized.");
-            }
+                return;
 
             Sawmill = _logManager.GetSawmill("proto");
 
             _initialized = true;
             ReloadPrototypeKinds();
+            PrototypesReloaded += OnReload;
         }
 
         /// <inheritdoc />
@@ -72,17 +81,7 @@ namespace Robust.Shared.Prototypes
         /// <inheritdoc />
         public IEnumerable<T> EnumeratePrototypes<T>() where T : class, IPrototype
         {
-            if (!_hasEverBeenReloaded)
-            {
-                throw new InvalidOperationException("No prototypes have been loaded yet.");
-            }
-
-            var data = _kinds[typeof(T)];
-
-            foreach (var proto in data.Instances.Values)
-            {
-                yield return (T)proto;
-            }
+            return GetInstances<T>().Values;
         }
 
         /// <inheritdoc />
@@ -103,7 +102,14 @@ namespace Robust.Shared.Prototypes
         }
 
         /// <inheritdoc />
-        public IEnumerable<T> EnumerateParents<T>(string kind, bool includeSelf = false)
+        public IEnumerable<T> EnumerateParents<T>(T proto, bool includeSelf = false)
+            where T : class, IPrototype, IInheritingPrototype
+        {
+            return EnumerateParents<T>(proto.ID, includeSelf);
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<T> EnumerateParents<T>(string id, bool includeSelf = false)
             where T : class, IPrototype, IInheritingPrototype
         {
             if (!_hasEverBeenReloaded)
@@ -111,18 +117,24 @@ namespace Robust.Shared.Prototypes
                 throw new InvalidOperationException("No prototypes have been loaded yet.");
             }
 
-            if (!TryIndex<T>(kind, out var prototype))
+            if (!TryIndex<T>(id, out var prototype))
                 yield break;
-            if (includeSelf) yield return prototype;
-            if (prototype.Parents == null) yield break;
+
+            if (includeSelf)
+                yield return prototype;
+
+            if (prototype.Parents == null)
+                yield break;
 
             var queue = new Queue<string>(prototype.Parents);
             while (queue.TryDequeue(out var prototypeId))
             {
                 if (!TryIndex<T>(prototypeId, out var parent))
-                    yield break;
+                    continue; // Abstract parent?
+
                 yield return parent;
-                if (parent.Parents == null) continue;
+                if (parent.Parents == null)
+                    continue;
 
                 foreach (var parentId in parent.Parents)
                 {
@@ -146,6 +158,7 @@ namespace Robust.Shared.Prototypes
 
             if (!TryIndex(kind, id, out var prototype))
                 yield break;
+
             if (includeSelf)
                 yield return prototype;
 
@@ -157,7 +170,7 @@ namespace Robust.Shared.Prototypes
             while (queue.TryDequeue(out var prototypeId))
             {
                 if (!TryIndex(kind, prototypeId, out var parent))
-                    continue;
+                    continue; // Abstract parent?
 
                 yield return parent;
                 iPrototype = (IInheritingPrototype)parent;
@@ -171,13 +184,62 @@ namespace Robust.Shared.Prototypes
             }
         }
 
+        /// <inheritdoc />
+        public IEnumerable<(string id, T?)> EnumerateAllParents<T>(string id, bool includeSelf = false)
+            where T : class, IPrototype, IInheritingPrototype
+        {
+            if (!_hasEverBeenReloaded)
+                throw new InvalidOperationException("No prototypes have been loaded yet.");
+
+            if (!_kinds.TryGetValue(typeof(T), out var kindData))
+                throw new UnknownPrototypeException(id, typeof(T));
+
+            if (!kindData.Results.ContainsKey(id))
+                yield break;
+
+            IPrototype? uncast;
+            T? instance;
+
+            if (includeSelf)
+            {
+                kindData.Instances.TryGetValue(id, out uncast);
+                instance = uncast as T;
+                yield return (id, instance);
+            }
+
+            if (!kindData.Inheritance!.TryGetParents(id, out var parents))
+                yield break;
+
+            var queue = new Queue<string>(parents);
+            while (queue.TryDequeue(out var prototypeId))
+            {
+                if (!kindData.Results.ContainsKey(prototypeId))
+                {
+                    Sawmill.Error($"Encountered invalid prototype while enumerating parents. Kind: {typeof(T).Name}. Child: {id}. Invalid: {prototypeId}");
+                    continue;
+                }
+
+                kindData.Instances.TryGetValue(prototypeId, out uncast);
+                instance = uncast as T;
+                yield return (prototypeId, instance);
+
+                if (!kindData.Inheritance.TryGetParents(prototypeId, out parents))
+                    continue;
+
+                foreach (var parentId in parents)
+                {
+                    queue.Enqueue(parentId);
+                }
+            }
+        }
+
         public IEnumerable<Type> EnumeratePrototypeKinds()
         {
             if (!_hasEverBeenReloaded)
                 throw new InvalidOperationException("No prototypes have been loaded yet.");
             return _kinds.Keys;
         }
-        
+
         /// <inheritdoc />
         public T Index<T>(string id) where T : class, IPrototype
         {
@@ -192,8 +254,20 @@ namespace Robust.Shared.Prototypes
             }
             catch (KeyNotFoundException)
             {
-                throw new UnknownPrototypeException(id);
+                throw new UnknownPrototypeException(id, typeof(T));
             }
+        }
+
+        /// <inheritdoc />
+        public EntityPrototype Index(EntProtoId id)
+        {
+            return Index<EntityPrototype>(id.Id);
+        }
+
+        /// <inheritdoc />
+        public T Index<T>(ProtoId<T> id) where T : class, IPrototype
+        {
+            return Index<T>(id.Id);
         }
 
         /// <inheritdoc />
@@ -211,7 +285,7 @@ namespace Robust.Shared.Prototypes
         public void Clear()
         {
             _kindNames.Clear();
-            _kinds.Clear();
+            _kinds = FrozenDictionary<Type, KindData>.Empty;
         }
 
         /// <inheritdoc />
@@ -269,6 +343,7 @@ namespace Robust.Shared.Prototypes
             prototypeTypeOrder.Sort(SortPrototypesByPriority);
 
             var pushed = new Dictionary<Type, HashSet<string>>();
+            var modifiedKinds = new HashSet<KindData>();
 
             foreach (var kind in prototypeTypeOrder)
             {
@@ -278,7 +353,9 @@ namespace Robust.Shared.Prototypes
                     foreach (var id in modified[kind])
                     {
                         var prototype = (IPrototype)_serializationManager.Read(kind, kindData.Results[id])!;
-                        kindData.Instances[id] = prototype;
+                        kindData.UnfrozenInstances ??= kindData.Instances.ToDictionary();
+                        kindData.UnfrozenInstances[id] = prototype;
+                        modifiedKinds.Add(kindData);
                     }
 
                     continue;
@@ -329,25 +406,47 @@ namespace Robust.Shared.Prototypes
                     var prototype = TryReadPrototype(kind, id, kindData.Results[id], SerializationHookContext.DontSkipHooks);
                     if (prototype != null)
                     {
-                        kindData.Instances[id] = prototype;
+                        kindData.UnfrozenInstances ??= kindData.Instances.ToDictionary();
+                        kindData.UnfrozenInstances[id] = prototype;
+                        modifiedKinds.Add(kindData);
                     }
 
                     pushedSet.Add(id);
                 }
             }
 
+            Freeze(modifiedKinds);
+            if (modifiedKinds.Any(x => x.Type == typeof(EntityPrototype) || x.Type == typeof(EntityCategoryPrototype)))
+                UpdateCategories();
 #endif
 
             //todo paul i hate it but i am not opening that can of worms in this refactor
-            PrototypesReloaded?.Invoke(
-                new PrototypesReloadedEventArgs(
-                    modified
-                        .ToDictionary(
-                            g => g.Key,
-                            g => new PrototypesReloadedEventArgs.PrototypeChangeSet(
-                                g.Value.Where(x => _kinds[g.Key].Instances.ContainsKey(x))
-                                    .ToDictionary(a => a, a => _kinds[g.Key].Instances[a]))),
-                    removed));
+            var byType = modified
+                .ToDictionary(
+                    g => g.Key,
+                    g => new PrototypesReloadedEventArgs.PrototypeChangeSet(
+                        g.Value.Where(x => _kinds[g.Key].Instances.ContainsKey(x))
+                            .ToDictionary(a => a, a => _kinds[g.Key].Instances[a])));
+
+            var modifiedTypes = new HashSet<Type>(byType.Keys);
+            if (removed != null)
+                modifiedTypes.UnionWith(removed.Keys);
+
+            var ev = new PrototypesReloadedEventArgs(modifiedTypes, byType, removed);
+            PrototypesReloaded?.Invoke(ev);
+            _entMan.EventBus.RaiseEvent(EventSource.Local, ev);
+        }
+
+        private void Freeze(IEnumerable<KindData> kinds)
+        {
+            var st = RStopwatch.StartNew();
+            foreach (var kind in kinds)
+            {
+                kind.Freeze();
+            }
+
+            // fun fact: Sawmill can be null in tests????
+            Sawmill?.Verbose($"Freezing prototype instances took {st.Elapsed.TotalMilliseconds:f2}ms");
         }
 
         /// <summary>
@@ -369,98 +468,99 @@ namespace Robust.Shared.Prototypes
                     continue;
 
                 var task = Task.Run(() => PushKindInheritance(k, v));
-
                 inheritanceTasks.Add(k, task);
             }
 
-            var rand = new System.Random();
-            var priorities = _kinds.Keys.GroupBy(k => _kindPriorities[k]).OrderByDescending(k => k.Key);
+            var priorities = _kinds.Keys
+                .GroupBy(k => _kindPriorities[k])
+                .OrderByDescending(k => k.Key);
+
             foreach (var group in priorities)
             {
-                // Wait for all inheritance pushing in this group to finish.
-                // This isn't ideal, but since entity prototypes are the big ones in SS14 it's fine.
-                foreach (var k in group)
-                {
-                    if (inheritanceTasks.TryGetValue(k, out var task))
-                        task.Wait();
-                }
+                var kinds = group.Select(k => _kinds[k]).ToArray();
+                InstantiateKinds(kinds, inheritanceTasks);
+            }
 
-                // Process all prototypes in this group in a single parallel operation.
-                var allResults = group.Select(k => new
-                {
-                    Kind = k,
-                    KindData = _kinds[k],
-                }).SelectMany(k => k.KindData.Results, (data, pair) => new
-                {
-                    data.Kind,
-                    data.KindData,
-                    Id = pair.Key,
-                    Mapping = pair.Value
-                }).ToArray();
+            UpdateCategories();
+        }
 
-                // Randomize to remove any patterns that could cause uneven load.
-                RandomExtensions.Shuffle(allResults.AsSpan(), rand);
+        private void InstantiateKinds(KindData[] kinds, Dictionary<Type, Task> inheritanceTasks)
+        {
+            // Wait for all inheritance pushing in this group to finish.
+            // This isn't ideal, but since entity prototypes are the big ones in SS14 it's fine.
+            foreach (var kind in kinds)
+            {
+                if (inheritanceTasks.TryGetValue(kind.Type, out var task))
+                    task.Wait();
+            }
 
-                // Create channel that all AfterDeserialization hooks in this group will be sent into.
-                var hooksChannelOptions = new UnboundedChannelOptions
-                {
-                    SingleReader = true,
-                    SingleWriter = false,
-                    // Don't use an async job to unblock the read task.
-                    AllowSynchronousContinuations = true
-                };
-#pragma warning disable CS0618
-                var hooksChannel = Channel.CreateUnbounded<ISerializationHooks>(hooksChannelOptions);
-#pragma warning restore CS0618
-                var hookCtx = new SerializationHookContext(hooksChannel.Writer, false);
+            // Process all prototypes in this group in a single parallel operation.
+            var results = kinds
+                .SelectMany(data => data.Results,
+                    (data, results) => (KindData: data, Id: results.Key, Mapping: results.Value, Instance: (IPrototype?)null))
+                .ToArray();
 
-                var mergeTask = Task.Run(() =>
-                {
-                    // Start a thread pool job that will Parallel.ForEach the list of prototype instances.
-                    // When the list of prototype instances is processed, merge them into the instances on the KindData.
-                    try
-                    {
-                        var protoChannel =
-                            Channel.CreateUnbounded<(KindData KindData, string Id, IPrototype Prototype)>(
-                                new UnboundedChannelOptions
-                                {
-                                    SingleReader = true,
-                                    SingleWriter = false
-                                });
+            // Randomize to remove any patterns that could cause uneven load.
+            _random.Shuffle(results.AsSpan());
 
-                        Parallel.ForEach(allResults, item =>
-                        {
-                            var prototype = TryReadPrototype(item.Kind, item.Id, item.Mapping, hookCtx);
-                            if (prototype != null)
-                                protoChannel.Writer.TryWrite((item.KindData, item.Id, prototype));
-                        });
+            // Create channel that all AfterDeserialization hooks in this group will be sent into.
+            var hooksChannelOptions = new UnboundedChannelOptions
+            {
+                SingleReader = true,
+                SingleWriter = false,
+                // Don't use an async job to unblock the read task.
+                AllowSynchronousContinuations = true
+            };
 
-                        while (protoChannel.Reader.TryRead(out var item))
-                        {
-                            item.KindData.Instances[item.Id] = item.Prototype;
-                        }
-                    }
-                    finally
-                    {
-                        // Mark the hooks channel as complete so the game thread unblocks.
-                        hooksChannel.Writer.Complete();
-                    }
-                });
+            var hooksChannel = Channel.CreateUnbounded<ISerializationHooks>(hooksChannelOptions);
+            var instantiateTask = Task.Run(() => InstantiatePrototypes(kinds, results, hooksChannel));
 
-                // On the game thread: process AfterDeserialization hooks from the channel.
-                var channelReader = hooksChannel.Reader;
+            // On the game thread: process AfterDeserialization hooks from the channel.
+            var channelReader = hooksChannel.Reader;
 #pragma warning disable RA0004
-                while (channelReader.WaitToReadAsync().AsTask().Result)
+            while (channelReader.WaitToReadAsync().AsTask().Result)
 #pragma warning restore RA0004
+            {
+                while (channelReader.TryRead(out var hooks))
                 {
-                    while (channelReader.TryRead(out var hooks))
+                    hooks.AfterDeserialization();
+                }
+            }
+
+            // Join task in case an exception was raised.
+            instantiateTask.Wait();
+        }
+
+        private void InstantiatePrototypes(
+            KindData[] kinds,
+            (KindData KindData, string Id, MappingDataNode Mapping, IPrototype? Instance)[] results,
+            Channel<ISerializationHooks> hooks)
+        {
+            var hookCtx = new SerializationHookContext(hooks.Writer, false);
+            try
+            {
+                Parallel.For(0,
+                    results.Length,
+                    i =>
                     {
-                        hooks.AfterDeserialization();
-                    }
+                        ref var item = ref results[i];
+                        item.Instance = TryReadPrototype(item.KindData.Type, item.Id, item.Mapping, hookCtx);
+                    });
+
+                foreach (var item in results)
+                {
+                    if (item.Instance == null)
+                        continue;
+                    item.KindData.UnfrozenInstances ??= item.KindData.Instances.ToDictionary();
+                    item.KindData.UnfrozenInstances[item.Id] = item.Instance;
                 }
 
-                // Join task in case an exception was raised.
-                mergeTask.Wait();
+                Freeze(kinds.Where(data => data.UnfrozenInstances != null));
+            }
+            finally
+            {
+                // Mark the hooks channel as complete so the game thread unblocks.
+                hooks.Writer.Complete();
             }
         }
 
@@ -507,35 +607,43 @@ namespace Robust.Shared.Prototypes
 
             void ProcessItem(string id, InheritancePushDatum datum)
             {
-                if (tree.TryGetParents(id, out var parents))
+                try
                 {
-                    var parentNodes = new MappingDataNode[parents.Length];
-                    for (var i = 0; i < parents.Length; i++)
+                    if (tree.TryGetParents(id, out var parents))
                     {
-                        parentNodes[i] = results[parents[i]].Result;
+                        var parentNodes = new MappingDataNode[parents.Length];
+                        for (var i = 0; i < parents.Length; i++)
+                        {
+                            parentNodes[i] = results[parents[i]].Result;
+                        }
+
+                        datum.Result = _serializationManager.PushCompositionWithGenericNode(
+                            kind,
+                            parentNodes,
+                            datum.Result);
                     }
 
-                    datum.Result = _serializationManager.PushCompositionWithGenericNode(
-                        kind,
-                        parentNodes,
-                        datum.Result);
-                }
-
-                if (tree.TryGetChildren(id, out var children))
-                {
-                    foreach (var child in children)
+                    if (tree.TryGetChildren(id, out var children))
                     {
-                        var childDatum = results[child];
-                        var val = Interlocked.Decrement(ref childDatum.CountParentsRemaining);
-                        if (val == 0)
+                        foreach (var child in children)
                         {
-                            ThreadPool.QueueUserWorkItem(_ => { ProcessItem(child, childDatum); });
+                            var childDatum = results[child];
+                            var val = Interlocked.Decrement(ref childDatum.CountParentsRemaining);
+                            if (val == 0)
+                            {
+                                ThreadPool.QueueUserWorkItem(_ => { ProcessItem(child, childDatum); });
+                            }
                         }
                     }
-                }
 
-                // ReSharper disable once AccessToDisposedClosure
-                countDown.Signal();
+                    // ReSharper disable once AccessToDisposedClosure
+                    countDown.Signal();
+                }
+                catch (Exception e)
+                {
+                    Sawmill.Error($"Failed to push composition for {kind.Name} prototype with id: {id}. Exception: {e}");
+                    throw;
+                }
             }
 
             await WaitHandleHelpers.WaitOneAsync(countDown.WaitHandle);
@@ -567,10 +675,12 @@ namespace Robust.Shared.Prototypes
         public void ReloadPrototypeKinds()
         {
             Clear();
+            var dict = new Dictionary<Type, KindData>();
             foreach (var type in _reflectionManager.GetAllChildren<IPrototype>())
             {
-                RegisterKind(type);
+                RegisterKind(type, dict);
             }
+            Freeze(dict);
         }
 
         /// <inheritdoc />
@@ -578,10 +688,40 @@ namespace Robust.Shared.Prototypes
         {
             if (!_kinds.TryGetValue(typeof(T), out var index))
             {
-                throw new UnknownPrototypeException(id);
+                throw new UnknownPrototypeException(id, typeof(T));
             }
 
             return index.Instances.ContainsKey(id);
+        }
+
+        /// <inheritdoc />
+        public bool HasIndex(EntProtoId id)
+        {
+            return HasIndex<EntityPrototype>(id.Id);
+        }
+
+        /// <inheritdoc />
+        public bool HasIndex<T>(ProtoId<T> id) where T : class, IPrototype
+        {
+            return HasIndex<T>(id.Id);
+        }
+
+        /// <inheritdoc />
+        public bool HasIndex(EntProtoId? id)
+        {
+            if (id == null)
+                return false;
+
+            return HasIndex(id.Value);
+        }
+
+        /// <inheritdoc />
+        public bool HasIndex<T>(ProtoId<T>? id) where T : class, IPrototype
+        {
+            if (id == null)
+                return false;
+
+            return HasIndex(id.Value);
         }
 
         /// <inheritdoc />
@@ -597,10 +737,56 @@ namespace Robust.Shared.Prototypes
         {
             if (!_kinds.TryGetValue(kind, out var index))
             {
-                throw new UnknownPrototypeException(id);
+                throw new UnknownPrototypeException(id, kind);
             }
 
             return index.Instances.TryGetValue(id, out prototype);
+        }
+
+        /// <inheritdoc />
+        public bool TryIndex(EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype, bool logError = true)
+        {
+            if (TryIndex(id.Id, out prototype))
+                return true;
+
+            if (logError)
+                Sawmill.Error($"Attempted to resolve invalid {nameof(EntProtoId)}: {id.Id}");
+            return false;
+        }
+
+        /// <inheritdoc />
+        public bool TryIndex<T>(ProtoId<T> id, [NotNullWhen(true)] out T? prototype, bool logError = true) where T : class, IPrototype
+        {
+            if (TryIndex(id.Id, out prototype))
+                return true;
+
+            if (logError)
+                Sawmill.Error($"Attempted to resolve invalid ProtoId<{typeof(T).Name}>: {id.Id}");
+            return false;
+        }
+
+        /// <inheritdoc />
+        public bool TryIndex(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype, bool logError = true)
+        {
+            if (id == null)
+            {
+                prototype = null;
+                return false;
+            }
+
+            return TryIndex(id.Value, out prototype, logError);
+        }
+
+        /// <inheritdoc />
+        public bool TryIndex<T>(ProtoId<T>? id, [NotNullWhen(true)] out T? prototype, bool logError = true) where T : class, IPrototype
+        {
+            if (id == null)
+            {
+                prototype = null;
+                return false;
+            }
+
+            return TryIndex(id.Value, out prototype, logError);
         }
 
         /// <inheritdoc />
@@ -608,7 +794,7 @@ namespace Robust.Shared.Prototypes
         {
             if (!_kinds.TryGetValue(typeof(T), out var index))
             {
-                throw new UnknownPrototypeException(id);
+                throw new UnknownPrototypeException(id, typeof(T));
             }
 
             return index.Results.ContainsKey(id);
@@ -674,10 +860,51 @@ namespace Robust.Shared.Prototypes
                 return false;
 
             // If the variant isn't registered, this fails.
-            if (!HasKind(attribute.Type))
+            if (attribute.Type == null || !HasKind(attribute.Type))
                 return false;
 
             kind = attribute.Type;
+            return true;
+        }
+
+        public FrozenDictionary<string, T> GetInstances<T>() where T : IPrototype
+        {
+            if (TryGetInstances<T>(out var dict))
+                return dict;
+
+            throw new Exception($"Failed to fetch instances for kind {nameof(T)}");
+        }
+
+        public bool TryGetInstances<T>([NotNullWhen(true)] out FrozenDictionary<string, T>? instances)
+            where T : IPrototype
+        {
+            if (!TryGetInstances(typeof(T), out var dict))
+            {
+                instances = null;
+                return false;
+            }
+
+            DebugTools.Assert(dict is FrozenDictionary<string, T> || dict == null);
+            instances = dict as FrozenDictionary<string, T>;
+
+            // Prototypes with no loaded instances never get frozen.
+            instances ??= FrozenDictionary<string, T>.Empty;
+            return true;
+        }
+
+        private bool TryGetInstances(Type kind, [NotNullWhen(true)] out object? instances)
+        {
+            if (!_hasEverBeenReloaded)
+                throw new InvalidOperationException("No prototypes have been loaded yet.");
+
+            DebugTools.Assert(kind.IsAssignableTo(typeof(IPrototype)));
+            if (!_kinds.TryGetValue(kind, out var kindData))
+            {
+                instances = null;
+                return false;
+            }
+
+            instances = kindData.InstancesDirect;
             return true;
         }
 
@@ -705,8 +932,38 @@ namespace Robust.Shared.Prototypes
 
         void IPrototypeManager.RegisterType(Type type) => RegisterKind(type);
 
+        static string CalculatePrototypeName(Type type)
+        {
+            const string prototype = "Prototype";
+            if (!type.Name.EndsWith(prototype))
+                throw new InvalidPrototypeNameException($"Prototype {type} must end with the word Prototype");
+
+            var name = type.Name.AsSpan();
+            return $"{char.ToLowerInvariant(name[0])}{name[1..^prototype.Length]}";
+        }
+
         /// <inheritdoc />
-        public void RegisterKind(Type kind)
+        public void RegisterKind(params Type[] kinds)
+        {
+            var dict = _kinds.ToDictionary();
+            foreach (var kind in kinds)
+            {
+                RegisterKind(kind, dict);
+            }
+
+            Freeze(dict);
+        }
+
+        private void Freeze(Dictionary<Type, KindData> dict)
+        {
+            var st = RStopwatch.StartNew();
+            _kinds = dict.ToFrozenDictionary();
+
+            // fun fact: Sawmill can be null in tests????
+            Sawmill?.Verbose($"Freezing prototype kinds took {st.Elapsed.TotalMilliseconds:f2}ms");
+        }
+
+        private void RegisterKind(Type kind, Dictionary<Type, KindData> kinds)
         {
             if (!(typeof(IPrototype).IsAssignableFrom(kind)))
                 throw new InvalidOperationException("Type must implement IPrototype.");
@@ -719,6 +976,8 @@ namespace Robust.Shared.Prototypes
                     typeof(IPrototype),
                     "No " + nameof(PrototypeAttribute) + " to give it a type string.");
             }
+
+            attribute.Type ??= CalculatePrototypeName(kind);
 
             if (_kindNames.TryGetValue(attribute.Type, out var name))
             {
@@ -795,8 +1054,8 @@ namespace Robust.Shared.Prototypes
             _kindNames[attribute.Type] = kind;
             _kindPriorities[kind] = attribute.LoadPriority;
 
-            var kindData = new KindData();
-            _kinds[kind] = kindData;
+            var kindData = new KindData(kind);
+            kinds[kind] = kindData;
 
             if (kind.IsAssignableTo(typeof(IInheritingPrototype)))
                 kindData.Inheritance = new MultiRootInheritanceGraph<string>();
@@ -805,13 +1064,130 @@ namespace Robust.Shared.Prototypes
         /// <inheritdoc />
         public event Action<PrototypesReloadedEventArgs>? PrototypesReloaded;
 
-        private sealed class KindData
+        private sealed class KindData(Type kind)
         {
-            public readonly Dictionary<string, IPrototype> Instances = new();
+            public Dictionary<string, IPrototype>? UnfrozenInstances;
+
+            public FrozenDictionary<string, IPrototype> Instances = FrozenDictionary<string, IPrototype>.Empty;
+
             public readonly Dictionary<string, MappingDataNode> Results = new();
+
+            public readonly Type Type = kind;
 
             // Only initialized if prototype is inheriting.
             public MultiRootInheritanceGraph<string>? Inheritance;
+
+            /// <summary>
+            /// Variant of <see cref="Instances"/> that has a direct mapping to the prototype kind. I.e., no IPrototype interface.
+            /// </summary>
+            public object InstancesDirect = default!;
+
+            private MethodInfo _freezeDirectInfo = typeof(KindData)
+                .GetMethod(nameof(FreezeDirect), BindingFlags.Instance | BindingFlags.NonPublic)!
+                .MakeGenericMethod(kind);
+
+            private void FreezeDirect<T>()
+            {
+                var dict = new Dictionary<string, T>();
+                foreach (var (id, instance) in Instances)
+                {
+                    dict.Add(id, (T) instance);
+                }
+                InstancesDirect = dict.ToFrozenDictionary();
+            }
+
+            public void Freeze()
+            {
+                DebugTools.AssertNotNull(UnfrozenInstances);
+                Instances = UnfrozenInstances?.ToFrozenDictionary() ?? FrozenDictionary<string, IPrototype>.Empty;
+                UnfrozenInstances = null;
+                _freezeDirectInfo.Invoke(this, null);
+            }
+        }
+
+        private void OnReload(PrototypesReloadedEventArgs args)
+        {
+            if (args.ByType.TryGetValue(typeof(EntityPrototype), out var modified))
+            {
+                foreach (var id in modified.Modified.Keys)
+                {
+                    _prototypeDataCache.Remove(id);
+                }
+            }
+
+            if (args.Removed == null || !args.Removed.TryGetValue(typeof(EntityPrototype), out var removed))
+                return;
+
+            foreach (var id in removed)
+            {
+                _prototypeDataCache.Remove(id);
+            }
+        }
+
+        public IReadOnlyDictionary<string, MappingDataNode> GetPrototypeData(EntityPrototype prototype)
+        {
+            if (_prototypeDataCache.TryGetValue(prototype.ID, out var data))
+                return data;
+
+            _context.WritingReadingPrototypes = true;
+            data = new();
+
+            var xform = _factory.GetRegistration(typeof(TransformComponent)).Name;
+            try
+            {
+                foreach (var (compType, comp) in prototype.Components)
+                {
+                    if (compType == xform)
+                        continue;
+
+                    var node = _serializationManager.WriteValueAs<MappingDataNode>(comp.Component.GetType(), comp.Component,
+                        alwaysWrite: true, context: _context);
+                    data.Add(compType, node);
+                }
+            }
+            catch (Exception e)
+            {
+                Sawmill.Error($"Failed to convert prototype {prototype.ID} into yaml. Exception: {e.Message}");
+            }
+
+            _context.WritingReadingPrototypes = false;
+            _prototypeDataCache[prototype.ID] = data;
+            return data;
+        }
+
+        public bool TryGetRandom<T>(IRobustRandom random, [NotNullWhen(true)] out IPrototype? prototype) where T : class, IPrototype
+        {
+            var count = Count<T>();
+
+            if (count == 0)
+            {
+                prototype = null;
+                return false;
+            }
+
+            var index = 0;
+
+            var picked = random.Next(count);
+
+            foreach (var proto in EnumeratePrototypes<T>())
+            {
+                if (index == picked)
+                {
+                    prototype = proto;
+                    return true;
+                }
+
+                index++;
+            }
+
+            throw new ArgumentOutOfRangeException($"Unable to pick valid prototype for {typeof(T)}?");
+        }
+    }
+
+    public sealed class InvalidPrototypeNameException : Exception
+    {
+        public InvalidPrototypeNameException(string message) : base(message)
+        {
         }
     }
 }

@@ -31,10 +31,10 @@ public sealed partial class JointComponent : Component
 [Serializable, NetSerializable]
 public sealed class JointComponentState : ComponentState
 {
-    public EntityUid? Relay;
+    public NetEntity? Relay;
     public Dictionary<string, JointState> Joints;
 
-    public JointComponentState(EntityUid? relay, Dictionary<string, JointState> joints)
+    public JointComponentState(NetEntity? relay, Dictionary<string, JointState> joints)
     {
         Relay = relay;
         Joints = joints;

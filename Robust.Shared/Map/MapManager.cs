@@ -3,55 +3,45 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map.Components;
-using Robust.Shared.Maths;
-using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Collision;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map;
 
 /// <inheritdoc cref="IMapManager" />
 [Virtual]
-internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
+internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber, IPostInjectInit
 {
     [field: Dependency] public IGameTiming GameTiming { get; } = default!;
     [field: Dependency] public IEntityManager EntityManager { get; } = default!;
-
+    [Dependency] private readonly IManifoldManager _manifolds = default!;
+    [Dependency] private readonly ILogManager _logManager = default!;
     [Dependency] private readonly IConsoleHost _conhost = default!;
 
     private ISawmill _sawmill = default!;
 
     private SharedMapSystem _mapSystem = default!;
+    private SharedPhysicsSystem _physics = default!;
     private SharedTransformSystem _transformSystem = default!;
-    private EntityQuery<PhysicsComponent> _physicsQuery;
-    private EntityQuery<TransformComponent> _xformQuery;
+
+    private EntityQuery<GridTreeComponent> _gridTreeQuery;
+    private EntityQuery<MapGridComponent> _gridQuery;
 
     /// <inheritdoc />
     public void Initialize()
     {
-        _physicsQuery = EntityManager.GetEntityQuery<PhysicsComponent>();
-        _xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
-
-        _sawmill = Logger.GetSawmill("map");
-
-#if DEBUG
-        DebugTools.Assert(!_dbgGuardInit);
-        DebugTools.Assert(!_dbgGuardRunning);
-        _dbgGuardInit = true;
-#endif
+        _gridTreeQuery = EntityManager.GetEntityQuery<GridTreeComponent>();
+        _gridQuery = EntityManager.GetEntityQuery<MapGridComponent>();
         InitializeMapPausing();
     }
 
     /// <inheritdoc />
     public void Startup()
     {
+        _physics = EntityManager.System<SharedPhysicsSystem>();
         _transformSystem = EntityManager.System<SharedTransformSystem>();
         _mapSystem = EntityManager.System<SharedMapSystem>();
-
-#if DEBUG
-        DebugTools.Assert(_dbgGuardInit);
-        _dbgGuardRunning = true;
-#endif
 
         _sawmill.Debug("Starting...");
     }
@@ -59,9 +49,6 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
     /// <inheritdoc />
     public void Shutdown()
     {
-#if DEBUG
-        DebugTools.Assert(_dbgGuardInit);
-#endif
         _sawmill.Debug("Stopping...");
 
         // TODO: AllEntityQuery instead???
@@ -88,8 +75,8 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
         }
     }
 
-#if DEBUG
-    private bool _dbgGuardInit;
-    private bool _dbgGuardRunning;
-#endif
+    void IPostInjectInit.PostInject()
+    {
+        _sawmill = _logManager.GetSawmill("system.map");
+    }
 }

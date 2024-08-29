@@ -8,6 +8,8 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.UnitTesting.Server;
 
+// ReSharper disable AccessToStaticMemberViaDerivedType
+
 namespace Robust.UnitTesting.Shared.Physics;
 
 [TestFixture]
@@ -25,10 +27,10 @@ public sealed class RecursiveUpdateTest
         var xforms = entManager.System<SharedTransformSystem>();
         var containers = entManager.System<ContainerSystem>();
 
-        var mapId = mapManager.CreateMap();
-        var grid = mapManager.CreateGrid(mapId);
+        var mapId = sim.CreateMap().MapId;
+        var grid = mapManager.CreateGridEntity(mapId);
         var guid = grid.Owner;
-        grid.SetTile(Vector2i.Zero, new Tile(1));
+        grid.Comp.SetTile(Vector2i.Zero, new Tile(1));
         Assert.That(entManager.HasComponent<BroadphaseComponent>(guid));
 
         var broadphase = entManager.GetComponent<BroadphaseComponent>(guid);
@@ -58,7 +60,7 @@ public sealed class RecursiveUpdateTest
 
         // Insert into container.
         var slot = containers.EnsureContainer<ContainerSlot>(container, "test");
-        slot.Insert(contained);
+        containers.Insert(contained, slot);
 
         // Attach child B after having inserted.
         xforms.SetCoordinates(childB, childBXform, new EntityCoordinates(contained, Vector2.Zero));
@@ -98,7 +100,7 @@ public sealed class RecursiveUpdateTest
         Assert.That(childBXform.ParentUid, Is.EqualTo(contained));
 
         // Remove from container.
-        slot.Remove(contained);
+        containers.Remove(contained, slot);
 
         Assert.That(broadphase.SundriesTree, Does.Contain(container));
         Assert.That(broadphase.SundriesTree, Does.Contain(contained));
@@ -116,7 +118,7 @@ public sealed class RecursiveUpdateTest
         Assert.That(childBXform.ParentUid, Is.EqualTo(contained));
 
         // Insert back into container.
-        slot.Insert(contained);
+        containers.Insert(contained, slot);
 
         Assert.That(broadphase.SundriesTree, Does.Contain(container));
         Assert.That(broadphase.SundriesTree, Does.Not.Contain(contained));
@@ -134,7 +136,7 @@ public sealed class RecursiveUpdateTest
         Assert.That(childBXform.ParentUid, Is.EqualTo(contained));
 
         // re-remove from container, but this time WITHOUT changing parent.
-        slot.Remove(contained, reparent: false);
+        containers.Remove(contained, slot, reparent: false);
 
         Assert.That(broadphase.SundriesTree, Does.Contain(container));
         Assert.That(broadphase.SundriesTree, Does.Contain(contained));
@@ -164,7 +166,7 @@ public sealed class RecursiveUpdateTest
         var transforms = entManager.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
         var lookup = entManager.EntitySysManager.GetEntitySystem<EntityLookupSystem>();
 
-        var mapId = mapManager.CreateMap();
+        var mapId = sim.CreateMap().MapId;
         var map = mapManager.GetMapEntityId(mapId);
         var mapBroadphase = entManager.GetComponent<BroadphaseComponent>(map);
 
@@ -214,9 +216,9 @@ public sealed class RecursiveUpdateTest
         Assert.That(ents, Does.Contain(child));
 
         // Try again, but this time with a parent change.
-        var grid = mapManager.CreateGrid(mapId);
+        var grid = mapManager.CreateGridEntity(mapId);
         var guid = grid.Owner;
-        grid.SetTile(Vector2i.Zero, new Tile(1));
+        grid.Comp.SetTile(Vector2i.Zero, new Tile(1));
         var gridBroadphase = entManager.GetComponent<BroadphaseComponent>(guid);
         var gridBroadData = new BroadphaseData(guid, EntityUid.Invalid, false, false);
 

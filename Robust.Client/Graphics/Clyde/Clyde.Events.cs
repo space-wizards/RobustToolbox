@@ -33,7 +33,7 @@ namespace Robust.Client.Graphics.Clyde
 #if EXCEPTION_TOLERANCE_LOCAL
                 catch (Exception e)
                 {
-                    Logger.ErrorS("clyde.win", $"Error dispatching window event {ev.GetType().Name}:\n{e}");
+                    _sawmillWin.Error($"Error dispatching window event {ev.GetType().Name}:\n{e}");
                 }
 #endif
             }

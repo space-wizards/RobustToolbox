@@ -18,7 +18,7 @@ namespace Robust.Shared.Serialization.Manager
 {
     public sealed partial class SerializationManager : ISerializationManager
     {
-        [IoC.Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
         public IReflectionManager ReflectionManager => _reflectionManager;
 
@@ -262,6 +262,26 @@ namespace Robust.Shared.Serialization.Manager
         {
             dataDefinition = GetDefinition(type);
             return dataDefinition != null;
+        }
+
+        public bool TryGetVariableType(Type type, string variableName, [NotNullWhen(true)] out Type? variableType)
+        {
+            if (!TryGetDefinition(type, out var definition))
+            {
+                variableType = null;
+                return false;
+            }
+            var foundFieldDef = definition.BaseFieldDefinitions.FirstOrDefault(fieldDef => fieldDef?.Attribute is DataFieldAttribute attr && attr.Tag==variableName, null);
+            if(foundFieldDef != null)
+            {
+                variableType = foundFieldDef.BackingField.FieldType;
+                return true;
+            }
+            else
+            {
+                variableType = null;
+                return false;
+            }
         }
 
         private Type ResolveConcreteType(Type baseType, string typeName)

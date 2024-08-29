@@ -1,28 +1,33 @@
 <Control xmlns="https://spacestation14.io"
          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-         x:Class="Robust.Client.UserInterface.DevWindowTabUI">
-    <BoxContainer Orientation="Vertical">
-        <SplitContainer VerticalExpand="True" Orientation="Horizontal">
-            <BoxContainer Orientation="Vertical" MinWidth="250">
-                <!--
-                <BoxContainer Orientation="Horizontal">
-                    <Button Name="RefreshButton" Text="{Loc 'dev-window-ui-refresh'}" />
+         x:Class="Robust.Client.UserInterface.DevWindowTabUI"
+         xmlns:gfx="clr-namespace:Robust.Client.Graphics">
+    <PanelContainer HorizontalExpand="True" VerticalExpand="True">
+        <PanelContainer.PanelOverride>
+            <gfx:StyleBoxFlat BackgroundColor="#25252add" ContentMarginTopOverride="3" />
+        </PanelContainer.PanelOverride>
+        <BoxContainer Orientation="Vertical">
+            <PanelContainer Name="TopbarButtons" HorizontalExpand="True">
+                <BoxContainer HorizontalExpand="True" Orientation="Horizontal">
+                    <Button Name="ControlPicker" ToggleMode="True" Text="Inspect Element" />
+                    <Button Name="RefreshPropertiesButton" Text="Refresh Props" />
                 </BoxContainer>
-                -->
-                <Button Name="ControlPicker" ToggleMode="True" Text="Inspect" />
-                <ScrollContainer VerticalExpand="True">
-                    <BoxContainer Name="ControlTreeRoot" Orientation="Vertical" MouseFilter="Stop" />
+            </PanelContainer>
+            <SplitContainer HorizontalExpand="True" VerticalExpand="True"
+                            Orientation="Horizontal" ResizeMode="RespectChildrenMinSize">
+                <ScrollContainer>
+                    <PanelContainer Name="TreeRootBG">
+                        <BoxContainer Name="ControlTreeRoot" Orientation="Vertical" MouseFilter="Stop"  />
+                    </PanelContainer>
                 </ScrollContainer>
-            </BoxContainer>
-            <BoxContainer Orientation="Vertical">
-                <BoxContainer Orientation="Horizontal">
-                    <Button Name="RefreshPropertiesButton" Text="Refresh" />
-                </BoxContainer>
-
-                <ScrollContainer VerticalExpand="True" HScrollEnabled="False">
-                    <GridContainer Name="ControlProperties" Columns="2" />
+                <ScrollContainer>
+                    <BoxContainer Name="ControlProperties" Orientation="Vertical" MouseFilter="Stop" />
                 </ScrollContainer>
-            </BoxContainer>
-        </SplitContainer>
-    </BoxContainer>
+            </SplitContainer>
+        </BoxContainer>
+    </PanelContainer>
+    <!-- TODO Remove and replace with a popup container on WindowRoot -->
+    <PopupContainer Name="PopupContainer" Access="Public">
+        <DevWindowTabUIPopup Name="UIPopup" />
+    </PopupContainer>
 </Control>

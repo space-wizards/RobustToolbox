@@ -165,7 +165,7 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
     {
         var textEdit = new TextEdit
         {
-            Placeholder = new Rope.Leaf("You deleted the lipsum OwO")
+            Placeholder = new Rope.Leaf("You deleted the lipsum\nOwO")
         };
         TabContainer.SetTabTitle(textEdit, "TextEdit");
 
@@ -204,7 +204,7 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
     private Control TabRichText()
     {
         var label = new RichTextLabel();
-        label.SetMessage(FormattedMessage.FromMarkup(Lipsum));
+        label.SetMessage(FormattedMessage.FromMarkupOrThrow(Lipsum));
 
         TabContainer.SetTabTitle(label, "RichText");
         return label;

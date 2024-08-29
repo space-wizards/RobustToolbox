@@ -16,22 +16,19 @@ namespace Robust.UnitTesting.Shared.Localization
     [TestFixture]
     internal sealed class LocalizationTests : RobustUnitTest
     {
+        protected override Type[] ExtraComponents => new[] {typeof(GrammarComponent)};
 
         [OneTimeSetUp]
         public void Setup()
         {
             IoCManager.Resolve<ISerializationManager>().Initialize();
-            var componentFactory = IoCManager.Resolve<IComponentFactory>();
-            componentFactory.RegisterClass<GrammarComponent>();
-            componentFactory.GenerateNetIds();
-
             var res = IoCManager.Resolve<IResourceManagerInternal>();
             res.MountString("/Locale/en-US/a.ftl", FluentCode);
             res.MountString("/EnginePrototypes/a.yml", YAMLCode);
 
             var protoMan = IoCManager.Resolve<IPrototypeManager>();
 
-            protoMan.RegisterKind(typeof(EntityPrototype));
+            protoMan.RegisterKind(typeof(EntityPrototype), typeof(EntityCategoryPrototype));
             protoMan.LoadDirectory(new ResPath("/EnginePrototypes"));
             protoMan.ResolveResults();
 

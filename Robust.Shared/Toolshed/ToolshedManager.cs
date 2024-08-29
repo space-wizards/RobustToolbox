@@ -1,18 +1,12 @@
-﻿#pragma warning restore CS1591
-
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using Robust.Shared.Console;
+using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Reflection;
-using Robust.Shared.Timing;
 using Robust.Shared.Toolshed.Invocation;
 using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Toolshed.TypeParsers;
@@ -32,89 +26,46 @@ public sealed partial class ToolshedManager
     [Dependency] private readonly IEntityManager _entity = default!;
     [Dependency] private readonly IReflectionManager _reflection = default!;
     [Dependency] private readonly ILogManager _logManager = default!;
+#if !CLIENT_SCRIPTING
     [Dependency] private readonly INetManager _net = default!;
+#endif
+    [Dependency] private readonly ISharedPlayerManager _player = default!;
+    [Dependency] private readonly IConsoleHost _conHost = default!;
 
     private ISawmill _log = default!;
 
-    private readonly Dictionary<string, ToolshedCommand> _commands = new();
+    private Dictionary<NetUserId, OldShellInvocationContext> _contexts = new();
 
     /// <summary>
     ///     If you're not an engine developer, you probably shouldn't call this.
     /// </summary>
     public void Initialize()
     {
-#if !CLIENT_SCRIPTING
-        if (_net.IsClient)
-            throw new NotImplementedException("Toolshed is not yet ready for client-side use.");
-#endif
-
         _log = _logManager.GetSawmill("toolshed");
-        var watch = new Stopwatch();
-        watch.Start();
-
-        var tys = _reflection.FindTypesWithAttribute<ToolshedCommandAttribute>();
-        foreach (var ty in tys)
-        {
-            if (!ty.IsAssignableTo(typeof(ToolshedCommand)))
-            {
-                _log.Error($"The type {ty.AssemblyQualifiedName} has {nameof(ToolshedCommandAttribute)} without being a child of {nameof(ToolshedCommand)}");
-                continue;
-            }
-
-            var command = (ToolshedCommand)Activator.CreateInstance(ty)!;
-            IoCManager.InjectDependencies(command);
-
-            _commands.Add(command.Name, command);
-        }
 
         InitializeParser();
-        InitializeQueries();
-
-        _log.Info($"Initialized console in {watch.Elapsed}");
+        _player.PlayerStatusChanged += OnStatusChanged;
     }
 
-    /// <summary>
-    ///     Provides every registered command, including subcommands.
-    /// </summary>
-    /// <returns>Enumerable of every command.</returns>
-    public IEnumerable<CommandSpec> AllCommands()
+    private void OnStatusChanged(object? sender, SessionStatusEventArgs e)
     {
-        foreach (var (_, cmd) in _commands)
+        if (!_contexts.TryGetValue(e.Session.UserId, out var ctx))
+            return;
+
+        DebugTools.Assert(ctx.User == e.Session.UserId);
+        if (e.NewStatus == SessionStatus.Disconnected)
         {
-            if (cmd.HasSubCommands)
-            {
-                foreach (var subcommand in cmd.Subcommands)
-                {
-                    yield return new(cmd, subcommand);
-                }
-            }
-            else
-            {
-                yield return new(cmd, null);
-            }
+            DebugTools.Assert(ctx.Session == e.Session);
+            ctx.Shell = null;
+        }
+
+        if (e.NewStatus == SessionStatus.InGame)
+        {
+            DebugTools.AssertNull(ctx.Session);
+            DebugTools.AssertNull(ctx.Shell);
+            ctx.Shell = new ConsoleShell(_conHost, e.Session, false);
         }
     }
-
-    /// <summary>
-    ///     Gets a command's object by name.
-    /// </summary>
-    /// <param name="commandName">Command to get.</param>
-    /// <returns>A command object.</returns>
-    /// <exception cref="IndexOutOfRangeException">Thrown when there is no command of the given name.</exception>
-    public ToolshedCommand GetCommand(string commandName) => _commands[commandName];
-
-    /// <summary>
-    ///     Attempts to get a command's object by name.
-    /// </summary>
-    /// <param name="commandName">Command to get.</param>
-    /// <param name="command">The command obtained, if any.</param>
-    /// <returns>Success.</returns>
-    public bool TryGetCommand(string commandName, [NotNullWhen(true)] out ToolshedCommand? command)
-    {
-        return _commands.TryGetValue(commandName, out command);
-    }
-
-    private Dictionary<NetUserId, IInvocationContext> _contexts = new();
 
     /// <summary>
     ///     Invokes a command as the given user.
@@ -155,12 +106,12 @@ public sealed partial class ToolshedManager
     /// <param name="input">An input value to use, if any.</param>
     /// <param name="result">The resulting value, if any.</param>
     /// <returns>Invocation success.</returns>
-   /// <example><code>
-   ///     ToolshedManager toolshed = ...;
-   ///     IConsoleShell ctx = ...;
-   ///     // Now run some user provided command and get a result!
-   ///     toolshed.InvokeCommand(ctx, userCommand, "my input value", out var result);
-   /// </code></example>
+    /// <example><code>
+    ///     ToolshedManager toolshed = ...;
+    ///     IConsoleShell ctx = ...;
+    ///     // Now run some user provided command and get a result!
+    ///     toolshed.InvokeCommand(ctx, userCommand, "my input value", out var result);
+    /// </code></example>
     /// <remarks>
     ///     This will use the same IInvocationContext as the one used by the user for debug console commands.
     /// </remarks>
@@ -198,8 +149,8 @@ public sealed partial class ToolshedManager
     {
         ctx.ClearErrors();
 
-        var parser = new ForwardParser(command, this);
-        if (!CommandRun.TryParse(false, false, parser, input?.GetType(), null, false, out var expr, out _, out var err) || parser.Index < parser.MaxIndex)
+        var parser = new ParserContext(command, this, ctx.Environment);
+        if (!CommandRun.TryParse(false, parser, input?.GetType(), null, false, out var expr, out _, out var err) || parser.Index < parser.MaxIndex)
         {
 
             if (err is not null)

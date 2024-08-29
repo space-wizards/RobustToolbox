@@ -137,5 +137,70 @@ highp vec4 zTexture(highp vec2 uv)
     return zTextureSpec(TEXTURE, uv);
 }
 
+// -- color --
+
+// Grayscale function for the ITU's Rec BT-709. Primarily intended for HDTVs, but standard sRGB monitors are coincidentally extremely close.
+highp float zGrayscale_BT709(highp vec3 col) {
+    return dot(col, vec3(0.2126, 0.7152, 0.0722));
+}
+
+// Grayscale function for the ITU's Rec BT-601, primarily intended for SDTV, but amazing for a handful of niche use-cases.
+highp float zGrayscale_BT601(highp vec3 col) {
+    return dot(col, vec3(0.299, 0.587, 0.114));
+}
+
+// If you don't have any reason to be specifically using the above grayscale functions, then you should default to this.
+highp float zGrayscale(highp vec3 col) {
+    return zGrayscale_BT709(col);
+}
+
+// -- noise --
+
+//zRandom, zNoise, and zFBM are derived from https://godotshaders.com/snippet/2d-noise/ and https://godotshaders.com/snippet/fractal-brownian-motion-fbm/
+highp vec2 zRandom(highp vec2 uv){
+    uv = vec2( dot(uv, vec2(127.1,311.7) ),
+               dot(uv, vec2(269.5,183.3) ) );
+    return -1.0 + 2.0 * fract(sin(uv) * 43758.5453123);
+}
+
+highp float zNoise(highp vec2 uv) {
+    highp vec2 uv_index = floor(uv);
+    highp vec2 uv_fract = fract(uv);
+
+    highp vec2 blur = smoothstep(0.0, 1.0, uv_fract);
+
+    return mix( mix( dot( zRandom(uv_index + vec2(0.0,0.0) ), uv_fract - vec2(0.0,0.0) ),
+                     dot( zRandom(uv_index + vec2(1.0,0.0) ), uv_fract - vec2(1.0,0.0) ), blur.x),
+                mix( dot( zRandom(uv_index + vec2(0.0,1.0) ), uv_fract - vec2(0.0,1.0) ),
+                     dot( zRandom(uv_index + vec2(1.0,1.0) ), uv_fract - vec2(1.0,1.0) ), blur.x), blur.y) * 0.5 + 0.5;
+}
+
+highp float zFBM(highp vec2 uv) {
+    const int octaves = 6;
+    highp float amplitude = 0.5;
+    highp float frequency = 3.0;
+    highp float value = 0.0;
+
+    for(int i = 0; i < octaves; i++) {
+        value += amplitude * zNoise(frequency * uv);
+        amplitude *= 0.5;
+        frequency *= 2.0;
+    }
+    return value;
+}
+
+
+// -- generative --
+
+// Function that creates a circular gradient. Screenspace shader bread n butter.
+highp float zCircleGradient(highp vec2 ps, highp vec2 coord, highp float maxi, highp float radius, highp float dist, highp float power) {
+    highp float rad = (radius * ps.y) * 0.001;
+    highp float aspectratio = ps.x / ps.y;
+    highp vec2 totaldistance = ((ps * 0.5) - coord) / (rad * ps);
+    totaldistance.x *= aspectratio;
+    highp float length = (length(totaldistance) * ps.y) - dist;
+    return pow(clamp(length, 0.0, maxi), power);
+}
+
 // -- Utilities End --
 

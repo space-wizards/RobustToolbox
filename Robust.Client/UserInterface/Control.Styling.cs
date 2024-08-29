@@ -24,7 +24,10 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        [ViewVariables]
         public ICollection<string> StyleClasses { get; }
+
+        [ViewVariables(VVAccess.ReadOnly)]
         public IReadOnlyCollection<string> StylePseudoClass => _stylePseudoClass;
 
         [ViewVariables]
@@ -236,6 +239,7 @@ namespace Robust.Client.UserInterface
 
         protected virtual void StylePropertiesChanged()
         {
+            UpdateLayoutStyleProperties();
             InvalidateMeasure();
         }
 

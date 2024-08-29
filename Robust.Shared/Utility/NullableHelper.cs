@@ -7,7 +7,23 @@ namespace Robust.Shared.Utility
 {
     public static class NullableHelper
     {
+        //
+        // Since .NET 8, System.Runtime.CompilerServices.NullableAttribute is included in the BCL.
+        // Before this, Roslyn emitted a copy of the attribute into every assembly compiled.
+        // In the latter case we need to find the type for every assembly that has it.
+        // Yeah most of this code can probably be removed now but just for safety I'm keeping it as a fallback path.
+        //
+
         private const int NotAnnotatedNullableFlag = 1;
+
+        private static readonly Type? BclNullableCache;
+        private static readonly Type? BclNullableContextCache;
+
+        static NullableHelper()
+        {
+            BclNullableCache = Type.GetType("System.Runtime.CompilerServices.NullableAttribute");
+            BclNullableContextCache = Type.GetType("System.Runtime.CompilerServices.NullableContextAttribute");
+        }
 
         private static readonly Dictionary<Assembly, (Type AttributeType, FieldInfo NullableFlagsField)?>
             _nullableAttributeTypeCache = new();
@@ -130,6 +146,7 @@ namespace Robust.Shared.Utility
         private static void CacheNullableFieldInfo(Assembly assembly)
         {
             var nullableAttributeType = assembly.GetType("System.Runtime.CompilerServices.NullableAttribute");
+            nullableAttributeType ??= BclNullableCache;
             if (nullableAttributeType == null)
             {
                 _nullableAttributeTypeCache.Add(assembly, null);
@@ -150,6 +167,7 @@ namespace Robust.Shared.Utility
         {
             var nullableContextAttributeType =
                 assembly.GetType("System.Runtime.CompilerServices.NullableContextAttribute");
+            nullableContextAttributeType ??= BclNullableContextCache;
             if (nullableContextAttributeType == null)
             {
                 _nullableContextAttributeTypeCache.Add(assembly, null);

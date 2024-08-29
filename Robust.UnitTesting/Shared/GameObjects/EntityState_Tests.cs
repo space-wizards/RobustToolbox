@@ -66,10 +66,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
             using(var stream = new MemoryStream())
             {
                 var payload = new EntityState(
-                    new EntityUid(512),
+                    new NetEntity(64),
                     new []
                     {
-                        new ComponentChange(0, new MapGridComponentState(16, chunkData: null), default)
+                        new ComponentChange(0, new MapGridComponentDeltaState(16, chunkData: null, default), default)
                     }, default);
 
                 serializer.Serialize(stream, payload);

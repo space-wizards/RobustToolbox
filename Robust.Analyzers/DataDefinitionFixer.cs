@@ -1,23 +1,25 @@
 #nullable enable
 using System.Collections.Immutable;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxKind;
-using static Robust.Analyzers.Diagnostics;
+using static Robust.Roslyn.Shared.Diagnostics;
 
 namespace Robust.Analyzers;
 
 [ExportCodeFixProvider(LanguageNames.CSharp)]
 public sealed class DefinitionFixer : CodeFixProvider
 {
+    private const string DataFieldAttributeName = "DataField";
+
+    private const string ViewVariablesAttributeName = "ViewVariables";
+
     public override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(
-        IdDataDefinitionPartial, IdNestedDataDefinitionPartial, IdDataFieldWritable, IdDataFieldPropertyWritable
+        IdDataDefinitionPartial, IdNestedDataDefinitionPartial, IdDataFieldWritable, IdDataFieldPropertyWritable,
+        IdDataFieldRedundantTag, IdDataFieldNoVVReadWrite
     );
 
     public override Task RegisterCodeFixesAsync(CodeFixContext context)
@@ -34,6 +36,10 @@ public sealed class DefinitionFixer : CodeFixProvider
                     return RegisterDataFieldFix(context, diagnostic);
                 case IdDataFieldPropertyWritable:
                     return RegisterDataFieldPropertyFix(context, diagnostic);
+                case IdDataFieldRedundantTag:
+                    return RegisterRedundantTagFix(context, diagnostic);
+                case IdDataFieldNoVVReadWrite:
+                    return RegisterVVReadWriteFix(context, diagnostic);
             }
         }
 
@@ -68,6 +74,110 @@ public sealed class DefinitionFixer : CodeFixProvider
         var newDeclaration = declaration.AddModifiers(token);
 
         root = root!.ReplaceNode(declaration, newDeclaration);
+
+        return document.WithSyntaxRoot(root);
+    }
+
+    private static async Task RegisterRedundantTagFix(CodeFixContext context, Diagnostic diagnostic)
+    {
+        var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken);
+        var span = diagnostic.Location.SourceSpan;
+        var token = root?.FindToken(span.Start).Parent?.AncestorsAndSelf().OfType<MemberDeclarationSyntax>().First();
+
+        if (token == null)
+            return;
+
+        // Find the DataField attribute
+        AttributeSyntax? dataFieldAttribute = null;
+        foreach (var attributeList in token.AttributeLists)
+        {
+            foreach (var attribute in attributeList.Attributes)
+            {
+                if (attribute.Name.ToString() == DataFieldAttributeName)
+                {
+                    dataFieldAttribute = attribute;
+                    break;
+                }
+            }
+            if (dataFieldAttribute != null)
+                break;
+        }
+
+        if (dataFieldAttribute == null)
+            return;
+
+        context.RegisterCodeFix(CodeAction.Create(
+            "Remove explicitly set tag",
+            c => RemoveRedundantTag(context.Document, dataFieldAttribute, c),
+            "Remove explicitly set tag"
+        ), diagnostic);
+    }
+
+    private static async Task<Document> RemoveRedundantTag(Document document, AttributeSyntax syntax, CancellationToken cancellation)
+    {
+        var root = (CompilationUnitSyntax?) await document.GetSyntaxRootAsync(cancellation);
+
+        if (syntax.ArgumentList == null)
+            return document;
+
+        AttributeSyntax? newSyntax;
+        if (syntax.ArgumentList.Arguments.Count == 1)
+        {
+            // If this is the only argument, delete the ArgumentList so we don't leave empty parentheses
+            newSyntax = syntax.RemoveNode(syntax.ArgumentList, SyntaxRemoveOptions.KeepNoTrivia);
+        }
+        else
+        {
+            // Remove the first argument, which is the tag
+            var newArgs = syntax.ArgumentList.Arguments.RemoveAt(0);
+            var newArgList = syntax.ArgumentList.WithArguments(newArgs);
+            // Construct a new attribute with the tag removed
+            newSyntax = syntax.WithArgumentList(newArgList);
+        }
+
+        root = root!.ReplaceNode(syntax, newSyntax!);
+
+        return document.WithSyntaxRoot(root);
+    }
+
+    private static async Task RegisterVVReadWriteFix(CodeFixContext context, Diagnostic diagnostic)
+    {
+        var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken);
+        var span = diagnostic.Location.SourceSpan;
+        var token = root?.FindToken(span.Start).Parent?.AncestorsAndSelf().OfType<MemberDeclarationSyntax>().First();
+
+        if (token == null)
+            return;
+
+        context.RegisterCodeFix(CodeAction.Create(
+            "Remove ViewVariables attribute",
+            c => RemoveVVAttribute(context.Document, token, c),
+            "Remove ViewVariables attribute"
+        ), diagnostic);
+    }
+
+    private static async Task<Document> RemoveVVAttribute(Document document, MemberDeclarationSyntax syntax, CancellationToken cancellation)
+    {
+        var root = (CompilationUnitSyntax?) await document.GetSyntaxRootAsync(cancellation);
+
+        var newLists = new SyntaxList<AttributeListSyntax>();
+        foreach (var attributeList in syntax.AttributeLists)
+        {
+            var attributes = new SeparatedSyntaxList<AttributeSyntax>();
+            foreach (var attribute in attributeList.Attributes)
+            {
+                if (attribute.Name.ToString() != ViewVariablesAttributeName)
+                {
+                    attributes = attributes.Add(attribute);
+                }
+            }
+            // Don't add empty lists []
+            if (attributes.Count > 0)
+                newLists = newLists.Add(attributeList.WithAttributes(attributes));
+        }
+        var newSyntax = syntax.WithAttributeLists(newLists);
+
+        root = root!.ReplaceNode(syntax, newSyntax);
 
         return document.WithSyntaxRoot(root);
     }

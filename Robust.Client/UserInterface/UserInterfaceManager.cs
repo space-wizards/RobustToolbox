@@ -12,6 +12,7 @@ using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.UserInterface.CustomControls.DebugMonitorControls;
 using Robust.Client.UserInterface.Stylesheets;
 using Robust.Shared;
+using Robust.Shared.Audio.Sources;
 using Robust.Shared.Configuration;
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
@@ -26,7 +27,6 @@ using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface
@@ -54,6 +54,10 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly IEntitySystemManager _systemManager = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
         [Dependency] private readonly IRuntimeLog _runtime = default!;
+        [Dependency] private readonly IClipboardManager _clipboard = null!;
+
+        private IAudioSource? _clickSource;
+        private IAudioSource? _hoverSource;
 
         /// <summary>
         /// Upper limit on the number of times that controls can be measured / arranged each tick before being deferred
@@ -72,7 +76,7 @@ namespace Robust.Client.UserInterface
 
                 foreach (var root in _roots)
                 {
-                    if (root.Stylesheet != null)
+                    if (root.Stylesheet == null)
                     {
                         root.StylesheetUpdateRecursive();
                     }
@@ -148,6 +152,7 @@ namespace Robust.Client.UserInterface
 
             RootControl = CreateWindowRoot(_clyde.MainWindow);
             RootControl.Name = "MainWindowRoot";
+            RootControl.DisableAutoScaling = false;
 
             _clyde.DestroyWindow += WindowDestroyed;
             _clyde.OnWindowFocused += ClydeOnWindowFocused;
@@ -212,6 +217,8 @@ namespace Robust.Client.UserInterface
             {
                 foreach (var root in _roots)
                 {
+                    CheckRootUIScaleUpdate(root);
+
                     using (_prof.Group("Root"))
                     {
                         var totalUpdated = root.DoFrameUpdateRecursive(args);
@@ -325,8 +332,8 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private void _render(IRenderHandle renderHandle, ref int total, Control control, Vector2i position, Color modulate,
-            UIBox2i? scissorBox)
+        public void RenderControl(IRenderHandle renderHandle, ref int total, Control control, Vector2i position, Color modulate,
+            UIBox2i? scissorBox, Matrix3x2 coordinateTransform)
         {
             if (!control.Visible)
             {
@@ -373,7 +380,9 @@ namespace Robust.Client.UserInterface
             total += 1;
 
             var handle = renderHandle.DrawingHandleScreen;
-            handle.SetTransform(position, Angle.Zero, Vector2.One);
+            var oldXform = handle.GetTransform();
+            var xform = oldXform * Matrix3Helpers.CreateTransform(position, Angle.Zero, Vector2.One);
+            handle.SetTransform(xform);
             modulate *= control.Modulate;
 
             if (_rendering || control.AlwaysRender)
@@ -385,19 +394,71 @@ namespace Robust.Client.UserInterface
                 handle.Modulate = oldMod;
                 handle.UseShader(null);
             }
+            handle.SetTransform(oldXform);
+            var args = new Control.ControlRenderArguments()
+            {
+                Handle = renderHandle,
+                Total = ref total,
+                Modulate = modulate,
+                ScissorBox = scissorRegion,
+                CoordinateTransform = ref coordinateTransform
+            };
+
+            control.PreRenderChildren(ref args);
 
             foreach (var child in control.Children)
             {
-                _render(renderHandle, ref total, child, position + child.PixelPosition, modulate, scissorRegion);
+                var pos = position + (Vector2i)Vector2.Transform(child.PixelPosition, coordinateTransform);
+                control.RenderChildOverride(ref args, child.GetPositionInParent(), pos);
             }
+
+            control.PostRenderChildren(ref args);
 
             if (clip)
             {
                 renderHandle.SetScissor(scissorBox);
             }
+
+            handle.SetTransform(oldXform);
         }
 
         public Color GetMainClearColor() => RootControl.ActualBgColor;
+
+        /*
+         * UI Sounds.
+         * Some notes:
+         * - Did not play click sound on all button presses because other stuff setting it shouldn't implicitly play the sound
+         * Which turns this into opt-in rather than opt-out for existing behaviour.
+         * This just means we have to manually fix buttons but that's okay.
+         */
+
+        public void SetClickSound(IAudioSource? source)
+        {
+            if (!_configurationManager.GetCVar(CVars.InterfaceAudio))
+                return;
+
+            _clickSource?.Dispose();
+            _clickSource = source;
+        }
+
+        public void ClickSound()
+        {
+            _clickSource?.Restart();
+        }
+
+        public void SetHoverSound(IAudioSource? source)
+        {
+            if (!_configurationManager.GetCVar(CVars.InterfaceAudio))
+                return;
+
+            _hoverSource?.Dispose();
+            _hoverSource = source;
+        }
+
+        public void HoverSound()
+        {
+            _hoverSource?.Restart();
+        }
 
         ~UserInterfaceManager()
         {

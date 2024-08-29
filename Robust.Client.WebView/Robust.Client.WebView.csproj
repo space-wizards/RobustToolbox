@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="JetBrains.Annotations" Version="2020.3.0" />
-    <PackageReference Include="Robust.Natives.Cef" Version="102.0.9" />
+    <PackageReference Include="JetBrains.Annotations" />
+    <PackageReference Include="Robust.Natives.Cef" />
   </ItemGroup>
 
   <ItemGroup>

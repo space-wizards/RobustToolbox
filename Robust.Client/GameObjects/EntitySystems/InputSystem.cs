@@ -3,16 +3,13 @@ using System.Numerics;
 using Robust.Client.GameStates;
 using Robust.Client.Input;
 using Robust.Client.Player;
-using Robust.Shared;
-using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -23,12 +20,14 @@ namespace Robust.Client.GameObjects
     /// </summary>
     public sealed class InputSystem : SharedInputSystem, IPostInjectInit
     {
+        [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IClientGameStateManager _stateManager = default!;
         [Dependency] private readonly IConsoleHost _conHost = default!;
         [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private readonly SharedTransformSystem _transform = default!;
 
         private ISawmill _sawmillInputContext = default!;
 
@@ -52,7 +51,7 @@ namespace Robust.Client.GameObjects
         /// <param name="message">Arguments for this event.</param>
         /// <param name="replay">if true, current cmd state will not be checked or updated - use this for "replaying" an
         /// old input that was saved or buffered until further processing could be done</param>
-        public bool HandleInputCommand(ICommonSession? session, BoundKeyFunction function, FullInputCmdMessage message, bool replay = false)
+        public bool HandleInputCommand(ICommonSession? session, BoundKeyFunction function, IFullInputCmdMessage message, bool replay = false)
         {
             #if DEBUG
 
@@ -78,14 +77,44 @@ namespace Robust.Client.GameObjects
                     continue;
 
                 // local handlers can block sending over the network.
-                if (handler.HandleCmdMessage(session, message))
+                if (handler.HandleCmdMessage(EntityManager, session, message))
                 {
                     return true;
                 }
             }
 
-            // send it off to the server
-            DispatchInputCommand(message);
+            var clientMsg = message switch
+            {
+                ClientFullInputCmdMessage clientInput => clientInput,
+                FullInputCmdMessage fullInput => new ClientFullInputCmdMessage(
+                    fullInput.Tick,
+                    fullInput.SubTick,
+                    fullInput.InputFunctionId,
+                    GetCoordinates(fullInput.Coordinates),
+                    fullInput.ScreenCoordinates,
+                    fullInput.State,
+                    GetEntity(fullInput.Uid)),
+
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            var fullMsg = message switch
+            {
+                FullInputCmdMessage fullInput => fullInput,
+                ClientFullInputCmdMessage client => new FullInputCmdMessage(
+                    client.Tick,
+                    client.SubTick,
+                    client.InputFunctionId,
+                    clientMsg.State,
+                    GetNetCoordinates(client.Coordinates),
+                    clientMsg.ScreenCoordinates,
+                    GetNetEntity(clientMsg.Uid)
+                    ),
+
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            DispatchInputCommand(clientMsg, fullMsg);
             return false;
         }
 
@@ -93,35 +122,34 @@ namespace Robust.Client.GameObjects
         /// Handle a predicted input command.
         /// </summary>
         /// <param name="inputCmd">Input command to handle as predicted.</param>
-        public void PredictInputCommand(FullInputCmdMessage inputCmd)
+        public void PredictInputCommand(IFullInputCmdMessage inputCmd)
         {
-            DebugTools.AssertNotNull(_playerManager.LocalPlayer);
-
             var keyFunc = _inputManager.NetworkBindMap.KeyFunctionName(inputCmd.InputFunctionId);
 
             Predicted = true;
-            var session = _playerManager.LocalPlayer!.Session;
+            var session = _playerManager.LocalSession;
             foreach (var handler in BindRegistry.GetHandlers(keyFunc))
             {
-                if (handler.HandleCmdMessage(session, inputCmd)) break;
+                if (handler.HandleCmdMessage(EntityManager, session, inputCmd))
+                    break;
             }
             Predicted = false;
 
         }
 
-        private void DispatchInputCommand(FullInputCmdMessage message)
+        private void DispatchInputCommand(ClientFullInputCmdMessage clientMsg, FullInputCmdMessage message)
         {
-            _stateManager.InputCommandDispatched(message);
+            _stateManager.InputCommandDispatched(clientMsg, message);
             EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, message.InputSequence);
         }
 
         public override void Initialize()
         {
-            SubscribeLocalEvent<PlayerAttachSysMessage>(OnAttachedEntityChanged);
+            SubscribeLocalEvent<LocalPlayerAttachedEvent>(OnAttachedEntityChanged);
 
             _conHost.RegisterCommand("incmd",
                 "Inserts an input command into the simulation",
-                "incmd <KeyFunction> <d|u KeyState> <wxPos> <wyPos>",
+                "incmd <KeyFunction> <KeyState> [wxPos] [wyPos]",
                 GenerateInputCommand);
         }
 
@@ -134,34 +162,59 @@ namespace Robust.Client.GameObjects
 
         private void GenerateInputCommand(IConsoleShell shell, string argstr, string[] args)
         {
-            var localPlayer = _playerManager.LocalPlayer;
-            if(localPlayer is null)
+            if (_playerManager.LocalEntity is not { } pent)
                 return;
 
-            var pent = localPlayer.ControlledEntity;
-            if(pent is null)
+            if (args.Length is not (2 or 4))
+            {
+                shell.WriteLine(Loc.GetString($"cmd-invalid-arg-number-error"));
                 return;
+            }
 
-            BoundKeyFunction keyFunction = new BoundKeyFunction(args[0]);
-            BoundKeyState state = args[1] == "u" ? BoundKeyState.Up: BoundKeyState.Down;
+            var keyFunction = new BoundKeyFunction(args[0]);
+            if (!Enum.TryParse<BoundKeyState>(args[1], out var state))
+            {
+                shell.WriteLine(Loc.GetString("cmd-parse-failure-enum", ("arg", args[1]), ("enum", nameof(BoundKeyState))));
+                return;
+            }
 
-            var pxform = Transform(pent.Value);
-            var wPos = pxform.WorldPosition + new Vector2(float.Parse(args[2]), float.Parse(args[3]));
-            var coords = EntityCoordinates.FromMap(EntityManager, pent.Value, new MapCoordinates(wPos, pxform.MapID));
+            var wOffset = Vector2.Zero;
+            if (args.Length == 4)
+            {
+                if (!float.TryParse(args[2], out var wX))
+                {
+                    shell.WriteError(Loc.GetString("cmd-parse-failure-float", ("arg", args[2])));
+                    return;
+                }
 
+                if (!float.TryParse(args[3], out var wY))
+                {
+                    shell.WriteError(Loc.GetString("cmd-parse-failure-float", ("arg", args[3])));
+                    return;
+                }
+
+                wOffset = new Vector2(wX, wY);
+            }
+
+            var coords = _transform.ToCoordinates(pent, _transform.GetMapCoordinates(pent).Offset(wOffset));
             var funcId = _inputManager.NetworkBindMap.KeyFunctionID(keyFunction);
 
-            var message = new FullInputCmdMessage(_timing.CurTick, _timing.TickFraction, funcId, state,
-                coords, new ScreenCoordinates(0, 0, default), EntityUid.Invalid);
+            var message = new ClientFullInputCmdMessage(_timing.CurTick,
+                _timing.TickFraction,
+                funcId,
+                coords,
+                new ScreenCoordinates(0, 0, default),
+                state,
+                EntityUid.Invalid);
 
-            HandleInputCommand(localPlayer.Session, keyFunction, message);
+            HandleInputCommand(_playerManager.LocalSession, keyFunction, message);
         }
 
-        private void OnAttachedEntityChanged(PlayerAttachSysMessage message)
+        private void OnAttachedEntityChanged(LocalPlayerAttachedEvent message)
         {
-            if (message.AttachedEntity != default) // attach
+            if (message.Entity != default) // attach
             {
-                SetEntityContextActive(_inputManager, message.AttachedEntity);
+                SetEntityContextActive(_inputManager, message.Entity);
             }
             else // detach
             {
@@ -197,58 +250,17 @@ namespace Robust.Client.GameObjects
         /// </summary>
         public void SetEntityContextActive()
         {
-            var controlled = _playerManager.LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
-            if (controlled == EntityUid.Invalid)
-            {
+            if (_playerManager.LocalEntity is not { } controlled)
                 return;
-            }
 
             SetEntityContextActive(_inputManager, controlled);
         }
 
-        void IPostInjectInit.PostInject()
+        protected override void PostInject()
         {
+            base.PostInject();
+
             _sawmillInputContext = _logManager.GetSawmill("input.context");
         }
-    }
-
-    /// <summary>
-    ///     Entity system message that is raised when the player changes attached entities.
-    /// </summary>
-    public sealed class PlayerAttachSysMessage : EntityEventArgs
-    {
-        /// <summary>
-        ///     New entity the player is attached to.
-        /// </summary>
-        public EntityUid AttachedEntity { get; }
-
-        /// <summary>
-        ///     Creates a new instance of <see cref="PlayerAttachSysMessage"/>.
-        /// </summary>
-        /// <param name="attachedEntity">New entity the player is attached to.</param>
-        public PlayerAttachSysMessage(EntityUid attachedEntity)
-        {
-            AttachedEntity = attachedEntity;
-        }
-    }
-
-    public sealed class PlayerAttachedEvent : EntityEventArgs
-    {
-        public PlayerAttachedEvent(EntityUid entity)
-        {
-            Entity = entity;
-        }
-
-        public EntityUid Entity { get; }
-    }
-
-    public sealed class PlayerDetachedEvent : EntityEventArgs
-    {
-        public PlayerDetachedEvent(EntityUid entity)
-        {
-            Entity = entity;
-        }
-
-        public EntityUid Entity { get; }
     }
 }

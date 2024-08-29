@@ -42,12 +42,19 @@ public abstract class MetaDataSystem : EntitySystem
         component.PauseTime = state.PauseTime;
     }
 
-    public void SetEntityName(EntityUid uid, string value, MetaDataComponent? metadata = null)
+    public void SetEntityName(EntityUid uid, string value, MetaDataComponent? metadata = null, bool raiseEvents = true)
     {
         if (!_metaQuery.Resolve(uid, ref metadata) || value.Equals(metadata.EntityName))
             return;
 
         metadata._entityName = value;
+
+        if (raiseEvents)
+        {
+            var ev = new EntityRenamedEvent(value);
+            RaiseLocalEvent(uid, ref ev);
+        }
+
         Dirty(uid, metadata, metadata);
     }
 
@@ -123,12 +130,19 @@ public abstract class MetaDataSystem : EntitySystem
         time += paused;
     }
 
-    public void AddFlag(EntityUid uid, MetaDataFlags flags, MetaDataComponent? component = null)
+    public void SetFlag(Entity<MetaDataComponent?> entity, MetaDataFlags flags, bool enabled)
     {
-        if (!_metaQuery.Resolve(uid, ref component)) return;
+        if (!_metaQuery.Resolve(entity, ref entity.Comp))
+            return;
 
-        component.Flags |= flags;
+        if (enabled)
+            entity.Comp.Flags |= flags;
+        else
+            RemoveFlag(entity, flags, entity.Comp);
     }
+
+    public void AddFlag(EntityUid uid, MetaDataFlags flags, MetaDataComponent? comp = null)
+        => SetFlag((uid, comp), flags, true);
 
     /// <summary>
     /// Attempts to remove the specific flag from metadata.
@@ -147,12 +161,6 @@ public abstract class MetaDataSystem : EntitySystem
         RaiseLocalEvent(uid, ref ev, true);
 
         component.Flags &= ~ev.ToRemove;
-    }
-
-    public virtual void SetVisibilityMask(EntityUid uid, int value, MetaDataComponent? meta = null)
-    {
-        if (Resolve(uid, ref meta))
-            meta.VisibilityMask = value;
     }
 }
 

@@ -1,16 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using NFluidsynth;
-using Robust.Client.GameObjects;
-using Robust.Client.Graphics;
-using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Audio.Midi;
+using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
@@ -19,7 +18,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Threading;
@@ -33,25 +31,19 @@ internal sealed partial class MidiManager : IMidiManager
 {
     public const string SoundfontEnvironmentVariable = "ROBUST_SOUNDFONT_OVERRIDE";
 
-    private int _minRendererParallel;
-    private float _occlusionUpdateDelay;
-    private float _positionUpdateDelay;
-
-    [ViewVariables] private TimeSpan _nextOcclusionUpdate = TimeSpan.Zero;
-    [ViewVariables] private TimeSpan _nextPositionUpdate = TimeSpan.Zero;
-
-    [Dependency] private readonly IEyeManager _eyeManager = default!;
-    [Dependency] private readonly IResourceCacheInternal _resourceManager = default!;
+    [Dependency] private readonly IGameTiming _timing = default!;
+    [Dependency] private readonly IResourceManager _resourceManager = default!;
     [Dependency] private readonly IEntityManager _entityManager = default!;
     [Dependency] private readonly IConfigurationManager _cfgMan = default!;
-    [Dependency] private readonly IClydeAudio _clydeAudio = default!;
+    [Dependency] private readonly IAudioInternal _audio = default!;
     [Dependency] private readonly ITaskManager _taskManager = default!;
     [Dependency] private readonly ILogManager _logger = default!;
     [Dependency] private readonly IParallelManager _parallel = default!;
     [Dependency] private readonly IRuntimeLog _runtime = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
 
+    private AudioSystem _audioSys = default!;
     private SharedPhysicsSystem _broadPhaseSystem = default!;
+    private SharedTransformSystem _xformSystem = default!;
 
     public IReadOnlyList<IMidiRenderer> Renderers
     {
@@ -78,24 +70,32 @@ internal sealed partial class MidiManager : IMidiManager
 
     [ViewVariables] private readonly List<IMidiRenderer> _renderers = new();
 
+    // To avoid lock contention until some kind of MIDI refactor.
+    private TimeSpan _nextUpdate;
+    private TimeSpan _updateFrequency = TimeSpan.FromSeconds(0.25f);
+
+    private SemaphoreSlim _updateSemaphore = new(1);
+
     private bool _alive = true;
     [ViewVariables] private Settings? _settings;
     private Thread? _midiThread;
     private ISawmill _midiSawmill = default!;
-    private float _volume = 0f;
+    private float _gain = 0f;
     private bool _volumeDirty = true;
 
     // Not reliable until Fluidsynth is initialized!
     [ViewVariables(VVAccess.ReadWrite)]
-    public float Volume
+    public float Gain
     {
-        get => _volume;
+        get => _gain;
         set
         {
-            if (MathHelper.CloseToPercent(_volume, value))
+            var clamped = Math.Clamp(value, 0f, 1f);
+
+            if (MathHelper.CloseToPercent(_gain, clamped))
                 return;
 
-            _cfgMan.SetCVar(CVars.MidiVolume, value);
+            _cfgMan.SetCVar(CVars.MidiVolume, clamped);
             _volumeDirty = true;
         }
     }
@@ -114,7 +114,7 @@ internal sealed partial class MidiManager : IMidiManager
         "/usr/share/sounds/sf2/TimGM6mb.sf2",
     };
 
-    private const string WindowsSoundfont = @"C:\WINDOWS\system32\drivers\gm.dls";
+    private static readonly string WindowsSoundfont = $@"{Environment.GetEnvironmentVariable("SystemRoot")}\system32\drivers\gm.dls";
 
     private const string OsxSoundfont =
         "/System/Library/Components/CoreAudio.component/Contents/Resources/gs_instruments.dls";
@@ -132,10 +132,9 @@ internal sealed partial class MidiManager : IMidiManager
 
     private NFluidsynth.Logger.LoggerDelegate _loggerDelegate = default!;
     private ISawmill _fluidsynthSawmill = default!;
-    private float _maxCastLength;
 
-    [ViewVariables(VVAccess.ReadWrite)]
-    public int OcclusionCollisionMask { get; set; }
+    private MidiUpdateJob _updateJob;
+
 
     public MidiManager()
     {
@@ -148,18 +147,9 @@ internal sealed partial class MidiManager : IMidiManager
 
         _cfgMan.OnValueChanged(CVars.MidiVolume, value =>
         {
-            _volume = value;
+            _gain = value;
             _volumeDirty = true;
         }, true);
-
-        _cfgMan.OnValueChanged(CVars.MidiMinRendererParallel,
-            value => _minRendererParallel = value, true);
-
-        _cfgMan.OnValueChanged(CVars.MidiOcclusionUpdateDelay,
-            value => _occlusionUpdateDelay = value, true);
-
-        _cfgMan.OnValueChanged(CVars.MidiPositionUpdateDelay,
-            value => _positionUpdateDelay = value, true);
 
         _midiSawmill = _logger.GetSawmill("midi");
 #if DEBUG
@@ -202,7 +192,12 @@ internal sealed partial class MidiManager : IMidiManager
             _settings["synth.midi-bank-select"].StringValue = "gm";
             //_settings["synth.verbose"].IntValue = 1; // Useful for debugging.
 
-            _parallel.AddAndInvokeParallelCountChanged(UpdateParallelCount);
+            var midiParallel = _cfgMan.GetCVar(CVars.MidiParallelism);
+            _settings["synth.polyphony"].IntValue = Math.Clamp(1024 + (int)(Math.Log2(midiParallel) * 2048), 1, 65535);
+            _settings["synth.cpu-cores"].IntValue = Math.Clamp(midiParallel, 1, 256);
+
+            _midiSawmill.Debug($"Synth Cores: {_settings["synth.cpu-cores"].IntValue}");
+            _midiSawmill.Debug($"Synth Polyphony: {_settings["synth.polyphony"].IntValue}");
         }
         catch (Exception e)
         {
@@ -211,30 +206,25 @@ internal sealed partial class MidiManager : IMidiManager
             return;
         }
 
-        _midiThread = new Thread(ThreadUpdate);
+        _midiThread = new Thread(ThreadUpdate)
+        {
+            Name = "RobustToolbox MIDI Thread"
+        };
         _midiThread.Start();
 
+        _updateJob = new MidiUpdateJob()
+        {
+            Manager = this,
+            Renderers = _renderers,
+        };
+
+        _audioSys = _entityManager.EntitySysManager.GetEntitySystem<AudioSystem>();
         _broadPhaseSystem = _entityManager.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>();
-        _cfgMan.OnValueChanged(CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
+        _xformSystem = _entityManager.System<SharedTransformSystem>();
+        _entityManager.GetEntityQuery<PhysicsComponent>();
+        _entityManager.GetEntityQuery<TransformComponent>();
 
         FluidsynthInitialized = true;
-    }
-
-    private void UpdateParallelCount()
-    {
-        if (_settings == null)
-            return;
-
-        _settings["synth.polyphony"].IntValue = Math.Clamp(1024 + (int)(Math.Log2(_parallel.ParallelProcessCount) * 2048), 1, 65535);
-        _settings["synth.cpu-cores"].IntValue = Math.Clamp(_parallel.ParallelProcessCount, 1, 256);
-
-        _midiSawmill.Debug($"Synth Cores: {_settings["synth.cpu-cores"].IntValue}");
-        _midiSawmill.Debug($"Synth Polyphony: {_settings["synth.polyphony"].IntValue}");
-    }
-
-    private void OnRaycastLengthChanged(float value)
-    {
-        _maxCastLength = value;
     }
 
     private void LoggerDelegate(NFluidsynth.Logger.LogLevel level, string message, IntPtr data)
@@ -273,7 +263,7 @@ internal sealed partial class MidiManager : IMidiManager
         {
             soundfontLoader.SetCallbacks(_soundfontLoaderCallbacks);
 
-            var renderer = new MidiRenderer(_settings!, soundfontLoader, mono, this, _clydeAudio, _taskManager, _midiSawmill);
+            var renderer = new MidiRenderer(_settings!, soundfontLoader, mono, this, _audio, _taskManager, _midiSawmill);
 
             _midiSawmill.Debug($"Loading fallback soundfont {FallbackSoundfont}");
             // Since the last loaded soundfont takes priority, we load the fallback soundfont before the soundfont.
@@ -351,7 +341,7 @@ internal sealed partial class MidiManager : IMidiManager
                 renderer.LoadSoundfont(file.ToString());
             }
 
-            renderer.Source.SetVolume(Volume);
+            renderer.Source.Gain = _gain;
 
             lock (_renderers)
             {
@@ -372,112 +362,125 @@ internal sealed partial class MidiManager : IMidiManager
             return;
         }
 
-        // Update positions of streams every frame.
+        if (_nextUpdate > _timing.RealTime)
+            return;
+
+        _nextUpdate = _timing.RealTime + _updateFrequency;
+
+        // Update positions of streams occasionally.
         // This has a lot of code duplication with AudioSystem.FrameUpdate(), and they should probably be combined somehow.
+        // so TRUE
 
-        lock (_renderers)
-        {
-            if (_renderers.Count == 0)
-                return;
+        _updateJob.OurPosition = _audioSys.GetListenerCoordinates();
 
-            var transQuery = _entityManager.GetEntityQuery<TransformComponent>();
-            var physicsQuery = _entityManager.GetEntityQuery<PhysicsComponent>();
-            var opts = new ParallelOptions { MaxDegreeOfParallelism = _parallel.ParallelProcessCount };
+        // This semaphore is here to avoid lock contention as much as possible.
+        _updateSemaphore.Wait();
 
-            if (_renderers.Count > _minRendererParallel)
-            {
-                Parallel.ForEach(_renderers, opts, renderer => UpdateRenderer(renderer, transQuery, physicsQuery));
-            }
-            else
-            {
-                foreach (var renderer in _renderers)
-                {
-                    UpdateRenderer(renderer, transQuery, physicsQuery);
-                }
-            }
+        // The ONLY time this should be contested is with ThreadUpdate.
+        // If that becomes NOT the case then just lock this, remove the semaphore, and drop the update frequency even harder.
+        // ReSharper disable once InconsistentlySynchronizedField
+        _parallel.ProcessNow(_updateJob, _renderers.Count);
 
-        }
-
-        if (_nextOcclusionUpdate < _timing.RealTime)
-            _nextOcclusionUpdate = _timing.RealTime.Add(TimeSpan.FromSeconds(_occlusionUpdateDelay));
-
-        if (_nextPositionUpdate < _timing.RealTime)
-            _nextPositionUpdate = _timing.RealTime.Add(TimeSpan.FromSeconds(_positionUpdateDelay));
+        _updateSemaphore.Release();
 
         _volumeDirty = false;
     }
-    private void UpdateRenderer(IMidiRenderer renderer, EntityQuery<TransformComponent> transQuery,
-        EntityQuery<PhysicsComponent> physicsQuery)
+
+    private void UpdateRenderer(IMidiRenderer renderer, MapCoordinates listener)
     {
+        // TODO: This should be sharing more code with AudioSystem.
         try
         {
             if (renderer.Disposed)
                 return;
 
             if (_volumeDirty)
-                renderer.Source.SetVolume(Volume);
+            {
+                renderer.Source.Gain = Gain;
+            }
 
             if (!renderer.Mono)
             {
-                renderer.Source.SetGlobal();
+                renderer.Source.Global = true;
                 return;
             }
 
-            if (_nextPositionUpdate < _timing.RealTime)
+            MapCoordinates mapPos;
+
+            if (renderer.TrackingEntity is {} trackedEntity && !_entityManager.Deleted(trackedEntity))
             {
-                if (renderer.TrackingEntity is {} trackedEntity && !_entityManager.Deleted(trackedEntity))
+                renderer.TrackingCoordinates = _xformSystem.GetMapCoordinates(renderer.TrackingEntity.Value);
+
+                // Pause it if the attached entity is paused.
+                if (_entityManager.IsPaused(renderer.TrackingEntity))
                 {
-                    renderer.TrackingCoordinates = transQuery.GetComponent(renderer.TrackingEntity!.Value).MapPosition;
-                }
-                else if (renderer.TrackingCoordinates == null)
-                {
+                    renderer.Source.Pause();
                     return;
                 }
-
-                if (!renderer.Source.SetPosition(renderer.TrackingCoordinates.Value.Position))
-                {
-                    return;
-                }
-
-                var vel = _broadPhaseSystem.GetMapLinearVelocity(renderer.TrackingEntity!.Value,
-                    xformQuery: transQuery, physicsQuery: physicsQuery);
-                renderer.Source.SetVelocity(vel);
+            }
+            else if (renderer.TrackingCoordinates == null)
+            {
+                renderer.Source.Pause();
+                return;
             }
 
-            if (renderer.TrackingCoordinates != null && renderer.TrackingCoordinates.Value.MapId == _eyeManager.CurrentMap)
+            mapPos = renderer.TrackingCoordinates.Value;
+
+            // If it's on a different map then just mute it, not pause.
+            if (mapPos.MapId == MapId.Nullspace || mapPos.MapId != listener.MapId)
             {
-                if (_nextOcclusionUpdate >= _timing.RealTime)
-                    return;
+                renderer.Source.Gain = 0f;
+                return;
+            }
 
-                var pos = renderer.TrackingCoordinates.Value;
+            // Was previously muted maybe so try unmuting it?
+            if (renderer.Source.Gain == 0f)
+            {
+                renderer.Source.Gain = Gain;
+            }
 
-                var sourceRelative = pos.Position - _eyeManager.CurrentEye.Position.Position;
-                var occlusion = 0f;
-                if (sourceRelative.Length() > 0)
-                {
-                    occlusion = _broadPhaseSystem.IntersectRayPenetration(
-                        pos.MapId,
-                        new CollisionRay(
-                            _eyeManager.CurrentEye.Position.Position,
-                            sourceRelative.Normalized(),
-                            OcclusionCollisionMask),
-                        MathF.Min(sourceRelative.Length(), _maxCastLength),
-                        renderer.TrackingEntity);
-                }
+            var worldPos = mapPos.Position;
+            var delta = worldPos - listener.Position;
+            var distance = delta.Length();
 
-                renderer.Source.SetOcclusion(occlusion);
+            // Update position
+            // Out of range so just clip it for us.
+            if (distance > renderer.Source.MaxDistance)
+            {
+                // Still keeps the source playing, just with no volume.
+                renderer.Source.Gain = 0f;
+                return;
+            }
+
+            // Same imprecision suppression as audiosystem.
+            if (distance > 0f && distance < 0.01f)
+            {
+                worldPos = listener.Position;
+                delta = Vector2.Zero;
+                distance = 0f;
+            }
+
+            renderer.Source.Position = worldPos;
+
+            // Update velocity (doppler).
+            if (!_entityManager.Deleted(renderer.TrackingEntity))
+            {
+                var velocity = _broadPhaseSystem.GetMapLinearVelocity(renderer.TrackingEntity.Value);
+                renderer.Source.Velocity = velocity;
             }
             else
             {
-                renderer.Source.SetOcclusion(float.MaxValue);
+                renderer.Source.Velocity = Vector2.Zero;
             }
 
+            // Update occlusion
+            var occlusion = _audioSys.GetOcclusion(listener, delta, distance, renderer.TrackingEntity);
+            renderer.Source.Occlusion = occlusion;
         }
         catch (Exception ex)
         {
             _runtime.LogException(ex, _midiSawmill.Name);
         }
-
     }
 
     /// <summary>
@@ -489,21 +492,39 @@ internal sealed partial class MidiManager : IMidiManager
         {
             lock (_renderers)
             {
+                var toRemove = new ValueList<IMidiRenderer>();
+
                 for (var i = 0; i < _renderers.Count; i++)
                 {
                     var renderer = _renderers[i];
-                    if (!renderer.Disposed)
-                    {
-                        if (renderer.Master is { Disposed: true })
-                            renderer.Master = null;
 
-                        renderer.Render();
+                    lock (renderer)
+                    {
+                        if (!renderer.Disposed)
+                        {
+                            if (renderer.Master is { Disposed: true })
+                                renderer.Master = null;
+
+                            renderer.Render();
+                        }
+                        else
+                        {
+                            toRemove.Add(renderer);
+                        }
                     }
-                    else
+                }
+
+                if (toRemove.Count > 0)
+                {
+                    _updateSemaphore.Wait();
+
+                    foreach (var renderer in toRemove)
                     {
                         renderer.InternalDispose();
                         _renderers.Remove(renderer);
                     }
+
+                    _updateSemaphore.Release();
                 }
             }
 
@@ -674,4 +695,31 @@ internal sealed partial class MidiManager : IMidiManager
 
         }
     }
+
+    #region Jobs
+
+    private record struct MidiUpdateJob : IParallelRobustJob
+    {
+        public int MinimumBatchParallel => 2;
+
+        public int BatchSize => 1;
+
+        public MidiManager Manager;
+
+        public MapCoordinates OurPosition;
+        public List<IMidiRenderer> Renderers;
+
+        public void Execute(int index)
+        {
+            // The indices shouldn't be able to be touched while this job is running, just the renderer itself getting locked.
+            var renderer = Renderers[index];
+
+            lock (renderer)
+            {
+                Manager.UpdateRenderer(renderer, OurPosition);
+            }
+        }
+    }
+
+    #endregion
 }

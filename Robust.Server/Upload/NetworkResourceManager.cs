@@ -5,6 +5,7 @@ using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
+using Robust.Shared.Player;
 using Robust.Shared.Upload;
 using Robust.Shared.ViewVariables;
 
@@ -17,7 +18,7 @@ public sealed class NetworkResourceManager : SharedNetworkResourceManager
     [Dependency] private readonly IConfigurationManager _cfgManager = default!;
     [Dependency] private readonly IConGroupController _controller = default!;
 
-    public event Action<IPlayerSession, NetworkResourceUploadMessage>? OnResourceUploaded;
+    public event Action<ICommonSession, NetworkResourceUploadMessage>? OnResourceUploaded;
 
     [ViewVariables] public bool Enabled { get; private set; } = true;
     [ViewVariables] public float SizeLimit { get; private set; }
@@ -26,7 +27,6 @@ public sealed class NetworkResourceManager : SharedNetworkResourceManager
     {
         base.Initialize();
 
-        _serverNetManager.Connected += ServerNetManagerOnConnected;
         _cfgManager.OnValueChanged(CVars.ResourceUploadingEnabled, value => Enabled = value, true);
         _cfgManager.OnValueChanged(CVars.ResourceUploadingLimitMb, value => SizeLimit = value, true);
     }
@@ -64,14 +64,14 @@ public sealed class NetworkResourceManager : SharedNetworkResourceManager
         OnResourceUploaded?.Invoke(session, msg);
     }
 
-    private void ServerNetManagerOnConnected(object? sender, NetChannelArgs e)
+    internal void SendToNewUser(INetChannel channel)
     {
         foreach (var (path, data) in ContentRoot.GetAllFiles())
         {
             var msg = new NetworkResourceUploadMessage();
             msg.RelativePath = path;
             msg.Data = data;
-            e.Channel.SendMessage(msg);
+            channel.SendMessage(msg);
         }
     }
 }

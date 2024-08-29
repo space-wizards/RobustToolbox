@@ -9,7 +9,10 @@ using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared;
 using Robust.Shared.Enums;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Graphics;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
 using Robust.Shared.Utility;
@@ -249,10 +252,8 @@ namespace Robust.Client.Graphics.Clyde
         private void DrawEntities(Viewport viewport, Box2Rotated worldBounds, Box2 worldAABB, IEye eye)
         {
             var mapId = eye.Position.MapId;
-            if (mapId == MapId.Nullspace || !_mapManager.HasMapEntity(mapId))
-            {
+            if (mapId == MapId.Nullspace)
                 return;
-            }
 
             RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowEntities, worldAABB, worldBounds);
             var worldOverlays = GetOverlaysForSpace(OverlaySpace.WorldSpaceEntities);
@@ -349,7 +350,7 @@ namespace Robust.Client.Graphics.Clyde
                         _renderHandle.Viewport(Box2i.FromDimensions(-flippedPos, screenSize));
 
                         if (entry.Sprite.RaiseShaderEvent)
-                            _entityManager.EventBus.RaiseLocalEvent(entry.Sprite.Owner,
+                            _entityManager.EventBus.RaiseLocalEvent(entry.Uid,
                                 new BeforePostShaderRenderEvent(entry.Sprite, viewport), false);
                     }
                 }
@@ -367,7 +368,7 @@ namespace Robust.Client.Graphics.Clyde
                     _renderHandle.UseShader(entry.Sprite.PostShader);
                     CalcScreenMatrices(viewport.Size, out var proj, out var view);
                     _renderHandle.SetProjView(proj, view);
-                    _renderHandle.SetModelTransform(Matrix3.Identity);
+                    _renderHandle.SetModelTransform(Matrix3x2.Identity);
 
                     var rounded = roundedPos - entityPostRenderTarget.Size / 2;
 
@@ -480,7 +481,7 @@ namespace Robust.Client.Graphics.Clyde
                 var worldBounds = CalcWorldBounds(viewport);
                 var worldAABB = worldBounds.CalcBoundingBox();
 
-                if (_eyeManager.CurrentMap != MapId.Nullspace)
+                if (eye.Position.MapId != MapId.Nullspace)
                 {
                     using (DebugGroup("Lights"))
                     using (_prof.Group("Lights"))
@@ -496,7 +497,7 @@ namespace Robust.Client.Graphics.Clyde
                     using (DebugGroup("Grids"))
                     using (_prof.Group("Grids"))
                     {
-                        _drawGrids(viewport, worldBounds, eye);
+                        _drawGrids(viewport, worldAABB, worldBounds, eye);
                     }
 
                     // We will also render worldspace overlays here so we can do them under / above entities as necessary
@@ -511,9 +512,11 @@ namespace Robust.Client.Graphics.Clyde
                         RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowFOV, worldAABB, worldBounds);
                     }
 
-                    if (_lightManager.Enabled && _lightManager.DrawHardFov && eye.DrawFov)
+                    if (_lightManager.Enabled && _lightManager.DrawHardFov && eye.DrawLight && eye.DrawFov)
                     {
-                        ApplyFovToBuffer(viewport, eye);
+                        var mapUid = _mapSystem.GetMap(eye.Position.MapId);
+                        if (_entityManager.GetComponent<MapComponent>(mapUid).LightingEnabled)
+                            ApplyFovToBuffer(viewport, eye);
                     }
                 }
 
@@ -528,7 +531,7 @@ namespace Robust.Client.Graphics.Clyde
                     // Because the math is wrong.
                     // So there are distortions from incorrect projection.
                     _renderHandle.UseShader(_fovDebugShaderInstance);
-                    _renderHandle.DrawingHandleScreen.SetTransform(Matrix3.Identity);
+                    _renderHandle.DrawingHandleScreen.SetTransform(Matrix3x2.Identity);
                     var pos = UIBox2.FromDimensions(viewport.Size / 2 - new Vector2(200, 200), new Vector2(400, 400));
                     _renderHandle.DrawingHandleScreen.DrawTextureRect(FovTexture, pos);
                 }
@@ -536,15 +539,18 @@ namespace Robust.Client.Graphics.Clyde
                 if (DebugLayers == ClydeDebugLayers.Light)
                 {
                     _renderHandle.UseShader(null);
-                    _renderHandle.DrawingHandleScreen.SetTransform(Matrix3.Identity);
+                    _renderHandle.DrawingHandleScreen.SetTransform(Matrix3x2.Identity);
                     _renderHandle.DrawingHandleScreen.DrawTextureRect(
                         viewport.WallBleedIntermediateRenderTarget2.Texture,
                         UIBox2.FromDimensions(Vector2.Zero, viewport.Size), new Color(1, 1, 1, 0.5f));
                 }
 
-                using (_prof.Group("Overlays WS"))
+                if (eye.Position.MapId != MapId.Nullspace)
                 {
-                    RenderOverlays(viewport, OverlaySpace.WorldSpace, worldAABB, worldBounds);
+                    using (_prof.Group("Overlays WS"))
+                    {
+                        RenderOverlays(viewport, OverlaySpace.WorldSpace, worldAABB, worldBounds);
+                    }
                 }
 
                 _currentViewport = oldVp;

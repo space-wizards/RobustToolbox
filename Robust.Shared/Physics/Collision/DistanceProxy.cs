@@ -28,6 +28,7 @@ using System.Runtime.InteropServices;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision.Shapes;
+using Robust.Shared.Physics.Shapes;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Collision;
@@ -61,23 +62,30 @@ internal ref struct DistanceProxy
                 break;
 
             case ShapeType.Polygon:
-                var polygon = (PolygonShape) shape;
-                Vertices = polygon.Vertices;
-                Radius = polygon.Radius;
+                if (shape is Polygon poly)
+                {
+                    Vertices = poly.Vertices;
+                    Radius = poly.Radius;
+                }
+                else
+                {
+                    var polyShape = (PolygonShape) shape;
+                    Vertices = polyShape.Vertices;
+                    Radius = polyShape.Radius;
+                }
+
                 break;
 
             case ShapeType.Chain:
-                throw new NotImplementedException();
-            /*
-            ChainShape chain = (ChainShape) shape;
-            Debug.Assert(0 <= index && index < chain.Vertices.Count);
-            Vertices.Clear();
-            Vertices.Add(chain.Vertices[index]);
-            Vertices.Add(index + 1 < chain.Vertices.Count ? chain.Vertices[index + 1] : chain.Vertices[0]);
+                ChainShape chain = (ChainShape) shape;
+                Debug.Assert(0 <= index && index < chain.Vertices.Length);
 
-            Radius = chain.Radius;
-            */
+                Buffer._00 = chain.Vertices[index];
+                Buffer._01 = index + 1 < chain.Vertices.Length ? chain.Vertices[index + 1] : chain.Vertices[0];
+                Vertices = Buffer.AsSpan;
 
+                Radius = chain.Radius;
+                break;
             case ShapeType.Edge:
                 EdgeShape edge = (EdgeShape) shape;
 

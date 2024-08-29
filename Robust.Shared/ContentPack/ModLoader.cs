@@ -325,19 +325,23 @@ namespace Robust.Shared.ContentPack
             {
                 lock (_lock)
                 {
-                    Sawmill.Debug("ResolvingAssembly {0}", name);
+                    Sawmill.Verbose("ResolvingAssembly {0}", name);
 
                     // Try main modules.
                     foreach (var mod in Mods)
                     {
                         if (mod.GameAssembly.FullName == name.FullName)
                         {
+                            Sawmill.Verbose($"Found assembly in modloader ALC: {mod.GameAssembly}");
                             return mod.GameAssembly;
                         }
                     }
 
                     if (TryLoadExtra(name) is { } asm)
+                    {
+                        Sawmill.Verbose($"Found assembly through extra loader: {asm}");
                         return asm;
+                    }
 
                     // Do not allow sideloading when sandboxing is enabled.
                     // Side loaded assemblies would not be checked for sandboxing currently, so we can't have that.
@@ -347,18 +351,42 @@ namespace Robust.Shared.ContentPack
                         {
                             if (assembly.FullName == name.FullName)
                             {
+                                Sawmill.Verbose($"Found assembly in existing side modules: {assembly}");
                                 return assembly;
                             }
+                        }
+
+                        // Try to resolve assemblies in the default AssemblyLoadContext.
+                        // If we don't do this manually, the sideloading code below could load assemblies from content,
+                        // even if Robust provides its own versions.
+                        // This can lead to:
+                        // * Multiple copies of the same assembly being loaded.
+                        // * Mismatching versions of dependencies being loaded.
+                        //   * e.g. Microsoft.Extensions.Primitives 6.0 with Microsoft.Extensions.DependencyInjection 7.0
+                        //
+                        // Now, to be clear, this is 100% an error in packaging. But it's also one that's really easy to make.
+                        //
+                        try
+                        {
+                            var defaultAssembly = AssemblyLoadContext.Default.LoadFromAssemblyName(new AssemblyName(name.Name!));
+                            Sawmill.Verbose($"Found assembly through default ALC (early): {defaultAssembly}");
+                            return defaultAssembly;
+                        }
+                        catch
+                        {
+                             // Assume assembly not loadable from Robust's directory, proceed with loading from content.
                         }
 
                         if (_res.TryContentFileRead($"/Assemblies/{name.Name}.dll", out var dll))
                         {
                             var assembly = _loadContext.LoadFromStream(dll);
                             _sideModules.Add(assembly);
+                            Sawmill.Verbose($"Found assembly in NEW side module: {assembly}");
                             return assembly;
                         }
                     }
 
+                    Sawmill.Verbose("Did not find assembly directly. Should fall back to default ALC.");
                     return null;
                 }
             }
@@ -381,7 +409,7 @@ namespace Robust.Shared.ContentPack
             // Otherwise it would load the assemblies a second time which is an amazing way to have everything break.
             if (_useLoadContext)
             {
-                Sawmill.Debug($"RESOLVING DEFAULT: {name}");
+                Sawmill.Verbose($"RESOLVING DEFAULT: {name}");
                 foreach (var module in LoadedModules)
                 {
                     if (module.GetName().Name == name.Name)

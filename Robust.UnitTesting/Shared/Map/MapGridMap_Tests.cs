@@ -22,7 +22,7 @@ public sealed class MapGridMap_Tests
         var entManager = sim.Resolve<IEntityManager>();
         var mapManager = sim.Resolve<IMapManager>();
 
-        var mapId = mapManager.CreateMap();
+        var mapId = sim.CreateMap().MapId;
         Assert.That(!mapManager.FindGridsIntersecting(mapId, Box2.UnitCentered).Any());
 
         entManager.AddComponent<MapGridComponent>(mapManager.GetMapEntityId(mapId));
@@ -40,8 +40,8 @@ public sealed class MapGridMap_Tests
         var entManager = sim.Resolve<IEntityManager>();
         var mapManager = sim.Resolve<IMapManager>();
 
-        var mapId = mapManager.CreateMap();
-        var grid = mapManager.CreateGrid(mapId);
+        var mapId = sim.CreateMap().MapId;
+        mapManager.CreateGridEntity(mapId);
 
         Assert.DoesNotThrow(() =>
         {

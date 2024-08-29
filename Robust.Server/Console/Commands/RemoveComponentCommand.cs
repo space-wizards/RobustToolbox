@@ -22,11 +22,13 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            if (!EntityUid.TryParse(args[0], out var uid))
+            if (!NetEntity.TryParse(args[0], out var netEntity))
             {
-                shell.WriteLine($"{uid} is not a valid entity uid.");
+                shell.WriteLine($"{netEntity} is not a valid entity uid.");
                 return;
             }
+
+            var uid = _entityManager.GetEntity(netEntity);
 
             if (!_entityManager.EntityExists(uid))
             {

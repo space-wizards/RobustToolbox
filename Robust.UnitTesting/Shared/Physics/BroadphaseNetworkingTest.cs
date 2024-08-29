@@ -2,7 +2,6 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Robust.Server.Player;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
@@ -14,8 +13,7 @@ using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Systems;
-using cIPlayerManager = Robust.Client.Player.IPlayerManager;
-using sIPlayerManager = Robust.Server.Player.IPlayerManager;
+using Robust.Shared.Player;
 
 // ReSharper disable AccessToStaticMemberViaDerivedType
 
@@ -42,8 +40,8 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
         var cEntMan = client.ResolveDependency<IEntityManager>();
         var netMan = client.ResolveDependency<IClientNetManager>();
         var confMan = server.ResolveDependency<IConfigurationManager>();
-        var cPlayerMan = client.ResolveDependency<cIPlayerManager>();
-        var sPlayerMan = server.ResolveDependency<sIPlayerManager>();
+        var cPlayerMan = client.ResolveDependency<ISharedPlayerManager>();
+        var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
         var fixturesSystem = sEntMan.EntitySysManager.GetEntitySystem<FixtureSystem>();
         var physicsSystem = sEntMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>();
 
@@ -62,12 +60,13 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
         EntityUid map1 = default;
         await server.WaitPost(() =>
         {
-            var mapId = mapMan.CreateMap();
-            map1 = mapMan.GetMapEntityId(mapId);
-            var gridComp = mapMan.CreateGrid(mapId);
-            gridComp.SetTile(Vector2i.Zero, new Tile(1));
-            grid1 = gridComp.Owner;
+            map1 = sEntMan.System<SharedMapSystem>().CreateMap(out var mapId);
+            var gridEnt = mapMan.CreateGridEntity(mapId);
+            gridEnt.Comp.SetTile(Vector2i.Zero, new Tile(1));
+            grid1 = gridEnt.Owner;
         });
+
+        var map1Net = sEntMan.GetNetEntity(map1);
 
         // Spawn player entity on grid 1
         EntityUid player = default;
@@ -88,10 +87,12 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
             Assert.That(physics.CanCollide);
 
             // Attach player.
-            var session = (IPlayerSession) sPlayerMan.Sessions.First();
-            session.AttachToEntity(player);
-            session.JoinGame();
+            var session = sPlayerMan.Sessions.First();
+            server.PlayerMan.SetAttachedEntity(session, player);
+            sPlayerMan.JoinGame(session);
         });
+
+        var playerNet = sEntMan.GetNetEntity(player);
 
         for (int i = 0; i < 10; i++)
         {
@@ -102,20 +103,26 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
         // Check player got properly attached
         await client.WaitPost(() =>
         {
-            var ent = cPlayerMan.LocalPlayer?.ControlledEntity;
-            Assert.That(ent, Is.EqualTo(player));
+            var ent = cEntMan.GetNetEntity(cPlayerMan.LocalEntity);
+            Assert.That(ent, Is.EqualTo(playerNet));
         });
 
         var sPlayerXform = sEntMan.GetComponent<TransformComponent>(player);
-        var cPlayerXform = cEntMan.GetComponent<TransformComponent>(player);
+        var cPlayerXform = cEntMan.GetComponent<TransformComponent>(cEntMan.GetEntity(playerNet));
 
         // Client initially has correct transform data.
         var broadphase = new BroadphaseData(grid1, map1, true, false);
-        Assert.That(cPlayerXform.GridUid, Is.EqualTo(grid1));
+        var grid1Net = sEntMan.GetNetEntity(grid1);
+
+        Assert.That(cPlayerXform.GridUid, Is.EqualTo(cEntMan.GetEntity(grid1Net)));
         Assert.That(sPlayerXform.GridUid, Is.EqualTo(grid1));
-        Assert.That(cPlayerXform.MapUid, Is.EqualTo(map1));
+        Assert.That(cPlayerXform.MapUid, Is.EqualTo(cEntMan.GetEntity(map1Net)));
         Assert.That(sPlayerXform.MapUid, Is.EqualTo(map1));
-        Assert.That(cPlayerXform.Broadphase, Is.EqualTo(broadphase));
+
+        Assert.That(cPlayerXform.Broadphase?.Uid, Is.EqualTo(cEntMan.GetEntity(sEntMan.GetNetEntity(broadphase.Uid))));
+        Assert.That(cPlayerXform.Broadphase?.PhysicsMap, Is.EqualTo(cEntMan.GetEntity(sEntMan.GetNetEntity(broadphase.PhysicsMap))));
+        Assert.That(cPlayerXform.Broadphase?.Static, Is.EqualTo(broadphase.Static));
+        Assert.That(cPlayerXform.Broadphase?.CanCollide, Is.EqualTo(broadphase.CanCollide));
         Assert.That(sPlayerXform.Broadphase, Is.EqualTo(broadphase));
 
         // Set up maps 2 & grid 2 and move the player there (in the same tick).
@@ -124,17 +131,19 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
         await server.WaitPost(() =>
         {
             // Create grid
-            var mapId = mapMan.CreateMap();
-            map2 = mapMan.GetMapEntityId(mapId);
-            var gridComp = mapMan.CreateGrid(mapId);
-            gridComp.SetTile(Vector2i.Zero, new Tile(1));
-            grid2 = gridComp.Owner;
+            map2 = sEntMan.System<SharedMapSystem>().CreateMap(out var mapId);
+            var gridEnt = mapMan.CreateGridEntity(mapId);
+            gridEnt.Comp.SetTile(Vector2i.Zero, new Tile(1));
+            grid2 = gridEnt.Owner;
 
             // Move player
             var coords = new EntityCoordinates(grid2, Vector2.Zero);
             sEntMan.System<SharedTransformSystem>().SetCoordinates(player, coords);
 
         });
+
+        var grid2Net = sEntMan.GetNetEntity(grid2);
+        var map2Net = sEntMan.GetNetEntity(map2);
 
         for (int i = 0; i < 10; i++)
         {
@@ -144,11 +153,15 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
 
         // Player & server xforms should match.
         broadphase = new BroadphaseData(grid2, map2, true, false);
-        Assert.That(cPlayerXform.GridUid, Is.EqualTo(grid2));
+        Assert.That(cEntMan.GetNetEntity(cPlayerXform.GridUid), Is.EqualTo(grid2Net));
         Assert.That(sPlayerXform.GridUid, Is.EqualTo(grid2));
-        Assert.That(cPlayerXform.MapUid, Is.EqualTo(map2));
+        Assert.That(cEntMan.GetNetEntity(cPlayerXform.MapUid), Is.EqualTo(map2Net));
         Assert.That(sPlayerXform.MapUid, Is.EqualTo(map2));
-        Assert.That(cPlayerXform.Broadphase, Is.EqualTo(broadphase));
+
+        Assert.That(cPlayerXform.Broadphase?.Uid, Is.EqualTo(cEntMan.GetEntity(sEntMan.GetNetEntity(broadphase.Uid))));
+        Assert.That(cPlayerXform.Broadphase?.PhysicsMap, Is.EqualTo(cEntMan.GetEntity(sEntMan.GetNetEntity(broadphase.PhysicsMap))));
+        Assert.That(cPlayerXform.Broadphase?.Static, Is.EqualTo(broadphase.Static));
+        Assert.That(cPlayerXform.Broadphase?.CanCollide, Is.EqualTo(broadphase.CanCollide));
         Assert.That(sPlayerXform.Broadphase, Is.EqualTo(broadphase));
     }
 }

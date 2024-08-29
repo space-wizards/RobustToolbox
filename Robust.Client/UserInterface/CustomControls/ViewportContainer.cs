@@ -155,17 +155,17 @@ namespace Robust.Client.UserInterface.CustomControls
             return WorldToLocalPixel(point) + GlobalPixelPosition;
         }
 
-        public Matrix3 GetWorldToScreenMatrix()
+        public Matrix3x2 GetWorldToScreenMatrix()
         {
             if (Viewport == null)
-                return Matrix3.Identity;
+                return Matrix3x2.Identity;
 
             return Viewport.GetWorldToLocalMatrix() * GetLocalToScreenMatrix();
         }
 
-        public Matrix3 GetLocalToScreenMatrix()
+        public Matrix3x2 GetLocalToScreenMatrix()
         {
-            return Matrix3.CreateTransform(GlobalPixelPosition, 0, Vector2.One / _viewportResolution);
+            return Matrix3Helpers.CreateTransform(GlobalPixelPosition, 0, Vector2.One / _viewportResolution);
         }
     }
 }

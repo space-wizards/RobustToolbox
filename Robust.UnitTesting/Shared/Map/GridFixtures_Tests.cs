@@ -14,6 +14,7 @@ namespace Robust.UnitTesting.Shared.Map
     /// <summary>
     /// Tests whether grid fixtures are being generated correctly.
     /// </summary>
+    [Parallelizable(ParallelScope.All)]
     [TestFixture]
     public sealed class GridFixtures_Tests : RobustIntegrationTest
     {
@@ -29,17 +30,17 @@ namespace Robust.UnitTesting.Shared.Map
 
             await server.WaitAssertion(() =>
             {
-                var mapId = mapManager.CreateMap();
-                var grid = mapManager.CreateGrid(mapId);
+                entManager.System<SharedMapSystem>().CreateMap(out var mapId);
+                var grid = mapManager.CreateGridEntity(mapId);
 
                 // Should be nothing if grid empty
-                Assert.That(entManager.TryGetComponent(grid.Owner, out PhysicsComponent? gridBody));
-                Assert.That(entManager.TryGetComponent(grid.Owner, out FixturesComponent? manager));
+                Assert.That(entManager.TryGetComponent(grid, out PhysicsComponent? gridBody));
+                Assert.That(entManager.TryGetComponent(grid, out FixturesComponent? manager));
                 Assert.That(manager!.FixtureCount, Is.EqualTo(0));
                 Assert.That(gridBody!.BodyType, Is.EqualTo(BodyType.Static));
 
                 // 1 fixture if we only ever update the 1 chunk
-                grid.SetTile(Vector2i.Zero, new Tile(1));
+                grid.Comp.SetTile(Vector2i.Zero, new Tile(1));
 
                 Assert.That(manager.FixtureCount, Is.EqualTo(1));
                 // Also should only be a single tile.
@@ -48,7 +49,7 @@ namespace Robust.UnitTesting.Shared.Map
                 Assert.That(MathHelper.CloseToPercent(Box2.Area(bounds), 1.0f, 0.1f));
 
                 // Now do 2 tiles (same chunk)
-                grid.SetTile(new Vector2i(0, 1), new Tile(1));
+                grid.Comp.SetTile(new Vector2i(0, 1), new Tile(1));
 
                 Assert.That(manager.FixtureCount, Is.EqualTo(1));
                 bounds = manager.Fixtures.First().Value.Shape.ComputeAABB(new Transform(Vector2.Zero, (float) Angle.Zero.Theta), 0);
@@ -57,10 +58,10 @@ namespace Robust.UnitTesting.Shared.Map
                 Assert.That(MathHelper.CloseToPercent(Box2.Area(bounds), 2.0f, 0.1f));
 
                 // If we add a new chunk should be 2 now
-                grid.SetTile(new Vector2i(0, -1), new Tile(1));
+                grid.Comp.SetTile(new Vector2i(0, -1), new Tile(1));
                 Assert.That(manager.FixtureCount, Is.EqualTo(2));
 
-                physSystem.SetLinearVelocity(grid.Owner, Vector2.One, manager: manager, body: gridBody);
+                physSystem.SetLinearVelocity(grid, Vector2.One, manager: manager, body: gridBody);
                 Assert.That(gridBody.LinearVelocity.Length, Is.EqualTo(0f));
             });
         }

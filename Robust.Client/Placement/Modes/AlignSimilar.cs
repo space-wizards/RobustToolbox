@@ -34,7 +34,7 @@ namespace Robust.Client.Placement.Modes
 
             var snapToEntities = EntitySystem.Get<EntityLookupSystem>().GetEntitiesInRange(MouseCoords, SnapToRange)
                 .Where(entity => pManager.EntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype == pManager.CurrentPrototype && pManager.EntityManager.GetComponent<TransformComponent>(entity).MapID == mapId)
-                .OrderBy(entity => (pManager.EntityManager.GetComponent<TransformComponent>(entity).WorldPosition - MouseCoords.ToMapPos(pManager.EntityManager)).LengthSquared())
+                .OrderBy(entity => (pManager.EntityManager.GetComponent<TransformComponent>(entity).WorldPosition - MouseCoords.ToMapPos(pManager.EntityManager, pManager.EntityManager.System<SharedTransformSystem>())).LengthSquared())
                 .ToList();
 
             if (snapToEntities.Count == 0)
@@ -44,7 +44,7 @@ namespace Robust.Client.Placement.Modes
 
             var closestEntity = snapToEntities[0];
             var closestTransform = pManager.EntityManager.GetComponent<TransformComponent>(closestEntity);
-            if (!pManager.EntityManager.TryGetComponent<SpriteComponent?>(closestEntity, out var component) || component.BaseRSI == null)
+            if (!pManager.EntityManager.TryGetComponent(closestEntity, out SpriteComponent? component) || component.BaseRSI == null)
             {
                 return;
             }

@@ -7,7 +7,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Toolshed;
 using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Utility;
@@ -20,18 +20,18 @@ public sealed class PlayerCommand : ToolshedCommand
     [Dependency] private readonly IPlayerManager _playerManager = default!;
 
     [CommandImplementation("list")]
-    public IEnumerable<IPlayerSession> Players()
-        => _playerManager.ServerSessions;
+    public IEnumerable<ICommonSession> Players()
+        => _playerManager.Sessions;
 
     [CommandImplementation("self")]
-    public IPlayerSession Self([CommandInvocationContext] IInvocationContext ctx)
+    public ICommonSession Self([CommandInvocationContext] IInvocationContext ctx)
     {
         if (ctx.Session is null)
         {
             ctx.ReportError(new NotForServerConsoleError());
         }
 
-        return (IPlayerSession)ctx.Session!;
+        return ctx.Session!;
     }
 
     [CommandImplementation("imm")]
@@ -59,15 +59,21 @@ public sealed class PlayerCommand : ToolshedCommand
     }
 
     [CommandImplementation("entity")]
-    public IEnumerable<EntityUid> GetPlayerEntity([PipedArgument] IEnumerable<IPlayerSession> sessions)
+    public IEnumerable<EntityUid> GetPlayerEntity([PipedArgument] IEnumerable<ICommonSession> sessions)
     {
         return sessions.Select(x => x.AttachedEntity).Where(x => x is not null).Cast<EntityUid>();
     }
 
     [CommandImplementation("entity")]
-    public EntityUid GetPlayerEntity([PipedArgument] IPlayerSession sessions)
+    public EntityUid GetPlayerEntity([PipedArgument] ICommonSession sessions)
     {
         return sessions.AttachedEntity ?? default;
+    }
+
+    [CommandImplementation("entity")]
+    public EntityUid GetPlayerEntity([CommandInvocationContext] IInvocationContext ctx, [CommandArgument] string username)
+    {
+        return GetPlayerEntity(Immediate(ctx, username));
     }
 }
 

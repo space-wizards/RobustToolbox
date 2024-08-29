@@ -22,6 +22,12 @@ public sealed class ComponentRegistration
     public CompIdx Idx { get; }
 
     /// <summary>
+    /// If this is true, the component will not be saved when saving a map/grid.
+    /// </summary>
+    /// <seealso cref="UnsavedComponentAttribute"/>
+    public bool Unsaved { get; }
+
+    /// <summary>
     /// ID used to reference the component type across the network.
     /// If null, no network synchronization will be available for this component.
     /// </summary>
@@ -33,16 +39,14 @@ public sealed class ComponentRegistration
     /// </summary>
     public Type Type { get; }
 
-    public ValueList<CompIdx> References;
-
     // Internal for sandboxing.
     // Avoid content passing an instance of this to ComponentFactory to get any type they want instantiated.
-    internal ComponentRegistration(string name, Type type, CompIdx idx)
+    internal ComponentRegistration(string name, Type type, CompIdx idx, bool unsaved = false)
     {
         Name = name;
         Type = type;
         Idx = idx;
-        References.Add(idx);
+        Unsaved = unsaved;
     }
 
     public override string ToString()

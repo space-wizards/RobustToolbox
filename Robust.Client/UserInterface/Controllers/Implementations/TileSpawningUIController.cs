@@ -7,6 +7,7 @@ using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Enums;
+using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Map;
@@ -129,7 +130,7 @@ public sealed class TileSpawningUIController : UIController
 
         _window.TileList.Clear();
 
-        IEnumerable<ITileDefinition> tileDefs = _tiles;
+        IEnumerable<ITileDefinition> tileDefs = _tiles.Where(def => !def.EditorHidden);
 
         if (!string.IsNullOrEmpty(searchStr))
         {

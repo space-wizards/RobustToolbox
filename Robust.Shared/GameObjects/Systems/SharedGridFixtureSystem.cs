@@ -36,8 +36,8 @@ namespace Robust.Shared.GameObjects
             base.Initialize();
             UpdatesBefore.Add(typeof(SharedBroadphaseSystem));
 
-            _cfg.OnValueChanged(CVars.GenerateGridFixtures, SetEnabled, true);
-            _cfg.OnValueChanged(CVars.GridFixtureEnlargement, SetEnlargement, true);
+            Subs.CVar(_cfg, CVars.GenerateGridFixtures, SetEnabled, true);
+            Subs.CVar(_cfg, CVars.GridFixtureEnlargement, SetEnlargement, true);
 
             SubscribeLocalEvent<GridInitializeEvent>(OnGridInit);
             SubscribeLocalEvent<RegenerateGridBoundsEvent>(OnGridBoundsRegenerate);
@@ -56,14 +56,6 @@ namespace Robust.Shared.GameObjects
             // This will also check for grid splits if applicable.
             var grid = Comp<MapGridComponent>(ev.EntityUid);
             _map.RegenerateCollision(ev.EntityUid, grid, _map.GetMapChunks(ev.EntityUid, grid).Values.ToHashSet());
-        }
-
-        public override void Shutdown()
-        {
-            base.Shutdown();
-
-            _cfg.UnsubValueChanged(CVars.GenerateGridFixtures, SetEnabled);
-            _cfg.UnsubValueChanged(CVars.GridFixtureEnlargement, SetEnlargement);
         }
 
         private void SetEnabled(bool value) => _enabled = value;
@@ -152,7 +144,10 @@ namespace Robust.Shared.GameObjects
                     poly,
                     MapGridHelpers.CollisionGroup,
                     MapGridHelpers.CollisionGroup,
-                    true) { Body = body};
+                    true)
+                {
+                    Owner = uid
+                };
 #pragma warning restore CS0618
 
                 newFixtures.Add(($"grid_chunk-{bounds.Left}-{bounds.Bottom}", newFixture));
@@ -185,7 +180,7 @@ namespace Robust.Shared.GameObjects
                 toRemove.Add((oldId, oldFixture));
             }
 
-            foreach (var (id, fixture) in toRemove)
+            foreach (var (id, fixture) in toRemove.Span)
             {
                 // TODO add a DestroyFixture() override that takes in a list.
                 // reduced broadphase lookups
@@ -199,7 +194,7 @@ namespace Robust.Shared.GameObjects
             }
 
             // Anything remaining is a new fixture (or at least, may have not serialized onto the chunk yet).
-            foreach (var (id, fixture) in newFixtures)
+            foreach (var (id, fixture) in newFixtures.Span)
             {
                 var existingFixture = _fixtures.GetFixtureOrNull(uid, id, manager: manager);
                 // Check if it's the same (otherwise remove anyway).
@@ -230,7 +225,7 @@ namespace Robust.Shared.GameObjects
     [Serializable, NetSerializable]
     public sealed class ChunkSplitDebugMessage : EntityEventArgs
     {
-        public EntityUid Grid;
+        public NetEntity Grid;
         public Dictionary<Vector2i, List<List<Vector2i>>> Nodes = new ();
         public List<(Vector2 Start, Vector2 End)> Connections = new();
     }

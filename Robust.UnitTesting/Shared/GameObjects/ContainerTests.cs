@@ -3,18 +3,14 @@ using System.Numerics;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Client.GameObjects;
-using Robust.Client.GameStates;
 using Robust.Client.Timing;
 using Robust.Server.GameObjects;
-using Robust.Server.Maps;
 using Robust.Server.Player;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Timing;
-using MapSystem = Robust.Server.GameObjects.MapSystem;
 
 // ReSharper disable AccessToStaticMemberViaDerivedType
 
@@ -28,15 +24,25 @@ namespace Robust.UnitTesting.Shared.GameObjects
         /// </summary>
         /// <returns></returns>
         [Test]
-         public async Task TestContainerNonexistantItems()
-         {
+        public async Task TestContainerNonexistantItems()
+        {
              var server = StartServer();
              var client = StartClient();
 
              await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
 
+             var cEntManager = client.ResolveDependency<IEntityManager>();
+             var clientNetManager = client.ResolveDependency<IClientNetManager>();
+
+             var sMapManager = server.ResolveDependency<IMapManager>();
+             var sEntManager = server.ResolveDependency<IEntityManager>();
+             var sPlayerManager = server.ResolveDependency<IPlayerManager>();
+
              Assert.DoesNotThrow(() => client.SetConnectTarget(server));
-             client.Post(() => IoCManager.Resolve<IClientNetManager>().ClientConnect(null!, 0, null!));
+             client.Post(() =>
+             {
+                 clientNetManager.ClientConnect(null!, 0, null!);
+             });
 
              for (int i = 0; i < 10; i++)
              {
@@ -49,27 +55,25 @@ namespace Robust.UnitTesting.Shared.GameObjects
              var mapPos = MapCoordinates.Nullspace;
 
              EntityUid entityUid = default!;
-             EntityUid itemUid = default!;
+
+             var cContainerSys = cEntManager.System<ContainerSystem>();
+             var sContainerSys = sEntManager.System<SharedContainerSystem>();
+             var sMetadataSys = sEntManager.System<MetaDataSystem>();
 
              await server.WaitAssertion(() =>
              {
-                 var mapMan = IoCManager.Resolve<IMapManager>();
-                 var entMan = IoCManager.Resolve<IEntityManager>();
-                 var playerMan = IoCManager.Resolve<IPlayerManager>();
-                 var containerSys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedContainerSystem>();
-
-                 mapId = mapMan.CreateMap();
+                 sEntManager.System<SharedMapSystem>().CreateMap(out mapId);
                  mapPos = new MapCoordinates(new Vector2(0, 0), mapId);
 
-                 entityUid = entMan.SpawnEntity(null, mapPos);
-                 entMan.GetComponent<MetaDataComponent>(entityUid).EntityName = "Container";
-                 containerSys.EnsureContainer<Container>(entityUid, "dummy");
+                 entityUid = sEntManager.SpawnEntity(null, mapPos);
+                 sMetadataSys.SetEntityName(entityUid, "Container");
+                 sContainerSys.EnsureContainer<Container>(entityUid, "dummy");
 
                  // Setup PVS
-                 entMan.AddComponent<Robust.Server.GameObjects.EyeComponent>(entityUid);
-                 var player = playerMan.ServerSessions.First();
-                 player.AttachToEntity(entityUid);
-                 player.JoinGame();
+                 sEntManager.AddComponent<EyeComponent>(entityUid);
+                 var player = sPlayerManager.Sessions.First();
+                 server.PlayerMan.SetAttachedEntity(player, entityUid);
+                 sPlayerManager.JoinGame(player);
              });
 
              for (int i = 0; i < 10; i++)
@@ -78,48 +82,44 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  await client.WaitRunTicks(1);
              }
 
+             EntityUid itemUid = default!;
              await server.WaitAssertion(() =>
              {
-                 var entMan = IoCManager.Resolve<IEntityManager>();
-                 var containerSys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedContainerSystem>();
+                 itemUid = sEntManager.SpawnEntity(null, mapPos);
+                 sMetadataSys.SetEntityName(itemUid, "Item");
+                 var container = sContainerSys.EnsureContainer<Container>(entityUid, "dummy");
+                 Assert.That(sContainerSys.Insert(itemUid, container));
 
-                 itemUid = entMan.SpawnEntity(null, mapPos);
-                 entMan.GetComponent<MetaDataComponent>(itemUid).EntityName = "Item";
-                 var container = containerSys.EnsureContainer<Container>(entityUid, "dummy");
-                 Assert.That(container.Insert(itemUid));
-
-                 // Move item out of PVS so that it doesn't get sent to the client
-                 entMan.GetComponent<TransformComponent>(itemUid).LocalPosition = new Vector2(100000, 0);
+                 // Modify visibility layer so that the item does not get sent ot the player
+                 sEntManager.System<VisibilitySystem>().AddLayer(itemUid, 10 );
              });
 
              // Needs minimum 4 to sync to client because buffer size is 3
-             await server.WaitRunTicks(10);
-             await client.WaitRunTicks(40);
+             await server.WaitRunTicks(4);
+             await client.WaitRunTicks(10);
 
+             EntityUid cEntityUid = default!;
              await client.WaitAssertion(() =>
              {
-                 var entMan = IoCManager.Resolve<IEntityManager>();
-                 if (!entMan.TryGetComponent<ContainerManagerComponent>(entityUid, out var containerManagerComp))
+                 cEntityUid = client.EntMan.GetEntity(server.EntMan.GetNetEntity(entityUid));
+                 if (!cEntManager.TryGetComponent<ContainerManagerComponent>(cEntityUid, out var containerManagerComp))
                  {
                      Assert.Fail();
                      return;
                  }
 
-                 var container = containerManagerComp.GetContainer("dummy");
+                 var container = cContainerSys.GetContainer(cEntityUid, "dummy", containerManagerComp);
                  Assert.That(container.ContainedEntities.Count, Is.EqualTo(0));
                  Assert.That(container.ExpectedEntities.Count, Is.EqualTo(1));
 
-                 var containerSystem = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
-                 Assert.That(containerSystem.ExpectedEntities.ContainsKey(itemUid));
-                 Assert.That(containerSystem.ExpectedEntities.Count, Is.EqualTo(1));
+                 Assert.That(cContainerSys.ExpectedEntities.ContainsKey(sEntManager.GetNetEntity(itemUid)));
+                 Assert.That(cContainerSys.ExpectedEntities.Count, Is.EqualTo(1));
              });
 
              await server.WaitAssertion(() =>
              {
-                 var entMan = IoCManager.Resolve<IEntityManager>();
-
-                 // Move item into PVS so it gets sent to the client
-                 entMan.GetComponent<TransformComponent>(itemUid).LocalPosition = new Vector2(0, 0);
+                 // Modify visibility layer so it now gets sent to the client
+                 sEntManager.System<VisibilitySystem>().RemoveLayer(itemUid, 10 );
              });
 
              await server.WaitRunTicks(1);
@@ -127,20 +127,18 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
              await client.WaitAssertion(() =>
              {
-                 var entMan = IoCManager.Resolve<IEntityManager>();
-                 if (!entMan.TryGetComponent<ContainerManagerComponent>(entityUid, out var containerManagerComp))
+                 if (!cEntManager.TryGetComponent<ContainerManagerComponent>(cEntityUid, out var containerManagerComp))
                  {
                      Assert.Fail();
                      return;
                  }
 
-                 var container = containerManagerComp.GetContainer("dummy");
+                 var container = cContainerSys.GetContainer(cEntityUid, "dummy", containerManagerComp);
                  Assert.That(container.ContainedEntities.Count, Is.EqualTo(1));
                  Assert.That(container.ExpectedEntities.Count, Is.EqualTo(0));
 
-                 var containerSystem = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
-                 Assert.That(!containerSystem.ExpectedEntities.ContainsKey(itemUid));
-                 Assert.That(containerSystem.ExpectedEntities.Count, Is.EqualTo(0));
+                 Assert.That(!cContainerSys.ExpectedEntities.ContainsKey(sEntManager.GetNetEntity(itemUid)));
+                 Assert.That(cContainerSys.ExpectedEntities, Is.Empty);
              });
          }
 
@@ -157,8 +155,20 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
              await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
 
+             var cEntManager = client.ResolveDependency<IEntityManager>();
+             var clientTime = client.ResolveDependency<IClientGameTiming>();
+             var clientNetManager = client.ResolveDependency<IClientNetManager>();
+
+             var sMapManager = server.ResolveDependency<IMapManager>();
+             var sEntManager = server.ResolveDependency<IEntityManager>();
+             var sPlayerManager = server.ResolveDependency<IPlayerManager>();
+             var serverTime = server.ResolveDependency<IGameTiming>();
+
              Assert.DoesNotThrow(() => client.SetConnectTarget(server));
-             client.Post(() => IoCManager.Resolve<IClientNetManager>().ClientConnect(null!, 0, null!));
+             await client.WaitPost(() =>
+             {
+                 clientNetManager.ClientConnect(null!, 0, null!);
+             });
 
              for (int i = 0; i < 10; i++)
              {
@@ -167,31 +177,31 @@ namespace Robust.UnitTesting.Shared.GameObjects
              }
 
              // Setup
-             var mapId = MapId.Nullspace;
+             MapId mapId;
              var mapPos = MapCoordinates.Nullspace;
 
-             EntityUid entityUid = default!;
-             EntityUid itemUid = default!;
+             EntityUid sEntityUid = default!;
+             EntityUid sItemUid = default!;
+             NetEntity netEnt = default;
+
+             var cContainerSys = cEntManager.System<ContainerSystem>();
+             var sContainerSys = sEntManager.System<SharedContainerSystem>();
+             var sMetadataSys = sEntManager.System<MetaDataSystem>();
 
              await server.WaitAssertion(() =>
              {
-                 var mapMan = IoCManager.Resolve<IMapManager>();
-                 var entMan = IoCManager.Resolve<IEntityManager>();
-                 var playerMan = IoCManager.Resolve<IPlayerManager>();
-                 var containerSys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedContainerSystem>();
-
-                 mapId = mapMan.CreateMap();
+                 sEntManager.System<SharedMapSystem>().CreateMap(out mapId);
                  mapPos = new MapCoordinates(new Vector2(0, 0), mapId);
 
-                 entityUid = entMan.SpawnEntity(null, mapPos);
-                 entMan.GetComponent<MetaDataComponent>(entityUid).EntityName = "Container";
-                 containerSys.EnsureContainer<Container>(entityUid, "dummy");
+                 sEntityUid = sEntManager.SpawnEntity(null, mapPos);
+                 sMetadataSys.SetEntityName(sEntityUid, "Container");
+                 sContainerSys.EnsureContainer<Container>(sEntityUid, "dummy");
 
                  // Setup PVS
-                 entMan.AddComponent<Robust.Server.GameObjects.EyeComponent>(entityUid);
-                 var player = playerMan.ServerSessions.First();
-                 player.AttachToEntity(entityUid);
-                 player.JoinGame();
+                 sEntManager.AddComponent<EyeComponent>(sEntityUid);
+                 var player = sPlayerManager.Sessions.First();
+                 server.PlayerMan.SetAttachedEntity(player, sEntityUid);
+                 sPlayerManager.JoinGame(player);
              });
 
              for (int i = 0; i < 10; i++)
@@ -202,56 +212,53 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
              await server.WaitAssertion(() =>
              {
-                 var entMan = IoCManager.Resolve<IEntityManager>();
-                 var containerSys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedContainerSystem>();
+                 sItemUid = sEntManager.SpawnEntity(null, mapPos);
+                 netEnt = sEntManager.GetNetEntity(sItemUid);
+                 sMetadataSys.SetEntityName(sItemUid, "Item");
+                 var container = sContainerSys.GetContainer(sEntityUid, "dummy");
+                 sContainerSys.Insert(sItemUid, container);
 
-                 itemUid = entMan.SpawnEntity(null, mapPos);
-                 entMan.GetComponent<MetaDataComponent>(itemUid).EntityName = "Item";
-                 var container = containerSys.EnsureContainer<Container>(entityUid, "dummy");
-                 container.Insert(itemUid);
-
-                 // Move item out of PVS so that it doesn't get sent to the client
-                 entMan.GetComponent<TransformComponent>(itemUid).LocalPosition = new Vector2(100000, 0);
+                 // Modify visibility layer so that the item does not get sent ot the player
+                 sEntManager.System<VisibilitySystem>().AddLayer(sItemUid, 10 );
              });
 
             await server.WaitRunTicks(1);
-            var serverTime = server.ResolveDependency<IGameTiming>();
-            var clientTime = client.ResolveDependency<IClientGameTiming>();
+
             while (clientTime.LastRealTick < serverTime.CurTick - 1)
             {
                 await client.WaitRunTicks(1);
             }
 
+            var cUid = cEntManager.GetEntity(sEntManager.GetNetEntity(sEntityUid));
+
              await client.WaitAssertion(() =>
              {
-                 var entMan = IoCManager.Resolve<IEntityManager>();
-                 if (!entMan.TryGetComponent<ContainerManagerComponent>(entityUid, out var containerManagerComp))
+                 if (!cEntManager.TryGetComponent<ContainerManagerComponent>(cUid, out var containerManagerComp))
                  {
                      Assert.Fail();
                      return;
                  }
 
-                 var container = containerManagerComp.GetContainer("dummy");
+                 var container = cContainerSys.GetContainer(cUid, "dummy", containerManagerComp);
                  Assert.That(container.ContainedEntities.Count, Is.EqualTo(0));
                  Assert.That(container.ExpectedEntities.Count, Is.EqualTo(1));
 
-                 var containerSystem = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
-                 Assert.That(containerSystem.ExpectedEntities.ContainsKey(itemUid));
-                 Assert.That(containerSystem.ExpectedEntities.Count, Is.EqualTo(1));
+                 Assert.That(cContainerSys.ExpectedEntities.ContainsKey(netEnt));
+                 Assert.That(cContainerSys.ExpectedEntities.Count, Is.EqualTo(1));
              });
 
              await server.WaitAssertion(() =>
              {
-                 var entMan = IoCManager.Resolve<IEntityManager>();
-                 var containerSystem = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedContainerSystem>();
-
                  // If possible it'd be best to only have the DeleteEntity, but right now
                  // the entity deleted event is not played on the client if the entity does not exist on the client.
-                 if (entMan.EntityExists(itemUid)
+                 if (sEntManager.EntityExists(sItemUid)
                      // && itemUid.TryGetContainer(out var container))
-                     && containerSystem.TryGetContainingContainer(itemUid, out var container))
-                     container.ForceRemove(itemUid);
-                 entMan.DeleteEntity(itemUid);
+                     && sContainerSys.TryGetContainingContainer(sItemUid, out var container))
+                 {
+                     sContainerSys.Remove(sItemUid, container, force: true);
+                 }
+
+                 sEntManager.DeleteEntity(sItemUid);
              });
 
              await server.WaitRunTicks(1);
@@ -259,23 +266,20 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
              await client.WaitAssertion(() =>
              {
-                 var entMan = IoCManager.Resolve<IEntityManager>();
-                 if (!entMan.TryGetComponent<ContainerManagerComponent>(entityUid, out var containerManagerComp))
+                 if (!cEntManager.TryGetComponent<ContainerManagerComponent>(cUid, out var containerManagerComp))
                  {
                      Assert.Fail();
                      return;
                  }
 
-                 var container = containerManagerComp.GetContainer("dummy");
+                 var container = cContainerSys.GetContainer(cUid, "dummy", containerManagerComp);
                  Assert.That(container.ContainedEntities.Count, Is.EqualTo(0));
                  Assert.That(container.ExpectedEntities.Count, Is.EqualTo(0));
 
-                 var containerSystem = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
-                 Assert.That(!containerSystem.ExpectedEntities.ContainsKey(itemUid));
-                 Assert.That(containerSystem.ExpectedEntities.Count, Is.EqualTo(0));
+                 Assert.That(!cContainerSys.ExpectedEntities.ContainsKey(netEnt));
+                 Assert.That(cContainerSys.ExpectedEntities.Count, Is.EqualTo(0));
              });
         }
-
 
         /// <summary>
         /// Sets up a new container, initializes map, saves the map, then loads it again on another map. The contained entity should still
@@ -288,30 +292,30 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             await Task.WhenAll(server.WaitIdleAsync());
 
+            var sEntManager = server.ResolveDependency<IEntityManager>();
+            var mapManager = server.ResolveDependency<IMapManager>();
+            var sContainerSys = sEntManager.System<SharedContainerSystem>();
+            var sMetadataSys = sEntManager.System<MetaDataSystem>();
+
             await server.WaitAssertion(() =>
             {
-                var entMan = IoCManager.Resolve<IEntityManager>();
-                var containerSys = entMan.EntitySysManager.GetEntitySystem<Robust.Server.Containers.ContainerSystem>();
-
                 // build the map
-                var mapManager = IoCManager.Resolve<IMapManager>();
-
-                var mapIdOne = mapManager.CreateMap();
+                sEntManager.System<SharedMapSystem>().CreateMap(out var mapIdOne);
                 Assert.That(mapManager.IsMapInitialized(mapIdOne), Is.True);
 
-                var containerEnt = entMan.SpawnEntity(null, new MapCoordinates(1, 1, mapIdOne));
-                entMan.GetComponent<MetaDataComponent>(containerEnt).EntityName = "ContainerEnt";
+                var containerEnt = sEntManager.SpawnEntity(null, new MapCoordinates(1, 1, mapIdOne));
+                sMetadataSys.SetEntityName(containerEnt, "ContainerEnt");
 
-                var containeeEnt = entMan.SpawnEntity(null, new MapCoordinates(2, 2, mapIdOne));
-                entMan.GetComponent<MetaDataComponent>(containeeEnt).EntityName = "ContaineeEnt";
+                var containeeEnt = sEntManager.SpawnEntity(null, new MapCoordinates(2, 2, mapIdOne));
+                sMetadataSys.SetEntityName(containeeEnt, "ContaineeEnt");
 
-                var container = containerSys.MakeContainer<Container>(containerEnt, "testContainer");
+                var container = sContainerSys.MakeContainer<Container>(containerEnt, "testContainer");
                 container.OccludesLight = true;
                 container.ShowContents = true;
-                container.Insert(containeeEnt);
+                sContainerSys.Insert(containeeEnt, container);
 
                 // save the map
-                var mapLoader = entMan.EntitySysManager.GetEntitySystem<MapLoaderSystem>();
+                var mapLoader = sEntManager.EntitySysManager.GetEntitySystem<MapLoaderSystem>();
 
                 mapLoader.SaveMap(mapIdOne, "container_test.yml");
                 mapManager.DeleteMap(mapIdOne);
@@ -322,9 +326,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             await server.WaitAssertion(() =>
             {
-                var mapManager = IoCManager.Resolve<IMapManager>();
-                var mapLoader = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MapLoaderSystem>();
-                var mapIdTwo = mapManager.CreateMap();
+                var mapLoader = sEntManager.System<MapLoaderSystem>();
+                sEntManager.System<SharedMapSystem>().CreateMap(out var mapIdTwo);
 
                 // load the map
                 mapLoader.Load(mapIdTwo, "container_test.yml");
@@ -335,22 +338,26 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             await server.WaitAssertion(() =>
             {
-                var entMan = IoCManager.Resolve<IEntityManager>();
-
                 // verify container
-                var containerQuery = entMan.EntityQuery<ContainerManagerComponent>();
-                var containerComp = containerQuery.First();
-                var containerEnt = containerComp.Owner;
+                Entity<ContainerManagerComponent> container = default;
+                var query = sEntManager.EntityQueryEnumerator<ContainerManagerComponent>();
+                while (query.MoveNext(out var uid, out var containerComp))
+                {
+                    container = (uid, containerComp);
+                }
 
-                Assert.That(entMan.GetComponent<MetaDataComponent>(containerEnt).EntityName, Is.EqualTo("ContainerEnt"));
+                var containerEnt = container.Owner;
+                Assert.That(container.Comp, Is.Not.Null);
 
-                Assert.That(containerComp.Containers.ContainsKey("testContainer"));
+                Assert.That(sEntManager.GetComponent<MetaDataComponent>(containerEnt).EntityName, Is.EqualTo("ContainerEnt"));
 
-                var iContainer = containerComp.GetContainer("testContainer");
-                Assert.That(iContainer.ContainedEntities.Count, Is.EqualTo(1));
+                Assert.That(container.Comp!.Containers.ContainsKey("testContainer"));
 
-                var containeeEnt = iContainer.ContainedEntities[0];
-                Assert.That(entMan.GetComponent<MetaDataComponent>(containeeEnt).EntityName, Is.EqualTo("ContaineeEnt"));
+                var baseContainer = sContainerSys.GetContainer(containerEnt, "testContainer", container.Comp);
+                Assert.That(baseContainer.ContainedEntities, Has.Count.EqualTo(1));
+
+                var containeeEnt = baseContainer.ContainedEntities[0];
+                Assert.That(sEntManager.GetComponent<MetaDataComponent>(containeeEnt).EntityName, Is.EqualTo("ContaineeEnt"));
             });
         }
     }

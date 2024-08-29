@@ -1,8 +1,11 @@
-﻿using System.Numerics;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
 using Robust.Shared.Toolshed.Syntax;
 
 namespace Robust.Shared.Toolshed.Commands.Math;
 
+#region Core arithmetic
 [ToolshedCommand(Name = "+")]
 public sealed class AddCommand : ToolshedCommand
 {
@@ -18,6 +21,71 @@ public sealed class AddCommand : ToolshedCommand
         if (yVal is null)
             return x;
         return x + yVal;
+    }
+
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public IEnumerable<T> Operation<T>(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] IEnumerable<T> x,
+        [CommandArgument] ValueRef<IEnumerable<T>> y
+    )
+        where T : IAdditionOperators<T, T, T>
+        => x.Zip(y.Evaluate(ctx)!).Select(inp =>
+        {
+            var (left, right) = inp;
+            return Operation(ctx, left, new ValueRef<T>(right));
+        });
+
+    [CommandImplementation]
+    public Vector2 Operation(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] Vector2 x,
+        [CommandArgument] ValueRef<Vector2> y
+    )
+    {
+        var yVal = y.Evaluate(ctx);
+        return x + yVal;
+    }
+
+    [CommandImplementation]
+    public IEnumerable<Vector2> Operation(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] IEnumerable<Vector2> x,
+        [CommandArgument] ValueRef<IEnumerable<Vector2>> y
+    )
+        => x.Zip(y.Evaluate(ctx)!).Select(inp =>
+        {
+            var (left, right) = inp;
+            return Operation(ctx, left, new ValueRef<Vector2>(right));
+        });
+}
+
+[ToolshedCommand(Name = "+/")]
+public sealed class AddVecCommand : ToolshedCommand
+{
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public IEnumerable<T> Operation<T>(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] IEnumerable<T> x,
+        [CommandArgument] ValueRef<T> y
+    )
+        where T : IAdditionOperators<T, T, T>
+    {
+        var yVal = y.Evaluate(ctx);
+        if (yVal is null)
+            return x;
+        return x.Select(i => i + yVal);
+    }
+
+    [CommandImplementation]
+    public IEnumerable<Vector2> Operation(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] IEnumerable<Vector2> x,
+        [CommandArgument] ValueRef<Vector2> y
+    )
+    {
+        var yVal = y.Evaluate(ctx);
+        return x.Select(i => i + yVal);
     }
 }
 
@@ -37,6 +105,71 @@ public sealed class SubtractCommand : ToolshedCommand
             return x;
         return x - yVal;
     }
+
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public IEnumerable<T> Operation<T>(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] IEnumerable<T> x,
+        [CommandArgument] ValueRef<IEnumerable<T>> y
+    )
+        where T : ISubtractionOperators<T, T, T>
+        => x.Zip(y.Evaluate(ctx)!).Select(inp =>
+        {
+            var (left, right) = inp;
+            return Operation(ctx, left, new ValueRef<T>(right));
+        });
+
+    [CommandImplementation]
+    public Vector2 Operation(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] Vector2 x,
+        [CommandArgument] ValueRef<Vector2> y
+    )
+    {
+        var yVal = y.Evaluate(ctx);
+        return x - yVal;
+    }
+
+    [CommandImplementation]
+    public IEnumerable<Vector2> Operation(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] IEnumerable<Vector2> x,
+        [CommandArgument] ValueRef<IEnumerable<Vector2>> y
+    )
+        => x.Zip(y.Evaluate(ctx)!).Select(inp =>
+        {
+            var (left, right) = inp;
+            return Operation(ctx, left, new ValueRef<Vector2>(right));
+        });
+}
+
+[ToolshedCommand(Name = "-/")]
+public sealed class SubVecCommand : ToolshedCommand
+{
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public IEnumerable<T> Operation<T>(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] IEnumerable<T> x,
+        [CommandArgument] ValueRef<T> y
+    )
+        where T : ISubtractionOperators<T, T, T>
+    {
+        var yVal = y.Evaluate(ctx);
+        if (yVal is null)
+            return x;
+        return x.Select(i => i - yVal);
+    }
+
+    [CommandImplementation]
+    public IEnumerable<Vector2> Operation(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] IEnumerable<Vector2> x,
+        [CommandArgument] ValueRef<Vector2> y
+    )
+    {
+        var yVal = y.Evaluate(ctx);
+        return x.Select(i => i - yVal);
+    }
 }
 
 [ToolshedCommand(Name = "*")]
@@ -53,6 +186,71 @@ public sealed class MultiplyCommand : ToolshedCommand
         var yVal = y.Evaluate(ctx)!;
         return x * yVal;
     }
+
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public IEnumerable<T> Operation<T>(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] IEnumerable<T> x,
+        [CommandArgument] ValueRef<IEnumerable<T>> y
+    )
+        where T : IMultiplyOperators<T, T, T>
+        => x.Zip(y.Evaluate(ctx)!).Select(inp =>
+        {
+            var (left, right) = inp;
+            return Operation(ctx, left, new ValueRef<T>(right));
+        });
+
+    [CommandImplementation]
+    public Vector2 Operation(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] Vector2 x,
+        [CommandArgument] ValueRef<Vector2> y
+    )
+    {
+        var yVal = y.Evaluate(ctx);
+        return x * yVal;
+    }
+
+    [CommandImplementation]
+    public IEnumerable<Vector2> Operation(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] IEnumerable<Vector2> x,
+        [CommandArgument] ValueRef<IEnumerable<Vector2>> y
+    )
+        => x.Zip(y.Evaluate(ctx)!).Select(inp =>
+        {
+            var (left, right) = inp;
+            return Operation(ctx, left, new ValueRef<Vector2>(right));
+        });
+}
+
+[ToolshedCommand(Name = "*/")]
+public sealed class MulVecCommand : ToolshedCommand
+{
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public IEnumerable<T> Operation<T>(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] IEnumerable<T> x,
+        [CommandArgument] ValueRef<T> y
+    )
+        where T : IMultiplyOperators<T, T, T>
+    {
+        var yVal = y.Evaluate(ctx);
+        if (yVal is null)
+            return x;
+        return x.Select(i => i * yVal);
+    }
+
+    [CommandImplementation]
+    public IEnumerable<Vector2> Operation(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] IEnumerable<Vector2> x,
+        [CommandArgument] ValueRef<Vector2> y
+    )
+    {
+        var yVal = y.Evaluate(ctx);
+        return x.Select(i => i * yVal);
+    }
 }
 
 [ToolshedCommand(Name = "/")]
@@ -64,12 +262,101 @@ public sealed class DivideCommand : ToolshedCommand
         [PipedArgument] T x,
         [CommandArgument] ValueRef<T> y
     )
-        where T : IDivisionOperators<T, T, T>
+        where T : INumberBase<T>
     {
-        var yVal = y.Evaluate(ctx)!;
+        var yVal = y.Evaluate(ctx);
+        if (yVal is null)
+            return x;
+
+        if (T.IsZero(yVal))
+            return T.Zero;
+
         return x / yVal;
     }
+
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public IEnumerable<T> Operation<T>(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] IEnumerable<T> x,
+        [CommandArgument] ValueRef<IEnumerable<T>> y
+    )
+        where T : INumberBase<T>
+        => x.Zip(y.Evaluate(ctx)!).Select(inp =>
+        {
+            var (left, right) = inp;
+            return Operation(ctx, left, new ValueRef<T>(right));
+        });
 }
+
+[ToolshedCommand(Name = "//")]
+public sealed class DivVecCommand : ToolshedCommand
+{
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public IEnumerable<T> Operation<T>(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] IEnumerable<T> x,
+        [CommandArgument] ValueRef<T> y
+    )
+        where T : INumberBase<T>
+    {
+        var yVal = y.Evaluate(ctx);
+        if (yVal is null)
+            return x;
+
+        if (T.IsZero(yVal))
+            return x.Select(_ => T.Zero);
+
+        return x.Select(i => i / yVal);
+    }
+}
+
+[ToolshedCommand(Name = "%")]
+public sealed class ModulusCommand : ToolshedCommand
+{
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public T Operation<T>(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] T x,
+        [CommandArgument] ValueRef<T> y
+    )
+        where T : IModulusOperators<T, T, T>
+    {
+        var yVal = y.Evaluate(ctx)!;
+        return x % yVal;
+    }
+
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public IEnumerable<T> Operation<T>(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] IEnumerable<T> x,
+        [CommandArgument] ValueRef<IEnumerable<T>> y
+    )
+        where T : IModulusOperators<T, T, T>
+        => x.Zip(y.Evaluate(ctx)!).Select(inp =>
+        {
+            var (left, right) = inp;
+            return Operation(ctx, left, new ValueRef<T>(right));
+        });
+}
+
+[ToolshedCommand(Name = "%/")]
+public sealed class ModVecCommand : ToolshedCommand
+{
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public IEnumerable<T> Operation<T>(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] IEnumerable<T> x,
+        [CommandArgument] ValueRef<T> y
+    )
+        where T : IModulusOperators<T, T, T>
+    {
+        var yVal = y.Evaluate(ctx);
+        if (yVal is null)
+            return x;
+        return x.Select(i => i % yVal);
+    }
+}
+#endregion
 
 [ToolshedCommand]
 public sealed class MinCommand : ToolshedCommand
@@ -80,11 +367,24 @@ public sealed class MinCommand : ToolshedCommand
         [PipedArgument] T x,
         [CommandArgument] ValueRef<T> y
     )
-        where T : IComparisonOperators<T, T, bool>
+        where T : INumberBase<T>
     {
         var yVal = y.Evaluate(ctx)!;
-        return x > yVal ? yVal : x;
+        return T.MinMagnitude(x, yVal);
     }
+
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public IEnumerable<T> Operation<T>(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] IEnumerable<T> x,
+        [CommandArgument] ValueRef<IEnumerable<T>> y
+    )
+        where T : INumberBase<T>
+        => x.Zip(y.Evaluate(ctx)!).Select(inp =>
+        {
+            var (left, right) = inp;
+            return Operation(ctx, left, new ValueRef<T>(right));
+        });
 }
 
 [ToolshedCommand]
@@ -96,13 +396,27 @@ public sealed class MaxCommand : ToolshedCommand
         [PipedArgument] T x,
         [CommandArgument] ValueRef<T> y
     )
-        where T : IComparisonOperators<T, T, bool>
+        where T : INumberBase<T>
     {
         var yVal = y.Evaluate(ctx)!;
-        return x > yVal ? x : yVal;
+        return T.MaxMagnitude(x, yVal);
     }
+
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public IEnumerable<T> Operation<T>(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] IEnumerable<T> x,
+        [CommandArgument] ValueRef<IEnumerable<T>> y
+    )
+        where T : INumberBase<T>
+        => x.Zip(y.Evaluate(ctx)!).Select(inp =>
+        {
+            var (left, right) = inp;
+            return Operation(ctx, left, new ValueRef<T>(right));
+        });
 }
 
+#region Bitwise
 [ToolshedCommand(Name = "&")]
 public sealed class BitAndCommand : ToolshedCommand
 {
@@ -117,6 +431,48 @@ public sealed class BitAndCommand : ToolshedCommand
         var yVal = y.Evaluate(ctx)!;
         return x & yVal;
     }
+
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public IEnumerable<T> Operation<T>(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] IEnumerable<T> x,
+        [CommandArgument] ValueRef<IEnumerable<T>> y
+    )
+        where T : IBitwiseOperators<T, T, T>
+        => x.Zip(y.Evaluate(ctx)!).Select(inp =>
+        {
+            var (left, right) = inp;
+            return Operation(ctx, left, new ValueRef<T>(right));
+        });
+}
+
+[ToolshedCommand(Name = "&~")]
+public sealed class BitAndNotCommand : ToolshedCommand
+{
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public T Operation<T>(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] T x,
+        [CommandArgument] ValueRef<T> y
+    )
+        where T : IBitwiseOperators<T, T, T>
+    {
+        var yVal = y.Evaluate(ctx)!;
+        return x & ~yVal;
+    }
+
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public IEnumerable<T> Operation<T>(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] IEnumerable<T> x,
+        [CommandArgument] ValueRef<IEnumerable<T>> y
+    )
+        where T : IBitwiseOperators<T, T, T>
+        => x.Zip(y.Evaluate(ctx)!).Select(inp =>
+        {
+            var (left, right) = inp;
+            return Operation(ctx, left, new ValueRef<T>(right));
+        });
 }
 
 [ToolshedCommand(Name = "|")]
@@ -133,6 +489,48 @@ public sealed class BitOrCommand : ToolshedCommand
         var yVal = y.Evaluate(ctx)!;
         return x | yVal;
     }
+
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public IEnumerable<T> Operation<T>(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] IEnumerable<T> x,
+        [CommandArgument] ValueRef<IEnumerable<T>> y
+    )
+        where T : IBitwiseOperators<T, T, T>
+        => x.Zip(y.Evaluate(ctx)!).Select(inp =>
+        {
+            var (left, right) = inp;
+            return Operation(ctx, left, new ValueRef<T>(right));
+        });
+}
+
+[ToolshedCommand(Name = "|~")]
+public sealed class BitOrNotCommand : ToolshedCommand
+{
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public T Operation<T>(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] T x,
+        [CommandArgument] ValueRef<T> y
+    )
+        where T : IBitwiseOperators<T, T, T>
+    {
+        var yVal = y.Evaluate(ctx)!;
+        return x | ~yVal;
+    }
+
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public IEnumerable<T> Operation<T>(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] IEnumerable<T> x,
+        [CommandArgument] ValueRef<IEnumerable<T>> y
+    )
+        where T : IBitwiseOperators<T, T, T>
+        => x.Zip(y.Evaluate(ctx)!).Select(inp =>
+        {
+            var (left, right) = inp;
+            return Operation(ctx, left, new ValueRef<T>(right));
+        });
 }
 
 [ToolshedCommand(Name = "^")]
@@ -149,18 +547,102 @@ public sealed class BitXorCommand : ToolshedCommand
         var yVal = y.Evaluate(ctx)!;
         return x ^ yVal;
     }
+
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public IEnumerable<T> Operation<T>(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] IEnumerable<T> x,
+        [CommandArgument] ValueRef<IEnumerable<T>> y
+    )
+        where T : IBitwiseOperators<T, T, T>
+        => x.Zip(y.Evaluate(ctx)!).Select(inp =>
+        {
+            var (left, right) = inp;
+            return Operation(ctx, left, new ValueRef<T>(right));
+        });
 }
 
-[ToolshedCommand]
-public sealed class NegCommand : ToolshedCommand
+[ToolshedCommand(Name = "^~")]
+public sealed class BitXnorCommand : ToolshedCommand
+{
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public T Operation<T>(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] T x,
+        [CommandArgument] ValueRef<T> y
+    )
+        where T : IBitwiseOperators<T, T, T>
+    {
+        var yVal = y.Evaluate(ctx)!;
+        return x ^ ~yVal;
+    }
+
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public IEnumerable<T> Operation<T>(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] IEnumerable<T> x,
+        [CommandArgument] ValueRef<IEnumerable<T>> y
+    )
+        where T : IBitwiseOperators<T, T, T>
+        => x.Zip(y.Evaluate(ctx)!).Select(inp =>
+        {
+            var (left, right) = inp;
+            return Operation(ctx, left, new ValueRef<T>(right));
+        });
+}
+
+[ToolshedCommand(Name = "~")]
+public sealed class BitNotCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public T Operation<T>(
         [CommandInvocationContext] IInvocationContext ctx,
         [PipedArgument] T x
     )
+        where T : IBitwiseOperators<T, T, T>
+    {
+        return ~x;
+    }
+
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public IEnumerable<T> Operation<T>(
+        [CommandInvocationContext] IInvocationContext ctx,
+        [PipedArgument] IEnumerable<T> x
+    )
+        where T : IBitwiseOperators<T, T, T>
+        => x.Select(v => Operation<T>(ctx, v));
+}
+
+#endregion
+
+[ToolshedCommand]
+public sealed class NegCommand : ToolshedCommand
+{
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public T Operation<T>([PipedArgument] T x)
         where T : IUnaryNegationOperators<T, T>
     {
         return -x;
     }
+
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public IEnumerable<T> Operation<T>([PipedArgument] IEnumerable<T> x)
+        where T : IUnaryNegationOperators<T, T>
+        => x.Select(Operation);
+}
+
+[ToolshedCommand]
+public sealed class AbsCommand : ToolshedCommand
+{
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public T Operation<T>([PipedArgument] T x)
+        where T : INumberBase<T>
+    {
+        return T.Abs(x);
+    }
+
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public IEnumerable<T> Operation<T>([PipedArgument] IEnumerable<T> x)
+        where T : INumberBase<T>
+        => x.Select(Operation);
 }

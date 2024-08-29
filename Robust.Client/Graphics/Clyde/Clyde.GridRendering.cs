@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using OpenToolkit.Graphics.OpenGL4;
+using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
+using Robust.Shared.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
@@ -13,15 +14,20 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
-        [Dependency] private readonly IEntityManager _entityManager = default!;
-
         private readonly Dictionary<EntityUid, Dictionary<Vector2i, MapChunkData>> _mapChunkData =
             new();
+
+        /// <summary>
+        /// To avoid spamming errors we'll just log it once and move on.
+        /// </summary>
+        private HashSet<Type> _erroredGridOverlays = new();
 
         private int _verticesPerChunk(MapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * 4;
         private int _indicesPerChunk(MapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * GetQuadBatchIndexCount();
 
-        private void _drawGrids(Viewport viewport, Box2Rotated worldBounds, IEye eye)
+        private List<Entity<MapGridComponent>> _grids = new();
+
+        private void _drawGrids(Viewport viewport, Box2 worldAABB, Box2Rotated worldBounds, IEye eye)
         {
             var mapId = eye.Position.MapId;
             if (!_mapManager.MapExists(mapId))
@@ -30,32 +36,47 @@ namespace Robust.Client.Graphics.Clyde
                 mapId = MapId.Nullspace;
             }
 
-            SetTexture(TextureUnit.Texture0, _tileDefinitionManager.TileTextureAtlas);
-            SetTexture(TextureUnit.Texture1, _lightingReady ? viewport.LightRenderTarget.Texture : _stockTextureWhite);
+            _grids.Clear();
+            _mapManager.FindGridsIntersecting(mapId, worldBounds, ref _grids);
 
-            var gridProgram = ActivateShaderInstance(_defaultShader.Handle).Item1;
-            SetupGlobalUniformsImmediate(gridProgram, (ClydeTexture) _tileDefinitionManager.TileTextureAtlas);
+            var requiresFlush = true;
+            GLShaderProgram gridProgram = default!;
+            var gridOverlays = GetOverlaysForSpace(OverlaySpace.WorldSpaceGrids);
+            var mapSystem = _entityManager.System<SharedMapSystem>();
 
-            gridProgram.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
-            gridProgram.SetUniformTextureMaybe(UniILightTexture, TextureUnit.Texture1);
-            gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
-
-            foreach (var mapGrid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
+            foreach (var mapGrid in _grids)
             {
-                if (!_mapChunkData.ContainsKey(mapGrid.Owner))
+                if (!_mapChunkData.TryGetValue(mapGrid, out var data))
+                {
                     continue;
+                }
 
-                var transform = _entityManager.GetComponent<TransformComponent>(mapGrid.Owner);
-                gridProgram.SetUniform(UniIModelMatrix, transform.WorldMatrix);
-                var enumerator = mapGrid.GetMapChunks(worldBounds);
+                if (requiresFlush)
+                {
+                    SetTexture(TextureUnit.Texture0, _tileDefinitionManager.TileTextureAtlas);
+                    SetTexture(TextureUnit.Texture1, _lightingReady ? viewport.LightRenderTarget.Texture : _stockTextureWhite);
+                    gridProgram = ActivateShaderInstance(_defaultShader.Handle).Item1;
+                    SetupGlobalUniformsImmediate(gridProgram, (ClydeTexture) _tileDefinitionManager.TileTextureAtlas);
+
+                    gridProgram.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
+                    gridProgram.SetUniformTextureMaybe(UniILightTexture, TextureUnit.Texture1);
+                    gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
+                }
+
+                var transform = _entityManager.GetComponent<TransformComponent>(mapGrid);
+                gridProgram.SetUniform(UniIModelMatrix, _transformSystem.GetWorldMatrix(transform));
+                var enumerator = mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, worldBounds);
 
                 while (enumerator.MoveNext(out var chunk))
                 {
-                    if (_isChunkDirty(mapGrid, chunk))
-                        _updateChunkMesh(mapGrid, chunk);
+                    DebugTools.Assert(chunk.FilledTiles > 0);
+                    if (!data.TryGetValue(chunk.Indices, out MapChunkData? datum))
+                        data[chunk.Indices] = datum = _initChunkBuffers(mapGrid, chunk);
 
-                    var datum = _mapChunkData[mapGrid.Owner][chunk.Indices];
+                    if (datum.Dirty)
+                        _updateChunkMesh(mapGrid, chunk, datum);
 
+                    DebugTools.Assert(datum.TileCount > 0);
                     if (datum.TileCount == 0)
                         continue;
 
@@ -66,23 +87,62 @@ namespace Robust.Client.Graphics.Clyde
                     GL.DrawElements(GetQuadGLPrimitiveType(), datum.TileCount * GetQuadBatchIndexCount(), DrawElementsType.UnsignedShort, 0);
                     CheckGlError();
                 }
+
+                requiresFlush = false;
+
+                foreach (var overlay in gridOverlays)
+                {
+                    if (overlay is not IGridOverlay iGrid)
+                    {
+                        if (!_erroredGridOverlays.Add(overlay.GetType()))
+                        {
+                            _clydeSawmill.Error($"Tried to render grid overlay {overlay.GetType()} that doesn't implement {nameof(IGridOverlay)}");
+                        }
+
+                        continue;
+                    }
+
+                    iGrid.Grid = mapGrid;
+                    iGrid.RequiresFlush = false;
+                    RenderSingleWorldOverlay(overlay, viewport, OverlaySpace.WorldSpaceGrids, worldAABB, worldBounds);
+                    requiresFlush |= iGrid.RequiresFlush;
+                }
+
+                if (requiresFlush)
+                {
+                    FlushRenderQueue();
+                }
+            }
+
+            CullEmptyChunks();
+        }
+
+        private void CullEmptyChunks()
+        {
+            foreach (var (grid, chunks) in _mapChunkData)
+            {
+                var gridComp = _entityManager.GetComponent<MapGridComponent>(grid);
+                foreach (var (index, chunk) in chunks)
+                {
+                    if (!chunk.Dirty || gridComp.Chunks.ContainsKey(index))
+                    {
+                        DebugTools.Assert(gridComp.Chunks[index].FilledTiles > 0);
+                        continue;
+                    }
+
+                    DeleteChunk(chunk);
+                    chunks.Remove(index);
+                }
             }
         }
 
-        private void _updateChunkMesh(MapGridComponent grid, MapChunk chunk)
+        private void _updateChunkMesh(Entity<MapGridComponent> grid, MapChunk chunk, MapChunkData datum)
         {
-            var data = _mapChunkData[grid.Owner];
-
-            if (!data.TryGetValue(chunk.Indices, out var datum))
-            {
-                datum = _initChunkBuffers(grid, chunk);
-            }
-
             Span<ushort> indexBuffer = stackalloc ushort[_indicesPerChunk(chunk)];
             Span<Vertex2D> vertexBuffer = stackalloc Vertex2D[_verticesPerChunk(chunk)];
 
             var i = 0;
-            var cSz = grid.ChunkSize;
+            var cSz = grid.Comp.ChunkSize;
             var cScaled = chunk.Indices * cSz;
             for (ushort x = 0; x < cSz; x++)
             {
@@ -129,7 +189,7 @@ namespace Robust.Client.Graphics.Clyde
             datum.TileCount = i;
         }
 
-        private unsafe MapChunkData _initChunkBuffers(MapGridComponent grid, MapChunk chunk)
+        private unsafe MapChunkData _initChunkBuffers(Entity<MapGridComponent> grid, MapChunk chunk)
         {
             var vao = GenVertexArray();
             BindVertexArray(vao);
@@ -157,41 +217,22 @@ namespace Robust.Client.Graphics.Clyde
                 Dirty = true
             };
 
-            _mapChunkData[grid.Owner].Add(chunk.Indices, datum);
             return datum;
         }
 
-        private bool _isChunkDirty(MapGridComponent grid, MapChunk chunk)
+        private void DeleteChunk(MapChunkData data)
         {
-            var data = _mapChunkData[grid.Owner];
-            return !data.TryGetValue(chunk.Indices, out var datum) || datum.Dirty;
-        }
-
-        public void _setChunkDirty(MapGridComponent grid, Vector2i chunk)
-        {
-            var data = _mapChunkData.GetOrNew(grid.Owner);
-            if (data.TryGetValue(chunk, out var datum))
-            {
-                datum.Dirty = true;
-            }
-            // Don't need to set it if we don't have an entry since lack of an entry is treated as dirty.
-        }
-
-        private void _updateOnGridModified(GridModifiedEvent args)
-        {
-            foreach (var (pos, _) in args.Modified)
-            {
-                var grid = args.Grid;
-                var chunk = grid.GridTileToChunkIndices(pos);
-                _setChunkDirty(grid, chunk);
-            }
+            DeleteVertexArray(data.VAO);
+            CheckGlError();
+            data.VBO.Delete();
+            data.EBO.Delete();
         }
 
         private void _updateTileMapOnUpdate(ref TileChangedEvent args)
         {
-            var grid = _mapManager.GetGrid(args.NewTile.GridUid);
-            var chunk = grid.GridTileToChunkIndices(new Vector2i(args.NewTile.X, args.NewTile.Y));
-            _setChunkDirty(grid, chunk);
+            var gridData = _mapChunkData.GetOrNew(args.Entity);
+            if (gridData.TryGetValue(args.ChunkIndex, out var data))
+                data.Dirty = true;
         }
 
         private void _updateOnGridCreated(GridStartupEvent ev)
@@ -207,10 +248,7 @@ namespace Robust.Client.Graphics.Clyde
             var data = _mapChunkData[gridId];
             foreach (var chunkDatum in data.Values)
             {
-                DeleteVertexArray(chunkDatum.VAO);
-                CheckGlError();
-                chunkDatum.VBO.Delete();
-                chunkDatum.EBO.Delete();
+                DeleteChunk(chunkDatum);
             }
 
             _mapChunkData.Remove(gridId);

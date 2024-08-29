@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Random;
 
 namespace Robust.Shared.Map
@@ -22,6 +23,7 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="name">The name of the tile definition.</param>
         /// <returns>The named tile definition.</returns>
+        /// <seealso cref="TryGetDefinition(string,out Robust.Shared.Map.ITileDefinition?)"/>
         ITileDefinition this[string name] { get; }
 
         /// <summary>
@@ -29,7 +31,29 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="id">The ID of the tile definition.</param>
         /// <returns>The tile definition.</returns>
+        /// <seealso cref="TryGetDefinition(int,out Robust.Shared.Map.ITileDefinition?)"/>
         ITileDefinition this[int id] { get; }
+
+        /// <summary>
+        /// Try to retrieve a tile definition by name.
+        /// </summary>
+        /// <remarks>
+        /// Note: In the presence of tile aliases, this[A].ID does not necessarily equal A.
+        /// </remarks>
+        /// <param name="name">The name of the tile definition to look up.</param>
+        /// <param name="definition">The found tile definition, if it exists.</param>
+        /// <returns>True if a tile definition was resolved, false otherwise.</returns>
+        /// <seealso cref="this[string]"/>
+        bool TryGetDefinition(string name, [NotNullWhen(true)] out ITileDefinition? definition);
+
+        /// <summary>
+        /// Try to retrieve a tile definition by tile ID.
+        /// </summary>
+        /// <param name="id">The ID of the tile definition to look up.</param>
+        /// <param name="definition">The found tile definition, if it exists.</param>
+        /// <returns>True if a tile definition was resolved, false otherwise.</returns>
+        /// <seealso cref="this[int]"/>
+        bool TryGetDefinition(int id, [NotNullWhen(true)] out ITileDefinition? definition);
 
         /// <summary>
         ///     The number of tile definitions contained inside of this manager.

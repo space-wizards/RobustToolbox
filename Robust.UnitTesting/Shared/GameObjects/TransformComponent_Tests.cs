@@ -20,9 +20,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var server = RobustServerSimulation.NewSimulation().InitializeInstance();
 
             var entManager = server.Resolve<IEntityManager>();
-            var mapManager = server.Resolve<IMapManager>();
-
-            var mapId = mapManager.CreateMap();
+            entManager.System<SharedMapSystem>().CreateMap(out var mapId);
 
             var ent1 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
             var ent2 = entManager.SpawnEntity(null, new MapCoordinates(new Vector2(100f, 0f), mapId));
@@ -56,20 +54,20 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var entManager = server.Resolve<IEntityManager>();
             var mapManager = server.Resolve<IMapManager>();
 
-            var mapId = mapManager.CreateMap();
-            var grid = mapManager.CreateGrid(mapId);
-            grid.SetTile(new Vector2i(0, 0), new Tile(1));
-            var gridXform = entManager.GetComponent<TransformComponent>(grid.Owner);
+            entManager.System<SharedMapSystem>().CreateMap(out var mapId);
+            var grid = mapManager.CreateGridEntity(mapId);
+            grid.Comp.SetTile(new Vector2i(0, 0), new Tile(1));
+            var gridXform = entManager.GetComponent<TransformComponent>(grid);
             gridXform.LocalPosition = new Vector2(0f, 100f);
 
-            var ent1 = entManager.SpawnEntity(null, new EntityCoordinates(grid.Owner, Vector2.One * grid.TileSize / 2));
+            var ent1 = entManager.SpawnEntity(null, new EntityCoordinates(grid, Vector2.One * grid.Comp.TileSize / 2));
             var ent2 = entManager.SpawnEntity(null, new EntityCoordinates(ent1, Vector2.Zero));
 
             var xform2 = entManager.GetComponent<TransformComponent>(ent2);
             Assert.That(xform2.WorldPosition, Is.EqualTo(new Vector2(0.5f, 100.5f)));
 
             xform2.AttachToGridOrMap();
-            Assert.That(xform2.LocalPosition, Is.EqualTo(Vector2.One * grid.TileSize / 2));
+            Assert.That(xform2.LocalPosition, Is.EqualTo(Vector2.One * grid.Comp.TileSize / 2));
         }
     }
 }

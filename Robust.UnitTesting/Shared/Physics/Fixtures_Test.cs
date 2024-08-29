@@ -24,7 +24,7 @@ public sealed class Fixtures_Test
         var sysManager = sim.Resolve<IEntitySystemManager>();
         var fixturesSystem = sysManager.GetEntitySystem<FixtureSystem>();
         var physicsSystem = sysManager.GetEntitySystem<SharedPhysicsSystem>();
-        var map = mapManager.CreateMap();
+        var map = sim.CreateMap().MapId;
 
         var ent = sim.SpawnEntity(null, new MapCoordinates(Vector2.Zero, map));
         var body = entManager.AddComponent<PhysicsComponent>(ent);

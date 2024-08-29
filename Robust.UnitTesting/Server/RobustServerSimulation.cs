@@ -35,9 +35,10 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Controllers;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Systems;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Random;
 using Robust.Shared.Reflection;
 using Robust.Shared.Replays;
 using Robust.Shared.Serialization;
@@ -71,8 +72,7 @@ namespace Robust.UnitTesting.Server
         /// <summary>
         /// Adds a new map directly to the map manager.
         /// </summary>
-        EntityUid AddMap(int mapId);
-        EntityUid AddMap(MapId mapId);
+        (EntityUid Uid, MapId MapId) CreateMap();
         EntityUid SpawnEntity(string? protoId, EntityCoordinates coordinates);
         EntityUid SpawnEntity(string? protoId, MapCoordinates coordinates);
     }
@@ -99,18 +99,10 @@ namespace Robust.UnitTesting.Server
             return Collection.Resolve<T>();
         }
 
-        public EntityUid AddMap(int mapId)
+        public (EntityUid Uid, MapId MapId) CreateMap()
         {
-            var mapMan = Collection.Resolve<IMapManager>();
-            mapMan.CreateMap(new MapId(mapId));
-            return mapMan.GetMapEntityId(new MapId(mapId));
-        }
-
-        public EntityUid AddMap(MapId mapId)
-        {
-            var mapMan = Collection.Resolve<IMapManager>();
-            mapMan.CreateMap(mapId);
-            return mapMan.GetMapEntityId(mapId);
+            var uid = Collection.Resolve<IEntityManager>().System<SharedMapSystem>().CreateMap(out var mapId);
+            return (uid, mapId);
         }
 
         public EntityUid SpawnEntity(string? protoId, EntityCoordinates coordinates)
@@ -221,21 +213,26 @@ namespace Robust.UnitTesting.Server
 
             //Tier 2: Simulation
             container.RegisterInstance<IConsoleHost>(new Mock<IConsoleHost>().Object); //Console is technically a frontend, we want to run headless
-            container.Register<IEntityManager, EntityManager>();
-            container.Register<EntityManager, EntityManager>();
-            container.Register<IMapManager, MapManager>();
+            container.Register<IEntityManager, ServerEntityManager>();
+            container.Register<IServerEntityNetworkManager, ServerEntityManager>();
+            container.Register<EntityManager, ServerEntityManager>();
+            container.Register<IMapManager, NetworkedMapManager>();
+            container.Register<INetworkedMapManager, NetworkedMapManager>();
+            container.Register<IMapManagerInternal, NetworkedMapManager>();
             container.Register<ISerializationManager, SerializationManager>();
+            container.Register<IRobustRandom, RobustRandom>();
             container.Register<IPrototypeManager, ServerPrototypeManager>();
             container.Register<IComponentFactory, ComponentFactory>();
             container.Register<IEntitySystemManager, EntitySystemManager>();
             container.Register<IManifoldManager, CollisionManager>();
-            container.Register<IMapManagerInternal, MapManager>();
             container.Register<INetManager, NetManager>();
             container.Register<IAuthManager, AuthManager>();
             container.Register<ITileDefinitionManager, TileDefinitionManager>();
             container.Register<IParallelManager, TestingParallelManager>();
+            container.Register<IParallelManagerInternal, TestingParallelManager>();
             // Needed for grid fixture debugging.
             container.Register<IConGroupController, ConGroupController>();
+            container.Register<EntityConsoleHost>();
 
             // I just wanted to load pvs system
             container.Register<IServerEntityManager, ServerEntityManager>();
@@ -283,6 +280,8 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<OccluderComponent>();
             compFactory.RegisterClass<OccluderTreeComponent>();
             compFactory.RegisterClass<Gravity2DComponent>();
+            compFactory.RegisterClass<CollideOnAnchorComponent>();
+            compFactory.RegisterClass<ActorComponent>();
 
             _regDelegate?.Invoke(compFactory);
 
@@ -309,6 +308,8 @@ namespace Robust.UnitTesting.Server
             entitySystemMan.LoadExtraSystemType<EntityLookupSystem>();
             entitySystemMan.LoadExtraSystemType<ServerMetaDataSystem>();
             entitySystemMan.LoadExtraSystemType<PvsSystem>();
+            entitySystemMan.LoadExtraSystemType<InputSystem>();
+            entitySystemMan.LoadExtraSystemType<PvsOverrideSystem>();
 
             _systemDelegate?.Invoke(entitySystemMan);
 
@@ -322,8 +323,14 @@ namespace Robust.UnitTesting.Server
             container.Resolve<ISerializationManager>().Initialize();
 
             var protoMan = container.Resolve<IPrototypeManager>();
-            protoMan.RegisterKind(typeof(EntityPrototype));
+            protoMan.Initialize();
+            protoMan.RegisterKind(typeof(EntityPrototype), typeof(EntityCategoryPrototype));
             _protoDelegate?.Invoke(protoMan);
+
+            // This just exists to set protoMan._hasEverBeenReloaded to True
+            // The code is perfect.
+            protoMan.LoadString("");
+
             protoMan.ResolveResults();
 
             return this;

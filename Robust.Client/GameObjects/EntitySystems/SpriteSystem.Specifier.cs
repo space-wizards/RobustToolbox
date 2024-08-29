@@ -4,6 +4,7 @@ using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
+using Robust.Shared.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations;
@@ -121,14 +122,13 @@ public sealed partial class SpriteSystem
         return GetFallbackState();
     }
 
-    private void OnPrototypesReloaded(PrototypesReloadedEventArgs protoReloaded)
+    private void OnPrototypesReloaded(PrototypesReloadedEventArgs args)
     {
-        // Check if any EntityPrototype has been changed.
-        if (!protoReloaded.ByType.TryGetValue(typeof(EntityPrototype), out var changedSet))
+        if (!args.TryGetModified<EntityPrototype>(out var modified))
             return;
 
         // Remove all changed prototypes from the cache, if they're there.
-        foreach (var (prototype, _) in changedSet.Modified)
+        foreach (var prototype in modified)
         {
             // Let's be lazy and not regenerate them until something needs them again.
             _cachedPrototypeIcons.Remove(prototype);

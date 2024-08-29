@@ -7,9 +7,12 @@ using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Reflection;
 using Robust.Shared.Toolshed.Errors;
+using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Toolshed.TypeParsers;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed;
 
@@ -46,6 +49,7 @@ namespace Robust.Shared.Toolshed;
 public abstract partial class ToolshedCommand
 {
     [Dependency] protected readonly ToolshedManager Toolshed = default!;
+    [Dependency] protected readonly ILocalizationManager Loc = default!;
 
     /// <summary>
     ///     The user-facing name of the command.
@@ -71,6 +75,12 @@ public abstract partial class ToolshedCommand
     /// </summary>
     public IEnumerable<string> Subcommands => _implementors.Keys.Where(x => x != "");
 
+    /// <summary>
+    /// List of parameters for this command and all sub commands. Used for command help usage.
+    /// Dictionary(subCommand, List(pipedType, List(parameterType)))
+    /// </summary>
+    private readonly Dictionary<string, List<(Type?, List<Type>)>> _readonlyParameters;
+
     protected ToolshedCommand()
     {
         var name = GetType().GetCustomAttribute<ToolshedCommandAttribute>()!.Name;
@@ -82,7 +92,7 @@ public abstract partial class ToolshedCommand
 
             if (!typeName.EndsWith(commandStr))
             {
-                throw new InvalidComponentNameException($"Component {GetType()} must end with the word Component");
+                throw new InvalidComponentNameException($"Command {GetType()} must end with the word Command");
             }
 
             name = typeName[..^commandStr.Length].ToLowerInvariant();
@@ -98,11 +108,14 @@ public abstract partial class ToolshedCommand
             };
 
         var impls = GetGenericImplementations();
-        Dictionary<string, SortedDictionary<string, Type>> parameters = new();
+        Dictionary<(string, Type?), SortedDictionary<string, Type>> parameters = new();
+
+        _readonlyParameters = new();
 
         foreach (var impl in impls)
         {
             var myParams = new SortedDictionary<string, Type>();
+            var orderedParams = new List<Type>();
             string? subCmd = null;
             if (impl.GetCustomAttribute<CommandImplementationAttribute>() is {SubCommand: { } x})
             {
@@ -116,27 +129,33 @@ public abstract partial class ToolshedCommand
                     };
             }
 
+            Type? pipedType = null;
             foreach (var param in impl.GetParameters())
             {
                 if (param.GetCustomAttribute<CommandArgumentAttribute>() is not null)
                 {
-                    if (parameters.ContainsKey(param.Name!))
-                        continue;
-
-                    myParams.Add(param.Name!, param.ParameterType);
+                    if (myParams.TryAdd(param.Name!, param.ParameterType))
+                        orderedParams.Add(param.ParameterType);
                 }
-            }
 
-            if (parameters.TryGetValue(subCmd ?? "", out var existing))
-            {
-                if (!existing.SequenceEqual(existing))
+                if (param.GetCustomAttribute<PipedArgumentAttribute>() is not null)
                 {
-                    throw new NotImplementedException("All command implementations of a given subcommand must share the same parameters!");
+                    if (pipedType != null)
+                        throw new NotSupportedException($"Commands cannot have more than one piped argument");
+                    pipedType = param.ParameterType;
                 }
             }
-            else
-                parameters.Add(subCmd ?? "", myParams);
 
+            var key = (subCmd ?? "", pipedType);
+            if (parameters.TryAdd(key, myParams))
+            {
+                var readParam = _readonlyParameters.GetOrNew(subCmd ?? "");
+                readParam.Add((pipedType, orderedParams));
+                continue;
+            }
+
+            if (!parameters[key].SequenceEqual(myParams))
+                throw new NotImplementedException("All command implementations of a given subcommand with the same pipe type must share the same argument types");
         }
     }
 
@@ -151,7 +170,7 @@ public abstract partial class ToolshedCommand
 
     internal bool TryParseArguments(
             bool doAutocomplete,
-            ForwardParser parser,
+            ParserContext parserContext,
             Type? pipedType,
             string? subCommand,
             [NotNullWhen(true)] out Dictionary<string, object?>? args,
@@ -160,7 +179,8 @@ public abstract partial class ToolshedCommand
             out ValueTask<(CompletionResult?, IConError?)>? autocomplete
         )
     {
-        return _implementors[subCommand ?? ""].TryParseArguments(doAutocomplete, parser, subCommand, pipedType, out args, out resolvedTypeArguments, out error, out autocomplete);
+
+        return _implementors[subCommand ?? ""].TryParseArguments(doAutocomplete, parserContext, subCommand, pipedType, out args, out resolvedTypeArguments, out error, out autocomplete);
     }
 }
 
@@ -182,14 +202,11 @@ internal sealed class CommandArgumentBundle
     public required Type[] TypeArguments;
 }
 
-internal readonly record struct CommandDiscriminator(Type? PipedType, Type[] TypeArguments) : IEquatable<CommandDiscriminator?>
+internal readonly record struct CommandDiscriminator(Type? PipedType, Type[] TypeArguments)
 {
-    public bool Equals(CommandDiscriminator? other)
+    public bool Equals(CommandDiscriminator other)
     {
-        if (other is not {} value)
-            return false;
-
-        return value.PipedType == PipedType && value.TypeArguments.SequenceEqual(TypeArguments);
+        return other.PipedType == PipedType && other.TypeArguments.SequenceEqual(TypeArguments);
     }
 
     public override int GetHashCode()

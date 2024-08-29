@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Runtime;
 using System.Threading.Tasks;
+using Robust.Client.Audio;
 using Robust.Client.Audio.Midi;
 using Robust.Client.Console;
 using Robust.Client.GameObjects;
@@ -18,12 +19,14 @@ using Robust.Client.State;
 using Robust.Client.Upload;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.RichText;
+using Robust.Client.UserInterface.XAML.Proxy;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
 using Robust.Client.WebViewHook;
 using Robust.LoaderApi;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
+using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
@@ -49,7 +52,10 @@ namespace Robust.Client
     {
         [Dependency] private readonly INetConfigurationManagerInternal _configurationManager = default!;
         [Dependency] private readonly IResourceCacheInternal _resourceCache = default!;
+        [Dependency] private readonly IResourceManagerInternal _resManager = default!;
         [Dependency] private readonly IRobustSerializer _serializer = default!;
+        [Dependency] private readonly IXamlProxyManager _xamlProxyManager = default!;
+        [Dependency] private readonly IXamlHotReloadManager _xamlHotReloadManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         [Dependency] private readonly IClientNetManager _networkManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
@@ -68,7 +74,7 @@ namespace Robust.Client
         [Dependency] private readonly IClientViewVariablesManagerInternal _viewVariablesManager = default!;
         [Dependency] private readonly IDiscordRichPresence _discord = default!;
         [Dependency] private readonly IClydeInternal _clyde = default!;
-        [Dependency] private readonly IClydeAudioInternal _clydeAudio = default!;
+        [Dependency] private readonly IAudioInternal _audio = default!;
         [Dependency] private readonly IFontManagerInternal _fontManager = default!;
         [Dependency] private readonly IModLoaderInternal _modLoader = default!;
         [Dependency] private readonly IScriptClient _scriptClient = default!;
@@ -111,11 +117,12 @@ namespace Robust.Client
             DebugTools.AssertNotNull(_resourceManifest);
 
             _clyde.InitializePostWindowing();
-            _clydeAudio.InitializePostWindowing();
+            _audio.InitializePostWindowing();
             _clyde.SetWindowTitle(
                 Options.DefaultWindowTitle ?? _resourceManifest!.DefaultWindowTitle ?? "RobustToolbox");
 
             _taskManager.Initialize();
+            _parallelMgr.Initialize();
             _fontManager.SetFontDpi((uint)_configurationManager.GetCVar(CVars.DisplayFontDpi));
 
             // Load optional Robust modules.
@@ -148,7 +155,7 @@ namespace Robust.Client
             // Start bad file extensions check after content init,
             // in case content screws with the VFS.
             var checkBadExtensions = ProgramShared.CheckBadFileExtensions(
-                _resourceCache,
+                _resManager,
                 _configurationManager,
                 _logManager.GetSawmill("res"));
 
@@ -167,7 +174,8 @@ namespace Robust.Client
             _reflectionManager.Initialize();
             _prototypeManager.Initialize();
             _prototypeManager.LoadDefaultPrototypes();
-            _prototypeManager.ResolveResults();
+            _xamlProxyManager.Initialize();
+            _xamlHotReloadManager.Initialize();
             _userInterfaceManager.Initialize();
             _eyeManager.Initialize();
             _entityManager.Initialize();
@@ -288,78 +296,6 @@ namespace Robust.Client
             return true;
         }
 
-        private ResourceManifestData LoadResourceManifest()
-        {
-            // Parses /manifest.yml for game-specific settings that cannot be exclusively set up by content code.
-            if (!_resourceCache.TryContentFileRead("/manifest.yml", out var stream))
-                return ResourceManifestData.Default;
-
-            var yamlStream = new YamlStream();
-            using (stream)
-            {
-                using var streamReader = new StreamReader(stream, EncodingHelpers.UTF8);
-                yamlStream.Load(streamReader);
-            }
-
-            if (yamlStream.Documents.Count == 0)
-                return ResourceManifestData.Default;
-
-            if (yamlStream.Documents.Count != 1 || yamlStream.Documents[0].RootNode is not YamlMappingNode mapping)
-            {
-                throw new InvalidOperationException(
-                    "Expected a single YAML document with root mapping for /manifest.yml");
-            }
-
-            var modules = ReadStringArray(mapping, "modules") ?? Array.Empty<string>();
-
-            string? assemblyPrefix = null;
-            if (mapping.TryGetNode("assemblyPrefix", out var prefixNode))
-                assemblyPrefix = prefixNode.AsString();
-
-            string? defaultWindowTitle = null;
-            if (mapping.TryGetNode("defaultWindowTitle", out var winTitleNode))
-                defaultWindowTitle = winTitleNode.AsString();
-
-            string? windowIconSet = null;
-            if (mapping.TryGetNode("windowIconSet", out var iconSetNode))
-                windowIconSet = iconSetNode.AsString();
-
-            string? splashLogo = null;
-            if (mapping.TryGetNode("splashLogo", out var splashNode))
-                splashLogo = splashNode.AsString();
-
-            bool autoConnect = true;
-            if (mapping.TryGetNode("autoConnect", out var autoConnectNode))
-                autoConnect = autoConnectNode.AsBool();
-
-            var clientAssemblies = ReadStringArray(mapping, "clientAssemblies");
-
-            return new ResourceManifestData(
-                modules,
-                assemblyPrefix,
-                defaultWindowTitle,
-                windowIconSet,
-                splashLogo,
-                autoConnect,
-                clientAssemblies
-            );
-
-            static string[]? ReadStringArray(YamlMappingNode mapping, string key)
-            {
-                if (!mapping.TryGetNode(key, out var node))
-                    return null;
-
-                var sequence = (YamlSequenceNode)node;
-                var array = new string[sequence.Children.Count];
-                for (var i = 0; i < array.Length; i++)
-                {
-                    array[i] = sequence[i].AsString();
-                }
-
-                return array;
-            }
-        }
-
         internal bool StartupSystemSplash(
             GameControllerOptions options,
             Func<ILogHandler>? logHandlerFactory,
@@ -430,16 +366,15 @@ namespace Robust.Client
 
             ProfileOptSetup.Setup(_configurationManager);
 
-            _parallelMgr.Initialize();
             _prof.Initialize();
 
-            _resourceCache.Initialize(Options.LoadConfigAndUserData ? userDataDir : null);
+            _resManager.Initialize(Options.LoadConfigAndUserData ? userDataDir : null);
 
             var mountOptions = _commandLineArgs != null
                 ? MountOptions.Merge(_commandLineArgs.MountOptions, Options.MountOptions)
                 : Options.MountOptions;
 
-            ProgramShared.DoMounts(_resourceCache, mountOptions, Options.ContentBuildDirectory,
+            ProgramShared.DoMounts(_resManager, mountOptions, Options.ContentBuildDirectory,
                 Options.AssemblyDirectory,
                 Options.LoadContentResources, _loaderArgs != null && !Options.ResourceMountDisabled, ContentStart);
 
@@ -449,16 +384,16 @@ namespace Robust.Client
                 {
                     foreach (var (api, prefix) in mounts)
                     {
-                        _resourceCache.MountLoaderApi(api, "", new(prefix));
+                        _resourceCache.MountLoaderApi(_resManager, api, "", new(prefix));
                     }
                 }
 
                 _stringSerializer.EnableCaching = false;
-                _resourceCache.MountLoaderApi(_loaderArgs.FileApi, "Resources/");
+                _resourceCache.MountLoaderApi(_resManager, _loaderArgs.FileApi, "Resources/");
                 _modLoader.VerifierExtraLoadHandler = VerifierExtraLoadHandler;
             }
 
-            _resourceManifest = LoadResourceManifest();
+            _resourceManifest = ResourceManifestData.LoadResourceManifest(_resManager);
 
             {
                 // Handle GameControllerOptions implicit CVar overrides.
@@ -640,11 +575,6 @@ namespace Robust.Client
                 }
             }
 
-            using (_prof.Group("ClydeAudio"))
-            {
-                _clydeAudio.FrameProcess(frameEventArgs);
-            }
-
             using (_prof.Group("Clyde"))
             {
                 _clyde.FrameProcess(frameEventArgs);
@@ -687,6 +617,8 @@ namespace Robust.Client
             {
                 _modLoader.BroadcastUpdate(ModUpdateLevel.FramePostEngine, frameEventArgs);
             }
+
+            _audio.FlushALDisposeQueues();
         }
 
         internal static void SetupLogging(
@@ -705,7 +637,6 @@ namespace Robust.Client
             logManager.GetSawmill("ogl.debug.other").Level = LogLevel.Warning;
             logManager.GetSawmill("gdparse").Level = LogLevel.Error;
             logManager.GetSawmill("discord").Level = LogLevel.Warning;
-            logManager.GetSawmill("net.predict").Level = LogLevel.Info;
             logManager.GetSawmill("szr").Level = LogLevel.Info;
             logManager.GetSawmill("loc").Level = LogLevel.Warning;
 
@@ -784,21 +715,7 @@ namespace Robust.Client
         internal void CleanupWindowThread()
         {
             _clyde.Shutdown();
-            _clydeAudio.Shutdown();
-        }
-
-        private sealed record ResourceManifestData(
-            string[] Modules,
-            string? AssemblyPrefix,
-            string? DefaultWindowTitle,
-            string? WindowIconSet,
-            string? SplashLogo,
-            bool AutoConnect,
-            string[]? ClientAssemblies
-        )
-        {
-            public static readonly ResourceManifestData Default =
-                new ResourceManifestData(Array.Empty<string>(), null, null, null, null, true, null);
+            _audio.Shutdown();
         }
 
         public event Action<FrameEventArgs>? TickUpdateOverride;

@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
-using Robust.Shared.Players;
+using Robust.Shared.Network;
+using Robust.Shared.Player;
 using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Utility;
 
@@ -10,43 +11,41 @@ namespace Robust.Shared.Toolshed.Invocation;
 /// <inheritdoc />
 internal sealed class OldShellInvocationContext : IInvocationContext
 {
-    [Dependency] private readonly ToolshedManager _toolshed = default!;
+    [field: Dependency]
+    public ToolshedManager Toolshed { get; } = default!;
+
+    public ToolshedEnvironment Environment => Toolshed.DefaultEnvironment;
+
     private readonly List<IConError> _errors = new();
 
     /// <summary>
-    ///     Old system's shell associated with this context
+    ///     Old system's shell associated with this context. May be null if the player is currently disconnected.
     /// </summary>
-    public IConsoleShell Shell;
+    public IConsoleShell? Shell;
 
     public OldShellInvocationContext(IConsoleShell shell)
     {
         IoCManager.InjectDependencies(this);
         Shell = shell;
+        User = Session?.UserId;
     }
 
     /// <inheritdoc />
-    public bool CheckInvokable(CommandSpec command, out IConError? error)
-    {
-        if (_toolshed.ActivePermissionController is { } controller)
-            return controller.CheckInvokable(command, Session, out error);
-
-        error = null;
-        return true;
-    }
+    public NetUserId? User { get; }
 
     /// <inheritdoc />
-    public ICommonSession? Session => Shell.Player;
+    public ICommonSession? Session => Shell?.Player;
 
     /// <inheritdoc />
     public void WriteLine(string line)
     {
-        Shell.WriteLine(line);
+        Shell?.WriteLine(line);
     }
 
     /// <inheritdoc />
     public void WriteLine(FormattedMessage line)
     {
-        Shell.WriteLine(line);
+        Shell?.WriteLine(line);
     }
 
     /// <inheritdoc />

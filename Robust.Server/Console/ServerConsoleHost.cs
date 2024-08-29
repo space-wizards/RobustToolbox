@@ -1,14 +1,15 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Robust.Server.Player;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Toolshed;
 using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Utility;
@@ -16,7 +17,8 @@ using Robust.Shared.Utility;
 namespace Robust.Server.Console
 {
     /// <inheritdoc cref="IServerConsoleHost" />
-    internal sealed class ServerConsoleHost : ConsoleHost, IServerConsoleHost, IConsoleHostInternal
+    [Virtual]
+    internal class ServerConsoleHost : ConsoleHost, IServerConsoleHost, IConsoleHostInternal
     {
         [Dependency] private readonly IConGroupController _groupController = default!;
         [Dependency] private readonly IPlayerManager _players = default!;
@@ -42,7 +44,7 @@ namespace Robust.Server.Console
 
             var msg = new MsgConCmd();
             msg.Text = command;
-            NetManager.ServerSendMessage(msg, ((IPlayerSession)session).ConnectedClient);
+            NetManager.ServerSendMessage(msg, session.Channel);
         }
 
         /// <inheritdoc />
@@ -50,18 +52,12 @@ namespace Robust.Server.Console
         {
             var msg = new FormattedMessage();
             msg.AddText(text);
-            if (session is IPlayerSession playerSession)
-                OutputText(playerSession, msg, false);
-            else
-                OutputText(null, msg, false);
+            OutputText(session, msg, false);
         }
 
         public override void WriteLine(ICommonSession? session, FormattedMessage msg)
         {
-            if (session is IPlayerSession playerSession)
-                OutputText(playerSession, msg, false);
-            else
-                OutputText(null, msg, false);
+            OutputText(session, msg, false);
         }
 
         /// <inheritdoc />
@@ -69,10 +65,7 @@ namespace Robust.Server.Console
         {
             var msg = new FormattedMessage();
             msg.AddText(text);
-            if (session is IPlayerSession playerSession)
-                OutputText(playerSession, msg, true);
-            else
-                OutputText(null, msg, true);
+            OutputText(session, msg, true);
         }
 
         public bool IsCmdServer(IConsoleCommand cmd) => true;
@@ -91,7 +84,7 @@ namespace Robust.Server.Console
                 var sudoShell = new SudoShell(this, localShell, shell);
 
 #pragma warning disable CA2012
-                return CalcCompletions(sudoShell, args, argStr);
+                return CalcCompletionsOrEmpty(sudoShell, args, argStr);
 #pragma warning restore CA2012
             });
 
@@ -137,12 +130,19 @@ namespace Robust.Server.Console
                     // toolshed time
                     _toolshed.InvokeCommand(shell, command, null, out var res, out var ctx);
 
+                    bool anyErrors = false;
                     foreach (var err in ctx.GetErrors())
                     {
+                        anyErrors = true;
                         ctx.WriteLine(err.Describe());
                     }
 
-                    shell.WriteLine(_toolshed.PrettyPrintType(res));
+                    // why does ctx not have any write-error support?
+                    if (anyErrors)
+                        shell.WriteError($"Failed to execute toolshed command");
+
+                    shell.WriteLine(FormattedMessage.FromMarkupPermissive(_toolshed.PrettyPrintType(res, out var more, moreUsed: true)));
+                    ctx.WriteVar("more", more);
                 }
             }
             catch (Exception e)
@@ -155,7 +155,7 @@ namespace Robust.Server.Console
 
         private bool ShellCanExecute(IConsoleShell shell, string cmdName)
         {
-            return shell.Player == null || _groupController.CanCommand((IPlayerSession)shell.Player, cmdName);
+            return shell.Player == null || _groupController.CanCommand(shell.Player, cmdName);
         }
 
         private void HandleRegistrationRequest(INetChannel senderConnection)
@@ -163,16 +163,40 @@ namespace Robust.Server.Console
             var message = new MsgConCmdReg();
 
             var counter = 0;
-            message.Commands = new MsgConCmdReg.Command[AvailableCommands.Count];
+            var toolshedCommands = _toolshed.DefaultEnvironment.AllCommands().ToArray();
+            message.Commands = new List<MsgConCmdReg.Command>(AvailableCommands.Count + toolshedCommands.Length);
+            var commands = new HashSet<string>();
 
             foreach (var command in AvailableCommands.Values)
             {
-                message.Commands[counter++] = new MsgConCmdReg.Command
+                if (!commands.Add(command.Command))
+                {
+                    Sawmill.Error($"Duplicate command: {command.Command}");
+                    continue;
+                }
+                message.Commands.Add(new MsgConCmdReg.Command
                 {
                     Name = command.Command,
                     Description = command.Description,
                     Help = command.Help
-                };
+                });
+            }
+
+            foreach (var spec in toolshedCommands)
+            {
+                var name = spec.FullName();
+                if (!commands.Add(name))
+                {
+                    Sawmill.Warning($"Duplicate toolshed command: {name}");
+                    continue;
+                }
+
+                message.Commands.Add(new MsgConCmdReg.Command
+                {
+                    Name = name,
+                    Description = spec.Cmd.Description(spec.SubCommand),
+                    Help = spec.Cmd.GetHelp(spec.SubCommand)
+                });
             }
 
             NetManager.ServerSendMessage(message, senderConnection);
@@ -189,14 +213,14 @@ namespace Robust.Server.Console
             ExecuteCommand(session, text);
         }
 
-        private void OutputText(IPlayerSession? session, FormattedMessage text, bool error)
+        private void OutputText(ICommonSession? session, FormattedMessage text, bool error)
         {
             if (session != null)
             {
                 var replyMsg = new MsgConCmdAck();
                 replyMsg.Error = error;
                 replyMsg.Text = text;
-                NetManager.ServerSendMessage(replyMsg, session.ConnectedClient);
+                NetManager.ServerSendMessage(replyMsg, session.Channel);
             }
             else
                 _systemConsole.Print(text + "\n");
@@ -215,20 +239,30 @@ namespace Robust.Server.Console
 
             var result = await CalcCompletions(shell, message.Args, message.ArgString);
 
-            if ((result.Options.Length == 0 && result.Hint is null) || message.Args.Length <= 1)
+            if ((result == null) || message.Args.Length <= 1)
             {
-                var parser = new ForwardParser(message.ArgString, _toolshed);
-                CommandRun.TryParse(false, true, parser, null, null, false, out _, out var completions, out _);
+                var parser = new ParserContext(message.ArgString, _toolshed);
+                CommandRun.TryParse(true, parser, null, null, false, out _, out var completions, out _);
                 if (completions == null)
                 {
                     goto done;
                 }
                 var (shedRes, _) = await completions.Value;
-                shedRes ??= CompletionResult.Empty;
-                result = new CompletionResult(shedRes.Options.Concat(result.Options).ToArray(), shedRes.Hint ?? result.Hint);
+
+                IEnumerable<CompletionOption> options = result?.Options ?? Array.Empty<CompletionOption>();
+
+                if (shedRes != null)
+                    options = options.Concat(shedRes.Options);
+
+                var hints = result?.Hint ?? shedRes?.Hint;
+
+                result = new CompletionResult(options.ToArray(), hints);
             }
 
             done:
+
+            result ??= CompletionResult.Empty;
+
             var msg = new MsgConCompletionResp
             {
                 Result = result,
@@ -241,25 +275,34 @@ namespace Robust.Server.Console
             NetManager.ServerSendMessage(msg, message.MsgChannel);
         }
 
-        private ValueTask<CompletionResult> CalcCompletions(IConsoleShell shell, string[] args, string argStr)
+        private async ValueTask<CompletionResult> CalcCompletionsOrEmpty(IConsoleShell shell, string[] args, string argStr)
+        {
+            return await CalcCompletions(shell, args, argStr) ?? CompletionResult.Empty;
+        }
+
+        /// <summary>
+        /// Get completions. Non-null results imply that the command was handled. If it is empty, it implies that
+        /// there are no completions for this command.
+        /// </summary>
+        private async ValueTask<CompletionResult?> CalcCompletions(IConsoleShell shell, string[] args, string argStr)
         {
             // Logger.Debug(string.Join(", ", args));
 
             if (args.Length <= 1)
             {
                 // Typing out command name, handle this ourselves.
-                return ValueTask.FromResult(CompletionResult.FromOptions(
-                    AvailableCommands.Values.Where(c => ShellCanExecute(shell, c.Command)).Select(c => new CompletionOption(c.Command, c.Description))));
+                return CompletionResult.FromOptions(
+                    AvailableCommands.Values.Where(c => ShellCanExecute(shell, c.Command)).Select(c => new CompletionOption(c.Command, c.Description)));
             }
 
             var cmdName = args[0];
             if (!RegisteredCommands.TryGetValue(cmdName, out var cmd))
-                return ValueTask.FromResult(CompletionResult.Empty);
+                return null;
 
             if (!ShellCanExecute(shell, cmdName))
-                return ValueTask.FromResult(CompletionResult.Empty);
+                return CompletionResult.Empty;
 
-            return cmd.GetCompletionAsync(shell, args[1..], argStr, default);
+            return await cmd.GetCompletionAsync(shell, args[1..], argStr, CancellationToken.None);
         }
 
         private sealed class SudoShell : IConsoleShell

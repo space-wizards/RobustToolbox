@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Robust.Client.Graphics;
@@ -8,6 +9,7 @@ using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Input;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface;
@@ -19,9 +21,10 @@ internal partial class UserInterfaceManager
     private bool _needUpdateActiveCursor;
     [ViewVariables] public Control? KeyboardFocused { get; private set; }
 
-    [ViewVariables] public Control? CurrentlyHovered { get; private set; } = default!;
+    [ViewVariables] public Control? CurrentlyHovered { get; private set; }
 
     private Control? _controlFocused;
+
     [ViewVariables]
     public Control? ControlFocused
     {
@@ -39,7 +42,8 @@ internal partial class UserInterfaceManager
     private float? _tooltipDelay;
     private bool _showingTooltip;
     private Control? _suppliedTooltip;
-    private const float TooltipDelay = 1;
+    private const float TooltipDelay = 0.25f;
+    private readonly Dictionary<BoundKeyFunction, Control> _focusedControls = new();
 
     private WindowRoot? _focusedRoot;
 
@@ -98,6 +102,7 @@ internal partial class UserInterfaceManager
             return;
         }
 
+
         var guiArgs = new GUIBoundKeyEventArgs(args.Function, args.State, args.PointerLocation, args.CanFocus,
             args.PointerLocation.Position / control.UIScale - control.GlobalPosition,
             args.PointerLocation.Position - control.GlobalPixelPosition);
@@ -109,16 +114,20 @@ internal partial class UserInterfaceManager
             args.Handle();
         }
 
+        // Attempt to ensure that keybind-up events get raised after a keybind-down.
+        DebugTools.Assert(!_focusedControls.TryGetValue(args.Function, out var existing)
+                          || !existing.VisibleInTree
+                          || args.IsRepeat && existing == control);
+        _focusedControls[args.Function] = control;
+
         OnKeyBindDown?.Invoke(control);
     }
 
     public void KeyBindUp(BoundKeyEventArgs args)
     {
-        var control = ControlFocused ?? KeyboardFocused ?? MouseGetControl(args.PointerLocation);
-        if (control == null)
-        {
+        // Only raise keybind-up for the control on which we previously raised keybind-down
+        if (!_focusedControls.Remove(args.Function, out var control) || !control.VisibleInTree)
             return;
-        }
 
         var guiArgs = new GUIBoundKeyEventArgs(args.Function, args.State, args.PointerLocation, args.CanFocus,
             args.PointerLocation.Position / control.UIScale - control.GlobalPosition,
@@ -137,23 +146,7 @@ internal partial class UserInterfaceManager
         _resetTooltipTimer();
         // Update which control is considered hovered.
         var newHovered = MouseGetControl(mouseMoveEventArgs.Position);
-        if (newHovered != CurrentlyHovered)
-        {
-            _clearTooltip();
-            CurrentlyHovered?.MouseExited();
-            CurrentlyHovered = newHovered;
-            CurrentlyHovered?.MouseEntered();
-            if (CurrentlyHovered != null)
-            {
-                _tooltipDelay = CurrentlyHovered.TooltipDelay ?? TooltipDelay;
-            }
-            else
-            {
-                _tooltipDelay = null;
-            }
-
-            _needUpdateActiveCursor = true;
-        }
+        SetHovered(newHovered);
 
         var target = ControlFocused ?? newHovered;
         if (target != null)
@@ -167,6 +160,33 @@ internal partial class UserInterfaceManager
 
             _doMouseGuiInput(target, guiArgs, (c, ev) => c.MouseMove(ev));
         }
+    }
+
+    public void UpdateHovered()
+    {
+        var ctrl =  MouseGetControl(_inputManager.MouseScreenPosition);
+        SetHovered(ctrl);
+    }
+
+    public void SetHovered(Control? control)
+    {
+        if (control == CurrentlyHovered)
+            return;
+
+        _clearTooltip();
+        CurrentlyHovered?.MouseExited();
+        CurrentlyHovered = control;
+        CurrentlyHovered?.MouseEntered();
+        if (CurrentlyHovered != null)
+        {
+            _tooltipDelay = CurrentlyHovered.TooltipDelay ?? TooltipDelay;
+        }
+        else
+        {
+            _tooltipDelay = null;
+        }
+
+        _needUpdateActiveCursor = true;
     }
 
     private void UpdateActiveCursor()

@@ -1,6 +1,7 @@
 using System;
 using System.Numerics;
 using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -16,6 +17,7 @@ namespace Robust.Client.Graphics
         ///     The render target that is rendered to when rendering this viewport.
         /// </summary>
         IRenderTexture RenderTarget { get; }
+        IRenderTexture LightRenderTarget { get; }
         IEye? Eye { get; set; }
         Vector2i Size { get; }
 
@@ -47,7 +49,7 @@ namespace Robust.Client.Graphics
         /// <summary>
         ///     Matrix equivalent of <see cref="LocalToWorld(Vector2)"/>.
         /// </summary>
-        Matrix3 GetWorldToLocalMatrix();
+        Matrix3x2 GetWorldToLocalMatrix();
 
         /// <summary>
         ///     Converts a point in world-space to the viewport's screen coordinates.

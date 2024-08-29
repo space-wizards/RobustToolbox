@@ -3,6 +3,7 @@ using System.Numerics;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Shapes;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Systems
@@ -16,6 +17,7 @@ namespace Robust.Shared.Physics.Systems
         {
             switch (shape)
             {
+                case ChainShape:
                 case EdgeShape:
                     return false;
                 case PhysShapeAabb aabb:
@@ -27,6 +29,7 @@ namespace Robust.Shared.Physics.Systems
                     var distance = worldPoint - center;
                     return Vector2.Dot(distance, distance) <= circle.Radius * circle.Radius;
                 case PolygonShape poly:
+                {
                     var pLocal = Physics.Transform.MulT(xform.Quaternion2D, worldPoint - xform.Position);
 
                     for (var i = 0; i < poly.VertexCount; i++)
@@ -36,6 +39,19 @@ namespace Robust.Shared.Physics.Systems
                     }
 
                     return true;
+                }
+                case Polygon poly:
+                {
+                    var pLocal = Physics.Transform.MulT(xform.Quaternion2D, worldPoint - xform.Position);
+
+                    for (var i = 0; i < poly.VertexCount; i++)
+                    {
+                        var dot = Vector2.Dot(poly.Normals[i], pLocal - poly.Vertices[i]);
+                        if (dot > 0f) return false;
+                    }
+
+                    return true;
+                }
                 default:
                     throw new ArgumentOutOfRangeException($"No implemented TestPoint for {shape.GetType()}");
             }
@@ -49,6 +65,11 @@ namespace Robust.Shared.Physics.Systems
             // we can just cut out the middle-man
             switch (shape)
             {
+                case ChainShape:
+                    data.Mass = 0f;
+                    data.Center = Vector2.Zero;
+                    data.I = 0f;
+                    break;
                 case EdgeShape edge:
                     data.Mass = 0.0f;
                     data.Center = (edge.Vertex1 + edge.Vertex2) * 0.5f;
@@ -153,6 +174,11 @@ namespace Robust.Shared.Physics.Systems
             // we can just cut out the middle-man
             switch (shape)
             {
+                case ChainShape:
+                    data.Mass = 0f;
+                    data.Center = Vector2.Zero;
+                    data.I = 0f;
+                    break;
                 case EdgeShape edge:
                     data.Mass = 0.0f;
                     data.Center = (edge.Vertex1 + edge.Vertex2) * 0.5f;

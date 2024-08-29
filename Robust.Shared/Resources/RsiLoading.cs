@@ -2,6 +2,7 @@
 using System.IO;
 using System.Text.Json;
 using JetBrains.Annotations;
+using Robust.Shared.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -93,7 +94,17 @@ internal static class RsiLoading
             states[stateI] = new StateMetadata(stateName, dirValue, delays);
         }
 
-        return new RsiMetadata(size, states);
+        var textureParams = TextureLoadParameters.Default;
+        if (manifestJson.Load is { } load)
+        {
+            textureParams = new TextureLoadParameters
+            {
+                SampleParameters = TextureSampleParameters.Default,
+                Srgb = load.Srgb
+            };
+        }
+
+        return new RsiMetadata(size, states, textureParams);
     }
 
     public static void Warmup()
@@ -103,16 +114,11 @@ internal static class RsiLoading
         JsonSerializer.Deserialize<RsiJsonMetadata>(warmupJson, SerializerOptions);
     }
 
-    internal sealed class RsiMetadata
+    internal sealed class RsiMetadata(Vector2i size, StateMetadata[] states, TextureLoadParameters loadParameters)
     {
-        public readonly Vector2i Size;
-        public readonly StateMetadata[] States;
-
-        public RsiMetadata(Vector2i size, StateMetadata[] states)
-        {
-            Size = size;
-            States = states;
-        }
+        public readonly Vector2i Size = size;
+        public readonly StateMetadata[] States = states;
+        public readonly TextureLoadParameters LoadParameters = loadParameters;
     }
 
     internal sealed class StateMetadata
@@ -134,10 +140,13 @@ internal static class RsiLoading
 
     // To be directly deserialized.
     [UsedImplicitly]
-    private sealed record RsiJsonMetadata(Vector2i Size, StateJsonMetadata[] States);
+    private sealed record RsiJsonMetadata(Vector2i Size, StateJsonMetadata[] States, RsiJsonLoad? Load);
 
     [UsedImplicitly]
     private sealed record StateJsonMetadata(string Name, int? Directions, float[][]? Delays);
+
+    [UsedImplicitly]
+    private sealed record RsiJsonLoad(bool Srgb = true);
 }
 
 [Serializable]
@@ -153,12 +162,6 @@ public class RSILoadException : Exception
     }
 
     public RSILoadException(string message, Exception inner) : base(message, inner)
-    {
-    }
-
-    protected RSILoadException(
-        System.Runtime.Serialization.SerializationInfo info,
-        System.Runtime.Serialization.StreamingContext context) : base(info, context)
     {
     }
 }

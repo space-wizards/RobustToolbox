@@ -24,6 +24,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
 using JetBrains.Annotations;
 using Robust.Shared.Maths;
 
@@ -131,7 +133,7 @@ namespace Robust.Shared.Physics
 
             aabb ??= _extractAabb(item);
 
-            if (HasNaNs(aabb.Value))
+            if (aabb.Value.HasNan())
             {
                 _nodeLookup[item] = DynamicTree.Proxy.Free;
                 return true;
@@ -179,28 +181,25 @@ namespace Robust.Shared.Physics
         [MethodImpl(MethodImplOptions.NoInlining)]
         public bool Update(in T item, Box2? newBox = null)
         {
-            if (!TryGetProxy(item, out var proxy))
-            {
+            ref var proxy = ref CollectionsMarshal.GetValueRefOrNullRef(_nodeLookup, item);
+            if (Unsafe.IsNullRef(ref proxy))
                 return false;
-            }
 
             newBox ??= _extractAabb(item);
 
-            if (HasNaNs(newBox.Value))
+            if (newBox.Value.HasNan())
             {
                 if (proxy == DynamicTree.Proxy.Free)
-                {
                     return false;
-                }
 
                 _b2Tree.DestroyProxy(proxy);
-                _nodeLookup[item] = DynamicTree.Proxy.Free;
+                proxy = DynamicTree.Proxy.Free;
                 return true;
             }
 
             if (proxy == DynamicTree.Proxy.Free)
             {
-                _nodeLookup[item] = _b2Tree.CreateProxy(newBox.Value, item);
+                proxy = _b2Tree.CreateProxy(newBox.Value, item);
                 return true;
             }
 
@@ -223,7 +222,7 @@ namespace Robust.Shared.Physics
         {
             var list = new List<T>();
 
-            QueryAabb(ref list, (ref List<T> lst, in T i) =>
+            QueryAabb(ref list, static (ref List<T> lst, in T i) =>
             {
                 lst.Add(i);
                 return true;
@@ -331,34 +330,28 @@ namespace Robust.Shared.Physics
         public void AddOrUpdate(T item, Box2? aabb = null)
         {
             aabb ??= _extractAabb(item);
-            if (!_nodeLookup.TryGetValue(item, out var proxy))
+
+            ref var proxy = ref CollectionsMarshal.GetValueRefOrAddDefault(_nodeLookup, item, out var exists);
+            if (!exists)
             {
-                _nodeLookup[item] = HasNaNs(aabb.Value) ? DynamicTree.Proxy.Free : _b2Tree.CreateProxy(aabb.Value, item);
+                proxy = aabb.Value.HasNan() ? DynamicTree.Proxy.Free : _b2Tree.CreateProxy(aabb.Value, item);
                 return;
             }
 
-            if (HasNaNs(aabb.Value))
+            if (aabb.Value.HasNan())
             {
                 if (proxy == DynamicTree.Proxy.Free)
                     return;
 
                 _b2Tree.DestroyProxy(proxy);
-                _nodeLookup[item] = DynamicTree.Proxy.Free;
+                proxy = DynamicTree.Proxy.Free;
                 return;
             }
 
             if (proxy == DynamicTree.Proxy.Free)
-                _nodeLookup[item] = _b2Tree.CreateProxy(aabb.Value, item);
+                proxy = _b2Tree.CreateProxy(aabb.Value, item);
             else
                 _b2Tree.MoveProxy(proxy, aabb.Value, Vector2.Zero);
-        }
-
-        private static bool HasNaNs(in Box2 box)
-        {
-            return float.IsNaN(box.Left)
-                   || float.IsNaN(box.Top)
-                   || float.IsNaN(box.Bottom)
-                   || float.IsNaN(box.Right);
         }
 
         [Conditional("DEBUG_DYNAMIC_TREE")]

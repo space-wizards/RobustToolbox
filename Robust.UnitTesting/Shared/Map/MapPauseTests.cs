@@ -31,10 +31,9 @@ internal sealed class MapPauseTests
         var mapMan = sim.Resolve<IMapManager>();
 
         // arrange
-        var mapId = mapMan.CreateMap();
-        mapMan.SetMapPaused(mapId, true);
-
-        entMan.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
+        var mapId = sim.CreateMap().Uid;
+        entMan.System<SharedMapSystem>().SetPaused(mapId, true);
+        entMan.SpawnEntity(null, new EntityCoordinates(mapId, default));
 
         var query = entMan.EntityQuery<TransformComponent>(false).ToList();
 
@@ -53,10 +52,9 @@ internal sealed class MapPauseTests
         var mapMan = sim.Resolve<IMapManager>();
 
         // arrange
-        var mapId = mapMan.CreateMap();
-        mapMan.SetMapPaused(mapId, false);
-
-        var newEnt = entMan.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
+        var mapId = sim.CreateMap().Uid;
+        entMan.System<SharedMapSystem>().SetPaused(mapId, false);
+        entMan.SpawnEntity(null, new EntityCoordinates(mapId, default));
 
         var query = entMan.EntityQuery<TransformComponent>(false).ToList();
 
@@ -75,10 +73,9 @@ internal sealed class MapPauseTests
         var mapMan = sim.Resolve<IMapManager>();
 
         // arrange
-        var mapId = mapMan.CreateMap();
-        mapMan.SetMapPaused(mapId, true);
-
-        entMan.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
+        var mapId = sim.CreateMap().Uid;
+        entMan.System<SharedMapSystem>().SetPaused(mapId, true);
+        entMan.SpawnEntity(null, new EntityCoordinates(mapId, default));
 
         var query = entMan.EntityQuery<TransformComponent>(true).ToList();
 
@@ -97,10 +94,9 @@ internal sealed class MapPauseTests
         var mapMan = sim.Resolve<IMapManager>();
 
         // arrange
-        var mapId = mapMan.CreateMap();
-        mapMan.SetMapPaused(mapId, true);
-
-        var newEnt = entMan.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
+        var mapId = sim.CreateMap().Uid;
+        entMan.System<SharedMapSystem>().SetPaused(mapId, true);
+        var newEnt = entMan.SpawnEntity(null, new EntityCoordinates(mapId, default));
 
         var metaData = entMan.GetComponent<MetaDataComponent>(newEnt);
         Assert.That(metaData.EntityPaused, Is.True);
@@ -117,10 +113,9 @@ internal sealed class MapPauseTests
         var mapMan = sim.Resolve<IMapManager>();
 
         // arrange
-        var mapId = mapMan.CreateMap();
-        mapMan.SetMapPaused(mapId, false);
-
-        var newEnt = entMan.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
+        var mapId = sim.CreateMap().Uid;
+        entMan.System<SharedMapSystem>().SetPaused(mapId, false);
+        var newEnt = entMan.SpawnEntity(null, new EntityCoordinates(mapId, default));
 
         var metaData = entMan.GetComponent<MetaDataComponent>(newEnt);
         Assert.That(metaData.EntityPaused, Is.False);
@@ -137,14 +132,14 @@ internal sealed class MapPauseTests
         var mapMan = sim.Resolve<IMapManager>();
 
         // arrange
-        var mapId = mapMan.CreateMap();
-        mapMan.SetMapPaused(mapId, true);
+        var mapId = sim.CreateMap().MapId;
+        entMan.System<SharedMapSystem>().SetPaused(mapId, true);
 
         // act
-        var newGrid = mapMan.CreateGrid(mapId);
+        var newGrid = mapMan.CreateGridEntity(mapId);
 
         // assert
-        var metaData = entMan.GetComponent<MetaDataComponent>(newGrid.Owner);
+        var metaData = entMan.GetComponent<MetaDataComponent>(newGrid);
         Assert.That(metaData.EntityPaused, Is.True);
     }
 
@@ -160,17 +155,16 @@ internal sealed class MapPauseTests
         var mapMan = sim.Resolve<IMapManager>();
 
         // arrange
-        var map1 = mapMan.CreateMap();
-        mapMan.SetMapPaused(map1, true);
-
-        var newEnt = entMan.SpawnEntity(null, new MapCoordinates(0, 0, map1));
+        var map1 = sim.CreateMap().Uid;
+        entMan.System<SharedMapSystem>().SetPaused(map1, true);
+        var newEnt = entMan.SpawnEntity(null, new EntityCoordinates(map1, default));
         var xform = entMan.GetComponent<TransformComponent>(newEnt);
 
-        var map2 = mapMan.CreateMap();
-        mapMan.SetMapPaused(map2, false);
+        var map2 = sim.CreateMap().Uid;
+        entMan.System<SharedMapSystem>().SetPaused(map2, false);
 
         // Act
-        entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(xform.Owner, mapMan.GetMapEntityId(map2));
+        entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(xform.Owner, map2);
 
         var metaData = entMan.GetComponent<MetaDataComponent>(newEnt);
         Assert.That(metaData.EntityPaused, Is.False);
@@ -188,17 +182,16 @@ internal sealed class MapPauseTests
         var mapMan = sim.Resolve<IMapManager>();
 
         // arrange
-        var map1 = mapMan.CreateMap();
-        mapMan.SetMapPaused(map1, false);
-
-        var newEnt = entMan.SpawnEntity(null, new MapCoordinates(0, 0, map1));
+        var map1 = sim.CreateMap().Uid;
+        entMan.System<SharedMapSystem>().SetPaused(map1, false);
+        var newEnt = entMan.SpawnEntity(null, new EntityCoordinates(map1, default));
         var xform = entMan.GetComponent<TransformComponent>(newEnt);
 
-        var map2 = mapMan.CreateMap();
-        mapMan.SetMapPaused(map2, true);
+        var map2 = sim.CreateMap().Uid;
+        entMan.System<SharedMapSystem>().SetPaused(map2, true);
 
         // Act
-        entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(xform.Owner, mapMan.GetMapEntityId(map2));
+        entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(xform.Owner, map2);
 
         var metaData = entMan.GetComponent<MetaDataComponent>(newEnt);
         Assert.That(metaData.EntityPaused, Is.True);
@@ -214,11 +207,11 @@ internal sealed class MapPauseTests
         var entMan = sim.Resolve<IEntityManager>();
         var mapMan = sim.Resolve<IMapManager>();
 
-        var mapId = mapMan.CreateMap();
-        mapMan.SetMapPaused(mapId, true);
-        var newEnt = entMan.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
+        var mapId = sim.CreateMap().Uid;
+        entMan.System<SharedMapSystem>().SetPaused(mapId, true);
+        var newEnt = entMan.SpawnEntity(null, new EntityCoordinates(mapId, default));
 
-        mapMan.SetMapPaused(mapId, false);
+        entMan.System<SharedMapSystem>().SetPaused(mapId, false);
 
         var metaData = entMan.GetComponent<MetaDataComponent>(newEnt);
         Assert.That(metaData.EntityPaused, Is.False);
@@ -234,75 +227,13 @@ internal sealed class MapPauseTests
         var entMan = sim.Resolve<IEntityManager>();
         var mapMan = sim.Resolve<IMapManager>();
 
-        var mapId = mapMan.CreateMap();
-        mapMan.SetMapPaused(mapId, false);
-        var newEnt = entMan.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
+        var mapId = sim.CreateMap().Uid;
+        entMan.System<SharedMapSystem>().SetPaused(mapId, false);
+        var newEnt = entMan.SpawnEntity(null, new EntityCoordinates(mapId, default));
 
-        mapMan.SetMapPaused(mapId, true);
+        entMan.System<SharedMapSystem>().SetPaused(mapId, true);
 
         var metaData = entMan.GetComponent<MetaDataComponent>(newEnt);
         Assert.That(metaData.EntityPaused, Is.True);
-    }
-
-    /// <summary>
-    /// An unallocated MapId is always unpaused.
-    /// </summary>
-    [Test]
-    public void UnallocatedMap_IsUnPaused()
-    {
-        var sim = SimulationFactory();
-        var entMan = sim.Resolve<IEntityManager>();
-        var mapMan = (IMapManagerInternal)sim.Resolve<IMapManager>();
-
-        // some random unallocated MapId
-        var paused = mapMan.IsMapPaused(new MapId(12));
-
-        Assert.That(paused, Is.False);
-    }
-
-    /// <summary>
-    /// Nullspace is always unpaused, and setting it is a no-op.
-    /// </summary>
-    [Test]
-    public void Nullspace_Pause_IsUnPaused()
-    {
-        var sim = SimulationFactory();
-        var entMan = sim.Resolve<IEntityManager>();
-        var mapMan = (IMapManagerInternal)sim.Resolve<IMapManager>();
-
-        mapMan.SetMapPaused(MapId.Nullspace, true);
-
-        var paused = mapMan.IsMapPaused(MapId.Nullspace);
-        Assert.That(paused, Is.False);
-    }
-
-    /// <summary>
-    /// An allocated MapId without an allocated entity (Nullspace) is always unpaused.
-    /// </summary>
-    [Test]
-    public void Nullspace_IsUnPaused()
-    {
-        var sim = SimulationFactory();
-        var entMan = sim.Resolve<IEntityManager>();
-        var mapMan = (IMapManagerInternal)sim.Resolve<IMapManager>();
-
-        var paused = mapMan.IsMapPaused(MapId.Nullspace);
-
-        Assert.That(paused, Is.False);
-    }
-
-    /// <summary>
-    /// A freed MapId is always unpaused.
-    /// </summary>
-    [Test]
-    public void Unpaused_Freed_IsUnPaused()
-    {
-        var sim = SimulationFactory();
-        var entMan = sim.Resolve<IEntityManager>();
-        var mapMan = (IMapManagerInternal)sim.Resolve<IMapManager>();
-
-        var paused = mapMan.IsMapPaused(MapId.Nullspace);
-
-        Assert.That(paused, Is.False);
     }
 }

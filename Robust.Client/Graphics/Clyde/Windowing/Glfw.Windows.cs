@@ -10,8 +10,11 @@ using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp.PixelFormats;
 using TerraFX.Interop.Windows;
+using TerraFX.Interop.Xlib;
 using GlfwImage = OpenToolkit.GraphicsLibraryFramework.Image;
 using Monitor = OpenToolkit.GraphicsLibraryFramework.Monitor;
+using Window = OpenToolkit.GraphicsLibraryFramework.Window;
+using X11Window = TerraFX.Interop.Xlib.Window;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -468,6 +471,11 @@ namespace Robust.Client.Graphics.Clyde
                     GLFW.MaximizeWindow(window);
                 }
 
+                if ((parameters.Styles & OSWindowStyles.NoTitleBar) != 0)
+                {
+                    GLFW.WindowHint(WindowHintBool.Decorated, false);
+                }
+
                 if ((parameters.Styles & OSWindowStyles.NoTitleOptions) != 0)
                 {
                     if (OperatingSystem.IsWindows())
@@ -480,6 +488,35 @@ namespace Robust.Client.Graphics.Clyde
                             GWL.GWL_STYLE,
                             // Cast to long here to work around a bug in rider with nint bitwise operators.
                             (nint)((long)Windows.GetWindowLongPtrW(hWnd, GWL.GWL_STYLE) & ~WS.WS_SYSMENU));
+                    }
+                    else if (OperatingSystem.IsLinux())
+                    {
+                        try
+                        {
+                            var x11Window = (X11Window)GLFW.GetX11Window(window);
+                            var x11Display = (Display*) GLFW.GetX11Display(window);
+                            DebugTools.Assert(x11Window != X11Window.NULL);
+                            // https://specifications.freedesktop.org/wm-spec/wm-spec-latest.html#idm46181547486832
+                            var newPropValString = Marshal.StringToCoTaskMemUTF8("_NET_WM_WINDOW_TYPE_DIALOG");
+                            var newPropVal = Xlib.XInternAtom(x11Display, (sbyte*)newPropValString, Xlib.False);
+                            DebugTools.Assert(newPropVal != Atom.NULL);
+
+                            var propNameString = Marshal.StringToCoTaskMemUTF8("_NET_WM_WINDOW_TYPE");
+#pragma warning disable CA1806
+                            // [display] [window] [property] [type] [format (8, 16,32)] [mode] [data] [element count]
+                            Xlib.XChangeProperty(x11Display, x11Window,
+                                Xlib.XInternAtom(x11Display, (sbyte*)propNameString, Xlib.False), // should never be null; part of spec
+                                Xlib.XA_ATOM, 32, Xlib.PropModeReplace,
+                                (byte*)&newPropVal, 1);
+#pragma warning restore CA1806
+
+                            Marshal.FreeCoTaskMem(newPropValString);
+                            Marshal.FreeCoTaskMem(propNameString);
+                        }
+                        catch (EntryPointNotFoundException)
+                        {
+                            _sawmill.Warning("OSWindowStyles.NoTitleOptions not implemented on this windowing manager");
+                        }
                     }
                     else
                     {
@@ -499,6 +536,25 @@ namespace Robust.Client.Graphics.Clyde
                             hWnd,
                             GWLP.GWLP_HWNDPARENT,
                             ownerHWnd);
+                    }
+                    else if (OperatingSystem.IsLinux())
+                    {
+                        try
+                        {
+                            var x11Display = (Display*) GLFW.GetX11Display(window);
+                            var thisWindow = (X11Window)GLFW.GetX11Window(window);
+                            var parentWindow = (X11Window)GLFW.GetX11Window(ownerWindow);
+                            DebugTools.Assert(thisWindow != X11Window.NULL);
+                            DebugTools.Assert(parentWindow != X11Window.NULL);
+
+#pragma warning disable CA1806
+                            Xlib.XSetTransientForHint(x11Display, thisWindow, parentWindow);
+#pragma warning restore CA1806
+                        }
+                        catch (EntryPointNotFoundException)
+                        {
+                            _sawmill.Warning("owner windows not implemented on this windowing manager");
+                        }
                     }
                     else
                     {
@@ -598,7 +654,7 @@ namespace Robust.Client.Graphics.Clyde
 
             private static void WinThreadGetClipboard(CmdGetClipboard cmd)
             {
-                var clipboard = GLFW.GetClipboardString((Window*) cmd.Window);
+                var clipboard = GLFW.GetClipboardString((Window*) cmd.Window) ?? "";
                 // Don't have to care about synchronization I don't think so just fire this immediately.
                 cmd.Tcs.TrySetResult(clipboard);
             }

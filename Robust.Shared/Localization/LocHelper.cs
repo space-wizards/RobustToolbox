@@ -1,8 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using Linguini.Bundle;
 using Linguini.Bundle.Errors;
+using Linguini.Syntax.Ast;
 using Linguini.Syntax.Parser.Error;
+using Robust.Shared.Collections;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Localization;
 
@@ -16,54 +21,98 @@ internal static class LocHelper
         return FormatErrors(self.Message, span, resource, newLine);
     }
 
+    public static bool InsertResourcesAndReport(this FluentBundle bundle, Resource resource,
+        ResPath path, [NotNullWhen(false)] out List<LocError>? errors)
+    {
+        if (!bundle.AddResource(resource, out var parseErrors))
+        {
+            errors = new List<LocError>();
+            foreach (var fluentError in parseErrors)
+            {
+                errors.Add(new LocError(path, fluentError));
+            }
+
+            return false;
+        }
+
+        errors = null;
+        return true;
+    }
+
     private static string FormatErrors(string message, ErrorSpan span, ReadOnlyMemory<char> resource, string? newLine)
     {
+        newLine ??= Environment.NewLine;
+
+        var lines = new ValueList<(int start, int end)>();
+
+        // Isolate the lines in the context
+        // Also figure out the line number for the 1st line (1-indexed).
+        var startLineNumber = -1;
+        var markOffset = 0;
+        var curLineNumber = 0;
+        var lineEnumerator = new LineEnumerator(resource);
+        while (lineEnumerator.MoveNext(out var lineStart, out var lineEnd))
+        {
+            curLineNumber += 1;
+            if (span.StartSpan >= lineEnd)
+                continue;
+
+            if (span.EndSpan <= lineStart)
+                break;
+
+            lines.Add((lineStart, lineEnd));
+            if (startLineNumber == -1)
+                startLineNumber = curLineNumber;
+
+            if (span.StartMark < lineEnd && span.StartMark >= lineStart)
+                markOffset = span.StartMark - lineStart;
+        }
+
+        // Figure out width of line number column.
+        var lastLine = lines.Count + startLineNumber - 1;
+        var lastLineNumberWidth = $"{lastLine}".Length;
+
         var sb = new StringBuilder();
-        var errContext = resource.Slice(span.StartSpan, span.EndSpan - span.StartSpan).ToString();
-        var lines = new List<ReadOnlyMemory<char>>(5);
-        var currLineOffset = 0;
-        var lastStart = 0;
-        for (var i = 0; i < span.StartMark - span.StartSpan; i++)
+        curLineNumber = startLineNumber;
+        foreach (var (lineStart, lineEnd) in lines)
         {
-            switch (errContext[i])
-            {
-                // Reset current line so that mark aligns with the reported error
-                // We cheat here a bit, since we both `\r\n` and `\n` end with '\n'
-                case '\n':
-                    if (i > 0 && errContext[i - 1] == '\r')
-                    {
-                        lines.Add(resource.Slice(lastStart, currLineOffset - 1));
-                    }
-                    else
-                    {
-                        lines.Add(resource.Slice(lastStart, currLineOffset));
-                    }
+            var linePadded = $"{curLineNumber}".PadLeft(lastLineNumberWidth);
+            var line = resource.Span[lineStart..lineEnd];
+            sb.Append($" {linePadded} |{line.TrimEnd()}");
+            sb.Append(newLine);
 
-                    lastStart = currLineOffset + 1;
-                    currLineOffset = 0;
-                    break;
-                default:
-                    currLineOffset++;
-                    break;
-            }
+            curLineNumber += 1;
         }
 
-        lines.Add(resource.Slice(lastStart, resource.Length - lastStart));
+        sb.Append(' ', markOffset + lastLineNumberWidth + 3);
+        sb.Append('^', span.EndMark - span.StartMark);
+        sb.Append($" {message}");
 
-
-        var lastLine = $"{span.Row + lines.Count - 1}".Length;
-        for (var index = 0; index < lines.Count; index++)
-        {
-            var line = lines[index];
-
-            sb.Append(newLine ?? Environment.NewLine).Append(' ').Append($"{span.Row + index}".PadLeft(lastLine))
-                .Append(" |").Append(line);
-        }
-
-        sb.Append(newLine ?? Environment.NewLine)
-            .Append(' ', currLineOffset + lastLine + 3)
-            .Append('^', span.EndMark - span.StartMark)
-            .Append($" {message}");
         return sb.ToString();
+    }
+}
+/// <summary>
+///  Wrapper around Fluent Error, that adds path to the list of values.
+///  Work in progress, FluentErrors need to be modified to be more accessible.
+/// </summary>
+internal record LocError
+{
+    public readonly ResPath Path;
+    public readonly FluentError Error;
+
+    /// <summary>
+    /// Basic constructor.
+    /// </summary>
+    /// <param name="path">path of resource being added.</param>
+    /// <param name="fluentError">FluentError encountered.</param>
+    public LocError(ResPath path, FluentError fluentError)
+    {
+        Path = path;
+        Error = fluentError;
+    }
+
+    public override string ToString()
+    {
+        return $"[{Path.CanonPath}]: {Error}";
     }
 }

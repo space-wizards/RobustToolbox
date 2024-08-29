@@ -1,7 +1,6 @@
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
@@ -25,8 +24,8 @@ namespace Robust.UnitTesting.Shared.Map
             var physSystem = server.ResolveDependency<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>();
 
             MapId mapId;
-            MapGridComponent? gridId1 = null;
-            MapGridComponent? gridId2 = null;
+            Entity<MapGridComponent>? gridId1 = null;
+            Entity<MapGridComponent>? gridId2 = null;
             PhysicsComponent? physics1 = null;
             PhysicsComponent? physics2 = null;
             EntityUid? gridEnt1;
@@ -34,11 +33,11 @@ namespace Robust.UnitTesting.Shared.Map
 
             await server.WaitPost(() =>
             {
-                mapId = mapManager.CreateMap();
-                gridId1 = mapManager.CreateGrid(mapId);
-                gridId2 = mapManager.CreateGrid(mapId);
-                gridEnt1 = gridId1.Owner;
-                gridEnt2 = gridId2.Owner;
+                entManager.System<SharedMapSystem>().CreateMap(out mapId);
+                gridId1 = mapManager.CreateGridEntity(mapId);
+                gridId2 = mapManager.CreateGridEntity(mapId);
+                gridEnt1 = gridId1.Value.Owner;
+                gridEnt2 = gridId2.Value.Owner;
                 physics1 = entManager.GetComponent<PhysicsComponent>(gridEnt1.Value);
                 physics2 = entManager.GetComponent<PhysicsComponent>(gridEnt2.Value);
                 // Can't collide static bodies and grids (at time of this writing) start as static
@@ -70,8 +69,8 @@ namespace Robust.UnitTesting.Shared.Map
 
             await server.WaitAssertion(() =>
             {
-                gridId1?.SetTile(new Vector2i(0, 0), new Tile(1));
-                gridId2?.SetTile(new Vector2i(0, 0), new Tile(1));
+                gridId1?.Comp.SetTile(new Vector2i(0, 0), new Tile(1));
+                gridId2?.Comp.SetTile(new Vector2i(0, 0), new Tile(1));
             });
 
             await server.WaitRunTicks(1);

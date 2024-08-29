@@ -22,6 +22,7 @@
  * PhysicsComponent is heavily modified from Box2D.
  */
 
+using System;
 using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
@@ -52,7 +53,7 @@ public partial class SharedPhysicsSystem
         {
             if (component.BodyType != BodyType.Static)
             {
-                SetAwake(uid, component, true);
+                SetAwake((uid, component), true);
             }
         }
 
@@ -98,9 +99,9 @@ public partial class SharedPhysicsSystem
         SetLinearVelocity(uid, newState.LinearVelocity, body: component, manager: manager);
         SetAngularVelocity(uid, newState.AngularVelocity, body: component, manager: manager);
         SetBodyType(uid, newState.BodyType, manager, component);
-        SetFriction(component, newState.Friction);
-        SetLinearDamping(component, newState.LinearDamping);
-        SetAngularDamping(component, newState.AngularDamping);
+        SetFriction(uid, component, newState.Friction);
+        SetLinearDamping(uid, component, newState.LinearDamping);
+        SetAngularDamping(uid, component, newState.AngularDamping);
     }
 
     #endregion
@@ -114,7 +115,7 @@ public partial class SharedPhysicsSystem
 
     public void ApplyAngularImpulse(EntityUid uid, float impulse, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
-        if (!Resolve(uid, ref body) || !IsMoveable(body) || !WakeBody(uid, manager: manager, body: body))
+        if (!PhysicsQuery.Resolve(uid, ref body) || !IsMoveable(body) || !WakeBody(uid, manager: manager, body: body))
         {
             return;
         }
@@ -124,41 +125,41 @@ public partial class SharedPhysicsSystem
 
     public void ApplyForce(EntityUid uid, Vector2 force, Vector2 point, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
-        if (!Resolve(uid, ref body) || !IsMoveable(body) || !WakeBody(uid, manager: manager, body: body))
+        if (!PhysicsQuery.Resolve(uid, ref body) || !IsMoveable(body) || !WakeBody(uid, manager: manager, body: body))
         {
             return;
         }
 
         body.Force += force;
         body.Torque += Vector2Helpers.Cross(point - body._localCenter, force);
-        Dirty(body);
+        Dirty(uid, body);
     }
 
     public void ApplyForce(EntityUid uid, Vector2 force, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
-        if (!Resolve(uid, ref body) || !IsMoveable(body) || !WakeBody(uid, manager: manager, body: body))
+        if (!PhysicsQuery.Resolve(uid, ref body) || !IsMoveable(body) || !WakeBody(uid, manager: manager, body: body))
         {
             return;
         }
 
         body.Force += force;
-        Dirty(body);
+        Dirty(uid, body);
     }
 
     public void ApplyTorque(EntityUid uid, float torque, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
-        if (!Resolve(uid, ref body) || !IsMoveable(body) || !WakeBody(uid, manager: manager, body: body))
+        if (!PhysicsQuery.Resolve(uid, ref body) || !IsMoveable(body) || !WakeBody(uid, manager: manager, body: body))
         {
             return;
         }
 
         body.Torque += torque;
-        Dirty(body);
+        Dirty(uid, body);
     }
 
     public void ApplyLinearImpulse(EntityUid uid, Vector2 impulse, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
-        if (!Resolve(uid, ref body) || !IsMoveable(body) || !WakeBody(uid, manager: manager, body: body))
+        if (!PhysicsQuery.Resolve(uid, ref body) || !IsMoveable(body) || !WakeBody(uid, manager: manager, body: body))
         {
             return;
         }
@@ -168,7 +169,7 @@ public partial class SharedPhysicsSystem
 
     public void ApplyLinearImpulse(EntityUid uid, Vector2 impulse, Vector2 point, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
-        if (!Resolve(uid, ref body) || !IsMoveable(body) || !WakeBody(uid, manager: manager, body: body))
+        if (!PhysicsQuery.Resolve(uid, ref body) || !IsMoveable(body) || !WakeBody(uid, manager: manager, body: body))
         {
             return;
         }
@@ -185,23 +186,31 @@ public partial class SharedPhysicsSystem
     {
         if (body.Contacts.Count == 0) return;
 
+        // This variable is only used in edge-case scenario when contact flagged Deleting raises
+        // EndCollideEvent which will QueueDelete contact's entity
+        ushort contactsFlaggedDeleting = 0;
         var node = body.Contacts.First;
 
         while (node != null)
         {
             var contact = node.Value;
             node = node.Next;
+
             // Destroy last so the linked-list doesn't get touched.
-            DestroyContact(contact);
+            if (!DestroyContact(contact))
+            {
+                contactsFlaggedDeleting++;
+            }
         }
 
-        DebugTools.Assert(body.Contacts.Count == 0);
+        // This contact will be deleted before SimulateWorld runs since it is already set to be Deleted
+        DebugTools.Assert(body.Contacts.Count == contactsFlaggedDeleting);
     }
 
     /// <summary>
     /// Completely resets a dynamic body.
     /// </summary>
-    public void ResetDynamics(PhysicsComponent body)
+    public void ResetDynamics(EntityUid uid, PhysicsComponent body, bool dirty = true)
     {
         var updated = false;
 
@@ -229,14 +238,26 @@ public partial class SharedPhysicsSystem
             updated = true;
         }
 
-        if (updated)
-            Dirty(body);
+        if (updated && dirty)
+            Dirty(uid, body);
+    }
+
+    [Obsolete("Use overload that takes EntityUid")]
+    public void ResetDynamics(PhysicsComponent body, bool dirty = true)
+    {
+        ResetDynamics(body.Owner, body, dirty);
     }
 
     public void ResetMassData(EntityUid uid, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
-        if (!Resolve(uid, ref manager, ref body))
+        if (!PhysicsQuery.Resolve(uid, ref body))
             return;
+
+        if (!_fixturesQuery.Resolve(uid, ref manager))
+            return;
+
+        var oldMass = body._mass;
+        var oldInertia = body._inertia;
 
         body._mass = 0.0f;
         body._invMass = 0.0f;
@@ -260,7 +281,7 @@ public partial class SharedPhysicsSystem
         if (((int) body.BodyType & (int) (BodyType.Kinematic | BodyType.Static)) != 0)
         {
             body._localCenter = Vector2.Zero;
-            Dirty(body);
+            Dirty(uid, body);
             return;
         }
 
@@ -295,61 +316,72 @@ public partial class SharedPhysicsSystem
 
         // Update center of mass velocity.
         body.LinearVelocity += Vector2Helpers.Cross(body.AngularVelocity, localCenter - oldCenter);
-        Dirty(body);
+        Dirty(uid, body);
+
+        if (body._mass == oldMass && body._inertia == oldInertia && oldCenter == localCenter)
+            return;
+
+        var ev = new MassDataChangedEvent((uid, body, manager), oldMass, oldInertia, oldCenter);
+        RaiseLocalEvent(uid, ref ev);
     }
 
-    public void SetAngularVelocity(EntityUid uid, float value, bool dirty = true, FixturesComponent? manager = null, PhysicsComponent? body = null)
+    public bool SetAngularVelocity(EntityUid uid, float value, bool dirty = true, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
-        if (!Resolve(uid, ref body))
-            return;
+        if (!PhysicsQuery.Resolve(uid, ref body))
+            return false;
 
         if (body.BodyType == BodyType.Static)
-            return;
+            return false;
 
         if (value * value > 0.0f)
         {
             if (!WakeBody(uid, manager: manager, body: body))
-                return;
+                return false;
         }
 
         // CloseToPercent tolerance needs to be small enough such that an angular velocity just above
         // sleep-tolerance can damp down to sleeping.
 
         if (MathHelper.CloseToPercent(body.AngularVelocity, value, 0.00001f))
-            return;
+            return false;
 
         body.AngularVelocity = value;
 
         if (dirty)
-            Dirty(body);
+            Dirty(uid, body);
+
+        return true;
     }
 
     /// <summary>
     /// Attempts to set the body to collidable, wake it, then move it.
     /// </summary>
-    public void SetLinearVelocity(EntityUid uid, Vector2 velocity, bool dirty = true, bool wakeBody = true, FixturesComponent? manager = null, PhysicsComponent? body = null)
+    public bool SetLinearVelocity(EntityUid uid, Vector2 velocity, bool dirty = true, bool wakeBody = true, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
-        if (!Resolve(uid, ref body))
-            return;
+        if (!PhysicsQuery.Resolve(uid, ref body))
+            return false;
 
-        if (body.BodyType == BodyType.Static) return;
+        if (body.BodyType == BodyType.Static)
+            return false;
 
         if (wakeBody && Vector2.Dot(velocity, velocity) > 0.0f)
         {
             if (!WakeBody(uid, manager: manager, body: body))
-                return;
+                return false;
         }
 
         if (body.LinearVelocity.EqualsApprox(velocity, 0.0000001f))
-            return;
+            return false;
 
         body.LinearVelocity = velocity;
 
         if (dirty)
-            Dirty(body);
+            Dirty(uid, body);
+
+        return true;
     }
 
-    public void SetAngularDamping(PhysicsComponent body, float value, bool dirty = true)
+    public void SetAngularDamping(EntityUid uid, PhysicsComponent body, float value, bool dirty = true)
     {
         if (MathHelper.CloseTo(body.AngularDamping, value))
             return;
@@ -357,10 +389,16 @@ public partial class SharedPhysicsSystem
         body.AngularDamping = value;
 
         if (dirty)
-            Dirty(body);
+            Dirty(uid, body);
     }
 
-    public void SetLinearDamping(PhysicsComponent body, float value, bool dirty = true)
+    [Obsolete("Use overload that takes EntityUid")]
+    public void SetAngularDamping(PhysicsComponent body, float value, bool dirty = true)
+    {
+        SetAngularDamping(body.Owner, body, value, dirty);
+    }
+
+    public void SetLinearDamping(EntityUid uid, PhysicsComponent body, float value, bool dirty = true)
     {
         if (MathHelper.CloseTo(body.LinearDamping, value))
             return;
@@ -368,15 +406,33 @@ public partial class SharedPhysicsSystem
         body.LinearDamping = value;
 
         if (dirty)
-            Dirty(body);
+            Dirty(uid, body);
     }
 
+    [Obsolete("Use overload that takes EntityUid")]
+    public void SetLinearDamping(PhysicsComponent body, float value, bool dirty = true)
+    {
+        SetLinearDamping(body.Owner, body, value, dirty);
+    }
+
+    [Obsolete("Use SetAwake with EntityUid<PhysicsComponent>")]
     public void SetAwake(EntityUid uid, PhysicsComponent body, bool value, bool updateSleepTime = true)
     {
-        if (body.Awake == value)
-            return;
+        SetAwake(new Entity<PhysicsComponent>(uid, body), value, updateSleepTime);
+    }
 
-        if (value && (body.BodyType == BodyType.Static || !body.CanCollide))
+    public void SetAwake(Entity<PhysicsComponent> ent, bool value, bool updateSleepTime = true)
+    {
+        var (uid, body) = ent;
+        var canWake = body.BodyType != BodyType.Static && body.CanCollide;
+
+        if (body.Awake == value)
+        {
+            DebugTools.Assert(!body.Awake || canWake);
+            return;
+        }
+
+        if (value && !canWake)
             return;
 
         body.Awake = value;
@@ -390,19 +446,31 @@ public partial class SharedPhysicsSystem
         {
             var ev = new PhysicsSleepEvent(uid, body);
             RaiseLocalEvent(uid, ref ev, true);
-            ResetDynamics(body);
+            ResetDynamics(ent, body, dirty: false);
         }
+
+        // Update wake system last, if sleeping but still colliding.
+        if (!value && body.CanCollide)
+            _wakeSystem.UpdateCanCollide(ent, checkTerminating: false, dirty: false);
 
         if (updateSleepTime)
             SetSleepTime(body, 0);
 
-        Dirty(body);
+        if (body.Awake != value)
+        {
+            Log.Error($"Found a corrupted physics awake state for {ToPrettyString(ent)}! Did you forget to cancel the sleep subscription? Forcing body awake");
+            DebugTools.Assert(false);
+            body.Awake = true;
+        }
+
+        UpdateMapAwakeState(uid, body);
+        Dirty(ent);
     }
 
     public void TrySetBodyType(EntityUid uid, BodyType value, FixturesComponent? manager = null, PhysicsComponent? body = null, TransformComponent? xform = null)
     {
         if (_fixturesQuery.Resolve(uid, ref manager, false) &&
-           _physicsQuery.Resolve(uid, ref body, false) &&
+           PhysicsQuery.Resolve(uid, ref body, false) &&
            _xformQuery.Resolve(uid, ref xform, false))
         {
             SetBodyType(uid, value, manager, body, xform);
@@ -411,7 +479,7 @@ public partial class SharedPhysicsSystem
 
     public void SetBodyType(EntityUid uid, BodyType value, FixturesComponent? manager = null, PhysicsComponent? body = null, TransformComponent? xform = null)
     {
-        if (!Resolve(uid, ref body))
+        if (!PhysicsQuery.Resolve(uid, ref body))
             return;
 
         if (body.BodyType == value)
@@ -423,14 +491,14 @@ public partial class SharedPhysicsSystem
 
         if (body.BodyType == BodyType.Static)
         {
-            SetAwake(uid, body, false);
+            SetAwake((uid, body), false);
             body.LinearVelocity = Vector2.Zero;
             body.AngularVelocity = 0.0f;
         }
         // Even if it's dynamic if it can't collide then don't force it awake.
         else if (body.CanCollide)
         {
-            SetAwake(uid, body, true);
+            SetAwake((uid, body), true);
         }
 
         body.Force = Vector2.Zero;
@@ -445,7 +513,7 @@ public partial class SharedPhysicsSystem
         }
     }
 
-    public void SetBodyStatus(PhysicsComponent body, BodyStatus status, bool dirty = true)
+    public void SetBodyStatus(EntityUid uid, PhysicsComponent body, BodyStatus status, bool dirty = true)
     {
         if (body.BodyStatus == status)
             return;
@@ -453,7 +521,13 @@ public partial class SharedPhysicsSystem
         body.BodyStatus = status;
 
         if (dirty)
-            Dirty(body);
+            Dirty(uid, body);
+    }
+
+    [Obsolete("Use overload that takes EntityUid")]
+    public void SetBodyStatus(PhysicsComponent body, BodyStatus status, bool dirty = true)
+    {
+        SetBodyStatus(body.Owner, body, status, dirty);
     }
 
     /// <summary>
@@ -469,7 +543,7 @@ public partial class SharedPhysicsSystem
         FixturesComponent? manager = null,
         PhysicsComponent? body = null)
     {
-        if (!Resolve(uid, ref body))
+        if (!PhysicsQuery.Resolve(uid, ref body))
             return false;
 
         if (body.CanCollide == value)
@@ -483,7 +557,7 @@ public partial class SharedPhysicsSystem
                 if (_containerSystem.IsEntityOrParentInContainer(uid))
                     return false;
 
-                if (!Resolve(uid, ref manager) || manager.FixtureCount == 0 && !_mapManager.IsGrid(uid))
+                if (!_fixturesQuery.Resolve(uid, ref manager) || manager.FixtureCount == 0 && !_mapManager.IsGrid(uid))
                     return false;
             }
             else
@@ -497,7 +571,7 @@ public partial class SharedPhysicsSystem
         body.CanCollide = value;
 
         if (!value)
-            SetAwake(uid, body, false);
+            SetAwake((uid, body), false);
 
         if (body.Initialized)
         {
@@ -506,14 +580,14 @@ public partial class SharedPhysicsSystem
         }
 
         if (dirty)
-            Dirty(body);
+            Dirty(uid, body);
 
         return value;
     }
 
     public void SetFixedRotation(EntityUid uid, bool value, bool dirty = true, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
-        if (!Resolve(uid, ref body) || body.FixedRotation == value)
+        if (!PhysicsQuery.Resolve(uid, ref body) || body.FixedRotation == value)
             return;
 
         body.FixedRotation = value;
@@ -521,10 +595,10 @@ public partial class SharedPhysicsSystem
         ResetMassData(uid, manager: manager, body: body);
 
         if (dirty)
-            Dirty(body);
+            Dirty(uid, body);
     }
 
-    public void SetFriction(PhysicsComponent body, float value, bool dirty = true)
+    public void SetFriction(EntityUid uid, PhysicsComponent body, float value, bool dirty = true)
     {
         if (MathHelper.CloseTo(body.Friction, value))
             return;
@@ -532,10 +606,16 @@ public partial class SharedPhysicsSystem
         body._friction = value;
 
         if (dirty)
-            Dirty(body);
+            Dirty(uid, body);
     }
 
-    public void SetInertia(PhysicsComponent body, float value, bool dirty = true)
+    [Obsolete("Use overload that takes EntityUid")]
+    public void SetFriction(PhysicsComponent body, float value, bool dirty = true)
+    {
+        SetFriction(body.Owner, body, value, dirty);
+    }
+
+    public void SetInertia(EntityUid uid, PhysicsComponent body, float value, bool dirty = true)
     {
         DebugTools.Assert(!float.IsNaN(value));
 
@@ -550,8 +630,14 @@ public partial class SharedPhysicsSystem
             body.InvI = 1.0f / body._inertia;
 
             if (dirty)
-                Dirty(body);
+                Dirty(uid, body);
         }
+    }
+
+    [Obsolete("Use overload that takes EntityUid")]
+    public void SetInertia(PhysicsComponent body, float value, bool dirty = true)
+    {
+        SetInertia(body.Owner, body, value, dirty);
     }
 
     public void SetLocalCenter(EntityUid uid, PhysicsComponent body, Vector2 value)
@@ -569,12 +655,12 @@ public partial class SharedPhysicsSystem
             return;
 
         if (!value)
-            SetAwake(uid, body, true);
+            SetAwake((uid, body), true);
 
         body.SleepingAllowed = value;
 
         if (dirty)
-            Dirty(body);
+            Dirty(uid, body);
     }
 
     public void SetSleepTime(PhysicsComponent body, float value)
@@ -594,22 +680,72 @@ public partial class SharedPhysicsSystem
     /// <returns>true if the body is collidable and awake</returns>
     public bool WakeBody(EntityUid uid, bool force = false, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
-        if (!SetCanCollide(uid, true, manager: manager, body: body, force: force) || !Resolve(uid, ref body))
+        if (!PhysicsQuery.Resolve(uid, ref body))
             return false;
 
-        SetAwake(uid, body, true);
+        if (!SetCanCollide(uid, true, manager: manager, body: body, force: force))
+            return false;
+
+        SetAwake((uid, body), true);
         return body.Awake;
     }
 
     #endregion
 
-    public Transform GetPhysicsTransform(EntityUid uid, TransformComponent? xform = null, EntityQuery<TransformComponent>? xformQuery = null)
+    public Transform GetRelativePhysicsTransform(Transform worldTransform, Entity<TransformComponent?> relative)
     {
-        if (!Resolve(uid, ref xform))
-            return new Transform();
+        if (!_xformQuery.Resolve(relative.Owner, ref relative.Comp))
+            return Physics.Transform.Empty;
 
-        xformQuery ??= GetEntityQuery<TransformComponent>();
-        var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform, xformQuery.Value);
+        var (_, broadphaseRot, _, broadphaseInv) = _transform.GetWorldPositionRotationMatrixWithInv(relative.Comp);
+
+        return new Transform(Vector2.Transform(worldTransform.Position, broadphaseInv),
+            worldTransform.Quaternion2D.Angle - broadphaseRot);
+    }
+
+    /// <summary>
+    /// Gets the physics transform relative to another entity.
+    /// </summary>
+    public Transform GetRelativePhysicsTransform(
+        Entity<TransformComponent?> entity,
+        Entity<TransformComponent?> relative)
+    {
+        if (!_xformQuery.Resolve(entity.Owner, ref entity.Comp) ||
+            !_xformQuery.Resolve(relative.Owner, ref relative.Comp))
+        {
+            return Physics.Transform.Empty;
+        }
+
+        var (worldPos, worldRot) = _transform.GetWorldPositionRotation(entity.Comp);
+        var (_, broadphaseRot, _, broadphaseInv) = _transform.GetWorldPositionRotationMatrixWithInv(relative.Comp);
+
+        return new Transform(Vector2.Transform(worldPos, broadphaseInv), worldRot - broadphaseRot);
+    }
+
+    /// <summary>
+    /// Gets broadphase relevant transform.
+    /// </summary>
+    public Transform GetLocalPhysicsTransform(EntityUid uid, TransformComponent? xform = null)
+    {
+        if (!_xformQuery.Resolve(uid, ref xform) || xform.Broadphase == null)
+            return Physics.Transform.Empty;
+
+        var broadphase = xform.Broadphase.Value.Uid;
+
+        if (xform.ParentUid == broadphase)
+        {
+            return new Transform(xform.LocalPosition, xform.LocalRotation);
+        }
+
+        return GetRelativePhysicsTransform((uid, xform), broadphase);
+    }
+
+    public Transform GetPhysicsTransform(EntityUid uid, TransformComponent? xform = null)
+    {
+        if (!_xformQuery.Resolve(uid, ref xform))
+            return Physics.Transform.Empty;
+
+        var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform);
 
         return new Transform(worldPos, worldRot);
     }
@@ -622,7 +758,7 @@ public partial class SharedPhysicsSystem
         if (!Resolve(uid, ref manager, ref body, ref xform))
             return new Box2();
 
-        var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform, GetEntityQuery<TransformComponent>());
+        var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform);
 
         var transform = new Transform(worldPos, (float) worldRot.Theta);
 
@@ -642,12 +778,14 @@ public partial class SharedPhysicsSystem
 
     public Box2 GetHardAABB(EntityUid uid, FixturesComponent? manager = null, PhysicsComponent? body = null, TransformComponent? xform = null)
     {
-        if (!Resolve(uid, ref body, ref xform, ref manager))
+        if (!PhysicsQuery.Resolve(uid, ref body)
+            || !_fixturesQuery.Resolve(uid, ref manager)
+            || !Resolve(uid, ref xform))
         {
-            return new Box2();
+            return Box2.Empty;
         }
 
-        var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform, GetEntityQuery<TransformComponent>());
+        var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform);
 
         var transform = new Transform(worldPos, (float) worldRot.Theta);
 
@@ -669,7 +807,7 @@ public partial class SharedPhysicsSystem
 
     public (int Layer, int Mask) GetHardCollision(EntityUid uid, FixturesComponent? manager = null)
     {
-        if (!Resolve(uid, ref manager))
+        if (!_fixturesQuery.Resolve(uid, ref manager, false))
         {
             return (0, 0);
         }

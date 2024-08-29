@@ -1,12 +1,12 @@
 using System;
-using System.Collections.Generic;
 using JetBrains.Annotations;
+using Robust.Shared.Collections;
 
 namespace Robust.Shared.GameObjects
 {
     public abstract partial class EntitySystem
     {
-        private List<SubBase>? _subscriptions;
+        private ValueList<SubBase> _subscriptions;
 
         /// <summary>
         /// A handle to allow subscription on this entity system's behalf.
@@ -24,6 +24,8 @@ namespace Robust.Shared.GameObjects
             SubEvent(EventSource.Network, handler, before, after);
         }
 
+        /// <seealso cref="SubscribeLocalEvent{T}(EntityEventRefHandler{T}, Type[], Type[])"/>
+        // [Obsolete("Subscribe to the event by ref instead (EntityEventRefHandler)")]
         protected void SubscribeLocalEvent<T>(
             EntityEventHandler<T> handler,
             Type[]? before = null, Type[]? after = null)
@@ -72,6 +74,8 @@ namespace Robust.Shared.GameObjects
             SubSessionEvent(EventSource.All, handler, before, after);
         }
 
+        /// <seealso cref="SubEvent{T}(EventSource, EntityEventRefHandler{T}, Type[], Type[])"/>
+        // [Obsolete("Subscribe to the event by ref instead (EntityEventRefHandler)")]
         private void SubEvent<T>(
             EventSource src,
             EntityEventHandler<T> handler,
@@ -80,7 +84,6 @@ namespace Robust.Shared.GameObjects
         {
             EntityManager.EventBus.SubscribeEvent(src, this, handler, GetType(), before, after);
 
-            _subscriptions ??= new();
             _subscriptions.Add(new SubBroadcast<T>(src));
         }
 
@@ -92,7 +95,6 @@ namespace Robust.Shared.GameObjects
         {
             EntityManager.EventBus.SubscribeEvent(src, this, handler, GetType(), before, after);
 
-            _subscriptions ??= new();
             _subscriptions.Add(new SubBroadcast<T>(src));
         }
 
@@ -104,10 +106,22 @@ namespace Robust.Shared.GameObjects
         {
             EntityManager.EventBus.SubscribeSessionEvent(src, this, handler, GetType(), before, after);
 
-            _subscriptions ??= new();
             _subscriptions.Add(new SubBroadcast<EntitySessionMessage<T>>(src));
         }
 
+        protected void SubscribeLocalEvent<TComp, TEvent>(
+            EntityEventRefHandler<TComp, TEvent> handler,
+            Type[]? before = null, Type[]? after = null)
+            where TComp : IComponent
+            where TEvent : notnull
+        {
+            EntityManager.EventBus.SubscribeLocalEvent(handler, GetType(), before, after);
+
+            _subscriptions.Add(new SubLocal<TComp, TEvent>());
+        }
+
+        /// <seealso cref="SubscribeLocalEvent{TComp, TEvent}(ComponentEventRefHandler{TComp, TEvent}, Type[], Type[])"/>
+        // [Obsolete("Subscribe to the event by ref instead (ComponentEventRefHandler)")]
         protected void SubscribeLocalEvent<TComp, TEvent>(
             ComponentEventHandler<TComp, TEvent> handler,
             Type[]? before = null, Type[]? after = null)
@@ -116,7 +130,6 @@ namespace Robust.Shared.GameObjects
         {
             EntityManager.EventBus.SubscribeLocalEvent(handler, GetType(), before, after);
 
-            _subscriptions ??= new();
             _subscriptions.Add(new SubLocal<TComp, TEvent>());
         }
 
@@ -128,21 +141,17 @@ namespace Robust.Shared.GameObjects
         {
             EntityManager.EventBus.SubscribeLocalEvent(handler, GetType(), before, after);
 
-            _subscriptions ??= new();
             _subscriptions.Add(new SubLocal<TComp, TEvent>());
         }
 
         private void ShutdownSubscriptions()
         {
-            if (_subscriptions == null)
-                return;
-
             foreach (var sub in _subscriptions)
             {
                 sub.Unsubscribe(this, EntityManager.EventBus);
             }
 
-            _subscriptions = null;
+            _subscriptions = default;
         }
 
         /// <summary>
@@ -188,6 +197,45 @@ namespace Robust.Shared.GameObjects
             {
                 System.SubscribeLocalEvent(handler, before, after);
             }
+
+            /// <summary>
+            /// Proxy to <see cref="M:Robust.Shared.GameObjects.EntitySystem.SubscribeLocalEvent``2(Robust.Shared.GameObjects.ComponentEventRefHandler{``0,``1},System.Type[],System.Type[])" />
+            /// on the owning system.
+            /// </summary>
+            public void SubscribeLocalEvent<TComp, TEvent>(
+                ComponentEventRefHandler<TComp, TEvent> handler,
+                Type[]? before = null, Type[]? after = null)
+                where TComp : IComponent
+                where TEvent : EntityEventArgs
+            {
+                System.SubscribeLocalEvent(handler, before, after);
+            }
+
+            /// <summary>
+            /// Proxy to <see cref="M:Robust.Shared.GameObjects.EntitySystem.SubscribeLocalEvent``2(Robust.Shared.GameObjects.EntityEventRefHandler{``0,``1},System.Type[],System.Type[])" />
+            /// on the owning system.
+            /// </summary>
+            public void SubscribeLocalEvent<TComp, TEvent>(
+                EntityEventRefHandler<TComp, TEvent> handler,
+                Type[]? before = null, Type[]? after = null)
+                where TComp : IComponent
+                where TEvent : EntityEventArgs
+            {
+                System.SubscribeLocalEvent(handler, before, after);
+            }
+
+            /// <summary>
+            /// Register an action to be ran when this entity system is shut down.
+            /// </summary>
+            /// <remarks>
+            /// This can be used by extension methods for <see cref="Subscriptions"/>
+            /// to unsubscribe from from external sources such as CVars.
+            /// </remarks>
+            /// <param name="action">An action to be ran when the entity system is shut down.</param>
+            public void RegisterUnsubscription(Action action)
+            {
+                System._subscriptions.Add(new SubAction(action));
+            }
         }
 
         private abstract class SubBase
@@ -215,6 +263,14 @@ namespace Robust.Shared.GameObjects
             public override void Unsubscribe(EntitySystem sys, IEventBus bus)
             {
                 bus.UnsubscribeLocalEvent<TComp, TBase>();
+            }
+        }
+
+        private sealed class SubAction(Action action) : SubBase
+        {
+            public override void Unsubscribe(EntitySystem sys, IEventBus bus)
+            {
+                action();
             }
         }
     }

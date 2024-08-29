@@ -1,7 +1,9 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Net;
 using System.Text.Json.Nodes;
+using System.Web;
 using Robust.Shared;
 using Robust.Shared.Utility;
 
@@ -77,7 +79,8 @@ namespace Robust.Server.ServerStatus
 
             if (string.IsNullOrEmpty(downloadUrl))
             {
-                buildInfo = await PrepareACZBuildInfo();
+                var query = HttpUtility.ParseQueryString(context.Url.Query);
+                buildInfo = await PrepareACZBuildInfo(optional: query.Get("can_skip_build") == "1");
             }
             else
             {
@@ -125,9 +128,9 @@ namespace Robust.Server.ServerStatus
             };
         }
 
-        private async Task<JsonObject?> PrepareACZBuildInfo()
+        private async Task<JsonObject?> PrepareACZBuildInfo(bool optional)
         {
-            var acm = await PrepareAcz();
+            var acm = await PrepareAcz(optional);
             if (acm == null) return null;
 
             // Fork ID is an interesting case, we don't want to cause too many redownloads but we also don't want to pollute disk.

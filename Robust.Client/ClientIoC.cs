@@ -1,4 +1,5 @@
 using System;
+using Robust.Client.Audio;
 using Robust.Client.Audio.Midi;
 using Robust.Client.Configuration;
 using Robust.Client.Console;
@@ -6,7 +7,6 @@ using Robust.Client.Debugging;
 using Robust.Client.GameObjects;
 using Robust.Client.GameStates;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Audio;
 using Robust.Client.Graphics.Clyde;
 using Robust.Client.Input;
 using Robust.Client.Map;
@@ -26,6 +26,7 @@ using Robust.Client.Upload;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.RichText;
 using Robust.Client.UserInterface.Themes;
+using Robust.Client.UserInterface.XAML.Proxy;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
 using Robust.Shared;
@@ -37,7 +38,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Replays;
@@ -107,8 +108,8 @@ namespace Robust.Client
                     deps.Register<IClyde, ClydeHeadless>();
                     deps.Register<IClipboardManager, ClydeHeadless>();
                     deps.Register<IClydeInternal, ClydeHeadless>();
-                    deps.Register<IClydeAudio, ClydeAudioHeadless>();
-                    deps.Register<IClydeAudioInternal, ClydeAudioHeadless>();
+                    deps.Register<IAudioManager, HeadlessAudioManager>();
+                    deps.Register<IAudioInternal, HeadlessAudioManager>();
                     deps.Register<IInputManager, InputManager>();
                     deps.Register<IFileDialogManager, DummyFileDialogManager>();
                     deps.Register<IUriOpener, UriOpenerDummy>();
@@ -117,8 +118,8 @@ namespace Robust.Client
                     deps.Register<IClyde, Clyde>();
                     deps.Register<IClipboardManager, Clyde>();
                     deps.Register<IClydeInternal, Clyde>();
-                    deps.Register<IClydeAudio, FallbackProxyClydeAudio>();
-                    deps.Register<IClydeAudioInternal, FallbackProxyClydeAudio>();
+                    deps.Register<IAudioManager, AudioManager>();
+                    deps.Register<IAudioInternal, AudioManager>();
                     deps.Register<IInputManager, ClydeInputManager>();
                     deps.Register<IFileDialogManager, FileDialogManager>();
                     deps.Register<IUriOpener, UriOpener>();
@@ -146,6 +147,16 @@ namespace Robust.Client
             deps.Register<IConfigurationManagerInternal, ClientNetConfigurationManager>();
             deps.Register<IClientNetConfigurationManager, ClientNetConfigurationManager>();
             deps.Register<INetConfigurationManagerInternal, ClientNetConfigurationManager>();
+
+#if TOOLS
+            deps.Register<IXamlProxyManager, XamlProxyManager>();
+            deps.Register<IXamlHotReloadManager, XamlHotReloadManager>();
+#else
+            deps.Register<IXamlProxyManager, XamlProxyManagerStub>();
+            deps.Register<IXamlHotReloadManager, XamlHotReloadManagerStub>();
+#endif
+
+            deps.Register<IXamlProxyHelper, XamlProxyHelper>();
             deps.Register<MarkupTagManager>();
         }
     }

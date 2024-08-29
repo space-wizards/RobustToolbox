@@ -1,5 +1,6 @@
 using System.IO;
 using Lidgren.Network;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
@@ -17,7 +18,8 @@ namespace Robust.Shared.Network.Messages
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             int length = buffer.ReadVariableInt32();
-            using var stream = buffer.ReadAlignedMemory(length);
+            using var stream = RobustMemoryManager.GetMemoryStream(length);
+            buffer.ReadAlignedMemory(stream, length);
             Text = serializer.Deserialize<FormattedMessage>(stream);
         }
 

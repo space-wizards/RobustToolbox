@@ -1,11 +1,3 @@
-using Robust.Client.ComponentTrees;
-using Robust.Client.GameObjects;
-using Robust.Shared.GameObjects;
-using Robust.Shared.Map;
-using Robust.Shared.Maths;
-using Robust.Shared.Physics;
-using Robust.Shared.Threading;
-using Robust.Shared.Utility;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
@@ -14,6 +6,15 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using System.Threading.Tasks;
+using Robust.Client.ComponentTrees;
+using Robust.Client.GameObjects;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Graphics;
+using Robust.Shared.Map;
+using Robust.Shared.Maths;
+using Robust.Shared.Physics;
+using Robust.Shared.Threading;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Clyde;
 
@@ -60,12 +61,11 @@ internal partial class Clyde
         var index = 0;
         var added = 0;
         var opts = new ParallelOptions { MaxDegreeOfParallelism = _parMan.ParallelProcessCount };
-        var xformSystem = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
 
-        foreach (var (treeOwner, comp) in _entitySystemManager.GetEntitySystem<SpriteTreeSystem>().GetIntersectingTrees(map, worldBounds))
+        foreach (var (treeOwner, comp) in _spriteTreeSystem.GetIntersectingTrees(map, worldBounds))
         {
             var treeXform = query.GetComponent(treeOwner);
-            var bounds = xformSystem.GetInvWorldMatrix(treeOwner).TransformBox(worldBounds);
+            var bounds = _transformSystem.GetInvWorldMatrix(treeOwner).TransformBox(worldBounds);
             DebugTools.Assert(treeXform.MapUid == treeXform.ParentUid || !treeXform.ParentUid.IsValid());
 
             treeData = treeData with
@@ -259,7 +259,7 @@ internal partial class Clyde
             if (cmp != 0)
                 return cmp;
 
-            return a.Sprite.Owner.CompareTo(b.Sprite.Owner);
+            return a.Uid.CompareTo(b.Uid);
         }
     }
 }

@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Client.Graphics;
 using Robust.Client.Utility;
+using Robust.Shared.ContentPack;
+using Robust.Shared.Graphics;
+using Robust.Shared.Graphics.RSI;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Resources;
@@ -32,26 +35,31 @@ namespace Robust.Client.ResourceManagement
         /// </summary>
         public const uint MAXIMUM_RSI_VERSION = RsiLoading.MAXIMUM_RSI_VERSION;
 
-        public override void Load(IResourceCache cache, ResPath path)
+        public override void Load(IDependencyCollection dependencies, ResPath path)
         {
             var loadStepData = new LoadStepData {Path = path};
-            LoadPreTexture(cache, loadStepData);
-
-            loadStepData.AtlasTexture = cache.Clyde.LoadTextureFromImage(
-                loadStepData.AtlasSheet,
-                loadStepData.Path.ToString());
-
+            var manager = dependencies.Resolve<IResourceManager>();
+            LoadPreTexture(manager, loadStepData);
+            LoadTexture(dependencies.Resolve<IClyde>(), loadStepData);
             LoadPostTexture(loadStepData);
-            LoadFinish(cache, loadStepData);
+            LoadFinish(dependencies.Resolve<IResourceCacheInternal>(), loadStepData);
 
             loadStepData.AtlasSheet.Dispose();
         }
 
-        internal static void LoadPreTexture(IResourceCache cache, LoadStepData data)
+        internal static void LoadTexture(IClyde clyde, LoadStepData loadStepData)
+        {
+            loadStepData.AtlasTexture = clyde.LoadTextureFromImage(
+                loadStepData.AtlasSheet,
+                loadStepData.Path.ToString(),
+                loadStepData.LoadParameters);
+        }
+
+        internal static void LoadPreTexture(IResourceManager manager, LoadStepData data)
         {
             var manifestPath = data.Path / "meta.json";
             RsiLoading.RsiMetadata metadata;
-            using (var manifestFile = cache.ContentFileRead(manifestPath))
+            using (var manifestFile = manager.ContentFileRead(manifestPath))
             {
                 metadata = RsiLoading.LoadRsiMetadata(manifestFile);
             }
@@ -84,7 +92,7 @@ namespace Robust.Client.ResourceManagement
                 var stateObject = metadata.States[index];
                 // Load image from disk.
                 var texPath = data.Path / (stateObject.StateId + ".png");
-                using (var stream = cache.ContentFileRead(texPath))
+                using (var stream = manager.ContentFileRead(texPath))
                 {
                     reg.Src = Image.Load<Rgba32>(stream);
                 }
@@ -116,9 +124,9 @@ namespace Robust.Client.ResourceManagement
 
                 var dirType = stateObject.DirCount switch
                 {
-                    1 => RSI.State.DirectionType.Dir1,
-                    4 => RSI.State.DirectionType.Dir4,
-                    8 => RSI.State.DirectionType.Dir8,
+                    1 => RsiDirectionType.Dir1,
+                    4 => RsiDirectionType.Dir4,
+                    8 => RsiDirectionType.Dir8,
                     _ => throw new InvalidOperationException()
                 };
 
@@ -174,6 +182,7 @@ namespace Robust.Client.ResourceManagement
             data.FrameSize = frameSize;
             data.DimX = dimensionX;
             data.CallbackOffsets = callbackOffsets;
+            data.LoadParameters = metadata.LoadParameters;
         }
 
         internal static void LoadPostTexture(LoadStepData data)
@@ -210,14 +219,10 @@ namespace Robust.Client.ResourceManagement
             }
         }
 
-        internal void LoadFinish(IResourceCache cache, LoadStepData data)
+        internal void LoadFinish(IResourceCacheInternal cache, LoadStepData data)
         {
             RSI = data.Rsi;
-
-            if (cache is IResourceCacheInternal cacheInternal)
-            {
-                cacheInternal.RsiLoaded(new RsiLoadedEventArgs(data.Path, this, data.AtlasSheet, data.CallbackOffsets));
-            }
+            cache.RsiLoaded(new RsiLoadedEventArgs(data.Path, this, data.AtlasSheet, data.CallbackOffsets));
         }
 
         /// <summary>
@@ -380,6 +385,7 @@ namespace Robust.Client.ResourceManagement
             public Texture AtlasTexture = default!;
             public Vector2i AtlasOffset;
             public RSI Rsi = default!;
+            public TextureLoadParameters LoadParameters;
         }
 
         internal struct StateReg

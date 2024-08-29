@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
-using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Utility;
-using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Prototypes;
@@ -46,18 +42,18 @@ public partial class PrototypeManager
                 foreach (YamlMappingNode node in rootNode.Cast<YamlMappingNode>())
                 {
                     var typeId = node.GetNode("type").AsString();
+                    if (_ignoredPrototypeTypes.Contains(typeId))
+                        continue;
+
                     if (!_kindNames.TryGetValue(typeId, out var type))
                     {
-                        if (_ignoredPrototypeTypes.Contains(typeId))
-                            continue;
-
                         throw new PrototypeLoadException($"Unknown prototype type: '{typeId}'");
                     }
 
                     var mapping = node.ToDataNodeCast<MappingDataNode>();
                     var id = mapping.Get<ValueDataNode>("id").Value;
 
-                    var data = new PrototypeValidationData(mapping, resourcePath.ToString());
+                    var data = new PrototypeValidationData(id, mapping, resourcePath.ToString());
                     mapping.Remove("type");
 
                     if (prototypes.GetOrNew(type).TryAdd(id, data))
@@ -69,10 +65,14 @@ public partial class PrototypeManager
             }
         }
 
+        var ctx = new YamlValidationContext();
+        var errors = new List<ErrorNode>();
         foreach (var (type, instances) in prototypes)
         {
-            foreach (var data in instances.Values)
+            var defaultErrorOccurred = false;
+            foreach (var (id, data) in instances)
             {
+                errors.Clear();
                 EnsurePushed(data, instances, type);
                 if (data.Mapping.TryGet("abstract", out ValueDataNode? abstractNode)
                     && bool.Parse(abstractNode.Value))
@@ -80,9 +80,25 @@ public partial class PrototypeManager
                     continue;
                 }
 
-                var result = _serializationManager.ValidateNode(type, data.Mapping).GetErrors().ToHashSet();
-                if (result.Count > 0)
-                    dict.GetOrNew(data.File).UnionWith(result);
+                // Validate yaml directly
+                errors.AddRange(_serializationManager.ValidateNode(type, data.Mapping).GetErrors());
+                if (errors.Count > 0)
+                    dict.GetOrNew(data.File).UnionWith(errors);
+
+                // Create instance & re-serialize it, to validate the default values of data-fields. We still validate
+                // the yaml directly just in case reading & writing the fields somehow modifies their values.
+                try
+                {
+                    var instance = _serializationManager.Read(type, data.Mapping, ctx);
+                    var mapping = _serializationManager.WriteValue(type, instance, alwaysWrite: true, ctx);
+                    errors.AddRange(_serializationManager.ValidateNode(type, mapping, ctx).GetErrors());
+                    if (errors.Count > 0)
+                        dict.GetOrNew(data.File).UnionWith(errors);
+                }
+                catch (Exception ex)
+                {
+                    errors.Add(new ErrorNode(new ValueDataNode(), $"Caught Exception while validating {type} prototype {id}. Exception: {ex}"));
+                }
             }
         }
 
@@ -156,12 +172,17 @@ public partial class PrototypeManager
 
     private sealed class PrototypeValidationData
     {
+        public readonly string Id;
         public MappingDataNode Mapping;
         public readonly string File;
         public bool Pushed;
 
-        public PrototypeValidationData(MappingDataNode mapping, string file)
+        public string[]? Parents;
+        public MappingDataNode[]? ParentMappings;
+
+        public PrototypeValidationData(string id, MappingDataNode mapping, string file)
         {
+            Id = id;
             File = file;
             Mapping = mapping;
         }
@@ -180,23 +201,22 @@ public partial class PrototypeManager
         if (!data.Mapping.TryGet(ParentDataFieldAttribute.Name, out var parentNode))
             return;
 
-        var parents = _serializationManager.Read<string[]>(parentNode, notNullableOverride: true);
-        var parentNodes = new MappingDataNode[parents.Length];
+        DebugTools.AssertNull(data.Parents);
+        DebugTools.AssertNull(data.ParentMappings);
+        data.Parents = _serializationManager.Read<string[]>(parentNode, notNullableOverride: true);
+        data.ParentMappings = new MappingDataNode[data.Parents.Length];
 
-        foreach (var parentId in parents)
+        var i = 0;
+        foreach (var parentId in data.Parents)
         {
             var parent = prototypes[parentId];
             EnsurePushed(parent, prototypes, type);
-
-            for (var i = 0; i < parents.Length; i++)
-            {
-                parentNodes[i] = parent.Mapping;
-            }
+            data.ParentMappings[i++] = parent.Mapping;
         }
 
         data.Mapping = _serializationManager.PushCompositionWithGenericNode(
             type,
-            parentNodes,
+            data.ParentMappings,
             data.Mapping);
     }
 }

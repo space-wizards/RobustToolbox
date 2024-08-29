@@ -1,32 +1,44 @@
 using System.Linq;
+using Robust.Server.GameStates;
 using Robust.Shared;
 using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Map.Events;
-using Robust.Shared.Physics.Dynamics;
 
 namespace Robust.Server.GameObjects
 {
     public sealed class MapSystem : SharedMapSystem
     {
         [Dependency] private readonly IConfigurationManager _cfg = default!;
+        [Dependency] private readonly PvsSystem _pvs = default!;
 
         private bool _deleteEmptyGrids;
+
+        protected override MapId GetNextMapId()
+        {
+            var id = new MapId(++LastMapId);
+            while (MapManager.MapExists(id))
+            {
+                id = new MapId(++LastMapId);
+            }
+            return id;
+        }
+
+        protected override void UpdatePvsChunks(Entity<TransformComponent, MetaDataComponent> grid)
+        {
+            _pvs.GridParentChanged(grid);
+        }
 
         public override void Initialize()
         {
             base.Initialize();
             SubscribeLocalEvent<MapGridComponent, EmptyGridEvent>(HandleGridEmpty);
 
-            _cfg.OnValueChanged(CVars.GameDeleteEmptyGrids, SetGridDeletion, true);
-        }
-
-        protected override void OnMapAdd(EntityUid uid, MapComponent component, ComponentAdd args)
-        {
-            EnsureComp<PhysicsMapComponent>(uid);
+            Subs.CVar(_cfg, CVars.GameDeleteEmptyGrids, SetGridDeletion, true);
         }
 
         private void SetGridDeletion(bool value)
@@ -57,18 +69,10 @@ namespace Robust.Server.GameObjects
             return !(grid.GetAllTiles().Any());
         }
 
-        public override void Shutdown()
-        {
-            base.Shutdown();
-
-            _cfg.UnsubValueChanged(CVars.GameDeleteEmptyGrids, SetGridDeletion);
-        }
-
         private void HandleGridEmpty(EntityUid uid, MapGridComponent component, EmptyGridEvent args)
         {
-            if (!_deleteEmptyGrids) return;
-            if (!EntityManager.EntityExists(uid)) return;
-            if (EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage >= EntityLifeStage.Terminating) return;
+            if (!_deleteEmptyGrids || TerminatingOrDeleted(uid) || HasComp<MapComponent>(uid))
+                return;
 
             MapManager.DeleteGrid(args.GridId);
         }

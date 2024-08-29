@@ -1,24 +1,54 @@
 using System;
+using System.Diagnostics.Metrics;
+using System.Diagnostics.Tracing;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using Prometheus;
 using Prometheus.DotNetRuntime;
 using Prometheus.DotNetRuntime.Metrics.Producers;
 using Robust.Shared;
+using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-
-#nullable enable
+using EventSource = System.Diagnostics.Tracing.EventSource;
 
 namespace Robust.Server.DataMetrics;
 
-internal sealed partial class MetricsManager : IMetricsManager, IDisposable
+/// <summary>
+/// Manages OpenTelemetry metrics exposure.
+/// </summary>
+/// <remarks>
+/// <para>
+/// If enabled via <see cref="CVars.MetricsEnabled"/>, metrics about the game server are exposed via a HTTP server
+/// in an OpenTelemetry-compatible format (Prometheus).
+/// </para>
+/// <para>
+/// Metrics can be added through the types in <c>System.Diagnostics.Metrics</c> or <c>Prometheus</c>.
+/// IoC contains an implementation of <see cref="IMeterFactory"/> that can be used to instantiate meters.
+/// </para>
+/// </remarks>
+public interface IMetricsManager
+{
+    /// <summary>
+    /// An event that gets raised on the main thread when complex metrics should be updated.
+    /// </summary>
+    /// <remarks>
+    /// This event is raised on the main thread before a Prometheus collection happens,
+    /// and also with a fixed interval if <see cref="CVars.MetricsUpdateInterval"/> is set.
+    /// You can use it to update complex metrics that can't "just" be stuffed into a counter.
+    /// </remarks>
+    event Action UpdateMetrics;
+}
+
+internal sealed partial class MetricsManager : IMetricsManagerInternal, IDisposable
 {
     [Dependency] private readonly IConfigurationManager _cfg = default!;
     [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
     [Dependency] private readonly ILogManager _logManager = default!;
+    [Dependency] private readonly ITaskManager _taskManager = default!;
 
     private bool _initialized;
 
@@ -53,6 +83,8 @@ internal sealed partial class MetricsManager : IMetricsManager, IDisposable
         {
             _cfg.OnValueChanged(cVar, _ => Reload());
         }
+
+        InitializeUpdateMetrics();
     }
 
     private async Task Stop()
@@ -71,6 +103,8 @@ internal sealed partial class MetricsManager : IMetricsManager, IDisposable
 
     async void IDisposable.Dispose()
     {
+        DisposeMeters();
+
         await Stop();
 
         _initialized = false;
@@ -98,7 +132,12 @@ internal sealed partial class MetricsManager : IMetricsManager, IDisposable
 
         _sawmill.Info("Prometheus metrics enabled, host: {1} port: {0}", port, host);
         var sawmill = Logger.GetSawmill("metrics.server");
-        _metricServer = new ManagedHttpListenerMetricsServer(sawmill, host, port);
+        _metricServer = new ManagedHttpListenerMetricsServer(
+            sawmill,
+            host,
+            port,
+            registry: Metrics.DefaultRegistry,
+            beforeCollect: BeforeCollectCallback);
         _metricServer.Start();
 
         if (_cfg.GetCVar(CVars.MetricsRuntime))
@@ -168,9 +207,28 @@ internal sealed partial class MetricsManager : IMetricsManager, IDisposable
 
         return builder;
     }
+
+    [EventSource(Name = "Robust.MetricsManager")]
+    private sealed class MetricsEvents : EventSource
+    {
+        public static MetricsEvents Log { get; } = new();
+
+        [Event(1)]
+        public void ScrapeStart() => WriteEvent(1);
+
+        [Event(2)]
+        public void ScrapeStop() => WriteEvent(2);
+
+        [Event(3)]
+        public void RequestStart() => WriteEvent(3);
+
+        [Event(4)]
+        public void RequestStop() => WriteEvent(4);
+    }
 }
 
-internal interface IMetricsManager
+internal interface IMetricsManagerInternal : IMetricsManager
 {
     void Initialize();
+    void FrameUpdate();
 }

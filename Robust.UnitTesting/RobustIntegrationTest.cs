@@ -12,25 +12,31 @@ using System.Threading.Tasks;
 using Moq;
 using NUnit.Framework;
 using Robust.Client;
+using Robust.Client.Console;
 using Robust.Client.GameStates;
 using Robust.Client.Player;
 using Robust.Client.Timing;
 using Robust.Client.UserInterface;
+using Robust.Client.UserInterface.XAML.Proxy;
 using Robust.Server;
 using Robust.Server.Console;
+using Robust.Server.GameStates;
 using Robust.Server.ServerStatus;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
+using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
+using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 using ServerProgram = Robust.Server.Program;
@@ -269,7 +275,9 @@ namespace Robust.UnitTesting
             public ISharedPlayerManager PlayerMan { get; private set; } = default!;
             public IGameTiming Timing { get; private set; } = default!;
             public IMapManager MapMan { get; private set; } = default!;
-            
+            public IConsoleHost ConsoleHost { get; private set; } = default!;
+            public ISawmill Log { get; private set; } = default!;
+
             protected virtual void ResolveIoC(IDependencyCollection deps)
             {
                 EntMan = deps.Resolve<IEntityManager>();
@@ -278,6 +286,8 @@ namespace Robust.UnitTesting
                 PlayerMan = deps.Resolve<ISharedPlayerManager>();
                 Timing = deps.Resolve<IGameTiming>();
                 MapMan = deps.Resolve<IMapManager>();
+                ConsoleHost = deps.Resolve<IConsoleHost>();
+                Log = deps.Resolve<ILogManager>().GetSawmill("test");
             }
 
             public T System<T>() where T : IEntitySystem
@@ -293,6 +303,17 @@ namespace Robust.UnitTesting
             public MetaDataComponent MetaData(EntityUid uid)
             {
                 return EntMan.GetComponent<MetaDataComponent>(uid);
+            }
+
+            public MetaDataComponent MetaData(NetEntity uid)
+                => MetaData(EntMan.GetEntity(uid));
+
+            public TransformComponent Transform(NetEntity uid)
+                => Transform(EntMan.GetEntity(uid));
+
+            public async Task ExecuteCommand(string cmd)
+            {
+                await WaitPost(() => ConsoleHost.ExecuteCommand(cmd));
             }
 
             /// <summary>
@@ -660,10 +681,14 @@ namespace Robust.UnitTesting
                 deps.Register<TestingModLoader, TestingModLoader>(true);
                 deps.RegisterInstance<IStatusHost>(new Mock<IStatusHost>().Object, true);
                 deps.Register<IRobustMappedStringSerializer, IntegrationMappedStringSerializer>(true);
+                deps.Register<IServerConsoleHost, TestingServerConsoleHost>(true);
+                deps.Register<IConsoleHost, TestingServerConsoleHost>(true);
+                deps.Register<IConsoleHostInternal, TestingServerConsoleHost>(true);
                 Options?.InitIoC?.Invoke();
                 deps.BuildGraph();
                 //ServerProgram.SetupLogging();
                 ServerProgram.InitReflectionManager(deps);
+                deps.Resolve<IReflectionManager>().LoadAssemblies(typeof(RobustIntegrationTest).Assembly);
 
                 var server = DependencyCollection.Resolve<BaseServer>();
 
@@ -728,12 +753,86 @@ namespace Robust.UnitTesting
 
                 return server;
             }
+
+            /// <summary>
+            /// Force a PVS update. This is mainly here to expose internal PVS methods to content benchmarks.
+            /// </summary>
+            public void PvsTick(ICommonSession[] players)
+            {
+                var pvs = EntMan.System<PvsSystem>();
+                pvs.SendGameStates(players);
+                Timing.CurTick += 1;
+            }
+
+            /// <summary>
+            /// Adds multiple dummy players to the server.
+            /// </summary>
+            public async Task<ICommonSession[]> AddDummySessions(int count)
+            {
+                var sessions = new ICommonSession[count];
+                for (var i = 0; i < sessions.Length; i++)
+                {
+                    sessions[i] = await AddDummySession();
+                }
+
+                return sessions;
+            }
+
+            /// <summary>
+            /// Adds a dummy player to the server.
+            /// </summary>
+            public async Task<ICommonSession> AddDummySession(string? userName = null)
+            {
+                userName ??= $"integration_dummy_{DummyUsers.Count}";
+                Log.Info($"Adding dummy session {userName}");
+                if (!_dummyUsers.TryGetValue(userName, out var userId))
+                    _dummyUsers[userName] = userId = new(Guid.NewGuid());
+
+                var man = (Robust.Server.Player.PlayerManager) PlayerMan;
+                var session = man.AddDummySession(userId, userName);
+                _dummySessions.Add(userId, session);
+
+                session.ConnectedTime = DateTime.UtcNow;
+                await WaitPost(() => man.SetStatus(session, SessionStatus.Connected));
+
+                return session;
+            }
+
+            /// <summary>
+            /// Removes a dummy player from the server.
+            /// </summary>
+            public async Task RemoveDummySession(ICommonSession session, bool removeUser = false)
+            {
+                Log.Info($"Removing dummy session {session.Name}");
+                _dummySessions.Remove(session.UserId);
+                var man = (Robust.Server.Player.PlayerManager) PlayerMan;
+                await WaitPost(() => man.EndSession(session.UserId));
+                if (removeUser)
+                    _dummyUsers.Remove(session.Name);
+            }
+
+            /// <summary>
+            /// Removes all dummy players from the server.
+            /// </summary>
+            public async Task RemoveAllDummySessions()
+            {
+                foreach (var session in _dummySessions.Values)
+                {
+                    await RemoveDummySession(session);
+                }
+            }
+
+            private Dictionary<string, NetUserId> _dummyUsers = new();
+            private Dictionary<NetUserId, ICommonSession> _dummySessions = new();
+            public IReadOnlyDictionary<string, NetUserId> DummyUsers => _dummyUsers;
+            public IReadOnlyDictionary<NetUserId, ICommonSession> DummySessions => _dummySessions;
         }
 
         public sealed class ClientIntegrationInstance : IntegrationInstance
         {
+            [Obsolete("Use Session instead")]
             public LocalPlayer? Player => ((IPlayerManager) PlayerMan).LocalPlayer;
-            public ICommonSession? Session => Player?.Session;
+            public ICommonSession? Session => ((IPlayerManager) PlayerMan).LocalSession;
             public NetUserId? User => Session?.UserId;
             public EntityUid? AttachedEntity => Session?.AttachedEntity;
 
@@ -822,17 +921,22 @@ namespace Robust.UnitTesting
                 ClientIoC.RegisterIoC(GameController.DisplayMode.Headless, deps);
                 deps.Register<INetManager, IntegrationNetManager>(true);
                 deps.Register<IClientNetManager, IntegrationNetManager>(true);
-                deps.Register<IGameStateProcessor, GameStateProcessor>(true);
                 deps.Register<IClientGameTiming, ClientGameTiming>(true);
                 deps.Register<IntegrationNetManager, IntegrationNetManager>(true);
                 deps.Register<IModLoader, TestingModLoader>(true);
                 deps.Register<IModLoaderInternal, TestingModLoader>(true);
                 deps.Register<TestingModLoader, TestingModLoader>(true);
                 deps.Register<IRobustMappedStringSerializer, IntegrationMappedStringSerializer>(true);
+                deps.Register<IClientConsoleHost, TestingClientConsoleHost>(true);
+                deps.Register<IConsoleHost, TestingClientConsoleHost>(true);
+                deps.Register<IConsoleHostInternal, TestingClientConsoleHost>(true);
+                deps.Register<IXamlProxyManager, XamlProxyManagerStub>(true);
+                deps.Register<IXamlHotReloadManager, XamlHotReloadManagerStub>(true);
                 Options?.InitIoC?.Invoke();
                 deps.BuildGraph();
 
                 GameController.RegisterReflection(deps);
+                deps.Resolve<IReflectionManager>().LoadAssemblies(typeof(RobustIntegrationTest).Assembly);
 
                 var client = DependencyCollection.Resolve<GameController>();
 
@@ -902,6 +1006,19 @@ namespace Robust.UnitTesting
 
                 GameLoop.RunInit();
                 ResolveIoC(deps);
+
+                // Offset client generated Uids.
+                // Not that we have client-server uid separation, there might be bugs where tests might accidentally
+                // use server side uids on the client and vice versa. This can sometimes accidentally work if the
+                // entities get created in the same order. For that reason we arbitrarily increment the queued Uid by
+                // some arbitrary quantity.
+
+                /* TODO: End my suffering and fix this because entmanager hasn't started up yet.
+                for (var i = 0; i < 10; i++)
+                {
+                    EntMan.SpawnEntity(null, MapCoordinates.Nullspace);
+                }
+                */
 
                 return client;
             }

@@ -150,7 +150,7 @@ namespace Robust.Client.WebView.Cef
             }
         }
 
-        private sealed class WindowCefClient : CefClient
+        private sealed class WindowCefClient : BaseRobustCefClient
         {
             private readonly CefLifeSpanHandler _lifeSpanHandler;
             private readonly CefRequestHandler _requestHandler;

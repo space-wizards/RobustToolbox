@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
@@ -12,6 +11,7 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Array;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Prototypes
@@ -57,6 +57,17 @@ namespace Robust.Shared.Prototypes
         [DataField("suffix")]
         public string? SetSuffix { get; private set; }
 
+        [DataField("categories"), Access(typeof(PrototypeManager))]
+        [NeverPushInheritance]
+        internal HashSet<ProtoId<EntityCategoryPrototype>>? CategoriesInternal;
+
+        /// <summary>
+        /// What categories this prototype belongs to. This includes categories inherited from parents and categories
+        /// that were automatically inferred from the prototype's components.
+        /// </summary>
+        [ViewVariables]
+        public IReadOnlySet<EntityCategoryPrototype> Categories { get; internal set; } = new HashSet<EntityCategoryPrototype>();
+
         [ViewVariables]
         public IReadOnlyDictionary<string, string> LocProperties => _locPropertiesSet ?? LocPropertiesDefault;
 
@@ -92,7 +103,11 @@ namespace Robust.Shared.Prototypes
         [ViewVariables]
         [NeverPushInheritance]
         [DataField("noSpawn")]
+        [Obsolete("Use HideSpawnMenu")]
         public bool NoSpawn { get; private set; }
+
+        [Access(typeof(PrototypeManager))]
+        public bool HideSpawnMenu { get; internal set; }
 
         [DataField("placement")]
         private EntityPlacementProperties PlacementProperties = new();
@@ -159,39 +174,51 @@ namespace Robust.Shared.Prototypes
             _loc = IoCManager.Resolve<ILocalizationManager>();
         }
 
-        public bool TryGetComponent<T>([NotNullWhen(true)] out T? component, IComponentFactory? factory = null) where T : IComponent
+        [Obsolete("Pass in IComponentFactory")]
+        public bool TryGetComponent<T>([NotNullWhen(true)] out T? component)
+            where T : IComponent
         {
-            if (factory == null)
-            {
-                factory = IoCManager.Resolve<IComponentFactory>();
-            }
+            var compName = IoCManager.Resolve<IComponentFactory>().GetComponentName(typeof(T));
+            return TryGetComponent(compName, out component);
+        }
 
-            var compName = factory.GetComponentName(typeof(T));
+        public bool TryGetComponent<T>([NotNullWhen(true)] out T? component, IComponentFactory factory) where T : IComponent, new()
+        {
+            var compName = factory.GetComponentName<T>();
             return TryGetComponent(compName, out component);
         }
 
         public bool TryGetComponent<T>(string name, [NotNullWhen(true)] out T? component) where T : IComponent
         {
+            DebugTools.AssertEqual(IoCManager.Resolve<IComponentFactory>().GetComponentName(typeof(T)), name);
+
             if (!Components.TryGetValue(name, out var componentUnCast))
             {
                 component = default;
                 return false;
             }
 
-            // There are no duplicate component names
-            // TODO Sanity check with names being in an attribute of the type instead
-            component = (T) componentUnCast.Component;
+            if (componentUnCast.Component is not T cast)
+            {
+                component = default;
+                return false;
+            }
+
+            component = cast;
             return true;
         }
 
         internal static void LoadEntity(
-            EntityPrototype? prototype,
-            EntityUid entity,
+            Entity<MetaDataComponent> ent,
             IComponentFactory factory,
             IEntityManager entityManager,
             ISerializationManager serManager,
             IEntityLoadContext? context) //yeah officer this method right here
         {
+            var (entity, meta) = ent;
+            var prototype = meta.EntityPrototype;
+            var ctx = context as ISerializationContext;
+
             if (prototype != null)
             {
                 foreach (var (name, entry) in prototype.Components)
@@ -200,8 +227,11 @@ namespace Robust.Shared.Prototypes
                         continue;
 
                     var fullData = context != null && context.TryGetComponent(name, out var data) ? data : entry.Component;
+                    var compReg = factory.GetRegistration(name);
+                    EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, name, fullData, ctx);
 
-                    EnsureCompExistsAndDeserialize(entity, factory, entityManager, serManager, name, fullData, context as ISerializationContext);
+                    if (!entry.Component.NetSyncEnabled && compReg.NetID is {} netId)
+                        meta.NetComponents.Remove(netId);
                 }
             }
 
@@ -223,12 +253,14 @@ namespace Robust.Shared.Prototypes
                             $"{nameof(IEntityLoadContext)} provided component name {name} but refused to provide data");
                     }
 
-                    EnsureCompExistsAndDeserialize(entity, factory, entityManager, serManager, name, data, context as ISerializationContext);
+                    var compReg = factory.GetRegistration(name);
+                    EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, name, data, ctx);
                 }
             }
         }
 
         public static void EnsureCompExistsAndDeserialize(EntityUid entity,
+            ComponentRegistration compReg,
             IComponentFactory factory,
             IEntityManager entityManager,
             ISerializationManager serManager,
@@ -236,12 +268,9 @@ namespace Robust.Shared.Prototypes
             IComponent data,
             ISerializationContext? context)
         {
-            var compReg = factory.GetRegistration(compName);
-
             if (!entityManager.TryGetComponent(entity, compReg.Idx, out var component))
             {
-                var newComponent = (Component) factory.GetComponent(compName);
-                newComponent.Owner = entity;
+                var newComponent = factory.GetComponent(compName);
                 entityManager.AddComponent(entity, newComponent);
                 component = newComponent;
             }

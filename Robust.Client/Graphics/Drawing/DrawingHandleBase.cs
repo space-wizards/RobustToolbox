@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics
@@ -42,21 +44,38 @@ namespace Robust.Client.Graphics
         {
             CheckDisposed();
 
-            var matrix = Matrix3.CreateTransform(in position, in rotation, in scale);
+            var matrix = Matrix3Helpers.CreateTransform(in position, in rotation, in scale);
             SetTransform(in matrix);
         }
 
         public void SetTransform(in Vector2 position, in Angle rotation)
         {
-            var matrix = Matrix3.CreateTransform(in position, in rotation);
+            var matrix = Matrix3Helpers.CreateTransform(in position, in rotation);
             SetTransform(in matrix);
         }
 
-        public abstract void SetTransform(in Matrix3 matrix);
+        public abstract void SetTransform(in Matrix3x2 matrix);
+
+        public abstract Matrix3x2 GetTransform();
 
         public abstract void UseShader(ShaderInstance? shader);
 
+        public abstract ShaderInstance? GetShader();
+
         // ---- DrawPrimitives: Vector2 API ----
+
+        /// <summary>
+        ///     Draws arbitrary geometry primitives with a flat color.
+        /// </summary>
+        /// <param name="primitiveTopology">The topology of the primitives to draw.</param>
+        /// <param name="vertices">The list of vertices to render.</param>
+        /// <param name="color">The color to draw with.</param>
+        public void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, List<Vector2> vertices,
+            Color color)
+        {
+            var span = CollectionsMarshal.AsSpan(vertices);
+            DrawPrimitives(primitiveTopology, span, color);
+        }
 
         /// <summary>
         ///     Draws arbitrary geometry primitives with a flat color.
@@ -218,6 +237,8 @@ namespace Robust.Client.Graphics
     {
         public Vector2 Position;
         public Vector2 UV;
+        public Vector2 UV2;
+
         /// <summary>
         ///     Modulation colour for this vertex.
         ///     Note that this color is in linear space.

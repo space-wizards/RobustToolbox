@@ -1,22 +1,20 @@
 using System;
 using Robust.Server.GameStates;
-using Robust.Server.Player;
 using Robust.Shared;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Replays;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Server.Replays;
 
 internal sealed class ReplayRecordingManager : SharedReplayRecordingManager, IServerReplayRecordingManager
 {
-    [Dependency] private readonly IPlayerManager _player = default!;
     [Dependency] private readonly IEntitySystemManager _sysMan = default!;
-    private GameTick _fromTick = GameTick.Zero;
 
     private PvsSystem _pvs = default!;
+    private PvsSession _pvsSession = new(default!, new ResizableMemoryRegion<PvsData>(1)) { DisableCulling = true };
 
     public override void Initialize()
     {
@@ -47,16 +45,16 @@ internal sealed class ReplayRecordingManager : SharedReplayRecordingManager, ISe
             return;
         }
 
-        var (entStates, deletions, _) = _pvs.GetAllEntityStates(null, _fromTick, Timing.CurTick);
-        var playerStates = _player.GetPlayerStates(_fromTick);
-        var state = new GameState(_fromTick, Timing.CurTick, 0, entStates, playerStates, deletions);
-        _fromTick = Timing.CurTick;
-        Update(state);
+        _pvs.ComputeSessionState(_pvsSession);
+        Update(_pvsSession.State);
+        _pvsSession.ClearState();
+        _pvsSession.LastReceivedAck = Timing.CurTick;
     }
 
     protected override void Reset()
     {
         base.Reset();
-        _fromTick = GameTick.Zero;
+        _pvsSession.LastReceivedAck = GameTick.Zero;
+        _pvsSession.ClearState();
     }
 }

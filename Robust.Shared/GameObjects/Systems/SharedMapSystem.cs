@@ -1,11 +1,9 @@
-using JetBrains.Annotations;
-using Robust.Shared.IoC;
-using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using System.Collections.Generic;
 using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
-using System.Linq;
+using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
@@ -14,6 +12,7 @@ namespace Robust.Shared.GameObjects
 {
     public abstract partial class SharedMapSystem : EntitySystem
     {
+        [Dependency] private readonly ITileDefinitionManager _tileMan = default!;
         [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] protected readonly IMapManager MapManager = default!;
         [Dependency] private readonly IMapManagerInternal _mapInternal = default!;
@@ -21,13 +20,23 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly FixtureSystem _fixtures = default!;
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
+        [Dependency] private readonly IComponentFactory _factory = default!;
+        [Dependency] private readonly MetaDataSystem _meta = default!;
 
+        private EntityQuery<MapComponent> _mapQuery;
+        private EntityQuery<MapGridComponent> _gridQuery;
+        private EntityQuery<MetaDataComponent> _metaQuery;
         private EntityQuery<TransformComponent> _xformQuery;
+
+        internal Dictionary<MapId, EntityUid> Maps { get; } = new();
 
         public override void Initialize()
         {
             base.Initialize();
 
+            _mapQuery = GetEntityQuery<MapComponent>();
+            _gridQuery = GetEntityQuery<MapGridComponent>();
+            _metaQuery = GetEntityQuery<MetaDataComponent>();
             _xformQuery = GetEntityQuery<TransformComponent>();
 
             InitializeMap();
@@ -128,12 +137,18 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Creates a new instance of this class.
         /// </summary>
-        public TileChangedEvent(EntityUid uid, TileRef newTile, Tile oldTile)
+        public TileChangedEvent(EntityUid uid, TileRef newTile, Tile oldTile, Vector2i chunkIndex)
         {
             Entity = uid;
             NewTile = newTile;
             OldTile = oldTile;
+            ChunkIndex = chunkIndex;
         }
+
+        /// <summary>
+        /// Was the tile previously empty or is it now empty.
+        /// </summary>
+        public bool EmptyChanged => OldTile.IsEmpty != NewTile.Tile.IsEmpty;
 
         /// <summary>
         ///     EntityUid of the grid with the tile-change. TileRef stores the GridId.
@@ -149,30 +164,10 @@ namespace Robust.Shared.GameObjects
         ///     Old tile that was replaced.
         /// </summary>
         public readonly Tile OldTile;
-    }
-
-    /// <summary>
-    ///     Arguments for when a one or more tiles on a grid are modified at once.
-    /// </summary>
-    public sealed class GridModifiedEvent : EntityEventArgs
-    {
-        /// <summary>
-        ///     Grid being changed.
-        /// </summary>
-        public MapGridComponent Grid { get; }
 
         /// <summary>
-        /// Set of tiles that were modified.
+        ///     The index of the grid-chunk that this tile belongs to.
         /// </summary>
-        public IReadOnlyCollection<(Vector2i position, Tile tile)> Modified { get; }
-
-        /// <summary>
-        ///     Creates a new instance of this class.
-        /// </summary>
-        public GridModifiedEvent(MapGridComponent grid, IReadOnlyCollection<(Vector2i position, Tile tile)> modified)
-        {
-            Grid = grid;
-            Modified = modified;
-        }
+        public readonly Vector2i ChunkIndex;
     }
 }

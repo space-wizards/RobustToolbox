@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
+using static Microsoft.CodeAnalysis.SymbolDisplayFormat;
+using static Microsoft.CodeAnalysis.SymbolDisplayMiscellaneousOptions;
 
 namespace Robust.Shared.CompNetworkGenerator
 {
@@ -15,14 +14,36 @@ namespace Robust.Shared.CompNetworkGenerator
         private const string ClassAttributeName = "Robust.Shared.Analyzers.AutoGenerateComponentStateAttribute";
         private const string MemberAttributeName = "Robust.Shared.Analyzers.AutoNetworkedFieldAttribute";
 
-        private static string GenerateSource(in GeneratorExecutionContext context, INamedTypeSymbol classSymbol, CSharpCompilation comp, bool raiseAfterAutoHandle)
+        private const string GlobalEntityUidName = "global::Robust.Shared.GameObjects.EntityUid";
+        private const string GlobalNullableEntityUidName = "global::Robust.Shared.GameObjects.EntityUid?";
+
+        private const string GlobalNetEntityName = "global::Robust.Shared.GameObjects.NetEntity";
+        private const string GlobalNetEntityNullableName = "global::Robust.Shared.GameObjects.NetEntity?";
+
+        private const string GlobalEntityCoordinatesName = "global::Robust.Shared.Map.EntityCoordinates";
+        private const string GlobalNullableEntityCoordinatesName = "global::Robust.Shared.Map.EntityCoordinates?";
+
+        private const string GlobalEntityUidSetName = "global::System.Collections.Generic.HashSet<global::Robust.Shared.GameObjects.EntityUid>";
+        private const string GlobalNetEntityUidSetName = $"global::System.Collections.Generic.HashSet<{GlobalNetEntityName}>";
+
+        private const string GlobalEntityUidListName = "global::System.Collections.Generic.List<global::Robust.Shared.GameObjects.EntityUid>";
+        private const string GlobalNetEntityUidListName = $"global::System.Collections.Generic.List<{GlobalNetEntityName}>";
+
+        private const string GlobalDictionaryName = "global::System.Collections.Generic.Dictionary<TKey, TValue>";
+        private const string GlobalHashSetName = "global::System.Collections.Generic.HashSet<T>";
+        private const string GlobalListName = "global::System.Collections.Generic.List<T>";
+
+        private static readonly SymbolDisplayFormat FullNullableFormat =
+            FullyQualifiedFormat.WithMiscellaneousOptions(IncludeNullableReferenceTypeModifier);
+
+        private static string? GenerateSource(in GeneratorExecutionContext context, INamedTypeSymbol classSymbol, CSharpCompilation comp, bool raiseAfterAutoHandle)
         {
             var nameSpace = classSymbol.ContainingNamespace.ToDisplayString();
             var componentName = classSymbol.Name;
             var stateName = $"{componentName}_AutoState";
 
             var members = classSymbol.GetMembers();
-            var fields = new List<(ITypeSymbol Type, string FieldName, AttributeData Attribute)>();
+            var fields = new List<(ITypeSymbol Type, string FieldName)>();
             var fieldAttr = comp.GetTypeByMetadataName(MemberAttributeName);
 
             foreach (var mem in members)
@@ -39,7 +60,7 @@ namespace Robust.Shared.CompNetworkGenerator
                 switch (mem)
                 {
                     case IFieldSymbol field:
-                        fields.Add((field.Type, field.Name, attribute));
+                        fields.Add((field.Type, field.Name));
                         break;
                     case IPropertySymbol prop:
                     {
@@ -75,7 +96,7 @@ namespace Robust.Shared.CompNetworkGenerator
                             continue;
                         }
 
-                        fields.Add((prop.Type, prop.Name, attribute));
+                        fields.Add((prop.Type, prop.Name));
                         break;
                     }
                 }
@@ -113,29 +134,139 @@ namespace Robust.Shared.CompNetworkGenerator
             //            component.Count = state.Count;
             var handleStateSetters = new StringBuilder();
 
-            foreach (var (type, name, attribute) in fields)
+            foreach (var (type, name) in fields)
             {
-                stateFields.Append($@"
-        public {type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} {name} = default!;");
+                var typeDisplayStr = type.ToDisplayString(FullNullableFormat);
+                var nullable = type.NullableAnnotation == NullableAnnotation.Annotated;
+                var nullableAnnotation = nullable ? "?" : string.Empty;
 
-                // get first ctor arg of the field attribute, which determines whether the field should be cloned
-                // (like if its a dict or list)
-                if (attribute.ConstructorArguments[0].Value is bool val && val)
+                switch (typeDisplayStr)
                 {
-                    getStateInit.Append($@"
+                    case GlobalEntityUidName:
+                    case GlobalNullableEntityUidName:
+                        stateFields.Append($@"
+        public NetEntity{nullableAnnotation} {name} = default!;");
+
+                        getStateInit.Append($@"
+                {name} = GetNetEntity(component.{name}),");
+                        handleStateSetters.Append($@"
+            component.{name} = EnsureEntity<{componentName}>(state.{name}, uid);");
+
+                        break;
+                    case GlobalEntityCoordinatesName:
+                    case GlobalNullableEntityCoordinatesName:
+                        stateFields.Append($@"
+        public NetCoordinates{nullableAnnotation} {name} = default!;");
+
+                        getStateInit.Append($@"
+                {name} = GetNetCoordinates(component.{name}),");
+                        handleStateSetters.Append($@"
+            component.{name} = EnsureCoordinates<{componentName}>(state.{name}, uid);");
+
+                        break;
+                    case GlobalEntityUidSetName:
+                        stateFields.Append($@"
+        public {GlobalNetEntityUidSetName} {name} = default!;");
+
+                        getStateInit.Append($@"
+                {name} = GetNetEntitySet(component.{name}),");
+                        handleStateSetters.Append($@"
+            EnsureEntitySet<{componentName}>(state.{name}, uid, component.{name});");
+
+                        break;
+                    case GlobalEntityUidListName:
+                        stateFields.Append($@"
+        public {GlobalNetEntityUidListName} {name} = default!;");
+
+                        getStateInit.Append($@"
+                {name} = GetNetEntityList(component.{name}),");
+                        handleStateSetters.Append($@"
+            EnsureEntityList<{componentName}>(state.{name}, uid, component.{name});");
+
+                        break;
+                    default:
+                        if (type is INamedTypeSymbol { TypeArguments.Length: 2 } named &&
+                            named.ConstructedFrom.ToDisplayString(FullyQualifiedFormat) == GlobalDictionaryName)
+                        {
+                            var key = named.TypeArguments[0].ToDisplayString(FullNullableFormat);
+                            var keyNullable = key.EndsWith("?");
+
+                            var value = named.TypeArguments[1].ToDisplayString(FullNullableFormat);
+                            var valueNullable = value.EndsWith("?");
+
+                            if (key is GlobalEntityUidName or GlobalNullableEntityUidName)
+                            {
+                                key = keyNullable ? GlobalNetEntityNullableName : GlobalNetEntityName;
+
+                                var ensureGeneric = $"{componentName}, {value}";
+                                if (value is GlobalEntityUidName or GlobalNullableEntityUidName)
+                                {
+                                    value = valueNullable ? GlobalNetEntityNullableName : GlobalNetEntityName;
+                                    ensureGeneric = componentName;
+                                }
+
+                                stateFields.Append($@"
+        public Dictionary<{key}, {value}> {name} = default!;");
+
+                                getStateInit.Append($@"
+                {name} = GetNetEntityDictionary(component.{name}),");
+
+                                if (valueNullable && value is not GlobalNetEntityName and not GlobalNetEntityNullableName)
+                                {
+                                    handleStateSetters.Append($@"
+            EnsureEntityDictionaryNullableValue<{componentName}, {value}>(state.{name}, uid, component.{name});");
+                                }
+                                else
+                                {
+                                    handleStateSetters.Append($@"
+            EnsureEntityDictionary<{ensureGeneric}>(state.{name}, uid, component.{name});");
+                                }
+
+                                break;
+                            }
+
+                            if (value is GlobalEntityUidName or GlobalNullableEntityUidName)
+                            {
+                                value = valueNullable ? GlobalNetEntityNullableName : GlobalNetEntityName;
+
+                                stateFields.Append($@"
+        public Dictionary<{key}, {value}> {name} = default!;");
+
+                                getStateInit.Append($@"
+                {name} = GetNetEntityDictionary(component.{name}),");
+                                handleStateSetters.Append($@"
+            EnsureEntityDictionary<{componentName}, {key}>(state.{name}, uid, component.{name});");
+
+                                break;
+                            }
+                        }
+
+                        stateFields.Append($@"
+        public {typeDisplayStr} {name} = default!;");
+
+                        if (IsCloneType(type))
+                        {
+                            // get first ctor arg of the field attribute, which determines whether the field should be cloned
+                            // (like if its a dict or list)
+                            getStateInit.Append($@"
                 {name} = component.{name},");
 
-                    handleStateSetters.Append($@"
-            if (state.{name} != null)
+                            handleStateSetters.Append($@"
+            if (state.{name} == null)
+                component.{name} = null!;
+            else
                 component.{name} = new(state.{name});");
-                }
-                else
-                {
-                    getStateInit.Append($@"
+                        }
+                        else
+                        {
+                            getStateInit.Append($@"
                 {name} = component.{name},");
 
-                    handleStateSetters.Append($@"
+                            handleStateSetters.Append($@"
             component.{name} = state.{name};");
+                        }
+
+                        break;
                 }
             }
 
@@ -144,26 +275,29 @@ namespace Robust.Shared.CompNetworkGenerator
             {
                 eventRaise = @"
             var ev = new AfterAutoHandleStateEvent(args.Current);
-            EntityManager.EventBus.RaiseComponentEvent(component, ref ev);";
+            EntityManager.EventBus.RaiseComponentEvent(uid, component, ref ev);";
             }
 
             return $@"// <auto-generated />
+#nullable enable
+using System;
 using Robust.Shared.GameStates;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Analyzers;
 using Robust.Shared.Serialization;
+using Robust.Shared.Map;
 
 namespace {nameSpace};
 
 public partial class {componentName}
 {{
-    [Serializable, NetSerializable]
-    public class {stateName} : ComponentState
+    [System.Serializable, NetSerializable]
+    public sealed class {stateName} : IComponentState
     {{{stateFields}
     }}
 
     [RobustAutoGenerated]
-    public class {componentName}_AutoNetworkSystem : EntitySystem
+    public sealed class {componentName}_AutoNetworkSystem : EntitySystem
     {{
         public override void Initialize()
         {{
@@ -207,10 +341,10 @@ public partial class {componentName}
                 {
                     var attr = type.Attribute;
                     var raiseEv = false;
-                    if (attr.ConstructorArguments.Length == 1 && attr.ConstructorArguments[0].Value != null)
+                    if (attr.ConstructorArguments is [{Value: bool raise}])
                     {
                         // Get the afterautohandle bool, which is first constructor arg
-                        raiseEv = (bool) attr.ConstructorArguments[0].Value;
+                        raiseEv = raise;
                     }
 
                     var source = GenerateSource(context, type.Type, comp, raiseEv);
@@ -242,6 +376,8 @@ public partial class {componentName}
         {
             var symbols = new List<(INamedTypeSymbol, AttributeData)>();
             var attributeSymbol = comp.GetTypeByMetadataName(ClassAttributeName);
+            var fieldAttr = comp.GetTypeByMetadataName(MemberAttributeName);
+
             foreach (var candidateClass in receiver.CandidateClasses)
             {
                 var model = comp.GetSemanticModel(candidateClass.SyntaxTree);
@@ -250,8 +386,33 @@ public partial class {componentName}
                     attr.AttributeClass != null &&
                     attr.AttributeClass.Equals(attributeSymbol, SymbolEqualityComparer.Default));
 
+                if (typeSymbol == null)
+                    continue;
+
                 if (relevantAttribute == null)
                 {
+                    foreach (var mem in typeSymbol.GetMembers())
+                    {
+                        var attribute = mem.GetAttributes().FirstOrDefault(a =>
+                            a.AttributeClass != null &&
+                            a.AttributeClass.Equals(fieldAttr, SymbolEqualityComparer.Default));
+
+                        if (attribute == null)
+                            continue;
+
+                        var msg = "Field is marked with [AutoNetworkedField], but its class has no [AutoGenerateComponentState] attribute.";
+                        context.ReportDiagnostic(
+                            Diagnostic.Create(
+                                new DiagnosticDescriptor(
+                                    "RXN0007",
+                                    msg,
+                                    msg,
+                                    "Usage",
+                                    DiagnosticSeverity.Error,
+                                    true),
+                                candidateClass.Keyword.GetLocation()));
+                    }
+
                     continue;
                 }
 
@@ -290,6 +451,21 @@ public partial class {componentName}
                 //Debugger.Launch();
             }
             context.RegisterForSyntaxNotifications(() => new NameReferenceSyntaxReceiver());
+        }
+
+        private static bool IsCloneType(ITypeSymbol type)
+        {
+            if (type is not INamedTypeSymbol named || !named.IsGenericType)
+            {
+                return false;
+            }
+
+            var constructed = named.ConstructedFrom.ToDisplayString(FullyQualifiedFormat);
+            return constructed switch
+            {
+                GlobalDictionaryName or GlobalHashSetName or GlobalListName => true,
+                _ => false
+            };
         }
     }
 }

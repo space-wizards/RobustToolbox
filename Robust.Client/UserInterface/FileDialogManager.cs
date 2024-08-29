@@ -51,7 +51,7 @@ namespace Robust.Client.UserInterface
             return await OpenFileNfd(filters);
         }
 
-        public async Task<(Stream, bool)?> SaveFile(FileDialogFilters? filters)
+        public async Task<(Stream, bool)?> SaveFile(FileDialogFilters? filters, bool truncate = true)
         {
             var name = await GetSaveFileName(filters);
             if (name == null)
@@ -61,7 +61,7 @@ namespace Robust.Client.UserInterface
 
             try
             {
-                return (File.Open(name, FileMode.Open), true);
+                return (File.Open(name, truncate ? FileMode.Truncate : FileMode.Open), true);
             }
             catch (FileNotFoundException)
             {

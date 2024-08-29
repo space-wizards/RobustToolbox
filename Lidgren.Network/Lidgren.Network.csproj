@@ -10,9 +10,14 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
     <SkipRobustAnalyzer>true</SkipRobustAnalyzer>
+
+    <Nullable>enable</Nullable>
+    <LangVersion>12.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="CursedHorrorsBeyondOurWildestImagination.cs" />
+
     <Compile Include="Lidgren.Network\Lidgren.Network\**\*.cs">
      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>

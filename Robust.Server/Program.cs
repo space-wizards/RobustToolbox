@@ -32,16 +32,12 @@ namespace Robust.Server
                 throw new InvalidOperationException("Cannot start twice!");
             }
 
-            GlibcBug.Check();
-
             _hasStarted = true;
 
             if (!CommandLineArgs.TryParse(args, out var parsed))
             {
                 return;
             }
-
-            ThreadPool.SetMinThreads(Environment.ProcessorCount * 2, Environment.ProcessorCount);
 
             ParsedMain(parsed, contentStart, options);
         }

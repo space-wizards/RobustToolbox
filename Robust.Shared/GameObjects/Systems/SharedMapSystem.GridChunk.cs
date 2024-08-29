@@ -14,12 +14,13 @@ public abstract partial class SharedMapSystem
     /// <param name="xIndex">The X tile index relative to the chunk.</param>
     /// <param name="yIndex">The Y tile index relative to the chunk.</param>
     /// <param name="tile">The new tile to insert.</param>
-    internal void SetChunkTile(EntityUid uid, MapGridComponent grid, MapChunk chunk, ushort xIndex, ushort yIndex, Tile tile)
+    internal bool SetChunkTile(EntityUid uid, MapGridComponent grid, MapChunk chunk, ushort xIndex, ushort yIndex, Tile tile)
     {
         if (!chunk.TrySetTile(xIndex, yIndex, tile, out var oldTile, out var shapeChanged))
-            return;
+            return false;
 
         var tileIndices = new Vector2i(xIndex, yIndex);
         OnTileModified(uid, grid, chunk, tileIndices, tile, oldTile, shapeChanged);
+        return true;
     }
 }

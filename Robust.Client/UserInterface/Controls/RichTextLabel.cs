@@ -6,6 +6,7 @@ using Robust.Client.UserInterface.RichText;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -16,10 +17,46 @@ namespace Robust.Client.UserInterface.Controls
 
         private FormattedMessage? _message;
         private RichTextEntry _entry;
+        private float _lineHeightScale = 1;
+        private bool _lineHeightOverride;
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public float LineHeightScale
+        {
+            get
+            {
+                if (!_lineHeightOverride && TryGetStyleProperty(nameof(LineHeightScale), out float value))
+                    return value;
+
+                return _lineHeightScale;
+            }
+            set
+            {
+                _lineHeightScale = value;
+                _lineHeightOverride = true;
+                InvalidateMeasure();
+            }
+        }
+
+        public string? Text
+        {
+            get => _message?.ToMarkup();
+            set
+            {
+                if (value == null)
+                {
+                    _message?.Clear();
+                    return;
+                }
+
+                SetMessage(FormattedMessage.FromMarkupPermissive(value));
+            }
+        }
 
         public RichTextLabel()
         {
             IoCManager.InjectDependencies(this);
+            VerticalAlignment = VAlignment.Center;
         }
 
         public void SetMessage(FormattedMessage message, Type[]? tagsAllowed = null, Color? defaultColor = null)
@@ -46,7 +83,7 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             var font = _getFont();
-            _entry.Update(font, availableSize.X * UIScale, UIScale);
+            _entry.Update(_tagManager, font, availableSize.X * UIScale, UIScale, LineHeightScale);
 
             return new Vector2(_entry.Width / UIScale, _entry.Height / UIScale);
         }
@@ -60,7 +97,7 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            _entry.Draw(handle, _getFont(), SizeBox, 0, new MarkupDrawingContext(), UIScale);
+            _entry.Draw(_tagManager, handle, _getFont(), SizeBox, 0, new MarkupDrawingContext(), UIScale, LineHeightScale);
         }
 
         [Pure]

@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using NUnit.Framework;
 using Robust.Server.GameObjects;
@@ -10,6 +11,8 @@ using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Utility;
+using IgnoreUIRangeComponent = Robust.Shared.GameObjects.IgnoreUIRangeComponent;
 
 namespace Robust.UnitTesting.Server.Maps
 {
@@ -52,32 +55,21 @@ entities:
   - type: MapDeserializeTest
     foo: 1
     bar: 2
-
 ";
+
+        protected override Type[]? ExtraComponents => new[] { typeof(MapDeserializeTestComponent), typeof(VisibilityComponent), typeof(IgnoreUIRangeComponent)};
 
         [OneTimeSetUp]
         public void Setup()
         {
-            var compFactory = IoCManager.Resolve<IComponentFactory>();
-            compFactory.RegisterClass<MapDeserializeTestComponent>();
-            compFactory.RegisterClass<VisibilityComponent>();
-            compFactory.RegisterClass<ActorComponent>();
-            compFactory.RegisterClass<IgnoreUIRangeComponent>();
-            compFactory.GenerateNetIds();
             IoCManager.Resolve<ISerializationManager>().Initialize();
-
-            // For some reason RobustUnitTest doesn't discover PVSSystem but this does here so ?
-            var syssy = IoCManager.Resolve<IEntitySystemManager>();
-            syssy.Shutdown();
-            syssy.Initialize();
-
             var resourceManager = IoCManager.Resolve<IResourceManagerInternal>();
             resourceManager.Initialize(null);
             resourceManager.MountString("/TestMap.yml", MapData);
             resourceManager.MountString("/EnginePrototypes/TestMapEntity.yml", Prototype);
 
             var protoMan = IoCManager.Resolve<IPrototypeManager>();
-            protoMan.RegisterKind(typeof(EntityPrototype));
+            protoMan.RegisterKind(typeof(EntityPrototype), typeof(EntityCategoryPrototype));
 
             protoMan.LoadDirectory(new ("/EnginePrototypes"));
             protoMan.LoadDirectory(new ("/Prototypes"));
@@ -88,16 +80,13 @@ entities:
         public void TestDataLoadPriority()
         {
             // TODO: Fix after serv3
-            var map = IoCManager.Resolve<IMapManager>();
+            // fix what?
 
             var entMan = IoCManager.Resolve<IEntityManager>();
+            entMan.System<SharedMapSystem>().CreateMap(out var mapId);
 
-            var mapId = map.CreateMap();
-            // Yay test bullshit
-            var mapUid = map.GetMapEntityId(mapId);
-            entMan.EnsureComponent<PhysicsMapComponent>(mapUid);
-            entMan.EnsureComponent<BroadphaseComponent>(mapUid);
-
+            var traversal = entMan.System<SharedGridTraversalSystem>();
+            traversal.Enabled = false;
             var mapLoad = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MapLoaderSystem>();
             if (!mapLoad.TryLoad(mapId, "/TestMap.yml", out var root)
                 || root.FirstOrDefault() is not { Valid:true } geid)
@@ -106,8 +95,9 @@ entities:
                 return;
             }
 
-            var entity = entMan.GetComponent<TransformComponent>(geid).Children.Single().Owner;
+            var entity = entMan.GetComponent<TransformComponent>(geid)._children.Single();
             var c = entMan.GetComponent<MapDeserializeTestComponent>(entity);
+            traversal.Enabled = true;
 
             Assert.That(c.Bar, Is.EqualTo(2));
             Assert.That(c.Foo, Is.EqualTo(3));

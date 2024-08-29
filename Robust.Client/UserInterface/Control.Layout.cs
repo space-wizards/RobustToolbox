@@ -12,24 +12,30 @@ namespace Robust.Client.UserInterface
 
     public partial class Control
     {
+        private const float DefaultStretchRatio = 1;
+        private const float DefaultSetSize = float.NaN;
+        private const float DefaultMaxSize = float.PositiveInfinity;
+        private const HAlignment DefaultHAlignment = HAlignment.Stretch;
+        private const VAlignment DefaultVAlignment = VAlignment.Stretch;
+
         private Vector2 _size;
 
         [ViewVariables] internal Vector2? PreviousMeasure;
         [ViewVariables] internal UIBox2? PreviousArrange;
 
-        private float _sizeFlagsStretchRatio = 1;
+        private float _sizeFlagsStretchRatio = DefaultStretchRatio;
 
         private float _minWidth;
         private float _minHeight;
-        private float _setWidth = float.NaN;
-        private float _setHeight = float.NaN;
-        private float _maxWidth = float.PositiveInfinity;
-        private float _maxHeight = float.PositiveInfinity;
+        private float _setWidth = DefaultSetSize;
+        private float _setHeight = DefaultSetSize;
+        private float _maxWidth = DefaultMaxSize;
+        private float _maxHeight = DefaultMaxSize;
 
         private bool _horizontalExpand;
         private bool _verticalExpand;
-        private HAlignment _horizontalAlignment = HAlignment.Stretch;
-        private VAlignment _verticalAlignment = VAlignment.Stretch;
+        private HAlignment _horizontalAlignment = DefaultHAlignment;
+        private VAlignment _verticalAlignment = DefaultVAlignment;
         private Thickness _margin;
         private bool _measuring;
         private bool _arranging;
@@ -46,6 +52,10 @@ namespace Robust.Client.UserInterface
         [ViewVariables] public bool IsMeasureValid { get; private set; }
         [ViewVariables] public bool IsArrangeValid { get; private set; }
 
+        /// <summary>
+        /// Controls the amount of empty space in virtual pixels around the control.
+        /// </summary>
+        /// <remarks>Values can be provided as "All" or "Horizontal, Vertical" or "Left, Top, Right, Bottom"</remarks>
         [ViewVariables]
         public Thickness Margin
         {
@@ -53,6 +63,7 @@ namespace Robust.Client.UserInterface
             set
             {
                 _margin = value;
+                SetLayoutStyleProp(LayoutStyleProperties.Margin);
                 InvalidateMeasure();
             }
         }
@@ -226,6 +237,10 @@ namespace Robust.Client.UserInterface
         /// <seealso cref="Rect"/>
         public UIBox2i PixelRect => UIBox2i.FromDimensions(PixelPosition, PixelSize);
 
+        public UIBox2 GlobalRect => UIBox2.FromDimensions(GlobalPosition, _size);
+
+        public UIBox2i GlobalPixelRect => UIBox2i.FromDimensions(GlobalPixelPosition, PixelSize);
+
         /// <summary>
         /// Horizontal alignment mode.
         /// This determines how the control should be laid out horizontally
@@ -238,6 +253,7 @@ namespace Robust.Client.UserInterface
             set
             {
                 _horizontalAlignment = value;
+                SetLayoutStyleProp(LayoutStyleProperties.HorizontalAlignment);
                 InvalidateArrange();
             }
         }
@@ -254,6 +270,7 @@ namespace Robust.Client.UserInterface
             set
             {
                 _verticalAlignment = value;
+                SetLayoutStyleProp(LayoutStyleProperties.VerticalAlignment);
                 InvalidateArrange();
             }
         }
@@ -272,6 +289,7 @@ namespace Robust.Client.UserInterface
             set
             {
                 _horizontalExpand = value;
+                SetLayoutStyleProp(LayoutStyleProperties.HorizontalExpand);
                 Parent?.InvalidateMeasure();
             }
         }
@@ -290,6 +308,7 @@ namespace Robust.Client.UserInterface
             set
             {
                 _verticalExpand = value;
+                SetLayoutStyleProp(LayoutStyleProperties.VerticalExpand);
                 Parent?.InvalidateArrange();
             }
         }
@@ -314,6 +333,7 @@ namespace Robust.Client.UserInterface
 
                 _sizeFlagsStretchRatio = value;
 
+                SetLayoutStyleProp(LayoutStyleProperties.StretchRatio);
                 Parent?.InvalidateArrange();
             }
         }
@@ -390,6 +410,7 @@ namespace Robust.Client.UserInterface
             set
             {
                 _minWidth = value;
+                SetLayoutStyleProp(LayoutStyleProperties.MinWidth);
                 InvalidateMeasure();
             }
         }
@@ -404,6 +425,7 @@ namespace Robust.Client.UserInterface
             set
             {
                 _minHeight = value;
+                SetLayoutStyleProp(LayoutStyleProperties.MinHeight);
                 InvalidateMeasure();
             }
         }
@@ -418,6 +440,7 @@ namespace Robust.Client.UserInterface
             set
             {
                 _setWidth = value;
+                SetLayoutStyleProp(LayoutStyleProperties.SetWidth);
                 InvalidateMeasure();
             }
         }
@@ -432,6 +455,7 @@ namespace Robust.Client.UserInterface
             set
             {
                 _setHeight = value;
+                SetLayoutStyleProp(LayoutStyleProperties.SetHeight);
                 InvalidateMeasure();
             }
         }
@@ -446,6 +470,7 @@ namespace Robust.Client.UserInterface
             set
             {
                 _maxWidth = value;
+                SetLayoutStyleProp(LayoutStyleProperties.MaxWidth);
                 InvalidateMeasure();
             }
         }
@@ -460,8 +485,17 @@ namespace Robust.Client.UserInterface
             set
             {
                 _maxHeight = value;
+                SetLayoutStyleProp(LayoutStyleProperties.MaxHeight);
                 InvalidateMeasure();
             }
+        }
+
+        /// <summary>
+        /// Gets the screen coordinates position relative to the control.
+        /// </summary>
+        public Vector2 GetLocalPosition(ScreenCoordinates coordinates)
+        {
+            return coordinates.Position - GlobalPixelPosition;
         }
 
         /// <summary>

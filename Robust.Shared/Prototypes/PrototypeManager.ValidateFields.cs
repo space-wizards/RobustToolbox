@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
 using Robust.Shared.Utility;
 using BindingFlags = System.Reflection.BindingFlags;
 
@@ -13,35 +12,41 @@ namespace Robust.Shared.Prototypes;
 public partial class PrototypeManager
 {
     /// <inheritdoc/>
-    public List<string> ValidateFields(Dictionary<Type, HashSet<string>> prototypes)
+    public List<string> ValidateStaticFields(Dictionary<Type, HashSet<string>> prototypes)
     {
         var errors = new List<string>();
         foreach (var type in _reflectionManager.FindAllTypes())
         {
             // TODO validate public static fields on abstract classes that have no implementations?
             if (!type.IsAbstract)
-                ValidateType(type, errors, prototypes);
+                ValidateStaticFieldsInternal(type, errors, prototypes);
         }
 
         return errors;
     }
 
-    /// <summary>
-    /// Validate all fields defined on this type and all base types.
-    /// </summary>
-    private void ValidateType(Type type, List<string> errors, Dictionary<Type, HashSet<string>> prototypes)
+    /// <inheritdoc/>
+    public List<string> ValidateStaticFields(Type type, Dictionary<Type, HashSet<string>> prototypes)
     {
-        object? instance = null;
-        Type? baseType = type;
+        var errors = new List<string>();
+        ValidateStaticFieldsInternal(type, errors, prototypes);
+        return errors;
+    }
 
-        var flags = BindingFlags.Static | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public |
-                    BindingFlags.DeclaredOnly;
+    /// <summary>
+    /// Validate all static fields defined on this type and all base types.
+    /// </summary>
+    private void ValidateStaticFieldsInternal(Type type, List<string> errors, Dictionary<Type, HashSet<string>> prototypes)
+    {
+        var baseType = type;
+        var flags = BindingFlags.Static |  BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.DeclaredOnly;
 
         while (baseType != null)
         {
             foreach (var field in baseType.GetFields(flags))
             {
-                ValidateField(field, type, ref instance, errors, prototypes);
+                DebugTools.Assert(field.IsStatic);
+                ValidateStaticField(field, type, errors, prototypes);
             }
 
             // We need to get the fields on the base type separately in order to get the private fields
@@ -49,99 +54,110 @@ public partial class PrototypeManager
         }
     }
 
-    private void ValidateField(
+    private void ValidateStaticField(
         FieldInfo field,
         Type type,
-        ref object? instance,
         List<string> errors,
         Dictionary<Type, HashSet<string>> prototypes)
     {
+        DebugTools.Assert(field.IsStatic);
+        DebugTools.Assert(!field.HasCustomAttribute<DataFieldAttribute>(), "Datafields should not be static");
+
         // Is this even a prototype id related field?
-        if (!TryGetFieldPrototype(field, out var proto, out var canBeNull, out var canBeEmpty))
+        if (!TryGetFieldPrototype(field, out var proto))
             return;
 
-        if (field.FieldType != typeof(string))
+        if (!prototypes.TryGetValue(proto, out var validIds))
         {
-            errors.Add($"Prototype id field failed validation. Field is not a string. Field: {field.Name} in {type.FullName}");
+            errors.Add($"Prototype id field failed validation. Unknown prototype kind {proto.Name}. Field: {field.Name} in {type.FullName}");
             return;
         }
 
-        if (!TryGetFieldValue(field, type, ref instance, errors, out var value))
-            return;
-
-        if (value == null)
+        if (!TryGetIds(field, proto, out var ids))
         {
-            if (!canBeNull)
-                errors.Add($"Prototype id field failed validation. Const/Static fields should not be null. Field: {field.Name} in {type.FullName}");
+            TryGetIds(field, proto, out _);
+            DebugTools.Assert($"Failed to get ids, despite resolving the field into a prototype kind?");
             return;
         }
 
-        var id = (string) value;
-
-        if (string.IsNullOrWhiteSpace(id))
+        foreach (var id in ids)
         {
-            if (!canBeEmpty)
-                errors.Add($"Prototype id field failed validation. Non-optional non-nullable data-fields must have a default value. Field: {field.Name} in {type.FullName}");
-            return;
-        }
-
-        if (!prototypes.TryGetValue(proto, out var ids))
-        {
-            errors.Add($"Prototype id field failed validation. Unknown prototype kind. Field: {field.Name} in {type.FullName}");
-            return;
-        }
-
-        if (!ids.Contains(id))
-        {
-            errors.Add($"Prototype id field failed validation. Unknown prototype: {id}. Field: {field.Name} in {type.FullName}");
+            if (!validIds.Contains(id))
+                errors.Add($"Prototype id field failed validation. Unknown prototype: {id} of type {proto.Name}. Field: {field.Name} in {type.FullName}");
         }
     }
 
     /// <summary>
-    /// Get the value of some field. If this is not a static field, this will create instance of the object in order to
-    /// validate default field values.
+    /// Extract prototype ids from a string, IEnumerable{string}, EntProtoId, IEnumerable{EntProtoId}, ProtoId{T}, or IEnumerable{ProtoId{T}} field.
     /// </summary>
-    private bool TryGetFieldValue(FieldInfo field, Type type, ref object? instance, List<string> errors, out object? value)
+    private bool TryGetIds(FieldInfo field, Type proto, [NotNullWhen(true)] out string[]? ids)
     {
-        value = null;
+        ids = null;
+        var value = field.GetValue(null);
+        if (value == null)
+            return false;
 
-        if (field.IsStatic || instance != null)
+        if (value is string str)
         {
-            value = field.GetValue(instance);
+            ids = [str];
             return true;
         }
 
-        var constructor = type.GetConstructor(
-            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
-            Type.EmptyTypes);
-
-        // TODO handle parameterless record constructors.
-        // Figure out how ISerializationManager does it, or just re-use that code somehow.
-        // In the meantime, record data fields need an explicit parameterless ctor.
-
-        if (constructor == null)
+        if (value is IEnumerable<string> strEnum)
         {
-            errors.Add($"Prototype id field failed validation. Could not create instance to validate default value. Field: {field.Name} in {type.FullName}");
-            return false;
+            ids = strEnum.ToArray();
+            return true;
         }
 
-        instance = constructor.Invoke(Array.Empty<object>());
-        value = field.GetValue(instance);
+        if (value is EntProtoId protoId)
+        {
+            ids = [protoId];
+            return true;
+        }
 
-        return true;
+        if (value is IEnumerable<EntProtoId> protoIdEnum)
+        {
+            ids = protoIdEnum.Select(x=> x.Id).ToArray();
+            return true;
+        }
+
+        if (field.FieldType.IsGenericType && field.FieldType.GetGenericTypeDefinition() == typeof(ProtoId<>))
+        {
+            ids = [value.ToString()!];
+            return true;
+        }
+
+        foreach (var iface in field.FieldType.GetInterfaces())
+        {
+            if (!iface.IsGenericType)
+                continue;
+
+            if (iface.GetGenericTypeDefinition() != typeof(IEnumerable<>))
+                continue;
+
+            var enumType = iface.GetGenericArguments().Single();
+            if (!enumType.IsGenericType)
+                continue;
+
+            if (enumType.GetGenericTypeDefinition() != typeof(ProtoId<>))
+                continue;
+
+            ids = GetIdsMethod.MakeGenericMethod(proto).Invoke(null, [value]) as string[];
+            return ids != null;
+        }
+
+        return false;
     }
 
-    private bool TryGetFieldPrototype(
-        FieldInfo field,
-        [NotNullWhen(true)] out Type? proto,
-        out bool canBeNull,
-        out bool canBeEmpty)
+    private static MethodInfo GetIdsMethod = typeof(PrototypeManager).GetMethod(nameof(GetIds), BindingFlags.NonPublic | BindingFlags.Static)!;
+    private static string[] GetIds<T>(IEnumerable<ProtoId<T>> enumerable) where T : class, IPrototype
     {
-        proto = null;
-        canBeNull = false;
-        canBeEmpty = false;
+        return enumerable.Select(x => x.Id).ToArray();
+    }
 
-        // Check for a [PrototypeId] attribute.
+    private bool TryGetFieldPrototype(FieldInfo field, [NotNullWhen(true)] out Type? proto)
+    {
+        // Validate anything with the attribute
         var attrib = field.GetCustomAttribute(typeof(ValidatePrototypeIdAttribute<>), false);
         if (attrib != null)
         {
@@ -149,29 +165,40 @@ public partial class PrototypeManager
             return true;
         }
 
-        // Next, check for a data field attribute.
-        if (!field.TryGetCustomAttribute(out DataFieldAttribute? dataField))
-            return false;
+        if (TryGetPrototypeFromType(field.FieldType, out proto))
+            return true;
 
-        DebugTools.Assert(!field.IsStatic);
+        // Allow validating arrays or lists.
+        foreach (var iface in field.FieldType.GetInterfaces().Where(x => x.IsGenericType))
+        {
+            if (iface.GetGenericTypeDefinition() != typeof(IEnumerable<>))
+                continue;
 
-        if (dataField.CustomTypeSerializer == null)
-            return false;
+            var enumType = iface.GetGenericArguments().Single();
+            if (TryGetPrototypeFromType(enumType, out proto))
+                return true;
+        }
 
-        // Check that this is a prototype id serializer
-        if (!dataField.CustomTypeSerializer.IsGenericType)
-            return false;
+        proto = null;
+        return false;
+    }
 
-        if (dataField.CustomTypeSerializer.GetGenericTypeDefinition() != typeof(PrototypeIdSerializer<>))
-            return false;
+    private bool TryGetPrototypeFromType(Type type, [NotNullWhen(true)] out Type? proto)
+    {
+        if (type == typeof(EntProtoId))
+        {
+            proto = typeof(EntityPrototype);
+            return true;
+        }
 
-        proto = dataField.CustomTypeSerializer.GetGenericArguments().First();
-        canBeEmpty = dataField.Required;
+        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ProtoId<>))
+        {
+            proto = type.GetGenericArguments().Single();
+            DebugTools.Assert(proto != typeof(EntityPrototype), "Use EntProtoId instead of ProtoId<EntityPrototype>");
+            return true;
+        }
 
-        // We will assume null values imply that the field itself is marked as nullable.
-        // Unless someone can tell me how to figure out the nullability of a string field.
-        canBeNull = true;
-
-        return true;
+        proto = null;
+        return false;
     }
 }

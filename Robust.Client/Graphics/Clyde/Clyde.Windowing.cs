@@ -188,7 +188,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     if (!TryInitMainWindow(glSpec, out lastError))
                     {
-                        Logger.DebugS("clyde.win", $"OpenGL {glSpec.OpenGLVersion} unsupported: {lastError}");
+                        _sawmillWin.Debug($"OpenGL {glSpec.OpenGLVersion} unsupported: {lastError}");
                         continue;
                     }
 
@@ -199,7 +199,7 @@ namespace Robust.Client.Graphics.Clyde
             else
             {
                 if (!TryInitMainWindow(null, out lastError))
-                    Logger.DebugS("clyde.win", $"Failed to create window: {lastError}");
+                    _sawmillWin.Debug($"Failed to create window: {lastError}");
                 else
                     succeeded = true;
             }
@@ -224,14 +224,13 @@ namespace Robust.Client.Graphics.Clyde
                     fixed (char* pCaption = "RobustToolbox: Failed to create window")
                     {
                         Windows.MessageBoxW(HWND.NULL,
-                            (ushort*) pText,
-                            (ushort*) pCaption,
+                            pText,
+                            pCaption,
                             MB.MB_OK | MB.MB_ICONERROR);
                     }
                 }
 
-                Logger.FatalS("clyde.win",
-                    "Failed to create main game window! " +
+                _sawmillWin.Fatal("Failed to create main game window! " +
                     "This probably means your GPU is too old to run the game. " +
                     $"That or update your graphics drivers. {lastError}");
 
@@ -260,14 +259,14 @@ namespace Robust.Client.Graphics.Clyde
                 yield break;
             }
 
-            foreach (var file in _resourceCache.ContentFindFiles(_windowIconPath))
+            foreach (var file in _resManager.ContentFindFiles(_windowIconPath))
             {
                 if (file.Extension != "png")
                 {
                     continue;
                 }
 
-                using var stream = _resourceCache.ContentFileRead(file);
+                using var stream = _resManager.ContentFileRead(file);
                 yield return Image.Load<Rgba32>(stream);
             }
         }

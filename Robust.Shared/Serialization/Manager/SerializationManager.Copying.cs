@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Frozen;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Serialization.Manager.Definition;
@@ -79,6 +80,14 @@ public sealed partial class SerializationManager
 
             Expression call;
             var sameType = baseType == actualType;
+
+            if (baseType.IsGenericType)
+            {
+                // Frozen dictionaries/sets are abstract and have a bunch of implementations, but we always serialize them as their abstract type.
+                var t = baseType.GetGenericTypeDefinition();
+                if (t == typeof(FrozenDictionary<,>) || t == typeof(FrozenSet<>))
+                    actualType = baseType;
+            }
 
             var targetVar = sameType ? targetParam : Expression.Variable(actualType);
             Expression sourceVar = sameType ? sourceParam : Expression.Convert(sourceParam, actualType);

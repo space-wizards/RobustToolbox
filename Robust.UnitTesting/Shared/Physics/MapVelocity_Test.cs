@@ -1,12 +1,11 @@
 using System.Numerics;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
-using System.Threading.Tasks;
 
 namespace Robust.UnitTesting.Shared.Physics
 {
@@ -39,12 +38,14 @@ namespace Robust.UnitTesting.Shared.Physics
             var system = entityManager.EntitySysManager;
             var physicsSys = system.GetEntitySystem<SharedPhysicsSystem>();
             var xformSystem = system.GetEntitySystem<SharedTransformSystem>();
+            var traversal = entityManager.System<SharedGridTraversalSystem>();
+            traversal.Enabled = false;
 
             await server.WaitAssertion(() =>
             {
-                var mapId = mapManager.CreateMap();
-                var grid = mapManager.CreateGrid(mapId);
-                var grid2 = mapManager.CreateGrid(mapId);
+                entityManager.System<SharedMapSystem>().CreateMap(out var mapId);
+                var grid = mapManager.CreateGridEntity(mapId);
+                var grid2 = mapManager.CreateGridEntity(mapId);
                 var gridUidA = grid.Owner;
 
                 Assert.That(entityManager.TryGetComponent<PhysicsComponent>(gridUidA, out var gridPhysics));
@@ -53,7 +54,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 Vector2 offset = new(3, 4);
                 Vector2 expectedFinalVelocity = new Vector2(-4, 3) * 2 + Vector2.One;
 
-                var dummy = entityManager.SpawnEntity(DummyEntity, new EntityCoordinates(grid.Owner, offset));
+                var dummy = entityManager.SpawnEntity(DummyEntity, new EntityCoordinates(grid, offset));
                 Assert.That(entityManager.TryGetComponent(dummy, out PhysicsComponent? body));
                 Assert.That(entityManager.TryGetComponent(dummy, out TransformComponent? xform));
                 xformSystem.SetParent(dummy, xform!, gridUidA);
@@ -85,7 +86,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 Assert.That(velocities.Item2, Is.Approximately(angularVelocity, 1e-6));
 
                 // Check that velocity does not change when changing parent
-                xformSystem.SetParent(dummy, xform!, grid2.Owner);
+                xformSystem.SetParent(dummy, xform!, grid2);
                 linearVelocity = physicsSys.GetMapLinearVelocity(dummy, body);
                 angularVelocity = physicsSys.GetMapAngularVelocity(dummy, body);
                 velocities = physicsSys.GetMapVelocities(dummy, body);
@@ -94,6 +95,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 Assert.That(velocities.Item1, Is.Approximately(linearVelocity, 1e-6));
                 Assert.That(velocities.Item2, Is.Approximately(angularVelocity, 1e-6));
             });
+            traversal.Enabled = true;
         }
 
         // Check that if something has more than one parent, the velocities are properly added
@@ -108,11 +110,13 @@ namespace Robust.UnitTesting.Shared.Physics
             var system = entityManager.EntitySysManager;
             var physicsSys = system.GetEntitySystem<SharedPhysicsSystem>();
             var xformSystem = system.GetEntitySystem<SharedTransformSystem>();
+            var traversal = entityManager.System<SharedGridTraversalSystem>();
+            traversal.Enabled = false;
 
             await server.WaitAssertion(() =>
             {
-                var mapId = mapManager.CreateMap();
-                var grid = mapManager.CreateGrid(mapId);
+                entityManager.System<SharedMapSystem>().CreateMap(out var mapId);
+                var grid = mapManager.CreateGridEntity(mapId);
                 var gridUid = grid.Owner;
 
                 Assert.That(entityManager.TryGetComponent<PhysicsComponent>(gridUid, out var gridPhysics));
@@ -167,6 +171,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 Assert.That(velocities.Item1, Is.Approximately(linearVelocity, 1e-6));
                 Assert.That(velocities.Item2, Is.Approximately(angularVelocity, 1e-6));
             });
+        traversal.Enabled = true;
         }
     }
 }

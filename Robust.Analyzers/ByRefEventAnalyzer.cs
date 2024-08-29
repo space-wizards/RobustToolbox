@@ -4,6 +4,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
+using Robust.Roslyn.Shared;
 using static Microsoft.CodeAnalysis.SymbolEqualityComparer;
 
 namespace Robust.Analyzers;
@@ -16,27 +17,17 @@ public sealed class ByRefEventAnalyzer : DiagnosticAnalyzer
     private static readonly DiagnosticDescriptor ByRefEventSubscribedByValueRule = new(
         Diagnostics.IdByRefEventSubscribedByValue,
         "By-ref event subscribed to by value",
-        "Tried to subscribe to a by-ref event '{0}' by value.",
+        "Tried to subscribe to a by-ref event '{0}' by value",
         "Usage",
         DiagnosticSeverity.Error,
         true,
         "Make sure that methods subscribing to a ref event have the ref keyword for the event argument."
     );
 
-    private static readonly DiagnosticDescriptor ByValueEventSubscribedByRefRule = new(
-        Diagnostics.IdValueEventRaisedByRef,
-        "Value event subscribed to by-ref",
-        "Tried to subscribe to a value event '{0}' by-ref.",
-        "Usage",
-        DiagnosticSeverity.Error,
-        true,
-        "Make sure that methods subscribing to value events do not have the ref keyword for the event argument."
-    );
-
     private static readonly DiagnosticDescriptor ByRefEventRaisedByValueRule = new(
         Diagnostics.IdByRefEventRaisedByValue,
         "By-ref event raised by value",
-        "Tried to raise a by-ref event '{0}' by value.",
+        "Tried to raise a by-ref event '{0}' by value",
         "Usage",
         DiagnosticSeverity.Error,
         true,
@@ -46,7 +37,7 @@ public sealed class ByRefEventAnalyzer : DiagnosticAnalyzer
     private static readonly DiagnosticDescriptor ByValueEventRaisedByRefRule = new(
         Diagnostics.IdValueEventRaisedByRef,
         "Value event raised by-ref",
-        "Tried to raise a value event '{0}' by-ref.",
+        "Tried to raise a value event '{0}' by-ref",
         "Usage",
         DiagnosticSeverity.Error,
         true,
@@ -55,7 +46,6 @@ public sealed class ByRefEventAnalyzer : DiagnosticAnalyzer
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
         ByRefEventSubscribedByValueRule,
-        ByValueEventSubscribedByRefRule,
         ByRefEventRaisedByValueRule,
         ByValueEventRaisedByRefRule
     );
@@ -64,69 +54,7 @@ public sealed class ByRefEventAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.ReportDiagnostics);
         context.EnableConcurrentExecution();
-        context.RegisterOperationAction(CheckEventSubscription, OperationKind.Invocation);
         context.RegisterOperationAction(CheckEventRaise, OperationKind.Invocation);
-    }
-
-    private void CheckEventSubscription(OperationAnalysisContext context)
-    {
-        if (context.Operation is not IInvocationOperation operation)
-            return;
-
-        var subscribeMethods = context.Compilation
-            .GetTypeByMetadataName("Robust.Shared.GameObjects.EntitySystem")?
-            .GetMembers()
-            .Where(m => m.Name.Contains("SubscribeLocalEvent"))
-            .Cast<IMethodSymbol>();
-
-        if (subscribeMethods == null)
-            return;
-
-        if (!subscribeMethods.Any(m => m.Equals(operation.TargetMethod.OriginalDefinition, Default)))
-            return;
-
-        var typeArguments = operation.TargetMethod.TypeArguments;
-        if (typeArguments.Length < 1 || typeArguments.Length > 2)
-            return;
-
-        if (operation.Arguments.First().Value is not IDelegateCreationOperation delegateCreation)
-            return;
-
-        if (delegateCreation.Target is not IMethodReferenceOperation methodReference)
-            return;
-
-        var eventParameter = methodReference.Method.Parameters.LastOrDefault();
-        if (eventParameter == null)
-            return;
-
-        ITypeSymbol eventArgument;
-        switch (typeArguments.Length)
-        {
-            case 1:
-                eventArgument = typeArguments[0];
-                break;
-            case 2:
-                eventArgument = typeArguments[1];
-                break;
-            default:
-                return;
-        }
-
-        var byRefAttribute = context.Compilation.GetTypeByMetadataName(ByRefAttribute);
-        if (byRefAttribute == null)
-            return;
-
-        var isByRefEventType = eventArgument
-            .GetAttributes()
-            .Any(attribute => attribute.AttributeClass?.Equals(byRefAttribute, Default) ?? false);
-        var parameterIsRef = eventParameter.RefKind == RefKind.Ref;
-
-        if (isByRefEventType != parameterIsRef)
-        {
-            var descriptor = isByRefEventType ? ByRefEventSubscribedByValueRule : ByValueEventSubscribedByRefRule;
-            var diagnostic = Diagnostic.Create(descriptor, operation.Syntax.GetLocation(), eventArgument);
-            context.ReportDiagnostic(diagnostic);
-        }
     }
 
     private void CheckEventRaise(OperationAnalysisContext context)

@@ -305,7 +305,19 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         // I.e., don't resend the whole BUI state just because a new user opened it.
 
         var actors = new Dictionary<Enum, List<NetEntity>>();
-        args.State = new UserInterfaceComponent.UserInterfaceComponentState(actors, ent.Comp.States, ent.Comp.Interfaces);
+
+        var dataCopy = new Dictionary<Enum, InterfaceData>();
+
+        foreach (var (weh, a) in ent.Comp.Interfaces)
+        {
+            dataCopy[weh] = new InterfaceData(a.ClientType)
+            {
+                InteractionRange = a.InteractionRange,
+                RequireInputValidation = a.RequireInputValidation,
+            };
+        }
+
+        args.State = new UserInterfaceComponent.UserInterfaceComponentState(actors, ent.Comp.States, dataCopy);
 
         // Ensure that only the player that currently has the UI open gets to know what they have it open.
         if (args.ReplayState)

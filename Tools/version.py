@@ -28,7 +28,7 @@ def main():
 
 
 def verify_version(version: str):
-    parts = version.split(".")
+    parts = version.split("-")[0].split(".")
     if len(parts) != 3:
         print("Version must be split into three parts with '.'")
         sys.exit(1)

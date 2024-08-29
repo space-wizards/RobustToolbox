@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 232.0.0
+
+### Breaking changes
+
 * Obsolete method `AppearanceComponent.TryGetData` is now access-restricted to `SharedAppearanceSystem`; use `SharedAppearanceSystem.TryGetData` instead.
 
 ### New features
@@ -44,12 +67,11 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fix multithreading bug in ParallelTracker that caused the game to crash randomly.
+* Fix BUI interfaces not deep-copying in state handling.
+* Add Robust.Xaml.csproj to the solution to fix some XAML issues.
 
 ### Other
 
-* Added obsoletion warning for `Control.Dispose()`. New code should not rely on it.
-* Reduced the default tickrate to 30 ticks.
 * Serialization will now add type tags (`!type:<T>`) for necessary `NodeData` when writing (currently only for `object` nodes).
 
 ### Internal

@@ -1,3 +1,5 @@
+#define DEBUG
+
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -56,6 +58,8 @@ internal sealed partial class PvsSystem
 
     private WaitHandle? _deletionTask;
 
+    private int _mainThreadId;
+
     /// <summary>
     /// Expand the size of <see cref="_metadataMemory"/> (and all session data stores) one iteration.
     /// </summary>
@@ -89,6 +93,8 @@ internal sealed partial class PvsSystem
     /// </summary>
     private void InitializePvsArray()
     {
+        _mainThreadId = Environment.CurrentManagedThreadId;
+
         var initialCount = _configManager.GetCVar(CVars.NetPvsEntityInitial);
         var maxCount = _configManager.GetCVar(CVars.NetPvsEntityMax);
 
@@ -255,6 +261,8 @@ internal sealed partial class PvsSystem
     /// </summary>
     private void AssignEntityPointer(MetaDataComponent meta)
     {
+        DebugTools.Assert(Environment.CurrentManagedThreadId == _mainThreadId);
+
         if (_dataFreeListHead == PvsIndex.Invalid)
         {
             ExpandEntityCapacity();
@@ -313,6 +321,8 @@ internal sealed partial class PvsSystem
     /// </summary>
     private void ProcessDeletions()
     {
+        DebugTools.Assert(Environment.CurrentManagedThreadId == _mainThreadId);
+
         var curTick = _gameTiming.CurTick;
 
         if (curTick < _lastReturn + (uint)ForceAckThreshold + 1)

@@ -56,7 +56,7 @@ public sealed class BeforeSaveEvent
 public sealed class AfterSaveEvent
 {
     /// <summary>
-    /// The entity that is going to be saved. usually a map or grid.
+    /// The entity that was saved. usually a map or grid.
     /// </summary>
     public EntityUid Entity;
 

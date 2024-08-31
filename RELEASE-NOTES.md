@@ -51,7 +51,26 @@ END TEMPLATE-->
 
 ### Internal
 
+*None yet*
+
+
+## 233.0.0
+
+### Breaking changes
+
+* Made EntityRenamed a broadcast event & added additional args.
+* Made test runs parallelizable.
+* Added a debug assert that other threads aren't touching entities.
+
+### Bugfixes
+
+* Fix some entitylookup method transformations and add more tests.
+* Fix mousehover not updating if new controls showed up under the mouse.
+
+### Internal
+
 * `ClientGameStateManager` now only initialises or starts entities after their parents have already been initialized. There are also some new debug asserts to try ensure that this rule isn't broken elsewhere. 
+* Engine version script now supports dashes.
 
 
 ## 232.0.0

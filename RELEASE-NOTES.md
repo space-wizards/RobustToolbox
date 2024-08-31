@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 233.0.1
+
+### Bugfixes
+
+* Fix IsHardCollidable component to EntityUid references.
+
+
 ## 233.0.0
 
 ### Breaking changes

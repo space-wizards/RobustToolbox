@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -117,6 +118,10 @@ namespace Robust.Shared.GameObjects
 
         public bool Initialized { get; protected set; }
 
+#if DEBUG
+        private int _mainThreadId;
+#endif
+
         /// <summary>
         /// Constructs a new instance of <see cref="EntityManager"/>.
         /// </summary>
@@ -137,6 +142,10 @@ namespace Robust.Shared.GameObjects
             _xformName = _xformReg.Name;
             _sawmill = LogManager.GetSawmill("entity");
             _resolveSawmill = LogManager.GetSawmill("resolve");
+
+#if DEBUG
+            _mainThreadId = Environment.CurrentManagedThreadId;
+#endif
 
             Initialized = true;
         }
@@ -511,6 +520,8 @@ namespace Robust.Shared.GameObjects
             if (!Started)
                 return;
 
+            ThreadCheck();
+
             if (meta.EntityLifeStage >= EntityLifeStage.Deleted)
                 return;
 
@@ -752,6 +763,8 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         private EntityUid AllocEntity(out MetaDataComponent metadata)
         {
+            ThreadCheck();
+
             var uid = GenerateEntityUid();
 
 #if DEBUG
@@ -953,6 +966,16 @@ namespace Robust.Shared.GameObjects
         /// Generates a unique network id and increments <see cref="NextNetworkId"/>
         /// </summary>
         protected virtual NetEntity GenerateNetEntity() => new(NextNetworkId++);
+
+        [Conditional("DEBUG")]
+        protected void ThreadCheck()
+        {
+#if DEBUG
+            DebugTools.Assert(
+                Environment.CurrentManagedThreadId == _mainThreadId,
+                "Environment.CurrentManagedThreadId == _mainThreadId");
+#endif
+        }
     }
 
     public enum EntityMessageType : byte

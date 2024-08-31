@@ -19,6 +19,8 @@ namespace Robust.Shared.GameStates
         // Also it's stored row-major.
         public readonly Tile[]? TileData;
 
+        public readonly Box2i? CachedBounds;
+
         [MemberNotNullWhen(false, nameof(TileData))]
         public bool IsDeleted()
         {
@@ -37,17 +39,20 @@ namespace Robust.Shared.GameStates
             {
                 Fixtures = new HashSet<string>(data.Fixtures);
             }
+
+            CachedBounds = data.CachedBounds;
         }
 
-        private ChunkDatum(Tile[] tileData, HashSet<string> fixtures)
+        private ChunkDatum(Tile[] tileData, HashSet<string> fixtures, Box2i cachedBounds)
         {
             TileData = tileData;
             Fixtures = fixtures;
+            CachedBounds = cachedBounds;
         }
 
-        public static ChunkDatum CreateModified(Tile[] tileData, HashSet<string> fixtures)
+        public static ChunkDatum CreateModified(Tile[] tileData, HashSet<string> fixtures, Box2i cachedBounds)
         {
-            return new ChunkDatum(tileData, fixtures);
+            return new ChunkDatum(tileData, fixtures, cachedBounds);
         }
     }
 }

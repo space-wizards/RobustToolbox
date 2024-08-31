@@ -369,9 +369,12 @@ public abstract partial class SharedMapSystem
                 chunk.Fixtures.UnionWith(data.Fixtures);
         }
 
+        chunk.CachedBounds = data.CachedBounds!.Value;
         chunk.SuppressCollisionRegeneration = false;
         if (shapeChanged)
+        {
             modifiedChunks.Add(chunk);
+        }
     }
 
     private void OnGridGetState(EntityUid uid, MapGridComponent component, ref ComponentGetState args)
@@ -426,7 +429,7 @@ public abstract partial class SharedMapSystem
                         tileBuffer[x * component.ChunkSize + y] = chunk.GetTile((ushort)x, (ushort)y);
                     }
                 }
-                chunkData.Add(index, ChunkDatum.CreateModified(tileBuffer, chunk.Fixtures));
+                chunkData.Add(index, ChunkDatum.CreateModified(tileBuffer, chunk.Fixtures, chunk.CachedBounds));
             }
         }
 
@@ -463,7 +466,7 @@ public abstract partial class SharedMapSystem
                     tileBuffer[x * component.ChunkSize + y] = chunk.GetTile((ushort)x, (ushort)y);
                 }
             }
-            chunkData.Add(index, ChunkDatum.CreateModified(tileBuffer, chunk.Fixtures));
+            chunkData.Add(index, ChunkDatum.CreateModified(tileBuffer, chunk.Fixtures, chunk.CachedBounds));
         }
 
         args.State = new MapGridComponentState(component.ChunkSize, chunkData, component.LastTileModifiedTick);

@@ -39,8 +39,10 @@ namespace Robust.Shared.Map
         /// <summary>
         /// Chunk-local AABB of this chunk.
         /// </summary>
+        [ViewVariables]
         public Box2i CachedBounds { get; set; }
 
+        [ViewVariables]
         internal HashSet<string> Fixtures = new();
 
         /// <summary>

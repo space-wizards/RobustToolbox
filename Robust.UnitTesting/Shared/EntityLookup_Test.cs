@@ -33,6 +33,9 @@ namespace Robust.UnitTesting.Shared
             new TestCaseData(false, new MapCoordinates(new Vector2(10f, 10f), MapId), new MapCoordinates(new Vector2(9.5f, 9.5f), MapId), 0.5f, false),
             // Close but no cigar
             new TestCaseData(false, new MapCoordinates(new Vector2(10f, 10f), MapId), new MapCoordinates(new Vector2(9f, 9f), MapId), 0.5f, false),
+
+            // Big offset
+            new TestCaseData(true, new MapCoordinates(new Vector2(100f, 0f), MapId), new MapCoordinates(new Vector2(100f, 0f), MapId), 0.25f, true),
         };
 
         // Remember this test data is relative.

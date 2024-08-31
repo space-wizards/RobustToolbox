@@ -252,7 +252,7 @@ public sealed partial class EntityLookupSystem
                 var localTransform = state.Physics.GetRelativePhysicsTransform(state.Transform, uid);
                 var localAabb = state.Shape.ComputeAABB(localTransform, 0);
 
-                if (state.Lookup.AnyEntitiesIntersecting(uid, state.Shape, localAabb, state.Transform, state.Flags, ignored: state.Ignored))
+                if (state.Lookup.AnyEntitiesIntersecting(uid, state.Shape, localAabb, localTransform, state.Flags, ignored: state.Ignored))
                 {
                     state.Found = true;
                     return false;
@@ -266,7 +266,7 @@ public sealed partial class EntityLookupSystem
             var mapUid = _map.GetMapOrInvalid(mapId);
             var localTransform = state.Physics.GetRelativePhysicsTransform(state.Transform, mapUid);
             var localAabb = state.Shape.ComputeAABB(localTransform, 0);
-            state.Found = AnyEntitiesIntersecting(mapUid, shape, localAabb, shapeTransform, flags, ignored);
+            state.Found = AnyEntitiesIntersecting(mapUid, shape, localAabb, localTransform, flags, ignored);
         }
 
         return state.Found;
@@ -568,7 +568,7 @@ public sealed partial class EntityLookupSystem
                     state.intersecting,
                     state.shape,
                     localAabb,
-                    state.transform,
+                    localTransform,
                     state.flags);
                 return true;
             });

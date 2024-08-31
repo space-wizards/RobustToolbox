@@ -26,12 +26,29 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IBaseClient _client = default!;
         [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
 
+        internal event Action? AfterStartup;
+        internal event Action? AfterShutdown;
+
         public override void Initialize()
         {
             SetupNetworking();
             ReceivedSystemMessage += (_, systemMsg) => EventBus.RaiseEvent(EventSource.Network, systemMsg);
 
             base.Initialize();
+        }
+
+        public override void Startup()
+        {
+            base.Startup();
+
+            AfterStartup?.Invoke();
+        }
+
+        public override void Shutdown()
+        {
+            base.Shutdown();
+
+            AfterShutdown?.Invoke();
         }
 
         public override void FlushEntities()

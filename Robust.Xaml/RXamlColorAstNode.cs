@@ -1,10 +1,9 @@
-﻿using System.Reflection.Emit;
-using XamlX.Ast;
+﻿using XamlX.Ast;
 using XamlX.Emit;
 using XamlX.IL;
 using XamlX.TypeSystem;
 
-namespace Robust.Build.Tasks
+namespace Robust.Xaml
 {
     internal class RXamlColorAstNode
         : XamlAstNode, IXamlAstValueNode, IXamlAstILEmitableNode

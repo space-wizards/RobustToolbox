@@ -361,6 +361,10 @@ namespace Robust.Client.Graphics.Clyde
             {
             }
 
+            private protected override void SetParameterImpl(string name, bool[] value)
+            {
+            }
+
             private protected override void SetParameterImpl(string name, in Matrix3x2 value)
             {
             }

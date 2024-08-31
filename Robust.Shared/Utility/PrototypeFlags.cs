@@ -45,7 +45,7 @@ namespace Robust.Shared.Utility
         /// <returns>Whether the flag was added or not.</returns>
         public bool Add(string flag, IPrototypeManager prototypeManager)
         {
-            return !prototypeManager.TryIndex<T>(flag, out _) && _flags.Add(flag);
+            return prototypeManager.HasIndex<T>(flag) && _flags.Add(flag);
         }
 
         internal void UnionWith(PrototypeFlags<T> flags)

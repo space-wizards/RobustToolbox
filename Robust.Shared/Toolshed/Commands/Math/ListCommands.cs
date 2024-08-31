@@ -7,7 +7,7 @@ namespace Robust.Shared.Toolshed.Commands.Math;
 [ToolshedCommand]
 public sealed class JoinCommand : ToolshedCommand
 {
-    [CommandImplementation, TakesPipedTypeAsGeneric]
+    [CommandImplementation]
     public string Join(
         [CommandInvocationContext] IInvocationContext ctx,
         [PipedArgument] string x,
@@ -18,7 +18,7 @@ public sealed class JoinCommand : ToolshedCommand
         if (yVal is null)
             return x;
 
-        return x + y;
+        return x + yVal;
     }
 
     [CommandImplementation, TakesPipedTypeAsGeneric]

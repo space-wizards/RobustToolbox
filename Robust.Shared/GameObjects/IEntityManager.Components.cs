@@ -22,11 +22,13 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Calls Initialize() on all registered components of the entity.
         /// </summary>
+        [Obsolete("Use InitializeEntity")]
         void InitializeComponents(EntityUid uid, MetaDataComponent? meta = null);
 
         /// <summary>
         ///     Calls Startup() on all registered components of the entity.
         /// </summary>
+        [Obsolete("Use StartEntity")]
         void StartComponents(EntityUid uid);
 
         /// <summary>
@@ -426,6 +428,16 @@ namespace Robust.Shared.GameObjects
         /// Use sparingly.
         /// </summary>
         List<(EntityUid Uid, T Component)> AllComponentsList<T>() where T : IComponent;
+
+        /// <summary>
+        /// <see cref="ComponentQueryEnumerator"/>
+        /// </summary>
+        public ComponentQueryEnumerator ComponentQueryEnumerator(ComponentRegistry registry);
+
+        /// <summary>
+        /// <see cref="CompRegistryQueryEnumerator"/>
+        /// </summary>
+        public CompRegistryEntityEnumerator CompRegistryQueryEnumerator(ComponentRegistry registry);
 
         AllEntityQueryEnumerator<TComp1> AllEntityQueryEnumerator<TComp1>()
             where TComp1 : IComponent;

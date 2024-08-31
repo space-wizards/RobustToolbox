@@ -27,6 +27,11 @@ namespace Robust.Shared.Maths
         public static readonly Vector2i Left = (-1, 0);
         public static readonly Vector2i Right = (1, 0);
 
+        public static readonly Vector2i DownLeft = (-1, -1);
+        public static readonly Vector2i DownRight = (1, -1);
+        public static readonly Vector2i UpRight = (1, 1);
+        public static readonly Vector2i UpLeft = (-1, 1);
+
         /// <summary>
         /// The X component of the Vector2i.
         /// </summary>

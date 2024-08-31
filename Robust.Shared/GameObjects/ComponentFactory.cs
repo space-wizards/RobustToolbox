@@ -8,7 +8,9 @@ using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
+using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -18,6 +20,7 @@ namespace Robust.Shared.GameObjects
     internal class ComponentFactory(
             IDynamicTypeFactoryInternal _typeFactory,
             IReflectionManager _reflectionManager,
+            ISerializationManager _serManager,
             ILogManager logManager) : IComponentFactory
     {
         private readonly ISawmill _sawmill = logManager.GetSawmill("ent.componentFactory");
@@ -179,6 +182,13 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException("Ignoring multiple prefixes is not supported");
             }
             _ignoreMissingComponentPostfix = postfix ?? throw new ArgumentNullException(nameof(postfix));
+        }
+
+        public IComponent GetComponent(EntityPrototype.ComponentRegistryEntry entry)
+        {
+            var copy = GetComponent(entry.Component.GetType());
+            _serManager.CopyTo(entry.Component, ref copy, notNullableOverride: true);
+            return copy;
         }
 
         public void RegisterIgnore(params string[] names)

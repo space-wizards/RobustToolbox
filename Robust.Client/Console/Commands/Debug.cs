@@ -579,7 +579,20 @@ namespace Robust.Client.Console.Commands
         private static string GetMemberValue(MemberInfo? member, Control control, string separator, string
                 wrap = "{0}")
         {
-            var value = member?.GetValue(control);
+            object? value = null;
+            try
+            {
+                value = member?.GetValue(control);
+            }
+            catch (TargetInvocationException exception)
+            {
+                var exceptionToPrint = exception.InnerException ?? exception;
+                value = $"{exceptionToPrint.GetType()}: {exceptionToPrint.Message}";
+            }
+            catch (Exception exception)
+            {
+                value = $"{exception.GetType()}: {exception.Message}";
+            }
             var o = value switch
             {
                 ICollection<Control> controls => string.Join(separator,

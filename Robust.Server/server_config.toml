@@ -9,7 +9,7 @@ level = 1
 enabled = false
 
 [net]
-tickrate = 60
+tickrate = 30
 port = 1212
 bindto = "::,0.0.0.0"
 max_connections = 256

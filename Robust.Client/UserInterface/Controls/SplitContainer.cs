@@ -191,6 +191,19 @@ namespace Robust.Client.UserInterface.Controls
             _splitDragArea.OnMouseMove += OnMove;
         }
 
+        /// <summary>
+        /// Swaps the position of the first and zeroeth children; for a 2-control viewport it effectively flips them.
+        /// </summary>
+        public void Flip()
+        {
+            if (ChildCount < 3)
+                return;
+
+            DebugTools.Assert(ChildCount <= 3);
+            GetChild(1).SetPositionFirst();
+            InvalidateArrange();
+        }
+
         private void OnMove(GUIMouseMoveEventArgs args)
         {
             if (ResizeMode == SplitResizeMode.NotResizable)

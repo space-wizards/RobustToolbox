@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fix exceptions in client game state handling for grids.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,13 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 233.0.2
+
+### Bugfixes
+
+* Fix exceptions in client game state handling for grids. Now they will rely upon the networked fixture data and not try to rebuild in the grid state handler.
 
 
 ## 233.0.1

@@ -454,26 +454,8 @@ public sealed partial class EntityLookupSystem
     {
         if (mapId == MapId.Nullspace) return false;
 
-        // Don't need to check contained entities as they have the same bounds as the parent.
-        var found = false;
-
-        var state = (this, worldAABB, flags, found);
-
-        _mapManager.FindGridsIntersecting(mapId, worldAABB, ref state,
-            static (EntityUid uid, MapGridComponent _, ref (EntityLookupSystem lookup, Box2 worldAABB, LookupFlags flags, bool found) tuple) =>
-            {
-                if (!tuple.lookup.AnyLocalEntitiesIntersecting(uid, tuple.worldAABB, tuple.flags))
-                    return true;
-
-                tuple.found = true;
-                return false;
-            }, approx: true, includeMap: false);
-
-        if (state.found)
-            return true;
-
-        var mapUid = _map.GetMapOrInvalid(mapId);
-        return AnyLocalEntitiesIntersecting(mapUid, worldAABB, flags);
+        var shape = new Polygon(worldAABB);
+        return AnyEntitiesIntersecting(mapId, shape, Physics.Transform.Empty, flags);
     }
 
     public HashSet<EntityUid> GetEntitiesIntersecting(MapId mapId, Box2 worldAABB, LookupFlags flags = DefaultFlags)
@@ -498,27 +480,8 @@ public sealed partial class EntityLookupSystem
     public bool AnyEntitiesIntersecting(MapId mapId, Box2Rotated worldBounds, LookupFlags flags = DefaultFlags)
     {
         // Don't need to check contained entities as they have the same bounds as the parent.
-        var worldAABB = worldBounds.CalcBoundingBox();
-
-        const bool found = false;
-        var state = (this, worldBounds, flags, found);
-
-        _mapManager.FindGridsIntersecting(mapId, worldAABB, ref state,
-            static (EntityUid uid, MapGridComponent grid, ref (EntityLookupSystem lookup, Box2Rotated worldBounds, LookupFlags flags, bool found) tuple) =>
-            {
-                if (tuple.lookup.AnyEntitiesIntersecting(uid, tuple.worldBounds, tuple.flags))
-                {
-                    tuple.found = true;
-                    return false;
-                }
-                return true;
-            }, approx: true, includeMap: false);
-
-        if (state.found)
-            return true;
-
-        var mapUid = _map.GetMapOrInvalid(mapId);
-        return AnyEntitiesIntersecting(mapUid, worldBounds, flags);
+        var shape = new Polygon(worldBounds);
+        return AnyEntitiesIntersecting(mapId, shape, Physics.Transform.Empty, flags);
     }
 
     public HashSet<EntityUid> GetEntitiesIntersecting(MapId mapId, Box2Rotated worldBounds, LookupFlags flags = DefaultFlags)
@@ -545,47 +508,8 @@ public sealed partial class EntityLookupSystem
         if (mapPos.MapId == MapId.Nullspace)
             return false;
 
-        var rangeVec = new Vector2(range, range);
-        var worldAABB = new Box2(mapPos.Position - rangeVec, mapPos.Position + rangeVec);
-        var circle = new PhysShapeCircle(range, mapPos.Position);
-
-        const bool found = false;
-        var transform = Physics.Transform.Empty;
-        var state = (this, _physics, transform, circle, flags, found, uid);
-
-        _mapManager.FindGridsIntersecting(mapPos.MapId, worldAABB, ref state, static (
-            EntityUid gridUid,
-            MapGridComponent _, ref (
-                EntityLookupSystem lookup,
-                SharedPhysicsSystem physics,
-                Transform worldTransform,
-                PhysShapeCircle circle,
-                LookupFlags flags,
-                bool found,
-                EntityUid ignored) tuple) =>
-        {
-            var localTransform = tuple.physics.GetRelativePhysicsTransform(tuple.worldTransform, gridUid);
-            var localAabb = tuple.circle.ComputeAABB(localTransform, 0);
-
-            if (tuple.lookup.AnyEntitiesIntersecting(gridUid, tuple.circle, localAabb, localTransform, tuple.flags, tuple.ignored))
-            {
-                tuple.found = true;
-                return false;
-            }
-
-            return true;
-        }, approx: true, includeMap: false);
-
-        if (state.found)
-        {
-            return true;
-        }
-
-        var mapUid = _map.GetMapOrInvalid(mapPos.MapId);
-        var localTransform = _physics.GetRelativePhysicsTransform(transform, uid);
-        var localAabb = circle.ComputeAABB(localTransform, 0);
-
-        return AnyEntitiesIntersecting(mapUid, circle, localAabb, localTransform, flags, uid);
+        var shape = new PhysShapeCircle(range, mapPos.Position);
+        return AnyEntitiesIntersecting(mapPos.MapId, shape, Physics.Transform.Empty, flags, uid);
     }
 
     public HashSet<EntityUid> GetEntitiesInRange(EntityUid uid, float range, LookupFlags flags = DefaultFlags)

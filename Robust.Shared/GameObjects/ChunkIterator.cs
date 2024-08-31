@@ -52,9 +52,10 @@ internal struct ArchChunkEnumerator
 
 internal static partial class QueryExtensions
 {
-    internal static ArchChunkIterator ChunkIterator(this in Query query, World world)
+    internal static ArchChunkIterator ChunkIterator(this Query query, World world)
     {
-        var archetypeEnumerator = new ArchetypeEnumerator(query.Matches);
-        return new ArchChunkIterator(in archetypeEnumerator);
+        query.Match();
+        var enumerator = new ArchetypeEnumerator(query.GetMatches());
+        return new ArchChunkIterator(in enumerator);
     }
 }

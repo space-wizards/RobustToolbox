@@ -67,10 +67,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public int Count(Type component)
         {
-            var query = new QueryDescription
-            {
-                All = new ComponentType[] { component }
-            };
+            var query = new QueryDescription([component]);
             return _world.CountEntities(in query);
         }
 
@@ -1290,17 +1287,17 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<(EntityUid Uid, IComponent Component)> GetAllComponents(Type type, bool includePaused = false)
         {
-            var query = new QueryDescription();
+            QueryDescription query;
 
             // TODO arch paused component
             if (includePaused)
             {
                 // TODO arch pool
-                query.All = new ComponentType[] { type };
+                query = new (new ComponentType[] { type });
             }
             else
             {
-                query.All = new ComponentType[] { type, typeof(MetaDataComponent) };
+                query = new(new ComponentType[] { type, typeof(MetaDataComponent) });
             }
 
             foreach (var chunk in _world.Query(query).ChunkIterator(_world))

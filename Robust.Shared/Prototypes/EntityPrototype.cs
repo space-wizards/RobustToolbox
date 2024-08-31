@@ -454,6 +454,19 @@ namespace Robust.Shared.Prototypes
         {
         }
 
+        public ComponentType[] GetTypes()
+        {
+            var arr = new ComponentType[Count];
+            var idx = 0;
+
+            foreach (var comp in Values)
+            {
+                arr[idx++] = comp.Component.GetType();
+            }
+
+            return arr;
+        }
+
         public bool TryGetComponent(string componentName, [NotNullWhen(true)] out IComponent? component)
         {
             var success = TryGetValue(componentName, out var comp);

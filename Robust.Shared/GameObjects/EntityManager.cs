@@ -877,15 +877,35 @@ namespace Robust.Shared.GameObjects
 
         public void InitializeEntity(EntityUid entity, MetaDataComponent? meta = null)
         {
+            // Ideally, entities only ever get initialized once their parent has already been initialized.
+            // Note that this doesn't guarantee that an uninitialized entity will never have initialized children.
+            // In particular, for the client this might happen when applying a new game state that re-parents an
+            // existing entity to a newly created entity. The new entity only gets initialiuzed & started at the end,
+            // after the old/existing entity was already moved to the new parent.
+            DebugTools.Assert(TransformQuery.GetComponent(entity).ParentUid is not { Valid: true } parent
+                || MetaQuery.GetComponent(parent).EntityLifeStage >= EntityLifeStage.Initialized);
+
             DebugTools.AssertOwner(entity, meta);
             meta ??= GetComponent<MetaDataComponent>(entity);
+#pragma warning disable CS0618 // Type or member is obsolete
             InitializeComponents(entity, meta);
+#pragma warning restore CS0618 // Type or member is obsolete
             EntityInitialized?.Invoke((entity, meta));
         }
 
         public void StartEntity(EntityUid entity)
         {
+            // Ideally, entities only ever get initialized once their parent has already been initialized.
+            // Note that this doesn't guarantee that an uninitialized entity will never have initialized children.
+            // In particular, for the client this might happen when applying a new game state that re-parents an
+            // existing entity to a newly created entity. The new entity only gets initialiuzed & started at the end,
+            // after the old/existing entity was already moved to the new parent.
+            DebugTools.Assert(TransformQuery.GetComponent(entity).ParentUid is not { Valid: true } parent
+                              || MetaQuery.GetComponent(parent).EntityLifeStage >= EntityLifeStage.Initialized);
+
+#pragma warning disable CS0618 // Type or member is obsolete
             StartComponents(entity);
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         public void RunMapInit(EntityUid entity, MetaDataComponent meta)

@@ -487,23 +487,8 @@ public sealed partial class EntityLookupSystem
     {
         if (mapId == MapId.Nullspace) return;
 
-        // Get grid entities
-        var state = (this, intersecting, worldAABB, _transform, flags);
-
-        _mapManager.FindGridsIntersecting(mapId, worldAABB, ref state,
-            static (EntityUid gridUid, MapGridComponent _, ref (
-                EntityLookupSystem lookup, HashSet<EntityUid> intersecting,
-                Box2 worldAABB, SharedTransformSystem xformSystem, LookupFlags flags) tuple) =>
-            {
-                var localAABB = tuple.xformSystem.GetInvWorldMatrix(gridUid).TransformBox(tuple.worldAABB);
-                tuple.lookup.AddLocalEntitiesIntersecting(gridUid, tuple.intersecting, localAABB, tuple.flags);
-                return true;
-            }, approx: true, includeMap: false);
-
-        // Get map entities
-        var mapUid = _map.GetMapOrInvalid(mapId);
-        AddLocalEntitiesIntersecting(mapUid, intersecting, worldAABB, flags);
-        AddContained(intersecting, flags);
+        var shape = new Polygon(worldAABB);
+        AddEntitiesIntersecting(mapId, intersecting, shape, Physics.Transform.Empty, flags);
     }
 
     #endregion
@@ -539,47 +524,8 @@ public sealed partial class EntityLookupSystem
     public HashSet<EntityUid> GetEntitiesIntersecting(MapId mapId, Box2Rotated worldBounds, LookupFlags flags = DefaultFlags)
     {
         var intersecting = new HashSet<EntityUid>();
-
-        if (mapId == MapId.Nullspace)
-            return intersecting;
-
-        var mapUid = _map.GetMapOrInvalid(mapId);
-
-        // Get grid entities
         var shape = new Polygon(worldBounds);
-        var transform = Physics.Transform.Empty;
-
-        var state = (this, _physics, intersecting, transform, shape, flags);
-
-        _mapManager.FindGridsIntersecting(mapUid, shape, transform, ref state,
-            static (
-                EntityUid uid,
-                MapGridComponent grid,
-                ref (EntityLookupSystem lookup,
-                    SharedPhysicsSystem _physics,
-                    HashSet<EntityUid> intersecting,
-                    Transform transform,
-                    Polygon shape, LookupFlags flags) state) =>
-            {
-                var localTransform = state._physics.GetRelativePhysicsTransform(state.transform, uid);
-                var localAabb = state.shape.ComputeAABB(localTransform, 0);
-
-                state.lookup.AddEntitiesIntersecting(uid,
-                    state.intersecting,
-                    state.shape,
-                    localAabb,
-                    localTransform,
-                    state.flags);
-                return true;
-            });
-
-        // Get map entities
-        var localTransform = _physics.GetRelativePhysicsTransform(transform, mapUid);
-        var localAabb = shape.ComputeAABB(localTransform, 0);
-
-        AddEntitiesIntersecting(mapUid, intersecting, shape, localAabb, transform, flags);
-        AddContained(intersecting, flags);
-
+        AddEntitiesIntersecting(mapId, intersecting, shape, Physics.Transform.Empty, flags);
         return intersecting;
     }
 

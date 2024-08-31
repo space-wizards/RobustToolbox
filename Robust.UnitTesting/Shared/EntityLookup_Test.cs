@@ -18,6 +18,12 @@ namespace Robust.UnitTesting.Shared
     {
         private static readonly MapId MapId = new MapId(1);
 
+        private static readonly TestCaseData[] IntersectingCases = new[]
+        {
+            // Big offset
+            new TestCaseData(true, new MapCoordinates(new Vector2(100f, 0f), MapId), new MapCoordinates(new Vector2(100f, 0f), MapId), 0.25f, true),
+        };
+
         private static readonly TestCaseData[] InRangeCases = new[]
         {
             new TestCaseData(true, new MapCoordinates(Vector2.One, MapId), new MapCoordinates(Vector2.Zero, MapId), 0.5f, false),
@@ -33,9 +39,6 @@ namespace Robust.UnitTesting.Shared
             new TestCaseData(false, new MapCoordinates(new Vector2(10f, 10f), MapId), new MapCoordinates(new Vector2(9.5f, 9.5f), MapId), 0.5f, false),
             // Close but no cigar
             new TestCaseData(false, new MapCoordinates(new Vector2(10f, 10f), MapId), new MapCoordinates(new Vector2(9f, 9f), MapId), 0.5f, false),
-
-            // Big offset
-            new TestCaseData(true, new MapCoordinates(new Vector2(100f, 0f), MapId), new MapCoordinates(new Vector2(100f, 0f), MapId), 0.25f, true),
         };
 
         // Remember this test data is relative.
@@ -207,6 +210,32 @@ namespace Robust.UnitTesting.Shared
                 entManager.Spawn(null, spawnPos);
 
             Assert.That(lookup.GetEntitiesInRange(queryPos.MapId, queryPos.Position, range).Count > 0, Is.EqualTo(result));
+            mapManager.DeleteMap(spawnPos.MapId);
+        }
+
+        [Test, TestCaseSource(nameof(IntersectingCases))]
+        public void TestGridIntersecting(bool physics, MapCoordinates spawnPos, MapCoordinates queryPos, float range, bool result)
+        {
+            var sim = RobustServerSimulation.NewSimulation();
+            var server = sim.InitializeInstance();
+
+            var lookup = server.Resolve<IEntitySystemManager>().GetEntitySystem<EntityLookupSystem>();
+            var entManager = server.Resolve<IEntityManager>();
+            var mapManager = server.Resolve<IMapManager>();
+            var mapSystem = entManager.System<SharedMapSystem>();
+
+            mapSystem.CreateMap(spawnPos.MapId);
+            var grid = SetupGrid(spawnPos.MapId, mapSystem, entManager, mapManager);
+
+            if (physics)
+                GetPhysicsEntity(entManager, spawnPos);
+            else
+                entManager.Spawn(null, spawnPos);
+
+            _ = entManager.SpawnEntity(null, spawnPos);
+            var bounds = Box2.CenteredAround(queryPos.Position, new Vector2(range, range));
+
+            Assert.That(lookup.GetEntitiesIntersecting(queryPos.MapId, bounds).Count > 0, Is.EqualTo(result));
             mapManager.DeleteMap(spawnPos.MapId);
         }
 

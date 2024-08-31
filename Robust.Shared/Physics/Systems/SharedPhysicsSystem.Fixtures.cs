@@ -81,7 +81,7 @@ public abstract partial class SharedPhysicsSystem
         if (!_fixturesQuery.Resolve(bodyA, ref bodyA.Comp1, false) ||
             !_fixturesQuery.Resolve(bodyB, ref bodyB.Comp1, false) ||
             !PhysicsQuery.Resolve(bodyA, ref bodyA.Comp2, false) ||
-            !PhysicsQuery.Resolve(bodyA, ref bodyB.Comp2, false))
+            !PhysicsQuery.Resolve(bodyB, ref bodyB.Comp2, false))
         {
             return false;
         }
@@ -103,7 +103,7 @@ public abstract partial class SharedPhysicsSystem
         if (!_fixturesQuery.Resolve(bodyA, ref bodyA.Comp1, false) ||
             !_fixturesQuery.Resolve(bodyB, ref bodyB.Comp1, false) ||
             !PhysicsQuery.Resolve(bodyA, ref bodyA.Comp2, false) ||
-            !PhysicsQuery.Resolve(bodyA, ref bodyB.Comp2, false))
+            !PhysicsQuery.Resolve(bodyB, ref bodyB.Comp2, false))
         {
             return false;
         }

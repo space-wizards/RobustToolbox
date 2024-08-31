@@ -542,7 +542,7 @@ public sealed partial class EntityLookupSystem
                 {
                     var localTransform = state.Physics.GetRelativePhysicsTransform(state.Transform, uid);
                     var localAabb = state.Shape.ComputeAABB(localTransform, 0);
-                    state.Lookup.AddEntitiesIntersecting(uid, state.Intersecting, state.Shape, localAabb, state.Transform, state.Flags, state.Query);
+                    state.Lookup.AddEntitiesIntersecting(uid, state.Intersecting, state.Shape, localAabb, localTransform, state.Flags, state.Query);
                     return true;
                 }, approx: true, includeMap: false);
 
@@ -550,7 +550,7 @@ public sealed partial class EntityLookupSystem
             var localTransform = state.Physics.GetRelativePhysicsTransform(state.Transform, mapUid);
             var localAabb = state.Shape.ComputeAABB(localTransform, 0);
 
-            AddEntitiesIntersecting(mapUid, intersecting, shape, localAabb, shapeTransform, flags, query);
+            AddEntitiesIntersecting(mapUid, intersecting, shape, localAabb, localTransform, flags, query);
 
             AddContained(intersecting, flags, query);
         }
@@ -586,7 +586,7 @@ public sealed partial class EntityLookupSystem
                 {
                     var localTransform = state.Physics.GetRelativePhysicsTransform(state.Transform, uid);
                     var localAabb = state.Shape.ComputeAABB(localTransform, 0);
-                    state.Lookup.AddEntitiesIntersecting(uid, state.Intersecting, state.Shape, localAabb, state.Transform, state.Flags, state.Query);
+                    state.Lookup.AddEntitiesIntersecting(uid, state.Intersecting, state.Shape, localAabb, localTransform, state.Flags, state.Query);
                     return true;
                 }, approx: true, includeMap: false);
 
@@ -595,7 +595,7 @@ public sealed partial class EntityLookupSystem
             var localTransform = state.Physics.GetRelativePhysicsTransform(state.Transform, mapUid);
             var localAabb = state.Shape.ComputeAABB(localTransform, 0);
 
-            AddEntitiesIntersecting(mapUid, entities, shape, localAabb, shapeTransform, flags, query);
+            AddEntitiesIntersecting(mapUid, entities, shape, localAabb, localTransform, flags, query);
             AddContained(entities, flags, query);
         }
     }
@@ -678,8 +678,8 @@ public sealed partial class EntityLookupSystem
 
     public void GetEntitiesInRange<T>(MapId mapId, Vector2 worldPos, float range, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
     {
-        var shape = new PhysShapeCircle(range);
-        var transform = new Transform(worldPos, 0f);
+        var shape = new PhysShapeCircle(range, worldPos);
+        var transform = Physics.Transform.Empty;
 
         GetEntitiesInRange(mapId, shape, transform, entities, flags);
     }

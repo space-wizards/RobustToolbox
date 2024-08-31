@@ -39,6 +39,30 @@ namespace Robust.UnitTesting.Shared.Physics;
 public sealed class Collision_Test
 {
     [Test]
+    public void TestHardCollidable()
+    {
+        var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
+        var entManager = sim.Resolve<IEntityManager>();
+
+        var fixtures = entManager.System<FixtureSystem>();
+        var physics = entManager.System<SharedPhysicsSystem>();
+
+        var map = sim.CreateMap();
+
+        var bodyAUid = entManager.SpawnAttachedTo(null, new EntityCoordinates(map.Uid, Vector2.Zero));
+        var bodyBUid = entManager.SpawnAttachedTo(null, new EntityCoordinates(map.Uid, Vector2.Zero));
+        var bodyA = entManager.AddComponent<PhysicsComponent>(bodyAUid);
+        var bodyB = entManager.AddComponent<PhysicsComponent>(bodyBUid);
+
+        Assert.That(!physics.IsHardCollidable(bodyAUid, bodyBUid));
+
+        fixtures.CreateFixture(bodyAUid, "fix1", new Fixture(new PhysShapeCircle(0.5f), 1, 1, true));
+        fixtures.CreateFixture(bodyBUid, "fix1", new Fixture(new PhysShapeCircle(0.5f), 1, 1, true));
+
+        Assert.That(physics.IsHardCollidable(bodyAUid, bodyBUid));
+    }
+
+    [Test]
     public void TestCollision()
     {
         var center = new Vector2(100.0f, -50.0f);

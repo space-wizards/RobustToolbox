@@ -21,7 +21,7 @@ namespace Robust.UnitTesting.Shared
         private static readonly TestCaseData[] IntersectingCases = new[]
         {
             // Big offset
-            new TestCaseData(true, new MapCoordinates(new Vector2(100f, 0f), MapId), new MapCoordinates(new Vector2(100f, 0f), MapId), 0.25f, true),
+            new TestCaseData(true, new MapCoordinates(new Vector2(10.5f, 10.5f), MapId), new MapCoordinates(new Vector2(10.5f, 10.5f), MapId), 0.25f, true),
         };
 
         private static readonly TestCaseData[] InRangeCases = new[]
@@ -233,7 +233,7 @@ namespace Robust.UnitTesting.Shared
                 entManager.Spawn(null, spawnPos);
 
             _ = entManager.SpawnEntity(null, spawnPos);
-            var bounds = Box2.CenteredAround(queryPos.Position, new Vector2(range, range));
+            var bounds = new Box2Rotated(Box2.CenteredAround(queryPos.Position, new Vector2(range, range)));
 
             Assert.That(lookup.GetEntitiesIntersecting(queryPos.MapId, bounds).Count > 0, Is.EqualTo(result));
             mapManager.DeleteMap(spawnPos.MapId);

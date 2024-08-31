@@ -246,7 +246,6 @@ public abstract partial class SharedMapSystem
     private void OnGridHandleState(EntityUid uid, MapGridComponent component, ref ComponentHandleState args)
     {
         HashSet<MapChunk> modifiedChunks;
-        var fixturesComp = _fixturesQuery.Comp(uid);
 
         switch (args.Current)
         {

@@ -35,8 +35,7 @@ namespace Robust.Shared.GameStates
 
             if (data.Fixtures != null)
             {
-                Fixtures = new HashSet<string>(data.Fixtures.Count);
-                Fixtures.UnionWith(data.Fixtures);
+                Fixtures = new HashSet<string>(data.Fixtures);
             }
         }
 

@@ -93,6 +93,11 @@ namespace Robust.Shared.GameObjects
             foreach (var (chunk, rectangles) in mapChunks)
             {
                 UpdateFixture(uid, chunk, rectangles, body, manager, xform);
+
+                foreach (var id in chunk.Fixtures)
+                {
+                    fixtures[id] = manager.Fixtures[id];
+                }
             }
 
             EntityManager.EventBus.RaiseLocalEvent(uid,new GridFixtureChangeEvent {NewFixtures = fixtures}, true);
@@ -192,16 +197,16 @@ namespace Robust.Shared.GameObjects
             // Anything remaining is a new fixture (or at least, may have not serialized onto the chunk yet).
             foreach (var (id, fixture) in newFixtures.Span)
             {
+                chunk.Fixtures.Add(id);
                 var existingFixture = _fixtures.GetFixtureOrNull(uid, id, manager: manager);
                 // Check if it's the same (otherwise remove anyway).
                 if (existingFixture?.Shape is PolygonShape poly &&
                     poly.EqualsApprox((PolygonShape) fixture.Shape))
                 {
-                    chunk.Fixtures.Add(id);
+
                     continue;
                 }
 
-                chunk.Fixtures.Add(id);
                 _fixtures.CreateFixture(uid, id, fixture, false, manager, body, xform);
             }
 

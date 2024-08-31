@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using Robust.Shared.IoC;
 using Robust.Shared.Player;
+using Robust.Shared.Prototypes;
 
 namespace Robust.Shared.GameObjects
 {
@@ -17,9 +19,21 @@ namespace Robust.Shared.GameObjects
         public EntityUid Owner { get; }
 
         /// <summary>
+        /// Additional controls to be disposed when this BUI is disposed.
+        /// </summary>
+        internal List<IDisposable>? Disposals;
+
+        /// <summary>
         ///     The last received state object sent from the server.
         /// </summary>
         protected internal BoundUserInterfaceState? State { get; internal set; }
+
+        // Bandaid just for storage :)
+        /// <summary>
+        /// Defers state handling
+        /// </summary>
+        [Obsolete]
+        public virtual bool DeferredClose { get; } = true;
 
         protected BoundUserInterface(EntityUid owner, Enum uiKey)
         {
@@ -43,6 +57,14 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         protected internal virtual void UpdateState(BoundUserInterfaceState state)
         {
+        }
+
+        /// <summary>
+        /// Helper method that gets called upon prototype reload.
+        /// </summary>
+        public virtual void OnProtoReload(PrototypesReloadedEventArgs args)
+        {
+
         }
 
         /// <summary>
@@ -86,6 +108,18 @@ namespace Robust.Shared.GameObjects
 
         protected virtual void Dispose(bool disposing)
         {
+            if (disposing)
+            {
+                if (Disposals != null)
+                {
+                    foreach (var control in Disposals)
+                    {
+                        control.Dispose();
+                    }
+
+                    Disposals = null;
+                }
+            }
         }
     }
 }

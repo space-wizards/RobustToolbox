@@ -21,9 +21,20 @@ internal sealed class EntityConsoleHost
 
     private readonly HashSet<string> _entityCommands = [];
 
+    /// <summary>
+    /// If disabled, don't automatically discover commands via reflection.
+    /// </summary>
+    /// <remarks>
+    /// This gets disabled in certain unit tests.
+    /// </remarks>
+    public bool DiscoverCommands { get; set; } = true;
+
     public void Startup()
     {
         DebugTools.Assert(_entityCommands.Count == 0);
+
+        if (!DiscoverCommands)
+            return;
 
         var deps = ((EntitySystemManager)_entitySystemManager).SystemDependencyCollection;
 

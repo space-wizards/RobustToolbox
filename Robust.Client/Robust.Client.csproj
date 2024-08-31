@@ -44,6 +44,10 @@
     <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(RobustToolsBuild)' == 'True'">
+    <ProjectReference Include="..\Robust.Xaml\Robust.Xaml.csproj" />
+  </ItemGroup>
+
   <!-- Shader embedding -->
   <ItemGroup>
     <EmbeddedResource Include="Graphics\Clyde\Shaders\*" />

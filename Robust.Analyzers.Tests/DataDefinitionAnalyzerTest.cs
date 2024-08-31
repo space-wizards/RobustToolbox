@@ -84,8 +84,8 @@ public sealed class DataDefinitionAnalyzerTest
             """;
 
         await Verifier(code,
-            // /0/Test0.cs(35,5): info RA0028: Data field Bad in data definition Foo has ViewVariables attribute with ReadWrite access, which is redundant
-            VerifyCS.Diagnostic(DataDefinitionAnalyzer.DataFieldNoVVReadWriteRule).WithSpan(35, 5, 36, 20).WithArguments("Bad", "Foo")
+            // /0/Test0.cs(35,17): info RA0028: Data field Bad in data definition Foo has ViewVariables attribute with ReadWrite access, which is redundant
+            VerifyCS.Diagnostic(DataDefinitionAnalyzer.DataFieldNoVVReadWriteRule).WithSpan(35, 17, 35, 50).WithArguments("Bad", "Foo")
         );
     }
 }

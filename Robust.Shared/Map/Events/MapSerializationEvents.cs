@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Map.Events;
@@ -44,6 +44,28 @@ public sealed class BeforeSaveEvent
     public EntityUid? Map;
 
     public BeforeSaveEvent(EntityUid entity, EntityUid? map)
+    {
+        Entity = entity;
+        Map = map;
+    }
+}
+
+/// <summary>
+/// This event is broadcast just after the map loader reads the entity section.
+/// </summary>
+public sealed class AfterSaveEvent
+{
+    /// <summary>
+    /// The entity that is going to be saved. usually a map or grid.
+    /// </summary>
+    public EntityUid Entity;
+
+    /// <summary>
+    /// The map that the <see cref="Entity"/> is on.
+    /// </summary>
+    public EntityUid? Map;
+
+    public AfterSaveEvent(EntityUid entity, EntityUid? map)
     {
         Entity = entity;
         Map = map;

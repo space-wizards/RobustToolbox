@@ -960,6 +960,9 @@ public sealed class MapLoaderSystem : EntitySystem
         _logLoader.Debug($"Wrote entity section for {entities.Count} entities in {_stopwatch.Elapsed}");
         _context.Clear();
 
+        var ve = new AfterSaveEvent(uid, Transform(uid).MapUid);
+        RaiseLocalEvent(ve);
+
         return data;
     }
 

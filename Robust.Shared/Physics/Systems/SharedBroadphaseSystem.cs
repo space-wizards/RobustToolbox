@@ -433,7 +433,7 @@ namespace Robust.Shared.Physics.Systems
             }
         }
 
-        private void TouchProxies(EntityUid mapId, Matrix3x2 broadphaseMatrix, Fixture fixture)
+        internal void TouchProxies(EntityUid mapId, Matrix3x2 broadphaseMatrix, Fixture fixture)
         {
             foreach (var proxy in fixture.Proxies)
             {

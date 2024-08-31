@@ -12,6 +12,7 @@ using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.BroadPhase;
 using Robust.Shared.Physics.Collision;
+using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
@@ -95,6 +96,10 @@ public sealed partial class EntityLookupSystem : EntitySystem
     private EntityQuery<PhysicsMapComponent> _mapQuery;
     private EntityQuery<TransformComponent> _xformQuery;
 
+    /// <summary>
+    /// 1 x 1 polygons can overlap neighboring tiles (even without considering the polygon skin around them.
+    /// When querying for specific tile fixtures we shrink the bounds by this amount to avoid this overlap.
+    /// </summary>
     public const float TileEnlargementRadius = -PhysicsConstants.PolygonRadius * 4f;
 
     /// <summary>
@@ -220,6 +225,11 @@ public sealed partial class EntityLookupSystem : EntitySystem
         var xform = Transform(broadphase.Owner);
         _transform.InitializeMapUid(broadphase.Owner, xform);
 
+        // If in broadphase then skip this for now because no physicsmap to init physics entities properly
+        // This mainly happens in replays or otherwise spawning grids in nullspace. PhysicsMap is getting dumped in box2c anyway
+        if (xform.MapUid == null)
+            return;
+
         if (!_mapQuery.TryGetComponent(xform.MapUid, out var physMap))
         {
             throw new InvalidOperationException(
@@ -272,7 +282,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
             }
         }
 
-        DebugTools.Assert(xform.Broadphase is not {} x || x.Uid == broadphase.Owner && x.PhysicsMap == map.Owner);
+        DebugTools.Assert(xform.Broadphase is not {} x || x.Uid == broadphase.Owner && (!x.CanCollide || x.PhysicsMap == map.Owner));
         AddOrUpdateEntityTree(
             broadphase.Owner,
             broadphase.Comp2,

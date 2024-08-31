@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Added `InterpolatedStringHandlerArgumentAttribute` to the sandbox whitelist.
+*None yet*
 
 ### Bugfixes
 
@@ -51,7 +51,142 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* `ClientGameStateManager` now only initialises or starts entities after their parents have already been initialized. There are also some new debug asserts to try ensure that this rule isn't broken elsewhere. 
+
+
+## 232.0.0
+
+### Breaking changes
+
+* Obsolete method `AppearanceComponent.TryGetData` is now access-restricted to `SharedAppearanceSystem`; use `SharedAppearanceSystem.TryGetData` instead.
+
+### New features
+
+* Added `SharedAppearanceSystem.AppendData`, which appends non-existing `AppearanceData` from one `AppearanceComponent` to another.
+* Added `AppearanceComponent.AppearanceDataInit`, which can be used to set initial `AppearanceData` entries in .yaml.
+
+### Bugfixes
+
+* Fix BUI interfaces not deep-copying in state handling.
+* Add Robust.Xaml.csproj to the solution to fix some XAML issues.
+
+### Other
+
+* Serialization will now add type tags (`!type:<T>`) for necessary `NodeData` when writing (currently only for `object` nodes).
+
+### Internal
+
+* Added `ObjectSerializer`, which handles serialization of the generic `object` type.
+
+
+## 231.1.1
+
+### Bugfixes
+
+* Fixed a bug where the client might not add entities to the broadphase/lookup components.
+* Fixed  various toolshed commands not working, including `sort`, `sortdown` `join` (for strings), and `emplace`
+
+### Other
+
+* Toolshed command blocks now stop executing if previous errors were not handled / cleared.
+
+
+## 231.1.0
+
+### New features
+
+* Network `InterfaceData` on `UserInterfaceComponent`.
+* Added `System.Decimal` to sandbox.
+* Added XAML hot reloading.
+* Added API for content to write custom files into replay through `IReplayFileWriter`.
+
+### Other
+
+* Optimized `EntityLookup` and other physics systems.
+
+### Internal
+
+* Added more tests related to physics.
+
+
+## 231.0.1
+
+### Other
+
+* Add better logging to failed PVS sends.
+
+
+## 231.0.0
+
+### Breaking changes
+
+* ViewSubscriber has been moved to shared; it doesn't actually do anything on the client but makes shared code easier.
+
+### New features
+
+* ContactEnumreator exists to iterate the contacts of a particular entity.
+* Add FixturesChangeComponent as a generic way to add and remove fixtures easily.
+* PointLightComponent enabling / disabling now has an attempt event if you wish to block it on content side.
+* There's an OpenScreenAt overload for screen-relative coordinates.
+* SpriteSystem has methods to get an entity's position in sprite terms.
+* EntityManager and ComponentFactory now have additional methods that interact with ComponentRegistry and ComponentRegistryEntry.
+
+### Bugfixes
+
+* Fix PrototypeFlags Add not actually working.
+* Fix BUIs going BRRT opening and closing repeatedly upon prediction. The closing now gets deferred to the update loop if it's still closed at the end of prediction.
+
+
+## 230.2.0
+
+### New features
+
+* Add ProcessNow for IRobustJob as a convenience method where you may not want to run a job in the background sometimes.
+* Add Vector2i helpers to all 8 neighbouring directions.
+
+### Other
+
+* Remove IThreadPoolWorkItem interface from IRobustJob.
+
+
+## 230.1.0
+
+### New features
+
+* You can now pass `bool[]` parameters to shaders.
+* Added `toolshed.nearby_entities_limit` CVar.
+* Fix `RichTextLabel.Text` to clear and reset the message properly in all cases.
+* `scene` command has tab completion now.
+* `devwindow` UI inspector property catches exceptions for read properties.
+* `SplitContainer.Flip()`
+
+### Bugfixes
+
+* Fix tile enlargement not being applied for some EntityLookup queries.
+* `LocalizedEntityCommands` are now not initialized inside `RobustUnitTest`, fixing guaranteed test failures.
+* Fixed issues with broadphase init breaking replays frequently.
+* Fix uploaded prototypes and resources for clients connecting to a server.
+
+### Other
+
+* Improved error reporting for DataField analyzer.
+
+
+## 230.0.1
+
+
+## 230.0.0
+
+### New features
+
+* Added `InterpolatedStringHandlerArgumentAttribute` to the sandbox whitelist.
+* `IUserInterfaceManager.Popup()` popups now have a copy to clipboard button.
+
+### Bugfixes
+
+* Security fixes
+* Fix exception in `TimedDespawnComponent` spawning another `TimedDespawnComponent`.
+* Fixed pool memory leak in physics `SolveIsland`.
 
 
 ## 229.1.2

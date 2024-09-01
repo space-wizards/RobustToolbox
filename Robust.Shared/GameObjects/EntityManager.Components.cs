@@ -664,27 +664,20 @@ namespace Robust.Shared.GameObjects
 
         #region Entity<T>
 
-        public ArchEntity<T?> GetArchEntity<T>(EntityUid uid) where T : IComponent?
+        public ArchEntity GetArchEntity(EntityUid uid)
         {
-            // TODO: Could be faster
-            var archetype = _world.GetArchetype(uid);
-            var slot = _world.GetSlot(uid);
+            var entRef = (EntityReference)uid;
+            var (slot, archetype) = _world.GetSlotArchetype(entRef.Entity);
             var chunk = archetype.GetChunk(slot.Item2);
             var index = slot.Item1;
-            T? comp = default;
 
-            if (chunk.Has<T>())
-            {
-                comp = chunk.Get<T>(index);
-            }
-
-            return new ArchEntity<T?>(uid, comp, chunk, index);
+            return new ArchEntity(uid, chunk, index);
         }
 
-        public bool TryComp<TComp, T>(ref ArchEntity<T> entity, [NotNullWhen(true)] out TComp? comp)
-            where T : IComponent?
+        public bool TryComp<TComp>(ref ArchEntity entity, [NotNullWhen(true)] out TComp? comp)
             where TComp : IComponent?
         {
+            ref var index = ref entity.ChunkIndex;
             ref var chunk = ref entity.Chunk;
 
             if (!chunk.Has<TComp>())
@@ -693,13 +686,31 @@ namespace Robust.Shared.GameObjects
                 return false;
             }
 
-            ref var index = ref entity.ChunkIndex;
             comp = chunk.Get<TComp>(index)!;
             return true;
         }
 
-        public bool HasComp<TComp, T>(ArchEntity<T> entity) where T : IComponent?
-            where TComp : IComponent?
+        public bool TryComp<TComp1, TComp2>(ref ArchEntity entity, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2)
+            where TComp1 : IComponent?
+            where TComp2 : IComponent?
+        {
+            ref var index = ref entity.ChunkIndex;
+            ref var chunk = ref entity.Chunk;
+
+            if (!chunk.Has<TComp1, TComp2>())
+            {
+                comp1 = default;
+                comp2 = default;
+                return false;
+            }
+
+            var comps = chunk.Get<TComp1, TComp2>(index);
+            comp1 = comps.t0!;
+            comp2 = comps.t1!;
+            return true;
+        }
+
+        public bool HasComp<TComp>(ArchEntity entity) where TComp : IComponent?
         {
             ref var chunk = ref entity.Chunk;
             return chunk.Has<TComp>();
@@ -923,7 +934,7 @@ namespace Robust.Shared.GameObjects
 
         public bool TryGetComponent(EntityUid uid, CompIdx type, [NotNullWhen(true)] out IComponent? component)
         {
-            if (_world.TryGetAlive(uid, type.Type, out var comp))
+            if (_world.TryGetAlive(uid, type.Type.Id, out var comp))
             {
                 component = (IComponent)comp!;
                 if (component != null! && !component.Deleted)

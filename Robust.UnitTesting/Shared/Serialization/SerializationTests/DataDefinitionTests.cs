@@ -23,7 +23,7 @@ public sealed partial class DataDefinitionTests : SerializationTest
     //copy: null <> cts(cc(+nt), c)/regular(c)
 
     [DataDefinition]
-    public partial class DataDefTestDummy
+    public sealed partial class DataDefTestDummy
     {
         [DataField("a")] public int a = Int32.MaxValue;
         [DataField("b")] public DataDummyStruct b = new(){Value = "default"};

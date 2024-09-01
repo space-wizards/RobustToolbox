@@ -9,7 +9,7 @@ namespace Robust.UnitTesting;
 /// </summary>j
 public sealed class TestingParallelManager : IParallelManagerInternal
 {
-    public event Action? ParallelCountChanged;
+    public event Action? ParallelCountChanged { add { } remove { } }
     public int ParallelProcessCount => 1;
 
     public void AddAndInvokeParallelCountChanged(Action changed)

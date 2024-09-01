@@ -25,6 +25,77 @@ namespace Robust.UnitTesting.Shared.GameObjects
           - type: Physics
 ";
 
+        /// <summary>
+        /// Tests that entities properly get recycled
+        /// </summary>
+        [Test]
+        public void VersionIncreaseTest()
+        {
+            var sim = RobustServerSimulation
+                .NewSimulation()
+                .InitializeInstance();
+
+            var entMan = sim.Resolve<IEntityManager>();
+
+            var uid1 = entMan.Spawn(null, MapCoordinates.Nullspace);
+            entMan.DeleteEntity(uid1);
+
+            var uid2 = entMan.Spawn(null, MapCoordinates.Nullspace);
+
+            Assert.That(uid2.Version, Is.EqualTo(uid1.Version + 1));
+        }
+
+        /// <summary>
+        /// Tests that new entities don't get dangling references to old components.
+        /// </summary>
+        [Test]
+        public void VersionReuseTest()
+        {
+            var sim = RobustServerSimulation
+                .NewSimulation()
+                .InitializeInstance();
+
+            var entMan = sim.Resolve<IEntityManager>();
+
+            var uid1 = entMan.Spawn(null, MapCoordinates.Nullspace);
+            var body1 = entMan.AddComponent<PhysicsComponent>(uid1);
+            entMan.DeleteEntity(uid1);
+
+            var uid2 = entMan.Spawn(null, MapCoordinates.Nullspace);
+            var body2 = entMan.AddComponent<PhysicsComponent>(uid2);
+
+            Assert.That(body1.Deleted && body1.Owner == uid1 && body1 != body2 && body2.Owner == uid2);
+        }
+
+        /// <summary>
+        /// Tests that new entities don't get dangling references to old components.
+        /// </summary>
+        [Test]
+        public void VersionQueueDeleteTest()
+        {
+            var sim = RobustServerSimulation
+                .NewSimulation()
+                .InitializeInstance();
+
+            var entMan = sim.Resolve<IEntityManager>();
+
+            var uid1 = entMan.Spawn(null, MapCoordinates.Nullspace);
+            var body1 = entMan.AddComponent<PhysicsComponent>(uid1);
+            entMan.QueueDeleteEntity(uid1);
+
+            var uid2 = entMan.Spawn(null, MapCoordinates.Nullspace);
+            var body2 = entMan.AddComponent<PhysicsComponent>(uid2);
+
+            entMan.DeleteEntity(uid1);
+
+            Assert.That(body1.Deleted &&
+                        body1.Owner == uid1 &&
+                        body1 != body2 &&
+                        body2.Owner == uid2 &&
+                        !entMan.Deleted(uid2));
+        }
+
+
         [Test]
         public void AddRegistryComponentTest()
         {

@@ -1705,6 +1705,7 @@ namespace Robust.Shared.GameObjects
             if (MoveNext(out comp1))
             {
                 uid = _chunkEnumerator.Current.EntityReference(_index);
+                DebugTools.AssertOwner(uid, comp1);
                 return true;
             }
 
@@ -1769,6 +1770,8 @@ namespace Robust.Shared.GameObjects
             if (MoveNext(out comp1, out comp2))
             {
                 uid = _chunkEnumerator.Current.EntityReference(_index);
+                DebugTools.AssertOwner(uid, comp1);
+                DebugTools.AssertOwner(uid, comp2);
                 return true;
             }
 
@@ -1839,6 +1842,9 @@ namespace Robust.Shared.GameObjects
             if (MoveNext(out comp1, out comp2, out comp3))
             {
                 uid = _chunkEnumerator.Current.EntityReference(_index);
+                DebugTools.AssertOwner(uid, comp1);
+                DebugTools.AssertOwner(uid, comp2);
+                DebugTools.AssertOwner(uid, comp3);
                 return true;
             }
 
@@ -1917,6 +1923,10 @@ namespace Robust.Shared.GameObjects
             if (MoveNext(out comp1, out comp2, out comp3, out comp4))
             {
                 uid = _chunkEnumerator.Current.EntityReference(_index);
+                DebugTools.AssertOwner(uid, comp1);
+                DebugTools.AssertOwner(uid, comp2);
+                DebugTools.AssertOwner(uid, comp3);
+                DebugTools.AssertOwner(uid, comp4);
                 return true;
             }
 
@@ -1998,6 +2008,7 @@ namespace Robust.Shared.GameObjects
             if (MoveNext(out comp1))
             {
                 uid = _chunkEnumerator.Current.EntityReference(_index);
+                DebugTools.AssertOwner(uid, comp1);
                 return true;
             }
 
@@ -2065,6 +2076,8 @@ namespace Robust.Shared.GameObjects
             if (MoveNext(out comp1, out comp2))
             {
                 uid = _chunkEnumerator.Current.EntityReference(_index);
+                DebugTools.AssertOwner(uid, comp1);
+                DebugTools.AssertOwner(uid, comp2);
                 return true;
             }
 
@@ -2136,6 +2149,9 @@ namespace Robust.Shared.GameObjects
             if (MoveNext(out comp1, out comp2, out comp3))
             {
                 uid = _chunkEnumerator.Current.EntityReference(_index);
+                DebugTools.AssertOwner(uid, comp1);
+                DebugTools.AssertOwner(uid, comp2);
+                DebugTools.AssertOwner(uid, comp3);
                 return true;
             }
 
@@ -2212,6 +2228,10 @@ namespace Robust.Shared.GameObjects
             if (MoveNext(out comp1, out comp2, out comp3, out comp4))
             {
                 uid = _chunkEnumerator.Current.EntityReference(_index);
+                DebugTools.AssertOwner(uid, comp1);
+                DebugTools.AssertOwner(uid, comp2);
+                DebugTools.AssertOwner(uid, comp3);
+                DebugTools.AssertOwner(uid, comp4);
                 return true;
             }
 

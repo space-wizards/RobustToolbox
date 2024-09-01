@@ -668,6 +668,8 @@ namespace Robust.Client.GameStates
                             comp.ClearCreationTick(); // don't undo the re-adding.
                             comp.LastModifiedTick = _timing.LastRealTick;
                         }
+
+                        toAdd.Clear();
                     }
                 }
 

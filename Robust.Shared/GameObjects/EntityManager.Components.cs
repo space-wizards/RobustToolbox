@@ -10,6 +10,7 @@ using System.Threading;
 using Arch.Core;
 using Arch.Core.Extensions.Dangerous;
 using Arch.Core.Utils;
+using CommunityToolkit.HighPerformance.Helpers;
 using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.Log;
@@ -685,24 +686,6 @@ namespace Robust.Shared.GameObjects
             where TComp : IComponent?
         {
             ref var chunk = ref entity.Chunk;
-            ref var index = ref entity.ChunkIndex;
-            ref var entRef = ref chunk.EntityReference(index);
-
-            // Check chunk isn't stale.
-            if ((EntityUid) entRef != entity.Owner)
-            {
-                if (!_world.IsAlive(entity.Owner))
-                {
-                    comp = default;
-                    return false;
-                }
-
-                // TODO: Could be faster
-                var archetype = _world.GetArchetype(entity.Owner);
-                var slot = _world.GetSlot(entity.Owner);
-                chunk = archetype.GetChunk(slot.Item2);
-                index = slot.Item1;
-            }
 
             if (!chunk.Has<TComp>())
             {
@@ -710,6 +693,7 @@ namespace Robust.Shared.GameObjects
                 return false;
             }
 
+            ref var index = ref entity.ChunkIndex;
             comp = chunk.Get<TComp>(index)!;
             return true;
         }
@@ -718,23 +702,6 @@ namespace Robust.Shared.GameObjects
             where TComp : IComponent?
         {
             ref var chunk = ref entity.Chunk;
-            ref var index = ref entity.ChunkIndex;
-            ref var entRef = ref chunk.EntityReference(index);
-
-            // Check chunk isn't stale.
-            if ((EntityUid) entRef != entity.Owner)
-            {
-                if (!_world.IsAlive(entity.Owner))
-                {
-                    return false;
-                }
-
-                var archetype = _world.GetArchetype(entity.Owner);
-                var slot = _world.GetSlot(entity.Owner);
-                chunk = archetype.GetChunk(slot.Item2);
-                index = slot.Item1;
-            }
-
             return chunk.Has<TComp>();
         }
 
@@ -744,7 +711,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent<T>(EntityUid uid) where T : IComponent
         {
-            if (!IsAlive(uid) || !_world.TryGet(uid, out T? comp))
+            if (!_world.TryGetAlive(uid, out T? comp))
                 return false;
 
             return !comp!.Deleted;
@@ -761,7 +728,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent(EntityUid uid, Type type)
         {
-            if (!IsAlive(uid) || !_world.TryGet(uid, type, out var comp))
+            if (!_world.TryGetAlive(uid, type, out var comp))
                 return false;
 
             return !((IComponent)comp!).Deleted;
@@ -861,7 +828,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetComponent<T>(EntityUid uid) where T : IComponent
         {
-            if (IsAlive(uid) && _world.TryGet(uid, out T? comp))
+            if (_world.TryGetAlive(uid, out T? comp))
                 return comp!;
 
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(T)}");
@@ -903,10 +870,10 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T? component) where T : IComponent?
         {
-            if (IsAlive(uid) && _world.TryGet(uid, out component))
+            if (_world.TryGetAlive(uid, out component))
             {
                 DebugTools.Assert(component != null);
-                if (!component!.Deleted)
+                if (!component.Deleted)
                 {
                     return true;
                 }
@@ -941,9 +908,9 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public bool TryGetComponent(EntityUid uid, Type type, [NotNullWhen(true)] out IComponent? component)
         {
-            if (IsAlive(uid) && _world.TryGet(uid, type, out var comp))
+            if (_world.TryGetAlive(uid, type, out var comp))
             {
-                component = (IComponent)(comp!);
+                component = (IComponent)comp!;
                 if (!component.Deleted)
                 {
                     return true;
@@ -956,7 +923,7 @@ namespace Robust.Shared.GameObjects
 
         public bool TryGetComponent(EntityUid uid, CompIdx type, [NotNullWhen(true)] out IComponent? component)
         {
-            if (IsAlive(uid) && _world.TryGet(uid, type.Type, out var comp))
+            if (_world.TryGetAlive(uid, type.Type, out var comp))
             {
                 component = (IComponent)comp!;
                 if (component != null! && !component.Deleted)
@@ -1367,12 +1334,36 @@ namespace Robust.Shared.GameObjects
         }
     }
 
+    public readonly struct ArchEntityQuery<TComp1> where TComp1 : IComponent
+    {
+        private readonly IEntityManager _manager;
+        private readonly World _world;
+        private readonly ComponentType? _type;
+        private readonly ISawmill _sawmill;
+        private readonly Query _query;
+
+        public ArchEntityQuery(IEntityManager manager, World world, ISawmill sawmill)
+        {
+            _manager = manager;
+            _world = world;
+            _sawmill = sawmill;
+            _query = world.Query(new QueryDescription().WithAll<TComp1>());
+            _query.Match();
+        }
+
+        public bool TryComp(EntityUid uid, out TComp1? component)
+        {
+            return _world.TryGetAlive(uid, out component);
+        }
+    }
+
     public readonly struct EntityQuery<TComp1> where TComp1 : IComponent
     {
         private readonly IEntityManager _manager;
         private readonly World _world;
         private readonly ComponentType? _type;
         private readonly ISawmill _sawmill;
+        private readonly int _compId;
 
         public EntityQuery(IEntityManager manager, World world, ComponentType? type, ISawmill sawmill)
         {
@@ -1380,6 +1371,8 @@ namespace Robust.Shared.GameObjects
             _world = world;
             _type = type;
             _sawmill = sawmill;
+
+            _compId = Component<TComp1>.ComponentType.Id;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1430,7 +1423,15 @@ namespace Robust.Shared.GameObjects
             }
             else
             {
-                return _manager.TryGetComponent(uid, out component);
+                if (!_world.TryGetAlive(uid, _compId, out var obj))
+                {
+                    component = default;
+                    return false;
+                }
+
+                DebugTools.AssertNotNull(obj);
+                component = (TComp1) obj!;
+                return true;
             }
         }
 

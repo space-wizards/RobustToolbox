@@ -694,7 +694,7 @@ namespace Robust.Shared.GameObjects
 
         public bool Deleted(EntityUid uid)
         {
-            return !IsAlive(uid) || !_world.TryGet(uid, out MetaDataComponent? comp) || comp!.EntityLifeStage > EntityLifeStage.Terminating;
+            return !_world.TryGetAlive(uid, out MetaDataComponent? comp) || comp!.EntityLifeStage > EntityLifeStage.Terminating;
         }
 
         /// <summary>
@@ -799,7 +799,7 @@ namespace Robust.Shared.GameObjects
         private EntityUid AllocEntity(out MetaDataComponent metadata, out TransformComponent xform)
         {
             ThreadCheck();
-            
+
             SpawnEntityArch(out var uid);
 
             metadata = new MetaDataComponent

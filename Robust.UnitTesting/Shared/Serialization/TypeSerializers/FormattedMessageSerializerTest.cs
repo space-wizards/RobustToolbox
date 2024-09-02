@@ -15,7 +15,7 @@ public sealed class FormattedMessageSerializerTest : SerializationTest
     [TestCase("[color=red]message[/color]")]
     public void SerializationTest(string text)
     {
-        var message = FormattedMessage.FromMarkup(text);
+        var message = FormattedMessage.FromMarkupOrThrow(text);
         var node = Serialization.WriteValueAs<ValueDataNode>(message);
         Assert.That(node.Value, Is.EqualTo(text));
     }

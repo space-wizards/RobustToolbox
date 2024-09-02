@@ -1,7 +1,6 @@
 using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.Intrinsics;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -192,28 +191,6 @@ internal record struct Polygon : IPhysShape
         {
             var vert = Vertices[i];
             if (!vert.Equals(poly.Vertices[i])) return false;
-        }
-
-        return true;
-    }
-
-    public bool Equals(PolygonShape? other)
-    {
-        if (ReferenceEquals(null, other))
-            return false;
-        if (ReferenceEquals(this, other))
-            return true;
-
-        if (!Radius.Equals(other.Radius) || VertexCount != other.VertexCount)
-            return false;
-
-        for (var i = 0; i < VertexCount; i++)
-        {
-            var vert = Vertices[i];
-            var otherVert = other.Vertices[i];
-
-            if (!vert.Equals(otherVert))
-                return false;
         }
 
         return true;

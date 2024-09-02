@@ -8,9 +8,11 @@ public sealed partial class ToolshedTypesTest
 {
     // Assert that T -> Nullable<T> holds and it's inverse does not.
     [Test]
-    public async Task Bug_Nullables_08_21_2023()
+    public Task Bug_Nullables_08_21_2023()
     {
         Assert.That(Toolshed.IsTransformableTo(typeof(int), typeof(Nullable<int>)));
         Assert.That(!Toolshed.IsTransformableTo(typeof(Nullable<int>), typeof(int)));
+
+        return Task.CompletedTask;
     }
 }

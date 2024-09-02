@@ -707,14 +707,29 @@ public abstract partial class SharedMapSystem
 
     #region TileAccess
 
+    public TileRef GetTileRef(Entity<MapGridComponent> grid, MapCoordinates coords)
+    {
+        return GetTileRef(grid.Owner, grid.Comp, coords);
+    }
+
     public TileRef GetTileRef(EntityUid uid, MapGridComponent grid, MapCoordinates coords)
     {
         return GetTileRef(uid, grid, CoordinatesToTile(uid, grid, coords));
     }
 
+    public TileRef GetTileRef(Entity<MapGridComponent> grid, EntityCoordinates coords)
+    {
+        return GetTileRef(grid.Owner, grid.Comp, coords);
+    }
+
     public TileRef GetTileRef(EntityUid uid, MapGridComponent grid, EntityCoordinates coords)
     {
         return GetTileRef(uid, grid, CoordinatesToTile(uid, grid, coords));
+    }
+
+    public TileRef GetTileRef(Entity<MapGridComponent> grid, Vector2i tileCoordinates)
+    {
+        return GetTileRef(grid.Owner, grid.Comp, tileCoordinates);
     }
 
     public TileRef GetTileRef(EntityUid uid, MapGridComponent grid, Vector2i tileCoordinates)
@@ -1089,14 +1104,29 @@ public abstract partial class SharedMapSystem
         return chunk.GetSnapGrid((ushort)x, (ushort)y)?.Count ?? 0; // ?
     }
 
+    public IEnumerable<EntityUid> GetAnchoredEntities(Entity<MapGridComponent> grid, MapCoordinates coords)
+    {
+        return GetAnchoredEntities(grid.Owner, grid.Comp, coords);
+    }
+
     public IEnumerable<EntityUid> GetAnchoredEntities(EntityUid uid, MapGridComponent grid, MapCoordinates coords)
     {
         return GetAnchoredEntities(uid, grid, TileIndicesFor(uid, grid, coords));
     }
 
+    public IEnumerable<EntityUid> GetAnchoredEntities(Entity<MapGridComponent> grid, EntityCoordinates coords)
+    {
+        return GetAnchoredEntities(grid.Owner, grid.Comp, coords);
+    }
+
     public IEnumerable<EntityUid> GetAnchoredEntities(EntityUid uid, MapGridComponent grid, EntityCoordinates coords)
     {
         return GetAnchoredEntities(uid, grid, TileIndicesFor(uid, grid, coords));
+    }
+
+    public IEnumerable<EntityUid> GetAnchoredEntities(Entity<MapGridComponent> grid, Vector2i pos)
+    {
+        return GetAnchoredEntities(grid.Owner, grid.Comp, pos);
     }
 
     public IEnumerable<EntityUid> GetAnchoredEntities(EntityUid uid, MapGridComponent grid, Vector2i pos)
@@ -1191,6 +1221,11 @@ public abstract partial class SharedMapSystem
         return SnapGridLocalCellFor(uid, grid, LocalToGrid(uid, grid, coords));
     }
 
+    public Vector2i TileIndicesFor(Entity<MapGridComponent> grid, EntityCoordinates coords)
+    {
+        return TileIndicesFor(grid.Owner, grid.Comp, coords);
+    }
+
     public Vector2i TileIndicesFor(EntityUid uid, MapGridComponent grid, MapCoordinates worldPos)
     {
 #if DEBUG
@@ -1200,6 +1235,11 @@ public abstract partial class SharedMapSystem
 
         var localPos = WorldToLocal(uid, grid, worldPos.Position);
         return SnapGridLocalCellFor(uid, grid, localPos);
+    }
+
+    public Vector2i TileIndicesFor(Entity<MapGridComponent> grid, MapCoordinates coords)
+    {
+        return TileIndicesFor(grid.Owner, grid.Comp, coords);
     }
 
     private Vector2i SnapGridLocalCellFor(EntityUid uid, MapGridComponent grid, Vector2 localPos)

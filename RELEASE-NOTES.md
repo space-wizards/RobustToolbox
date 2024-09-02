@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * `MarkupNode` is now `IEquatable<MarkupNode>`. It already supported equality checks, now it implements the interface.
+* Added `Entity<T>` overloads to the following `SharedMapSystem` methods: `GetTileRef`, `GetAnchoredEntities`, `TileIndicesFor`.
 
 ### Bugfixes
 

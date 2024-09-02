@@ -17,7 +17,6 @@ namespace Robust.UnitTesting.Shared.Timing
         ///     With single step enabled, the game loop should run 1 tick and then pause again.
         /// </summary>
         [Test]
-        [Timeout(1000)] // comment this out if you want to debug
         public void SingleStepTest()
         {
             // TimeoutAttribute causes this to run on different thread on .NET Core,

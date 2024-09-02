@@ -9,14 +9,22 @@ public record struct ArchEntity : IFluentEntityUid
     public EntityUid Owner;
     EntityUid IFluentEntityUid.FluentOwner => Owner;
 
-    internal Chunk Chunk;
+    internal Archetype? _archetype;
+    internal Chunk? Chunk;
+
+    /// <summary>
+    /// Id of the chunk the entity is stored in.
+    /// </summary>
+    internal int ChunkId;
+
+    /// <summary>
+    /// Index of this entity into its chunk.
+    /// </summary>
     internal int ChunkIndex;
 
-    public ArchEntity(EntityUid owner, Chunk chunk, int chunkIndex)
+    public ArchEntity(EntityUid owner)
     {
         Owner = owner;
-        Chunk = chunk;
-        ChunkIndex = chunkIndex;
     }
 
     public static implicit operator EntityUid(ArchEntity ent)

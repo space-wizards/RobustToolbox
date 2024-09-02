@@ -666,69 +666,64 @@ namespace Robust.Shared.GameObjects
 
         public ArchEntity GetArchEntity(EntityUid uid)
         {
-            var entRef = (EntityReference)uid;
-            var (slot, archetype) = _world.GetSlotArchetype(entRef.Entity);
-            var chunk = archetype.GetChunk(slot.Item2);
-            var index = slot.Item1;
-
-            return new ArchEntity(uid, chunk, index);
+            return new ArchEntity(uid);
         }
 
-        public bool TryComp<TComp>(ref ArchEntity entity, [NotNullWhen(true)] out TComp? comp)
+        public void EnsureArchEntity(ref ArchEntity ent)
+        {
+            EnsureArchetype(ref ent);
+            EnsureChunk(ref ent);
+        }
+
+        private void EnsureArchetype(ref ArchEntity ent)
+        {
+            if (ent._archetype == null)
+            {
+                var entRef = (EntityReference)ent.Owner;
+                var (slot, archetype) = _world.GetSlotArchetype(entRef);
+                ent._archetype = archetype;
+                ent.ChunkId = slot.Item2;
+                ent.ChunkIndex = slot.Item1;
+            }
+        }
+
+        private void EnsureChunk(ref ArchEntity ent)
+        {
+            if (ent.Chunk == null)
+            {
+                ent.Chunk = ent._archetype!.GetChunk(ent.ChunkId);
+            }
+        }
+
+        public bool TryComp<TComp>(ref ArchEntity entity, [NotNullWhen(true)] out TComp? comp1)
             where TComp : IComponent?
         {
-            ref var index = ref entity.ChunkIndex;
-            ref var chunk = ref entity.Chunk;
+            EnsureArchetype(ref entity);
 
-            if (!chunk.Has<TComp>())
+            if (!entity._archetype!.Has<TComp>())
             {
-                comp = default;
+                comp1 = default;
                 return false;
             }
 
-            comp = chunk.Get<TComp>(index)!;
+            EnsureChunk(ref entity);
+            comp1 = entity.Chunk!.Value.Get<TComp>(entity.ChunkIndex)!;
             return true;
         }
 
         public bool TryComp(ref ArchEntity entity, CompIdx idx, [NotNullWhen(true)] out IComponent? comp1)
         {
-            ref var index = ref entity.ChunkIndex;
-            ref var chunk = ref entity.Chunk;
+            EnsureArchetype(ref entity);
 
-            if (!chunk.Has(idx.Type))
+            if (!entity._archetype!.Has(idx.Type))
             {
                 comp1 = default;
                 return false;
             }
 
-            comp1 = (IComponent) chunk.Get(index, idx.Type)!;
+            EnsureChunk(ref entity);
+            comp1 = (IComponent) entity.Chunk!.Value.Get(entity.ChunkIndex, idx.Type)!;
             return true;
-        }
-
-        public bool TryComp<TComp1, TComp2>(ref ArchEntity entity, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2)
-            where TComp1 : IComponent?
-            where TComp2 : IComponent?
-        {
-            ref var index = ref entity.ChunkIndex;
-            ref var chunk = ref entity.Chunk;
-
-            if (!chunk.Has<TComp1, TComp2>())
-            {
-                comp1 = default;
-                comp2 = default;
-                return false;
-            }
-
-            var comps = chunk.Get<TComp1, TComp2>(index);
-            comp1 = comps.t0!;
-            comp2 = comps.t1!;
-            return true;
-        }
-
-        public bool HasComp<TComp>(ArchEntity entity) where TComp : IComponent?
-        {
-            ref var chunk = ref entity.Chunk;
-            return chunk.Has<TComp>();
         }
 
         #endregion

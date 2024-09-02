@@ -9,7 +9,6 @@ using Robust.Shared.Utility;
 
 // ReSharper disable UnassignedGetOnlyAutoProperty
 // ReSharper disable UnusedAutoPropertyAccessor.Global
-// ReSharper disable AccessToStaticMemberViaDerivedType
 
 namespace Robust.UnitTesting.Shared.Serialization
 {

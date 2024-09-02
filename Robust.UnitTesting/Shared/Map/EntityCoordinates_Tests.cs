@@ -7,7 +7,6 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 
 // ReSharper disable InconsistentNaming
-// ReSharper disable AccessToStaticMemberViaDerivedType
 namespace Robust.UnitTesting.Shared.Map
 {
     [TestFixture, Parallelizable, TestOf(typeof(EntityCoordinates))]

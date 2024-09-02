@@ -15,7 +15,6 @@ using Robust.UnitTesting.Server;
 namespace Robust.UnitTesting.Shared.Physics;
 
 [TestFixture]
-[SuppressMessage("ReSharper", "AccessToStaticMemberViaDerivedType")]
 public sealed class Broadphase_Test
 {
     /// <summary>

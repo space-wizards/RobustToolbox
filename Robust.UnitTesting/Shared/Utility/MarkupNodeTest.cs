@@ -10,7 +10,6 @@ namespace Robust.UnitTesting.Shared.Utility;
 [TestFixture]
 [Parallelizable(ParallelScope.All)]
 [TestOf(typeof(MarkupNode))]
-[SuppressMessage("ReSharper", "AccessToStaticMemberViaDerivedType")]
 public sealed class MarkupNodeTest
 {
     [Test]

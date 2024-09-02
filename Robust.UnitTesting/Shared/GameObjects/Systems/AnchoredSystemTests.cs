@@ -13,7 +13,6 @@ using Robust.Shared.Physics.Systems;
 using Robust.Shared.Reflection;
 using Robust.UnitTesting.Server;
 
-// ReSharper disable AccessToStaticMemberViaDerivedType
 
 namespace Robust.UnitTesting.Shared.GameObjects.Systems
 {

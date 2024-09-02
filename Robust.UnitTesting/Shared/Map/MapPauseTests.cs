@@ -4,8 +4,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.UnitTesting.Server;
 
-// ReSharper disable AccessToStaticMemberViaDerivedType
-
 namespace Robust.UnitTesting.Shared.Map;
 
 [TestFixture]

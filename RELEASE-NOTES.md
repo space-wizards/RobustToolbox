@@ -39,11 +39,12 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `MarkupNode` is now `IEquatable<MarkupNode>`. It already supported equality checks, now it implements the interface.
 
 ### Bugfixes
 
-*None yet*
+* Fixed equality checks for `MarkupNode` not properly handling attributes.
+* Fixed `MarkupNode` not having a `GetHashCode()` implementation.
 
 ### Other
 
@@ -83,7 +84,7 @@ END TEMPLATE-->
 
 ### Internal
 
-* `ClientGameStateManager` now only initialises or starts entities after their parents have already been initialized. There are also some new debug asserts to try ensure that this rule isn't broken elsewhere. 
+* `ClientGameStateManager` now only initialises or starts entities after their parents have already been initialized. There are also some new debug asserts to try ensure that this rule isn't broken elsewhere.
 * Engine version script now supports dashes.
 
 

@@ -54,7 +54,7 @@ public partial class EntityManager
         var sw = new Stopwatch();
         sw.Start();
         var arc = _world.Archetypes.Count;
-        _world.TrimExcess();
+        // _world.TrimExcess();
         arc -= _world.Archetypes.Count;
         sw.Stop();
         _sawmill.Debug($"Trimming {arc} archetypes took {sw.Elapsed.TotalMilliseconds} milliseconds");

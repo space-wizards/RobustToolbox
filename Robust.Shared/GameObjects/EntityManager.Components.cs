@@ -690,6 +690,21 @@ namespace Robust.Shared.GameObjects
             return true;
         }
 
+        public bool TryComp(ref ArchEntity entity, CompIdx idx, [NotNullWhen(true)] out IComponent? comp1)
+        {
+            ref var index = ref entity.ChunkIndex;
+            ref var chunk = ref entity.Chunk;
+
+            if (!chunk.Has(idx.Type))
+            {
+                comp1 = default;
+                return false;
+            }
+
+            comp1 = (IComponent) chunk.Get(index, idx.Type)!;
+            return true;
+        }
+
         public bool TryComp<TComp1, TComp2>(ref ArchEntity entity, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2)
             where TComp1 : IComponent?
             where TComp2 : IComponent?

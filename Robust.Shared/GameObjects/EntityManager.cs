@@ -138,6 +138,7 @@ namespace Robust.Shared.GameObjects
             _eventBus = new EntityEventBus(this, _reflection);
 
             InitializeArch();
+            InitializeComponents();
             _metaReg = _componentFactory.GetRegistration(typeof(MetaDataComponent));
             _xformReg = _componentFactory.GetRegistration(typeof(TransformComponent));
             _xformName = _xformReg.Name;

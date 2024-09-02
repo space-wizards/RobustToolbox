@@ -40,6 +40,9 @@ namespace Robust.Shared.GameObjects
         private const int TypeCapacity = 32;
         private const int EntityCapacity = 1024;
 
+        private Dictionary<EntityUid, IComponent>[] _entTraitArray
+            = Array.Empty<Dictionary<EntityUid, IComponent>>();
+
         private readonly HashSet<IComponent> _deleteSet = new(TypeCapacity);
 
         /// <inheritdoc />
@@ -48,6 +51,20 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public event Action<RemovedComponentEventArgs>? ComponentRemoved;
 
+        public void InitializeComponents()
+        {
+            if (Initialized)
+                throw new InvalidOperationException("Already initialized.");
+
+            FillComponentDict();
+            _componentFactory.ComponentsAdded += OnComponentsAdded;
+        }
+
+        private void OnComponentsAdded(ComponentRegistration[] components)
+        {
+            RegisterComponents(components);
+        }
+
         /// <summary>
         ///     Instantly clears all components from the manager. This will NOT shut them down gracefully.
         ///     Any entities relying on existing components will be broken.
@@ -55,6 +72,15 @@ namespace Robust.Shared.GameObjects
         public void ClearComponents()
         {
             _deleteSet.Clear();
+        }
+
+        private void RegisterComponents(IEnumerable<ComponentRegistration> components)
+        {
+            foreach (var reg in components)
+            {
+                var dict = new Dictionary<EntityUid, IComponent>();
+                CompIdx.AssignArray(ref _entTraitArray, reg.Idx, dict);
+            }
         }
 
         #region Component Management
@@ -318,6 +344,25 @@ namespace Robust.Shared.GameObjects
                 // Okay so technically it may have an existing one not null but pointing to a stale component
                 // hence just set it and act casual.
                 _world.Set(uid, (object)component);
+            }
+
+            var dict = _entTraitArray[reg.Idx.Value];
+            DebugTools.Assert(dict != null);
+
+            // Code block to restrict access to ref comp.
+            {
+                ref var comp = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, uid, out var exists);
+                if (exists)
+                {
+                    // This will invalidate the comp ref as it removes the key from the dictionary.
+                    // This is inefficient, but component overriding rarely ever happens.
+                    RemoveComponentImmediate(uid, comp!, reg.Idx, false, false, meta: metadata);
+                    dict.Add(uid, component);
+                }
+                else
+                {
+                    comp = component;
+                }
             }
 
             // add the component to the netId grid
@@ -651,6 +696,8 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
+            _entTraitArray[idx.Value].Remove(entityUid);
+
             if (archetypeChange)
             {
                 DebugTools.Assert(_world.Has(entityUid, idx.Type));
@@ -732,10 +779,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent<T>(EntityUid uid) where T : IComponent
         {
-            if (!_world.TryGetAlive(uid, out T? comp))
-                return false;
-
-            return !comp!.Deleted;
+            return _entTraitArray[CompIdx.ArrayIndex<T>()].TryGetValue(uid, out var comp) && !comp.Deleted;
         }
 
         /// <inheritdoc />
@@ -749,10 +793,8 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent(EntityUid uid, Type type)
         {
-            if (!_world.TryGetAlive(uid, type, out var comp))
-                return false;
-
-            return !((IComponent)comp!).Deleted;
+            var dict = _entTraitArray[_componentFactory.GetArrayIndex(type)];
+            return dict.TryGetValue(uid, out var comp) && !comp.Deleted;
         }
 
         /// <inheritdoc />
@@ -857,8 +899,12 @@ namespace Robust.Shared.GameObjects
 
         public IComponent GetComponent(EntityUid uid, CompIdx type)
         {
-            if (TryGetComponent(uid, type, out var comp))
-                return comp;
+            var dict = _entTraitArray[type.Value];
+            if (dict.TryGetValue(uid, out var comp))
+            {
+                if (!comp.Deleted)
+                    return comp;
+            }
 
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {_componentFactory.IdxToType(type)}");
         }
@@ -866,8 +912,15 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IComponent GetComponent(EntityUid uid, Type type)
         {
-            if (TryGetComponent(uid, type, out var component))
-                return component;
+            // ReSharper disable once InvertIf
+            var dict = _entTraitArray[_componentFactory.GetArrayIndex(type)];
+            if (dict.TryGetValue(uid, out var comp))
+            {
+                if (!comp.Deleted)
+                {
+                    return comp;
+                }
+            }
 
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {type}");
         }
@@ -929,11 +982,12 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public bool TryGetComponent(EntityUid uid, Type type, [NotNullWhen(true)] out IComponent? component)
         {
-            if (_world.TryGetAlive(uid, type, out var comp))
+            var dict = _entTraitArray[_componentFactory.GetArrayIndex(type)];
+            if (dict.TryGetValue(uid, out var comp))
             {
-                component = (IComponent)comp!;
-                if (!component.Deleted)
+                if (!comp.Deleted)
                 {
+                    component = comp;
                     return true;
                 }
             }
@@ -944,15 +998,7 @@ namespace Robust.Shared.GameObjects
 
         public bool TryGetComponent(EntityUid uid, CompIdx type, [NotNullWhen(true)] out IComponent? component)
         {
-            if (_world.TryGetAlive(uid, type.Type.Id, out var comp))
-            {
-                component = (IComponent)comp!;
-                if (component != null! && !component.Deleted)
-                    return true;
-            }
-
-            component = null;
-            return false;
+            return TryGetComponent(uid, type.Type.Type, out component);
         }
 
         /// <inheritdoc />
@@ -998,12 +1044,16 @@ namespace Robust.Shared.GameObjects
 
         public EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : IComponent
         {
-            return new EntityQuery<TComp1>(this, _world, null, _resolveSawmill);
+            var comps = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
+            DebugTools.Assert(comps != null, $"Unknown component: {typeof(TComp1).Name}");
+            return new EntityQuery<TComp1>(comps, _resolveSawmill);
         }
 
         public EntityQuery<IComponent> GetEntityQuery(Type type)
         {
-            return new EntityQuery<IComponent>(this, _world, type, _resolveSawmill);
+            var comps = _entTraitArray[_componentFactory.GetArrayIndex(type)];
+            DebugTools.Assert(comps != null, $"Unknown component: {type.Name}");
+            return new EntityQuery<IComponent>(comps, _resolveSawmill);
         }
 
         /// <inheritdoc />
@@ -1325,6 +1375,13 @@ namespace Robust.Shared.GameObjects
         }
 
         #endregion
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void FillComponentDict()
+        {
+            Array.Fill(_entTraitArray, null);
+            RegisterComponents(_componentFactory.GetAllRegistrations());
+        }
     }
 
     public readonly struct NetComponentEnumerable
@@ -1355,61 +1412,32 @@ namespace Robust.Shared.GameObjects
         }
     }
 
-    public readonly struct ArchEntityQuery<TComp1> where TComp1 : IComponent
-    {
-        private readonly IEntityManager _manager;
-        private readonly World _world;
-        private readonly ComponentType? _type;
-        private readonly ISawmill _sawmill;
-        private readonly Query _query;
-
-        public ArchEntityQuery(IEntityManager manager, World world, ISawmill sawmill)
-        {
-            _manager = manager;
-            _world = world;
-            _sawmill = sawmill;
-            _query = world.Query(new QueryDescription().WithAll<TComp1>());
-            _query.Match();
-        }
-
-        public bool TryComp(EntityUid uid, out TComp1? component)
-        {
-            return _world.TryGetAlive(uid, out component);
-        }
-    }
-
     public readonly struct EntityQuery<TComp1> where TComp1 : IComponent
     {
-        private readonly IEntityManager _manager;
-        private readonly World _world;
-        private readonly ComponentType? _type;
+        private readonly Dictionary<EntityUid, IComponent> _traitDict;
         private readonly ISawmill _sawmill;
-        private readonly int _compId;
 
-        public EntityQuery(IEntityManager manager, World world, ComponentType? type, ISawmill sawmill)
+        public EntityQuery(Dictionary<EntityUid, IComponent> traitDict, ISawmill sawmill)
         {
-            _manager = manager;
-            _world = world;
-            _type = type;
+            _traitDict = traitDict;
             _sawmill = sawmill;
-
-            _compId = Component<TComp1>.ComponentType.Id;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
         public TComp1 GetComponent(EntityUid uid)
         {
-            return _type == null
-                ? _manager.GetComponent<TComp1>(uid)
-                : (TComp1)_manager.GetComponent(uid, _type.Value.Type);
+            if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
+                return (TComp1) comp;
+
+            throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(TComp1)}");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
         public Entity<TComp1> Get(EntityUid uid)
         {
-            if (_world.TryGet(uid, out TComp1? comp) && comp != null && !comp.Deleted)
-                return new Entity<TComp1>(uid, comp);
+            if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
+                return new Entity<TComp1>(uid, (TComp1) comp);
 
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(TComp1)}");
         }
@@ -1431,29 +1459,14 @@ namespace Robust.Shared.GameObjects
         [Pure]
         public bool TryGetComponent(EntityUid uid, [NotNullWhen(true)] out TComp1? component)
         {
-            if (_type != null)
+            if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
             {
-                if (_manager.TryGetComponent(uid, _type.Value.Type, out var comp))
-                {
-                    component = (TComp1) comp;
-                    return true;
-                }
-
-                component = default;
-                return false;
-            }
-            else
-            {
-                if (!_world.TryGetAlive(uid, _compId, out var obj))
-                {
-                    component = default;
-                    return false;
-                }
-
-                DebugTools.AssertNotNull(obj);
-                component = (TComp1) obj!;
+                component = (TComp1) comp;
                 return true;
             }
+
+            component = default;
+            return false;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1478,18 +1491,14 @@ namespace Robust.Shared.GameObjects
         [Pure]
         public bool HasComponent(EntityUid uid)
         {
-            return _type == null
-                ? _manager.HasComponent<TComp1>(uid)
-                : _manager.HasComponent(uid, _type.Value.Type);
+            return _traitDict.TryGetValue(uid, out var comp) && !comp.Deleted;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
         public bool HasComponent(EntityUid? uid)
         {
-            return _type == null
-                ? _manager.HasComponent<TComp1>(uid)
-                : _manager.HasComponent(uid, _type.Value.Type);
+            return uid != null && HasComponent(uid.Value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1502,8 +1511,9 @@ namespace Robust.Shared.GameObjects
                 return true;
             }
 
-            if (TryGetComponent(uid, out component))
+            if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
             {
+                component = (TComp1)comp;
                 return true;
             }
 
@@ -1547,8 +1557,8 @@ namespace Robust.Shared.GameObjects
         [Pure]
         internal TComp1 GetComponentInternal(EntityUid uid)
         {
-            if (TryGetComponentInternal(uid, out var comp))
-                return comp;
+            if (_traitDict.TryGetValue(uid, out var comp))
+                return (TComp1) comp;
 
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(TComp1)}");
         }
@@ -1576,8 +1586,9 @@ namespace Robust.Shared.GameObjects
         [Pure]
         internal bool TryGetComponentInternal(EntityUid uid, [NotNullWhen(true)] out TComp1? component)
         {
-            if (_world.TryGet(uid, out component!))
+            if (_traitDict.TryGetValue(uid, out var comp))
             {
+                component = (TComp1) comp;
                 return true;
             }
 
@@ -1592,8 +1603,7 @@ namespace Robust.Shared.GameObjects
         [Pure]
         internal bool HasComponentInternal(EntityUid uid)
         {
-            // TODO fix checking deleted
-            return _world.TryGet(uid, out TComp1? comp) && !comp!.Deleted;
+            return _traitDict.TryGetValue(uid, out var comp) && !comp.Deleted;
         }
 
         /// <summary>
@@ -1609,8 +1619,9 @@ namespace Robust.Shared.GameObjects
                 return true;
             }
 
-            if (TryGetComponentInternal(uid, out component))
+            if (_traitDict.TryGetValue(uid, out var comp))
             {
+                component = (TComp1)comp;
                 return true;
             }
 

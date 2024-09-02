@@ -88,14 +88,13 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public int Count<T>() where T : IComponent
         {
-            return _world.CountEntities(new QueryDescription().WithAll<T>());
+            return _entTraitArray[CompIdx.ArrayIndex<T>()].Count;
         }
 
         /// <inheritdoc />
         public int Count(Type component)
         {
-            var query = new QueryDescription([component]);
-            return _world.CountEntities(in query);
+            return _entTraitArray[_componentFactory.GetArrayIndex(component)].Count;
         }
 
         [Obsolete("Use InitializeEntity")]

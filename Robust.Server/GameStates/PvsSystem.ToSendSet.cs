@@ -80,7 +80,6 @@ internal sealed partial class PvsSystem
         if (meta.LifeStage >= EntityLifeStage.Terminating)
         {
             Log.Error($"Attempted to send deleted entity: {ToPrettyString(ent.Uid)}, Meta lifestage: {ent.Meta.EntityLifeStage}, PVS lifestage: {meta.LifeStage}.\n{Environment.StackTrace}");
-            EntityManager.QueueDeleteEntity(ent.Uid);
             return;
         }
 

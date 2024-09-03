@@ -204,7 +204,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Offset into internal PVS data.
         /// </summary>
-        internal PvsIndex PvsData;
+        internal PvsIndex PvsData = PvsIndex.Invalid;
     }
 
     [Flags]

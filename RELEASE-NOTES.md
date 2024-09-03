@@ -18,7 +18,7 @@ Don't change the format without looking at the script!
 
 ### Bugfixes
 
-*None yet*
+* Fixed a PVS error that could occur when trying to delete the first entity that gets created in a round.
 
 ### Other
 

@@ -18,7 +18,7 @@ Don't change the format without looking at the script!
 
 ### Bugfixes
 
-* Fixed a PVS error that could occur when trying to delete the first entity that gets created in a round.
+*None yet*
 
 ### Other
 
@@ -47,6 +47,7 @@ END TEMPLATE-->
 
 * Fixed equality checks for `MarkupNode` not properly handling attributes.
 * Fixed `MarkupNode` not having a `GetHashCode()` implementation.
+* Fixed a PVS error that could occur when trying to delete the first entity that gets created in a round.
 
 ### Other
 

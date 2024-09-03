@@ -185,7 +185,7 @@ public sealed partial class ManagerTests : ISerializationContext
     #region Other TypeDefinitions
 
     [CopyByRef]
-    private class CopyByRefTestClass {}
+    private sealed class CopyByRefTestClass {}
 
     [CopyByRef]
     private struct CopyByRefTestStruct

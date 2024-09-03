@@ -133,10 +133,7 @@ namespace Robust.UnitTesting.Client.UserInterface
                 Assert.That(control3Fired, NUnit.Framework.Is.True);
             });
 
-            control1.Dispose();
-            control2.Dispose();
-            control3.Dispose();
-            control4.Dispose();
+            control1.Orphan();
         }
 
         [Test]
@@ -144,7 +141,6 @@ namespace Robust.UnitTesting.Client.UserInterface
         {
             Assert.That(_userInterfaceManager.KeyboardFocused, NUnit.Framework.Is.Null);
             var control1 = new Control {CanKeyboardFocus = true};
-            var control2 = new Control {CanKeyboardFocus = true};
 
             control1.GrabKeyboardFocus();
             Assert.That(_userInterfaceManager.KeyboardFocused, NUnit.Framework.Is.EqualTo(control1));
@@ -152,9 +148,6 @@ namespace Robust.UnitTesting.Client.UserInterface
 
             control1.ReleaseKeyboardFocus();
             Assert.That(_userInterfaceManager.KeyboardFocused, NUnit.Framework.Is.Null);
-
-            control1.Dispose();
-            control2.Dispose();
         }
 
         [Test]
@@ -169,9 +162,6 @@ namespace Robust.UnitTesting.Client.UserInterface
             Assert.That(_userInterfaceManager.KeyboardFocused, NUnit.Framework.Is.EqualTo(control2));
             control2.ReleaseKeyboardFocus();
             Assert.That(_userInterfaceManager.KeyboardFocused, NUnit.Framework.Is.Null);
-
-            control1.Dispose();
-            control2.Dispose();
         }
 
         [Test]
@@ -186,9 +176,6 @@ namespace Robust.UnitTesting.Client.UserInterface
             Assert.That(_userInterfaceManager.KeyboardFocused, NUnit.Framework.Is.EqualTo(control1));
             _userInterfaceManager.ReleaseKeyboardFocus();
             Assert.That(_userInterfaceManager.KeyboardFocused, NUnit.Framework.Is.Null);
-
-            control1.Dispose();
-            control2.Dispose();
         }
 
         [Test]
@@ -226,7 +213,7 @@ namespace Robust.UnitTesting.Client.UserInterface
             _userInterfaceManager.ReleaseKeyboardFocus();
             Assert.That(_userInterfaceManager.KeyboardFocused, NUnit.Framework.Is.Null);
 
-            control.Dispose();
+            control.Orphan();
         }
 
         /// <summary>
@@ -253,7 +240,7 @@ namespace Robust.UnitTesting.Client.UserInterface
 
             Assert.That(_userInterfaceManager.KeyboardFocused, NUnit.Framework.Is.Null);
 
-            control.Dispose();
+            control.Orphan();
         }
     }
 }

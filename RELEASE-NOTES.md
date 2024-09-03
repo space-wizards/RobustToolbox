@@ -39,11 +39,14 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `MarkupNode` is now `IEquatable<MarkupNode>`. It already supported equality checks, now it implements the interface.
+* Added `Entity<T>` overloads to the following `SharedMapSystem` methods: `GetTileRef`, `GetAnchoredEntities`, `TileIndicesFor`.
+* Added `EntityUid`-only overloads to the following `SharedTransformSystem` methods: `AnchorEntity`, `Unanchor`.
 
 ### Bugfixes
 
-*None yet*
+* Fixed equality checks for `MarkupNode` not properly handling attributes.
+* Fixed `MarkupNode` not having a `GetHashCode()` implementation.
 
 ### Other
 
@@ -52,6 +55,13 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 233.0.2
+
+### Bugfixes
+
+* Fix exceptions in client game state handling for grids. Now they will rely upon the networked fixture data and not try to rebuild in the grid state handler.
 
 
 ## 233.0.1
@@ -76,7 +86,7 @@ END TEMPLATE-->
 
 ### Internal
 
-* `ClientGameStateManager` now only initialises or starts entities after their parents have already been initialized. There are also some new debug asserts to try ensure that this rule isn't broken elsewhere. 
+* `ClientGameStateManager` now only initialises or starts entities after their parents have already been initialized. There are also some new debug asserts to try ensure that this rule isn't broken elsewhere.
 * Engine version script now supports dashes.
 
 

@@ -343,7 +343,11 @@ namespace Robust.Shared.Prototypes
             var prototypeTypeOrder = modified.Keys.ToList();
             prototypeTypeOrder.Sort(SortPrototypesByPriority);
 
+            // Keep track of what has been pushed so we don't double-work common parents.
             var pushed = new Dictionary<Type, HashSet<string>>();
+            // Track what prototypes actually get modified as a result of the reload.
+            // This is for big files to ensure we don't flag 100 prototypes as modified when only 1 may be.
+            var changedPrototypes = new Dictionary<Type, HashSet<string>>();
             var modifiedKinds = new HashSet<KindData>();
 
             foreach (var kind in prototypeTypeOrder)
@@ -427,6 +431,7 @@ namespace Robust.Shared.Prototypes
                             kindData.UnfrozenInstances ??= kindData.Instances.ToDictionary();
                             kindData.UnfrozenInstances[id] = prototype;
                             modifiedKinds.Add(kindData);
+                            changedPrototypes.GetOrNew(kind).Add(id);
                         }
                     }
 
@@ -437,11 +442,10 @@ namespace Robust.Shared.Prototypes
             Freeze(modifiedKinds);
             if (modifiedKinds.Any(x => x.Type == typeof(EntityPrototype) || x.Type == typeof(EntityCategoryPrototype)))
                 UpdateCategories();
-#endif
 
             var byType = new Dictionary<Type, PrototypesReloadedEventArgs.PrototypeChangeSet>();
 
-            foreach (var (type, pushedSet) in pushed)
+            foreach (var (type, pushedSet) in changedPrototypes)
             {
                 var kindData = _kinds[type];
                 var set = new Dictionary<string, IPrototype>(pushedSet.Count);
@@ -456,6 +460,25 @@ namespace Robust.Shared.Prototypes
 
                 byType[type] = new PrototypesReloadedEventArgs.PrototypeChangeSet(set);
             }
+#else
+            var byType = new Dictionary<Type, PrototypesReloadedEventArgs.PrototypeChangeSet>();
+
+            foreach (var (type, pushedSet) in modified)
+            {
+                var kindData = _kinds[type];
+                var set = new Dictionary<string, IPrototype>(pushedSet.Count);
+
+                foreach (var pId in pushedSet)
+                {
+                    if (!kindData.Instances.TryGetValue(pId, out var prototype))
+                        continue;
+
+                    set[pId] = prototype;
+                }
+
+                byType[type] = new PrototypesReloadedEventArgs.PrototypeChangeSet(set);
+            }
+#endif
 
             // Don't raise the event if types match.
             var types = new ValueList<Type>(byType.Keys);

@@ -26,10 +26,7 @@ internal sealed partial class PvsSystem
         foreach (ref var ent in CollectionsMarshal.AsSpan(_cachedGlobalOverride))
         {
             ref var meta = ref _metadataMemory.GetRef(ent.Ptr.Index);
-            DebugTools.AssertEqual(meta.NetEntity, ent.Meta.NetEntity);
-            DebugTools.AssertEqual(meta.LastModifiedTick, ent.Meta.EntityLastModifiedTick);
-            DebugTools.AssertEqual(meta.VisMask, ent.Meta.VisibilityMask);
-            DebugTools.AssertEqual(meta.LifeStage, ent.Meta.EntityLifeStage);
+            meta.Validate(ent.Meta);
             if ((mask & meta.VisMask) == meta.VisMask)
                 AddEntity(session, ref ent, ref meta, fromTick);
         }
@@ -56,11 +53,7 @@ internal sealed partial class PvsSystem
         foreach (ref var ent in CollectionsMarshal.AsSpan(_cachedForceOverride))
         {
             ref var meta = ref _metadataMemory.GetRef(ent.Ptr.Index);
-            DebugTools.AssertEqual(meta.NetEntity, ent.Meta.NetEntity);
-            DebugTools.AssertEqual(meta.LastModifiedTick, ent.Meta.EntityLastModifiedTick);
-            DebugTools.AssertEqual(meta.VisMask, ent.Meta.VisibilityMask);
-            DebugTools.AssertEqual(meta.LifeStage, ent.Meta.EntityLifeStage);
-            if ((mask & meta.VisMask) == meta.VisMask)
+            meta.Validate(ent.Meta);
                 AddEntity(session, ref ent, ref meta, fromTick);
         }
 

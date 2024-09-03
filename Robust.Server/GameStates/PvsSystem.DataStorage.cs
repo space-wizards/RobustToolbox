@@ -300,7 +300,8 @@ internal sealed partial class PvsSystem
     /// </summary>
     private void AfterEntityFlush()
     {
-        DebugTools.Assert(EntityManager.EntityCount == 0);
+        if (EntityManager.EntityCount > 0)
+            throw new Exception("Cannot reset PVS data without first deleting all entities.");
 
         ClearPvsData();
         ShrinkDataMemory();

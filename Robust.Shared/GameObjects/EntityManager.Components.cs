@@ -110,6 +110,7 @@ namespace Robust.Shared.GameObjects
             return dict.Count;
         }
 
+        [Obsolete("Use InitializeEntity")]
         public void InitializeComponents(EntityUid uid, MetaDataComponent? metadata = null)
         {
             DebugTools.AssertOwner(uid, metadata);
@@ -145,6 +146,7 @@ namespace Robust.Shared.GameObjects
             SetLifeStage(metadata, EntityLifeStage.Initialized);
         }
 
+        [Obsolete("Use StartEntity")]
         public void StartComponents(EntityUid uid)
         {
             // Startup() can modify _components
@@ -342,6 +344,8 @@ namespace Robust.Shared.GameObjects
 
         private void AddComponentInternal<T>(EntityUid uid, T component, ComponentRegistration reg, bool overwrite, bool skipInit, MetaDataComponent metadata) where T : IComponent
         {
+            ThreadCheck();
+
             // We can't use typeof(T) here in case T is just Component
             DebugTools.Assert(component is MetaDataComponent ||
                               (metadata ?? MetaQuery.GetComponent(uid)).EntityLifeStage < EntityLifeStage.Terminating,
@@ -602,6 +606,8 @@ namespace Robust.Shared.GameObjects
             bool terminating,
             MetaDataComponent? meta)
         {
+            ThreadCheck();
+
             if (component.Deleted)
             {
                 _sawmill.Warning($"Deleting an already deleted component. Entity: {ToPrettyString(uid)}, Component: {_componentFactory.GetComponentName(component.GetType())}.");

@@ -40,10 +40,14 @@ END TEMPLATE-->
 ### New features
 
 * AddComponent now has an overload for ComponentRegistryEntry.
+* `MarkupNode` is now `IEquatable<MarkupNode>`. It already supported equality checks, now it implements the interface.
+* Added `Entity<T>` overloads to the following `SharedMapSystem` methods: `GetTileRef`, `GetAnchoredEntities`, `TileIndicesFor`.
+* Added `EntityUid`-only overloads to the following `SharedTransformSystem` methods: `AnchorEntity`, `Unanchor`.
 
 ### Bugfixes
 
-*None yet*
+* Fixed equality checks for `MarkupNode` not properly handling attributes.
+* Fixed `MarkupNode` not having a `GetHashCode()` implementation.
 
 ### Other
 
@@ -52,6 +56,64 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 233.0.2
+
+### Bugfixes
+
+* Fix exceptions in client game state handling for grids. Now they will rely upon the networked fixture data and not try to rebuild in the grid state handler.
+
+
+## 233.0.1
+
+### Bugfixes
+
+* Fix IsHardCollidable component to EntityUid references.
+
+
+## 233.0.0
+
+### Breaking changes
+
+* Made EntityRenamed a broadcast event & added additional args.
+* Made test runs parallelizable.
+* Added a debug assert that other threads aren't touching entities.
+
+### Bugfixes
+
+* Fix some entitylookup method transformations and add more tests.
+* Fix mousehover not updating if new controls showed up under the mouse.
+
+### Internal
+
+* `ClientGameStateManager` now only initialises or starts entities after their parents have already been initialized. There are also some new debug asserts to try ensure that this rule isn't broken elsewhere.
+* Engine version script now supports dashes.
+
+
+## 232.0.0
+
+### Breaking changes
+
+* Obsolete method `AppearanceComponent.TryGetData` is now access-restricted to `SharedAppearanceSystem`; use `SharedAppearanceSystem.TryGetData` instead.
+
+### New features
+
+* Added `SharedAppearanceSystem.AppendData`, which appends non-existing `AppearanceData` from one `AppearanceComponent` to another.
+* Added `AppearanceComponent.AppearanceDataInit`, which can be used to set initial `AppearanceData` entries in .yaml.
+
+### Bugfixes
+
+* Fix BUI interfaces not deep-copying in state handling.
+* Add Robust.Xaml.csproj to the solution to fix some XAML issues.
+
+### Other
+
+* Serialization will now add type tags (`!type:<T>`) for necessary `NodeData` when writing (currently only for `object` nodes).
+
+### Internal
+
+* Added `ObjectSerializer`, which handles serialization of the generic `object` type.
 
 
 ## 231.1.1

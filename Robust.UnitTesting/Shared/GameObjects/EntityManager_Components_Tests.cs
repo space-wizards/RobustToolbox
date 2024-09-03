@@ -81,10 +81,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var (sim, coords) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var entity = entMan.SpawnEntity(null, coords);
-            var component = new DummyComponent()
-            {
-                Owner = entity
-            };
+            var component = new DummyComponent();
 
             // Act
             entMan.AddComponent(entity, component);
@@ -101,10 +98,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var (sim, coords) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var entity = entMan.SpawnEntity(null, coords);
-            var component = new DummyComponent()
-            {
-                Owner = entity
-            };
+            var component = new DummyComponent();
 
             // Act
             entMan.AddComponent(entity, component, true);
@@ -121,10 +115,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var (sim, coords) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var entity = entMan.SpawnEntity(null, coords);
-            var firstComp = new DummyComponent {Owner = entity};
+            var firstComp = new DummyComponent();
             entMan.AddComponent(entity, firstComp);
             entMan.RemoveComponent<DummyComponent>(entity);
-            var secondComp = new DummyComponent { Owner = entity };
+            var secondComp = new DummyComponent();
 
             // Act
             entMan.AddComponent(entity, secondComp);

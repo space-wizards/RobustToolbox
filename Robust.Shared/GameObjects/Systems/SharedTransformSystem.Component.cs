@@ -107,6 +107,11 @@ public abstract partial class SharedTransformSystem
         return AnchorEntity(uid, xform, grid.Owner, grid, tileIndices);
     }
 
+    public bool AnchorEntity(EntityUid uid)
+    {
+        return AnchorEntity(uid, XformQuery.GetComponent(uid));
+    }
+
     public bool AnchorEntity(EntityUid uid, TransformComponent xform)
     {
         return AnchorEntity((uid, xform));
@@ -125,6 +130,11 @@ public abstract partial class SharedTransformSystem
 
         var tileIndices =  _map.TileIndicesFor(grid.Value, grid.Value, entity.Comp.Coordinates);
         return AnchorEntity(entity, grid.Value, tileIndices);
+    }
+
+    public void Unanchor(EntityUid uid)
+    {
+        Unanchor(uid, XformQuery.GetComponent(uid));
     }
 
     public void Unanchor(EntityUid uid, TransformComponent xform, bool setPhysics = true)

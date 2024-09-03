@@ -5,7 +5,6 @@ using Robust.Shared.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
-// ReSharper disable AccessToStaticMemberViaDerivedType
 namespace Robust.UnitTesting.Client.Graphics
 {
     [TestFixture, Parallelizable, TestOf(typeof(Eye))]

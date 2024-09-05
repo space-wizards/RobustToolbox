@@ -29,7 +29,7 @@ public class PhysicsTumblerBenchmark
         entManager.System<SharedMapSystem>().CreateMap(out var mapId);
         SetupTumbler(entManager, mapId);
 
-        for (var i = 0; i < 800; i++)
+        for (var i = 0; i < 300; i++)
         {
             entManager.TickUpdate(0.016f, false);
             var boxUid = entManager.SpawnEntity(null, new MapCoordinates(0f, 10f, mapId));
@@ -49,7 +49,7 @@ public class PhysicsTumblerBenchmark
     {
         var entManager = _sim.Resolve<IEntityManager>();
 
-        for (var i = 0; i < 5000; i++)
+        for (var i = 0; i < 1000; i++)
         {
             entManager.TickUpdate(0.016f, false);
         }

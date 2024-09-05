@@ -52,6 +52,8 @@ public interface IBroadPhase
         DynamicTree<FixtureProxy>.RayQueryCallbackDelegate<TState> callback,
         in Ray ray,
         bool approx = false);
+
+    void Rebuild(bool fullBuild);
 }
 
 public interface IBroadPhase<T> : ICollection<T> where T : notnull {

@@ -523,8 +523,16 @@ public abstract partial class SharedPhysicsSystem
         var status = ArrayPool<ContactStatus>.Shared.Rent(index);
         var worldPoints = ArrayPool<Vector2>.Shared.Rent(index);
 
+        var rebuildJob = new UpdateTreesJob()
+        {
+            EntManager = EntityManager,
+        };
+        var updateTreesHandle = _parallel.Process(rebuildJob);
+
         // Update contacts all at once.
         BuildManifolds(contacts, index, status, worldPoints);
+
+        updateTreesHandle.WaitOne();
 
         // Single-threaded so content doesn't need to worry about race conditions.
         for (var i = 0; i < index; i++)
@@ -597,6 +605,24 @@ public abstract partial class SharedPhysicsSystem
         ArrayPool<Contact>.Shared.Return(contacts);
         ArrayPool<ContactStatus>.Shared.Return(status);
         ArrayPool<Vector2>.Shared.Return(worldPoints);
+    }
+
+    private record struct UpdateTreesJob : IRobustJob
+    {
+        public IEntityManager EntManager;
+
+        public void Execute()
+        {
+            var query = EntManager.AllEntityQueryEnumerator<BroadphaseComponent>();
+
+            while (query.MoveNext(out var broadphase))
+            {
+                broadphase.DynamicTree.Rebuild(false);
+                broadphase.StaticTree.Rebuild(false);
+                broadphase.SundriesTree._b2Tree.Rebuild(false);
+                broadphase.StaticSundriesTree._b2Tree.Rebuild(false);
+            }
+        }
     }
 
     private void BuildManifolds(Contact[] contacts, int count, ContactStatus[] status, Vector2[] worldPoints)

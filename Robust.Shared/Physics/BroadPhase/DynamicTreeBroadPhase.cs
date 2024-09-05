@@ -131,6 +131,11 @@ public sealed class DynamicTreeBroadPhase : IBroadPhase
         state = tuple.state;
     }
 
+    public void Rebuild(bool fullBuild)
+    {
+        _tree.Rebuild(fullBuild);
+    }
+
     private static bool AabbQueryStateCallback<TState>(ref (TState state, B2DynamicTree<FixtureProxy> tree, DynamicTree<FixtureProxy>.QueryCallbackDelegate<TState> callback, Box2 aabb, bool approx, DynamicTree<FixtureProxy>.ExtractAabbDelegate extract) tuple, DynamicTree.Proxy proxy)
     {
         var item = tuple.tree.GetUserData(proxy)!;

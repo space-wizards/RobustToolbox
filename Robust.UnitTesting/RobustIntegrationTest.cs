@@ -17,6 +17,7 @@ using Robust.Client.GameStates;
 using Robust.Client.Player;
 using Robust.Client.Timing;
 using Robust.Client.UserInterface;
+using Robust.Client.UserInterface.XAML.Proxy;
 using Robust.Server;
 using Robust.Server.Console;
 using Robust.Server.GameStates;
@@ -929,6 +930,8 @@ namespace Robust.UnitTesting
                 deps.Register<IClientConsoleHost, TestingClientConsoleHost>(true);
                 deps.Register<IConsoleHost, TestingClientConsoleHost>(true);
                 deps.Register<IConsoleHostInternal, TestingClientConsoleHost>(true);
+                deps.Register<IXamlProxyManager, XamlProxyManagerStub>(true);
+                deps.Register<IXamlHotReloadManager, XamlHotReloadManagerStub>(true);
                 Options?.InitIoC?.Invoke();
                 deps.BuildGraph();
 

@@ -18,6 +18,8 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
     private const string ImplicitDataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.ImplicitDataDefinitionForInheritorsAttribute";
     private const string DataFieldBaseNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataFieldBaseAttribute";
     private const string ViewVariablesNamespace = "Robust.Shared.ViewVariables.ViewVariablesAttribute";
+    private const string DataFieldAttributeName = "DataField";
+    private const string ViewVariablesAttributeName = "ViewVariables";
 
     private static readonly DiagnosticDescriptor DataDefinitionPartialRule = new(
         Diagnostics.IdDataDefinitionPartial,
@@ -152,12 +154,14 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
 
             if (HasRedundantTag(fieldSymbol))
             {
-                context.ReportDiagnostic(Diagnostic.Create(DataFieldRedundantTagRule, context.Node.GetLocation(), fieldSymbol.Name, type.Name));
+                TryGetAttributeLocation(field, DataFieldAttributeName, out var location);
+                context.ReportDiagnostic(Diagnostic.Create(DataFieldRedundantTagRule, location, fieldSymbol.Name, type.Name));
             }
 
             if (HasVVReadWrite(fieldSymbol))
             {
-                context.ReportDiagnostic(Diagnostic.Create(DataFieldNoVVReadWriteRule, context.Node.GetLocation(), fieldSymbol.Name, type.Name));
+                TryGetAttributeLocation(field, ViewVariablesAttributeName, out var location);
+                context.ReportDiagnostic(Diagnostic.Create(DataFieldNoVVReadWriteRule, location, fieldSymbol.Name, type.Name));
             }
         }
     }
@@ -186,12 +190,14 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
 
         if (HasRedundantTag(propertySymbol))
         {
-            context.ReportDiagnostic(Diagnostic.Create(DataFieldRedundantTagRule, context.Node.GetLocation(), propertySymbol.Name, type.Name));
+            TryGetAttributeLocation(property, DataFieldAttributeName, out var location);
+            context.ReportDiagnostic(Diagnostic.Create(DataFieldRedundantTagRule, location, propertySymbol.Name, type.Name));
         }
 
         if (HasVVReadWrite(propertySymbol))
         {
-            context.ReportDiagnostic(Diagnostic.Create(DataFieldNoVVReadWriteRule, context.Node.GetLocation(), propertySymbol.Name, type.Name));
+            TryGetAttributeLocation(property, ViewVariablesAttributeName, out var location);
+            context.ReportDiagnostic(Diagnostic.Create(DataFieldNoVVReadWriteRule, location, propertySymbol.Name, type.Name));
         }
     }
 
@@ -258,6 +264,24 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
                 return true;
         }
 
+        return false;
+    }
+
+    private static bool TryGetAttributeLocation(MemberDeclarationSyntax syntax, string attributeName, out Location location)
+    {
+        foreach (var attributeList in syntax.AttributeLists)
+        {
+            foreach (var attribute in attributeList.Attributes)
+            {
+                if (attribute.Name.ToString() != attributeName)
+                    continue;
+
+                location = attribute.GetLocation();
+                return true;
+            }
+        }
+        // Default to the declaration syntax's location
+        location = syntax.GetLocation();
         return false;
     }
 

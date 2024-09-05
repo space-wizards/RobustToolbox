@@ -299,6 +299,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
     {
         var uid = EntityManager.CreateEntityUninitialized("Audio", MapCoordinates.Nullspace);
         DebugTools.Assert(!string.IsNullOrEmpty(fileName) || length is not null);
+        MetadataSys.SetEntityName(uid, $"Audio ({fileName})", raiseEvents: false);
         audioParams ??= AudioParams.Default;
         var comp = AddComp<AudioComponent>(uid);
         comp.FileName = fileName ?? string.Empty;

@@ -15,7 +15,6 @@ namespace Robust.Client.GameStates
     {
         [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         private readonly EntityLookupSystem _lookup;
 

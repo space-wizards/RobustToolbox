@@ -523,16 +523,8 @@ public abstract partial class SharedPhysicsSystem
         var status = ArrayPool<ContactStatus>.Shared.Rent(index);
         var worldPoints = ArrayPool<Vector2>.Shared.Rent(index);
 
-        var rebuildJob = new UpdateTreesJob()
-        {
-            EntManager = EntityManager,
-        };
-        var updateTreesHandle = _parallel.Process(rebuildJob);
-
         // Update contacts all at once.
         BuildManifolds(contacts, index, status, worldPoints);
-
-        updateTreesHandle.WaitOne();
 
         // Single-threaded so content doesn't need to worry about race conditions.
         for (var i = 0; i < index; i++)

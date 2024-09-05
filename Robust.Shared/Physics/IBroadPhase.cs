@@ -54,6 +54,9 @@ public interface IBroadPhase
         bool approx = false);
 
     void Rebuild(bool fullBuild);
+
+
+    void RebuildBottomUp();
 }
 
 public interface IBroadPhase<T> : ICollection<T> where T : notnull {

@@ -26,7 +26,7 @@ public class PhysicsTumblerBenchmark
         var entManager = _sim.Resolve<IEntityManager>();
         var physics = entManager.System<SharedPhysicsSystem>();
         var fixtures = entManager.System<FixtureSystem>();
-        entManager.System<SharedMapSystem>().CreateMap(out var mapId);
+        var mapUid = entManager.System<SharedMapSystem>().CreateMap(out var mapId);
         SetupTumbler(entManager, mapId);
 
         for (var i = 0; i < 300; i++)
@@ -42,6 +42,9 @@ public class PhysicsTumblerBenchmark
             physics.WakeBody(boxUid, body: box);
             physics.SetSleepingAllowed(boxUid, box, false);
         }
+
+        if (entManager.TryGetComponent(mapUid, out BroadphaseComponent? mapBroadphase))
+            entManager.System<SharedBroadphaseSystem>().RebuildBottomUp(mapBroadphase);
     }
 
     [Benchmark]

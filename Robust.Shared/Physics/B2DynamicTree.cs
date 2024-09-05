@@ -20,6 +20,7 @@
 
 // #define DEBUG_DYNAMIC_TREE
 #define B2_TREE_HEURISTIC
+#undef B2_TREE_HEURISTIC
 
 using System;
 using System.Collections.Generic;
@@ -46,7 +47,6 @@ namespace Robust.Shared.Physics
     /// <typeparam name="T"></typeparam>
     public sealed class B2DynamicTree<T> : DynamicTree
     {
-        // TODO: Check array access are by ref
         public const int B2_Bin_Count = 8;
 
         public delegate bool RayQueryCallback<TState>(ref TState state, Proxy proxy, in Vector2 hitPos, float distance);
@@ -1107,7 +1107,8 @@ namespace Robust.Shared.Physics
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Proxy BalanceStep(Proxy iA)
         {
-            ref var a = ref _nodes[iA];
+            ref var baseRef = ref _nodes[0];
+            ref var a = ref Unsafe.Add(ref baseRef, iA);
 
             if (a.IsLeaf || a.Height < 2)
             {
@@ -1120,8 +1121,8 @@ namespace Robust.Shared.Physics
             Assert(iA != iC);
             Assert(iB != iC);
 
-            ref var b = ref _nodes[iB];
-            ref var c = ref _nodes[iC];
+            ref var b = ref Unsafe.Add(ref baseRef, iB);
+            ref var c = ref Unsafe.Add(ref baseRef, iC);
 
             var balance = c.Height - b.Height;
 
@@ -1134,8 +1135,8 @@ namespace Robust.Shared.Physics
                 Assert(iC != iG);
                 Assert(iF != iG);
 
-                ref var f = ref _nodes[iF];
-                ref var g = ref _nodes[iG];
+                ref var f = ref Unsafe.Add(ref baseRef, iF);
+                ref var g = ref Unsafe.Add(ref baseRef, iG);
 
                 // A <> C
 
@@ -1150,7 +1151,7 @@ namespace Robust.Shared.Physics
                 }
                 else
                 {
-                    ref var cParent = ref _nodes[c.Parent];
+                    ref var cParent = ref Unsafe.Add(ref baseRef, c.Parent);
                     if (cParent.Child1 == iA)
                     {
                         cParent.Child1 = iC;
@@ -1198,8 +1199,8 @@ namespace Robust.Shared.Physics
                 Assert(iB != iE);
                 Assert(iD != iE);
 
-                ref var d = ref _nodes[iD];
-                ref var e = ref _nodes[iE];
+                ref var d = ref Unsafe.Add(ref baseRef, iD);
+                ref var e = ref Unsafe.Add(ref baseRef, iE);
 
                 // A <> B
 
@@ -1214,7 +1215,7 @@ namespace Robust.Shared.Physics
                 }
                 else
                 {
-                    ref var bParent = ref _nodes[b.Parent];
+                    ref var bParent = ref Unsafe.Add(ref baseRef, b.Parent);
                     if (bParent.Child1 == iA)
                     {
                         bParent.Child1 = iB;
@@ -1282,7 +1283,7 @@ namespace Robust.Shared.Physics
         [MethodImpl(MethodImplOptions.NoInlining)]
         public void RebuildBottomUp()
         {
-            var newNodes = new Proxy[Capacity];
+            Span<Proxy> newNodes = stackalloc Proxy[Capacity];
             var count = 0;
 
             // Build array of leaves. Free the rest.
@@ -1378,6 +1379,7 @@ namespace Robust.Shared.Physics
         {
             var stack = new GrowableStack<Proxy>(stackalloc Proxy[TreeStackSize]);
             stack.Push(_root);
+            ref var baseRef = ref _nodes[0];
 
             while (stack.GetCount() > 0)
             {
@@ -1387,7 +1389,7 @@ namespace Robust.Shared.Physics
                     continue;
                 }
 
-                ref var node = ref _nodes[nodeId];
+                ref var node = ref Unsafe.Add(ref baseRef, nodeId);
 
                 if (node.Aabb.Intersects(aabb) && (node.CategoryBits & maskBits) != 0)
                 {
@@ -1455,6 +1457,7 @@ namespace Robust.Shared.Physics
 
             var stack = new GrowableStack<Proxy>(stackalloc Proxy[TreeStackSize]);
             stack.Push(_root);
+            ref var baseRef = ref _nodes[0];
 
 	        RayCastInput subInput = input;
 
@@ -1466,7 +1469,7 @@ namespace Robust.Shared.Physics
 			        continue;
 		        }
 
-		        ref var node = ref _nodes[nodeId];
+                ref var node = ref Unsafe.Add(ref baseRef, nodeId);
 		        if (!node.Aabb.Intersects(segmentAABB) || (node.CategoryBits & maskBits) == 0)
 		        {
 			        continue;
@@ -1588,6 +1591,7 @@ namespace Robust.Shared.Physics
 
             var stack = new GrowableStack<Proxy>(stackalloc Proxy[TreeStackSize]);
             stack.Push(_root);
+            ref var baseRef = ref _nodes[0];
 
 	        while (stack.GetCount() > 0)
 	        {
@@ -1597,7 +1601,7 @@ namespace Robust.Shared.Physics
 			        continue;
 		        }
 
-                ref var node = ref _nodes[nodeId];
+                ref var node = ref Unsafe.Add(ref baseRef, nodeId);
 		        if (!node.Aabb.Intersects(totalAABB) || (node.CategoryBits & maskBits) == 0)
 		        {
 			        continue;
@@ -1654,7 +1658,7 @@ namespace Robust.Shared.Physics
 #if !B2_TREE_HEURISTIC
 
         // Median split heuristic
-        public int PartitionMid(int[] indices, Vector2[] centers, int count)
+        public int PartitionMid(Proxy[] indices, Vector2[] centers, int count)
         {
             // Handle trivial case
             if (count <= 2)
@@ -1663,13 +1667,15 @@ namespace Robust.Shared.Physics
             }
 
             // erin: todo SIMD?
-            var lowerBound = centers[0];
-            var upperBound = centers[0];
+            ref var firstCenter = ref centers[0];
+            var lowerBound = firstCenter;
+            var upperBound = firstCenter;
 
             for (var i = 1; i < count; ++i)
             {
-                lowerBound = Vector2.Min(lowerBound, centers[i]);
-                upperBound = Vector2.Max(upperBound, centers[i]);
+                var offsetCenter = Unsafe.Add(ref firstCenter, i);
+                lowerBound = Vector2.Min(lowerBound, offsetCenter);
+                upperBound = Vector2.Max(upperBound, offsetCenter);
             }
 
             var d = Vector2.Subtract(upperBound, lowerBound);
@@ -1700,16 +1706,12 @@ namespace Robust.Shared.Physics
                     {
                         // Swap indices
                         {
-                            int temp = indices[i1];
-                            indices[i1] = indices[i2 - 1];
-                            indices[i2 - 1] = temp;
+                            (indices[i1], indices[i2 - 1]) = (indices[i2 - 1], indices[i1]);
                         }
 
                         // Swap centers
                         {
-                            Vector2 temp = centers[i1];
-                            centers[i1] = centers[i2 - 1];
-                            centers[i2 - 1] = temp;
+                            (centers[i1], centers[i2 - 1]) = (centers[i2 - 1], centers[i1]);
                         }
 
                         i1 += 1;
@@ -1737,16 +1739,12 @@ namespace Robust.Shared.Physics
                     {
                         // Swap indices
                         {
-                            int temp = indices[i1];
-                            indices[i1] = indices[i2 - 1];
-                            indices[i2 - 1] = temp;
+                            (indices[i1], indices[i2 - 1]) = (indices[i2 - 1], indices[i1]);
                         }
 
                         // Swap centers
                         {
-                            Vector2 temp = centers[i1];
-                            centers[i1] = centers[i2 - 1];
-                            centers[i2 - 1] = temp;
+                            (centers[i1], centers[i2 - 1]) = (centers[i2 - 1], centers[i1]);
                         }
 
                         i1 += 1;
@@ -1973,7 +1971,7 @@ namespace Robust.Shared.Physics
                 StartIndex = 0,
                 EndIndex = leafCount,
 #if !B2_TREE_HEURISTIC
-                splitIndex = PartitionMid(leafIndices, leafCenters, leafCount),
+                SplitIndex = PartitionMid(leafIndices, leafCenters, leafCount),
 #else
                 SplitIndex = PartitionSAH(leafIndices, binIndices, leafBoxes, leafCount),
 #endif
@@ -2080,7 +2078,7 @@ namespace Robust.Shared.Physics
 				        newItem.StartIndex = startIndex;
 				        newItem.EndIndex = endIndex;
         #if !B2_TREE_HEURISTIC
-				        newItem.SplitIndex = PartitionMid(leafIndices + startIndex, leafCenters + startIndex, count);
+				        newItem.SplitIndex = PartitionMid(leafIndices[startIndex..], leafCenters[startIndex..], count);
         #else
 				        newItem.SplitIndex =
 					        PartitionSAH(leafIndices[startIndex..], binIndices[startIndex..], leafBoxes[startIndex..], count);
@@ -2137,8 +2135,8 @@ namespace Robust.Shared.Physics
 	        var stack = new GrowableStack<Proxy>(stackalloc Proxy[TreeStackSize]);
 
 	        var nodeIndex = _root;
-            var nodes = _nodes;
-	        var node = _nodes[nodeIndex];
+            ref var baseRef = ref _nodes[0];
+	        var node = baseRef;
 
 	        // These are the nodes that get sorted to rebuild the tree.
 	        // I'm using indices because the node pool may grow during the build.
@@ -2183,7 +2181,7 @@ namespace Robust.Shared.Physics
                         stack.Push(node.Child2);
 			        }
 
-			        node = nodes[nodeIndex];
+                    node = Unsafe.Add(ref baseRef, nodeIndex);
 
 			        // Remove doomed node
 			        FreeNode(doomedNodeIndex);
@@ -2197,7 +2195,7 @@ namespace Robust.Shared.Physics
 		        }
 
                 nodeIndex = stack.Pop();
-		        node = nodes[nodeIndex];
+		        node = Unsafe.Add(ref baseRef, nodeIndex);
 	        }
 
         #if B2_VALIDATE

@@ -14,6 +14,8 @@ using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Map.Events;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
@@ -43,6 +45,7 @@ public sealed class MapLoaderSystem : EntitySystem
                  private          IServerEntityManagerInternal _serverEntityManager = default!;
     [Dependency] private readonly ITileDefinitionManager _tileDefManager = default!;
     [Dependency] private readonly MetaDataSystem _meta = default!;
+    [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
     [Dependency] private readonly SharedMapSystem _mapSystem = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
 
@@ -177,6 +180,14 @@ public sealed class MapLoaderSystem : EntitySystem
         }
 
         _context.Clear();
+
+        foreach (var ent in rootUids)
+        {
+            if (TryComp(ent, out BroadphaseComponent? broadphase))
+            {
+                _broadphase.RebuildBottomUp(broadphase);
+            }
+        }
 
 #if DEBUG
         DebugTools.Assert(result);

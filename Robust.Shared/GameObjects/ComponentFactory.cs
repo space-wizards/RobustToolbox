@@ -193,8 +193,8 @@ namespace Robust.Shared.GameObjects
 
             if (fields.Length > 32)
             {
-                // Components with more than 32 networked fields unsupported! Consider splitting it up or making a pr for 64-bit flags.
-                return;
+                throw new NotSupportedException(
+                    "Components with more than 32 networked fields unsupported! Consider splitting it up or making a pr for 64-bit flags");
             }
 
             compReg.NetworkedFields = fields;

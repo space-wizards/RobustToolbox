@@ -46,6 +46,7 @@ END TEMPLATE-->
 ### Bugfixes
 
 * Fixed equality checks for `MarkupNode` not properly handling attributes.
+* Fixed toolshed commands failing to generate error messages when working with array types
 * Fixed `MarkupNode` not having a `GetHashCode()` implementation.
 
 ### Other

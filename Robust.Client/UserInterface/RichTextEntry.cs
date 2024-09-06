@@ -229,7 +229,7 @@ namespace Robust.Client.UserInterface
                 var invertedScale = 1f / uiScale;
 
                 control.Position = new Vector2(baseLine.X * invertedScale, (baseLine.Y - defaultFont.GetAscent(uiScale)) * invertedScale);
-                if(!control.Visible) control.Visible = true;
+                control.Visible = true;
                 control.Measure(new Vector2(Width, Height));
                 var advanceX = control.DesiredPixelSize.X;
                 controlYAdvance = Math.Max(0f, (control.DesiredPixelSize.Y - GetLineHeight(font, uiScale, lineHeightScale)) * invertedScale);

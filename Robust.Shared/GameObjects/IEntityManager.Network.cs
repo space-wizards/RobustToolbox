@@ -9,7 +9,7 @@ public partial interface IEntityManager
     public void DirtyField(EntityUid uid, IComponentDelta delta, string fieldName, MetaDataComponent? metadata = null);
 
     public void DirtyField<T>(EntityUid uid, T component, string fieldName, MetaDataComponent? metadata = null)
-        where T : IComponent, IComponentDelta;
+        where T : IComponentDelta;
 
     /// <summary>
     /// Tries to parse a string as a NetEntity and return the relevant EntityUid.

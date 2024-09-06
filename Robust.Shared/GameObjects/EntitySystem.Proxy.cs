@@ -166,7 +166,7 @@ public partial class EntitySystem
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void DirtyField<T>(Entity<T?> entity, string fieldName, MetaDataComponent? meta = null)
-        where T : IComponent, IComponentDelta
+        where T : IComponentDelta
     {
         if (!Resolve(entity.Owner, ref entity.Comp))
             return;
@@ -175,7 +175,8 @@ public partial class EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void DirtyField<T>(EntityUid uid, T component, string fieldName, MetaDataComponent? meta = null) where T : IComponent, IComponentDelta
+    protected void DirtyField<T>(EntityUid uid, T component, string fieldName, MetaDataComponent? meta = null)
+        where T : IComponentDelta
     {
         EntityManager.DirtyField(uid, component, fieldName, meta);
     }

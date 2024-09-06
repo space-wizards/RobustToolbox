@@ -2,9 +2,9 @@
 using XamlX.Transform;
 using XamlX.TypeSystem;
 
-namespace Robust.Build.Tasks
+namespace Robust.Xaml
 {
-    class RXamlWellKnownTypes
+    internal class RXamlWellKnownTypes
     {
         public XamlTypeWellKnownTypes XamlIlTypes { get; }
         public IXamlType Single { get; }

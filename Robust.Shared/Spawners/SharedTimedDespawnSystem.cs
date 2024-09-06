@@ -1,4 +1,4 @@
-using Robust.Shared.Audio;
+using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Timing;
@@ -8,6 +8,8 @@ namespace Robust.Shared.Spawners;
 public abstract class SharedTimedDespawnSystem : EntitySystem
 {
     [Dependency] private readonly IGameTiming _timing = default!;
+
+    private readonly HashSet<EntityUid> _queuedDespawnEntities = new();
 
     public override void Initialize()
     {
@@ -24,6 +26,8 @@ public abstract class SharedTimedDespawnSystem : EntitySystem
         if (!_timing.IsFirstTimePredicted)
             return;
 
+        _queuedDespawnEntities.Clear();
+
         var query = EntityQueryEnumerator<TimedDespawnComponent>();
 
         while (query.MoveNext(out var uid, out var comp))
@@ -35,10 +39,15 @@ public abstract class SharedTimedDespawnSystem : EntitySystem
 
             if (comp.Lifetime <= 0)
             {
-                var ev = new TimedDespawnEvent();
-                RaiseLocalEvent(uid, ref ev);
-                QueueDel(uid);
+                _queuedDespawnEntities.Add(uid);
             }
+        }
+
+        foreach (var queued in _queuedDespawnEntities)
+        {
+            var ev = new TimedDespawnEvent();
+            RaiseLocalEvent(queued, ref ev);
+            QueueDel(queued);
         }
     }
 

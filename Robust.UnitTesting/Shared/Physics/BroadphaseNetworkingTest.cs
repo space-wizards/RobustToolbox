@@ -15,8 +15,6 @@ using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Player;
 
-// ReSharper disable AccessToStaticMemberViaDerivedType
-
 namespace Robust.UnitTesting.Shared.Physics;
 
 public sealed class BroadphaseNetworkingTest : RobustIntegrationTest

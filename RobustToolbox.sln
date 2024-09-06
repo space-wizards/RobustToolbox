@@ -53,6 +53,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "cefglue", "cefglue", "{2D78
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CefGlue", "cefglue\CefGlue\CefGlue.csproj", "{6BC71226-BA9C-4CD6-9838-03AC076F9518}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.Xaml", "Robust.Xaml\Robust.Xaml.csproj", "{EC7BA4C0-A02F-40E8-B4FC-9A96D91BD1EC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -229,6 +231,14 @@ Global
 		{6BC71226-BA9C-4CD6-9838-03AC076F9518}.Release|Any CPU.Build.0 = Release|Any CPU
 		{6BC71226-BA9C-4CD6-9838-03AC076F9518}.Release|x64.ActiveCfg = Release|Any CPU
 		{6BC71226-BA9C-4CD6-9838-03AC076F9518}.Release|x64.Build.0 = Release|Any CPU
+		{EC7BA4C0-A02F-40E8-B4FC-9A96D91BD1EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EC7BA4C0-A02F-40E8-B4FC-9A96D91BD1EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EC7BA4C0-A02F-40E8-B4FC-9A96D91BD1EC}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{EC7BA4C0-A02F-40E8-B4FC-9A96D91BD1EC}.Debug|x64.Build.0 = Debug|Any CPU
+		{EC7BA4C0-A02F-40E8-B4FC-9A96D91BD1EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EC7BA4C0-A02F-40E8-B4FC-9A96D91BD1EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EC7BA4C0-A02F-40E8-B4FC-9A96D91BD1EC}.Release|x64.ActiveCfg = Release|Any CPU
+		{EC7BA4C0-A02F-40E8-B4FC-9A96D91BD1EC}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

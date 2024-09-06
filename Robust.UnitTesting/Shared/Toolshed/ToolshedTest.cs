@@ -32,10 +32,11 @@ public abstract class ToolshedTest : RobustIntegrationTest, IInvocationContext
         Server.Dispose();
     }
 
-    protected virtual async Task TearDown()
+    protected virtual Task TearDown()
     {
         Assert.That(_expectedErrors, Is.Empty);
         ClearErrors();
+        return Task.CompletedTask;
     }
 
     [SetUp]

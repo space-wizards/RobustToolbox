@@ -14,7 +14,6 @@ public sealed class ToolshedEnvironment
 {
     [Dependency] private readonly IReflectionManager _reflection = default!;
     [Dependency] private readonly ILogManager _logManager = default!;
-    [Dependency] private readonly INetManager _net = default!;
     [Dependency] private readonly ToolshedManager _toolshedManager = default!;
     private readonly Dictionary<string, ToolshedCommand> _commands = new();
     private readonly Dictionary<Type, List<CommandSpec>> _commandPipeValueMap = new();

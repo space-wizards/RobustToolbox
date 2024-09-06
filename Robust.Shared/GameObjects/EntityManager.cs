@@ -693,6 +693,25 @@ namespace Robust.Shared.GameObjects
         public virtual void FlushEntities()
         {
             BeforeEntityFlush?.Invoke();
+            FlushEntitiesInternal();
+
+            if (Entities.Count != 0)
+                _sawmill.Error("Failed to flush all entities");
+
+#if EXCEPTION_TOLERANCE
+            // Attempt to flush entities a second time, just in case something somehow caused an entity to be spawned
+            // while flushing entities
+            FlushEntitiesInternal();
+#endif
+
+            if (Entities.Count != 0)
+                throw new Exception("Failed to flush all entities");
+
+            AfterEntityFlush?.Invoke();
+        }
+
+        private void FlushEntitiesInternal()
+        {
             QueuedDeletions.Clear();
             QueuedDeletionsSet.Clear();
 
@@ -738,11 +757,6 @@ namespace Robust.Shared.GameObjects
 #endif
                 }
             }
-
-            if (Entities.Count != 0)
-                _sawmill.Error("Entities were spawned while flushing entities.");
-
-            AfterEntityFlush?.Invoke();
         }
 
         /// <summary>

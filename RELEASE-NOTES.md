@@ -51,7 +51,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* If `EntityManager.FlushEntities()` fails to delete all entities, it will now attempt to do so a second time before throwing an exception.
 
 ### Internal
 

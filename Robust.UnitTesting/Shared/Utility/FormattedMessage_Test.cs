@@ -13,7 +13,7 @@ namespace Robust.UnitTesting.Shared.Utility
         [Test]
         public static void TestParseMarkup()
         {
-            var msg = FormattedMessage.FromMarkup("foo[color=#aabbcc]bar[/color]baz");
+            var msg = FormattedMessage.FromMarkupOrThrow("foo[color=#aabbcc]bar[/color]baz");
 
             Assert.That(msg.Nodes, NUnit.Framework.Is.EquivalentTo(new MarkupNode[]
             {
@@ -28,7 +28,7 @@ namespace Robust.UnitTesting.Shared.Utility
         [Test]
         public static void TestParseMarkupColorName()
         {
-            var msg = FormattedMessage.FromMarkup("foo[color=orange]bar[/color]baz");
+            var msg = FormattedMessage.FromMarkupOrThrow("foo[color=orange]bar[/color]baz");
 
             Assert.That(msg.Nodes, NUnit.Framework.Is.EquivalentTo(new MarkupNode[]
             {
@@ -57,7 +57,7 @@ namespace Robust.UnitTesting.Shared.Utility
         [TestCase("[color=red]Foo[/color]bar", ExpectedResult = "Foobar")]
         public string TestRemoveMarkup(string test)
         {
-            return FormattedMessage.RemoveMarkup(test);
+            return FormattedMessage.RemoveMarkupOrThrow(test);
         }
 
         [Test]
@@ -66,7 +66,7 @@ namespace Robust.UnitTesting.Shared.Utility
         [TestCase("[color=lime]Foo[/color]bar")]
         public static void TestToMarkup(string text)
         {
-            var message = FormattedMessage.FromMarkup(text);
+            var message = FormattedMessage.FromMarkupOrThrow(text);
             Assert.That(message.ToMarkup(), NUnit.Framework.Is.EqualTo(text));
         }
 
@@ -77,7 +77,7 @@ namespace Robust.UnitTesting.Shared.Utility
         [TestCase("honk honk [color=#00FF00FF]Foo[/color]bar")]
         public static void TestEnumerateRunes(string text)
         {
-            var message = FormattedMessage.FromMarkup(text);
+            var message = FormattedMessage.FromMarkupOrThrow(text);
 
             Assert.That(
                 message.EnumerateRunes(),

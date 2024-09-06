@@ -77,6 +77,32 @@ namespace Robust.UnitTesting.Server
         EntityUid SpawnEntity(string? protoId, MapCoordinates coordinates);
     }
 
+    /// <summary>
+    /// Helper methods for working with <see cref="ISimulation"/>.
+    /// </summary>
+    internal static class SimulationExtensions
+    {
+        public static T System<T>(this ISimulation simulation) where T : IEntitySystem
+        {
+            return simulation.Resolve<IEntitySystemManager>().GetEntitySystem<T>();
+        }
+
+        public static bool HasComp<T>(this ISimulation simulation, EntityUid entity) where T : IComponent
+        {
+            return simulation.Resolve<IEntityManager>().HasComponent<T>(entity);
+        }
+
+        public static T Comp<T>(this ISimulation simulation, EntityUid entity) where T : IComponent
+        {
+            return simulation.Resolve<IEntityManager>().GetComponent<T>(entity);
+        }
+
+        public static TransformComponent Transform(this ISimulation simulation, EntityUid entity)
+        {
+            return simulation.Comp<TransformComponent>(entity);
+        }
+    }
+
     public delegate void DiContainerDelegate(IDependencyCollection diContainer);
 
     public delegate void CompRegistrationDelegate(IComponentFactory factory);

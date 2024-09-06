@@ -104,6 +104,7 @@ namespace Robust.Server
         [Dependency] private readonly IComponentFactory _componentFactory = default!;
         [Dependency] private readonly IReplayRecordingManagerInternal _replay = default!;
         [Dependency] private readonly IGamePrototypeLoadManager _protoLoadMan = default!;
+        [Dependency] private readonly UploadedContentManager _uploadedContMan = default!;
         [Dependency] private readonly NetworkResourceManager _netResMan = default!;
         [Dependency] private readonly IReflectionManager _refMan = default!;
 
@@ -393,6 +394,7 @@ namespace Robust.Server
             _scriptHost.Initialize();
             _protoLoadMan.Initialize();
             _netResMan.Initialize();
+            _uploadedContMan.Initialize();
 
             // String serializer has to be locked before PostInit as content can depend on it (e.g., replays that start
             // automatically recording on startup).

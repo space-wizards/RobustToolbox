@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack
@@ -135,11 +136,37 @@ namespace Robust.Shared.ContentPack
                 path = path.Directory;
 
             var fullPath = GetFullPath(path);
-            Process.Start(new ProcessStartInfo
+            if (OperatingSystem.IsWindows())
             {
-                UseShellExecute = true,
-                FileName = fullPath,
-            });
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = $"{Environment.GetEnvironmentVariable("SystemRoot")}\\explorer.exe",
+                    Arguments = ".",
+                    WorkingDirectory = fullPath,
+                });
+            }
+            else if (OperatingSystem.IsMacOS())
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "open",
+                    Arguments = ".",
+                    WorkingDirectory = fullPath,
+                });
+            }
+            else if (OperatingSystem.IsLinux() || OperatingSystem.IsFreeBSD())
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "xdg-open",
+                    Arguments = ".",
+                    WorkingDirectory = fullPath,
+                });
+            }
+            else
+            {
+                throw new NotSupportedException("Opening OS windows not supported on this OS");
+            }
         }
 
         #endregion

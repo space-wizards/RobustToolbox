@@ -8,8 +8,6 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.UnitTesting.Server;
 
-// ReSharper disable AccessToStaticMemberViaDerivedType
-
 namespace Robust.UnitTesting.Shared.Physics;
 
 [TestFixture]

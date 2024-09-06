@@ -10,8 +10,6 @@ using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
 
-// ReSharper disable AccessToStaticMemberViaDerivedType
-
 namespace Robust.UnitTesting.Shared.GameState;
 
 /// <summary>

@@ -12,8 +12,6 @@ using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Timing;
 
-// ReSharper disable AccessToStaticMemberViaDerivedType
-
 namespace Robust.UnitTesting.Shared.GameObjects
 {
     public sealed class ContainerTests : RobustIntegrationTest

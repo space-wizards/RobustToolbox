@@ -1,5 +1,6 @@
 using System;
 using System.Numerics;
+using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
@@ -234,6 +235,15 @@ namespace Robust.Client.UserInterface.CustomControls
         public void OpenCenteredLeft() => OpenCenteredAt(new Vector2(0.25f, 0.5f));
         public void OpenToRight() => OpenCenteredAt(new Vector2(1, 0.5f));
         public void OpenCenteredRight() => OpenCenteredAt(new Vector2(0.75f, 0.5f));
+
+        /// <summary>
+        /// Opens a window and centers it relative to the screen position.
+        /// </summary>
+        public void OpenScreenAt(Vector2 relativePosition, IClyde clyde)
+        {
+            var adjusted = relativePosition / clyde.ScreenSize;
+            OpenCenteredAt(adjusted);
+        }
 
         /// <summary>
         ///     Opens a window, attempting to place the center of the window at some relative point on the screen.

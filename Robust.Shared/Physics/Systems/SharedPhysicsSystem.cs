@@ -27,7 +27,6 @@ namespace Robust.Shared.Physics.Systems
          * Raycasts for non-box shapes.
          * TOI Solver (continuous collision detection)
          * Poly cutting
-         * Chain shape
          */
 
         public static readonly Histogram TickUsageControllerBeforeSolveHistogram = Metrics.CreateHistogram("robust_entity_physics_controller_before_solve",

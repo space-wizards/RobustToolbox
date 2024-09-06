@@ -12,7 +12,6 @@ namespace Robust.UnitTesting.Shared.Maths
     [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestFixture]
     [TestOf(typeof(NumericsHelpers))]
-    [SuppressMessage("ReSharper", "AccessToStaticMemberViaDerivedType")]
     public sealed class NumericsHelpers_Test
     {
         #region Utils

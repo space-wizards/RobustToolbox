@@ -868,6 +868,54 @@ public partial class SharedPhysicsSystem
 
     #endregion
 
+    public Transform GetRelativePhysicsTransform(Transform worldTransform, Entity<TransformComponent?> relative)
+    {
+        if (!_xformQuery.Resolve(relative.Owner, ref relative.Comp))
+            return Physics.Transform.Empty;
+
+        var (_, broadphaseRot, _, broadphaseInv) = _transform.GetWorldPositionRotationMatrixWithInv(relative.Comp);
+
+        return new Transform(Vector2.Transform(worldTransform.Position, broadphaseInv),
+            worldTransform.Quaternion2D.Angle - broadphaseRot);
+    }
+
+    /// <summary>
+    /// Gets the physics transform relative to another entity.
+    /// </summary>
+    public Transform GetRelativePhysicsTransform(
+        Entity<TransformComponent?> entity,
+        Entity<TransformComponent?> relative)
+    {
+        if (!_xformQuery.Resolve(entity.Owner, ref entity.Comp) ||
+            !_xformQuery.Resolve(relative.Owner, ref relative.Comp))
+        {
+            return Physics.Transform.Empty;
+        }
+
+        var (worldPos, worldRot) = _transform.GetWorldPositionRotation(entity.Comp);
+        var (_, broadphaseRot, _, broadphaseInv) = _transform.GetWorldPositionRotationMatrixWithInv(relative.Comp);
+
+        return new Transform(Vector2.Transform(worldPos, broadphaseInv), worldRot - broadphaseRot);
+    }
+
+    /// <summary>
+    /// Gets broadphase relevant transform.
+    /// </summary>
+    public Transform GetLocalPhysicsTransform(EntityUid uid, TransformComponent? xform = null)
+    {
+        if (!_xformQuery.Resolve(uid, ref xform) || xform.Broadphase == null)
+            return Physics.Transform.Empty;
+
+        var broadphase = xform.Broadphase.Value.Uid;
+
+        if (xform.ParentUid == broadphase)
+        {
+            return new Transform(xform.LocalPosition, xform.LocalRotation);
+        }
+
+        return GetRelativePhysicsTransform((uid, xform), broadphase);
+    }
+
     public Transform GetPhysicsTransform(EntityUid uid, TransformComponent? xform = null)
     {
         if (!_xformQuery.Resolve(uid, ref xform))

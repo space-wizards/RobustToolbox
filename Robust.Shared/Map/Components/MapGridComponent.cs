@@ -335,7 +335,7 @@ namespace Robust.Shared.Map.Components
     ///     Serialized state of a <see cref="MapGridComponentState"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    internal sealed class MapGridComponentState(ushort chunkSize, Dictionary<Vector2i, Tile[]> fullGridData, GameTick lastTileModifiedTick) : ComponentState
+    internal sealed class MapGridComponentState(ushort chunkSize, Dictionary<Vector2i, ChunkDatum> fullGridData, GameTick lastTileModifiedTick) : ComponentState
     {
         /// <summary>
         ///     The size of the chunks in the map grid.
@@ -345,7 +345,7 @@ namespace Robust.Shared.Map.Components
         /// <summary>
         /// Networked chunk data containing the full grid state.
         /// </summary>
-        public Dictionary<Vector2i, Tile[]> FullGridData = fullGridData;
+        public Dictionary<Vector2i, ChunkDatum> FullGridData = fullGridData;
 
         /// <summary>
         /// Last game tick that the tile on the grid was modified.
@@ -357,7 +357,7 @@ namespace Robust.Shared.Map.Components
     ///     Serialized state of a <see cref="MapGridComponentState"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    internal sealed class MapGridComponentDeltaState(ushort chunkSize, List<ChunkDatum>? chunkData, GameTick lastTileModifiedTick)
+    internal sealed class MapGridComponentDeltaState(ushort chunkSize, Dictionary<Vector2i, ChunkDatum>? chunkData, GameTick lastTileModifiedTick)
         : ComponentState, IComponentDeltaState<MapGridComponentState>
     {
         /// <summary>
@@ -368,7 +368,7 @@ namespace Robust.Shared.Map.Components
         /// <summary>
         /// Networked chunk data.
         /// </summary>
-        public readonly List<ChunkDatum>? ChunkData = chunkData;
+        public readonly Dictionary<Vector2i, ChunkDatum>? ChunkData = chunkData;
 
         /// <summary>
         /// Last game tick that the tile on the grid was modified.
@@ -382,12 +382,12 @@ namespace Robust.Shared.Map.Components
             if (ChunkData == null)
                 return;
 
-            foreach (var data in ChunkData)
+            foreach (var (index, data) in ChunkData)
             {
                 if (data.IsDeleted())
-                    state.FullGridData!.Remove(data.Index);
+                    state.FullGridData.Remove(index);
                 else
-                    state.FullGridData![data.Index] = data.TileData;
+                    state.FullGridData[index] = new(data);
             }
 
             state.LastTileModifiedTick = LastTileModifiedTick;
@@ -395,12 +395,11 @@ namespace Robust.Shared.Map.Components
 
         public MapGridComponentState CreateNewFullState(MapGridComponentState state)
         {
-            var fullGridData = new Dictionary<Vector2i, Tile[]>(state.FullGridData.Count);
+            var fullGridData = new Dictionary<Vector2i, ChunkDatum>(state.FullGridData.Count);
 
             foreach (var (key, value) in state.FullGridData)
             {
-                var arr = fullGridData[key] = new Tile[value.Length];
-                Array.Copy(value, arr, value.Length);
+                fullGridData[key] = new(value);
             }
 
             var newState = new MapGridComponentState(ChunkSize, fullGridData, LastTileModifiedTick);

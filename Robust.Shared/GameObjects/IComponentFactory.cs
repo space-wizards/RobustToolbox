@@ -116,6 +116,8 @@ namespace Robust.Shared.GameObjects
         /// <param name="postfix">If provided, will only ignore components ending with the postfix.</param>
         void IgnoreMissingComponents(string postfix = "");
 
+        IComponent GetComponent(EntityPrototype.ComponentRegistryEntry entry);
+
         /// <summary>
         /// Gets a new component instantiated of the specified type.
         /// </summary>

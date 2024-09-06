@@ -11,8 +11,6 @@ using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using YamlDotNet.RepresentationModel;
 
-// ReSharper disable AccessToStaticMemberViaDerivedType
-
 namespace Robust.UnitTesting.Shared.Serialization
 {
     public sealed class SerializationPriorityTest : RobustUnitTest

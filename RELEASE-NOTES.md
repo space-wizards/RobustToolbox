@@ -35,10 +35,11 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Prototype reloads now also re-apply modified components. For example this means sprite or physics changes are reflected on existing prototypes.
 
 ### New features
 
+* AddComponent now has an overload for ComponentRegistryEntry.
 * `MarkupNode` is now `IEquatable<MarkupNode>`. It already supported equality checks, now it implements the interface.
 * Added `Entity<T>` overloads to the following `SharedMapSystem` methods: `GetTileRef`, `GetAnchoredEntities`, `TileIndicesFor`.
 * Added `EntityUid`-only overloads to the following `SharedTransformSystem` methods: `AnchorEntity`, `Unanchor`.

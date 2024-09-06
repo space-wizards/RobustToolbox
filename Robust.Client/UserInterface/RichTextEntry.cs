@@ -67,6 +67,19 @@ namespace Robust.Client.UserInterface
             _tagControls = tagControls;
         }
 
+        internal readonly void Hide()
+        {
+            var nodeIndex = -1;
+            foreach (var node in Message)
+            {
+                nodeIndex++;
+
+                if (_tagControls == null || !_tagControls.TryGetValue(nodeIndex, out var control))
+                    continue;
+                control.Visible = false;
+            }
+        }
+
         /// <summary>
         ///     Recalculate line dimensions and where it has line breaks for word wrapping.
         /// </summary>
@@ -116,9 +129,6 @@ namespace Robust.Client.UserInterface
                 }
 
                 if (_tagControls == null || !_tagControls.TryGetValue(nodeIndex, out var control))
-                    continue;
-
-                if (ProcessRune(ref this, new Rune(' '), out breakLine))
                     continue;
 
                 control.Measure(new Vector2(Width, Height));
@@ -219,6 +229,7 @@ namespace Robust.Client.UserInterface
                 var invertedScale = 1f / uiScale;
 
                 control.Position = new Vector2(baseLine.X * invertedScale, (baseLine.Y - defaultFont.GetAscent(uiScale)) * invertedScale);
+                if(!control.Visible) control.Visible = true;
                 control.Measure(new Vector2(Width, Height));
                 var advanceX = control.DesiredPixelSize.X;
                 controlYAdvance = Math.Max(0f, (control.DesiredPixelSize.Y - GetLineHeight(font, uiScale, lineHeightScale)) * invertedScale);

@@ -58,16 +58,16 @@ internal sealed class XamlHotReloadManager : IXamlHotReloadManager
         var watcher = new FileSystemWatcher(location)
         {
             IncludeSubdirectories = true,
-            NotifyFilter = NotifyFilters.LastWrite,
+            NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName,
         };
 
-        watcher.Changed += (_, args) =>
+        void OnWatcherEvent(object sender, FileSystemEventArgs args)
         {
             switch (args.ChangeType)
             {
-                case WatcherChangeTypes.Renamed:
                 case WatcherChangeTypes.Deleted:
                     return;
+                case WatcherChangeTypes.Renamed:
                 case WatcherChangeTypes.Created:
                 case WatcherChangeTypes.Changed:
                 case WatcherChangeTypes.All:
@@ -98,7 +98,10 @@ internal sealed class XamlHotReloadManager : IXamlHotReloadManager
 
                 _xamlProxyManager.SetImplementation(resourceFileName, newText);
             });
-        };
+        }
+
+        watcher.Changed += OnWatcherEvent;
+        watcher.Renamed += OnWatcherEvent;
         watcher.EnableRaisingEvents = true;
         return watcher;
     }

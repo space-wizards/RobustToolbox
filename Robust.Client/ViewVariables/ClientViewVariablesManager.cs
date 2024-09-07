@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Threading.Tasks;
+using System.Xml;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
@@ -20,6 +21,7 @@ using Robust.Shared.Network.Messages;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using static Robust.Client.ViewVariables.Editors.VVPropEditorNumeric;
 
@@ -49,6 +51,8 @@ namespace Robust.Client.ViewVariables
         private readonly Dictionary<uint, TaskCompletionSource<ViewVariablesBlob>> _requestedData
             = new();
 
+        private readonly Dictionary<string, string> _docStrings = new();
+
         public override void Initialize()
         {
             base.Initialize();
@@ -60,6 +64,8 @@ namespace Robust.Client.ViewVariables
             _netManager.RegisterNetMessage<MsgViewVariablesModifyRemote>();
             _netManager.RegisterNetMessage<MsgViewVariablesReqSession>();
             _netManager.RegisterNetMessage<MsgViewVariablesReqData>();
+
+            LoadDocStrings();
         }
 
         public VVPropEditor PropertyFor(Type? type)
@@ -464,6 +470,58 @@ namespace Robust.Client.ViewVariables
         {
             session = null;
             return false;
+        }
+
+        public void LoadDocStrings()
+        {
+            foreach(var resPath in _resManager.ContentFindFiles("/ViewVariables/"))
+            {
+                using var resStream = _resManager.ContentFileRead(resPath);
+
+                var xmlDoc = new XmlDocument();
+                xmlDoc.Load(resStream);
+
+                var docNode = xmlDoc["doc"];
+                var membersNode = docNode!["members"];
+                foreach (XmlNode memberNode in membersNode!.ChildNodes)
+                {
+                    if (memberNode.NodeType != XmlNodeType.Element)
+                        continue;
+
+                    DebugTools.Assert(memberNode.Name == "member");
+
+                    if (memberNode.Attributes == null)
+                        continue;
+
+                    XmlAttribute? nameAttribute = memberNode.Attributes["name"];
+                    var memberName = nameAttribute!.InnerText;
+                    var summaryNode = memberNode["summary"];
+
+                    string docString;
+                    if (summaryNode != null)
+                    {
+                        docString = summaryNode.InnerText.Trim();
+                    }
+                    else
+                    {
+                        docString = "invalid docstring";
+                    }
+
+                    _docStrings.Add(memberName, docString);
+                }
+            }
+        }
+
+        public string GetDocString(string key)
+        {
+            if (_docStrings.TryGetValue(key, out string? docString))
+            {
+                return docString;
+            }
+            else
+            {
+                return "no docstring for this key";
+            }
         }
     }
 

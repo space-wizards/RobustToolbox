@@ -36,7 +36,10 @@ namespace Robust.Client.ViewVariables.Instances
 
             var title = PrettyPrint.PrintUserFacingWithType(obj, out var subtitle);
 
-            _wrappingInit(window, title, subtitle);
+            string typeName = type.AssemblyQualifiedName!.Split(", ")[0];
+            string docString = ViewVariablesManager.GetDocString($"T:{typeName}");
+
+            _wrappingInit(window, title, docString, subtitle);
             foreach (var trait in TraitsFor(ViewVariablesManager.TraitIdsFor(type)))
             {
                 trait.Initialize(this);
@@ -50,7 +53,10 @@ namespace Robust.Client.ViewVariables.Instances
         {
             Session = session;
 
-            _wrappingInit(window, $"[SERVER] {blob.Stringified}", blob.ObjectTypePretty);
+            string typeName = blob.ObjectType.Split(", ")[0];
+            string docString = ViewVariablesManager.GetDocString($"T:{typeName}");
+
+            _wrappingInit(window, $"[SERVER] {blob.Stringified}", docString, blob.ObjectTypePretty);
             foreach (var trait in TraitsFor(blob.Traits))
             {
                 trait.Initialize(this);
@@ -59,7 +65,7 @@ namespace Robust.Client.ViewVariables.Instances
             _refresh();
         }
 
-        private void _wrappingInit(DefaultWindow window, string top, string bottom)
+        private void _wrappingInit(DefaultWindow window, string top, string middle, string bottom)
         {
             // Wrapping containers.
             var scrollContainer = new ScrollContainer();
@@ -79,7 +85,7 @@ namespace Robust.Client.ViewVariables.Instances
                 {
                     Orientation = LayoutOrientation.Horizontal
                 };
-                var name = MakeTopBar(top, bottom);
+                var name = MakeTopBar(top, middle, bottom);
                 name.HorizontalExpand = true;
                 headBox.AddChild(name);
 

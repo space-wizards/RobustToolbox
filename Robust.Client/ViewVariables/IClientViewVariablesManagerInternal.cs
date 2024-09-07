@@ -68,5 +68,9 @@ namespace Robust.Client.ViewVariables
         /// <seealso cref="ViewVariablesBlobMetadata.Traits" />
         /// <seealso cref="Shared.ViewVariables.ViewVariablesManager.TraitIdsFor"/>
         ICollection<object> TraitIdsFor(Type type);
+
+        void LoadDocStrings();
+
+        string GetDocString(string key);
     }
 }

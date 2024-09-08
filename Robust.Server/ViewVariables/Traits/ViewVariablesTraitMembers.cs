@@ -86,7 +86,7 @@ namespace Robust.Server.ViewVariables.Traits
                     .OrderByDescending(g => g.Key, TypeHelpers.TypeInheritanceComparer)
                     .Select(g =>
                     (
-                        TypeAbbreviation.Abbreviate(g.Key),
+                        g.Key.FullName!.Split('`')[0],
                         g.Select(d => d.mData).ToList()
                     ))
                     .ToList();

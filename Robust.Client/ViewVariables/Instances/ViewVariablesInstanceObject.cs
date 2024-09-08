@@ -37,7 +37,7 @@ namespace Robust.Client.ViewVariables.Instances
             var title = PrettyPrint.PrintUserFacingWithType(obj, out var subtitle);
 
             string typeName = type.AssemblyQualifiedName!.Split(", ")[0];
-            string docString = ViewVariablesManager.GetDocString($"T:{typeName}");
+            string docString = ViewVariablesManager.GetDocStringForType(typeName);
 
             _wrappingInit(window, title, docString, subtitle);
             foreach (var trait in TraitsFor(ViewVariablesManager.TraitIdsFor(type)))
@@ -54,7 +54,7 @@ namespace Robust.Client.ViewVariables.Instances
             Session = session;
 
             string typeName = blob.ObjectType.Split(", ")[0];
-            string docString = ViewVariablesManager.GetDocString($"T:{typeName}");
+            string docString = ViewVariablesManager.GetDocStringForType(typeName);
 
             _wrappingInit(window, $"[SERVER] {blob.Stringified}", docString, blob.ObjectTypePretty);
             foreach (var trait in TraitsFor(blob.Traits))

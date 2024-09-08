@@ -512,15 +512,42 @@ namespace Robust.Client.ViewVariables
             }
         }
 
-        public string GetDocString(string key)
+        public string GetDocStringForType(string key)
         {
-            if (_docStrings.TryGetValue(key, out string? docString))
+            if (_docStrings.TryGetValue($"T:{key}", out string? docString))
             {
                 return docString;
             }
             else
             {
-                return "no docstring for this key";
+#if DEBUG
+                return $"docstring not found ({key})";
+#else
+                return "docstring not found";
+#endif
+            }
+        }
+
+        public string GetDocStringForFieldOrProperty(string key)
+        {
+            // Will lumping fields and properties into the same search come back to bite us? Yes!
+            // It's a problem for future someone to take care of. You'll have to make the server
+            // send over a bool that toggles if we should look for a field or a property.
+            if (_docStrings.TryGetValue($"F:{key}", out string? fieldDoc))
+            {
+                return fieldDoc;
+            }
+            if (_docStrings.TryGetValue($"P:{key}", out string? propDoc))
+            {
+                return propDoc;
+            }
+            else
+            {
+#if DEBUG
+                return $"docstring not found ({key})";
+#else
+                return "docstring not found";
+#endif
             }
         }
     }

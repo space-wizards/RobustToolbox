@@ -71,6 +71,8 @@ namespace Robust.Client.ViewVariables
 
         void LoadDocStrings();
 
-        string GetDocString(string key);
+        string GetDocStringForType(string key);
+
+        string GetDocStringForFieldOrProperty(string key);
     }
 }

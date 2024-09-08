@@ -102,9 +102,12 @@ namespace Robust.Client.ViewVariables
                         Value = value
                     };
 
+                    string typeName = type.AssemblyQualifiedName!.Split(", ")[0];
+                    string fullName = $"{typeName}.{memberInfo.Name}";
+                    
                     var propertyEdit = new ViewVariablesPropertyControl(vvm, robustSerializer);
                     propertyEdit.SetStyle(styleOther = !styleOther);
-                    var editor = propertyEdit.SetProperty(data);
+                    var editor = propertyEdit.SetProperty(data, fullName);
                     editor.OnValueChanged += onValueChanged;
                     return propertyEdit;
                 })

@@ -66,13 +66,14 @@ namespace Robust.Client.ViewVariables.Traits
                 var first = true;
                 foreach (var (groupName, groupMembers) in blob.MemberGroups)
                 {
-                    CreateMemberGroupHeader(ref first, groupName, _memberList);
+                    var prettyGroupName = TypeAbbreviation.Abbreviate(groupName);
+                    CreateMemberGroupHeader(ref first, prettyGroupName, _memberList);
 
                     foreach (var propertyData in groupMembers)
                     {
                         var propertyEdit = new ViewVariablesPropertyControl(_vvm, _robustSerializer);
                         propertyEdit.SetStyle(otherStyle = !otherStyle);
-                        var editor = propertyEdit.SetProperty(propertyData);
+                        var editor = propertyEdit.SetProperty(propertyData, $"{groupName}.{propertyData.Name}");
 
                         var selectorChain = new object[] {new ViewVariablesMemberSelector(propertyData.PropertyIndex)};
                         editor.WireNetworkSelector(Instance.Session!.SessionId, selectorChain);

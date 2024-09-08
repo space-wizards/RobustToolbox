@@ -785,6 +785,22 @@ public sealed partial class EntityLookupSystem
     #endregion
 
     /// <summary>
+    /// Gets entities with the specified component with the specified grid.
+    /// </summary>
+    public void GetGridEntities<TComp1>(EntityUid gridUid, HashSet<Entity<TComp1>> entities) where TComp1 : IComponent
+    {
+        var query = AllEntityQuery<TComp1, TransformComponent>();
+
+        while (query.MoveNext(out var uid, out var comp, out var xform))
+        {
+            if (xform.GridUid != gridUid)
+                continue;
+
+            entities.Add((uid, comp));
+        }
+    }
+
+    /// <summary>
     /// Gets entities with the specified component with the specified parent.
     /// </summary>
     public void GetChildEntities<TComp1>(EntityUid parentUid, HashSet<Entity<TComp1>> entities) where TComp1 : IComponent

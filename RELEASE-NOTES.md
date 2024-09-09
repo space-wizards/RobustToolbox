@@ -39,6 +39,26 @@ END TEMPLATE-->
 
 ### New features
 
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 233.1.0
+
+### New features
+
+* Add GetGridEntities and another GetEntitiesIntersecting overload to EntityLookupSystem. 
 * `MarkupNode` is now `IEquatable<MarkupNode>`. It already supported equality checks, now it implements the interface.
 * Added `Entity<T>` overloads to the following `SharedMapSystem` methods: `GetTileRef`, `GetAnchoredEntities`, `TileIndicesFor`.
 * Added `EntityUid`-only overloads to the following `SharedTransformSystem` methods: `AnchorEntity`, `Unanchor`.
@@ -52,10 +72,6 @@ END TEMPLATE-->
 ### Other
 
 * If `EntityManager.FlushEntities()` fails to delete all entities, it will now attempt to do so a second time before throwing an exception.
-
-### Internal
-
-*None yet*
 
 
 ## 233.0.2

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
@@ -36,7 +37,8 @@ namespace Robust.Client.ViewVariables
                     string docString;
                     if (summaryNode != null)
                     {
-                        docString = ProcessDocNode(summaryNode);
+                        var xmlString = ProcessDocNode(summaryNode);
+                        docString = TrimLines(xmlString);
                     }
                     else
                     {
@@ -125,6 +127,13 @@ namespace Robust.Client.ViewVariables
                     break;
                 }
             }
+        }
+
+        private static string TrimLines(string inputString)
+        {
+            var splitOpts = StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries;
+            var lines = inputString.Split('\n', splitOpts);
+            return string.Join(Environment.NewLine, lines);
         }
 
         private static bool TryGetAttributeText(XmlNode xmlNode, string attributeName, [NotNullWhen(true)] out string? attributeText)

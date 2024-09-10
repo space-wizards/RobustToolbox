@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using System.Xml;
 using Robust.Shared.Utility;
 
@@ -33,7 +36,7 @@ namespace Robust.Client.ViewVariables
                     string docString;
                     if (summaryNode != null)
                     {
-                        docString = summaryNode.InnerText.Trim();
+                        docString = ProcessDocNode(summaryNode);
                     }
                     else
                     {
@@ -43,6 +46,101 @@ namespace Robust.Client.ViewVariables
                     _docStrings.Add(memberName, docString);
                 }
             }
+        }
+
+        private string ProcessDocNode(XmlNode xmlNode)
+        {
+            var sb = new StringBuilder();
+            foreach (XmlNode childNode in xmlNode.ChildNodes)
+            {
+                switch (childNode.NodeType)
+                {
+                    case XmlNodeType.Text:
+                        sb.Append(childNode.InnerText);
+                        break;
+                    case XmlNodeType.Element:
+                        ProcessXmlElement(childNode, sb);
+                        break;
+                }
+            }
+            return sb.ToString();
+        }
+
+        private void ProcessXmlElement(XmlNode elementNode, StringBuilder sb)
+        {
+            DebugTools.Assert(elementNode.NodeType == XmlNodeType.Element);
+            switch (elementNode.Name)
+            {
+                case "see":
+                {
+                    if (!string.IsNullOrEmpty(elementNode.InnerText))
+                    {
+                        sb.Append(elementNode.InnerText);
+                    }
+                    else if (TryGetAttributeText(elementNode, "cref", out var crefText))
+                    {
+                        sb.Append(crefText);
+                    }
+                    else if (TryGetAttributeText(elementNode, "langword", out var langwordText))
+                    {
+                        sb.Append(langwordText);
+                    }
+                    break;
+                }
+                case "seealso":
+                {
+                    DebugTools.Assert(string.IsNullOrEmpty(elementNode.InnerText));
+                    if (TryGetAttributeText(elementNode, "cref", out var crefText))
+                    {
+                        sb.Append(crefText);
+                    }
+                    break;
+                }
+                case "b":     // bold text
+                case "code":  // use code formatting
+                case "c":     //
+                case "para":  // paragraph text
+                case "value": //
+                {
+                    DebugTools.Assert(!string.IsNullOrEmpty(elementNode.InnerText));
+                    sb.Append(elementNode.InnerText);
+                    break;
+                }
+                case "br":
+                {
+                    // line break
+                    break;
+                }
+                case "paramref":
+                {
+                    DebugTools.Assert(string.IsNullOrEmpty(elementNode.InnerText));
+                    if (TryGetAttributeText(elementNode, "name", out var innerText))
+                    {
+                        sb.Append(innerText);
+                    }
+                    break;
+                }
+                case "inheritdoc":
+                {
+                    break;
+                }
+            }
+        }
+
+        private static bool TryGetAttributeText(XmlNode xmlNode, string attributeName, [NotNullWhen(true)] out string? attributeText)
+        {
+            attributeText = null;
+            var attributes = xmlNode.Attributes;
+            if (attributes != null)
+            {
+                var attribute = attributes[attributeName];
+                if (attribute != null)
+                {
+                    attributeText = attribute.InnerText;
+                    return true;
+                }
+            }
+            return false;
         }
 
         public string GetDocStringForType(string key)

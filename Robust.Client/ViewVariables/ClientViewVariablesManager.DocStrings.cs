@@ -9,29 +9,59 @@ namespace Robust.Client.ViewVariables
 {
     internal sealed partial class ClientViewVariablesManager
     {
+        private const string ViewVariablesResourcesRoot = "/ViewVariables/";
+
+        private readonly Dictionary<string, string> _docStrings = new();
+
         public void LoadDocStrings()
         {
-            foreach (var resPath in _resManager.ContentFindFiles("/ViewVariables/"))
+            // todo: lots of clients (most clients actually) wont ever open VV so we
+            // might be able to just skip loading the doc strings in a majority of cases.
+
+            foreach (var resPath in _resManager.ContentFindFiles(ViewVariablesResourcesRoot))
             {
                 using var resStream = _resManager.ContentFileRead(resPath);
 
                 var xmlDoc = new XmlDocument();
-                xmlDoc.Load(resStream);
-
-                var docNode = xmlDoc["doc"];
-                var membersNode = docNode!["members"];
-                foreach (XmlNode memberNode in membersNode!.ChildNodes)
+                try
                 {
+                    xmlDoc.Load(resStream);
+                }
+                catch (XmlException ex)
+                {
+                    Sawmill.Warning($"DocString xml file at `{resPath}` failed to load with exception: {ex}");
+                    continue;
+                }
+                
+                var docNode = xmlDoc["doc"];
+                if (docNode == null)
+                {
+                    Sawmill.Warning($"DocString xml file at `{resPath}` lacks `doc` node!");
+                    continue;
+                }
+
+                var membersNode = docNode["members"];
+                if (membersNode == null)
+                {
+                    Sawmill.Warning($"DocString xml file at `{resPath}` lacks `members` node!");
+                    continue;
+                }
+
+                foreach (XmlNode memberNode in membersNode.ChildNodes)
+                {
+                    // skips comment blocks, whitespace between elements
                     if (memberNode.NodeType != XmlNodeType.Element)
                         continue;
 
                     DebugTools.Assert(memberNode.Name == "member");
 
-                    if (memberNode.Attributes == null)
+                    if (!TryGetAttributeText(memberNode, "name", out var memberName))
                         continue;
 
-                    XmlAttribute? nameAttribute = memberNode.Attributes["name"];
-                    var memberName = nameAttribute!.InnerText;
+                    // skip method definitions
+                    if (memberName.StartsWith("M:"))
+                        continue;
+
                     var summaryNode = memberNode["summary"];
 
                     string docString;
@@ -42,7 +72,7 @@ namespace Robust.Client.ViewVariables
                     }
                     else
                     {
-                        docString = "invalid docstring";
+                        docString = "Invalid DocString.";
                     }
 
                     _docStrings.Add(memberName, docString);
@@ -161,9 +191,9 @@ namespace Robust.Client.ViewVariables
             else
             {
 #if DEBUG
-                return $"docstring not found ({key})";
+                return $"DocString not found ({key}).";
 #else
-                return "docstring not found";
+                return "DocString not found.";
 #endif
             }
         }
@@ -184,9 +214,9 @@ namespace Robust.Client.ViewVariables
             else
             {
 #if DEBUG
-                return $"docstring not found ({key})";
+                return $"DocString not found ({key}).";
 #else
-                return "docstring not found";
+                return "DocString not found.";
 #endif
             }
         }

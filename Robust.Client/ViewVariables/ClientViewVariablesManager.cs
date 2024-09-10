@@ -49,8 +49,6 @@ namespace Robust.Client.ViewVariables
         private readonly Dictionary<uint, TaskCompletionSource<ViewVariablesBlob>> _requestedData
             = new();
 
-        private readonly Dictionary<string, string> _docStrings = new();
-
         public override void Initialize()
         {
             base.Initialize();

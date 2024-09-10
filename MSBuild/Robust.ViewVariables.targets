@@ -1,0 +1,11 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="SetUpDocumentationFile" BeforeTargets="CoreCompile">
+    <PropertyGroup>
+      <DocumentationFile>$([MSBuild]::NormalizePath('..\Resources\ViewVariables\', '$(MSBuildProjectName).xml'))</DocumentationFile>
+    </PropertyGroup>
+    <ItemGroup Condition="'$(DocumentationFile)' != ''">
+      <DocFileItem Remove="*" /> <!-- might not be strictly required -->
+      <DocFileItem Include="$(DocumentationFile)" />
+    </ItemGroup>
+  </Target>
+</Project>

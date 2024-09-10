@@ -1,3 +1,27 @@
+<!--
+This is arcane even by compiler standards - even by /microsoft/ compiler standards.
+
+This tells the compiler to write the DocFile for a given project to the `Resources`
+folder so it can be read by the view-variables system.
+
+The root of the issue is that the basic mechanism for generating the xml docs assumes you will
+always want a copy of the docs next to the DLL. Why would you possibly want anything different?? So when
+`DocumentationFile` is provided normally there are always **two** files generated, one at the path 
+in `DocumentationFile` and one next to the DLL. `DocumentationFile` actually defines a location to **copy**
+the xml docs to **in addition** to always generating the xml doc next to the DLL.
+
+Well, we actually do what something different. We want to create a *single* copy of the docfile *and*
+we want that file to go in a non-standard location. Thankfully we can poke at msbuild's arcane internals
+and achieve the desired effect.
+
+I don't know if .csprojs that include this will be able to generate the xml docs for another purpose 
+concurrently. This hack will likely squash or conflict with the regular xml doc process if it is invoked 
+for the same project during a build. Best to use a toggle to apply this only to projects you know you want
+to generate the view variables specific xml docs for.
+
+see also
+github.com/dotnet/msbuild/issues/1559
+-->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Target Name="SetUpDocumentationFile" BeforeTargets="CoreCompile">
     <PropertyGroup>

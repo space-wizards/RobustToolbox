@@ -46,17 +46,4 @@ public sealed partial class AppearanceComponent : Component
         get { return _appearanceDataInit; }
         set { AppearanceData = value ?? AppearanceData; _appearanceDataInit = value; }
     }
-
-    [Obsolete("Use SharedAppearanceSystem instead")]
-    public bool TryGetData<T>(Enum key, [NotNullWhen(true)] out T data)
-    {
-        if (AppearanceData.TryGetValue(key, out var dat) && dat is T)
-        {
-            data = (T)dat;
-            return true;
-        }
-
-        data = default!;
-        return false;
-    }
 }

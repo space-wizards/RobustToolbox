@@ -1,6 +1,4 @@
 <!--
-This is arcane even by compiler standards - even by /microsoft/ compiler standards.
-
 This tells the compiler to write the DocFile for a given project to the `Resources`
 folder so it can be read by the view-variables system.
 
@@ -10,7 +8,7 @@ always want a copy of the docs next to the DLL. Why would you possibly want anyt
 in `DocumentationFile` and one next to the DLL. `DocumentationFile` actually defines a location to **copy**
 the xml docs to **in addition** to always generating the xml doc next to the DLL.
 
-Well, we actually do what something different. We want to create a *single* copy of the docfile *and*
+Well, we actually do want something different. We want to create a *single* copy of the docfile *and*
 we want that file to go in a non-standard location. Thankfully we can poke at msbuild's arcane internals
 and achieve the desired effect.
 
@@ -24,12 +22,9 @@ github.com/dotnet/msbuild/issues/1559
 -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Target Name="SetUpDocumentationFile" BeforeTargets="CoreCompile">
-    <PropertyGroup>
-      <DocumentationFile>$([MSBuild]::NormalizePath('..\Resources\ViewVariables\', '$(MSBuildProjectName).xml'))</DocumentationFile>
-    </PropertyGroup>
-    <ItemGroup Condition="'$(DocumentationFile)' != ''">
-      <DocFileItem Remove="*" /> <!-- might not be strictly required -->
-      <DocFileItem Include="$(DocumentationFile)" />
+    <MakeDir Directories="..\Resources\ViewVariables\"/>
+    <ItemGroup>
+      <DocFileItem Include="$([MSBuild]::NormalizePath('..\Resources\ViewVariables\', '$(MSBuildProjectName).xml'))" />
     </ItemGroup>
   </Target>
 </Project>

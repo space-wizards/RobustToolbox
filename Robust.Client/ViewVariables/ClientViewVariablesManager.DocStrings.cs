@@ -32,16 +32,14 @@ namespace Robust.Client.ViewVariables
                     Sawmill.Warning($"DocString xml file at `{resPath}` failed to load with exception: {ex}");
                     continue;
                 }
-                
-                var docNode = xmlDoc["doc"];
-                if (docNode == null)
+
+                if (!TryGetChildNode(xmlDoc, "doc", out var docNode))
                 {
                     Sawmill.Warning($"DocString xml file at `{resPath}` lacks `doc` node!");
                     continue;
                 }
 
-                var membersNode = docNode["members"];
-                if (membersNode == null)
+                if (!TryGetChildNode(docNode, "members", out var membersNode))
                 {
                     Sawmill.Warning($"DocString xml file at `{resPath}` lacks `members` node!");
                     continue;
@@ -164,6 +162,12 @@ namespace Robust.Client.ViewVariables
             var splitOpts = StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries;
             var lines = inputString.Split('\n', splitOpts);
             return string.Join(Environment.NewLine, lines);
+        }
+
+        public static bool TryGetChildNode(XmlNode node, string childName, [NotNullWhen(true)] out XmlNode? element)
+        {
+            element = node[childName];
+            return element != null;
         }
 
         private static bool TryGetAttributeText(XmlNode xmlNode, string attributeName, [NotNullWhen(true)] out string? attributeText)

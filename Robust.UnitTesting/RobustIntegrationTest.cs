@@ -830,8 +830,6 @@ namespace Robust.UnitTesting
 
         public sealed class ClientIntegrationInstance : IntegrationInstance
         {
-            [Obsolete("Use Session instead")]
-            public LocalPlayer? Player => ((IPlayerManager) PlayerMan).LocalPlayer;
             public ICommonSession? Session => ((IPlayerManager) PlayerMan).LocalSession;
             public NetUserId? User => Session?.UserId;
             public EntityUid? AttachedEntity => Session?.AttachedEntity;

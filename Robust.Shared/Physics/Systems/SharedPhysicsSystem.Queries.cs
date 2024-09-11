@@ -178,13 +178,6 @@ namespace Robust.Shared.Physics.Systems
             return bodies;
         }
 
-
-        [Obsolete("Use override that takes in a entity Uid")]
-        public HashSet<EntityUid> GetContactingEntities(PhysicsComponent body, bool approximate = false)
-        {
-            return GetContactingEntities(body.Owner, body);
-        }
-
         public HashSet<EntityUid> GetContactingEntities(EntityUid uid, PhysicsComponent? body = null, bool approximate = false)
         {
             // HashSet to ensure that we only return each entity once, instead of once per colliding fixture.

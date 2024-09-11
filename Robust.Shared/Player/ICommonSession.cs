@@ -44,7 +44,7 @@ public interface ICommonSession
     /// On the Server every player has a network channel,
     /// on the Client only the LocalPlayer has a network channel, and that channel points to the server.
     /// </remarks>
-    INetChannel Channel { get; [Obsolete] set; }
+    INetChannel Channel { get; set; }
 
     LoginType AuthType { get; }
 
@@ -64,9 +64,6 @@ public interface ICommonSession
     /// Class for storing arbitrary session-specific data that is not lost upon reconnect.
     /// </summary>
     SessionData Data { get; }
-
-    [Obsolete("Just use the Channel field instead.")]
-    INetChannel ConnectedClient => Channel;
 
     /// <summary>
     /// If true, this indicates that this is a client-side session, and should be ignored when applying a server's

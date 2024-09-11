@@ -141,16 +141,6 @@ public partial class EntitySystem
         EntityManager.DirtyEntity(uid, meta);
     }
 
-    /// <summary>
-    ///     Marks a component as dirty. This also implicitly dirties the entity this component belongs to.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [Obsolete("Use Dirty(EntityUid, Component, MetaDataComponent?")]
-    protected void Dirty(IComponent component, MetaDataComponent? meta = null)
-    {
-        EntityManager.Dirty(component.Owner, component, meta);
-    }
-
     /// <inheritdoc cref="Dirty{T}"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null)

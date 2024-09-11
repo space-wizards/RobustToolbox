@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* SharedAudioSystem now have method for playing sound for one player with prediction
 
 ### Bugfixes
 

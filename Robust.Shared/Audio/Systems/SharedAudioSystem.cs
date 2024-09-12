@@ -575,6 +575,15 @@ public abstract partial class SharedAudioSystem : EntitySystem
         AudioParams? audioParams = null);
 
     /// <summary>
+    /// Plays a predicted sound following an entity for only one entity. The client-side system plays this sound as normal, server will do nothing.
+    /// </summary>
+    /// <param name="sound">The sound specifier that points the audio file(s) that should be played.</param>
+    /// <param name="source">The UID of the entity "emitting" the audio.</param>
+    /// <param name="soundInitiator">The UID of the user that initiated this sound. This is usually some player's controlled entity.</param>
+    [return: NotNullIfNotNull("sound")]
+    public abstract (EntityUid Entity, Components.AudioComponent Component)? PlayLocal(SoundSpecifier? sound, EntityUid source, EntityUid? soundInitiator, AudioParams? audioParams = null);
+
+    /// <summary>
     /// Plays a predicted sound following an entity. The server will send the sound to every player in PVS range,
     /// unless that player is attached to the "user" entity that initiated the sound. The client-side system plays
     /// this sound as normal
@@ -584,16 +593,6 @@ public abstract partial class SharedAudioSystem : EntitySystem
     /// <param name="user">The UID of the user that initiated this sound. This is usually some player's controlled entity.</param>
     [return: NotNullIfNotNull("sound")]
     public abstract (EntityUid Entity, Components.AudioComponent Component)? PlayPredicted(SoundSpecifier? sound, EntityUid source, EntityUid? user, AudioParams? audioParams = null);
-
-    /// <summary>
-    /// Plays a predicted sound following an entity for only one entity. The client-side system plays this sound as normal, server will do nothing.
-    /// </summary>
-    /// <param name="sound">The sound specifier that points the audio file(s) that should be played.</param>
-    /// <param name="source">The UID of the entity "emitting" the audio.</param>
-    /// <param name="soundInitiator">The UID of the user that initiated this sound. This is usually some player's controlled entity.</param>
-    /// <param name="receiver">The UID of entity, that have to receive audio.</param>
-    [return: NotNullIfNotNull("sound")]
-    public abstract (EntityUid Entity, Components.AudioComponent Component)? PlayPredicted(SoundSpecifier? sound, EntityUid source, EntityUid? soundInitiator, EntityUid receiver, AudioParams? audioParams = null);
 
     /// <summary>
     /// Plays a predicted sound following an EntityCoordinates. The server will send the sound to every player in PVS range,

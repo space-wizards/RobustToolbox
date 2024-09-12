@@ -60,10 +60,14 @@ namespace Robust.Client.ViewVariables
                     if (memberName.StartsWith("M:"))
                         continue;
 
-                    var summaryNode = memberNode["summary"];
-
                     string docString;
-                    if (summaryNode != null)
+
+                    if (TryGetChildNode(memberNode, "viewvariables", out var viewVariablesNode))
+                    {
+                        var xmlString = ProcessDocNode(viewVariablesNode);
+                        docString = TrimLines(xmlString);
+                    }
+                    else if (TryGetChildNode(memberNode, "summary", out var summaryNode))
                     {
                         var xmlString = ProcessDocNode(summaryNode);
                         docString = TrimLines(xmlString);
@@ -127,10 +131,13 @@ namespace Robust.Client.ViewVariables
                     break;
                 }
                 case "b":     // bold text
-                case "code":  // use code formatting
-                case "c":     //
+                case "i":     // italic text
+                //case "u":
+                //case "a":
+                case "c":     // text should be formatted as code
+                case "code":  // text should be formatted as /multiline/ code
                 case "para":  // paragraph text
-                case "value": //
+                case "value": // value
                 {
                     DebugTools.Assert(!string.IsNullOrEmpty(elementNode.InnerText));
                     sb.Append(elementNode.InnerText);

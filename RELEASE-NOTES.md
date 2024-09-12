@@ -54,6 +54,22 @@ END TEMPLATE-->
 *None yet*
 
 
+## 234.0.0
+
+### Breaking changes
+
+* Remove a lot of obsoleted code that has been obsoleted for a while.
+
+### New features
+
+* Add another GetLocalEntitiesIntersecting override.
+
+### Other
+
+* Mark large replays as requiring Server GC.
+* Obsolete some IResourceCache proxies.
+
+
 ## 233.1.0
 
 ### New features

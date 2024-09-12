@@ -34,39 +34,12 @@ namespace Robust.Shared.Containers
         }
 
         [Obsolete]
-        public T MakeContainer<T>(EntityUid uid, string id)
-            where T : BaseContainer
-            => _entMan.System<SharedContainerSystem>().MakeContainer<T>(uid, id, this);
-
-        [Obsolete]
-        public BaseContainer GetContainer(string id)
-            => _entMan.System<SharedContainerSystem>().GetContainer(Owner, id, this);
-
-        [Obsolete]
-        public bool HasContainer(string id)
-            => _entMan.System<SharedContainerSystem>().HasContainer(Owner, id, this);
-
-        [Obsolete]
         public bool TryGetContainer(string id, [NotNullWhen(true)] out BaseContainer? container)
             => _entMan.System<SharedContainerSystem>().TryGetContainer(Owner, id, out container, this);
 
         [Obsolete]
         public bool TryGetContainer(EntityUid entity, [NotNullWhen(true)] out BaseContainer? container)
             => _entMan.System<SharedContainerSystem>().TryGetContainingContainer(Owner, entity, out container, this);
-
-        [Obsolete]
-        public bool ContainsEntity(EntityUid entity)
-            => _entMan.System<SharedContainerSystem>().ContainsEntity(Owner, entity, this);
-
-        [Obsolete]
-        public bool Remove(EntityUid toremove,
-            TransformComponent? xform = null,
-            MetaDataComponent? meta = null,
-            bool reparent = true,
-            bool force = false,
-            EntityCoordinates? destination = null,
-            Angle? localRotation = null)
-            => _entMan.System<SharedContainerSystem>().RemoveEntity(Owner, toremove, this, xform, meta, reparent, force, destination, localRotation);
 
         [Obsolete]
         public AllContainersEnumerable GetAllContainers()

@@ -34,12 +34,6 @@ public interface IMidiRenderer : IDisposable
     bool LoopMidi { get; set; }
 
     /// <summary>
-    ///     This increases all note on velocities to 127.
-    /// </summary>
-    [Obsolete($"Use {nameof(VelocityOverride)} instead, you can set it to 127 to achieve the same effect.")]
-    bool VolumeBoost { get; set; }
-
-    /// <summary>
     ///     The midi program (instrument) the renderer is using.
     /// </summary>
     byte MidiProgram { get; set; }

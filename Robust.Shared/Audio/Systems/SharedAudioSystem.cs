@@ -428,7 +428,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
     [return: NotNullIfNotNull("sound")]
     public (EntityUid Entity, Components.AudioComponent Component)? PlayGlobal(SoundSpecifier? sound, Filter playerFilter, bool recordReplay, AudioParams? audioParams = null)
     {
-        return sound == null ? null : PlayGlobal(GetSound(sound), playerFilter, recordReplay, sound.Params);
+        return sound == null ? null : PlayGlobal(GetSound(sound), playerFilter, recordReplay, audioParams ?? sound.Params);
     }
 
     /// <summary>
@@ -445,9 +445,9 @@ public abstract partial class SharedAudioSystem : EntitySystem
     /// <param name="sound">The sound specifier that points the audio file(s) that should be played.</param>
     /// <param name="recipient">The player that will hear the sound.</param>
     [return: NotNullIfNotNull("sound")]
-    public (EntityUid Entity, Components.AudioComponent Component)? PlayGlobal(SoundSpecifier? sound, ICommonSession recipient)
+    public (EntityUid Entity, Components.AudioComponent Component)? PlayGlobal(SoundSpecifier? sound, ICommonSession recipient, AudioParams? audioParams = null)
     {
-        return sound == null ? null : PlayGlobal(GetSound(sound), recipient, sound.Params);
+        return sound == null ? null : PlayGlobal(GetSound(sound), recipient, audioParams ?? sound.Params);
     }
 
     public abstract void LoadStream<T>(Entity<AudioComponent> entity, T stream);
@@ -468,7 +468,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
     [return: NotNullIfNotNull("sound")]
     public (EntityUid Entity, Components.AudioComponent Component)? PlayGlobal(SoundSpecifier? sound, EntityUid recipient, AudioParams? audioParams = null)
     {
-        return sound == null ? null : PlayGlobal(GetSound(sound), recipient, sound.Params);
+        return sound == null ? null : PlayGlobal(GetSound(sound), recipient, audioParams ?? sound.Params);
     }
 
     /// <summary>

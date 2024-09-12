@@ -176,6 +176,17 @@ public sealed partial class AudioSystem : SharedAudioSystem
     }
 
     /// <inheritdoc />
+    public override (EntityUid Entity, AudioComponent Component)? PlayLocal(
+        SoundSpecifier? sound,
+        EntityUid source,
+        EntityUid? soundInitiator,
+        AudioParams? audioParams = null
+    )
+    {
+        return null;
+    }
+
+    /// <inheritdoc />
     public override (EntityUid Entity, AudioComponent Component)? PlayPredicted(SoundSpecifier? sound, EntityUid source, EntityUid? user, AudioParams? audioParams = null)
     {
         if (sound == null)

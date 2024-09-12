@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* SharedAudioSystem now has PlayLocal which only runs audio locally on the client.
 
 ### Bugfixes
 
@@ -74,7 +74,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Add GetGridEntities and another GetEntitiesIntersecting overload to EntityLookupSystem. 
+* Add GetGridEntities and another GetEntitiesIntersecting overload to EntityLookupSystem.
 * `MarkupNode` is now `IEquatable<MarkupNode>`. It already supported equality checks, now it implements the interface.
 * Added `Entity<T>` overloads to the following `SharedMapSystem` methods: `GetTileRef`, `GetAnchoredEntities`, `TileIndicesFor`.
 * Added `EntityUid`-only overloads to the following `SharedTransformSystem` methods: `AnchorEntity`, `Unanchor`.

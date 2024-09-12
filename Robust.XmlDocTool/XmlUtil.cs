@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Xml;
 
-namespace XmlDocTool;
+namespace Robust.XmlDocTool;
 
 public class XmlUtil
 {

@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Xml;
 
-using XmlDocTool;
+using Robust.XmlDocTool;
 
 //
 // XmlDocTool
@@ -136,7 +136,7 @@ static void ProcessFile(string filePath, bool dryRun)
         copiedNodes++;
     }
 
-    var tempFilename = $"{sourceFileDirectory}\\{sourceFileName}.temp.xml";
+    var tempFilename = Path.Combine(sourceFileDirectory!, $"{sourceFileName}.temp.xml");
 
     var writerSettings = new XmlWriterSettings();
     writerSettings.Indent = true;

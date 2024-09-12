@@ -1,6 +1,6 @@
 using System.Xml;
 
-namespace XmlDocTool;
+namespace Robust.XmlDocTool;
 
 public static class XmlDocRoundTripTest
 {
@@ -74,7 +74,8 @@ public static class XmlDocRoundTripTest
             destMembersNode.AppendChild(importedMemberNode);
         }
 
-        var tempFilename = $"{sourceFileDirectory}\\{sourceFileName}.temp.xml";
+        var tempFilename = Path.Combine(sourceFileDirectory!, $"{sourceFileName}.temp.xml");
+
         var writerSettings = new XmlWriterSettings();
         writerSettings.Indent = true;
         writerSettings.IndentChars = "    ";

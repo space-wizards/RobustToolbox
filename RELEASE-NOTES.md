@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* SharedAudioSystem now has PlayLocal which only runs audio locally on the client.
+*None yet*
 
 ### Bugfixes
 
@@ -52,6 +52,17 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 234.1.0
+
+### New features
+
+* SharedAudioSystem now has PlayLocal which only runs audio locally on the client.
+
+### Bugfixes
+
+* Fix AudioParams not being passed through on PlayGlobal methods.
 
 
 ## 234.0.0

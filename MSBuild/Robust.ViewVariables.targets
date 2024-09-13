@@ -21,13 +21,16 @@ see also
 github.com/dotnet/msbuild/issues/1559
 -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Target Name="SetUpDocumentationFile" BeforeTargets="CoreCompile">
+  <Target Name="GenerateXmlDoc" BeforeTargets="CoreCompile">
     <MakeDir Directories="..\Resources\ViewVariables\"/>
     <ItemGroup>
-      <DocFileItem Include="$([MSBuild]::NormalizePath('..\Resources\ViewVariables\', '$(MSBuildProjectName).xml'))" />
+      <DocFileItem Include="$([MSBuild]::NormalizePath('..\Resources\ViewVariables\$(MSBuildProjectName).xml'))" />
     </ItemGroup>
   </Target>
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-	<Exec Command="$([MSBuild]::NormalizePath('$(SolutionDir)', 'bin\XmlDocTool\Robust.XmlDocTool.exe')) $([MSBuild]::NormalizePath('$(SolutionDir)', 'Resources\ViewVariables\$(MSBuildProjectName).xml'))" />
+  <Target Name="TrimXmlDoc" AfterTargets="PostBuildEvent">
+    <PropertyGroup>
+      <VVDocPath>$([MSBuild]::NormalizePath('..\Resources\ViewVariables\$(MSBuildProjectName).xml'))</VVDocPath>
+    </PropertyGroup>
+    <Exec Command="$([MSBuild]::NormalizePath('$(ProjectDir)\..\$(VVRobustProjectDir)\bin\XmlDocTool\Robust.XmlDocTool.exe')) $(VVDocPath)" />
   </Target>
 </Project>

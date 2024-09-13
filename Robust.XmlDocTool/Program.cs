@@ -18,18 +18,11 @@ using Robust.XmlDocTool;
 if (args.Length == 0)
 {
     // give us a target string, idiot
-    Console.WriteLine("needs target string!");
-    return;
+    Console.WriteLine("XmlDocTool - Needs folder or file path!");
+    return 1;
 }
 
 var targetString = args[0];
-
-if (string.IsNullOrEmpty(targetString))
-{
-    Console.WriteLine("null or empty target string (wut?)");
-    return;
-}
-
 bool dryRun = false;
 
 if (File.Exists(targetString))
@@ -45,9 +38,11 @@ else if(Directory.Exists(targetString))
 }
 else
 {
-    Console.WriteLine($"Argument 1 `{targetString}` is not a valid file or directory!");
-    return;
+    Console.WriteLine($"XmlDocTool - Argument 1 `{targetString}` is not a valid file or directory!");
+    return 1;
 }
+
+return 0;
 
 static void ProcessFile(string filePath, bool dryRun)
 {
@@ -66,13 +61,13 @@ static void ProcessFile(string filePath, bool dryRun)
     }
     catch (XmlException ex)
     {
-        Console.WriteLine($"DocString xml file at `{filePath}` failed to load with exception: {ex}");
+        Console.WriteLine($"XmlDocTool - DocString xml file at `{filePath}` failed to load with exception: {ex}");
         return;
     }
 
     if (!XmlUtil.TryGetChildNode(sourceXmlDoc, "doc", out var sourceDocNode))
     {
-        Console.WriteLine($"DocString xml file at `{filePath}` lacks `doc` node!");
+        Console.WriteLine($"XmlDocTool - DocString xml file at `{filePath}` lacks `doc` node!");
         return;
     }
 
@@ -87,7 +82,7 @@ static void ProcessFile(string filePath, bool dryRun)
 
     if (!XmlUtil.TryGetChildNode(sourceDocNode, "assembly", out var sourceAssemblyNode))
     {
-        Console.WriteLine($"DocString xml file at `{filePath}` lacks `assembly` node!");
+        Console.WriteLine($"XmlDocTool - DocString xml file at `{filePath}` lacks `assembly` node!");
         return;
     }
 
@@ -98,7 +93,7 @@ static void ProcessFile(string filePath, bool dryRun)
 
     if (!XmlUtil.TryGetChildNode(sourceDocNode, "members", out var sourceMembersNode))
     {
-        Console.WriteLine($"DocString xml file at `{filePath}` lacks `members` node!");
+        Console.WriteLine($"XmlDocTool - DocString xml file at `{filePath}` lacks `members` node!");
         return;
     }
 
@@ -153,5 +148,5 @@ static void ProcessFile(string filePath, bool dryRun)
         File.Delete(tempFilename);
     }
 
-    Console.WriteLine($"{sourceFileName}: Total Nodes: {totalNodes}, Copied Nodes: {copiedNodes}, Delta: {copiedNodes - totalNodes}");
+    Console.WriteLine($"XmlDocTool - {sourceFileName}: Total Nodes: {totalNodes}, Copied Nodes: {copiedNodes}, Delta: {copiedNodes - totalNodes}");
 }

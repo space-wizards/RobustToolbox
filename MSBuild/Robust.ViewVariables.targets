@@ -27,4 +27,7 @@ github.com/dotnet/msbuild/issues/1559
       <DocFileItem Include="$([MSBuild]::NormalizePath('..\Resources\ViewVariables\', '$(MSBuildProjectName).xml'))" />
     </ItemGroup>
   </Target>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+	<Exec Command="$([MSBuild]::NormalizePath('$(SolutionDir)', 'bin\XmlDocTool\Robust.XmlDocTool.exe')) $([MSBuild]::NormalizePath('$(SolutionDir)', 'Resources\ViewVariables\$(MSBuildProjectName).xml'))" />
+  </Target>
 </Project>

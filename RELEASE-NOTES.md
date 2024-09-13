@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed the "to" and "take" toolshed commands not working as intended.
 
 ### Other
 

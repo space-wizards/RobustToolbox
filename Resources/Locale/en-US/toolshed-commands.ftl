@@ -219,9 +219,9 @@ command-description-MulVecCommand =
 command-description-DivVecCommand =
     Divides every element in the input by a scalar (single value).
 command-description-rng-to =
-    Returns a number from its input to its argument (i.e. n..m inclusive)
+    Returns a number between the input (inclusive) and the argument (exclusive).
 command-description-rng-from =
-    Returns a number to its input from its argument (i.e. m..n inclusive)
+    Returns a number between the argument (inclusive) and the input (exclusive))
 command-description-rng-prob =
     Returns a boolean based on the input probability/chance (from 0 to 1)
 command-description-sum =

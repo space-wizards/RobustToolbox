@@ -48,7 +48,7 @@ github.com/dotnet/msbuild/issues/1559
     <MakeDir Directories="..\Resources\ViewVariables\"/>
     <PropertyGroup>
       <!-- This is just for convenience so the lines below don't get unreasonably long -->
-      <VVDocPath>$([MSBuild]::NormalizePath('..\Resources\ViewVariables\$(MSBuildProjectName).xml'))</VVDocPath>
+      <VVDocPath>..\Resources\ViewVariables\$(MSBuildProjectName).xml</VVDocPath>
     </PropertyGroup>
     <ItemGroup>
       <!-- Slightly arcane invocation of the MSBuild doc generation facility that bypasses the issue explained above -->

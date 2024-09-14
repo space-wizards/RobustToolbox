@@ -55,6 +55,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CefGlue", "cefglue\CefGlue\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.Xaml", "Robust.Xaml\Robust.Xaml.csproj", "{EC7BA4C0-A02F-40E8-B4FC-9A96D91BD1EC}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Robust.XmlDocTool", "Robust.XmlDocTool\Robust.XmlDocTool.csproj", "{4EF116C9-C353-47C4-A18A-4A8C5EF8B88B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -239,6 +241,14 @@ Global
 		{EC7BA4C0-A02F-40E8-B4FC-9A96D91BD1EC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{EC7BA4C0-A02F-40E8-B4FC-9A96D91BD1EC}.Release|x64.ActiveCfg = Release|Any CPU
 		{EC7BA4C0-A02F-40E8-B4FC-9A96D91BD1EC}.Release|x64.Build.0 = Release|Any CPU
+		{4EF116C9-C353-47C4-A18A-4A8C5EF8B88B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4EF116C9-C353-47C4-A18A-4A8C5EF8B88B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4EF116C9-C353-47C4-A18A-4A8C5EF8B88B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4EF116C9-C353-47C4-A18A-4A8C5EF8B88B}.Debug|x64.Build.0 = Debug|Any CPU
+		{4EF116C9-C353-47C4-A18A-4A8C5EF8B88B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4EF116C9-C353-47C4-A18A-4A8C5EF8B88B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4EF116C9-C353-47C4-A18A-4A8C5EF8B88B}.Release|x64.ActiveCfg = Release|Any CPU
+		{4EF116C9-C353-47C4-A18A-4A8C5EF8B88B}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

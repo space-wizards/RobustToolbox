@@ -67,18 +67,7 @@ namespace Robust.Client.UserInterface
             _tagControls = tagControls;
         }
 
-        internal readonly void Hide()
-        {
-            var nodeIndex = -1;
-            foreach (var node in Message)
-            {
-                nodeIndex++;
-
-                if (_tagControls == null || !_tagControls.TryGetValue(nodeIndex, out var control))
-                    continue;
-                control.Visible = false;
-            }
-        }
+        
 
         /// <summary>
         ///     Recalculate line dimensions and where it has line breaks for word wrapping.
@@ -175,6 +164,12 @@ namespace Robust.Client.UserInterface
                     src.Height += GetLineHeight(font, uiScale, lineHeightScale);
                 }
             }
+        }
+
+        internal readonly void HideControls()
+        {
+            if (_tagControls == null) return;
+            foreach ((_, var control) in _tagControls) control.Visible = false;
         }
 
         public readonly void Draw(

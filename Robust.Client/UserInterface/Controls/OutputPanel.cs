@@ -141,14 +141,14 @@ namespace Robust.Client.UserInterface.Controls
             {
                 if (entryOffset + entry.Height < 0)
                 {
+                    entry.HideControls();
                     entryOffset += entry.Height + font.GetLineSeparation(UIScale);
-                    entry.Hide();
                     continue;
                 }
 
                 if (entryOffset > contentBox.Height)
                 {
-                    entry.Hide();
+                    entry.HideControls();
                     continue;
                 }
 

@@ -74,7 +74,7 @@ namespace Robust.Client.ViewVariables
                     }
                     else
                     {
-                        docString = "Invalid DocString.";
+                        docString = "DocString is invalid.";
                     }
 
                     _docStrings.Add(memberName, docString);
@@ -100,6 +100,15 @@ namespace Robust.Client.ViewVariables
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Try to process the most common tags inside xml comment blocks
+        /// </summary>
+        /// <param name="elementNode">The node to process</param>
+        /// <param name="sb">A <see cref="StringBuilder"/> that the result will be appended to</param>
+        /// <remarks>
+        /// Ideally all the tags on <see href="https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/xmldoc/recommended-tags">this page</see>
+        /// should be minimally supported.
+        /// </remarks>
         private void ProcessXmlElement(XmlNode elementNode, StringBuilder sb)
         {
             DebugTools.Assert(elementNode.NodeType == XmlNodeType.Element);
@@ -202,9 +211,9 @@ namespace Robust.Client.ViewVariables
             else
             {
 #if DEBUG
-                return $"DocString not found ({key}).";
+                return $"No DocString defined ({key}).";
 #else
-                return "DocString not found.";
+                return "No DocString defined.";
 #endif
             }
         }
@@ -225,9 +234,9 @@ namespace Robust.Client.ViewVariables
             else
             {
 #if DEBUG
-                return $"DocString not found ({key}).";
+                return $"No DocString defined ({key}).";
 #else
-                return "DocString not found.";
+                return "No DocString defined.";
 #endif
             }
         }

@@ -261,25 +261,42 @@ internal abstract partial class ViewVariablesManager
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     private sealed partial class VvTest : IEnumerable<object>
     {
-        [DataField("x")]
-        [ViewVariables(VVAccess.ReadWrite)]
+        /// <summary>
+        /// An integer.
+        /// </summary>
+        [DataField]
+        [ViewVariables]
         private int X = 10;
 
         // Note: DataField implies VV read-only already.
-        [ViewVariables] public Dictionary<object, object> Dict = new() {{"a", "b"}, {"c", "d"}};
+        // Note: Intentionally no xml doc defined to test that behaviour
+        [ViewVariables]
+        public Dictionary<object, object> Dict = new() {{"a", "b"}, {"c", "d"}};
 
-        [ViewVariables] public List<object> List => new() {1, 2, 3, 4, 5, 6, 7, 8, 9, X, 11, 12, 13, 14, 15, this};
+        /// <summary>
+        /// A list of objects.
+        /// </summary>
+        [ViewVariables]
+        public List<object> List => new() {1, 2, 3, 4, 5, 6, 7, 8, 9, X, 11, 12, 13, 14, 15, this};
 
+        /// <summary>
+        /// A multi dimensional array.
+        /// </summary>
+        [DataField]
+        public int[,] MultiDimensionalArray = new int[5, 2] {{1, 2}, {3, 4}, {5, 6}, {7, 8}, {9, 0}};
 
-        [DataField("multiDimensionalArray")] public int[,] MultiDimensionalArray = new int[5, 2] {{1, 2}, {3, 4}, {5, 6}, {7, 8}, {9, 0}};
-
-
-        [DataField("vector")]
-        [ViewVariables(VVAccess.ReadWrite)]
+        /// <summary>
+        /// A vector.
+        /// </summary>
+        [DataField]
+        [ViewVariables]
         private Vector2 Vector = new(50, 50);
 
-        [DataField("data")]
-        [ViewVariables(VVAccess.ReadWrite)]
+        /// <summary>
+        /// A dummy data structure to inspect.
+        /// </summary>
+        [DataField]
+        [ViewVariables]
         private ComplexDataStructure Data = new();
 
         public IEnumerator<object> GetEnumerator()
@@ -296,12 +313,21 @@ internal abstract partial class ViewVariablesManager
         private partial struct ComplexDataStructure
         {
             // VV3 uses our serialization system internally, so this allows these values to be changed.
-            [DataField("X")]
-            [ViewVariables(VVAccess.ReadWrite)]
+            /// <viewvariables>
+            /// These comments come from the custom viewvariables tag.
+            /// </viewvariables>
+            [DataField]
+            [ViewVariables]
             public int X;
 
-            [DataField("Y")]
-            [ViewVariables(VVAccess.ReadWrite)]
+            /// <summary>
+            /// This text will be shown in your IDE but won't be shown in the VV window.
+            /// </summary>
+            /// <viewvariables>
+            /// The viewvariables tag takes precidence over the summary tag in the VV window.
+            /// </viewvariables>
+            [DataField]
+            [ViewVariables]
             public int Y;
 
             public ComplexDataStructure()

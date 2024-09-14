@@ -21,16 +21,29 @@ see also
 github.com/dotnet/msbuild/issues/1559
 -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <!-- Add a reference to XmlDocTool so it always gets built before any project that needs it -->
+    <ProjectReference Include="..\$(VVRobustProjectDir)\Robust.XmlDocTool\Robust.XmlDocTool.csproj">
+      <!-- Don't copy the build artifacts from this project to the referencing project's output folder  -->
+      <Private>false</Private>
+      <!-- Indicate that the referencing project isn't actually meant to reference this project's assembly directily -->
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
   <Target Name="GenerateXmlDoc" BeforeTargets="CoreCompile">
+    <!-- Ensure the destination folder for the docs exists -->
     <MakeDir Directories="..\Resources\ViewVariables\"/>
+    <PropertyGroup>
+      <!-- This is just for convenience so the lines below don't get unreasonably long -->
+      <VVDocPath>$([MSBuild]::NormalizePath('..\Resources\ViewVariables\$(MSBuildProjectName).xml'))</VVDocPath>
+    </PropertyGroup>
     <ItemGroup>
-      <DocFileItem Include="$([MSBuild]::NormalizePath('..\Resources\ViewVariables\$(MSBuildProjectName).xml'))" />
+      <!-- Slightly arcane invocation of the MSBuild doc generation facility that bypasses the issue explained above -->
+      <DocFileItem Include="$(VVDocPath)" />
     </ItemGroup>
   </Target>
   <Target Name="TrimXmlDoc" AfterTargets="PostBuildEvent">
-    <PropertyGroup>
-      <VVDocPath>$([MSBuild]::NormalizePath('..\Resources\ViewVariables\$(MSBuildProjectName).xml'))</VVDocPath>
-    </PropertyGroup>
+    <!-- Run XmlDocTool on the generated doc file -->
     <Exec Command="$([MSBuild]::NormalizePath('$(ProjectDir)\..\$(VVRobustProjectDir)\bin\XmlDocTool\Robust.XmlDocTool.exe')) $(VVDocPath)" />
   </Target>
 </Project>

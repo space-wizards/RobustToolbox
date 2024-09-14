@@ -1,21 +1,34 @@
 <!--
-This tells the compiler to write the DocFile for a given project to the `Resources`
-folder so it can be read by the view-variables system.
+This is the MSBuild file that drives the creation of xml docs for use by View Variables.
 
-The root of the issue is that the basic mechanism for generating the xml docs assumes you will
-always want a copy of the docs next to the DLL. Why would you possibly want anything different?? So when
-`DocumentationFile` is provided normally there are always **two** files generated, one at the path 
-in `DocumentationFile` and one next to the DLL. `DocumentationFile` actually defines a location to **copy**
-the xml docs to **in addition** to always generating the xml doc next to the DLL.
+Normally this is invoked from `Robust.Properties.targets` when a csproj defines `<ViewVariables>`
+in its `<PropertyGroup>`.
 
-Well, we actually do want something different. We want to create a *single* copy of the docfile *and*
-we want that file to go in a non-standard location. Thankfully we can poke at msbuild's arcane internals
-and achieve the desired effect.
+The workflow is:
 
-I don't know if .csprojs that include this will be able to generate the xml docs for another purpose 
-concurrently. This hack will likely squash or conflict with the regular xml doc process if it is invoked 
-for the same project during a build. Best to use a toggle to apply this only to projects you know you want
-to generate the view variables specific xml docs for.
+0. Ensure the XmlDocTool is built before any project that uses this system
+1. Make sure `..\Resources\ViewVariables\` exists
+2. Get MSBuild to generate the xml doc at the path from step 1.
+3. Run XmlDocTool on the generated doc
+
+Step two avoids using `<DocumentationFile>` due to a weird quirk of how that facility
+works. DocumentationFile always causes two copies of the generated xml file to be
+created, one at the path in DocumentationFile and one next to the DLL. This script
+uses the somewhat arcane faciity `<DocFileItem>` to side-step that problem and create
+a single copy of the xml docs in the folder we want.
+
+Project files (.csproj) outside Robust Toolbox need to define these properties:
+
+```
+  <PropertyGroup>
+    <ViewVariables>true</ViewVariables>
+    <VVRobustProjectDir>{path to robust toolbox}</VVRobustProjectDir>
+  </PropertyGroup>
+```
+
+VVRobustProjectDir is required so that projects outside Robust Toolbox can properly find the 
+XmlDocTool project and the resulting executable. This is perhaps not as seemless as it could be, 
+but it's good enough for now :tm:
 
 see also
 github.com/dotnet/msbuild/issues/1559

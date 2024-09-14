@@ -57,6 +57,6 @@ github.com/dotnet/msbuild/issues/1559
   </Target>
   <Target Name="TrimXmlDoc" AfterTargets="PostBuildEvent">
     <!-- Run XmlDocTool on the generated doc file -->
-    <Exec Command="$([MSBuild]::NormalizePath('$(ProjectDir)\..\$(VVRobustProjectDir)\bin\XmlDocTool\Robust.XmlDocTool.exe')) $(VVDocPath)" />
+    <Exec Command="$([MSBuild]::NormalizePath('$(ProjectDir)\..\$(VVRobustProjectDir)\bin\XmlDocTool\Robust.XmlDocTool')) $(VVDocPath)" />
   </Target>
 </Project>

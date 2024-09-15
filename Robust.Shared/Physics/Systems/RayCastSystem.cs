@@ -64,8 +64,8 @@ public sealed partial class RayCastSystem : EntitySystem
     private CastOutput RayCastShape(RayCastInput input, IPhysShape shape, Transform transform)
     {
         var localInput = input;
-        localInput.Origin = b2InvTransformPoint( transform, input.Origin );
-        localInput.Translation = b2InvRotateVector( transform.Quaternion2D, input.Translation );
+        localInput.Origin = Physics.Transform.InvTransformPoint(transform, input.Origin);
+        localInput.Translation = Quaternion2D.InvRotateVector(transform.Quaternion2D, input.Translation);
 
         CastOutput output = new();
 
@@ -102,11 +102,11 @@ public sealed partial class RayCastSystem : EntitySystem
         var input = new RayCastInput
         {
             MaxFraction = 1.0f,
-            Origin = b2InvTransformPoint(transform, origin),
-            Translation = b2InvRotateVector(transform.q, translation)
+            Origin = Physics.Transform.InvTransformPoint(transform, origin),
+            Translation = Quaternion2D.InvRotateVector(transform.q, translation)
         };
 
-        var output = new CastOutput();
+        CastOutput output;
         switch (shape)
         {
             case PhysShapeCircle circle:

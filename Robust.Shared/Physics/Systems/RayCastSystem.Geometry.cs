@@ -71,87 +71,6 @@ public sealed partial class RayCastSystem
         return output;
     }
 
-    // Ray vs line segment
-    private CastOutput RayCastSegment(RayCastInput input, EdgeShape shape, bool oneSided)
-    {
-        var output = new CastOutput();
-
-        if (oneSided)
-        {
-            // Skip left-side collision
-            float offset = Vector2Helpers.Cross(Vector2.Subtract(input.Origin, shape.Vertex0), Vector2.Subtract( shape.Vertex1, shape.Vertex0));
-            if ( offset < 0.0f )
-            {
-                return output;
-            }
-        }
-
-        // Put the ray into the edge's frame of reference.
-        var p1 = input.Origin;
-        var d = input.Translation;
-
-        var v1 = shape.Vertex0;
-        var v2 = shape.Vertex1;
-        var e = Vector2.Subtract( v2, v1 );
-
-        float length = 0f;
-        var eUnit = e.GetLengthAndNormalize(ref length);
-        if (length == 0.0f)
-        {
-            return output;
-        }
-
-        // Normal points to the right, looking from v1 towards v2
-        var normal = eUnit.RightPerp();
-
-        // Intersect ray with infinite segment using normal
-        // Similar to intersecting a ray with an infinite plane
-        // p = p1 + t * d
-        // dot(normal, p - v1) = 0
-        // dot(normal, p1 - v1) + t * dot(normal, d) = 0
-        float numerator = Vector2.Dot(normal, Vector2.Subtract(v1, p1));
-        float denominator = Vector2.Dot(normal, d);
-
-        if (denominator == 0.0f)
-        {
-            // parallel
-            return output;
-        }
-
-        float t = numerator / denominator;
-        if ( t < 0.0f || input.MaxFraction < t )
-        {
-            // out of ray range
-            return output;
-        }
-
-        // Intersection point on infinite segment
-        var p = Vector2.Add(p1, t * d);
-
-        // Compute position of p along segment
-        // p = v1 + s * e
-        // s = dot(p - v1, e) / dot(e, e)
-
-        float s = Vector2.Dot(Vector2.Subtract(p, v1), eUnit);
-        if ( s < 0.0f || length < s )
-        {
-            // out of segment range
-            return output;
-        }
-
-        if ( numerator > 0.0f )
-        {
-            normal = -normal;
-        }
-
-        output.Fraction = t;
-        output.Point = Vector2.Add(p1, t * d);
-        output.Normal = normal;
-        output.Hit = true;
-
-        return output;
-    }
-
     private CastOutput RayCastPolygon(RayCastInput input, Polygon shape)
     {
 	    if (shape.Radius == 0.0f)
@@ -239,6 +158,87 @@ public sealed partial class RayCastSystem
             MaxFraction = input.MaxFraction
         };
         return ShapeCast(castInput);
+    }
+
+    // Ray vs line segment
+    private CastOutput RayCastSegment(RayCastInput input, EdgeShape shape, bool oneSided)
+    {
+        var output = new CastOutput();
+
+        if (oneSided)
+        {
+            // Skip left-side collision
+            float offset = Vector2Helpers.Cross(Vector2.Subtract(input.Origin, shape.Vertex0), Vector2.Subtract( shape.Vertex1, shape.Vertex0));
+            if ( offset < 0.0f )
+            {
+                return output;
+            }
+        }
+
+        // Put the ray into the edge's frame of reference.
+        var p1 = input.Origin;
+        var d = input.Translation;
+
+        var v1 = shape.Vertex0;
+        var v2 = shape.Vertex1;
+        var e = Vector2.Subtract( v2, v1 );
+
+        float length = 0f;
+        var eUnit = e.GetLengthAndNormalize(ref length);
+        if (length == 0.0f)
+        {
+            return output;
+        }
+
+        // Normal points to the right, looking from v1 towards v2
+        var normal = eUnit.RightPerp();
+
+        // Intersect ray with infinite segment using normal
+        // Similar to intersecting a ray with an infinite plane
+        // p = p1 + t * d
+        // dot(normal, p - v1) = 0
+        // dot(normal, p1 - v1) + t * dot(normal, d) = 0
+        float numerator = Vector2.Dot(normal, Vector2.Subtract(v1, p1));
+        float denominator = Vector2.Dot(normal, d);
+
+        if (denominator == 0.0f)
+        {
+            // parallel
+            return output;
+        }
+
+        float t = numerator / denominator;
+        if ( t < 0.0f || input.MaxFraction < t )
+        {
+            // out of ray range
+            return output;
+        }
+
+        // Intersection point on infinite segment
+        var p = Vector2.Add(p1, t * d);
+
+        // Compute position of p along segment
+        // p = v1 + s * e
+        // s = dot(p - v1, e) / dot(e, e)
+
+        float s = Vector2.Dot(Vector2.Subtract(p, v1), eUnit);
+        if ( s < 0.0f || length < s )
+        {
+            // out of segment range
+            return output;
+        }
+
+        if ( numerator > 0.0f )
+        {
+            normal = -normal;
+        }
+
+        output.Fraction = t;
+        output.Point = Vector2.Add(p1, t * d);
+        output.Normal = normal;
+        output.Hit = true;
+
+        return output;
     }
 
     #endregion
@@ -454,6 +454,20 @@ public sealed partial class RayCastSystem
             TranslationB = input.Translation,
             MaxFraction = input.MaxFraction
         };
+
+        var output = ShapeCast(pairInput);
+        return output;
+    }
+
+    private CastOutput ShapeCastSegment(ShapeCastInput input, EdgeShape shape)
+    {
+        var pairInput = new ShapeCastPairInput();
+        pairInput.ProxyA = DistanceProxy.MakeProxy([shape.Vertex0], 2, 0.0f);
+        pairInput.ProxyB = DistanceProxy.MakeProxy(input.Points, input.Count, input.Radius);
+        pairInput.TransformA = Physics.Transform.Empty;
+        pairInput.TransformB = Physics.Transform.Empty;
+        pairInput.TranslationB = input.Translation;
+        pairInput.MaxFraction = input.MaxFraction;
 
         var output = ShapeCast(pairInput);
         return output;

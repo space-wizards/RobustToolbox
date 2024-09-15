@@ -55,6 +55,14 @@ namespace Robust.Shared.Physics
             Quaternion2D = new Quaternion2D(angle);
         }
 
+        /// Inverse transform a point (e.g. world space to local space)
+        public static Vector2 InvTransformPoint(Transform t, Vector2 p)
+        {
+            float vx = p.X - t.Position.X;
+            float vy = p.Y - t.Position.Y;
+            return new Vector2(t.Quaternion2D.C * vx + t.Quaternion2D.S * vy, -t.Quaternion2D.S * vx + t.Quaternion2D.C * vy);
+        }
+
         /// Transform a point (e.g. local space to world space)
         public static Vector2 TransformPoint(Transform xf, Vector2 p)
         {
@@ -200,6 +208,13 @@ namespace Robust.Shared.Physics
         public static Vector2 RotateVector(Quaternion2D q, Vector2 v )
         {
             return new Vector2(q.C * v.X - q.S * v.Y, q.S * v.X + q.C * v.Y);
+        }
+
+        /// Inverse rotate a vector
+        [Pure]
+        public static Vector2 InvRotateVector(Quaternion2D q, Vector2 v)
+        {
+            return new Vector2(q.C * v.X + q.S * v.Y, -q.S * v.X + q.C * v.Y);
         }
     }
 }

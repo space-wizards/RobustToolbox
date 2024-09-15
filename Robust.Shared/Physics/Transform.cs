@@ -55,6 +55,15 @@ namespace Robust.Shared.Physics
             Quaternion2D = new Quaternion2D(angle);
         }
 
+        /// Transform a point (e.g. local space to world space)
+        public static Vector2 TransformPoint(Transform xf, Vector2 p)
+        {
+            float x = xf.Quaternion2D.C * p.X - xf.Quaternion2D.S * p.Y + p.X;
+            float y = xf.Quaternion2D.S * p.X + xf.Quaternion2D.C * p.Y + p.Y;
+
+            return new Vector2(x, y);
+        }
+
         public static Vector2 Mul(in Transform transform, in Vector2 vector)
         {
             float x = (transform.Quaternion2D.C * vector.X - transform.Quaternion2D.S * vector.Y) + transform.Position.X;
@@ -80,6 +89,7 @@ namespace Robust.Shared.Physics
         }
 
         /// Transpose multiply two rotations: qT * r
+        [Pure]
         public static Quaternion2D MulT(in Quaternion2D q, in Quaternion2D r)
         {
             // [ qc qs] * [rc -rs] = [qc*rc+qs*rs -qc*rs+qs*rc]
@@ -183,6 +193,13 @@ namespace Robust.Shared.Physics
 
             // TODO_ERIN optimize
             return new Quaternion2D(MathF.Cos(angle), MathF.Sin(angle));
+        }
+
+        /// Rotate a vector
+        [Pure]
+        public static Vector2 RotateVector(Quaternion2D q, Vector2 v )
+        {
+            return new Vector2(q.C * v.X - q.S * v.Y, q.S * v.X + q.C * v.Y);
         }
     }
 }

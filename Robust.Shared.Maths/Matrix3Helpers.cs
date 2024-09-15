@@ -68,6 +68,15 @@ public static class Matrix3Helpers
     }
 
     /// <summary>
+    /// Gets the position of the Matrix. Will have some precision loss.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector2 Position(this Matrix3x2 t)
+    {
+        return new Vector2(t.M31, t.M32);
+    }
+
+    /// <summary>
     /// Gets the rotation of the Matrix. Will have some precision loss.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

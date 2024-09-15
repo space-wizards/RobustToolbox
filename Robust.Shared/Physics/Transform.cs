@@ -94,6 +94,7 @@ namespace Robust.Shared.Physics
 
         // v2 = A.q' * (B.q * v1 + B.p - A.p)
         //    = A.q' * B.q * v1 + A.q' * (B.p - A.p)
+        [Pure]
         public static Transform MulT(in Transform A, in Transform B)
         {
             Transform C = new Transform

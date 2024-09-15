@@ -27,6 +27,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics
@@ -942,6 +943,100 @@ namespace Robust.Shared.Physics
 
         private static readonly RayQueryCallback<RayQueryCallback> EasyRayQueryCallback =
             (ref RayQueryCallback callback, Proxy proxy, in Vector2 hitPos, float distance) => callback(proxy, hitPos, distance);
+
+        public delegate float NewRayCallback(RayCastInput input, Proxy proxy, T context);
+
+        public void RayCastNew(RayCastInput input, uint mask, NewRayCallback callback)
+        {
+            var p1 = input.Origin;
+            var d = input.Translation;
+
+            var r = d.Normalized();
+
+	        // v is perpendicular to the segment.
+	        var v = Vector2Helpers.Cross(1.0f, r);
+            var abs_v = Vector2.Abs(v);
+
+	        // Separating axis for segment (Gino, p80).
+	        // |dot(v, p1 - c)| > dot(|v|, h)
+
+	        float maxFraction = input.MaxFraction;
+
+	        var p2 = Vector2.Add(p1, maxFraction * d);
+
+	        // Build a bounding box for the segment.
+	        var segmentAABB = new Box2(Vector2.Min( p1, p2 ), Vector2.Max( p1, p2 ));
+
+	        var stack = new GrowableStack<Proxy>(stackalloc Proxy[256]);
+            ref var baseRef = ref _nodes[0];
+            var stackCount = 1;
+	        stack.Push(_root);
+
+	        var subInput = input;
+
+	        while (stackCount > 0)
+            {
+                stackCount = stack.GetCount();
+                var nodeId = stack.Pop();
+
+		        if ( nodeId == Proxy.Free)
+		        {
+			        continue;
+		        }
+
+		        var node = Unsafe.Add(ref baseRef, nodeId);
+
+		        if (!node.Aabb.Intersects(segmentAABB))// || ( node->categoryBits & maskBits ) == 0 )
+		        {
+			        continue;
+		        }
+
+		        // Separating axis for segment (Gino, p80).
+		        // |dot(v, p1 - c)| > dot(|v|, h)
+		        // radius extension is added to the node in this case
+		        var c = node.Aabb.Center;
+		        var h = node.Aabb.Extents;
+		        float term1 = MathF.Abs(Vector2.Dot(v, Vector2.Subtract(p1, c)));
+		        float term2 = Vector2.Dot(abs_v, h);
+		        if ( term2 < term1 )
+		        {
+			        continue;
+		        }
+
+		        if (node.IsLeaf)
+		        {
+			        subInput.MaxFraction = maxFraction;
+
+			        float value = callback(subInput, nodeId, node.UserData);
+
+			        if ( value == 0.0f )
+			        {
+				        // The client has terminated the ray cast.
+				        return;
+			        }
+
+			        if ( 0.0f < value && value < maxFraction )
+			        {
+				        // Update segment bounding box.
+				        maxFraction = value;
+				        p2 = Vector2.Add(p1, maxFraction * d);
+				        segmentAABB.BottomLeft = Vector2.Min( p1, p2 );
+				        segmentAABB.TopRight = Vector2.Max( p1, p2 );
+			        }
+		        }
+		        else
+		        {
+			        Assert( stackCount < 256 - 1 );
+			        if (stackCount < 256 - 1 )
+			        {
+				        // TODO_ERIN just put one node on the stack, continue on a child node
+				        // TODO_ERIN test ordering children by nearest to ray origin
+				        stack.Push(node.Child1);
+				        stack.Push(node.Child2);
+			        }
+		        }
+	        }
+        }
 
         public void RayCast(RayQueryCallback callback, in Ray input)
         {

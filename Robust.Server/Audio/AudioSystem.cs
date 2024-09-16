@@ -66,14 +66,11 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
     private void AddAudioFilter(EntityUid uid, AudioComponent component, Filter filter)
     {
-        var count = filter.Count;
-
-        if (count == 0)
-            return;
+        DebugTools.Assert(filter.Count > 0);
 
         _pvs.AddSessionOverrides(uid, filter);
 
-        var ents = new HashSet<EntityUid>(count);
+        var ents = new HashSet<EntityUid>(filter.Count);
 
         foreach (var session in filter.Recipients)
         {
@@ -92,6 +89,9 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <inheritdoc />
     public override (EntityUid Entity, AudioComponent Component)? PlayGlobal(string? filename, Filter playerFilter, bool recordReplay, AudioParams? audioParams = null)
     {
+        if (string.IsNullOrEmpty(filename) || playerFilter.Count == 0)
+            return null;
+
         var entity = SetupAudio(filename, audioParams);
         AddAudioFilter(entity, entity.Comp, playerFilter);
         entity.Comp.Global = true;
@@ -101,7 +101,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <inheritdoc />
     public override (EntityUid Entity, AudioComponent Component)? PlayEntity(string? filename, Filter playerFilter, EntityUid uid, bool recordReplay, AudioParams? audioParams = null)
     {
-        if (string.IsNullOrEmpty(filename))
+        if (string.IsNullOrEmpty(filename) || playerFilter.Count == 0)
             return null;
 
         if (TerminatingOrDeleted(uid))
@@ -133,7 +133,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <inheritdoc />
     public override (EntityUid Entity, AudioComponent Component)? PlayStatic(string? filename, Filter playerFilter, EntityCoordinates coordinates, bool recordReplay, AudioParams? audioParams = null)
     {
-        if (string.IsNullOrEmpty(filename))
+        if (string.IsNullOrEmpty(filename) || playerFilter.Count == 0)
             return null;
 
         if (TerminatingOrDeleted(coordinates.EntityId))

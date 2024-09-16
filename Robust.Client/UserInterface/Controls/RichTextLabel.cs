@@ -90,16 +90,16 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
-            if (_entry is not {} entry)
+            if (_entry == null)
                 return Vector2.Zero;
 
             var font = _getFont();
 
             // _entry is nullable struct.
-            // cannot just call entry.Update or _entry.Value.Update() as that doesn't actually update _entry.
-            _entry = entry.Update(_tagManager, font, availableSize.X * UIScale, UIScale, LineHeightScale);
+            // cannot just call _entry.Value.Update() as that doesn't actually update _entry.
+            _entry = _entry.Value.Update(_tagManager, font, availableSize.X * UIScale, UIScale, LineHeightScale);
 
-            return new Vector2(entry.Width / UIScale, entry.Height / UIScale);
+            return new Vector2(_entry.Value.Width / UIScale, _entry.Value.Height / UIScale);
         }
 
         protected internal override void Draw(DrawingHandleScreen handle)

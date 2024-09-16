@@ -56,6 +56,7 @@ namespace Robust.Shared.Physics
         }
 
         /// Inverse transform a point (e.g. world space to local space)
+        [Pure]
         public static Vector2 InvTransformPoint(Transform t, Vector2 p)
         {
             float vx = p.X - t.Position.X;
@@ -64,6 +65,7 @@ namespace Robust.Shared.Physics
         }
 
         /// Transform a point (e.g. local space to world space)
+        [Pure]
         public static Vector2 TransformPoint(Transform xf, Vector2 p)
         {
             float x = xf.Quaternion2D.C * p.X - xf.Quaternion2D.S * p.Y + p.X;
@@ -72,6 +74,7 @@ namespace Robust.Shared.Physics
             return new Vector2(x, y);
         }
 
+        [Pure]
         public static Vector2 Mul(in Transform transform, in Vector2 vector)
         {
             float x = (transform.Quaternion2D.C * vector.X - transform.Quaternion2D.S * vector.Y) + transform.Position.X;
@@ -80,12 +83,14 @@ namespace Robust.Shared.Physics
             return new Vector2(x, y);
         }
 
+        [Pure]
         public static Vector2 MulT(in Vector2[] A, in Vector2 v)
         {
             DebugTools.Assert(A.Length == 2);
             return new Vector2(v.X * A[0].X + v.Y * A[0].Y, v.X * A[1].X + v.Y * A[1].Y);
         }
 
+        [Pure]
         public static Vector2 MulT(in Transform T, in Vector2 v)
         {
             float px = v.X - T.Position.X;

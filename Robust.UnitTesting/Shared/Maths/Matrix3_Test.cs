@@ -12,18 +12,30 @@ namespace Robust.UnitTesting.Shared.Maths
     [TestOf(typeof(Matrix3x2))]
     public sealed class Matrix3_Test
     {
-        [Test]
-        public void GetRotationTest()
+        private static readonly TestCaseData[] Positions = new TestCaseData[]
         {
-            Assert.That(Matrix3x2.Identity.Rotation(), Is.EqualTo(Angle.Zero));
+            new(Matrix3x2.Identity, Vector2.Zero),
+            new(Matrix3x2.CreateTranslation(Vector2.One), Vector2.One),
+            new(Matrix3x2.CreateTranslation(new Vector2(1f, 0f)), new Vector2(1f, 0f)),
+        };
 
-            var piOver2 = new Angle(Math.PI / 2);
-            var piOver2Mat = Matrix3Helpers.CreateRotation(piOver2.Theta);
-            Assert.That(piOver2Mat.Rotation(), Is.EqualTo(piOver2));
+        private static readonly TestCaseData[] Rotations = new TestCaseData[]
+        {
+            new(Matrix3x2.Identity, Angle.Zero),
+            new(Matrix3x2.CreateRotation(MathF.PI / 2), new Angle(MathF.PI / 2)),
+            new(Matrix3x2.CreateRotation(MathF.PI), Math.PI),
+        };
 
-            var pi = new Angle(Math.PI);
-            var piMat = Matrix3Helpers.CreateRotation(pi.Theta);
-            Assert.That(piMat.Rotation(), Is.EqualTo(pi));
+        [Test, TestCaseSource(nameof(Positions))]
+        public void GetPositionTest(Matrix3x2 matrix, Vector2 vec)
+        {
+            Assert.That(matrix.Position(), Is.EqualTo(vec));
+        }
+
+        [Test, TestCaseSource(nameof(Rotations))]
+        public void GetRotationTest(Matrix3x2 matrix, Angle angle)
+        {
+            Assert.That(matrix.Rotation(), Is.EqualTo(angle));
         }
 
         [Test]

@@ -136,7 +136,7 @@ public sealed partial class RayCastSystem
 
 		    DebugTools.Assert( 0.0f <= lower && lower <= input.MaxFraction );
 
-		    if ( index >= 0 )
+		    if (index >= 0)
 		    {
 			    output.Fraction = lower;
 			    output.Normal = shape.Normals[index];

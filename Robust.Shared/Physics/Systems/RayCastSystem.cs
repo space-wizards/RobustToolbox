@@ -1,8 +1,10 @@
 using System;
 using System.Numerics;
+using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
@@ -12,14 +14,64 @@ namespace Robust.Shared.Physics.Systems;
 
 public sealed partial class RayCastSystem : EntitySystem
 {
+    [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
-    public void RayCast(MapCoordinates coordinates, Vector2 translation)
+    private record struct RayCastQueryState
     {
-        // TODO: Get trees in range.
+        public RayCastSystem System;
+        public SharedPhysicsSystem Physics;
+
+        public uint CollisionMask;
+        public Vector2 Origin;
+        public Vector2 Translation;
     }
 
-    public void RayCast(Entity<BroadphaseComponent?> grid, Vector2 origin, Vector2 translation, uint collisionMask = uint.MaxValue - 1)
+    public void RayCast(MapCoordinates coordinates, Vector2 translation, uint collisionMask = uint.MaxValue - 1)
+    {
+        var end = coordinates.Position + translation;
+        var aabb = new Box2(Vector2.Min(coordinates.Position, end), Vector2.Max(coordinates.Position, end));
+
+        var state = new RayCastQueryState()
+        {
+            System = this,
+            Physics = _physics,
+
+            CollisionMask = collisionMask,
+            Origin = coordinates.Position,
+            Translation = translation,
+        };
+
+        _broadphase.GetBroadphases(coordinates.MapId,
+            aabb, ref state,
+            static (Entity<BroadphaseComponent> entity, ref RayCastQueryState state) =>
+            {
+                var transform = state.Physics.GetPhysicsTransform(entity.Owner);
+                var localOrigin = Physics.Transform.InvTransformPoint(transform, state.Origin);
+                var localTranslation = Physics.Transform.InvTransformPoint(transform, state.Origin + state.Translation);
+
+                state.System.RayCast((entity.Owner, entity.Comp), localOrigin, localTranslation);
+            });
+    }
+
+    public void RayCast(
+        Entity<BroadphaseComponent?> grid,
+        Vector2 origin,
+        Vector2 translation,
+        uint collisionMask = uint.MaxValue - 1)
+    {
+        if (!Resolve(grid.Owner, ref grid.Comp))
+            return;
+
+        var state = new RayCastQueryState()
+        {
+            System = this,
+        };
+
+        RayCast(grid, state, origin, translation, collisionMask);
+    }
+
+    private void RayCast(Entity<BroadphaseComponent?> grid, RayCastQueryState state, Vector2 origin, Vector2 translation, uint collisionMask = uint.MaxValue - 1)
     {
         if (!Resolve(grid.Owner, ref grid.Comp))
             return;
@@ -33,10 +85,9 @@ public sealed partial class RayCastSystem : EntitySystem
 
         var broadphaseTransform = _physics.GetPhysicsTransform(grid);
 
-        ((B2DynamicTree<FixtureProxy>) grid.Comp.DynamicTree).RayCastNew(input, collisionMask,
-            (castInput, proxy, context) =>
+        grid.Comp.DynamicTree.Tree.RayCastNew(input, collisionMask,
+            static (castInput, proxy, context) =>
             {
-
                 // TODO: Collision check.
                 if ((shapeFilter.categoryBits & queryFilter.maskBits ) == 0 || ( shapeFilter.maskBits & queryFilter.categoryBits ) == 0 )
                 {
@@ -51,8 +102,7 @@ public sealed partial class RayCastSystem : EntitySystem
 
                 if (output.Hit)
                 {
-                    b2ShapeId id = { shapeId + 1, world->worldId, shape->revision };
-                    float fraction = worldContext->fcn( id, output.Point, output.Normal, output.Fraction, worldContext->userContext );
+                    float fraction = worldContext->fcn( id, output.Point, output.Normal, output.Fraction, worldContext->userContext);
                     worldContext->fraction = fraction;
                     return fraction;
                 }

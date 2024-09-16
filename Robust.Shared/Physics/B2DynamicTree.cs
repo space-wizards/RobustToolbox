@@ -944,9 +944,9 @@ namespace Robust.Shared.Physics
         private static readonly RayQueryCallback<RayQueryCallback> EasyRayQueryCallback =
             (ref RayQueryCallback callback, Proxy proxy, in Vector2 hitPos, float distance) => callback(proxy, hitPos, distance);
 
-        public delegate float NewRayCallback(RayCastInput input, Proxy proxy, T context);
+        internal delegate float NewRayCallback(RayCastInput input, Proxy proxy, T context);
 
-        public void RayCastNew(RayCastInput input, uint mask, NewRayCallback callback)
+        internal void RayCastNew(RayCastInput input, uint mask, NewRayCallback callback)
         {
             var p1 = input.Origin;
             var d = input.Translation;

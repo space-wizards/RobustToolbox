@@ -54,6 +54,7 @@ internal sealed partial class PvsSystem
         {
             ref var meta = ref _metadataMemory.GetRef(ent.Ptr.Index);
             meta.Validate(ent.Meta);
+            if ((mask & meta.VisMask) == meta.VisMask)
                 AddEntity(session, ref ent, ref meta, fromTick);
         }
 

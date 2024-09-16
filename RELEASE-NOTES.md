@@ -43,6 +43,9 @@ END TEMPLATE-->
 
 ### Bugfixes
 
+* Fixed equality checks for `MarkupNode` not properly handling attributes.
+* Fixed `MarkupNode` not having a `GetHashCode()` implementation.
+* Fixed a PVS error that could occur when trying to delete the first entity that gets created in a round.
 * Fixed the "to" and "take" toolshed commands not working as intended.
 * Rich text controls within an `OutputPanel` control will now become invisible when they are out of view.
 

@@ -15,5 +15,5 @@ public sealed class ToCommand : ToolshedCommand
             [CommandArgument] ValueRef<T> end
         )
         where T : INumber<T>
-        => Enumerable.Range(int.CreateTruncating(start), int.CreateTruncating(end.Evaluate(ctx)! - start)).Select(T.CreateTruncating);
+        => Enumerable.Range(int.CreateTruncating(start), 1 + int.CreateTruncating(end.Evaluate(ctx)! - start)).Select(T.CreateTruncating);
 }

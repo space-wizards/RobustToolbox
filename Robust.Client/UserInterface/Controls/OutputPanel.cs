@@ -62,6 +62,12 @@ namespace Robust.Client.UserInterface.Controls
         public void Clear()
         {
             _firstLine = true;
+
+            foreach (var entry in _entries)
+            {
+                entry.RemoveControls();
+            }
+
             _entries.Clear();
             _totalContentHeight = 0;
             _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
@@ -71,6 +77,7 @@ namespace Robust.Client.UserInterface.Controls
         public void RemoveEntry(Index index)
         {
             var entry = _entries[index];
+            entry.RemoveControls();
             _entries.RemoveAt(index.GetOffset(_entries.Count));
 
             var font = _getFont();
@@ -156,6 +163,9 @@ namespace Robust.Client.UserInterface.Controls
                 if (entryOffset > contentBox.Height)
                 {
                     entry.HideControls();
+
+                    // We know that every subsequent entry will also fail the test, but we also need to
+                    // hide all the controls, so we cannot simply break out of the loop
                     continue;
                 }
 

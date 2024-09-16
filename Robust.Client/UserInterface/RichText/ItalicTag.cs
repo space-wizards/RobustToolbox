@@ -6,7 +6,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.RichText;
 
-public sealed class ItalicTag : IMarkupTag
+public sealed class ItalicTag : IMarkupTagHandler
 {
     public const string ItalicFont = "DefaultItalic";
 

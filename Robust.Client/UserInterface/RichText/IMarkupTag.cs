@@ -1,9 +1,16 @@
+using System;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.RichText;
 
-public interface IMarkupTag
+/// <summary>
+/// Classes that implement this interface will be instantiated by <see cref="MarkupTagManager"/> and used to handle
+/// the parsing and behaviour of markup tags. Note that each class is only ever instantiated once by the tag manager,
+/// and wil be used to handle all tags of that kind, and thus should not contain state information relevant to a
+/// specific tag.
+/// </summary>
+public interface IMarkupTagHandler
 {
     /// <summary>
     /// The string used as the tags name when writing rich text
@@ -54,17 +61,32 @@ public interface IMarkupTag
     }
 
     /// <summary>
-    /// Called inside the constructor of <see cref="RichTextEntry"/> to
-    /// supply a control that gets rendered inline before this tags children<br/>
-    /// Text continues to the right of the control until the next line and then continues bellow it
+    /// Called inside the constructor of <see cref="RichTextEntry"/> to supply a control that gets rendered inline
+    /// before this tags children. The returned control must be new instance to avoid issues with shallow cloning
+    /// <see cref="FormattedMessage"/> nodes. Text continues to the right of the control until the next line and
+    /// then continues bellow it.
     /// </summary>
     /// <param name="node">The markup node containing the parameter and attributes</param>
     /// <param name="control">A UI control for placing in line with this tags children</param>
     /// <returns>true if this tag supplies a control</returns>
+    public bool TryCreateControl(MarkupNode node, [NotNullWhen(true)] out Control? control)
+    {
+        control = null;
+        return false;
+    }
+}
+
+[Obsolete("Use IMarkupTagHandler")]
+public interface IMarkupTag : IMarkupTagHandler
+{
+    bool IMarkupTagHandler.TryCreateControl(MarkupNode node, [NotNullWhen(true)] out Control? control)
+    {
+        return TryGetControl(node, out control);
+    }
+
     public bool TryGetControl(MarkupNode node, [NotNullWhen(true)] out Control? control)
     {
         control = null;
         return false;
     }
-
 }

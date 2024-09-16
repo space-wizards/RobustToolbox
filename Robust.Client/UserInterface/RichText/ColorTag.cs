@@ -6,7 +6,7 @@ namespace Robust.Client.UserInterface.RichText;
 /// <summary>
 /// Colors the text inside its opening and closing nodes
 /// </summary>
-public sealed class ColorTag : IMarkupTag
+public sealed class ColorTag : IMarkupTagHandler
 {
     public static readonly Color DefaultColor = new(200, 200, 200);
 

@@ -132,7 +132,8 @@ namespace Robust.UnitTesting
                                 var sessionId = new NetUserId(userId);
                                 var userData = new NetUserData(sessionId, userName)
                                 {
-                                    HWId = ImmutableArray<byte>.Empty
+                                    HWId = ImmutableArray<byte>.Empty,
+                                    ModernHWIds = []
                                 };
 
                                 var args = await OnConnecting(

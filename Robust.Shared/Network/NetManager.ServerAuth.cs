@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -156,7 +157,13 @@ namespace Robust.Shared.Network
                     userData = new NetUserData(userId, joinedRespJson.UserData.UserName)
                     {
                         PatronTier = joinedRespJson.UserData.PatronTier,
-                        HWId = msgLogin.HWId
+                        HWId = msgLogin.HWId,
+                        ModernHWIds =
+                        [
+                            ..joinedRespJson.ConnectionData!.Hwids
+                                .Select(h => ImmutableArray.Create(Convert.FromBase64String(h)))
+                        ],
+                        Trust = joinedRespJson.ConnectionData!.Trust
                     };
                     padSuccessMessage = false;
                     type = LoginType.LoggedIn;
@@ -359,8 +366,9 @@ namespace Robust.Shared.Network
         }
 
         // ReSharper disable ClassNeverInstantiated.Local
-        private sealed record HasJoinedResponse(bool IsValid, HasJoinedUserData? UserData);
+        private sealed record HasJoinedResponse(bool IsValid, HasJoinedUserData? UserData, HasJoinedConnectionData? ConnectionData);
         private sealed record HasJoinedUserData(string UserName, Guid UserId, string? PatronTier);
+        private sealed record HasJoinedConnectionData(string[] Hwids, float Trust);
         // ReSharper restore ClassNeverInstantiated.Local
     }
 }

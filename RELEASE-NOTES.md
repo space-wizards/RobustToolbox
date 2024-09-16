@@ -47,11 +47,13 @@ END TEMPLATE-->
 * Fixed `MarkupNode` not having a `GetHashCode()` implementation.
 * Fixed a PVS error that could occur when trying to delete the first entity that gets created in a round.
 * Fixed the "to" and "take" toolshed commands not working as intended.
+* OutputPanel and RichTextLabel now remove controls associated with rich text tags when the text is updated.
 * Rich text controls within an `OutputPanel` control will now become invisible when they are out of view.
+
 
 ### Other
 
-*None yet*
+* `IMarkupTag` and related methods in `MarkupTagManager` have been obsoleted and should be replaced with the new `IMarkupTagHandler`
 
 ### Internal
 

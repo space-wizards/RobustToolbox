@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
@@ -15,8 +17,7 @@ namespace Robust.Client.UserInterface.Controls
     {
         [Dependency] private readonly MarkupTagManager _tagManager = default!;
 
-        private FormattedMessage? _message;
-        private RichTextEntry _entry;
+        private RichTextEntry? _entry;
         private float _lineHeightScale = 1;
         private bool _lineHeightOverride;
 
@@ -40,18 +41,25 @@ namespace Robust.Client.UserInterface.Controls
 
         public string? Text
         {
-            get => _message?.ToMarkup();
+            get => _entry?.Message.ToMarkup();
             set
             {
                 if (value == null)
-                {
-                    _message?.Clear();
-                    return;
-                }
-
-                SetMessage(FormattedMessage.FromMarkupPermissive(value));
+                    Clear();
+                else
+                    SetMessage(FormattedMessage.FromMarkupPermissive(value));
             }
         }
+
+        public void Clear()
+        {
+            _entry?.RemoveControls();
+            _entry = null;
+            InvalidateMeasure();
+        }
+
+        public IEnumerable<Control> Controls => _entry?.Controls?.Values ?? Enumerable.Empty<Control>();
+        public IReadOnlyList<MarkupNode> Nodes => _entry?.Message.Nodes ?? Array.Empty<MarkupNode>();
 
         public RichTextLabel()
         {
@@ -61,8 +69,8 @@ namespace Robust.Client.UserInterface.Controls
 
         public void SetMessage(FormattedMessage message, Type[]? tagsAllowed = null, Color? defaultColor = null)
         {
-            _message = message;
-            _entry = new RichTextEntry(_message, this, _tagManager, tagsAllowed, defaultColor);
+            _entry?.RemoveControls();
+            _entry = new RichTextEntry(message, this, _tagManager, tagsAllowed, defaultColor);
             InvalidateMeasure();
         }
 
@@ -73,31 +81,31 @@ namespace Robust.Client.UserInterface.Controls
             SetMessage(msg, tagsAllowed, defaultColor);
         }
 
-        public string? GetMessage() => _message?.ToMarkup();
+        public string? GetMessage() => _entry?.Message.ToMarkup();
+
+        /// <summary>
+        /// Returns a copy of the currently used formatted message.
+        /// </summary>
+        public FormattedMessage? GetFormattedMessage() => _entry == null ? null : new FormattedMessage(_entry.Value.Message);
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
-            if (_message == null)
-            {
+            if (_entry == null)
                 return Vector2.Zero;
-            }
 
             var font = _getFont();
-            _entry.Update(_tagManager, font, availableSize.X * UIScale, UIScale, LineHeightScale);
 
-            return new Vector2(_entry.Width / UIScale, _entry.Height / UIScale);
+            // _entry is nullable struct.
+            // cannot just call _entry.Value.Update() as that doesn't actually update _entry.
+            _entry = _entry.Value.Update(_tagManager, font, availableSize.X * UIScale, UIScale, LineHeightScale);
+
+            return new Vector2(_entry.Value.Width / UIScale, _entry.Value.Height / UIScale);
         }
 
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             base.Draw(handle);
-
-            if (_message == null)
-            {
-                return;
-            }
-
-            _entry.Draw(_tagManager, handle, _getFont(), SizeBox, 0, new MarkupDrawingContext(), UIScale, LineHeightScale);
+            _entry?.Draw(_tagManager, handle, _getFont(), SizeBox, 0, new MarkupDrawingContext(), UIScale, LineHeightScale);
         }
 
         [Pure]

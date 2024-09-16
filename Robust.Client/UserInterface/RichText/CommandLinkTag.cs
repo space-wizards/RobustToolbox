@@ -8,14 +8,16 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.RichText;
 
+#pragma warning disable CS0618 // Type or member is obsolete
 public sealed class CommandLinkTag : IMarkupTag
+#pragma warning restore CS0618 // Type or member is obsolete
 {
     [Dependency] private readonly IClientConsoleHost _clientConsoleHost = default!;
 
     public string Name => "cmdlink";
 
     /// <inheritdoc/>
-    public bool TryGetControl(MarkupNode node, [NotNullWhen(true)] out Control? control)
+    public bool TryCreateControl(MarkupNode node, [NotNullWhen(true)] out Control? control)
     {
         if (!node.Value.TryGetString(out var text)
             || !node.Attributes.TryGetValue("command", out var commandParameter)

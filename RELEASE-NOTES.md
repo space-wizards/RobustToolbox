@@ -39,6 +39,53 @@ END TEMPLATE-->
 
 ### New features
 
+*None yet*
+
+### Bugfixes
+
+* Fixed the "to" and "take" toolshed commands not working as intended.
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 234.1.0
+
+### New features
+
+* SharedAudioSystem now has PlayLocal which only runs audio locally on the client.
+
+### Bugfixes
+
+* Fix AudioParams not being passed through on PlayGlobal methods.
+
+
+## 234.0.0
+
+### Breaking changes
+
+* Remove a lot of obsoleted code that has been obsoleted for a while.
+
+### New features
+
+* Add another GetLocalEntitiesIntersecting override.
+
+### Other
+
+* Mark large replays as requiring Server GC.
+* Obsolete some IResourceCache proxies.
+
+
+## 233.1.0
+
+### New features
+
+* Add GetGridEntities and another GetEntitiesIntersecting overload to EntityLookupSystem.
 * `MarkupNode` is now `IEquatable<MarkupNode>`. It already supported equality checks, now it implements the interface.
 * Added `Entity<T>` overloads to the following `SharedMapSystem` methods: `GetTileRef`, `GetAnchoredEntities`, `TileIndicesFor`.
 * Added `EntityUid`-only overloads to the following `SharedTransformSystem` methods: `AnchorEntity`, `Unanchor`.
@@ -52,10 +99,6 @@ END TEMPLATE-->
 ### Other
 
 * If `EntityManager.FlushEntities()` fails to delete all entities, it will now attempt to do so a second time before throwing an exception.
-
-### Internal
-
-*None yet*
 
 
 ## 233.0.2

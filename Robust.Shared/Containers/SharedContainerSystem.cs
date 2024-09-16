@@ -193,16 +193,6 @@ namespace Robust.Shared.Containers
             return true;
         }
 
-        [Obsolete("Use variant without skipExistCheck argument")]
-        public bool TryGetContainingContainer(
-            EntityUid uid,
-            EntityUid containedUid,
-            [NotNullWhen(true)] out BaseContainer? container,
-            bool skipExistCheck)
-        {
-            return TryGetContainingContainer(uid, containedUid, out container);
-        }
-
         public bool TryGetContainingContainer(
             EntityUid uid,
             EntityUid containedUid,

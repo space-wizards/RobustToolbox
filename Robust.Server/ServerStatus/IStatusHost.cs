@@ -27,19 +27,6 @@ namespace Robust.Server.ServerStatus
         /// </summary>
         event Action<JsonNode> OnInfoRequest;
 
-        /// <summary>
-        /// Set information used by automatic-client-zipping to determine the layout of your dev setup,
-        /// and which assembly files to send.
-        /// </summary>
-        /// <param name="clientBinFolder">
-        /// The name of your client project in the bin/ folder on the top of your project.
-        /// </param>
-        /// <param name="clientAssemblyNames">
-        /// The list of client assemblies to send from the aforementioned folder.
-        /// </param>
-        [Obsolete("This API is deprecated as it cannot share information with standalone packaging. Use SetMagicAczProvider instead")]
-        void SetAczInfo(string clientBinFolder, string[] clientAssemblyNames);
-
         void SetMagicAczProvider(IMagicAczProvider provider);
 
         /// <summary>

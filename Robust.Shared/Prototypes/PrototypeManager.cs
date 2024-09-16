@@ -806,30 +806,6 @@ namespace Robust.Shared.Prototypes
             return _kinds[kind].Results.TryGetValue(id, out mappings);
         }
 
-        [Obsolete("Variant is outdated naming, use *kind* functions instead")]
-        public bool HasVariant(string variant) => HasKind(variant);
-
-        [Obsolete("Variant is outdated naming, use *kind* functions instead")]
-        public Type GetVariantType(string variant) => GetKindType(variant);
-
-        [Obsolete("Variant is outdated naming, use *kind* functions instead")]
-        public bool TryGetVariantType(string variant, [NotNullWhen(true)] out Type? prototype)
-        {
-            return TryGetKindType(variant, out prototype);
-        }
-
-        [Obsolete("Variant is outdated naming, use *kind* functions instead")]
-        public bool TryGetVariantFrom(Type type, [NotNullWhen(true)] out string? variant)
-        {
-            return TryGetKindFrom(type, out variant);
-        }
-
-        [Obsolete("Variant is outdated naming, use *kind* functions instead")]
-        public bool TryGetVariantFrom<T>([NotNullWhen(true)] out string? variant) where T : class, IPrototype
-        {
-            return TryGetKindFrom<T>(out variant);
-        }
-
         public bool HasKind(string kind)
         {
             return _kindNames.ContainsKey(kind);
@@ -918,19 +894,11 @@ namespace Robust.Shared.Prototypes
             return TryGetKindFrom(typeof(T), out kind);
         }
 
-        [Obsolete("Variant is outdated naming, use *kind* functions instead")]
-        public bool TryGetVariantFrom(IPrototype prototype, [NotNullWhen(true)] out string? variant)
-        {
-            return TryGetKindFrom(prototype, out variant);
-        }
-
         /// <inheritdoc />
         public void RegisterIgnore(string name)
         {
             _ignoredPrototypeTypes.Add(name);
         }
-
-        void IPrototypeManager.RegisterType(Type type) => RegisterKind(type);
 
         static string CalculatePrototypeName(Type type)
         {

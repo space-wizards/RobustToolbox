@@ -8,7 +8,9 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.RichText;
 
-public sealed class CommandLinkTag : IMarkupTagHandler
+#pragma warning disable CS0618 // Type or member is obsolete
+public sealed class CommandLinkTag : IMarkupTag
+#pragma warning restore CS0618 // Type or member is obsolete
 {
     [Dependency] private readonly IClientConsoleHost _clientConsoleHost = default!;
 

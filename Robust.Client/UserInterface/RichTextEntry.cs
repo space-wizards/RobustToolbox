@@ -270,7 +270,7 @@ namespace Robust.Client.UserInterface
                 return node.Value.StringValue ?? "";
 
             //Skip the node if there is no markup tag for it.
-            if (!tagManager.TryGetMarkupTag(node.Name, _tagsAllowed, out var tag))
+            if (!tagManager.TryGetMarkupTagHandler(node.Name, _tagsAllowed, out var tag))
                 return "";
 
             if (!node.Closing)

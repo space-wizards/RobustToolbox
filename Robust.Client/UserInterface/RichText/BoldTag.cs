@@ -6,7 +6,9 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.RichText;
 
-public sealed class BoldTag : IMarkupTagHandler
+#pragma warning disable CS0618 // Type or member is obsolete
+public sealed class BoldTag : IMarkupTag
+#pragma warning restore CS0618 // Type or member is obsolete
 {
     public const string BoldFont = "DefaultBold";
 

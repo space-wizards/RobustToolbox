@@ -634,12 +634,6 @@ public sealed partial class EntityLookupSystem
         GetEntitiesInRange(type, coordinates.MapId, coordinates.Position, range, entities, flags);
     }
 
-    [Obsolete]
-    public HashSet<T> GetComponentsInRange<T>(MapCoordinates coordinates, float range) where T : IComponent
-    {
-        return GetComponentsInRange<T>(coordinates.MapId, coordinates.Position, range);
-    }
-
     public void GetEntitiesInRange<T>(MapCoordinates coordinates, float range, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
     {
         GetEntitiesInRange(coordinates.MapId, coordinates.Position, range, entities, flags);
@@ -666,14 +660,6 @@ public sealed partial class EntityLookupSystem
         var circle = new PhysShapeCircle(range);
         var transform = new Transform(worldPos, 0f);
         GetEntitiesIntersecting(type, mapId, circle, transform, entities, flags);
-    }
-
-    [Obsolete]
-    public HashSet<T> GetComponentsInRange<T>(MapId mapId, Vector2 worldPos, float range) where T : IComponent
-    {
-        var entities = new HashSet<Entity<T>>();
-        GetEntitiesInRange(mapId, worldPos, range, entities);
-        return [..entities.Select(e => e.Comp)];
     }
 
     public void GetEntitiesInRange<T>(MapId mapId, Vector2 worldPos, float range, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
@@ -783,6 +769,22 @@ public sealed partial class EntityLookupSystem
     }
 
     #endregion
+
+    /// <summary>
+    /// Gets entities with the specified component with the specified grid.
+    /// </summary>
+    public void GetGridEntities<TComp1>(EntityUid gridUid, HashSet<Entity<TComp1>> entities) where TComp1 : IComponent
+    {
+        var query = AllEntityQuery<TComp1, TransformComponent>();
+
+        while (query.MoveNext(out var uid, out var comp, out var xform))
+        {
+            if (xform.GridUid != gridUid)
+                continue;
+
+            entities.Add((uid, comp));
+        }
+    }
 
     /// <summary>
     /// Gets entities with the specified component with the specified parent.

@@ -453,6 +453,17 @@ public sealed partial class AudioSystem : SharedAudioSystem
         return null; // uhh Lets hope predicted audio never needs to somehow store the playing audio....
     }
 
+    /// <inheritdoc />
+    public override (EntityUid Entity, AudioComponent Component)? PlayLocal(
+        SoundSpecifier? sound,
+        EntityUid source,
+        EntityUid? soundInitiator,
+        AudioParams? audioParams = null
+    )
+    {
+        return PlayPredicted(sound, source, soundInitiator, audioParams);
+    }
+
     public override (EntityUid Entity, AudioComponent Component)? PlayPredicted(SoundSpecifier? sound, EntityCoordinates coordinates, EntityUid? user, AudioParams? audioParams = null)
     {
         if (Timing.IsFirstTimePredicted && sound != null)

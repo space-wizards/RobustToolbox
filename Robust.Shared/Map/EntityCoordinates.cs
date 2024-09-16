@@ -77,21 +77,9 @@ namespace Robust.Shared.Map
         }
 
         [Obsolete("Use SharedTransformSystem.ToMapCoordinates()")]
-        public MapCoordinates ToMap(IEntityManager entityManager)
-        {
-            return ToMap(entityManager, entityManager.System<SharedTransformSystem>());
-        }
-
-        [Obsolete("Use SharedTransformSystem.ToMapCoordinates()")]
         public MapCoordinates ToMap(IEntityManager entityManager, SharedTransformSystem transformSystem)
         {
             return transformSystem.ToMapCoordinates(this);
-        }
-
-        [Obsolete("Use SharedTransformSystem.ToMapCoordinates()")]
-        public Vector2 ToMapPos(IEntityManager entityManager)
-        {
-            return ToMap(entityManager, entityManager.System<SharedTransformSystem>()).Position;
         }
 
         [Obsolete("Use SharedTransformSystem.ToMapCoordinates()")]
@@ -101,34 +89,15 @@ namespace Robust.Shared.Map
         }
 
         [Obsolete("Use SharedTransformSystem.ToCoordinates()")]
-        public static EntityCoordinates FromMap(EntityUid entity, MapCoordinates coordinates, IEntityManager? entMan = null)
-        {
-            IoCManager.Resolve(ref entMan);
-            return FromMap(entity, coordinates, entMan.System<SharedTransformSystem>(), entMan);
-        }
-
-        [Obsolete("Use SharedTransformSystem.ToCoordinates()")]
         public static EntityCoordinates FromMap(EntityUid entity, MapCoordinates coordinates, SharedTransformSystem transformSystem, IEntityManager? entMan = null)
         {
             return transformSystem.ToCoordinates(entity, coordinates);
         }
 
         [Obsolete("Use SharedTransformSystem.ToCoordinates()")]
-        public static EntityCoordinates FromMap(IEntityManager entityManager, EntityUid entityUid, MapCoordinates coordinates)
-        {
-            return FromMap(entityUid, coordinates, entityManager.System<SharedTransformSystem>(), entityManager);
-        }
-
-        [Obsolete("Use SharedTransformSystem.ToCoordinates()")]
         public static EntityCoordinates FromMap(IMapManager mapManager, MapCoordinates coordinates)
         {
             return IoCManager.Resolve<IEntityManager>().System<SharedTransformSystem>().ToCoordinates(coordinates);
-        }
-
-        [Obsolete("Use overload with TransformSystem")]
-        public Vector2i ToVector2i(IEntityManager entityManager, IMapManager mapManager)
-        {
-            return ToVector2i(entityManager, mapManager, entityManager.System<SharedTransformSystem>());
         }
 
         /// <summary>

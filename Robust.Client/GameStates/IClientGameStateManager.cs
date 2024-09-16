@@ -34,9 +34,6 @@ namespace Robust.Client.GameStates
         /// </summary>
         int GetApplicableStateCount();
 
-        [Obsolete("use GetApplicableStateCount()")]
-        int CurrentBufferSize => GetApplicableStateCount();
-
         /// <summary>
         ///     Total number of game states currently in the state buffer.
         /// </summary>

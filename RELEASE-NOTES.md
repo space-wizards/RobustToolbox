@@ -39,15 +39,17 @@ END TEMPLATE-->
 
 ### New features
 
-* `MarkupNode` is now `IEquatable<MarkupNode>`. It already supported equality checks, now it implements the interface.
-* Added `Entity<T>` overloads to the following `SharedMapSystem` methods: `GetTileRef`, `GetAnchoredEntities`, `TileIndicesFor`.
-* Added `EntityUid`-only overloads to the following `SharedTransformSystem` methods: `AnchorEntity`, `Unanchor`.
+*None yet*
 
 ### Bugfixes
 
+<<<<<<< HEAD
 * Fixed equality checks for `MarkupNode` not properly handling attributes.
 * Fixed `MarkupNode` not having a `GetHashCode()` implementation.
 * Fixed a PVS error that could occur when trying to delete the first entity that gets created in a round.
+=======
+* Fixed the "to" and "take" toolshed commands not working as intended.
+>>>>>>> f5c1d870f904ca1a5d67ae6db20c17e181a26df9
 
 ### Other
 
@@ -56,6 +58,53 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 234.1.0
+
+### New features
+
+* SharedAudioSystem now has PlayLocal which only runs audio locally on the client.
+
+### Bugfixes
+
+* Fix AudioParams not being passed through on PlayGlobal methods.
+
+
+## 234.0.0
+
+### Breaking changes
+
+* Remove a lot of obsoleted code that has been obsoleted for a while.
+
+### New features
+
+* Add another GetLocalEntitiesIntersecting override.
+
+### Other
+
+* Mark large replays as requiring Server GC.
+* Obsolete some IResourceCache proxies.
+
+
+## 233.1.0
+
+### New features
+
+* Add GetGridEntities and another GetEntitiesIntersecting overload to EntityLookupSystem.
+* `MarkupNode` is now `IEquatable<MarkupNode>`. It already supported equality checks, now it implements the interface.
+* Added `Entity<T>` overloads to the following `SharedMapSystem` methods: `GetTileRef`, `GetAnchoredEntities`, `TileIndicesFor`.
+* Added `EntityUid`-only overloads to the following `SharedTransformSystem` methods: `AnchorEntity`, `Unanchor`.
+
+### Bugfixes
+
+* Fixed equality checks for `MarkupNode` not properly handling attributes.
+* Fixed toolshed commands failing to generate error messages when working with array types
+* Fixed `MarkupNode` not having a `GetHashCode()` implementation.
+
+### Other
+
+* If `EntityManager.FlushEntities()` fails to delete all entities, it will now attempt to do so a second time before throwing an exception.
 
 
 ## 233.0.2

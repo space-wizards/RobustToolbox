@@ -428,7 +428,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
     [return: NotNullIfNotNull("sound")]
     public (EntityUid Entity, Components.AudioComponent Component)? PlayGlobal(SoundSpecifier? sound, Filter playerFilter, bool recordReplay, AudioParams? audioParams = null)
     {
-        return sound == null ? null : PlayGlobal(GetSound(sound), playerFilter, recordReplay, sound.Params);
+        return sound == null ? null : PlayGlobal(GetSound(sound), playerFilter, recordReplay, audioParams ?? sound.Params);
     }
 
     /// <summary>
@@ -445,9 +445,9 @@ public abstract partial class SharedAudioSystem : EntitySystem
     /// <param name="sound">The sound specifier that points the audio file(s) that should be played.</param>
     /// <param name="recipient">The player that will hear the sound.</param>
     [return: NotNullIfNotNull("sound")]
-    public (EntityUid Entity, Components.AudioComponent Component)? PlayGlobal(SoundSpecifier? sound, ICommonSession recipient)
+    public (EntityUid Entity, Components.AudioComponent Component)? PlayGlobal(SoundSpecifier? sound, ICommonSession recipient, AudioParams? audioParams = null)
     {
-        return sound == null ? null : PlayGlobal(GetSound(sound), recipient, sound.Params);
+        return sound == null ? null : PlayGlobal(GetSound(sound), recipient, audioParams ?? sound.Params);
     }
 
     public abstract void LoadStream<T>(Entity<AudioComponent> entity, T stream);
@@ -468,7 +468,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
     [return: NotNullIfNotNull("sound")]
     public (EntityUid Entity, Components.AudioComponent Component)? PlayGlobal(SoundSpecifier? sound, EntityUid recipient, AudioParams? audioParams = null)
     {
-        return sound == null ? null : PlayGlobal(GetSound(sound), recipient, sound.Params);
+        return sound == null ? null : PlayGlobal(GetSound(sound), recipient, audioParams ?? sound.Params);
     }
 
     /// <summary>
@@ -573,6 +573,15 @@ public abstract partial class SharedAudioSystem : EntitySystem
     [return: NotNullIfNotNull("filename")]
     public abstract (EntityUid Entity, Components.AudioComponent Component)? PlayPvs(string? filename, EntityUid uid,
         AudioParams? audioParams = null);
+
+    /// <summary>
+    /// Plays a predicted sound following an entity for only one entity. The client-side system plays this sound as normal, server will do nothing.
+    /// </summary>
+    /// <param name="sound">The sound specifier that points the audio file(s) that should be played.</param>
+    /// <param name="source">The UID of the entity "emitting" the audio.</param>
+    /// <param name="soundInitiator">The UID of the user that initiated this sound. This is usually some player's controlled entity.</param>
+    [return: NotNullIfNotNull("sound")]
+    public abstract (EntityUid Entity, Components.AudioComponent Component)? PlayLocal(SoundSpecifier? sound, EntityUid source, EntityUid? soundInitiator, AudioParams? audioParams = null);
 
     /// <summary>
     /// Plays a predicted sound following an entity. The server will send the sound to every player in PVS range,

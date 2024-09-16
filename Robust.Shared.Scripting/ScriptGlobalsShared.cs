@@ -206,8 +206,11 @@ namespace Robust.Shared.Scripting
         public void Dirty(EntityUid uid)
             => ent.DirtyEntity(uid);
 
+#pragma warning disable CS0618 // Type or member is obsolete
+        // Remove this helper when component.Owner finally gets removed.
         public void Dirty(Component comp)
             => ent.Dirty(comp.Owner, comp);
+#pragma warning restore CS0618 // Type or member is obsolete
 
         public string Name(EntityUid uid)
             => ent.GetComponent<MetaDataComponent>(uid).EntityName;

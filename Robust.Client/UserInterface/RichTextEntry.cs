@@ -118,9 +118,6 @@ namespace Robust.Client.UserInterface
                 if (_tagControls == null || !_tagControls.TryGetValue(nodeIndex, out var control))
                     continue;
 
-                if (ProcessRune(ref this, new Rune(' '), out breakLine))
-                    continue;
-
                 control.Measure(new Vector2(Width, Height));
 
                 var desiredSize = control.DesiredPixelSize;
@@ -164,6 +161,16 @@ namespace Robust.Client.UserInterface
 
                     src.Height += GetLineHeight(font, uiScale, lineHeightScale);
                 }
+            }
+        }
+
+        internal readonly void HideControls()
+        {
+            if (_tagControls == null)
+                return;
+            foreach (var control in _tagControls.Values)
+            {
+                control.Visible = false;
             }
         }
 
@@ -216,8 +223,11 @@ namespace Robust.Client.UserInterface
                 if (_tagControls == null || !_tagControls.TryGetValue(nodeIndex, out var control))
                     continue;
 
-                var invertedScale = 1f / uiScale;
+                // Controls may have been previously hidden via HideControls due to being "out-of frame".
+                // If this ever gets replaced with RectClipContents / scissor box testing, this can be removed.
+                control.Visible = true;
 
+                var invertedScale = 1f / uiScale;
                 control.Position = new Vector2(baseLine.X * invertedScale, (baseLine.Y - defaultFont.GetAscent(uiScale)) * invertedScale);
                 control.Measure(new Vector2(Width, Height));
                 var advanceX = control.DesiredPixelSize.X;

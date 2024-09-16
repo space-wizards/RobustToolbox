@@ -80,7 +80,7 @@ namespace Robust.Client.UserInterface
         /// <summary>
         /// Remove all owned controls from their parents.
         /// </summary>
-        public void RemoveControls()
+        public readonly void RemoveControls()
         {
             if (Controls == null)
                 return;
@@ -98,7 +98,7 @@ namespace Robust.Client.UserInterface
         /// <param name="maxSizeX">The maximum horizontal size of the container of this entry.</param>
         /// <param name="uiScale"></param>
         /// <param name="lineHeightScale"></param>
-        public void Update(MarkupTagManager tagManager, Font defaultFont, float maxSizeX, float uiScale, float lineHeightScale = 1)
+        public RichTextEntry Update(MarkupTagManager tagManager, Font defaultFont, float maxSizeX, float uiScale, float lineHeightScale = 1)
         {
             // This method is gonna suck due to complexity.
             // Bear with me here.
@@ -136,7 +136,7 @@ namespace Robust.Client.UserInterface
                         continue;
 
                     if (ProcessMetric(ref this, metrics, out breakLine))
-                        return;
+                        return this;
                 }
 
                 if (Controls == null || !Controls.TryGetValue(nodeIndex, out var control))
@@ -152,11 +152,13 @@ namespace Robust.Client.UserInterface
                     desiredSize.Y);
 
                 if (ProcessMetric(ref this, controlMetrics, out breakLine))
-                    return;
+                    return  this;
             }
 
             Width = wordWrap.FinalizeText(out breakLine);
             CheckLineBreak(ref this, breakLine);
+
+            return this;
 
             bool ProcessRune(ref RichTextEntry src, Rune rune, out int? outBreakLine)
             {

@@ -91,12 +91,13 @@ namespace Robust.Client.UserInterface.Controls
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
             if (_entry is not {} entry)
-            {
                 return Vector2.Zero;
-            }
 
             var font = _getFont();
-            entry.Update(_tagManager, font, availableSize.X * UIScale, UIScale, LineHeightScale);
+
+            // _entry is nullable struct.
+            // cannot just call entry.Update or _entry.Value.Update() as that doesn't actually update _entry.
+            _entry = entry.Update(_tagManager, font, availableSize.X * UIScale, UIScale, LineHeightScale);
 
             return new Vector2(entry.Width / UIScale, entry.Height / UIScale);
         }

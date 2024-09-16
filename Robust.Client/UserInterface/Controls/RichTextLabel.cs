@@ -75,8 +75,6 @@ namespace Robust.Client.UserInterface.Controls
 
         public string? GetMessage() => _message?.ToMarkup();
 
-        public FormattedMessage? GetFormattedMessage() => _message;
-
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
             if (_message == null)

@@ -67,8 +67,6 @@ namespace Robust.Client.UserInterface
             _tagControls = tagControls;
         }
 
-        
-
         /// <summary>
         ///     Recalculate line dimensions and where it has line breaks for word wrapping.
         /// </summary>
@@ -168,8 +166,12 @@ namespace Robust.Client.UserInterface
 
         internal readonly void HideControls()
         {
-            if (_tagControls == null) return;
-            foreach ((_, var control) in _tagControls) control.Visible = false;
+            if (_tagControls == null)
+                return;
+            foreach (var control in _tagControls.Values)
+            {
+                control.Visible = false;
+            }
         }
 
         public readonly void Draw(
@@ -221,10 +223,12 @@ namespace Robust.Client.UserInterface
                 if (_tagControls == null || !_tagControls.TryGetValue(nodeIndex, out var control))
                     continue;
 
-                var invertedScale = 1f / uiScale;
-
-                control.Position = new Vector2(baseLine.X * invertedScale, (baseLine.Y - defaultFont.GetAscent(uiScale)) * invertedScale);
+                // Controls may have been previously hidden via HideControls due to being "out-of frame".
+                // If this ever gets replaced with RectClipContents / scissor box testing, this can be removed.
                 control.Visible = true;
+
+                var invertedScale = 1f / uiScale;
+                control.Position = new Vector2(baseLine.X * invertedScale, (baseLine.Y - defaultFont.GetAscent(uiScale)) * invertedScale);
                 control.Measure(new Vector2(Width, Height));
                 var advanceX = control.DesiredPixelSize.X;
                 controlYAdvance = Math.Max(0f, (control.DesiredPixelSize.Y - GetLineHeight(font, uiScale, lineHeightScale)) * invertedScale);

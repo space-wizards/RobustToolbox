@@ -44,6 +44,7 @@ END TEMPLATE-->
 ### Bugfixes
 
 * Fixed the "to" and "take" toolshed commands not working as intended.
+* Rich text controls within an `OutputPanel` control will now become invisible when they are out of view.
 
 ### Other
 

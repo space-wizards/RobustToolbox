@@ -132,13 +132,13 @@ namespace Robust.Shared.Network
             var hasPubKey = !string.IsNullOrEmpty(pubKey);
             var authenticate = !string.IsNullOrEmpty(authToken);
 
-            var hwId = ImmutableArray.Create(_hwId.GetLegacy());
+            byte[] legacyHwid = [];
+
             var msgLogin = new MsgLoginStart
             {
                 UserName = userNameRequest,
                 CanAuth = authenticate,
                 NeedPubKey = !hasPubKey,
-                HWId = hwId,
                 Encrypt = encrypt
             };
 
@@ -190,7 +190,13 @@ namespace Robust.Shared.Network
 
                 var authHashBytes = MakeAuthHash(sharedSecret, keyBytes);
                 var authHash = Convert.ToBase64String(authHashBytes);
-                var modernHwid = _hwId.GetModern();
+
+                byte[]? modernHwid = null;
+                if (_authManager.AllowHwid && encRequest.WantHwid)
+                {
+                    legacyHwid = _hwId.GetLegacy();
+                    modernHwid = _hwId.GetModern();
+                }
 
                 var joinReq = new JoinRequest(authHash, Base64Helpers.ToBase64Nullable(modernHwid));
                 var request = new HttpRequestMessage(HttpMethod.Post, authServer + "api/session/join");
@@ -203,7 +209,8 @@ namespace Robust.Shared.Network
                 var encryptionResponse = new MsgEncryptionResponse
                 {
                     SealedData = sealedData,
-                    UserId = userId!.Value.UserId
+                    UserId = userId!.Value.UserId,
+                    LegacyHwid = legacyHwid
                 };
 
                 var outEncRespMsg = peer.Peer.CreateMessage();
@@ -218,7 +225,7 @@ namespace Robust.Shared.Network
             var msgSuc = new MsgLoginSuccess();
             msgSuc.ReadFromBuffer(response, _serializer);
 
-            var channel = new NetChannel(this, connection, msgSuc.UserData with { HWId = hwId }, msgSuc.Type);
+            var channel = new NetChannel(this, connection, msgSuc.UserData with { HWId = [..legacyHwid] }, msgSuc.Type);
             _channels.Add(connection, channel);
             peer.AddChannel(channel);
 

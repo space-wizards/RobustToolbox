@@ -80,10 +80,12 @@ namespace Robust.Shared.Network
 
                     var verifyToken = new byte[4];
                     RandomNumberGenerator.Fill(verifyToken);
+                    var wantHwid = _config.GetCVar(CVars.NetHwid);
                     var msgEncReq = new MsgEncryptionRequest
                     {
                         PublicKey = needPk ? CryptoPublicKey : Array.Empty<byte>(),
-                        VerifyToken = verifyToken
+                        VerifyToken = verifyToken,
+                        WantHwid = wantHwid
                     };
 
                     var outMsgEncReq = peer.Peer.CreateMessage();
@@ -154,15 +156,23 @@ namespace Robust.Shared.Network
                         $"Patron: {joinedRespJson.UserData.PatronTier}");
 
                     var userId = new NetUserId(joinedRespJson.UserData!.UserId);
+                    ImmutableArray<ImmutableArray<byte>> modernHWIds = [
+                        ..joinedRespJson.ConnectionData!.Hwids
+                            .Select(h => ImmutableArray.Create(Convert.FromBase64String(h)))
+                    ];
+                    ImmutableArray<byte> legacyHwid = [..msgEncResponse.LegacyHwid];
+                    if (!wantHwid)
+                    {
+                        // If the client somehow sends a HWID even if we didn't ask for one, ignore it.
+                        modernHWIds = [];
+                        legacyHwid = [];
+                    }
+
                     userData = new NetUserData(userId, joinedRespJson.UserData.UserName)
                     {
                         PatronTier = joinedRespJson.UserData.PatronTier,
-                        HWId = msgLogin.HWId,
-                        ModernHWIds =
-                        [
-                            ..joinedRespJson.ConnectionData!.Hwids
-                                .Select(h => ImmutableArray.Create(Convert.FromBase64String(h)))
-                        ],
+                        HWId = legacyHwid,
+                        ModernHWIds = modernHWIds,
                         Trust = joinedRespJson.ConnectionData!.Trust
                     };
                     padSuccessMessage = false;
@@ -206,7 +216,8 @@ namespace Robust.Shared.Network
 
                     userData = new NetUserData(userId, name)
                     {
-                        HWId = msgLogin.HWId
+                        HWId = [],
+                        ModernHWIds = []
                     };
                 }
 

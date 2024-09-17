@@ -66,30 +66,24 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
     private void AddAudioFilter(EntityUid uid, AudioComponent component, Filter filter)
     {
-        DebugTools.Assert(filter.Count > 0);
+        DebugTools.Assert(component.IncludedEntities == null);
+        component.IncludedEntities = new();
+
+        if (filter.Count == 0)
+            return;
 
         _pvs.AddSessionOverrides(uid, filter);
-
-        var ents = new HashSet<EntityUid>(filter.Count);
-
         foreach (var session in filter.Recipients)
         {
-            var ent = session.AttachedEntity;
-
-            if (ent == null)
-                continue;
-
-            ents.Add(ent.Value);
+            if (session.AttachedEntity is {} ent)
+                component.IncludedEntities.Add(ent);
         }
-
-        DebugTools.Assert(component.IncludedEntities == null);
-        component.IncludedEntities = ents;
     }
 
     /// <inheritdoc />
     public override (EntityUid Entity, AudioComponent Component)? PlayGlobal(string? filename, Filter playerFilter, bool recordReplay, AudioParams? audioParams = null)
     {
-        if (string.IsNullOrEmpty(filename) || playerFilter.Count == 0)
+        if (string.IsNullOrEmpty(filename))
             return null;
 
         var entity = SetupAudio(filename, audioParams);
@@ -101,7 +95,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <inheritdoc />
     public override (EntityUid Entity, AudioComponent Component)? PlayEntity(string? filename, Filter playerFilter, EntityUid uid, bool recordReplay, AudioParams? audioParams = null)
     {
-        if (string.IsNullOrEmpty(filename) || playerFilter.Count == 0)
+        if (string.IsNullOrEmpty(filename))
             return null;
 
         if (TerminatingOrDeleted(uid))
@@ -133,7 +127,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <inheritdoc />
     public override (EntityUid Entity, AudioComponent Component)? PlayStatic(string? filename, Filter playerFilter, EntityCoordinates coordinates, bool recordReplay, AudioParams? audioParams = null)
     {
-        if (string.IsNullOrEmpty(filename) || playerFilter.Count == 0)
+        if (string.IsNullOrEmpty(filename))
             return null;
 
         if (TerminatingOrDeleted(coordinates.EntityId))

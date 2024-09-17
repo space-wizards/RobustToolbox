@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Several different `AudioSystem` methods were incorrectly given a `[return: NotNullIfNotNull]` attribute. Content code that uses these methods needs to be updated to perform null checks.
 
 ### New features
 

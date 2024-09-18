@@ -472,6 +472,27 @@ namespace Robust.Shared.Physics.Systems
             TouchProxies(xform.MapUid.Value, matrix, fixture);
         }
 
+        internal void GetBroadphases(MapId mapId, Box2 aabb,BroadphaseCallback callback)
+        {
+            var internalState = (callback, _broadphaseQuery);
+
+            _mapManager.FindGridsIntersecting(mapId,
+                aabb,
+                ref internalState,
+                static (
+                    EntityUid uid,
+                    MapGridComponent grid,
+                    ref (BroadphaseCallback callback, EntityQuery<BroadphaseComponent> _broadphaseQuery) tuple) =>
+                {
+                    if (!tuple._broadphaseQuery.TryComp(uid, out var broadphase))
+                        return true;
+
+                    tuple.callback((uid, broadphase));
+                    return true;
+                    // Approx because we don't really need accurate checks for these most of the time.
+                }, approx: true, includeMap: true);
+        }
+
         internal void GetBroadphases<TState>(MapId mapId, Box2 aabb, ref TState state, BroadphaseCallback<TState> callback)
         {
             var internalState = (state, callback, _broadphaseQuery);
@@ -492,6 +513,8 @@ namespace Robust.Shared.Physics.Systems
                     // Approx because we don't really need accurate checks for these most of the time.
                 }, approx: true, includeMap: true);
         }
+
+        internal delegate void BroadphaseCallback(Entity<BroadphaseComponent> entity);
 
         internal delegate void BroadphaseCallback<TState>(Entity<BroadphaseComponent> entity, ref TState state);
 

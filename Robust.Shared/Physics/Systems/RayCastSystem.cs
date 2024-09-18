@@ -50,7 +50,7 @@ public sealed partial class RayCastSystem : EntitySystem
                 var localOrigin = Physics.Transform.InvTransformPoint(transform, state.Origin);
                 var localTranslation = Physics.Transform.InvTransformPoint(transform, state.Origin + state.Translation);
 
-                state.System.RayCast((entity.Owner, entity.Comp), localOrigin, localTranslation);
+                state.System.RayCast((entity.Owner, entity.Comp), localOrigin, localTranslation, collisionMask: state.CollisionMask);
             });
     }
 

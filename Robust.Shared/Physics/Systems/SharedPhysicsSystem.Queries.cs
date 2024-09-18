@@ -144,21 +144,25 @@ namespace Robust.Shared.Physics.Systems
 
             var aabb = worldAABB;
             var bodies = new HashSet<PhysicsComponent>();
+            var state = (_transform, bodies, aabb);
 
-            _broadphase.GetBroadphases(mapId, worldAABB, broadphase =>
-            {
-                var gridAABB = _transform.GetInvWorldMatrix(broadphase.Owner).TransformBox(aabb);
-
-                foreach (var proxy in broadphase.Comp.StaticTree.QueryAabb(gridAABB, false))
+            _broadphase.GetBroadphases(mapId, worldAABB, ref state, static
+                (
+                    Entity<BroadphaseComponent> entity,
+                    ref (SharedTransformSystem _transform, HashSet<PhysicsComponent> bodies, Box2 aabb) tuple) =>
                 {
-                    bodies.Add(proxy.Body);
-                }
+                    var gridAABB = tuple._transform.GetInvWorldMatrix(entity.Owner).TransformBox(tuple.aabb);
 
-                foreach (var proxy in broadphase.Comp.DynamicTree.QueryAabb(gridAABB, false))
-                {
-                    bodies.Add(proxy.Body);
-                }
-            });
+                    foreach (var proxy in entity.Comp.StaticTree.QueryAabb(gridAABB, false))
+                    {
+                        tuple.bodies.Add(proxy.Body);
+                    }
+
+                    foreach (var proxy in entity.Comp.DynamicTree.QueryAabb(gridAABB, false))
+                    {
+                        tuple.bodies.Add(proxy.Body);
+                    }
+                });
 
             return bodies;
         }
@@ -171,25 +175,27 @@ namespace Robust.Shared.Physics.Systems
             if (mapId == MapId.Nullspace)
                 return Array.Empty<Entity<PhysicsComponent>>();
 
-            var bounds = worldBounds;
             var bodies = new HashSet<Entity<PhysicsComponent>>();
 
-            _broadphase.GetBroadphases(mapId,
-                worldBounds.CalcBoundingBox(),
-                broadphase =>
+            var state = (_transform, bodies, worldBounds);
+
+            _broadphase.GetBroadphases(mapId, worldBounds.CalcBoundingBox(), ref state, static
+            (
+                Entity<BroadphaseComponent> entity,
+                ref (SharedTransformSystem _transform, HashSet<PhysicsComponent> bodies, Box2Rotated bounds) tuple) =>
+            {
+                var gridAABB = tuple._transform.GetInvWorldMatrix(entity.Owner).TransformBox(tuple.bounds);
+
+                foreach (var proxy in entity.Comp.StaticTree.QueryAabb(gridAABB, false))
                 {
-                    var gridAABB = _transform.GetInvWorldMatrix(broadphase).TransformBox(bounds);
+                    tuple.bodies.Add(proxy.Body);
+                }
 
-                    foreach (var proxy in broadphase.Comp.StaticTree.QueryAabb(gridAABB, false))
-                    {
-                        bodies.Add(new Entity<PhysicsComponent>(proxy.Entity, proxy.Body));
-                    }
-
-                    foreach (var proxy in broadphase.Comp.DynamicTree.QueryAabb(gridAABB, false))
-                    {
-                        bodies.Add(new Entity<PhysicsComponent>(proxy.Entity, proxy.Body));
-                    }
-                });
+                foreach (var proxy in entity.Comp.DynamicTree.QueryAabb(gridAABB, false))
+                {
+                    tuple.bodies.Add(proxy.Body);
+                }
+            });
 
             return bodies;
         }

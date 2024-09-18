@@ -15,6 +15,21 @@ public static class Vector2Helpers
     /// </summary>
     public static readonly Vector2 Half = new(0.5f, 0.5f);
 
+    public static bool IsValid(this Vector2 v)
+    {
+        if (float.IsNaN(v.X) || float.IsNaN(v.Y))
+        {
+            return false;
+        }
+
+        if (float.IsInfinity(v.X) || float.IsInfinity(v.Y))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
     public static Vector2 GetLengthAndNormalize(this Vector2 v, ref float length)
     {
         length = v.Length();

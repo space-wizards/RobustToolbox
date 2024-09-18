@@ -156,13 +156,15 @@ namespace Robust.Client.Graphics.Clyde
 
             if (obj.TryRelativeTo(new ResPath("/Textures"), out _) && !obj.TryRelativeTo(new ResPath("/Textures/Tiles"), out _))
             {
-                if (obj.Extension == "png" || obj.Extension == "jpg" || obj.Extension == "jpeg" || obj.Extension == "webp")
+                if (obj.Extension == "jpg" || obj.Extension == "jpeg" || obj.Extension == "webp")
                 {
                     _resourceCache.ReloadResource<TextureResource>(obj);
                 }
 
-                // Should just be able to try reloading and if it's not an RSI / texture it should just get swalloed
-                // _resourceCache.ReloadResource<RSIResource>(obj); Unsupported
+                if (obj.Extension == "png")
+                {
+                    _resourceCache.ReloadResource<TextureResource>(obj);
+                }
             }
         }
 

@@ -1,20 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
-using Robust.Client.Map;
-using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
-using Robust.Shared.GameObjects;
-using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Toolshed;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -23,6 +18,8 @@ namespace Robust.Client.Map
 {
     internal sealed class ClydeTileDefinitionManager : TileDefinitionManager, IClydeTileDefinitionManager, IPostInjectInit
     {
+        [Dependency] private readonly IPrototypeManager _protoManager = default!;
+        [Dependency] private readonly IReloadManager _reload = default!;
         [Dependency] private readonly IResourceManager _manager = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
 
@@ -56,6 +53,30 @@ namespace Robust.Client.Map
         public override void Initialize()
         {
             base.Initialize();
+
+            _protoManager.PrototypesReloaded += OnProtoReload;
+
+            _reload.Register("/Textures/Tiles", "*.png");
+            _reload.OnChanged += OnReload;
+
+            _genTextureAtlas();
+        }
+
+        private void OnProtoReload(PrototypesReloadedEventArgs obj)
+        {
+            if (!obj.WasModified<ITileDefinition>())
+                return;
+
+            _genTextureAtlas();
+        }
+
+        private void OnReload(ResPath obj)
+        {
+            if (obj.Extension != "png")
+                return;
+
+            if (!obj.TryRelativeTo(new ResPath("/Textures/Tiles"), out _))
+                return;
 
             _genTextureAtlas();
         }

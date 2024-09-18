@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Text;
 using System.Text.Json.Serialization;
 using JetBrains.Annotations;
@@ -64,7 +65,7 @@ public readonly struct ResPath : IEquatable<ResPath>
 
     public ResPath(string canonPath)
     {
-        CanonPath = canonPath;
+        CanonPath = canonPath.Replace(Path.DirectorySeparatorChar, Separator);
     }
 
     /// <summary>

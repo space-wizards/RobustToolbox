@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Several different `AudioSystem` methods were incorrectly given a `[return: NotNullIfNotNull]` attribute. Content code that uses these methods needs to be updated to perform null checks.
+*None yet*
 
 ### New features
 
@@ -43,6 +43,28 @@ END TEMPLATE-->
 
 ### Bugfixes
 
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 235.0.0
+
+### Breaking changes
+
+* Several different `AudioSystem` methods were incorrectly given a `[return: NotNullIfNotNull]` attribute. Content code that uses these methods needs to be updated to perform null checks.
+* noSpawn is no longer obsolete and is now removed in lieu of the EntityCategory HideSpawnMenu.
+
+### Bugfixes
+
+* physics.maxlinvelocity is now a replicated cvar.
+* Fix DistanceJoint debug drawing in physics not using the local anchors.
 * Fixed filtered AudioSystem methods playing a sound for all players when given an empty filter.
 * Fixed equality checks for `MarkupNode` not properly handling attributes.
 * Fixed `MarkupNode` not having a `GetHashCode()` implementation.
@@ -52,11 +74,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
-
-### Internal
-
-*None yet*
+* Improve precision for Quaternion2D constructor from angles.
 
 
 ## 234.1.0

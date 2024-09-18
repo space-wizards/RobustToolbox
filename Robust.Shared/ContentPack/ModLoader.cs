@@ -77,7 +77,7 @@ namespace Robust.Shared.ContentPack
             var paths = new List<ResPath>();
 
             foreach (var filePath in _res.ContentFindRelativeFiles(mountPath)
-                         .Where(p => !p.ToString().Contains('/') && p.Filename.StartsWith(filterPrefix) &&
+                         .Where(p => p.Filename.StartsWith(filterPrefix) &&
                                      p.Extension == "dll"))
             {
                 var fullPath = mountPath / filePath;

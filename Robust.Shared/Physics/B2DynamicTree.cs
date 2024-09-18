@@ -944,9 +944,9 @@ namespace Robust.Shared.Physics
         private static readonly RayQueryCallback<RayQueryCallback> EasyRayQueryCallback =
             (ref RayQueryCallback callback, Proxy proxy, in Vector2 hitPos, float distance) => callback(proxy, hitPos, distance);
 
-        internal delegate float NewRayCallback(RayCastInput input, Proxy proxy, T context);
+        internal delegate float RayCallback<TState>(RayCastInput input, Proxy proxy, T context, ref TState State);
 
-        internal void RayCastNew(RayCastInput input, uint mask, NewRayCallback callback)
+        internal void RayCastNew<TState>(RayCastInput input, uint mask, ref TState state, RayCallback<TState> callback)
         {
             var p1 = input.Origin;
             var d = input.Translation;
@@ -1007,15 +1007,15 @@ namespace Robust.Shared.Physics
 		        {
 			        subInput.MaxFraction = maxFraction;
 
-			        float value = callback(subInput, nodeId, node.UserData);
+			        float value = callback(subInput, nodeId, node.UserData, ref state);
 
-			        if ( value == 0.0f )
+			        if (value == 0.0f)
 			        {
 				        // The client has terminated the ray cast.
 				        return;
 			        }
 
-			        if ( 0.0f < value && value < maxFraction )
+			        if (0.0f < value && value < maxFraction)
 			        {
 				        // Update segment bounding box.
 				        maxFraction = value;
@@ -1033,6 +1033,121 @@ namespace Robust.Shared.Physics
 				        // TODO_ERIN test ordering children by nearest to ray origin
 				        stack.Push(node.Child1);
 				        stack.Push(node.Child2);
+			        }
+		        }
+	        }
+        }
+
+        /// This function receives clipped ray-cast input for a proxy. The function
+        /// returns the new ray fraction.
+        /// - return a value of 0 to terminate the ray-cast
+        /// - return a value less than input->maxFraction to clip the ray
+        /// - return a value of input->maxFraction to continue the ray cast without clipping
+        internal delegate float TreeShapeCastCallback<TState>(ref ShapeCastInput input, Proxy proxyId, T userData, ref TState state);
+
+        internal void ShapeCast<TState>(ShapeCastInput input, long maskBits, TreeShapeCastCallback<TState> callback, ref TState state)
+        {
+	        if (input.Count == 0)
+	        {
+		        return;
+	        }
+
+            var originAABB = new Box2(input.Points[0], input.Points[0]);
+
+	        for (var i = 1; i < input.Count; ++i)
+	        {
+		        originAABB.BottomLeft = Vector2.Min(originAABB.BottomLeft, input.Points[i]);
+		        originAABB.TopRight = Vector2.Max(originAABB.TopRight, input.Points[i]);
+	        }
+
+	        var radius = new Vector2(input.Radius, input.Radius);
+
+	        originAABB.BottomLeft = Vector2.Subtract(originAABB.BottomLeft, radius);
+	        originAABB.TopRight = Vector2.Add(originAABB.TopRight, radius );
+
+	        var p1 = originAABB.Center;
+	        var extension = originAABB.Extents;
+
+	        // v is perpendicular to the segment.
+	        var r = input.Translation;
+	        var v = b2CrossSV( 1.0f, r );
+	        var abs_v = v.Abs();
+
+	        // Separating axis for segment (Gino, p80).
+	        // |dot(v, p1 - c)| > dot(|v|, h)
+
+	        float maxFraction = input.MaxFraction;
+
+	        // Build total box for the shape cast
+	        b2Vec2 t = b2MulSV(maxFraction, input.Translation);
+	        var totalAABB = new Box2(
+		        Vector2.Min(originAABB.BottomLeft, Vector2.Add(originAABB.BottomLeft, t)),
+		        Vector2.Max(originAABB.TopRight, Vector2.Add( originAABB.TopRight, t))
+	        );
+
+	        var subInput = input;
+
+            ref var baseRef = ref _nodes[0];
+            var stack = new GrowableStack<Proxy>(stackalloc Proxy[256]);
+	        var stackCount = 0;
+	        stack.Push(_root);
+
+	        while (stack.GetCount() > 0)
+	        {
+		        var nodeId = stack.Pop();
+		        if (nodeId == Proxy.Free)
+		        {
+			        continue;
+		        }
+
+                var node = Unsafe.Add(ref baseRef, nodeId);
+		        if (!node.Aabb.Intersects(totalAABB))// || ( node->categoryBits & maskBits ) == 0 )
+		        {
+			        continue;
+		        }
+
+		        // Separating axis for segment (Gino, p80).
+		        // |dot(v, p1 - c)| > dot(|v|, h)
+		        // radius extension is added to the node in this case
+		        var c = node.Aabb.Center;
+		        var h = Vector2.Add(node.Aabb.Extents, extension);
+		        float term1 = MathF.Abs(Vector2.Dot(v, Vector2.Subtract(p1, c)));
+		        float term2 = Vector2.Dot(abs_v, h);
+		        if (term2 < term1)
+		        {
+			        continue;
+		        }
+
+		        if (node.IsLeaf)
+		        {
+			        subInput.MaxFraction = maxFraction;
+
+			        float value = callback(ref subInput, nodeId, node.UserData, ref state);
+
+			        if ( value == 0.0f )
+			        {
+				        // The client has terminated the ray cast.
+				        return;
+			        }
+
+			        if ( 0.0f < value && value < maxFraction )
+			        {
+				        // Update segment bounding box.
+				        maxFraction = value;
+				        t = b2MulSV( maxFraction, input.Translation);
+				        totalAABB.BottomLeft = Vector2.Min( originAABB.lowerBound, b2Add( originAABB.lowerBound, t ) );
+				        totalAABB.TopRight = Vector2.Max( originAABB.upperBound, b2Add( originAABB.upperBound, t ) );
+			        }
+		        }
+		        else
+		        {
+			        B2_ASSERT( stackCount < b2_treeStackSize - 1 );
+			        if ( stackCount < b2_treeStackSize - 1 )
+			        {
+				        // TODO_ERIN just put one node on the stack, continue on a child node
+				        // TODO_ERIN test ordering children by nearest to ray origin
+				        stack[stackCount++] = node->child1;
+				        stack[stackCount++] = node->child2;
 			        }
 		        }
 	        }

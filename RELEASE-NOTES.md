@@ -43,6 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
+* Fixed filtered AudioSystem methods playing a sound for all players when given an empty filter.
 * Fixed equality checks for `MarkupNode` not properly handling attributes.
 * Fixed `MarkupNode` not having a `GetHashCode()` implementation.
 * Fixed a PVS error that could occur when trying to delete the first entity that gets created in a round.

@@ -402,7 +402,7 @@ namespace Robust.Shared
         /// Note that modern HWIDs are only available if the connection is authenticated.
         /// </para>
         /// </remarks>
-        public static readonly CVarDef<bool> NetHwid =
+        public static readonly CVarDef<bool> NetHWId =
             CVarDef.Create("net.hwid", true, CVar.SERVERONLY);
 
 

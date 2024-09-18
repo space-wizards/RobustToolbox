@@ -199,7 +199,7 @@ namespace Robust.UnitTesting.Server
             container.RegisterInstance<ITaskManager>(new Mock<ITaskManager>().Object);
             container.Register<HttpClientHolder>();
             container.Register<IHttpClientHolder, HttpClientHolder>();
-            container.Register<IHWId, DummyHWid>();
+            container.Register<IHWId, DummyHWId>();
 
             var realReflection = new ServerReflectionManager();
             realReflection.LoadAssemblies(new List<Assembly>(2)

@@ -159,7 +159,7 @@ namespace Robust.Client
 
             deps.Register<IXamlProxyHelper, XamlProxyHelper>();
             deps.Register<MarkupTagManager>();
-            deps.Register<IHWId, BasicHWid>();
+            deps.Register<IHWId, BasicHWId>();
         }
     }
 }

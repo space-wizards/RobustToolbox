@@ -97,7 +97,7 @@ namespace Robust.Server
             deps.Register<NetworkResourceManager>();
             deps.Register<IHttpClientHolder, HttpClientHolder>();
             deps.Register<UploadedContentManager>();
-            deps.Register<IHWId, DummyHWid>();
+             deps.Register<IHWId, DummyHWId>();
         }
     }
 }

@@ -80,7 +80,7 @@ namespace Robust.Shared.Network
 
                     var verifyToken = new byte[4];
                     RandomNumberGenerator.Fill(verifyToken);
-                    var wantHwid = _config.GetCVar(CVars.NetHwid);
+                    var wantHwid = _config.GetCVar(CVars.NetHWId);
                     var msgEncReq = new MsgEncryptionRequest
                     {
                         PublicKey = needPk ? CryptoPublicKey : Array.Empty<byte>(),

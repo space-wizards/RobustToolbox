@@ -36,7 +36,7 @@ internal interface IHWId
 /// <summary>
 /// Implementation of <see cref="IHWId"/> that does nothing, always returning an empty result.
 /// </summary>
-internal sealed class DummyHWid : IHWId
+internal sealed class DummyHWId : IHWId
 {
     public byte[] GetLegacy()
     {

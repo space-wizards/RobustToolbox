@@ -50,7 +50,6 @@
     <Compile Update="Serialization\RobustMappedStringSerializer.MappedStringDict.cs">
       <DependentUpon>RobustMappedStringSerializer.cs</DependentUpon>
     </Compile>
-    <Compile Remove="Network\HWId.cs" />
   </ItemGroup>
 
   <Import Project="..\MSBuild\Robust.Properties.targets" />

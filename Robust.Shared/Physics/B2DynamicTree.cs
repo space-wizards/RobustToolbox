@@ -1070,8 +1070,8 @@ namespace Robust.Shared.Physics
 
 	        // v is perpendicular to the segment.
 	        var r = input.Translation;
-	        var v = b2CrossSV( 1.0f, r );
-	        var abs_v = v.Abs();
+	        var v = Vector2Helpers.Cross(1.0f, r);
+	        var abs_v = Vector2.Abs(v);
 
 	        // Separating axis for segment (Gino, p80).
 	        // |dot(v, p1 - c)| > dot(|v|, h)
@@ -1079,8 +1079,9 @@ namespace Robust.Shared.Physics
 	        float maxFraction = input.MaxFraction;
 
 	        // Build total box for the shape cast
-	        b2Vec2 t = b2MulSV(maxFraction, input.Translation);
-	        var totalAABB = new Box2(
+	        var t = Vector2.Multiply(maxFraction, input.Translation);
+
+            var totalAABB = new Box2(
 		        Vector2.Min(originAABB.BottomLeft, Vector2.Add(originAABB.BottomLeft, t)),
 		        Vector2.Max(originAABB.TopRight, Vector2.Add( originAABB.TopRight, t))
 	        );
@@ -1089,12 +1090,14 @@ namespace Robust.Shared.Physics
 
             ref var baseRef = ref _nodes[0];
             var stack = new GrowableStack<Proxy>(stackalloc Proxy[256]);
-	        var stackCount = 0;
+	        var stackCount = 1;
 	        stack.Push(_root);
 
-	        while (stack.GetCount() > 0)
-	        {
+	        while (stackCount > 0)
+            {
 		        var nodeId = stack.Pop();
+                stackCount = stack.GetCount();
+
 		        if (nodeId == Proxy.Free)
 		        {
 			        continue;
@@ -1130,24 +1133,25 @@ namespace Robust.Shared.Physics
 				        return;
 			        }
 
-			        if ( 0.0f < value && value < maxFraction )
+			        if (0.0f < value && value < maxFraction)
 			        {
 				        // Update segment bounding box.
 				        maxFraction = value;
-				        t = b2MulSV( maxFraction, input.Translation);
-				        totalAABB.BottomLeft = Vector2.Min( originAABB.lowerBound, b2Add( originAABB.lowerBound, t ) );
-				        totalAABB.TopRight = Vector2.Max( originAABB.upperBound, b2Add( originAABB.upperBound, t ) );
+				        t = Vector2.Multiply(maxFraction, input.Translation);
+				        totalAABB.BottomLeft = Vector2.Min( originAABB.BottomLeft, Vector2.Add(originAABB.BottomLeft, t));
+				        totalAABB.TopRight = Vector2.Max( originAABB.TopRight, Vector2.Add( originAABB.TopRight, t));
 			        }
 		        }
 		        else
 		        {
-			        B2_ASSERT( stackCount < b2_treeStackSize - 1 );
-			        if ( stackCount < b2_treeStackSize - 1 )
+			        Assert(stackCount < 256 - 1);
+
+			        if (stackCount < 255)
 			        {
 				        // TODO_ERIN just put one node on the stack, continue on a child node
 				        // TODO_ERIN test ordering children by nearest to ray origin
-				        stack[stackCount++] = node->child1;
-				        stack[stackCount++] = node->child2;
+				        stack.Push(node.Child1);
+				        stack.Push(node.Child2);
 			        }
 		        }
 	        }

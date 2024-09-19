@@ -209,26 +209,24 @@ public sealed partial class RayCastSystem : EntitySystem
         QueryFilter filter,
         CastResult fcn)
     {
-        b2World* world = b2GetWorldFromId( worldId );
-        B2_ASSERT( world->locked == false );
-        if ( world->locked )
-        {
-            return;
-        }
-
         B2_ASSERT( b2Vec2_IsValid( originTransform.p ) );
         B2_ASSERT( b2Rot_IsValid( originTransform.q ) );
         B2_ASSERT( b2Vec2_IsValid( translation ) );
 
-        b2ShapeCastInput input;
-        for ( int i = 0; i < polygon->count; ++i )
+
+        ShapeCastInput input = new()
         {
-            input.points[i] = b2TransformPoint( originTransform, polygon->vertices[i] );
+            Points = new Vector2[polygon.VertexCount],
+        };
+        for ( int i = 0; i < polygon.VertexCount; ++i )
+        {
+            input.Points[i] = Physics.Transform.TransformPoint(originTransform, polygon.Vertices[i]);
         }
-        input.count = polygon->count;
-        input.radius = polygon->radius;
-        input.translation = translation;
-        input.maxFraction = 1.0f;
+
+        input.Count = polygon->count;
+        input.Radius = polygon->radius;
+        input.Translation = translation;
+        input.MaxFraction = 1.0f;
 
         WorldRayCastContext worldContext = { world, fcn, filter, 1.0f, context };
 
@@ -241,7 +239,7 @@ public sealed partial class RayCastSystem : EntitySystem
                 return;
             }
 
-            input.maxFraction = worldContext.fraction;
+            input.MaxFraction = worldContext.fraction;
         }
     }
 

@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed `ICommonSession.Ping` always returning zero instead of the ping. Note that this will still return zero for client-side code when trying to get the ping of other players.
 
 ### Other
 

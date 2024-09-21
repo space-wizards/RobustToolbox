@@ -1,6 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.Maths;
 using Robust.Shared.Toolshed.Errors;
@@ -11,47 +9,43 @@ namespace Robust.Shared.Toolshed.TypeParsers;
 
 public sealed class BoolTypeParser : TypeParser<bool>
 {
-    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
+    public override bool TryParse(ParserContext ctx, out bool result)
     {
-        var word = parserContext.GetWord(ParserContext.IsToken)?.ToLowerInvariant();
+        var word = ctx.GetWord(ParserContext.IsToken)?.ToLowerInvariant();
         if (word is null)
         {
-            if (parserContext.PeekChar() is null)
+            if (ctx.PeekRune() is null)
             {
-                error = new OutOfInputError();
-                result = null;
+                ctx.Error = new OutOfInputError();
+                result = default;
                 return false;
             }
-            else
-            {
-                error = new InvalidBool(parserContext.GetWord()!);
-                result = null;
-                return false;
-            }
+
+            ctx.Error = new InvalidBool(ctx.GetWord()!);
+            result = default;
+            return false;
         }
 
         if (word == "true" || word == "t" || word == "1")
         {
             result = true;
-            error = null;
             return true;
-        } else if (word == "false" || word == "f" || word == "0")
+        }
+
+        if (word == "false" || word == "f" || word == "0")
         {
             result = false;
-            error = null;
             return true;
         }
-        else
-        {
-            error = new InvalidBool(word);
-            result = null;
-            return false;
-        }
+
+        ctx.Error = new InvalidBool(word);
+        result = default;
+        return false;
     }
 
-    public override async ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext, string? argName)
+    public override CompletionResult TryAutocomplete(ParserContext parserContext, string? argName)
     {
-        return (CompletionResult.FromOptions(new[] {"true", "false"}), null);
+        return CompletionResult.FromOptions(new[] {"true", "false"});
     }
 }
 

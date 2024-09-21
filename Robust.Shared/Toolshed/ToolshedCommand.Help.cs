@@ -10,21 +10,28 @@ public abstract partial class ToolshedCommand
     ///     Returns a command's localized description.
     /// </summary>
     public string Description(string? subCommand)
-        => Loc.GetString(UnlocalizedDescription(subCommand));
+        => Loc.GetString(DescriptionLocKey(subCommand));
 
     /// <summary>
     ///     Returns the locale string for a command's description.
     /// </summary>
-    public string UnlocalizedDescription(string? subCommand)
+    public string DescriptionLocKey(string? subCommand)
     {
-        if (Name.All(char.IsAsciiLetterOrDigit))
-        {
-            return $"command-description-{Name}" + (subCommand is not null ? $"-{subCommand}" : "");
-        }
-        else
-        {
-            return $"command-description-{GetType().PrettyName()}" + (subCommand is not null ? $"-{subCommand}" : "");
-        }
+        return $"command-description-{GetLocKeyName(subCommand)}";
+    }
+
+    /// <summary>
+    /// Get the full name of a command for use when fetching localized strings.
+    /// </summary>
+    public string GetLocKeyName(string? subCommand)
+    {
+        var name = Name.All(char.IsAsciiLetterOrDigit)
+            ? Name
+            : GetType().PrettyName();
+
+        return subCommand == null
+            ? name
+            : $"{name}-{subCommand}";
     }
 
     /// <summary>

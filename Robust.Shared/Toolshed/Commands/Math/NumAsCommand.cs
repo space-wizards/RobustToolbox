@@ -2,13 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using Robust.Shared.Toolshed.TypeParsers;
 
 namespace Robust.Shared.Toolshed.Commands.Math;
 
 [ToolshedCommand]
 public sealed class CheckedToCommand : ToolshedCommand
 {
-    public override Type[] TypeParameterParsers => new[] {typeof(Type)};
+    private static Type[] _parsers = [typeof(TypeTypeParser)];
+    public override Type[] TypeParameterParsers => _parsers;
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public TOut Operation<TOut, T>([PipedArgument] T x)
@@ -28,7 +30,8 @@ public sealed class CheckedToCommand : ToolshedCommand
 [ToolshedCommand]
 public sealed class SaturateToCommand : ToolshedCommand
 {
-    public override Type[] TypeParameterParsers => new[] {typeof(Type)};
+    private static Type[] _parsers = [typeof(TypeTypeParser)];
+    public override Type[] TypeParameterParsers => _parsers;
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public TOut Operation<TOut, T>([PipedArgument] T x)
@@ -48,7 +51,8 @@ public sealed class SaturateToCommand : ToolshedCommand
 [ToolshedCommand]
 public sealed class TruncToCommand : ToolshedCommand
 {
-    public override Type[] TypeParameterParsers => new[] {typeof(Type)};
+    private static Type[] _parsers = [typeof(TypeTypeParser)];
+    public override Type[] TypeParameterParsers => _parsers;
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public TOut Operation<TOut, T>([PipedArgument] T x)

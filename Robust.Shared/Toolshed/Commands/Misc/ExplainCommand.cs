@@ -7,8 +7,8 @@ public sealed class ExplainCommand : ToolshedCommand
 {
     [CommandImplementation]
     public void Explain(
-            [CommandInvocationContext] IInvocationContext ctx,
-            [CommandArgument] CommandRun expr
+            IInvocationContext ctx,
+            CommandRun expr
         )
     {
         foreach (var (cmd, _) in expr.Commands)

@@ -2,17 +2,23 @@
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Toolshed.Syntax;
+using Robust.Shared.Toolshed.TypeParsers;
 
 namespace Robust.Shared.Toolshed.Commands.Math;
 
-[ToolshedCommand(Name = "?"), MapLikeCommand]
+[ToolshedCommand(Name = "?")]
 public sealed class DefaultIfNullCommand : ToolshedCommand
 {
+    // TODO TOOLSHED fix PipedBlockType
+    // This command will currently fail if the Tin == typeof(IEnumerable<>)
+    private static Type[] _parsers = [typeof(MapBlockOutputParser)];
+    public override Type[] TypeParameterParsers => _parsers;
+
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public TOut? DefaultIfNull<TOut, TIn>(
-            [CommandInvocationContext] IInvocationContext ctx,
+            IInvocationContext ctx,
             [PipedArgument] TIn? value,
-            [CommandArgument] Block<TIn, TOut> follower
+            Block<TIn, TOut> follower
         )
         where TIn : unmanaged
     {
@@ -30,9 +36,9 @@ public sealed class OrValueCommand : ToolshedCommand
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public T OrValue<T>(
-            [CommandInvocationContext] IInvocationContext ctx,
+            IInvocationContext ctx,
             [PipedArgument] T? value,
-            [CommandArgument] ValueRef<T> alternate
+            ValueRef<T> alternate
         )
         where T : class
     {
@@ -41,9 +47,9 @@ public sealed class OrValueCommand : ToolshedCommand
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public T OrValue<T>(
-            [CommandInvocationContext] IInvocationContext ctx,
+            IInvocationContext ctx,
             [PipedArgument] T? value,
-            [CommandArgument] ValueRef<T> alternate
+            ValueRef<T> alternate
         )
         where T : unmanaged
     {
@@ -58,7 +64,7 @@ public sealed class DebugPrintCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public T DebugPrint<T>(
-            [CommandInvocationContext] IInvocationContext ctx,
+            IInvocationContext ctx,
             [PipedArgument] T value
         )
     {
@@ -68,7 +74,7 @@ public sealed class DebugPrintCommand : ToolshedCommand
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<T> DebugPrint<T>(
-        [CommandInvocationContext] IInvocationContext ctx,
+        IInvocationContext ctx,
         [PipedArgument] IEnumerable<T> value
     )
     {

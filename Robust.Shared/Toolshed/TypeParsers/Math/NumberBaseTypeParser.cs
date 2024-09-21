@@ -2,7 +2,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Numerics;
-using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.Maths;
 using Robust.Shared.Toolshed.Errors;
@@ -14,41 +13,35 @@ namespace Robust.Shared.Toolshed.TypeParsers.Math;
 internal sealed class NumberBaseTypeParser<T> : TypeParser<T>
     where T: INumberBase<T>
 {
-    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
+    public override bool TryParse(ParserContext ctx, [NotNullWhen(true)] out T? result)
     {
-        var maybeNumber = parserContext.GetWord(ParserContext.IsNumeric);
-        if (maybeNumber?.Length == 0)
+        result = default;
+        var maybeNumber = ctx.GetWord(ParserContext.IsNumeric);
+        if (string.IsNullOrEmpty(maybeNumber))
         {
-            error = new OutOfInputError();
-            result = null;
+            ctx.Error = new ExpectedNumericError();
             return false;
         }
 
-        if (!T.TryParse(maybeNumber, NumberStyles.Number, CultureInfo.InvariantCulture, out var @number))
-        {
-            if (maybeNumber is null)
-            {
-                error = new OutOfInputError();
-            }
-            else
-            {
-                error = new InvalidNumber<T>(maybeNumber);
-            }
+        if (T.TryParse(maybeNumber, NumberStyles.Number, CultureInfo.InvariantCulture, out result))
+            return true;
 
-            result = null;
-            return false;
-        }
-        result = @number;
-        error = null;
-        return true;
+        ctx.Error = new InvalidNumber<T>(maybeNumber);
+        return false;
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext,
+    public override CompletionResult TryAutocomplete(ParserContext parserContext,
         string? argName)
     {
-        return new ValueTask<(CompletionResult? result, IConError? error)>(
-                (CompletionResult.FromHint(typeof(T).PrettyName()), null)
-            );
+        return CompletionResult.FromHint(typeof(T).PrettyName());
+    }
+}
+
+public sealed class ExpectedNumericError : ConError
+{
+    public override FormattedMessage DescribeInner()
+    {
+        return FormattedMessage.FromUnformatted($"Expected a number");
     }
 }
 

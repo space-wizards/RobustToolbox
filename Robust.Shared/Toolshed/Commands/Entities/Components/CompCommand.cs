@@ -9,7 +9,8 @@ namespace Robust.Shared.Toolshed.Commands.Entities.Components;
 [ToolshedCommand]
 internal sealed class CompCommand : ToolshedCommand
 {
-    public override Type[] TypeParameterParsers => new[] {typeof(ComponentType)};
+    private static Type[] _parsers = [typeof(ComponentTypeParser)];
+    public override Type[] TypeParameterParsers => _parsers;
 
     [CommandImplementation("get")]
     public IEnumerable<T> CompEnumerable<T>([PipedArgument] IEnumerable<EntityUid> input)

@@ -1151,6 +1151,13 @@ namespace Robust.Shared.GameObjects
             return new CompRegistryEntityEnumerator(this, trait1, registry);
         }
 
+        public AllEntityQueryEnumerator<IComponent> AllEntityQueryEnumerator(Type comp)
+        {
+            DebugTools.Assert(comp.IsAssignableTo(typeof(IComponent)));
+            var trait = _entTraitArray[_componentFactory.GetIndex(comp).Value];
+            return new AllEntityQueryEnumerator<IComponent>(trait);
+        }
+
         public AllEntityQueryEnumerator<TComp1> AllEntityQueryEnumerator<TComp1>()
         where TComp1 : IComponent
         {

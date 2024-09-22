@@ -38,7 +38,7 @@ public interface IVariableParser
             GetVars()
                 .Where(x => x.Item2 == typeof(T))
                 .Select(x => new CompletionOption($"${x.Item1}")),
-            $"<name of variable of type {typeof(T).PrettyName()}>");
+            $"<Variable of type {typeof(T).PrettyName()}>");
 
     public IEnumerable<(string, Type)> GetVars();
 

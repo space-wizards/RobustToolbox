@@ -206,7 +206,6 @@ namespace Robust.Client.UserInterface.Controls
                     contentBox = UIBox2.FromDimensions(topLeft, size);
                 }
 
-
                 var baseLine = new Vector2(0, font.GetAscent(UIScale)) + contentBox.TopLeft;
 
                 foreach (var rune in title.EnumerateRunes())

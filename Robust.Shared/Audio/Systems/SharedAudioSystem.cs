@@ -353,19 +353,19 @@ public abstract partial class SharedAudioSystem : EntitySystem
     /// <summary>
     /// Sets the audio params volume for an entity.
     /// </summary>
-    public void SetGain(EntityUid? entity, float value, AudioComponent? component = null)
+    public void SetGain(EntityUid? entity, float value, AudioComponent? component = null, bool dirty = true)
     {
         if (entity == null || !Resolve(entity.Value, ref component))
             return;
 
         var volume = GainToVolume(value);
-        SetVolume(entity, volume, component);
+        SetVolume(entity, volume, component, dirty);
     }
 
     /// <summary>
     /// Sets the audio params volume for an entity.
     /// </summary>
-    public void SetVolume(EntityUid? entity, float value, AudioComponent? component = null)
+    public void SetVolume(EntityUid? entity, float value, AudioComponent? component = null, bool dirty = true)
     {
         if (entity == null || !Resolve(entity.Value, ref component))
             return;
@@ -375,7 +375,8 @@ public abstract partial class SharedAudioSystem : EntitySystem
 
         component.Params.Volume = value;
         component.Volume = value;
-        Dirty(entity.Value, component);
+        if(dirty)
+            Dirty(entity.Value, component);
     }
 
     #endregion

@@ -3,6 +3,7 @@ using System.Numerics;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
+using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Shapes;
 using Robust.Shared.Utility;
 
@@ -11,6 +12,29 @@ namespace Robust.Shared.Physics.Systems;
 public sealed partial class RayCastSystem
 {
     #region Raycast
+
+    /// <summary>
+    /// This callback is invoked upon every AABB collision.
+    /// </summary>
+    private static float RayCastCallback(RayCastInput input, FixtureProxy proxy, ref WorldRayCastContext worldContext)
+    {
+        if ((proxy.Fixture.CollisionLayer & worldContext.Filter.MaskBits) == 0 || (proxy.Fixture.CollisionMask & worldContext.Filter.LayerBits) == 0)
+        {
+            return input.MaxFraction;
+        }
+
+        var transform = worldContext.Physics.GetLocalPhysicsTransform(proxy.Entity);
+        var output = worldContext.System.RayCastShape(input, proxy.Fixture.Shape, transform);
+
+        if (output.Hit)
+        {
+            // Fraction returned determines what B2Dynamictree will do, i.e. shrink the AABB or not.
+            var fraction = worldContext.fcn(proxy, output.Point, output.Normal, output.Fraction, worldContext.Result);
+            return fraction;
+        }
+
+        return input.MaxFraction;
+    }
 
     // Precision Improvements for Ray / Sphere Intersection - Ray Tracing Gems 2019
     // http://www.codercorner.com/blog/?p=321
@@ -245,6 +269,63 @@ public sealed partial class RayCastSystem
 
     #region Shape
 
+    private CastOutput ShapeCastShape(ShapeCastInput input, IPhysShape shape, Transform transform)
+    {
+        var localInput = input;
+
+        for ( int i = 0; i < localInput.Count; ++i )
+        {
+            localInput.Points[i] = Physics.Transform.InvTransformPoint(transform, input.Points[i]);
+        }
+
+        localInput.Translation = Quaternion2D.InvRotateVector(transform.Quaternion2D, input.Translation);
+
+        CastOutput output;
+
+        switch (shape)
+        {
+            case PhysShapeCircle circle:
+                output = ShapeCastCircle(localInput, circle);
+                break;
+            case PolygonShape pShape:
+                output = ShapeCastPolygon(localInput, (Polygon) pShape);
+                break;
+            case Polygon poly:
+                output = ShapeCastPolygon(localInput, poly);
+                break;
+            default:
+                return new CastOutput();
+        }
+
+        output.Point = Physics.Transform.TransformPoint(transform, output.Point);
+        output.Normal = Quaternion2D.RotateVector(transform.Quaternion2D, output.Normal);
+        return output;
+    }
+
+    /// <summary>
+    /// This callback is invoked upon getting the AABB inside of B2DynamicTree.
+    /// </summary>
+    private float ShapeCastCallback(ShapeCastInput input, FixtureProxy proxy, ref WorldRayCastContext worldContext)
+    {
+        var filter = worldContext.Filter;
+
+        if ((proxy.Fixture.CollisionLayer & filter.MaskBits) == 0 || (proxy.Fixture.CollisionMask & filter.LayerBits) == 0)
+        {
+            return input.MaxFraction;
+        }
+
+        var transform = worldContext.Physics.GetLocalPhysicsTransform(proxy.Entity);
+        var output = ShapeCastShape(input, proxy.Fixture.Shape, transform);
+
+        if (output.Hit)
+        {
+            var fraction = worldContext.fcn(proxy, output.Point, output.Normal, output.Fraction, worldContext.Result);
+            return fraction;
+        }
+
+        return input.MaxFraction;
+    }
+
     // GJK-raycast
     // Algorithm by Gino van den Bergen.
     // "Smooth Mesh Contacts with GJK" in Game Physics Pearls. 2010
@@ -474,4 +555,87 @@ public sealed partial class RayCastSystem
     }
 
     #endregion
+
+    private ref struct RayCastQueryState
+    {
+        public RayCastSystem System;
+        public SharedPhysicsSystem Physics;
+
+        public uint CollisionMask;
+        public Vector2 Origin;
+        public Vector2 Translation;
+    }
+}
+
+internal ref struct WorldRayCastContext
+{
+    public RayCastSystem System;
+    public SharedPhysicsSystem Physics;
+
+    public CastResult fcn;
+    public QueryFilter Filter;
+    public float Fraction;
+
+    public RayResult Result;
+}
+
+internal ref struct ShapeCastPairInput
+{
+    public DistanceProxy ProxyA;
+    public DistanceProxy ProxyB;
+    public Transform TransformA;
+    public Transform TransformB;
+    public Vector2 TranslationB;
+
+    /// <summary>
+    /// The fraction of the translation to consider, typically 1
+    /// </summary>
+    public float MaxFraction;
+}
+
+internal ref struct ShapeCastInput
+{
+    /// A point cloud to cast
+    public Vector2[] Points;
+
+    /// The number of points
+    public int Count;
+
+    /// The radius around the point cloud
+    public float Radius;
+
+    /// The translation of the shape cast
+    public Vector2 Translation;
+
+    /// The maximum fraction of the translation to consider, typically 1
+    public float MaxFraction;
+}
+
+internal ref struct RayCastInput
+{
+    public Vector2 Origin;
+
+    public Vector2 Translation;
+
+    public float MaxFraction;
+
+    public bool IsValidRay()
+    {
+        bool isValid = Origin.IsValid() && Translation.IsValid() && MaxFraction.IsValid() &&
+                       0.0f <= MaxFraction && MaxFraction < float.MaxValue;
+        return isValid;
+    }
+}
+
+internal ref struct CastOutput
+{
+    public Vector2 Normal;
+
+    public Vector2 Point;
+
+    public float Fraction;
+
+    public int Iterations;
+
+    public bool Hit;
 }

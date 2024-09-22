@@ -944,9 +944,9 @@ namespace Robust.Shared.Physics
         private static readonly RayQueryCallback<RayQueryCallback> EasyRayQueryCallback =
             (ref RayQueryCallback callback, Proxy proxy, in Vector2 hitPos, float distance) => callback(proxy, hitPos, distance);
 
-        internal delegate float RayCallback<TState>(RayCastInput input, Proxy proxy, T context, ref TState State);
+        internal delegate float RayCallback(RayCastInput input, T context, ref WorldRayCastContext state);
 
-        internal void RayCastNew<TState>(RayCastInput input, uint mask, ref TState state, RayCallback<TState> callback)
+        internal void RayCastNew(RayCastInput input, long mask, ref WorldRayCastContext state, RayCallback callback)
         {
             var p1 = input.Origin;
             var d = input.Translation;
@@ -965,7 +965,7 @@ namespace Robust.Shared.Physics
 	        var p2 = Vector2.Add(p1, maxFraction * d);
 
 	        // Build a bounding box for the segment.
-	        var segmentAABB = new Box2(Vector2.Min( p1, p2 ), Vector2.Max( p1, p2 ));
+	        var segmentAABB = new Box2(Vector2.Min(p1, p2), Vector2.Max(p1, p2));
 
 	        var stack = new GrowableStack<Proxy>(stackalloc Proxy[256]);
             ref var baseRef = ref _nodes[0];
@@ -1007,7 +1007,7 @@ namespace Robust.Shared.Physics
 		        {
 			        subInput.MaxFraction = maxFraction;
 
-			        float value = callback(subInput, nodeId, node.UserData, ref state);
+			        float value = callback(subInput, node.UserData, ref state);
 
 			        if (value == 0.0f)
 			        {

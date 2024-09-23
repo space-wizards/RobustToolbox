@@ -43,6 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
+* Auto-networked dictionaries now use `TryAdd()` to avoid duplicate key errors when a dictionary contains multiple unknown networked entities.
 * Fixed `ICommonSession.Ping` always returning zero instead of the ping. Note that this will still return zero for client-side code when trying to get the ping of other players.
 
 ### Other

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
@@ -18,14 +19,16 @@ public sealed partial class RayCastSystem : EntitySystem
     [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
-    #region RayCast
+    private readonly RayComparer _rayComparer = new();
+
+    #region Callbacks
 
     /// <summary>
     /// Tells the callback we want every entity.
     /// </summary>
-    private static float RayCastAllCallback(FixtureProxy proxy, Vector2 point, Vector2 normal, float fraction, WorldRayCastContext context)
+    private static float RayCastAllCallback(FixtureProxy proxy, Vector2 point, Vector2 normal, float fraction, RayResult result)
     {
-        context.Result.Results.Add(new RayHit()
+        result.Results.Add(new RayHit()
         {
             Fraction = fraction,
             Normal = normal,
@@ -38,16 +41,16 @@ public sealed partial class RayCastSystem : EntitySystem
     /// <summary>
     /// This just lets the callback continue.
     /// </summary>
-    private static float RayCastClosestCallback(FixtureProxy proxy, Vector2 point, Vector2 normal, float fraction, WorldRayCastContext context)
+    private static float RayCastClosestCallback(FixtureProxy proxy, Vector2 point, Vector2 normal, float fraction, RayResult result)
     {
         var add = false;
 
-        if (context.Result.Results.Count > 0)
+        if (result.Results.Count > 0)
         {
-            if (context.Result.Results[0].Fraction > fraction)
+            if (result.Results[0].Fraction > fraction)
             {
                 add = true;
-                context.Result.Results.Clear();
+                result.Results.Clear();
             }
         }
         else
@@ -57,7 +60,7 @@ public sealed partial class RayCastSystem : EntitySystem
 
         if (add)
         {
-            context.Result.Results.Add(new RayHit()
+            result.Results.Add(new RayHit()
             {
                 Fraction = fraction,
                 Normal = normal,
@@ -69,10 +72,26 @@ public sealed partial class RayCastSystem : EntitySystem
         return fraction;
     }
 
+    #endregion
+
+    #region RayCast
+
+    private sealed class RayComparer : IComparer<RayHit>
+    {
+        public int Compare(RayHit x, RayHit y)
+        {
+            return x.Fraction.CompareTo(y.Fraction);
+        }
+    }
+
+    /*
+     * Raycasts that return all entities sorted.
+     */
+
     /// <summary>
-    /// Casts a ray against a broadphase. Requires you to handle the <see cref="CastResult"/> callback yourself
+    /// Casts a ray against a broadphase.
     /// </summary>
-    public void CastRay(Entity<BroadphaseComponent?> entity, Vector2 origin, Vector2 translation, QueryFilter filter, CastResult callback)
+    public void CastRay(Entity<BroadphaseComponent?> entity, ref RayResult result, Vector2 origin, Vector2 translation, QueryFilter filter, bool sorted = true)
     {
         if (!Resolve(entity.Owner, ref entity.Comp))
             return;
@@ -89,29 +108,74 @@ public sealed partial class RayCastSystem : EntitySystem
 
         var worldContext = new WorldRayCastContext()
         {
-            fcn = callback,
+            fcn = RayCastAllCallback,
             Filter = filter,
             Fraction = 1f,
             Physics = _physics,
             System = this,
-            Result = new RayResult(),
+            Result = result,
         };
 
         entity.Comp.DynamicTree.Tree.RayCastNew(input, filter.MaskBits, ref worldContext, RayCastCallback);
-
-        if (worldContext.Fraction == 0f)
-            return;
-
         input.MaxFraction = worldContext.Fraction;
         entity.Comp.StaticTree.Tree.RayCastNew(input, filter.MaskBits, ref worldContext, RayCastCallback);
+        result = worldContext.Result;
+
+        if (sorted)
+        {
+            result.Results.Sort(_rayComparer);
+        }
     }
 
     /// <summary>
-    /// Returns the closest entity hit.
+    /// Returns all entities hit in order.
     /// </summary>
-    public RayResult CastRayClosest(Vector2 origin, Vector2 translation, QueryFilter filter)
+    public RayResult CastRay(MapId mapId, Vector2 origin, Vector2 translation, QueryFilter filter)
     {
+        DebugTools.Assert(origin.IsValid());
+        DebugTools.Assert(translation.IsValid());
+
+        var input = new RayCastInput
+        {
+            Origin = origin,
+            Translation = translation,
+            MaxFraction = 1.0f
+        };
+
         var result = new RayResult();
+
+        var start = origin;
+        var end = origin + translation;
+
+        var aabb = new Box2(Vector2.Min(start, end), Vector2.Max(start, end));
+        var state = (input, filter, result, this, _physics);
+
+        _broadphase.GetBroadphases(mapId, aabb, ref state,
+            static (Entity<BroadphaseComponent> entity, ref (RayCastInput input, QueryFilter filter, RayResult result, RayCastSystem system, SharedPhysicsSystem Physics) tuple) =>
+            {
+                var transform = tuple.Physics.GetPhysicsTransform(entity.Owner);
+                var localOrigin = Physics.Transform.InvTransformPoint(transform, tuple.input.Origin);
+                var localTranslation = Physics.Transform.InvTransformPoint(transform, tuple.input.Origin + tuple.input.Translation);
+
+                tuple.system.CastRay((entity.Owner, entity.Comp), ref tuple.result, localOrigin, localTranslation, filter: tuple.filter, sorted: false);
+            });
+
+        result = state.result;
+        result.Results.Sort(_rayComparer);
+        return result;
+    }
+
+    /*
+     * Raycasts that only return the closest entity.
+     */
+
+    /// <summary>
+    /// Casts a ray against a broadphase.
+    /// </summary>
+    public void CastRayClosest(Entity<BroadphaseComponent?> entity, ref RayResult result, Vector2 origin, Vector2 translation, QueryFilter filter)
+    {
+        if (!Resolve(entity.Owner, ref entity.Comp))
+            return;
 
         DebugTools.Assert(origin.IsValid());
         DebugTools.Assert(translation.IsValid());
@@ -120,10 +184,10 @@ public sealed partial class RayCastSystem : EntitySystem
         {
             Origin = origin,
             Translation = translation,
-            MaxFraction = 1.0f
+            MaxFraction = 1f,
         };
 
-        var worldContext = new WorldRayCastContext
+        var worldContext = new WorldRayCastContext()
         {
             fcn = RayCastClosestCallback,
             Filter = filter,
@@ -134,62 +198,47 @@ public sealed partial class RayCastSystem : EntitySystem
         };
 
         entity.Comp.DynamicTree.Tree.RayCastNew(input, filter.MaskBits, ref worldContext, RayCastCallback);
-
-        if (worldContext.Fraction != 0f)
-        {
-            input.MaxFraction = worldContext.Fraction;
-            entity.Comp.StaticTree.Tree.RayCastNew(input, filter.MaskBits, ref worldContext, RayCastCallback);
-        }
-
-        return result;
+        input.MaxFraction = worldContext.Fraction;
+        entity.Comp.StaticTree.Tree.RayCastNew(input, filter.MaskBits, ref worldContext, RayCastCallback);
+        result = worldContext.Result;
+        DebugTools.Assert(result.Results.Count <= 1);
     }
 
-    public void RayCast(MapCoordinates coordinates, Vector2 translation, uint collisionMask = uint.MaxValue - 1)
+    /// <summary>
+    /// Returns all entities hit in order.
+    /// </summary>
+    public RayResult CastRayClosest(MapId mapId, Vector2 origin, Vector2 translation, QueryFilter filter)
     {
-        var end = coordinates.Position + translation;
-        var aabb = new Box2(Vector2.Min(coordinates.Position, end), Vector2.Max(coordinates.Position, end));
+        DebugTools.Assert(origin.IsValid());
+        DebugTools.Assert(translation.IsValid());
 
-        var state = new RayCastQueryState()
+        var input = new RayCastInput
         {
-            System = this,
-            Physics = _physics,
-
-            CollisionMask = collisionMask,
-            Origin = coordinates.Position,
-            Translation = translation,
-        };
-
-        _broadphase.GetBroadphases(coordinates.MapId,
-            aabb, ref state,
-            static (Entity<BroadphaseComponent> entity, ref RayCastQueryState state) =>
-            {
-                var transform = state.Physics.GetPhysicsTransform(entity.Owner);
-                var localOrigin = Physics.Transform.InvTransformPoint(transform, state.Origin);
-                var localTranslation = Physics.Transform.InvTransformPoint(transform, state.Origin + state.Translation);
-
-                state.System.RayCast((entity.Owner, entity.Comp), localOrigin, localTranslation, collisionMask: state.CollisionMask);
-            });
-    }
-
-    public void RayCast(
-        Entity<BroadphaseComponent?> grid,
-        Vector2 origin,
-        Vector2 translation,
-        uint collisionMask = uint.MaxValue - 1)
-    {
-        if (!Resolve(grid.Owner, ref grid.Comp))
-            return;
-
-        var state = new RayCastQueryState()
-        {
-            System = this,
             Origin = origin,
             Translation = translation,
-            Physics = _physics,
-            CollisionMask = collisionMask,
+            MaxFraction = 1.0f
         };
 
-        RayCast(grid, ref state, origin, translation, collisionMask);
+        var result = new RayResult();
+
+        var end = origin + translation;
+
+        var aabb = new Box2(Vector2.Min(origin, end), Vector2.Max(origin, end));
+        var state = (input, filter, result, this, _physics);
+
+        _broadphase.GetBroadphases(mapId, aabb, ref state,
+            static (Entity<BroadphaseComponent> entity, ref (RayCastInput input, QueryFilter filter, RayResult result, RayCastSystem system, SharedPhysicsSystem _physics) tuple) =>
+            {
+                var transform = tuple._physics.GetPhysicsTransform(entity.Owner);
+                var localOrigin = Physics.Transform.InvTransformPoint(transform, tuple.input.Origin);
+                var localTranslation = Physics.Transform.InvTransformPoint(transform, tuple.input.Origin + tuple.input.Translation);
+
+                tuple.system.CastRayClosest((entity.Owner, entity.Comp), ref tuple.result, localOrigin, localTranslation, filter: tuple.filter);
+            });
+
+        result = state.result;
+        DebugTools.Assert(result.Results.Count <= 1);
+        return result;
     }
 
     #endregion
@@ -199,21 +248,19 @@ public sealed partial class RayCastSystem : EntitySystem
     /// <summary>
     /// Convenience method for shape casts; only supports shapes with area.
     /// </summary>
-    public void CastShape(
+    public RayResult CastShape(
+        MapId mapId,
         IPhysShape shape,
         Transform originTransform,
         Vector2 translation,
-        QueryFilter filter,
-        CastResult fcn)
+        QueryFilter filter)
     {
         switch (shape)
         {
             case PhysShapeCircle circle:
-                CastCircle(circle, originTransform, translation, filter, fcn);
-                break;
+                return CastCircle(mapId, circle, originTransform, translation, filter);
             case PolygonShape poly:
-                CastPolygon(poly, originTransform, translation, filter, fcn);
-                break;
+                return CastPolygon(mapId, poly, originTransform, translation, filter);
             default:
                 throw new ArgumentOutOfRangeException();
         }
@@ -222,16 +269,52 @@ public sealed partial class RayCastSystem : EntitySystem
     /// <summary>
     /// Cast a circle through the world. Similar to a cast ray except that a circle is cast instead of a point.
     /// </summary>
-    public void CastCircle(
+    public RayResult CastCircle(
+        MapId mapId,
         PhysShapeCircle circle,
         Transform originTransform,
         Vector2 translation,
-        QueryFilter filter,
-        CastResult fcn)
+        QueryFilter filter)
     {
         DebugTools.Assert(originTransform.Position.IsValid());
         DebugTools.Assert(originTransform.Quaternion2D.IsValid());
         DebugTools.Assert(translation.IsValid());
+
+        // Need to get the entire shape AABB to know what broadphases to even query.
+        var startAabb = circle.ComputeAABB(originTransform, 0);
+        var endAabb = circle.ComputeAABB(new Transform(originTransform.Position + translation, originTransform.Quaternion2D.Angle), 0);
+        var aabb = startAabb.Union(endAabb);
+
+        var result = new RayResult();
+        var state = (originTransform, translation, shape: circle, filter, result, this, _physics);
+
+        _broadphase.GetBroadphases(mapId, aabb, ref state,
+            static (
+                Entity<BroadphaseComponent> entity,
+                ref (Transform origin, Vector2 translation, PhysShapeCircle shape, QueryFilter filter, RayResult result, RayCastSystem system, SharedPhysicsSystem _physics
+                    ) tuple) =>
+            {
+                var transform = tuple._physics.GetPhysicsTransform(entity.Owner);
+                var localOrigin = Physics.Transform.MulT(transform, tuple.origin);
+                var localTranslation = Physics.Transform.InvTransformPoint(transform, tuple.origin.Position + tuple.translation);
+
+                tuple.system.CastCircle((entity.Owner, entity.Comp), ref tuple.result, tuple.shape, localOrigin, localTranslation, filter: tuple.filter);
+            });
+
+        result = state.result;
+        return result;
+    }
+
+    public void CastCircle(
+        Entity<BroadphaseComponent?> entity,
+        ref RayResult result,
+        PhysShapeCircle circle,
+        Transform originTransform,
+        Vector2 translation,
+        QueryFilter filter)
+    {
+        if (!Resolve(entity.Owner, ref entity.Comp))
+            return;
 
         var input = new ShapeCastInput()
         {
@@ -244,36 +327,77 @@ public sealed partial class RayCastSystem : EntitySystem
 
         input.Points[0] = Physics.Transform.TransformPoint(originTransform, circle.Position);
 
-        WorldRayCastContext worldContext = { world, fcn, filter, 1.0f, context };
-
-        for ( int i = 0; i < b2_bodyTypeCount; ++i )
+        var worldContext = new WorldRayCastContext()
         {
-            b2DynamicTree_ShapeCast( world->broadPhase.trees + i, &input, filter.maskBits, ShapeCastCallback, &worldContext );
+            System = this,
+            Physics = _physics,
+            Filter = filter,
+            Fraction = 1f,
+            Result = result,
+            fcn = RayCastAllCallback,
+        };
 
-            if ( worldContext.Fraction == 0.0f )
-            {
-                return;
-            }
-
-            input.MaxFraction = worldContext.Fraction;
-        }
+        entity.Comp.StaticTree.Tree.ShapeCast(input, filter.MaskBits, ShapeCastCallback, ref worldContext);
+        input.MaxFraction = worldContext.Fraction;
+        entity.Comp.DynamicTree.Tree.ShapeCast(input, filter.MaskBits, ShapeCastCallback, ref worldContext);
+        result = worldContext.Result;
     }
 
     /// <summary>
-    /// Cast a polygon through the world. Similar to a cast ray except that a polygon is cast instead of a point.
+    /// Cast a circle through the world. Similar to a cast ray except that a circle is cast instead of a point.
     /// </summary>
-    public void CastPolygon(
+    public RayResult CastPolygon(
         MapId mapId,
+        PolygonShape poly,
+        Transform originTransform,
+        Vector2 translation,
+        QueryFilter filter)
+    {
+        DebugTools.Assert(originTransform.Position.IsValid());
+        DebugTools.Assert(originTransform.Quaternion2D.IsValid());
+        DebugTools.Assert(translation.IsValid());
+
+        // Need to get the entire shape AABB to know what broadphases to even query.
+        var startAabb = poly.ComputeAABB(originTransform, 0);
+        var endAabb = poly.ComputeAABB(new Transform(originTransform.Position + translation, originTransform.Quaternion2D.Angle), 0);
+        var aabb = startAabb.Union(endAabb);
+
+        var result = new RayResult();
+        var state = (originTransform, translation, shape: poly, filter, result, this, _physics);
+
+        _broadphase.GetBroadphases(mapId, aabb, ref state,
+            static (
+                Entity<BroadphaseComponent> entity,
+                ref (Transform origin, Vector2 translation, PolygonShape shape, QueryFilter filter, RayResult result, RayCastSystem system, SharedPhysicsSystem _physics
+                    ) tuple) =>
+            {
+                var transform = tuple._physics.GetPhysicsTransform(entity.Owner);
+                var localOrigin = Physics.Transform.MulT(transform, tuple.origin);
+                var localTranslation = Physics.Transform.InvTransformPoint(transform, tuple.origin.Position + tuple.translation);
+
+                tuple.system.CastPolygon((entity.Owner, entity.Comp), ref tuple.result, tuple.shape, localOrigin, localTranslation, filter: tuple.filter);
+            });
+
+        result = state.result;
+        return result;
+    }
+
+    public void CastPolygon(
+        Entity<BroadphaseComponent?> entity,
+        ref RayResult result,
         PolygonShape polygon,
         Transform originTransform,
         Vector2 translation,
-        QueryFilter filter,
-        CastResult fcn)
+        QueryFilter filter)
     {
+        if (!Resolve(entity.Owner, ref entity.Comp))
+            return;
+
         ShapeCastInput input = new()
         {
             Points = new Vector2[polygon.VertexCount],
         };
+
         for ( int i = 0; i < polygon.VertexCount; ++i )
         {
             input.Points[i] = Physics.Transform.TransformPoint(originTransform, polygon.Vertices[i]);
@@ -286,63 +410,18 @@ public sealed partial class RayCastSystem : EntitySystem
 
         var worldContext = new WorldRayCastContext()
         {
-            Physics = _physics,
             System = this,
-            fcn = fcn,
+            Physics = _physics,
             Filter = filter,
             Fraction = 1f,
-            Result = new RayResult(),
+            Result = result,
+            fcn = RayCastAllCallback,
         };
 
-        var startAabb = polygon.ComputeAABB(originTransform, 0);
-        var endAabb = polygon.ComputeAABB(new Transform(originTransform.Position), 1);
-
-        _broadphase.GetBroadphases(mapId);
-
-        for ( int i = 0; i < b2_bodyTypeCount; ++i )
-        {
-            b2DynamicTree_ShapeCast( world->broadPhase.trees + i, &input, filter.maskBits, ShapeCastCallback, &worldContext );
-
-            if ( worldContext.Fraction == 0.0f )
-            {
-                return;
-            }
-
-            input.MaxFraction = worldContext.Fraction;
-        }
-    }
-
-    private CastOutput RayCastShape(RayCastInput input, IPhysShape shape, Transform transform)
-    {
-        var localInput = input;
-        localInput.Origin = Physics.Transform.InvTransformPoint(transform, input.Origin);
-        localInput.Translation = Quaternion2D.InvRotateVector(transform.Quaternion2D, input.Translation);
-
-        CastOutput output = new();
-
-        switch (shape)
-        {
-            /*
-            case b2_capsuleShape:
-                output = b2RayCastCapsule( &localInput, &shape->capsule );
-                break;
-                */
-            case PhysShapeCircle circle:
-                output = RayCastCircle(localInput, circle);
-                break;
-            case PolygonShape polyShape:
-                output = RayCastPolygon(localInput, (Polygon) polyShape);
-                break;
-            case Polygon poly:
-                output = RayCastPolygon(localInput, poly);
-                break;
-            default:
-                return output;
-        }
-
-        output.Point = Physics.Transform.TransformPoint(transform, output.Point);
-        output.Normal = Quaternion2D.RotateVector(transform.Quaternion2D, output.Normal);
-        return output;
+        entity.Comp.StaticTree.Tree.ShapeCast(input, filter.MaskBits, ShapeCastCallback, ref worldContext);
+        input.MaxFraction = worldContext.Fraction;
+        entity.Comp.DynamicTree.Tree.ShapeCast(input, filter.MaskBits, ShapeCastCallback, ref worldContext);
+        result = worldContext.Result;
     }
 
     #endregion

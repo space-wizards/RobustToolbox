@@ -222,5 +222,27 @@ namespace Robust.Shared.Physics
         {
             return new Vector2(q.C * v.X + q.S * v.Y, -q.S * v.X + q.C * v.Y);
         }
+
+        public bool IsValid()
+        {
+            if (float.IsNaN(S ) || float.IsNaN(C))
+            {
+                return false;
+            }
+
+            if (float.IsInfinity(S) || float.IsInfinity(C))
+            {
+                return false;
+            }
+
+            return IsNormalized();
+        }
+
+        public bool IsNormalized()
+        {
+            // larger tolerance due to failure on mingw 32-bit
+            float qq = S * S + C * C;
+            return 1.0f - 0.0006f < qq && qq < 1.0f + 0.0006f;
+        }
     }
 }

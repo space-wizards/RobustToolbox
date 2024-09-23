@@ -1043,9 +1043,9 @@ namespace Robust.Shared.Physics
         /// - return a value of 0 to terminate the ray-cast
         /// - return a value less than input->maxFraction to clip the ray
         /// - return a value of input->maxFraction to continue the ray cast without clipping
-        internal delegate float TreeShapeCastCallback<TState>(ref ShapeCastInput input, Proxy proxyId, T userData, ref TState state);
+        internal delegate float TreeShapeCastCallback(ShapeCastInput input, T userData, ref WorldRayCastContext state);
 
-        internal void ShapeCast<TState>(ShapeCastInput input, long maskBits, TreeShapeCastCallback<TState> callback, ref TState state)
+        internal void ShapeCast(ShapeCastInput input, long maskBits, TreeShapeCastCallback callback, ref WorldRayCastContext state)
         {
 	        if (input.Count == 0)
 	        {
@@ -1125,7 +1125,7 @@ namespace Robust.Shared.Physics
 		        {
 			        subInput.MaxFraction = maxFraction;
 
-			        float value = callback(ref subInput, nodeId, node.UserData, ref state);
+			        float value = callback(subInput, node.UserData, ref state);
 
 			        if ( value == 0.0f )
 			        {

@@ -13,6 +13,39 @@ public sealed partial class RayCastSystem
 {
     #region Raycast
 
+    private CastOutput RayCastShape(RayCastInput input, IPhysShape shape, Transform transform)
+    {
+        var localInput = input;
+        localInput.Origin = Physics.Transform.InvTransformPoint(transform, input.Origin);
+        localInput.Translation = Quaternion2D.InvRotateVector(transform.Quaternion2D, input.Translation);
+
+        CastOutput output = new();
+
+        switch (shape)
+        {
+            /*
+            case b2_capsuleShape:
+                output = b2RayCastCapsule( &localInput, &shape->capsule );
+                break;
+                */
+            case PhysShapeCircle circle:
+                output = RayCastCircle(localInput, circle);
+                break;
+            case PolygonShape polyShape:
+                output = RayCastPolygon(localInput, (Polygon) polyShape);
+                break;
+            case Polygon poly:
+                output = RayCastPolygon(localInput, poly);
+                break;
+            default:
+                return output;
+        }
+
+        output.Point = Physics.Transform.TransformPoint(transform, output.Point);
+        output.Normal = Quaternion2D.RotateVector(transform.Quaternion2D, output.Normal);
+        return output;
+    }
+
     /// <summary>
     /// This callback is invoked upon every AABB collision.
     /// </summary>
@@ -593,8 +626,10 @@ internal ref struct ShapeCastPairInput
     public float MaxFraction;
 }
 
-internal ref struct ShapeCastInput
+internal record struct ShapeCastInput
 {
+    public Transform Origin;
+
     /// A point cloud to cast
     public Vector2[] Points;
 
@@ -611,7 +646,7 @@ internal ref struct ShapeCastInput
     public float MaxFraction;
 }
 
-internal ref struct RayCastInput
+internal record struct RayCastInput
 {
     public Vector2 Origin;
 

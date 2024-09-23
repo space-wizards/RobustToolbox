@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
@@ -19,10 +20,13 @@ public sealed class RayCast_Test
     private static TestCaseData[] _rayCases =
     {
         // Ray goes through
-        new(new Vector2(0f, 0.5f), Vector2.UnitY * 2f, true),
+        new(new Vector2(0f, 0.5f), Vector2.UnitY * 2f, new Vector2(0.5f, 1.5f)),
 
         // Ray stops inside
-        new(new Vector2(0f, 0.5f), Vector2.UnitY, true),
+        new(new Vector2(0f, 0.5f), Vector2.UnitY, new Vector2(0.5f, 1.5f)),
+
+        // No hit
+        new(new Vector2(0f, 0.5f), -Vector2.UnitY, null),
     };
 
     private static TestCaseData[] _shapeCases =
@@ -34,7 +38,7 @@ public sealed class RayCast_Test
     };
 
     [Test, TestCaseSource(nameof(_rayCases))]
-    public void RayCast(Vector2 origin, Vector2 direction, bool result)
+    public void RayCast(Vector2 origin, Vector2 direction, Vector2? point)
     {
         var sim = RobustServerSimulation.NewSimulation().RegisterEntitySystems(f =>
         {
@@ -43,7 +47,7 @@ public sealed class RayCast_Test
         Setup(sim, out var mapId);
         var raycast = sim.System<RayCastSystem>();
 
-        var hits = raycast.CastRay(mapId,
+        var hits = raycast.CastRayClosest(mapId,
             origin,
             direction,
             new QueryFilter()
@@ -51,7 +55,14 @@ public sealed class RayCast_Test
                 LayerBits = 1,
             });
 
-        Assert.That(hits.Hit, Is.EqualTo(result));
+        if (point == null)
+        {
+            Assert.That(!hits.Hit);
+        }
+        else
+        {
+            Assert.That(hits.Results.First().Point, Is.EqualTo(point.Value));
+        }
     }
 
     [Test, TestCaseSource(nameof(_shapeCases))]

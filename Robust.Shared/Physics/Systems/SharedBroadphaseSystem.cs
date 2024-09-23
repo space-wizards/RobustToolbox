@@ -512,6 +512,8 @@ namespace Robust.Shared.Physics.Systems
                     return true;
                     // Approx because we don't really need accurate checks for these most of the time.
                 }, approx: true, includeMap: true);
+
+            state = internalState.state;
         }
 
         internal delegate void BroadphaseCallback(Entity<BroadphaseComponent> entity);

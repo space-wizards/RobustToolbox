@@ -71,16 +71,6 @@ namespace Robust.Shared.Physics
             return new Vector2(t.Quaternion2D.C * vx + t.Quaternion2D.S * vy, -t.Quaternion2D.S * vx + t.Quaternion2D.C * vy);
         }
 
-        /// Transform a point (e.g. local space to world space)
-        [Pure]
-        public static Vector2 TransformPoint(Transform xf, Vector2 p)
-        {
-            float x = (xf.Quaternion2D.C * p.X - xf.Quaternion2D.S * p.Y) + p.X;
-            float y = (xf.Quaternion2D.S * p.X + xf.Quaternion2D.C * p.Y) + p.Y;
-
-            return new Vector2(x, y);
-        }
-
         [Pure]
         public static Vector2 Mul(in Transform transform, in Vector2 vector)
         {

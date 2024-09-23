@@ -429,7 +429,7 @@ internal struct Simplex
     // Solution
     // a1 = d12_1 / d12
     // a2 = d12_2 / d12
-    public static void SolveSimplex2(Simplex s)
+    public static void SolveSimplex2(ref Simplex s)
     {
 	    var w1 = s.V._00.W;
 	    var w2 = s.V._01.W;
@@ -463,7 +463,7 @@ internal struct Simplex
 	    s.Count = 2;
     }
 
-    public static void SolveSimplex3(Simplex s)
+    public static void SolveSimplex3(ref Simplex s)
     {
 	    var w1 = s.V._00.W;
         var w2 = s.V._01.W;

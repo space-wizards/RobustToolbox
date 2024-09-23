@@ -20,7 +20,7 @@ public sealed partial class RayCastSystem
     /// <summary>
     /// Tells the callback we want every entity.
     /// </summary>
-    private static float RayCastAllCallback(FixtureProxy proxy, Vector2 point, Vector2 normal, float fraction, RayResult result)
+    private static float RayCastAllCallback(FixtureProxy proxy, Vector2 point, Vector2 normal, float fraction, ref RayResult result)
     {
         result.Results.Add(new RayHit()
         {
@@ -35,7 +35,7 @@ public sealed partial class RayCastSystem
     /// <summary>
     /// This just lets the callback continue.
     /// </summary>
-    private static float RayCastClosestCallback(FixtureProxy proxy, Vector2 point, Vector2 normal, float fraction, RayResult result)
+    private static float RayCastClosestCallback(FixtureProxy proxy, Vector2 point, Vector2 normal, float fraction, ref RayResult result)
     {
         var add = false;
 
@@ -89,16 +89,20 @@ public sealed partial class RayCastSystem
                 output = RayCastCircle(localInput, circle);
                 break;
             case PolygonShape polyShape:
+            {
                 output = RayCastPolygon(localInput, (Polygon) polyShape);
+            }
                 break;
             case Polygon poly:
+            {
                 output = RayCastPolygon(localInput, poly);
+            }
                 break;
             default:
                 return output;
         }
 
-        output.Point = Physics.Transform.TransformPoint(transform, output.Point);
+        output.Point = Physics.Transform.Mul(transform, output.Point);
         output.Normal = Quaternion2D.RotateVector(transform.Quaternion2D, output.Normal);
         return output;
     }
@@ -119,7 +123,7 @@ public sealed partial class RayCastSystem
         if (output.Hit)
         {
             // Fraction returned determines what B2Dynamictree will do, i.e. shrink the AABB or not.
-            var fraction = worldContext.fcn(proxy, output.Point, output.Normal, output.Fraction, worldContext.Result);
+            var fraction = worldContext.fcn(proxy, output.Point, output.Normal, output.Fraction, ref worldContext.Result);
             return fraction;
         }
 
@@ -387,7 +391,7 @@ public sealed partial class RayCastSystem
                 return new CastOutput();
         }
 
-        output.Point = Physics.Transform.TransformPoint(transform, output.Point);
+        output.Point = Physics.Transform.Mul(transform, output.Point);
         output.Normal = Quaternion2D.RotateVector(transform.Quaternion2D, output.Normal);
         return output;
     }
@@ -409,7 +413,7 @@ public sealed partial class RayCastSystem
 
         if (output.Hit)
         {
-            var fraction = worldContext.fcn(proxy, output.Point, output.Normal, output.Fraction, worldContext.Result);
+            var fraction = worldContext.fcn(proxy, output.Point, output.Normal, output.Fraction, ref worldContext.Result);
             return fraction;
         }
 
@@ -425,9 +429,8 @@ public sealed partial class RayCastSystem
     {
 	    var output = new CastOutput()
         {
-            Fraction = 0f,
+            Fraction = input.MaxFraction,
 	    };
-	    output.Fraction = input.MaxFraction;
 
 	    var proxyA = input.ProxyA;
         var count = input.ProxyB.Vertices.Length;
@@ -441,7 +444,7 @@ public sealed partial class RayCastSystem
 
 	    for ( int i = 0; i < count; ++i )
 	    {
-		    proxyBVerts[i] = Physics.Transform.TransformPoint(xf, input.ProxyB.Vertices[i]);
+		    proxyBVerts[i] = Physics.Transform.Mul(xf, input.ProxyB.Vertices[i]);
 	    }
 
         var proxyB = DistanceProxy.MakeProxy(proxyBVerts, count, input.ProxyB.Radius);
@@ -532,11 +535,11 @@ public sealed partial class RayCastSystem
 				    break;
 
 			    case 2:
-				    Simplex.SolveSimplex2(simplex);
+				    Simplex.SolveSimplex2(ref simplex);
 				    break;
 
 			    case 3:
-				    Simplex.SolveSimplex3(simplex);
+				    Simplex.SolveSimplex3(ref simplex);
 				    break;
 
 			    default:
@@ -571,7 +574,7 @@ public sealed partial class RayCastSystem
 	    var n = (-v).Normalized();
 	    var point = new Vector2(pointA.X + proxyA.Radius * n.X, pointA.Y + proxyA.Radius * n.Y);
 
-	    output.Point = Physics.Transform.TransformPoint(xfA, point);
+	    output.Point = Physics.Transform.Mul(xfA, point);
 	    output.Normal = Quaternion2D.RotateVector(xfA.Quaternion2D, n);
 	    output.Fraction = lambda;
 	    output.Iterations = iter;

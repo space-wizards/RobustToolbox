@@ -105,8 +105,9 @@ public sealed partial class RayCastSystem : EntitySystem
                 var transform = tuple.Physics.GetPhysicsTransform(entity.Owner);
                 var localOrigin = Physics.Transform.InvTransformPoint(transform, tuple.input.Origin);
                 var localTranslation = Physics.Transform.InvTransformPoint(transform, tuple.input.Origin + tuple.input.Translation) - localOrigin;
+                ref var result = ref tuple.result;
 
-                tuple.system.CastRay((entity.Owner, entity.Comp), ref tuple.result, localOrigin, localTranslation, filter: tuple.filter, sorted: false);
+                tuple.system.CastRay((entity.Owner, entity.Comp), ref result, localOrigin, localTranslation, filter: tuple.filter, sorted: false);
             });
 
         result = state.result;
@@ -279,7 +280,7 @@ public sealed partial class RayCastSystem : EntitySystem
             MaxFraction = 1f,
         };
 
-        input.Points[0] = Physics.Transform.TransformPoint(originTransform, circle.Position);
+        input.Points[0] = Physics.Transform.Mul(originTransform, circle.Position);
 
         var worldContext = new WorldRayCastContext()
         {
@@ -315,7 +316,7 @@ public sealed partial class RayCastSystem : EntitySystem
 
         for ( int i = 0; i < polygon.VertexCount; ++i )
         {
-            input.Points[i] = Physics.Transform.TransformPoint(originTransform, polygon.Vertices[i]);
+            input.Points[i] = Physics.Transform.Mul(originTransform, polygon.Vertices[i]);
         }
 
         input.Count = polygon.VertexCount;
@@ -392,4 +393,4 @@ public record struct QueryFilter
 /// @return -1 to filter, 0 to terminate, fraction to clip the ray for closest hit, 1 to continue
 /// @see b2World_CastRay
 ///	@ingroup world
-public delegate float CastResult(FixtureProxy proxy, Vector2 point, Vector2 normal, float fraction, RayResult result);
+public delegate float CastResult(FixtureProxy proxy, Vector2 point, Vector2 normal, float fraction, ref RayResult result);

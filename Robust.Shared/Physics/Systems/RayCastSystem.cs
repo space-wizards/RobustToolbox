@@ -17,6 +17,13 @@ namespace Robust.Shared.Physics.Systems;
 
 public sealed partial class RayCastSystem : EntitySystem
 {
+    /*
+     * A few things to keep in mind with the below:
+     * - Raycasts are done relative to the corresponding broadphases.
+     * - The raycast results need to be transformed into Map terms.
+     * - If you wish to add more helper methods make a new partial and dump them there and have them call the below methods.
+     */
+
     [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
@@ -29,6 +36,14 @@ public sealed partial class RayCastSystem : EntitySystem
         public int Compare(RayHit x, RayHit y)
         {
             return x.Fraction.CompareTo(y.Fraction);
+        }
+    }
+
+    private void AdjustResults(ref RayResult result, int index, Transform xf)
+    {
+        for (var i = index; i < result.Results.Count; i++)
+        {
+            result.Results[i].Point = Physics.Transform.Mul(xf, result.Results[i].Point);
         }
     }
 
@@ -105,9 +120,9 @@ public sealed partial class RayCastSystem : EntitySystem
                 var transform = tuple.Physics.GetPhysicsTransform(entity.Owner);
                 var localOrigin = Physics.Transform.InvTransformPoint(transform, tuple.input.Origin);
                 var localTranslation = Physics.Transform.InvTransformPoint(transform, tuple.input.Origin + tuple.input.Translation) - localOrigin;
-                ref var result = ref tuple.result;
-
-                tuple.system.CastRay((entity.Owner, entity.Comp), ref result, localOrigin, localTranslation, filter: tuple.filter, sorted: false);
+                var oldIndex = tuple.result.Results.Count;
+                tuple.system.CastRay((entity.Owner, entity.Comp), ref tuple.result, localOrigin, localTranslation, filter: tuple.filter, sorted: false);
+                tuple.system.AdjustResults(ref tuple.result, oldIndex, transform);
             });
 
         result = state.result;
@@ -183,7 +198,9 @@ public sealed partial class RayCastSystem : EntitySystem
                 var localOrigin = Physics.Transform.InvTransformPoint(transform, tuple.input.Origin);
                 var localTranslation = Physics.Transform.InvTransformPoint(transform, tuple.input.Origin + tuple.input.Translation) - localOrigin;
 
+                var oldIndex = tuple.result.Results.Count;
                 tuple.system.CastRayClosest((entity.Owner, entity.Comp), ref tuple.result, localOrigin, localTranslation, filter: tuple.filter);
+                tuple.system.AdjustResults(ref tuple.result, oldIndex, transform);
             });
 
         result = state.result;
@@ -227,7 +244,9 @@ public sealed partial class RayCastSystem : EntitySystem
                 var localOrigin = Physics.Transform.MulT(transform, tuple.origin);
                 var localTranslation = Physics.Transform.InvTransformPoint(transform, tuple.origin.Position + tuple.translation) - localOrigin.Position;
 
+                var oldIndex = tuple.result.Results.Count;
                 tuple.system.CastShape((entity.Owner, entity.Comp), ref tuple.result, tuple.shape, localOrigin, localTranslation, filter: tuple.filter);
+                tuple.system.AdjustResults(ref tuple.result, oldIndex, transform);
             });
 
         result = state.result;

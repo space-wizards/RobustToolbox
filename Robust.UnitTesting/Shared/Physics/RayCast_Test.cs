@@ -20,10 +20,10 @@ public sealed class RayCast_Test
     private static TestCaseData[] _rayCases =
     {
         // Ray goes through
-        new(new Vector2(0f, 0.5f), Vector2.UnitY * 2f, new Vector2(0.5f, 1.5f)),
+        new(new Vector2(0f, 0.5f), Vector2.UnitY * 2f, new Vector2(0f, 1f - PhysicsConstants.PolygonRadius)),
 
         // Ray stops inside
-        new(new Vector2(0f, 0.5f), Vector2.UnitY, new Vector2(0.5f, 1.5f)),
+        new(new Vector2(0f, 0.5f), Vector2.UnitY, new Vector2(0f, 1f - PhysicsConstants.PolygonRadius)),
 
         // No hit
         new(new Vector2(0f, 0.5f), -Vector2.UnitY, null),

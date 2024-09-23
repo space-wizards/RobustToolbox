@@ -369,7 +369,7 @@ public sealed partial class RayCastSystem
 
         for ( int i = 0; i < localInput.Count; ++i )
         {
-            localInput.Points[i] = Physics.Transform.InvTransformPoint(transform, input.Points[i]);
+            localInput.Points[i] = Physics.Transform.MulT(transform, input.Points[i]);
         }
 
         localInput.Translation = Quaternion2D.InvRotateVector(transform.Quaternion2D, input.Translation);

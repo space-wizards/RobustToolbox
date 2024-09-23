@@ -32,7 +32,11 @@ public sealed class RayCast_Test
     private static TestCaseData[] _shapeCases =
     {
         // Circle
-        new(new PhysShapeCircle(1f, Vector2.Zero), new Transform(Vector2.One / 2f, Angle.Zero), Vector2.UnitX, true),
+        // - Initial overlap
+        new(new PhysShapeCircle(0.5f, Vector2.Zero), new Transform(Vector2.UnitY / 2f, Angle.Zero), Vector2.UnitY, new Vector2(0f, 0.5f)),
+
+        // - Cast
+        new(new PhysShapeCircle(0.5f, Vector2.Zero), new Transform(Vector2.Zero, Angle.Zero), Vector2.UnitY, new Vector2(0f, 1f - PhysicsConstants.PolygonRadius)),
 
         // Polygon
     };
@@ -66,7 +70,7 @@ public sealed class RayCast_Test
     }
 
     [Test, TestCaseSource(nameof(_shapeCases))]
-    public void ShapeCast(IPhysShape shape, Transform origin, Vector2 direction, bool result)
+    public void ShapeCast(IPhysShape shape, Transform origin, Vector2 direction, Vector2? point)
     {
         var sim = RobustServerSimulation.NewSimulation().RegisterEntitySystems(f =>
         {
@@ -74,6 +78,24 @@ public sealed class RayCast_Test
         }).InitializeInstance();
         Setup(sim, out var mapId);
         var raycast = sim.System<RayCastSystem>();
+
+        var hits = raycast.CastShape(mapId,
+            shape,
+            origin,
+            direction,
+            new QueryFilter()
+            {
+                LayerBits = 1,
+            });
+
+        if (point == null)
+        {
+            Assert.That(!hits.Hit);
+        }
+        else
+        {
+            Assert.That(hits.Results.First().Point, Is.EqualTo(point.Value));
+        }
     }
 
     private void Setup(ISimulation sim, out MapId mapId)

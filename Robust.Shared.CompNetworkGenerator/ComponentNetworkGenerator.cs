@@ -246,10 +246,18 @@ namespace Robust.Shared.CompNetworkGenerator
 
                         if (IsCloneType(type))
                         {
-                            // get first ctor arg of the field attribute, which determines whether the field should be cloned
-                            // (like if its a dict or list)
-                            getStateInit.Append($@"
-                {name} = component.{name},");
+                            if (type.NullableAnnotation == NullableAnnotation.NotAnnotated)
+                            {
+                                // get first ctor arg of the field attribute, which determines whether the field should be cloned
+                                // (like if its a dict or list)
+                                getStateInit.Append($@"
+                {name} = new(component.{name}),");
+                            }
+                            else
+                            {
+                                getStateInit.Append($@"
+                {name} = component.{name} == null ? null : new(component.{name}),");
+                            }
 
                             handleStateSetters.Append($@"
             if (state.{name} == null)

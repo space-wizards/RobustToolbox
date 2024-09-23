@@ -391,7 +391,7 @@ public partial class EntityManager
         entities.EnsureCapacity(netEntities.Count);
         foreach (var pair in netEntities)
         {
-            entities.Add(EnsureEntity<TComp>(pair.Key, callerEntity), pair.Value);
+            entities.TryAdd(EnsureEntity<TComp>(pair.Key, callerEntity), pair.Value);
         }
     }
 
@@ -402,7 +402,7 @@ public partial class EntityManager
         entities.EnsureCapacity(netEntities.Count);
         foreach (var pair in netEntities)
         {
-            entities.Add(EnsureEntity<TComp>(pair.Key, callerEntity), pair.Value);
+            entities.TryAdd(EnsureEntity<TComp>(pair.Key, callerEntity), pair.Value);
         }
     }
 
@@ -413,7 +413,7 @@ public partial class EntityManager
         entities.EnsureCapacity(netEntities.Count);
         foreach (var pair in netEntities)
         {
-            entities.Add(pair.Key, EnsureEntity<TComp>(pair.Value, callerEntity));
+            entities.TryAdd(pair.Key, EnsureEntity<TComp>(pair.Value, callerEntity));
         }
     }
 
@@ -424,7 +424,7 @@ public partial class EntityManager
         entities.EnsureCapacity(netEntities.Count);
         foreach (var pair in netEntities)
         {
-            entities.Add(pair.Key, EnsureEntity<TComp>(pair.Value, callerEntity));
+            entities.TryAdd(pair.Key, EnsureEntity<TComp>(pair.Value, callerEntity));
         }
     }
 
@@ -435,7 +435,7 @@ public partial class EntityManager
         entities.EnsureCapacity(netEntities.Count);
         foreach (var pair in netEntities)
         {
-            entities.Add(EnsureEntity<TComp>(pair.Key, callerEntity), EnsureEntity<TComp>(pair.Value, callerEntity));
+            entities.TryAdd(EnsureEntity<TComp>(pair.Key, callerEntity), EnsureEntity<TComp>(pair.Value, callerEntity));
         }
     }
 
@@ -446,7 +446,7 @@ public partial class EntityManager
         entities.EnsureCapacity(netEntities.Count);
         foreach (var pair in netEntities)
         {
-            entities.Add(EnsureEntity<TComp>(pair.Key, callerEntity), EnsureEntity<TComp>(pair.Value, callerEntity));
+            entities.TryAdd(EnsureEntity<TComp>(pair.Key, callerEntity), EnsureEntity<TComp>(pair.Value, callerEntity));
         }
     }
 

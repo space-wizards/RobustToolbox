@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Auto-networked dictionaries now use `TryAdd()` to avoid duplicate key errors when a dictionary contains multiple unknown networked entities.
 
 ### Other
 

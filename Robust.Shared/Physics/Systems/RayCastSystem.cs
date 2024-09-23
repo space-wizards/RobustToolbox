@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using JetBrains.Annotations;
 using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -20,59 +21,6 @@ public sealed partial class RayCastSystem : EntitySystem
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
     private readonly RayComparer _rayComparer = new();
-
-    #region Callbacks
-
-    /// <summary>
-    /// Tells the callback we want every entity.
-    /// </summary>
-    private static float RayCastAllCallback(FixtureProxy proxy, Vector2 point, Vector2 normal, float fraction, RayResult result)
-    {
-        result.Results.Add(new RayHit()
-        {
-            Fraction = fraction,
-            Normal = normal,
-            Point = point,
-            Proxy = proxy,
-        });
-        return 1f;
-    }
-
-    /// <summary>
-    /// This just lets the callback continue.
-    /// </summary>
-    private static float RayCastClosestCallback(FixtureProxy proxy, Vector2 point, Vector2 normal, float fraction, RayResult result)
-    {
-        var add = false;
-
-        if (result.Results.Count > 0)
-        {
-            if (result.Results[0].Fraction > fraction)
-            {
-                add = true;
-                result.Results.Clear();
-            }
-        }
-        else
-        {
-            add = true;
-        }
-
-        if (add)
-        {
-            result.Results.Add(new RayHit()
-            {
-                Fraction = fraction,
-                Normal = normal,
-                Point = point,
-                Proxy = proxy,
-            });
-        }
-
-        return fraction;
-    }
-
-    #endregion
 
     #region RayCast
 
@@ -130,6 +78,7 @@ public sealed partial class RayCastSystem : EntitySystem
     /// <summary>
     /// Returns all entities hit in order.
     /// </summary>
+    [Pure]
     public RayResult CastRay(MapId mapId, Vector2 origin, Vector2 translation, QueryFilter filter)
     {
         DebugTools.Assert(origin.IsValid());
@@ -155,7 +104,7 @@ public sealed partial class RayCastSystem : EntitySystem
             {
                 var transform = tuple.Physics.GetPhysicsTransform(entity.Owner);
                 var localOrigin = Physics.Transform.InvTransformPoint(transform, tuple.input.Origin);
-                var localTranslation = Physics.Transform.InvTransformPoint(transform, tuple.input.Origin + tuple.input.Translation);
+                var localTranslation = Physics.Transform.InvTransformPoint(transform, tuple.input.Origin + tuple.input.Translation) - localOrigin;
 
                 tuple.system.CastRay((entity.Owner, entity.Comp), ref tuple.result, localOrigin, localTranslation, filter: tuple.filter, sorted: false);
             });
@@ -231,7 +180,7 @@ public sealed partial class RayCastSystem : EntitySystem
             {
                 var transform = tuple._physics.GetPhysicsTransform(entity.Owner);
                 var localOrigin = Physics.Transform.InvTransformPoint(transform, tuple.input.Origin);
-                var localTranslation = Physics.Transform.InvTransformPoint(transform, tuple.input.Origin + tuple.input.Translation);
+                var localTranslation = Physics.Transform.InvTransformPoint(transform, tuple.input.Origin + tuple.input.Translation) - localOrigin;
 
                 tuple.system.CastRayClosest((entity.Owner, entity.Comp), ref tuple.result, localOrigin, localTranslation, filter: tuple.filter);
             });
@@ -255,54 +204,59 @@ public sealed partial class RayCastSystem : EntitySystem
         Vector2 translation,
         QueryFilter filter)
     {
-        switch (shape)
-        {
-            case PhysShapeCircle circle:
-                return CastCircle(mapId, circle, originTransform, translation, filter);
-            case PolygonShape poly:
-                return CastPolygon(mapId, poly, originTransform, translation, filter);
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
-    }
-
-    /// <summary>
-    /// Cast a circle through the world. Similar to a cast ray except that a circle is cast instead of a point.
-    /// </summary>
-    public RayResult CastCircle(
-        MapId mapId,
-        PhysShapeCircle circle,
-        Transform originTransform,
-        Vector2 translation,
-        QueryFilter filter)
-    {
         DebugTools.Assert(originTransform.Position.IsValid());
         DebugTools.Assert(originTransform.Quaternion2D.IsValid());
         DebugTools.Assert(translation.IsValid());
 
         // Need to get the entire shape AABB to know what broadphases to even query.
-        var startAabb = circle.ComputeAABB(originTransform, 0);
-        var endAabb = circle.ComputeAABB(new Transform(originTransform.Position + translation, originTransform.Quaternion2D.Angle), 0);
+        var startAabb = shape.ComputeAABB(originTransform, 0);
+        var endAabb = shape.ComputeAABB(new Transform(originTransform.Position + translation, originTransform.Quaternion2D.Angle), 0);
         var aabb = startAabb.Union(endAabb);
 
         var result = new RayResult();
-        var state = (originTransform, translation, shape: circle, filter, result, this, _physics);
+        var state = (originTransform, translation, shape: shape, filter, result, this, _physics);
 
         _broadphase.GetBroadphases(mapId, aabb, ref state,
             static (
                 Entity<BroadphaseComponent> entity,
-                ref (Transform origin, Vector2 translation, PhysShapeCircle shape, QueryFilter filter, RayResult result, RayCastSystem system, SharedPhysicsSystem _physics
+                ref (Transform origin, Vector2 translation, IPhysShape shape, QueryFilter filter, RayResult result, RayCastSystem system, SharedPhysicsSystem _physics
                     ) tuple) =>
             {
                 var transform = tuple._physics.GetPhysicsTransform(entity.Owner);
                 var localOrigin = Physics.Transform.MulT(transform, tuple.origin);
-                var localTranslation = Physics.Transform.InvTransformPoint(transform, tuple.origin.Position + tuple.translation);
+                var localTranslation = Physics.Transform.InvTransformPoint(transform, tuple.origin.Position + tuple.translation) - localOrigin.Position;
 
-                tuple.system.CastCircle((entity.Owner, entity.Comp), ref tuple.result, tuple.shape, localOrigin, localTranslation, filter: tuple.filter);
+                tuple.system.CastShape((entity.Owner, entity.Comp), ref tuple.result, tuple.shape, localOrigin, localTranslation, filter: tuple.filter);
             });
 
         result = state.result;
         return result;
+    }
+
+    public void CastShape(
+        Entity<BroadphaseComponent?> entity,
+        ref RayResult result,
+        IPhysShape shape,
+        Transform originTransform,
+        Vector2 translation,
+        QueryFilter filter)
+    {
+        if (!Resolve(entity.Owner, ref entity.Comp))
+            return;
+
+        switch (shape)
+        {
+            case PhysShapeCircle circle:
+                CastCircle(entity, ref result, circle, originTransform, translation, filter);
+                break;
+            case PolygonShape polygon:
+                CastPolygon(entity, ref result,polygon, originTransform, translation, filter);
+                break;
+            default:
+                Log.Error("Tried to shapecast for shape not implemented.");
+                DebugTools.Assert(false);
+                return;
+        }
     }
 
     public void CastCircle(
@@ -341,45 +295,6 @@ public sealed partial class RayCastSystem : EntitySystem
         input.MaxFraction = worldContext.Fraction;
         entity.Comp.DynamicTree.Tree.ShapeCast(input, filter.MaskBits, ShapeCastCallback, ref worldContext);
         result = worldContext.Result;
-    }
-
-    /// <summary>
-    /// Cast a circle through the world. Similar to a cast ray except that a circle is cast instead of a point.
-    /// </summary>
-    public RayResult CastPolygon(
-        MapId mapId,
-        PolygonShape poly,
-        Transform originTransform,
-        Vector2 translation,
-        QueryFilter filter)
-    {
-        DebugTools.Assert(originTransform.Position.IsValid());
-        DebugTools.Assert(originTransform.Quaternion2D.IsValid());
-        DebugTools.Assert(translation.IsValid());
-
-        // Need to get the entire shape AABB to know what broadphases to even query.
-        var startAabb = poly.ComputeAABB(originTransform, 0);
-        var endAabb = poly.ComputeAABB(new Transform(originTransform.Position + translation, originTransform.Quaternion2D.Angle), 0);
-        var aabb = startAabb.Union(endAabb);
-
-        var result = new RayResult();
-        var state = (originTransform, translation, shape: poly, filter, result, this, _physics);
-
-        _broadphase.GetBroadphases(mapId, aabb, ref state,
-            static (
-                Entity<BroadphaseComponent> entity,
-                ref (Transform origin, Vector2 translation, PolygonShape shape, QueryFilter filter, RayResult result, RayCastSystem system, SharedPhysicsSystem _physics
-                    ) tuple) =>
-            {
-                var transform = tuple._physics.GetPhysicsTransform(entity.Owner);
-                var localOrigin = Physics.Transform.MulT(transform, tuple.origin);
-                var localTranslation = Physics.Transform.InvTransformPoint(transform, tuple.origin.Position + tuple.translation);
-
-                tuple.system.CastPolygon((entity.Owner, entity.Comp), ref tuple.result, tuple.shape, localOrigin, localTranslation, filter: tuple.filter);
-            });
-
-        result = state.result;
-        return result;
     }
 
     public void CastPolygon(

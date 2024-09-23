@@ -11,6 +11,63 @@ namespace Robust.Shared.Physics.Systems;
 
 public sealed partial class RayCastSystem
 {
+    /*
+     * This is really "geometry and friends" as it has all the private methods.
+     */
+
+    #region Callbacks
+
+    /// <summary>
+    /// Tells the callback we want every entity.
+    /// </summary>
+    private static float RayCastAllCallback(FixtureProxy proxy, Vector2 point, Vector2 normal, float fraction, RayResult result)
+    {
+        result.Results.Add(new RayHit()
+        {
+            Fraction = fraction,
+            Normal = normal,
+            Point = point,
+            Proxy = proxy,
+        });
+        return 1f;
+    }
+
+    /// <summary>
+    /// This just lets the callback continue.
+    /// </summary>
+    private static float RayCastClosestCallback(FixtureProxy proxy, Vector2 point, Vector2 normal, float fraction, RayResult result)
+    {
+        var add = false;
+
+        if (result.Results.Count > 0)
+        {
+            if (result.Results[0].Fraction > fraction)
+            {
+                add = true;
+                result.Results.Clear();
+            }
+        }
+        else
+        {
+            add = true;
+        }
+
+        if (add)
+        {
+            result.Results.Add(new RayHit()
+            {
+                Fraction = fraction,
+                Normal = normal,
+                Point = point,
+                Proxy = proxy,
+            });
+        }
+
+        return fraction;
+    }
+
+    #endregion
+
     #region Raycast
 
     private CastOutput RayCastShape(RayCastInput input, IPhysShape shape, Transform transform)
@@ -51,7 +108,7 @@ public sealed partial class RayCastSystem
     /// </summary>
     private static float RayCastCallback(RayCastInput input, FixtureProxy proxy, ref WorldRayCastContext worldContext)
     {
-        if ((proxy.Fixture.CollisionLayer & worldContext.Filter.MaskBits) == 0 || (proxy.Fixture.CollisionMask & worldContext.Filter.LayerBits) == 0)
+        if ((proxy.Fixture.CollisionLayer & worldContext.Filter.MaskBits) == 0 && (proxy.Fixture.CollisionMask & worldContext.Filter.LayerBits) == 0)
         {
             return input.MaxFraction;
         }
@@ -342,7 +399,7 @@ public sealed partial class RayCastSystem
     {
         var filter = worldContext.Filter;
 
-        if ((proxy.Fixture.CollisionLayer & filter.MaskBits) == 0 || (proxy.Fixture.CollisionMask & filter.LayerBits) == 0)
+        if ((proxy.Fixture.CollisionLayer & filter.MaskBits) == 0 && (proxy.Fixture.CollisionMask & filter.LayerBits) == 0)
         {
             return input.MaxFraction;
         }
@@ -366,7 +423,8 @@ public sealed partial class RayCastSystem
     // todo this converges slowly with a radius
     private CastOutput ShapeCast(ShapeCastPairInput input)
     {
-	    var output = new CastOutput() {
+	    var output = new CastOutput()
+        {
             Fraction = 0f,
 	    };
 	    output.Fraction = input.MaxFraction;
@@ -376,7 +434,7 @@ public sealed partial class RayCastSystem
 
 	    var xfA = input.TransformA;
 	    var xfB = input.TransformB;
-	    var xf = Physics.Transform.MulT(xfA, xfB);
+	    var xf = Physics.Transform.InvMulTransforms(xfA, xfB);
 
 	    // Put proxyB in proxyA's frame to reduce round-off error
         var proxyBVerts = new Vector2[input.ProxyB.Vertices.Length];
@@ -402,9 +460,6 @@ public sealed partial class RayCastSystem
             Count = 0,
             V = new FixedArray4<SimplexVertex>()
         };
-
-        // Get simplex vertices as an array.
-	    var vertices = new SimplexVertex[] { simplex.V._00, simplex.V._01, simplex.V._02 };
 
 	    // Get an initial point in A - B
 	    int indexA = FindSupport(proxyA, -r);
@@ -462,7 +517,7 @@ public sealed partial class RayCastSystem
 		    // Shift by lambda * r because we want the closest point to the current clip point.
 		    // Note that the support point p is not shifted because we want the plane equation
 		    // to be formed in unshifted space.
-		    var vertex = vertices[simplex.Count];
+		    ref var vertex = ref simplex.V.AsSpan[simplex.Count];
 		    vertex.IndexA = indexB;
 		    vertex.WA = new Vector2(wB.X + lambda * r.X, wB.Y + lambda * r.Y);
 		    vertex.IndexB = indexA;

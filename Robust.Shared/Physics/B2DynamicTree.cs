@@ -976,10 +976,10 @@ namespace Robust.Shared.Physics
 
 	        while (stackCount > 0)
             {
-                stackCount = stack.GetCount();
                 var nodeId = stack.Pop();
+                stackCount = stack.GetCount();
 
-		        if ( nodeId == Proxy.Free)
+		        if (nodeId == Proxy.Free)
 		        {
 			        continue;
 		        }

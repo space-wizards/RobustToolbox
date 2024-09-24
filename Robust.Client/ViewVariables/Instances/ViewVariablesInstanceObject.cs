@@ -85,14 +85,29 @@ namespace Robust.Client.ViewVariables.Instances
                 {
                     Orientation = LayoutOrientation.Horizontal
                 };
-                var name = MakeTopBar(top, middle, bottom);
-                name.HorizontalExpand = true;
-                headBox.AddChild(name);
 
-                _refreshButton = new Button {Text = "Refresh", ToolTip = "RMB to toggle auto-refresh."};
+                var topBarControl = MakeTopBar(top, middle, bottom);
+                topBarControl.HorizontalExpand = true;
+
+                headBox.AddChild(topBarControl);
+
+                var refreshBox = new BoxContainer()
+                {
+                    Orientation = LayoutOrientation.Vertical,
+                };
+
+                _refreshButton = new Button
+                {
+                    Text = "Refresh",
+                    ToolTip = "RMB to toggle auto-refresh.",
+                };
                 _refreshButton.OnPressed += _ => _refresh();
                 _refreshButton.OnKeyBindDown += OnButtonKeybindDown;
-                headBox.AddChild(_refreshButton);
+
+                refreshBox.AddChild(_refreshButton);
+
+                headBox.AddChild(refreshBox);
+
                 vBoxContainer.AddChild(headBox);
             }
 

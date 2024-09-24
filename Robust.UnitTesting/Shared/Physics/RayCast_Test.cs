@@ -41,12 +41,18 @@ public sealed class RayCast_Test
         // - Cast
         new(new PhysShapeCircle(0.5f, Vector2.Zero), new Transform(Vector2.Zero, Angle.Zero), Vector2.UnitY, new Vector2(0f, 1f - PhysicsConstants.PolygonRadius)),
 
+        // - Miss
+        new(new PhysShapeCircle(0.5f, Vector2.Zero), new Transform(Vector2.Zero, Angle.Zero), -Vector2.UnitY, null),
+
         // Polygon
         // - Initial overlap, no shapecast
         new(new Polygon(Box2.UnitCentered), new Transform(Vector2.UnitY / 2f, Angle.Zero), Vector2.UnitY, null),
 
         // - Cast
         new(new Polygon(Box2.UnitCentered), new Transform(Vector2.Zero, Angle.Zero), Vector2.UnitY, new Vector2(0.5f, 1f - PhysicsConstants.PolygonRadius)),
+
+        // - Miss
+        new(new Polygon(Box2.UnitCentered), new Transform(Vector2.Zero, Angle.Zero), -Vector2.UnitY, null),
     };
 
     [Test, TestCaseSource(nameof(_rayCases))]

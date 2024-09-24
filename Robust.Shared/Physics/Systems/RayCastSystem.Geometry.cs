@@ -22,12 +22,9 @@ public sealed partial class RayCastSystem
     /// </summary>
     private static float RayCastAllCallback(FixtureProxy proxy, Vector2 point, Vector2 normal, float fraction, ref RayResult result)
     {
-        result.Results.Add(new RayHit()
+        result.Results.Add(new RayHit(proxy.Entity, normal, fraction)
         {
-            Fraction = fraction,
-            Normal = normal,
             Point = point,
-            Proxy = proxy,
         });
         return 1f;
     }
@@ -54,12 +51,9 @@ public sealed partial class RayCastSystem
 
         if (add)
         {
-            result.Results.Add(new RayHit()
+            result.Results.Add(new RayHit(proxy.Entity, normal, fraction)
             {
-                Fraction = fraction,
-                Normal = normal,
                 Point = point,
-                Proxy = proxy,
             });
         }
 
@@ -646,16 +640,6 @@ public sealed partial class RayCastSystem
     }
 
     #endregion
-
-    private ref struct RayCastQueryState
-    {
-        public RayCastSystem System;
-        public SharedPhysicsSystem Physics;
-
-        public uint CollisionMask;
-        public Vector2 Origin;
-        public Vector2 Translation;
-    }
 }
 
 internal ref struct WorldRayCastContext

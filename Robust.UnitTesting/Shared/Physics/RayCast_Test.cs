@@ -25,6 +25,9 @@ public sealed class RayCast_Test
         // Ray stops inside
         new(new Vector2(0f, 0.5f), Vector2.UnitY, new Vector2(0f, 1f - PhysicsConstants.PolygonRadius)),
 
+        // Ray starts inside
+        new(new Vector2(0f, 1.5f), Vector2.UnitY, null),
+
         // No hit
         new(new Vector2(0f, 0.5f), -Vector2.UnitY, null),
     };
@@ -32,13 +35,18 @@ public sealed class RayCast_Test
     private static TestCaseData[] _shapeCases =
     {
         // Circle
-        // - Initial overlap
-        new(new PhysShapeCircle(0.5f, Vector2.Zero), new Transform(Vector2.UnitY / 2f, Angle.Zero), Vector2.UnitY, new Vector2(0f, 0.5f)),
+        // - Initial overlap, no shapecast
+        new(new PhysShapeCircle(0.5f, Vector2.Zero), new Transform(Vector2.UnitY / 2f, Angle.Zero), Vector2.UnitY, null),
 
         // - Cast
         new(new PhysShapeCircle(0.5f, Vector2.Zero), new Transform(Vector2.Zero, Angle.Zero), Vector2.UnitY, new Vector2(0f, 1f - PhysicsConstants.PolygonRadius)),
 
         // Polygon
+        // - Initial overlap, no shapecast
+        new(new Polygon(Box2.UnitCentered), new Transform(Vector2.UnitY / 2f, Angle.Zero), Vector2.UnitY, null),
+
+        // - Cast
+        new(new Polygon(Box2.UnitCentered), new Transform(Vector2.Zero, Angle.Zero), Vector2.UnitY, new Vector2(0.5f, 1f - PhysicsConstants.PolygonRadius)),
     };
 
     [Test, TestCaseSource(nameof(_rayCases))]

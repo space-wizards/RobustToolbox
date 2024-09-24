@@ -269,8 +269,11 @@ public sealed partial class RayCastSystem : EntitySystem
             case PhysShapeCircle circle:
                 CastCircle(entity, ref result, circle, originTransform, translation, filter);
                 break;
+            case Polygon poly:
+                CastPolygon(entity, ref result, new PolygonShape(poly), originTransform, translation, filter);
+                break;
             case PolygonShape polygon:
-                CastPolygon(entity, ref result,polygon, originTransform, translation, filter);
+                CastPolygon(entity, ref result, polygon, originTransform, translation, filter);
                 break;
             default:
                 Log.Error("Tried to shapecast for shape not implemented.");
@@ -371,12 +374,15 @@ public record struct RayResult()
     public bool Hit => Results.Count > 0;
 }
 
-public record struct RayHit()
+public record struct RayHit(EntityUid Entity, Vector2 LocalNormal, float Fraction)
 {
-    public FixtureProxy Proxy;
+    public readonly EntityUid Entity = Entity;
+    public readonly Vector2 LocalNormal = LocalNormal;
+    public readonly float Fraction = Fraction;
+
+    // When this point gets added it's in broadphase terms, then the caller handles whether it gets turned into map-terms.
+
     public Vector2 Point;
-    public Vector2 Normal;
-    public float Fraction;
 }
 
 /// The query filter is used to filter collisions between queries and shapes. For example,

@@ -14,7 +14,7 @@ The workflow is:
 Step two avoids using `<DocumentationFile>` due to a weird quirk of how that facility
 works. DocumentationFile always causes two copies of the generated xml file to be
 created, one at the path in DocumentationFile and one next to the DLL. This script
-uses the somewhat arcane faciity `<DocFileItem>` to side-step that problem and create
+uses the somewhat arcane facility `<DocFileItem>` to side-step that problem and create
 a single copy of the xml docs in the folder we want.
 
 Project files (.csproj) outside Robust Toolbox need to define these properties:

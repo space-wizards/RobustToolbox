@@ -28,13 +28,11 @@ bool dryRun = false;
 if (File.Exists(targetString))
 {
     ProcessFile(targetString, dryRun);
-    //XmlDocRoundTripTest.ProcessFile(targetString);
 }
 else if(Directory.Exists(targetString))
 {
     var filePaths = Directory.GetFiles(targetString, "*.xml");
     Parallel.ForEach(filePaths, path => ProcessFile(path, false));
-    //Parallel.ForEach(filePaths, path => XmlDocRoundTripTest.ProcessFile(path));
 }
 else
 {

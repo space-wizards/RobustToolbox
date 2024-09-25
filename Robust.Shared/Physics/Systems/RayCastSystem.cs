@@ -401,6 +401,11 @@ public record struct QueryFilter
     /// query would accept for collision.
     /// </summary>
     public long MaskBits;
+
+    /// <summary>
+    /// Return whether to ignore an entity.
+    /// </summary>
+    public Func<EntityUid, bool>? IsIgnored;
 }
 
 /// Prototype callback for ray casts.

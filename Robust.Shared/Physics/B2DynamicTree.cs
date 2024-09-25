@@ -969,15 +969,13 @@ namespace Robust.Shared.Physics
 
 	        var stack = new GrowableStack<Proxy>(stackalloc Proxy[256]);
             ref var baseRef = ref _nodes[0];
-            var stackCount = 1;
 	        stack.Push(_root);
 
 	        var subInput = input;
 
-	        while (stackCount > 0)
+	        while (stack.GetCount() > 0)
             {
                 var nodeId = stack.Pop();
-                stackCount = stack.GetCount();
 
 		        if (nodeId == Proxy.Free)
 		        {
@@ -1025,7 +1023,8 @@ namespace Robust.Shared.Physics
 			        }
 		        }
 		        else
-		        {
+                {
+                    var stackCount = stack.GetCount();
 			        Assert( stackCount < 256 - 1 );
 			        if (stackCount < 256 - 1 )
 			        {
@@ -1090,13 +1089,11 @@ namespace Robust.Shared.Physics
 
             ref var baseRef = ref _nodes[0];
             var stack = new GrowableStack<Proxy>(stackalloc Proxy[256]);
-	        var stackCount = 1;
 	        stack.Push(_root);
 
-	        while (stackCount > 0)
+	        while (stack.GetCount() > 0)
             {
 		        var nodeId = stack.Pop();
-                stackCount = stack.GetCount();
 
 		        if (nodeId == Proxy.Free)
 		        {
@@ -1144,6 +1141,7 @@ namespace Robust.Shared.Physics
 		        }
 		        else
 		        {
+                    var stackCount = stack.GetCount();
 			        Assert(stackCount < 256 - 1);
 
 			        if (stackCount < 255)

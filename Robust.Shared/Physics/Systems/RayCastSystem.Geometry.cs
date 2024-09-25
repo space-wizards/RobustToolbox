@@ -111,6 +111,11 @@ public sealed partial class RayCastSystem
             return input.MaxFraction;
         }
 
+        if (worldContext.Filter.IsIgnored?.Invoke(proxy.Entity) == true)
+        {
+            return input.MaxFraction;
+        }
+
         var transform = worldContext.Physics.GetLocalPhysicsTransform(proxy.Entity);
         var output = worldContext.System.RayCastShape(input, proxy.Fixture.Shape, transform);
 
@@ -398,6 +403,11 @@ public sealed partial class RayCastSystem
         var filter = worldContext.Filter;
 
         if ((proxy.Fixture.CollisionLayer & filter.MaskBits) == 0 && (proxy.Fixture.CollisionMask & filter.LayerBits) == 0)
+        {
+            return input.MaxFraction;
+        }
+
+        if (worldContext.Filter.IsIgnored?.Invoke(proxy.Entity) == true)
         {
             return input.MaxFraction;
         }

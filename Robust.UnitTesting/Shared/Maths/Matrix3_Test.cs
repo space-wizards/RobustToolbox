@@ -12,30 +12,17 @@ namespace Robust.UnitTesting.Shared.Maths
     [TestOf(typeof(Matrix3x2))]
     public sealed class Matrix3_Test
     {
-        private static readonly TestCaseData[] Positions = new TestCaseData[]
-        {
-            new(Matrix3x2.Identity, Vector2.Zero),
-            new(Matrix3x2.CreateTranslation(Vector2.One), Vector2.One),
-            new(Matrix3x2.CreateTranslation(new Vector2(1f, 0f)), new Vector2(1f, 0f)),
-        };
-
         private static readonly TestCaseData[] Rotations = new TestCaseData[]
         {
             new(Matrix3x2.Identity, Angle.Zero),
-            new(Matrix3x2.CreateRotation(MathF.PI / 2), new Angle(MathF.PI / 2)),
-            new(Matrix3x2.CreateRotation(MathF.PI), Math.PI),
+            new(Matrix3x2.CreateRotation(MathF.PI / 2f), new Angle(Math.PI / 2)),
+            new(Matrix3x2.CreateRotation(MathF.PI), new Angle(Math.PI)),
         };
-
-        [Test, TestCaseSource(nameof(Positions))]
-        public void GetPositionTest(Matrix3x2 matrix, Vector2 vec)
-        {
-            Assert.That(matrix.Position(), Is.EqualTo(vec));
-        }
 
         [Test, TestCaseSource(nameof(Rotations))]
         public void GetRotationTest(Matrix3x2 matrix, Angle angle)
         {
-            Assert.That(matrix.Rotation(), Is.EqualTo(angle));
+            Assert.That(angle, Is.EqualTo(matrix.Rotation()));
         }
 
         [Test]
@@ -47,7 +34,7 @@ namespace Robust.UnitTesting.Shared.Maths
             var origin = new Vector2(0, 0);
             var result = Vector2.Transform(origin, matrix);
 
-            Assert.That(control == result, Is.True, result.ToString);
+            Assert.That(control, Is.EqualTo(result), result.ToString);
         }
 
         private static readonly IEnumerable<(Vector2, double)> _rotationTests = new[]

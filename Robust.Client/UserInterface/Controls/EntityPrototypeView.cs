@@ -56,4 +56,15 @@ public class EntityPrototypeView : SpriteView
         base.ExitedTree();
         EntMan.TryQueueDeleteEntity(_ourEntity);
     }
+
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
+
+        if (!disposing)
+            return;
+
+        if (_ourEntity is not null)
+            EntMan.DeleteEntity(_ourEntity);
+    }
 }

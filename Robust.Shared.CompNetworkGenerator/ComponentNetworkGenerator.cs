@@ -244,20 +244,29 @@ namespace Robust.Shared.CompNetworkGenerator
                         stateFields.Append($@"
         public {typeDisplayStr} {name} = default!;");
 
+                        // get first ctor arg of the field attribute, which determines whether the field should be cloned
+                        // (like if its a dict or list)
                         if (IsCloneType(type))
                         {
+                            // Avoid the allocations on release
+                            #if !FULL_RELEASE
                             if (type.NullableAnnotation == NullableAnnotation.NotAnnotated)
                             {
-                                // get first ctor arg of the field attribute, which determines whether the field should be cloned
-                                // (like if its a dict or list)
                                 getStateInit.Append($@"
-                {name} = new(component.{name}),");
+            {name} = new(component.{name}),");
                             }
                             else
                             {
                                 getStateInit.Append($@"
-                {name} = component.{name} == null ? null : new(component.{name}),");
+            {name} = component.{name} == null ? null : new(component.{name}),");
                             }
+                            #else
+                            {
+                                getStateInit.Append($@"
+                {name} = component.{name},");
+                            }
+                            #endif
+
 
                             handleStateSetters.Append($@"
             if (state.{name} == null)

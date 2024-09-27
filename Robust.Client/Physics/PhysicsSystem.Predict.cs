@@ -156,7 +156,6 @@ public sealed partial class PhysicsSystem
 
             if (activeA == false && activeB == false)
             {
-                contact.IsTouching = false;
                 continue;
             }
 

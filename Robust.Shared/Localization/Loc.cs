@@ -1,8 +1,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using JetBrains.Annotations;
-using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 
 namespace Robust.Shared.Localization
@@ -36,6 +34,7 @@ namespace Robust.Shared.Localization
             return LocalizationManager.GetString(messageId);
         }
 
+        [Obsolete("Use ILocalizationManager")]
         public static bool TryGetString(string messageId, [NotNullWhen(true)] out string? message)
         {
             return LocalizationManager.TryGetString(messageId, out message);
@@ -49,6 +48,7 @@ namespace Robust.Shared.Localization
             return LocalizationManager.GetString(messageId, args);
         }
 
+        [Obsolete("Use ILocalizationManager")]
         public static bool TryGetString(
             string messageId,
             [NotNullWhen(true)] out string? value,

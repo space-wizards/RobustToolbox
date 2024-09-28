@@ -43,11 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fixed equality checks for `MarkupNode` not properly handling attributes.
-* Fixed `MarkupNode` not having a `GetHashCode()` implementation.
-* Fixed a PVS error that could occur when trying to delete the first entity that gets created in a round.
-* Fixed the "to" and "take" toolshed commands not working as intended.
-* Rich text controls within an `OutputPanel` control will now become invisible when they are out of view.
+*None yet*
 
 ### Other
 
@@ -56,6 +52,53 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 236.0.0
+
+### Breaking changes
+
+* Revert IsTouching only being set to true if the contact were laready touching in clientside physics prediction.
+* Don't touch IsTouching if both bodies are asleep for clientside physics contacts. This change and the one above should fix a lot of clientside contact issues, particularly around repeated incorrect clientside contact events.
+
+### New features
+
+* Added an analyzer to detect duplicate Dependency fields.
+
+### Bugfixes
+
+* Auto-networked dictionaries now use `TryAdd()` to avoid duplicate key errors when a dictionary contains multiple unknown networked entities.
+* Fixed `ICommonSession.Ping` always returning zero instead of the ping. Note that this will still return zero for client-side code when trying to get the ping of other players.
+* Hot reload XAML files on rename to fix them potentially not being reloaded with Visual Studio.
+* Fix TabContainer click detection for non-1.0 UI scales.
+
+### Other
+
+* Obsolete some static localization methods.
+* Tried to improve PVS tolerance to exceptions occurring.
+
+
+## 235.0.0
+
+### Breaking changes
+
+* Several different `AudioSystem` methods were incorrectly given a `[return: NotNullIfNotNull]` attribute. Content code that uses these methods needs to be updated to perform null checks.
+* noSpawn is no longer obsolete and is now removed in lieu of the EntityCategory HideSpawnMenu.
+
+### Bugfixes
+
+* physics.maxlinvelocity is now a replicated cvar.
+* Fix DistanceJoint debug drawing in physics not using the local anchors.
+* Fixed filtered AudioSystem methods playing a sound for all players when given an empty filter.
+* Fixed equality checks for `MarkupNode` not properly handling attributes.
+* Fixed `MarkupNode` not having a `GetHashCode()` implementation.
+* Fixed a PVS error that could occur when trying to delete the first entity that gets created in a round.
+* Fixed the "to" and "take" toolshed commands not working as intended.
+* Rich text controls within an `OutputPanel` control will now become invisible when they are out of view.
+
+### Other
+
+* Improve precision for Quaternion2D constructor from angles.
 
 
 ## 234.1.0

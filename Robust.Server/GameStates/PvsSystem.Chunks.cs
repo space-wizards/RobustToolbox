@@ -232,6 +232,7 @@ internal sealed partial class PvsSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void AddEntityToChunk(EntityUid uid, MetaDataComponent meta, PvsChunkLocation location)
     {
+        DebugTools.Assert(meta.EntityLifeStage < EntityLifeStage.Terminating);
         ref var chunk = ref CollectionsMarshal.GetValueRefOrAddDefault(_chunks, location, out var existing);
         if (!existing)
         {

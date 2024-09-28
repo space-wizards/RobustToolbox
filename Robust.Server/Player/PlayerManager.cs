@@ -137,8 +137,7 @@ namespace Robust.Server.Player
                 {
                     UserId = client.UserId,
                     Name = client.Name,
-                    Status = client.Status,
-                    Ping = client.Channel!.Ping
+                    Status = client.Status
                 };
                 list.Add(info);
             }

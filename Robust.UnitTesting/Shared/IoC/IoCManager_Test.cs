@@ -258,6 +258,7 @@ namespace Robust.UnitTesting.Shared.IoC
 
     public sealed class TestFieldInjection : TestFieldInjectionParent
     {
+#pragma warning disable RA0032 // Duplicate [Dependency] field. I wrote this test 7 years idk if this makes sense.
         [Dependency]
 #pragma warning disable 649
         private readonly TestFieldInjection myuniqueself = default!;
@@ -265,6 +266,7 @@ namespace Robust.UnitTesting.Shared.IoC
         [Dependency]
         public TestFieldInjection mydifferentself = default!;
 #pragma warning restore 649
+#pragma warning restore RA0032
 
         public override void Test()
         {

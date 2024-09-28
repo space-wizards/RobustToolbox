@@ -1,0 +1,14 @@
+<DefaultWindow xmlns="https://spacestation14.io"
+               Title="System font debug">
+    <SplitContainer Orientation="Horizontal" MinSize="800 600">
+        <ScrollContainer HScrollEnabled="False">
+            <BoxContainer Name="SelectorContainer" Orientation="Vertical" />
+        </ScrollContainer>
+        <ScrollContainer HScrollEnabled="False">
+            <BoxContainer Orientation="Vertical">
+                <Label Name="FamilyLabel" />
+                <BoxContainer Orientation="Vertical" Name="FaceContainer" />
+            </BoxContainer>
+        </ScrollContainer>
+    </SplitContainer>
+</DefaultWindow>

@@ -93,7 +93,7 @@ public record struct StringMustStartWithQuote : IConError
 {
     public FormattedMessage DescribeInner()
     {
-        return FormattedMessage.FromMarkupOrThrow("A string must start with a quote.");
+        return FormattedMessage.FromUnformatted("A string must start with a quote.");
     }
 
     public string? Expression { get; set; }

@@ -1288,7 +1288,7 @@ namespace Robust.Shared
         /// Default is 35 m/s. Around half a tile per tick at 60 ticks per second.
         /// </remarks>
         public static readonly CVarDef<float> MaxLinVelocity =
-            CVarDef.Create("physics.maxlinvelocity", 35f);
+            CVarDef.Create("physics.maxlinvelocity", 35f, CVar.SERVER | CVar.REPLICATED);
 
         /// <summary>
         /// Maximum angular velocity in full rotations per second.
@@ -1635,6 +1635,16 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<long> ReplayMaxUncompressedSize = CVarDef.Create("replay.max_uncompressed_size",
             1024L * 1024, CVar.ARCHIVE);
+
+        /// <summary>
+        /// Size of the replay (in kilobytes) at which point the replay is considered "large",
+        /// and replay clients should enable server GC (if possible) to improve performance.
+        /// </summary>
+        /// <remarks>
+        /// Set to -1 to never make replays use server GC.
+        /// </remarks>
+        public static readonly CVarDef<long> ReplayServerGCSizeThreshold =
+            CVarDef.Create("replay.server_gc_size_threshold", 50L * 1024);
 
         /// <summary>
         /// Uncompressed size of individual files created by the replay (in kilobytes), where each file contains data

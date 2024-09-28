@@ -281,24 +281,6 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        /// <inheritdoc />
-        [Obsolete]
-        public CompInitializeHandle<T> AddComponentUninitialized<T>(EntityUid uid) where T : IComponent, new()
-        {
-            var reg = _componentFactory.GetRegistration<T>();
-            var newComponent = (T)_componentFactory.GetComponent(reg);
-#pragma warning disable CS0618 // Type or member is obsolete
-            newComponent.Owner = uid;
-#pragma warning restore CS0618 // Type or member is obsolete
-
-            if (!uid.IsValid() || !EntityExists(uid))
-                throw new ArgumentException($"Entity {uid} is not valid.", nameof(uid));
-
-            AddComponentInternal(uid, newComponent, false, true, null);
-
-            return new CompInitializeHandle<T>(this, uid, newComponent, reg.Idx);
-        }
-
         public void AddComponent(
             EntityUid uid,
             EntityPrototype.ComponentRegistryEntry entry,

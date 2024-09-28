@@ -171,22 +171,6 @@ internal sealed partial class StatusHost
 
     // -- Information Input --
 
-    public void SetAczInfo(string clientBinFolder, string[] clientAssemblyNames)
-    {
-        _aczLock.Wait();
-        try
-        {
-            if (_aczPrepared != null)
-                throw new InvalidOperationException("ACZ already prepared");
-
-            _aczInfo = (clientBinFolder, clientAssemblyNames);
-        }
-        finally
-        {
-            _aczLock.Release();
-        }
-    }
-
     public void SetMagicAczProvider(IMagicAczProvider provider)
     {
         _magicAczProvider = provider;

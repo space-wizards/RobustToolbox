@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;

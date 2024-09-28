@@ -127,6 +127,7 @@ namespace Robust.Client.UserInterface.Controls
 
             var style = _getStyleBox();
             var font = _getFont();
+            var lineSeparation = font.GetLineSeparation(UIScale);
             style?.Draw(handle, PixelSizeBox, UIScale);
             var contentBox = _getContentBox();
 
@@ -141,18 +142,26 @@ namespace Robust.Client.UserInterface.Controls
             {
                 if (entryOffset + entry.Height < 0)
                 {
-                    entryOffset += entry.Height + font.GetLineSeparation(UIScale);
+                    // Controls within the entry are the children of this control, which means they are drawn separately
+                    // after this Draw call, so we have to mark them as invisible to prevent them from being drawn.
+                    //
+                    // An alternative option is to ensure that the control position updating logic in entry.Draw is always
+                    // run, and then setting RectClipContent = true to use scissor box testing to handle the controls
+                    // visibility
+                    entry.HideControls();
+                    entryOffset += entry.Height + lineSeparation;
                     continue;
                 }
 
                 if (entryOffset > contentBox.Height)
                 {
-                    break;
+                    entry.HideControls();
+                    continue;
                 }
 
                 entry.Draw(_tagManager, handle, font, contentBox, entryOffset, context, UIScale);
 
-                entryOffset += entry.Height + font.GetLineSeparation(UIScale);
+                entryOffset += entry.Height + lineSeparation;
             }
         }
 

@@ -352,7 +352,7 @@ public record OutOfInputError : IConError
 {
     public FormattedMessage DescribeInner()
     {
-        return FormattedMessage.FromMarkupOrThrow("Ran out of input data when data was expected.");
+        return FormattedMessage.FromUnformatted("Ran out of input data when data was expected.");
     }
 
     public string? Expression { get; set; }

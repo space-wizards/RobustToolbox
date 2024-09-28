@@ -43,8 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Auto-networked dictionaries now use `TryAdd()` to avoid duplicate key errors when a dictionary contains multiple unknown networked entities.
-* Fixed `ICommonSession.Ping` always returning zero instead of the ping. Note that this will still return zero for client-side code when trying to get the ping of other players.
+*None yet*
 
 ### Other
 
@@ -53,6 +52,30 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 236.0.0
+
+### Breaking changes
+
+* Revert IsTouching only being set to true if the contact were laready touching in clientside physics prediction.
+* Don't touch IsTouching if both bodies are asleep for clientside physics contacts. This change and the one above should fix a lot of clientside contact issues, particularly around repeated incorrect clientside contact events.
+
+### New features
+
+* Added an analyzer to detect duplicate Dependency fields.
+
+### Bugfixes
+
+* Auto-networked dictionaries now use `TryAdd()` to avoid duplicate key errors when a dictionary contains multiple unknown networked entities.
+* Fixed `ICommonSession.Ping` always returning zero instead of the ping. Note that this will still return zero for client-side code when trying to get the ping of other players.
+* Hot reload XAML files on rename to fix them potentially not being reloaded with Visual Studio.
+* Fix TabContainer click detection for non-1.0 UI scales.
+
+### Other
+
+* Obsolete some static localization methods.
+* Tried to improve PVS tolerance to exceptions occurring.
 
 
 ## 235.0.0

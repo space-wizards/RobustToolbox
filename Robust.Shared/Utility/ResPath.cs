@@ -65,7 +65,9 @@ public readonly struct ResPath : IEquatable<ResPath>
 
     public ResPath(string canonPath)
     {
-        CanonPath = canonPath.Replace(Path.DirectorySeparatorChar, Separator);
+        // Paths should never have non-standardised directory separators passed in, the caller should have already sanitised it.
+        DebugTools.Assert(!canonPath.Contains('\\'));
+        CanonPath = canonPath;
     }
 
     /// <summary>

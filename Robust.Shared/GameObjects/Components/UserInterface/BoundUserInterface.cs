@@ -12,7 +12,7 @@ namespace Robust.Shared.GameObjects
     public abstract class BoundUserInterface : IDisposable
     {
         [Dependency] protected readonly IEntityManager EntMan = default!;
-        [Dependency] private readonly ISharedPlayerManager _playerManager = default!;
+        [Dependency] protected readonly ISharedPlayerManager PlayerManager = default!;
         protected readonly SharedUserInterfaceSystem UiSystem;
 
         public readonly Enum UiKey;
@@ -79,7 +79,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void Close()
         {
-            UiSystem.CloseUi(Owner, UiKey, _playerManager.LocalEntity, predicted: true);
+            UiSystem.CloseUi(Owner, UiKey, PlayerManager.LocalEntity, predicted: true);
         }
 
         /// <summary>

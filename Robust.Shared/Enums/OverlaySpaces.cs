@@ -54,6 +54,11 @@ namespace Robust.Shared.Enums
         /// <summary>
         ///     Overlay will be rendered below grids, entities, and everything else. In world space.
         /// </summary>
-        WorldSpaceBelowWorld = 1 << 8
+        WorldSpaceBelowWorld = 1 << 8,
+
+        /// <summary>
+        ///     Overlay will be drawn before lighting occurs. Used to apply changes to the lighting render target.
+        /// </summary>
+        BeforeLighting = 1 << 9,
     }
 }

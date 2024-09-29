@@ -111,6 +111,7 @@ namespace Robust.Shared.Network
         [Dependency] private readonly ILogManager _logMan = default!;
         [Dependency] private readonly ProfManager _prof = default!;
         [Dependency] private readonly HttpClientHolder _http = default!;
+        [Dependency] private readonly IHWId _hwId = default!;
 
         /// <summary>
         ///     Holds lookup table for NetMessage.Id -> NetMessage.Type

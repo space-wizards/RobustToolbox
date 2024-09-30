@@ -71,5 +71,15 @@ namespace Robust.UnitTesting
         {
             return "RobustToolbox";
         }
+
+        public string WindowIconSet()
+        {
+            return "";
+        }
+
+        public string SplashLogo()
+        {
+            return "";
+        }
     }
 }

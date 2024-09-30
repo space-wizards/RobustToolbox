@@ -27,10 +27,13 @@ public interface IGameController
     /// </summary>
     event Action<FrameEventArgs>? TickUpdateOverride;
 
-
     /// <summary>
     ///     Get the games title, if Options.DefaultWindowTitle or if DefaultWindowTitle is not set in the manifest.yml, it will default to RobustToolbox.
     /// </summary>
     string GameTitle();
+
+    string WindowIconSet();
+
+    string SplashLogo();
 }
 

@@ -40,7 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * `RequiredMemberAttribute` and `SetsRequiredMembersAttribute` have been added to the sandbox whitelist. I.e., you can now use the `required` keyword in client/shared code.
-* ``Gametitle`` is exposed in IGameController. This will return a game title set within set game options or the whatever is set in manifest.yml.
+* ``Gametitle``,``WindowIconSet`` and ``SplashLogo`` are exposed in IGameController. These will return said information set game options or whatever is set in manifest.yml.
 
 ### Bugfixes
 

@@ -66,5 +66,10 @@ namespace Robust.UnitTesting
         public void OverrideMainLoop(IGameLoop gameLoop)
         {
         }
+
+        public string GameTitle()
+        {
+            return "RobustToolbox";
+        }
     }
 }

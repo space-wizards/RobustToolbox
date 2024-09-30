@@ -394,6 +394,18 @@ namespace Robust.Shared
         public static readonly CVarDef<int> NetEncryptionThreadChannelSize =
             CVarDef.Create("net.encryption_thread_channel_size", 16);
 
+        /// <summary>
+        /// Whether the server should request HWID system for client identification.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Note that modern HWIDs are only available if the connection is authenticated.
+        /// </para>
+        /// </remarks>
+        public static readonly CVarDef<bool> NetHWId =
+            CVarDef.Create("net.hwid", true, CVar.SERVERONLY);
+
+
         /**
          * SUS
          */

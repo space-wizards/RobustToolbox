@@ -480,6 +480,7 @@ Types:
     NotNullAttribute: { All: True }
     NotNullIfNotNullAttribute: { All: True }
     NotNullWhenAttribute: { All: True }
+    SetsRequiredMembersAttribute: { All : True}
     SuppressMessageAttribute: { All: True }
   System.Diagnostics:
     DebuggableAttribute: { All: True }
@@ -588,7 +589,6 @@ Types:
     Vector2: { All: True }
     Vector3: { All: True }
     Vector4: { All: True }
-    Matrix3x2: { All: True }
   System.Reflection:
     Assembly:
       Methods:
@@ -653,6 +653,7 @@ Types:
     NullableContextAttribute: { All: True }
     PreserveBaseOverridesAttribute: { All: True }
     RefSafetyRulesAttribute: { All: True }
+    RequiredMemberAttribute: { All: True }
     RuntimeCompatibilityAttribute: { All: True }
     RuntimeHelpers: { All: True }
     TaskAwaiter: { All: True }

@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * `RequiredMemberAttribute` and `SetsRequiredMembersAttribute` have been added to the sandbox whitelist. I.e., you can now use the `required` keyword in client/shared code.
+* Added `LineEdit.SelectAllOnFocus`.
 
 ### Bugfixes
 

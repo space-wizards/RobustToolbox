@@ -26,5 +26,11 @@ public interface IGameController
     ///     This exists to give content module more control over tick updating.
     /// </summary>
     event Action<FrameEventArgs>? TickUpdateOverride;
+
+
+    /// <summary>
+    ///     Get the games title, if Options.DefaultWindowTitle or if DefaultWindowTitle is not set in the manifest.yml, it will default to RobustToolbox.
+    /// </summary>
+    string GameTitle();
 }
 

@@ -112,14 +112,18 @@ namespace Robust.Client
             _commandLineArgs = args;
         }
 
+        public string GameTitle()
+        {
+            return Options.DefaultWindowTitle ?? _resourceManifest!.DefaultWindowTitle ?? "RobustToolbox";
+        }
+
         internal bool StartupContinue(DisplayMode displayMode)
         {
             DebugTools.AssertNotNull(_resourceManifest);
 
             _clyde.InitializePostWindowing();
             _audio.InitializePostWindowing();
-            _clyde.SetWindowTitle(
-                Options.DefaultWindowTitle ?? _resourceManifest!.DefaultWindowTitle ?? "RobustToolbox");
+            _clyde.SetWindowTitle(GameTitle());
 
             _taskManager.Initialize();
             _parallelMgr.Initialize();

@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+``Gametitle`` is exposed in IGameController. This will return a game title set within set game options or the whatever is set in manifest.yml.
 
 ### Bugfixes
 

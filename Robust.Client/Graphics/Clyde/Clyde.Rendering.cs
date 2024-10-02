@@ -859,13 +859,13 @@ namespace Robust.Client.Graphics.Clyde
 
         private FullStoredRendererState PushRenderStateFull()
         {
-            return new FullStoredRendererState(_currentMatrixProj, _currentMatrixView, _currentRenderTarget);
+            return new FullStoredRendererState(_currentMatrixProj, _currentMatrixView, _currentBoundRenderTarget);
         }
 
         private void PopRenderStateFull(in FullStoredRendererState state)
         {
             SetProjViewFull(state.ProjMatrix, state.ViewMatrix);
-            BindRenderTargetFull(state.RenderTarget);
+            BindRenderTargetImmediate(state.RenderTarget);
 
             var (width, height) = state.RenderTarget.Size;
             GL.Viewport(0, 0, width, height);

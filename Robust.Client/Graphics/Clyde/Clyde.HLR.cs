@@ -423,6 +423,11 @@ namespace Robust.Client.Graphics.Clyde
 
             var oldTransform = _currentMatrixModel;
             var oldScissor = _currentScissorState;
+            var oldMatrixProj = _currentMatrixProj;
+            var oldMatrixView = _currentMatrixView;
+            var oldBoundTarget = _currentBoundRenderTarget;
+            var oldRenderTarget = _currentRenderTarget;
+            var oldShader = _queuedShaderInstance;
 
             // Have to flush the render queue so that all commands finish rendering to the previous framebuffer.
             FlushRenderQueue();
@@ -452,6 +457,14 @@ namespace Robust.Client.Graphics.Clyde
 
             SetScissorFull(oldScissor);
             _currentMatrixModel = oldTransform;
+
+            DebugTools.Assert(_currentMatrixModel.Equals(oldTransform));
+            DebugTools.Assert(_currentScissorState.Equals(oldScissor));
+            DebugTools.Assert(_currentMatrixProj.Equals(oldMatrixProj));
+            DebugTools.Assert(oldMatrixView.Equals(_currentMatrixView));
+            DebugTools.Assert(oldRenderTarget.Equals(_currentRenderTarget));
+            DebugTools.Assert(oldBoundTarget.Equals(_currentBoundRenderTarget));
+            DebugTools.Assert(oldShader.Equals(_queuedShaderInstance));
         }
 
         private void RenderViewport(Viewport viewport)

@@ -452,6 +452,7 @@ namespace Robust.Client.Graphics.Clyde
 
             FenceRenderTarget(rt);
 
+            _currentRenderTarget = oldRenderTarget;
             PopRenderStateFull(state);
             _updateUniformConstants(_currentRenderTarget.Size);
 

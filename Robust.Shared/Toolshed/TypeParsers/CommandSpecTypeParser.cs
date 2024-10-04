@@ -1,73 +1,67 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using Robust.Shared.Console;
 using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Toolshed.Syntax;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
 public sealed class CommandSpecTypeParser : TypeParser<CommandSpec>
 {
-    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
+    public override bool TryParse(ParserContext ctx, out CommandSpec result)
     {
-        var cmd = parserContext.GetWord(ParserContext.IsCommandToken);
-        var start = parserContext.Index;
+        var cmd = ctx.GetWord(ParserContext.IsCommandToken);
+        var start = ctx.Index;
         string? subCommand = null;
         if (cmd is null)
         {
-            if (parserContext.PeekRune() is null)
+            if (ctx.PeekRune() is null)
             {
-                error = new OutOfInputError();
-                error.Contextualize(parserContext.Input, (parserContext.Index, parserContext.Index));
-                result = null;
+                ctx.Error = new OutOfInputError();
+                ctx.Error.Contextualize(ctx.Input, (ctx.Index, ctx.Index));
+                result = default;
                 return false;
             }
-            else
-            {
 
-                error = new NotValidCommandError(typeof(object));
-                error.Contextualize(parserContext.Input, (start, parserContext.Index+1));
-                result = null;
-                return false;
-            }
+            ctx.Error = new NotValidCommandError();
+            ctx.Error.Contextualize(ctx.Input, (start, ctx.Index+1));
+            result = default;
+            return false;
         }
 
-        if (!parserContext.Environment.TryGetCommand(cmd, out var cmdImpl))
+        if (!ctx.Environment.TryGetCommand(cmd, out var cmdImpl))
         {
-            error = new UnknownCommandError(cmd);
-            error.Contextualize(parserContext.Input, (start, parserContext.Index));
-            result = null;
+            ctx.Error = new UnknownCommandError(cmd);
+            ctx.Error.Contextualize(ctx.Input, (start, ctx.Index));
+            result = default;
             return false;
         }
 
         if (cmdImpl.HasSubCommands)
         {
-            error = null;
-
-            if (parserContext.GetChar() is not ':')
+            if (!ctx.EatMatch(':'))
             {
-                error = new OutOfInputError();
-                error.Contextualize(parserContext.Input, (parserContext.Index, parserContext.Index));
-                result = null;
+                ctx.Error = ctx.OutOfInput ? new OutOfInputError() : new ExpectedSubCommand();
+                ctx.Error.Contextualize(ctx.Input, (ctx.Index, ctx.Index + 1));
+                result = default;
                 return false;
             }
 
-            var subCmdStart = parserContext.Index;
+            var subCmdStart = ctx.Index;
 
-            if (parserContext.GetWord(ParserContext.IsToken) is not { } subcmd)
+            if (ctx.GetWord(ParserContext.IsToken) is not { } subcmd)
             {
-                error = new OutOfInputError();
-                error.Contextualize(parserContext.Input, (parserContext.Index, parserContext.Index));
-                result = null;
+                ctx.Error = new ExpectedSubCommand();
+                ctx.Error.Contextualize(ctx.Input, (ctx.Index, ctx.Index));
+                result = default;
                 return false;
             }
 
             if (!cmdImpl.Subcommands.Contains(subcmd))
             {
-                error = new UnknownSubcommandError(cmd, subcmd, cmdImpl);
-                error.Contextualize(parserContext.Input, (subCmdStart, parserContext.Index));
-                result = null;
+                ctx.Error = new UnknownSubcommandError(subcmd, cmdImpl);
+                ctx.Error.Contextualize(ctx.Input, (subCmdStart, ctx.Index));
+                result = default;
                 return false;
             }
 
@@ -75,13 +69,21 @@ public sealed class CommandSpecTypeParser : TypeParser<CommandSpec>
         }
 
         result = new CommandSpec(cmdImpl, subCommand);
-        error = null;
         return true;
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext, string? argName)
+    public override CompletionResult TryAutocomplete(ParserContext parserContext, string? argName)
     {
         var cmds = parserContext.Environment.AllCommands();
-        return ValueTask.FromResult<(CompletionResult?, IConError?)>((CompletionResult.FromHintOptions(cmds.Select(x => x.AsCompletion()), "<command name>"), null));
+        return CompletionResult.FromHintOptions(cmds.Select(x => x.AsCompletion()), "<command name>");
+    }
+}
+
+
+public sealed class ExpectedSubCommand : ConError
+{
+    public override FormattedMessage DescribeInner()
+    {
+        return FormattedMessage.FromUnformatted($"Expected subcommand");
     }
 }

@@ -60,6 +60,8 @@ internal sealed class OldShellInvocationContext : IInvocationContext
         return _errors;
     }
 
+    public bool HasErrors => _errors.Count > 0;
+
     /// <inheritdoc />
     public void ClearErrors()
     {
@@ -67,6 +69,23 @@ internal sealed class OldShellInvocationContext : IInvocationContext
     }
 
     /// <inheritdoc />
+    public object? ReadVar(string name)
+    {
+        return Variables.GetValueOrDefault(name);
+    }
+
+    /// <inheritdoc />
+    public void WriteVar(string name, object? value)
+    {
+        Variables[name] = value;
+    }
+
+    /// <inheritdoc />
+    public IEnumerable<string> GetVars()
+    {
+        return Variables.Keys;
+    }
+
     public Dictionary<string, object?> Variables { get; } = new();
 }
 

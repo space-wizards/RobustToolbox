@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using Robust.Shared.Player;
+﻿using Robust.Shared.Player;
 using Robust.Shared.Toolshed.Errors;
 
 namespace Robust.Shared.Toolshed;

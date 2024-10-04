@@ -2,9 +2,7 @@
 using System.Linq;
 using System.Numerics;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Toolshed.Syntax;
 
 namespace Robust.Shared.Toolshed.Commands.Entities.World;
 
@@ -14,62 +12,38 @@ internal sealed class TpCommand : ToolshedCommand
     private SharedTransformSystem? _xform;
 
     [CommandImplementation("coords")]
-    public EntityUid TpCoords(
-            [CommandInvocationContext] IInvocationContext ctx,
-            [PipedArgument] EntityUid teleporter,
-            [CommandArgument] ValueRef<EntityCoordinates> target
-        )
+    public EntityUid TpCoords([PipedArgument] EntityUid teleporter, EntityCoordinates target)
     {
         _xform ??= GetSys<SharedTransformSystem>();
-        _xform.SetCoordinates(teleporter, target.Evaluate(ctx));
+        _xform.SetCoordinates(teleporter, target);
         return teleporter;
     }
 
     [CommandImplementation("coords")]
-    public IEnumerable<EntityUid> TpCoords(
-        [CommandInvocationContext] IInvocationContext ctx,
-        [PipedArgument] IEnumerable<EntityUid> teleporters,
-        [CommandArgument] ValueRef<EntityCoordinates> target
-    )
-        => teleporters.Select(x => TpCoords(ctx, x, target));
+    public IEnumerable<EntityUid> TpCoords([PipedArgument] IEnumerable<EntityUid> teleporters, EntityCoordinates target)
+        => teleporters.Select(x => TpCoords(x, target));
 
     [CommandImplementation("to")]
-    public EntityUid TpTo(
-        [CommandInvocationContext] IInvocationContext ctx,
-        [PipedArgument] EntityUid teleporter,
-        [CommandArgument] ValueRef<EntityUid> target
-    )
+    public EntityUid TpTo([PipedArgument] EntityUid teleporter, EntityUid target)
     {
         _xform ??= GetSys<SharedTransformSystem>();
-        _xform.SetCoordinates(teleporter, Transform(target.Evaluate(ctx)).Coordinates);
+        _xform.SetCoordinates(teleporter, Transform(target).Coordinates);
         return teleporter;
     }
 
     [CommandImplementation("to")]
-    public IEnumerable<EntityUid> TpTo(
-        [CommandInvocationContext] IInvocationContext ctx,
-        [PipedArgument] IEnumerable<EntityUid> teleporters,
-        [CommandArgument] ValueRef<EntityUid> target
-    )
-        => teleporters.Select(x => TpTo(ctx, x, target));
+    public IEnumerable<EntityUid> TpTo([PipedArgument] IEnumerable<EntityUid> teleporters, EntityUid target)
+        => teleporters.Select(x => TpTo(x, target));
 
     [CommandImplementation("into")]
-    public EntityUid TpInto(
-        [CommandInvocationContext] IInvocationContext ctx,
-        [PipedArgument] EntityUid teleporter,
-        [CommandArgument] ValueRef<EntityUid> target
-    )
+    public EntityUid TpInto([PipedArgument] EntityUid teleporter, EntityUid target)
     {
         _xform ??= GetSys<SharedTransformSystem>();
-        _xform.SetCoordinates(teleporter, new EntityCoordinates(target.Evaluate(ctx), Vector2.Zero));
+        _xform.SetCoordinates(teleporter, new EntityCoordinates(target, Vector2.Zero));
         return teleporter;
     }
 
     [CommandImplementation("into")]
-    public IEnumerable<EntityUid> TpInto(
-        [CommandInvocationContext] IInvocationContext ctx,
-        [PipedArgument] IEnumerable<EntityUid> teleporters,
-        [CommandArgument] ValueRef<EntityUid> target
-    )
-        => teleporters.Select(x => TpInto(ctx, x, target));
+    public IEnumerable<EntityUid> TpInto([PipedArgument] IEnumerable<EntityUid> teleporters, EntityUid target)
+        => teleporters.Select(x => TpInto(x, target));
 }

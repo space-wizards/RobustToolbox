@@ -5,6 +5,9 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Robust.Shared.Exceptions;
 using Robust.Shared.Log;
+using Robust.Shared.Toolshed.Syntax;
+using Robust.Shared.Toolshed.TypeParsers;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed;
 
@@ -64,24 +67,6 @@ internal static class ReflectionExtensions
         }
     }
 
-    public static IEnumerable<(string, List<MethodInfo>)> BySubCommand(this IEnumerable<MethodInfo> methods)
-    {
-        var output = new Dictionary<string, List<MethodInfo>>();
-
-        foreach (var method in methods)
-        {
-            var subCommand = method.GetCustomAttribute<CommandImplementationAttribute>()!.SubCommand ?? "";
-            if (!output.TryGetValue(subCommand, out var methodList))
-            {
-                methodList = new();
-                output[subCommand] = methodList;
-            }
-            methodList.Add(method);
-        }
-
-        return output.Select(x => (x.Key, x.Value));
-    }
-
     public static Type StepDownConstraints(this Type t)
     {
         if (!t.IsGenericType || t.IsGenericTypeDefinition)
@@ -99,6 +84,36 @@ internal static class ReflectionExtensions
         }
 
         return t.GetGenericTypeDefinition().MakeGenericType(newArgs);
+    }
+
+    public static bool HasGenericParent(this Type type, Type parent)
+    {
+        DebugTools.Assert(parent.IsGenericType);
+        var t = type;
+        while (t != null)
+        {
+            if (t.IsGenericType(parent))
+                return true;
+
+            t = t.BaseType;
+        }
+
+        return false;
+    }
+
+    public static bool IsValueRef(this Type type)
+    {
+        return type.HasGenericParent(typeof(ValueRef<>));
+    }
+
+    public static bool IsCustomParser(this Type type)
+    {
+        return type.HasGenericParent(typeof(CustomTypeParser<>));
+    }
+
+    public static bool IsParser(this Type type)
+    {
+        return type.HasGenericParent(typeof(TypeParser<>));
     }
 
     public static string PrettyName(this Type type)
@@ -128,13 +143,7 @@ internal static class ReflectionExtensions
 
     public static ParameterInfo? ConsoleGetPipedArgument(this MethodInfo method)
     {
-        var p = method.GetParameters().Where(x => x.GetCustomAttribute<PipedArgumentAttribute>() is not null).ToList();
-        return p.FirstOrDefault();
-    }
-
-    public static IEnumerable<ParameterInfo> ConsoleGetArguments(this MethodInfo method)
-    {
-        return method.GetParameters().Where(x => x.GetCustomAttribute<CommandArgumentAttribute>() is not null);
+        return method.GetParameters().SingleOrDefault(x => x.GetCustomAttribute<PipedArgumentAttribute>() is not null);
     }
 
     public static Expression CreateEmptyExpr(this Type t)

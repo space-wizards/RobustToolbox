@@ -24,7 +24,7 @@ public sealed class PlayerCommand : ToolshedCommand
         => _playerManager.Sessions;
 
     [CommandImplementation("self")]
-    public ICommonSession Self([CommandInvocationContext] IInvocationContext ctx)
+    public ICommonSession Self(IInvocationContext ctx)
     {
         if (ctx.Session is null)
         {
@@ -35,10 +35,7 @@ public sealed class PlayerCommand : ToolshedCommand
     }
 
     [CommandImplementation("imm")]
-    public ICommonSession Immediate(
-        [CommandInvocationContext] IInvocationContext ctx,
-        [CommandArgument] string username
-        )
+    public ICommonSession Immediate(IInvocationContext ctx, string username)
     {
         _playerManager.TryGetSessionByUsername(username, out var session);
 
@@ -71,7 +68,7 @@ public sealed class PlayerCommand : ToolshedCommand
     }
 
     [CommandImplementation("entity")]
-    public EntityUid GetPlayerEntity([CommandInvocationContext] IInvocationContext ctx, [CommandArgument] string username)
+    public EntityUid GetPlayerEntity(IInvocationContext ctx, string username)
     {
         return GetPlayerEntity(Immediate(ctx, username));
     }

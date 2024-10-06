@@ -30,6 +30,19 @@ namespace Robust.Client.Graphics.Clyde
         // It, like _mainWindowRenderTarget, is initialized in Clyde's constructor
         private LoadedRenderTarget _currentBoundRenderTarget;
 
+        public IRenderTexture CreateLightRenderTarget(Vector2i size, string? name)
+        {
+            var lightMapColorFormat = _hasGLFloatFramebuffers
+                ? RTCF.R11FG11FB10F
+                : RTCF.Rgba8;
+            var lightMapSampleParameters = new TextureSampleParameters { Filter = true };
+
+            return CreateRenderTarget(size,
+                new RenderTargetFormatParameters(lightMapColorFormat, hasDepthStencil: true),
+                lightMapSampleParameters,
+                name: name);
+        }
+
         IRenderTexture IClyde.CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
             TextureSampleParameters? sampleParameters, string? name)
         {
@@ -251,9 +264,15 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private LoadedRenderTarget RtToLoaded(RenderTargetBase rt)
+        private LoadedRenderTarget RtToLoaded(IRenderTarget rt)
         {
-            return _renderTargets[rt.Handle];
+            switch (rt)
+            {
+                case RenderTargetBase based:
+                    return _renderTargets[based.Handle];
+                default:
+                    throw new NotImplementedException();
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

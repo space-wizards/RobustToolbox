@@ -859,15 +859,16 @@ namespace Robust.Client.Graphics.Clyde
 
         private FullStoredRendererState PushRenderStateFull()
         {
-            return new FullStoredRendererState(_currentMatrixProj, _currentMatrixView, _currentBoundRenderTarget);
+            return new FullStoredRendererState(_currentMatrixProj, _currentMatrixView, _currentBoundRenderTarget, _currentRenderTarget);
         }
 
         private void PopRenderStateFull(in FullStoredRendererState state)
         {
             SetProjViewFull(state.ProjMatrix, state.ViewMatrix);
-            BindRenderTargetImmediate(state.RenderTarget);
+            BindRenderTargetImmediate(state.BoundRenderTarget);
 
-            var (width, height) = state.RenderTarget.Size;
+            _currentRenderTarget = state.RenderTarget;
+            var (width, height) = state.BoundRenderTarget.Size;
             GL.Viewport(0, 0, width, height);
             CheckGlError();
         }
@@ -1061,13 +1062,15 @@ namespace Robust.Client.Graphics.Clyde
         {
             public readonly Matrix3x2 ProjMatrix;
             public readonly Matrix3x2 ViewMatrix;
+            public readonly LoadedRenderTarget BoundRenderTarget;
             public readonly LoadedRenderTarget RenderTarget;
 
             public FullStoredRendererState(in Matrix3x2 projMatrix, in Matrix3x2 viewMatrix,
-                LoadedRenderTarget renderTarget)
+                LoadedRenderTarget boundRenderTarget, LoadedRenderTarget renderTarget)
             {
                 ProjMatrix = projMatrix;
                 ViewMatrix = viewMatrix;
+                BoundRenderTarget = boundRenderTarget;
                 RenderTarget = renderTarget;
             }
         }

@@ -188,6 +188,16 @@ namespace Robust.Client.Graphics.Clyde
             return new DummyTexture(size);
         }
 
+        public void BlurLights(IClydeViewport viewport, IRenderTarget target, IEye eye, float multiplier = 14)
+        {
+            // NOOP
+        }
+
+        public IRenderTexture CreateLightRenderTarget(Vector2i size, string? name = null)
+        {
+            return CreateRenderTarget(size, new RenderTargetFormatParameters(), null, name: name);
+        }
+
         public IRenderTexture CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
             TextureSampleParameters? sampleParameters = null, string? name = null)
         {

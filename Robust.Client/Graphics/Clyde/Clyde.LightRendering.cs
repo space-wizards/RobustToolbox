@@ -410,18 +410,20 @@ namespace Robust.Client.Graphics.Clyde
             GL.StencilMask(0xFF);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.StencilBufferBit);
             CheckGlError();
+
             var oldTarget = _currentRenderTarget;
             var oldProj = _currentMatrixProj;
             var oldShader = _queuedShaderInstance;
             var oldModel = _currentMatrixModel;
             var oldScissor = _currentScissorState;
             var oldScissoring = _isScissoring;
-            _lightingReady = true;
 
             RenderOverlays(viewport, OverlaySpace.BeforeLighting, worldAABB, worldBounds);
 
-            GL.Viewport(0, 0, lightW, lightH);
-            BindVertexArray(_occlusionVao.Handle);
+            // Batching doesn't restore stencil state so we do it here.
+            // Yes I spent 8 hours across 2 days just to track down this as the problem.
+            GL.Enable(EnableCap.StencilTest);
+            _isStencilling = true;
             DebugTools.Assert(oldScissoring.Equals(_isScissoring));
             DebugTools.Assert(oldScissor.Equals(_currentScissorState));
             DebugTools.Assert(oldModel.Equals(_currentMatrixModel));
@@ -552,6 +554,7 @@ namespace Robust.Client.Graphics.Clyde
             GL.Viewport(0, 0, viewport.Size.X, viewport.Size.Y);
             CheckGlError();
 
+            _lightingReady = true;
             Array.Clear(_lightsToRenderList, 0, count);
         }
 
@@ -1163,6 +1166,10 @@ namespace Robust.Client.Graphics.Clyde
             viewport.WallMaskRenderTarget?.Dispose();
             viewport.WallBleedIntermediateRenderTarget1?.Dispose();
             viewport.WallBleedIntermediateRenderTarget2?.Dispose();
+            var lightMapColorFormat = _hasGLFloatFramebuffers
+                ? RenderTargetColorFormat.R11FG11FB10F
+                : RenderTargetColorFormat.Rgba8;
+            var lightMapSampleParameters = new TextureSampleParameters { Filter = true };
 
             viewport.WallMaskRenderTarget = CreateRenderTarget(viewport.Size, RenderTargetColorFormat.R8,
                 name: $"{viewport.Name}-{nameof(viewport.WallMaskRenderTarget)}");
@@ -1170,13 +1177,19 @@ namespace Robust.Client.Graphics.Clyde
             viewport.LightRenderTarget = (RenderTexture) CreateLightRenderTarget(lightMapSize,
                 $"{viewport.Name}-{nameof(viewport.LightRenderTarget)}");
 
-            viewport.LightBlurTarget = (RenderTexture) CreateLightRenderTarget(lightMapSize,
+            viewport.LightBlurTarget = CreateRenderTarget(lightMapSize,
+                new RenderTargetFormatParameters(lightMapColorFormat),
+                lightMapSampleParameters,
                 $"{viewport.Name}-{nameof(viewport.LightBlurTarget)}");
 
-            viewport.WallBleedIntermediateRenderTarget1 = (RenderTexture) CreateLightRenderTarget(lightMapSizeQuart,
+            viewport.WallBleedIntermediateRenderTarget1 = CreateRenderTarget(lightMapSizeQuart,
+                new RenderTargetFormatParameters(lightMapColorFormat),
+                lightMapSampleParameters,
                 $"{viewport.Name}-{nameof(viewport.WallBleedIntermediateRenderTarget1)}");
 
-            viewport.WallBleedIntermediateRenderTarget2 = (RenderTexture) CreateLightRenderTarget(lightMapSizeQuart,
+            viewport.WallBleedIntermediateRenderTarget2 = CreateRenderTarget(lightMapSizeQuart,
+                new RenderTargetFormatParameters(lightMapColorFormat),
+                lightMapSampleParameters,
                 $"{viewport.Name}-{nameof(viewport.WallBleedIntermediateRenderTarget2)}");
         }
 

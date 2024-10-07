@@ -233,5 +233,70 @@ namespace Robust.Client.Graphics
             SpriteComponent? sprite = null,
             TransformComponent? xform = null,
             SharedTransformSystem? xformSystem = null);
+
+        /// <summary>
+        /// Draw segment between two concentrated circles from and to certain angles.
+        /// </summary>
+        /// <param name="center">Point where circle center should be.</param>
+        /// <param name="radiusInner">Radius of internal circle.</param>
+        /// <param name="radiusOuter">Radius of external circle.</param>
+        /// <param name="angleSectorFrom">Angle in radian, from which sector should start.</param>
+        /// <param name="angleSectorTo">Angle in radian, from which sector should start.</param>
+        /// <param name="color">Color for drawing.</param>
+        /// <param name="filled">Should figure be filled, or have only border.</param>
+        public void DrawBagleSector(
+            Vector2 center,
+            float radiusInner,
+            float radiusOuter,
+            float angleSectorFrom,
+            float angleSectorTo,
+            Color color,
+            bool filled = true
+        )
+        {
+            const float minimalSegmentSize = MathF.Tau / 32;
+
+            var requestedSegmentSize = angleSectorTo - angleSectorFrom;
+            var segmentCount = (int)(requestedSegmentSize / minimalSegmentSize) + 1;
+
+            Span<Vector2> buffer = stackalloc Vector2[segmentCount * 2];
+
+            for (var i = 0; i < segmentCount; i++)
+            {
+                float angle;
+                if (i == segmentCount - 1)
+                {
+                    // fix rounding problem that was created when calculating count of segments as int
+                    angle = angleSectorTo;
+                }
+                else
+                {
+                    angle = angleSectorFrom + minimalSegmentSize * i;
+                }
+
+                var point = new Angle(angle).RotateVec(-Vector2.UnitY);
+                var outerPoint = center + point * radiusOuter;
+                var innerPoint = center + point * radiusInner;
+                if (filled)
+                {
+                    // to make filled sector we need to create strip from triangles
+                    buffer[i * 2] = outerPoint;
+                    buffer[i * 2 + 1] = innerPoint;
+                }
+                else
+                {
+                    // to make border of sector we need points ordered as sequences on radius
+                    buffer[i] = outerPoint;
+                    buffer[segmentCount * 2 - 1 - i] = innerPoint;
+                }
+
+            }
+
+            DrawPrimitiveTopology type = filled
+                ? DrawPrimitiveTopology.TriangleStrip
+                : DrawPrimitiveTopology.LineStrip;
+            DrawPrimitives(type, buffer, color);
+
+        }
     }
 }

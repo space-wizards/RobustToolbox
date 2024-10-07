@@ -237,16 +237,6 @@ namespace Robust.Client.UserInterface
         /// <seealso cref="Rect"/>
         public UIBox2i PixelRect => UIBox2i.FromDimensions(PixelPosition, PixelSize);
 
-        /// <summary>
-        ///     Checks that point is inside control.
-        /// </summary>
-        /// <param name="point">Coordinates of point to be checked.</param>
-        /// <returns>True if point is considered inside control area, false otherwise.</returns>
-        public virtual bool IsPositionInside(Vector2i point)
-        {
-            return PixelRect.Contains(point);
-        }
-
         public UIBox2 GlobalRect => UIBox2.FromDimensions(GlobalPosition, _size);
 
         public UIBox2i GlobalPixelRect => UIBox2i.FromDimensions(GlobalPixelPosition, PixelSize);

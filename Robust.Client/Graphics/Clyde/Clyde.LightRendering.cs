@@ -408,6 +408,11 @@ namespace Robust.Client.Graphics.Clyde
             GL.StencilMask(0xFF);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.StencilBufferBit);
             CheckGlError();
+            
+            if (_lightManager.NightVision)
+            {
+                GLClearColor(_lightManager.NightVisionColor);
+            }
 
             ApplyLightingFovToBuffer(viewport, eye);
 
@@ -433,12 +438,6 @@ namespace Robust.Client.Graphics.Clyde
             var lastColor = new Color(float.NaN, float.NaN, float.NaN, float.NaN);
             var lastSoftness = float.NaN;
             Texture? lastMask = null;
-
-            if (_lightManager.NightVision)
-            {
-                GLClearColor(_lightManager.NightVisionColor);
-                GL.Clear(ClearBufferMask.ColorBufferBit);
-            }
 
             using (_prof.Group("Draw Lights"))
             {

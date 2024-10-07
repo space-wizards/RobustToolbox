@@ -566,7 +566,7 @@ namespace Robust.Server
             // Don't start the main loop. This only works if a reason is passed to Shutdown(...)
             if (_shutdownReason != null)
             {
-                _logger.Fatal("Shutdown has been requested before the main loop has been started, complying.");
+                _logger.Fatal("Shutdown has been requested before the main loop has been started, complying. Reason: {0}", _shutdownReason);
             }
             else _mainLoop.Run();
 

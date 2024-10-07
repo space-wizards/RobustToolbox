@@ -24,5 +24,17 @@ namespace Robust.Client.Graphics
         /// This is useful to prevent players messing with lighting setup when they shouldn't.
         /// </summary>
         bool LockConsoleAccess { get; set; }
+        /// <summary>
+        ///
+        /// </summary>
+        bool NightVision { get; set; }
+        /// <summary>
+        ///
+        /// </summary>
+        float LightSensitivity { get; set; }
+        /// <summary>
+        ///
+        /// </summary>
+        Color NightVisionColor { get; set; }
     }
 }

@@ -434,6 +434,12 @@ namespace Robust.Client.Graphics.Clyde
             var lastSoftness = float.NaN;
             Texture? lastMask = null;
 
+            if (_lightManager.NightVision)
+            {
+                GLClearColor(_lightManager.NightVisionColor);
+                GL.Clear(ClearBufferMask.ColorBufferBit);
+            }
+
             using (_prof.Group("Draw Lights"))
             {
                 for (var i = 0; i < count; i++)
@@ -475,7 +481,18 @@ namespace Robust.Client.Graphics.Clyde
 
                     if (lastColor != component.Color)
                     {
-                        lastColor = component.Color;
+                        if (_lightManager.LightSensitivity != 0)
+                        {
+                            lastColor = new Color(component.Color.R * _lightManager.LightSensitivity,
+                                component.Color.G * _lightManager.LightSensitivity,
+                                component.Color.B * _lightManager.LightSensitivity,
+                                component.Color.A);
+                        }
+                        else
+                        {
+                            lastColor = component.Color;
+                        }
+
                         lightShader.SetUniformMaybe("lightColor", lastColor);
                     }
 

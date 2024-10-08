@@ -27,12 +27,40 @@ public sealed class TileSpawningUIController : UIController
 
     private readonly List<ITileDefinition> _shownTiles = new();
     private bool _clearingTileSelections;
+    private bool _eraseTile;
 
     public override void Initialize()
     {
         DebugTools.Assert(_init == false);
         _init = true;
         _placement.PlacementChanged += ClearTileSelection;
+    }
+
+    private void OnTileEraseToggled(ButtonToggledEventArgs args)
+    {
+        if (_window == null || _window.Disposed)
+            return;
+
+        _placement.Clear();
+
+        if (args.Pressed)
+        {
+            _eraseTile = true;
+
+            var newObjInfo = new PlacementInformation
+            {
+                PlacementOption = "AlignTileAny",
+                TileType = 0,
+                Range = 400,
+                IsTile = true
+            };
+
+            _placement.BeginPlacing(newObjInfo);
+        }
+        else
+            _eraseTile = false;
+
+        args.Button.Pressed = args.Pressed;
     }
 
     public void ToggleWindow()
@@ -60,6 +88,8 @@ public sealed class TileSpawningUIController : UIController
         _window.SearchBar.OnTextChanged += OnTileSearchChanged;
         _window.TileList.OnItemSelected += OnTileItemSelected;
         _window.TileList.OnItemDeselected += OnTileItemDeselected;
+        _window.EraseButton.Pressed = _eraseTile;
+        _window.EraseButton.OnToggled += OnTileEraseToggled;
         BuildTileList();
     }
 
@@ -76,6 +106,7 @@ public sealed class TileSpawningUIController : UIController
         _clearingTileSelections = true;
         _window.TileList.ClearSelected();
         _clearingTileSelections = false;
+        _window.EraseButton.Pressed = false;
     }
 
     private void OnTileClearPressed(ButtonEventArgs args)

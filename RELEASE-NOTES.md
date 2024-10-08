@@ -39,9 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* `RequiredMemberAttribute` and `SetsRequiredMembersAttribute` have been added to the sandbox whitelist. I.e., you can now use the `required` keyword in client/shared code.
-* Added `LineEdit.SelectAllOnFocus`.
-* ``Gametitle``,``WindowIconSet`` and ``SplashLogo`` are exposed in IGameController. These will return said information set game options or whatever is set in manifest.yml.
+*None yet*
 
 ### Bugfixes
 
@@ -54,6 +52,39 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 236.1.0
+
+### New features
+
+* `RequiredMemberAttribute` and `SetsRequiredMembersAttribute` have been added to the sandbox whitelist. I.e., you can now use the `required` keyword in client/shared code.
+* Added `SwitchExpressionException` to sandbox. This type gets used if you have a `switch` expression with no default case.
+* Added `LineEdit.SelectAllOnFocus`.
+* `GameTitle`, `WindowIconSet` and `SplashLogo` are exposed in `IGameController`. These will return said information set in game options or whatever is set in `manifest.yml`.
+* `BoundUserInterface` inheritors now have access to `PlayerManager`.
+* Added `MuteSounds` bool to `BaseButton`.
+* The engine has a new future-proof HWID system.
+  * The auth server now manages HWIDs. This avoids HWID impersonation attacks.
+  * The auth server can return multiple HWIDs. They are accessible in `NetUserData.ModernHWIds`.
+  * The auth server also returns a trust score factor, accessible as `NetUserData.Trust`.
+  * HWID can be disabled client side (`ROBUST_AUTH_ALLOW_HWID` env var) or server side (`net.hwid` cvar).
+  * The old HWID system is still in place. It is intended that content switches to placing new bans against the new HWIDs.
+  * Old HWIDs no longer work if the connection is not authenticated.
+* `launchauth` command now recognizes `SS14_LAUNCHER_APPDATA_NAME`.
+* Added new overload to `EntityLookupSystem.GetEntitiesIntersecting`.
+* Added `Control.RemoveChild(int childIndex)`.
+* `build.entities_category_filter` allows filtering the entity spawn panel to a specific category.
+
+### Bugfixes
+
+* Fixed `SpriteView` offset calculations when scaled.
+
+### Other
+
+* Sprite flicks are applied immediately when started.
+* More warning fixes.
+* If the server gets shut down before finishing startup, the reason is now logged properly.
 
 
 ## 236.0.0

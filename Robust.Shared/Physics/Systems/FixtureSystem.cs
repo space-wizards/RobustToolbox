@@ -20,6 +20,7 @@ namespace Robust.Shared.Physics.Systems
     public sealed partial class FixtureSystem : EntitySystem
     {
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
+        [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
         private EntityQuery<PhysicsMapComponent> _mapQuery;
         private EntityQuery<PhysicsComponent> _physicsQuery;
@@ -224,9 +225,18 @@ namespace Robust.Shared.Physics.Systems
 
         private void OnGetState(EntityUid uid, FixturesComponent component, ref ComponentGetState args)
         {
+            var copied = new Dictionary<string, Fixture>(component.Fixtures.Count);
+
+            foreach (var (id, fixture) in component.Fixtures)
+            {
+                var copy = new Fixture();
+                fixture.CopyTo(copy);
+                copied[id] = copy;
+            }
+
             args.State = new FixtureManagerComponentState
             {
-                Fixtures = component.Fixtures,
+                Fixtures = copied,
             };
         }
 
@@ -238,10 +248,6 @@ namespace Robust.Shared.Physics.Systems
             {
                 Log.Error($"Tried to apply fixture state for an entity without physics: {ToPrettyString(uid)}");
                 return;
-            }
-            foreach (var fixture in component.Fixtures.Values)
-            {
-                fixture.Owner = uid;
             }
 
             var toAddFixtures = new ValueList<(string Id, Fixture Fixture)>();
@@ -260,6 +266,7 @@ namespace Robust.Shared.Physics.Systems
             }
 
             TransformComponent? xform = null;
+            var regenerate = false;
 
             // Add / update new fixtures
             // FUTURE SLOTH
@@ -272,10 +279,12 @@ namespace Robust.Shared.Physics.Systems
                 {
                     toAddFixtures.Add((id, fixture));
                 }
+                // Retained fixture but new data
                 else if (!existing.Equivalent(fixture))
                 {
-                    toRemoveFixtures.Add((id, existing));
-                    toAddFixtures.Add((id, fixture));
+                    fixture.CopyTo(existing);
+                    computeProperties = true;
+                    regenerate = true;
                 }
             }
 
@@ -308,6 +317,11 @@ namespace Robust.Shared.Physics.Systems
             if (computeProperties)
             {
                 FixtureUpdate(uid, manager: component, body: physics);
+            }
+
+            if (regenerate)
+            {
+                _broadphase.RegenerateContacts(uid, body: physics, fixtures: component, xform: xform);
             }
         }
 

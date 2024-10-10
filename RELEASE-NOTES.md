@@ -39,7 +39,9 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* The game server's `/update` endpoint now supports passing more information on why an update is available.
+  * This information is accessible via `IWatchdogApi.RestartRequested`.
+  * Information can be specified by passing a JSON object with a `Reason` code and `Message` field.
 
 ### Bugfixes
 
@@ -47,7 +49,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Made `WatchdogApi` and some members of `IWatchdogApi` private. These symbols should never have been accessed by content.
 
 ### Internal
 

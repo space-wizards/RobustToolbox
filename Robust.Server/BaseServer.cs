@@ -86,7 +86,7 @@ namespace Robust.Server
         [Dependency] private readonly ITaskManager _taskManager = default!;
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
         [Dependency] private readonly IModLoaderInternal _modLoader = default!;
-        [Dependency] private readonly IWatchdogApi _watchdogApi = default!;
+        [Dependency] private readonly IWatchdogApiInternal _watchdogApi = default!;
         [Dependency] private readonly HubManager _hubManager = default!;
         [Dependency] private readonly IScriptHost _scriptHost = default!;
         [Dependency] private readonly IMetricsManagerInternal _metricsManager = default!;

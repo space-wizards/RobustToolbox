@@ -139,7 +139,7 @@ namespace Robust.Shared.Physics
                 return true;
             }
 
-            proxy = _b2Tree.CreateProxy(aabb.Value, item);
+            proxy = _b2Tree.CreateProxy(aabb.Value, uint.MaxValue, item);
             _nodeLookup[item] = proxy;
 
             return true;
@@ -199,11 +199,12 @@ namespace Robust.Shared.Physics
 
             if (proxy == DynamicTree.Proxy.Free)
             {
-                proxy = _b2Tree.CreateProxy(newBox.Value, item);
+                proxy = _b2Tree.CreateProxy(newBox.Value, uint.MaxValue, item);
                 return true;
             }
 
-            return _b2Tree.MoveProxy(proxy, newBox.Value, Vector2.Zero);
+            _b2Tree.MoveProxy(proxy, newBox.Value);
+            return true;
         }
 
         public void QueryAabb(QueryCallbackDelegate callback, Box2 aabb, bool approx = false)
@@ -334,7 +335,7 @@ namespace Robust.Shared.Physics
             ref var proxy = ref CollectionsMarshal.GetValueRefOrAddDefault(_nodeLookup, item, out var exists);
             if (!exists)
             {
-                proxy = aabb.Value.HasNan() ? DynamicTree.Proxy.Free : _b2Tree.CreateProxy(aabb.Value, item);
+                proxy = aabb.Value.HasNan() ? DynamicTree.Proxy.Free : _b2Tree.CreateProxy(aabb.Value, uint.MaxValue, item);
                 return;
             }
 
@@ -349,9 +350,9 @@ namespace Robust.Shared.Physics
             }
 
             if (proxy == DynamicTree.Proxy.Free)
-                proxy = _b2Tree.CreateProxy(aabb.Value, item);
+                proxy = _b2Tree.CreateProxy(aabb.Value, uint.MaxValue, item);
             else
-                _b2Tree.MoveProxy(proxy, aabb.Value, Vector2.Zero);
+                _b2Tree.MoveProxy(proxy, aabb.Value);
         }
 
         [Conditional("DEBUG_DYNAMIC_TREE")]

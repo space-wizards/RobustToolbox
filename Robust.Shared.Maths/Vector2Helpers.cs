@@ -1,6 +1,7 @@
 using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 
 namespace Robust.Shared.Maths;
 
@@ -13,6 +14,29 @@ public static class Vector2Helpers
     /// Half of a unit vector.
     /// </summary>
     public static readonly Vector2 Half = new(0.5f, 0.5f);
+
+    [Pure]
+    public static bool IsValid(this Vector2 vec)
+    {
+        if (float.IsNaN(vec.X) || float.IsNaN(vec.Y))
+        {
+            return false;
+        }
+
+        if (float.IsInfinity(vec.X) || float.IsInfinity(vec.Y))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [Pure]
+    public static Vector2 MulAdd(Vector2 a, float s, Vector2 b)
+    {
+        return new Vector2(a.X + s * b.X, a.Y + s * b.Y);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector2 InterpolateCubic(Vector2 preA, Vector2 a, Vector2 b, Vector2 postB, float t)

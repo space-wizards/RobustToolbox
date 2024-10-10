@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
 using Microsoft.Extensions.ObjectPool;
+using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -471,37 +472,53 @@ namespace Robust.Shared.Physics.Systems
             TouchProxies(xform.MapUid.Value, matrix, fixture);
         }
 
-        // TODO: The below is slow and should just query the map's broadphase directly. The problem is that
-        // there's some ordering stuff going on where the broadphase has queued all of its updates but hasn't applied
-        // them yet so this query will fail on initialization which chains into a whole lot of issues.
-        internal IEnumerable<(EntityUid uid, BroadphaseComponent comp)> GetBroadphases(MapId mapId, Box2 aabb)
+        internal void GetBroadphases(MapId mapId, Box2 aabb,BroadphaseCallback callback)
         {
-            // TODO Okay so problem: If we just do Encloses that's a lot faster BUT it also means we don't return the
-            // map's broadphase which avoids us iterating over it for 99% of bodies.
+            var internalState = (callback, _broadphaseQuery);
 
-            if (mapId == MapId.Nullspace) yield break;
-
-            var enumerator = AllEntityQuery<BroadphaseComponent, TransformComponent>();
-
-            while (enumerator.MoveNext(out var bUid, out var broadphase, out var xform))
-            {
-                if (xform.MapID != mapId) continue;
-
-                if (!EntityManager.TryGetComponent(bUid, out MapGridComponent? mapGrid))
+            _mapManager.FindGridsIntersecting(mapId,
+                aabb,
+                ref internalState,
+                static (
+                    EntityUid uid,
+                    MapGridComponent grid,
+                    ref (BroadphaseCallback callback, EntityQuery<BroadphaseComponent> _broadphaseQuery) tuple) =>
                 {
-                    yield return (bUid, broadphase);
-                    continue;
-                }
+                    if (!tuple._broadphaseQuery.TryComp(uid, out var broadphase))
+                        return true;
 
-                // Won't worry about accurate bounds checks as it's probably slower in most use cases.
-                var chunkEnumerator = _map.GetMapChunks(bUid, mapGrid, aabb);
-
-                if (chunkEnumerator.MoveNext(out _))
-                {
-                    yield return (bUid, broadphase);
-                }
-            }
+                    tuple.callback((uid, broadphase));
+                    return true;
+                    // Approx because we don't really need accurate checks for these most of the time.
+                }, approx: true, includeMap: true);
         }
+
+        internal void GetBroadphases<TState>(MapId mapId, Box2 aabb, ref TState state, BroadphaseCallback<TState> callback)
+        {
+            var internalState = (state, callback, _broadphaseQuery);
+
+            _mapManager.FindGridsIntersecting(mapId,
+                aabb,
+                ref internalState,
+                static (
+                    EntityUid uid,
+                    MapGridComponent grid,
+                    ref (TState state, BroadphaseCallback<TState> callback, EntityQuery<BroadphaseComponent> _broadphaseQuery) tuple) =>
+                {
+                    if (!tuple._broadphaseQuery.TryComp(uid, out var broadphase))
+                        return true;
+
+                    tuple.callback((uid, broadphase), ref tuple.state);
+                    return true;
+                    // Approx because we don't really need accurate checks for these most of the time.
+                }, approx: true, includeMap: true);
+
+            state = internalState.state;
+        }
+
+        internal delegate void BroadphaseCallback(Entity<BroadphaseComponent> entity);
+
+        internal delegate void BroadphaseCallback<TState>(Entity<BroadphaseComponent> entity, ref TState state);
 
         private record struct BroadphaseContactJob() : IParallelRobustJob
         {

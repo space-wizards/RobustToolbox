@@ -30,7 +30,8 @@ namespace Robust.Client.Graphics.Clyde
         // It, like _mainWindowRenderTarget, is initialized in Clyde's constructor
         private LoadedRenderTarget _currentBoundRenderTarget;
 
-        public IRenderTexture CreateLightRenderTarget(Vector2i size, string? name)
+
+        public IRenderTexture CreateLightRenderTarget(Vector2i size, string? name = null, bool depthStencil = true)
         {
             var lightMapColorFormat = _hasGLFloatFramebuffers
                 ? RTCF.R11FG11FB10F
@@ -38,7 +39,7 @@ namespace Robust.Client.Graphics.Clyde
             var lightMapSampleParameters = new TextureSampleParameters { Filter = true };
 
             return CreateRenderTarget(size,
-                new RenderTargetFormatParameters(lightMapColorFormat, hasDepthStencil: true),
+                new RenderTargetFormatParameters(lightMapColorFormat, hasDepthStencil: depthStencil),
                 lightMapSampleParameters,
                 name: name);
         }
@@ -217,7 +218,8 @@ namespace Robust.Client.Graphics.Clyde
                 Size = size,
                 TextureHandle = textureObject.TextureId,
                 MemoryPressure = pressure,
-                ColorFormat = format.ColorFormat
+                ColorFormat = format.ColorFormat,
+                SampleParameters = sampleParameters,
             };
 
             //GC.AddMemoryPressure(pressure);
@@ -321,6 +323,8 @@ namespace Robust.Client.Graphics.Clyde
             // Renderbuffer handle
             public GLHandle DepthStencilHandle;
             public long MemoryPressure;
+
+            public TextureSampleParameters? SampleParameters;
         }
 
         private abstract class RenderTargetBase : IRenderTarget

@@ -193,9 +193,9 @@ namespace Robust.Client.Graphics.Clyde
             // NOOP
         }
 
-        public IRenderTexture CreateLightRenderTarget(Vector2i size, string? name = null)
+        public IRenderTexture CreateLightRenderTarget(Vector2i size, string? name = null, bool depthStencil = true)
         {
-            return CreateRenderTarget(size, new RenderTargetFormatParameters(), null, name: name);
+            return CreateRenderTarget(size, new RenderTargetFormatParameters(RenderTargetColorFormat.R8, hasDepthStencil: depthStencil), null, name: name);
         }
 
         public IRenderTexture CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,

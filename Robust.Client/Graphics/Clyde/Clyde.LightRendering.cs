@@ -18,6 +18,7 @@ using Robust.Shared.Physics;
 using Robust.Client.ComponentTrees;
 using Robust.Shared.Enums;
 using Robust.Shared.Graphics;
+using Robust.Shared.Prototypes;
 using static Robust.Shared.GameObjects.OccluderComponent;
 using Robust.Shared.Utility;
 using TextureWrapMode = Robust.Shared.Graphics.TextureWrapMode;
@@ -417,12 +418,20 @@ namespace Robust.Client.Graphics.Clyde
             var oldModel = _currentMatrixModel;
             var oldScissor = _currentScissorState;
             var oldScissoring = _isScissoring;
+            var state = PushRenderStateFull();
 
             RenderOverlays(viewport, OverlaySpace.BeforeLighting, worldAABB, worldBounds);
+
+            if (_lightManager.BlurFactor != 0f && viewport.Eye != null)
+                BlurLights(viewport, viewport.LightRenderTarget, viewport.Eye, _lightManager.BlurFactor);
 
             // Batching doesn't restore stencil state so we do it here.
             // Yes I spent 8 hours across 2 days just to track down this as the problem.
             GL.Enable(EnableCap.StencilTest);
+            GL.ClearStencil(0xFF);
+            GL.StencilMask(0xFF);
+            GL.Clear(ClearBufferMask.StencilBufferBit);
+            PopRenderStateFull(state);
             _isStencilling = true;
             DebugTools.Assert(oldScissoring.Equals(_isScissoring));
             DebugTools.Assert(oldScissor.Equals(_currentScissorState));
@@ -683,7 +692,7 @@ namespace Robust.Client.Graphics.Clyde
 
             SetupGlobalUniformsImmediate(shader, rTexture.Texture);
 
-            var size = viewport.LightRenderTarget.Size;
+            var size = target.Size;
             shader.SetUniformMaybe("size", (Vector2)size);
             shader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
 

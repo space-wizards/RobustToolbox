@@ -859,7 +859,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private FullStoredRendererState PushRenderStateFull()
         {
-            return new FullStoredRendererState(_currentMatrixProj, _currentMatrixView, _currentBoundRenderTarget, _currentRenderTarget);
+            return new FullStoredRendererState(_currentMatrixProj, _currentMatrixView, _currentBoundRenderTarget, _currentRenderTarget, _queuedShaderInstance);
         }
 
         private void PopRenderStateFull(in FullStoredRendererState state)
@@ -867,6 +867,7 @@ namespace Robust.Client.Graphics.Clyde
             SetProjViewFull(state.ProjMatrix, state.ViewMatrix);
             BindRenderTargetImmediate(state.BoundRenderTarget);
 
+            _queuedShaderInstance = state.QueuedShaderInstance;
             _currentRenderTarget = state.RenderTarget;
             var (width, height) = state.BoundRenderTarget.Size;
             GL.Viewport(0, 0, width, height);
@@ -1064,14 +1065,21 @@ namespace Robust.Client.Graphics.Clyde
             public readonly Matrix3x2 ViewMatrix;
             public readonly LoadedRenderTarget BoundRenderTarget;
             public readonly LoadedRenderTarget RenderTarget;
+            public readonly ClydeShaderInstance QueuedShaderInstance;
 
-            public FullStoredRendererState(in Matrix3x2 projMatrix, in Matrix3x2 viewMatrix,
-                LoadedRenderTarget boundRenderTarget, LoadedRenderTarget renderTarget)
+            public FullStoredRendererState(
+                in Matrix3x2 projMatrix,
+                in Matrix3x2 viewMatrix,
+                LoadedRenderTarget boundRenderTarget,
+                LoadedRenderTarget renderTarget,
+                ClydeShaderInstance queuedShaderInstance
+                )
             {
                 ProjMatrix = projMatrix;
                 ViewMatrix = viewMatrix;
                 BoundRenderTarget = boundRenderTarget;
                 RenderTarget = renderTarget;
+                QueuedShaderInstance = queuedShaderInstance;
             }
         }
     }

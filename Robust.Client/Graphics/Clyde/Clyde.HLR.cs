@@ -429,10 +429,12 @@ namespace Robust.Client.Graphics.Clyde
             var oldRenderTarget = _currentRenderTarget;
             var oldShader = _queuedShaderInstance;
 
+            // Need to get state before flushing render queue in case they modify the original state.
+            var state = PushRenderStateFull();
+
             // Have to flush the render queue so that all commands finish rendering to the previous framebuffer.
             FlushRenderQueue();
 
-            var state = PushRenderStateFull();
 
             {
                 BindRenderTargetFull(RtToLoaded(rt));

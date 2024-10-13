@@ -14,7 +14,7 @@ namespace Robust.Client.Graphics
         WindowId Id { get; }
         IRenderTarget RenderTarget { get; }
         string Title { get; set; }
-        Vector2i Size { get; }
+        Vector2i Size { get; set; }
         bool IsFocused { get; }
         bool IsMinimized { get; }
         bool IsVisible { get; set; }

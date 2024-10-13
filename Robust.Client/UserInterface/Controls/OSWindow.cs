@@ -1,10 +1,10 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using TerraFX.Interop.Windows;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -27,17 +27,6 @@ namespace Robust.Client.UserInterface.Controls
         public IClydeWindow? ClydeWindow { get; private set; }
 
         /// <summary>
-        /// The window that will "own" this window.
-        /// Owned windows always appear on top of their owners and have some other misc behavior depending on the OS.
-        /// </summary>
-        public IClydeWindow? Owner { get; set; }
-
-        /// <summary>
-        /// Whether the window is currently open.
-        /// </summary>
-        public bool IsOpen => ClydeWindow != null;
-
-        /// <summary>
         /// The title of the window.
         /// </summary>
         /// <remarks>
@@ -49,35 +38,10 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 _title = value;
-
                 if (ClydeWindow != null)
-                    ClydeWindow.Title = value;
+                    ClydeWindow.Title = _title;
             }
         }
-
-        /// <summary>
-        /// The location to place the window at when it is opened.
-        /// </summary>
-        /// <remarks>
-        /// Changing this while the window is open has no effect.
-        /// </remarks>
-        public WindowStartupLocation StartupLocation { get; set; }
-
-        /// <summary>
-        /// Controls whether to automatically size one or both axis of the window to fit the content.
-        /// </summary>
-        /// <remarks>
-        /// Changing this while the window is open has no effect.
-        /// </remarks>
-        public WindowSizeToContent SizeToContent { get; set; }
-
-        /// <summary>
-        /// Specifies window styling options for the window.
-        /// </summary>
-        /// <remarks>
-        /// Changing this while the window is open has no effect.
-        /// </remarks>
-        public OSWindowStyles WindowStyles { get; set; }
 
         /// <summary>
         /// Raised when the window is being closed
@@ -91,42 +55,30 @@ namespace Robust.Client.UserInterface.Controls
         /// </summary>
         public event Action? Closed;
 
-        public OSWindow()
+        public OSWindow() : this(title: null) { }
+
+        /// <param name="title">The title of the window.</param>
+        /// <param name="windowStyles">Specifies window styling options for the window.</param>
+        /// <param name="owner">
+        /// The window that will "own" this window.
+        /// Owned windows always appear on top of their owners and have some other misc behavior depending on the OS.
+        /// </param>
+        /// <param name="startupLocation">The location to place the window at when it is opened.</param>
+        public OSWindow(string? title = null, OSWindowStyles windowStyles = OSWindowStyles.None, IClydeWindow? owner = null, WindowStartupLocation startupLocation = WindowStartupLocation.Manual)
         {
             IoCManager.InjectDependencies(this);
-        }
 
-        /// <summary>
-        /// Show the window to the user.
-        /// </summary>
-        public void Show()
-        {
-            if (IsOpen)
-                return;
+            if (title != null)
+                Title = title;
 
-            var parameters = new WindowCreateParameters();
-
-            if (!float.IsNaN(SetWidth))
-                parameters.Width = (int) SetWidth;
-
-            if (!float.IsNaN(SetHeight))
-                parameters.Height = (int) SetHeight;
-
-            if (SizeToContent != WindowSizeToContent.Manual)
+            var parameters = new WindowCreateParameters
             {
-                Measure(Vector2Helpers.Infinity);
-
-                if ((SizeToContent & WindowSizeToContent.Width) != 0)
-                    parameters.Width = (int)DesiredSize.X;
-
-                if ((SizeToContent & WindowSizeToContent.Height) != 0)
-                    parameters.Height = (int)DesiredSize.Y;
-            }
-
-            parameters.Title = _title;
-            parameters.Styles = WindowStyles;
-            parameters.Owner = Owner;
-            parameters.StartupLocation = StartupLocation;
+                Title = Title,
+                Styles = windowStyles,
+                Owner = owner,
+                StartupLocation = startupLocation,
+                Visible = false
+            };
 
             ClydeWindow = _clyde.CreateWindow(parameters);
             ClydeWindow.RequestClosed += OnWindowRequestClosed;
@@ -135,7 +87,16 @@ namespace Robust.Client.UserInterface.Controls
 
             _root = UserInterfaceManager.CreateWindowRoot(ClydeWindow);
             _root.AddChild(this);
+        }
 
+        /// <summary>
+        /// Show the window to the user.
+        /// </summary>
+        public void Show() {
+            if (ClydeWindow == null)
+                return;
+
+            ClydeWindow.IsVisible = true;
             Shown();
         }
 
@@ -161,6 +122,34 @@ namespace Robust.Client.UserInterface.Controls
                 return;
 
             ClydeWindow.Dispose();
+        }
+
+        public void Resize(Vector2i size)
+        {
+            if (ClydeWindow == null)
+                return;
+
+            ClydeWindow.Size = size;
+        }
+
+        /// <summary>
+        /// Sizes one or both axis of the window to fit the content.
+        /// </summary>
+        public void ResizeToContent(WindowSizeToContent axis)
+        {
+            if (ClydeWindow == null)
+                return;
+
+            Measure(Vector2Helpers.Infinity);
+
+            Vector2i size = ClydeWindow.Size;
+
+            if ((axis & WindowSizeToContent.Width) != 0)
+                size.X = (int)DesiredSize.X;
+            if ((axis & WindowSizeToContent.Height) != 0)
+                size.Y = (int)DesiredSize.Y;
+
+            ClydeWindow.Size = size;
         }
 
         private void OnWindowRequestClosed(WindowRequestClosedEventArgs eventArgs)
@@ -196,7 +185,6 @@ namespace Robust.Client.UserInterface.Controls
     [Flags]
     public enum WindowSizeToContent : byte
     {
-        Manual = 0,
         Width = 1 << 0,
         Height = 1 << 1,
         WidthAndHeight = Width | Height

@@ -27,12 +27,44 @@ public sealed class TileSpawningUIController : UIController
 
     private readonly List<ITileDefinition> _shownTiles = new();
     private bool _clearingTileSelections;
+    private bool _eraseTile;
 
     public override void Initialize()
     {
         DebugTools.Assert(_init == false);
         _init = true;
         _placement.PlacementChanged += ClearTileSelection;
+    }
+
+    private void StartTilePlacement(int tileType)
+    {
+        var newObjInfo = new PlacementInformation
+        {
+            PlacementOption = "AlignTileAny",
+            TileType = tileType,
+            Range = 400,
+            IsTile = true
+        };
+
+        _placement.BeginPlacing(newObjInfo);
+    }
+
+    private void OnTileEraseToggled(ButtonToggledEventArgs args)
+    {
+        if (_window == null || _window.Disposed)
+            return;
+
+        _placement.Clear();
+
+        if (args.Pressed)
+        {
+            _eraseTile = true;
+            StartTilePlacement(0);
+        }
+        else
+            _eraseTile = false;
+
+        args.Button.Pressed = args.Pressed;
     }
 
     public void ToggleWindow()
@@ -60,6 +92,8 @@ public sealed class TileSpawningUIController : UIController
         _window.SearchBar.OnTextChanged += OnTileSearchChanged;
         _window.TileList.OnItemSelected += OnTileItemSelected;
         _window.TileList.OnItemDeselected += OnTileItemDeselected;
+        _window.EraseButton.Pressed = _eraseTile;
+        _window.EraseButton.OnToggled += OnTileEraseToggled;
         BuildTileList();
     }
 
@@ -76,6 +110,7 @@ public sealed class TileSpawningUIController : UIController
         _clearingTileSelections = true;
         _window.TileList.ClearSelected();
         _clearingTileSelections = false;
+        _window.EraseButton.Pressed = false;
     }
 
     private void OnTileClearPressed(ButtonEventArgs args)
@@ -102,16 +137,7 @@ public sealed class TileSpawningUIController : UIController
     private void OnTileItemSelected(ItemList.ItemListSelectedEventArgs args)
     {
         var definition = _shownTiles[args.ItemIndex];
-
-        var newObjInfo = new PlacementInformation
-        {
-            PlacementOption = "AlignTileAny",
-            TileType = definition.TileId,
-            Range = 400,
-            IsTile = true
-        };
-
-        _placement.BeginPlacing(newObjInfo);
+        StartTilePlacement(definition.TileId);
     }
 
     private void OnTileItemDeselected(ItemList.ItemListDeselectedEventArgs args)

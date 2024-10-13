@@ -45,7 +45,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* EntityPrototypeView control now is creating entity and keeping it alive only when opened (between EnteredTree and ExitedTree).
 
 ### Other
 

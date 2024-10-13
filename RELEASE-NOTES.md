@@ -39,7 +39,9 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `RequiredMemberAttribute` and `SetsRequiredMembersAttribute` have been added to the sandbox whitelist. I.e., you can now use the `required` keyword in client/shared code.
+* Added `LineEdit.SelectAllOnFocus`.
+* ``Gametitle``,``WindowIconSet`` and ``SplashLogo`` are exposed in IGameController. These will return said information set game options or whatever is set in manifest.yml.
 
 ### Bugfixes
 

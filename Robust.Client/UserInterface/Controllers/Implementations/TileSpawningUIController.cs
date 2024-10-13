@@ -36,6 +36,19 @@ public sealed class TileSpawningUIController : UIController
         _placement.PlacementChanged += ClearTileSelection;
     }
 
+    private void StartTilePlacement(int tileType)
+    {
+        var newObjInfo = new PlacementInformation
+        {
+            PlacementOption = "AlignTileAny",
+            TileType = tileType,
+            Range = 400,
+            IsTile = true
+        };
+
+        _placement.BeginPlacing(newObjInfo);
+    }
+
     private void OnTileEraseToggled(ButtonToggledEventArgs args)
     {
         if (_window == null || _window.Disposed)
@@ -46,16 +59,7 @@ public sealed class TileSpawningUIController : UIController
         if (args.Pressed)
         {
             _eraseTile = true;
-
-            var newObjInfo = new PlacementInformation
-            {
-                PlacementOption = "AlignTileAny",
-                TileType = 0,
-                Range = 400,
-                IsTile = true
-            };
-
-            _placement.BeginPlacing(newObjInfo);
+            StartTilePlacement(0);
         }
         else
             _eraseTile = false;
@@ -133,16 +137,7 @@ public sealed class TileSpawningUIController : UIController
     private void OnTileItemSelected(ItemList.ItemListSelectedEventArgs args)
     {
         var definition = _shownTiles[args.ItemIndex];
-
-        var newObjInfo = new PlacementInformation
-        {
-            PlacementOption = "AlignTileAny",
-            TileType = definition.TileId,
-            Range = 400,
-            IsTile = true
-        };
-
-        _placement.BeginPlacing(newObjInfo);
+        StartTilePlacement(definition.TileId);
     }
 
     private void OnTileItemDeselected(ItemList.ItemListDeselectedEventArgs args)

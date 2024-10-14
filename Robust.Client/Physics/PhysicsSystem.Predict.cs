@@ -93,7 +93,7 @@ public sealed partial class PhysicsSystem
         var maps = new HashSet<EntityUid>();
 
         var enumerator = AllEntityQuery<PredictedPhysicsComponent, PhysicsComponent, TransformComponent>();
-        while (enumerator.MoveNext(out var _, out var physics, out var xform))
+        while (enumerator.MoveNext(out _, out var physics, out var xform))
         {
             DebugTools.Assert(physics.Predict);
 

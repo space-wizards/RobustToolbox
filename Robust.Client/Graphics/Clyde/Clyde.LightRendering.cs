@@ -674,7 +674,7 @@ namespace Robust.Client.Graphics.Clyde
             return (state.count, expandedBounds);
         }
 
-        public void BlurLights(IClydeViewport viewport, IRenderTarget target, IEye eye, float multiplier = 14f)
+        private void BlurLights(IClydeViewport viewport, IRenderTarget target, IEye eye, float multiplier = 14f)
         {
             if (target is not RenderTexture rTexture || viewport is not Viewport rViewport)
                 return;

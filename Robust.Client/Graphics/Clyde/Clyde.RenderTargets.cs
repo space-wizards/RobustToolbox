@@ -30,6 +30,20 @@ namespace Robust.Client.Graphics.Clyde
         // It, like _mainWindowRenderTarget, is initialized in Clyde's constructor
         private LoadedRenderTarget _currentBoundRenderTarget;
 
+
+        public IRenderTexture CreateLightRenderTarget(Vector2i size, string? name = null, bool depthStencil = true)
+        {
+            var lightMapColorFormat = _hasGLFloatFramebuffers
+                ? RTCF.R11FG11FB10F
+                : RTCF.Rgba8;
+            var lightMapSampleParameters = new TextureSampleParameters { Filter = true };
+
+            return CreateRenderTarget(size,
+                new RenderTargetFormatParameters(lightMapColorFormat, hasDepthStencil: depthStencil),
+                lightMapSampleParameters,
+                name: name);
+        }
+
         IRenderTexture IClyde.CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
             TextureSampleParameters? sampleParameters, string? name)
         {
@@ -204,7 +218,8 @@ namespace Robust.Client.Graphics.Clyde
                 Size = size,
                 TextureHandle = textureObject.TextureId,
                 MemoryPressure = pressure,
-                ColorFormat = format.ColorFormat
+                ColorFormat = format.ColorFormat,
+                SampleParameters = sampleParameters,
             };
 
             //GC.AddMemoryPressure(pressure);
@@ -251,9 +266,15 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private LoadedRenderTarget RtToLoaded(RenderTargetBase rt)
+        private LoadedRenderTarget RtToLoaded(IRenderTarget rt)
         {
-            return _renderTargets[rt.Handle];
+            switch (rt)
+            {
+                case RenderTargetBase based:
+                    return _renderTargets[based.Handle];
+                default:
+                    throw new NotImplementedException();
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -302,6 +323,8 @@ namespace Robust.Client.Graphics.Clyde
             // Renderbuffer handle
             public GLHandle DepthStencilHandle;
             public long MemoryPressure;
+
+            public TextureSampleParameters? SampleParameters;
         }
 
         private abstract class RenderTargetBase : IRenderTarget

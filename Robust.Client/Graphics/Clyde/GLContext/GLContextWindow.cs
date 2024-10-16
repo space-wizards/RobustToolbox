@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
@@ -212,8 +212,8 @@ namespace Robust.Client.Graphics.Clyde
                 GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
                 Clyde.CheckGlError();
 
-                window.BlitDoneEvent?.Set();
                 Clyde._windowing!.WindowSwapBuffers(window.Reg);
+                window.BlitDoneEvent?.Set();
             }
 
             private unsafe void BlitThreadInit(WindowData reg)

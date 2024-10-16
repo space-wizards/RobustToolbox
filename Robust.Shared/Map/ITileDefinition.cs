@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Robust.Shared.Maths;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map
@@ -7,7 +8,7 @@ namespace Robust.Shared.Map
     /// <summary>
     ///     The definition (template) for a grid tile.
     /// </summary>
-    public interface ITileDefinition
+    public interface ITileDefinition : IPrototype
     {
         /// <summary>
         ///     The numeric tile ID used to refer to this tile inside the map datastructure.

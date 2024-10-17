@@ -40,6 +40,9 @@ public sealed class TextEdit : Control
     [Dependency] private readonly IClipboardManager _clipboard = null!;
     [Dependency] private readonly IClyde _clyde = null!;
 
+    public const string StylePropertyStyleBox = "stylebox";
+    public StyleBox? StyleBoxOverride { get; set; }
+
     // @formatter:off
     public const string StylePropertyCursorColor    = "cursor-color";
     public const string StylePropertySelectionColor = "selection-color";
@@ -784,15 +787,16 @@ public sealed class TextEdit : Control
 
     protected override Vector2 ArrangeOverride(Vector2 finalSize)
     {
-        var size = base.ArrangeOverride(finalSize);
+        var style = _getStyleBox();
+        var box = UIBox2.FromDimensions(Vector2.Zero, finalSize);
+        _renderBox.Arrange(style.GetContentBox(box, 1));
 
         var renderBoxSize = _renderBox.Size;
-
         _scrollBar.Page = renderBoxSize.Y * UIScale;
 
         UpdateLineBreaks((int)(renderBoxSize.X * UIScale));
 
-        return size;
+        return finalSize;
     }
 
     protected override void FrameUpdate(FrameEventArgs args)
@@ -805,12 +809,12 @@ public sealed class TextEdit : Control
 
         if (_mouseSelectingText)
         {
-            var contentBox = PixelSizeBox;
+            var style = _getStyleBox();
+            var contentBox = style.GetContentBox(PixelSizeBox, UIScale);
 
             var index = GetIndexAtPos(_lastMouseSelectPos);
-
             _cursorPosition = index;
-
+            
             // Only move scrollbar when the cursor is dragging above/below the text control.
             if (_lastMouseSelectPos.Y < contentBox.Top)
             {
@@ -947,7 +951,8 @@ public sealed class TextEdit : Control
         if (IsPlaceholderVisible)
             return default;
 
-        var contentBox = PixelSizeBox;
+        var style = _getStyleBox();
+        var contentBox = style.GetContentBox(PixelSizeBox, UIScale);
         var font = GetFont();
         var uiScale = UIScale;
         horizontalPos *= uiScale;
@@ -1179,7 +1184,29 @@ public sealed class TextEdit : Control
             AddStylePseudoClass(StylePseudoClassNotEditable);
     }
 
+    protected internal override void Draw(DrawingHandleScreen handle)
+    {
+        base.Draw(handle);
 
+        _getStyleBox().Draw(handle, PixelSizeBox, UIScale);
+    }
+
+    [Pure]
+    private StyleBox _getStyleBox()
+    {
+        if (StyleBoxOverride != null)
+        {
+            return StyleBoxOverride;
+        }
+
+        if (TryGetStyleProperty<StyleBox>(StylePropertyStyleBox, out var box))
+        {
+            return box;
+        }
+
+        return UserInterfaceManager.ThemeDefaults.LineEditBox;
+    }
+    
     /// <summary>
     /// Sub-control responsible for doing the actual rendering work.
     /// </summary>
@@ -1216,6 +1243,8 @@ public sealed class TextEdit : Control
 
         protected internal override void Draw(DrawingHandleScreen handle)
         {
+            base.Draw(handle);
+            
             CursorPos? drawIndexDebug = null;
             if (_master.DebugOverlay && _master._lastDebugMousePos is { } mouse)
             {

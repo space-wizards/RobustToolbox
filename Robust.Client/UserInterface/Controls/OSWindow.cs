@@ -100,7 +100,8 @@ namespace Robust.Client.UserInterface.Controls
         /// Create the window if not already created.
         /// This window is not visible by default, call <see cref="Show"/> to display it.
         /// </summary>
-        public IClydeWindow Create() {
+        public IClydeWindow Create()
+        {
             if (ClydeWindow != null)
                 return ClydeWindow;
 
@@ -143,7 +144,8 @@ namespace Robust.Client.UserInterface.Controls
         /// <summary>
         /// Show the window to the user, creating it if necessary
         /// </summary>
-        public void Show() {
+        public void Show()
+        {
             ClydeWindow = Create();
             ClydeWindow.IsVisible = true;
 

@@ -13,7 +13,7 @@ namespace Robust.Shared.Map
     [PublicAPI]
     public readonly struct TileRef : IEquatable<TileRef>, ISpanFormattable
     {
-        public static TileRef Zero => new(EntityUid.Invalid, Vector2i.Zero, Tile.Empty);
+        public static readonly TileRef Zero = new(EntityUid.Invalid, Vector2i.Zero, Tile.Empty);
 
         /// <summary>
         ///     Grid Entity this Tile belongs to.

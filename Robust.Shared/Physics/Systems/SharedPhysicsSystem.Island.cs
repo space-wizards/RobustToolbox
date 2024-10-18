@@ -194,6 +194,13 @@ public abstract partial class SharedPhysicsSystem
     private const int VelocityConstraintsPerThread = 16;
     private const int PositionConstraintsPerThread = 16;
 
+    public delegate void LinearDampingOverrideHandler(ref Entity<PhysicsComponent, TransformComponent> entity, ref float? linearDampingOverride);
+
+    /// <summary>
+    ///     Invoked to allow content to override linear damping for objects.
+    /// </summary>
+    public event LinearDampingOverrideHandler? OnGetLinearDampingOverride;
+
     #region Setup
 
     private void InitializeIsland()
@@ -719,8 +726,9 @@ public abstract partial class SharedPhysicsSystem
         for (var i = 0; i < island.Bodies.Count; i++)
         {
             var body = island.Bodies[i];
+            var xform = xformQuery.GetComponent(body.Owner);
             var (worldPos, worldRot) =
-                _transform.GetWorldPositionRotation(xformQuery.GetComponent(body.Owner), xformQuery);
+                _transform.GetWorldPositionRotation(xform, xformQuery);
 
             var transform = new Transform(worldPos, worldRot);
             var position = Physics.Transform.Mul(transform, body.LocalCenter);
@@ -743,7 +751,12 @@ public abstract partial class SharedPhysicsSystem
 
                 angularVelocity += body.InvI * body.Torque * data.FrameTime;
 
-                linearVelocity *= Math.Clamp(1.0f - data.FrameTime * body.LinearDamping, 0.0f, 1.0f);
+                float? linearDampingOverride = null;
+                var entity = new Entity<PhysicsComponent, TransformComponent>(body.Owner, body, xform);
+                OnGetLinearDampingOverride?.Invoke(ref entity, ref linearDampingOverride);
+                var linearDamping = linearDampingOverride ?? body.LinearDamping;
+
+                linearVelocity *= Math.Clamp(1.0f - data.FrameTime * linearDamping, 0.0f, 1.0f);
                 angularVelocity *= Math.Clamp(1.0f - data.FrameTime * body.AngularDamping, 0.0f, 1.0f);
             }
 

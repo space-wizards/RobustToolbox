@@ -8,6 +8,7 @@
     <NoWarn>NU1701;CA1416</NoWarn>
     <OutputPath>../bin/Client</OutputPath>
     <RobustILLink>true</RobustILLink>
+    <ViewVariables>true</ViewVariables>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="DiscordRichPresence" PrivateAssets="compile" />

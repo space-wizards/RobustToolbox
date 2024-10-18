@@ -12,18 +12,17 @@ namespace Robust.UnitTesting.Shared.Maths
     [TestOf(typeof(Matrix3x2))]
     public sealed class Matrix3_Test
     {
-        [Test]
-        public void GetRotationTest()
+        private static readonly TestCaseData[] Rotations = new TestCaseData[]
         {
-            Assert.That(Matrix3x2.Identity.Rotation(), Is.EqualTo(Angle.Zero));
+            new(Matrix3x2.Identity, Angle.Zero),
+            new(Matrix3x2.CreateRotation(MathF.PI / 2f), new Angle(Math.PI / 2)),
+            new(Matrix3x2.CreateRotation(MathF.PI), new Angle(Math.PI)),
+        };
 
-            var piOver2 = new Angle(Math.PI / 2);
-            var piOver2Mat = Matrix3Helpers.CreateRotation(piOver2.Theta);
-            Assert.That(piOver2Mat.Rotation(), Is.EqualTo(piOver2));
-
-            var pi = new Angle(Math.PI);
-            var piMat = Matrix3Helpers.CreateRotation(pi.Theta);
-            Assert.That(piMat.Rotation(), Is.EqualTo(pi));
+        [Test, TestCaseSource(nameof(Rotations))]
+        public void GetRotationTest(Matrix3x2 matrix, Angle angle)
+        {
+            Assert.That(angle, Is.EqualTo(matrix.Rotation()));
         }
 
         [Test]
@@ -35,7 +34,7 @@ namespace Robust.UnitTesting.Shared.Maths
             var origin = new Vector2(0, 0);
             var result = Vector2.Transform(origin, matrix);
 
-            Assert.That(control == result, Is.True, result.ToString);
+            Assert.That(control, Is.EqualTo(result), result.ToString);
         }
 
         private static readonly IEnumerable<(Vector2, double)> _rotationTests = new[]

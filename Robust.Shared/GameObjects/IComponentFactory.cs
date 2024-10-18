@@ -77,6 +77,10 @@ namespace Robust.Shared.GameObjects
         /// <returns>The availability of the component.</returns>
         ComponentAvailability GetComponentAvailability(string componentName, bool ignoreCase = false);
 
+        public void RegisterNetworkedFields<T>(params string[] fields) where T : IComponent;
+
+        public void RegisterNetworkedFields(ComponentRegistration compReg, params string[] fields);
+
         /// <summary>
         /// Slow-path for Type -> CompIdx mapping without generics.
         /// </summary>

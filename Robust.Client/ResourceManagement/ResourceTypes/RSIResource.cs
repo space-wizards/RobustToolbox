@@ -183,6 +183,7 @@ namespace Robust.Client.ResourceManagement
             data.DimX = dimensionX;
             data.CallbackOffsets = callbackOffsets;
             data.LoadParameters = metadata.LoadParameters;
+            data.AtlasGroup = metadata.AtlasGroup;
         }
 
         internal static void LoadPostTexture(LoadStepData data)
@@ -386,6 +387,24 @@ namespace Robust.Client.ResourceManagement
             public Vector2i AtlasOffset;
             public RSI Rsi = default!;
             public TextureLoadParameters LoadParameters;
+
+            /// <summary>
+            /// Integer used to identify how different textures should be grouped together into atlases.
+            /// Negative values imply that the texture should not be put on an atlas.
+            /// </summary>
+            public int AtlasGroup;
+
+            /// <summary>
+            /// Comparer used for determining the order in which textures should be placed into the texture atlas.
+            /// </summary>
+            public static int Comparison(LoadStepData b, LoadStepData a)
+            {
+                var cmp = b.AtlasGroup.CompareTo(a.AtlasGroup);
+                if (cmp != 0)
+                    return cmp;
+
+                return (b.AtlasSheet?.Height ?? 0).CompareTo(a.AtlasSheet?.Height ?? 0);
+            }
         }
 
         internal struct StateReg

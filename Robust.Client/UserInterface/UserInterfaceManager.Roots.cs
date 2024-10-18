@@ -25,14 +25,14 @@ internal sealed partial class UserInterfaceManager
             throw new ArgumentException("Window already has a UI root.");
         }
 
-        var cvarScale = _configurationManager.GetCVar(CVars.DisplayUIScale);
         var newRoot = new WindowRoot(window)
         {
             MouseFilter = Control.MouseFilterMode.Ignore,
             HorizontalAlignment = Control.HAlignment.Stretch,
-            VerticalAlignment = Control.VAlignment.Stretch,
-            UIScaleSet = cvarScale == 0f ? window.ContentScale.X : cvarScale
+            VerticalAlignment = Control.VAlignment.Stretch
         };
+
+        newRoot.UIScaleSet = CalculateAutoScale(newRoot);
 
         _roots.Add(newRoot);
         _windowsToRoot.Add(window.Id, newRoot);

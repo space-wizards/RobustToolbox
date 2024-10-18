@@ -343,6 +343,8 @@ namespace Robust.Client.Graphics.Clyde
                 if (isMain)
                     _mainWindow = reg;
 
+                reg.IsVisible = parameters.Visible;
+
                 _windows.Add(reg);
                 _windowHandles.Add(reg.Handle);
 

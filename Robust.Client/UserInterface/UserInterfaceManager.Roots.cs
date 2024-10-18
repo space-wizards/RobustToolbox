@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared;
 using Robust.Shared.Map;
 using Robust.Shared.Utility;
 
@@ -24,12 +25,13 @@ internal sealed partial class UserInterfaceManager
             throw new ArgumentException("Window already has a UI root.");
         }
 
+        var cvarScale = _configurationManager.GetCVar(CVars.DisplayUIScale);
         var newRoot = new WindowRoot(window)
         {
             MouseFilter = Control.MouseFilterMode.Ignore,
             HorizontalAlignment = Control.HAlignment.Stretch,
             VerticalAlignment = Control.VAlignment.Stretch,
-            UIScaleSet = window.ContentScale.X
+            UIScaleSet = cvarScale == 0f ? window.ContentScale.X : cvarScale
         };
 
         _roots.Add(newRoot);

@@ -42,7 +42,7 @@ namespace Robust.Client.GameStates
         private uint _nextInputCmdSeq = 1;
         private readonly Queue<FullInputCmdMessage> _pendingInputs = new();
 
-        private readonly Queue<(uint sequence, GameTick sourceTick, EntityEventArgs msg, object sessionMsg)>
+        private readonly Queue<(uint sequence, GameTick sourceTick, object msg, object sessionMsg)>
             _pendingSystemMessages
                 = new();
 
@@ -504,9 +504,7 @@ namespace Robust.Client.GameStates
 
                 while (hasPendingMessage && pendingMessagesEnumerator.Current.sourceTick <= _timing.CurTick)
                 {
-                    var msg = pendingMessagesEnumerator.Current.msg;
-
-                    _entities.EventBus.RaiseEvent(EventSource.Local, msg);
+                    _entities.EventBus.RaiseEvent(EventSource.Local, pendingMessagesEnumerator.Current.msg);
                     _entities.EventBus.RaiseEvent(EventSource.Local, pendingMessagesEnumerator.Current.sessionMsg);
                     hasPendingMessage = pendingMessagesEnumerator.MoveNext();
                 }

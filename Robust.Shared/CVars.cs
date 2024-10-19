@@ -1106,6 +1106,14 @@ namespace Robust.Shared
             CVarDef.Create("display.thread_window_blit", true, CVar.CLIENTONLY);
 
         /// <summary>
+        /// Diagnostic flag for testing. When using a separate thread for multi-window blitting,
+        /// should the worker be unblocked before the SwapBuffers(). Setting to true may improve
+        /// performance but may cause crashes or rendering errors.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayThreadUnlockBeforeSwap =
+            CVarDef.Create("display.thread_unlock_before_swap", false, CVar.CLIENTONLY);
+
+        /// <summary>
         /// Buffer size of input command channel from windowing thread to main game thread.
         /// </summary>
         public static readonly CVarDef<int> DisplayInputBufferSize =

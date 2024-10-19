@@ -176,6 +176,7 @@ namespace Robust.Client.Graphics.Clyde
                         window.BlitDoneEvent!.Reset();
                         window.BlitStartEvent!.Set();
                         window.BlitDoneEvent.Wait();
+                        window.UnlockBeforeSwap = Clyde._cfg.GetCVar(CVars.DisplayThreadUnlockBeforeSwap);
                     }
                 }
                 else
@@ -212,8 +213,15 @@ namespace Robust.Client.Graphics.Clyde
                 GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
                 Clyde.CheckGlError();
 
+                if (window.UnlockBeforeSwap)
+                {
+                    window.BlitDoneEvent?.Set();
+                }
                 Clyde._windowing!.WindowSwapBuffers(window.Reg);
-                window.BlitDoneEvent?.Set();
+                if (!window.UnlockBeforeSwap)
+                {
+                    window.BlitDoneEvent?.Set();
+                }
             }
 
             private unsafe void BlitThreadInit(WindowData reg)
@@ -336,6 +344,7 @@ namespace Robust.Client.Graphics.Clyde
                 public Thread? BlitThread;
                 public ManualResetEventSlim? BlitStartEvent;
                 public ManualResetEventSlim? BlitDoneEvent;
+                public bool UnlockBeforeSwap;
             }
         }
     }

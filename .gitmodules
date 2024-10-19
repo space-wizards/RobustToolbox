@@ -13,3 +13,6 @@
 [submodule "cefglue"]
 	path = cefglue
 	url = https://github.com/space-wizards/cefglue.git
+[submodule "netserializer"]
+	path = netserializer
+	url = https://github.com/space-wizards/netserializer.git

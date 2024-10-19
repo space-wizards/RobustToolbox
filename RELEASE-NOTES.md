@@ -54,6 +54,19 @@ END TEMPLATE-->
 *None yet*
 
 
+## 237.1.0
+
+### New features
+
+* csi's auto import-system can now handle generic types.
+* csi's reflection helpers (like `fld()`) handle private members up the inheritance chain.
+
+### Bugfixes
+
+* Fix `UniqueIndexHkm<,>` and, by extension, entity data storage memory leaking.
+* Fix bugs related to UIScale on `OSWindow`s.
+
+
 ## 237.0.0
 
 ### Breaking changes

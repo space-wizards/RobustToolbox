@@ -43,13 +43,10 @@ namespace Robust.Client.Graphics.Clyde
 
                     return new[]
                     {
+                        GetVersionSpec(RendererOpenGLVersion.GL33),
                         GetVersionSpec(RendererOpenGLVersion.GL31),
                         GetVersionSpec(RendererOpenGLVersion.GLES3),
                         GetVersionSpec(RendererOpenGLVersion.GLES2),
-                        // Preferentially create renderers with versions other than 3.3
-                        // As activating the Steam Overlay with multiple 3.3 windows
-                        // causes the overlay to get corrupted.
-                        GetVersionSpec(RendererOpenGLVersion.GL33),
                     };
                 }
             }

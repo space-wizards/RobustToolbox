@@ -236,6 +236,40 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
     }
 
     /// <summary>
+    /// Removes excess whitespace at the end of markup.
+    /// </summary>
+    public void TrimEnd()
+    {
+        for (var i = _nodes.Count - 1; i >= 0; i--)
+        {
+            var node = _nodes[i];
+            var markup = node.Value;
+
+            if (markup.StringValue == null)
+                break;
+
+            var value = markup.StringValue.Trim();
+
+            // If we stripped all text then remove the node and continue.
+            if (string.IsNullOrEmpty(value))
+            {
+                _nodes.RemoveAt(i);
+                continue;
+            }
+
+            // Only trimmed some of it so update node and stop.
+            if (value != node.Value.StringValue)
+            {
+                _nodes.RemoveAt(i);
+                markup = markup with { StringValue = value };
+                _nodes.Add(new MarkupNode(value, markup, node.Attributes));
+            }
+
+            break;
+        }
+    }
+
+    /// <summary>
     /// Returns an enumerator that enumerates every rune for each text node contained in this formatted text instance.
     /// </summary>
     public FormattedMessageRuneEnumerator EnumerateRunes()

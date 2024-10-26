@@ -86,7 +86,7 @@ namespace Robust.Server
         [Dependency] private readonly ITaskManager _taskManager = default!;
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
         [Dependency] private readonly IModLoaderInternal _modLoader = default!;
-        [Dependency] private readonly IWatchdogApi _watchdogApi = default!;
+        [Dependency] private readonly IWatchdogApiInternal _watchdogApi = default!;
         [Dependency] private readonly HubManager _hubManager = default!;
         [Dependency] private readonly IScriptHost _scriptHost = default!;
         [Dependency] private readonly IMetricsManagerInternal _metricsManager = default!;
@@ -566,7 +566,7 @@ namespace Robust.Server
             // Don't start the main loop. This only works if a reason is passed to Shutdown(...)
             if (_shutdownReason != null)
             {
-                _logger.Fatal("Shutdown has been requested before the main loop has been started, complying.");
+                _logger.Fatal("Shutdown has been requested before the main loop has been started, complying. Reason: {0}", _shutdownReason);
             }
             else _mainLoop.Run();
 

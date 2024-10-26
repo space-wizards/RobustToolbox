@@ -336,9 +336,20 @@ internal partial class Clyde
             _sawmill.Warning("WindowSetMonitor not implemented on SDL2");
         }
 
+        public void WindowSetSize(WindowReg window, Vector2i size)
+        {
+            SendCmd(new CmdWinSetSize(WinPtr(window), size.X, size.Y));
+        }
+
         public void WindowSetVisible(WindowReg window, bool visible)
         {
+            window.IsVisible = visible;
             SendCmd(new CmdWinSetVisible(WinPtr(window), visible));
+        }
+
+        private static void WinThreadWinSetSize(CmdWinSetSize cmd)
+        {
+            SDL_SetWindowSize(cmd.Window, cmd.W, cmd.H);
         }
 
         private static void WinThreadWinSetVisible(CmdWinSetVisible cmd)

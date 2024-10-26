@@ -39,9 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* The game server's `/update` endpoint now supports passing more information on why an update is available.
-  * This information is accessible via `IWatchdogApi.RestartRequested`.
-  * Information can be specified by passing a JSON object with a `Reason` code and `Message` field.
+*None yet*
 
 ### Bugfixes
 
@@ -49,11 +47,43 @@ END TEMPLATE-->
 
 ### Other
 
-* Made `WatchdogApi` and some members of `IWatchdogApi` private. These symbols should never have been accessed by content.
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 237.1.0
+
+### New features
+
+* csi's auto import-system can now handle generic types.
+* csi's reflection helpers (like `fld()`) handle private members up the inheritance chain.
+
+### Bugfixes
+
+* Fix `UniqueIndexHkm<,>` and, by extension, entity data storage memory leaking.
+* Fix bugs related to UIScale on `OSWindow`s.
+
+
+## 237.0.0
+
+### Breaking changes
+
+* `IClydeWindow.Size` is now settable, allowing window sizes to be changed after creation.
+
+### New features
+
+* The game server's `/update` endpoint now supports passing more information on why an update is available.
+  * This information is accessible via `IWatchdogApi.RestartRequested`.
+  * Information can be specified by passing a JSON object with a `Reason` code and `Message` field.
+* Added an "Erase" button to the tile spawn menu.
+* Added `OSWindow.Create()`, which allows OS windows to be created & initialised without immediately opening/showing them.
+
+### Other
+
+* Made `WatchdogApi` and some members of `IWatchdogApi` private. These symbols should never have been accessed by content.
 
 
 ## 236.1.0

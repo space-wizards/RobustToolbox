@@ -70,13 +70,7 @@ namespace Robust.Shared.Utility
         {
             InitializedCheck();
 
-            var c = _index.Count;
-
-            if (c == 0) return false;
-
-            _index[key] = new HashSet<TValue>();
-
-            return c > _index.Count;
+            return _index.Remove(key);
         }
 
         /// <inheritdoc />

@@ -13,7 +13,7 @@
         </ScrollContainer>
         <BoxContainer Orientation="Horizontal">
             <Button Name="ReplaceButton" Access="Public" ToggleMode="True" Text="{Loc entity-spawn-window-replace-button-text}"/>
-            <Button Name="EraseButton" Access="Public" ToggleMode="True" Text="{Loc entity-spawn-window-erase-button-text}"/>
+            <Button Name="EraseButton" Access="Public" ToggleMode="True" Text="{Loc window-erase-button-text}"/>
             <OptionButton Name="OverrideMenu" Access="Public" HorizontalExpand="True" ToolTip="{Loc entity-spawn-window-override-menu-tooltip}" />
         </BoxContainer>
         <Label Name="RotationLabel" Access="Public"/>

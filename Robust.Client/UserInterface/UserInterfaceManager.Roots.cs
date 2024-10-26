@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared;
 using Robust.Shared.Map;
 using Robust.Shared.Utility;
 
@@ -28,9 +29,10 @@ internal sealed partial class UserInterfaceManager
         {
             MouseFilter = Control.MouseFilterMode.Ignore,
             HorizontalAlignment = Control.HAlignment.Stretch,
-            VerticalAlignment = Control.VAlignment.Stretch,
-            UIScaleSet = window.ContentScale.X
+            VerticalAlignment = Control.VAlignment.Stretch
         };
+
+        newRoot.UIScaleSet = CalculateAutoScale(newRoot);
 
         _roots.Add(newRoot);
         _windowsToRoot.Add(window.Id, newRoot);

@@ -517,7 +517,7 @@ namespace Robust.Client.Graphics.Clyde
                 RenderTarget = renderTarget;
             }
 
-            public Vector2i Size { get; } = default;
+            public Vector2i Size { get; set; } = default;
             public bool IsDisposed { get; private set; }
             public WindowId Id { get; set; }
             public IRenderTarget RenderTarget { get; }

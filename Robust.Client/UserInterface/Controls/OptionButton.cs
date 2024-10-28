@@ -47,6 +47,8 @@ namespace Robust.Client.UserInterface.Controls
 
         public event Action<ItemSelectedEventArgs>? OnItemSelected;
 
+        public event Action? OnDropdownHide;
+
         public string Prefix { get; set; } = string.Empty;
         public bool PrefixMargin { get; set; } = true;
 
@@ -171,6 +173,7 @@ namespace Robust.Client.UserInterface.Controls
         private void OnPopupHide()
         {
             UserInterfaceManager.ModalRoot.RemoveChild(_popup);
+            OnDropdownHide?.Invoke();
         }
 
         private void ButtonOnPressed(ButtonEventArgs obj)

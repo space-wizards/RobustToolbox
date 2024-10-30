@@ -583,11 +583,11 @@ namespace Robust.Client.Graphics.Clyde
             return true;
         }
 
-        private sealed class LightCapacityComparer : IComparer<(PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot)>
+        private sealed class LightCapacityComparer : IComparer<(EntityUid _, PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot)>
         {
             public int Compare(
-                (PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot) x,
-                (PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot) y)
+                (EntityUid _, PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot) x,
+                (EntityUid _, PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot) y)
             {
                 if (x.light.CastShadows && !y.light.CastShadows) return 1;
                 if (!x.light.CastShadows && y.light.CastShadows) return -1;
@@ -595,11 +595,11 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private sealed class ShadowCapacityComparer : IComparer<(PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot)>
+        private sealed class ShadowCapacityComparer : IComparer<(EntityUid _, PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot)>
         {
             public int Compare(
-                (PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot) x,
-                (PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot) y)
+                (EntityUid _, PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot) x,
+                (EntityUid _, PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot) y)
             {
                 return x.distanceSquared.CompareTo(y.distanceSquared);
             }

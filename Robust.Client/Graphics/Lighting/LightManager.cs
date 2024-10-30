@@ -10,8 +10,5 @@ namespace Robust.Client.Graphics
         public bool DrawLighting { get; set; } = true;
         public bool LockConsoleAccess { get; set; } = false;
         public Color AmbientLightColor { get; set; } = Color.FromSrgb(Color.Black);
-        public bool NightVision { get; set; } = false;
-        public float LightSensitivity { get; set; } = 0f;
-        public Color NightVisionColor { get; set; } = new(0.1f, 0.1f, 0.1f);
     }
 }

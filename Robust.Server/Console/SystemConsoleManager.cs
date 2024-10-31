@@ -278,7 +278,7 @@ namespace Robust.Server.Console
 
         public void DrawCommandLine()
         {
-        	if (Con.WindowWidth <= 0) return;
+            if (Con.WindowWidth <= 0) return;
             ClearCurrentLine();
             Con.SetCursorPosition(0, Con.CursorTop);
             Con.Write("> " + currentBuffer);

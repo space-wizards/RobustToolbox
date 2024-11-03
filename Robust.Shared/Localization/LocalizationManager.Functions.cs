@@ -205,7 +205,7 @@ namespace Robust.Shared.Localization
         }
 
         /// <summary>
-        /// Returns the dative form pronoun for the specified entity based on gender and number.
+        /// Returns the dative form pronoun for the entity's gender.
         /// This method is intended for languages with a dative case, where indirect objects
         /// (e.g., "to him," "for her") require specific forms. Not applicable for en-US locale.
         /// </summary>

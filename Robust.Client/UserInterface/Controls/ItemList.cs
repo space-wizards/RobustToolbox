@@ -178,12 +178,24 @@ namespace Robust.Client.UserInterface.Controls
 
         /// <summary>
         /// Replace the current list of items with the items in newItems.
-        /// newItems should be in the order which they should appear in the list.
+        /// newItems should be in the order which they should appear in the list,
+        /// and items are considered equal if the Item text is equal in each item.
+        ///
         /// Provided the existing items have not been re-ordered relative to each
-        /// other, Any items which already exist in the list are not destroyed,
+        /// other, any items which already exist in the list are not destroyed,
         /// which maintains consistency of scrollbars, selected items, etc.
         /// </summary>
         /// <param name="newItems">The list of items to update this list to</param>
+        public void SetItems(List<Item> newItems)
+        {
+            SetItems(newItems, (a,b) => string.Compare(a.Text, b.Text));
+        }
+
+        /// <inheritdoc />
+        /// <summary>
+        /// This variant allows for a custom equality operator to compare items, when
+        /// comparing the Item text is not desired.
+        /// </summary>
         /// <param name="itemCmp">Comparison function to compare existing to new items.</param>
         public void SetItems(List<Item> newItems, Comparison<Item> itemCmp)
         {
@@ -214,14 +226,14 @@ namespace Robust.Client.UserInterface.Controls
                 }
             }
 
-            // Any remaining items in our list don't exist in `newItems`, so remove them
+            // Any remaining items in our list don't exist in `newItems` so remove them
             while (i >= 0)
             {
                 RemoveAt(i);
                 i--;
             }
 
-            // And finally, any remaining items in `newItems`, don't exist in our list. Create them.
+            // And finally, any remaining items in `newItems` don't exist in our list. Create them.
             while (j >= 0)
             {
                 Insert(0, newItems[j]);

@@ -302,16 +302,6 @@ namespace Robust.Client.UserInterface.Controls
             return new Vector2(h, v);
         }
 
-        public void SetScrollValue(Vector2 value)
-        {
-            _suppressScrollValueChanged = true;
-            _hScrollBar.Value = value.X;
-            _vScrollBar.Value = value.Y;
-            _suppressScrollValueChanged = false;
-            InvalidateArrange();
-            _queueScrolled = true;
-        }
-
         private void _scrollValueChanged(Range obj)
         {
             if (_suppressScrollValueChanged)
@@ -322,5 +312,66 @@ namespace Robust.Client.UserInterface.Controls
             InvalidateArrange();
             _queueScrolled = true;
         }
+
+        #region Scrollbat Set Methods
+
+        /// <summary>
+        /// Sets the scrollbars thumbs position to a value from 1 (the start of the scrollbar) to 100 (the end of the scrollbar)
+        /// </summary>
+        /// <param name="value">
+        /// The value from 1 to 100 that we want to put the scrollbars thumbs in.
+        /// Any value higher than 100 will just be interpreted as 100
+        /// </param>
+        public void SetScrollValueToPercentage(int? hValue, int? vValue)
+        {
+            if (hValue != null)
+                SetHScrollValueToPercentage(hValue.Value);
+            if (vValue != null)
+                SetVScrollValueToPercentage(vValue.Value);
+        }
+
+        /// <summary>
+        /// Sets the horizontal scrollbar thumb position to a value from 1 (the start of the scrollbar) to 100 (the end of the scrollbar)
+        /// </summary>
+        /// <param name="value">
+        /// The value from 1 to 100 that we want to put the scrollbar thumb in.
+        /// Any value higher than 100 will just be interpreted as 100
+        /// </param>
+        public void SetHScrollValueToPercentage(int value)
+        {
+            var size = _hScrollBar.MaxValue - _hScrollBar.Page;
+            var target = (float) (0.01 * value * size);
+            SetScrollValue(target, null);
+        }
+
+        /// <summary>
+        /// Sets the vertical scrollbar thumb position to a value from 1 (the start of the scrollbar) to 100 (the end of the scrollbar)
+        /// </summary>
+        /// <param name="value">
+        /// The value from 1 to 100 that we want to put the scrollbar thumb in.
+        /// Any value higher than 100 will just be interpreted as 100
+        /// </param>
+        public void SetVScrollValueToPercentage(int value)
+        {
+            var size = _vScrollBar.MaxValue - _vScrollBar.Page;
+            var target = (float) (0.01 * value * size);
+            SetScrollValue(null, target);
+        }
+
+        public void SetScrollValue(Vector2 value) => SetScrollValue(value.X, value.Y);
+
+        public void SetScrollValue(float? hValue, float? vValue)
+        {
+            _suppressScrollValueChanged = true;
+            if (hValue != null)
+                _hScrollBar.Value = hValue.Value;
+            if (vValue != null)
+                _vScrollBar.Value = vValue.Value;
+            _suppressScrollValueChanged = false;
+            InvalidateArrange();
+            _queueScrolled = true;
+        }
+
+        #endregion
     }
 }

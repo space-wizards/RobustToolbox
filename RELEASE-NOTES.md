@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `ImmutableArray<T>` can now be serialized by `RobustSerializer`.
 
 ### Bugfixes
 

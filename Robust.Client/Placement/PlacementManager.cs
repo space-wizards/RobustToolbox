@@ -754,14 +754,14 @@ namespace Robust.Client.Placement
 
             if (CurrentPermission.IsTile)
             {
-                var gridIdOpt = coordinates.GetGridUid(EntityManager);
+                var gridIdOpt = EntityManager.System<SharedTransformSystem>().GetGrid(coordinates);
                 // If we have actually placed something on a valid grid...
-                if (gridIdOpt is EntityUid gridId && gridId.IsValid())
+                if (gridIdOpt is { } gridId && gridId.IsValid())
                 {
                     var grid = EntityManager.GetComponent<MapGridComponent>(gridId);
 
                     // no point changing the tile to the same thing.
-                    if (grid.GetTileRef(coordinates).Tile.TypeId == CurrentPermission.TileType)
+                    if (EntityManager.System<SharedMapSystem>().GetTileRef(gridId, grid, coordinates).Tile.TypeId == CurrentPermission.TileType)
                         return;
                 }
 

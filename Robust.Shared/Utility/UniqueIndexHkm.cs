@@ -89,14 +89,11 @@ namespace Robust.Shared.Utility
         {
             InitializedCheck();
 
-            if (_index.Count == 0) return 0;
-
-            if (!_index.TryGetValue(key, out var set)) return 0;
+            if (!_index.TryGetValue(key, out var set))
+                return 0;
 
             var c = set.Count;
-
-            set.ExceptWith(set);
-
+            set.ExceptWith(values);
             return c - set.Count;
         }
 

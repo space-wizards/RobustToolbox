@@ -159,18 +159,6 @@ internal static class ReflectionExtensions
         throw new NotImplementedException();
     }
 
-    // IEnumerable<EntityUid> ^ IEnumerable<T> -> EntityUid
-    public static Type Intersect(this Type left, Type right)
-    {
-        if (!left.IsGenericType)
-            return left;
-
-        if (!right.IsGenericType)
-            return left;
-
-        return left.GetGenericArguments().First();
-    }
-
     public static void DumpGenericInfo(this Type t)
     {
         Logger.Debug($"Info for {t.PrettyName()}");
@@ -188,8 +176,17 @@ internal static class ReflectionExtensions
 
     public static bool IsAssignableToGeneric(this Type left, Type right, ToolshedManager toolshed, bool recursiveDescent = true)
     {
+        return left.IntersectWithGeneric(right, toolshed, recursiveDescent) is not null;
+    }
+
+    /// <summary>
+    /// Hopefully allows to figure out all the relevant type arguments when intersecting concrete with a generic one. Returns null if no intersection is possible
+    /// Pseudocode: <c>IEnumerable&lt;EntityUid&gt; ^ IEnumerable&lt;T&gt; -&gt; [EntityUid]</c>
+    /// </summary>
+    public static Type[]? IntersectWithGeneric(this Type left, Type right, ToolshedManager toolshed, bool recursiveDescent)
+    {
         if (left.IsAssignableTo(right))
-            return true;
+            return [left];
 
         if (right.IsInterface && !left.IsInterface)
         {
@@ -197,15 +194,15 @@ internal static class ReflectionExtensions
             {
                 if (right.GetMostGenericPossible() != i.GetMostGenericPossible())
                     continue;
-                if (right.IsAssignableToGeneric(i, toolshed, recursiveDescent))
-                    return true;
+                if (right.IntersectWithGeneric(i, toolshed, recursiveDescent) is var outType && outType is not null)
+                    return outType;
             }
         }
 
         if (left.Constructable() && right.IsGenericParameter)
         {
             // TODO: We need a constraint solver and a general overhaul of how toolshed constructs implementations.
-            return true;
+            return [left];
         }
 
         if (left.IsGenericType && right.IsGenericType && left.GenericTypeArguments.Length == right.GenericTypeArguments.Length)
@@ -215,10 +212,11 @@ internal static class ReflectionExtensions
             if (!equal)
                 goto next;
 
-            var res = true;
+            Type[]? res = null;
             foreach (var (leftTy, rightTy) in left.GenericTypeArguments.Zip(right.GenericTypeArguments))
             {
-                res &= leftTy.IsAssignableToGeneric(rightTy, toolshed, false);
+                if (leftTy.IntersectWithGeneric(rightTy, toolshed, false) is var outType && outType is not null)
+                    res = [ .. res ?? [], .. outType ];
             }
 
             return res;
@@ -229,14 +227,14 @@ internal static class ReflectionExtensions
         {
             foreach (var leftSubTy in toolshed.AllSteppedTypes(left))
             {
-                if (leftSubTy.IsAssignableToGeneric(right, toolshed, false))
+                if (leftSubTy.IntersectWithGeneric(right, toolshed, false) is var outType && outType is not null)
                 {
-                    return true;
+                    return outType;
                 }
             }
         }
 
-        return false;
+        return null;
     }
 
     public static bool IsGenericRelated(this Type t)

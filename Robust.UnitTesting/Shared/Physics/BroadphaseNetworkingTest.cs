@@ -42,7 +42,7 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
         var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
         var fixturesSystem = sEntMan.EntitySysManager.GetEntitySystem<FixtureSystem>();
         var physicsSystem = sEntMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>();
-        var mapSystem = sEntMan.System<SharedMapSystem>();
+        var mapSystem = sEntMan.EntitySysManager.GetEntitySystem<SharedMapSystem>();
 
         Assert.DoesNotThrow(() => client.SetConnectTarget(server));
         client.Post(() => netMan.ClientConnect(null!, 0, null!));

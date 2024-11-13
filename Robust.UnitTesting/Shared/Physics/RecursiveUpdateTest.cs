@@ -162,7 +162,7 @@ public sealed class RecursiveUpdateTest
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
         var mapManager = sim.Resolve<IMapManager>();
-        var mapSystem = entManager.System<SharedMapSystem>();
+        var mapSystem = entManager.EntitySysManager.GetEntitySystem<SharedMapSystem>();
         var transforms = entManager.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
         var lookup = entManager.EntitySysManager.GetEntitySystem<EntityLookupSystem>();
 

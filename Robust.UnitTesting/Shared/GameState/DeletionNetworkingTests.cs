@@ -36,7 +36,7 @@ public sealed class DeletionNetworkingTests : RobustIntegrationTest
         var cPlayerMan = client.ResolveDependency<ISharedPlayerManager>();
         var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
         var xformSys = sEntMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
-        var mapSys = sEntMan.System<SharedMapSystem>();
+        var mapSys = sEntMan.EntitySysManager.GetEntitySystem<SharedMapSystem>();
 
         Assert.DoesNotThrow(() => client.SetConnectTarget(server));
         client.Post(() => netMan.ClientConnect(null!, 0, null!));

@@ -28,7 +28,8 @@ public sealed class GridMovement_Test : RobustIntegrationTest
         var mapManager = server.ResolveDependency<IMapManager>();
         var entManager = server.ResolveDependency<IEntityManager>();
         var physSystem = systems.GetEntitySystem<SharedPhysicsSystem>();
-        var mapSystem = entManager.System<SharedMapSystem>();
+        var transformSystem = entManager.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
+        var mapSystem = entManager.EntitySysManager.GetEntitySystem<SharedMapSystem>();
 
         await server.WaitAssertion(() =>
         {
@@ -68,7 +69,7 @@ public sealed class GridMovement_Test : RobustIntegrationTest
             Assert.That(onGridBody.ContactCount, Is.EqualTo(0));
 
             // Alright now move the grid on top of the off grid body, run physics for a frame and see if they contact
-            entManager.GetComponent<TransformComponent>(grid.Owner)._localPosition = new Vector2(10f, 10f);
+            transformSystem.SetLocalPosition(grid.Owner, new Vector2(10f, 10f));
             physSystem.Update(0.001f);
 
             Assert.That(onGridBody.ContactCount, Is.EqualTo(1));

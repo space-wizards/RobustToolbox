@@ -18,7 +18,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             var entManager = server.ResolveDependency<IEntityManager>();
             var mapManager = server.ResolveDependency<IMapManager>();
-            var mapSystem = entManager.System<SharedMapSystem>();
+            var mapSystem = entManager.EntitySysManager.GetEntitySystem<SharedMapSystem>();
 
             await server.WaitAssertion(() =>
             {

@@ -59,7 +59,7 @@ public sealed class GridFixtures_Tests : RobustIntegrationTest
         var entManager = server.ResolveDependency<IEntityManager>();
         var mapManager = server.ResolveDependency<IMapManager>();
         var physSystem = server.ResolveDependency<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>();
-        var mapSystem = entManager.System<SharedMapSystem>();
+        var mapSystem = entManager.EntitySysManager.GetEntitySystem<SharedMapSystem>();
 
         await server.WaitAssertion(() =>
         {

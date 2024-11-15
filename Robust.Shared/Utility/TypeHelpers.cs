@@ -4,11 +4,16 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace Robust.Shared.Utility
 {
     public static class TypeHelpers
     {
+        private static SemaphoreSlim _hasSlim = new(1);
+        private static Dictionary<MemberInfo, Dictionary<Type, bool>> _hasAttribute = new();
+
         /// <summary>
         ///     Returns absolutely all fields, privates, readonlies, and ones from parents.
         /// </summary>
@@ -183,7 +188,18 @@ namespace Robust.Shared.Utility
 
         public static bool HasCustomAttribute<T>(this MemberInfo memberInfo) where T : Attribute
         {
-            return memberInfo.GetCustomAttribute<T>() != null;
+            using (_hasSlim.WaitGuard())
+            {
+                var types = _hasAttribute.GetOrNew(memberInfo);
+                ref var value = ref CollectionsMarshal.GetValueRefOrAddDefault(types, typeof(T), out var existing);
+
+                if (!existing)
+                {
+                    value = memberInfo.GetCustomAttribute<T>() != null;
+                }
+
+                return value;
+            }
         }
 
         public static bool TryGetCustomAttribute<T>(this MemberInfo memberInfo, [NotNullWhen(true)] out T? attribute)

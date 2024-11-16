@@ -669,7 +669,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
         // TODO clamp the offset inside of SetPlaybackPosition() itself.
         var offset = audioP.PlayOffsetSeconds;
-        var maxOffset = Math.Max((float) stream.Length.TotalSeconds - 0.01f, 0f)
+        var maxOffset = Math.Max((float) stream.Length.TotalSeconds - 0.01f, 0f);
         offset = Math.Clamp(offset, 0f, maxOffset);
         source.PlaybackPosition = offset;
 

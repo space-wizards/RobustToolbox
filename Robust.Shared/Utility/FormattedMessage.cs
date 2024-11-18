@@ -183,6 +183,35 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
     }
 
     /// <summary>
+    /// Removes extraneous newlines from the end of the message.
+    /// </summary>
+    public void TrimTrailingNewlines()
+    {
+        while (_nodes.Count > 1)
+        {
+            var last = _nodes[^1];
+            if (last.Name == null && last.Value.TryGetString(out var text) && text.EndsWith('\n'))
+            {
+                text = text.TrimEnd('\n');
+                if (text.Length == 0)
+                {
+                    _nodes.Pop();
+                    continue;
+                }
+                else
+                {
+                    _nodes[^1] = new MarkupNode(text);
+                    break;
+                }
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+
+    /// <summary>
     /// Adds a new open node to the formatted message.
     /// The method for inserting closed nodes: <see cref="Pop"/>. It needs to be
     /// called once for each inserted open node that isn't self closing.

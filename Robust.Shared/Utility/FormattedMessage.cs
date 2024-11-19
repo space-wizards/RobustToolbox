@@ -183,6 +183,31 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
     }
 
     /// <summary>
+    /// Removes extraneous whitespace from the end of the message.
+    /// </summary>
+    public void TrimEnd()
+    {
+        while (_nodes.Count > 1)
+        {
+            var last = _nodes[^1];
+            if (last.Name == null && last.Value.TryGetString(out var text))
+            {
+                string trimmed = text.TrimEnd();
+                if (trimmed.Length == 0)
+                {
+                    _nodes.Pop();
+                    continue;
+                }
+                else if (trimmed != text)
+                {
+                    _nodes[^1] = new MarkupNode(trimmed);
+                }
+            }
+            break;
+        }
+    }
+
+    /// <summary>
     /// Adds a new open node to the formatted message.
     /// The method for inserting closed nodes: <see cref="Pop"/>. It needs to be
     /// called once for each inserted open node that isn't self closing.

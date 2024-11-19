@@ -1064,8 +1064,8 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     private record struct ActorRangeCheckJob() : IParallelRobustJob
     {
-        public EntityQuery<TransformComponent> XformQuery;
-        public SharedUserInterfaceSystem System;
+        public required EntityQuery<TransformComponent> XformQuery;
+        public required SharedUserInterfaceSystem System;
         public readonly List<(EntityUid Ui, Enum Key, InterfaceData Data, EntityUid Actor, bool Result)> ActorRanges = new();
 
         public void Execute(int index)

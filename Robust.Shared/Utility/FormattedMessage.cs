@@ -183,31 +183,27 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
     }
 
     /// <summary>
-    /// Removes extraneous newlines from the end of the message.
+    /// Removes extraneous whitespace from the end of the message.
     /// </summary>
-    public void TrimTrailingNewlines()
+    public void TrimEnd()
     {
         while (_nodes.Count > 1)
         {
             var last = _nodes[^1];
-            if (last.Name == null && last.Value.TryGetString(out var text) && text.EndsWith('\n'))
+            if (last.Name == null && last.Value.TryGetString(out var text))
             {
-                text = text.TrimEnd('\n');
-                if (text.Length == 0)
+                string trimmed = text.TrimEnd();
+                if (trimmed.Length == 0)
                 {
                     _nodes.Pop();
                     continue;
                 }
-                else
+                else if (trimmed != text)
                 {
-                    _nodes[^1] = new MarkupNode(text);
-                    break;
+                    _nodes[^1] = new MarkupNode(trimmed);
                 }
             }
-            else
-            {
-                break;
-            }
+            break;
         }
     }
 

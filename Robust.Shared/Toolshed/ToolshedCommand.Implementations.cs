@@ -101,7 +101,7 @@ public abstract partial class ToolshedCommand
                         {
                             var paramT = x.ConsoleGetPipedArgument()!.ParameterType;
                             var t = pipedType!.IntersectWithGeneric(paramT, Toolshed, true);
-                            return x.MakeGenericMethod([.. typeArguments, .. t]);
+                            return x.MakeGenericMethod([.. typeArguments, .. t!]);
                         }
                         else
                             return x.MakeGenericMethod(typeArguments);

@@ -35,15 +35,15 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* `SharedEyeSystem..SetTarget()` will now also automatically remove the old target from the session's ViewSubscriptions
+*None yet*
 
 ### New features
 
-* `ImmutableArray<T>` can now be serialized by `RobustSerializer`.
+*None yet*
 
 ### Bugfixes
 
-* Fix `UniqueIndex<,>.RemoveRange()` and`UniqueIndexHkm<,>.RemoveRange()` clearing the whole set instead of just removing the specified values.
+*None yet*
 
 ### Other
 
@@ -53,6 +53,40 @@ END TEMPLATE-->
 
 *None yet*
 
+
+## 237.2.0
+
+### Breaking changes
+
+* `SharedEyeSystem..SetTarget()` will now also automatically remove the old target from the session's ViewSubscriptions
+
+### New features
+
+* `ImmutableArray<T>` can now be serialized by `RobustSerializer`.
+* `RequiresLocationAttribute`, used by `ref readonly`, is now allowed by the sandbox.
+* Added `DAT-OBJ()` localization function, for the dative case in certain languages.
+* Client builds for FreeBSD are now made.
+* Added `FormattedMessage.TrimEnd()`.
+* Added Toolshed `with` for `ProtoId<T>`.
+
+### Bugfixes
+
+* Fix `UniqueIndex<,>.RemoveRange()` and`UniqueIndexHkm<,>.RemoveRange()` clearing the whole set instead of just removing the specified values.
+* Avoid server crashes on some weird console setups (notably Pterodactyl).
+* Avoid unhandled exceptions during server shutdown getting swallowed due logging into a disposed logger.
+* Fix sandbox definitions for `Regex` functions returning `MatchCollection`.
+* Fix minor layout bugs with `SplitContainer` and `BoxContainer`.
+
+### Other
+
+* Changed how multi-window rendering presents to the screen with a new CVar `display.thread_unlock_before_swap`. This is an experiment to see if it solves some synchronization issues.
+* View Variables no longer clears the window on refresh while waiting on response from server.
+* `SpinBox` buttons now have a `+` prefix for the positive ones.
+* Improve Toolshed type intersection mechanism
+
+### Internal
+
+* Warning cleanup.
 
 ## 237.1.0
 

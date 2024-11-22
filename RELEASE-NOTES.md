@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Sandbox error reference locator now works with generic method calls.
 
 ### Internal
 

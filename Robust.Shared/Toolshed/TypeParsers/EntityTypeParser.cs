@@ -41,7 +41,7 @@ internal sealed class EntityTypeParser : TypeParser<EntityUid>
     public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext,
         string? argName)
     {
-        return ValueTask<(CompletionResult?, IConError?).FromResult((CompletionResult.FromHint("<NetEntity>"), null));
+        return ValueTask<(CompletionResult?, IConError?)>.FromResult((CompletionResult.FromHint("<NetEntity>"), null));
     }
 }
 

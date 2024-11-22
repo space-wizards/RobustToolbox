@@ -14,7 +14,7 @@ namespace Robust.Client.UserInterface
     /// <summary>
     ///     Used by <see cref="OutputPanel"/> and <see cref="RichTextLabel"/> to handle rich text layout.
     /// </summary>
-    internal struct RichTextEntry
+    public struct RichTextEntry
     {
         private readonly Color _defaultColor;
         private readonly Type[]? _tagsAllowed;
@@ -176,7 +176,7 @@ namespace Robust.Client.UserInterface
 
         public readonly void Draw(
             MarkupTagManager tagManager,
-            DrawingHandleScreen handle,
+            DrawingHandleBase handle,
             Font defaultFont,
             UIBox2 drawBox,
             float verticalOffset,

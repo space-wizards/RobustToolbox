@@ -48,7 +48,7 @@ public sealed class EnumTypeParser<T> : TypeParser<T>
 
     public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext, string? argName)
     {
-        return ValueTask<(CompletionResult?, IConError?)>.FromResult((CompletionResult.FromOptions(Enum.GetNames<T>()), null));
+        return new ValueTask<(CompletionResult?, IConError?)>.FromResult((CompletionResult.FromOptions(Enum.GetNames<T>()), null));
     }
 }
 

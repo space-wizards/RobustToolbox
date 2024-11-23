@@ -2,6 +2,7 @@
 using System.Numerics;
 using System.Text;
 using Robust.Client.ResourceManagement;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 
@@ -132,7 +133,10 @@ namespace Robust.Client.Graphics
             }
 
             baseline += new Vector2(metrics.Value.BearingX, -metrics.Value.BearingY);
-            handle.DrawTexture(texture, baseline, color);
+            if(handle is DrawingHandleWorld worldhandle)
+                worldhandle.DrawTextureRect(texture,  Box2.FromDimensions(baseline, texture.Size));
+            else
+                handle.DrawTexture(texture, baseline, color);
             return metrics.Value.Advance;
         }
 

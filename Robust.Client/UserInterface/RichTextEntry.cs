@@ -14,7 +14,7 @@ namespace Robust.Client.UserInterface
     /// <summary>
     ///     Used by <see cref="OutputPanel"/> and <see cref="RichTextLabel"/> to handle rich text layout.
     /// </summary>
-    public struct RichTextEntry
+    internal struct RichTextEntry
     {
         private readonly Color _defaultColor;
         private readonly Type[]? _tagsAllowed;

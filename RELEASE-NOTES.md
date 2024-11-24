@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added stack-like functions to `ValueList<T>` and added an `AddRange(ReadOnlySpan<T>)` overload.
 
 ### Bugfixes
 

@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - name: Check out content
-        uses: actions/checkout@v4.2.0
+        uses: actions/checkout@v4.2.2
         with:
           repository: space-wizards/space-station-14
           submodules: recursive

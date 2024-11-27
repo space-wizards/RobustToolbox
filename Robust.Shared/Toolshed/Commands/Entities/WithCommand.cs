@@ -24,23 +24,10 @@ internal sealed class WithCommand : ToolshedCommand
         if (inverted)
             return input.Where(x => !EntityManager.HasComponent(x, ty));
 
-        // Special case when iterating over **all** entities.
         if (input is EntitiesCommand.AllEntityEnumerator)
-            return Query(ty).ToArray();
+            return EntityManager.AllEntityUids(ty);
 
         return input.Where(x => EntityManager.HasComponent(x, ty));
-    }
-
-    private IEnumerable<EntityUid> Query(Type ty)
-    {
-        if (!ty.IsAssignableTo(typeof(IComponent)))
-            throw new ArgumentException("Type is not a component");
-
-        var query = EntityManager.AllEntityQueryEnumerator(ty);
-        while (query.MoveNext(out var uid, out _))
-        {
-            yield return uid;
-        }
     }
 
     [CommandImplementation]

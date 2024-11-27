@@ -411,6 +411,30 @@ namespace Robust.Shared.GameObjects
         (EntityUid Uid, T Component)[] AllComponents<T>() where T : IComponent;
 
         /// <summary>
+        /// Returns an array of all entities that have the given component.
+        /// Use sparingly.
+        /// </summary>
+        Entity<T>[] AllEntities<T>() where T : IComponent;
+
+        /// <summary>
+        /// Returns an array of all entities that have the given component.
+        /// Use sparingly.
+        /// </summary>
+        Entity<IComponent>[] AllEntities(Type tComp);
+
+        /// <summary>
+        /// Returns an array uids of all entities that have the given component.
+        /// Use sparingly.
+        /// </summary>
+        EntityUid[] AllEntityUids<T>() where T : IComponent;
+
+        /// <summary>
+        /// Returns an array uids of all entities that have the given component.
+        /// Use sparingly.
+        /// </summary>
+        EntityUid[] AllEntityUids(Type tComp);
+
+        /// <summary>
         /// Returns all instances of a component in a List.
         /// Use sparingly.
         /// </summary>

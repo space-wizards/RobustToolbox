@@ -106,6 +106,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public int Count(Type component)
         {
+            DebugTools.Assert(component.IsAssignableTo(typeof(IComponent)));
             var dict = _entTraitDict[component];
             return dict.Count;
         }
@@ -1107,6 +1108,78 @@ namespace Robust.Shared.GameObjects
                 i++;
             }
 
+            // Count<T> includes "deleted" components that are not returned by MoveNext()
+            // This ensures that we dont return an array with empty/invalid entries
+            Array.Resize(ref comps, i);
+            return comps;
+        }
+
+        public Entity<T>[] AllEntities<T>() where T : IComponent
+        {
+            var query = AllEntityQueryEnumerator<T>();
+            var comps = new Entity<T>[Count<T>()];
+            var i = 0;
+
+            while (query.MoveNext(out var uid, out var comp))
+            {
+                comps[i++] = (uid, comp);
+            }
+
+            // Count<T> includes "deleted" components that are not returned by MoveNext()
+            // This ensures that we dont return an array with empty/invalid entries
+            Array.Resize(ref comps, i);
+            return comps;
+        }
+
+        public Entity<IComponent>[] AllEntities(Type tComp)
+        {
+            var query = AllEntityQueryEnumerator(tComp);
+            var comps = new Entity<IComponent>[Count(tComp)];
+            var i = 0;
+
+            while (query.MoveNext(out var uid, out var comp))
+            {
+                comps[i++] = (uid, comp);
+            }
+
+            // Count() includes "deleted" components that are not returned by MoveNext()
+            // This ensures that we dont return an array with empty/invalid entries
+            Array.Resize(ref comps, i);
+            return comps;
+        }
+
+
+        public EntityUid[] AllEntityUids<T>() where T : IComponent
+        {
+            var query = AllEntityQueryEnumerator<T>();
+            var comps = new EntityUid[Count<T>()];
+            var i = 0;
+
+            while (query.MoveNext(out var uid, out _))
+            {
+                comps[i++] = uid;
+            }
+
+            // Count<T> includes "deleted" components that are not returned by MoveNext()
+            // This ensures that we dont return an array with empty/invalid entries
+            Array.Resize(ref comps, i);
+            return comps;
+        }
+
+        public EntityUid[] AllEntityUids(Type tComp)
+        {
+            var query = AllEntityQueryEnumerator(tComp);
+            var comps = new EntityUid[Count(tComp)];
+            var i = 0;
+
+            while (query.MoveNext(out var uid, out _))
+            {
+                comps[i++] = uid;
+            }
+
+            // Count() includes "deleted" components that are not returned by MoveNext()
+            // This ensures that we dont return an array with empty/invalid entries
+            Array.Resize(ref comps, i);
             return comps;
         }
 

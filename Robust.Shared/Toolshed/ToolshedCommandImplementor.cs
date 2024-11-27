@@ -388,6 +388,7 @@ internal sealed class ToolshedCommandImplementor
         // inputType!.IntersectWithGeneric(parameterType, _toolshed, true);
 
         // I don't really understand the logic behind this
+        // Actually I understand it now, but its just broken or incomplete. Yipeee
         return inputType.Intersect(parameterType);
 }
 

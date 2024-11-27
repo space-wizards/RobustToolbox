@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
@@ -19,10 +20,20 @@ public sealed class ProtoIdTypeParser<T> : TypeParser<ProtoId<T>>
 
     public override bool TryParse(ParserContext ctx, out ProtoId<T> result)
     {
+        result = default;
+        string? proto;
+
         // Prototype ids can be specified without quotes, but for backwards compatibility, we also accept strings with
         // quotes, as previously it **had** to be a string
-        if (!Toolshed.TryParse(ctx, out string? proto))
+        if (ctx.PeekRune() == new Rune('"'))
+        {
+            if (!Toolshed.TryParse(ctx, out proto))
+                return false;
+        }
+        else
+        {
             proto = ctx.GetWord(ParserContext.IsToken);
+        }
 
         if (proto is null || !_proto.HasIndex<T>(proto))
         {

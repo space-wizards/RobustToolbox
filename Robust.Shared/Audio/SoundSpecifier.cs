@@ -27,6 +27,9 @@ public sealed partial class SoundPathSpecifier : SoundSpecifier
     [DataField(Node, customTypeSerializer: typeof(ResPathSerializer), required: true)]
     public ResPath Path { get; private set; }
 
+    override public string ToString() =>
+        $"SoundPathSpecifier({Path})";
+
     [UsedImplicitly]
     private SoundPathSpecifier()
     {
@@ -51,6 +54,9 @@ public sealed partial class SoundCollectionSpecifier : SoundSpecifier
 
     [DataField(Node, customTypeSerializer: typeof(PrototypeIdSerializer<SoundCollectionPrototype>), required: true)]
     public string? Collection { get; private set; }
+
+    override public string ToString() =>
+        $"SoundCollectionSpecifier({Collection})";
 
     [UsedImplicitly]
     public SoundCollectionSpecifier() { }

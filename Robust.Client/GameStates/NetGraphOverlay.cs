@@ -46,7 +46,6 @@ namespace Robust.Client.GameStates
 
         // sum of all data point sizes in bytes
         private int _totalHistoryPayload;
-        private int _totalUncompressed;
 
         public EntityUid WatchEntId { get; set; }
 

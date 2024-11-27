@@ -120,14 +120,10 @@ public abstract class SharedEyeSystem : EntitySystem
         if (TryComp(uid, out ActorComponent? actorComp))
         {
             if (value != null)
-            {
                 _views.AddViewSubscriber(value.Value, actorComp.PlayerSession);
-            }
-            else
-            {
-                // Should never be null here
-                _views.RemoveViewSubscriber(eyeComponent.Target!.Value, actorComp.PlayerSession);
-            }
+
+            if (eyeComponent.Target is { } old)
+                _views.RemoveViewSubscriber(old, actorComp.PlayerSession);
         }
 
         eyeComponent.Target = value;

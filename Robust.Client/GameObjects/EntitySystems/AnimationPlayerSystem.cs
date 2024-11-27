@@ -143,6 +143,14 @@ namespace Robust.Client.GameObjects
             }
 #endif
 
+            foreach (var track in animation.AnimationTracks)
+            {
+                if (track is not AnimationTrackSpriteFlick)
+                    continue;
+
+                track.AdvancePlayback(ent.Owner, 0, 0, 0f);
+            }
+
             ent.Comp.PlayingAnimations.Add(key, playback);
         }
 

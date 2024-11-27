@@ -2,6 +2,7 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -15,11 +16,9 @@ using Robust.Shared.Network;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
-#nullable enable
-
 namespace Robust.Server.ServerStatus
 {
-    public sealed class WatchdogApi : IWatchdogApi, IPostInjectInit
+    internal sealed class WatchdogApi : IWatchdogApiInternal, IPostInjectInit
     {
         [Dependency] private readonly IStatusHost _statusHost = default!;
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
@@ -42,7 +41,7 @@ namespace Robust.Server.ServerStatus
             HttpClientUserAgent.AddUserAgent(_httpClient);
         }
 
-        public void PostInject()
+        void IPostInjectInit.PostInject()
         {
             _sawmill = Logger.GetSawmill("watchdogApi");
 
@@ -52,7 +51,7 @@ namespace Robust.Server.ServerStatus
 
         private async Task<bool> UpdateHandler(IStatusHandlerContext context)
         {
-            if (context.RequestMethod != HttpMethod.Post || context.Url!.AbsolutePath != "/update")
+            if (context.RequestMethod != HttpMethod.Post || context.Url.AbsolutePath != "/update")
             {
                 return false;
             }
@@ -73,7 +72,46 @@ namespace Robust.Server.ServerStatus
                 return true;
             }
 
-            _taskManager.RunOnMainThread(() => UpdateReceived?.Invoke());
+            RestartRequestParameters? parameters = null;
+            if (context.RequestHeaders.TryGetValue("Content-Type", out var contentType)
+                && contentType == MediaTypeNames.Application.Json)
+            {
+                try
+                {
+                    parameters = await context.RequestBodyJsonAsync<RestartRequestParameters>();
+                }
+                catch (JsonException)
+                {
+                    // parameters null so it'll catch the block down below.
+                }
+
+                if (parameters == null)
+                {
+                    await context.RespondErrorAsync(HttpStatusCode.BadRequest);
+                    return true;
+                }
+            }
+
+            RestartRequestedData restartData;
+            if (parameters == null)
+            {
+                restartData = RestartRequestedData.DefaultData;
+            }
+            else
+            {
+                // Allow parsing to fail for forwards compatibility.
+                var reasonCode = Enum.TryParse<RestartRequestedReason>(parameters.Reason, out var code)
+                    ? code
+                    : RestartRequestedReason.Other;
+
+                restartData = new RestartRequestedData(reasonCode, parameters.Message);
+            }
+
+            _taskManager.RunOnMainThread(() =>
+            {
+                RestartRequested?.Invoke(restartData);
+                UpdateReceived?.Invoke();
+            });
 
             await context.RespondAsync("Success", HttpStatusCode.OK);
 
@@ -86,7 +124,7 @@ namespace Robust.Server.ServerStatus
         /// </remarks>
         private async Task<bool> ShutdownHandler(IStatusHandlerContext context)
         {
-            if (context.RequestMethod != HttpMethod.Post || context.Url!.AbsolutePath != "/shutdown")
+            if (context.RequestMethod != HttpMethod.Post || context.Url.AbsolutePath != "/shutdown")
             {
                 return false;
             }
@@ -106,7 +144,8 @@ namespace Robust.Server.ServerStatus
             if (auth != _watchdogToken)
             {
                 _sawmill.Verbose(
-                    "received POST /shutdown with invalid authentication token. Ignoring {0}, {1}", auth,
+                    "received POST /shutdown with invalid authentication token. Ignoring {0}, {1}",
+                    auth,
                     _watchdogToken);
                 await context.RespondErrorAsync(HttpStatusCode.Unauthorized);
                 return true;
@@ -137,6 +176,7 @@ namespace Robust.Server.ServerStatus
         }
 
         public event Action? UpdateReceived;
+        public event Action<RestartRequestedData>? RestartRequested;
 
         public async void Heartbeat()
         {
@@ -203,6 +243,13 @@ namespace Robust.Server.ServerStatus
         {
             // ReSharper disable once RedundantDefaultMemberInitializer
             public string Reason { get; set; } = default!;
+        }
+
+        [UsedImplicitly]
+        private sealed class RestartRequestParameters
+        {
+            public string Reason { get; set; } = nameof(RestartRequestedReason.Other);
+            public string? Message { get; set; }
         }
     }
 }

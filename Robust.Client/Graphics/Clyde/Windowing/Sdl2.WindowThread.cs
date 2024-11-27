@@ -93,6 +93,10 @@ internal partial class Clyde
                     WinThreadWinRequestAttention(cmd);
                     break;
 
+                case CmdWinSetSize cmd:
+                    WinThreadWinSetSize(cmd);
+                    break;
+
                 case CmdWinSetVisible cmd:
                     WinThreadWinSetVisible(cmd);
                     break;
@@ -244,6 +248,11 @@ internal partial class Clyde
 
         private sealed record CmdWinRequestAttention(
             nint Window
+        ) : CmdBase;
+
+        private sealed record CmdWinSetSize(
+            nint Window,
+            int W, int H
         ) : CmdBase;
 
         private sealed record CmdWinSetVisible(

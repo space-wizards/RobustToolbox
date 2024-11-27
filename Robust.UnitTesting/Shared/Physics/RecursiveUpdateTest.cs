@@ -23,12 +23,13 @@ public sealed class RecursiveUpdateTest
         var entManager = sim.Resolve<IEntityManager>();
         var mapManager = sim.Resolve<IMapManager>();
         var xforms = entManager.System<SharedTransformSystem>();
+        var mapSystem = entManager.System<SharedMapSystem>();
         var containers = entManager.System<ContainerSystem>();
 
         var mapId = sim.CreateMap().MapId;
         var grid = mapManager.CreateGridEntity(mapId);
         var guid = grid.Owner;
-        grid.Comp.SetTile(Vector2i.Zero, new Tile(1));
+        mapSystem.SetTile(grid, Vector2i.Zero, new Tile(1));
         Assert.That(entManager.HasComponent<BroadphaseComponent>(guid));
 
         var broadphase = entManager.GetComponent<BroadphaseComponent>(guid);
@@ -161,11 +162,12 @@ public sealed class RecursiveUpdateTest
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
         var mapManager = sim.Resolve<IMapManager>();
+        var mapSystem = entManager.EntitySysManager.GetEntitySystem<SharedMapSystem>();
         var transforms = entManager.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
         var lookup = entManager.EntitySysManager.GetEntitySystem<EntityLookupSystem>();
 
         var mapId = sim.CreateMap().MapId;
-        var map = mapManager.GetMapEntityId(mapId);
+        var map = mapSystem.GetMapOrInvalid(mapId);
         var mapBroadphase = entManager.GetComponent<BroadphaseComponent>(map);
 
         var coords = new EntityCoordinates(map, new Vector2(0.5f, 0.5f));
@@ -216,7 +218,7 @@ public sealed class RecursiveUpdateTest
         // Try again, but this time with a parent change.
         var grid = mapManager.CreateGridEntity(mapId);
         var guid = grid.Owner;
-        grid.Comp.SetTile(Vector2i.Zero, new Tile(1));
+        mapSystem.SetTile(grid, Vector2i.Zero, new Tile(1));
         var gridBroadphase = entManager.GetComponent<BroadphaseComponent>(guid);
         var gridBroadData = new BroadphaseData(guid, EntityUid.Invalid, false, false);
 

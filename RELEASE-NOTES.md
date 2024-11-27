@@ -43,15 +43,138 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fixed `ICommonSession.Ping` always returning zero instead of the ping. Note that this will still return zero for client-side code when trying to get the ping of other players.
+*None yet*
 
 ### Other
 
-*None yet*
+* Sandbox error reference locator now works with generic method calls.
 
 ### Internal
 
 *None yet*
+
+
+## 237.2.0
+
+### Breaking changes
+
+* `SharedEyeSystem..SetTarget()` will now also automatically remove the old target from the session's ViewSubscriptions
+
+### New features
+
+* `ImmutableArray<T>` can now be serialized by `RobustSerializer`.
+* `RequiresLocationAttribute`, used by `ref readonly`, is now allowed by the sandbox.
+* Added `DAT-OBJ()` localization function, for the dative case in certain languages.
+* Client builds for FreeBSD are now made.
+* Added `FormattedMessage.TrimEnd()`.
+* Added Toolshed `with` for `ProtoId<T>`.
+
+### Bugfixes
+
+* Fix `UniqueIndex<,>.RemoveRange()` and`UniqueIndexHkm<,>.RemoveRange()` clearing the whole set instead of just removing the specified values.
+* Avoid server crashes on some weird console setups (notably Pterodactyl).
+* Avoid unhandled exceptions during server shutdown getting swallowed due logging into a disposed logger.
+* Fix sandbox definitions for `Regex` functions returning `MatchCollection`.
+* Fix minor layout bugs with `SplitContainer` and `BoxContainer`.
+
+### Other
+
+* Changed how multi-window rendering presents to the screen with a new CVar `display.thread_unlock_before_swap`. This is an experiment to see if it solves some synchronization issues.
+* View Variables no longer clears the window on refresh while waiting on response from server.
+* `SpinBox` buttons now have a `+` prefix for the positive ones.
+* Improve Toolshed type intersection mechanism
+
+### Internal
+
+* Warning cleanup.
+
+## 237.1.0
+
+### New features
+
+* csi's auto import-system can now handle generic types.
+* csi's reflection helpers (like `fld()`) handle private members up the inheritance chain.
+
+### Bugfixes
+
+* Fix `UniqueIndexHkm<,>` and, by extension, entity data storage memory leaking.
+* Fix bugs related to UIScale on `OSWindow`s.
+
+
+## 237.0.0
+
+### Breaking changes
+
+* `IClydeWindow.Size` is now settable, allowing window sizes to be changed after creation.
+
+### New features
+
+* The game server's `/update` endpoint now supports passing more information on why an update is available.
+  * This information is accessible via `IWatchdogApi.RestartRequested`.
+  * Information can be specified by passing a JSON object with a `Reason` code and `Message` field.
+* Added an "Erase" button to the tile spawn menu.
+* Added `OSWindow.Create()`, which allows OS windows to be created & initialised without immediately opening/showing them.
+
+### Other
+
+* Made `WatchdogApi` and some members of `IWatchdogApi` private. These symbols should never have been accessed by content.
+
+
+## 236.1.0
+
+### New features
+
+* `RequiredMemberAttribute` and `SetsRequiredMembersAttribute` have been added to the sandbox whitelist. I.e., you can now use the `required` keyword in client/shared code.
+* Added `SwitchExpressionException` to sandbox. This type gets used if you have a `switch` expression with no default case.
+* Added `LineEdit.SelectAllOnFocus`.
+* `GameTitle`, `WindowIconSet` and `SplashLogo` are exposed in `IGameController`. These will return said information set in game options or whatever is set in `manifest.yml`.
+* `BoundUserInterface` inheritors now have access to `PlayerManager`.
+* Added `MuteSounds` bool to `BaseButton`.
+* The engine has a new future-proof HWID system.
+  * The auth server now manages HWIDs. This avoids HWID impersonation attacks.
+  * The auth server can return multiple HWIDs. They are accessible in `NetUserData.ModernHWIds`.
+  * The auth server also returns a trust score factor, accessible as `NetUserData.Trust`.
+  * HWID can be disabled client side (`ROBUST_AUTH_ALLOW_HWID` env var) or server side (`net.hwid` cvar).
+  * The old HWID system is still in place. It is intended that content switches to placing new bans against the new HWIDs.
+  * Old HWIDs no longer work if the connection is not authenticated.
+* `launchauth` command now recognizes `SS14_LAUNCHER_APPDATA_NAME`.
+* Added new overload to `EntityLookupSystem.GetEntitiesIntersecting`.
+* Added `Control.RemoveChild(int childIndex)`.
+* `build.entities_category_filter` allows filtering the entity spawn panel to a specific category.
+
+### Bugfixes
+
+* Fixed `SpriteView` offset calculations when scaled.
+
+### Other
+
+* Sprite flicks are applied immediately when started.
+* More warning fixes.
+* If the server gets shut down before finishing startup, the reason is now logged properly.
+
+
+## 236.0.0
+
+### Breaking changes
+
+* Revert IsTouching only being set to true if the contact were laready touching in clientside physics prediction.
+* Don't touch IsTouching if both bodies are asleep for clientside physics contacts. This change and the one above should fix a lot of clientside contact issues, particularly around repeated incorrect clientside contact events.
+
+### New features
+
+* Added an analyzer to detect duplicate Dependency fields.
+
+### Bugfixes
+
+* Auto-networked dictionaries now use `TryAdd()` to avoid duplicate key errors when a dictionary contains multiple unknown networked entities.
+* Fixed `ICommonSession.Ping` always returning zero instead of the ping. Note that this will still return zero for client-side code when trying to get the ping of other players.
+* Hot reload XAML files on rename to fix them potentially not being reloaded with Visual Studio.
+* Fix TabContainer click detection for non-1.0 UI scales.
+
+### Other
+
+* Obsolete some static localization methods.
+* Tried to improve PVS tolerance to exceptions occurring.
 
 
 ## 235.0.0

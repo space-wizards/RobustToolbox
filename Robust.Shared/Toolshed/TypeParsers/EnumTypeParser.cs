@@ -10,7 +10,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Toolshed.TypeParsers;
 
 public sealed class EnumTypeParser<T> : TypeParser<T>
-    where T: unmanaged, Enum
+    where T : unmanaged, Enum
 {
     public override bool TryParse(ParserContext ctx, [NotNullWhen(true)] out T result)
     {
@@ -47,7 +47,7 @@ public sealed class EnumTypeParser<T> : TypeParser<T>
 }
 
 public record InvalidEnum<T>(string Value) : IConError
-    where T: unmanaged, Enum
+    where T : unmanaged, Enum
 {
     public FormattedMessage DescribeInner()
     {

@@ -1,6 +1,6 @@
 <TileSpawnWindow
     xmlns="https://spacestation14.io"
-    Title="Place Tiles"
+    Title="{Loc tile-spawn-window-title}"
     SetSize="300 300"
     MinSize="300 200">
     <BoxContainer Orientation="Vertical">
@@ -9,5 +9,8 @@
             <Button Name="ClearButton" Access="Public" Text="Clear"/>
         </BoxContainer>
         <ItemList Name="TileList" Access="Public" VerticalExpand="True"/>
+        <BoxContainer Orientation="Horizontal">
+            <Button Name="EraseButton" Access="Public" ToggleMode="True" Text="{Loc window-erase-button-text}"/>
+        </BoxContainer>
     </BoxContainer>
 </TileSpawnWindow>

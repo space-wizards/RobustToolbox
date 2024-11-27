@@ -22,6 +22,7 @@ namespace Robust.Shared.Localization
             AddCtxFunction(bundle, "GENDER", FuncGender);
             AddCtxFunction(bundle, "SUBJECT", FuncSubject);
             AddCtxFunction(bundle, "OBJECT", FuncObject);
+            AddCtxFunction(bundle, "DAT-OBJ", FuncDatObj);
             AddCtxFunction(bundle, "POSS-ADJ", FuncPossAdj);
             AddCtxFunction(bundle, "POSS-PRONOUN", FuncPossPronoun);
             AddCtxFunction(bundle, "REFLEXIVE", FuncReflexive);
@@ -201,6 +202,16 @@ namespace Robust.Shared.Localization
         private ILocValue FuncObject(LocArgs args)
         {
             return new LocValueString(GetString("zzzz-object-pronoun", ("ent", args.Args[0])));
+        }
+
+        /// <summary>
+        /// Returns the dative form pronoun for the entity's gender.
+        /// This method is intended for languages with a dative case, where indirect objects
+        /// (e.g., "to him," "for her") require specific forms. Not applicable for en-US locale.
+        /// </summary>
+        private ILocValue FuncDatObj(LocArgs args)
+        {
+            return new LocValueString(GetString("zzzz-dat-object", ("ent", args.Args[0])));
         }
 
         /// <summary>

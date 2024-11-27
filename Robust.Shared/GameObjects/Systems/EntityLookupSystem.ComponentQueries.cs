@@ -495,6 +495,16 @@ public sealed partial class EntityLookupSystem
         GetEntitiesIntersecting(type, mapId, shape, transform, intersecting, flags);
     }
 
+    public void GetEntitiesIntersecting<T>(MapId mapId, Box2Rotated worldBounds, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
+    {
+        if (mapId == MapId.Nullspace) return;
+
+        var shape = new Polygon(worldBounds);
+        var shapeTransform = Physics.Transform.Empty;
+
+        GetEntitiesIntersecting(mapId, shape, shapeTransform, entities, flags);
+    }
+
     public void GetEntitiesIntersecting<T>(MapId mapId, Box2 worldAABB, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
     {
         if (mapId == MapId.Nullspace) return;

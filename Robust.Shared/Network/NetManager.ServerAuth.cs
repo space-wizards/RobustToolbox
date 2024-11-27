@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -79,10 +80,12 @@ namespace Robust.Shared.Network
 
                     var verifyToken = new byte[4];
                     RandomNumberGenerator.Fill(verifyToken);
+                    var wantHwid = _config.GetCVar(CVars.NetHWId);
                     var msgEncReq = new MsgEncryptionRequest
                     {
                         PublicKey = needPk ? CryptoPublicKey : Array.Empty<byte>(),
-                        VerifyToken = verifyToken
+                        VerifyToken = verifyToken,
+                        WantHwid = wantHwid
                     };
 
                     var outMsgEncReq = peer.Peer.CreateMessage();
@@ -153,10 +156,24 @@ namespace Robust.Shared.Network
                         $"Patron: {joinedRespJson.UserData.PatronTier}");
 
                     var userId = new NetUserId(joinedRespJson.UserData!.UserId);
+                    ImmutableArray<ImmutableArray<byte>> modernHWIds = [
+                        ..joinedRespJson.ConnectionData!.Hwids
+                            .Select(h => ImmutableArray.Create(Convert.FromBase64String(h)))
+                    ];
+                    ImmutableArray<byte> legacyHwid = [..msgEncResponse.LegacyHwid];
+                    if (!wantHwid)
+                    {
+                        // If the client somehow sends a HWID even if we didn't ask for one, ignore it.
+                        modernHWIds = [];
+                        legacyHwid = [];
+                    }
+
                     userData = new NetUserData(userId, joinedRespJson.UserData.UserName)
                     {
                         PatronTier = joinedRespJson.UserData.PatronTier,
-                        HWId = msgLogin.HWId
+                        HWId = legacyHwid,
+                        ModernHWIds = modernHWIds,
+                        Trust = joinedRespJson.ConnectionData!.Trust
                     };
                     padSuccessMessage = false;
                     type = LoginType.LoggedIn;
@@ -199,7 +216,8 @@ namespace Robust.Shared.Network
 
                     userData = new NetUserData(userId, name)
                     {
-                        HWId = msgLogin.HWId
+                        HWId = [],
+                        ModernHWIds = []
                     };
                 }
 
@@ -359,8 +377,9 @@ namespace Robust.Shared.Network
         }
 
         // ReSharper disable ClassNeverInstantiated.Local
-        private sealed record HasJoinedResponse(bool IsValid, HasJoinedUserData? UserData);
+        private sealed record HasJoinedResponse(bool IsValid, HasJoinedUserData? UserData, HasJoinedConnectionData? ConnectionData);
         private sealed record HasJoinedUserData(string UserName, Guid UserId, string? PatronTier);
+        private sealed record HasJoinedConnectionData(string[] Hwids, float Trust);
         // ReSharper restore ClassNeverInstantiated.Local
     }
 }

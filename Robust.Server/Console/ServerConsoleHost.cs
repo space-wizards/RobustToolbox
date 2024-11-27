@@ -160,7 +160,6 @@ namespace Robust.Server.Console
         {
             var message = new MsgConCmdReg();
 
-            var counter = 0;
             var toolshedCommands = _toolshed.DefaultEnvironment.AllCommands();
             message.Commands = new List<MsgConCmdReg.Command>(AvailableCommands.Count + toolshedCommands.Count);
             var commands = new HashSet<string>();

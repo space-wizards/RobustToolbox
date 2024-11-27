@@ -12,6 +12,7 @@ namespace Robust.Shared.Toolshed.Commands.Entities;
 internal sealed class WithCommand : ToolshedCommand
 {
     [Dependency] private readonly IComponentFactory _componentFactory = default!;
+    [Dependency] private readonly IPrototypeManager _prototype = default!;
 
     [CommandImplementation]
     public IEnumerable<EntityUid> With(
@@ -51,5 +52,15 @@ internal sealed class WithCommand : ToolshedCommand
     {
         var name = _componentFactory.GetComponentName(ty);
         return input.Where(x => x.Components.ContainsKey(name) ^ inverted);
+    }
+
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public IEnumerable<ProtoId<T>> With<T>(
+        [PipedArgument] IEnumerable<ProtoId<T>> input,
+        [CommandArgument] ProtoId<T> protoId,
+        [CommandInverted] bool inverted
+    ) where T : class, IPrototype
+    {
+        return input.Where(x => (x == protoId) ^ inverted);
     }
 }

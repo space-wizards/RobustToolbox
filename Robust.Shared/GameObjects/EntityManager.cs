@@ -93,6 +93,14 @@ namespace Robust.Shared.GameObjects
         public event Action<Entity<MetaDataComponent>>? EntityAdded;
         public event Action<Entity<MetaDataComponent>>? EntityInitialized;
         public event Action<Entity<MetaDataComponent>>? EntityDeleted;
+
+        /// <summary>
+        /// Internal termination event handlers. This is mainly for exception tolerance, we want to ensure that PVS,
+        /// and other important engine systems can get updated before some content code throws an exception.
+        /// </summary>
+        internal event TerminatingEventHandler? BeforeEntityTerminating;
+        public delegate void TerminatingEventHandler(ref EntityTerminatingEvent ev);
+
         public event Action? BeforeEntityFlush;
         public event Action? AfterEntityFlush;
 
@@ -556,6 +564,7 @@ namespace Robust.Shared.GameObjects
             try
             {
                 var ev = new EntityTerminatingEvent((uid, metadata));
+                BeforeEntityTerminating?.Invoke(ref ev);
                 EventBus.RaiseLocalEvent(uid, ref ev, true);
             }
             catch (Exception e)

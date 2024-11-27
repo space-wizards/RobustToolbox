@@ -168,6 +168,28 @@ internal static class ReflectionExtensions
         throw new NotImplementedException();
     }
 
+    // IEnumerable<EntityUid> ^ IEnumerable<T> -> EntityUid
+    public static Type Intersect(this Type left, Type right)
+    {
+        if (!left.IsGenericType)
+            return left;
+
+        if (!right.IsGenericType)
+            return left;
+
+        var leftGen = left.GetGenericTypeDefinition();
+        var rightGen = right.GetGenericTypeDefinition();
+        var leftArgs = left.GetGenericArguments();
+
+        // TODO TOOLSHED implement this properly.
+        // Currently this only recurses through the first generic argument.
+
+        if (leftGen == rightGen)
+            return Intersect(leftArgs.First(), right.GenericTypeArguments.First());
+
+        return Intersect(leftArgs.First(), right);
+    }
+
     public static void DumpGenericInfo(this Type t)
     {
         Logger.Debug($"Info for {t.PrettyName()}");

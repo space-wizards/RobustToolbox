@@ -388,13 +388,7 @@ internal sealed class ToolshedCommandImplementor
         // inputType!.IntersectWithGeneric(parameterType, _toolshed, true);
 
         // I don't really understand the logic behind this
-        if (!inputType.IsGenericType)
-            return inputType;
-
-        if (!parameterType.IsGenericType)
-            return inputType;
-
-        return inputType.GetGenericArguments().First();
+        return inputType.Intersect(parameterType);
 }
 
     /// <summary>

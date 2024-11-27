@@ -54,7 +54,7 @@ internal sealed class WithCommand : ToolshedCommand
         return input.Where(x => x.Components.ContainsKey(name) ^ inverted);
     }
 
-    /*[CommandImplementation, TakesPipedTypeAsGeneric]
+    [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<ProtoId<T>> With<T>(
         [PipedArgument] IEnumerable<ProtoId<T>> input,
         [CommandArgument] ProtoId<T> protoId,
@@ -62,5 +62,5 @@ internal sealed class WithCommand : ToolshedCommand
     ) where T : class, IPrototype
     {
         return input.Where(x => (x == protoId) ^ inverted);
-    }*/
+    }
 }

@@ -288,7 +288,6 @@ namespace Robust.Shared.Scripting
         {
         }
 
-<<<<<<< HEAD
         /// <inheritdoc />
         public object? ReadVar(string name)
         {

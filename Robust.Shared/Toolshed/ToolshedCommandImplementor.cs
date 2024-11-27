@@ -385,9 +385,17 @@ internal sealed class ToolshedCommandImplementor
     /// <param name="parameterType">The type as specified in the method</param>
     public static Type GetGenericTypeFromPiped(Type inputType, Type parameterType)
     {
+        // inputType!.IntersectWithGeneric(parameterType, _toolshed, true);
+
         // I don't really understand the logic behind this
-        return inputType.Intersect(parameterType);
-    }
+        if (!inputType.IsGenericType)
+            return inputType;
+
+        if (!parameterType.IsGenericType)
+            return inputType;
+
+        return inputType.GetGenericArguments().First();
+}
 
     /// <summary>
     ///     Attempts to fetch a callable shim for a command, aka it's implementation, using the given types.

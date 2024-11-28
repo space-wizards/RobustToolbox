@@ -223,10 +223,10 @@ namespace Robust.Server
 
                 if (!Path.IsPathRooted(fullPath))
                 {
-                    logPath = PathHelpers.ExecutableRelativeFile(fullPath);
+                    fullPath = PathHelpers.ExecutableRelativeFile(fullPath);
                 }
 
-                logHandler = new FileLogHandler(logPath);
+                logHandler = new FileLogHandler(fullPath);
             }
 
             _log.RootSawmill.Level = _config.GetCVar(CVars.LogLevel);

@@ -3,51 +3,50 @@
 on:
   push:
     tags:
-    - 'v*'
+      - "v*"
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: Parse version
-      id: parse_version
-      shell: pwsh
-      run: |
-        $ver = [regex]::Match($env:GITHUB_REF, "refs/tags/v?(.+)").Groups[1].Value
-        echo ("::set-output name=version::{0}" -f $ver)
+      - name: Parse version
+        id: parse_version
+        shell: pwsh
+        run: |
+          $ver = [regex]::Match($env:GITHUB_REF, "refs/tags/v?(.+)").Groups[1].Value
+          echo ("::set-output name=version::{0}" -f $ver)
 
-    - uses: actions/checkout@v3.6.0
-      with:
-        submodules: true
+      - uses: actions/checkout@v4.2.2
+        with:
+          submodules: true
 
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v3.2.0
-      with:
-        dotnet-version: 8.0.x
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v4.1.0
+        with:
+          dotnet-version: 8.0.x
 
-    - name: Package client
-      run: Tools/package_client_build.py -p windows mac linux
+      - name: Package client
+        run: Tools/package_client_build.py -p windows mac linux
 
-    - name: Shuffle files around
-      run: |
-        mkdir "release/${{ steps.parse_version.outputs.version }}"
-        mv release/*.zip "release/${{ steps.parse_version.outputs.version }}"
+      - name: Shuffle files around
+        run: |
+          mkdir "release/${{ steps.parse_version.outputs.version }}"
+          mv release/*.zip "release/${{ steps.parse_version.outputs.version }}"
 
-    - name: Upload files to Suns
-      uses: appleboy/scp-action@master
-      with:
-        host: suns.spacestation14.com
-        username: robust-build-push
-        key: ${{ secrets.CENTCOMM_ROBUST_BUILDS_PUSH_KEY }}
-        source: "release/${{ steps.parse_version.outputs.version }}"
-        target: "/var/lib/robust-builds/builds/"
-        strip_components: 1
+      - name: Upload files to Suns
+        uses: appleboy/scp-action@master
+        with:
+          host: suns.spacestation14.com
+          username: robust-build-push
+          key: ${{ secrets.CENTCOMM_ROBUST_BUILDS_PUSH_KEY }}
+          source: "release/${{ steps.parse_version.outputs.version }}"
+          target: "/var/lib/robust-builds/builds/"
+          strip_components: 1
 
-    - name: Update manifest JSON
-      uses: appleboy/ssh-action@master
-      with:
-        host: suns.spacestation14.com
-        username: robust-build-push
-        key: ${{ secrets.CENTCOMM_ROBUST_BUILDS_PUSH_KEY }}
-        script: /home/robust-build-push/push.ps1 ${{ steps.parse_version.outputs.version }}
-
+      - name: Update manifest JSON
+        uses: appleboy/ssh-action@master
+        with:
+          host: suns.spacestation14.com
+          username: robust-build-push
+          key: ${{ secrets.CENTCOMM_ROBUST_BUILDS_PUSH_KEY }}
+          script: /home/robust-build-push/push.ps1 ${{ steps.parse_version.outputs.version }}

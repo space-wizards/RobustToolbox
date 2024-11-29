@@ -97,6 +97,8 @@ command-description-vars =
     Provides a list of all variables set in this session.
 command-description-any =
     Returns true if there's any values in the input, otherwise false.
+command-description-contains =
+    Returns whether the input enumerable contains the specified value.
 command-description-ArrowCommand =
     Assigns the input to a variable.
 command-description-isempty =

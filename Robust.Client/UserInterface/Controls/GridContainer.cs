@@ -302,7 +302,6 @@ namespace Robust.Client.UserInterface.Controls
             {
                 if (!child.Visible)
                 {
-                    index--;
                     continue;
                 }
 

@@ -1,4 +1,8 @@
-﻿command-description-tpto =
+﻿command-help-usage =
+    Usage:
+command-help-invertible =
+    The behaviour of this command can be inverted using the "not" prefix.
+command-description-tpto =
     Teleport the given entities to some target entity.
 command-description-player-list =
     Returns a list of all player sessions.

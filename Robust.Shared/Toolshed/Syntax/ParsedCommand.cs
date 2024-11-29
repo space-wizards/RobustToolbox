@@ -50,7 +50,7 @@ public sealed class ParsedCommand
         // completion suggestions for modifiers?
         // I.e., if parsing a command name fails, we should take into account that they might be trying to type out
         // "not" or some other command modifier?
-        
+
         if (!TryParseCommand(ctx, out var invocable, out var method, out var implementor))
         {
             result = null;

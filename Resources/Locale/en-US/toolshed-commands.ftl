@@ -19,7 +19,7 @@ command-description-buildinfo =
 command-description-cmd-list =
     Returns a list of all commands, for this side.
 command-description-explain =
-    Explains the given expression, providing command descriptions and signatures.
+    Explains the given expression, providing command descriptions and signatures. This only works for valid expressions, it can't explain commands that it fails to parse.
 command-description-search =
     Searches through the input for the provided value.
 command-description-stopwatch =
@@ -53,10 +53,8 @@ command-description-entities =
     Returns all entities on the server.
 command-description-paused =
     Filters the input entities by whether or not they are paused.
-    This command can be inverted with not.
 command-description-with =
     Filters the input entities by whether or not they have the given component.
-    This command can be inverted with not.
 command-description-fuck =
     Throws an exception.
 command-description-ecscomp-listty =

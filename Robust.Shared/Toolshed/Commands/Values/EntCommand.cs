@@ -6,6 +6,5 @@ namespace Robust.Shared.Toolshed.Commands.Values;
 internal sealed class EntCommand : ToolshedCommand
 {
     [CommandImplementation]
-    public EntityUid Ent(EntityUid ent)
-        => ent;
+    public EntityUid Ent(EntityUid uid) => uid;
 }

@@ -100,7 +100,7 @@ public sealed class ToolshedEnvironment
             var list = new List<CommandSpec>();
             _commandTypeMap.Add(ty, list);
 
-            foreach (var impl in cmd.GetImplementors())
+            foreach (var impl in cmd.CommandImplementors.Values)
             {
                 list.Add(impl.Spec);
                 _allCommands.Add(impl.Spec);

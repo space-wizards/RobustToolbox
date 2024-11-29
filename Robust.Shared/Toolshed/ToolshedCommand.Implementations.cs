@@ -20,10 +20,7 @@ public abstract partial class ToolshedCommand
     {
         type = null;
 
-        ToolshedCommandImplementor? impl;
-        if (subCommand == null)
-            impl = Implementor;
-        else if (!SubCommandImplementors.TryGetValue(subCommand, out impl))
+        if (!CommandImplementors.TryGetValue(subCommand ?? string.Empty, out var impl))
             return false;
 
         if (!impl.TryGetConcreteMethod(pipedType, typeArguments, out var method))

@@ -13,13 +13,17 @@ using Invocable = Func<CommandInvocationArguments, object?>;
 
 public sealed class ParsedCommand
 {
-    public ToolshedCommand Command { get; }
-    public Type ReturnType { get; }
+    public ToolshedCommand Command => Implementor.Owner;
+    public Type ReturnType => Method.Info.ReturnType;
 
     public Type? PipedType => Bundle.PipedType;
+    public string? SubCommand => Bundle.SubCommand;
+
+    internal readonly ToolshedCommandImplementor Implementor;
     internal Invocable Invocable { get; }
     internal CommandArgumentBundle Bundle { get; }
-    public string? SubCommand => Bundle.SubCommand;
+
+    internal readonly ConcreteCommandMethod Method;
 
     public static bool TryParse(ParserContext ctx, Type? piped, [NotNullWhen(true)] out ParsedCommand? result)
     {
@@ -42,7 +46,7 @@ public sealed class ParsedCommand
             return false;
         }
 
-        if (!TryParseCommand(ctx, out var invocable, out var command, out var retType))
+        if (!TryParseCommand(ctx, out var invocable, out var method, out var implementor))
         {
             result = null;
             ctx.Restore(checkpoint);
@@ -52,17 +56,17 @@ public sealed class ParsedCommand
         // No errors or completions should have been generated if the parse was successful.
         DebugTools.AssertNull(ctx.Error);
         DebugTools.AssertNull(ctx.Completions);
-        result = new(ctx.Bundle, invocable, command, retType);
+        result = new(ctx.Bundle, invocable, method.Value, implementor);
         ctx.Bundle = oldBundle;
         return true;
     }
 
-    private ParsedCommand(CommandArgumentBundle bundle, Invocable invocable, ToolshedCommand command, Type returnType)
+    private ParsedCommand(CommandArgumentBundle bundle, Invocable invocable, ConcreteCommandMethod method, ToolshedCommandImplementor implementor)
     {
         Invocable = invocable;
         Bundle = bundle;
-        Command = command;
-        ReturnType = returnType;
+        Implementor = implementor;
+        Method = method;
     }
 
     /// <summary>
@@ -83,12 +87,12 @@ public sealed class ParsedCommand
     private static bool TryParseCommand(
         ParserContext ctx,
         [NotNullWhen(true)] out Invocable? invocable,
-        [NotNullWhen(true)] out ToolshedCommand? command,
-        [NotNullWhen(true)] out Type? returnType)
+        [NotNullWhen(true)] out ConcreteCommandMethod? method,
+        [NotNullWhen(true)] out ToolshedCommandImplementor? implementor)
     {
         invocable = null;
-        command = null;
-        returnType = null;
+        implementor = null;
+        method = null;
         var cmdNameStart = ctx.Index;
         DebugTools.AssertNull(ctx.Error);
         DebugTools.AssertNull(ctx.Completions);
@@ -98,7 +102,7 @@ public sealed class ParsedCommand
             return false;
 
         // Attempt to find the command with the given name
-        if (!ctx.Environment.TryGetCommand(cmdName, out command))
+        if (!ctx.Environment.TryGetCommand(cmdName, out var command))
         {
             if (ctx.GenerateCompletions)
             {
@@ -113,8 +117,7 @@ public sealed class ParsedCommand
         }
 
         // Attempt to parse the subcommand, if applicable.
-        var implementor = command.Implementor;
-        if (!TryParseSubcommand(ctx, command, ref implementor))
+        if (!TryParseImplementor(ctx, command, out implementor))
             return false;
 
         // This is a safeguard to try help prevent information from being accidentally leaked by poorly validated
@@ -142,26 +145,7 @@ public sealed class ParsedCommand
             return false;
         }
 
-        ctx.ConsumeWhitespace();
-        var argsStart = ctx.Index;
-        if (!implementor.TryParseArguments(ctx))
-        {
-            ctx.Error?.Contextualize(ctx.Input, (argsStart, ctx.Index));
-            return false;
-        }
-
-        if (implementor.TryGetInvokable(ctx, out var impl, out returnType))
-        {
-            invocable = impl;
-            return true;
-        }
-
-        if (ctx.GenerateCompletions)
-            return false;
-
-        ctx.Error = new NoImplementationError(ctx);
-        ctx.Error.Contextualize(ctx.Input, (cmdNameStart, ctx.Index));
-        return false;
+        return implementor.TryParse(ctx, out invocable, out method);
     }
 
     private static bool TryParseCommandName(ParserContext ctx, [NotNullWhen(true)] out string? name)
@@ -197,11 +181,15 @@ public sealed class ParsedCommand
         return false;
     }
 
-    private static bool TryParseSubcommand(ParserContext ctx, ToolshedCommand cmd, ref ToolshedCommandImplementor impl)
+    private static bool TryParseImplementor(ParserContext ctx, ToolshedCommand cmd, [NotNullWhen(true)] out ToolshedCommandImplementor? impl)
     {
         if (!cmd.HasSubCommands)
+        {
+            impl = cmd.CommandImplementors[string.Empty];
             return true;
+        }
 
+        impl = null;
         if (!ctx.EatMatch(':'))
         {
             if (ctx.GenerateCompletions)
@@ -227,7 +215,7 @@ public sealed class ParsedCommand
             return false;
         }
 
-        if (!cmd.SubCommandImplementors.TryGetValue(subcmd, out impl!))
+        if (!cmd.CommandImplementors.TryGetValue(subcmd, out impl!))
         {
             if (ctx.GenerateCompletions)
             {
@@ -243,7 +231,7 @@ public sealed class ParsedCommand
         return true;
     }
 
-    private bool _passedInvokeTest = false;
+    private bool _passedInvokeTest;
 
     public object? Invoke(object? pipedIn, IInvocationContext ctx)
     {

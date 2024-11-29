@@ -116,6 +116,23 @@ internal static class ReflectionExtensions
         return type.HasGenericParent(typeof(TypeParser<>));
     }
 
+    public static bool IsCommandArgument(this ParameterInfo param)
+    {
+        if (param.HasCustomAttribute<CommandArgumentAttribute>())
+            return true;
+
+        if (param.HasCustomAttribute<CommandInvertedAttribute>())
+            return false;
+
+        if (param.HasCustomAttribute<PipedArgumentAttribute>())
+            return false;
+
+        if (param.HasCustomAttribute<CommandInvocationContextAttribute>())
+            return false;
+
+        return param.ParameterType != typeof(IInvocationContext);
+    }
+
     public static string PrettyName(this Type type)
     {
         var name = type.Name;
@@ -143,7 +160,12 @@ internal static class ReflectionExtensions
 
     public static ParameterInfo? ConsoleGetPipedArgument(this MethodInfo method)
     {
-        return method.GetParameters().SingleOrDefault(x => x.GetCustomAttribute<PipedArgumentAttribute>() is not null);
+        return method.GetParameters().SingleOrDefault(x => x.HasCustomAttribute<PipedArgumentAttribute>());
+    }
+
+    public static bool ConsoleHasInvertedArgument(this MethodInfo method)
+    {
+        return method.GetParameters().Any(x => x.HasCustomAttribute<CommandInvertedAttribute>());
     }
 
     public static Expression CreateEmptyExpr(this Type t)

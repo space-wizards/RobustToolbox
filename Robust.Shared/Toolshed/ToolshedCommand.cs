@@ -57,7 +57,7 @@ public abstract partial class ToolshedCommand
     /// <summary>
     ///     Whether or not this command has subcommands.
     /// </summary>
-    public bool HasSubCommands => SubCommandImplementors.Count > 0;
+    public bool HasSubCommands;
 
     /// <summary>
     ///     The additional type parameters of this command, specifically which parsers to use.
@@ -68,16 +68,9 @@ public abstract partial class ToolshedCommand
     /// <summary>
     ///     The set of all subcommands on this command.
     /// </summary>
-    public IEnumerable<string> Subcommands => SubCommandImplementors.Keys;
+    public IEnumerable<string> Subcommands => CommandImplementors.Keys;
 
-    internal readonly Dictionary<string, ToolshedCommandImplementor> SubCommandImplementors = new();
-    internal ToolshedCommandImplementor Implementor = default!;
-
-    /// <summary>
-    /// List of parameters for this command and all sub commands. Used for command help usage.
-    /// Dictionary(subCommand, List(pipedType, List(parameterType)))
-    /// </summary>
-    private readonly Dictionary<string, List<(Type?, List<Type>)>> _readonlyParameters = new();
+    internal readonly Dictionary<string, ToolshedCommandImplementor> CommandImplementors = new();
 
     private readonly Dictionary<string, HashSet<Type>> _acceptedTypes = new();
 
@@ -119,7 +112,6 @@ public abstract partial class ToolshedCommand
         var implementations = new HashSet<(string?, Type?)>();
         var argNames =  new HashSet<string>();
         var hasNonSubCommands = false;
-        var hasSubCommands = false;
 
         foreach (var impl in impls)
         {
@@ -127,8 +119,6 @@ public abstract partial class ToolshedCommand
             var hasCtx = false;
             Type? pipeType = null;
             argNames.Clear();
-
-            var orderedParams = new List<Type>();
 
             foreach (var param in impl.GetParameters())
             {
@@ -138,7 +128,6 @@ public abstract partial class ToolshedCommand
                 {
                     if (param.Name == null || !argNames.Add(param.Name))
                         throw new InvalidCommandImplementation($"Command arguments must have a unique name");
-                    orderedParams.Add(param.ParameterType);
                     hasAnyAttribute = true;
                 }
 
@@ -191,7 +180,6 @@ public abstract partial class ToolshedCommand
                 // Implicit [CommandArgument]
                 if (param.Name == null || !argNames.Add(param.Name))
                     throw new InvalidCommandImplementation($"Command arguments must have a unique name");
-                orderedParams.Add(param.ParameterType);
             }
 
             var takesPipedGeneric = impl.HasCustomAttribute<TakesPipedTypeAsGenericAttribute>();
@@ -214,47 +202,31 @@ public abstract partial class ToolshedCommand
                     throw new InvalidCommandImplementation($"Commands using {nameof(TakesPipedTypeAsGenericAttribute)} must have the inferred piped parameter type {expectedGeneric.Name} be the last generic parameter");
             }
 
-            Implementor = new ToolshedCommandImplementor(null, this, Toolshed, Loc);
-
             string? subCmd = null;
             if (impl.GetCustomAttribute<CommandImplementationAttribute>() is {SubCommand: { } x})
             {
                 subCmd = x;
+                HasSubCommands = true;
                 if (string.IsNullOrEmpty(subCmd) || !subCmd.EnumerateRunes().All(ParserContext.IsToken))
-                    throw new InvalidCommandImplementation($"Subcommand name contains invalid tokens");
-                SubCommandImplementors[x] = new ToolshedCommandImplementor(subCmd, this, Toolshed, Loc);
-                hasSubCommands = true;
+                    throw new InvalidCommandImplementation($"Subcommand name {subCmd} contains invalid tokens");
             }
             else
             {
                 hasNonSubCommands = true;
             }
 
+            // Currently a command either has no subcommands, or **only** subcommands. This was the behaviour when I got
+            // here, and I don't see a clear reason why it couldn't be supported if desired.
+            if (hasNonSubCommands && HasSubCommands)
+                throw new InvalidCommandImplementation("Toolshed commands either need to be all sub-commands, or have no sub commands at all.");
+
+            // AFAIK this is currently just not supported, though it could eventually be added?
             if (!implementations.Add((subCmd, pipeType)))
                 throw new InvalidCommandImplementation("The combination of subcommand and piped parameter type must be unique");
 
-            _readonlyParameters.GetOrNew(subCmd ?? "").Add((pipeType, orderedParams));
-        }
-
-        // Currently a command either has no subcommands, or **only** subcommands. This was the behaviour when I got
-        // here, and I don't see a clear reason why it couldn't be supported if desired.
-        if (hasNonSubCommands && hasSubCommands)
-            throw new InvalidCommandImplementation("Toolshed commands either need to be all sub-commands, or have no sub commands at all.");
-    }
-
-    internal IEnumerable<ToolshedCommandImplementor> GetImplementors()
-    {
-        if (!HasSubCommands)
-        {
-            DebugTools.Assert(SubCommandImplementors.Count == 0);
-            yield return Implementor;
-            yield break;
-        }
-
-        DebugTools.Assert(Implementor.Methods.Length == 0);
-        foreach (var impl in SubCommandImplementors.Values)
-        {
-            yield return impl;
+            var key = subCmd ?? string.Empty;
+            if (!CommandImplementors.ContainsKey(key))
+                CommandImplementors[key] = new ToolshedCommandImplementor(subCmd, this, Toolshed, Loc);
         }
     }
 
@@ -263,11 +235,12 @@ public abstract partial class ToolshedCommand
         if (_acceptedTypes.TryGetValue(subCommand ?? "", out var set))
             return set;
 
-        return _acceptedTypes[subCommand ?? ""] = GetGenericImplementations()
-            .Where(x =>
-                x.ConsoleGetPipedArgument() is not null
-            &&  x.GetCustomAttribute<CommandImplementationAttribute>()?.SubCommand == subCommand)
-            .Select(x => x.ConsoleGetPipedArgument()!.ParameterType)
+        return _acceptedTypes[subCommand ?? ""] = GetType()
+            .GetMethods(MethodFlags)
+            .Where(x => x.GetCustomAttribute<CommandImplementationAttribute>() is {} attr  && attr.SubCommand == subCommand )
+            .Select(x => x.ConsoleGetPipedArgument())
+            .Where(x => x != null)
+            .Select(x => x!.ParameterType)
             .ToHashSet();
     }
 }

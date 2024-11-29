@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed `IPrototypeManager.TryGetKindFrom()` not working for prototypes with automatically inferred kind names.
 
 ### Other
 

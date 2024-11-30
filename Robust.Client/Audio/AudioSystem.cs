@@ -417,7 +417,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
     private bool TryGetAudio(ResolvedSoundSpecifier specifier, [NotNullWhen(true)] out AudioResource? audio)
     {
-        var filename = GetAudioPath(specifier) ?? string.Empty;
+        var filename = GetSoundPath(specifier) ?? string.Empty;
         if (_resourceCache.TryGetResource(new ResPath(filename), out audio))
             return true;
 

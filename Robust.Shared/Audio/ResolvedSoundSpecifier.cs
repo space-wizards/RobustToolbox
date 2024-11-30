@@ -14,7 +14,7 @@ namespace Robust.Shared.Audio;
 [Serializable, NetSerializable]
 public abstract partial class ResolvedSoundSpecifier {
     [Obsolete("String literals for sounds are deprecated, use a SoundSpecifier or ResolvedSoundSpecifier as appropriate instead")]
-    public static implicit operator ResolvedSoundSpecifier(string s) => new ResolvedPathSpecifier(s);
+    public static implicit operator ResolvedSoundSpecifier(string? s) => s is string path ? new ResolvedPathSpecifier(path) : null!;
     [Obsolete("String literals for sounds are deprecated, use a SoundSpecifier or ResolvedSoundSpecifier as appropriate instead")]
     public static implicit operator ResolvedSoundSpecifier(ResPath s) => new ResolvedPathSpecifier(s);
 

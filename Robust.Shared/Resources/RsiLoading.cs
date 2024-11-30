@@ -104,7 +104,7 @@ internal static class RsiLoading
             };
         }
 
-        return new RsiMetadata(size, states, textureParams);
+        return new RsiMetadata(size, states, textureParams, manifestJson.MetaAtlas);
     }
 
     public static void Warmup()
@@ -114,11 +114,12 @@ internal static class RsiLoading
         JsonSerializer.Deserialize<RsiJsonMetadata>(warmupJson, SerializerOptions);
     }
 
-    internal sealed class RsiMetadata(Vector2i size, StateMetadata[] states, TextureLoadParameters loadParameters)
+    internal sealed class RsiMetadata(Vector2i size, StateMetadata[] states, TextureLoadParameters loadParameters, bool metaAtlas)
     {
         public readonly Vector2i Size = size;
         public readonly StateMetadata[] States = states;
         public readonly TextureLoadParameters LoadParameters = loadParameters;
+        public readonly bool MetaAtlas = metaAtlas;
     }
 
     internal sealed class StateMetadata
@@ -140,7 +141,11 @@ internal static class RsiLoading
 
     // To be directly deserialized.
     [UsedImplicitly]
-    private sealed record RsiJsonMetadata(Vector2i Size, StateJsonMetadata[] States, RsiJsonLoad? Load);
+    private sealed record RsiJsonMetadata(
+        Vector2i Size,
+        StateJsonMetadata[] States,
+        RsiJsonLoad? Load,
+        bool MetaAtlas = true);
 
     [UsedImplicitly]
     private sealed record StateJsonMetadata(string Name, int? Directions, float[][]? Delays);

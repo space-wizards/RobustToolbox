@@ -659,8 +659,7 @@ namespace Robust.Shared
         /// </summary>
         /// <remarks>
         /// <para>
-        /// This parameter is stored by the launcher and should be modified by the server whenever the privacy policy
-        /// in such a way as to require a new agreement by players the next time they try to connect.
+        /// This parameter is stored by the launcher and should be modified whenever your server's privacy policy changes.
         /// </para>
         /// </remarks>
         public static readonly CVarDef<string> StatusPrivacyPolicyVersion =

@@ -295,7 +295,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             DebugTools.Assert(!ent.Comp.Actors.ContainsKey(key));
         }
 
-        DebugTools.AssertEqual(ent.Comp.ClientOpenInterfaces.Count, 0);
+        DebugTools.Assert(ent.Comp.ClientOpenInterfaces.Values.All(x => _queuedCloses.Contains(x)));
     }
 
     private void OnUserInterfaceGetState(Entity<UserInterfaceComponent> ent, ref ComponentGetState args)

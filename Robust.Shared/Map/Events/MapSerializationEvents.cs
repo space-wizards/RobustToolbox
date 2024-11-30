@@ -28,24 +28,17 @@ public sealed class BeforeEntityReadEvent
 }
 
 /// <summary>
-/// This event is broadcast just before the map loader reads the entity section. It can be used to somewhat modify
-/// how the map data is read, as a super basic kind of map migration tool.
+/// This event is broadcast just before an entity gets serialized.
 /// </summary>
-public sealed class BeforeSaveEvent
+public sealed class BeforeSaveEvent(EntityUid entity, EntityUid? map)
 {
     /// <summary>
     /// The entity that is going to be saved. usually a map or grid.
     /// </summary>
-    public EntityUid Entity;
+    public EntityUid Entity = entity;
 
     /// <summary>
     /// The map that the <see cref="Entity"/> is on.
     /// </summary>
-    public EntityUid? Map;
-
-    public BeforeSaveEvent(EntityUid entity, EntityUid? map)
-    {
-        Entity = entity;
-        Map = map;
-    }
+    public EntityUid? Map = map;
 }

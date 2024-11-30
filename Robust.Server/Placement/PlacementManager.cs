@@ -201,7 +201,10 @@ namespace Robust.Server.Placement
             else if (tileType != 0) // create a new grid
             {
                 var newGrid = _mapManager.CreateGridEntity(_xformSystem.GetMapId(coordinates));
-                var newGridXform = new Entity<TransformComponent>(newGrid.Owner, _entityManager.GetComponent<TransformComponent>(newGrid));
+                var newGridXform = new Entity<TransformComponent>(
+                    newGrid.Owner,
+                    _entityManager.GetComponent<TransformComponent>(newGrid));
+
                 _xformSystem.SetWorldPosition(newGridXform, coordinates.Position - newGrid.Comp.TileSizeHalfVector); // assume bottom left tile origin
                 var tilePos = _maps.WorldToTile(newGrid.Owner, newGrid.Comp, coordinates.Position);
                 _maps.SetTile(newGrid.Owner, newGrid.Comp, tilePos, new Tile(tileType));

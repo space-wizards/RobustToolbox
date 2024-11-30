@@ -100,7 +100,7 @@ namespace Robust.Client.Physics
                             return true;
 
                         tuple.worldHandle.SetTransform(tuple.transform.GetWorldMatrix(uid));
-                        var chunkEnumerator = _map.GetMapChunks(uid, grid,tuple.worldBounds);
+                        var chunkEnumerator = _map.GetMapChunks(uid, grid, tuple.worldBounds);
 
                         while (chunkEnumerator.MoveNext(out var chunk))
                         {

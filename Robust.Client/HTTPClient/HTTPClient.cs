@@ -26,11 +26,11 @@ namespace Robust.Client.HTTPClient
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
 
         private readonly HttpClient _httpClient;
-        // move whiteListed domains to a configuration file and access it through IConfigurationManager
+        // move whitelisted domains to a configuration file and access it through IConfigurationManager
         private readonly string[] _whitelistedDomains = { "example.com", "anotherexample.com" };
 
         // this should also be in a configuration file
-        private readonly string _manifestFilename = "manifest.json";
+        private readonly string _manifestFilename = "cdn_manifest.json";
 
 
         public CDNConsumer()
@@ -69,12 +69,9 @@ namespace Robust.Client.HTTPClient
                 _runtimeLog.LogException(e, $"Invalid media type {nameof(mediaType)}");
             }
 
-            using (var contentStream = await response.Content.ReadAsStreamAsync())
-            using (var fileStream = new FileStream(_manifestFilename, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true))
-            {
-                await contentStream.CopyToAsync(fileStream);
-            }
+            var manifest = await response.Content.ReadAsStringAsync();
 
+            //TODO: need to parse the JSON file and make it available to the ContentAudioSystem somehow
         }
         public async Task<string> GetFileAsync(string url, string outputPath)
         {
@@ -98,12 +95,12 @@ namespace Robust.Client.HTTPClient
 
             // Validate the response
             // here we are checking if the response is an audio file
-            // ideally this should verify integrity of the file using a hash
+            // TODO: ideally this should verify integrity of the file using a hash
             var mediaType = response.Content.Headers.ContentType.MediaType;
             var fileExtension = Path.GetExtension(outputPath);
 
 
-            // this shouldn't be hardcoded, whitelisting file types should be in a configuration file
+            // TODO: this shouldn't be hardcoded, whitelisting file types should be in a configuration file
             if (!mediaType.Equals("audio/ogg", StringComparison.OrdinalIgnoreCase))
             {
                 _runtimeLog.LogException(e, $"CDNConsumer: Invalid media type {nameof(mediaType)}");

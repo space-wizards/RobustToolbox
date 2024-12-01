@@ -142,8 +142,21 @@ public interface IInvocationContext
     void WriteVar(string name, object? value);
 
     /// <summary>
+    ///     Whether or not a variable is read-only. Used for variable name auto-completion.
+    /// </summary>
+    bool IsReadonlyVar(string name) => false;
+
+    /// <summary>
     ///     Provides a list of all variables that have been written to at some point.
     /// </summary>
     /// <returns>List of all variables.</returns>
     public IEnumerable<string> GetVars();
+}
+
+public sealed class ReadonlyVariableError(string name) : ConError
+{
+    public override FormattedMessage DescribeInner()
+    {
+        return FormattedMessage.FromUnformatted($"${name} is a read-only variable.");
+    }
 }

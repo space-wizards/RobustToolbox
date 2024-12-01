@@ -81,9 +81,13 @@ internal sealed class OldShellInvocationContext : IInvocationContext
     public void WriteVar(string name, object? value)
     {
         if (name == "self")
-            return;
-        Variables[name] = value;
+            ReportError(new ReadonlyVariableError("self"));
+        else
+            Variables[name] = value;
     }
+
+    /// <inheritdoc />
+    public bool IsReadonlyVar(string name) => name == "self";
 
     /// <inheritdoc />
     public IEnumerable<string> GetVars()

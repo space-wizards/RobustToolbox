@@ -51,7 +51,7 @@ public sealed class ReduceCommand : ToolshedCommand
 
             var localParser = new LocalVarParser(ctx.VariableParser);
             var type = ctx.Bundle.PipedType.GetGenericArguments()[0];
-            localParser.SetLocalType("value", type);
+            localParser.SetLocalType("value", type, false);
             ctx.VariableParser = localParser;
 
             if (!Block.TryParseBlock(ctx, type, type, out var run))
@@ -73,7 +73,7 @@ public sealed class ReduceCommand : ToolshedCommand
 
             var localParser = new LocalVarParser(ctx.VariableParser);
             var type = ctx.Bundle.PipedType.GetGenericArguments()[0];
-            localParser.SetLocalType("value", type);
+            localParser.SetLocalType("value", type, false);
             ctx.VariableParser = localParser;
             Block.TryParseBlock(ctx, type, type, out _);
             ctx.VariableParser = localParser.Inner;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Network;
@@ -156,9 +157,13 @@ public sealed class EmplaceCommand : ToolshedCommand
 
         public void WriteVar(string name, object? value)
         {
-            if (!_localVars.Contains(name))
+            if (_localVars.Contains(name))
+                ReportError(new ReadonlyVariableError(name));
+            else
                 _inner.WriteVar(name, value);
         }
+
+        public bool IsReadonlyVar(string name) => _localVars.Contains(name);
     }
 
     /// <summary>
@@ -184,21 +189,21 @@ public sealed class EmplaceCommand : ToolshedCommand
         {
             var localParser = new LocalVarParser(ctx.VariableParser);
             ctx.VariableParser = localParser;
-            localParser.SetLocalType("value", input);
+            localParser.SetLocalType("value", input, true);
             if (input == typeof(EntityUid))
             {
-                localParser.SetLocalType("wx", typeof(float));
-                localParser.SetLocalType("wy", typeof(float));
-                localParser.SetLocalType("proto", typeof(string));
-                localParser.SetLocalType("desc", typeof(string));
-                localParser.SetLocalType("name", typeof(string));
-                localParser.SetLocalType("paused", typeof(bool));
+                localParser.SetLocalType("wx", typeof(float), true);
+                localParser.SetLocalType("wy", typeof(float), true);
+                localParser.SetLocalType("proto", typeof(string), true);
+                localParser.SetLocalType("desc", typeof(string), true);
+                localParser.SetLocalType("name", typeof(string), true);
+                localParser.SetLocalType("paused", typeof(bool), true);
             }
             else if (input.IsAssignableTo(typeof(ICommonSession)))
             {
-                localParser.SetLocalType("ent", typeof(EntityUid));
-                localParser.SetLocalType("name", typeof(string));
-                localParser.SetLocalType("userid", typeof(NetUserId));
+                localParser.SetLocalType("ent", typeof(EntityUid), true);
+                localParser.SetLocalType("name", typeof(string), true);
+                localParser.SetLocalType("userid", typeof(NetUserId), true);
             }
 
             return localParser;

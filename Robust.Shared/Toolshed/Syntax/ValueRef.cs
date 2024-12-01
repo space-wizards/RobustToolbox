@@ -87,6 +87,17 @@ public sealed class VarRef<T>(string varName) : ValueRef<T>
     }
 }
 
+// Used to only parse writeable variable names.
+// Hacky class to work around the lack of generics in attributes, preventing a custom type parser .
+public sealed class WriteableVarRef<T>(VarRef<T> inner) : ValueRef<T>
+{
+    public readonly VarRef<T> Inner = inner;
+    public override T? Evaluate(IInvocationContext ctx)
+    {
+        return Inner.Evaluate(ctx);
+    }
+}
+
 /// <summary>
 /// This class represents a <see cref="ValueRef{T}"/> command argument that simply corresponds to a specific value of
 /// some type that has already been parsed/evaluated.

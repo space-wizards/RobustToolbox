@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Robust.Shared.Console;
 
 namespace Robust.Shared.Toolshed.Syntax;
@@ -25,20 +26,31 @@ public interface IVariableParser
     /// <summary>
     /// Generate completion options containing valid variable names along with their types.
     /// </summary>
-    CompletionResult GenerateCompletions()
-        => CompletionResult.FromHintOptions(
-            GetVars().Select(x => new CompletionOption($"${x.Item1}", $"({x.Item2})")),
-            "<variable name>");
+    CompletionResult GenerateCompletions(bool includeReadonly = true)
+    {
+        var vars = GetVars()
+            .Where(x => includeReadonly || !IsReadonlyVar(x.Item1))
+            .Select(x => new CompletionOption($"${x.Item1}", $"{x.Item2.PrettyName()}"));
+        return CompletionResult.FromHintOptions(vars, "<variable name>");
+    }
 
     /// <summary>
     /// Generate completion options containing valid variable names along with their types.
     /// </summary>
-    CompletionResult GenerateCompletions<T>()
-        => CompletionResult.FromHintOptions(
-            GetVars()
-                .Where(x => x.Item2 == typeof(T))
-                .Select(x => new CompletionOption($"${x.Item1}")),
-            $"<Variable of type {typeof(T).PrettyName()}>");
+    CompletionResult GenerateCompletions<T>(bool includeReadonly = true)
+    {
+        var vars = GetVars()
+            .Where(x => x.Item2 == typeof(T))
+            .Where(x => includeReadonly || !IsReadonlyVar(x.Item1))
+            .Select(x => new CompletionOption($"${x.Item1}"));
+
+        return CompletionResult.FromHintOptions(vars,$"<Variable of type {typeof(T).PrettyName()}>");
+    }
+
+    /// <summary>
+    ///     Whether or not a variable is read-only. Used for variable name auto-completion.
+    /// </summary>
+    bool IsReadonlyVar(string name) => false;
 
     public IEnumerable<(string, Type)> GetVars();
 
@@ -80,6 +92,8 @@ public sealed class InvocationCtxVarParser(IInvocationContext ctx) : IVariablePa
                 yield return (name, type);
         }
     }
+
+    public bool IsReadonlyVar(string name) => _ctx.IsReadonlyVar(name);
 }
 
 /// <summary>
@@ -90,8 +104,9 @@ public sealed class LocalVarParser(IVariableParser inner) : IVariableParser
     public readonly IVariableParser Inner = inner;
 
     public Dictionary<string, Type>? Variables;
+    public HashSet<string>? ReadonlyVariables;
 
-    public void SetLocalType(string name, Type? type)
+    public void SetLocalType(string name, Type? type, bool @readonly)
     {
         if (type == null)
         {
@@ -101,6 +116,12 @@ public sealed class LocalVarParser(IVariableParser inner) : IVariableParser
 
         Variables ??= new();
         Variables[name] = type;
+
+        if (@readonly)
+        {
+            ReadonlyVariables ??= new();
+            ReadonlyVariables.Add(name);
+        }
     }
 
     public bool TryParseVar(string name, [NotNullWhen(true)] out Type? type)
@@ -123,5 +144,10 @@ public sealed class LocalVarParser(IVariableParser inner) : IVariableParser
             if (!Variables.ContainsKey(name))
                 yield return (name, type);
         }
+    }
+
+    public bool IsReadonlyVar(string name)
+    {
+        return ReadonlyVariables != null && ReadonlyVariables.Contains(name);
     }
 }

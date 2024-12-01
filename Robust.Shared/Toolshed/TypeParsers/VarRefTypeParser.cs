@@ -45,6 +45,35 @@ internal sealed class VarRefTypeParser<T> : TypeParser<VarRef<T>>
     }
 }
 
+public sealed class WriteableVarRefParser<T> : TypeParser<WriteableVarRef<T>>
+{
+    public override bool TryParse(ParserContext ctx, [NotNullWhen(true)] out WriteableVarRef<T>? result)
+    {
+        var start = ctx.Index;
+        result = null;
+        if (!ctx.Toolshed.TryParse(ctx, out VarRef<T>? inner))
+            return false;
+
+        if (!ctx.VariableParser.IsReadonlyVar(inner.VarName))
+        {
+            result = new(inner);
+            return true;
+        }
+        if (ctx.GenerateCompletions)
+            return false;
+
+        ctx.Error = new ReadonlyVariableError(inner.VarName);
+        ctx.Error.Contextualize(ctx.Input, (start, ctx.Index+1));
+        return false;
+    }
+
+    public override CompletionResult TryAutocomplete(ParserContext parserContext, string? argName)
+    {
+        return parserContext.VariableParser.GenerateCompletions<T>(false);
+    }
+}
+
+
 public sealed class ExpectedDollarydoo : ConError
 {
     public override FormattedMessage DescribeInner()

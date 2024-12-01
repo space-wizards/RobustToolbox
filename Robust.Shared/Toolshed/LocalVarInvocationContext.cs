@@ -69,13 +69,18 @@ public sealed class LocalVarInvocationContext(IInvocationContext inner) : IInvoc
     public void WriteVar(string name, object? value)
     {
         if (ReadonlyVars != null && ReadonlyVars.Contains(name))
+        {
+            ReportError(new ReadonlyVariableError(name));
             return;
+        }
 
         if (LocalVars.ContainsKey(name))
             LocalVars[name] = value;
         else
             inner.WriteVar(name, value);
     }
+
+    public bool IsReadonlyVar(string name) => ReadonlyVars != null && ReadonlyVars.Contains(name);
 
     public IEnumerable<string> GetVars()
     {

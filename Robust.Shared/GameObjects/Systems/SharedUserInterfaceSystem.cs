@@ -222,13 +222,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         if (ent.Comp.ClientOpenInterfaces.TryGetValue(key, out var cBui))
         {
-            if (cBui.DeferredClose)
-                _queuedCloses.Add(cBui);
-            else
-            {
-                ent.Comp.ClientOpenInterfaces.Remove(key);
-                cBui.Dispose();
-            }
+            _queuedCloses.Add(cBui);
         }
 
         if (ent.Comp.Actors.Count == 0)
@@ -402,14 +396,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             }
 
             var bui = ent.Comp.ClientOpenInterfaces[key];
-
-            if (bui.DeferredClose)
-                _queuedCloses.Add(bui);
-            else
-            {
-                ent.Comp.ClientOpenInterfaces.Remove(key);
-                bui.Dispose();
-            }
+            _queuedCloses.Add(bui);
         }
 
         // update any states we have open
@@ -454,9 +441,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         // Existing BUI just keep it.
         if (entity.Comp.ClientOpenInterfaces.TryGetValue(key, out var existing))
         {
-            if (existing.DeferredClose)
-                _queuedCloses.Remove(existing);
-
+            _queuedCloses.Remove(existing);
             return;
         }
 

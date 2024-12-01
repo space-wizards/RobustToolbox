@@ -13,7 +13,6 @@ using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Shapes;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
-using TerraFX.Interop.Windows;
 
 namespace Robust.Shared.GameObjects;
 

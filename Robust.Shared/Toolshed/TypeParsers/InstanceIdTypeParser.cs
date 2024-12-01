@@ -1,24 +1,20 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
 using Robust.Shared.Console;
-using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Toolshed.Syntax;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
 public sealed class InstanceIdTypeParser : TypeParser<InstanceId>
 {
-    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
+    public override bool TryParse(ParserContext parserContext, out InstanceId result)
     {
         result = new InstanceId(Guid.NewGuid());
-        error = null;
         return true;
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext parserContext, string? argName)
     {
-        return new ValueTask<(CompletionResult? result, IConError? error)>((null, null));
+        return null;
     }
 }
 

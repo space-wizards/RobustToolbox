@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Robust.Shared.Toolshed.Syntax;
 
 namespace Robust.Shared.Toolshed.Commands.Math;
 
@@ -9,30 +8,20 @@ public sealed class JoinCommand : ToolshedCommand
 {
     [CommandImplementation]
     public string Join(
-        [CommandInvocationContext] IInvocationContext ctx,
         [PipedArgument] string x,
-        [CommandArgument] ValueRef<string> y
+        string y
     )
     {
-        var yVal = y.Evaluate(ctx);
-        if (yVal is null)
-            return x;
-
-        return x + yVal;
+        return x + y;
     }
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<T> Join<T>(
-            [CommandInvocationContext] IInvocationContext ctx,
             [PipedArgument] IEnumerable<T> x,
-            [CommandArgument] ValueRef<IEnumerable<T>> y
+            IEnumerable<T> y
         )
     {
-        var yVal = y.Evaluate(ctx);
-        if (yVal is null)
-            return x;
-
-        return x.Concat(yVal);
+        return x.Concat(y);
     }
 }
 
@@ -41,15 +30,10 @@ public sealed class AppendCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<T> Append<T>(
-        [CommandInvocationContext] IInvocationContext ctx,
         [PipedArgument] IEnumerable<T> x,
-        [CommandArgument] ValueRef<T> y
+        T y
     )
     {
-        var yVal = y.Evaluate(ctx);
-        if (yVal is null)
-            return x;
-
-        return x.Append(yVal);
+        return x.Append(y);
     }
 }

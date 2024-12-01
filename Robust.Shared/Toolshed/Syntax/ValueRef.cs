@@ -6,107 +6,108 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.Syntax;
 
-public sealed class ValueRef<T> : ValueRef<T, T>
+/// <summary>
+/// This class is used represent toolshed command arguments that are either a reference to a Toolshed variable
+/// (<see cref="VarRef{T}"/>), a block of commands that need to be evaluated (<see cref="Block{T}"/>), or simply some
+/// specific value that has already been parsed/evaluated (<see cref="ParsedValueRef{T}"/>).
+/// </summary>
+public abstract class ValueRef<T>
 {
-    public ValueRef(ValueRef<T, T> inner)
-    {
-        InnerBlock = inner.InnerBlock;
-        VarName = inner.VarName;
-        HasValue = inner.HasValue;
-        Value = inner.Value;
-        Expression = inner.Expression;
-        RefSpan = inner.RefSpan;
-    }
-    public ValueRef(string varName) : base(varName)
-    {
-    }
+    public abstract T? Evaluate(IInvocationContext ctx);
 
-    public ValueRef(Block<T> innerBlock) : base(innerBlock)
+    // Internal method used when invoking commands to evaluate & cast command parameters.
+    // Mainly exists for convenience, as expression trees don't support 'is' pattern matching or null propagation.
+    // Also makes makes for much nicer debugging of command parameter parsing
+    internal static T? EvaluateParameter(object? obj, IInvocationContext ctx)
     {
-    }
-
-    public ValueRef(T value) : base(value)
-    {
+        return obj switch
+        {
+            null => default,
+            T cast => cast,
+            ValueRef<T> @ref => @ref.Evaluate(ctx),
+            _ => throw new Exception(
+                $"Failed to parse command parameter. This likely is a toolshed bug and should be reported.\n" +
+                $"Target type: {typeof(T).PrettyName()}.\n" +
+                $"Input type: {obj.GetType()}.\n" +
+                $"Input: {obj}")
+        };
     }
 }
 
-[Virtual]
-public class ValueRef<T, TAuto>
+[Obsolete("Use EntProtoId / ProtoId<T>")]
+public sealed class ValueRef<T, TAuto>(ValueRef<T> inner) : ValueRef<T>
 {
-    internal Block<T>? InnerBlock;
-    internal string? VarName;
-    internal bool HasValue = false;
-    internal T? Value;
-    internal string? Expression;
-    internal Vector2i? RefSpan;
-
-    protected ValueRef()
+    public override T? Evaluate(IInvocationContext ctx)
     {
+        return inner.Evaluate(ctx);
     }
+}
 
-    public ValueRef(string varName)
+public sealed class BlockRef<T>(Block<T> block) : ValueRef<T>
+{
+    public override T? Evaluate(IInvocationContext ctx) => block.Invoke(ctx);
+}
+
+/// <summary>
+/// This class is used represent toolshed command arguments that references to a Toolshed variable.
+/// I.e., something accessible via <see cref="IInvocationContext.ReadVar"/>.
+/// </summary>
+public sealed class VarRef<T>(string varName) : ValueRef<T>
+{
+    /// <summary>
+    /// The name of the variable.
+    /// </summary>
+    public readonly string VarName = varName;
+
+    public override T? Evaluate(IInvocationContext ctx)
     {
-        VarName = varName;
-    }
+        var value = ctx.ReadVar(VarName);
 
-    public ValueRef(Block<T> innerBlock)
-    {
-        InnerBlock = innerBlock;
-    }
-
-    public ValueRef(T value)
-    {
-        Value = value;
-        HasValue = true;
-    }
-
-    public bool LikelyConst => VarName is not null || HasValue;
-
-    public T? Evaluate(IInvocationContext ctx)
-    {
-        if (Value is not null && HasValue)
-        {
-            return Value;
-        }
-        else if (VarName is not null)
-        {
-            var value = ctx.ReadVar(VarName);
-
-            if (value is not T v)
-            {
-                ctx.ReportError(new BadVarTypeError(value?.GetType() ?? typeof(void), typeof(T), VarName));
-                return default;
-            }
-
+        if (value is T v)
             return v;
-        }
-        else if (InnerBlock is not null)
-        {
-            return InnerBlock.Invoke(null, ctx);
-        }
-        else
-        {
-            throw new UnreachableException();
-        }
+
+        var error = new BadVarTypeError(value?.GetType(), typeof(T), VarName);
+        ctx.ReportError(error);
+        return default;
     }
 
-    public void Set(IInvocationContext ctx, T? value)
+    public record BadVarTypeError(Type? Got, Type Expected, string VarName) : IConError
     {
-        if (VarName is null)
-            throw new NotImplementedException();
+        public FormattedMessage DescribeInner()
+        {
+            var msg = Got == null
+                ? $"Variable ${VarName} is not assigned. Expected variable of type {Expected.PrettyName()}."
+                : $"Variable ${VarName} is not of the expected type. Expected {Expected.PrettyName()} but got {Got?.PrettyName()}.";
+            return FormattedMessage.FromUnformatted(msg);
+        }
 
-        ctx.WriteVar(VarName!, value);
+        public string? Expression { get; set; }
+        public Vector2i? IssueSpan { get; set; }
+        public StackTrace? Trace { get; set; }
     }
 }
 
-public record BadVarTypeError(Type Got, Type Expected, string VarName) : IConError
+// Used to only parse writeable variable names.
+// Hacky class to work around the lack of generics in attributes, preventing a custom type parser .
+public sealed class WriteableVarRef<T>(VarRef<T> inner) : ValueRef<T>
 {
-    public FormattedMessage DescribeInner()
+    public readonly VarRef<T> Inner = inner;
+    public override T? Evaluate(IInvocationContext ctx)
     {
-        return FormattedMessage.FromUnformatted($"Got unexpected type {Got.PrettyName()} in {VarName}, expected {Expected.PrettyName()}");
+        return Inner.Evaluate(ctx);
     }
+}
 
-    public string? Expression { get; set; }
-    public Vector2i? IssueSpan { get; set; }
-    public StackTrace? Trace { get; set; }
+/// <summary>
+/// This class represents a <see cref="ValueRef{T}"/> command argument that simply corresponds to a specific value of
+/// some type that has already been parsed/evaluated.
+/// </summary>
+internal sealed class ParsedValueRef<T>(T? value) : ValueRef<T>
+{
+    public readonly T? Value = value;
+
+    public override T? Evaluate(IInvocationContext ctx)
+    {
+        return Value;
+    }
 }

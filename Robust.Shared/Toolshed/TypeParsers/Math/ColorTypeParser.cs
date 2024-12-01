@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
+﻿using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.Maths;
 using Robust.Shared.Toolshed.Errors;
@@ -16,43 +11,35 @@ namespace Robust.Shared.Toolshed.TypeParsers.Math;
 
 public sealed class ColorTypeParser : TypeParser<Color>
 {
-    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
+    public override bool TryParse(ParserContext ctx, out Color result)
     {
-        var word = parserContext.GetWord(x => ParserContext.IsToken(x) || x == new Rune('#'))?.ToLowerInvariant();
+        result = default;
+        var word = ctx.GetWord(x => ParserContext.IsToken(x) || x == new Rune('#'))?.ToLowerInvariant();
         if (word is null)
         {
-            if (parserContext.PeekChar() is null)
+            if (ctx.PeekRune() is null)
             {
-                error = new OutOfInputError();
-                result = null;
+                ctx.Error = new OutOfInputError();
                 return false;
             }
-            else
-            {
-                error = new InvalidColor(parserContext.GetWord()!);
-                result = null;
-                return false;
-            }
-        }
 
-        if (!Color.TryParse(word, out var r))
-        {
-            error = new InvalidColor(word);
-            result = null;
+            ctx.Error = new InvalidColor(ctx.GetWord()!);
+            result = default;
             return false;
         }
 
-        result = r;
-        error = null;
-        return true;
+        if (Color.TryParse(word, out result))
+            return true;
+
+        ctx.Error = new InvalidColor(word);
+        return false;
+
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext parserContext, string? argName)
     {
-        return new ValueTask<(CompletionResult? result, IConError? error)>((
-                CompletionResult.FromHintOptions(Color.GetAllDefaultColors().Select(x => x.Key), "RGB color or color name."),
-                null
-            ));
+        return CompletionResult.FromHintOptions(Color.GetAllDefaultColors().Select(x => x.Key),
+            "RGB color or color name.");
     }
 }
 

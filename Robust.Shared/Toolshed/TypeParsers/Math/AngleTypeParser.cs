@@ -1,8 +1,5 @@
-﻿using System;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
 using System.Globalization;
-using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.Maths;
 using Robust.Shared.Toolshed.Errors;
@@ -13,56 +10,50 @@ namespace Robust.Shared.Toolshed.TypeParsers.Math;
 
 public sealed class AngleTypeParser : TypeParser<Angle>
 {
-    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
+    public override bool TryParse(ParserContext ctx, out Angle result)
     {
-        var word = parserContext.GetWord(ParserContext.IsNumeric)?.ToLowerInvariant();
+        result = default;
+        var word = ctx.GetWord(ParserContext.IsNumeric)?.ToLowerInvariant();
         if (word is null)
         {
-            if (parserContext.PeekChar() is null)
+            if (ctx.PeekRune() is null)
             {
-                error = new OutOfInputError();
-                result = null;
+                ctx.Error = new OutOfInputError();
                 return false;
             }
-            else
-            {
-                error = new InvalidAngle(parserContext.GetWord()!);
-                result = null;
-                return false;
-            }
+
+            ctx.Error = new InvalidAngle(ctx.GetWord()!);
+            return false;
         }
 
         if (word.EndsWith("deg"))
         {
             if (!float.TryParse(word[..^3], CultureInfo.InvariantCulture, out var f))
             {
-                error = new InvalidAngle(word);
-                result = null;
+                ctx.Error = new InvalidAngle(word);
                 return false;
             }
 
             result = Angle.FromDegrees(f);
-            error = null;
             return true;
         }
         else
         {
             if (!float.TryParse(word, CultureInfo.InvariantCulture, out var f))
             {
-                error = new InvalidAngle(word);
-                result = null;
+                ctx.Error = new InvalidAngle(word);
+                result = default;
                 return false;
             }
 
             result = new Angle(f);
-            error = null;
             return true;
         }
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext, string? argName)
+    public override CompletionResult TryAutocomplete(ParserContext parserContext, string? argName)
     {
-        return new ValueTask<(CompletionResult? result, IConError? error)>((CompletionResult.FromHint("angle (append deg for degrees, otherwise radians)"), null));
+        return CompletionResult.FromHint("angle (append deg for degrees, otherwise radians)");
     }
 }
 

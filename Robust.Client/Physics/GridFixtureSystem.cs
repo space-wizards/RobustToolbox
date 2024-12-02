@@ -13,8 +13,9 @@ namespace Robust.Client.Physics
     internal sealed class GridFixtureSystem : SharedGridFixtureSystem
     {
         [Dependency] private readonly IOverlayManager _overlay = default!;
-        [Dependency] private readonly IMapManager _map = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
+        [Dependency] private readonly SharedMapSystem _map = default!;
 
         public bool EnableDebug
         {
@@ -28,7 +29,7 @@ namespace Robust.Client.Physics
 
                 if (_enableDebug)
                 {
-                    var overlay = new GridSplitNodeOverlay(_map, this, _transform);
+                    var overlay = new GridSplitNodeOverlay(_mapManager, this, _transform, _map);
                     _overlay.AddOverlay(overlay);
                     RaiseNetworkEvent(new RequestGridNodesMessage());
                 }
@@ -74,12 +75,14 @@ namespace Robust.Client.Physics
             private readonly IMapManager _mapManager;
             private readonly GridFixtureSystem _system;
             private readonly SharedTransformSystem _transform;
+            private readonly SharedMapSystem _map;
 
-            public GridSplitNodeOverlay(IMapManager mapManager, GridFixtureSystem system, SharedTransformSystem transform)
+            public GridSplitNodeOverlay(IMapManager mapManager, GridFixtureSystem system, SharedTransformSystem transform, SharedMapSystem map)
             {
                 _mapManager = mapManager;
                 _system = system;
                 _transform = transform;
+                _map = map;
             }
 
             protected internal override void Draw(in OverlayDrawArgs args)
@@ -89,7 +92,7 @@ namespace Robust.Client.Physics
                 var state = (_system, _transform, args.WorldBounds, worldHandle);
 
                 _mapManager.FindGridsIntersecting(args.MapId, args.WorldBounds, ref state,
-                    static (EntityUid uid, MapGridComponent grid,
+                    (EntityUid uid, MapGridComponent grid,
                         ref (GridFixtureSystem system, SharedTransformSystem transform, Box2Rotated worldBounds, DrawingHandleWorld worldHandle) tuple) =>
                     {
                         // May not have received nodes yet.
@@ -97,7 +100,7 @@ namespace Robust.Client.Physics
                             return true;
 
                         tuple.worldHandle.SetTransform(tuple.transform.GetWorldMatrix(uid));
-                        var chunkEnumerator = grid.GetMapChunks(tuple.worldBounds);
+                        var chunkEnumerator = _map.GetMapChunks(uid, grid, tuple.worldBounds);
 
                         while (chunkEnumerator.MoveNext(out var chunk))
                         {

@@ -27,7 +27,7 @@ namespace Robust.Client.Placement.Modes
 
                 var gridUid = pManager.EntityManager.System<SharedTransformSystem>().GetGrid(MouseCoords);
 
-                var gridPosition = pManager.EntityManager.System<SharedMapSystem>().MapToGrid((EntityUid)gridUid!, pManager.EyeManager.ScreenToMap(Vector2.Zero));
+                var gridPosition = pManager.EntityManager.System<SharedMapSystem>().MapToGrid(gridUid!.Value, pManager.EyeManager.ScreenToMap(Vector2.Zero));
 
                 var gridstart = pManager.EyeManager.CoordinatesToScreen(
                     gridPosition.WithPosition(new Vector2(MathF.Floor(gridPosition.X), MathF.Floor(gridPosition.Y))));

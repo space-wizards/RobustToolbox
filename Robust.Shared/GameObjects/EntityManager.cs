@@ -335,7 +335,7 @@ namespace Robust.Shared.GameObjects
             if (coordinates.MapId == MapId.Nullspace)
             {
                 transform._parent = EntityUid.Invalid;
-                transform.Anchored = false;
+                _xforms.Unanchor(newEntity);
                 return newEntity;
             }
 
@@ -886,7 +886,7 @@ namespace Robust.Shared.GameObjects
 
         public void InitializeAndStartEntity(EntityUid entity, MapId? mapId = null)
         {
-            var doMapInit = _mapManager.IsMapInitialized(mapId ?? TransformQuery.GetComponent(entity).MapID);
+            var doMapInit = _mapSystem.IsInitialized(mapId ?? TransformQuery.GetComponent(entity).MapID);
             InitializeAndStartEntity(entity, doMapInit);
         }
 

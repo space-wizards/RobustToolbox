@@ -768,7 +768,14 @@ public abstract partial class SharedTransformSystem
             }
             else
             {
-                xform.Anchored = newState.Anchored;
+                if (xform.Anchored)
+                {
+                    AnchorEntity(uid, xform);
+                }
+                else
+                {
+                    Unanchor(uid, xform);
+                }
             }
 
             if (oldAnchored != newState.Anchored && xform.Initialized)

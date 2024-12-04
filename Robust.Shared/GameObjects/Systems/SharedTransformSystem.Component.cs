@@ -124,8 +124,13 @@ public abstract partial class SharedTransformSystem
         if (grid == null)
         {
             if (!TryComp(entity.Comp.GridUid, out MapGridComponent? gridComp))
-                return false;
-            grid = (entity.Comp.GridUid.Value, gridComp);
+            {
+                if (!_mapManager.TryFindGridAt(GetMapCoordinates(entity.Comp), out var gridUid, out var gridMapComp))
+                    return false;
+                grid = (gridUid, gridMapComp);
+            }
+            else
+                grid = (entity.Comp.GridUid.Value, gridComp);
         }
 
         var tileIndices =  _map.TileIndicesFor(grid.Value, grid.Value, entity.Comp.Coordinates);

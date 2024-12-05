@@ -36,6 +36,7 @@ public sealed class DeletionNetworkingTests : RobustIntegrationTest
         var cPlayerMan = client.ResolveDependency<ISharedPlayerManager>();
         var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
         var xformSys = sEntMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
+        var mapSys = sEntMan.EntitySysManager.GetEntitySystem<SharedMapSystem>();
 
         Assert.DoesNotThrow(() => client.SetConnectTarget(server));
         client.Post(() => netMan.ClientConnect(null!, 0, null!));
@@ -56,18 +57,18 @@ public sealed class DeletionNetworkingTests : RobustIntegrationTest
         EntityUid grid2 = default;
         NetEntity grid1Net = default;
         NetEntity grid2Net = default;
-        server.System<SharedMapSystem>().CreateMap(out var mapId);
+        mapSys.CreateMap(out var mapId);
 
         await server.WaitPost(() =>
         {
             var gridComp = mapMan.CreateGridEntity(mapId);
-            gridComp.Comp.SetTile(Vector2i.Zero, new Tile(1));
+            mapSys.SetTile(gridComp, Vector2i.Zero, new Tile(1));
             grid1 = gridComp.Owner;
             xformSys.SetLocalPosition(grid1, new Vector2(-2,0));
             grid1Net = sEntMan.GetNetEntity(grid1);
 
             gridComp = mapMan.CreateGridEntity(mapId);
-            gridComp.Comp.SetTile(Vector2i.Zero, new Tile(1));
+            mapSys.SetTile(gridComp, Vector2i.Zero, new Tile(1));
             grid2 = gridComp.Owner;
             xformSys.SetLocalPosition(grid2, new Vector2(2,0));
             grid2Net = sEntMan.GetNetEntity(grid2);

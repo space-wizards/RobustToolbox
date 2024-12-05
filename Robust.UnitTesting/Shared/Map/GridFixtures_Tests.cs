@@ -59,6 +59,7 @@ public sealed class GridFixtures_Tests : RobustIntegrationTest
         var entManager = server.ResolveDependency<IEntityManager>();
         var mapManager = server.ResolveDependency<IMapManager>();
         var physSystem = server.ResolveDependency<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>();
+        var mapSystem = entManager.EntitySysManager.GetEntitySystem<SharedMapSystem>();
 
         await server.WaitAssertion(() =>
         {
@@ -72,7 +73,7 @@ public sealed class GridFixtures_Tests : RobustIntegrationTest
             Assert.That(gridBody!.BodyType, Is.EqualTo(BodyType.Static));
 
             // 1 fixture if we only ever update the 1 chunk
-            grid.Comp.SetTile(Vector2i.Zero, new Tile(1));
+            mapSystem.SetTile(grid, Vector2i.Zero, new Tile(1));
 
             Assert.That(manager.FixtureCount, Is.EqualTo(1));
             // Also should only be a single tile.
@@ -81,7 +82,7 @@ public sealed class GridFixtures_Tests : RobustIntegrationTest
             Assert.That(MathHelper.CloseToPercent(Box2.Area(bounds), 1.0f, 0.1f));
 
             // Now do 2 tiles (same chunk)
-            grid.Comp.SetTile(new Vector2i(0, 1), new Tile(1));
+            mapSystem.SetTile(grid, new Vector2i(0, 1), new Tile(1));
 
             Assert.That(manager.FixtureCount, Is.EqualTo(1));
             bounds = manager.Fixtures.First().Value.Shape.ComputeAABB(new Transform(Vector2.Zero, (float) Angle.Zero.Theta), 0);
@@ -90,7 +91,7 @@ public sealed class GridFixtures_Tests : RobustIntegrationTest
             Assert.That(MathHelper.CloseToPercent(Box2.Area(bounds), 2.0f, 0.1f));
 
             // If we add a new chunk should be 2 now
-            grid.Comp.SetTile(new Vector2i(0, -1), new Tile(1));
+            mapSystem.SetTile(grid, new Vector2i(0, -1), new Tile(1));
             Assert.That(manager.FixtureCount, Is.EqualTo(2));
 
             physSystem.SetLinearVelocity(grid, Vector2.One, manager: manager, body: gridBody);

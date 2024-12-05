@@ -2,40 +2,39 @@ name: Test content master against engine
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - name: Check out content
-      uses: actions/checkout@v3.6.0
-      with:
-        repository: space-wizards/space-station-14
-        submodules: recursive
+      - name: Check out content
+        uses: actions/checkout@v4.2.2
+        with:
+          repository: space-wizards/space-station-14
+          submodules: recursive
 
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v3.2.0
-      with:
-        dotnet-version: 8.0.x
-    - name: Disable submodule autoupdate
-      run: touch BuildChecker/DISABLE_SUBMODULE_AUTOUPDATE
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v4.1.0
+        with:
+          dotnet-version: 8.0.x
+      - name: Disable submodule autoupdate
+        run: touch BuildChecker/DISABLE_SUBMODULE_AUTOUPDATE
 
-    - name: Check out engine version
-      run: |
-        cd RobustToolbox
-        git fetch origin ${{ github.sha }}
-        git checkout FETCH_HEAD
-        git submodule update --init --recursive
-    - name: Install dependencies
-      run: dotnet restore
-    - name: Build
-      run: dotnet build --configuration Tools --no-restore
-    - name: Content.Tests
-      run: dotnet test --no-build Content.Tests/Content.Tests.csproj -v n
-    - name: Content.IntegrationTests
-      run: COMPlus_gcServer=1 dotnet test --no-build Content.IntegrationTests/Content.IntegrationTests.csproj -v n
+      - name: Check out engine version
+        run: |
+          cd RobustToolbox
+          git fetch origin ${{ github.sha }}
+          git checkout FETCH_HEAD
+          git submodule update --init --recursive
+      - name: Install dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --configuration Tools --no-restore
+      - name: Content.Tests
+        run: dotnet test --no-build Content.Tests/Content.Tests.csproj -v n
+      - name: Content.IntegrationTests
+        run: COMPlus_gcServer=1 dotnet test --no-build Content.IntegrationTests/Content.IntegrationTests.csproj -v n

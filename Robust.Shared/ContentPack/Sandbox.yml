@@ -654,6 +654,7 @@ Types:
     PreserveBaseOverridesAttribute: { All: True }
     RefSafetyRulesAttribute: { All: True }
     RequiredMemberAttribute: { All: True }
+    RequiresLocationAttribute: { All: True }
     RuntimeCompatibilityAttribute: { All: True }
     RuntimeHelpers: { All: True }
     SwitchExpressionException: { All: True }
@@ -722,11 +723,11 @@ Types:
       - "System.Text.RegularExpressions.Match Match(string, string)"
       - "System.Text.RegularExpressions.Match Match(string, string, System.Text.RegularExpressions.RegexOptions)"
       - "System.Text.RegularExpressions.Match Match(string, string, System.Text.RegularExpressions.RegexOptions, System.TimeSpan)"
-      - "System.Text.RegularExpressions.Match[] Matches(string)"
-      - "System.Text.RegularExpressions.Match[] Matches(string, int)"
-      - "System.Text.RegularExpressions.Match[] Matches(string, string)"
-      - "System.Text.RegularExpressions.Match[] Matches(string, string, System.Text.RegularExpressions.RegexOptions)"
-      - "System.Text.RegularExpressions.Match[] Matches(string, string, System.Text.RegularExpressions.RegexOptions, System.TimeSpan)"
+      - "System.Text.RegularExpressions.MatchCollection Matches(string)"
+      - "System.Text.RegularExpressions.MatchCollection Matches(string, int)"
+      - "System.Text.RegularExpressions.MatchCollection Matches(string, string)"
+      - "System.Text.RegularExpressions.MatchCollection Matches(string, string, System.Text.RegularExpressions.RegexOptions)"
+      - "System.Text.RegularExpressions.MatchCollection Matches(string, string, System.Text.RegularExpressions.RegexOptions, System.TimeSpan)"
       - "System.Text.RegularExpressions.RegexOptions get_Options()"
       - "System.TimeSpan get_MatchTimeout()"
       - "void .ctor()"

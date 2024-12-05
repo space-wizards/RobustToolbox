@@ -95,7 +95,7 @@ namespace Robust.Client.Graphics.Clyde
         private ClydeTexture FovTexture => _fovRenderTarget.Texture;
         private ClydeTexture ShadowTexture => _shadowRenderTarget.Texture;
 
-        private (PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot)[] _lightsToRenderList = default!;
+        private (EntityUid uid, PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot)[] _lightsToRenderList = default!;
 
         private LightCapacityComparer _lightCap = new();
         private ShadowCapacityComparer _shadowCap = new ShadowCapacityComparer();
@@ -383,7 +383,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     for (var i = 0; i < count; i++)
                     {
-                        var (light, lightPos, _, _) = _lightsToRenderList[i];
+                        var (_, light, lightPos, _, _) = _lightsToRenderList[i];
 
                         if (!light.CastShadows) continue;
 
@@ -432,22 +432,34 @@ namespace Robust.Client.Graphics.Clyde
             var lastPower = float.NaN;
             var lastColor = new Color(float.NaN, float.NaN, float.NaN, float.NaN);
             var lastSoftness = float.NaN;
+            var lightRenderEvent = new LightRenderEvent();
             Texture? lastMask = null;
 
             using (_prof.Group("Draw Lights"))
             {
                 for (var i = 0; i < count; i++)
                 {
-                    var (component, lightPos, _, rot) = _lightsToRenderList[i];
+                    var (uid, component, lightPos, _, rot) = _lightsToRenderList[i];
+
+                    lightRenderEvent.Mask = component.Mask;
+                    lightRenderEvent.Rotation = component.Rotation;
+                    lightRenderEvent.MaskAutoRotate = component.MaskAutoRotate;
+                    lightRenderEvent.Radius = component.Radius;
+                    lightRenderEvent.Energy = component.Energy;
+                    lightRenderEvent.Color = component.Color;
+                    lightRenderEvent.CastShadows = component.CastShadows;
+                    lightRenderEvent.Softness = component.Softness;
+                    
+                    _entityManager.EventBus.RaiseLocalEvent(uid, ref lightRenderEvent);
 
                     Texture? mask = null;
                     var rotation = Angle.Zero;
-                    if (component.Mask != null)
+                    if (lightRenderEvent.Mask != null)
                     {
-                        mask = component.Mask;
-                        rotation = component.Rotation;
+                        mask = lightRenderEvent.Mask;
+                        rotation = lightRenderEvent.Rotation;
 
-                        if (component.MaskAutoRotate)
+                        if (lightRenderEvent.MaskAutoRotate)
                         {
                             rotation += rot;
                         }
@@ -461,35 +473,35 @@ namespace Robust.Client.Graphics.Clyde
                         lightShader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
                     }
 
-                    if (!MathHelper.CloseToPercent(lastRange, component.Radius))
+                    if (!MathHelper.CloseToPercent(lastRange, lightRenderEvent.Radius))
                     {
-                        lastRange = component.Radius;
+                        lastRange = lightRenderEvent.Radius;
                         lightShader.SetUniformMaybe("lightRange", lastRange);
                     }
 
-                    if (!MathHelper.CloseToPercent(lastPower, component.Energy))
+                    if (!MathHelper.CloseToPercent(lastPower, lightRenderEvent.Energy))
                     {
-                        lastPower = component.Energy;
+                        lastPower = lightRenderEvent.Energy;
                         lightShader.SetUniformMaybe("lightPower", lastPower);
                     }
 
-                    if (lastColor != component.Color)
+                    if (lastColor != lightRenderEvent.Color)
                     {
-                        lastColor = component.Color;
+                        lastColor = lightRenderEvent.Color;
                         lightShader.SetUniformMaybe("lightColor", lastColor);
                     }
 
                     if (_enableSoftShadows && !MathHelper.CloseToPercent(lastSoftness, component.Softness))
                     {
-                        lastSoftness = component.Softness;
+                        lastSoftness = lightRenderEvent.Softness;
                         lightShader.SetUniformMaybe("lightSoftness", lastSoftness);
                     }
 
                     lightShader.SetUniformMaybe("lightCenter", lightPos);
                     lightShader.SetUniformMaybe("lightIndex",
-                        component.CastShadows ? (i + 0.5f) / ShadowTexture.Height : -1);
+                        lightRenderEvent.CastShadows ? (i + 0.5f) / ShadowTexture.Height : -1);
 
-                    var offset = new Vector2(component.Radius, component.Radius);
+                    var offset = new Vector2(lightRenderEvent.Radius, lightRenderEvent.Radius);
 
                     Matrix3x2 matrix;
                     if (mask == null)
@@ -566,16 +578,16 @@ namespace Robust.Client.Graphics.Clyde
                 shadowCount++;
 
             var distanceSquared = (state.worldAABB.Center - lightPos).LengthSquared();
-            state.clyde._lightsToRenderList[count++] = (light, lightPos, distanceSquared, rot);
+            state.clyde._lightsToRenderList[count++] = (value.Uid, light, lightPos, distanceSquared, rot);
 
             return true;
         }
 
-        private sealed class LightCapacityComparer : IComparer<(PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot)>
+        private sealed class LightCapacityComparer : IComparer<(EntityUid _, PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot)>
         {
             public int Compare(
-                (PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot) x,
-                (PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot) y)
+                (EntityUid _, PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot) x,
+                (EntityUid _, PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot) y)
             {
                 if (x.light.CastShadows && !y.light.CastShadows) return 1;
                 if (!x.light.CastShadows && y.light.CastShadows) return -1;
@@ -583,11 +595,11 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private sealed class ShadowCapacityComparer : IComparer<(PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot)>
+        private sealed class ShadowCapacityComparer : IComparer<(EntityUid _, PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot)>
         {
             public int Compare(
-                (PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot) x,
-                (PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot) y)
+                (EntityUid _, PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot) x,
+                (EntityUid _, PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot) y)
             {
                 return x.distanceSquared.CompareTo(y.distanceSquared);
             }
@@ -1233,7 +1245,7 @@ namespace Robust.Client.Graphics.Clyde
         private void MaxLightsChanged(int value)
         {
             _maxLights = value;
-            _lightsToRenderList = new (PointLightComponent, Vector2, float , Angle)[value];
+            _lightsToRenderList = new (EntityUid, PointLightComponent, Vector2, float , Angle)[value];
             DebugTools.Assert(_maxLights >= _maxShadowcastingLights);
         }
     }

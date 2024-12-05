@@ -15,6 +15,8 @@ using Robust.Shared.Configuration;
 using Robust.Shared.Exceptions;
 using Robust.Shared.Log;
 
+using NVorbis;
+
 
 namespace Robust.Client.HTTPClient
 {
@@ -29,8 +31,6 @@ namespace Robust.Client.HTTPClient
         void Initialize();
 
         Task<string> PlayAudioFromCDN(string url);
-
-        void StopAudio();
 
         Task<string> GetFileAsync(string url);
 
@@ -160,7 +160,7 @@ namespace Robust.Client.HTTPClient
                     }
                     catch (Exception e)
                     {
-                        _sawmill.Error($"Failed to save file {e}");
+                        _sawmill.Error($"Failed to save file: {e}");
                         return "Failed to save file";
                     }
                 }
@@ -170,7 +170,7 @@ namespace Robust.Client.HTTPClient
             }
             catch (HttpRequestException e)
             {
-                _sawmill.Error(e, "Failed to download file");
+                _sawmill.Error($"Failed to download file: {e}");
                 return "Failed to download file";
             }
         }
@@ -334,12 +334,12 @@ namespace Robust.Client.HTTPClient
                 _activeSources.Add(source);
                 source.StartPlaying();
 
-                // add an event listener to remove the source from the list when it finishes playing
-                source.PlaybackFinished += (src) =>
-                {
-                    src.Dispose();
-                    _activeSources.Remove(src);
-                };
+                // TODO: add an event listener to remove the source from the list when it finishes playing
+                // source.PlaybackFinished += (src) =>
+                // {
+                //     src.Dispose();
+                //     _activeSources.Remove(src);
+                // };
             }
             else
                 _sawmill.Error("Failed to create audio source");

@@ -11,7 +11,7 @@ namespace Robust.Shared.GameObjects;
 /// <summary>
 ///     Handles moving entities between grids as they move around.
 /// </summary>
-internal sealed class SharedGridTraversalSystem : EntitySystem
+public sealed class SharedGridTraversalSystem : EntitySystem
 {
     [Dependency] private readonly IMapManagerInternal _mapManager = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;

@@ -39,7 +39,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
     private void OnAudioStartup(EntityUid uid, AudioComponent component, ComponentStartup args)
     {
-        component.Source = new DummyAudioSource();
+        component.Source = new DummyMixableAudioSource();
     }
 
     public override void SetGridAudio(Entity<AudioComponent>? entity)

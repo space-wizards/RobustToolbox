@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using JetBrains.Annotations;
 using NFluidsynth;
+
+using Robust.Client.Audio.Sources;
 using Robust.Client.Graphics;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Audio;
@@ -56,6 +58,7 @@ internal sealed class MidiRenderer : IMidiRenderer
     private IMidiRenderer? _master;
     public MidiRendererState RendererState => _rendererState;
     public IBufferedAudioSource Source { get; set; }
+    public IMixableAudioSource MixableSource { get; set; }
     IBufferedAudioSource IMidiRenderer.Source => Source;
 
     [ViewVariables]
@@ -263,6 +266,7 @@ internal sealed class MidiRenderer : IMidiRenderer
         _midiSawmill = midiSawmill;
 
         Source = clydeAudio.CreateBufferedAudioSource(Buffers, true) ?? DummyBufferedAudioSource.Instance;
+        MixableSource = new MixableAudioSource(Source);
         Source.SampleRate = SampleRate;
         _settings = settings;
         _soundFontLoader = soundFontLoader;

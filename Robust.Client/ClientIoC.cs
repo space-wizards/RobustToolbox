@@ -1,6 +1,7 @@
 using System;
 using Robust.Client.Audio;
 using Robust.Client.Audio.Midi;
+using Robust.Client.Audio.Mixers;
 using Robust.Client.Configuration;
 using Robust.Client.Console;
 using Robust.Client.Debugging;
@@ -102,6 +103,7 @@ namespace Robust.Client
             deps.Register<ProfViewManager>();
             deps.Register<IGamePrototypeLoadManager, GamePrototypeLoadManager>();
             deps.Register<NetworkResourceManager>();
+            deps.Register<IAudioMixersManager, AudioMixersManager>();
 
             switch (mode)
             {

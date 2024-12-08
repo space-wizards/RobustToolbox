@@ -53,10 +53,17 @@ public abstract partial class SharedAudioSystem : EntitySystem
     {
         base.Initialize();
         InitializeEffect();
+        InitializeMixers();
         ZOffset = CfgManager.GetCVar(CVars.AudioZOffset);
         Subs.CVar(CfgManager, CVars.AudioZOffset, SetZOffset);
         SubscribeLocalEvent<AudioComponent, ComponentGetStateAttemptEvent>(OnAudioGetStateAttempt);
         SubscribeLocalEvent<AudioComponent, EntityUnpausedEvent>(OnAudioUnpaused);
+    }
+
+    public override void Update(float frameTime)
+    {
+        base.Update(frameTime);
+        UpdateMixers();
     }
 
     /// <summary>
@@ -301,6 +308,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
         DebugTools.Assert(!string.IsNullOrEmpty(fileName) || length is not null);
         MetadataSys.SetEntityName(uid, $"Audio ({fileName})", raiseEvents: false);
         audioParams ??= AudioParams.Default;
+        audioParams = audioParams.Value.WithMixer(audioParams.Value.MixerProto ?? DefaultMixer);
         var comp = AddComp<AudioComponent>(uid);
         comp.FileName = fileName ?? string.Empty;
         comp.Params = audioParams.Value;
@@ -319,6 +327,8 @@ public abstract partial class SharedAudioSystem : EntitySystem
         {
             comp.Params.Pitch *= (float) RandMan.NextGaussian(1, comp.Params.Variation.Value);
         }
+
+        ApplyAudioParamsMixer((uid, comp), audioParams.Value);
 
         if (initialize)
         {

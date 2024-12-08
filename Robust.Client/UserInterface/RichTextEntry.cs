@@ -46,7 +46,7 @@ namespace Robust.Client.UserInterface
             LineBreaks = default;
             _defaultColor = defaultColor ?? new(200, 200, 200);
             _tagsAllowed = tagsAllowed;
-            Dictionary<int, Control>? tagControls = null;
+            Dictionary<int, Control>? tagControls = new Dictionary<int, Control>();
 
             var nodeIndex = -1;
             foreach (var node in Message)
@@ -59,9 +59,11 @@ namespace Robust.Client.UserInterface
                 if (!tagManager.TryGetMarkupTag(node.Name, _tagsAllowed, out var tag) || !tag.TryGetControl(node, out var control))
                     continue;
 
-                parent.Children.Add(control);
-                tagControls ??= new Dictionary<int, Control>();
+                if (tagControls.ContainsKey(nodeIndex))
+                    continue;
+
                 tagControls.Add(nodeIndex, control);
+                parent.Children.Add(control);
             }
 
             _tagControls = tagControls;

@@ -24,7 +24,6 @@ namespace Robust.Server.ServerStatus;
 
 internal sealed partial class StatusHost
 {
-    private (string binFolder, string[] assemblies)? _aczInfo;
     private IMagicAczProvider? _magicAczProvider;
     private IFullHybridAczProvider? _fullHybridAczProvider;
 
@@ -158,8 +157,7 @@ internal sealed partial class StatusHost
         {
             _aczSawmill.Verbose("Using default magic ACZ provider");
             // Default provider
-            var (binFolderPath, assemblyNames) =
-                _aczInfo ?? ("Content.Client", new[] { "Content.Client", "Content.Shared" });
+            var (binFolderPath, assemblyNames) = ("Content.Client", new[] { "Content.Client", "Content.Shared" });
 
             var info = new DefaultMagicAczInfo(binFolderPath, assemblyNames);
             provider = new DefaultMagicAczProvider(info, _deps);

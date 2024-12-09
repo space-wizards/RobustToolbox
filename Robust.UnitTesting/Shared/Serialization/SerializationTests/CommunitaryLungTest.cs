@@ -17,14 +17,18 @@ public sealed partial class CommunitaryLungTest : SerializationTest
         Assert.That(def.Dict == copy.Dict, Is.False);
 
         // Sanity check
+#pragma warning disable CS1718 // Comparison made to same variable
         Assert.That(def.Dict == def.Dict, Is.True);
+#pragma warning restore CS1718 // Comparison made to same variable
 
         Serialization.CopyTo(def, ref copy, notNullableOverride: true);
 
         Assert.That(def.Dict == copy.Dict, Is.False);
 
         // Sanity check
+#pragma warning disable CS1718 // Comparison made to same variable
         Assert.That(def.Dict == def.Dict, Is.True);
+#pragma warning restore CS1718 // Comparison made to same variable
     }
 
     [Test]
@@ -38,7 +42,9 @@ public sealed partial class CommunitaryLungTest : SerializationTest
         Assert.That(copy.Dict, Is.Not.Null);
 
         // Sanity check
+#pragma warning disable CS1718 // Comparison made to same variable
         Assert.That(def.Dict == def.Dict, Is.True);
+#pragma warning restore CS1718 // Comparison made to same variable
 
         Serialization.CopyTo(def, ref copy, notNullableOverride: true);
 
@@ -46,7 +52,9 @@ public sealed partial class CommunitaryLungTest : SerializationTest
         Assert.That(copy.Dict, Is.Not.Null);
 
         // Sanity check
+#pragma warning disable CS1718 // Comparison made to same variable
         Assert.That(def.Dict == def.Dict, Is.True);
+#pragma warning restore CS1718 // Comparison made to same variable
     }
 
     [Test]

@@ -2,33 +2,32 @@ name: Build & Test
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest ] # , macos-latest] - temporarily disabled due to libfreetype.dll errors.
+        os: [ubuntu-latest, windows-latest] # , macos-latest] - temporarily disabled due to libfreetype.dll errors.
 
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v3.6.0
-      with:
-        submodules: true
+      - uses: actions/checkout@v4.2.2
+        with:
+          submodules: true
 
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v3.2.0
-      with:
-        dotnet-version: 8.0.x
-    - name: Install dependencies
-      run: dotnet restore
-    - name: Build
-      run: dotnet build --no-restore /p:WarningsAsErrors=nullable
-    - name: Robust.UnitTesting
-      run: dotnet test --no-build Robust.UnitTesting/Robust.UnitTesting.csproj -- NUnit.ConsoleOut=0
-    - name: Robust.Analyzers.Tests
-      run: dotnet test --no-build Robust.Analyzers.Tests/Robust.Analyzers.Tests.csproj -- NUnit.ConsoleOut=0
-
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v4.1.0
+        with:
+          dotnet-version: 8.0.x
+      - name: Install dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --no-restore /p:WarningsAsErrors=nullable
+      - name: Robust.UnitTesting
+        run: dotnet test --no-build Robust.UnitTesting/Robust.UnitTesting.csproj -- NUnit.ConsoleOut=0
+      - name: Robust.Analyzers.Tests
+        run: dotnet test --no-build Robust.Analyzers.Tests/Robust.Analyzers.Tests.csproj -- NUnit.ConsoleOut=0

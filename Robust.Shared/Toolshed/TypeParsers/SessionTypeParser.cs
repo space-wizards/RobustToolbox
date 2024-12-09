@@ -47,7 +47,7 @@ internal sealed class SessionTypeParser : TypeParser<ICommonSession>
         string? argName)
     {
         var opts = CompletionHelper.SessionNames(true, _player);
-        return ValueTask.FromResult<(CompletionResult? result, IConError? error)>((CompletionResult.FromHintOptions(opts, "<player session>"), null));
+        return new ValueTask<(CompletionResult?, IConError?)>((CompletionResult.FromHintOptions(opts, "<player session>"), null));
     }
 
     public record InvalidUsername(ILocalizationManager Loc, string Username) : IConError

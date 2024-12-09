@@ -49,9 +49,9 @@ public sealed class BoolTypeParser : TypeParser<bool>
         }
     }
 
-    public override async ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext, string? argName)
+    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext, string? argName)
     {
-        return (CompletionResult.FromOptions(new[] {"true", "false"}), null);
+        return ValueTask.FromResult<(CompletionResult? result, IConError? error)>((CompletionResult.FromOptions(new[] {"true", "false"}), null));
     }
 }
 

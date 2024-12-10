@@ -71,6 +71,8 @@ namespace Robust.Client.Graphics
             in TextureLoadParameters? loadParams = null)
             where T : unmanaged, IPixel<T>;
 
+        IRenderTexture CreateLightRenderTarget(Vector2i size, string? name = null, bool depthStencil = true);
+
         IRenderTexture CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
             TextureSampleParameters? sampleParameters = null, string? name = null);
 

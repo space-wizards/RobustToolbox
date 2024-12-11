@@ -2,19 +2,21 @@
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Toolshed.Syntax;
+using Robust.Shared.Toolshed.TypeParsers;
 
 namespace Robust.Shared.Toolshed.Commands.Generic.Ordering;
 
-[ToolshedCommand, MapLikeCommand]
+[ToolshedCommand]
 public sealed class SortByCommand : ToolshedCommand
 {
-    public override Type[] TypeParameterParsers => new[] {typeof(Type)};
+    private static Type[] _parsers = [typeof(MapBlockOutputParser)];
+    public override Type[] TypeParameterParsers => _parsers;
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<T> SortBy<TOrd, T>(
-        [CommandInvocationContext] IInvocationContext ctx,
+        IInvocationContext ctx,
         [PipedArgument] IEnumerable<T> input,
-        [CommandArgument] Block<T, TOrd> orderer
+        Block<T, TOrd> orderer
     )
         where TOrd : IComparable<TOrd>
         => input.OrderBy(x => orderer.Invoke(x, ctx)!);

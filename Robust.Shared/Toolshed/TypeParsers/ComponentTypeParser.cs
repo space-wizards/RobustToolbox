@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
-using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -14,48 +13,39 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
-internal sealed class ComponentTypeParser : TypeParser<ComponentType>
+public sealed class ComponentTypeParser : CustomTypeParser<Type>
 {
     [Dependency] private readonly IComponentFactory _factory = default!;
 
-    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
+    public override bool TryParse(ParserContext ctx, [NotNullWhen(true)] out Type? result)
     {
-        var start = parserContext.Index;
-        var word = parserContext.GetWord(ParserContext.IsToken);
-        error = null;
+        result = null;
+        var start = ctx.Index;
+        var word = ctx.GetWord(ParserContext.IsToken);
 
         if (word is null)
         {
-            error = new OutOfInputError();
-            result = null;
+            ctx.Error = new OutOfInputError();
             return false;
         }
 
         if (!_factory.TryGetRegistration(word.ToLower(), out var reg, true))
         {
-            result = null;
-            error = new UnknownComponentError(word);
-            error.Contextualize(parserContext.Input, (start, parserContext.Index));
+            ctx.Error = new UnknownComponentError(word);
+            ctx.Error.Contextualize(ctx.Input, (start, ctx.Index));
             return false;
         }
 
-        result = new ComponentType(reg.Type);
+        result = reg.Type;
         return true;
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext,
+    public override CompletionResult? TryAutocomplete(ParserContext parserContext,
         string? argName)
     {
-        return ValueTask.FromResult<(CompletionResult? result, IConError? error)>(
-            (CompletionResult.FromOptions(_factory.AllRegisteredTypes.Select(_factory.GetComponentName)), null)
-            );
+        return CompletionResult.FromOptions(_factory.AllRegisteredTypes.Select(_factory.GetComponentName));
     }
 }
-
-public readonly record struct ComponentType(Type Ty) : IAsType<Type>
-{
-    public Type AsType() => Ty;
-};
 
 public record struct UnknownComponentError(string Component) : IConError
 {

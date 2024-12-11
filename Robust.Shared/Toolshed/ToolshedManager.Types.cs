@@ -9,6 +9,7 @@ namespace Robust.Shared.Toolshed;
 
 public sealed partial class ToolshedManager
 {
+    // If this gets updated, ensure that GetTransformer() is also updated
     internal bool IsTransformableTo(Type left, Type right)
     {
         if (left.IsAssignableToGeneric(right, this))
@@ -21,25 +22,16 @@ public sealed partial class ToolshedManager
             return true;
         }
 
-        if (right == typeof(object))
-            return true; // May need boxed.
-
-        if (right.IsGenericType && right.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-        {
-            if (right.GenericTypeArguments[0] == left)
-                return true;
-
+        if (!right.IsGenericType(typeof(IEnumerable<>)))
             return false;
-        }
 
-        return false;
+        return right.GenericTypeArguments[0] == left;
     }
 
+    // Autobots, roll out!
+    // If this gets updated, ensure that IsTransformableTo() is also updated
     internal Expression GetTransformer(Type from, Type to, Expression input)
     {
-        if (!IsTransformableTo(from, to))
-            throw new InvalidCastException();
-
         if (from.IsAssignableTo(to))
             return Expression.Convert(input, to);
 
@@ -54,20 +46,23 @@ public sealed partial class ToolshedManager
                 );
         }
 
-        if (to.IsGenericType && to.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+        if (to.IsGenericType(typeof(IEnumerable<>)))
         {
             var toInner = to.GenericTypeArguments[0];
-            var tys = new [] {toInner};
+            var tys = new[] {toInner};
             return Expression.Convert(
                 Expression.New(
-                            typeof(UnitEnumerable<>).MakeGenericType(tys).GetConstructor(tys)!,
-                            Expression.Convert(input, toInner)
-                        ),
-                    to
-                );
+                    typeof(UnitEnumerable<>).MakeGenericType(tys).GetConstructor(tys)!,
+                    Expression.Convert(input, toInner)
+                ),
+                to
+            );
         }
 
-        return Expression.Convert(input, to);
+        if (from.IsAssignableToGeneric(to, this))
+            return Expression.Convert(input, to);
+
+        throw new InvalidCastException();
     }
 }
 

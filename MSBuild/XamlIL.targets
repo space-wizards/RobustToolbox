@@ -22,8 +22,6 @@
   <!-- XamlIL does not make use of special Robust configurations like DebugOpt. Convert these down. -->
   <PropertyGroup>
     <RobustInjectorsConfiguration>$(Configuration)</RobustInjectorsConfiguration>
-    <RobustInjectorsConfiguration Condition="'$(Configuration)' == 'DebugOpt'">Debug</RobustInjectorsConfiguration>
-    <RobustInjectorsConfiguration Condition="'$(Configuration)' == 'Tools'">Release</RobustInjectorsConfiguration>
     <RobustInjectorsConfiguration Condition="'$(UseArtifactsOutput)' == 'true' And '$(RuntimeIdentifier)' != ''">$(RobustInjectorsConfiguration)_$(RuntimeIdentifier)</RobustInjectorsConfiguration>
     <RobustInjectorsConfiguration Condition="'$(UseArtifactsOutput)' == 'true'">$(RobustInjectorsConfiguration.ToLower())</RobustInjectorsConfiguration>
     <CompileRobustXamlTaskAssemblyFile Condition="'$(UseArtifactsOutput)' != 'true'">$(MSBuildThisFileDirectory)\..\Robust.Client.Injectors\bin\$(RobustInjectorsConfiguration)\netstandard2.0\Robust.Client.Injectors.dll</CompileRobustXamlTaskAssemblyFile>

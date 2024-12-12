@@ -685,6 +685,13 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             stateRef = state;
         }
 
+        // Predict the change on client
+        if (state != null && _netManager.IsClient && entity.Comp.ClientOpenInterfaces.TryGetValue(key, out var bui))
+        {
+            bui.UpdateState(state);
+            bui.Update();
+        }
+
         Dirty(entity);
     }
 

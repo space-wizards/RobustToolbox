@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+
 using Robust.Shared.Maths;
 
 namespace Robust.Shared.GameObjects;
@@ -34,6 +35,15 @@ public abstract class SharedPointLightSystem : EntitySystem
             return;
 
         comp.Color = value;
+        Dirty(uid, comp);
+    }
+
+    public virtual void SetContainerOccluded(EntityUid uid, bool occluded, SharedPointLightComponent? comp = null)
+    {
+        if (!ResolveLight(uid, ref comp) || occluded == comp.ContainerOccluded)
+            return;
+
+        comp.ContainerOccluded = occluded;
         Dirty(uid, comp);
     }
 

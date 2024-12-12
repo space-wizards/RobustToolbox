@@ -1,22 +1,30 @@
 using System.Diagnostics.CodeAnalysis;
+
+using Robust.Server.ComponentTrees;
+using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
+using Robust.Shared.Maths;
 
 namespace Robust.Server.GameObjects;
 
-public sealed class PointLightSystem : SharedPointLightSystem
+    public sealed class PointLightSystem : SharedPointLightSystem
 {
     [Dependency] private readonly MetaDataSystem _metadata = default!;
+    [Dependency] private readonly LightTreeSystem _lightTree = default!;
+    [Dependency] private readonly SharedContainerSystem _container = default!;
 
     public override void Initialize()
     {
         base.Initialize();
         SubscribeLocalEvent<PointLightComponent, ComponentGetState>(OnLightGetState);
-        SubscribeLocalEvent<PointLightComponent, ComponentStartup>(OnLightStartup);
+        //SubscribeLocalEvent<PointLightComponent, ComponentStartup>(OnLightStartup);
+        SubscribeLocalEvent<PointLightComponent, EntGotInsertedIntoContainerMessage>(OnInserted);
+        SubscribeLocalEvent<PointLightComponent, EntGotRemovedFromContainerMessage>(OnRemoved);
     }
 
-    private void OnLightStartup(EntityUid uid, PointLightComponent component, ComponentStartup args)
+    public void OnLightStartup(EntityUid uid, PointLightComponent component, ComponentStartup args)
     {
         UpdatePriority(uid, component, MetaData(uid));
     }
@@ -25,6 +33,17 @@ public sealed class PointLightSystem : SharedPointLightSystem
     {
         var isHighPriority = comp.Enabled && comp.CastShadows && (comp.Radius > 7);
         _metadata.SetFlag((uid, meta), MetaDataFlags.PvsPriority, isHighPriority);
+    }
+
+    private void OnInserted(EntityUid uid, PointLightComponent component, EntGotInsertedIntoContainerMessage args)
+    {
+        // var isInContainer = _container.IsEntityOrParentInContainer(uid, meta, xform);
+        SetContainerOccluded(uid, args.Container.OccludesLight, component);
+    }
+
+    private void OnRemoved(EntityUid uid, PointLightComponent component, EntGotRemovedFromContainerMessage args)
+    {
+        SetContainerOccluded(uid, false, component);
     }
 
     private void OnLightGetState(EntityUid uid, PointLightComponent component, ref ComponentGetState args)
@@ -38,7 +57,10 @@ public sealed class PointLightSystem : SharedPointLightSystem
             Radius = component.Radius,
             Softness = component.Softness,
             CastShadows = component.CastShadows,
+            ContainerOccluded = component.ContainerOccluded,
         };
+
+        _lightTree.QueueTreeUpdate(uid, component);
     }
 
     public override SharedPointLightComponent EnsureLight(EntityUid uid)
@@ -71,5 +93,36 @@ public sealed class PointLightSystem : SharedPointLightSystem
     public override bool RemoveLightDeferred(EntityUid uid)
     {
         return RemCompDeferred<PointLightComponent>(uid);
+    }
+
+    public override void SetContainerOccluded(EntityUid uid, bool occluded, SharedPointLightComponent? comp = null)
+    {
+        if (!ResolveLight(uid, ref comp) || occluded == comp.ContainerOccluded || comp is not PointLightComponent clientComp)
+            return;
+
+        base.SetContainerOccluded(uid, occluded, comp);
+        if (comp.Enabled)
+            _lightTree.QueueTreeUpdate(uid, clientComp);
+    }
+
+    public override void SetEnabled(EntityUid uid, bool enabled, SharedPointLightComponent? comp = null, MetaDataComponent? meta = null)
+    {
+        if (!ResolveLight(uid, ref comp) || enabled == comp.Enabled || comp is not PointLightComponent clientComp)
+            return;
+
+        base.SetEnabled(uid, enabled, comp, meta);
+        if (!comp.ContainerOccluded)
+            _lightTree.QueueTreeUpdate(uid, clientComp);
+    }
+
+    public override void SetRadius(EntityUid uid, float radius, SharedPointLightComponent? comp = null, MetaDataComponent? meta = null)
+    {
+        if (!ResolveLight(uid, ref comp) || MathHelper.CloseToPercent(radius, comp.Radius) ||
+            comp is not PointLightComponent clientComp)
+            return;
+
+        base.SetRadius(uid, radius, comp, meta);
+        if (clientComp.TreeUid != null)
+            _lightTree.QueueTreeUpdate(uid, clientComp);
     }
 }

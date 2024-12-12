@@ -1,10 +1,10 @@
-using Robust.Client.GameObjects;
+using Robust.Server.GameObjects;
 using Robust.Shared.ComponentTrees;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Physics;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Client.ComponentTrees;
+namespace Robust.Server.ComponentTrees;
 
 [RegisterComponent]
 public sealed partial class LightTreeComponent: SharedLightTreeComponent, IComponentTreeComponent<PointLightComponent>

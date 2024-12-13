@@ -175,7 +175,7 @@ public sealed partial class EntityLookupSystem
 
         return;
 
-        static bool PhysicsQuery<T>(ref QueryState<T> state, in FixtureProxy value) where T : IComponent
+        static bool PhysicsQuery(ref QueryState<T> state, in FixtureProxy value)
         {
             if (!state.Sensors && !value.Fixture.Hard)
                 return true;
@@ -196,7 +196,7 @@ public sealed partial class EntityLookupSystem
             return true;
         }
 
-        static bool SundriesQuery<T>(ref QueryState<T> state, in EntityUid value) where T : IComponent
+        static bool SundriesQuery(ref QueryState<T> state, in EntityUid value)
         {
             if (!state.Query.TryGetComponent(value, out var comp))
                 return true;
@@ -318,7 +318,7 @@ public sealed partial class EntityLookupSystem
 
         return state.Found;
 
-        static bool PhysicsQuery<T>(ref AnyQueryState<T> state, in FixtureProxy value) where T : IComponent
+        static bool PhysicsQuery(ref AnyQueryState<T> state, in FixtureProxy value)
         {
             if (value.Entity == state.Ignored)
                 return true;

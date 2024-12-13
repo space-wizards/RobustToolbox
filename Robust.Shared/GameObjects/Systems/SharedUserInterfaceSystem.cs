@@ -275,6 +275,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             if (ent.Comp.States.TryGetValue(key, out var state))
             {
                 bui.UpdateState(state);
+                bui.Update();
             }
         }
     }
@@ -428,6 +429,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
             cBui.State = buiState;
             cBui.UpdateState(buiState);
+            cBui.Update();
         }
 
         // If UI not open then open it
@@ -490,6 +492,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         {
             boundUserInterface.State = buiState;
             boundUserInterface.UpdateState(buiState);
+            boundUserInterface.Update();
         }
 #if EXCEPTION_TOLERANCE
         }
@@ -680,6 +683,13 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
                 return;
 
             stateRef = state;
+        }
+
+        // Predict the change on client
+        if (state != null && _netManager.IsClient && entity.Comp.ClientOpenInterfaces.TryGetValue(key, out var bui))
+        {
+            bui.UpdateState(state);
+            bui.Update();
         }
 
         Dirty(entity);
@@ -1025,6 +1035,18 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         ent.Comp.Interfaces[key] = data;
         Dirty(ent, ent.Comp);
+    }
+
+    public bool TryGetUiState<T>(Entity<UserInterfaceComponent?> ent, Enum key, [NotNullWhen(true)] out T? state) where T : BoundUserInterfaceState
+    {
+        if (!Resolve(ent, ref ent.Comp, false) || !ent.Comp.States.TryGetValue(key, out var stateComp))
+        {
+            state = null;
+            return false;
+        }
+
+        state = (T)stateComp;
+        return true;
     }
 
     /// <summary>

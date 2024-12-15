@@ -343,6 +343,8 @@ namespace Robust.Client.Graphics.Clyde
                 if (isMain)
                     _mainWindow = reg;
 
+                reg.IsVisible = parameters.Visible;
+
                 _windows.Add(reg);
                 _windowHandles.Add(reg.Handle);
 
@@ -444,6 +446,12 @@ namespace Robust.Client.Graphics.Clyde
             _windowing!.CursorSet(_mainWindow!, cursor);
         }
 
+        private void SetWindowSize(WindowReg reg, Vector2i size)
+        {
+            DebugTools.AssertNotNull(_windowing);
+
+            _windowing!.WindowSetSize(reg, size);
+        }
 
         private void SetWindowVisible(WindowReg reg, bool visible)
         {
@@ -533,7 +541,11 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde.DoDestroyWindow(Reg);
             }
 
-            public Vector2i Size => Reg.FramebufferSize;
+            public Vector2i Size
+            {
+                get => Reg.FramebufferSize;
+                set => _clyde.SetWindowSize(Reg, value);
+            }
 
             public IRenderTarget RenderTarget => Reg.RenderTarget;
 

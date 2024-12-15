@@ -23,7 +23,6 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     [Dependency] private   readonly IGameTiming _timing = default!;
     [Dependency] private   readonly INetManager _netManager = default!;
     [Dependency] private   readonly IParallelManager _parallel = default!;
-    [Dependency] private readonly ISharedPlayerManager _player = default!;
     [Dependency] protected readonly IPrototypeManager ProtoManager = default!;
     [Dependency] private   readonly IReflectionManager _reflection = default!;
     [Dependency] protected readonly ISharedPlayerManager Player = default!;
@@ -296,7 +295,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             DebugTools.Assert(!ent.Comp.Actors.ContainsKey(key));
         }
 
-        DebugTools.AssertEqual(ent.Comp.ClientOpenInterfaces.Count, 0);
+        DebugTools.Assert(ent.Comp.ClientOpenInterfaces.Values.All(x => _queuedCloses.Contains(x)));
     }
 
     private void OnUserInterfaceGetState(Entity<UserInterfaceComponent> ent, ref ComponentGetState args)
@@ -390,7 +389,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
                 ent.Comp.States.Remove(key);
         }
 
-        var attachedEnt = _player.LocalEntity;
+        var attachedEnt = Player.LocalEntity;
         var clientBuis = new ValueList<Enum>(ent.Comp.ClientOpenInterfaces.Keys);
 
         // Check if the UI is open by us, otherwise dispose of it.
@@ -1065,8 +1064,8 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     private record struct ActorRangeCheckJob() : IParallelRobustJob
     {
-        public EntityQuery<TransformComponent> XformQuery;
-        public SharedUserInterfaceSystem System;
+        public required EntityQuery<TransformComponent> XformQuery;
+        public required SharedUserInterfaceSystem System;
         public readonly List<(EntityUid Ui, Enum Key, InterfaceData Data, EntityUid Actor, bool Result)> ActorRanges = new();
 
         public void Execute(int index)

@@ -355,12 +355,14 @@ namespace Robust.UnitTesting.Shared
             var lookup = server.Resolve<IEntitySystemManager>().GetEntitySystem<EntityLookupSystem>();
             var entManager = server.Resolve<IEntityManager>();
             var mapManager = server.Resolve<IMapManager>();
+            var mapSystem = entManager.System<SharedMapSystem>();
+            var transformSystem = entManager.System<SharedTransformSystem>();
 
             var mapId = server.CreateMap().MapId;
             var grid = mapManager.CreateGridEntity(mapId);
 
             var theMapSpotBeingUsed = new Box2(Vector2.Zero, Vector2.One);
-            grid.Comp.SetTile(new Vector2i(), new Tile(1));
+            mapSystem.SetTile(grid, new Vector2i(), new Tile(1));
 
             Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList(), Is.Empty);
 
@@ -371,15 +373,16 @@ namespace Robust.UnitTesting.Shared
             var xform = entManager.GetComponent<TransformComponent>(dummy);
 
             // When anchoring it should still get returned.
-            xform.Anchored = true;
-            Assert.That(xform.Anchored);
+            transformSystem.AnchorEntity(dummy, xform);
+            Assert.That(xform.Anchored, Is.True);
             Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList(), Has.Count.EqualTo(1));
 
-            xform.Anchored = false;
+            transformSystem.Unanchor(dummy, xform);
+            Assert.That(xform.Anchored, Is.False);
             Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList().Count, Is.EqualTo(1));
 
             entManager.DeleteEntity(dummy);
-            mapManager.DeleteGrid(grid);
+            entManager.DeleteEntity(grid);
             mapManager.DeleteMap(mapId);
         }
     }

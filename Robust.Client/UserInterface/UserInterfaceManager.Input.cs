@@ -35,6 +35,7 @@ internal partial class UserInterfaceManager
                 return;
             _controlFocused?.ControlFocusExited();
             _controlFocused = value;
+            _needUpdateActiveCursor = true;
         }
     }
 

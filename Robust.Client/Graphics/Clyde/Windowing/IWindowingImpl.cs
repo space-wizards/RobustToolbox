@@ -39,6 +39,7 @@ namespace Robust.Client.Graphics.Clyde
             void WindowDestroy(WindowReg reg);
             void WindowSetTitle(WindowReg window, string title);
             void WindowSetMonitor(WindowReg window, IClydeMonitor monitor);
+            void WindowSetSize(WindowReg window, Vector2i size);
             void WindowSetVisible(WindowReg window, bool visible);
             void WindowRequestAttention(WindowReg window);
             void WindowSwapBuffers(WindowReg window);

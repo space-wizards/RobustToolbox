@@ -69,7 +69,6 @@ public partial class PrototypeManager
         var errors = new List<ErrorNode>();
         foreach (var (type, instances) in prototypes)
         {
-            var defaultErrorOccurred = false;
             foreach (var (id, data) in instances)
             {
                 errors.Clear();

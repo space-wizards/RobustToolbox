@@ -20,6 +20,15 @@ zzzz-object-pronoun = { GENDER($ent) ->
    *[neuter] it
    }
 
+# Used internally by the DAT-OBJ() function.
+# Not used in en-US. Created for supporting other languages.
+zzzz-dat-object = { GENDER($ent) ->
+    [male] him
+    [female] her
+    [epicene] them
+   *[neuter] it
+   }
+
 # Used internally by the POSS-PRONOUN() function.
 zzzz-possessive-pronoun = { GENDER($ent) ->
     [male] his

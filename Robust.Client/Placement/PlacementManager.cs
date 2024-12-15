@@ -27,6 +27,7 @@ namespace Robust.Client.Placement
 {
     public sealed partial class PlacementManager : IPlacementManager, IDisposable, IEntityEventSubscriber
     {
+        [Dependency] private readonly ILogManager _logManager = default!;
         [Dependency] private readonly IClientNetManager _networkManager = default!;
         [Dependency] internal readonly IPlayerManager PlayerManager = default!;
         [Dependency] internal readonly IResourceCache ResourceCache = default!;
@@ -42,7 +43,7 @@ namespace Robust.Client.Placement
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
         [Dependency] internal readonly IClyde Clyde = default!;
 
-        private readonly ISawmill _sawmill = default!;
+        private ISawmill _sawmill = default!;
 
         private SharedMapSystem Maps => EntityManager.System<SharedMapSystem>();
         private SharedTransformSystem XformSystem => EntityManager.System<SharedTransformSystem>();
@@ -193,6 +194,7 @@ namespace Robust.Client.Placement
         public void Initialize()
         {
             _drawingShader = _prototypeManager.Index<ShaderPrototype>("unshaded").Instance();
+            _sawmill = _logManager.GetSawmill("placement");
 
             _networkManager.RegisterNetMessage<MsgPlacement>(HandlePlacementMessage);
 
@@ -484,7 +486,7 @@ namespace Robust.Client.Placement
 
             if (!_modeDictionary.TryFirstOrNull(pair => pair.Key.Equals(CurrentPermission.PlacementOption), out KeyValuePair<string, Type>? placeMode))
             {
-                _sawmill.Log(LogLevel.Warning, nameof(PlacementManager), $"Invalid placement mode `{CurrentPermission.PlacementOption}`");
+                _sawmill.Log(LogLevel.Warning, $"Invalid placement mode `{CurrentPermission.PlacementOption}`");
                 Clear();
                 return;
             }

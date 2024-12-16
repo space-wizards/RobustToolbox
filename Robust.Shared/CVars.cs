@@ -394,6 +394,18 @@ namespace Robust.Shared
         public static readonly CVarDef<int> NetEncryptionThreadChannelSize =
             CVarDef.Create("net.encryption_thread_channel_size", 16);
 
+        /// <summary>
+        /// Whether the server should request HWID system for client identification.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Note that modern HWIDs are only available if the connection is authenticated.
+        /// </para>
+        /// </remarks>
+        public static readonly CVarDef<bool> NetHWId =
+            CVarDef.Create("net.hwid", true, CVar.SERVERONLY);
+
+
         /**
          * SUS
          */
@@ -616,6 +628,43 @@ namespace Robust.Shared
         public static readonly CVarDef<string> StatusConnectAddress =
             CVarDef.Create("status.connectaddress", "", CVar.ARCHIVE | CVar.SERVERONLY);
 
+        /// <summary>
+        /// HTTP(S) link to a privacy policy that the user must accept to connect to the server.
+        /// </summary>
+        /// <remarks>
+        /// This must be set along with <see cref="StatusPrivacyPolicyIdentifier"/> and
+        /// <see cref="StatusPrivacyPolicyVersion"/> for the user to be prompted about a privacy policy.
+        /// </remarks>
+        public static readonly CVarDef<string> StatusPrivacyPolicyLink =
+            CVarDef.Create("status.privacy_policy_link", "https://example.com/privacy", CVar.SERVER | CVar.REPLICATED);
+
+        /// <summary>
+        /// An identifier for privacy policy specified by <see cref="StatusPrivacyPolicyLink"/>.
+        /// This must be globally unique.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This value must be globally unique per server community. Servers that want to enforce a
+        /// privacy policy should set this to a value that is unique to their server and, preferably, recognizable.
+        /// </para>
+        /// <para>
+        /// This value is stored by the launcher to keep track of what privacy policies a player has accepted.
+        /// </para>
+        /// </remarks>
+        public static readonly CVarDef<string> StatusPrivacyPolicyIdentifier =
+            CVarDef.Create("status.privacy_policy_identifier", "", CVar.SERVER | CVar.REPLICATED);
+
+        /// <summary>
+        /// A "version" for the privacy policy specified by <see cref="StatusPrivacyPolicyLink"/>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This parameter is stored by the launcher and should be modified whenever your server's privacy policy changes.
+        /// </para>
+        /// </remarks>
+        public static readonly CVarDef<string> StatusPrivacyPolicyVersion =
+            CVarDef.Create("status.privacy_policy_version", "", CVar.SERVER | CVar.REPLICATED);
+
         /*
          * BUILD
          */
@@ -670,6 +719,13 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<string> BuildManifestHash =
             CVarDef.Create("build.manifest_hash", "");
+
+        /// <summary>
+        /// Allows you to disable the display of all entities in the spawn menu that are not labeled with the ShowSpawnMenu category.
+        /// This is useful for forks that just want to disable the standard upstream content
+        /// </summary>
+        public static readonly CVarDef<string> EntitiesCategoryFilter =
+            CVarDef.Create("build.entities_category_filter", "");
 
         /*
          * WATCHDOG
@@ -1087,6 +1143,14 @@ namespace Robust.Shared
             CVarDef.Create("display.thread_window_blit", true, CVar.CLIENTONLY);
 
         /// <summary>
+        /// Diagnostic flag for testing. When using a separate thread for multi-window blitting,
+        /// should the worker be unblocked before the SwapBuffers(). Setting to true may improve
+        /// performance but may cause crashes or rendering errors.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayThreadUnlockBeforeSwap =
+            CVarDef.Create("display.thread_unlock_before_swap", false, CVar.CLIENTONLY);
+
+        /// <summary>
         /// Buffer size of input command channel from windowing thread to main game thread.
         /// </summary>
         public static readonly CVarDef<int> DisplayInputBufferSize =
@@ -1288,7 +1352,7 @@ namespace Robust.Shared
         /// Default is 35 m/s. Around half a tile per tick at 60 ticks per second.
         /// </remarks>
         public static readonly CVarDef<float> MaxLinVelocity =
-            CVarDef.Create("physics.maxlinvelocity", 35f);
+            CVarDef.Create("physics.maxlinvelocity", 35f, CVar.SERVER | CVar.REPLICATED);
 
         /// <summary>
         /// Maximum angular velocity in full rotations per second.
@@ -1635,6 +1699,16 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<long> ReplayMaxUncompressedSize = CVarDef.Create("replay.max_uncompressed_size",
             1024L * 1024, CVar.ARCHIVE);
+
+        /// <summary>
+        /// Size of the replay (in kilobytes) at which point the replay is considered "large",
+        /// and replay clients should enable server GC (if possible) to improve performance.
+        /// </summary>
+        /// <remarks>
+        /// Set to -1 to never make replays use server GC.
+        /// </remarks>
+        public static readonly CVarDef<long> ReplayServerGCSizeThreshold =
+            CVarDef.Create("replay.server_gc_size_threshold", 50L * 1024);
 
         /// <summary>
         /// Uncompressed size of individual files created by the replay (in kilobytes), where each file contains data

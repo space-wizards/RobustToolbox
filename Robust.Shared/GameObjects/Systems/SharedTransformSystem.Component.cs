@@ -1108,13 +1108,6 @@ public abstract partial class SharedTransformSystem
     #region Set Position+Rotation
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [Obsolete("Use override with EntityUid")]
-    public void SetWorldPositionRotation(TransformComponent component, Vector2 worldPos, Angle worldRot)
-    {
-        SetWorldPositionRotation(component.Owner, worldPos, worldRot, component);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetWorldPositionRotation(EntityUid uid, Vector2 worldPos, Angle worldRot, TransformComponent? component = null)
     {
         SetWorldPositionRotationInternal(uid, worldPos, worldRot, component);

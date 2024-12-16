@@ -87,33 +87,33 @@ namespace Robust.Shared.Scripting
 
         public object? prop(object target, string name)
         {
-            return target.GetType().GetProperty(name, BindingFlags.Instance | BindingFlags.NonPublic)
-                    !.GetValue(target);
+            var prop = (PropertyInfo?) ReflectionGetInstanceMember(target.GetType(), MemberTypes.Property, name);
+            return prop!.GetValue(target);
         }
 
         public void setprop(object target, string name, object? value)
         {
-            target.GetType().GetProperty(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
-                !.SetValue(target, value);
+            var prop = (PropertyInfo?) ReflectionGetInstanceMember(target.GetType(), MemberTypes.Property, name);
+            prop!.SetValue(target, value);
         }
 
         public object? fld(object target, string name)
         {
-            return target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
-                !.GetValue(target);
+            var fld = (FieldInfo?) ReflectionGetInstanceMember(target.GetType(), MemberTypes.Field, name);
+            return fld!.GetValue(target);
         }
 
         public void setfld(object target, string name, object? value)
         {
-            target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
-                !.SetValue(target, value);
+            var fld = (FieldInfo?) ReflectionGetInstanceMember(target.GetType(), MemberTypes.Field, name);
+            fld!.SetValue(target, value);
         }
 
         public object? call(object target, string name, params object[] args)
         {
             var t = target.GetType();
             // TODO: overloads
-            var m = t.GetMethod(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+            var m = (MethodInfo?) ReflectionGetInstanceMember(t, MemberTypes.Method, name);
             return m!.Invoke(target, args);
         }
 
@@ -287,5 +287,21 @@ namespace Robust.Shared.Scripting
         }
 
         public Dictionary<string, object?> Variables { get; }  = new();
+
+        private static MemberInfo? ReflectionGetInstanceMember(Type type, MemberTypes memberType, string name)
+        {
+            for (var curType = type; curType != null; curType = curType.BaseType)
+            {
+                var member = curType.GetMember(
+                    name,
+                    memberType,
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+                if (member.Length > 0)
+                    return member[0];
+            }
+
+            return null;
+        }
     }
 }

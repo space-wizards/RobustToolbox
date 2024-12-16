@@ -39,7 +39,7 @@ internal sealed partial class AssemblyTypeChecker
             {
                 if (instruction.TryGetEntityHandle(out var handle))
                 {
-                    if (refs.Contains(handle))
+                    if (refs.Overlaps(ExpandHandle(reader, handle)))
                     {
                         var type = GetTypeFromDefinition(reader, methodDef.GetDeclaringType());
                         _sawmill.Error(
@@ -56,6 +56,12 @@ internal sealed partial class AssemblyTypeChecker
     {
         switch (handle.Kind)
         {
+            case HandleKind.MethodSpecification:
+                var methodSpec = reader.GetMethodSpecification((MethodSpecificationHandle)handle);
+                var methodProvider = new TypeProvider();
+                var spec = methodSpec.DecodeSignature(methodProvider, 0);
+                return $"{DisplayHandle(reader, methodSpec.Method)}<{string.Join(", ", spec.Select(t => t.ToString()))}>";
+
             case HandleKind.MemberReference:
                 var memberRef = reader.GetMemberReference((MemberReferenceHandle)handle);
                 var name = reader.GetString(memberRef.Name);
@@ -90,6 +96,17 @@ internal sealed partial class AssemblyTypeChecker
         }
 
         handles.UnionWith(toAdd);
+    }
+
+    private static IEnumerable<EntityHandle> ExpandHandle(MetadataReader reader, EntityHandle handle)
+    {
+        // Annoying, S.R.M gives no way to iterate over the MethodSpec table.
+        // This means the only way to correlate MethodSpec references is to do it for each handle.
+
+        yield return handle;
+
+        if (handle.Kind == HandleKind.MethodSpecification)
+            yield return reader.GetMethodSpecification((MethodSpecificationHandle)handle).Method;
     }
 
     private readonly struct ILInstruction

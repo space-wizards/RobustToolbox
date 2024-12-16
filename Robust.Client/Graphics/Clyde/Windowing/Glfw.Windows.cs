@@ -84,12 +84,26 @@ namespace Robust.Client.Graphics.Clyde
                 );
             }
 
+            public void WindowSetSize(WindowReg window, Vector2i size)
+            {
+                var reg = (GlfwWindowReg) window;
+
+                SendCmd(new CmdWinSetSize((nint) reg.GlfwWindow, size.X, size.Y));
+            }
+
             public void WindowSetVisible(WindowReg window, bool visible)
             {
                 var reg = (GlfwWindowReg) window;
                 reg.IsVisible = visible;
 
                 SendCmd(new CmdWinSetVisible((nint) reg.GlfwWindow, visible));
+            }
+
+            private void WinThreadWinSetSize(CmdWinSetSize cmd)
+            {
+                var win = (Window*) cmd.Window;
+
+                GLFW.SetWindowSize(win, cmd.W, cmd.H);
             }
 
             private void WinThreadWinSetVisible(CmdWinSetVisible cmd)

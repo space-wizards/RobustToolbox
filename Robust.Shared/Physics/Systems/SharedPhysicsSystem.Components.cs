@@ -417,12 +417,6 @@ public partial class SharedPhysicsSystem
         }
     }
 
-    [Obsolete("Use overload that takes EntityUid")]
-    public void ResetDynamics(PhysicsComponent body, bool dirty = true)
-    {
-        ResetDynamics(body.Owner, body, dirty);
-    }
-
     public void ResetMassData(EntityUid uid, FixturesComponent? manager = null, PhysicsComponent? body = null)
     {
         if (!PhysicsQuery.Resolve(uid, ref body))
@@ -564,12 +558,6 @@ public partial class SharedPhysicsSystem
         DirtyField(uid, body, nameof(PhysicsComponent.AngularDamping));
     }
 
-    [Obsolete("Use overload that takes EntityUid")]
-    public void SetAngularDamping(PhysicsComponent body, float value, bool dirty = true)
-    {
-        SetAngularDamping(body.Owner, body, value, dirty);
-    }
-
     public void SetLinearDamping(EntityUid uid, PhysicsComponent body, float value, bool dirty = true)
     {
         if (MathHelper.CloseTo(body.LinearDamping, value))
@@ -577,12 +565,6 @@ public partial class SharedPhysicsSystem
 
         body.LinearDamping = value;
         DirtyField(uid, body, nameof(PhysicsComponent.LinearDamping));
-    }
-
-    [Obsolete("Use overload that takes EntityUid")]
-    public void SetLinearDamping(PhysicsComponent body, float value, bool dirty = true)
-    {
-        SetLinearDamping(body.Owner, body, value, dirty);
     }
 
     [Obsolete("Use SetAwake with EntityUid<PhysicsComponent>")]
@@ -704,12 +686,6 @@ public partial class SharedPhysicsSystem
         DirtyField(uid, body, nameof(PhysicsComponent.BodyStatus));
     }
 
-    [Obsolete("Use overload that takes EntityUid")]
-    public void SetBodyStatus(PhysicsComponent body, BodyStatus status, bool dirty = true)
-    {
-        SetBodyStatus(body.Owner, body, status, dirty);
-    }
-
     /// <summary>
     /// Sets the <see cref="PhysicsComponent.CanCollide"/> property; this handles whether the body is enabled.
     /// </summary>
@@ -788,12 +764,6 @@ public partial class SharedPhysicsSystem
         DirtyField(uid, body, nameof(PhysicsComponent.Friction));
     }
 
-    [Obsolete("Use overload that takes EntityUid")]
-    public void SetFriction(PhysicsComponent body, float value, bool dirty = true)
-    {
-        SetFriction(body.Owner, body, value, dirty);
-    }
-
     public void SetInertia(EntityUid uid, PhysicsComponent body, float value, bool dirty = true)
     {
         DebugTools.Assert(!float.IsNaN(value));
@@ -809,12 +779,6 @@ public partial class SharedPhysicsSystem
             body.InvI = 1.0f / body._inertia;
             // Not networked
         }
-    }
-
-    [Obsolete("Use overload that takes EntityUid")]
-    public void SetInertia(PhysicsComponent body, float value, bool dirty = true)
-    {
-        SetInertia(body.Owner, body, value, dirty);
     }
 
     public void SetLocalCenter(EntityUid uid, PhysicsComponent body, Vector2 value)

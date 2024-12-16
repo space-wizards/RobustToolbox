@@ -254,8 +254,8 @@ internal sealed unsafe class ResizableMemoryRegion<T> : IDisposable where T : un
     public ref T GetRef(int index)
     {
         // If the memory region is disposed, CurrentSize is 0 and this check always fails.
-        if (index >= CurrentSize)
-            ThrowIndexOutOfRangeException();
+        if (index >= CurrentSize || index < 0)
+            ThrowIndexOutOfRangeException(CurrentSize, index);
 
         return ref *(BaseAddress + index);
     }
@@ -302,9 +302,9 @@ internal sealed unsafe class ResizableMemoryRegion<T> : IDisposable where T : un
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void ThrowIndexOutOfRangeException()
+    private static void ThrowIndexOutOfRangeException(int size, int index)
     {
-        throw new IndexOutOfRangeException();
+        throw new IndexOutOfRangeException($"Index was outside the bounds of the memory region. Size: {size}, Index: {index}");
     }
 
     private void ReleaseUnmanagedResources()

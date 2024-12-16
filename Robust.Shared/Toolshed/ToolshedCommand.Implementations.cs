@@ -29,6 +29,9 @@ public abstract partial class ToolshedCommand
         return false;
     }
 
+    /// <summary>
+    /// Does its best to find an implementation that can deal with the given types
+    /// </summary>
     internal List<MethodInfo> GetConcreteImplementations(Type? pipedType, Type[] typeArguments,
         string? subCommand)
     {
@@ -97,8 +100,8 @@ public abstract partial class ToolshedCommand
                         if (x.HasCustomAttribute<TakesPipedTypeAsGenericAttribute>())
                         {
                             var paramT = x.ConsoleGetPipedArgument()!.ParameterType;
-                            var t = pipedType!.Intersect(paramT);
-                            return x.MakeGenericMethod(typeArguments.Append(t).ToArray());
+                            var t = pipedType!.IntersectWithGeneric(paramT, Toolshed, true);
+                            return x.MakeGenericMethod([.. typeArguments, .. t!]);
                         }
                         else
                             return x.MakeGenericMethod(typeArguments);

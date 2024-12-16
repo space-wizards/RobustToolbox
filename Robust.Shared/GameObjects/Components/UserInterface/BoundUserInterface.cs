@@ -12,7 +12,7 @@ namespace Robust.Shared.GameObjects
     public abstract class BoundUserInterface : IDisposable
     {
         [Dependency] protected readonly IEntityManager EntMan = default!;
-        [Dependency] private readonly ISharedPlayerManager _playerManager = default!;
+        [Dependency] protected readonly ISharedPlayerManager PlayerManager = default!;
         protected readonly SharedUserInterfaceSystem UiSystem;
 
         public readonly Enum UiKey;
@@ -60,6 +60,27 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <summary>
+        /// Calls <see cref="UpdateState"/> if the supplied state exists and calls <see cref="Update"/>
+        /// </summary>
+        public void Update<T>() where T : BoundUserInterfaceState
+        {
+            if (UiSystem.TryGetUiState<T>(Owner, UiKey, out var state))
+            {
+                UpdateState(state);
+            }
+
+            Update();
+        }
+
+        /// <summary>
+        /// Generic update method called whenever the BUI should update.
+        /// </summary>
+        public virtual void Update()
+        {
+
+        }
+
+        /// <summary>
         /// Helper method that gets called upon prototype reload.
         /// </summary>
         public virtual void OnProtoReload(PrototypesReloadedEventArgs args)
@@ -79,7 +100,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void Close()
         {
-            UiSystem.CloseUi(Owner, UiKey, _playerManager.LocalEntity, predicted: true);
+            UiSystem.CloseUi(Owner, UiKey, PlayerManager.LocalEntity, predicted: true);
         }
 
         /// <summary>

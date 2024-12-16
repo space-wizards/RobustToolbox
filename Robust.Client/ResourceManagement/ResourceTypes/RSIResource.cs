@@ -183,6 +183,7 @@ namespace Robust.Client.ResourceManagement
             data.DimX = dimensionX;
             data.CallbackOffsets = callbackOffsets;
             data.LoadParameters = metadata.LoadParameters;
+            data.MetaAtlas = metadata.MetaAtlas;
         }
 
         internal static void LoadPostTexture(LoadStepData data)
@@ -386,6 +387,7 @@ namespace Robust.Client.ResourceManagement
             public Vector2i AtlasOffset;
             public RSI Rsi = default!;
             public TextureLoadParameters LoadParameters;
+            public bool MetaAtlas;
         }
 
         internal struct StateReg

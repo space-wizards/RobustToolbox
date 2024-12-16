@@ -162,61 +162,6 @@ public interface IPrototypeManager
     bool TryGetMapping(Type kind, string id, [NotNullWhen(true)] out MappingDataNode? mappings);
 
     /// <summary>
-    ///     Returns whether a prototype variant <param name="variant"/> exists.
-    /// </summary>
-    /// <param name="variant">Identifier for the prototype variant.</param>
-    /// <returns>Whether the prototype variant exists.</returns>
-    [Obsolete("Variant is outdated naming, use *kind* functions instead")]
-    bool HasVariant(string variant);
-
-    /// <summary>
-    ///     Returns the Type for a prototype variant.
-    /// </summary>
-    /// <param name="variant">Identifier for the prototype variant.</param>
-    /// <returns>The specified prototype Type.</returns>
-    /// <exception cref="KeyNotFoundException">
-    ///     Thrown when the specified prototype variant isn't registered or doesn't exist.
-    /// </exception>
-    [Obsolete("Variant is outdated naming, use *kind* functions instead")]
-    Type GetVariantType(string variant);
-
-    /// <summary>
-    ///     Attempts to get the Type for a prototype variant.
-    /// </summary>
-    /// <param name="variant">Identifier for the prototype variant.</param>
-    /// <param name="prototype">The specified prototype Type, or null.</param>
-    /// <returns>Whether the prototype type was found and <see cref="prototype"/> isn't null.</returns>
-    [Obsolete("Variant is outdated naming, use *kind* functions instead")]
-    bool TryGetVariantType(string variant, [NotNullWhen(true)] out Type? prototype);
-
-    /// <summary>
-    ///     Attempts to get a prototype's variant.
-    /// </summary>
-    /// <param name="type"></param>
-    /// <param name="variant"></param>
-    /// <returns></returns>
-    [Obsolete("Variant is outdated naming, use *kind* functions instead")]
-    bool TryGetVariantFrom(Type type, [NotNullWhen(true)] out string? variant);
-
-    /// <summary>
-    ///     Attempts to get a prototype's variant.
-    /// </summary>
-    /// <param name="prototype">The prototype in question.</param>
-    /// <param name="variant">Identifier for the prototype variant, or null.</param>
-    /// <returns>Whether the prototype variant was successfully retrieved.</returns>
-    [Obsolete("Variant is outdated naming, use *kind* functions instead")]
-    bool TryGetVariantFrom(IPrototype prototype, [NotNullWhen(true)] out string? variant);
-
-    /// <summary>
-    ///     Attempts to get a prototype's variant.
-    /// </summary>
-    /// <param name="variant">Identifier for the prototype variant, or null.</param>
-    /// <typeparam name="T">The prototype in question.</typeparam>
-    /// <returns>Whether the prototype variant was successfully retrieved.</returns>
-    [Obsolete("Variant is outdated naming, use *kind* functions instead")]
-    bool TryGetVariantFrom<T>([NotNullWhen(true)] out string? variant) where T : class, IPrototype;
-
-    /// <summary>
     ///     Returns whether a prototype kind <param name="kind"/> exists.
     /// </summary>
     /// <param name="kind">Identifier for the prototype kind.</param>
@@ -354,14 +299,6 @@ public interface IPrototypeManager
     ///     Registers a specific prototype name to be ignored.
     /// </summary>
     void RegisterIgnore(string name);
-
-    /// <summary>
-    /// Loads a single prototype class type into the manager.
-    /// </summary>
-    /// <param name="protoClass">A prototype class type that implements IPrototype. This type also
-    /// requires a <see cref="PrototypeAttribute"/> with a non-empty class string.</param>
-    [Obsolete("Prototype type is outdated naming, use *king* functions instead")]
-    void RegisterType(Type protoClass);
 
     /// <summary>
     /// Loads several prototype kinds into the manager. Note that this will re-build a frozen dictionary and should be avoided if possible.

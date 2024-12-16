@@ -11,7 +11,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Toolshed.TypeParsers;
 
 public sealed class EnumTypeParser<T> : TypeParser<T>
-    where T: unmanaged, Enum
+    where T : unmanaged, Enum
 {
     public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result,
         out IConError? error)
@@ -46,14 +46,14 @@ public sealed class EnumTypeParser<T> : TypeParser<T>
         return true;
     }
 
-    public override async ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext, string? argName)
+    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext, string? argName)
     {
-        return (CompletionResult.FromOptions(Enum.GetNames<T>()), null);
+        return new ValueTask<(CompletionResult?, IConError?)>((CompletionResult.FromOptions(Enum.GetNames<T>()), null));
     }
 }
 
 public record InvalidEnum<T>(string Value) : IConError
-    where T: unmanaged, Enum
+    where T : unmanaged, Enum
 {
     public FormattedMessage DescribeInner()
     {

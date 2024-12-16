@@ -11,7 +11,7 @@ namespace Robust.Shared.GameObjects;
 /// <summary>
 ///     Handles moving entities between grids as they move around.
 /// </summary>
-internal sealed class SharedGridTraversalSystem : EntitySystem
+public sealed class SharedGridTraversalSystem : EntitySystem
 {
     [Dependency] private readonly IMapManagerInternal _mapManager = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
@@ -21,6 +21,10 @@ internal sealed class SharedGridTraversalSystem : EntitySystem
 
     /// <summary>
     /// Enables or disables changing grid / map uid upon moving.
+    /// WARNING: If you do this in a live-game. You need to make sure that the parented entity
+    /// doesn't move too far away from the grid. As it will cause Entity Lookups to not see it
+    /// (because the grid its parented to is not close enough and all parented entities are assumed
+    /// to be on the grid through the broadphase component)
     /// </summary>
     public bool Enabled = true;
 

@@ -87,8 +87,8 @@ internal record struct Polygon : IPhysShape
 
         if (hull.Count < 3)
         {
-            Vertices = Array.Empty<Vector2>();
-            Normals = Array.Empty<Vector2>();
+            Vertices = [];
+            Normals = [];
             return;
         }
 

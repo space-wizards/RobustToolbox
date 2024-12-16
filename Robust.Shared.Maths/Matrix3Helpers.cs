@@ -73,7 +73,7 @@ public static class Matrix3Helpers
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Angle Rotation(this Matrix3x2 t)
     {
-        return new Vector2(t.M11, t.M12).ToAngle();
+        return new Angle(Math.Atan2(t.M12, t.M11));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

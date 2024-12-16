@@ -25,21 +25,10 @@ public sealed partial class RayCastSystem : EntitySystem
      * - If you wish to add more helper methods make a new partial and dump them there and have them call the below methods.
      */
 
-    [Dependency] private readonly EntityLookupSystem _lookup = default!;
     [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
     private readonly RayComparer _rayComparer = new();
-
-    private EntityQuery<BroadphaseComponent> _broadQuery;
-    private EntityQuery<TransformComponent> _xformQuery;
-
-    public override void Initialize()
-    {
-        base.Initialize();
-        _broadQuery = GetEntityQuery<BroadphaseComponent>();
-        _xformQuery = GetEntityQuery<TransformComponent>();
-    }
 
     #region RayCast
 

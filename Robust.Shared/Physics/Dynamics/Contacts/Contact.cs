@@ -131,6 +131,14 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// </summary>
         public float TangentSpeed { get; set; }
 
+        [ViewVariables]
+        public bool Deleting => (Flags & ContactFlags.Deleting) == ContactFlags.Deleting;
+
+        /// <summary>
+        /// If either fixture is hard then it's a hard contact.
+        /// </summary>
+        public bool Hard => FixtureA != null && FixtureB != null && (FixtureA.Hard && FixtureB.Hard);
+
         public void ResetRestitution()
         {
             Restitution = MathF.Max(FixtureA?.Restitution ?? 0.0f, FixtureB?.Restitution ?? 0.0f);
@@ -353,6 +361,16 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             return HashCode.Combine(EntityA, EntityB);
         }
 
+        public EntityUid OurEnt(EntityUid uid)
+        {
+            if (uid == EntityA)
+                return EntityA;
+            else if (uid == EntityB)
+                return EntityB;
+
+            throw new InvalidOperationException();
+        }
+
         /// <summary>
         /// Gets the other ent for this contact.
         /// </summary>
@@ -362,6 +380,16 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 return EntityB;
             else if (uid == EntityB)
                 return EntityA;
+
+            throw new InvalidOperationException();
+        }
+
+        public (string Id, Fixture) OurFixture(EntityUid uid)
+        {
+            if (uid == EntityA)
+                return (FixtureAId, FixtureA!);
+            else if (uid == EntityB)
+                return (FixtureBId, FixtureB!);
 
             throw new InvalidOperationException();
         }

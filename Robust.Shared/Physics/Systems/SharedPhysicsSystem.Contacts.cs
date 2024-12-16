@@ -790,10 +790,10 @@ public abstract partial class SharedPhysicsSystem
     /// Returns all of this entity's contacts.
     /// </summary>
     [Pure]
-    public ContactEnumerator GetContacts(Entity<FixturesComponent?> entity)
+    public ContactEnumerator GetContacts(Entity<FixturesComponent?> entity, bool includeDeleting = false)
     {
         _fixturesQuery.Resolve(entity.Owner, ref entity.Comp);
-        return new ContactEnumerator(entity.Comp);
+        return new ContactEnumerator(entity.Comp, includeDeleting);
     }
 }
 
@@ -804,8 +804,16 @@ public record struct ContactEnumerator
     private Dictionary<string, Fixture>.ValueCollection.Enumerator _fixtureEnumerator;
     private Dictionary<Fixture, Contact>.ValueCollection.Enumerator _contactEnumerator;
 
-    public ContactEnumerator(FixturesComponent? fixtures)
+    /// <summary>
+    /// Also include deleting contacts.
+    /// This typically includes the current contact if you're invoking this in the eventbus for an EndCollideEvent.
+    /// </summary>
+    public bool IncludeDeleting;
+
+    public ContactEnumerator(FixturesComponent? fixtures, bool includeDeleting = false)
     {
+        IncludeDeleting = includeDeleting;
+
         if (fixtures == null || fixtures.Fixtures.Count == 0)
         {
             this = Empty;
@@ -832,6 +840,10 @@ public record struct ContactEnumerator
         }
 
         contact = _contactEnumerator.Current;
+
+        if (!IncludeDeleting && contact.Deleting)
+            return MoveNext(out contact);
+
         return true;
     }
 }

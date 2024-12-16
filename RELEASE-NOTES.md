@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * Added stack-like functions to `ValueList<T>` and added an `AddRange(ReadOnlySpan<T>)` overload.
+* Added a new RayCastSystem with the latest Box2D raycast + shapecasts implemented.
 
 ### Bugfixes
 

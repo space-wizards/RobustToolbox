@@ -745,6 +745,21 @@ namespace Robust.Shared.Maths
             return remainder == T.Zero ? value : (value | mask) + T.One;
         }
 
+        public static bool IsValid(this float value)
+        {
+            if (float.IsNaN(value))
+            {
+                return false;
+            }
+
+            if (float.IsInfinity(value))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         #endregion Public Members
     }
 }

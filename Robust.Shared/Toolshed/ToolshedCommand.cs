@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
-using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Reflection;
-using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Toolshed.TypeParsers;
 using Robust.Shared.Utility;
@@ -55,132 +52,196 @@ public abstract partial class ToolshedCommand
     ///     The user-facing name of the command.
     /// </summary>
     /// <remarks>This is automatically generated based on the type name unless overridden with <see cref="ToolshedCommandAttribute"/>.</remarks>
-    public string Name { get; }
+    public string Name { get; private set; } = default!;
 
     /// <summary>
     ///     Whether or not this command has subcommands.
     /// </summary>
-    public bool HasSubCommands { get; }
+    public bool HasSubCommands;
 
     /// <summary>
     ///     The additional type parameters of this command, specifically which parsers to use.
     /// </summary>
-    /// <remarks>Every type specified must either be <see cref="Type"/> itself or something implementing <see cref="IAsType{Type}"/> where T is Type.</remarks>
+    /// <remarks>Every type specified must be either be <see cref="TypeTypeParser"/> or must inherit from CustomTypeParser&lt;Type&gt;.</remarks>
     public virtual Type[] TypeParameterParsers => Array.Empty<Type>();
 
-    internal bool HasTypeParameters => TypeParameterParsers.Length != 0;
-
     /// <summary>
-    ///     The list of all subcommands on this command.
+    ///     The set of all subcommands on this command.
     /// </summary>
-    public IEnumerable<string> Subcommands => _implementors.Keys.Where(x => x != "");
+    public IEnumerable<string> Subcommands => CommandImplementors.Keys;
 
-    /// <summary>
-    /// List of parameters for this command and all sub commands. Used for command help usage.
-    /// Dictionary(subCommand, List(pipedType, List(parameterType)))
-    /// </summary>
-    private readonly Dictionary<string, List<(Type?, List<Type>)>> _readonlyParameters;
+    internal readonly Dictionary<string, ToolshedCommandImplementor> CommandImplementors = new();
 
-    protected ToolshedCommand()
+    private readonly Dictionary<string, HashSet<Type>> _acceptedTypes = new();
+
+    protected internal ToolshedCommand()
     {
-        var name = GetType().GetCustomAttribute<ToolshedCommandAttribute>()!.Name;
+    }
 
+    internal void Init()
+    {
+        var type = GetType();
+        var name = type.GetCustomAttribute<ToolshedCommandAttribute>()!.Name;
         if (name is null)
         {
-            var typeName = GetType().Name;
+            var typeName = type.Name;
             const string commandStr = "Command";
-
             if (!typeName.EndsWith(commandStr))
-            {
-                throw new InvalidComponentNameException($"Command {GetType()} must end with the word Command");
-            }
+                throw new InvalidCommandImplementation($"Command {type} must end with the word Command");
 
             name = typeName[..^commandStr.Length].ToLowerInvariant();
         }
 
+        if (string.IsNullOrEmpty(name) || !name.EnumerateRunes().All(ParserContext.IsCommandToken))
+            throw new InvalidCommandImplementation($"Command name contains invalid tokens");
+
         Name = name;
-        HasSubCommands = false;
-        _implementors[""] =
-            new ToolshedCommandImplementor
-            {
-                Owner = this,
-                SubCommand = null
-            };
 
-        var impls = GetGenericImplementations();
-        Dictionary<(string, Type?), SortedDictionary<string, Type>> parameters = new();
+        foreach (var typeParser in TypeParameterParsers)
+        {
+            if (typeParser == typeof(TypeTypeParser))
+                continue;
+            if (!typeParser.IsAssignableTo(typeof(CustomTypeParser<Type>)))
+                throw new InvalidCommandImplementation($"{nameof(TypeParameterParsers)} element {typeParser} is not {nameof(TypeTypeParser)} or assignable to {typeof(CustomTypeParser<Type>).PrettyName()}");
+        }
 
-        _readonlyParameters = new();
+        var impls = GetGenericImplementations().ToArray();
+        if (impls.Length == 0)
+            throw new Exception($"Command has no implementations?");
+
+        var implementations = new HashSet<(string?, Type?)>();
+        var argNames =  new HashSet<string>();
+        var hasNonSubCommands = false;
 
         foreach (var impl in impls)
         {
-            var myParams = new SortedDictionary<string, Type>();
-            var orderedParams = new List<Type>();
+            var hasInverted = false;
+            var hasCtx = false;
+            Type? pipeType = null;
+            argNames.Clear();
+
+            foreach (var param in impl.GetParameters())
+            {
+                var hasAnyAttribute = false;
+
+                if (param.HasCustomAttribute<CommandArgumentAttribute>())
+                {
+                    if (param.Name == null || !argNames.Add(param.Name))
+                        throw new InvalidCommandImplementation($"Command arguments must have a unique name");
+                    hasAnyAttribute = true;
+                }
+
+                if (param.HasCustomAttribute<PipedArgumentAttribute>())
+                {
+                    if (hasAnyAttribute)
+                        throw new InvalidCommandImplementation($"Method parameter cannot have more than one relevant attribute");
+                    if (pipeType != null)
+                        throw new InvalidCommandImplementation($"Commands cannot have more than one piped argument");
+                    pipeType = param.ParameterType;
+                    hasAnyAttribute = true;
+                }
+
+                if (param.HasCustomAttribute<CommandInvertedAttribute>())
+                {
+                    if (hasAnyAttribute)
+                        throw new InvalidCommandImplementation($"Method parameter cannot have more than one relevant attribute");
+                    if (hasInverted)
+                        throw new InvalidCommandImplementation($"Duplicate {nameof(CommandInvertedAttribute)}");
+                    if (param.ParameterType != typeof(bool))
+                        throw new InvalidCommandImplementation($"Command argument with the {nameof(CommandInvertedAttribute)} must be of type bool");
+                    hasInverted = true;
+                    hasAnyAttribute = true;
+                }
+
+                if (param.HasCustomAttribute<CommandInvocationContextAttribute>())
+                {
+                    if (hasAnyAttribute)
+                        throw new InvalidCommandImplementation($"Method parameter cannot have more than one relevant attribute");
+                    if (hasCtx)
+                        throw new InvalidCommandImplementation($"Duplicate {nameof(CommandInvocationContextAttribute)}");
+                    if (param.ParameterType != typeof(IInvocationContext))
+                        throw new InvalidCommandImplementation($"Command argument with the {nameof(CommandInvocationContextAttribute)} must be of type {nameof(IInvocationContext)}");
+                    hasCtx = true;
+                    hasAnyAttribute = true;
+                }
+
+                if (hasAnyAttribute)
+                    continue;
+
+                // Implicit [CommandInvocationContext]
+                if (param.ParameterType == typeof(IInvocationContext))
+                {
+                    if (hasCtx)
+                        throw new InvalidCommandImplementation($"Duplicate (implicit?) {nameof(CommandInvocationContextAttribute)}");
+                    hasCtx = true;
+                    continue;
+                }
+
+                // Implicit [CommandArgument]
+                if (param.Name == null || !argNames.Add(param.Name))
+                    throw new InvalidCommandImplementation($"Command arguments must have a unique name");
+            }
+
+            var takesPipedGeneric = impl.HasCustomAttribute<TakesPipedTypeAsGenericAttribute>();
+            var expected = TypeParameterParsers.Length + (takesPipedGeneric ? 1 : 0);
+            var genericCount = impl.IsGenericMethodDefinition ? impl.GetGenericArguments().Length : 0;
+            if (genericCount != expected)
+                throw new InvalidCommandImplementation("Incorrect number of generic arguments.");
+
+            if (takesPipedGeneric)
+            {
+                if (!impl.IsGenericMethodDefinition)
+                    throw new InvalidCommandImplementation($"{nameof(TakesPipedTypeAsGenericAttribute)} requires a method to have generics");
+                if (pipeType == null)
+                    throw new InvalidCommandImplementation($"{nameof(TakesPipedTypeAsGenericAttribute)} required there to be a piped parameter");
+
+                // type that would used to create a concrete method if the desired pipe type were passed in.
+                var expectedGeneric = ToolshedCommandImplementor.GetGenericTypeFromPiped(pipeType, pipeType);
+                var lastGeneric = impl.GetGenericArguments()[^1];
+                if (expectedGeneric != lastGeneric)
+                    throw new InvalidCommandImplementation($"Commands using {nameof(TakesPipedTypeAsGenericAttribute)} must have the inferred piped parameter type {expectedGeneric.Name} be the last generic parameter");
+            }
+
             string? subCmd = null;
             if (impl.GetCustomAttribute<CommandImplementationAttribute>() is {SubCommand: { } x})
             {
                 subCmd = x;
                 HasSubCommands = true;
-                _implementors[x] =
-                    new ToolshedCommandImplementor
-                    {
-                        Owner = this,
-                        SubCommand = x
-                    };
+                if (string.IsNullOrEmpty(subCmd) || !subCmd.EnumerateRunes().All(ParserContext.IsToken))
+                    throw new InvalidCommandImplementation($"Subcommand name {subCmd} contains invalid tokens");
             }
-
-            Type? pipedType = null;
-            foreach (var param in impl.GetParameters())
+            else
             {
-                if (param.GetCustomAttribute<CommandArgumentAttribute>() is not null)
-                {
-                    if (myParams.TryAdd(param.Name!, param.ParameterType))
-                        orderedParams.Add(param.ParameterType);
-                }
-
-                if (param.GetCustomAttribute<PipedArgumentAttribute>() is not null)
-                {
-                    if (pipedType != null)
-                        throw new NotSupportedException($"Commands cannot have more than one piped argument");
-                    pipedType = param.ParameterType;
-                }
+                hasNonSubCommands = true;
             }
 
-            var key = (subCmd ?? "", pipedType);
-            if (parameters.TryAdd(key, myParams))
-            {
-                var readParam = _readonlyParameters.GetOrNew(subCmd ?? "");
-                readParam.Add((pipedType, orderedParams));
-                continue;
-            }
+            // Currently a command either has no subcommands, or **only** subcommands. This was the behaviour when I got
+            // here, and I don't see a clear reason why it couldn't be supported if desired.
+            if (hasNonSubCommands && HasSubCommands)
+                throw new InvalidCommandImplementation("Toolshed commands either need to be all sub-commands, or have no sub commands at all.");
 
-            if (!parameters[key].SequenceEqual(myParams))
-                throw new NotImplementedException("All command implementations of a given subcommand with the same pipe type must share the same argument types");
+            // AFAIK this is currently just not supported, though it could eventually be added?
+            if (!implementations.Add((subCmd, pipeType)))
+                throw new InvalidCommandImplementation("The combination of subcommand and piped parameter type must be unique");
+
+            var key = subCmd ?? string.Empty;
+            if (!CommandImplementors.ContainsKey(key))
+                CommandImplementors[key] = new ToolshedCommandImplementor(subCmd, this, Toolshed, Loc);
         }
     }
 
-    internal IEnumerable<Type> AcceptedTypes(string? subCommand)
+    internal HashSet<Type> AcceptedTypes(string? subCommand)
     {
-        return GetGenericImplementations()
-            .Where(x =>
-                x.ConsoleGetPipedArgument() is not null
-            &&  x.GetCustomAttribute<CommandImplementationAttribute>()?.SubCommand == subCommand)
-            .Select(x => x.ConsoleGetPipedArgument()!.ParameterType);
-    }
+        if (_acceptedTypes.TryGetValue(subCommand ?? "", out var set))
+            return set;
 
-    internal bool TryParseArguments(
-            bool doAutocomplete,
-            ParserContext parserContext,
-            Type? pipedType,
-            string? subCommand,
-            [NotNullWhen(true)] out Dictionary<string, object?>? args,
-            out Type[] resolvedTypeArguments,
-            out IConError? error,
-            out ValueTask<(CompletionResult?, IConError?)>? autocomplete
-        )
-    {
-
-        return _implementors[subCommand ?? ""].TryParseArguments(doAutocomplete, parserContext, subCommand, pipedType, out args, out resolvedTypeArguments, out error, out autocomplete);
+        return _acceptedTypes[subCommand ?? ""] = GetType()
+            .GetMethods(MethodFlags)
+            .Where(x => x.GetCustomAttribute<CommandImplementationAttribute>() is {} attr  && attr.SubCommand == subCommand )
+            .Select(x => x.ConsoleGetPipedArgument())
+            .Where(x => x != null)
+            .Select(x => x!.ParameterType)
+            .ToHashSet();
     }
 }
 
@@ -189,30 +250,73 @@ internal sealed class CommandInvocationArguments
     public required object? PipedArgument;
     public required IInvocationContext Context { get; set; }
     public required CommandArgumentBundle Bundle;
-    public Dictionary<string, object?> Arguments => Bundle.Arguments;
+    public Dictionary<string, object?>? Arguments => Bundle.Arguments;
     public bool Inverted => Bundle.Inverted;
-    public Type? PipedArgumentType => Bundle.PipedArgumentType;
 }
 
-internal sealed class CommandArgumentBundle
+/// <summary>
+/// Collection of values used in the process of parsing a single command.
+/// </summary>
+public struct CommandArgumentBundle
 {
-    public required Dictionary<string, object?> Arguments;
-    public required bool Inverted = false;
-    public required Type? PipedArgumentType;
-    public required Type[] TypeArguments;
+    /// <summary>
+    /// The name of the command currently being parsed.
+    /// </summary>
+    public string? Command;
+
+    /// <summary>
+    /// The name of the sub-command currently being parsed.
+    /// </summary>
+    public string? SubCommand;
+
+    /// <summary>
+    /// The collection of arguments that will be handed to the command method.
+    /// </summary>
+    public Dictionary<string, object?>? Arguments;
+
+    /// <summary>
+    /// The collection of type arguments that will be used to get a concrete method for generic commands.
+    /// This does not include any generic parameters that are inferred from the <see cref="PipedType"/>.
+    /// </summary>
+    public Type[]? TypeArguments;
+
+    /// <summary>
+    /// The value that will get passed to any method arguments with the <see cref="CommandInvertedAttribute"/>.
+    /// </summary>
+    public required bool Inverted;
+
+    /// <summary>
+    /// The type of input that will be piped into this command.
+    /// </summary>
+    public required Type? PipedType;
 }
 
-internal readonly record struct CommandDiscriminator(Type? PipedType, Type[] TypeArguments)
+internal readonly record struct CommandDiscriminator(Type? PipedType, Type[]? TypeArguments)
 {
     public bool Equals(CommandDiscriminator other)
     {
-        return other.PipedType == PipedType && other.TypeArguments.SequenceEqual(TypeArguments);
+        if (other.PipedType != PipedType)
+            return false;
+
+        if (other.TypeArguments == null && TypeArguments == null)
+            return true;
+
+        if (TypeArguments == null)
+            return false;
+
+        if (TypeArguments.Length != other.TypeArguments!.Length)
+            return false;
+
+        return TypeArguments.SequenceEqual(other.TypeArguments);
     }
 
     public override int GetHashCode()
     {
         // poor man's hash do not judge
         var h = PipedType?.GetHashCode() ?? (int.MaxValue / 3);
+        if (TypeArguments == null)
+            return h;
+
         foreach (var arg in TypeArguments)
         {
             h += h ^ arg.GetHashCode();
@@ -222,3 +326,5 @@ internal readonly record struct CommandDiscriminator(Type? PipedType, Type[] Typ
         return h;
     }
 }
+
+public sealed class InvalidCommandImplementation(string message) : Exception(message);

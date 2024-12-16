@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 using Robust.Shared.Collections;
-using Robust.Shared.IoC;
+using Robust.Shared.Console;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
+using Robust.Shared.Player;
 using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Utility;
 
@@ -18,17 +20,66 @@ public sealed partial class ParserContext
     public readonly ToolshedManager Toolshed;
     public readonly ToolshedEnvironment Environment;
 
+    /// <summary>
+    /// The parser to use when trying autocomplete variable names or to infer the type of a variable.
+    /// </summary>
+    /// <remarks>
+    /// Unless a command uses custom parsing code, the parser context will be unaware if a command modifies a variable's
+    /// type during invocation. As a result, autocompletion may be inaccurate, and invocation may cause a
+    /// <see cref="VarRef{T}.BadVarTypeError"/> if the command that was parsed relied on knowing a variable's type.
+    /// </remarks>
+    public IVariableParser VariableParser;
+
+    /// <summary>
+    /// Arguments for the command that is currently being parsed. Useful for parsing context dependent types. E.g.,
+    /// command type arguments that depend on the piped type.
+    /// </summary>
+    public CommandArgumentBundle Bundle;
+
+    /// <summary>
+    /// Whether or not to generate auto-completion options.
+    /// </summary>
+    public bool GenerateCompletions;
+
+    /// <summary>
+    /// Any auto-completion suggestions that have been generated while parsing.
+    /// </summary>
+    public CompletionResult? Completions;
+
+    /// <summary>
+    /// Any errors that have come up while parsing. This is generally null while <see cref="GenerateCompletions"/> is true,
+    /// under the assumption that the command is purely being parsed to gather completion suggestions, not to try evaluate it.
+    /// </summary>
+    public IConError? Error;
+
     public readonly string Input;
-    public int MaxIndex { get; private set; }
+    public int MaxIndex { get; }
 
-    public int Index { get; private set; } = 0;
+    public int Index { get; private set; }
 
-    public ParserContext(string input, ToolshedManager toolshed, ToolshedEnvironment? environment = null)
+    public readonly ICommonSession? Session;
+
+    /// <summary>
+    /// Whether the parser has reached the end of the input.
+    /// </summary>
+    public bool OutOfInput => Index > MaxIndex;
+
+    public ParserContext(string input, ToolshedManager toolshed, ToolshedEnvironment environment, IVariableParser parser, ICommonSession? session)
     {
         Toolshed = toolshed;
-        Environment = environment ?? toolshed.DefaultEnvironment;
+        Environment = environment;
         Input = input;
         MaxIndex = input.Length - 1;
+        VariableParser = parser;
+        Session = session;
+    }
+
+    public ParserContext(string input, ToolshedManager toolshed) : this(input, toolshed, toolshed.DefaultEnvironment, IVariableParser.Empty, null)
+    {
+    }
+
+    public ParserContext(string input, ToolshedManager toolshed, IInvocationContext ctx) : this(input, toolshed, ctx.Environment, new InvocationCtxVarParser(ctx), ctx.Session)
+    {
     }
 
     private ParserContext(ParserContext parserContext, int sliceSize, int? index)
@@ -39,35 +90,31 @@ public sealed partial class ParserContext
         Input = parserContext.Input;
         Index = index ?? parserContext.Index;
         MaxIndex = Math.Min(parserContext.MaxIndex, Index + sliceSize - 1);
-    }
-
-    public bool SpanInRange(int length)
-    {
-        return MaxIndex >= (Index + length - 1);
+        VariableParser = parserContext.VariableParser;
+        Session = parserContext.Session;
     }
 
     public bool EatMatch(char c) => EatMatch(new Rune(c));
 
     public bool EatMatch(Rune c)
     {
-        if (PeekRune() == c)
-        {
-            GetRune();
-            return true;
-        }
+        if (PeekRune() is not { } next || next != c)
+            return false;
 
-        return false;
+        Index += c.Utf16SequenceLength;
+        return true;
     }
 
     public bool EatMatch(string c)
     {
-        if (PeekWord() == c)
-        {
-            GetWord();
-            return true;
-        }
+        // TODO TOOLSHED Optimize
+        // Combine into one method, remove allocations.
+        // I.e., this unnecessarily creates two strings.
+        if (PeekWord() != c)
+            return false;
 
-        return false;
+        GetWord();
+        return true;
     }
 
     /// <remarks>
@@ -88,7 +135,7 @@ public sealed partial class ParserContext
 
     public Rune? PeekRune()
     {
-        if (!SpanInRange(1))
+        if (MaxIndex < Index)
             return null;
 
         return Rune.GetRuneAt(Input, Index);
@@ -96,13 +143,11 @@ public sealed partial class ParserContext
 
     public Rune? GetRune()
     {
-        if (PeekRune() is { } c)
-        {
-            Index += c.Utf16SequenceLength;
-            return c;
-        }
+        if (PeekRune() is not { } c)
+            return null;
 
-        return null;
+        Index += c.Utf16SequenceLength;
+        return c;
     }
 
     /// <remarks>
@@ -110,26 +155,24 @@ public sealed partial class ParserContext
     /// </remarks>
     public char? GetChar()
     {
-        if (PeekRune() is { } c)
-        {
-            Index += c.Utf16SequenceLength;
+        if (PeekRune() is not { } c)
+            return null;
 
-            if (c.Utf16SequenceLength > 1)
-                return '\x01';
+        Index += c.Utf16SequenceLength;
 
-            Span<char> buffer = stackalloc char[2];
-            c.EncodeToUtf16(buffer);
+        if (c.Utf16SequenceLength > 1)
+            return '\x01';
 
-            return buffer[0];
-        }
+        Span<char> buffer = stackalloc char[2];
+        c.EncodeToUtf16(buffer);
 
-        return null;
+        return buffer[0];
     }
 
     [PublicAPI]
     public void DebugPrint()
     {
-        Logger.DebugS("parser", string.Join(", ", _terminatorStack));
+        Logger.DebugS("parser", string.Join(", ", _blockStack));
         Logger.DebugS("parser", Input);
         MakeDebugPointer(Index);
         MakeDebugPointer(MaxIndex, '|');
@@ -228,13 +271,15 @@ public sealed partial class ParserContext
 
     public ParserRestorePoint Save()
     {
-        return new ParserRestorePoint(Index, new(_terminatorStack));
+        return new ParserRestorePoint(Index, new(_blockStack), Bundle, VariableParser);
     }
 
     public void Restore(ParserRestorePoint point)
     {
         Index = point.Index;
-        _terminatorStack = point.TerminatorStack;
+        _blockStack = point.TerminatorStack;
+        Bundle = point.Bundle;
+        VariableParser =point.VariableParser;
     }
 
     public int ConsumeWhitespace()
@@ -244,37 +289,34 @@ public sealed partial class ParserContext
         return Consume(Rune.IsWhiteSpace);
     }
 
-    private Stack<string> _terminatorStack = new();
+    private Stack<Rune> _blockStack = new();
 
-    public void PushTerminator(string term)
+    public void PushBlockTerminator(Rune term)
     {
-        _terminatorStack.Push(term);
+        _blockStack.Push(term);
     }
 
-    public bool PeekTerminated()
+    public void PushBlockTerminator(char term)
+        => PushBlockTerminator(new Rune(term));
+
+    public bool PeekBlockTerminator()
     {
-        if (_terminatorStack.Count == 0)
+        if (_blockStack.Count == 0)
             return false;
 
-        ConsumeWhitespace();
-        var save = Save();
-        var match = TryMatch(_terminatorStack.Peek());
-        Restore(save);
-        return match;
+        return PeekRune() == _blockStack.Peek();
     }
 
-    public bool EatTerminator()
+    public bool EatBlockTerminator()
     {
-        if (_terminatorStack.Count == 0)
+        if (_blockStack.Count == 0)
             return false;
 
-        if (TryMatch(_terminatorStack.Peek()))
-        {
-            _terminatorStack.Pop();
-            return true;
-        }
+        if (!EatMatch(_blockStack.Peek()))
+            return false;
 
-        return false;
+        _blockStack.Pop();
+        return true;
     }
 
     public bool CheckEndLine()
@@ -290,7 +332,7 @@ public sealed partial class ParserContext
 
         while (PeekRune() is { } c && control(c))
         {
-            GetRune();
+            Index += c.Utf16SequenceLength;
             amount++;
         }
 
@@ -334,19 +376,90 @@ public sealed partial class ParserContext
 
         return new ParserContext(this, Index - blockStart, blockStart);
     }
-}
 
-public readonly struct ParserRestorePoint
-{
-    public readonly int Index;
-    internal readonly Stack<string> TerminatorStack;
-
-    public ParserRestorePoint(int index, Stack<string> terminatorStack)
+    /// <summary>
+    /// Check whether a command can be invoked by the given session/user.
+    /// A null session implies that the command is being run by the server.
+    /// </summary>
+    public bool CheckInvokable(CommandSpec cmd)
     {
-        Index = index;
-        TerminatorStack = terminatorStack;
+        return Toolshed.CheckInvokable(cmd, Session, out Error);
+    }
+
+    /// <summary>
+    /// Check whether all commands implemented by some type can be invoked by the given session/user.
+    /// A null session implies that the command is being run by the server.
+    /// </summary>
+    public bool CheckInvokable<T>() where T : ToolshedCommand
+    {
+        if (!Environment.TryGetCommands<T>(out var list))
+            return false;
+
+        foreach (var x in list)
+        {
+            if (!CheckInvokable(x))
+                return false;
+        }
+
+        return true;
+    }
+
+    public bool PeekCommandOrBlockTerminated()
+    {
+        if (PeekRune() is not { } c)
+            return false;
+
+        if (c == new Rune(';'))
+            return true;
+
+        if (NoMultilineExprs && c == new Rune('\n'))
+            return true;
+
+        if (_blockStack.Count == 0)
+            return false;
+
+        return c == _blockStack.Peek();
+    }
+
+    /// <summary>
+    /// Attempts to consume a single command terminator, which is either a ';' or a newline (if <see cref="NoMultilineExprs"/> is
+    /// enabled).
+    /// </summary>
+    public bool EatCommandTerminator()
+    {
+        if (EatMatch(new Rune(';')))
+            return true;
+
+        // If multi-line commands are not enabled, we treat a newline like a ';'
+        // I.e., it terminates the command currently being parsed in
+        return NoMultilineExprs && EatMatch(new Rune('\n'));
+    }
+
+    /// <summary>
+    /// Attempts to repeatedly consume command terminators, and return true if any were consumed.
+    /// </summary>
+    public bool EatCommandTerminators()
+    {
+        if (!EatCommandTerminator())
+            return false;
+
+        // Maybe one day we want to allow ';;' to have special meaning?
+        // But for now, just eat em all.
+        ConsumeWhitespace();
+        while (EatCommandTerminator())
+        {
+            ConsumeWhitespace();
+        }
+
+        return true;
     }
 }
+
+public readonly record struct ParserRestorePoint(
+    int Index,
+    Stack<Rune> TerminatorStack,
+    CommandArgumentBundle Bundle,
+    IVariableParser VariableParser);
 
 public record OutOfInputError : IConError
 {

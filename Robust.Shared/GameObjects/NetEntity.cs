@@ -51,28 +51,42 @@ public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>
         if (uid.Length == 0)
             throw new FormatException($"An empty string is not a valid NetEntity");
 
+        // 'c' prefix for client-side entities
         if (uid[0] != 'c')
             return new NetEntity(int.Parse(uid));
 
         if (uid.Length == 1)
             throw new FormatException($"'c' is not a valid NetEntity");
 
-        var id = int.Parse(uid.Slice(1));
+        var id = int.Parse(uid[1..]);
         return new NetEntity(id | ClientEntity);
     }
 
     public static bool TryParse(ReadOnlySpan<char> uid, out NetEntity entity)
     {
-        try
+        entity = Invalid;
+        int id;
+        if (uid.Length == 0)
+            return false;
+
+        // 'c' prefix for client-side entities
+        if (uid[0] != 'c')
         {
-            entity = Parse(uid);
+            if (!int.TryParse(uid, out id))
+                return false;
+
+            entity = new NetEntity(id);
             return true;
         }
-        catch (Exception ex) when (ex is FormatException or OverflowException)
-        {
-            entity = Invalid;
+
+        if (uid.Length == 1)
             return false;
-        }
+
+        if (!int.TryParse(uid[1..], out id))
+            return false;
+
+        entity = new NetEntity(id | ClientEntity);
+        return true;
     }
 
     /// <summary>

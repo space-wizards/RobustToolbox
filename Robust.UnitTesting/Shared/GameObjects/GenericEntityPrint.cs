@@ -167,7 +167,7 @@ public sealed class GenericEntityPrint
             }
 
             structs.Append($$"""
-                public record struct Entity<{{generics}}>
+                public record struct Entity<{{generics}}> : IFluentEntityUid, IAsType<EntityUid>
                     {{constraints.ToString().TrimEnd()}}
                 {
                     public EntityUid Owner;
@@ -203,6 +203,9 @@ public sealed class GenericEntityPrint
                 {{deConstructorAccess.ToString().TrimEnd()}}
                     }
                     {{castRegion}}
+
+                    EntityUid IFluentEntityUid.FluentOwner => Owner;
+                    public EntityUid AsType() => Owner;
                 }
 
 

@@ -6,6 +6,7 @@ using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
@@ -24,10 +25,21 @@ public sealed partial class RayCastSystem : EntitySystem
      * - If you wish to add more helper methods make a new partial and dump them there and have them call the below methods.
      */
 
+    [Dependency] private readonly EntityLookupSystem _lookup = default!;
     [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
     private readonly RayComparer _rayComparer = new();
+
+    private EntityQuery<BroadphaseComponent> _broadQuery;
+    private EntityQuery<TransformComponent> _xformQuery;
+
+    public override void Initialize()
+    {
+        base.Initialize();
+        _broadQuery = GetEntityQuery<BroadphaseComponent>();
+        _xformQuery = GetEntityQuery<TransformComponent>();
+    }
 
     #region RayCast
 
@@ -220,7 +232,8 @@ public sealed partial class RayCastSystem : EntitySystem
         IPhysShape shape,
         Transform originTransform,
         Vector2 translation,
-        QueryFilter filter)
+        QueryFilter filter,
+        CastResult callback)
     {
         DebugTools.Assert(originTransform.Position.IsValid());
         DebugTools.Assert(originTransform.Quaternion2D.IsValid());
@@ -232,12 +245,12 @@ public sealed partial class RayCastSystem : EntitySystem
         var aabb = startAabb.Union(endAabb);
 
         var result = new RayResult();
-        var state = (originTransform, translation, shape: shape, filter, result, this, _physics);
+        var state = (originTransform, translation, shape: shape, filter, result, this, _physics, callback);
 
         _broadphase.GetBroadphases(mapId, aabb, ref state,
             static (
                 Entity<BroadphaseComponent> entity,
-                ref (Transform origin, Vector2 translation, IPhysShape shape, QueryFilter filter, RayResult result, RayCastSystem system, SharedPhysicsSystem _physics
+                ref (Transform origin, Vector2 translation, IPhysShape shape, QueryFilter filter, RayResult result, RayCastSystem system, SharedPhysicsSystem _physics, CastResult callback
                     ) tuple) =>
             {
                 var transform = tuple._physics.GetPhysicsTransform(entity.Owner);
@@ -245,7 +258,7 @@ public sealed partial class RayCastSystem : EntitySystem
                 var localTranslation = Physics.Transform.InvTransformPoint(transform, tuple.origin.Position + tuple.translation) - localOrigin.Position;
 
                 var oldIndex = tuple.result.Results.Count;
-                tuple.system.CastShape((entity.Owner, entity.Comp), ref tuple.result, tuple.shape, localOrigin, localTranslation, filter: tuple.filter);
+                tuple.system.CastShape((entity.Owner, entity.Comp), ref tuple.result, tuple.shape, localOrigin, localTranslation, filter: tuple.filter, callback: tuple.callback);
                 tuple.system.AdjustResults(ref tuple.result, oldIndex, transform);
             });
 
@@ -253,13 +266,17 @@ public sealed partial class RayCastSystem : EntitySystem
         return result;
     }
 
+    /// <summary>
+    /// Cast on the broadphase.
+    /// </summary>
     public void CastShape(
         Entity<BroadphaseComponent?> entity,
         ref RayResult result,
         IPhysShape shape,
         Transform originTransform,
         Vector2 translation,
-        QueryFilter filter)
+        QueryFilter filter,
+        CastResult callback)
     {
         if (!Resolve(entity.Owner, ref entity.Comp))
             return;
@@ -267,13 +284,13 @@ public sealed partial class RayCastSystem : EntitySystem
         switch (shape)
         {
             case PhysShapeCircle circle:
-                CastCircle(entity, ref result, circle, originTransform, translation, filter);
+                CastCircle(entity, ref result, circle, originTransform, translation, filter, callback);
                 break;
             case Polygon poly:
-                CastPolygon(entity, ref result, new PolygonShape(poly), originTransform, translation, filter);
+                CastPolygon(entity, ref result, new PolygonShape(poly), originTransform, translation, filter, callback);
                 break;
             case PolygonShape polygon:
-                CastPolygon(entity, ref result, polygon, originTransform, translation, filter);
+                CastPolygon(entity, ref result, polygon, originTransform, translation, filter, callback);
                 break;
             default:
                 Log.Error("Tried to shapecast for shape not implemented.");
@@ -288,7 +305,8 @@ public sealed partial class RayCastSystem : EntitySystem
         PhysShapeCircle circle,
         Transform originTransform,
         Vector2 translation,
-        QueryFilter filter)
+        QueryFilter filter,
+        CastResult callback)
     {
         if (!Resolve(entity.Owner, ref entity.Comp))
             return;
@@ -311,7 +329,7 @@ public sealed partial class RayCastSystem : EntitySystem
             Filter = filter,
             Fraction = 1f,
             Result = result,
-            fcn = RayCastAllCallback,
+            fcn = callback,
         };
 
         entity.Comp.StaticTree.Tree.ShapeCast(input, filter.MaskBits, ShapeCastCallback, ref worldContext);
@@ -326,7 +344,8 @@ public sealed partial class RayCastSystem : EntitySystem
         PolygonShape polygon,
         Transform originTransform,
         Vector2 translation,
-        QueryFilter filter)
+        QueryFilter filter,
+        CastResult callback)
     {
         if (!Resolve(entity.Owner, ref entity.Comp))
             return;
@@ -353,12 +372,20 @@ public sealed partial class RayCastSystem : EntitySystem
             Filter = filter,
             Fraction = 1f,
             Result = result,
-            fcn = RayCastAllCallback,
+            fcn = callback,
         };
 
-        entity.Comp.StaticTree.Tree.ShapeCast(input, filter.MaskBits, ShapeCastCallback, ref worldContext);
-        input.MaxFraction = worldContext.Fraction;
-        entity.Comp.DynamicTree.Tree.ShapeCast(input, filter.MaskBits, ShapeCastCallback, ref worldContext);
+        if ((filter.Flags & QueryFlags.Static) == QueryFlags.Static)
+        {
+            entity.Comp.StaticTree.Tree.ShapeCast(input, filter.MaskBits, ShapeCastCallback, ref worldContext);
+            input.MaxFraction = worldContext.Fraction;
+        }
+
+        if ((filter.Flags & QueryFlags.Dynamic) == QueryFlags.Dynamic)
+        {
+            entity.Comp.DynamicTree.Tree.ShapeCast(input, filter.MaskBits, ShapeCastCallback, ref worldContext);
+        }
+
         result = worldContext.Result;
     }
 
@@ -372,6 +399,8 @@ public record struct RayResult()
     public ValueList<RayHit> Results = new();
 
     public bool Hit => Results.Count > 0;
+
+    public static readonly RayResult Empty = new();
 }
 
 public record struct RayHit(EntityUid Entity, Vector2 LocalNormal, float Fraction)
@@ -389,7 +418,7 @@ public record struct RayHit(EntityUid Entity, Vector2 LocalNormal, float Fractio
 ///	you may want a ray-cast representing a projectile to hit players and the static environment
 ///	but not debris.
 /// @ingroup shape
-public record struct QueryFilter
+public record struct QueryFilter()
 {
     /// <summary>
     /// The collision category bits of this query. Normally you would just set one bit.
@@ -406,6 +435,27 @@ public record struct QueryFilter
     /// Return whether to ignore an entity.
     /// </summary>
     public Func<EntityUid, bool>? IsIgnored;
+
+    public QueryFlags Flags = QueryFlags.Dynamic | QueryFlags.Static;
+}
+
+/// <summary>
+/// Which trees we wish to query.
+/// </summary>
+[Flags]
+public enum QueryFlags : byte
+{
+    None = 0,
+
+    Dynamic = 1 << 0,
+
+    Static = 1 << 1,
+
+    Sensors = 1 << 2,
+
+    // StaticSundries = 1 << 3,
+
+    // Sundries = 1 << 4,
 }
 
 /// Prototype callback for ray casts.

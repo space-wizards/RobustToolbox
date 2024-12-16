@@ -100,7 +100,8 @@ public sealed class RayCast_Test
             new QueryFilter()
             {
                 LayerBits = 1,
-            });
+            },
+            RayCastSystem.RayCastAllCallback);
 
         if (point == null)
         {

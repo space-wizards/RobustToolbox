@@ -1,5 +1,6 @@
 using System;
 using System.Numerics;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
@@ -18,9 +19,9 @@ public sealed partial class RayCastSystem
     #region Callbacks
 
     /// <summary>
-    /// Tells the callback we want every entity.
+    /// Returns every entity from the callback.
     /// </summary>
-    private static float RayCastAllCallback(FixtureProxy proxy, Vector2 point, Vector2 normal, float fraction, ref RayResult result)
+    public static float RayCastAllCallback(FixtureProxy proxy, Vector2 point, Vector2 normal, float fraction, ref RayResult result)
     {
         result.Results.Add(new RayHit(proxy.Entity, normal, fraction)
         {
@@ -30,9 +31,9 @@ public sealed partial class RayCastSystem
     }
 
     /// <summary>
-    /// This just lets the callback continue.
+    /// Gets the closest entity from the callback.
     /// </summary>
-    private static float RayCastClosestCallback(FixtureProxy proxy, Vector2 point, Vector2 normal, float fraction, ref RayResult result)
+    public static float RayCastClosestCallback(FixtureProxy proxy, Vector2 point, Vector2 normal, float fraction, ref RayResult result)
     {
         var add = false;
 
@@ -398,11 +399,17 @@ public sealed partial class RayCastSystem
     /// <summary>
     /// This callback is invoked upon getting the AABB inside of B2DynamicTree.
     /// </summary>
+    /// <returns>The max fraction to continue checking for. If this is lower then we will start dropping more shapes early</returns>
     private float ShapeCastCallback(ShapeCastInput input, FixtureProxy proxy, ref WorldRayCastContext worldContext)
     {
         var filter = worldContext.Filter;
 
         if ((proxy.Fixture.CollisionLayer & filter.MaskBits) == 0 && (proxy.Fixture.CollisionMask & filter.LayerBits) == 0)
+        {
+            return input.MaxFraction;
+        }
+
+        if ((filter.Flags & QueryFlags.Sensors) == 0x0 && !proxy.Fixture.Hard)
         {
             return input.MaxFraction;
         }
@@ -554,6 +561,7 @@ public sealed partial class RayCastSystem
 		    if ( simplex.Count == 3 )
 		    {
 			    // Overlap
+                // Yes this means you need to manually query for overlaps.
 			    return output;
 		    }
 

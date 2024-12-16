@@ -54,6 +54,11 @@ namespace Robust.Shared.Enums
         /// <summary>
         ///     Overlay will be rendered below grids, entities, and everything else. In world space.
         /// </summary>
-        WorldSpaceBelowWorld = 1 << 8
+        WorldSpaceBelowWorld = 1 << 8,
+
+        /// <summary>
+        /// Called after GLClear but before FOV applied to the lighting buffer.
+        /// </summary>
+        BeforeLighting = 1 << 9,
     }
 }

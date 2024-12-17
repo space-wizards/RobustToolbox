@@ -7,10 +7,7 @@ using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
-using Robust.Shared.Network;
-using Robust.Shared.Player;
 using Robust.Shared.Reflection;
-using Robust.Shared.Replays;
 
 namespace Robust.Shared.GameObjects
 {
@@ -21,12 +18,9 @@ namespace Robust.Shared.GameObjects
     ///     This class is instantiated by the <c>EntitySystemManager</c>, and any IoC Dependencies will be resolved.
     /// </remarks>
     [Reflect(false), PublicAPI]
-    public abstract partial class EntitySystem : IEntitySystem, IPostInjectInit
+    public abstract partial class EntitySystem : EntManProxy, IEntitySystem, IPostInjectInit
     {
-        [Dependency] protected readonly EntityManager EntityManager = default!;
         [Dependency] protected readonly ILogManager LogManager = default!;
-        [Dependency] private readonly ISharedPlayerManager _playerMan = default!;
-        [Dependency] private readonly IReplayRecordingManager _replayMan = default!;
         [Dependency] protected readonly ILocalizationManager Loc = default!;
 
         public ISawmill Log { get; private set; } = default!;
@@ -92,90 +86,6 @@ namespace Robust.Shared.GameObjects
         {
             ShutdownSubscriptions();
         }
-
-        #region Event Proxy
-
-        protected void RaiseLocalEvent<T>(T message) where T : notnull
-        {
-            EntityManager.EventBus.RaiseEvent(EventSource.Local, message);
-        }
-
-        protected void RaiseLocalEvent<T>(ref T message) where T : notnull
-        {
-            EntityManager.EventBus.RaiseEvent(EventSource.Local, ref message);
-        }
-
-        protected void RaiseLocalEvent(object message)
-        {
-            EntityManager.EventBus.RaiseEvent(EventSource.Local, message);
-        }
-
-        protected void QueueLocalEvent(EntityEventArgs message)
-        {
-            EntityManager.EventBus.QueueEvent(EventSource.Local, message);
-        }
-
-        protected void RaiseNetworkEvent(EntityEventArgs message)
-        {
-            EntityManager.EntityNetManager?.SendSystemNetworkMessage(message);
-        }
-
-        protected void RaiseNetworkEvent(EntityEventArgs message, INetChannel channel)
-        {
-            EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, channel);
-        }
-
-        protected void RaiseNetworkEvent(EntityEventArgs message, ICommonSession session)
-        {
-            EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, session.Channel);
-        }
-
-        /// <summary>
-        ///     Raises a networked event with some filter.
-        /// </summary>
-        /// <param name="message">The event to send</param>
-        /// <param name="filter">The filter that specifies recipients</param>
-        /// <param name="recordReplay">Optional bool specifying whether or not to save this event to replays.</param>
-        protected void RaiseNetworkEvent(EntityEventArgs message, Filter filter, bool recordReplay = true)
-        {
-            if (recordReplay)
-                _replayMan.RecordServerMessage(message);
-
-            foreach (var session in filter.Recipients)
-            {
-                EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, session.Channel);
-            }
-        }
-
-        protected void RaiseNetworkEvent(EntityEventArgs message, EntityUid recipient)
-        {
-            if (_playerMan.TryGetSessionByEntity(recipient, out var session))
-                EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, session.Channel);
-        }
-
-        protected void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = false)
-            where TEvent : notnull
-        {
-            EntityManager.EventBus.RaiseLocalEvent(uid, args, broadcast);
-        }
-
-        protected void RaiseLocalEvent(EntityUid uid, object args, bool broadcast = false)
-        {
-            EntityManager.EventBus.RaiseLocalEvent(uid, args, broadcast);
-        }
-
-        protected void RaiseLocalEvent<TEvent>(EntityUid uid, ref TEvent args, bool broadcast = false)
-            where TEvent : notnull
-        {
-            EntityManager.EventBus.RaiseLocalEvent(uid, ref args, broadcast);
-        }
-
-        protected void RaiseLocalEvent(EntityUid uid, ref object args, bool broadcast = false)
-        {
-            EntityManager.EventBus.RaiseLocalEvent(uid, ref args, broadcast);
-        }
-
-        #endregion
 
         #region Static Helpers
         /*

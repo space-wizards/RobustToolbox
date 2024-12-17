@@ -6,13 +6,43 @@ using JetBrains.Annotations;
 using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
+using Robust.Shared.Replays;
 
 namespace Robust.Shared.GameObjects;
 
-public partial class EntitySystem
+/// <summary>
+/// Base abstract class for classes that have an <see cref="EntityManager"/> that can have methods proxied for convenience.
+/// </summary>
+/// <example>
+/// In an <see cref="EntitySystem"/> instead of using the verbose <c>EntityManager.HasComponent<T>(uid)</c>, you can use the proxy <c>HasComp(uid)</c>.
+/// </example>
+public abstract partial class EntManProxy
 {
+    #region Managers
+
+    /// <summary>
+    /// The <see cref="EntityManager"/> reference to use for proxy methods.
+    /// </summary>
+    /// <remarks>
+    /// This cannot use <see cref="IEntityManager"/> as some non-interfaced methods are used.
+    /// </remarks>
+    [IoC.Dependency] protected readonly EntityManager EntityManager = default!;
+
+    /// <summary>
+    /// The <see cref="ISharedPlayerManager"/> reference to use for raising network events.
+    /// </summary>
+    [IoC.Dependency] protected readonly ISharedPlayerManager PlayerManager = default!;
+
+    /// <summary>
+    /// The <see cref="IReplayRecordingManager"/> reference to use for raising network events.
+    /// </summary>
+    [IoC.Dependency] protected readonly IReplayRecordingManager ReplayMan = default!;
+
+    #endregion
+
     #region Entity LifeStage
 
     /// <inheritdoc cref="IEntityManager.EntityExists(EntityUid)" />
@@ -924,19 +954,6 @@ public partial class EntitySystem
         where TComp4 : IComponent
     {
         return EntityManager.EntityQuery<TComp1, TComp2, TComp3, TComp4>(includePaused);
-    }
-
-    #endregion
-
-    #region Networked Events
-
-    /// <summary>
-    ///     Sends a networked message to the server, while also repeatedly raising it locally for every time this tick gets re-predicted.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void RaisePredictiveEvent<T>(T msg) where T : EntityEventArgs
-    {
-        EntityManager.RaisePredictiveEvent(msg);
     }
 
     #endregion

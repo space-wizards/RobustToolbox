@@ -485,7 +485,7 @@ namespace Robust.Shared.GameObjects
             ent.Comp4.LastModifiedTick = CurrentTick;
         }
 
-        public bool TryQueueDeleteEntity(EntityUid? uid)
+        public virtual bool TryQueueDeleteEntity(EntityUid? uid)
         {
             if (uid == null)
                 return false;

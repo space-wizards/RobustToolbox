@@ -27,6 +27,7 @@ using System.Runtime.InteropServices;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Shapes;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -170,6 +171,13 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         public PolygonShape()
         {
+        }
+
+        internal PolygonShape(Polygon poly)
+        {
+            Vertices = poly.Vertices;
+            Normals = poly.Normals;
+            Centroid = poly.Centroid;
         }
 
         public PolygonShape(float radius)

@@ -38,6 +38,12 @@ namespace Robust.Shared.Physics
         public Vector2 Position;
         public Quaternion2D Quaternion2D;
 
+        public Transform(Vector2 position, Quaternion2D quat)
+        {
+            Position = position;
+            Quaternion2D = quat;
+        }
+
         public Transform(Vector2 position, float angle)
         {
             Position = position;
@@ -56,6 +62,16 @@ namespace Robust.Shared.Physics
             Quaternion2D = new Quaternion2D(angle);
         }
 
+        /// Inverse transform a point (e.g. world space to local space)
+        [Pure]
+        public static Vector2 InvTransformPoint(Transform t, Vector2 p)
+        {
+            float vx = p.X - t.Position.X;
+            float vy = p.Y - t.Position.Y;
+            return new Vector2(t.Quaternion2D.C * vx + t.Quaternion2D.S * vy, -t.Quaternion2D.S * vx + t.Quaternion2D.C * vy);
+        }
+
+        [Pure]
         public static Vector2 Mul(in Transform transform, in Vector2 vector)
         {
             float x = (transform.Quaternion2D.C * vector.X - transform.Quaternion2D.S * vector.Y) + transform.Position.X;
@@ -64,12 +80,14 @@ namespace Robust.Shared.Physics
             return new Vector2(x, y);
         }
 
+        [Pure]
         public static Vector2 MulT(in Vector2[] A, in Vector2 v)
         {
             DebugTools.Assert(A.Length == 2);
             return new Vector2(v.X * A[0].X + v.Y * A[0].Y, v.X * A[1].X + v.Y * A[1].Y);
         }
 
+        [Pure]
         public static Vector2 MulT(in Transform T, in Vector2 v)
         {
             float px = v.X - T.Position.X;
@@ -81,6 +99,7 @@ namespace Robust.Shared.Physics
         }
 
         /// Transpose multiply two rotations: qT * r
+        [Pure]
         public static Quaternion2D MulT(in Quaternion2D q, in Quaternion2D r)
         {
             // [ qc qs] * [rc -rs] = [qc*rc+qs*rs -qc*rs+qs*rc]
@@ -93,8 +112,15 @@ namespace Robust.Shared.Physics
             return qr;
         }
 
+        [Pure]
+        public static Transform InvMulTransforms(in Transform A, in Transform B)
+        {
+            return new Transform(Quaternion2D.InvRotateVector(A.Quaternion2D, Vector2.Subtract(B.Position, A.Position)), Quaternion2D.InvMulRot(A.Quaternion2D, B.Quaternion2D));
+        }
+
         // v2 = A.q' * (B.q * v1 + B.p - A.p)
         //    = A.q' * B.q * v1 + A.q' * (B.p - A.p)
+        [Pure]
         public static Transform MulT(in Transform A, in Transform B)
         {
             Transform C = new Transform
@@ -183,6 +209,52 @@ namespace Robust.Shared.Physics
 
             // TODO_ERIN optimize
             return new Quaternion2D(MathF.Cos(angle), MathF.Sin(angle));
+        }
+
+        /// Rotate a vector
+        [Pure]
+        public static Vector2 RotateVector(Quaternion2D q, Vector2 v )
+        {
+            return new Vector2(q.C * v.X - q.S * v.Y, q.S * v.X + q.C * v.Y);
+        }
+
+        /// Inverse rotate a vector
+        [Pure]
+        public static Vector2 InvRotateVector(Quaternion2D q, Vector2 v)
+        {
+            return new Vector2(q.C * v.X + q.S * v.Y, -q.S * v.X + q.C * v.Y);
+        }
+
+        public bool IsValid()
+        {
+            if (float.IsNaN(S ) || float.IsNaN(C))
+            {
+                return false;
+            }
+
+            if (float.IsInfinity(S) || float.IsInfinity(C))
+            {
+                return false;
+            }
+
+            return IsNormalized();
+        }
+
+        public bool IsNormalized()
+        {
+            // larger tolerance due to failure on mingw 32-bit
+            float qq = S * S + C * C;
+            return 1.0f - 0.0006f < qq && qq < 1.0f + 0.0006f;
+        }
+
+        [Pure]
+        public static Quaternion2D InvMulRot(Quaternion2D q, Quaternion2D r)
+        {
+            // [ qc qs] * [rc -rs] = [qc*rc+qs*rs -qc*rs+qs*rc]
+            // [-qs qc]   [rs  rc]   [-qs*rc+qc*rs qs*rs+qc*rc]
+            // s(q - r) = qc * rs - qs * rc
+            // c(q - r) = qc * rc + qs * rs
+            return new Quaternion2D(q.C * r.C + q.S * r.S, q.C * r.S - q.S * r.C);
         }
     }
 }

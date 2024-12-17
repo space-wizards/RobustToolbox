@@ -11,7 +11,6 @@ namespace Robust.Shared.Toolshed.Commands.Entities;
 internal sealed class WithCommand : ToolshedCommand
 {
     [Dependency] private readonly IComponentFactory _componentFactory = default!;
-    [Dependency] private readonly IPrototypeManager _prototype = default!;
 
     [CommandImplementation]
     public IEnumerable<EntityUid> With(

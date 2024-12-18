@@ -25,7 +25,9 @@ namespace Robust.Client.Placement.Modes
             {
                 var viewportSize = (Vector2)pManager.Clyde.ScreenSize;
 
-                var gridPosition = Grid.MapToGrid(pManager.EyeManager.ScreenToMap(Vector2.Zero));
+                var gridUid = pManager.EntityManager.System<SharedTransformSystem>().GetGrid(MouseCoords);
+
+                var gridPosition = pManager.EntityManager.System<SharedMapSystem>().MapToGrid(gridUid!.Value, pManager.EyeManager.ScreenToMap(Vector2.Zero));
 
                 var gridstart = pManager.EyeManager.CoordinatesToScreen(
                     gridPosition.WithPosition(new Vector2(MathF.Floor(gridPosition.X), MathF.Floor(gridPosition.Y))));
@@ -52,9 +54,9 @@ namespace Robust.Client.Placement.Modes
         {
             MouseCoords = ScreenToCursorGrid(mouseScreen);
 
-            var gridIdOpt = MouseCoords.GetGridUid(pManager.EntityManager);
+            var gridIdOpt = pManager.EntityManager.System<SharedTransformSystem>().GetGrid(MouseCoords);
             SnapSize = 1f;
-            if (gridIdOpt is EntityUid gridId && gridId.IsValid())
+            if (gridIdOpt is { } gridId && gridId.IsValid())
             {
                 Grid = pManager.EntityManager.GetComponent<MapGridComponent>(gridId);
                 SnapSize = Grid.TileSize; //Find snap size for the grid.

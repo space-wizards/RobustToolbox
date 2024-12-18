@@ -12,14 +12,14 @@ internal sealed partial class AudioManager
 
     public void NotifySourceDisposed(AudioStream sourceStream)
     {
-        OpenALSawmill.Debug($"Ended a source life with a {sourceStream.ClydeHandle} buffer.");
+        OpenALSawmill.Debug($"Ended a source life with a {sourceStream.ClydeHandle} handle.");
         var audioSample = _loadedAudioSamples[sourceStream.ClydeHandle!];
         audioSample.DecreaseUsings();
 
         if (!audioSample.IsSafeToDelete())
             return;
 
-        OpenALSawmill.Debug($"Enqueued a {sourceStream.ClydeHandle} buffer to free up.");
+        OpenALSawmill.Debug($"Enqueued {sourceStream.ClydeHandle} handle's buffer to free up.");
         _loadedAudioSamples.Remove(sourceStream.ClydeHandle!);
         _bufferDisposeQueue.Enqueue(audioSample.BufferHandle);
     }

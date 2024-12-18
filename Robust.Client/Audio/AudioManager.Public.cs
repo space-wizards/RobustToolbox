@@ -170,8 +170,8 @@ internal partial class AudioManager
                 {
                     Buffer.MemoryCopy(sourcePrt,
                         destinyPrt,
-                        wav.Data.Length / sizeof(short),
-                        wav.Data.Length / sizeof(short));
+                        wav.Data.Length,
+                        wav.Data.Length);
                 }
             }
         }

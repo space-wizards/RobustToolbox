@@ -8,8 +8,8 @@ using Robust.Client.Audio.Sources;
 using Robust.Shared;
 using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
+using Robust.Shared.Graphics;
 using Robust.Shared.Log;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.Audio;
 
@@ -23,7 +23,7 @@ internal sealed partial class AudioManager : IAudioInternal
     private ALDevice _openALDevice;
     private ALContext _openALContext;
 
-    private readonly List<LoadedAudioSample> _audioSampleBuffers = new();
+    private readonly Dictionary<IClydeHandle, LoadedAudioSample> _audioSampleBuffers = new();
 
     private readonly Dictionary<int, WeakReference<BaseAudioSource>> _audioSources =
         new();
@@ -160,13 +160,30 @@ internal sealed partial class AudioManager : IAudioInternal
         }
     }
 
-    private sealed class LoadedAudioSample
+    internal sealed class LoadedAudioSample
     {
         public readonly int BufferHandle;
+        private int UsingsCount { set; get; }
 
         public LoadedAudioSample(int bufferHandle)
         {
             BufferHandle = bufferHandle;
+            UsingsCount = 0;
+        }
+
+        public void IncreaseUsings()
+        {
+            UsingsCount++;
+        }
+
+        public void DecreaseUsings()
+        {
+            UsingsCount--;
+        }
+
+        public bool IsSafeToDelete()
+        {
+            return UsingsCount == 0;
         }
     }
 

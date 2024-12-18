@@ -6,7 +6,6 @@ public abstract partial class EntityManager
 {
     public void DirtyField(EntityUid uid, IComponentDelta comp, string fieldName, MetaDataComponent? metadata = null)
     {
-        // TODO
         var compReg = ComponentFactory.GetRegistration(comp);
 
         if (!compReg.NetworkedFieldLookup.TryGetValue(fieldName, out var idx))

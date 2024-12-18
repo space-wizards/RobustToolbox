@@ -109,69 +109,6 @@ public partial class SharedPhysicsSystem
 
                 return;
             }
-
-            // Slowpath :(
-            uint fields = 0;
-            var data = new ValueList<object?>();
-
-            for (byte i = 0; i < component.LastModifiedFields.Length; i++)
-            {
-                var lastUpdate = component.LastModifiedFields[i];
-
-                if (lastUpdate < args.FromTick)
-                    continue;
-
-                fields |= (uint) (1 << i);
-
-                switch (i)
-                {
-                    case 0:
-                        data.Add(component.CanCollide);
-                        break;
-                    case 1:
-                        data.Add(component.BodyStatus);
-                        break;
-                    case 2:
-                        data.Add(component.BodyType);
-                        break;
-                    case 3:
-                        data.Add(component.SleepingAllowed);
-                        break;
-                    case 4:
-                        data.Add(component.FixedRotation);
-                        break;
-                    case 5:
-                        data.Add(component._friction);
-                        break;
-                    case 6:
-                        data.Add(component.Force);
-                        break;
-                    case 7:
-                        data.Add(component.Torque);
-                        break;
-                    case 8:
-                        data.Add(component.LinearDamping);
-                        break;
-                    case 9:
-                        data.Add(component.AngularDamping);
-                        break;
-                    case 10:
-                        data.Add(component.AngularVelocity);
-                        break;
-                    case 11:
-                        data.Add(component.LinearVelocity);
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-            }
-
-            args.State = new PhysicsDeltaState()
-            {
-                ModifiedFields = fields,
-                Fields = data.ToArray(),
-            };
-            return;
         }
 
         args.State = new PhysicsComponentState
@@ -208,65 +145,6 @@ public partial class SharedPhysicsSystem
         {
             SetLinearVelocity(uid, velocityState.LinearVelocity, body: component, manager: manager);
             SetAngularVelocity(uid, velocityState.AngularVelocity, body: component, manager: manager);
-        }
-        else if (args.Current is PhysicsDeltaState deltaState)
-        {
-            byte index = 0;
-
-            for (var i = 0; i < 12; i++)
-            {
-                var field = 1 << i;
-
-                // Field not dirty
-                if ((deltaState.ModifiedFields & field) == 0x0)
-                    continue;
-
-                var value = deltaState.Fields[index];
-
-                switch (i)
-                {
-                    case 0:
-                        SetCanCollide(uid, (bool)value!, body: component);
-                        break;
-                    case 1:
-                        component.BodyStatus = (BodyStatus)value!;
-                        break;
-                    case 2:
-                        SetBodyType(uid, (BodyType)value!, manager, component);
-                        break;
-                    case 3:
-                        SetSleepingAllowed(uid, component, (bool)value!);
-                        break;
-                    case 4:
-                        SetFixedRotation(uid, (bool)value!, body: component);
-                        break;
-                    case 5:
-                        SetFriction(uid, component, (float)value!);
-                        break;
-                    case 6:
-                        component.Force = (Vector2)value!;
-                        break;
-                    case 7:
-                        component.Torque = (float)value!;
-                        break;
-                    case 8:
-                        SetLinearDamping(uid, component, (float)value!);
-                        break;
-                    case 9:
-                        SetAngularDamping(uid, component, (float)value!);
-                        break;
-                    case 10:
-                        SetAngularVelocity(uid, (float)value!, body: component, manager: manager);
-                        break;
-                    case 11:
-                        SetLinearVelocity(uid, (Vector2)value!, body: component, manager: manager);
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-
-                index++;
-            }
         }
         else if (args.Current is PhysicsComponentState newState)
         {
@@ -484,7 +362,7 @@ public partial class SharedPhysicsSystem
 
         // Update center of mass velocity.
         var comVelocityDiff = Vector2Helpers.Cross(body.AngularVelocity, localCenter - oldCenter);
-        
+
         if (comVelocityDiff != Vector2.Zero)
        	{
        		body.LinearVelocity += comVelocityDiff;

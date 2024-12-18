@@ -243,10 +243,12 @@ namespace Robust.UnitTesting.Shared.IoC
     {
         [Dependency]
 #pragma warning disable 649
+#pragma warning disable RA0032
         private readonly TestFieldInjection myself = default!;
 
         [Dependency]
         public TestFieldInjection myotherself = default!;
+#pragma warning restore RA0032
 #pragma warning restore 649
 
         public virtual void Test()

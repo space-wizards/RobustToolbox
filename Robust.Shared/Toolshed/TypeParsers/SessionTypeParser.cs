@@ -43,11 +43,11 @@ internal sealed class SessionTypeParser : TypeParser<ICommonSession>
         return false;
     }
 
-    public override async ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext,
+    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext,
         string? argName)
     {
         var opts = CompletionHelper.SessionNames(true, _player);
-        return (CompletionResult.FromHintOptions(opts, "<player session>"), null);
+        return new ValueTask<(CompletionResult?, IConError?)>((CompletionResult.FromHintOptions(opts, "<player session>"), null));
     }
 
     public record InvalidUsername(ILocalizationManager Loc, string Username) : IConError

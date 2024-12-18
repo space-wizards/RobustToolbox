@@ -35,7 +35,8 @@ public sealed class BoolTypeParser : TypeParser<bool>
             result = true;
             error = null;
             return true;
-        } else if (word == "false" || word == "f" || word == "0")
+        }
+        else if (word == "false" || word == "f" || word == "0")
         {
             result = false;
             error = null;
@@ -49,9 +50,9 @@ public sealed class BoolTypeParser : TypeParser<bool>
         }
     }
 
-    public override async ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext, string? argName)
+    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext, string? argName)
     {
-        return (CompletionResult.FromOptions(new[] {"true", "false"}), null);
+        return new ValueTask<(CompletionResult?, IConError?)>((CompletionResult.FromOptions(new[] { "true", "false" }), null));
     }
 }
 

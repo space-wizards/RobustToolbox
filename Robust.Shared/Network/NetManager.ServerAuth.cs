@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Lidgren.Network;
 using Robust.Shared.AuthLib;
+using Robust.Shared.Configuration;
 using Robust.Shared.Log;
 using Robust.Shared.Network.Messages.Handshake;
 using Robust.Shared.Utility;
@@ -18,6 +19,10 @@ namespace Robust.Shared.Network
     partial class NetManager
     {
         private static readonly string DisconnectReasonWrongKey = new NetDisconnectMessage("Token decryption failed.\nPlease reconnect to this server from the launcher.", true).Encode();
+
+        private static readonly string DisconnectReasonHashMismatch =
+            new NetDisconnectMessage("Client version mismatch, please retry connecting from the launcher.", false)
+                .Encode();
 
         private readonly byte[] _cryptoPrivateKey = new byte[CryptoBox.SecretKeyBytes];
 
@@ -52,9 +57,27 @@ namespace Robust.Shared.Network
                 var needPk = msgLogin.NeedPubKey;
                 var authServer = _config.GetCVar(CVars.AuthServer);
 
+                var expectedEngineVersion = _config.GetCVar(CVars.BuildEngineVersion);
+                var expectedClientVersion = _config.GetCVar(CVars.BuildManifestHash);
+
+                var engineVersion = msgLogin.EngineVersion;
+                var clientVersion = msgLogin.ClientVersion;
+
+                var devBuild = string.IsNullOrEmpty(expectedClientVersion); // dev builds don't have a version
+                if (devBuild)
+                    _logger.Debug($"{connection.RemoteEndPoint}: Dev build detected, skipping version check");
+
+                if ((engineVersion != expectedEngineVersion || clientVersion != expectedClientVersion)
+                    && !devBuild) // local dev builds don't have a version and validation is skipped in that case
+                {
+                    _logger.Warning($"{connection.RemoteEndPoint}: Version mismatch, {engineVersion} vs. {expectedEngineVersion} and {clientVersion} vs. {expectedClientVersion}");;
+                    connection.Disconnect(DisconnectReasonHashMismatch);
+                    return;
+                }
+
                 _logger.Verbose(
                     $"{connection.RemoteEndPoint}: Received MsgLoginStart. " +
-                    $"canAuth: {canAuth}, needPk: {needPk}, username: {msgLogin.UserName}, encrypt: {msgLogin.Encrypt}");
+                    $"canAuth: {canAuth}, needPk: {needPk}, username: {msgLogin.UserName}, encrypt: {msgLogin.Encrypt}, engineVersion: {engineVersion}, clientVersion: {clientVersion}");
 
                 _logger.Verbose(
                     $"{connection.RemoteEndPoint}: Connection is specialized local? {isLocal} ");

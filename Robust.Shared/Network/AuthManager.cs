@@ -13,7 +13,6 @@ namespace Robust.Shared.Network
         NetUserId? UserId { get; set; }
         string? Server { get; set; }
         string? Token { get; set; }
-        string? PubKey { get; set; }
 
         /// <summary>
         /// If true, the user allows HWID information to be provided to servers.
@@ -30,7 +29,6 @@ namespace Robust.Shared.Network
         public NetUserId? UserId { get; set; }
         public string? Server { get; set; } = DefaultAuthServer;
         public string? Token { get; set; }
-        public string? PubKey { get; set; }
         public bool AllowHwid { get; set; } = true;
 
         public void LoadFromEnv()
@@ -43,11 +41,6 @@ namespace Robust.Shared.Network
             if (TryGetVar("ROBUST_AUTH_USERID", out var userId))
             {
                 UserId = new NetUserId(Guid.Parse(userId));
-            }
-
-            if (TryGetVar("ROBUST_AUTH_PUBKEY", out var pubKey))
-            {
-                PubKey = pubKey;
             }
 
             if (TryGetVar("ROBUST_AUTH_TOKEN", out var token))

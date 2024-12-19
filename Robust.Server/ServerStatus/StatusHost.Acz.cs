@@ -335,6 +335,8 @@ namespace Robust.Server.ServerStatus
                         if (results == null)
                             return null;
 
+                        _cfg.SetCVar(CVars.BuildManifestHash.Name, results.ManifestHash); // This is used for connection validation.
+
                         _aczSawmill.Info(
                             "StatusHost synthesized client manifest in {Elapsed} ms!",
                             sw.Elapsed.TotalMilliseconds);

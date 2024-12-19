@@ -8,6 +8,9 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Net.Sockets;
 using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Lidgren.Network;
@@ -125,11 +128,9 @@ namespace Robust.Shared.Network
         {
             var encrypt = _config.GetCVar(CVars.NetEncrypt);
             var authToken = _authManager.Token;
-            var pubKey = _authManager.PubKey;
             var authServer = _authManager.Server;
             var userId = _authManager.UserId;
 
-            var hasPubKey = !string.IsNullOrEmpty(pubKey);
             var authenticate = !string.IsNullOrEmpty(authToken);
 
             byte[] legacyHwid = [];
@@ -138,8 +139,10 @@ namespace Robust.Shared.Network
             {
                 UserName = userNameRequest,
                 CanAuth = authenticate,
-                NeedPubKey = !hasPubKey,
-                Encrypt = encrypt
+                NeedPubKey = true,
+                Encrypt = encrypt,
+                ClientVersion = _config.GetCVar(CVars.BuildManifestHash),
+                EngineVersion = _config.GetCVar(CVars.BuildEngineVersion)
             };
 
             var outLoginMsg = peer.Peer.CreateMessage();
@@ -162,17 +165,7 @@ namespace Robust.Shared.Network
                 if (encrypt)
                     encryption = new NetEncryption(sharedSecret, isServer: false);
 
-                byte[] keyBytes;
-                if (hasPubKey)
-                {
-                    // public key provided by launcher.
-                    keyBytes = Convert.FromBase64String(pubKey!);
-                }
-                else
-                {
-                    // public key is gotten from handshake.
-                    keyBytes = encRequest.PublicKey;
-                }
+                var keyBytes = encRequest.PublicKey;
 
                 if (keyBytes.Length != CryptoBox.PublicKeyBytes)
                 {

@@ -535,18 +535,7 @@ public partial class {componentName} : IComponentDelta
 
             if (args.FromTick > component.CreationTick && delta.LastFieldUpdate >= args.FromTick)
             {{
-                uint fields = 0;
-
-                for (var i = 0; i < delta.LastModifiedFields.Length; i++)
-                {{
-                    var lastUpdate = delta.LastModifiedFields[i];
-
-                    // Field not dirty
-                    if (lastUpdate < args.FromTick)
-                        continue;
-
-                    fields |= (uint) (1 << i);
-                }}
+                var fields = EntityManager.GetModifiedFields(component, args.FromTick);
 
                 // Try and get a matching delta state for the relevant dirty fields, otherwise fall back to full state.
                 switch (fields)

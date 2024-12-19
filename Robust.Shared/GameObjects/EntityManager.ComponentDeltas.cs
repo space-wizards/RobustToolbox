@@ -4,6 +4,24 @@ namespace Robust.Shared.GameObjects;
 
 public abstract partial class EntityManager
 {
+    public uint GetModifiedFields(IComponentDelta delta, GameTick fromTick)
+    {
+        uint fields = 0;
+
+        for (var i = 0; i < delta.LastModifiedFields.Length; i++)
+        {
+            var lastUpdate = delta.LastModifiedFields[i];
+
+            // Field not dirty
+            if (lastUpdate < fromTick)
+                continue;
+
+            fields |= (uint) (1 << i);
+        }
+
+        return fields;
+    }
+
     public void DirtyField(EntityUid uid, IComponentDelta comp, string fieldName, MetaDataComponent? metadata = null)
     {
         var compReg = ComponentFactory.GetRegistration(comp);

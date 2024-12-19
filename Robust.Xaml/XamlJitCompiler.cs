@@ -42,9 +42,8 @@ internal sealed class XamlJitCompiler
     /// <returns>the new name</returns>
     private static string GenerateAssemblyName()
     {
-        // make the name unique (even though C# possibly doesn't care)
         return
-            $"{nameof(XamlJitCompiler)}_{Interlocked.Increment(ref _assemblyId)}";
+            $"{nameof(XamlJitCompiler)}_Assembly";
     }
 
     /// <summary>

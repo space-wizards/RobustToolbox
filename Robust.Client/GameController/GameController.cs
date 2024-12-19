@@ -10,6 +10,7 @@ using Robust.Client.Console;
 using Robust.Client.GameObjects;
 using Robust.Client.GameStates;
 using Robust.Client.Graphics;
+using Robust.Client.HTTPClient;
 using Robust.Client.Input;
 using Robust.Client.Placement;
 using Robust.Client.Replays.Loading;
@@ -93,6 +94,8 @@ namespace Robust.Client
         [Dependency] private readonly IReplayPlaybackManager _replayPlayback = default!;
         [Dependency] private readonly IReplayRecordingManagerInternal _replayRecording = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+
+        [Dependency] private readonly ICDNConsumer _cdnConsumer = default!;
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -206,6 +209,7 @@ namespace Robust.Client
             _replayLoader.Initialize();
             _replayPlayback.Initialize();
             _replayRecording.Initialize();
+            _cdnConsumer.Initialize();
             _userInterfaceManager.PostInitialize();
             _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
 

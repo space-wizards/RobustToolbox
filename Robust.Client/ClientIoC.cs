@@ -8,6 +8,7 @@ using Robust.Client.GameObjects;
 using Robust.Client.GameStates;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Clyde;
+using Robust.Client.HTTPClient;
 using Robust.Client.HWId;
 using Robust.Client.Input;
 using Robust.Client.Map;
@@ -102,6 +103,8 @@ namespace Robust.Client
             deps.Register<ProfViewManager>();
             deps.Register<IGamePrototypeLoadManager, GamePrototypeLoadManager>();
             deps.Register<NetworkResourceManager>();
+            deps.Register<ICDNConsumer, CDNConsumer>();
+            deps.Register<IJSON, JSON>();
 
             switch (mode)
             {

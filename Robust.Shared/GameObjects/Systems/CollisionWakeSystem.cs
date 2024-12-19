@@ -1,4 +1,3 @@
-using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
@@ -16,9 +15,6 @@ namespace Robust.Shared.GameObjects
         {
             base.Initialize();
             SubscribeLocalEvent<CollisionWakeComponent, ComponentShutdown>(OnRemove);
-
-            SubscribeLocalEvent<CollisionWakeComponent, ComponentGetState>(OnGetState);
-            SubscribeLocalEvent<CollisionWakeComponent, ComponentHandleState>(OnHandleState);
 
             SubscribeLocalEvent<CollisionWakeComponent, JointAddedEvent>(OnJointAdd);
             SubscribeLocalEvent<CollisionWakeComponent, JointRemovedEvent>(OnJointRemove);
@@ -41,22 +37,6 @@ namespace Robust.Shared.GameObjects
                 _physics.SetCanCollide(uid, true, body: physics);
 
             Dirty(uid, component);
-        }
-
-        private void OnHandleState(EntityUid uid, CollisionWakeComponent component, ref ComponentHandleState args)
-        {
-            if (args.Current is CollisionWakeComponent.CollisionWakeState state)
-                component.Enabled = state.Enabled;
-
-            // Note, this explicitly does not update PhysicsComponent.CanCollide. The physics component should perform
-            // its own state-handling logic. Additionally, if we wanted to set it you would have to ensure that things
-            // like the join-component and physics component have already handled their states, otherwise CanCollide may
-            // be set incorrectly and leave the client with a bad state.
-        }
-
-        private void OnGetState(EntityUid uid, CollisionWakeComponent component, ref ComponentGetState args)
-        {
-            args.State = new CollisionWakeComponent.CollisionWakeState(component.Enabled);
         }
 
         private void OnRemove(EntityUid uid, CollisionWakeComponent component, ComponentShutdown args)

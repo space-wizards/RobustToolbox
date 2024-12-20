@@ -23,8 +23,6 @@ internal sealed partial class AudioManager : IAudioInternal
     private ALDevice _openALDevice;
     private ALContext _openALContext;
 
-    private readonly Dictionary<IClydeHandle, LoadedAudioSample> _audioSampleBuffers = new();
-
     private readonly Dictionary<int, WeakReference<BaseAudioSource>> _audioSources =
         new();
 
@@ -76,7 +74,8 @@ internal sealed partial class AudioManager : IAudioInternal
             if (_openALDevice == IntPtr.Zero)
             {
                 OpenALSawmill.Warning("Unable to open preferred audio device '{0}': {1}. Falling back default.",
-                    preferredDevice, ALC.GetError(ALDevice.Null));
+                    preferredDevice,
+                    ALC.GetError(ALDevice.Null));
 
                 _openALDevice = ALC.OpenDevice(null);
             }
@@ -129,7 +128,8 @@ internal sealed partial class AudioManager : IAudioInternal
             EFX.DeleteFilter(handles.filterHandle);
     }
 
-    private void _checkAlcError(ALDevice device,
+    private void _checkAlcError(
+        ALDevice device,
         [CallerMemberName] string callerMember = "",
         [CallerLineNumber] int callerLineNumber = -1)
     {
@@ -183,7 +183,7 @@ internal sealed partial class AudioManager : IAudioInternal
 
         public bool IsSafeToDelete()
         {
-            return UsingsCount == 0;
+            return UsingsCount <= 0;
         }
     }
 

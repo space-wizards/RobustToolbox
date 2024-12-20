@@ -159,7 +159,6 @@ internal partial class AudioManager
             throw new InvalidOperationException("Unable to load wav with bits per sample different from 8 or 16");
         }
 
-        var handle = new ClydeHandle(_generatedBuffers++);
         var buffer = new short[wav.Data.Length / sizeof(short)];
 
         unsafe
@@ -176,6 +175,7 @@ internal partial class AudioManager
             }
         }
 
+        var handle = new ClydeHandle(_generatedBuffers++);
         MakeVorbisCast(handle, format, buffer, wav.Data.Length, wav.SampleRate);
         var length = TimeSpan.FromSeconds(wav.Data.Length / (double) wav.BlockAlign / wav.SampleRate);
         return new AudioStream(handle, length, wav.NumChannels, name);
@@ -208,7 +208,6 @@ internal partial class AudioManager
 
         var handle = new ClydeHandle(_generatedBuffers++);
         MakeVorbisCast(handle, fmt, samples.ToArray(), samples.Length * sizeof(short), sampleRate);
-
         var length = TimeSpan.FromSeconds((double) samples.Length / channels / sampleRate);
         return new AudioStream(handle, length, channels, name);
     }

@@ -74,9 +74,31 @@ namespace Robust.Shared.Physics.Systems
         protected EntityQuery<PhysicsMapComponent> PhysMapQuery;
         protected EntityQuery<MapComponent> MapQuery;
 
+        private ComponentRegistration _physicsReg = default!;
+        private byte _angularVelocityIndex;
+
         public override void Initialize()
         {
             base.Initialize();
+
+            _physicsReg = EntityManager.ComponentFactory.GetRegistration(CompIdx.Index<PhysicsComponent>());
+
+            // If you update this then update the delta state + GetState + HandleState!
+            EntityManager.ComponentFactory.RegisterNetworkedFields(_physicsReg,
+                nameof(PhysicsComponent.CanCollide),
+                nameof(PhysicsComponent.BodyStatus),
+                nameof(PhysicsComponent.BodyType),
+                nameof(PhysicsComponent.SleepingAllowed),
+                nameof(PhysicsComponent.FixedRotation),
+                nameof(PhysicsComponent.Friction),
+                nameof(PhysicsComponent.Force),
+                nameof(PhysicsComponent.Torque),
+                nameof(PhysicsComponent.LinearDamping),
+                nameof(PhysicsComponent.AngularDamping),
+                nameof(PhysicsComponent.AngularVelocity),
+                nameof(PhysicsComponent.LinearVelocity));
+
+            _angularVelocityIndex = 10;
 
             _fixturesQuery = GetEntityQuery<FixturesComponent>();
             PhysicsQuery = GetEntityQuery<PhysicsComponent>();

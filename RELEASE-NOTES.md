@@ -54,6 +54,17 @@ END TEMPLATE-->
 *None yet*
 
 
+## 237.4.0
+
+### New features
+
+* Implement automatic field-level delta states via AutoGenerateComponentState via opt-in.
+
+### Bugfixes
+
+* Remove redundant TransformComponentState bool.
+
+
 ## 237.3.0
 
 ### New features

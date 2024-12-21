@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -13,6 +14,8 @@ public class Generator : IIncrementalGenerator
     private const string TypeCopierInterfaceNamespace = "Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopier";
     private const string TypeCopyCreatorInterfaceNamespace = "Robust.Shared.Serialization.TypeSerializers.Interfaces.ITypeCopyCreator";
     private const string SerializationHooksNamespace = "Robust.Shared.Serialization.ISerializationHooks";
+    private const string AutoStateAttributeName = "Robust.Shared.Analyzers.AutoGenerateComponentStateAttribute";
+    private const string ComponentDeltaInterfaceName = "Robust.Shared.GameObjects.IComponentDelta";
 
     public void Initialize(IncrementalGeneratorInitializationContext initContext)
     {
@@ -35,6 +38,7 @@ public class Generator : IIncrementalGenerator
                 var builder = new StringBuilder();
                 var containingTypes = new Stack<INamedTypeSymbol>();
                 var declarationsGenerated = new HashSet<string>();
+                var deltaType = compilation.GetTypeByMetadataName(ComponentDeltaInterfaceName)!;
 
                 foreach (var declaration in declarations)
                 {
@@ -106,9 +110,9 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 {
     {{GetConstructor(definition)}}
 
-    {{GetCopyMethods(definition)}}
+    {{GetCopyMethods(definition, deltaType)}}
 
-    {{GetInstantiators(definition)}}
+    {{GetInstantiators(definition, deltaType)}}
 }
 
 {{containingTypesEnd}}
@@ -192,7 +196,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
          return builder.ToString();
      }
 
-    private static string GetCopyMethods(DataDefinition definition)
+    private static string GetCopyMethods(DataDefinition definition, ITypeSymbol deltaType)
     {
         var builder = new StringBuilder();
 
@@ -263,7 +267,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
                              {{baseCopy}}
                              """);
 
-        foreach (var @interface in GetImplicitDataDefinitionInterfaces(definition.Type, true))
+        foreach (var @interface in InternalGetImplicitDataDefinitionInterfaces(definition.Type, true, deltaType))
         {
             var interfaceModifiers = baseType != null && baseType.AllInterfaces.Contains(@interface, SymbolEqualityComparer.Default)
                 ? "override "
@@ -292,7 +296,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
         return builder.ToString();
     }
 
-    private static string GetInstantiators(DataDefinition definition)
+    private static string GetInstantiators(DataDefinition definition, ITypeSymbol deltaType)
     {
         var builder = new StringBuilder();
         var modifiers = string.Empty;
@@ -326,7 +330,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
                                  """);
         }
 
-        foreach (var @interface in GetImplicitDataDefinitionInterfaces(definition.Type, false))
+        foreach (var @interface in InternalGetImplicitDataDefinitionInterfaces(definition.Type, false, deltaType))
         {
             var interfaceName = @interface.ToDisplayString();
             builder.AppendLine($$"""
@@ -343,6 +347,31 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
         }
 
         return builder.ToString();
+    }
+
+    [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
+    private static IEnumerable<ITypeSymbol> InternalGetImplicitDataDefinitionInterfaces(ITypeSymbol type, bool all, ITypeSymbol deltaType)
+    {
+        var symbols = GetImplicitDataDefinitionInterfaces(type, all);
+
+        // TODO SOURCE GEN
+        // fix this jank
+        // The comp-state source generator will add an "IComponentDelta" interface to classes with the auto state
+        // attribute, and this generator creates methods that those classes then have to implement because
+        // IComponentDelta a DataDefinition via the ImplicitDataDefinitionForInheritorsAttribute on IComponent.
+        if (!TryGetAttribute(type, AutoStateAttributeName, out var data))
+            return symbols;
+
+        // If it doesn't have field deltas then ignore
+        if (data.ConstructorArguments[1] is not { Value: bool fields and true })
+        {
+            return symbols;
+        }
+
+        if (symbols.Any(x => x.ToDisplayString() == deltaType.ToDisplayString()))
+            return symbols;
+
+        return symbols.Append(deltaType);
     }
 
     // TODO serveronly? do we care? who knows!!

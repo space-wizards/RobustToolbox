@@ -4,26 +4,26 @@
 public sealed class IntCommand : ToolshedCommand
 {
     [CommandImplementation]
-    public int Impl([CommandArgument] int value) => value;
+    public int Impl(int value) => value;
 }
 
 [ToolshedCommand(Name = "f")]
 public sealed class FloatCommand : ToolshedCommand
 {
     [CommandImplementation]
-    public float Impl([CommandArgument] float value) => value;
+    public float Impl(float value) => value;
 }
 
 [ToolshedCommand(Name = "s")]
 public sealed class StringCommand : ToolshedCommand
 {
     [CommandImplementation]
-    public string Impl([CommandArgument] string value) => value;
+    public string Impl(string value) => value;
 }
 
 [ToolshedCommand(Name = "b")]
 public sealed class BoolCommand : ToolshedCommand
 {
     [CommandImplementation]
-    public bool Impl([CommandArgument] bool value) => value;
+    public bool Impl(bool value) => value;
 }

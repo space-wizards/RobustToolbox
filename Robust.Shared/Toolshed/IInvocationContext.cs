@@ -24,11 +24,7 @@ public interface IInvocationContext
     /// </remarks>
     public bool CheckInvokable(CommandSpec command, out IConError? error)
     {
-        if (Toolshed.ActivePermissionController is { } controller)
-            return controller.CheckInvokable(command, Session, out error);
-
-        error = null;
-        return true;
+        return Toolshed.CheckInvokable(command, Session, out error);
     }
 
     ToolshedEnvironment Environment { get; }
@@ -115,6 +111,8 @@ public interface IInvocationContext
     /// </remarks>
     public IEnumerable<IConError> GetErrors();
 
+    public bool HasErrors { get; }
+
     /// <summary>
     ///     Clears the list of unobserved errors.
     /// </summary>
@@ -124,14 +122,6 @@ public interface IInvocationContext
     public void ClearErrors();
 
     /// <summary>
-    ///     The backing variable storage.
-    /// </summary>
-    /// <remarks>
-    ///     You don't have to use this at all.
-    /// </remarks>
-    protected Dictionary<string, object?> Variables { get; }
-
-    /// <summary>
     ///     Reads the given variable from the context.
     /// </summary>
     /// <param name="name">The name of the variable.</param>
@@ -139,11 +129,7 @@ public interface IInvocationContext
     /// <remarks>
     ///     This may behave arbitrarily, but it's advised it behave somewhat sanely.
     /// </remarks>
-    public virtual object? ReadVar(string name)
-    {
-        Variables.TryGetValue(name, out var res);
-        return res;
-    }
+    object? ReadVar(string name);
 
     /// <summary>
     ///     Writes the given variable to the context.
@@ -153,17 +139,24 @@ public interface IInvocationContext
     /// <remarks>
     ///     Writes may be ignored or manipulated.
     /// </remarks>
-    public virtual void WriteVar(string name, object? value)
-    {
-        Variables[name] = value;
-    }
+    void WriteVar(string name, object? value);
+
+    /// <summary>
+    ///     Whether or not a variable is read-only. Used for variable name auto-completion.
+    /// </summary>
+    bool IsReadonlyVar(string name) => false;
 
     /// <summary>
     ///     Provides a list of all variables that have been written to at some point.
     /// </summary>
     /// <returns>List of all variables.</returns>
-    public virtual IEnumerable<string> GetVars()
+    public IEnumerable<string> GetVars();
+}
+
+public sealed class ReadonlyVariableError(string name) : ConError
+{
+    public override FormattedMessage DescribeInner()
     {
-        return Variables.Keys;
+        return FormattedMessage.FromUnformatted($"${name} is a read-only variable.");
     }
 }

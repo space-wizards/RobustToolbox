@@ -1,7 +1,10 @@
 ﻿using System.Collections.Generic;
+using System.Numerics;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Maths;
+using Robust.Shared.Toolshed;
 using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Toolshed.TypeParsers;
 using Robust.Shared.Toolshed.TypeParsers.Math;
@@ -20,13 +23,11 @@ public sealed partial class ToolshedParserTest : ToolshedTest
             ParseCommand("entities select 1");
             ParseCommand("entities with MetaData select 1");
 
-            ExpectError<OutOfInputError>();
-            ParseCommand("entities with");
+            ParseError<ExpectedArgumentError>("entities with");
 
-            ExpectError<NoImplementationError>();
-            ParseCommand("player:list with MetaData");
+            ParseError<NoImplementationError>("player:list with MetaData");
 
-            ExpectError<ExpressionOfWrongType>();
+            ExpectError<WrongCommandReturn>();
             ParseCommand("player:list", expectedType: typeof(IEnumerable<EntityUid>));
 
             ParseCommand("entities not with MetaData");
@@ -45,8 +46,7 @@ public sealed partial class ToolshedParserTest : ToolshedTest
             ParseCommand("ent 1");
             // Clientside entities are a myth.
 
-            ExpectError<InvalidEntity>();
-            ParseCommand("ent foodigity");
+            ParseError<InvalidEntity>("ent foodigity");
         });
     }
 
@@ -57,15 +57,9 @@ public sealed partial class ToolshedParserTest : ToolshedTest
         {
             ParseCommand("entities select 100");
             ParseCommand("entities select 50%");
-
-            ExpectError<InvalidQuantity>();
-            ParseCommand("entities select -1");
-
-            ExpectError<InvalidQuantity>();
-            ParseCommand("entities select 200%");
-
-            ExpectError<InvalidQuantity>();
-            ParseCommand("entities select hotdog");
+            ParseError<InvalidQuantity>("entities select -1");
+            ParseError<InvalidQuantity>("entities select 200%");
+            ParseError<InvalidQuantity>("entities select hotdog");
         });
     }
 
@@ -75,12 +69,8 @@ public sealed partial class ToolshedParserTest : ToolshedTest
         await Server.WaitAssertion(() =>
         {
             ParseCommand("entities with MetaData");
-
-            ExpectError<UnknownComponentError>();
-            ParseCommand("entities with Foodiddy");
-
-            ExpectError<UnknownComponentError>();
-            ParseCommand("entities with MetaDataComponent");
+            ParseError<UnknownComponentError>("entities with Foodiddy");
+            ParseError<UnknownComponentError>("entities with MetaDataComponent");
         });
     }
 
@@ -89,12 +79,11 @@ public sealed partial class ToolshedParserTest : ToolshedTest
     {
         await Server.WaitAssertion(() =>
         {
-            ParseCommand("val Color red");
-            ParseCommand("val Color blue");
-            ParseCommand("val Color green");
-            ParseCommand("val Color #FF0000");
-            ParseCommand("val Color #00FF00");
-            ParseCommand("val Color #0000FF");
+            AssertResult("val Color red", Color.Red);
+            AssertResult("val Color blue", Color.Blue);
+            AssertResult("val Color green", Color.Green);
+            AssertResult("val Color #89ABCD", Color.FromHex("#89ABCD"));
+            AssertResult("val Color #89ABCDEF", Color.FromHex("#89ABCDEF"));
         });
     }
 
@@ -103,8 +92,8 @@ public sealed partial class ToolshedParserTest : ToolshedTest
     {
         await Server.WaitAssertion(() =>
         {
-            ParseCommand("val Angle 3.14159");
-            ParseCommand("val Angle 180deg");
+            AssertResult("val Angle 3.14159", new Angle(3.14159f));
+            AssertResult("val Angle 180deg", Angle.FromDegrees(180));
         });
     }
 
@@ -113,19 +102,13 @@ public sealed partial class ToolshedParserTest : ToolshedTest
     {
         await Server.WaitAssertion(() =>
         {
-            ParseCommand("val Vector2 [1, 1]");
-            ParseCommand("val Vector2 [-1, 1]");
-            ParseCommand("val Vector2 [ 1  , 1    ]");
-            ParseCommand("val Vector2 [ -1, 1 ]");
-
-            ExpectError<ExpectedOpenBrace>();
-            ParseCommand("val Vector2 1, 1");
-
-            ExpectError<ExpectedCloseBrace>();
-            ParseCommand("val Vector2 [1, 1");
-
-            ExpectError<UnexpectedCloseBrace>();
-            ParseCommand("val Vector2 [1]");
+            AssertResult("val Vector2 [1, 1]", new Vector2(1, 1));
+            AssertResult("val Vector2 [-1, 1]", new Vector2(-1, 1));
+            AssertResult("val Vector2 [ 1  , 1    ]", new Vector2(1, 1));
+            AssertResult("val Vector2 [ -1, 1 ]", new Vector2(-1, 1));
+            ParseError<ExpectedOpenBrace>("val Vector2 1, 1");
+            ParseError<ExpectedCloseBrace>("val Vector2 [1, 1");
+            ParseError<UnexpectedCloseBrace>("val Vector2 [1]");
         });
     }
 }

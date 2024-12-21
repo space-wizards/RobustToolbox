@@ -67,7 +67,6 @@ public sealed partial class ToolshedParserTest
 
                 // Toolshed special constructs.
                 AssertParseable<ValueRef<object>>();
-                AssertParseable<ValueRef<object, object>>();
                 AssertParseable<CommandRun>();
                 AssertParseable<CommandRun<object>>();
                 AssertParseable<CommandRun<object, object>>();

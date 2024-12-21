@@ -367,7 +367,7 @@ namespace Robust.Shared.Containers
             if (!xform.ParentUid.Valid)
                 return false;
 
-            if (entityQuery.Resolve(xform.ParentUid, ref foundComponent, false))
+            if (entityQuery.TryComp(xform.ParentUid, out foundComponent))
                 return true;
 
             return TryFindComponentOnEntityContainerOrParent(xform.ParentUid, entityQuery, ref foundComponent);

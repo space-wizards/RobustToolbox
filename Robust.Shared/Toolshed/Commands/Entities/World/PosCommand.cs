@@ -16,7 +16,7 @@ internal sealed class PosCommand : ToolshedCommand
         => input.Select(Pos);
 
     [CommandImplementation]
-    public EntityCoordinates Pos([CommandInvocationContext] IInvocationContext ctx)
+    public EntityCoordinates Pos(IInvocationContext ctx)
     {
         if (ExecutingEntity(ctx) is { } ent)
             return Transform(ent).Coordinates;

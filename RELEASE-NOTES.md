@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Some toolshed command syntax/parsing has changed slightly, and several toolshed related classes and interfaces have changed significantly, including ToolshedManager, type parsers, invocation contexts, and parser contexts. For more detail see the the description of PR #5455
+*None yet*
 
 ### New features
 
@@ -52,6 +52,13 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 238.0.0
+
+### Breaking changes
+
+* Some toolshed command syntax/parsing has changed slightly, and several toolshed related classes and interfaces have changed significantly, including ToolshedManager, type parsers, invocation contexts, and parser contexts. For more detail see the the description of PR #5455
 
 
 ## 237.4.0

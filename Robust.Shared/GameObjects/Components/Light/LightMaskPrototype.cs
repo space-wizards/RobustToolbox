@@ -22,35 +22,49 @@ namespace Robust.Shared.GameObjects;
 [Prototype("lightMask")]
 public sealed partial class LightMaskPrototype : IPrototype
 {
-    [IdDataField] public string ID { get; } = default!;
+    [ViewVariables(VVAccess.ReadWrite)]
+    [IdDataField] 
+    public string ID { get; private set; } = default!;
 
+    /// <summary>
+    /// File path to the mask image that will be applied to the light for rendering.
+    /// </summary>
     [ViewVariables(VVAccess.ReadWrite), DataField("maskPath", required: true)]
     public ResPath MaskPath;
-    
-    // [ViewVariables(VVAccess.ReadWrite), DataField("coneAngle", required: true)]
-    // public float ConeAngle = 0.0f;
 
-    // [ViewVariables(VVAccess.ReadWrite), DataField("cones")]
-    // public Dictionary<float, float> cones = new();
-
-    [ViewVariables(VVAccess.ReadWrite), DataField("cones")]
-    public List<LightConeData> Cones = new();
+    /// <summary>
+    /// Light of light cones that correspond to the light mask.
+    /// </summary>
+    [ViewVariables(VVAccess.ReadWrite), DataField("lightCones", required: true)]
+    public List<LightConeData> LightCones = default!;
 
 }
 
+/// <summary>
+/// Container class that holds data for a light cone.
+/// This Data is used by <see cref="LightSensitiveSystem"/>
+/// </summary>
+[Serializable, NetSerializable]
 [DataDefinition]
 public sealed partial class LightConeData
 {
-    [DataField("direction", required: true)] 
-    public float Direction;
+    /// <summary>
+    ///     The angle offset of the cone in degrees, relative to the light it belongs to.
+    ///     0 is forward, 90 is to the right, etc.
+    /// </summary>
+    [DataField("direction", required: true)]
+    public float Direction = default!;
 
     /// <summary>
-    ///     
+    ///     Angle limit of the cone to be within the full brightness of the light.
     /// </summary>
-    [DataField("innerWidth", required: true)] 
-    public float InnerWidth;
+    [DataField("innerWidth", required: true)]
+    public float InnerWidth = default!;
 
-    [DataField("outerWidth", required: true)] 
-    public float OuterWidth;
+    /// <summary>
+    ///     Angle limit of the cone to be within the reduced light. Beyond this angle, you are considered out of the light.
+    /// </summary>
+    [DataField("outerWidth", required: true)]
+    public float OuterWidth = default!;
 
 }

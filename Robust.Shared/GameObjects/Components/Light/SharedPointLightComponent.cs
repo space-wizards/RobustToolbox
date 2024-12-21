@@ -93,7 +93,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// The Prototype ID of the light mask the light uses.
         /// </summary>
-        [DataField("lightMask"), ViewVariables(VVAccess.ReadWrite)]
+        [DataField("lightMask")]
         public ProtoId<LightMaskPrototype>? LightMask;
     }
 

@@ -15,8 +15,8 @@ public sealed class LightTreeSystem : ComponentTreeSystem<LightTreeComponent, Po
     #region Component Tree Overrides
     protected override bool DoFrameUpdate => false;
     protected override bool DoTickUpdate => true;
-    protected override int InitialCapacity => 256;
-    protected override bool Recursive => false;
+    protected override int InitialCapacity => 128;
+    protected override bool Recursive => true;
 
     protected override void OnCompStartup(EntityUid uid, PointLightComponent component, ComponentStartup args)
     {

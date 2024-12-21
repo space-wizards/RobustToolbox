@@ -1,17 +1,12 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Numerics;
 
 using Robust.Server.ComponentTrees;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
-using Robust.Shared.Physics;
-using Robust.Shared.Physics.Components;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization.TypeSerializers.Implementations;
 using Robust.Shared.Timing;
 
 namespace Robust.Server.GameObjects;
@@ -20,218 +15,131 @@ public sealed class LightSensitiveSystem : SharedLightSensitiveSystem
 {
     [Dependency] private readonly IGameTiming _gameTiming = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Dependency] private readonly OccluderSystem _occluder = default!;
     [Dependency] private readonly LightTreeSystem _lightTreeSystem = default!;
     [Dependency] private readonly IPrototypeManager _proto = default!;
+    [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
-    private EntityQuery<PhysicsComponent> _physicsQuery;
-    private float _cooldown = 0.5f;
+    private const float DefaultCooldown = 0.5f;
 
-    private TimeSpan _targetTime = TimeSpan.Zero;
-
-
-    public override void Initialize()
+    /// <summary>
+    ///     Returns the illumination level of an entity. If the entity doesn't have a LightSensitiveComponent, one will be added to store the light level.
+    ///     If the entity hasn't had its light level calculated, or it hasn't been updated in the last _cooldown seconds, it will be re-calculated.
+    ///     Subsequent calls to this method within a short period will return the previously calculated light level, unless the forceUpdate parameter is true.
+    /// </summary>
+    /// <remarks>
+    ///     If you're designing a system that depends on the light level of an entity, you should create a const variable that the system will
+    ///     use for the cooldown. I anticipate as time goes on, more systems will use this same function for potentially reasons and all have different cooldowns.
+    ///     I really hope I don't have to deal with the fallout of this design choice.
+    /// <remarks>
+    /// <param name="uid">Entity UID to check.</param>
+    /// <param name="lightLevel">A float value to be treated as a percentage.</param>
+    /// <param name="cooldown">A float value to that a light level dependent system should set for how frequent of a recalculation in light level it should need.</param>
+    /// <param name="clamped">If true, Clamp the light level that will be returned to be between 0 and 1 for 0% to 100%.
+    /// If false, the return value can go beyond 100% if the nearest lights have a high enough energy value</param>
+    /// <param name="forceUpdate">If true, disregard any cooldowns in place and force an update in calculated light value.</param>
+    /// <returns>The illumination level of the entity as a float. Treat this as a percentage.</returns>
+    public bool TryGetLightLevel(EntityUid uid, [NotNullWhen(true)] out float? lightLevel, float cooldown = DefaultCooldown, bool clamped = true, bool forceUpdate = false)
     {
-        base.Initialize();
-
-        _physicsQuery = GetEntityQuery<PhysicsComponent>();
-    }
-
-    public override void Update(float frameTime)
-    {
-        base.Update(frameTime);
-
-        if (!_gameTiming.IsFirstTimePredicted)
-            return;
-
-        if (_cooldown <= 0f)
-            return;
-
-        if (_gameTiming.CurTime < _targetTime)
-            return;
-
-        _targetTime = _gameTiming.CurTime + TimeSpan.FromSeconds(_cooldown);
-        //var occluderQuery = GetEntityQuery<OccluderComponent>();
-
-        var query = EntityQueryEnumerator<LightSensitiveComponent, TransformComponent>();
-        while (query.MoveNext(out var uid, out var comp, out var xform))
-        {
-            ProcessNearbyLights(uid, comp, xform);
-        }
-    }
-
-    public bool TryGetLightLevel(
-        EntityUid uid,
-        [NotNullWhen(true)] out LightSensitiveComponent? component,
-        bool forceUpdate = false
-        )
-    {
+        // To gauge something's light level, we need to assign it a corresponding LightSensitiveComponent if it doesn't already have one
         var comp = EnsureComp<LightSensitiveComponent>(uid);
 
         // We only want to run this update if enough time has passed or it's REALLY important
         // that a component/system operate on precise or frequent updates.
         // For example: If a non player entity like a plant takes damage from being in the dark, that doesn't
         // really need updates every single tick.
-        if (comp.LastUpdate + TimeSpan.FromSeconds(_cooldown) < _gameTiming.CurTime || forceUpdate)
+        if (forceUpdate || comp.LastUpdate + TimeSpan.FromSeconds(cooldown) < _gameTiming.CurTime)
             ProcessNearbyLights(uid, comp, Transform(uid));
 
-        component = comp;
+        lightLevel = clamped ? Math.Clamp(comp.LightLevel, 0f, 1f) : comp.LightLevel;
         return true;
     }
 
-    private void ProcessNearbyLights(EntityUid uid, LightSensitiveComponent component, TransformComponent playerXform)
+    /// <summary>
+    ///     Gets all PointLightComponents near an entity by querying the light tree with the entity's position and bounding box.
+    ///     Then checks for occlusion between each light and entity by raycasting against the occluderTree, and if the entity is in range of its radius.
+    ///     Lights that are in range and unoccluded then have their light level calculated by multiplying their energy by a modified attenuation formula.
+    ///     Only the highest light level is kept because I don't want to mess with adding or multiplying light values together.
+    /// </summary>
+    /// <remarks>
+    ///     This method is probably going to be very performance inefficient, so try not to use it too often. We store recent light level calculations
+    ///     in the LightSensitiveComponent, so it's not necessary to calculate them every single tick.
+    /// <remarks>
+    /// <param name="uid">Entity UID to check.</param>
+    /// <param name="component">The LightSensitiveComponent of the entity</param>
+    /// <param name="entityXform">The TransformComponent of the entity</param>
+    /// <returns>If the component existed in the entity.</returns>
+    private void ProcessNearbyLights(EntityUid uid, LightSensitiveComponent component, TransformComponent entityXform)
     {
         var illumination = 0f;
 
         var ourPosition = _transform.GetMapCoordinates(uid);
-        //var bounds = _physics.GetWorldAABB(uid);
-        var box = Box2.CenteredAround(ourPosition.Position, new Vector2(0.5f, 0.5f));
-        var queryResult = _lightTreeSystem.QueryAabb(ourPosition.MapId, box);
+        var bounds = _physics.GetWorldAABB(uid);
+        var queryResult = _lightTreeSystem.QueryAabb(ourPosition.MapId, bounds);
 
         foreach (var val in queryResult)
         {
-            var (lightComp, lightxform) = val;
+            var (lightComp, lightXform) = val;
             if (!lightComp.Enabled)
                 continue;
 
-            var lightPosition = _transform.GetMapCoordinates(lightxform).Offset(lightComp.Offset);
+            var (lightPos, lightRot) = _transform.GetWorldPositionRotation(lightXform);
+            lightPos += lightRot.RotateVec(lightComp.Offset);
+
+            var lightPosition = new MapCoordinates(lightPos, lightXform.MapID);
 
             if (!InRangeUnOccluded(lightPosition, ourPosition, lightComp.Radius, null))
                 continue;
 
-            playerXform.Coordinates.TryDistance(EntityManager, lightxform.Coordinates, out var dist);
-            //Log.Debug($"distance from light {lightPosition}: {dist}, light energy: {lightComp.Energy}, light radius: {lightComp.Radius}");
+            entityXform.Coordinates.TryDistance(EntityManager, lightXform.Coordinates, out var dist);
+
+            var denom = dist / lightComp.Radius;
+            /// A slight modification of standard inverse square falloff that incorperates the radius of the light to make it more forgiving
+            var attenuation = 1 - (denom * denom);
 
             var calculatedLight = 0f;
             if (_proto.TryIndex(lightComp.LightMask, out var mask))
             {
-                var angleToTarget = GetAngle(val.Uid, lightxform, lightComp, uid, playerXform);
-                foreach (var cone in mask.Cones)
+                var angleToTarget = GetAngle(val.Uid, lightXform, lightComp, uid, entityXform);
+
+                foreach (var cone in mask.LightCones)
                 {
-                    if (Math.Abs(angleToTarget.Degrees) - cone.Direction > cone.OuterWidth)
+                    var coneLight = 0f;
+                    var angleAttenuation = (float)Math.Min((float)Math.Max(cone.OuterWidth - angleToTarget, 0f), cone.InnerWidth) / cone.OuterWidth;
+
+                    // Target is outside the cone's outer width angle, so ignore
+                    if (Math.Abs(angleToTarget.Degrees) - Math.Abs(cone.Direction) > cone.OuterWidth)
                     {
-                        //Log.Debug($"{uid} outside of cone");
                         continue;
                     }
+                    // Target is outside the inner cone, but inside the outer cone, so reduce the light level
                     else if (
                         Math.Abs(angleToTarget.Degrees) - cone.Direction > cone.InnerWidth &&
-                        Math.Abs(angleToTarget.Degrees) - cone.Direction < cone.OuterWidth)
+                        Math.Abs(angleToTarget.Degrees) - cone.Direction < cone.OuterWidth
+                        )
                     {
-                        calculatedLight = Math.Clamp(
-                            lightComp.Energy * (1 - dist / lightComp.Radius) *
-                            (float)Math.Cos(angleToTarget + MathHelper.DegreesToRadians(cone.OuterWidth - cone.InnerWidth)), 0f, 1f);
-
-                        //Log.Debug($"{uid} between inner and outer angle of cone");
+                        coneLight = lightComp.Energy * attenuation * attenuation * angleAttenuation;
                     }
+                    // Target is inside the inner cone, so the light level will use standard falloff.
                     else
                     {
-                        calculatedLight = Math.Clamp(lightComp.Energy * (1 - dist / lightComp.Radius), 0f, 1f);
-                        //Log.Debug($"{uid} fully within cone");
+                        coneLight = lightComp.Energy * attenuation * attenuation;
                     }
+                    calculatedLight = Math.Max(calculatedLight, coneLight);
                 }
             }
+            // No mask, use normal falloff
             else
-                calculatedLight = Math.Clamp(lightComp.Energy * (1 - dist / lightComp.Radius), 0f, 1f);
+            {
+                calculatedLight = lightComp.Energy * attenuation * attenuation;
+            }
 
+            // We only care about the strongest light level being applied to the entity. 
+            // I really don't want to deal with multiplicative or additive illumination
             illumination = Math.Max(illumination, calculatedLight);
         }
 
         SetIllumination(uid, illumination, component);
         component.LastUpdate = _gameTiming.CurTime;
-    }
-
-    public override bool InRangeUnOccluded<TState>(MapCoordinates origin, MapCoordinates other, float range,
-            TState state, Func<EntityUid, TState, bool> predicate, bool ignoreInsideBlocker = true, IEntityManager? entMan = null)
-    {
-        if (other.MapId != origin.MapId ||
-            other.MapId == MapId.Nullspace) return false;
-
-        var dir = other.Position - origin.Position;
-        var length = dir.Length();
-
-        // If range specified also check it
-        // TODO: This rounding check is here because the API is kinda eh
-        if (range > 0f && length > range + 0.01f) return false;
-
-        if (MathHelper.CloseTo(length, 0)) return true;
-
-        if (length > MaxRaycastRange)
-        {
-            Log.Warning("InRangeUnOccluded check performed over extreme range. Limiting CollisionRay size.");
-            length = MaxRaycastRange;
-        }
-
-        var ray = new Ray(origin.Position, dir.Normalized());
-        bool Ignored(EntityUid entity) => TryComp<OccluderComponent>(entity, out var o) && !o.Enabled;
-
-        var rayResults = _occluder
-            .IntersectRayWithPredicate(origin.MapId, ray, length, state, predicate: (e, ts) => TryComp<OccluderComponent>(e, out var o) && !o.Enabled, false);
-
-        if (rayResults.Count == 0) return true;
-
-        if (!ignoreInsideBlocker) return false;
-
-        foreach (var result in rayResults)
-        {
-            if (!TryComp(result.HitEntity, out OccluderComponent? o))
-            {
-                continue;
-            }
-
-            if (!o.Enabled)
-            {
-                continue;
-            }
-            var bBox = o.BoundingBox;
-            bBox = bBox.Translated(_transform.GetWorldPosition(result.HitEntity));
-
-            if (bBox.Contains(origin.Position) || bBox.Contains(other.Position))
-            {
-                continue;
-            }
-
-            return false;
-        }
-
-        return true;
-    }
-
-    public override bool InRangeUnOccluded(EntityUid origin, EntityUid other, float range = 3f, Ignored? predicate = null, bool ignoreInsideBlocker = true)
-    {
-
-        var originPos = _transform.GetMapCoordinates(origin);
-        var otherPos = _transform.GetMapCoordinates(other);
-
-        return InRangeUnOccluded(originPos, otherPos, range, predicate, ignoreInsideBlocker);
-    }
-
-    public override bool InRangeUnOccluded(MapCoordinates origin, MapCoordinates other, float range, Ignored? predicate, bool ignoreInsideBlocker = true, IEntityManager? entMan = null)
-    {
-        // No, rider. This is better.
-        // ReSharper disable once ConvertToLocalFunction
-        var wrapped = (EntityUid uid, Ignored? wrapped)
-            => wrapped != null && wrapped(uid);
-
-        return InRangeUnOccluded(origin, other, range, predicate, wrapped, ignoreInsideBlocker, entMan);
-    }
-
-    public Angle GetAngle(EntityUid lightUid, TransformComponent lightXform, PointLightComponent lightComp, EntityUid targetUid, TransformComponent targetXform)
-    {
-        var (lightPos, lightRot) = _transform.GetWorldPositionRotation(lightXform);
-        lightPos += lightRot.RotateVec(lightComp.Offset);
-
-        var (targetPos, targetRot) = _transform.GetWorldPositionRotation(targetXform);
-
-        // var lightCOM = Robust.Shared.Physics.Transform.Mul(new Transform(lightPos, lightRot),
-        //     _physicsQuery.GetComponent(lightUid).LocalCenter);
-        // var targetCOM = Robust.Shared.Physics.Transform.Mul(new Transform(targetPos, targetRot),
-        //     _physicsQuery.GetComponent(targetUid).LocalCenter);
-
-        var mapDiff = targetPos - lightPos;
-
-        var oppositeMapDiff = (-lightRot).RotateVec(mapDiff);
-        var angle = oppositeMapDiff.ToWorldAngle();
-        return angle;
     }
 
 }

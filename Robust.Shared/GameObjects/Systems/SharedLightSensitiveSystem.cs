@@ -1,9 +1,10 @@
-using Robust.Shared.Map;
-using Robust.Shared.Physics;
-using Robust.Shared.IoC;
-using Robust.Shared.Maths;
 using System;
 using System.Diagnostics.CodeAnalysis;
+
+using Robust.Shared.IoC;
+using Robust.Shared.Map;
+using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 
 namespace Robust.Shared.GameObjects
 {
@@ -12,12 +13,8 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly SharedTransformSystem _transform = default!;
         [Dependency] private readonly OccluderSystem _occluder = default!;
-        
+
         protected const float MaxRaycastRange = 100;
-
-        private float _cooldown = 0.1f;
-        private TimeSpan _targetTime = TimeSpan.Zero;
-
         public delegate bool Ignored(EntityUid entity);
 
         public virtual bool ResolveComp(EntityUid uid, [NotNullWhen(true)] ref LightSensitiveComponent? component)
@@ -31,16 +28,16 @@ namespace Robust.Shared.GameObjects
 
         protected virtual void SetIllumination(EntityUid uid, float value, LightSensitiveComponent? comp = null)
         {
-            if(!ResolveComp(uid, ref comp))
+            if (!ResolveComp(uid, ref comp))
                 return;
-            
+
             comp.LightLevel = value;
             Dirty(uid, comp);
         }
 
 
         public virtual bool InRangeUnOccluded<TState>(MapCoordinates origin, MapCoordinates other, float range,
-                TState state, Func<EntityUid, TState, bool> predicate, bool ignoreInsideBlocker = true, IEntityManager? entMan = null)
+            TState state, Func<EntityUid, TState, bool> predicate, bool ignoreInsideBlocker = true, IEntityManager? entMan = null)
         {
             if (other.MapId != origin.MapId ||
                 other.MapId == MapId.Nullspace) return false;
@@ -48,8 +45,6 @@ namespace Robust.Shared.GameObjects
             var dir = other.Position - origin.Position;
             var length = dir.Length();
 
-            // If range specified also check it
-            // TODO: This rounding check is here because the API is kinda eh
             if (range > 0f && length > range + 0.01f) return false;
 
             if (MathHelper.CloseTo(length, 0)) return true;
@@ -61,8 +56,10 @@ namespace Robust.Shared.GameObjects
             }
 
             var ray = new Ray(origin.Position, dir.Normalized());
+            bool Ignored(EntityUid entity, TState ts) => TryComp<OccluderComponent>(entity, out var o) && !o.Enabled;
+
             var rayResults = _occluder
-                .IntersectRayWithPredicate(origin.MapId, ray, length, state, predicate, false);
+                .IntersectRayWithPredicate(origin.MapId, ray, length, state, predicate: Ignored, false);
 
             if (rayResults.Count == 0) return true;
 
@@ -106,6 +103,26 @@ namespace Robust.Shared.GameObjects
                 => wrapped != null && wrapped(uid);
 
             return InRangeUnOccluded(origin, other, range, predicate, wrapped, ignoreInsideBlocker, entMan);
+        }
+
+        public Angle GetAngle(EntityUid lightUid, TransformComponent lightXform, SharedPointLightComponent lightComp, EntityUid targetUid, TransformComponent targetXform)
+        {
+            var (lightPos, lightRot) = _transform.GetWorldPositionRotation(lightXform);
+            lightPos += lightRot.RotateVec(lightComp.Offset);
+
+            var (targetPos, targetRot) = _transform.GetWorldPositionRotation(targetXform);
+
+            var mapDiff = targetPos - lightPos;
+
+            var oppositeMapDiff = (-lightRot).RotateVec(mapDiff);
+            var angle = oppositeMapDiff.ToWorldAngle();
+
+            if (angle == double.NaN && _transform.ContainsEntity(targetUid, lightUid) || _transform.ContainsEntity(lightUid, targetUid))
+            {
+                angle = 0f;
+            }
+
+            return angle;
         }
 
     }

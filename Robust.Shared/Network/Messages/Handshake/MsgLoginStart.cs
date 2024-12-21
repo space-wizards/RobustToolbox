@@ -19,6 +19,8 @@ namespace Robust.Shared.Network.Messages.Handshake
         public bool CanAuth;
         public bool NeedPubKey;
         public bool Encrypt;
+        public string ClientVersion;
+        public string EngineVersion;
 
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
@@ -26,6 +28,8 @@ namespace Robust.Shared.Network.Messages.Handshake
             CanAuth = buffer.ReadBoolean();
             NeedPubKey = buffer.ReadBoolean();
             Encrypt = buffer.ReadBoolean();
+            ClientVersion = buffer.ReadString();
+            EngineVersion = buffer.ReadString();
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
@@ -34,6 +38,8 @@ namespace Robust.Shared.Network.Messages.Handshake
             buffer.Write(CanAuth);
             buffer.Write(NeedPubKey);
             buffer.Write(Encrypt);
+            buffer.Write(ClientVersion);
+            buffer.Write(EngineVersion);
         }
     }
 }

@@ -359,8 +359,14 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
         // The comp-state source generator will add an "IComponentDelta" interface to classes with the auto state
         // attribute, and this generator creates methods that those classes then have to implement because
         // IComponentDelta a DataDefinition via the ImplicitDataDefinitionForInheritorsAttribute on IComponent.
-        if (!HasAttribute(type, AutoStateAttributeName))
+        if (!TryGetAttribute(type, AutoStateAttributeName, out var data))
             return symbols;
+
+        // If it doesn't have field deltas then ignore
+        if (data.ConstructorArguments[1] is not { Value: bool fields and true })
+        {
+            return symbols;
+        }
 
         if (symbols.Any(x => x.ToDisplayString() == deltaType.ToDisplayString()))
             return symbols;

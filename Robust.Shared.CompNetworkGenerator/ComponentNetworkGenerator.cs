@@ -453,15 +453,31 @@ namespace Robust.Shared.CompNetworkGenerator
 
             }
 
-            for (var i = 0; i < fields.Count; i++)
+            var eventRaise = "";
+            if (raiseAfterAutoHandle)
             {
-                var name = fields[i].FieldName;
-                string deltaStateName = $"{name}_FieldComponentState";
-                var networkedType = networkedTypes[i];
-                var apply = deltaApply[i];
+                eventRaise = @"
+            var ev = new AfterAutoHandleStateEvent(args.Current);
+            EntityManager.EventBus.RaiseComponentEvent(uid, component, ref ev);";
+            }
 
-                // Creates a state per field
-                fieldStates.Append($@"
+            var deltaGetState = "";
+            var deltaHandleState = "";
+            var deltaInterface = "";
+            var deltaCompFields = "";
+            var deltaNetRegister = "";
+
+            if (fieldDeltas)
+            {
+                for (var i = 0; i < fields.Count; i++)
+                {
+                    var name = fields[i].FieldName;
+                    string deltaStateName = $"{name}_FieldComponentState";
+                    var networkedType = networkedTypes[i];
+                    var apply = deltaApply[i];
+
+                    // Creates a state per field
+                    fieldStates.Append($@"
     [Serializable, NetSerializable]
     public sealed class {deltaStateName} : IComponentDeltaState<{stateName}>
     {{
@@ -482,32 +498,12 @@ namespace Robust.Shared.CompNetworkGenerator
         }}
     }}
                     ");
-            }
+                }
 
-            var eventRaise = "";
-            if (raiseAfterAutoHandle)
-            {
-                eventRaise = @"
-            var ev = new AfterAutoHandleStateEvent(args.Current);
-            EntityManager.EventBus.RaiseComponentEvent(uid, component, ref ev);";
-            }
-
-            var deltaGetState = "";
-            var deltaHandleState = "";
-            var deltaInterface = "";
-            var deltaCompFields = "";
-            var deltaNetRegister = "";
-
-            if (fieldDeltas)
-            {
                 deltaNetRegister = $@"EntityManager.ComponentFactory.RegisterNetworkedFields<{classSymbol}>({fieldsStr});";
 
-                fieldStates.Clear();
-
                 deltaGetState = @$"// Delta state
-            var delta = (IComponentDelta)component;
-
-            if (args.FromTick > component.CreationTick && delta.LastFieldUpdate >= args.FromTick)
+            if (component is IComponentDelta delta && args.FromTick > component.CreationTick && delta.LastFieldUpdate >= args.FromTick)
             {{
                 var fields = EntityManager.GetModifiedFields(component, args.FromTick);
 

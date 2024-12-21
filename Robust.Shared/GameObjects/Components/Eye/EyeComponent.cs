@@ -8,7 +8,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
-    [RegisterComponent, NetworkedComponent, Access(typeof(SharedEyeSystem)), AutoGenerateComponentState(true)]
+    [RegisterComponent, NetworkedComponent, Access(typeof(SharedEyeSystem)), AutoGenerateComponentState(true, fieldDeltas: true)]
     public sealed partial class EyeComponent : Component
     {
         public const int DefaultVisibilityMask = 1;
@@ -30,14 +30,14 @@ namespace Robust.Shared.GameObjects
         [DataField, AutoNetworkedField]
         public bool DrawFov = true;
 
-        [ViewVariables(VVAccess.ReadWrite), AutoNetworkedField]
+        [AutoNetworkedField]
         public bool DrawLight = true;
 
         // yes it's not networked, don't ask.
-        [ViewVariables(VVAccess.ReadWrite), DataField]
+        [DataField]
         public Angle Rotation;
 
-        [ViewVariables(VVAccess.ReadWrite), DataField]
+        [DataField]
         public Vector2 Zoom = Vector2.One;
 
         /// <summary>
@@ -50,7 +50,7 @@ namespace Robust.Shared.GameObjects
         ///     The visibility mask for this eye.
         ///     The player will be able to get updates for entities whose layers match the mask.
         /// </summary>
-        [ViewVariables(VVAccess.ReadWrite), DataField("visMask", customTypeSerializer:typeof(FlagSerializer<VisibilityMaskLayer>)), AutoNetworkedField]
+        [DataField("visMask", customTypeSerializer:typeof(FlagSerializer<VisibilityMaskLayer>)), AutoNetworkedField]
         public int VisibilityMask = DefaultVisibilityMask;
 
         /// <summary>

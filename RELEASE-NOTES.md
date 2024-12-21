@@ -39,7 +39,39 @@ END TEMPLATE-->
 
 ### New features
 
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 237.4.0
+
+### New features
+
+* Implement automatic field-level delta states via AutoGenerateComponentState via opt-in.
+
+### Bugfixes
+
+* Remove redundant TransformComponentState bool.
+
+
+## 237.3.0
+
+### New features
+
 * Added stack-like functions to `ValueList<T>` and added an `AddRange(ReadOnlySpan<T>)` overload.
+* Added new `AssetPassFilterDrop`.
+* Added a new RayCastSystem with the latest Box2D raycast + shapecasts implemented.
 
 ### Bugfixes
 
@@ -48,10 +80,6 @@ END TEMPLATE-->
 ### Other
 
 * Sandbox error reference locator now works with generic method calls.
-
-### Internal
-
-*None yet*
 
 
 ## 237.2.0

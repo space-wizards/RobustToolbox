@@ -1,116 +1,139 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Text;
 using Robust.Shared.Console;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Toolshed.Syntax;
+using Robust.Shared.Utility;
+
+#pragma warning disable CS0618 // Type or member is obsolete
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
-internal sealed class ValueRefTypeParser<T> : TypeParser<ValueRef<T>>
+internal sealed class ValueRefTypeParser<T, TAuto> : TypeParser<ValueRef<T, TAuto>>
 {
-    [Dependency] private readonly ToolshedManager _toolshed = default!;
-
-    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
+    public override bool TryParse(ParserContext ctx, [NotNullWhen(true)] out ValueRef<T, TAuto>? result)
     {
-        var res = _toolshed.TryParse<ValueRef<T, T>>(parserContext, out var inner, out error);
+        var res = Toolshed.TryParse<ValueRef<T>>(ctx, out var inner);
         result = null;
         if (res)
-            result = new ValueRef<T>((ValueRef<T, T>)inner!);
+            result = new ValueRef<T, TAuto>(inner!);
         return res;
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext parserContext, string? argName)
     {
-        return _toolshed.TryAutocomplete(parserContext, typeof(ValueRef<T, T>), argName);
+        return Toolshed.TryAutocomplete(parserContext, typeof(ValueRef<T, T>), argName);
     }
 }
 
-internal sealed class VarRefParser<T, TAuto> : TypeParser<ValueRef<T, TAuto>>
+internal sealed class ValueRefTypeParser<T> : TypeParser<ValueRef<T>>
 {
-    [Dependency] private readonly ToolshedManager _toolshed = default!;
-
-    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
+    internal static bool TryParse(
+        ToolshedManager shed,
+        ParserContext ctx,
+        ITypeParser? parser,
+        [NotNullWhen(true)] out ValueRef<T>? result)
     {
-        error = null;
-        parserContext.ConsumeWhitespace();
+        result = null;
 
-        if (parserContext.EatMatch('$'))
+        ctx.ConsumeWhitespace();
+        var rune = ctx.PeekRune();
+        if (rune == new Rune('$'))
         {
-            // We're parsing a variable.
-            if (parserContext.GetWord(ParserContext.IsToken) is not { } word)
-            {
-                error = new OutOfInputError();
-                result = null;
+            if (!shed.TryParse<VarRef<T>>(ctx, out var valRef))
                 return false;
-            }
 
-            result = new ValueRef<T, TAuto>(word);
-            error = null;
+            result = valRef;
             return true;
         }
-        else
+
+        if (rune == new Rune('{'))
         {
-            var chkpoint = parserContext.Save();
-            if (Block<T>.TryParse(false, parserContext, null, out var block, out _, out error))
-            {
-                result = new ValueRef<T, TAuto>(block);
-                return true;
-            }
-            parserContext.Restore(chkpoint);
+            if (!shed.TryParse<Block<T>>(ctx, out var block))
+                return false;
 
-            var success = _toolshed.TryParse<T>(parserContext, out var value, out error);
+            result = new BlockRef<T>(block);
+            return true;
+        }
 
-            if (error is UnparseableValueError)
-                error = null;
-
-            if (value is not null && success)
-            {
-                result = new ValueRef<T, TAuto>((T)value);
-                error = null;
-                return true;
-            }
-
-
-            result = null;
+        parser ??= shed.GetParserForType(typeof(T));
+        if (parser == null)
+        {
+            // No parser is available -> must be provided via a variable or block
+            if (!ctx.GenerateCompletions)
+                ctx.Error = new MustBeVarOrBlock(typeof(T));
             return false;
         }
+
+        if (!parser.TryParse(ctx, out var obj))
+            return false;
+
+        if (obj is not T value)
+            return false;
+
+        result = new ParsedValueRef<T>(value);
+        return true;
     }
 
-    public override async ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext,
-        string? argName)
+    public override bool TryParse(ParserContext ctx, [NotNullWhen(true)] out ValueRef<T>? result)
     {
-        parserContext.ConsumeWhitespace();
+        return TryParse(Toolshed, ctx, null, out result);
+    }
 
-        if (parserContext.EatMatch('$'))
+    public static CompletionResult? TryAutocomplete(
+        ToolshedManager shed,
+        ParserContext ctx,
+        string? argName,
+        ITypeParser? parser)
+    {
+        ctx.ConsumeWhitespace();
+        var rune = ctx.PeekRune();
+        if (rune == new Rune('$'))
+            return shed.TryAutocomplete(ctx, typeof(VarRef<T>), argName);
+
+        if (rune == new Rune('{'))
         {
-            return (CompletionResult.FromHint("<variable name>"), null);
+            Block<T>.TryParse(ctx, out _);
+            return ctx.Completions;
         }
-        else
-        {
-            var chkpoint = parserContext.Save();
-            var (res, err) = await _toolshed.TryAutocomplete(parserContext, typeof(TAuto), null);
-            parserContext.Restore(chkpoint);
-            CompletionOption[] parseOptions = Array.Empty<CompletionOption>();
-            if (err is not UnparseableValueError || res is not null)
-            {
-                parseOptions = res?.Options ?? parseOptions;
-            }
 
-            chkpoint = parserContext.Save();
-            Block<T>.TryParse(true, parserContext, null, out _, out var result, out _);
-            if (result is not null)
-            {
-                var (blockRes, _) = await result.Value;
-                var options = blockRes?.Options ?? Array.Empty<CompletionOption>();
-                return (CompletionResult.FromHintOptions(parseOptions.Concat(options).ToArray(), $"<variable, block, or value of type {typeof(T).PrettyName()}>"), err);
-            }
-            parserContext.Restore(chkpoint);
+        parser ??= shed.GetParserForType(typeof(T));
 
-            return (CompletionResult.FromHint("$<variable name>"), null);
-        }
+        if (parser == null)
+            return CompletionResult.FromHint($"<variable or block of type {typeof(T).PrettyName()}>");
+
+        var res = parser.TryAutocomplete(ctx, null);
+        return res ?? CompletionResult.FromHint($"<variable, block, or value of type {typeof(T).PrettyName()}>");
+    }
+
+    public override CompletionResult? TryAutocomplete(ParserContext ctx, string? argName)
+    {
+        return TryAutocomplete(Toolshed, ctx, argName, null);
+    }
+}
+
+internal sealed class CustomValueRefTypeParser<T, TParser> : CustomTypeParser<ValueRef<T>>
+    where TParser : CustomTypeParser<T>, new()
+    where T : notnull
+{
+    public override CompletionResult? TryAutocomplete(ParserContext ctx, string? argName)
+    {
+        var parser = Toolshed.GetCustomParser<TParser, T>();
+        return ValueRefTypeParser<T>.TryAutocomplete(Toolshed, ctx, argName, parser);
+    }
+
+    public override bool TryParse(ParserContext ctx, [NotNullWhen(true)] out ValueRef<T>? result)
+    {
+        var parser = Toolshed.GetCustomParser<TParser, T>();
+        return ValueRefTypeParser<T>.TryParse(Toolshed, ctx, parser, out result);
+    }
+}
+
+public sealed class MustBeVarOrBlock(Type T) : ConError
+{
+    public override FormattedMessage DescribeInner()
+    {
+        return FormattedMessage.FromUnformatted($"Command expects an argument of type {T.PrettyName()}.\nHowever this type has no parser available, and thus cannot be directly parsed.\nInstead, you have to use a variable or command block to provide it.");
     }
 }

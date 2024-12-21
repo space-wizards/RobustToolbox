@@ -63,7 +63,7 @@ public sealed class ArithmeticTest : ToolshedTest
                 list.Add(i + 1);
             }
 
-            Assert.That(list, Is.EquivalentTo(InvokeCommand<IEnumerable<float>>("f 0 iterate + 1 100")));
+            Assert.That(list, Is.EquivalentTo(InvokeCommand<IEnumerable<float>>("f 0 iterate { + 1 } 100")));
 
         });
     }

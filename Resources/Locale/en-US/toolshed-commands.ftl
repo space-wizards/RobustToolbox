@@ -1,4 +1,8 @@
-﻿command-description-tpto =
+﻿command-help-usage =
+    Usage:
+command-help-invertible =
+    The behaviour of this command can be inverted using the "not" prefix.
+command-description-tpto =
     Teleport the given entities to some target entity.
 command-description-player-list =
     Returns a list of all player sessions.
@@ -19,7 +23,7 @@ command-description-buildinfo =
 command-description-cmd-list =
     Returns a list of all commands, for this side.
 command-description-explain =
-    Explains the given expression, providing command descriptions and signatures.
+    Explains the given expression, providing command descriptions and signatures. This only works for valid expressions, it can't explain commands that it fails to parse.
 command-description-search =
     Searches through the input for the provided value.
 command-description-stopwatch =
@@ -53,10 +57,8 @@ command-description-entities =
     Returns all entities on the server.
 command-description-paused =
     Filters the input entities by whether or not they are paused.
-    This command can be inverted with not.
 command-description-with =
     Filters the input entities by whether or not they have the given component.
-    This command can be inverted with not.
 command-description-fuck =
     Throws an exception.
 command-description-ecscomp-listty =
@@ -95,6 +97,8 @@ command-description-vars =
     Provides a list of all variables set in this session.
 command-description-any =
     Returns true if there's any values in the input, otherwise false.
+command-description-contains =
+    Returns whether the input enumerable contains the specified value.
 command-description-ArrowCommand =
     Assigns the input to a variable.
 command-description-isempty =
@@ -119,6 +123,8 @@ command-description-splat =
     "Splats" a block, value, or variable, creating N copies of it in a list.
 command-description-val =
     Casts the given value, block, or variable to the given type. This is mostly a workaround for current limitations of variables.
+command-description-var =
+    Returns the contents of the given variable. This will attempt to automatically infer a variables type. Compound commands that modify a variable may need to use the 'val' command instead.
 command-description-actor-controlled =
     Filters entities by whether or not they're actively controlled.
 command-description-actor-session =

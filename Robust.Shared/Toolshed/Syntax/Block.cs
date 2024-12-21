@@ -1,143 +1,129 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
 using Robust.Shared.Console;
-using Robust.Shared.Maths;
-using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.Syntax;
 
-public sealed class Block
+/// <summary>
+/// A simple block of commands.
+/// </summary>
+[Virtual]
+public class Block(CommandRun expr)
 {
-    internal CommandRun CommandRun { get; set; }
+    public readonly CommandRun Run = expr;
 
-    public static bool TryParse(
-            bool doAutoComplete,
-            ParserContext parserContext,
-            Type? pipedType,
-            [NotNullWhen(true)] out Block? block,
-            out ValueTask<(CompletionResult?, IConError?)>? autoComplete,
-            out IConError? error
-        )
+    public static bool TryParse(ParserContext ctx, [NotNullWhen(true)] out Block? block)
     {
-        parserContext.ConsumeWhitespace();
-
-        var enclosed = parserContext.EatMatch('{');
-
-        if (enclosed)
-            parserContext.PushTerminator("}");
-
-        CommandRun.TryParse(doAutoComplete, parserContext, pipedType, null, !enclosed, out var expr, out autoComplete, out error);
-
-        if (expr is null)
-        {
-            block = null;
+        block = null;
+        if (!TryParseBlock(ctx, null, null, out var run))
             return false;
-        }
 
-        block = new Block(expr);
+        block = new Block(run);
         return true;
-    }
-
-    public Block(CommandRun expr)
-    {
-        CommandRun = expr;
     }
 
     public object? Invoke(object? input, IInvocationContext ctx)
     {
-        return CommandRun.Invoke(input, ctx);
+        return Run.Invoke(input, ctx);
+    }
+
+    public static bool TryParseBlock(
+        ParserContext ctx,
+        Type? pipedType,
+        Type? targetOutput,
+        [NotNullWhen(true)] out CommandRun? run)
+    {
+        run = null;
+        DebugTools.AssertNull(ctx.Error);
+        DebugTools.AssertNull(ctx.Completions);
+
+        ctx.ConsumeWhitespace();
+        if (!ctx.EatMatch('{'))
+        {
+            if (ctx.GenerateCompletions)
+                ctx.Completions = CompletionResult.FromOptions([new CompletionOption("{")]);
+            else
+                ctx.Error = new MissingOpeningBrace();
+
+            return false;
+        }
+
+        ctx.PushBlockTerminator('}');
+        if (!CommandRun.TryParse(ctx, pipedType, targetOutput, out run))
+        {
+            return false;
+        }
+
+        if (ctx.EatBlockTerminator())
+            return true;
+
+        ctx.ConsumeWhitespace();
+        if (!ctx.GenerateCompletions)
+        {
+            ctx.Error = new MissingClosingBrace();
+            return false;
+        }
+
+        if (ctx.OutOfInput)
+            ctx.Completions = CompletionResult.FromOptions([new CompletionOption("}")]);
+        return false;
+    }
+
+    public override string ToString()
+    {
+        return $"{{ {Run} }}";
     }
 }
 
 /// <summary>
-/// Something more akin to actual expressions.
+/// A block of commands that take in no input, and return <see cref="T"/>.
 /// </summary>
-public sealed class Block<T>
+[Virtual]
+public class Block<T>(CommandRun expr) : Block(expr)
 {
-    internal CommandRun<T> CommandRun { get; set; }
-
-    public static bool TryParse(bool doAutoComplete, ParserContext parserContext, Type? pipedType,
-        [NotNullWhen(true)] out Block<T>? block, out ValueTask<(CompletionResult?, IConError?)>? autoComplete, out IConError? error)
+    public static bool TryParse(ParserContext ctx,
+        [NotNullWhen(true)] out Block<T>? block
+    )
     {
-        parserContext.ConsumeWhitespace();
-
-        var enclosed = parserContext.EatMatch('{');
-
-        if (enclosed)
-            parserContext.PushTerminator("}");
-
-        CommandRun<T>.TryParse(enclosed, doAutoComplete, parserContext, pipedType, !enclosed, out var expr, out autoComplete, out error);
-
-        if (expr is null)
-        {
-            block = null;
+        block = null;
+        if (!TryParseBlock(ctx, null, typeof(T), out var run))
             return false;
-        }
 
-        block = new Block<T>(expr);
+        block = new Block<T>(run);
         return true;
     }
 
-    public Block(CommandRun<T> expr)
+    public T? Invoke(IInvocationContext ctx)
     {
-        CommandRun = expr;
-    }
-
-    public T? Invoke(object? input, IInvocationContext ctx)
-    {
-        return CommandRun.Invoke(input, ctx);
+        var res = Run.Invoke(null, ctx);
+        if (res is null)
+            return default;
+        return (T?) res;
     }
 }
 
-public sealed class Block<TIn, TOut>
+/// <summary>
+/// A block of commands that take in <see cref="TIn"/>, and return <see cref="TOut"/>.
+/// </summary>
+[Virtual]
+public class Block<TIn, TOut>(CommandRun expr) : Block(expr)
 {
-    internal CommandRun<TIn, TOut> CommandRun { get; set; }
-
-    public static bool TryParse(bool doAutoComplete, ParserContext parserContext, Type? pipedType,
-        [NotNullWhen(true)] out Block<TIn, TOut>? block, out ValueTask<(CompletionResult?, IConError?)>? autoComplete, out IConError? error)
+    public static bool TryParse(ParserContext ctx, [NotNullWhen(true)] out Block<TIn, TOut>? block)
     {
-        parserContext.ConsumeWhitespace();
-
-        var enclosed = parserContext.EatMatch('{');
-
-        if (enclosed)
-            parserContext.PushTerminator("}");
-
-        CommandRun<TIn, TOut>.TryParse(enclosed, doAutoComplete, parserContext, !enclosed, out var expr, out autoComplete, out error);
-
-        if (expr is null)
-        {
-            block = null;
+        block = null;
+        if (!TryParseBlock(ctx, typeof(TIn), typeof(TOut), out var run))
             return false;
-        }
 
-        block = new Block<TIn, TOut>(expr);
+        block = new Block<TIn, TOut>(run);
         return true;
-    }
-
-    public Block(CommandRun<TIn, TOut> expr)
-    {
-        CommandRun = expr;
     }
 
     public TOut? Invoke(TIn? input, IInvocationContext ctx)
     {
-        return CommandRun.Invoke(input, ctx);
+        var res = Run.Invoke(input, ctx);
+        if (res is null)
+            return default;
+        return (TOut?) res;
     }
-}
-
-
-public record struct MissingClosingBrace() : IConError
-{
-    public FormattedMessage DescribeInner()
-    {
-        return FormattedMessage.FromUnformatted("Expected a closing brace.");
-    }
-
-    public string? Expression { get; set; }
-    public Vector2i? IssueSpan { get; set; }
-    public StackTrace? Trace { get; set; }
 }

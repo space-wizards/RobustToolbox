@@ -1,22 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Shared.Toolshed.Syntax;
+using Robust.Shared.Toolshed.TypeParsers;
 
 namespace Robust.Shared.Toolshed.Commands.Generic;
 
-[ToolshedCommand, MapLikeCommand]
+[ToolshedCommand]
 public sealed class MapCommand : ToolshedCommand
 {
-    public override Type[] TypeParameterParsers => new[] {typeof(Type)};
+    private static Type[] _parsers = [typeof(MapBlockOutputParser)];
+    public override Type[] TypeParameterParsers => _parsers;
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
-    public IEnumerable<TOut>? Map<TOut, TIn>(
-            [CommandInvocationContext] IInvocationContext ctx,
+    public IEnumerable<TOut> Map<TOut, TIn>(
+            IInvocationContext ctx,
             [PipedArgument] IEnumerable<TIn> value,
-            [CommandArgument] Block<TIn, TOut> block
+            Block<TIn, TOut> block
         )
     {
-        return value.Select(x => block.Invoke(x, ctx)).Where(x => x != null).Cast<TOut>();
+        foreach (var x in value)
+        {
+            if (block.Invoke(x, ctx) is { } result)
+                yield return result;
+
+            if (ctx.HasErrors)
+                break;
+        }
     }
 }

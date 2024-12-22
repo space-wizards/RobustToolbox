@@ -303,11 +303,8 @@ internal sealed partial class PvsSystem
         RemoveRoot(ev.EntityUid);
     }
 
-    private void OnMapChanged(MapChangedEvent ev)
+    private void OnMapChanged(MapRemovedEvent ev)
     {
-        if (!ev.Destroyed)
-            return;
-
         RemoveRoot(ev.Uid);
     }
 

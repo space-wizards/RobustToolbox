@@ -59,7 +59,7 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         UpdatesAfter.Add(typeof(SharedTransformSystem));
         UpdatesAfter.Add(typeof(SharedPhysicsSystem));
 
-        SubscribeLocalEvent<MapChangedEvent>(MapManagerOnMapCreated);
+        SubscribeLocalEvent<MapCreatedEvent>(MapManagerOnMapCreated);
         SubscribeLocalEvent<GridInitializeEvent>(MapManagerOnGridCreated);
 
         SubscribeLocalEvent<TComp, ComponentStartup>(OnCompStartup);
@@ -143,11 +143,8 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         RemComp(uid, component);
     }
 
-    private void MapManagerOnMapCreated(MapChangedEvent e)
+    private void MapManagerOnMapCreated(MapCreatedEvent e)
     {
-        if (e.Destroyed || e.Map == MapId.Nullspace)
-            return;
-
         EnsureComp<TTreeComp>(e.Uid);
     }
 

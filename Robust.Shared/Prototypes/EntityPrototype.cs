@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.EntitySerialization;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
@@ -268,7 +269,7 @@ namespace Robust.Shared.Prototypes
                 component = newComponent;
             }
 
-            if (context is not MapSerializationContext map)
+            if (context is not EntityDeserializer map)
             {
                 serManager.CopyTo(data, ref component, context, notNullableOverride: true);
                 return;

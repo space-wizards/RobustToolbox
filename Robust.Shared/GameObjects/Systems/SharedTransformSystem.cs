@@ -201,7 +201,7 @@ namespace Robust.Shared.GameObjects
             if (xform.GridUid == xform.ParentUid)
                 return (xform.Coordinates, GetWorldRotation(xform, XformQuery));
 
-            DebugTools.Assert(!_mapManager.IsGrid(uid) && !_mapManager.IsMap(uid));
+            DebugTools.Assert(!HasComp<MapComponent>(uid) && !HasComp<MapComponent>(uid));
 
             var (pos, worldRot) = GetWorldPositionRotation(xform, XformQuery);
 

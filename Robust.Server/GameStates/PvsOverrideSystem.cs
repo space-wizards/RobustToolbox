@@ -28,7 +28,8 @@ public sealed class PvsOverrideSystem : EntitySystem
         base.Initialize();
         EntityManager.EntityDeleted += OnDeleted;
         _player.PlayerStatusChanged += OnPlayerStatusChanged;
-        SubscribeLocalEvent<MapChangedEvent>(OnMapChanged);
+        SubscribeLocalEvent<MapRemovedEvent>(OnMapRemoved);
+        SubscribeLocalEvent<MapCreatedEvent>(OnMapCreated);
         SubscribeLocalEvent<GridInitializeEvent>(OnGridCreated);
         SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoved);
 
@@ -259,14 +260,6 @@ public sealed class PvsOverrideSystem : EntitySystem
 
     #region Map/Grid Events
 
-    private void OnMapChanged(MapChangedEvent ev)
-    {
-        if (ev.Created)
-            OnMapCreated(ev);
-        else
-            OnMapDestroyed(ev);
-    }
-
     private void OnGridRemoved(GridRemovalEvent ev)
     {
         RemoveForceSend(ev.EntityUid);
@@ -279,12 +272,12 @@ public sealed class PvsOverrideSystem : EntitySystem
         AddForceSend(ev.EntityUid);
     }
 
-    private void OnMapDestroyed(MapChangedEvent ev)
+    private void OnMapRemoved(MapRemovedEvent ev)
     {
         RemoveForceSend(ev.Uid);
     }
 
-    private void OnMapCreated(MapChangedEvent ev)
+    private void OnMapCreated(MapCreatedEvent ev)
     {
         // TODO PVS remove this requirement.
         // I think this just required refactoring client game state logic so it doesn't sending maps/grids to nullspace.

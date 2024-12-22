@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using Robust.Shared.EntitySerialization;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Serialization.Markdown.Mapping;
 
 namespace Robust.Shared.Map.Events;
 
@@ -42,3 +44,8 @@ public sealed class BeforeSaveEvent(EntityUid entity, EntityUid? map)
     /// </summary>
     public EntityUid? Map = map;
 }
+
+/// <summary>
+/// This event is broadcast just after an entity gets serialized, but before it gets written to a yaml file.
+/// </summary>
+public readonly record struct AfterSaveEvent(EntityUid Uid, EntityUid? Map, MappingDataNode Node, FileCategory Category);

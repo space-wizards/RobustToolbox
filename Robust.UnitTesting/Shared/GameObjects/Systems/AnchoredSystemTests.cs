@@ -40,7 +40,6 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             var mapManager = sim.Resolve<IMapManager>();
 
-            // Adds the map with id 1, and spawns entity 1 as the map entity.
             var testMapId = sim.CreateMap().MapId;
             var coords = new MapCoordinates(new Vector2(7, 7), testMapId);
             // Add grid 1, as the default grid to anchor things to.

@@ -304,16 +304,21 @@ namespace Robust.Shared.GameObjects
 
         #region Entity Management
 
-        /// <inheritdoc />
+        [Obsolete]
         public EntityUid CreateEntityUninitialized(string? prototypeName, EntityUid euid, ComponentRegistry? overrides = null)
         {
             return CreateEntity(prototypeName, out _, overrides);
         }
 
         /// <inheritdoc />
-        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, ComponentRegistry? overrides = null)
+        public EntityUid CreateEntityUninitialized(string? prototypeName, ComponentRegistry? overrides = null)
         {
             return CreateEntity(prototypeName, out _, overrides);
+        }
+
+        public EntityUid CreateEntityUninitialized(string? prototypeName, out MetaDataComponent meta, ComponentRegistry? overrides = null)
+        {
+            return CreateEntity(prototypeName, out meta, overrides);
         }
 
         /// <inheritdoc />
@@ -783,7 +788,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
-        private protected EntityUid AllocEntity(
+        protected internal EntityUid AllocEntity(
             EntityPrototype? prototype,
             out MetaDataComponent metadata)
         {
@@ -792,6 +797,9 @@ namespace Robust.Shared.GameObjects
             Dirty(entity, metadata, metadata);
             return entity;
         }
+
+        /// <inheritdoc cref="AllocEntity(Robust.Shared.Prototypes.EntityPrototype?,out Robust.Shared.GameObjects.MetaDataComponent)"/>
+        internal EntityUid AllocEntity(EntityPrototype? prototype) => AllocEntity(prototype, out _);
 
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
@@ -872,21 +880,9 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private protected void LoadEntity(EntityUid entity, IEntityLoadContext? context)
-        {
-            EntityPrototype.LoadEntity((entity, MetaQuery.GetComponent(entity)), ComponentFactory, this, _serManager, context);
-        }
-
-        private protected void LoadEntity(EntityUid entity, IEntityLoadContext? context, EntityPrototype? prototype)
-        {
-            var meta = MetaQuery.GetComponent(entity);
-            DebugTools.Assert(meta.EntityPrototype == prototype);
-            EntityPrototype.LoadEntity((entity, meta), ComponentFactory, this, _serManager, context);
-        }
-
         public void InitializeAndStartEntity(EntityUid entity, MapId? mapId = null)
         {
-            var doMapInit = _mapManager.IsMapInitialized(mapId ?? TransformQuery.GetComponent(entity).MapID);
+            var doMapInit = _mapSystem.IsInitialized(mapId ?? TransformQuery.GetComponent(entity).MapID);
             InitializeAndStartEntity(entity, doMapInit);
         }
 

@@ -117,12 +117,7 @@ namespace Robust.Shared.Physics.Dynamics
             {
                 var bounds = aabb.LocalBounds;
                 var poly = new PolygonShape();
-                Span<Vector2> verts = stackalloc Vector2[4];
-                verts[0] = bounds.BottomLeft;
-                verts[1] = bounds.BottomRight;
-                verts[2] = bounds.TopRight;
-                verts[3] = bounds.TopLeft;
-                poly.Set(verts, 4);
+                poly.SetAsBox(bounds);
                 Shape = poly;
             }
         }
@@ -151,8 +146,7 @@ namespace Robust.Shared.Physics.Dynamics
 
         public Fixture(Fixture fixture)
         {
-            var thisFix = new Fixture();
-            fixture.CopyTo(thisFix);
+            fixture.CopyTo(this);
         }
 
         /// <summary>

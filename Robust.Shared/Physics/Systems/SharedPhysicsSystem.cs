@@ -75,6 +75,7 @@ namespace Robust.Shared.Physics.Systems
 
         private ComponentRegistration _physicsReg = default!;
         private byte _angularVelocityIndex;
+        private byte _fixtureFieldIndex;
 
         public override void Initialize()
         {
@@ -87,6 +88,7 @@ namespace Robust.Shared.Physics.Systems
                 nameof(PhysicsComponent.CanCollide),
                 nameof(PhysicsComponent.BodyStatus),
                 nameof(PhysicsComponent.BodyType),
+                nameof(PhysicsComponent.Fixtures),
                 nameof(PhysicsComponent.SleepingAllowed),
                 nameof(PhysicsComponent.FixedRotation),
                 nameof(PhysicsComponent.Friction),
@@ -97,7 +99,11 @@ namespace Robust.Shared.Physics.Systems
                 nameof(PhysicsComponent.AngularVelocity),
                 nameof(PhysicsComponent.LinearVelocity));
 
-            _angularVelocityIndex = 10;
+            _fixtureFieldIndex = 3;
+            _angularVelocityIndex = 11;
+
+            DebugTools.Assert(EntityManager.GetNetworkedFieldIndex(_physicsReg, nameof(PhysicsComponent.AngularVelocity)) == _angularVelocityIndex);
+            DebugTools.Assert(EntityManager.GetNetworkedFieldIndex(_physicsReg, nameof(PhysicsComponent.Fixtures)) == _fixtureFieldIndex);
 
             PhysicsQuery = GetEntityQuery<PhysicsComponent>();
             _xformQuery = GetEntityQuery<TransformComponent>();
@@ -115,7 +121,6 @@ namespace Robust.Shared.Physics.Systems
             SubscribeLocalEvent<PhysicsComponent, ComponentHandleState>(OnPhysicsHandleState);
             InitializeIsland();
             InitializeContacts();
-            InitializeFixturesChange();
 
             Subs.CVar(_cfg, CVars.AutoClearForces, OnAutoClearChange);
             Subs.CVar(_cfg, CVars.NetTickrate, UpdateSubsteps, true);

@@ -127,7 +127,7 @@ public partial class SharedPhysicsSystem
             }
         }
 
-        args.State = new PhysicsComponentState
+        var slim = new PhysicsSlimDeltaState()
         {
             CanCollide = component.CanCollide,
             SleepingAllowed = component.SleepingAllowed,
@@ -141,6 +141,26 @@ public partial class SharedPhysicsSystem
             AngularDamping = component.AngularDamping,
             Force = component.Force,
             Torque = component.Torque,
+        };
+
+        // Check if we even need to add fixtures
+        if (component.LastModifiedFields[_fixtureFieldIndex] < args.FromTick)
+        {
+            args.State = slim;
+            return;
+        }
+
+        var fixtures = new Dictionary<string, Fixture>(component.Fixtures.Count);
+
+        foreach (var (id, fix) in component.Fixtures)
+        {
+            fixtures.Add(id, new(fix));
+        }
+
+        args.State = new PhysicsComponentState
+        {
+            Slim = slim,
+            Fixtures = fixtures,
         };
     }
 
@@ -160,21 +180,13 @@ public partial class SharedPhysicsSystem
             SetLinearVelocity(uid, velocityState.LinearVelocity, body: component);
             SetAngularVelocity(uid, velocityState.AngularVelocity, body: component);
         }
+        else if (args.Current is PhysicsSlimDeltaState slim)
+        {
+            ApplySlimState(uid, component, slim);
+        }
         else if (args.Current is PhysicsComponentState newState)
         {
-            SetSleepingAllowed(uid, component, newState.SleepingAllowed);
-            SetFixedRotation(uid, newState.FixedRotation, body: component);
-            SetCanCollide(uid, newState.CanCollide, body: component);
-            component.BodyStatus = newState.Status;
-
-            SetLinearVelocity(uid, newState.LinearVelocity, body: component);
-            SetAngularVelocity(uid, newState.AngularVelocity, body: component);
-            SetBodyType(uid, newState.BodyType, component);
-            SetFriction(uid, component, newState.Friction);
-            SetLinearDamping(uid, component, newState.LinearDamping);
-            SetAngularDamping(uid, component, newState.AngularDamping);
-            component.Force = newState.Force;
-            component.Torque = newState.Torque;
+            ApplySlimState(uid, component, newState.Slim);
 
             // Fixtures
             foreach (var fixture in component.Fixtures.Values)
@@ -248,6 +260,23 @@ public partial class SharedPhysicsSystem
                 FixtureUpdate(uid, body: component);
             }
         }
+    }
+
+    private void ApplySlimState(EntityUid uid, PhysicsComponent component, PhysicsSlimDeltaState newState)
+    {
+        SetSleepingAllowed(uid, component, newState.SleepingAllowed);
+        SetFixedRotation(uid, newState.FixedRotation, body: component);
+        SetCanCollide(uid, newState.CanCollide, body: component);
+        component.BodyStatus = newState.Status;
+
+        SetLinearVelocity(uid, newState.LinearVelocity, body: component);
+        SetAngularVelocity(uid, newState.AngularVelocity, body: component);
+        SetBodyType(uid, newState.BodyType, component);
+        SetFriction(uid, component, newState.Friction);
+        SetLinearDamping(uid, component, newState.LinearDamping);
+        SetAngularDamping(uid, component, newState.AngularDamping);
+        component.Force = newState.Force;
+        component.Torque = newState.Torque;
     }
 
     #endregion
@@ -654,7 +683,6 @@ public partial class SharedPhysicsSystem
     public bool SetCanCollide(
         EntityUid uid,
         bool value,
-        bool dirty = true,
         bool force = false,
         PhysicsComponent? body = null)
     {
@@ -686,13 +714,16 @@ public partial class SharedPhysicsSystem
         body.CanCollide = value;
 
         if (!value)
+        {
             SetAwake((uid, body), false);
+        }
 
         if (body.Initialized)
         {
             var ev = new CollisionChangeEvent(uid, body, value);
             RaiseLocalEvent(ref ev);
         }
+
         DirtyField(uid, body, nameof(PhysicsComponent.CanCollide));
         return value;
     }

@@ -72,7 +72,7 @@ public abstract partial class SharedPhysicsSystem
                 // Don't need to dirty here as we'll just manually call it after (we 100% need to call it).
                 FixtureUpdate(uid, false, body: body);
                 // Don't need to ResetMassData as FixtureUpdate already does it.
-                Dirty(uid, body);
+                DirtyField(uid, body, nameof(PhysicsComponent.Fixtures));
             }
 
             // TODO: Set newcontacts to true.
@@ -195,7 +195,9 @@ public abstract partial class SharedPhysicsSystem
         }
 
         if (dirty)
-            Dirty(uid, body);
+        {
+            DirtyField(uid, body, nameof(PhysicsComponent.Fixtures));
+        }
     }
 
     public void SetDensity(EntityUid uid, string fixtureId, Fixture fixture, float value, bool update = true, PhysicsComponent? body = null)

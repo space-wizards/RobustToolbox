@@ -20,7 +20,6 @@ namespace Robust.UnitTesting.Shared.Physics
   components:
   - type: Physics
     bodyType: Dynamic
-  - type: Fixtures
     fixtures:
       fix1:
         shape:

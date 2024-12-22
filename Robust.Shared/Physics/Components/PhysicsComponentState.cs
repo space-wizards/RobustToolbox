@@ -8,56 +8,10 @@ using Robust.Shared.Serialization;
 namespace Robust.Shared.Physics.Components;
 
 /// <summary>
-/// Average use-case of only linear velocity update
+/// No chunky fixture updates
 /// </summary>
 [Serializable, NetSerializable]
-public record struct PhysicsLinearVelocityDeltaState : IComponentDeltaState<PhysicsComponentState>
-{
-    public Vector2 LinearVelocity;
-
-    public void ApplyToFullState(PhysicsComponentState fullState)
-    {
-        fullState.LinearVelocity = LinearVelocity;
-    }
-
-    public PhysicsComponentState CreateNewFullState(PhysicsComponentState fullState)
-    {
-        var copy = new PhysicsComponentState(fullState)
-        {
-            LinearVelocity = LinearVelocity,
-        };
-        return copy;
-    }
-}
-
-/// <summary>
-/// 2nd-most typical usecase of just velocity updates
-/// </summary>
-[Serializable, NetSerializable]
-public record struct PhysicsVelocityDeltaState : IComponentDeltaState<PhysicsComponentState>
-{
-    public Vector2 LinearVelocity;
-    public float AngularVelocity;
-
-    public void ApplyToFullState(PhysicsComponentState fullState)
-    {
-        fullState.LinearVelocity = LinearVelocity;
-        fullState.AngularVelocity = AngularVelocity;
-    }
-
-    public PhysicsComponentState CreateNewFullState(PhysicsComponentState fullState)
-    {
-        var copy = new PhysicsComponentState(fullState)
-        {
-            LinearVelocity = LinearVelocity,
-            AngularVelocity = AngularVelocity
-        };
-        return copy;
-    }
-}
-
-[Serializable, NetSerializable]
-public sealed class PhysicsComponentState : IComponentState
+public record struct PhysicsSlimDeltaState : IComponentDeltaState<PhysicsComponentState>
 {
     public bool CanCollide;
     public bool SleepingAllowed;
@@ -75,27 +29,79 @@ public sealed class PhysicsComponentState : IComponentState
     public Vector2 Force;
     public float Torque;
 
+    public void ApplyToFullState(PhysicsComponentState fullState)
+    {
+        fullState.Slim = this;
+    }
+
+    public PhysicsComponentState CreateNewFullState(PhysicsComponentState fullState)
+    {
+        var copy = new PhysicsComponentState(fullState)
+        {
+            Slim = this
+        };
+        return copy;
+    }
+}
+
+
+/// <summary>
+/// Average use-case of only linear velocity update
+/// </summary>
+[Serializable, NetSerializable]
+public record struct PhysicsLinearVelocityDeltaState : IComponentDeltaState<PhysicsComponentState>
+{
+    public Vector2 LinearVelocity;
+
+    public void ApplyToFullState(PhysicsComponentState fullState)
+    {
+        fullState.Slim.LinearVelocity = LinearVelocity;
+    }
+
+    public PhysicsComponentState CreateNewFullState(PhysicsComponentState fullState)
+    {
+        var copy = new PhysicsComponentState(fullState);
+        copy.Slim.LinearVelocity = LinearVelocity;
+        return copy;
+    }
+}
+
+/// <summary>
+/// 2nd-most typical usecase of just velocity updates
+/// </summary>
+[Serializable, NetSerializable]
+public record struct PhysicsVelocityDeltaState : IComponentDeltaState<PhysicsComponentState>
+{
+    public Vector2 LinearVelocity;
+    public float AngularVelocity;
+
+    public void ApplyToFullState(PhysicsComponentState fullState)
+    {
+        fullState.Slim.LinearVelocity = LinearVelocity;
+        fullState.Slim.AngularVelocity = AngularVelocity;
+    }
+
+    public PhysicsComponentState CreateNewFullState(PhysicsComponentState fullState)
+    {
+        var copy = new PhysicsComponentState(fullState);
+        copy.Slim.LinearVelocity = LinearVelocity;
+        copy.Slim.AngularVelocity = AngularVelocity;
+        return copy;
+    }
+}
+
+[Serializable, NetSerializable]
+public sealed class PhysicsComponentState : IComponentState
+{
+    public PhysicsSlimDeltaState Slim;
+
     public Dictionary<string, Fixture> Fixtures = new();
 
     public PhysicsComponentState() {}
 
     public PhysicsComponentState(PhysicsComponentState existing)
     {
-        CanCollide = existing.CanCollide;
-        SleepingAllowed = existing.SleepingAllowed;
-        FixedRotation = existing.FixedRotation;
-        Status = existing.Status;
-
-        LinearVelocity = existing.LinearVelocity;
-        AngularVelocity = existing.AngularVelocity;
-        BodyType = existing.BodyType;
-
-        Friction = existing.Friction;
-        LinearDamping = existing.LinearDamping;
-        AngularDamping = existing.AngularDamping;
-
-        Force = existing.Force;
-        Torque = existing.Torque;
+        Slim = existing.Slim;
 
         foreach (var (key, value) in existing.Fixtures)
         {

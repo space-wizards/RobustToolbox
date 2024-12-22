@@ -119,19 +119,12 @@ namespace Robust.Shared.GameObjects
             // on the grid (e.g. mass) which we want to preserve.
             var newFixtures = new ValueList<(string Id, Fixture Fixture)>();
 
-            Span<Vector2> vertices = stackalloc Vector2[4];
-
             foreach (var rectangle in rectangles)
             {
                 var bounds = ((Box2) rectangle.Translated(origin)).Enlarged(_fixtureEnlargement);
                 var poly = new PolygonShape();
 
-                vertices[0] = bounds.BottomLeft;
-                vertices[1] = bounds.BottomRight;
-                vertices[2] = bounds.TopRight;
-                vertices[3] = bounds.TopLeft;
-
-                poly.Set(vertices, 4);
+                poly.SetAsBox(bounds);
 
 #pragma warning disable CS0618
                 var newFixture = new Fixture(

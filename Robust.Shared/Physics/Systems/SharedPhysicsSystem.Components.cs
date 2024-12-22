@@ -47,7 +47,7 @@ public partial class SharedPhysicsSystem
 
         if (component.CanCollide && (_containerSystem.IsEntityOrParentInContainer(uid) || xform.MapID == MapId.Nullspace))
         {
-            SetCanCollide(uid, false, false, body: component);
+            SetCanCollide(uid, false, body: component);
         }
 
         if (component.CanCollide)
@@ -81,7 +81,7 @@ public partial class SharedPhysicsSystem
     private void OnPhysicsShutdown(EntityUid uid, PhysicsComponent component, ComponentShutdown args)
     {
         DestroyContacts(component);
-        SetCanCollide(uid, false, false, body: component);
+        SetCanCollide(uid, false, body: component);
         DebugTools.Assert(!component.Awake);
     }
 
@@ -593,7 +593,7 @@ public partial class SharedPhysicsSystem
 
         // Update wake system last, if sleeping but still colliding.
         if (!value && body.CanCollide)
-            _wakeSystem.UpdateCanCollide(ent, checkTerminating: false, dirty: false);
+            _wakeSystem.UpdateCanCollide(ent, checkTerminating: false);
 
         if (updateSleepTime)
             SetSleepTime(body, 0);

@@ -22,11 +22,11 @@ namespace Robust.Shared.GameObjects
 {
     public sealed class EntitySystemManager : IEntitySystemManager, IPostInjectInit
     {
-        [IoC.Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [IoC.Dependency] private readonly IEntityManager _entityManager = default!;
-        [IoC.Dependency] private readonly ProfManager _profManager = default!;
-        [IoC.Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
-        [IoC.Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly ProfManager _profManager = default!;
+        [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
+        [Dependency] private readonly ILogManager _logManager = default!;
 
 #if EXCEPTION_TOLERANCE
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
@@ -35,6 +35,8 @@ namespace Robust.Shared.GameObjects
         private ISawmill _sawmill = default!;
 
         internal DependencyCollection SystemDependencyCollection = default!;
+        public IDependencyCollection DependencyCollection => SystemDependencyCollection;
+
         private readonly List<Type> _systemTypes = new();
 
         private static readonly Histogram _tickUsageHistogram = Metrics.CreateHistogram("robust_entity_systems_update_usage",

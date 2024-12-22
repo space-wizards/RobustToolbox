@@ -61,7 +61,7 @@ public sealed partial class MapLoaderSystem
             ev.RenamedPrototypes,
             ev.DeletedPrototypes);
 
-        if (!deserializer.ProcessData())
+        if (!deserializer.TryProcessData())
         {
             Log.Debug($"Failed to process entity data in {file}");
             return false;
@@ -353,7 +353,7 @@ public sealed partial class MapLoaderSystem
         return false;
     }
 
-    private bool TryReadFile(ResPath file, [NotNullWhen(true)] out MappingDataNode? data)
+    public bool TryReadFile(ResPath file, [NotNullWhen(true)] out MappingDataNode? data)
     {
         var resPath = file.ToRootedPath();
         data = null;

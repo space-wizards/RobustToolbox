@@ -29,7 +29,7 @@ namespace Robust.Shared.EntitySerialization;
 /// This class provides methods for deserializing entities from yaml. It provides some more control over
 /// serialization than the methods provided by <see cref="MapLoaderSystem"/>.
 /// </summary>
-internal sealed class EntityDeserializer : ISerializationContext, IEntityLoadContext,
+public sealed class EntityDeserializer : ISerializationContext, IEntityLoadContext,
     ITypeSerializer<EntityUid, ValueDataNode>
 {
     private const int BackwardsVersion = 3;
@@ -55,9 +55,14 @@ internal sealed class EntityDeserializer : ISerializationContext, IEntityLoadCon
     public readonly MappingDataNode Data;
 
     /// <summary>
-    /// Subset of the file's <see cref="Data"/> relevant to each entity.
+    /// Subset of the file's <see cref="Data"/> relevant to each entity, indexed by their allocated EntityUids
     /// </summary>
     public readonly Dictionary<EntityUid, EntData> Entities = new();
+
+    /// <summary>
+    /// Variant of <see cref="Entities"/> indexed by the entity's yaml id.
+    /// </summary>
+    public readonly Dictionary<int, EntData> YamlEntities = new();
 
     /// <summary>
     /// Entity data grouped by their entity prototype id. Any entities without a prototype or with an invalid or
@@ -70,6 +75,9 @@ internal sealed class EntityDeserializer : ISerializationContext, IEntityLoadCon
     public readonly LoadResult Result = new();
     public readonly Dictionary<int, string> TileMap = new();
     public readonly Dictionary<int, EntityUid> UidMap = new();
+    public readonly List<int> MapYamlIds = new();
+    public readonly List<int> GridYamlIds = new();
+    public readonly List<int> OrphanYamlIds = new();
     public readonly Dictionary<string, string> RenamedPrototypes;
     public readonly HashSet<string> DeletedPrototypes;
 
@@ -120,11 +128,11 @@ internal sealed class EntityDeserializer : ISerializationContext, IEntityLoadCon
     public bool WritingReadingPrototypes { get; private set; }
 
     /// <summary>
-    /// This processes some of the data in <see cref="Data"/>, including extracting the metdata, tile-map,
-    /// validate that all referenced entity prototypes exists, grouping entity data by their prototypes.
+    /// This processes some of the data in <see cref="Data"/>, including extracting the metadata, tile-map,
+    /// validating that all referenced entity prototypes exists, and generating collections for accessing entity data.
     /// </summary>
     /// <returns>Returns false if the entity data cannot be processed</returns>
-    public bool ProcessData()
+    public bool TryProcessData()
     {
         ReadMetadata();
         if (Result.Version < BackwardsVersion)
@@ -139,6 +147,7 @@ internal sealed class EntityDeserializer : ISerializationContext, IEntityLoadCon
 
         ReadEntities();
         ReadTileMap();
+        ReadMapsAndGrids();
         return true;
     }
 
@@ -153,14 +162,17 @@ internal sealed class EntityDeserializer : ISerializationContext, IEntityLoadCon
         // Load the prototype data onto entities, e.g. transform parents, etc.
         LoadEntities();
 
-        // Read the list of maps, grids, and orphan entities
-        ReadMapsAndGrids();
+        // Get the lists of maps, grids, and orphan entities
+        GetMapsAndGrids();
 
         // grids prior to engine v175 might've been serialized with empty chunks which now throw debug asserts.
         RemoveEmptyChunks();
 
         // Assign MapSaveTileMapComponent to all read grids. This is used to avoid large file diffs if the tile map changes.
         StoreGridTileMap();
+
+        // Separate maps and orphaned entities out from the "true" null-space entities.
+        ProcessNullspaceEntities();
 
         if (Options.AssignMapids)
             AssignMapIds();
@@ -177,7 +189,6 @@ internal sealed class EntityDeserializer : ISerializationContext, IEntityLoadCon
         ValidateMapIds();
         PauseMaps();
         BuildEntityHierarchy();
-        ProcessNullspaceEntities();
         StartEntitiesInternal();
         SetMapInitLifestage();
         SetPaused();
@@ -309,7 +320,9 @@ internal sealed class EntityDeserializer : ISerializationContext, IEntityLoadCon
                     ? pausedNode.AsBool()
                     : !postInit;
 
-                protoData.Add(new EntData(yamlId, entityNode, postInit, paused, deletedPrototype));
+                var entData = new EntData(yamlId, entityNode, postInit, paused, deletedPrototype);
+                protoData.Add(entData);
+                YamlEntities.Add(yamlId, entData);
             }
         }
     }
@@ -343,6 +356,7 @@ internal sealed class EntityDeserializer : ISerializationContext, IEntityLoadCon
             var protoData = Prototypes.GetOrNew(proto?.ID ?? string.Empty);
             var entData = new EntData(yamlId, entityNode, PostInit: !preInit, Paused: preInit, toDelete);
             protoData.Add(entData);
+            YamlEntities.Add(yamlId, entData);
         }
     }
 
@@ -351,7 +365,6 @@ internal sealed class EntityDeserializer : ISerializationContext, IEntityLoadCon
         var metadata = Data.Get<MappingDataNode>("meta");
         var preInit = metadata.TryGet<ValueDataNode>("postmapinit", out var mapInitNode) && !mapInitNode.AsBool();
 
-        // entities are grouped by prototype.
         var prototypeGroups = Data.Get<SequenceDataNode>("entities");
         foreach (var protoGroup in prototypeGroups.Cast<MappingDataNode>())
         {
@@ -379,7 +392,9 @@ internal sealed class EntityDeserializer : ISerializationContext, IEntityLoadCon
             foreach (var entityNode in entities.Cast<MappingDataNode>())
             {
                 var yamlId = entityNode.Get<ValueDataNode>("uid").AsInt();
-                protoData.Add(new EntData(yamlId, entityNode, PostInit: !preInit, Paused: preInit, ToDelete: deletedPrototype));
+                var entData = new EntData(yamlId, entityNode, PostInit: !preInit, Paused: preInit, ToDelete: deletedPrototype);
+                protoData.Add(entData);
+                YamlEntities.Add(yamlId, entData);
             }
         }
     }
@@ -443,6 +458,33 @@ internal sealed class EntityDeserializer : ISerializationContext, IEntityLoadCon
         _log.Debug($"Allocated {Entities.Count} entities in {_stopwatch.Elapsed}");
     }
 
+    private void ReadMapsAndGrids()
+    {
+        if (Result.Version < 7)
+            return;
+
+        var maps = Data.Get<SequenceDataNode>("maps");
+        foreach (var node in maps)
+        {
+            var yamlId = ((ValueDataNode) node).AsInt();
+            MapYamlIds.Add(yamlId);
+        }
+
+        var grids = Data.Get<SequenceDataNode>("grids");
+        foreach (var node in grids)
+        {
+            var yamlId = ((ValueDataNode) node).AsInt();
+            GridYamlIds.Add(yamlId);
+        }
+
+        var orphans = Data.Get<SequenceDataNode>("orphans");
+        foreach (var node in orphans)
+        {
+            var yamlId = ((ValueDataNode) node).AsInt();
+            OrphanYamlIds.Add(yamlId);
+        }
+    }
+
     private void LoadEntities()
     {
         _stopwatch.Restart();
@@ -491,11 +533,23 @@ internal sealed class EntityDeserializer : ISerializationContext, IEntityLoadCon
                 var compType = reg.Type;
                 if (prototype?.Components != null && prototype.Components.TryGetValue(value, out var protoData))
                 {
-                    datanode = _seriMan.PushCompositionWithGenericNode(
-                            compType,
-                            [protoData.Mapping],
-                            datanode,
-                            this);
+                    // Previously this method used generic composition pushing. I.e.:
+                    /*
+                     datanode = ISerializationManager.PushCompositionWithGenericNode(
+                        compType,
+                        [protoData.Mapping],
+                        datanode,
+                        this);
+                    */
+                    // However, I don't think this is what we want to do here. I.e., we want to ignore things like the
+                    // AlwaysPushInheritanceAttribute. Complex inheritance pushing should have already been done when
+                    // creating the proto data. Now we want to directly compare the serialized entity with the prototype,
+                    // and we don't want data in the prototype to be pushed into the entity.
+                    //
+                    // If we want to support this, we need to change entity serialization so that it doesn't do a simple
+                    // diff with respect to the prototype data and instead does some kind of inheritance subtraction / removal.
+
+                    datanode = _seriMan.CombineMappings(protoData.Mapping, datanode);
                 }
 
                 CurrentComponent = value;
@@ -513,18 +567,16 @@ internal sealed class EntityDeserializer : ISerializationContext, IEntityLoadCon
             meta.LastComponentRemoved = Timing.CurTick;
     }
 
-    private void ReadMapsAndGrids()
+    private void GetMapsAndGrids()
     {
         if (Result.Version < 7)
         {
-            ReadMapsAndGridsFallback();
+            GetMapsAndGridsFallback();
             return;
         }
 
-        var maps = Data.Get<SequenceDataNode>("maps");
-        foreach (var node in maps)
+        foreach (var yamlId in MapYamlIds)
         {
-            var yamlId = ((ValueDataNode) node).AsInt();
             var uid = UidMap[yamlId];
             if (_mapQuery.TryComp(uid, out var map))
             {
@@ -535,10 +587,8 @@ internal sealed class EntityDeserializer : ISerializationContext, IEntityLoadCon
                 _log.Error($"Missing map entity: {EntMan.ToPrettyString(uid)}");
         }
 
-        var grids = Data.Get<SequenceDataNode>("grids");
-        foreach (var node in grids)
+        foreach (var yamlId in GridYamlIds)
         {
-            var yamlId = ((ValueDataNode) node).AsInt();
             var uid = UidMap[yamlId];
             if (_gridQuery.TryComp(uid, out var grid))
                 Result.Grids.Add((uid, grid));
@@ -546,12 +596,9 @@ internal sealed class EntityDeserializer : ISerializationContext, IEntityLoadCon
                 _log.Error($"Missing grid entity: {EntMan.ToPrettyString(uid)}");
         }
 
-        var orphans = Data.Get<SequenceDataNode>("orphans");
-        foreach (var node in orphans)
+        foreach (var yamlId in OrphanYamlIds)
         {
-            var yamlId = ((ValueDataNode) node).AsInt();
             var uid = UidMap[yamlId];
-
             if (EntMan.HasComponent<MapComponent>(uid) || _xformQuery.Comp(uid).ParentUid.IsValid())
                 _log.Error($"Entity {EntMan.ToPrettyString(uid)} was incorrectly labelled as an orphan?");
             else
@@ -567,7 +614,7 @@ internal sealed class EntityDeserializer : ISerializationContext, IEntityLoadCon
         }
     }
 
-    private void ReadMapsAndGridsFallback()
+    private void GetMapsAndGridsFallback()
     {
         foreach (var uid in Result.Entities)
         {
@@ -701,6 +748,18 @@ internal sealed class EntityDeserializer : ISerializationContext, IEntityLoadCon
                 _log.Error($"Encountered an orphaned grid. Automatically creating a map for the grid.");
             var map = _map.CreateUninitializedMap();
             _map.AssignMapId(map);
+
+            // We intentionally do this after maps have been given the LoadedMapComponent, so this map will not have it.
+            // vague justification is that this entity wasn't actually deserialized from the file, and shouldn't
+            // contain any non-default data.
+
+            // But the real reason is that this is just how it used to work due to shitty code that never properly
+            // distinguished between grid & map files, and checks for this component after deserialization to check whether
+            // the file was a grid or map.
+
+            // So we still support code that tries to load a file without knowing what's in it, but unless the options
+            // disable it, the default behaviour is to log an error in this situation. This is meant to try ensure that
+            // people use the `TryLoadGrid` method when appropriate.
 
             Result.Entities.Add(map);
             Result.Maps.Add(map);

@@ -1,6 +1,7 @@
 using System;
 using System.Numerics;
 using NUnit.Framework;
+using Robust.Server.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
@@ -9,15 +10,15 @@ using Robust.Shared.Physics.Systems;
 namespace Robust.UnitTesting.Shared.Physics
 {
     [TestFixture]
-    [TestOf(typeof(FixtureSystem))]
+    [TestOf(typeof(SharedPhysicsSystem))]
     public sealed class FixtureShape_Test : RobustUnitTest
     {
-        private FixtureSystem _shapeManager = default!;
+        private SharedPhysicsSystem _shapeManager = default!;
 
         [OneTimeSetUp]
         public void Setup()
         {
-            _shapeManager = new FixtureSystem();
+            _shapeManager = new PhysicsSystem();
         }
 
         [Test]

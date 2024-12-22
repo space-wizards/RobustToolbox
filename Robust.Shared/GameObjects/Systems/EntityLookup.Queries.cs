@@ -10,6 +10,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Shapes;
 using Robust.Shared.Physics.Systems;
@@ -87,11 +88,10 @@ public sealed partial class EntityLookupSystem
         var state = new EntityQueryState(intersecting,
             shape,
             shapeTransform,
-            _fixtures,
             this,
             _physics,
             _manifoldManager,
-            _fixturesQuery,
+            _physicsQuery,
             flags);
 
         // Need to include maps
@@ -128,11 +128,10 @@ public sealed partial class EntityLookupSystem
             intersecting,
             shape,
             localShapeTransform,
-            _fixtures,
             this,
             _physics,
             _manifoldManager,
-            _fixturesQuery,
+            _physicsQuery,
             flags);
 
         if ((flags & LookupFlags.Dynamic) != 0x0)
@@ -217,7 +216,7 @@ public sealed partial class EntityLookupSystem
                     return true;
             }
 
-            if (state.Fixtures.TestPoint(state.Shape, state.Transform, intersectingTransform.Position))
+            if (state.Physics.TestPoint(state.Shape, state.Transform, intersectingTransform.Position))
                 state.Intersecting.Add(value);
 
             return true;
@@ -238,11 +237,10 @@ public sealed partial class EntityLookupSystem
             ignored,
             shape,
             shapeTransform,
-            _fixtures,
             this,
             _physics,
             _manifoldManager,
-            _fixturesQuery,
+            _physicsQuery,
             flags);
 
         // Need to include maps
@@ -287,11 +285,10 @@ public sealed partial class EntityLookupSystem
             ignored,
             shape,
             shapeTransform,
-            _fixtures,
             this,
             _physics,
             _manifoldManager,
-            _fixturesQuery,
+            _physicsQuery,
             flags);
 
         if ((flags & LookupFlags.Dynamic) != 0x0)
@@ -391,7 +388,7 @@ public sealed partial class EntityLookupSystem
                     return true;
             }
 
-            if (state.Fixtures.TestPoint(state.Shape, state.Transform, intersectingTransform.Position))
+            if (state.Physics.TestPoint(state.Shape, state.Transform, intersectingTransform.Position))
             {
                 state.Found = true;
                 return false;
@@ -548,13 +545,13 @@ public sealed partial class EntityLookupSystem
         var existing = intersecting.Contains(uid);
         var transform = new Transform(worldPos, worldRot);
 
-        var state = (uid, transform, intersecting, _fixturesQuery, this, _physics, flags);
+        var state = (uid, transform, intersecting, _physicsQuery, this, _physics, flags);
 
         // Unfortuantely I can't think of a way to de-dupe this with the other ones as it's slightly different.
         _mapManager.FindGridsIntersecting(mapId, worldAABB, ref state,
             static (EntityUid gridUid, MapGridComponent grid,
                 ref (EntityUid entity, Transform transform, HashSet<EntityUid> intersecting,
-                    EntityQuery<FixturesComponent> fixturesQuery, EntityLookupSystem lookup, SharedPhysicsSystem physics, LookupFlags flags) state) =>
+                    EntityQuery<PhysicsComponent> fixturesQuery, EntityLookupSystem lookup, SharedPhysicsSystem physics, LookupFlags flags) state) =>
             {
                 EntityIntersectingQuery(gridUid, state);
 
@@ -573,7 +570,7 @@ public sealed partial class EntityLookupSystem
         return;
 
         static void EntityIntersectingQuery(EntityUid lookupUid, (EntityUid entity, Transform shapeTransform, HashSet<EntityUid> intersecting,
-            EntityQuery<FixturesComponent> fixturesQuery, EntityLookupSystem lookup, SharedPhysicsSystem physics, LookupFlags flags) state)
+            EntityQuery<PhysicsComponent> fixturesQuery, EntityLookupSystem lookup, SharedPhysicsSystem physics, LookupFlags flags) state)
         {
             var localTransform = state.physics.GetRelativePhysicsTransform(state.shapeTransform, lookupUid);
 
@@ -837,11 +834,10 @@ public sealed partial class EntityLookupSystem
         EntityUid? Ignored,
         IPhysShape Shape,
         Transform Transform,
-        FixtureSystem Fixtures,
         EntityLookupSystem Lookup,
         SharedPhysicsSystem Physics,
         IManifoldManager Manifolds,
-        EntityQuery<FixturesComponent> FixturesQuery,
+        EntityQuery<PhysicsComponent> FixturesQuery,
         LookupFlags Flags
     );
 
@@ -849,11 +845,10 @@ public sealed partial class EntityLookupSystem
         HashSet<EntityUid> Intersecting,
         IPhysShape Shape,
         Transform Transform,
-        FixtureSystem Fixtures,
         EntityLookupSystem Lookup,
         SharedPhysicsSystem Physics,
         IManifoldManager Manifolds,
-        EntityQuery<FixturesComponent> FixturesQuery,
+        EntityQuery<PhysicsComponent> FixturesQuery,
         LookupFlags Flags
     );
 }

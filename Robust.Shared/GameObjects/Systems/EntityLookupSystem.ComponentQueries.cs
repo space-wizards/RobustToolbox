@@ -9,6 +9,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Shapes;
 using Robust.Shared.Physics.Systems;
@@ -79,7 +80,7 @@ public sealed partial class EntityLookupSystem
             return false;
         }
 
-        if (_fixturesQuery.TryGetComponent(uid, out var fixtures))
+        if (_physicsQuery.TryGetComponent(uid, out var fixtures))
         {
             var transform = new Transform(entPos, entRot);
             bool anyFixture = false;
@@ -104,7 +105,7 @@ public sealed partial class EntityLookupSystem
                 return false;
         }
 
-        if (!_fixtures.TestPoint(shape, shapeTransform, entPos))
+        if (!_physics.TestPoint(shape, shapeTransform, entPos))
             return false;
 
         return true;
@@ -143,11 +144,10 @@ public sealed partial class EntityLookupSystem
             intersecting,
             shape,
             localTransform,
-            _fixtures,
             _physics,
             _manifoldManager,
             query,
-            _fixturesQuery,
+            _physicsQuery,
             (flags & LookupFlags.Sensors) != 0,
             (flags & LookupFlags.Approximate) != 0x0
         );
@@ -232,7 +232,7 @@ public sealed partial class EntityLookupSystem
                     return true;
             }
 
-            if (state.Fixtures.TestPoint(state.Shape, state.Transform, intersectingTransform.Position))
+            if (state.Physics.TestPoint(state.Shape, state.Transform, intersectingTransform.Position))
                 state.Intersecting.Add((value, comp));
 
             return true;
@@ -279,11 +279,10 @@ public sealed partial class EntityLookupSystem
             ignored,
             shape,
             shapeTransform,
-            _fixtures,
             _physics,
             _manifoldManager,
             query,
-            _fixturesQuery,
+            _physicsQuery,
             flags);
 
         if ((flags & LookupFlags.Dynamic) != 0x0)
@@ -385,7 +384,7 @@ public sealed partial class EntityLookupSystem
                     return true;
             }
 
-            if (state.Fixtures.TestPoint(state.Shape, state.Transform, intersectingTransform.Position))
+            if (state.Physics.TestPoint(state.Shape, state.Transform, intersectingTransform.Position))
             {
                 state.Found = true;
                 return false;
@@ -844,11 +843,10 @@ public sealed partial class EntityLookupSystem
         EntityUid? Ignored,
         IPhysShape Shape,
         Transform Transform,
-        FixtureSystem Fixtures,
         SharedPhysicsSystem Physics,
         IManifoldManager Manifolds,
         EntityQuery<T> Query,
-        EntityQuery<FixturesComponent> FixturesQuery,
+        EntityQuery<PhysicsComponent> FixturesQuery,
         LookupFlags Flags
     ) where T : IComponent;
 
@@ -856,11 +854,10 @@ public sealed partial class EntityLookupSystem
         HashSet<Entity<T>> Intersecting,
         IPhysShape Shape,
         Transform Transform,
-        FixtureSystem Fixtures,
         SharedPhysicsSystem Physics,
         IManifoldManager Manifolds,
         EntityQuery<T> Query,
-        EntityQuery<FixturesComponent> FixturesQuery,
+        EntityQuery<PhysicsComponent> FixturesQuery,
         bool Sensors,
         bool Approximate
     ) where T : IComponent;

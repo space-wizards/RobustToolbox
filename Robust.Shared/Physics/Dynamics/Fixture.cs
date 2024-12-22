@@ -65,14 +65,14 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         /// Contact friction between 2 bodies. Not tile-friction for top-down.
         /// </summary>
-        [ViewVariables(VVAccess.ReadWrite), DataField("friction"), Access(typeof(SharedPhysicsSystem), typeof(FixtureSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
+        [ViewVariables(VVAccess.ReadWrite), DataField("friction"), Access(typeof(SharedPhysicsSystem), typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
         public float Friction = PhysicsConstants.DefaultContactFriction;
 
         /// <summary>
         /// AKA how much bounce there is on a collision.
         /// 0.0 for inelastic collision and 1.0 for elastic.
         /// </summary>
-        [ViewVariables(VVAccess.ReadWrite), DataField("restitution"), Access(typeof(SharedPhysicsSystem), typeof(FixtureSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
+        [ViewVariables(VVAccess.ReadWrite), DataField("restitution"), Access(typeof(SharedPhysicsSystem), typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
         public float Restitution = PhysicsConstants.DefaultRestitution;
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// <remarks>
         ///     This is useful for triggers or such to detect collision without actually causing a blockage.
         /// </remarks>
-        [ViewVariables(VVAccess.ReadWrite), DataField("hard"), Access(typeof(SharedPhysicsSystem), typeof(FixtureSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
+        [ViewVariables(VVAccess.ReadWrite), DataField("hard"), Access(typeof(SharedPhysicsSystem), typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
         public bool Hard = true;
 
         /// <summary>
@@ -147,6 +147,12 @@ namespace Robust.Shared.Physics.Dynamics
 
         public Fixture()
         {
+        }
+
+        public Fixture(Fixture fixture)
+        {
+            var thisFix = new Fixture();
+            fixture.CopyTo(thisFix);
         }
 
         /// <summary>

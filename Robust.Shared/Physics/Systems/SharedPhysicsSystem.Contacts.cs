@@ -762,9 +762,9 @@ public abstract partial class SharedPhysicsSystem
     /// </summary>
     /// <param name="ignoredFixtureId">Fixture we should ignore if applicable</param>
     [Pure]
-    public int GetTouchingContacts(Entity<FixturesComponent?> entity, string? ignoredFixtureId = null)
+    public int GetTouchingContacts(Entity<PhysicsComponent?> entity, string? ignoredFixtureId = null)
     {
-        if (!_fixturesQuery.Resolve(entity.Owner, ref entity.Comp))
+        if (!PhysicsQuery.Resolve(entity.Owner, ref entity.Comp))
             return 0;
 
         var count = 0;
@@ -790,9 +790,9 @@ public abstract partial class SharedPhysicsSystem
     /// Returns all of this entity's contacts.
     /// </summary>
     [Pure]
-    public ContactEnumerator GetContacts(Entity<FixturesComponent?> entity)
+    public ContactEnumerator GetContacts(Entity<PhysicsComponent?> entity)
     {
-        _fixturesQuery.Resolve(entity.Owner, ref entity.Comp);
+        PhysicsQuery.Resolve(entity.Owner, ref entity.Comp);
         return new ContactEnumerator(entity.Comp);
     }
 }
@@ -804,7 +804,7 @@ public record struct ContactEnumerator
     private Dictionary<string, Fixture>.ValueCollection.Enumerator _fixtureEnumerator;
     private Dictionary<Fixture, Contact>.ValueCollection.Enumerator _contactEnumerator;
 
-    public ContactEnumerator(FixturesComponent? fixtures)
+    public ContactEnumerator(PhysicsComponent? fixtures)
     {
         if (fixtures == null || fixtures.Fixtures.Count == 0)
         {

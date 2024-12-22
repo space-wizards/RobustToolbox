@@ -40,7 +40,6 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
         var confMan = server.ResolveDependency<IConfigurationManager>();
         var cPlayerMan = client.ResolveDependency<ISharedPlayerManager>();
         var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
-        var fixturesSystem = sEntMan.EntitySysManager.GetEntitySystem<FixtureSystem>();
         var physicsSystem = sEntMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>();
         var mapSystem = sEntMan.EntitySysManager.GetEntitySystem<SharedMapSystem>();
 
@@ -80,7 +79,7 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
             var shape = new PolygonShape();
             shape.SetAsBox(0.5f, 0.5f);
             var fixture = new Fixture(shape, 0, 0, true);
-            fixturesSystem.CreateFixture(player, "fix1", fixture, body: physics, xform: xform);
+            physicsSystem.CreateFixture(player, "fix1", fixture, body: physics, xform: xform);
             physicsSystem.SetCanCollide(player, true, body: physics);
             physicsSystem.SetBodyType(player, BodyType.Dynamic);
             Assert.That(physics.CanCollide);

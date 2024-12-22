@@ -67,7 +67,6 @@ namespace Robust.Shared.Physics.Systems
 
         public bool MetricsEnabled { get; protected set; }
 
-        private EntityQuery<FixturesComponent> _fixturesQuery;
         protected EntityQuery<PhysicsComponent> PhysicsQuery;
         private EntityQuery<TransformComponent> _xformQuery;
         private EntityQuery<CollideOnAnchorComponent> _anchorQuery;
@@ -100,7 +99,6 @@ namespace Robust.Shared.Physics.Systems
 
             _angularVelocityIndex = 10;
 
-            _fixturesQuery = GetEntityQuery<FixturesComponent>();
             PhysicsQuery = GetEntityQuery<PhysicsComponent>();
             _xformQuery = GetEntityQuery<TransformComponent>();
             _anchorQuery = GetEntityQuery<CollideOnAnchorComponent>();
@@ -117,19 +115,11 @@ namespace Robust.Shared.Physics.Systems
             SubscribeLocalEvent<PhysicsComponent, ComponentHandleState>(OnPhysicsHandleState);
             InitializeIsland();
             InitializeContacts();
+            InitializeFixturesChange();
 
             Subs.CVar(_cfg, CVars.AutoClearForces, OnAutoClearChange);
             Subs.CVar(_cfg, CVars.NetTickrate, UpdateSubsteps, true);
             Subs.CVar(_cfg, CVars.TargetMinimumTickrate, UpdateSubsteps, true);
-        }
-
-        private void OnPhysicsShutdown(EntityUid uid, PhysicsComponent component, ComponentShutdown args)
-        {
-            SetCanCollide(uid, false, false, body: component);
-            DebugTools.Assert(!component.Awake);
-
-            if (LifeStage(uid) <= EntityLifeStage.MapInitialized)
-                RemComp<FixturesComponent>(uid);
         }
 
         private void OnCollisionChange(ref CollisionChangeEvent ev)
@@ -256,10 +246,9 @@ namespace Robust.Shared.Physics.Systems
                 return;
 
             var body = EnsureComp<PhysicsComponent>(guid);
-            var manager = EnsureComp<FixturesComponent>(guid);
 
-            SetCanCollide(guid, true, manager: manager, body: body);
-            SetBodyType(guid, BodyType.Static, manager: manager, body: body);
+            SetCanCollide(guid, true, body: body);
+            SetBodyType(guid, BodyType.Static, body: body);
         }
 
         public override void Shutdown()

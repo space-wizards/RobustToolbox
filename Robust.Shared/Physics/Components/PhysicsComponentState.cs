@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Numerics;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Physics.Components;
@@ -74,6 +75,8 @@ public sealed class PhysicsComponentState : IComponentState
     public Vector2 Force;
     public float Torque;
 
+    public Dictionary<string, Fixture> Fixtures = new();
+
     public PhysicsComponentState() {}
 
     public PhysicsComponentState(PhysicsComponentState existing)
@@ -93,5 +96,10 @@ public sealed class PhysicsComponentState : IComponentState
 
         Force = existing.Force;
         Torque = existing.Torque;
+
+        foreach (var (key, value) in existing.Fixtures)
+        {
+            Fixtures[key] = new(value);
+        }
     }
 }

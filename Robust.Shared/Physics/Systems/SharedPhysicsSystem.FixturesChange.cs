@@ -15,7 +15,7 @@ public abstract partial class SharedPhysicsSystem
     {
         foreach (var (id, fixture) in ent.Comp.Fixtures)
         {
-            _fixtures.TryCreateFixture(ent.Owner,
+            TryCreateFixture(ent.Owner,
                 fixture.Shape,
                 id,
                 fixture.Density,
@@ -34,7 +34,7 @@ public abstract partial class SharedPhysicsSystem
     {
         foreach (var id in ent.Comp.Fixtures.Keys)
         {
-            _fixtures.DestroyFixture(ent.Owner, id);
+            DestroyFixture(ent.Owner, id);
         }
     }
 }

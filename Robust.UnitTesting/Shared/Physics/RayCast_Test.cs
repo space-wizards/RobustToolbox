@@ -133,7 +133,7 @@ public sealed class RayCast_Test
         var physics = entManager.AddComponent<PhysicsComponent>(wall);
         var poly = new PolygonShape();
         poly.SetAsBox(Box2.UnitCentered);
-        entManager.System<FixtureSystem>().CreateFixture(wall, "fix1", new Fixture(poly, 1, 1, true));
+        entManager.System<SharedPhysicsSystem>().CreateFixture(wall, "fix1", new Fixture(poly, 1, 1, true));
 
         entManager.System<SharedPhysicsSystem>().SetCanCollide(wall, true, body: physics);
         Assert.That(physics.CanCollide);

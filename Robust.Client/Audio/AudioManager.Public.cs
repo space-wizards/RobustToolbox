@@ -8,7 +8,6 @@ using Robust.Client.Graphics;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.AudioLoading;
 using Robust.Shared.Audio.Sources;
-using Robust.Shared.Graphics;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Audio;
@@ -16,7 +15,7 @@ namespace Robust.Client.Audio;
 internal partial class AudioManager
 {
     private float _zOffset;
-    private long _generatedBuffers = 0;
+    private long _generatedBuffers;
 
     public void SetZOffset(float offset)
     {
@@ -163,12 +162,12 @@ internal partial class AudioManager
 
         unsafe
         {
-            fixed (void* sourcePrt = wav.Data.Span)
+            fixed (void* sourcePtr = wav.Data.Span)
             {
-                fixed (void* destinyPrt = buffer)
+                fixed (void* destinyPtr = buffer)
                 {
-                    Buffer.MemoryCopy(sourcePrt,
-                        destinyPrt,
+                    Buffer.MemoryCopy(sourcePtr,
+                        destinyPtr,
                         wav.Data.Length,
                         wav.Data.Length);
                 }
@@ -189,7 +188,8 @@ internal partial class AudioManager
             1 => ALFormat.Mono16,
             2 => ALFormat.Stereo16,
             _ => throw new ArgumentOutOfRangeException(
-                nameof(channels), "Only stereo and mono is currently supported")
+                nameof(channels),
+                "Only stereo and mono is currently supported")
         };
 
         var buffer = AL.GenBuffer();

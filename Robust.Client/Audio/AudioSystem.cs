@@ -43,6 +43,10 @@ public sealed partial class AudioSystem : SharedAudioSystem
     [Dependency] private readonly SharedMapSystem _maps = default!;
     [Dependency] private readonly SharedTransformSystem _xformSys = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+    [Dependency] private readonly IEntityManager _entityManager = default!;
+
+    public event Action<CaptionComponent>? OnSubtitledAudioStart;
+    public event Action<CaptionComponent>? OnSubtitledAudioEnd;
 
     /// <summary>
     /// Per-tick cache of relevant streams.
@@ -172,17 +176,23 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
     private void OnAudioPaused(EntityUid uid, AudioComponent component, ref EntityPausedEvent args)
     {
+        if (_entityManager.TryGetComponent(uid, out CaptionComponent? caption))
+            OnSubtitledAudioEnd?.Invoke(caption);
         component.Pause();
     }
 
     protected override void OnAudioUnpaused(EntityUid uid, AudioComponent component, ref EntityUnpausedEvent args)
     {
+        if (_entityManager.TryGetComponent(uid, out CaptionComponent? caption))
+            OnSubtitledAudioStart?.Invoke(caption);
         base.OnAudioUnpaused(uid, component, ref args);
         component.StartPlaying();
     }
 
     private void OnAudioStartup(EntityUid uid, AudioComponent component, ComponentStartup args)
     {
+        if (_entityManager.TryGetComponent(uid, out CaptionComponent? caption))
+            OnSubtitledAudioStart?.Invoke(caption);
         if (!Timing.ApplyingState && !Timing.IsFirstTimePredicted)
         {
             return;
@@ -247,6 +257,8 @@ public sealed partial class AudioSystem : SharedAudioSystem
         component.Source.Dispose();
 
         RemoveAudioLimit(component.FileName);
+        if (_entityManager.TryGetComponent(uid, out CaptionComponent? caption))
+            OnSubtitledAudioEnd?.Invoke(caption);
     }
 
     private void OnAudioAttenuation(int obj)

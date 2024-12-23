@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Player;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Toolshed;
 using Robust.Shared.Toolshed.Commands.Generic;
 using Robust.Shared.Toolshed.Syntax;
@@ -351,6 +354,41 @@ public sealed class ToolshedTests : ToolshedTest
             AssertResult("i 1 join { testparamscollection 1 2 }", new[] {1, 1, 2});
             AssertResult("i 1 join { testparamscollection 1 2 3 }", new[] {1, 1, 2, 3});
             AssertResult("i 1 join { testparamscollection 1 2 3 4 }", new[] {1, 1, 2, 3, 4});
+        });
+    }
+
+    /// <summary>
+    /// Check that the type of generic parameters can be correctly inferred from the piped-in value. I.e., when check
+    /// that if we pipe a <see cref="List{T}"/> into a command that takes an <see cref="IEnumerable{T}"/>, the value of
+    /// the generic parameter can be properly inferred.
+    /// </summary>
+    [Test]
+    [TestOf(typeof(TakesPipedTypeAsGenericAttribute))]
+    public async Task TestGenericPipeInference()
+    {
+        await Server.WaitAssertion(() =>
+        {
+            // Pipe T[] -> T[]
+            AssertResult("testarray testarrayinfer 1", typeof(int));
+
+            // Pipe List<T> -> List<T>
+            AssertResult("testlist testlistinfer 1", typeof(int));
+
+            // Pipe T[] -> IEnumerable<T>
+            AssertResult("testarray testenumerableinfer 1", typeof(int));
+
+            // Pipe List<T> -> IEnumerable<T>
+            AssertResult("testlist testenumerableinfer 1", typeof(int));
+
+            // Pipe IEnumerable<T> -> IEnumerable<T>
+            AssertResult("testenumerable testenumerableinfer 1", typeof(int));
+
+            // Repeat but with nested types. i.e. extracting T when piping ProtoId<T> -> IEnumerable<ProtoId<T>>
+            AssertResult("testnestedarray testnestedarrayinfer", typeof(EntityPrototype));
+            AssertResult("testnestedlist testnestedlistinfer", typeof(EntityPrototype));
+            AssertResult("testnestedarray testnestedenumerableinfer", typeof(EntityPrototype));
+            AssertResult("testnestedlist testnestedenumerableinfer", typeof(EntityPrototype));
+            AssertResult("testnestedenumerable testnestedenumerableinfer", typeof(EntityPrototype));
         });
     }
 

@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.Console;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Toolshed;
 using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Toolshed.TypeParsers;
@@ -111,4 +115,104 @@ public sealed class TestCustomParserCommand : ToolshedCommand
         // I.e., this parser will not not try to parse variables or blocks
         public override bool EnableValueRef => false;
     }
+}
+
+[ToolshedCommand]
+public sealed class TestEnumerableInferCommand : ToolshedCommand
+{
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public Type Impl<T>([PipedArgument] IEnumerable<T> x, T y) => typeof(T);
+}
+
+[ToolshedCommand]
+public sealed class TestListInferCommand : ToolshedCommand
+{
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public Type Impl<T>([PipedArgument] List<T> x, T y) => typeof(T);
+}
+
+[ToolshedCommand]
+public sealed class TestArrayInferCommand : ToolshedCommand
+{
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public Type Impl<T>([PipedArgument] T[] x, T y) => typeof(T);
+}
+
+[ToolshedCommand]
+public sealed class TestNestedEnumerableInferCommand : ToolshedCommand
+{
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public Type Impl<T>([PipedArgument] IEnumerable<ProtoId<T>> x)
+        where T : class, IPrototype
+    {
+        return typeof(T);
+    }
+}
+
+[ToolshedCommand]
+public sealed class TestNestedListInferCommand : ToolshedCommand
+{
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public Type Impl<T>([PipedArgument] List<ProtoId<T>> x)
+        where T : class, IPrototype
+    {
+        return typeof(T);
+    }
+}
+
+[ToolshedCommand]
+public sealed class TestNestedArrayInferCommand : ToolshedCommand
+{
+    [CommandImplementation, TakesPipedTypeAsGeneric]
+    public Type Impl<T>([PipedArgument] ProtoId<T>[] x)
+        where T : class, IPrototype
+    {
+        return typeof(T);
+    }
+}
+
+[ToolshedCommand]
+public sealed class TestArrayCommand : ToolshedCommand
+{
+    [CommandImplementation]
+    public int[] Impl() => Array.Empty<int>();
+}
+
+[ToolshedCommand]
+public sealed class TestListCommand : ToolshedCommand
+{
+    [CommandImplementation]
+    public List<int> Impl() => new();
+}
+
+[ToolshedCommand]
+public sealed class TestEnumerableCommand : ToolshedCommand
+{
+    private static int[] _arr = {1, 3, 3};
+
+    [CommandImplementation]
+    public IEnumerable<int> Impl() => _arr.Select(x => 2 * x);
+}
+
+[ToolshedCommand]
+public sealed class TestNestedArrayCommand : ToolshedCommand
+{
+    [CommandImplementation]
+    public ProtoId<EntityPrototype>[] Impl() => Array.Empty<ProtoId<EntityPrototype>>();
+}
+
+[ToolshedCommand]
+public sealed class TestNestedListCommand : ToolshedCommand
+{
+    [CommandImplementation]
+    public List<ProtoId<EntityPrototype>> Impl() => new();
+}
+
+[ToolshedCommand]
+public sealed class TestNestedEnumerableCommand : ToolshedCommand
+{
+    private static ProtoId<EntityPrototype>[] _arr = {new("a"), new("b"), new("c")};
+
+    [CommandImplementation]
+    public IEnumerable<ProtoId<EntityPrototype>> Impl() => _arr.OrderByDescending(x => x.Id);
 }

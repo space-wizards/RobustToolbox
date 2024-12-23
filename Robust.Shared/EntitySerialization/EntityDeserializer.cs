@@ -542,11 +542,12 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
                     */
                     // However, I don't think this is what we want to do here. I.e., we want to ignore things like the
                     // AlwaysPushInheritanceAttribute. Complex inheritance pushing should have already been done when
-                    // creating the proto data. Now we want to directly compare the serialized entity with the prototype,
-                    // and we don't want data in the prototype to be pushed into the entity.
+                    // creating the proto data. Now we just want to override the prototype information with the
+                    // serialized data.
                     //
-                    // If we want to support this, we need to change entity serialization so that it doesn't do a simple
-                    // diff with respect to the prototype data and instead does some kind of inheritance subtraction / removal.
+                    // If we do ever want to support this, we need to change entity serialization so that it doesn't do
+                    // a simple diff with respect to the prototype data and instead does some kind of inheritance
+                    // subtraction / removal.
 
                     datanode = _seriMan.CombineMappings(compData, protoData.Mapping);
                 }

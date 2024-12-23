@@ -35,7 +35,17 @@ namespace Robust.Shared.GameObjects
         private ISawmill _sawmill = default!;
 
         internal DependencyCollection SystemDependencyCollection = default!;
-        public IDependencyCollection DependencyCollection => SystemDependencyCollection;
+
+        public IDependencyCollection DependencyCollection
+        {
+            get
+            {
+                if (_initialized)
+                    return SystemDependencyCollection;
+
+                throw new InvalidOperationException($"{nameof(EntitySystemManager)} has been initialized.");
+            }
+        }
 
         private readonly List<Type> _systemTypes = new();
 

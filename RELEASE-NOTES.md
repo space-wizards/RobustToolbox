@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed entity deserialization for components with a data fields that have a AlwaysPushInheritance Attribute
 
 ### Other
 

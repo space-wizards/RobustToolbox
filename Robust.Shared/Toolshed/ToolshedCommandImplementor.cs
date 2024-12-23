@@ -107,11 +107,20 @@ internal sealed class ToolshedCommandImplementor
         DebugTools.AssertNull(ctx.Error);
         DebugTools.AssertNull(ctx.Completions);
 
-        ref var args = ref ctx.Bundle.Arguments;
         foreach (var arg in method.Args)
         {
-            if (!TryParseArgument(ctx, arg, ref args))
+            object? parsed;
+            if (arg.IsParamsCollection)
+            {
+                DebugTools.Assert(arg == method.Args[^1]);
+                if (!ParseParamsCollection(ctx, arg, out parsed))
+                    return false;
+            }
+            else if (!TryParseArgument(ctx, arg, out parsed))
                 return false;
+
+            ctx.Bundle.Arguments ??= new();
+            ctx.Bundle.Arguments[arg.Name] = parsed;
         }
 
         DebugTools.AssertNull(ctx.Error);
@@ -119,7 +128,30 @@ internal sealed class ToolshedCommandImplementor
         return true;
     }
 
-    private bool TryParseArgument(ParserContext ctx, CommandArgument arg, ref Dictionary<string, object?>? args)
+    private bool ParseParamsCollection(ParserContext ctx, CommandArgument arg, out object? collection)
+    {
+        var list = new List<object?>();
+        collection = list;
+
+        while (true)
+        {
+            ctx.ConsumeWhitespace();
+            if (ctx.PeekCommandOrBlockTerminated())
+                break;
+
+            if (ctx is {OutOfInput: true, GenerateCompletions: false})
+                break;
+
+            if (!TryParseArgument(ctx, arg, out var parsed))
+                return false;
+
+            list.Add(parsed);
+        }
+
+        return true;
+    }
+
+    private bool TryParseArgument(ParserContext ctx, CommandArgument arg, out object? parsed)
     {
         DebugTools.AssertNull(ctx.Error);
         DebugTools.AssertNull(ctx.Completions);
@@ -128,7 +160,7 @@ internal sealed class ToolshedCommandImplementor
         ctx.ConsumeWhitespace();
         DebugTools.AssertNotNull(arg.Parser);
 
-        object? parsed;
+        parsed = null;
         if (ctx.PeekCommandOrBlockTerminated() || ctx is {OutOfInput: true, GenerateCompletions: false})
         {
             if (!arg.IsOptional)
@@ -185,9 +217,6 @@ internal sealed class ToolshedCommandImplementor
             ctx.Error.Contextualize(ctx.Input, (start, end));
             return false;
         }
-
-        args ??= new();
-        args[arg.Name] = parsed;
 
         if (!ctx.GenerateCompletions || !ctx.OutOfInput)
             return true;
@@ -337,8 +366,8 @@ internal sealed class ToolshedCommandImplementor
         var argType = arg.ParameterType;
 
         // Is this a "params T[] argument"?
-        var isParams = arg.HasCustomAttribute<ParamArrayAttribute>();
-        if (isParams)
+        var isParamsCollection = arg.HasCustomAttribute<ParamArrayAttribute>();
+        if (isParamsCollection)
         {
             if (!argType.IsArray)
                 throw new NotSupportedException(".net 9 params collections are not yet supported");
@@ -353,7 +382,7 @@ internal sealed class ToolshedCommandImplementor
             GetArgumentParser(arg, argType),
             arg.IsOptional,
             arg.DefaultValue,
-            isParams);
+            isParamsCollection);
     }
 
     private ITypeParser? GetArgumentParser(ParameterInfo param, Type type)
@@ -511,12 +540,24 @@ internal sealed class ToolshedCommandImplementor
         // args.Context
         var ctx = Expression.Property(args, nameof(CommandInvocationArguments.Context));
 
-        // ValueRef<T>.TryEvaluate
-        var evalMethod = typeof(ValueRef<>)
-            .MakeGenericType(param.ParameterType)
-            .GetMethod(nameof(ValueRef<int>.EvaluateParameter), BindingFlags.Static | BindingFlags.NonPublic)!;
+        MethodInfo? evalMethod;
 
-        // ValueRef<T>.TryEvaluate(args.Arguments[param.Name], args.Context)
+        var isParamsCollection = param.HasCustomAttribute<ParamArrayAttribute>();
+        if (isParamsCollection)
+        {
+            // ValueRef<T>.EvaluateParamsCollection
+            evalMethod = typeof(ValueRef<>)
+                .MakeGenericType(param.ParameterType.GetElementType()!)
+                .GetMethod(nameof(ValueRef<int>.EvaluateParamsCollection), BindingFlags.Static | BindingFlags.NonPublic)!;
+        }
+        else
+        {
+            // ValueRef<T>.EvaluateParameter
+            evalMethod = typeof(ValueRef<>)
+                .MakeGenericType(param.ParameterType)
+                .GetMethod(nameof(ValueRef<int>.EvaluateParameter), BindingFlags.Static | BindingFlags.NonPublic)!;
+        }
+
         return Expression.Call(evalMethod, argValue, ctx);
     }
 

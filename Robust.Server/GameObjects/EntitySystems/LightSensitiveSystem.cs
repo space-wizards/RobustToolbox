@@ -33,7 +33,8 @@ public sealed class LightSensitiveSystem : SharedLightSensitiveSystem
     /// <remarks>
     /// <param name="uid">Entity UID to check.</param>
     /// <param name="lightLevel">A float value to be treated as a percentage.</param>
-    /// <param name="cooldown">A float value to that a light level dependent system should set for how frequent of a recalculation in light level it should need.</param>
+    /// <param name="cooldown">A float value to that a light level dependent system should set for how frequent of a recalculation in light level it should need.
+    /// To be treated as seconds.</param>
     /// <param name="clamped">If true, Clamp the light level that will be returned to be between 0 and 1 for 0% to 100%.
     /// If false, the return value can go beyond 100% if the nearest lights have a high enough energy value</param>
     /// <param name="forceUpdate">If true, disregard any cooldowns in place and force an update in calculated light value.</param>

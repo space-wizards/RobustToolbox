@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Console;
-using Robust.Shared.GameObjects;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Toolshed;
 using Robust.Shared.Toolshed.Syntax;
@@ -211,7 +210,7 @@ public sealed class TestNestedListCommand : ToolshedCommand
 [ToolshedCommand]
 public sealed class TestNestedEnumerableCommand : ToolshedCommand
 {
-    private static ProtoId<EntityPrototype>[] _arr = {new("a"), new("b"), new("c")};
+    private static ProtoId<EntityPrototype>[] _arr = Array.Empty<ProtoId<EntityPrototype>>();
 
     [CommandImplementation]
     public IEnumerable<ProtoId<EntityPrototype>> Impl() => _arr.OrderByDescending(x => x.Id);

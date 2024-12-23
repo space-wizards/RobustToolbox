@@ -43,7 +43,7 @@ namespace Robust.Shared.GameObjects
                 if (_initialized)
                     return SystemDependencyCollection;
 
-                throw new InvalidOperationException($"{nameof(EntitySystemManager)} has been initialized.");
+                throw new InvalidOperationException($"{nameof(EntitySystemManager)} has not been initialized.");
             }
         }
 

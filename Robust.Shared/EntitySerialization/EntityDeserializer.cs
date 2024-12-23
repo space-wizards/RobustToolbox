@@ -32,7 +32,8 @@ namespace Robust.Shared.EntitySerialization;
 public sealed class EntityDeserializer : ISerializationContext, IEntityLoadContext,
     ITypeSerializer<EntityUid, ValueDataNode>
 {
-    private const int BackwardsVersion = 3;
+    public const int OldestSupportedVersion = 3;
+    public const int NewestSupportedVersion = EntitySerializer.MapFormatVersion;
 
     public SerializationManager.SerializerProvider SerializerProvider { get; } = new();
 
@@ -135,10 +136,18 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
     public bool TryProcessData()
     {
         ReadMetadata();
-        if (Result.Version < BackwardsVersion)
+
+        if (Result.Version < OldestSupportedVersion)
         {
             _log.Error(
-                $"Cannot handle this map file version, found v{Result.Version} and require at least v{BackwardsVersion}");
+                $"Cannot handle this map file version, found v{Result.Version} and require at least v{OldestSupportedVersion}");
+            return false;
+        }
+
+        if (Result.Version > NewestSupportedVersion)
+        {
+            _log.Error(
+                $"Cannot handle this map file version, found v{Result.Version} but require at most v{NewestSupportedVersion}");
             return false;
         }
 

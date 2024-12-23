@@ -35,11 +35,13 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* The signature of Toolshed type parsers have changed. Instead of taking in an optional command argument name string, they now take in a `CommandArgument` struct.
+* Toolshed commands can no longer contain a '|', as this symbol is now used for explicitly piping the output of one command to another. command pipes. The existing `|` and '|~' commands have been renamed to `bitor` and `bitnotor`.
+* Semicolon terminated command blocks in toolshed commands no longer return anything. I.e., `i { i 2 ; }` is no longer a valid command, as the block has no return value.
 
 ### New features
 
-*None yet*
+* Toolshed commands now support optional and `params T[]` arguments. optional / variable length commands can be terminated using ';' or '|'.
 
 ### Bugfixes
 
@@ -47,7 +49,10 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* The default auto-completion hint for Toolshed commands have been changed and somewhat standardized. Most type parsers should now have a hint of the form:
+  * `<name (Type)>` for mandatory arguments
+  * `[name (Type)]` for optional arguments
+  * `[name (Type)]...` for variable length arguments (i.e., for `params T[]`)
 
 ### Internal
 

@@ -11,7 +11,7 @@ internal sealed class BlockTypeParser : TypeParser<Block>
         return Block.TryParse(ctx, out result);
     }
 
-    public override CompletionResult? TryAutocomplete(ParserContext ctx, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
     {
         Block.TryParse(ctx, out _);
         return ctx.Completions;
@@ -25,7 +25,7 @@ internal sealed class BlockTypeParser<T> : TypeParser<Block<T>>
         return Block<T>.TryParse(ctx, out result);
     }
 
-    public override CompletionResult? TryAutocomplete(ParserContext ctx, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
     {
         Block<T>.TryParse(ctx, out _);
         return ctx.Completions;
@@ -39,7 +39,7 @@ internal sealed class BlockTypeParser<TIn, TOut> : TypeParser<Block<TIn, TOut>>
         return Block<TIn, TOut>.TryParse(ctx, out result);
     }
 
-    public override CompletionResult? TryAutocomplete(ParserContext ctx, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
     {
         Block<TIn, TOut>.TryParse(ctx, out _);
         return ctx.Completions;

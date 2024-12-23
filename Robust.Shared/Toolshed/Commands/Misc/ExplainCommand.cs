@@ -30,8 +30,9 @@ public sealed class ExplainCommand : ToolshedCommand
                 builder.Append("not ");
 
             builder.Append($"{name}");
-            foreach (var (argName, argType, _) in cmd.Method.Args)
+            foreach (var (argName, argType, _, optional, _, @params) in cmd.Method.Args)
             {
+                aaaa
                 builder.Append($" <{argName} ({ToolshedCommandImplementor.GetFriendlyName(argType)})>");
             }
 

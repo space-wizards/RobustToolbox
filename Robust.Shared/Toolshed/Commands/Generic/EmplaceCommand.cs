@@ -219,7 +219,7 @@ public sealed class EmplaceCommand : ToolshedCommand
             return true;
         }
 
-        public override CompletionResult? TryAutocomplete(ParserContext ctx, string? argName)
+        public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
         {
             TryParse(ctx, out _);
             return ctx.Completions;
@@ -246,7 +246,7 @@ public sealed class EmplaceCommand : ToolshedCommand
             return true;
         }
 
-        public override CompletionResult? TryAutocomplete(ParserContext ctx, string? argName)
+        public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
         {
             EmplaceBlockParser.TryParse(ctx, out _);
             return ctx.Completions;

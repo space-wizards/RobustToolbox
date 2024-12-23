@@ -11,7 +11,7 @@ internal sealed class CommandRunTypeParser : TypeParser<CommandRun>
         return CommandRun.TryParse(ctx, null, null, out result);
     }
 
-    public override CompletionResult? TryAutocomplete(ParserContext ctx, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
     {
         CommandRun.TryParse(ctx, null, null, out _);
         return ctx.Completions;
@@ -25,7 +25,7 @@ internal sealed class ExpressionTypeParser<T> : TypeParser<CommandRun<T>>
         return CommandRun<T>.TryParse(ctx, null, out result);
     }
 
-    public override CompletionResult? TryAutocomplete(ParserContext ctx, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
     {
         CommandRun<T>.TryParse(ctx, null, out _);
         return ctx.Completions;
@@ -39,7 +39,7 @@ internal sealed class ExpressionTypeParser<TIn, TOut> : TypeParser<CommandRun<TI
         return CommandRun<TIn, TOut>.TryParse(ctx, out result);
     }
 
-    public override CompletionResult? TryAutocomplete(ParserContext ctx, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
     {
         CommandRun<TIn, TOut>.TryParse(ctx, out _);
         return ctx.Completions;

@@ -31,7 +31,7 @@ public sealed class BlockOutputParser : CustomTypeParser<Type>
         return true;
     }
 
-    public override CompletionResult? TryAutocomplete(ParserContext ctx, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
     {
         Block.TryParseBlock(ctx, null, null, out _);
         return ctx.Completions;
@@ -77,7 +77,7 @@ public sealed class MapBlockOutputParser : CustomTypeParser<Type>
         return true;
     }
 
-    public override CompletionResult? TryAutocomplete(ParserContext ctx, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
     {
         var pipeType = ctx.Bundle.PipedType;
         if (pipeType != null && pipeType.IsGenericType(typeof(IEnumerable<>)))

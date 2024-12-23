@@ -68,7 +68,7 @@ public sealed class TestCustomVarRefParserCommand : ToolshedCommand
             return true;
         }
 
-        public override CompletionResult TryAutocomplete(ParserContext ctx, string? argName)
+        public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
         {
             return new CompletionResult([new("A")], "B");
         }

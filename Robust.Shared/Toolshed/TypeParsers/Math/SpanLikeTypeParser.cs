@@ -79,7 +79,7 @@ public abstract class SpanLikeTypeParser<T, TElem> : TypeParser<T>
         return true;
     }
 
-    public override CompletionResult TryAutocomplete(ParserContext parserContext, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext parserContext, CommandArgument? arg)
     {
         return CompletionResult.FromHint(typeof(T).PrettyName());
     }

@@ -53,7 +53,7 @@ public sealed class VarTypeParser : CustomTypeParser<Type>
         return false;
     }
 
-    public override CompletionResult TryAutocomplete(ParserContext ctx, string? argName)
+    public override CompletionResult TryAutocomplete(ParserContext ctx, CommandArgument? arg)
     {
         return ctx.VariableParser.GenerateCompletions();
     }

@@ -40,10 +40,11 @@ public sealed class ComponentTypeParser : CustomTypeParser<Type>
         return true;
     }
 
-    public override CompletionResult? TryAutocomplete(ParserContext parserContext,
-        string? argName)
+    public override CompletionResult TryAutocomplete(
+        ParserContext parserContext,
+        CommandArgument? arg)
     {
-        return CompletionResult.FromOptions(_factory.AllRegisteredTypes.Select(_factory.GetComponentName));
+        return CompletionResult.FromHintOptions(_factory.AllRegisteredTypes.Select(_factory.GetComponentName), GetArgHint(arg));
     }
 }
 

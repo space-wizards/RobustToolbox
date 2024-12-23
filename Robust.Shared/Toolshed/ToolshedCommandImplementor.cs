@@ -149,8 +149,8 @@ internal sealed class ToolshedCommandImplementor
 
                 ctx.Restore(save);
                 ctx.Error = null;
-                ctx.Completions ??= arg.Parser.TryAutocomplete(ctx, arg.Name);
-                TrySetArgHint(ctx, arg.Name);
+                ctx.Completions ??= arg.Parser.TryAutocomplete(ctx, arg);
+                TrySetArgHint(ctx, arg);
                 return false;
             }
 
@@ -191,8 +191,8 @@ internal sealed class ToolshedCommandImplementor
 
         ctx.Restore(save);
         ctx.Error = null;
-        ctx.Completions ??= arg.Parser.TryAutocomplete(ctx, arg.Name);
-        TrySetArgHint(ctx, arg.Name);
+        ctx.Completions ??= arg.Parser.TryAutocomplete(ctx, arg);
+        TrySetArgHint(ctx, arg);
 
         // TODO TOOLSHED invalid-fail
         // This can technically "fail" to parse a valid command, however this only happens when generating
@@ -201,13 +201,12 @@ internal sealed class ToolshedCommandImplementor
         return false;
     }
 
-
-    private void TrySetArgHint(ParserContext ctx, string argName)
+    private void TrySetArgHint(ParserContext ctx, CommandArgument arg)
     {
         if (ctx.Completions == null)
             return;
 
-        if (_loc.TryGetString($"command-arg-hint-{LocName}-{argName}", out var hint))
+        if (_loc.TryGetString($"command-arg-hint-{LocName}-{arg.Name}", out var hint))
             ctx.Completions.Hint = hint;
     }
 
@@ -609,7 +608,14 @@ internal sealed class CommandMethod
 }
 
 internal readonly record struct ConcreteCommandMethod(MethodInfo Info, CommandArgument[] Args, CommandMethod Base);
-internal readonly record struct CommandArgument(string Name, Type Type, ITypeParser Parser);
+
+public readonly record struct CommandArgument(
+    string Name,
+    Type Type,
+    ITypeParser Parser,
+    bool Optional,
+    object? Default,
+    bool Params);
 
 public sealed class ArgumentParseError(Type type, Type parser) : ConError
 {

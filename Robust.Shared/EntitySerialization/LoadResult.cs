@@ -66,6 +66,4 @@ public sealed class LoadResult
     /// <see cref="MapComponent"/>, and were not listed as orphans
     /// </summary>
     public readonly List<EntityUid> NullspaceEntities = new();
-
-
 }

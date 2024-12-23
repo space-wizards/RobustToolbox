@@ -836,8 +836,8 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
                 goto case MissingEntityBehaviour.AutoIncludeChildren;
             case MissingEntityBehaviour.AutoInclude:
             case MissingEntityBehaviour.AutoIncludeChildren:
-                if (Options.WarnOnAutoInclude)
-                    _log.Warning($"Auto-including entity {EntMan.ToPrettyString(value)} referenced by {EntMan.ToPrettyString(CurrentEntity)}");
+                if (Options.LogAutoInclude is {} level)
+                    _log.Log(level, $"Auto-including entity {EntMan.ToPrettyString(value)} referenced by {EntMan.ToPrettyString(CurrentEntity)}");
                 _autoInclude.Add(value);
                 var id = GetYamlUid(value);
                 return new ValueDataNode(id.ToString(CultureInfo.InvariantCulture));

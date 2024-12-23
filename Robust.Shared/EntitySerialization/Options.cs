@@ -2,6 +2,7 @@
 using JetBrains.Annotations;
 using Robust.Shared.EntitySerialization.Components;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -25,9 +26,10 @@ public record struct SerializationOptions
     public bool ErrorOnOrphan = true;
 
     /// <summary>
-    /// Whether or not to log a warning when auto-including entities while serializing. See <see cref="MissingEntityBehaviour"/>.
+    /// Log level to use when auto-including entities while serializing. Null implies no logs.
+    /// See <see cref="MissingEntityBehaviour"/>.
     /// </summary>
-    public bool WarnOnAutoInclude = true;
+    public LogLevel? LogAutoInclude = LogLevel.Info;
 
     /// <summary>
     /// If true, the serializer will log an error if it encounters a post map-init entity.

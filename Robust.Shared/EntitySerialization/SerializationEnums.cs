@@ -27,7 +27,7 @@ public enum FileCategory : byte
     Map,
 
     /// <summary>
-    /// File is a full game save, and will in general contain one or more maps likely a few null-space entities.
+    /// File is a full game save, and will likely contain at least one map and a few null-space entities.
     /// </summary>
     /// <remarks>
     /// The file might also contain additional yaml entries for things like prototypes uploaded via

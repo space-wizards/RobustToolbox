@@ -304,7 +304,7 @@ namespace Robust.Shared.GameObjects
 
         #region Entity Management
 
-        [Obsolete]
+        /// <inheritdoc />
         public EntityUid CreateEntityUninitialized(string? prototypeName, EntityUid euid, ComponentRegistry? overrides = null)
         {
             return CreateEntity(prototypeName, out _, overrides);

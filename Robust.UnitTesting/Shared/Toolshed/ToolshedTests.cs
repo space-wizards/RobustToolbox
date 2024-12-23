@@ -121,8 +121,8 @@ public sealed class ToolshedTests : ToolshedTest
             // Terminators don't actually discard the final output type if it is the end of the command.;
             AssertResult("testint;", 1);
             AssertResult("testint; testint;", 1);
-            AssertResult("i 2 + { i 2; }", 4);
-            AssertResult("i 2 + { i 2; ; } ;; ;", 4);
+            ParseError<WrongCommandReturn>("i 2 + { i 2; }");
+            ParseError<WrongCommandReturn>("i 2 + { i 2; ; } ;; ;");
         });
     }
 
@@ -190,7 +190,7 @@ public sealed class ToolshedTests : ToolshedTest
     }
 
     [Test]
-    public async Task TestOTerminators()
+    public async Task TestTerminators()
     {
         await Server.WaitAssertion(() =>
         {
@@ -405,14 +405,14 @@ public sealed class ToolshedTests : ToolshedTest
             AssertCompletionEmpty($"testvoid ");
 
             // Without a whitespace, they will still suggest the hint for the command that is currently being typed.
-            AssertCompletionHint("i 1", "Int32");
+            AssertCompletionHint("i 1", "<value (Int32)>");
             AssertCompletionSingle($"i 1 => $x", "$x");
             AssertCompletionContains($"testvoid", "testvoid");
 
             // If an error occurs while parsing something, but tha error is not at the end of the command, we should
             // not generate completions. I.e., we don't want to mislead people into thinking a command is valid and is
             // expecting additional arguments.
-            AssertCompletionHint("i a", "Int32");
+            AssertCompletionHint("i a", "<value (Int32)>");
             AssertCompletionEmpty("i a ");
             AssertCompletionEmpty("i a 1");
             AssertCompletionSingle("i $", "$x");
@@ -445,13 +445,13 @@ public sealed class ToolshedTests : ToolshedTest
 
             // Check completions when typing out: testintstrarg 1 "a"
             AssertCompletionContains("testintstrarg", "testintstrarg");
-            AssertCompletionHint("testintstrarg ", "Int32");
-            AssertCompletionHint("testintstrarg 1", "Int32");
+            AssertCompletionHint("testintstrarg ", "<i (Int32)>");
+            AssertCompletionHint("testintstrarg 1", "<i (Int32)>");
             AssertCompletionSingle("testintstrarg 1 ", "\"");
-            AssertCompletionHint("testintstrarg 1 \"", "<string>");
-            AssertCompletionHint("testintstrarg 1 \"a\"", "<string>");
+            AssertCompletionHint("testintstrarg 1 \"", "<str (String)>");
+            AssertCompletionHint("testintstrarg 1 \"a\"", "<str (String)>");
             AssertCompletionEmpty("testintstrarg 1 \"a\" ");
-            AssertCompletionHint("testintstrarg 1 \"a\" + ", "Int32");
+            AssertCompletionHint("testintstrarg 1 \"a\" + ", "<y (Int32)>");
 
             AssertCompletionContains("i 5 iota reduce { ma", "max");
             AssertCompletionContains("i 5 iota reduce { max $", "$x", "$value");

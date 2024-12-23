@@ -149,7 +149,7 @@ command-description-max =
     Returns the maximum of two values.
 command-description-BitAndCommand =
     Performs bitwise AND.
-command-description-BitOrCommand =
+command-description-bitor =
     Performs bitwise OR.
 command-description-BitXorCommand =
     Performs bitwise XOR.
@@ -277,7 +277,7 @@ command-description-ModVecCommand =
     Performs the modulus operation over the input with the given constant right-hand value.
 command-description-BitAndNotCommand =
     Performs bitwise AND-NOT over the input.
-command-description-BitOrNotCommand =
+command-description-bitornot =
     Performs bitwise OR-NOT over the input.
 command-description-BitXnorCommand =
     Performs bitwise XNOR over the input.

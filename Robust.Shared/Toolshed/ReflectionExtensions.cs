@@ -191,8 +191,20 @@ internal static class ReflectionExtensions
     }
 
     // IEnumerable<EntityUid> ^ IEnumerable<T> -> EntityUid
+    // List<T> ^ IEnumerable<T> -> EntityUid
+    // T[] ^ IEnumerable<T> -> EntityUid
     public static Type Intersect(this Type left, Type right)
     {
+        // TODO TOOLSHED implement this properly.
+        // AAAAHhhhhh
+        // this is all sphagetti and needs fixing.
+        // I'm just bodging a fix for now that makes it treat arrays as equivalent to a list.
+        if (left.IsArray)
+            return Intersect(typeof(List<>).MakeGenericType(left.GetElementType()!), right);
+
+        if (right.IsArray)
+            return Intersect(left, typeof(List<>).MakeGenericType(right.GetElementType()!));
+
         if (!left.IsGenericType)
             return left;
 

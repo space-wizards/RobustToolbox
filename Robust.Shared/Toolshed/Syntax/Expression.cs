@@ -95,7 +95,7 @@ public sealed class CommandRun
             return false;
         }
 
-        bool expectCommand;
+        bool commandExpected;
         while (true)
         {
             if (!ParsedCommand.TryParse(ctx, pipedType, out var cmd))
@@ -109,20 +109,14 @@ public sealed class CommandRun
             cmds.Add((cmd, (start, ctx.Index)));
             ctx.ConsumeWhitespace();
 
-            expectCommand = false;
-            if (ctx.EatCommandTerminators(ref pipedType))
-            {
-                // If a command was terminated by an explicit pipe symbol (i.e., '|'), then it implies the user intends
-                // to write another command after this one.
-                expectCommand = pipedType != null;
-            }
+            ctx.EatCommandTerminators(ref pipedType, out commandExpected);
 
             // If the command run encounters a block terminator we exit out.
             // The parser that pushed the block terminator is what should actually eat & pop it, so that it can
             // return appropriate errors if the block was not terminated.
             if (ctx.PeekBlockTerminator())
             {
-                if (!expectCommand)
+                if (!commandExpected)
                     break;
 
                 // Lets enforce that poeple don't end command blocks with a dangling explicit pipe.
@@ -139,7 +133,7 @@ public sealed class CommandRun
             {
                 // If the last command was terminated by an explicit pipe symbol we require that there be a follow-up
                 // command
-                if (!expectCommand)
+                if (!commandExpected)
                     break;
 
                 if (ctx.GenerateCompletions)

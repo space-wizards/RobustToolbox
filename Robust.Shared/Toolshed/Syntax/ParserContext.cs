@@ -428,8 +428,10 @@ public sealed partial class ParserContext
     /// Attempts to consume a single command terminator
     /// </summary>
     /// <param name="pipedType"></param>
-    public bool EatCommandTerminator(ref Type? pipedType)
+    public bool EatCommandTerminator(ref Type? pipedType, out bool commandExpected)
     {
+        commandExpected = false;
+
         // Command terminator drops piped values.
         if (EatMatch(new Rune(';')))
         {
@@ -440,6 +442,7 @@ public sealed partial class ParserContext
         // Explicit pipe operator keeps piped value, but is only valid if there is a piped value.
         if (pipedType != null && pipedType != typeof(void) && EatMatch(new Rune('|')))
         {
+            commandExpected = true;
             return true;
         }
 
@@ -448,7 +451,6 @@ public sealed partial class ParserContext
         {
             pipedType = null;
             return true;
-
         }
 
         return false;
@@ -457,20 +459,16 @@ public sealed partial class ParserContext
     /// <summary>
     /// Attempts to repeatedly consume command terminators, and return true if any were consumed.
     /// </summary>
-    public bool EatCommandTerminators(ref Type? pipedType)
+    public void EatCommandTerminators(ref Type? pipedType, out bool commandExpected)
     {
-        if (!EatCommandTerminator(ref pipedType))
-            return false;
+        if (!EatCommandTerminator(ref pipedType, out commandExpected))
+            return;
 
-        // Maybe one day we want to allow ';;' to have special meaning?
-        // But for now, just eat em all.
         ConsumeWhitespace();
-        while (EatCommandTerminator(ref pipedType))
+        while (!commandExpected && EatCommandTerminator(ref pipedType, out commandExpected))
         {
             ConsumeWhitespace();
         }
-
-        return true;
     }
 }
 

@@ -76,6 +76,30 @@ public sealed class TestCustomVarRefParserCommand : ToolshedCommand
 }
 
 [ToolshedCommand]
+public sealed class TestOptionalArgsCommand : ToolshedCommand
+{
+    [CommandImplementation]
+    public int[] Impl(int x, int y = 0, int z = 1)
+        => [x, y, z];
+}
+
+[ToolshedCommand]
+public sealed class TestParamsCollectionCommand : ToolshedCommand
+{
+    [CommandImplementation]
+    public int[] Impl(int x, int y = 0, params int[] others)
+        => [x, y, ..others];
+}
+
+[ToolshedCommand]
+public sealed class TestParamsOnlyCommand : ToolshedCommand
+{
+    [CommandImplementation]
+    public int[] Impl(params int[] others)
+        => others;
+}
+
+[ToolshedCommand]
 public sealed class TestCustomParserCommand : ToolshedCommand
 {
     [CommandImplementation]

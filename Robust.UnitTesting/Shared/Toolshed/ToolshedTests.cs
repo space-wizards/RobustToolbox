@@ -187,6 +187,174 @@ public sealed class ToolshedTests : ToolshedTest
     }
 
     [Test]
+    public async Task TestOTerminators()
+    {
+        await Server.WaitAssertion(() =>
+        {
+            // Baseline check that these commands work:
+            AssertResult("i 1", 1);
+            AssertResult("i 1 + 1", 2);
+            AssertResult("i { i 1 }", 1);
+
+            // Trailing terminators have no clear effect.
+            AssertResult("i 1;", 1);
+            AssertResult("i { i 1 };", 1);
+
+            // Simple explicit piping works
+            AssertResult("i 1 | + 1", 2);
+
+            // Explicit pipes imply a command is expected. Ending a command or a block after a pipe should error.
+            ParseError<OutOfInputError>("i 1 |");
+            ParseError<UnexpectedCloseBrace>("i { i 1 | }");
+
+            // A terminator inside a block or command run doesn't pipe anything;
+            ParseError<NoImplementationError>("i 1 ; + 1");
+            ParseError<WrongCommandReturn>("i { i 1 ; }");
+
+            // Check double terminators
+            // A starting terminators/pipes will try to be parsed as a command.
+            ParseError<NotValidCommandError>("|");
+            ParseError<NotValidCommandError>(";");
+            ParseError<NotValidCommandError>(";;");
+            ParseError<NotValidCommandError>("||");
+            ParseError<NotValidCommandError>("|;");
+            ParseError<NotValidCommandError>(";|");
+            AssertResult("i 1 ;;", 1);
+
+            // Consecutive pipes will try to parse the second one as the command, which will not succeed.
+            ParseError<NotValidCommandError>("i 1 ||");
+            ParseError<NotValidCommandError>("i 1 |;");
+            ParseError<NotValidCommandError>("i 1 ;|");
+            AssertResult("i 1 ;; i 1", 1);
+            ParseError<NotValidCommandError>("i 1 || i 1");
+            ParseError<NotValidCommandError>("i 1 |; i 1");
+            ParseError<NotValidCommandError>("i 1 ;| i 1");
+            ParseError<NoImplementationError>("i 1 ;; + 1");
+            ParseError<NotValidCommandError>("i 1 || + 1");
+            ParseError<NotValidCommandError>("i 1 |; + 1");
+            ParseError<NotValidCommandError>("i 1 ;| + 1");
+        });
+    }
+
+    [Test]
+    public async Task TestOptionalArgs()
+    {
+        await Server.WaitAssertion(() =>
+        {
+            // Check that straightforward optional args work.
+            ParseError<ExpectedArgumentError>("testoptionalargs ");
+            AssertResult("testoptionalargs 1", new[] {1, 0, 1});
+            AssertResult("testoptionalargs 1 2", new[] {1, 2, 1});
+            AssertResult("testoptionalargs 1 2 3", new[] {1, 2, 3});
+            AssertResult("testoptionalargs 1 2 3 append 4", new[] {1, 2, 3, 4});
+            ParseError<UnknownCommandError>("testoptionalargs 1 2 3 4");
+            ParseError<InvalidNumber<int>>("testoptionalargs 1 append 4");
+            ParseError<InvalidNumber<int>>("testoptionalargs 1 2 append 4");
+
+            // Check that semicolon terminators interrupt optional args
+            ParseError<ExpectedArgumentError>("testoptionalargs ;");
+            AssertResult("testoptionalargs 1;", new[] {1, 0, 1});
+            AssertResult("testoptionalargs 1 2;", new[] {1, 2, 1});
+            AssertResult("testoptionalargs 1 2 3;", new[] {1, 2, 3});
+            ParseError<UnknownCommandError>("testoptionalargs 1 2 3; 4");
+            AssertResult("testoptionalargs 1 2; i 3", 3);
+            AssertResult("testoptionalargs 1 2 3; i 4", 4);
+
+            // Check that explicit pipes interrupt optional args
+            ParseError<ExpectedArgumentError>("testoptionalargs |");
+            ParseError<OutOfInputError>("testoptionalargs 1 |");
+            AssertResult("testoptionalargs 1 | append 4", new[] {1, 0, 1, 4});
+            AssertResult("testoptionalargs 1 2 | append 4", new[] {1, 2, 1, 4});
+            AssertResult("testoptionalargs 1 2 3 | append 4", new[] {1, 2, 3, 4});
+
+            // Check that variables and blocks can be used to specify optional args;
+            AssertResult("i -1 => $i", -1);
+            AssertResult("testoptionalargs 1 $i", new[] {1, -1, 1});
+            AssertResult("testoptionalargs 1 $i 2", new[] {1, -1, 2});
+            AssertResult("testoptionalargs 1 { i -1 }", new[] {1, -1, 1});
+            AssertResult("testoptionalargs 1 { i -1 } 2", new[] {1, -1, 2});
+
+            // Repeat the above groups of tests, but within a command block.
+            // I.e., wrap the commands in "i 1 join { <old command> }" to prepend "1" to the results.
+
+            // This first block also effectively checks that closing braces can interrupt optional args
+            ParseError<ExpectedArgumentError>("i 1 join { testoptionalargs } ");
+            AssertResult("i 1 join { testoptionalargs 1 } ", new[] {1, 1, 0, 1});
+            AssertResult("i 1 join { testoptionalargs 1 2 }", new[] {1, 1, 2, 1});
+            AssertResult("i 1 join { testoptionalargs 1 2 3 }", new[] {1, 1, 2, 3});
+            AssertResult("i 1 join { testoptionalargs 1 2 3 append 4 }", new[] {1, 1, 2, 3, 4});
+            ParseError<UnknownCommandError>("testoptionalargs 1 2 3 4 }");
+            ParseError<InvalidNumber<int>>("testoptionalargs 1 2 i 3 }");
+            ParseError<NoImplementationError>("testoptionalargs 1 2 3 i 4 }");
+
+            ParseError<ExpectedArgumentError>("i 1 join { testoptionalargs | }");
+            ParseError<UnexpectedCloseBrace>("i 1 join { testoptionalargs 1 | }");
+            AssertResult("i 1 join { testoptionalargs 1 | append 4 }", new[] {1, 1, 0, 1, 4});
+            AssertResult("i 1 join { testoptionalargs 1 2 | append 4 }", new[] {1, 1, 2, 1, 4});
+            AssertResult("i 1 join { testoptionalargs 1 2 3 | append 4 }", new[] {1, 1, 2, 3, 4});
+
+            AssertResult("i 1 join { testoptionalargs 1 $i }", new[] {1, 1, -1, 1});
+            AssertResult("i 1 join { testoptionalargs 1 $i 2 }", new[] {1, 1, -1, 2});
+            AssertResult("i 1 join { testoptionalargs 1 { i -1 } }", new[] {1, 1, -1, 1});
+            AssertResult("i 1 join { testoptionalargs 1 { i -1 } 2 }", new[] {1, 1, -1, 2});
+        });
+    }
+
+    [Test]
+    public async Task TestParamsCollections()
+    {
+        await Server.WaitAssertion(() =>
+        {
+            // Check that straightforward optional args work.
+            ParseError<ExpectedArgumentError>("testparamscollection");
+            AssertResult("testparamsonly", new int[] {});
+            AssertResult("testparamscollection 1", new[] {1, 0});
+            AssertResult("testparamscollection 1 2", new[] {1, 2});
+            AssertResult("testparamscollection 1 2 3", new[] {1, 2, 3});
+            AssertResult("testparamscollection 1 2 3 4", new[] {1, 2, 3, 4});
+            ParseError<InvalidNumber<int>>("testparamscollection 1 2 append 4");
+            ParseError<InvalidNumber<int>>("testparamscollection 1 2 3 append 4");
+            ParseError<InvalidNumber<int>>("testparamscollection 1 2 3 4 append 4");
+
+            // Check that semicolon terminators interrupt optional args
+            ParseError<ExpectedArgumentError>("testparamscollection ;");
+            AssertResult("testparamsonly;", new int[] { });
+            AssertResult("testparamscollection 1;", new[] {1, 0});
+            AssertResult("testparamscollection 1 2;", new[] {1, 2});
+            AssertResult("testparamscollection 1 2 3;", new[] {1, 2, 3});
+            AssertResult("testparamscollection 1 2 3 4;", new[] {1, 2, 3, 4});
+            AssertResult("testparamscollection 1 2; i 4", 4);
+            AssertResult("testparamscollection 1 2 3; i 4", 4);
+            AssertResult("testparamscollection 1 2 3 4; i 4", 4);
+
+            // Check that explicit pipes interrupt optional args
+            ParseError<ExpectedArgumentError>("testparamscollection |");
+            ParseError<OutOfInputError>("testparamsonly |");
+            ParseError<OutOfInputError>("testparamscollection 1 |");
+            ParseError<OutOfInputError>("testparamscollection 1 2 |");
+            ParseError<OutOfInputError>("testparamscollection 1 2 3 |");
+            ParseError<OutOfInputError>("testparamscollection 1 2 3 4 |");
+            AssertResult("testparamsonly | append 1", new[] {1});
+            AssertResult("testparamscollection 1 | append 1", new[] {1, 0, 1});
+            AssertResult("testparamscollection 1 2 | append 1", new[] {1, 2, 1});
+            AssertResult("testparamscollection 1 2 3 | append 1", new[] {1, 2, 3, 1});
+            AssertResult("testparamscollection 1 2 3 4 | append 1", new[] {1, 2, 3, 4, 1});
+
+            // Check that variables and blocks can be used to specify args inside params arrays;
+            AssertResult("i -1 => $i", -1);
+            AssertResult("testparamscollection 1 2 3 $i 5", new[] {1, 2, 3, -1, 5});
+            AssertResult("testparamscollection 1 2 3 { i -1 } 5", new[] {1, 2, 3, -1, 5});
+
+            // Check that closing braces interrupt optional args
+            AssertResult("i 1 join { testparamsonly }", new[] {1});
+            AssertResult("i 1 join { testparamscollection 1 }", new[] {1, 1, 0});
+            AssertResult("i 1 join { testparamscollection 1 2 }", new[] {1, 1, 2});
+            AssertResult("i 1 join { testparamscollection 1 2 3 }", new[] {1, 1, 2, 3});
+            AssertResult("i 1 join { testparamscollection 1 2 3 4 }", new[] {1, 1, 2, 3, 4});
+        });
+    }
+
+    [Test]
     public async Task TestCompletions()
     {
         await Server.WaitAssertion(() =>

@@ -23,17 +23,17 @@ public sealed class ExplainCommand : ToolshedCommand
             {
                 var pipeArg = cmd.Method.Base.PipeArg;
                 DebugTools.AssertNotNull(pipeArg);
-                builder.Append($"<{pipeArg?.Name} ({ToolshedCommandImplementor.GetFriendlyName(cmd.PipedType)})> -> ");
+                builder.Append($"<{pipeArg?.Name} ({cmd.PipedType.PrettyName()})> -> ");
             }
 
             if (cmd.Bundle.Inverted)
                 builder.Append("not ");
 
             builder.Append($"{name}");
-            foreach (var (argName, argType, _, optional, _, @params) in cmd.Method.Args)
+            foreach (var arg in cmd.Method.Args)
             {
-                aaaa
-                builder.Append($" <{argName} ({ToolshedCommandImplementor.GetFriendlyName(argType)})>");
+                builder.Append(' ');
+                builder.Append(GetArgHint(arg, arg.Type));
             }
 
             builder.AppendLine();

@@ -103,7 +103,7 @@ internal sealed class ValueRefTypeParser<T> : TypeParser<ValueRef<T>>
         if (parser == null)
             return CompletionResult.FromHint($"<variable or block of type {typeof(T).PrettyName()}>");
 
-        var res = parser.TryAutocomplete(ctx, null);
+        var res = parser.TryAutocomplete(ctx, arg);
         return res ?? CompletionResult.FromHint($"<variable, block, or value of type {typeof(T).PrettyName()}>");
     }
 

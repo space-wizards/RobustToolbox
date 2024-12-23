@@ -53,8 +53,8 @@ internal sealed class EntityTypeParser : TypeParser<EntityUid>
         return TryParseEntity(_entMan, parser, out result);
     }
 
-    public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
-        => CompletionResult.FromHint(GetArgHint(arg, typeof(NetEntity)));
+    public override CompletionResult TryAutocomplete(ParserContext ctx, CommandArgument? arg)
+        => CompletionResult.FromHint(ToolshedCommand.GetArgHint(arg, typeof(NetEntity)));
 }
 
 internal sealed class NetEntityTypeParser : TypeParser<NetEntity>
@@ -100,8 +100,8 @@ internal sealed class NetEntityTypeParser : TypeParser<NetEntity>
         return false;
     }
 
-    public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
-        => CompletionResult.FromHint(GetArgHint(arg, typeof(NetEntity)));
+    public override CompletionResult TryAutocomplete(ParserContext ctx, CommandArgument? arg)
+        => CompletionResult.FromHint(ToolshedCommand.GetArgHint(arg, typeof(NetEntity)));
 }
 
 internal sealed class EntityTypeParser<T> : TypeParser<Entity<T>>
@@ -130,7 +130,7 @@ internal sealed class EntityTypeParser<T> : TypeParser<Entity<T>>
         if (!ctx.CheckInvokable<EntitiesCommand>())
             return null;
 
-        var hint = GetArgHint(arg, typeof(NetEntity));
+        var hint = ToolshedCommand.GetArgHint(arg, typeof(NetEntity));
 
         // Avoid dumping too many entities
         if (_entMan.Count<T>() > 128)
@@ -174,7 +174,7 @@ internal sealed class EntityTypeParser<T1, T2> : TypeParser<Entity<T1, T2>>
         if (!ctx.CheckInvokable<EntitiesCommand>())
             return null;
 
-        var hint = GetArgHint(arg, typeof(NetEntity));
+        var hint = ToolshedCommand.GetArgHint(arg, typeof(NetEntity));
         if (_entMan.Count<T1>() > 128)
             return CompletionResult.FromHint(hint);
 
@@ -220,7 +220,7 @@ internal sealed class EntityTypeParser<T1, T2, T3> : TypeParser<Entity<T1, T2, T
         if (!ctx.CheckInvokable<EntitiesCommand>())
             return null;
 
-        var hint = GetArgHint(arg, typeof(NetEntity));
+        var hint = ToolshedCommand.GetArgHint(arg, typeof(NetEntity));
         if (_entMan.Count<T1>() > 128)
             return CompletionResult.FromHint(hint);
 

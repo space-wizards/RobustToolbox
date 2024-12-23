@@ -55,7 +55,7 @@ internal sealed class ToolshedCommandImplementor
             .GetMethods(ToolshedCommand.MethodFlags)
             .Where(x => x.GetCustomAttribute<CommandImplementationAttribute>() is { } attr &&
                         attr.SubCommand == SubCommand)
-            .Select(x => new CommandMethod(x))
+            .Select(x => new CommandMethod(x, this))
             .ToArray();
 
         LocName = Owner.Name.All(char.IsAsciiLetterOrDigit)
@@ -126,15 +126,38 @@ internal sealed class ToolshedCommandImplementor
         var start = ctx.Index;
         var save = ctx.Save();
         ctx.ConsumeWhitespace();
+        DebugTools.AssertNotNull(arg.Parser);
 
+        object? parsed;
         if (ctx.PeekCommandOrBlockTerminated() || ctx is {OutOfInput: true, GenerateCompletions: false})
         {
-            ctx.Error = new ExpectedArgumentError(arg.Type);
-            ctx.Error.Contextualize(ctx.Input, (start, ctx.Index+1));
-            return false;
-        }
+            if (!arg.IsOptional)
+            {
+                ctx.Error = new ExpectedArgumentError(arg.Type);
+                ctx.Error.Contextualize(ctx.Input, (start, ctx.Index + 1));
+                return false;
+            }
 
-        if (!arg.Parser.TryParse(ctx, out var parsed))
+            parsed = arg.DefaultValue;
+        }
+        else if (arg.Parser!.TryParse(ctx, out parsed))
+        {
+            // All arguments should have been parsed as a ValueRef<T> or Block, unless this is using some custom type parser
+#if DEBUG
+            var t = parsed.GetType();
+            if (arg.Parser.GetType().IsCustomParser())
+            {
+                DebugTools.Assert(t.IsAssignableTo(arg.Type)
+                                  || t.IsAssignableTo(typeof(Block))
+                                  || t.IsValueRef());
+            }
+            else if (arg.Type.IsAssignableTo(typeof(Block)))
+                DebugTools.Assert(t.IsAssignableTo(typeof(Block)));
+            else
+                DebugTools.Assert(t.IsValueRef());
+#endif
+        }
+        else
         {
             if (ctx.GenerateCompletions)
             {
@@ -163,21 +186,6 @@ internal sealed class ToolshedCommandImplementor
             return false;
         }
 
-        // All arguments should have been parsed as a ValueRef<T> or Block, unless this is using some custom type parser
-#if DEBUG
-        var t = parsed.GetType();
-        if (arg.Parser.GetType().IsCustomParser())
-        {
-            DebugTools.Assert(t.IsAssignableTo(arg.Type)
-                              || t.IsAssignableTo(typeof(Block))
-                              || t.IsValueRef());
-        }
-        else if (arg.Type.IsAssignableTo(typeof(Block)))
-            DebugTools.Assert(t.IsAssignableTo(typeof(Block)));
-        else
-            DebugTools.Assert(t.IsValueRef());
-#endif
-
         args ??= new();
         args[arg.Name] = parsed;
 
@@ -191,7 +199,7 @@ internal sealed class ToolshedCommandImplementor
 
         ctx.Restore(save);
         ctx.Error = null;
-        ctx.Completions ??= arg.Parser.TryAutocomplete(ctx, arg);
+        ctx.Completions ??= arg.Parser!.TryAutocomplete(ctx, arg);
         TrySetArgHint(ctx, arg);
 
         // TODO TOOLSHED invalid-fail
@@ -317,18 +325,45 @@ internal sealed class ToolshedCommandImplementor
 
         var args = info.GetParameters()
             .Where(x => x.IsCommandArgument())
-            .Select(x => new CommandArgument(x.Name!, x.ParameterType, GetArgumentParser(x)))
+            .Select(GetCommandArgument)
             .ToArray();
 
         _methodCache[idx] = method = new(info, args, cmd);
         return true;
     }
 
-    private ITypeParser GetArgumentParser(ParameterInfo param)
+    internal CommandArgument GetCommandArgument(ParameterInfo arg)
     {
+        var argType = arg.ParameterType;
+
+        // Is this a "params T[] argument"?
+        var isParams = arg.HasCustomAttribute<ParamArrayAttribute>();
+        if (isParams)
+        {
+            if (!argType.IsArray)
+                throw new NotSupportedException(".net 9 params collections are not yet supported");
+
+            // We parse each element directly, as opposed to trying to parse an array.
+            argType = argType.GetElementType()!;
+        }
+
+        return new CommandArgument(
+            arg.Name!,
+            argType,
+            GetArgumentParser(arg, argType),
+            arg.IsOptional,
+            arg.DefaultValue,
+            isParams);
+    }
+
+    private ITypeParser? GetArgumentParser(ParameterInfo param, Type type)
+    {
+        if (type.ContainsGenericParameters)
+            return null;
+
         var attrib = param.GetCustomAttribute<CommandArgumentAttribute>();
         var parser = attrib?.CustomParser is not {} custom
-            ? _toolshed.GetArgumentParser(param.ParameterType)
+            ? _toolshed.GetArgumentParser(type)
             : _toolshed.GetArgumentParser(_toolshed.GetCustomParser(custom));
 
         if (parser == null)
@@ -509,20 +544,21 @@ internal sealed class ToolshedCommandImplementor
             builder.Append(Environment.NewLine + "  ");
 
             if (method.PipeArg != null)
-                builder.Append($"<{method.PipeArg.Name} ({GetFriendlyName(method.PipeArg.ParameterType)})> -> ");
+                builder.Append($"<{method.PipeArg.Name} ({method.PipeArg.ParameterType.PrettyName()})> -> ");
 
             if (method.Invertible)
                 builder.Append("[not] ");
 
             builder.Append(FullName);
 
-            foreach (var (argName, argType) in method.Arguments)
+            foreach (var arg in method.Arguments)
             {
-                builder.Append($" <{argName} ({GetFriendlyName(argType)})>");
+                builder.Append(' ');
+                builder.Append(ToolshedCommand.GetArgHint(arg, arg.Type));
             }
 
             if (method.Info.ReturnType != typeof(void))
-                builder.Append($" -> {GetFriendlyName(method.Info.ReturnType)}");
+                builder.Append($" -> {method.Info.ReturnType.PrettyName()}");
         }
 
         return builder.ToString();
@@ -536,33 +572,11 @@ internal sealed class ToolshedCommandImplementor
     {
         return _loc.GetString(DescriptionLocKey());
     }
-
-    public static string GetFriendlyName(Type type)
-    {
-        var friendlyName = type.Name;
-        if (!type.IsGenericType)
-            return friendlyName;
-
-        var iBacktick = friendlyName.IndexOf('`');
-        if (iBacktick > 0)
-            friendlyName = friendlyName.Remove(iBacktick);
-
-        friendlyName += "<";
-        var typeParameters = type.GetGenericArguments();
-        for (var i = 0; i < typeParameters.Length; ++i)
-        {
-            var typeParamName = GetFriendlyName(typeParameters[i]);
-            friendlyName += (i == 0 ? typeParamName : "," + typeParamName);
-        }
-        friendlyName += ">";
-
-        return friendlyName;
-    }
 }
 
 
 /// <summary>
-/// Struct for caching information about a command's methods. Helps reduce LINQ & reflection calls when attempting
+/// Class for caching information about a command's methods. Helps reduce LINQ & reflection calls when attempting
 /// to find matching methods.
 /// </summary>
 internal sealed class CommandMethod
@@ -586,9 +600,9 @@ internal sealed class CommandMethod
     /// </summary>
     public readonly bool PipeGeneric;
 
-    public readonly (string, Type)[] Arguments;
+    public readonly CommandArgument[] Arguments;
 
-    public CommandMethod(MethodInfo info)
+    public CommandMethod(MethodInfo info, ToolshedCommandImplementor impl)
     {
         Info = info;
         PipeArg = info.ConsoleGetPipedArgument();
@@ -596,7 +610,7 @@ internal sealed class CommandMethod
 
         Arguments = info.GetParameters()
             .Where(x => x.IsCommandArgument())
-            .Select(x => (x.Name ?? string.Empty, x.ParameterType))
+            .Select(impl.GetCommandArgument)
             .ToArray();
 
         if (!info.IsGenericMethodDefinition)
@@ -612,10 +626,10 @@ internal readonly record struct ConcreteCommandMethod(MethodInfo Info, CommandAr
 public readonly record struct CommandArgument(
     string Name,
     Type Type,
-    ITypeParser Parser,
-    bool Optional,
-    object? Default,
-    bool Params);
+    ITypeParser? Parser,
+    bool IsOptional,
+    object? DefaultValue,
+    bool IsParamsCollection);
 
 public sealed class ArgumentParseError(Type type, Type parser) : ConError
 {

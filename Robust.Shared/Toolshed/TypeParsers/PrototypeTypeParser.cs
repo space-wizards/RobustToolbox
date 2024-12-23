@@ -55,7 +55,7 @@ public sealed class ProtoIdTypeParser<T> : TypeParser<ProtoId<T>>
             return _completions;
 
         _proto.TryGetKindFrom<T>(out var kind);
-        var hint = GetArgHint(arg, typeof(ProtoId<T>));
+        var hint = ToolshedCommand.GetArgHint(arg, typeof(ProtoId<T>));
 
         _completions = _proto.Count<T>() < 256
             ? CompletionResult.FromHintOptions( CompletionHelper.PrototypeIDs<T>(proto: _proto), hint)

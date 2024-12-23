@@ -49,25 +49,9 @@ public abstract class BaseParser<T> : ITypeParser, IPostInjectInit where T : not
 
     public abstract CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg);
 
-    /// <summary>
-    /// Helper method for generating auto-completion hints while parsing command arguments.
-    /// </summary>
-    protected string GetArgHint(CommandArgument? arg, Type? t = null)
+    protected string GetArgHint(CommandArgument? arg)
     {
-        var type = (t ?? typeof(T)).PrettyName();
-
-        if (arg == null)
-            return type;
-
-        // optional arguments wrapped in square braces, inspired by the syntax of man pages
-        if (arg.Value.Optional)
-            return $"[{arg.Value.Name} ({type})]";
-
-        // ellipses for params / variable length arguments
-        if (arg.Value.Params)
-            return $"[{arg.Value.Name} ({type})]...";
-
-        return $"<{arg.Value.Name} ({type})>";
+        return ToolshedCommand.GetArgHint(arg, typeof(T));
     }
 
     public Type Parses => typeof(T);

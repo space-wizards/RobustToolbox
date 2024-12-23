@@ -1,4 +1,6 @@
-﻿namespace Robust.Shared.Toolshed;
+﻿using System;
+
+namespace Robust.Shared.Toolshed;
 
 public abstract partial class ToolshedCommand
 {
@@ -32,5 +34,26 @@ public abstract partial class ToolshedCommand
     public override string ToString()
     {
         return Name;
+    }
+
+    /// <summary>
+    /// Helper method for generating auto-completion hints while parsing command arguments.
+    /// </summary>
+    public static string GetArgHint(CommandArgument? arg, Type t)
+    {
+        var type = t.PrettyName();
+
+        if (arg == null)
+            return type;
+
+        // optional arguments wrapped in square braces, inspired by the syntax of man pages
+        if (arg.Value.IsOptional)
+            return $"[{arg.Value.Name} ({type})]";
+
+        // ellipses for params / variable length arguments
+        if (arg.Value.IsParamsCollection)
+            return $"[{arg.Value.Name} ({type})]...";
+
+        return $"<{arg.Value.Name} ({type})>";
     }
 }

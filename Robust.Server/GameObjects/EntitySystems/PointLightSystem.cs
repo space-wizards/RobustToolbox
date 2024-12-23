@@ -13,17 +13,16 @@ namespace Robust.Server.GameObjects;
 {
     [Dependency] private readonly MetaDataSystem _metadata = default!;
     [Dependency] private readonly LightTreeSystem _lightTree = default!;
-    [Dependency] private readonly SharedContainerSystem _container = default!;
 
     public override void Initialize()
     {
         base.Initialize();
         SubscribeLocalEvent<PointLightComponent, ComponentGetState>(OnLightGetState);
-        //SubscribeLocalEvent<PointLightComponent, ComponentStartup>(OnLightStartup);
         SubscribeLocalEvent<PointLightComponent, EntGotInsertedIntoContainerMessage>(OnInserted);
         SubscribeLocalEvent<PointLightComponent, EntGotRemovedFromContainerMessage>(OnRemoved);
     }
 
+    /// This is public just so that the LightTreeSystem can call it
     public void OnLightStartup(EntityUid uid, PointLightComponent component, ComponentStartup args)
     {
         UpdatePriority(uid, component, MetaData(uid));
@@ -37,7 +36,6 @@ namespace Robust.Server.GameObjects;
 
     private void OnInserted(EntityUid uid, PointLightComponent component, EntGotInsertedIntoContainerMessage args)
     {
-        // var isInContainer = _container.IsEntityOrParentInContainer(uid, meta, xform);
         SetContainerOccluded(uid, args.Container.OccludesLight, component);
     }
 

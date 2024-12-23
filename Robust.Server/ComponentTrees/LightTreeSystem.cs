@@ -21,6 +21,7 @@ public sealed class LightTreeSystem : ComponentTreeSystem<LightTreeComponent, Po
     protected override void OnCompStartup(EntityUid uid, PointLightComponent component, ComponentStartup args)
     {
         base.OnCompStartup(uid, component, args);
+        /// This feels like a poor workaround to the fact that Entites can't have duplicate subscriptions to the same event, but it works. 
         _pointLightSystem.OnLightStartup(uid, component, args);
     }
 

@@ -520,8 +520,6 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
             CurrentReadingEntityComponents.EnsureCapacity(componentList.Count);
             foreach (var compData in componentList.Cast<MappingDataNode>())
             {
-                var datanode = compData.Copy();
-                datanode.Remove("type");
                 var value = ((ValueDataNode)compData["type"]).Value;
                 if (!_factory.TryGetRegistration(value, out var reg))
                 {
@@ -531,6 +529,7 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
                 }
 
                 var compType = reg.Type;
+                MappingDataNode datanode;
                 if (prototype?.Components != null && prototype.Components.TryGetValue(value, out var protoData))
                 {
                     // Previously this method used generic composition pushing. I.e.:
@@ -549,9 +548,15 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
                     // If we want to support this, we need to change entity serialization so that it doesn't do a simple
                     // diff with respect to the prototype data and instead does some kind of inheritance subtraction / removal.
 
-                    datanode = _seriMan.CombineMappings(protoData.Mapping, datanode);
+                    datanode = _seriMan.CombineMappings(compData, protoData.Mapping);
+                }
+                else
+                {
+                    datanode = compData.ShallowClone();
                 }
 
+
+                datanode.Remove("type");
                 CurrentComponent = value;
                 CurrentReadingEntityComponents[value] = (IComponent) _seriMan.Read(compType, datanode, this)!;
                 CurrentComponent = null;

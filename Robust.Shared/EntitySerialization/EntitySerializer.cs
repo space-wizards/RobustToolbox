@@ -804,7 +804,15 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
             return;
 
         if (_yamlQuery.TryGetComponent(uid, out var comp) && comp.Uid > 0 && YamlIds.Add(comp.Uid))
+        {
+            if (Truncated.Contains(uid))
+            {
+                _log.Error(
+                    "Including a previously truncated entity within the serialization process? Something probably wrong");
+            }
+
             YamlUidMap.Add(uid, comp.Uid);
+        }
         else
             AllocateYamlUid(uid);
     }

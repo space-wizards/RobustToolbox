@@ -12,7 +12,7 @@ public enum FileCategory : byte
     Unknown,
 
     /// <summary>
-    /// File should contain a single root entity, its children, and maybe some null-space entities.
+    /// File should contain a single orphaned entity, its children, and maybe some null-space entities.
     /// </summary>
     Entity,
 

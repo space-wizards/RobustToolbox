@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -43,6 +44,8 @@ public sealed partial class MapLoaderSystem : EntitySystem
 
     private void Write(ResPath path, MappingDataNode data)
     {
+        Log.Info($"Saving serialized results to {path}");
+        path = path.ToRootedPath();
         var document = new YamlDocument(data.ToYaml());
         using var writer = _resourceManager.UserData.OpenWriteText(path);
         {
@@ -81,4 +84,49 @@ public sealed partial class MapLoaderSystem : EntitySystem
                 return true;
         }
     }
+
+    private bool TryGetReader(ResPath resPath, [NotNullWhen(true)] out TextReader? reader)
+    {
+        if (_resourceManager.UserData.Exists(resPath))
+        {
+            // Log warning if file exists in both user and content data.
+            if (_resourceManager.ContentFileExists(resPath))
+                Log.Warning("Reading map user data instead of content");
+
+            reader = _resourceManager.UserData.OpenText(resPath);
+            return true;
+        }
+
+        if (_resourceManager.TryContentFileRead(resPath, out var contentReader))
+        {
+            reader = new StreamReader(contentReader);
+            return true;
+        }
+
+        Log.Error($"File not found: {resPath}");
+        reader = null;
+        return false;
+    }
+
+    /// <summary>
+    /// Helper method for deleting all loaded entities.
+    /// </summary>
+    public void Delete(LoadResult result)
+    {
+        foreach (var uid in result.Maps)
+        {
+            Del(uid);
+        }
+
+        foreach (var uid in result.Orphans)
+        {
+            Del(uid);
+        }
+
+        foreach (var uid in result.Entities)
+        {
+            Del(uid);
+        }
+    }
+
 }

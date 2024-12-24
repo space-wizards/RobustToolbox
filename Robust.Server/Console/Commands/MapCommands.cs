@@ -43,7 +43,7 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            _ent.System<MapLoaderSystem>().TrySaveGrid(uid, args[1]);
+            _ent.System<MapLoaderSystem>().TrySaveGrid(uid, new ResPath(args[1]));
             shell.WriteLine("Save successful. Look in the user data directory.");
         }
 

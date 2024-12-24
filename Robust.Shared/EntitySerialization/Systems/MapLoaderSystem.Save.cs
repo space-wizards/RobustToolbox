@@ -9,6 +9,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.EntitySerialization.Systems;
 
+// This partial class file contains methods for serializing and saving entities, grids, and maps.
 public sealed partial class MapLoaderSystem
 {
     /// <inheritdoc cref="EntitySerializer.OnIsSerializeable"/>
@@ -135,7 +136,7 @@ public sealed partial class MapLoaderSystem
             return false;
         }
 
-        if (cat != FileCategory.Entity)
+        if (cat != FileCategory.Map)
         {
             Log.Error($"Failed to save {ToPrettyString(map)} as a map. Output: {cat}");
             return false;
@@ -150,13 +151,13 @@ public sealed partial class MapLoaderSystem
     /// </summary>
     public bool TrySaveGrid(EntityUid grid, ResPath path, SerializationOptions? options = null)
     {
-        if (!_mapQuery.HasComp(grid))
+        if (!_gridQuery.HasComp(grid))
         {
             Log.Error($"{ToPrettyString(grid)} is not a grid.");
             return false;
         }
 
-        if (_gridQuery.HasComp(grid))
+        if (_mapQuery.HasComp(grid))
         {
             Log.Error($"{ToPrettyString(grid)} is a map, not (just) a grid. Use {nameof(TrySaveMap)}");
             return false;
@@ -188,11 +189,31 @@ public sealed partial class MapLoaderSystem
     }
 
     /// <summary>
-    /// Serialize one or more entities and all of their children to a yaml file.
+    /// Serialize an entities and all of their children to a yaml file.
+    /// This makes no assumptions about the expected entity or resulting file category.
     /// If possible, use the map/grid specific variants instead.
     /// </summary>
-    public bool TrySaveEntities(HashSet<EntityUid> entities, ResPath path, SerializationOptions? options = null)
+    public bool TrySaveGeneric(
+        EntityUid uid,
+        ResPath path,
+        out FileCategory category,
+        SerializationOptions? options = null)
     {
+        return TrySaveGeneric([uid], path, out category, options);
+    }
+
+    /// <summary>
+    /// Serialize one or more entities and all of their children to a yaml file.
+    /// This makes no assumptions about the expected entity or resulting file category.
+    /// If possible, use the map/grid specific variants instead.
+    /// </summary>
+    public bool TrySaveGeneric(
+        HashSet<EntityUid> entities,
+        ResPath path,
+        out FileCategory category,
+        SerializationOptions? options = null)
+    {
+        category = FileCategory.Unknown;
         if (entities.Count == 0)
             return false;
 
@@ -201,7 +222,7 @@ public sealed partial class MapLoaderSystem
         MappingDataNode data;
         try
         {
-            (data, _) = SerializeEntitiesRecursive(entities, opts);
+            (data, category) = SerializeEntitiesRecursive(entities, opts);
         }
         catch (Exception e)
         {

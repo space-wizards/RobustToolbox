@@ -78,8 +78,8 @@ public sealed partial class AutoIncludeSerializationTest : RobustIntegrationTest
         // This will cause the null-space entity to be lost.
         // Save the map, then delete all the entities.
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(5));
-        await server.WaitPost(() => Assert.That(loader.TrySaveMap(mapId, mapPath)));
-        await server.WaitPost(() => Assert.That(loader.TrySaveGrid(grid, gridPath)));
+        Assert.That(loader.TrySaveMap(mapId, mapPath));
+        Assert.That(loader.TrySaveGrid(grid, gridPath));
         await server.WaitPost(() => mapSys.DeleteMap(mapId));
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(1));
         await server.WaitPost(() => entMan.DeleteEntity(nullSpace));
@@ -102,7 +102,7 @@ public sealed partial class AutoIncludeSerializationTest : RobustIntegrationTest
         HashSet<Entity<MapGridComponent>>? loadedGrids = default!;
         await server.WaitAssertion(() => Assert.That(loader.TryLoadMap(mapPath, out loadedMap, out loadedGrids)));
         mapId = loadedMap!.Value.Comp.MapId;
-        Assert.That(loadedGrids.Count, Is.EqualTo(1));
+        Assert.That(loadedGrids, Has.Count.EqualTo(1));
 
         AssertCount(4);
         map = Find(nameof(map), entMan);
@@ -127,8 +127,8 @@ public sealed partial class AutoIncludeSerializationTest : RobustIntegrationTest
         onGrid.Comp2.Entity = nullSpace.Owner;
 
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(5));
-        await server.WaitPost(() => Assert.That(loader.TrySaveMap(mapId, mapPath)));
-        await server.WaitPost(() => Assert.That(loader.TrySaveGrid(grid, gridPath)));
+        Assert.That(loader.TrySaveMap(mapId, mapPath));
+        Assert.That(loader.TrySaveGrid(grid, gridPath));
         await server.WaitPost(() => mapSys.DeleteMap(mapId));
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(1));
         await server.WaitPost(() => entMan.DeleteEntity(nullSpace));
@@ -154,7 +154,7 @@ public sealed partial class AutoIncludeSerializationTest : RobustIntegrationTest
         // Load up the map, and check that the expected entities exist.
         await server.WaitAssertion(() => Assert.That(loader.TryLoadMap(mapPath, out loadedMap, out loadedGrids)));
         mapId = loadedMap!.Value.Comp.MapId;
-        Assert.That(loadedGrids.Count, Is.EqualTo(1));
+        Assert.That(loadedGrids, Has.Count.EqualTo(1));
 
         AssertCount(5);
         map = Find(nameof(map), entMan);
@@ -183,8 +183,8 @@ public sealed partial class AutoIncludeSerializationTest : RobustIntegrationTest
         // By default it should log an error, but tests don't have a nice way to validate that an error was logged, so we'll just suppress it.
         var opts = SerializationOptions.Default with {MissingEntityBehaviour = MissingEntityBehaviour.Ignore};
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(6));
-        await server.WaitPost(() => Assert.That(loader.TrySaveMap(mapId, mapPath, opts)));
-        await server.WaitPost(() => Assert.That(loader.TrySaveGrid(grid, gridPath, opts)));
+        Assert.That(loader.TrySaveMap(mapId, mapPath, opts));
+        Assert.That(loader.TrySaveGrid(grid, gridPath, opts));
         await server.WaitPost(() => mapSys.DeleteMap(mapId));
         await server.WaitPost(() => entMan.DeleteEntity(nullSpace));
         await server.WaitPost(() => entMan.DeleteEntity(otherMap));
@@ -204,7 +204,7 @@ public sealed partial class AutoIncludeSerializationTest : RobustIntegrationTest
         // Check the map file
         await server.WaitAssertion(() => Assert.That(loader.TryLoadMap(mapPath, out loadedMap, out loadedGrids, dOpts)));
         mapId = loadedMap!.Value.Comp.MapId;
-        Assert.That(loadedGrids.Count, Is.EqualTo(1));
+        Assert.That(loadedGrids, Has.Count.EqualTo(1));
         AssertCount(4);
         map = Find(nameof(map), entMan);
         grid = Find(nameof(grid), entMan);
@@ -231,8 +231,10 @@ public sealed partial class AutoIncludeSerializationTest : RobustIntegrationTest
 
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(6));
         opts = opts with {MissingEntityBehaviour = MissingEntityBehaviour.AutoIncludeChildren};
-        await server.WaitPost(() => loader.TrySaveEntity(map.Owner, mapPath, opts));
-        await server.WaitPost(() => loader.TrySaveEntity(grid.Owner, gridPath, opts));
+        Assert.That(loader.TrySaveGeneric(map.Owner, mapPath, out var cat, opts));
+        Assert.That(cat, Is.EqualTo(FileCategory.Unknown));
+        Assert.That(loader.TrySaveGeneric(grid.Owner, gridPath, out cat, opts));
+        Assert.That(cat, Is.EqualTo(FileCategory.Unknown));
         await server.WaitPost(() => mapSys.DeleteMap(mapId));
         await server.WaitPost(() => entMan.DeleteEntity(otherMap));
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(0));
@@ -244,7 +246,7 @@ public sealed partial class AutoIncludeSerializationTest : RobustIntegrationTest
             DeserializationOptions = DeserializationOptions.Default with {LogOrphanedGrids = false}
         };
         LoadResult? result = default;
-        await server.WaitAssertion(() => Assert.That(loader.TryLoadEntities(gridPath, out result, mapLoadOpts)));
+        await server.WaitAssertion(() => Assert.That(loader.TryLoadGeneric(gridPath, out result, mapLoadOpts)));
         Assert.That(result!.Grids.Count, Is.EqualTo(1));
         Assert.That(result.Maps.Count, Is.EqualTo(2));
         AssertCount(4);
@@ -260,10 +262,10 @@ public sealed partial class AutoIncludeSerializationTest : RobustIntegrationTest
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(0));
 
         // Check the map file
-        await server.WaitAssertion(() => Assert.That(loader.TryLoadEntities(mapPath, out result)));
-        Assert.That(result!.Grids.Count, Is.EqualTo(1));
-        Assert.That(result.Maps.Count, Is.EqualTo(2));
-        Assert.That(loadedGrids.Count, Is.EqualTo(1));
+        await server.WaitAssertion(() => Assert.That(loader.TryLoadGeneric(mapPath, out result)));
+        Assert.That(result!.Grids, Has.Count.EqualTo(1));
+        Assert.That(result.Maps, Has.Count.EqualTo(2));
+        Assert.That(loadedGrids, Has.Count.EqualTo(1));
         AssertCount(6);
         map = Find(nameof(map), entMan);
         grid = Find(nameof(grid), entMan);

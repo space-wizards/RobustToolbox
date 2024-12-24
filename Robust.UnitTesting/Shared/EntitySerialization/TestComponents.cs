@@ -27,8 +27,9 @@ public sealed partial class EntitySaveTestComponent : Component
     public static Entity<TransformComponent, EntitySaveTestComponent> Find(string id, IEntityManager entMan)
     {
         var ents = entMan.AllEntities<EntitySaveTestComponent>();
-        var found = ents.Single(x => x.Comp.Id == id);
-        return (found.Owner, entMan.GetComponent<TransformComponent>(found.Owner), found.Comp);
+        var matching = ents.Where(x => x.Comp.Id == id).ToArray();
+        Assert.That(matching, Has.Length.EqualTo(1));
+        return (matching[0].Owner, entMan.GetComponent<TransformComponent>(matching[0].Owner), matching[0].Comp);
     }
 
     public static Entity<TransformComponent, EntitySaveTestComponent> Get(EntityUid uid, IEntityManager entMan)

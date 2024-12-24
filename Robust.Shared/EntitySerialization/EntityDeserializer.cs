@@ -196,12 +196,17 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
     {
         AdoptGrids();
         ValidateMapIds();
-        PauseMaps();
         BuildEntityHierarchy();
         StartEntitiesInternal();
+
+        // Set loaded entity metadata
         SetMapInitLifestage();
         SetPaused();
-        MapInitializeEntities();
+
+        // Apply entity metadata options
+        PauseMaps();
+        InitializeMaps();
+
         ProcessDeletions();
     }
 
@@ -960,10 +965,13 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
     }
 
 
-    private void MapInitializeEntities()
+    private void InitializeMaps()
     {
         if (!Options.InitializeMaps)
         {
+            if (Options.PauseMaps)
+                return; // Already paused
+
             foreach (var ent in Result.Maps)
             {
                 if (_metaQuery.Comp(ent.Owner).EntityLifeStage < EntityLifeStage.MapInitialized)

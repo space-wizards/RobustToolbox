@@ -27,7 +27,9 @@ public sealed partial class MapLoaderSystem
             throw new Exception($"Cannot serialize deleted entities");
 
         Log.Info($"Serializing entities: {string.Join(", ", entities.Select(x => ToPrettyString(x).ToString()))}");
-        var ev = new BeforeSerializationEvent(entities);
+
+        var maps = entities.Select(x => Transform(x).MapID).ToHashSet();
+        var ev = new BeforeSerializationEvent(entities, maps);
         RaiseLocalEvent(ev);
 
         // In case no options were provided, we assume that if all of the starting entities are pre-init, we should

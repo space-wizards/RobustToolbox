@@ -31,8 +31,10 @@ public sealed class BeforeEntityReadEvent
 
 /// <summary>
 /// This event is broadcast just before the given entities (and their children) are serialized.
+/// For convenience, the event also contains a set with all the maps that the entities are on. This does not
+/// necessarily mean that the maps are themselves getting serialized.
 /// </summary>
-public readonly record struct BeforeSerializationEvent(HashSet<EntityUid> Entities);
+public readonly record struct BeforeSerializationEvent(HashSet<EntityUid> Entities, HashSet<MapId> MapIds);
 
 /// <summary>
 /// This event is broadcast just after entities (and their children) have been serialized, but before it gets written to a yaml file.

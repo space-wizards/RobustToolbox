@@ -54,7 +54,7 @@ public sealed partial class MapLoaderSystem : EntitySystem
         }
     }
 
-    private bool TryReadFile(ResPath file, [NotNullWhen(true)] out MappingDataNode? data)
+    public bool TryReadFile(ResPath file, [NotNullWhen(true)] out MappingDataNode? data)
     {
         var resPath = file.ToRootedPath();
         data = null;

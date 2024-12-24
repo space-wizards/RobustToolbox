@@ -708,28 +708,26 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
         switch (Result.Category)
         {
             case FileCategory.Map:
-                if (Result.Maps.Count == 1)
+                if (Result.Maps.Count == 1 && Result.Orphans.Count == 0)
                     return;
-                _log.Error($"Expected file to contain a single map, but instead found: {Result.Maps.Count}");
+                _log.Error($"Expected file to contain a single map, but instead found {Result.Maps.Count} maps and {Result.Orphans.Count} orphans");
                 break;
 
             case FileCategory.Grid:
-                if (Result.Maps.Count == 0 && Result.Grids.Count == 1)
+                if (Result.Maps.Count == 0 && Result.Grids.Count == 1 && Result.Orphans.Count == 1 && Result.Orphans.First() == Result.Grids.First().Owner)
                     return;
-                _log.Error($"Expected file to contain a single grid, but instead found: {Result.Grids.Count}");
+                _log.Error($"Expected file to contain a single grid, but instead found {Result.Grids.Count} grids and {Result.Orphans.Count} orphans");
                 break;
 
             case FileCategory.Entity:
                 if (Result.Maps.Count == 0 && Result.Grids.Count == 0 && Result.Orphans.Count == 1)
                     return;
-                _log.Error($"Expected file to contain a orphaned entity, but instead found: {Result.Orphans.Count}");
+                _log.Error($"Expected file to contain a orphaned entity, but instead found {Result.Orphans.Count} orphans");
                 break;
 
             default:
-                return;
+                return; // No validation for full game saves
         }
-
-        Result.Category = FileCategory.Unknown;
     }
 
     private void InferCategory()

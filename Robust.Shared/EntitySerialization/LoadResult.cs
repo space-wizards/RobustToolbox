@@ -17,6 +17,8 @@ public sealed class LoadResult
 
     /// <summary>
     /// The category of the file that was loaded in.
+    /// This might not match the actual final result. E.g., when loading in a grid file, a map may automatically gets
+    /// generated for it via <see cref="EntityDeserializer.AdoptGrids"/>.
     /// </summary>
     public FileCategory Category = FileCategory.Unknown;
 

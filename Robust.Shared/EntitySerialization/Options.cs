@@ -121,9 +121,14 @@ public struct MapLoadOptions()
     public MapId? ForceMapId;
 
     /// <summary>
-    /// The expected type for the file currently being read.
-    /// Will log errors if the category doesn't match the expected one (e.g., trying to load a "map" from a file
+    /// The expected <see cref="LoadResult.Category"/> for the file currently being read in, at the end of the entity
+    /// creation step. Will log errors if the category doesn't match the expected one (e.g., trying to load a "map" from a file
     /// that doesn't contain any map entities).
     /// </summary>
+    /// <remarks>
+    /// Note that the effective final category may change by the time the file has fully loaded. E.g., when loading a
+    /// file containing an orphaned grid, a map may be automatically created for the grid, but the category will still
+    /// be <see cref="FileCategory.Grid"/>
+    /// </remarks>
     public FileCategory? ExpectedCategory;
 }

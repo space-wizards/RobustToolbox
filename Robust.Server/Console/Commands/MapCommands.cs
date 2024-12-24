@@ -43,7 +43,7 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            _ent.System<MapLoaderSystem>().SaveGrid(uid, args[1]);
+            _ent.System<MapLoaderSystem>().TrySaveGrid(uid, args[1]);
             shell.WriteLine("Save successful. Look in the user data directory.");
         }
 
@@ -207,7 +207,7 @@ namespace Robust.Server.Console.Commands
             }
 
             shell.WriteLine(Loc.GetString("cmd-savemap-attempt", ("mapId", mapId), ("path", args[1])));
-            _system.GetEntitySystem<MapLoaderSystem>().SaveMap(mapId, args[1]);
+            _system.GetEntitySystem<MapLoaderSystem>().TrySaveMap(mapId, new ResPath(args[1]));
             shell.WriteLine(Loc.GetString("cmd-savemap-success"));
         }
     }

@@ -318,7 +318,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 // save the map
                 var mapLoader = sEntManager.EntitySysManager.GetEntitySystem<MapLoaderSystem>();
 
-                mapLoader.SaveMap(mapIdOne, path);
+                Assert.That(mapLoader.TrySaveMap(mapIdOne, path));
                 mapSys.DeleteMap(mapIdOne);
             });
 

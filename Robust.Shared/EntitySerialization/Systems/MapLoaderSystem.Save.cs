@@ -1,14 +1,11 @@
 using System;
-using Robust.Shared.ContentPack;
+using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
-using Robust.Shared.Map.Components;
 using Robust.Shared.Map.Events;
-using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Utility;
-using YamlDotNet.Core;
-using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.EntitySerialization.Systems;
 
@@ -20,112 +17,199 @@ public sealed partial class MapLoaderSystem
     /// <summary>
     /// Recursively serialize the given entity and its children.
     /// </summary>
-    public (MappingDataNode Node, FileCategory Category) SerializeEntityRecursive(EntityUid uid, SerializationOptions? options = null)
+    public (MappingDataNode Node, FileCategory Category) SerializeEntitiesRecursive(
+        HashSet<EntityUid> entities,
+        SerializationOptions? options = null)
     {
         _stopwatch.Restart();
+        if (!entities.All(Exists))
+            throw new Exception($"Cannot serialize deleted entities");
+
+        Log.Info($"Serializing entities: {string.Join(", ", entities.Select(x => ToPrettyString(x).ToString()))}");
+        var ev = new BeforeSerializationEvent(entities);
+        RaiseLocalEvent(ev);
+
+        // In case no options were provided, we assume that if all of the starting entities are pre-init, we should
+        // expect that **all** entities that get serialized should be pre-init.
         var opts = options ?? SerializationOptions.Default with
         {
-            ExpectPreInit = (LifeStage(uid) < EntityLifeStage.MapInitialized)
+            ExpectPreInit = (entities.All(x => LifeStage(x) < EntityLifeStage.MapInitialized))
         };
 
         var serializer = new EntitySerializer(_dependency, opts);
         serializer.OnIsSerializeable += OnIsSerializable;
 
-        serializer.SerializeEntityRecursive(uid);
+        foreach (var ent in entities)
+        {
+            serializer.SerializeEntityRecursive(ent);
+        }
 
         var data = serializer.Write();
         var cat = serializer.GetCategory();
+
+        var ev2 = new AfterSerializationEvent(entities, data, cat);
+        RaiseLocalEvent(ev2);
 
         Log.Debug($"Serialized {serializer.EntityData.Count} entities in {_stopwatch.Elapsed}");
         return (data, cat);
     }
 
     /// <summary>
-    /// This method will serialize an entity and all of its children, and will write the result to a yaml file.
-    /// If you are specifically trying to save a single grid or map, you should probably use SaveGrid or SaveMap instead.
+    /// Serialize a standard (non-grid, non-map) entity and all of its children and write the result to a
+    /// yaml file.
     /// </summary>
-    public FileCategory SaveEntity(EntityUid uid, ResPath path, SerializationOptions? options = null)
+    public bool TrySaveEntity(EntityUid entity, ResPath path, SerializationOptions? options = null)
     {
-        if (!Exists(uid))
-            throw new Exception($"{uid} does not exist.");
-
-        var ev = new BeforeSaveEvent(uid, Transform(uid).MapUid);
-        RaiseLocalEvent(ev);
-
-        Log.Debug($"Saving entity {ToPrettyString(uid)} to {path}");
-
-        var data = SerializeEntityRecursive(uid, options);
-
-        var ev2 = new AfterSaveEvent(uid, Transform(uid).MapUid, data.Node, data.Category);
-        RaiseLocalEvent(ev2);
-
-        var document = new YamlDocument(ev2.Node.ToYaml());
-        var resPath = path.ToRootedPath();
-        _resourceManager.UserData.CreateDir(resPath.Directory);
-
-        using var writer = _resourceManager.UserData.OpenWriteText(resPath);
+        if (_mapQuery.HasComp(entity))
         {
-            var stream = new YamlStream {document};
-            stream.Save(new YamlMappingFix(new Emitter(writer)), false);
+            Log.Error($"{ToPrettyString(entity)} is a map. Use {nameof(TrySaveMap)}.");
+            return false;
         }
 
-        Log.Info($"Saved {ToPrettyString(uid)} to {path}");
-
-        return data.Item2;
-    }
-
-    public void SaveMap(MapId id, string path, SerializationOptions? options = null)
-        => SaveMap(id, new ResPath(path), options);
-
-    public void SaveMap(MapId mapId, ResPath path, SerializationOptions? options = null)
-    {
-        if (!_mapSystem.TryGetMap(mapId, out var mapUid))
+        if (_gridQuery.HasComp(entity))
         {
-            Log.Error($"Unable to find map {mapId}");
-            return;
+            Log.Error($"{ToPrettyString(entity)} is a grid. Use {nameof(TrySaveGrid)}.");
+            return false;
         }
 
-        SaveMap(mapUid.Value, path, options);
+        var opts = options ?? SerializationOptions.Default;
+        opts.Category = FileCategory.Entity;
+
+        MappingDataNode data;
+        FileCategory cat;
+        try
+        {
+            (data, cat) = SerializeEntitiesRecursive([entity], opts);
+        }
+        catch (Exception e)
+        {
+            Log.Error($"Caught exception while trying to serialize entity {ToPrettyString(entity)}:\n{e}");
+            return false;
+        }
+
+        if (cat != FileCategory.Entity)
+        {
+            Log.Error($"Failed to save {ToPrettyString(entity)} as a singular entity. Output: {cat}");
+            return false;
+        }
+
+        Write(path, data);
+        return true;
     }
 
-    public void SaveMap(EntityUid map, ResPath path, SerializationOptions? options = null)
+    /// <summary>
+    /// Serialize a map and all of its children and write the result to a yaml file.
+    /// </summary>
+    public bool TrySaveMap(MapId mapId, ResPath path, SerializationOptions? options = null)
     {
-        if (!HasComp<MapComponent>(map))
+        if (_mapSystem.TryGetMap(mapId, out var mapUid))
+            return TrySaveMap(mapUid.Value, path, options);
+
+        Log.Error($"Unable to find map {mapId}");
+        return false;
+    }
+
+    /// <summary>
+    /// Serialize a map and all of its children and write the result to a yaml file.
+    /// </summary>
+    public bool TrySaveMap(EntityUid map, ResPath path, SerializationOptions? options = null)
+    {
+        if (!_mapQuery.HasComp(map))
         {
             Log.Error($"{ToPrettyString(map)} is not a map.");
-            return;
+            return false;
         }
 
         var opts = options ?? SerializationOptions.Default;
         opts.Category = FileCategory.Map;
 
-        var cat = SaveEntity(map, path, opts);
-        if (cat != FileCategory.Map)
-            Log.Error($"Failed to save {ToPrettyString(map)} as a map. Output: {cat}");
-    }
-
-    public void SaveGrid(EntityUid grid, string path, SerializationOptions? options = null)
-        => SaveGrid(grid, new ResPath(path), options);
-
-    public void SaveGrid(EntityUid grid, ResPath path, SerializationOptions? options = null)
-    {
-        if (!HasComp<MapGridComponent>(grid))
+        MappingDataNode data;
+        FileCategory cat;
+        try
         {
-            Log.Error($"{ToPrettyString(grid)} is not a grid.");
-            return;
+            (data, cat) = SerializeEntitiesRecursive([map], opts);
+        }
+        catch (Exception e)
+        {
+            Log.Error($"Caught exception while trying to serialize map {ToPrettyString(map)}:\n{e}");
+            return false;
         }
 
-        if (HasComp<MapComponent>(grid))
+        if (cat != FileCategory.Entity)
         {
-            Log.Error($"{ToPrettyString(grid)} is a map, not (just) a grid.");
-            return;
+            Log.Error($"Failed to save {ToPrettyString(map)} as a map. Output: {cat}");
+            return false;
+        }
+
+        Write(path, data);
+        return true;
+    }
+
+    /// <summary>
+    /// Serialize a grid and all of its children and write the result to a yaml file.
+    /// </summary>
+    public bool TrySaveGrid(EntityUid grid, ResPath path, SerializationOptions? options = null)
+    {
+        if (!_mapQuery.HasComp(grid))
+        {
+            Log.Error($"{ToPrettyString(grid)} is not a grid.");
+            return false;
+        }
+
+        if (_gridQuery.HasComp(grid))
+        {
+            Log.Error($"{ToPrettyString(grid)} is a map, not (just) a grid. Use {nameof(TrySaveMap)}");
+            return false;
         }
 
         var opts = options ?? SerializationOptions.Default;
         opts.Category = FileCategory.Grid;
 
-        var cat = SaveEntity(grid, path, opts);
+        MappingDataNode data;
+        FileCategory cat;
+        try
+        {
+            (data, cat) = SerializeEntitiesRecursive([grid], opts);
+        }
+        catch (Exception e)
+        {
+            Log.Error($"Caught exception while trying to serialize grid {ToPrettyString(grid)}:\n{e}");
+            return false;
+        }
+
         if (cat != FileCategory.Grid)
+        {
             Log.Error($"Failed to save {ToPrettyString(grid)} as a grid. Output: {cat}");
+            return false;
+        }
+
+        Write(path, data);
+        return true;
+    }
+
+    /// <summary>
+    /// Serialize one or more entities and all of their children to a yaml file.
+    /// If possible, use the map/grid specific variants instead.
+    /// </summary>
+    public bool TrySaveEntities(HashSet<EntityUid> entities, ResPath path, SerializationOptions? options = null)
+    {
+        if (entities.Count == 0)
+            return false;
+
+        var opts = options ?? SerializationOptions.Default;
+
+        MappingDataNode data;
+        try
+        {
+            (data, _) = SerializeEntitiesRecursive(entities, opts);
+        }
+        catch (Exception e)
+        {
+            Log.Error($"Caught exception while trying to serialize entities:\n{e}");
+            return false;
+        }
+
+        Write(path, data);
+        return true;
     }
 }

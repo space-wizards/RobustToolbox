@@ -30,22 +30,11 @@ public sealed class BeforeEntityReadEvent
 }
 
 /// <summary>
-/// This event is broadcast just before an entity gets serialized.
+/// This event is broadcast just before the given entities (and their children) are serialized.
 /// </summary>
-public sealed class BeforeSaveEvent(EntityUid entity, EntityUid? map)
-{
-    /// <summary>
-    /// The entity that is going to be saved. usually a map or grid.
-    /// </summary>
-    public EntityUid Entity = entity;
-
-    /// <summary>
-    /// The map that the <see cref="Entity"/> is on.
-    /// </summary>
-    public EntityUid? Map = map;
-}
+public readonly record struct BeforeSerializationEvent(HashSet<EntityUid> Entities);
 
 /// <summary>
-/// This event is broadcast just after an entity gets serialized, but before it gets written to a yaml file.
+/// This event is broadcast just after entities (and their children) have been serialized, but before it gets written to a yaml file.
 /// </summary>
-public readonly record struct AfterSaveEvent(EntityUid Uid, EntityUid? Map, MappingDataNode Node, FileCategory Category);
+public readonly record struct AfterSerializationEvent(HashSet<EntityUid> Entities, MappingDataNode Node, FileCategory Category);

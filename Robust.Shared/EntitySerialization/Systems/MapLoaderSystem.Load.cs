@@ -353,37 +353,6 @@ public sealed partial class MapLoaderSystem
         return false;
     }
 
-    public bool TryReadFile(ResPath file, [NotNullWhen(true)] out MappingDataNode? data)
-    {
-        var resPath = file.ToRootedPath();
-        data = null;
-
-        if (!TryGetReader(resPath, out var reader))
-            return false;
-
-        Log.Info($"Loading file: {resPath}");
-        _stopwatch.Restart();
-
-        using var textReader = reader;
-        var documents = DataNodeParser.ParseYamlStream(reader).ToArray();
-        Log.Debug($"Loaded yml stream in {_stopwatch.Elapsed}");
-
-        // Yes, logging errors in a "try" method is kinda shit, but it was throwing exceptions when I found it and it does
-        // make sense to at least provide some kind of feedback for why it failed.
-        switch (documents.Length)
-        {
-            case < 1:
-                Log.Error("Stream has no YAML documents.");
-                return false;
-            case > 1:
-                Log.Error("Stream too many YAML documents. Map files store exactly one.");
-                return false;
-            default:
-                data = (MappingDataNode) documents[0].Root;
-                return true;
-        }
-    }
-
     private void ApplyTransform(EntityDeserializer deserializer, MapLoadOptions opts)
     {
         if (opts.Rotation == Angle.Zero && opts.Offset == Vector2.Zero)

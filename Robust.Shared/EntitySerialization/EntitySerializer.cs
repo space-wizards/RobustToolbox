@@ -77,6 +77,16 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
     /// </summary>
     public EntityUid Truncate { get; private set; }
 
+    /// <summary>
+    /// List of all entities that have previously been ignored via <see cref="Truncate"/>.
+    /// </summary>
+    /// <remarks>
+    /// This is tracked in case somebody does something weird, like trying to save a grid w/o its map, and then later on
+    /// including the map in the file. AFAIK, that should work in principle, though it would lead to a weird file where
+    /// the grid is orphaned and not on the map where it should be.
+    /// </remarks>
+    public readonly HashSet<EntityUid> Truncated = new();
+
     public readonly SerializationOptions Options;
 
     /// <summary>
@@ -212,6 +222,7 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
             throw new Exception($"{EntMan.ToPrettyString(root)} is not serializable");
 
         Truncate = EntMan.GetComponent<TransformComponent>(root).ParentUid;
+        Truncated.Add(Truncate);
         InitializeTileMap(root);
         HashSet<EntityUid> entities = new();
         RecursivelyIncludeChildren(root, entities);
@@ -237,6 +248,10 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
         // Note: some old maps were saved with duplicate id strings.
         // I.e, multiple integers that correspond to the same prototype id.
         // Hence the TryAdd()
+        //
+        // Though now we also need to use TryAdd in case InitializeTileMap() is called multiple times.
+        // E.g., if different grids get added separately to a single save file, in which case the
+        // tile map may already be partially populated.
         foreach (var (origId, prototypeId) in savedMap)
         {
             if (_tileDef.TryGetDefinition(prototypeId, out var definition))
@@ -253,7 +268,7 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
             return true;
         }
 
-        // If the root is a map, iterate over all of its children and grab the first grid with a mapping
+        // iterate over all of its children and grab the first grid with a mapping
         var xform = EntMan.GetComponent<TransformComponent>(root);
         foreach (var child in xform._children)
         {
@@ -375,6 +390,11 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
     {
         var saveId = GetYamlUid(uid);
         DebugTools.Assert(!EntityData.ContainsKey(saveId));
+
+        // It might be possible that something could cause an entity to be included twice.
+        // E.g., if someone serializes a grid w/o its map, and then tries to separately include the map and all its children.
+        // In that case, the grid would already have been serialized as a orphan.
+        // uhhh.... I guess its fine?
         if (EntityData.ContainsKey(saveId))
             return;
 
@@ -700,6 +720,12 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
 
     private int AllocateYamlUid(EntityUid uid)
     {
+        if (Truncated.Contains(uid))
+        {
+            _log.Error(
+                "Including a previously truncated entity within the serialization process? Something probably wrong");
+        }
+
         DebugTools.Assert(!YamlUidMap.ContainsKey(uid));
         while (!YamlIds.Add(_nextYamlUid))
         {
@@ -746,9 +772,19 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
                 continue;
 
             if (_yamlQuery.TryGetComponent(uid, out var comp) && comp.Uid > 0 && YamlIds.Add(comp.Uid))
+            {
+                if (Truncated.Contains(uid))
+                {
+                    _log.Error(
+                        "Including a previously truncated entity within the serialization process? Something probably wrong");
+                }
+
                 YamlUidMap.Add(uid, comp.Uid);
+            }
             else
+            {
                 needIds.Add(uid);
+            }
         }
 
         foreach (var uid in needIds)
@@ -800,10 +836,7 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
         ISerializationContext? context = null)
     {
         if (YamlUidMap.TryGetValue(value, out var yamlId))
-        {
-            DebugTools.Assert(value != Truncate);
             return new ValueDataNode(yamlId.ToString(CultureInfo.InvariantCulture));
-        }
 
         if (CurrentComponent == _xformName)
         {
@@ -819,18 +852,18 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
             return new ValueDataNode("invalid");
         }
 
-        if (Truncate != EntityUid.Invalid && value == Truncate)
-        {
-            _log.Error(
-                $"{EntMan.ToPrettyString(CurrentEntity)} is attempting to serialize references to a truncated parent entity {EntMan.ToPrettyString(Truncate)}.");
-        }
-
         if (value == EntityUid.Invalid)
         {
             if (Options.MissingEntityBehaviour != MissingEntityBehaviour.Ignore)
                 _log.Error($"Encountered an invalid entityUid reference.");
 
             return new ValueDataNode("invalid");
+        }
+
+        if (value == Truncate)
+        {
+            _log.Error(
+                $"{EntMan.ToPrettyString(CurrentEntity)}:{CurrentComponent} is attempting to serialize references to a truncated entity {EntMan.ToPrettyString(Truncate)}.");
         }
 
         switch (Options.MissingEntityBehaviour)

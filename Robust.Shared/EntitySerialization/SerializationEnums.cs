@@ -64,10 +64,15 @@ public enum MissingEntityBehaviour
 
     /// <summary>
     /// Automatically include & serialize any referenced entity. Note that this means that the missing entity's
-    /// parents will also be included, however this will not include other children. E.g., if serializing a grid that
-    /// references an entity on the map, this will also cause the map to get serialized, but will not necessarily
+    /// parents will (generally) also be included, however this will not include other children. E.g., if serializing a
+    /// grid that references an entity on the map, this will also cause the map to get serialized, but will not necessarily
     /// serialize everything on the map.
     /// </summary>
+    /// <remarks>
+    /// If trying to serialize an entity without its parent (i.e., its parent is truncated via
+    /// <see cref="EntitySerializer.Truncate"/>), this will try to respect that. E.g., if a referenced entity is on the
+    /// same map as a grid that is getting serialized, it should include the entity without including the map.
+    /// </remarks>
     /// <remarks>
     /// Note that this might unexpectedly change the <see cref="FileCategory"/>. I.e., trying to serialize a grid might
     /// accidentally lead to serializing a (partial?) map file.
@@ -76,7 +81,8 @@ public enum MissingEntityBehaviour
 
     /// <summary>
     /// Variant of <see cref="AutoInclude"/> that will also automatically include the children of any entities that
-    /// that are automatically included.
+    /// that are automatically included. Note that because auto-inclusion generally needs to include an entity's
+    /// parents, this will include more than just the missing entity's direct children.
     /// </summary>
     AutoIncludeChildren,
 }

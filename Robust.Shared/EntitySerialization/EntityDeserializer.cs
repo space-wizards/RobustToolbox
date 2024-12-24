@@ -544,7 +544,7 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
                     // Previously this method used generic composition pushing. I.e.:
                     /*
                      datanode = ISerializationManager.PushCompositionWithGenericNode(
-                        compType,
+                        compData,
                         [protoData.Mapping],
                         datanode,
                         this);

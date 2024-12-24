@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -7,19 +6,9 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
+using static Robust.UnitTesting.Shared.EntitySerialization.EntitySaveTestComponent;
 
 namespace Robust.UnitTesting.Shared.EntitySerialization;
-
-/// <summary>
-/// Simple test component that contains a data-field with a <see cref="AlwaysPushInheritanceAttribute"/>
-/// </summary>
-[RegisterComponent]
-public sealed partial class TestAlwaysPushComponent : Component
-{
-    [DataField, AlwaysPushInheritance] public List<int> List = [];
-
-    [DataField] public int Id;
-}
 
 [TestFixture]
 public sealed class AlwaysPushSerializationTest : RobustIntegrationTest
@@ -28,14 +17,14 @@ public sealed class AlwaysPushSerializationTest : RobustIntegrationTest
 - type: entity
   id: TestEntityCompositionParent
   components:
-  - type: TestAlwaysPush
+  - type: EntitySaveTest
     list: [ 1, 2 ]
 
 - type: entity
   id: TestEntityCompositionChild
   parent: TestEntityCompositionParent
   components:
-  - type: TestAlwaysPush
+  - type: EntitySaveTest
     list: [ 3 , 4 ]
 ";
 
@@ -56,15 +45,16 @@ public sealed class AlwaysPushSerializationTest : RobustIntegrationTest
 
         var server = StartServer(opts);
         await server.WaitIdleAsync();
+        var entMan = server.EntMan;
 
         // Create a new map and spawn in some entities.
         MapId mapId = default;
-        Entity<TestAlwaysPushComponent> parent1 = default;
-        Entity<TestAlwaysPushComponent> parent2 = default;
-        Entity<TestAlwaysPushComponent> parent3 = default;
-        Entity<TestAlwaysPushComponent> child1 = default;
-        Entity<TestAlwaysPushComponent> child2 = default;
-        Entity<TestAlwaysPushComponent> child3 = default;
+        Entity<TransformComponent, EntitySaveTestComponent> parent1 = default;
+        Entity<TransformComponent, EntitySaveTestComponent> parent2 = default;
+        Entity<TransformComponent, EntitySaveTestComponent> parent3 = default;
+        Entity<TransformComponent, EntitySaveTestComponent> child1 = default;
+        Entity<TransformComponent, EntitySaveTestComponent> child2 = default;
+        Entity<TransformComponent, EntitySaveTestComponent> child3 = default;
 
         var path = new ResPath($"{nameof(TestAlwaysPushSerialization)}.yml");
 
@@ -72,49 +62,49 @@ public sealed class AlwaysPushSerializationTest : RobustIntegrationTest
         {
             server.System<SharedMapSystem>().CreateMap(out mapId);
             var coords = new MapCoordinates(0, 0, mapId);
-            var uidParent1 = server.EntMan.Spawn("TestEntityCompositionParent", coords);
-            var uidParent2 = server.EntMan.Spawn("TestEntityCompositionParent", coords);
-            var uidParent3 = server.EntMan.Spawn("TestEntityCompositionParent", coords);
-            var uidChild1 = server.EntMan.Spawn("TestEntityCompositionChild", coords);
-            var uidChild2 = server.EntMan.Spawn("TestEntityCompositionChild", coords);
-            var uidChild3 = server.EntMan.Spawn("TestEntityCompositionChild", coords);
+            var parent1Uid = entMan.Spawn("TestEntityCompositionParent", coords);
+            var parent2Uid = entMan.Spawn("TestEntityCompositionParent", coords);
+            var parent3Uid = entMan.Spawn("TestEntityCompositionParent", coords);
+            var child1Uid = entMan.Spawn("TestEntityCompositionChild", coords);
+            var child2Uid = entMan.Spawn("TestEntityCompositionChild", coords);
+            var child3Uid = entMan.Spawn("TestEntityCompositionChild", coords);
 
-            parent1 = (uidParent1, server.EntMan.GetComponent<TestAlwaysPushComponent>(uidParent1));
-            parent2 = (uidParent2, server.EntMan.GetComponent<TestAlwaysPushComponent>(uidParent2));
-            parent3 = (uidParent3, server.EntMan.GetComponent<TestAlwaysPushComponent>(uidParent3));
-            child1 = (uidChild1, server.EntMan.GetComponent<TestAlwaysPushComponent>(uidChild1));
-            child2 = (uidChild2, server.EntMan.GetComponent<TestAlwaysPushComponent>(uidChild2));
-            child3 = (uidChild3, server.EntMan.GetComponent<TestAlwaysPushComponent>(uidChild3));
+            parent1 = Get(parent1Uid, entMan);
+            parent2 = Get(parent2Uid, entMan);
+            parent3 = Get(parent3Uid, entMan);
+            child1 = Get(child1Uid, entMan);
+            child2 = Get(child2Uid, entMan);
+            child3 = Get(child3Uid, entMan);
         });
 
         // Assign a unique id to each entity (so they can be identified after saving & loading a map)
-        parent1.Comp!.Id = 1;
-        parent2.Comp!.Id = 2;
-        parent3.Comp!.Id = 3;
-        child1.Comp!.Id = 4;
-        child2.Comp!.Id = 5;
-        child3.Comp!.Id = 6;
+        parent1.Comp2!.Id = nameof(parent1);
+        parent2.Comp2!.Id = nameof(parent2);
+        parent3.Comp2!.Id = nameof(parent3);
+        child1.Comp2!.Id = nameof(child1);
+        child2.Comp2!.Id = nameof(child2);
+        child3.Comp2!.Id = nameof(child3);
 
         // The inheritance pushing for the prototypes should ensure that the parent & child prototype's lists were merged.
-        Assert.That(parent1.Comp.List.SequenceEqual(new[] {1, 2}));
-        Assert.That(parent2.Comp.List.SequenceEqual(new[] {1, 2}));
-        Assert.That(parent3.Comp.List.SequenceEqual(new[] {1, 2}));
-        Assert.That(child1.Comp.List.SequenceEqual(new[] {3, 4, 1, 2}));
-        Assert.That(child2.Comp.List.SequenceEqual(new[] {3, 4, 1, 2}));
-        Assert.That(child3.Comp.List.SequenceEqual(new[] {3, 4, 1, 2}));
+        Assert.That(parent1.Comp2.List.SequenceEqual(new[] {1, 2}));
+        Assert.That(parent2.Comp2.List.SequenceEqual(new[] {1, 2}));
+        Assert.That(parent3.Comp2.List.SequenceEqual(new[] {1, 2}));
+        Assert.That(child1.Comp2.List.SequenceEqual(new[] {3, 4, 1, 2}));
+        Assert.That(child2.Comp2.List.SequenceEqual(new[] {3, 4, 1, 2}));
+        Assert.That(child3.Comp2.List.SequenceEqual(new[] {3, 4, 1, 2}));
 
         // Modify data on some components.
-        parent2.Comp.List.Add(-1);
-        child2.Comp.List.Add(-1);
-        parent3.Comp.List.RemoveAt(1);
-        child3.Comp.List.RemoveAt(1);
+        parent2.Comp2.List.Add(-1);
+        child2.Comp2.List.Add(-1);
+        parent3.Comp2.List.RemoveAt(1);
+        child3.Comp2.List.RemoveAt(1);
 
-        Assert.That(parent1.Comp.List.SequenceEqual(new[] {1, 2}));
-        Assert.That(parent2.Comp.List.SequenceEqual(new[] {1, 2, -1}));
-        Assert.That(parent3.Comp.List.SequenceEqual(new[] {1}));
-        Assert.That(child1.Comp.List.SequenceEqual(new[] {3, 4, 1, 2}));
-        Assert.That(child2.Comp.List.SequenceEqual(new[] {3, 4, 1, 2, -1}));
-        Assert.That(child3.Comp.List.SequenceEqual(new[] {3, 1, 2}));
+        Assert.That(parent1.Comp2.List.SequenceEqual(new[] {1, 2}));
+        Assert.That(parent2.Comp2.List.SequenceEqual(new[] {1, 2, -1}));
+        Assert.That(parent3.Comp2.List.SequenceEqual(new[] {1}));
+        Assert.That(child1.Comp2.List.SequenceEqual(new[] {3, 4, 1, 2}));
+        Assert.That(child2.Comp2.List.SequenceEqual(new[] {3, 4, 1, 2, -1}));
+        Assert.That(child3.Comp2.List.SequenceEqual(new[] {3, 1, 2}));
 
         // Save map to yaml
         var loader = server.System<MapLoaderSystem>();
@@ -123,8 +113,7 @@ public sealed class AlwaysPushSerializationTest : RobustIntegrationTest
 
         // Delete the entities
         await server.WaitPost(() => map.DeleteMap(mapId));
-        var ents = server.EntMan.AllEntities<TestAlwaysPushComponent>();
-        Assert.That(ents.Length, Is.EqualTo(0));
+        Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(0));
 
         // Load the map
         await server.WaitPost(() =>
@@ -133,22 +122,22 @@ public sealed class AlwaysPushSerializationTest : RobustIntegrationTest
             mapId = ent!.Value.Comp.MapId;
         });
 
-        ents = server.EntMan.AllEntities<TestAlwaysPushComponent>();
-        Assert.That(ents.Length, Is.EqualTo(6));
+        Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(6));
 
-        parent1 = ents.Single(x => x.Comp.Id == 1);
-        parent2 = ents.Single(x => x.Comp.Id == 2);
-        parent3 = ents.Single(x => x.Comp.Id == 3);
-        child1 = ents.Single(x => x.Comp.Id == 4);
-        child2 = ents.Single(x => x.Comp.Id == 5);
-        child3 = ents.Single(x => x.Comp.Id == 6);
+        // Find the deserialized entities
+        parent1 = Find(nameof(parent1), entMan);
+        parent2 = Find(nameof(parent2), entMan);
+        parent3 = Find(nameof(parent3), entMan);
+        child1 = Find(nameof(child1), entMan);
+        child2 = Find(nameof(child2), entMan);
+        child3 = Find(nameof(child3), entMan);
 
         // Verify that the entity data has not changed.
-        Assert.That(parent1.Comp.List.SequenceEqual(new[] {1, 2}));
-        Assert.That(parent2.Comp.List.SequenceEqual(new[] {1, 2, -1}));
-        Assert.That(parent3.Comp.List.SequenceEqual(new[] {1}));
-        Assert.That(child1.Comp.List.SequenceEqual(new[] {3, 4, 1, 2}));
-        Assert.That(child2.Comp.List.SequenceEqual(new[] {3, 4, 1, 2, -1}));
-        Assert.That(child3.Comp.List.SequenceEqual(new[] {3, 1, 2}));
+        Assert.That(parent1.Comp2.List.SequenceEqual(new[] {1, 2}));
+        Assert.That(parent2.Comp2.List.SequenceEqual(new[] {1, 2, -1}));
+        Assert.That(parent3.Comp2.List.SequenceEqual(new[] {1}));
+        Assert.That(child1.Comp2.List.SequenceEqual(new[] {3, 4, 1, 2}));
+        Assert.That(child2.Comp2.List.SequenceEqual(new[] {3, 4, 1, 2, -1}));
+        Assert.That(child3.Comp2.List.SequenceEqual(new[] {3, 1, 2}));
     }
 }

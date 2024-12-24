@@ -72,6 +72,12 @@ public record struct DeserializationOptions()
     public bool LogOrphanedGrids = true;
 
     /// <summary>
+    /// Whether or not to log an error when encountering an yaml entity id.
+    /// <see cref="TransformComponent.ParentUid"/> is exempt from this.
+    /// </summary>
+    public bool LogInvalidEntities = true;
+
+    /// <summary>
     /// Whether or not to automatically assign map ids to any deserialized map entities.
     /// If false, maps need to be manually given ids before entities are initialized.
     /// </summary>

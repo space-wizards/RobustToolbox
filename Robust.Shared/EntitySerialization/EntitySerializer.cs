@@ -592,7 +592,12 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
         var map = new MappingDataNode();
         foreach (var (tileId, yamlTileId) in _tileMap.OrderBy(x => x.Key))
         {
-            map.Add(yamlTileId.ToString(CultureInfo.InvariantCulture), _tileDef[tileId].ID);
+            // This can come up if tests try to serialize test maps with custom / placeholder tile ids without registering them with the tile def manager..
+            if (!_tileDef.TryGetDefinition(tileId, out var def))
+                throw new Exception($"Attempting to serialize a tile {tileId} with no valid tile definition.");
+
+            var yamlId = yamlTileId.ToString(CultureInfo.InvariantCulture);
+            map.Add(yamlId, def.ID);
         }
         return map;
     }
@@ -660,11 +665,23 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
 
             default:
                 if (Maps.Count == 1)
-                    return FileCategory.Map;
-                if (Grids.Count == 1)
-                    return FileCategory.Grid;
-                if (Orphans.Count == 1)
+                {
+                    // Contains a single map, and no orphaned entities that need reparenting.
+                    if (Orphans.Count == 0)
+                        return FileCategory.Map;
+                }
+                else if (Grids.Count == 1)
+                {
+                    // Contains a single orphaned grid.
+                    if (Orphans.Count == 1 && Grids[0] == Orphans[0])
+                        return FileCategory.Grid;
+                }
+                else if (Orphans.Count == 1)
+                {
+                    // A lone orphaned entity.
                     return FileCategory.Entity;
+                }
+
                 return FileCategory.Unknown;
         }
     }

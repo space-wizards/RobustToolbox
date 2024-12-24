@@ -124,17 +124,34 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
         using (var stream = new MemoryStream(barr))
         using (var writer = new BinaryWriter(stream))
         {
+            if (serializer == null)
+            {
+                for (ushort y = 0; y < chunk.ChunkSize; y++)
+                {
+                    for (ushort x = 0; x < chunk.ChunkSize; x++)
+                    {
+                        var tile = chunk.GetTile(x, y);
+                        writer.Write(tile.TypeId);
+                        writer.Write((byte) tile.Flags);
+                        writer.Write(tile.Variant);
+                    }
+                }
+                return Convert.ToBase64String(barr);
+            }
+
+            var lastTile = -1;
+            var yamlId = -1;
             for (ushort y = 0; y < chunk.ChunkSize; y++)
             {
                 for (ushort x = 0; x < chunk.ChunkSize; x++)
                 {
                     var tile = chunk.GetTile(x, y);
-                    var typeId = tile.TypeId;
-                    if (serializer != null)
-                        typeId = serializer.GetYamlTileId(typeId);
+                    if (tile.TypeId != lastTile)
+                        yamlId = serializer.GetYamlTileId(tile.TypeId);
 
-                    writer.Write(typeId);
-                    writer.Write((byte)tile.Flags);
+                    lastTile = tile.TypeId;
+                    writer.Write(yamlId);
+                    writer.Write((byte) tile.Flags);
                     writer.Write(tile.Variant);
                 }
             }

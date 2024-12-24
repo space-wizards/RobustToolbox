@@ -730,8 +730,9 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
                 _log.Error($"Expected file to contain a orphaned entity, but instead found {Result.Orphans.Count} orphans");
                 break;
 
+            case FileCategory.Save: // No validation for full game saves, they can contain whatever they want.
             default:
-                return; // No validation for full game saves
+                return;
         }
     }
 

@@ -40,6 +40,11 @@ namespace Robust.Shared.EntitySerialization;
 public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<EntityUid, ValueDataNode>
 {
     public const int MapFormatVersion = 7;
+    // v6->v7: PR #5572 - Added more metadata, List maps/grids/orphans, include some life-stage information
+    // v5->v6: PR #4307 - Converted Tile.TypeId from ushort to int
+    // v4->v5: PR #3992 - Removed name & author fields
+    // v3->v4: PR #3913 - Grouped entities by prototype
+    // v2->v3: PR #3468
 
     public SerializationManager.SerializerProvider SerializerProvider { get; } = new();
 

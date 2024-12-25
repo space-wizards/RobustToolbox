@@ -16,7 +16,6 @@ public sealed partial class BackwardsCompatibilityTest
 {
     /// <summary>
     /// Check that v4 maps can be loaded. This simply tries to load a file and doesn't do a lot of extra validation.
-    /// TBH I don't even know if theres a real difference between v4 and v5.
     /// </summary>
     /// <remarks>
     /// The file was pilfered from content integration tests ("floor3x3.yml") and modified slightly.
@@ -139,6 +138,8 @@ public sealed partial class BackwardsCompatibilityTest
     private const string MapDataV4Grid = @"
 meta:
   format: 4
+  name: DemoStation
+  author: Space-Wizards
   postmapinit: false
 tilemap:
   0: Space
@@ -190,6 +191,8 @@ entities:
     private const string MapDataV4Map = @"
 meta:
   format: 4
+  name: DemoStation
+  author: Space-Wizards
   postmapinit: false
 tilemap:
   0: Space

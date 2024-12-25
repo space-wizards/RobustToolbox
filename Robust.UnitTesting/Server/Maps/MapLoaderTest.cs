@@ -27,6 +27,7 @@ grids:
 - 1
 orphans:
 - 1
+nullspace: []
 tilemap: {}
 entities:
 - proto: """"

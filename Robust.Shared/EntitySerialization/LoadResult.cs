@@ -51,7 +51,7 @@ public sealed class LoadResult
     /// Set of entities that are not parented to other entities. This will be a combination of <see cref="Maps"/>,
     /// <see cref="Orphans"/>, and <see cref="NullspaceEntities"/>.
     /// </summary>
-    public readonly List<EntityUid> RootNodes = new();
+    public readonly HashSet<EntityUid> RootNodes = new();
 
     public readonly HashSet<Entity<MapComponent>> Maps = new();
 
@@ -67,5 +67,5 @@ public sealed class LoadResult
     /// List of null-space entities. This contains all entities without a parent that don't have a
     /// <see cref="MapComponent"/>, and were not listed as orphans
     /// </summary>
-    public readonly List<EntityUid> NullspaceEntities = new();
+    public readonly HashSet<EntityUid> NullspaceEntities = new();
 }

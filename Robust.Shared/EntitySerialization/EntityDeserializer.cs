@@ -79,6 +79,7 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
     public readonly List<int> MapYamlIds = new();
     public readonly List<int> GridYamlIds = new();
     public readonly List<int> OrphanYamlIds = new();
+    public readonly List<int> NullspaceYamlIds = new();
     public readonly Dictionary<string, string> RenamedPrototypes;
     public readonly HashSet<string> DeletedPrototypes;
 
@@ -171,17 +172,14 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
         // Load the prototype data onto entities, e.g. transform parents, etc.
         LoadEntities();
 
-        // Get the lists of maps, grids, and orphan entities
-        GetMapsAndGrids();
+        // Get the lists of maps, grids, orphan, and nullspace entities
+        GetRootEntities();
 
         // grids prior to engine v175 might've been serialized with empty chunks which now throw debug asserts.
         RemoveEmptyChunks();
 
         // Assign MapSaveTileMapComponent to all read grids. This is used to avoid large file diffs if the tile map changes.
         StoreGridTileMap();
-
-        // Separate maps and orphaned entities out from the "true" null-space entities.
-        ProcessNullspaceEntities();
 
         if (Options.AssignMapids)
             AssignMapIds();
@@ -202,6 +200,8 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
         // Set loaded entity metadata
         SetMapInitLifestage();
         SetPaused();
+
+        GetRootNodes();
 
         // Apply entity metadata options
         PauseMaps();
@@ -477,25 +477,20 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
         if (Result.Version < 7)
             return;
 
-        var maps = Data.Get<SequenceDataNode>("maps");
-        foreach (var node in maps)
-        {
-            var yamlId = ((ValueDataNode) node).AsInt();
-            MapYamlIds.Add(yamlId);
-        }
+        ReadYamlIdList(Data, "maps", MapYamlIds);
+        ReadYamlIdList(Data, "grids", GridYamlIds);
+        ReadYamlIdList(Data, "orphans", OrphanYamlIds);
+        ReadYamlIdList(Data, "nullspace", NullspaceYamlIds);
+    }
 
-        var grids = Data.Get<SequenceDataNode>("grids");
-        foreach (var node in grids)
+    private void ReadYamlIdList(MappingDataNode data, string key, List<int> list)
+    {
+        var sequence = data.Get<SequenceDataNode>(key);
+        list.EnsureCapacity(sequence.Count);
+        foreach (var node in sequence)
         {
             var yamlId = ((ValueDataNode) node).AsInt();
-            GridYamlIds.Add(yamlId);
-        }
-
-        var orphans = Data.Get<SequenceDataNode>("orphans");
-        foreach (var node in orphans)
-        {
-            var yamlId = ((ValueDataNode) node).AsInt();
-            OrphanYamlIds.Add(yamlId);
+            list.Add(yamlId);
         }
     }
 
@@ -587,11 +582,11 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
             meta.LastComponentRemoved = Timing.CurTick;
     }
 
-    private void GetMapsAndGrids()
+    private void GetRootEntities()
     {
         if (Result.Version < 7)
         {
-            GetMapsAndGridsFallback();
+            GetRootEntitiesFallback();
             return;
         }
 
@@ -619,10 +614,19 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
         foreach (var yamlId in OrphanYamlIds)
         {
             var uid = UidMap[yamlId];
-            if (EntMan.HasComponent<MapComponent>(uid) || _xformQuery.Comp(uid).ParentUid.IsValid())
+            if (_mapQuery.HasComponent(uid) || _xformQuery.Comp(uid).ParentUid.IsValid())
                 _log.Error($"Entity {EntMan.ToPrettyString(uid)} was incorrectly labelled as an orphan?");
             else
                 Result.Orphans.Add(uid);
+        }
+
+        foreach (var yamlId in NullspaceYamlIds)
+        {
+            var uid = UidMap[yamlId];
+            if (_mapQuery.HasComponent(uid) || _xformQuery.Comp(uid).ParentUid.IsValid())
+                _log.Error($"Entity {EntMan.ToPrettyString(uid)} was incorrectly labelled as a null-space entity?");
+            else
+                Result.NullspaceEntities.Add(uid);
         }
     }
 
@@ -634,8 +638,11 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
         }
     }
 
-    private void GetMapsAndGridsFallback()
+    private void GetRootEntitiesFallback()
     {
+        // Older versions did not support non-grid orphaned entities or nullspace entities.
+        // So we just check for grids & maps.
+
         foreach (var uid in Result.Entities)
         {
             if (_gridQuery.TryComp(uid, out var grid))
@@ -655,10 +662,9 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
 
     private void RemoveEmptyChunks()
     {
-        var gridQuery = EntMan.GetEntityQuery<MapGridComponent>();
         foreach (var uid in Entities.Keys)
         {
-            if (!gridQuery.TryGetComponent(uid, out var gridComp))
+            if (!_gridQuery.TryGetComponent(uid, out var gridComp))
                 continue;
 
             foreach (var (index, chunk) in gridComp.Chunks)
@@ -755,7 +761,7 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
     {
         foreach (var grid in Result.Grids)
         {
-            if (EntMan.HasComponent<MapComponent>(grid.Owner))
+            if (_mapQuery.HasComponent(grid.Owner))
                 continue;
 
             var xform = _xformQuery.Comp(grid.Owner);
@@ -835,38 +841,14 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
             return;
 
         SortedEntities.Add(uid);
-        if (parent == EntityUid.Invalid)
-            Result.RootNodes.Add(uid);
-    }
-
-    private void ProcessNullspaceEntities()
-    {
-        foreach (var uid in Result.RootNodes)
-        {
-            if (EntMan.HasComponent<MapComponent>(uid))
-            {
-                DebugTools.Assert(Result.Maps.Any(x => x.Owner == uid));
-                continue;
-            }
-
-            if (Result.Orphans.Contains(uid))
-                continue;
-
-            Result.NullspaceEntities.Add(uid);
-
-            // Null-space grids are not yet supported.
-            // So it shouldn't have been possible to save a grid without it being flagged as an orphan.
-            DebugTools.Assert(!EntMan.HasComponent<MapGridComponent>(uid));
-        }
     }
 
     private void StartEntitiesInternal()
     {
         _stopwatch.Restart();
-        var metaQuery = EntMan.GetEntityQuery<MetaDataComponent>();
         foreach (var uid in SortedEntities)
         {
-            StartupEntity(uid, metaQuery.GetComponent(uid));
+            StartupEntity(uid, _metaQuery.GetComponent(uid));
         }
         _log.Debug($"Started up {Result.Entities.Count} entities in {_stopwatch.Elapsed}");
     }
@@ -996,6 +978,46 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
             EntMan.DeleteEntity(uid);
             Result.Entities.Remove(uid);
         }
+    }
+
+    private void GetRootNodes()
+    {
+        Result.RootNodes.UnionWith(Result.Orphans);
+        Result.RootNodes.UnionWith(Result.NullspaceEntities);
+        foreach (var map in Result.Maps)
+        {
+            Result.RootNodes.Add(map.Owner);
+        }
+
+        // These asserts are probably a bit over-kill
+        // but might as well check nothing has gone wrong somehow.
+#if DEBUG
+        var grids = Result.Grids.Select(x => x.Owner).ToHashSet();
+        var maps = Result.Maps.Select(x => x.Owner).ToHashSet();
+        var totalRoots = 0;
+        foreach (var uid in Result.Entities)
+        {
+            DebugTools.AssertEqual(maps.Contains(uid), _mapQuery.HasComp(uid));
+            DebugTools.AssertEqual(grids.Contains(uid), _gridQuery.HasComp(uid));
+
+            if (!_xformQuery.TryComp(uid, out var xform))
+                continue;
+
+            if (xform.ParentUid != EntityUid.Invalid)
+                continue;
+
+            totalRoots++;
+            DebugTools.Assert(Result.RootNodes.Contains(uid));
+            DebugTools.Assert(Result.Orphans.Contains(uid)
+                || Result.NullspaceEntities.Contains(uid)
+                || maps.Contains(uid));
+        }
+        DebugTools.AssertEqual(Result.RootNodes.Count, totalRoots);
+        DebugTools.AssertEqual(maps.Intersect(Result.Orphans).Count(), 0);
+        DebugTools.AssertEqual(maps.Intersect(Result.NullspaceEntities).Count(), 0);
+        DebugTools.AssertEqual(grids.Intersect(Result.NullspaceEntities).Count(), 0);
+        DebugTools.AssertEqual(Result.Orphans.Intersect(Result.NullspaceEntities).Count(), 0);
+#endif
     }
 
     // Create custom object serializers that will correctly allow data to be overriden by the map file.

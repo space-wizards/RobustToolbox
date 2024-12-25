@@ -13,7 +13,6 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
@@ -111,6 +110,13 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
     public readonly List<int> Maps = new();
 
     /// <summary>
+    /// Yaml ids of all serialized null-space entities.
+    /// This only includes entities that were initially in null-space, it does not include entities that were
+    /// serialized without their parents. Those are in <see cref="Orphans"/>.
+    /// </summary>
+    public readonly List<int> Nullspace = new();
+
+    /// <summary>
     /// Yaml ids of all serialized grid entities.
     /// </summary>
     public readonly List<int> Grids = new();
@@ -133,6 +139,8 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
     private readonly EntityQuery<YamlUidComponent> _yamlQuery;
     private readonly EntityQuery<MapGridComponent> _gridQuery;
     private readonly EntityQuery<MapComponent> _mapQuery;
+    private readonly EntityQuery<MetaDataComponent> _metaQuery;
+    private readonly EntityQuery<TransformComponent> _xformQuery;
 
     /// <summary>
     /// C# event for checking whether an entity is serializable. Can be used by content to prevent specific entities
@@ -159,6 +167,8 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
         _yamlQuery = EntMan.GetEntityQuery<YamlUidComponent>();
         _gridQuery = EntMan.GetEntityQuery<MapGridComponent>();
         _mapQuery = EntMan.GetEntityQuery<MapComponent>();
+        _metaQuery = EntMan.GetEntityQuery<MetaDataComponent>();
+        _xformQuery = EntMan.GetEntityQuery<TransformComponent>();
         Options = options;
     }
 
@@ -221,7 +231,7 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
         if (!IsSerializable(root))
             throw new Exception($"{EntMan.ToPrettyString(root)} is not serializable");
 
-        Truncate = EntMan.GetComponent<TransformComponent>(root).ParentUid;
+        Truncate = _xformQuery.GetComponent(root).ParentUid;
         Truncated.Add(Truncate);
         InitializeTileMap(root);
         HashSet<EntityUid> entities = new();
@@ -269,7 +279,7 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
         }
 
         // iterate over all of its children and grab the first grid with a mapping
-        var xform = EntMan.GetComponent<TransformComponent>(root);
+        var xform = _xformQuery.GetComponent(root);
         foreach (var child in xform._children)
         {
             if (!EntMan.TryGetComponent(child, out MapSaveTileMapComponent? cComp))
@@ -329,7 +339,7 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
             return;
 
         ents.Add(uid);
-        var xform = EntMan.GetComponent<TransformComponent>(uid);
+        var xform = _xformQuery.GetComponent(uid);
         foreach (var child in xform._children)
         {
             RecursivelyIncludeChildren(child, ents);
@@ -341,11 +351,11 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
         if (!IsSerializable(uid))
             throw new NotSupportedException($"Attempted to auto-include an unserializable entity: {EntMan.ToPrettyString(uid)}");
 
-        var xform = EntMan.GetComponent<TransformComponent>(uid);
+        var xform = _xformQuery.GetComponent(uid);
         while (xform.ParentUid.IsValid() && xform.ParentUid != Truncate)
         {
             uid = xform.ParentUid;
-            xform = EntMan.GetComponent<TransformComponent>(uid);
+            xform = _xformQuery.GetComponent(uid);
 
             if (!IsSerializable(uid))
                 throw new NotSupportedException($"Encountered an un-serializable parent entity: {EntMan.ToPrettyString(uid)}");
@@ -364,7 +374,7 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
             if (!IsSerializable(uid))
                 throw new NotSupportedException($"Encountered an un-serializable parent entity: {EntMan.ToPrettyString(uid)}");
 
-            uid = EntMan.GetComponent<TransformComponent>(uid).ParentUid;
+            uid = _xformQuery.GetComponent(uid).ParentUid;
         }
     }
 
@@ -398,7 +408,7 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
         if (EntityData.ContainsKey(saveId))
             return;
 
-        var meta = EntMan.GetComponent<MetaDataComponent>(uid);
+        var meta = _metaQuery.GetComponent(uid);
         var protoId = meta.EntityPrototype?.ID ?? string.Empty;
 
         switch (meta.EntityLifeStage)
@@ -415,12 +425,20 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
         CurrentEntity = (uid, meta);
 
         Prototypes.GetOrNew(protoId).Add(saveId);
+        var xform = _xformQuery.GetComponent(uid);
 
         if (_mapQuery.HasComp(uid))
             Maps.Add(saveId);
+        else if (xform.ParentUid == EntityUid.Invalid)
+            Nullspace.Add(saveId);
 
         if (_gridQuery.HasComp(uid))
+        {
+            // The current assumption is that grids cannot be in null-space, because the rest of the code
+            // (broadphase, etc) don't support grids without maps.
+            DebugTools.Assert(xform.ParentUid != EntityUid.Invalid || _mapQuery.HasComp(uid));
             Grids.Add(saveId);
+        }
 
         var entData = new MappingDataNode
         {
@@ -456,7 +474,6 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
         }
 
         var components = new SequenceDataNode();
-        var xform = EntMan.GetComponent<TransformComponent>(uid);
         if (xform.NoLocalRotation && xform.LocalRotation != 0)
         {
             _log.Error($"Encountered a no-rotation entity with non-zero local rotation: {EntMan.ToPrettyString(uid)}");
@@ -569,12 +586,18 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
 
     public MappingDataNode Write()
     {
+        DebugTools.AssertEqual(Maps.ToHashSet().Count, Maps.Count, "Duplicate maps?");
+        DebugTools.AssertEqual(Grids.ToHashSet().Count, Grids.Count, "Duplicate frids?");
+        DebugTools.AssertEqual(Orphans.ToHashSet().Count, Orphans.Count, "Duplicate orphans?");
+        DebugTools.AssertEqual(Nullspace.ToHashSet().Count, Nullspace.Count, "Duplicate nullspace?");
+
         return new MappingDataNode
         {
             {"meta", WriteMetadata()},
             {"maps", WriteIds(Maps)},
             {"grids", WriteIds(Grids)},
             {"orphans", WriteIds(Orphans)},
+            {"nullspace", WriteIds(Nullspace)},
             {"tilemap", WriteTileMap()},
             {"entities", WriteEntitySection()},
         };
@@ -886,8 +909,8 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
             case MissingEntityBehaviour.IncludeNullspace:
                 if (!EntMan.TryGetComponent(value, out TransformComponent? xform)
                     || xform.ParentUid != EntityUid.Invalid
-                    || EntMan.HasComponent<MapGridComponent>(value)
-                    || EntMan.HasComponent<MapComponent>(value))
+                    || _gridQuery.HasComp(value)
+                    || _mapQuery.HasComp(value))
                 {
                     goto case MissingEntityBehaviour.Error;
                 }

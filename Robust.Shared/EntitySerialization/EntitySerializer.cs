@@ -302,7 +302,7 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
 
         switch (Options.MissingEntityBehaviour)
         {
-            case MissingEntityBehaviour.AutoInclude:
+            case MissingEntityBehaviour.PartialInclude:
                 // Include the entity and any of its direct parents
                 foreach (var uid in _autoInclude)
                 {
@@ -310,7 +310,7 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
                 }
                 break;
             case MissingEntityBehaviour.IncludeNullspace:
-            case MissingEntityBehaviour.AutoIncludeChildren:
+            case MissingEntityBehaviour.AutoInclude:
                 // Find the root transform of all the included entities
                 var roots = new HashSet<EntityUid>();
                 foreach (var uid in _autoInclude)
@@ -914,9 +914,9 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
                 {
                     goto case MissingEntityBehaviour.Error;
                 }
-                goto case MissingEntityBehaviour.AutoIncludeChildren;
+                goto case MissingEntityBehaviour.AutoInclude;
+            case MissingEntityBehaviour.PartialInclude:
             case MissingEntityBehaviour.AutoInclude:
-            case MissingEntityBehaviour.AutoIncludeChildren:
                 if (Options.LogAutoInclude is {} level)
                     _log.Log(level, $"Auto-including entity {EntMan.ToPrettyString(value)} referenced by {EntMan.ToPrettyString(CurrentEntity)}");
                 _autoInclude.Add(value);

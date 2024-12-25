@@ -10,22 +10,22 @@ using static Robust.UnitTesting.Shared.EntitySerialization.EntitySaveTestCompone
 namespace Robust.UnitTesting.Shared.EntitySerialization;
 
 [TestFixture]
-public sealed partial class LifetimeSerializationTest : RobustIntegrationTest
+public sealed partial class LifestageSerializationTest : RobustIntegrationTest
 {
     /// <summary>
     /// Check that whether or not an entity has been paused or map-initialized is preserved across saves & loads.
     /// </summary>
     [Test]
-    public async Task TestLifetimeSerialization()
+    public async Task TestLifestageSerialization()
     {
         var server = StartServer();
         await server.WaitIdleAsync();
         var entMan = server.EntMan;
         var mapSys = server.System<SharedMapSystem>();
         var loader = server.System<MapLoaderSystem>();
-        var preInitPath = new ResPath($"{nameof(TestLifetimeSerialization)}_preInit.yml");
-        var postInitPath = new ResPath($"{nameof(TestLifetimeSerialization)}_postInit.yml");
-        var pausedPostInitPath = new ResPath($"{nameof(TestLifetimeSerialization)}_paused.yml");
+        var preInitPath = new ResPath($"{nameof(TestLifestageSerialization)}_preInit.yml");
+        var postInitPath = new ResPath($"{nameof(TestLifestageSerialization)}_postInit.yml");
+        var pausedPostInitPath = new ResPath($"{nameof(TestLifestageSerialization)}_paused.yml");
 
         // Create a pre-init map, and spawn multiple entities on it
         Entity<TransformComponent, EntitySaveTestComponent> map = default;
@@ -162,11 +162,11 @@ public sealed partial class LifetimeSerializationTest : RobustIntegrationTest
     }
 
     /// <summary>
-    /// Variant of <see cref="TestLifetimeSerialization"/> that has multiple maps and combinations. E.g., a single
+    /// Variant of <see cref="TestLifestageSerialization"/> that has multiple maps and combinations. E.g., a single
     /// paused entity on an un-paused map.
     /// </summary>
     [Test]
-    public async Task TestMixedLifetimeSerialization()
+    public async Task TestMixedLifestageSerialization()
     {
         var server = StartServer();
         await server.WaitIdleAsync();
@@ -174,8 +174,8 @@ public sealed partial class LifetimeSerializationTest : RobustIntegrationTest
         var meta = server.System<MetaDataSystem>();
         var mapSys = server.System<SharedMapSystem>();
         var loader = server.System<MapLoaderSystem>();
-        var path = new ResPath($"{nameof(TestMixedLifetimeSerialization)}.yml");
-        var altPath = new ResPath($"{nameof(TestMixedLifetimeSerialization)}_alt.yml");
+        var path = new ResPath($"{nameof(TestMixedLifestageSerialization)}.yml");
+        var altPath = new ResPath($"{nameof(TestMixedLifestageSerialization)}_alt.yml");
 
         Entity<TransformComponent, EntitySaveTestComponent> mapA = default; // preinit Map
         Entity<TransformComponent, EntitySaveTestComponent> mapB = default; // postinit unpaused Map

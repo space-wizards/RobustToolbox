@@ -77,12 +77,12 @@ public enum MissingEntityBehaviour
     /// Note that this might unexpectedly change the <see cref="FileCategory"/>. I.e., trying to serialize a grid might
     /// accidentally lead to serializing a (partial?) map file.
     /// </remarks>
-    AutoInclude,
+    PartialInclude,
 
     /// <summary>
-    /// Variant of <see cref="AutoInclude"/> that will also automatically include the children of any entities that
+    /// Variant of <see cref="PartialInclude"/> that will also automatically include the children of any entities that
     /// that are automatically included. Note that because auto-inclusion generally needs to include an entity's
     /// parents, this will include more than just the missing entity's direct children.
     /// </summary>
-    AutoIncludeChildren,
+    AutoInclude,
 }

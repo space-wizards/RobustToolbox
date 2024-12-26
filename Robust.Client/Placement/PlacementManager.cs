@@ -536,13 +536,14 @@ namespace Robust.Client.Placement
             }
             else
             {
+                var mousePosition = EyeManager.PixelToMap(InputManager.MouseScreenPosition);
                 var map = EntityManager.GetComponent<TransformComponent>(ent).MapID;
-                if (map == MapId.Nullspace || !Eraser)
+                if (map == MapId.Nullspace || !Eraser || mousePosition.MapId == MapId.Nullspace)
                 {
                     coordinates = new EntityCoordinates();
                     return false;
                 }
-                coordinates = XformSystem.ToCoordinates(ent, EyeManager.PixelToMap(InputManager.MouseScreenPosition));
+                coordinates = XformSystem.ToCoordinates(mousePosition);
                 return true;
             }
         }

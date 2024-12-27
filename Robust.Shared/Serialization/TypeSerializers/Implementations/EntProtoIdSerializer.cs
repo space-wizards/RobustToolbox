@@ -17,7 +17,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations;
 ///     Serializer used automatically for <see cref="EntProtoId"/> types.
 /// </summary>
 [TypeSerializer]
-public sealed class EntProtoIdSerializer : ITypeSerializer<EntProtoId, ValueDataNode>, ITypeCopyCreator<EntProtoId>
+public sealed class EntProtoIdSerializer : ITypeSerializer<EntProtoId, ValueDataNode>
 {
     public ValidationNode Validate(ISerializationManager serialization, ValueDataNode node, IDependencyCollection dependencies, ISerializationContext? context = null)
     {
@@ -37,18 +37,13 @@ public sealed class EntProtoIdSerializer : ITypeSerializer<EntProtoId, ValueData
     {
         return new ValueDataNode(value.Id);
     }
-
-    public EntProtoId CreateCopy(ISerializationManager serializationManager, EntProtoId source, IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
-    {
-        return source;
-    }
 }
 
 /// <summary>
 ///     Serializer used automatically for <see cref="EntProtoId"/> types.
 /// </summary>
 [TypeSerializer]
-public sealed class EntProtoIdSerializer<T> : ITypeSerializer<EntProtoId<T>, ValueDataNode>, ITypeCopyCreator<EntProtoId<T>> where T : IComponent, new()
+public sealed class EntProtoIdSerializer<T> : ITypeSerializer<EntProtoId<T>, ValueDataNode> where T : IComponent, new()
 {
     public ValidationNode Validate(ISerializationManager serialization, ValueDataNode node, IDependencyCollection dependencies, ISerializationContext? context = null)
     {
@@ -82,10 +77,5 @@ public sealed class EntProtoIdSerializer<T> : ITypeSerializer<EntProtoId<T>, Val
     public DataNode Write(ISerializationManager serialization, EntProtoId<T> value, IDependencyCollection dependencies, bool alwaysWrite = false, ISerializationContext? context = null)
     {
         return new ValueDataNode(value.Id);
-    }
-
-    public EntProtoId<T> CreateCopy(ISerializationManager serializationManager, EntProtoId<T> source, IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
-    {
-        return source;
     }
 }

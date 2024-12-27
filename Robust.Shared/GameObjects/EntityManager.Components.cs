@@ -1242,6 +1242,52 @@ namespace Robust.Shared.GameObjects
             return new CompRegistryEntityEnumerator(this, trait1, registry);
         }
 
+        /// <inheritdoc />
+        public EntityUid? Resolve(ref WeakEntityReference weakRef)
+        {
+            if (weakRef.Entity != EntityUid.Invalid && EntityExists(weakRef.Entity))
+                return weakRef.Entity;
+
+            weakRef.Entity = EntityUid.Invalid;
+            return null;
+        }
+
+        /// <inheritdoc />
+        public EntityUid? Resolve(ref WeakEntityReference? weakRef)
+        {
+            if (weakRef is not { } value)
+                return null;
+
+            if (value.Entity != EntityUid.Invalid && EntityExists(value.Entity))
+                return value.Entity;
+
+            weakRef = null;
+            return null;
+        }
+
+        /// <inheritdoc />
+        public Entity<T>? Resolve<T>(ref WeakEntityReference<T> weakRef) where T : IComponent
+        {
+            if (weakRef.Entity != EntityUid.Invalid && TryGetComponent(weakRef.Entity, out T? comp))
+                return new(weakRef.Entity, comp);
+
+            weakRef.Entity = EntityUid.Invalid;
+            return null;
+        }
+
+        /// <inheritdoc />
+        public Entity<T>? Resolve<T>(ref WeakEntityReference<T>? weakRef) where T : IComponent
+        {
+            if (weakRef is not { } value)
+                return null;
+
+            if (value.Entity != EntityUid.Invalid && TryGetComponent(value.Entity, out T? comp))
+                return new(value.Entity, comp);
+
+            weakRef = null;
+            return null;
+        }
+
         public AllEntityQueryEnumerator<IComponent> AllEntityQueryEnumerator(Type comp)
         {
             DebugTools.Assert(comp.IsAssignableTo(typeof(IComponent)));

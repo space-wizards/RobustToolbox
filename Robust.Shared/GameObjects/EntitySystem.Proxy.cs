@@ -1447,4 +1447,36 @@ public partial class EntitySystem
     }
 
     #endregion
+
+    #region WeakEntityReference
+
+    /// <inheritdoc cref="IEntityManager.Resolve(ref Robust.Shared.GameObjects.WeakEntityReference)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid? Resolve(ref WeakEntityReference weakRef)
+    {
+        return EntityManager.Resolve(ref weakRef);
+    }
+
+    /// <inheritdoc cref="IEntityManager.Resolve(ref Robust.Shared.GameObjects.WeakEntityReference)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid? Resolve(ref WeakEntityReference? weakRef)
+    {
+        return EntityManager.Resolve(ref weakRef);
+    }
+
+    /// <inheritdoc cref="IEntityManager.Resolve{T}(ref Robust.Shared.GameObjects.WeakEntityReference{T})"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected Entity<T>? Resolve<T>(ref WeakEntityReference<T> weakRef) where T : IComponent
+    {
+        return EntityManager.Resolve(ref weakRef);
+    }
+
+    /// <inheritdoc cref="IEntityManager.Resolve{T}(ref Robust.Shared.GameObjects.WeakEntityReference{T})"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected Entity<T>? Resolve<T>(ref WeakEntityReference<T>? weakRef) where T : IComponent
+    {
+        return EntityManager.Resolve(ref weakRef);
+    }
+    #endregion
+
 }

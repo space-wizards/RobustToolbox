@@ -1,5 +1,4 @@
 using System.Globalization;
-using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
@@ -11,7 +10,9 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Prototypes;
 
-internal sealed class YamlValidationContext : ISerializationContext, ITypeSerializer<EntityUid, ValueDataNode>
+internal sealed class YamlValidationContext : ISerializationContext,
+    ITypeSerializer<EntityUid, ValueDataNode>,
+    ITypeSerializer<WeakEntityReference, ValueDataNode>
 {
     public SerializationManager.SerializerProvider SerializerProvider { get; } = new();
     public bool WritingReadingPrototypes => true;
@@ -52,11 +53,39 @@ internal sealed class YamlValidationContext : ISerializationContext, ITypeSerial
         return EntityUid.Parse(node.Value);
     }
 
-    [MustUseReturnValue]
-    public EntityUid Copy(ISerializationManager serializationManager, EntityUid source, EntityUid target,
-        bool skipHook,
+    public ValidationNode Validate(
+        ISerializationManager serializationManager,
+        ValueDataNode node,
+        IDependencyCollection dependencies,
         ISerializationContext? context = null)
     {
-        return new((int)source);
+        if (node.Value == "invalid")
+            return new ValidatedValueNode(node);
+
+        return new ErrorNode(node, "Prototypes should not contain EntityUids", true);
+    }
+
+    public WeakEntityReference Read(
+        ISerializationManager serializationManager,
+        ValueDataNode node,
+        IDependencyCollection dependencies,
+        SerializationHookContext hookCtx,
+        ISerializationContext? context = null,
+        ISerializationManager.InstantiationDelegate<WeakEntityReference>? instanceProvider = null)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public DataNode Write(
+        ISerializationManager serializationManager,
+        WeakEntityReference value,
+        IDependencyCollection dependencies,
+        bool alwaysWrite = false,
+        ISerializationContext? context = null)
+    {
+        if (!value.Entity.Valid)
+            return new ValueDataNode("invalid");
+
+        return new ValueDataNode(value.Entity.Id.ToString(CultureInfo.InvariantCulture));
     }
 }

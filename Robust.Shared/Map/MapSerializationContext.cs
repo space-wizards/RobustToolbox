@@ -17,7 +17,8 @@ using Robust.Shared.Timing;
 namespace Robust.Shared.Map;
 
 internal sealed class MapSerializationContext : ISerializationContext, IEntityLoadContext,
-    ITypeSerializer<EntityUid, ValueDataNode>
+    ITypeSerializer<EntityUid, ValueDataNode>,
+    ITypeSerializer<WeakEntityReference, ValueDataNode>
 {
     public SerializationManager.SerializerProvider SerializerProvider { get; } = new();
 
@@ -160,7 +161,6 @@ internal sealed class MapSerializationContext : ISerializationContext, IEntityLo
             .Error("Error in map file: found local entity UID '{0}' which does not exist.", val);
 
         return EntityUid.Invalid;
-
     }
 
     [MustUseReturnValue]
@@ -169,5 +169,47 @@ internal sealed class MapSerializationContext : ISerializationContext, IEntityLo
         ISerializationContext? context = null)
     {
         return new((int)source);
+    }
+
+    public WeakEntityReference Read(
+        ISerializationManager serializationManager,
+        ValueDataNode node,
+        IDependencyCollection dependencies,
+        SerializationHookContext hookCtx,
+        ISerializationContext? context = null,
+        ISerializationManager.InstantiationDelegate<WeakEntityReference>? instanceProvider = null)
+    {
+        if (node.Value != "null" && int.TryParse(node.Value, out var val) && _uidEntityMap.TryGetValue(val, out var entity))
+            return new(entity);
+
+        return WeakEntityReference.Invalid;
+    }
+
+    public DataNode Write(
+        ISerializationManager serializationManager,
+        WeakEntityReference value,
+        IDependencyCollection dependencies,
+        bool alwaysWrite = false,
+        ISerializationContext? context = null)
+    {
+        if (!_entityUidMap.TryGetValue(value.Entity, out var entityUidMapped))
+            return new ValueDataNode("invalid");
+
+        return new ValueDataNode(entityUidMapped.ToString(CultureInfo.InvariantCulture));
+    }
+
+    ValidationNode ITypeValidator<WeakEntityReference, ValueDataNode>.Validate(
+        ISerializationManager serializationManager,
+        ValueDataNode node,
+        IDependencyCollection dependencies,
+        ISerializationContext? context)
+    {
+        if (node.Value is "invalid")
+            return new ValidatedValueNode(node);
+
+        if (!int.TryParse(node.Value, out var val))
+            return new ErrorNode(node, "Invalid WeakEntityReference", true);
+
+        return new ValidatedValueNode(node);
     }
 }

@@ -1,9 +1,11 @@
 ﻿using Robust.Shared.Localization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Toolshed.TypeParsers;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
+[NotYamlSerializable]
 public record struct Entity<T> : IFluentEntityUid, IAsType<EntityUid>
     where T : IComponent?
 {
@@ -50,6 +52,7 @@ public record struct Entity<T> : IFluentEntityUid, IAsType<EntityUid>
     public override int GetHashCode() => Owner.GetHashCode();
 }
 
+[NotYamlSerializable]
 public record struct Entity<T1, T2> : IFluentEntityUid, IAsType<EntityUid>
     where T1 : IComponent? where T2 : IComponent?
 {
@@ -118,6 +121,7 @@ public record struct Entity<T1, T2> : IFluentEntityUid, IAsType<EntityUid>
     public EntityUid AsType() => Owner;
 }
 
+[NotYamlSerializable]
 public record struct Entity<T1, T2, T3> : IFluentEntityUid, IAsType<EntityUid>
     where T1 : IComponent? where T2 : IComponent? where T3 : IComponent?
 {
@@ -222,6 +226,7 @@ public record struct Entity<T1, T2, T3> : IFluentEntityUid, IAsType<EntityUid>
     public EntityUid AsType() => Owner;
 }
 
+[NotYamlSerializable]
 public record struct Entity<T1, T2, T3, T4> : IFluentEntityUid, IAsType<EntityUid>
     where T1 : IComponent? where T2 : IComponent? where T3 : IComponent? where T4 : IComponent?
 {
@@ -350,6 +355,7 @@ public record struct Entity<T1, T2, T3, T4> : IFluentEntityUid, IAsType<EntityUi
     public EntityUid AsType() => Owner;
 }
 
+[NotYamlSerializable]
 public record struct Entity<T1, T2, T3, T4, T5> : IFluentEntityUid, IAsType<EntityUid>
     where T1 : IComponent? where T2 : IComponent? where T3 : IComponent? where T4 : IComponent? where T5 : IComponent?
 {
@@ -502,6 +508,7 @@ public record struct Entity<T1, T2, T3, T4, T5> : IFluentEntityUid, IAsType<Enti
     public EntityUid AsType() => Owner;
 }
 
+[NotYamlSerializable]
 public record struct Entity<T1, T2, T3, T4, T5, T6> : IFluentEntityUid, IAsType<EntityUid>
     where T1 : IComponent? where T2 : IComponent? where T3 : IComponent? where T4 : IComponent? where T5 : IComponent? where T6 : IComponent?
 {
@@ -678,6 +685,7 @@ public record struct Entity<T1, T2, T3, T4, T5, T6> : IFluentEntityUid, IAsType<
     public EntityUid AsType() => Owner;
 }
 
+[NotYamlSerializable]
 public record struct Entity<T1, T2, T3, T4, T5, T6, T7> : IFluentEntityUid, IAsType<EntityUid>
     where T1 : IComponent? where T2 : IComponent? where T3 : IComponent? where T4 : IComponent? where T5 : IComponent? where T6 : IComponent? where T7 : IComponent?
 {
@@ -879,6 +887,7 @@ public record struct Entity<T1, T2, T3, T4, T5, T6, T7> : IFluentEntityUid, IAsT
 
 }
 
+[NotYamlSerializable]
 public record struct Entity<T1, T2, T3, T4, T5, T6, T7, T8> : IFluentEntityUid, IAsType<EntityUid>
     where T1 : IComponent? where T2 : IComponent? where T3 : IComponent? where T4 : IComponent? where T5 : IComponent? where T6 : IComponent? where T7 : IComponent? where T8 : IComponent?
 {

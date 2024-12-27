@@ -216,6 +216,7 @@ public sealed partial class MapLoaderSystem
 
         // We want to apply the transforms to all children of any loaded maps. However, we can't just iterate over the
         // children of loaded maps, as transform component has not yet been initialized. I.e. xform.Children is empty.
+        // Hence we iterate over all entities and check which ones are attached to maps.
         foreach (var uid in deserializer.Result.Entities)
         {
             var xform = Transform(uid);

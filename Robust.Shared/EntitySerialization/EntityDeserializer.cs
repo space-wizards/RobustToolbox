@@ -32,7 +32,13 @@ namespace Robust.Shared.EntitySerialization;
 public sealed class EntityDeserializer : ISerializationContext, IEntityLoadContext,
     ITypeSerializer<EntityUid, ValueDataNode>
 {
+    // See the comments around EntitySerializer's version const for information about the different versions.
+    // TBH version three isn't even really fully supported anymore, simply due to changes in engine component serialization.
+    // E.g., PR #3923 changed the physics fixture serialization from a sequence to a dictionary/mapping.
+    // So any unmodified v3 file will with a grid will fail to load, though that's technically not due to any map
+    // file formatting changes.
     public const int OldestSupportedVersion = 3;
+
     public const int NewestSupportedVersion = EntitySerializer.MapFormatVersion;
 
     public SerializationManager.SerializerProvider SerializerProvider { get; } = new();
@@ -997,7 +1003,10 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
         var totalRoots = 0;
         foreach (var uid in Result.Entities)
         {
-            DebugTools.AssertEqual(maps.Contains(uid), _mapQuery.HasComp(uid));
+            if (ToDelete.Contains(uid))
+                continue;
+
+            DebugTools.Assert(maps.Contains(uid) == _mapQuery.HasComp(uid));
             DebugTools.AssertEqual(grids.Contains(uid), _gridQuery.HasComp(uid));
 
             if (!_xformQuery.TryComp(uid, out var xform))

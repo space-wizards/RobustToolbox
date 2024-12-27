@@ -105,13 +105,11 @@ public sealed partial class MapLoaderSystem
     public bool TryMergeMap(
         MapId mapId,
         ResPath path,
-        [NotNullWhen(true)] out Entity<MapComponent>? map,
         [NotNullWhen(true)] out HashSet<Entity<MapGridComponent>>? grids,
         DeserializationOptions? options = null,
         Vector2 offset = default,
         Angle rot = default)
     {
-        map = null;
         grids = null;
 
         var opts = new MapLoadOptions
@@ -132,7 +130,6 @@ public sealed partial class MapLoaderSystem
         if (!_mapSystem.TryGetMap(mapId, out var uid) || !TryComp(uid, out MapComponent? comp))
             return false;
 
-        map = new(uid.Value, comp);
         grids = result.Grids;
         return true;
     }
@@ -150,36 +147,36 @@ public sealed partial class MapLoaderSystem
         var matrix = Matrix3Helpers.CreateTransform(opts.Offset, rotation);
         var target = new Entity<TransformComponent>(targetUid.Value, Transform(targetUid.Value));
 
-        foreach (var uid in deserializer.Result.Orphans)
-        {
-            Merge(merged, uid, target, matrix, rotation);
-        }
-
-        deserializer.Result.Orphans.Clear();
-
+        // We want to apply the transforms to all children of any loaded maps. However, we can't just iterate over the
+        // children of loaded maps, as transform component has not yet been initialized. I.e. xform.Children is empty.
+        // Hence we iterate over all entities and check which ones are attached to maps.
+        HashSet<EntityUid> maps = new();
+        HashSet<EntityUid> logged = new();
         foreach (var uid in deserializer.Result.Entities)
         {
             var xform = Transform(uid);
             if (!_mapQuery.HasComp(xform.ParentUid))
                 continue;
 
-            // The original comment around this bit of logic was just:
-            // > Smelly
-            // I don't know what sloth meant by that, but I guess loading a grid-map onto another grid-map for whatever
-            // reason must be done without offsets?
-            // Or more generally, loading a mapgrid onto another (potentially non-mapgrid) map is just generally kind of weird.
-            if (_gridQuery.HasComponent(xform.ParentUid))
+            if (_gridQuery.HasComponent(xform.ParentUid) && logged.Add(xform.ParentUid))
             {
-                Merge(merged, uid, target, Matrix3x2.Identity, Angle.Zero);
+                Log.Error($"Merging a grid-map onto another map is not supported.");
+                continue;
             }
-            else
-            {
-                Merge(merged, uid, target, matrix, rotation);
-            }
+
+            maps.Add(xform.ParentUid);
+            Merge(merged, uid, target, matrix, rotation);
         }
 
-        deserializer.ToDelete.UnionWith(deserializer.Result.Maps.Select(x => x.Owner));
-        deserializer.Result.Maps.Clear();
+        deserializer.ToDelete.UnionWith(maps);
+        deserializer.Result.Maps.RemoveWhere(x => maps.Contains(x.Owner));
+
+        foreach (var uid in deserializer.Result.Orphans)
+        {
+            Merge(merged, uid, target, matrix, rotation);
+        }
+
+        deserializer.Result.Orphans.Clear();
     }
 
     private void Merge(

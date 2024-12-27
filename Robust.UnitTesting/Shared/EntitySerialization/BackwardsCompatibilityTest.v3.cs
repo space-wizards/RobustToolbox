@@ -19,6 +19,8 @@ public sealed partial class BackwardsCompatibilityTest
     /// </summary>
     /// <remarks>
     /// The file was pilfered from content integration tests ("floor3x3.yml") and modified slightly.
+    /// See also the comments around <see cref="EntityDeserializer.OldestSupportedVersion"/> that point out that v3
+    /// isn't even really loadable anymore.
     /// </remarks>
     [Test]
     public async Task TestLoadV3()
@@ -33,8 +35,10 @@ public sealed partial class BackwardsCompatibilityTest
         var resourceManager = server.ResolveDependency<IResourceManagerInternal>();
 
         tileMan.Register(new TileDef("Space"));
-        tileMan.Register(new TileDef("A"));
-        tileMan.Register(new TileDef("B"));
+        for (var i = 1; i <= 88; i++)
+        {
+            tileMan.Register(new TileDef(i.ToString()));
+        }
         var gridPath = new ResPath($"{nameof(MapDataV3Grid)}.yml");
         resourceManager.MountString(gridPath.ToString(), MapDataV3Grid);
 
@@ -257,7 +261,7 @@ entities:
     fixedRotation: False
     bodyType: Dynamic
     type: Physics
-  - fixtures: []
+  - fixtures: {}
     type: Fixtures
   - type: OccluderTree
   - id: grid
@@ -402,7 +406,7 @@ entities:
     fixedRotation: False
     bodyType: Dynamic
     type: Physics
-  - fixtures: []
+  - fixtures: {}
     type: Fixtures
   - type: OccluderTree
   - id: grid

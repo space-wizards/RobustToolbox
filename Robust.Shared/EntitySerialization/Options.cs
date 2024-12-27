@@ -60,7 +60,7 @@ public record struct DeserializationOptions()
 
     /// <summary>
     /// If true, all maps that get created while loading this file will get paused.
-    /// Note that this will not automatically unpause maps that were saved while paused.
+    /// Note that the converse is not true, paused maps will not get un-paused if this is false.
     /// Pre-mapinit maps are assumed to be paused.
     /// </summary>
     public bool PauseMaps = false;
@@ -97,6 +97,11 @@ public struct MapLoadOptions()
     /// I.e., this will merge map contents onto an existing map. This will also cause any maps that get loaded to
     /// delete themselves after their children have been moved.
     /// </summary>
+    /// <remarks>
+    /// Note that this option effectively causes <see cref="DeserializationOptions.InitializeMaps"/> and
+    /// <see cref="DeserializationOptions.PauseMaps"/> to have no effect, as the target map is not a map that was
+    /// created by the deserialization.
+    /// </remarks>
     public MapId? MergeMap = null;
 
     /// <summary>

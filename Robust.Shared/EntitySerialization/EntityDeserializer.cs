@@ -30,7 +30,8 @@ namespace Robust.Shared.EntitySerialization;
 /// serialization than the methods provided by <see cref="MapLoaderSystem"/>.
 /// </summary>
 public sealed class EntityDeserializer : ISerializationContext, IEntityLoadContext,
-    ITypeSerializer<EntityUid, ValueDataNode>
+    ITypeSerializer<EntityUid, ValueDataNode>,
+    ITypeSerializer<NetEntity, ValueDataNode>
 {
     // See the comments around EntitySerializer's version const for information about the different versions.
     // TBH version three isn't even really fully supported anymore, simply due to changes in engine component serialization.
@@ -1053,7 +1054,7 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
         IDependencyCollection dependencies,
         ISerializationContext? context)
     {
-        if (node.Value is "null" or "invalid")
+        if (node.Value is "invalid")
             return new ValidatedValueNode(node);
 
         if (!int.TryParse(node.Value, out _))
@@ -1062,12 +1063,12 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
         return new ValidatedValueNode(node);
     }
 
-    public DataNode Write(
+    DataNode ITypeWriter<EntityUid>.Write(
         ISerializationManager serializationManager,
         EntityUid value,
         IDependencyCollection dependencies,
-        bool alwaysWrite = false,
-        ISerializationContext? context = null)
+        bool alwaysWrite,
+        ISerializationContext? context)
     {
         return value.IsValid()
             ? new ValueDataNode(value.Id.ToString(CultureInfo.InvariantCulture))
@@ -1104,15 +1105,48 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
         return EntityUid.Invalid;
     }
 
-    [MustUseReturnValue]
-    public EntityUid Copy(
+    ValidationNode ITypeValidator<NetEntity, ValueDataNode>.Validate(
         ISerializationManager serializationManager,
-        EntityUid source,
-        EntityUid target,
-        bool skipHook,
-        ISerializationContext? context = null)
+        ValueDataNode node,
+        IDependencyCollection dependencies,
+        ISerializationContext? context)
     {
-        return new(source.Id);
+        if (node.Value is "invalid")
+            return new ValidatedValueNode(node);
+
+        if (!int.TryParse(node.Value, out _))
+            return new ErrorNode(node, "Invalid NetEntity");
+
+        return new ValidatedValueNode(node);
+    }
+
+    NetEntity ITypeReader<NetEntity, ValueDataNode>.Read(
+        ISerializationManager serializationManager,
+        ValueDataNode node,
+        IDependencyCollection dependencies,
+        SerializationHookContext hookCtx,
+        ISerializationContext? context,
+        ISerializationManager.InstantiationDelegate<NetEntity>? instanceProvider)
+    {
+        var uid = serializationManager.Read<EntityUid>(node, context);
+
+        if (EntMan.TryGetNetEntity(uid, out var nent))
+            return nent.Value;
+
+        _log.Error($"Failed to get NetEntity entity {EntMan.ToPrettyString(uid)}");
+        return NetEntity.Invalid;
+    }
+
+    DataNode ITypeWriter<NetEntity>.Write(
+        ISerializationManager serializationManager,
+        NetEntity value,
+        IDependencyCollection dependencies,
+        bool alwaysWrite,
+        ISerializationContext? context)
+    {
+        return value.IsValid()
+            ? new ValueDataNode(value.Id.ToString(CultureInfo.InvariantCulture))
+            : new ValueDataNode("invalid");
     }
 
     #endregion

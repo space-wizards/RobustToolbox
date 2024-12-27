@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
-using JetBrains.Annotations;
 using Robust.Shared.Configuration;
 using Robust.Shared.EntitySerialization.Components;
 using Robust.Shared.EntitySerialization.Systems;
@@ -37,7 +36,9 @@ namespace Robust.Shared.EntitySerialization;
 /// document using the various "Write" methods. (e.g., <see cref="WriteEntitySection"/>). After a one has finished using
 /// the generated data, the serializer needs to be reset (<see cref="Reset"/>) using it again to serialize other entities.
 /// </remarks>
-public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<EntityUid, ValueDataNode>
+public sealed class EntitySerializer : ISerializationContext,
+    ITypeSerializer<EntityUid, ValueDataNode>,
+    ITypeSerializer<NetEntity, ValueDataNode>
 {
     public const int MapFormatVersion = 7;
     // v6->v7: PR #5572 - Added more metadata, List maps/grids/orphans, include some life-stage information
@@ -855,7 +856,7 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
         IDependencyCollection dependencies,
         ISerializationContext? context)
     {
-        if (node.Value is "null" or "invalid")
+        if (node.Value == "invalid")
             return new ValidatedValueNode(node);
 
         if (!int.TryParse(node.Value, out _))
@@ -943,15 +944,41 @@ public sealed class EntitySerializer : ISerializationContext, ITypeSerializer<En
         return node.Value == "invalid" ? EntityUid.Invalid : EntityUid.Parse(node.Value);
     }
 
-    [MustUseReturnValue]
-    public EntityUid Copy(
+    public ValidationNode Validate(
         ISerializationManager serializationManager,
-        EntityUid source,
-        EntityUid target,
-        bool skipHook,
+        ValueDataNode node,
+        IDependencyCollection dependencies,
         ISerializationContext? context = null)
     {
-        return new(source.Id);
+        if (node.Value == "invalid")
+            return new ValidatedValueNode(node);
+
+        if (!int.TryParse(node.Value, out _))
+            return new ErrorNode(node, "Invalid NetEntity");
+
+        return new ValidatedValueNode(node);
+    }
+
+    public NetEntity Read(
+        ISerializationManager serializationManager,
+        ValueDataNode node,
+        IDependencyCollection dependencies,
+        SerializationHookContext hookCtx,
+        ISerializationContext? context = null,
+        ISerializationManager.InstantiationDelegate<NetEntity>? instanceProvider = null)
+    {
+        return node.Value == "invalid" ? NetEntity.Invalid : NetEntity.Parse(node.Value);
+    }
+
+    public DataNode Write(
+        ISerializationManager serializationManager,
+        NetEntity value,
+        IDependencyCollection dependencies,
+        bool alwaysWrite = false,
+        ISerializationContext? context = null)
+    {
+        var uid = EntMan.GetEntity(value);
+        return serializationManager.WriteValue(uid, alwaysWrite, context);
     }
 
     #endregion

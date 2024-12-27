@@ -38,11 +38,15 @@ public sealed class WeakEntityReferenceSerializer<T> :
         bool alwaysWrite = false,
         ISerializationContext? context = null)
     {
-        var uid = context is MapSerializationContext ctx && !ctx.EntityManager.HasComponent<T>(value.Entity)
-            ? EntityUid.Invalid
-            : value.Entity;
+        NetEntity val = value.Entity;
 
-        return serializationManager.WriteValue(new WeakEntityReference(uid), alwaysWrite, context);
+        if (context is MapSerializationContext ctx)
+        {
+            if (!ctx.EntityManager.TryGetEntity(val, out var uid) || !ctx.EntityManager.HasComponent<T>(uid))
+                val = NetEntity.Invalid;
+        }
+
+        return serializationManager.WriteValue(new WeakEntityReference(val), alwaysWrite, context);
     }
 
     public ValidationNode Validate(

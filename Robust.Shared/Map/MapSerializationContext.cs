@@ -179,8 +179,12 @@ internal sealed class MapSerializationContext : ISerializationContext, IEntityLo
         ISerializationContext? context = null,
         ISerializationManager.InstantiationDelegate<WeakEntityReference>? instanceProvider = null)
     {
-        if (node.Value != "null" && int.TryParse(node.Value, out var val) && _uidEntityMap.TryGetValue(val, out var entity))
-            return new(entity);
+        if (node.Value != "null"
+            && int.TryParse(node.Value, out var val)
+            && _uidEntityMap.TryGetValue(val, out var entity))
+        {
+            return new(EntityManager.GetNetEntity(entity));
+        }
 
         return WeakEntityReference.Invalid;
     }
@@ -192,8 +196,11 @@ internal sealed class MapSerializationContext : ISerializationContext, IEntityLo
         bool alwaysWrite = false,
         ISerializationContext? context = null)
     {
-        if (!_entityUidMap.TryGetValue(value.Entity, out var entityUidMapped))
+        if (!EntityManager.TryGetEntity(value.Entity, out var uid)
+            || !_entityUidMap.TryGetValue(uid.Value, out var entityUidMapped))
+        {
             return new ValueDataNode("invalid");
+        }
 
         return new ValueDataNode(entityUidMapped.ToString(CultureInfo.InvariantCulture));
     }

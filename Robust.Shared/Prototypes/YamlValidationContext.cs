@@ -73,7 +73,10 @@ internal sealed class YamlValidationContext : ISerializationContext,
         ISerializationContext? context = null,
         ISerializationManager.InstantiationDelegate<WeakEntityReference>? instanceProvider = null)
     {
-        throw new System.NotImplementedException();
+        if (node.Value == "invalid")
+            return WeakEntityReference.Invalid;
+
+        return new WeakEntityReference(NetEntity.Parse(node.Value));
     }
 
     public DataNode Write(

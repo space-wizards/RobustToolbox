@@ -452,22 +452,23 @@ namespace Robust.Shared.GameObjects
 
         /// <summary>
         /// Attempts to resolve the given <see cref="WeakEntityReference"/> into an <see cref="EntityUid"/> that
-        /// corresponds to an existing entity. If the entity does not exist, the weak reference is invalidated.
+        /// corresponds to an existing entity. If this fails, the entity has either been deleted, or for clients, the
+        /// entity may not yet have been sent to them.
         /// </summary>
-        public EntityUid? Resolve(ref WeakEntityReference weakRef);
+        public EntityUid? Resolve(WeakEntityReference weakRef);
 
-        /// <inheritdoc cref="Resolve(ref Robust.Shared.GameObjects.WeakEntityReference)"/>
-        public EntityUid? Resolve(ref WeakEntityReference? weakRef);
+        /// <inheritdoc cref="Resolve(WeakEntityReference)"/>
+        public EntityUid? Resolve(WeakEntityReference? weakRef);
 
         /// <summary>
         /// Attempts to resolve the given <see cref="WeakEntityReference"/> into an existing entity with the specified
-        /// component and return the <see cref="Entity{T}"/>. If the entity does not exist or doesn't have the component,
-        /// the weak reference will get invalidated.
+        /// component and return the <see cref="Entity{T}"/>. If this fails, the entity has either been deleted, or for
+        /// clients, the entity may not yet have been sent to them.
         /// </summary>
-        public Entity<T>? Resolve<T>(ref WeakEntityReference<T> weakRef) where T : IComponent;
+        public Entity<T>? Resolve<T>(WeakEntityReference<T> weakRef) where T : IComponent;
 
-        /// <inheritdoc cref="Resolve{T}(ref Robust.Shared.GameObjects.WeakEntityReference{T})"/>
-        public Entity<T>? Resolve<T>(ref WeakEntityReference<T>? weakRef) where T : IComponent;
+        /// <inheritdoc cref="Resolve{T}(WeakEntityReference{T})"/>
+        public Entity<T>? Resolve<T>(WeakEntityReference<T>? weakRef) where T : IComponent;
 
         AllEntityQueryEnumerator<IComponent> AllEntityQueryEnumerator(Type comp);
 

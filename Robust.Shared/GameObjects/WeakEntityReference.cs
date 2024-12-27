@@ -1,10 +1,11 @@
-﻿using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.ViewVariables;
+﻿using System;
+using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Shared.GameObjects;
 
 /// <summary>
-/// This struct is just a wrapper around a <see cref="EntityUid"/> that is intended to be used to store references to
+/// This struct is just a wrapper around a <see cref="NetEntity"/> that is intended to be used to store references to
 /// entities in a context where there is no expectation that the entity still exists (has not been deleted).
 /// </summary>
 /// <remarks>
@@ -18,20 +19,11 @@ namespace Robust.Shared.GameObjects;
 /// When saving a map, any weak references to entities that are not being included in the save file are automatically
 /// ignored.
 /// </remarks>
-[CopyByRef]
-public record struct WeakEntityReference
+[CopyByRef, Serializable, NetSerializable]
+public record struct WeakEntityReference(NetEntity Entity)
 {
-    // Internal to dissuade anyone from accessing the field directly.
-    // If made public to be more permissive for whatever reason, maybe add [Obsolete] do something else to generate a
-    // warning to prevent accidental misuse?
-    [ViewVariables] internal EntityUid Entity;
     public override int GetHashCode() => Entity.GetHashCode();
-    public static readonly WeakEntityReference Invalid = new(EntityUid.Invalid);
-
-    public WeakEntityReference(EntityUid uid)
-    {
-        Entity = uid;
-    }
+    public static readonly WeakEntityReference Invalid = new(NetEntity.Invalid);
 }
 
 /// <summary>
@@ -39,14 +31,8 @@ public record struct WeakEntityReference
 /// specified component.
 /// </summary>
 [CopyByRef]
-public record struct WeakEntityReference<T> where T : IComponent
+public record struct WeakEntityReference<T>(NetEntity Entity) where T : IComponent
 {
-    [ViewVariables] internal EntityUid Entity;
     public override int GetHashCode() => Entity.GetHashCode();
-    public static readonly WeakEntityReference<T> Invalid = new(EntityUid.Invalid);
-
-    public WeakEntityReference(EntityUid uid)
-    {
-        Entity = uid;
-    }
+    public static readonly WeakEntityReference<T> Invalid = new(NetEntity.Invalid);
 }

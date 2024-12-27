@@ -1450,32 +1450,32 @@ public partial class EntitySystem
 
     #region WeakEntityReference
 
-    /// <inheritdoc cref="IEntityManager.Resolve(ref Robust.Shared.GameObjects.WeakEntityReference)"/>
+    /// <inheritdoc cref="IEntityManager.Resolve(WeakEntityReference)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityUid? Resolve(ref WeakEntityReference weakRef)
     {
-        return EntityManager.Resolve(ref weakRef);
+        return EntityManager.Resolve(weakRef);
     }
 
-    /// <inheritdoc cref="IEntityManager.Resolve(ref Robust.Shared.GameObjects.WeakEntityReference)"/>
+    /// <inheritdoc cref="IEntityManager.Resolve(WeakEntityReference)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityUid? Resolve(ref WeakEntityReference? weakRef)
     {
-        return EntityManager.Resolve(ref weakRef);
+        return EntityManager.Resolve(weakRef);
     }
 
-    /// <inheritdoc cref="IEntityManager.Resolve{T}(ref Robust.Shared.GameObjects.WeakEntityReference{T})"/>
+    /// <inheritdoc cref="IEntityManager.Resolve{T}(ref WeakEntityReference{T})"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected Entity<T>? Resolve<T>(ref WeakEntityReference<T> weakRef) where T : IComponent
     {
-        return EntityManager.Resolve(ref weakRef);
+        return EntityManager.Resolve(weakRef);
     }
 
-    /// <inheritdoc cref="IEntityManager.Resolve{T}(ref Robust.Shared.GameObjects.WeakEntityReference{T})"/>
+    /// <inheritdoc cref="IEntityManager.Resolve{T}(WeakEntityReference{T})"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected Entity<T>? Resolve<T>(ref WeakEntityReference<T>? weakRef) where T : IComponent
+    protected Entity<T>? Resolve<T>(WeakEntityReference<T>? weakRef) where T : IComponent
     {
-        return EntityManager.Resolve(ref weakRef);
+        return EntityManager.Resolve(weakRef);
     }
     #endregion
 

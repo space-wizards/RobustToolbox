@@ -54,6 +54,14 @@ END TEMPLATE-->
 *None yet*
 
 
+## 238.0.1
+
+### Bugfixes
+
+* Fixed source generation for auto-networked EntityUid Dictionaries missing a semicolon
+* Fixed PlacementManager using the wrong coordinates when deleting entities in an area.
+
+
 ## 238.0.0
 
 ### Breaking changes

@@ -160,14 +160,14 @@ public sealed class TruncCommand : ToolshedCommand
 public sealed class Round2FracCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
-    public T Operation<T>([PipedArgument] T x, [CommandArgument] int frac)
+    public T Operation<T>([PipedArgument] T x, int frac)
         where T : IFloatingPoint<T>
     {
         return T.Round(x, frac);
     }
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
-    public IEnumerable<T> Operation<T>([PipedArgument] IEnumerable<T> x, [CommandArgument] int frac)
+    public IEnumerable<T> Operation<T>([PipedArgument] IEnumerable<T> x, int frac)
         where T : IFloatingPoint<T>
         => x.Select(v => Operation(v, frac));
 }
@@ -226,15 +226,13 @@ public sealed class SignificandBitCountCommand : ToolshedCommand
 public sealed class ExponentShortestBitCountCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
-    public int Operation<T>([PipedArgument] T x)
-        where T : IFloatingPoint<T>
+    public int Operation<T>([PipedArgument] T x) where T : IFloatingPoint<T>
     {
         return x.GetExponentShortestBitLength();
     }
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
-    public IEnumerable<int> Operation<T>([PipedArgument] IEnumerable<T> x)
-        where T : IFloatingPoint<T>
+    public IEnumerable<int> Operation<T>([PipedArgument] IEnumerable<T> x) where T : IFloatingPoint<T>
         => x.Select(Operation);
 }
 
@@ -242,44 +240,24 @@ public sealed class ExponentShortestBitCountCommand : ToolshedCommand
 public sealed class StepNextCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
-    public T Operation<T>(
-        [CommandInvocationContext] IInvocationContext ctx,
-        [PipedArgument] T x
-    )
-        where T : IFloatingPointIeee754<T>
-    {
-        return T.BitIncrement(x);
-    }
+    public T Operation<T>([PipedArgument] T x) where T : IFloatingPointIeee754<T>
+        => T.BitIncrement(x);
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
-    public IEnumerable<T> Operation<T>(
-        [CommandInvocationContext] IInvocationContext ctx,
-        [PipedArgument] IEnumerable<T> x
-    )
-        where T : IFloatingPointIeee754<T>
-        => x.Select(v => Operation(ctx, v));
+    public IEnumerable<T> Operation<T>([PipedArgument] IEnumerable<T> x) where T : IFloatingPointIeee754<T>
+        => x.Select(Operation);
 }
 
 [ToolshedCommand]
 public sealed class StepPrevCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
-    public T Operation<T>(
-        [CommandInvocationContext] IInvocationContext ctx,
-        [PipedArgument] T x
-    )
-        where T : IFloatingPointIeee754<T>
-    {
-        return T.BitDecrement(x);
-    }
+    public T Operation<T>([PipedArgument] T x) where T : IFloatingPointIeee754<T>
+        => T.BitDecrement(x);
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
-    public IEnumerable<T> Operation<T>(
-        [CommandInvocationContext] IInvocationContext ctx,
-        [PipedArgument] IEnumerable<T> x
-    )
-        where T : IFloatingPointIeee754<T>
-        => x.Select(v => Operation(ctx, v));
+    public IEnumerable<T> Operation<T>([PipedArgument] IEnumerable<T> x) where T : IFloatingPointIeee754<T>
+        => x.Select(Operation);
 }
 #endregion
 

@@ -13,9 +13,9 @@ internal sealed class DoCommand : ToolshedCommand
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<T> Do<T>(
-        [CommandInvocationContext] IInvocationContext ctx,
+        IInvocationContext ctx,
         [PipedArgument] IEnumerable<T> input,
-        [CommandArgument] string command)
+        string command)
     {
         if (ctx is not OldShellInvocationContext { } reqCtx || reqCtx.Shell == null)
         {

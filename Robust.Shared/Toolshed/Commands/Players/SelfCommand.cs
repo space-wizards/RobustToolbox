@@ -7,7 +7,7 @@ namespace Robust.Shared.Toolshed.Commands.Players;
 internal sealed class SelfCommand : ToolshedCommand
 {
     [CommandImplementation]
-    public EntityUid Self([CommandInvocationContext] IInvocationContext ctx)
+    public EntityUid Self(IInvocationContext ctx)
     {
         if (ctx.Session is null)
         {

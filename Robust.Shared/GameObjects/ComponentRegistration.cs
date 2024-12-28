@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using Robust.Shared.Collections;
 using Robust.Shared.GameStates;
@@ -38,6 +39,13 @@ public sealed class ComponentRegistration
     /// The type that will be instantiated if this component is created.
     /// </summary>
     public Type Type { get; }
+
+    /// <summary>
+    /// Fields that are networked for this component. Used for delta states.
+    /// </summary>
+    public string[] NetworkedFields = [];
+
+    public FrozenDictionary<string, int> NetworkedFieldLookup = FrozenDictionary<string, int>.Empty;
 
     // Internal for sandboxing.
     // Avoid content passing an instance of this to ComponentFactory to get any type they want instantiated.

@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Robust.Shared.Network;
-using Robust.Shared.Player;
-using Robust.Shared.Toolshed.Errors;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.Console;
 using Robust.Shared.Toolshed.Syntax;
+using Robust.Shared.Toolshed.TypeParsers;
 
 namespace Robust.Shared.Toolshed.Commands.Generic;
 
@@ -12,53 +12,72 @@ public sealed class ReduceCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public T Reduce<T>(
-        [CommandInvocationContext] IInvocationContext ctx,
+        IInvocationContext ctx,
         [PipedArgument] IEnumerable<T> input,
-        [CommandArgument] Block<T, T> reducer
+        [CommandArgument(typeof(ReduceBlockParser))] Block reducer
     )
-        => input.Aggregate((x, next) => reducer.Invoke(x, new ReduceContext<T>(ctx, next))!);
-}
-
-internal record ReduceContext<T>(IInvocationContext Inner, T Value) : IInvocationContext
-{
-    public bool CheckInvokable(CommandSpec command, out IConError? error)
     {
-        return Inner.CheckInvokable(command, out error);
+        var localCtx = new LocalVarInvocationContext(ctx);
+        localCtx.SetLocal("value", default(T));
+
+        using var enumerator = input.GetEnumerator();
+
+        if (!enumerator.MoveNext())
+            throw new InvalidOperationException($"Input contains no elements");
+
+        var result = enumerator.Current;
+
+        while (enumerator.MoveNext())
+        {
+            localCtx.SetLocal("value", enumerator.Current);
+            result = (T) reducer.Invoke(result, localCtx)!;
+            if (ctx.HasErrors)
+                break;
+        }
+
+        return result;
     }
 
-    public ICommonSession? Session => Inner.Session;
-    public ToolshedManager Toolshed => Inner.Toolshed;
-    public NetUserId? User => Inner.User;
-
-    public ToolshedEnvironment Environment => Inner.Environment;
-
-    public void WriteLine(string line)
+    /// <summary>
+    /// Custom block parser for the <see cref="ReduceCommand"/> that is aware of the "$value" variable.
+    /// </summary>
+    private sealed class ReduceBlockParser : CustomTypeParser<Block>
     {
-        Inner.WriteLine(line);
-    }
+        public override bool TryParse(ParserContext ctx, [NotNullWhen(true)] out Block? result)
+        {
+            result = null;
+            if (ctx.Bundle.PipedType is not {IsGenericType: true})
+                return false;
 
-    public void ReportError(IConError err)
-    {
-        Inner.ReportError(err);
-    }
+            var localParser = new LocalVarParser(ctx.VariableParser);
+            var type = ctx.Bundle.PipedType.GetGenericArguments()[0];
+            localParser.SetLocalType("value", type, false);
+            ctx.VariableParser = localParser;
 
-    public IEnumerable<IConError> GetErrors()
-    {
-        return Inner.GetErrors();
-    }
+            if (!Block.TryParseBlock(ctx, type, type, out var run))
+            {
+                result = null;
+                ctx.VariableParser = localParser.Inner;
+                return false;
+            }
 
-    public void ClearErrors()
-    {
-        Inner.ClearErrors();
-    }
+            ctx.VariableParser = localParser.Inner;
+            result = new Block(run);
+            return true;
+        }
 
-    public Dictionary<string, object?> Variables { get; } = new();
+        public override CompletionResult? TryAutocomplete(ParserContext ctx, string? argName)
+        {
+            if (ctx.Bundle.PipedType is not {IsGenericType: true})
+                return null;
 
-    public object? ReadVar(string name)
-    {
-        if (name == "value")
-            return Value;
-
-        return Inner.ReadVar(name);
+            var localParser = new LocalVarParser(ctx.VariableParser);
+            var type = ctx.Bundle.PipedType.GetGenericArguments()[0];
+            localParser.SetLocalType("value", type, false);
+            ctx.VariableParser = localParser;
+            Block.TryParseBlock(ctx, type, type, out _);
+            ctx.VariableParser = localParser.Inner;
+            return ctx.Completions;
+        }
     }
 }

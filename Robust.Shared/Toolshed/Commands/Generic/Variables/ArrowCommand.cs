@@ -8,25 +8,17 @@ namespace Robust.Shared.Toolshed.Commands.Generic.Variables ;
 public sealed class ArrowCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
-    public T Arrow<T>(
-            [CommandInvocationContext] IInvocationContext ctx,
-            [PipedArgument] T input,
-            [CommandArgument] ValueRef<T> @ref
-        )
+    public T Arrow<T>(IInvocationContext ctx, [PipedArgument] T input, WriteableVarRef<T> var)
     {
-        @ref.Set(ctx, input);
+        ctx.WriteVar(var.Inner.VarName, input);
         return input;
     }
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
-    public List<T> Arrow<T>(
-            [CommandInvocationContext] IInvocationContext ctx,
-            [PipedArgument] IEnumerable<T> input,
-            [CommandArgument] ValueRef<List<T>> @ref
-        )
+    public List<T> Arrow<T>(IInvocationContext ctx, [PipedArgument] IEnumerable<T> input, WriteableVarRef<List<T>> var)
     {
         var list = input.ToList();
-        @ref.Set(ctx, list);
+        ctx.WriteVar(var.Inner.VarName, list);
         return list;
     }
 }

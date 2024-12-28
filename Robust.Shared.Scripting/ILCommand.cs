@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using System.Reflection.Emit;
 using ILReader;
 using ILReader.Readers;
 using Robust.Shared.Toolshed;
@@ -11,7 +10,7 @@ public sealed class ILCommand : ToolshedCommand
 {
     [CommandImplementation("dumpil")]
     public void DumpIL(
-        [CommandInvocationContext] IInvocationContext ctx,
+        IInvocationContext ctx,
         [PipedArgument] MethodInfo info
     )
     {

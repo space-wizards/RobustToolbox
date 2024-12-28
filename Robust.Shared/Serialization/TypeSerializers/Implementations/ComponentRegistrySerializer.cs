@@ -100,7 +100,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
             foreach (var sequenceEntry in node.Sequence)
             {
-                var componentMapping = (MappingDataNode)sequenceEntry;
+                if (sequenceEntry is not MappingDataNode componentMapping)
+                {
+                    list.Add(new ErrorNode(sequenceEntry, $"Expected {nameof(MappingDataNode)}"));
+                    continue;
+                }
                 string compType = ((ValueDataNode) componentMapping.Get("type")).Value;
                 // See if type exists to detect errors.
                 switch (factory.GetComponentAvailability(compType))

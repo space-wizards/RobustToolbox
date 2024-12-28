@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -172,10 +173,64 @@ namespace Robust.Shared.Serialization.Manager
                 throw new ArgumentException($"Invalid Types used for include fields:\n{invalidIncludes}");
             }
 
+            // We want to ensure that all the fields are actually serializable.
+            // Problem is that I have NFI how to do that and all of this is such convoluted spaghetti that the best way.
+            // Why is there no "is this serializable" test.
+            // Best I could get was to try brute force this by repeatedly trying to call ValidateNode with either a value, mapping, or sequence data node and checking that at least one of them doesn't throw an exception.
+            // But that still fails, because things like EntityUid aren't actually serializable without the mapping context.
+            // TODO SERIALIZATION REFACTOR Somehow validate that data-fields are serializable.
+            // For now, I will just do a very basic blacklist check.
+
+            var forbidden = _reflectionManager.FindTypesWithAttribute<NotYamlSerializableAttribute>()
+                .Select(x => x.IsGenericType ? x.GetGenericTypeDefinition() : x )
+                .ToFrozenSet();
+
+            var msg = "";
+            foreach (var def in _dataDefinitions.Values)
+            {
+                foreach (var field in def.BaseFieldDefinitions)
+                {
+                    if (field.FieldType.ContainsGenericParameters)
+                        continue;
+
+                    if (field.Attribute.CustomTypeSerializer != null)
+                        continue;
+
+                    if (!ValidateIsSerializable(field.FieldType, forbidden))
+                        sawmill.Error($"Data-field of type {field.FieldType} in {def} is not serializable");
+                }
+            }
+
             _copyByRefRegistrations[typeof(Type)] = 0;
 
             _initialized = true;
             _initializing = false;
+        }
+
+        private bool ValidateIsSerializable(Type type, FrozenSet<Type> forbidden)
+        {
+            if (type.IsArray)
+            {
+                return ValidateIsSerializable(type.GetElementType()!, forbidden);
+            }
+
+            if (!type.IsGenericType)
+                return !forbidden.Contains(type);
+
+            var genDef = type.GetGenericTypeDefinition();
+            if (forbidden.Contains(genDef))
+                return false;
+
+            if (genDef == typeof(List<>) || genDef == typeof(HashSet<>) || genDef == typeof(Nullable<>))
+                return ValidateIsSerializable(type.GetGenericArguments()[0], forbidden);
+
+            if (genDef == typeof(Dictionary<,>))
+            {
+                var args = type.GetGenericArguments();
+                return ValidateIsSerializable(args[0], forbidden) && ValidateIsSerializable(args[1], forbidden);
+            }
+
+            return true;
         }
 
         private void CollectAttributedTypes(

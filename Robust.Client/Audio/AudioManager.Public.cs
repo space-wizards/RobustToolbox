@@ -15,6 +15,7 @@ namespace Robust.Client.Audio;
 internal partial class AudioManager
 {
     private float _zOffset;
+    private long _generatedBuffers;
 
     public void SetZOffset(float offset)
     {
@@ -89,8 +90,6 @@ internal partial class AudioManager
     {
         var vorbis = AudioLoaderOgg.LoadAudioData(stream);
 
-        var buffer = AL.GenBuffer();
-
         ALFormat format;
         // NVorbis only supports loading into floats.
         // If this becomes a problem due to missing extension support (doubt it but ok),
@@ -108,19 +107,12 @@ internal partial class AudioManager
             throw new InvalidOperationException("Unable to load audio with more than 2 channels.");
         }
 
-        unsafe
-        {
-            fixed (short* ptr = vorbis.Data.Span)
-            {
-                AL.BufferData(buffer, format, (IntPtr) ptr, vorbis.Data.Length * sizeof(short),
-                    (int) vorbis.SampleRate);
-            }
-        }
-
-        _checkAlError();
-
-        var handle = new ClydeHandle(_audioSampleBuffers.Count);
-        _audioSampleBuffers.Add(new LoadedAudioSample(buffer));
+        var handle = new ClydeHandle(_generatedBuffers++);
+        MakeVorbisCast(handle,
+            format,
+            vorbis.Data.Span.ToArray(),
+            vorbis.Data.Length * sizeof(short),
+            (int) vorbis.SampleRate);
         var length = TimeSpan.FromSeconds(vorbis.TotalSamples / (double) vorbis.SampleRate);
         return new AudioStream(handle, length, (int) vorbis.Channels, name, vorbis.Title, vorbis.Artist);
     }
@@ -129,8 +121,6 @@ internal partial class AudioManager
     public AudioStream LoadAudioWav(Stream stream, string? name = null)
     {
         var wav = AudioLoaderWav.LoadAudioData(stream);
-
-        var buffer = AL.GenBuffer();
 
         ALFormat format;
         if (wav.BitsPerSample == 16)
@@ -168,18 +158,24 @@ internal partial class AudioManager
             throw new InvalidOperationException("Unable to load wav with bits per sample different from 8 or 16");
         }
 
+        var buffer = new short[wav.Data.Length / sizeof(short)];
+
         unsafe
         {
-            fixed (byte* ptr = wav.Data.Span)
+            fixed (void* sourcePtr = wav.Data.Span)
             {
-                AL.BufferData(buffer, format, (IntPtr) ptr, wav.Data.Length, wav.SampleRate);
+                fixed (void* destinyPtr = buffer)
+                {
+                    Buffer.MemoryCopy(sourcePtr,
+                        destinyPtr,
+                        wav.Data.Length,
+                        wav.Data.Length);
+                }
             }
         }
 
-        _checkAlError();
-
-        var handle = new ClydeHandle(_audioSampleBuffers.Count);
-        _audioSampleBuffers.Add(new LoadedAudioSample(buffer));
+        var handle = new ClydeHandle(_generatedBuffers++);
+        MakeVorbisCast(handle, format, buffer, wav.Data.Length, wav.SampleRate);
         var length = TimeSpan.FromSeconds(wav.Data.Length / (double) wav.BlockAlign / wav.SampleRate);
         return new AudioStream(handle, length, wav.NumChannels, name);
     }
@@ -192,7 +188,8 @@ internal partial class AudioManager
             1 => ALFormat.Mono16,
             2 => ALFormat.Stereo16,
             _ => throw new ArgumentOutOfRangeException(
-                nameof(channels), "Only stereo and mono is currently supported")
+                nameof(channels),
+                "Only stereo and mono is currently supported")
         };
 
         var buffer = AL.GenBuffer();
@@ -208,9 +205,10 @@ internal partial class AudioManager
 
         _checkAlError();
 
-        var handle = new ClydeHandle(_audioSampleBuffers.Count);
+
+        var handle = new ClydeHandle(_generatedBuffers++);
+        MakeVorbisCast(handle, fmt, samples.ToArray(), samples.Length * sizeof(short), sampleRate);
         var length = TimeSpan.FromSeconds((double) samples.Length / channels / sampleRate);
-        _audioSampleBuffers.Add(new LoadedAudioSample(buffer));
         return new AudioStream(handle, length, channels, name);
     }
 
@@ -292,8 +290,10 @@ internal partial class AudioManager
         }
 
         // ReSharper disable once PossibleInvalidOperationException
-        // TODO: This really shouldn't be indexing based on the ClydeHandle...
-        AL.Source(source, ALSourcei.Buffer, _audioSampleBuffers[(int) stream.ClydeHandle!.Value].BufferHandle);
+        var audioSample = EnsureAudioSample(stream.ClydeHandle!);
+
+        AL.Source(source, ALSourcei.Buffer, audioSample!.BufferHandle);
+        audioSample.IncreaseUsings();
 
         var audioSource = new AudioSource(this, source, stream);
         _audioSources.Add(source, new WeakReference<BaseAudioSource>(audioSource));

@@ -1,8 +1,6 @@
-using System;
 using System.Numerics;
 using OpenTK.Audio.OpenAL;
 using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
-using Robust.Shared.Audio;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -83,6 +81,8 @@ internal sealed class AudioSource : BaseAudioSource
             Master.RemoveAudioSource(SourceHandle);
             Master._checkAlError();
         }
+
+        Master.NotifySourceDisposed(_sourceStream);
 
         FilterHandle = 0;
         SourceHandle = -1;

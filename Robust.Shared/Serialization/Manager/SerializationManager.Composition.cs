@@ -95,7 +95,7 @@ public partial class SerializationManager
                         Expression.Convert(parentParam, nodeType)),
                     MappingDataNode => Expression.Call(
                         instanceConst,
-                        nameof(PushInheritanceMapping),
+                        nameof(CombineMappings),
                         Type.EmptyTypes,
                         Expression.Convert(childParam, nodeType),
                         Expression.Convert(parentParam, nodeType)),
@@ -117,32 +117,26 @@ public partial class SerializationManager
         //todo implement different inheritancebehaviours for yamlfield
         // I have NFI what this comment means.
 
-        var result = new SequenceDataNode(child.Count + parent.Count);
+        var result = child.Copy();
         foreach (var entry in parent)
         {
-            result.Add(entry);
-        }
-        foreach (var entry in child)
-        {
-            result.Add(entry);
+            result.Add(entry.Copy());
         }
 
         return result;
     }
 
-    private MappingDataNode PushInheritanceMapping(MappingDataNode child, MappingDataNode parent)
+    public MappingDataNode CombineMappings(MappingDataNode child, MappingDataNode parent)
     {
         //todo implement different inheritancebehaviours for yamlfield
         // I have NFI what this comment means.
+        // I still don't know what it means, but if it's talking about the always/never push inheritance attributes,
+        // make sure it doesn't break entity serialization.
 
-        var result = new MappingDataNode(child.Count + parent.Count);
+        var result = child.Copy();
         foreach (var (k, v) in parent)
         {
-            result[k] = v;
-        }
-        foreach (var (k, v) in child)
-        {
-            result[k] = v;
+            result.TryAddCopy(k, v);
         }
 
         return result;

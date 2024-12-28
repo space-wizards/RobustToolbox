@@ -108,8 +108,6 @@ namespace Robust.UnitTesting.Shared.Map
         public void GetGridId_Map()
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            var mapManager = IoCManager.Resolve<IMapManager>();
-
             var mapEnt = entityManager.System<SharedMapSystem>().CreateMap(out var mapId);
             var newEnt = entityManager.CreateEntityUninitialized(null, new MapCoordinates(Vector2.Zero, mapId));
 
@@ -139,8 +137,6 @@ namespace Robust.UnitTesting.Shared.Map
         public void GetMapId_Map()
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            var mapManager = IoCManager.Resolve<IMapManager>();
-
             var mapEnt = entityManager.System<SharedMapSystem>().CreateMap(out var mapId);
             var newEnt = entityManager.CreateEntityUninitialized(null, new MapCoordinates(Vector2.Zero, mapId));
 

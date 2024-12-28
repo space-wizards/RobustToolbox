@@ -67,7 +67,6 @@ namespace Robust.Server
             deps.Register<IResourceManagerInternal, ResourceManager>();
             deps.Register<EntityManager, ServerEntityManager>();
             deps.Register<IServerEntityManager, ServerEntityManager>();
-            deps.Register<IServerEntityManagerInternal, ServerEntityManager>();
             deps.Register<IServerGameStateManager, ServerGameStateManager>();
             deps.Register<IReplayRecordingManager, ReplayRecordingManager>();
             deps.Register<IReplayRecordingManagerInternal, ReplayRecordingManager>();

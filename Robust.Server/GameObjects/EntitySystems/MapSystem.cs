@@ -21,7 +21,7 @@ namespace Robust.Server.GameObjects
         protected override MapId GetNextMapId()
         {
             var id = new MapId(++LastMapId);
-            while (MapManager.MapExists(id))
+            while (MapExists(id) || UsedIds.Contains(id))
             {
                 id = new MapId(++LastMapId);
             }

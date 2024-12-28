@@ -17,7 +17,7 @@ public sealed class MapSystem : SharedMapSystem
     {
         // Client-side map entities use negative map Ids to avoid conflict with server-side maps.
         var id = new MapId(--LastMapId);
-        while (MapManager.MapExists(id))
+        while (MapExists(id) || UsedIds.Contains(id))
         {
             id = new MapId(--LastMapId);
         }

@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using Robust.Shared.EntitySerialization;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Serialization.Markdown.Mapping;
 
 namespace Robust.Shared.Map.Events;
 
@@ -28,17 +30,13 @@ public sealed class BeforeEntityReadEvent
 }
 
 /// <summary>
-/// This event is broadcast just before an entity gets serialized.
+/// This event is broadcast just before the given entities (and their children) are serialized.
+/// For convenience, the event also contains a set with all the maps that the entities are on. This does not
+/// necessarily mean that the maps are themselves getting serialized.
 /// </summary>
-public sealed class BeforeSaveEvent(EntityUid entity, EntityUid? map)
-{
-    /// <summary>
-    /// The entity that is going to be saved. usually a map or grid.
-    /// </summary>
-    public EntityUid Entity = entity;
+public readonly record struct BeforeSerializationEvent(HashSet<EntityUid> Entities, HashSet<MapId> MapIds);
 
-    /// <summary>
-    /// The map that the <see cref="Entity"/> is on.
-    /// </summary>
-    public EntityUid? Map = map;
-}
+/// <summary>
+/// This event is broadcast just after entities (and their children) have been serialized, but before it gets written to a yaml file.
+/// </summary>
+public readonly record struct AfterSerializationEvent(HashSet<EntityUid> Entities, MappingDataNode Node, FileCategory Category);

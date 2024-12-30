@@ -83,7 +83,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <inheritdoc />
     public override (EntityUid Entity, AudioComponent Component)? PlayGlobal(string? filename, Filter playerFilter, bool recordReplay, AudioParams? audioParams = null)
     {
-        if (string.IsNullOrEmpty(filename))
+        if (string.IsNullOrEmpty(filename) || playerFilter.Count == 0)
             return null;
 
         var entity = SetupAudio(filename, audioParams);

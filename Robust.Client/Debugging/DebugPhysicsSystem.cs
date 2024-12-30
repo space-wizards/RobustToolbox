@@ -250,7 +250,7 @@ namespace Robust.Client.Debugging
 
                     const float AlphaModifier = 0.2f;
 
-                    foreach (var fixture in _entityManager.GetComponent<FixturesComponent>(physBody).Fixtures.Values)
+                    foreach (var fixture in _entityManager.GetComponent<PhysicsComponent>(physBody).Fixtures.Values)
                     {
                         // Invalid shape - Box2D doesn't check for IsSensor but we will for sanity.
                         if (comp.BodyType == BodyType.Dynamic && fixture.Density == 0f && fixture.Hard)
@@ -315,7 +315,7 @@ namespace Robust.Client.Debugging
                     const float AlphaModifier = 0.2f;
                     Box2? aabb = null;
 
-                    foreach (var fixture in _entityManager.GetComponent<FixturesComponent>(physBody).Fixtures.Values)
+                    foreach (var fixture in _entityManager.GetComponent<PhysicsComponent>(physBody).Fixtures.Values)
                     {
                         for (var i = 0; i < fixture.Shape.ChildCount; i++)
                         {
@@ -443,10 +443,10 @@ namespace Robust.Client.Debugging
 
                 foreach (var ent in _lookup.GetEntitiesIntersecting(mapPos, flags))
                 {
-                    if (!_entityManager.TryGetComponent<FixturesComponent>(ent, out var managerB))
+                    if (!_entityManager.TryGetComponent<PhysicsComponent>(ent, out var managerB))
                         continue;
 
-                    if (_physicsSystem.TryGetDistance(player.Value, ent, out var distance, managerB: managerB))
+                    if (_physicsSystem.TryGetDistance(player.Value, ent, out var distance, bodyB: managerB))
                     {
                         screenHandle.DrawString(_font, mousePos.Position, $"Ent: {_entityManager.ToPrettyString(ent)}\nDistance: {distance:0.00}");
                         break;

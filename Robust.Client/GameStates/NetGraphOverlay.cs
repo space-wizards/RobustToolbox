@@ -85,6 +85,9 @@ namespace Robust.Client.GameStates
             if (entStates.HasContents)
             {
                 var sb = new StringBuilder();
+
+                sb.Append($"\nSize: {args.AppliedState.PayloadSize}");
+
                 foreach (var entState in entStates.Span)
                 {
                     var uid = _entManager.GetEntity(entState.NetEntity);
@@ -102,7 +105,7 @@ namespace Robust.Client.GameStates
                     foreach (var compChange in entState.ComponentChanges.Span)
                     {
                         var registration = _componentFactory.GetRegistration(compChange.NetID);
-                        sb.Append($"\n    [{compChange.NetID}:{registration.Name}");
+                        sb.Append($"\n    n[{compChange.NetID}:{registration.Name}");
 
                         if (compChange.State is not null)
                             sb.Append($"\n      STATE:{compChange.State.GetType().Name}");

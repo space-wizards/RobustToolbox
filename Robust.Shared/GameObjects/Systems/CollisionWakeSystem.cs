@@ -69,10 +69,10 @@ namespace Robust.Shared.GameObjects
                 _physics.SetCanCollide(uid, true);
         }
 
-        internal void UpdateCanCollide(Entity<PhysicsComponent> entity, bool checkTerminating = true, bool dirty = true)
+        internal void UpdateCanCollide(Entity<PhysicsComponent> entity, bool checkTerminating = true)
         {
             if (_query.TryGetComponent(entity, out var wakeComp))
-                UpdateCanCollide(entity.Owner, wakeComp, entity.Comp, checkTerminating: checkTerminating, dirty: dirty);
+                UpdateCanCollide(entity.Owner, wakeComp, entity.Comp, checkTerminating: checkTerminating);
         }
 
         internal void UpdateCanCollide(
@@ -80,8 +80,7 @@ namespace Robust.Shared.GameObjects
             CollisionWakeComponent component,
             PhysicsComponent? body = null,
             TransformComponent? xform = null,
-            bool checkTerminating = true,
-            bool dirty = true)
+            bool checkTerminating = true)
         {
             if (!component.Enabled)
                 return;
@@ -99,7 +98,7 @@ namespace Robust.Shared.GameObjects
                               (TryComp(uid, out JointComponent? jointComponent) && jointComponent.JointCount > 0) ||
                               xform.GridUid == null;
 
-            _physics.SetCanCollide(uid, canCollide, dirty, body: body);
+            _physics.SetCanCollide(uid, canCollide, body: body);
         }
     }
 }

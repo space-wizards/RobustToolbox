@@ -46,16 +46,15 @@ public class PhysicsCircleStackBenchmark
     private void SetupTumbler(IEntityManager entManager, MapId mapId)
     {
         var physics = entManager.System<SharedPhysicsSystem>();
-        var fixtures = entManager.System<FixtureSystem>();
 
         var groundUid = entManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
         var ground = entManager.AddComponent<PhysicsComponent>(groundUid);
 
         var horizontal = new EdgeShape(new Vector2(-40, 0), new Vector2(40, 0));
-        fixtures.CreateFixture(groundUid, "fix1", new Fixture(horizontal, 2, 2, true), body: ground);
+        physics.CreateFixture(groundUid, "fix1", new Fixture(horizontal, 2, 2, true), body: ground);
 
         var vertical = new EdgeShape(new Vector2(20, 0), new Vector2(20, 20));
-        fixtures.CreateFixture(groundUid, "fix2", new Fixture(vertical, 2, 2, true), body: ground);
+        physics.CreateFixture(groundUid, "fix2", new Fixture(vertical, 2, 2, true), body: ground);
 
         var xs = new[]
         {
@@ -81,7 +80,7 @@ public class PhysicsCircleStackBenchmark
                 physics.SetFixedRotation(boxUid, false, body: box);
                 // TODO: Need to detect shape and work out if we need to use fixedrotation
 
-                fixtures.CreateFixture(boxUid, "fix1", new Fixture(shape, 2, 2, true, 5f));
+                physics.CreateFixture(boxUid, "fix1", new Fixture(shape, 2, 2, true, 5f));
                 physics.WakeBody(boxUid, body: box);
                 physics.SetSleepingAllowed(boxUid, box, false);
             }

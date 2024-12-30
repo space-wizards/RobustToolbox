@@ -60,7 +60,7 @@ namespace Robust.UnitTesting.Shared
         {
             var ent = entManager.SpawnEntity(null, spawnPos);
             var physics = entManager.AddComponent<PhysicsComponent>(ent);
-            entManager.System<FixtureSystem>().TryCreateFixture(ent, new PhysShapeCircle(0.35f, Vector2.Zero), "fix1");
+            entManager.System<SharedPhysicsSystem>().TryCreateFixture(ent, new PhysShapeCircle(0.35f, Vector2.Zero), "fix1");
             entManager.System<SharedPhysicsSystem>().SetCanCollide(ent, true, body: physics);
             return ent;
         }

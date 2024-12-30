@@ -26,7 +26,6 @@ public sealed class PhysicsMap_Test
         var mapManager = sim.Resolve<IMapManager>();
         var system = entManager.EntitySysManager;
         var physSystem = system.GetEntitySystem<SharedPhysicsSystem>();
-        var fixtureSystem = system.GetEntitySystem<FixtureSystem>();
         var xformSystem = system.GetEntitySystem<SharedTransformSystem>();
 
         var mapId = sim.CreateMap().MapId;
@@ -43,7 +42,7 @@ public sealed class PhysicsMap_Test
 
         physSystem.SetBodyType(parent, BodyType.Dynamic);
         physSystem.SetSleepingAllowed(parent, parentBody, false);
-        fixtureSystem.CreateFixture(parent, "fix1", new Fixture(new PhysShapeCircle(0.5f), 0, 0, false), body: parentBody);
+        physSystem.CreateFixture(parent, "fix1", new Fixture(new PhysShapeCircle(0.5f), 0, 0, false), body: parentBody);
         physSystem.WakeBody(parent);
         Assert.That(physicsMap.AwakeBodies, Does.Contain(parentBody));
 
@@ -52,7 +51,7 @@ public sealed class PhysicsMap_Test
 
         physSystem.SetBodyType(child, BodyType.Dynamic);
         physSystem.SetSleepingAllowed(child, childBody, false);
-        fixtureSystem.CreateFixture(child, "fix1", new Fixture(new PhysShapeCircle(0.5f), 0, 0, false), body: childBody);
+        physSystem.CreateFixture(child, "fix1", new Fixture(new PhysShapeCircle(0.5f), 0, 0, false), body: childBody);
         physSystem.WakeBody(child, body: childBody);
 
         Assert.That(physicsMap.AwakeBodies, Does.Contain(childBody));

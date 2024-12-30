@@ -44,20 +44,19 @@ public sealed class Collision_Test
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
 
-        var fixtures = entManager.System<FixtureSystem>();
         var physics = entManager.System<SharedPhysicsSystem>();
 
         var map = sim.CreateMap();
 
         var bodyAUid = entManager.SpawnAttachedTo(null, new EntityCoordinates(map.Uid, Vector2.Zero));
         var bodyBUid = entManager.SpawnAttachedTo(null, new EntityCoordinates(map.Uid, Vector2.Zero));
-        var bodyA = entManager.AddComponent<PhysicsComponent>(bodyAUid);
-        var bodyB = entManager.AddComponent<PhysicsComponent>(bodyBUid);
+        entManager.AddComponent<PhysicsComponent>(bodyAUid);
+        entManager.AddComponent<PhysicsComponent>(bodyBUid);
 
         Assert.That(!physics.IsHardCollidable(bodyAUid, bodyBUid));
 
-        fixtures.CreateFixture(bodyAUid, "fix1", new Fixture(new PhysShapeCircle(0.5f), 1, 1, true));
-        fixtures.CreateFixture(bodyBUid, "fix1", new Fixture(new PhysShapeCircle(0.5f), 1, 1, true));
+        physics.CreateFixture(bodyAUid, "fix1", new Fixture(new PhysShapeCircle(0.5f), 1, 1, true));
+        physics.CreateFixture(bodyBUid, "fix1", new Fixture(new PhysShapeCircle(0.5f), 1, 1, true));
 
         Assert.That(physics.IsHardCollidable(bodyAUid, bodyBUid));
     }
@@ -98,7 +97,7 @@ public sealed class Collision_Test
         const float mass = 4.0f * hx * hy;
         var inertia = (mass / 3.0f) * (hx * hx + hy * hy) + mass * Vector2.Dot(center, center);
 
-        var massData1 = FixtureSystem.GetMassData(polygon1, 1f);
+        var massData1 = SharedPhysicsSystem.GetMassData(polygon1, 1f);
 
         Assert.That(MathF.Abs(massData1.Center.X - center.X), Is.LessThan(absTol + relTol * Math.Abs(center.X)));
         Assert.That(MathF.Abs(massData1.Center.Y - center.Y), Is.LessThan(absTol + relTol * Math.Abs(center.Y)));
@@ -106,7 +105,7 @@ public sealed class Collision_Test
         // Assert.That(MathF.Abs(massData1.Mass - mass), Is.LessThan(20.0f * (absTol + relTol * mass)));
         // Assert.That(MathF.Abs(massData1.I - inertia), Is.LessThan(40.0f * (absTol + relTol * inertia)));
 
-        var massData2 = FixtureSystem.GetMassData(polygon2, 1f);
+        var massData2 = SharedPhysicsSystem.GetMassData(polygon2, 1f);
 
         Assert.That(MathF.Abs(massData2.Center.X - center.X), Is.LessThan(absTol + relTol * Math.Abs(center.X)));
         Assert.That(MathF.Abs(massData2.Center.Y - center.Y), Is.LessThan(absTol + relTol * Math.Abs(center.Y)));
@@ -123,7 +122,6 @@ public sealed class Collision_Test
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
         var mapManager = sim.Resolve<IMapManager>();
-        var fixtures = entManager.System<FixtureSystem>();
         var physics = entManager.System<SharedPhysicsSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
         var mapId = sim.CreateMap().MapId;
@@ -137,8 +135,8 @@ public sealed class Collision_Test
         var body2 = entManager.AddComponent<PhysicsComponent>(ent2);
         physics.SetBodyType(ent2, BodyType.Dynamic, body: body2);
 
-        fixtures.CreateFixture(ent1, "fix1", new Fixture(new PhysShapeCircle(1f), 1, 0, true), body: body1);
-        fixtures.CreateFixture(ent2, "fix1", new Fixture(new PhysShapeCircle(1f), 0, 1, true), body: body2);
+        physics.CreateFixture(ent1, "fix1", new Fixture(new PhysShapeCircle(1f), 1, 0, true), body: body1);
+        physics.CreateFixture(ent2, "fix1", new Fixture(new PhysShapeCircle(1f), 0, 1, true), body: body2);
 
         physics.WakeBody(ent1, body: body1);
         physics.WakeBody(ent2, body: body2);

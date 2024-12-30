@@ -22,7 +22,7 @@ namespace Robust.Shared.GameObjects
 {
     public abstract class SharedGridFixtureSystem : EntitySystem
     {
-        [Dependency] private readonly FixtureSystem _fixtures = default!;
+        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
         [Dependency] private readonly SharedMapSystem _map = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
 
@@ -76,12 +76,6 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            if (!EntityManager.TryGetComponent(uid, out FixturesComponent? manager))
-            {
-                Log.Error($"Trying to regenerate collision for {uid} that doesn't have {nameof(manager)}");
-                return;
-            }
-
             if (!EntityManager.TryGetComponent(uid, out TransformComponent? xform))
             {
                 Log.Error($"Trying to regenerate collision for {uid} that doesn't have {nameof(TransformComponent)}");
@@ -92,16 +86,16 @@ namespace Robust.Shared.GameObjects
 
             foreach (var (chunk, rectangles) in mapChunks)
             {
-                UpdateFixture(uid, chunk, rectangles, body, manager, xform);
+                UpdateFixture(uid, chunk, rectangles, body, xform);
 
                 foreach (var id in chunk.Fixtures)
                 {
-                    fixtures[id] = manager.Fixtures[id];
+                    fixtures[id] = body.Fixtures[id];
                 }
             }
 
             EntityManager.EventBus.RaiseLocalEvent(uid,new GridFixtureChangeEvent {NewFixtures = fixtures}, true);
-            _fixtures.FixtureUpdate(uid, manager: manager, body: body);
+            _physics.FixtureUpdate(uid, body: body);
 
             CheckSplit(uid, mapChunks, removedChunks);
         }
@@ -111,7 +105,7 @@ namespace Robust.Shared.GameObjects
 
         internal virtual void CheckSplit(EntityUid gridEuid, MapChunk chunk, List<Box2i> rectangles) {}
 
-        private bool UpdateFixture(EntityUid uid, MapChunk chunk, List<Box2i> rectangles, PhysicsComponent body, FixturesComponent manager, TransformComponent xform)
+        private bool UpdateFixture(EntityUid uid, MapChunk chunk, List<Box2i> rectangles, PhysicsComponent body, TransformComponent xform)
         {
             var origin = chunk.Indices * chunk.ChunkSize;
 
@@ -125,19 +119,12 @@ namespace Robust.Shared.GameObjects
             // on the grid (e.g. mass) which we want to preserve.
             var newFixtures = new ValueList<(string Id, Fixture Fixture)>();
 
-            Span<Vector2> vertices = stackalloc Vector2[4];
-
             foreach (var rectangle in rectangles)
             {
                 var bounds = ((Box2) rectangle.Translated(origin)).Enlarged(_fixtureEnlargement);
                 var poly = new PolygonShape();
 
-                vertices[0] = bounds.BottomLeft;
-                vertices[1] = bounds.BottomRight;
-                vertices[2] = bounds.TopRight;
-                vertices[3] = bounds.TopLeft;
-
-                poly.Set(vertices, 4);
+                poly.SetAsBox(bounds);
 
 #pragma warning disable CS0618
                 var newFixture = new Fixture(
@@ -159,7 +146,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var oldId in chunk.Fixtures)
             {
-                var oldFixture = manager.Fixtures[oldId];
+                var oldFixture = body.Fixtures[oldId];
                 var existing = false;
 
                 // Handle deleted / updated fixtures
@@ -186,7 +173,7 @@ namespace Robust.Shared.GameObjects
                 // TODO add a DestroyFixture() override that takes in a list.
                 // reduced broadphase lookups
                 chunk.Fixtures.Remove(id);
-                _fixtures.DestroyFixture(uid, id, fixture, false, body: body, manager: manager, xform: xform);
+                _physics.DestroyFixture(uid, id, fixture, false, body: body, xform: xform);
             }
 
             if (newFixtures.Count > 0 || toRemove.Count > 0)
@@ -198,7 +185,7 @@ namespace Robust.Shared.GameObjects
             foreach (var (id, fixture) in newFixtures.Span)
             {
                 chunk.Fixtures.Add(id);
-                var existingFixture = _fixtures.GetFixtureOrNull(uid, id, manager: manager);
+                var existingFixture = _physics.GetFixtureOrNull(uid, id, body: body);
                 // Check if it's the same (otherwise remove anyway).
                 if (existingFixture?.Shape is PolygonShape poly &&
                     poly.EqualsApprox((PolygonShape) fixture.Shape))
@@ -207,7 +194,7 @@ namespace Robust.Shared.GameObjects
                     continue;
                 }
 
-                _fixtures.CreateFixture(uid, id, fixture, false, manager, body, xform);
+                _physics.CreateFixture(uid, id, fixture, false, body, xform);
             }
 
             return updated;

@@ -23,11 +23,9 @@ public sealed class JointDeletion_Test : RobustIntegrationTest
         await server.WaitIdleAsync();
 
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var susManager = server.ResolveDependency<IEntitySystemManager>();
         var jointSystem = susManager.GetEntitySystem<SharedJointSystem>();
         var broadphase = susManager.GetEntitySystem<SharedBroadphaseSystem>();
-        var fixSystem = susManager.GetEntitySystem<FixtureSystem>();
         var physicsSystem = susManager.GetEntitySystem<SharedPhysicsSystem>();
 
         DistanceJoint joint = default!;
@@ -45,18 +43,16 @@ public sealed class JointDeletion_Test : RobustIntegrationTest
 
             body1 = entManager.AddComponent<PhysicsComponent>(ent1);
             body2 = entManager.AddComponent<PhysicsComponent>(ent2);
-            var manager1 = entManager.EnsureComponent<FixturesComponent>(ent1);
-            var manager2 = entManager.EnsureComponent<FixturesComponent>(ent2);
             entManager.AddComponent<CollisionWakeComponent>(ent2);
 
-            physicsSystem.SetBodyType(ent1, BodyType.Dynamic, manager: manager1, body: body1);
-            physicsSystem.SetBodyType(ent2, BodyType.Dynamic, manager: manager2, body: body2);
-            physicsSystem.SetCanCollide(ent1, true, manager: manager1, body: body1);
-            physicsSystem.SetCanCollide(ent2, true, manager: manager2, body: body2);
+            physicsSystem.SetBodyType(ent1, BodyType.Dynamic, body: body1);
+            physicsSystem.SetBodyType(ent2, BodyType.Dynamic, body: body2);
+            physicsSystem.SetCanCollide(ent1, true, body: body1);
+            physicsSystem.SetCanCollide(ent2, true, body: body2);
             var shape = new PolygonShape();
             shape.SetAsBox(0.5f, 0.5f);
 
-            fixSystem.CreateFixture(ent2, "fix1", new Fixture(shape, 0, 0, false), manager: manager2, body: body2);
+            physicsSystem.CreateFixture(ent2, "fix1", new Fixture(shape, 0, 0, false), body: body2);
 
             joint = jointSystem.CreateDistanceJoint(ent1, ent2, id: "distance-joint");
             joint.CollideConnected = false;

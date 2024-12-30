@@ -66,7 +66,6 @@ public sealed class Joints_Test
         var server = factory.InitializeInstance();
         var entManager = server.Resolve<IEntityManager>();
         var mapManager = server.Resolve<IMapManager>();
-        var fixtureSystem = entManager.EntitySysManager.GetEntitySystem<FixtureSystem>();
         var jointSystem = entManager.EntitySysManager.GetEntitySystem<JointSystem>();
         var broadphaseSystem = entManager.EntitySysManager.GetEntitySystem<SharedBroadphaseSystem>();
         var physicsSystem = server.Resolve<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>();
@@ -77,14 +76,12 @@ public sealed class Joints_Test
         var ent2 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
         var body1 = entManager.AddComponent<PhysicsComponent>(ent1);
         var body2 = entManager.AddComponent<PhysicsComponent>(ent2);
-        var manager1 = entManager.EnsureComponent<FixturesComponent>(ent1);
-        var manager2 = entManager.EnsureComponent<FixturesComponent>(ent2);
 
-        physicsSystem.SetBodyType(ent1, BodyType.Dynamic, manager: manager1, body: body1);
-        physicsSystem.SetBodyType(ent2, BodyType.Dynamic, manager: manager2, body: body2);
+        physicsSystem.SetBodyType(ent1, BodyType.Dynamic, body: body1);
+        physicsSystem.SetBodyType(ent2, BodyType.Dynamic, body: body2);
 
-        fixtureSystem.CreateFixture(ent1, "fix1", new Fixture(new PhysShapeCircle(0.1f), 1, 1, false), manager: manager1, body: body1);
-        fixtureSystem.CreateFixture(ent2, "fix1", new Fixture(new PhysShapeCircle(0.1f), 1, 1, false), manager: manager2, body: body2);
+        physicsSystem.CreateFixture(ent1, "fix1", new Fixture(new PhysShapeCircle(0.1f), 1, 1, false), body: body1);
+        physicsSystem.CreateFixture(ent2, "fix1", new Fixture(new PhysShapeCircle(0.1f), 1, 1, false), body: body2);
 
         var joint = jointSystem.CreateDistanceJoint(ent1, ent2);
         Assert.That(joint.CollideConnected, Is.EqualTo(true));

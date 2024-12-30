@@ -25,7 +25,6 @@ public class PhysicsTumblerBenchmark
 
         var entManager = _sim.Resolve<IEntityManager>();
         var physics = entManager.System<SharedPhysicsSystem>();
-        var fixtures = entManager.System<FixtureSystem>();
         entManager.System<SharedMapSystem>().CreateMap(out var mapId);
         SetupTumbler(entManager, mapId);
 
@@ -38,7 +37,7 @@ public class PhysicsTumblerBenchmark
             physics.SetFixedRotation(boxUid, false, body: box);
             var shape = new PolygonShape();
             shape.SetAsBox(0.125f, 0.125f);
-            fixtures.CreateFixture(boxUid, "fix1", new Fixture(shape, 2, 2, true, 0.0625f), body: box);
+            physics.CreateFixture(boxUid, "fix1", new Fixture(shape, 2, 2, true, 0.0625f), body: box);
             physics.WakeBody(boxUid, body: box);
             physics.SetSleepingAllowed(boxUid, box, false);
         }
@@ -58,14 +57,13 @@ public class PhysicsTumblerBenchmark
     private void SetupTumbler(IEntityManager entManager, MapId mapId)
     {
         var physics = entManager.System<SharedPhysicsSystem>();
-        var fixtures = entManager.System<FixtureSystem>();
         var joints = entManager.System<SharedJointSystem>();
 
         var groundUid = entManager.SpawnEntity(null, new MapCoordinates(0f, 0f, mapId));
         var ground = entManager.AddComponent<PhysicsComponent>(groundUid);
         // Due to lookup changes fixtureless bodies are invalid, so
         var cShape = new PhysShapeCircle(1f);
-        fixtures.CreateFixture(groundUid, "fix1", new Fixture(cShape, 0, 0, false));
+        physics.CreateFixture(groundUid, "fix1", new Fixture(cShape, 0, 0, false));
 
         var bodyUid = entManager.SpawnEntity(null, new MapCoordinates(0f, 10f, mapId));
         var body = entManager.AddComponent<PhysicsComponent>(bodyUid);
@@ -78,19 +76,19 @@ public class PhysicsTumblerBenchmark
         // TODO: Box2D just deref, bleh shape structs someday
         var shape1 = new PolygonShape();
         shape1.SetAsBox(0.5f, 10.0f, new Vector2(10.0f, 0.0f), 0.0f);
-        fixtures.CreateFixture(bodyUid, "fix1", new Fixture(shape1, 2, 0, true, 20f));
+        physics.CreateFixture(bodyUid, "fix1", new Fixture(shape1, 2, 0, true, 20f));
 
         var shape2 = new PolygonShape();
         shape2.SetAsBox(0.5f, 10.0f, new Vector2(-10.0f, 0.0f), 0f);
-        fixtures.CreateFixture(bodyUid, "fix2", new Fixture(shape2, 2, 0, true, 20f));
+        physics.CreateFixture(bodyUid, "fix2", new Fixture(shape2, 2, 0, true, 20f));
 
         var shape3 = new PolygonShape();
         shape3.SetAsBox(10.0f, 0.5f, new Vector2(0.0f, 10.0f), 0f);
-        fixtures.CreateFixture(bodyUid, "fix3", new Fixture(shape3, 2, 0, true, 20f));
+        physics.CreateFixture(bodyUid, "fix3", new Fixture(shape3, 2, 0, true, 20f));
 
         var shape4 = new PolygonShape();
         shape4.SetAsBox(10.0f, 0.5f, new Vector2(0.0f, -10.0f), 0f);
-        fixtures.CreateFixture(bodyUid, "fix4", new Fixture(shape4, 2, 0, true, 20f));
+        physics.CreateFixture(bodyUid, "fix4", new Fixture(shape4, 2, 0, true, 20f));
 
         physics.WakeBody(groundUid, body: ground);
         physics.WakeBody(bodyUid, body: body);

@@ -7,6 +7,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 
 namespace Robust.Server.Console.Commands;
@@ -58,9 +59,9 @@ public sealed class ScaleCommand : LocalizedCommands
 
         appearance.SetData(uid, ScaleVisuals.Scale, oldScale * scale, appearanceComponent);
 
-        if (_entityManager.TryGetComponent(uid, out FixturesComponent? manager))
+        if (_entityManager.TryGetComponent(uid, out PhysicsComponent? body))
         {
-            foreach (var (id, fixture) in manager.Fixtures)
+            foreach (var (id, fixture) in body.Fixtures)
             {
                 switch (fixture.Shape)
                 {
@@ -70,10 +71,10 @@ public sealed class ScaleCommand : LocalizedCommands
                             edge.Vertex0 * scale,
                             edge.Vertex1 * scale,
                             edge.Vertex2 * scale,
-                            edge.Vertex3 * scale, manager);
+                            edge.Vertex3 * scale, body);
                         break;
                     case PhysShapeCircle circle:
-                        physics.SetPositionRadius(uid, id, fixture, circle, circle.Position * scale, circle.Radius * scale, manager);
+                        physics.SetPositionRadius(uid, id, fixture, circle, circle.Position * scale, circle.Radius * scale, body);
                         break;
                     case PolygonShape poly:
                         var verts = poly.Vertices;
@@ -83,7 +84,7 @@ public sealed class ScaleCommand : LocalizedCommands
                             verts[i] *= scale;
                         }
 
-                        physics.SetVertices(uid, id, fixture, poly, verts, manager);
+                        physics.SetVertices(uid, id, fixture, poly, verts, body);
                         break;
                     default:
                         throw new NotImplementedException();

@@ -545,8 +545,6 @@ public sealed class MapLoaderSystem : EntitySystem
             _context.CurrentReadingEntityComponents.EnsureCapacity(componentList.Count);
             foreach (var compData in componentList.Cast<MappingDataNode>())
             {
-                var datanode = compData.Copy();
-                datanode.Remove("type");
                 var value = ((ValueDataNode)compData["type"]).Value;
                 if (!_factory.TryGetRegistration(value, out var reg))
                 {
@@ -555,15 +553,36 @@ public sealed class MapLoaderSystem : EntitySystem
                     continue;
                 }
 
+
+                MappingDataNode datanode;
                 var compType = reg.Type;
                 if (prototype?.Components != null && prototype.Components.TryGetValue(value, out var protData))
                 {
-                    datanode =
-                        _serManager.PushCompositionWithGenericNode(
+                    // Previously this method used generic composition pushing. I.e.:
+                    /*
+                        datanode = _serManager.PushCompositionWithGenericNode(
                             compType,
-                            new[] { protData.Mapping }, datanode, _context);
+                            new[] {protData.Mapping},
+                            datanode,
+                            _context);
+                    */
+                    // However, I don't think this is what we want to do here. I.e., we want to ignore things like the
+                    // AlwaysPushInheritanceAttribute. Complex inheritance pushing should have already been done when
+                    // creating the proto data. Now we just want to override the prototype information with the
+                    // serialized data.
+                    //
+                    // If we do ever want to support this, we need to change entity serialization so that it doesn't do
+                    // a simple diff with respect to the prototype data and instead does some kind of inheritance
+                    // subtraction / removal.
+
+                    datanode = _serManager.CombineMappings(compData, protData.Mapping);
+                }
+                else
+                {
+                    datanode = compData.ShallowClone();
                 }
 
+                datanode.Remove("type");
                 _context.CurrentComponent = value;
                 _context.CurrentReadingEntityComponents[value] = (IComponent) _serManager.Read(compType, datanode, _context)!;
                 _context.CurrentComponent = null;

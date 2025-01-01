@@ -231,6 +231,7 @@ public sealed class EmplaceCommand : ToolshedCommand
     /// </summary>
     private sealed class EmplaceBlockOutputParser : CustomTypeParser<Type>
     {
+        public override bool ShowTypeArgSignature => false;
         public override bool TryParse(ParserContext ctx, [NotNullWhen(true)] out Type? result)
         {
             result = null;

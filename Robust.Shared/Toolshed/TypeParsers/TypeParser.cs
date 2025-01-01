@@ -26,11 +26,18 @@ public interface ITypeParser
     /// or variables
     /// </summary>
     public bool EnableValueRef { get; }
+
+    /// <summary>
+    /// Whether or not the type argument should appear in the method's signature. This mainly exists for type-argument
+    /// parsers that infer a type argument based on a regular arguments, like <see cref="VarTypeParser"/>.
+    /// </summary>
+    public virtual bool ShowTypeArgSignature => true;
 }
 
 public abstract class BaseParser<T> : ITypeParser, IPostInjectInit where T : notnull
 {
     public virtual bool EnableValueRef => true;
+    public virtual bool ShowTypeArgSignature => true;
 
     // TODO TOOLSHED Localization
     // Ensure that all of the type parser auto-completions actually use localized strings

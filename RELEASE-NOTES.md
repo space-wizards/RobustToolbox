@@ -45,7 +45,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* The map-like Toolshed commands now work when a collection is piped in.
 
 ### Other
 

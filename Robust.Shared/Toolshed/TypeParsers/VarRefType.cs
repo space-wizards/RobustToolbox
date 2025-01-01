@@ -23,6 +23,7 @@ namespace Robust.Shared.Toolshed.TypeParsers;
 /// </remarks>
 public sealed class VarTypeParser : CustomTypeParser<Type>
 {
+    public override bool ShowTypeArgSignature => false;
     public override bool TryParse(ParserContext ctx, [NotNullWhen(true)] out Type? result)
     {
         result = null;

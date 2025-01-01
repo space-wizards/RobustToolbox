@@ -1,5 +1,8 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
+using Microsoft.Extensions.Primitives;
 using Robust.Shared.Toolshed.Syntax;
+using Robust.Shared.Toolshed.TypeParsers;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.Commands.Misc;
@@ -16,6 +19,7 @@ public sealed class ExplainCommand : ToolshedCommand
         var builder = new StringBuilder();
         foreach (var (cmd, _) in expr.Commands)
         {
+            builder.AppendLine();
             var name = cmd.Implementor.FullName;
             builder.AppendLine($"{name} - {cmd.Implementor.Description()}");
 
@@ -29,20 +33,14 @@ public sealed class ExplainCommand : ToolshedCommand
             if (cmd.Bundle.Inverted)
                 builder.Append("not ");
 
-            builder.Append($"{name}");
-            foreach (var arg in cmd.Method.Args)
-            {
-                builder.Append(' ');
-                builder.Append(GetArgHint(arg, arg.Type));
-            }
+            cmd.Implementor.AddMethodSignature(builder, cmd.Method.Args);
 
             builder.AppendLine();
             var piped = cmd.PipedType?.PrettyName() ?? "[none]";
             var returned = cmd.ReturnType?.PrettyName() ?? "[none]";
             builder.AppendLine($"{piped} -> {returned}");
-            builder.AppendLine();
         }
 
-        ctx.WriteLine(builder.ToString());
+        ctx.WriteLine(builder.ToString().TrimEnd());
     }
 }

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using Microsoft.Extensions.Primitives;
 using Robust.Shared.Exceptions;
 using Robust.Shared.Localization;
 using Robust.Shared.Toolshed.Errors;
@@ -590,19 +591,47 @@ internal sealed class ToolshedCommandImplementor
             if (method.Invertible)
                 builder.Append("[not] ");
 
-            builder.Append(FullName);
-
-            foreach (var arg in method.Arguments)
-            {
-                builder.Append(' ');
-                builder.Append(ToolshedCommand.GetArgHint(arg, arg.Type));
-            }
+            AddMethodSignature(builder, method.Arguments);
 
             if (method.Info.ReturnType != typeof(void))
                 builder.Append($" -> {method.Info.ReturnType.PrettyName()}");
         }
 
         return builder.ToString();
+    }
+
+    /// <summary>
+    /// Construct the methods signature for help and explain commands.
+    /// </summary>
+    internal void AddMethodSignature(StringBuilder builder, CommandArgument[] args)
+    {
+        builder.Append(FullName);
+
+        var tParsers = Owner.TypeParameterParsers;
+        var numParsers = 0;
+        foreach (var parserType in tParsers)
+        {
+            if (parserType == typeof(TypeTypeParser))
+                continue;
+
+            var parser = _toolshed.GetCustomParser(parserType);
+            if (parser.ShowTypeArgSignature)
+                numParsers++;
+        }
+
+        for (var i = 0; i < numParsers; i++)
+        {
+            builder.Append(" <T");
+            if (numParsers > 1)
+                builder.Append(i);
+            builder.Append('>');
+        }
+
+        foreach (var arg in args)
+        {
+            builder.Append(' ');
+            builder.Append(ToolshedCommand.GetArgHint(arg, arg.Type));
+        }
     }
 
     /// <inheritdoc cref="ToolshedCommand.DescriptionLocKey"/>

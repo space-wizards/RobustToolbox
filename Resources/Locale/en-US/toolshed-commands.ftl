@@ -42,8 +42,7 @@ command-description-as =
 command-description-count =
     Counts the amount of entries in it's input, returning an integer.
 command-description-map =
-    Maps the input over the given block, with the provided expected return type.
-    This command may be modified to not need an explicit return type in the future.
+    Maps the input over the given block.
 command-description-select =
     Selects N objects or N% of objects from the input.
     One can additionally invert this command with not to make it select everything except N objects instead.

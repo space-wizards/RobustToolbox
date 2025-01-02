@@ -1,8 +1,5 @@
-﻿using System;
-using System.Text;
-using Microsoft.Extensions.Primitives;
+﻿using System.Text;
 using Robust.Shared.Toolshed.Syntax;
-using Robust.Shared.Toolshed.TypeParsers;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.Commands.Misc;
@@ -23,22 +20,24 @@ public sealed class ExplainCommand : ToolshedCommand
             var name = cmd.Implementor.FullName;
             builder.AppendLine($"{name} - {cmd.Implementor.Description()}");
 
+            var piped = cmd.PipedType?.PrettyName() ?? "[none]";
+            builder.AppendLine($"Pipe input: {piped}");
+            builder.AppendLine($"Pipe output: {cmd.ReturnType.PrettyName()}");
+
+            builder.Append($"Signature:\n  ");
+
             if (cmd.PipedType != null)
             {
                 var pipeArg = cmd.Method.Base.PipeArg;
                 DebugTools.AssertNotNull(pipeArg);
-                builder.Append($"<{pipeArg?.Name} ({cmd.PipedType.PrettyName()})> -> ");
+                builder.Append($"<{pipeArg?.Name}> → "); // No type information, as that is already given above.
             }
 
             if (cmd.Bundle.Inverted)
                 builder.Append("not ");
 
             cmd.Implementor.AddMethodSignature(builder, cmd.Method.Args, cmd.Bundle.TypeArguments);
-
             builder.AppendLine();
-            var piped = cmd.PipedType?.PrettyName() ?? "[none]";
-            var returned = cmd.ReturnType?.PrettyName() ?? "[none]";
-            builder.AppendLine($"{piped} -> {returned}");
         }
 
         ctx.WriteLine(builder.ToString().TrimEnd());

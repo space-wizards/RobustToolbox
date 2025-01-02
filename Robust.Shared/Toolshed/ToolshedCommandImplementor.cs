@@ -588,8 +588,12 @@ internal sealed class ToolshedCommandImplementor
         {
             builder.Append(Environment.NewLine + "  ");
 
+            // TODO TOOLSHED
+            // FormattedMessage support for help strings
+            // make the argument type hint colour coded, for easier parsing of help strings.
+            // I.e., in "<input (IEnumerable<Int>)> make the "(IEnumerable<Int>)" part gray?
             if (method.PipeArg != null)
-                builder.Append($"<{method.PipeArg.Name} ({method.PipeArg.ParameterType.PrettyName()})> -> ");
+                builder.Append($"<{method.PipeArg.Name} ({method.PipeArg.ParameterType.PrettyName()})> → ");
 
             if (method.Invertible)
                 builder.Append("[not] ");
@@ -597,7 +601,7 @@ internal sealed class ToolshedCommandImplementor
             AddMethodSignature(builder, method.Arguments);
 
             if (method.Info.ReturnType != typeof(void))
-                builder.Append($" -> {method.Info.ReturnType.PrettyName()}");
+                builder.Append($" → {method.Info.ReturnType.PrettyName()}");
         }
 
         return builder.ToString();

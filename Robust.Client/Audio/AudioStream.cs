@@ -8,6 +8,11 @@ namespace Robust.Client.Audio;
 /// </summary>
 public sealed class AudioStream
 {
+    /// <summary>
+    /// Buffer ID for this audio in AL.
+    /// </summary>
+    internal int BufferId { get; }
+
     public TimeSpan Length { get; }
     internal IClydeHandle? ClydeHandle { get; }
     public string? Name { get; }
@@ -15,8 +20,9 @@ public sealed class AudioStream
     public string? Artist { get; }
     public int ChannelCount { get; }
 
-    internal AudioStream(IClydeHandle? handle, TimeSpan length, int channelCount, string? name = null, string? title = null, string? artist = null)
+    internal AudioStream(int bufferId, IClydeHandle? handle, TimeSpan length, int channelCount, string? name = null, string? title = null, string? artist = null)
     {
+        BufferId = bufferId;
         ClydeHandle = handle;
         Length = length;
         ChannelCount = channelCount;

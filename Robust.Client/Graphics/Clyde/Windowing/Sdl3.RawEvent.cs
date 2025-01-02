@@ -2,7 +2,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using TerraFX.Interop.Windows;
 using static SDL3.SDL;
 using static SDL3.SDL.SDL_EventType;
 
@@ -88,7 +87,8 @@ internal partial class Clyde
 
         private void ProcessSdl3EventMouseButton(in SDL_MouseButtonEvent ev)
         {
-            SendEvent(new EventMouseButton(ev.windowID, ev.type, ev.button));
+            var mods = SDL_GetModState();
+            SendEvent(new EventMouseButton(ev.windowID, ev.type, ev.button, mods));
         }
 
         private void ProcessSdl3EventMouseMotion(in SDL_MouseMotionEvent ev)
@@ -175,8 +175,8 @@ internal partial class Clyde
         private record EventMouseButton(
             uint WindowId,
             SDL_EventType Type,
-            byte Button
-        ) : EventBase;
+            byte Button,
+            SDL_Keymod Mods) : EventBase;
 
         private record EventText(
             uint WindowId,

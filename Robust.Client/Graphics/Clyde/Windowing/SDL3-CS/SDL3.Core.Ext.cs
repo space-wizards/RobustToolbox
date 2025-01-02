@@ -20,10 +20,10 @@ public static partial class SDL
     public static unsafe partial void SDL_RemoveEventWatch(delegate* unmanaged[Cdecl] <void*, SDL_Event*, byte> filter, void* userdata);
 
     public const byte SDL_BUTTON_LEFT = 1;
-    public const byte SDL_BUTTON_MIDDLE = 1;
-    public const byte SDL_BUTTON_RIGHT = 1;
-    public const byte SDL_BUTTON_X1 = 1;
-    public const byte SDL_BUTTON_X2 = 1;
+    public const byte SDL_BUTTON_MIDDLE = 2;
+    public const byte SDL_BUTTON_RIGHT = 3;
+    public const byte SDL_BUTTON_X1 = 4;
+    public const byte SDL_BUTTON_X2 = 5;
 
     public const int SDL_GL_CONTEXT_PROFILE_CORE = 0x0001;
     public const int SDL_GL_CONTEXT_PROFILE_COMPATIBILITY = 0x0002;

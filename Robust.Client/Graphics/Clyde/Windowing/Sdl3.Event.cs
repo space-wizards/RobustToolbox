@@ -153,10 +153,9 @@ internal partial class Clyde
             if (windowReg == null)
                 return;
 
-            var mods = SDL_GetModState();
             var button = ConvertSdl3Button(ev.Button);
             var key = Mouse.MouseButtonToKey(button);
-            EmitKeyEvent(key, ev.Type, false, mods, 0);
+            EmitKeyEvent(key, ev.Type, false, ev.Mods, 0);
         }
 
         private void ProcessEventMouseMotion(EventMouseMotion ev)

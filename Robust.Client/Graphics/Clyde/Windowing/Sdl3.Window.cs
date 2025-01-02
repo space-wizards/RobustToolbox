@@ -265,11 +265,17 @@ internal partial class Clyde
             var handle = new WindowHandle(_clyde, reg);
             reg.Handle = handle;
 
-            // TODO: REPLACE
-            // SDL_VERSION(out reg.SysWMinfo.version);
-            // var res = SDL_GetWindowWMInfo(window, ref reg.SysWMinfo);
-            // if (res == SDL_FALSE)
-            //     _sawmill.Error("Failed to get window WM info: {error}", SDL_GetError());
+            var windowProps = SDL_GetWindowProperties(window);
+            switch (_videoDriver)
+            {
+                case SdlVideoDriver.Windows:
+                    reg.WindowsHwnd = SDL_GetPointerProperty(windowProps, SDL_PROP_WINDOW_WIN32_HWND_POINTER, 0);
+                    break;
+                case SdlVideoDriver.X11:
+                    reg.X11Display = SDL_GetPointerProperty(windowProps, SDL_PROP_WINDOW_X11_DISPLAY_POINTER, 0);
+                    reg.X11Id = (uint)SDL_GetNumberProperty(windowProps, SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0);
+                    break;
+            }
 
             // LoadWindowIcon(window);
 

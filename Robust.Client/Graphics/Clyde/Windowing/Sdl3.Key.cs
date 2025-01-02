@@ -1,11 +1,8 @@
 ﻿using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using Robust.Client.Input;
-using Robust.Shared;
-using static SDL2.SDL;
-using static SDL2.SDL.SDL_Scancode;
+using static SDL3.SDL;
+using static SDL3.SDL.SDL_Scancode;
 using Key = Robust.Client.Input.Keyboard.Key;
 using Button = Robust.Client.Input.Mouse.Button;
 
@@ -13,7 +10,7 @@ namespace Robust.Client.Graphics.Clyde;
 
 internal partial class Clyde
 {
-    private sealed partial class Sdl2WindowingImpl
+    private sealed partial class Sdl3WindowingImpl
     {
         // Indices are values of SDL_Scancode
         private static readonly Key[] KeyMap;
@@ -29,6 +26,8 @@ internal partial class Clyde
             lock (_printableKeyNameMap)
             {
                 _printableKeyNameMap.Clear();
+
+                // TODO: Validate this is correct in SDL3.
 
                 // List of mappable keys from SDL2's source appears to be:
                 // entries in SDL_default_keymap that aren't an SDLK_ enum reference.
@@ -47,11 +46,12 @@ internal partial class Clyde
 
                 void CacheKey(SDL_Scancode scancode)
                 {
-                    var rKey = ConvertSdl2Scancode(scancode);
+                    var rKey = ConvertSdl3Scancode(scancode);
                     if (rKey == Key.Unknown)
                         return;
 
-                    var name = SDL_GetKeyName(SDL_GetKeyFromScancode(scancode));
+                    // TODO: SDL_GetKeyFromScancode correct?
+                    var name = SDL_GetKeyName(SDL_GetKeyFromScancode(scancode, SDL_Keymod.SDL_KMOD_NONE, false));
 
                     if (!string.IsNullOrEmpty(name))
                         _printableKeyNameMap.Add(rKey, name);
@@ -70,17 +70,17 @@ internal partial class Clyde
             }
         }
 
-        internal static Key ConvertSdl2Scancode(SDL_Scancode scancode)
+        internal static Key ConvertSdl3Scancode(SDL_Scancode scancode)
         {
             return KeyMap[(int) scancode];
         }
 
-        public static Button ConvertSdl2Button(int button)
+        public static Button ConvertSdl3Button(int button)
         {
             return MouseButtonMap[button];
         }
 
-        static Sdl2WindowingImpl()
+        static Sdl3WindowingImpl()
         {
             MouseButtonMap = new Button[6];
             MouseButtonMap[SDL_BUTTON_LEFT] = Button.Left;
@@ -89,7 +89,7 @@ internal partial class Clyde
             MouseButtonMap[SDL_BUTTON_X1] = Button.Button4;
             MouseButtonMap[SDL_BUTTON_X2] = Button.Button5;
 
-            KeyMap = new Key[(int) SDL_NUM_SCANCODES];
+            KeyMap = new Key[(int) SDL_SCANCODE_COUNT];
             MapKey(SDL_SCANCODE_A, Key.A);
             MapKey(SDL_SCANCODE_B, Key.B);
             MapKey(SDL_SCANCODE_C, Key.C);

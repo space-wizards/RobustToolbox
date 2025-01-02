@@ -33,6 +33,8 @@ internal partial class Clyde
 
         public static unsafe void WindowsSharedWindowCreate(HWND hWnd, IConfigurationManager cfg)
         {
+            // TODO: REMOVE, only used by GLFW, SDL3 does DWMWA_USE_IMMERSIVE_DARK_MODE automatically.
+
             // >= Windows 11 22000 check
             if (cfg.GetCVar(CVars.DisplayWin11ImmersiveDarkMode) && Environment.OSVersion.Version.Build >= 22000)
             {

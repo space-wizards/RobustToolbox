@@ -109,8 +109,8 @@ namespace Robust.Client.Graphics.Clyde
                 case "glfw":
                     winImpl = new GlfwWindowingImpl(this, _deps);
                     break;
-                case "sdl2":
-                    winImpl = new Sdl2WindowingImpl(this, _deps);
+                case "sdl3":
+                    winImpl = new Sdl3WindowingImpl(this, _deps);
                     break;
                 default:
                     _logManager.GetSawmill("clyde.win").Log(

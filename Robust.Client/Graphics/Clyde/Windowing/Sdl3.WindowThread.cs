@@ -6,13 +6,13 @@ using Robust.Shared;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using static SDL2.SDL;
+using static SDL3.SDL;
 
 namespace Robust.Client.Graphics.Clyde;
 
 internal partial class Clyde
 {
-    private sealed partial class Sdl2WindowingImpl
+    private sealed partial class Sdl3WindowingImpl
     {
         private bool _windowingRunning;
         private ChannelWriter<CmdBase> _cmdWriter = default!;
@@ -30,33 +30,33 @@ internal partial class Clyde
             while (_windowingRunning)
             {
                 var res = SDL_WaitEvent(out Unsafe.NullRef<SDL_Event>());
-                if (res == 0)
+                if (!res)
                 {
-                    _sawmill.Error("Error while waiting on SDL2 events: {error}", SDL_GetError());
+                    _sawmill.Error("Error while waiting on SDL3 events: {error}", SDL_GetError());
                     continue; // Assume it's a transient failure?
                 }
 
-                while (SDL_PollEvent(out _) == 1)
+                while (SDL_PollEvent(out _))
                 {
                     // We let callbacks process all events because of stuff like resizing.
                 }
 
                 while (_cmdReader.TryRead(out var cmd) && _windowingRunning)
                 {
-                    ProcessSdl2Cmd(cmd);
+                    ProcessSdl3Cmd(cmd);
                 }
             }
         }
 
         public void PollEvents()
         {
-            while (SDL_PollEvent(out _) == 1)
+            while (SDL_PollEvent(out _))
             {
                 // We let callbacks process all events because of stuff like resizing.
             }
         }
 
-        private void ProcessSdl2Cmd(CmdBase cmdb)
+        private void ProcessSdl3Cmd(CmdBase cmdb)
         {
             switch (cmdb)
             {
@@ -171,25 +171,25 @@ internal partial class Clyde
             _eventWriter = eventChannel.Writer;
         }
 
-        private unsafe void SendCmd(CmdBase cmd)
+        private void SendCmd(CmdBase cmd)
         {
             if (_clyde._threadWindowApi)
             {
                 _cmdWriter.TryWrite(cmd);
 
                 SDL_Event ev = default;
-                ev.type = (SDL_EventType)_sdlEventWakeup;
+                ev.type = _sdlEventWakeup;
                 // Post empty event to unstuck WaitEvents if necessary.
                 // This self-registered event type is ignored by the winthread, but it'll still wake it up.
 
                 // This can fail if the event queue is full.
                 // That's not really a problem since in that case something else will be sure to wake the thread up anyways.
                 // NOTE: have to avoid using PushEvents since that invokes callbacks which causes a deadlock.
-                SDL_PeepEvents(&ev, 1, SDL_eventaction.SDL_ADDEVENT, ev.type, ev.type);
+                SDL_PeepEvents(new Span<SDL_Event>(ref ev), 1, SDL_EventAction.SDL_ADDEVENT, ev.type, ev.type);
             }
             else
             {
-                ProcessSdl2Cmd(cmd);
+                ProcessSdl3Cmd(cmd);
             }
         }
 
@@ -221,7 +221,7 @@ internal partial class Clyde
             nint ShareWindow,
             nint ShareContext,
             nint OwnerWindow,
-            TaskCompletionSource<Sdl2WindowCreateResult> Tcs
+            TaskCompletionSource<Sdl3WindowCreateResult> Tcs
         ) : CmdBase;
 
         private sealed record CmdWinDestroy(
@@ -229,8 +229,8 @@ internal partial class Clyde
             bool HadOwner
         ) : CmdBase;
 
-        private sealed record Sdl2WindowCreateResult(
-            Sdl2WindowReg? Reg,
+        private sealed record Sdl3WindowCreateResult(
+            Sdl3WindowReg? Reg,
             string? Error
         );
 

@@ -1,18 +1,20 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using static SDL2.SDL;
-using static SDL2.SDL.SDL_LogCategory;
+using static SDL3.SDL;
+using static SDL3.SDL.SDL_LogCategory;
+using static SDL3.SDL.SDL_InitFlags;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Robust.Client.Graphics.Clyde;
 
 internal partial class Clyde
 {
-    private sealed partial class Sdl2WindowingImpl : IWindowingImpl
+    private sealed partial class Sdl3WindowingImpl : IWindowingImpl
     {
         [Dependency] private readonly ILogManager _logManager = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
@@ -21,54 +23,65 @@ internal partial class Clyde
         private GCHandle _selfGCHandle;
 
         private readonly ISawmill _sawmill;
-        private readonly ISawmill _sawmillSdl2;
+        private readonly ISawmill _sawmillSdl3;
 
-        public Sdl2WindowingImpl(Clyde clyde, IDependencyCollection deps)
+        private SdlVideoDriver _videoDriver;
+
+        public Sdl3WindowingImpl(Clyde clyde, IDependencyCollection deps)
         {
             _clyde = clyde;
             deps.InjectDependencies(this, true);
 
             _sawmill = _logManager.GetSawmill("clyde.win");
-            _sawmillSdl2 = _logManager.GetSawmill("clyde.win.sdl2");
+            _sawmillSdl3 = _logManager.GetSawmill("clyde.win.sdl3");
         }
 
         public bool Init()
         {
             InitChannels();
 
-            if (!InitSdl2())
+            if (!InitSdl3())
                 return false;
 
             return true;
         }
 
-        private unsafe bool InitSdl2()
+        private unsafe bool InitSdl3()
         {
             _selfGCHandle = GCHandle.Alloc(this, GCHandleType.Normal);
 
-            SDL_LogSetAllPriority(SDL_LogPriority.SDL_LOG_PRIORITY_VERBOSE);
-            SDL_LogSetOutputFunction(&LogOutputFunction, (void*) GCHandle.ToIntPtr(_selfGCHandle));
+            SDL_SetLogPriorities(SDL_LogPriority.SDL_LOG_PRIORITY_VERBOSE);
+            SDL_SetLogOutputFunction(&LogOutputFunction, (void*) GCHandle.ToIntPtr(_selfGCHandle));
 
-            SDL_SetHint("SDL_WINDOWS_DPI_SCALING", "1");
             SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
-            SDL_SetHint(SDL_HINT_IME_SUPPORT_EXTENDED_TEXT, "1");
-            SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
+            SDL_SetHint(SDL_HINT_IME_IMPLEMENTED_UI, "composition");
+
+            // SDL3's GameInput support is currently broken and leaving it on
+            // causes a "that operation is not supported" error to be logged on startup.
+            // https://github.com/libsdl-org/SDL/issues/11813
+            SDL_SetHint(SDL_HINT_WINDOWS_GAMEINPUT, "0");
 
             var res = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
-            if (res < 0)
+            if (!res)
             {
-                _sawmill.Fatal("Failed to initialize SDL2: {error}", SDL_GetError());
+                _sawmill.Fatal("Failed to initialize SDL3: {error}", SDL_GetError());
                 return false;
             }
 
-            SDL_GetVersion(out var version);
+            var version = SDL_GetVersion();
             var videoDriver = SDL_GetCurrentVideoDriver();
             _sawmill.Debug(
-                "SDL2 initialized, version: {major}.{minor}.{patch}, video driver: {videoDriver}", version.major, version.minor, version.patch, videoDriver);
+                "SDL3 initialized, version: {major}.{minor}.{patch}, video driver: {videoDriver}",
+                SDL_VERSIONNUM_MAJOR(version),
+                SDL_VERSIONNUM_MINOR(version),
+                SDL_VERSIONNUM_MICRO(version),
+                videoDriver);
+
+            LoadSdl3VideoDriver();
 
             _sdlEventWakeup = SDL_RegisterEvents(1);
-
-            SDL_EventState(SDL_EventType.SDL_SYSWMEVENT, SDL_ENABLE);
+            if (_sdlEventWakeup == 0)
+                throw new InvalidOperationException("SDL_RegisterEvents failed");
 
             InitCursors();
             InitMonitors();
@@ -76,26 +89,42 @@ internal partial class Clyde
 
             SDL_AddEventWatch(&EventWatch, (void*) GCHandle.ToIntPtr(_selfGCHandle));
 
-            // SDL defaults to having text input enabled, so we have to manually turn it off in init for consistency.
-            // If we don't, text input will remain enabled *until* the user first leaves a LineEdit/TextEdit.
-            SDL_StopTextInput();
-
             return true;
+        }
+
+        private void CheckThreadApartment()
+        {
+            if (!OperatingSystem.IsWindows())
+                return;
+
+            if (Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
+                _sawmill.Error("Thread apartment state isn't STA. This will likely break things!!!");
+        }
+
+        private void LoadSdl3VideoDriver()
+        {
+            _videoDriver = SDL_GetCurrentVideoDriver() switch
+            {
+                "windows" => SdlVideoDriver.Windows,
+                "x11" => SdlVideoDriver.X11,
+                _ => SdlVideoDriver.Other,
+            };
         }
 
         public unsafe void Shutdown()
         {
             if (_selfGCHandle != default)
             {
-                SDL_DelEventWatch(&EventWatch, (void*) GCHandle.ToIntPtr(_selfGCHandle));
+                SDL_RemoveEventWatch(&EventWatch, (void*) GCHandle.ToIntPtr(_selfGCHandle));
                 _selfGCHandle.Free();
+                _selfGCHandle = default;
             }
 
-            SDL_LogSetOutputFunction(null, null);
+            SDL_SetLogOutputFunction(null, null);
 
             if (SDL_WasInit(0) != 0)
             {
-                _sawmill.Debug("Terminating SDL2");
+                _sawmill.Debug("Terminating SDL3");
                 SDL_Quit();
             }
         }
@@ -107,19 +136,19 @@ internal partial class Clyde
 
         public void GLMakeContextCurrent(WindowReg? reg)
         {
-            int res;
-            if (reg is Sdl2WindowReg sdlReg)
-                res = SDL_GL_MakeCurrent(sdlReg.Sdl2Window, sdlReg.GlContext);
+            SDLBool res;
+            if (reg is Sdl3WindowReg sdlReg)
+                res = SDL_GL_MakeCurrent(sdlReg.Sdl3Window, sdlReg.GlContext);
             else
                 res = SDL_GL_MakeCurrent(IntPtr.Zero, IntPtr.Zero);
 
-            if (res < 0)
+            if (!res)
                 _sawmill.Error("SDL_GL_MakeCurrent failed: {error}", SDL_GetError());
         }
 
         public void GLSwapInterval(WindowReg reg, int interval)
         {
-            ((Sdl2WindowReg)reg).SwapInterval = interval;
+            ((Sdl3WindowReg)reg).SwapInterval = interval;
             SDL_GL_SetSwapInterval(interval);
         }
 
@@ -130,23 +159,26 @@ internal partial class Clyde
 
         public string GetDescription()
         {
-            SDL_GetVersion(out var version);
-            _sawmill.Debug(
-                "SDL2 initialized, version: {major}.{minor}.{patch}", version.major, version.minor, version.patch);
+            var version = SDL_GetVersion();
+
+            var major = SDL_VERSIONNUM_MAJOR(version);
+            var minor = SDL_VERSIONNUM_MINOR(version);
+            var micro = SDL_VERSIONNUM_MICRO(version);
 
             var videoDriver = SDL_GetCurrentVideoDriver();
+            var revision = SDL_GetRevision();
 
-            return $"SDL2 {version.major}.{version.minor}.{version.patch} ({videoDriver})";
+            return $"SDL {major}.{minor}.{micro} (rev: {revision}, video driver: {videoDriver})";
         }
 
-        [UnmanagedCallersOnly(CallConvs = new []{typeof(CallConvCdecl)})]
+        [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
         private static unsafe void LogOutputFunction(
             void* userdata,
             int category,
             SDL_LogPriority priority,
             byte* message)
         {
-            var obj = (Sdl2WindowingImpl) GCHandle.FromIntPtr((IntPtr)userdata).Target!;
+            var obj = (Sdl3WindowingImpl) GCHandle.FromIntPtr((IntPtr)userdata).Target!;
 
             var level = priority switch
             {
@@ -160,13 +192,8 @@ internal partial class Clyde
             };
 
             var msg = Marshal.PtrToStringUTF8((IntPtr) message) ?? "";
-            if (msg == "That operation is not supported")
-            {
-                obj._sawmillSdl2.Info(Environment.StackTrace);
-            }
-            
             var categoryName = SdlLogCategoryName(category);
-            obj._sawmillSdl2.Log(level, $"[{categoryName}] {msg}");
+            obj._sawmillSdl3.Log(level, $"[{categoryName}] {msg}");
         }
 
         private static string SdlLogCategoryName(int category)
@@ -185,6 +212,14 @@ internal partial class Clyde
                 _                            => "unknown"
                 // @formatter:on
             };
+        }
+
+        private enum SdlVideoDriver
+        {
+            // These are the ones we need to be able to check against.
+            Other,
+            Windows,
+            X11
         }
     }
 }

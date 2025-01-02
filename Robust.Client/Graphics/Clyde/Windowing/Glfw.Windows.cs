@@ -468,6 +468,8 @@ namespace Robust.Client.Graphics.Clyde
                 GLFW.WindowHint(WindowHintInt.AlphaBits, 8);
                 GLFW.WindowHint(WindowHintInt.StencilBits, 8);
 
+                GLFW.WindowHint(WindowHintBool.Decorated, (parameters.Styles & OSWindowStyles.NoTitleBar) == 0);
+
                 var window = GLFW.CreateWindow(
                     parameters.Width, parameters.Height,
                     parameters.Title,
@@ -483,11 +485,6 @@ namespace Robust.Client.Graphics.Clyde
                     GLFW.GetMonitorPos(monitor, out var x, out var y);
                     GLFW.SetWindowPos(window, x, y);
                     GLFW.MaximizeWindow(window);
-                }
-
-                if ((parameters.Styles & OSWindowStyles.NoTitleBar) != 0)
-                {
-                    GLFW.WindowHint(WindowHintBool.Decorated, false);
                 }
 
                 if ((parameters.Styles & OSWindowStyles.NoTitleOptions) != 0)

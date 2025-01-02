@@ -492,13 +492,7 @@ namespace Robust.Client.Graphics.Clyde
                     if (OperatingSystem.IsWindows())
                     {
                         var hWnd = (HWND) GLFW.GetWin32Window(window);
-                        DebugTools.Assert(hWnd != HWND.NULL);
-
-                        Windows.SetWindowLongPtrW(
-                            hWnd,
-                            GWL.GWL_STYLE,
-                            // Cast to long here to work around a bug in rider with nint bitwise operators.
-                            (nint)((long)Windows.GetWindowLongPtrW(hWnd, GWL.GWL_STYLE) & ~WS.WS_SYSMENU));
+                        WsiShared.SetWindowStyleNoTitleOptionsWindows(hWnd);
                     }
                     else if (OperatingSystem.IsLinux())
                     {
@@ -506,23 +500,7 @@ namespace Robust.Client.Graphics.Clyde
                         {
                             var x11Window = (X11Window)GLFW.GetX11Window(window);
                             var x11Display = (Display*) GLFW.GetX11Display(window);
-                            DebugTools.Assert(x11Window != X11Window.NULL);
-                            // https://specifications.freedesktop.org/wm-spec/wm-spec-latest.html#idm46181547486832
-                            var newPropValString = Marshal.StringToCoTaskMemUTF8("_NET_WM_WINDOW_TYPE_DIALOG");
-                            var newPropVal = Xlib.XInternAtom(x11Display, (sbyte*)newPropValString, Xlib.False);
-                            DebugTools.Assert(newPropVal != Atom.NULL);
-
-                            var propNameString = Marshal.StringToCoTaskMemUTF8("_NET_WM_WINDOW_TYPE");
-#pragma warning disable CA1806
-                            // [display] [window] [property] [type] [format (8, 16,32)] [mode] [data] [element count]
-                            Xlib.XChangeProperty(x11Display, x11Window,
-                                Xlib.XInternAtom(x11Display, (sbyte*)propNameString, Xlib.False), // should never be null; part of spec
-                                Xlib.XA_ATOM, 32, Xlib.PropModeReplace,
-                                (byte*)&newPropVal, 1);
-#pragma warning restore CA1806
-
-                            Marshal.FreeCoTaskMem(newPropValString);
-                            Marshal.FreeCoTaskMem(propNameString);
+                            WsiShared.SetWindowStyleNoTitleOptionsX11(x11Display, x11Window);
                         }
                         catch (EntryPointNotFoundException)
                         {

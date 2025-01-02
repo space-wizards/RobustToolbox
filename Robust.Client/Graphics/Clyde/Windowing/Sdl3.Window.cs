@@ -5,10 +5,12 @@ using System.Threading.Tasks;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using SDL3;
+using TerraFX.Interop.Windows;
+using TerraFX.Interop.Xlib;
 using BOOL = TerraFX.Interop.Windows.BOOL;
 using Windows = TerraFX.Interop.Windows.Windows;
 using GLAttr = SDL3.SDL.SDL_GLAttr;
-using WindowFlags = SDL3.SDL.SDL_WindowFlags;
+using X11Window = TerraFX.Interop.Xlib.Window;
 
 namespace Robust.Client.Graphics.Clyde;
 
@@ -172,13 +174,14 @@ internal partial class Clyde
             nint shareContext,
             nint ownerWindow)
         {
-            var windowFlags = WindowFlags.SDL_WINDOW_HIDDEN
-                              | WindowFlags.SDL_WINDOW_RESIZABLE
-                              | WindowFlags.SDL_WINDOW_HIGH_PIXEL_DENSITY;
+            var createProps = SDL.SDL_CreateProperties();
+            SDL.SDL_SetBooleanProperty(createProps, SDL.SDL_PROP_WINDOW_CREATE_HIDDEN_BOOLEAN, true);
+            SDL.SDL_SetBooleanProperty(createProps, SDL.SDL_PROP_WINDOW_CREATE_RESIZABLE_BOOLEAN, true);
+            SDL.SDL_SetBooleanProperty(createProps, SDL.SDL_PROP_WINDOW_CREATE_HIGH_PIXEL_DENSITY_BOOLEAN, true);
 
             if (spec is { } s)
             {
-                windowFlags |= WindowFlags.SDL_WINDOW_OPENGL;
+                SDL.SDL_SetBooleanProperty(createProps, SDL.SDL_PROP_WINDOW_CREATE_OPENGL_BOOLEAN, true);
 
                 SDL.SDL_GL_SetAttribute(GLAttr.SDL_GL_RED_SIZE, 8);
                 SDL.SDL_GL_SetAttribute(GLAttr.SDL_GL_GREEN_SIZE, 8);
@@ -226,13 +229,39 @@ internal partial class Clyde
             }
 
             if (parameters.Fullscreen)
-                windowFlags |= WindowFlags.SDL_WINDOW_FULLSCREEN;
+                SDL.SDL_SetBooleanProperty(createProps, SDL.SDL_PROP_WINDOW_CREATE_FULLSCREEN_BOOLEAN, true);
 
-            nint window = SDL.SDL_CreateWindow(
-                parameters.Title,
-                parameters.Width,
-                parameters.Height,
-                windowFlags);
+            if ((parameters.Styles & OSWindowStyles.NoTitleBar) != 0)
+                SDL.SDL_SetBooleanProperty(createProps, SDL.SDL_PROP_WINDOW_CREATE_BORDERLESS_BOOLEAN, true);
+
+            if (ownerWindow != 0)
+            {
+                SDL.SDL_SetPointerProperty(createProps, SDL.SDL_PROP_WINDOW_CREATE_PARENT_POINTER, ownerWindow);
+
+                if (parameters.StartupLocation == WindowStartupLocation.CenterOwner)
+                {
+                    SDL.SDL_GetWindowSize(ownerWindow, out var parentW, out var parentH);
+                    SDL.SDL_GetWindowPosition(ownerWindow, out var parentX, out var parentY);
+
+                    SDL.SDL_SetNumberProperty(
+                        createProps,
+                        SDL.SDL_PROP_WINDOW_CREATE_X_NUMBER,
+                        parentX + (parentW - parameters.Width) / 2);
+                    SDL.SDL_SetNumberProperty(
+                        createProps,
+                        SDL.SDL_PROP_WINDOW_CREATE_Y_NUMBER,
+                        parentY + (parentH - parameters.Height) / 2);
+                }
+            }
+
+            SDL.SDL_SetNumberProperty(createProps, SDL.SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER, parameters.Width);
+            SDL.SDL_SetNumberProperty(createProps, SDL.SDL_PROP_WINDOW_CREATE_HEIGHT_NUMBER, parameters.Height);
+            SDL.SDL_SetStringProperty(createProps, SDL.SDL_PROP_WINDOW_CREATE_TITLE_STRING, parameters.Title);
+
+            // ---> CREATE <---
+            var window = SDL.SDL_CreateWindowWithProperties(createProps);
+
+            SDL.SDL_DestroyProperties(createProps);
 
             if (window == 0)
                 return default;
@@ -244,8 +273,42 @@ internal partial class Clyde
                 return default;
             }
 
+            if ((parameters.Styles & OSWindowStyles.NoTitleOptions) != 0)
+            {
+                var props = SDL.SDL_GetWindowProperties(window);
+                switch (_videoDriver)
+                {
+                    case SdlVideoDriver.Windows:
+                    {
+                        var hWnd = SDL.SDL_GetPointerProperty(
+                            props,
+                            SDL.SDL_PROP_WINDOW_WIN32_HWND_POINTER,
+                            0);
+                        WsiShared.SetWindowStyleNoTitleOptionsWindows((HWND)hWnd);
+                        break;
+                    }
+                    case SdlVideoDriver.X11:
+                        unsafe
+                        {
+                            var x11Display = (Display*)SDL.SDL_GetPointerProperty(
+                                props,
+                                SDL.SDL_PROP_WINDOW_X11_DISPLAY_POINTER,
+                                0);
+                            var x11Window = (X11Window)SDL.SDL_GetNumberProperty(
+                                props,
+                                SDL.SDL_PROP_WINDOW_X11_WINDOW_NUMBER,
+                                0);
+                            WsiShared.SetWindowStyleNoTitleOptionsX11(x11Display, x11Window);
+                            break;
+                        }
+
+                    default:
+                        _sawmill.Warning("OSWindowStyles.NoTitleOptions not implemented on this video driver");
+                        break;
+                }
+            }
+
             // TODO: Monitors, window maximize.
-            // TODO: a bunch of win32 calls for funny window properties I still haven't ported to other platforms.
 
             // Make sure window thread doesn't keep hold of the GL context.
             SDL.SDL_GL_MakeCurrent(IntPtr.Zero, IntPtr.Zero);

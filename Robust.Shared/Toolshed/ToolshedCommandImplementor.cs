@@ -606,7 +606,7 @@ internal sealed class ToolshedCommandImplementor
     /// <summary>
     /// Construct the methods signature for help and explain commands.
     /// </summary>
-    internal void AddMethodSignature(StringBuilder builder, CommandArgument[] args)
+    internal void AddMethodSignature(StringBuilder builder, CommandArgument[] args, Type[]? typeArgs = null)
     {
         builder.Append(FullName);
 
@@ -622,11 +622,25 @@ internal sealed class ToolshedCommandImplementor
                 numParsers++;
         }
 
-        for (var i = 0; i < numParsers; i++)
+        // Add "<T1, T2>" for methods that take in type arguments.
+        if (numParsers > 0)
         {
-            builder.Append(" <T");
-            if (numParsers > 1)
-                builder.Append(i);
+            builder.Append('<');
+            for (var i = 0; i < numParsers; i++)
+            {
+                if (i > 0)
+                    builder.Append(", ");
+
+                if (typeArgs != null)
+                {
+                    builder.Append(typeArgs[i].PrettyName());
+                    continue;
+                }
+
+                builder.Append('T');
+                if (numParsers > 1)
+                    builder.Append(i + 1);
+            }
             builder.Append('>');
         }
 

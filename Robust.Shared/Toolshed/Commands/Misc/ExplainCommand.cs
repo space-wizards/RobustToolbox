@@ -33,7 +33,7 @@ public sealed class ExplainCommand : ToolshedCommand
             if (cmd.Bundle.Inverted)
                 builder.Append("not ");
 
-            cmd.Implementor.AddMethodSignature(builder, cmd.Method.Args);
+            cmd.Implementor.AddMethodSignature(builder, cmd.Method.Args, cmd.Bundle.TypeArguments);
 
             builder.AppendLine();
             var piped = cmd.PipedType?.PrettyName() ?? "[none]";

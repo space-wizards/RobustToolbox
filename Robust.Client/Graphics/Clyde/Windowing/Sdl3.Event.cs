@@ -2,10 +2,10 @@
 using System.Numerics;
 using Robust.Client.Input;
 using Robust.Shared.Map;
-using static SDL3.SDL;
-using static SDL3.SDL.SDL_EventType;
-using static SDL3.SDL.SDL_Keymod;
+using SDL3;
 using Key = Robust.Client.Input.Keyboard.Key;
+using ET = SDL3.SDL.SDL_EventType;
+using SDL_Keymod = SDL3.SDL.SDL_Keymod;
 
 namespace Robust.Client.Graphics.Clyde;
 
@@ -102,30 +102,30 @@ internal partial class Clyde
 
             switch (ev.EventId)
             {
-                case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+                case ET.SDL_EVENT_WINDOW_CLOSE_REQUESTED:
                     _clyde.SendCloseWindow(window, new WindowRequestClosedEventArgs(window.Handle));
                     break;
-                case SDL_EVENT_WINDOW_MOUSE_ENTER:
+                case ET.SDL_EVENT_WINDOW_MOUSE_ENTER:
                     _clyde._currentHoveredWindow = window;
                     _clyde.SendMouseEnterLeave(new MouseEnterLeaveEventArgs(window.Handle, true));
                     break;
-                case SDL_EVENT_WINDOW_MOUSE_LEAVE:
+                case ET.SDL_EVENT_WINDOW_MOUSE_LEAVE:
                     if (_clyde._currentHoveredWindow == window)
                         _clyde._currentHoveredWindow = null;
 
                     _clyde.SendMouseEnterLeave(new MouseEnterLeaveEventArgs(window.Handle, false));
                     break;
-                case SDL_EVENT_WINDOW_MINIMIZED:
+                case ET.SDL_EVENT_WINDOW_MINIMIZED:
                     window.IsMinimized = true;
                     break;
-                case SDL_EVENT_WINDOW_RESTORED:
+                case ET.SDL_EVENT_WINDOW_RESTORED:
                     window.IsMinimized = false;
                     break;
-                case SDL_EVENT_WINDOW_FOCUS_GAINED:
+                case ET.SDL_EVENT_WINDOW_FOCUS_GAINED:
                     window.IsFocused = true;
                     _clyde.SendWindowFocus(new WindowFocusedEventArgs(true, window.Handle));
                     break;
-                case SDL_EVENT_WINDOW_FOCUS_LOST:
+                case ET.SDL_EVENT_WINDOW_FOCUS_LOST:
                     window.IsFocused = false;
                     _clyde.SendWindowFocus(new WindowFocusedEventArgs(false, window.Handle));
                     break;
@@ -222,12 +222,12 @@ internal partial class Clyde
             EmitKeyEvent(ConvertSdl3Scancode(ev.Scancode), ev.Type, ev.Repeat, ev.Mods, ev.Scancode);
         }
 
-        private void EmitKeyEvent(Key key, SDL_EventType type, bool repeat, SDL_Keymod mods, SDL_Scancode scancode)
+        private void EmitKeyEvent(Key key, ET type, bool repeat, SDL.SDL_Keymod mods, SDL.SDL_Scancode scancode)
         {
-            var shift = (mods & SDL_KMOD_SHIFT) != 0;
-            var alt = (mods & SDL_KMOD_ALT) != 0;
-            var control = (mods & SDL_KMOD_CTRL) != 0;
-            var system = (mods & SDL_KMOD_GUI) != 0;
+            var shift = (mods & SDL_Keymod.SDL_KMOD_SHIFT) != 0;
+            var alt = (mods & SDL_Keymod.SDL_KMOD_ALT) != 0;
+            var control = (mods & SDL_Keymod.SDL_KMOD_CTRL) != 0;
+            var system = (mods & SDL_Keymod.SDL_KMOD_GUI) != 0;
 
             var ev = new KeyEventArgs(
                 key,
@@ -237,12 +237,12 @@ internal partial class Clyde
 
             switch (type)
             {
-                case SDL_EVENT_KEY_UP:
-                case SDL_EVENT_MOUSE_BUTTON_UP:
+                case ET.SDL_EVENT_KEY_UP:
+                case ET.SDL_EVENT_MOUSE_BUTTON_UP:
                     _clyde.SendKeyUp(ev);
                     break;
-                case SDL_EVENT_KEY_DOWN:
-                case SDL_EVENT_MOUSE_BUTTON_DOWN:
+                case ET.SDL_EVENT_KEY_DOWN:
+                case ET.SDL_EVENT_MOUSE_BUTTON_DOWN:
                     _clyde.SendKeyDown(ev);
                     break;
             }

@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using Robust.Client.Utility;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using SDL3;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using static SDL3.SDL;
-using static SDL3.SDL.SDL_SystemCursor;
-using static SDL3.SDL.SDL_PixelFormat;
 
 namespace Robust.Client.Graphics.Clyde;
 
@@ -40,20 +38,20 @@ internal partial class Clyde
 
             fixed (Rgba32* pixPtr = img.GetPixelSpan())
             {
-                var surface = SDL_CreateSurfaceFrom(
+                var surface = SDL.SDL_CreateSurfaceFrom(
                     img.Width,
                     img.Height,
-                    SDL_PIXELFORMAT_RGBA8888,
+                    SDL.SDL_PixelFormat.SDL_PIXELFORMAT_RGBA8888,
                     (IntPtr)pixPtr,
                     sizeof(Rgba32) * img.Width);
 
-                var cursor = SDL_CreateColorCursor(surface, cmd.Hotspot.X, cmd.Hotspot.Y);
+                var cursor = SDL.SDL_CreateColorCursor(surface, cmd.Hotspot.X, cmd.Hotspot.Y);
                 if (cursor == 0)
                     throw new InvalidOperationException("SDL_CreateColorCursor failed");
 
                 _winThreadCursors.Add(cmd.Cursor, new WinThreadCursorReg { Ptr = cursor });
 
-                SDL_DestroySurface(surface);
+                SDL.SDL_DestroySurface(surface);
             }
         }
 
@@ -85,22 +83,22 @@ internal partial class Clyde
             var ptr = _winThreadCursors[cmd.Cursor].Ptr;
 
             // TODO: multi-window??
-            SDL_SetCursor(ptr);
+            SDL.SDL_SetCursor(ptr);
         }
 
         private void InitCursors()
         {
-            Add(StandardCursorShape.Arrow, SDL_SYSTEM_CURSOR_DEFAULT);
-            Add(StandardCursorShape.IBeam, SDL_SYSTEM_CURSOR_TEXT);
-            Add(StandardCursorShape.Crosshair, SDL_SYSTEM_CURSOR_CROSSHAIR);
-            Add(StandardCursorShape.Hand, SDL_SYSTEM_CURSOR_POINTER);
-            Add(StandardCursorShape.HResize, SDL_SYSTEM_CURSOR_EW_RESIZE);
-            Add(StandardCursorShape.VResize, SDL_SYSTEM_CURSOR_NS_RESIZE);
+            Add(StandardCursorShape.Arrow, SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_DEFAULT);
+            Add(StandardCursorShape.IBeam, SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_TEXT);
+            Add(StandardCursorShape.Crosshair, SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_CROSSHAIR);
+            Add(StandardCursorShape.Hand, SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_POINTER);
+            Add(StandardCursorShape.HResize, SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_EW_RESIZE);
+            Add(StandardCursorShape.VResize, SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_NS_RESIZE);
 
-            void Add(StandardCursorShape shape, SDL_SystemCursor sysCursor)
+            void Add(StandardCursorShape shape, SDL.SDL_SystemCursor sysCursor)
             {
                 var id = _clyde.AllocRid();
-                var cursor = SDL_CreateSystemCursor(sysCursor);
+                var cursor = SDL.SDL_CreateSystemCursor(sysCursor);
 
                 var impl = new CursorImpl(this, id, true);
 

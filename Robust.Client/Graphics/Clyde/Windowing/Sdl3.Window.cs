@@ -229,7 +229,7 @@ internal partial class Clyde
                 windowFlags |= WindowFlags.SDL_WINDOW_FULLSCREEN;
 
             nint window = SDL.SDL_CreateWindow(
-                "",
+                parameters.Title,
                 parameters.Width,
                 parameters.Height,
                 windowFlags);

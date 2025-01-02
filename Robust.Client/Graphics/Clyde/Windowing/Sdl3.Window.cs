@@ -144,26 +144,6 @@ internal partial class Clyde
 
         private static void WinThreadWinDestroy(CmdWinDestroy cmd)
         {
-            // TODO: Think this can be removed?
-            // if (OperatingSystem.IsWindows() && cmd.HadOwner)
-            // {
-            //     // On Windows, closing the child window causes the owner to be minimized, apparently.
-            //     // Clear owner on close to avoid this.
-            //
-            //     SDL_SysWMinfo wmInfo = default;
-            //     SDL_VERSION(out wmInfo.version);
-            //     if (SDL_GetWindowWMInfo(cmd.Window, ref wmInfo) == SDL_TRUE && wmInfo.subsystem == SDL_SYSWM_WINDOWS)
-            //     {
-            //         var hWnd = (HWND)wmInfo.info.win.window;
-            //         DebugTools.Assert(hWnd != HWND.NULL);
-            //
-            //         Windows.SetWindowLongPtrW(
-            //             hWnd,
-            //             GWLP.GWLP_HWNDPARENT,
-            //             0);
-            //     }
-            // }
-
             SDL.SDL_DestroyWindow(cmd.Window);
         }
 

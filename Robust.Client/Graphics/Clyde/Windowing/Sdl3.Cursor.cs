@@ -107,6 +107,14 @@ internal partial class Clyde
             }
         }
 
+        private void WinThreadCursorDestroy(CmdCursorDestroy cmd)
+        {
+            if (!_winThreadCursors.TryGetValue(cmd.Cursor, out var cursor))
+                return;
+
+            SDL.SDL_DestroyCursor(cursor.Ptr);
+        }
+
         private sealed class CursorImpl : ICursor
         {
             private readonly bool _standard;
@@ -146,11 +154,6 @@ internal partial class Clyde
         public sealed class WinThreadCursorReg
         {
             public nint Ptr;
-        }
-
-        private void WinThreadCursorDestroy(CmdCursorDestroy cmd)
-        {
-            // TODO: implement
         }
     }
 }

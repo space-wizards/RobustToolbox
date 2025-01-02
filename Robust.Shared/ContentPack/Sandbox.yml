@@ -1197,6 +1197,7 @@ Types:
     RuntimeFieldHandle: { }
     RuntimeMethodHandle: { }
     RuntimeTypeHandle: { }
+    STAThreadAttribute: { All: True }
     SByte: { All: True }
     Single: { All: True }
     Span`1:

@@ -174,8 +174,14 @@ public sealed class EmplaceCommand : ToolshedCommand
     {
         public static bool TryParse(ParserContext ctx, [NotNullWhen(true)] out CommandRun? result)
         {
+            if (ctx.Bundle.PipedType == null)
+            {
+                result = null;
+                return false;
+            }
+
             // If the piped type is IEnumerable<T> we want to extract the type T.
-            var pipeInferredType = ctx.Bundle.PipedType!;
+            var pipeInferredType = ctx.Bundle.PipedType;
             if (pipeInferredType.IsGenericType(typeof(IEnumerable<>)))
                 pipeInferredType = pipeInferredType.GetGenericArguments()[0];
 

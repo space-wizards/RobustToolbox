@@ -148,9 +148,9 @@ internal partial class Clyde
         private void ProcessSdl3EventWindowPixelSizeChanged(in SDL_WindowEvent ev)
         {
             var window = SDL_GetWindowFromID(ev.windowID);
-            var width = ev.data1;
-            var height = ev.data2;
-            SDL_GetWindowSizeInPixels(window, out var fbW, out var fbH);
+            SDL_GetWindowSize(window, out var width, out var height);
+            var fbW = ev.data1;
+            var fbH = ev.data2;
 
             SendEvent(new EventWindowPixelSize
             {

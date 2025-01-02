@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
@@ -389,6 +388,13 @@ public sealed class ToolshedTests : ToolshedTest
             AssertResult("testnestedarray testnestedenumerableinfer", typeof(EntityPrototype));
             AssertResult("testnestedlist testnestedenumerableinfer", typeof(EntityPrototype));
             AssertResult("testnestedenumerable testnestedenumerableinfer", typeof(EntityPrototype));
+
+            // The map command used to work when the piped type was passed as an IEnumerable<T> directly, but would fail
+            // when given a List<T> or something else that implemented the interface.
+            // In particular, this would become relevant when using command variables (which store enumerables as a List<T>).
+            AssertResult("i 1 to 4 map { * 2 }", new[] {2, 4, 6, 8});
+            InvokeCommand("i 1 to 4 => $x", out _);
+            AssertResult("var $x map { * 2 }", new[] {2, 4, 6, 8});
         });
     }
 

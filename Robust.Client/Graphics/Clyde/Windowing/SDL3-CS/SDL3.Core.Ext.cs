@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace SDL3;
@@ -19,6 +20,10 @@ public static partial class SDL
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     public static unsafe partial void SDL_RemoveEventWatch(delegate* unmanaged[Cdecl] <void*, SDL_Event*, byte> filter, void* userdata);
 
+    [LibraryImport(nativeLibName, StringMarshalling = StringMarshalling.Utf8)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    public static unsafe partial void SDL_ShowFileDialogWithProperties(int type, delegate* unmanaged[Cdecl]<void*, byte**, int, void> callback, void* userdata, uint properties);
+
     public const byte SDL_BUTTON_LEFT = 1;
     public const byte SDL_BUTTON_MIDDLE = 2;
     public const byte SDL_BUTTON_RIGHT = 3;
@@ -33,6 +38,13 @@ public static partial class SDL
     public const int SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG = 0x0002;
     public const int SDL_GL_CONTEXT_ROBUST_ACCESS_FLAG = 0x0004;
     public const int SDL_GL_CONTEXT_RESET_ISOLATION_FLAG = 0x0008;
+
+    public const int SDL_FILEDIALOG_OPENFILE = 0;
+    public const int SDL_FILEDIALOG_SAVEFILE = 1;
+    public const int SDL_FILEDIALOG_OPENFOLDER = 2;
+
+    public const string SDL_PROP_FILE_DIALOG_NFILTERS_NUMBER = "SDL.filedialog.nfilters";
+    public const string SDL_PROP_FILE_DIALOG_FILTERS_POINTER = "SDL.filedialog.filters";
 
     public static int SDL_VERSIONNUM_MAJOR(int version) => version / 1000000;
     public static int SDL_VERSIONNUM_MINOR(int version) => version / 1000 % 1000;

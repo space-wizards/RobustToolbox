@@ -467,6 +467,8 @@ namespace Robust.Client.Graphics.Clyde
             _windowing!.RunOnWindowThread(a);
         }
 
+        public IFileDialogManager? FileDialogImpl => _windowing as IFileDialogManager;
+
         private abstract class WindowReg
         {
             public bool IsDisposed;

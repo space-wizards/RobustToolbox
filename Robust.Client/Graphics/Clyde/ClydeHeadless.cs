@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 using Robust.Client.Audio;
 using Robust.Client.Input;
 using Robust.Client.ResourceManagement;
+using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Graphics;
 using Robust.Shared.Map;
@@ -283,6 +284,8 @@ namespace Robust.Client.Graphics.Clyde
         {
             action();
         }
+
+        public IFileDialogManager? FileDialogImpl => null;
 
         private sealed class DummyCursor : ICursor
         {

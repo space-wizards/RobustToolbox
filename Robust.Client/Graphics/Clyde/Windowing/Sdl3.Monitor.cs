@@ -24,6 +24,9 @@ internal partial class Clyde
             }
 
             SDL.SDL_free((nint)displayList);
+
+            // Needed so that monitor creation events get processed.
+            ProcessEvents();
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

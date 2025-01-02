@@ -129,6 +129,9 @@ internal partial class Clyde
                     window.IsFocused = false;
                     _clyde.SendWindowFocus(new WindowFocusedEventArgs(false, window.Handle));
                     break;
+                case ET.SDL_EVENT_WINDOW_MOVED:
+                    window.WindowPos = (ev.Data1, ev.Data2);
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }

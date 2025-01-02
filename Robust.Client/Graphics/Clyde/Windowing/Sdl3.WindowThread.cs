@@ -113,8 +113,12 @@ internal partial class Clyde
                     WinThreadWinCursorSet(cmd);
                     break;
 
-                case CmdWinWinSetMode cmd:
-                    WinThreadWinSetMode(cmd);
+                case CmdWinWinSetFullscreen cmd:
+                    WinThreadWinSetFullscreen(cmd);
+                    break;
+
+                case CmdWinSetWindowed cmd:
+                    WinThreadWinSetWindowed(cmd);
                     break;
 
                 case CmdTextInputSetRect cmd:
@@ -294,10 +298,18 @@ internal partial class Clyde
             public ClydeHandle Cursor;
         }
 
-        private sealed class CmdWinWinSetMode : CmdBase
+        private sealed class CmdWinWinSetFullscreen : CmdBase
         {
             public nint Window;
-            public WindowMode Mode;
+        }
+
+        private sealed class CmdWinSetWindowed : CmdBase
+        {
+            public nint Window;
+            public int Width;
+            public int Height;
+            public int PosX;
+            public int PosY;
         }
 
         // IME

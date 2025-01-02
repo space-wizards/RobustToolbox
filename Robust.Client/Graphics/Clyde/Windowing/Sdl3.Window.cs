@@ -361,7 +361,7 @@ internal partial class Clyde
             reg.PrevWindowSize = reg.WindowSize = (w, h);
 
             SDL.SDL_GetWindowPosition(window, out var x, out var y);
-            reg.PrevWindowPos = (x, y);
+            reg.PrevWindowPos = reg.WindowPos = (x, y);
 
             reg.PixelRatio = reg.FramebufferSize / (Vector2)reg.WindowSize;
 
@@ -385,16 +385,39 @@ internal partial class Clyde
 
             var win = (Sdl3WindowReg)_clyde._mainWindow;
 
-            SendCmd(new CmdWinWinSetMode
+            if (_clyde._windowMode == WindowMode.Fullscreen)
             {
-                Window = win.Sdl3Window,
-                Mode = _clyde._windowMode
-            });
+                win.PrevWindowSize = win.WindowSize;
+                win.PrevWindowPos = win.WindowPos;
+
+                SendCmd(new CmdWinWinSetFullscreen
+                {
+                    Window = win.Sdl3Window,
+                });
+            }
+            else
+            {
+                SendCmd(new CmdWinSetWindowed
+                {
+                    Window = win.Sdl3Window,
+                    Width = win.PrevWindowSize.X,
+                    Height = win.PrevWindowSize.Y,
+                    PosX = win.PrevWindowPos.X,
+                    PosY = win.PrevWindowPos.Y
+                });
+            }
         }
 
-        private static void WinThreadWinSetMode(CmdWinWinSetMode cmd)
+        private static void WinThreadWinSetFullscreen(CmdWinWinSetFullscreen cmd)
         {
-            SDL.SDL_SetWindowFullscreen(cmd.Window, cmd.Mode == WindowMode.Fullscreen);
+            SDL.SDL_SetWindowFullscreen(cmd.Window, true);
+        }
+
+        private static void WinThreadWinSetWindowed(CmdWinSetWindowed cmd)
+        {
+            SDL.SDL_SetWindowFullscreen(cmd.Window, false);
+            SDL.SDL_SetWindowSize(cmd.Window, cmd.Width, cmd.Height);
+            SDL.SDL_SetWindowPosition(cmd.Window, cmd.PosX, cmd.PosY);
         }
 
         public void WindowSetTitle(WindowReg window, string title)

@@ -38,6 +38,7 @@ internal partial class Clyde
                 case ET.SDL_EVENT_WINDOW_RESTORED:
                 case ET.SDL_EVENT_WINDOW_FOCUS_GAINED:
                 case ET.SDL_EVENT_WINDOW_FOCUS_LOST:
+                case ET.SDL_EVENT_WINDOW_MOVED:
                     ProcessSdl3EventWindowMisc(in ev.window);
                     break;
                 case ET.SDL_EVENT_KEY_DOWN:
@@ -82,7 +83,7 @@ internal partial class Clyde
 
         private void ProcessSdl3EventMouseWheel(in SDL.SDL_MouseWheelEvent ev)
         {
-            SendEvent(new EventWheel { WindowId = ev.windowID, XOffset = ev.x, YOffset = ev.y});
+            SendEvent(new EventWheel { WindowId = ev.windowID, XOffset = ev.x, YOffset = ev.y });
         }
 
         private void ProcessSdl3EventMouseButton(in SDL.SDL_MouseButtonEvent ev)
@@ -172,7 +173,13 @@ internal partial class Clyde
 
         private void ProcessSdl3EventWindowMisc(in SDL.SDL_WindowEvent ev)
         {
-            SendEvent(new EventWindowMisc { WindowId = ev.windowID, EventId = ev.type });
+            SendEvent(new EventWindowMisc
+            {
+                WindowId = ev.windowID,
+                EventId = ev.type,
+                Data1 = ev.data1,
+                Data2 = ev.data2
+            });
         }
 
         private abstract class EventBase;
@@ -250,6 +257,8 @@ internal partial class Clyde
         {
             public uint WindowId;
             public ET EventId;
+            public int Data1;
+            public int Data2;
         }
 
         private sealed class EventMonitorSetup : EventBase

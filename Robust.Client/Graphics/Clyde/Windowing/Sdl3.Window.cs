@@ -286,7 +286,7 @@ internal partial class Clyde
                     break;
             }
 
-            // LoadWindowIcon(window);
+            AssignWindowIconToWindow(window);
 
             SDL.SDL_GetWindowSizeInPixels(window, out var fbW, out var fbH);
             reg.FramebufferSize = (fbW, fbH);

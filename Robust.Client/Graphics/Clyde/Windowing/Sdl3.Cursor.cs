@@ -41,7 +41,7 @@ internal partial class Clyde
                 var surface = SDL.SDL_CreateSurfaceFrom(
                     img.Width,
                     img.Height,
-                    SDL.SDL_PixelFormat.SDL_PIXELFORMAT_RGBA8888,
+                    SDL.SDL_PixelFormat.SDL_PIXELFORMAT_ABGR8888,
                     (IntPtr)pixPtr,
                     sizeof(Rgba32) * img.Width);
 

@@ -83,6 +83,7 @@ internal partial class Clyde
             if (_sdlEventWakeup == 0)
                 throw new InvalidOperationException("SDL_RegisterEvents failed");
 
+            LoadWindowIcons();
             InitCursors();
             InitMonitors();
             ReloadKeyMap();

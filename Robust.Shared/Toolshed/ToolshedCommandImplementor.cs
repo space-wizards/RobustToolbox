@@ -81,8 +81,11 @@ internal sealed class ToolshedCommandImplementor
 
         if (!TryGetConcreteMethod(ctx.Bundle.PipedType, ctx.Bundle.TypeArguments, out method))
         {
-            if (!ctx.GenerateCompletions)
-                ctx.Error = new NoImplementationError(ctx);
+            if (ctx.GenerateCompletions)
+                return false;
+
+            ctx.Error = new NoImplementationError(ctx);
+            ctx.Error.Contextualize(ctx.Input, (ctx.Bundle.NameStart, ctx.Bundle.NameEnd));
             return false;
         }
 

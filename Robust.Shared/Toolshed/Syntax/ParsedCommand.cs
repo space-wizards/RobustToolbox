@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -155,11 +156,12 @@ public sealed class ParsedCommand
 
     private static bool TryParseCommandName(ParserContext ctx, [NotNullWhen(true)] out string? name)
     {
-        var cmdNameStart = ctx.Index;
+        ctx.Bundle.NameStart = ctx.Index;
         name = ctx.GetWord(ParserContext.IsCommandToken);
         if (name != null)
         {
             ctx.Bundle.Command = name;
+            ctx.Bundle.NameEnd = ctx.Index;
             return true;
         }
 
@@ -182,7 +184,7 @@ public sealed class ParsedCommand
             return false;
 
         ctx.Error = new NotValidCommandError();
-        ctx.Error.Contextualize(ctx.Input, (cmdNameStart, ctx.Index+1));
+        ctx.Error.Contextualize(ctx.Input, (ctx.Bundle.NameStart, ctx.Index+1));
         return false;
     }
 
@@ -232,6 +234,7 @@ public sealed class ParsedCommand
             return false;
         }
 
+        ctx.Bundle.NameEnd = ctx.Index;
         ctx.Bundle.SubCommand = subcmd;
         return true;
     }
@@ -287,36 +290,24 @@ public sealed class NoImplementationError(ParserContext ctx) : ConError
 
     public override FormattedMessage DescribeInner()
     {
-        var msg = FormattedMessage.FromUnformatted($"Could not find an implementation for {Cmd} given the input type {PipedType?.PrettyName() ?? "void"}.");
-        msg.PushNewline();
+        var msg = FormattedMessage.FromUnformatted($"Could not find an implementation of the '{Cmd}' command given the input type '{PipedType?.PrettyName() ?? "void"}'.\n");
 
-        var typeArgs = "";
-
-        if (Types != null && Types.Length != 0)
-        {
-            typeArgs = "<" + string.Join(",", Types.Select(ReflectionExtensions.PrettyName)) + ">";
-        }
-
-        msg.AddText($"Signature: {Cmd}{(SubCommand is not null ? $":{SubCommand}" : "")}{typeArgs} {PipedType?.PrettyName() ?? "void"} -> ???");
-
-        var piped = PipedType ?? typeof(void);
         var cmdImpl = Env.GetCommand(Cmd);
         var accepted = cmdImpl.AcceptedTypes(SubCommand);
 
-        foreach (var (command, subCommand) in Env.CommandsTakingType(piped))
-        {
-            if (!command.TryGetReturnType(subCommand, piped, null, out var retType) || !accepted.Any(x => retType.IsAssignableTo(x)))
-                continue;
+        // If one of the signatures just takes T Or IEnumerable<T> we just don't print anything, as it doesn't provide any useful information.
+        // TODO TOOLSHED list accepted generic types
+        var isGeneric = accepted.Any(x => x.IsGenericParameter);
+        if (isGeneric)
+            return msg;
 
-            if (!cmdImpl.TryGetReturnType(SubCommand, retType, Types, out var myRetType))
-                continue;
+        var isGenericEnumerable = accepted.Any(x=> x.IsGenericType
+                                             && x.GetGenericTypeDefinition() == typeof(IEnumerable<>)
+                                             && x.GetGenericArguments()[0].IsGenericParameter);
+        if (isGenericEnumerable)
+            return msg;
 
-            msg.PushNewline();
-            msg.AddText($"The command {command.Name}{(subCommand is not null ? $":{subCommand}" : "")} can convert from {piped.PrettyName()} to {retType.PrettyName()}.");
-            msg.PushNewline();
-            msg.AddText($"With this fix, the new signature will be: {Cmd}{(SubCommand is not null ? $":{SubCommand}" : "")}{typeArgs} {retType?.PrettyName() ?? "void"} -> {myRetType?.PrettyName() ?? "void"}.");
-        }
-
+        msg.AddText($"Accepted types: '{string.Join("','", accepted.Select(x => x.PrettyName()))}'.\n");
         return msg;
     }
 }

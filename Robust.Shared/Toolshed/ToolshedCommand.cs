@@ -303,6 +303,16 @@ public struct CommandArgumentBundle
     /// The type of input that will be piped into this command.
     /// </summary>
     public required Type? PipedType;
+
+    /// <summary>
+    /// The index where the command's name starts. Used for contextualising errors.
+    /// </summary>
+    public int NameStart;
+
+    /// <summary>
+    /// The index where the (sub)command's name ends. Used for contextualising errors.
+    /// </summary>
+    public int NameEnd;
 }
 
 internal readonly record struct CommandDiscriminator(Type? PipedType, Type[]? TypeArguments)

@@ -13,7 +13,7 @@ namespace Robust.Client.Graphics.Clyde;
 
 internal partial class Clyde
 {
-    private sealed partial class Sdl3WindowingImpl : IWindowingImpl
+    private sealed partial class Sdl3WindowingImpl
     {
         private readonly Dictionary<ClydeHandle, WinThreadCursorReg> _winThreadCursors = new();
         private readonly CursorImpl[] _standardCursors = new CursorImpl[(int)StandardCursorShape.CountCursors];
@@ -29,14 +29,14 @@ internal partial class Clyde
             image.GetPixelSpan().CopyTo(cloneImg.GetPixelSpan());
 
             var id = _clyde.AllocRid();
-            SendCmd(new CmdCursorCreate(cloneImg, hotSpot, id));
+            SendCmd(new CmdCursorCreate { Bytes = cloneImg, Hotspot = hotSpot, Cursor = id });
 
             return new CursorImpl(this, id, false);
         }
 
         private unsafe void WinThreadCursorCreate(CmdCursorCreate cmd)
         {
-            var (img, (hotX, hotY), id) = cmd;
+            using var img = cmd.Bytes;
 
             fixed (Rgba32* pixPtr = img.GetPixelSpan())
             {
@@ -47,16 +47,14 @@ internal partial class Clyde
                     (IntPtr)pixPtr,
                     sizeof(Rgba32) * img.Width);
 
-                var cursor = SDL_CreateColorCursor(surface, hotX, hotY);
+                var cursor = SDL_CreateColorCursor(surface, cmd.Hotspot.X, cmd.Hotspot.Y);
                 if (cursor == 0)
                     throw new InvalidOperationException("SDL_CreateColorCursor failed");
 
-                _winThreadCursors.Add(id, new WinThreadCursorReg { Ptr = cursor });
+                _winThreadCursors.Add(cmd.Cursor, new WinThreadCursorReg { Ptr = cursor });
 
                 SDL_DestroySurface(surface);
             }
-
-            img.Dispose();
         }
 
         public void CursorSet(WindowReg window, ICursor? cursor)
@@ -78,7 +76,7 @@ internal partial class Clyde
                 throw new ObjectDisposedException(nameof(cursor));
 
             reg.Cursor = impl;
-            SendCmd(new CmdWinCursorSet(reg.Sdl3Window, impl.Id));
+            SendCmd(new CmdWinCursorSet { Window = reg.Sdl3Window, Cursor = impl.Id });
         }
 
         private void WinThreadWinCursorSet(CmdWinCursorSet cmd)
@@ -131,7 +129,7 @@ internal partial class Clyde
 
             private void DisposeImpl()
             {
-                Owner.SendCmd(new CmdCursorDestroy(Id));
+                Owner.SendCmd(new CmdCursorDestroy { Cursor = Id });
                 Id = default;
             }
 

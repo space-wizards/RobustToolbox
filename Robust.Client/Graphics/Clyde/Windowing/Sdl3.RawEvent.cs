@@ -82,32 +82,49 @@ internal partial class Clyde
 
         private void ProcessSdl3EventMouseWheel(in SDL_MouseWheelEvent ev)
         {
-            SendEvent(new EventWheel(ev.windowID, ev.x, ev.y));
+            SendEvent(new EventWheel { WindowId = ev.windowID, XOffset = ev.x, YOffset = ev.y});
         }
 
         private void ProcessSdl3EventMouseButton(in SDL_MouseButtonEvent ev)
         {
             var mods = SDL_GetModState();
-            SendEvent(new EventMouseButton(ev.windowID, ev.type, ev.button, mods));
+            SendEvent(new EventMouseButton
+            {
+                WindowId = ev.windowID,
+                Type = ev.type,
+                Button = ev.button,
+                Mods = mods
+            });
         }
 
         private void ProcessSdl3EventMouseMotion(in SDL_MouseMotionEvent ev)
         {
-            // _sawmill.Info($"{evMotion.x}, {evMotion.y}, {evMotion.xrel}, {evMotion.yrel}");
-            SendEvent(new EventMouseMotion(ev.windowID, ev.x, ev.y, ev.xrel, ev.yrel));
+            SendEvent(new EventMouseMotion
+            {
+                WindowId = ev.windowID,
+                X = ev.x,
+                Y = ev.y,
+                XRel = ev.xrel,
+                YRel = ev.yrel
+            });
         }
 
         private unsafe void ProcessSdl3EventTextInput(in SDL_TextInputEvent ev)
         {
             var str = Marshal.PtrToStringUTF8((IntPtr)ev.text) ?? "";
-            // _logManager.GetSawmill("ime").Debug($"Input: {str}");
-            SendEvent(new EventText(ev.windowID, str));
+            SendEvent(new EventText { WindowId = ev.windowID, Text = str });
         }
 
         private unsafe void ProcessSdl3EventTextEditing(in SDL_TextEditingEvent ev)
         {
             var str = Marshal.PtrToStringUTF8((IntPtr)ev.text) ?? "";
-            SendEvent(new EventTextEditing(ev.windowID, str, ev.start, ev.length));
+            SendEvent(new EventTextEditing
+            {
+                WindowId = ev.windowID,
+                Text = str,
+                Start = ev.start,
+                Length = ev.length
+            });
         }
 
         private void ProcessSdl3EventKeyMapChanged()
@@ -118,12 +135,14 @@ internal partial class Clyde
 
         private void ProcessSdl3KeyEvent(in SDL_KeyboardEvent ev)
         {
-            SendEvent(new EventKey(
-                ev.windowID,
-                ev.scancode,
-                ev.type,
-                ev.repeat,
-                ev.mod));
+            SendEvent(new EventKey
+            {
+                WindowId = ev.windowID,
+                Scancode = ev.scancode,
+                Type = ev.type,
+                Repeat = ev.repeat,
+                Mods = ev.mod,
+            });
         }
 
         private void ProcessSdl3EventWindowPixelSizeChanged(in SDL_WindowEvent ev)
@@ -133,7 +152,14 @@ internal partial class Clyde
             var height = ev.data2;
             SDL_GetWindowSizeInPixels(window, out var fbW, out var fbH);
 
-            SendEvent(new EventWindowPixelSize(ev.windowID, width, height, fbW, fbH));
+            SendEvent(new EventWindowPixelSize
+            {
+                WindowId = ev.windowID,
+                Width = width,
+                Height = height,
+                FramebufferWidth = fbW,
+                FramebufferHeight = fbH,
+            });
         }
 
         private void ProcessSdl3EventWindowDisplayScaleChanged(in SDL_WindowEvent ev)
@@ -141,94 +167,107 @@ internal partial class Clyde
             var window = SDL_GetWindowFromID(ev.windowID);
             var scale = SDL_GetWindowDisplayScale(window);
 
-            SendEvent(new EventWindowContentScale(ev.windowID, scale));
+            SendEvent(new EventWindowContentScale { WindowId = ev.windowID, Scale = scale });
         }
 
         private void ProcessSdl3EventWindowMisc(in SDL_WindowEvent ev)
         {
-            SendEvent(new EventWindowMisc(ev.windowID, ev.type));
+            SendEvent(new EventWindowMisc { WindowId = ev.windowID, EventId = ev.type });
         }
 
-        private abstract record EventBase;
+        private abstract class EventBase;
 
-        private record EventWindowCreate(
-            Sdl3WindowCreateResult Result,
-            TaskCompletionSource<Sdl3WindowCreateResult> Tcs
-        ) : EventBase;
+        private sealed class EventWindowCreate : EventBase
+        {
+            public required Sdl3WindowCreateResult Result;
+            public required TaskCompletionSource<Sdl3WindowCreateResult> Tcs;
+        }
 
-        private record EventKey(
-            uint WindowId,
-            SDL_Scancode Scancode,
-            SDL_EventType Type,
-            bool Repeat,
-            SDL_Keymod Mods
-        ) : EventBase;
+        private sealed class EventKey : EventBase
+        {
+            public uint WindowId;
+            public SDL_Scancode Scancode;
+            public SDL_EventType Type;
+            public bool Repeat;
+            public SDL_Keymod Mods;
+        }
 
-        private record EventMouseMotion(
-            uint WindowId,
-            float X,
-            float Y,
-            float XRel,
-            float YRel
-        ) : EventBase;
+        private sealed class EventMouseMotion : EventBase
+        {
+            public uint WindowId;
+            public float X;
+            public float Y;
+            public float XRel;
+            public float YRel;
+        }
 
-        private record EventMouseButton(
-            uint WindowId,
-            SDL_EventType Type,
-            byte Button,
-            SDL_Keymod Mods) : EventBase;
+        private sealed class EventMouseButton : EventBase
+        {
+            public uint WindowId;
+            public SDL_EventType Type;
+            public byte Button;
+            public SDL_Keymod Mods;
+        }
 
-        private record EventText(
-            uint WindowId,
-            string Text
-        ) : EventBase;
+        private sealed class EventText : EventBase
+        {
+            public uint WindowId;
+            public required string Text;
+        }
 
-        private record EventTextEditing(
-            uint WindowId,
-            string Text,
-            int Start,
-            int Length
-        ) : EventBase;
+        private sealed class EventTextEditing : EventBase
+        {
+            public uint WindowId;
+            public required string Text;
+            public int Start;
+            public int Length;
+        }
 
-        private record EventWindowPixelSize(
-            uint WindowId,
-            int Width,
-            int Height,
-            int FramebufferWidth,
-            int FramebufferHeight
-        ) : EventBase;
+        private sealed class EventWindowPixelSize : EventBase
+        {
+            public uint WindowId;
+            public int Width;
+            public int Height;
+            public int FramebufferWidth;
+            public int FramebufferHeight;
+        }
 
-        private record EventWindowContentScale(
-            uint WindowId,
-            float Scale
-        ) : EventBase;
+        private sealed class EventWindowContentScale : EventBase
+        {
+            public uint WindowId;
+            public float Scale;
+        }
 
-        private record EventWheel(
-            uint WindowId,
-            float XOffset,
-            float YOffset
-        ) : EventBase;
+        private sealed class EventWheel : EventBase
+        {
+            public uint WindowId;
+            public float XOffset;
+            public float YOffset;
+        }
 
-        // SDL_WindowEvents that don't have special handling.
-        private record EventWindowMisc(
-            uint WindowId,
-            SDL_EventType EventId
-        ) : EventBase;
+        // SDL_WindowEvents that don't need any handling on the window thread itself.
+        private sealed class EventWindowMisc : EventBase
+        {
+            public uint WindowId;
+            public SDL_EventType EventId;
+        }
 
-        private record EventMonitorSetup(
-            int Id,
-            uint DisplayId,
-            string Name,
-            VideoMode CurrentMode,
-            VideoMode[] AllModes
-        ) : EventBase;
+        private sealed class EventMonitorSetup : EventBase
+        {
+            public int Id;
+            public uint DisplayId;
+            public required string Name;
+            public VideoMode CurrentMode;
+            public required VideoMode[] AllModes;
+        }
 
-        private record EventMonitorDestroy(
-            int Id
-        ) : EventBase;
+        private sealed class EventMonitorDestroy : EventBase
+        {
+            public int Id;
+        }
 
-        private record EventKeyMapChanged : EventBase;
+        private sealed class EventKeyMapChanged : EventBase;
 
-        private record EventQuit : EventBase;
+        private sealed class EventQuit : EventBase;
     }
 }

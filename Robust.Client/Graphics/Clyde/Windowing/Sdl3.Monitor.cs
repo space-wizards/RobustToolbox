@@ -17,13 +17,13 @@ internal partial class Clyde
 
         private unsafe void InitMonitors()
         {
-            var displayList = (uint*) SDL.SDL_GetDisplays(out var count);
+            var displayList = (uint*)SDL.SDL_GetDisplays(out var count);
             for (var i = 0; i < count; i++)
             {
                 WinThreadSetupMonitor(displayList[i]);
             }
 
-            SDL.SDL_free((nint) displayList);
+            SDL.SDL_free((nint)displayList);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -32,22 +32,29 @@ internal partial class Clyde
             var id = _nextMonitorId++;
 
             var name = SDL.SDL_GetDisplayName(displayId);
-            var modePtr = (SDL.SDL_DisplayMode**) SDL.SDL_GetFullscreenDisplayModes(displayId, out var modeCount);
-            var curMode = (SDL.SDL_DisplayMode*) SDL.SDL_GetCurrentDisplayMode(displayId);
+            var modePtr = (SDL.SDL_DisplayMode**)SDL.SDL_GetFullscreenDisplayModes(displayId, out var modeCount);
+            var curMode = (SDL.SDL_DisplayMode*)SDL.SDL_GetCurrentDisplayMode(displayId);
             var modes = new VideoMode[modeCount];
             for (var i = 0; i < modes.Length; i++)
             {
                 modes[i] = ConvertVideoMode(in *modePtr[i]);
             }
 
-            SDL.SDL_free((nint) modePtr);
+            SDL.SDL_free((nint)modePtr);
 
             _winThreadMonitors.Add(id, new WinThreadMonitorReg { DisplayId = displayId });
 
             if (SDL.SDL_GetPrimaryDisplay() == displayId)
                 _clyde._primaryMonitorId = id;
 
-            SendEvent(new EventMonitorSetup(id, displayId, name, ConvertVideoMode(in *curMode), modes));
+            SendEvent(new EventMonitorSetup
+            {
+                Id = id,
+                DisplayId = displayId,
+                Name = name,
+                AllModes = modes,
+                CurrentMode = ConvertVideoMode(in *curMode),
+            });
         }
 
         private static VideoMode ConvertVideoMode(in SDL.SDL_DisplayMode mode)
@@ -88,7 +95,7 @@ internal partial class Clyde
                 return;
 
             _winThreadMonitors.Remove(monitorId);
-            SendEvent(new EventMonitorDestroy(monitorId));
+            SendEvent(new EventMonitorDestroy { Id = monitorId });
         }
 
         private void ProcessEventDestroyMonitor(EventMonitorDestroy ev)

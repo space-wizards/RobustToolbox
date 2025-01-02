@@ -44,14 +44,14 @@ internal partial class Clyde
 
 #pragma warning disable RA0004
             // Block above ensured task is done, this is safe.
-            var (reg, error) = task.Result;
+            var result = task.Result;
 #pragma warning restore RA0004
-            if (reg != null)
+            if (result.Reg != null)
             {
-                reg.Owner = reg.Handle;
+                result.Reg.Owner = result.Reg.Handle;
             }
 
-            return (reg, error);
+            return (result.Reg, result.Error);
         }
 
         private void WaitWindowCreate(Task<Sdl3WindowCreateResult> windowTask)
@@ -88,28 +88,41 @@ internal partial class Clyde
 
             // Yes we ping-pong this TCS through the window thread and back, deal with it.
             var tcs = new TaskCompletionSource<Sdl3WindowCreateResult>();
-            SendCmd(new CmdWinCreate(glSpec, parameters, shareWindow, shareContext, owner, tcs));
+            SendCmd(new CmdWinCreate
+            {
+                GLSpec = glSpec,
+                Parameters = parameters,
+                ShareWindow = shareWindow,
+                ShareContext = shareContext,
+                OwnerWindow = owner,
+                Tcs = tcs
+            });
             return tcs.Task;
         }
 
         private static void FinishWindowCreate(EventWindowCreate ev)
         {
-            var (res, tcs) = ev;
-
-            tcs.TrySetResult(res);
+            ev.Tcs.TrySetResult(ev.Result);
         }
 
         private void WinThreadWinCreate(CmdWinCreate cmd)
         {
-            var (glSpec, parameters, shareWindow, shareContext, owner, tcs) = cmd;
-
-            var (window, context) = CreateSdl3WindowForRenderer(glSpec, parameters, shareWindow, shareContext, owner);
+            var (window, context) = CreateSdl3WindowForRenderer(
+                cmd.GLSpec,
+                cmd.Parameters,
+                cmd.ShareWindow,
+                cmd.ShareContext,
+                cmd.OwnerWindow);
 
             if (window == 0)
             {
                 var err = SDL_GetError();
 
-                SendEvent(new EventWindowCreate(new Sdl3WindowCreateResult(null, err), tcs));
+                SendEvent(new EventWindowCreate
+                {
+                    Result = new Sdl3WindowCreateResult { Error = err },
+                    Tcs = cmd.Tcs
+                });
                 return;
             }
 
@@ -121,7 +134,11 @@ internal partial class Clyde
             // which processes events in the correct order and has better control of stuff during init.
             var reg = WinThreadSetupWindow(window, context);
 
-            SendEvent(new EventWindowCreate(new Sdl3WindowCreateResult(reg, null), tcs));
+            SendEvent(new EventWindowCreate
+            {
+                Result = new Sdl3WindowCreateResult { Reg = reg },
+                Tcs = cmd.Tcs
+            });
         }
 
         private static void WinThreadWinDestroy(CmdWinDestroy cmd)
@@ -276,7 +293,11 @@ internal partial class Clyde
         public void WindowDestroy(WindowReg window)
         {
             var reg = (Sdl3WindowReg)window;
-            SendCmd(new CmdWinDestroy(reg.Sdl3Window, window.Owner != null));
+            SendCmd(new CmdWinDestroy
+            {
+                Window = reg.Sdl3Window,
+                HadOwner = window.Owner != null
+            });
         }
 
         public void UpdateMainWindowMode()
@@ -286,7 +307,11 @@ internal partial class Clyde
 
             var win = (Sdl3WindowReg)_clyde._mainWindow;
 
-            SendCmd(new CmdWinWinSetMode(win.Sdl3Window, _clyde._windowMode));
+            SendCmd(new CmdWinWinSetMode
+            {
+                Window = win.Sdl3Window,
+                Mode = _clyde._windowMode
+            });
         }
 
         private static void WinThreadWinSetMode(CmdWinWinSetMode cmd)
@@ -296,7 +321,11 @@ internal partial class Clyde
 
         public void WindowSetTitle(WindowReg window, string title)
         {
-            SendCmd(new CmdWinSetTitle(WinPtr(window), title));
+            SendCmd(new CmdWinSetTitle
+            {
+                Window = WinPtr(window),
+                Title = title,
+            });
         }
 
         private static void WinThreadWinSetTitle(CmdWinSetTitle cmd)
@@ -312,13 +341,13 @@ internal partial class Clyde
 
         public void WindowSetSize(WindowReg window, Vector2i size)
         {
-            SendCmd(new CmdWinSetSize(WinPtr(window), size.X, size.Y));
+            SendCmd(new CmdWinSetSize { Window = WinPtr(window), W = size.X, H = size.Y });
         }
 
         public void WindowSetVisible(WindowReg window, bool visible)
         {
             window.IsVisible = visible;
-            SendCmd(new CmdWinSetVisible(WinPtr(window), visible));
+            SendCmd(new CmdWinSetVisible { Window = WinPtr(window), Visible = visible });
         }
 
         private static void WinThreadWinSetSize(CmdWinSetSize cmd)
@@ -336,7 +365,7 @@ internal partial class Clyde
 
         public void WindowRequestAttention(WindowReg window)
         {
-            SendCmd(new CmdWinRequestAttention(WinPtr(window)));
+            SendCmd(new CmdWinRequestAttention { Window = WinPtr(window) });
         }
 
         private void WinThreadWinRequestAttention(CmdWinRequestAttention cmd)
@@ -432,21 +461,23 @@ internal partial class Clyde
 
         public void RunOnWindowThread(Action a)
         {
-            SendCmd(new CmdRunAction(a));
+            SendCmd(new CmdRunAction { Action = a });
         }
 
         public void TextInputSetRect(WindowReg reg, UIBox2i rect, int cursor)
         {
-            SendCmd(new CmdTextInputSetRect(
-                WinPtr(reg),
-                new SDL_Rect
+            SendCmd(new CmdTextInputSetRect
+            {
+                Window = WinPtr(reg),
+                Rect = new SDL_Rect
                 {
                     x = rect.Left,
                     y = rect.Top,
                     w = rect.Width,
                     h = rect.Height
                 },
-                cursor));
+                Cursor = cursor
+            });
         }
 
         private static void WinThreadSetTextInputRect(CmdTextInputSetRect cmdTextInput)
@@ -457,7 +488,7 @@ internal partial class Clyde
 
         public void TextInputStart(WindowReg reg)
         {
-            SendCmd(new CmdTextInputStart(WinPtr(reg)));
+            SendCmd(new CmdTextInputStart { Window = WinPtr(reg) });
         }
 
         private static void WinThreadStartTextInput(CmdTextInputStart cmd)
@@ -467,7 +498,7 @@ internal partial class Clyde
 
         public void TextInputStop(WindowReg reg)
         {
-            SendCmd(new CmdTextInputStop(WinPtr(reg)));
+            SendCmd(new CmdTextInputStop { Window = WinPtr(reg) });
         }
 
         private static void WinThreadStopTextInput(CmdTextInputStop cmd)
@@ -477,7 +508,7 @@ internal partial class Clyde
 
         public void ClipboardSetText(WindowReg mainWindow, string text)
         {
-            SendCmd(new CmdSetClipboard(text));
+            SendCmd(new CmdSetClipboard { Text = text });
         }
 
         private void WinThreadSetClipboard(CmdSetClipboard cmd)
@@ -490,7 +521,7 @@ internal partial class Clyde
         public Task<string> ClipboardGetText(WindowReg mainWindow)
         {
             var tcs = new TaskCompletionSource<string>();
-            SendCmd(new CmdGetClipboard(tcs));
+            SendCmd(new CmdGetClipboard { Tcs = tcs });
             return tcs.Task;
         }
 

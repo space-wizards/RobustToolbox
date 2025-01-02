@@ -211,89 +211,111 @@ internal partial class Clyde
         }
 
 
-        private abstract record CmdBase;
+        private abstract class CmdBase;
 
-        private sealed record CmdTerminate : CmdBase;
+        private sealed class CmdTerminate : CmdBase;
 
-        private sealed record CmdWinCreate(
-            GLContextSpec? GLSpec,
-            WindowCreateParameters Parameters,
-            nint ShareWindow,
-            nint ShareContext,
-            nint OwnerWindow,
-            TaskCompletionSource<Sdl3WindowCreateResult> Tcs
-        ) : CmdBase;
+        private sealed class CmdWinCreate : CmdBase
+        {
+            public required GLContextSpec? GLSpec;
+            public required WindowCreateParameters Parameters;
+            public required nint ShareWindow;
+            public required nint ShareContext;
+            public required nint OwnerWindow;
+            public required TaskCompletionSource<Sdl3WindowCreateResult> Tcs;
+        }
 
-        private sealed record CmdWinDestroy(
-            nint Window,
-            bool HadOwner
-        ) : CmdBase;
+        private sealed class CmdWinDestroy : CmdBase
+        {
+            public nint Window;
+            public bool HadOwner;
+        }
 
-        private sealed record Sdl3WindowCreateResult(
-            Sdl3WindowReg? Reg,
-            string? Error
-        );
+        private sealed class Sdl3WindowCreateResult
+        {
+            public Sdl3WindowReg? Reg;
+            public string? Error;
+        }
 
-        private sealed record CmdRunAction(
-            Action Action
-        ) : CmdBase;
+        private sealed class CmdRunAction : CmdBase
+        {
+            public required Action Action;
+        }
 
-        private sealed record CmdSetClipboard(
-            string Text
-        ) : CmdBase;
+        private sealed class CmdSetClipboard : CmdBase
+        {
+            public required string Text;
+        }
 
-        private sealed record CmdGetClipboard(
-            TaskCompletionSource<string> Tcs
-        ) : CmdBase;
+        private sealed class CmdGetClipboard : CmdBase
+        {
+            public required TaskCompletionSource<string> Tcs;
+        }
 
-        private sealed record CmdWinRequestAttention(
-            nint Window
-        ) : CmdBase;
+        private sealed class CmdWinRequestAttention : CmdBase
+        {
+            public nint Window;
+        }
 
-        private sealed record CmdWinSetSize(
-            nint Window,
-            int W, int H
-        ) : CmdBase;
+        private sealed class CmdWinSetSize : CmdBase
+        {
+            public nint Window;
+            public int W;
+            public int H;
+        }
 
-        private sealed record CmdWinSetVisible(
-            nint Window,
-            bool Visible
-        ) : CmdBase;
+        private sealed class CmdWinSetVisible : CmdBase
+        {
+            public nint Window;
+            public bool Visible;
+        }
 
-        private sealed record CmdWinSetTitle(
-            nint Window,
-            string Title
-        ) : CmdBase;
+        private sealed class CmdWinSetTitle : CmdBase
+        {
+            public nint Window;
+            public required string Title;
+        }
 
-        private sealed record CmdCursorCreate(
-            Image<Rgba32> Bytes,
-            Vector2i Hotspot,
-            ClydeHandle Cursor
-        ) : CmdBase;
+        private sealed class CmdCursorCreate : CmdBase
+        {
+            public required Image<Rgba32> Bytes;
+            public Vector2i Hotspot;
+            public ClydeHandle Cursor;
+        }
 
-        private sealed record CmdCursorDestroy(
-            ClydeHandle Cursor
-        ) : CmdBase;
+        private sealed class CmdCursorDestroy : CmdBase
+        {
+            public ClydeHandle Cursor;
+        }
 
-        private sealed record CmdWinCursorSet(
-            nint Window,
-            ClydeHandle Cursor
-        ) : CmdBase;
+        private sealed class CmdWinCursorSet : CmdBase
+        {
+            public nint Window;
+            public ClydeHandle Cursor;
+        }
 
-        private sealed record CmdWinWinSetMode(
-            nint Window,
-            WindowMode Mode
-        ) : CmdBase;
+        private sealed class CmdWinWinSetMode : CmdBase
+        {
+            public nint Window;
+            public WindowMode Mode;
+        }
 
         // IME
-        private sealed record CmdTextInputStart(nint Window) : CmdBase;
+        private sealed class CmdTextInputStart : CmdBase
+        {
+            public nint Window;
+        }
 
-        private sealed record CmdTextInputStop(nint Window) : CmdBase;
+        private sealed class CmdTextInputStop : CmdBase
+        {
+            public nint Window;
+        }
 
-        private sealed record CmdTextInputSetRect(
-            nint Window,
-            SDL_Rect Rect,
-            int Cursor
-        ) : CmdBase;
+        private sealed class CmdTextInputSetRect : CmdBase
+        {
+            public nint Window;
+            public SDL_Rect Rect;
+            public int Cursor;
+        }
     }
 }

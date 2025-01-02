@@ -1,0 +1,62 @@
+<!--
+This is the MSBuild file that drives the creation of xml docs for use by View Variables.
+
+Normally this is invoked from `Robust.Properties.targets` when a csproj defines `<ViewVariables>`
+in its `<PropertyGroup>`.
+
+The workflow is:
+
+0. Ensure the XmlDocTool is built before any project that uses this system
+1. Make sure `..\Resources\ViewVariables\` exists
+2. Get MSBuild to generate the xml doc at the path from step 1.
+3. Run XmlDocTool on the generated doc
+
+Step two avoids using `<DocumentationFile>` due to a weird quirk of how that facility
+works. DocumentationFile always causes two copies of the generated xml file to be
+created, one at the path in DocumentationFile and one next to the DLL. This script
+uses the somewhat arcane facility `<DocFileItem>` to side-step that problem and create
+a single copy of the xml docs in the folder we want.
+
+Project files (.csproj) outside Robust Toolbox need to define these properties:
+
+```
+  <PropertyGroup>
+    <ViewVariables>true</ViewVariables>
+    <VVRobustProjectDir>{path to robust toolbox}</VVRobustProjectDir>
+  </PropertyGroup>
+```
+
+VVRobustProjectDir is required so that projects outside Robust Toolbox can properly find the 
+XmlDocTool project and the resulting executable. This is perhaps not as seemless as it could be, 
+but it's good enough for now :tm:
+
+see also
+github.com/dotnet/msbuild/issues/1559
+-->
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <!-- Add a reference to XmlDocTool so it always gets built before any project that needs it -->
+    <ProjectReference Include="..\$(VVRobustProjectDir)\Robust.XmlDocTool\Robust.XmlDocTool.csproj">
+      <!-- Don't copy the build artifacts from this project to the referencing project's output folder  -->
+      <Private>false</Private>
+      <!-- Indicate that the referencing project isn't actually meant to reference this project's assembly directily -->
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <Target Name="GenerateXmlDoc" BeforeTargets="CoreCompile">
+    <!-- Ensure the destination folder for the docs exists -->
+    <MakeDir Directories="..\Resources\ViewVariables\"/>
+    <PropertyGroup>
+      <!-- This is just for convenience so the lines below don't get unreasonably long -->
+      <VVDocPath>..\Resources\ViewVariables\$(MSBuildProjectName).xml</VVDocPath>
+    </PropertyGroup>
+    <ItemGroup>
+      <!-- Slightly arcane invocation of the MSBuild doc generation facility that bypasses the issue explained above -->
+      <DocFileItem Include="$(VVDocPath)" />
+    </ItemGroup>
+  </Target>
+  <Target Name="TrimXmlDoc" AfterTargets="PostBuildEvent">
+    <!-- Run XmlDocTool on the generated doc file -->
+    <Exec Command="$([MSBuild]::NormalizePath('$(ProjectDir)\..\$(VVRobustProjectDir)\bin\XmlDocTool\Robust.XmlDocTool')) $(VVDocPath)" />
+  </Target>
+</Project>

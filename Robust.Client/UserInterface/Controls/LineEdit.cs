@@ -880,7 +880,7 @@ namespace Robust.Client.UserInterface.Controls
 
             if (Editable)
             {
-                _clyde.TextInputStart();
+                Root?.Window?.TextInputStart();
             }
 
             _focusedOnFrame = _timing.CurFrame;
@@ -897,7 +897,8 @@ namespace Robust.Client.UserInterface.Controls
 
             OnFocusExit?.Invoke(new LineEditEventArgs(this, _text));
 
-            _clyde.TextInputStop();
+            Root?.Window?.TextInputStop();
+
             AbortIme(delete: false);
         }
 
@@ -1145,15 +1146,16 @@ namespace Robust.Client.UserInterface.Controls
                             contentBox.Bottom),
                         cursorColor);
 
+                    if (Root?.Window is { } window)
                     {
                         // Update IME position.
                         var imeBox = new UIBox2(
-                            actualCursorPosition,
+                            contentBox.Left,
                             contentBox.Top,
                             contentBox.Right,
                             contentBox.Bottom);
 
-                        _master._clyde.TextInputSetRect((UIBox2i) imeBox.Translated(GlobalPixelPosition));
+                        window.TextInputSetRect((UIBox2i) imeBox.Translated(GlobalPixelPosition), actualCursorPosition);
                     }
                 }
 

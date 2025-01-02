@@ -643,16 +643,16 @@ namespace Robust.Client.Graphics.Clyde
                 return reg;
             }
 
-            private WindowReg? FindWindow(nint window) => FindWindow((Window*) window);
+            private GlfwWindowReg? FindWindow(nint window) => FindWindow((Window*) window);
 
-            private WindowReg? FindWindow(Window* window)
+            private GlfwWindowReg? FindWindow(Window* window)
             {
                 foreach (var windowReg in _clyde._windows)
                 {
                     var glfwReg = (GlfwWindowReg) windowReg;
                     if (glfwReg.GlfwWindow == window)
                     {
-                        return windowReg;
+                        return glfwReg;
                     }
                 }
 
@@ -739,23 +739,23 @@ namespace Robust.Client.Graphics.Clyde
                 return (void*) GLFW.GetProcAddress(procName);
             }
 
-            public void TextInputSetRect(UIBox2i rect)
+            public void TextInputSetRect(WindowReg reg, UIBox2i rect, int cursor)
             {
                 // Not supported on GLFW.
             }
 
-            public void TextInputStart()
+            public void TextInputStart(WindowReg reg)
             {
                 // Not properly supported on GLFW.
 
-                _textInputActive = true;
+                ((GlfwWindowReg)reg).TextInputActive = true;
             }
 
-            public void TextInputStop()
+            public void TextInputStop(WindowReg reg)
             {
                 // Not properly supported on GLFW.
 
-                _textInputActive = false;
+                ((GlfwWindowReg)reg).TextInputActive = false;
             }
 
             private void CheckWindowDisposed(WindowReg reg)
@@ -770,6 +770,10 @@ namespace Robust.Client.Graphics.Clyde
 
                 // Kept around to avoid it being GCd.
                 public CursorImpl? Cursor;
+
+                // While GLFW does not provide proper IME APIs, we can at least emulate SDL3's StartTextInput() system.
+                // This will ensure some level of consistency between the backends.
+                public bool TextInputActive;
             }
         }
     }

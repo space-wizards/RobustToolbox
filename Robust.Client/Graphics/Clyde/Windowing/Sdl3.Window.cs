@@ -210,7 +210,8 @@ internal partial class Clyde
 
             nint window = SDL_CreateWindow(
                 "",
-                parameters.Width, parameters.Height,
+                parameters.Width,
+                parameters.Height,
                 windowFlags);
 
             if (window == 0)
@@ -267,14 +268,14 @@ internal partial class Clyde
             SDL_GetWindowPosition(window, out var x, out var y);
             reg.PrevWindowPos = (x, y);
 
-            reg.PixelRatio = reg.FramebufferSize / (Vector2) reg.WindowSize;
+            reg.PixelRatio = reg.FramebufferSize / (Vector2)reg.WindowSize;
 
             return reg;
         }
 
         public void WindowDestroy(WindowReg window)
         {
-            var reg = (Sdl3WindowReg) window;
+            var reg = (Sdl3WindowReg)window;
             SendCmd(new CmdWinDestroy(reg.Sdl3Window, window.Owner != null));
         }
 
@@ -283,7 +284,7 @@ internal partial class Clyde
             if (_clyde._mainWindow == null)
                 return;
 
-            var win = (Sdl3WindowReg) _clyde._mainWindow;
+            var win = (Sdl3WindowReg)_clyde._mainWindow;
 
             SendCmd(new CmdWinWinSetMode(win.Sdl3Window, _clyde._windowMode));
         }
@@ -403,7 +404,7 @@ internal partial class Clyde
             if (_videoDriver != SdlVideoDriver.X11)
                 return null;
 
-            var reg = (Sdl3WindowReg) window;
+            var reg = (Sdl3WindowReg)window;
             return reg.X11Id;
         }
 
@@ -414,7 +415,7 @@ internal partial class Clyde
             if (_videoDriver != SdlVideoDriver.X11)
                 return null;
 
-            var reg = (Sdl3WindowReg) window;
+            var reg = (Sdl3WindowReg)window;
             return reg.X11Display;
         }
 
@@ -425,7 +426,7 @@ internal partial class Clyde
             if (_videoDriver != SdlVideoDriver.Windows)
                 return null;
 
-            var reg = (Sdl3WindowReg) window;
+            var reg = (Sdl3WindowReg)window;
             return reg.WindowsHwnd;
         }
 
@@ -434,44 +435,44 @@ internal partial class Clyde
             SendCmd(new CmdRunAction(a));
         }
 
-        public void TextInputSetRect(UIBox2i rect)
+        public void TextInputSetRect(WindowReg reg, UIBox2i rect, int cursor)
         {
-            SendCmd(new CmdTextInputSetRect(new SDL_Rect
-            {
-                x = rect.Left,
-                y = rect.Top,
-                w = rect.Width,
-                h = rect.Height
-            }));
+            SendCmd(new CmdTextInputSetRect(
+                WinPtr(reg),
+                new SDL_Rect
+                {
+                    x = rect.Left,
+                    y = rect.Top,
+                    w = rect.Width,
+                    h = rect.Height
+                },
+                cursor));
         }
 
         private static void WinThreadSetTextInputRect(CmdTextInputSetRect cmdTextInput)
         {
             var rect = cmdTextInput.Rect;
-            throw new NotImplementedException();
-            // SDL_SetTextInputRect(ref rect);
+            SDL_SetTextInputArea(cmdTextInput.Window, ref rect, cmdTextInput.Cursor);
         }
 
-        public void TextInputStart()
+        public void TextInputStart(WindowReg reg)
         {
-            SendCmd(CmdTextInputStart.Instance);
+            SendCmd(new CmdTextInputStart(WinPtr(reg)));
         }
 
-        private static void WinThreadStartTextInput()
+        private static void WinThreadStartTextInput(CmdTextInputStart cmd)
         {
-            throw new NotImplementedException();
-            // SDL_StartTextInput();
+            SDL_StartTextInput(cmd.Window);
         }
 
-        public void TextInputStop()
+        public void TextInputStop(WindowReg reg)
         {
-            SendCmd(CmdTextInputStop.Instance);
+            SendCmd(new CmdTextInputStop(WinPtr(reg)));
         }
 
-        private static void WinThreadStopTextInput()
+        private static void WinThreadStopTextInput(CmdTextInputStop cmd)
         {
-            throw new NotImplementedException();
-            // SDL_StopTextInput();
+            SDL_StopTextInput(cmd.Window);
         }
 
         public void ClipboardSetText(WindowReg mainWindow, string text)
@@ -511,7 +512,7 @@ internal partial class Clyde
         {
             foreach (var windowReg in _clyde._windows)
             {
-                var glfwReg = (Sdl3WindowReg) windowReg;
+                var glfwReg = (Sdl3WindowReg)windowReg;
                 if (glfwReg.WindowId == windowId)
                     return windowReg;
             }

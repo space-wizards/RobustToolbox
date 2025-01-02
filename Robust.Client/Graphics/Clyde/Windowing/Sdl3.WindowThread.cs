@@ -121,12 +121,12 @@ internal partial class Clyde
                     WinThreadSetTextInputRect(cmd);
                     break;
 
-                case CmdTextInputStart:
-                    WinThreadStartTextInput();
+                case CmdTextInputStart cmd:
+                    WinThreadStartTextInput(cmd);
                     break;
 
-                case CmdTextInputStop:
-                    WinThreadStopTextInput();
+                case CmdTextInputStop cmd:
+                    WinThreadStopTextInput(cmd);
                     break;
             }
         }
@@ -286,18 +286,14 @@ internal partial class Clyde
         ) : CmdBase;
 
         // IME
-        private sealed record CmdTextInputStart : CmdBase
-        {
-            public static readonly CmdTextInputStart Instance = new();
-        }
+        private sealed record CmdTextInputStart(nint Window) : CmdBase;
 
-        private sealed record CmdTextInputStop : CmdBase
-        {
-            public static readonly CmdTextInputStop Instance = new();
-        }
+        private sealed record CmdTextInputStop(nint Window) : CmdBase;
 
         private sealed record CmdTextInputSetRect(
-            SDL_Rect Rect
+            nint Window,
+            SDL_Rect Rect,
+            int Cursor
         ) : CmdBase;
     }
 }

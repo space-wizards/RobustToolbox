@@ -531,6 +531,21 @@ namespace Robust.Client.Graphics.Clyde
             public event Action<WindowDestroyedEventArgs>? Destroyed;
             public event Action<WindowResizedEventArgs>? Resized { add { } remove { } }
 
+            public void TextInputSetRect(UIBox2i rect, int cursor)
+            {
+                // Nop.
+            }
+
+            public void TextInputStart()
+            {
+                // Nop.
+            }
+
+            public void TextInputStop()
+            {
+                // Nop.
+            }
+
             public void MaximizeOnMonitor(IClydeMonitor monitor)
             {
             }

@@ -46,6 +46,8 @@ internal partial class Clyde
 
         private unsafe bool InitSdl3()
         {
+            CheckThreadApartment();
+
             _selfGCHandle = GCHandle.Alloc(this, GCHandleType.Normal);
 
             SDL.SDL_SetLogPriorities(SDL.SDL_LogPriority.SDL_LOG_PRIORITY_VERBOSE);

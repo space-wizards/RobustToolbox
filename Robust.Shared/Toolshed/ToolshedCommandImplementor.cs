@@ -448,15 +448,15 @@ internal sealed class ToolshedCommandImplementor
     {
         // This method is used to try rate possible command methods to determine how good of a match
         // they for a given piped input based on the type of the method's piped argument. I.e., if we are
-        // piping an List<EntProtoId> into a command, iin order of most to least preferred we want a method that
-        // takes in an:
+        // piping an List<EntProtoId> into a command, in order of most to least preferred we want a method that
+        // takes in a:
         // - List<EntProtoId>
         // - List<string>
         // - Any concrete type (IEnumerable<EntProtoId>, IEnumerable<string>, string, EntProtoId, etc)
         // - List<T>
-        // - Any type constructed out of generic types (e.g., List<T>, IEnumerable<T>)
         // - constrained generic parameters (e.g., T where T : IEnumerable)
         // - unconstrained generic parameters
+        // - Any type constructed out of generic types (e.g., List<T>, IEnumerable<T>)
         //
         // Finally, subsequent Select() calls in GetConcreteMethodInternal() will effectively discard any methods that
         // can't actually be used. E.g., List<int> is preferred over List<T> here, but obviously couldn't be used.
@@ -468,7 +468,7 @@ internal sealed class ToolshedCommandImplementor
             return 1000;
 
         // We prefer non-generic methods
-        if (paramType.ContainsGenericParameters)
+        if (!paramType.ContainsGenericParameters)
         {
             // Next, we also prefer methods that have the same base type.
             // E.g., given a List<EntProtoId> we should preferentially match to methods that take in an List<string>
@@ -483,13 +483,12 @@ internal sealed class ToolshedCommandImplementor
         if (paramType.GetMostGenericPossible() == pipedType.GetMostGenericPossible())
             return 300;
 
-        // Anything that is not just directly a generic parameter is preferred.
-        if (!paramType.IsGenericParameter)
-            return 100;
+        // Next we prefer methods that just directly take in some generic type
+        // i.e., we prefer matching the method that takes T over IEnumerable<T>
+        if (paramType.IsGenericParameter)
+            return Math.Min(100 + paramType.GetGenericParameterConstraints().Length, 299);
 
-        // If this is a generic parameter, we prefer specificity. The least preferred match is any method that
-        // just takes an un-constrained generic parameter.
-        return Math.Min(paramType.GetGenericParameterConstraints().Length, 99);
+        return 0;
     }
 
     /// <summary>

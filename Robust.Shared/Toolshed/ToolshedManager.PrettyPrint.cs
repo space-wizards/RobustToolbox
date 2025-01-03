@@ -60,10 +60,10 @@ public sealed partial class ToolshedManager
 
             var kvList = new List<string>();
 
-            do
+            while (dict.MoveNext())
             {
                 kvList.Add($"({PrettyPrintType(dict.Key, out _)}, {PrettyPrintType(dict.Value, out _)}");
-            } while (dict.MoveNext());
+            }
 
             return $"Dictionary {{\n{string.Join(",\n", kvList)}\n}}";
         }

@@ -54,19 +54,6 @@ public sealed partial class ToolshedManager
             return t.PrettyName();
         }
 
-        if (value is IEnumerable @enum)
-        {
-            var list = @enum.Cast<object?>().ToList();
-            if (list.Count > maxOutput.Value)
-                more = list.GetRange(maxOutput.Value, list.Count - maxOutput.Value - 1);
-            var res = string.Join(",\n", list.Take(maxOutput.Value).Select(x => PrettyPrintType(x, out _)));
-            if (more is not null && moreUsed)
-                return res + "... (output truncated, run more for further output)";
-            if (more is not null)
-                return res + "... (output truncated, if possible tee the value into it's own variable)";
-            return res;
-        }
-
         if (value.GetType().IsAssignableTo(typeof(IDictionary)))
         {
             var dict = ((IDictionary) value).GetEnumerator();
@@ -79,6 +66,19 @@ public sealed partial class ToolshedManager
             } while (dict.MoveNext());
 
             return $"Dictionary {{\n{string.Join(",\n", kvList)}\n}}";
+        }
+
+        if (value is IEnumerable @enum)
+        {
+            var list = @enum.Cast<object?>().ToList();
+            if (list.Count > maxOutput.Value)
+                more = list.GetRange(maxOutput.Value, list.Count - maxOutput.Value - 1);
+            var res = string.Join(",\n", list.Take(maxOutput.Value).Select(x => PrettyPrintType(x, out _)));
+            if (more is not null && moreUsed)
+                return res + "... (output truncated, run more for further output)";
+            if (more is not null)
+                return res + "... (output truncated, if possible tee the value into it's own variable)";
+            return res;
         }
 
         return value.ToString() ?? "[unrepresentable]";

@@ -202,11 +202,11 @@ command-description-mappos =
 command-description-pos =
     Returns an entity's coordinates.
 command-description-tp-coords =
-    Teleports the target to the given coordinates.
+    Teleports the given entities to the target coordinates.
 command-description-tp-to =
-    Teleports the target to the given other entity.
+    Teleports the given entities to the target entity.
 command-description-tp-into =
-    Teleports the target "into" the given other entity, attaching it at (0 0) relative to it.
+    Teleports the given entities "into" the target entity, attaching it at (0 0) relative to it.
 command-description-comp-get =
     Gets the given component from the given entity.
 command-description-comp-add =

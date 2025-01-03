@@ -423,13 +423,18 @@ internal sealed class ToolshedCommandImplementor
                 if (x.PipeArg is not { } param)
                     return 0;
 
+                // We want exact match to be preferred.
                 if (pipedType!.IsAssignableTo(param.ParameterType))
-                    return 1000; // We want exact match to be preferred!
+                    return 1000;
+
+                // Next, we prefer methods that have the same base type.
+                // E.g., given an IEnumerable<EntProtoId> we should preferentially match to methods that take in an IEnumerable<string>
                 if (param.ParameterType.GetMostGenericPossible() == pipedType.GetMostGenericPossible())
                     return 500; // If not, try to prefer the same base type.
 
                 // Finally, prefer specialized (type exact) implementations.
-                return param.ParameterType.IsGenericTypeParameter ? 0 : 100;
+                // I.e., anything concrete is preferable over a simple generic parameter that could match any type.
+                return param.ParameterType.IsGenericParameter ? 0 : 100;
 
             })
             .Select(x =>

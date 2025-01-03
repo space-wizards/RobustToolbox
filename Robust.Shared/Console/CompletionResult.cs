@@ -77,9 +77,14 @@ public enum CompletionOptionFlags
     PartialCompletion = 1 << 0,
 
     /// <summary>
-    /// The completion should be inserted as-is, and shouldn't be quoted or escaped using
-    /// <see cref="CommandParsing.Escape"/>. Unless it is a <see cref="PartialCompletion"/>, a space will still be
-    /// inserted at the end.
+    /// Prevents suggestions containing spaces from being automatically wrapped in quotes.
     /// </summary>
-    Literal = 1 << 1,
+    NoQuote = 1 << 1,
+
+    /// <summary>
+    /// Prevents suggestions from being escaped using <see cref="CommandParsing.Escape"/>.
+    /// </summary>
+    NoEscape = 1 << 2,
+
+    Literal = NoQuote | NoEscape,
 }

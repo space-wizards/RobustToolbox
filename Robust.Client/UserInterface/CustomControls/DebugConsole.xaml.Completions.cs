@@ -276,16 +276,12 @@ public sealed partial class DebugConsole
                 // This means that letter casing will match the completion suggestion.
                 CommandBar.CursorPosition = lastRange.end;
                 CommandBar.SelectionStart = lastRange.start;
-                var insertValue = completion;
-                var mustQuote = false;
 
-                if ((completionFlags & CompletionOptionFlags.Literal) == 0)
-                {
-                    insertValue = CommandParsing.Escape(completion);
+                var insertValue = (completionFlags & CompletionOptionFlags.NoEscape) == 0
+                    ? CommandParsing.Escape(completion)
+                    : completion;
 
-                    // If the replacement contains a space, we must quote it to treat it as a single argument.
-                    mustQuote = insertValue.Contains(' ');
-                }
+                var mustQuote = (completionFlags & CompletionOptionFlags.NoQuote) == 0 && insertValue.Contains(' ');
 
                 if ((completionFlags & CompletionOptionFlags.PartialCompletion) == 0)
                 {

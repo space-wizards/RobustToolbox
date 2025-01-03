@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Console completion options now have a new flag `CompletionOptionFlags.Literal`, which will prevent options from being escaped or quoted.
+* Console completion options now have a new flags for preventing suggestions from being escaped or quoted.
 
 ### Bugfixes
 

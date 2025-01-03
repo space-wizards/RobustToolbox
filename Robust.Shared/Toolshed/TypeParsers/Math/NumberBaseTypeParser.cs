@@ -30,10 +30,11 @@ internal sealed class NumberBaseTypeParser<T> : TypeParser<T>
         return false;
     }
 
-    public override CompletionResult TryAutocomplete(ParserContext parserContext,
-        string? argName)
+    public override CompletionResult? TryAutocomplete(
+        ParserContext parserContext,
+        CommandArgument? arg)
     {
-        return CompletionResult.FromHint(typeof(T).PrettyName());
+        return CompletionResult.FromHint(GetArgHint(arg));
     }
 }
 

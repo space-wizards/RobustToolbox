@@ -66,7 +66,7 @@ public sealed class ReduceCommand : ToolshedCommand
             return true;
         }
 
-        public override CompletionResult? TryAutocomplete(ParserContext ctx, string? argName)
+        public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
         {
             if (ctx.Bundle.PipedType is not {IsGenericType: true})
                 return null;

@@ -72,7 +72,7 @@ public sealed class CommandSpecTypeParser : TypeParser<CommandSpec>
         return true;
     }
 
-    public override CompletionResult TryAutocomplete(ParserContext parserContext, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext parserContext, CommandArgument? arg)
     {
         var cmds = parserContext.Environment.AllCommands();
         return CompletionResult.FromHintOptions(cmds.Select(x => x.AsCompletion()), "<command name>");

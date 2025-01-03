@@ -629,8 +629,14 @@ internal sealed class ToolshedCommandImplementor
             // FormattedMessage support for help strings
             // make the argument type hint colour coded, for easier parsing of help strings.
             // I.e., in "<input (IEnumerable<Int>)> make the "(IEnumerable<Int>)" part gray?
-            if (method.PipeArg != null)
-                builder.Append($"<{method.PipeArg.Name} ({method.PipeArg.ParameterType.PrettyName()})> → ");
+            if (method.PipeArg is {} pipeArg)
+            {
+                var locKey = $"command-arg-sig-{LocName}-{pipeArg.Name}";
+                if (!_loc.TryGetString(locKey, out var pipeSig))
+                    pipeSig = ToolshedCommand.GetArgHint(pipeArg.Name!, false, false, pipeArg.ParameterType);
+
+                builder.Append($"{pipeSig} → ");
+            }
 
             if (method.Invertible)
                 builder.Append("[not] ");
@@ -688,7 +694,10 @@ internal sealed class ToolshedCommandImplementor
         foreach (var arg in args)
         {
             builder.Append(' ');
-            builder.Append(ToolshedCommand.GetArgHint(arg, arg.Type));
+            if (_loc.TryGetString($"command-arg-sig-{LocName}-{arg.Name}", out var msg))
+                builder.Append(msg);
+            else
+                builder.Append(ToolshedCommand.GetArgHint(arg, arg.Type));
         }
     }
 

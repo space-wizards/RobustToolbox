@@ -30,7 +30,17 @@ public sealed class ExplainCommand : ToolshedCommand
             {
                 var pipeArg = cmd.Method.Base.PipeArg;
                 DebugTools.AssertNotNull(pipeArg);
-                builder.Append($"<{pipeArg?.Name}> → "); // No type information, as that is already given above.
+
+                var locKey = $"command-arg-sig-{cmd.Implementor.LocName}-{pipeArg?.Name}";
+                if (Loc.TryGetString(locKey, out var msg))
+                {
+                    builder.Append(msg);
+                    builder.Append(" → ");
+                }
+                else
+                {
+                    builder.Append($"<{pipeArg?.Name}> → "); // No type information, as that is already given above.
+                }
             }
 
             if (cmd.Bundle.Inverted)

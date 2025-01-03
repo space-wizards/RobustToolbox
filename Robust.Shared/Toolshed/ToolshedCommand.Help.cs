@@ -41,19 +41,27 @@ public abstract partial class ToolshedCommand
     /// </summary>
     public static string GetArgHint(CommandArgument? arg, Type t)
     {
+        if (arg == null)
+            return t.PrettyName();
+
+        return GetArgHint(arg.Value.Name, arg.Value.IsOptional, arg.Value.IsParamsCollection, t);
+    }
+
+    /// <summary>
+    /// Helper method for generating auto-completion hints while parsing command arguments.
+    /// </summary>
+    public static string GetArgHint(string name, bool optional, bool isParams, Type t)
+    {
         var type = t.PrettyName();
 
-        if (arg == null)
-            return type;
-
         // optional arguments wrapped in square braces, inspired by the syntax of man pages
-        if (arg.Value.IsOptional)
-            return $"[{arg.Value.Name} ({type})]";
+        if (optional)
+            return $"[{name} ({type})]";
 
         // ellipses for params / variable length arguments
-        if (arg.Value.IsParamsCollection)
-            return $"[{arg.Value.Name} ({type})]...";
+        if (isParams)
+            return $"[{name} ({type})]...";
 
-        return $"<{arg.Value.Name} ({type})>";
+        return $"<{name} ({type})>";
     }
 }

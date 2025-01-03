@@ -11,8 +11,8 @@ namespace Robust.Shared.Toolshed.TypeParsers;
 
 internal sealed class StringTypeParser : TypeParser<string>
 {
-    // Completion option for hinting that all strings must start with an quote
-    private static readonly CompletionOption[] Option = [new("\"", Flags: CompletionOptionFlags.PartialCompletion)];
+    // Completion option for hinting that all strings must start with a quote
+    private static readonly CompletionOption[] Option = [new("\"", Flags: CompletionOptionFlags.PartialCompletion | CompletionOptionFlags.Literal)];
 
     public override bool TryParse(ParserContext ctx, [NotNullWhen(true)] out string? result)
     {

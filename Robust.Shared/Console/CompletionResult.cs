@@ -85,6 +85,4 @@ public enum CompletionOptionFlags
     /// Prevents suggestions from being escaped using <see cref="CommandParsing.Escape"/>.
     /// </summary>
     NoEscape = 1 << 2,
-
-    Literal = NoQuote | NoEscape,
 }

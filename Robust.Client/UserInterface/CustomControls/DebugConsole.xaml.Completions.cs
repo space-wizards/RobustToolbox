@@ -281,6 +281,7 @@ public sealed partial class DebugConsole
                     ? CommandParsing.Escape(completion)
                     : completion;
 
+                // If the replacement contains a space, we must quote it to treat it as a single argument.
                 var mustQuote = (completionFlags & CompletionOptionFlags.NoQuote) == 0 && insertValue.Contains(' ');
 
                 if ((completionFlags & CompletionOptionFlags.PartialCompletion) == 0)

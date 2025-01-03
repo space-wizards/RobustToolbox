@@ -412,30 +412,16 @@ internal sealed class ToolshedCommandImplementor
                     return pipedType is null;
 
                 if (pipedType == null)
-                    return false; // We want exact match to be preferred!
+                    return false;
 
                 return x.Generic || _toolshed.IsTransformableTo(pipedType, param.ParameterType);
-
-                // Finally, prefer specialized (type exact) implementations.
             })
             .OrderByDescending(x =>
             {
                 if (x.PipeArg is not { } param)
                     return 0;
 
-                // We want exact match to be preferred.
-                if (pipedType!.IsAssignableTo(param.ParameterType))
-                    return 1000;
-
-                // Next, we prefer methods that have the same base type.
-                // E.g., given an IEnumerable<EntProtoId> we should preferentially match to methods that take in an IEnumerable<string>
-                if (param.ParameterType.GetMostGenericPossible() == pipedType.GetMostGenericPossible())
-                    return 500; // If not, try to prefer the same base type.
-
-                // Finally, prefer specialized (type exact) implementations.
-                // I.e., anything concrete is preferable over a simple generic parameter that could match any type.
-                return param.ParameterType.IsGenericParameter ? 0 : 100;
-
+                return GetMethodRating(pipedType, param.ParameterType);
             })
             .Select(x =>
             {
@@ -456,6 +442,54 @@ internal sealed class ToolshedCommandImplementor
                 }
             })
             .FirstOrDefault(x => x != null);
+    }
+
+    private int GetMethodRating(Type? pipedType, Type paramType)
+    {
+        // This method is used to try rate possible command methods to determine how good of a match
+        // they for a given piped input based on the type of the method's piped argument. I.e., if we are
+        // piping an List<EntProtoId> into a command, iin order of most to least preferred we want a method that
+        // takes in an:
+        // - List<EntProtoId>
+        // - List<string>
+        // - Any concrete type (IEnumerable<EntProtoId>, IEnumerable<string>, string, EntProtoId, etc)
+        // - List<T>
+        // - Any type constructed out of generic types (e.g., List<T>, IEnumerable<T>)
+        // - constrained generic parameters (e.g., T where T : IEnumerable)
+        // - unconstrained generic parameters
+        //
+        // Finally, subsequent Select() calls in GetConcreteMethodInternal() will effectively discard any methods that
+        // can't actually be used. E.g., List<int> is preferred over List<T> here, but obviously couldn't be used.
+        //
+        // TBH this whole method is pretty janky, but it works well enough.
+
+        // We want exact match to be preferred.
+        if (pipedType!.IsAssignableTo(paramType))
+            return 1000;
+
+        // We prefer non-generic methods
+        if (paramType.ContainsGenericParameters)
+        {
+            // Next, we also prefer methods that have the same base type.
+            // E.g., given a List<EntProtoId> we should preferentially match to methods that take in an List<string>
+            if (paramType.GetMostGenericPossible() == pipedType.GetMostGenericPossible())
+                return 500;
+
+            return 400;
+        }
+
+        // Again. we prefer methods that have the same base type.
+        // E.g., given an List<EntProtoId> we should preferentially match to methods that take in an List<T>
+        if (paramType.GetMostGenericPossible() == pipedType.GetMostGenericPossible())
+            return 300;
+
+        // Anything that is not just directly a generic parameter is preferred.
+        if (!paramType.IsGenericParameter)
+            return 100;
+
+        // If this is a generic parameter, we prefer specificity. The least preferred match is any method that
+        // just takes an un-constrained generic parameter.
+        return Math.Min(paramType.GetGenericParameterConstraints().Length, 99);
     }
 
     /// <summary>

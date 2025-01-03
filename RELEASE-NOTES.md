@@ -46,6 +46,8 @@ END TEMPLATE-->
 ### Bugfixes
 
 * The map-like Toolshed commands now work when a collection is piped in.
+* Fixed a bug in toolshed that could cause it to preferentially use the incorrect command implementation.
+  * E.g., passing a concrete enumerable type would previously use the command implementation that takes in an unconstrained generic parameter `T` instead of a dedicated `IEnumeerable<T>` implementation.
 
 ### Other
 

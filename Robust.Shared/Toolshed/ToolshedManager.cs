@@ -91,9 +91,8 @@ public sealed partial class ToolshedManager
     {
         if (!_contexts.TryGetValue(session.UserId, out var ctx))
         {
-            // Can't get a shell here.
-            result = null;
-            return false;
+            var shell = new ConsoleShell(_conHost, session, false);
+            _contexts[session.UserId] = ctx = new(shell);
         }
 
         ctx.ClearErrors();

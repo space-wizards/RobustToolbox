@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added `MockInterfaces.MakeConfigurationManager` for creating functional configuration managers for unit test mocking.
 
 ### Bugfixes
 

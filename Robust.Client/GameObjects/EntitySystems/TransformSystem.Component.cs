@@ -8,6 +8,21 @@ namespace Robust.Client.GameObjects;
 
 public sealed partial class TransformSystem
 {
+    protected override void OnCompStartup(EntityUid uid, TransformComponent xform, ComponentStartup args)
+    {
+        // When parenting a transform to an entity that doesn't yet exist on the client (ex: outside of PVS),
+        // the parenting will be done before the target entity's transform is initialized.
+        // The parent transforms will have their GridUids set on initialize, but this value
+        // won't be copied to their children. Thus we need to push the GridUid to the children once
+        // we have it set up.
+        foreach (var child in xform._children)
+        {
+            SetGridId(child, XformQuery.GetComponent(child), xform._gridUid);
+        }
+
+        base.OnCompStartup(uid, xform, args);
+    }
+
     public override void SetLocalPosition(EntityUid uid, Vector2 value, TransformComponent? xform = null)
     {
         if (!XformQuery.Resolve(uid, ref xform))

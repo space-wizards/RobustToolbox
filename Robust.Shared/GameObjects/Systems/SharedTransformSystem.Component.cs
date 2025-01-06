@@ -309,7 +309,7 @@ public abstract partial class SharedTransformSystem
         xform._gridUid = parentXform._gridUid;
     }
 
-    private void OnCompStartup(EntityUid uid, TransformComponent xform, ComponentStartup args)
+    protected virtual void OnCompStartup(EntityUid uid, TransformComponent xform, ComponentStartup args)
     {
         // TODO PERFORMANCE remove AnchorStateChangedEvent and EntParentChangedMessage events here.
 

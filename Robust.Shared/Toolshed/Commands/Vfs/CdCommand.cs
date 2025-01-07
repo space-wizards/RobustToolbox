@@ -6,10 +6,7 @@ namespace Robust.Shared.Toolshed.Commands.Vfs;
 internal sealed class CdCommand : VfsCommand
 {
     [CommandImplementation]
-    public void Cd(
-        [CommandInvocationContext] IInvocationContext ctx,
-        [CommandArgument] ResPath path
-        )
+    public void Cd(IInvocationContext ctx,ResPath path)
     {
         var curPath = CurrentPath(ctx);
 

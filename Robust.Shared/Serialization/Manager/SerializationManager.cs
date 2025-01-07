@@ -70,7 +70,7 @@ namespace Robust.Shared.Serialization.Manager
                 {
                     foreach (var child in _reflectionManager.GetAllChildren(type))
                     {
-                        if (child.IsAbstract || child.IsGenericTypeDefinition)
+                        if (child.IsAbstract || child.IsGenericTypeDefinition || child.IsInterface)
                             continue;
 
                         yield return child;

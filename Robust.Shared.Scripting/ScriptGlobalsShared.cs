@@ -282,11 +282,31 @@ namespace Robust.Shared.Scripting
             return Array.Empty<IConError>();
         }
 
+        public bool HasErrors => false;
+
         public void ClearErrors()
         {
         }
 
-        public Dictionary<string, object?> Variables { get; }  = new();
+        /// <inheritdoc />
+        public object? ReadVar(string name)
+        {
+            return Variables.GetValueOrDefault(name);
+        }
+
+        /// <inheritdoc />
+        public void WriteVar(string name, object? value)
+        {
+            Variables[name] = value;
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<string> GetVars()
+        {
+            return Variables.Keys;
+        }
+
+        public Dictionary<string, object?> Variables { get; } = new();
 
         private static MemberInfo? ReflectionGetInstanceMember(Type type, MemberTypes memberType, string name)
         {

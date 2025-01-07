@@ -471,12 +471,12 @@ namespace Robust.Shared.CompNetworkGenerator
 
         public {stateName} CreateNewFullState({stateName} fullState)
         {{
-            fullState = fullState.ShallowClone();
-            {apply}
-            return fullState;
+            var newState = fullState.ShallowClone();
+            ApplyToFullState(newState);
+            return newState;
         }}
     }}
-                    ");
+");
                 }
 
                 deltaNetRegister = $@"EntityManager.ComponentFactory.RegisterNetworkedFields<{classSymbol}>({fieldsStr});";

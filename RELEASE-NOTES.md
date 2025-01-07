@@ -42,6 +42,7 @@ END TEMPLATE-->
 ### New features
 
 * Added `MockInterfaces.MakeConfigurationManager` for creating functional configuration managers for unit test mocking.
+* Added `ISawmill.IsLogLevelEnabled()` to avoid doing expensive verbose logging operations when not necessary.
 
 ### Bugfixes
 

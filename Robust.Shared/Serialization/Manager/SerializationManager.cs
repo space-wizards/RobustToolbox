@@ -185,7 +185,6 @@ namespace Robust.Shared.Serialization.Manager
             // So for now, This will just do a very basic blacklist check.
 
             var forbidden = _reflectionManager.FindTypesWithAttribute<NotYamlSerializableAttribute>()
-                .Select(x => x.IsGenericType ? x.GetGenericTypeDefinition() : x )
                 .ToFrozenSet();
 
             foreach (var def in _dataDefinitions.Values)

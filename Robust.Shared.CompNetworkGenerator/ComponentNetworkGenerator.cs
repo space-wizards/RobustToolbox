@@ -327,7 +327,7 @@ namespace Robust.Shared.CompNetworkGenerator
                                     cast = $"({castString})";
 
                                     handleStateSetters.Append($@"
-            EnsureEntityDictionary<{ensureGeneric}>(state.{name}, uid, component.{name})");
+            EnsureEntityDictionary<{ensureGeneric}>(state.{name}, uid, component.{name});");
 
                                     deltaHandleFields.Append($@"
                     EnsureEntityDictionary<{ensureGeneric}>({cast} {fieldHandleValue}, uid, component.{name});");

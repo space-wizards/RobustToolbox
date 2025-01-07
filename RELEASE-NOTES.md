@@ -1,4 +1,4 @@
-# Release notes for RobustToolbox.
+﻿# Release notes for RobustToolbox.
 
 <!--
 NOTE: automatically updated sometimes by version.py.
@@ -35,11 +35,11 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Robust now uses **.NET 9**.
 
 ### New features
 
-*None yet*
+* Added `MockInterfaces.MakeConfigurationManager` for creating functional configuration managers for unit test mocking.
 
 ### Bugfixes
 
@@ -52,6 +52,14 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 238.0.1
+
+### Bugfixes
+
+* Fixed source generation for auto-networked EntityUid Dictionaries missing a semicolon
+* Fixed PlacementManager using the wrong coordinates when deleting entities in an area.
 
 
 ## 238.0.0

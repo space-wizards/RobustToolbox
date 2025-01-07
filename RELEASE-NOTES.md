@@ -1,4 +1,4 @@
-# Release notes for RobustToolbox.
+﻿# Release notes for RobustToolbox.
 
 <!--
 NOTE: automatically updated sometimes by version.py.
@@ -35,12 +35,13 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+* Robust now uses **.NET 9**.
 * `ISerializationManager` will now log errors if it encounters `Entity<T>` data-fields.
   * To be clear, this has never been supported and is not really a breaking change, but this will likely require manual intervention to prevent tests from failing.
 
 ### New features
 
-*None yet*
+* Added `MockInterfaces.MakeConfigurationManager` for creating functional configuration managers for unit test mocking.
 
 ### Bugfixes
 
@@ -53,6 +54,14 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 238.0.1
+
+### Bugfixes
+
+* Fixed source generation for auto-networked EntityUid Dictionaries missing a semicolon
+* Fixed PlacementManager using the wrong coordinates when deleting entities in an area.
 
 
 ## 238.0.0

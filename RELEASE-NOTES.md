@@ -51,7 +51,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* The `loglevel` command now properly shows the "`null`" log level that resets the level to inheriting from parent. This was already supported by it, but the completions didn't list it.
 
 ### Internal
 

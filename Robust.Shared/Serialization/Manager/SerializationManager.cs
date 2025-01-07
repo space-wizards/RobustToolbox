@@ -173,28 +173,30 @@ namespace Robust.Shared.Serialization.Manager
                 throw new ArgumentException($"Invalid Types used for include fields:\n{invalidIncludes}");
             }
 
-            // We want to ensure that all the fields are actually serializable.
-            // Problem is that I have NFI how to do that and all of this is such convoluted spaghetti that the best way.
-            // Why is there no "is this serializable" test.
-            // Best I could get was to try brute force this by repeatedly trying to call ValidateNode with either a value, mapping, or sequence data node and checking that at least one of them doesn't throw an exception.
-            // But that still fails, because things like EntityUid aren't actually serializable without the mapping context.
+            // We want to ensure that all the fields marked with a DataFieldAttribute in some DataDefinition are
+            // actually serializable. Problem is that I have NFI how to do that, and all of this serialization code is
+            // such convoluted spaghetti that this is the best way I could think of.
+            //
+            // The only alternative Idea I had was to try brute force this by repeatedly trying to call ValidateNode
+            // with either a value, mapping, or sequence data node and checking that at least one of them doesn't throw
+            // an exception due to the type having no serializer/validator. But that still fails, because things like
+            // EntityUid aren't actually serializable without the mapping context which provides the serializer.
             // TODO SERIALIZATION REFACTOR Somehow validate that data-fields are serializable.
-            // For now, I will just do a very basic blacklist check.
+            // So for now, This will just do a very basic blacklist check.
 
             var forbidden = _reflectionManager.FindTypesWithAttribute<NotYamlSerializableAttribute>()
                 .Select(x => x.IsGenericType ? x.GetGenericTypeDefinition() : x )
                 .ToFrozenSet();
 
-            var msg = "";
             foreach (var def in _dataDefinitions.Values)
             {
                 foreach (var field in def.BaseFieldDefinitions)
                 {
                     if (field.FieldType.ContainsGenericParameters)
-                        continue;
+                        continue; // This just isn't supported yet, can't validate it so just skip it.
 
                     if (field.Attribute.CustomTypeSerializer != null)
-                        continue;
+                        continue; // Assume that anything with a custom type serializer can be handled.
 
                     if (!ValidateIsSerializable(field.FieldType, forbidden))
                         sawmill.Error($"Data-field of type {field.FieldType} in {def} is not serializable");
@@ -207,12 +209,15 @@ namespace Robust.Shared.Serialization.Manager
             _initializing = false;
         }
 
+        /// <summary>
+        /// Check if the given type is, or contains instances of, any forbidden types.
+        /// This is not at all a thorough check, but should help prevent people from accidentally using the
+        /// <see cref="DataFieldAttribute"/> on invalid / unserializable fields.
+        /// </summary>
         private bool ValidateIsSerializable(Type type, FrozenSet<Type> forbidden)
         {
             if (type.IsArray)
-            {
                 return ValidateIsSerializable(type.GetElementType()!, forbidden);
-            }
 
             if (!type.IsGenericType)
                 return !forbidden.Contains(type);

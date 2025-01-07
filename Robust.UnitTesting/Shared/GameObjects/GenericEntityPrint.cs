@@ -167,6 +167,7 @@ public sealed class GenericEntityPrint
             }
 
             structs.Append($$"""
+                [NotYamlSerializable]
                 public record struct Entity<{{generics}}> : IFluentEntityUid, IAsType<EntityUid>
                     {{constraints.ToString().TrimEnd()}}
                 {

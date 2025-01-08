@@ -7,11 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ILReader.Core" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
     <PackageReference Include="JetBrains.Annotations" PrivateAssets="All" />
+
+    <!-- Needed to pin transitive dependency versions. -->
+    <PackageReference Include="System.Text.Json" />
   </ItemGroup>
 
   <ItemGroup>

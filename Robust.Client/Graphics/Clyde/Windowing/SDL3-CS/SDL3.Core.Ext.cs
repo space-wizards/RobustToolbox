@@ -24,6 +24,10 @@ public static partial class SDL
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     public static unsafe partial void SDL_ShowFileDialogWithProperties(int type, delegate* unmanaged[Cdecl]<void*, byte**, int, void> callback, void* userdata, uint properties);
 
+    [LibraryImport(nativeLibName, EntryPoint = "SDL_WaitEvent")]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    public static partial SDLBool SDL_WaitEventRef(ref SDL_Event @event);
+
     public const byte SDL_BUTTON_LEFT = 1;
     public const byte SDL_BUTTON_MIDDLE = 2;
     public const byte SDL_BUTTON_RIGHT = 3;

@@ -726,6 +726,11 @@ public abstract partial class SharedTransformSystem
     {
         if (args.Current is TransformComponentState newState)
         {
+            // TODO Delta-states
+            // If the transform component ever gets delta states, then the client state manager needs to be updated.
+            // Currently it explicitly looks for a "TransformComponentState" when determining an entity's parent for the
+            // sake of sorting the states that need to be applied base on the transform hierarchy.
+
             var parent = EnsureEntity<TransformComponent>(newState.ParentID, uid);
             var oldAnchored = xform.Anchored;
 

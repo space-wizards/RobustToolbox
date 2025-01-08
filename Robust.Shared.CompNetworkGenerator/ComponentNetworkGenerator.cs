@@ -6,6 +6,9 @@ using Microsoft.CodeAnalysis.Text;
 using static Microsoft.CodeAnalysis.SymbolDisplayFormat;
 using static Microsoft.CodeAnalysis.SymbolDisplayMiscellaneousOptions;
 
+// Yes dude I know this source generator isn't incremental, I'll fix it eventually.
+#pragma warning disable RS1035
+
 namespace Robust.Shared.CompNetworkGenerator
 {
     [Generator]

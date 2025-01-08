@@ -587,8 +587,11 @@ namespace Robust.Client.WebView.Cef
                 }
             }
 
-            protected override void OnAcceleratedPaint(CefBrowser browser, CefPaintElementType type,
-                CefRectangle[] dirtyRects, IntPtr sharedHandle)
+            protected override void OnAcceleratedPaint(
+                CefBrowser browser,
+                CefPaintElementType type,
+                CefRectangle[] dirtyRects,
+                in CefAcceleratedPaintInfo info)
             {
                 // Unused, but we're forced to implement it so.. NOOP.
             }

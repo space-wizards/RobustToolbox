@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 239.0.0
+
+### Breaking changes
+
 * Robust now uses **.NET 9**.
 * `ISerializationManager` will now log errors if it encounters `Entity<T>` data-fields.
   * To be clear, this has never been supported and is not really a breaking change, but this will likely require manual intervention to prevent tests from failing.

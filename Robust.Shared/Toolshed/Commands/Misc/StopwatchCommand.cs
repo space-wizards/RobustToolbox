@@ -8,7 +8,7 @@ namespace Robust.Shared.Toolshed.Commands.Misc;
 public sealed class StopwatchCommand : ToolshedCommand
 {
     [CommandImplementation]
-    public object? Stopwatch([CommandInvocationContext] IInvocationContext ctx, [CommandArgument] CommandRun expr)
+    public object? Stopwatch(IInvocationContext ctx, CommandRun expr)
     {
         var watch = new Stopwatch();
         watch.Start();

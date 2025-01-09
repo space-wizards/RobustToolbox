@@ -1,6 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.Maths;
 using Robust.Shared.Toolshed.Errors;
@@ -11,26 +9,21 @@ namespace Robust.Shared.Toolshed.TypeParsers;
 
 internal sealed class QuantityParser : TypeParser<Quantity>
 {
-    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
+    public override bool TryParse(ParserContext ctx, out Quantity result)
     {
-        var word = parserContext.GetWord(ParserContext.IsNumeric);
-        error = null;
+        result = default;
+        var word = ctx.GetWord(ParserContext.IsNumeric);
 
         if (word?.TrimEnd('%') is not { } maybeParseable || !float.TryParse(maybeParseable, out var v))
         {
-            if (word is not null)
-                error = new InvalidQuantity(word);
-            else
-                error = new OutOfInputError();
+            ctx.Error = word is not null ? new InvalidQuantity(word) : new OutOfInputError();
 
-            result = null;
             return false;
         }
 
         if (v < 0.0)
         {
-            error = new InvalidQuantity(word);
-            result = null;
+            ctx.Error = new InvalidQuantity(word);
             return false;
         }
 
@@ -38,8 +31,7 @@ internal sealed class QuantityParser : TypeParser<Quantity>
         {
             if (v > 100.0)
             {
-                error = new InvalidQuantity(word);
-                result = null;
+                ctx.Error = new InvalidQuantity(word);
                 return false;
             }
 
@@ -51,10 +43,10 @@ internal sealed class QuantityParser : TypeParser<Quantity>
         return true;
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext,
+    public override CompletionResult? TryAutocomplete(ParserContext parserContext,
         string? argName)
     {
-        return ValueTask.FromResult<(CompletionResult? result, IConError? error)>((CompletionResult.FromHint($"{argName ?? "quantity"}"), null));
+        return CompletionResult.FromHint($"{argName ?? "quantity"}");
     }
 }
 

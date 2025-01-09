@@ -106,6 +106,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public int Count(Type component)
         {
+            DebugTools.Assert(component.IsAssignableTo(typeof(IComponent)));
             var dict = _entTraitDict[component];
             return dict.Count;
         }
@@ -370,6 +371,13 @@ namespace Robust.Shared.GameObjects
                 var netId = reg.NetID.Value;
                 metadata ??= MetaQuery.GetComponentInternal(uid);
                 metadata.NetComponents.Add(netId, component);
+            }
+
+            if (component is IComponentDelta delta)
+            {
+                var curTick = _gameTiming.CurTick;
+                delta.LastModifiedFields = new GameTick[reg.NetworkedFields.Length];
+                Array.Fill(delta.LastModifiedFields, curTick);
             }
 
             component.Networked = reg.NetID != null;
@@ -718,7 +726,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
-        public bool HasComponent<T>(EntityUid? uid) where T : IComponent
+        public bool HasComponent<T>([NotNullWhen(true)] EntityUid? uid) where T : IComponent
         {
             return uid.HasValue && HasComponent<T>(uid.Value);
         }
@@ -735,7 +743,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
-        public bool HasComponent(EntityUid? uid, Type type)
+        public bool HasComponent([NotNullWhen(true)] EntityUid? uid, Type type)
         {
             if (!uid.HasValue)
             {
@@ -760,7 +768,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
-        public bool HasComponent(EntityUid? uid, ushort netId, MetaDataComponent? meta = null)
+        public bool HasComponent([NotNullWhen(true)] EntityUid? uid, ushort netId, MetaDataComponent? meta = null)
         {
             if (!uid.HasValue)
             {
@@ -1118,6 +1126,78 @@ namespace Robust.Shared.GameObjects
                 i++;
             }
 
+            // Count<T> includes "deleted" components that are not returned by MoveNext()
+            // This ensures that we dont return an array with empty/invalid entries
+            Array.Resize(ref comps, i);
+            return comps;
+        }
+
+        public Entity<T>[] AllEntities<T>() where T : IComponent
+        {
+            var query = AllEntityQueryEnumerator<T>();
+            var comps = new Entity<T>[Count<T>()];
+            var i = 0;
+
+            while (query.MoveNext(out var uid, out var comp))
+            {
+                comps[i++] = (uid, comp);
+            }
+
+            // Count<T> includes "deleted" components that are not returned by MoveNext()
+            // This ensures that we dont return an array with empty/invalid entries
+            Array.Resize(ref comps, i);
+            return comps;
+        }
+
+        public Entity<IComponent>[] AllEntities(Type tComp)
+        {
+            var query = AllEntityQueryEnumerator(tComp);
+            var comps = new Entity<IComponent>[Count(tComp)];
+            var i = 0;
+
+            while (query.MoveNext(out var uid, out var comp))
+            {
+                comps[i++] = (uid, comp);
+            }
+
+            // Count() includes "deleted" components that are not returned by MoveNext()
+            // This ensures that we dont return an array with empty/invalid entries
+            Array.Resize(ref comps, i);
+            return comps;
+        }
+
+
+        public EntityUid[] AllEntityUids<T>() where T : IComponent
+        {
+            var query = AllEntityQueryEnumerator<T>();
+            var comps = new EntityUid[Count<T>()];
+            var i = 0;
+
+            while (query.MoveNext(out var uid, out _))
+            {
+                comps[i++] = uid;
+            }
+
+            // Count<T> includes "deleted" components that are not returned by MoveNext()
+            // This ensures that we dont return an array with empty/invalid entries
+            Array.Resize(ref comps, i);
+            return comps;
+        }
+
+        public EntityUid[] AllEntityUids(Type tComp)
+        {
+            var query = AllEntityQueryEnumerator(tComp);
+            var comps = new EntityUid[Count(tComp)];
+            var i = 0;
+
+            while (query.MoveNext(out var uid, out _))
+            {
+                comps[i++] = uid;
+            }
+
+            // Count() includes "deleted" components that are not returned by MoveNext()
+            // This ensures that we dont return an array with empty/invalid entries
+            Array.Resize(ref comps, i);
             return comps;
         }
 
@@ -1160,6 +1240,13 @@ namespace Robust.Shared.GameObjects
             var trait1 = _entTraitArray[_componentFactory.GetArrayIndex(comp1.Component.GetType())];
 
             return new CompRegistryEntityEnumerator(this, trait1, registry);
+        }
+
+        public AllEntityQueryEnumerator<IComponent> AllEntityQueryEnumerator(Type comp)
+        {
+            DebugTools.Assert(comp.IsAssignableTo(typeof(IComponent)));
+            var trait = _entTraitArray[_componentFactory.GetIndex(comp).Value];
+            return new AllEntityQueryEnumerator<IComponent>(trait);
         }
 
         public AllEntityQueryEnumerator<TComp1> AllEntityQueryEnumerator<TComp1>()
@@ -1590,7 +1677,7 @@ namespace Robust.Shared.GameObjects
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
-        public bool HasComp(EntityUid? uid) => HasComponent(uid);
+        public bool HasComp([NotNullWhen(true)] EntityUid? uid) => HasComponent(uid);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
@@ -1601,7 +1688,7 @@ namespace Robust.Shared.GameObjects
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
-        public bool HasComponent(EntityUid? uid)
+        public bool HasComponent([NotNullWhen(true)] EntityUid? uid)
         {
             return uid != null && HasComponent(uid.Value);
         }

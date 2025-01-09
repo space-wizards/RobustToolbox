@@ -69,5 +69,7 @@ namespace Robust.Client.Graphics
         void ShutdownGridEcsEvents();
 
         void RunOnWindowThread(Action action);
+
+        IFileDialogManager? FileDialogImpl { get; }
     }
 }

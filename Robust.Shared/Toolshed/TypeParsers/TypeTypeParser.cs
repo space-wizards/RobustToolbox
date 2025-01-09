@@ -19,7 +19,7 @@ namespace Robust.Shared.Toolshed.TypeParsers;
 
 
 // TODO: This should be able to parse more types, currently it only knows the ones in SimpleTypes.
-internal sealed class TypeTypeParser : TypeParser<Type>
+public sealed class TypeTypeParser : TypeParser<Type>
 {
     [Dependency] private readonly IModLoader _modLoader = default!;
 
@@ -79,12 +79,12 @@ internal sealed class TypeTypeParser : TypeParser<Type>
         _optionsCache = CompletionResult.FromHintOptions(Types.Select(x => new CompletionOption(x.Key)), "C# level type");
     }
 
-    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
+    public override bool TryParse(ParserContext ctx, [NotNullWhen(true)] out Type? result)
     {
-        var firstWord = parserContext.GetWord(Rune.IsLetterOrDigit);
+        var firstWord = ctx.GetWord(Rune.IsLetterOrDigit);
         if (firstWord is null)
         {
-            error = new OutOfInputError();
+            ctx.Error = new OutOfInputError();
             result = null;
             return false;
         }
@@ -93,16 +93,16 @@ internal sealed class TypeTypeParser : TypeParser<Type>
 
         if (ty is null)
         {
-            error = new UnknownType(firstWord);
+            ctx.Error = new UnknownType(firstWord);
             result = null;
             return false;
         }
 
         if (ty.IsGenericTypeDefinition)
         {
-            if (!parserContext.EatMatch('<'))
+            if (!ctx.EatMatch('<'))
             {
-                error = new ExpectedGeneric();
+                ctx.Error = new ExpectedGeneric();
                 result = null;
                 return false;
             }
@@ -112,25 +112,25 @@ internal sealed class TypeTypeParser : TypeParser<Type>
 
             for (var i = 0; i < len; i++)
             {
-                if (!TryParse(parserContext, out var t, out error))
+                if (!TryParse(ctx, out var t))
                 {
                     result = null;
                     return false;
                 }
 
-                args[i] = (Type) t;
+                args[i] = t;
 
-                if (i != (len - 1) && !parserContext.EatMatch(','))
+                if (i != (len - 1) && !ctx.EatMatch(','))
                 {
-                    error = new ExpectedNextType();
+                    ctx.Error = new ExpectedNextType();
                     result = null;
                     return false;
                 }
             }
 
-            if (!parserContext.EatMatch('>'))
+            if (!ctx.EatMatch('>'))
             {
-                error = new ExpectedGeneric();
+                ctx.Error = new ExpectedGeneric();
                 result = null;
                 return false;
             }
@@ -138,11 +138,11 @@ internal sealed class TypeTypeParser : TypeParser<Type>
             ty = ty.MakeGenericType(args);
         }
 
-        if (parserContext.EatMatch('['))
+        if (ctx.EatMatch('['))
         {
-            if (!parserContext.EatMatch(']'))
+            if (!ctx.EatMatch(']'))
             {
-                error = new UnknownType(firstWord);
+                ctx.Error = new UnknownType(firstWord);
                 result = null;
                 return false;
             }
@@ -150,13 +150,12 @@ internal sealed class TypeTypeParser : TypeParser<Type>
             ty = ty.MakeArrayType();
         }
 
-        if (parserContext.EatMatch('?') && (ty.IsValueType || ty.IsPrimitive))
+        if (ctx.EatMatch('?') && (ty.IsValueType || ty.IsPrimitive))
         {
             ty = typeof(Nullable<>).MakeGenericType(ty);
         }
 
         result = ty;
-        error = null;
         return true;
     }
 
@@ -166,11 +165,11 @@ internal sealed class TypeTypeParser : TypeParser<Type>
         return ty;
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext,
+    public override CompletionResult? TryAutocomplete(ParserContext parserContext,
         string? argName)
     {
-        // TODO: Suggest generics.
-        return ValueTask.FromResult<(CompletionResult? result, IConError? error)>((_optionsCache, null));
+        // TODO TOOLSHED Generic Type Suggestions.
+        return _optionsCache;
     }
 }
 
@@ -203,19 +202,6 @@ public record struct UnknownType(string T) : IConError
     public FormattedMessage DescribeInner()
     {
         return FormattedMessage.FromUnformatted($"The type {T} is not known and cannot be used.");
-    }
-
-    public string? Expression { get; set; }
-    public Vector2i? IssueSpan { get; set; }
-    public StackTrace? Trace { get; set; }
-}
-
-
-internal record struct TypeIsSandboxViolation(Type T) : IConError
-{
-    public FormattedMessage DescribeInner()
-    {
-        return FormattedMessage.FromUnformatted($"The type {T.PrettyName()} is not permitted under sandbox rules.");
     }
 
     public string? Expression { get; set; }

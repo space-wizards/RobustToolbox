@@ -17,7 +17,7 @@ public sealed record CompletionResult(CompletionOption[] Options, string? Hint)
     /// <summary>
     /// Type hint string for the current argument being typed.
     /// </summary>
-    public string? Hint { get; init; } = Hint;
+    public string? Hint { get; set; } = Hint;
 
     public static readonly CompletionResult Empty = new(Array.Empty<CompletionOption>(), null);
 

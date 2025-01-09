@@ -37,8 +37,9 @@ END TEMPLATE-->
 
 * The interaction between PVS overrides and visibility masks / layers have changed:
   * Any forced entities (i.e., `PvsOverrideSystem.AddForceSend()`) now ignore visibility masks.
-  * Any global & session overrides (`PvsOverrideSystem.AddGlobalOverride()` & `PvsOverrideSystem.AddSessionOverride()`) now respect visibility masks
-  * Entities added via the `ExpandPvsEvent` respect visibility masks, though the mask used for those entities can be configured via `ExpandPvsEvent.Mask`
+  * Any global & session overrides (`PvsOverrideSystem.AddGlobalOverride()` & `PvsOverrideSystem.AddSessionOverride()`) now respect visibility masks.
+  * Entities added via the `ExpandPvsEvent` respect visibility masks.
+  * The mask used for any global/session overrides can be modified via `ExpandPvsEvent.Mask`.
 
 ### New features
 

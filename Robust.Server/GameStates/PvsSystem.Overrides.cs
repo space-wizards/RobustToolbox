@@ -19,9 +19,8 @@ internal sealed partial class PvsSystem
 
     private void AddAllOverrides(PvsSession session)
     {
-        var mask = session.VisMask;
         var fromTick = session.FromTick;
-        RaiseExpandEvent(session, fromTick, mask);
+        var mask = RaiseExpandEvent(session, fromTick);
 
         foreach (ref var ent in CollectionsMarshal.AsSpan(_cachedGlobalOverride))
         {
@@ -75,9 +74,9 @@ internal sealed partial class PvsSystem
         }
     }
 
-    private void RaiseExpandEvent(PvsSession session, GameTick fromTick, int mask)
+    private int RaiseExpandEvent(PvsSession session, GameTick fromTick)
     {
-        var expandEvent = new ExpandPvsEvent(session.Session, mask);
+        var expandEvent = new ExpandPvsEvent(session.Session, session.VisMask);
 
         if (session.Session.AttachedEntity != null)
             RaiseLocalEvent(session.Session.AttachedEntity.Value, ref expandEvent, true);
@@ -93,12 +92,14 @@ internal sealed partial class PvsSystem
         }
 
         if (expandEvent.RecursiveEntities == null)
-            return;
+            return expandEvent.VisMask;
 
         foreach (var uid in expandEvent.RecursiveEntities)
         {
             RecursivelyAddOverride(session, uid, fromTick, addChildren: true, expandEvent.VisMask);
         }
+
+        return expandEvent.VisMask;
     }
 
     /// <summary>

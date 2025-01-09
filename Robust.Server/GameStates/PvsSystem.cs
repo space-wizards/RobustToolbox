@@ -485,7 +485,11 @@ public struct ExpandPvsEvent(ICommonSession session, int mask)
     public List<EntityUid>? RecursiveEntities;
 
     /// <summary>
-    /// Visibility mask to use when adding entities. Defaults to the client usual visibility mask.
+    /// Visibility mask to use when adding entities. Defaults to the usual visibility mask for that client.
     /// </summary>
+    /// <remarks>
+    /// Note that this mask will affect all global & session overrides from <see cref="PvsOverrideSystem"/> for this
+    /// client, not just the entities in <see cref="Entities"/> and <see cref="RecursiveEntities"/>.
+    /// </remarks>
     public int VisMask = mask;
 }

@@ -94,6 +94,8 @@ internal sealed partial class PvsSystem : EntitySystem
     /// </summary>
     private readonly List<GameTick> _deletedTick = new();
 
+    private readonly HashSet<EntityUid> _toDelete = new();
+
     /// <summary>
     /// The sessions that are currently being processed. Note that this is in general used by parallel & async tasks.
     /// Hence player disconnection processing is deferred and only run via <see cref="ProcessDisconnections"/>.
@@ -194,6 +196,12 @@ internal sealed partial class PvsSystem : EntitySystem
 
         // Construct & serialize the game state for each player (and for the replay).
         SerializeStates();
+
+        foreach (var uid in _toDelete)
+        {
+            EntityManager.QueueDeleteEntity(uid);
+        }
+        _toDelete.Clear();
 
         // Compress & send the states.
         SendStates();

@@ -21,12 +21,14 @@ internal sealed partial class PvsSystem
     {
         var mask = session.VisMask;
         var fromTick = session.FromTick;
-        RaiseExpandEvent(session, fromTick);
+        RaiseExpandEvent(session, fromTick, mask);
 
         foreach (ref var ent in CollectionsMarshal.AsSpan(_cachedGlobalOverride))
         {
             ref var meta = ref _metadataMemory.GetRef(ent.Ptr.Index);
             meta.Validate(ent.Meta);
+
+            // PVS overrides still respect visibility masks
             if ((mask & meta.VisMask) == meta.VisMask)
                 AddEntity(session, ref ent, ref meta, fromTick);
         }
@@ -36,7 +38,7 @@ internal sealed partial class PvsSystem
 
         foreach (var uid in sessionOverrides)
         {
-            RecursivelyAddOverride(session, uid, fromTick, addChildren: true);
+            RecursivelyAddOverride(session, uid, fromTick, addChildren: true, mask);
         }
     }
 
@@ -45,22 +47,23 @@ internal sealed partial class PvsSystem
     /// </summary>
     private void AddForcedEntities(PvsSession session)
     {
+        // Forced overrides do not respect visibility masks, so we set all bits.
+        var mask = -1;
+
         // Ignore PVS budgets
         session.Budget = new() {NewLimit = int.MaxValue, EnterLimit = int.MaxValue};
 
-        var mask = session.VisMask;
         var fromTick = session.FromTick;
         foreach (ref var ent in CollectionsMarshal.AsSpan(_cachedForceOverride))
         {
             ref var meta = ref _metadataMemory.GetRef(ent.Ptr.Index);
             meta.Validate(ent.Meta);
-            if ((mask & meta.VisMask) == meta.VisMask)
-                AddEntity(session, ref ent, ref meta, fromTick);
+            AddEntity(session, ref ent, ref meta, fromTick);
         }
 
         foreach (var uid in session.Viewers)
         {
-            RecursivelyAddOverride(session, uid, fromTick, addChildren: false);
+            RecursivelyAddOverride(session, uid, fromTick, addChildren: false, mask);
         }
 
         if (!_pvsOverride.SessionForceSend.TryGetValue(session.Session, out var sessionForce))
@@ -68,13 +71,13 @@ internal sealed partial class PvsSystem
 
         foreach (var uid in sessionForce)
         {
-            RecursivelyAddOverride(session, uid, fromTick, addChildren: false);
+            RecursivelyAddOverride(session, uid, fromTick, addChildren: false, mask);
         }
     }
 
-    private void RaiseExpandEvent(PvsSession session, GameTick fromTick)
+    private void RaiseExpandEvent(PvsSession session, GameTick fromTick, int mask)
     {
-        var expandEvent = new ExpandPvsEvent(session.Session);
+        var expandEvent = new ExpandPvsEvent(session.Session, mask);
 
         if (session.Session.AttachedEntity != null)
             RaiseLocalEvent(session.Session.AttachedEntity.Value, ref expandEvent, true);
@@ -85,7 +88,7 @@ internal sealed partial class PvsSystem
         {
             foreach (var uid in expandEvent.Entities)
             {
-                RecursivelyAddOverride(session, uid, fromTick, addChildren: false);
+                RecursivelyAddOverride(session, uid, fromTick, addChildren: false, expandEvent.VisMask);
             }
         }
 
@@ -94,14 +97,14 @@ internal sealed partial class PvsSystem
 
         foreach (var uid in expandEvent.RecursiveEntities)
         {
-            RecursivelyAddOverride(session, uid, fromTick, addChildren: true);
+            RecursivelyAddOverride(session, uid, fromTick, addChildren: true, expandEvent.VisMask);
         }
     }
 
     /// <summary>
     /// Recursively add an entity and all of its parents to the to-send set. This optionally also adds all children.
     /// </summary>
-    private bool RecursivelyAddOverride(PvsSession session, EntityUid uid, GameTick fromTick, bool addChildren)
+    private bool RecursivelyAddOverride(PvsSession session, EntityUid uid, GameTick fromTick, bool addChildren, int mask)
     {
         if (!_xformQuery.TryGetComponent(uid, out var xform))
         {
@@ -116,17 +119,20 @@ internal sealed partial class PvsSystem
         // to the toSend set, it doesn't guarantee that its parents have been. E.g., if a player ghost just teleported
         // to follow a far away entity, the player's own entity is still being sent, but we need to ensure that we also
         // send the new parents, which may otherwise be delayed because of the PVS budget.
-        if (parent.IsValid() && !RecursivelyAddOverride(session, parent, fromTick, false))
+        if (parent.IsValid() && !RecursivelyAddOverride(session, parent, fromTick, false, mask))
             return false;
 
         if (!_metaQuery.TryGetComponent(uid, out var meta))
+            return false;
+
+        if ((mask & meta.VisibilityMask) != meta.VisibilityMask)
             return false;
 
         if (!AddEntity(session, (uid, meta), fromTick))
             return false;
 
         if (addChildren)
-            RecursivelyAddChildren(session, xform, fromTick);
+            RecursivelyAddChildren(session, xform, fromTick, mask);
 
         return true;
     }
@@ -134,7 +140,7 @@ internal sealed partial class PvsSystem
     /// <summary>
     /// Recursively add an entity and all of its children to the to-send set.
     /// </summary>
-    private void RecursivelyAddChildren(PvsSession session, TransformComponent xform, GameTick fromTick)
+    private void RecursivelyAddChildren(PvsSession session, TransformComponent xform, GameTick fromTick, int mask)
     {
         foreach (var child in xform._children)
         {
@@ -145,10 +151,14 @@ internal sealed partial class PvsSystem
             }
 
             var metadata = _metaQuery.GetComponent(child);
-            if (!AddEntity(session, (child, metadata), fromTick))
-                return;
 
-            RecursivelyAddChildren(session, childXform, fromTick);
+            if ((mask & metadata.VisibilityMask) != metadata.VisibilityMask)
+                continue;
+
+            if (!AddEntity(session, (child, metadata), fromTick))
+                return; // Budget was exceeded (or some error occurred) -> return instead of continue.
+
+            RecursivelyAddChildren(session, childXform, fromTick, mask);
         }
     }
 

@@ -461,18 +461,23 @@ internal sealed partial class PvsSystem : EntitySystem
 }
 
 [ByRefEvent]
-public struct ExpandPvsEvent(ICommonSession session)
+public struct ExpandPvsEvent(ICommonSession session, int mask)
 {
     public readonly ICommonSession Session = session;
 
     /// <summary>
-    /// List of entities that will get added to this session's PVS set.
+    /// List of entities that will get added to this session's PVS set. This will still respect visibility masks.
     /// </summary>
     public List<EntityUid>? Entities;
 
     /// <summary>
     /// List of entities that will get added to this session's PVS set. Unlike <see cref="Entities"/> this will also
-    /// recursively add all children of the given entity.
+    /// recursively add all children of the given entity. This will still respect visibility masks.
     /// </summary>
     public List<EntityUid>? RecursiveEntities;
+
+    /// <summary>
+    /// Visibility mask to use when adding entities. Defaults to the client usual visibility mask.
+    /// </summary>
+    public int VisMask = mask;
 }

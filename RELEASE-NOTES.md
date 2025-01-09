@@ -35,7 +35,10 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* The interaction between PVS overrides and visibility masks / layers have changed:
+  * Any forced entities (i.e., `PvsOverrideSystem.AddForceSend()`) now ignore visibility masks.
+  * Any global & session overrides (`PvsOverrideSystem.AddGlobalOverride()` & `PvsOverrideSystem.AddSessionOverride()`) now respect visibility masks
+  * Entities added via the `ExpandPvsEvent` respect visibility masks, though the mask used for those entities can be configured via `ExpandPvsEvent.Mask`
 
 ### New features
 
@@ -43,7 +46,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Audio entities attached to invisible / masked entities should no longer be able to temporarily make those entities visible to all players.
 
 ### Other
 

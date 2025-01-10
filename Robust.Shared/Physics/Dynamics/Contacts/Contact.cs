@@ -30,6 +30,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -361,6 +362,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             return HashCode.Combine(EntityA, EntityB);
         }
 
+        [Pure]
         public EntityUid OurEnt(EntityUid uid)
         {
             if (uid == EntityA)
@@ -374,6 +376,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// <summary>
         /// Gets the other ent for this contact.
         /// </summary>
+        [Pure]
         public EntityUid OtherEnt(EntityUid uid)
         {
             if (uid == EntityA)
@@ -384,6 +387,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             throw new InvalidOperationException();
         }
 
+        [Pure, PublicAPI]
         public (string Id, Fixture) OurFixture(EntityUid uid)
         {
             if (uid == EntityA)
@@ -394,6 +398,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             throw new InvalidOperationException();
         }
 
+        [Pure, PublicAPI]
         public (string Id, Fixture) OtherFixture(EntityUid uid)
         {
             if (uid == EntityA)

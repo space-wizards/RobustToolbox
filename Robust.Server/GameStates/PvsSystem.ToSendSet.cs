@@ -149,7 +149,8 @@ internal sealed partial class PvsSystem
             lock (_toDelete)
             {
                 queued = EntityManager.IsQueuedForDeletion(uid) || _toDelete.Contains(uid);
-                _toDelete.Add(uid);
+                if (!queued)
+                    _toDelete.Add(uid);
             }
 
             var rep = new EntityStringRepresentation(entity);

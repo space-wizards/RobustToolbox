@@ -957,7 +957,7 @@ namespace Robust.Shared.Network
             }
 
             if (_loggerPacket.IsLogLevelEnabled(LogLevel.Verbose))
-                _loggerPacket.Verbose("net", $"RECV: {instance.GetType().Name} {msg.LengthBytes}");
+                _loggerPacket.Verbose($"RECV: {instance.GetType().Name} {msg.LengthBytes}");
 
             try
             {

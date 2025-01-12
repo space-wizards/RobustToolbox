@@ -31,6 +31,10 @@
     <PackageReference Include="SharpZstd.Interop" PrivateAssets="compile" />
     <PackageReference Condition="'$(RobustToolsBuild)' == 'True'" Include="JetBrains.Profiler.Api" />
     <PackageReference Include="Microsoft.NET.ILLink.Tasks" />
+
+    <!-- Needed to pin transitive dependency versions. -->
+    <PackageReference Include="System.Text.Json" />
+    <PackageReference Include="Newtonsoft.Json" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />

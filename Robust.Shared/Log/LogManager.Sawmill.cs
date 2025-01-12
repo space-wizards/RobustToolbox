@@ -71,6 +71,11 @@ namespace Robust.Shared.Log
                 }
             }
 
+            public bool IsLogLevelEnabled(LogLevel level)
+            {
+                return level >= GetPracticalLevel();
+            }
+
             public void Log(LogLevel level, Exception? exception, string message, params object?[] args)
             {
                 if (!_sLogger.BindMessageTemplate(message, args, out var parsedTemplate, out var properties))
@@ -78,7 +83,7 @@ namespace Robust.Shared.Log
 
                 var msg = new LogEvent(DateTimeOffset.Now, level.ToSerilog(), exception, parsedTemplate, properties);
 
-                if (level < GetPracticalLevel())
+                if (!IsLogLevelEnabled(level))
                     return;
 
                 LogInternal(Name, msg);

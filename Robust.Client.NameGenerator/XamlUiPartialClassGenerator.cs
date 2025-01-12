@@ -15,6 +15,9 @@ using XamlX.Transform;
 using XamlX.Transform.Transformers;
 using XamlX.TypeSystem;
 
+// Yes dude I know this source generator isn't incremental, I'll fix it eventually.
+#pragma warning disable RS1035
+
 namespace Robust.Client.NameGenerator
 {
     /// <summary>

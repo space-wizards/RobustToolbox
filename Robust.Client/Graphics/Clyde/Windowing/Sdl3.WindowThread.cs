@@ -4,15 +4,15 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using Robust.Shared;
 using Robust.Shared.Maths;
+using SDL3;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using static SDL2.SDL;
 
 namespace Robust.Client.Graphics.Clyde;
 
 internal partial class Clyde
 {
-    private sealed partial class Sdl2WindowingImpl
+    private sealed partial class Sdl3WindowingImpl
     {
         private bool _windowingRunning;
         private ChannelWriter<CmdBase> _cmdWriter = default!;
@@ -29,34 +29,34 @@ internal partial class Clyde
 
             while (_windowingRunning)
             {
-                var res = SDL_WaitEvent(out Unsafe.NullRef<SDL_Event>());
-                if (res == 0)
+                var res = SDL.SDL_WaitEventRef(ref Unsafe.NullRef<SDL.SDL_Event>());
+                if (!res)
                 {
-                    _sawmill.Error("Error while waiting on SDL2 events: {error}", SDL_GetError());
+                    _sawmill.Error("Error while waiting on SDL3 events: {error}", SDL.SDL_GetError());
                     continue; // Assume it's a transient failure?
                 }
 
-                while (SDL_PollEvent(out _) == 1)
+                while (SDL.SDL_PollEvent(out _))
                 {
                     // We let callbacks process all events because of stuff like resizing.
                 }
 
                 while (_cmdReader.TryRead(out var cmd) && _windowingRunning)
                 {
-                    ProcessSdl2Cmd(cmd);
+                    ProcessSdl3Cmd(cmd);
                 }
             }
         }
 
         public void PollEvents()
         {
-            while (SDL_PollEvent(out _) == 1)
+            while (SDL.SDL_PollEvent(out _))
             {
                 // We let callbacks process all events because of stuff like resizing.
             }
         }
 
-        private void ProcessSdl2Cmd(CmdBase cmdb)
+        private void ProcessSdl3Cmd(CmdBase cmdb)
         {
             switch (cmdb)
             {
@@ -113,20 +113,24 @@ internal partial class Clyde
                     WinThreadWinCursorSet(cmd);
                     break;
 
-                case CmdWinWinSetMode cmd:
-                    WinThreadWinSetMode(cmd);
+                case CmdWinWinSetFullscreen cmd:
+                    WinThreadWinSetFullscreen(cmd);
+                    break;
+
+                case CmdWinSetWindowed cmd:
+                    WinThreadWinSetWindowed(cmd);
                     break;
 
                 case CmdTextInputSetRect cmd:
                     WinThreadSetTextInputRect(cmd);
                     break;
 
-                case CmdTextInputStart:
-                    WinThreadStartTextInput();
+                case CmdTextInputStart cmd:
+                    WinThreadStartTextInput(cmd);
                     break;
 
-                case CmdTextInputStop:
-                    WinThreadStopTextInput();
+                case CmdTextInputStop cmd:
+                    WinThreadStopTextInput(cmd);
                     break;
             }
         }
@@ -171,25 +175,25 @@ internal partial class Clyde
             _eventWriter = eventChannel.Writer;
         }
 
-        private unsafe void SendCmd(CmdBase cmd)
+        private void SendCmd(CmdBase cmd)
         {
             if (_clyde._threadWindowApi)
             {
                 _cmdWriter.TryWrite(cmd);
 
-                SDL_Event ev = default;
-                ev.type = (SDL_EventType)_sdlEventWakeup;
+                SDL.SDL_Event ev = default;
+                ev.type = _sdlEventWakeup;
                 // Post empty event to unstuck WaitEvents if necessary.
                 // This self-registered event type is ignored by the winthread, but it'll still wake it up.
 
                 // This can fail if the event queue is full.
                 // That's not really a problem since in that case something else will be sure to wake the thread up anyways.
                 // NOTE: have to avoid using PushEvents since that invokes callbacks which causes a deadlock.
-                SDL_PeepEvents(&ev, 1, SDL_eventaction.SDL_ADDEVENT, ev.type, ev.type);
+                SDL.SDL_PeepEvents(new Span<SDL.SDL_Event>(ref ev), 1, SDL.SDL_EventAction.SDL_ADDEVENT, ev.type, ev.type);
             }
             else
             {
-                ProcessSdl2Cmd(cmd);
+                ProcessSdl3Cmd(cmd);
             }
         }
 
@@ -211,93 +215,119 @@ internal partial class Clyde
         }
 
 
-        private abstract record CmdBase;
+        private abstract class CmdBase;
 
-        private sealed record CmdTerminate : CmdBase;
+        private sealed class CmdTerminate : CmdBase;
 
-        private sealed record CmdWinCreate(
-            GLContextSpec? GLSpec,
-            WindowCreateParameters Parameters,
-            nint ShareWindow,
-            nint ShareContext,
-            nint OwnerWindow,
-            TaskCompletionSource<Sdl2WindowCreateResult> Tcs
-        ) : CmdBase;
+        private sealed class CmdWinCreate : CmdBase
+        {
+            public required GLContextSpec? GLSpec;
+            public required WindowCreateParameters Parameters;
+            public required nint ShareWindow;
+            public required nint ShareContext;
+            public required nint OwnerWindow;
+            public required TaskCompletionSource<Sdl3WindowCreateResult> Tcs;
+        }
 
-        private sealed record CmdWinDestroy(
-            nint Window,
-            bool HadOwner
-        ) : CmdBase;
+        private sealed class CmdWinDestroy : CmdBase
+        {
+            public nint Window;
+            public bool HadOwner;
+        }
 
-        private sealed record Sdl2WindowCreateResult(
-            Sdl2WindowReg? Reg,
-            string? Error
-        );
+        private sealed class Sdl3WindowCreateResult
+        {
+            public Sdl3WindowReg? Reg;
+            public string? Error;
+        }
 
-        private sealed record CmdRunAction(
-            Action Action
-        ) : CmdBase;
+        private sealed class CmdRunAction : CmdBase
+        {
+            public required Action Action;
+        }
 
-        private sealed record CmdSetClipboard(
-            string Text
-        ) : CmdBase;
+        private sealed class CmdSetClipboard : CmdBase
+        {
+            public required string Text;
+        }
 
-        private sealed record CmdGetClipboard(
-            TaskCompletionSource<string> Tcs
-        ) : CmdBase;
+        private sealed class CmdGetClipboard : CmdBase
+        {
+            public required TaskCompletionSource<string> Tcs;
+        }
 
-        private sealed record CmdWinRequestAttention(
-            nint Window
-        ) : CmdBase;
+        private sealed class CmdWinRequestAttention : CmdBase
+        {
+            public nint Window;
+        }
 
-        private sealed record CmdWinSetSize(
-            nint Window,
-            int W, int H
-        ) : CmdBase;
+        private sealed class CmdWinSetSize : CmdBase
+        {
+            public nint Window;
+            public int W;
+            public int H;
+        }
 
-        private sealed record CmdWinSetVisible(
-            nint Window,
-            bool Visible
-        ) : CmdBase;
+        private sealed class CmdWinSetVisible : CmdBase
+        {
+            public nint Window;
+            public bool Visible;
+        }
 
-        private sealed record CmdWinSetTitle(
-            nint Window,
-            string Title
-        ) : CmdBase;
+        private sealed class CmdWinSetTitle : CmdBase
+        {
+            public nint Window;
+            public required string Title;
+        }
 
-        private sealed record CmdCursorCreate(
-            Image<Rgba32> Bytes,
-            Vector2i Hotspot,
-            ClydeHandle Cursor
-        ) : CmdBase;
+        private sealed class CmdCursorCreate : CmdBase
+        {
+            public required Image<Rgba32> Bytes;
+            public Vector2i Hotspot;
+            public ClydeHandle Cursor;
+        }
 
-        private sealed record CmdCursorDestroy(
-            ClydeHandle Cursor
-        ) : CmdBase;
+        private sealed class CmdCursorDestroy : CmdBase
+        {
+            public ClydeHandle Cursor;
+        }
 
-        private sealed record CmdWinCursorSet(
-            nint Window,
-            ClydeHandle Cursor
-        ) : CmdBase;
+        private sealed class CmdWinCursorSet : CmdBase
+        {
+            public nint Window;
+            public ClydeHandle Cursor;
+        }
 
-        private sealed record CmdWinWinSetMode(
-            nint Window,
-            WindowMode Mode
-        ) : CmdBase;
+        private sealed class CmdWinWinSetFullscreen : CmdBase
+        {
+            public nint Window;
+        }
+
+        private sealed class CmdWinSetWindowed : CmdBase
+        {
+            public nint Window;
+            public int Width;
+            public int Height;
+            public int PosX;
+            public int PosY;
+        }
 
         // IME
-        private sealed record CmdTextInputStart : CmdBase
+        private sealed class CmdTextInputStart : CmdBase
         {
-            public static readonly CmdTextInputStart Instance = new();
+            public nint Window;
         }
 
-        private sealed record CmdTextInputStop : CmdBase
+        private sealed class CmdTextInputStop : CmdBase
         {
-            public static readonly CmdTextInputStop Instance = new();
+            public nint Window;
         }
 
-        private sealed record CmdTextInputSetRect(
-            SDL_Rect Rect
-        ) : CmdBase;
+        private sealed class CmdTextInputSetRect : CmdBase
+        {
+            public nint Window;
+            public SDL.SDL_Rect Rect;
+            public int Cursor;
+        }
     }
 }

@@ -695,15 +695,15 @@ namespace Robust.Client.GameStates
 
             foreach (var netEntity in _created)
             {
-#if EXCEPTION_TOLERANCE
-                if (!_entityManager.TryGetEntityData(netEntity, out _, out var meta))
+                if (!_entities.TryGetEntityData(netEntity, out _, out var meta))
                 {
                     _sawmill.Error($"Encountered deleted entity while merging implicit data! NetEntity: {netEntity}");
+
+#if !EXCEPTION_TOLERANCE
+                    throw new KeyNotFoundException();
+#endif
                     continue;
                 }
-#else
-                var (_, meta) = _entities.GetEntityData(netEntity);
-#endif
 
                 var compData = _compDataPool.Get();
                 _outputData.Add(netEntity, compData);

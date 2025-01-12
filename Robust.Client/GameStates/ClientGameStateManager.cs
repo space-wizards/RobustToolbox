@@ -23,7 +23,6 @@ using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
-using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Profiling;
@@ -58,6 +57,7 @@ namespace Robust.Client.GameStates
         private readonly List<(EntityUid, TransformComponent)> _queuedBroadphaseUpdates = new();
         private readonly HashSet<EntityUid> _sorted = new();
         private readonly List<NetEntity> _created = new();
+        private readonly List<NetEntity> _detached = new();
 
         private readonly record struct StateData(
             EntityUid Uid,
@@ -754,10 +754,9 @@ namespace Robust.Client.GameStates
                 _config.TickProcessMessages();
             }
 
-            List<NetEntity> detached;
             using (_prof.Group("Entity"))
             {
-                detached = ApplyEntityStates(curState, nextState);
+                ApplyEntityStates(curState, nextState);
             }
 
             using (_prof.Group("Player"))
@@ -767,13 +766,13 @@ namespace Robust.Client.GameStates
 
             using (_prof.Group("Callback"))
             {
-                GameStateApplied?.Invoke(new GameStateAppliedArgs(curState, detached));
+                GameStateApplied?.Invoke(new GameStateAppliedArgs(curState, _detached));
             }
 
             return _created;
         }
 
-        private List<NetEntity> ApplyEntityStates(GameState curState, GameState? nextState)
+        private void ApplyEntityStates(GameState curState, GameState? nextState)
         {
             var metas = _entities.GetEntityQuery<MetaDataComponent>();
             var xforms = _entities.GetEntityQuery<TransformComponent>();
@@ -841,7 +840,7 @@ namespace Robust.Client.GameStates
             // Detach entities to null space
             var containerSys = _entitySystemManager.GetEntitySystem<ContainerSystem>();
             var lookupSys = _entitySystemManager.GetEntitySystem<EntityLookupSystem>();
-            var detached = ProcessPvsDeparture(curState.ToSequence, metas, xforms, xformSys, containerSys, lookupSys);
+            ProcessPvsDeparture(curState.ToSequence, metas, xforms, xformSys, containerSys, lookupSys);
 
             // Check next state (AFTER having created new entities introduced in curstate)
             if (nextState != null)
@@ -949,11 +948,9 @@ namespace Robust.Client.GameStates
 
             _prof.WriteValue("State Size", ProfData.Int32(curSpan.Length));
             _prof.WriteValue("Entered PVS", ProfData.Int32(enteringPvs));
-
-            return detached;
         }
 
-        private void ApplyEntState(StateData data, GameTick toTick)
+        private void ApplyEntState(in StateData data, GameTick toTick)
         {
             try
             {
@@ -1054,6 +1051,8 @@ namespace Robust.Client.GameStates
             {
                 AddToSorted(ent, data, ref i);
             }
+
+            DebugTools.AssertEqual(i, toApply.Count);
         }
 
         private void AddToSorted(EntityUid ent, in StateData data, ref int i)
@@ -1074,6 +1073,7 @@ namespace Robust.Client.GameStates
                 if (_toApply.TryGetValue(parent, out var parentData))
                 {
                     AddToSorted(parent, parentData, ref i);
+                    // The above method will handle the rest of the transform hierarchy, so we can just return early.
                     return;
                 }
 
@@ -1081,6 +1081,10 @@ namespace Robust.Client.GameStates
             }
         }
 
+        /// <summary>
+        /// Get the entity's parent in the game state that is being applies. I.e., if the state contains a new
+        /// transform state, get the parent from that. Otherwise, return the entity's current parent.
+        /// </summary>
         private EntityUid GetStateParent(EntityUid uid, in StateData data)
         {
             // TODO GAME STATE
@@ -1227,9 +1231,10 @@ namespace Robust.Client.GameStates
             var containerSys = _entitySystemManager.GetEntitySystem<ContainerSystem>();
             var lookupSys = _entitySystemManager.GetEntitySystem<EntityLookupSystem>();
             Detach(GameTick.MaxValue, null, entities, metas, xforms, xformSys, containerSys, lookupSys);
+            _detached.Clear();
         }
 
-        private List<NetEntity> ProcessPvsDeparture(
+        private void ProcessPvsDeparture(
             GameTick toTick,
             EntityQuery<MetaDataComponent> metas,
             EntityQuery<TransformComponent> xforms,
@@ -1238,25 +1243,23 @@ namespace Robust.Client.GameStates
             EntityLookupSystem lookupSys)
         {
             var toDetach = _processor.GetEntitiesToDetach(toTick, _pvsDetachBudget);
-            var detached = new List<NetEntity>();
 
             if (toDetach.Count == 0)
-                return detached;
+                return;
 
             // TODO optimize
             // If an entity is leaving PVS, so are all of its children. If we can preserve the hierarchy we can avoid
             // things like container insertion and ejection.
 
             using var _ = _prof.Group("Leave PVS");
-            detached.EnsureCapacity(toDetach.Count);
 
+            _detached.Clear();
             foreach (var (tick, ents) in toDetach)
             {
-                Detach(tick, toTick, ents, metas, xforms, xformSys, containerSys, lookupSys, detached);
+                Detach(tick, toTick, ents, metas, xforms, xformSys, containerSys, lookupSys);
             }
 
-            _prof.WriteValue("Count", ProfData.Int32(detached.Count));
-            return detached;
+            _prof.WriteValue("Count", ProfData.Int32(_detached.Count));
         }
 
         private void Detach(GameTick maxTick,
@@ -1266,8 +1269,7 @@ namespace Robust.Client.GameStates
             EntityQuery<TransformComponent> xforms,
             SharedTransformSystem xformSys,
             ContainerSystem containerSys,
-            EntityLookupSystem lookupSys,
-            List<NetEntity>? detached = null)
+            EntityLookupSystem lookupSys)
         {
             foreach (var netEntity in entities)
             {
@@ -1312,7 +1314,7 @@ namespace Robust.Client.GameStates
                         containerSys.AddExpectedEntity(netEntity, container);
                 }
 
-                detached?.Add(netEntity);
+                _detached.Add(netEntity);
             }
         }
 

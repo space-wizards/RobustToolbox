@@ -7,6 +7,8 @@ namespace Robust.Shared.Console.Commands;
 
 internal sealed class LogSetLevelCommand : LocalizedCommands
 {
+    private const string LevelNull = "null";
+
     [Dependency] private readonly ILogManager _logManager = default!;
 
     public override string Command => "loglevel";
@@ -21,7 +23,7 @@ internal sealed class LogSetLevelCommand : LocalizedCommands
         var name = args[0];
         var levelname = args[1];
         LogLevel? level;
-        if (levelname == "null")
+        if (levelname == LevelNull)
         {
             level = null;
         }
@@ -49,7 +51,7 @@ internal sealed class LogSetLevelCommand : LocalizedCommands
                     "<sawmill>");
             case 2:
                 return CompletionResult.FromHintOptions(
-                    Enum.GetNames<LogLevel>(),
+                    Enum.GetNames<LogLevel>().Union([LevelNull]),
                     "<level>");
 
             default:

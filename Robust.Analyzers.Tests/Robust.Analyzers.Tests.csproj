@@ -27,13 +27,17 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzer.Testing"/>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp"/>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing.NUnit"/>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing.NUnit"/>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces"/>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing"/>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing"/>
     <PackageReference Include="NUnit"/>
     <PackageReference Include="NUnit3TestAdapter"/>
     <PackageReference Include="NUnit.Analyzers"/>
     <PackageReference Include="Microsoft.NET.Test.Sdk"/>
+
+    <!-- Needed to fix transitive dependency versions -->
+    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
+    <PackageReference Include="System.Formats.Asn1" />
   </ItemGroup>
 
   <ItemGroup>

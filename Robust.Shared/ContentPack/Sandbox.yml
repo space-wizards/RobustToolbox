@@ -1197,6 +1197,7 @@ Types:
     RuntimeFieldHandle: { }
     RuntimeMethodHandle: { }
     RuntimeTypeHandle: { }
+    STAThreadAttribute: { All: True }
     SByte: { All: True }
     Single: { All: True }
     Span`1:
@@ -1367,6 +1368,7 @@ Types:
       - "string[] Split(char, int, System.StringSplitOptions)"
       - "string[] Split(char, System.StringSplitOptions)"
       - "string[] Split(char[])"
+      - "string[] Split(System.ReadOnlySpan`1<char>)"
       - "string[] Split(char[], int)"
       - "string[] Split(char[], int, System.StringSplitOptions)"
       - "string[] Split(char[], System.StringSplitOptions)"

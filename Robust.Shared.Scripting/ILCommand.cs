@@ -1,13 +1,12 @@
-﻿using System.Reflection;
-using ILReader;
-using ILReader.Readers;
-using Robust.Shared.Toolshed;
+﻿using Robust.Shared.Toolshed;
 
 namespace Robust.Shared.Scripting;
 
 [ToolshedCommand]
 public sealed class ILCommand : ToolshedCommand
 {
+    // Disabled due to relying on external dependency ILReader.
+    /*
     [CommandImplementation("dumpil")]
     public void DumpIL(
         IInvocationContext ctx,
@@ -30,5 +29,6 @@ public sealed class ILCommand : ToolshedCommand
         IILReaderConfiguration cfg = ILReader.Configuration.Resolve(method);
         return cfg.GetReader(method);
     }
+    */
 }
 

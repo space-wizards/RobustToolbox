@@ -23,6 +23,7 @@ namespace Robust.Client
         private Thread? _gameThread;
         private ISawmill _logger = default!;
 
+        [STAThread]
         public static void Main(string[] args)
         {
             Start(args, new GameControllerOptions());

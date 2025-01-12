@@ -5,10 +5,12 @@ using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Text;
+using Robust.Client.ComponentTrees;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Clyde;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
+using Robust.Shared;
 using Robust.Shared.Animations;
 using Robust.Shared.ComponentTrees;
 using Robust.Shared.GameObjects;
@@ -25,23 +27,23 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
-using static Robust.Client.ComponentTrees.SpriteTreeSystem;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 using static Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer;
 using Direction = Robust.Shared.Maths.Direction;
 using Vector4 = Robust.Shared.Maths.Vector4;
+#pragma warning disable CS0618 // Type or member is obsolete
 
 namespace Robust.Client.GameObjects
 {
     [RegisterComponent]
     public sealed partial class SpriteComponent : Component, IComponentDebug, ISerializationHooks, IComponentTreeEntry<SpriteComponent>, IAnimationProperties
     {
+        public const string LogCategory = "go.comp.sprite";
+
         [Dependency] private readonly IResourceCache resourceCache = default!;
         [Dependency] private readonly IPrototypeManager prototypes = default!;
-        [Dependency] private readonly IEntityManager entities = default!;
+        [Dependency] private readonly EntityManager entities = default!;
         [Dependency] private readonly IReflectionManager reflection = default!;
-        [Dependency] private readonly IEyeManager eyeManager = default!;
-        [Dependency] private readonly IComponentFactory factory = default!;
 
         /// <summary>
         ///     See <see cref="CVars.RenderSpriteDirectionBias"/>.
@@ -52,11 +54,11 @@ namespace Robust.Client.GameObjects
         ///     Whether the layers have independant drawing strategies, e.g some may snap to cardinals while others won't.
         ///     The sprite should still set its global rendering method (e.g NoRot or SnapCardinals), this only gives finer control over how layers are rendered internally.
         /// </summary>
-        [DataField("granularLayersRendering")]
+        [DataField]
         public bool GranularLayersRendering = false;
 
-        [DataField("visible")]
-        private bool _visible = true;
+        [DataField]
+        internal bool _visible = true;
 
         // VV convenience variable to examine layer objects using layer keys
         [ViewVariables]
@@ -66,17 +68,17 @@ namespace Robust.Client.GameObjects
         public bool Visible
         {
             get => _visible;
-            set
-            {
-                if (_visible == value) return;
-                _visible = value;
-
-                QueueUpdateRenderTree();
-            }
+            [Obsolete("Use SpriteSystem.SetVisible() instead.")]
+            set => Sys.SetVisible((Owner, this), value);
         }
 
+        private SpriteSystem? _sys;
+        private SpriteTreeSystem? _treeSys;
+        private SpriteSystem Sys => _sys ??= entities.System<SpriteSystem>();
+        private SpriteTreeSystem TreeSys => _treeSys ??= entities.System<SpriteTreeSystem>();
+
         [DataField("drawdepth", customTypeSerializer: typeof(ConstantSerializer<DrawDepthTag>))]
-        private int drawDepth = DrawDepthTag.Default;
+        internal int drawDepth = DrawDepthTag.Default;
 
         /// <summary>
         ///     Z-index for drawing.
@@ -85,11 +87,12 @@ namespace Robust.Client.GameObjects
         public int DrawDepth
         {
             get => drawDepth;
-            set => drawDepth = value;
+            [Obsolete("Use SpriteSystem.SetDrawDepth() instead.")]
+            set => Sys.SetDrawDepth((Owner, this), value);
         }
 
-        [DataField("scale")]
-        private Vector2 scale = Vector2.One;
+        [DataField]
+        internal Vector2 scale = Vector2.One;
 
         /// <summary>
         ///     A scale applied to all layers.
@@ -99,38 +102,24 @@ namespace Robust.Client.GameObjects
         public Vector2 Scale
         {
             get => scale;
-            set
-            {
-                if (MathF.Abs(value.X) < 0.005f || MathF.Abs(value.Y) < 0.005f)
-                {
-                    // Scales of ~0.0025 or lower can lead to singular matrices due to rounding errors.
-                    Logger.Error($"Attempted to set layer sprite scale to very small values. Entity: {entities.ToPrettyString(Owner)}. Scale: {value}");
-                    return;
-                }
-
-                _bounds = _bounds.Scale(value / scale);
-                scale = value;
-                UpdateLocalMatrix();
-            }
+            [Obsolete("Use SpriteSystem.SetScale() instead.")]
+            set => Sys.SetScale((Owner, this), value);
         }
 
-        [DataField("rotation")]
-        private Angle rotation = Angle.Zero;
+        [DataField]
+        internal Angle rotation = Angle.Zero;
 
         [Animatable]
         [ViewVariables(VVAccess.ReadWrite)]
         public Angle Rotation
         {
             get => rotation;
-            set
-            {
-                rotation = value;
-                UpdateLocalMatrix();
-            }
+            [Obsolete("Use SpriteSystem.SetRotation() instead.")]
+            set => Sys.SetRotation((Owner, this), value);
         }
 
-        [DataField("offset")]
-        private Vector2 offset = Vector2.Zero;
+        [DataField]
+        internal Vector2 offset = Vector2.Zero;
 
         /// <summary>
         ///     Offset applied to all layers.
@@ -140,26 +129,25 @@ namespace Robust.Client.GameObjects
         public Vector2 Offset
         {
             get => offset;
-            set
-            {
-                offset = value;
-                UpdateLocalMatrix();
-            }
+            [Obsolete("Use SpriteSystem.SetOffset() instead.")]
+            set => Sys.SetOffset((Owner, this), value);
         }
 
-        [DataField("color")]
-        private Color color = Color.White;
-
-        public Matrix3x2 LocalMatrix = Matrix3x2.Identity;
+        [DataField]
+        internal Color color = Color.White;
 
         [Animatable]
         [ViewVariables(VVAccess.ReadWrite)]
         public Color Color
         {
             get => color;
-            set => color = value;
+            [Obsolete("Use SpriteSystem.SetColor() instead.")]
+            set => Sys.SetColor((Owner, this), value);
         }
 
+        public Matrix3x2 LocalMatrix = Matrix3x2.Identity;
+
+        #region SpriteTree
         [ViewVariables]
         public DynamicTree<ComponentTreeEntry<SpriteComponent>>? Tree { get; set; }
 
@@ -168,52 +156,23 @@ namespace Robust.Client.GameObjects
         public bool AddToTree => Visible && !ContainerOccluded && Layers.Count > 0;
 
         public bool TreeUpdateQueued { get; set; }
+        #endregion
 
-        private RSI? _baseRsi;
+        internal RSI? _baseRsi;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public RSI? BaseRSI
         {
             get => _baseRsi;
-            set
-            {
-                if (value == _baseRsi)
-                    return;
-
-                _baseRsi = value;
-                if (value == null)
-                    return;
-
-                for (var i = 0; i < Layers.Count; i++)
-                {
-                    var layer = Layers[i];
-                    if (!layer.State.IsValid || layer.RSI != null)
-                    {
-                        continue;
-                    }
-
-                    layer.UpdateActualState();
-
-                    if (value.TryGetState(layer.State, out var state))
-                    {
-                        layer.AnimationTimeLeft = state.GetDelay(0);
-                    }
-                    else
-                    {
-                        Logger.ErrorS(LogCategory,
-                            "Layer '{0}'no longer has state '{1}' due to base RSI change. Trace:\n{2}",
-                            i, layer.State, Environment.StackTrace);
-                        layer.Texture = null;
-                    }
-                }
-            }
+            [Obsolete("Use SpriteSystem.SetBaseRSI() instead.")]
+            set => Sys.SetBaseRsi((Owner, this), value);
         }
 
         [DataField("sprite", readOnly: true)] private string? rsi;
         [DataField("layers", readOnly: true)] private List<PrototypeLayerData> layerDatums = new();
 
-        [DataField("state", readOnly: true)] private string? state;
-        [DataField("texture", readOnly: true)] private string? texture;
+        [DataField(readOnly: true)] private string? state;
+        [DataField(readOnly: true)] private string? texture;
 
         /// <summary>
         ///     Should this entity show up in containers regardless of whether the container can show contents?
@@ -226,17 +185,13 @@ namespace Robust.Client.GameObjects
         public bool ContainerOccluded
         {
             get => _containerOccluded && !OverrideContainerOcclusion;
-            set
-            {
-                if (_containerOccluded == value) return;
-                _containerOccluded = value;
-                QueueUpdateRenderTree();
-            }
+            [Obsolete("Use SpriteSystem.SetContainerOccluded() instead.")]
+            set => Sys.SetContainerOccluded((Owner, this), value);
         }
 
-        private bool _containerOccluded;
+        internal bool _containerOccluded;
 
-        private Box2 _bounds;
+        internal Box2 _bounds;
 
         /// <summary>
         ///     The bounds of the sprite. This does factor in the sprite's <see cref="Scale"/> but not the
@@ -250,61 +205,52 @@ namespace Robust.Client.GameObjects
         ///     Shader instance to use when drawing the final sprite to the world.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public ShaderInstance? PostShader { get; set; }
+        public ShaderInstance? PostShader
+        {
+            get;
+            // This will get obsoleted, but I only want to mark it as obsolete when multi-shader support is added, so
+            // that people can use the appropriate method and don't migrate to an incorrect new method that wont
+            // be obsoleted.
+            set;
+        }
 
         /// <summary>
-        ///     Whether or not to pass the screen texture to the <see cref="PostShader"/>.
+        ///     Whether to pass the screen texture to the <see cref="PostShader"/>.
         /// </summary>
         /// <remarks>
         ///     Should be false unless you really need it.
         /// </remarks>
-        [DataField("getScreenTexture")]
-        [ViewVariables(VVAccess.ReadWrite)]
-        private bool _getScreenTexture = false;
-        public bool GetScreenTexture
-        {
-            get => _getScreenTexture && PostShader != null;
-            set => _getScreenTexture = value;
-        }
+        [DataField]
+        public bool GetScreenTexture;
 
         /// <summary>
         ///     If true, this raise a entity system event before rendering this sprite, allowing systems to modify the
         ///     shader parameters. Usually this can just be done via a frame-update, but some shaders require
         ///     information about the viewport / eye.
         /// </summary>
-        [DataField("raiseShaderEvent")]
-        [ViewVariables(VVAccess.ReadWrite)]
-        public bool RaiseShaderEvent = false;
+        [DataField]
+        public bool RaiseShaderEvent;
 
-        [ViewVariables] private Dictionary<object, int> LayerMap = new();
-        [ViewVariables] private bool _layerMapShared;
+        [ViewVariables] internal Dictionary<object, int> LayerMap { get; set; } = new();
         [ViewVariables] internal List<Layer> Layers = new();
 
         [ViewVariables(VVAccess.ReadWrite)] public uint RenderOrder { get; set; }
-
-        public const string LogCategory = "go.comp.sprite";
 
         [ViewVariables(VVAccess.ReadWrite)] public bool IsInert { get; internal set; }
 
         void ISerializationHooks.AfterDeserialization()
         {
             // Please somebody burn this to the ground. There is so much spaghetti.
+            // Why has no one answered my prayers.
 
             IoCManager.InjectDependencies(this);
-
+            if (!string.IsNullOrWhiteSpace(rsi))
             {
-                if (!string.IsNullOrWhiteSpace(rsi))
-                {
-                    var rsiPath = TextureRoot / rsi;
-                    if(resourceCache.TryGetResource(rsiPath, out RSIResource? resource))
-                    {
-                        BaseRSI = resource.RSI;
-                    }
-                    else
-                    {
-                        Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'.", rsiPath);
-                    }
-                }
+                var rsiPath = TextureRoot / rsi;
+                if (resourceCache.TryGetResource(rsiPath, out RSIResource? resource))
+                    _baseRsi = resource.RSI;
+                else
+                    Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'.", rsiPath);
             }
 
             if (layerDatums.Count == 0)
@@ -332,16 +278,22 @@ namespace Robust.Client.GameObjects
                 Layers.Clear();
                 foreach (var datum in layerDatums)
                 {
-                    AddLayer(datum);
+                    var layer = new Layer(this);
+                    Layers.Add(layer);
+                    LayerSetData(layer, Layers.Count - 1, datum);
                 }
 
-                _layerMapShared = true;
-
-                QueueUpdateRenderTree();
-                QueueUpdateIsInert();
             }
 
-            UpdateLocalMatrix();
+            _bounds = new Box2();
+            foreach (var layer in Layers)
+            {
+                if (layer is {Visible: true, Blank: false})
+                    _bounds = _bounds.Union(layer.CalculateBoundingBox());
+            }
+
+            _bounds = _bounds.Scale(Scale);
+            LocalMatrix = Matrix3Helpers.CreateTransform(in offset, in rotation, in scale);
         }
 
         /// <summary>
@@ -349,55 +301,19 @@ namespace Robust.Client.GameObjects
         /// this is called. Does not keep them perpetually in sync.
         /// This does some deep copying thus exerts some gc pressure, so avoid this for hot code paths.
         /// </summary>
+        [Obsolete("Use SpriteSystem.CopySprite() instead.")]
         public void CopyFrom(SpriteComponent other)
         {
-            //deep copying things to avoid entanglement
-            _baseRsi = other._baseRsi;
-            _bounds = other._bounds;
-            _visible = other._visible;
-            _layerMapShared = other._layerMapShared;
-            color = other.color;
-            offset = other.offset;
-            rotation = other.rotation;
-            scale = other.scale;
-            UpdateLocalMatrix();
-            drawDepth = other.drawDepth;
-            _screenLock = other._screenLock;
-            DirectionOverride = other.DirectionOverride;
-            EnableDirectionOverride = other.EnableDirectionOverride;
-            Layers = new List<Layer>(other.Layers.Count);
-            foreach (var otherLayer in other.Layers)
-            {
-                Layers.Add(new Layer(otherLayer, this));
-            }
-            IsInert = other.IsInert;
-            LayerMap = other.LayerMap.ToDictionary(entry => entry.Key,
-                entry => entry.Value);
-            if (other.PostShader != null)
-            {
-                // only need to copy the shader if it's mutable
-                PostShader = other.PostShader.Mutable ? other.PostShader.Duplicate() : other.PostShader;
-            }
-            else
-            {
-                PostShader = null;
-            }
-
-            RenderOrder = other.RenderOrder;
-            GranularLayersRendering = other.GranularLayersRendering;
+            Sys.CopySprite(other, this);
         }
 
-        internal void UpdateLocalMatrix()
-        {
-            LocalMatrix = Matrix3Helpers.CreateTransform(in offset, in rotation, in scale);
-        }
-
+        [Obsolete("Use LocalMatrix")]
         public Matrix3x2 GetLocalMatrix()
         {
             return LocalMatrix;
         }
 
-        /// <inheritdoc />
+        [Obsolete("Use SpriteSystem.LayerMapSet() instead.")]
         public void LayerMapSet(object key, int layer)
         {
             if (layer < 0 || layer >= Layers.Count)
@@ -405,24 +321,22 @@ namespace Robust.Client.GameObjects
                 throw new ArgumentOutOfRangeException();
             }
 
-            _layerMapEnsurePrivate();
             LayerMap.Add(key, layer);
         }
 
-        /// <inheritdoc />
+        [Obsolete("Use SpriteSystem.LayerMapRemove() instead.")]
         public void LayerMapRemove(object key)
         {
-            _layerMapEnsurePrivate();
             LayerMap.Remove(key);
         }
 
-        /// <inheritdoc />
+        [Obsolete("Use SpriteSystem.LayerMapGet() instead.")]
         public int LayerMapGet(object key)
         {
             return LayerMap[key];
         }
 
-        /// <inheritdoc />
+        [Obsolete("Use SpriteSystem.LayerMapTryGet() instead.")]
         public bool LayerMapTryGet(object key, out int layer, bool logError = false)
         {
             var result = LayerMap.TryGetValue(key, out layer);
@@ -436,38 +350,18 @@ namespace Robust.Client.GameObjects
             return result;
         }
 
+        [Obsolete("Use SpriteSystem.TryGetLayer() instead.")]
         public bool TryGetLayer(int index, [NotNullWhen(true)] out Layer? layer, bool logError = false)
-        {
-            if (index < Layers.Count)
-            {
-                layer = Layers[index];
-                return true;
-            }
+            => Sys.TryGetLayer((Owner, this), index, out layer, logError);
 
-            if (logError)
-            {
-                Logger.ErrorS(LogCategory, "{0} - Layer index '{1}' does not exist! Trace:\n{2}",
-                    entities.ToPrettyString(Owner), index, Environment.StackTrace);
-            }
+        [Obsolete("Use SpriteSystem.LayerExists() instead.")]
+        public bool LayerExists(int layer, bool logError = true)
+            => Sys.LayerExists((Owner, this), layer);
 
-            layer = null;
-            return false;
-        }
-
-        public bool LayerExists(int layer, bool logError = true) => TryGetLayer(layer, out _, logError);
+        [Obsolete("Use SpriteSystem.LayerExists() instead.")]
         public bool LayerExists(object key, bool logError = false) => LayerMapTryGet(key, out _, logError);
 
-        private void _layerMapEnsurePrivate()
-        {
-            if (!_layerMapShared)
-            {
-                return;
-            }
-
-            LayerMap = LayerMap.ShallowClone();
-            _layerMapShared = false;
-        }
-
+        [Obsolete("Use SpriteSystem.LayerMapReserve() instead.")]
         public int LayerMapReserveBlank(object key)
         {
             if (LayerMapTryGet(key, out var index))
@@ -481,186 +375,79 @@ namespace Robust.Client.GameObjects
             return index;
         }
 
+        [Obsolete("Use SpriteSystem.AddBlankLayer() instead.")]
         public int AddBlankLayer(int? newIndex = null)
-        {
-            var layer = new Layer(this);
-            return AddLayer(layer, newIndex);
-        }
+            => Sys.AddBlankLayer((Owner, this), newIndex);
 
-        /// <summary>
-        ///     Add a new layer based on some <see cref="PrototypeLayerData"/>.
-        /// </summary>
+        [Obsolete("Use SpriteSystem.AddLayer() instead.")]
         public int AddLayer(PrototypeLayerData layerDatum, int? newIndex = null)
-        {
-            var layer = new Layer(this);
+            => Sys.AddLayer((Owner, this), layerDatum, newIndex);
 
-            var index = AddLayer(layer, newIndex);
-
-            LayerSetData(index, layerDatum);
-            return index;
-        }
-
+        [Obsolete("Use SpriteSystem.AddTextureLayer() instead.")]
         public int AddLayer(string texturePath, int? newIndex = null)
         {
             return AddLayer(new ResPath(texturePath), newIndex);
         }
 
+        [Obsolete("Use SpriteSystem.AddTextureLayer() instead.")]
         public int AddLayer(ResPath texturePath, int? newIndex = null)
-        {
-            if (!resourceCache.TryGetResource<TextureResource>(TextureRoot / texturePath, out var texture))
-            {
-                if (texturePath.Extension == "rsi")
-                {
-                    Logger.ErrorS(LogCategory,
-                        "Expected texture but got rsi '{0}', did you mean 'sprite:' instead of 'texture:'?",
-                        texturePath);
-                }
+            => Sys.AddTextureLayer((Owner, this), texturePath, newIndex);
 
-                Logger.ErrorS(LogCategory, "Unable to load texture '{0}'. Trace:\n{1}", texturePath,
-                    Environment.StackTrace);
-            }
-
-            return AddLayer(texture?.Texture, newIndex);
-        }
-
+        [Obsolete("Use SpriteSystem.AddTextureLayer() instead.")]
         public int AddLayer(Texture? texture, int? newIndex = null)
-        {
-            var layer = new Layer(this) { Texture = texture };
-            return AddLayer(layer, newIndex);
-        }
+            => Sys.AddTextureLayer((Owner, this), texture, newIndex);
 
+        [Obsolete("Use SpriteSystem.AddRsiLayer() instead.")]
         public int AddLayer(RSI.StateId stateId, int? newIndex = null)
-        {
-            var layer = new Layer(this) { State = stateId };
-            if (BaseRSI != null && BaseRSI.TryGetState(stateId, out var state))
-            {
-                layer.AnimationTimeLeft = state.GetDelay(0);
-            }
-            else
-            {
-                Logger.ErrorS(LogCategory, "State does not exist in RSI: '{0}'. Trace:\n{1}", stateId,
-                    Environment.StackTrace);
-            }
+            => Sys.AddRsiLayer((Owner, this), stateId, null, newIndex);
 
-            return AddLayer(layer, newIndex);
-        }
-
+        [Obsolete("Use SpriteSystem.AddRsiLayer() instead.")]
         public int AddLayerState(string stateId, int? newIndex = null)
         {
             return AddLayer(new RSI.StateId(stateId), newIndex);
         }
 
+        [Obsolete("Use SpriteSystem.AddRsiLayer() instead.")]
         public int AddLayer(RSI.StateId stateId, string rsiPath, int? newIndex = null)
         {
             return AddLayer(stateId, new ResPath(rsiPath), newIndex);
         }
 
+        [Obsolete("Use SpriteSystem.AddRsiLayer() instead.")]
         public int AddLayerState(string stateId, string rsiPath, int? newIndex = null)
         {
             return AddLayer(new RSI.StateId(stateId), rsiPath, newIndex);
         }
 
+        [Obsolete("Use SpriteSystem.AddRsiLayer() instead.")]
         public int AddLayer(RSI.StateId stateId, ResPath rsiPath, int? newIndex = null)
-        {
-            if (!resourceCache.TryGetResource<RSIResource>(TextureRoot / rsiPath, out var res))
-            {
-                Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, Environment.StackTrace);
-            }
+            => Sys.AddRsiLayer((Owner, this), stateId, rsiPath, newIndex);
 
-            return AddLayer(stateId, res?.RSI, newIndex);
-        }
-
+        [Obsolete("Use SpriteSystem.AddRsiLayer() instead.")]
         public int AddLayerState(string stateId, ResPath rsiPath, int? newIndex = null)
         {
             return AddLayer(new RSI.StateId(stateId), rsiPath, newIndex);
         }
 
+        [Obsolete("Use SpriteSystem.AddRsiLayer() instead.")]
         public int AddLayer(RSI.StateId stateId, RSI? rsi, int? newIndex = null)
-        {
-            var layer = new Layer(this) { State = stateId, RSI = rsi };
-            if (rsi != null && rsi.TryGetState(stateId, out var state))
-            {
-                layer.AnimationTimeLeft = state.GetDelay(0);
-            }
-            else
-            {
-                Logger.ErrorS(LogCategory, "State does not exist in RSI: '{0}'. Trace:\n{1}", stateId,
-                    Environment.StackTrace);
-            }
+            => Sys.AddRsiLayer((Owner, this), stateId, rsi, newIndex);
 
-            return AddLayer(layer, newIndex);
-        }
-
+        [Obsolete("Use SpriteSystem.AddRsiLayer() instead.")]
         public int AddLayerState(string stateId, RSI rsi, int? newIndex = null)
         {
             return AddLayer(new RSI.StateId(stateId), rsi, newIndex);
         }
 
+        [Obsolete("Use SpriteSystem.AddLayer() instead.")]
         public int AddLayer(SpriteSpecifier specifier, int? newIndex = null)
-        {
-            switch (specifier)
-            {
-                case SpriteSpecifier.Texture tex:
-                    return AddLayer(tex.TexturePath, newIndex);
+            => Sys.AddLayer((Owner, this), specifier, newIndex);
 
-                case SpriteSpecifier.Rsi rsi:
-                    return AddLayerState(rsi.RsiState, rsi.RsiPath, newIndex);
-
-                default:
-                    throw new NotImplementedException();
-            }
-        }
-
-        private int AddLayer(Layer layer, int? newIndex)
-        {
-            int index;
-            if (newIndex.HasValue)
-            {
-                Layers.Insert(newIndex.Value, layer);
-                foreach (var kv in LayerMap)
-                {
-                    if (kv.Value >= newIndex.Value)
-                    {
-                        LayerMap[kv.Key] = kv.Value + 1;
-                    }
-                }
-
-                index = newIndex.Value;
-            }
-            else
-            {
-                Layers.Add(layer);
-                index = Layers.Count - 1;
-            }
-
-            RebuildBounds();
-            QueueUpdateIsInert();
-            return index;
-        }
-
+        [Obsolete("Use SpriteSystem.RemoveLayer() instead.")]
         public void RemoveLayer(int layer)
-        {
-            if (!LayerExists(layer))
-                return;
+            => Sys.RemoveLayer((Owner, this), layer);
 
-            Layers.RemoveAt(layer);
-            foreach (var kv in LayerMap)
-            {
-                if (kv.Value == layer)
-                {
-                    LayerMap.Remove(kv.Key);
-                }
-
-                else if (kv.Value > layer)
-                {
-                    LayerMap[kv.Key] = kv.Value - 1;
-                }
-            }
-
-            RebuildBounds();
-            QueueUpdateIsInert();
-        }
-
+        [Obsolete("Use SpriteSystem.RemoveLayer() instead.")]
         public void RemoveLayer(object layerKey)
         {
             if (!LayerMapTryGet(layerKey, out var layer, true))
@@ -669,17 +456,11 @@ namespace Robust.Client.GameObjects
             RemoveLayer(layer);
         }
 
-        private void RebuildBounds()
+        [Obsolete("Use SpriteSystem.RebuildBounds() instead.")]
+        internal void RebuildBounds()
         {
-            _bounds = new Box2();
-            foreach (var layer in Layers)
-            {
-                if (!layer.Visible || layer.Blank) continue;
-
-                _bounds = _bounds.Union(layer.CalculateBoundingBox());
-            }
-            _bounds = _bounds.Scale(Scale);
-            QueueUpdateRenderTree();
+            if (entities.Initialized && entities.TrySystem(out SpriteSystem? sys))
+                sys.RebuildBounds((Owner, this));
         }
 
         /// <summary>
@@ -687,9 +468,12 @@ namespace Robust.Client.GameObjects
         /// </summary>
         public void LayerSetData(int index, PrototypeLayerData layerDatum)
         {
-            if (!TryGetLayer(index, out var layer))
-                return;
+            if (TryGetLayer(index, out var layer))
+                LayerSetData(layer, index, layerDatum);
+        }
 
+        private void LayerSetData(Layer layer, int index, PrototypeLayerData layerDatum)
+        {
             if (!string.IsNullOrWhiteSpace(layerDatum.RsiPath))
             {
                 var path = TextureRoot / layerDatum.RsiPath;
@@ -781,7 +565,6 @@ namespace Robust.Client.GameObjects
                         continue;
                     }
 
-                    _layerMapEnsurePrivate();
                     LayerMap[key] = index;
                 }
             }
@@ -1255,7 +1038,7 @@ namespace Robust.Client.GameObjects
             RenderInternal(drawingHandle, eyeRotation, worldRotation, position, overrideDirection);
         }
 
-        [DataField("noRot")] private bool _screenLock = false;
+        [DataField("noRot")] internal bool _screenLock = false;
 
         /// <summary>
         /// If the sprite only has 1 direction should it snap at cardinals if rotated.
@@ -1374,15 +1157,10 @@ namespace Robust.Client.GameObjects
 
         private void QueueUpdateRenderTree()
         {
-            if (TreeUpdateQueued || !Owner.IsValid())
-                return;
-
-            // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
-            var ev = new QueueSpriteTreeUpdateEvent(entities.GetComponent<TransformComponent>(Owner));
-            entities.EventBus.RaiseComponentEvent(Owner, this, ref ev);
+            TreeSys.QueueTreeUpdate((Owner, this));
         }
 
-        private void QueueUpdateIsInert()
+        internal void QueueUpdateIsInert()
         {
             if (_inertUpdateQueued || !Owner.IsValid())
                 return;

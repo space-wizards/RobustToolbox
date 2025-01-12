@@ -304,7 +304,7 @@ namespace Robust.Client.Graphics.Clyde
                         screenSpriteSize.Y++;
 
                     bool exit = false;
-                    if (entry.Sprite.GetScreenTexture)
+                    if (entry.Sprite.GetScreenTexture && entry.Sprite.PostShader != null)
                     {
                         FlushRenderQueue();
                         var tex = CopyScreenTexture(viewport.RenderTarget);

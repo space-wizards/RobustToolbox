@@ -36,6 +36,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IResourceCache _resourceCache = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
         [Dependency] private readonly SharedTransformSystem _xforms = default!;
+        [Dependency] private readonly SpriteTreeSystem _tree = default!;
 
         private readonly Queue<SpriteComponent> _inertUpdateQueue = new();
 
@@ -45,6 +46,7 @@ namespace Robust.Client.GameObjects
         private readonly HashSet<EntityUid> _queuedFrameUpdate = new();
 
         private ISawmill _sawmill = default!;
+        private EntityQuery<SpriteComponent> _query;
 
         internal void Render(EntityUid uid, SpriteComponent sprite, DrawingHandleWorld drawingHandle, Angle eyeRotation, in Angle worldRotation, in Vector2 worldPosition)
         {
@@ -66,6 +68,7 @@ namespace Robust.Client.GameObjects
 
             Subs.CVar(_cfg, CVars.RenderSpriteDirectionBias, OnBiasChanged, true);
             _sawmill = _logManager.GetSawmill("sprite");
+            _query = GetEntityQuery<SpriteComponent>();
         }
 
         public bool IsVisible(Layer layer)

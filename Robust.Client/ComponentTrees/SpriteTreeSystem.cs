@@ -9,26 +9,6 @@ namespace Robust.Client.ComponentTrees;
 
 public sealed class SpriteTreeSystem : ComponentTreeSystem<SpriteTreeComponent, SpriteComponent>
 {
-    public override void Initialize()
-    {
-        base.Initialize();
-        SubscribeLocalEvent<SpriteComponent, QueueSpriteTreeUpdateEvent>(OnQueueUpdate);
-    }
-
-    private void OnQueueUpdate(EntityUid uid, SpriteComponent component, ref QueueSpriteTreeUpdateEvent args)
-        => QueueTreeUpdate(uid, component, args.Xform);
-
-    // TODO remove this when finally ECSing sprite components
-    [ByRefEvent]
-    internal readonly struct QueueSpriteTreeUpdateEvent
-    {
-        public readonly TransformComponent Xform;
-        public QueueSpriteTreeUpdateEvent(TransformComponent xform)
-        {
-            Xform = xform;
-        }
-    }
-
     #region Component Tree Overrides
     protected override bool DoFrameUpdate => true;
     protected override bool DoTickUpdate => false;

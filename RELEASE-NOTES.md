@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Several SpriteComponent methods have been marked as obsolete, and should be replaced with new methods in SpriteSystem.
 
 ### Internal
 

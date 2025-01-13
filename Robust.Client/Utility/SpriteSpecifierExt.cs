@@ -27,10 +27,11 @@ namespace Robust.Client.Utility
         [Obsolete("Use SpriteSystem")]
         public static RSI.State GetState(this SpriteSpecifier.Rsi rsiSpecifier, IResourceCache cache)
         {
+            var sys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
             if (!cache.TryGetResource<RSIResource>(SpriteSpecifierSerializer.TextureRoot / rsiSpecifier.RsiPath, out var theRsi))
             {
                 Logger.Error("SpriteSpecifier failed to load RSI {0}", rsiSpecifier.RsiPath);
-                return SpriteComponent.GetFallbackState(cache);
+                return sys.GetFallbackState();
             }
 
             if (theRsi.RSI.TryGetState(rsiSpecifier.RsiState, out var state))
@@ -39,7 +40,7 @@ namespace Robust.Client.Utility
             }
 
             Logger.Error($"SpriteSpecifier has invalid RSI state '{rsiSpecifier.RsiState}' for RSI: {rsiSpecifier.RsiPath}");
-            return SpriteComponent.GetFallbackState(cache);
+            return sys.GetFallbackState();
         }
 
         [Obsolete("Use SpriteSystem")]
@@ -67,10 +68,11 @@ namespace Robust.Client.Utility
 
                 case SpriteSpecifier.EntityPrototype prototypeIcon:
                     var protMgr = IoCManager.Resolve<IPrototypeManager>();
+                    var sys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
                     if (!protMgr.TryIndex<EntityPrototype>(prototypeIcon.EntityPrototypeId, out var prototype))
                     {
                         Logger.Error("Failed to load PrototypeIcon {0}", prototypeIcon.EntityPrototypeId);
-                        return SpriteComponent.GetFallbackState(resC);
+                        return sys.GetFallbackState();
                     }
 
                     return SpriteComponent.GetPrototypeIcon(prototype, resC);

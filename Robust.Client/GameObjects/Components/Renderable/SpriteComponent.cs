@@ -1069,7 +1069,7 @@ namespace Robust.Client.GameObjects
             var rsi = layer.Rsi ?? BaseRSI;
             if (rsi == null || !rsi.TryGetState(layer.RsiState, out var state))
             {
-                state = GetFallbackState(resourceCache);
+                state = Sys.GetFallbackState();
             }
 
             return state.RsiDirections switch
@@ -1079,13 +1079,6 @@ namespace Robust.Client.GameObjects
                 RsiDirectionType.Dir8 => 8,
                 _ => throw new ArgumentOutOfRangeException()
             };
-        }
-
-        [Obsolete("Use SpriteSystem instead.")]
-        internal static RSI.State GetFallbackState(IResourceCache cache)
-        {
-            var rsi = cache.GetResource<RSIResource>("/Textures/error.rsi").RSI;
-            return rsi["error"];
         }
 
         public string GetDebugString()
@@ -1547,14 +1540,14 @@ namespace Robust.Client.GameObjects
                 var rsi = ActualRsi;
                 if (rsi == null)
                 {
-                    state = GetFallbackState(_parent.resourceCache);
+                    state = _parent.Sys.GetFallbackState();
                     Logger.ErrorS(LogCategory, "No RSI to pull new state from! Trace:\n{0}", Environment.StackTrace);
                 }
                 else
                 {
                     if (!rsi.TryGetState(stateId, out state))
                     {
-                        state = GetFallbackState(_parent.resourceCache);
+                        state = _parent.Sys.GetFallbackState();
                         Logger.ErrorS(LogCategory, "State '{0}' does not exist in RSI. Trace:\n{1}", stateId,
                             Environment.StackTrace);
                     }
@@ -1653,7 +1646,7 @@ namespace Robust.Client.GameObjects
                 var rsi = RSI ?? _parent.BaseRSI;
                 if (rsi == null || !rsi.TryGetState(State, out _actualState))
                 {
-                    _actualState = GetFallbackState(_parent.resourceCache);
+                    _actualState = _parent.Sys?.GetFallbackState();
                 }
             }
 
@@ -1907,7 +1900,7 @@ namespace Robust.Client.GameObjects
                 var rsi = layer.RSI ?? BaseRSI;
                 if (rsi == null || !rsi.TryGetState(layer.State, out var state))
                 {
-                    state = GetFallbackState(resourceCache);
+                    state = Sys?.GetFallbackState();
                 }
 
                 return state;
@@ -1976,22 +1969,18 @@ namespace Robust.Client.GameObjects
         [Obsolete("Use SpriteSystem")]
         public static IRsiStateLike GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
         {
+            var sys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
             // TODO when moving to a non-static method in a system, pass in IComponentFactory
             if (prototype.TryGetComponent(out IconComponent? icon))
-            {
-                var sys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
                 return sys.GetIcon(icon);
-            }
 
             if (!prototype.Components.ContainsKey("Sprite"))
-            {
-                return GetFallbackState(resourceCache);
-            }
+                return sys.GetFallbackState();
 
             var entityManager = IoCManager.Resolve<IEntityManager>();
             var dummy = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace);
             var spriteComponent = entityManager.EnsureComponent<SpriteComponent>(dummy);
-            var result = spriteComponent.Icon ?? GetFallbackState(resourceCache);
+            var result = spriteComponent.Icon ?? sys.GetFallbackState();
             entityManager.DeleteEntity(dummy);
 
             return result;

@@ -64,12 +64,12 @@ public sealed partial class SpriteSystem
         {
             case SpriteSpecifier.Texture tex:
                 LayerSetTexture(sprite, index, tex.TexturePath);
-
                 break;
+
             case SpriteSpecifier.Rsi rsi:
                 LayerSetRsi(sprite, index, rsi.RsiPath, rsi.RsiState);
-
                 break;
+
             default:
                 throw new NotImplementedException();
         }
@@ -340,10 +340,8 @@ public sealed partial class SpriteSystem
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
             return;
 
-        if (!TryGetLayer(sprite, index, out var layer, true))
-            return;
-
-        LayerSetRotation(layer, value);
+        if (TryGetLayer(sprite, index, out var layer, true))
+            LayerSetRotation(layer, value);
     }
 
     public void LayerSetRotation(Layer layer, Angle value)
@@ -383,13 +381,11 @@ public sealed partial class SpriteSystem
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
             return;
 
-        if (!TryGetLayer(sprite, index, out var layer, true))
-            return;
-
-        LayerSetOffset(layer, value);
+        if (TryGetLayer(sprite, index, out var layer, true))
+            LayerSetOffset(layer, value);
     }
 
-    private void LayerSetOffset(Layer layer, Vector2 value)
+    public void LayerSetOffset(Layer layer, Vector2 value)
     {
         if (layer._offset.EqualsApprox(value))
             return;
@@ -426,13 +422,11 @@ public sealed partial class SpriteSystem
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
             return;
 
-        if (!TryGetLayer(sprite, index, out var layer, true))
-            return;
-
-        LayerSetVisible(layer, value);
+        if (TryGetLayer(sprite, index, out var layer, true))
+            LayerSetVisible(layer, value);
     }
 
-    private void LayerSetVisible(Layer layer, bool value)
+    public void LayerSetVisible(Layer layer, bool value)
     {
         if (layer._visible == value)
             return;
@@ -476,7 +470,7 @@ public sealed partial class SpriteSystem
         layer.Color = value;
     }
 
-    private void LayerSetColor(Layer layer, Color value)
+    public void LayerSetColor(Layer layer, Color value)
     {
         //Yes this is trivial, but this is here mainly for future proofing.
         layer.Color = value;
@@ -509,13 +503,11 @@ public sealed partial class SpriteSystem
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
             return;
 
-        if (!TryGetLayer(sprite, index, out var layer, true))
-            return;
-
-        LayerSetDirOffset(layer, value);
+        if (TryGetLayer(sprite, index, out var layer, true))
+            LayerSetDirOffset(layer, value);
     }
 
-    private void LayerSetDirOffset(Layer layer, DirectionOffset value)
+    public void LayerSetDirOffset(Layer layer, DirectionOffset value)
     {
         //Yes this is trivial, but this is here mainly for future proofing.
         layer.DirOffset = value;
@@ -537,6 +529,106 @@ public sealed partial class SpriteSystem
 
         if (LayerMapTryGet(sprite, key, out var index, true))
             LayerSetDirOffset(sprite, index, value);
+    }
+
+    #endregion
+
+    #region AnimationTime
+
+    public void LayerSetAnimationTime(Entity<SpriteComponent?> sprite, int index, float value)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (TryGetLayer(sprite, index, out var layer, true))
+            LayerSetAnimationTime(layer, value);
+    }
+
+    public void LayerSetAnimationTime(Layer layer, float value)
+    {
+        if (!layer.StateId.IsValid)
+            return;
+
+        if (layer.ActualRsi is not {} rsi)
+            return;
+
+        var state = rsi[layer.StateId];
+        if (value > layer.AnimationTime)
+        {
+            // Handle advancing differently from going backwards.
+            layer.AnimationTimeLeft -= (value - layer.AnimationTime);
+        }
+        else
+        {
+            // Going backwards we re-calculate from zero.
+            // Definitely possible to optimize this for going backwards but I'm too lazy to figure that out.
+            layer.AnimationTimeLeft = -value + state.GetDelay(0);
+            layer.AnimationFrame = 0;
+        }
+
+        layer.AnimationTime = value;
+        layer.AdvanceFrameAnimation(state);
+        layer.SetAnimationTime(value);
+    }
+
+    public void LayerSetAnimationTime(Entity<SpriteComponent?> sprite, string key, float value)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (LayerMapTryGet(sprite, key, out var index, true))
+            LayerSetAnimationTime(sprite, index, value);
+    }
+
+    public void LayerSetAnimationTime(Entity<SpriteComponent?> sprite, Enum key, float value)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (LayerMapTryGet(sprite, key, out var index, true))
+            LayerSetAnimationTime(sprite, index, value);
+    }
+
+    #endregion
+
+    #region AutoAnimated
+
+    public void LayerSetAutoAnimated(Entity<SpriteComponent?> sprite, int index, bool value)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (!TryGetLayer(sprite, index, out var layer, true))
+            return;
+
+        LayerSetAutoAnimated(layer, value);
+    }
+
+    public void LayerSetAutoAnimated(Layer layer, bool value)
+    {
+        if (layer._autoAnimated == value)
+            return;
+
+        layer._autoAnimated = value;
+        QueueUpdateIsInert(layer.Owner);
+    }
+
+    public void LayerSetAutoAnimated(Entity<SpriteComponent?> sprite, string key, bool value)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (LayerMapTryGet(sprite, key, out var index, true))
+            LayerSetAutoAnimated(sprite, index, value);
+    }
+
+    public void LayerSetAutoAnimated(Entity<SpriteComponent?> sprite, Enum key, bool value)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (LayerMapTryGet(sprite, key, out var index, true))
+            LayerSetAutoAnimated(sprite, index, value);
     }
 
     #endregion

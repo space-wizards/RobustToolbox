@@ -858,16 +858,11 @@ namespace Robust.Client.GameObjects
             LayerSetDirOffset(layer, offset);
         }
 
-        #endregion
-
+        [Obsolete("Use SpriteSystem.LayerSetAnimationTime() instead.")]
         public void LayerSetAnimationTime(int layer, float animationTime)
-        {
-            if (!TryGetLayer(layer, out var theLayer, true))
-                return;
+            => Sys.LayerSetAnimationTime((Owner, this), layer, animationTime);
 
-            theLayer.SetAnimationTime(animationTime);
-        }
-
+        [Obsolete("Use SpriteSystem.LayerSetAnimationTime() instead.")]
         public void LayerSetAnimationTime(object layerKey, float animationTime)
         {
             if (!LayerMapTryGet(layerKey, out var layer, true))
@@ -876,14 +871,11 @@ namespace Robust.Client.GameObjects
             LayerSetAnimationTime(layer, animationTime);
         }
 
+        [Obsolete("Use SpriteSystem.LayerSetAutoAnimated() instead.")]
         public void LayerSetAutoAnimated(int layer, bool autoAnimated)
-        {
-            if (!TryGetLayer(layer, out var theLayer, true))
-                return;
+            => Sys.LayerSetAutoAnimated((Owner, this), layer, autoAnimated);
 
-            theLayer.AutoAnimated = autoAnimated;
-        }
-
+        [Obsolete("Use SpriteSystem.LayerSetAutoAnimated() instead.")]
         public void LayerSetAutoAnimated(object layerKey, bool autoAnimated)
         {
             if (!LayerMapTryGet(layerKey, out var layer, true))
@@ -891,6 +883,8 @@ namespace Robust.Client.GameObjects
 
             LayerSetAutoAnimated(layer, autoAnimated);
         }
+
+        #endregion
 
         public void LayerSetRenderingStrategy(int layer, LayerRenderingStrategy renderingStrategy)
         {

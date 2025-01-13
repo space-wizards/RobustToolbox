@@ -27,7 +27,7 @@ public sealed partial class SpriteSystem
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
             return;
 
-        if (!ValidateScale(sprite.Owner, value))
+        if (!ValidateScale(sprite!, value))
             return;
 
         sprite.Comp._bounds = sprite.Comp._bounds.Scale(value / sprite.Comp.scale);

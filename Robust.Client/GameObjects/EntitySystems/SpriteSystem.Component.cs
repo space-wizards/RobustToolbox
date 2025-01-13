@@ -55,34 +55,42 @@ public sealed partial class SpriteSystem
         if (!Resolve(target.Owner, ref target.Comp))
             return;
 
-        CopySprite(source.Comp, target.Comp);
-    }
+        target.Comp._baseRsi = source.Comp._baseRsi;
+        target.Comp._bounds = source.Comp._bounds;
+        target.Comp._visible = source.Comp._visible;
+        target.Comp.color = source.Comp.color;
+        target.Comp.offset = source.Comp.offset;
+        target.Comp.rotation = source.Comp.rotation;
+        target.Comp.scale = source.Comp.scale;
+        target.Comp.LocalMatrix = Matrix3Helpers.CreateTransform(
+            in target.Comp.offset,
+            in target.Comp.rotation,
+            in target
+            .Comp.scale);
 
-    public void CopySprite(SpriteComponent source, SpriteComponent target)
-    {
-        target._baseRsi = source._baseRsi;
-        target._bounds = source._bounds;
-        target._visible = source._visible;
-        target.color = source.color;
-        target.offset = source.offset;
-        target.rotation = source.rotation;
-        target.scale = source.scale;
-        target.LocalMatrix = Matrix3Helpers.CreateTransform(in target.offset, in target.rotation, in target.scale);
-        target.drawDepth = source.drawDepth;
-        target.NoRotation = source.NoRotation;
-        target.DirectionOverride = source.DirectionOverride;
-        target.EnableDirectionOverride = source.EnableDirectionOverride;
-        target.Layers = new List<SpriteComponent.Layer>(source.Layers.Count);
-        foreach (var otherLayer in source.Layers)
+        target.Comp.drawDepth = source.Comp.drawDepth;
+        target.Comp.NoRotation = source.Comp.NoRotation;
+        target.Comp.DirectionOverride = source.Comp.DirectionOverride;
+        target.Comp.EnableDirectionOverride = source.Comp.EnableDirectionOverride;
+        target.Comp.Layers = new List<SpriteComponent.Layer>(source.Comp.Layers.Count);
+        foreach (var otherLayer in source.Comp.Layers)
         {
-            target.Layers.Add(new SpriteComponent.Layer(otherLayer, target));
+            var layer = new SpriteComponent.Layer(otherLayer, target.Comp);
+            layer.Index = target.Comp.Layers.Count;
+            layer.Owner = target!;
+            target.Comp.Layers.Add(layer);
         }
 
-        target.IsInert = source.IsInert;
-        target.LayerMap = source.LayerMap.ShallowClone();
-        target.PostShader = source.PostShader is {Mutable: true} ? source.PostShader.Duplicate() : source.PostShader;
-        target.RenderOrder = source.RenderOrder;
-        target.GranularLayersRendering = source.GranularLayersRendering;
+        target.Comp.IsInert = source.Comp.IsInert;
+        target.Comp.LayerMap = source.Comp.LayerMap.ShallowClone();
+        target.Comp.PostShader = source.Comp.PostShader is {Mutable: true}
+            ? source.Comp.PostShader.Duplicate()
+            : source.Comp.PostShader;
+
+        target.Comp.RenderOrder = source.Comp.RenderOrder;
+        target.Comp.GranularLayersRendering = source.Comp.GranularLayersRendering;
+
+        _tree.QueueTreeUpdate(target!);
     }
 
     public void RebuildBounds(Entity<SpriteComponent> sprite)
@@ -90,7 +98,7 @@ public sealed partial class SpriteSystem
         // TODO SPRITE
         // Maybe the bounds calculation should be deferred?
         // The tree update is already deferred anyways.
-        // And layer.CalculateBoundingBox() is relatively expensive.
+        // And layer.CalculateBoundingBox() is relatively expensive for sprites like players
 
         var bounds = new Box2();
         foreach (var layer in sprite.Comp.Layers)

@@ -112,7 +112,7 @@ public sealed partial class SpriteSystem
             return -1;
         }
 
-        layer.Owner = sprite.Owner!;
+        layer.Owner = sprite!;
 
         if (index is { } i && i != sprite.Comp.Layers.Count)
         {
@@ -144,8 +144,11 @@ public sealed partial class SpriteSystem
         }
 #endif
 
-        RebuildBounds(sprite!);
-        QueueUpdateIsInert(sprite!);
+        if (!layer.Blank)
+        {
+            RebuildBounds(sprite!);
+            QueueUpdateIsInert(sprite!);
+        }
         return layer.Index;
     }
 
@@ -162,15 +165,14 @@ public sealed partial class SpriteSystem
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
             return -1;
 
-        var layer = new Layer {State = stateId, RSI = rsi};
-        rsi ??= sprite.Comp._baseRsi;
+        var layer = AddBlankLayer(sprite!, index);
 
-        if (rsi != null && rsi.TryGetState(stateId, out var state))
-            layer.AnimationTimeLeft = state.GetDelay(0);
+        if (rsi != null)
+            LayerSetRsi(layer, rsi, stateId);
         else
-            Log.Error($"State does not exist in RSI: '{stateId}'. Trace:\n{Environment.StackTrace}");
+            LayerSetRsiState(layer, stateId);
 
-        return AddLayer(sprite, layer, index);
+        return layer.Index;
     }
 
     /// <summary>

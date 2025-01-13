@@ -282,10 +282,8 @@ namespace Robust.Client.GameObjects
                 Layers.Clear();
                 foreach (var datum in layerDatums)
                 {
-                    var layer = new Layer();
+                    var layer = new Layer((Owner, this), Layers.Count);
                     Layers.Add(layer);
-                    layer.Owner = (Owner, this);
-                    layer.Index = Layers.Count - 1;
                     LayerSetData(layer, datum);
                 }
 
@@ -310,7 +308,7 @@ namespace Robust.Client.GameObjects
         [Obsolete("Use SpriteSystem.CopySprite() instead.")]
         public void CopyFrom(SpriteComponent other)
         {
-            Sys.CopySprite(other, this);
+            Sys.CopySprite((other.Owner, other), (Owner, this));
         }
 
         [Obsolete("Use LocalMatrix")]
@@ -1147,11 +1145,20 @@ namespace Robust.Client.GameObjects
         {
             internal SpriteComponent _parent => Owner.Comp;
 
+            /// <summary>
+            /// The entity that this layer belongs to.
+            /// </summary>
             [Access(typeof(SpriteSystem), typeof(SpriteComponent))]
-            [ViewVariables] public Entity<SpriteComponent> Owner;
+            [ViewVariables] internal Entity<SpriteComponent> Owner;
+            // Internal, because I might want to change this in future W/O breaking changes.
+            // Also, it's possible for SpriteComponent to be null if it is not currently attached to a sprite.
 
+            /// <summary>
+            /// The index of the layer within its layer collection (usually a SpriteComponent).
+            /// </summary>
             [Access(typeof(SpriteSystem), typeof(SpriteComponent))]
-            [ViewVariables] public int Index;
+            [ViewVariables] internal int Index;
+            // Internal, because I might want to change this in future W/O breaking changes.
 
             [ViewVariables] public string? ShaderPrototype;
             [ViewVariables] public ShaderInstance? Shader;
@@ -1320,11 +1327,24 @@ namespace Robust.Client.GameObjects
             [ViewVariables(VVAccess.ReadWrite)]
             public CopyToShaderParameters? CopyToShaderParameters;
 
-            public Layer()
+            [Obsolete("Use SpriteSystem.AddBlankLayer")]
+            public Layer(SpriteComponent parent)
+            {
+                Owner = (parent.Owner, parent);
+            }
+
+            internal Layer()
             {
             }
 
-            public Layer(Layer toClone, SpriteComponent _)
+            internal Layer(Entity<SpriteComponent> owner, int index)
+            {
+                Owner = owner;
+                Index = index;
+            }
+
+            [Obsolete] // This should be internal to SpriteSystem
+            public Layer(Layer toClone, SpriteComponent parent) : this(parent)
             {
                 if (toClone.Shader != null)
                 {
@@ -1350,6 +1370,8 @@ namespace Robust.Client.GameObjects
                     CopyToShaderParameters = new CopyToShaderParameters(copyToShaderParameters);
             }
 
+            // TODO SPRITE
+            // Is Layer even serializable?
             void ISerializationHooks.AfterDeserialization()
             {
                 UpdateLocalMatrix();

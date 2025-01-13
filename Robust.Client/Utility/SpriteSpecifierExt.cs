@@ -27,9 +27,9 @@ namespace Robust.Client.Utility
         [Obsolete("Use SpriteSystem")]
         public static RSI.State GetState(this SpriteSpecifier.Rsi rsiSpecifier, IResourceCache cache)
         {
-            var sys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
             if (!cache.TryGetResource<RSIResource>(SpriteSpecifierSerializer.TextureRoot / rsiSpecifier.RsiPath, out var theRsi))
             {
+                var sys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
                 Logger.Error("SpriteSpecifier failed to load RSI {0}", rsiSpecifier.RsiPath);
                 return sys.GetFallbackState();
             }
@@ -40,7 +40,7 @@ namespace Robust.Client.Utility
             }
 
             Logger.Error($"SpriteSpecifier has invalid RSI state '{rsiSpecifier.RsiState}' for RSI: {rsiSpecifier.RsiPath}");
-            return sys.GetFallbackState();
+            return IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>().GetFallbackState();
         }
 
         [Obsolete("Use SpriteSystem")]

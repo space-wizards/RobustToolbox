@@ -38,6 +38,9 @@ public sealed partial class SpriteSystem
 
     public void LayerSetData(Layer layer, PrototypeLayerData data)
     {
+        DebugTools.Assert(layer.Owner != default);
+        DebugTools.AssertNotNull(layer.Owner.Comp);
+        DebugTools.AssertEqual(layer.Owner.Comp.Layers[layer.Index], layer);
         // TODO SPRITE ECS
         layer._parent.LayerSetData(layer, data);
     }
@@ -163,6 +166,10 @@ public sealed partial class SpriteSystem
 
     public void LayerSetRsiState(Layer layer, StateId state, bool refresh = false)
     {
+        DebugTools.Assert(layer.Owner != default);
+        DebugTools.AssertNotNull(layer.Owner.Comp);
+        DebugTools.AssertEqual(layer.Owner.Comp.Layers[layer.Index], layer);
+
         if (layer.StateId == state && !refresh)
             return;
 
@@ -271,6 +278,10 @@ public sealed partial class SpriteSystem
 
     public void LayerSetScale(Layer layer, Vector2 value)
     {
+        DebugTools.Assert(layer.Owner != default);
+        DebugTools.AssertNotNull(layer.Owner.Comp);
+        DebugTools.AssertEqual(layer.Owner.Comp.Layers[layer.Index], layer);
+
         if (layer._scale.EqualsApprox(value))
             return;
 
@@ -306,6 +317,10 @@ public sealed partial class SpriteSystem
 
     public void LayerSetRotation(Layer layer, Angle value)
     {
+        DebugTools.Assert(layer.Owner != default);
+        DebugTools.AssertNotNull(layer.Owner.Comp);
+        DebugTools.AssertEqual(layer.Owner.Comp.Layers[layer.Index], layer);
+
         if (layer._rotation.EqualsApprox(value))
             return;
 
@@ -338,6 +353,10 @@ public sealed partial class SpriteSystem
 
     public void LayerSetOffset(Layer layer, Vector2 value)
     {
+        DebugTools.Assert(layer.Owner != default);
+        DebugTools.AssertNotNull(layer.Owner.Comp);
+        DebugTools.AssertEqual(layer.Owner.Comp.Layers[layer.Index], layer);
+
         if (layer._offset.EqualsApprox(value))
             return;
 
@@ -370,6 +389,10 @@ public sealed partial class SpriteSystem
 
     public void LayerSetVisible(Layer layer, bool value)
     {
+        DebugTools.Assert(layer.Owner != default);
+        DebugTools.AssertNotNull(layer.Owner.Comp);
+        DebugTools.AssertEqual(layer.Owner.Comp.Layers[layer.Index], layer);
+
         if (layer._visible == value)
             return;
 
@@ -402,6 +425,10 @@ public sealed partial class SpriteSystem
 
     public void LayerSetColor(Layer layer, Color value)
     {
+        DebugTools.Assert(layer.Owner != default);
+        DebugTools.AssertNotNull(layer.Owner.Comp);
+        DebugTools.AssertEqual(layer.Owner.Comp.Layers[layer.Index], layer);
+
         layer.Color = value;
     }
 
@@ -429,6 +456,10 @@ public sealed partial class SpriteSystem
 
     public void LayerSetDirOffset(Layer layer, DirectionOffset value)
     {
+        DebugTools.Assert(layer.Owner != default);
+        DebugTools.AssertNotNull(layer.Owner.Comp);
+        DebugTools.AssertEqual(layer.Owner.Comp.Layers[layer.Index], layer);
+
         layer.DirOffset = value;
     }
 
@@ -456,6 +487,10 @@ public sealed partial class SpriteSystem
 
     public void LayerSetAnimationTime(Layer layer, float value)
     {
+        DebugTools.Assert(layer.Owner != default);
+        DebugTools.AssertNotNull(layer.Owner.Comp);
+        DebugTools.AssertEqual(layer.Owner.Comp.Layers[layer.Index], layer);
+
         if (!layer.StateId.IsValid)
             return;
 
@@ -505,6 +540,10 @@ public sealed partial class SpriteSystem
 
     public void LayerSetAutoAnimated(Layer layer, bool value)
     {
+        DebugTools.Assert(layer.Owner != default);
+        DebugTools.AssertNotNull(layer.Owner.Comp);
+        DebugTools.AssertEqual(layer.Owner.Comp.Layers[layer.Index], layer);
+
         if (layer._autoAnimated == value)
             return;
 
@@ -536,6 +575,10 @@ public sealed partial class SpriteSystem
 
     public void LayerSetRenderingStrategy(Layer layer, LayerRenderingStrategy value)
     {
+        DebugTools.Assert(layer.Owner != default);
+        DebugTools.AssertNotNull(layer.Owner.Comp);
+        DebugTools.AssertEqual(layer.Owner.Comp.Layers[layer.Index], layer);
+
         layer.RenderingStrategy = value;
     }
 

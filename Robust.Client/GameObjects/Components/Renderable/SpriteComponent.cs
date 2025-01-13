@@ -1358,8 +1358,11 @@ namespace Robust.Client.GameObjects
                     _visible = value;
 
                     // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
-                    _parent.Sys?.QueueUpdateIsInert((_parent.Owner, _parent));
-                    _parent.Sys?.RebuildBounds((_parent.Owner, _parent));
+                    if (_parent.Owner != EntityUid.Invalid)
+                        _parent.Sys?.QueueUpdateIsInert((_parent.Owner, _parent));
+
+                    if (_parent.Owner != EntityUid.Invalid)
+                        _parent.Sys?.RebuildBounds((_parent.Owner, _parent));
                 }
             }
 
@@ -1380,7 +1383,8 @@ namespace Robust.Client.GameObjects
                         return;
                     _autoAnimated = value;
                     // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
-                    _parent.Sys?.QueueUpdateIsInert((_parent.Owner, _parent));
+                    if (_parent.Owner != EntityUid.Invalid)
+                        _parent.Sys?.QueueUpdateIsInert((_parent.Owner, _parent));
                 }
             }
 
@@ -1395,7 +1399,8 @@ namespace Robust.Client.GameObjects
                     _offset = value;
                     UpdateLocalMatrix();
                     // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
-                    _parent.Sys?.RebuildBounds((_parent.Owner, _parent));
+                    if (_parent.Owner != EntityUid.Invalid)
+                        _parent.Sys?.RebuildBounds((_parent.Owner, _parent));
                 }
             }
 

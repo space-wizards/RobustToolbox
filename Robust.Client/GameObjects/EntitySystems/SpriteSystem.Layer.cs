@@ -202,7 +202,7 @@ public sealed partial class SpriteSystem
             return -1;
 
         index = AddBlankLayer(sprite, index);
-        sprite.Comp.LayerSetData(index, layerDatum);
+        sprite.Comp.LayerSetData(index.Value, layerDatum);
         return index.Value;
     }
 

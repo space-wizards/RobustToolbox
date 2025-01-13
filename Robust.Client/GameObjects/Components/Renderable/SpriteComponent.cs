@@ -642,8 +642,7 @@ namespace Robust.Client.GameObjects
             LayerSetData(layer, data);
         }
 
-        #endregion
-
+        [Obsolete("Use SpriteSystem.LayerSetSprite() instead.")]
         public void LayerSetSprite(int layer, SpriteSpecifier specifier)
         {
             switch (specifier)
@@ -659,6 +658,7 @@ namespace Robust.Client.GameObjects
             }
         }
 
+        [Obsolete("Use SpriteSystem.LayerSetSprite() instead.")]
         public void LayerSetSprite(object layerKey, SpriteSpecifier specifier)
         {
             if (!LayerMapTryGet(layerKey, out var layer, true))
@@ -666,6 +666,8 @@ namespace Robust.Client.GameObjects
 
             LayerSetSprite(layer, specifier);
         }
+
+        #endregion
 
         public void LayerSetTexture(int layer, Texture? texture)
         {

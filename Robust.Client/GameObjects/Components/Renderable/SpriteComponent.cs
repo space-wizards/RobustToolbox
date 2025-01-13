@@ -616,7 +616,8 @@ namespace Robust.Client.GameObjects
             }
 
             // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
-            Sys?.RebuildBounds((Owner, this));
+            if (Owner != EntityUid.Invalid)
+                Sys?.RebuildBounds((Owner, this));
 
             object ParseKey(string keyString)
             {

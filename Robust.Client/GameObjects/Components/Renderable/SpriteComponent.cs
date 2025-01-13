@@ -239,6 +239,11 @@ namespace Robust.Client.GameObjects
 
         [ViewVariables(VVAccess.ReadWrite)] public bool IsInert { get; internal set; }
 
+        public ISpriteLayer this[int layer] => Layers[layer];
+        public ISpriteLayer this[Index layer] => Layers[layer];
+        public ISpriteLayer this[object layerKey] => this[LayerMap[layerKey]];
+        public IEnumerable<ISpriteLayer> AllLayers => Layers;
+
         void ISerializationHooks.AfterDeserialization()
         {
             // Please somebody burn this to the ground. There is so much spaghetti.
@@ -639,45 +644,6 @@ namespace Robust.Client.GameObjects
 
         #endregion
 
-        public void LayerSetShader(int layer, ShaderInstance? shader, string? prototype = null)
-        {
-            if (!TryGetLayer(layer, out var theLayer, true))
-                return;
-
-            theLayer.Shader = shader;
-            theLayer.ShaderPrototype = prototype;
-        }
-
-        public void LayerSetShader(object layerKey, ShaderInstance shader, string? prototype = null)
-        {
-            if (!LayerMapTryGet(layerKey, out var layer, true))
-                return;
-
-            LayerSetShader(layer, shader, prototype);
-        }
-
-        public void LayerSetShader(int layer, string shaderName)
-        {
-            if (!prototypes.TryIndex<ShaderPrototype>(shaderName, out var prototype))
-            {
-                Logger.ErrorS(LogCategory, "Shader prototype '{0}' does not exist. Trace:\n{1}", shaderName,
-                    Environment.StackTrace);
-
-                LayerSetShader(layer, null, null);
-                return;
-            }
-
-            LayerSetShader(layer, prototype.Instance(), shaderName);
-        }
-
-        public void LayerSetShader(object layerKey, string shaderName)
-        {
-            if (!LayerMapTryGet(layerKey, out var layer, true))
-                return;
-
-            LayerSetShader(layer, shaderName);
-        }
-
         public void LayerSetSprite(int layer, SpriteSpecifier specifier)
         {
             switch (specifier)
@@ -1050,10 +1016,46 @@ namespace Robust.Client.GameObjects
             return this[layerKey].ActualRsi;
         }
 
-        public ISpriteLayer this[int layer] => Layers[layer];
-        public ISpriteLayer this[Index layer] => Layers[layer];
-        public ISpriteLayer this[object layerKey] => this[LayerMap[layerKey]];
-        public IEnumerable<ISpriteLayer> AllLayers => Layers;
+        public void LayerSetShader(int layer, ShaderInstance? shader, string? prototype = null)
+        {
+            if (!TryGetLayer(layer, out var theLayer, true))
+                return;
+
+            theLayer.Shader = shader;
+            theLayer.ShaderPrototype = prototype;
+        }
+
+        public void LayerSetShader(object layerKey, ShaderInstance shader, string? prototype = null)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer, true))
+                return;
+
+            LayerSetShader(layer, shader, prototype);
+        }
+
+        public void LayerSetShader(int layer, string shaderName)
+        {
+            if (!prototypes.TryIndex<ShaderPrototype>(shaderName, out var prototype))
+            {
+                Logger.ErrorS(LogCategory,
+                    "Shader prototype '{0}' does not exist. Trace:\n{1}",
+                    shaderName,
+                    Environment.StackTrace);
+
+                LayerSetShader(layer, null, null);
+                return;
+            }
+
+            LayerSetShader(layer, prototype.Instance(), shaderName);
+        }
+
+        public void LayerSetShader(object layerKey, string shaderName)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer, true))
+                return;
+
+            LayerSetShader(layer, shaderName);
+        }
 
         // Lobby SpriteView rendering path
         public void Render(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Direction? overrideDirection = null, Vector2 position = default)

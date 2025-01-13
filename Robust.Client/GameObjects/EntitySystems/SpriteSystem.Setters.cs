@@ -9,14 +9,14 @@ namespace Robust.Client.GameObjects;
 // This partial class contains various public methods for setting sprite component data.
 public sealed partial class SpriteSystem
 {
-    private bool ValidateScale(EntityUid uid, Vector2 scale)
+    private bool ValidateScale(Entity<SpriteComponent> sprite, Vector2 scale)
     {
         if (!(MathF.Abs(scale.X) < 0.005f) && !(MathF.Abs(scale.Y) < 0.005f))
             return true;
 
         // Scales of ~0.0025 or lower can lead to singular matrices due to rounding errors.
         Log.Error(
-            $"Attempted to set layer sprite scale to very small values. Entity: {ToPrettyString(uid)}. Scale: {scale}");
+            $"Attempted to set layer sprite scale to very small values. Entity: {ToPrettyString(sprite)}. Scale: {scale}");
 
         return false;
     }

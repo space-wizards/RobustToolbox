@@ -1149,7 +1149,9 @@ namespace Robust.Client.GameObjects
 
         public sealed class Layer : ISpriteLayer, ISerializationHooks
         {
-            [ViewVariables] internal readonly SpriteComponent _parent;
+            internal SpriteComponent _parent => Owner.Comp;
+
+            [ViewVariables] public readonly Entity<SpriteComponent> Owner;
 
             [ViewVariables] public string? ShaderPrototype;
             [ViewVariables] public ShaderInstance? Shader;
@@ -1268,7 +1270,7 @@ namespace Robust.Client.GameObjects
             [ViewVariables(VVAccess.ReadWrite)]
             public Color Color { get; set; } = Color.White;
 
-            private bool _autoAnimated = true;
+            internal bool _autoAnimated = true;
             [ViewVariables(VVAccess.ReadWrite)]
             public bool AutoAnimated
             {
@@ -1320,12 +1322,13 @@ namespace Robust.Client.GameObjects
 
             public Layer(SpriteComponent parent)
             {
-                _parent = parent;
+                Owner = (parent.Owner, parent);
             }
 
             public Layer(Layer toClone, SpriteComponent parentSprite)
             {
-                _parent = parentSprite;
+                Owner = (parentSprite.Owner, parentSprite);
+
                 if (toClone.Shader != null)
                 {
                     Shader = toClone.Shader.Mutable ? toClone.Shader.Duplicate() : toClone.Shader;

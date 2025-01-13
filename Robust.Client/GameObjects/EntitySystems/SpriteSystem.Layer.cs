@@ -9,7 +9,8 @@ using static Robust.Client.GameObjects.SpriteComponent;
 
 namespace Robust.Client.GameObjects;
 
-// This partial class contains various public methods for manipulating layers.
+// This partial class contains various public methods for managing a sprite's layers.
+// This setter methods for modifying a layer's properties are in a separate file.
 public sealed partial class SpriteSystem
 {
     public bool LayerExists(Entity<SpriteComponent?> sprite, int index)

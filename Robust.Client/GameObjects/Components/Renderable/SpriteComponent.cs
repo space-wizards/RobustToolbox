@@ -488,18 +488,12 @@ namespace Robust.Client.GameObjects
         [DataField("enableOverrideDir")]
         public bool EnableDirectionOverride;
 
-        #endregion
-
-        /// <summary>
-        ///     Fills in a layer's values using some <see cref="PrototypeLayerData"/>.
-        /// </summary>
+        [Obsolete("Use SpriteSystem.LayerSetData() instead.")]
         public void LayerSetData(int index, PrototypeLayerData layerDatum)
-        {
-            if (TryGetLayer(index, out var layer))
-                LayerSetData(layer, index, layerDatum);
-        }
+            => Sys.LayerSetData((Owner, this), index, layerDatum);
 
-        private void LayerSetData(Layer layer, int index, PrototypeLayerData layerDatum)
+        [Obsolete("Use SpriteSystem.LayerSetData() instead.")]
+        internal void LayerSetData(Layer layer, int index, PrototypeLayerData layerDatum)
         {
             if (!string.IsNullOrWhiteSpace(layerDatum.RsiPath))
             {
@@ -623,16 +617,17 @@ namespace Robust.Client.GameObjects
 
             // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
             Sys?.RebuildBounds((Owner, this));
+
+            object ParseKey(string keyString)
+            {
+                if (reflection.TryParseEnumReference(keyString, out var @enum))
+                    return @enum;
+
+                return keyString;
+            }
         }
 
-        private object ParseKey(string keyString)
-        {
-            if (reflection.TryParseEnumReference(keyString, out var @enum))
-                return @enum;
-
-            return keyString;
-        }
-
+        [Obsolete("Use SpriteSystem.LayerSetData() instead.")]
         public void LayerSetData(object layerKey, PrototypeLayerData data)
         {
             if (!LayerMapTryGet(layerKey, out var layer, true))
@@ -640,6 +635,8 @@ namespace Robust.Client.GameObjects
 
             LayerSetData(layer, data);
         }
+
+        #endregion
 
         public void LayerSetShader(int layer, ShaderInstance? shader, string? prototype = null)
         {

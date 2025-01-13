@@ -1,4 +1,4 @@
-# Release notes for RobustToolbox.
+﻿# Release notes for RobustToolbox.
 
 <!--
 NOTE: automatically updated sometimes by version.py.
@@ -39,7 +39,89 @@ END TEMPLATE-->
 
 ### New features
 
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 239.0.0
+
+### Breaking changes
+
+* Robust now uses **.NET 9**.
+* `ISerializationManager` will now log errors if it encounters `Entity<T>` data-fields.
+  * To be clear, this has never been supported and is not really a breaking change, but this will likely require manual intervention to prevent tests from failing.
+* `IClyde.TextInputSetRect`, `TextInputStart` and `TextInputStop` have been moved to be on `IClydeWindow`.
+* Updated various NuGet dependencies and removed some other ones, of note:
+  * `FastAccessors`, which is a transitive dep we never used, is now gone. It might have snuck into some `using` statement thanks to your IDE, and those will now fail to compile. Remove them.
+  * NUnit `Is.EqualTo(default)` seems to have ambiguous overload resolution in some cases now, this can be fixed by using an explicit `default(type)` syntax.
+  * This also fixed various false-positive warnings reported by NuGet.
+
+### New features
+
+* Added `MockInterfaces.MakeConfigurationManager` for creating functional configuration managers for unit test mocking.
+* Added `ISawmill.IsLogLevelEnabled()` to avoid doing expensive verbose logging operations when not necessary.
+* ``string[] Split(System.ReadOnlySpan`1<char>)`` is now available in sandbox.
+
+### Bugfixes
+
+* Fixed auto-generated component delta-states not raising `AfterAutoHandleStateEvent`
+* Fixed auto-generated component delta-states improperly implementing `IComponentDeltaState` methods. May have caused bugs in replays.
+* Fixed `Robust.Client.WebView` on the launcher via a new release.
+* Fixed an exception that could occur when saving a map that had tiles migrated by alias.
+
+### Other
+
+* The `loglevel` command now properly shows the "`null`" log level that resets the level to inheriting from parent. This was already supported by it, but the completions didn't list it.
+
+### Internal
+
+* Experimental SDL2 windowing backend has been replaced with SDL3. SDL3 backend is also more feature-complete, though it is still not in use.
+* Updated CEF used by Robust.Client.WebView to 131.3.5.
+
+## 238.0.1
+
+### Bugfixes
+
+* Fixed source generation for auto-networked EntityUid Dictionaries missing a semicolon
+* Fixed PlacementManager using the wrong coordinates when deleting entities in an area.
+
+
+## 238.0.0
+
+### Breaking changes
+
+* Some toolshed command syntax/parsing has changed slightly, and several toolshed related classes and interfaces have changed significantly, including ToolshedManager, type parsers, invocation contexts, and parser contexts. For more detail see the the description of PR #5455
+
+
+## 237.4.0
+
+### New features
+
+* Implement automatic field-level delta states via AutoGenerateComponentState via opt-in.
+
+### Bugfixes
+
+* Remove redundant TransformComponentState bool.
+
+
+## 237.3.0
+
+### New features
+
 * Added stack-like functions to `ValueList<T>` and added an `AddRange(ReadOnlySpan<T>)` overload.
+* Added new `AssetPassFilterDrop`.
+* Added a new RayCastSystem with the latest Box2D raycast + shapecasts implemented.
 
 ### Bugfixes
 
@@ -48,10 +130,6 @@ END TEMPLATE-->
 ### Other
 
 * Sandbox error reference locator now works with generic method calls.
-
-### Internal
-
-*None yet*
 
 
 ## 237.2.0

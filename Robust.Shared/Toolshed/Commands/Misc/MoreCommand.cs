@@ -4,7 +4,7 @@
 public sealed class MoreCommand : ToolshedCommand
 {
     [CommandImplementation]
-    public object? More([CommandInvocationContext] IInvocationContext ctx)
+    public object? More(IInvocationContext ctx)
     {
         return ctx.ReadVar("more");
     }

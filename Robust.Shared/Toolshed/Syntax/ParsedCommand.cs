@@ -2,9 +2,7 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Threading.Tasks;
 using Robust.Shared.Console;
-using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Utility;
@@ -15,199 +13,230 @@ using Invocable = Func<CommandInvocationArguments, object?>;
 
 public sealed class ParsedCommand
 {
-    public ToolshedCommand Command { get; }
-    public Type? ReturnType { get; }
+    public ToolshedCommand Command => Implementor.Owner;
+    public Type ReturnType => Method.Info.ReturnType;
 
-    public Type? PipedType => Bundle.PipedArgumentType;
+    public Type? PipedType => Bundle.PipedType;
+    public string? SubCommand => Bundle.SubCommand;
+
+    internal readonly ToolshedCommandImplementor Implementor;
     internal Invocable Invocable { get; }
     internal CommandArgumentBundle Bundle { get; }
-    public string? SubCommand { get; }
 
-    public static bool TryParse(
-            bool doAutoComplete,
-            ParserContext parserContext,
-            Type? pipedArgumentType,
-            [NotNullWhen(true)] out ParsedCommand? result,
-            out IConError? error,
-            out bool noCommand,
-            out ValueTask<(CompletionResult?, IConError?)>? autocomplete,
-            Type? targetType = null
-        )
+    internal readonly ConcreteCommandMethod Method;
+
+    public static bool TryParse(ParserContext ctx, Type? piped, [NotNullWhen(true)] out ParsedCommand? result)
     {
-        noCommand = false;
-        var checkpoint = parserContext.Save();
-        var bundle = new CommandArgumentBundle()
-            {Arguments = new(), Inverted = false, PipedArgumentType = pipedArgumentType, TypeArguments = Array.Empty<Type>()};
+        var checkpoint = ctx.Save();
+        var oldBundle = ctx.Bundle;
+        DebugTools.AssertNull(ctx.Error);
+        DebugTools.AssertNull(ctx.Completions);
+        ctx.Bundle = new CommandArgumentBundle
+        {
+            Inverted = false,
+            PipedType = piped
+        };
 
-        autocomplete = null;
-        if (!TryDigestModifiers(parserContext, bundle, out error)
-            || !TryParseCommand(doAutoComplete, parserContext, bundle, pipedArgumentType, targetType, out var subCommand, out var invocable, out var command, out error, out noCommand, out autocomplete)
-            || !command.TryGetReturnType(subCommand, pipedArgumentType, bundle.TypeArguments, out var retType)
-            )
+        ctx.ConsumeWhitespace();
+
+        if (!TryDigestModifiers(ctx))
         {
             result = null;
-            parserContext.Restore(checkpoint);
+            ctx.Restore(checkpoint);
             return false;
         }
 
+        // TODO TOOLSHED
+        // completion suggestions for modifiers?
+        // I.e., if parsing a command name fails, we should take into account that they might be trying to type out
+        // "not" or some other command modifier?
 
-        result = new(bundle, invocable, command, retType, subCommand);
+        if (!TryParseCommand(ctx, out var invocable, out var method, out var implementor))
+        {
+            result = null;
+            ctx.Restore(checkpoint);
+            return false;
+        }
+
+        // No errors or completions should have been generated if the parse was successful.
+        DebugTools.AssertNull(ctx.Error);
+        DebugTools.AssertNull(ctx.Completions);
+        result = new(ctx.Bundle, invocable, method.Value, implementor);
+        ctx.Bundle = oldBundle;
         return true;
     }
 
-    private ParsedCommand(CommandArgumentBundle bundle, Invocable invocable, ToolshedCommand command, Type? returnType, string? subCommand)
+    private ParsedCommand(CommandArgumentBundle bundle, Invocable invocable, ConcreteCommandMethod method, ToolshedCommandImplementor implementor)
     {
         Invocable = invocable;
         Bundle = bundle;
-        Command = command;
-        ReturnType = returnType;
-        SubCommand = subCommand;
+        Implementor = implementor;
+        Method = method;
     }
 
-    private static bool TryDigestModifiers(ParserContext parserContext, CommandArgumentBundle bundle, out IConError? error)
+    /// <summary>
+    /// Attempt to process any modifer tokens that modify how a command behaves or how it's arguments are parsed and
+    /// store the results in the <see cref="CommandArgumentBundle"/>.
+    /// </summary>
+    private static bool TryDigestModifiers(ParserContext ctx)
     {
-        error = null;
-        if (parserContext.PeekWord() == "not")
+        if (ctx.EatMatch("not"))
         {
-            parserContext.GetWord(); //yum
-            bundle.Inverted = true;
+            ctx.ConsumeWhitespace();
+            ctx.Bundle.Inverted = true;
         }
 
         return true;
     }
 
     private static bool TryParseCommand(
-                bool makeCompletions,
-                ParserContext parserContext,
-                CommandArgumentBundle bundle,
-                Type? pipedType,
-                Type? targetType,
-                out string? subCommand,
-                [NotNullWhen(true)] out Invocable? invocable,
-                [NotNullWhen(true)] out ToolshedCommand? command,
-                out IConError? error,
-                out bool noCommand,
-                out ValueTask<(CompletionResult?, IConError?)>? autocomplete
-            )
+        ParserContext ctx,
+        [NotNullWhen(true)] out Invocable? invocable,
+        [NotNullWhen(true)] out ConcreteCommandMethod? method,
+        [NotNullWhen(true)] out ToolshedCommandImplementor? implementor)
     {
-        noCommand = false;
-        var start = parserContext.Index;
-        var cmd = parserContext.GetWord(ParserContext.IsCommandToken);
-        subCommand = null;
         invocable = null;
-        command = null;
-        if (cmd is null)
-        {
-            if (parserContext.PeekRune() is null)
-            {
-                noCommand = true;
-                error = new OutOfInputError();
-                error.Contextualize(parserContext.Input, (parserContext.Index, parserContext.Index));
-                autocomplete = null;
-                if (makeCompletions)
-                {
-                    var cmds = parserContext.Environment.CommandsTakingType(pipedType ?? typeof(void));
-                    autocomplete = ValueTask.FromResult<(CompletionResult?, IConError?)>((CompletionResult.FromHintOptions(cmds.Select(x => x.AsCompletion()), "<command>"), error));
-                }
+        implementor = null;
+        method = null;
+        var cmdNameStart = ctx.Index;
+        DebugTools.AssertNull(ctx.Error);
+        DebugTools.AssertNull(ctx.Completions);
 
+        // Try to parse the command name
+        if (!TryParseCommandName(ctx, out var cmdName))
+            return false;
+
+        // Attempt to find the command with the given name
+        if (!ctx.Environment.TryGetCommand(cmdName, out var command))
+        {
+            if (ctx.GenerateCompletions)
+            {
+                if (ctx.OutOfInput)
+                    ctx.Completions = ctx.Environment.CommandCompletionsForType(ctx.Bundle.PipedType);
                 return false;
+            }
+
+            ctx.Error ??= new UnknownCommandError(cmdName);
+            ctx.Error.Contextualize(ctx.Input, (cmdNameStart, ctx.Index));
+            return false;
+        }
+
+        // Attempt to parse the subcommand, if applicable.
+        if (!TryParseImplementor(ctx, command, out implementor))
+            return false;
+
+        // This is a safeguard to try help prevent information from being accidentally leaked by poorly validated
+        // auto completion for commands. I.e., if there is a command that operates on all minds/players, we don't want
+        // to send the client a list of all players.
+        if (!ctx.CheckInvokable(implementor.Spec))
+        {
+            if (ctx.GenerateCompletions)
+                ctx.Completions = CompletionResult.FromHint($"Insufficient permissions for command: {implementor.FullName}");
+            return false;
+        }
+
+        // If the name command is currently still being typed, we continue to give command name completions, not
+        // argument completions.
+        if (ctx.GenerateCompletions && ctx.OutOfInput)
+        {
+            ctx.Completions = ctx.Bundle.SubCommand == null
+                ? ctx.Environment.CommandCompletionsForType(ctx.Bundle.PipedType)
+                : ctx.Environment.SubCommandCompletionsForType(ctx.Bundle.PipedType, command);
+
+            // TODO TOOLSHED invalid-fail
+            // This technically "fails" to parse what might otherwise be a valid command that takes no argument.
+            // However this only happens when generating completions, not when actually executing the command
+            // Still, this is pretty janky and I don't know of a good fix.
+            return false;
+        }
+
+        return implementor.TryParse(ctx, out invocable, out method);
+    }
+
+    private static bool TryParseCommandName(ParserContext ctx, [NotNullWhen(true)] out string? name)
+    {
+        var cmdNameStart = ctx.Index;
+        name = ctx.GetWord(ParserContext.IsCommandToken);
+        if (name != null)
+        {
+            ctx.Bundle.Command = name;
+            return true;
+        }
+
+        if (ctx.OutOfInput)
+        {
+            if (ctx.GenerateCompletions)
+            {
+                ctx.Completions = ctx.Environment.CommandCompletionsForType(ctx.Bundle.PipedType);
             }
             else
             {
-
-                noCommand = true;
-                error = new NotValidCommandError(targetType);
-                error.Contextualize(parserContext.Input, (start, parserContext.Index+1));
-                autocomplete = null;
-                return false;
-            }
-        }
-
-        if (!parserContext.Environment.TryGetCommand(cmd, out var cmdImpl))
-        {
-            error = new UnknownCommandError(cmd);
-            error.Contextualize(parserContext.Input, (start, parserContext.Index));
-            autocomplete = null;
-            if (makeCompletions)
-            {
-                var cmds = parserContext.Environment.CommandsTakingType(pipedType ?? typeof(void));
-                autocomplete = ValueTask.FromResult<(CompletionResult?, IConError?)>((CompletionResult.FromHintOptions(cmds.Select(x => x.AsCompletion()), "<command>"), error));
+                ctx.Error = new OutOfInputError();
+                ctx.Error.Contextualize(ctx.Input, (ctx.Index, ctx.Index));
             }
 
             return false;
         }
 
-        if (cmdImpl.HasSubCommands)
+        if (ctx.GenerateCompletions)
+            return false;
+
+        ctx.Error = new NotValidCommandError();
+        ctx.Error.Contextualize(ctx.Input, (cmdNameStart, ctx.Index+1));
+        return false;
+    }
+
+    private static bool TryParseImplementor(ParserContext ctx, ToolshedCommand cmd, [NotNullWhen(true)] out ToolshedCommandImplementor? impl)
+    {
+        if (!cmd.HasSubCommands)
         {
-            error = null;
-            autocomplete = null;
-            if (makeCompletions)
-            {
-                var cmds = parserContext.Environment.CommandsTakingType(pipedType ?? typeof(void)).Where(x => x.Cmd.Name == cmd);
-                autocomplete = ValueTask.FromResult<(CompletionResult?, IConError?)>((
-                    CompletionResult.FromHintOptions(cmds.Select(x => x.AsCompletion()), "<command>"), error));
-            }
-
-            if (parserContext.GetChar() is not ':')
-            {
-                error = new OutOfInputError();
-                error.Contextualize(parserContext.Input, (parserContext.Index, parserContext.Index));
-                return false;
-            }
-
-            var subCmdStart = parserContext.Index;
-
-            if (parserContext.GetWord(ParserContext.IsToken) is not { } subcmd)
-            {
-                error = new OutOfInputError();
-                error.Contextualize(parserContext.Input, (parserContext.Index, parserContext.Index));
-                return false;
-            }
-
-            if (!cmdImpl.Subcommands.Contains(subcmd))
-            {
-                error = new UnknownSubcommandError(cmd, subcmd, cmdImpl);
-                error.Contextualize(parserContext.Input, (subCmdStart, parserContext.Index));
-                return false;
-            }
-
-            subCommand = subcmd;
+            impl = cmd.CommandImplementors[string.Empty];
+            return true;
         }
 
-        if (parserContext.ConsumeWhitespace() == 0 && makeCompletions)
+        impl = null;
+        if (!ctx.EatMatch(':'))
         {
-            error = null;
-            var cmds = parserContext.Environment.CommandsTakingType(pipedType ?? typeof(void));
-            autocomplete = ValueTask.FromResult<(CompletionResult?, IConError?)>((CompletionResult.FromHintOptions(cmds.Select(x => x.AsCompletion()), "<command>"), null));
+            if (ctx.GenerateCompletions)
+            {
+                ctx.Completions = ctx.Environment.SubCommandCompletionsForType(ctx.Bundle.PipedType, cmd);
+                return false;
+            }
+            ctx.Error = new OutOfInputError();
+            ctx.Error.Contextualize(ctx.Input, (ctx.Index, ctx.Index));
             return false;
         }
 
-        var argsStart = parserContext.Index;
-
-        if (!cmdImpl.TryParseArguments(makeCompletions, parserContext, pipedType, subCommand, out var args, out var types, out error, out autocomplete))
+        var subCmdStart = ctx.Index;
+        if (ctx.GetWord(ParserContext.IsToken) is not { } subcmd)
         {
-            error?.Contextualize(parserContext.Input, (argsStart, parserContext.Index));
+            if (ctx.GenerateCompletions)
+            {
+                ctx.Completions = ctx.Environment.SubCommandCompletionsForType(ctx.Bundle.PipedType, cmd);
+                return false;
+            }
+            ctx.Error = new OutOfInputError();
+            ctx.Error.Contextualize(ctx.Input, (ctx.Index, ctx.Index));
             return false;
         }
 
-        bundle.TypeArguments = types;
-
-        if (!cmdImpl.TryGetImplementation(bundle.PipedArgumentType, subCommand, types, out var impl))
+        if (!cmd.CommandImplementors.TryGetValue(subcmd, out impl!))
         {
-            error = new NoImplementationError(cmd, types, subCommand, bundle.PipedArgumentType, parserContext.Environment);
-            error.Contextualize(parserContext.Input, (start, parserContext.Index));
-            autocomplete = null;
+            if (ctx.GenerateCompletions)
+            {
+                ctx.Completions = ctx.Environment.SubCommandCompletionsForType(ctx.Bundle.PipedType, cmd);
+                return false;
+            }
+            ctx.Error = new UnknownSubcommandError(subcmd, cmd);
+            ctx.Error.Contextualize(ctx.Input, (subCmdStart, ctx.Index));
             return false;
         }
 
-        bundle.Arguments = args;
-        invocable = impl;
-        command = cmdImpl;
-        autocomplete = null;
+        ctx.Bundle.SubCommand = subcmd;
         return true;
     }
 
-    private bool _passedInvokeTest = false;
+    private bool _passedInvokeTest;
 
     public object? Invoke(object? pipedIn, IInvocationContext ctx)
     {
@@ -248,16 +277,22 @@ public record struct UnknownCommandError(string Cmd) : IConError
     public StackTrace? Trace { get; set; }
 }
 
-public record NoImplementationError(string Cmd, Type[] Types, string? SubCommand, Type? PipedType, ToolshedEnvironment ctx) : IConError
+public sealed class NoImplementationError(ParserContext ctx) : ConError
 {
-    public FormattedMessage DescribeInner()
+    public readonly ToolshedEnvironment Env = ctx.Environment;
+    public readonly string Cmd = ctx.Bundle.Command!;
+    public readonly string? SubCommand = ctx.Bundle.SubCommand;
+    public readonly Type[]? Types = ctx.Bundle.TypeArguments;
+    public readonly Type? PipedType = ctx.Bundle.PipedType;
+
+    public override FormattedMessage DescribeInner()
     {
         var msg = FormattedMessage.FromUnformatted($"Could not find an implementation for {Cmd} given the input type {PipedType?.PrettyName() ?? "void"}.");
         msg.PushNewline();
 
         var typeArgs = "";
 
-        if (Types.Length != 0)
+        if (Types != null && Types.Length != 0)
         {
             typeArgs = "<" + string.Join(",", Types.Select(ReflectionExtensions.PrettyName)) + ">";
         }
@@ -265,12 +300,12 @@ public record NoImplementationError(string Cmd, Type[] Types, string? SubCommand
         msg.AddText($"Signature: {Cmd}{(SubCommand is not null ? $":{SubCommand}" : "")}{typeArgs} {PipedType?.PrettyName() ?? "void"} -> ???");
 
         var piped = PipedType ?? typeof(void);
-        var cmdImpl = ctx.GetCommand(Cmd);
-        var accepted = cmdImpl.AcceptedTypes(SubCommand).ToHashSet();
+        var cmdImpl = Env.GetCommand(Cmd);
+        var accepted = cmdImpl.AcceptedTypes(SubCommand);
 
-        foreach (var (command, subCommand) in ctx.CommandsTakingType(piped))
+        foreach (var (command, subCommand) in Env.CommandsTakingType(piped))
         {
-            if (!command.TryGetReturnType(subCommand, piped, Array.Empty<Type>(), out var retType) || !accepted.Any(x => retType.IsAssignableTo(x)))
+            if (!command.TryGetReturnType(subCommand, piped, null, out var retType) || !accepted.Any(x => retType.IsAssignableTo(x)))
                 continue;
 
             if (!cmdImpl.TryGetReturnType(SubCommand, retType, Types, out var myRetType))
@@ -284,18 +319,14 @@ public record NoImplementationError(string Cmd, Type[] Types, string? SubCommand
 
         return msg;
     }
-
-    public string? Expression { get; set; }
-    public Vector2i? IssueSpan { get; set; }
-    public StackTrace? Trace { get; set; }
 }
 
-public record UnknownSubcommandError(string Cmd, string SubCmd, ToolshedCommand Command) : IConError
+public record UnknownSubcommandError(string SubCmd, ToolshedCommand Command) : IConError
 {
     public FormattedMessage DescribeInner()
     {
         var msg = new FormattedMessage();
-        msg.AddText($"The command group {Cmd} doesn't have command {SubCmd}.");
+        msg.AddText($"The command group {Command.Name} doesn't have command {SubCmd}.");
         msg.PushNewline();
         msg.AddText($"The valid commands are: {string.Join(", ", Command.Subcommands)}.");
         return msg;
@@ -306,9 +337,11 @@ public record UnknownSubcommandError(string Cmd, string SubCmd, ToolshedCommand 
     public StackTrace? Trace { get; set; }
 }
 
-public record NotValidCommandError(Type? TargetType) : IConError
+public sealed class NotValidCommandError : ConError
 {
-    public FormattedMessage DescribeInner()
+    public Type? TargetType;
+
+    public override FormattedMessage DescribeInner()
     {
         var msg = new FormattedMessage();
         msg.AddText("Ran into an invalid command, could not parse.");
@@ -320,8 +353,4 @@ public record NotValidCommandError(Type? TargetType) : IConError
 
         return msg;
     }
-
-    public string? Expression { get; set; }
-    public Vector2i? IssueSpan { get; set; }
-    public StackTrace? Trace { get; set; }
 }

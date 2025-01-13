@@ -845,17 +845,11 @@ namespace Robust.Client.GameObjects
             LayerSetColor(layer, color);
         }
 
-        #endregion
-
+        [Obsolete("Use SpriteSystem.LayerSetDirOffset() instead.")]
         public void LayerSetDirOffset(int layer, DirectionOffset offset)
-        {
-            if (!TryGetLayer(layer, out var theLayer, true))
-                return;
+            => Sys.LayerSetDirOffset((Owner, this), layer, offset);
 
-            theLayer.DirOffset = offset;
-            Sys.RebuildBounds((Owner, this));
-        }
-
+        [Obsolete("Use SpriteSystem.LayerSetDirOffset() instead.")]
         public void LayerSetDirOffset(object layerKey, DirectionOffset offset)
         {
             if (!LayerMapTryGet(layerKey, out var layer, true))
@@ -863,6 +857,8 @@ namespace Robust.Client.GameObjects
 
             LayerSetDirOffset(layer, offset);
         }
+
+        #endregion
 
         public void LayerSetAnimationTime(int layer, float animationTime)
         {

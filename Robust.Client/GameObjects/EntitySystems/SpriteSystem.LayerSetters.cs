@@ -452,5 +452,34 @@ public sealed partial class SpriteSystem
             LayerSetColor(sprite, index, value);
     }
 
+    public void LayerSetDirOffset(Entity<SpriteComponent?> sprite, int index, DirectionOffset value)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (!TryGetLayer(sprite, index, out var layer, true))
+            return;
+
+        layer.DirOffset = value;
+    }
+
+    public void LayerSetDirOffset(Entity<SpriteComponent?> sprite, string key, DirectionOffset value)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (LayerMapTryGet(sprite, key, out var index, true))
+            LayerSetDirOffset(sprite, index, value);
+    }
+
+    public void LayerSetDirOffset(Entity<SpriteComponent?> sprite, Enum key, DirectionOffset value)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (LayerMapTryGet(sprite, key, out var index, true))
+            LayerSetDirOffset(sprite, index, value);
+    }
+
     #endregion
 }

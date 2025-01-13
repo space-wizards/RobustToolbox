@@ -54,31 +54,43 @@ public sealed class ByRefEventAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.ReportDiagnostics);
         context.EnableConcurrentExecution();
-        context.RegisterOperationAction(CheckEventRaise, OperationKind.Invocation);
+        context.RegisterCompilationStartAction(compilationContext =>
+        {
+            var raiseMethods = compilationContext.Compilation
+                .GetTypeByMetadataName("Robust.Shared.GameObjects.EntitySystem")?
+                .GetMembers()
+                .Where(m => m.Name.Contains("RaiseLocalEvent") && m.Kind == SymbolKind.Method)
+                .Cast<IMethodSymbol>();
+
+            var busRaiseMethods = compilationContext.Compilation
+                .GetTypeByMetadataName("Robust.Shared.GameObjects.EntityEventBus")?
+                .GetMembers()
+                .Where(m => m.Name.Contains("RaiseLocalEvent") && m.Kind == SymbolKind.Method)
+                .Cast<IMethodSymbol>();
+
+            if (raiseMethods == null)
+                return;
+
+            if (busRaiseMethods != null)
+                raiseMethods = raiseMethods.Concat(busRaiseMethods);
+
+            var raiseMethodsArray = raiseMethods.ToArray();
+
+            compilationContext.RegisterOperationAction(
+                ctx => CheckEventRaise(ctx, raiseMethodsArray),
+                OperationKind.Invocation);
+        });
     }
 
-    private void CheckEventRaise(OperationAnalysisContext context)
+    private static void CheckEventRaise(
+        OperationAnalysisContext context,
+        IReadOnlyCollection<IMethodSymbol> raiseMethods)
     {
         if (context.Operation is not IInvocationOperation operation)
             return;
 
-        var raiseMethods = context.Compilation
-            .GetTypeByMetadataName("Robust.Shared.GameObjects.EntitySystem")?
-            .GetMembers()
-            .Where(m => m.Name.Contains("RaiseLocalEvent") && m.Kind == SymbolKind.Method)
-            .Cast<IMethodSymbol>();
-
-        var busRaiseMethods = context.Compilation
-            .GetTypeByMetadataName("Robust.Shared.GameObjects.EntityEventBus")?
-            .GetMembers()
-            .Where(m => m.Name.Contains("RaiseLocalEvent") && m.Kind == SymbolKind.Method)
-            .Cast<IMethodSymbol>();
-
-        if (raiseMethods == null)
+        if (!operation.TargetMethod.Name.Contains("RaiseLocalEvent"))
             return;
-
-        if (busRaiseMethods != null)
-            raiseMethods = raiseMethods.Concat(busRaiseMethods);
 
         if (!raiseMethods.Any(m => m.Equals(operation.TargetMethod.OriginalDefinition, Default)))
         {

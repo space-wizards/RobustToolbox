@@ -482,7 +482,14 @@ namespace Robust.Client.GameObjects
         [DataField("noRot")]
         public bool NoRotation;
 
+        [DataField("overrideDir")]
+        public Direction DirectionOverride = Direction.East;
+
+        [DataField("enableOverrideDir")]
+        public bool EnableDirectionOverride;
+
         #endregion
+
         /// <summary>
         ///     Fills in a layer's values using some <see cref="PrototypeLayerData"/>.
         /// </summary>
@@ -1055,14 +1062,6 @@ namespace Robust.Client.GameObjects
         {
             RenderInternal(drawingHandle, eyeRotation, worldRotation, position, overrideDirection);
         }
-
-        [DataField("overrideDir")]
-        [ViewVariables(VVAccess.ReadWrite)]
-        public Direction DirectionOverride = Direction.East;
-
-        [DataField("enableOverrideDir")]
-        [ViewVariables(VVAccess.ReadWrite)]
-        public bool EnableDirectionOverride;
 
         internal void RenderInternal(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Vector2 worldPosition, Direction? overrideDirection)
         {

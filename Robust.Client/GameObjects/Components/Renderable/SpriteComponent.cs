@@ -459,7 +459,8 @@ namespace Robust.Client.GameObjects
         [Obsolete("Use SpriteSystem.RebuildBounds() instead.")]
         internal void RebuildBounds()
         {
-            if (entities.Initialized && entities.TrySystem(out SpriteSystem? sys))
+            // I Love ISerializationHooks & inconsistent initialization ordering between server, client, and tests.
+            if (entities.Started && entities.TrySystem(out SpriteSystem? sys))
                 sys.RebuildBounds((Owner, this));
         }
 

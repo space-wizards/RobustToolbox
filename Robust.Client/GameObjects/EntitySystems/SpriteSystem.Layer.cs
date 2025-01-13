@@ -111,7 +111,7 @@ public sealed partial class SpriteSystem
             sprite.Comp.Layers.Add(layer);
         }
 
-        sprite.Comp.RebuildBounds();
+        RebuildBounds(sprite!);
         sprite.Comp.QueueUpdateIsInert();
         return index.Value;
     }

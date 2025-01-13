@@ -132,4 +132,16 @@ public sealed partial class SpriteSystem
 
         sprite.Comp.PostShader = shader;
     }
+
+    public void SetSnapCardinals(Entity<SpriteComponent?> sprite, bool value)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (value == sprite.Comp._snapCardinals)
+            return;
+
+        sprite.Comp._snapCardinals = value;
+        RebuildBounds(sprite!);
+    }
 }

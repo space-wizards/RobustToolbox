@@ -38,6 +38,7 @@ namespace Robust.Client.GameObjects
     [RegisterComponent]
     public sealed partial class SpriteComponent : Component, IComponentDebug, ISerializationHooks, IComponentTreeEntry<SpriteComponent>, IAnimationProperties
     {
+        #region ECSd
         public const string LogCategory = "go.comp.sprite";
 
         [Dependency] private readonly IResourceCache resourceCache = default!;
@@ -456,6 +457,21 @@ namespace Robust.Client.GameObjects
             RemoveLayer(layer);
         }
 
+        [DataField("snapCardinals")]
+        internal bool _snapCardinals = false;
+
+        /// <summary>
+        /// If the sprite only has 1 direction should it snap at cardinals if rotated.
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool SnapCardinals
+        {
+            get => _snapCardinals;
+            [Obsolete("Use SpriteSystem.SnapCardinals() instead.")]
+            set => Sys.SetSnapCardinals((Owner, this), value);
+        }
+
+        #endregion
         /// <summary>
         ///     Fills in a layer's values using some <see cref="PrototypeLayerData"/>.
         /// </summary>
@@ -1031,25 +1047,6 @@ namespace Robust.Client.GameObjects
 
         [DataField("noRot")] internal bool _screenLock = false;
 
-        /// <summary>
-        /// If the sprite only has 1 direction should it snap at cardinals if rotated.
-        /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public bool SnapCardinals
-        {
-            get => _snapCardinals;
-            set
-            {
-                if (value == _snapCardinals)
-                    return;
-
-                _snapCardinals = value;
-                Sys.RebuildBounds((Owner, this));
-            }
-        }
-
-        [DataField("snapCardinals")]
-        private bool _snapCardinals = false;
 
         [DataField("overrideDir")]
         [ViewVariables(VVAccess.ReadWrite)]

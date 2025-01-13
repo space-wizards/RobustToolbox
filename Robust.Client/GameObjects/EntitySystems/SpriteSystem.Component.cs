@@ -87,8 +87,10 @@ public sealed partial class SpriteSystem
 
     public void RebuildBounds(Entity<SpriteComponent> sprite)
     {
+        // TODO SPRITE
         // Maybe the bounds calculation should be deferred?
         // The tree update is already deferred anyways.
+        // And layer.CalculateBoundingBox() is relatively expensive.
 
         var bounds = new Box2();
         foreach (var layer in sprite.Comp.Layers)

@@ -63,7 +63,6 @@ namespace Robust.Client.GameObjects
             UpdatesAfter.Add(typeof(SpriteTreeSystem));
 
             SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
-            SubscribeLocalEvent<SpriteComponent, SpriteUpdateInertEvent>(QueueUpdateInert);
             SubscribeLocalEvent<SpriteComponent, ComponentInit>(OnInit);
 
             Subs.CVar(_cfg, CVars.RenderSpriteDirectionBias, OnBiasChanged, true);
@@ -85,18 +84,6 @@ namespace Robust.Client.GameObjects
         private void OnBiasChanged(double value)
         {
             SpriteComponent.DirectionBias = value;
-        }
-
-        private void QueueUpdateInert(EntityUid uid, SpriteComponent sprite, ref SpriteUpdateInertEvent ev)
-            => QueueUpdateInert(uid, sprite);
-
-        public void QueueUpdateInert(EntityUid uid, SpriteComponent sprite)
-        {
-            if (sprite._inertUpdateQueued)
-                return;
-
-            sprite._inertUpdateQueued = true;
-            _inertUpdateQueue.Enqueue(sprite);
         }
 
         private void DoUpdateIsInert(SpriteComponent component)

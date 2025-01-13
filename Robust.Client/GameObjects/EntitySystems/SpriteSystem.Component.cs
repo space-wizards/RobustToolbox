@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.GameObjects;
@@ -86,6 +87,9 @@ public sealed partial class SpriteSystem
 
     public void RebuildBounds(Entity<SpriteComponent> sprite)
     {
+        // Maybe the bounds calculation should be deferred?
+        // The tree update is already deferred anyways.
+
         var bounds = new Box2();
         foreach (var layer in sprite.Comp.Layers)
         {
@@ -96,4 +100,19 @@ public sealed partial class SpriteSystem
         sprite.Comp._bounds = bounds.Scale(sprite.Comp.Scale);
         _tree.QueueTreeUpdate(sprite);
     }
+
+    /// <summary>
+    /// Adds a sprite to a queue that will update <see cref="SpriteComponent.IsInert"/> next frame.
+    /// </summary>
+    public void QueueUpdateIsInert(Entity<SpriteComponent> sprite)
+    {
+        if (sprite.Comp._inertUpdateQueued)
+            return;
+
+        sprite.Comp._inertUpdateQueued = true;
+        _inertUpdateQueue.Enqueue(sprite);
+    }
+
+    [Obsolete("Use QueueUpdateIsInert")]
+    public void QueueUpdateInert(EntityUid uid, SpriteComponent sprite) => QueueUpdateIsInert(new (uid, sprite));
 }

@@ -74,8 +74,8 @@ namespace Robust.Client.GameObjects
 
         private SpriteSystem? _sys;
         private SpriteTreeSystem? _treeSys;
-        private SpriteSystem Sys => _sys ??= entities.System<SpriteSystem>();
-        private SpriteTreeSystem TreeSys => _treeSys ??= entities.System<SpriteTreeSystem>();
+        private SpriteSystem Sys => _sys ??= (entities.Started ? entities.System<SpriteSystem>() : null)!;
+        private SpriteTreeSystem TreeSys => _treeSys ??= (entities.Started ? entities.System<SpriteTreeSystem>() : null)!;
 
         [DataField("drawdepth", customTypeSerializer: typeof(ConstantSerializer<DrawDepthTag>))]
         internal int drawDepth = DrawDepthTag.Default;
@@ -456,14 +456,6 @@ namespace Robust.Client.GameObjects
             RemoveLayer(layer);
         }
 
-        [Obsolete("Use SpriteSystem.RebuildBounds() instead.")]
-        internal void RebuildBounds()
-        {
-            // I Love ISerializationHooks & inconsistent initialization ordering between server, client, and tests.
-            if (entities.Started && entities.TrySystem(out SpriteSystem? sys))
-                sys.RebuildBounds((Owner, this));
-        }
-
         /// <summary>
         ///     Fills in a layer's values using some <see cref="PrototypeLayerData"/>.
         /// </summary>
@@ -595,7 +587,8 @@ namespace Robust.Client.GameObjects
                 layer.CopyToShaderParameters = null;
             }
 
-            RebuildBounds();
+            // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+            Sys?.RebuildBounds((Owner, this));
         }
 
         private object ParseKey(string keyString)
@@ -682,8 +675,8 @@ namespace Robust.Client.GameObjects
                 return;
             theLayer.SetTexture(texture);
 
-            QueueUpdateIsInert();
-            RebuildBounds();
+            Sys.QueueUpdateIsInert((Owner, this));
+            Sys.RebuildBounds((Owner, this));
         }
 
         public void LayerSetTexture(object layerKey, Texture texture)
@@ -735,7 +728,7 @@ namespace Robust.Client.GameObjects
             if (!TryGetLayer(layer, out var theLayer, true))
                 return;
             theLayer.SetState(stateId);
-            RebuildBounds();
+            Sys.RebuildBounds((Owner, this));
         }
 
         public void LayerSetState(object layerKey, RSI.StateId stateId)
@@ -774,8 +767,8 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            QueueUpdateIsInert();
-            RebuildBounds();
+            Sys.QueueUpdateIsInert((Owner, this));
+            Sys.RebuildBounds((Owner, this));
         }
 
         public void LayerSetState(object layerKey, RSI.StateId stateId, RSI rsi)
@@ -819,7 +812,7 @@ namespace Robust.Client.GameObjects
             if (!TryGetLayer(layer, out var theLayer, true))
                 return;
             theLayer.SetRsi(rsi);
-            RebuildBounds();
+            Sys.RebuildBounds((Owner, this));
         }
 
         public void LayerSetRSI(object layerKey, RSI rsi)
@@ -863,7 +856,7 @@ namespace Robust.Client.GameObjects
             if (!TryGetLayer(layer, out var theLayer, true))
                 return;
             theLayer.Scale = scale;
-            RebuildBounds();
+            Sys.RebuildBounds((Owner, this));
         }
 
         public void LayerSetScale(object layerKey, Vector2 scale)
@@ -880,7 +873,7 @@ namespace Robust.Client.GameObjects
             if (!TryGetLayer(layer, out var theLayer, true))
                 return;
             theLayer.Rotation = rotation;
-            RebuildBounds();
+            Sys.RebuildBounds((Owner, this));
         }
 
         public void LayerSetRotation(object layerKey, Angle rotation)
@@ -913,8 +906,7 @@ namespace Robust.Client.GameObjects
                 return;
 
             theLayer.Color = color;
-
-            RebuildBounds();
+            Sys.RebuildBounds((Owner, this));
         }
 
         public void LayerSetColor(object layerKey, Color color)
@@ -931,8 +923,7 @@ namespace Robust.Client.GameObjects
                 return;
 
             theLayer.DirOffset = offset;
-
-            RebuildBounds();
+            Sys.RebuildBounds((Owner, this));
         }
 
         public void LayerSetDirOffset(object layerKey, DirectionOffset offset)
@@ -981,8 +972,7 @@ namespace Robust.Client.GameObjects
                 return;
 
             theLayer.Offset = layerOffset;
-
-            RebuildBounds();
+            Sys.RebuildBounds((Owner, this));
         }
 
         public void LayerSetOffset(object layerKey, Vector2 layerOffset)
@@ -1054,7 +1044,7 @@ namespace Robust.Client.GameObjects
                     return;
 
                 _snapCardinals = value;
-                RebuildBounds();
+                Sys.RebuildBounds((Owner, this));
             }
         }
 
@@ -1154,21 +1144,6 @@ namespace Robust.Client.GameObjects
                 RsiDirectionType.Dir8 => 8,
                 _ => throw new ArgumentOutOfRangeException()
             };
-        }
-
-        private void QueueUpdateRenderTree()
-        {
-            TreeSys.QueueTreeUpdate((Owner, this));
-        }
-
-        internal void QueueUpdateIsInert()
-        {
-            if (_inertUpdateQueued || !Owner.IsValid())
-                return;
-
-            // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
-            var ev = new SpriteUpdateInertEvent();
-            entities.EventBus.RaiseComponentEvent(Owner, this, ref ev);
         }
 
         [Obsolete("Use SpriteSystem instead.")]
@@ -1343,7 +1318,7 @@ namespace Robust.Client.GameObjects
 
                     _scale = value;
                     UpdateLocalMatrix();
-                    _parent.RebuildBounds();
+                    _parent.Sys.RebuildBounds((_parent.Owner, _parent));
                 }
             }
             internal Vector2 _scale = Vector2.One;
@@ -1358,7 +1333,7 @@ namespace Robust.Client.GameObjects
 
                     _rotation = value;
                     UpdateLocalMatrix();
-                    _parent.RebuildBounds();
+                    _parent.Sys.RebuildBounds((_parent.Owner, _parent));
                 }
             }
             internal Angle _rotation = Angle.Zero;
@@ -1374,8 +1349,9 @@ namespace Robust.Client.GameObjects
                         return;
                     _visible = value;
 
-                    _parent.QueueUpdateIsInert();
-                    _parent.RebuildBounds();
+                    // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+                    _parent.Sys?.QueueUpdateIsInert((_parent.Owner, _parent));
+                    _parent.Sys?.RebuildBounds((_parent.Owner, _parent));
                 }
             }
 
@@ -1395,7 +1371,8 @@ namespace Robust.Client.GameObjects
                     if (_autoAnimated == value)
                         return;
                     _autoAnimated = value;
-                    _parent.QueueUpdateIsInert();
+                    // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+                    _parent.Sys?.QueueUpdateIsInert((_parent.Owner, _parent));
                 }
             }
 
@@ -1409,7 +1386,8 @@ namespace Robust.Client.GameObjects
 
                     _offset = value;
                     UpdateLocalMatrix();
-                    _parent.RebuildBounds();
+                    // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+                    _parent.Sys?.RebuildBounds((_parent.Owner, _parent));
                 }
             }
 
@@ -1581,7 +1559,7 @@ namespace Robust.Client.GameObjects
             {
                 AutoAnimated = value;
 
-                _parent.QueueUpdateIsInert();
+                _parent.Sys.QueueUpdateIsInert((_parent.Owner, _parent));
             }
 
             public void SetRsi(RSI? rsi)
@@ -1613,8 +1591,8 @@ namespace Robust.Client.GameObjects
                     }
                 }
 
-                _parent.QueueUpdateRenderTree();
-                _parent.QueueUpdateIsInert();
+                _parent.TreeSys.QueueTreeUpdate((_parent.Owner, _parent));
+                _parent.Sys.QueueUpdateIsInert((_parent.Owner, _parent));
             }
 
             public void SetState(RSI.StateId stateId)
@@ -1646,7 +1624,7 @@ namespace Robust.Client.GameObjects
                 AnimationTime = 0;
                 AnimationTimeLeft = state.GetDelay(0);
 
-                _parent.QueueUpdateIsInert();
+                _parent.Sys.QueueUpdateIsInert((_parent.Owner, _parent));
             }
 
             public void SetTexture(Texture? texture)
@@ -1654,8 +1632,8 @@ namespace Robust.Client.GameObjects
                 State = default;
                 Texture = texture;
 
-                _parent.QueueUpdateRenderTree();
-                _parent.QueueUpdateIsInert();
+                _parent.TreeSys.QueueTreeUpdate((_parent.Owner, _parent));
+                _parent.Sys.QueueUpdateIsInert((_parent.Owner, _parent));
             }
 
             /// <inheritdoc/>
@@ -1723,7 +1701,8 @@ namespace Robust.Client.GameObjects
             /// </summary>
             internal void UpdateActualState()
             {
-                _parent.QueueUpdateIsInert();
+                // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+                _parent.Sys?.QueueUpdateIsInert((_parent.Owner, _parent));
                 if (!State.IsValid)
                 {
                     _actualState = null;
@@ -2077,11 +2056,5 @@ namespace Robust.Client.GameObjects
 
             return result;
         }
-    }
-
-
-    [ByRefEvent]
-    internal struct SpriteUpdateInertEvent
-    {
     }
 }

@@ -80,7 +80,7 @@ public sealed partial class SpriteSystem
         }
 
         RebuildBounds(sprite!);
-        sprite.Comp.QueueUpdateIsInert();
+        QueueUpdateIsInert(sprite!);
         return true;
     }
 
@@ -112,7 +112,7 @@ public sealed partial class SpriteSystem
         }
 
         RebuildBounds(sprite!);
-        sprite.Comp.QueueUpdateIsInert();
+        QueueUpdateIsInert(sprite!);
         return index.Value;
     }
 

@@ -1147,7 +1147,10 @@ namespace Robust.Client.GameObjects
         {
             internal SpriteComponent _parent => Owner.Comp;
 
+            [Access(typeof(SpriteSystem), typeof(SpriteComponent))]
             [ViewVariables] public Entity<SpriteComponent> Owner;
+
+            [Access(typeof(SpriteSystem), typeof(SpriteComponent))]
             [ViewVariables] public int Index;
 
             [ViewVariables] public string? ShaderPrototype;

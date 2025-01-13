@@ -598,10 +598,8 @@ public sealed partial class SpriteSystem
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
             return;
 
-        if (!TryGetLayer(sprite, index, out var layer, true))
-            return;
-
-        LayerSetAutoAnimated(layer, value);
+        if (TryGetLayer(sprite, index, out var layer, true))
+            LayerSetAutoAnimated(layer, value);
     }
 
     public void LayerSetAutoAnimated(Layer layer, bool value)
@@ -629,6 +627,42 @@ public sealed partial class SpriteSystem
 
         if (LayerMapTryGet(sprite, key, out var index, true))
             LayerSetAutoAnimated(sprite, index, value);
+    }
+
+    #endregion
+
+    #region LayerSetRenderingStrategy
+
+    public void LayerSetRenderingStrategy(Entity<SpriteComponent?> sprite, int index, LayerRenderingStrategy value)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (TryGetLayer(sprite, index, out var layer, true))
+            LayerSetRenderingStrategy(layer, value);
+    }
+
+    public void LayerSetRenderingStrategy(Layer layer, LayerRenderingStrategy value)
+    {
+        layer.RenderingStrategy = value;
+    }
+
+    public void LayerSetRenderingStrategy(Entity<SpriteComponent?> sprite, string key, LayerRenderingStrategy value)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (LayerMapTryGet(sprite, key, out var index, true))
+            LayerSetRenderingStrategy(sprite, index, value);
+    }
+
+    public void LayerSetRenderingStrategy(Entity<SpriteComponent?> sprite, Enum key, LayerRenderingStrategy value)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (LayerMapTryGet(sprite, key, out var index, true))
+            LayerSetRenderingStrategy(sprite, index, value);
     }
 
     #endregion

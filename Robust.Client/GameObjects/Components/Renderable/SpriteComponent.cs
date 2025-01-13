@@ -884,16 +884,11 @@ namespace Robust.Client.GameObjects
             LayerSetAutoAnimated(layer, autoAnimated);
         }
 
-        #endregion
-
+        [Obsolete("Use SpriteSystem.LayerSetRenderingStrategy() instead.")]
         public void LayerSetRenderingStrategy(int layer, LayerRenderingStrategy renderingStrategy)
-        {
-            if (!TryGetLayer(layer, out var theLayer, true))
-                return;
+            => Sys.LayerSetRenderingStrategy((Owner, this), layer, renderingStrategy);
 
-            theLayer.RenderingStrategy = renderingStrategy;
-        }
-
+        [Obsolete("Use SpriteSystem.LayerSetRenderingStrategy() instead.")]
         public void LayerSetRenderingStrategy(object layerKey, LayerRenderingStrategy renderingStrategy)
         {
             if (!LayerMapTryGet(layerKey, out var layer, true))
@@ -901,6 +896,9 @@ namespace Robust.Client.GameObjects
 
             LayerSetRenderingStrategy(layer, renderingStrategy);
         }
+
+        #endregion
+
 
         /// <inheritdoc />
         public RSI.StateId LayerGetState(int layer)

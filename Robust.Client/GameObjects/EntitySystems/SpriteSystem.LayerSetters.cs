@@ -1,5 +1,8 @@
 using System;
+using Robust.Client.Graphics;
+using Robust.Client.ResourceManagement;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Serialization.TypeSerializers.Implementations;
 using Robust.Shared.Utility;
 using static Robust.Client.GameObjects.SpriteComponent;
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -44,19 +47,13 @@ public sealed partial class SpriteSystem
 
     public void LayerSetSprite(Entity<SpriteComponent?> sprite, int index, SpriteSpecifier specifier)
     {
-        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
-            return;
-
-        if (!TryGetLayer(sprite, index, out var layer, true))
-            return;
-
         switch (specifier)
         {
             case SpriteSpecifier.Texture tex:
-                LayerSetTexture(sprite, layer, tex.TexturePath);
+                LayerSetTexture(sprite, index, tex.TexturePath);
                 break;
             case SpriteSpecifier.Rsi rsi:
-                LayerSetState(sprite, layer, rsi.RsiState, rsi.RsiPath);
+                //LayerSetState(sprite, layer, rsi.RsiState, rsi.RsiPath);
                 break;
             default:
                 throw new NotImplementedException();
@@ -78,6 +75,56 @@ public sealed partial class SpriteSystem
     #endregion
 
     #region LayerSetTexture
+
+    public void LayerSetTexture(Entity<SpriteComponent?> sprite, int index, Texture? texture)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (!TryGetLayer(sprite, index, out var layer, true))
+            return;
+
+        layer.State = default;
+        layer.Texture = texture;
+        QueueUpdateIsInert(sprite!);
+        RebuildBounds(sprite!);
+    }
+
+    public void LayerSetTexture(Entity<SpriteComponent?> sprite, string key, Texture? texture)
+    {
+        if (LayerMapTryGet(sprite, key, out var index, true))
+            LayerSetTexture(sprite, index, texture);
+    }
+
+    public void LayerSetTexture(Entity<SpriteComponent?> sprite, Enum key, Texture? texture)
+    {
+        if (LayerMapTryGet(sprite, key, out var index, true))
+            LayerSetTexture(sprite, index, texture);
+    }
+
+    public void LayerSetTexture(Entity<SpriteComponent?> sprite, int index, ResPath path)
+    {
+        if (!_resourceCache.TryGetResource<TextureResource>(SpriteSpecifierSerializer.TextureRoot / path, out var texture))
+        {
+            if (path.Extension == "rsi")
+                Log.Error($"Expected texture but got rsi '{path}', did you mean 'sprite:' instead of 'texture:'?");
+            Log.Error($"Unable to load texture '{path}'. Trace:\n{Environment.StackTrace}");
+        }
+
+        LayerSetTexture(sprite, index, texture?.Texture);
+    }
+
+    public void LayerSetTexture(Entity<SpriteComponent?> sprite, string key, ResPath texture)
+    {
+        if (LayerMapTryGet(sprite, key, out var index, true))
+            LayerSetTexture(sprite, index, texture);
+    }
+
+    public void LayerSetTexture(Entity<SpriteComponent?> sprite, Enum key, ResPath texture)
+    {
+        if (LayerMapTryGet(sprite, key, out var index, true))
+            LayerSetTexture(sprite, index, texture);
+    }
 
     #endregion
 }

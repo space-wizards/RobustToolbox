@@ -667,8 +667,7 @@ namespace Robust.Client.GameObjects
             LayerSetSprite(layer, specifier);
         }
 
-        #endregion
-
+        [Obsolete("Use SpriteSystem.LayerSetTexture() instead.")]
         public void LayerSetTexture(int layer, Texture? texture)
         {
             if (!TryGetLayer(layer, out var theLayer, true))
@@ -679,6 +678,7 @@ namespace Robust.Client.GameObjects
             Sys.RebuildBounds((Owner, this));
         }
 
+        [Obsolete("Use SpriteSystem.LayerSetTexture() instead.")]
         public void LayerSetTexture(object layerKey, Texture texture)
         {
             if (!LayerMapTryGet(layerKey, out var layer, true))
@@ -687,16 +687,19 @@ namespace Robust.Client.GameObjects
             LayerSetTexture(layer, texture);
         }
 
+        [Obsolete("Use SpriteSystem.LayerSetTexture() instead.")]
         public void LayerSetTexture(int layer, string texturePath)
         {
             LayerSetTexture(layer, new ResPath(texturePath));
         }
 
+        [Obsolete("Use SpriteSystem.LayerSetTexture() instead.")]
         public void LayerSetTexture(object layerKey, string texturePath)
         {
             LayerSetTexture(layerKey, new ResPath(texturePath));
         }
 
+        [Obsolete("Use SpriteSystem.LayerSetTexture() instead.")]
         public void LayerSetTexture(int layer, ResPath texturePath)
         {
             if (!resourceCache.TryGetResource<TextureResource>(TextureRoot / texturePath, out var texture))
@@ -715,6 +718,7 @@ namespace Robust.Client.GameObjects
             LayerSetTexture(layer, texture?.Texture);
         }
 
+        [Obsolete("Use SpriteSystem.LayerSetTexture() instead.")]
         public void LayerSetTexture(object layerKey, ResPath texturePath)
         {
             if (!LayerMapTryGet(layerKey, out var layer, true))
@@ -722,6 +726,8 @@ namespace Robust.Client.GameObjects
 
             LayerSetTexture(layer, texturePath);
         }
+
+        #endregion
 
         public void LayerSetState(int layer, RSI.StateId stateId)
         {

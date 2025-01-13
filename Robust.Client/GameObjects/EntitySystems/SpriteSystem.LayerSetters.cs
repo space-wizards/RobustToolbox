@@ -355,6 +355,40 @@ public sealed partial class SpriteSystem
             LayerSetRotation(sprite, index, value);
     }
 
+    public void LayerSetOffset(Entity<SpriteComponent?> sprite, int index, Vector2 value)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (!TryGetLayer(sprite, index, out var layer, true))
+            return;
+
+        if (layer._offset.EqualsApprox(value))
+            return;
+
+        layer._offset = value;
+        layer.UpdateLocalMatrix();
+        RebuildBounds(sprite!);
+    }
+
+    public void LayerSetOffset(Entity<SpriteComponent?> sprite, string key, Vector2 value)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (LayerMapTryGet(sprite, key, out var index, true))
+            LayerSetOffset(sprite, index, value);
+    }
+
+    public void LayerSetOffset(Entity<SpriteComponent?> sprite, Enum key, Vector2 value)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (LayerMapTryGet(sprite, key, out var index, true))
+            LayerSetOffset(sprite, index, value);
+    }
+
     public void LayerSetVisible(Entity<SpriteComponent?> sprite, int index, bool value)
     {
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp))

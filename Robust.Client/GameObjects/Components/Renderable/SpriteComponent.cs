@@ -806,6 +806,19 @@ namespace Robust.Client.GameObjects
             LayerSetRotation(layer, rotation);
         }
 
+        [Obsolete("Use SpriteSystem.LayerSetOffset() instead.")]
+        public void LayerSetOffset(int layer, Vector2 layerOffset)
+            => Sys.LayerSetOffset((Owner, this), layer, layerOffset);
+
+        [Obsolete("Use SpriteSystem.LayerSetOffset() instead.")]
+        public void LayerSetOffset(object layerKey, Vector2 layerOffset)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer, true))
+                return;
+
+            LayerSetOffset(layer, layerOffset);
+        }
+
         [Obsolete("Use SpriteSystem.LayerSetVisible() instead.")]
         public void LayerSetVisible(int layer, bool visible)
             => Sys.LayerSetVisible((Owner, this), layer, visible);
@@ -881,23 +894,6 @@ namespace Robust.Client.GameObjects
                 return;
 
             LayerSetAutoAnimated(layer, autoAnimated);
-        }
-
-        public void LayerSetOffset(int layer, Vector2 layerOffset)
-        {
-            if (!TryGetLayer(layer, out var theLayer, true))
-                return;
-
-            theLayer.Offset = layerOffset;
-            Sys.RebuildBounds((Owner, this));
-        }
-
-        public void LayerSetOffset(object layerKey, Vector2 layerOffset)
-        {
-            if (!LayerMapTryGet(layerKey, out var layer, true))
-                return;
-
-            LayerSetOffset(layer, layerOffset);
         }
 
         public void LayerSetRenderingStrategy(int layer, LayerRenderingStrategy renderingStrategy)

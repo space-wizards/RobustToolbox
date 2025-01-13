@@ -644,19 +644,7 @@ namespace Robust.Client.GameObjects
 
         [Obsolete("Use SpriteSystem.LayerSetSprite() instead.")]
         public void LayerSetSprite(int layer, SpriteSpecifier specifier)
-        {
-            switch (specifier)
-            {
-                case SpriteSpecifier.Texture tex:
-                    LayerSetTexture(layer, tex.TexturePath);
-                    break;
-                case SpriteSpecifier.Rsi rsi:
-                    LayerSetState(layer, rsi.RsiState, rsi.RsiPath);
-                    break;
-                default:
-                    throw new NotImplementedException();
-            }
-        }
+            => Sys.LayerSetSprite((Owner, this), layer, specifier);
 
         [Obsolete("Use SpriteSystem.LayerSetSprite() instead.")]
         public void LayerSetSprite(object layerKey, SpriteSpecifier specifier)
@@ -669,14 +657,7 @@ namespace Robust.Client.GameObjects
 
         [Obsolete("Use SpriteSystem.LayerSetTexture() instead.")]
         public void LayerSetTexture(int layer, Texture? texture)
-        {
-            if (!TryGetLayer(layer, out var theLayer, true))
-                return;
-            theLayer.SetTexture(texture);
-
-            Sys.QueueUpdateIsInert((Owner, this));
-            Sys.RebuildBounds((Owner, this));
-        }
+            => Sys.LayerSetTexture((Owner, this), layer, texture);
 
         [Obsolete("Use SpriteSystem.LayerSetTexture() instead.")]
         public void LayerSetTexture(object layerKey, Texture texture)
@@ -701,22 +682,7 @@ namespace Robust.Client.GameObjects
 
         [Obsolete("Use SpriteSystem.LayerSetTexture() instead.")]
         public void LayerSetTexture(int layer, ResPath texturePath)
-        {
-            if (!resourceCache.TryGetResource<TextureResource>(TextureRoot / texturePath, out var texture))
-            {
-                if (texturePath.Extension == "rsi")
-                {
-                    Logger.ErrorS(LogCategory,
-                        "Expected texture but got rsi '{0}', did you mean 'sprite:' instead of 'texture:'?",
-                        texturePath);
-                }
-
-                Logger.ErrorS(LogCategory, "Unable to load texture '{0}'. Trace:\n{1}", texturePath,
-                    Environment.StackTrace);
-            }
-
-            LayerSetTexture(layer, texture?.Texture);
-        }
+            => Sys.LayerSetTexture((Owner, this), layer, texturePath);
 
         [Obsolete("Use SpriteSystem.LayerSetTexture() instead.")]
         public void LayerSetTexture(object layerKey, ResPath texturePath)
@@ -727,16 +693,11 @@ namespace Robust.Client.GameObjects
             LayerSetTexture(layer, texturePath);
         }
 
-        #endregion
-
+        [Obsolete("Use SpriteSystem.LayerSetRsiState() instead.")]
         public void LayerSetState(int layer, RSI.StateId stateId)
-        {
-            if (!TryGetLayer(layer, out var theLayer, true))
-                return;
-            theLayer.SetState(stateId);
-            Sys.RebuildBounds((Owner, this));
-        }
+            => Sys.LayerSetRsiState((Owner, this), layer, stateId);
 
+        [Obsolete("Use SpriteSystem.LayerSetRsiState() instead.")]
         public void LayerSetState(object layerKey, RSI.StateId stateId)
         {
             if (!LayerMapTryGet(layerKey, out var layer, true))
@@ -745,38 +706,11 @@ namespace Robust.Client.GameObjects
             LayerSetState(layer, stateId);
         }
 
+        [Obsolete("Use SpriteSystem.LayerSetRsi() instead.")]
         public void LayerSetState(int layer, RSI.StateId stateId, RSI? rsi)
-        {
-            if (!TryGetLayer(layer, out var theLayer, true))
-                return;
-            theLayer.State = stateId;
-            theLayer.RSI = rsi;
-            var actualRsi = theLayer.RSI ?? BaseRSI;
-            if (actualRsi == null)
-            {
-                Logger.ErrorS(LogCategory, "No RSI to pull new state from! Trace:\n{0}", Environment.StackTrace);
-                theLayer.Texture = null;
-            }
-            else
-            {
-                if (actualRsi.TryGetState(stateId, out var state))
-                {
-                    theLayer.AnimationFrame = 0;
-                    theLayer.AnimationTime = 0;
-                    theLayer.AnimationTimeLeft = state.GetDelay(0);
-                }
-                else
-                {
-                    Logger.ErrorS(LogCategory, "State '{0}' does not exist in RSI {1}. Trace:\n{2}", stateId,
-                        actualRsi.Path, Environment.StackTrace);
-                    theLayer.Texture = null;
-                }
-            }
+            => Sys.LayerSetRsi((Owner, this), layer, rsi, stateId);
 
-            Sys.QueueUpdateIsInert((Owner, this));
-            Sys.RebuildBounds((Owner, this));
-        }
-
+        [Obsolete("Use SpriteSystem.LayerSetRsi() instead.")]
         public void LayerSetState(object layerKey, RSI.StateId stateId, RSI rsi)
         {
             if (!LayerMapTryGet(layerKey, out var layer, true))
@@ -785,26 +719,23 @@ namespace Robust.Client.GameObjects
             LayerSetState(layer, stateId, rsi);
         }
 
+        [Obsolete("Use SpriteSystem.LayerSetRsiState() instead.")]
         public void LayerSetState(int layer, RSI.StateId stateId, string rsiPath)
         {
             LayerSetState(layer, stateId, new ResPath(rsiPath));
         }
 
+        [Obsolete("Use SpriteSystem.LayerSetRsi() instead.")]
         public void LayerSetState(object layerKey, RSI.StateId stateId, string rsiPath)
         {
             LayerSetState(layerKey, stateId, new ResPath(rsiPath));
         }
 
+        [Obsolete("Use SpriteSystem.LayerSetRsi() instead.")]
         public void LayerSetState(int layer, RSI.StateId stateId, ResPath rsiPath)
-        {
-            if (!resourceCache.TryGetResource<RSIResource>(TextureRoot / rsiPath, out var res))
-            {
-                Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, Environment.StackTrace);
-            }
+            => Sys.LayerSetRsi((Owner, this), layer, rsiPath, stateId);
 
-            LayerSetState(layer, stateId, res?.RSI);
-        }
-
+        [Obsolete("Use SpriteSystem.LayerSetRsi() instead.")]
         public void LayerSetState(object layerKey, RSI.StateId stateId, ResPath rsiPath)
         {
             if (!LayerMapTryGet(layerKey, out var layer, true))
@@ -813,14 +744,11 @@ namespace Robust.Client.GameObjects
             LayerSetState(layer, stateId, rsiPath);
         }
 
+        [Obsolete("Use SpriteSystem.LayerSetRsi() instead.")]
         public void LayerSetRSI(int layer, RSI? rsi)
-        {
-            if (!TryGetLayer(layer, out var theLayer, true))
-                return;
-            theLayer.SetRsi(rsi);
-            Sys.RebuildBounds((Owner, this));
-        }
+            => Sys.LayerSetRsi((Owner, this), layer, rsi);
 
+        [Obsolete("Use SpriteSystem.LayerSetRsi() instead.")]
         public void LayerSetRSI(object layerKey, RSI rsi)
         {
             if (!LayerMapTryGet(layerKey, out var layer, true))
@@ -829,26 +757,23 @@ namespace Robust.Client.GameObjects
             LayerSetRSI(layer, rsi);
         }
 
+        [Obsolete("Use SpriteSystem.LayerSetRsi() instead.")]
         public void LayerSetRSI(int layer, string rsiPath)
         {
             LayerSetRSI(layer, new ResPath(rsiPath));
         }
 
+        [Obsolete("Use SpriteSystem.LayerSetRsi() instead.")]
         public void LayerSetRSI(object layerKey, string rsiPath)
         {
             LayerSetRSI(layerKey, new ResPath(rsiPath));
         }
 
+        [Obsolete("Use SpriteSystem.LayerSetRsi() instead.")]
         public void LayerSetRSI(int layer, ResPath rsiPath)
-        {
-            if (!resourceCache.TryGetResource<RSIResource>(TextureRoot / rsiPath, out var res))
-            {
-                Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, Environment.StackTrace);
-            }
+            => Sys.LayerSetRsi((Owner, this), layer, rsiPath);
 
-            LayerSetRSI(layer, res?.RSI);
-        }
-
+        [Obsolete("Use SpriteSystem.LayerSetRsi() instead.")]
         public void LayerSetRSI(object layerKey, ResPath rsiPath)
         {
             if (!LayerMapTryGet(layerKey, out var layer, true))
@@ -856,6 +781,8 @@ namespace Robust.Client.GameObjects
 
             LayerSetRSI(layer, rsiPath);
         }
+
+        #endregion
 
         public void LayerSetScale(int layer, Vector2 scale)
         {
@@ -1273,16 +1200,16 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            private RSI.StateId _state;
+            internal RSI.StateId StateId;
             [ViewVariables] public RSI.StateId State
             {
-                get => _state;
+                get => StateId;
                 set
                 {
-                    if (_state == value)
+                    if (StateId == value)
                         return;
 
-                    _state = value;
+                    StateId = value;
                     UpdateActualState();
                 }
             }
@@ -1304,7 +1231,7 @@ namespace Robust.Client.GameObjects
             /// </remarks>
             [ViewVariables] public bool Cycle;
 
-            private RSI.State? _actualState;
+            internal RSI.State? _actualState;
             [ViewVariables] public RSI.State? ActualState => _actualState;
 
             public Matrix3x2 LocalMatrix = Matrix3x2.Identity;

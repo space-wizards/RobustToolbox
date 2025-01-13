@@ -282,9 +282,11 @@ namespace Robust.Client.GameObjects
                 Layers.Clear();
                 foreach (var datum in layerDatums)
                 {
-                    var layer = new Layer(this);
+                    var layer = new Layer();
                     Layers.Add(layer);
-                    LayerSetData(layer, Layers.Count - 1, datum);
+                    layer.Owner = (Owner, this);
+                    layer.Index = Layers.Count - 1;
+                    LayerSetData(layer, datum);
                 }
 
             }
@@ -381,7 +383,7 @@ namespace Robust.Client.GameObjects
 
         [Obsolete("Use SpriteSystem.AddBlankLayer() instead.")]
         public int AddBlankLayer(int? newIndex = null)
-            => Sys.AddBlankLayer((Owner, this), newIndex);
+            => Sys.AddBlankLayer((Owner, this), newIndex).Index;
 
         [Obsolete("Use SpriteSystem.AddLayer() instead.")]
         public int AddLayer(PrototypeLayerData layerDatum, int? newIndex = null)
@@ -496,8 +498,10 @@ namespace Robust.Client.GameObjects
             => Sys.LayerSetData((Owner, this), index, layerDatum);
 
         [Obsolete("Use SpriteSystem.LayerSetData() instead.")]
-        internal void LayerSetData(Layer layer, int index, PrototypeLayerData layerDatum)
+        internal void LayerSetData(Layer layer, PrototypeLayerData layerDatum)
         {
+            DebugTools.AssertEqual(layer, layer.Owner.Comp.Layers[layer.Index]);
+
             if (!string.IsNullOrWhiteSpace(layerDatum.RsiPath))
             {
                 var path = TextureRoot / layerDatum.RsiPath;
@@ -584,12 +588,12 @@ namespace Robust.Client.GameObjects
 
                     if (LayerMap.TryGetValue(key, out var mappedIndex))
                     {
-                        if (mappedIndex != index)
+                        if (mappedIndex != layer.Index)
                             Logger.ErrorS(LogCategory, "Duplicate layer map key definition: {0}", key);
                         continue;
                     }
 
-                    LayerMap[key] = index;
+                    LayerMap[key] = layer.Index;
                 }
             }
 
@@ -1143,7 +1147,8 @@ namespace Robust.Client.GameObjects
         {
             internal SpriteComponent _parent => Owner.Comp;
 
-            [ViewVariables] public readonly Entity<SpriteComponent> Owner;
+            [ViewVariables] public Entity<SpriteComponent> Owner;
+            [ViewVariables] public int Index;
 
             [ViewVariables] public string? ShaderPrototype;
             [ViewVariables] public ShaderInstance? Shader;
@@ -1312,15 +1317,12 @@ namespace Robust.Client.GameObjects
             [ViewVariables(VVAccess.ReadWrite)]
             public CopyToShaderParameters? CopyToShaderParameters;
 
-            public Layer(SpriteComponent parent)
+            public Layer()
             {
-                Owner = (parent.Owner, parent);
             }
 
-            public Layer(Layer toClone, SpriteComponent parentSprite)
+            public Layer(Layer toClone, SpriteComponent _)
             {
-                Owner = (parentSprite.Owner, parentSprite);
-
                 if (toClone.Shader != null)
                 {
                     Shader = toClone.Shader.Mutable ? toClone.Shader.Duplicate() : toClone.Shader;

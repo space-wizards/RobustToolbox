@@ -35,6 +35,8 @@ public sealed partial class SpriteSystem
         if (index >= 0 && index < sprite.Comp.Layers.Count)
         {
             layer = sprite.Comp.Layers[index];
+            DebugTools.AssertEqual(layer.Owner, sprite!);
+            DebugTools.AssertEqual(layer.Index, index);
             return true;
         }
 
@@ -59,15 +61,15 @@ public sealed partial class SpriteSystem
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp, logMissing))
             return false;
 
-        if (index < 0 || index >= sprite.Comp.Layers.Count)
-        {
-            if (logMissing)
-                Log.Error($"Layer index '{index}' on entity {ToPrettyString(sprite)} does not exist! Trace:\n{Environment.StackTrace}");
+        if (!TryGetLayer(sprite, index, out layer, logMissing))
             return false;
-        }
 
-        layer = sprite.Comp.Layers[index];
         sprite.Comp.Layers.RemoveAt(index);
+
+        foreach (var otherLayer in sprite.Comp.Layers[index..])
+        {
+            otherLayer.Index--;
+        }
 
         // TODO SPRITE track inverse-mapping?
         foreach (var (key, value) in sprite.Comp.LayerMap)
@@ -79,6 +81,16 @@ public sealed partial class SpriteSystem
                 sprite.Comp.LayerMap[key]--;
             }
         }
+
+        layer.Owner = default;
+        layer.Index = -1;
+
+#if DEBUG
+        foreach (var otherLayer in sprite.Comp.Layers)
+        {
+            DebugTools.AssertEqual(otherLayer, sprite.Comp.Layers[otherLayer.Index]);
+        }
+#endif
 
         RebuildBounds(sprite!);
         QueueUpdateIsInert(sprite!);
@@ -94,12 +106,25 @@ public sealed partial class SpriteSystem
     public int AddLayer(Entity<SpriteComponent?> sprite, Layer layer, int? index = null)
     {
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+        {
+            layer.Index = -1;
+            layer.Owner = default;
             return -1;
+        }
+
+        layer.Owner = sprite.Owner!;
 
         if (index is { } i && i != sprite.Comp.Layers.Count)
         {
+            foreach (var otherLayer in sprite.Comp.Layers[i..])
+            {
+                otherLayer.Index++;
+            }
+
             // TODO SPRITE track inverse-mapping?
             sprite.Comp.Layers.Insert(i, layer);
+            layer.Index = i;
+
             foreach (var (key, value) in sprite.Comp.LayerMap)
             {
                 if (value >= i)
@@ -108,13 +133,20 @@ public sealed partial class SpriteSystem
         }
         else
         {
-            index = sprite.Comp.Layers.Count;
+            layer.Index = sprite.Comp.Layers.Count;
             sprite.Comp.Layers.Add(layer);
         }
 
+#if DEBUG
+        foreach (var otherLayer in sprite.Comp.Layers)
+        {
+            DebugTools.AssertEqual(otherLayer, sprite.Comp.Layers[otherLayer.Index]);
+        }
+#endif
+
         RebuildBounds(sprite!);
         QueueUpdateIsInert(sprite!);
-        return index.Value;
+        return layer.Index;
     }
 
     /// <summary>
@@ -130,7 +162,7 @@ public sealed partial class SpriteSystem
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
             return -1;
 
-        var layer = new Layer(sprite.Comp) {State = stateId, RSI = rsi};
+        var layer = new Layer {State = stateId, RSI = rsi};
         rsi ??= sprite.Comp._baseRsi;
 
         if (rsi != null && rsi.TryGetState(stateId, out var state))
@@ -180,7 +212,7 @@ public sealed partial class SpriteSystem
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
             return -1;
 
-        var layer = new Layer(sprite.Comp) {Texture = texture};
+        var layer = new Layer {Texture = texture};
         return AddLayer(sprite, layer, index);
     }
 
@@ -202,21 +234,19 @@ public sealed partial class SpriteSystem
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
             return -1;
 
-        index = AddBlankLayer(sprite, index);
-        sprite.Comp.LayerSetData(index.Value, layerDatum);
-        return index.Value;
+        var layer = AddBlankLayer(sprite!, index);
+        LayerSetData(layer, layerDatum);
+        return layer.Index;
     }
 
     /// <summary>
     /// Add a blank sprite layer.
     /// </summary>
-    public int AddBlankLayer(Entity<SpriteComponent?> sprite, int? index = null)
+    public Layer AddBlankLayer(Entity<SpriteComponent> sprite, int? index = null)
     {
-        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
-            return -1;
-
-        var layer = new Layer(sprite.Comp);
-        return AddLayer(sprite, layer, index);
+        var layer = new Layer();
+        AddLayer(sprite!, layer, index);
+        return layer;
     }
 
     #endregion

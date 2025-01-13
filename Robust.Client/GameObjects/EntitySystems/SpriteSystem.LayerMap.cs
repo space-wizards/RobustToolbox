@@ -152,6 +152,32 @@ public sealed partial class SpriteSystem
         return false;
     }
 
+    /// <summary>
+    /// Attempt to resolve an enum mapping.
+    /// </summary>
+    public bool TryGetLayer(Entity<SpriteComponent?> sprite, Enum key, [NotNullWhen(true)] out Layer? layer, bool logMissing)
+    {
+        layer = null;
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp, logMissing))
+            return false;
+
+        return LayerMapTryGet(sprite, key, out var index, logMissing)
+               && TryGetLayer(sprite, index, out layer, logMissing);
+    }
+
+    /// <summary>
+    /// Attempt to resolve a string mapping.
+    /// </summary>
+    public bool TryGetLayer(Entity<SpriteComponent?> sprite, string key, [NotNullWhen(true)] out Layer? layer, bool logMissing)
+    {
+        layer = null;
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp, logMissing))
+            return false;
+
+        return LayerMapTryGet(sprite, key, out var index, logMissing)
+               && TryGetLayer(sprite, index, out layer, logMissing);
+    }
+
     public int LayerMapGet(Entity<SpriteComponent?> sprite, Enum key)
     {
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
@@ -197,9 +223,9 @@ public sealed partial class SpriteSystem
         if (LayerExists(sprite, key))
             throw new Exception("Layer already exists");
 
-        var index = AddBlankLayer(sprite);
-        LayerMapSet(sprite, key, index);
-        return index;
+        var layer = AddBlankLayer(sprite!);
+        LayerMapSet(sprite, key, layer.Index);
+        return layer.Index;
     }
 
     /// <summary>
@@ -214,9 +240,9 @@ public sealed partial class SpriteSystem
         if (LayerExists(sprite, key))
             throw new Exception("Layer already exists");
 
-        var index = AddBlankLayer(sprite);
-        LayerMapSet(sprite, key, index);
-        return index;
+        var layer = AddBlankLayer(sprite!);
+        LayerMapSet(sprite, key, layer.Index);
+        return layer.Index;
     }
 
     public bool RemoveLayer(Entity<SpriteComponent?> sprite, string key, bool logMissing = true)

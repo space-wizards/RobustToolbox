@@ -471,6 +471,17 @@ namespace Robust.Client.GameObjects
             set => Sys.SetSnapCardinals((Owner, this), value);
         }
 
+        /// <summary>
+        /// If true, the sprite will always be rendered as if its world rotation relative to the screen's eye is 0.
+        /// Note for 4- or 8- directional sprites, the relative rotation is still used to choose the RSI state.
+        /// </summary>
+        /// <remarks>
+        /// E.g., this is used to ensure that players/mobs are always standing upright, but the sprite will still change
+        /// based on the direction that a mob is looking in.
+        /// </remarks>
+        [DataField("noRot")]
+        public bool NoRotation;
+
         #endregion
         /// <summary>
         ///     Fills in a layer's values using some <see cref="PrototypeLayerData"/>.
@@ -1045,9 +1056,6 @@ namespace Robust.Client.GameObjects
             RenderInternal(drawingHandle, eyeRotation, worldRotation, position, overrideDirection);
         }
 
-        [DataField("noRot")] internal bool _screenLock = false;
-
-
         [DataField("overrideDir")]
         [ViewVariables(VVAccess.ReadWrite)]
         public Direction DirectionOverride = Direction.East;
@@ -1055,10 +1063,6 @@ namespace Robust.Client.GameObjects
         [DataField("enableOverrideDir")]
         [ViewVariables(VVAccess.ReadWrite)]
         public bool EnableDirectionOverride;
-
-        /// <inheritdoc />
-        [ViewVariables(VVAccess.ReadWrite)]
-        public bool NoRotation { get => _screenLock; set => _screenLock = value; }
 
         internal void RenderInternal(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Vector2 worldPosition, Direction? overrideDirection)
         {

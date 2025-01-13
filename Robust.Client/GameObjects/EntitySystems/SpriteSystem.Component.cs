@@ -69,7 +69,7 @@ public sealed partial class SpriteSystem
         target.scale = source.scale;
         target.LocalMatrix = Matrix3Helpers.CreateTransform(in target.offset, in target.rotation, in target.scale);
         target.drawDepth = source.drawDepth;
-        target._screenLock = source._screenLock;
+        target.NoRotation = source.NoRotation;
         target.DirectionOverride = source.DirectionOverride;
         target.EnableDirectionOverride = source.EnableDirectionOverride;
         target.Layers = new List<SpriteComponent.Layer>(source.Layers.Count);

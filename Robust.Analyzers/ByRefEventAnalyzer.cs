@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -24,7 +24,7 @@ public sealed class ByRefEventAnalyzer : DiagnosticAnalyzer
         "Make sure that methods subscribing to a ref event have the ref keyword for the event argument."
     );
 
-    private static readonly DiagnosticDescriptor ByRefEventRaisedByValueRule = new(
+    public static readonly DiagnosticDescriptor ByRefEventRaisedByValueRule = new(
         Diagnostics.IdByRefEventRaisedByValue,
         "By-ref event raised by value",
         "Tried to raise a by-ref event '{0}' by value",
@@ -34,7 +34,7 @@ public sealed class ByRefEventAnalyzer : DiagnosticAnalyzer
         "Make sure to use the ref keyword when raising ref events."
     );
 
-    private static readonly DiagnosticDescriptor ByValueEventRaisedByRefRule = new(
+    public static readonly DiagnosticDescriptor ByValueEventRaisedByRefRule = new(
         Diagnostics.IdValueEventRaisedByRef,
         "Value event raised by-ref",
         "Tried to raise a value event '{0}' by-ref",

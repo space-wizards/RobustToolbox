@@ -148,7 +148,6 @@ namespace Robust.Client.GameObjects
 
         public Matrix3x2 LocalMatrix = Matrix3x2.Identity;
 
-        #region SpriteTree
         [ViewVariables]
         public DynamicTree<ComponentTreeEntry<SpriteComponent>>? Tree { get; set; }
 
@@ -157,7 +156,6 @@ namespace Robust.Client.GameObjects
         public bool AddToTree => Visible && !ContainerOccluded && Layers.Count > 0;
 
         public bool TreeUpdateQueued { get; set; }
-        #endregion
 
         internal RSI? _baseRsi;
 
@@ -782,16 +780,11 @@ namespace Robust.Client.GameObjects
             LayerSetRSI(layer, rsiPath);
         }
 
-        #endregion
-
+        [Obsolete("Use SpriteSystem.LayerSetScale() instead.")]
         public void LayerSetScale(int layer, Vector2 scale)
-        {
-            if (!TryGetLayer(layer, out var theLayer, true))
-                return;
-            theLayer.Scale = scale;
-            Sys.RebuildBounds((Owner, this));
-        }
+            => Sys.LayerSetScale((Owner, this), layer, scale);
 
+        [Obsolete("Use SpriteSystem.LayerSetScale() instead.")]
         public void LayerSetScale(object layerKey, Vector2 scale)
         {
             if (!LayerMapTryGet(layerKey, out var layer, true))
@@ -800,15 +793,11 @@ namespace Robust.Client.GameObjects
             LayerSetScale(layer, scale);
         }
 
-
+        [Obsolete("Use SpriteSystem.LayerSetRotation() instead.")]
         public void LayerSetRotation(int layer, Angle rotation)
-        {
-            if (!TryGetLayer(layer, out var theLayer, true))
-                return;
-            theLayer.Rotation = rotation;
-            Sys.RebuildBounds((Owner, this));
-        }
+            => Sys.LayerSetRotation((Owner, this), layer, rotation);
 
+        [Obsolete("Use SpriteSystem.LayerSetRotation() instead.")]
         public void LayerSetRotation(object layerKey, Angle rotation)
         {
             if (!LayerMapTryGet(layerKey, out var layer, true))
@@ -817,14 +806,11 @@ namespace Robust.Client.GameObjects
             LayerSetRotation(layer, rotation);
         }
 
+        [Obsolete("Use SpriteSystem.LayerSetVisible() instead.")]
         public void LayerSetVisible(int layer, bool visible)
-        {
-            if (!TryGetLayer(layer, out var theLayer, true))
-                return;
+            => Sys.LayerSetVisible((Owner, this), layer, visible);
 
-            theLayer.Visible = visible;
-        }
-
+        [Obsolete("Use SpriteSystem.LayerSetVisible() instead.")]
         public void LayerSetVisible(object layerKey, bool visible)
         {
             if (!LayerMapTryGet(layerKey, out var layer, true))
@@ -833,15 +819,11 @@ namespace Robust.Client.GameObjects
             LayerSetVisible(layer, visible);
         }
 
+        [Obsolete("Use SpriteSystem.LayerSetColor() instead.")]
         public void LayerSetColor(int layer, Color color)
-        {
-            if (!TryGetLayer(layer, out var theLayer, true))
-                return;
+            => Sys.LayerSetColor((Owner, this), layer, color);
 
-            theLayer.Color = color;
-            Sys.RebuildBounds((Owner, this));
-        }
-
+        [Obsolete("Use SpriteSystem.LayerSetColor() instead.")]
         public void LayerSetColor(object layerKey, Color color)
         {
             if (!LayerMapTryGet(layerKey, out var layer, true))
@@ -849,6 +831,8 @@ namespace Robust.Client.GameObjects
 
             LayerSetColor(layer, color);
         }
+
+        #endregion
 
         public void LayerSetDirOffset(int layer, DirectionOffset offset)
         {
@@ -1266,7 +1250,7 @@ namespace Robust.Client.GameObjects
             }
             internal Angle _rotation = Angle.Zero;
 
-            private bool _visible = true;
+            internal bool _visible = true;
             [ViewVariables(VVAccess.ReadWrite)]
             public bool Visible
             {

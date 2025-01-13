@@ -1,7 +1,9 @@
 using System;
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using static Robust.Client.GameObjects.SpriteComponent;
 using static Robust.Client.Graphics.RSI;
@@ -264,6 +266,144 @@ public sealed partial class SpriteSystem
 
         if (LayerMapTryGet(sprite, key, out var index, true))
             LayerSetRsi(sprite, index, rsi, state);
+    }
+
+    #endregion
+
+    #region Properties
+
+    public void LayerSetScale(Entity<SpriteComponent?> sprite, int index, Vector2 value)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (!TryGetLayer(sprite, index, out var layer, true))
+            return;
+
+        if (layer._scale.EqualsApprox(value))
+            return;
+
+        if (!ValidateScale(sprite.Owner, value))
+            return;
+
+        layer._scale = value;
+        layer.UpdateLocalMatrix();
+        RebuildBounds(sprite!);
+    }
+
+    public void LayerSetScale(Entity<SpriteComponent?> sprite, string key, Vector2 value)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (LayerMapTryGet(sprite, key, out var index, true))
+            LayerSetScale(sprite, index, value);
+    }
+
+    public void LayerSetScale(Entity<SpriteComponent?> sprite, Enum key, Vector2 value)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (LayerMapTryGet(sprite, key, out var index, true))
+            LayerSetScale(sprite, index, value);
+    }
+
+    public void LayerSetRotation(Entity<SpriteComponent?> sprite, int index, Angle value)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (!TryGetLayer(sprite, index, out var layer, true))
+            return;
+
+        if (layer._rotation.EqualsApprox(value))
+            return;
+
+        layer._rotation = value;
+        layer.UpdateLocalMatrix();
+        RebuildBounds(sprite!);
+    }
+
+    public void LayerSetRotation(Entity<SpriteComponent?> sprite, string key, Angle value)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (LayerMapTryGet(sprite, key, out var index, true))
+            LayerSetRotation(sprite, index, value);
+    }
+
+    public void LayerSetRotation(Entity<SpriteComponent?> sprite, Enum key, Angle value)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (LayerMapTryGet(sprite, key, out var index, true))
+            LayerSetRotation(sprite, index, value);
+    }
+
+    public void LayerSetVisible(Entity<SpriteComponent?> sprite, int index, bool value)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (!TryGetLayer(sprite, index, out var layer, true))
+            return;
+
+        if (layer._visible == value)
+            return;
+
+        layer._visible = value;
+        QueueUpdateIsInert(sprite!);
+        RebuildBounds(sprite!);
+    }
+
+    public void LayerSetVisible(Entity<SpriteComponent?> sprite, string key, bool value)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (LayerMapTryGet(sprite, key, out var index, true))
+            LayerSetVisible(sprite, index, value);
+    }
+
+    public void LayerSetVisible(Entity<SpriteComponent?> sprite, Enum key, bool value)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (LayerMapTryGet(sprite, key, out var index, true))
+            LayerSetVisible(sprite, index, value);
+    }
+
+    public void LayerSetColor(Entity<SpriteComponent?> sprite, int index, Color value)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (!TryGetLayer(sprite, index, out var layer, true))
+            return;
+
+        layer.Color = value;
+    }
+
+    public void LayerSetColor(Entity<SpriteComponent?> sprite, string key, Color value)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (LayerMapTryGet(sprite, key, out var index, true))
+            LayerSetColor(sprite, index, value);
+    }
+
+    public void LayerSetColor(Entity<SpriteComponent?> sprite, Enum key, Color value)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (LayerMapTryGet(sprite, key, out var index, true))
+            LayerSetColor(sprite, index, value);
     }
 
     #endregion

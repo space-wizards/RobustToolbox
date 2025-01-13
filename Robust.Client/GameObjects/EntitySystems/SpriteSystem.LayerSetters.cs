@@ -166,8 +166,40 @@ public sealed partial class SpriteSystem
         if (!TryGetLayer(sprite, index, out var layer, true))
             return;
 
-        layer.SetState(state);
-        RebuildBounds(sprite!);
+        LayerSetRsiState(sprite!, layer, state);
+    }
+
+    public void LayerSetRsiState(Entity<SpriteComponent> sprite, Layer layer, StateId state, bool refresh = false)
+    {
+        if (layer._parent != sprite.Comp)
+            throw new InvalidOperationException($"The given layer does not belong this entity.");
+
+        if (layer.StateId == state && !refresh)
+            return;
+
+        layer.StateId = state;
+
+        if (!layer.StateId.IsValid)
+        {
+            layer._actualState = null;
+        }
+        else if (layer.ActualRsi is not {} rsi)
+        {
+            Log.Error($"{ToPrettyString(sprite)} has no RSI to pull new state from! Trace:\n{Environment.StackTrace}");
+            layer._actualState = GetFallbackState();
+        }
+        else if (!rsi.TryGetState(layer.StateId, out layer._actualState))
+        {
+            layer._actualState = GetFallbackState();
+            Log.Error($"{ToPrettyString(sprite)}'s state '{state}' does not exist in RSI {rsi.Path}. Trace:\n{Environment.StackTrace}");
+        }
+
+        layer.AnimationFrame = 0;
+        layer.AnimationTime = 0;
+        layer.AnimationTimeLeft = layer._actualState?.GetDelay(0) ?? 0f;
+
+        RebuildBounds(sprite);
+        QueueUpdateIsInert(sprite);
     }
 
     public void LayerSetRsiState(Entity<SpriteComponent?> sprite, string key, StateId state)
@@ -200,28 +232,8 @@ public sealed partial class SpriteSystem
         if (!TryGetLayer(sprite, index, out var layer, true))
             return;
 
-        layer.RSI = rsi;
-        if (state != null)
-            layer.StateId = state.Value;
-
-        layer.AnimationFrame = 0;
-        layer.AnimationTime = 0;
-
-        var actualRsi = layer.RSI ?? sprite.Comp.BaseRSI;
-        if (actualRsi == null)
-        {
-            Log.Error($"Entity {ToPrettyString(sprite)} has no RSI to pull new state from! Trace:\n{Environment.StackTrace}");
-        }
-        else
-        {
-            if (actualRsi.TryGetState(layer.StateId, out layer._actualState))
-                layer.AnimationTimeLeft = layer._actualState.GetDelay(0);
-            else
-                Log.Error($"Entity {ToPrettyString(sprite)}'s state '{state}' does not exist in RSI {actualRsi.Path}. Trace:\n{Environment.StackTrace}");
-        }
-
-        RebuildBounds(sprite!);
-        QueueUpdateIsInert(sprite!);
+        layer._rsi = rsi;
+        LayerSetRsiState(sprite!, layer, state ?? layer.StateId, refresh: true);
     }
 
     public void LayerSetRsi(Entity<SpriteComponent?> sprite, string key, RSI? rsi, StateId? state = null)

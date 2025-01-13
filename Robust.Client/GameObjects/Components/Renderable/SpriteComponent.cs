@@ -1157,13 +1157,13 @@ namespace Robust.Client.GameObjects
 
         public sealed class Layer : ISpriteLayer, ISerializationHooks
         {
-            [ViewVariables] private readonly SpriteComponent _parent;
+            [ViewVariables] internal readonly SpriteComponent _parent;
 
             [ViewVariables] public string? ShaderPrototype;
             [ViewVariables] public ShaderInstance? Shader;
             [ViewVariables] public Texture? Texture;
 
-            private RSI? _rsi;
+            internal RSI? _rsi;
             [ViewVariables] public RSI? RSI
             {
                 get => _rsi;

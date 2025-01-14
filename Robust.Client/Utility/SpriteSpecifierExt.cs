@@ -17,6 +17,7 @@ namespace Robust.Client.Utility
     /// </summary>
     public static class SpriteSpecifierExt
     {
+        [Obsolete("Use SpriteSystem.GetTexture() instead")]
         public static Texture GetTexture(this SpriteSpecifier.Texture texSpecifier, IResourceCache cache)
         {
             return cache
@@ -24,7 +25,7 @@ namespace Robust.Client.Utility
                 .Texture;
         }
 
-        [Obsolete("Use SpriteSystem")]
+        [Obsolete("Use SpriteSystem.GetState() instead")]
         public static RSI.State GetState(this SpriteSpecifier.Rsi rsiSpecifier, IResourceCache cache)
         {
             if (!cache.TryGetResource<RSIResource>(SpriteSpecifierSerializer.TextureRoot / rsiSpecifier.RsiPath, out var theRsi))
@@ -43,18 +44,19 @@ namespace Robust.Client.Utility
             return IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>().GetFallbackState();
         }
 
-        [Obsolete("Use SpriteSystem")]
+        [Obsolete("Use SpriteSystem.Frame0() instead")]
         public static Texture Frame0(this SpriteSpecifier specifier)
         {
             return specifier.RsiStateLike().Default;
         }
 
+        [Obsolete("Use SpriteSystem.RsiStateLike() instead")]
         public static IDirectionalTextureProvider DirFrame0(this SpriteSpecifier specifier)
         {
             return specifier.RsiStateLike();
         }
 
-        [Obsolete("Use SpriteSystem")]
+        [Obsolete("Use SpriteSystem.RsiStateLike() instead")]
         public static IRsiStateLike RsiStateLike(this SpriteSpecifier specifier)
         {
             var resC = IoCManager.Resolve<IResourceCache>();

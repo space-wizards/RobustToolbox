@@ -25,7 +25,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         ITypeCopier<Rsi>,
         ITypeCopier<Texture>
     {
-        // Should probably be in SpriteComponent, but is needed for server to validate paths.
+        // Should probably be in SpriteSystem, but is needed for server to validate paths.
         // So I guess it might as well go here?
         public static readonly ResPath TextureRoot = new("/Textures");
 

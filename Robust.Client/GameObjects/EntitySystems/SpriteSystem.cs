@@ -13,10 +13,9 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics.RSI;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.TypeSerializers.Implementations;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using static Robust.Client.GameObjects.SpriteComponent;
@@ -39,6 +38,8 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly SpriteTreeSystem _tree = default!;
 
         private readonly Queue<SpriteComponent> _inertUpdateQueue = new();
+
+        public static readonly ResPath TextureRoot = SpriteSpecifierSerializer.TextureRoot;
 
         /// <summary>
         ///     Entities that require a sprite frame update.

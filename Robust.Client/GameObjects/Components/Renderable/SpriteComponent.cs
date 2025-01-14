@@ -1906,11 +1906,13 @@ namespace Robust.Client.GameObjects
             }
         }
 
+        [Obsolete("Use SpriteSystem.GetPrototypeTextures() instead")]
         public static IEnumerable<IDirectionalTextureProvider> GetPrototypeTextures(EntityPrototype prototype, IResourceCache resourceCache)
         {
             return GetPrototypeTextures(prototype, resourceCache, out var _);
         }
 
+        [Obsolete("Use SpriteSystem.GetPrototypeTextures() instead")]
         public static IEnumerable<IDirectionalTextureProvider> GetPrototypeTextures(EntityPrototype prototype, IResourceCache resourceCache, out bool noRot)
         {
             var results = new List<IDirectionalTextureProvider>();
@@ -1965,7 +1967,7 @@ namespace Robust.Client.GameObjects
             return results;
         }
 
-        [Obsolete("Use SpriteSystem")]
+        [Obsolete("Use SpriteSystem.GetPrototypeIcon() instead")]
         public static IRsiStateLike GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
         {
             var sys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();

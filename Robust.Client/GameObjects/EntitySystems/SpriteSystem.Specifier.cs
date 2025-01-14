@@ -3,15 +3,14 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
-using Robust.Client.Utility;
-using Robust.Shared.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization.TypeSerializers.Implementations;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects;
 
+// This partial class contains various public helper methods for extracting textures/icons from sprite specifiers and
+// entity prototypes.
 public sealed partial class SpriteSystem
 {
     private readonly Dictionary<string, IRsiStateLike> _cachedPrototypeIcons = new();
@@ -31,7 +30,7 @@ public sealed partial class SpriteSystem
         switch (specifier)
         {
             case SpriteSpecifier.Texture tex:
-                return tex.GetTexture(_resourceCache);
+                return GetTexture(tex);
 
             case SpriteSpecifier.Rsi rsi:
                 return GetState(rsi);
@@ -111,7 +110,7 @@ public sealed partial class SpriteSystem
     public RSI.State GetState(SpriteSpecifier.Rsi rsiSpecifier)
     {
         if (_resourceCache.TryGetResource<RSIResource>(
-                SpriteSpecifierSerializer.TextureRoot / rsiSpecifier.RsiPath,
+                TextureRoot / rsiSpecifier.RsiPath,
                 out var theRsi) &&
             theRsi.RSI.TryGetState(rsiSpecifier.RsiState, out var state))
         {
@@ -120,6 +119,13 @@ public sealed partial class SpriteSystem
 
         _sawmill.Error("Failed to load RSI {0}", rsiSpecifier.RsiPath);
         return GetFallbackState();
+    }
+
+    public Texture GetTexture(SpriteSpecifier.Texture texSpecifier)
+    {
+        return _resourceCache
+            .GetResource<TextureResource>(TextureRoot / texSpecifier.TexturePath)
+            .Texture;
     }
 
     private void OnPrototypesReloaded(PrototypesReloadedEventArgs args)

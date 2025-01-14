@@ -1,11 +1,6 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
 using Robust.Client.Graphics;
-using Robust.Client.ResourceManagement;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Serialization.TypeSerializers.Implementations;
-using Robust.Shared.Utility;
-using static Robust.Client.GameObjects.SpriteComponent;
 using static Robust.Client.Graphics.RSI;
 
 namespace Robust.Client.GameObjects;

@@ -7,7 +7,6 @@ using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using static Robust.Client.GameObjects.SpriteComponent;
 using static Robust.Client.Graphics.RSI;
-using static Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer;
 
 #pragma warning disable CS0618 // Type or member is obsolete
 

@@ -1079,11 +1079,14 @@ namespace Robust.Client.GameObjects
             [ViewVariables] public RSI? RSI
             {
                 get => _rsi;
+                [Obsolete("Use SpriteSystem.LayerSetRsi() instead.")]
                 set
                 {
                     if (_rsi == value)
                         return;
 
+                    BoundsDirty = true;
+                    Owner.Comp.BoundsDirty = true;
                     _rsi = value;
                     UpdateActualState();
                 }
@@ -1093,6 +1096,7 @@ namespace Robust.Client.GameObjects
             [ViewVariables] public RSI.StateId State
             {
                 get => StateId;
+                [Obsolete("Use SpriteSystem.LayerSetRsiState() instead.")]
                 set
                 {
                     if (StateId == value)
@@ -1120,15 +1124,18 @@ namespace Robust.Client.GameObjects
             /// </remarks>
             [ViewVariables] public bool Cycle;
 
+            // TODO SPRITE ACCESS
             internal RSI.State? _actualState;
             [ViewVariables] public RSI.State? ActualState => _actualState;
 
+            // TODO SPRITE ACCESS
             public Matrix3x2 LocalMatrix = Matrix3x2.Identity;
 
             [ViewVariables(VVAccess.ReadWrite)]
             public Vector2 Scale
             {
                 get => _scale;
+                [Obsolete("Use SpriteSystem.LayerSetScale() instead.")]
                 set
                 {
                     if (_scale.EqualsApprox(value)) return;
@@ -1153,6 +1160,7 @@ namespace Robust.Client.GameObjects
             public Angle Rotation
             {
                 get => _rotation;
+                [Obsolete("Use SpriteSystem.LayerSetRotation() instead.")]
                 set
                 {
                     if (_rotation.EqualsApprox(value)) return;
@@ -1171,6 +1179,7 @@ namespace Robust.Client.GameObjects
             public bool Visible
             {
                 get => _visible;
+                [Obsolete("Use SpriteSystem.LayerSetVisible() instead.")]
                 set
                 {
                     if (_visible == value)
@@ -1197,6 +1206,7 @@ namespace Robust.Client.GameObjects
             public bool AutoAnimated
             {
                 get => _autoAnimated;
+                [Obsolete("Use SpriteSystem.LayerSetAutoAnimated() instead.")]
                 set
                 {
                     if (_autoAnimated == value)
@@ -1212,6 +1222,7 @@ namespace Robust.Client.GameObjects
             public Vector2 Offset
             {
                 get => _offset;
+                [Obsolete("Use SpriteSystem.LayerSetOffset() instead.")]
                 set
                 {
                     if (_offset.EqualsApprox(value)) return;
@@ -1239,9 +1250,11 @@ namespace Robust.Client.GameObjects
             ///    Whether the current layer have a specific rendering method (e.g no rotation or snap to cardinal)
             ///    The sprite GranularLayersRendering var must be set to true for this to have any effect.
             /// </summary>
-            [ViewVariables] // TODO access restrict
+            [ViewVariables] // TODO SPRITE ACCESS
             public LayerRenderingStrategy RenderingStrategy = LayerRenderingStrategy.UseSpriteStrategy;
 
+            // TODO SPRITE ACCESS
+            // If someone sets this, it stops the actual layer from being drawn, which should chage the sprites bounds.
             [ViewVariables(VVAccess.ReadWrite)]
             public CopyToShaderParameters? CopyToShaderParameters;
 
@@ -1373,6 +1386,7 @@ namespace Robust.Client.GameObjects
                 }
             }
 
+            [Obsolete("Use SpriteSystem.LayerSetAnimationTime")]
             public void SetAnimationTime(float animationTime)
             {
                 if (!State.IsValid)
@@ -1404,6 +1418,7 @@ namespace Robust.Client.GameObjects
                 AdvanceFrameAnimation(state);
             }
 
+            [Obsolete("Use SpriteSystem.LayerSetAutoAnimated")]
             public void SetAutoAnimated(bool value)
             {
                 AutoAnimated = value;
@@ -1411,6 +1426,7 @@ namespace Robust.Client.GameObjects
                 _parent.Sys.QueueUpdateIsInert((_parent.Owner, _parent));
             }
 
+            [Obsolete("Use SpriteSystem.LayerSetRsi")]
             public void SetRsi(RSI? rsi)
             {
                 RSI = rsi;
@@ -1447,6 +1463,7 @@ namespace Robust.Client.GameObjects
                 _parent.Sys.QueueUpdateIsInert((_parent.Owner, _parent));
             }
 
+            [Obsolete("Use SpriteSystem.LayerSetRsiState")]
             public void SetState(RSI.StateId stateId)
             {
                 if (State == stateId)
@@ -1479,6 +1496,7 @@ namespace Robust.Client.GameObjects
                 _parent.Sys.QueueUpdateIsInert((_parent.Owner, _parent));
             }
 
+            [Obsolete("Use SpriteSystem.LayerSetTexture")]
             public void SetTexture(Texture? texture)
             {
                 State = default;

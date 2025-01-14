@@ -28,7 +28,7 @@ public sealed partial class SpriteSystem
         var bounds = new Box2();
         foreach (var layer in sprite.Comp.Layers)
         {
-            if (layer is {Visible: true, Blank: false})
+            if (layer is {Visible: true, Blank: false, CopyToShaderParameters: null})
                 bounds = bounds.Union(GetLocalBounds(layer));
         }
 
@@ -53,7 +53,7 @@ public sealed partial class SpriteSystem
 
     internal Box2 CalculateLocalBounds(Layer layer)
     {
-        if (layer.Blank)
+        if (layer.Blank || layer.CopyToShaderParameters == null)
             return Box2.Empty;
 
         var textureSize = (Vector2) layer.PixelSize / EyeManager.PixelsPerMeter;

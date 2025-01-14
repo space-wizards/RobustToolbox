@@ -173,28 +173,7 @@ public sealed partial class SpriteSystem
             return;
 
         layer.StateId = state;
-
-        if (!layer.StateId.IsValid)
-        {
-            layer._actualState = null;
-        }
-        else if (layer.ActualRsi is not { } rsi)
-        {
-            Log.Error(
-                $"{ToPrettyString(layer.Owner)} has no RSI to pull new state from! Trace:\n{Environment.StackTrace}");
-            layer._actualState = GetFallbackState();
-        }
-        else if (!rsi.TryGetState(layer.StateId, out layer._actualState))
-        {
-            layer._actualState = GetFallbackState();
-            Log.Error(
-                $"{ToPrettyString(layer.Owner)}'s state '{state}' does not exist in RSI {rsi.Path}. Trace:\n{Environment.StackTrace}");
-        }
-
-        layer.AnimationFrame = 0;
-        layer.AnimationTime = 0;
-        layer.AnimationTimeLeft = layer._actualState?.GetDelay(0) ?? 0f;
-
+        RefreshCachedState(layer, true, null);
         _tree.QueueTreeUpdate(layer.Owner);
         QueueUpdateIsInert(layer.Owner);
         layer.BoundsDirty = true;
@@ -594,4 +573,33 @@ public sealed partial class SpriteSystem
     }
 
     #endregion
+
+    /// <summary>
+    /// Refreshes an RSI layer's cached RSI state.
+    /// </summary>
+    private void RefreshCachedState(Layer layer, bool logErrors, RSI.State? fallback)
+    {
+        if (!layer.StateId.IsValid)
+        {
+            layer._actualState = null;
+        }
+        else if (layer.ActualRsi is not { } rsi)
+        {
+            layer._actualState = fallback ?? GetFallbackState();
+            if (logErrors)
+                Log.Error(
+                    $"{ToPrettyString(layer.Owner)} has no RSI to pull new state from! Trace:\n{Environment.StackTrace}");
+        }
+        else if (!rsi.TryGetState(layer.StateId, out layer._actualState))
+        {
+            layer._actualState = fallback ?? GetFallbackState();
+            if (logErrors)
+                Log.Error(
+                    $"{ToPrettyString(layer.Owner)}'s state '{layer.StateId}' does not exist in RSI {rsi.Path}. Trace:\n{Environment.StackTrace}");
+        }
+
+        layer.AnimationFrame = 0;
+        layer.AnimationTime = 0;
+        layer.AnimationTimeLeft = layer._actualState?.GetDelay(0) ?? 0f;
+    }
 }

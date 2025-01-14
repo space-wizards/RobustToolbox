@@ -105,6 +105,16 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
+        /// Rounds the angle to the nearest cardinal direction. This behaves similarly to a combination of
+        /// <see cref="GetCardinalDir"/> and Direction.ToAngle(), however this may return an angle outside of the range
+        /// returned by those methods (-pi to pi).
+        /// </summary>
+        public Angle RoundToCardinalAngle()
+        {
+            return new Angle(CardinalSegment * Math.Floor((Theta + CardinalOffset) / CardinalSegment));
+        }
+
+        /// <summary>
         ///     Rotates the vector counter-clockwise around its origin by the value of Theta.
         /// </summary>
         /// <param name="vec">Vector to rotate.</param>

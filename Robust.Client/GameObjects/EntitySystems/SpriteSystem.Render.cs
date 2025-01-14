@@ -53,7 +53,7 @@ public sealed partial class SpriteSystem
 
         // If we have a 1-directional sprite then snap it to try and always face it south if applicable.
         if (sprite.Comp is {NoRotation: false, SnapCardinals: true})
-            cardinal = angle.GetCardinalDir().ToAngle();
+            cardinal = angle.RoundToCardinalAngle();
 
         // worldRotation + eyeRotation should be the angle of the entity on-screen. If no-rot is enabled this is just set to zero.
         // However, at some point later the eye-matrix is applied separately, so we subtract -eye rotation for now:
@@ -70,14 +70,12 @@ public sealed partial class SpriteSystem
             return;
         }
 
-        // TODO sprite optimize angle.GetCardinalDir().ToAngle()
-
         //Default rendering (NoRotation = false)
         entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, worldRotation);
         var transformDefault = Matrix3x2.Multiply(sprite.Comp.LocalMatrix, entityMatrix);
 
         //Snap to cardinals
-        entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, worldRotation - angle.GetCardinalDir().ToAngle());
+        entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, worldRotation - angle.RoundToCardinalAngle());
         var transformSnap = Matrix3x2.Multiply(sprite.Comp.LocalMatrix, entityMatrix);
 
         //No rotation

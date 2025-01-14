@@ -480,6 +480,8 @@ namespace Robust.Client.GameObjects
         [DataField("noRot")]
         public bool NoRotation;
 
+        // TODO SPRITE
+        // When refactoring, make this nullable and remove EnableDirectionOverride
         [DataField("overrideDir")]
         public Direction DirectionOverride = Direction.East;
 

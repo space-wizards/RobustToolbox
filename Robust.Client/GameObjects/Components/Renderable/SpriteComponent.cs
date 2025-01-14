@@ -55,7 +55,7 @@ namespace Robust.Client.GameObjects
         ///     Whether the layers have independant drawing strategies, e.g some may snap to cardinals while others won't.
         ///     The sprite should still set its global rendering method (e.g NoRot or SnapCardinals), this only gives finer control over how layers are rendered internally.
         /// </summary>
-        [DataField]
+        [DataField] // TODO Sprite access restrict.
         public bool GranularLayersRendering = false;
 
         [DataField]
@@ -190,13 +190,15 @@ namespace Robust.Client.GameObjects
 
         internal bool _containerOccluded;
 
+        /// <summary>
+        /// Whether or not the sprite's local bounding box is dirty and need to be rebuilt.
+        /// </summary>
+        internal bool BoundsDirty = true;
+
         internal Box2 _bounds;
 
-        /// <summary>
-        ///     The bounds of the sprite. This does factor in the sprite's <see cref="Scale"/> but not the
-        ///     <see cref="Rotation"/> and <see cref="Offset"/>
-        /// </summary>
-        public Box2 Bounds => _bounds;
+        [Obsolete("Use SpriteSystem.GetLocalBounds() instead.")]
+        public Box2 Bounds => Sys.GetLocalBounds((Owner, this));
 
         [ViewVariables(VVAccess.ReadWrite)] internal bool _inertUpdateQueued;
 
@@ -289,14 +291,7 @@ namespace Robust.Client.GameObjects
 
             }
 
-            _bounds = new Box2();
-            foreach (var layer in Layers)
-            {
-                if (layer is {Visible: true, Blank: false})
-                    _bounds = _bounds.Union(layer.CalculateBoundingBox());
-            }
-
-            _bounds = _bounds.Scale(Scale);
+            BoundsDirty = true;
             LocalMatrix = Matrix3Helpers.CreateTransform(in offset, in rotation, in scale);
         }
 
@@ -620,9 +615,11 @@ namespace Robust.Client.GameObjects
                 layer.CopyToShaderParameters = null;
             }
 
+            BoundsDirty = true;
+            layer.BoundsDirty = true;
             // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
             if (Owner != EntityUid.Invalid)
-                Sys?.RebuildBounds((Owner, this));
+                TreeSys?.QueueTreeUpdate((Owner, this));
 
             object ParseKey(string keyString)
             {
@@ -990,16 +987,11 @@ namespace Robust.Client.GameObjects
             };
         }
 
-        #endregion
-
         public string GetDebugString()
         {
             var builder = new StringBuilder();
-            builder.AppendFormat(
-                "vis/depth/scl/rot/ofs/col/norot/override/dir: {0}/{1}/{2}/{3}/{4}/{5}/{6}/{8}/{7}\n",
-                Visible, DrawDepth, Scale, Rotation, Offset,
-                Color, NoRotation, entities.GetComponent<TransformComponent>(Owner).WorldRotation.ToRsiDirection(RsiDirectionType.Dir8),
-                DirectionOverride
+            builder.Append(
+                $"vis/depth/scl/rot/ofs/col/norot/override: {Visible}/{DrawDepth}/{Scale}/{Rotation}/{Offset}/{Color}/{NoRotation}/{DirectionOverride}/\n"
             );
 
             foreach (var layer in Layers)
@@ -1008,53 +1000,31 @@ namespace Robust.Client.GameObjects
                     "shad/tex/rsi/state/ant/anf/scl/rot/vis/col/dofs/renderstrat: {0}/{1}/{2}/{3}/{4}/{5}/{6}/{7}/{8}/{9}/{10}/{11}\n",
                     // These are references and don't include useful data for knowing where they came from, sadly.
                     // "is one set" is better than nothing at least.
-                    layer.Shader != null, layer.Texture != null, layer.RSI != null,
+                    layer.Shader != null,
+                    layer.Texture != null,
+                    layer.RSI != null,
                     layer.State,
-                    layer.AnimationTimeLeft, layer.AnimationFrame, layer.Scale, layer.Rotation, layer.Visible,
-                    layer.Color, layer.DirOffset, layer.RenderingStrategy
+                    layer.AnimationTimeLeft,
+                    layer.AnimationFrame,
+                    layer.Scale,
+                    layer.Rotation,
+                    layer.Visible,
+                    layer.Color,
+                    layer.DirOffset,
+                    layer.RenderingStrategy
                 );
             }
 
             return builder.ToString();
         }
 
-        /// <inheritdoc/>
+        [Obsolete("Use SpriteSystem.GetBoundingBox() instead.")]
         public Box2Rotated CalculateRotatedBoundingBox(Vector2 worldPosition, Angle worldRotation, Angle eyeRot)
         {
-            // fast check for empty sprites
-            if (!Visible || Layers.Count == 0)
-            {
-                return new Box2Rotated(new Box2(worldPosition, worldPosition), Angle.Zero, worldPosition);
-            }
-
-            // We need to modify world rotation so that it lies between 0 and 2pi.
-            // This matters for 4 or 8 directional sprites deciding which quadrant (octant?) they lie in.
-            // the 0->2pi convention is set by the sprite-rendering code that selects the layers.
-            // See RenderInternal().
-
-            worldRotation = worldRotation.Reduced();
-            if (worldRotation.Theta < 0)
-                worldRotation = new Angle(worldRotation.Theta + Math.Tau);
-
-            // Next, what we do is take the box2 and apply the sprite's transform, and then the entity's transform. We
-            // could do this via Matrix3.TransformBox, but that only yields bounding boxes. So instead we manually
-            // transform our box by the combination of these matrices:
-
-            Angle finalRotation = NoRotation
-                ? Rotation - eyeRot
-                : Rotation + worldRotation;
-
-            // slightly faster path if offset == 0 (true for 99.9% of sprites)
-            if (Offset == Vector2.Zero)
-                return new Box2Rotated(Bounds.Translated(worldPosition), finalRotation, worldPosition);
-
-            var adjustedOffset = NoRotation
-                ? (-eyeRot).RotateVec(Offset)
-                : worldRotation.RotateVec(Offset);
-
-            Vector2 position = adjustedOffset + worldPosition;
-            return new Box2Rotated(Bounds.Translated(position), finalRotation, position);
+            return Sys.CalculateBounds((Owner, this), worldPosition, worldRotation, eyeRot);
         }
+
+        #endregion
 
         /// <summary>
         ///     Enum to "offset" a cardinal direction.
@@ -1172,7 +1142,9 @@ namespace Robust.Client.GameObjects
 
                     _scale = value;
                     UpdateLocalMatrix();
-                    _parent.Sys.RebuildBounds((_parent.Owner, _parent));
+                    BoundsDirty = true;
+                    Owner.Comp.BoundsDirty = true;
+                    Owner.Comp.TreeSys.QueueTreeUpdate(Owner);
                 }
             }
             internal Vector2 _scale = Vector2.One;
@@ -1187,7 +1159,9 @@ namespace Robust.Client.GameObjects
 
                     _rotation = value;
                     UpdateLocalMatrix();
-                    _parent.Sys.RebuildBounds((_parent.Owner, _parent));
+                    BoundsDirty = true;
+                    Owner.Comp.BoundsDirty = true;
+                    Owner.Comp.TreeSys.QueueTreeUpdate(Owner);
                 }
             }
             internal Angle _rotation = Angle.Zero;
@@ -1205,10 +1179,10 @@ namespace Robust.Client.GameObjects
 
                     // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
                     if (_parent.Owner != EntityUid.Invalid)
-                        _parent.Sys?.QueueUpdateIsInert((_parent.Owner, _parent));
+                        Owner.Comp.Sys?.QueueUpdateIsInert(Owner);
 
                     if (_parent.Owner != EntityUid.Invalid)
-                        _parent.Sys?.RebuildBounds((_parent.Owner, _parent));
+                        Owner.Comp.TreeSys.QueueTreeUpdate(Owner);
                 }
             }
 
@@ -1242,11 +1216,14 @@ namespace Robust.Client.GameObjects
                 {
                     if (_offset.EqualsApprox(value)) return;
 
+                    BoundsDirty = true;
+                    Owner.Comp.BoundsDirty = true;
+
                     _offset = value;
                     UpdateLocalMatrix();
                     // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
                     if (_parent.Owner != EntityUid.Invalid)
-                        _parent.Sys?.RebuildBounds((_parent.Owner, _parent));
+                        Owner.Comp.TreeSys.QueueTreeUpdate(Owner);
                 }
             }
 
@@ -1262,7 +1239,7 @@ namespace Robust.Client.GameObjects
             ///    Whether the current layer have a specific rendering method (e.g no rotation or snap to cardinal)
             ///    The sprite GranularLayersRendering var must be set to true for this to have any effect.
             /// </summary>
-            [ViewVariables]
+            [ViewVariables] // TODO access restrict
             public LayerRenderingStrategy RenderingStrategy = LayerRenderingStrategy.UseSpriteStrategy;
 
             [ViewVariables(VVAccess.ReadWrite)]
@@ -1463,6 +1440,9 @@ namespace Robust.Client.GameObjects
                     }
                 }
 
+                BoundsDirty = true;
+                Owner.Comp.BoundsDirty = true;
+
                 _parent.TreeSys.QueueTreeUpdate((_parent.Owner, _parent));
                 _parent.Sys.QueueUpdateIsInert((_parent.Owner, _parent));
             }
@@ -1504,6 +1484,9 @@ namespace Robust.Client.GameObjects
                 State = default;
                 Texture = texture;
 
+                BoundsDirty = true;
+                Owner.Comp.BoundsDirty = true;
+
                 _parent.TreeSys.QueueTreeUpdate((_parent.Owner, _parent));
                 _parent.Sys.QueueUpdateIsInert((_parent.Owner, _parent));
             }
@@ -1527,46 +1510,14 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            /// <inheritdoc/>
-            public Box2 CalculateBoundingBox()
-            {
-                var textureSize = (Vector2) PixelSize / EyeManager.PixelsPerMeter;
-                var longestSide = MathF.Max(textureSize.X, textureSize.Y);
-                var longestRotatedSide = Math.Max(longestSide, (textureSize.X + textureSize.Y) / MathF.Sqrt(2));
+            /// <summary>
+            /// Whether or not the layers's local bounding box is dirty and need to be rebuilt.
+            /// </summary>
+            internal bool BoundsDirty = true;
+            internal Box2 Bounds;
 
-                Vector2 size;
-
-                // If this layer has any form of arbitrary rotation, return a bounding box big enough to cover
-                // any possible rotation.
-                if (_rotation != 0)
-                {
-                    size = new Vector2(longestRotatedSide, longestRotatedSide);
-                }
-                else if (_parent.SnapCardinals && (!_parent.GranularLayersRendering || RenderingStrategy == LayerRenderingStrategy.UseSpriteStrategy)
-                         || _parent.GranularLayersRendering && RenderingStrategy == LayerRenderingStrategy.SnapToCardinals)
-                {
-                    DebugTools.Assert(_actualState == null || _actualState.RsiDirections == RsiDirectionType.Dir1);
-                    size = new Vector2(longestSide, longestSide);
-                }
-                else
-                {
-                    // Build the bounding box based on how many directions the sprite has
-                    size = (_actualState?.RsiDirections) switch
-                    {
-                        // If we have four cardinal directions, take the longest side of our texture and square it, then turn that into our bounding box.
-                        // This accounts for all possible rotations.
-                        RsiDirectionType.Dir4 => new Vector2(longestSide, longestSide),
-
-                        // If we have eight directions, find the maximum length of the texture (accounting for rotation), then square it to make
-                        RsiDirectionType.Dir8 => new Vector2(longestRotatedSide, longestRotatedSide),
-
-                        // If we have only one direction or an invalid RSI state, create a simple bounding box with the size of the texture.
-                        _ => textureSize
-                    };
-                }
-
-                return Box2.CenteredAround(Offset, size * _scale);
-            }
+            [Obsolete("Use SpriteSystem.GetLocalBounds()")]
+            public Box2 CalculateBoundingBox() => Owner.Comp.Sys.GetLocalBounds(this);
 
             /// <summary>
             ///     Update Cached RSI state. State is cached to avoid calling this every time an entity gets drawn.

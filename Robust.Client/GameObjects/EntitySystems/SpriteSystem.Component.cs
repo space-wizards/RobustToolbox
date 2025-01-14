@@ -89,25 +89,8 @@ public sealed partial class SpriteSystem
         target.Comp.RenderOrder = source.Comp.RenderOrder;
         target.Comp.GranularLayersRendering = source.Comp.GranularLayersRendering;
 
+        DirtyBounds(target!);
         _tree.QueueTreeUpdate(target!);
-    }
-
-    public void RebuildBounds(Entity<SpriteComponent> sprite)
-    {
-        // TODO SPRITE
-        // Maybe the bounds calculation should be deferred?
-        // The tree update is already deferred anyways.
-        // And layer.CalculateBoundingBox() is relatively expensive for sprites like players
-
-        var bounds = new Box2();
-        foreach (var layer in sprite.Comp.Layers)
-        {
-            if (layer is {Visible: true, Blank: false})
-                bounds = bounds.Union(layer.CalculateBoundingBox());
-        }
-
-        sprite.Comp._bounds = bounds.Scale(sprite.Comp.Scale);
-        _tree.QueueTreeUpdate(sprite);
     }
 
     /// <summary>

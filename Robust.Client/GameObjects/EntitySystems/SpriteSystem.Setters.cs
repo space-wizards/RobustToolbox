@@ -72,8 +72,7 @@ public sealed partial class SpriteSystem
             return;
 
         sprite.Comp._visible = value;
-        if (!sprite.Comp.TreeUpdateQueued)
-            _tree.QueueTreeUpdate(sprite!);
+        _tree.QueueTreeUpdate(sprite!);
     }
 
     public void SetDrawDepth(Entity<SpriteComponent?> sprite, int value)
@@ -133,14 +132,6 @@ public sealed partial class SpriteSystem
         _tree.QueueTreeUpdate(sprite!);
     }
 
-    public void SetShader(Entity<SpriteComponent?> sprite, ShaderInstance? shader)
-    {
-        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
-            return;
-
-        sprite.Comp.PostShader = shader;
-    }
-
     public void SetSnapCardinals(Entity<SpriteComponent?> sprite, bool value)
     {
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
@@ -150,6 +141,20 @@ public sealed partial class SpriteSystem
             return;
 
         sprite.Comp._snapCardinals = value;
-        RebuildBounds(sprite!);
+        _tree.QueueTreeUpdate(sprite!);
+        DirtyBounds(sprite!);
+    }
+
+    public void SetGranularLayersRendering(Entity<SpriteComponent?> sprite, bool value)
+    {
+        if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
+            return;
+
+        if (value == sprite.Comp.GranularLayersRendering)
+            return;
+
+        sprite.Comp.GranularLayersRendering = value;
+        _tree.QueueTreeUpdate(sprite!);
+        DirtyBounds(sprite!);
     }
 }

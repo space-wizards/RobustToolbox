@@ -91,7 +91,8 @@ public sealed partial class SpriteSystem
         }
 #endif
 
-        RebuildBounds(sprite!);
+        sprite.Comp.BoundsDirty = true;
+        _tree.QueueTreeUpdate(sprite!);
         QueueUpdateIsInert(sprite!);
         return true;
     }
@@ -145,7 +146,9 @@ public sealed partial class SpriteSystem
 
         if (!layer.Blank)
         {
-            RebuildBounds(sprite!);
+            layer.BoundsDirty = true;
+            sprite.Comp.BoundsDirty = true;
+            _tree.QueueTreeUpdate(sprite!);
             QueueUpdateIsInert(sprite!);
         }
         return layer.Index;

@@ -195,8 +195,10 @@ public sealed partial class SpriteSystem
         layer.AnimationTime = 0;
         layer.AnimationTimeLeft = layer._actualState?.GetDelay(0) ?? 0f;
 
-        RebuildBounds(layer.Owner);
+        _tree.QueueTreeUpdate(layer.Owner);
         QueueUpdateIsInert(layer.Owner);
+        layer.BoundsDirty = true;
+        layer.Owner.Comp.BoundsDirty = true;
     }
 
     #endregion
@@ -289,7 +291,9 @@ public sealed partial class SpriteSystem
 
         layer._scale = value;
         layer.UpdateLocalMatrix();
-        RebuildBounds(layer.Owner);
+        _tree.QueueTreeUpdate(layer.Owner);
+        layer.BoundsDirty = true;
+        layer.Owner.Comp.BoundsDirty = true;
     }
 
     #endregion
@@ -325,7 +329,9 @@ public sealed partial class SpriteSystem
 
         layer._rotation = value;
         layer.UpdateLocalMatrix();
-        RebuildBounds(layer.Owner);
+        _tree.QueueTreeUpdate(layer.Owner);
+        layer.BoundsDirty = true;
+        layer.Owner.Comp.BoundsDirty = true;
     }
 
     #endregion
@@ -361,7 +367,9 @@ public sealed partial class SpriteSystem
 
         layer._offset = value;
         layer.UpdateLocalMatrix();
-        RebuildBounds(layer.Owner);
+        _tree.QueueTreeUpdate(layer.Owner);
+        layer.BoundsDirty = true;
+        layer.Owner.Comp.BoundsDirty = true;
     }
 
     #endregion
@@ -397,7 +405,8 @@ public sealed partial class SpriteSystem
 
         layer._visible = value;
         QueueUpdateIsInert(layer.Owner);
-        RebuildBounds(layer.Owner);
+        _tree.QueueTreeUpdate(layer.Owner);
+        layer.Owner.Comp.BoundsDirty = true;
     }
 
     #endregion
@@ -579,6 +588,9 @@ public sealed partial class SpriteSystem
         DebugTools.AssertEqual(layer.Owner.Comp.Layers[layer.Index], layer);
 
         layer.RenderingStrategy = value;
+        layer.BoundsDirty = true;
+        layer.Owner.Comp.BoundsDirty = true;
+        _tree.QueueTreeUpdate(layer.Owner);
     }
 
     #endregion

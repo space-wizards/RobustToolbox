@@ -920,8 +920,6 @@ namespace Robust.Client.GameObjects
             return this[layerKey].ActualRsi;
         }
 
-        #endregion
-
         public void LayerSetShader(int layer, ShaderInstance? shader, string? prototype = null)
         {
             if (!TryGetLayer(layer, out var theLayer, true))
@@ -964,72 +962,13 @@ namespace Robust.Client.GameObjects
         }
 
         // Lobby SpriteView rendering path
+        [Obsolete("Use SpriteSystem.Render() instead.")]
         public void Render(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Direction? overrideDirection = null, Vector2 position = default)
         {
-            RenderInternal(drawingHandle, eyeRotation, worldRotation, position, overrideDirection);
+            Sys.Render((Owner, this), drawingHandle, eyeRotation, worldRotation, position, overrideDirection);
         }
 
-        internal void RenderInternal(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Vector2 worldPosition, Direction? overrideDirection)
-        {
-            var angle = worldRotation + eyeRotation; // angle on-screen. Used to decide the direction of 4/8 directional RSIs
-            angle = angle.Reduced().FlipPositive();  // Reduce the angles to fix math shenanigans
-
-            var cardinal = Angle.Zero;
-
-            // If we have a 1-directional sprite then snap it to try and always face it south if applicable.
-            if (!NoRotation && SnapCardinals)
-            {
-                cardinal = angle.GetCardinalDir().ToAngle();
-            }
-
-            // worldRotation + eyeRotation should be the angle of the entity on-screen. If no-rot is enabled this is just set to zero.
-            // However, at some point later the eye-matrix is applied separately, so we subtract -eye rotation for now:
-            var entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, NoRotation ? -eyeRotation : worldRotation - cardinal);
-
-            var transformSprite = Matrix3x2.Multiply(LocalMatrix, entityMatrix);
-
-            if (GranularLayersRendering)
-            {
-                //Default rendering
-                entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, worldRotation);
-                var transformDefault = Matrix3x2.Multiply(LocalMatrix, entityMatrix);
-                //Snap to cardinals
-                entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, worldRotation - angle.GetCardinalDir().ToAngle());
-                var transformSnap = Matrix3x2.Multiply(LocalMatrix, entityMatrix);
-                //No rotation
-                entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, -eyeRotation);
-                var transformNoRot = Matrix3x2.Multiply(LocalMatrix, entityMatrix);
-
-                foreach (var layer in Layers) {
-                    switch (layer.RenderingStrategy)
-                    {
-                        case LayerRenderingStrategy.NoRotation:
-                            layer.Render(drawingHandle, ref transformNoRot, angle, overrideDirection);
-                            break;
-                        case LayerRenderingStrategy.SnapToCardinals:
-                            layer.Render(drawingHandle, ref transformSnap, angle, overrideDirection);
-                            break;
-                        case LayerRenderingStrategy.Default:
-                            layer.Render(drawingHandle, ref transformDefault, angle, overrideDirection);
-                            break;
-                        case LayerRenderingStrategy.UseSpriteStrategy:
-                            layer.Render(drawingHandle, ref transformSprite, angle, overrideDirection);
-                            break;
-                        default:
-                            Logger.Error($"Tried to render a layer with unknown rendering stragegy: {layer.RenderingStrategy}");
-                            break;
-                    }
-                }
-            }
-
-            else
-            {
-                foreach (var layer in Layers)
-                {
-                    layer.Render(drawingHandle, ref transformSprite, angle, overrideDirection);
-                }
-            }
-        }
+        #endregion
 
         public int GetLayerDirectionCount(ISpriteLayer layer)
         {

@@ -355,7 +355,7 @@ namespace Robust.Client.Graphics.Clyde
                     }
                 }
 
-                spriteSystem.Render(entry.Uid, entry.Sprite, _renderHandle.DrawingHandleWorld, eye.Rotation, in entry.WorldRot, in entry.WorldPos);
+                spriteSystem.Render(new(entry.Uid, entry.Sprite), _renderHandle.DrawingHandleWorld, eye.Rotation, entry.WorldRot, entry.WorldPos);
 
                 if (entry.Sprite.PostShader != null && entityPostRenderTarget != null)
                 {

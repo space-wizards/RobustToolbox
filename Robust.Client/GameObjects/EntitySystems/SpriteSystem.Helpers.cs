@@ -108,6 +108,11 @@ public sealed partial class SpriteSystem
         return _resourceCache.GetFallback<RSIResource>().RSI["error"];
     }
 
+    public Texture GetFallbackTexture()
+    {
+        return _resourceCache.GetFallback<TextureResource>().Texture;
+    }
+
     [Pure]
     public RSI.State GetState(SpriteSpecifier.Rsi rsiSpecifier)
     {

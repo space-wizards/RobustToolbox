@@ -1,21 +1,26 @@
 using System.Numerics;
 using Robust.Client.Graphics;
+using Robust.Client.Graphics.Clyde;
+using Robust.Client.Utility;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Graphics.RSI;
 using Robust.Shared.Maths;
+using static Robust.Client.GameObjects.SpriteComponent;
+using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.Client.GameObjects;
 
 // This partial class contains code related to actually rendering sprites.
 public sealed partial class SpriteSystem
 {
-    public void Render(
+    public void RenderSprite(
         Entity<SpriteComponent> sprite,
         DrawingHandleWorld drawingHandle,
         Angle eyeRotation,
         Angle worldRotation,
         Vector2 worldPosition)
     {
-        Render(sprite,
+        RenderSprite(sprite,
             drawingHandle,
             eyeRotation,
             worldRotation,
@@ -23,7 +28,7 @@ public sealed partial class SpriteSystem
             sprite.Comp.EnableDirectionOverride ? sprite.Comp.DirectionOverride : null);
     }
 
-    public void Render(
+    public void RenderSprite(
         Entity<SpriteComponent> sprite,
         DrawingHandleWorld drawingHandle,
         Angle eyeRotation,
@@ -31,6 +36,13 @@ public sealed partial class SpriteSystem
         Vector2 worldPosition,
         Direction? overrideDirection)
     {
+        // TODO SPRITE RENDERING
+        // Add fast path for simple sprites.
+        // I.e., when a sprite is modified, check if it is "simple". If it is. cache texture information in a struct
+        // and use a fast path here.
+        // E.g., simple 1-directional, 1-layer sprites can basically become a direct texture draw call. (most in game items).
+        // Similarly, 1-directional multi-layer sprites can become a sequence of direct draw calls (most in game walls).
+
         if (!sprite.Comp.IsInert)
             _queuedFrameUpdate.Add(sprite);
 
@@ -53,7 +65,7 @@ public sealed partial class SpriteSystem
         {
             foreach (var layer in sprite.Comp.Layers)
             {
-                layer.Render(drawingHandle, ref spriteMatrix, angle, overrideDirection);
+                RenderLayer(layer, drawingHandle, ref spriteMatrix, angle, overrideDirection);
             }
             return;
         }
@@ -77,21 +89,97 @@ public sealed partial class SpriteSystem
             switch (layer.RenderingStrategy)
             {
                 case LayerRenderingStrategy.UseSpriteStrategy:
-                    layer.Render(drawingHandle, ref spriteMatrix, angle, overrideDirection);
+                    RenderLayer(layer, drawingHandle, ref spriteMatrix, angle, overrideDirection);
                     break;
                 case LayerRenderingStrategy.Default:
-                    layer.Render(drawingHandle, ref transformDefault, angle, overrideDirection);
+                    RenderLayer(layer, drawingHandle, ref transformDefault, angle, overrideDirection);
                     break;
                 case LayerRenderingStrategy.NoRotation:
-                    layer.Render(drawingHandle, ref transformNoRot, angle, overrideDirection);
+                    RenderLayer(layer, drawingHandle, ref transformNoRot, angle, overrideDirection);
                     break;
                 case LayerRenderingStrategy.SnapToCardinals:
-                    layer.Render(drawingHandle, ref transformSnap, angle, overrideDirection);
+                    RenderLayer(layer, drawingHandle, ref transformSnap, angle, overrideDirection);
                     break;
                 default:
                     Log.Error($"Tried to render a layer with unknown rendering stragegy: {layer.RenderingStrategy}");
                     break;
             }
         }
+    }
+
+    /// <summary>
+    /// Render a layer. This assumes that the input angle is between 0 and 2pi.
+    /// </summary>
+    private void RenderLayer(Layer layer, DrawingHandleWorld drawingHandle, ref Matrix3x2 spriteMatrix, Angle angle, Direction? overrideDirection)
+    {
+        if (!layer.Visible || layer.Blank)
+            return;
+
+        var state = layer._actualState;
+        var dir = state == null ? RsiDirection.South : Layer.GetDirection(state.RsiDirections, angle);
+
+        // Set the drawing transform for this layer
+        layer.GetLayerDrawMatrix(dir, out var layerMatrix, layer.Owner.Comp.NoRotation);
+
+        // The direction used to draw the sprite can differ from the one that the angle would naively suggest,
+        // due to direction overrides or offsets.
+        if (overrideDirection != null && state != null)
+            dir = overrideDirection.Value.Convert(state.RsiDirections);
+        dir = dir.OffsetRsiDir(layer.DirOffset);
+
+        var texture = state?.GetFrame(dir, layer.AnimationFrame) ?? layer.Texture ?? GetFallbackTexture();
+
+        // TODO SPRITE
+        // Refactor shader-param-layers to a separate layer type after layers are split into types & collections.
+        // I.e., separate Layer -> RsiLayer, TextureLayer, LayerCollection, SpriteLayer, and ShaderLayer
+        if (layer.CopyToShaderParameters != null)
+        {
+            HandleShaderLayer(layer, texture, layer.CopyToShaderParameters);
+            return;
+        }
+
+        // Set the drawing transform for this layer
+        var transformMatrix = Matrix3x2.Multiply(layerMatrix, spriteMatrix);
+        drawingHandle.SetTransform(in transformMatrix);
+
+        if (layer.Shader != null)
+            drawingHandle.UseShader(layer.Shader);
+
+        var layerColor = layer.Owner.Comp.color * layer.Color;
+        var textureSize = texture.Size / (float) EyeManager.PixelsPerMeter;
+        var quad = Box2.FromDimensions(textureSize / -2, textureSize);
+
+        drawingHandle.DrawTextureRectRegion(texture, quad, layerColor);
+
+        if (layer.Shader != null)
+            drawingHandle.UseShader(null);
+    }
+
+    /// <summary>
+    /// Handle a a "fake layer" that just exists to modify the parameters of a shader being used by some other
+    /// layer.
+    /// </summary>
+    private void HandleShaderLayer(Layer layer, Texture texture, CopyToShaderParameters @params)
+    {
+        // Multiple atrocities to god being committed right here.
+        var otherLayerIdx = layer._parent.LayerMap[@params.LayerKey!];
+        var otherLayer = layer._parent.Layers[otherLayerIdx];
+        if (otherLayer.Shader is not { } shader)
+            return;
+
+        if (!shader.Mutable)
+            otherLayer.Shader = shader = shader.Duplicate();
+
+        var clydeTexture = Clyde.RenderHandle.ExtractTexture(texture, null, out var csr);
+
+        if (@params.ParameterTexture is { } paramTexture)
+            shader.SetParameter(paramTexture, clydeTexture);
+
+        if (@params.ParameterUV is not { } paramUV)
+            return;
+
+        var sr = Clyde.RenderHandle.WorldTextureBoundsToUV(clydeTexture, csr);
+        var uv = new Vector4(sr.Left, sr.Bottom, sr.Right, sr.Top);
+        shader.SetParameter(paramUV, uv);
     }
 }

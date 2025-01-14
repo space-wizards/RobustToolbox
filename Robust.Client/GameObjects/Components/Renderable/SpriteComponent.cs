@@ -962,7 +962,7 @@ namespace Robust.Client.GameObjects
         [Obsolete("Use SpriteSystem.Render() instead.")]
         public void Render(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Direction? overrideDirection = null, Vector2 position = default)
         {
-            Sys.Render((Owner, this), drawingHandle, eyeRotation, worldRotation, position, overrideDirection);
+            Sys.RenderSprite((Owner, this), drawingHandle, eyeRotation, worldRotation, position, overrideDirection);
         }
 
         [Obsolete("Use SpriteSystem.LayerGetDirectionCount() instead.")]
@@ -1540,24 +1540,32 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            /// <summary>
-            ///     Given the apparent rotation of an entity on screen (world + eye rotation), get layer's matrix for drawing &
-            ///     relevant RSI direction.
-            /// </summary>
             public void GetLayerDrawMatrix(RsiDirection dir, out Matrix3x2 layerDrawMatrix)
             {
-                if (_parent.NoRotation || dir == RsiDirection.South)
+                GetLayerDrawMatrix(dir, out layerDrawMatrix, Owner.Comp.NoRotation);
+            }
+
+            /// <summary>
+            /// Given the apparent rotation of an entity on screen (world + eye rotation), get layer's matrix for drawing &
+            /// relevant RSI direction.
+            /// </summary>
+            internal void GetLayerDrawMatrix(RsiDirection dir, out Matrix3x2 layerDrawMatrix, bool noRot)
+            {
+                // TODO RENDERING
+                // Consider changing the RSI format (or at least modify the loaded textures) to remove this
+                // unnecessary matrix transformation. This transform is completely unnecessary for 4- and
+                // 1-directional sprites. Its only really required for 8-directional sprites.
+
+                if (dir == RsiDirection.South || noRot)
                     layerDrawMatrix = LocalMatrix;
                 else
-                {
-                    layerDrawMatrix = Matrix3x2.Multiply(_rsiDirectionMatrices[(int)dir], LocalMatrix);
-                }
+                    layerDrawMatrix = Matrix3x2.Multiply(_rsiDirectionMatrices[(int) dir], LocalMatrix);
             }
 
             private static Matrix3x2[] _rsiDirectionMatrices = new Matrix3x2[]
             {
                 // array order chosen such that this array can be indexed by casing an RSI direction to an int
-                Matrix3x2.Identity, // should probably just avoid matrix multiplication altogether if the direction is south.
+                Matrix3x2.Identity,
                 Matrix3Helpers.CreateRotation(-Direction.North.ToAngle()),
                 Matrix3Helpers.CreateRotation(-Direction.East.ToAngle()),
                 Matrix3Helpers.CreateRotation(-Direction.West.ToAngle()),
@@ -1575,7 +1583,8 @@ namespace Robust.Client.GameObjects
             {
                 if (dirType == RsiDirectionType.Dir1)
                     return RsiDirection.South;
-                else if (dirType == RsiDirectionType.Dir8)
+
+                if (dirType == RsiDirectionType.Dir8)
                     return angle.GetDir().Convert(dirType);
 
                 // For 4-directional sprites, as entities are often moving & facing diagonally, we will slightly bias the
@@ -1593,87 +1602,6 @@ namespace Robust.Client.GameObjects
                     2 => RsiDirection.North,
                     _ => RsiDirection.West,
                 };
-            }
-
-            /// <summary>
-            ///     Render a layer. This assumes that the input angle is between 0 and 2pi.
-            /// </summary>
-            internal void Render(DrawingHandleWorld drawingHandle, ref Matrix3x2 spriteMatrix, Angle angle, Direction? overrideDirection)
-            {
-                if (!Visible || Blank)
-                    return;
-
-                var dir = _actualState == null ? RsiDirection.South : GetDirection(_actualState.RsiDirections, angle);
-
-                // Set the drawing transform for this layer
-                GetLayerDrawMatrix(dir, out var layerMatrix);
-
-                // The direction used to draw the sprite can differ from the one that the angle would naively suggest,
-                // due to direction overrides or offsets.
-                if (overrideDirection != null && _actualState != null)
-                    dir = overrideDirection.Value.Convert(_actualState.RsiDirections);
-                dir = dir.OffsetRsiDir(DirOffset);
-
-                // Get the correct directional texture from the state, and draw it!
-                var texture = GetRenderTexture(_actualState, dir);
-
-                if (CopyToShaderParameters == null)
-                {
-                    // Set the drawing transform for this layer
-                    var transformMatrix = Matrix3x2.Multiply(layerMatrix, spriteMatrix);
-                    drawingHandle.SetTransform(in transformMatrix);
-
-                    RenderTexture(drawingHandle, texture);
-                }
-                else
-                {
-                    // Multiple atrocities to god being committed right here.
-                    var otherLayerIdx = _parent.LayerMap[CopyToShaderParameters.LayerKey!];
-                    var otherLayer = _parent.Layers[otherLayerIdx];
-                    if (otherLayer.Shader is not { } shader)
-                    {
-                        // No shader set apparently..?
-                        return;
-                    }
-
-                    if (!shader.Mutable)
-                        otherLayer.Shader = shader = shader.Duplicate();
-
-                    var clydeTexture = Clyde.RenderHandle.ExtractTexture(texture, null, out var csr);
-                    var sr = Clyde.RenderHandle.WorldTextureBoundsToUV(clydeTexture, csr);
-
-                    if (CopyToShaderParameters.ParameterTexture is { } paramTexture)
-                        shader.SetParameter(paramTexture, clydeTexture);
-
-                    if (CopyToShaderParameters.ParameterUV is { } paramUV)
-                    {
-                        var uv = new Vector4(sr.Left, sr.Bottom, sr.Right, sr.Top);
-                        shader.SetParameter(paramUV, uv);
-                    }
-                }
-            }
-
-            private void RenderTexture(DrawingHandleWorld drawingHandle, Texture texture)
-            {
-                if (Shader != null)
-                    drawingHandle.UseShader(Shader);
-
-                var layerColor = _parent.color * Color;
-                var textureSize = texture.Size / (float)EyeManager.PixelsPerMeter;
-                var quad = Box2.FromDimensions(textureSize/-2, textureSize);
-
-                drawingHandle.DrawTextureRectRegion(texture, quad, layerColor);
-
-                if (Shader != null)
-                    drawingHandle.UseShader(null);
-            }
-
-            private Texture GetRenderTexture(RSI.State? state, RsiDirection dir)
-            {
-                if (state == null)
-                    return Texture ?? _parent.resourceCache.GetFallback<TextureResource>().Texture;
-
-                return state.GetFrame(dir, AnimationFrame);
             }
 
             internal void AdvanceFrameAnimation(RSI.State state)

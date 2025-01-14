@@ -899,10 +899,7 @@ namespace Robust.Client.GameObjects
             LayerSetRenderingStrategy(layer, renderingStrategy);
         }
 
-        #endregion
-
-
-        /// <inheritdoc />
+        [Obsolete("Use SpriteSystem.LayerGetRsiState() instead.")]
         public RSI.StateId LayerGetState(int layer)
         {
             if (!TryGetLayer(layer, out var theLayer, true))
@@ -911,15 +908,19 @@ namespace Robust.Client.GameObjects
             return theLayer.State;
         }
 
+        [Obsolete("Use SpriteSystem.LayerGetEffectiveRsi() instead.")]
         public RSI? LayerGetActualRSI(int layer)
         {
             return this[layer].ActualRsi;
         }
 
+        [Obsolete("Use SpriteSystem.LayerGetEffectiveRsi() instead.")]
         public RSI? LayerGetActualRSI(object layerKey)
         {
             return this[layerKey].ActualRsi;
         }
+
+        #endregion
 
         public void LayerSetShader(int layer, ShaderInstance? shader, string? prototype = null)
         {

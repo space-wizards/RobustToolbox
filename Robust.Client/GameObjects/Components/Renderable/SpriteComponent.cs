@@ -968,8 +968,7 @@ namespace Robust.Client.GameObjects
             Sys.Render((Owner, this), drawingHandle, eyeRotation, worldRotation, position, overrideDirection);
         }
 
-        #endregion
-
+        [Obsolete("Use SpriteSystem.LayerGetDirectionCount() instead.")]
         public int GetLayerDirectionCount(ISpriteLayer layer)
         {
             if (!layer.RsiState.IsValid)
@@ -990,6 +989,8 @@ namespace Robust.Client.GameObjects
                 _ => throw new ArgumentOutOfRangeException()
             };
         }
+
+        #endregion
 
         public string GetDebugString()
         {

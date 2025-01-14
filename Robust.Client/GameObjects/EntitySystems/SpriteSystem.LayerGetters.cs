@@ -1,6 +1,8 @@
 using System;
 using Robust.Client.Graphics;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Graphics.RSI;
+using static Robust.Client.GameObjects.SpriteComponent;
 using static Robust.Client.Graphics.RSI;
 
 namespace Robust.Client.GameObjects;
@@ -78,6 +80,70 @@ public sealed partial class SpriteSystem
     {
         TryGetLayer(sprite, key, out var layer, true);
         return layer?.ActualRsi;
+    }
+
+    #endregion
+
+    #region Directions
+
+    public RsiDirectionType LayerGetDirections(Entity<SpriteComponent?> sprite, int index)
+    {
+        return TryGetLayer(sprite, index, out var layer, true)
+            ? LayerGetDirections(layer)
+            : RsiDirectionType.Dir1;
+    }
+
+
+    public RsiDirectionType LayerGetDirections(Entity<SpriteComponent?> sprite, Enum key)
+    {
+        return TryGetLayer(sprite, key, out var layer, true)
+            ? LayerGetDirections(layer)
+            : RsiDirectionType.Dir1;
+    }
+
+    public RsiDirectionType LayerGetDirections(Entity<SpriteComponent?> sprite, string key)
+    {
+        return TryGetLayer(sprite, key, out var layer, true)
+            ? LayerGetDirections(layer)
+            : RsiDirectionType.Dir1;
+    }
+
+    public RsiDirectionType LayerGetDirections(Layer layer)
+    {
+        if (!layer.StateId.IsValid)
+            return RsiDirectionType.Dir1;
+
+        // Pull texture from RSI state instead.
+        if (layer.ActualRsi is not {} rsi || !rsi.TryGetState(layer.StateId, out var state))
+            return RsiDirectionType.Dir1;
+
+        return state.RsiDirections;
+    }
+
+    public int LayerGetDirectionCount(Entity<SpriteComponent?> sprite, int index)
+    {
+        return TryGetLayer(sprite, index, out var layer, true) ? LayerGetDirectionCount(layer) : 1;
+    }
+
+    public int LayerGetDirectionCount(Entity<SpriteComponent?> sprite, Enum key)
+    {
+        return TryGetLayer(sprite, key, out var layer, true) ? LayerGetDirectionCount(layer) : 1;
+    }
+
+    public int LayerGetDirectionCount(Entity<SpriteComponent?> sprite, string key)
+    {
+        return TryGetLayer(sprite, key, out var layer, true) ? LayerGetDirectionCount(layer) : 1;
+    }
+
+    public int LayerGetDirectionCount(Layer layer)
+    {
+        return LayerGetDirections(layer) switch
+        {
+            RsiDirectionType.Dir1 => 1,
+            RsiDirectionType.Dir4 => 4,
+            RsiDirectionType.Dir8 => 8,
+            _ => throw new ArgumentOutOfRangeException()
+        };
     }
 
     #endregion

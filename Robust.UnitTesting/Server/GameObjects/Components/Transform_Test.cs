@@ -19,7 +19,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
     {
         public override UnitTestProject Project => UnitTestProject.Server;
 
-        private IServerEntityManagerInternal EntityManager = default!;
+        private IEntityManager EntityManager = default!;
         private IMapManager MapManager = default!;
         private SharedTransformSystem XformSystem => EntityManager.System<SharedTransformSystem>();
 
@@ -47,7 +47,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         {
             IoCManager.Resolve<IComponentFactory>().GenerateNetIds();
 
-            EntityManager = IoCManager.Resolve<IServerEntityManagerInternal>();
+            EntityManager = IoCManager.Resolve<IEntityManager>();
             MapManager = IoCManager.Resolve<IMapManager>();
 
             IoCManager.Resolve<ISerializationManager>().Initialize();

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Text;
 using System.Text.Json.Serialization;
 using JetBrains.Annotations;
@@ -64,6 +65,8 @@ public readonly struct ResPath : IEquatable<ResPath>
 
     public ResPath(string canonPath)
     {
+        // Paths should never have non-standardised directory separators passed in, the caller should have already sanitised it.
+        DebugTools.Assert(!canonPath.Contains('\\'));
         CanonPath = canonPath;
     }
 

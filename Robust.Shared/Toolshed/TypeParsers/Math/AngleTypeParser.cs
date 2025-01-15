@@ -51,9 +51,9 @@ public sealed class AngleTypeParser : TypeParser<Angle>
         }
     }
 
-    public override CompletionResult TryAutocomplete(ParserContext parserContext, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext parserContext, CommandArgument? arg)
     {
-        return CompletionResult.FromHint("angle (append deg for degrees, otherwise radians)");
+        return CompletionResult.FromHint($"{GetArgHint(arg)}\nAppend \"deg\" for degrees");
     }
 }
 

@@ -43,10 +43,11 @@ internal sealed class QuantityParser : TypeParser<Quantity>
         return true;
     }
 
-    public override CompletionResult? TryAutocomplete(ParserContext parserContext,
-        string? argName)
+    public override CompletionResult? TryAutocomplete(
+        ParserContext parserContext,
+        CommandArgument? arg)
     {
-        return CompletionResult.FromHint($"{argName ?? "quantity"}");
+        return CompletionResult.FromHint(GetArgHint(arg));
     }
 }
 

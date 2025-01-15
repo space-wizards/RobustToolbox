@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Robust.Shared.Console;
 using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Toolshed.Syntax;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
@@ -12,6 +14,7 @@ namespace Robust.Shared.Toolshed.TypeParsers;
 /// </summary>
 public sealed class BlockOutputParser : CustomTypeParser<Type>
 {
+    public override bool ShowTypeArgSignature => false;
     public override bool TryParse(ParserContext ctx, [NotNullWhen(true)] out Type? result)
     {
         result = null;
@@ -31,7 +34,7 @@ public sealed class BlockOutputParser : CustomTypeParser<Type>
         return true;
     }
 
-    public override CompletionResult? TryAutocomplete(ParserContext ctx, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
     {
         Block.TryParseBlock(ctx, null, null, out _);
         return ctx.Completions;
@@ -52,13 +55,32 @@ public sealed class BlockOutputParser : CustomTypeParser<Type>
 /// </remarks>>
 public sealed class MapBlockOutputParser : CustomTypeParser<Type>
 {
+    public override bool ShowTypeArgSignature => false;
     public override bool TryParse(ParserContext ctx, [NotNullWhen(true)] out Type? result)
     {
         result = null;
 
         var pipeType = ctx.Bundle.PipedType;
-        if (pipeType != null && pipeType.IsGenericType(typeof(IEnumerable<>)))
-            pipeType = pipeType.GetGenericArguments()[0];
+        if (pipeType != null)
+        {
+            // TODO TOOLSHED
+            // The concrete implementation should already know that the piped in type must be assignable tosome kind of IEnumerable<T>
+            // So why can't we just already have modified the PipedType to match?
+
+            if (pipeType.IsGenericType(typeof(IEnumerable<>))) // most common case
+                pipeType = pipeType.GetGenericArguments()[0];
+            else if (pipeType.IsGenericType(typeof(List<>))) // common for toolshed variables
+                pipeType = pipeType.GetGenericArguments()[0];
+            else if (pipeType.IsArray)
+                pipeType = pipeType.GetElementType()!;
+            else
+            {
+                // Slow fallback
+                // TODO TOOLSHED Cache this?
+                var @interface = pipeType.GetInterfaces().FirstOrDefault(x => x.IsGenericType(typeof(IEnumerable<>)));
+                pipeType = @interface?.GetGenericArguments()[0] ?? pipeType;
+            }
+        }
 
         var save = ctx.Save();
         var start = ctx.Index;
@@ -77,7 +99,7 @@ public sealed class MapBlockOutputParser : CustomTypeParser<Type>
         return true;
     }
 
-    public override CompletionResult? TryAutocomplete(ParserContext ctx, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
     {
         var pipeType = ctx.Bundle.PipedType;
         if (pipeType != null && pipeType.IsGenericType(typeof(IEnumerable<>)))

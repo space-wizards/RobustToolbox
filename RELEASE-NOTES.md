@@ -43,11 +43,12 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix logging of received packets with `net.packet` logging level.
+* Downgrade `VorbisPizza` to fix audio playback for systems without AVX2 support.
 
 ### Other
 
-*None yet*
+* Improved performance of some Roslyn analyzers and source generators, which should significantly improve compile times and IDE performance.
 
 ### Internal
 

@@ -41,7 +41,7 @@ namespace Robust.Client.UserInterface.Controls
             return (32, 32) * Scale;
         }
 
-        internal override void DrawInternal(IRenderHandle renderHandle)
+        public override void DrawInternal(IRenderHandle renderHandle)
         {
             if (Sprite == null || Sprite.Deleted)
             {

@@ -463,7 +463,7 @@ namespace Robust.Client.UserInterface
         {
         }
 
-        internal virtual void DrawInternal(IRenderHandle renderHandle)
+        public virtual void DrawInternal(IRenderHandle renderHandle)
         {
             Draw(renderHandle.DrawingHandleScreen);
         }

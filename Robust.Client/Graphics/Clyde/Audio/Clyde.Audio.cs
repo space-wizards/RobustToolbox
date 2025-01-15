@@ -183,6 +183,32 @@ namespace Robust.Client.Graphics.Clyde
             if (handles.filterHandle != 0) EFX.DeleteFilter(handles.filterHandle);
         }
 
+        public AudioStream LoadAudioRaw(short[] samples, int channels, int sampleRate)
+        {
+            var buffer = AL.GenBuffer();
+
+            unsafe
+            {
+                fixed (short* ptr = samples)
+                {
+                    AL.BufferData(
+                        buffer,
+                        channels == 1 ? ALFormat.Mono16 : ALFormat.Stereo16,
+                        (IntPtr) ptr,
+                        samples.Length * 2,
+                        sampleRate);
+                }
+            }
+
+            _checkAlError();
+
+            var handle = new ClydeHandle(_audioSampleBuffers.Count);
+            _audioSampleBuffers.Add(new LoadedAudioSample(buffer));
+            // ReSharper disable once PossibleLossOfFraction
+            var length = TimeSpan.FromSeconds(samples.Length / channels / (double) sampleRate);
+            return new AudioStream(handle, length, channels);
+        }
+
         public void SetMasterVolume(float newVolume)
         {
             AL.Listener(ALListenerf.Gain, _baseGain * newVolume);
@@ -435,6 +461,21 @@ namespace Robust.Client.Graphics.Clyde
                     priorOcclusion = priorGain / _gain;
                 }
                 _gain =  MathF.Pow(10, decibels / 10);
+                AL.Source(SourceHandle, ALSourcef.Gain, _gain * priorOcclusion);
+                _checkAlError();
+            }
+
+            public void SetVolumeDirect(float decibels)
+            {
+                _checkDisposed();
+                var priorOcclusion = 1f;
+                if (!IsEfxSupported)
+                {
+                    AL.GetSource(SourceHandle, ALSourcef.Gain, out var priorGain);
+                    priorOcclusion = priorGain / _gain;
+                }
+
+                _gain = decibels;
                 AL.Source(SourceHandle, ALSourcef.Gain, _gain * priorOcclusion);
                 _checkAlError();
             }
@@ -744,6 +785,21 @@ namespace Robust.Client.Graphics.Clyde
 
                 AL.Source(SourceHandle!.Value, ALSource3f.Velocity, x, y, 0);
 
+                _checkAlError();
+            }
+
+            public void SetVolumeDirect(float masterVolumeDecay)
+            {
+                _checkDisposed();
+                var priorOcclusion = 1f;
+                if (!IsEfxSupported)
+                {
+                    AL.GetSource(SourceHandle!.Value, ALSourcef.Gain, out var priorGain);
+                    priorOcclusion = priorGain / _gain;
+                }
+
+                _gain = masterVolumeDecay;
+                AL.Source(SourceHandle!.Value, ALSourcef.Gain, _gain * priorOcclusion);
                 _checkAlError();
             }
 

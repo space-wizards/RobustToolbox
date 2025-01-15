@@ -248,6 +248,11 @@ namespace Robust.Client.Graphics.Clyde
             return new(default, default, 1, name);
         }
 
+        public AudioStream LoadAudioRaw(short[] samples, int channels, int sampleRate)
+        {
+            throw new NotImplementedException();
+        }
+
         public IClydeAudioSource CreateAudioSource(AudioStream stream)
         {
             return DummyAudioSource.Instance;
@@ -334,6 +339,11 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public void SetVelocity(Vector2 velocity)
+            {
+                // Nada.
+            }
+
+            public void SetVolumeDirect(float masterVolumeDecay)
             {
                 // Nada.
             }

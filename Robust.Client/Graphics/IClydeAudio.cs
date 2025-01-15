@@ -8,6 +8,7 @@ namespace Robust.Client.Graphics
         // AUDIO SYSTEM DOWN BELOW.
         AudioStream LoadAudioOggVorbis(Stream stream, string? name = null);
         AudioStream LoadAudioWav(Stream stream, string? name = null);
+        AudioStream LoadAudioRaw(short[] samples, int channels, int sampleRate);
 
         void SetMasterVolume(float newVolume);
 

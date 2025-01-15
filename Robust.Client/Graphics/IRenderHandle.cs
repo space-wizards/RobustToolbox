@@ -4,7 +4,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics
 {
-    internal interface IRenderHandle
+    public interface IRenderHandle
     {
         DrawingHandleScreen DrawingHandleScreen { get; }
         DrawingHandleWorld DrawingHandleWorld { get; }

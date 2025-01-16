@@ -80,4 +80,8 @@ public enum LayerRenderingStrategy
     SnapToCardinals,
     NoRotation,
     UseSpriteStrategy
+    // TODO SPRITE
+    // Refactor this make the sprites strategy the actual default.
+    // That way layers have to opt in to having a custom strategy, instead of opt out.
+    // Also rename default to make it clear that its not actually the default, instead I guess its "WithRotation"?
 }

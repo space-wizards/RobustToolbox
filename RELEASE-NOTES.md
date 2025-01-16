@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed a state handling bug in replays, which was causing exceptions to be thrown when applying delta states.
 
 ### Other
 

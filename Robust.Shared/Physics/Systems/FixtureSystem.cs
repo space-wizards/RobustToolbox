@@ -5,11 +5,13 @@ using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Serialization;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Systems
@@ -21,6 +23,7 @@ namespace Robust.Shared.Physics.Systems
     {
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+        [Dependency] private readonly IGameTiming _timing = default!;
         private EntityQuery<PhysicsMapComponent> _mapQuery;
         private EntityQuery<PhysicsComponent> _physicsQuery;
         private EntityQuery<FixturesComponent> _fixtureQuery;
@@ -179,6 +182,18 @@ namespace Robust.Shared.Physics.Systems
                 Log.Error($"Tried to remove fixture from {ToPrettyString(uid)} that was already removed.");
                 return;
             }
+
+            // Temporary debug block for trying to help catch a bug where grid fixtures disappear without the chunk's
+            // fixture set being updated
+#if DEBUG
+            if (TryComp(uid, out MapGridComponent? grid) && !_timing.ApplyingState)
+            {
+                foreach (var chunk in grid.Chunks.Values)
+                {
+                    DebugTools.Assert(!chunk.Fixtures.Contains(fixtureId), $"A grid fixture is being deleted without first removing it from the chunk. Please report this bug.");
+                }
+            }
+#endif
 
             foreach (var contact in fixture.Contacts.Values.ToArray())
             {

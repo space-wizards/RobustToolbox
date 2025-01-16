@@ -26,6 +26,8 @@ namespace Robust.Client.GameObjects
 
         protected override void OnAppearanceGetState(EntityUid uid, AppearanceComponent component, ref ComponentGetState args)
         {
+            // TODO Game State
+            // Force the client to serialize & de-serialize implicitly generated component states.
             var clone = CloneAppearanceData(component.AppearanceData);
             args.State = new AppearanceComponentState(clone);
         }

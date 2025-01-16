@@ -67,7 +67,6 @@ namespace Robust.Shared.Physics.Systems
 
         public bool MetricsEnabled { get; protected set; }
 
-        private EntityQuery<FixturesComponent> _fixturesQuery;
         protected EntityQuery<PhysicsComponent> PhysicsQuery;
         private EntityQuery<TransformComponent> _xformQuery;
         private EntityQuery<CollideOnAnchorComponent> _anchorQuery;
@@ -76,6 +75,7 @@ namespace Robust.Shared.Physics.Systems
 
         private ComponentRegistration _physicsReg = default!;
         private byte _angularVelocityIndex;
+        private byte _fixtureFieldIndex;
 
         public override void Initialize()
         {
@@ -88,6 +88,7 @@ namespace Robust.Shared.Physics.Systems
                 nameof(PhysicsComponent.CanCollide),
                 nameof(PhysicsComponent.BodyStatus),
                 nameof(PhysicsComponent.BodyType),
+                nameof(PhysicsComponent.Fixtures),
                 nameof(PhysicsComponent.SleepingAllowed),
                 nameof(PhysicsComponent.FixedRotation),
                 nameof(PhysicsComponent.Friction),
@@ -98,9 +99,12 @@ namespace Robust.Shared.Physics.Systems
                 nameof(PhysicsComponent.AngularVelocity),
                 nameof(PhysicsComponent.LinearVelocity));
 
-            _angularVelocityIndex = 10;
+            _fixtureFieldIndex = 3;
+            _angularVelocityIndex = 11;
 
-            _fixturesQuery = GetEntityQuery<FixturesComponent>();
+            DebugTools.Assert(EntityManager.GetNetworkedFieldIndex(_physicsReg, nameof(PhysicsComponent.AngularVelocity)) == _angularVelocityIndex);
+            DebugTools.Assert(EntityManager.GetNetworkedFieldIndex(_physicsReg, nameof(PhysicsComponent.Fixtures)) == _fixtureFieldIndex);
+
             PhysicsQuery = GetEntityQuery<PhysicsComponent>();
             _xformQuery = GetEntityQuery<TransformComponent>();
             _anchorQuery = GetEntityQuery<CollideOnAnchorComponent>();
@@ -121,15 +125,6 @@ namespace Robust.Shared.Physics.Systems
             Subs.CVar(_cfg, CVars.AutoClearForces, OnAutoClearChange);
             Subs.CVar(_cfg, CVars.NetTickrate, UpdateSubsteps, true);
             Subs.CVar(_cfg, CVars.TargetMinimumTickrate, UpdateSubsteps, true);
-        }
-
-        private void OnPhysicsShutdown(EntityUid uid, PhysicsComponent component, ComponentShutdown args)
-        {
-            SetCanCollide(uid, false, false, body: component);
-            DebugTools.Assert(!component.Awake);
-
-            if (LifeStage(uid) <= EntityLifeStage.MapInitialized)
-                RemComp<FixturesComponent>(uid);
         }
 
         private void OnCollisionChange(ref CollisionChangeEvent ev)
@@ -256,10 +251,9 @@ namespace Robust.Shared.Physics.Systems
                 return;
 
             var body = EnsureComp<PhysicsComponent>(guid);
-            var manager = EnsureComp<FixturesComponent>(guid);
 
-            SetCanCollide(guid, true, manager: manager, body: body);
-            SetBodyType(guid, BodyType.Static, manager: manager, body: body);
+            SetCanCollide(guid, true, body: body);
+            SetBodyType(guid, BodyType.Static, body: body);
         }
 
         public override void Shutdown()

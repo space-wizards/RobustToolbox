@@ -6,6 +6,7 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 
@@ -18,16 +19,15 @@ namespace Robust.Shared.GameObjects
         [Dependency] protected readonly IMapManager MapManager = default!;
         [Dependency] private readonly IMapManagerInternal _mapInternal = default!;
         [Dependency] private readonly INetManager _netManager = default!;
-        [Dependency] private readonly FixtureSystem _fixtures = default!;
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
         [Dependency] private readonly IComponentFactory _factory = default!;
         [Dependency] private readonly MetaDataSystem _meta = default!;
 
-        private EntityQuery<FixturesComponent> _fixturesQuery;
         private EntityQuery<MapComponent> _mapQuery;
         private EntityQuery<MapGridComponent> _gridQuery;
         private EntityQuery<MetaDataComponent> _metaQuery;
+        private EntityQuery<PhysicsComponent> _physicsQuery;
         private EntityQuery<TransformComponent> _xformQuery;
 
         internal Dictionary<MapId, EntityUid> Maps { get; } = new();
@@ -36,9 +36,9 @@ namespace Robust.Shared.GameObjects
         {
             base.Initialize();
 
-            _fixturesQuery = GetEntityQuery<FixturesComponent>();
             _mapQuery = GetEntityQuery<MapComponent>();
             _gridQuery = GetEntityQuery<MapGridComponent>();
+            _physicsQuery = GetEntityQuery<PhysicsComponent>();
             _metaQuery = GetEntityQuery<MetaDataComponent>();
             _xformQuery = GetEntityQuery<TransformComponent>();
 

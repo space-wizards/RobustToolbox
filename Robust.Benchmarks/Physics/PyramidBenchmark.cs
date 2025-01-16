@@ -50,12 +50,11 @@ public class PhysicsPyramidBenchmark
 
         // Setup ground
         var physics = entManager.System<SharedPhysicsSystem>();
-        var fixtures = entManager.System<FixtureSystem>();
         var groundUid = entManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
         var ground = entManager.AddComponent<PhysicsComponent>(groundUid);
 
         var horizontal = new EdgeShape(new Vector2(40, 0), new Vector2(-40, 0));
-        fixtures.CreateFixture(groundUid, "fix1", new Fixture(horizontal, 2, 2, true), body: ground);
+        physics.CreateFixture(groundUid, "fix1", new Fixture(horizontal, 2, 2, true), body: ground);
         physics.WakeBody(groundUid, body: ground);
 
         // Setup boxes
@@ -78,7 +77,7 @@ public class PhysicsPyramidBenchmark
                 var box = entManager.AddComponent<PhysicsComponent>(boxUid);
                 physics.SetBodyType(boxUid, BodyType.Dynamic, body: box);
 
-                fixtures.CreateFixture(boxUid, "fix1", new Fixture(shape, 2, 2, true, 5f), body: box);
+                physics.CreateFixture(boxUid, "fix1", new Fixture(shape, 2, 2, true, 5f), body: box);
                 y += deltaY;
 
                 physics.WakeBody(boxUid, body: box);

@@ -202,7 +202,7 @@ public abstract partial class SharedContainerSystem
             // player for any entity inside of a container during init.
             _physics.SetLinearVelocity(entity, Vector2.Zero, false, body: physics);
             _physics.SetAngularVelocity(entity, 0, false, body: physics);
-            _physics.SetCanCollide(entity, false, false, body: physics);
+            _physics.SetCanCollide(entity, false, body: physics);
         }
 
         foreach (var child in entity.Comp1._children)

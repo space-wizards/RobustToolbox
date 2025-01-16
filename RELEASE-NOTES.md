@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Reduced amount of `DynamicMethod`s used by serialization system. This should improve performance somewhat.
 
 ### Internal
 

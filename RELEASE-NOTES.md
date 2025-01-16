@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Console completion options now have a new flags for preventing suggestions from being escaped or quoted.
 
 ### Bugfixes
 

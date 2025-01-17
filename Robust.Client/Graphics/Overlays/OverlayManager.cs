@@ -13,10 +13,22 @@ internal sealed class OverlayManager : IOverlayManagerInternal, IPostInjectInit
     [Dependency] private readonly ILogManager _logMan = default!;
 
     [ViewVariables]
-    private readonly Dictionary<Type, Overlay> _overlays = new Dictionary<Type, Overlay>();
+    private readonly Dictionary<Type, Overlay> _overlays = new();
+
+    /// <summary>
+    /// A list that duplicates a value from <see cref="_overlays"/>,
+    /// but already sorted, by invoking <see cref="Sort"/>
+    /// in <see cref="AddOverlay"/> and <see cref="RemoveOverlay(System.Type)"/>.
+    /// </summary>
+    [ViewVariables]
+    private readonly List<Overlay> _sortedOverlays = [];
+
     private ISawmill _logger = default!;
 
-    public IEnumerable<Overlay> AllOverlays => _overlays.Values;
+    /// <summary>
+    /// Returns a list of all overlays sorted by <see cref="Overlay.ZIndex"/>
+    /// </summary>
+    public IEnumerable<Overlay> AllOverlays => _sortedOverlays;
 
     public void FrameUpdate(FrameEventArgs args)
     {
@@ -30,7 +42,9 @@ internal sealed class OverlayManager : IOverlayManagerInternal, IPostInjectInit
     {
         if (_overlays.ContainsKey(overlay.GetType()))
             return false;
+
         _overlays.Add(overlay.GetType(), overlay);
+        Sort();
         return true;
     }
 
@@ -42,7 +56,9 @@ internal sealed class OverlayManager : IOverlayManagerInternal, IPostInjectInit
             return false;
         }
 
-        return _overlays.Remove(overlayClass);
+        var result = _overlays.Remove(overlayClass);
+        Sort();
+        return result;
     }
 
     public bool RemoveOverlay<T>() where T : Overlay
@@ -104,8 +120,27 @@ internal sealed class OverlayManager : IOverlayManagerInternal, IPostInjectInit
         return _overlays.ContainsKey(typeof(T));
     }
 
+    private void Sort()
+    {
+        _sortedOverlays.Clear();
+        _sortedOverlays.AddRange(_overlays.Values);
+        _sortedOverlays.Sort(OverlayComparer.Instance);
+    }
+
     void IPostInjectInit.PostInject()
     {
         _logger = _logMan.GetSawmill("overlay");
+    }
+
+    private sealed class OverlayComparer : IComparer<Overlay>
+    {
+        public static readonly OverlayComparer Instance = new();
+
+        public int Compare(Overlay? x, Overlay? y)
+        {
+            var zX = x?.ZIndex ?? 0;
+            var zY = y?.ZIndex ?? 0;
+            return zX.CompareTo(zY);
+        }
     }
 }

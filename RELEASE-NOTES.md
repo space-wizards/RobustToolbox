@@ -35,11 +35,12 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Prototype reloads now also re-apply modified components. For example this means sprite or physics changes are reflected on existing prototypes.
 
 ### New features
 
 * Console completion options now have a new flags for preventing suggestions from being escaped or quoted.
+* AddComponent now has an overload for ComponentRegistryEntry.
 
 ### Bugfixes
 

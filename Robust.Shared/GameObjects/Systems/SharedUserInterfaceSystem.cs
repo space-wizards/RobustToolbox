@@ -322,12 +322,14 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
                 }
                 case 1 << 2:
                 {
-                    var state = new UserInterfaceStatesDeltaState()
-                    {
-                        States = new Dictionary<Enum, BoundUserInterfaceState>(ent.Comp.States),
-                    };
+                    var states = ent.Comp.States;
 
-                    args.State = state;
+                    // TODO Game State
+                    // Force the client to serialize & de-serialize implicitly generated component states.
+                    if (_netManager.IsClient)
+                        states = new(states);
+
+                    args.State = new UserInterfaceStatesDeltaState {States = states};
                     return;
                 }
             }
@@ -336,6 +338,8 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         var actors = new Dictionary<Enum, List<NetEntity>>();
         var dataCopy = new Dictionary<Enum, InterfaceData>(ent.Comp.Interfaces.Count);
 
+        // TODO Game State
+        // Force the client to serialize & de-serialize implicitly generated component states.
         foreach (var (weh, a) in ent.Comp.Interfaces)
         {
             dataCopy[weh] = new InterfaceData(a);

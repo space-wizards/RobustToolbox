@@ -29,7 +29,8 @@ namespace Robust.Shared.EntitySerialization;
 /// This class provides methods for deserializing entities from yaml. It provides some more control over
 /// serialization than the methods provided by <see cref="MapLoaderSystem"/>.
 /// </summary>
-public sealed class EntityDeserializer : ISerializationContext, IEntityLoadContext,
+public sealed class EntityDeserializer :
+    ISerializationContext,
     ITypeSerializer<EntityUid, ValueDataNode>,
     ITypeSerializer<NetEntity, ValueDataNode>
 {
@@ -78,7 +79,14 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
     /// </summary>
     public readonly Dictionary<string, List<EntData>> Prototypes = new();
 
-    public readonly record struct EntData(int YamlId, MappingDataNode Node, bool PostInit, bool Paused, bool ToDelete);
+    public record struct EntData(
+        int YamlId,
+        MappingDataNode Node,
+        Dictionary<string, MappingDataNode>? Components,
+        HashSet<string>? MissingComponents,
+        bool PostInit,
+        bool Paused,
+        bool ToDelete);
 
     public readonly LoadResult Result = new();
     public readonly Dictionary<int, string> TileMap = new();
@@ -99,9 +107,8 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
     public readonly HashSet<EntityUid> ToDelete = new();
     public readonly List<EntityUid> SortedEntities = new();
 
-    public readonly Dictionary<string, IComponent> CurrentReadingEntityComponents = new();
+    private readonly Dictionary<string, MappingDataNode> _components = new();
     public EntData? CurrentReadingEntity;
-    public HashSet<string> CurrentlyIgnoredComponents = new();
     public string? CurrentComponent;
     private readonly EntityQuery<MapComponent> _mapQuery;
     private readonly EntityQuery<MapGridComponent> _gridQuery;
@@ -341,7 +348,8 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
                     ? pausedNode.AsBool()
                     : !postInit;
 
-                var entData = new EntData(yamlId, entityNode, postInit, paused, deletedPrototype);
+                var (comps, missing) = GetComponents(entityNode);
+                var entData = new EntData(yamlId, entityNode, comps, missing, postInit, paused, deletedPrototype);
                 protoData.Add(entData);
                 YamlEntities.Add(yamlId, entData);
             }
@@ -375,7 +383,8 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
 
             _proto.TryIndex(protoId, out var proto);
             var protoData = Prototypes.GetOrNew(proto?.ID ?? string.Empty);
-            var entData = new EntData(yamlId, entityNode, PostInit: !preInit, Paused: preInit, toDelete);
+            var (comps, missing) = GetComponents(entityNode);
+            var entData = new EntData(yamlId, entityNode, comps, missing, PostInit: !preInit, Paused: preInit, toDelete);
             protoData.Add(entData);
             YamlEntities.Add(yamlId, entData);
         }
@@ -413,13 +422,43 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
             foreach (var entityNode in entities.Cast<MappingDataNode>())
             {
                 var yamlId = entityNode.Get<ValueDataNode>("uid").AsInt();
-                var entData = new EntData(yamlId, entityNode, PostInit: !preInit, Paused: preInit, ToDelete: deletedPrototype);
+                var (comps, missing) = GetComponents(entityNode);
+                var entData = new EntData(yamlId, entityNode, comps, missing, PostInit: !preInit, Paused: preInit, ToDelete: deletedPrototype);
                 protoData.Add(entData);
                 YamlEntities.Add(yamlId, entData);
             }
         }
     }
 
+    private (Dictionary<string, MappingDataNode>? Comps, HashSet<string>? Missing) GetComponents(MappingDataNode node)
+    {
+        Dictionary<string, MappingDataNode>? dict = null;
+        HashSet<string>? missing = null;
+
+        if (node.TryGet("components", out SequenceDataNode? componentList))
+        {
+            dict = new(componentList.Count);
+            foreach (var compData in componentList.Cast<MappingDataNode>())
+            {
+                var value = ((ValueDataNode) compData["type"]).Value;
+                compData.Remove("type");
+                dict.Add(value, compData);
+            }
+        }
+
+        if (node.TryGet("missingComponents", out SequenceDataNode? missingComponentList))
+        {
+            missing = new(missingComponentList.Count);
+            foreach (var missNode in missingComponentList)
+            {
+                missing.Add(((ValueDataNode) missNode).Value);
+            }
+        }
+
+        node.Remove("components");
+        node.Remove("missingComponents");
+        return (dict, missing);
+    }
 
     private void ReadTileMap()
     {
@@ -509,7 +548,7 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
             try
             {
                 CurrentReadingEntity = data;
-                LoadEntity(entity, _metaQuery.Comp(entity), data.Node);
+                LoadEntity(entity, _metaQuery.Comp(entity), data.Components, data.MissingComponents);
             }
             catch (Exception e)
             {
@@ -525,67 +564,89 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
         _log.Debug($"Loaded {Entities.Count} entities in {_stopwatch.Elapsed}");
     }
 
-    private void LoadEntity(EntityUid uid, MetaDataComponent meta, MappingDataNode entData)
+    private void LoadEntity(
+        EntityUid uid,
+        MetaDataComponent meta,
+        Dictionary<string, MappingDataNode>? comps,
+        HashSet<string>? missingComps)
     {
-        CurrentReadingEntityComponents.Clear();
-        CurrentlyIgnoredComponents.Clear();
+        var proto = meta.EntityPrototype;
 
-        if (entData.TryGet("components", out SequenceDataNode? componentList))
+        // Get any serialized component data for this entity, and push any implicit data-fields from the component
+        // and store the result in _components.
+        if (comps != null)
         {
-            var prototype = meta.EntityPrototype;
-            CurrentReadingEntityComponents.EnsureCapacity(componentList.Count);
-            foreach (var compData in componentList.Cast<MappingDataNode>())
+            _components.EnsureCapacity(comps.Count);
+            foreach (var (name, compData) in comps)
             {
-                var value = ((ValueDataNode)compData["type"]).Value;
-                if (!_factory.TryGetRegistration(value, out var reg))
+                DebugTools.Assert(missingComps?.Contains(name) == false);
+
+                if (!_factory.TryGetRegistration(name, out _))
                 {
-                    if (!_factory.IsIgnored(value))
-                        _log.Error($"Encountered unregistered component ({value}) while loading entity {EntMan.ToPrettyString(uid)}");
+                    if (!_factory.IsIgnored(name))
+                        _log.Error($"Encountered unregistered component ({name}) while loading entity {EntMan.ToPrettyString(uid)}");
                     continue;
                 }
 
-                var compType = reg.Type;
-                MappingDataNode datanode;
-                if (prototype?.Components != null && prototype.Components.TryGetValue(value, out var protoData))
-                {
-                    // Previously this method used generic composition pushing. I.e.:
-                    /*
-                     datanode = ISerializationManager.PushCompositionWithGenericNode(
-                        compData,
-                        [protoData.Mapping],
-                        datanode,
-                        this);
-                    */
-                    // However, I don't think this is what we want to do here. I.e., we want to ignore things like the
-                    // AlwaysPushInheritanceAttribute. Complex inheritance pushing should have already been done when
-                    // creating the proto data. Now we just want to override the prototype information with the
-                    // serialized data.
-                    //
-                    // If we do ever want to support this, we need to change entity serialization so that it doesn't do
-                    // a simple diff with respect to the prototype data and instead does some kind of inheritance
-                    // subtraction / removal.
-
+                var datanode = compData;
+                if (proto != null && proto.Components.TryGetValue(name, out var protoData))
                     datanode = _seriMan.CombineMappings(compData, protoData.Mapping);
-                }
-                else
-                {
-                    datanode = compData.ShallowClone();
-                }
 
-
-                datanode.Remove("type");
-                CurrentComponent = value;
-                CurrentReadingEntityComponents[value] = (IComponent) _seriMan.Read(compType, datanode, this)!;
-                CurrentComponent = null;
+                _components.Add(name, datanode);
             }
         }
 
-        if (entData.TryGet("missingComponents", out SequenceDataNode? missingComponentList))
-            CurrentlyIgnoredComponents = missingComponentList.Cast<ValueDataNode>().Select(x => x.Value).ToHashSet();
+        // Iterate over the prototype's components, and add them to the entity unless the entity has data relevant to
+        // that component from the map file
+        if (proto != null)
+        {
+            foreach (var (name, entry) in proto.Components)
+            {
+                if (missingComps != null && missingComps.Contains(name))
+                    continue;
 
-        EntityPrototype.LoadEntity((uid, meta), _factory, EntMan, _seriMan, this);
+                if (_components.ContainsKey(name))
+                    continue;
 
-        if (CurrentlyIgnoredComponents.Count > 0)
+                CurrentComponent = name;
+                var compReg = _factory.GetRegistration(name);
+                var component = EntMan.GetComponent(uid, compReg.Idx);
+                _seriMan.CopyTo(entry.Component, ref component, this, notNullableOverride: true);
+
+                if (!entry.Component.NetSyncEnabled && compReg.NetID is { } netId)
+                    meta.NetComponents.Remove(netId);
+            }
+        }
+
+        // Finally, copy over the entity specific information
+        foreach (var (name, data) in _components)
+        {
+            if (proto != null && proto.Components.ContainsKey(name))
+                continue;
+
+            CurrentComponent = name;
+
+            var compReg = _factory.GetRegistration(name);
+            if (!EntMan.TryGetComponent(uid, compReg.Idx, out var existing))
+            {
+                // New component not present in the prototype.
+                var newComponent = (IComponent) _seriMan.Read(compReg.Type, data, this)!;
+                EntMan.AddComponent(uid, newComponent);
+                continue;
+            }
+
+            // TODO ENTITY SERIALIZATION
+            // Copy directly into the existing object
+            // Not doing this yet, because its modifying the method significantly and I'm scared turning over this
+            // rock will reveal a lot of bugs. So leaving that to a future PR. I.e., creating "temp" here just
+            // unnecessarily slows everything down.
+            var temp = (IComponent) _seriMan.Read(compReg.Type, data, this)!;
+
+            _seriMan.CopyTo(temp, ref existing, this, notNullableOverride: true);
+        }
+
+        CurrentComponent = null;
+        if (missingComps is {Count: > 0})
             meta.LastComponentRemoved = Timing.CurTick;
     }
 
@@ -878,28 +939,27 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
         if (metadata.EntityPrototype is not { } prototype)
             return;
 
-        if (!entData.Node.TryGet("components", out SequenceDataNode? componentList))
+        if (entData.Components == null)
             return;
 
         foreach (var component in metadata.NetComponents.Values)
         {
             var compName = _factory.GetComponentName(component.GetType());
 
-            if (componentList.Cast<MappingDataNode>().Any(p => ((ValueDataNode) p["type"]).Value == compName))
+            if (!entData.Components.ContainsKey(compName))
             {
-                if (prototype.Components.ContainsKey(compName))
-                {
-                    // This component is modified by the map so we have to send state.
-                    // Though it's still in the prototype itself so creation doesn't need to be sent.
-                    component.ClearCreationTick();
-                }
-
+                // This component is not modified by the map file,
+                // so the client will have the same data after instantiating it from prototype ID.
+                component.ClearTicks();
                 continue;
             }
 
-            // This component is not modified by the map file,
-            // so the client will have the same data after instantiating it from prototype ID.
-            component.ClearTicks();
+            if (prototype.Components.ContainsKey(compName))
+            {
+                // This component is modified by the map so we have to send state.
+                // Though it's still in the prototype itself so creation doesn't need to be sent.
+                component.ClearCreationTick();
+            }
         }
     }
 
@@ -1028,22 +1088,6 @@ public sealed class EntityDeserializer : ISerializationContext, IEntityLoadConte
         DebugTools.AssertEqual(grids.Intersect(Result.NullspaceEntities).Count(), 0);
         DebugTools.AssertEqual(Result.Orphans.Intersect(Result.NullspaceEntities).Count(), 0);
 #endif
-    }
-
-    // Create custom object serializers that will correctly allow data to be overriden by the map file.
-    bool IEntityLoadContext.TryGetComponent(string componentName, [NotNullWhen(true)] out IComponent? component)
-    {
-        return CurrentReadingEntityComponents.TryGetValue(componentName, out component);
-    }
-
-    public IEnumerable<string> GetExtraComponentTypes()
-    {
-        return CurrentReadingEntityComponents.Keys;
-    }
-
-    public bool ShouldSkipComponent(string compName)
-    {
-        return CurrentlyIgnoredComponents.Contains(compName);
     }
 
     #region ITypeSerializer

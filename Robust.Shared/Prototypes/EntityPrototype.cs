@@ -477,7 +477,6 @@ namespace Robust.Shared.Prototypes
             hashCode.Add(SetSuffix);
             hashCode.Add(Categories);
             hashCode.Add(CustomLocalizationID);
-            hashCode.Add(NoSpawn);
             hashCode.Add(HideSpawnMenu);
             hashCode.Add(MapSavable);
             hashCode.Add(Parents);

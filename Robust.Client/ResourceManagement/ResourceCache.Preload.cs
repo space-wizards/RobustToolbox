@@ -143,9 +143,9 @@ namespace Robust.Client.ResourceManagement
                 }
             });
 
-            // Do not meta-atlas RSIs with custom load parameters.
-            var atlasList = rsiList.Where(x => x.LoadParameters == TextureLoadParameters.Default).ToArray();
-            var nonAtlasList = rsiList.Where(x => x.LoadParameters != TextureLoadParameters.Default).ToArray();
+            var atlasLookup = rsiList.ToLookup(ShouldMetaAtlas);
+            var atlasList = atlasLookup[true].ToArray();
+            var nonAtlasList = atlasLookup[false].ToArray();
 
             foreach (var data in nonAtlasList)
             {
@@ -225,8 +225,9 @@ namespace Robust.Client.ResourceManagement
 
             void FinalizeMetaAtlas(int toIndex, Image<Rgba32> sheet)
             {
-                var atlas = Clyde.LoadTextureFromImage(sheet);
-                for (int i = finalized + 1; i <= toIndex; i++)
+                var fromIndex = finalized + 1;
+                var atlas = Clyde.LoadTextureFromImage(sheet, $"Meta atlas {fromIndex}-{toIndex}");
+                for (int i = fromIndex; i <= toIndex; i++)
                 {
                     var rsi = atlasList[i];
                     rsi.AtlasTexture = atlas;
@@ -282,7 +283,11 @@ namespace Robust.Client.ResourceManagement
                 nonAtlasList.Length,
                 errors,
                 sw.Elapsed);
+        }
 
+        private static bool ShouldMetaAtlas(RSIResource.LoadStepData rsi)
+        {
+            return rsi.MetaAtlas && rsi.LoadParameters == TextureLoadParameters.Default;
         }
     }
 }

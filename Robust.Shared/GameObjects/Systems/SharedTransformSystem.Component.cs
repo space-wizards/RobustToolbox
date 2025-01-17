@@ -719,8 +719,7 @@ public abstract partial class SharedTransformSystem
             component.LocalRotation,
             parent,
             component.NoLocalRotation,
-            component.Anchored,
-            component.GridTraversal);
+            component.Anchored);
     }
 
     internal void OnHandleState(EntityUid uid, TransformComponent xform, ref ComponentHandleState args)
@@ -1106,13 +1105,6 @@ public abstract partial class SharedTransformSystem
     #endregion
 
     #region Set Position+Rotation
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [Obsolete("Use override with EntityUid")]
-    public void SetWorldPositionRotation(TransformComponent component, Vector2 worldPos, Angle worldRot)
-    {
-        SetWorldPositionRotation(component.Owner, worldPos, worldRot, component);
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetWorldPositionRotation(EntityUid uid, Vector2 worldPos, Angle worldRot, TransformComponent? component = null)

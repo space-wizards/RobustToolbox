@@ -5,6 +5,9 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Robust.Shared.Exceptions;
 using Robust.Shared.Log;
+using Robust.Shared.Toolshed.Syntax;
+using Robust.Shared.Toolshed.TypeParsers;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed;
 
@@ -64,24 +67,6 @@ internal static class ReflectionExtensions
         }
     }
 
-    public static IEnumerable<(string, List<MethodInfo>)> BySubCommand(this IEnumerable<MethodInfo> methods)
-    {
-        var output = new Dictionary<string, List<MethodInfo>>();
-
-        foreach (var method in methods)
-        {
-            var subCommand = method.GetCustomAttribute<CommandImplementationAttribute>()!.SubCommand ?? "";
-            if (!output.TryGetValue(subCommand, out var methodList))
-            {
-                methodList = new();
-                output[subCommand] = methodList;
-            }
-            methodList.Add(method);
-        }
-
-        return output.Select(x => (x.Key, x.Value));
-    }
-
     public static Type StepDownConstraints(this Type t)
     {
         if (!t.IsGenericType || t.IsGenericTypeDefinition)
@@ -99,6 +84,53 @@ internal static class ReflectionExtensions
         }
 
         return t.GetGenericTypeDefinition().MakeGenericType(newArgs);
+    }
+
+    public static bool HasGenericParent(this Type type, Type parent)
+    {
+        DebugTools.Assert(parent.IsGenericType);
+        var t = type;
+        while (t != null)
+        {
+            if (t.IsGenericType(parent))
+                return true;
+
+            t = t.BaseType;
+        }
+
+        return false;
+    }
+
+    public static bool IsValueRef(this Type type)
+    {
+        return type.HasGenericParent(typeof(ValueRef<>));
+    }
+
+    public static bool IsCustomParser(this Type type)
+    {
+        return type.HasGenericParent(typeof(CustomTypeParser<>));
+    }
+
+    public static bool IsParser(this Type type)
+    {
+        return type.HasGenericParent(typeof(TypeParser<>));
+    }
+
+    public static bool IsCommandArgument(this ParameterInfo param)
+    {
+        if (param.HasCustomAttribute<CommandArgumentAttribute>())
+            return true;
+
+        if (param.HasCustomAttribute<CommandInvertedAttribute>())
+            return false;
+
+        if (param.HasCustomAttribute<PipedArgumentAttribute>())
+            return false;
+
+        if (param.HasCustomAttribute<CommandInvocationContextAttribute>())
+            return false;
+
+        return param.ParameterType != typeof(IInvocationContext);
     }
 
     public static string PrettyName(this Type type)
@@ -128,13 +160,12 @@ internal static class ReflectionExtensions
 
     public static ParameterInfo? ConsoleGetPipedArgument(this MethodInfo method)
     {
-        var p = method.GetParameters().Where(x => x.GetCustomAttribute<PipedArgumentAttribute>() is not null).ToList();
-        return p.FirstOrDefault();
+        return method.GetParameters().SingleOrDefault(x => x.HasCustomAttribute<PipedArgumentAttribute>());
     }
 
-    public static IEnumerable<ParameterInfo> ConsoleGetArguments(this MethodInfo method)
+    public static bool ConsoleHasInvertedArgument(this MethodInfo method)
     {
-        return method.GetParameters().Where(x => x.GetCustomAttribute<CommandArgumentAttribute>() is not null);
+        return method.GetParameters().Any(x => x.HasCustomAttribute<CommandInvertedAttribute>());
     }
 
     public static Expression CreateEmptyExpr(this Type t)
@@ -168,7 +199,17 @@ internal static class ReflectionExtensions
         if (!right.IsGenericType)
             return left;
 
-        return left.GetGenericArguments().First();
+        var leftGen = left.GetGenericTypeDefinition();
+        var rightGen = right.GetGenericTypeDefinition();
+        var leftArgs = left.GetGenericArguments();
+
+        // TODO TOOLSHED implement this properly.
+        // Currently this only recurses through the first generic argument.
+
+        if (leftGen == rightGen)
+            return Intersect(leftArgs.First(), right.GenericTypeArguments.First());
+
+        return Intersect(leftArgs.First(), right);
     }
 
     public static void DumpGenericInfo(this Type t)
@@ -188,8 +229,17 @@ internal static class ReflectionExtensions
 
     public static bool IsAssignableToGeneric(this Type left, Type right, ToolshedManager toolshed, bool recursiveDescent = true)
     {
+        return left.IntersectWithGeneric(right, toolshed, recursiveDescent) is not null;
+    }
+
+    /// <summary>
+    /// Hopefully allows to figure out all the relevant type arguments when intersecting concrete with a generic one. Returns null if no intersection is possible
+    /// Pseudocode: <c>IEnumerable&lt;EntityUid&gt; ^ IEnumerable&lt;T&gt; -&gt; [EntityUid]</c>
+    /// </summary>
+    public static Type[]? IntersectWithGeneric(this Type left, Type right, ToolshedManager toolshed, bool recursiveDescent)
+    {
         if (left.IsAssignableTo(right))
-            return true;
+            return [left];
 
         if (right.IsInterface && !left.IsInterface)
         {
@@ -197,15 +247,15 @@ internal static class ReflectionExtensions
             {
                 if (right.GetMostGenericPossible() != i.GetMostGenericPossible())
                     continue;
-                if (right.IsAssignableToGeneric(i, toolshed, recursiveDescent))
-                    return true;
+                if (right.IntersectWithGeneric(i, toolshed, recursiveDescent) is var outType && outType is not null)
+                    return outType;
             }
         }
 
         if (left.Constructable() && right.IsGenericParameter)
         {
             // TODO: We need a constraint solver and a general overhaul of how toolshed constructs implementations.
-            return true;
+            return [left];
         }
 
         if (left.IsGenericType && right.IsGenericType && left.GenericTypeArguments.Length == right.GenericTypeArguments.Length)
@@ -215,10 +265,11 @@ internal static class ReflectionExtensions
             if (!equal)
                 goto next;
 
-            var res = true;
+            Type[]? res = null;
             foreach (var (leftTy, rightTy) in left.GenericTypeArguments.Zip(right.GenericTypeArguments))
             {
-                res &= leftTy.IsAssignableToGeneric(rightTy, toolshed, false);
+                if (leftTy.IntersectWithGeneric(rightTy, toolshed, false) is var outType && outType is not null)
+                    res = [ .. res ?? [], .. outType ];
             }
 
             return res;
@@ -229,14 +280,14 @@ internal static class ReflectionExtensions
         {
             foreach (var leftSubTy in toolshed.AllSteppedTypes(left))
             {
-                if (leftSubTy.IsAssignableToGeneric(right, toolshed, false))
+                if (leftSubTy.IntersectWithGeneric(right, toolshed, false) is var outType && outType is not null)
                 {
-                    return true;
+                    return outType;
                 }
             }
         }
 
-        return false;
+        return null;
     }
 
     public static bool IsGenericRelated(this Type t)

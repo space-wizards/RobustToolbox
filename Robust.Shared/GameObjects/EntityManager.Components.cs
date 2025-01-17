@@ -106,6 +106,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public int Count(Type component)
         {
+            DebugTools.Assert(component.IsAssignableTo(typeof(IComponent)));
             var dict = _entTraitDict[component];
             return dict.Count;
         }
@@ -281,24 +282,6 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        /// <inheritdoc />
-        [Obsolete]
-        public CompInitializeHandle<T> AddComponentUninitialized<T>(EntityUid uid) where T : IComponent, new()
-        {
-            var reg = _componentFactory.GetRegistration<T>();
-            var newComponent = (T)_componentFactory.GetComponent(reg);
-#pragma warning disable CS0618 // Type or member is obsolete
-            newComponent.Owner = uid;
-#pragma warning restore CS0618 // Type or member is obsolete
-
-            if (!uid.IsValid() || !EntityExists(uid))
-                throw new ArgumentException($"Entity {uid} is not valid.", nameof(uid));
-
-            AddComponentInternal(uid, newComponent, false, true, null);
-
-            return new CompInitializeHandle<T>(this, uid, newComponent, reg.Idx);
-        }
-
         public void AddComponent(
             EntityUid uid,
             EntityPrototype.ComponentRegistryEntry entry,
@@ -388,6 +371,13 @@ namespace Robust.Shared.GameObjects
                 var netId = reg.NetID.Value;
                 metadata ??= MetaQuery.GetComponentInternal(uid);
                 metadata.NetComponents.Add(netId, component);
+            }
+
+            if (component is IComponentDelta delta)
+            {
+                var curTick = _gameTiming.CurTick;
+                delta.LastModifiedFields = new GameTick[reg.NetworkedFields.Length];
+                Array.Fill(delta.LastModifiedFields, curTick);
             }
 
             component.Networked = reg.NetID != null;
@@ -725,6 +715,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
         public bool HasComponent<T>(EntityUid uid) where T : IComponent
         {
             var dict = _entTraitArray[CompIdx.ArrayIndex<T>()];
@@ -734,13 +725,15 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool HasComponent<T>(EntityUid? uid) where T : IComponent
+        [Pure]
+        public bool HasComponent<T>([NotNullWhen(true)] EntityUid? uid) where T : IComponent
         {
             return uid.HasValue && HasComponent<T>(uid.Value);
         }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
         public bool HasComponent(EntityUid uid, Type type)
         {
             var dict = _entTraitDict[type];
@@ -749,7 +742,8 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool HasComponent(EntityUid? uid, Type type)
+        [Pure]
+        public bool HasComponent([NotNullWhen(true)] EntityUid? uid, Type type)
         {
             if (!uid.HasValue)
             {
@@ -762,6 +756,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
         public bool HasComponent(EntityUid uid, ushort netId, MetaDataComponent? meta = null)
         {
             if (!MetaQuery.Resolve(uid, ref meta))
@@ -772,7 +767,8 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool HasComponent(EntityUid? uid, ushort netId, MetaDataComponent? meta = null)
+        [Pure]
+        public bool HasComponent([NotNullWhen(true)] EntityUid? uid, ushort netId, MetaDataComponent? meta = null)
         {
             if (!uid.HasValue)
             {
@@ -839,6 +835,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        [Pure]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetComponent<T>(EntityUid uid) where T : IComponent
         {
@@ -855,6 +852,7 @@ namespace Robust.Shared.GameObjects
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(T)}");
         }
 
+        [Pure]
         public IComponent GetComponent(EntityUid uid, CompIdx type)
         {
             var dict = _entTraitArray[type.Value];
@@ -868,6 +866,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        [Pure]
         public IComponent GetComponent(EntityUid uid, Type type)
         {
             // ReSharper disable once InvertIf
@@ -884,12 +883,14 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        [Pure]
         public IComponent GetComponent(EntityUid uid, ushort netId, MetaDataComponent? meta = null)
         {
             return (meta ?? MetaQuery.GetComponentInternal(uid)).NetComponents[netId];
         }
 
         /// <inheritdoc />
+        [Pure]
         public IComponent GetComponentInternal(EntityUid uid, CompIdx type)
         {
             var dict = _entTraitArray[type.Value];
@@ -1125,6 +1126,78 @@ namespace Robust.Shared.GameObjects
                 i++;
             }
 
+            // Count<T> includes "deleted" components that are not returned by MoveNext()
+            // This ensures that we dont return an array with empty/invalid entries
+            Array.Resize(ref comps, i);
+            return comps;
+        }
+
+        public Entity<T>[] AllEntities<T>() where T : IComponent
+        {
+            var query = AllEntityQueryEnumerator<T>();
+            var comps = new Entity<T>[Count<T>()];
+            var i = 0;
+
+            while (query.MoveNext(out var uid, out var comp))
+            {
+                comps[i++] = (uid, comp);
+            }
+
+            // Count<T> includes "deleted" components that are not returned by MoveNext()
+            // This ensures that we dont return an array with empty/invalid entries
+            Array.Resize(ref comps, i);
+            return comps;
+        }
+
+        public Entity<IComponent>[] AllEntities(Type tComp)
+        {
+            var query = AllEntityQueryEnumerator(tComp);
+            var comps = new Entity<IComponent>[Count(tComp)];
+            var i = 0;
+
+            while (query.MoveNext(out var uid, out var comp))
+            {
+                comps[i++] = (uid, comp);
+            }
+
+            // Count() includes "deleted" components that are not returned by MoveNext()
+            // This ensures that we dont return an array with empty/invalid entries
+            Array.Resize(ref comps, i);
+            return comps;
+        }
+
+
+        public EntityUid[] AllEntityUids<T>() where T : IComponent
+        {
+            var query = AllEntityQueryEnumerator<T>();
+            var comps = new EntityUid[Count<T>()];
+            var i = 0;
+
+            while (query.MoveNext(out var uid, out _))
+            {
+                comps[i++] = uid;
+            }
+
+            // Count<T> includes "deleted" components that are not returned by MoveNext()
+            // This ensures that we dont return an array with empty/invalid entries
+            Array.Resize(ref comps, i);
+            return comps;
+        }
+
+        public EntityUid[] AllEntityUids(Type tComp)
+        {
+            var query = AllEntityQueryEnumerator(tComp);
+            var comps = new EntityUid[Count(tComp)];
+            var i = 0;
+
+            while (query.MoveNext(out var uid, out _))
+            {
+                comps[i++] = uid;
+            }
+
+            // Count() includes "deleted" components that are not returned by MoveNext()
+            // This ensures that we dont return an array with empty/invalid entries
+            Array.Resize(ref comps, i);
             return comps;
         }
 
@@ -1167,6 +1240,13 @@ namespace Robust.Shared.GameObjects
             var trait1 = _entTraitArray[_componentFactory.GetArrayIndex(comp1.Component.GetType())];
 
             return new CompRegistryEntityEnumerator(this, trait1, registry);
+        }
+
+        public AllEntityQueryEnumerator<IComponent> AllEntityQueryEnumerator(Type comp)
+        {
+            DebugTools.Assert(comp.IsAssignableTo(typeof(IComponent)));
+            var trait = _entTraitArray[_componentFactory.GetIndex(comp).Value];
+            return new AllEntityQueryEnumerator<IComponent>(trait);
         }
 
         public AllEntityQueryEnumerator<TComp1> AllEntityQueryEnumerator<TComp1>()
@@ -1468,6 +1548,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        [Pure]
         public IComponentState? GetComponentState(IEventBus eventBus, IComponent component, ICommonSession? session, GameTick fromTick)
         {
             DebugTools.Assert(component.NetSyncEnabled, $"Attempting to get component state for an un-synced component: {component.GetType()}");
@@ -1596,7 +1677,7 @@ namespace Robust.Shared.GameObjects
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
-        public bool HasComp(EntityUid? uid) => HasComponent(uid);
+        public bool HasComp([NotNullWhen(true)] EntityUid? uid) => HasComponent(uid);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
@@ -1607,7 +1688,7 @@ namespace Robust.Shared.GameObjects
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
-        public bool HasComponent(EntityUid? uid)
+        public bool HasComponent([NotNullWhen(true)] EntityUid? uid)
         {
             return uid != null && HasComponent(uid.Value);
         }

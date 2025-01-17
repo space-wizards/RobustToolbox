@@ -184,10 +184,9 @@ internal sealed partial class PvsSystem
             return;
         }
 
-        int i = 0;
+        var i = 0;
         if (session.AttachedEntity is { } local)
         {
-            DebugTools.Assert(!session.ViewSubscriptions.Contains(local));
             Array.Resize(ref pvsSession.Viewers, session.ViewSubscriptions.Count + 1);
             pvsSession.Viewers[i++] = (local, Transform(local), _eyeQuery.CompOrNull(local));
         }
@@ -198,7 +197,8 @@ internal sealed partial class PvsSystem
 
         foreach (var ent in session.ViewSubscriptions)
         {
-            pvsSession.Viewers[i++] =  (ent, Transform(ent), _eyeQuery.CompOrNull(ent));
+            if (ent != session.AttachedEntity)
+                pvsSession.Viewers[i++] =  (ent, Transform(ent), _eyeQuery.CompOrNull(ent));
         }
     }
 
@@ -232,6 +232,7 @@ internal sealed partial class PvsSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void AddEntityToChunk(EntityUid uid, MetaDataComponent meta, PvsChunkLocation location)
     {
+        DebugTools.Assert(meta.EntityLifeStage < EntityLifeStage.Terminating);
         ref var chunk = ref CollectionsMarshal.GetValueRefOrAddDefault(_chunks, location, out var existing);
         if (!existing)
         {
@@ -240,7 +241,7 @@ internal sealed partial class PvsSystem
             {
                 chunk.Initialize(location, _metaQuery, _xformQuery);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 _chunks.Remove(location);
                 throw;

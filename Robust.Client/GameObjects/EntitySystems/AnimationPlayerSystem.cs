@@ -99,15 +99,6 @@ namespace Robust.Client.GameObjects
             Play(new Entity<AnimationPlayerComponent>(uid, component), animation, key);
         }
 
-        /// <summary>
-        ///     Start playing an animation.
-        /// </summary>
-        [Obsolete("Use Play(EntityUid<AnimationPlayerComponent> ent, Animation animation, string key) instead")]
-        public void Play(AnimationPlayerComponent component, Animation animation, string key)
-        {
-            Play(new Entity<AnimationPlayerComponent>(component.Owner, component), animation, key);
-        }
-
         public void Play(Entity<AnimationPlayerComponent> ent, Animation animation, string key)
         {
             AddComponent(ent);
@@ -151,6 +142,14 @@ namespace Robust.Client.GameObjects
                 }
             }
 #endif
+
+            foreach (var track in animation.AnimationTracks)
+            {
+                if (track is not AnimationTrackSpriteFlick)
+                    continue;
+
+                track.AdvancePlayback(ent.Owner, 0, 0, 0f);
+            }
 
             ent.Comp.PlayingAnimations.Add(key, playback);
         }

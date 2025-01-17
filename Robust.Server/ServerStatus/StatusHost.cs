@@ -269,55 +269,9 @@ namespace Robust.Server.ServerStatus
                 _responseHeaders = new Dictionary<string, string>();
             }
 
-            public T? RequestBodyJson<T>()
-            {
-                return JsonSerializer.Deserialize<T>(RequestBody);
-            }
-
             public async Task<T?> RequestBodyJsonAsync<T>()
             {
                 return await JsonSerializer.DeserializeAsync<T>(RequestBody);
-            }
-
-            public void Respond(string text, HttpStatusCode code = HttpStatusCode.OK, string contentType = MediaTypeNames.Text.Plain)
-            {
-                Respond(text, (int)code, contentType);
-            }
-
-            public void Respond(string text, int code = 200, string contentType = MediaTypeNames.Text.Plain)
-            {
-                _context.Response.StatusCode = code;
-                _context.Response.ContentType = contentType;
-
-                if (RequestMethod == HttpMethod.Head)
-                {
-                    return;
-                }
-
-                using var writer = new StreamWriter(_context.Response.OutputStream, EncodingHelpers.UTF8);
-
-                writer.Write(text);
-            }
-
-            public void Respond(byte[] data, HttpStatusCode code = HttpStatusCode.OK, string contentType = MediaTypeNames.Text.Plain)
-            {
-                Respond(data, (int)code, contentType);
-            }
-
-            public void Respond(byte[] data, int code = 200, string contentType = MediaTypeNames.Text.Plain)
-            {
-                _context.Response.StatusCode = code;
-                _context.Response.ContentType = contentType;
-                _context.Response.ContentLength64 = data.Length;
-
-                if (RequestMethod == HttpMethod.Head)
-                {
-                    _context.Response.Close();
-                    return;
-                }
-
-                _context.Response.OutputStream.Write(data);
-                _context.Response.Close();
             }
 
             public Task RespondNoContentAsync()
@@ -373,25 +327,9 @@ namespace Robust.Server.ServerStatus
                 _context.Response.Close();
             }
 
-            public void RespondError(HttpStatusCode code)
-            {
-                Respond(code.ToString(), code);
-            }
-
             public Task RespondErrorAsync(HttpStatusCode code)
             {
                 return RespondAsync(code.ToString(), code);
-            }
-
-            public void RespondJson(object jsonData, HttpStatusCode code = HttpStatusCode.OK)
-            {
-                RespondShared();
-
-                _context.Response.ContentType = "application/json";
-
-                JsonSerializer.Serialize(_context.Response.OutputStream, jsonData);
-
-                _context.Response.Close();
             }
 
             public async Task RespondJsonAsync(object jsonData, HttpStatusCode code = HttpStatusCode.OK)

@@ -26,6 +26,7 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly IClientNetManager _netManager = default!;
         [Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
         [Dependency] private readonly IComponentFactory _componentFactory = default!;
+        [Dependency] private readonly IConsoleHost _host = default!;
         [Dependency] private readonly IEntityManager _entManager = default!;
 
         private const int HistorySize = 60 * 5; // number of ticks to keep in history.
@@ -46,7 +47,6 @@ namespace Robust.Client.GameStates
 
         // sum of all data point sizes in bytes
         private int _totalHistoryPayload;
-        private int _totalUncompressed;
 
         public EntityUid WatchEntId { get; set; }
 
@@ -79,7 +79,7 @@ namespace Robust.Client.GameStates
 
             string? entStateString = null;
             string? entDelString = null;
-            var conShell = IoCManager.Resolve<IConsoleHost>().LocalShell;
+            var conShell = _host.LocalShell;
 
             var entStates = args.AppliedState.EntityStates;
             if (entStates.HasContents)

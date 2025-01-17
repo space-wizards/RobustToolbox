@@ -76,12 +76,6 @@ namespace Robust.Shared.Map.Components
         #region TileAccess
 
         [Obsolete("Use the MapSystem method")]
-        public TileRef GetTileRef(MapCoordinates coords)
-        {
-            return MapSystem.GetTileRef(Owner, this, coords);
-        }
-
-        [Obsolete("Use the MapSystem method")]
         public TileRef GetTileRef(EntityCoordinates coords)
         {
             return MapSystem.GetTileRef(Owner, this, coords);
@@ -121,20 +115,6 @@ namespace Robust.Shared.Map.Components
         public void SetTiles(List<(Vector2i GridIndices, Tile Tile)> tiles)
         {
             MapSystem.SetTiles(Owner, this, tiles);
-        }
-
-        [Obsolete("Use the MapSystem method")]
-        public IEnumerable<TileRef> GetLocalTilesIntersecting(Box2Rotated localArea, bool ignoreEmpty = true,
-            Predicate<TileRef>? predicate = null)
-        {
-            return MapSystem.GetLocalTilesIntersecting(Owner, this, localArea, ignoreEmpty, predicate);
-        }
-
-        [Obsolete("Use the MapSystem method")]
-        public IEnumerable<TileRef> GetTilesIntersecting(Box2Rotated worldArea, bool ignoreEmpty = true,
-            Predicate<TileRef>? predicate = null)
-        {
-            return MapSystem.GetTilesIntersecting(Owner, this, worldArea, ignoreEmpty, predicate);
         }
 
         [Obsolete("Use the MapSystem method")]
@@ -203,18 +183,6 @@ namespace Robust.Shared.Map.Components
         }
 
         [Obsolete("Use the MapSystem method")]
-        public IEnumerable<EntityUid> GetLocalAnchoredEntities(Box2 localAABB)
-        {
-            return MapSystem.GetLocalAnchoredEntities(Owner, this, localAABB);
-        }
-
-        [Obsolete("Use the MapSystem method")]
-        public IEnumerable<EntityUid> GetAnchoredEntities(Box2 worldAABB)
-        {
-            return MapSystem.GetAnchoredEntities(Owner, this, worldAABB);
-        }
-
-        [Obsolete("Use the MapSystem method")]
         public Vector2i TileIndicesFor(EntityCoordinates coords)
         {
             return MapSystem.TileIndicesFor(Owner, this, coords);
@@ -224,24 +192,6 @@ namespace Robust.Shared.Map.Components
         public Vector2i TileIndicesFor(MapCoordinates worldPos)
         {
             return MapSystem.TileIndicesFor(Owner, this, worldPos);
-        }
-
-        [Obsolete("Use the MapSystem method")]
-        public IEnumerable<EntityUid> GetInDir(EntityCoordinates position, Direction dir)
-        {
-            return MapSystem.GetInDir(Owner, this, position, dir);
-        }
-
-        [Obsolete("Use the MapSystem method")]
-        public IEnumerable<EntityUid> GetLocal(EntityCoordinates coords)
-        {
-            return MapSystem.GetLocal(Owner, this, coords);
-        }
-
-        [Obsolete("Use the MapSystem method")]
-        public IEnumerable<EntityUid> GetCardinalNeighborCells(EntityCoordinates coords)
-        {
-            return MapSystem.GetCardinalNeighborCells(Owner, this, coords);
         }
 
         [Obsolete("Use the MapSystem method")]
@@ -289,18 +239,6 @@ namespace Robust.Shared.Map.Components
         }
 
         [Obsolete("Use the MapSystem method")]
-        public bool CollidesWithGrid(Vector2i indices)
-        {
-            return MapSystem.CollidesWithGrid(Owner, this, indices);
-        }
-
-        [Obsolete("Use the MapSystem method")]
-        public Vector2i GridTileToChunkIndices(Vector2i gridTile)
-        {
-            return MapSystem.GridTileToChunkIndices(Owner, this, gridTile);
-        }
-
-        [Obsolete("Use the MapSystem method")]
         public EntityCoordinates GridTileToLocal(Vector2i gridTile)
         {
             return MapSystem.GridTileToLocal(Owner, this, gridTile);
@@ -310,12 +248,6 @@ namespace Robust.Shared.Map.Components
         public Vector2 GridTileToWorldPos(Vector2i gridTile)
         {
             return MapSystem.GridTileToWorldPos(Owner, this, gridTile);
-        }
-
-        [Obsolete("Use the MapSystem method")]
-        public MapCoordinates GridTileToWorld(Vector2i gridTile)
-        {
-            return MapSystem.GridTileToWorld(Owner, this, gridTile);
         }
 
         [Obsolete("Use the MapSystem method")]

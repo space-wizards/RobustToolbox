@@ -93,6 +93,14 @@ namespace Robust.Shared.GameObjects
         public event Action<Entity<MetaDataComponent>>? EntityAdded;
         public event Action<Entity<MetaDataComponent>>? EntityInitialized;
         public event Action<Entity<MetaDataComponent>>? EntityDeleted;
+
+        /// <summary>
+        /// Internal termination event handlers. This is mainly for exception tolerance, we want to ensure that PVS,
+        /// and other important engine systems can get updated before some content code throws an exception.
+        /// </summary>
+        internal event TerminatingEventHandler? BeforeEntityTerminating;
+        public delegate void TerminatingEventHandler(ref EntityTerminatingEvent ev);
+
         public event Action? BeforeEntityFlush;
         public event Action? AfterEntityFlush;
 
@@ -556,6 +564,7 @@ namespace Robust.Shared.GameObjects
             try
             {
                 var ev = new EntityTerminatingEvent((uid, metadata));
+                BeforeEntityTerminating?.Invoke(ref ev);
                 EventBus.RaiseLocalEvent(uid, ref ev, true);
             }
             catch (Exception e)
@@ -692,7 +701,38 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public virtual void FlushEntities()
         {
+            _sawmill.Info($"Flushing entities. Entity count: {Entities.Count}");
             BeforeEntityFlush?.Invoke();
+            FlushEntitiesInternal();
+
+            if (Entities.Count != 0)
+            {
+                _sawmill.Error($"Failed to flush all entities. Entity count: {Entities.Count}");
+                // Dump entity info, but avoid dumping ~50k errors if for whatever reason we failed to delete almost all entities.
+                // Using 512 as the limit, in case the problem entities are related to player counts on high-pop servers.
+                if (Entities.Count < 512)
+                {
+                    foreach (var uid in Entities)
+                    {
+                        _sawmill.Error($"Entity exists after flush: {ToPrettyString(uid)}");
+                    }
+                }
+            }
+
+#if EXCEPTION_TOLERANCE
+            // Attempt to flush entities a second time, just in case something somehow caused an entity to be spawned
+            // while flushing entities
+            FlushEntitiesInternal();
+#endif
+
+            if (Entities.Count != 0)
+                throw new Exception($"Failed to flush all entities. Entity count: {Entities.Count}");
+
+            AfterEntityFlush?.Invoke();
+        }
+
+        private void FlushEntitiesInternal()
+        {
             QueuedDeletions.Clear();
             QueuedDeletionsSet.Clear();
 
@@ -738,11 +778,6 @@ namespace Robust.Shared.GameObjects
 #endif
                 }
             }
-
-            if (Entities.Count != 0)
-                _sawmill.Error("Entities were spawned while flushing entities.");
-
-            AfterEntityFlush?.Invoke();
         }
 
         /// <summary>

@@ -703,6 +703,19 @@ public sealed partial class EntityLookupSystem
         return entities;
     }
 
+    public void GetEntitiesIntersecting(
+        MapId mapId,
+        IPhysShape shape,
+        Transform transform,
+        HashSet<EntityUid> entities,
+        LookupFlags flags = LookupFlags.All)
+    {
+        if (mapId == MapId.Nullspace)
+            return;
+
+        AddEntitiesIntersecting(mapId, entities, shape, transform, flags: flags);
+    }
+
     public void GetEntitiesInRange(MapId mapId, Vector2 worldPos, float range, HashSet<EntityUid> entities, LookupFlags flags = DefaultFlags)
     {
         DebugTools.Assert(range > 0, "Range must be a positive float");

@@ -75,19 +75,6 @@ namespace Robust.Shared.GameObjects
         IComponent AddComponent(EntityUid uid, ushort netId, MetaDataComponent? meta = null);
 
         /// <summary>
-        ///     Adds an uninitialized Component type to an entity.
-        /// </summary>
-        /// <remarks>
-        ///     This function returns a disposable initialize handle that you can use in a <see langword="using" /> statement, to set up a component
-        ///     before initialization is ran on it.
-        /// </remarks>
-        /// <typeparam name="T">Concrete component type to add.</typeparam>
-        /// <param name="uid">Entity being modified.</param>
-        /// <returns>Component initialization handle. When you are done setting up the component, make sure to dispose this.</returns>
-        [Obsolete]
-        EntityManager.CompInitializeHandle<T> AddComponentUninitialized<T>(EntityUid uid) where T : IComponent, new();
-
-        /// <summary>
         ///     Adds a Component to an entity. If the entity is already Initialized, the component will
         ///     automatically be Initialized and Started.
         /// </summary>
@@ -424,6 +411,30 @@ namespace Robust.Shared.GameObjects
         (EntityUid Uid, T Component)[] AllComponents<T>() where T : IComponent;
 
         /// <summary>
+        /// Returns an array of all entities that have the given component.
+        /// Use sparingly.
+        /// </summary>
+        Entity<T>[] AllEntities<T>() where T : IComponent;
+
+        /// <summary>
+        /// Returns an array of all entities that have the given component.
+        /// Use sparingly.
+        /// </summary>
+        Entity<IComponent>[] AllEntities(Type tComp);
+
+        /// <summary>
+        /// Returns an array uids of all entities that have the given component.
+        /// Use sparingly.
+        /// </summary>
+        EntityUid[] AllEntityUids<T>() where T : IComponent;
+
+        /// <summary>
+        /// Returns an array uids of all entities that have the given component.
+        /// Use sparingly.
+        /// </summary>
+        EntityUid[] AllEntityUids(Type tComp);
+
+        /// <summary>
         /// Returns all instances of a component in a List.
         /// Use sparingly.
         /// </summary>
@@ -438,6 +449,8 @@ namespace Robust.Shared.GameObjects
         /// <see cref="CompRegistryQueryEnumerator"/>
         /// </summary>
         public CompRegistryEntityEnumerator CompRegistryQueryEnumerator(ComponentRegistry registry);
+
+        AllEntityQueryEnumerator<IComponent> AllEntityQueryEnumerator(Type comp);
 
         AllEntityQueryEnumerator<TComp1> AllEntityQueryEnumerator<TComp1>()
             where TComp1 : IComponent;

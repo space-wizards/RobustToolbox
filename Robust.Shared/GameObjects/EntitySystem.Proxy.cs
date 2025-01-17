@@ -141,21 +141,34 @@ public partial class EntitySystem
         EntityManager.DirtyEntity(uid, meta);
     }
 
-    /// <summary>
-    ///     Marks a component as dirty. This also implicitly dirties the entity this component belongs to.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [Obsolete("Use Dirty(EntityUid, Component, MetaDataComponent?")]
-    protected void Dirty(IComponent component, MetaDataComponent? meta = null)
-    {
-        EntityManager.Dirty(component.Owner, component, meta);
-    }
-
     /// <inheritdoc cref="Dirty{T}"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
     {
         EntityManager.Dirty(uid, component, meta);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void DirtyField(EntityUid uid, IComponentDelta delta, string fieldName, MetaDataComponent? meta = null)
+    {
+        EntityManager.DirtyField(uid, delta, fieldName, meta);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void DirtyField<T>(Entity<T?> entity, string fieldName, MetaDataComponent? meta = null)
+        where T : IComponentDelta
+    {
+        if (!Resolve(entity.Owner, ref entity.Comp))
+            return;
+
+        EntityManager.DirtyField(entity.Owner, entity.Comp, fieldName, meta);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void DirtyField<T>(EntityUid uid, T component, string fieldName, MetaDataComponent? meta = null)
+        where T : IComponentDelta
+    {
+        EntityManager.DirtyField(uid, component, fieldName, meta);
     }
 
     /// <summary>

@@ -7,6 +7,8 @@ using Robust.Client.Placement;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
@@ -19,6 +21,7 @@ namespace Robust.Client.UserInterface.Controllers.Implementations;
 
 public sealed class EntitySpawningUIController : UIController
 {
+    [Dependency] private readonly IConfigurationManager _cfg = default!;
     [Dependency] private readonly IPlacementManager _placement = default!;
     [Dependency] private readonly IPrototypeManager _prototypes = default!;
 
@@ -192,6 +195,9 @@ public sealed class EntitySpawningUIController : UIController
         _window.SelectedButton = null;
         searchStr = searchStr?.ToLowerInvariant();
 
+        var categoryFilter = _cfg.GetCVar(CVars.EntitiesCategoryFilter);
+        _prototypes.TryIndex<EntityCategoryPrototype>(categoryFilter, out var filter);
+
         foreach (var prototype in _prototypes.EnumeratePrototypes<EntityPrototype>())
         {
             if (prototype.Abstract)
@@ -200,6 +206,11 @@ public sealed class EntitySpawningUIController : UIController
             }
 
             if (prototype.HideSpawnMenu)
+            {
+                continue;
+            }
+
+            if (filter is not null && !prototype.Categories.Contains(filter))
             {
                 continue;
             }

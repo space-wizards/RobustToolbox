@@ -250,13 +250,6 @@ public sealed class PvsOverrideSystem : EntitySystem
             AddSessionOverride(uid.Value, session);
     }
 
-    [Obsolete("Use variant that takes in an EntityUid")]
-    public void AddSessionOverrides(NetEntity entity, Filter filter, bool removeExistingOverride = true)
-    {
-        if (TryGetEntity(entity, out var uid))
-            AddSessionOverrides(uid.Value, filter);
-    }
-
     [Obsolete("Don't use this, clear specific overrides")]
     public void ClearOverride(NetEntity entity)
     {

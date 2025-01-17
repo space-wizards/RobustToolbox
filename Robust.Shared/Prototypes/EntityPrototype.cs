@@ -97,16 +97,9 @@ namespace Robust.Shared.Prototypes
         [DataField("localizationId")]
         public string? CustomLocalizationID { get; private set; }
 
-
         /// <summary>
         ///     If true, this object should not show up in the entity spawn panel.
         /// </summary>
-        [ViewVariables]
-        [NeverPushInheritance]
-        [DataField("noSpawn")]
-        [Obsolete("Use HideSpawnMenu")]
-        public bool NoSpawn { get; private set; }
-
         [Access(typeof(PrototypeManager))]
         public bool HideSpawnMenu { get; internal set; }
 

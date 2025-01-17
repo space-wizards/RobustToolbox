@@ -71,15 +71,6 @@ namespace Robust.Shared.Map
         Entity<MapGridComponent> CreateGridEntity(MapId currentMapId, GridCreateOptions? options = null);
         Entity<MapGridComponent> CreateGridEntity(EntityUid map, GridCreateOptions? options = null);
 
-        [Obsolete("Use GetComponent<MapGridComponent>(uid)")]
-        MapGridComponent GetGrid(EntityUid gridId);
-
-        [Obsolete("Use TryGetComponent(uid, out MapGridComponent? grid)")]
-        bool TryGetGrid([NotNullWhen(true)] EntityUid? euid, [NotNullWhen(true)] out MapGridComponent? grid);
-
-        [Obsolete("Use HasComponent<MapGridComponent>(uid)")]
-        bool GridExists([NotNullWhen(true)] EntityUid? euid);
-
         IEnumerable<MapGridComponent> GetAllMapGrids(MapId mapId);
 
         IEnumerable<Entity<MapGridComponent>> GetAllGrids(MapId mapId);

@@ -198,20 +198,20 @@ public abstract partial class SharedPhysicsSystem
 
     private void InitializeIsland()
     {
-        Subs.CVar(_configManager, CVars.NetTickrate, SetTickRate, true);
-        Subs.CVar(_configManager, CVars.WarmStarting, SetWarmStarting, true);
-        Subs.CVar(_configManager, CVars.MaxLinearCorrection, SetMaxLinearCorrection, true);
-        Subs.CVar(_configManager, CVars.MaxAngularCorrection, SetMaxAngularCorrection, true);
-        Subs.CVar(_configManager, CVars.VelocityIterations, SetVelocityIterations, true);
-        Subs.CVar(_configManager, CVars.PositionIterations, SetPositionIterations, true);
-        Subs.CVar(_configManager, CVars.MaxLinVelocity, SetMaxLinearVelocity, true);
-        Subs.CVar(_configManager, CVars.MaxAngVelocity, SetMaxAngularVelocity, true);
-        Subs.CVar(_configManager, CVars.SleepAllowed, SetSleepAllowed, true);
-        Subs.CVar(_configManager, CVars.AngularSleepTolerance, SetAngularToleranceSqr, true);
-        Subs.CVar(_configManager, CVars.LinearSleepTolerance, SetLinearToleranceSqr, true);
-        Subs.CVar(_configManager, CVars.TimeToSleep, SetTimeToSleep, true);
-        Subs.CVar(_configManager, CVars.VelocityThreshold, SetVelocityThreshold, true);
-        Subs.CVar(_configManager, CVars.Baumgarte, SetBaumgarte, true);
+        Subs.CVar(_cfg, CVars.NetTickrate, SetTickRate, true);
+        Subs.CVar(_cfg, CVars.WarmStarting, SetWarmStarting, true);
+        Subs.CVar(_cfg, CVars.MaxLinearCorrection, SetMaxLinearCorrection, true);
+        Subs.CVar(_cfg, CVars.MaxAngularCorrection, SetMaxAngularCorrection, true);
+        Subs.CVar(_cfg, CVars.VelocityIterations, SetVelocityIterations, true);
+        Subs.CVar(_cfg, CVars.PositionIterations, SetPositionIterations, true);
+        Subs.CVar(_cfg, CVars.MaxLinVelocity, SetMaxLinearVelocity, true);
+        Subs.CVar(_cfg, CVars.MaxAngVelocity, SetMaxAngularVelocity, true);
+        Subs.CVar(_cfg, CVars.SleepAllowed, SetSleepAllowed, true);
+        Subs.CVar(_cfg, CVars.AngularSleepTolerance, SetAngularToleranceSqr, true);
+        Subs.CVar(_cfg, CVars.LinearSleepTolerance, SetLinearToleranceSqr, true);
+        Subs.CVar(_cfg, CVars.TimeToSleep, SetTimeToSleep, true);
+        Subs.CVar(_cfg, CVars.VelocityThreshold, SetVelocityThreshold, true);
+        Subs.CVar(_cfg, CVars.Baumgarte, SetBaumgarte, true);
     }
 
     private void SetWarmStarting(bool value) => _warmStarting = value;

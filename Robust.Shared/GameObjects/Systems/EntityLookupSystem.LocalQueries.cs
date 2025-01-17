@@ -69,6 +69,16 @@ public sealed partial class EntityLookupSystem
     }
 
     /// <summary>
+    /// Gets entities intersecting to the relative broadphase entity. Does NOT turn the transform into local terms.
+    /// </summary>
+    public void GetLocalEntitiesIntersecting(EntityUid gridUid, IPhysShape shape, Transform localTransform, HashSet<EntityUid> intersecting, LookupFlags flags = DefaultFlags, BroadphaseComponent? lookup = null)
+    {
+        var localAABB = shape.ComputeAABB(localTransform, 0);
+        AddEntitiesIntersecting(gridUid, intersecting, shape, localAABB, localTransform, flags: flags, lookup: lookup);
+        AddContained(intersecting, flags);
+    }
+
+    /// <summary>
     /// Gets the entities intersecting the specified broadphase entity using a local AABB.
     /// </summary>
     public void GetLocalEntitiesIntersecting(EntityUid gridUid, Vector2i localTile, HashSet<EntityUid> intersecting,

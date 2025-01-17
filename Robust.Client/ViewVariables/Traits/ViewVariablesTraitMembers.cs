@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Collections.Generic;
+using System.Numerics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.ViewVariables.Instances;
@@ -36,7 +37,7 @@ namespace Robust.Client.ViewVariables.Traits
 
         public override async void Refresh()
         {
-            _memberList.DisposeAllChildren();
+            List<Control> replacementControls = [];
 
             if (Instance.Object != null)
             {
@@ -51,7 +52,7 @@ namespace Robust.Client.ViewVariables.Traits
 
                     foreach (var control in group)
                     {
-                        _memberList.AddChild(control);
+                        replacementControls.Add(control);
                     }
                 }
             }
@@ -82,9 +83,15 @@ namespace Robust.Client.ViewVariables.Traits
                                 selectorChain, o, r);
                         };
 
-                        _memberList.AddChild(propertyEdit);
+                        replacementControls.Add(propertyEdit);
                     }
                 }
+            }
+
+            _memberList.DisposeAllChildren();
+            foreach (var item in replacementControls)
+            {
+                _memberList.AddChild(item);
             }
         }
 

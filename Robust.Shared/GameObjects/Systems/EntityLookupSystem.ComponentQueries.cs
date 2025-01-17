@@ -13,7 +13,6 @@ using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Shapes;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
-using TerraFX.Interop.Windows;
 
 namespace Robust.Shared.GameObjects;
 
@@ -175,7 +174,7 @@ public sealed partial class EntityLookupSystem
 
         return;
 
-        static bool PhysicsQuery<T>(ref QueryState<T> state, in FixtureProxy value) where T : IComponent
+        static bool PhysicsQuery(ref QueryState<T> state, in FixtureProxy value)
         {
             if (!state.Sensors && !value.Fixture.Hard)
                 return true;
@@ -196,7 +195,7 @@ public sealed partial class EntityLookupSystem
             return true;
         }
 
-        static bool SundriesQuery<T>(ref QueryState<T> state, in EntityUid value) where T : IComponent
+        static bool SundriesQuery(ref QueryState<T> state, in EntityUid value)
         {
             if (!state.Query.TryGetComponent(value, out var comp))
                 return true;
@@ -318,7 +317,7 @@ public sealed partial class EntityLookupSystem
 
         return state.Found;
 
-        static bool PhysicsQuery<T>(ref AnyQueryState<T> state, in FixtureProxy value) where T : IComponent
+        static bool PhysicsQuery(ref AnyQueryState<T> state, in FixtureProxy value)
         {
             if (value.Entity == state.Ignored)
                 return true;
@@ -496,6 +495,16 @@ public sealed partial class EntityLookupSystem
         GetEntitiesIntersecting(type, mapId, shape, transform, intersecting, flags);
     }
 
+    public void GetEntitiesIntersecting<T>(MapId mapId, Box2Rotated worldBounds, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
+    {
+        if (mapId == MapId.Nullspace) return;
+
+        var shape = new Polygon(worldBounds);
+        var shapeTransform = Physics.Transform.Empty;
+
+        GetEntitiesIntersecting(mapId, shape, shapeTransform, entities, flags);
+    }
+
     public void GetEntitiesIntersecting<T>(MapId mapId, Box2 worldAABB, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
     {
         if (mapId == MapId.Nullspace) return;
@@ -634,12 +643,6 @@ public sealed partial class EntityLookupSystem
         GetEntitiesInRange(type, coordinates.MapId, coordinates.Position, range, entities, flags);
     }
 
-    [Obsolete]
-    public HashSet<T> GetComponentsInRange<T>(MapCoordinates coordinates, float range) where T : IComponent
-    {
-        return GetComponentsInRange<T>(coordinates.MapId, coordinates.Position, range);
-    }
-
     public void GetEntitiesInRange<T>(MapCoordinates coordinates, float range, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
     {
         GetEntitiesInRange(coordinates.MapId, coordinates.Position, range, entities, flags);
@@ -666,14 +669,6 @@ public sealed partial class EntityLookupSystem
         var circle = new PhysShapeCircle(range);
         var transform = new Transform(worldPos, 0f);
         GetEntitiesIntersecting(type, mapId, circle, transform, entities, flags);
-    }
-
-    [Obsolete]
-    public HashSet<T> GetComponentsInRange<T>(MapId mapId, Vector2 worldPos, float range) where T : IComponent
-    {
-        var entities = new HashSet<Entity<T>>();
-        GetEntitiesInRange(mapId, worldPos, range, entities);
-        return [..entities.Select(e => e.Comp)];
     }
 
     public void GetEntitiesInRange<T>(MapId mapId, Vector2 worldPos, float range, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
@@ -783,6 +778,22 @@ public sealed partial class EntityLookupSystem
     }
 
     #endregion
+
+    /// <summary>
+    /// Gets entities with the specified component with the specified grid.
+    /// </summary>
+    public void GetGridEntities<TComp1>(EntityUid gridUid, HashSet<Entity<TComp1>> entities) where TComp1 : IComponent
+    {
+        var query = AllEntityQuery<TComp1, TransformComponent>();
+
+        while (query.MoveNext(out var uid, out var comp, out var xform))
+        {
+            if (xform.GridUid != gridUid)
+                continue;
+
+            entities.Add((uid, comp));
+        }
+    }
 
     /// <summary>
     /// Gets entities with the specified component with the specified parent.

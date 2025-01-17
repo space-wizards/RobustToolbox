@@ -43,7 +43,6 @@ namespace Robust.Shared.Physics.Systems
                 Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
             });
 
-        [Dependency] private readonly IConfigurationManager _configManager = default!;
         [Dependency] private readonly IManifoldManager _manifoldManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IParallelManager _parallel = default!;
@@ -75,9 +74,31 @@ namespace Robust.Shared.Physics.Systems
         protected EntityQuery<PhysicsMapComponent> PhysMapQuery;
         protected EntityQuery<MapComponent> MapQuery;
 
+        private ComponentRegistration _physicsReg = default!;
+        private byte _angularVelocityIndex;
+
         public override void Initialize()
         {
             base.Initialize();
+
+            _physicsReg = EntityManager.ComponentFactory.GetRegistration(CompIdx.Index<PhysicsComponent>());
+
+            // If you update this then update the delta state + GetState + HandleState!
+            EntityManager.ComponentFactory.RegisterNetworkedFields(_physicsReg,
+                nameof(PhysicsComponent.CanCollide),
+                nameof(PhysicsComponent.BodyStatus),
+                nameof(PhysicsComponent.BodyType),
+                nameof(PhysicsComponent.SleepingAllowed),
+                nameof(PhysicsComponent.FixedRotation),
+                nameof(PhysicsComponent.Friction),
+                nameof(PhysicsComponent.Force),
+                nameof(PhysicsComponent.Torque),
+                nameof(PhysicsComponent.LinearDamping),
+                nameof(PhysicsComponent.AngularDamping),
+                nameof(PhysicsComponent.AngularVelocity),
+                nameof(PhysicsComponent.LinearVelocity));
+
+            _angularVelocityIndex = 10;
 
             _fixturesQuery = GetEntityQuery<FixturesComponent>();
             PhysicsQuery = GetEntityQuery<PhysicsComponent>();
@@ -97,9 +118,9 @@ namespace Robust.Shared.Physics.Systems
             InitializeIsland();
             InitializeContacts();
 
-            Subs.CVar(_configManager, CVars.AutoClearForces, OnAutoClearChange);
-            Subs.CVar(_configManager, CVars.NetTickrate, UpdateSubsteps, true);
-            Subs.CVar(_configManager, CVars.TargetMinimumTickrate, UpdateSubsteps, true);
+            Subs.CVar(_cfg, CVars.AutoClearForces, OnAutoClearChange);
+            Subs.CVar(_cfg, CVars.NetTickrate, UpdateSubsteps, true);
+            Subs.CVar(_cfg, CVars.TargetMinimumTickrate, UpdateSubsteps, true);
         }
 
         private void OnPhysicsShutdown(EntityUid uid, PhysicsComponent component, ComponentShutdown args)
@@ -143,8 +164,8 @@ namespace Robust.Shared.Physics.Systems
 
         private void UpdateSubsteps(int obj)
         {
-            var targetMinTickrate = (float) _configManager.GetCVar(CVars.TargetMinimumTickrate);
-            var serverTickrate = (float) _configManager.GetCVar(CVars.NetTickrate);
+            var targetMinTickrate = (float) _cfg.GetCVar(CVars.TargetMinimumTickrate);
+            var serverTickrate = (float) _cfg.GetCVar(CVars.NetTickrate);
             _substeps = (int)Math.Ceiling(targetMinTickrate / serverTickrate);
         }
 

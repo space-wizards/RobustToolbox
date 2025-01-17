@@ -390,10 +390,10 @@ namespace Robust.Shared.Prototypes
 
                 while (processQueue.TryDequeue(out var id))
                 {
-                    MappingDataNode[]? parentMaps = null;
                     DebugTools.Assert(toProcess.Contains(id));
                     if (tree.TryGetParents(id, out var parents))
                     {
+                        DebugTools.Assert(parents.Length > 0);
                         var nonPushedParent = false;
                         foreach (var parent in parents)
                         {
@@ -411,13 +411,7 @@ namespace Robust.Shared.Prototypes
                         if (nonPushedParent)
                             continue;
 
-                        if (parents.Length == 0)
-                        {
-                            kindData.Results[id] = kindData.RawResults[id];
-                            continue;
-                        }
-
-                        parentMaps = new MappingDataNode[parents.Length];
+                        var parentMaps = new MappingDataNode[parents.Length];
                         for (var i = 0; i < parentMaps.Length; i++)
                         {
                             parentMaps[i] = kindData.Results[parents[i]];
@@ -428,11 +422,14 @@ namespace Robust.Shared.Prototypes
                             parentMaps,
                             kindData.RawResults[id]);
                     }
+                    else
+                    {
+                        kindData.Results[id] = kindData.RawResults[id];
+                    }
 
                     toProcess.Remove(id);
 
-                    var res = kindData.Results[id];
-                    var prototype = TryReadPrototype(kind, id, res, SerializationHookContext.DontSkipHooks);
+                    var prototype = TryReadPrototype(kind, id, kindData.Results[id], SerializationHookContext.DontSkipHooks);
                     if (prototype == null)
                         continue;
 

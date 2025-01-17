@@ -123,12 +123,7 @@ internal sealed class OverlayManager : IOverlayManagerInternal, IPostInjectInit
     private void Sort()
     {
         _sortedOverlays.Clear();
-
-        foreach (var overlay in _overlays.Values)
-        {
-            _sortedOverlays.Add(overlay);
-        }
-
+        _sortedOverlays.AddRange(_overlays.Values);
         _sortedOverlays.Sort(OverlayComparer.Instance);
     }
 

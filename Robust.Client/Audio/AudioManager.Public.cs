@@ -135,7 +135,7 @@ internal partial class AudioManager
         var handle = new ClydeHandle(_audioSampleBuffers.Count);
         _audioSampleBuffers.Add(buffer, new LoadedAudioSample(buffer));
         var length = TimeSpan.FromSeconds(vorbis.TotalSamples / (double) vorbis.SampleRate);
-        return new AudioStream(buffer, handle, length, (int) vorbis.Channels, name, vorbis.Title, vorbis.Artist);
+        return new AudioStream(this, buffer, handle, length, (int) vorbis.Channels, name, vorbis.Title, vorbis.Artist);
     }
 
     /// <inheritdoc/>
@@ -194,7 +194,7 @@ internal partial class AudioManager
         var handle = new ClydeHandle(_audioSampleBuffers.Count);
         _audioSampleBuffers.Add(buffer, new LoadedAudioSample(buffer));
         var length = TimeSpan.FromSeconds(wav.Data.Length / (double) wav.BlockAlign / wav.SampleRate);
-        return new AudioStream(buffer, handle, length, wav.NumChannels, name);
+        return new AudioStream(this, buffer, handle, length, wav.NumChannels, name);
     }
 
     /// <inheritdoc/>
@@ -224,7 +224,7 @@ internal partial class AudioManager
         var handle = new ClydeHandle(_audioSampleBuffers.Count);
         var length = TimeSpan.FromSeconds((double) samples.Length / channels / sampleRate);
         _audioSampleBuffers.Add(buffer, new LoadedAudioSample(buffer));
-        return new AudioStream(buffer, handle, length, channels, name);
+        return new AudioStream(this, buffer, handle, length, channels, name);
     }
 
     public void SetMasterGain(float newGain)
@@ -383,5 +383,12 @@ internal partial class AudioManager
         }
 
         _bufferedAudioSources.Clear();
+
+        foreach (var buffer in _audioSampleBuffers.Values)
+        {
+            DeleteAudioBufferOnMainThread(buffer.BufferHandle);
+        }
+
+        _audioSampleBuffers.Clear();
     }
 }

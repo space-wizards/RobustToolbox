@@ -9,6 +9,7 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
@@ -82,7 +83,7 @@ namespace Robust.Client.GameObjects
             var viewport = args.WorldBounds;
             var worldHandle = args.WorldHandle;
 
-            var fixturesQuery = _entityManager.GetEntityQuery<FixturesComponent>();
+            var physicsQuery = _entityManager.GetEntityQuery<PhysicsComponent>();
             _grids.Clear();
             _mapManager.FindGridsIntersecting(currentMap, viewport, ref _grids);
             foreach (var grid in _grids)
@@ -90,7 +91,7 @@ namespace Robust.Client.GameObjects
                 var worldMatrix = _transformSystem.GetWorldMatrix(grid);
                 worldHandle.SetTransform(worldMatrix);
                 var transform = new Transform(Vector2.Zero, Angle.Zero);
-                var fixtures = fixturesQuery.Comp(grid.Owner);
+                var fixtures = physicsQuery.Comp(grid.Owner);
 
                 var chunkEnumerator = _mapSystem.GetMapChunks(grid.Owner, grid.Comp, viewport);
 

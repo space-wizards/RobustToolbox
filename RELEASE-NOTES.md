@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 240.0.0
+
+### Breaking changes
+
 * `ComponentRegistry` no longer implements `ISerializationContext`
 * Tickrate values are now `ushort`, allowing them to go up to 65535.
 

@@ -52,6 +52,7 @@ public sealed class EntityDeserializer :
     [Dependency] private readonly IPrototypeManager _proto = default!;
     [Dependency] private readonly SharedMapSystem _map = default!;
     [Dependency] private readonly ILogManager _logMan = default!;
+    [Dependency] private readonly IDependencyCollection _deps = default!;
 
     private readonly ISawmill _log;
     private Stopwatch _stopwatch = new();
@@ -574,12 +575,13 @@ public sealed class EntityDeserializer :
 
         // Get any serialized component data for this entity, and push any implicit data-fields from the component
         // and store the result in _components.
+        _components.Clear();
         if (comps != null)
         {
             _components.EnsureCapacity(comps.Count);
             foreach (var (name, compData) in comps)
             {
-                DebugTools.Assert(missingComps?.Contains(name) == false);
+                DebugTools.Assert(missingComps?.Contains(name) != true);
 
                 if (!_factory.TryGetRegistration(name, out _))
                 {
@@ -610,7 +612,14 @@ public sealed class EntityDeserializer :
 
                 CurrentComponent = name;
                 var compReg = _factory.GetRegistration(name);
-                var component = EntMan.GetComponent(uid, compReg.Idx);
+
+                if (!EntMan.TryGetComponent(uid, compReg.Idx, out var component))
+                {
+                    var newComponent = _factory.GetComponent(compReg);
+                    EntMan.AddComponent(uid, newComponent);
+                    component = newComponent;
+                }
+
                 _seriMan.CopyTo(entry.Component, ref component, this, notNullableOverride: true);
 
                 if (!entry.Component.NetSyncEnabled && compReg.NetID is { } netId)
@@ -631,6 +640,10 @@ public sealed class EntityDeserializer :
             {
                 // New component not present in the prototype.
                 var newComponent = (IComponent) _seriMan.Read(compReg.Type, data, this)!;
+
+                // TODO ECS remove this when everything has been ECSd
+                _deps.InjectDependencies(newComponent);
+
                 EntMan.AddComponent(uid, newComponent);
                 continue;
             }
@@ -645,6 +658,7 @@ public sealed class EntityDeserializer :
             _seriMan.CopyTo(temp, ref existing, this, notNullableOverride: true);
         }
 
+        _components.Clear();
         CurrentComponent = null;
         if (missingComps is {Count: > 0})
             meta.LastComponentRemoved = Timing.CurTick;

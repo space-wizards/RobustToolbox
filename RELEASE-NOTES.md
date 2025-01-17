@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `ComponentRegistry` no longer implements `ISerializationContext`
 
 ### New features
 

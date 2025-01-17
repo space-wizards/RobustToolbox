@@ -39,15 +39,16 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Console completion options now have new flags for preventing suggestions from being escaped or quoted.
 
 ### Bugfixes
 
 * Fixed prototype reloading/hotloading not properly handling data-fields with the `AlwaysPushInheritanceAttribute`
+* Fixed a state handling bug in replays, which was causing exceptions to be thrown when applying delta states.
 
 ### Other
 
-*None yet*
+* Reduced amount of `DynamicMethod`s used by serialization system. This should improve performance somewhat.
 
 ### Internal
 

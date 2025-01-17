@@ -292,7 +292,8 @@ public interface IPrototypeManager
     /// Invokes <see cref="PrototypesReloaded"/> with information about the modified prototypes.
     /// When built with development tools, this will also push inheritance for reloaded prototypes/
     /// </summary>
-    void ReloadPrototypes(Dictionary<Type, HashSet<string>> modified,
+    void ReloadPrototypes(
+        Dictionary<Type, HashSet<string>> modified,
         Dictionary<Type, HashSet<string>>? removed = null);
 
     /// <summary>

@@ -31,10 +31,13 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
+using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics.Dynamics.Contacts
 {
@@ -94,11 +97,13 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// <summary>
         ///     Determines whether the contact is touching.
         /// </summary>
+        [ViewVariables]
         public bool IsTouching { get; internal set; }
 
         /// Enable/disable this contact. This can be used inside the pre-solve
         /// contact listener. The contact is only disabled for the current
         /// time step (or sub-step in continuous collisions).
+        [ViewVariables]
         public bool Enabled { get; set; }
 
         /// <summary>
@@ -256,9 +261,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             {
                 var manifold = Manifold;
                 Evaluate(ref manifold, bodyATransform, bodyBTransform);
-
-                if (IsTouching)
-                    IsTouching = manifold.PointCount > 0;
+                IsTouching = manifold.PointCount > 0;
             }
         }
 

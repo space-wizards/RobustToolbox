@@ -4,22 +4,18 @@ using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Robust.Shared.Containers;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.BroadPhase;
 using Robust.Shared.Physics.Collision;
-using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
-using TerraFX.Interop.Windows;
 
 namespace Robust.Shared.GameObjects;
 

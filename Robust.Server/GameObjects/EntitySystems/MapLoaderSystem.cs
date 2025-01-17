@@ -1017,8 +1017,8 @@ public sealed class MapLoaderSystem : EntitySystem
                 // Skip removed tile definitions.
                 if (!_tileDefManager.TryGetDefinition(prototypeId, out var definition))
                     continue;
-
-                tileIdMap.Add(definition.TileId, origId);
+                if (!tileIdMap.ContainsKey(definition.TileId))
+                    tileIdMap.Add(definition.TileId, origId);
             }
 
             // Assign new IDs for all new tile types.

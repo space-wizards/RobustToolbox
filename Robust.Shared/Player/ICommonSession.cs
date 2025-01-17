@@ -33,9 +33,12 @@ public interface ICommonSession
     string Name { get; }
 
     /// <summary>
-    /// Current connection latency of this session from the server to their client.
+    /// Current connection latency of this session. If <see cref="Channel"/> is not null this simply returns
+    /// <see cref="INetChannel.Ping"/>. This is not currently usable by client-side code that wants to try access ping
+    /// information of other players.
     /// </summary>
     short Ping { get; }
+    // TODO PlayerManager ping networking.
 
     /// <summary>
     /// The current network channel for this session.

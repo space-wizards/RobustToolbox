@@ -88,10 +88,10 @@ namespace Robust.Client
         {
             if (GameInfo != null)
             {
-                GameInfo.TickRate = (byte) tickrate;
+                GameInfo.TickRate = (ushort) tickrate;
             }
 
-            _timing.SetTickRateAt((byte) tickrate, info.TickChanged);
+            _timing.SetTickRateAt((ushort) tickrate, info.TickChanged);
             _logger.Info($"Tickrate changed to: {tickrate} on tick {_timing.CurTick}");
         }
 
@@ -395,6 +395,6 @@ namespace Robust.Client
         /// </summary>
         public int ServerMaxPlayers { get; set; }
 
-        public byte TickRate { get; internal set; }
+        public uint TickRate { get; internal set; }
     }
 }

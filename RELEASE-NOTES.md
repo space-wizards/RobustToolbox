@@ -1,4 +1,4 @@
-# Release notes for RobustToolbox.
+﻿# Release notes for RobustToolbox.
 
 <!--
 NOTE: automatically updated sometimes by version.py.
@@ -39,19 +39,232 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Console completion options now have a new flags for preventing suggestions from being escaped or quoted.
 
 ### Bugfixes
 
-*None yet*
+* Fixed a state handling bug in replays, which was causing exceptions to be thrown when applying delta states.
 
 ### Other
 
-*None yet*
+* Reduced amount of `DynamicMethod`s used by serialization system. This should improve performance somewhat.
 
 ### Internal
 
 *None yet*
+
+
+## 239.0.1
+
+### Bugfixes
+
+* Fix logging of received packets with `net.packet` logging level.
+* Downgrade `VorbisPizza` to fix audio playback for systems without AVX2 support.
+
+### Other
+
+* Improved performance of some Roslyn analyzers and source generators, which should significantly improve compile times and IDE performance.
+
+
+## 239.0.0
+
+### Breaking changes
+
+* Robust now uses **.NET 9**.
+* `ISerializationManager` will now log errors if it encounters `Entity<T>` data-fields.
+  * To be clear, this has never been supported and is not really a breaking change, but this will likely require manual intervention to prevent tests from failing.
+* `IClyde.TextInputSetRect`, `TextInputStart` and `TextInputStop` have been moved to be on `IClydeWindow`.
+* Updated various NuGet dependencies and removed some other ones, of note:
+  * `FastAccessors`, which is a transitive dep we never used, is now gone. It might have snuck into some `using` statement thanks to your IDE, and those will now fail to compile. Remove them.
+  * NUnit `Is.EqualTo(default)` seems to have ambiguous overload resolution in some cases now, this can be fixed by using an explicit `default(type)` syntax.
+  * This also fixed various false-positive warnings reported by NuGet.
+
+### New features
+
+* Added `MockInterfaces.MakeConfigurationManager` for creating functional configuration managers for unit test mocking.
+* Added `ISawmill.IsLogLevelEnabled()` to avoid doing expensive verbose logging operations when not necessary.
+* ``string[] Split(System.ReadOnlySpan`1<char>)`` is now available in sandbox.
+
+### Bugfixes
+
+* Fixed auto-generated component delta-states not raising `AfterAutoHandleStateEvent`
+* Fixed auto-generated component delta-states improperly implementing `IComponentDeltaState` methods. May have caused bugs in replays.
+* Fixed `Robust.Client.WebView` on the launcher via a new release.
+* Fixed an exception that could occur when saving a map that had tiles migrated by alias.
+
+### Other
+
+* The `loglevel` command now properly shows the "`null`" log level that resets the level to inheriting from parent. This was already supported by it, but the completions didn't list it.
+
+### Internal
+
+* Experimental SDL2 windowing backend has been replaced with SDL3. SDL3 backend is also more feature-complete, though it is still not in use.
+* Updated CEF used by Robust.Client.WebView to 131.3.5.
+
+## 238.0.1
+
+### Bugfixes
+
+* Fixed source generation for auto-networked EntityUid Dictionaries missing a semicolon
+* Fixed PlacementManager using the wrong coordinates when deleting entities in an area.
+
+
+## 238.0.0
+
+### Breaking changes
+
+* Some toolshed command syntax/parsing has changed slightly, and several toolshed related classes and interfaces have changed significantly, including ToolshedManager, type parsers, invocation contexts, and parser contexts. For more detail see the the description of PR #5455
+
+
+## 237.4.0
+
+### New features
+
+* Implement automatic field-level delta states via AutoGenerateComponentState via opt-in.
+
+### Bugfixes
+
+* Remove redundant TransformComponentState bool.
+
+
+## 237.3.0
+
+### New features
+
+* Added stack-like functions to `ValueList<T>` and added an `AddRange(ReadOnlySpan<T>)` overload.
+* Added new `AssetPassFilterDrop`.
+* Added a new RayCastSystem with the latest Box2D raycast + shapecasts implemented.
+
+### Bugfixes
+
+* Fixed `IPrototypeManager.TryGetKindFrom()` not working for prototypes with automatically inferred kind names.
+
+### Other
+
+* Sandbox error reference locator now works with generic method calls.
+
+
+## 237.2.0
+
+### Breaking changes
+
+* `SharedEyeSystem..SetTarget()` will now also automatically remove the old target from the session's ViewSubscriptions
+
+### New features
+
+* `ImmutableArray<T>` can now be serialized by `RobustSerializer`.
+* `RequiresLocationAttribute`, used by `ref readonly`, is now allowed by the sandbox.
+* Added `DAT-OBJ()` localization function, for the dative case in certain languages.
+* Client builds for FreeBSD are now made.
+* Added `FormattedMessage.TrimEnd()`.
+* Added Toolshed `with` for `ProtoId<T>`.
+
+### Bugfixes
+
+* Fix `UniqueIndex<,>.RemoveRange()` and`UniqueIndexHkm<,>.RemoveRange()` clearing the whole set instead of just removing the specified values.
+* Avoid server crashes on some weird console setups (notably Pterodactyl).
+* Avoid unhandled exceptions during server shutdown getting swallowed due logging into a disposed logger.
+* Fix sandbox definitions for `Regex` functions returning `MatchCollection`.
+* Fix minor layout bugs with `SplitContainer` and `BoxContainer`.
+
+### Other
+
+* Changed how multi-window rendering presents to the screen with a new CVar `display.thread_unlock_before_swap`. This is an experiment to see if it solves some synchronization issues.
+* View Variables no longer clears the window on refresh while waiting on response from server.
+* `SpinBox` buttons now have a `+` prefix for the positive ones.
+* Improve Toolshed type intersection mechanism
+
+### Internal
+
+* Warning cleanup.
+
+## 237.1.0
+
+### New features
+
+* csi's auto import-system can now handle generic types.
+* csi's reflection helpers (like `fld()`) handle private members up the inheritance chain.
+
+### Bugfixes
+
+* Fix `UniqueIndexHkm<,>` and, by extension, entity data storage memory leaking.
+* Fix bugs related to UIScale on `OSWindow`s.
+
+
+## 237.0.0
+
+### Breaking changes
+
+* `IClydeWindow.Size` is now settable, allowing window sizes to be changed after creation.
+
+### New features
+
+* The game server's `/update` endpoint now supports passing more information on why an update is available.
+  * This information is accessible via `IWatchdogApi.RestartRequested`.
+  * Information can be specified by passing a JSON object with a `Reason` code and `Message` field.
+* Added an "Erase" button to the tile spawn menu.
+* Added `OSWindow.Create()`, which allows OS windows to be created & initialised without immediately opening/showing them.
+
+### Other
+
+* Made `WatchdogApi` and some members of `IWatchdogApi` private. These symbols should never have been accessed by content.
+
+
+## 236.1.0
+
+### New features
+
+* `RequiredMemberAttribute` and `SetsRequiredMembersAttribute` have been added to the sandbox whitelist. I.e., you can now use the `required` keyword in client/shared code.
+* Added `SwitchExpressionException` to sandbox. This type gets used if you have a `switch` expression with no default case.
+* Added `LineEdit.SelectAllOnFocus`.
+* `GameTitle`, `WindowIconSet` and `SplashLogo` are exposed in `IGameController`. These will return said information set in game options or whatever is set in `manifest.yml`.
+* `BoundUserInterface` inheritors now have access to `PlayerManager`.
+* Added `MuteSounds` bool to `BaseButton`.
+* The engine has a new future-proof HWID system.
+  * The auth server now manages HWIDs. This avoids HWID impersonation attacks.
+  * The auth server can return multiple HWIDs. They are accessible in `NetUserData.ModernHWIds`.
+  * The auth server also returns a trust score factor, accessible as `NetUserData.Trust`.
+  * HWID can be disabled client side (`ROBUST_AUTH_ALLOW_HWID` env var) or server side (`net.hwid` cvar).
+  * The old HWID system is still in place. It is intended that content switches to placing new bans against the new HWIDs.
+  * Old HWIDs no longer work if the connection is not authenticated.
+* `launchauth` command now recognizes `SS14_LAUNCHER_APPDATA_NAME`.
+* Added new overload to `EntityLookupSystem.GetEntitiesIntersecting`.
+* Added `Control.RemoveChild(int childIndex)`.
+* `build.entities_category_filter` allows filtering the entity spawn panel to a specific category.
+
+### Bugfixes
+
+* Fixed `SpriteView` offset calculations when scaled.
+
+### Other
+
+* Sprite flicks are applied immediately when started.
+* More warning fixes.
+* If the server gets shut down before finishing startup, the reason is now logged properly.
+
+
+## 236.0.0
+
+### Breaking changes
+
+* Revert IsTouching only being set to true if the contact were laready touching in clientside physics prediction.
+* Don't touch IsTouching if both bodies are asleep for clientside physics contacts. This change and the one above should fix a lot of clientside contact issues, particularly around repeated incorrect clientside contact events.
+
+### New features
+
+* Added an analyzer to detect duplicate Dependency fields.
+
+### Bugfixes
+
+* Auto-networked dictionaries now use `TryAdd()` to avoid duplicate key errors when a dictionary contains multiple unknown networked entities.
+* Fixed `ICommonSession.Ping` always returning zero instead of the ping. Note that this will still return zero for client-side code when trying to get the ping of other players.
+* Hot reload XAML files on rename to fix them potentially not being reloaded with Visual Studio.
+* Fix TabContainer click detection for non-1.0 UI scales.
+
+### Other
+
+* Obsolete some static localization methods.
+* Tried to improve PVS tolerance to exceptions occurring.
 
 
 ## 235.0.0

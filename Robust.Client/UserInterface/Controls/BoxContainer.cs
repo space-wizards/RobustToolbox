@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using Robust.Shared.Maths;
 
@@ -56,7 +57,7 @@ namespace Robust.Client.UserInterface.Controls
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
             // Account for separation.
-            var separation = ActualSeparation * (ChildCount - 1);
+            var separation = ActualSeparation * (Children.Where(c => c.Visible).Count() - 1);
             var desiredSize = Vector2.Zero;
             if (Vertical)
             {
@@ -136,13 +137,14 @@ namespace Robust.Client.UserInterface.Controls
         protected override Vector2 ArrangeOverride(Vector2 finalSize)
         {
             var separation = ActualSeparation;
+            var visibleChildCount = Children.Where(c => c.Visible).Count();
 
             var stretchAvail = Vertical ? finalSize.Y : finalSize.X;
-            stretchAvail -= separation * (ChildCount - 1);
+            stretchAvail -= separation * (visibleChildCount - 1);
             stretchAvail = Math.Max(0, stretchAvail);
 
             // Step one: figure out the sizes of all our children and whether they want to stretch.
-            var sizeList = new List<(Control control, float size, bool stretch)>(ChildCount);
+            var sizeList = new List<(Control control, float size, bool stretch)>(visibleChildCount);
             var totalStretchRatio = 0f;
             foreach (var child in Children)
             {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.Serialization;
 using JetBrains.Annotations;
 using Robust.Shared.EntitySerialization.Components;
 using Robust.Shared.EntitySerialization.Systems;
@@ -630,9 +631,6 @@ public sealed class EntityDeserializer :
         // Finally, copy over the entity specific information
         foreach (var (name, data) in _components)
         {
-            if (proto != null && proto.Components.ContainsKey(name))
-                continue;
-
             CurrentComponent = name;
 
             var compReg = _factory.GetRegistration(name);
@@ -642,6 +640,19 @@ public sealed class EntityDeserializer :
                 var newComponent = (IComponent) _seriMan.Read(compReg.Type, data, this)!;
 
                 // TODO ECS remove this when everything has been ECSd
+                if (newComponent is ISerializationHooks)
+                {
+                    // Some components depend on Component.Owner being correctly set after serialization
+                    // E.g., ContainerManagerComponent
+                    // So we have this jank edge case.
+                    // I hate this.
+                    existing = _factory.GetComponent(compReg);
+                    EntMan.AddComponent(uid, existing);
+                    _seriMan.CopyTo(newComponent, ref existing, this, notNullableOverride: true);
+                    continue;
+                }
+
+                // TODO ECS also remove this
                 _deps.InjectDependencies(newComponent);
 
                 EntMan.AddComponent(uid, newComponent);
@@ -650,9 +661,8 @@ public sealed class EntityDeserializer :
 
             // TODO ENTITY SERIALIZATION
             // Copy directly into the existing object
-            // Not doing this yet, because its modifying the method significantly and I'm scared turning over this
-            // rock will reveal a lot of bugs. So leaving that to a future PR. I.e., creating "temp" here just
-            // unnecessarily slows everything down.
+            // I'm scared turning over this rock will reveal a lot of bugs. So leaving that to a future PR.
+            // I.e., creating "temp" here just unnecessarily slows everything down.
             var temp = (IComponent) _seriMan.Read(compReg.Type, data, this)!;
 
             _seriMan.CopyTo(temp, ref existing, this, notNullableOverride: true);

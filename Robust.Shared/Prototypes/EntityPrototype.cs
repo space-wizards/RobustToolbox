@@ -402,7 +402,7 @@ namespace Robust.Shared.Prototypes
         }*/
     }
 
-    public sealed class ComponentRegistry : Dictionary<string, EntityPrototype.ComponentRegistryEntry>, IEntityLoadContext, ISerializationContext
+    public sealed class ComponentRegistry : Dictionary<string, EntityPrototype.ComponentRegistryEntry>, IEntityLoadContext
     {
         public ComponentRegistry()
         {
@@ -429,8 +429,5 @@ namespace Robust.Shared.Prototypes
         {
             return false; //Registries cannot represent the "remove this component" state.
         }
-
-        public SerializationManager.SerializerProvider SerializerProvider { get; } = new();
-        public bool WritingReadingPrototypes { get; } = true;
     }
 }

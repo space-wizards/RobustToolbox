@@ -35,6 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+* `ComponentRegistry` no longer implements `ISerializationContext`
 * `ITileDefinitionManager.AssignAlias` and general tile alias functionality has been removed. `TileAliasPrototype` still exist, but are only used during entity deserialization.
 * `IMapManager.AddUninitializedMap` has been removed. Use the map-init options on `CreateMap()` instead.
 * Re-using a MapId will now log a warning. This may cause some integration tests to fail if they are configured to fail
@@ -49,20 +50,36 @@ END TEMPLATE-->
 
 ### New features
 
+* Console completion options now have a new flags for preventing suggestions from being escaped or quoted.
 * The current map format/version has increased from 6 to 7 and now contains more information to try support serialization of maps with null-space entities and full game saves.
 * `IEntitySystemManager` now provides access to the system `IDependencyCollection`.
 
 ### Bugfixes
 
+* Fixed a state handling bug in replays, which was causing exceptions to be thrown when applying delta states.
 * Fixed entity deserialization for components with a data fields that have a AlwaysPushInheritance Attribute
 
 ### Other
 
+* Reduced amount of `DynamicMethod`s used by serialization system. This should improve performance somewhat.
 * `MapChangedEvent` has been marked as obsolete, and should be replaced with `MapCreatedEvent` and `MapRemovedEvent.
+
 
 ### Internal
 
 *None yet*
+
+
+## 239.0.1
+
+### Bugfixes
+
+* Fix logging of received packets with `net.packet` logging level.
+* Downgrade `VorbisPizza` to fix audio playback for systems without AVX2 support.
+
+### Other
+
+* Improved performance of some Roslyn analyzers and source generators, which should significantly improve compile times and IDE performance.
 
 
 ## 239.0.0

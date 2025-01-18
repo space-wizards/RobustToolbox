@@ -349,24 +349,15 @@ namespace Robust.Shared.Prototypes
 
             foreach (var kind in prototypeTypeOrder)
             {
+                var modifiedInstances = new Dictionary<string, IPrototype>();
                 var kindData = _kinds[kind];
-                if (!kind.IsAssignableTo(typeof(IInheritingPrototype)))
-                {
-                    foreach (var id in modified[kind])
-                    {
-                        var prototype = (IPrototype)_serializationManager.Read(kind, kindData.Results[id])!;
-                        kindData.UnfrozenInstances ??= kindData.Instances.ToDictionary();
-                        kindData.UnfrozenInstances[id] = prototype;
-                        modifiedKinds.Add(kindData);
-                    }
 
-                    continue;
-                }
-
-                var tree = kindData.Inheritance!;
+                var tree = kindData.Inheritance;
                 toProcess.Clear();
                 processQueue.Clear();
-                var modifiedInstances = new Dictionary<string, IPrototype>();
+
+                DebugTools.AssertEqual(kind.IsAssignableTo(typeof(IInheritingPrototype)), tree != null);
+                DebugTools.Assert(tree != null || kindData.RawResults == kindData.Results);
 
                 foreach (var id in modified[kind])
                 {
@@ -378,6 +369,9 @@ namespace Robust.Shared.Prototypes
                     if (!toProcess.Add(id))
                         return;
                     processQueue.Enqueue(id);
+
+                    if (tree == null)
+                        return;
 
                     if (!tree.TryGetChildren(id, out var children))
                         return;
@@ -391,40 +385,43 @@ namespace Robust.Shared.Prototypes
                 while (processQueue.TryDequeue(out var id))
                 {
                     DebugTools.Assert(toProcess.Contains(id));
-                    if (tree.TryGetParents(id, out var parents))
+                    if (tree != null)
                     {
-                        DebugTools.Assert(parents.Length > 0);
-                        var nonPushedParent = false;
-                        foreach (var parent in parents)
+                        if (tree.TryGetParents(id, out var parents))
                         {
-                            if (!toProcess.Contains(parent))
+                            DebugTools.Assert(parents.Length > 0);
+                            var nonPushedParent = false;
+                            foreach (var parent in parents)
+                            {
+                                if (!toProcess.Contains(parent))
+                                    continue;
+
+                                // our parent has been modified, but has not yet been processed.
+                                // we re-queue ourselves at the end of the queue.
+                                DebugTools.Assert(processQueue.Contains(parent));
+                                processQueue.Enqueue(id);
+                                nonPushedParent = true;
+                                break;
+                            }
+
+                            if (nonPushedParent)
                                 continue;
 
-                            // our parent has been modified, but has not yet been processed.
-                            // we re-queue ourselves at the end of the queue.
-                            DebugTools.Assert(processQueue.Contains(parent));
-                            processQueue.Enqueue(id);
-                            nonPushedParent = true;
-                            break;
+                            var parentMaps = new MappingDataNode[parents.Length];
+                            for (var i = 0; i < parentMaps.Length; i++)
+                            {
+                                parentMaps[i] = kindData.Results[parents[i]];
+                            }
+
+                            kindData.Results[id] = _serializationManager.PushCompositionWithGenericNode(
+                                kind,
+                                parentMaps,
+                                kindData.RawResults[id]);
                         }
-
-                        if (nonPushedParent)
-                            continue;
-
-                        var parentMaps = new MappingDataNode[parents.Length];
-                        for (var i = 0; i < parentMaps.Length; i++)
+                        else
                         {
-                            parentMaps[i] = kindData.Results[parents[i]];
+                            kindData.Results[id] = kindData.RawResults[id];
                         }
-
-                        kindData.Results[id] = _serializationManager.PushCompositionWithGenericNode(
-                            kind,
-                            parentMaps,
-                            kindData.RawResults[id]);
-                    }
-                    else
-                    {
-                        kindData.Results[id] = kindData.RawResults[id];
                     }
 
                     toProcess.Remove(id);

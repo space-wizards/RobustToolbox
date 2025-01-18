@@ -35,7 +35,6 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* `ComponentRegistry` no longer implements `ISerializationContext`
 * `ITileDefinitionManager.AssignAlias` and general tile alias functionality has been removed. `TileAliasPrototype` still exist, but are only used during entity deserialization.
 * `IMapManager.AddUninitializedMap` has been removed. Use the map-init options on `CreateMap()` instead.
 * Re-using a MapId will now log a warning. This may cause some integration tests to fail if they are configured to fail
@@ -50,25 +49,57 @@ END TEMPLATE-->
 
 ### New features
 
-* Console completion options now have a new flags for preventing suggestions from being escaped or quoted.
 * The current map format/version has increased from 6 to 7 and now contains more information to try support serialization of maps with null-space entities and full game saves.
 * `IEntitySystemManager` now provides access to the system `IDependencyCollection`.
 
 ### Bugfixes
 
-* Fixed a state handling bug in replays, which was causing exceptions to be thrown when applying delta states.
 * Fixed entity deserialization for components with a data fields that have a AlwaysPushInheritance Attribute
 
 ### Other
 
-* Reduced amount of `DynamicMethod`s used by serialization system. This should improve performance somewhat.
 * `MapChangedEvent` has been marked as obsolete, and should be replaced with `MapCreatedEvent` and `MapRemovedEvent.
-
 
 ### Internal
 
 *None yet*
 
+
+## 240.0.1
+
+### Bugfixes
+
+* Fixed `SharedBroadphaseSystem.GetBroadphases()` not returning the map itself, which was causing physics to not work properly off-grid.
+
+
+## 240.0.0
+
+### Breaking changes
+
+* `ComponentRegistry` no longer implements `ISerializationContext`
+
+
+### New features
+
+* Console completion options now have a new flags for preventing suggestions from being escaped or quoted.
+* Tickrate values are now `ushort`, allowing them to go up to 65535.
+* Console completion options now have new flags for preventing suggestions from being escaped or quoted.
+* Added `ILocalizationManager.HasCulture()`.
+* Static `EntProtoId<T>` fields are now validated to exist.
+
+### Bugfixes
+
+* Fixed a state handling bug in replays, which was causing exceptions to be thrown when applying delta states.
+
+### Other
+
+* Reduced amount of `DynamicMethod`s used by serialization system. This should improve performance somewhat.
+
+
+### Internal
+
+* Avoided sorting overlays every render frame.
+* Various clean up to grid fixture code/adding asserts.
 
 ## 239.0.1
 

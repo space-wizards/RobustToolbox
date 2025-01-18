@@ -472,46 +472,59 @@ namespace Robust.Shared.Physics.Systems
             TouchProxies(xform.MapUid.Value, matrix, fixture);
         }
 
-        internal void GetBroadphases(MapId mapId, Box2 aabb,BroadphaseCallback callback)
+        internal void GetBroadphases(MapId mapId, Box2 aabb, BroadphaseCallback callback)
         {
             var internalState = (callback, _broadphaseQuery);
 
-            _mapManager.FindGridsIntersecting(mapId,
+            if (!_map.TryGetMap(mapId, out var map))
+                return;
+
+            if (_broadphaseQuery.TryGetComponent(map.Value, out var mapBroadphase))
+                callback((map.Value, mapBroadphase));
+
+            _mapManager.FindGridsIntersecting(map.Value,
                 aabb,
                 ref internalState,
                 static (
                     EntityUid uid,
-                    MapGridComponent grid,
+                    MapGridComponent _,
                     ref (BroadphaseCallback callback, EntityQuery<BroadphaseComponent> _broadphaseQuery) tuple) =>
                 {
-                    if (!tuple._broadphaseQuery.TryComp(uid, out var broadphase))
-                        return true;
+                    if (tuple._broadphaseQuery.TryComp(uid, out var broadphase))
+                        tuple.callback((uid, broadphase));
 
-                    tuple.callback((uid, broadphase));
                     return true;
-                    // Approx because we don't really need accurate checks for these most of the time.
-                }, approx: true, includeMap: true);
+                },
+                // Approx because we don't really need accurate checks for these most of the time.
+                approx: true,
+                includeMap: false);
         }
 
         internal void GetBroadphases<TState>(MapId mapId, Box2 aabb, ref TState state, BroadphaseCallback<TState> callback)
         {
             var internalState = (state, callback, _broadphaseQuery);
 
-            _mapManager.FindGridsIntersecting(mapId,
+            if (!_map.TryGetMap(mapId, out var map))
+                return;
+
+            if (_broadphaseQuery.TryGetComponent(map.Value, out var mapBroadphase))
+                callback((map.Value, mapBroadphase), ref state);
+
+            _mapManager.FindGridsIntersecting(map.Value,
                 aabb,
                 ref internalState,
                 static (
                     EntityUid uid,
-                    MapGridComponent grid,
+                    MapGridComponent _,
                     ref (TState state, BroadphaseCallback<TState> callback, EntityQuery<BroadphaseComponent> _broadphaseQuery) tuple) =>
                 {
-                    if (!tuple._broadphaseQuery.TryComp(uid, out var broadphase))
-                        return true;
-
-                    tuple.callback((uid, broadphase), ref tuple.state);
+                    if (tuple._broadphaseQuery.TryComp(uid, out var broadphase))
+                        tuple.callback((uid, broadphase), ref tuple.state);
                     return true;
-                    // Approx because we don't really need accurate checks for these most of the time.
-                }, approx: true, includeMap: true);
+                },
+                // Approx because we don't really need accurate checks for these most of the time.
+                approx: true,
+                includeMap: false);
 
             state = internalState.state;
         }

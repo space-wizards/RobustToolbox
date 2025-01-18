@@ -553,7 +553,28 @@ namespace Robust.Shared.GameObjects
 
             TransformComponent? parentXform = null;
             if (xform.ParentUid.IsValid())
-                TransformQuery.Resolve(xform.ParentUid, ref parentXform);
+            {
+                if (xform.LifeStage < ComponentLifeStage.Initialized)
+                {
+                    // Entity is being deleted before initialization ever finished.
+                    // The entity will not yet have been added to the parent's transform component.
+                    // This is seemingly pretty error prone ATM, and I'm not even sure if it should be supported?
+
+                    // Just in case it HAS somehow been added, make sure we remove it.
+                    if (TransformQuery.TryComp(xform.ParentUid, out parentXform) && parentXform._children.Remove(e))
+                        DebugTools.Assert($"Child entity {ToPrettyString(e)} was added to the parent's child set prior to being initialized?");
+
+                    parentXform = null;
+                    xform._parent = EntityUid.Invalid;
+                    xform._anchored = false;
+                }
+                else
+                {
+                    // Use resolve for automatic error logging.
+                    // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+                    TransformQuery.Resolve(xform.ParentUid, ref parentXform);
+                }
+            }
 
             // Then actually delete them
             RecursiveDeleteEntity(e, meta, xform, parentXform);

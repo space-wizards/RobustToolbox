@@ -102,6 +102,7 @@ namespace Robust.Client.UserInterface.CustomControls
             {
                 var cursor = CursorShape.Arrow;
                 var previewDragMode = GetDragModeFor(args.RelativePosition);
+                previewDragMode &= ~DragMode.Move;
                 switch (previewDragMode)
                 {
                     case DragMode.Top:

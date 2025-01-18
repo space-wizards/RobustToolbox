@@ -77,12 +77,10 @@ END TEMPLATE-->
 ### Breaking changes
 
 * `ComponentRegistry` no longer implements `ISerializationContext`
-
+* Tickrate values are now `ushort`, allowing them to go up to 65535.
 
 ### New features
 
-* Console completion options now have a new flags for preventing suggestions from being escaped or quoted.
-* Tickrate values are now `ushort`, allowing them to go up to 65535.
 * Console completion options now have new flags for preventing suggestions from being escaped or quoted.
 * Added `ILocalizationManager.HasCulture()`.
 * Static `EntProtoId<T>` fields are now validated to exist.
@@ -94,7 +92,6 @@ END TEMPLATE-->
 ### Other
 
 * Reduced amount of `DynamicMethod`s used by serialization system. This should improve performance somewhat.
-
 
 ### Internal
 

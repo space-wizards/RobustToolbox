@@ -467,6 +467,8 @@ Types:
     IComponent: { All: True }
     IContainer: { All: True }
     ITypeDescriptorContext: { All: True }
+    EditorBrowsableAttribute: { All: True }
+    EditorBrowsableState: { All: True }
   System.Diagnostics.CodeAnalysis:
     AllowNullAttribute: { All: True }
     DisallowNullAttribute: { All: True }

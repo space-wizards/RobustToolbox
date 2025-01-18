@@ -39,11 +39,43 @@ END TEMPLATE-->
 
 ### New features
 
-* Console completion options now have new flags for preventing suggestions from being escaped or quoted.
+*None yet*
 
 ### Bugfixes
 
 * Fixed prototype reloading/hotloading not properly handling data-fields with the `AlwaysPushInheritanceAttribute`
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 240.0.1
+
+### Bugfixes
+
+* Fixed `SharedBroadphaseSystem.GetBroadphases()` not returning the map itself, which was causing physics to not work properly off-grid.
+
+
+## 240.0.0
+
+### Breaking changes
+
+* `ComponentRegistry` no longer implements `ISerializationContext`
+* Tickrate values are now `ushort`, allowing them to go up to 65535.
+
+### New features
+
+* Console completion options now have new flags for preventing suggestions from being escaped or quoted.
+* Added `ILocalizationManager.HasCulture()`.
+* Static `EntProtoId<T>` fields are now validated to exist.
+
+### Bugfixes
+
 * Fixed a state handling bug in replays, which was causing exceptions to be thrown when applying delta states.
 
 ### Other
@@ -52,8 +84,8 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
-
+* Avoided sorting overlays every render frame.
+* Various clean up to grid fixture code/adding asserts.
 
 ## 239.0.1
 

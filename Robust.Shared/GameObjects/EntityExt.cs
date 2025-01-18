@@ -19,7 +19,7 @@ public static class EntityExt
     /// </example>
     public static Entity<T?> AsNullable<T>(this Entity<T> ent) where T : IComponent
     {
-        return (ent.Owner, ent.Comp);
+        return new(ent.Owner, ent.Comp);
     }
 
     /// <inheritdoc cref="AsNullable{T}" />
@@ -27,7 +27,7 @@ public static class EntityExt
         where T1 : IComponent
         where T2 : IComponent
     {
-        return (ent.Owner, ent.Comp1, ent.Comp2);
+        return new(ent.Owner, ent.Comp1, ent.Comp2);
     }
 
     /// <inheritdoc cref="AsNullable{T}" />
@@ -36,7 +36,7 @@ public static class EntityExt
         where T2 : IComponent
         where T3 : IComponent
     {
-        return (ent.Owner, ent.Comp1, ent.Comp2, ent.Comp3);
+        return new(ent.Owner, ent.Comp1, ent.Comp2, ent.Comp3);
     }
 
     /// <inheritdoc cref="AsNullable{T}" />
@@ -46,7 +46,7 @@ public static class EntityExt
         where T3 : IComponent
         where T4 : IComponent
     {
-        return (ent.Owner, ent.Comp1, ent.Comp2, ent.Comp3, ent.Comp4);
+        return new(ent.Owner, ent.Comp1, ent.Comp2, ent.Comp3, ent.Comp4);
     }
 
     /// <inheritdoc cref="AsNullable{T}" />
@@ -57,7 +57,7 @@ public static class EntityExt
         where T4 : IComponent
         where T5 : IComponent
     {
-        return (ent.Owner, ent.Comp1, ent.Comp2, ent.Comp3, ent.Comp4, ent.Comp5);
+        return new(ent.Owner, ent.Comp1, ent.Comp2, ent.Comp3, ent.Comp4, ent.Comp5);
     }
 
     /// <inheritdoc cref="AsNullable{T}" />
@@ -70,7 +70,7 @@ public static class EntityExt
         where T5 : IComponent
         where T6 : IComponent
     {
-        return (ent.Owner, ent.Comp1, ent.Comp2, ent.Comp3, ent.Comp4, ent.Comp5, ent.Comp6);
+        return new(ent.Owner, ent.Comp1, ent.Comp2, ent.Comp3, ent.Comp4, ent.Comp5, ent.Comp6);
     }
 
     /// <inheritdoc cref="AsNullable{T}" />
@@ -84,7 +84,7 @@ public static class EntityExt
         where T6 : IComponent
         where T7 : IComponent
     {
-        return (ent.Owner, ent.Comp1, ent.Comp2, ent.Comp3, ent.Comp4, ent.Comp5, ent.Comp6, ent.Comp7);
+        return new(ent.Owner, ent.Comp1, ent.Comp2, ent.Comp3, ent.Comp4, ent.Comp5, ent.Comp6, ent.Comp7);
     }
 
     /// <inheritdoc cref="AsNullable{T}" />
@@ -99,6 +99,6 @@ public static class EntityExt
         where T7 : IComponent
         where T8 : IComponent
     {
-        return (ent.Owner, ent.Comp1, ent.Comp2, ent.Comp3, ent.Comp4, ent.Comp5, ent.Comp6, ent.Comp7, ent.Comp8);
+        return new(ent.Owner, ent.Comp1, ent.Comp2, ent.Comp3, ent.Comp4, ent.Comp5, ent.Comp6, ent.Comp7, ent.Comp8);
     }
 }

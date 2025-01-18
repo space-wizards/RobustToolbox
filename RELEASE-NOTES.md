@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fixed `SharedBroadphaseSystem.GetBroadphases()` not returning the map itself, which was causing physics to not work properly off-grid.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,13 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 240.0.1
+
+### Bugfixes
+
+* Fixed `SharedBroadphaseSystem.GetBroadphases()` not returning the map itself, which was causing physics to not work properly off-grid.
 
 
 ## 240.0.0
@@ -63,7 +70,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Console completion options now have a new flags for preventing suggestions from being escaped or quoted.
+* Console completion options now have new flags for preventing suggestions from being escaped or quoted.
 * Added `ILocalizationManager.HasCulture()`.
 * Static `EntProtoId<T>` fields are now validated to exist.
 

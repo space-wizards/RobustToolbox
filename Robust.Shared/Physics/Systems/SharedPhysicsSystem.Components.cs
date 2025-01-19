@@ -139,26 +139,26 @@ public partial class SharedPhysicsSystem
 
         if (args.Current is PhysicsLinearVelocityDeltaState linearState)
         {
-            SetLinearVelocity(uid, linearState.LinearVelocity, body: component, manager: manager);
+            SetLinearVelocity(uid, linearState.LinearVelocity, dirty: false, body: component, manager: manager);
         }
         else if (args.Current is PhysicsVelocityDeltaState velocityState)
         {
-            SetLinearVelocity(uid, velocityState.LinearVelocity, body: component, manager: manager);
-            SetAngularVelocity(uid, velocityState.AngularVelocity, body: component, manager: manager);
+            SetLinearVelocity(uid, velocityState.LinearVelocity, dirty: false, body: component, manager: manager);
+            SetAngularVelocity(uid, velocityState.AngularVelocity, dirty: false, body: component, manager: manager);
         }
         else if (args.Current is PhysicsComponentState newState)
         {
-            SetSleepingAllowed(uid, component, newState.SleepingAllowed);
-            SetFixedRotation(uid, newState.FixedRotation, body: component);
-            SetCanCollide(uid, newState.CanCollide, body: component);
+            SetSleepingAllowed(uid, component, newState.SleepingAllowed, dirty: false);
+            SetFixedRotation(uid, newState.FixedRotation, body: component, dirty: false);
+            SetCanCollide(uid, newState.CanCollide, body: component, dirty: false);
             component.BodyStatus = newState.Status;
 
-            SetLinearVelocity(uid, newState.LinearVelocity, body: component, manager: manager);
-            SetAngularVelocity(uid, newState.AngularVelocity, body: component, manager: manager);
+            SetLinearVelocity(uid, newState.LinearVelocity, dirty: false, body: component, manager: manager);
+            SetAngularVelocity(uid, newState.AngularVelocity, dirty: false, body: component, manager: manager);
             SetBodyType(uid, newState.BodyType, manager, component);
-            SetFriction(uid, component, newState.Friction);
-            SetLinearDamping(uid, component, newState.LinearDamping);
-            SetAngularDamping(uid, component, newState.AngularDamping);
+            SetFriction(uid, component, newState.Friction, dirty: false);
+            SetLinearDamping(uid, component, newState.LinearDamping, dirty: false);
+            SetAngularDamping(uid, component, newState.AngularDamping, dirty: false);
             component.Force = newState.Force;
             component.Torque = newState.Torque;
         }
@@ -270,29 +270,12 @@ public partial class SharedPhysicsSystem
     /// </summary>
     public void ResetDynamics(EntityUid uid, PhysicsComponent body, bool dirty = true)
     {
-        if (body.Torque != 0f)
-        {
-            body.Torque = 0f;
-            DirtyField(uid, body, nameof(PhysicsComponent.Torque));
-        }
-
-        if (body.AngularVelocity != 0f)
-        {
-            body.AngularVelocity = 0f;
-            DirtyField(uid, body, nameof(PhysicsComponent.AngularVelocity));
-        }
-
-        if (body.Force != Vector2.Zero)
-        {
-            body.Force = Vector2.Zero;
-            DirtyField(uid, body, nameof(PhysicsComponent.Force));
-        }
-
-        if (body.LinearVelocity != Vector2.Zero)
-        {
-            body.LinearVelocity = Vector2.Zero;
-            DirtyField(uid, body, nameof(PhysicsComponent.LinearVelocity));
-        }
+        body.Torque = 0f;
+        body.AngularVelocity = 0f;
+        body.Force = Vector2.Zero;
+        body.LinearVelocity = Vector2.Zero;
+        if (dirty)
+            DirtyFields(uid, body, null, nameof(PhysicsComponent.Torque), nameof(PhysicsComponent.AngularVelocity), nameof(PhysicsComponent.Force), nameof(PhysicsComponent.LinearVelocity));
     }
 
     public void ResetMassData(EntityUid uid, FixturesComponent? manager = null, PhysicsComponent? body = null)
@@ -397,7 +380,8 @@ public partial class SharedPhysicsSystem
             return false;
 
         body.AngularVelocity = value;
-        DirtyField(uid, body, nameof(PhysicsComponent.AngularVelocity));
+        if (dirty)
+            DirtyField(uid, body, nameof(PhysicsComponent.AngularVelocity));
 
         return true;
     }
@@ -423,7 +407,9 @@ public partial class SharedPhysicsSystem
             return false;
 
         body.LinearVelocity = velocity;
-        DirtyField(uid, body, nameof(PhysicsComponent.LinearVelocity));
+        if (dirty)
+            DirtyField(uid, body, nameof(PhysicsComponent.LinearVelocity));
+
         return true;
     }
 
@@ -433,7 +419,8 @@ public partial class SharedPhysicsSystem
             return;
 
         body.AngularDamping = value;
-        DirtyField(uid, body, nameof(PhysicsComponent.AngularDamping));
+        if (dirty)
+            DirtyField(uid, body, nameof(PhysicsComponent.AngularDamping));
     }
 
     public void SetLinearDamping(EntityUid uid, PhysicsComponent body, float value, bool dirty = true)
@@ -442,7 +429,8 @@ public partial class SharedPhysicsSystem
             return;
 
         body.LinearDamping = value;
-        DirtyField(uid, body, nameof(PhysicsComponent.LinearDamping));
+        if (dirty)
+            DirtyField(uid, body, nameof(PhysicsComponent.LinearDamping));
     }
 
     [Obsolete("Use SetAwake with EntityUid<PhysicsComponent>")]
@@ -518,32 +506,27 @@ public partial class SharedPhysicsSystem
         body.BodyType = value;
         ResetMassData(uid, manager, body);
 
+        body.Force = Vector2.Zero;
+        body.Torque = 0f;
+
         if (body.BodyType == BodyType.Static)
         {
             SetAwake((uid, body), false);
 
-            if (body.LinearVelocity != Vector2.Zero)
-            {
-                body.LinearVelocity = Vector2.Zero;
-                DirtyField(uid, body, nameof(PhysicsComponent.LinearVelocity));
-            }
+            body.LinearVelocity = Vector2.Zero;
+            body.AngularVelocity = 0f;
 
-            if (body.AngularVelocity != 0f)
-            {
-                body.AngularVelocity = 0f;
-                DirtyField(uid, body, nameof(PhysicsComponent.AngularVelocity));
-            }
+            DirtyFields(uid, body, null,
+                nameof(PhysicsComponent.LinearVelocity),
+                nameof(PhysicsComponent.AngularVelocity),
+                nameof(PhysicsComponent.Force),
+                nameof(PhysicsComponent.Torque));
         }
         // Even if it's dynamic if it can't collide then don't force it awake.
         else if (body.CanCollide)
         {
             SetAwake((uid, body), true);
-        }
-
-        if (body.Torque != 0f)
-        {
-            body.Torque = 0f;
-            DirtyField(uid, body, nameof(PhysicsComponent.Torque));
+            DirtyFields(uid, body, null, nameof(PhysicsComponent.Force), nameof(PhysicsComponent.Torque));
         }
 
         _broadphase.RegenerateContacts(uid, body, manager, xform);
@@ -561,7 +544,8 @@ public partial class SharedPhysicsSystem
             return;
 
         body.BodyStatus = status;
-        DirtyField(uid, body, nameof(PhysicsComponent.BodyStatus));
+        if (dirty)
+            DirtyField(uid, body, nameof(PhysicsComponent.BodyStatus));
     }
 
     /// <summary>
@@ -612,7 +596,10 @@ public partial class SharedPhysicsSystem
             var ev = new CollisionChangeEvent(uid, body, value);
             RaiseLocalEvent(ref ev);
         }
-        DirtyField(uid, body, nameof(PhysicsComponent.CanCollide));
+
+        if (dirty)
+            DirtyField(uid, body, nameof(PhysicsComponent.CanCollide));
+
         return value;
     }
 
@@ -622,13 +609,10 @@ public partial class SharedPhysicsSystem
             return;
 
         body.FixedRotation = value;
-        DirtyField(uid, body, nameof(PhysicsComponent.FixedRotation));
+        body.AngularVelocity = 0.0f;
 
-        if (body.AngularVelocity != 0f)
-        {
-            body.AngularVelocity = 0.0f;
-            DirtyField(uid, body, nameof(PhysicsComponent.AngularVelocity));
-        }
+        if (dirty)
+            DirtyFields(uid, body, null, nameof(PhysicsComponent.FixedRotation), nameof(PhysicsComponent.AngularVelocity));
 
         ResetMassData(uid, manager: manager, body: body);
     }
@@ -639,7 +623,8 @@ public partial class SharedPhysicsSystem
             return;
 
         body._friction = value;
-        DirtyField(uid, body, nameof(PhysicsComponent.Friction));
+        if (dirty)
+            DirtyField(uid, body, nameof(PhysicsComponent.Friction));
     }
 
     public void SetInertia(EntityUid uid, PhysicsComponent body, float value, bool dirty = true)
@@ -678,7 +663,8 @@ public partial class SharedPhysicsSystem
             SetAwake((uid, body), true);
 
         body.SleepingAllowed = value;
-        DirtyField(uid, body, nameof(PhysicsComponent.SleepingAllowed));
+        if (dirty)
+            DirtyField(uid, body, nameof(PhysicsComponent.SleepingAllowed));
     }
 
     public void SetSleepTime(PhysicsComponent body, float value)

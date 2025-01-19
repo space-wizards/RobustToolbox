@@ -43,6 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
+* Fixed `RaisePredictiveEvent()` not properly re-raising events during prediction for event handlers that did not take an `EntitySessionEventArgs` argument.
 * Fixed an exception in `PhysicsSystem.DestroyContacts()` that could result in entities getting stuck with broken physics.
 
 ### Other

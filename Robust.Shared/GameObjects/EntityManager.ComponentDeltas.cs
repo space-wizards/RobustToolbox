@@ -59,7 +59,6 @@ public abstract partial class EntityManager
         Dirty(uid, comp, metadata);
     }
 
-
     public virtual void DirtyFields<T>(EntityUid uid, T comp, MetaDataComponent? meta, params ReadOnlySpan<string> fields)
         where T : IComponentDelta
     {

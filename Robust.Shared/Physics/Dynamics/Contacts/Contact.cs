@@ -406,5 +406,10 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// Set right before the contact is deleted
         /// </summary>
         Deleting = 1 << 4,
+
+        /// <summary>
+        /// Set after a contact has been deleted and returned to the contact pool.
+        /// </summary>
+        Deleted = 1 << 5,
     }
 }

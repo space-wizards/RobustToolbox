@@ -3,16 +3,15 @@ using System.Collections.Generic;
 using Robust.Client.Utility;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using SDL3;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using static SDL2.SDL;
-using static SDL2.SDL.SDL_SystemCursor;
 
 namespace Robust.Client.Graphics.Clyde;
 
 internal partial class Clyde
 {
-    private sealed partial class Sdl2WindowingImpl : IWindowingImpl
+    private sealed partial class Sdl3WindowingImpl
     {
         private readonly Dictionary<ClydeHandle, WinThreadCursorReg> _winThreadCursors = new();
         private readonly CursorImpl[] _standardCursors = new CursorImpl[(int)StandardCursorShape.CountCursors];
@@ -28,31 +27,32 @@ internal partial class Clyde
             image.GetPixelSpan().CopyTo(cloneImg.GetPixelSpan());
 
             var id = _clyde.AllocRid();
-            SendCmd(new CmdCursorCreate(cloneImg, hotSpot, id));
+            SendCmd(new CmdCursorCreate { Bytes = cloneImg, Hotspot = hotSpot, Cursor = id });
 
             return new CursorImpl(this, id, false);
         }
 
         private unsafe void WinThreadCursorCreate(CmdCursorCreate cmd)
         {
-            var (img, (hotX, hotY), id) = cmd;
+            using var img = cmd.Bytes;
 
             fixed (Rgba32* pixPtr = img.GetPixelSpan())
             {
-                var surface = SDL_CreateRGBSurfaceWithFormatFrom(
+                var surface = SDL.SDL_CreateSurfaceFrom(
+                    img.Width,
+                    img.Height,
+                    SDL.SDL_PixelFormat.SDL_PIXELFORMAT_ABGR8888,
                     (IntPtr)pixPtr,
-                    img.Width, img.Height, 0,
-                    sizeof(Rgba32) * img.Width,
-                    SDL_PIXELFORMAT_RGBA8888);
+                    sizeof(Rgba32) * img.Width);
 
-                var cursor = SDL_CreateColorCursor(surface, hotX, hotY);
+                var cursor = SDL.SDL_CreateColorCursor(surface, cmd.Hotspot.X, cmd.Hotspot.Y);
+                if (cursor == 0)
+                    throw new InvalidOperationException("SDL_CreateColorCursor failed");
 
-                _winThreadCursors.Add(id, new WinThreadCursorReg { Ptr = cursor });
+                _winThreadCursors.Add(cmd.Cursor, new WinThreadCursorReg { Ptr = cursor });
 
-                SDL_FreeSurface(surface);
+                SDL.SDL_DestroySurface(surface);
             }
-
-            img.Dispose();
         }
 
         public void CursorSet(WindowReg window, ICursor? cursor)
@@ -62,7 +62,7 @@ internal partial class Clyde
             // SDL_SetCursor(NULL) does redraw, not reset.
             cursor ??= CursorGetStandard(StandardCursorShape.Arrow);
 
-            var reg = (Sdl2WindowReg)window;
+            var reg = (Sdl3WindowReg)window;
 
             if (reg.Cursor == cursor)
                 return;
@@ -74,7 +74,7 @@ internal partial class Clyde
                 throw new ObjectDisposedException(nameof(cursor));
 
             reg.Cursor = impl;
-            SendCmd(new CmdWinCursorSet(reg.Sdl2Window, impl.Id));
+            SendCmd(new CmdWinCursorSet { Window = reg.Sdl3Window, Cursor = impl.Id });
         }
 
         private void WinThreadWinCursorSet(CmdWinCursorSet cmd)
@@ -83,22 +83,22 @@ internal partial class Clyde
             var ptr = _winThreadCursors[cmd.Cursor].Ptr;
 
             // TODO: multi-window??
-            SDL_SetCursor(ptr);
+            SDL.SDL_SetCursor(ptr);
         }
 
         private void InitCursors()
         {
-            Add(StandardCursorShape.Arrow, SDL_SYSTEM_CURSOR_ARROW);
-            Add(StandardCursorShape.IBeam, SDL_SYSTEM_CURSOR_IBEAM);
-            Add(StandardCursorShape.Crosshair, SDL_SYSTEM_CURSOR_CROSSHAIR);
-            Add(StandardCursorShape.Hand, SDL_SYSTEM_CURSOR_HAND);
-            Add(StandardCursorShape.HResize, SDL_SYSTEM_CURSOR_SIZEWE);
-            Add(StandardCursorShape.VResize, SDL_SYSTEM_CURSOR_SIZENS);
+            Add(StandardCursorShape.Arrow, SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_DEFAULT);
+            Add(StandardCursorShape.IBeam, SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_TEXT);
+            Add(StandardCursorShape.Crosshair, SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_CROSSHAIR);
+            Add(StandardCursorShape.Hand, SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_POINTER);
+            Add(StandardCursorShape.HResize, SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_EW_RESIZE);
+            Add(StandardCursorShape.VResize, SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_NS_RESIZE);
 
-            void Add(StandardCursorShape shape, SDL_SystemCursor sysCursor)
+            void Add(StandardCursorShape shape, SDL.SDL_SystemCursor sysCursor)
             {
                 var id = _clyde.AllocRid();
-                var cursor = SDL_CreateSystemCursor(sysCursor);
+                var cursor = SDL.SDL_CreateSystemCursor(sysCursor);
 
                 var impl = new CursorImpl(this, id, true);
 
@@ -107,13 +107,21 @@ internal partial class Clyde
             }
         }
 
+        private void WinThreadCursorDestroy(CmdCursorDestroy cmd)
+        {
+            if (!_winThreadCursors.TryGetValue(cmd.Cursor, out var cursor))
+                return;
+
+            SDL.SDL_DestroyCursor(cursor.Ptr);
+        }
+
         private sealed class CursorImpl : ICursor
         {
             private readonly bool _standard;
-            public Sdl2WindowingImpl Owner { get; }
+            public Sdl3WindowingImpl Owner { get; }
             public ClydeHandle Id { get; private set; }
 
-            public CursorImpl(Sdl2WindowingImpl clyde, ClydeHandle id, bool standard)
+            public CursorImpl(Sdl3WindowingImpl clyde, ClydeHandle id, bool standard)
             {
                 _standard = standard;
                 Owner = clyde;
@@ -127,7 +135,7 @@ internal partial class Clyde
 
             private void DisposeImpl()
             {
-                Owner.SendCmd(new CmdCursorDestroy(Id));
+                Owner.SendCmd(new CmdCursorDestroy { Cursor = Id });
                 Id = default;
             }
 
@@ -146,10 +154,6 @@ internal partial class Clyde
         public sealed class WinThreadCursorReg
         {
             public nint Ptr;
-        }
-
-        private void WinThreadCursorDestroy(CmdCursorDestroy cmd)
-        {
         }
     }
 }

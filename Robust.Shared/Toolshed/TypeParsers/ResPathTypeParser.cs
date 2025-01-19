@@ -1,31 +1,24 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
-using Robust.Shared.Console;
-using Robust.Shared.Toolshed.Errors;
+﻿using Robust.Shared.Console;
 using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
-internal sealed class ResPathTypeParser : StringTypeParser
+internal sealed class ResPathTypeParser : TypeParser<ResPath>
 {
-    public override Type Parses => typeof(ResPath);
-
-    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
+    public override bool TryParse(ParserContext parserContext, out ResPath result)
     {
-        var baseResult = base.TryParse(parserContext, out result, out error);
-
-        if (!baseResult)
+        result = default;
+        if (!Toolshed.TryParse(parserContext, out string? str))
             return false;
 
-        result = new ResPath((string) result!);
+        result = new ResPath(str);
         return true;
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext,
-        string? argName)
+    public override CompletionResult TryAutocomplete(ParserContext parserContext, string? argName)
     {
-        return base.TryAutocomplete(parserContext, argName);
+        // TODO TOOLSHED ResPath Completion
+        return CompletionResult.FromHint($"\"<{argName ?? nameof(ResPath)}>\"");
     }
 }

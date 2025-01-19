@@ -215,8 +215,6 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            _overlays.Sort(OverlayComparer.Instance);
-
             return _overlays;
         }
 
@@ -573,18 +571,6 @@ namespace Robust.Client.Graphics.Clyde
             var aabb = GetAABB(eye, viewport);
 
             return new Box2Rotated(aabb, rotation, aabb.Center);
-        }
-
-        private sealed class OverlayComparer : IComparer<Overlay>
-        {
-            public static readonly OverlayComparer Instance = new();
-
-            public int Compare(Overlay? x, Overlay? y)
-            {
-                var zX = x?.ZIndex ?? 0;
-                var zY = y?.ZIndex ?? 0;
-                return zX.CompareTo(zY);
-            }
         }
     }
 }

@@ -399,7 +399,7 @@ namespace Robust.Client.GameStates
 
                 using (_prof.Group("MergeImplicitData"))
                 {
-                    MergeImplicitData(createdEntities);
+                    GenerateImplicitStates(createdEntities);
                 }
 
                 if (_lastProcessedInput < curState.LastProcessedInput)
@@ -669,7 +669,7 @@ namespace Robust.Client.GameStates
         ///     initial server state for any newly created entity. It does this by simply using the standard <see
         ///     cref="IEntityManager.GetComponentState"/>.
         /// </remarks>
-        private void MergeImplicitData(IEnumerable<NetEntity> createdEntities)
+        public void GenerateImplicitStates(IEnumerable<NetEntity> createdEntities)
         {
             var bus = _entityManager.EventBus;
 

@@ -30,7 +30,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             await server.WaitAssertion(() =>
             {
-                entMan.System<SharedMapSystem>().CreateMap(out var mapId);
+                mapSystem.CreateMap(out var mapId);
                 var grid = mapMan.CreateGridEntity(mapId);
                 var gridEnt = grid.Owner;
                 var coordinates = new EntityCoordinates(gridEnt, new Vector2(10, 0));
@@ -41,18 +41,18 @@ namespace Robust.UnitTesting.Shared.Map
                 Assert.That(mapSystem.WorldToLocal(grid.Owner, grid.Comp, coordinates.Position), Is.EqualTo(coordinates.Position));
 
                 // Rotate 180 degrees should show -10, 0 for the position in map-terms and 10, 0 for the position in entity terms (i.e. no change).
-                entMan.GetComponent<TransformComponent>(gridEnt).WorldRotation += new Angle(MathF.PI);
+                transformSystem.SetWorldRotation(gridEnt, transformSystem.GetWorldRotation(gridEnt) + new Angle(MathF.PI));
                 Assert.That(transformSystem.GetWorldRotation(gridEnt), Is.EqualTo(new Angle(MathF.PI)));
                 // Check the map coordinate rotates correctly
-                Assert.That(mapSystem.WorldToLocal(grid.Owner, grid.Comp, new Vector2(10, 0)).EqualsApprox(new Vector2(-10, 0), 0.01f));
-                Assert.That(mapSystem.LocalToWorld(grid.Owner, grid.Comp, coordinates.Position).EqualsApprox(new Vector2(-10, 0), 0.01f));
+                Assert.That(mapSystem.WorldToLocal(gridEnt, grid.Comp, new Vector2(10, 0)).EqualsApprox(new Vector2(-10, 0), 0.01f));
+                Assert.That(mapSystem.LocalToWorld(gridEnt, grid.Comp, coordinates.Position).EqualsApprox(new Vector2(-10, 0), 0.01f));
 
                 // Now we'll do the same for 180 degrees.
-                entMan.GetComponent<TransformComponent>(gridEnt).WorldRotation += MathF.PI / 2f;
+                transformSystem.SetWorldRotation(gridEnt, transformSystem.GetWorldRotation(gridEnt) + MathF.PI / 2f);
                 // If grid facing down then worldpos of 10, 0 gets rotated 90 degrees CCW and hence should be 0, 10
-                Assert.That(mapSystem.WorldToLocal(grid.Owner, grid.Comp, new Vector2(10, 0)).EqualsApprox(new Vector2(0, 10), 0.01f));
+                Assert.That(mapSystem.WorldToLocal(gridEnt, grid.Comp, new Vector2(10, 0)).EqualsApprox(new Vector2(0, 10), 0.01f));
                 // If grid facing down then local 10,0 pos should just return 0, -10 given it's aligned with the rotation.
-                Assert.That(mapSystem.LocalToWorld(grid.Owner, grid.Comp, coordinates.Position).EqualsApprox(new Vector2(0, -10), 0.01f));
+                Assert.That(mapSystem.LocalToWorld(gridEnt, grid.Comp, coordinates.Position).EqualsApprox(new Vector2(0, -10), 0.01f));
             });
         }
 
@@ -70,7 +70,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             await server.WaitAssertion(() =>
             {
-                entMan.System<SharedMapSystem>().CreateMap(out var mapId);
+                mapSystem.CreateMap(out var mapId);
                 var grid = mapMan.CreateGridEntity(mapId);
                 var gridEnt = grid.Owner;
 
@@ -85,7 +85,7 @@ namespace Robust.UnitTesting.Shared.Map
                     }
                 }
 
-                var chunks = mapSystem.GetMapChunks(grid.Owner, grid.Comp).Select(c => c.Value).ToList();
+                var chunks = mapSystem.GetMapChunks(gridEnt, grid.Comp).Select(c => c.Value).ToList();
 
                 Assert.That(chunks.Count, Is.EqualTo(1));
                 var chunk = chunks[0];

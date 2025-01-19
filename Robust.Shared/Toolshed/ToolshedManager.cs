@@ -1,12 +1,15 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using Robust.Shared.Console;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Reflection;
+using Robust.Shared.Toolshed.Errors;
 using Robust.Shared.Toolshed.Invocation;
 using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Toolshed.TypeParsers;
@@ -130,7 +133,6 @@ public sealed partial class ToolshedManager
         return InvokeCommand(ctx, command, input, out result);
     }
 
-
     /// <summary>
     ///     Invokes a command with the given context.
     /// </summary>
@@ -148,20 +150,35 @@ public sealed partial class ToolshedManager
     public bool InvokeCommand(IInvocationContext ctx, string command, object? input, out object? result)
     {
         ctx.ClearErrors();
+        result = null;
 
-        var parser = new ParserContext(command, this, ctx.Environment);
-        if (!CommandRun.TryParse(false, parser, input?.GetType(), null, false, out var expr, out _, out var err) || parser.Index < parser.MaxIndex)
+        var parser = new ParserContext(command, this, ctx);
+        if (!CommandRun.TryParse(parser, input?.GetType(), null, out var expr))
         {
-
-            if (err is not null)
-                ctx.ReportError(err);
-
-            result = null;
+            ctx.ReportError(parser.Error ?? new FailedToParseError());
             return false;
         }
 
         result = expr.Invoke(input, ctx);
         return true;
+    }
+
+    public CompletionResult? GetCompletions(ConsoleShell shell, string command)
+    {
+        var idx = shell.Player?.UserId ?? new NetUserId();
+        if (!_contexts.TryGetValue(idx, out var ourCtx))
+            ourCtx = _contexts[idx] = new OldShellInvocationContext(shell);
+
+        return GetCompletions(ourCtx, command);
+    }
+
+    public CompletionResult? GetCompletions(IInvocationContext ctx, string command)
+    {
+        ctx.ClearErrors();
+        var parser = new ParserContext(command, this, ctx);
+        parser.GenerateCompletions = true;
+        CommandRun.TryParse(parser, null, null, out _);
+        return parser.Completions;
     }
 }
 
@@ -183,25 +200,31 @@ public readonly record struct CommandSpec(ToolshedCommand Cmd, string? SubComman
     /// </summary>
     public CompletionOption AsCompletion()
     {
-        return new CompletionOption(
-                $"{Cmd.Name}{(SubCommand is not null ? ":" + SubCommand : "")}",
-                Cmd.Description(SubCommand)
-            );
+        return new CompletionOption(FullName(), Cmd.Description(SubCommand));
     }
 
     /// <summary>
     ///     Returns the full name of the command.
     /// </summary>
-    public string FullName() => $"{Cmd.Name}{(SubCommand is not null ? ":" + SubCommand : "")}";
+    public string FullName() => SubCommand == null ? Cmd.Name : $"{Cmd.Name}:{SubCommand}";
 
     /// <summary>
     ///     Returns the localization string for the description of this command.
     /// </summary>
-    public string DescLocStr() => Cmd.UnlocalizedDescription(SubCommand);
+    public string DescLocStr() => Cmd.DescriptionLocKey(SubCommand);
 
     /// <inheritdoc/>
-    public override string ToString()
+    public override string ToString() => FullName();
+}
+
+public record struct FailedToParseError() : IConError
+{
+    public FormattedMessage DescribeInner()
     {
-        return Cmd.GetHelp(SubCommand);
+        return FormattedMessage.FromUnformatted($"Failed to parse toolshed command");
     }
+
+    public string? Expression { get; set; }
+    public Vector2i? IssueSpan { get; set; }
+    public StackTrace? Trace { get; set; }
 }

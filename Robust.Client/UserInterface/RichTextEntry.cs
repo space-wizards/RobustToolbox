@@ -176,7 +176,7 @@ namespace Robust.Client.UserInterface
 
         public readonly void Draw(
             MarkupTagManager tagManager,
-            DrawingHandleScreen handle,
+            DrawingHandleBase handle,
             Font defaultFont,
             UIBox2 drawBox,
             float verticalOffset,

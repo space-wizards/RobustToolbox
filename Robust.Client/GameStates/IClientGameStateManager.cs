@@ -83,6 +83,12 @@ namespace Robust.Client.GameStates
         IEnumerable<NetEntity> ApplyGameState(GameState curState, GameState? nextState);
 
         /// <summary>
+        ///     Generates implicit component states for newly created entities.
+        ///     This should always be called after running <see cref="ApplyGameState(GameState, GameState)"/>.
+        /// </summary>
+        void GenerateImplicitStates(IEnumerable<NetEntity> states);
+
+        /// <summary>
         ///     Resets any entities that have changed while predicting future ticks.
         /// </summary>
         void ResetPredictedEntities();

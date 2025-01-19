@@ -39,6 +39,12 @@ internal static class InternalReflectionUtils
 
     internal static object EmitFieldAccessor(Type obj, FieldDefinition fieldDefinition)
     {
+        if (fieldDefinition.BackingField is SpecificFieldInfo fieldInfo)
+            return fieldInfo.FieldInfo;
+
+        if (fieldDefinition.BackingField is SpecificPropertyInfo propertyInfo)
+            return propertyInfo.PropertyInfo.GetGetMethod(true) ?? throw new InvalidOperationException("Property has no getter");
+
         var method = new DynamicMethod(
             "AccessField",
             fieldDefinition.BackingField.FieldType,
@@ -71,14 +77,29 @@ internal static class InternalReflectionUtils
         return method.CreateDelegate(typeof(AccessField<,>).MakeGenericType(obj, fieldDefinition.BackingField.FieldType));
     }
 
-    internal static object EmitFieldAssigner<TObj>(AbstractFieldInfo backingField, bool boxing = false)
+    internal static object EmitFieldAssigner(Type objType, AbstractFieldInfo backingField, bool boxing = false)
     {
+        if (!boxing)
+        {
+            if (backingField is SpecificFieldInfo { FieldInfo.IsInitOnly: false } fieldInfo)
+                return fieldInfo.FieldInfo;
+
+            if (backingField is SpecificPropertyInfo propertyInfo)
+            {
+                if (propertyInfo.TryGetBackingField(out var propertyBackingField) && !propertyBackingField.FieldInfo.IsInitOnly)
+                    return propertyBackingField.FieldInfo;
+
+                if (propertyInfo.PropertyInfo.GetSetMethod(true) is { } setMethod)
+                    return setMethod;
+            }
+        }
+
         var fieldType = backingField.FieldType;
 
         var method = new DynamicMethod(
             "AssignField",
             typeof(void),
-            new[] {typeof(TObj).MakeByRefType(), boxing ? typeof(object) : fieldType},
+            new[] {objType.MakeByRefType(), boxing ? typeof(object) : fieldType},
             true);
 
         method.DefineParameter(1, ParameterAttributes.Out, "target");
@@ -88,7 +109,7 @@ internal static class InternalReflectionUtils
 
         generator.Emit(OpCodes.Ldarg_0);
 
-        if(!typeof(TObj).IsValueType)
+        if(!objType.IsValueType)
             generator.Emit(OpCodes.Ldind_Ref);
 
         generator.Emit(OpCodes.Ldarg_1);
@@ -102,6 +123,6 @@ internal static class InternalReflectionUtils
 
         generator.Emit(OpCodes.Ret);
 
-        return method.CreateDelegate(typeof(AssignField<,>).MakeGenericType(typeof(TObj), boxing ? typeof(object) : fieldType));
+        return method.CreateDelegate(typeof(AssignField<,>).MakeGenericType(objType, boxing ? typeof(object) : fieldType));
     }
 }

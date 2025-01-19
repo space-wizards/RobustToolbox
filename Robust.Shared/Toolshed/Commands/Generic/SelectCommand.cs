@@ -12,7 +12,7 @@ public sealed class SelectCommand : ToolshedCommand
     [Dependency] private readonly IRobustRandom _random = default!;
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
-    public IEnumerable<TR> Select<TR>([PipedArgument] IEnumerable<TR> enumerable, [CommandArgument] Quantity quantity, [CommandInverted] bool inverted)
+    public IEnumerable<TR> Select<TR>([PipedArgument] IEnumerable<TR> enumerable, Quantity quantity, [CommandInverted] bool inverted)
     {
         var arr = enumerable.ToArray();
         _random.Shuffle(arr);

@@ -24,6 +24,10 @@
     <PackageReference Include="SpaceWizards.Sodium" PrivateAssets="compile" />
     <PackageReference Include="SixLabors.ImageSharp" />
     <PackageReference Include="TerraFX.Interop.Windows" PrivateAssets="compile" />
+
+    <!-- Needed to pin transitive dependency versions. -->
+    <PackageReference Include="System.Reflection.Metadata" />
+
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />

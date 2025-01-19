@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -11,7 +10,6 @@ using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Player;
 using Robust.Shared.Toolshed;
-using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Utility;
 
 namespace Robust.Server.Console
@@ -162,8 +160,8 @@ namespace Robust.Server.Console
         {
             var message = new MsgConCmdReg();
 
-            var toolshedCommands = _toolshed.DefaultEnvironment.AllCommands().ToArray();
-            message.Commands = new List<MsgConCmdReg.Command>(AvailableCommands.Count + toolshedCommands.Length);
+            var toolshedCommands = _toolshed.DefaultEnvironment.AllCommands();
+            message.Commands = new List<MsgConCmdReg.Command>(AvailableCommands.Count + toolshedCommands.Count);
             var commands = new HashSet<string>();
 
             foreach (var command in AvailableCommands.Values)
@@ -240,20 +238,15 @@ namespace Robust.Server.Console
 
             if ((result == null) || message.Args.Length <= 1)
             {
-                var parser = new ParserContext(message.ArgString, _toolshed);
-                CommandRun.TryParse(true, parser, null, null, false, out _, out var completions, out _);
-                if (completions == null)
-                {
+                var shedRes = _toolshed.GetCompletions(shell, message.ArgString);
+                if (shedRes == null)
                     goto done;
-                }
-                var (shedRes, _) = await completions.Value;
 
                 IEnumerable<CompletionOption> options = result?.Options ?? Array.Empty<CompletionOption>();
 
-                if (shedRes != null)
-                    options = options.Concat(shedRes.Options);
+                options = options.Concat(shedRes.Options);
 
-                var hints = result?.Hint ?? shedRes?.Hint;
+                var hints = result?.Hint ?? shedRes.Hint;
 
                 result = new CompletionResult(options.ToArray(), hints);
             }

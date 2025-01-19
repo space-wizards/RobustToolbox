@@ -44,6 +44,11 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     {
         base.Initialize();
 
+        EntityManager.ComponentFactory.RegisterNetworkedFields<UserInterfaceComponent>(
+            nameof(UserInterfaceComponent.Actors),
+            nameof(UserInterfaceComponent.Interfaces),
+            nameof(UserInterfaceComponent.States));
+
         _ignoreUIRangeQuery = GetEntityQuery<IgnoreUIRangeComponent>();
         _xformQuery = GetEntityQuery<TransformComponent>();
         UIQuery = GetEntityQuery<UserInterfaceComponent>();
@@ -204,7 +209,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         if (actors.Count == 0)
             ent.Comp.Actors.Remove(key);
 
-        Dirty(ent);
+        DirtyField(ent, nameof(UserInterfaceComponent.Actors));
 
         // If the actor is also deleting then don't worry about updating what they have open.
         if (!TerminatingOrDeleted(actor)
@@ -256,7 +261,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         // Let state handling open the UI clientside.
         actorComp.OpenInterfaces.GetOrNew(ent.Owner).Add(key);
         ent.Comp.Actors.GetOrNew(key).Add(actor);
-        Dirty(ent);
+        DirtyField(ent, nameof(UserInterfaceComponent.Actors));
 
         var ev = new BoundUIOpenedEvent(key, ent.Owner, actor);
         RaiseLocalEvent(ent.Owner, ev);
@@ -275,6 +280,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             if (ent.Comp.States.TryGetValue(key, out var state))
             {
                 bui.UpdateState(state);
+                bui.Update();
             }
         }
     }
@@ -295,25 +301,58 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             DebugTools.Assert(!ent.Comp.Actors.ContainsKey(key));
         }
 
-        DebugTools.AssertEqual(ent.Comp.ClientOpenInterfaces.Count, 0);
+        DebugTools.Assert(ent.Comp.ClientOpenInterfaces.Values.All(x => _queuedCloses.Contains(x)));
     }
 
     private void OnUserInterfaceGetState(Entity<UserInterfaceComponent> ent, ref ComponentGetState args)
     {
-        // TODO delta states.
-        // I.e., don't resend the whole BUI state just because a new user opened it.
+        if (ent.Comp.LastFieldUpdate >= args.FromTick)
+        {
+            var fields = EntityManager.GetModifiedFields(ent.Comp, args.FromTick);
+
+            switch (fields)
+            {
+                case 1 << 0:
+                {
+                    var state = new UserInterfaceActorsDeltaState();
+                    AddActors(ent, state.Actors, ref args);
+
+                    args.State = state;
+                    return;
+                }
+                case 1 << 2:
+                {
+                    var states = ent.Comp.States;
+
+                    // TODO Game State
+                    // Force the client to serialize & de-serialize implicitly generated component states.
+                    if (_netManager.IsClient)
+                        states = new(states);
+
+                    args.State = new UserInterfaceStatesDeltaState {States = states};
+                    return;
+                }
+            }
+        }
 
         var actors = new Dictionary<Enum, List<NetEntity>>();
+        var dataCopy = new Dictionary<Enum, InterfaceData>(ent.Comp.Interfaces.Count);
 
-        var dataCopy = new Dictionary<Enum, InterfaceData>();
-
+        // TODO Game State
+        // Force the client to serialize & de-serialize implicitly generated component states.
         foreach (var (weh, a) in ent.Comp.Interfaces)
         {
             dataCopy[weh] = new InterfaceData(a);
         }
 
-        args.State = new UserInterfaceComponent.UserInterfaceComponentState(actors, ent.Comp.States, dataCopy);
+        args.State = new UserInterfaceComponentState(actors, new(ent.Comp.States), dataCopy);
 
+        // Ensure that only the player that currently has the UI open gets to know what they have it open.
+        AddActors(ent, actors, ref args);
+    }
+
+    private void AddActors(Entity<UserInterfaceComponent> ent, Dictionary<Enum, List<NetEntity>> actors, ref ComponentGetState args)
+    {
         // Ensure that only the player that currently has the UI open gets to know what they have it open.
         if (args.ReplayState)
         {
@@ -335,106 +374,140 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
     private void OnUserInterfaceHandleState(Entity<UserInterfaceComponent> ent, ref ComponentHandleState args)
     {
-        if (args.Current is not UserInterfaceComponent.UserInterfaceComponentState state)
+        Dictionary<Enum, List<NetEntity>>? stateActors = null;
+        Dictionary<Enum, InterfaceData>? stateData = null;
+        Dictionary<Enum, BoundUserInterfaceState>? stateStates = null;
+
+        if (args.Current is UserInterfaceComponentState state)
+        {
+            stateActors = state.Actors;
+            stateData = state.Data;
+            stateStates = state.States;
+        }
+        else if (args.Current is UserInterfaceActorsDeltaState actorDelta)
+        {
+            stateActors = actorDelta.Actors;
+        }
+        else if (args.Current is UserInterfaceStatesDeltaState stateDelta)
+        {
+            stateStates = stateDelta.States;
+        }
+        else
+        {
             return;
-
-        ent.Comp.Interfaces.Clear();
-
-        foreach (var data in state.Data)
-        {
-            ent.Comp.Interfaces[data.Key] = new(data.Value);
         }
 
-        foreach (var key in ent.Comp.Actors.Keys)
+        // Interfaces
+        if (stateData != null)
         {
-            if (!state.Actors.ContainsKey(key))
-                CloseUi(ent!, key);
-        }
+            ent.Comp.Interfaces.Clear();
 
-        var toRemoveActors = new ValueList<EntityUid>();
-        var newSet = new HashSet<EntityUid>();
-        foreach (var (key, stateActors) in state.Actors)
-        {
-            var actors = ent.Comp.Actors.GetOrNew(key);
-
-            newSet.Clear();
-            foreach (var netEntity in stateActors)
+            foreach (var data in stateData)
             {
-                var uid = EnsureEntity<UserInterfaceComponent>(netEntity, ent.Owner);
-                if (uid.IsValid())
-                    newSet.Add(uid);
+                ent.Comp.Interfaces[data.Key] = new(data.Value);
             }
-
-            foreach (var actor in newSet)
-            {
-                if (!actors.Contains(actor))
-                    OpenUiInternal(ent!, key,  actor);
-            }
-
-            foreach (var actor in actors)
-            {
-                if (!newSet.Contains(actor))
-                    toRemoveActors.Add(actor);
-            }
-
-            foreach (var actor in toRemoveActors)
-            {
-                CloseUiInternal(ent!, key, actor);
-            }
-        }
-
-        foreach (var key in ent.Comp.States.Keys)
-        {
-            if (!state.States.ContainsKey(key))
-                ent.Comp.States.Remove(key);
         }
 
         var attachedEnt = Player.LocalEntity;
-        var clientBuis = new ValueList<Enum>(ent.Comp.ClientOpenInterfaces.Keys);
 
-        // Check if the UI is open by us, otherwise dispose of it.
-        foreach (var key in clientBuis)
+        // Actors
+        if (stateActors != null)
         {
-            if (ent.Comp.Actors.TryGetValue(key, out var actors) &&
-                (attachedEnt == null || actors.Contains(attachedEnt.Value)))
+            foreach (var key in ent.Comp.Actors.Keys)
             {
-                continue;
+                if (!stateActors.ContainsKey(key))
+                    CloseUi(ent!, key);
             }
 
-            var bui = ent.Comp.ClientOpenInterfaces[key];
-
-            if (bui.DeferredClose)
-                _queuedCloses.Add(bui);
-            else
+            var toRemoveActors = new ValueList<EntityUid>();
+            var newSet = new HashSet<EntityUid>();
+            foreach (var (key, acts) in stateActors)
             {
-                ent.Comp.ClientOpenInterfaces.Remove(key);
-                bui.Dispose();
+                var actors = ent.Comp.Actors.GetOrNew(key);
+
+                newSet.Clear();
+                foreach (var netEntity in acts)
+                {
+                    var uid = EnsureEntity<UserInterfaceComponent>(netEntity, ent.Owner);
+                    if (uid.IsValid())
+                        newSet.Add(uid);
+                }
+
+                foreach (var actor in newSet)
+                {
+                    if (!actors.Contains(actor))
+                        OpenUiInternal(ent!, key,  actor);
+                }
+
+                foreach (var actor in actors)
+                {
+                    if (!newSet.Contains(actor))
+                        toRemoveActors.Add(actor);
+                }
+
+                foreach (var actor in toRemoveActors)
+                {
+                    CloseUiInternal(ent!, key, actor);
+                }
+            }
+
+            var clientBuis = new ValueList<Enum>(ent.Comp.ClientOpenInterfaces.Keys);
+
+            // Check if the UI is open by us, otherwise dispose of it.
+            foreach (var key in clientBuis)
+            {
+                if (ent.Comp.Actors.TryGetValue(key, out var actors) &&
+                    (attachedEnt == null || actors.Contains(attachedEnt.Value)))
+                {
+                    continue;
+                }
+
+                var bui = ent.Comp.ClientOpenInterfaces[key];
+
+                if (bui.DeferredClose)
+                    _queuedCloses.Add(bui);
+                else
+                {
+                    ent.Comp.ClientOpenInterfaces.Remove(key);
+                    bui.Dispose();
+                }
             }
         }
 
-        // update any states we have open
-        foreach (var (key, buiState) in state.States)
+        // States
+        if (stateStates != null)
         {
-            if (ent.Comp.States.TryGetValue(key, out var existing) &&
-                existing.Equals(buiState))
+            foreach (var key in ent.Comp.States.Keys)
             {
-                continue;
+                if (!stateStates.ContainsKey(key))
+                    ent.Comp.States.Remove(key);
             }
 
-            ent.Comp.States[key] = buiState;
+            // update any states we have open
+            foreach (var (key, buiState) in stateStates)
+            {
+                if (ent.Comp.States.TryGetValue(key, out var existing) &&
+                    existing.Equals(buiState))
+                {
+                    continue;
+                }
 
-            if (!ent.Comp.ClientOpenInterfaces.TryGetValue(key, out var cBui))
-                continue;
+                ent.Comp.States[key] = buiState;
 
-            cBui.State = buiState;
-            cBui.UpdateState(buiState);
+                if (!ent.Comp.ClientOpenInterfaces.TryGetValue(key, out var cBui))
+                    continue;
+
+                cBui.State = buiState;
+                cBui.UpdateState(buiState);
+                cBui.Update();
+            }
         }
 
         // If UI not open then open it
         // If we get the first state for an ent coming in then don't open BUIs yet, just defer it until later.
         var open = ent.Comp.LifeStage > ComponentLifeStage.Added;
 
-        if (attachedEnt != null)
+        if (attachedEnt != null && stateActors != null)
         {
             foreach (var (key, value) in ent.Comp.Interfaces)
             {
@@ -490,6 +563,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         {
             boundUserInterface.State = buiState;
             boundUserInterface.UpdateState(buiState);
+            boundUserInterface.Update();
         }
 #if EXCEPTION_TOLERANCE
         }
@@ -669,7 +743,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             if (!entity.Comp.States.Remove(key))
                 return;
 
-            Dirty(entity);
+            DirtyField(entity, nameof(UserInterfaceComponent.States));
         }
         // Non-null state, check if it matches existing.
         else
@@ -682,7 +756,14 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             stateRef = state;
         }
 
-        Dirty(entity);
+        // Predict the change on client
+        if (state != null && _netManager.IsClient && entity.Comp.ClientOpenInterfaces.TryGetValue(key, out var bui))
+        {
+            bui.UpdateState(state);
+            bui.Update();
+        }
+
+        DirtyField(entity, nameof(UserInterfaceComponent.States));
     }
 
     /// <summary>
@@ -1024,7 +1105,19 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             ent.Comp = AddComp<UserInterfaceComponent>(ent);
 
         ent.Comp.Interfaces[key] = data;
-        Dirty(ent, ent.Comp);
+        DirtyField(ent, nameof(UserInterfaceComponent.Interfaces));
+    }
+
+    public bool TryGetUiState<T>(Entity<UserInterfaceComponent?> ent, Enum key, [NotNullWhen(true)] out T? state) where T : BoundUserInterfaceState
+    {
+        if (!Resolve(ent, ref ent.Comp, false) || !ent.Comp.States.TryGetValue(key, out var stateComp))
+        {
+            state = null;
+            return false;
+        }
+
+        state = (T)stateComp;
+        return true;
     }
 
     /// <summary>
@@ -1064,8 +1157,8 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     private record struct ActorRangeCheckJob() : IParallelRobustJob
     {
-        public EntityQuery<TransformComponent> XformQuery;
-        public SharedUserInterfaceSystem System;
+        public required EntityQuery<TransformComponent> XformQuery;
+        public required SharedUserInterfaceSystem System;
         public readonly List<(EntityUid Ui, Enum Key, InterfaceData Data, EntityUid Actor, bool Result)> ActorRanges = new();
 
         public void Execute(int index)

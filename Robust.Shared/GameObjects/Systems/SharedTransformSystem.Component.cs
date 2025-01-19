@@ -719,8 +719,7 @@ public abstract partial class SharedTransformSystem
             component.LocalRotation,
             parent,
             component.NoLocalRotation,
-            component.Anchored,
-            component.GridTraversal);
+            component.Anchored);
     }
 
     internal void OnHandleState(EntityUid uid, TransformComponent xform, ref ComponentHandleState args)

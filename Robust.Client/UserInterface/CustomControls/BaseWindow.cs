@@ -102,27 +102,23 @@ namespace Robust.Client.UserInterface.CustomControls
             {
                 var cursor = CursorShape.Arrow;
                 var previewDragMode = GetDragModeFor(args.RelativePosition);
-                previewDragMode &= ~DragMode.Move;
                 switch (previewDragMode)
                 {
-                    case DragMode.Top:
-                    case DragMode.Bottom:
-                        cursor = CursorShape.VResize;
+                    case var _ when (previewDragMode & (DragMode.Bottom | DragMode.Left)) == (DragMode.Bottom | DragMode.Left):
+                    case var _ when (previewDragMode & (DragMode.Top | DragMode.Right)) == (DragMode.Top | DragMode.Right):
+                        cursor = CursorShape.Crosshair;
                         break;
-
-                    case DragMode.Left:
-                    case DragMode.Right:
+                    case var _ when (previewDragMode & (DragMode.Bottom | DragMode.Right)) == (DragMode.Bottom | DragMode.Right):
+                    case var _ when (previewDragMode & (DragMode.Top | DragMode.Left)) == (DragMode.Top | DragMode.Left):
+                        cursor = CursorShape.Crosshair;
+                        break;
+                    case var _ when (previewDragMode & DragMode.Left) != 0:
+                    case var _ when (previewDragMode & DragMode.Right) != 0:
                         cursor = CursorShape.HResize;
                         break;
-
-                    case DragMode.Bottom | DragMode.Left:
-                    case DragMode.Top | DragMode.Right:
-                        cursor = CursorShape.Crosshair;
-                        break;
-
-                    case DragMode.Bottom | DragMode.Right:
-                    case DragMode.Top | DragMode.Left:
-                        cursor = CursorShape.Crosshair;
+                    case var _ when (previewDragMode & DragMode.Top) != 0:
+                    case var _ when (previewDragMode & DragMode.Bottom) != 0:
+                        cursor = CursorShape.VResize;
                         break;
                 }
 

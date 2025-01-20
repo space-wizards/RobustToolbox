@@ -40,10 +40,9 @@ internal sealed class OverlayManager : IOverlayManagerInternal, IPostInjectInit
 
     public bool AddOverlay(Overlay overlay)
     {
-        if (_overlays.ContainsKey(overlay.GetType()))
+        if (!_overlays.TryAdd(overlay.GetType(), overlay))
             return false;
 
-        _overlays.Add(overlay.GetType(), overlay);
         Sort();
         return true;
     }
@@ -68,7 +67,7 @@ internal sealed class OverlayManager : IOverlayManagerInternal, IPostInjectInit
 
     public bool RemoveOverlay(Overlay overlay)
     {
-        return _overlays.Remove(overlay.GetType());
+        return RemoveOverlay(overlay.GetType());
     }
 
     public bool TryGetOverlay(Type overlayClass, [NotNullWhen(true)] out Overlay? overlay)

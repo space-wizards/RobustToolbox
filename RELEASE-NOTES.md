@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed one of the `IOverlayManager.RemoveOverlay` overrides not fully removing the overlay.
 
 ### Other
 

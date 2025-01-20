@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Maths;
 using Robust.Shared.Toolshed.Errors;
+using Robust.Shared.Toolshed.TypeParsers.Math;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.Syntax;
@@ -79,13 +80,13 @@ public sealed class CommandRun
     {
         expr = null;
         var cmds = new List<(ParsedCommand, Vector2i)>();
-        var start = ctx.Index;
         ctx.ConsumeWhitespace();
         DebugTools.AssertNull(ctx.Error);
         DebugTools.AssertNull(ctx.Completions);
         if (pipedType == typeof(void))
             throw new ArgumentException($"Piped type cannot be void");
 
+        var start = ctx.Index;
         if (ctx.PeekBlockTerminator())
         {
             // Trying to parse an empty block as a command run? I.e. " { } "
@@ -94,6 +95,7 @@ public sealed class CommandRun
             return false;
         }
 
+        bool commandExpected;
         while (true)
         {
             if (!ParsedCommand.TryParse(ctx, pipedType, out var cmd))
@@ -107,27 +109,55 @@ public sealed class CommandRun
             cmds.Add((cmd, (start, ctx.Index)));
             ctx.ConsumeWhitespace();
 
-            if (ctx.EatCommandTerminators())
-            {
-                ctx.ConsumeWhitespace();
-                pipedType = null;
-            }
+            ctx.EatCommandTerminators(ref pipedType, out commandExpected);
 
             // If the command run encounters a block terminator we exit out.
             // The parser that pushed the block terminator is what should actually eat & pop it, so that it can
             // return appropriate errors if the block was not terminated.
             if (ctx.PeekBlockTerminator())
-                break;
+            {
+                if (!commandExpected)
+                    break;
+
+                // Lets enforce that poeple don't end command blocks with a dangling explicit pipe.
+                // I.e., force people to use `{ i 2 }` instead of `{ i 2 | }`.
+                if (!ctx.GenerateCompletions)
+                {
+                    ctx.Error = new UnexpectedCloseBrace();
+                    ctx.Error.Contextualize(ctx.Input, (ctx.Index, ctx.Index + 1));
+                }
+                return false;
+            }
 
             if (ctx.OutOfInput)
-                break;
+            {
+                // If the last command was terminated by an explicit pipe symbol we require that there be a follow-up
+                // command
+                if (!commandExpected)
+                    break;
+
+                if (ctx.GenerateCompletions)
+                {
+                    // TODO TOOLSHED COMPLETIONS improve this
+                    // Currently completions are only shown if a command ends in a space. I.e. "| " instead of "|".
+                    // Ideally the completions should still be shown, and it should know to auto-insert a leading space.
+                    // AFAIK this requires updating the client-side code like FilterCompletions(), as well as somehow
+                    // communicating this to the client, maybe by adding a new bit to the CompletionOptionFlags, or
+                    // adding some similar flag field to the whole whole completion collection?
+                    ParsedCommand.TryParse(ctx, pipedType, out _);
+                }
+                else
+                    ctx.Error = new OutOfInputError();
+
+                return false;
+            }
 
             start = ctx.Index;
 
             if (pipedType != typeof(void))
                 continue;
 
-            // The previously parsed command does not generate any output that can be piped/chained into another
+            // The  previously parsed command does not generate any output that can be piped/chained into another
             // command. This can happen if someone tries to provide more arguments than a command accepts.
             // e.g., " i 5 5". In this case, the parsing fails and should make it clear that no more input was expected.
             // Multiple unrelated commands on a single line are still supported via the ';' terminator.
@@ -147,8 +177,7 @@ public sealed class CommandRun
             return false;
         }
 
-        // Return the last type, even if the command ended with a ';'
-        var returnType = cmds[^1].Item1.ReturnType;
+        var returnType = pipedType != null ? cmds[^1].Item1.ReturnType : typeof(void);
         if (targetOutput != null && !returnType.IsAssignableTo(targetOutput))
         {
             ctx.Error = new WrongCommandReturn(targetOutput, returnType);
@@ -333,6 +362,6 @@ public sealed class EndOfCommandError : ConError
 {
     public override FormattedMessage DescribeInner()
     {
-        return FormattedMessage.FromUnformatted("Expected an end of command (;)");
+        return FormattedMessage.FromUnformatted("Expected a command or block terminator (';' or '}')");
     }
 }

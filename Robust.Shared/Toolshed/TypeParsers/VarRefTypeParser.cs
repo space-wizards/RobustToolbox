@@ -39,7 +39,7 @@ internal sealed class VarRefTypeParser<T> : TypeParser<VarRef<T>>
         return true;
     }
 
-    public override CompletionResult TryAutocomplete(ParserContext parserContext, string? argName)
+    public override CompletionResult TryAutocomplete(ParserContext parserContext, CommandArgument? arg)
     {
         return parserContext.VariableParser.GenerateCompletions<T>();
     }
@@ -67,7 +67,7 @@ public sealed class WriteableVarRefParser<T> : TypeParser<WriteableVarRef<T>>
         return false;
     }
 
-    public override CompletionResult TryAutocomplete(ParserContext parserContext, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext parserContext, CommandArgument? arg)
     {
         return parserContext.VariableParser.GenerateCompletions<T>(false);
     }

@@ -13,11 +13,11 @@ namespace Robust.Shared.Toolshed.TypeParsers;
 /// Base interface used by both custom and default type parsers.
 /// </summary>
 [UsedImplicitly(ImplicitUseTargetFlags.WithInheritors)]
-internal interface ITypeParser
+public interface ITypeParser
 {
     public Type Parses { get; }
     bool TryParse(ParserContext ctx, [NotNullWhen(true)] out object? result);
-    CompletionResult? TryAutocomplete(ParserContext ctx, string? argName);
+    CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg);
 
     /// <summary>
     /// If true, then before attempting to use this parser directly, toolshed will instead first try to parse this as a
@@ -26,11 +26,18 @@ internal interface ITypeParser
     /// or variables
     /// </summary>
     public bool EnableValueRef { get; }
+
+    /// <summary>
+    /// Whether or not the type argument should appear in the method's signature. This mainly exists for type-argument
+    /// parsers that infer a type argument based on a regular arguments, like <see cref="VarTypeParser"/>.
+    /// </summary>
+    public virtual bool ShowTypeArgSignature => true;
 }
 
 public abstract class BaseParser<T> : ITypeParser, IPostInjectInit where T : notnull
 {
     public virtual bool EnableValueRef => true;
+    public virtual bool ShowTypeArgSignature => true;
 
     // TODO TOOLSHED Localization
     // Ensure that all of the type parser auto-completions actually use localized strings
@@ -46,7 +53,13 @@ public abstract class BaseParser<T> : ITypeParser, IPostInjectInit where T : not
     }
 
     public abstract bool TryParse(ParserContext ctx, [NotNullWhen(true)] out T? result);
-    public abstract CompletionResult? TryAutocomplete(ParserContext ctx, string? argName);
+
+    public abstract CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg);
+
+    protected string GetArgHint(CommandArgument? arg)
+    {
+        return ToolshedCommand.GetArgHint(arg, typeof(T));
+    }
 
     public Type Parses => typeof(T);
 

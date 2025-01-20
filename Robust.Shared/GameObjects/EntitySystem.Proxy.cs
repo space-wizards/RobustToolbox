@@ -171,6 +171,13 @@ public partial class EntitySystem
         EntityManager.DirtyField(uid, component, fieldName, meta);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void DirtyFields<T>(EntityUid uid, T comp, MetaDataComponent? meta, params ReadOnlySpan<string> fields)
+        where T : IComponentDelta
+    {
+        EntityManager.DirtyFields(uid, comp, meta);
+    }
+
     /// <summary>
     ///     Marks a component as dirty. This also implicitly dirties the entity this component belongs to.
     /// </summary>

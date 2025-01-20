@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
@@ -439,6 +440,12 @@ namespace Robust.Shared.Serialization.Manager
             // ReSharper disable once CoVariantArrayConversion
             return (TNode) PushComposition(type, parents, child, context);
         }
+
+        /// <summary>
+        /// Simple <see cref="MappingDataNode"/> inheritance pusher clones data and overrides a parent's values with
+        /// the child's.
+        /// </summary>
+        MappingDataNode CombineMappings(MappingDataNode child, MappingDataNode parent);
 
         #endregion
 

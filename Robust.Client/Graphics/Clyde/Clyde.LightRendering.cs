@@ -16,7 +16,9 @@ using OGLTextureWrapMode = OpenToolkit.Graphics.OpenGL.TextureWrapMode;
 using TKStencilOp = OpenToolkit.Graphics.OpenGL4.StencilOp;
 using Robust.Shared.Physics;
 using Robust.Client.ComponentTrees;
+using Robust.Shared.Enums;
 using Robust.Shared.Graphics;
+using Robust.Shared.Prototypes;
 using static Robust.Shared.GameObjects.OccluderComponent;
 using Robust.Shared.Utility;
 using TextureWrapMode = Robust.Shared.Graphics.TextureWrapMode;
@@ -402,12 +404,42 @@ namespace Robust.Client.Graphics.Clyde
             CheckGlError();
 
             BindRenderTargetImmediate(RtToLoaded(viewport.LightRenderTarget));
+            DebugTools.Assert(_currentBoundRenderTarget.TextureHandle.Equals(viewport.LightRenderTarget.Texture.TextureId));
             CheckGlError();
             GLClearColor(_entityManager.GetComponentOrNull<MapLightComponent>(mapUid)?.AmbientLightColor ?? MapLightComponent.DefaultColor);
             GL.ClearStencil(0xFF);
             GL.StencilMask(0xFF);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.StencilBufferBit);
             CheckGlError();
+
+            var oldTarget = _currentRenderTarget;
+            var oldProj = _currentMatrixProj;
+            var oldShader = _queuedShaderInstance;
+            var oldModel = _currentMatrixModel;
+            var oldScissor = _currentScissorState;
+            var oldScissoring = _isScissoring;
+            var state = PushRenderStateFull();
+
+            RenderOverlays(viewport, OverlaySpace.BeforeLighting, worldAABB, worldBounds);
+
+            if (_lightManager.BlurFactor != 0f && viewport.Eye != null)
+                BlurLights(viewport, viewport.LightRenderTarget, viewport.Eye, _lightManager.BlurFactor);
+
+            // Batching doesn't restore stencil state so we do it here.
+            // Yes I spent 8 hours across 2 days just to track down this as the problem.
+            GL.Enable(EnableCap.StencilTest);
+            GL.ClearStencil(0xFF);
+            GL.StencilMask(0xFF);
+            GL.Clear(ClearBufferMask.StencilBufferBit);
+            PopRenderStateFull(state);
+            _isStencilling = true;
+            DebugTools.Assert(oldScissoring.Equals(_isScissoring));
+            DebugTools.Assert(oldScissor.Equals(_currentScissorState));
+            DebugTools.Assert(oldModel.Equals(_currentMatrixModel));
+            DebugTools.Assert(oldShader.Equals(_queuedShaderInstance));
+            DebugTools.Assert(oldProj.Equals(_currentMatrixProj));
+            DebugTools.Assert(oldTarget.Equals(_currentRenderTarget));
+            DebugTools.Assert(_currentBoundRenderTarget.TextureHandle.Equals(viewport.LightRenderTarget.Texture.TextureId));
 
             ApplyLightingFovToBuffer(viewport, eye);
 
@@ -515,7 +547,7 @@ namespace Robust.Client.Graphics.Clyde
             CheckGlError();
 
             if (_cfg.GetCVar(CVars.LightBlur))
-                BlurLights(viewport, eye);
+                BlurLights(viewport, viewport.LightRenderTarget, eye);
 
             using (_prof.Group("BlurOntoWalls"))
             {
@@ -531,9 +563,8 @@ namespace Robust.Client.Graphics.Clyde
             GL.Viewport(0, 0, viewport.Size.X, viewport.Size.Y);
             CheckGlError();
 
-            Array.Clear(_lightsToRenderList, 0, count);
-
             _lightingReady = true;
+            Array.Clear(_lightsToRenderList, 0, count);
         }
 
         private static bool LightQuery(ref (
@@ -643,10 +674,14 @@ namespace Robust.Client.Graphics.Clyde
             return (state.count, expandedBounds);
         }
 
-        private void BlurLights(Viewport viewport, IEye eye)
+        private void BlurLights(IClydeViewport viewport, IRenderTarget target, IEye eye, float multiplier = 14f)
         {
+            if (target is not RenderTexture rTexture || viewport is not Viewport rViewport)
+                return;
+
             using var _ = DebugGroup(nameof(BlurLights));
 
+            var state = PushRenderStateFull();
             GL.Disable(EnableCap.Blend);
             CheckGlError();
             CalcScreenMatrices(viewport.Size, out var proj, out var view);
@@ -655,9 +690,9 @@ namespace Robust.Client.Graphics.Clyde
             var shader = _loadedShaders[_lightBlurShaderHandle].Program;
             shader.Use();
 
-            SetupGlobalUniformsImmediate(shader, viewport.LightRenderTarget.Texture);
+            SetupGlobalUniformsImmediate(shader, rTexture.Texture);
 
-            var size = viewport.LightRenderTarget.Size;
+            var size = target.Size;
             shader.SetUniformMaybe("size", (Vector2)size);
             shader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
 
@@ -667,14 +702,13 @@ namespace Robust.Client.Graphics.Clyde
             // Initially we're pulling from the light render target.
             // So we set it out of the loop so
             // _wallBleedIntermediateRenderTarget2 gets bound at the end of the loop body.
-            SetTexture(TextureUnit.Texture0, viewport.LightRenderTarget.Texture);
+            SetTexture(TextureUnit.Texture0, rTexture.Texture);
 
             // Have to scale the blurring radius based on viewport size and camera zoom.
-            const float refCameraHeight = 14;
             var facBase = _cfg.GetCVar(CVars.LightBlurFactor);
             var cameraSize = eye.Zoom.Y * viewport.Size.Y * (1 / viewport.RenderScale.Y) / EyeManager.PixelsPerMeter;
             // 7e-3f is just a magic factor that makes it look ok.
-            var factor = facBase * (refCameraHeight / cameraSize);
+            var factor = facBase * (multiplier / cameraSize);
 
             // Multi-iteration gaussian blur.
             for (var i = 3; i > 0; i--)
@@ -683,23 +717,24 @@ namespace Robust.Client.Graphics.Clyde
                 // Set factor.
                 shader.SetUniformMaybe("radius", scale);
 
-                BindRenderTargetFull(viewport.LightBlurTarget);
+                BindRenderTargetImmediate(RtToLoaded(rViewport.LightBlurTarget));
 
                 // Blur horizontally to _wallBleedIntermediateRenderTarget1.
                 shader.SetUniformMaybe("direction", Vector2.UnitX);
                 _drawQuad(Vector2.Zero, viewport.Size, Matrix3x2.Identity, shader);
 
-                SetTexture(TextureUnit.Texture0, viewport.LightBlurTarget.Texture);
+                SetTexture(TextureUnit.Texture0, rViewport.LightBlurTarget.Texture);
 
-                BindRenderTargetFull(viewport.LightRenderTarget);
+                BindRenderTargetImmediate(RtToLoaded(rTexture));
 
                 // Blur vertically to _wallBleedIntermediateRenderTarget2.
                 shader.SetUniformMaybe("direction", Vector2.UnitY);
                 _drawQuad(Vector2.Zero, viewport.Size, Matrix3x2.Identity, shader);
 
-                SetTexture(TextureUnit.Texture0, viewport.LightRenderTarget.Texture);
+                SetTexture(TextureUnit.Texture0, rTexture.Texture);
             }
 
+            PopRenderStateFull(state);
             GL.Enable(EnableCap.Blend);
             CheckGlError();
             // We didn't trample over the old _currentMatrices so just roll it back.
@@ -1135,22 +1170,20 @@ namespace Robust.Client.Graphics.Clyde
 
             var lightMapSize = GetLightMapSize(viewport.Size);
             var lightMapSizeQuart = GetLightMapSize(viewport.Size, true);
-            var lightMapColorFormat = _hasGLFloatFramebuffers
-                ? RenderTargetColorFormat.R11FG11FB10F
-                : RenderTargetColorFormat.Rgba8;
-            var lightMapSampleParameters = new TextureSampleParameters { Filter = true };
 
             viewport.LightRenderTarget?.Dispose();
             viewport.WallMaskRenderTarget?.Dispose();
             viewport.WallBleedIntermediateRenderTarget1?.Dispose();
             viewport.WallBleedIntermediateRenderTarget2?.Dispose();
+            var lightMapColorFormat = _hasGLFloatFramebuffers
+                ? RenderTargetColorFormat.R11FG11FB10F
+                : RenderTargetColorFormat.Rgba8;
+            var lightMapSampleParameters = new TextureSampleParameters { Filter = true };
 
             viewport.WallMaskRenderTarget = CreateRenderTarget(viewport.Size, RenderTargetColorFormat.R8,
                 name: $"{viewport.Name}-{nameof(viewport.WallMaskRenderTarget)}");
 
-            viewport.LightRenderTarget = CreateRenderTarget(lightMapSize,
-                new RenderTargetFormatParameters(lightMapColorFormat, hasDepthStencil: true),
-                lightMapSampleParameters,
+            viewport.LightRenderTarget = (RenderTexture) CreateLightRenderTarget(lightMapSize,
                 $"{viewport.Name}-{nameof(viewport.LightRenderTarget)}");
 
             viewport.LightBlurTarget = CreateRenderTarget(lightMapSize,
@@ -1158,11 +1191,13 @@ namespace Robust.Client.Graphics.Clyde
                 lightMapSampleParameters,
                 $"{viewport.Name}-{nameof(viewport.LightBlurTarget)}");
 
-            viewport.WallBleedIntermediateRenderTarget1 = CreateRenderTarget(lightMapSizeQuart, lightMapColorFormat,
+            viewport.WallBleedIntermediateRenderTarget1 = CreateRenderTarget(lightMapSizeQuart,
+                new RenderTargetFormatParameters(lightMapColorFormat),
                 lightMapSampleParameters,
                 $"{viewport.Name}-{nameof(viewport.WallBleedIntermediateRenderTarget1)}");
 
-            viewport.WallBleedIntermediateRenderTarget2 = CreateRenderTarget(lightMapSizeQuart, lightMapColorFormat,
+            viewport.WallBleedIntermediateRenderTarget2 = CreateRenderTarget(lightMapSizeQuart,
+                new RenderTargetFormatParameters(lightMapColorFormat),
                 lightMapSampleParameters,
                 $"{viewport.Name}-{nameof(viewport.WallBleedIntermediateRenderTarget2)}");
         }

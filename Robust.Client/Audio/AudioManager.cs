@@ -8,8 +8,8 @@ using Robust.Client.Audio.Sources;
 using Robust.Shared;
 using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
+using Robust.Shared.Graphics;
 using Robust.Shared.Log;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.Audio;
 
@@ -22,8 +22,6 @@ internal sealed partial class AudioManager : IAudioInternal
 
     private ALDevice _openALDevice;
     private ALContext _openALContext;
-
-    private readonly List<LoadedAudioSample> _audioSampleBuffers = new();
 
     private readonly Dictionary<int, WeakReference<BaseAudioSource>> _audioSources =
         new();
@@ -76,7 +74,8 @@ internal sealed partial class AudioManager : IAudioInternal
             if (_openALDevice == IntPtr.Zero)
             {
                 OpenALSawmill.Warning("Unable to open preferred audio device '{0}': {1}. Falling back default.",
-                    preferredDevice, ALC.GetError(ALDevice.Null));
+                    preferredDevice,
+                    ALC.GetError(ALDevice.Null));
 
                 _openALDevice = ALC.OpenDevice(null);
             }
@@ -129,7 +128,8 @@ internal sealed partial class AudioManager : IAudioInternal
             EFX.DeleteFilter(handles.filterHandle);
     }
 
-    private void _checkAlcError(ALDevice device,
+    private void _checkAlcError(
+        ALDevice device,
         [CallerMemberName] string callerMember = "",
         [CallerLineNumber] int callerLineNumber = -1)
     {
@@ -160,13 +160,30 @@ internal sealed partial class AudioManager : IAudioInternal
         }
     }
 
-    private sealed class LoadedAudioSample
+    internal sealed class LoadedAudioSample
     {
         public readonly int BufferHandle;
+        private int UsingsCount { set; get; }
 
         public LoadedAudioSample(int bufferHandle)
         {
             BufferHandle = bufferHandle;
+            UsingsCount = 0;
+        }
+
+        public void IncreaseUsings()
+        {
+            UsingsCount++;
+        }
+
+        public void DecreaseUsings()
+        {
+            UsingsCount--;
+        }
+
+        public bool IsSafeToDelete()
+        {
+            return UsingsCount <= 0;
         }
     }
 

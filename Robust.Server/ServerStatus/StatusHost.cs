@@ -336,6 +336,7 @@ namespace Robust.Server.ServerStatus
             {
                 RespondShared();
 
+                _context.Response.StatusCode = (int)code;
                 _context.Response.ContentType = "application/json";
 
                 await JsonSerializer.SerializeAsync(_context.Response.OutputStream, jsonData);

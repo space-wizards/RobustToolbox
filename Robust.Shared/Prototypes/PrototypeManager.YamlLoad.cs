@@ -209,10 +209,10 @@ public partial class PrototypeManager
 
         var kindData = _kinds[kind];
 
-        if (!overwrite && kindData.Results.ContainsKey(id))
+        if (!overwrite && kindData.RawResults.ContainsKey(id))
             throw new PrototypeLoadException($"Duplicate ID: '{id}' for kind '{kind}");
 
-        kindData.Results[id] = data;
+        kindData.RawResults[id] = data;
 
         if (kindData.Inheritance is { } inheritance)
         {
@@ -295,6 +295,7 @@ public partial class PrototypeManager
                 kindData.UnfrozenInstances ??= kindData.Instances.ToDictionary();
                 kindData.UnfrozenInstances.Remove(id);
                 kindData.Results.Remove(id);
+                kindData.RawResults.Remove(id);
                 modified.Add(kindData);
             }
         }

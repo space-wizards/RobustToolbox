@@ -42,7 +42,6 @@ public abstract class SharedPrototypeLoadManager : IGamePrototypeLoadManager
 
         var changed = new Dictionary<Type, HashSet<string>>();
         _prototypeManager.LoadString(data, true, changed);
-        _prototypeManager.ResolveResults();
         _prototypeManager.ReloadPrototypes(changed);
         _localizationManager.ReloadLocalizations();
 

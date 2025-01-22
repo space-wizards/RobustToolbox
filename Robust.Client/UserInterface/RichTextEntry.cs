@@ -204,33 +204,31 @@ namespace Robust.Client.UserInterface
                     font = defaultFont;
                 }
 
-                Vector2 background_color_begin = new();
-                if (!context.BackgroundColor.TryPeek(out var background_color))
-                {
-                    background_color = null;
-                }
+                Vector2 backgroundColorBegin = new();
+                if (!context.BackgroundColor.TryPeek(out var backgroundColor))
+                    backgroundColor = null;
 
                 foreach (var rune in text.EnumerateRunes())
                 {
                     if (lineBreakIndex < LineBreaks.Count &&
                         LineBreaks[lineBreakIndex] == globalBreakCounter)
                     {
-                        if (background_color is Color bg)
-                            handle.DrawLine(background_color_begin, baseLine, bg);
+                        if (backgroundColor is Color bg)
+                            handle.DrawLine(backgroundColorBegin, baseLine, bg);
                         baseLine = new Vector2(drawBox.Left, baseLine.Y + GetLineHeight(font, uiScale, lineHeightScale) + controlYAdvance);
-                        background_color_begin = new Vector2(drawBox.Left, baseLine.Y - GetLineHeight(font, uiScale, lineHeightScale));
+                        backgroundColorBegin = new Vector2(drawBox.Left, baseLine.Y - GetLineHeight(font, uiScale, lineHeightScale));
                         controlYAdvance = 0;
                         lineBreakIndex += 1;
                     }
 
-                    var advance = font.DrawChar(handle, rune, baseLine, uiScale, color, background_color);
+                    var advance = font.DrawChar(handle, rune, baseLine, uiScale, color, backgroundColor);
                     baseLine += new Vector2(advance, 0);
 
                     globalBreakCounter += 1;
                 }
 
-                if (background_color is Color bga)
-                    handle.DrawLine(background_color_begin, baseLine, bga);
+                if (backgroundColor is Color bgEnd)
+                    handle.DrawLine(backgroundColorBegin, baseLine, bgEnd);
 
                 if (_tagControls == null || !_tagControls.TryGetValue(nodeIndex, out var control))
                     continue;

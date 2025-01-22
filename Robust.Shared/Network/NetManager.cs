@@ -592,13 +592,6 @@ namespace Robust.Shared.Network
             if (ClientConnectState != ClientConnectionState.NotConnecting)
             {
                 _cancelConnectTokenSource?.Cancel();
-
-                // Clean up any pending net peers
-                foreach (var peer in _netPeers)
-                {
-                    peer.Peer.Shutdown(reason);
-                    _toCleanNetPeers.Add(peer.Peer);
-                }
             }
 
             // Then handle existing connection if any

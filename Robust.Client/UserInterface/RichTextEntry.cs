@@ -221,7 +221,7 @@ namespace Robust.Client.UserInterface
                         lineBreakIndex += 1;
                     }
 
-                    var advance = font.DrawChar(handle, rune, baseLine, uiScale, color, backgroundColor);
+                    var advance = font.DrawChar(handle, rune, baseLine, uiScale, color);
                     baseLine += new Vector2(advance, 0);
 
                     globalBreakCounter += 1;

@@ -109,13 +109,7 @@ namespace Robust.Client.Graphics
         public override int GetDescent(float scale) => Handle.GetDescent(scale);
         public override int GetLineHeight(float scale) => Handle.GetLineHeight(scale);
 
-        public override float DrawChar(
-            DrawingHandleBase handle,
-            Rune rune,
-            Vector2 baseline,
-            float scale,
-            Color color,
-            bool fallback = true)
+        public override float DrawChar(DrawingHandleBase handle, Rune rune, Vector2 baseline, float scale, Color color, bool fallback=true)
         {
             var metrics = Handle.GetCharMetrics(rune, scale);
             if (!metrics.HasValue)
@@ -137,7 +131,6 @@ namespace Robust.Client.Graphics
                 return metrics.Value.Advance;
             }
 
-            var start = baseline;
             baseline += new Vector2(metrics.Value.BearingX, -metrics.Value.BearingY);
             if(handle is DrawingHandleWorld worldhandle)
                 worldhandle.DrawTextureRect(texture, Box2.FromDimensions(baseline, texture.Size), color);
@@ -179,13 +172,7 @@ namespace Robust.Client.Graphics
         public override int GetLineHeight(float scale) => _main.GetLineHeight(scale);
 
         // DrawChar just proxies to the stack, or invokes _main's fallback.
-        public override float DrawChar(
-            DrawingHandleBase handle,
-            Rune rune,
-            Vector2 baseline,
-            float scale,
-            Color color,
-            bool fallback = true)
+        public override float DrawChar(DrawingHandleBase handle, Rune rune, Vector2 baseline, float scale, Color color, bool fallback=true)
         {
             foreach (var f in Stack)
             {
@@ -223,13 +210,7 @@ namespace Robust.Client.Graphics
         public override int GetDescent(float scale) => default;
         public override int GetLineHeight(float scale) => default;
 
-        public override float DrawChar(
-            DrawingHandleBase handle,
-            Rune rune,
-            Vector2 baseline,
-            float scale,
-            Color color,
-            bool fallback = true)
+        public override float DrawChar(DrawingHandleBase handle, Rune rune, Vector2 baseline, float scale, Color color, bool fallback=true)
         {
             // Nada, it's a dummy after all.
             return 0;

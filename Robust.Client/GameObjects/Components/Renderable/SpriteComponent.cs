@@ -1289,7 +1289,7 @@ namespace Robust.Client.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public bool NoRotation { get => _screenLock; set => _screenLock = value; }
 
-        internal void RenderInternal(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Vector2 worldPosition, Direction? overrideDirection)
+        internal void RenderInternal(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Vector2 worldPosition, Direction? overrideDirection, bool normal = false)
         {
             var angle = worldRotation + eyeRotation; // angle on-screen. Used to decide the direction of 4/8 directional RSIs
             angle = angle.Reduced().FlipPositive();  // Reduce the angles to fix math shenanigans
@@ -1324,16 +1324,16 @@ namespace Robust.Client.GameObjects
                     switch (layer.RenderingStrategy)
                     {
                         case LayerRenderingStrategy.NoRotation:
-                            layer.Render(drawingHandle, ref transformNoRot, angle, overrideDirection);
+                            layer.Render(drawingHandle, ref transformNoRot, angle, overrideDirection, normal: normal);
                             break;
                         case LayerRenderingStrategy.SnapToCardinals:
-                            layer.Render(drawingHandle, ref transformSnap, angle, overrideDirection);
+                            layer.Render(drawingHandle, ref transformSnap, angle, overrideDirection, normal: normal);
                             break;
                         case LayerRenderingStrategy.Default:
-                            layer.Render(drawingHandle, ref transformDefault, angle, overrideDirection);
+                            layer.Render(drawingHandle, ref transformDefault, angle, overrideDirection, normal: normal);
                             break;
                         case LayerRenderingStrategy.UseSpriteStrategy:
-                            layer.Render(drawingHandle, ref transformSprite, angle, overrideDirection);
+                            layer.Render(drawingHandle, ref transformSprite, angle, overrideDirection, normal: normal);
                             break;
                         default:
                             Logger.Error($"Tried to render a layer with unknown rendering stragegy: {layer.RenderingStrategy}");
@@ -1346,7 +1346,7 @@ namespace Robust.Client.GameObjects
             {
                 foreach (var layer in Layers)
                 {
-                    layer.Render(drawingHandle, ref transformSprite, angle, overrideDirection);
+                    layer.Render(drawingHandle, ref transformSprite, angle, overrideDirection, normal: normal);
                 }
             }
         }
@@ -2017,7 +2017,7 @@ namespace Robust.Client.GameObjects
             /// <summary>
             ///     Render a layer. This assumes that the input angle is between 0 and 2pi.
             /// </summary>
-            internal void Render(DrawingHandleWorld drawingHandle, ref Matrix3x2 spriteMatrix, Angle angle, Direction? overrideDirection)
+            internal void Render(DrawingHandleWorld drawingHandle, ref Matrix3x2 spriteMatrix, Angle angle, Direction? overrideDirection, bool normal = false)
             {
                 if (!Visible || Blank)
                     return;
@@ -2042,7 +2042,7 @@ namespace Robust.Client.GameObjects
                     var transformMatrix = Matrix3x2.Multiply(layerMatrix, spriteMatrix);
                     drawingHandle.SetTransform(in transformMatrix);
 
-                    RenderTexture(drawingHandle, texture);
+                    RenderTexture(drawingHandle, texture, normal: normal);
                 }
                 else
                 {
@@ -2072,7 +2072,7 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            private void RenderTexture(DrawingHandleWorld drawingHandle, Texture texture)
+            private void RenderTexture(DrawingHandleWorld drawingHandle, Texture texture, bool normal = false)
             {
                 if (Shader != null)
                     drawingHandle.UseShader(Shader);
@@ -2081,7 +2081,7 @@ namespace Robust.Client.GameObjects
                 var textureSize = texture.Size / (float)EyeManager.PixelsPerMeter;
                 var quad = Box2.FromDimensions(textureSize/-2, textureSize);
 
-                drawingHandle.DrawTextureRectRegion(texture, quad, layerColor);
+                drawingHandle.DrawTextureRectRegion(texture, quad, layerColor, normal: normal);
 
                 if (Shader != null)
                     drawingHandle.UseShader(null);

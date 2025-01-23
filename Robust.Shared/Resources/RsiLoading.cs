@@ -41,6 +41,7 @@ internal static class RsiLoading
         {
             var stateObject = manifestJson.States[stateI];
             var stateName = stateObject.Name;
+            var normalName = stateObject.Normal;
             int dirValue;
 
             if (stateObject.Directions is { } dirVal)
@@ -91,7 +92,7 @@ internal static class RsiLoading
                 }
             }
 
-            states[stateI] = new StateMetadata(stateName, dirValue, delays);
+            states[stateI] = new StateMetadata(stateName, normalName, dirValue, delays);
         }
 
         var textureParams = TextureLoadParameters.Default;
@@ -125,12 +126,14 @@ internal static class RsiLoading
     internal sealed class StateMetadata
     {
         public readonly string StateId;
+        public readonly string? NormalId;
         public readonly int DirCount;
         public readonly float[][] Delays;
 
-        public StateMetadata(string stateId, int dirCount, float[][] delays)
+        public StateMetadata(string stateId, string? normalId, int dirCount, float[][] delays)
         {
             StateId = stateId;
+            NormalId = normalId;
             DirCount = dirCount;
 
             Delays = delays;
@@ -148,7 +151,7 @@ internal static class RsiLoading
         bool MetaAtlas = true);
 
     [UsedImplicitly]
-    private sealed record StateJsonMetadata(string Name, int? Directions, float[][]? Delays);
+    private sealed record StateJsonMetadata(string Name, string? Normal, int? Directions, float[][]? Delays);
 
     [UsedImplicitly]
     private sealed record RsiJsonLoad(bool Srgb = true);

@@ -43,7 +43,7 @@ namespace Robust.Client.Graphics
         /// <param name="modulate">A color to multiply the texture by when shading.</param>
         /// <param name="subRegion">The four corners of the texture sub region in px.</param>
         public abstract void DrawTextureRectRegion(Texture texture, Box2 quad,
-            Color? modulate = null, UIBox2? subRegion = null);
+            Color? modulate = null, UIBox2? subRegion = null, bool normal = false);
 
         /// <summary>
         /// Draws a sprite to the world. The coordinate system is right handed.
@@ -56,7 +56,7 @@ namespace Robust.Client.Graphics
         /// <param name="modulate">A color to multiply the texture by when shading.</param>
         /// <param name="subRegion">The four corners of the texture sub region in px.</param>
         public abstract void DrawTextureRectRegion(Texture texture, in Box2Rotated quad,
-            Color? modulate = null, UIBox2? subRegion = null);
+            Color? modulate = null, UIBox2? subRegion = null, bool normal = false);
 
         private Box2 GetQuad(Texture texture, Vector2 position)
         {

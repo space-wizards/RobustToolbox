@@ -104,15 +104,14 @@ namespace Robust.Client.Graphics.Clyde
             /// </summary>
             internal static ClydeTexture ExtractTexture(Texture texture, in UIBox2? subRegion, out UIBox2 sr, bool normal = false)
             {
-                normal = false;
                 if (texture is AtlasTexture atlas)
                 {
                     texture = atlas.SourceTexture;
                     if (subRegion.HasValue)
                     {
                         var offset = atlas.SubRegion.TopLeft;
-                        if (normal)
-                            offset += Vector2.UnitX * (texture.Width >> 1);
+                        // if (normal)
+                        //     offset += Vector2.UnitX * atlas.SubRegion.Width;
                         sr = new UIBox2(
                             subRegion.Value.TopLeft + offset,
                             subRegion.Value.BottomRight + offset);
@@ -120,12 +119,16 @@ namespace Robust.Client.Graphics.Clyde
                     else
                     {
                         sr = atlas.SubRegion;
+                        // if (normal)
+                        // {
+                        //     var offset = Vector2.UnitX * (texture.Width >> 1);
+                        //     sr = new UIBox2(sr.TopLeft + offset, sr.BottomRight + offset);
+                        // }
                     }
                 }
                 else
                 {
-                    var normOffset = normal ? texture.Width >> 1 : 0;
-                    sr = subRegion ?? new UIBox2(normOffset, 0, texture.Width >> 1 + normOffset, texture.Height);
+                    sr = subRegion ?? new UIBox2(0, 0, texture.Width, texture.Height);
                 }
 
                 var clydeTexture = (ClydeTexture) texture;
@@ -516,6 +519,7 @@ namespace Robust.Client.Graphics.Clyde
                 /// <param name="quad">The four vertices of the quad in object space (or world if the transform is identity.).</param>
                 /// <param name="modulate">A color to multiply the texture by when shading.</param>
                 /// <param name="subRegion">The four corners of the texture sub region in px.</param>
+                /// <param name="normal">If the normal for this texture should be rendered.</param>
                 public override void DrawTextureRectRegion(Texture texture, Box2 quad,
                     Color? modulate = null, UIBox2? subRegion = null, bool normal = false)
                 {
@@ -537,7 +541,7 @@ namespace Robust.Client.Graphics.Clyde
                 public override void DrawTextureRectRegion(Texture texture, in Box2Rotated quad,
                     Color? modulate = null, UIBox2? subRegion = null, bool normal = false)
                 {
-                    var color = (modulate ?? Color.White) * Modulate;
+                    var color = normal ? (modulate ?? Color.White) * Modulate : Color.White;
 
                     _renderHandle.DrawTextureWorld(texture, quad.BottomLeft, quad.BottomRight,
                         quad.TopLeft, quad.TopRight, color, in subRegion, normal: normal);

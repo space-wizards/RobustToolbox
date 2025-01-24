@@ -53,6 +53,11 @@ void fragment()
     val *= lightPower;
     val *= mask;
 
-    COLOR = vec4(lightColor.rgb, val * occlusion);
+    highp vec2 j = normalize(diff);
+    highp float run = dot(j, vec2(1,0));
+    if (run < 0)
+        discard;
+
+    COLOR = vec4(lightColor.xyz, val * occlusion) * run;
 }
 

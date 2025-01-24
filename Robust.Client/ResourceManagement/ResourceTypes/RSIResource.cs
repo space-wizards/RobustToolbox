@@ -173,7 +173,7 @@ namespace Robust.Client.ResourceManagement
             var dimensionY = (int) MathF.Ceiling((float) totalFrameCount / dimensionX);
 
             var sheetHalfWidth = dimensionX * frameSize.X;
-            var sheet = new Image<Rgba32>(sheetHalfWidth * 1, dimensionY * frameSize.Y);
+            var sheet = new Image<Rgba32>(sheetHalfWidth * 2, dimensionY * frameSize.Y);
 
             var sheetIndex = 0;
             for (var index = 0; index < toAtlas.Length; index++)
@@ -195,7 +195,7 @@ namespace Robust.Client.ResourceManagement
                     var srcBox = UIBox2i.FromDimensions(srcPos, frameSize);
 
                     reg.Src.Item1.Blit(srcBox, sheet, sheetPos);
-                    // reg.Src.Item2.Blit(srcBox, sheet, sheetNPos);
+                    reg.Src.Item2.Blit(srcBox, sheet, sheetNPos);
                 }
 
                 sheetIndex += reg.TotalFrameCount;

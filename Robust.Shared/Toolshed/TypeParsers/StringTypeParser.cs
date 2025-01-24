@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
-using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.Maths;
 using Robust.Shared.Toolshed.Errors;
@@ -10,82 +9,74 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.TypeParsers;
 
-[Virtual]
-internal class StringTypeParser : TypeParser<string>
+internal sealed class StringTypeParser : TypeParser<string>
 {
-    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result, out IConError? error)
+    // Completion option for hinting that all strings must start with a quote
+    private static readonly CompletionOption[] Option = [new("\"", Flags: CompletionOptionFlags.PartialCompletion | CompletionOptionFlags.NoEscape)];
+
+    public override bool TryParse(ParserContext ctx, [NotNullWhen(true)] out string? result)
     {
-        error = null;
-        parserContext.ConsumeWhitespace();
-        if (parserContext.PeekRune() != new Rune('"'))
+        ctx.ConsumeWhitespace();
+        if (!ctx.EatMatch('"'))
         {
-            if (parserContext.PeekRune() is null)
+            if (ctx.PeekRune() is null)
             {
-                error = new OutOfInputError();
+                ctx.Error = new OutOfInputError();
                 result = null;
                 return false;
             }
 
-            error = new StringMustStartWithQuote();
-            error.Contextualize(parserContext.Input, (parserContext.Index, parserContext.Index + 1));
+            ctx.Error = new StringMustStartWithQuote();
+            ctx.Error.Contextualize(ctx.Input, (ctx.Index, ctx.Index + 1));
             result = null;
             return false;
         }
 
-        parserContext.GetRune();
-
         var output = new StringBuilder();
-
-        while (true)
+        while (ctx.GetRune() is {} r)
         {
-            while (parserContext.PeekChar() is not '"' and not '\\' and not null)
+            if (r == new Rune('"'))
             {
-                output.Append(parserContext.GetRune());
+                result = output.ToString();
+                return true;
             }
 
-            if (parserContext.PeekChar() is '"' or null)
+            if (r != new Rune('\\'))
             {
-                if (parserContext.PeekRune() is null)
-                {
-                    error = new OutOfInputError();
-                    result = null;
-                    return false;
-                }
-
-                parserContext.GetRune();
-                break;
+                output.Append(r);
+                continue;
             }
 
-            parserContext.GetRune(); // okay it's \
+            var escaped = ctx.GetRune();
+            if (escaped is null)
+                continue;
 
-            switch (parserContext.GetChar())
+            if (r == new Rune('"') || r == new Rune('n') || r == new Rune('\\'))
             {
-                case '"':
-                    output.Append('"');
-                    continue;
-                case 'n':
-                    output.Append('\n');
-                    continue;
-                case '\\':
-                    output.Append('\\');
-                    continue;
-                default:
-                    result = null;
-                    // todo: error
-                    return false;
+                output.Append(escaped);
+                continue;
             }
+
+            ctx.Error = new UnknownEscapeSequence(escaped.Value);
+            result = null;
+            return false;
         }
 
-        parserContext.ConsumeWhitespace();
-
-        result = output.ToString();
-        return true;
+        // We ran out of input before encountering the terminating quote.
+        // Either someone is trying to execute an incomplete command, or more likely, they forgot the terminating quote.
+        if (!ctx.GenerateCompletions)
+            ctx.Error = new StringMustEndWithQuote();
+        result = null;
+        return false;
     }
 
-    public override ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext,
-        string? argName)
+    public override CompletionResult TryAutocomplete(ParserContext parserContext, string? argName)
     {
-        return ValueTask.FromResult<(CompletionResult? result, IConError? error)>((CompletionResult.FromHint($"\"<{argName ?? "string"}>\""), null));
+        var hint = argName != null ? $"<{argName}> (string)" : "<string>";
+        parserContext.ConsumeWhitespace();
+        return parserContext.PeekRune() == new Rune('"')
+            ? CompletionResult.FromHint(hint)
+            : CompletionResult.FromHintOptions(Option, hint);
     }
 }
 
@@ -93,10 +84,22 @@ public record struct StringMustStartWithQuote : IConError
 {
     public FormattedMessage DescribeInner()
     {
-        return FormattedMessage.FromUnformatted("A string must start with a quote.");
+        return FormattedMessage.FromUnformatted("A string must start with a quote (\").");
     }
 
     public string? Expression { get; set; }
     public Vector2i? IssueSpan { get; set; }
     public StackTrace? Trace { get; set; }
+}
+
+public sealed class StringMustEndWithQuote : ConError
+{
+    public override FormattedMessage DescribeInner()
+        => FormattedMessage.FromUnformatted($"String must end with a quote (\").");
+}
+
+public sealed class UnknownEscapeSequence(Rune c) : ConError
+{
+    public override FormattedMessage DescribeInner()
+        => FormattedMessage.FromUnformatted($"Unknown escape sequence: \\{c}");
 }

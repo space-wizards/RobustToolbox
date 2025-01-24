@@ -17,10 +17,10 @@ namespace Robust.Shared.Audio.Components;
 /// <summary>
 /// Stores the audio data for an audio entity.
 /// </summary>
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(true), Access(typeof(SharedAudioSystem))]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(true, fieldDeltas: true), Access(typeof(SharedAudioSystem))]
 public sealed partial class AudioComponent : Component, IMixableAudioSource
 {
-    [ViewVariables(VVAccess.ReadWrite), AutoNetworkedField, DataField, Access(Other = AccessPermissions.ReadWriteExecute)]
+    [AutoNetworkedField, DataField, Access(Other = AccessPermissions.ReadWriteExecute)]
     public AudioFlags Flags = AudioFlags.None;
 
     #region Filter

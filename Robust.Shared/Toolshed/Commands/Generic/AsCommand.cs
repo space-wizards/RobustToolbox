@@ -1,11 +1,13 @@
 ﻿using System;
+using Robust.Shared.Toolshed.TypeParsers;
 
 namespace Robust.Shared.Toolshed.Commands.Generic;
 
 [ToolshedCommand]
 public sealed class AsCommand : ToolshedCommand
 {
-    public override Type[] TypeParameterParsers => [ typeof(Type) ];
+    private static Type[] _parsers = [typeof(TypeTypeParser)];
+    public override Type[] TypeParameterParsers => _parsers;
 
     /// <summary>
     ///     Uses a typecast to convert a type. It does not handle implicit casts, nor explicit ones.

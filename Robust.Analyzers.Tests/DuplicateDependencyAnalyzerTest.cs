@@ -1,10 +1,9 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
-using Microsoft.CodeAnalysis.Testing.Verifiers;
 using NUnit.Framework;
 using VerifyCS =
-    Microsoft.CodeAnalysis.CSharp.Testing.NUnit.AnalyzerVerifier<Robust.Analyzers.DuplicateDependencyAnalyzer>;
+    Microsoft.CodeAnalysis.CSharp.Testing.CSharpAnalyzerVerifier<Robust.Analyzers.DuplicateDependencyAnalyzer, Microsoft.CodeAnalysis.Testing.DefaultVerifier>;
 
 namespace Robust.Analyzers.Tests;
 
@@ -15,7 +14,7 @@ public sealed class DuplicateDependencyAnalyzerTest
 {
     private static Task Verifier(string code, params DiagnosticResult[] expected)
     {
-        var test = new CSharpAnalyzerTest<DuplicateDependencyAnalyzer, NUnitVerifier>()
+        var test = new CSharpAnalyzerTest<DuplicateDependencyAnalyzer, DefaultVerifier>()
         {
             TestState =
             {

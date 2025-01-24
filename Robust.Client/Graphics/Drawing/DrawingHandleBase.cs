@@ -211,6 +211,8 @@ namespace Robust.Client.Graphics
         public abstract void DrawLine(Vector2 from, Vector2 to, Color color);
 
         public abstract void RenderInRenderTarget(IRenderTarget target, Action a, Color? clearColor);
+
+        public abstract void DrawTexture(Texture texture, Vector2 position, Color? modulate = null);
     }
 
     /// <summary>

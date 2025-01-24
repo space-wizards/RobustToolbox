@@ -101,7 +101,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         if (TerminatingOrDeleted(uid))
             return null;
 
-        var ev = new AudioPlayAttempt();
+        var ev = new PlayAudioAttempt();
         RaiseLocalEvent(uid, ev, false);
         if (ev.Cancelled)
             return null;
@@ -123,7 +123,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         if (TerminatingOrDeleted(uid))
             return null;
 
-        var ev = new AudioPlayAttempt();
+        var ev = new PlayAudioAttempt();
         RaiseLocalEvent(uid, ev, false);
         if (ev.Cancelled)
             return null;

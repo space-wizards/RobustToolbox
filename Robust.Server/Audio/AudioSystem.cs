@@ -101,6 +101,11 @@ public sealed partial class AudioSystem : SharedAudioSystem
         if (TerminatingOrDeleted(uid))
             return null;
 
+        var ev = new AudioPlayAttempt();
+        RaiseLocalEvent(uid, ev, false);
+        if (ev.Cancelled)
+            return null;
+
         var entity = SetupAudio(filename, audioParams);
         // Move it after setting it up
         XformSystem.SetCoordinates(entity, new EntityCoordinates(uid, Vector2.Zero));
@@ -116,6 +121,11 @@ public sealed partial class AudioSystem : SharedAudioSystem
             return null;
 
         if (TerminatingOrDeleted(uid))
+            return null;
+
+        var ev = new AudioPlayAttempt();
+        RaiseLocalEvent(uid, ev, false);
+        if (ev.Cancelled)
             return null;
 
         var entity = SetupAudio(filename, audioParams);
@@ -161,6 +171,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
         if (!coordinates.IsValid(EntityManager))
             return null;
+
 
         // TODO: Transform TryFindGridAt mess + optimisation required.
         var entity = SetupAudio(filename, audioParams);

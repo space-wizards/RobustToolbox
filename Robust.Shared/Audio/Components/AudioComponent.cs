@@ -275,3 +275,8 @@ public enum AudioFlags : byte
 
     NoOcclusion = 1 << 1,
 }
+
+/// <summary>
+/// Raised directed at an entity, which is emitting the audio. Raised only when audio played at the entity itself, not the coordinates.
+/// </summary>
+public sealed class AudioPlayAttempt : CancellableEntityEventArgs;

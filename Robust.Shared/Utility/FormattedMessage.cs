@@ -247,7 +247,7 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
     public void InsertAtIndex(MarkupNode markupNode, int startIndex, int? endIndex = null)
     {
         if (startIndex > _nodes.Count)
-            return;
+            throw new ArgumentOutOfRangeException("startIndex", "startIndex must be less than or equal to the number of nodes.");
 
         if (markupNode.Name == null)
         {
@@ -255,8 +255,12 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
             return;
         }
 
-        if (endIndex == null || endIndex > _nodes.Count)
-            return;
+        ArgumentNullException.ThrowIfNull(endIndex);
+        if (endIndex > _nodes.Count)
+            throw new ArgumentOutOfRangeException("endIndex", "endIndex must be less than or equal to the number of nodes.");
+
+        if (startIndex > endIndex.Value)
+            throw new ArgumentException("startIndex must be less than or equal to endIndex.");
 
         _nodes.Insert(startIndex, markupNode);
         _nodes.Insert(endIndex.Value + 1, new MarkupNode(markupNode.Name, null, null, true));
@@ -268,8 +272,7 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
     /// <param name="markupNode">The node to be inserted; may not be a text node.</param>
     public void InsertAroundMessage(MarkupNode markupNode)
     {
-        if (markupNode.Name == null)
-            return;
+        ArgumentNullException.ThrowIfNull(markupNode.Name);
 
         InsertAtIndex(markupNode, 0, _nodes.Count);
     }
@@ -280,6 +283,8 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
     /// <param name="markupNode">The node to be inserted; may not be a text node.</param>
     public void InsertAroundText(MarkupNode markupNode)
     {
+        ArgumentNullException.ThrowIfNull(markupNode.Name);
+
         var firstIndex = _nodes.FindIndex(x => x.Name == null);
         var lastIndex = _nodes.FindLastIndex(x => x.Name == null);
 
@@ -289,10 +294,12 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
     /// <summary>
     /// Helper method that inserts a node around a string.
     /// </summary>
-    /// <param name="markupNode">The node to be inserted.</param>
+    /// <param name="markupNode">The node to be inserted; may not be a text node.</param>
     /// <param name="stringText">The string to look for when inserting.</param>
     public void InsertAroundString(MarkupNode markupNode, string stringText)
     {
+        ArgumentNullException.ThrowIfNull(markupNode.Name);
+
         for (int i = 0; i < _nodes.Count; i++)
         {
             var node = _nodes[i];
@@ -379,10 +386,12 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
     /// Helper function that inserts a node inside of other nodes of a specific type.
     /// The new node encloses any other nodes that the target node encloses.
     /// </summary>
-    /// <param name="markupNode">The node to be inserted.</param>
+    /// <param name="markupNode">The node to be inserted; may not be a text node.</param>
     /// <param name="tagText">The tag to search for.</param>
     public void InsertInsideTag(MarkupNode markupNode, string tagText)
     {
+        ArgumentNullException.ThrowIfNull(markupNode.Name);
+
         var i = _nodes.FindIndex(x => x.Name == tagText && !x.Closing);
         var j = _nodes.FindLastIndex(x => x.Name == tagText && x.Closing);
 
@@ -402,10 +411,12 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
     /// Helper function that inserts a node around other nodes of a specific type.
     /// The new node encloses any other nodes that the target node encloses.
     /// </summary>
-    /// <param name="markupNode">The node to be inserted.</param>
+    /// <param name="markupNode">The node to be inserted; may not be a text node.</param>
     /// <param name="tagText">The tag to search for.</param>
     public void InsertOutsideTag(MarkupNode markupNode, string tagText)
     {
+        ArgumentNullException.ThrowIfNull(markupNode.Name);
+
         var i = _nodes.FindIndex(x => x.Name == tagText && !x.Closing);
         var j = _nodes.FindLastIndex(x => x.Name == tagText && x.Closing);
 

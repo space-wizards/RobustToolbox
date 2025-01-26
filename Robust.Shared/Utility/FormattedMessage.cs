@@ -296,7 +296,8 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
     /// </summary>
     /// <param name="markupNode">The node to be inserted; may not be a text node.</param>
     /// <param name="stringText">The string to look for when inserting.</param>
-    public void InsertAroundString(MarkupNode markupNode, string stringText)
+    /// <param name="matchCase">If true, the string case must match exactly.</param>
+    public void InsertAroundString(MarkupNode markupNode, string stringText, bool matchCase = true)
     {
         ArgumentNullException.ThrowIfNull(markupNode.Name);
 
@@ -307,7 +308,7 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
             if (node.Name == null && node.Value.StringValue != null)
             {
                 var stringNode = node.Value.StringValue;
-                var stringLocation = stringNode.IndexOf(stringText, StringComparison.Ordinal);
+                var stringLocation = matchCase ? stringNode.IndexOf(stringText, StringComparison.Ordinal) : stringNode.IndexOf(stringText, StringComparison.OrdinalIgnoreCase);
 
                 if (stringLocation != -1)
                 {
@@ -324,7 +325,7 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
                         j++;
                     }
 
-                    InsertAtIndex(new MarkupNode(stringText), i + j);
+                    InsertAtIndex(new MarkupNode(stringNode.Substring(stringLocation, stringText.Length)), i + j);
                     InsertAtIndex(markupNode, i + j, i + j + 1);
 
                     j += 3;

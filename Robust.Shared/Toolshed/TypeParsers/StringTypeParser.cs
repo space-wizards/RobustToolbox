@@ -70,9 +70,9 @@ internal sealed class StringTypeParser : TypeParser<string>
         return false;
     }
 
-    public override CompletionResult TryAutocomplete(ParserContext parserContext, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext parserContext, CommandArgument? arg)
     {
-        var hint = argName != null ? $"<{argName}> (string)" : "<string>";
+        var hint = GetArgHint(arg);
         parserContext.ConsumeWhitespace();
         return parserContext.PeekRune() == new Rune('"')
             ? CompletionResult.FromHint(hint)

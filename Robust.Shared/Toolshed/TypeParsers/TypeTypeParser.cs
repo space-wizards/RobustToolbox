@@ -165,10 +165,13 @@ public sealed class TypeTypeParser : TypeParser<Type>
         return ty;
     }
 
-    public override CompletionResult? TryAutocomplete(ParserContext parserContext,
-        string? argName)
+    public override CompletionResult? TryAutocomplete(
+        ParserContext parserContext,
+        CommandArgument? arg)
     {
         // TODO TOOLSHED Generic Type Suggestions.
+        if (_optionsCache != null)
+            _optionsCache.Hint = GetArgHint(arg);
         return _optionsCache;
     }
 }

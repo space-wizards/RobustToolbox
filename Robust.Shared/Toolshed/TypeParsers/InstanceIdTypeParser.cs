@@ -12,9 +12,9 @@ public sealed class InstanceIdTypeParser : TypeParser<InstanceId>
         return true;
     }
 
-    public override CompletionResult? TryAutocomplete(ParserContext parserContext, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext parserContext, CommandArgument? arg)
     {
-        return null;
+        return CompletionResult.FromHint(GetArgHint(arg));
     }
 }
 

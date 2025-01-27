@@ -210,6 +210,7 @@ namespace Robust.Client.ResourceManagement
 
             data.Rsi = rsi;
             data.AtlasSheet = sheet;
+            data.SheetNormalOffset = sheetHalfWidth;
             data.AtlasList = toAtlas;
             data.FrameSize = frameSize;
             data.DimX = dimensionX;
@@ -411,6 +412,7 @@ namespace Robust.Client.ResourceManagement
             public bool Bad;
             public ResPath Path = default!;
             public Image<Rgba32> AtlasSheet = default!;
+            public int SheetNormalOffset = default!;
             public int DimX;
             public StateReg[] AtlasList = default!;
             public Vector2i FrameSize;

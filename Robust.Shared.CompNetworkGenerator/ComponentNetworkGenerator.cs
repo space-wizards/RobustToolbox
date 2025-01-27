@@ -346,8 +346,8 @@ namespace Robust.Shared.CompNetworkGenerator
 
                             if (value is GlobalEntityUidName or GlobalNullableEntityUidName)
                             {
-                                networkedType = $"Dictionary<{key}, {value}>";
                                 value = valueNullable ? GlobalNetEntityNullableName : GlobalNetEntityName;
+                                networkedType = $"Dictionary<{key}, {value}>";
 
                                 stateFields.Append($@"
         public {networkedType} {name} = default!;");

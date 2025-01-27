@@ -320,11 +320,18 @@ namespace Robust.Shared.Network
                 NetConnectionStatus status;
                 string reason;
 
-                do
+                try
                 {
-                    reason = await AwaitStatusChange(connection, cancellationToken);
-                    status = connection.Status;
-                } while (status == NetConnectionStatus.InitiatedConnect);
+                    do
+                    {
+                        reason = await AwaitStatusChange(connection, cancellationToken);
+                        status = connection.Status;
+                    } while (status == NetConnectionStatus.InitiatedConnect);
+                }
+                catch (OperationCanceledException)
+                {
+                    reason = "Connection attempt cancelled";
+                }
 
                 return reason;
             }

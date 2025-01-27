@@ -587,6 +587,14 @@ namespace Robust.Shared.Network
         public void ClientDisconnect(string reason)
         {
             DebugTools.Assert(IsClient, "Should never be called on the server.");
+
+            // First handle any in-progress connection attempt
+            if (ClientConnectState != ClientConnectionState.NotConnecting)
+            {
+                _cancelConnectTokenSource?.Cancel();
+            }
+
+            // Then handle existing connection if any
             if (ServerChannel != null)
             {
                 Disconnect?.Invoke(this, new NetDisconnectedArgs(ServerChannel, reason));

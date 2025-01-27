@@ -47,16 +47,14 @@ namespace Robust.Shared.GameObjects
 
         public static bool TryParse(ReadOnlySpan<char> uid, out EntityUid entityUid)
         {
-            try
+            if (!int.TryParse(uid, out var id))
             {
-                entityUid = Parse(uid);
-                return true;
-            }
-            catch (FormatException)
-            {
-                entityUid = Invalid;
+                entityUid = default;
                 return false;
             }
+
+            entityUid = new(id);
+            return true;
         }
 
         /// <summary>

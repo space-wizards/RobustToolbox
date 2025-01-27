@@ -28,13 +28,6 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         protected internal BoundUserInterfaceState? State { get; internal set; }
 
-        // Bandaid just for storage :)
-        /// <summary>
-        /// Defers state handling
-        /// </summary>
-        [Obsolete]
-        public virtual bool DeferredClose { get; } = true;
-
         protected BoundUserInterface(EntityUid owner, Enum uiKey)
         {
             IoCManager.InjectDependencies(this);
@@ -57,6 +50,27 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         protected internal virtual void UpdateState(BoundUserInterfaceState state)
         {
+        }
+
+        /// <summary>
+        /// Calls <see cref="UpdateState"/> if the supplied state exists and calls <see cref="Update"/>
+        /// </summary>
+        public void Update<T>() where T : BoundUserInterfaceState
+        {
+            if (UiSystem.TryGetUiState<T>(Owner, UiKey, out var state))
+            {
+                UpdateState(state);
+            }
+
+            Update();
+        }
+
+        /// <summary>
+        /// Generic update method called whenever the BUI should update.
+        /// </summary>
+        public virtual void Update()
+        {
+
         }
 
         /// <summary>

@@ -103,6 +103,22 @@ namespace Robust.Server.ServerStatus
                 ["desc"] = _serverDescCache,
             };
 
+            var privacyPolicyLink = _cfg.GetCVar(CVars.StatusPrivacyPolicyLink);
+            var privacyPolicyIdentifier = _cfg.GetCVar(CVars.StatusPrivacyPolicyIdentifier);
+            var privacyPolicyVersion = _cfg.GetCVar(CVars.StatusPrivacyPolicyVersion);
+
+            if (!string.IsNullOrEmpty(privacyPolicyLink)
+                && !string.IsNullOrEmpty(privacyPolicyIdentifier)
+                && !string.IsNullOrEmpty(privacyPolicyVersion))
+            {
+                jObject["privacy_policy"] = new JsonObject
+                {
+                    ["identifier"] = privacyPolicyIdentifier,
+                    ["version"] = privacyPolicyVersion,
+                    ["link"] = privacyPolicyLink,
+                };
+            }
+
             OnInfoRequest?.Invoke(jObject);
 
             await context.RespondJsonAsync(jObject);

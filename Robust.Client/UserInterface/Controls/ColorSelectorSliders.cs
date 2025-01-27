@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Robust.Client.Graphics;
-using Robust.Client.ResourceManagement;
-using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 
@@ -88,8 +85,6 @@ public sealed class ColorSelectorSliders : Control
 
     private OptionButton _typeSelector;
     private List<ColorSelectorType> _types = new();
-
-    private static ShaderInstance _shader = default!;
 
     private ColorSelectorStyleBox _topStyle;
     private ColorSelectorStyleBox _middleStyle;

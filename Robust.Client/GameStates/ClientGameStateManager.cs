@@ -42,7 +42,7 @@ namespace Robust.Client.GameStates
         private uint _nextInputCmdSeq = 1;
         private readonly Queue<FullInputCmdMessage> _pendingInputs = new();
 
-        private readonly Queue<(uint sequence, GameTick sourceTick, EntityEventArgs msg, object sessionMsg)>
+        private readonly Queue<(uint sequence, GameTick sourceTick, object msg, object sessionMsg)>
             _pendingSystemMessages
                 = new();
 
@@ -399,7 +399,7 @@ namespace Robust.Client.GameStates
 
                 using (_prof.Group("MergeImplicitData"))
                 {
-                    MergeImplicitData(createdEntities);
+                    GenerateImplicitStates(createdEntities);
                 }
 
                 if (_lastProcessedInput < curState.LastProcessedInput)
@@ -504,9 +504,7 @@ namespace Robust.Client.GameStates
 
                 while (hasPendingMessage && pendingMessagesEnumerator.Current.sourceTick <= _timing.CurTick)
                 {
-                    var msg = pendingMessagesEnumerator.Current.msg;
-
-                    _entities.EventBus.RaiseEvent(EventSource.Local, msg);
+                    _entities.EventBus.RaiseEvent(EventSource.Local, pendingMessagesEnumerator.Current.msg);
                     _entities.EventBus.RaiseEvent(EventSource.Local, pendingMessagesEnumerator.Current.sessionMsg);
                     hasPendingMessage = pendingMessagesEnumerator.MoveNext();
                 }
@@ -671,7 +669,7 @@ namespace Robust.Client.GameStates
         ///     initial server state for any newly created entity. It does this by simply using the standard <see
         ///     cref="IEntityManager.GetComponentState"/>.
         /// </remarks>
-        private void MergeImplicitData(IEnumerable<NetEntity> createdEntities)
+        public void GenerateImplicitStates(IEnumerable<NetEntity> createdEntities)
         {
             var bus = _entityManager.EventBus;
 

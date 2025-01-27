@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* EntityPrototypeView control now avoids creating entities if the prototype is set while the control is not on the UI tree.
 
 ### Other
 

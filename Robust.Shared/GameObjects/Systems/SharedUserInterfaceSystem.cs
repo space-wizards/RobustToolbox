@@ -40,6 +40,11 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     private readonly List<(BoundUserInterface Bui, bool value)> _queuedBuis = new();
 
+    /// <summary>
+    /// Temporary storage for BUI keys
+    /// </summary>
+    private ValueList<Enum> _keys = new();
+
     public override void Initialize()
     {
         base.Initialize();
@@ -851,6 +856,32 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     }
 
     /// <summary>
+    /// Closes the user's UIs that match the specified key.
+    /// </summary>
+    public void CloseUserUis<T>(Entity<UserInterfaceUserComponent?> actor) where T: Enum
+    {
+        if (!UserQuery.Resolve(actor.Owner, ref actor.Comp, false))
+            return;
+
+        if (actor.Comp.OpenInterfaces.Count == 0)
+            return;
+
+        foreach (var (uid, enums) in actor.Comp.OpenInterfaces)
+        {
+            _keys.Clear();
+            _keys.AddRange(enums);
+
+            foreach (var weh in _keys)
+            {
+                if (weh is not T)
+                    continue;
+
+                CloseUiInternal(uid, weh, actor.Owner);
+            }
+        }
+    }
+
+    /// <summary>
     /// Closes all Uis for the actor.
     /// </summary>
     public void CloseUserUis(Entity<UserInterfaceUserComponent?> actor)
@@ -861,13 +892,12 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         if (actor.Comp.OpenInterfaces.Count == 0)
             return;
 
-        var enumCopy = new ValueList<Enum>();
         foreach (var (uid, enums) in actor.Comp.OpenInterfaces)
         {
-            enumCopy.Clear();
-            enumCopy.AddRange(enums);
+            _keys.Clear();
+            _keys.AddRange(enums);
 
-            foreach (var key in enumCopy)
+            foreach (var key in _keys)
             {
                 CloseUiInternal(uid, key, actor.Owner);
             }

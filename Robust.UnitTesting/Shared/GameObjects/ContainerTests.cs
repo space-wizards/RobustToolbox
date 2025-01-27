@@ -7,10 +7,12 @@ using Robust.Client.Timing;
 using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared.Containers;
+using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting.Shared.GameObjects
 {
@@ -291,15 +293,16 @@ namespace Robust.UnitTesting.Shared.GameObjects
             await Task.WhenAll(server.WaitIdleAsync());
 
             var sEntManager = server.ResolveDependency<IEntityManager>();
-            var mapManager = server.ResolveDependency<IMapManager>();
+            var mapSys = sEntManager.System<SharedMapSystem>();
             var sContainerSys = sEntManager.System<SharedContainerSystem>();
             var sMetadataSys = sEntManager.System<MetaDataSystem>();
+            var path = new ResPath("container_test.yml");
 
             await server.WaitAssertion(() =>
             {
                 // build the map
                 sEntManager.System<SharedMapSystem>().CreateMap(out var mapIdOne);
-                Assert.That(mapManager.IsMapInitialized(mapIdOne), Is.True);
+                Assert.That(mapSys.IsInitialized(mapIdOne), Is.True);
 
                 var containerEnt = sEntManager.SpawnEntity(null, new MapCoordinates(1, 1, mapIdOne));
                 sMetadataSys.SetEntityName(containerEnt, "ContainerEnt");
@@ -315,8 +318,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 // save the map
                 var mapLoader = sEntManager.EntitySysManager.GetEntitySystem<MapLoaderSystem>();
 
-                mapLoader.SaveMap(mapIdOne, "container_test.yml");
-                mapManager.DeleteMap(mapIdOne);
+                Assert.That(mapLoader.TrySaveMap(mapIdOne, path));
+                mapSys.DeleteMap(mapIdOne);
             });
 
             // A few moments later...
@@ -325,11 +328,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
             await server.WaitAssertion(() =>
             {
                 var mapLoader = sEntManager.System<MapLoaderSystem>();
-                sEntManager.System<SharedMapSystem>().CreateMap(out var mapIdTwo);
 
                 // load the map
-                mapLoader.Load(mapIdTwo, "container_test.yml");
-                Assert.That(mapManager.IsMapInitialized(mapIdTwo), Is.True); // Map Initialize-ness is saved in the map file.
+                Assert.That(mapLoader.TryLoadMap(path, out var map, out _));
+                Assert.That(mapSys.IsInitialized(map), Is.True); // Map Initialize-ness is saved in the map file.
             });
 
             await server.WaitRunTicks(1);

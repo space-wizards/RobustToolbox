@@ -1052,10 +1052,9 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
                     catch (Exception e)
                     {
                         Log.Error(
-                            $"Caught exception while attempting to create a BUI {key} with type {data.ClientType} on entity {ToPrettyString(entity.Owner)}. Exception: {e}");
-                        return;
+                            $"Caught exception while attempting to create a BUI {bui.UiKey} with type {bui.GetType()} on entity {ToPrettyString(bui.Owner)}. Exception: {e}");
                     }
-#endi
+#endif
                 }
                 else
                 {

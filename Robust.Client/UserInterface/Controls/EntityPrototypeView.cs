@@ -31,7 +31,7 @@ public class EntityPrototypeView : SpriteView
 
         _currentPrototype = entProto;
 
-        if (_ourEntity != default)
+        if (_ourEntity != null)
         {
             UpdateEntity();
         }
@@ -51,6 +51,7 @@ public class EntityPrototypeView : SpriteView
     {
         base.ExitedTree();
         EntMan.TryQueueDeleteEntity(_ourEntity);
+        _ourEntity = null;
     }
 
     private void UpdateEntity()
@@ -65,6 +66,10 @@ public class EntityPrototypeView : SpriteView
             _ourEntity = EntMan.Spawn(_currentPrototype);
             SpriteSystem.ForceUpdate(_ourEntity.Value);
             SetEntity(_ourEntity);
+        }
+        else
+        {
+            _ourEntity = null;
         }
     }
 }

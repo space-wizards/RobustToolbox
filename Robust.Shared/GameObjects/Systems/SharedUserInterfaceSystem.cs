@@ -1046,6 +1046,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
                             bui.UpdateState(buiState);
                             bui.Update();
                         }
+                    }
 #if EXCEPTION_TOLERANCE
                     }
                     catch (Exception e)
@@ -1054,8 +1055,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
                             $"Caught exception while attempting to create a BUI {key} with type {data.ClientType} on entity {ToPrettyString(entity.Owner)}. Exception: {e}");
                         return;
                     }
-#endif
-                    }
+#endi
                 }
                 else
                 {

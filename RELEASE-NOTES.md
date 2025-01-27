@@ -39,11 +39,11 @@ END TEMPLATE-->
 
 ### New features
 
-* Added `EntityManager.DirtyFields()`, which allows components with delta states to simultaneously mark several fields as dirty at the same time.
+*None yet*
 
 ### Bugfixes
 
-* Fixed `RaisePredictiveEvent()` not properly re-raising events during prediction for event handlers that did not take an `EntitySessionEventArgs` argument.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,23 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 241.0.0
+
+### Breaking changes
+
+* Remove DeferredClose from BUIs.
+
+### New features
+
+* Added `EntityManager.DirtyFields()`, which allows components with delta states to simultaneously mark several fields as dirty at the same time.
+* Add `CloserUserUIs<T>` to close keys of a specific key.
+
+### Bugfixes
+
+* Fixed `RaisePredictiveEvent()` not properly re-raising events during prediction for event handlers that did not take an `EntitySessionEventArgs` argument.
+* BUI openings are now deferred to avoid having slight desync between deferred closes and opens occurring in the same tick.
 
 
 ## 240.1.2

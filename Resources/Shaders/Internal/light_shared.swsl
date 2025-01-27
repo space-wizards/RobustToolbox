@@ -15,6 +15,7 @@ uniform highp float lightRange;
 uniform highp float lightPower;
 uniform highp float lightSoftness;
 uniform highp float lightIndex;
+uniform highp float globalRotation;
 uniform sampler2D shadowMap;
 
 void vertex()
@@ -24,6 +25,11 @@ void vertex()
     transformed = projectionMatrix * viewMatrix * transformed;
 
     VERTEX = transformed.xy;
+}
+
+highp vec2 rotateVector(highp vec2 vector, highp float theta)
+{
+    return vec2(vector.x * cos(theta) - vector.y * sin(theta), vector.x * sin(theta) + vector.y * cos(theta));
 }
 
 highp float shadowContrib(highp vec2 diff)
@@ -53,7 +59,7 @@ void fragment()
     val *= lightPower;
     val *= mask;
 
-    highp vec2 j = normalize(diff);
+    highp vec2 j = rotateVector(normalize(diff), globalRotation);
     highp float run = dot(j, vec2(1,0));
     if (run < 0)
         discard;

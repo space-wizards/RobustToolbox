@@ -106,12 +106,13 @@ namespace Robust.Client.Graphics.Clyde
             {
                 if (texture is AtlasTexture atlas)
                 {
+                    int horizontalNormalOffset = atlas.Width;
                     texture = atlas.SourceTexture;
                     if (subRegion.HasValue)
                     {
                         var offset = atlas.SubRegion.TopLeft;
-                        // if (normal)
-                        //     offset += Vector2.UnitX * atlas.SubRegion.Width;
+                        if (normal)
+                            offset += Vector2.UnitX * horizontalNormalOffset;
                         sr = new UIBox2(
                             subRegion.Value.TopLeft + offset,
                             subRegion.Value.BottomRight + offset);
@@ -119,11 +120,11 @@ namespace Robust.Client.Graphics.Clyde
                     else
                     {
                         sr = atlas.SubRegion;
-                        // if (normal)
-                        // {
-                        //     var offset = Vector2.UnitX * (texture.Width >> 1);
-                        //     sr = new UIBox2(sr.TopLeft + offset, sr.BottomRight + offset);
-                        // }
+                        if (normal)
+                        {
+                            var offset = Vector2.UnitX * horizontalNormalOffset;
+                            sr = new UIBox2(sr.TopLeft + offset, sr.BottomRight + offset);
+                        }
                     }
                 }
                 else

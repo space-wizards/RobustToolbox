@@ -514,7 +514,7 @@ namespace Robust.Client.Graphics.Clyde
                     using (DebugGroup("Entities"))
                     using (_prof.Group("Entities"))
                     {
-                        DrawEntities(viewport, worldBounds, worldAABB, eye);
+                        DrawEntities(viewport, worldBounds, worldAABB, eye, true);
                     }
 
                     using (_prof.Group("Overlays WSBFOV"))

@@ -119,7 +119,11 @@ public abstract partial class SharedTransformSystem
 
     public bool AnchorEntity(Entity<TransformComponent> entity, Entity<MapGridComponent>? grid = null)
     {
-        DebugTools.Assert(grid == null || grid.Value.Owner == entity.Comp.GridUid);
+        if (grid != null && grid.Value.Owner != entity.Comp.GridUid)
+        {
+            Log.Error($"Tried to anchor {ToPrettyString(entity):entity} to a different grid {ToPrettyString(grid):grid}");
+            return false;
+        }
 
         if (grid == null)
         {

@@ -9,7 +9,7 @@ namespace Robust.Shared.Toolshed.Commands.Entities;
 internal sealed class NamedCommand : ToolshedCommand
 {
     [CommandImplementation]
-    public IEnumerable<EntityUid> Named([PipedArgument] IEnumerable<EntityUid> input, [CommandArgument] string regex, [CommandInverted] bool inverted)
+    public IEnumerable<EntityUid> Named([PipedArgument] IEnumerable<EntityUid> input, string regex, [CommandInverted] bool inverted)
     {
         var compiled = new Regex($"^{regex}$");
         return input.Where(x => compiled.IsMatch(EntName(x)) ^ inverted);

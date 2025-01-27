@@ -460,10 +460,17 @@ namespace Robust.Shared.Configuration
 
         public void LoadCVarsFromAssembly(Assembly assembly)
         {
-            foreach (var defField in assembly
+            foreach (var type in assembly
                          .GetTypes()
-                         .Where(p => Attribute.IsDefined(p, typeof(CVarDefsAttribute)))
-                         .SelectMany(p => p.GetFields(BindingFlags.Public | BindingFlags.Static)))
+                         .Where(p => Attribute.IsDefined(p, typeof(CVarDefsAttribute))))
+            {
+                LoadCVarsFromType(type);
+            }
+        }
+
+        public void LoadCVarsFromType(Type containingType)
+        {
+            foreach (var defField in containingType.GetFields(BindingFlags.Public | BindingFlags.Static))
             {
                 var fieldType = defField.FieldType;
                 if (!fieldType.IsGenericType || fieldType.GetGenericTypeDefinition() != typeof(CVarDef<>))

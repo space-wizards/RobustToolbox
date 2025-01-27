@@ -186,6 +186,11 @@ namespace Robust.Shared.Utility
             return memberInfo.GetCustomAttribute<T>() != null;
         }
 
+        public static bool HasCustomAttribute<T>(this ParameterInfo memberInfo) where T : Attribute
+        {
+            return memberInfo.GetCustomAttribute<T>() != null;
+        }
+
         public static bool TryGetCustomAttribute<T>(this MemberInfo memberInfo, [NotNullWhen(true)] out T? attribute)
             where T : Attribute
         {

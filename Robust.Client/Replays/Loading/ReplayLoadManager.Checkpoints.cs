@@ -352,6 +352,9 @@ public sealed partial class ReplayLoadManager
                 // prototype changes when jumping around in time. This also requires reworking how the initial
                 // implicit state data is generated, because we can't simply cache it anymore.
                 // Also, does reloading prototypes in release mode modify existing entities?
+                // Yes, yes it does. See PrototypeReloadSystem.UpdateEntity()
+                // Its just not supported ATM.
+                // TBH it'd be easier if overriding existing prototypes in release mode was just forbidden.
 
                 var msg = $"Overwriting an existing prototype! Kind: {kind.Name}. Ids: {string.Join(", ", ids)}";
                 if (_confMan.GetCVar(CVars.ReplayIgnoreErrors))
@@ -361,7 +364,6 @@ public sealed partial class ReplayLoadManager
             }
         }
 
-        _protoMan.ResolveResults();
         _protoMan.ReloadPrototypes(changed);
         _locMan.ReloadLocalizations();
     }

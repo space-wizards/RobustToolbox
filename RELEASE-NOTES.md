@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* EntityPrototypeView control now is creating entity and keeping it alive only when opened (between EnteredTree and ExitedTree).
+* EntityPrototypeView control now avoids creating entities if the prototype is set while the control is not on the UI tree.
 
 ### Other
 

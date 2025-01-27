@@ -54,6 +54,76 @@ END TEMPLATE-->
 *None yet*
 
 
+## 240.1.2
+
+
+## 240.1.1
+
+### Bugfixes
+
+* Fixed one of the `IOverlayManager.RemoveOverlay` overrides not fully removing the overlay.
+
+
+## 240.1.0
+
+### New features
+
+* Added an `AsNullable` extension method for converting an `Entity<T>` into an `Entity<T?>`
+
+### Bugfixes
+
+* Fixed an exception in `PhysicsSystem.DestroyContacts()` that could result in entities getting stuck with broken physics.
+
+### Other
+
+* `GamePrototypeLoadManager` will now send all uploaded prototypes to connecting players in a single `GamePrototypeLoadMessage`, as opposed to one message per upload.
+
+
+## 240.0.1
+
+### Bugfixes
+
+* Fixed `SharedBroadphaseSystem.GetBroadphases()` not returning the map itself, which was causing physics to not work properly off-grid.
+
+
+## 240.0.0
+
+### Breaking changes
+
+* `ComponentRegistry` no longer implements `ISerializationContext`
+* Tickrate values are now `ushort`, allowing them to go up to 65535.
+
+### New features
+
+* Console completion options now have new flags for preventing suggestions from being escaped or quoted.
+* Added `ILocalizationManager.HasCulture()`.
+* Static `EntProtoId<T>` fields are now validated to exist.
+
+### Bugfixes
+
+* Fixed a state handling bug in replays, which was causing exceptions to be thrown when applying delta states.
+
+### Other
+
+* Reduced amount of `DynamicMethod`s used by serialization system. This should improve performance somewhat.
+
+### Internal
+
+* Avoided sorting overlays every render frame.
+* Various clean up to grid fixture code/adding asserts.
+
+## 239.0.1
+
+### Bugfixes
+
+* Fix logging of received packets with `net.packet` logging level.
+* Downgrade `VorbisPizza` to fix audio playback for systems without AVX2 support.
+
+### Other
+
+* Improved performance of some Roslyn analyzers and source generators, which should significantly improve compile times and IDE performance.
+
+
 ## 239.0.0
 
 ### Breaking changes

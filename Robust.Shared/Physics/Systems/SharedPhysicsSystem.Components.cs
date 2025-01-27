@@ -24,6 +24,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
@@ -32,6 +33,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Utility;
 
@@ -242,27 +244,31 @@ public partial class SharedPhysicsSystem
 
     public void DestroyContacts(PhysicsComponent body)
     {
-        if (body.Contacts.Count == 0) return;
+        if (body.Contacts.Count == 0)
+            return;
 
-        // This variable is only used in edge-case scenario when contact flagged Deleting raises
-        // EndCollideEvent which will QueueDelete contact's entity
-        ushort contactsFlaggedDeleting = 0;
         var node = body.Contacts.First;
 
         while (node != null)
         {
             var contact = node.Value;
-            node = node.Next;
 
-            // Destroy last so the linked-list doesn't get touched.
-            if (!DestroyContact(contact))
-            {
-                contactsFlaggedDeleting++;
-            }
+            // The Start/End collide events can result in other contacts in this list being destroyed, and maybe being
+            // created elsewhere. We want to ensure that the "next" node from a previous iteration wasn't somehow
+            // destroyed, returned to the pool, and then re-assigned to a new body.
+            // AFAIK this shouldn't be possible anymore, now that the next node is returned by DestroyContacts() after
+            // all events were raised.
+            DebugTools.Assert(contact.BodyA == body || contact.BodyB == body || contact.Flags == ContactFlags.Deleted);
+            DebugTools.AssertNotEqual(node, node.Next);
+
+            DestroyContact(contact, node, out var next);
+            DebugTools.AssertNotEqual(node, next);
+            node = next;
         }
 
-        // This contact will be deleted before SimulateWorld runs since it is already set to be Deleted
-        DebugTools.Assert(body.Contacts.Count == contactsFlaggedDeleting);
+        // It is possible that this DestroyContacts was called while another DestroyContacts was still being processed.
+        // The only remaining contacts should be those that are still getting deleted.
+        DebugTools.Assert(body.Contacts.All(x => (x.Flags & ContactFlags.Deleting) != 0));
     }
 
     /// <summary>

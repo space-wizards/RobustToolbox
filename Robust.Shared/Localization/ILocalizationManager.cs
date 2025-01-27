@@ -95,6 +95,12 @@ namespace Robust.Shared.Localization
         CultureInfo? DefaultCulture { get; set; }
 
         /// <summary>
+        ///     Checks if the culture has been loaded.
+        /// </summary>
+        /// <param name="culture"></param>
+        bool HasCulture(CultureInfo culture);
+
+        /// <summary>
         ///     Load data for a culture.
         /// </summary>
         /// <param name="culture"></param>

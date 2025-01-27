@@ -123,6 +123,7 @@ public abstract partial class SharedPhysicsSystem
 
         public bool Return(Contact obj)
         {
+            DebugTools.Assert(obj.Flags is ContactFlags.None or ContactFlags.Deleted);
             SetContact(obj,
                 false,
                 EntityUid.Invalid, EntityUid.Invalid,
@@ -145,7 +146,7 @@ public abstract partial class SharedPhysicsSystem
     {
         contact.Enabled = enabled;
         contact.IsTouching = false;
-        contact.Flags = ContactFlags.None | ContactFlags.PreInit;
+        DebugTools.Assert(contact.Flags is ContactFlags.None or ContactFlags.PreInit or ContactFlags.Deleted);
         // TOIFlag = false;
 
         contact.EntityA = uidA;
@@ -229,6 +230,8 @@ public abstract partial class SharedPhysicsSystem
 
         // Pull out a spare contact object
         var contact = _contactPool.Get();
+        DebugTools.Assert(contact.Flags is ContactFlags.None or ContactFlags.Deleted);
+        contact.Flags = ContactFlags.PreInit;
 
         // Edge+Polygon is non-symmetrical due to the way Erin handles collision type registration.
         if ((type1 >= type2 || (type1 == ShapeType.Edge && type2 == ShapeType.Polygon)) && !(type2 == ShapeType.Edge && type1 == ShapeType.Polygon))
@@ -314,13 +317,26 @@ public abstract partial class SharedPhysicsSystem
                  (fixtureB.CollisionMask & fixtureA.CollisionLayer) == 0x0);
     }
 
-    public bool DestroyContact(Contact contact)
+    public void DestroyContact(Contact contact)
     {
-        if ((contact.Flags & ContactFlags.Deleting) != 0x0)
-            return false;
+        DestroyContact(contact, null, out _);
+    }
 
-        Fixture fixtureA = contact.FixtureA!;
-        Fixture fixtureB = contact.FixtureB!;
+    internal void DestroyContact(Contact contact, LinkedListNode<Contact>? node, out LinkedListNode<Contact>? next)
+    {
+        // EndCollideEvent may cause knock on effects that cause contacts to be destroyed.
+        // This check prevents us from trying to destroy a contact that is already being, or already has been, destroyed.
+        if ((contact.Flags & (ContactFlags.Deleting | ContactFlags.Deleted)) != 0x0)
+        {
+            next = node?.Next;
+            return;
+        }
+
+        DebugTools.Assert((contact.Flags & ContactFlags.PreInit) == 0);
+        // Contact flag might be None here as CollideContacts() might destroy the contact after having removed the PreInit flag
+
+        var fixtureA = contact.FixtureA!;
+        var fixtureB = contact.FixtureB!;
         var bodyA = contact.BodyA!;
         var bodyB = contact.BodyB!;
         var aUid = contact.EntityA;
@@ -344,6 +360,11 @@ public abstract partial class SharedPhysicsSystem
                 SetAwake((bUid, bodyB), true);
         }
 
+        // Fetch next node AFTER all event raising has finished.
+        // This ensures that we actually get the next node in case the linked list was modified by the events that were
+        // raised
+        next = node?.Next;
+
         // Remove from the world
         _activeContacts.Remove(contact.MapNode);
 
@@ -359,10 +380,8 @@ public abstract partial class SharedPhysicsSystem
         DebugTools.Assert(bodyB.Contacts.Contains(contact.BodyBNode.Value));
         bodyB.Contacts.Remove(contact.BodyBNode);
 
-        // Insert into the pool.
+        contact.Flags = ContactFlags.Deleted;
         _contactPool.Return(contact);
-
-        return true;
     }
 
     internal void CollideContacts()

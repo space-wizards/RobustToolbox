@@ -4,6 +4,7 @@ using Prometheus;
 using Robust.Client.GameStates;
 using Robust.Client.Player;
 using Robust.Client.Timing;
+using Robust.Client.UserInterface;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
@@ -71,6 +72,14 @@ namespace Robust.Client.GameObjects
             //  Client only dirties during prediction
             if (_gameTiming.InPrediction)
                 base.DirtyEntity(uid, meta);
+        }
+
+        public override bool TryQueueDeleteEntity(EntityUid? uid)
+        {
+            if (uid == null || !IsClientSide(uid.Value))
+                return false;
+
+            return base.TryQueueDeleteEntity(uid);
         }
 
         public override void QueueDeleteEntity(EntityUid? uid)

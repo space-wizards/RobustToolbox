@@ -260,6 +260,245 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
         _nodes.Clear();
     }
 
+    # region Helper Methods
+
+    /// <summary>
+    /// Helper method that inserts a node at a specific index.
+    /// Unless a node is text, an end index must be specified for the closing node.
+    /// </summary>
+    /// <param name="markupNode">The node to be inserted.</param>
+    /// <param name="startIndex">The index of the opening node.</param>
+    /// <param name="endIndex">The index of the closing node, if not a text node.</param>
+    public void InsertAtIndex(MarkupNode markupNode, int startIndex, int? endIndex = null)
+    {
+        if (startIndex > _nodes.Count)
+            throw new ArgumentOutOfRangeException("startIndex", "startIndex must be less than or equal to the number of nodes.");
+
+        if (markupNode.Name == null)
+        {
+            _nodes.Insert(startIndex, markupNode);
+            return;
+        }
+
+        ArgumentNullException.ThrowIfNull(endIndex);
+        if (endIndex > _nodes.Count)
+            throw new ArgumentOutOfRangeException("endIndex", "endIndex must be less than or equal to the number of nodes.");
+
+        if (startIndex > endIndex.Value)
+            throw new ArgumentException("startIndex must be less than or equal to endIndex.");
+
+        _nodes.Insert(startIndex, markupNode);
+        _nodes.Insert(endIndex.Value + 1, new MarkupNode(markupNode.Name, null, null, true));
+    }
+
+    /// <summary>
+    /// Helper method that inserts a node around the message.
+    /// </summary>
+    /// <param name="markupNode">The node to be inserted; may not be a text node.</param>
+    public void InsertAroundMessage(MarkupNode markupNode)
+    {
+        ArgumentNullException.ThrowIfNull(markupNode.Name);
+
+        InsertAtIndex(markupNode, 0, _nodes.Count);
+    }
+
+    /// <summary>
+    /// Helper method that inserts a node surrounding the first and last text node.
+    /// </summary>
+    /// <param name="markupNode">The node to be inserted; may not be a text node.</param>
+    public void InsertAroundText(MarkupNode markupNode)
+    {
+        ArgumentNullException.ThrowIfNull(markupNode.Name);
+
+        var firstIndex = _nodes.FindIndex(x => x.Name == null);
+        var lastIndex = _nodes.FindLastIndex(x => x.Name == null);
+
+        InsertAtIndex(markupNode, firstIndex, lastIndex + 1);
+    }
+
+    /// <summary>
+    /// Helper method that inserts a node around a string.
+    /// </summary>
+    /// <param name="markupNode">The node to be inserted; may not be a text node.</param>
+    /// <param name="stringText">The string to look for when inserting.</param>
+    /// <param name="matchCase">If true, the string case must match exactly.</param>
+    public void InsertAroundString(MarkupNode markupNode, string stringText, bool matchCase = true)
+    {
+        ArgumentNullException.ThrowIfNull(markupNode.Name);
+
+        for (int i = 0; i < _nodes.Count; i++)
+        {
+            var node = _nodes[i];
+
+            if (node.Name == null && node.Value.StringValue != null)
+            {
+                var stringNode = node.Value.StringValue;
+                var stringLocation = matchCase ? stringNode.IndexOf(stringText, StringComparison.Ordinal) : stringNode.IndexOf(stringText, StringComparison.OrdinalIgnoreCase);
+
+                if (stringLocation != -1)
+                {
+                    // Original node needs to be removed, to make room for the new ones.
+                    _nodes.RemoveAt(i);
+
+                    // j keeps track of the number of added nodes.
+                    var j = 0;
+
+                    var beforeText = stringNode.Substring(0, stringLocation);
+                    if (beforeText != "")
+                    {
+                        InsertAtIndex(new MarkupNode(beforeText), i);
+                        j++;
+                    }
+
+                    InsertAtIndex(new MarkupNode(stringNode.Substring(stringLocation, stringText.Length)), i + j);
+                    InsertAtIndex(markupNode, i + j, i + j + 1);
+
+                    j += 3;
+
+                    var afterText = stringNode.Substring(stringLocation + stringText.Length);
+                    if (afterText != "")
+                    {
+                        InsertAtIndex(new MarkupNode(afterText), i + j);
+                    }
+
+                    // We make sure to move the i forwards, searching for additional instances of the string.
+                    i += j - 2;
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Helper function that inserts a node before tags of a specific type.
+    /// </summary>
+    /// <param name="markupNode">The node to be inserted.</param>
+    /// <param name="tagText">The tag to search for.</param>
+    public void InsertBeforeTag(MarkupNode markupNode, string tagText)
+    {
+        var i = _nodes.FindIndex(x => x.Name == tagText && !x.Closing);
+
+        while (i != -1)
+        {
+            InsertAtIndex(markupNode, i, i);
+
+            if (i + 2 >= _nodes.Count)
+                break;
+
+            i = _nodes.FindIndex(i + 2, x => x.Name == tagText && !x.Closing);
+        }
+    }
+
+    /// <summary>
+    /// Helper function that inserts a node after tags of a specific type.
+    /// </summary>
+    /// <param name="markupNode">The node to be inserted.</param>
+    /// <param name="tagText">The tag to search for.</param>
+    public void InsertAfterTag(MarkupNode markupNode, string tagText)
+    {
+        var i = _nodes.FindIndex(x => x.Name == tagText && x.Closing);
+
+        while (i != -1)
+        {
+            InsertAtIndex(markupNode, i + 1, i + 1);
+
+            if (i + 2 >= _nodes.Count)
+                break;
+
+            i = _nodes.FindIndex(i + 2, x => x.Name == tagText && x.Closing);
+        }
+    }
+
+    /// <summary>
+    /// Helper function that inserts a node inside of other nodes of a specific type.
+    /// The new node encloses any other nodes that the target node encloses.
+    /// </summary>
+    /// <param name="markupNode">The node to be inserted; may not be a text node.</param>
+    /// <param name="tagText">The tag to search for.</param>
+    public void InsertInsideTag(MarkupNode markupNode, string tagText)
+    {
+        ArgumentNullException.ThrowIfNull(markupNode.Name);
+
+        var i = _nodes.FindIndex(x => x.Name == tagText && !x.Closing);
+        var j = _nodes.FindLastIndex(x => x.Name == tagText && x.Closing);
+
+        while (i != -1 || j != -1)
+        {
+            InsertAtIndex(markupNode, i + 1, j);
+
+            if (i + 2 >= _nodes.Count)
+                break;
+
+            i = _nodes.FindIndex(i + 2, x => x.Name == tagText && !x.Closing);
+            j = _nodes.FindLastIndex(j, x => x.Name == tagText && x.Closing);
+        }
+    }
+
+    /// <summary>
+    /// Helper function that inserts a node around other nodes of a specific type.
+    /// The new node encloses any other nodes that the target node encloses.
+    /// </summary>
+    /// <param name="markupNode">The node to be inserted; may not be a text node.</param>
+    /// <param name="tagText">The tag to search for.</param>
+    public void InsertOutsideTag(MarkupNode markupNode, string tagText)
+    {
+        ArgumentNullException.ThrowIfNull(markupNode.Name);
+
+        var i = _nodes.FindIndex(x => x.Name == tagText && !x.Closing);
+        var j = _nodes.FindLastIndex(x => x.Name == tagText && x.Closing);
+
+        while (i != -1 || j != -1)
+        {
+            InsertAtIndex(markupNode, i, j + 1);
+
+            if (i + 2 >= _nodes.Count)
+                break;
+
+            i = _nodes.FindIndex(i + 2, x => x.Name == tagText && !x.Closing);
+            j = _nodes.FindLastIndex(j, x => x.Name == tagText && x.Closing);
+        }
+    }
+
+    /// <summary>
+    /// Helper function that inserts a node before the entire message.
+    /// </summary>
+    /// <param name="markupNode">The node to be inserted.</param>
+    public void InsertBeforeMessage(MarkupNode markupNode)
+    {
+        InsertAtIndex(markupNode, 0, 0);
+    }
+
+    /// <summary>
+    /// Helper function that inserts a node after the entire message.
+    /// </summary>
+    /// <param name="markupNode">The node to be inserted.</param>
+    public void InsertAfterMessage(MarkupNode markupNode)
+    {
+        PushTag(markupNode, true);
+    }
+
+    /// <summary>
+    /// Helper function that tries to find the first instance of a tag and returns a FormattedMessage containing the nodes inside.
+    /// </summary>
+    /// <param name="returnMessage">The node to be inserted.</param>
+    /// <param name="tagText">The tag to search for.</param>
+    public bool TryGetMessageInsideTag(out FormattedMessage? returnMessage, string tagText)
+    {
+        var openingNode = _nodes.FindIndex(x => x.Name == tagText && !x.Closing);
+        var closingNode = _nodes.FindLastIndex(x => x.Name == tagText && x.Closing);
+
+        if (openingNode == -1 || closingNode == -1)
+        {
+            returnMessage = null;
+            return false;
+        }
+
+        var resultingRange = _nodes.GetRange(openingNode, closingNode - openingNode + 1);
+        returnMessage = new FormattedMessage(resultingRange);
+        return true;
+    }
+
+    # endregion
+
     /// <summary>
     /// Returns an enumerator that enumerates every rune for each text node contained in this formatted text instance.
     /// </summary>

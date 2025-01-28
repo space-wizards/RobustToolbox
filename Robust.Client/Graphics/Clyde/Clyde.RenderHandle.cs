@@ -106,7 +106,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 if (texture is AtlasTexture atlas)
                 {
-                    int horizontalNormalOffset = atlas.Width;
+                    int horizontalNormalOffset = atlas.RegionWidth;
                     texture = atlas.SourceTexture;
                     if (subRegion.HasValue)
                     {

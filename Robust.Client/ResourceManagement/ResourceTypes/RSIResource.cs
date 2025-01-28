@@ -5,7 +5,6 @@ using System.IO.IsolatedStorage;
 using System.Linq;
 using Robust.Client.Graphics;
 using Robust.Client.Utility;
-using Robust.Shared.ContentPack;
 using Robust.Shared.Graphics;
 using Robust.Shared.Graphics.RSI;
 using Robust.Shared.IoC;
@@ -15,6 +14,9 @@ using Robust.Shared.Resources;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using TerraFX.Interop.Windows;
+using Color = SixLabors.ImageSharp.Color;
+using IResourceManager = Robust.Shared.ContentPack.IResourceManager;
 
 namespace Robust.Client.ResourceManagement
 {
@@ -58,6 +60,45 @@ namespace Robust.Client.ResourceManagement
                 loadStepData.LoadParameters);
         }
 
+        internal static void ConvertBumpToNormal(Image<Rgba32> bump, out Image<Rgba32> normal, float factor = 1)
+        {
+            // Maybe not the most elegant method, but better than nothing
+            int Width = bump.Width;
+            int Height = bump.Height;
+            normal = new Image<Rgba32>(Width, Height);
+            int x, y;
+            for (x = 0; x < Width; x++)
+            for (y = 0; y < Height; y++)
+            {
+                float Left = bump[x - 1 < 0 ? x : 0, y].R;
+                float Right = bump[x + 1 >= Width ? x : 0, y].R;
+                float Up = bump[x, y - 1 < 0 ? y : 0].R;
+                float Down = bump[x, y - 1 >= Height ? y : 0].R;
+                double XA = Math.Atan(factor * (Left - Right));
+                double YA = Math.Atan(factor * (Up - Down));
+
+                var (XDSin, XDCos) = Math.SinCos(XA);
+                var (YDSin, YDCos) = Math.SinCos(YA);
+
+                var XSin = (float)XDSin;
+                var XCos = (float)XDCos;
+                var YSin = (float)YDSin;
+                var YCos = (float)YDCos;
+
+                Vector3 XV = new Vector3(XCos, 0f,XSin);
+                Vector3 YV = new Vector3(0f, YCos, YSin);
+
+                var NormalV = Vector3.Cross(XV, YV);
+                NormalV.Normalize();
+
+                float X = NormalV.X;
+                float Y = NormalV.Y;
+                float Z = NormalV.Z;
+                var NewColor = new Rgba32(X, Y, Z, 0f);
+                normal[x, y] = NewColor;
+            }
+        }
+
         internal static void LoadPreTexture(IResourceManager manager, LoadStepData data)
         {
             var manifestPath = data.Path / "meta.json";
@@ -96,6 +137,7 @@ namespace Robust.Client.ResourceManagement
                 // Load image from disk.
                 var texPath = data.Path / (stateObject.StateId + ".png");
                 var normalPath = data.Path / (stateObject.NormalId + ".png");
+                var bumpPath = data.Path / (stateObject.BumpId + ".png");
                 using (var stream = manager.ContentFileRead(texPath))
                 {
                     var texture = Image.Load<Rgba32>(stream);
@@ -245,7 +287,7 @@ namespace Robust.Client.ResourceManagement
                         var sheetPos = (sheetColumn * frameSize.X, sheetRow * frameSize.Y);
 
                         dirOffsets[j] = sheetPos;
-                        dirOutput[j] = new AtlasTexture(texture, UIBox2.FromDimensions(data.AtlasOffset + sheetPos, frameSize));
+                        dirOutput[j] = new AtlasTexture(texture, UIBox2.FromDimensions(data.AtlasOffset + sheetPos, frameSize), data.SheetNormalOffset);
                     }
                 }
 

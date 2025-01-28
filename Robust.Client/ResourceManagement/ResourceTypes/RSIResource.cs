@@ -60,7 +60,7 @@ namespace Robust.Client.ResourceManagement
                 loadStepData.LoadParameters);
         }
 
-        internal static void ConvertBumpToNormal(Image<Rgba32> bumpmap, out Image<Rgba32> normal, float factor = 1)
+        internal static void ConvertBumpToNormal(Image<Rgba32> bumpmap, out Image<Rgba32> normal, float factor = 100f)
         {
             int Width = bumpmap.Width;
             int Height = bumpmap.Height;
@@ -69,17 +69,22 @@ namespace Robust.Client.ResourceManagement
             for (x = 0; x < Width; x++)
             for (y = 0; y < Height; y++)
             {
-                float Left = bumpmap[x - 1 < 0 ? x : 0, y].R;
-                float Right = bumpmap[x + 1 >= Width ? x : 0, y].R;
-                float Up = bumpmap[x, y - 1 < 0 ? y : 0].R;
-                float Down = bumpmap[x, y - 1 >= Height ? y : 0].R;
+                int XL = Math.Clamp(x - 1, 0, Width - 1);
+                int YL = Math.Clamp(y - 1, 0, Height - 1);
+                int XR = Math.Clamp(x + 1, 0, Width - 1);
+                int YR = Math.Clamp(y + 1, 0, Height - 1);
+
+                float Left = bumpmap[XL, y].R;
+                float Right = bumpmap[XR, y].R;
+                float Up = bumpmap[x, YL].R;
+                float Down = bumpmap[x, YR].R;
 
                 // very good math
                 // cross product of a certain two vectors
                 var Cross = new Vector3((Left - Right) * factor, (Down - Up) * factor, 1f);
                 Cross.Normalize();
 
-                var NewColor = new Rgba32(Cross.X, Cross.Y, Cross.Z, bumpmap[x, y].A);
+                var NewColor = new Rgba32((Cross.X + 1) * 0.5f, (Cross.Y + 1) * 0.5f, Cross.Z, bumpmap[x, y].A);
                 normal[x, y] = NewColor;
             }
         }
@@ -95,18 +100,23 @@ namespace Robust.Client.ResourceManagement
             {
                 if (original[x, y].A == 0)
                 {
-                    bumpmap[x, y] = new Rgba32(0f, 0f, 0f, 0f);
+                    bumpmap[x, y] = new Rgba32(0f, 0f, 0f);
                     continue;
                 }
 
-                float Left = bumpmap[x - 1 < 0 ? x : 0, y].A;
-                float Right = bumpmap[x + 1 >= Width ? x : 0, y].A;
-                float Up = bumpmap[x, y - 1 < 0 ? y : 0].A;
-                float Down = bumpmap[x, y - 1 >= Height ? y : 0].A;
+                int XL = Math.Clamp(x - 1, 0, Width - 1);
+                int YL = Math.Clamp(y - 1, 0, Height - 1);
+                int XR = Math.Clamp(x + 1, 0, Width - 1);
+                int YR = Math.Clamp(y + 1, 0, Height - 1);
 
-                if (Left * Right * Up * Down == 0)
+                byte Left = original[XL, y].A;
+                byte Right = original[XR, y].A;
+                byte Up = original[x, YL].A;
+                byte Down = original[x, YR].A;
+
+                if (Left == 0 || Right == 0 || Up == 0 || Down == 0)
                 {
-                    bumpmap[x, y] = new Rgba32(0.5f, 0.5f, 0.5f, original[x, y].A);
+                    bumpmap[x, y] = new Rgba32(1f, 0.5f, 0.5f, original[x, y].A);
                 }
                 else
                 {
@@ -165,7 +175,7 @@ namespace Robust.Client.ResourceManagement
                 {
                     var texture = Image.Load<Rgba32>(stream);
                     Image<Rgba32> normalImage;
-                    if (stateObject.NormalId is not null)
+                    if (stateObject.NormalId is {})
                     {
                         using (var normalStream = manager.ContentFileRead(normalPath))
                         {
@@ -174,18 +184,26 @@ namespace Robust.Client.ResourceManagement
                     }
                     else
                     {
-                        CreatePlaceholderNormal(texture, out normalImage);
+                        if (stateObject.BumpId is {})
+                        {
+                            using (var bumpStream = manager.ContentFileRead(bumpPath))
+                            {
+                                var bump = Image.Load<Rgba32>(bumpStream);
+                                ConvertBumpToNormal(bump, out normalImage);
+                                bump.Dispose();
+                            }
+                        }
+                        else
+                        {
+                            CreatePlaceholderNormal(texture, out normalImage);
+                        }
                     }
                     for (int nX = 0; nX < texture.Width; nX++)
+                    for (int nY = 0; nY < texture.Height; nY++)
                     {
-                        for (int nY = 0; nY < texture.Height; nY++)
-                        {
-                            var T = normalImage[nX, nY];
-                            if (stateObject.NormalId is not { })
-                                T = new Rgba32(0.5f, 0.5f, 1f, 0f);
-                            T.A = texture[nX, nY].A;
-                            normalImage[nX, nY] = T;
-                        }
+                        var T = normalImage[nX, nY];
+                        T.A = texture[nX, nY].A;
+                        normalImage[nX, nY] = T;
                     }
 
                     reg.Src = (texture, normalImage);

@@ -26,7 +26,7 @@ namespace Robust.Shared.GameObjects
 
         public void SetEnabled(EntityUid uid, bool enabled, CollisionWakeComponent? component = null)
         {
-            if (!_query.Resolve(uid, ref component) || component.Enabled == enabled)
+            if (!_query.Resolve(uid, ref component, false) || component.Enabled == enabled)
                 return;
 
             component.Enabled = enabled;

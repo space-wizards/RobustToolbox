@@ -487,6 +487,13 @@ namespace Robust.Client.Graphics.Clyde
 
                 if (eye.Position.MapId != MapId.Nullspace)
                 {
+
+                    // using (DebugGroup("GridNormals"))
+                    // using (_prof.Group("GridNormals"))
+                    // {
+                    //     _drawGrids(viewport, worldAABB, worldBounds, eye, normal: true);
+                    // }
+
                     // using (DebugGroup("EntityNormals"))
                     // using (_prof.Group("EntityNormals"))
                     // {

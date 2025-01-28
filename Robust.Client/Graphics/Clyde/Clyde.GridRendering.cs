@@ -27,7 +27,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private List<Entity<MapGridComponent>> _grids = new();
 
-        private void _drawGrids(Viewport viewport, Box2 worldAABB, Box2Rotated worldBounds, IEye eye)
+        private void _drawGrids(Viewport viewport, Box2 worldAABB, Box2Rotated worldBounds, IEye eye, bool normal = false)
         {
             var mapId = eye.Position.MapId;
             if (!_mapManager.MapExists(mapId))

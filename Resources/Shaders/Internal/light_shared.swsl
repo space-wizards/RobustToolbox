@@ -17,6 +17,7 @@ uniform highp float lightSoftness;
 uniform highp float lightIndex;
 uniform highp float globalRotation;
 uniform sampler2D shadowMap;
+uniform sampler2D normalMap;
 
 void vertex()
 {
@@ -59,8 +60,9 @@ void fragment()
     val *= lightPower;
     val *= mask;
 
-    highp vec2 j = rotateVector(normalize(diff), globalRotation);
-    highp float run = dot(j, vec2(1,0));
+    highp vec2 lightDir = rotateVector(normalize(diff), globalRotation);
+    highp vec4 normalSample = texture2D(normalMap, UV);
+    highp float run = dot(lightDir, vec2(normalSample.x, normalsample.y)) + normalSample.z;
     if (run < 0)
         discard;
 

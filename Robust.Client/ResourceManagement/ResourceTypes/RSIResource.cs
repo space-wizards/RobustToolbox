@@ -60,43 +60,66 @@ namespace Robust.Client.ResourceManagement
                 loadStepData.LoadParameters);
         }
 
-        internal static void ConvertBumpToNormal(Image<Rgba32> bump, out Image<Rgba32> normal, float factor = 1)
+        internal static void ConvertBumpToNormal(Image<Rgba32> bumpmap, out Image<Rgba32> normal, float factor = 1)
         {
-            // Maybe not the most elegant method, but better than nothing
-            int Width = bump.Width;
-            int Height = bump.Height;
+            int Width = bumpmap.Width;
+            int Height = bumpmap.Height;
             normal = new Image<Rgba32>(Width, Height);
             int x, y;
             for (x = 0; x < Width; x++)
             for (y = 0; y < Height; y++)
             {
-                float Left = bump[x - 1 < 0 ? x : 0, y].R;
-                float Right = bump[x + 1 >= Width ? x : 0, y].R;
-                float Up = bump[x, y - 1 < 0 ? y : 0].R;
-                float Down = bump[x, y - 1 >= Height ? y : 0].R;
-                double XA = Math.Atan(factor * (Left - Right));
-                double YA = Math.Atan(factor * (Up - Down));
+                float Left = bumpmap[x - 1 < 0 ? x : 0, y].R;
+                float Right = bumpmap[x + 1 >= Width ? x : 0, y].R;
+                float Up = bumpmap[x, y - 1 < 0 ? y : 0].R;
+                float Down = bumpmap[x, y - 1 >= Height ? y : 0].R;
 
-                var (XDSin, XDCos) = Math.SinCos(XA);
-                var (YDSin, YDCos) = Math.SinCos(YA);
+                // very good math
+                // cross product of a certain two vectors
+                var Cross = new Vector3((Left - Right) * factor, (Down - Up) * factor, 1f);
+                Cross.Normalize();
 
-                var XSin = (float)XDSin;
-                var XCos = (float)XDCos;
-                var YSin = (float)YDSin;
-                var YCos = (float)YDCos;
-
-                Vector3 XV = new Vector3(XCos, 0f,XSin);
-                Vector3 YV = new Vector3(0f, YCos, YSin);
-
-                var NormalV = Vector3.Cross(XV, YV);
-                NormalV.Normalize();
-
-                float X = NormalV.X;
-                float Y = NormalV.Y;
-                float Z = NormalV.Z;
-                var NewColor = new Rgba32(X, Y, Z, 0f);
+                var NewColor = new Rgba32(Cross.X, Cross.Y, Cross.Z, bumpmap[x, y].A);
                 normal[x, y] = NewColor;
             }
+        }
+
+        internal static void CreatePlaceholderBump(Image<Rgba32> original, out Image<Rgba32> bumpmap)
+        {
+            int x, y;
+            int Width = original.Width;
+            int Height = original.Height;
+            bumpmap = new Image<Rgba32>(Width, Height);
+            for (x = 0; x < Width; x++)
+            for (y = 0; y < Height; y++)
+            {
+                if (original[x, y].A == 0)
+                {
+                    bumpmap[x, y] = new Rgba32(0f, 0f, 0f, 0f);
+                    continue;
+                }
+
+                float Left = bumpmap[x - 1 < 0 ? x : 0, y].A;
+                float Right = bumpmap[x + 1 >= Width ? x : 0, y].A;
+                float Up = bumpmap[x, y - 1 < 0 ? y : 0].A;
+                float Down = bumpmap[x, y - 1 >= Height ? y : 0].A;
+
+                if (Left * Right * Up * Down == 0)
+                {
+                    bumpmap[x, y] = new Rgba32(0.5f, 0.5f, 0.5f, original[x, y].A);
+                }
+                else
+                {
+                    bumpmap[x, y] = new Rgba32(1f, 1f, 1f, original[x, y].A);
+                }
+            }
+        }
+
+        internal static void CreatePlaceholderNormal(Image<Rgba32> original, out Image<Rgba32> normalmap)
+        {
+            CreatePlaceholderBump(original, out var bumpmap);
+            ConvertBumpToNormal(bumpmap, out normalmap);
+            bumpmap.Dispose();
         }
 
         internal static void LoadPreTexture(IResourceManager manager, LoadStepData data)
@@ -151,7 +174,7 @@ namespace Robust.Client.ResourceManagement
                     }
                     else
                     {
-                        normalImage = new Image<Rgba32>(texture.Width, texture.Height);
+                        CreatePlaceholderNormal(texture, out normalImage);
                     }
                     for (int nX = 0; nX < texture.Width; nX++)
                     {

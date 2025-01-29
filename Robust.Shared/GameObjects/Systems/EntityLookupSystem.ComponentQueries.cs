@@ -67,7 +67,7 @@ public sealed partial class EntityLookupSystem
     /// <summary>
     /// Common method to determine if an entity overlaps the specified shape.
     /// </summary>
-    private bool IsIntersecting(MapId mapId, EntityUid uid, TransformComponent xform, IPhysShape shape, Transform shapeTransform, Box2 worldAABB, LookupFlags flags)
+    private bool IsIntersecting<TShape>(MapId mapId, EntityUid uid, TransformComponent xform, TShape shape, Transform shapeTransform, Box2 worldAABB, LookupFlags flags) where TShape : IPhysShape
     {
         var (entPos, entRot) = _transform.GetWorldPositionRotation(xform);
 
@@ -121,25 +121,27 @@ public sealed partial class EntityLookupSystem
         if (!_broadQuery.Resolve(lookupUid, ref lookup))
             return;
 
-        var lookupPoly = new Polygon(localAABB);
-
-        AddEntitiesIntersecting(lookupUid, intersecting, lookupPoly, localAABB, Physics.Transform.Empty, flags, query, lookup);
+        var polygon = _physics.GetPooled(localAABB);
+        AddEntitiesIntersecting(lookupUid, intersecting, polygon, localAABB, Physics.Transform.Empty, flags, query, lookup);
+        _physics.ReturnPooled(polygon);
     }
 
-    private void AddEntitiesIntersecting<T>(
+    private void AddEntitiesIntersecting<T, TShape>(
         EntityUid lookupUid,
         HashSet<Entity<T>> intersecting,
-        IPhysShape shape,
+        TShape shape,
         Box2 localAABB,
         Transform localTransform,
         LookupFlags flags,
         EntityQuery<T> query,
-        BroadphaseComponent? lookup = null) where T : IComponent
+        BroadphaseComponent? lookup = null)
+        where T : IComponent
+       where TShape : IPhysShape
     {
         if (!_broadQuery.Resolve(lookupUid, ref lookup))
             return;
 
-        var state = new QueryState<T>(
+        var state = new QueryState<T, TShape>(
             intersecting,
             shape,
             localTransform,
@@ -174,7 +176,7 @@ public sealed partial class EntityLookupSystem
 
         return;
 
-        static bool PhysicsQuery(ref QueryState<T> state, in FixtureProxy value)
+        static bool PhysicsQuery(ref QueryState<T, TShape> state, in FixtureProxy value)
         {
             if (!state.Sensors && !value.Fixture.Hard)
                 return true;
@@ -195,7 +197,7 @@ public sealed partial class EntityLookupSystem
             return true;
         }
 
-        static bool SundriesQuery(ref QueryState<T> state, in EntityUid value)
+        static bool SundriesQuery(ref QueryState<T, TShape> state, in EntityUid value)
         {
             if (!state.Query.TryGetComponent(value, out var comp))
                 return true;
@@ -250,22 +252,26 @@ public sealed partial class EntityLookupSystem
         if (!_broadQuery.Resolve(lookupUid, ref lookup))
             return false;
 
-        var shape = new Polygon(localAABB);
+        var polygon = _physics.GetPooled(localAABB);
         var (lookupPos, lookupRot) = _transform.GetWorldPositionRotation(lookupUid);
         var transform = new Transform(lookupPos, lookupRot);
+        var result = AnyComponentsIntersecting(lookupUid, polygon, localAABB, transform, flags, query, ignored, lookup);
+        _physics.ReturnPooled(polygon);
 
-        return AnyComponentsIntersecting(lookupUid, shape, localAABB, transform, flags, query, ignored, lookup);
+        return result;
     }
 
-    private bool AnyComponentsIntersecting<T>(
+    private bool AnyComponentsIntersecting<T, TShape>(
         EntityUid lookupUid,
-        IPhysShape shape,
+        TShape shape,
         Box2 localAABB,
         Transform shapeTransform,
         LookupFlags flags,
         EntityQuery<T> query,
         EntityUid? ignored = null,
-        BroadphaseComponent? lookup = null) where T : IComponent
+        BroadphaseComponent? lookup = null)
+        where T : IComponent
+       where TShape : IPhysShape
     {
         /*
          * Unfortunately this is split from the other query as we can short-circuit here, hence the code duplication.
@@ -275,7 +281,7 @@ public sealed partial class EntityLookupSystem
         if (!_broadQuery.Resolve(lookupUid, ref lookup))
             return false;
 
-        var state = new AnyQueryState<T>(false,
+        var state = new AnyQueryState<T, TShape>(false,
             ignored,
             shape,
             shapeTransform,
@@ -317,7 +323,7 @@ public sealed partial class EntityLookupSystem
 
         return state.Found;
 
-        static bool PhysicsQuery(ref AnyQueryState<T> state, in FixtureProxy value)
+        static bool PhysicsQuery(ref AnyQueryState<T, TShape> state, in FixtureProxy value)
         {
             if (value.Entity == state.Ignored)
                 return true;
@@ -342,7 +348,7 @@ public sealed partial class EntityLookupSystem
             return false;
         }
 
-        static bool SundriesQuery(ref AnyQueryState<T> state, in EntityUid value)
+        static bool SundriesQuery(ref AnyQueryState<T, TShape> state, in EntityUid value)
         {
             if (state.Ignored == value)
                 return true;
@@ -421,10 +427,11 @@ public sealed partial class EntityLookupSystem
 
     public bool AnyComponentsIntersecting(Type type, MapId mapId, Box2 worldAABB, EntityUid? ignored = null, LookupFlags flags = DefaultFlags)
     {
-        var shape = new Polygon(worldAABB);
+        var polygon = _physics.GetPooled(worldAABB);
         var transform = Physics.Transform.Empty;
-
-        return AnyComponentsIntersecting(type, mapId, shape, transform, ignored, flags);
+        var result = AnyComponentsIntersecting(type, mapId, polygon, transform, ignored, flags);
+        _physics.ReturnPooled(polygon);
+        return result;
     }
 
     public bool AnyComponentsIntersecting(Type type, MapId mapId, IPhysShape shape, Transform shapeTransform, EntityUid? ignored = null, LookupFlags flags = DefaultFlags)
@@ -489,30 +496,33 @@ public sealed partial class EntityLookupSystem
         if (mapId == MapId.Nullspace)
             return;
 
-        var shape = new Polygon(worldAABB);
+        var polygon = _physics.GetPooled(worldAABB);
         var transform = Physics.Transform.Empty;
 
-        GetEntitiesIntersecting(type, mapId, shape, transform, intersecting, flags);
+        GetEntitiesIntersecting(type, mapId, polygon, transform, intersecting, flags);
+        _physics.ReturnPooled(polygon);
     }
 
     public void GetEntitiesIntersecting<T>(MapId mapId, Box2Rotated worldBounds, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
     {
         if (mapId == MapId.Nullspace) return;
 
-        var shape = new Polygon(worldBounds);
+        var polygon = _physics.GetPooled(worldBounds);
         var shapeTransform = Physics.Transform.Empty;
 
-        GetEntitiesIntersecting(mapId, shape, shapeTransform, entities, flags);
+        GetEntitiesIntersecting(mapId, polygon, shapeTransform, entities, flags);
+        _physics.ReturnPooled(polygon);
     }
 
     public void GetEntitiesIntersecting<T>(MapId mapId, Box2 worldAABB, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
     {
         if (mapId == MapId.Nullspace) return;
 
-        var shape = new Polygon(worldAABB);
+        var polygon = _physics.GetPooled(worldAABB);
         var shapeTransform = Physics.Transform.Empty;
 
-        GetEntitiesIntersecting(mapId, shape, shapeTransform, entities, flags);
+        GetEntitiesIntersecting(mapId, polygon, shapeTransform, entities, flags);
+        _physics.ReturnPooled(polygon);
     }
 
     #endregion
@@ -839,10 +849,10 @@ public sealed partial class EntityLookupSystem
         EntityQuery<T> Query
     ) where T : IComponent;
 
-    private record struct AnyQueryState<T>(
+    private record struct AnyQueryState<T, TShape>(
         bool Found,
         EntityUid? Ignored,
-        IPhysShape Shape,
+        TShape Shape,
         Transform Transform,
         FixtureSystem Fixtures,
         SharedPhysicsSystem Physics,
@@ -850,11 +860,12 @@ public sealed partial class EntityLookupSystem
         EntityQuery<T> Query,
         EntityQuery<FixturesComponent> FixturesQuery,
         LookupFlags Flags
-    ) where T : IComponent;
+    ) where T : IComponent
+     where TShape : IPhysShape;
 
-    private readonly record struct QueryState<T>(
+    private readonly record struct QueryState<T, TShape>(
         HashSet<Entity<T>> Intersecting,
-        IPhysShape Shape,
+        TShape Shape,
         Transform Transform,
         FixtureSystem Fixtures,
         SharedPhysicsSystem Physics,
@@ -863,5 +874,6 @@ public sealed partial class EntityLookupSystem
         EntityQuery<FixturesComponent> FixturesQuery,
         bool Sensors,
         bool Approximate
-    ) where T : IComponent;
+    ) where T : IComponent
+     where TShape : IPhysShape;
 }

@@ -77,7 +77,7 @@ namespace Robust.Client.ViewVariables.Editors
         {
             var protoMan = IoCManager.Resolve<IPrototypeManager>();
 
-            if (!protoMan.TryGetVariantFrom(typeof(T), out var variant)) return;
+            if (!protoMan.TryGetKindFrom(typeof(T), out var variant)) return;
 
             var list = new List<string>();
 

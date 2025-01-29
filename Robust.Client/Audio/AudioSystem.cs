@@ -37,7 +37,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
     [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
     [Dependency] private readonly IEyeManager _eyeManager = default!;
     [Dependency] private readonly IResourceCache _resourceCache = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
     [Dependency] private readonly IParallelManager _parMan = default!;
     [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
     [Dependency] private readonly IAudioInternal _audio = default!;
@@ -49,9 +48,10 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// Per-tick cache of relevant streams.
     /// </summary>
     private readonly List<(EntityUid Entity, AudioComponent Component, TransformComponent Xform)> _streams = new();
-    private EntityUid? _listenerGrid;
     private UpdateAudioJob _updateAudioJob;
 
+    private float _audioFrameTime;
+    private float _audioFrameTimeRemaining;
 
     private EntityQuery<PhysicsComponent> _physicsQuery;
 
@@ -110,7 +110,14 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
         Subs.CVar(CfgManager, CVars.AudioAttenuation, OnAudioAttenuation, true);
         Subs.CVar(CfgManager, CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
+        Subs.CVar(CfgManager, CVars.AudioTickRate, OnAudioTickRate, true);
         InitializeLimit();
+    }
+
+    private void OnAudioTickRate(int obj)
+    {
+        _audioFrameTime = 1f / obj;
+        _audioFrameTimeRemaining = MathF.Min(_audioFrameTimeRemaining, _audioFrameTime);
     }
 
     private void OnAudioState(EntityUid uid, AudioComponent component, ref AfterAutoHandleStateEvent args)
@@ -254,6 +261,13 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
     public override void FrameUpdate(float frameTime)
     {
+        _audioFrameTimeRemaining -= frameTime;
+
+        if (_audioFrameTimeRemaining > 0f)
+            return;
+
+        // Clamp to 0 in case we have a really long frame.
+        _audioFrameTimeRemaining = MathF.Max(0f, _audioFrameTime + _audioFrameTimeRemaining);
         var eye = _eyeManager.CurrentEye;
         var localEntity = _playerManager.LocalEntity;
         Vector2 listenerVelocity;
@@ -276,9 +290,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
         {
             _streams.Add((uid, comp, xform));
         }
-
-        _mapManager.TryFindGridAt(ourPos, out var gridUid, out _);
-        _listenerGrid = gridUid == EntityUid.Invalid ? null : gridUid;
 
         try
         {
@@ -332,7 +343,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
         Vector2 worldPos;
         component.Volume = component.Params.Volume;
-        Vector2 delta;
 
         // Handle grid audio differently by using grid position.
         if ((component.Flags & AudioFlags.GridAudio) != 0x0)
@@ -346,7 +356,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         }
 
         // Max distance check
-        delta = worldPos - listener.Position;
+        var delta = worldPos - listener.Position;
         var distance = delta.Length();
 
         // Out of range so just clip it for us.
@@ -443,6 +453,17 @@ public sealed partial class AudioSystem : SharedAudioSystem
         return null; // uhh Lets hope predicted audio never needs to somehow store the playing audio....
     }
 
+    /// <inheritdoc />
+    public override (EntityUid Entity, AudioComponent Component)? PlayLocal(
+        SoundSpecifier? sound,
+        EntityUid source,
+        EntityUid? soundInitiator,
+        AudioParams? audioParams = null
+    )
+    {
+        return PlayPredicted(sound, source, soundInitiator, audioParams);
+    }
+
     public override (EntityUid Entity, AudioComponent Component)? PlayPredicted(SoundSpecifier? sound, EntityCoordinates coordinates, EntityUid? user, AudioParams? audioParams = null)
     {
         if (Timing.IsFirstTimePredicted && sound != null)
@@ -483,7 +504,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         var (entity, component) = CreateAndStartPlayingStream(audioParams, stream);
         component.Global = true;
         component.Source.Global = true;
-        Dirty(entity, component);
+        DirtyField(entity, component, nameof(AudioComponent.Global));
         return (entity, component);
     }
 
@@ -648,7 +669,8 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
         // TODO clamp the offset inside of SetPlaybackPosition() itself.
         var offset = audioP.PlayOffsetSeconds;
-        offset = Math.Clamp(offset, 0f, (float) stream.Length.TotalSeconds - 0.01f);
+        var maxOffset = Math.Max((float) stream.Length.TotalSeconds - 0.01f, 0f);
+        offset = Math.Clamp(offset, 0f, maxOffset);
         source.PlaybackPosition = offset;
 
         // For server we will rely on the adjusted one but locally we will have to adjust it ourselves.

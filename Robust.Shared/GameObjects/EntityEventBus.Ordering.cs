@@ -35,6 +35,9 @@ namespace Robust.Shared.GameObjects
             if (broadcast)
                 CollectBroadcastOrdered(EventSource.Local, subs, ref found);
 
+            // TODO PERF
+            // consider ordering the linked list itself?
+            // Then make broadcast events always a lower priority and replace the valuelist with stackalloc?
             EntCollectOrdered(uid, eventType, ref found);
 
             DispatchOrderedEvents(ref unitRef, ref found);

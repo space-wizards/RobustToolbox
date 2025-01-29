@@ -5,6 +5,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Reflection;
+using Robust.Shared.Serialization.Manager;
 using Robust.UnitTesting.Shared.Reflection;
 
 namespace Robust.UnitTesting.Shared.GameObjects
@@ -14,7 +15,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         [Test]
         public void SubscribeCompEvent()
         {
-            var compFactory = new ComponentFactory(new DynamicTypeFactory(), new ReflectionManagerTest(), new LogManager());
+            var compFactory = new ComponentFactory(new DynamicTypeFactory(), new ReflectionManagerTest(), new SerializationManager(), new LogManager());
 
             // Arrange
             var entUid = new EntityUid(7);
@@ -85,6 +86,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             compFacMock.Setup(m => m.GetRegistration(CompIdx.Index<MetaDataComponent>())).Returns(compRegistration);
             compFacMock.Setup(m => m.GetAllRegistrations()).Returns(new[] { compRegistration });
+            compFacMock.Setup(m => m.GetIndex(typeof(MetaDataComponent))).Returns(CompIdx.Index<MetaDataComponent>());
             entManMock.Setup(m => m.ComponentFactory).Returns(compFacMock.Object);
 
             IComponent? outIComponent = compInstance;
@@ -143,6 +145,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             compFacMock.Setup(m => m.GetRegistration(CompIdx.Index<MetaDataComponent>())).Returns(compRegistration);
             compFacMock.Setup(m => m.GetAllRegistrations()).Returns(new[] { compRegistration });
+            compFacMock.Setup(m => m.GetIndex(typeof(MetaDataComponent))).Returns(CompIdx.Index<MetaDataComponent>());
             entManMock.Setup(m => m.ComponentFactory).Returns(compFacMock.Object);
 
             IComponent? outIComponent = compInstance;
@@ -167,7 +170,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             entManMock.Raise(m => m.ComponentAdded += null, new AddedComponentEventArgs(new ComponentEventArgs(compInstance, entUid), reg));
 
             // Raise
-            ((IEventBus)bus).RaiseComponentEvent(compInstance, new ComponentInit());
+            ((IEventBus)bus).RaiseComponentEvent(entUid, compInstance, new ComponentInit());
 
             // Assert
             Assert.That(calledCount, Is.EqualTo(1));
@@ -199,6 +202,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                     CompIdx.Index<T>());
 
                 compFacMock.Setup(m => m.GetRegistration(CompIdx.Index<T>())).Returns(reg);
+                compFacMock.Setup(m => m.GetIndex(typeof(T))).Returns(CompIdx.Index<T>());
                 entManMock.Setup(m => m.TryGetComponent(entUid, CompIdx.Index<T>(), out inst)).Returns(true);
                 entManMock.Setup(m => m.GetComponent(entUid, CompIdx.Index<T>())).Returns(inst);
                 entManMock.Setup(m => m.GetComponentInternal(entUid, CompIdx.Index<T>())).Returns(inst);
@@ -260,6 +264,95 @@ namespace Robust.UnitTesting.Shared.GameObjects
             Assert.That(a, Is.True, "A did not fire");
             Assert.That(b, Is.True, "B did not fire");
             Assert.That(c, Is.True, "C did not fire");
+        }
+
+        [Test]
+        public void CompEventLoop()
+        {
+            var entUid = new EntityUid(7);
+
+            var entManMock = new Mock<IEntityManager>();
+            var compFacMock = new Mock<IComponentFactory>();
+            var reflectMock = new Mock<IReflectionManager>();
+
+            List<ComponentRegistration> allRefTypes = new();
+            void Setup<T>(out T instance) where T : IComponent, new()
+            {
+                IComponent? inst = instance = new T();
+                var reg = new ComponentRegistration(
+                    typeof(T).Name,
+                    typeof(T),
+                    CompIdx.Index<T>());
+
+                compFacMock.Setup(m => m.GetRegistration(CompIdx.Index<T>())).Returns(reg);
+                compFacMock.Setup(m => m.GetIndex(typeof(T))).Returns(CompIdx.Index<T>());
+                entManMock.Setup(m => m.TryGetComponent(entUid, CompIdx.Index<T>(), out inst)).Returns(true);
+                entManMock.Setup(m => m.GetComponent(entUid, CompIdx.Index<T>())).Returns(inst);
+                entManMock.Setup(m => m.GetComponentInternal(entUid, CompIdx.Index<T>())).Returns(inst);
+                allRefTypes.Add(reg);
+            }
+
+            Setup<OrderAComponent>(out var instA);
+            Setup<OrderBComponent>(out var instB);
+
+            compFacMock.Setup(m => m.GetAllRegistrations()).Returns(allRefTypes.ToArray());
+
+            entManMock.Setup(m => m.ComponentFactory).Returns(compFacMock.Object);
+            var bus = new EntityEventBus(entManMock.Object, reflectMock.Object);
+            bus.OnlyCallOnRobustUnitTestISwearToGodPleaseSomebodyKillThisNightmare();
+
+            var regA = compFacMock.Object.GetRegistration(CompIdx.Index<OrderAComponent>());
+            var regB = compFacMock.Object.GetRegistration(CompIdx.Index<OrderBComponent>());
+
+            var handlerACount = 0;
+            void HandlerA(EntityUid uid, Component comp, TestEvent ev)
+            {
+                Assert.That(handlerACount, Is.EqualTo(0));
+                handlerACount++;
+
+                // add and then remove component B
+                bus.OnComponentRemoved(new RemovedComponentEventArgs(new ComponentEventArgs(instB, entUid), false, default!, CompIdx.Index<OrderBComponent>()));
+                bus.OnComponentAdded(new AddedComponentEventArgs(new ComponentEventArgs(instB, entUid), regB));
+            }
+
+            var handlerBCount = 0;
+            void HandlerB(EntityUid uid, Component comp, TestEvent ev)
+            {
+                Assert.That(handlerBCount, Is.EqualTo(0));
+                handlerBCount++;
+
+                // add and then remove component A
+                bus.OnComponentRemoved(new RemovedComponentEventArgs(new ComponentEventArgs(instA, entUid), false, default!, CompIdx.Index<OrderAComponent>()));
+                bus.OnComponentAdded(new AddedComponentEventArgs(new ComponentEventArgs(instA, entUid), regA));
+            }
+
+            bus.SubscribeLocalEvent<OrderAComponent, TestEvent>(HandlerA, typeof(OrderAComponent));
+            bus.SubscribeLocalEvent<OrderBComponent, TestEvent>(HandlerB, typeof(OrderBComponent));
+            bus.LockSubscriptions();
+
+            // add a component to the system
+            bus.OnEntityAdded(entUid);
+
+            bus.OnComponentAdded(new AddedComponentEventArgs(new ComponentEventArgs(instA, entUid), regA));
+            bus.OnComponentAdded(new AddedComponentEventArgs(new ComponentEventArgs(instB, entUid), regB));
+
+            // Event subscriptions currently use a linked list.
+            // Currently expect event subscriptions to be raised in order: handlerB -> handlerA
+            // If a component gets removed and added again, it gets moved back to the front of the linked list.
+            // I.e., adding and then removing compA changes the linked list order:  handlerA -> handlerB
+            //
+            // This could in principle cause the event raising code to  enter an infinite loop.
+            // Adding and removing a comp in an event handler may seem silly but:
+            // - it doesn't have to be the same component if you had a chain of three or more components
+            // - some event handlers raise other events and can lead to convoluted chains of interactions that might inadvertently trigger something like this.
+
+            // Raise
+            bus.RaiseLocalEvent(entUid, new TestEvent(0));
+
+            // Assert
+            Assert.That(handlerACount, Is.LessThanOrEqualTo(1));
+            Assert.That(handlerBCount, Is.LessThanOrEqualTo(1));
+            Assert.That(handlerACount+handlerBCount, Is.GreaterThan(0));
         }
 
         private sealed partial class DummyComponent : Component

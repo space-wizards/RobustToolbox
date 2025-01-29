@@ -1,5 +1,6 @@
 ﻿using System;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Generic;
+using Robust.Shared.Toolshed.TypeParsers;
 
 namespace Robust.Shared.Prototypes;
 
@@ -13,7 +14,12 @@ namespace Robust.Shared.Prototypes;
 /// </remarks>
 /// <remarks><seealso cref="EntProtoId"/> for an <see cref="EntityPrototype"/> alias.</remarks>
 [Serializable]
-public readonly record struct ProtoId<T>(string Id) : IEquatable<string>, IComparable<ProtoId<T>> where T : class, IPrototype
+[PreferOtherType(typeof(EntityPrototype), typeof(EntProtoId))]
+public readonly record struct ProtoId<T>(string Id) :
+    IEquatable<string>,
+    IComparable<ProtoId<T>>,
+    IAsType<string>
+    where T : class, IPrototype
 {
     public static implicit operator string(ProtoId<T> protoId)
     {
@@ -44,6 +50,8 @@ public readonly record struct ProtoId<T>(string Id) : IEquatable<string>, ICompa
     {
         return string.Compare(Id, other.Id, StringComparison.Ordinal);
     }
+
+    public string AsType() => Id;
 
     public override string ToString() => Id ?? string.Empty;
 }

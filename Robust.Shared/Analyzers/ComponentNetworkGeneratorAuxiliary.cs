@@ -19,9 +19,15 @@ public sealed class AutoGenerateComponentStateAttribute : Attribute
     /// </summary>
     public bool RaiseAfterAutoHandleState;
 
-    public AutoGenerateComponentStateAttribute(bool raiseAfterAutoHandleState = false)
+    /// <summary>
+    ///     Should delta states be generated for every field.
+    /// </summary>
+    public bool FieldDeltas;
+
+    public AutoGenerateComponentStateAttribute(bool raiseAfterAutoHandleState = false, bool fieldDeltas = false)
     {
         RaiseAfterAutoHandleState = raiseAfterAutoHandleState;
+        FieldDeltas = fieldDeltas;
     }
 }
 
@@ -39,5 +45,5 @@ public sealed class AutoNetworkedFieldAttribute : Attribute
 ///     <see cref="AutoGenerateComponentStateAttribute.RaiseAfterAutoHandleState"/> is true, so that other systems
 ///     can have effects after handling state without having to redefine all replication.
 /// </summary>
-[ByRefEvent]
+[ByRefEvent, ComponentEvent]
 public record struct AfterAutoHandleStateEvent(IComponentState State);

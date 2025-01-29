@@ -15,9 +15,11 @@ public sealed class DefinitionFixer : CodeFixProvider
 {
     private const string DataFieldAttributeName = "DataField";
 
+    private const string ViewVariablesAttributeName = "ViewVariables";
+
     public override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(
         IdDataDefinitionPartial, IdNestedDataDefinitionPartial, IdDataFieldWritable, IdDataFieldPropertyWritable,
-        IdDataFieldRedundantTag
+        IdDataFieldRedundantTag, IdDataFieldNoVVReadWrite
     );
 
     public override Task RegisterCodeFixesAsync(CodeFixContext context)
@@ -36,6 +38,8 @@ public sealed class DefinitionFixer : CodeFixProvider
                     return RegisterDataFieldPropertyFix(context, diagnostic);
                 case IdDataFieldRedundantTag:
                     return RegisterRedundantTagFix(context, diagnostic);
+                case IdDataFieldNoVVReadWrite:
+                    return RegisterVVReadWriteFix(context, diagnostic);
             }
         }
 
@@ -132,6 +136,48 @@ public sealed class DefinitionFixer : CodeFixProvider
         }
 
         root = root!.ReplaceNode(syntax, newSyntax!);
+
+        return document.WithSyntaxRoot(root);
+    }
+
+    private static async Task RegisterVVReadWriteFix(CodeFixContext context, Diagnostic diagnostic)
+    {
+        var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken);
+        var span = diagnostic.Location.SourceSpan;
+        var token = root?.FindToken(span.Start).Parent?.AncestorsAndSelf().OfType<MemberDeclarationSyntax>().First();
+
+        if (token == null)
+            return;
+
+        context.RegisterCodeFix(CodeAction.Create(
+            "Remove ViewVariables attribute",
+            c => RemoveVVAttribute(context.Document, token, c),
+            "Remove ViewVariables attribute"
+        ), diagnostic);
+    }
+
+    private static async Task<Document> RemoveVVAttribute(Document document, MemberDeclarationSyntax syntax, CancellationToken cancellation)
+    {
+        var root = (CompilationUnitSyntax?) await document.GetSyntaxRootAsync(cancellation);
+
+        var newLists = new SyntaxList<AttributeListSyntax>();
+        foreach (var attributeList in syntax.AttributeLists)
+        {
+            var attributes = new SeparatedSyntaxList<AttributeSyntax>();
+            foreach (var attribute in attributeList.Attributes)
+            {
+                if (attribute.Name.ToString() != ViewVariablesAttributeName)
+                {
+                    attributes = attributes.Add(attribute);
+                }
+            }
+            // Don't add empty lists []
+            if (attributes.Count > 0)
+                newLists = newLists.Add(attributeList.WithAttributes(attributes));
+        }
+        var newSyntax = syntax.WithAttributeLists(newLists);
+
+        root = root!.ReplaceNode(syntax, newSyntax);
 
         return document.WithSyntaxRoot(root);
     }

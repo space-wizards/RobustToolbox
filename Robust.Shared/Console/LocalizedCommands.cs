@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Threading.Tasks;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 
@@ -33,4 +34,22 @@ public abstract class LocalizedCommands : IConsoleCommand
     {
         return ValueTask.FromResult(GetCompletion(shell, args));
     }
+}
+
+/// <summary>
+/// Base class for localized console commands that run in "entity space".
+/// </summary>
+/// <remarks>
+/// <para>
+/// This type of command is registered only while the entity system is active.
+/// On the client this means that the commands are only available while connected to a server or in single player.
+/// </para>
+/// <para>
+/// These commands are allowed to take dependencies on entity systems, reducing boilerplate for many usages.
+/// </para>
+/// </remarks>
+public abstract class LocalizedEntityCommands : LocalizedCommands, IEntityConsoleCommand
+{
+    [Dependency]
+    protected readonly EntityManager EntityManager = default!;
 }

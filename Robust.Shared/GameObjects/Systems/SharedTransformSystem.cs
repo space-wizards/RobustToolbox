@@ -22,6 +22,7 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
         [Dependency] private readonly SharedMapSystem _map = default!;
+        [Dependency] private readonly MetaDataSystem _metaData = default!;
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
         [Dependency] private readonly INetManager _netMan = default!;
         [Dependency] private readonly SharedContainerSystem _container = default!;
@@ -336,8 +337,6 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public readonly bool Anchored;
 
-        public readonly bool GridTraversal;
-
         /// <summary>
         ///     Constructs a new state snapshot of a TransformComponent.
         /// </summary>
@@ -345,14 +344,13 @@ namespace Robust.Shared.GameObjects
         /// <param name="rotation">Current direction offset of this entity.</param>
         /// <param name="parentId">Current parent transform of this entity.</param>
         /// <param name="noLocalRotation"></param>
-        public TransformComponentState(Vector2 localPosition, Angle rotation, NetEntity parentId, bool noLocalRotation, bool anchored, bool gridTraversal)
+        public TransformComponentState(Vector2 localPosition, Angle rotation, NetEntity parentId, bool noLocalRotation, bool anchored)
         {
             LocalPosition = localPosition;
             Rotation = rotation;
             ParentID = parentId;
             NoLocalRotation = noLocalRotation;
             Anchored = anchored;
-            GridTraversal = gridTraversal;
         }
     }
 }

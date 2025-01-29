@@ -33,7 +33,7 @@ public sealed class GridTraversalTest : RobustIntegrationTest
             grid = gridComp.Owner;
             mapSys.SetTile(grid, gridComp, Vector2i.Zero, new Tile(1));
             var gridCentre = new EntityCoordinates(grid, .5f, .5f);
-            gridMapPos = gridCentre.ToMap(sEntMan, xforms).Position;
+             gridMapPos = xforms.ToMapCoordinates(gridCentre).Position;
         });
 
         for (int i = 0; i < 10; i++)

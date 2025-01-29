@@ -40,12 +40,6 @@ namespace Robust.Server.GameObjects
             EntityManager.EntityInitialized -= OnEntityInit;
         }
 
-        [Obsolete("Use Entity<T> variant")]
-        public void AddLayer(EntityUid uid, VisibilityComponent component, int layer, bool refresh = true)
-        {
-            AddLayer((uid, component), (ushort)layer, refresh);
-        }
-
         public void AddLayer(Entity<VisibilityComponent?> ent, ushort layer, bool refresh = true)
         {
             ent.Comp ??= _visibilityQuery.CompOrNull(ent.Owner) ?? AddComp<VisibilityComponent>(ent.Owner);
@@ -57,13 +51,6 @@ namespace Robust.Server.GameObjects
 
             if (refresh)
                 RefreshVisibility(ent);
-        }
-
-
-        [Obsolete("Use Entity<T> variant")]
-        public void RemoveLayer(EntityUid uid, VisibilityComponent component, int layer, bool refresh = true)
-        {
-            RemoveLayer((uid, component), (ushort)layer, refresh);
         }
 
         public void RemoveLayer(Entity<VisibilityComponent?> ent, ushort layer, bool refresh = true)
@@ -78,12 +65,6 @@ namespace Robust.Server.GameObjects
 
             if (refresh)
                 RefreshVisibility(ent);
-        }
-
-        [Obsolete("Use Entity<T> variant")]
-        public void SetLayer(EntityUid uid, VisibilityComponent component, int layer, bool refresh = true)
-        {
-            SetLayer((uid, component), (ushort)layer, refresh);
         }
 
         public void SetLayer(Entity<VisibilityComponent?> ent, ushort layer, bool refresh = true)

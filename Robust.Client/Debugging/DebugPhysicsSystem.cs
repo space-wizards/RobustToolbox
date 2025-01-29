@@ -47,6 +47,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.Player;
@@ -78,6 +79,14 @@ namespace Robust.Client.Debugging
         internal int PointCount;
 
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+        [Dependency] private readonly EntityLookupSystem _entityLookup = default!;
+        [Dependency] private readonly TransformSystem _transform = default!;
+        [Dependency] private readonly IOverlayManager _overlay = default!;
+        [Dependency] private readonly IEyeManager _eye = default!;
+        [Dependency] private readonly IInputManager _input = default!;
+        [Dependency] private readonly IMapManager _map = default!;
+        [Dependency] private readonly IPlayerManager _player = default!;
+        [Dependency] private readonly IResourceCache _resourceCache = default!;
 
         internal ContactPoint[] Points = new ContactPoint[MaxContactPoints];
 
@@ -89,20 +98,21 @@ namespace Robust.Client.Debugging
                 if (value == _flags) return;
 
                 if (_flags == PhysicsDebugFlags.None)
-                    IoCManager.Resolve<IOverlayManager>().AddOverlay(
+                    _overlay.AddOverlay(
                         new PhysicsDebugOverlay(
                             EntityManager,
-                            IoCManager.Resolve<IEyeManager>(),
-                            IoCManager.Resolve<IInputManager>(),
-                            IoCManager.Resolve<IMapManager>(),
-                            IoCManager.Resolve<IPlayerManager>(),
-                            IoCManager.Resolve<IResourceCache>(),
+                            _eye,
+                            _input,
+                            _map,
+                            _player,
+                            _resourceCache,
                             this,
-                            Get<EntityLookupSystem>(),
-                            Get<SharedPhysicsSystem>()));
+                            _entityLookup,
+                            _physics,
+                            _transform));
 
                 if (value == PhysicsDebugFlags.None)
-                    IoCManager.Resolve<IOverlayManager>().RemoveOverlay(typeof(PhysicsDebugOverlay));
+                    _overlay.RemoveOverlay(typeof(PhysicsDebugOverlay));
 
                 _flags = value;
             }
@@ -198,6 +208,7 @@ namespace Robust.Client.Debugging
         private readonly DebugPhysicsSystem _debugPhysicsSystem;
         private readonly EntityLookupSystem _lookup;
         private readonly SharedPhysicsSystem _physicsSystem;
+        private readonly SharedTransformSystem _transformSystem;
 
         public override OverlaySpace Space => OverlaySpace.WorldSpace | OverlaySpace.ScreenSpace;
 
@@ -208,7 +219,7 @@ namespace Robust.Client.Debugging
         private HashSet<Joint> _drawnJoints = new();
         private List<Entity<MapGridComponent>> _grids = new();
 
-        public PhysicsDebugOverlay(IEntityManager entityManager, IEyeManager eyeManager, IInputManager inputManager, IMapManager mapManager, IPlayerManager playerManager, IResourceCache cache, DebugPhysicsSystem system, EntityLookupSystem lookup, SharedPhysicsSystem physicsSystem)
+        public PhysicsDebugOverlay(IEntityManager entityManager, IEyeManager eyeManager, IInputManager inputManager, IMapManager mapManager, IPlayerManager playerManager, IResourceCache cache, DebugPhysicsSystem system, EntityLookupSystem lookup, SharedPhysicsSystem physicsSystem, SharedTransformSystem transformSystem)
         {
             _entityManager = entityManager;
             _eyeManager = eyeManager;
@@ -218,6 +229,7 @@ namespace Robust.Client.Debugging
             _debugPhysicsSystem = system;
             _lookup = lookup;
             _physicsSystem = physicsSystem;
+            _transformSystem = transformSystem;
             _font = new VectorFont(cache.GetResource<FontResource>("/EngineFonts/NotoSans/NotoSans-Regular.ttf"), 10);
         }
 
@@ -327,7 +339,7 @@ namespace Robust.Client.Debugging
                 {
                     if (jointComponent.JointCount == 0 ||
                         !_entityManager.TryGetComponent(uid, out TransformComponent? xf1) ||
-                        !viewAABB.Contains(xf1.WorldPosition)) continue;
+                        !viewAABB.Contains(_transformSystem.GetWorldPosition(xf1))) continue;
 
                     foreach (var (_, joint) in jointComponent.Joints)
                     {
@@ -517,8 +529,8 @@ namespace Robust.Client.Debugging
             if (!_entityManager.TryGetComponent(joint.BodyAUid, out TransformComponent? xform1) ||
                 !_entityManager.TryGetComponent(joint.BodyBUid, out TransformComponent? xform2)) return;
 
-            var matrix1 = xform1.WorldMatrix;
-            var matrix2 = xform2.WorldMatrix;
+            var matrix1 = _transformSystem.GetWorldMatrix(xform1);
+            var matrix2 = _transformSystem.GetWorldMatrix(xform2);
 
             var xf1 = new Vector2(matrix1.M31, matrix1.M32);
             var xf2 = new Vector2(matrix2.M31, matrix2.M32);
@@ -526,13 +538,13 @@ namespace Robust.Client.Debugging
             var p1 = Vector2.Transform(joint.LocalAnchorA, matrix1);
             var p2 = Vector2.Transform(joint.LocalAnchorB, matrix2);
 
-            var xfa = new Transform(xf1, xform1.WorldRotation);
-            var xfb = new Transform(xf2, xform2.WorldRotation);
+            var xfa = new Transform(xf1, _transformSystem.GetWorldRotation(xform1));
+            var xfb = new Transform(xf2, _transformSystem.GetWorldRotation(xform2));
 
             switch (joint)
             {
                 case DistanceJoint:
-                    worldHandle.DrawLine(xf1, xf2, JointColor);
+                    worldHandle.DrawLine(p1, p2, JointColor);
                     break;
                 case PrismaticJoint prisma:
                     var pA = Transform.Mul(xfa, joint.LocalAnchorA);

@@ -3,6 +3,7 @@ using System.Numerics;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Shapes;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Systems
@@ -28,6 +29,7 @@ namespace Robust.Shared.Physics.Systems
                     var distance = worldPoint - center;
                     return Vector2.Dot(distance, distance) <= circle.Radius * circle.Radius;
                 case PolygonShape poly:
+                {
                     var pLocal = Physics.Transform.MulT(xform.Quaternion2D, worldPoint - xform.Position);
 
                     for (var i = 0; i < poly.VertexCount; i++)
@@ -37,6 +39,19 @@ namespace Robust.Shared.Physics.Systems
                     }
 
                     return true;
+                }
+                case Polygon poly:
+                {
+                    var pLocal = Physics.Transform.MulT(xform.Quaternion2D, worldPoint - xform.Position);
+
+                    for (var i = 0; i < poly.VertexCount; i++)
+                    {
+                        var dot = Vector2.Dot(poly.Normals[i], pLocal - poly.Vertices[i]);
+                        if (dot > 0f) return false;
+                    }
+
+                    return true;
+                }
                 default:
                     throw new ArgumentOutOfRangeException($"No implemented TestPoint for {shape.GetType()}");
             }

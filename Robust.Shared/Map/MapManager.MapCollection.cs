@@ -62,10 +62,7 @@ internal partial class MapManager
     /// <inheritdoc />
     public EntityUid GetMapEntityId(MapId mapId)
     {
-        if (_mapSystem.TryGetMap(mapId, out var entId))
-            return entId.Value;
-
-        return EntityUid.Invalid;
+        return _mapSystem.GetMapOrInvalid(mapId);
     }
 
     /// <summary>

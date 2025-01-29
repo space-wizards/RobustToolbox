@@ -14,6 +14,7 @@ namespace Robust.Client.GameObjects
     {
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private readonly TransformSystem _transform = default!;
 
         internal bool Enabled { get; set; }
 
@@ -43,7 +44,7 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            var screenPos = _eyeManager.WorldToScreen(EntityManager.GetComponent<TransformComponent>(player.Value).WorldPosition);
+            var screenPos = _eyeManager.WorldToScreen(_transform.GetWorldPosition(Transform(player.Value)));
             LayoutContainer.SetPosition(_label, screenPos + new Vector2(0, 50));
             _label.Visible = true;
 

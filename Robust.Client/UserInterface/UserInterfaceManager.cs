@@ -54,6 +54,7 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly IEntitySystemManager _systemManager = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
         [Dependency] private readonly IRuntimeLog _runtime = default!;
+        [Dependency] private readonly IClipboardManager _clipboard = null!;
 
         private IAudioSource? _clickSource;
         private IAudioSource? _hoverSource;
@@ -214,8 +215,13 @@ namespace Robust.Client.UserInterface
         {
             using (_prof.Group("Update"))
             {
+                // Update hovered. Can't rely upon mouse movement due to New controls potentially coming up.
+                UpdateHovered();
+
                 foreach (var root in _roots)
                 {
+                    CheckRootUIScaleUpdate(root);
+
                     using (_prof.Group("Root"))
                     {
                         var totalUpdated = root.DoFrameUpdateRecursive(args);

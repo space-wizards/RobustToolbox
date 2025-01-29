@@ -9,6 +9,7 @@ using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared;
 using Robust.Shared.Enums;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -213,8 +214,6 @@ namespace Robust.Client.Graphics.Clyde
                     _overlays.Add(overlay);
                 }
             }
-
-            _overlays.Sort(OverlayComparer.Instance);
 
             return _overlays;
         }
@@ -513,7 +512,7 @@ namespace Robust.Client.Graphics.Clyde
 
                     if (_lightManager.Enabled && _lightManager.DrawHardFov && eye.DrawLight && eye.DrawFov)
                     {
-                        var mapUid = _mapManager.GetMapEntityId(eye.Position.MapId);
+                        var mapUid = _mapSystem.GetMap(eye.Position.MapId);
                         if (_entityManager.GetComponent<MapComponent>(mapUid).LightingEnabled)
                             ApplyFovToBuffer(viewport, eye);
                     }
@@ -572,18 +571,6 @@ namespace Robust.Client.Graphics.Clyde
             var aabb = GetAABB(eye, viewport);
 
             return new Box2Rotated(aabb, rotation, aabb.Center);
-        }
-
-        private sealed class OverlayComparer : IComparer<Overlay>
-        {
-            public static readonly OverlayComparer Instance = new();
-
-            public int Compare(Overlay? x, Overlay? y)
-            {
-                var zX = x?.ZIndex ?? 0;
-                var zY = y?.ZIndex ?? 0;
-                return zX.CompareTo(zY);
-            }
         }
     }
 }

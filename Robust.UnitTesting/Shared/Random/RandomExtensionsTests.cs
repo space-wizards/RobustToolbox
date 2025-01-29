@@ -6,8 +6,6 @@ using NUnit.Framework;
 using Robust.Shared.Collections;
 using Robust.Shared.Random;
 
-// ReSharper disable AccessToStaticMemberViaDerivedType
-
 namespace Robust.UnitTesting.Shared.Random;
 
 /// <summary> Instantiable tests for <see cref="RandomExtensions.GetItems{T}(IRobustRandom,IList{T},int,bool)"/>. </summary>

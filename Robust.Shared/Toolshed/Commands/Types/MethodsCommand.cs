@@ -34,7 +34,7 @@ internal sealed class MethodsCommand : ToolshedCommand
     }
 
     [CommandImplementation("overridesfrom")]
-    public IEnumerable<MethodInfo> OverridesFrom([PipedArgument] IEnumerable<Type> types, [CommandArgument] Type t)
+    public IEnumerable<MethodInfo> OverridesFrom([PipedArgument] IEnumerable<Type> types, Type t)
     {
         foreach (var ty in types)
         {

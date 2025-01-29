@@ -141,21 +141,41 @@ public partial class EntitySystem
         EntityManager.DirtyEntity(uid, meta);
     }
 
-    /// <summary>
-    ///     Marks a component as dirty. This also implicitly dirties the entity this component belongs to.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [Obsolete("Use Dirty(EntityUid, Component, MetaDataComponent?")]
-    protected void Dirty(IComponent component, MetaDataComponent? meta = null)
-    {
-        EntityManager.Dirty(component.Owner, component, meta);
-    }
-
     /// <inheritdoc cref="Dirty{T}"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
     {
         EntityManager.Dirty(uid, component, meta);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void DirtyField(EntityUid uid, IComponentDelta delta, string fieldName, MetaDataComponent? meta = null)
+    {
+        EntityManager.DirtyField(uid, delta, fieldName, meta);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void DirtyField<T>(Entity<T?> entity, string fieldName, MetaDataComponent? meta = null)
+        where T : IComponentDelta
+    {
+        if (!Resolve(entity.Owner, ref entity.Comp))
+            return;
+
+        EntityManager.DirtyField(entity.Owner, entity.Comp, fieldName, meta);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void DirtyField<T>(EntityUid uid, T component, string fieldName, MetaDataComponent? meta = null)
+        where T : IComponentDelta
+    {
+        EntityManager.DirtyField(uid, component, fieldName, meta);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void DirtyFields<T>(EntityUid uid, T comp, MetaDataComponent? meta, params ReadOnlySpan<string> fields)
+        where T : IComponentDelta
+    {
+        EntityManager.DirtyFields(uid, comp, meta);
     }
 
     /// <summary>
@@ -439,6 +459,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;(EntityUid, out T)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [PreferNonGenericVariantFor(typeof(TransformComponent), typeof(MetaDataComponent))]
     protected bool TryComp<T>(EntityUid uid, [NotNullWhen(true)] out T? comp) where T : IComponent
     {
         return EntityManager.TryGetComponent(uid, out comp);
@@ -703,6 +724,13 @@ public partial class EntitySystem
     protected void QueueDel(EntityUid? uid)
     {
         EntityManager.QueueDeleteEntity(uid);
+    }
+
+    /// <inheritdoc cref="IEntityManager.TryQueueDeleteEntity(EntityUid?)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TryQueueDel(EntityUid? uid)
+    {
+        return EntityManager.TryQueueDeleteEntity(uid);
     }
 
     #endregion

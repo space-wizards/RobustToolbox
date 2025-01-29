@@ -11,8 +11,6 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
-// ReSharper disable AccessToStaticMemberViaDerivedType
-
 namespace Robust.UnitTesting.Server.GameObjects.Components
 {
     [TestFixture, Parallelizable]
@@ -267,7 +265,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             var containerMan = entManager.GetComponent<ContainerManagerComponent>(entity);
             var getState = new ComponentGetState();
-            entManager.EventBus.RaiseComponentEvent(containerMan, ref getState);
+            entManager.EventBus.RaiseComponentEvent(entity, containerMan, ref getState);
             var state = (ContainerManagerComponent.ContainerManagerComponentState)getState.State!;
 
             Assert.That(state.Containers, Has.Count.EqualTo(1));

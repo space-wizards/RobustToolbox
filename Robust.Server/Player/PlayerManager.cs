@@ -137,13 +137,11 @@ namespace Robust.Server.Player
                 {
                     UserId = client.UserId,
                     Name = client.Name,
-                    Status = client.Status,
-                    Ping = client.Channel!.Ping
+                    Status = client.Status
                 };
                 list.Add(info);
             }
             netMsg.Plyrs = list;
-            netMsg.PlyCount = (byte)list.Count;
 
             channel.SendMessage(netMsg);
         }

@@ -245,8 +245,6 @@ internal sealed partial class PvsSystem
 
     private void OnEntityAdded(Entity<MetaDataComponent> entity)
     {
-        DebugTools.Assert(entity.Comp.PvsData.Index == default);
-
         AssignEntityPointer(entity.Comp);
     }
 
@@ -255,6 +253,7 @@ internal sealed partial class PvsSystem
     /// </summary>
     private void AssignEntityPointer(MetaDataComponent meta)
     {
+        DebugTools.Assert(meta.PvsData == PvsIndex.Invalid);
         if (_dataFreeListHead == PvsIndex.Invalid)
         {
             ExpandEntityCapacity();
@@ -267,8 +266,6 @@ internal sealed partial class PvsSystem
         ref var freeLink = ref Unsafe.As<PvsMetadata, PvsMetadataFreeLink>(ref metadata);
         _dataFreeListHead = freeLink.NextFree;
 
-        // TODO: re-introduce this assert.
-        // DebugTools.AssertEqual(((PvsMetadata*) ptr)->NetEntity, NetEntity.Invalid);
         DebugTools.AssertNotEqual(meta.NetEntity, NetEntity.Invalid);
 
         meta.PvsData = index;
@@ -287,9 +284,9 @@ internal sealed partial class PvsSystem
     private void OnEntityDeleted(Entity<MetaDataComponent> entity)
     {
         var ptr = entity.Comp.PvsData;
-        entity.Comp.PvsData = default;
+        entity.Comp.PvsData = PvsIndex.Invalid;
 
-        if (ptr == default)
+        if (ptr == PvsIndex.Invalid)
             return;
 
         _incomingReturns.Add(ptr);
@@ -300,7 +297,8 @@ internal sealed partial class PvsSystem
     /// </summary>
     private void AfterEntityFlush()
     {
-        DebugTools.Assert(EntityManager.EntityCount == 0);
+        if (EntityManager.EntityCount > 0)
+            throw new Exception("Cannot reset PVS data without first deleting all entities.");
 
         ClearPvsData();
         ShrinkDataMemory();

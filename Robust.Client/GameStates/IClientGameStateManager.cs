@@ -34,9 +34,6 @@ namespace Robust.Client.GameStates
         /// </summary>
         int GetApplicableStateCount();
 
-        [Obsolete("use GetApplicableStateCount()")]
-        int CurrentBufferSize => GetApplicableStateCount();
-
         /// <summary>
         ///     Total number of game states currently in the state buffer.
         /// </summary>
@@ -84,6 +81,12 @@ namespace Robust.Client.GameStates
         ///     Applies a given set of game states.
         /// </summary>
         IEnumerable<NetEntity> ApplyGameState(GameState curState, GameState? nextState);
+
+        /// <summary>
+        ///     Generates implicit component states for newly created entities.
+        ///     This should always be called after running <see cref="ApplyGameState(GameState, GameState)"/>.
+        /// </summary>
+        void GenerateImplicitStates(IEnumerable<NetEntity> states);
 
         /// <summary>
         ///     Resets any entities that have changed while predicting future ticks.

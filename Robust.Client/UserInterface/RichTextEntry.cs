@@ -17,7 +17,6 @@ namespace Robust.Client.UserInterface
     internal struct RichTextEntry
     {
         private readonly Color _defaultColor;
-        private readonly MarkupTagManager _tagManager;
         private readonly Type[]? _tagsAllowed;
 
         public readonly FormattedMessage Message;
@@ -37,7 +36,7 @@ namespace Robust.Client.UserInterface
         /// </summary>
         public ValueList<int> LineBreaks;
 
-        private readonly Dictionary<int, Control> _tagControls = new();
+        private readonly Dictionary<int, Control>? _tagControls;
 
         public RichTextEntry(FormattedMessage message, Control parent, MarkupTagManager tagManager, Type[]? tagsAllowed = null, Color? defaultColor = null)
         {
@@ -46,23 +45,26 @@ namespace Robust.Client.UserInterface
             Width = 0;
             LineBreaks = default;
             _defaultColor = defaultColor ?? new(200, 200, 200);
-            _tagManager = tagManager;
             _tagsAllowed = tagsAllowed;
+            Dictionary<int, Control>? tagControls = null;
 
             var nodeIndex = -1;
-            foreach (var node in Message.Nodes)
+            foreach (var node in Message)
             {
                 nodeIndex++;
 
                 if (node.Name == null)
                     continue;
 
-                if (!_tagManager.TryGetMarkupTag(node.Name, _tagsAllowed, out var tag) || !tag.TryGetControl(node, out var control))
+                if (!tagManager.TryGetMarkupTag(node.Name, _tagsAllowed, out var tag) || !tag.TryGetControl(node, out var control))
                     continue;
 
                 parent.Children.Add(control);
-                _tagControls.Add(nodeIndex, control);
+                tagControls ??= new Dictionary<int, Control>();
+                tagControls.Add(nodeIndex, control);
             }
+
+            _tagControls = tagControls;
         }
 
         /// <summary>
@@ -72,7 +74,7 @@ namespace Robust.Client.UserInterface
         /// <param name="maxSizeX">The maximum horizontal size of the container of this entry.</param>
         /// <param name="uiScale"></param>
         /// <param name="lineHeightScale"></param>
-        public void Update(Font defaultFont, float maxSizeX, float uiScale, float lineHeightScale = 1)
+        public void Update(MarkupTagManager tagManager, Font defaultFont, float maxSizeX, float uiScale, float lineHeightScale = 1)
         {
             // This method is gonna suck due to complexity.
             // Bear with me here.
@@ -91,10 +93,10 @@ namespace Robust.Client.UserInterface
             // Nodes can change the markup drawing context and return additional text.
             // It's also possible for nodes to return inline controls. They get treated as one large rune.
             var nodeIndex = -1;
-            foreach (var node in Message.Nodes)
+            foreach (var node in Message)
             {
                 nodeIndex++;
-                var text = ProcessNode(node, context);
+                var text = ProcessNode(tagManager, node, context);
 
                 if (!context.Font.TryPeek(out var font))
                     font = defaultFont;
@@ -113,10 +115,7 @@ namespace Robust.Client.UserInterface
                         return;
                 }
 
-                if (!_tagControls.TryGetValue(nodeIndex, out var control))
-                    continue;
-
-                if (ProcessRune(ref this, new Rune(' '), out breakLine))
+                if (_tagControls == null || !_tagControls.TryGetValue(nodeIndex, out var control))
                     continue;
 
                 control.Measure(new Vector2(Width, Height));
@@ -165,8 +164,19 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        internal readonly void HideControls()
+        {
+            if (_tagControls == null)
+                return;
+            foreach (var control in _tagControls.Values)
+            {
+                control.Visible = false;
+            }
+        }
+
         public readonly void Draw(
-            DrawingHandleScreen handle,
+            MarkupTagManager tagManager,
+            DrawingHandleBase handle,
             Font defaultFont,
             UIBox2 drawBox,
             float verticalOffset,
@@ -184,10 +194,10 @@ namespace Robust.Client.UserInterface
             var controlYAdvance = 0f;
 
             var nodeIndex = -1;
-            foreach (var node in Message.Nodes)
+            foreach (var node in Message)
             {
                 nodeIndex++;
-                var text = ProcessNode(node, context);
+                var text = ProcessNode(tagManager, node, context);
                 if (!context.Color.TryPeek(out var color) || !context.Font.TryPeek(out var font))
                 {
                     color = _defaultColor;
@@ -210,11 +220,14 @@ namespace Robust.Client.UserInterface
                     globalBreakCounter += 1;
                 }
 
-                if (!_tagControls.TryGetValue(nodeIndex, out var control))
+                if (_tagControls == null || !_tagControls.TryGetValue(nodeIndex, out var control))
                     continue;
 
-                var invertedScale = 1f / uiScale;
+                // Controls may have been previously hidden via HideControls due to being "out-of frame".
+                // If this ever gets replaced with RectClipContents / scissor box testing, this can be removed.
+                control.Visible = true;
 
+                var invertedScale = 1f / uiScale;
                 control.Position = new Vector2(baseLine.X * invertedScale, (baseLine.Y - defaultFont.GetAscent(uiScale)) * invertedScale);
                 control.Measure(new Vector2(Width, Height));
                 var advanceX = control.DesiredPixelSize.X;
@@ -223,24 +236,22 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private readonly string ProcessNode(MarkupNode node, MarkupDrawingContext context)
+        private readonly string ProcessNode(MarkupTagManager tagManager, MarkupNode node, MarkupDrawingContext context)
         {
             // If a nodes name is null it's a text node.
             if (node.Name == null)
                 return node.Value.StringValue ?? "";
 
             //Skip the node if there is no markup tag for it.
-            if (!_tagManager.TryGetMarkupTag(node.Name, _tagsAllowed, out var tag))
+            if (!tagManager.TryGetMarkupTag(node.Name, _tagsAllowed, out var tag))
                 return "";
 
             if (!node.Closing)
             {
-                context.Tags.Add(tag);
                 tag.PushDrawContext(node, context);
                 return tag.TextBefore(node);
             }
 
-            context.Tags.Remove(tag);
             tag.PopDrawContext(node, context);
             return tag.TextAfter(node);
         }

@@ -69,39 +69,29 @@ namespace Robust.Shared.GameObjects
         /// DO NOT USE THIS IN CONTENT UNLESS YOU KNOW WHAT YOU'RE DOING, the only reason it's not internal
         /// is because of the component network source generator.
         /// </remarks>
-        /// <typeparam name="TEvent">Event to dispatch.</typeparam>
-        /// <param name="component">Component receiving the event.</param>
-        /// <param name="args">Event arguments for the event.</param>
-        public void RaiseComponentEvent<TEvent>(IComponent component, TEvent args)
+        public void RaiseComponentEvent<TEvent, TComponent>(EntityUid uid, TComponent component, TEvent args)
+            where TEvent : notnull
+            where TComponent : IComponent;
+
+        /// <inheritdoc cref="RaiseComponentEvent{TEvent,TComponent}(Robust.Shared.GameObjects.EntityUid,TComponent,TEvent)"/>
+        public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, TEvent args)
             where TEvent : notnull;
 
-        /// <summary>
-        /// Dispatches an event directly to a specific component.
-        /// </summary>
-        /// <remarks>
-        /// This has a very specific purpose, and has massive potential to be abused.
-        /// DO NOT USE THIS IN CONTENT UNLESS YOU KNOW WHAT YOU'RE DOING, the only reason it's not internal
-        /// is because of the component network source generator.
-        /// </remarks>
-        /// <typeparam name="TEvent">Event to dispatch.</typeparam>
-        /// <param name="component">Component receiving the event.</param>
-        /// <param name="idx">Type of the component, for faster lookups.</param>
-        /// <param name="args">Event arguments for the event.</param>
-        public void RaiseComponentEvent<TEvent>(IComponent component, CompIdx idx, TEvent args)
+        /// <inheritdoc cref="RaiseComponentEvent{TEvent,TComponent}(Robust.Shared.GameObjects.EntityUid,TComponent,TEvent)"/>
+        public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, CompIdx idx, TEvent args)
             where TEvent : notnull;
 
-        /// <summary>
-        /// Dispatches an event directly to a specific component, by-ref.
-        /// </summary>
-        /// <remarks>
-        /// This has a very specific purpose, and has massive potential to be abused.
-        /// DO NOT USE THIS IN CONTENT UNLESS YOU KNOW WHAT YOU'RE DOING, the only reason it's not internal
-        /// is because of the component network source generator.
-        /// </remarks>
-        /// <typeparam name="TEvent">Event to dispatch.</typeparam>
-        /// <param name="component">Component receiving the event.</param>
-        /// <param name="args">Event arguments for the event.</param>
-        public void RaiseComponentEvent<TEvent>(IComponent component, ref TEvent args)
+        /// <inheritdoc cref="RaiseComponentEvent{TEvent,TComponent}(Robust.Shared.GameObjects.EntityUid,TComponent,TEvent)"/>
+        public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, ref TEvent args)
+            where TEvent : notnull;
+
+        /// <inheritdoc cref="RaiseComponentEvent{TEvent,TComponent}(Robust.Shared.GameObjects.EntityUid,TComponent,TEvent)"/>
+        public void RaiseComponentEvent<TEvent, TComponent>(EntityUid uid, TComponent component, ref TEvent args)
+            where TEvent : notnull
+            where TComponent : IComponent;
+
+        /// <inheritdoc cref="RaiseComponentEvent{TEvent,TComponent}(Robust.Shared.GameObjects.EntityUid,TComponent,TEvent)"/>
+        public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, CompIdx idx, ref TEvent args)
             where TEvent : notnull;
 
         public void OnlyCallOnRobustUnitTestISwearToGodPleaseSomebodyKillThisNightmare();
@@ -113,6 +103,15 @@ namespace Robust.Shared.GameObjects
 
         private delegate void DirectedEventHandler<TEvent>(EntityUid uid, IComponent comp, ref TEvent args)
             where TEvent : notnull;
+
+        /// <summary>
+        /// Max size of a components event subscription linked list.
+        /// Used to limit the stackalloc in <see cref="EntDispatch"/>
+        /// </summary>
+        /// <remarks>
+        /// SS14 currently requires only 18, I doubt it will ever need to exceed 256.
+        /// </remarks>
+        private const int MaxEventLinkedListSize = 256;
 
         /// <summary>
         /// Constructs a new instance of <see cref="EntityEventBus"/>.
@@ -131,37 +130,58 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        void IDirectedEventBus.RaiseComponentEvent<TEvent>(IComponent component, TEvent args)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, TEvent args)
+            where TEvent : notnull
         {
-            ref var unitRef = ref Unsafe.As<TEvent, Unit>(ref args);
-
-            DispatchComponent<TEvent>(
-                component.Owner,
-                component,
-                CompIdx.Index(component.GetType()),
-                ref unitRef);
-        }
-
-        void IDirectedEventBus.RaiseComponentEvent<TEvent>(IComponent component, CompIdx type, TEvent args)
-        {
-            ref var unitRef = ref Unsafe.As<TEvent, Unit>(ref args);
-
-            DispatchComponent<TEvent>(
-                component.Owner,
-                component,
-                type,
-                ref unitRef);
+            RaiseComponentEvent(uid, component, _comFac.GetIndex(component.GetType()), ref args);
         }
 
         /// <inheritdoc />
-        void IDirectedEventBus.RaiseComponentEvent<TEvent>(IComponent component, ref TEvent args)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void RaiseComponentEvent<TEvent, TComponent>(EntityUid uid, TComponent component, TEvent args)
+            where TEvent : notnull
+            where TComponent : IComponent
+        {
+            RaiseComponentEvent(uid, component, CompIdx.Index<TComponent>(), ref args);
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, CompIdx type, TEvent args)
+            where TEvent : notnull
+        {
+            RaiseComponentEvent(uid, component, type, ref args);
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, ref TEvent args)
+            where TEvent : notnull
+        {
+            RaiseComponentEvent(uid, component, _comFac.GetIndex(component.GetType()), ref args);
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void RaiseComponentEvent<TEvent, TComponent>(EntityUid uid, TComponent component, ref TEvent args)
+            where TEvent : notnull
+            where TComponent : IComponent
+        {
+            RaiseComponentEvent(uid, component, CompIdx.Index<TComponent>(), ref args);
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, CompIdx type, ref TEvent args)
+            where TEvent : notnull
         {
             ref var unitRef = ref Unsafe.As<TEvent, Unit>(ref args);
 
             DispatchComponent<TEvent>(
-                component.Owner,
+                uid,
                 component,
-                CompIdx.Index(component.GetType()),
+                type,
                 ref unitRef);
         }
 
@@ -390,7 +410,7 @@ namespace Robust.Shared.GameObjects
 
         public void OnComponentRemoved(in RemovedComponentEventArgs e)
         {
-            EntRemoveComponent(e.BaseArgs.Owner, CompIdx.Index(e.BaseArgs.Component.GetType()));
+            EntRemoveComponent(e.BaseArgs.Owner, e.Idx);
         }
 
         private void EntAddSubscription(
@@ -488,7 +508,7 @@ namespace Robust.Shared.GameObjects
 
                 DebugTools.Assert(eventTable.Free >= 0);
 
-                ref var eventStartIdx = ref CollectionsMarshal.GetValueRefOrAddDefault(
+                ref var indices = ref CollectionsMarshal.GetValueRefOrAddDefault(
                     eventTable.EventIndices,
                     evType,
                     out var exists);
@@ -500,10 +520,13 @@ namespace Robust.Shared.GameObjects
 
                 // Set it up
                 entry.Component = compType;
-                entry.Next = exists ? eventStartIdx : -1;
+                entry.Next = exists ? indices.Start : -1;
 
                 // Assign new list entry to EventIndices dictionary.
-                eventStartIdx = entryIdx;
+                indices.Start = entryIdx;
+                indices.Count++;
+                if (indices.Count > MaxEventLinkedListSize)
+                    throw new NotSupportedException($"Exceeded maximum event linked list size. Need to implement stackalloc fallback.");
             }
         }
 
@@ -541,40 +564,37 @@ namespace Robust.Shared.GameObjects
             foreach (var evType in compSubs.Keys)
             {
                 DebugTools.Assert(!_eventData[evType].ComponentEvent);
-                ref var dictIdx = ref CollectionsMarshal.GetValueRefOrNullRef(eventTable.EventIndices, evType);
-                if (Unsafe.IsNullRef(ref dictIdx))
+                ref var indices = ref CollectionsMarshal.GetValueRefOrNullRef(eventTable.EventIndices, evType);
+                if (Unsafe.IsNullRef(ref indices))
                 {
                     DebugTools.Assert("This should not be possible. Were the events for this component never added?");
                     continue;
                 }
 
-                ref var updateNext = ref dictIdx;
+                var entryIdx = indices.Start;
+                ref var entry = ref eventTable.ComponentLists[entryIdx];
 
-                // Go over linked list to find index of component.
-                var entryIdx = dictIdx;
-                ref var entry = ref Unsafe.NullRef<EventTableListEntry>();
-                while (true)
-                {
-                    entry = ref eventTable.ComponentLists[entryIdx];
-                    if (entry.Component == compType)
-                    {
-                        // Found
-                        break;
-                    }
-
-                    entryIdx = entry.Next;
-                    updateNext = ref entry.Next;
-                }
-
-                if (entry.Next == -1 && Unsafe.AreSame(ref dictIdx, ref updateNext))
+                if (indices.Count == 1)
                 {
                     // Last entry for this event type, remove from dict.
+                    DebugTools.AssertEqual(entry.Next, -1);
                     eventTable.EventIndices.Remove(evType);
                 }
                 else
                 {
+                    ref var updateNext = ref indices.Start;
+
+                    // Go over linked list to find index of component.
+                    while (entry.Component != compType)
+                    {
+                        updateNext = ref entry.Next;
+                        entryIdx = entry.Next;
+                        entry = ref eventTable.ComponentLists[entryIdx];
+                    }
+
                     // Rewrite previous index to point to next in chain.
                     updateNext = entry.Next;
+                    indices.Count--;
                 }
 
                 // Push entry back onto free list.
@@ -585,15 +605,33 @@ namespace Robust.Shared.GameObjects
 
         private void EntDispatch(EntityUid euid, Type eventType, ref Unit args)
         {
-            if (!EntTryGetSubscriptions(eventType, euid, out var enumerator))
+            if (!_entEventTables.TryGetValue(euid, out var eventTable))
                 return;
 
-            while (enumerator.MoveNext(out var component, out var reg))
-            {
-                if (component.Deleted)
-                    continue;
+            if (!eventTable.EventIndices.TryGetValue(eventType, out var indices))
+                return;
 
-                reg.Handler(euid, component, ref args);
+            DebugTools.Assert(indices.Count > 0);
+            DebugTools.Assert(indices.Start >= 0);
+
+            // First, collect all subscribing components.
+            // This is to avoid infinite loops over the linked list if subscription handlers add or remove components.
+            Span<CompIdx> compIds = stackalloc CompIdx[indices.Count];
+            var idx = indices.Start;
+            for (var index = 0; index < compIds.Length; index++)
+            {
+                DebugTools.Assert(idx >= 0);
+                ref var entry = ref eventTable.ComponentLists[idx];
+                idx = entry.Next;
+                compIds[index] = entry.Component;
+            }
+
+            foreach (var compIdx in compIds)
+            {
+                if (!_entMan.TryGetComponent(euid, compIdx, out var comp))
+                    continue;
+                var compSubs = _eventSubs[compIdx.Value];
+                compSubs[eventType].Handler(euid, comp, ref args);
             }
         }
 
@@ -602,16 +640,30 @@ namespace Robust.Shared.GameObjects
             Type eventType,
             ref ValueList<OrderedEventDispatch> found)
         {
-            if (!EntTryGetSubscriptions(eventType, euid, out var enumerator))
+            if (!_entEventTables.TryGetValue(euid, out var eventTable))
                 return;
 
-            while (enumerator.MoveNext(out var component, out var reg))
+            if (!eventTable.EventIndices.TryGetValue(eventType, out var indices))
+                return;
+
+            DebugTools.Assert(indices.Count > 0);
+            DebugTools.Assert(indices.Start >= 0);
+            var idx = indices.Start;
+            while (idx != -1)
             {
-                found.Add(new OrderedEventDispatch((ref Unit ev) =>
-                {
-                    if (!component.Deleted)
-                        reg.Handler(euid, component, ref ev);
-                }, reg.Order));
+                ref var entry = ref eventTable.ComponentLists[idx];
+                idx = entry.Next;
+                var comp = _entMan.GetComponentInternal(euid, entry.Component);
+                var compSubs = _eventSubs[entry.Component.Value];
+                var reg = compSubs[eventType];
+
+                found.Add(new OrderedEventDispatch(
+                    (ref Unit ev) =>
+                    {
+                        if (!comp.Deleted)
+                            reg.Handler(euid, comp, ref ev);
+                    },
+                    reg.Order));
             }
         }
 
@@ -624,28 +676,6 @@ namespace Robust.Shared.GameObjects
         {
             if (_compEventSubs[baseType.Value].TryGetValue(typeof(TEvent), out var reg))
                 reg.Handler(euid, component, ref args);
-        }
-
-        /// <summary>
-        ///     Enumerates all subscriptions for an event on a specific entity, returning the component instances and registrations.
-        /// </summary>
-        private bool EntTryGetSubscriptions(Type eventType, EntityUid euid, out SubscriptionsEnumerator enumerator)
-        {
-            if (!_entEventTables.TryGetValue(euid, out var eventTable))
-            {
-                enumerator = default!;
-                return false;
-            }
-
-            // No subscriptions to this event type, return null.
-            if (!eventTable.EventIndices.TryGetValue(eventType, out var startEntry))
-            {
-                enumerator = default;
-                return false;
-            }
-
-            enumerator = new(eventType, startEntry, eventTable.ComponentLists, _eventSubs, euid, _entMan);
-            return true;
         }
 
         public void ClearSubscriptions()
@@ -678,59 +708,6 @@ namespace Robust.Shared.GameObjects
             _eventSubsInv = null!;
         }
 
-        private struct SubscriptionsEnumerator
-        {
-            private readonly Type _eventType;
-            private readonly EntityUid _uid;
-            private readonly FrozenDictionary<Type, DirectedRegistration>[] _subscriptions;
-            private readonly IEntityManager _entityManager;
-            private readonly EventTableListEntry[] _list;
-            private int _idx;
-
-            public SubscriptionsEnumerator(
-                Type eventType,
-                int startEntry,
-                EventTableListEntry[] list,
-                FrozenDictionary<Type, DirectedRegistration>[] subscriptions,
-                EntityUid uid,
-                IEntityManager entityManager)
-            {
-                _eventType = eventType;
-                _list = list;
-                _subscriptions = subscriptions;
-                _idx = startEntry;
-                _entityManager = entityManager;
-                _uid = uid;
-            }
-
-            public bool MoveNext(
-                [NotNullWhen(true)] out IComponent? component,
-                [NotNullWhen(true)] out DirectedRegistration? registration)
-            {
-                if (_idx == -1)
-                {
-                    component = null;
-                    registration = null;
-                    return false;
-                }
-
-                ref var entry = ref _list[_idx];
-                _idx = entry.Next;
-
-                var compType = entry.Component;
-                var compSubs = _subscriptions[compType.Value];
-
-                if (!compSubs.TryGetValue(_eventType, out registration))
-                {
-                    component = default;
-                    return false;
-                }
-
-                component = _entityManager.GetComponentInternal(_uid, compType);
-                return true;
-            }
-        }
-
         internal sealed class DirectedRegistration : OrderedRegistration
         {
             public readonly Delegate Original;
@@ -760,7 +737,7 @@ namespace Robust.Shared.GameObjects
             // Free contains the first free linked list node, or -1 if there is none.
             // Free nodes form their own linked list.
             // ComponentList is the actual region of memory containing linked list nodes.
-            public readonly Dictionary<Type, int> EventIndices = new();
+            public readonly Dictionary<Type, (int Start, int Count)> EventIndices = new();
             public int Free;
             public EventTableListEntry[] ComponentLists = new EventTableListEntry[InitialListSize];
 

@@ -806,30 +806,6 @@ namespace Robust.Shared.Prototypes
             return _kinds[kind].Results.TryGetValue(id, out mappings);
         }
 
-        [Obsolete("Variant is outdated naming, use *kind* functions instead")]
-        public bool HasVariant(string variant) => HasKind(variant);
-
-        [Obsolete("Variant is outdated naming, use *kind* functions instead")]
-        public Type GetVariantType(string variant) => GetKindType(variant);
-
-        [Obsolete("Variant is outdated naming, use *kind* functions instead")]
-        public bool TryGetVariantType(string variant, [NotNullWhen(true)] out Type? prototype)
-        {
-            return TryGetKindType(variant, out prototype);
-        }
-
-        [Obsolete("Variant is outdated naming, use *kind* functions instead")]
-        public bool TryGetVariantFrom(Type type, [NotNullWhen(true)] out string? variant)
-        {
-            return TryGetKindFrom(type, out variant);
-        }
-
-        [Obsolete("Variant is outdated naming, use *kind* functions instead")]
-        public bool TryGetVariantFrom<T>([NotNullWhen(true)] out string? variant) where T : class, IPrototype
-        {
-            return TryGetKindFrom<T>(out variant);
-        }
-
         public bool HasKind(string kind)
         {
             return _kindNames.ContainsKey(kind);
@@ -848,22 +824,10 @@ namespace Robust.Shared.Prototypes
         public bool TryGetKindFrom(Type type, [NotNullWhen(true)] out string? kind)
         {
             kind = null;
-
-            // If the type doesn't implement IPrototype, this fails.
-            if (!(typeof(IPrototype).IsAssignableFrom(type)))
+            if (!_kinds.TryGetValue(type, out var kindData))
                 return false;
 
-            var attribute = (PrototypeAttribute?)Attribute.GetCustomAttribute(type, typeof(PrototypeAttribute));
-
-            // If the prototype type doesn't have the attribute, this fails.
-            if (attribute == null)
-                return false;
-
-            // If the variant isn't registered, this fails.
-            if (attribute.Type == null || !HasKind(attribute.Type))
-                return false;
-
-            kind = attribute.Type;
+            kind = kindData.Name;
             return true;
         }
 
@@ -918,19 +882,11 @@ namespace Robust.Shared.Prototypes
             return TryGetKindFrom(typeof(T), out kind);
         }
 
-        [Obsolete("Variant is outdated naming, use *kind* functions instead")]
-        public bool TryGetVariantFrom(IPrototype prototype, [NotNullWhen(true)] out string? variant)
-        {
-            return TryGetKindFrom(prototype, out variant);
-        }
-
         /// <inheritdoc />
         public void RegisterIgnore(string name)
         {
             _ignoredPrototypeTypes.Add(name);
         }
-
-        void IPrototypeManager.RegisterType(Type type) => RegisterKind(type);
 
         static string CalculatePrototypeName(Type type)
         {
@@ -977,13 +933,13 @@ namespace Robust.Shared.Prototypes
                     "No " + nameof(PrototypeAttribute) + " to give it a type string.");
             }
 
-            attribute.Type ??= CalculatePrototypeName(kind);
+            var name = attribute.Type ?? CalculatePrototypeName(kind);
 
-            if (_kindNames.TryGetValue(attribute.Type, out var name))
+            if (_kindNames.TryGetValue(name, out var existing))
             {
                 throw new InvalidImplementationException(kind,
                     typeof(IPrototype),
-                    $"Duplicate prototype type ID: {attribute.Type}. Current: {name}");
+                    $"Duplicate prototype type ID: {attribute.Type}. Current: {existing}");
             }
 
             var foundIdAttribute = false;
@@ -1051,10 +1007,10 @@ namespace Robust.Shared.Prototypes
                     $"Did not find any member annotated with the {nameof(ParentDataFieldAttribute)} and/or {nameof(AbstractDataFieldAttribute)}");
             }
 
-            _kindNames[attribute.Type] = kind;
+            _kindNames[name] = kind;
             _kindPriorities[kind] = attribute.LoadPriority;
 
-            var kindData = new KindData(kind);
+            var kindData = new KindData(kind, name);
             kinds[kind] = kindData;
 
             if (kind.IsAssignableTo(typeof(IInheritingPrototype)))
@@ -1064,7 +1020,7 @@ namespace Robust.Shared.Prototypes
         /// <inheritdoc />
         public event Action<PrototypesReloadedEventArgs>? PrototypesReloaded;
 
-        private sealed class KindData(Type kind)
+        private sealed class KindData(Type kind, string name)
         {
             public Dictionary<string, IPrototype>? UnfrozenInstances;
 
@@ -1073,6 +1029,7 @@ namespace Robust.Shared.Prototypes
             public readonly Dictionary<string, MappingDataNode> Results = new();
 
             public readonly Type Type = kind;
+            public readonly string Name = name;
 
             // Only initialized if prototype is inheriting.
             public MultiRootInheritanceGraph<string>? Inheritance;

@@ -149,10 +149,6 @@ public abstract partial class PrototypeManager : IPrototypeManagerInternal
             categories.GetOrNew(category).Add(protoInstance);
         }
 
-#pragma warning disable CS0618 // Type or member is obsolete
-        protoInstance.HideSpawnMenu |= protoInstance.NoSpawn;
-#pragma warning restore CS0618 // Type or member is obsolete
-
         return set;
     }
 }

@@ -1379,7 +1379,7 @@ namespace Robust.Client.GameObjects
 
             // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
             var ev = new QueueSpriteTreeUpdateEvent(entities.GetComponent<TransformComponent>(Owner));
-            entities.EventBus.RaiseComponentEvent(this, ref ev);
+            entities.EventBus.RaiseComponentEvent(Owner, this, ref ev);
         }
 
         private void QueueUpdateIsInert()
@@ -1389,7 +1389,7 @@ namespace Robust.Client.GameObjects
 
             // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
             var ev = new SpriteUpdateInertEvent();
-            entities.EventBus.RaiseComponentEvent(this, ref ev);
+            entities.EventBus.RaiseComponentEvent(Owner, this, ref ev);
         }
 
         [Obsolete("Use SpriteSystem instead.")]

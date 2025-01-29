@@ -65,7 +65,7 @@ namespace Robust.Client.UserInterface
 
         IDebugMonitors DebugMonitors { get; }
 
-        void Popup(string contents, string title = "Alert!");
+        void Popup(string contents, string? title = null, bool clipboardButton = true);
 
         Control? MouseGetControl(ScreenCoordinates coordinates);
 

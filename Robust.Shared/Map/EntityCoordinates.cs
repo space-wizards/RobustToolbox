@@ -77,21 +77,9 @@ namespace Robust.Shared.Map
         }
 
         [Obsolete("Use SharedTransformSystem.ToMapCoordinates()")]
-        public MapCoordinates ToMap(IEntityManager entityManager)
-        {
-            return ToMap(entityManager, entityManager.System<SharedTransformSystem>());
-        }
-
-        [Obsolete("Use SharedTransformSystem.ToMapCoordinates()")]
         public MapCoordinates ToMap(IEntityManager entityManager, SharedTransformSystem transformSystem)
         {
             return transformSystem.ToMapCoordinates(this);
-        }
-
-        [Obsolete("Use SharedTransformSystem.ToMapCoordinates()")]
-        public Vector2 ToMapPos(IEntityManager entityManager)
-        {
-            return ToMap(entityManager, entityManager.System<SharedTransformSystem>()).Position;
         }
 
         [Obsolete("Use SharedTransformSystem.ToMapCoordinates()")]
@@ -101,34 +89,15 @@ namespace Robust.Shared.Map
         }
 
         [Obsolete("Use SharedTransformSystem.ToCoordinates()")]
-        public static EntityCoordinates FromMap(EntityUid entity, MapCoordinates coordinates, IEntityManager? entMan = null)
-        {
-            IoCManager.Resolve(ref entMan);
-            return FromMap(entity, coordinates, entMan.System<SharedTransformSystem>(), entMan);
-        }
-
-        [Obsolete("Use SharedTransformSystem.ToCoordinates()")]
         public static EntityCoordinates FromMap(EntityUid entity, MapCoordinates coordinates, SharedTransformSystem transformSystem, IEntityManager? entMan = null)
         {
             return transformSystem.ToCoordinates(entity, coordinates);
         }
 
         [Obsolete("Use SharedTransformSystem.ToCoordinates()")]
-        public static EntityCoordinates FromMap(IEntityManager entityManager, EntityUid entityUid, MapCoordinates coordinates)
-        {
-            return FromMap(entityUid, coordinates, entityManager.System<SharedTransformSystem>(), entityManager);
-        }
-
-        [Obsolete("Use SharedTransformSystem.ToCoordinates()")]
         public static EntityCoordinates FromMap(IMapManager mapManager, MapCoordinates coordinates)
         {
             return IoCManager.Resolve<IEntityManager>().System<SharedTransformSystem>().ToCoordinates(coordinates);
-        }
-
-        [Obsolete("Use overload with TransformSystem")]
-        public Vector2i ToVector2i(IEntityManager entityManager, IMapManager mapManager)
-        {
-            return ToVector2i(entityManager, mapManager, entityManager.System<SharedTransformSystem>());
         }
 
         /// <summary>
@@ -143,14 +112,14 @@ namespace Robust.Shared.Map
                 return new Vector2i();
 
             var mapSystem = entityManager.System<SharedMapSystem>();
-            var gridIdOpt = GetGridUid(entityManager);
+            var gridIdOpt = transformSystem.GetGrid(this);
             if (gridIdOpt is { } gridId && gridId.IsValid())
             {
                 var grid = entityManager.GetComponent<MapGridComponent>(gridId);
                 return mapSystem.GetTileRef(gridId, grid, this).GridIndices;
             }
 
-            var vec = ToMapPos(entityManager, transformSystem);
+            var vec = transformSystem.ToMapCoordinates(this);
 
             return new Vector2i((int)MathF.Floor(vec.X), (int)MathF.Floor(vec.Y));
         }
@@ -248,6 +217,7 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="position">The vector to offset by local to the entity.</param>
         /// <returns>Newly offset coordinates.</returns>
+        [Pure]
         public EntityCoordinates Offset(Vector2 position)
         {
             return new(EntityId, Position + position);
@@ -333,8 +303,8 @@ namespace Robust.Shared.Map
                 return true;
             }
 
-            var mapCoordinates = ToMap(entityManager, transformSystem);
-            var otherMapCoordinates = otherCoordinates.ToMap(entityManager, transformSystem);
+            var mapCoordinates = transformSystem.ToMapCoordinates(this);
+            var otherMapCoordinates = transformSystem.ToMapCoordinates(otherCoordinates);
 
             if (mapCoordinates.MapId != otherMapCoordinates.MapId)
                 return false;

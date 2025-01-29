@@ -23,7 +23,7 @@ public sealed partial class ReplayLoadManager
     // Scratch data used by UpdateEntityStates.
     // Avoids copying changes for every change to an entity between checkpoints, instead copies once per checkpoint on
     // first change. We can also use this to avoid building a dictionary of ComponentChange inside the inner loop.
-    private class UpdateScratchData
+    private sealed class UpdateScratchData
     {
         public Dictionary<ushort, ComponentChange> Changes;
         public EntityState lastChange;

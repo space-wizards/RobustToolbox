@@ -26,12 +26,29 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IBaseClient _client = default!;
         [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
 
+        internal event Action? AfterStartup;
+        internal event Action? AfterShutdown;
+
         public override void Initialize()
         {
             SetupNetworking();
             ReceivedSystemMessage += (_, systemMsg) => EventBus.RaiseEvent(EventSource.Network, systemMsg);
 
             base.Initialize();
+        }
+
+        public override void Startup()
+        {
+            base.Startup();
+
+            AfterStartup?.Invoke();
+        }
+
+        public override void Shutdown()
+        {
+            base.Shutdown();
+
+            AfterShutdown?.Invoke();
         }
 
         public override void FlushEntities()
@@ -46,16 +63,6 @@ namespace Robust.Client.GameObjects
         EntityUid IClientEntityManagerInternal.CreateEntity(string? prototypeName, out MetaDataComponent metadata)
         {
             return base.CreateEntity(prototypeName, out metadata);
-        }
-
-        void IClientEntityManagerInternal.InitializeEntity(EntityUid entity, MetaDataComponent? meta)
-        {
-            base.InitializeEntity(entity, meta);
-        }
-
-        void IClientEntityManagerInternal.StartEntity(EntityUid entity)
-        {
-            base.StartEntity(entity);
         }
 
         /// <inheritdoc />
@@ -94,9 +101,31 @@ namespace Robust.Client.GameObjects
         /// <inheritdoc />
         public override void Dirty<T>(Entity<T> ent, MetaDataComponent? meta = null)
         {
-            //  Client only dirties during prediction
+            // Client only dirties during prediction
             if (_gameTiming.InPrediction)
                 base.Dirty(ent, meta);
+        }
+
+        public override void DirtyField<T>(EntityUid uid, T comp, string fieldName, MetaDataComponent? metadata = null)
+        {
+            // TODO Prediction
+            // does the client actually need to dirty the field?
+            // I.e., can't it just dirty the whole component to trigger a reset?
+
+            // Client only dirties during prediction
+            if (_gameTiming.InPrediction)
+                base.DirtyField(uid, comp, fieldName, metadata);
+        }
+
+        public override void DirtyFields<T>(EntityUid uid, T comp, MetaDataComponent? meta, params ReadOnlySpan<string> fields)
+        {
+            // TODO Prediction
+            // does the client actually need to dirty the field?
+            // I.e., can't it just dirty the whole component to trigger a reset?
+
+            // Client only dirties during prediction
+            if (_gameTiming.InPrediction)
+                base.DirtyFields(uid, comp, meta, fields);
         }
 
         /// <inheritdoc />
@@ -128,7 +157,10 @@ namespace Robust.Client.GameObjects
             var sequence = _stateMan.SystemMessageDispatched(msg);
             EntityNetManager?.SendSystemNetworkMessage(msg, sequence);
 
-            DebugTools.Assert(!_stateMan.IsPredictionEnabled || _gameTiming.InPrediction && _gameTiming.IsFirstTimePredicted || _client.RunLevel != ClientRunLevel.Connected);
+            if (!_stateMan.IsPredictionEnabled && _client.RunLevel != ClientRunLevel.SinglePlayerGame)
+                return;
+
+            DebugTools.Assert(_gameTiming.InPrediction && _gameTiming.IsFirstTimePredicted || _client.RunLevel == ClientRunLevel.SinglePlayerGame);
 
             var eventArgs = new EntitySessionEventArgs(session!);
             EventBus.RaiseEvent(EventSource.Local, msg);

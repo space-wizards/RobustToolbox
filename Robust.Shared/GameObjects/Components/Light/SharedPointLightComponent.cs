@@ -95,6 +95,15 @@ namespace Robust.Shared.GameObjects
         public string? MaskPath;
     }
 
+    /// <summary>
+    /// Raised directed on an entity when attempting to enable / disable it.
+    /// </summary>
+    [ByRefEvent]
+    public record struct AttemptPointLightToggleEvent(bool Enabled)
+    {
+        public bool Cancelled;
+    }
+
     public sealed class PointLightToggleEvent : EntityEventArgs
     {
         public bool Enabled;

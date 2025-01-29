@@ -496,6 +496,9 @@ namespace Robust.Client.Graphics.Clyde
                     case bool b:
                         program.SetUniform(name, b ? 1 : 0);
                         break;
+                    case bool[] bArr:
+                        program.SetUniform(name, bArr);
+                        break;
                     case Matrix3x2 matrix3:
                         program.SetUniform(name, matrix3);
                         break;

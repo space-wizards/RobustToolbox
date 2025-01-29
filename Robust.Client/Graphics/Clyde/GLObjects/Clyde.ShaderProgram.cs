@@ -418,6 +418,37 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
+            public void SetUniform(string uniformName, bool[] bools)
+            {
+                var uniformId = GetUniform(uniformName);
+                SetUniformDirect(uniformId, bools);
+            }
+
+            public void SetUniform(int uniformName, bool[] bools)
+            {
+                var uniformId = GetUniform(uniformName);
+                SetUniformDirect(uniformId, bools);
+            }
+
+            private void SetUniformDirect(int slot, bool[] bools)
+            {
+                Span<int> intBools = stackalloc int[bools.Length];
+
+                for (var i = 0; i < bools.Length; i++)
+                {
+                    intBools[i] = bools[i] ? 1 : 0;
+                }
+
+                unsafe
+                {
+                    fixed (int* intBoolsPtr = intBools)
+                    {
+                        GL.Uniform1(slot, bools.Length, intBoolsPtr);
+                        _clyde.CheckGlError();
+                    }
+                }
+            }
+
             public void SetUniformTexture(string uniformName, TextureUnit textureUnit)
             {
                 var uniformId = GetUniform(uniformName);

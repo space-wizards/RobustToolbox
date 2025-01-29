@@ -30,6 +30,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -37,6 +38,7 @@ using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics.Dynamics.Contacts
 {
@@ -96,11 +98,13 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// <summary>
         ///     Determines whether the contact is touching.
         /// </summary>
+        [ViewVariables]
         public bool IsTouching { get; internal set; }
 
         /// Enable/disable this contact. This can be used inside the pre-solve
         /// contact listener. The contact is only disabled for the current
         /// time step (or sub-step in continuous collisions).
+        [ViewVariables]
         public bool Enabled { get; set; }
 
         /// <summary>
@@ -127,6 +131,14 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         ///     Used for conveyor belt behavior in m/s.
         /// </summary>
         public float TangentSpeed { get; set; }
+
+        [ViewVariables]
+        public bool Deleting => (Flags & ContactFlags.Deleting) == ContactFlags.Deleting;
+
+        /// <summary>
+        /// If either fixture is hard then it's a hard contact.
+        /// </summary>
+        public bool Hard => FixtureA != null && FixtureB != null && (FixtureA.Hard && FixtureB.Hard);
 
         public void ResetRestitution()
         {
@@ -349,6 +361,53 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             // TODO: Need to suss this out
             return HashCode.Combine(EntityA, EntityB);
         }
+
+        [Pure]
+        public EntityUid OurEnt(EntityUid uid)
+        {
+            if (uid == EntityA)
+                return EntityA;
+            else if (uid == EntityB)
+                return EntityB;
+
+            throw new InvalidOperationException();
+        }
+
+        /// <summary>
+        /// Gets the other ent for this contact.
+        /// </summary>
+        [Pure]
+        public EntityUid OtherEnt(EntityUid uid)
+        {
+            if (uid == EntityA)
+                return EntityB;
+            else if (uid == EntityB)
+                return EntityA;
+
+            throw new InvalidOperationException();
+        }
+
+        [Pure, PublicAPI]
+        public (string Id, Fixture) OurFixture(EntityUid uid)
+        {
+            if (uid == EntityA)
+                return (FixtureAId, FixtureA!);
+            else if (uid == EntityB)
+                return (FixtureBId, FixtureB!);
+
+            throw new InvalidOperationException();
+        }
+
+        [Pure, PublicAPI]
+        public (string Id, Fixture) OtherFixture(EntityUid uid)
+        {
+            if (uid == EntityA)
+                return (FixtureBId, FixtureB!);
+            else if (uid == EntityB)
+                return (FixtureAId, FixtureA!);
+
+            throw new InvalidOperationException();
+        }
     }
 
     [Flags]
@@ -380,5 +439,10 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// Set right before the contact is deleted
         /// </summary>
         Deleting = 1 << 4,
+
+        /// <summary>
+        /// Set after a contact has been deleted and returned to the contact pool.
+        /// </summary>
+        Deleted = 1 << 5,
     }
 }

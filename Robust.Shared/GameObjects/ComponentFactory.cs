@@ -8,7 +8,9 @@ using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
+using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -18,12 +20,12 @@ namespace Robust.Shared.GameObjects
     internal class ComponentFactory(
             IDynamicTypeFactoryInternal _typeFactory,
             IReflectionManager _reflectionManager,
+            ISerializationManager _serManager,
             ILogManager logManager) : IComponentFactory
     {
         private readonly ISawmill _sawmill = logManager.GetSawmill("ent.componentFactory");
 
         // Bunch of dictionaries to allow lookups in all directions.
-        /// <summary>
         /// <summary>
         /// Mapping of component name to type.
         /// </summary>
@@ -63,6 +65,11 @@ namespace Robust.Shared.GameObjects
         private FrozenDictionary<CompIdx, Type> _idxToType
             = FrozenDictionary<CompIdx, Type>.Empty;
 
+        /// <summary>
+        /// Slow-path for Type -> CompIdx mapping without generics.
+        /// </summary>
+        private FrozenDictionary<Type, CompIdx> _typeToIdx = FrozenDictionary<Type, CompIdx>.Empty;
+
         /// <inheritdoc />
         public event Action<ComponentRegistration[]>? ComponentsAdded;
 
@@ -78,6 +85,7 @@ namespace Robust.Shared.GameObjects
         private IEnumerable<ComponentRegistration> AllRegistrations => _types.Values;
 
         private ComponentRegistration Register(Type type,
+            CompIdx idx,
             Dictionary<string, ComponentRegistration> names,
             Dictionary<string, string> lowerCaseNames,
             Dictionary<Type, ComponentRegistration> types,
@@ -123,8 +131,6 @@ namespace Robust.Shared.GameObjects
 
             var unsaved = type.HasCustomAttribute<UnsavedComponentAttribute>();
 
-            var idx = CompIdx.Index(type);
-
             var registration = new ComponentRegistration(name, type, idx, unsaved);
 
             idxToType[idx] = type;
@@ -169,6 +175,41 @@ namespace Robust.Shared.GameObjects
             return name;
         }
 
+        /// <inheritdoc />
+        public void RegisterNetworkedFields<T>(params string[] fields) where T : IComponent
+        {
+            var compReg = GetRegistration(CompIdx.Index<T>());
+            RegisterNetworkedFields(compReg, fields);
+        }
+
+        /// <inheritdoc />
+        public void RegisterNetworkedFields(ComponentRegistration compReg, params string[] fields)
+        {
+            // Nothing to do.
+            if (compReg.NetworkedFields.Length > 0 || fields.Length == 0)
+                return;
+
+            DebugTools.Assert(fields.Length <= 32);
+
+            if (fields.Length > 32)
+            {
+                throw new NotSupportedException(
+                    "Components with more than 32 networked fields unsupported! Consider splitting it up or making a pr for 64-bit flags");
+            }
+
+            compReg.NetworkedFields = fields;
+            var lookup = new Dictionary<string, int>(fields.Length);
+            var i = 0;
+
+            foreach (var field in fields)
+            {
+                lookup[field] = i;
+                i++;
+            }
+
+            compReg.NetworkedFieldLookup = lookup.ToFrozenDictionary();
+        }
+
         public void IgnoreMissingComponents(string postfix = "")
         {
             if (_ignoreMissingComponentPostfix != null && _ignoreMissingComponentPostfix != postfix)
@@ -176,6 +217,13 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException("Ignoring multiple prefixes is not supported");
             }
             _ignoreMissingComponentPostfix = postfix ?? throw new ArgumentNullException(nameof(postfix));
+        }
+
+        public IComponent GetComponent(EntityPrototype.ComponentRegistryEntry entry)
+        {
+            var copy = GetComponent(entry.Component.GetType());
+            _serManager.CopyTo(entry.Component, ref copy, notNullableOverride: true);
+            return copy;
         }
 
         public void RegisterIgnore(params string[] names)
@@ -399,6 +447,20 @@ namespace Robust.Shared.GameObjects
             RegisterTypesInternal(types, false);
         }
 
+        /// <inheritdoc />
+        [Pure]
+        public CompIdx GetIndex(Type type)
+        {
+            return _typeToIdx[type];
+        }
+
+        /// <inheritdoc />
+        [Pure]
+        public int GetArrayIndex(Type type)
+        {
+            return _typeToIdx[type].Value;
+        }
+
         private void RegisterTypesInternal(Type[] types, bool overwrite)
         {
             var names = _names.ToDictionary();
@@ -408,12 +470,19 @@ namespace Robust.Shared.GameObjects
             var ignored = _ignored.ToHashSet();
 
             var added = new ComponentRegistration[types.Length];
+            var typeToidx = _typeToIdx.ToDictionary();
+
             for (int i = 0; i < types.Length; i++)
             {
-                added[i] = Register(types[i], names, lowerCaseNames, typesDict, idxToType, ignored, overwrite);
+                var type = types[i];
+                var idx = CompIdx.GetIndex(type);
+                typeToidx[type] = idx;
+
+                added[i] = Register(type, idx, names, lowerCaseNames, typesDict, idxToType, ignored, overwrite);
             }
 
             var st = RStopwatch.StartNew();
+            _typeToIdx = typeToidx.ToFrozenDictionary();
             _names = names.ToFrozenDictionary();
             _lowerCaseNames = lowerCaseNames.ToFrozenDictionary();
             _types = typesDict.ToFrozenDictionary();

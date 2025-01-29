@@ -17,15 +17,21 @@ namespace Robust.Shared.Network.Messages
         // Ideally we would peg this to the actual configured MTU instead of the default constant, but oh well...
         public const int ReliableThreshold = NetPeerConfiguration.kDefaultMTU - 20;
 
-        // If a state is larger than this, compress it with deflate.
+        // If a state is larger than this, we will compress it
+        // TODO PVS make this a cvar
+        // TODO PVS figure out optimal value
         public const int CompressionThreshold = 256;
 
         public override MsgGroups MsgGroup => MsgGroups.Entity;
 
         public GameState State;
+        public MemoryStream StateStream;
+
         public ZStdCompressionContext CompressionContext;
 
-        internal bool _hasWritten;
+        internal bool HasWritten;
+
+        internal bool ForceSendReliably;
 
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
@@ -53,32 +59,32 @@ namespace Robust.Shared.Network.Messages
                 buffer.ReadAlignedMemory(finalStream, uncompressedLength);
             }
 
-            serializer.DeserializeDirect(finalStream, out State);
+            try
+            {
+                serializer.DeserializeDirect(finalStream, out State);
+            }
+            finally
+            {
+                finalStream.Dispose();
+            }
+
             State.PayloadSize = uncompressedLength;
-            finalStream.Dispose();
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
-            using var stateStream = RobustMemoryManager.GetMemoryStream();
-            serializer.SerializeDirect(stateStream, State);
-            buffer.WriteVariableInt32((int)stateStream.Length);
+            buffer.WriteVariableInt32((int)StateStream.Length);
 
             // We compress the state.
-            if (stateStream.Length > CompressionThreshold)
+            if (StateStream.Length > CompressionThreshold)
             {
                 // var sw = Stopwatch.StartNew();
-                stateStream.Position = 0;
-                var buf = ArrayPool<byte>.Shared.Rent(ZStd.CompressBound((int)stateStream.Length));
-                var length = CompressionContext.Compress2(buf, stateStream.AsSpan());
+                StateStream.Position = 0;
+                var buf = ArrayPool<byte>.Shared.Rent(ZStd.CompressBound((int)StateStream.Length));
+                var length = CompressionContext.Compress2(buf, StateStream.AsSpan());
 
                 buffer.WriteVariableInt32(length);
-
                 buffer.Write(buf.AsSpan(0, length));
-
-                // var elapsed = sw.Elapsed;
-                // System.Console.WriteLine(
-                //    $"From: {State.FromSequence} To: {State.ToSequence} Size: {length} B Before: {stateStream.Length} B time: {elapsed}");
 
                 ArrayPool<byte>.Shared.Return(buf);
             }
@@ -87,10 +93,10 @@ namespace Robust.Shared.Network.Messages
             {
                 // 0 means that the state isn't compressed.
                 buffer.WriteVariableInt32(0);
-                buffer.Write(stateStream.AsSpan());
+                buffer.Write(StateStream.AsSpan());
             }
 
-            _hasWritten = true;
+            HasWritten = true;
             MsgSize = buffer.LengthBytes;
         }
 
@@ -101,21 +107,12 @@ namespace Robust.Shared.Network.Messages
         /// <returns></returns>
         public bool ShouldSendReliably()
         {
-            DebugTools.Assert(_hasWritten, "Attempted to determine sending method before determining packet size.");
-            return State.ForceSendReliably || MsgSize > ReliableThreshold;
+            DebugTools.Assert(HasWritten, "Attempted to determine sending method before determining packet size.");
+            return ForceSendReliably || MsgSize > ReliableThreshold;
         }
 
-        public override NetDeliveryMethod DeliveryMethod
-        {
-            get
-            {
-                if (ShouldSendReliably())
-                {
-                    return NetDeliveryMethod.ReliableUnordered;
-                }
-
-                return base.DeliveryMethod;
-            }
-        }
+        public override NetDeliveryMethod DeliveryMethod => ShouldSendReliably()
+                ? NetDeliveryMethod.ReliableUnordered
+                : base.DeliveryMethod;
     }
 }

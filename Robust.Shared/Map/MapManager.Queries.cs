@@ -356,29 +356,6 @@ internal partial class MapManager
 
     #endregion
 
-    private readonly record struct GridQueryState(
-        GridCallback Callback,
-        Box2 WorldAABB,
-        IPhysShape Shape,
-        Transform Transform,
-        B2DynamicTree<(EntityUid Uid, FixturesComponent Fixtures, MapGridComponent Grid)> Tree,
-        SharedMapSystem MapSystem,
-        MapManager MapManager,
-        SharedTransformSystem TransformSystem,
-        bool Approximate);
-
-    private record struct GridQueryState<TState>(
-        GridCallback<TState> Callback,
-        TState State,
-        Box2 WorldAABB,
-        IPhysShape Shape,
-        Transform Transform,
-        B2DynamicTree<(EntityUid Uid, FixturesComponent Fixtures, MapGridComponent Grid)> Tree,
-        SharedMapSystem MapSystem,
-        MapManager MapManager,
-        SharedTransformSystem TransformSystem,
-        bool Approximate);
-
     private record struct GridQueryState<T, TState>(
         GridCallback<TState> Callback,
         TState State,

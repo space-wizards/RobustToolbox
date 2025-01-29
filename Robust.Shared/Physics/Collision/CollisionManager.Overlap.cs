@@ -12,12 +12,12 @@ internal sealed partial class CollisionManager
     /// <param name="xfA">The transform for the first shape.</param>
     /// <param name="xfB">The transform for the seconds shape.</param>
     /// <returns></returns>
-    public bool TestOverlap(IPhysShape shapeA, int childIndexA, IPhysShape shapeB, int childIndexB, in Transform xfA, in Transform xfB)
+    public bool TestOverlap<T, U>(T shapeA, int indexA, U shapeB, int indexB, in Transform xfA, in Transform xfB) where T : IPhysShape where U : IPhysShape
     {
         var input = new DistanceInput();
 
-        input.ProxyA.Set(shapeA, childIndexA);
-        input.ProxyB.Set(shapeB, childIndexB);
+        input.ProxyA.Set(shapeA, indexA);
+        input.ProxyB.Set(shapeB, indexB);
         input.TransformA = xfA;
         input.TransformB = xfB;
         input.UseRadii = true;

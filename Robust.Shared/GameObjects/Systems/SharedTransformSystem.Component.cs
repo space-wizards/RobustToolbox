@@ -289,17 +289,25 @@ public abstract partial class SharedTransformSystem
         EntityUid uid,
         TransformComponent xform)
     {
-        // Dont set pre-init, as the map grid component might not have been added yet.
-        if (xform._gridInitialized || xform.LifeStage < ComponentLifeStage.Initializing)
+        if (xform._gridInitialized)
             return;
 
-        xform._gridInitialized = true;
-        DebugTools.Assert(xform.GridUid == null);
         if (_gridQuery.HasComponent(uid))
         {
             xform._gridUid = uid;
+            xform._gridInitialized = true;
             return;
         }
+
+        // We don't set _gridInitialized to true unless the transform (and hence entity) is already being initialized,
+        // as otherwise the current entity's grid component might just not have been added yet.
+        //
+        // We don't just return early, on the off chance that what is happening here is some convoluted entity
+        // initialization pasta, where an an entity has been attached to an un-initialized entity on an already
+        // initialized grid. In that case, the newly attached entity needs to be able to figure out the new grid id.
+        // AFAIK this shouldn't happen anymore, but might as well keep this just in case.
+        if (xform.LifeStage >= ComponentLifeStage.Initializing)
+            xform._gridInitialized = true;
 
         if (!xform._parent.IsValid())
             return;
@@ -726,6 +734,11 @@ public abstract partial class SharedTransformSystem
     {
         if (args.Current is TransformComponentState newState)
         {
+            // TODO Delta-states
+            // If the transform component ever gets delta states, then the client state manager needs to be updated.
+            // Currently it explicitly looks for a "TransformComponentState" when determining an entity's parent for the
+            // sake of sorting the states that need to be applied base on the transform hierarchy.
+
             var parent = EnsureEntity<TransformComponent>(newState.ParentID, uid);
             var oldAnchored = xform.Anchored;
 

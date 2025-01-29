@@ -1694,7 +1694,6 @@ namespace Robust.Shared.GameObjects
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [Pure]
         public bool Resolve(EntityUid uid, [NotNullWhen(true)] ref TComp1? component, bool logMissing = true)
         {
             if (component != null)
@@ -1717,7 +1716,7 @@ namespace Robust.Shared.GameObjects
             return false;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Resolve(ref Entity<TComp1?> entity, bool logMissing = true)
         {
             return Resolve(entity.Owner, ref entity.Comp, logMissing);

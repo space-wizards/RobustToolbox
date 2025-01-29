@@ -549,7 +549,7 @@ namespace Robust.Client.UserInterface
         {
         }
 
-        internal virtual void DrawInternal(IRenderHandle renderHandle)
+        protected internal virtual void Draw(IRenderHandle renderHandle)
         {
             Draw(renderHandle.DrawingHandleScreen);
         }

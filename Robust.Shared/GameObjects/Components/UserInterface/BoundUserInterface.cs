@@ -28,13 +28,6 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         protected internal BoundUserInterfaceState? State { get; internal set; }
 
-        // Bandaid just for storage :)
-        /// <summary>
-        /// Defers state handling
-        /// </summary>
-        [Obsolete]
-        public virtual bool DeferredClose { get; } = true;
-
         protected BoundUserInterface(EntityUid owner, Enum uiKey)
         {
             IoCManager.InjectDependencies(this);

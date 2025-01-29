@@ -912,11 +912,11 @@ public abstract partial class SharedTransformSystem
             _mapManager.TryFindGridAt(mapUid, coordinates.Position, out var targetGrid, out _))
         {
             var invWorldMatrix = GetInvWorldMatrix(targetGrid);
-            SetCoordinates(entity, new EntityCoordinates(targetGrid, Vector2.Transform(coordinates.Position, invWorldMatrix)));
+            SetCoordinates((entity.Owner, entity.Comp, MetaData(entity.Owner)), new EntityCoordinates(targetGrid, Vector2.Transform(coordinates.Position, invWorldMatrix)));
         }
         else
         {
-            SetCoordinates(entity, new EntityCoordinates(mapUid, coordinates.Position));
+            SetCoordinates((entity.Owner, entity.Comp, MetaData(entity.Owner)), new EntityCoordinates(mapUid, coordinates.Position));
         }
     }
 

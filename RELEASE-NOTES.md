@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 242.0.0
+
+### Breaking changes
+
 * The order in which the client initialises networked entities has changed. It will now always apply component states, initialise, and start an entity's parent before processing any children. This might break anything that was relying on the old behaviour where all component states were applied before any entities were initialised & started.
 * `IClydeViewport` overlay rendering methods now take in an `IRenderHandle` instead of a world/screen handle.
 * The `OverlayDrawArgs` struct now has an internal constructor.
@@ -44,18 +67,21 @@ END TEMPLATE-->
 * Controls can now be manually restyled via `Control.InvalidateStyleSheet()` and `Control.DoStyleUpdate()`
 * Added `IUserInterfaceManager.RenderControl()` for manually drawing controls.
 * `OverlayDrawArgs` struct now has an `IRenderHandle` field such that overlays can use the new `RenderControl()` methods.
+* TileSpawnWindow will now take focus when opened.
 
 ### Bugfixes
 
 * Fixed a client-side bug where `TransformComponent.GridUid` does not get set properly when an existing entity is attached to a new entity outside of the player's PVS range.
+* EntityPrototypeView will only create entities when it's on the UI tree and not when the prototype is set.
+* Make CollisionWake not log errors if it can't resolve.
 
 ### Other
 
-*None yet*
+* Replace IPhysShape API with generics on IMapManager and EntityLookupSystem.
 
 ### Internal
 
-*None yet*
+* Significantly reduce allocations for Box2 / Box2Rotated queries.
 
 
 ## 241.0.0

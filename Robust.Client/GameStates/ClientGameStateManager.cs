@@ -687,7 +687,7 @@ namespace Robust.Client.GameStates
         ///     initial server state for any newly created entity. It does this by simply using the standard <see
         ///     cref="IEntityManager.GetComponentState"/>.
         /// </remarks>
-        private void MergeImplicitData()
+        public void MergeImplicitData()
         {
             var bus = _entities.EventBus;
 

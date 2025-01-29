@@ -77,11 +77,11 @@ namespace Robust.Shared.Map
 
         #region MapId
 
-        public void FindGridsIntersecting(MapId mapId, IPhysShape shape, Transform transform,
-            ref List<Entity<MapGridComponent>> grids, bool approx = Approximate, bool includeMap = IncludeMap);
+        public void FindGridsIntersecting<T>(MapId mapId, T shape, Transform transform,
+            ref List<Entity<MapGridComponent>> grids, bool approx = Approximate, bool includeMap = IncludeMap) where T : IPhysShape;
 
-        public void FindGridsIntersecting(MapId mapId, IPhysShape shape, Transform transform, GridCallback callback,
-            bool approx = Approximate, bool includeMap = IncludeMap);
+        public void FindGridsIntersecting<T>(MapId mapId, T shape, Transform transform, GridCallback callback,
+            bool approx = Approximate, bool includeMap = IncludeMap) where T : IPhysShape;
 
         public void FindGridsIntersecting(MapId mapId, Box2 worldAABB, GridCallback callback, bool approx = Approximate,
             bool includeMap = IncludeMap);
@@ -107,11 +107,11 @@ namespace Robust.Shared.Map
 
         #region MapEnt
 
-        public void FindGridsIntersecting(EntityUid mapEnt, IPhysShape shape, Transform transform, GridCallback callback,
-            bool approx = Approximate, bool includeMap = IncludeMap);
+        public void FindGridsIntersecting<T>(EntityUid mapEnt, T shape, Transform transform, GridCallback callback,
+            bool approx = Approximate, bool includeMap = IncludeMap) where T : IPhysShape;
 
-        public void FindGridsIntersecting<TState>(EntityUid mapEnt, IPhysShape shape, Transform transform,
-            ref TState state, GridCallback<TState> callback, bool approx = Approximate, bool includeMap = IncludeMap);
+        public void FindGridsIntersecting<T, TState>(EntityUid mapEnt, T shape, Transform transform,
+            ref TState state, GridCallback<TState> callback, bool approx = Approximate, bool includeMap = IncludeMap) where T : IPhysShape;
 
         /// <summary>
         /// Returns true if any grids overlap the specified shapes.
@@ -119,8 +119,8 @@ namespace Robust.Shared.Map
         public void FindGridsIntersecting(EntityUid mapEnt, List<IPhysShape> shapes, Transform transform,
             ref List<Entity<MapGridComponent>> entities, bool approx = Approximate, bool includeMap = IncludeMap);
 
-        public void FindGridsIntersecting(EntityUid mapEnt, IPhysShape shape, Transform transform,
-            ref List<Entity<MapGridComponent>> grids, bool approx = Approximate, bool includeMap = IncludeMap);
+        public void FindGridsIntersecting<T>(EntityUid mapEnt, T shape, Transform transform,
+            ref List<Entity<MapGridComponent>> grids, bool approx = Approximate, bool includeMap = IncludeMap) where T : IPhysShape;
 
         public void FindGridsIntersecting(EntityUid mapEnt, Box2 worldAABB, GridCallback callback,
             bool approx = Approximate, bool includeMap = IncludeMap);

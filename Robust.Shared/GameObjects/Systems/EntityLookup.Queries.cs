@@ -1,8 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using JetBrains.Annotations;
 using Robust.Shared.Collections;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -11,7 +9,6 @@ using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
-using Robust.Shared.Physics.Shapes;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
 
@@ -716,12 +713,12 @@ public sealed partial class EntityLookupSystem
         return entities;
     }
 
-    public void GetEntitiesIntersecting(
+    public void GetEntitiesIntersecting<T>(
         MapId mapId,
-        IPhysShape shape,
+        T shape,
         Transform transform,
         HashSet<EntityUid> entities,
-        LookupFlags flags = LookupFlags.All)
+        LookupFlags flags = LookupFlags.All) where T : IPhysShape
     {
         if (mapId == MapId.Nullspace)
             return;

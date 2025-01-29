@@ -490,7 +490,8 @@ namespace Robust.Client.Graphics.Clyde
                         component.CastShadows ? (i + 0.5f) / ShadowTexture.Height : -1);
 
                     lightShader.SetUniformMaybe("globalRotation", (float)eye.Rotation.Theta);
-                    lightShader.SetUniformTextureMaybe("normalMap", viewport.RenderTarget);
+                    SetTexture(TextureUnit.Texture1, viewport.RenderTarget.Texture);
+                    lightShader.SetUniformTextureMaybe("normalMap", TextureUnit.Texture1);
 
                     var offset = new Vector2(component.Radius, component.Radius);
 

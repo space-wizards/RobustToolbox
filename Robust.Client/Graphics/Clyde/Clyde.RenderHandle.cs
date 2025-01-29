@@ -524,7 +524,7 @@ namespace Robust.Client.Graphics.Clyde
                 public override void DrawTextureRectRegion(Texture texture, Box2 quad,
                     Color? modulate = null, UIBox2? subRegion = null, bool normal = false)
                 {
-                    var color = (modulate ?? Color.White) * Modulate;
+                    var color = normal ? Color.White : (modulate ?? Color.White) * Modulate;
 
                     _renderHandle.DrawTextureWorld(texture, quad.BottomLeft, quad.BottomRight,
                         quad.TopLeft, quad.TopRight, color, in subRegion, normal: normal);

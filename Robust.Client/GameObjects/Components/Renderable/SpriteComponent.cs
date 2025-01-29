@@ -2077,7 +2077,7 @@ namespace Robust.Client.GameObjects
                 if (Shader != null)
                     drawingHandle.UseShader(Shader);
 
-                var layerColor = _parent.color * Color;
+                var layerColor = normal ? Color.White : _parent.color * Color;
                 var textureSize = texture.Size / (float)EyeManager.PixelsPerMeter;
                 var quad = Box2.FromDimensions(textureSize/-2, textureSize);
 

@@ -93,7 +93,7 @@ internal static class RsiLoading
                 }
             }
 
-            states[stateI] = new StateMetadata(stateName, normalName, bumpName, dirValue, delays);
+            states[stateI] = new StateMetadata(stateName, normalName, bumpName, size, dirValue, delays);
         }
 
         var textureParams = TextureLoadParameters.Default;
@@ -129,14 +129,16 @@ internal static class RsiLoading
         public readonly string StateId;
         public readonly string? NormalId;
         public readonly string? BumpId;
+        public readonly Vector2i Size;
         public readonly int DirCount;
         public readonly float[][] Delays;
 
-        public StateMetadata(string stateId, string? normalId, string? bumpId, int dirCount, float[][] delays)
+        public StateMetadata(string stateId, string? normalId, string? bumpId, Vector2i size, int dirCount, float[][] delays)
         {
             StateId = stateId;
             NormalId = normalId;
             BumpId = bumpId;
+            Size = size;
             DirCount = dirCount;
 
             Delays = delays;

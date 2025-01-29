@@ -60,7 +60,7 @@ namespace Robust.Client.ResourceManagement
                 loadStepData.LoadParameters);
         }
 
-        internal static void ConvertBumpToNormal(Image<Rgba32> bumpmap, out Image<Rgba32> normal, float factor = 100f)
+        internal static void ConvertBumpToNormal(Image<Rgba32> bumpmap, Vector2i blocksize, out Image<Rgba32> normal, float factor = 1f)
         {
             int Width = bumpmap.Width;
             int Height = bumpmap.Height;
@@ -69,15 +69,24 @@ namespace Robust.Client.ResourceManagement
             for (x = 0; x < Width; x++)
             for (y = 0; y < Height; y++)
             {
-                int XL = Math.Clamp(x - 1, 0, Width - 1);
-                int YL = Math.Clamp(y - 1, 0, Height - 1);
-                int XR = Math.Clamp(x + 1, 0, Width - 1);
-                int YR = Math.Clamp(y + 1, 0, Height - 1);
+                int XFactor = x / blocksize.X;
+                int YFactor = y / blocksize.Y;
 
-                float Left = bumpmap[XL, y].R;
-                float Right = bumpmap[XR, y].R;
-                float Up = bumpmap[x, YL].R;
-                float Down = bumpmap[x, YR].R;
+                int XL = x - 1;
+                int YL = y - 1;
+                int XR = x + 1;
+                int YR = y + 1;
+
+                float Left = 0f, Right = 0f, Up = 0f, Down = 0f;
+
+                if (XL - XFactor * blocksize.X >= 0)
+                    Left = bumpmap[XL, y].R / 255f;
+                if (XR - XFactor * blocksize.X < blocksize.X)
+                    Right = bumpmap[XR, y].R / 255f;
+                if (YL - YFactor * blocksize.Y >= 0)
+                    Up = bumpmap[x, YL].R / 255f;
+                if (YR - YFactor * blocksize.Y < blocksize.Y)
+                    Down = bumpmap[x, YR].R / 255f;
 
                 // very good math
                 // cross product of a certain two vectors
@@ -89,7 +98,7 @@ namespace Robust.Client.ResourceManagement
             }
         }
 
-        internal static void CreatePlaceholderBump(Image<Rgba32> original, out Image<Rgba32> bumpmap)
+        internal static void CreatePlaceholderBump(Image<Rgba32> original, Vector2i blocksize, out Image<Rgba32> bumpmap)
         {
             int x, y;
             int Width = original.Width;
@@ -104,19 +113,28 @@ namespace Robust.Client.ResourceManagement
                     continue;
                 }
 
-                int XL = Math.Clamp(x - 1, 0, Width - 1);
-                int YL = Math.Clamp(y - 1, 0, Height - 1);
-                int XR = Math.Clamp(x + 1, 0, Width - 1);
-                int YR = Math.Clamp(y + 1, 0, Height - 1);
+                int XFactor = x / blocksize.X;
+                int YFactor = y / blocksize.Y;
 
-                byte Left = original[XL, y].A;
-                byte Right = original[XR, y].A;
-                byte Up = original[x, YL].A;
-                byte Down = original[x, YR].A;
+                int XL = x - 1;
+                int YL = y - 1;
+                int XR = x + 1;
+                int YR = y + 1;
+
+                byte Left = 0, Right = 0, Up = 0, Down = 0;
+
+                if (XL - XFactor * blocksize.X >= 0)
+                    Left = bumpmap[XL, y].A;
+                if (XR - XFactor * blocksize.X < blocksize.X)
+                    Right = bumpmap[XR, y].A;
+                if (YL - YFactor * blocksize.Y >= 0)
+                    Up = bumpmap[x, YL].A;
+                if (YR - YFactor * blocksize.Y < blocksize.Y)
+                    Down = bumpmap[x, YR].A;
 
                 if (Left == 0 || Right == 0 || Up == 0 || Down == 0)
                 {
-                    bumpmap[x, y] = new Rgba32(1f, 0.5f, 0.5f, original[x, y].A);
+                    bumpmap[x, y] = new Rgba32(0.5f, 0.5f, 0.5f, original[x, y].A);
                 }
                 else
                 {
@@ -125,10 +143,10 @@ namespace Robust.Client.ResourceManagement
             }
         }
 
-        internal static void CreatePlaceholderNormal(Image<Rgba32> original, out Image<Rgba32> normalmap)
+        internal static void CreatePlaceholderNormal(Image<Rgba32> original, Vector2i blocksize, out Image<Rgba32> normalmap)
         {
-            CreatePlaceholderBump(original, out var bumpmap);
-            ConvertBumpToNormal(bumpmap, out normalmap);
+            CreatePlaceholderBump(original, blocksize, out var bumpmap);
+            ConvertBumpToNormal(bumpmap, blocksize, out normalmap);
             bumpmap.Dispose();
         }
 
@@ -189,13 +207,13 @@ namespace Robust.Client.ResourceManagement
                             using (var bumpStream = manager.ContentFileRead(bumpPath))
                             {
                                 var bump = Image.Load<Rgba32>(bumpStream);
-                                ConvertBumpToNormal(bump, out normalImage);
+                                ConvertBumpToNormal(bump, stateObject.Size, out normalImage);
                                 bump.Dispose();
                             }
                         }
                         else
                         {
-                            CreatePlaceholderNormal(texture, out normalImage);
+                            CreatePlaceholderNormal(texture, stateObject.Size, out normalImage);
                         }
                     }
                     for (int nX = 0; nX < texture.Width; nX++)

@@ -37,7 +37,7 @@ internal sealed partial class UserInterfaceManager
         _roots.Add(newRoot);
         _windowsToRoot.Add(window.Id, newRoot);
 
-        newRoot.StyleSheetUpdate();
+        newRoot.InvalidateStyleSheet();
         newRoot.InvalidateMeasure();
         QueueMeasureUpdate(newRoot);
         QueueArrangeUpdate(newRoot);

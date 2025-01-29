@@ -35,11 +35,14 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `IClydeViewport` overlay rendering methods now take in an `IRenderHandle` instead of a world/screen handle.
+* The `OverlayDrawArgs` struct now has an internal constructor.
 
 ### New features
 
-*None yet*
+* Controls can now be manually restyled via `Control.InvalidateStyleSheet()` and `Control.DoStyleUpdate()`
+* Added `IUserInterfaceManager.RenderControl()` for manually drawing controls.
+* `OverlayDrawArgs` struct now has an `IRenderHandle` field such that overlays can use the new `RenderControl()` methods.
 
 ### Bugfixes
 

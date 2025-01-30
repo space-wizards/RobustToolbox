@@ -496,7 +496,7 @@ namespace Robust.Client.Graphics.Clyde
                     // lightShader.SetUniformMaybe("viewportScale", eye);
 
                     lightShader.SetUniformMaybe("eyeZoom", eye.Zoom / viewport.RenderScale);
-                    lightShader.SetUniformMaybe("eyeCenter", eye.Position.Position);
+                    lightShader.SetUniformMaybe("eyeCenter", eye.Position.Position + eye.Offset);
 
                     var offset = new Vector2(component.Radius, component.Radius);
 

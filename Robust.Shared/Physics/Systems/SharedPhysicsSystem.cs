@@ -24,7 +24,6 @@ namespace Robust.Shared.Physics.Systems
         /*
          * TODO:
 
-         * Raycasts for non-box shapes.
          * TOI Solver (continuous collision detection)
          * Poly cutting
          */

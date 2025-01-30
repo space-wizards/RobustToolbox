@@ -419,6 +419,8 @@ namespace Robust.Client.Graphics.Clyde
 
             SetTexture(TextureUnit.Texture1, ShadowTexture);
             lightShader.SetUniformTextureMaybe("shadowMap", TextureUnit.Texture1);
+            SetTexture(TextureUnit.Texture2, viewport.RenderTarget.Texture);
+            lightShader.SetUniformTextureMaybe("normalMap", TextureUnit.Texture2);
 
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.One);
             CheckGlError();
@@ -489,9 +491,7 @@ namespace Robust.Client.Graphics.Clyde
                     lightShader.SetUniformMaybe("lightIndex",
                         component.CastShadows ? (i + 0.5f) / ShadowTexture.Height : -1);
 
-                    lightShader.SetUniformMaybe("globalRotation", (float)eye.Rotation.Theta);
-                    SetTexture(TextureUnit.Texture1, viewport.RenderTarget.Texture);
-                    lightShader.SetUniformTextureMaybe("normalMap", TextureUnit.Texture1);
+                    lightShader.SetUniformMaybe("globalRotation", (float)eye.Rotation.Theta + (float)rot.Theta);
 
                     var offset = new Vector2(component.Radius, component.Radius);
 

@@ -494,11 +494,11 @@ namespace Robust.Client.Graphics.Clyde
                     //     _drawGrids(viewport, worldAABB, worldBounds, eye, normal: true);
                     // }
 
-                    // using (DebugGroup("EntityNormals"))
-                    // using (_prof.Group("EntityNormals"))
-                    // {
-                    //     DrawEntities(viewport, worldBounds, worldAABB, eye, normal: true);
-                    // }
+                    using (DebugGroup("EntityNormals"))
+                    using (_prof.Group("EntityNormals"))
+                    {
+                        DrawEntities(viewport, worldBounds, worldAABB, eye, normal: true);
+                    }
 
                     using (DebugGroup("Lights"))
                     using (_prof.Group("Lights"))
@@ -521,7 +521,7 @@ namespace Robust.Client.Graphics.Clyde
                     using (DebugGroup("Entities"))
                     using (_prof.Group("Entities"))
                     {
-                        DrawEntities(viewport, worldBounds, worldAABB, eye, true);
+                        DrawEntities(viewport, worldBounds, worldAABB, eye);
                     }
 
                     using (_prof.Group("Overlays WSBFOV"))

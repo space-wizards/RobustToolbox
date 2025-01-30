@@ -60,7 +60,7 @@ namespace Robust.Client.ResourceManagement
                 loadStepData.LoadParameters);
         }
 
-        internal static void ConvertBumpToNormal(Image<Rgba32> bumpmap, Vector2i blocksize, out Image<Rgba32> normal, float factor = 1f)
+        internal static void ConvertBumpToNormal(Image<Rgba32> bumpmap, Vector2i blocksize, out Image<Rgba32> normal, float factor = 2f)
         {
             int Width = bumpmap.Width;
             int Height = bumpmap.Height;

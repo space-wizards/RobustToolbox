@@ -7,6 +7,7 @@ using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.CustomControls;
+using Robust.Client.Utility;
 using Robust.Shared;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -16,6 +17,9 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
 using Robust.Shared.Utility;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using Color = Robust.Shared.Maths.Color;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -288,7 +292,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 Vector2i roundedPos = default;
-                if (entry.Sprite.PostShader != null && !normal)
+                if (entry.Sprite.PostShader != null)
                 {
                     // get the size of the sprite on screen, scaled slightly to allow for shaders that increase the final sprite size.
                     var screenSpriteSize = (Vector2i)(entry.SpriteScreenBB.Size * PostShadeScale).Rounded();
@@ -487,12 +491,12 @@ namespace Robust.Client.Graphics.Clyde
 
                 if (eye.Position.MapId != MapId.Nullspace)
                 {
-                    // // prob not needed
-                    // using (DebugGroup("GridNormals"))
-                    // using (_prof.Group("GridNormals"))
-                    // {
-                    //     _drawGrids(viewport, worldAABB, worldBounds, eye, normal: true);
-                    // }
+                    // prob not needed
+                    using (DebugGroup("GridNormals"))
+                    using (_prof.Group("GridNormals"))
+                    {
+                        _drawGrids(viewport, worldAABB, worldBounds, eye, normal: true);
+                    }
 
                     using (DebugGroup("EntityNormals"))
                     using (_prof.Group("EntityNormals"))
@@ -514,7 +518,7 @@ namespace Robust.Client.Graphics.Clyde
                     using (DebugGroup("Grids"))
                     using (_prof.Group("Grids"))
                     {
-                        _drawGrids(viewport, worldAABB, worldBounds, eye);
+                        _drawGrids(viewport, worldAABB, worldBounds, eye, true);
                     }
 
                     // We will also render worldspace overlays here so we can do them under / above entities as necessary

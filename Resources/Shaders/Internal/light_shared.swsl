@@ -18,6 +18,7 @@ uniform highp float lightPower;
 uniform highp float lightSoftness;
 uniform highp float lightIndex;
 uniform highp float globalRotation;
+uniform highp float viewportScale;
 uniform sampler2D shadowMap;
 uniform sampler2D normalMap;
 
@@ -68,6 +69,10 @@ void fragment()
     newUV *= lightRange;
     newUV += vec2(0.5, 0.5);
     highp vec4 origSample = texture2D(normalMap, newUV);
+    if (origSample.xy == vec2(0.5, 0.5))
+    {
+        COLOR = vec4(1,1,1,100);
+    }
     highp vec4 normalSample = origSample * vec4(2,2,1,1) - vec4(0.441, 0.441, 0, 0);
     highp float run = 1;
     if (origSample.xyzw != vec4(0,0,0,1))
@@ -75,7 +80,7 @@ void fragment()
         run = -dot(lightDir, normalSample.xy);
         if (run <= 0)
             run = 0;
-        run += normalSample.z * sqrt(normalize(vec3(diff, LIGHTING_HEIGHT)).z);
+        run += normalSample.z * normalize(vec3(diff, LIGHTING_HEIGHT)).z;
         if (run <= 0)
             discard;
     }

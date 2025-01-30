@@ -18,7 +18,6 @@ uniform highp float lightPower;
 uniform highp float lightSoftness;
 uniform highp float lightIndex;
 uniform highp float globalRotation;
-uniform highp float viewportScale;
 uniform sampler2D shadowMap;
 uniform sampler2D normalMap;
 

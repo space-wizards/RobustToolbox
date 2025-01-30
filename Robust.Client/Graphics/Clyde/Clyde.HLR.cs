@@ -487,7 +487,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 if (eye.Position.MapId != MapId.Nullspace)
                 {
-
+                    // // prob not needed
                     // using (DebugGroup("GridNormals"))
                     // using (_prof.Group("GridNormals"))
                     // {

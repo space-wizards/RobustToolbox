@@ -11,6 +11,7 @@ varying highp vec2 worldPosition;
 uniform highp vec4 lightColor;
 // Position of the light, in world coordinates.
 uniform highp vec2 lightCenter;
+uniform highp vec2 eyeCenter;
 uniform highp float lightRange;
 uniform highp float lightPower;
 uniform highp float lightSoftness;
@@ -61,15 +62,24 @@ void fragment()
     val *= mask;
 
     highp vec2 lightDir = rotateVector(normalize(diff), globalRotation);
-    highp vec2 newUV = rotateVector(UV - vec2(0.5, 0.5), -globalRotation);
+    highp vec2 newUV = rotateVector(UV - vec2(0.5, 0.5) + (lightCenter - eyeCenter) / vec2(20, -20), -globalRotation);
     newUV *= (projectionMatrix * vec3(1, 1, 0)).xy * vec2(1, -1);
     newUV *= lightRange;
     newUV += vec2(0.5, 0.5);
-    highp vec4 normalSample = texture2D(normalMap, newUV);
-    highp float run = dot(lightDir, vec2(normalSample.x, normalSample.y)) + normalSample.z;
-    if (run < 0)
-        discard;
+    //newUV += (lightCenter - eyeCenter) / vec2(21, 15);
+    highp vec4 origSample = texture2D(normalMap, newUV);
+    highp vec4 normalSample = origSample * vec4(2,2,1,1) - vec4(1,1,0,0);
+    highp float run = 1;
+    if (origSample.xyzw != vec4(0,0,0,1))
+    {
+        run = dot(lightDir, -normalSample.xy);
+        if (run < 0)
+            run = 0;
+        //run += normalSample.z;
+        if (run <= 0)
+            discard;
+    }
 
-    COLOR = vec4(lightColor.xyz, val * occlusion) * run;
+    COLOR = vec4(lightColor.xyz, val * occlusion * run);
 }
 

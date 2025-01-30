@@ -494,7 +494,7 @@ namespace Robust.Client.Graphics.Clyde
                     lightShader.SetUniformMaybe("globalRotation", (float)eye.Rotation.Theta - (float)rotation.Theta -
                                                                   (float)_transformSystem.GetWorldRotation(mapUid).Theta);
                     lightShader.SetUniformMaybe("eyeZoom", eye.Zoom);
-                    lightShader.SetUniformMaybe("eyeCenter", eye.Position.Position - eye.Offset);
+                    lightShader.SetUniformMaybe("eyeCenter", eye.Position.Position);
 
                     var offset = new Vector2(component.Radius, component.Radius);
 

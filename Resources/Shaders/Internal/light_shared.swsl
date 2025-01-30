@@ -62,14 +62,14 @@ void fragment()
     val *= mask;
 
     highp vec2 lightDir = rotateVector(normalize(diff), globalRotation);
-    highp vec2 newUV = rotateVector(UV - vec2(0.5, 0.5) + (lightCenter - eyeCenter) / vec2(20, -20), -globalRotation);
+    highp vec2 newUV = rotateVector(UV - vec2(0.5, 0.5) + (lightCenter - eyeCenter) / vec2(2, -2) / lightRange, -globalRotation);
     newUV *= (projectionMatrix * vec3(1, 1, 0)).xy * vec2(1, -1);
     newUV *= lightRange;
     newUV += vec2(0.5, 0.5);
     //newUV += (lightCenter - eyeCenter) / vec2(21, 15);
     highp vec4 origSample = texture2D(normalMap, newUV);
     highp vec4 normalSample = origSample * vec4(2,2,1,1) - vec4(1,1,0,0);
-    highp float run = 1;
+    highp float run = 0;
     if (origSample.xyzw != vec4(0,0,0,1))
     {
         run = dot(lightDir, -normalSample.xy);

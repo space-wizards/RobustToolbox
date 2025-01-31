@@ -63,7 +63,7 @@ void fragment()
     val *= mask;
 
     // how this works
-    // globalRotation: rotation of the eye minus rotation of the light minus rotation of the map
+    // globalRotation: rotation of the eye plus rotation of the light minus rotation of the map
     // eyeCenter: center of the eye plus offset
     // eyeZoom: zoom of the eye divided by viewport scale
     // UV is on a scale from 0 to 1 in x and y axes
@@ -89,15 +89,14 @@ void fragment()
     // to make sure original values of 0.5, 0.5 go to 0, 0
     highp vec4 normalSample = origSample * vec4(2,2,1,1) - vec4(0.441, 0.441, 0, 0);
     highp float run = 1;
-    if (origSample.xyzw != vec4(0,0,0,1))
-    {
-        run = -dot(lightDir, normalSample.xy);
-        if (run <= 0)
-            run = 0;
-        run += normalSample.z * normalize(vec3(diff, LIGHTING_HEIGHT)).z;
-        if (run <= 0)
-            discard;
-    }
+    if (origSample.xyzw == vec4(0,0,0,1))
+        discard;
+    run = -dot(lightDir, normalSample.xy);
+    if (run <= 0)
+        run = 0;
+    run += normalSample.z * normalize(vec3(diff, LIGHTING_HEIGHT)).z;
+    if (run <= 0)
+        discard;
 
     COLOR = vec4(lightColor.xyz, val * occlusion * run);
 }

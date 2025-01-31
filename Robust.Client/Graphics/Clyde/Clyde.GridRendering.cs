@@ -56,12 +56,15 @@ namespace Robust.Client.Graphics.Clyde
                     SetTexture(TextureUnit.Texture0, _tileDefinitionManager.TileTextureAtlas);
                     SetTexture(TextureUnit.Texture1, _lightingReady ? viewport.LightRenderTarget.Texture : _stockTextureWhite);
 
-                    gridProgram = ActivateShaderInstance(_defaultShader.Handle).Item1;
+                    gridProgram = ActivateShaderInstance((normal ? _colorShader : _defaultShader).Handle).Item1;
+                    if (normal)
+                        gridProgram.SetUniformMaybe("InputColor", new Color(0.5f, 0.5f, 1f));
                     SetupGlobalUniformsImmediate(gridProgram, (ClydeTexture) _tileDefinitionManager.TileTextureAtlas);
 
                     gridProgram.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
                     gridProgram.SetUniformTextureMaybe(UniILightTexture, TextureUnit.Texture1);
-                    gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
+                    if (!normal)
+                        gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
                 }
 
                 var transform = _entityManager.GetComponent<TransformComponent>(mapGrid);

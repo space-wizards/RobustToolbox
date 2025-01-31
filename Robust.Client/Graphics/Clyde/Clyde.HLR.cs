@@ -518,7 +518,7 @@ namespace Robust.Client.Graphics.Clyde
                     using (DebugGroup("Grids"))
                     using (_prof.Group("Grids"))
                     {
-                        _drawGrids(viewport, worldAABB, worldBounds, eye, true);
+                        _drawGrids(viewport, worldAABB, worldBounds, eye);
                     }
 
                     // We will also render worldspace overlays here so we can do them under / above entities as necessary

@@ -62,14 +62,33 @@ void fragment()
     val *= lightPower;
     val *= mask;
 
+    // how this works
+    // globalRotation: rotation of the eye minus rotation of the light minus rotation of the map
+    // eyeCenter: center of the eye plus offset
+    // eyeZoom: zoom of the eye divided by viewport scale
+    // UV is on a scale from 0 to 1 in x and y axes
+
+    // normalize diff and rotate it by globalRotation radians counterclockwise
     highp vec2 lightDir = rotateVector(normalize(diff), globalRotation);
+
+    // take UV, center it at 0.5, 0.5, add the difference between lightCenter and eyeCenter,
+    // flip it upside down, divide it by 2, divide it by lightRange, and rotate it
+    // by globalRotation radians clockwise
     highp vec2 newUV = rotateVector(UV - vec2(0.5, 0.5) + (lightCenter - eyeCenter) / vec2(2, -2) / lightRange, -globalRotation);
-    newUV *= (projectionMatrix * vec3(1, 1, 0)).xy * vec2(1, -1) / eyeZoom;
-    newUV *= lightRange;
+
+    // multiply newUV by the x and y components of projectionMatrix, flip it upside down again,
+    // and divide it by eyeZoom, before multiplying by lightRange
+    newUV *= (projectionMatrix * vec3(1, 1, 0)).xy * vec2(1, -1) / eyeZoom * lightRange;
+
+    // center newUV at 0, 0 instead of 0.5, 0.5
     newUV += vec2(0.5, 0.5);
     highp vec4 origSample = texture2D(normalMap, newUV);
+
+    // origSample is on the range 0 - 1 in all components,
+    // so we multiply the x and y by 2, then subtract a certain value
+    // to make sure original values of 0.5, 0.5 go to 0, 0
     highp vec4 normalSample = origSample * vec4(2,2,1,1) - vec4(0.441, 0.441, 0, 0);
-    highp float run = 1;
+    highp float run = 1f;
     if (origSample.xyzw != vec4(0,0,0,1))
     {
         run = -dot(lightDir, normalSample.xy);

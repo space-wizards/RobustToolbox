@@ -88,7 +88,7 @@ void fragment()
     // so we multiply the x and y by 2, then subtract a certain value
     // to make sure original values of 0.5, 0.5 go to 0, 0
     highp vec4 normalSample = origSample * vec4(2,2,1,1) - vec4(0.441, 0.441, 0, 0);
-    highp float run = 1f;
+    highp float run = 1;
     if (origSample.xyzw != vec4(0,0,0,1))
     {
         run = -dot(lightDir, normalSample.xy);

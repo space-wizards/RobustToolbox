@@ -18,6 +18,7 @@ uniform highp float lightPower;
 uniform highp float lightSoftness;
 uniform highp float lightIndex;
 uniform highp float globalRotation;
+uniform highp float maskRotation;
 uniform sampler2D shadowMap;
 uniform sampler2D normalMap;
 
@@ -74,7 +75,7 @@ void fragment()
     // take UV, center it at 0.5, 0.5, add the difference between lightCenter and eyeCenter,
     // flip it upside down, divide it by 2, divide it by lightRange, and rotate it
     // by globalRotation radians clockwise
-    highp vec2 newUV = rotateVector(UV - vec2(0.5, 0.5) + (lightCenter - eyeCenter) / vec2(2, -2) / lightRange, -globalRotation);
+    highp vec2 newUV = rotateVector(UV - vec2(0.5, 0.5) + rotateVector((lightCenter - eyeCenter) / vec2(2, -2) / lightRange, maskRotation), -globalRotation);
 
     // multiply newUV by the x and y components of projectionMatrix, flip it upside down again,
     // and divide it by eyeZoom, before multiplying by lightRange

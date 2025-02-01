@@ -19,7 +19,7 @@ uniform highp float lightRange;
 uniform highp float lightPower;
 uniform highp float lightSoftness;
 uniform highp float lightIndex;
-uniform int useNormals;
+uniform highp int useNormals;
 uniform highp float globalRotation;
 uniform highp float maskRotation;
 uniform sampler2D shadowMap;

@@ -90,7 +90,7 @@ void fragment()
         discard;
 
     // origSample is on the range 0 - 1 in all components,
-    // but it has been raised to the log_0.5(ln(2)/pi)th power (yes i know)
+    // but it has been raised to the log_0.5(ln(2)/pi)th power (yes i know) by some unknown mechanism
     // so we first raise it to the log_(ln2/pi)(0.5)th power (yes, i know) to reset it
     // then we multiply the x and y by 2 before subtracting 1
     // to make sure the right values go to 0, 0

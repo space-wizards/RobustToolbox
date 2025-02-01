@@ -6,6 +6,8 @@ const highp float LIGHTING_HEIGHT = 1.0;
 
 const highp float g_MinVariance = 0.0;
 
+const highp float COLOR_POWER = 0.4586603672224416246587735789683175073172; // yeah that's prob enough digits
+
 varying highp vec2 worldPosition;
 
 uniform highp vec4 lightColor;
@@ -86,16 +88,15 @@ void fragment()
     highp vec4 origSample = texture2D(normalMap, newUV);
 
     // origSample is on the range 0 - 1 in all components,
-    // so we multiply the x and y by 2, then subtract a certain value
-    // to make sure original values of 0.5, 0.5 go to 0, 0
-    highp vec4 normalSample = origSample * vec4(2,2,1,1) - vec4(0.441, 0.441, 0, 0);
-    highp float run = 1;
+    // but it has been raised to the log_0.5(ln(2)/pi)th power (yes i know)
+    // so we first raise it to the log_(ln2/pi)(0.5)th power (yes, i know) to reset it
+    // then we multiply the x and y by 2 before subtracting 1
+    // to make sure the right values go to 0, 0
+    // but it still ranges from -1 to 1
     if (origSample.xyzw == vec4(0,0,0,1))
         discard;
-    run = -dot(lightDir, normalSample.xy);
-    if (run <= 0)
-        run = 0;
-    run += normalSample.z * normalize(vec3(diff, LIGHTING_HEIGHT)).z;
+    highp vec3 normalSample = pow(origSample.xyz, vec3(COLOR_POWER)) * vec3(2,2,1) - vec3(1, 1, 0);
+    highp float run = dot(normalize(vec3(lightDir, LIGHTING_HEIGHT)), normalSample * vec3(-1, -1, 1));
     if (run <= 0)
         discard;
 

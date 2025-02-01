@@ -16,7 +16,7 @@ internal record struct Polygon : IPhysShape
     [DataField]
     public Vector2[] Vertices;
 
-    public int VertexCount => Vertices.Length;
+    public byte VertexCount;
 
     public Vector2[] Normals;
 
@@ -42,17 +42,19 @@ internal record struct Polygon : IPhysShape
 
         Array.Copy(polyShape.Vertices, Vertices, Vertices.Length);
         Array.Copy(polyShape.Normals, Normals, Vertices.Length);
+        VertexCount = (byte) Vertices.Length;
     }
 
     /// <summary>
     /// Manually constructed polygon for internal use to take advantage of pooling.
     /// </summary>
-    internal Polygon(Vector2[] vertices, Vector2[] normals, Vector2 centroid)
+    internal Polygon(Vector2[] vertices, Vector2[] normals, Vector2 centroid, byte count)
     {
         Unsafe.SkipInit(out this);
         Vertices = vertices;
         Normals = normals;
         Centroid = centroid;
+        VertexCount = count;
     }
 
     public Polygon(Box2 aabb)
@@ -72,6 +74,7 @@ internal record struct Polygon : IPhysShape
         Normals[2] = new Vector2(0.0f, 1.0f);
         Normals[3] = new Vector2(-1.0f, 0.0f);
 
+        VertexCount = 4;
         Centroid = aabb.Center;
     }
 
@@ -89,6 +92,7 @@ internal record struct Polygon : IPhysShape
 
         CalculateNormals(Normals, 4);
 
+        VertexCount = 4;
         Centroid = bounds.Center;
     }
 
@@ -99,11 +103,13 @@ internal record struct Polygon : IPhysShape
 
         if (hull.Count < 3)
         {
+            VertexCount = 0;
             Vertices = [];
             Normals = [];
             return;
         }
 
+        VertexCount = (byte) vertices.Length;
         Vertices = vertices;
         Normals = new Vector2[vertices.Length];
         Set(hull);

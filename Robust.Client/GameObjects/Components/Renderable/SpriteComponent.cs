@@ -2074,7 +2074,9 @@ namespace Robust.Client.GameObjects
 
             private void RenderTexture(DrawingHandleWorld drawingHandle, Texture texture, bool normal = false)
             {
-                if (Shader != null)
+                if (normal)
+                    drawingHandle.UseShader(Shader);
+                else if (Shader != null)
                     drawingHandle.UseShader(Shader);
 
                 var layerColor = normal ? Color.White : _parent.color * Color;
@@ -2083,7 +2085,7 @@ namespace Robust.Client.GameObjects
 
                 drawingHandle.DrawTextureRectRegion(texture, quad, layerColor, normal: normal);
 
-                if (Shader != null)
+                if (Shader != null || normal)
                     drawingHandle.UseShader(null);
             }
 

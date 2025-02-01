@@ -86,6 +86,8 @@ void fragment()
     // center newUV at 0, 0 instead of 0.5, 0.5
     newUV += vec2(0.5, 0.5);
     highp vec4 origSample = texture2D(normalMap, newUV);
+    if (origSample.xyzw == vec4(0,0,0,1))
+        discard;
 
     // origSample is on the range 0 - 1 in all components,
     // but it has been raised to the log_0.5(ln(2)/pi)th power (yes i know)
@@ -93,8 +95,6 @@ void fragment()
     // then we multiply the x and y by 2 before subtracting 1
     // to make sure the right values go to 0, 0
     // but it still ranges from -1 to 1
-    if (origSample.xyzw == vec4(0,0,0,1))
-        discard;
     highp vec3 normalSample = pow(origSample.xyz, vec3(COLOR_POWER)) * vec3(2,2,1) - vec3(1, 1, 0);
     highp float run = dot(normalize(vec3(lightDir, LIGHTING_HEIGHT)), normalSample * vec3(-1, -1, 1));
     if (run <= 0)

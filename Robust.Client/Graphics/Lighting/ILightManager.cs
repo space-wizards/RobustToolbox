@@ -21,6 +21,10 @@ namespace Robust.Client.Graphics
         /// </summary>
         bool DrawLighting { get; set; }
         /// <summary>
+        /// Enables/disables rendering with normals instead of rendering flatly.
+        /// </summary>
+        bool DrawNormals { get; set; }
+        /// <summary>
         /// This is useful to prevent players messing with lighting setup when they shouldn't.
         /// </summary>
         bool LockConsoleAccess { get; set; }

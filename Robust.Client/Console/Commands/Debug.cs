@@ -694,6 +694,18 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    internal sealed class ToggleNormals : LocalizedCommands
+    {
+        [Dependency] private readonly ILightManager _light = default!;
+
+        public override string Command => "togglenormals";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
+        {
+            _light.DrawNormals = !_light.DrawNormals;
+        }
+    }
+
     internal sealed class ChunkInfoCommand : LocalizedEntityCommands
     {
         [Dependency] private readonly IMapManager _map = default!;

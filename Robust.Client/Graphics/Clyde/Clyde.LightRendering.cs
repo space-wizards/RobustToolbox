@@ -497,6 +497,7 @@ namespace Robust.Client.Graphics.Clyde
 
                     lightShader.SetUniformMaybe("eyeZoom", eye.Zoom / viewport.RenderScale);
                     lightShader.SetUniformMaybe("eyeCenter", eye.Position.Position + eye.Offset);
+                    lightShader.SetUniformMaybe("useNormals", _lightManager.DrawNormals ? (int)1 : (int)0); // me when shaders do not support boolean values
 
                     var offset = new Vector2(component.Radius, component.Radius);
 

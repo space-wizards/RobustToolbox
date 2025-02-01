@@ -8,6 +8,7 @@ namespace Robust.Client.Graphics
         public bool DrawShadows { get; set; } = true;
         public bool DrawHardFov { get; set; } = true;
         public bool DrawLighting { get; set; } = true;
+        public bool DrawNormals { get; set; } = true;
         public bool LockConsoleAccess { get; set; } = false;
         public Color AmbientLightColor { get; set; } = Color.FromSrgb(Color.Black);
     }

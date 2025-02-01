@@ -29,6 +29,9 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _drawGrids(Viewport viewport, Box2 worldAABB, Box2Rotated worldBounds, IEye eye, bool normal = false)
         {
+            if (normal && (!_lightManager.Enabled || !_lightManager.DrawLighting || !_lightManager.DrawNormals))
+                return;
+
             var mapId = eye.Position.MapId;
             if (!_mapManager.MapExists(mapId))
             {

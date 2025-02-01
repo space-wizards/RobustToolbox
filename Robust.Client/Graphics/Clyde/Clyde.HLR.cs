@@ -253,6 +253,9 @@ namespace Robust.Client.Graphics.Clyde
 
         private void DrawEntities(Viewport viewport, Box2Rotated worldBounds, Box2 worldAABB, IEye eye, bool normal = false)
         {
+            if (normal && (!_lightManager.Enabled || !_lightManager.DrawLighting || !_lightManager.DrawNormals))
+                return;
+
             var mapId = eye.Position.MapId;
             if (mapId == MapId.Nullspace)
                 return;

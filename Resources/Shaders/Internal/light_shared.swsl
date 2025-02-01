@@ -19,6 +19,7 @@ uniform highp float lightRange;
 uniform highp float lightPower;
 uniform highp float lightSoftness;
 uniform highp float lightIndex;
+uniform int useNormals;
 uniform highp float globalRotation;
 uniform highp float maskRotation;
 uniform sampler2D shadowMap;
@@ -65,6 +66,11 @@ void fragment()
     val *= lightPower;
     val *= mask;
 
+    COLOR = vec4(lightColor.xyz, val * occlusion);
+
+    if (useNormals == 0)
+        return;
+
     // how this works
     // globalRotation: rotation of the eye plus rotation of the light minus rotation of the map
     // eyeCenter: center of the eye plus offset
@@ -100,6 +106,6 @@ void fragment()
     if (run <= 0)
         discard;
 
-    COLOR = vec4(lightColor.xyz, val * occlusion * run);
+    COLOR *= vec4(1, 1, 1, run);
 }
 

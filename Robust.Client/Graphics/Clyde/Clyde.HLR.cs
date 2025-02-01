@@ -7,7 +7,6 @@ using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.CustomControls;
-using Robust.Client.Utility;
 using Robust.Shared;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -17,8 +16,6 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
 using Robust.Shared.Utility;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 using Color = Robust.Shared.Maths.Color;
 
 namespace Robust.Client.Graphics.Clyde

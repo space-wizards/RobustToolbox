@@ -1,21 +1,16 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO.IsolatedStorage;
 using System.Linq;
 using Robust.Client.Graphics;
 using Robust.Client.Utility;
 using Robust.Shared.Graphics;
 using Robust.Shared.Graphics.RSI;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Resources;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using TerraFX.Interop.Windows;
-using Color = SixLabors.ImageSharp.Color;
 using IResourceManager = Robust.Shared.ContentPack.IResourceManager;
 
 namespace Robust.Client.ResourceManagement

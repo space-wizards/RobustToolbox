@@ -71,13 +71,13 @@ internal ref struct DistanceProxy
             case ShapeType.Polygon:
                 if (shape is Polygon poly)
                 {
-                    Vertices = poly.Vertices;
+                    Vertices = poly.Vertices.AsSpan()[..poly.VertexCount];
                     Radius = poly.Radius;
                 }
                 else
                 {
                     var polyShape = Unsafe.As<PolygonShape>(shape);
-                    Vertices = polyShape.Vertices;
+                    Vertices = polyShape.Vertices.AsSpan()[..polyShape.VertexCount];
                     Radius = polyShape.Radius;
                 }
 

@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fixed an exception in `PhysicsSystem.DestroyContacts()` that could result in entities getting stuck with broken physics.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,90 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 242.0.1
+
+### Bugfixes
+
+* Fixed prototype reloading/hotloading not properly handling data-fields with the `AlwaysPushInheritanceAttribute`
+* Fix the pooled polygons using incorrect vertices for EntityLookup and MapManager.
+
+### Internal
+
+* Avoid normalizing angles constructed from vectors.
+
+
+## 242.0.0
+
+### Breaking changes
+
+* The order in which the client initialises networked entities has changed. It will now always apply component states, initialise, and start an entity's parent before processing any children. This might break anything that was relying on the old behaviour where all component states were applied before any entities were initialised & started.
+* `IClydeViewport` overlay rendering methods now take in an `IRenderHandle` instead of a world/screen handle.
+* The `OverlayDrawArgs` struct now has an internal constructor.
+
+### New features
+
+* Controls can now be manually restyled via `Control.InvalidateStyleSheet()` and `Control.DoStyleUpdate()`
+* Added `IUserInterfaceManager.RenderControl()` for manually drawing controls.
+* `OverlayDrawArgs` struct now has an `IRenderHandle` field such that overlays can use the new `RenderControl()` methods.
+* TileSpawnWindow will now take focus when opened.
+
+### Bugfixes
+
+* Fixed a client-side bug where `TransformComponent.GridUid` does not get set properly when an existing entity is attached to a new entity outside of the player's PVS range.
+* EntityPrototypeView will only create entities when it's on the UI tree and not when the prototype is set.
+* Make CollisionWake not log errors if it can't resolve.
+
+### Other
+
+* Replace IPhysShape API with generics on IMapManager and EntityLookupSystem.
+
+### Internal
+
+* Significantly reduce allocations for Box2 / Box2Rotated queries.
+
+
+## 241.0.0
+
+### Breaking changes
+
+* Remove DeferredClose from BUIs.
+
+### New features
+
+* Added `EntityManager.DirtyFields()`, which allows components with delta states to simultaneously mark several fields as dirty at the same time.
+* Add `CloserUserUIs<T>` to close keys of a specific key.
+
+### Bugfixes
+
+* Fixed `RaisePredictiveEvent()` not properly re-raising events during prediction for event handlers that did not take an `EntitySessionEventArgs` argument.
+* BUI openings are now deferred to avoid having slight desync between deferred closes and opens occurring in the same tick.
+
+
+## 240.1.2
+
+
+## 240.1.1
+
+### Bugfixes
+
+* Fixed one of the `IOverlayManager.RemoveOverlay` overrides not fully removing the overlay.
+
+
+## 240.1.0
+
+### New features
+
+* Added an `AsNullable` extension method for converting an `Entity<T>` into an `Entity<T?>`
+
+### Bugfixes
+
+* Fixed an exception in `PhysicsSystem.DestroyContacts()` that could result in entities getting stuck with broken physics.
+
+### Other
+
+* `GamePrototypeLoadManager` will now send all uploaded prototypes to connecting players in a single `GamePrototypeLoadMessage`, as opposed to one message per upload.
 
 
 ## 240.0.1

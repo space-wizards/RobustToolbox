@@ -133,7 +133,7 @@ namespace Robust.Client.Graphics
 
             baseline += new Vector2(metrics.Value.BearingX, -metrics.Value.BearingY);
             if(handle is DrawingHandleWorld worldhandle)
-                worldhandle.DrawTextureRect(texture,  Box2.FromDimensions(baseline, texture.Size));
+                worldhandle.DrawTextureRect(texture, Box2.FromDimensions(baseline, texture.Size), color);
             else
                 handle.DrawTexture(texture, baseline, color);
             return metrics.Value.Advance;

@@ -20,6 +20,10 @@ namespace Robust.Server.GameStates;
 /// </summary>
 internal sealed class PvsSession(ICommonSession session, ResizableMemoryRegion<PvsData> memoryRegion)
 {
+#if DEBUG
+    public HashSet<NetEntity> ToSendSet = new();
+#endif
+
     public readonly ICommonSession Session = session;
 
     public readonly ResizableMemoryRegion<PvsData> DataMemory = memoryRegion;
@@ -197,7 +201,7 @@ internal struct PvsMetadata
     {
         DebugTools.AssertEqual(NetEntity, comp.NetEntity);
         DebugTools.AssertEqual(VisMask, comp.VisibilityMask);
-        DebugTools.AssertEqual(LifeStage, comp.EntityLifeStage);
+        DebugTools.Assert(LifeStage == comp.EntityLifeStage);
         DebugTools.Assert(LastModifiedTick == comp.EntityLastModifiedTick || LastModifiedTick.Value == 0);
     }
 }

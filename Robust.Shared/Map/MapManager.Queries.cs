@@ -8,17 +8,16 @@ using Robust.Shared.Map.Enumerators;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
-using Robust.Shared.Physics.Shapes;
 
 namespace Robust.Shared.Map;
 
 internal partial class MapManager
 {
-    private bool IsIntersecting(
+    private bool IsIntersecting<T>(
         ChunkEnumerator enumerator,
-        IPhysShape shape,
+        T shape,
         Transform shapeTransform,
-        Entity<FixturesComponent> grid)
+        Entity<FixturesComponent> grid) where T : IPhysShape
     {
         var gridTransform = _physics.GetPhysicsTransform(grid);
 
@@ -43,14 +42,14 @@ internal partial class MapManager
 
     #region MapId
 
-    public void FindGridsIntersecting(MapId mapId, IPhysShape shape, Transform transform,
-        ref List<Entity<MapGridComponent>> grids, bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap)
+    public void FindGridsIntersecting<T>(MapId mapId, T shape, Transform transform,
+        ref List<Entity<MapGridComponent>> grids, bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap) where T : IPhysShape
     {
         if (_mapEntities.TryGetValue(mapId, out var mapEnt))
             FindGridsIntersecting(mapEnt, shape, transform, ref grids, approx, includeMap);
     }
 
-    public void FindGridsIntersecting(MapId mapId, IPhysShape shape, Transform transform, GridCallback callback, bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap)
+    public void FindGridsIntersecting<T>(MapId mapId, T shape, Transform transform, GridCallback callback, bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap) where T : IPhysShape
     {
         if (_mapEntities.TryGetValue(mapId, out var mapEnt))
             FindGridsIntersecting(mapEnt, shape, transform, callback, includeMap, approx);
@@ -100,18 +99,18 @@ internal partial class MapManager
 
     #region MapEnt
 
-    public void FindGridsIntersecting(
+    public void FindGridsIntersecting<T>(
         EntityUid mapEnt,
-        IPhysShape shape,
+        T shape,
         Transform transform,
         GridCallback callback,
         bool approx = IMapManager.Approximate,
-        bool includeMap = IMapManager.IncludeMap)
+        bool includeMap = IMapManager.IncludeMap) where T : IPhysShape
     {
         FindGridsIntersecting(mapEnt, shape, shape.ComputeAABB(transform, 0), transform, callback, approx, includeMap);
     }
 
-    private void FindGridsIntersecting(EntityUid mapEnt, IPhysShape shape, Box2 worldAABB, Transform transform, GridCallback callback, bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap)
+    private void FindGridsIntersecting<T>(EntityUid mapEnt, T shape, Box2 worldAABB, Transform transform, GridCallback callback, bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap) where T : IPhysShape
     {
         // This is here so we don't double up on code.
         var state = callback;
@@ -121,20 +120,27 @@ internal partial class MapManager
             approx: approx, includeMap: includeMap);
     }
 
-    public void FindGridsIntersecting<TState>(
+    public void FindGridsIntersecting<T, TState>(
         EntityUid mapEnt,
-        IPhysShape shape,
+        T shape,
         Transform transform,
         ref TState state,
         GridCallback<TState> callback,
         bool approx = IMapManager.Approximate,
-        bool includeMap = IMapManager.IncludeMap)
+        bool includeMap = IMapManager.IncludeMap) where T : IPhysShape
     {
         FindGridsIntersecting(mapEnt, shape, shape.ComputeAABB(transform, 0), transform, ref state, callback, approx, includeMap);
     }
 
-    private void FindGridsIntersecting<TState>(EntityUid mapEnt, IPhysShape shape, Box2 worldAABB, Transform transform,
-        ref TState state, GridCallback<TState> callback, bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap)
+    private void FindGridsIntersecting<T, TState>(
+        EntityUid mapEnt,
+        T shape,
+        Box2 worldAABB,
+        Transform transform,
+        ref TState state,
+        GridCallback<TState> callback,
+        bool approx = IMapManager.Approximate,
+        bool includeMap = IMapManager.IncludeMap) where T : IPhysShape
     {
         if (!_gridTreeQuery.TryGetComponent(mapEnt, out var gridTree))
             return;
@@ -144,7 +150,7 @@ internal partial class MapManager
             callback(mapEnt, mapGrid, ref state);
         }
 
-        var gridState = new GridQueryState<TState>(
+        var gridState = new GridQueryState<T, TState>(
             callback,
             state,
             worldAABB,
@@ -156,8 +162,7 @@ internal partial class MapManager
             _transformSystem,
             approx);
 
-
-        gridTree.Tree.Query(ref gridState, static (ref GridQueryState<TState> state, DynamicTree.Proxy proxy) =>
+        gridTree.Tree.Query(ref gridState, static (ref GridQueryState<T, TState> state, DynamicTree.Proxy proxy) =>
         {
             // Even for approximate we'll check if any chunks roughly overlap.
             var data = state.Tree.GetUserData(proxy);
@@ -198,14 +203,14 @@ internal partial class MapManager
         }
     }
 
-    public void FindGridsIntersecting(EntityUid mapEnt, IPhysShape shape, Transform transform,
-        ref List<Entity<MapGridComponent>> grids, bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap)
+    public void FindGridsIntersecting<T>(EntityUid mapEnt, T shape, Transform transform,
+        ref List<Entity<MapGridComponent>> grids, bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap) where T : IPhysShape
     {
         FindGridsIntersecting(mapEnt, shape, shape.ComputeAABB(transform, 0), transform, ref grids, approx, includeMap);
     }
 
-    public void FindGridsIntersecting(EntityUid mapEnt, IPhysShape shape, Box2 worldAABB, Transform transform,
-        ref List<Entity<MapGridComponent>> grids, bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap)
+    public void FindGridsIntersecting<T>(EntityUid mapEnt, T shape, Box2 worldAABB, Transform transform,
+        ref List<Entity<MapGridComponent>> grids, bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap) where T : IPhysShape
     {
         var state = grids;
 
@@ -219,39 +224,48 @@ internal partial class MapManager
 
     public void FindGridsIntersecting(EntityUid mapEnt, Box2 worldAABB, GridCallback callback, bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap)
     {
-        FindGridsIntersecting(mapEnt, new Polygon(worldAABB), worldAABB, Transform.Empty, callback, approx, includeMap);
+        var polygon = _physics.GetPooled(worldAABB);
+        FindGridsIntersecting(mapEnt, polygon, worldAABB, Transform.Empty, callback, approx, includeMap);
+        _physics.ReturnPooled(polygon);
     }
 
     public void FindGridsIntersecting<TState>(EntityUid mapEnt, Box2 worldAABB, ref TState state, GridCallback<TState> callback, bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap)
     {
-        FindGridsIntersecting(mapEnt, new Polygon(worldAABB), worldAABB, Transform.Empty, ref state, callback, approx, includeMap);
+        var polygon = _physics.GetPooled(worldAABB);
+        FindGridsIntersecting(mapEnt, polygon, worldAABB, Transform.Empty, ref state, callback, approx, includeMap);
+        _physics.ReturnPooled(polygon);
     }
 
     public void FindGridsIntersecting(EntityUid mapEnt, Box2 worldAABB, ref List<Entity<MapGridComponent>> grids,
         bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap)
     {
-        FindGridsIntersecting(mapEnt, new Polygon(worldAABB), worldAABB, Transform.Empty, ref grids, approx, includeMap);
+        var polygon = _physics.GetPooled(worldAABB);
+        FindGridsIntersecting(mapEnt, polygon, worldAABB, Transform.Empty, ref grids, approx, includeMap);
+        _physics.ReturnPooled(polygon);
     }
 
     public void FindGridsIntersecting(EntityUid mapEnt, Box2Rotated worldBounds, GridCallback callback, bool approx = IMapManager.Approximate,
         bool includeMap = IMapManager.IncludeMap)
     {
-        var shape = new Polygon(worldBounds);
-        FindGridsIntersecting(mapEnt, shape, worldBounds.CalcBoundingBox(), Transform.Empty, callback, approx, includeMap);
+        var polygon = _physics.GetPooled(worldBounds);
+        FindGridsIntersecting(mapEnt, polygon, worldBounds.CalcBoundingBox(), Transform.Empty, callback, approx, includeMap);
+        _physics.ReturnPooled(polygon);
     }
 
     public void FindGridsIntersecting<TState>(EntityUid mapEnt, Box2Rotated worldBounds, ref TState state, GridCallback<TState> callback,
         bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap)
     {
-        var shape = new Polygon(worldBounds);
-        FindGridsIntersecting(mapEnt, shape, worldBounds.CalcBoundingBox(), Transform.Empty, ref state, callback, approx, includeMap);
+        var polygon = _physics.GetPooled(worldBounds);
+        FindGridsIntersecting(mapEnt, polygon, worldBounds.CalcBoundingBox(), Transform.Empty, ref state, callback, approx, includeMap);
+        _physics.ReturnPooled(polygon);
     }
 
     public void FindGridsIntersecting(EntityUid mapEnt, Box2Rotated worldBounds, ref List<Entity<MapGridComponent>> grids,
         bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap)
     {
-        var shape = new Polygon(worldBounds);
-        FindGridsIntersecting(mapEnt, shape, worldBounds.CalcBoundingBox(), Transform.Empty, ref grids, approx, includeMap);
+        var polygon = _physics.GetPooled(worldBounds);
+        FindGridsIntersecting(mapEnt, polygon, worldBounds.CalcBoundingBox(), Transform.Empty, ref grids, approx, includeMap);
+        _physics.ReturnPooled(polygon);
     }
 
     #endregion
@@ -342,22 +356,11 @@ internal partial class MapManager
 
     #endregion
 
-    private readonly record struct GridQueryState(
-        GridCallback Callback,
-        Box2 WorldAABB,
-        IPhysShape Shape,
-        Transform Transform,
-        B2DynamicTree<(EntityUid Uid, FixturesComponent Fixtures, MapGridComponent Grid)> Tree,
-        SharedMapSystem MapSystem,
-        MapManager MapManager,
-        SharedTransformSystem TransformSystem,
-        bool Approximate);
-
-    private record struct GridQueryState<TState>(
+    private record struct GridQueryState<T, TState>(
         GridCallback<TState> Callback,
         TState State,
         Box2 WorldAABB,
-        IPhysShape Shape,
+        T Shape,
         Transform Transform,
         B2DynamicTree<(EntityUid Uid, FixturesComponent Fixtures, MapGridComponent Grid)> Tree,
         SharedMapSystem MapSystem,

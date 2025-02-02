@@ -221,7 +221,7 @@ namespace Robust.Client.ResourceManagement
             var height = offset.Y + deltaY;
             var croppedSheet = new Image<Rgba32>(maxSize, height);
             sheet.Blit(new UIBox2i(0, 0, maxSize, height), croppedSheet, default);
-            // TODO: Figure out where I encode half widths into this stupid sheet
+            
             FinalizeMetaAtlas(atlasList.Length - 1, croppedSheet);
 
             void FinalizeMetaAtlas(int toIndex, Image<Rgba32> sheet)

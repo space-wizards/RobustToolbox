@@ -58,6 +58,8 @@ namespace Robust.Client.GameObjects
         [DataField("visible")]
         private bool _visible = true;
 
+        private const string NormalShaderPrototype = "NormalRotator";
+
         // VV convenience variable to examine layer objects using layer keys
         [ViewVariables]
         private Dictionary<object, Layer> _mappedLayers => LayerMap.ToDictionary(x => x.Key, x => Layers[x.Value]);
@@ -786,6 +788,9 @@ namespace Robust.Client.GameObjects
                 }
             }
 
+            prototypes.TryIndex<ShaderPrototype>(NormalShaderPrototype, out var normalProto);
+            layer.NormalShader = normalProto!.Instance();
+
             layer.RenderingStrategy = layerDatum.RenderingStrategy ?? layer.RenderingStrategy;
             layer.Cycle = layerDatum.Cycle;
 
@@ -1495,6 +1500,7 @@ namespace Robust.Client.GameObjects
 
             [ViewVariables] public string? ShaderPrototype;
             [ViewVariables] public ShaderInstance? Shader;
+            /* no vv 4 u */ public ShaderInstance? NormalShader;
             [ViewVariables] public Texture? Texture;
 
             private RSI? _rsi;
@@ -2074,8 +2080,12 @@ namespace Robust.Client.GameObjects
 
             private void RenderTexture(DrawingHandleWorld drawingHandle, Texture texture, bool normal = false)
             {
-                if (normal)
-                    drawingHandle.UseShader(Shader);
+                if (normal && NormalShader is {} normalShader)
+                {
+                    NormalShader = normalShader.Mutable ? normalShader : normalShader.Duplicate();
+                    drawingHandle.UseShader(NormalShader);
+                    NormalShader.SetParameter("rotation", (float)drawingHandle.GetTransform().Rotation());
+                }
                 else if (Shader != null)
                     drawingHandle.UseShader(Shader);
 

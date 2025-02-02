@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map;
@@ -19,6 +20,11 @@ public readonly struct Tile : IEquatable<Tile>, ISpanFormattable
     ///     Rendering flags.
     /// </summary>
     public readonly TileRenderFlag Flags;
+
+    /// <summary>
+    /// Tile-flags for content usage.
+    /// </summary>
+    public readonly ushort ContentFlag;
 
     /// <summary>
     /// Variant of this tile to render.
@@ -41,11 +47,13 @@ public readonly struct Tile : IEquatable<Tile>, ISpanFormattable
     /// <param name="typeId">Internal type ID.</param>
     /// <param name="flags">Flags used by toolbox's rendering.</param>
     /// <param name="variant">The visual variant this tile is using.</param>
-    public Tile(int typeId, TileRenderFlag flags = 0, byte variant = 0)
+    /// <param name="contentFlag"><see cref="ContentFlag"/></param>
+    public Tile(int typeId, TileRenderFlag flags = 0, byte variant = 0, ushort contentFlag = 0)
     {
         TypeId = typeId;
         Flags = flags;
         Variant = variant;
+        ContentFlag = contentFlag;
     }
 
     /// <summary>
@@ -93,7 +101,7 @@ public readonly struct Tile : IEquatable<Tile>, ISpanFormattable
     /// <inheritdoc />
     public bool Equals(Tile other)
     {
-        return TypeId == other.TypeId && Flags == other.Flags && Variant == other.Variant;
+        return TypeId == other.TypeId && Flags == other.Flags && Variant == other.Variant && ContentFlag == other.ContentFlag;
     }
 
     /// <inheritdoc />
@@ -112,7 +120,21 @@ public readonly struct Tile : IEquatable<Tile>, ISpanFormattable
             return (TypeId.GetHashCode() * 397) ^ Flags.GetHashCode() ^ Variant.GetHashCode();
         }
     }
+
+    [Pure]
+    public Tile WithContentFlag(ushort tileContentFlag)
+    {
+        return new Tile(typeId: TypeId, flags: Flags, variant: Variant, contentFlag: tileContentFlag);
+    }
+
+    [Pure]
+    public Tile WithVariant(byte variant)
+    {
+        return new Tile(TypeId, Flags, variant, ContentFlag);
+    }
 }
+
+public sealed class TileFlagLayer {}
 
 public enum TileRenderFlag : byte
 {

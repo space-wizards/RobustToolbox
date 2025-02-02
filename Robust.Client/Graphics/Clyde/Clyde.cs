@@ -21,6 +21,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using TextureWrapMode = Robust.Shared.Graphics.TextureWrapMode;
 
@@ -36,6 +37,7 @@ namespace Robust.Client.Graphics.Clyde
         [Dependency] private readonly ILogManager _logManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
+        [Dependency] private readonly IPrototypeManager _protoMan = default!;
         [Dependency] private readonly IResourceCache _resourceCache = default!;
         [Dependency] private readonly IResourceManager _resManager = default!;
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager = default!;

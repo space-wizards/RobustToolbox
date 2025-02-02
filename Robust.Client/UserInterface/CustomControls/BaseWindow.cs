@@ -102,23 +102,25 @@ namespace Robust.Client.UserInterface.CustomControls
             {
                 var cursor = CursorShape.Arrow;
                 var previewDragMode = GetDragModeFor(args.RelativePosition);
+                previewDragMode &= ~DragMode.Move;
+
                 switch (previewDragMode)
                 {
-                    case var _ when (previewDragMode & (DragMode.Bottom | DragMode.Left)) == (DragMode.Bottom | DragMode.Left):
-                    case var _ when (previewDragMode & (DragMode.Top | DragMode.Right)) == (DragMode.Top | DragMode.Right):
-                        cursor = CursorShape.Crosshair;
+                    case DragMode.Top:
+                    case DragMode.Bottom:
+                        cursor = CursorShape.VResize;
                         break;
-                    case var _ when (previewDragMode & (DragMode.Bottom | DragMode.Right)) == (DragMode.Bottom | DragMode.Right):
-                    case var _ when (previewDragMode & (DragMode.Top | DragMode.Left)) == (DragMode.Top | DragMode.Left):
-                        cursor = CursorShape.Crosshair;
-                        break;
-                    case var _ when (previewDragMode & DragMode.Left) != 0:
-                    case var _ when (previewDragMode & DragMode.Right) != 0:
+
+                    case DragMode.Left:
+                    case DragMode.Right:
                         cursor = CursorShape.HResize;
                         break;
-                    case var _ when (previewDragMode & DragMode.Top) != 0:
-                    case var _ when (previewDragMode & DragMode.Bottom) != 0:
-                        cursor = CursorShape.VResize;
+
+                    case DragMode.Bottom | DragMode.Left:
+                    case DragMode.Top | DragMode.Right:
+                    case DragMode.Bottom | DragMode.Right:
+                    case DragMode.Top | DragMode.Left:
+                        cursor = CursorShape.Crosshair;
                         break;
                 }
 
@@ -157,15 +159,6 @@ namespace Robust.Client.UserInterface.CustomControls
                 var rect = new UIBox2(left, top, right, bottom);
                 LayoutContainer.SetPosition(this, rect.TopLeft);
                 SetSize = rect.Size;
-
-                /*
-                var timing = IoCManager.Resolve<IGameTiming>();
-
-                var l = GetValue<float>(LayoutContainer.MarginLeftProperty);
-                var t = GetValue<float>(LayoutContainer.MarginTopProperty);
-
-                Logger.Debug($"{timing.CurFrame}: {rect.TopLeft}/({l}, {t}), {rect.Size}/{SetSize}");
-                */
             }
         }
 

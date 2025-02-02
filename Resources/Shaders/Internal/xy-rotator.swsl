@@ -1,0 +1,8 @@
+uniform highp float rotation;
+
+void fragment()
+{
+    highp vec4 Col = zTexture(UV);
+    COLOR = vec4(Col.xy * cos(rotation) + vec2(-1, 1) * Col.yz * sin(rotation), Col.zw)
+    COLOR = vec4(Col.x * cos(rotation) - Col.y * sin(rotation), Col.y * cos(rotation) + Col.x * sin(rotation), Col.z, Col.w);
+}

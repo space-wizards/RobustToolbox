@@ -36,7 +36,7 @@ void vertex()
 
 highp vec2 rotateVector(highp vec2 vector, highp float theta)
 {
-    return vec2(vector.x * cos(theta) - vector.y * sin(theta), vector.x * sin(theta) + vector.y * cos(theta));
+    return vector * cos(theta) + vector.yx * vec2(-1, 1) * sin(theta);
 }
 
 highp float shadowContrib(highp vec2 diff)

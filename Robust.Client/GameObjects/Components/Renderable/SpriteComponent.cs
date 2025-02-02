@@ -2084,7 +2084,7 @@ namespace Robust.Client.GameObjects
                 {
                     NormalShader = normalShader.Mutable ? normalShader : normalShader.Duplicate();
                     drawingHandle.UseShader(NormalShader);
-                    NormalShader.SetParameter("rotation", (float)drawingHandle.GetTransform().Rotation());
+                    NormalShader.SetParameter("rotation", (float)(drawingHandle.GetTransform().Rotation()));
                 }
                 else if (Shader != null)
                     drawingHandle.UseShader(Shader);

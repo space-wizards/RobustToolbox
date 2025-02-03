@@ -5,6 +5,7 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
@@ -36,8 +37,8 @@ namespace Robust.Client.UserInterface.CustomControls
                 return;
             }
 
-            Parent.RemoveChild(this);
             OnClose?.Invoke();
+            Parent.RemoveChild(this);
         }
 
         protected internal override void KeyBindDown(GUIBoundKeyEventArgs args)
@@ -227,6 +228,16 @@ namespace Robust.Client.UserInterface.CustomControls
 
             Opened();
             OnOpen?.Invoke();
+        }
+
+        /// <summary>
+        /// Opens the window and places it at the specified position.
+        /// </summary>
+        public void Open(Vector2 position)
+        {
+            Measure(Vector2Helpers.Infinity);
+            Open();
+            LayoutContainer.SetPosition(this, position);
         }
 
         public void OpenCentered() => OpenCenteredAt(new Vector2(0.5f, 0.5f));

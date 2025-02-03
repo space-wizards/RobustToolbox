@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Client.GameObjects;
+using Robust.Client.Graphics;
 using Robust.Shared.GameStates;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
@@ -8,6 +10,6 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.GameObjects;
 
 [RegisterComponent, NetworkedComponent]
-public abstract partial class SharedParticlesComponent : Component {
-    [ViewVariables] public string ParticleType;
+public sealed partial class ParticlesComponent : SharedParticlesComponent {
+    public ParticleSystem? particlesSystem;
 }

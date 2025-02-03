@@ -7,8 +7,8 @@ public abstract class SharedParticlesSystem : EntitySystem {
 
     public override void Initialize() {
         base.Initialize();
-        SubscribeLocalEvent<ParticlesComponent, ComponentGetState>(OnParticlesComponentGetState);
+        SubscribeLocalEvent<SharedParticlesComponent, ComponentGetState>(OnParticlesComponentGetState);
     }
 
-    protected abstract void OnParticlesComponentGetState(EntityUid uid, ParticlesComponent component, ref ComponentGetState args);
+    protected abstract void OnParticlesComponentGetState(EntityUid uid, SharedParticlesComponent component, ref ComponentGetState args);
 }

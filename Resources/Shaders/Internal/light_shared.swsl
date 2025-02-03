@@ -7,6 +7,7 @@ const highp float LIGHTING_HEIGHT = 1.0;
 const highp float g_MinVariance = 0.0;
 
 const highp float COLOR_POWER = 0.4586603672224416246587735789683175073172; // yeah that's prob enough digits
+// highp is only precise to like 2^-16 why do we do this
 
 varying highp vec2 worldPosition;
 

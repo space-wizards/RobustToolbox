@@ -46,6 +46,8 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     private ValueList<Enum> _keys = new();
 
+    private ValueList<EntityUid> _entList = new();
+
     public override void Initialize()
     {
         base.Initialize();
@@ -283,8 +285,6 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             AddQueued(bui, true);
         }
     }
-
-    private List<EntityUid> _entList = new();
 
     protected virtual void OnUserInterfaceShutdown(Entity<UserInterfaceComponent> ent, ref ComponentShutdown args)
     {

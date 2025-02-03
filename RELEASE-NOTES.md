@@ -35,11 +35,11 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* RemoveChild is called after OnClose for BaseWindow.
 
 ### New features
 
-*None yet*
+* BUIs now have their positions saved when closed and re-used when opened when using the `CreateWindow<T>` helper or via manually registering it via RegisterControl.
 
 ### Bugfixes
 

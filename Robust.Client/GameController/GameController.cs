@@ -67,7 +67,7 @@ namespace Robust.Client
         [Dependency] private readonly ITimerManager _timerManager = default!;
         [Dependency] private readonly IClientEntityManager _entityManager = default!;
         [Dependency] private readonly IPlacementManager _placementManager = default!;
-        [Dependency] private readonly ParticleManager _particleManager = default!;
+        [Dependency] private readonly ParticlesManager _particleManager = default!;
 
         [Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
         [Dependency] private readonly IOverlayManagerInternal _overlayManager = default!;

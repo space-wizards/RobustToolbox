@@ -13,7 +13,7 @@ namespace Robust.Client.Graphics
     ///     System for creating and managing particle effects.
     /// </summary>
     [PublicAPI]
-    public sealed class ParticleManager
+    public sealed class ParticlesManager
     {
         private List<ParticleSystem> _particleSystems = new();
         public void FrameUpdate(FrameEventArgs args)

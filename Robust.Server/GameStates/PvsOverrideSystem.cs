@@ -5,13 +5,14 @@ using Robust.Server.Player;
 using Robust.Shared.Console;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Player;
 using Robust.Shared.Utility;
 
 namespace Robust.Server.GameStates;
 
-public sealed class PvsOverrideSystem : EntitySystem
+public sealed class PvsOverrideSystem : SharedPvsOverrideSystem
 {
     [Dependency] private readonly IPlayerManager _player = default!;
     [Dependency] private readonly IConsoleHost _console = default!;
@@ -134,7 +135,7 @@ public sealed class PvsOverrideSystem : EntitySystem
     /// Forces the entity, all of its parents, and all of its children to ignore normal PVS range limitations,
     /// causing them to always be sent to all clients.
     /// </summary>
-    public void AddGlobalOverride(EntityUid uid)
+    public override void AddGlobalOverride(EntityUid uid)
     {
         if (GlobalOverride.Add(uid))
             _hasOverride.Add(uid);
@@ -143,7 +144,7 @@ public sealed class PvsOverrideSystem : EntitySystem
     /// <summary>
     /// Removes an entity from the global overrides.
     /// </summary>
-    public void RemoveGlobalOverride(EntityUid uid)
+    public override void RemoveGlobalOverride(EntityUid uid)
     {
         GlobalOverride.Remove(uid);
         // Not bothering to clear _hasOverride, as we'd have to check all the other collections, and at that point we
@@ -203,7 +204,7 @@ public sealed class PvsOverrideSystem : EntitySystem
     /// Forces the entity, all of its parents, and all of its children to ignore normal PVS range limitations for a
     /// specific session.
     /// </summary>
-    public void AddSessionOverride(EntityUid uid, ICommonSession session)
+    public override void AddSessionOverride(EntityUid uid, ICommonSession session)
     {
         if (SessionOverrides.GetOrNew(session).Add(uid))
             _hasOverride.Add(uid);
@@ -212,7 +213,7 @@ public sealed class PvsOverrideSystem : EntitySystem
     /// <summary>
     /// Removes an entity from a session's overrides.
     /// </summary>
-    public void RemoveSessionOverride(EntityUid uid, ICommonSession session)
+    public override void RemoveSessionOverride(EntityUid uid, ICommonSession session)
     {
         if (!SessionOverrides.TryGetValue(session, out var overrides))
             return;
@@ -228,7 +229,7 @@ public sealed class PvsOverrideSystem : EntitySystem
     /// Forces the entity, all of its parents, and all of its children to ignore normal PVS range limitations,
     /// causing them to always be sent to all clients.
     /// </summary>
-    public void AddSessionOverrides(EntityUid uid, Filter filter)
+    public override void AddSessionOverrides(EntityUid uid, Filter filter)
     {
         foreach (var session in filter.Recipients)
         {

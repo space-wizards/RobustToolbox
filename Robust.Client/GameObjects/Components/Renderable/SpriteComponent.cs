@@ -12,6 +12,7 @@ using Robust.Client.Utility;
 using Robust.Shared.Animations;
 using Robust.Shared.ComponentTrees;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Graphics;
 using Robust.Shared.Graphics.RSI;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -1329,16 +1330,16 @@ namespace Robust.Client.GameObjects
                     switch (layer.RenderingStrategy)
                     {
                         case LayerRenderingStrategy.NoRotation:
-                            layer.Render(drawingHandle, ref transformNoRot, angle, overrideDirection, normal: normal);
+                            layer.Render(drawingHandle, ref transformNoRot, angle, overrideDirection, (float)(eyeRotation + transformNoRot.Rotation()), normal: normal);
                             break;
                         case LayerRenderingStrategy.SnapToCardinals:
-                            layer.Render(drawingHandle, ref transformSnap, angle, overrideDirection, normal: normal);
+                            layer.Render(drawingHandle, ref transformSnap, angle, overrideDirection, (float)(eyeRotation + transformSnap.Rotation()), normal: normal);
                             break;
                         case LayerRenderingStrategy.Default:
-                            layer.Render(drawingHandle, ref transformDefault, angle, overrideDirection, normal: normal);
+                            layer.Render(drawingHandle, ref transformDefault, angle, overrideDirection, (float)(eyeRotation + transformDefault.Rotation()), normal: normal);
                             break;
                         case LayerRenderingStrategy.UseSpriteStrategy:
-                            layer.Render(drawingHandle, ref transformSprite, angle, overrideDirection, normal: normal);
+                            layer.Render(drawingHandle, ref transformSprite, angle, overrideDirection, (float)(eyeRotation + transformSprite.Rotation()), normal: normal);
                             break;
                         default:
                             Logger.Error($"Tried to render a layer with unknown rendering stragegy: {layer.RenderingStrategy}");
@@ -1351,7 +1352,7 @@ namespace Robust.Client.GameObjects
             {
                 foreach (var layer in Layers)
                 {
-                    layer.Render(drawingHandle, ref transformSprite, angle, overrideDirection, normal: normal);
+                    layer.Render(drawingHandle, ref transformSprite, angle, overrideDirection, (float)(eyeRotation + transformSprite.Rotation()), normal: normal);
                 }
             }
         }
@@ -1497,7 +1498,6 @@ namespace Robust.Client.GameObjects
         public sealed class Layer : ISpriteLayer, ISerializationHooks
         {
             [ViewVariables] private readonly SpriteComponent _parent;
-
             [ViewVariables] public string? ShaderPrototype;
             [ViewVariables] public ShaderInstance? Shader;
             /* no vv 4 u */ public ShaderInstance? NormalShader;
@@ -2023,7 +2023,7 @@ namespace Robust.Client.GameObjects
             /// <summary>
             ///     Render a layer. This assumes that the input angle is between 0 and 2pi.
             /// </summary>
-            internal void Render(DrawingHandleWorld drawingHandle, ref Matrix3x2 spriteMatrix, Angle angle, Direction? overrideDirection, bool normal = false)
+            internal void Render(DrawingHandleWorld drawingHandle, ref Matrix3x2 spriteMatrix, Angle angle, Direction? overrideDirection, float textureRotation = 0f, bool normal = false)
             {
                 if (!Visible || Blank)
                     return;
@@ -2048,7 +2048,7 @@ namespace Robust.Client.GameObjects
                     var transformMatrix = Matrix3x2.Multiply(layerMatrix, spriteMatrix);
                     drawingHandle.SetTransform(in transformMatrix);
 
-                    RenderTexture(drawingHandle, texture, normal: normal);
+                    RenderTexture(drawingHandle, texture, textureRotation, normal: normal);
                 }
                 else
                 {
@@ -2078,13 +2078,13 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            private void RenderTexture(DrawingHandleWorld drawingHandle, Texture texture, bool normal = false)
+            private void RenderTexture(DrawingHandleWorld drawingHandle, Texture texture, float textureRotation = 0f, bool normal = false)
             {
                 if (normal && NormalShader is {} normalShader)
                 {
                     NormalShader = normalShader.Mutable ? normalShader : normalShader.Duplicate();
                     drawingHandle.UseShader(NormalShader);
-                    NormalShader.SetParameter("rotation", (float)(drawingHandle.GetTransform().Rotation()));
+                    NormalShader.SetParameter("rotation", textureRotation);
                 }
                 else if (Shader != null)
                     drawingHandle.UseShader(Shader);

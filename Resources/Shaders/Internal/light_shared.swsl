@@ -6,8 +6,7 @@ const highp float LIGHTING_HEIGHT = 1.0;
 
 const highp float g_MinVariance = 0.0;
 
-const highp float COLOR_POWER = 0.4586603672224416246587735789683175073172; // yeah that's prob enough digits
-// highp is only precise to like 2^-16 why do we do this
+const highp float COLOR_POWER = 0.4586603672224416;
 
 varying highp vec2 worldPosition;
 
@@ -71,36 +70,18 @@ void fragment()
 
     if (useNormals == 1)
     {
-        // how this works
-        // globalRotation: rotation of the eye plus rotation of the light minus rotation of the map
-        // eyeCenter: center of the eye plus offset
-        // eyeZoom: zoom of the eye divided by viewport scale
-        // UV is on a scale from 0 to 1 in x and y axes
-
-        // normalize diff and rotate it by globalRotation radians counterclockwise
         highp vec2 lightDir = rotateVector(normalize(diff), globalRotation);
-
-        // take UV, center it at 0.5, 0.5, add the difference between lightCenter and eyeCenter,
-        // flip it upside down, divide it by 2, divide it by lightRange, and rotate it
-        // by globalRotation radians clockwise
         highp vec2 newUV = rotateVector(UV - vec2(0.5, 0.5) + rotateVector((lightCenter - eyeCenter) / vec2(2, -2) / lightRange, maskRotation), -globalRotation);
-
-        // multiply newUV by the x and y components of projectionMatrix, flip it upside down again,
-        // and divide it by eyeZoom, before multiplying by lightRange
         newUV *= (projectionMatrix * vec3(1, 1, 0)).xy * vec2(1, -1) / eyeZoom * lightRange;
-
-        // center newUV at 0, 0 instead of 0.5, 0.5
         newUV += vec2(0.5, 0.5);
+
         highp vec4 origSample = texture2D(normalMap, newUV);
         if (origSample.xyzw == vec4(0,0,0,1))
             discard;
 
         // origSample is on the range 0 - 1 in all components,
-        // but it has been raised to the log_0.5(ln(2)/pi)th power (yes i know) by some unknown mechanism
+        // but every color component has been raised to the log_0.5(ln(2)/pi)th power (yes i know) by some unknown mechanism
         // so we first raise it to the log_(ln2/pi)(0.5)th power (yes, i know) to reset it
-        // then we multiply the x and y by 2 before subtracting 1
-        // to make sure the right values go to 0, 0
-        // but it still ranges from -1 to 1
         highp vec3 normalSample = pow(origSample.xyz, vec3(COLOR_POWER)) * vec3(2,2,1) - vec3(1, 1, 0);
         run = dot(normalize(vec3(lightDir, LIGHTING_HEIGHT)), normalSample * vec3(-1, -1, 1));
         if (run <= 0)

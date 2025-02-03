@@ -6,7 +6,7 @@ const highp float LIGHTING_HEIGHT = 1.0;
 
 const highp float g_MinVariance = 0.0;
 
-const highp float COLOR_POWER = 0.4586603672224416;
+const highp float COLOR_POWER = 0.4586603;
 
 varying highp vec2 worldPosition;
 

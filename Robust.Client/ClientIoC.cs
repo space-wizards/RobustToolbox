@@ -135,6 +135,7 @@ namespace Robust.Client
             deps.Register<IPlacementManager, PlacementManager>();
             deps.Register<IOverlayManager, OverlayManager>();
             deps.Register<IOverlayManagerInternal, OverlayManager>();
+            deps.Register<ParticleManager>();
             deps.Register<IViewVariablesManager, ClientViewVariablesManager>();
             deps.Register<IClientViewVariablesManager, ClientViewVariablesManager>();
             deps.Register<IClientViewVariablesManagerInternal, ClientViewVariablesManager>();

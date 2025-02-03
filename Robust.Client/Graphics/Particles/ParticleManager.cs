@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Numerics;
 using JetBrains.Annotations;
+using Robust.Shared.Map;
 using Robust.Shared.Timing;
-using TerraFX.Interop.Windows;
+
 
 namespace Robust.Client.Graphics
 {
@@ -164,7 +165,17 @@ namespace Robust.Client.Graphics
         }
 
         public void Draw(in OverlayDrawArgs args){
+            if (args.MapId == MapId.Nullspace)
+                return;
 
+            var handle = args.WorldHandle;
+            foreach (var particle in _particles)
+            {
+                if(particle.active){
+                    handle.SetTransform(particle.transform);
+                    handle.DrawTexture(particle.texture, new Vector2(particle.position.X, particle.position.Y), particle.color);
+                }
+            }
         }
     }
 

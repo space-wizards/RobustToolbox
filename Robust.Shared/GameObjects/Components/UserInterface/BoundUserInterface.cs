@@ -11,7 +11,7 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     public abstract class BoundUserInterface : IDisposable
     {
-        [Dependency] protected readonly IEntityManager EntMan = default!;
+        [Dependency] protected internal readonly IEntityManager EntMan = default!;
         [Dependency] protected readonly ISharedPlayerManager PlayerManager = default!;
         protected readonly SharedUserInterfaceSystem UiSystem;
 

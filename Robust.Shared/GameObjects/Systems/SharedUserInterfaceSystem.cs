@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 using Robust.Shared.Collections;
@@ -84,6 +85,11 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         SubscribeLocalEvent<PlayerDetachedEvent>(OnPlayerDetached);
 
         SubscribeLocalEvent<UserInterfaceUserComponent, ComponentShutdown>(OnActorShutdown);
+    }
+
+    private void AddQueued(BoundUserInterface bui, bool value)
+    {
+        _queuedBuis.Add((bui, value));
     }
 
     /// <summary>
@@ -232,7 +238,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         if (ent.Comp.ClientOpenInterfaces.TryGetValue(key, out var cBui))
         {
-            _queuedBuis.Add((cBui, false));
+            AddQueued(cBui, false);
         }
 
         if (ent.Comp.Actors.Count == 0)
@@ -274,18 +280,19 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         // PlayerAttachedEvent will catch some of these.
         foreach (var (key, bui) in ent.Comp.ClientOpenInterfaces)
         {
-            _queuedBuis.Add((bui, true));
+            AddQueued(bui, true);
         }
     }
 
-    private void OnUserInterfaceShutdown(Entity<UserInterfaceComponent> ent, ref ComponentShutdown args)
+    private List<EntityUid> _entList = new();
+
+    protected virtual void OnUserInterfaceShutdown(Entity<UserInterfaceComponent> ent, ref ComponentShutdown args)
     {
-        var actors = new List<EntityUid>();
         foreach (var (key, acts) in ent.Comp.Actors)
         {
-            actors.Clear();
-            actors.AddRange(acts);
-            foreach (var actor in actors)
+            _entList.Clear();
+            _entList.AddRange(acts);
+            foreach (var actor in _entList)
             {
                 CloseUiInternal(ent!, key, actor);
                 DebugTools.Assert(!acts.Contains(actor));
@@ -456,7 +463,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
                 }
 
                 var bui = ent.Comp.ClientOpenInterfaces[key];
-                _queuedBuis.Add((bui, false));
+                AddQueued(bui, false);
             }
         }
 
@@ -537,7 +544,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         if (!open)
             return;
 
-        _queuedBuis.Add((boundUserInterface, true));
+        AddQueued(boundUserInterface, true);
     }
 
     /// <summary>
@@ -653,6 +660,14 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         return true;
     }
 
+    /// <summary>
+    /// Opens the UI for the local client. Does nothing on server.
+    /// </summary>
+    public virtual void OpenUi(Entity<UserInterfaceComponent?> entity, Enum key, bool predicted = false)
+    {
+
+    }
+
     public void OpenUi(Entity<UserInterfaceComponent?> entity, Enum key, EntityUid? actor, bool predicted = false)
     {
         if (actor == null || !UIQuery.Resolve(entity.Owner, ref entity.Comp, false))
@@ -688,6 +703,23 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             return;
 
         OpenUi(entity, key, actorEnt.Value, predicted);
+    }
+
+    /// <summary>
+    /// Tries to return the saved position of a user interface.
+    /// </summary>
+    public virtual bool TryGetPosition(Entity<UserInterfaceComponent?> entity, Enum key, out Vector2 position)
+    {
+        position = Vector2.Zero;
+        return false;
+    }
+
+    /// <summary>
+    /// Saves a position for the BUI.
+    /// </summary>
+    protected virtual void SavePosition(BoundUserInterface bui)
+    {
+
     }
 
     /// <summary>
@@ -1056,6 +1088,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
                     }
 #endif
                 }
+                // Close BUI
                 else
                 {
                     if (UIQuery.TryComp(bui.Owner, out var uiComp))
@@ -1063,6 +1096,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
                         uiComp.ClientOpenInterfaces.Remove(bui.UiKey);
                     }
 
+                    SavePosition(bui);
                     bui.Dispose();
                 }
             }

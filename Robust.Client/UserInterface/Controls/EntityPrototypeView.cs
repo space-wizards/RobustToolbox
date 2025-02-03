@@ -9,6 +9,7 @@ public class EntityPrototypeView : SpriteView
 {
     private string? _currentPrototype;
     private EntityUid? _ourEntity;
+    private bool _isShowing;
 
     public EntityPrototypeView()
     {
@@ -31,7 +32,7 @@ public class EntityPrototypeView : SpriteView
 
         _currentPrototype = entProto;
 
-        if (_ourEntity != null)
+        if (_ourEntity != null || _isShowing)
         {
             UpdateEntity();
         }
@@ -45,6 +46,8 @@ public class EntityPrototypeView : SpriteView
         {
             UpdateEntity();
         }
+
+        _isShowing = true;
     }
 
     protected override void ExitedTree()
@@ -52,6 +55,8 @@ public class EntityPrototypeView : SpriteView
         base.ExitedTree();
         EntMan.TryQueueDeleteEntity(_ourEntity);
         _ourEntity = null;
+
+        _isShowing = false;
     }
 
     private void UpdateEntity()

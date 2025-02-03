@@ -28,12 +28,15 @@ public sealed class TileSpawningUIController : UIController
     private readonly List<ITileDefinition> _shownTiles = new();
     private bool _clearingTileSelections;
     private bool _eraseTile;
+    private bool _mirroredTile;
 
     public override void Initialize()
     {
         DebugTools.Assert(_init == false);
         _init = true;
         _placement.PlacementChanged += ClearTileSelection;
+        _placement.DirectionChanged += OnDirectionChanged;
+        _placement.MirroredChanged += OnMirroredChanged;
     }
 
     private void StartTilePlacement(int tileType)
@@ -67,6 +70,21 @@ public sealed class TileSpawningUIController : UIController
         args.Button.Pressed = args.Pressed;
     }
 
+    private void OnTileMirroredToggled(ButtonToggledEventArgs args)
+    {
+        if (_window == null || _window.Disposed)
+            return;
+
+        if (args.Pressed)
+            _placement.Mirrored = true;
+        else
+            _placement.Mirrored = false;
+
+        _mirroredTile = _placement.Mirrored;
+
+        args.Button.Pressed = args.Pressed;
+    }
+
     public void ToggleWindow()
     {
         EnsureWindow();
@@ -78,6 +96,9 @@ public sealed class TileSpawningUIController : UIController
         else
         {
             _window.Open();
+            UpdateEntityDirectionLabel();
+            UpdateMirroredButton();
+            _window.SearchBar.GrabKeyboardFocus();
         }
     }
 
@@ -94,6 +115,8 @@ public sealed class TileSpawningUIController : UIController
         _window.TileList.OnItemDeselected += OnTileItemDeselected;
         _window.EraseButton.Pressed = _eraseTile;
         _window.EraseButton.OnToggled += OnTileEraseToggled;
+        _window.MirroredButton.Pressed = _mirroredTile;
+        _window.MirroredButton.OnToggled += OnTileMirroredToggled;
         BuildTileList();
     }
 
@@ -111,6 +134,7 @@ public sealed class TileSpawningUIController : UIController
         _window.TileList.ClearSelected();
         _clearingTileSelections = false;
         _window.EraseButton.Pressed = false;
+        _window.MirroredButton.Pressed = _placement.Mirrored;
     }
 
     private void OnTileClearPressed(ButtonEventArgs args)
@@ -148,6 +172,33 @@ public sealed class TileSpawningUIController : UIController
         }
 
         _placement.Clear();
+    }
+
+    private void OnDirectionChanged(object? sender, EventArgs e)
+    {
+        UpdateEntityDirectionLabel();
+    }
+
+    private void UpdateEntityDirectionLabel()
+    {
+        if (_window == null || _window.Disposed)
+            return;
+
+        _window.RotationLabel.Text = _placement.Direction.ToString();
+    }
+
+    private void OnMirroredChanged(object? sender, EventArgs e)
+    {
+        UpdateMirroredButton();
+    }
+
+    private void UpdateMirroredButton()
+    {
+        if (_window == null || _window.Disposed)
+            return;
+
+        _mirroredTile = _placement.Mirrored;
+        _window.MirroredButton.Pressed = _mirroredTile;
     }
 
     private void BuildTileList(string? searchStr = null)

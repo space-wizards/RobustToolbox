@@ -35,11 +35,11 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* RemoveChild is called after OnClose for BaseWindow.
+*None yet*
 
 ### New features
 
-* BUIs now have their positions saved when closed and re-used when opened when using the `CreateWindow<T>` helper or via manually registering it via RegisterControl.
+*None yet*
 
 ### Bugfixes
 
@@ -52,6 +52,21 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 243.0.0
+
+### Breaking changes
+
+* RemoveChild is called after OnClose for BaseWindow.
+
+### New features
+
+* BUIs now have their positions saved when closed and re-used when opened when using the `CreateWindow<T>` helper or via manually registering it via RegisterControl.
+
+### Other
+
+* Ensure grid fixtures get updated in client state handling even if exceptions occur.
 
 
 ## 242.0.1

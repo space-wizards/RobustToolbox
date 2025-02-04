@@ -197,17 +197,23 @@ namespace Robust.Shared.GameObjects
             {
                 var reg = _componentFactory.GetRegistration(name);
 
-                if (HasComponent(target, reg.Type))
+                if (removeExisting)
                 {
-                    if (!removeExisting)
-                        continue;
-
-                    RemoveComponent(target, reg.Type, metadata);
+                    var comp = _componentFactory.GetComponent(reg);
+                    _serManager.CopyTo(entry.Component, ref comp, notNullableOverride: true);
+                    AddComponentInternal(target, comp, reg, overwrite: true, skipInit: false, metadata: metadata);
                 }
+                else
+                {
+                    if (HasComponent(target, reg))
+                    {
+                        continue;
+                    }
 
-                var comp = _componentFactory.GetComponent(reg);
-                _serManager.CopyTo(entry.Component, ref comp, notNullableOverride: true);
-                AddComponent(target, comp, metadata: metadata);
+                    var comp = _componentFactory.GetComponent(reg);
+                    _serManager.CopyTo(entry.Component, ref comp, notNullableOverride: true);
+                    AddComponentInternal(target, comp, reg, overwrite: false, skipInit: false, metadata: metadata);
+                }
             }
         }
 
@@ -731,6 +737,14 @@ namespace Robust.Shared.GameObjects
             return uid.HasValue && HasComponent<T>(uid.Value);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
+        public bool HasComponent(EntityUid uid, ComponentRegistration reg)
+        {
+            var dict = _entTraitArray[reg.Idx.Value];
+            return dict.TryGetValue(uid, out var comp) && !comp.Deleted;
+        }
+
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
@@ -940,6 +954,23 @@ namespace Robust.Shared.GameObjects
             }
 
             component = default;
+            return false;
+        }
+
+        /// <inheritdoc />
+        public bool TryGetComponent(EntityUid uid, ComponentRegistration reg, [NotNullWhen(true)] out IComponent? component)
+        {
+            var dict = _entTraitArray[reg.Idx.Value];
+            if (dict.TryGetValue(uid, out var comp))
+            {
+                if (!comp.Deleted)
+                {
+                    component = comp;
+                    return true;
+                }
+            }
+
+            component = null;
             return false;
         }
 

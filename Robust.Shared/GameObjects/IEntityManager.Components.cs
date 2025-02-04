@@ -371,7 +371,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="metadataTarget">Optional metadata of the target entity</param>
         /// <param name="types">Array of component types to copy</param>
         /// <returns>Whether all components were successfully copied</returns>
-        bool CopyComponents(EntityUid source, EntityUid target, MetaDataComponent? metadataTarget = null, params ReadOnlySpan<Type> types);
+        bool CopyComponents(EntityUid source, EntityUid target, MetaDataComponent? metadataTarget = null, params Type[] types);
 
         /// <summary>
         /// Returns a cached struct enumerator with the specified component.

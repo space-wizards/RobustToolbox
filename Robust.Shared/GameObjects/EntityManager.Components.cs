@@ -1065,7 +1065,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc/>
-        public bool CopyComponents(EntityUid source, EntityUid target, MetaDataComponent? metadataTarget = null, params ReadOnlySpan<Type> types)
+        public bool CopyComponents(EntityUid source, EntityUid target, MetaDataComponent? metadataTarget = null, params Type[] types)
         {
             if (!MetaQuery.Resolve(target, ref metadataTarget, false))
                 throw new ArgumentException($"Entity {target} is not valid.", nameof(target));

@@ -583,7 +583,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.CopyComponents"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool CopyComps(EntityUid source, EntityUid target, MetaDataComponent? metadataTarget = null, params ReadOnlySpan<Type> types)
+    protected bool CopyComps(EntityUid source, EntityUid target, MetaDataComponent? metadataTarget = null, params Type[] types)
     {
         return EntityManager.CopyComponents(source, target, metadataTarget, types);
     }

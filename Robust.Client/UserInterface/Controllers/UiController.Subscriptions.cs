@@ -9,7 +9,7 @@ public abstract partial class UIController : IEntityEventSubscriber
     protected void SubscribeLocalEvent<T>(
         EntityEventHandler<T> handler,
         Type[]? before = null, Type[]? after = null)
-        where T : notnull
+        where T : notnull, allows ref struct
     {
         EntityManager.EventBus.SubscribeEvent(EventSource.Local, this, handler, GetType(), before, after);
     }
@@ -17,13 +17,13 @@ public abstract partial class UIController : IEntityEventSubscriber
     protected void SubscribeLocalEvent<T>(
         EntityEventRefHandler<T> handler,
         Type[]? before = null, Type[]? after = null)
-        where T : notnull
+        where T : notnull, allows ref struct
     {
         EntityManager.EventBus.SubscribeEvent(EventSource.Local, this, handler, GetType(), before, after);
     }
 
     protected void UnSubscribeLocalEvent<T>()
-        where T : notnull
+        where T : notnull, allows ref struct
     {
         EntityManager.EventBus.UnsubscribeEvent<T>(EventSource.Local, this);
     }
@@ -37,7 +37,7 @@ public abstract partial class UIController : IEntityEventSubscriber
     }
 
     protected void UnSubscribeNetworkEvent<T>()
-        where T : notnull
+        where T : notnull, allows ref struct
     {
         EntityManager.EventBus.UnsubscribeEvent<T>(EventSource.Network, this);
     }
@@ -51,7 +51,7 @@ public abstract partial class UIController : IEntityEventSubscriber
     }
 
     protected void UnSubscribeAllEvent<T>()
-        where T : notnull
+        where T : notnull, allows ref struct
     {
         EntityManager.EventBus.UnsubscribeEvent<T>(EventSource.All, this);
     }

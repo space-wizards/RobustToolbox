@@ -137,6 +137,8 @@ public sealed class PvsOverrideSystem : SharedPvsOverrideSystem
     /// </summary>
     public override void AddGlobalOverride(EntityUid uid)
     {
+        base.AddGlobalOverride(uid);
+
         if (GlobalOverride.Add(uid))
             _hasOverride.Add(uid);
     }
@@ -146,6 +148,8 @@ public sealed class PvsOverrideSystem : SharedPvsOverrideSystem
     /// </summary>
     public override void RemoveGlobalOverride(EntityUid uid)
     {
+        base.RemoveGlobalOverride(uid);
+
         GlobalOverride.Remove(uid);
         // Not bothering to clear _hasOverride, as we'd have to check all the other collections, and at that point we
         // might as well just do that when the entity gets deleted anyways.
@@ -206,6 +210,8 @@ public sealed class PvsOverrideSystem : SharedPvsOverrideSystem
     /// </summary>
     public override void AddSessionOverride(EntityUid uid, ICommonSession session)
     {
+        base.AddSessionOverride(uid, session);
+
         if (SessionOverrides.GetOrNew(session).Add(uid))
             _hasOverride.Add(uid);
     }
@@ -215,6 +221,8 @@ public sealed class PvsOverrideSystem : SharedPvsOverrideSystem
     /// </summary>
     public override void RemoveSessionOverride(EntityUid uid, ICommonSession session)
     {
+        base.RemoveSessionOverride(uid, session);
+
         if (!SessionOverrides.TryGetValue(session, out var overrides))
             return;
 
@@ -231,6 +239,8 @@ public sealed class PvsOverrideSystem : SharedPvsOverrideSystem
     /// </summary>
     public override void AddSessionOverrides(EntityUid uid, Filter filter)
     {
+        base.AddSessionOverrides(uid, filter);
+
         foreach (var session in filter.Recipients)
         {
             AddSessionOverride(uid, session);

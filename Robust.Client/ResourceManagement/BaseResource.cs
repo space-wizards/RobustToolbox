@@ -27,6 +27,9 @@ public abstract class BaseResource : IDisposable
     /// </summary>
     public abstract void Load(IDependencyCollection dependencies, ResPath path);
 
+    public virtual void Load(IDependencyCollection dependencies, ResPath path, bool normalLoading)
+        => Load(dependencies, path);
+
     public virtual void Reload(IDependencyCollection dependencies, ResPath path, CancellationToken ct = default)
     {
 

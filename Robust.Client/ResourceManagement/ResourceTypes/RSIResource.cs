@@ -11,6 +11,7 @@ using Robust.Shared.Resources;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using TerraFX.Interop.Windows;
 using IResourceManager = Robust.Shared.ContentPack.IResourceManager;
 
 namespace Robust.Client.ResourceManagement
@@ -36,10 +37,13 @@ namespace Robust.Client.ResourceManagement
         public const uint MAXIMUM_RSI_VERSION = RsiLoading.MAXIMUM_RSI_VERSION;
 
         public override void Load(IDependencyCollection dependencies, ResPath path)
+            => Load(dependencies, path, false);
+
+        public override void Load(IDependencyCollection dependencies, ResPath path, bool normalLoading)
         {
             var loadStepData = new LoadStepData {Path = path};
             var manager = dependencies.Resolve<IResourceManager>();
-            LoadPreTexture(manager, loadStepData);
+            LoadPreTexture(manager, loadStepData, normalLoading);
             LoadTexture(dependencies.Resolve<IClyde>(), loadStepData);
             LoadPostTexture(loadStepData);
             LoadFinish(dependencies.Resolve<IResourceCacheInternal>(), loadStepData);
@@ -145,7 +149,7 @@ namespace Robust.Client.ResourceManagement
             bumpmap.Dispose();
         }
 
-        internal static void LoadPreTexture(IResourceManager manager, LoadStepData data)
+        internal static void LoadPreTexture(IResourceManager manager, LoadStepData data, bool normalLoading = false)
         {
             var manifestPath = data.Path / "meta.json";
             RsiLoading.RsiMetadata metadata;
@@ -188,7 +192,8 @@ namespace Robust.Client.ResourceManagement
                 {
                     var texture = Image.Load<Rgba32>(stream);
                     Image<Rgba32> normalImage;
-                    if (stateObject.NormalId is {})
+                    if (!normalLoading) normalImage = texture;
+                    else if (stateObject.NormalId is {})
                     {
                         using (var normalStream = manager.ContentFileRead(normalPath))
                         {
@@ -211,13 +216,14 @@ namespace Robust.Client.ResourceManagement
                             CreatePlaceholderNormal(texture, stateObject.Size, out normalImage);
                         }
                     }
-                    for (int nX = 0; nX < texture.Width; nX++)
-                    for (int nY = 0; nY < texture.Height; nY++)
-                    {
-                        var T = normalImage[nX, nY];
-                        T.A = texture[nX, nY].A;
-                        normalImage[nX, nY] = T;
-                    }
+                    if (normalLoading)
+                        for (int nX = 0; nX < texture.Width; nX++)
+                        for (int nY = 0; nY < texture.Height; nY++)
+                        {
+                            var T = normalImage[nX, nY];
+                            T.A = texture[nX, nY].A;
+                            normalImage[nX, nY] = T;
+                        }
 
                     reg.Src = (texture, normalImage);
                 }
@@ -269,7 +275,7 @@ namespace Robust.Client.ResourceManagement
             var dimensionY = (int) MathF.Ceiling((float) totalFrameCount / dimensionX);
 
             var sheetHalfWidth = dimensionX * frameSize.X;
-            var sheet = new Image<Rgba32>(sheetHalfWidth * 2, dimensionY * frameSize.Y);
+            var sheet = new Image<Rgba32>(sheetHalfWidth * (normalLoading ? 2 : 1), dimensionY * frameSize.Y);
 
             var sheetIndex = 0;
             for (var index = 0; index < toAtlas.Length; index++)
@@ -291,7 +297,8 @@ namespace Robust.Client.ResourceManagement
                     var srcBox = UIBox2i.FromDimensions(srcPos, frameSize);
 
                     reg.Src.Item1.Blit(srcBox, sheet, sheetPos);
-                    reg.Src.Item2.Blit(srcBox, sheet, sheetNPos);
+                    if (normalLoading)
+                        reg.Src.Item2.Blit(srcBox, sheet, sheetNPos);
                 }
 
                 sheetIndex += reg.TotalFrameCount;
@@ -301,7 +308,8 @@ namespace Robust.Client.ResourceManagement
             {
                 ref var reg = ref toAtlas[i];
                 reg.Src.Item1.Dispose();
-                reg.Src.Item2.Dispose();
+                if (normalLoading)
+                    reg.Src.Item2.Dispose();
             }
 
             data.Rsi = rsi;

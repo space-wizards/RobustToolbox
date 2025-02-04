@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using OpenToolkit.Graphics.OpenGL4;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
@@ -29,7 +31,10 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _drawGrids(Viewport viewport, Box2 worldAABB, Box2Rotated worldBounds, IEye eye, bool normal = false)
         {
-            if (normal && (!_lightManager.Enabled || !_lightManager.DrawLighting || !_lightManager.DrawNormals))
+            if (normal && (!_lightManager.Enabled
+                           || !_lightManager.DrawLighting
+                           || !_cfg.GetCVar(CVars.LightNormals)
+                           || !_resourceCache.GetNormalsEnabled()))
                 return;
 
             var mapId = eye.Position.MapId;

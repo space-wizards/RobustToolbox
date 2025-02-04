@@ -565,6 +565,31 @@ public partial class EntitySystem
 
     #endregion
 
+    #region Component Copy
+
+    /// <inheritdoc cref="IEntityManager.CopyComponent"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool CopyComp(EntityUid source, EntityUid target, Type type, [NotNullWhen(true)] out IComponent? component, MetaDataComponent? metadataTarget = null)
+    {
+        return EntityManager.CopyComponent(source, target, type, out component, metadataTarget);
+    }
+
+    /// <inheritdoc cref="IEntityManager.CopyComponent{T}"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool CopyComp<T>(EntityUid source, EntityUid target, [NotNullWhen(true)] out T? component, MetaDataComponent? metadataTarget = null) where T : IComponent
+    {
+        return EntityManager.CopyComponent(source, target, out component, metadataTarget);
+    }
+
+    /// <inheritdoc cref="IEntityManager.CopyComponents"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool CopyComps(EntityUid source, EntityUid target, MetaDataComponent? metadataTarget = null, params ReadOnlySpan<Type> types)
+    {
+        return EntityManager.CopyComponents(source, target, metadataTarget, types);
+    }
+
+    #endregion
+
     #region Component Has
 
     /// <summary>

@@ -1028,6 +1028,59 @@ namespace Robust.Shared.GameObjects
             return TryGetComponent(uid.Value, netId, out component, meta);
         }
 
+        /// <inheritdoc/>
+        public bool CopyComponent(EntityUid source, EntityUid target, Type type, [NotNullWhen(true)] out IComponent? component, MetaDataComponent? metadataTarget = null)
+        {
+            component = null;
+
+            if (!MetaQuery.Resolve(target, ref metadataTarget, false))
+                throw new ArgumentException($"Entity {target} is not valid.", nameof(target));
+
+            if (!typeof(IComponent).IsAssignableFrom(type))
+                return false;
+
+            var compReg = ComponentFactory.GetRegistration(type);
+            if (!HasComponent(source, type))
+                return false;
+
+            var sourceComp = GetComponent(source, type);
+            component = ComponentFactory.GetComponent(compReg);
+
+            _serManager.CopyTo(sourceComp, ref component, notNullableOverride: true);
+
+            AddComponentInternal(target, component, compReg, true, false, metadataTarget);
+            return true;
+        }
+
+        /// <inheritdoc/>
+        public bool CopyComponent<T>(EntityUid source, EntityUid target, [NotNullWhen(true)] out T? component, MetaDataComponent? metadataTarget = null) where T : IComponent
+        {
+            component = default;
+            if (CopyComponent(source, target, typeof(T), out var baseComponent, metadataTarget))
+            {
+                component = (T)baseComponent;
+                return true;
+            }
+            return false;
+        }
+
+        /// <inheritdoc/>
+        public bool CopyComponents(EntityUid source, EntityUid target, MetaDataComponent? metadataTarget = null, params ReadOnlySpan<Type> types)
+        {
+            if (!MetaQuery.Resolve(target, ref metadataTarget, false))
+                throw new ArgumentException($"Entity {target} is not valid.", nameof(target));
+
+            var allSuccessful = true;
+
+            foreach (var type in types)
+            {
+                if (!CopyComponent(source, target, type, out _, metadataTarget))
+                    allSuccessful = false;
+            }
+
+            return allSuccessful;
+        }
+
         public EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : IComponent
         {
             var comps = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];

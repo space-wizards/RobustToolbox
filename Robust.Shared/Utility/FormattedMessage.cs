@@ -454,7 +454,7 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
     /// <summary>
     /// Helper function that tries to find the first instance of a tag and returns a FormattedMessage containing the nodes inside.
     /// </summary>
-    /// <param name="returnMessage">The node to be inserted.</param>
+    /// <param name="returnMessage">The message inside of the chosen tag.</param>
     /// <param name="tagText">The tag to search for.</param>
     public bool TryGetMessageInsideTag(out FormattedMessage? returnMessage, string tagText)
     {

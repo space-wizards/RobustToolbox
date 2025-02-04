@@ -7,7 +7,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects;
 
-[RegisterComponent, NetworkedComponent]
+[NetworkedComponent]
 public abstract partial class SharedParticlesComponent : Component {
     [ViewVariables] public string ParticleType;
 }

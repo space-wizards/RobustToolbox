@@ -36,10 +36,10 @@ public sealed class ColorTypeParser : TypeParser<Color>
 
     }
 
-    public override CompletionResult? TryAutocomplete(ParserContext parserContext, string? argName)
+    public override CompletionResult TryAutocomplete(ParserContext parserContext, CommandArgument? arg)
     {
         return CompletionResult.FromHintOptions(Color.GetAllDefaultColors().Select(x => x.Key),
-            "RGB color or color name.");
+            $"{GetArgHint(arg)}\nHex code or color name.");
     }
 }
 

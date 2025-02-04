@@ -53,8 +53,8 @@ internal sealed class EntityTypeParser : TypeParser<EntityUid>
         return TryParseEntity(_entMan, parser, out result);
     }
 
-    public override CompletionResult TryAutocomplete(ParserContext ctx, string? argName)
-        => CompletionResult.FromHint(argName == null ? "<NetEntity>" : $"<{argName}> (NetEntity)");
+    public override CompletionResult TryAutocomplete(ParserContext ctx, CommandArgument? arg)
+        => CompletionResult.FromHint(ToolshedCommand.GetArgHint(arg, typeof(NetEntity)));
 }
 
 internal sealed class NetEntityTypeParser : TypeParser<NetEntity>
@@ -100,8 +100,8 @@ internal sealed class NetEntityTypeParser : TypeParser<NetEntity>
         return false;
     }
 
-    public override CompletionResult TryAutocomplete(ParserContext ctx, string? argName)
-        => CompletionResult.FromHint(argName == null ? "<NetEntity>" : $"<{argName}> (NetEntity)");
+    public override CompletionResult TryAutocomplete(ParserContext ctx, CommandArgument? arg)
+        => CompletionResult.FromHint(ToolshedCommand.GetArgHint(arg, typeof(NetEntity)));
 }
 
 internal sealed class EntityTypeParser<T> : TypeParser<Entity<T>>
@@ -122,7 +122,7 @@ internal sealed class EntityTypeParser<T> : TypeParser<Entity<T>>
         return true;
     }
 
-    public override CompletionResult? TryAutocomplete(ParserContext ctx, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
     {
         // Avoid commands with loose permissions accidentally leaking information about entities.
         // I.e., if some command had an Entity<MindComponent> argument, we don't want auto-completions for
@@ -130,7 +130,7 @@ internal sealed class EntityTypeParser<T> : TypeParser<Entity<T>>
         if (!ctx.CheckInvokable<EntitiesCommand>())
             return null;
 
-        var hint = argName == null ? "<NetEntity>" : $"<{argName}> (NetEntity)";
+        var hint = ToolshedCommand.GetArgHint(arg, typeof(NetEntity));
 
         // Avoid dumping too many entities
         if (_entMan.Count<T>() > 128)
@@ -169,12 +169,12 @@ internal sealed class EntityTypeParser<T1, T2> : TypeParser<Entity<T1, T2>>
         return true;
     }
 
-    public override CompletionResult? TryAutocomplete(ParserContext ctx, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
     {
         if (!ctx.CheckInvokable<EntitiesCommand>())
             return null;
 
-        var hint = argName == null ? "<NetEntity>" : $"<{argName}> (NetEntity)";
+        var hint = ToolshedCommand.GetArgHint(arg, typeof(NetEntity));
         if (_entMan.Count<T1>() > 128)
             return CompletionResult.FromHint(hint);
 
@@ -215,12 +215,12 @@ internal sealed class EntityTypeParser<T1, T2, T3> : TypeParser<Entity<T1, T2, T
         return true;
     }
 
-    public override CompletionResult? TryAutocomplete(ParserContext ctx, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
     {
         if (!ctx.CheckInvokable<EntitiesCommand>())
             return null;
 
-        var hint = argName == null ? "<NetEntity>" : $"<{argName}> (NetEntity)";
+        var hint = ToolshedCommand.GetArgHint(arg, typeof(NetEntity));
         if (_entMan.Count<T1>() > 128)
             return CompletionResult.FromHint(hint);
 

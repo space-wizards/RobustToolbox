@@ -1330,16 +1330,16 @@ namespace Robust.Client.GameObjects
                     switch (layer.RenderingStrategy)
                     {
                         case LayerRenderingStrategy.NoRotation:
-                            layer.Render(drawingHandle, ref transformNoRot, angle, overrideDirection, (float)(eyeRotation + transformNoRot.Rotation()), normal: normal);
+                            layer.Render(drawingHandle, ref transformNoRot, angle, overrideDirection, (float)eyeRotation, normal: normal);
                             break;
                         case LayerRenderingStrategy.SnapToCardinals:
-                            layer.Render(drawingHandle, ref transformSnap, angle, overrideDirection, (float)(eyeRotation + transformSnap.Rotation()), normal: normal);
+                            layer.Render(drawingHandle, ref transformSnap, angle, overrideDirection, (float)eyeRotation, normal: normal);
                             break;
                         case LayerRenderingStrategy.Default:
-                            layer.Render(drawingHandle, ref transformDefault, angle, overrideDirection, (float)(eyeRotation + transformDefault.Rotation()), normal: normal);
+                            layer.Render(drawingHandle, ref transformDefault, angle, overrideDirection, (float)eyeRotation, normal: normal);
                             break;
                         case LayerRenderingStrategy.UseSpriteStrategy:
-                            layer.Render(drawingHandle, ref transformSprite, angle, overrideDirection, (float)(eyeRotation + transformSprite.Rotation()), normal: normal);
+                            layer.Render(drawingHandle, ref transformSprite, angle, overrideDirection, (float)eyeRotation, normal: normal);
                             break;
                         default:
                             Logger.Error($"Tried to render a layer with unknown rendering stragegy: {layer.RenderingStrategy}");
@@ -1352,7 +1352,7 @@ namespace Robust.Client.GameObjects
             {
                 foreach (var layer in Layers)
                 {
-                    layer.Render(drawingHandle, ref transformSprite, angle, overrideDirection, (float)(eyeRotation + transformSprite.Rotation()), normal: normal);
+                    layer.Render(drawingHandle, ref transformSprite, angle, overrideDirection, (float)eyeRotation, normal: normal);
                 }
             }
         }
@@ -2023,7 +2023,7 @@ namespace Robust.Client.GameObjects
             /// <summary>
             ///     Render a layer. This assumes that the input angle is between 0 and 2pi.
             /// </summary>
-            internal void Render(DrawingHandleWorld drawingHandle, ref Matrix3x2 spriteMatrix, Angle angle, Direction? overrideDirection, float textureRotation = 0f, bool normal = false)
+            internal void Render(DrawingHandleWorld drawingHandle, ref Matrix3x2 spriteMatrix, Angle angle, Direction? overrideDirection, float eyeRotation = 0f, bool normal = false)
             {
                 if (!Visible || Blank)
                     return;
@@ -2048,7 +2048,7 @@ namespace Robust.Client.GameObjects
                     var transformMatrix = Matrix3x2.Multiply(layerMatrix, spriteMatrix);
                     drawingHandle.SetTransform(in transformMatrix);
 
-                    RenderTexture(drawingHandle, texture, textureRotation, normal: normal);
+                    RenderTexture(drawingHandle, texture, eyeRotation, normal: normal);
                 }
                 else
                 {
@@ -2084,7 +2084,7 @@ namespace Robust.Client.GameObjects
                 {
                     NormalShader = normalShader.Mutable ? normalShader : normalShader.Duplicate();
                     drawingHandle.UseShader(NormalShader);
-                    NormalShader.SetParameter("rotation", textureRotation);
+                    NormalShader.SetParameter("rotation", textureRotation + (float)drawingHandle.GetTransform().Rotation());
                 }
                 else if (Shader != null)
                     drawingHandle.UseShader(Shader);

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Numerics;
 using JetBrains.Annotations;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Timing;
 
@@ -15,19 +16,24 @@ namespace Robust.Client.Graphics
     [PublicAPI]
     public sealed class ParticlesManager
     {
-        private List<ParticleSystem> _particleSystems = new();
+        private Dictionary<EntityUid,ParticleSystem> _particleSystems = new();
         public void FrameUpdate(FrameEventArgs args)
         {
-            foreach (var particleSys in _particleSystems)
+            foreach (var particleSys in _particleSystems.Values)
             {
                 particleSys.FrameUpdate(args);
             }
         }
 
-        public ParticleSystem CreateParticleSystem(ParticleSystemArgs args)
+        public void Render(EntityUid uid, ParticlesComponent particlesComponent, DrawingHandleWorld drawingHandle, Robust.Shared.Maths.Angle eyeRotation, in Robust.Shared.Maths.Angle worldRotation, in Vector2 worldPosition)
+        {
+
+        }
+
+        public ParticleSystem CreateParticleSystem(EntityUid entity, ParticleSystemArgs args)
         {
             var newSystem = new ParticleSystem(args);
-            _particleSystems.Add(newSystem);
+            _particleSystems.Add(entity, newSystem);
             return newSystem;
         }
 
@@ -115,7 +121,7 @@ namespace Robust.Client.Graphics
             _particleSystemSize = args.ParticleSystemSize;
             _particleCount = args.ParticleCount;
             _particlesPerSecond = args.ParticlesPerSecond;
-            _lowerBound = args.LowerDrawBound is null ? new Vector3(_particleSystemSize, float.MinValue) : args.LowerDrawBound.Value;
+            _lowerBound = args.LowerDrawBound is null ? new Vector3(-_particleSystemSize, float.MinValue) : args.LowerDrawBound.Value;
             _upperBound = args.UpperDrawBound is null ? new Vector3(_particleSystemSize, float.MaxValue) : args.UpperDrawBound.Value;
             _icon = args.Icon;
             _baseTransform = args.BaseTransform is null ? Matrix3x2.Identity : args.BaseTransform.Value;
@@ -129,6 +135,8 @@ namespace Robust.Client.Graphics
             _acceleration = args.Acceleration is null ? (float lifetime) => Vector3.Zero : args.Acceleration;
 
             _particles = new Particle[_particleCount];
+            for(int i=0; i<_particleCount; i++)
+                _particles[i] = new();
         }
 
         public void FrameUpdate(FrameEventArgs args)
@@ -144,12 +152,13 @@ namespace Robust.Client.Graphics
                     p.position += p.velocity*args.DeltaSeconds;
                     if(p.fadein > p.lifetime)
                         p.color = Color.FromArgb((int)Math.Clamp(p.lifetime/p.fadein * 255, 0, 255), p.color);
-                    if(p.fadeout < p.lifespan-p.lifetime)
+                    if(p.fadeout > p.lifespan-p.lifetime)
                         p.color = Color.FromArgb((int)Math.Clamp((p.lifespan-p.lifetime)/p.fadeout* 255, 0, 255), p.color);
 
                     if(p.lifetime > p.lifespan || p.position.X > _upperBound.X || p.position.Y > _upperBound.Y || p.position.Z > _upperBound.Z || p.position.X < _lowerBound.X || p.position.Y < _lowerBound.Y || p.position.Z < _lowerBound.Z)
                         p.active = false;
-                } else if (particlesSpawned < _particlesPerSecond) {
+                }
+                if (!p.active && particlesSpawned < _particlesPerSecond*args.DeltaSeconds) {
                     p.lifetime = 0;
                     p.texture = _icon();
                     p.position = _spawnPosition();
@@ -160,27 +169,24 @@ namespace Robust.Client.Graphics
                     p.fadein = _fadein();
                     p.fadeout = _fadeout();
                     p.active = true;
+                    particlesSpawned++;
                 }
             }
         }
 
-        public void Draw(in OverlayDrawArgs args){
-            if (args.MapId == MapId.Nullspace)
-                return;
-
-            var handle = args.WorldHandle;
+        public void Draw(DrawingHandleWorld handle){
             foreach (var particle in _particles)
             {
                 if(particle.active){
                     handle.SetTransform(particle.transform);
-                    handle.DrawTexture(particle.texture, new Vector2(particle.position.X, particle.position.Y), particle.color);
+                    handle.DrawTexture(particle.texture!, new Vector2(particle.position.X, particle.position.Y), particle.color);
                 }
             }
         }
     }
 
-    internal struct Particle {
-        public Texture texture;
+    internal sealed class Particle {
+        public Texture? texture;
         public Vector3 position;
         public Vector3 velocity;
         public Matrix3x2 transform;

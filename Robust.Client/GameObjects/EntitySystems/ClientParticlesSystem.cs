@@ -19,11 +19,13 @@ namespace Robust.Client.GameObjects
 
         public override void Initialize() {
             base.Initialize();
-            SubscribeLocalEvent<ParticlesComponent, ComponentGetState>(OnParticlesComponentGetState);
+            //SubscribeLocalEvent<ParticlesComponent, ComponentGetState>(OnParticlesComponentGetState);
+            SubscribeLocalEvent<ParticlesComponent, ComponentAdd>(HandleComponentAdd);
+            SubscribeLocalEvent<ParticlesComponent, ComponentRemove>(HandleComponentRemove);
         }
 
 
-        private void OnParticlesComponentGetState(EntityUid uid, ParticlesComponent component, ref ComponentGetState args)
+        private void HandleComponentAdd(EntityUid uid, ParticlesComponent component, ref ComponentAdd args)
         {
             //do a lookup for some yaml thing or some such based on particle type
             ParticleSystemArgs particleSystemArgs = new(
@@ -35,9 +37,14 @@ namespace Robust.Client.GameObjects
             particleSystemArgs.Acceleration = (float lifetime) => new Vector3(lifetime);
             particleSystemArgs.SpawnPosition = () => new Vector3(new Random().NextFloat()*200, 0, 0);
             particleSystemArgs.Color = (float lifetime) => Color.Red;
+            particleSystemArgs.ParticleCount=1000;
 
-            component.particlesSystem = _particlesManager.CreateParticleSystem(particleSystemArgs);
+            component.particlesSystem = _particlesManager.CreateParticleSystem(uid, particleSystemArgs);
 
+        }
+
+        private void HandleComponentRemove(EntityUid uid, ParticlesComponent component, ref ComponentRemove args)
+        {
         }
     }
 }

@@ -1194,8 +1194,27 @@ namespace Robust.Client.Graphics.Clyde
 
         private void LightResolutionScaleChanged(float newValue)
         {
-            _lightResolutionScale = newValue > 0.05f ? newValue : 0.05f;
-            RegenAllLightRts();
+            if (newValue < 0.05f) newValue = 0.05f;
+            else if (newValue > 1f) newValue = 1f;
+            else
+            {
+                _lightResolutionScale = newValue;
+                RegenAllLightRts();
+                return;
+            }
+            _cfg.SetCVar(CVars.LightResolutionScale, newValue);
+        }
+
+        private void LightBlurFactorChanged(float newValue)
+        {
+            if (newValue < 0f) newValue = 0f;
+            else if (newValue > 0.003f) newValue = 0.003f;
+            else
+            {
+                RegenAllLightRts();
+                return;
+            }
+            _cfg.SetCVar(CVars.LightBlurFactor, newValue);
         }
 
         private void MaxShadowcastingLightsChanged(int newValue)

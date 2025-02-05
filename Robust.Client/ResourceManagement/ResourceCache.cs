@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Robust.Client.Audio;
+using Robust.Shared;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -19,6 +20,12 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
 {
     private readonly Dictionary<Type, TypeData> _cachedResources = new();
     private readonly Dictionary<Type, BaseResource> _fallbacks = new();
+    public bool NormalsEnabled { get; private set; }
+
+    public bool GetNormalsEnabled()
+    {
+        return NormalsEnabled;
+    }
 
     public T GetResource<T>(string path, bool useFallback = true) where T : BaseResource, new()
     {
@@ -37,7 +44,7 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
         try
         {
             var dependencies = IoCManager.Instance!;
-            resource.Load(dependencies, path);
+            resource.Load(dependencies, path, _configurationManager.GetCVar(CVars.LightNormals));
             cache.Resources[path] = resource;
             return resource;
         }
@@ -82,7 +89,7 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
         try
         {
             var dependencies = IoCManager.Instance!;
-            _resource.Load(dependencies, path);
+            _resource.Load(dependencies, path, _configurationManager.GetCVar(CVars.LightNormals));
             resource = _resource;
             cache.Resources[path] = resource;
             return true;

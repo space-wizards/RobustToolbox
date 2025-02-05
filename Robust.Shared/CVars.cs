@@ -879,6 +879,12 @@ namespace Robust.Shared
         public static readonly CVarDef<float> LightBlurFactor =
             CVarDef.Create("light.blur_factor", 0.001f, CVar.CLIENTONLY | CVar.ARCHIVE);
 
+        /// <summary>
+        /// If we render and load normals.
+        /// </summary>
+        public static readonly CVarDef<bool> LightNormals =
+            CVarDef.Create("light.normals", false, CVar.CLIENTONLY | CVar.ARCHIVE);
+
         /*
          * Lookup
          */

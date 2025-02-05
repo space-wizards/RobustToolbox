@@ -17,3 +17,8 @@
   id: ColorPicker
   kind: source
   path: "/Shaders/color_picker.swsl"
+
+- type: shader
+  id: NormalRotator
+  kind: source
+  path: "/Shaders/Internal/normal-rotator.swsl"

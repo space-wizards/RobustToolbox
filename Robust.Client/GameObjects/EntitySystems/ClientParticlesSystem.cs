@@ -36,7 +36,7 @@ namespace Robust.Client.GameObjects
                 );
             particleSystemArgs.Acceleration = (float lifetime) => new Vector3(lifetime);
             particleSystemArgs.SpawnPosition = () => new Vector3(new Random().NextFloat()*200, 0, 0);
-            particleSystemArgs.Color = (float lifetime) => Color.Red;
+            particleSystemArgs.Color = (float lifetime) => Color.FromArgb(255,255,(byte)((lifetime/3.0)*255),0);
             particleSystemArgs.ParticleCount=1000;
 
             component.particlesSystem = _particlesManager.CreateParticleSystem(uid, particleSystemArgs);
@@ -45,6 +45,8 @@ namespace Robust.Client.GameObjects
 
         private void HandleComponentRemove(EntityUid uid, ParticlesComponent component, ref ComponentRemove args)
         {
+            component.particlesSystem = null;
+            _particlesManager.DestroyParticleSystem(uid);
         }
     }
 }

@@ -37,6 +37,10 @@ namespace Robust.Client.Graphics
             return newSystem;
         }
 
+        public void DestroyParticleSystem(EntityUid entity){
+            _particleSystems.Remove(entity);
+        }
+
     }
 
     public sealed class ParticleSystem {

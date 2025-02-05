@@ -142,8 +142,17 @@ namespace Robust.Client.ResourceManagement
             }
         }
 
-        internal static void CreatePlaceholderNormal(Image<Rgba32> original, Vector2i blocksize, out Image<Rgba32> normalmap)
+        internal static void CreatePlaceholderNormal(Image<Rgba32> original, Vector2i blocksize, out Image<Rgba32> normalmap, bool? flat = false)
         {
+            if (flat ?? false)
+            {
+                normalmap = new Image<Rgba32>(original.Width, original.Height);
+                int x, y;
+                for (x = 0; x < original.Width; x++)
+                for (y = 0; y < original.Height; y++)
+                    normalmap[x, y] = new Rgba32(0.5f, 0.5f, 1f);
+                return;
+            }
             CreatePlaceholderBump(original, blocksize, out var bumpmap);
             ConvertBumpToNormal(bumpmap, blocksize, out normalmap);
             bumpmap.Dispose();
@@ -213,7 +222,7 @@ namespace Robust.Client.ResourceManagement
                         }
                         else
                         {
-                            CreatePlaceholderNormal(texture, stateObject.Size, out normalImage);
+                            CreatePlaceholderNormal(texture, stateObject.Size, out normalImage, metadata.FlatNormal ?? stateObject.FlatNormal ?? false);
                         }
                     }
                     if (normalLoading)

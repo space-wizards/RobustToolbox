@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
 using Nett.Parser;
@@ -393,18 +394,35 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
     {
         ArgumentNullException.ThrowIfNull(markupNode.Name);
 
-        var i = _nodes.FindIndex(x => x.Name == tagText && !x.Closing);
-        var j = _nodes.FindLastIndex(x => x.Name == tagText && x.Closing);
+        var openingNodeCount = _nodes.Count(x => x.Name == tagText && !x.Closing);
+        var closingNodeCount = _nodes.Count(x => x.Name == tagText && x.Closing);
 
-        while (i != -1 || j != -1)
+        if (openingNodeCount != closingNodeCount)
+            throw new Exception("Opening and Closing node count mismatch.");
+
+        if (openingNodeCount == 0)
+            return;
+
+        var i = _nodes.FindIndex(x => x.Name == tagText && !x.Closing);
+        while (i > -1)
         {
-            InsertAtIndex(markupNode, i + 1, j);
+            _nodes.Insert(i + 1, markupNode);
 
             if (i + 2 >= _nodes.Count)
                 break;
 
             i = _nodes.FindIndex(i + 2, x => x.Name == tagText && !x.Closing);
-            j = _nodes.FindLastIndex(j, x => x.Name == tagText && x.Closing);
+        }
+
+        var j = _nodes.FindIndex(x => x.Name == tagText && x.Closing);
+        while (j > -1)
+        {
+            _nodes.Insert(j, new MarkupNode(markupNode.Name, null, null, true));
+
+            if (j + 2 >= _nodes.Count)
+                break;
+
+            j = _nodes.FindIndex(j + 2, x => x.Name == tagText && x.Closing);
         }
     }
 
@@ -418,18 +436,35 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
     {
         ArgumentNullException.ThrowIfNull(markupNode.Name);
 
-        var i = _nodes.FindIndex(x => x.Name == tagText && !x.Closing);
-        var j = _nodes.FindLastIndex(x => x.Name == tagText && x.Closing);
+        var openingNodeCount = _nodes.Count(x => x.Name == tagText && !x.Closing);
+        var closingNodeCount = _nodes.Count(x => x.Name == tagText && x.Closing);
 
-        while (i != -1 || j != -1)
+        if (openingNodeCount != closingNodeCount)
+            throw new Exception("Opening and Closing node count mismatch.");
+
+        if (openingNodeCount == 0)
+            return;
+
+        var i = _nodes.FindIndex(x => x.Name == tagText && !x.Closing);
+        while (i > -1)
         {
-            InsertAtIndex(markupNode, i, j + 1);
+            _nodes.Insert(i, markupNode);
 
             if (i + 2 >= _nodes.Count)
                 break;
 
             i = _nodes.FindIndex(i + 2, x => x.Name == tagText && !x.Closing);
-            j = _nodes.FindLastIndex(j, x => x.Name == tagText && x.Closing);
+        }
+
+        var j = _nodes.FindIndex(x => x.Name == tagText && x.Closing);
+        while (j > -1)
+        {
+            _nodes.Insert(j + 1, new MarkupNode(markupNode.Name, null, null, true));
+
+            if (j + 2 >= _nodes.Count)
+                break;
+
+            j = _nodes.FindIndex(j + 2, x => x.Name == tagText && x.Closing);
         }
     }
 
@@ -458,16 +493,32 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
     /// <param name="tagText">The tag to search for.</param>
     public bool TryGetMessageInsideTag(out FormattedMessage? returnMessage, string tagText)
     {
-        var openingNode = _nodes.FindIndex(x => x.Name == tagText && !x.Closing);
-        var closingNode = _nodes.FindLastIndex(x => x.Name == tagText && x.Closing);
+        returnMessage = null;
 
-        if (openingNode == -1 || closingNode == -1)
-        {
-            returnMessage = null;
+        var openingNode = _nodes.FindIndex(x => x.Name == tagText && !x.Closing);
+        var nextNode = openingNode;
+        var nodeCount = 1;
+
+        if (openingNode == -1)
             return false;
+
+        while (nodeCount > 0)
+        {
+            nextNode = _nodes.FindIndex(nextNode + 1, x => x.Name == tagText);
+            if (!_nodes[nextNode].Closing)
+            {
+                nodeCount++;
+            }
+            else
+            {
+                nodeCount--;
+            }
         }
 
-        var resultingRange = _nodes.GetRange(openingNode, closingNode - openingNode + 1);
+        if (nextNode == -1)
+            return false;
+
+        var resultingRange = _nodes.GetRange(openingNode, nextNode - openingNode + 1);
         returnMessage = new FormattedMessage(resultingRange);
         return true;
     }

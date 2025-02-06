@@ -31,13 +31,13 @@ namespace Robust.Client.Physics
             // (and serializing it over the network isn't necessary?)
             // This is a client-only problem.
             // Also need to suss out having the client build the island anyway and just... not solving it?
-            foreach (var body in component.AwakeBodies)
+            foreach (var (uid, body) in component.AwakeBodies)
             {
                 if (!body.SleepingAllowed || body.LinearVelocity.Length() > LinearToleranceSqr / 2f || body.AngularVelocity * body.AngularVelocity > AngularToleranceSqr / 2f) continue;
                 body.SleepTime += frameTime;
                 if (body.SleepTime > TimeToSleep)
                 {
-                    toRemove.Add(new Entity<PhysicsComponent>(body.Owner, body));
+                    toRemove.Add(new Entity<PhysicsComponent>(uid, body));
                 }
             }
 
@@ -49,11 +49,11 @@ namespace Robust.Client.Physics
             base.Cleanup(component, frameTime);
         }
 
-        protected override void UpdateLerpData(PhysicsMapComponent component, List<PhysicsComponent> bodies, EntityQuery<TransformComponent> xformQuery)
+        protected override void UpdateLerpData(PhysicsMapComponent component, List<Entity<PhysicsComponent>> bodies, EntityQuery<TransformComponent> xformQuery)
         {
             foreach (var body in bodies)
             {
-                if (body.BodyType == BodyType.Static ||
+                if (body.Comp.BodyType == BodyType.Static ||
                     component.LerpData.TryGetValue(body.Owner, out var lerpData) ||
                     !xformQuery.TryGetComponent(body.Owner, out var xform) ||
                     lerpData.ParentUid == xform.ParentUid)
@@ -61,7 +61,7 @@ namespace Robust.Client.Physics
                     continue;
                 }
 
-                component.LerpData[xform.Owner] = (xform.ParentUid, xform.LocalPosition, xform.LocalRotation);
+                component.LerpData[body.Owner] = (xform.ParentUid, xform.LocalPosition, xform.LocalRotation);
             }
         }
 

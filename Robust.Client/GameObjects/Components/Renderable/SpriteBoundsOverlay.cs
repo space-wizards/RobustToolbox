@@ -16,13 +16,15 @@ namespace Robust.Client.GameObjects
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            EntitySystem.Get<SpriteBoundsSystem>().Enabled ^= true;
+            IoCManager.Resolve<IEntityManager>()
+                .System<SpriteBoundsSystem>()
+                .Enabled ^= true;
         }
     }
 
     public sealed class SpriteBoundsSystem : EntitySystem
     {
-        [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly SharedTransformSystem _xformSystem = default!;
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
         [Dependency] private readonly SpriteTreeSystem _spriteTree = default!;
 
@@ -40,7 +42,7 @@ namespace Robust.Client.GameObjects
                 if (_enabled)
                 {
                     DebugTools.AssertNull(_overlay);
-                    _overlay = new SpriteBoundsOverlay(_spriteTree, _entityManager);
+                    _overlay = new SpriteBoundsOverlay(_spriteTree, _xformSystem);
                     _overlayManager.AddOverlay(_overlay);
                 }
                 else
@@ -59,13 +61,13 @@ namespace Robust.Client.GameObjects
     {
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-        private readonly IEntityManager _entityManager;
+        private readonly SharedTransformSystem _xformSystem;
         private SpriteTreeSystem _renderTree;
 
-        public SpriteBoundsOverlay(SpriteTreeSystem renderTree, IEntityManager entityManager)
+        public SpriteBoundsOverlay(SpriteTreeSystem renderTree, SharedTransformSystem xformSystem)
         {
             _renderTree = renderTree;
-            _entityManager = entityManager;
+            _xformSystem = xformSystem;
         }
 
         protected internal override void Draw(in OverlayDrawArgs args)
@@ -76,7 +78,7 @@ namespace Robust.Client.GameObjects
 
             foreach (var (sprite, xform) in _renderTree.QueryAabb(currentMap, viewport))
             {
-                var (worldPos, worldRot) = xform.GetWorldPositionRotation();
+                var (worldPos, worldRot) = _xformSystem.GetWorldPositionRotation(xform);
                 var bounds = sprite.CalculateRotatedBoundingBox(worldPos, worldRot, args.Viewport.Eye?.Rotation ?? default);
 
                 // Get scaled down bounds used to indicate the "south" of a sprite.

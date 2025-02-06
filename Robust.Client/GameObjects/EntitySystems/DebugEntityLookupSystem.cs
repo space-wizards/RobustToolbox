@@ -15,11 +15,13 @@ namespace Robust.Client.GameObjects;
 
 public sealed class DebugEntityLookupCommand : LocalizedCommands
 {
+    [Dependency] private readonly IEntityManager _entityManager = default!;
+
     public override string Command => "togglelookup";
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
-        EntitySystem.Get<DebugEntityLookupSystem>().Enabled ^= true;
+        _entityManager.System<DebugEntityLookupSystem>().Enabled ^= true;
     }
 }
 

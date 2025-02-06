@@ -16,8 +16,10 @@ namespace Robust.Client.Placement.Modes
         {
             MouseCoords = ScreenToCursorGrid(mouseScreen);
 
+            var transformSys = pManager.EntityManager.System<SharedTransformSystem>();
+
             var tileSize = 1f;
-            var gridIdOpt = MouseCoords.GetGridUid(pManager.EntityManager);
+            var gridIdOpt = transformSys.GetGrid(MouseCoords);
 
             if (gridIdOpt is EntityUid gridId && gridId.IsValid())
             {

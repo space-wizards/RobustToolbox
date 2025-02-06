@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.Numerics;
+using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics
 {
@@ -11,7 +12,7 @@ namespace Robust.Client.Graphics
         /// <summary>
         ///  Size of drawing surface
         /// </summary>
-        public Vector2 ParticleSystemSize;
+        public Vector2i ParticleSystemSize;
         /// <summary>
         ///  Maximum number of particles in this system. New particles will not be created while at this maximum.
         /// </summary>
@@ -23,11 +24,11 @@ namespace Robust.Client.Graphics
         /// <summary>
         ///  The lower left hand back corner of the cuboid outside of which particles will be deactivated
         /// </summary>
-        public Vector3?  LowerDrawBound;
+        public Robust.Shared.Maths.Vector3?  LowerDrawBound;
         /// <summary>
         ///  The upper right hand front corner of the cuboid outside of which particles will be deactivated
         /// </summary>
-        public Vector3? UpperDrawBound;
+        public Robust.Shared.Maths.Vector3? UpperDrawBound;
         /// <summary>
         /// The base transform to apply to all particles in this system
         /// </summary>
@@ -54,18 +55,18 @@ namespace Robust.Client.Graphics
         /// <summary>
         /// A function which returns a Vector3 which is this particles position at spawning
         /// </summary>
-        public Func<Vector3>? SpawnPosition;
+        public Func<Robust.Shared.Maths.Vector3>? SpawnPosition;
         /// <summary>
         /// A function which returns a Vector3 which is this particles velocity at spawning
         /// </summary>
-        public Func<Vector3>? SpawnVelocity;
+        public Func<Robust.Shared.Maths.Vector3>? SpawnVelocity;
 
         //queried every tick - arg is seconds particle has been alive. 0 for just spawned.
 
         /// <summary>
         /// A function which takes the life time of this particles and returns the Color of this particle
         /// </summary>
-        public Func<float,Color>? Color;
+        public Func<float,System.Drawing.Color>? Color;
         /// <summary>
         /// A function which takes the life time of this particles and returns the transform of this particle. Note that this is multiplied with the base transform.
         /// </summary>
@@ -73,9 +74,9 @@ namespace Robust.Client.Graphics
         /// <summary>
         /// A function which takes the life time of this particles and returns the an acceleration to apply to this particle
         /// </summary>
-        public Func<float,Vector3>? Acceleration;
+        public Func<float,Robust.Shared.Maths.Vector3>? Acceleration;
 
-        public ParticleSystemArgs(Func<Texture> icon, Vector2 particleSystemSize, uint particleCount, float particlesPerSecond){
+        public ParticleSystemArgs(Func<Texture> icon, Vector2i particleSystemSize, uint particleCount, float particlesPerSecond){
             Icon = icon;
             ParticleSystemSize = particleSystemSize;
             ParticleCount = particleCount;

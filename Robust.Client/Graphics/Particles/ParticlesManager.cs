@@ -5,6 +5,7 @@ using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
 
@@ -47,10 +48,11 @@ namespace Robust.Client.Graphics
 
         //unchanging
 
+        public Vector2i RenderSize { get => _particleSystemSize;}
         /// <summary>
         ///  Size of drawing surface
         /// </summary>
-        private Vector2 _particleSystemSize;
+        private Vector2i _particleSystemSize;
         /// <summary>
         ///  Maximum number of particles in this system. New particles will not be created while at this maximum.
         /// </summary>
@@ -62,11 +64,11 @@ namespace Robust.Client.Graphics
         /// <summary>
         ///  The lower left hand back corner of the cuboid outside of which particles will be deactivated
         /// </summary>
-        private Vector3 _lowerBound;
+        private Robust.Shared.Maths.Vector3 _lowerBound;
         /// <summary>
         ///  The upper right hand front corner of the cuboid outside of which particles will be deactivated
         /// </summary>
-        private Vector3 _upperBound;
+        private Robust.Shared.Maths.Vector3 _upperBound;
         /// <summary>
         /// The base transform to apply to all particles in this system
         /// </summary>
@@ -93,18 +95,18 @@ namespace Robust.Client.Graphics
         /// <summary>
         /// A function which returns a Vector3 which is this particles position at spawning
         /// </summary>
-        private Func<Vector3> _spawnPosition;
+        private Func<Robust.Shared.Maths.Vector3> _spawnPosition;
         /// <summary>
         /// A function which returns a Vector3 which is this particles velocity at spawning
         /// </summary>
-        private Func<Vector3> _spawnVelocity;
+        private Func<Robust.Shared.Maths.Vector3> _spawnVelocity;
 
         //queried every tick - arg is seconds particle has been alive. 0 for just spawned.
 
         /// <summary>
         /// A function which takes the life time of this particles and returns the Color of this particle
         /// </summary>
-        private Func<float,Color> _color;
+        private Func<float,System.Drawing.Color> _color;
         /// <summary>
         /// A function which takes the life time of this particles and returns the transform of this particle. Note that this is multiplied with the base transform.
         /// </summary>
@@ -112,7 +114,7 @@ namespace Robust.Client.Graphics
         /// <summary>
         /// A function which takes the life time of this particles and returns the an acceleration to apply to this particle
         /// </summary>
-        private Func<float,Vector3> _acceleration;
+        private Func<float,Robust.Shared.Maths.Vector3> _acceleration;
 
         /// <summary>
         /// Internal store for particles for this system
@@ -125,18 +127,18 @@ namespace Robust.Client.Graphics
             _particleSystemSize = args.ParticleSystemSize;
             _particleCount = args.ParticleCount;
             _particlesPerSecond = args.ParticlesPerSecond;
-            _lowerBound = args.LowerDrawBound is null ? new Vector3(-_particleSystemSize, float.MinValue) : args.LowerDrawBound.Value;
-            _upperBound = args.UpperDrawBound is null ? new Vector3(_particleSystemSize, float.MaxValue) : args.UpperDrawBound.Value;
+            _lowerBound = args.LowerDrawBound is null ? new Robust.Shared.Maths.Vector3(-_particleSystemSize.X, -_particleSystemSize.Y, float.MinValue) : args.LowerDrawBound.Value;
+            _upperBound = args.UpperDrawBound is null ? new Robust.Shared.Maths.Vector3(_particleSystemSize.X, _particleSystemSize.Y, float.MaxValue) : args.UpperDrawBound.Value;
             _icon = args.Icon;
             _baseTransform = args.BaseTransform is null ? Matrix3x2.Identity : args.BaseTransform.Value;
             _lifespan = args.Lifespan is null ? () => int.MaxValue : args.Lifespan;
             _fadeout = args.Fadeout is null ? () => 0 : args.Fadeout;
             _fadein = args.Fadein is null ? () => 0 : args.Fadein;
-            _spawnPosition = args.SpawnPosition is null ? () => Vector3.Zero : args.SpawnPosition;
-            _spawnVelocity = args.SpawnVelocity is null ? () => Vector3.Zero : args.SpawnVelocity;
-            _color = args.Color is null ? (float lifetime) => Color.White : args.Color;
+            _spawnPosition = args.SpawnPosition is null ? () => Robust.Shared.Maths.Vector3.Zero : args.SpawnPosition;
+            _spawnVelocity = args.SpawnVelocity is null ? () => Robust.Shared.Maths.Vector3.Zero : args.SpawnVelocity;
+            _color = args.Color is null ? (float lifetime) => System.Drawing.Color.White : args.Color;
             _transform = args.Transform is null ? (float lifetime) => Matrix3x2.Identity : args.Transform;
-            _acceleration = args.Acceleration is null ? (float lifetime) => Vector3.Zero : args.Acceleration;
+            _acceleration = args.Acceleration is null ? (float lifetime) => Robust.Shared.Maths.Vector3.Zero : args.Acceleration;
 
             _particles = new Particle[_particleCount];
             for(int i=0; i<_particleCount; i++)
@@ -155,9 +157,9 @@ namespace Robust.Client.Graphics
                     p.velocity += _acceleration(p.lifetime);
                     p.position += p.velocity*args.DeltaSeconds;
                     if(p.fadein > p.lifetime)
-                        p.color = Color.FromArgb((int)Math.Clamp(p.lifetime/p.fadein * 255, 0, 255), p.color);
+                        p.color = System.Drawing.Color.FromArgb((int)Math.Clamp(p.lifetime/p.fadein * 255, 0, 255), p.color);
                     if(p.fadeout > p.lifespan-p.lifetime)
-                        p.color = Color.FromArgb((int)Math.Clamp((p.lifespan-p.lifetime)/p.fadeout* 255, 0, 255), p.color);
+                        p.color = System.Drawing.Color.FromArgb((int)Math.Clamp((p.lifespan-p.lifetime)/p.fadeout* 255, 0, 255), p.color);
 
                     if(p.lifetime > p.lifespan || p.position.X > _upperBound.X || p.position.Y > _upperBound.Y || p.position.Z > _upperBound.Z || p.position.X < _lowerBound.X || p.position.Y < _lowerBound.Y || p.position.Z < _lowerBound.Z)
                         p.active = false;
@@ -178,12 +180,17 @@ namespace Robust.Client.Graphics
             }
         }
 
+
+        private static readonly Matrix3x2 FlipMatrix = Matrix3x2.Identity with {
+                M22 = -1
+            };
         public void Draw(DrawingHandleWorld handle){
+
             foreach (var particle in _particles)
             {
                 if(particle.active){
-                    handle.SetTransform(particle.transform);
-                    handle.DrawTexture(particle.texture!, new Vector2(particle.position.X, particle.position.Y), particle.color);
+                    handle.SetTransform(FlipMatrix * particle.transform);
+                    handle.DrawTextureRect(particle.texture!, new Box2(particle.position.Xy, particle.position.Xy+particle.texture!.Size), particle.color);
                 }
             }
         }
@@ -191,10 +198,10 @@ namespace Robust.Client.Graphics
 
     internal sealed class Particle {
         public Texture? texture;
-        public Vector3 position;
-        public Vector3 velocity;
+        public Robust.Shared.Maths.Vector3 position;
+        public Robust.Shared.Maths.Vector3 velocity;
         public Matrix3x2 transform;
-        public Color color;
+        public System.Drawing.Color color;
         public float lifetime;
         public float lifespan;
         public float fadein;

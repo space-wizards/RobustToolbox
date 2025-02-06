@@ -1,5 +1,6 @@
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
+using Robust.Client.ResourceManagement;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
@@ -15,6 +16,7 @@ namespace Robust.Client.GameObjects
     public sealed class ClientParticlesSystem : SharedParticlesSystem
     {
         [Dependency] private readonly ParticlesManager _particlesManager = default!;
+        [Dependency] private readonly IResourceCache _resourceCache = default!;
 
 
         public override void Initialize() {
@@ -29,15 +31,19 @@ namespace Robust.Client.GameObjects
         {
             //do a lookup for some yaml thing or some such based on particle type
             ParticleSystemArgs particleSystemArgs = new(
-                () => Texture.White,
-                new Vector2(200,200),
+                () => _resourceCache.GetResource<TextureResource>("/OpenDream/Logo/logo.png"),
+                new Shared.Maths.Vector2i(200,200),
                 100,
                 10.0f
                 );
-            particleSystemArgs.Acceleration = (float lifetime) => new Vector3(lifetime);
-            particleSystemArgs.SpawnPosition = () => new Vector3(new Random().NextFloat()*200, 0, 0);
-            particleSystemArgs.Color = (float lifetime) => Color.FromArgb(255,255,(byte)((lifetime/3.0)*255),0);
-            particleSystemArgs.ParticleCount=1000;
+            particleSystemArgs.Acceleration = (float lifetime) => new Robust.Shared.Maths.Vector3(0f,-1f,0f);
+            particleSystemArgs.SpawnPosition = () => new Robust.Shared.Maths.Vector3(100, 0, 0);
+            particleSystemArgs.SpawnVelocity = () => new Robust.Shared.Maths.Vector3((new Random().NextFloat()*500)-250,new Random().NextFloat()*205,0);
+            particleSystemArgs.Color = (float lifetime) => Color.FromArgb(255,255,255,(byte)((lifetime/3.0)*255));
+            particleSystemArgs.Transform = (float lifetime) => new Matrix3x2(0.25f,0,
+                                                                             0,0.25f,
+                                                                             40,80);
+            particleSystemArgs.ParticleCount=100;
 
             component.particlesSystem = _particlesManager.CreateParticleSystem(uid, particleSystemArgs);
 

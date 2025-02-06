@@ -81,7 +81,7 @@ namespace Robust.Client.Prototypes
 
             _reloadQueue.Clear();
 
-            Logger.Info($"Reloaded prototypes in {sw.ElapsedMilliseconds} ms");
+            Sawmill.Info($"Reloaded prototypes in {sw.ElapsedMilliseconds} ms");
 #endif
         }
 
@@ -139,7 +139,7 @@ namespace Robust.Client.Prototypes
                 }
                 catch (IOException ex)
                 {
-                    Logger.Error($"Watching resources in path {path} threw an exception:\n{ex}");
+                    Sawmill.Error($"Watching resources in path {path} threw an exception:\n{ex}");
                 }
             }
 #endif

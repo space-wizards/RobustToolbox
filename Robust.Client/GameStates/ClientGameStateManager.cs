@@ -698,8 +698,9 @@ namespace Robust.Client.GameStates
 
 #if !EXCEPTION_TOLERANCE
                     throw new KeyNotFoundException();
-#endif
+#else
                     continue;
+#endif
                 }
 
                 var compData = _compDataPool.Get();
@@ -960,8 +961,9 @@ namespace Robust.Client.GameStates
                 RequestFullState();
 #if !EXCEPTION_TOLERANCE
                 throw;
-#endif
+#else
                 return;
+#endif
             }
 
             if (data.Created)
@@ -979,8 +981,9 @@ namespace Robust.Client.GameStates
                     RequestFullState();
 #if !EXCEPTION_TOLERANCE
                     throw;
-#endif
+#else
                     return;
+#endif
                 }
             }
 

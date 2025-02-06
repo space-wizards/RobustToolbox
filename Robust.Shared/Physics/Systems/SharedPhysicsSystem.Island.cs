@@ -378,17 +378,17 @@ public abstract partial class SharedPhysicsSystem
 
                     contacts.Add(contact);
                     contact.Flags |= ContactFlags.Island;
-                    var bodyA = contact.BodyA!;
-                    var bodyB = contact.BodyB!;
+                    var bodyA = new Entity<PhysicsComponent>(contact.EntityA, contact.BodyA!);
+                    var bodyB = new Entity<PhysicsComponent>(contact.EntityB, contact.BodyB!);
 
-                    var other = bodyA == body ? bodyB : bodyA;
+                    var other = bodyA.Comp == body ? bodyB : bodyA;
 
                     // Was the other body already added to this island?
-                    if (other.Island)
+                    if (other.Comp.Island)
                         continue;
 
-                    _bodyStack.Push(bodyEnt);
-                    other.Island = true;
+                    _bodyStack.Push(other);
+                    other.Comp.Island = true;
                 }
 
                 // Handle joints

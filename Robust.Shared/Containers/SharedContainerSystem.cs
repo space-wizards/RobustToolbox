@@ -279,16 +279,6 @@ namespace Robust.Shared.Containers
 
         #region Container Helpers
 
-        [Obsolete("Use Entity<T> variant")]
-        public bool TryGetContainingContainer(
-            EntityUid uid,
-            [NotNullWhen(true)] out BaseContainer? container,
-            MetaDataComponent? meta = null,
-            TransformComponent? transform = null)
-        {
-            return TryGetContainingContainer((uid, transform, meta), out container);
-        }
-
         public bool TryGetContainingContainer(
             Entity<TransformComponent?, MetaDataComponent?> ent,
             [NotNullWhen(true)] out BaseContainer? container)

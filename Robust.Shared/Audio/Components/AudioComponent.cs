@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Robust.Shared.Audio.Effects;
+using Robust.Shared.Audio.Mixers;
 using Robust.Shared.Audio.Sources;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.GameObjects;
@@ -17,7 +18,7 @@ namespace Robust.Shared.Audio.Components;
 /// Stores the audio data for an audio entity.
 /// </summary>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState(true, fieldDeltas: true), Access(typeof(SharedAudioSystem))]
-public sealed partial class AudioComponent : Component, IAudioSource
+public sealed partial class AudioComponent : Component, IMixableAudioSource
 {
     [AutoNetworkedField, DataField, Access(Other = AccessPermissions.ReadWriteExecute)]
     public AudioFlags Flags = AudioFlags.None;
@@ -70,13 +71,19 @@ public sealed partial class AudioComponent : Component, IAudioSource
     /// Audio source that interacts with OpenAL.
     /// </summary>
     [ViewVariables(VVAccess.ReadOnly)]
-    internal IAudioSource Source = new DummyAudioSource();
+    internal IMixableAudioSource Source = DummyMixableAudioSource.Instance;
 
     /// <summary>
     /// Auxiliary entity to pass audio to.
     /// </summary>
     [DataField, AutoNetworkedField]
     public EntityUid? Auxiliary;
+
+    /// <summary>
+    /// Audio mixer entity to pass audio to.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public EntityUid? Mixer;
 
     /*
      * Values for IAudioSource stored on the component and sent to IAudioSource as applicable.
@@ -245,6 +252,11 @@ public sealed partial class AudioComponent : Component, IAudioSource
     void IAudioSource.SetAuxiliary(IAuxiliaryAudio? audio)
     {
         Source.SetAuxiliary(audio);
+    }
+
+    void IMixableAudioSource.SetMixer(IAudioMixer? mixer)
+    {
+        Source.SetMixer(mixer);
     }
 
     #endregion

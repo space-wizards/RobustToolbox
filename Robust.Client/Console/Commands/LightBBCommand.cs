@@ -2,6 +2,7 @@
 using Robust.Client.GameObjects;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 
 namespace Robust.Client.Console.Commands
 {
@@ -11,7 +12,9 @@ namespace Robust.Client.Console.Commands
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            EntitySystem.Get<DebugLightTreeSystem>().Enabled ^= true;
+            IoCManager.Resolve<IEntitySystemManager>()
+                .GetEntitySystem<DebugLightTreeSystem>()
+                .Enabled ^= true;
         }
     }
 }

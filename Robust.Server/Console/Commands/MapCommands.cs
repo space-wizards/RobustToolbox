@@ -195,7 +195,8 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            if (_map.IsMapInitialized(mapId) &&
+            var _mapSystem = _system.GetEntitySystem<SharedMapSystem>();
+            if (_mapSystem.IsInitialized(mapId) &&
                 ( args.Length < 3  || !bool.TryParse(args[2], out var force) || !force))
             {
                 shell.WriteError(Loc.GetString("cmd-savemap-init-warning"));

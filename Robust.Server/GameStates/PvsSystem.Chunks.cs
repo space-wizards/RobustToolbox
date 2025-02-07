@@ -71,7 +71,7 @@ internal sealed partial class PvsSystem
 
         var xform = Transform(chunk.Root);
         DebugTools.AssertEqual(chunk.Map.Owner, xform.MapUid);
-        chunk.InvWorldMatrix = xform.InvLocalMatrix;
+        chunk.InvWorldMatrix = _transform.GetInvLocalMatrix(xform);
         var worldPos = Vector2.Transform(chunk.Centre, _transform.GetLocalMatrix(xform));
         chunk.Position = new(worldPos, xform.MapID);
         chunk.UpdateQueued = false;

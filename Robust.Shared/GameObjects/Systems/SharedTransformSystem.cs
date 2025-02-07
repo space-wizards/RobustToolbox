@@ -140,7 +140,7 @@ namespace Robust.Shared.GameObjects
 
             return xform.GridUid == null
                 ? new EntityCoordinates(xform.MapUid ?? xform.ParentUid, worldPos)
-                : new EntityCoordinates(xform.GridUid.Value, Vector2.Transform(worldPos, XformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix));
+                : new EntityCoordinates(xform.GridUid.Value, Vector2.Transform(worldPos, GetInvLocalMatrix(xform.GridUid.Value)));
         }
 
         public EntityCoordinates GetMoverCoordinates(EntityCoordinates coordinates, EntityQuery<TransformComponent> xformQuery)
@@ -181,7 +181,7 @@ namespace Robust.Shared.GameObjects
 
             return parentXform.GridUid == null
                 ? new EntityCoordinates(mapId ?? parentUid, worldPos)
-                : new EntityCoordinates(parentXform.GridUid.Value, Vector2.Transform(worldPos, XformQuery.GetComponent(parentXform.GridUid.Value).InvLocalMatrix));
+                : new EntityCoordinates(parentXform.GridUid.Value, Vector2.Transform(worldPos, GetInvLocalMatrix(parentXform.GridUid.Value)));
         }
 
         /// <summary>
@@ -207,7 +207,7 @@ namespace Robust.Shared.GameObjects
 
             var coords = xform.GridUid == null
                 ? new EntityCoordinates(xform.MapUid ?? xform.ParentUid, pos)
-                : new EntityCoordinates(xform.GridUid.Value, Vector2.Transform(pos, XformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix));
+                : new EntityCoordinates(xform.GridUid.Value, Vector2.Transform(pos, GetInvLocalMatrix(xform.GridUid.Value)));
 
             return (coords, worldRot);
         }

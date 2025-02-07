@@ -1181,7 +1181,7 @@ public abstract partial class SharedTransformSystem
         if (component.GridUid != uid && _mapManager.TryFindGridAt(component.MapUid.Value, worldPos, out var targetGrid, out _))
         {
             var targetGridXform = XformQuery.GetComponent(targetGrid);
-            var invLocalMatrix = targetGridXform.InvLocalMatrix;
+            var invLocalMatrix = GetInvLocalMatrix(targetGridXform);
             var gridRot = targetGridXform.LocalRotation;
             var localRot = worldRot - gridRot;
             SetCoordinates(uid, component, new EntityCoordinates(targetGrid, Vector2.Transform(worldPos, invLocalMatrix)), rotation: localRot);

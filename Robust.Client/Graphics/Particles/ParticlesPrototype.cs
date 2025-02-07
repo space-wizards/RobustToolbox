@@ -15,6 +15,7 @@ using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using YamlDotNet.RepresentationModel;
+using YamlDotNet.Serialization;
 using Vector3 = Robust.Shared.Maths.Vector3;
 using Vector4 = Robust.Shared.Maths.Vector4;
 
@@ -45,37 +46,37 @@ namespace Robust.Client.Graphics
         public List<ResPath> TextureList { get; private set; } = default!;
 
         [DataField("lifespan", required: false)]
-        public GeneratorFloatPrototype Lifespan { get; private set; } = default!;
+        public GeneratorFloat Lifespan { get; private set; } = default!;
 
         [DataField("fadein", required: false)]
-        public GeneratorFloatPrototype FadeIn { get; private set; } = default!;
+        public GeneratorFloat FadeIn { get; private set; } = default!;
 
         [DataField("fadeout", required: false)]
-        public GeneratorFloatPrototype FadeOut { get; private set; } = default!;
+        public GeneratorFloat FadeOut { get; private set; } = default!;
 
         [DataField("color", required: false)]
         public List<string> ColorList { get; private set; } = default!;
 
         [DataField("spawn_position", required: false)]
-        public GeneratorVector3Prototype SpawnPosition { get; private set; } = default!;
+        public GeneratorVector3 SpawnPosition { get; private set; } = default!;
 
         [DataField("spawn_velocity", required: false)]
-        public GeneratorVector3Prototype SpawnVelocity { get; private set; } = default!;
+        public GeneratorVector3 SpawnVelocity { get; private set; } = default!;
 
         [DataField("acceleration", required: false)]
-        public GeneratorVector3Prototype Acceleration { get; private set; } = default!;
+        public GeneratorVector3 Acceleration { get; private set; } = default!;
 
         [DataField("scale", required: false)]
-        public GeneratorVector2Prototype Scale { get; private set; } = default!;
+        public GeneratorVector2 Scale { get; private set; } = default!;
 
         [DataField("rotation", required: false)]
-        public GeneratorFloatPrototype Rotation { get; private set; } = default!;
+        public GeneratorFloat Rotation { get; private set; } = default!;
 
         [DataField("growth", required: false)]
-        public GeneratorVector2Prototype Growth { get; private set; } = default!;
+        public GeneratorVector2 Growth { get; private set; } = default!;
 
         [DataField("spin", required: false)]
-        public GeneratorFloatPrototype Spin { get; private set; } = default!;
+        public GeneratorFloat Spin { get; private set; } = default!;
 
         public ParticleSystemArgs GetParticleSystemArgs() {
             Func<Texture> textureFunc;
@@ -107,7 +108,8 @@ namespace Robust.Client.Graphics
         }
     }
 
-    public sealed partial class GeneratorFloatPrototype
+    [DataDefinition]
+    public sealed partial class GeneratorFloat
     {
         [DataField("type", required: true)]
         public string GeneratorType { get; private set; } = default!;
@@ -134,7 +136,8 @@ namespace Robust.Client.Graphics
         }
     }
 
-    public sealed partial class GeneratorVector2Prototype
+    [DataDefinition]
+    public sealed partial class GeneratorVector2
     {
         [DataField("type", required: true)]
         public string GeneratorType { get; private set; } = default!;
@@ -159,8 +162,8 @@ namespace Robust.Client.Graphics
         }
     }
 
-
-    public sealed partial class GeneratorVector3Prototype
+    [DataDefinition]
+    public sealed partial class GeneratorVector3
     {
         [DataField("type", required: true)]
         public string GeneratorType { get; private set; } = default!;

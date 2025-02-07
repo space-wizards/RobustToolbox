@@ -78,12 +78,12 @@ namespace Robust.Client.Graphics
         [DataField("spin", required: false)]
         public GeneratorFloat Spin { get; private set; } = default!;
 
-        public ParticleSystemArgs GetParticleSystemArgs() {
+        public ParticleSystemArgs GetParticleSystemArgs(IResourceCache resourceCache) {
             Func<Texture> textureFunc;
             if(TextureList is null || TextureList.Count == 0)
                 textureFunc = () => Texture.White;
             else
-                textureFunc = () => _resourceCache.GetResource<TextureResource>(TextureList[0]); //TODO
+                textureFunc = () => resourceCache.GetResource<TextureResource>(new Random().Pick(TextureList)); //TODO
 
             var result = new ParticleSystemArgs(textureFunc, new Vector2i(Width, Height), (uint)Count, Spawning);
             result.Lifespan = Lifespan.GetNext;

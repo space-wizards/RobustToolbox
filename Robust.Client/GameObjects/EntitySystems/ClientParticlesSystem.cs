@@ -37,7 +37,7 @@ namespace Robust.Client.GameObjects
             if(!string.IsNullOrEmpty(component.ParticleType)){
                 //do a lookup for YAML defined particles
                 ParticlesPrototype prototype = _prototypeManager.Index<ParticlesPrototype>(component.ParticleType);
-                particleSystemArgs = prototype.GetParticleSystemArgs();
+                particleSystemArgs = prototype.GetParticleSystemArgs(_resourceCache);
             }
             else
             {

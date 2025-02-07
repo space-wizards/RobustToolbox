@@ -326,7 +326,9 @@ namespace Robust.Shared.GameObjects
 
         public string GetDebugString()
         {
-            return $"pos/rot/wpos/wrot: {Coordinates}/{LocalRotation}/{WorldPosition}/{WorldRotation}";
+            var xformSys = _entMan.System<SharedTransformSystem>();
+            var (wpos, wrot) = xformSys.GetWorldPositionRotation(this);
+            return $"pos/rot/wpos/wrot: {Coordinates}/{LocalRotation}/{wpos}/{wrot}";
         }
     }
 

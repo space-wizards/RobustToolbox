@@ -201,7 +201,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         [Obsolete("Use TransformSystem.GetMapCoordinates")]
-        public MapCoordinates MapPosition => new(WorldPosition, MapID);
+        public MapCoordinates MapPosition => _entMan.System<SharedTransformSystem>().GetMapCoordinates(this);
 
         /// <summary>
         ///     Local offset of this entity relative to its parent

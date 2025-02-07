@@ -377,6 +377,34 @@ public abstract partial class SharedTransformSystem
 
     #endregion
 
+    #region Local Matrix
+
+    /// <summary>
+    /// Gets the matrix for translating from a entities reference frame to the reference frame of its parent.
+    /// </summary>
+    public Matrix3x2 GetLocalMatrix(TransformComponent transform)
+    {
+        return transform.LocalMatrix; // TODO: Reverse this relationship once existing uses are purged.
+    }
+
+    /// <summary>
+    /// Gets the matrix for translating from to a entities reference frame from the reference frame of its parent.
+    /// </summary>
+    public Matrix3x2 GetInvLocalMatrix(TransformComponent transform)
+    {
+        return transform.InvLocalMatrix; // TODO: Reverse this relationship once existing uses are purged.
+    }
+
+    /// <summary>
+    /// Recalculates the matrices for translating back and forth between an entities reference frame and its parent.
+    /// </summary>
+    public void RebuildMatrices(TransformComponent transform)
+    {
+        transform.RebuildMatrices(); // TODO: Reverse this relationship once existing uses are purged.
+    }
+
+    #endregion Local Matrix
+
     #region Local Position
 
     [Obsolete("use override with EntityUid")]

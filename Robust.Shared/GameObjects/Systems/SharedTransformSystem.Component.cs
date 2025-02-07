@@ -448,6 +448,34 @@ public abstract partial class SharedTransformSystem
 
     #region Local Rotation
 
+    /// <summary>
+    /// Enables or disables local rotation for a given entity.
+    /// When disabling local rotation for an entity this will also remove all extant local rotation.
+    /// </summary>
+    public void SetNoLocalRotation(Entity<TransformComponent> ent, bool value)
+    {
+        if (value == ent.Comp._noLocalRotation)
+            return;
+
+        if (value)
+            SetLocalRotationNoLerp(ent, Angle.Zero, ent.Comp);
+
+        ent.Comp._noLocalRotation = value;
+        Dirty(ent);
+    }
+
+    /// <summary>
+    /// Attempts to enable or disable local rotation for a given entity.
+    /// May fail if the entity doesn't have a transform.
+    /// </summary>
+    public void TrySetNoLocalRotation(Entity<TransformComponent?> ent, bool value)
+    {
+        if (!XformQuery.Resolve(ent, ref ent.Comp))
+            return;
+
+        SetNoLocalRotation((ent, ent.Comp), value);
+    }
+
     public void SetLocalRotationNoLerp(EntityUid uid, Angle value, TransformComponent? xform = null)
     {
         if (!XformQuery.Resolve(uid, ref xform))

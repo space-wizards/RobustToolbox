@@ -56,29 +56,15 @@ namespace Robust.Shared.GameObjects
         internal BroadphaseData? Broadphase;
 
         internal bool MatricesDirty = true;
-        private Matrix3x2 _localMatrix = Matrix3x2.Identity;
-        private Matrix3x2 _invLocalMatrix = Matrix3x2.Identity;
+        internal Matrix3x2 _localMatrix = Matrix3x2.Identity;
+        internal Matrix3x2 _invLocalMatrix = Matrix3x2.Identity;
 
         // these should just be system methods, but existing component functions like InvWorldMatrix still rely on
         // getting these so those have to be fully ECS-ed first.
-        public Matrix3x2 LocalMatrix
-        {
-            get
-            {
-                if (MatricesDirty)
-                    RebuildMatrices();
-                return _localMatrix;
-            }
-        }
-        public Matrix3x2 InvLocalMatrix
-        {
-            get
-            {
-                if (MatricesDirty)
-                    RebuildMatrices();
-                return _invLocalMatrix;
-            }
-        }
+        [Obsolete("TransformComponent.LocalMatrix is obsolete, please use SharedTransformSystem.GetLocalMatrix")]
+        public Matrix3x2 LocalMatrix => _entMan.System<SharedTransformSystem>().GetLocalMatrix(this);
+        [Obsolete("TransformComponent.InvLocalMatrix is obsolete, please use SharedTransformSystem.GetInvLocalMatrix")]
+        public Matrix3x2 InvLocalMatrix => _entMan.System<SharedTransformSystem>().GetInvLocalMatrix(this);
 
         // used for lerping
 
@@ -536,16 +522,7 @@ namespace Robust.Shared.GameObjects
 
         public void RebuildMatrices()
         {
-            MatricesDirty = false;
-
-            if (!_parent.IsValid()) // Root Node
-            {
-                _localMatrix = Matrix3x2.Identity;
-                _invLocalMatrix = Matrix3x2.Identity;
-            }
-
-            _localMatrix = Matrix3Helpers.CreateTransform(_localPosition, _localRotation);
-            _invLocalMatrix = Matrix3Helpers.CreateInverseTransform(_localPosition, _localRotation);
+            _entMan.System<SharedTransformSystem>().RebuildMatrices(this);
         }
 
         public string GetDebugString()

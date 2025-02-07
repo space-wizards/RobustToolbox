@@ -384,7 +384,10 @@ public abstract partial class SharedTransformSystem
     /// </summary>
     public Matrix3x2 GetLocalMatrix(TransformComponent transform)
     {
-        return transform.LocalMatrix; // TODO: Reverse this relationship once existing uses are purged.
+        if (transform.MatricesDirty)
+            RebuildMatrices(transform);
+
+        return transform._localMatrix;
     }
 
     /// <inheritdoc cref="GetLocalMatrix"/>
@@ -398,7 +401,10 @@ public abstract partial class SharedTransformSystem
     /// </summary>
     public Matrix3x2 GetInvLocalMatrix(TransformComponent transform)
     {
-        return transform.InvLocalMatrix; // TODO: Reverse this relationship once existing uses are purged.
+        if (transform.MatricesDirty)
+            RebuildMatrices(transform);
+
+        return transform._invLocalMatrix;
     }
 
     /// <inheritdoc cref="GetInvLocalMatrix"/>
@@ -412,7 +418,16 @@ public abstract partial class SharedTransformSystem
     /// </summary>
     public void RebuildMatrices(TransformComponent transform)
     {
-        transform.RebuildMatrices(); // TODO: Reverse this relationship once existing uses are purged.
+        transform.MatricesDirty = false;
+
+        if (!transform._parent.IsValid()) // Root Node
+        {
+            transform._localMatrix = Matrix3x2.Identity;
+            transform._invLocalMatrix = Matrix3x2.Identity;
+        }
+
+        transform._localMatrix = Matrix3Helpers.CreateTransform(transform._localPosition, transform._localRotation);
+        transform._invLocalMatrix = Matrix3Helpers.CreateInverseTransform(transform._localPosition, transform._localRotation);
     }
 
     #endregion Local Matrix

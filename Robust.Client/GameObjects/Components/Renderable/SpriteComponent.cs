@@ -1405,7 +1405,7 @@ namespace Robust.Client.GameObjects
             builder.AppendFormat(
                 "vis/depth/scl/rot/ofs/col/norot/override/dir: {0}/{1}/{2}/{3}/{4}/{5}/{6}/{8}/{7}\n",
                 Visible, DrawDepth, Scale, Rotation, Offset,
-                Color, NoRotation, entities.GetComponent<TransformComponent>(Owner).WorldRotation.ToRsiDirection(RsiDirectionType.Dir8),
+                Color, NoRotation, entities.System<SharedTransformSystem>().GetWorldRotation(Owner).ToRsiDirection(RsiDirectionType.Dir8),
                 DirectionOverride
             );
 

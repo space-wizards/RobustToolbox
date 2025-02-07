@@ -122,7 +122,7 @@ namespace Robust.Client.Placement
                 if (!coordinate.IsValid(pManager.EntityManager))
                     return; // Just some paranoia just in case
                 var worldPos = coordinate.ToMapPos(pManager.EntityManager, transformSys);
-                var worldRot = pManager.EntityManager.GetComponent<TransformComponent>(coordinate.EntityId).WorldRotation + dirAng;
+                var worldRot = transformSys.GetWorldRotation(coordinate.EntityId) + dirAng;
 
                 sprite.Color = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
                 var rot = args.Viewport.Eye?.Rotation ?? default;

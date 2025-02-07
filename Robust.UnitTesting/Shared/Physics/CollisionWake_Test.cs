@@ -47,8 +47,10 @@ namespace Robust.UnitTesting.Shared.Physics
 
             Entity<MapGridComponent> grid = default!;
             MapId mapId = default!;
+            EntityUid entityOne = default!;
             PhysicsComponent entityOnePhysics = default!;
             TransformComponent xform = default!;
+            EntityUid entityTwo = default!;
             PhysicsComponent entityTwoPhysics = default!;
 
             await server.WaitPost(() =>
@@ -57,13 +59,13 @@ namespace Robust.UnitTesting.Shared.Physics
                 grid = mapManager.CreateGridEntity(mapId);
                 mapSystem.SetTile(grid, Vector2i.Zero, new Tile(1));
 
-                var entityOne = entManager.SpawnEntity("CollisionWakeTestItem", new MapCoordinates(Vector2.One * 2f, mapId));
+                entityOne = entManager.SpawnEntity("CollisionWakeTestItem", new MapCoordinates(Vector2.One * 2f, mapId));
                 entityOnePhysics = entManager.GetComponent<PhysicsComponent>(entityOne);
                 xform = entManager.GetComponent<TransformComponent>(entityOne);
                 mapSystem.TryGetMap(mapId, out var mapUid);
                 Assert.That(xform.ParentUid == mapUid);
 
-                var entityTwo = entManager.SpawnEntity("CollisionWakeTestItem", new EntityCoordinates(grid, new Vector2(0.5f, 0.5f)));
+                entityTwo = entManager.SpawnEntity("CollisionWakeTestItem", new EntityCoordinates(grid, new Vector2(0.5f, 0.5f)));
                 entityTwoPhysics = entManager.GetComponent<PhysicsComponent>(entityTwo);
                 Assert.That(entManager.GetComponent<TransformComponent>(entityTwo).ParentUid == grid.Owner);
 
@@ -77,7 +79,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 Assert.That(entityOnePhysics.Awake, Is.EqualTo(false));
                 Assert.That(entityOnePhysics.CanCollide, Is.EqualTo(true));
 
-                xform.LocalPosition = new Vector2(0.5f, 0.5f);
+                transformSystem.SetLocalPositionNoLerp(entityOne, new Vector2(0.5f, 0.5f), xform);
                 xform.AttachParent(grid);
 
                 // Entity 2 should immediately not be collidable on spawn
@@ -92,7 +94,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 Assert.That(entityOnePhysics.Awake, Is.EqualTo(false));
                 Assert.That(entityOnePhysics.CanCollide, Is.EqualTo(false));
 
-                xform.LocalPosition = Vector2.One * 2f;
+                transformSystem.SetLocalPositionNoLerp(entityOne, Vector2.One * 2f, xform);
                 xform.AttachParent(mapManager.GetMapEntityId(mapId));
             });
 

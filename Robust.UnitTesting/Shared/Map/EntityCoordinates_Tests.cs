@@ -99,8 +99,9 @@ namespace Robust.UnitTesting.Shared.Map
             var entMan = IoCManager.Resolve<IEntityManager>();
             var uid = entMan.SpawnEntity(null, MapCoordinates.Nullspace);
             var xform = entMan.GetComponent<TransformComponent>(uid);
+            var xformSys = entMan.System<SharedTransformSystem>();
             Assert.That(xform.Coordinates.Position, Is.EqualTo(Vector2.Zero));
-            xform.LocalPosition = Vector2.One;
+            xformSys.SetLocalPositionNoLerp(uid, Vector2.One, xform);
             Assert.That(xform.Coordinates.Position, Is.EqualTo(Vector2.Zero));
         }
 
@@ -249,7 +250,8 @@ namespace Robust.UnitTesting.Shared.Map
 
             Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEnt).Coordinates.ToMap(entityManager, transformSystem), Is.EqualTo(new MapCoordinates(entPos, mapId)));
 
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(gridEnt).LocalPosition += gridPos;
+            var gridXform = entityManager.GetComponent<TransformComponent>(gridEnt);
+            transformSystem.SetLocalPositionNoLerp(gridEnt, gridXform.LocalPosition + gridPos, gridXform);
 
             Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEnt).Coordinates.ToMap(entityManager, transformSystem), Is.EqualTo(new MapCoordinates(entPos + gridPos, mapId)));
         }
@@ -259,6 +261,7 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
             var mapManager = IoCManager.Resolve<IMapManager>();
+            var xformSystem = entityManager.System<SharedTransformSystem>();
 
             var mapEnt = entityManager.System<SharedMapSystem>().CreateMap(out var mapId);
             var grid = mapManager.CreateGridEntity(mapId);
@@ -267,12 +270,18 @@ namespace Robust.UnitTesting.Shared.Map
 
             Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEnt).Coordinates.WithEntityId(mapEnt).Position, Is.EqualTo(Vector2.Zero));
 
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEnt).LocalPosition = Vector2.One;
+            {
+                var xform = entityManager.GetComponent<TransformComponent>(newEnt);
+                xformSystem.SetLocalPositionNoLerp(newEnt, Vector2.One, xform);
+            }
 
             Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEnt).Coordinates.Position, Is.EqualTo(Vector2.One));
             Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEnt).Coordinates.WithEntityId(mapEnt).Position, Is.EqualTo(Vector2.One));
 
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(gridEnt).LocalPosition = Vector2.One;
+            {
+                var xform = entityManager.GetComponent<TransformComponent>(gridEnt);
+                xformSystem.SetLocalPositionNoLerp(gridEnt, Vector2.One, xform);
+            }
 
             Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEnt).Coordinates.Position, Is.EqualTo(Vector2.One));
             Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEnt).Coordinates.WithEntityId(mapEnt).Position, Is.EqualTo(new Vector2(2, 2)));
@@ -283,7 +292,10 @@ namespace Robust.UnitTesting.Shared.Map
             Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEntTwo).Coordinates.WithEntityId(mapEnt).Position, Is.EqualTo(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEnt).Coordinates.WithEntityId(mapEnt).Position));
             Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEntTwo).Coordinates.WithEntityId(gridEnt).Position, Is.EqualTo(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEnt).Coordinates.Position));
 
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEntTwo).LocalPosition = -Vector2.One;
+            {
+                var xform = entityManager.GetComponent<TransformComponent>(newEntTwo);
+                xformSystem.SetLocalPositionNoLerp(newEntTwo, -Vector2.One, xform);
+            }
 
             Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEntTwo).Coordinates.Position, Is.EqualTo(-Vector2.One));
             Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEntTwo).Coordinates.WithEntityId(mapEnt).Position, Is.EqualTo(Vector2.One));

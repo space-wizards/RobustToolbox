@@ -169,6 +169,7 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
             var mapManager = IoCManager.Resolve<IMapManager>();
+            var xformSystem = entityManager.System<SharedTransformSystem>();
 
             var mapEnt = entityManager.System<SharedMapSystem>().CreateMap(out var mapId);
             var grid = mapManager.CreateGridEntity(mapId);
@@ -180,7 +181,7 @@ namespace Robust.UnitTesting.Shared.Map
             Assert.That(entityManager.GetComponent<TransformComponent>(newEnt).Coordinates.EntityId, Is.EqualTo(gridEnt));
 
             // Reparenting the entity should return correct results.
-            entityManager.GetComponent<TransformComponent>(newEnt).AttachParent(mapEnt);
+            xformSystem.SetParent(newEnt, mapEnt);
 
             Assert.That(entityManager.GetComponent<TransformComponent>(newEnt).Coordinates.EntityId, Is.EqualTo(mapEnt));
         }
@@ -190,6 +191,7 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
             var mapManager = IoCManager.Resolve<IMapManager>();
+            var xformSystem = entityManager.System<SharedTransformSystem>();
 
             var mapEnt = entityManager.System<SharedMapSystem>().CreateMap(out var mapId);
             var grid = mapManager.CreateGridEntity(mapId);
@@ -210,7 +212,7 @@ namespace Robust.UnitTesting.Shared.Map
             Assert.That(newEntCoords.EntityId, Is.EqualTo(gridEnt));
 
             // Reparenting the entity should return correct results.
-            newEntTransform.AttachParent(mapEnt);
+            xformSystem.SetParent(newEnt, newEntTransform, mapEnt);
             var newEntCoords2 = newEntTransform.Coordinates;
 
             Assert.That(newEntCoords2.IsValid(entityManager), Is.EqualTo(true));

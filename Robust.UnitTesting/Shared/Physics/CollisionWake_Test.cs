@@ -80,7 +80,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 Assert.That(entityOnePhysics.CanCollide, Is.EqualTo(true));
 
                 transformSystem.SetLocalPositionNoLerp(entityOne, new Vector2(0.5f, 0.5f), xform);
-                xform.AttachParent(grid);
+                transformSystem.SetParent(entityOne, xform, grid);
 
                 // Entity 2 should immediately not be collidable on spawn
                 Assert.That(entityTwoPhysics.Awake, Is.EqualTo(false));
@@ -95,7 +95,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 Assert.That(entityOnePhysics.CanCollide, Is.EqualTo(false));
 
                 transformSystem.SetLocalPositionNoLerp(entityOne, Vector2.One * 2f, xform);
-                xform.AttachParent(mapManager.GetMapEntityId(mapId));
+                transformSystem.SetParent(entityOne, xform, mapManager.GetMapEntityId(mapId));
             });
 
             // Juussttt in case we'll re-parent it to the map and check its collision is back on.

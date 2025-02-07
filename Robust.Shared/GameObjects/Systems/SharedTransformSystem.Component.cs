@@ -387,12 +387,24 @@ public abstract partial class SharedTransformSystem
         return transform.LocalMatrix; // TODO: Reverse this relationship once existing uses are purged.
     }
 
+    /// <inheritdoc cref="GetLocalMatrix"/>
+    public Matrix3x2 GetLocalMatrix(EntityUid uid)
+    {
+        return GetLocalMatrix(XformQuery.GetComponent(uid));
+    }
+
     /// <summary>
     /// Gets the matrix for translating from to a entities reference frame from the reference frame of its parent.
     /// </summary>
     public Matrix3x2 GetInvLocalMatrix(TransformComponent transform)
     {
         return transform.InvLocalMatrix; // TODO: Reverse this relationship once existing uses are purged.
+    }
+
+    /// <inheritdoc cref="GetInvLocalMatrix"/>
+    public Matrix3x2 GetInvLocalMatrix(EntityUid uid)
+    {
+        return GetInvLocalMatrix(XformQuery.GetComponent(uid)); // TODO: Reverse this relationship once existing uses are purged.
     }
 
     /// <summary>

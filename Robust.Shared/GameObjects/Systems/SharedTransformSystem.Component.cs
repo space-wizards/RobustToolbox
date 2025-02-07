@@ -454,9 +454,24 @@ public abstract partial class SharedTransformSystem
         if (!XformQuery.Resolve(uid, ref xform))
             return;
 
-#pragma warning disable CS0618
-        xform.LocalPosition = value;
-#pragma warning restore CS0618
+        if(xform.Anchored)
+            return;
+
+        var oldPos = xform._localPosition;
+        if (oldPos.EqualsApprox(value))
+            return;
+
+        xform._localPosition = value;
+
+        var meta = MetaData(uid);
+        Dirty(uid, xform, meta);
+
+        xform.MatricesDirty = true;
+
+        if (!xform.Initialized)
+            return;
+
+        RaiseMoveEvent((uid, xform, meta), xform._parent, oldPos, xform._localRotation, xform.MapUid);
     }
 
     #endregion

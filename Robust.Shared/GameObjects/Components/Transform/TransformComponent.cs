@@ -297,28 +297,8 @@ namespace Robust.Shared.GameObjects
         public Vector2 LocalPosition
         {
             get => _localPosition;
-            [Obsolete("Use the system method instead")]
-            set
-            {
-                if(Anchored)
-                    return;
-
-                if (_localPosition.EqualsApprox(value))
-                    return;
-
-                var oldParent = _parent;
-                var oldPos = _localPosition;
-
-                _localPosition = value;
-                var meta = _entMan.GetComponent<MetaDataComponent>(Owner);
-                _entMan.Dirty(Owner, this, meta);
-                MatricesDirty = true;
-
-                if (!Initialized)
-                    return;
-
-                _entMan.System<SharedTransformSystem>().RaiseMoveEvent((Owner, this, meta), oldParent, oldPos, _localRotation, MapUid);
-            }
+            [Obsolete("TransformComponent.LocalPosition setter is obsolete, please use SharedTransformSystem.SetLocalPositionNoLerp")]
+            set { _entMan.System<SharedTransformSystem>().SetLocalPositionNoLerp(Owner, value, this); }
         }
 
         /// <summary>

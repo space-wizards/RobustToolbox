@@ -1,0 +1,187 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Numerics;
+using System.Runtime.Serialization;
+using Robust.Client.ResourceManagement;
+using Robust.Shared.IoC;
+using Robust.Shared.Log;
+using Robust.Shared.Maths;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Random;
+using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
+using YamlDotNet.RepresentationModel;
+using Vector3 = Robust.Shared.Maths.Vector3;
+using Vector4 = Robust.Shared.Maths.Vector4;
+
+namespace Robust.Client.Graphics
+{
+    [Prototype("particles")]
+    public sealed partial class ParticlesPrototype : IPrototype, ISerializationHooks
+    {
+        [Dependency] private readonly IResourceCache _resourceCache = default!;
+
+        [ViewVariables]
+        [IdDataField]
+        public string ID { get; private set; } = default!;
+
+        [DataField("width", required: true)]
+        public int Width { get; private set; } = default!;
+
+        [DataField("height", required: true)]
+        public int Height { get; private set; } = default!;
+
+        [DataField("count", required: true)]
+        public int Count { get; private set; } = default!;
+
+        [DataField("spawning", required: true)]
+        public int Spawning { get; private set; } = default!;
+
+        [DataField("texture", required: false)]
+        public List<ResPath> TextureList { get; private set; } = default!;
+
+        [DataField("lifespan", required: false)]
+        public GeneratorFloatPrototype Lifespan { get; private set; } = default!;
+
+        [DataField("fadein", required: false)]
+        public GeneratorFloatPrototype FadeIn { get; private set; } = default!;
+
+        [DataField("fadeout", required: false)]
+        public GeneratorFloatPrototype FadeOut { get; private set; } = default!;
+
+        [DataField("color", required: false)]
+        public List<string> ColorList { get; private set; } = default!;
+
+        [DataField("spawn_position", required: false)]
+        public GeneratorVector3Prototype SpawnPosition { get; private set; } = default!;
+
+        [DataField("spawn_velocity", required: false)]
+        public GeneratorVector3Prototype SpawnVelocity { get; private set; } = default!;
+
+        [DataField("acceleration", required: false)]
+        public GeneratorVector3Prototype Acceleration { get; private set; } = default!;
+
+        [DataField("scale", required: false)]
+        public GeneratorVector2Prototype Scale { get; private set; } = default!;
+
+        [DataField("rotation", required: false)]
+        public GeneratorFloatPrototype Rotation { get; private set; } = default!;
+
+        [DataField("growth", required: false)]
+        public GeneratorVector2Prototype Growth { get; private set; } = default!;
+
+        [DataField("spin", required: false)]
+        public GeneratorFloatPrototype Spin { get; private set; } = default!;
+
+        public ParticleSystemArgs GetParticleSystemArgs() {
+            Func<Texture> textureFunc;
+            if(TextureList is null || TextureList.Count == 0)
+                textureFunc = () => Texture.White;
+            else
+                textureFunc = () => _resourceCache.GetResource<TextureResource>(TextureList[0]); //TODO
+
+            var result = new ParticleSystemArgs(textureFunc, new Vector2i(Width, Height), (uint)Count, Spawning);
+            result.Lifespan = Lifespan.GetNext;
+            result.Fadein = FadeIn.GetNext;
+            result.Fadeout = FadeOut.GetNext;
+            result.Color = (float lifetime) => {
+                return (System.Drawing.Color)Color.FromHex(ColorList[0]); //TODO
+            };
+            result.Acceleration = (float lifetime) => Acceleration.GetNext();
+            result.SpawnPosition = SpawnPosition.GetNext;
+            result.SpawnVelocity = SpawnVelocity.GetNext;
+            result.Transform = (float lifetime) => {
+                var scale = Scale.GetNext();
+                var rotation = Rotation.GetNext();
+                var growth = Growth.GetNext();
+                var spin = Spin.GetNext();
+                return Matrix3x2.CreateScale(scale.X+growth.X, scale.Y+growth.Y) *
+                       Matrix3x2.CreateRotation(rotation + spin);
+            };
+
+            return result;
+        }
+    }
+
+    public sealed partial class GeneratorFloatPrototype
+    {
+        [DataField("type", required: true)]
+        public string GeneratorType { get; private set; } = default!;
+
+        [DataField("value", required: false)]
+        public float Value { get; private set; } = default!;
+        [DataField("low", required: false)]
+        public float Low { get; private set; } = default!;
+        [DataField("high", required: false)]
+        public float High { get; private set; } = default!;
+
+        private Random random = new();
+
+        public float GetNext() {
+            switch (GeneratorType) {
+                case "constant":
+                    return Value;
+                case "normal": //TODO
+                case "uniform":
+                    return random.NextFloat(Low,High);
+                default:
+                    throw new InvalidEnumArgumentException($"{GeneratorType} is not a valid generator type");
+            }
+        }
+    }
+
+    public sealed partial class GeneratorVector2Prototype
+    {
+        [DataField("type", required: true)]
+        public string GeneratorType { get; private set; } = default!;
+
+        [DataField("value", required: false)]
+        public Vector2 Value { get; private set; } = default!;
+        [DataField("low", required: false)]
+        public Vector2 Low { get; private set; } = default!;
+        [DataField("high", required: false)]
+        public Vector2 High { get; private set; } = default!;
+        private Random random = new();
+
+        public Vector2 GetNext() {
+            switch (GeneratorType) {
+                case "constant":
+                    return Value;
+                case "uniform":
+                    return new(random.NextFloat(Low.X,High.X), random.NextFloat(Low.Y,High.Y));
+                default:
+                    throw new InvalidEnumArgumentException($"{GeneratorType} is not a valid generator type");
+            }
+        }
+    }
+
+
+    public sealed partial class GeneratorVector3Prototype
+    {
+        [DataField("type", required: true)]
+        public string GeneratorType { get; private set; } = default!;
+
+        [DataField("value", required: false)]
+        public Vector3 Value { get; private set; } = default!;
+        [DataField("low", required: false)]
+        public Vector3 Low { get; private set; } = default!;
+        [DataField("high", required: false)]
+        public Vector3 High { get; private set; } = default!;
+        private Random random = new();
+
+        public Vector3 GetNext() {
+            switch (GeneratorType) {
+                case "constant":
+                    return Value;
+                case "uniform":
+                    return new(random.NextFloat(Low.X,High.X), random.NextFloat(Low.Y,High.Y), random.NextFloat(Low.Z,High.Z));
+                default:
+                    throw new InvalidEnumArgumentException($"{GeneratorType} is not a valid generator type");
+            }
+        }
+    }
+}

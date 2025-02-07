@@ -33,6 +33,7 @@ namespace Robust.Client.GameObjects
         private void HandleComponentAdd(EntityUid uid, ParticlesComponent component, ref ComponentAdd args)
         {
             ParticleSystemArgs particleSystemArgs;
+            component.ParticleType = "example";
             if(!string.IsNullOrEmpty(component.ParticleType)){
                 //do a lookup for YAML defined particles
                 ParticlesPrototype prototype = _prototypeManager.Index<ParticlesPrototype>(component.ParticleType);

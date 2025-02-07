@@ -143,19 +143,19 @@ namespace Robust.Client.Graphics
         public string GeneratorType { get; private set; } = default!;
 
         [DataField("value", required: false)]
-        public Vector2 Value { get; private set; } = default!;
+        public float[] Value { get; private set; } = default!;
         [DataField("low", required: false)]
-        public Vector2 Low { get; private set; } = default!;
+        public float[] Low { get; private set; } = default!;
         [DataField("high", required: false)]
-        public Vector2 High { get; private set; } = default!;
+        public float[] High { get; private set; } = default!;
         private Random random = new();
 
         public Vector2 GetNext() {
             switch (GeneratorType) {
                 case "constant":
-                    return Value;
+                    return new(Value[0], Value[1]);
                 case "uniform":
-                    return new(random.NextFloat(Low.X,High.X), random.NextFloat(Low.Y,High.Y));
+                    return new(random.NextFloat(Low[0],High[0]), random.NextFloat(Low[1],High[1]));
                 default:
                     throw new InvalidEnumArgumentException($"{GeneratorType} is not a valid generator type");
             }
@@ -169,19 +169,19 @@ namespace Robust.Client.Graphics
         public string GeneratorType { get; private set; } = default!;
 
         [DataField("value", required: false)]
-        public Vector3 Value { get; private set; } = default!;
+        public float[] Value { get; private set; } = default!;
         [DataField("low", required: false)]
-        public Vector3 Low { get; private set; } = default!;
+        public float[] Low { get; private set; } = default!;
         [DataField("high", required: false)]
-        public Vector3 High { get; private set; } = default!;
+        public float[] High { get; private set; } = default!;
         private Random random = new();
 
         public Vector3 GetNext() {
             switch (GeneratorType) {
                 case "constant":
-                    return Value;
+                    return new(Value[0],Value[1],Value[2]);
                 case "uniform":
-                    return new(random.NextFloat(Low.X,High.X), random.NextFloat(Low.Y,High.Y), random.NextFloat(Low.Z,High.Z));
+                    return new(random.NextFloat(Low[0],High[0]), random.NextFloat(Low[1],High[1]), random.NextFloat(Low[2],High[2]));
                 default:
                     throw new InvalidEnumArgumentException($"{GeneratorType} is not a valid generator type");
             }

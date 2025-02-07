@@ -846,9 +846,17 @@ public abstract partial class SharedTransformSystem
                     }
                 }
             }
-            else
+            else if (!xform.Initialized)
             {
-                xform.Anchored = newState.Anchored;
+                xform._anchored = newState.Anchored;
+            }
+            else if (newState.Anchored && !xform.Anchored && _mapManager.TryFindGridAt(GetMapCoordinates(xform), out var gridUid, out var grid))
+            {
+                AnchorEntity((uid, xform), (gridUid, grid));
+            }
+            else if (!newState.Anchored && xform.Anchored)
+            {
+                Unanchor(uid, xform);
             }
 
             if (oldAnchored != newState.Anchored && xform.Initialized)

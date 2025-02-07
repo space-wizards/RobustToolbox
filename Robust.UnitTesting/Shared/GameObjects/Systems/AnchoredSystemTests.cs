@@ -267,7 +267,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             sim.System<MoveEventTestSystem>().FailOnMove = true;
 
             // Act
-            sim.Transform(ent1).WorldPosition = new Vector2(99, 99);
+            xformSys.SetWorldPosition(ent1, new Vector2(99, 99));
             sim.Transform(ent1).LocalPosition = new Vector2(99, 99);
 
             Assert.That(xformSys.GetMapCoordinates(ent1), Is.EqualTo(coordinates));

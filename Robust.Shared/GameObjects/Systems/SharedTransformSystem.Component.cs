@@ -743,7 +743,26 @@ public abstract partial class SharedTransformSystem
 
         xform.MapUid = newUid;
         xform.MapID = newMapId;
-        xform.UpdateChildMapIdsRecursive(newMapId, newUid, mapPaused, XformQuery, _metaQuery, _metaData);
+        UpdateChildMapIdsRecursive(xform, newMapId, newUid, mapPaused);
+    }
+
+    internal void UpdateChildMapIdsRecursive(TransformComponent xform, MapId newMapId, EntityUid? newMapUid, bool mapPaused)
+    {
+        foreach (var child in xform._children)
+        {
+            //Set Paused state
+            var metaData = MetaData(child);
+            _metaData.SetEntityPaused(child, mapPaused, metaData);
+
+            var concrete = Transform(child);
+            concrete.MapUid = newMapUid;
+            concrete.MapID = newMapId;
+
+            if (concrete.ChildCount != 0)
+            {
+                UpdateChildMapIdsRecursive(concrete, newMapId, newMapUid, mapPaused);
+            }
+        }
     }
 
     #endregion

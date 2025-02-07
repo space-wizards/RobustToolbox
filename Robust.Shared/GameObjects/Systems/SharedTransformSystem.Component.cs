@@ -496,7 +496,24 @@ public abstract partial class SharedTransformSystem
         if (!XformQuery.Resolve(uid, ref xform))
             return;
 
-        xform.LocalRotation = value;
+        if(xform._noLocalRotation)
+            return;
+
+        var oldRotation = xform._localRotation;
+        if (oldRotation.EqualsApprox(value))
+            return;
+
+        xform._localRotation = value;
+
+        var meta = MetaData(uid);
+        Dirty(uid, xform, meta);
+
+        xform.MatricesDirty = true;
+
+        if (!xform.Initialized)
+            return;
+
+        RaiseMoveEvent((uid, xform, meta), xform._parent, xform._localPosition, oldRotation, xform.MapUid);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

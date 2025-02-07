@@ -115,17 +115,12 @@ namespace Robust.Shared.GameObjects
         ///     Disables or enables to ability to locally rotate the entity. When set it removes any local rotation.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
+
         public bool NoLocalRotation
         {
             get => _noLocalRotation;
-            set
-            {
-                if (value)
-                    LocalRotation = Angle.Zero;
-
-                _noLocalRotation = value;
-                _entMan.Dirty(Owner, this);
-            }
+            [Obsolete("TransformComponent.NoLocalRotation setter is obsolete, please use SharedTransformSystem.SetNoLocalRotation")]
+            set { _entMan.System<SharedTransformSystem>().SetNoLocalRotation((Owner, this), value); }
         }
 
         /// <summary>
@@ -136,25 +131,8 @@ namespace Robust.Shared.GameObjects
         public Angle LocalRotation
         {
             get => _localRotation;
-            set
-            {
-                if(_noLocalRotation)
-                    return;
-
-                if (_localRotation.EqualsApprox(value))
-                    return;
-
-                var oldRotation = _localRotation;
-                _localRotation = value;
-                var meta = _entMan.GetComponent<MetaDataComponent>(Owner);
-                _entMan.Dirty(Owner, this, meta);
-                MatricesDirty = true;
-
-                if (!Initialized)
-                    return;
-
-                _entMan.System<SharedTransformSystem>().RaiseMoveEvent((Owner, this, meta), _parent, _localPosition, oldRotation, MapUid);
-            }
+            [Obsolete("TransformComponent.LocalRotation setter is obsolete, please use SharedTransformSystem.SetLocalRotation")]
+            set { _entMan.System<SharedTransformSystem>().SetLocalRotationNoLerp(Owner, value, this); }
         }
 
         /// <summary>

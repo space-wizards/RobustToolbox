@@ -366,101 +366,44 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         [Obsolete("Use the system method instead")]
         public (Vector2 WorldPosition, Angle WorldRotation) GetWorldPositionRotation()
-        {
-            // Worldmatrix needs calculating anyway for worldpos so we'll just drop it.
-            var (worldPos, worldRot, _) = GetWorldPositionRotationMatrix();
-            return (worldPos, worldRot);
-        }
+            => _entMan.System<SharedTransformSystem>().GetWorldPositionRotation(this);
 
         /// <summary>
         /// Get the WorldPosition, WorldRotation, and WorldMatrix of this entity faster than each individually.
         /// </summary>
         [Obsolete("Use the system method instead")]
-        public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 WorldMatrix) GetWorldPositionRotationMatrix(EntityQuery<TransformComponent> xforms)
-        {
-            var parent = _parent;
-            var worldRot = _localRotation;
-            var worldMatrix = LocalMatrix;
-
-            // By doing these all at once we can elide multiple IsValid + GetComponent calls
-            while (parent.IsValid())
-            {
-                var xform = xforms.GetComponent(parent);
-                worldRot += xform.LocalRotation;
-                var parentMatrix = xform.LocalMatrix;
-                var result = Matrix3x2.Multiply(worldMatrix, parentMatrix);
-                worldMatrix = result;
-                parent = xform.ParentUid;
-            }
-
-            var worldPosition = worldMatrix.Translation;
-
-            return (worldPosition, worldRot, worldMatrix);
-        }
+        public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 WorldMatrix) GetWorldPositionRotationMatrix(EntityQuery<TransformComponent> _)
+            => _entMan.System<SharedTransformSystem>().GetWorldPositionRotationMatrix(this);
 
         /// <summary>
         /// Get the WorldPosition, WorldRotation, and WorldMatrix of this entity faster than each individually.
         /// </summary>
         [Obsolete("Use the system method instead")]
         public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 WorldMatrix) GetWorldPositionRotationMatrix()
-        {
-            var xforms = _entMan.GetEntityQuery<TransformComponent>();
-            return GetWorldPositionRotationMatrix(xforms);
-        }
+            => _entMan.System<SharedTransformSystem>().GetWorldPositionRotationMatrix(this);
 
         /// <summary>
         /// Get the WorldPosition, WorldRotation, and InvWorldMatrix of this entity faster than each individually.
         /// </summary>
         [Obsolete("Use the system method instead")]
-        public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 InvWorldMatrix) GetWorldPositionRotationInvMatrix(EntityQuery<TransformComponent> xformQuery)
-        {
-            var (worldPos, worldRot, _, invWorldMatrix) = GetWorldPositionRotationMatrixWithInv(xformQuery);
-            return (worldPos, worldRot, invWorldMatrix);
-        }
+        public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 InvWorldMatrix) GetWorldPositionRotationInvMatrix(EntityQuery<TransformComponent> _)
+            => _entMan.System<SharedTransformSystem>().GetWorldPositionRotationInvMatrix(this);
 
         /// <summary>
         /// Get the WorldPosition, WorldRotation, WorldMatrix, and InvWorldMatrix of this entity faster than each individually.
         /// </summary>
         [Obsolete("Use the system method instead")]
         public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 WorldMatrix, Matrix3x2 InvWorldMatrix) GetWorldPositionRotationMatrixWithInv()
-        {
-            var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
-            return GetWorldPositionRotationMatrixWithInv(xformQuery);
-        }
+            => _entMan.System<SharedTransformSystem>().GetWorldPositionRotationMatrixWithInv(this);
 
         /// <summary>
         /// Get the WorldPosition, WorldRotation, WorldMatrix, and InvWorldMatrix of this entity faster than each individually.
         /// </summary>
         [Obsolete("Use the system method instead")]
-        public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 WorldMatrix, Matrix3x2 InvWorldMatrix) GetWorldPositionRotationMatrixWithInv(EntityQuery<TransformComponent> xformQuery)
-        {
-            var parent = _parent;
-            var worldRot = _localRotation;
-            var invMatrix = InvLocalMatrix;
-            var worldMatrix = LocalMatrix;
+        public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 WorldMatrix, Matrix3x2 InvWorldMatrix) GetWorldPositionRotationMatrixWithInv(EntityQuery<TransformComponent> _)
+            => _entMan.System<SharedTransformSystem>().GetWorldPositionRotationMatrixWithInv(this);
 
-            // By doing these all at once we can avoid multiple IsValid + GetComponent calls
-            while (parent.IsValid())
-            {
-                var xform = xformQuery.GetComponent(parent);
-                worldRot += xform.LocalRotation;
-
-                var parentMatrix = xform.LocalMatrix;
-                var result = Matrix3x2.Multiply(worldMatrix, parentMatrix);
-                worldMatrix = result;
-
-                var parentInvMatrix = xform.InvLocalMatrix;
-                var invResult = Matrix3x2.Multiply(parentInvMatrix, invMatrix);
-                invMatrix = invResult;
-
-                parent = xform.ParentUid;
-            }
-
-            var worldPosition = worldMatrix.Translation;
-
-            return (worldPosition, worldRot, worldMatrix, invMatrix);
-        }
-
+        [Obsolete("use the system method instead")]
         public void RebuildMatrices()
         {
             _entMan.System<SharedTransformSystem>().RebuildMatrices(this);

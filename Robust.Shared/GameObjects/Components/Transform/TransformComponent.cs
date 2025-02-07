@@ -142,30 +142,8 @@ namespace Robust.Shared.GameObjects
         [Obsolete("Use the system method instead")]
         public Angle WorldRotation
         {
-            get
-            {
-                var parent = _parent;
-                var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
-                var rotation = _localRotation;
-
-                while (parent.IsValid())
-                {
-                    var parentXform = xformQuery.GetComponent(parent);
-                    rotation += parentXform._localRotation;
-                    parent = parentXform.ParentUid;
-                }
-
-                return rotation;
-            }
-            set
-            {
-                if (NoLocalRotation)
-                    return;
-
-                var current = WorldRotation;
-                var diff = value - current;
-                LocalRotation += diff;
-            }
+            get => _entMan.System<SharedTransformSystem>().GetWorldRotation(this);
+            set { _entMan.System<SharedTransformSystem>().SetWorldRotationNoLerp((Owner, this), value); }
         }
 
         // lazy VV convenience variable.
@@ -198,31 +176,8 @@ namespace Robust.Shared.GameObjects
         [Obsolete("Use the system method instead")]
         public Vector2 WorldPosition
         {
-            get
-            {
-                if (_parent.IsValid())
-                {
-                    // parent coords to world coords
-                    return Vector2.Transform(_localPosition, _entMan.GetComponent<TransformComponent>(ParentUid).WorldMatrix);
-                }
-                else
-                {
-                    return Vector2.Zero;
-                }
-            }
-            set
-            {
-                if (!_parent.IsValid())
-                {
-                    DebugTools.Assert("Parent is invalid while attempting to set WorldPosition - did you try to move root node?");
-                    return;
-                }
-
-                // world coords to parent coords
-                var newPos = Vector2.Transform(value, _entMan.GetComponent<TransformComponent>(ParentUid).InvWorldMatrix);
-
-                LocalPosition = newPos;
-            }
+            get => _entMan.System<SharedTransformSystem>().GetWorldPosition(this);
+            set { _entMan.System<SharedTransformSystem>().SetWorldPosition((Owner, this), value); }
         }
 
         /// <summary>

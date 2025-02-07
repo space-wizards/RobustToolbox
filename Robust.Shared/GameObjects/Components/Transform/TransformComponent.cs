@@ -181,53 +181,13 @@ namespace Robust.Shared.GameObjects
         ///     Matrix for transforming points from local to world space.
         /// </summary>
         [Obsolete("Use the system method instead")]
-        public Matrix3x2 WorldMatrix
-        {
-            get
-            {
-                var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
-                var parent = _parent;
-                var myMatrix = LocalMatrix;
-
-                while (parent.IsValid())
-                {
-                    var parentXform = xformQuery.GetComponent(parent);
-                    var parentMatrix = parentXform.LocalMatrix;
-                    parent = parentXform.ParentUid;
-
-                    var result = Matrix3x2.Multiply(myMatrix, parentMatrix);
-                    myMatrix = result;
-                }
-
-                return myMatrix;
-            }
-        }
+        public Matrix3x2 WorldMatrix => _entMan.System<SharedTransformSystem>().GetWorldMatrix(this);
 
         /// <summary>
         ///     Matrix for transforming points from world to local space.
         /// </summary>
         [Obsolete("Use the system method instead")]
-        public Matrix3x2 InvWorldMatrix
-        {
-            get
-            {
-                var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
-                var parent = _parent;
-                var myMatrix = InvLocalMatrix;
-
-                while (parent.IsValid())
-                {
-                    var parentXform = xformQuery.GetComponent(parent);
-                    var parentMatrix = parentXform.InvLocalMatrix;
-                    parent = parentXform.ParentUid;
-
-                    var result = Matrix3x2.Multiply(parentMatrix, myMatrix);
-                    myMatrix = result;
-                }
-
-                return myMatrix;
-            }
-        }
+        public Matrix3x2 InvWorldMatrix => _entMan.System<SharedTransformSystem>().GetInvWorldMatrix(this);
 
         /// <summary>
         ///     Current position offset of the entity relative to the world.

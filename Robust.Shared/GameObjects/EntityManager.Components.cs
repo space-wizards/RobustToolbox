@@ -1029,22 +1029,19 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc/>
-        public bool CopyComponent(EntityUid source, EntityUid target, Type type, [NotNullWhen(true)] out IComponent? component, MetaDataComponent? metadataTarget = null)
+        public bool CopyComponent<T>(EntityUid source, EntityUid target, [NotNullWhen(true)] out T? component, MetaDataComponent? metadataTarget = null) where T : IComponent
         {
-            component = null;
+            component = default;
 
             if (!MetaQuery.Resolve(target, ref metadataTarget, false))
                 throw new ArgumentException($"Entity {target} is not valid.", nameof(target));
 
-            if (!typeof(IComponent).IsAssignableFrom(type))
+            if (!HasComponent<T>(source))
                 return false;
 
-            var compReg = ComponentFactory.GetRegistration(type);
-            if (!HasComponent(source, type))
-                return false;
-
-            var sourceComp = GetComponent(source, type);
-            component = ComponentFactory.GetComponent(compReg);
+            var sourceComp = GetComponent<T>(source);
+            var compReg = ComponentFactory.GetRegistration(typeof(T));
+            component = (T)ComponentFactory.GetComponent(compReg);
 
             _serManager.CopyTo(sourceComp, ref component, notNullableOverride: true);
 
@@ -1053,15 +1050,13 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc/>
-        public bool CopyComponent<T>(EntityUid source, EntityUid target, [NotNullWhen(true)] out T? component, MetaDataComponent? metadataTarget = null) where T : IComponent
+        public bool CopyComponent(EntityUid source, EntityUid target, Type type, [NotNullWhen(true)] out IComponent? component, MetaDataComponent? metadataTarget = null)
         {
-            component = default;
-            if (CopyComponent(source, target, typeof(T), out var baseComponent, metadataTarget))
-            {
-                component = (T)baseComponent;
-                return true;
-            }
-            return false;
+            DebugTools.Assert(typeof(IComponent).IsAssignableFrom(type), $"Type {type} is not a component");
+
+            var success = CopyComponent<IComponent>(source, target, out var baseComponent, metadataTarget);
+            component = baseComponent;
+            return success;
         }
 
         /// <inheritdoc/>

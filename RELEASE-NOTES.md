@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed `BaseWindow` sometimes not properly updating the mouse cursor shape.
 
 ### Other
 

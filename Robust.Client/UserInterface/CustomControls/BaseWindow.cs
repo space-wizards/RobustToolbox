@@ -37,8 +37,8 @@ namespace Robust.Client.UserInterface.CustomControls
                 return;
             }
 
-            OnClose?.Invoke();
             Parent.RemoveChild(this);
+            OnClose?.Invoke();
         }
 
         protected internal override void KeyBindDown(GUIBoundKeyEventArgs args)

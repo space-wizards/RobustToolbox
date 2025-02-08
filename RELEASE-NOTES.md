@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fixed `BaseWindow` sometimes not properly updating the mouse cursor shape.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,14 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 243.0.1
+
+### Bugfixes
+
+* Fixed `BaseWindow` sometimes not properly updating the mouse cursor shape.
+* Revert `BaseWindow` OnClose ordering due to prior reliance upon the ordering.
 
 
 ## 243.0.0

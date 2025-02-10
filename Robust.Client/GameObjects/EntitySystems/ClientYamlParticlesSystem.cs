@@ -2,19 +2,13 @@ using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Random;
-using System;
-using System.Drawing;
-using System.Numerics;
-
 
 namespace Robust.Client.GameObjects;
 
 [UsedImplicitly]
-public sealed class ClientParticlesSystem : SharedParticlesSystem
+public sealed class ClientYamlParticlesSystem : ServerYamlParticlesSystem
 {
     [Dependency] private readonly ParticlesManager _particlesManager = default!;
     [Dependency] private readonly IResourceCache _resourceCache = default!;

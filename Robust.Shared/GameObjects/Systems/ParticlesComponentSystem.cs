@@ -3,4 +3,4 @@ using Robust.Shared.GameStates;
 
 namespace Robust.Shared.GameObjects;
 
-public abstract class SharedParticlesSystem : EntitySystem {}
+public abstract class ServerYamlParticlesSystem : EntitySystem {}

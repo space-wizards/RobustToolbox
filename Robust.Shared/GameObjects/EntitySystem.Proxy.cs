@@ -569,7 +569,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.CopyComponent"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool CopyComp(EntityUid source, EntityUid target, Type type, [NotNullWhen(true)] out IComponent? component, MetaDataComponent? metadataTarget = null)
+    protected bool CopyComp(EntityUid source, EntityUid target, IComponent type, [NotNullWhen(true)] out IComponent? component, MetaDataComponent? metadataTarget = null)
     {
         return EntityManager.CopyComponent(source, target, type, out component, metadataTarget);
     }
@@ -583,7 +583,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.CopyComponents"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool CopyComps(EntityUid source, EntityUid target, MetaDataComponent? metadataTarget = null, params Type[] types)
+    protected bool CopyComps(EntityUid source, EntityUid target, MetaDataComponent? metadataTarget = null, params IComponent[] types)
     {
         return EntityManager.CopyComponents(source, target, metadataTarget, types);
     }

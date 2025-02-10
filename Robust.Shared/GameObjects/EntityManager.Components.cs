@@ -1029,52 +1029,51 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc/>
-        public bool CopyComponent(EntityUid source, EntityUid target, Type type, [NotNullWhen(true)] out IComponent? component, MetaDataComponent? metadataTarget = null)
+        public bool CopyComponent(EntityUid source, EntityUid target, IComponent sourceComponent, [NotNullWhen(true)] out IComponent? component, MetaDataComponent? meta = null)
         {
-            component = null;
+            // Use the concrete type of the sourceComponent to call the generic version
+            var type = sourceComponent.GetType();
+            var method = GetType().GetMethod(nameof(CopyComponent), 1, [typeof(EntityUid), typeof(EntityUid), type.MakeByRefType(), typeof(MetaDataComponent)
+                ])!
+                .MakeGenericMethod(type);
 
-            if (!MetaQuery.Resolve(target, ref metadataTarget, false))
-                throw new ArgumentException($"Entity {target} is not valid.", nameof(target));
+            var parameters = new object?[] { source, target, null, meta };
+            var result = (bool)method.Invoke(this, parameters)!;
+            component = (IComponent?)parameters[2];
+            return result;
+        }
 
-            if (!typeof(IComponent).IsAssignableFrom(type))
+        /// <inheritdoc/>
+        public bool CopyComponent<T>(EntityUid source, EntityUid target, [NotNullWhen(true)] out T? component, MetaDataComponent? meta = null) where T : IComponent
+        {
+            component = default;
+
+            if (!MetaQuery.Resolve(target, ref meta))
                 return false;
 
-            var compReg = ComponentFactory.GetRegistration(type);
-            if (!HasComponent(source, type))
+            if (!TryGetComponent<T>(source, out var sourceComp))
                 return false;
 
-            var sourceComp = GetComponent(source, type);
-            component = ComponentFactory.GetComponent(compReg);
+            var compReg = ComponentFactory.GetRegistration(typeof(T));
+            component = (T)ComponentFactory.GetComponent(compReg);
 
             _serManager.CopyTo(sourceComp, ref component, notNullableOverride: true);
 
-            AddComponentInternal(target, component, compReg, true, false, metadataTarget);
+            AddComponentInternal(target, component, compReg, true, false, meta);
             return true;
         }
 
         /// <inheritdoc/>
-        public bool CopyComponent<T>(EntityUid source, EntityUid target, [NotNullWhen(true)] out T? component, MetaDataComponent? metadataTarget = null) where T : IComponent
+        public bool CopyComponents(EntityUid source, EntityUid target, MetaDataComponent? meta = null, params IComponent[] types)
         {
-            component = default;
-            if (CopyComponent(source, target, typeof(T), out var baseComponent, metadataTarget))
-            {
-                component = (T)baseComponent;
-                return true;
-            }
-            return false;
-        }
-
-        /// <inheritdoc/>
-        public bool CopyComponents(EntityUid source, EntityUid target, MetaDataComponent? metadataTarget = null, params Type[] types)
-        {
-            if (!MetaQuery.Resolve(target, ref metadataTarget, false))
-                throw new ArgumentException($"Entity {target} is not valid.", nameof(target));
+            if (!MetaQuery.Resolve(target, ref meta))
+                return false;
 
             var allSuccessful = true;
 
             foreach (var type in types)
             {
-                if (!CopyComponent(source, target, type, out _, metadataTarget))
+                if (!CopyComponent(source, target, type, out _, meta))
                     allSuccessful = false;
             }
 

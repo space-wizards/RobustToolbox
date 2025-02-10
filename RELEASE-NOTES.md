@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Add EntityManager overloads for ComponentRegistration that's faster than the generic methods.
 
 ### Bugfixes
 

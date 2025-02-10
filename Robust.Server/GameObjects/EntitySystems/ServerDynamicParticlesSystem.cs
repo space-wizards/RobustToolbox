@@ -3,7 +3,7 @@ using Robust.Shared.GameStates;
 
 namespace Robust.Server.GameObjects;
 
-public sealed class ServerYamlParticlesSystem : SharedYamlParticlesSystem
+public sealed class ServerDynamicParticlesSystem : SharedDynamicParticlesSystem
 {
 
 }

@@ -9,7 +9,7 @@ using Robust.Shared.Prototypes;
 namespace Robust.Client.GameObjects;
 
 [UsedImplicitly]
-public sealed class ClientYamlParticlesSystem : SharedYamlParticlesSystem
+public sealed class ClientDynamicParticlesSystem : SharedDynamicParticlesSystem
 {
     [Dependency] private readonly ParticlesManager _particlesManager = default!;
     [Dependency] private readonly IResourceCache _resourceCache = default!;
@@ -17,40 +17,39 @@ public sealed class ClientYamlParticlesSystem : SharedYamlParticlesSystem
 
     public override void Initialize() {
         base.Initialize();
-        SubscribeLocalEvent<YamlParticlesComponent, ComponentGetState>(OnYamlParticlesComponentGetState);
+        SubscribeLocalEvent<DynamicParticlesComponent, ComponentGetState>(OnDynamicParticlesComponentGetState);
         SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
-        SubscribeLocalEvent<YamlParticlesComponent, ComponentAdd>(HandleComponentAdd);
-        SubscribeLocalEvent<YamlParticlesComponent, ComponentRemove>(HandleComponentRemove);
+        SubscribeLocalEvent<DynamicParticlesComponent, ComponentAdd>(HandleComponentAdd);
+        SubscribeLocalEvent<DynamicParticlesComponent, ComponentRemove>(HandleComponentRemove);
     }
 
-    private void OnYamlParticlesComponentGetState(EntityUid uid, YamlParticlesComponent component, ref ComponentGetState args)
+    private void OnDynamicParticlesComponentGetState(EntityUid uid, DynamicParticlesComponent component, ref ComponentGetState args)
     {
         _particlesManager.DestroyParticleSystem(uid);
-        if(_prototypeManager.TryIndex<ParticlesPrototype>(component.ParticleType, out var prototype)){
+        if(_prototypeManager.TryIndex<ParticlesPrototype>("example", out var prototype)){
             ParticleSystemArgs particleSystemArgs = prototype.GetParticleSystemArgs(_resourceCache);
             component.particlesSystem = _particlesManager.CreateParticleSystem(uid, particleSystemArgs);
         }
         else
         {
-            throw new InvalidPrototypeNameException($"{component.ParticleType} is not a valid particles prototype");
+            throw new InvalidPrototypeNameException($"{component} is not a valid particles prototype");
         }
     }
 
-    private void HandleComponentAdd(EntityUid uid, YamlParticlesComponent component, ref ComponentAdd args)
+    private void HandleComponentAdd(EntityUid uid, DynamicParticlesComponent component, ref ComponentAdd args)
     {
-        component.ParticleType = "example";
         //do a lookup for YAML defined particles
-        if(_prototypeManager.TryIndex<ParticlesPrototype>(component.ParticleType, out var prototype)){
+        if(_prototypeManager.TryIndex<ParticlesPrototype>("example", out var prototype)){
             ParticleSystemArgs particleSystemArgs = prototype.GetParticleSystemArgs(_resourceCache);
             component.particlesSystem = _particlesManager.CreateParticleSystem(uid, particleSystemArgs);
         }
         else
         {
-            throw new InvalidPrototypeNameException($"{component.ParticleType} is not a valid particles prototype");
+            throw new InvalidPrototypeNameException($"{component} is not a valid particles prototype");
         }
     }
 
-    private void HandleComponentRemove(EntityUid uid, YamlParticlesComponent component, ref ComponentRemove args)
+    private void HandleComponentRemove(EntityUid uid, DynamicParticlesComponent component, ref ComponentRemove args)
     {
         component.particlesSystem = null;
         _particlesManager.DestroyParticleSystem(uid);

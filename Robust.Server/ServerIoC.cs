@@ -79,6 +79,7 @@ namespace Robust.Server
             deps.Register<IViewVariablesManager, ServerViewVariablesManager>();
             deps.Register<IServerViewVariablesInternal, ServerViewVariablesManager>();
             deps.Register<IWatchdogApi, WatchdogApi>();
+            deps.Register<IWatchdogApiInternal, WatchdogApi>();
             deps.Register<IScriptHost, ScriptHost>();
             deps.Register<IMetricsManager, MetricsManager>();
             deps.Register<IMetricsManagerInternal, MetricsManager>();

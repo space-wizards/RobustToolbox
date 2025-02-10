@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 using Robust.Client.Audio;
 using Robust.Client.Input;
 using Robust.Client.ResourceManagement;
+using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Graphics;
 using Robust.Shared.Map;
@@ -289,6 +290,8 @@ namespace Robust.Client.Graphics.Clyde
             action();
         }
 
+        public IFileDialogManager? FileDialogImpl => null;
+
         private sealed class DummyCursor : ICursor
         {
             public void Dispose()
@@ -499,7 +502,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public void RenderScreenOverlaysBelow(
-                DrawingHandleScreen handle,
+                IRenderHandle handle,
                 IViewportControl control,
                 in UIBox2i viewportBounds)
             {
@@ -507,7 +510,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public void RenderScreenOverlaysAbove(
-                DrawingHandleScreen handle,
+                IRenderHandle handle,
                 IViewportControl control,
                 in UIBox2i viewportBounds)
             {
@@ -522,7 +525,7 @@ namespace Robust.Client.Graphics.Clyde
                 RenderTarget = renderTarget;
             }
 
-            public Vector2i Size { get; } = default;
+            public Vector2i Size { get; set; } = default;
             public bool IsDisposed { get; private set; }
             public WindowId Id { get; set; }
             public IRenderTarget RenderTarget { get; }
@@ -535,6 +538,21 @@ namespace Robust.Client.Graphics.Clyde
             public event Action<WindowRequestClosedEventArgs>? RequestClosed { add { } remove { } }
             public event Action<WindowDestroyedEventArgs>? Destroyed;
             public event Action<WindowResizedEventArgs>? Resized { add { } remove { } }
+
+            public void TextInputSetRect(UIBox2i rect, int cursor)
+            {
+                // Nop.
+            }
+
+            public void TextInputStart()
+            {
+                // Nop.
+            }
+
+            public void TextInputStop()
+            {
+                // Nop.
+            }
 
             public void MaximizeOnMonitor(IClydeMonitor monitor)
             {

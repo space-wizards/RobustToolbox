@@ -32,6 +32,15 @@ namespace Robust.Shared.Log
         void RemoveHandler(ILogHandler handler);
 
         /// <summary>
+        /// Returns whether the given log level will actually be logged given the current configuration.
+        /// </summary>
+        /// <remarks>
+        /// This can be used to avoid logging things if nobody is listening,
+        /// for cases where the logging operation itself may add significant overhead.
+        /// </remarks>
+        bool IsLogLevelEnabled(LogLevel level) => true;
+
+        /// <summary>
         ///     Log a message, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
         void Log(LogLevel level, string message, params object?[] args);

@@ -316,6 +316,10 @@ namespace Robust.Shared.GameObjects
         ///     Current parent entity of this entity.
         /// </summary>
         public readonly NetEntity ParentID;
+        // TODO Delta-states
+        // If the transform component ever gets delta states, then the client state manager needs to be updated.
+        // Currently it explicitly looks for a "TransformComponentState" when determining an entity's parent for the
+        // sake of sorting the states that need to be applied base on the transform hierarchy.
 
         /// <summary>
         ///     Current position offset of the entity.
@@ -337,8 +341,6 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public readonly bool Anchored;
 
-        public readonly bool GridTraversal;
-
         /// <summary>
         ///     Constructs a new state snapshot of a TransformComponent.
         /// </summary>
@@ -346,14 +348,13 @@ namespace Robust.Shared.GameObjects
         /// <param name="rotation">Current direction offset of this entity.</param>
         /// <param name="parentId">Current parent transform of this entity.</param>
         /// <param name="noLocalRotation"></param>
-        public TransformComponentState(Vector2 localPosition, Angle rotation, NetEntity parentId, bool noLocalRotation, bool anchored, bool gridTraversal)
+        public TransformComponentState(Vector2 localPosition, Angle rotation, NetEntity parentId, bool noLocalRotation, bool anchored)
         {
             LocalPosition = localPosition;
             Rotation = rotation;
             ParentID = parentId;
             NoLocalRotation = noLocalRotation;
             Anchored = anchored;
-            GridTraversal = gridTraversal;
         }
     }
 }

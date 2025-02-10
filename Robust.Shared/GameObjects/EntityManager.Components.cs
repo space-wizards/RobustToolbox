@@ -201,7 +201,7 @@ namespace Robust.Shared.GameObjects
                 {
                     var comp = _componentFactory.GetComponent(reg);
                     _serManager.CopyTo(entry.Component, ref comp, notNullableOverride: true);
-                    AddComponentInternal(target, comp, reg, overwrite: true, skipInit: false, metadata: metadata);
+                    AddComponentInternal(target, comp, reg, overwrite: true, metadata: metadata);
                 }
                 else
                 {
@@ -212,7 +212,7 @@ namespace Robust.Shared.GameObjects
 
                     var comp = _componentFactory.GetComponent(reg);
                     _serManager.CopyTo(entry.Component, ref comp, notNullableOverride: true);
-                    AddComponentInternal(target, comp, reg, overwrite: false, skipInit: false, metadata: metadata);
+                    AddComponentInternal(target, comp, reg, overwrite: false, metadata: metadata);
                 }
             }
         }
@@ -319,6 +319,22 @@ namespace Robust.Shared.GameObjects
 #pragma warning restore CS0618 // Type or member is obsolete
 
             AddComponentInternal(uid, component, overwrite, false, metadata);
+        }
+
+        private void AddComponentInternal<T>(
+            EntityUid uid,
+            T component,
+            ComponentRegistration compReg,
+            bool overwrite = false,
+            MetaDataComponent? metadata = null) where T : IComponent
+        {
+            if (!MetaQuery.Resolve(uid, ref metadata, false))
+                throw new ArgumentException($"Entity {uid} is not valid.", nameof(uid));
+
+            DebugTools.Assert(component.Owner == default);
+            component.Owner = uid;
+
+            AddComponentInternal(uid, component, compReg, overwrite, skipInit: false, metadata);
         }
 
         private void AddComponentInternal<T>(EntityUid uid, T component, bool overwrite, bool skipInit, MetaDataComponent? metadata) where T : IComponent

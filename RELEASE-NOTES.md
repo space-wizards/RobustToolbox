@@ -35,15 +35,21 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* The fixes to renderer state may have inadvertantly broken some rendering code that relied upon the old behavior.
+* TileRenderFlag has been removed and now it's just a byte flag on the tile for content usage.
 
 ### New features
 
 * Add EntityManager overloads for ComponentRegistration that's faster than the generic methods.
+* Add roof flag to tiles to indicate lighting should not be drawn to them.
+* Add BeforeLighting overlay draw space for overlays that need to draw directly to lighting and want to do it immediately beforehand.
+* Add BlurFactor to LightManager to control how much to blur lights by.
+* Add ContentFlag to tiles for content-flag usage.
 
 ### Bugfixes
 
-*None yet*
+* Fix pushing renderer state not restoring stencil status.
+* Fix pushing renderer state not restoring the queued shader instance.
 
 ### Other
 

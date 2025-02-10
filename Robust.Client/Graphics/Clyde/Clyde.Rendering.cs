@@ -92,7 +92,31 @@ namespace Robust.Client.Graphics.Clyde
 
         // Some simple flags that basically just tracks the current state of glEnable(GL_STENCIL/GL_SCISSOR_TEST)
         private bool _isScissoring;
-        private bool _isStencilling;
+
+        private bool IsStencilling
+        {
+            get => _isStenc;
+            set
+            {
+                if (value == _isStenc)
+                    return;
+
+                _isStenc = value;
+
+                if (value)
+                {
+                    GL.Enable(EnableCap.StencilTest);
+                }
+                else
+                {
+                    GL.Disable(EnableCap.StencilTest);
+                }
+
+                CheckGlError();
+            }
+        }
+
+        private bool _isStenc;
 
         private readonly RefList<RenderCommand> _queuedRenderCommands = new RefList<RenderCommand>();
 
@@ -420,29 +444,17 @@ namespace Robust.Client.Graphics.Clyde
             var program = shader.Program;
 
             program.Use();
+            IsStencilling = instance.Stencil.Enabled;
 
             // Handle stencil parameters.
             if (instance.Stencil.Enabled)
             {
-                if (!_isStencilling)
-                {
-                    GL.Enable(EnableCap.StencilTest);
-                    CheckGlError();
-                    _isStencilling = true;
-                }
-
                 GL.StencilMask(instance.Stencil.WriteMask);
                 CheckGlError();
                 GL.StencilFunc(ToGLStencilFunc(instance.Stencil.Func), instance.Stencil.Ref, instance.Stencil.ReadMask);
                 CheckGlError();
                 GL.StencilOp(TKStencilOp.Keep, TKStencilOp.Keep, ToGLStencilOp(instance.Stencil.Op));
                 CheckGlError();
-            }
-            else if (_isStencilling)
-            {
-                GL.Disable(EnableCap.StencilTest);
-                CheckGlError();
-                _isStencilling = false;
             }
 
             if (instance.Parameters.Count == 0)
@@ -859,7 +871,13 @@ namespace Robust.Client.Graphics.Clyde
 
         private FullStoredRendererState PushRenderStateFull()
         {
-            return new FullStoredRendererState(_currentMatrixProj, _currentMatrixView, _currentBoundRenderTarget, _currentRenderTarget, _queuedShaderInstance);
+            return new FullStoredRendererState(
+                _currentMatrixProj,
+                _currentMatrixView,
+                _currentBoundRenderTarget,
+                _currentRenderTarget,
+                _queuedShaderInstance,
+                _isStenc);
         }
 
         private void PopRenderStateFull(in FullStoredRendererState state)
@@ -871,6 +889,10 @@ namespace Robust.Client.Graphics.Clyde
             _currentRenderTarget = state.RenderTarget;
             var (width, height) = state.BoundRenderTarget.Size;
             GL.Viewport(0, 0, width, height);
+            IsStencilling = state.IsStencilling;
+            GL.ClearStencil(0xFF);
+            GL.StencilMask(0xFF);
+            GL.Clear(ClearBufferMask.StencilBufferBit);
             CheckGlError();
         }
 
@@ -1066,13 +1088,15 @@ namespace Robust.Client.Graphics.Clyde
             public readonly LoadedRenderTarget BoundRenderTarget;
             public readonly LoadedRenderTarget RenderTarget;
             public readonly ClydeShaderInstance QueuedShaderInstance;
+            public readonly bool IsStencilling;
 
             public FullStoredRendererState(
                 in Matrix3x2 projMatrix,
                 in Matrix3x2 viewMatrix,
                 LoadedRenderTarget boundRenderTarget,
                 LoadedRenderTarget renderTarget,
-                ClydeShaderInstance queuedShaderInstance
+                ClydeShaderInstance queuedShaderInstance,
+                bool isStencilling
                 )
             {
                 ProjMatrix = projMatrix;
@@ -1080,6 +1104,7 @@ namespace Robust.Client.Graphics.Clyde
                 BoundRenderTarget = boundRenderTarget;
                 RenderTarget = renderTarget;
                 QueuedShaderInstance = queuedShaderInstance;
+                IsStencilling = isStencilling;
             }
         }
     }

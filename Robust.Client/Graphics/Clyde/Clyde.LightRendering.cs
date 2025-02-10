@@ -396,8 +396,7 @@ namespace Robust.Client.Graphics.Clyde
                 FinalizeDepthDraw();
             }
 
-            GL.Enable(EnableCap.StencilTest);
-            _isStencilling = true;
+            IsStencilling = true;
 
             var (lightW, lightH) = GetLightMapSize(viewport.Size);
             GL.Viewport(0, 0, lightW, lightH);
@@ -425,14 +424,7 @@ namespace Robust.Client.Graphics.Clyde
             if (_lightManager.BlurFactor != 0f && viewport.Eye != null)
                 BlurLights(viewport, viewport.LightRenderTarget, viewport.Eye, _lightManager.BlurFactor);
 
-            // Batching doesn't restore stencil state so we do it here.
-            // Yes I spent 8 hours across 2 days just to track down this as the problem.
-            GL.Enable(EnableCap.StencilTest);
-            GL.ClearStencil(0xFF);
-            GL.StencilMask(0xFF);
-            GL.Clear(ClearBufferMask.StencilBufferBit);
             PopRenderStateFull(state);
-            _isStencilling = true;
             DebugTools.Assert(oldScissoring.Equals(_isScissoring));
             DebugTools.Assert(oldScissor.Equals(_currentScissorState));
             DebugTools.Assert(oldModel.Equals(_currentMatrixModel));
@@ -541,8 +533,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             ResetBlendFunc();
-            GL.Disable(EnableCap.StencilTest);
-            _isStencilling = false;
+            IsStencilling = false;
 
             CheckGlError();
 
@@ -862,8 +853,7 @@ namespace Robust.Client.Graphics.Clyde
             FovSetTransformAndBlit(viewport, eye.Position.Position, fovShader);
 
             GL.StencilMask(0x00);
-            GL.Disable(EnableCap.StencilTest);
-            _isStencilling = false;
+            IsStencilling = false;
         }
 
         private void ApplyLightingFovToBuffer(Viewport viewport, IEye eye)

@@ -341,6 +341,16 @@ namespace Robust.Shared.GameObjects
         /// <returns>If the component existed in the entity.</returns>
         bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, ushort netId, [NotNullWhen(true)] out IComponent? component, MetaDataComponent? meta = null);
 
+        /// <summary>
+        /// Copy a single component from source to target entity and return a reference to the copied component.
+        /// </summary>
+        /// <param name="source">The source entity to copy the component from</param>
+        /// <param name="target">The target entity to copy the component to</param>
+        /// <param name="type">The type of component to copy</param>
+        /// <param name="component">The copied component if successful</param>
+        /// <param name="metadataTarget">Optional metadata of the target entity</param>
+        /// <returns>Whether the component was successfully copied</returns>
+        bool CopyComponent(EntityUid source, EntityUid target, Type type, [NotNullWhen(true)] out IComponent? component, MetaDataComponent? metadataTarget = null);
 
         /// <summary>
         /// Copy a typed component from source to target entity and return a reference to the copied component.
@@ -352,17 +362,6 @@ namespace Robust.Shared.GameObjects
         /// <param name="metadataTarget">Optional metadata of the target entity</param>
         /// <returns>Whether the component was successfully copied</returns>
         bool CopyComponent<T>(EntityUid source, EntityUid target, [NotNullWhen(true)] out T? component, MetaDataComponent? metadataTarget = null) where T : IComponent;
-
-        /// <summary>
-        /// Copy a single component from source to target entity and return a reference to the copied component.
-        /// </summary>
-        /// <param name="source">The source entity to copy the component from</param>
-        /// <param name="target">The target entity to copy the component to</param>
-        /// <param name="type">The type of component to copy</param>
-        /// <param name="component">The copied component if successful</param>
-        /// <param name="metadataTarget">Optional metadata of the target entity</param>
-        /// <returns>Whether the component was successfully copied</returns>
-        bool CopyComponent(EntityUid source, EntityUid target, Type type, [NotNullWhen(true)] out IComponent? component, MetaDataComponent? metadataTarget = null);
 
         /// <summary>
         /// Copy multiple components from source to target entity.

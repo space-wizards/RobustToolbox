@@ -1029,56 +1029,47 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc/>
-        public bool CopyComponent<T>(EntityUid source, EntityUid target, [NotNullWhen(true)] out T? component, MetaDataComponent? meta = null) where T : IComponent
+        public bool CopyComponent<T>(EntityUid source, EntityUid target, [NotNullWhen(true)] out T? component, MetaDataComponent? metadataTarget = null) where T : IComponent
         {
             component = default;
 
-            if (!MetaQuery.Resolve(target, ref meta))
+            if (!MetaQuery.Resolve(target, ref metadataTarget, false))
+                throw new ArgumentException($"Entity {target} is not valid.", nameof(target));
+
+            if (!HasComponent<T>(source))
                 return false;
 
-            if (!TryGetComponent<T>(source, out var sourceComp))
-                return false;
-
+            var sourceComp = GetComponent<T>(source);
             var compReg = ComponentFactory.GetRegistration(typeof(T));
             component = (T)ComponentFactory.GetComponent(compReg);
 
             _serManager.CopyTo(sourceComp, ref component, notNullableOverride: true);
 
-            AddComponentInternal(target, component, compReg, true, false, meta);
+            AddComponentInternal(target, component, compReg, true, false, metadataTarget);
             return true;
         }
 
         /// <inheritdoc/>
-        public bool CopyComponent(EntityUid source, EntityUid target, Type type, [NotNullWhen(true)] out IComponent? component, MetaDataComponent? meta = null)
+        public bool CopyComponent(EntityUid source, EntityUid target, Type type, [NotNullWhen(true)] out IComponent? component, MetaDataComponent? metadataTarget = null)
         {
-            DebugTools.Assert(typeof(IComponent).IsAssignableFrom(type) && type != typeof(IComponent), $"Invalid component type: {type}");
+            DebugTools.Assert(typeof(IComponent).IsAssignableFrom(type), $"Type {type} is not a component");
 
-            var method = GetType()
-                .GetMethod(nameof(CopyComponent), [typeof(EntityUid), typeof(EntityUid), type, typeof(MetaDataComponent)
-                ]);
-
-            var genericMethod = method!.MakeGenericMethod();
-
-            if (method == null)
-                throw new InvalidOperationException($"Could not create generic method for type {type}");
-
-            var parameters = new object?[] { source, target, null, meta };
-            var success = (bool)genericMethod.Invoke(this, [source, target, type, meta])!;
-            component = (IComponent?)parameters[2];
+            var success = CopyComponent<IComponent>(source, target, out var baseComponent, metadataTarget);
+            component = baseComponent;
             return success;
         }
 
         /// <inheritdoc/>
-        public bool CopyComponents(EntityUid source, EntityUid target, MetaDataComponent? meta = null, params Type[] types)
+        public bool CopyComponents(EntityUid source, EntityUid target, MetaDataComponent? metadataTarget = null, params Type[] types)
         {
-            if (!MetaQuery.Resolve(target, ref meta))
-                return false;
+            if (!MetaQuery.Resolve(target, ref metadataTarget, false))
+                throw new ArgumentException($"Entity {target} is not valid.", nameof(target));
 
             var allSuccessful = true;
 
             foreach (var type in types)
             {
-                if (!CopyComponent(source, target, type, out _, meta))
+                if (!CopyComponent(source, target, type, out _, metadataTarget))
                     allSuccessful = false;
             }
 

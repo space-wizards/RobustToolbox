@@ -167,23 +167,24 @@ public abstract partial class SharedTransformSystem
     /// <summary>
     /// Anchors or unanchors an entity as needed.
     /// </summary>
-    public void SetAnchor(Entity<TransformComponent> entity, bool value)
+    public bool TrySetAnchor(Entity<TransformComponent> entity, bool value)
     {
         var (uid, comp) = entity;
 
         if (value == comp._anchored)
-            return;
+            return true;
 
         if (!comp.Initialized)
         {
             comp._anchored = value;
-            return;
+            return true;
         }
 
         if (value && _mapManager.TryFindGridAt(GetMapCoordinates(entity), out var gridUid, out var gridComp))
-            AnchorEntity(entity, (gridUid, gridComp));
-        else
-            Unanchor(uid, entity);
+            return AnchorEntity(entity, (gridUid, gridComp));
+
+        Unanchor(uid, entity);
+        return true;
     }
 
     #endregion

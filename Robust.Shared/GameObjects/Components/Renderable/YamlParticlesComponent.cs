@@ -5,5 +5,5 @@ namespace Robust.Shared.GameObjects;
 
 [NetworkedComponent]
 public abstract partial class SharedYamlParticlesComponent : Component {
-    [ViewVariables] public string ParticleType;
+    [ViewVariables(VVAccess.ReadWrite)] public string ParticleType;
 }

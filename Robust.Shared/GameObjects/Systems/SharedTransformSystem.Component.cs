@@ -164,6 +164,28 @@ public abstract partial class SharedTransformSystem
         RaiseLocalEvent(uid, ref ev, true);
     }
 
+    /// <summary>
+    /// Anchors or unanchors an entity as needed.
+    /// </summary>
+    public void SetAnchor(Entity<TransformComponent> entity, bool value)
+    {
+        var (uid, comp) = entity;
+
+        if (value == comp._anchored)
+            return;
+
+        if (!comp.Initialized)
+        {
+            comp._anchored = value;
+            return;
+        }
+
+        if (value && _mapManager.TryFindGridAt(GetMapCoordinates(entity), out var gridUid, out var gridComp))
+            AnchorEntity(entity, (gridUid, gridComp));
+        else
+            Unanchor(uid, entity);
+    }
+
     #endregion
 
     #region Contains

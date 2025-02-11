@@ -51,6 +51,22 @@ public static class BoundUserInterfaceExt
         return window;
     }
 
+    public static T CreateWindowCenteredRight<T>(this BoundUserInterface bui) where T : BaseWindow, new()
+    {
+        var window = GetWindow<T>(bui);
+
+        if (bui.EntMan.System<UserInterfaceSystem>().TryGetPosition(bui.Owner, bui.UiKey, out var position))
+        {
+            window.Open(position);
+        }
+        else
+        {
+            window.OpenCenteredRight();
+        }
+
+        return window;
+    }
+
     /// <summary>
     /// Creates a control for this BUI that will be disposed when it is disposed.
     /// </summary>

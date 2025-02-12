@@ -35,6 +35,18 @@ public sealed class MultiRootInheritanceGraph<T> where T : notnull
 
     public void Add(T id, params T[] parents)
     {
+        _rootNodes.Remove(id);
+
+        foreach (var parent in parents)
+        {
+            var edges = _edges.GetOrNew(parent);
+            edges.Add(id);
+            _parents[id] = parents;
+
+            if (!_parents.ContainsKey(parent))
+                _rootNodes.Add(parent);
+        }
+
         //check for circular inheritance
         foreach (var parent in parents)
         {
@@ -56,18 +68,6 @@ public sealed class MultiRootInheritanceGraph<T> where T : notnull
                     }
                 }
             }
-        }
-
-        _rootNodes.Remove(id);
-
-        foreach (var parent in parents)
-        {
-            var edges = _edges.GetOrNew(parent);
-            edges.Add(id);
-            _parents[id] = parents;
-
-            if (!_parents.ContainsKey(parent))
-                _rootNodes.Add(parent);
         }
     }
 

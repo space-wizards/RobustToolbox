@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Add EntityManager overloads for ComponentRegistration that's faster than the generic methods.
+*None yet*
 
 ### Bugfixes
 
@@ -52,6 +52,22 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 244.0.0
+
+### Breaking changes
+
+* Increase physics speedcap default from 35m/s to 400m/s in-line with box2d v3.
+
+### New features
+
+* Add EntityManager overloads for ComponentRegistration that's faster than the generic methods.
+* Add CreateWindowCenteredRight for BUIs.
+
+### Bugfixes
+
+* Avoid calling UpdateState before opening a BUI.
 
 
 ## 243.0.1

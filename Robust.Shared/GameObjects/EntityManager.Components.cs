@@ -1289,6 +1289,43 @@ namespace Robust.Shared.GameObjects
             return new CompRegistryEntityEnumerator(this, trait1, registry);
         }
 
+        /// <inheritdoc />
+        public EntityUid? Resolve(WeakEntityReference weakRef)
+        {
+            if (weakRef.Entity != NetEntity.Invalid
+                && TryGetEntity(weakRef.Entity, out var ent))
+            {
+                return ent.Value;
+            }
+
+            return null;
+        }
+
+        /// <inheritdoc />
+        public EntityUid? Resolve(WeakEntityReference? weakRef)
+        {
+            return weakRef == null ? null : Resolve(weakRef.Value);
+        }
+
+        /// <inheritdoc />
+        public Entity<T>? Resolve<T>(WeakEntityReference<T> weakRef) where T : IComponent
+        {
+            if (weakRef.Entity != NetEntity.Invalid
+                && TryGetEntity(weakRef.Entity, out var ent)
+                && TryGetComponent(ent.Value, out T? comp))
+            {
+                return new(ent.Value, comp);
+            }
+
+            return null;
+        }
+
+        /// <inheritdoc />
+        public Entity<T>? Resolve<T>(WeakEntityReference<T>? weakRef) where T : IComponent
+        {
+            return weakRef == null ? null : Resolve(weakRef.Value);
+        }
+
         public AllEntityQueryEnumerator<IComponent> AllEntityQueryEnumerator(Type comp)
         {
             DebugTools.Assert(comp.IsAssignableTo(typeof(IComponent)));

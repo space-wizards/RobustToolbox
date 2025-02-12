@@ -487,7 +487,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
                 ent.Comp.States[key] = buiState;
 
-                if (!ent.Comp.ClientOpenInterfaces.TryGetValue(key, out var cBui))
+                if (!ent.Comp.ClientOpenInterfaces.TryGetValue(key, out var cBui) || !cBui.IsOpened)
                     continue;
 
                 cBui.State = buiState;

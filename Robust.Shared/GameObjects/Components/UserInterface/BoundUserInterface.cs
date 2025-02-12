@@ -15,6 +15,8 @@ namespace Robust.Shared.GameObjects
         [Dependency] protected readonly ISharedPlayerManager PlayerManager = default!;
         protected readonly SharedUserInterfaceSystem UiSystem;
 
+        public bool IsOpened { get; protected set; }
+
         public readonly Enum UiKey;
         public EntityUid Owner { get; }
 
@@ -43,6 +45,10 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         protected internal virtual void Open()
         {
+            if (IsOpened)
+                return;
+
+            IsOpened = true;
         }
 
         /// <summary>
@@ -93,6 +99,10 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void Close()
         {
+            if (!IsOpened)
+                return;
+
+            IsOpened = false;
             UiSystem.CloseUi(Owner, UiKey, PlayerManager.LocalEntity, predicted: true);
         }
 

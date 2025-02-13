@@ -35,21 +35,12 @@ public sealed class MultiRootInheritanceGraph<T> where T : notnull
 
     public void Add(T id, params T[] parents)
     {
-        _rootNodes.Remove(id);
-
-        foreach (var parent in parents)
-        {
-            var edges = _edges.GetOrNew(parent);
-            edges.Add(id);
-            _parents[id] = parents;
-
-            if (!_parents.ContainsKey(parent))
-                _rootNodes.Add(parent);
-        }
-
         //check for circular inheritance
         foreach (var parent in parents)
         {
+            if (EqualityComparer<T>.Default.Equals(parent,id))
+                throw new InvalidOperationException($"Circular Inheritance detected for id \"{id}\" and parent \"{parent}\"");
+
             var parentsL1 = GetParents(parent);
             if(parentsL1 == null) continue;
 
@@ -68,6 +59,18 @@ public sealed class MultiRootInheritanceGraph<T> where T : notnull
                     }
                 }
             }
+        }
+
+        _rootNodes.Remove(id);
+
+        foreach (var parent in parents)
+        {
+            var edges = _edges.GetOrNew(parent);
+            edges.Add(id);
+            _parents[id] = parents;
+
+            if (!_parents.ContainsKey(parent))
+                _rootNodes.Add(parent);
         }
     }
 

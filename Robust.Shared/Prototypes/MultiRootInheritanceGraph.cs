@@ -38,8 +38,8 @@ public sealed class MultiRootInheritanceGraph<T> where T : notnull
         //check for circular inheritance
         foreach (var parent in parents)
         {
-            if (EqualityComparer<T>.Default.Equals(parent,id))
-                throw new InvalidOperationException($"Circular Inheritance detected for id \"{id}\" and parent \"{parent}\"");
+            if (EqualityComparer<T>.Default.Equals(parent, id))
+                throw new InvalidOperationException($"Self Inheritance detected for id \"{id}\"!");
 
             var parentsL1 = GetParents(parent);
             if(parentsL1 == null) continue;

@@ -109,6 +109,6 @@ public sealed class MultiRootGraphTest
     public void IsOwnParentTest()
     {
         var graph = new MultiRootInheritanceGraph<string>();
-        Assert.Throws<InvalidOperationException>(() => graph.Add(Id1, new []{Id1}));
+        Assert.Throws<InvalidOperationException>(() => graph.Add(Id1, new []{ Id1 }));
     }
 }

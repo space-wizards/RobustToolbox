@@ -487,7 +487,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
                 ent.Comp.States[key] = buiState;
 
-                if (!ent.Comp.ClientOpenInterfaces.TryGetValue(key, out var cBui))
+                if (!ent.Comp.ClientOpenInterfaces.TryGetValue(key, out var cBui) || !cBui.IsOpened)
                     continue;
 
                 cBui.State = buiState;
@@ -755,8 +755,11 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         // Predict the change on client
         if (state != null && _netManager.IsClient && entity.Comp.ClientOpenInterfaces.TryGetValue(key, out var bui))
         {
-            bui.UpdateState(state);
-            bui.Update();
+            if (bui.State?.Equals(state) != true)
+            {
+                bui.UpdateState(state);
+                bui.Update();
+            }
         }
 
         DirtyField(entity, nameof(UserInterfaceComponent.States));

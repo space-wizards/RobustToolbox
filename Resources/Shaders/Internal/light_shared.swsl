@@ -66,25 +66,25 @@ void fragment()
     val *= lightPower;
     val *= mask;
 
-    highp float run = 1;
+    highp float run = 1.0;
 
     if (useNormals == 1)
     {
         highp vec2 lightDir = rotateVector(normalize(diff), globalRotation);
         highp vec2 newUV = rotateVector(UV - vec2(0.5, 0.5) + rotateVector((lightCenter - eyeCenter) / vec2(2, -2) / lightRange, maskRotation), -globalRotation);
-        newUV *= (projectionMatrix * vec3(1, 1, 0)).xy * vec2(1, -1) / eyeZoom * lightRange;
+        newUV *= (projectionMatrix * vec3(1.0, 1.0, 0.0)).xy * vec2(1.0, -1.0) / eyeZoom * lightRange;
         newUV += vec2(0.5, 0.5);
 
         highp vec4 origSample = texture2D(normalMap, newUV);
-        if (origSample.xyzw == vec4(0,0,0,1))
+        if (origSample.xyzw == vec4(0.0, 0.0, 0.0, 1.0))
             discard;
 
         // origSample is on the range 0 - 1 in all components,
         // but every color component has been raised to the log_0.5(ln(2)/pi)th power (yes i know) by some unknown mechanism
         // so we first raise it to the log_(ln2/pi)(0.5)th power (yes, i know) to reset it
-        highp vec3 normalSample = pow(origSample.xyz, vec3(COLOR_POWER)) * vec3(2,2,1) - vec3(1, 1, 0);
-        run = dot(normalize(vec3(lightDir, LIGHTING_HEIGHT)), normalSample * vec3(-1, -1, 1));
-        if (run <= 0)
+        highp vec3 normalSample = pow(origSample.xyz, vec3(COLOR_POWER)) * vec3(2.0, 2.0, 1.0) - vec3(1.0, 1.0, 0.0);
+        run = dot(normalize(vec3(lightDir, LIGHTING_HEIGHT)), normalSample * vec3(-1.0, -1.0, 1.0));
+        if (run <= 0.0)
             discard;
     }
 

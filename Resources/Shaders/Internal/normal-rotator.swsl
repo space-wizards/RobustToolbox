@@ -6,7 +6,7 @@ void fragment()
 {
     highp vec4 Col = zTexture(UV);
     Col = vec4(pow(Col.xy, vec2(COLOR_POWER)) - vec2(0.5, 0.5), Col.zw);
-    Col = vec4(Col.xy * cos(rotation) + vec2(-1, 1) * Col.yx * sin(rotation), Col.zw);
+    Col = vec4(Col.xy * cos(rotation) + vec2(-1.0, 1.0) * Col.yx * sin(rotation), Col.zw);
     Col = vec4(pow(Col.xy + vec2(0.5, 0.5), vec2(COLOR_POWERNT)), Col.zw);
     COLOR = Col;
 }

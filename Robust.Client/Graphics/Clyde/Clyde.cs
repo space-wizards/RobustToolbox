@@ -247,7 +247,7 @@ namespace Robust.Client.Graphics.Clyde
                 overrideVersion != null,
                 _windowing!.GetDescription());
 
-            GL.Enable(EnableCap.Blend);
+            IsBlending = true;
             if (_hasGLSrgb && !_isGLES)
             {
                 GL.Enable(EnableCap.FramebufferSrgb);

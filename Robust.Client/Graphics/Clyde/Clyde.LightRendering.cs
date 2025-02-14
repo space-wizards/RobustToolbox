@@ -281,8 +281,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             const float arbitraryDistanceMax = 1234;
 
-            GL.Disable(EnableCap.Blend);
-            CheckGlError();
+            IsBlending = false;
 
             GL.Enable(EnableCap.DepthTest);
             CheckGlError();
@@ -331,8 +330,7 @@ namespace Robust.Client.Graphics.Clyde
             GL.Disable(EnableCap.DepthTest);
             CheckGlError();
 
-            GL.Enable(EnableCap.Blend);
-            CheckGlError();
+            IsBlending = true;
         }
 
         private void DrawLightsAndFov(Viewport viewport, Box2Rotated worldBounds, Box2 worldAABB, IEye eye)
@@ -416,7 +414,6 @@ namespace Robust.Client.Graphics.Clyde
             var oldShader = _queuedShaderInstance;
             var oldModel = _currentMatrixModel;
             var oldScissor = _currentScissorState;
-            var oldScissoring = _isScissoring;
             var state = PushRenderStateFull();
 
             RenderOverlays(viewport, OverlaySpace.BeforeLighting, worldAABB, worldBounds);
@@ -425,7 +422,6 @@ namespace Robust.Client.Graphics.Clyde
                 BlurLights(viewport, viewport.LightRenderTarget, viewport.Eye, _lightManager.BlurFactor);
 
             PopRenderStateFull(state);
-            DebugTools.Assert(oldScissoring.Equals(_isScissoring));
             DebugTools.Assert(oldScissor.Equals(_currentScissorState));
             DebugTools.Assert(oldModel.Equals(_currentMatrixModel));
             DebugTools.Assert(oldShader.Equals(_queuedShaderInstance));
@@ -673,8 +669,7 @@ namespace Robust.Client.Graphics.Clyde
             using var _ = DebugGroup(nameof(BlurLights));
 
             var state = PushRenderStateFull();
-            GL.Disable(EnableCap.Blend);
-            CheckGlError();
+            IsBlending = false;
             CalcScreenMatrices(viewport.Size, out var proj, out var view);
             SetProjViewBuffer(proj, view);
 
@@ -726,8 +721,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             PopRenderStateFull(state);
-            GL.Enable(EnableCap.Blend);
-            CheckGlError();
+            IsBlending = true;
             // We didn't trample over the old _currentMatrices so just roll it back.
             SetProjViewBuffer(_currentMatrixProj, _currentMatrixView);
         }
@@ -736,8 +730,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             using var _ = DebugGroup(nameof(BlurOntoWalls));
 
-            GL.Disable(EnableCap.Blend);
-            CheckGlError();
+            IsBlending = false;
             CalcScreenMatrices(viewport.Size, out var proj, out var view);
             SetProjViewBuffer(proj, view);
 
@@ -787,8 +780,7 @@ namespace Robust.Client.Graphics.Clyde
                 SetTexture(TextureUnit.Texture0, viewport.WallBleedIntermediateRenderTarget2.Texture);
             }
 
-            GL.Enable(EnableCap.Blend);
-            CheckGlError();
+            IsBlending = true;
             // We didn't trample over the old _currentMatrices so just roll it back.
             SetProjViewBuffer(_currentMatrixProj, _currentMatrixView);
         }
@@ -801,8 +793,7 @@ namespace Robust.Client.Graphics.Clyde
 
             GL.Viewport(0, 0, viewport.LightRenderTarget.Size.X, viewport.LightRenderTarget.Size.Y);
             CheckGlError();
-            GL.Disable(EnableCap.Blend);
-            CheckGlError();
+            IsBlending = false;
 
             var shader = _loadedShaders[_mergeWallLayerShaderHandle].Program;
             shader.Use();
@@ -822,8 +813,7 @@ namespace Robust.Client.Graphics.Clyde
                 IntPtr.Zero);
             CheckGlError();
 
-            GL.Enable(EnableCap.Blend);
-            CheckGlError();
+            IsBlending = true;
         }
 
         private void ApplyFovToBuffer(Viewport viewport, IEye eye)

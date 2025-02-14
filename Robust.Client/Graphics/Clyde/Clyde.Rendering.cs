@@ -90,25 +90,24 @@ namespace Robust.Client.Graphics.Clyde
         // (queue) and (misc), current state of the scissor test. Null if disabled.
         private UIBox2i? _currentScissorState;
 
-        // Some simple flags that basically just tracks the current state of glEnable(GL_STENCIL/GL_SCISSOR_TEST)
-        private bool _isScissoring;
+        /// <summary>
+        /// Tracks enabled GL capabilities for renderer state.
+        /// </summary>
+        private GLCaps _glCaps = GLCaps.None;
 
         private bool IsStencilling
         {
-            get => _isStenc;
+            get => (_glCaps & GLCaps.Stencilling) == GLCaps.Stencilling;
             set
             {
-                if (value == _isStenc)
-                    return;
-
-                _isStenc = value;
-
                 if (value)
                 {
+                    _glCaps |= GLCaps.Stencilling;
                     GL.Enable(EnableCap.StencilTest);
                 }
                 else
                 {
+                    _glCaps &= GLCaps.Stencilling;
                     GL.Disable(EnableCap.StencilTest);
                 }
 
@@ -116,7 +115,30 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private bool _isStenc;
+        private bool IsBlending
+        {
+            get => (_glCaps & GLCaps.Blending) == GLCaps.Blending;
+            set
+            {
+                if (value)
+                {
+                    _glCaps |= GLCaps.Blending;
+                    GL.Enable(EnableCap.Blend);
+                }
+                else
+                {
+                    _glCaps &= GLCaps.Blending;
+                    GL.Disable(EnableCap.Blend);
+                }
+
+                CheckGlError();
+            }
+        }
+
+        private bool IsScissoring
+        {
+            get => _currentScissorState != null;
+        }
 
         private readonly RefList<RenderCommand> _queuedRenderCommands = new RefList<RenderCommand>();
 
@@ -388,16 +410,17 @@ namespace Robust.Client.Graphics.Clyde
 
         private void SetScissorImmediate(bool enable, in UIBox2i box)
         {
-            var oldIsScissoring = _isScissoring;
-            _isScissoring = enable;
-            if (_isScissoring)
+            if (enable)
             {
-                if (!oldIsScissoring)
-                {
-                    GL.Enable(EnableCap.ScissorTest);
-                    CheckGlError();
-                }
+                GL.Enable(EnableCap.ScissorTest);
+            }
+            else
+            {
+                GL.Disable(EnableCap.ScissorTest);
+            }
 
+            if (enable)
+            {
                 // Don't forget to flip it, these coordinates have bottom left as origin.
                 // TODO: Broken when rendering to non-screen render targets.
 
@@ -409,11 +432,6 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     GL.Scissor(box.Left, _currentRenderTarget.Size.Y - box.Bottom, box.Width, box.Height);
                 }
-                CheckGlError();
-            }
-            else if (oldIsScissoring)
-            {
-                GL.Disable(EnableCap.ScissorTest);
                 CheckGlError();
             }
         }
@@ -877,7 +895,8 @@ namespace Robust.Client.Graphics.Clyde
                 _currentBoundRenderTarget,
                 _currentRenderTarget,
                 _queuedShaderInstance,
-                _isStenc);
+                _currentScissorState,
+                _glCaps);
         }
 
         private void PopRenderStateFull(in FullStoredRendererState state)
@@ -889,11 +908,15 @@ namespace Robust.Client.Graphics.Clyde
             _currentRenderTarget = state.RenderTarget;
             var (width, height) = state.BoundRenderTarget.Size;
             GL.Viewport(0, 0, width, height);
-            IsStencilling = state.IsStencilling;
+
+            IsStencilling = (state.GLCaps & GLCaps.Stencilling) == GLCaps.Stencilling;
+            IsBlending = (state.GLCaps & GLCaps.Blending) == GLCaps.Blending;
+
+            SetScissorFull(state.ScissorState);
+
             GL.ClearStencil(0xFF);
             GL.StencilMask(0xFF);
             GL.Clear(ClearBufferMask.StencilBufferBit);
-            CheckGlError();
         }
 
         private void SetViewportImmediate(Box2i box)
@@ -1088,7 +1111,10 @@ namespace Robust.Client.Graphics.Clyde
             public readonly LoadedRenderTarget BoundRenderTarget;
             public readonly LoadedRenderTarget RenderTarget;
             public readonly ClydeShaderInstance QueuedShaderInstance;
-            public readonly bool IsStencilling;
+
+            public readonly UIBox2i? ScissorState;
+
+            public readonly GLCaps GLCaps;
 
             public FullStoredRendererState(
                 in Matrix3x2 projMatrix,
@@ -1096,7 +1122,8 @@ namespace Robust.Client.Graphics.Clyde
                 LoadedRenderTarget boundRenderTarget,
                 LoadedRenderTarget renderTarget,
                 ClydeShaderInstance queuedShaderInstance,
-                bool isStencilling
+                UIBox2i? scissorState,
+                GLCaps glcaps
                 )
             {
                 ProjMatrix = projMatrix;
@@ -1104,8 +1131,21 @@ namespace Robust.Client.Graphics.Clyde
                 BoundRenderTarget = boundRenderTarget;
                 RenderTarget = renderTarget;
                 QueuedShaderInstance = queuedShaderInstance;
-                IsStencilling = isStencilling;
+
+                ScissorState = scissorState;
+                GLCaps = glcaps;
             }
+        }
+
+        [Flags]
+        private enum GLCaps : ushort
+        {
+            // If you add flags here make sure to update PopRenderState!
+            None = 0,
+
+            Blending = 1 << 0,
+
+            Stencilling = 1 << 2,
         }
     }
 }

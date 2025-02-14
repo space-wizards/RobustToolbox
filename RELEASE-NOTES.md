@@ -42,7 +42,6 @@ END TEMPLATE-->
 
 * Add roof flag to tiles to indicate lighting should not be drawn to them.
 * Add BeforeLighting overlay draw space for overlays that need to draw directly to lighting and want to do it immediately beforehand.
-* Add BlurFactor to LightManager to control how much to blur lights by.
 * Add ContentFlag to tiles for content-flag usage.
 
 ### Bugfixes

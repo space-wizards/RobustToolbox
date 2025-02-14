@@ -416,13 +416,11 @@ namespace Robust.Client.Graphics.Clyde
             var oldScissor = _currentScissorState;
             var state = PushRenderStateFull();
 
-            // TODO: This fucks blend state somehow
             RenderOverlays(viewport, OverlaySpace.BeforeLighting, worldAABB, worldBounds);
-
-            //if (_lightManager.BlurFactor != 0f && viewport.Eye != null)
-            //    BlurLights(viewport, viewport.LightRenderTarget, viewport.Eye, _lightManager.BlurFactor);
-
             PopRenderStateFull(state);
+
+            //BlurRenderTarget(viewport, viewport.LightRenderTarget, eye, 14f);
+
             DebugTools.Assert(oldScissor.Equals(_currentScissorState));
             DebugTools.Assert(oldModel.Equals(_currentMatrixModel));
             DebugTools.Assert(oldShader.Equals(_queuedShaderInstance));
@@ -535,7 +533,7 @@ namespace Robust.Client.Graphics.Clyde
             CheckGlError();
 
             if (_cfg.GetCVar(CVars.LightBlur))
-                BlurLights(viewport, viewport.LightRenderTarget, eye);
+                BlurRenderTarget(viewport, viewport.LightRenderTarget, eye, 14f);
 
             using (_prof.Group("BlurOntoWalls"))
             {
@@ -662,12 +660,12 @@ namespace Robust.Client.Graphics.Clyde
             return (state.count, expandedBounds);
         }
 
-        private void BlurLights(IClydeViewport viewport, IRenderTarget target, IEye eye, float multiplier = 14f)
+        public void BlurRenderTarget(IClydeViewport viewport, IRenderTarget target, IEye eye, float multiplier)
         {
             if (target is not RenderTexture rTexture || viewport is not Viewport rViewport)
                 return;
 
-            using var _ = DebugGroup(nameof(BlurLights));
+            using var _ = DebugGroup(nameof(BlurRenderTarget));
 
             var state = PushRenderStateFull();
             IsBlending = false;

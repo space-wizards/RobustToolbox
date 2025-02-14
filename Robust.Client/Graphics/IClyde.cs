@@ -71,6 +71,8 @@ namespace Robust.Client.Graphics
             in TextureLoadParameters? loadParams = null)
             where T : unmanaged, IPixel<T>;
 
+        void BlurRenderTarget(IClydeViewport viewport, IRenderTarget target, IEye eye, float multiplier);
+
         IRenderTexture CreateLightRenderTarget(Vector2i size, string? name = null, bool depthStencil = true);
 
         IRenderTexture CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,

@@ -189,6 +189,11 @@ namespace Robust.Client.Graphics.Clyde
             return new DummyTexture(size);
         }
 
+        public void BlurRenderTarget(IClydeViewport viewport, IRenderTarget target, IEye eye, float multiplier)
+        {
+            // NOOP
+        }
+
         public IRenderTexture CreateLightRenderTarget(Vector2i size, string? name = null, bool depthStencil = true)
         {
             return CreateRenderTarget(size, new RenderTargetFormatParameters(RenderTargetColorFormat.R8, hasDepthStencil: depthStencil), null, name: name);

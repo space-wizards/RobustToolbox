@@ -24,10 +24,5 @@ namespace Robust.Client.Graphics
         /// This is useful to prevent players messing with lighting setup when they shouldn't.
         /// </summary>
         bool LockConsoleAccess { get; set; }
-
-        /// <summary>
-        /// How much to blur the lighting render target by after BeforeLighting overlays have run.
-        /// </summary>
-        float BlurFactor { get; set; }
     }
 }

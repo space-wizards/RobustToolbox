@@ -1,6 +1,5 @@
 ﻿using System.Numerics;
 using Robust.Client.Graphics;
-using Robust.Shared.Graphics;
 using Robust.Shared.Graphics.RSI;
 using Robust.Shared.Maths;
 

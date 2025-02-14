@@ -416,10 +416,11 @@ namespace Robust.Client.Graphics.Clyde
             var oldScissor = _currentScissorState;
             var state = PushRenderStateFull();
 
+            // TODO: This fucks blend state somehow
             RenderOverlays(viewport, OverlaySpace.BeforeLighting, worldAABB, worldBounds);
 
-            if (_lightManager.BlurFactor != 0f && viewport.Eye != null)
-                BlurLights(viewport, viewport.LightRenderTarget, viewport.Eye, _lightManager.BlurFactor);
+            //if (_lightManager.BlurFactor != 0f && viewport.Eye != null)
+            //    BlurLights(viewport, viewport.LightRenderTarget, viewport.Eye, _lightManager.BlurFactor);
 
             PopRenderStateFull(state);
             DebugTools.Assert(oldScissor.Equals(_currentScissorState));
@@ -721,9 +722,6 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             PopRenderStateFull(state);
-            IsBlending = true;
-            // We didn't trample over the old _currentMatrices so just roll it back.
-            SetProjViewBuffer(_currentMatrixProj, _currentMatrixView);
         }
 
         private void BlurOntoWalls(Viewport viewport, IEye eye)

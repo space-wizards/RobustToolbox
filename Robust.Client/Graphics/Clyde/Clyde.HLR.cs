@@ -426,13 +426,13 @@ namespace Robust.Client.Graphics.Clyde
             var oldBoundTarget = _currentBoundRenderTarget;
             var oldRenderTarget = _currentRenderTarget;
             var oldShader = _queuedShaderInstance;
+            var oldCaps = _glCaps;
 
             // Need to get state before flushing render queue in case they modify the original state.
             var state = PushRenderStateFull();
 
             // Have to flush the render queue so that all commands finish rendering to the previous framebuffer.
             FlushRenderQueue();
-
 
             {
                 BindRenderTargetFull(RtToLoaded(rt));
@@ -455,9 +455,9 @@ namespace Robust.Client.Graphics.Clyde
             PopRenderStateFull(state);
             _updateUniformConstants(_currentRenderTarget.Size);
 
-            SetScissorFull(oldScissor);
             _currentMatrixModel = oldTransform;
 
+            DebugTools.Assert(oldCaps.Equals(_glCaps));
             DebugTools.Assert(_currentMatrixModel.Equals(oldTransform));
             DebugTools.Assert(_currentScissorState.Equals(oldScissor));
             DebugTools.Assert(_currentMatrixProj.Equals(oldMatrixProj));

@@ -46,8 +46,6 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     private ValueList<Enum> _keys = new();
 
-    private ValueList<EntityUid> _entList = new();
-
     public override void Initialize()
     {
         base.Initialize();
@@ -288,11 +286,12 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
     protected virtual void OnUserInterfaceShutdown(Entity<UserInterfaceComponent> ent, ref ComponentShutdown args)
     {
+        var ents = new ValueList<EntityUid>();
         foreach (var (key, acts) in ent.Comp.Actors)
         {
-            _entList.Clear();
-            _entList.AddRange(acts);
-            foreach (var actor in _entList)
+            ents.Clear();
+            ents.AddRange(acts);
+            foreach (var actor in ents)
             {
                 CloseUiInternal(ent!, key, actor);
                 DebugTools.Assert(!acts.Contains(actor));

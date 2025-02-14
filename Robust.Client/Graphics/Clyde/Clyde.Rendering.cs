@@ -100,6 +100,9 @@ namespace Robust.Client.Graphics.Clyde
             get => (_glCaps & GLCaps.Stencilling) == GLCaps.Stencilling;
             set
             {
+                if (value == IsStencilling)
+                    return;
+
                 if (value)
                 {
                     _glCaps |= GLCaps.Stencilling;
@@ -107,7 +110,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 else
                 {
-                    _glCaps &= GLCaps.Stencilling;
+                    _glCaps &= ~GLCaps.Stencilling;
                     GL.Disable(EnableCap.StencilTest);
                 }
 
@@ -120,6 +123,9 @@ namespace Robust.Client.Graphics.Clyde
             get => (_glCaps & GLCaps.Blending) == GLCaps.Blending;
             set
             {
+                if (value == IsBlending)
+                    return;
+
                 if (value)
                 {
                     _glCaps |= GLCaps.Blending;
@@ -127,7 +133,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 else
                 {
-                    _glCaps &= GLCaps.Blending;
+                    _glCaps &= ~GLCaps.Blending;
                     GL.Disable(EnableCap.Blend);
                 }
 

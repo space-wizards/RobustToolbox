@@ -225,7 +225,8 @@ namespace Robust.Client.Graphics
             return
                 (type == ShaderDataType.Float) ||
                 (type == ShaderDataType.Vec2) ||
-                (type == ShaderDataType.Bool);
+                (type == ShaderDataType.Bool) ||
+                (type == ShaderDataType.Vec4);
         }
 
         [SuppressMessage("ReSharper", "StringLiteralTypo")]

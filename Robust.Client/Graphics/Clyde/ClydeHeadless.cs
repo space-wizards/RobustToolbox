@@ -352,6 +352,10 @@ namespace Robust.Client.Graphics.Clyde
             {
             }
 
+            private protected override void SetParameterImpl(string name, Color[] value)
+            {
+            }
+
             private protected override void SetParameterImpl(string name, int value)
             {
             }

@@ -487,6 +487,9 @@ namespace Robust.Client.Graphics.Clyde
                     case Color color:
                         program.SetUniform(name, color);
                         break;
+                    case Color[] colorArr:
+                        program.SetUniform(name, colorArr);
+                        break;
                     case int i:
                         program.SetUniform(name, i);
                         break;

@@ -334,7 +334,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private void SetUniformDirect(int slot, in Color color, bool convertToLinear=true)
+            private void SetUniformDirect(int slot, in Color color, bool convertToLinear = true)
             {
                 var converted = color;
                 if (convertToLinear)
@@ -346,6 +346,33 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     GL.Uniform4(slot, 1, (float*) &converted);
                     _clyde.CheckGlError();
+                }
+            }
+
+            public void SetUniform(string uniformName, in Color[] colors)
+            {
+                var uniformId = GetUniform(uniformName);
+                SetUniformDirect(uniformId, colors);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private void SetUniformDirect(int slot, Color[] colors, bool convertToLinear = true)
+            {
+                unsafe
+                {
+                    if (convertToLinear)
+                    {
+                        for (int i = 0; i < colors.Length; i++)
+                        {
+                            colors[i] = Color.FromSrgb(colors[i]);
+                        }
+                    }
+
+                    fixed (Color* ptr = &colors[0])
+                    {
+                        GL.Uniform4(slot, colors.Length, (float*)ptr);
+                        _clyde.CheckGlError();
+                    }
                 }
             }
 

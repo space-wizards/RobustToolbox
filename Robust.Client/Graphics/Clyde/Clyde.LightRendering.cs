@@ -16,6 +16,7 @@ using OGLTextureWrapMode = OpenToolkit.Graphics.OpenGL.TextureWrapMode;
 using TKStencilOp = OpenToolkit.Graphics.OpenGL4.StencilOp;
 using Robust.Shared.Physics;
 using Robust.Client.ComponentTrees;
+using Robust.Shared.Enums;
 using Robust.Shared.Graphics;
 using static Robust.Shared.GameObjects.OccluderComponent;
 using Robust.Shared.Utility;
@@ -513,6 +514,8 @@ namespace Robust.Client.Graphics.Clyde
             _isStencilling = false;
 
             CheckGlError();
+
+            RenderOverlays(viewport, OverlaySpace.BeforeLighting, worldAABB, worldBounds);
 
             if (_cfg.GetCVar(CVars.LightBlur))
                 BlurLights(viewport, eye);

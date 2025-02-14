@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fixed an error in `MappingDataNode.TryAddCopy()`, which was causing yaml inheritance/deserialization bugs.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,17 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 245.0.0
+
+### Breaking changes
+
+* `BoundUserInterface.Open()` now has the `MustCallBase` attribute
+
+### Bugfixes
+
+* Fixed an error in `MappingDataNode.TryAddCopy()`, which was causing yaml inheritance/deserialization bugs.
 
 
 ## 244.0.0

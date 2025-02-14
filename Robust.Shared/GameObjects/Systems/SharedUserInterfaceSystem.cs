@@ -41,13 +41,6 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// </summary>
     private readonly List<(BoundUserInterface Bui, bool value)> _queuedBuis = new();
 
-    /// <summary>
-    /// Temporary storage for BUI keys
-    /// </summary>
-    private ValueList<Enum> _keys = new();
-
-    private ValueList<EntityUid> _entList = new();
-
     public override void Initialize()
     {
         base.Initialize();
@@ -288,11 +281,12 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
     protected virtual void OnUserInterfaceShutdown(Entity<UserInterfaceComponent> ent, ref ComponentShutdown args)
     {
+        var ents = new ValueList<EntityUid>();
         foreach (var (key, acts) in ent.Comp.Actors)
         {
-            _entList.Clear();
-            _entList.AddRange(acts);
-            foreach (var actor in _entList)
+            ents.Clear();
+            ents.AddRange(acts);
+            foreach (var actor in ents)
             {
                 CloseUiInternal(ent!, key, actor);
                 DebugTools.Assert(!acts.Contains(actor));
@@ -897,12 +891,13 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         if (actor.Comp.OpenInterfaces.Count == 0)
             return;
 
+        var keys = new ValueList<Enum>();
         foreach (var (uid, enums) in actor.Comp.OpenInterfaces)
         {
-            _keys.Clear();
-            _keys.AddRange(enums);
+            keys.Clear();
+            keys.AddRange(enums);
 
-            foreach (var weh in _keys)
+            foreach (var weh in keys)
             {
                 if (weh is not T)
                     continue;
@@ -923,12 +918,14 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         if (actor.Comp.OpenInterfaces.Count == 0)
             return;
 
+        var keys = new ValueList<Enum>();
+
         foreach (var (uid, enums) in actor.Comp.OpenInterfaces)
         {
-            _keys.Clear();
-            _keys.AddRange(enums);
+            keys.Clear();
+            keys.AddRange(enums);
 
-            foreach (var key in _keys)
+            foreach (var key in keys)
             {
                 CloseUiInternal(uid, key, actor.Owner);
             }

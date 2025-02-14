@@ -26,14 +26,23 @@ public partial class SerializationManager
 
     public DataNode PushComposition(Type type, DataNode[] parents, DataNode child, ISerializationContext? context = null)
     {
+        // TODO SERIALIZATION
+        // Add variant that doesn't require a parent array.
+
+        // TODO SERIALIZATION
+        // Change inheritance pushing so that it modifies the passed in child. This avoids re-creating the child
+        // multiple times when there are multiple children.
+        //
+        // I.e., change the PushCompositionDelegate signature to not have a return value, and also add an override
+        // of this method that modified the given child.
+
         if (parents.Length == 0)
             return child.Copy();
 
         DebugTools.Assert(parents.All(x => x.GetType() == child.GetType()));
 
-        // TODO SERIALIZATION
-        // Change inheritance pushing so that it modifies the passed in child.
-        // I.e., move the child.Clone() statement to the beginning here, then make the delegate modify the clone.
+
+        // the child.Clone() statement to the beginning here, then make the delegate modify the clone.
         // Currently pusing more than one parent requires multiple unnecessary clones.
 
         var pusher = GetOrCreatePushCompositionDelegate(type, child);

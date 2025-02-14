@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed an error in `MappingDataNode.TryAddCopy()`, which was causing yaml inheritance/deserialization bugs.
 
 ### Other
 

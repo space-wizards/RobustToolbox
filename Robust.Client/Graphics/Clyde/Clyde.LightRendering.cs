@@ -419,8 +419,6 @@ namespace Robust.Client.Graphics.Clyde
             RenderOverlays(viewport, OverlaySpace.BeforeLighting, worldAABB, worldBounds);
             PopRenderStateFull(state);
 
-            //BlurRenderTarget(viewport, viewport.LightRenderTarget, eye, 14f);
-
             DebugTools.Assert(oldScissor.Equals(_currentScissorState));
             DebugTools.Assert(oldModel.Equals(_currentMatrixModel));
             DebugTools.Assert(oldShader.Equals(_queuedShaderInstance));

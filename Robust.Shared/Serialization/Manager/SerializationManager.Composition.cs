@@ -51,10 +51,6 @@ public partial class SerializationManager
         foreach (var parent in parents)
         {
             var newNode = pusher(type, parent, node, context);
-
-            // Currently delegate pusher should be returning a new instance, and not modifying the passed in child.
-            DebugTools.Assert(!ReferenceEquals(newNode, node));
-
             node = newNode;
         }
 

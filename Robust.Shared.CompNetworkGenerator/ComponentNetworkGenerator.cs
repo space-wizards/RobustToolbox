@@ -379,10 +379,18 @@ namespace Robust.Shared.CompNetworkGenerator
                         // (like if its a dict or list)
                         if (IsCloneType(type))
                         {
-                            getField = $"component.{name}";
                             cast = $"({castString})";
 
                             var nullCast = nullable ? castString.Substring(0, castString.Length - 1) : castString;
+
+                            if (nullable)
+                            {
+                                getField = $"component.{name} == null ? null : new(component.{name})";
+                            }
+                            else
+                            {
+                                getField = $"new(component.{name})";
+                            }
 
                             handleStateSetters.Append($@"
             component.{name} = state.{name} == null ? null! : new(state.{name});");

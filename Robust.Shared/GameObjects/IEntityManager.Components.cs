@@ -180,6 +180,14 @@ namespace Robust.Shared.GameObjects
         ///     Checks if the entity has a component type.
         /// </summary>
         /// <param name="uid">Entity UID to check.</param>
+        /// <param name="reg">The component registration to check for.</param>
+        /// <returns>True if the entity has the component type, otherwise false.</returns>
+        bool HasComponent(EntityUid uid, ComponentRegistration reg);
+
+        /// <summary>
+        ///     Checks if the entity has a component type.
+        /// </summary>
+        /// <param name="uid">Entity UID to check.</param>
         /// <param name="type">A trait or component type to check for.</param>
         /// <returns>True if the entity has the component type, otherwise false.</returns>
         bool HasComponent(EntityUid uid, Type type);
@@ -298,6 +306,15 @@ namespace Robust.Shared.GameObjects
         ///     Returns the component of a specific type.
         /// </summary>
         /// <param name="uid">Entity UID to check.</param>
+        /// <param name="reg">The component registration to check for.</param>
+        /// <param name="component">Component of the specified type (if exists).</param>
+        /// <returns>If the component existed in the entity.</returns>
+        bool TryGetComponent(EntityUid uid, ComponentRegistration reg, [NotNullWhen(true)] out IComponent? component);
+
+        /// <summary>
+        ///     Returns the component of a specific type.
+        /// </summary>
+        /// <param name="uid">Entity UID to check.</param>
         /// <param name="type">A trait or component type to check for.</param>
         /// <param name="component">Component of the specified type (if exists).</param>
         /// <returns>If the component existed in the entity.</returns>
@@ -411,6 +428,30 @@ namespace Robust.Shared.GameObjects
         (EntityUid Uid, T Component)[] AllComponents<T>() where T : IComponent;
 
         /// <summary>
+        /// Returns an array of all entities that have the given component.
+        /// Use sparingly.
+        /// </summary>
+        Entity<T>[] AllEntities<T>() where T : IComponent;
+
+        /// <summary>
+        /// Returns an array of all entities that have the given component.
+        /// Use sparingly.
+        /// </summary>
+        Entity<IComponent>[] AllEntities(Type tComp);
+
+        /// <summary>
+        /// Returns an array uids of all entities that have the given component.
+        /// Use sparingly.
+        /// </summary>
+        EntityUid[] AllEntityUids<T>() where T : IComponent;
+
+        /// <summary>
+        /// Returns an array uids of all entities that have the given component.
+        /// Use sparingly.
+        /// </summary>
+        EntityUid[] AllEntityUids(Type tComp);
+
+        /// <summary>
         /// Returns all instances of a component in a List.
         /// Use sparingly.
         /// </summary>
@@ -425,6 +466,8 @@ namespace Robust.Shared.GameObjects
         /// <see cref="CompRegistryQueryEnumerator"/>
         /// </summary>
         public CompRegistryEntityEnumerator CompRegistryQueryEnumerator(ComponentRegistry registry);
+
+        AllEntityQueryEnumerator<IComponent> AllEntityQueryEnumerator(Type comp);
 
         AllEntityQueryEnumerator<TComp1> AllEntityQueryEnumerator<TComp1>()
             where TComp1 : IComponent;

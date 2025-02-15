@@ -101,9 +101,31 @@ namespace Robust.Client.GameObjects
         /// <inheritdoc />
         public override void Dirty<T>(Entity<T> ent, MetaDataComponent? meta = null)
         {
-            //  Client only dirties during prediction
+            // Client only dirties during prediction
             if (_gameTiming.InPrediction)
                 base.Dirty(ent, meta);
+        }
+
+        public override void DirtyField<T>(EntityUid uid, T comp, string fieldName, MetaDataComponent? metadata = null)
+        {
+            // TODO Prediction
+            // does the client actually need to dirty the field?
+            // I.e., can't it just dirty the whole component to trigger a reset?
+
+            // Client only dirties during prediction
+            if (_gameTiming.InPrediction)
+                base.DirtyField(uid, comp, fieldName, metadata);
+        }
+
+        public override void DirtyFields<T>(EntityUid uid, T comp, MetaDataComponent? meta, params ReadOnlySpan<string> fields)
+        {
+            // TODO Prediction
+            // does the client actually need to dirty the field?
+            // I.e., can't it just dirty the whole component to trigger a reset?
+
+            // Client only dirties during prediction
+            if (_gameTiming.InPrediction)
+                base.DirtyFields(uid, comp, meta, fields);
         }
 
         /// <inheritdoc />

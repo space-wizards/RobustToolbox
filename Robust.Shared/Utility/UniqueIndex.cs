@@ -87,7 +87,7 @@ namespace Robust.Shared.Utility
                 return false;
             }
 
-            var newIndex = _index.SetItem(key, new HashSet<TValue>());
+            var newIndex = _index.Remove(key);
 
             if (_index != newIndex)
             {
@@ -126,7 +126,7 @@ namespace Robust.Shared.Utility
 
             var c = set.Count;
 
-            set.ExceptWith(set);
+            set.ExceptWith(values);
 
             return c - set.Count;
         }

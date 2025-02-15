@@ -123,13 +123,13 @@ namespace Robust.Shared.Timing
         /// </summary>
         public TimeSpan LastTick { get; set; }
 
-        private byte _tickRate;
+        private ushort _tickRate;
         private TimeSpan _tickRemainder;
 
         /// <summary>
         ///     The target ticks/second of the simulation.
         /// </summary>
-        public byte TickRate
+        public ushort TickRate
         {
             get => _tickRate;
             set => SetTickRateAt(value, CurTick);
@@ -230,7 +230,7 @@ namespace Robust.Shared.Timing
             Paused = true;
         }
 
-        public void SetTickRateAt(byte tickRate, GameTick atTick)
+        public void SetTickRateAt(ushort tickRate, GameTick atTick)
         {
             // Check this, because TickRate is a divisor in the cache calculation
             // The first time TickRate is set, no time will have passed anyways

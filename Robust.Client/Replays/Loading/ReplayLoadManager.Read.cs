@@ -52,7 +52,7 @@ public sealed partial class ReplayLoadManager
             var uncompressedSize = BitConverter.ToInt32(intBuf);
 
             var decompressedStream = new MemoryStream(uncompressedSize);
-            decompressStream.CopyTo(decompressedStream, uncompressedSize);
+            decompressStream.CopyTo(decompressedStream);
             decompressedStream.Position = 0;
             DebugTools.Assert(uncompressedSize == decompressedStream.Length);
 

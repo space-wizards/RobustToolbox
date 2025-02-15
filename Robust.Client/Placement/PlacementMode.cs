@@ -197,8 +197,9 @@ namespace Robust.Client.Placement
         /// </summary>
         public TileRef GetTileRef(EntityCoordinates coordinates)
         {
-            var gridUidOpt = coordinates.GetGridUid(pManager.EntityManager);
-            return gridUidOpt is EntityUid gridUid && gridUid.IsValid() ? pManager.EntityManager.GetComponent<MapGridComponent>(gridUid).GetTileRef(MouseCoords)
+            var gridUidOpt = pManager.EntityManager.System<SharedTransformSystem>().GetGrid(coordinates);
+            return gridUidOpt is { } gridUid && gridUid.IsValid()
+                ? pManager.EntityManager.System<SharedMapSystem>().GetTileRef(gridUid, pManager.EntityManager.GetComponent<MapGridComponent>(gridUid), MouseCoords)
                 : new TileRef(gridUidOpt ?? EntityUid.Invalid,
                     MouseCoords.ToVector2i(pManager.EntityManager, pManager.MapManager, pManager.EntityManager.System<SharedTransformSystem>()), Tile.Empty);
         }

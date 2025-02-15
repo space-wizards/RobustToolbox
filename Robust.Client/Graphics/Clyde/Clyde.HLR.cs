@@ -125,7 +125,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             DebugTools.Assert(space != OverlaySpace.ScreenSpaceBelowWorld && space != OverlaySpace.ScreenSpace);
 
-            var args = new OverlayDrawArgs(space, null, vp, _renderHandle.DrawingHandleWorld, new UIBox2i((0, 0), vp.Size), vp.Eye!.Position.MapId, worldBox, worldBounds);
+            var args = new OverlayDrawArgs(space, null, vp, _renderHandle, new UIBox2i((0, 0), vp.Size), vp.Eye!.Position.MapId, worldBox, worldBounds);
 
             if (!overlay.BeforeDraw(args))
                 return;
@@ -165,7 +165,7 @@ namespace Robust.Client.Graphics.Clyde
         private void RenderOverlaysDirect(
             Viewport vp,
             IViewportControl vpControl,
-            DrawingHandleBase handle,
+            IRenderHandle handle,
             OverlaySpace space,
             in UIBox2i bounds)
         {
@@ -214,8 +214,6 @@ namespace Robust.Client.Graphics.Clyde
                     _overlays.Add(overlay);
                 }
             }
-
-            _overlays.Sort(OverlayComparer.Instance);
 
             return _overlays;
         }
@@ -573,18 +571,6 @@ namespace Robust.Client.Graphics.Clyde
             var aabb = GetAABB(eye, viewport);
 
             return new Box2Rotated(aabb, rotation, aabb.Center);
-        }
-
-        private sealed class OverlayComparer : IComparer<Overlay>
-        {
-            public static readonly OverlayComparer Instance = new();
-
-            public int Compare(Overlay? x, Overlay? y)
-            {
-                var zX = x?.ZIndex ?? 0;
-                var zY = y?.ZIndex ?? 0;
-                return zX.CompareTo(zY);
-            }
         }
     }
 }

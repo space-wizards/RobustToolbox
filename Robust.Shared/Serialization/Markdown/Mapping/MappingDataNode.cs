@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Utility;
@@ -396,5 +397,25 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
 
         public int Count => _children.Count;
         public bool IsReadOnly => false;
+
+        public bool TryAdd(DataNode key, DataNode value)
+        {
+            if (!_children.TryAdd(key, value))
+                return false;
+
+            _list.Add(new(key, value));
+            return true;
+        }
+
+        public bool TryAddCopy(DataNode key, DataNode value)
+        {
+            ref var entry = ref CollectionsMarshal.GetValueRefOrAddDefault(_children, key, out var exists);
+            if (exists)
+                return false;
+
+            entry = value.Copy();
+            _list.Add(new(key, entry));
+            return true;
+        }
     }
 }

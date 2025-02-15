@@ -148,6 +148,36 @@ public partial class EntitySystem
         EntityManager.Dirty(uid, component, meta);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void DirtyField(EntityUid uid, IComponentDelta delta, string fieldName, MetaDataComponent? meta = null)
+    {
+        EntityManager.DirtyField(uid, delta, fieldName, meta);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void DirtyField<T>(Entity<T?> entity, string fieldName, MetaDataComponent? meta = null)
+        where T : IComponentDelta
+    {
+        if (!Resolve(entity.Owner, ref entity.Comp))
+            return;
+
+        EntityManager.DirtyField(entity.Owner, entity.Comp, fieldName, meta);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void DirtyField<T>(EntityUid uid, T component, string fieldName, MetaDataComponent? meta = null)
+        where T : IComponentDelta
+    {
+        EntityManager.DirtyField(uid, component, fieldName, meta);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void DirtyFields<T>(EntityUid uid, T comp, MetaDataComponent? meta, params ReadOnlySpan<string> fields)
+        where T : IComponentDelta
+    {
+        EntityManager.DirtyFields(uid, comp, meta);
+    }
+
     /// <summary>
     ///     Marks a component as dirty. This also implicitly dirties the entity this component belongs to.
     /// </summary>

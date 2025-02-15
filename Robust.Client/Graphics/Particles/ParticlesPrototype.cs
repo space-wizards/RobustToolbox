@@ -2,22 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Numerics;
-using System.Runtime.Serialization;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
-using YamlDotNet.RepresentationModel;
-using YamlDotNet.Serialization;
 using Vector3 = Robust.Shared.Maths.Vector3;
-using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.Client.Graphics;
 

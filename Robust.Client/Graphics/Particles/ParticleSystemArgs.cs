@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.Numerics;
 using Robust.Shared.Maths;
+using Vector3 = Robust.Shared.Maths.Vector3;
 
 namespace Robust.Client.Graphics;
 
@@ -24,11 +25,11 @@ public sealed class ParticleSystemArgs {
     /// <summary>
     ///  The lower left hand back corner of the cuboid outside of which particles will be deactivated
     /// </summary>
-    public Robust.Shared.Maths.Vector3?  LowerDrawBound;
+    public Vector3?  LowerDrawBound;
     /// <summary>
     ///  The upper right hand front corner of the cuboid outside of which particles will be deactivated
     /// </summary>
-    public Robust.Shared.Maths.Vector3? UpperDrawBound;
+    public Vector3? UpperDrawBound;
     /// <summary>
     /// The base transform to apply to all particles in this system
     /// </summary>
@@ -55,11 +56,11 @@ public sealed class ParticleSystemArgs {
     /// <summary>
     /// A function which returns a Vector3 which is this particles position at spawning
     /// </summary>
-    public Func<Robust.Shared.Maths.Vector3>? SpawnPosition;
+    public Func<Vector3>? SpawnPosition;
     /// <summary>
     /// A function which returns a Vector3 which is this particles velocity at spawning
     /// </summary>
-    public Func<Robust.Shared.Maths.Vector3>? SpawnVelocity;
+    public Func<Vector3>? SpawnVelocity;
 
     //queried every tick - arg is seconds particle has been alive. 0 for just spawned.
 
@@ -74,7 +75,7 @@ public sealed class ParticleSystemArgs {
     /// <summary>
     /// A function which takes the life time of this particles and returns the an acceleration to apply to this particle
     /// </summary>
-    public Func<float,Robust.Shared.Maths.Vector3>? Acceleration;
+    public Func<float,Vector3>? Acceleration;
 
     public ParticleSystemArgs(Func<Texture> icon, Vector2i particleSystemSize, uint particleCount, float particlesPerSecond){
         Icon = icon;

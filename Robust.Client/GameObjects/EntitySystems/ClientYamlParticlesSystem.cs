@@ -17,13 +17,13 @@ public sealed class ClientYamlParticlesSystem : SharedYamlParticlesSystem
 
     public override void Initialize() {
         base.Initialize();
-        SubscribeLocalEvent<YamlParticlesComponent, ComponentGetState>(OnYamlParticlesComponentGetState);
+        SubscribeLocalEvent<YamlParticlesComponent, ComponentChange>(OnYamlParticlesComponentChange);
         SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
         SubscribeLocalEvent<YamlParticlesComponent, ComponentAdd>(HandleComponentAdd);
         SubscribeLocalEvent<YamlParticlesComponent, ComponentRemove>(HandleComponentRemove);
     }
 
-    private void OnYamlParticlesComponentGetState(EntityUid uid, YamlParticlesComponent component, ref ComponentGetState args)
+    private void OnYamlParticlesComponentChange(EntityUid uid, YamlParticlesComponent component, ref ComponentChange args)
     {
         _particlesManager.DestroyParticleSystem(uid);
         if(_prototypeManager.TryIndex<ParticlesPrototype>(component.ParticleType, out var prototype)){

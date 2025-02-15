@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
+using Vector3 = Robust.Shared.Maths.Vector3;
 
 
 namespace Robust.Client.Graphics;
@@ -35,6 +37,9 @@ public sealed class ParticlesManager
         _particleSystems.Remove(entity);
     }
 
+    public bool TryGetParticleSystem(EntityUid entity, [NotNullWhen(true)] out ParticleSystem? system){
+        return _particleSystems.TryGetValue(entity, out system);
+    }
 }
 
 public sealed class ParticleSystem {
@@ -57,11 +62,11 @@ public sealed class ParticleSystem {
     /// <summary>
     ///  The lower left hand back corner of the cuboid outside of which particles will be deactivated
     /// </summary>
-    private Robust.Shared.Maths.Vector3 _lowerBound;
+    private Vector3 _lowerBound;
     /// <summary>
     ///  The upper right hand front corner of the cuboid outside of which particles will be deactivated
     /// </summary>
-    private Robust.Shared.Maths.Vector3 _upperBound;
+    private Vector3 _upperBound;
     /// <summary>
     /// The base transform to apply to all particles in this system
     /// </summary>
@@ -88,11 +93,11 @@ public sealed class ParticleSystem {
     /// <summary>
     /// A function which returns a Vector3 which is this particles position at spawning
     /// </summary>
-    private Func<Robust.Shared.Maths.Vector3> _spawnPosition;
+    private Func<Vector3> _spawnPosition;
     /// <summary>
     /// A function which returns a Vector3 which is this particles velocity at spawning
     /// </summary>
-    private Func<Robust.Shared.Maths.Vector3> _spawnVelocity;
+    private Func<Vector3> _spawnVelocity;
 
     //queried every tick - arg is seconds particle has been alive. 0 for just spawned.
 
@@ -107,7 +112,7 @@ public sealed class ParticleSystem {
     /// <summary>
     /// A function which takes the life time of this particles and returns the an acceleration to apply to this particle
     /// </summary>
-    private Func<float,Robust.Shared.Maths.Vector3> _acceleration;
+    private Func<float,Vector3> _acceleration;
 
     /// <summary>
     /// Internal store for particles for this system
@@ -120,18 +125,18 @@ public sealed class ParticleSystem {
         _particleSystemSize = args.ParticleSystemSize;
         _particleCount = args.ParticleCount;
         _particlesPerSecond = args.ParticlesPerSecond;
-        _lowerBound = args.LowerDrawBound is null ? new Robust.Shared.Maths.Vector3(-_particleSystemSize.X, -_particleSystemSize.Y, float.MinValue) : args.LowerDrawBound.Value;
-        _upperBound = args.UpperDrawBound is null ? new Robust.Shared.Maths.Vector3(_particleSystemSize.X, _particleSystemSize.Y, float.MaxValue) : args.UpperDrawBound.Value;
+        _lowerBound = args.LowerDrawBound is null ? new Vector3(-_particleSystemSize.X, -_particleSystemSize.Y, float.MinValue) : args.LowerDrawBound.Value;
+        _upperBound = args.UpperDrawBound is null ? new Vector3(_particleSystemSize.X, _particleSystemSize.Y, float.MaxValue) : args.UpperDrawBound.Value;
         _icon = args.Icon;
         _baseTransform = args.BaseTransform is null ? Matrix3x2.Identity : args.BaseTransform.Value;
         _lifespan = args.Lifespan is null ? () => int.MaxValue : args.Lifespan;
         _fadeout = args.Fadeout is null ? () => 0 : args.Fadeout;
         _fadein = args.Fadein is null ? () => 0 : args.Fadein;
-        _spawnPosition = args.SpawnPosition is null ? () => Robust.Shared.Maths.Vector3.Zero : args.SpawnPosition;
-        _spawnVelocity = args.SpawnVelocity is null ? () => Robust.Shared.Maths.Vector3.Zero : args.SpawnVelocity;
+        _spawnPosition = args.SpawnPosition is null ? () => Vector3.Zero : args.SpawnPosition;
+        _spawnVelocity = args.SpawnVelocity is null ? () => Vector3.Zero : args.SpawnVelocity;
         _color = args.Color is null ? (float lifetime) => System.Drawing.Color.White : args.Color;
         _transform = args.Transform is null ? (float lifetime) => Matrix3x2.Identity : args.Transform;
-        _acceleration = args.Acceleration is null ? (float lifetime) => Robust.Shared.Maths.Vector3.Zero : args.Acceleration;
+        _acceleration = args.Acceleration is null ? (float lifetime) => Vector3.Zero : args.Acceleration;
 
         _particles = new Particle[_particleCount];
         for(int i=0; i<_particleCount; i++)
@@ -191,8 +196,8 @@ public sealed class ParticleSystem {
 
 internal sealed class Particle {
     public Texture? texture;
-    public Robust.Shared.Maths.Vector3 position;
-    public Robust.Shared.Maths.Vector3 velocity;
+    public Vector3 position;
+    public Vector3 velocity;
     public Matrix3x2 transform;
     public System.Drawing.Color color;
     public float lifetime;

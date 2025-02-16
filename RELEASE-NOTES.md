@@ -65,6 +65,43 @@ END TEMPLATE-->
 *None yet*
 
 
+## 246.0.0
+
+### Breaking changes
+
+* The fixes to renderer state may have inadvertantly broken some rendering code that relied upon the old behavior.
+* TileRenderFlag has been removed and now it's just a byte flag on the tile for content usage.
+
+### New features
+
+* Add BeforeLighting overlay draw space for overlays that need to draw directly to lighting and want to do it immediately beforehand.
+* Change BlurLights to BlurRenderTarget and make it public for content usage.
+* Add ContentFlag to tiles for content-flag usage.
+* Add a basic mix shader for doing canvas blends.
+* Add GetClearColorEvent for content to override the clear color behavior.
+
+### Bugfixes
+
+* Fix pushing renderer state not restoring stencil status, blend status, queued shader instance scissor state.
+
+
+## 245.1.0
+
+### New features
+
+* Add more info to the AnchorEntity debug message.
+* Make ParseObject public where it will parse a supplied Type and string into the specified object.
+
+### Bugfixes
+
+* Fix EntityPrototypeView not always updating the entity correctly.
+* Tweak BUI shutdown to potentially avoid skipping closing.
+
+### Other
+
+* Increase Audio entity despawn buffer to avoid clipping.
+
+
 ## 245.0.0
 
 ### Breaking changes

@@ -78,7 +78,7 @@ public sealed class GridDeleteSingleTileRemoveTestTest : RobustIntegrationTest
             sMap = sys.CreateMap(out var mapId);
             var comp = mapMan.CreateGridEntity(mapId);
             grid = (comp.Owner, comp);
-            sys.SetTile(grid, grid, new Vector2i(0, 0), new Tile(1, (TileRenderFlag)1, 1));
+            sys.SetTile(grid, grid, new Vector2i(0, 0), new Tile(typeId: 1, flags: 1, variant: 1));
             var coords = new EntityCoordinates(grid, 0.5f, 0.5f);
 
             sPlayer = sEntMan.SpawnEntity(null, coords);

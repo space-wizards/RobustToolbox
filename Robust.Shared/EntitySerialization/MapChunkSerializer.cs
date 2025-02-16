@@ -77,7 +77,7 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
             for (ushort x = 0; x < chunk.ChunkSize; x++)
             {
                 var id = version < 6 ? reader.ReadUInt16() : reader.ReadInt32();
-                var flags = (TileRenderFlag)reader.ReadByte();
+                var flags = reader.ReadByte();
                 var variant = reader.ReadByte();
 
                 var defName = tileMap[id];

@@ -223,7 +223,7 @@ public abstract partial class SharedTransformSystem
         // An anchored entity is always parented to the grid.
         // If Transform.Anchored is true in the prototype but the entity was not spawned with a grid as the parent,
         // then this will be false.
-        Unanchor(uid, entity);
+        Unanchor(entity);
         return true;
     }
 

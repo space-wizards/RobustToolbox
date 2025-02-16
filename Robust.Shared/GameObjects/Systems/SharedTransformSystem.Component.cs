@@ -67,7 +67,7 @@ public abstract partial class SharedTransformSystem
     /// <param name="entity">The entity that will be attempted to anchor to <paramref name="grid"/> at <paramref name="tileIndices"/>.</param>
     /// <param name="grid">The grid that <paramref name="entity"/> will attempt to anchor to.</param>
     /// <param name="tileIndices">The location of the tile on <paramref name="grid"/> that <paramref name="entity"/> will attempt to anchor to.</param>
-    /// <returns></returns>
+    /// <returns>True if the entity was successfully anchored to the target tile on the target grid, false otherwise.</returns>
     public bool AnchorEntity(Entity<TransformComponent> entity, Entity<MapGridComponent> grid, Vector2i tileIndices)
     {
         var (uid, xform) = entity;
@@ -131,8 +131,6 @@ public abstract partial class SharedTransformSystem
 
     /// <summary>
     /// Attempts to anchor an entity to a given tile.
-    /// <br/>Will fail if the tiles entity lacks a <see cref="MapGridComponent"/>.
-    /// <br/>Will fail if the target tile cannot be anchored to (ex: does not exist, is space, etc).
     /// </summary>
     /// <param name="ent">The entity that will attempt to anchor to <paramref name="tile"/>.</param>
     /// <param name="tile">A reference to an extant tile that <paramref name="ent"/> will attempt to anchor to.</param>
@@ -145,12 +143,6 @@ public abstract partial class SharedTransformSystem
         return AnchorEntity(ent, (tile.GridUid, gridComp), tile.GridIndices);
     }
 
-    /// <summary>
-    /// <inheritdoc cref="AnchorEntity(Entity{TransformComponent}, Entity{MapGridComponent}?, Vector2i?)"/>
-    /// <br/>Will fail if the anchoring entity lacks a <see cref="TransformComponent"/>.
-    /// <br/>Will fail if the target entity lacks a <see cref="MapGridComponent"/>.
-    /// <br/>Will fail if the target tile cannot be anchored to (ex: does not exist, is space, etc).
-    /// </summary>
     /// <inheritdoc cref="AnchorEntity(Entity{TransformComponent}, Entity{MapGridComponent}?, Vector2i?)"/>
     public bool TryAnchorEntity(Entity<TransformComponent?> ent, Entity<MapGridComponent?>? grid = null, Vector2i? tileIndices = null)
     {
@@ -171,10 +163,6 @@ public abstract partial class SharedTransformSystem
         return AnchorEntity(ent!, gridEnt!, tileIndices);
     }
 
-    /// <summary>
-    /// <inheritdoc cref="AnchorEntity(Entity{TransformComponent}, TileRef)"/>
-    /// <br/>Will fail if the anchoring entity lacks a <see cref="TransformComponent"/>.
-    /// </summary>
     /// <inheritdoc cref="AnchorEntity(Entity{TransformComponent}, TileRef)"/>
     public bool TryAnchorEntity(Entity<TransformComponent?> ent, TileRef tile)
     {
@@ -274,7 +262,7 @@ public abstract partial class SharedTransformSystem
     /// <returns>True if the entity was successfully anchored or unanchored, false otherwise. Will return true if the entity was already in the desired state.</returns>
     public bool SetAnchor(Entity<TransformComponent> entity, bool value)
     {
-        var (uid, comp) = entity;
+        var (_, comp) = entity;
 
         if (value == comp._anchored)
             return true;
@@ -296,9 +284,7 @@ public abstract partial class SharedTransformSystem
         return true;
     }
 
-    /// <summary>
-    /// Attempts to anchor an entity that may or may not have a <see cref="TransformComponent"/>.
-    /// </summary>
+    /// <inheritdoc cref="SetAnchor"/>
     public bool TrySetAnchor(Entity<TransformComponent?> entity, bool value)
     {
         if (!XformQuery.Resolve(entity, ref entity.Comp))

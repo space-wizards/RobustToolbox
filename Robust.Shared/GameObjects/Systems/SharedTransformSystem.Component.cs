@@ -108,7 +108,7 @@ public abstract partial class SharedTransformSystem
         if (grid is null)
         {
             var gridUid = entity.Comp.GridUid;
-            if (!TryComp(gridUid, out MapGridComponent? gridComp))
+            if (!_gridQuery.TryGetComponent(gridUid, out MapGridComponent? gridComp))
                 return false;
 
             grid = (gridUid.Value, gridComp);

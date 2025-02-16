@@ -74,7 +74,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             // Act
             sim.System<MoveEventTestSystem>().ResetCounters();
-            xformSys.AnchorEntity(ent1);
+            xformSys.AnchorEntity((ent1, sim.Transform(ent1)));
             Assert.That(xformSys.GetWorldPosition(ent1), Is.EqualTo(new Vector2(7.5f, 7.5f))); // centered on tile
             sim.System<MoveEventTestSystem>().AssertMoved(false);
         }
@@ -224,7 +224,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             mapSys.SetTile(grid, tileIndices, Tile.Empty);
 
             // Act
-            xformSys.AnchorEntity(ent1);
+            xformSys.AnchorEntity((ent1, sim.Transform(ent1)));
 
             Assert.That(mapSys.GetAnchoredEntities(grid, tileIndices).Count(), Is.EqualTo(0));
             Assert.That(mapSys.GetTileRef(grid, tileIndices).Tile, Is.EqualTo(Tile.Empty));
@@ -292,7 +292,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var ent1 = sim.SpawnEntity(null, coordinates);
             var tileIndices = mapSys.TileIndicesFor(grid, sim.Transform(ent1).Coordinates);
             mapSys.SetTile(grid, tileIndices, new Tile(1));
-            xformSys.AnchorEntity(ent1);
+            xformSys.AnchorEntity((ent1, sim.Transform(ent1)));
 
             // Act
             xformSys.SetParent(ent1, mapSys.GetMap(coordinates.MapId));
@@ -337,7 +337,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var tileIndices = mapSys.TileIndicesFor(grid, sim.Transform(ent1).Coordinates);
             mapSys.SetTile(grid, tileIndices, new Tile(1));
             mapSys.SetTile(grid, new Vector2i(100, 100), new Tile(1)); // Prevents the grid from being deleted when the Act happens
-            xformSys.AnchorEntity(ent1);
+            xformSys.AnchorEntity((ent1, sim.Transform(ent1)));
 
             // Act
             mapSys.SetTile(grid, tileIndices, Tile.Empty);
@@ -363,7 +363,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var ent1 = sim.SpawnEntity(null, coords);
             var tileIndices = mapSys.TileIndicesFor(grid, sim.Transform(ent1).Coordinates);
             mapSys.SetTile(grid, tileIndices, new Tile(1));
-            xformSys.AnchorEntity(ent1);
+            xformSys.AnchorEntity((ent1, sim.Transform(ent1)));
 
             // Act
             // We purposefully use the grid as container so parent stays the same, reparent will unanchor
@@ -390,7 +390,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var ent1 = sim.SpawnEntity(null, coords);
             var tileIndices = mapSys.TileIndicesFor(grid, sim.Transform(ent1).Coordinates);
             mapSys.SetTile(grid, tileIndices, new Tile(1));
-            xformSys.AnchorEntity(ent1);
+            xformSys.AnchorEntity((ent1, sim.Transform(ent1)));
 
             // Act
             // assumed default body is Dynamic
@@ -417,7 +417,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             physSystem.SetBodyType(ent1, BodyType.Dynamic, body: physComp);
 
             // Act
-            xformSys.AnchorEntity(ent1);
+            xformSys.AnchorEntity((ent1, sim.Transform(ent1)));
 
             Assert.That(physComp.BodyType, Is.EqualTo(BodyType.Static));
         }
@@ -479,7 +479,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             containerSys.Insert(ent1, container);
 
             // Act
-            xformSys.AnchorEntity(ent1);
+            xformSys.AnchorEntity((ent1, sim.Transform(ent1)));
 
             Assert.That(sim.Transform(ent1).Anchored, Is.False);
             Assert.That(mapSys.GetAnchoredEntities(grid, tileIndices).Count(), Is.EqualTo(0));

@@ -125,7 +125,7 @@ internal partial class MapManager
         EntityManager.System<MetaDataSystem>().SetEntityName(gridEnt, $"grid", meta);
         EntityManager.InitializeComponents(gridEnt, meta);
         EntityManager.StartComponents(gridEnt);
-        // Note that this does not actually map-initialize the gird entity, even if the map its being spawn on has already been initialized.
+        // Note that this does not actually map-initialize the grid entity, even if the map its being spawn on has already been initialized.
         // I don't know whether that is intentional or not.
 
         return (gridEnt, grid);

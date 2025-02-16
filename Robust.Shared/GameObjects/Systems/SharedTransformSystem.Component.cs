@@ -61,23 +61,23 @@ public abstract partial class SharedTransformSystem
         RaiseLocalEvent(uid, ref ev);
     }
 
-    // AnchorEntity:
-    // - Entity<TransformComponent>, Entity<MapGridComponent>, Vector2i
-    // - Entity<TransformComponent>, Entity<MapGridComponent>? = null
-    //
-    // - [Obsolete] EntityUid, TransformComponent, EntityUid, MapGridComponent, Vector2i
-    // - [Obsolete] EntityUid, TransformComponent, MapGridComponent
-    // - [Obsolete] EntityUid, TransformComponent
-    // - [Obsolete] EntityUid
-
+    /// <summary>
+    /// Attempts to anchor an entity to a specific tile on a specific grid.
+    /// </summary>
+    /// <param name="entity">The entity that will be attempted to anchor to <paramref name="grid"/> at <paramref name="tileIndices"/>.</param>
+    /// <param name="grid">The grid that <paramref name="entity"/> will attempt to anchor to.</param>
+    /// <param name="tileIndices">The location of the tile on <paramref name="grid"/> that <paramref name="entity"/> will attempt to anchor to.</param>
+    /// <returns></returns>
     public bool AnchorEntity(Entity<TransformComponent> entity, Entity<MapGridComponent> grid, Vector2i tileIndices)
     {
         var (uid, xform) = entity;
+
         if (!_map.AddToSnapGridCell(grid, grid, tileIndices, uid))
             return false;
 
         var wasAnchored = entity.Comp._anchored;
         xform._anchored = true;
+
         var meta = MetaData(uid);
         Dirty(entity, meta);
 
@@ -96,20 +96,92 @@ public abstract partial class SharedTransformSystem
         return true;
     }
 
-    public bool AnchorEntity(Entity<TransformComponent> entity, Entity<MapGridComponent>? grid = null)
+    /// <summary>
+    /// Attempts to anchor an entity to a specific tile on a specific grid.
+    /// </summary>
+    /// <param name="entity">The entity that will attempt to anchor to <paramref name="grid"/> at <paramref name="tileIndices"/>.</param>
+    /// <param name="grid">The grid that <paramref name="entity"/> will attempt to anchor to. Defaults to <see cref="TransformComponent.GridUid"/> if omitted. </param>
+    /// <param name="tileIndices">The location of the tile on <paramref name="grid"/> that <paramref name="entity"/> will attempt to anchor to. Defaults to the tile at <see cref="TransformComponent.Coordinates"/> if omitted.</param>
+    /// <returns>True if the entity was successfully anchored to the target tile on the target grid, false otherwise.</returns>
+    public bool AnchorEntity(Entity<TransformComponent> entity, Entity<MapGridComponent>? grid = null, Vector2i? tileIndices = null)
     {
-        DebugTools.Assert(grid == null || grid.Value.Owner == entity.Comp.GridUid,
-            $"Tried to anchor entity {Name(entity)} to a grid ({grid!.Value.Owner}) different from its GridUid ({entity.Comp.GridUid})");
-
         if (grid == null)
         {
-            if (!TryComp(entity.Comp.GridUid, out MapGridComponent? gridComp))
+            var gridUid = entity.Comp.GridUid;
+            if (!TryComp(gridUid, out MapGridComponent? gridComp))
                 return false;
-            grid = (entity.Comp.GridUid.Value, gridComp);
+
+            grid = (gridUid.Value, gridComp);
         }
 
-        var tileIndices =  _map.TileIndicesFor(grid.Value, grid.Value, entity.Comp.Coordinates);
-        return AnchorEntity(entity, grid.Value, tileIndices);
+        if (tileIndices is null)
+        {
+            // Grids should not overlap*, so the current coordinates should only ever correspond to a point on the entities current grid.
+            // *TODO
+            DebugTools.Assert(
+                grid.Value.Owner == entity.Comp.GridUid,
+                $"Tried to anchor entity {Name(entity)} to a grid ({grid!.Value.Owner}) different from its GridUid ({entity.Comp.GridUid})"
+            );
+
+            tileIndices ??= _map.TileIndicesFor(grid.Value, grid.Value, entity.Comp.Coordinates);
+        }
+
+        return AnchorEntity(entity, grid.Value, tileIndices.Value);
+    }
+
+    /// <summary>
+    /// Attempts to anchor an entity to a given tile.
+    /// <br/>Will fail if the tiles entity lacks a <see cref="MapGridComponent"/>.
+    /// <br/>Will fail if the target tile cannot be anchored to (ex: does not exist, is space, etc).
+    /// </summary>
+    /// <param name="ent">The entity that will attempt to anchor to <paramref name="tile"/>.</param>
+    /// <param name="tile">A reference to an extant tile that <paramref name="ent"/> will attempt to anchor to.</param>
+    /// <returns>True if the entity was successfully anchored to the target tile, false otherwise.</returns>
+    public bool AnchorEntity(Entity<TransformComponent> ent, TileRef tile)
+    {
+        if (!_gridQuery.TryGetComponent(tile.GridUid, out var gridComp))
+            return false;
+
+        return AnchorEntity(ent, (tile.GridUid, gridComp), tile.GridIndices);
+    }
+
+    /// <summary>
+    /// <inheritdoc cref="AnchorEntity(Entity{TransformComponent}, Entity{MapGridComponent}?, Vector2i?)"/>
+    /// <br/>Will fail if the anchoring entity lacks a <see cref="TransformComponent"/>.
+    /// <br/>Will fail if the target entity lacks a <see cref="MapGridComponent"/>.
+    /// <br/>Will fail if the target tile cannot be anchored to (ex: does not exist, is space, etc).
+    /// </summary>
+    /// <inheritdoc cref="AnchorEntity(Entity{TransformComponent}, Entity{MapGridComponent}?, Vector2i?)"/>
+    public bool TryAnchorEntity(Entity<TransformComponent?> ent, Entity<MapGridComponent?>? grid = null, Vector2i? tileIndices = null)
+    {
+        if (!XformQuery.Resolve(ent, ref ent.Comp))
+            return false;
+
+        Entity<MapGridComponent>? gridEnt;
+        if (grid is { } gridVal)
+        {
+            if (!_gridQuery.Resolve(gridVal, ref gridVal.Comp))
+                return false; // Can't resolve through the Nullable<T>.Value.get accessor as it does not return a ref.
+
+            gridEnt = gridVal!;
+        }
+        else
+            gridEnt = null;
+
+        return AnchorEntity(ent!, gridEnt!, tileIndices);
+    }
+
+    /// <summary>
+    /// <inheritdoc cref="AnchorEntity(Entity{TransformComponent}, TileRef)"/>
+    /// <br/>Will fail if the anchoring entity lacks a <see cref="TransformComponent"/>.
+    /// </summary>
+    /// <inheritdoc cref="AnchorEntity(Entity{TransformComponent}, TileRef)"/>
+    public bool TryAnchorEntity(Entity<TransformComponent?> ent, TileRef tile)
+    {
+        if (!XformQuery.Resolve(ent, ref ent.Comp))
+            return false;
+
+        return AnchorEntity(ent!, tile);
     }
 
     [Obsolete("Use Entity<T> variant")]

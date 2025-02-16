@@ -125,7 +125,8 @@ namespace Robust.Client.Graphics.Clyde
         {
             DebugTools.Assert(space != OverlaySpace.ScreenSpaceBelowWorld && space != OverlaySpace.ScreenSpace);
 
-            var args = new OverlayDrawArgs(space, null, vp, _renderHandle, new UIBox2i((0, 0), vp.Size), vp.Eye!.Position.MapId, worldBox, worldBounds);
+            var mapId = vp.Eye!.Position.MapId;
+            var args = new OverlayDrawArgs(space, null, vp, _renderHandle, new UIBox2i((0, 0), vp.Size), _mapManager.GetMapEntityIdOrThrow(mapId), mapId, worldBox, worldBounds);
 
             if (!overlay.BeforeDraw(args))
                 return;
@@ -175,8 +176,9 @@ namespace Robust.Client.Graphics.Clyde
 
             var worldBounds = CalcWorldBounds(vp);
             var worldAABB = worldBounds.CalcBoundingBox();
+            var mapId = vp.Eye!.Position.MapId;
 
-            var args = new OverlayDrawArgs(space, vpControl, vp, handle, bounds, vp.Eye!.Position.MapId, worldAABB, worldBounds);
+            var args = new OverlayDrawArgs(space, vpControl, vp, handle, bounds, _mapManager.GetMapEntityIdOrThrow(mapId), mapId, worldAABB, worldBounds);
 
             foreach (var overlay in list)
             {
@@ -421,11 +423,18 @@ namespace Robust.Client.Graphics.Clyde
 
             var oldTransform = _currentMatrixModel;
             var oldScissor = _currentScissorState;
+            var oldMatrixProj = _currentMatrixProj;
+            var oldMatrixView = _currentMatrixView;
+            var oldBoundTarget = _currentBoundRenderTarget;
+            var oldRenderTarget = _currentRenderTarget;
+            var oldShader = _queuedShaderInstance;
+            var oldCaps = _glCaps;
+
+            // Need to get state before flushing render queue in case they modify the original state.
+            var state = PushRenderStateFull();
 
             // Have to flush the render queue so that all commands finish rendering to the previous framebuffer.
             FlushRenderQueue();
-
-            var state = PushRenderStateFull();
 
             {
                 BindRenderTargetFull(RtToLoaded(rt));
@@ -448,8 +457,16 @@ namespace Robust.Client.Graphics.Clyde
             PopRenderStateFull(state);
             _updateUniformConstants(_currentRenderTarget.Size);
 
-            SetScissorFull(oldScissor);
             _currentMatrixModel = oldTransform;
+
+            DebugTools.Assert(oldCaps.Equals(_glCaps));
+            DebugTools.Assert(_currentMatrixModel.Equals(oldTransform));
+            DebugTools.Assert(_currentScissorState.Equals(oldScissor));
+            DebugTools.Assert(_currentMatrixProj.Equals(oldMatrixProj));
+            DebugTools.Assert(oldMatrixView.Equals(_currentMatrixView));
+            DebugTools.Assert(oldRenderTarget.Equals(_currentRenderTarget));
+            DebugTools.Assert(oldBoundTarget.Equals(_currentBoundRenderTarget));
+            DebugTools.Assert(oldShader.Equals(_queuedShaderInstance));
         }
 
         private void RenderViewport(Viewport viewport)

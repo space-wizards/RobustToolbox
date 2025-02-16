@@ -96,7 +96,7 @@ public abstract partial class SharedContainerSystem
         transform.Broadphase = BroadphaseData.Invalid;
 
         // Unanchor the entity (without changing physics body types).
-        _transform.Unanchor(toInsert, transform, false);
+        _transform.Unanchor((toInsert, transform), setPhysics: false);
 
         // Next, update physics. Note that this cannot just be done in the physics system via parent change events,
         // because the insertion may not result in a parent change. This could alternatively be done via a

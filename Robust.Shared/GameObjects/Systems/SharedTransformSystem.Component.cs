@@ -114,18 +114,7 @@ public abstract partial class SharedTransformSystem
             grid = (gridUid.Value, gridComp);
         }
 
-        if (tileIndices is null)
-        {
-            // Grids should not overlap*, so the current coordinates should only ever correspond to a point on the entities current grid.
-            // *TODO
-            DebugTools.Assert(
-                grid.Value.Owner == entity.Comp.GridUid,
-                $"Tried to anchor entity {Name(entity)} to a grid ({grid!.Value.Owner}) different from its GridUid ({entity.Comp.GridUid})"
-            );
-
-            tileIndices ??= _map.TileIndicesFor(grid.Value, grid.Value, entity.Comp.Coordinates);
-        }
-
+        tileIndices ??= _map.TileIndicesFor(grid.Value, grid.Value, entity.Comp.Coordinates);
         return AnchorEntity(entity, grid.Value, tileIndices.Value);
     }
 
@@ -187,7 +176,7 @@ public abstract partial class SharedTransformSystem
     public bool AnchorEntity(EntityUid uid, TransformComponent xform, MapGridComponent grid)
     {
         var tileIndices = _map.TileIndicesFor(grid.Owner, grid, xform.Coordinates);
-        return AnchorEntity(uid, xform, grid.Owner, grid, tileIndices);
+        return AnchorEntity((uid, xform), (grid.Owner, grid), tileIndices);
     }
 
     [Obsolete("Use Entity<T> variants")]
@@ -199,7 +188,7 @@ public abstract partial class SharedTransformSystem
     [Obsolete("Use Entity<T> variants")]
     public bool AnchorEntity(EntityUid uid)
     {
-        return AnchorEntity(uid, XformQuery.GetComponent(uid));
+        return AnchorEntity((uid, XformQuery.GetComponent(uid)));
     }
 
     /// <summary>
@@ -274,8 +263,8 @@ public abstract partial class SharedTransformSystem
             return true;
         }
 
-        if (value)
-            return AnchorEntity(entity);
+        if (value && _mapManager.TryFindGridAt(GetMapCoordinates(entity), out var gridUid, out var gridComp))
+            return AnchorEntity(entity, (gridUid, gridComp));
 
         // An anchored entity is always parented to the grid.
         // If Transform.Anchored is true in the prototype but the entity was not spawned with a grid as the parent,
@@ -406,7 +395,7 @@ public abstract partial class SharedTransformSystem
 
         if (grid == null)
         {
-            Unanchor(uid, component);
+            Unanchor((uid, component));
             return;
         }
 
@@ -591,7 +580,7 @@ public abstract partial class SharedTransformSystem
         }
 
         if (xform.Anchored && unanchor)
-            Unanchor(uid, xform);
+            Unanchor((uid, xform));
 
         if (value.EntityId != xform.ParentUid && value.EntityId.IsValid())
         {
@@ -909,7 +898,7 @@ public abstract partial class SharedTransformSystem
             }
             else
             {
-                xform.Anchored = newState.Anchored;
+                SetAnchor((uid, xform), newState.Anchored);
             }
 
             if (oldAnchored != newState.Anchored && xform.Initialized)

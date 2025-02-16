@@ -105,7 +105,7 @@ public abstract partial class SharedTransformSystem
     /// <returns>True if the entity was successfully anchored to the target tile on the target grid, false otherwise.</returns>
     public bool AnchorEntity(Entity<TransformComponent> entity, Entity<MapGridComponent>? grid = null, Vector2i? tileIndices = null)
     {
-        if (grid == null)
+        if (grid is null)
         {
             var gridUid = entity.Comp.GridUid;
             if (!TryComp(gridUid, out MapGridComponent? gridComp))

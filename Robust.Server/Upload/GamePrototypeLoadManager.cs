@@ -50,6 +50,9 @@ public sealed class GamePrototypeLoadManager : SharedPrototypeLoadManager
 
     internal void SendToNewUser(INetChannel channel)
     {
+        if (LoadedPrototypes.Count == 0)
+            return;
+
         // Just dump all the prototypes on connect, before them missing could be an issue.
         var msg = new GamePrototypeLoadMessage
         {

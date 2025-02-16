@@ -418,10 +418,13 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
         public int Count => _children.Count;
         public bool IsReadOnly => false;
 
-
         public bool TryAdd(DataNode key, DataNode value)
         {
-            return _children.TryAdd(key, value);
+            if (!_children.TryAdd(key, value))
+                return false;
+
+            _list.Add(new(key, value));
+            return true;
         }
 
         public bool TryAddCopy(DataNode key, DataNode value)
@@ -431,6 +434,7 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
                 return false;
 
             entry = value.Copy();
+            _list.Add(new(key, entry));
             return true;
         }
     }

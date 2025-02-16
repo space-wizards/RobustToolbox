@@ -37,6 +37,8 @@ public abstract partial class SharedAudioSystem : EntitySystem
     [Dependency] protected readonly MetaDataSystem MetadataSys = default!;
     [Dependency] protected readonly SharedTransformSystem XformSystem = default!;
 
+    private const float AudioDespawnBuffer = 1f;
+
     /// <summary>
     /// Default max range at which the sound can be heard.
     /// </summary>
@@ -234,7 +236,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
                 {
                     var timed = EnsureComp<TimedDespawnComponent>(entity.Value);
                     var audioLength = GetAudioLength(component.FileName);
-                    timed.Lifetime = (float) audioLength.TotalSeconds + 0.01f;
+                    timed.Lifetime = (float) audioLength.TotalSeconds + AudioDespawnBuffer;
                 }
                 break;
         }
@@ -322,7 +324,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
 
             var despawn = AddComp<TimedDespawnComponent>(uid);
             // Don't want to clip audio too short due to imprecision.
-            despawn.Lifetime = (float) length.Value.TotalSeconds + 0.01f;
+            despawn.Lifetime = (float) length.Value.TotalSeconds + AudioDespawnBuffer;
         }
 
         if (comp.Params.Variation != null && comp.Params.Variation.Value != 0f)

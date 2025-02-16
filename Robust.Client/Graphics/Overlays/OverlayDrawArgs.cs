@@ -54,23 +54,29 @@ namespace Robust.Client.Graphics
         /// </summary>
         public readonly Box2Rotated WorldBounds;
 
+        public readonly IRenderHandle RenderHandle;
+
         public DrawingHandleScreen ScreenHandle => (DrawingHandleScreen) DrawingHandle;
         public DrawingHandleWorld WorldHandle => (DrawingHandleWorld) DrawingHandle;
 
-        public OverlayDrawArgs(
+        internal OverlayDrawArgs(
             OverlaySpace space,
             IViewportControl? viewportControl,
             IClydeViewport viewport,
-            DrawingHandleBase drawingHandle,
+            IRenderHandle renderHandle,
             in UIBox2i viewportBounds,
             in MapId mapId,
             in Box2 worldAabb,
             in Box2Rotated worldBounds)
         {
+            DrawingHandle = space is OverlaySpace.ScreenSpace or OverlaySpace.ScreenSpaceBelowWorld
+                ? renderHandle.DrawingHandleScreen
+                : renderHandle.DrawingHandleWorld;
+
             Space = space;
             ViewportControl = viewportControl;
             Viewport = viewport;
-            DrawingHandle = drawingHandle;
+            RenderHandle = renderHandle;
             ViewportBounds = viewportBounds;
             MapId = mapId;
             WorldAABB = worldAabb;

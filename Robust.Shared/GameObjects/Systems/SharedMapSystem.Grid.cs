@@ -312,7 +312,7 @@ public abstract partial class SharedMapSystem
 
         if (data.IsDeleted())
         {
-            if (!component.Chunks.TryGetValue(index, out var deletedChunk))
+            if (!component.Chunks.Remove(index, out var deletedChunk))
                 return;
 
             // Deleted chunks still need to raise tile-changed events.
@@ -330,11 +330,13 @@ public abstract partial class SharedMapSystem
                 }
             }
 
-            component.Chunks.Remove(index);
             return;
         }
 
         var chunk = GetOrAddChunk(uid, component, index);
+        chunk.Fixtures.Clear();
+        chunk.Fixtures.UnionWith(data.Fixtures);
+
         chunk.SuppressCollisionRegeneration = true;
         DebugTools.Assert(data.TileData.Any(x => !x.IsEmpty));
         DebugTools.Assert(data.TileData.Length == component.ChunkSize * component.ChunkSize);
@@ -354,12 +356,6 @@ public abstract partial class SharedMapSystem
 
         // These should never refer to the same object
         DebugTools.AssertNotEqual(chunk.Fixtures, data.Fixtures);
-
-        if (!chunk.Fixtures.SetEquals(data.Fixtures))
-        {
-            chunk.Fixtures.Clear();
-            chunk.Fixtures.UnionWith(data.Fixtures);
-        }
 
         chunk.CachedBounds = data.CachedBounds!.Value;
         chunk.SuppressCollisionRegeneration = false;

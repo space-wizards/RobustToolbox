@@ -5,13 +5,14 @@ using Robust.Server.Player;
 using Robust.Shared.Console;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Player;
 using Robust.Shared.Utility;
 
 namespace Robust.Server.GameStates;
 
-public sealed class PvsOverrideSystem : EntitySystem
+public sealed class PvsOverrideSystem : SharedPvsOverrideSystem
 {
     [Dependency] private readonly IPlayerManager _player = default!;
     [Dependency] private readonly IConsoleHost _console = default!;
@@ -28,7 +29,8 @@ public sealed class PvsOverrideSystem : EntitySystem
         base.Initialize();
         EntityManager.EntityDeleted += OnDeleted;
         _player.PlayerStatusChanged += OnPlayerStatusChanged;
-        SubscribeLocalEvent<MapChangedEvent>(OnMapChanged);
+        SubscribeLocalEvent<MapRemovedEvent>(OnMapRemoved);
+        SubscribeLocalEvent<MapCreatedEvent>(OnMapCreated);
         SubscribeLocalEvent<GridInitializeEvent>(OnGridCreated);
         SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoved);
 
@@ -134,8 +136,10 @@ public sealed class PvsOverrideSystem : EntitySystem
     /// Forces the entity, all of its parents, and all of its children to ignore normal PVS range limitations,
     /// causing them to be sent to all clients. This will still respect visibility masks, it only overrides the range.
     /// </summary>
-    public void AddGlobalOverride(EntityUid uid)
+    public override void AddGlobalOverride(EntityUid uid)
     {
+        base.AddGlobalOverride(uid);
+
         if (GlobalOverride.Add(uid))
             _hasOverride.Add(uid);
     }
@@ -143,8 +147,10 @@ public sealed class PvsOverrideSystem : EntitySystem
     /// <summary>
     /// Removes an entity from the global overrides.
     /// </summary>
-    public void RemoveGlobalOverride(EntityUid uid)
+    public override void RemoveGlobalOverride(EntityUid uid)
     {
+        base.RemoveGlobalOverride(uid);
+
         GlobalOverride.Remove(uid);
         // Not bothering to clear _hasOverride, as we'd have to check all the other collections, and at that point we
         // might as well just do that when the entity gets deleted anyways.
@@ -205,8 +211,10 @@ public sealed class PvsOverrideSystem : EntitySystem
     /// Forces the entity, all of its parents, and all of its children to ignore normal PVS range limitations for a
     /// specific session. This will still respect visibility masks, it only overrides the range.
     /// </summary>
-    public void AddSessionOverride(EntityUid uid, ICommonSession session)
+    public override void AddSessionOverride(EntityUid uid, ICommonSession session)
     {
+        base.AddSessionOverride(uid, session);
+
         if (SessionOverrides.GetOrNew(session).Add(uid))
             _hasOverride.Add(uid);
     }
@@ -214,8 +222,10 @@ public sealed class PvsOverrideSystem : EntitySystem
     /// <summary>
     /// Removes an entity from a session's overrides.
     /// </summary>
-    public void RemoveSessionOverride(EntityUid uid, ICommonSession session)
+    public override void RemoveSessionOverride(EntityUid uid, ICommonSession session)
     {
+        base.RemoveSessionOverride(uid, session);
+
         if (!SessionOverrides.TryGetValue(session, out var overrides))
             return;
 
@@ -231,9 +241,11 @@ public sealed class PvsOverrideSystem : EntitySystem
     /// causing them to always be sent to the specified clients. This will still respect visibility masks, it only
     /// overrides the range.
     /// </summary>
-    public void AddSessionOverrides(EntityUid uid, Filter filter)
+    public override void AddSessionOverrides(EntityUid uid, Filter filter)
     {
         _hasOverride.Add(uid);
+        base.AddSessionOverrides(uid, filter);
+
         foreach (var session in filter.Recipients)
         {
             SessionOverrides.GetOrNew(session).Add(uid);
@@ -263,14 +275,6 @@ public sealed class PvsOverrideSystem : EntitySystem
 
     #region Map/Grid Events
 
-    private void OnMapChanged(MapChangedEvent ev)
-    {
-        if (ev.Created)
-            OnMapCreated(ev);
-        else
-            OnMapDestroyed(ev);
-    }
-
     private void OnGridRemoved(GridRemovalEvent ev)
     {
         RemoveForceSend(ev.EntityUid);
@@ -283,12 +287,12 @@ public sealed class PvsOverrideSystem : EntitySystem
         AddForceSend(ev.EntityUid);
     }
 
-    private void OnMapDestroyed(MapChangedEvent ev)
+    private void OnMapRemoved(MapRemovedEvent ev)
     {
         RemoveForceSend(ev.Uid);
     }
 
-    private void OnMapCreated(MapChangedEvent ev)
+    private void OnMapCreated(MapCreatedEvent ev)
     {
         // TODO PVS remove this requirement.
         // I think this just required refactoring client game state logic so it doesn't sending maps/grids to nullspace.

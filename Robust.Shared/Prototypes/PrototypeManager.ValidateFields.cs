@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using BindingFlags = System.Reflection.BindingFlags;
@@ -73,9 +75,8 @@ public partial class PrototypeManager
             return;
         }
 
-        if (!TryGetIds(field, proto, out var ids))
+        if (!TryGetIds(field, out var ids))
         {
-            TryGetIds(field, proto, out _);
             DebugTools.Assert($"Failed to get ids, despite resolving the field into a prototype kind?");
             return;
         }
@@ -90,7 +91,7 @@ public partial class PrototypeManager
     /// <summary>
     /// Extract prototype ids from a string, IEnumerable{string}, EntProtoId, IEnumerable{EntProtoId}, ProtoId{T}, or IEnumerable{ProtoId{T}} field.
     /// </summary>
-    private bool TryGetIds(FieldInfo field, Type proto, [NotNullWhen(true)] out string[]? ids)
+    private bool TryGetIds(FieldInfo field, [NotNullWhen(true)] out string[]? ids)
     {
         ids = null;
         var value = field.GetValue(null);
@@ -121,10 +122,14 @@ public partial class PrototypeManager
             return true;
         }
 
-        if (field.FieldType.IsGenericType && field.FieldType.GetGenericTypeDefinition() == typeof(ProtoId<>))
+        if (field.FieldType.IsGenericType)
         {
-            ids = [value.ToString()!];
-            return true;
+            var genDef = field.FieldType.GetGenericTypeDefinition();
+            if (genDef == typeof(ProtoId<>) || genDef == typeof(EntProtoId<>))
+            {
+                ids = [value.ToString()!];
+                return true;
+            }
         }
 
         foreach (var iface in field.FieldType.GetInterfaces())
@@ -139,20 +144,27 @@ public partial class PrototypeManager
             if (!enumType.IsGenericType)
                 continue;
 
-            if (enumType.GetGenericTypeDefinition() != typeof(ProtoId<>))
+            var genDef = enumType.GetGenericTypeDefinition();
+            if (genDef != typeof(ProtoId<>) && genDef != typeof(EntProtoId<>))
                 continue;
 
-            ids = GetIdsMethod.MakeGenericMethod(proto).Invoke(null, [value]) as string[];
-            return ids != null;
+            ids = GetEnumerableIds((IEnumerable)value).ToArray();
+            return true;
         }
 
         return false;
     }
 
-    private static MethodInfo GetIdsMethod = typeof(PrototypeManager).GetMethod(nameof(GetIds), BindingFlags.NonPublic | BindingFlags.Static)!;
-    private static string[] GetIds<T>(IEnumerable<ProtoId<T>> enumerable) where T : class, IPrototype
+    /// <summary>
+    /// Helper method for <see cref="TryGetIds"/> that converts an IEnumerable of <see cref="EntProtoId{T}"/> and
+    /// <see cref="ProtoId{T}"/> into their id strings.
+    /// </summary>
+    private IEnumerable<string> GetEnumerableIds(IEnumerable ids)
     {
-        return enumerable.Select(x => x.Id).ToArray();
+        foreach (var id in ids)
+        {
+            yield return id!.ToString()!;
+        }
     }
 
     private bool TryGetFieldPrototype(FieldInfo field, [NotNullWhen(true)] out Type? proto)
@@ -191,7 +203,21 @@ public partial class PrototypeManager
             return true;
         }
 
-        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ProtoId<>))
+        if (!type.IsGenericType)
+        {
+            proto = null;
+            return false;
+        }
+
+        if (type.GetGenericTypeDefinition() == typeof(EntProtoId<>))
+        {
+            // TODO Static field validation
+            // Check that the given prototype has the T component.
+            proto = typeof(EntityPrototype);
+            return true;
+        }
+
+        if (type.GetGenericTypeDefinition() == typeof(ProtoId<>))
         {
             proto = type.GetGenericArguments().Single();
             DebugTools.Assert(proto != typeof(EntityPrototype), "Use EntProtoId instead of ProtoId<EntityPrototype>");

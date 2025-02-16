@@ -129,7 +129,7 @@ internal sealed partial class PvsSystem : EntitySystem
         _metaQuery = GetEntityQuery<MetaDataComponent>();
         _xformQuery = GetEntityQuery<TransformComponent>();
 
-        SubscribeLocalEvent<MapChangedEvent>(OnMapChanged);
+        SubscribeLocalEvent<MapRemovedEvent>(OnMapChanged);
         SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoved);
         SubscribeLocalEvent<TransformComponent, TransformStartupEvent>(OnTransformStartup);
 
@@ -310,7 +310,9 @@ internal sealed partial class PvsSystem : EntitySystem
         // Process all entities in visible PVS chunks
         AddPvsChunks(session);
 
+#if DEBUG
         VerifySessionData(session);
+#endif
 
         var toSend = session.ToSend!;
         session.ToSend = null;
@@ -340,11 +342,12 @@ internal sealed partial class PvsSystem : EntitySystem
         session.Overflow = oldEntry.Value;
     }
 
-    [Conditional("DEBUG")]
+#if DEBUG
     private void VerifySessionData(PvsSession pvsSession)
     {
-        var toSend = pvsSession.ToSend;
-        var toSendSet = new HashSet<NetEntity>(toSend!.Count);
+        var toSend = pvsSession.ToSend!;
+        var toSendSet = pvsSession.ToSendSet;
+        toSendSet.Clear();
 
         foreach (var intPtr in toSend)
         {
@@ -368,6 +371,7 @@ internal sealed partial class PvsSystem : EntitySystem
                               || data.LastSeen == _gameTiming.CurTick - 1);
         }
     }
+#endif
 
     private (Vector2 worldPos, float range, EntityUid? map) CalcViewBounds(Entity<TransformComponent, EyeComponent?> eye)
     {

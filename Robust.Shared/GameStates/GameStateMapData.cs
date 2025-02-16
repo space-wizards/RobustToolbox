@@ -10,7 +10,7 @@ namespace Robust.Shared.GameStates
     [Serializable, NetSerializable]
     public readonly struct ChunkDatum
     {
-        public static readonly ChunkDatum Empty = new ChunkDatum();
+        public static readonly ChunkDatum Empty = new();
 
         public readonly HashSet<string>? Fixtures;
 
@@ -21,26 +21,10 @@ namespace Robust.Shared.GameStates
 
         public readonly Box2i? CachedBounds;
 
-        [MemberNotNullWhen(false, nameof(TileData))]
+        [MemberNotNullWhen(false, nameof(TileData), nameof(Fixtures))]
         public bool IsDeleted()
         {
             return TileData == null;
-        }
-
-        internal ChunkDatum(ChunkDatum data)
-        {
-            if (data.TileData != null)
-            {
-                TileData = new Tile[data.TileData.Length];
-                data.TileData.CopyTo(TileData, 0);
-            }
-
-            if (data.Fixtures != null)
-            {
-                Fixtures = new HashSet<string>(data.Fixtures);
-            }
-
-            CachedBounds = data.CachedBounds;
         }
 
         private ChunkDatum(Tile[] tileData, HashSet<string> fixtures, Box2i cachedBounds)

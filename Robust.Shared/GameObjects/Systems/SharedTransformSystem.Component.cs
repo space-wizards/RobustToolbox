@@ -202,38 +202,16 @@ public abstract partial class SharedTransformSystem
         return AnchorEntity(uid, xform, grid.Owner, grid, tileIndices);
     }
 
+    [Obsolete("Use Entity<T> variants")]
     public bool AnchorEntity(EntityUid uid, TransformComponent xform)
     {
         return AnchorEntity((uid, xform));
     }
 
+    [Obsolete("Use Entity<T> variants")]
     public bool AnchorEntity(EntityUid uid)
     {
         return AnchorEntity(uid, XformQuery.GetComponent(uid));
-    }
-
-    /// <inheritdoc cref="Unanchor(Entity{TransformComponent}, bool)"/>
-    [Obsolete("Use Entity<T> varients")]
-    public void Unanchor(EntityUid uid)
-    {
-        Unanchor(uid, XformQuery.GetComponent(uid));
-    }
-
-    /// <inheritdoc cref="Unanchor(Entity{TransformComponent}, bool)"/>
-    [Obsolete("Use Entity<T> varients")]
-    public void Unanchor(EntityUid uid, TransformComponent xform, bool setPhysics = true)
-    {
-        Unanchor((uid, xform), setPhysics);
-    }
-
-    /// <inheritdoc cref="Unanchor(Entity{TransformComponent}, bool)"/>
-    public void TryUnanchor(Entity<TransformComponent?> entity, bool setPhysics = true)
-    {
-        if (!XformQuery.Resolve(entity, ref entity.Comp))
-            return;
-
-        Unanchor(entity!, setPhysics);
-        return;
     }
 
     /// <summary>
@@ -266,15 +244,28 @@ public abstract partial class SharedTransformSystem
         RaiseLocalEvent(uid, ref ev, true);
     }
 
-    /// <summary>
-    /// Attempts to anchor an entity that may or may not have a <see cref="TransformComponent"/>.
-    /// </summary>
-    public bool TrySetAnchor(Entity<TransformComponent?> entity, bool value)
+    /// <inheritdoc cref="Unanchor(Entity{TransformComponent}, bool)"/>
+    public void TryUnanchor(Entity<TransformComponent?> entity, bool setPhysics = true)
     {
         if (!XformQuery.Resolve(entity, ref entity.Comp))
-            return false;
+            return;
 
-        return SetAnchor(entity!, value);
+        Unanchor(entity!, setPhysics);
+        return;
+    }
+
+    /// <inheritdoc cref="Unanchor(Entity{TransformComponent}, bool)"/>
+    [Obsolete("Use Entity<T> varients")]
+    public void Unanchor(EntityUid uid)
+    {
+        Unanchor(uid, XformQuery.GetComponent(uid));
+    }
+
+    /// <inheritdoc cref="Unanchor(Entity{TransformComponent}, bool)"/>
+    [Obsolete("Use Entity<T> varients")]
+    public void Unanchor(EntityUid uid, TransformComponent xform, bool setPhysics = true)
+    {
+        Unanchor((uid, xform), setPhysics);
     }
 
     /// <summary>
@@ -303,6 +294,17 @@ public abstract partial class SharedTransformSystem
         // then this will be false.
         Unanchor(entity);
         return true;
+    }
+
+    /// <summary>
+    /// Attempts to anchor an entity that may or may not have a <see cref="TransformComponent"/>.
+    /// </summary>
+    public bool TrySetAnchor(Entity<TransformComponent?> entity, bool value)
+    {
+        if (!XformQuery.Resolve(entity, ref entity.Comp))
+            return false;
+
+        return SetAnchor(entity!, value);
     }
 
     #endregion

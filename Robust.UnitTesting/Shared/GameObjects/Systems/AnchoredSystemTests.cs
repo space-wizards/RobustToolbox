@@ -438,7 +438,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             xformSys.SetAnchor((ent1, sim.Transform(ent1)), true);
 
             // Act
-            xformSys.Unanchor(ent1);
+            xformSys.Unanchor((ent1, sim.Transform(ent1)));
 
             Assert.That(physComp.BodyType, Is.EqualTo(BodyType.Dynamic));
         }
@@ -504,7 +504,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             // Act
             sim.System<MoveEventTestSystem>().FailOnMove = true;
-            xformSys.Unanchor(ent1);
+            xformSys.Unanchor((ent1, sim.Transform(ent1)));
             Assert.That(sim.Transform(ent1).ParentUid, Is.EqualTo(mapSys.GetMap(coordinates.MapId)));
             sim.System<MoveEventTestSystem>().FailOnMove = false;
             traversal.Enabled = true;
@@ -523,7 +523,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             mapSys.SetTile(grid, mapSys.TileIndicesFor(grid, coordinates), new Tile(1));
             var ent1 = entMan.SpawnEntity("anchoredEnt", mapSys.MapToGrid(grid, coordinates));
 
-            xformSys.Unanchor(ent1);
+            xformSys.Unanchor((ent1, sim.Transform(ent1)));
 
             Assert.That(sim.Transform(ent1).ParentUid, Is.EqualTo(grid.Owner));
         }

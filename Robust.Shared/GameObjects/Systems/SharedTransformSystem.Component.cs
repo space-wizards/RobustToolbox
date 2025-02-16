@@ -235,7 +235,7 @@ public abstract partial class SharedTransformSystem
     [Obsolete("Use Entity<T> varients")]
     public void Unanchor(EntityUid uid)
     {
-        Unanchor(uid, XformQuery.GetComponent(uid));
+        Unanchor((uid, XformQuery.GetComponent(uid)));
     }
 
     /// <inheritdoc cref="Unanchor(Entity{TransformComponent}, bool)"/>

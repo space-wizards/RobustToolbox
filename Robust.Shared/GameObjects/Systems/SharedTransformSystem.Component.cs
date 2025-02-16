@@ -135,12 +135,14 @@ public abstract partial class SharedTransformSystem
     }
 
     /// <inheritdoc cref="Unanchor(Entity{TransformComponent}, bool)"/>
+    [Obsolete("Use Entity<T> varients")]
     public void Unanchor(EntityUid uid)
     {
         Unanchor(uid, XformQuery.GetComponent(uid));
     }
 
     /// <inheritdoc cref="Unanchor(Entity{TransformComponent}, bool)"/>
+    [Obsolete("Use Entity<T> varients")]
     public void Unanchor(EntityUid uid, TransformComponent xform, bool setPhysics = true)
     {
         Unanchor((uid, xform), setPhysics);

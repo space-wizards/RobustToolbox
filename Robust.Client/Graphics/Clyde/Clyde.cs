@@ -37,7 +37,6 @@ namespace Robust.Client.Graphics.Clyde
         [Dependency] private readonly ILogManager _logManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
-        [Dependency] private readonly IPrototypeManager _protoMan = default!;
         [Dependency] private readonly IResourceCache _resourceCache = default!;
         [Dependency] private readonly IResourceManager _resManager = default!;
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager = default!;

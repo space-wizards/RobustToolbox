@@ -1,24 +1,20 @@
 using System;
 using System.Collections.Generic;
 using System.Buffers;
+using System.Diagnostics.Contracts;
 using System.Numerics;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
 using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
-using OGLTextureWrapMode = OpenToolkit.Graphics.OpenGL.TextureWrapMode;
 using TKStencilOp = OpenToolkit.Graphics.OpenGL4.StencilOp;
 using Robust.Shared.Physics;
-using Robust.Client.ComponentTrees;
 using Robust.Shared.Enums;
 using Robust.Shared.Graphics;
-using Robust.Shared.Prototypes;
 using static Robust.Shared.GameObjects.OccluderComponent;
 using Robust.Shared.Utility;
 using TextureWrapMode = Robust.Shared.Graphics.TextureWrapMode;
@@ -403,7 +399,12 @@ namespace Robust.Client.Graphics.Clyde
             BindRenderTargetImmediate(RtToLoaded(viewport.LightRenderTarget));
             DebugTools.Assert(_currentBoundRenderTarget.TextureHandle.Equals(viewport.LightRenderTarget.Texture.TextureId));
             CheckGlError();
-            GLClearColor(_entityManager.GetComponentOrNull<MapLightComponent>(mapUid)?.AmbientLightColor ?? MapLightComponent.DefaultColor);
+
+            var clearEv = new GetClearColorEvent();
+            _entityManager.EventBus.RaiseEvent(EventSource.Local, ref clearEv);
+
+            var clearColor = clearEv.Color ?? GetClearColor(mapUid);
+            GLClearColor(clearColor);
             GL.ClearStencil(0xFF);
             GL.StencilMask(0xFF);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.StencilBufferBit);
@@ -531,7 +532,7 @@ namespace Robust.Client.Graphics.Clyde
             CheckGlError();
 
             if (_cfg.GetCVar(CVars.LightBlur))
-                BlurRenderTarget(viewport, viewport.LightRenderTarget, eye, 14f);
+                BlurRenderTarget(viewport, viewport.LightRenderTarget, viewport.LightBlurTarget, eye, 14f);
 
             using (_prof.Group("BlurOntoWalls"))
             {
@@ -658,9 +659,18 @@ namespace Robust.Client.Graphics.Clyde
             return (state.count, expandedBounds);
         }
 
-        public void BlurRenderTarget(IClydeViewport viewport, IRenderTarget target, IEye eye, float multiplier)
+        /// <inheritdoc/>
+        [Pure]
+        public Color GetClearColor(EntityUid mapUid)
         {
-            if (target is not RenderTexture rTexture || viewport is not Viewport rViewport)
+            return _entityManager.GetComponentOrNull<MapLightComponent>(mapUid)?.AmbientLightColor ??
+                MapLightComponent.DefaultColor;
+        }
+
+        /// <inheritdoc/>
+        public void BlurRenderTarget(IClydeViewport viewport, IRenderTarget target, IRenderTarget blurBuffer, IEye eye, float multiplier)
+        {
+            if (target is not RenderTexture rTexture || blurBuffer is not RenderTexture blurTexture)
                 return;
 
             using var _ = DebugGroup(nameof(BlurRenderTarget));
@@ -700,13 +710,13 @@ namespace Robust.Client.Graphics.Clyde
                 // Set factor.
                 shader.SetUniformMaybe("radius", scale);
 
-                BindRenderTargetImmediate(RtToLoaded(rViewport.LightBlurTarget));
+                BindRenderTargetImmediate(RtToLoaded(blurBuffer));
 
                 // Blur horizontally to _wallBleedIntermediateRenderTarget1.
                 shader.SetUniformMaybe("direction", Vector2.UnitX);
                 _drawQuad(Vector2.Zero, viewport.Size, Matrix3x2.Identity, shader);
 
-                SetTexture(TextureUnit.Texture0, rViewport.LightBlurTarget.Texture);
+                SetTexture(TextureUnit.Texture0, blurTexture.Texture);
 
                 BindRenderTargetImmediate(RtToLoaded(rTexture));
 

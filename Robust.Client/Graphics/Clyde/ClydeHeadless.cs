@@ -189,7 +189,12 @@ namespace Robust.Client.Graphics.Clyde
             return new DummyTexture(size);
         }
 
-        public void BlurRenderTarget(IClydeViewport viewport, IRenderTarget target, IEye eye, float multiplier)
+        public Color GetClearColor(EntityUid mapUid)
+        {
+            return Color.Transparent;
+        }
+
+        public void BlurRenderTarget(IClydeViewport viewport, IRenderTarget target, IRenderTarget blurBuffer, IEye eye, float multiplier)
         {
             // NOOP
         }

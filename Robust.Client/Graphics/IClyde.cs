@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Numerics;
 using System.Threading.Tasks;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using Color = Robust.Shared.Maths.Color;
 
 namespace Robust.Client.Graphics
 {
@@ -71,7 +74,21 @@ namespace Robust.Client.Graphics
             in TextureLoadParameters? loadParams = null)
             where T : unmanaged, IPixel<T>;
 
-        void BlurRenderTarget(IClydeViewport viewport, IRenderTarget target, IEye eye, float multiplier);
+        /// <summary>
+        /// Gets the clear color for the specified map viewport.
+        /// </summary>
+        [Pure]
+        Color GetClearColor(EntityUid mapUid);
+
+        /// <summary>
+        /// Applies a blur to the specified render target. Requires a separate buffer with similar properties to draw intermediate steps into.
+        /// </summary>
+        /// <param name="viewport">The viewport being used for drawing.</param>
+        /// <param name="target">The blur target.</param>
+        /// <param name="blurBuffer">The separate buffer to draw into.</param>
+        /// <param name="eye">The eye being drawn with.</param>
+        /// <param name="multiplier">Scale of how much blur to blur by.</param>
+        void BlurRenderTarget(IClydeViewport viewport, IRenderTarget target, IRenderTarget blurBuffer, IEye eye, float multiplier);
 
         IRenderTexture CreateLightRenderTarget(Vector2i size, string? name = null, bool depthStencil = true);
 

@@ -18,6 +18,7 @@ namespace Robust.Client.Graphics
         /// </summary>
         IRenderTexture RenderTarget { get; }
         IRenderTexture LightRenderTarget { get; }
+
         IEye? Eye { get; set; }
         Vector2i Size { get; }
 

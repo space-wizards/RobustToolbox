@@ -35,19 +35,30 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `ITileDefinitionManager.AssignAlias` and general tile alias functionality has been removed. `TileAliasPrototype` still exist, but are only used during entity deserialization.
+* `IMapManager.AddUninitializedMap` has been removed. Use the map-init options on `CreateMap()` instead.
+* Re-using a MapId will now log a warning. This may cause some integration tests to fail if they are configured to fail
+  when warnings are logged.
+* The minimum supported map format / version has been increased from 2 to 3.
+* The server-side `MapLoaderSystem` and associated classes & structs has been moved to `Robust.Shared`, and has been significantly modified.
+  * The`TryLoad` and `Save` methods have been replaced with grid, map, generic entity variants. I.e, `SaveGrid`, `SaveMap`, and `SaveEntities`.
+  * Most of the serialization logic and methods have been moved out of `MapLoaderSystem` and into new `EntitySerializer`
+    and `EntityDeserializer` classes, which also replace the old `MapSerializationContext`.
+  * The `MapLoadOptions` class has been split into `MapLoadOptions`, `SerializationOptions`, and `DeserializationOptions`
+    structs.
 
 ### New features
 
-*None yet*
+* The current map format/version has increased from 6 to 7 and now contains more information to try support serialization of maps with null-space entities and full game saves.
+* `IEntitySystemManager` now provides access to the system `IDependencyCollection`.
 
 ### Bugfixes
 
-*None yet*
+* Fixed entity deserialization for components with a data fields that have a AlwaysPushInheritance Attribute
 
 ### Other
 
-*None yet*
+* `MapChangedEvent` has been marked as obsolete, and should be replaced with `MapCreatedEvent` and `MapRemovedEvent.
 
 ### Internal
 

@@ -9,9 +9,5 @@ namespace Robust.Client.Graphics
         public bool DrawHardFov { get; set; } = true;
         public bool DrawLighting { get; set; } = true;
         public bool LockConsoleAccess { get; set; } = false;
-
-        public Color AmbientLightColor { get; set; } = Color.FromSrgb(Color.Black);
-
-        public float BlurFactor { get; set; } = 14f * 5f;
     }
 }

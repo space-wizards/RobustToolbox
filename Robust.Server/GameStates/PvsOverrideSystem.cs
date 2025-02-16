@@ -134,7 +134,7 @@ public sealed class PvsOverrideSystem : SharedPvsOverrideSystem
 
     /// <summary>
     /// Forces the entity, all of its parents, and all of its children to ignore normal PVS range limitations,
-    /// causing them to always be sent to all clients.
+    /// causing them to be sent to all clients. This will still respect visibility masks, it only overrides the range.
     /// </summary>
     public override void AddGlobalOverride(EntityUid uid)
     {
@@ -160,8 +160,9 @@ public sealed class PvsOverrideSystem : SharedPvsOverrideSystem
     /// This causes an entity and all of its parents to always be sent to all players.
     /// </summary>
     /// <remarks>
-    /// This differs from <see cref="AddGlobalOverride"/> as it does not send children, and will ignore a players usual
-    /// PVS budget. You generally shouldn't use this unless an entity absolutely always needs to be sent to all clients.
+    /// This differs from <see cref="AddGlobalOverride"/> as it does not send children, will ignore a players usual
+    /// PVS budget, and ignores visibility masks. You generally shouldn't use this unless an entity absolutely always
+    /// needs to be sent to all clients.
     /// </remarks>
     public void AddForceSend(EntityUid uid)
     {
@@ -177,11 +178,12 @@ public sealed class PvsOverrideSystem : SharedPvsOverrideSystem
     }
 
     /// <summary>
-    /// This causes an entity and all of its parents to always be sent to a player..
+    /// This causes an entity and all of its parents to always be sent to a player.
     /// </summary>
     /// <remarks>
-    /// This differs from <see cref="AddSessionOverride"/> as it does not send children, and will ignore a players usual
-    /// PVS budget. You generally shouldn't use this unless an entity absolutely always needs to be sent to a client.
+    /// This differs from <see cref="AddSessionOverride"/> as it does not send children, will ignore a players usual
+    /// PVS budget, and ignores visibility masks. You generally shouldn't use this unless an entity absolutely always
+    /// needs to be sent to a client.
     /// </remarks>
     public void AddForceSend(EntityUid uid, ICommonSession session)
     {
@@ -207,7 +209,7 @@ public sealed class PvsOverrideSystem : SharedPvsOverrideSystem
 
     /// <summary>
     /// Forces the entity, all of its parents, and all of its children to ignore normal PVS range limitations for a
-    /// specific session.
+    /// specific session. This will still respect visibility masks, it only overrides the range.
     /// </summary>
     public override void AddSessionOverride(EntityUid uid, ICommonSession session)
     {
@@ -236,15 +238,17 @@ public sealed class PvsOverrideSystem : SharedPvsOverrideSystem
 
     /// <summary>
     /// Forces the entity, all of its parents, and all of its children to ignore normal PVS range limitations,
-    /// causing them to always be sent to all clients.
+    /// causing them to always be sent to the specified clients. This will still respect visibility masks, it only
+    /// overrides the range.
     /// </summary>
     public override void AddSessionOverrides(EntityUid uid, Filter filter)
     {
+        _hasOverride.Add(uid);
         base.AddSessionOverrides(uid, filter);
 
         foreach (var session in filter.Recipients)
         {
-            AddSessionOverride(uid, session);
+            SessionOverrides.GetOrNew(session).Add(uid);
         }
     }
 

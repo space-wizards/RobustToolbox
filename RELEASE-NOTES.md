@@ -46,6 +46,11 @@ END TEMPLATE-->
     and `EntityDeserializer` classes, which also replace the old `MapSerializationContext`.
   * The `MapLoadOptions` class has been split into `MapLoadOptions`, `SerializationOptions`, and `DeserializationOptions`
     structs.
+* The interaction between PVS overrides and visibility masks / layers have changed:
+  * Any forced entities (i.e., `PvsOverrideSystem.AddForceSend()`) now ignore visibility masks.
+  * Any global & session overrides (`PvsOverrideSystem.AddGlobalOverride()` & `PvsOverrideSystem.AddSessionOverride()`) now respect visibility masks.
+  * Entities added via the `ExpandPvsEvent` respect visibility masks.
+  * The mask used for any global/session overrides can be modified via `ExpandPvsEvent.Mask`.
 
 ### New features
 
@@ -55,6 +60,7 @@ END TEMPLATE-->
 ### Bugfixes
 
 * Fixed entity deserialization for components with a data fields that have a AlwaysPushInheritance Attribute
+* Audio entities attached to invisible / masked entities should no longer be able to temporarily make those entities visible to all players.
 
 ### Other
 

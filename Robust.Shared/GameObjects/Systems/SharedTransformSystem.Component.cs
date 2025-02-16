@@ -274,8 +274,8 @@ public abstract partial class SharedTransformSystem
             return true;
         }
 
-        if (value && _mapManager.TryFindGridAt(GetMapCoordinates(entity), out var gridUid, out var gridComp))
-            return AnchorEntity(entity, (gridUid, gridComp));
+        if (value)
+            return AnchorEntity(entity);
 
         // An anchored entity is always parented to the grid.
         // If Transform.Anchored is true in the prototype but the entity was not spawned with a grid as the parent,

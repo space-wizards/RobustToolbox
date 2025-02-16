@@ -134,13 +134,36 @@ public abstract partial class SharedTransformSystem
         return AnchorEntity(entity, grid.Value, tileIndices);
     }
 
+    /// <inheritdoc cref="Unanchor(Entity{TransformComponent}, bool)"/>
     public void Unanchor(EntityUid uid)
     {
         Unanchor(uid, XformQuery.GetComponent(uid));
     }
 
+    /// <inheritdoc cref="Unanchor(Entity{TransformComponent}, bool)"/>
     public void Unanchor(EntityUid uid, TransformComponent xform, bool setPhysics = true)
     {
+        Unanchor((uid, xform), setPhysics);
+    }
+
+    /// <inheritdoc cref="Unanchor(Entity{TransformComponent}, bool)"/>
+    public void TryUnanchor(Entity<TransformComponent?> entity, bool setPhysics = true)
+    {
+        if (!XformQuery.Resolve(entity, ref entity.Comp))
+            return;
+
+        Unanchor(entity!, setPhysics);
+        return;
+    }
+
+    /// <summary>
+    /// Attempts to unanchor a given entity.
+    /// Does nothing if the entity is already unanchored.
+    /// </summary>
+    public void Unanchor(Entity<TransformComponent> entity, bool setPhysics = true)
+    {
+        var (uid, xform) = entity;
+
         if (!xform._anchored)
             return;
 
@@ -153,11 +176,8 @@ public abstract partial class SharedTransformSystem
         if (xform.LifeStage < ComponentLifeStage.Initialized)
             return;
 
-        if (_gridQuery.TryGetComponent(xform.GridUid, out var grid))
-        {
-            var tileIndices = _map.TileIndicesFor(xform.GridUid.Value, grid, xform.Coordinates);
-            _map.RemoveFromSnapGridCell(xform.GridUid.Value, grid, tileIndices, uid);
-        }
+        if (xform.GridUid is EntityUid gridUid && _gridQuery.TryGetComponent(gridUid, out var grid))
+            _map.RemoveFromSnapGridCell(gridUid, grid, xform.Coordinates, uid);
 
         if (!xform.Running)
             return;

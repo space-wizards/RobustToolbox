@@ -168,10 +168,50 @@ namespace Robust.Client.Graphics.Clyde
                     var gy = y + cScaled.Y;
 
                     var vIdx = i * 4;
-                    vertexBuffer[vIdx + 0] = new Vertex2D(gx, gy, region.Left, region.Bottom, Color.White);
-                    vertexBuffer[vIdx + 1] = new Vertex2D(gx + 1, gy, region.Right, region.Bottom, Color.White);
-                    vertexBuffer[vIdx + 2] = new Vertex2D(gx + 1, gy + 1, region.Right, region.Top, Color.White);
-                    vertexBuffer[vIdx + 3] = new Vertex2D(gx, gy + 1, region.Left, region.Top, Color.White);
+
+                    var rLeftBottom = (region.Left, region.Bottom);
+                    var rRightBottom = (region.Right, region.Bottom);
+                    var rRightTop = (region.Right, region.Top);
+                    var rLeftTop = (region.Left, region.Top);
+
+                    // Rotate the tile
+                    for (int r = 0; r < tile.Rotation; r++)
+                    {
+                        (rLeftBottom, rRightBottom, rRightTop, rLeftTop) =
+                            (rLeftTop, rLeftBottom, rRightBottom, rRightTop);
+                    }
+
+                    // Mirror on the x-axis
+                    if (tile.Mirrored)
+                    {
+                        if (tile.Rotation % 2 == 0)
+                        {
+                            rLeftBottom = (rLeftBottom.Item1.Equals(region.Left) ? region.Right : region.Left,
+                                rLeftBottom.Item2);
+                            rRightBottom = (rRightBottom.Item1.Equals(region.Left) ? region.Right : region.Left,
+                                rRightBottom.Item2);
+                            rRightTop = (rRightTop.Item1.Equals(region.Left) ? region.Right : region.Left,
+                                rRightTop.Item2);
+                            rLeftTop = (rLeftTop.Item1.Equals(region.Left) ? region.Right : region.Left,
+                                rLeftTop.Item2);
+                        }
+                        else
+                        {
+                            rLeftBottom = (rLeftBottom.Item1,
+                                rLeftBottom.Item2.Equals(region.Bottom) ? region.Top : region.Bottom);
+                            rRightBottom = (rRightBottom.Item1,
+                                rRightBottom.Item2.Equals(region.Bottom) ? region.Top : region.Bottom);
+                            rRightTop = (rRightTop.Item1,
+                                rRightTop.Item2.Equals(region.Bottom) ? region.Top : region.Bottom);
+                            rLeftTop = (rLeftTop.Item1,
+                                rLeftTop.Item2.Equals(region.Bottom) ? region.Top : region.Bottom);
+                        }
+                    }
+
+                    vertexBuffer[vIdx + 0] = new Vertex2D(gx, gy, rLeftBottom.Item1, rLeftBottom.Item2, Color.White);
+                    vertexBuffer[vIdx + 1] = new Vertex2D(gx + 1, gy, rRightBottom.Item1, rRightBottom.Item2, Color.White);
+                    vertexBuffer[vIdx + 2] = new Vertex2D(gx + 1, gy + 1, rRightTop.Item1, rRightTop.Item2, Color.White);
+                    vertexBuffer[vIdx + 3] = new Vertex2D(gx, gy + 1, rLeftTop.Item1, rLeftTop.Item2, Color.White);
                     var nIdx = i * GetQuadBatchIndexCount();
                     var tIdx = (ushort)(i * 4);
                     QuadBatchIndexWrite(indexBuffer, ref nIdx, tIdx);

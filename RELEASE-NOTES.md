@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 247.0.0
+
+### Breaking changes
+
 * `ITileDefinitionManager.AssignAlias` and general tile alias functionality has been removed. `TileAliasPrototype` still exist, but are only used during entity deserialization.
 * `IMapManager.AddUninitializedMap` has been removed. Use the map-init options on `CreateMap()` instead.
 * Re-using a MapId will now log a warning. This may cause some integration tests to fail if they are configured to fail
@@ -77,10 +100,6 @@ END TEMPLATE-->
   * `<name (Type)>` for mandatory arguments
   * `[name (Type)]` for optional arguments
   * `[name (Type)]...` for variable length arguments (i.e., for `params T[]`)
-
-### Internal
-
-*None yet*
 
 
 ## 246.0.0

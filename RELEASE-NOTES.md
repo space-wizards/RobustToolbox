@@ -51,20 +51,32 @@ END TEMPLATE-->
   * Any global & session overrides (`PvsOverrideSystem.AddGlobalOverride()` & `PvsOverrideSystem.AddSessionOverride()`) now respect visibility masks.
   * Entities added via the `ExpandPvsEvent` respect visibility masks.
   * The mask used for any global/session overrides can be modified via `ExpandPvsEvent.Mask`.
+* Toolshed Changes:
+  * The signature of Toolshed type parsers have changed. Instead of taking in an optional command argument name string, they now take in a `CommandArgument` struct.
+  * Toolshed commands can no longer contain a '|', as this symbol is now used for explicitly piping the output of one command to another. command pipes. The existing `|` and '|~' commands have been renamed to `bitor` and `bitnotor`.
+  * Semicolon terminated command blocks in toolshed commands no longer return anything. I.e., `i { i 2 ; }` is no longer a valid command, as the block has no return value.
 
 ### New features
 
 * The current map format/version has increased from 6 to 7 and now contains more information to try support serialization of maps with null-space entities and full game saves.
 * `IEntitySystemManager` now provides access to the system `IDependencyCollection`.
+* Toolshed commands now support optional and `params T[]` arguments. optional / variable length commands can be terminated using ';' or '|'.
 
 ### Bugfixes
 
 * Fixed entity deserialization for components with a data fields that have a AlwaysPushInheritance Attribute
 * Audio entities attached to invisible / masked entities should no longer be able to temporarily make those entities visible to all players.
+* The map-like Toolshed commands now work when a collection is piped in.
+* Fixed a bug in toolshed that could cause it to preferentially use the incorrect command implementation.
+  * E.g., passing a concrete enumerable type would previously use the command implementation that takes in an unconstrained generic parameter `T` instead of a dedicated `IEnumeerable<T>` implementation.
 
 ### Other
 
 * `MapChangedEvent` has been marked as obsolete, and should be replaced with `MapCreatedEvent` and `MapRemovedEvent.
+* The default auto-completion hint for Toolshed commands have been changed and somewhat standardized. Most parsers should now generate a hint of the form:
+  * `<name (Type)>` for mandatory arguments
+  * `[name (Type)]` for optional arguments
+  * `[name (Type)]...` for variable length arguments (i.e., for `params T[]`)
 
 ### Internal
 

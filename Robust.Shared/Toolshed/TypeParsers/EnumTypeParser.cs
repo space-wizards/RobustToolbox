@@ -40,9 +40,9 @@ public sealed class EnumTypeParser<T> : TypeParser<T>
         return true;
     }
 
-    public override CompletionResult? TryAutocomplete(ParserContext parserContext, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext parserContext, CommandArgument? arg)
     {
-        return CompletionResult.FromOptions(Enum.GetNames<T>());
+        return CompletionResult.FromHintOptions(Enum.GetNames<T>(), GetArgHint(arg));
     }
 }
 

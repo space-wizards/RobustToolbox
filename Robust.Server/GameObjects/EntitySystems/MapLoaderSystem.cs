@@ -844,7 +844,7 @@ public sealed class MapLoaderSystem : EntitySystem
 
             if (xformQuery.TryGetComponent(rootEntity, out var xform) && IsRoot(xform, mapQuery) && !HasComp<MapComponent>(rootEntity))
             {
-                _transform.SetLocalPosition(xform, Vector2.Transform(xform.LocalPosition, data.Options.TransformMatrix));
+                _transform.SetLocalPosition(rootEntity, Vector2.Transform(xform.LocalPosition, data.Options.TransformMatrix), xform);
                 xform.LocalRotation += data.Options.Rotation;
             }
         }
@@ -979,7 +979,7 @@ public sealed class MapLoaderSystem : EntitySystem
         meta.Add("format", MapFormatVersion.ToString(CultureInfo.InvariantCulture));
 
         var xform = Transform(uid);
-        var isPostInit = _mapManager.IsMapInitialized(xform.MapID);
+        var isPostInit = _mapSystem.IsInitialized(xform.MapID);
 
         meta.Add("postmapinit", isPostInit ? "true" : "false");
     }

@@ -45,7 +45,7 @@ public abstract partial class SharedPhysicsSystem
         if (!coordinates.IsValid(EntityManager))
             return Vector2.Zero;
 
-        var mapUid = coordinates.GetMapUid(EntityManager);
+        var mapUid = _transform.GetMap(coordinates);
         var parent = coordinates.EntityId;
         var localPos = coordinates.Position;
 

@@ -9,6 +9,7 @@ namespace Robust.Shared.GameObjects;
 public abstract class SharedEyeSystem : EntitySystem
 {
     [Dependency] private readonly SharedViewSubscriberSystem _views = default!;
+    [Dependency] protected readonly SharedTransformSystem TransformSystem = default!;
 
     public override void Initialize()
     {

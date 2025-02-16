@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using Robust.Client.Audio.Sources;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.Player;
@@ -134,6 +135,15 @@ public sealed partial class AudioSystem : SharedAudioSystem
             component.Source.SetAuxiliary(null);
         }
 
+        if (TryComp<AudioMixerComponent>(component.Mixer, out var mixerComp))
+        {
+            component.Source.SetMixer(mixerComp.Mixer);
+        }
+        else
+        {
+            ApplyAudioParamsMixer((uid, component), component.Params);
+        }
+
         switch (component.State)
         {
             case AudioState.Playing:
@@ -219,12 +229,20 @@ public sealed partial class AudioSystem : SharedAudioSystem
             }
             else
             {
-                component.Source = newSource;
+                component.Source = new MixableAudioSource(newSource);
             }
         }
 
         // Need to set all initial data for first frame.
         ApplyAudioParams(component.Params, component);
+        if (TryComp<AudioMixerComponent>(component.Mixer, out var mixerComp))
+        {
+            component.Source.SetMixer(mixerComp.Mixer);
+        }
+        else
+        {
+            ApplyAudioParamsMixer(entity, component.Params);
+        }
         component.Source.Global = component.Global;
 
         // Don't play until first frame so occlusion etc. are correct.
@@ -245,6 +263,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     {
         // Breaks with prediction?
         component.Source.Dispose();
+        ClearMixer((uid, component));
 
         RemoveAudioLimit(component.FileName);
     }

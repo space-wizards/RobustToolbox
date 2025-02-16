@@ -1,4 +1,5 @@
 using Robust.Shared.GameObjects;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.EntitySerialization.Components;
 
@@ -14,5 +15,6 @@ namespace Robust.Shared.EntitySerialization.Components;
 [RegisterComponent, UnsavedComponent]
 public sealed partial class YamlUidComponent : Component
 {
-    public int Uid { get; set; }
+    [ViewVariables(VVAccess.ReadWrite)]
+    public int Uid;
 }

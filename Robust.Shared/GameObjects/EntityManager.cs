@@ -335,7 +335,7 @@ namespace Robust.Shared.GameObjects
             if (coordinates.MapId == MapId.Nullspace)
             {
                 transform._parent = EntityUid.Invalid;
-                transform.Anchored = false;
+                transform._anchored = false;
                 return newEntity;
             }
 

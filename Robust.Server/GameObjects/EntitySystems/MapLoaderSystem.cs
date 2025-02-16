@@ -845,7 +845,7 @@ public sealed class MapLoaderSystem : EntitySystem
             if (xformQuery.TryGetComponent(rootEntity, out var xform) && IsRoot(xform, mapQuery) && !HasComp<MapComponent>(rootEntity))
             {
                 _transform.SetLocalPosition(xform, Vector2.Transform(xform.LocalPosition, data.Options.TransformMatrix));
-                xform.LocalRotation += data.Options.Rotation;
+                _transform.SetLocalRotationNoLerp(rootEntity, xform.LocalRotation + data.Options.Rotation, xform);
             }
         }
 

@@ -10,6 +10,8 @@ internal sealed class ReplaceCommand : ToolshedCommand
     [CommandImplementation]
     public IEnumerable<EntityUid> Replace([PipedArgument] IEnumerable<EntityUid> input, EntProtoId prototype)
     {
+        var xformSystem = EntityManager.System<SharedTransformSystem>();
+
         foreach (var i in input)
         {
             var xform = Transform(i);
@@ -17,7 +19,7 @@ internal sealed class ReplaceCommand : ToolshedCommand
             var rot = xform.LocalRotation;
             QDel(i); // yeet
             var res = Spawn(prototype, coords);
-            Transform(res).LocalRotation = rot;
+            xformSystem.SetLocalRotationNoLerp(res, rot);
             yield return res;
         }
     }

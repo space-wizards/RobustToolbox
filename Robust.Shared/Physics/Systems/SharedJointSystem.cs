@@ -18,6 +18,7 @@ public abstract partial class SharedJointSystem : EntitySystem
 {
     [Dependency] private readonly SharedContainerSystem _container = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+    [Dependency] private readonly SharedTransformSystem _transform = default!;
     [Dependency] private readonly IGameTiming _gameTiming = default!;
 
     private EntityQuery<JointComponent> _jointsQuery;
@@ -246,7 +247,7 @@ public abstract partial class SharedJointSystem : EntitySystem
         anchorA ??= Vector2.Zero;
         anchorB ??= Vector2.Zero;
 
-        var length = Vector2.Transform(anchorA.Value, xformA.WorldMatrix) - Vector2.Transform(anchorB.Value, xformB.WorldMatrix);
+        var length = Vector2.Transform(anchorA.Value, _transform.GetWorldMatrix(xformA)) - Vector2.Transform(anchorB.Value, _transform.GetWorldMatrix(xformB));
 
         var joint = new DistanceJoint(bodyA, bodyB, anchorA.Value, anchorB.Value, length.Length());
         id ??= GetJointId(joint);
@@ -342,7 +343,7 @@ public abstract partial class SharedJointSystem : EntitySystem
         if (!Resolve(uid, ref xform))
             return Vector2.Zero;
 
-        return Physics.Transform.MulT(new Quaternion2D((float) xform.WorldRotation.Theta), worldVector);
+        return Physics.Transform.MulT(new Quaternion2D((float)_transform.GetWorldRotation(xform).Theta), worldVector);
     }
 
     #endregion

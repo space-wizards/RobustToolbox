@@ -1,51 +1,59 @@
-using System;
 using System.Linq;
+using System.Threading.Tasks;
 using NUnit.Framework;
-using Robust.Server.GameObjects;
 using Robust.Shared.ContentPack;
+using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
-using Robust.Shared.Map;
-using Robust.Shared.Physics;
-using Robust.Shared.Physics.Dynamics;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
-using IgnoreUIRangeComponent = Robust.Shared.GameObjects.IgnoreUIRangeComponent;
 
 namespace Robust.UnitTesting.Server.Maps
 {
     [TestFixture]
-    public sealed partial class MapLoaderTest : RobustUnitTest
+    public sealed partial class MapLoaderTest : RobustIntegrationTest
     {
         private const string MapData = @"
 meta:
-  format: 2
-  name: DemoStation
-  author: Space-Wizards
-  postmapinit: false
+  format: 7
+  category: Grid
+  engineVersion: 238.0.0
+  forkId: """"
+  forkVersion: """"
+  time: 12/22/2024 04:08:12
+  entityCount: 3
+maps: []
 grids:
-- settings:
-    chunksize: 16
-    tilesize: 1
-    snapsize: 1
-  chunks: []
+- 1
+orphans:
+- 1
+nullspace: []
 tilemap: {}
 entities:
-- uid: 0
-  components:
-  - parent: null
-    type: Transform
-  - index: 0
-    type: MapGrid
-- uid: 1
-  type: MapDeserializeTest
-  components:
-  - type: MapDeserializeTest
-    foo: 3
-  - parent: 0
-    type: Transform
+- proto: """"
+  entities:
+  - uid: 1
+    mapInit: true
+    components:
+    - type: MetaData
+    - type: Transform
+    - type: MapGrid
+      chunks: {}
+    - type: Broadphase
+    - type: Physics
+      canCollide: False
+    - type: Fixtures
+      fixtures: {}
+    - type: MapSaveTileMap
+- proto: MapDeserializeTest
+  entities:
+  - uid: 2
+    mapInit: true
+    components:
+    - type: Transform
+      parent: 1
+    - type: MapDeserializeTest
+      foo: 3
 ";
 
         private const string Prototype = @"
@@ -57,46 +65,35 @@ entities:
     bar: 2
 ";
 
-        protected override Type[]? ExtraComponents => new[] { typeof(MapDeserializeTestComponent), typeof(VisibilityComponent), typeof(IgnoreUIRangeComponent)};
-
-        [OneTimeSetUp]
-        public void Setup()
-        {
-            IoCManager.Resolve<ISerializationManager>().Initialize();
-            var resourceManager = IoCManager.Resolve<IResourceManagerInternal>();
-            resourceManager.Initialize(null);
-            resourceManager.MountString("/TestMap.yml", MapData);
-            resourceManager.MountString("/EnginePrototypes/TestMapEntity.yml", Prototype);
-
-            var protoMan = IoCManager.Resolve<IPrototypeManager>();
-            protoMan.RegisterKind(typeof(EntityPrototype), typeof(EntityCategoryPrototype));
-
-            protoMan.LoadDirectory(new ("/EnginePrototypes"));
-            protoMan.LoadDirectory(new ("/Prototypes"));
-            protoMan.ResolveResults();
-        }
-
         [Test]
-        public void TestDataLoadPriority()
+        public async Task TestDataLoadPriority()
         {
-            // TODO: Fix after serv3
-            // fix what?
-
-            var entMan = IoCManager.Resolve<IEntityManager>();
-            entMan.System<SharedMapSystem>().CreateMap(out var mapId);
-
-            var traversal = entMan.System<SharedGridTraversalSystem>();
-            traversal.Enabled = false;
-            var mapLoad = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<MapLoaderSystem>();
-            if (!mapLoad.TryLoad(mapId, "/TestMap.yml", out var root)
-                || root.FirstOrDefault() is not { Valid:true } geid)
+            var opts = new ServerIntegrationOptions()
             {
-                Assert.Fail();
-                return;
-            }
+                ExtraPrototypes = Prototype
+            };
 
-            var entity = entMan.GetComponent<TransformComponent>(geid)._children.Single();
-            var c = entMan.GetComponent<MapDeserializeTestComponent>(entity);
+            var server = StartServer(opts);
+            await server.WaitIdleAsync();
+
+            var resourceManager = server.ResolveDependency<IResourceManagerInternal>();
+            resourceManager.MountString("/TestMap.yml", MapData);
+
+            var traversal = server.System<SharedGridTraversalSystem>();
+            traversal.Enabled = false;
+            var mapLoad = server.System<MapLoaderSystem>();
+
+            Entity<MapGridComponent>? grid = default;
+            await server.WaitPost(() =>
+            {
+                server.System<SharedMapSystem>().CreateMap(out var mapId);
+                Assert.That(mapLoad.TryLoadGrid(mapId, new ResPath("/TestMap.yml"), out grid));
+            });
+
+            var geid = grid!.Value.Owner;
+
+            var entity = server.EntMan.GetComponent<TransformComponent>(geid)._children.Single();
+            var c = server.EntMan.GetComponent<MapDeserializeTestComponent>(entity);
             traversal.Enabled = true;
 
             Assert.That(c.Bar, Is.EqualTo(2));
@@ -104,7 +101,7 @@ entities:
             Assert.That(c.Baz, Is.EqualTo(-1));
         }
 
-        [DataDefinition]
+        [RegisterComponent]
         private sealed partial class MapDeserializeTestComponent : Component
         {
             [DataField("foo")] public int Foo { get; set; } = -1;

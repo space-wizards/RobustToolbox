@@ -14,19 +14,25 @@ using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Utility;
 
-namespace Robust.Server.Maps;
+namespace Robust.Shared.EntitySerialization;
 
 [TypeSerializer]
 internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingDataNode>, ITypeCopyCreator<MapChunk>
 {
-    public ValidationNode Validate(ISerializationManager serializationManager, MappingDataNode node,
-        IDependencyCollection dependencies, ISerializationContext? context = null)
+    public ValidationNode Validate(
+        ISerializationManager serializationManager,
+        MappingDataNode node,
+        IDependencyCollection dependencies,
+        ISerializationContext? context = null)
     {
         throw new NotImplementedException();
     }
 
     public MapChunk Read(ISerializationManager serializationManager, MappingDataNode node,
-        IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null, ISerializationManager.InstantiationDelegate<MapChunk>? instantiationDelegate = null)
+        IDependencyCollection dependencies,
+        SerializationHookContext hookCtx,
+        ISerializationContext? context = null,
+        ISerializationManager.InstantiationDelegate<MapChunk>? instantiationDelegate = null)
     {
         var ind = (Vector2i) serializationManager.Read(typeof(Vector2i), node["ind"], hookCtx, context)!;
         var tileNode = (ValueDataNode)node["tiles"];
@@ -50,10 +56,8 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
 
         IReadOnlyDictionary<int, string>? tileMap = null;
 
-        if (context is MapSerializationContext serContext)
-        {
+        if (context is EntityDeserializer serContext)
             tileMap = serContext.TileMap;
-        }
 
         if (tileMap == null)
         {
@@ -73,7 +77,7 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
             for (ushort x = 0; x < chunk.ChunkSize; x++)
             {
                 var id = version < 6 ? reader.ReadUInt16() : reader.ReadInt32();
-                var flags = (TileRenderFlag)reader.ReadByte();
+                var flags = reader.ReadByte();
                 var variant = reader.ReadByte();
 
                 var defName = tileMap[id];
@@ -104,16 +108,12 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
 
         root.Add("version", new ValueDataNode("6"));
 
-        Dictionary<int, int>? tileWriteMap = null;
-        if (context is MapSerializationContext mapContext)
-            tileWriteMap = mapContext.TileWriteMap;
-
-        gridNode.Value = SerializeTiles(value, tileWriteMap);
+        gridNode.Value = SerializeTiles(value, context as EntitySerializer);
 
         return root;
     }
 
-    private static string SerializeTiles(MapChunk chunk, Dictionary<int, int>? tileWriteMap)
+    private static string SerializeTiles(MapChunk chunk, EntitySerializer? serializer)
     {
         // number of bytes written per tile, because sizeof(Tile) is useless.
         const int structSize = 6;
@@ -124,17 +124,34 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
         using (var stream = new MemoryStream(barr))
         using (var writer = new BinaryWriter(stream))
         {
+            if (serializer == null)
+            {
+                for (ushort y = 0; y < chunk.ChunkSize; y++)
+                {
+                    for (ushort x = 0; x < chunk.ChunkSize; x++)
+                    {
+                        var tile = chunk.GetTile(x, y);
+                        writer.Write(tile.TypeId);
+                        writer.Write((byte) tile.Flags);
+                        writer.Write(tile.Variant);
+                    }
+                }
+                return Convert.ToBase64String(barr);
+            }
+
+            var lastTile = -1;
+            var yamlId = -1;
             for (ushort y = 0; y < chunk.ChunkSize; y++)
             {
                 for (ushort x = 0; x < chunk.ChunkSize; x++)
                 {
                     var tile = chunk.GetTile(x, y);
-                    var typeId = tile.TypeId;
-                    if (tileWriteMap != null)
-                        typeId = tileWriteMap[typeId];
+                    if (tile.TypeId != lastTile)
+                        yamlId = serializer.GetYamlTileId(tile.TypeId);
 
-                    writer.Write(typeId);
-                    writer.Write((byte)tile.Flags);
+                    lastTile = tile.TypeId;
+                    writer.Write(yamlId);
+                    writer.Write((byte) tile.Flags);
                     writer.Write(tile.Variant);
                 }
             }
@@ -143,8 +160,12 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
         return Convert.ToBase64String(barr);
     }
 
-    public MapChunk CreateCopy(ISerializationManager serializationManager, MapChunk source,
-        IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
+    public MapChunk CreateCopy(
+        ISerializationManager serializationManager,
+        MapChunk source,
+        IDependencyCollection dependencies,
+        SerializationHookContext hookCtx,
+        ISerializationContext? context = null)
     {
         var mapManager = dependencies.Resolve<IMapManager>();
         mapManager.SuppressOnTileChanged = true;

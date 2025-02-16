@@ -17,7 +17,6 @@ public sealed partial class MapLightComponent : Component
     /// <summary>
     /// Ambient light. This is in linear-light, i.e. when providing a fixed colour, you must use Color.FromSrgb(Color.Black)!
     /// </summary>
-    [ViewVariables(VVAccess.ReadWrite)]
-    [DataField("ambientLightColor")]
-    public Color AmbientLightColor { get; set; } = Color.FromSrgb(Color.Black);
+    [DataField]
+    public Color AmbientLightColor = Color.FromSrgb(Color.Black);
 }

@@ -35,23 +35,45 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* The signature of Toolshed type parsers have changed. Instead of taking in an optional command argument name string, they now take in a `CommandArgument` struct.
-* Toolshed commands can no longer contain a '|', as this symbol is now used for explicitly piping the output of one command to another. command pipes. The existing `|` and '|~' commands have been renamed to `bitor` and `bitnotor`.
-* Semicolon terminated command blocks in toolshed commands no longer return anything. I.e., `i { i 2 ; }` is no longer a valid command, as the block has no return value.
+* `ITileDefinitionManager.AssignAlias` and general tile alias functionality has been removed. `TileAliasPrototype` still exist, but are only used during entity deserialization.
+* `IMapManager.AddUninitializedMap` has been removed. Use the map-init options on `CreateMap()` instead.
+* Re-using a MapId will now log a warning. This may cause some integration tests to fail if they are configured to fail
+  when warnings are logged.
+* The minimum supported map format / version has been increased from 2 to 3.
+* The server-side `MapLoaderSystem` and associated classes & structs has been moved to `Robust.Shared`, and has been significantly modified.
+  * The`TryLoad` and `Save` methods have been replaced with grid, map, generic entity variants. I.e, `SaveGrid`, `SaveMap`, and `SaveEntities`.
+  * Most of the serialization logic and methods have been moved out of `MapLoaderSystem` and into new `EntitySerializer`
+    and `EntityDeserializer` classes, which also replace the old `MapSerializationContext`.
+  * The `MapLoadOptions` class has been split into `MapLoadOptions`, `SerializationOptions`, and `DeserializationOptions`
+    structs.
+* The interaction between PVS overrides and visibility masks / layers have changed:
+  * Any forced entities (i.e., `PvsOverrideSystem.AddForceSend()`) now ignore visibility masks.
+  * Any global & session overrides (`PvsOverrideSystem.AddGlobalOverride()` & `PvsOverrideSystem.AddSessionOverride()`) now respect visibility masks.
+  * Entities added via the `ExpandPvsEvent` respect visibility masks.
+  * The mask used for any global/session overrides can be modified via `ExpandPvsEvent.Mask`.
+* Toolshed Changes:
+  * The signature of Toolshed type parsers have changed. Instead of taking in an optional command argument name string, they now take in a `CommandArgument` struct.
+  * Toolshed commands can no longer contain a '|', as this symbol is now used for explicitly piping the output of one command to another. command pipes. The existing `|` and '|~' commands have been renamed to `bitor` and `bitnotor`.
+  * Semicolon terminated command blocks in toolshed commands no longer return anything. I.e., `i { i 2 ; }` is no longer a valid command, as the block has no return value.
 
 ### New features
 
+* The current map format/version has increased from 6 to 7 and now contains more information to try support serialization of maps with null-space entities and full game saves.
+* `IEntitySystemManager` now provides access to the system `IDependencyCollection`.
 * Toolshed commands now support optional and `params T[]` arguments. optional / variable length commands can be terminated using ';' or '|'.
 
 ### Bugfixes
 
+* Fixed entity deserialization for components with a data fields that have a AlwaysPushInheritance Attribute
+* Audio entities attached to invisible / masked entities should no longer be able to temporarily make those entities visible to all players.
 * The map-like Toolshed commands now work when a collection is piped in.
 * Fixed a bug in toolshed that could cause it to preferentially use the incorrect command implementation.
   * E.g., passing a concrete enumerable type would previously use the command implementation that takes in an unconstrained generic parameter `T` instead of a dedicated `IEnumeerable<T>` implementation.
 
 ### Other
 
-* The default auto-completion hint for Toolshed commands have been changed and somewhat standardized. Most type parsers should now have a hint of the form:
+* `MapChangedEvent` has been marked as obsolete, and should be replaced with `MapCreatedEvent` and `MapRemovedEvent.
+* The default auto-completion hint for Toolshed commands have been changed and somewhat standardized. Most parsers should now generate a hint of the form:
   * `<name (Type)>` for mandatory arguments
   * `[name (Type)]` for optional arguments
   * `[name (Type)]...` for variable length arguments (i.e., for `params T[]`)
@@ -59,6 +81,222 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 246.0.0
+
+### Breaking changes
+
+* The fixes to renderer state may have inadvertantly broken some rendering code that relied upon the old behavior.
+* TileRenderFlag has been removed and now it's just a byte flag on the tile for content usage.
+
+### New features
+
+* Add BeforeLighting overlay draw space for overlays that need to draw directly to lighting and want to do it immediately beforehand.
+* Change BlurLights to BlurRenderTarget and make it public for content usage.
+* Add ContentFlag to tiles for content-flag usage.
+* Add a basic mix shader for doing canvas blends.
+* Add GetClearColorEvent for content to override the clear color behavior.
+
+### Bugfixes
+
+* Fix pushing renderer state not restoring stencil status, blend status, queued shader instance scissor state.
+
+
+## 245.1.0
+
+### New features
+
+* Add more info to the AnchorEntity debug message.
+* Make ParseObject public where it will parse a supplied Type and string into the specified object.
+
+### Bugfixes
+
+* Fix EntityPrototypeView not always updating the entity correctly.
+* Tweak BUI shutdown to potentially avoid skipping closing.
+
+### Other
+
+* Increase Audio entity despawn buffer to avoid clipping.
+
+
+## 245.0.0
+
+### Breaking changes
+
+* `BoundUserInterface.Open()` now has the `MustCallBase` attribute
+
+### Bugfixes
+
+* Fixed an error in `MappingDataNode.TryAddCopy()`, which was causing yaml inheritance/deserialization bugs.
+
+
+## 244.0.0
+
+### Breaking changes
+
+* Increase physics speedcap default from 35m/s to 400m/s in-line with box2d v3.
+
+### New features
+
+* Add EntityManager overloads for ComponentRegistration that's faster than the generic methods.
+* Add CreateWindowCenteredRight for BUIs.
+
+### Bugfixes
+
+* Avoid calling UpdateState before opening a BUI.
+
+
+## 243.0.1
+
+### Bugfixes
+
+* Fixed `BaseWindow` sometimes not properly updating the mouse cursor shape.
+* Revert `BaseWindow` OnClose ordering due to prior reliance upon the ordering.
+
+
+## 243.0.0
+
+### Breaking changes
+
+* RemoveChild is called after OnClose for BaseWindow.
+
+### New features
+
+* BUIs now have their positions saved when closed and re-used when opened when using the `CreateWindow<T>` helper or via manually registering it via RegisterControl.
+
+### Other
+
+* Ensure grid fixtures get updated in client state handling even if exceptions occur.
+
+
+## 242.0.1
+
+### Bugfixes
+
+* Fixed prototype reloading/hotloading not properly handling data-fields with the `AlwaysPushInheritanceAttribute`
+* Fix the pooled polygons using incorrect vertices for EntityLookup and MapManager.
+
+### Internal
+
+* Avoid normalizing angles constructed from vectors.
+
+
+## 242.0.0
+
+### Breaking changes
+
+* The order in which the client initialises networked entities has changed. It will now always apply component states, initialise, and start an entity's parent before processing any children. This might break anything that was relying on the old behaviour where all component states were applied before any entities were initialised & started.
+* `IClydeViewport` overlay rendering methods now take in an `IRenderHandle` instead of a world/screen handle.
+* The `OverlayDrawArgs` struct now has an internal constructor.
+
+### New features
+
+* Controls can now be manually restyled via `Control.InvalidateStyleSheet()` and `Control.DoStyleUpdate()`
+* Added `IUserInterfaceManager.RenderControl()` for manually drawing controls.
+* `OverlayDrawArgs` struct now has an `IRenderHandle` field such that overlays can use the new `RenderControl()` methods.
+* TileSpawnWindow will now take focus when opened.
+
+### Bugfixes
+
+* Fixed a client-side bug where `TransformComponent.GridUid` does not get set properly when an existing entity is attached to a new entity outside of the player's PVS range.
+* EntityPrototypeView will only create entities when it's on the UI tree and not when the prototype is set.
+* Make CollisionWake not log errors if it can't resolve.
+
+### Other
+
+* Replace IPhysShape API with generics on IMapManager and EntityLookupSystem.
+
+### Internal
+
+* Significantly reduce allocations for Box2 / Box2Rotated queries.
+
+
+## 241.0.0
+
+### Breaking changes
+
+* Remove DeferredClose from BUIs.
+
+### New features
+
+* Added `EntityManager.DirtyFields()`, which allows components with delta states to simultaneously mark several fields as dirty at the same time.
+* Add `CloserUserUIs<T>` to close keys of a specific key.
+
+### Bugfixes
+
+* Fixed `RaisePredictiveEvent()` not properly re-raising events during prediction for event handlers that did not take an `EntitySessionEventArgs` argument.
+* BUI openings are now deferred to avoid having slight desync between deferred closes and opens occurring in the same tick.
+
+
+## 240.1.2
+
+
+## 240.1.1
+
+### Bugfixes
+
+* Fixed one of the `IOverlayManager.RemoveOverlay` overrides not fully removing the overlay.
+
+
+## 240.1.0
+
+### New features
+
+* Added an `AsNullable` extension method for converting an `Entity<T>` into an `Entity<T?>`
+
+### Bugfixes
+
+* Fixed an exception in `PhysicsSystem.DestroyContacts()` that could result in entities getting stuck with broken physics.
+
+### Other
+
+* `GamePrototypeLoadManager` will now send all uploaded prototypes to connecting players in a single `GamePrototypeLoadMessage`, as opposed to one message per upload.
+
+
+## 240.0.1
+
+### Bugfixes
+
+* Fixed `SharedBroadphaseSystem.GetBroadphases()` not returning the map itself, which was causing physics to not work properly off-grid.
+
+
+## 240.0.0
+
+### Breaking changes
+
+* `ComponentRegistry` no longer implements `ISerializationContext`
+* Tickrate values are now `ushort`, allowing them to go up to 65535.
+
+### New features
+
+* Console completion options now have new flags for preventing suggestions from being escaped or quoted.
+* Added `ILocalizationManager.HasCulture()`.
+* Static `EntProtoId<T>` fields are now validated to exist.
+
+### Bugfixes
+
+* Fixed a state handling bug in replays, which was causing exceptions to be thrown when applying delta states.
+
+### Other
+
+* Reduced amount of `DynamicMethod`s used by serialization system. This should improve performance somewhat.
+
+### Internal
+
+* Avoided sorting overlays every render frame.
+* Various clean up to grid fixture code/adding asserts.
+
+## 239.0.1
+
+### Bugfixes
+
+* Fix logging of received packets with `net.packet` logging level.
+* Downgrade `VorbisPizza` to fix audio playback for systems without AVX2 support.
+
+### Other
+
+* Improved performance of some Roslyn analyzers and source generators, which should significantly improve compile times and IDE performance.
 
 
 ## 239.0.0

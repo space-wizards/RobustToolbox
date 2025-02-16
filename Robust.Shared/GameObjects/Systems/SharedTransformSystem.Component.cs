@@ -12,6 +12,7 @@ using Robust.Shared.Map.Components;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Robust.Shared.Containers;
+using TerraFX.Interop.Windows;
 
 namespace Robust.Shared.GameObjects;
 
@@ -166,15 +167,28 @@ public abstract partial class SharedTransformSystem
     }
 
     /// <summary>
+    /// Attempts to anchor an entity that may or may not have a <see cref="TransformComponent"/>.
+    /// </summary>
+    public bool TrySetAnchor(Entity<TransformComponent?> entity, bool value)
+    {
+        if (!XformQuery.Resolve(entity, ref entity.Comp))
+            return false;
+
+        return SetAnchor(entity!, value);
+    }
+
+    /// <summary>
     /// Anchors or unanchors an entity as needed.
     /// </summary>
-    public bool TrySetAnchor(Entity<TransformComponent> entity, bool value)
+    /// <returns>True if the entity was successfully anchored or unanchored, false otherwise. Will return true if the entity was already in the desired state.</returns>
+    public bool SetAnchor(Entity<TransformComponent> entity, bool value)
     {
         var (uid, comp) = entity;
 
         if (value == comp._anchored)
             return true;
 
+        // This will be set again when the transform initializes, actually anchoring it.
         if (!comp.Initialized)
         {
             comp._anchored = value;
@@ -184,6 +198,9 @@ public abstract partial class SharedTransformSystem
         if (value && _mapManager.TryFindGridAt(GetMapCoordinates(entity), out var gridUid, out var gridComp))
             return AnchorEntity(entity, (gridUid, gridComp));
 
+        // An anchored entity is always parented to the grid.
+        // If Transform.Anchored is true in the prototype but the entity was not spawned with a grid as the parent,
+        // then this will be false.
         Unanchor(uid, entity);
         return true;
     }

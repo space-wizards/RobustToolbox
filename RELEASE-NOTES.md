@@ -54,6 +54,23 @@ END TEMPLATE-->
 *None yet*
 
 
+## 245.1.0
+
+### New features
+
+* Add more info to the AnchorEntity debug message.
+* Make ParseObject public where it will parse a supplied Type and string into the specified object.
+
+### Bugfixes
+
+* Fix EntityPrototypeView not always updating the entity correctly.
+* Tweak BUI shutdown to potentially avoid skipping closing.
+
+### Other
+
+* Increase Audio entity despawn buffer to avoid clipping.
+
+
 ## 245.0.0
 
 ### Breaking changes

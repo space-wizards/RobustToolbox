@@ -6,16 +6,24 @@ const highp float LIGHTING_HEIGHT = 1.0;
 
 const highp float g_MinVariance = 0.0;
 
+const highp float COLOR_POWER = 0.4586603;
+
 varying highp vec2 worldPosition;
 
 uniform highp vec4 lightColor;
 // Position of the light, in world coordinates.
 uniform highp vec2 lightCenter;
+uniform highp vec2 eyeCenter;
+uniform highp vec2 eyeZoom;
 uniform highp float lightRange;
 uniform highp float lightPower;
 uniform highp float lightSoftness;
 uniform highp float lightIndex;
+uniform highp int useNormals;
+uniform highp float globalRotation;
+uniform highp float maskRotation;
 uniform sampler2D shadowMap;
+uniform sampler2D normalMap;
 
 void vertex()
 {
@@ -24,6 +32,11 @@ void vertex()
     transformed = projectionMatrix * viewMatrix * transformed;
 
     VERTEX = transformed.xy;
+}
+
+highp vec2 rotateVector(highp vec2 vector, highp float theta)
+{
+    return vector * cos(theta) + vector.yx * vec2(-1, 1) * sin(theta);
 }
 
 highp float shadowContrib(highp vec2 diff)
@@ -53,6 +66,28 @@ void fragment()
     val *= lightPower;
     val *= mask;
 
-    COLOR = vec4(lightColor.rgb, val * occlusion);
+    highp float run = 1.0;
+
+    if (useNormals == 1)
+    {
+        highp vec2 lightDir = rotateVector(normalize(diff), globalRotation);
+        highp vec2 newUV = rotateVector(UV - vec2(0.5, 0.5) + rotateVector((lightCenter - eyeCenter) / vec2(2, -2) / lightRange, maskRotation), -globalRotation);
+        newUV *= (projectionMatrix * vec3(1.0, 1.0, 0.0)).xy * vec2(1.0, -1.0) / eyeZoom * lightRange;
+        newUV += vec2(0.5, 0.5);
+
+        highp vec4 origSample = texture2D(normalMap, newUV);
+        if (origSample.xyzw == vec4(0.0, 0.0, 0.0, 1.0))
+            discard;
+
+        // origSample is on the range 0 - 1 in all components,
+        // but every color component has been raised to the log_0.5(ln(2)/pi)th power (yes i know) by some unknown mechanism
+        // so we first raise it to the log_(ln2/pi)(0.5)th power (yes, i know) to reset it
+        highp vec3 normalSample = pow(origSample.xyz, vec3(COLOR_POWER)) * vec3(2.0, 2.0, 1.0) - vec3(1.0, 1.0, 0.0);
+        run = dot(normalize(vec3(lightDir, LIGHTING_HEIGHT)), normalSample * vec3(-1.0, -1.0, 1.0));
+        if (run <= 0.0)
+            discard;
+    }
+
+    COLOR = vec4(lightColor.xyz, val * occlusion * run);
 }
 

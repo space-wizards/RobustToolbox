@@ -437,6 +437,8 @@ namespace Robust.Client.Graphics.Clyde
 
             SetTexture(TextureUnit.Texture1, ShadowTexture);
             lightShader.SetUniformTextureMaybe("shadowMap", TextureUnit.Texture1);
+            SetTexture(TextureUnit.Texture2, viewport.RenderTarget.Texture);
+            lightShader.SetUniformTextureMaybe("normalMap", TextureUnit.Texture2);
 
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.One);
             CheckGlError();
@@ -506,6 +508,14 @@ namespace Robust.Client.Graphics.Clyde
                     lightShader.SetUniformMaybe("lightCenter", lightPos);
                     lightShader.SetUniformMaybe("lightIndex",
                         component.CastShadows ? (i + 0.5f) / ShadowTexture.Height : -1);
+
+                    lightShader.SetUniformMaybe("globalRotation", (float)eye.Rotation.Theta + (float)rotation.Theta -
+                                                                  (float)_transformSystem.GetWorldRotation(mapUid).Theta);
+                    lightShader.SetUniformMaybe("maskRotation", component.MaskAutoRotate ? (float)rot : 0);
+
+                    lightShader.SetUniformMaybe("eyeZoom", eye.Zoom / viewport.RenderScale);
+                    lightShader.SetUniformMaybe("eyeCenter", eye.Position.Position + eye.Offset);
+                    lightShader.SetUniformMaybe("useNormals", (_cfg.GetCVar(CVars.LightNormals) && _resourceCache.GetNormalsEnabled()) ? (int)1 : (int)0); // me when shaders do not support boolean values
 
                     var offset = new Vector2(component.Radius, component.Radius);
 

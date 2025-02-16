@@ -19,6 +19,8 @@ namespace Robust.Client.Graphics.Clyde
     {
         [ViewVariables]
         private ClydeShaderInstance _defaultShader = default!;
+        [ViewVariables]
+        private ClydeShaderInstance _colorShader = default!;
 
         private string _shaderLibrary = default!;
 
@@ -159,8 +161,11 @@ namespace Robust.Client.Graphics.Clyde
 
             var defaultLoadedShader = _resourceCache
                 .GetResource<ShaderSourceResource>("/Shaders/Internal/default-sprite.swsl");
-
             _defaultShader = (ClydeShaderInstance) InstanceShader(defaultLoadedShader);
+
+            var colorShader = _resourceCache
+                .GetResource<ShaderSourceResource>("/Shaders/Internal/color.swsl");
+            _colorShader = (ClydeShaderInstance) InstanceShader(colorShader);
 
             _queuedShaderInstance = _defaultShader;
         }

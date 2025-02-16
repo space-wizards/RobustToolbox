@@ -45,6 +45,7 @@ namespace Robust.Client.ResourceManagement
 
         private void PreloadTextures(ISawmill sawmill)
         {
+            NormalsEnabled = _configurationManager.GetCVar(CVars.LightNormals);
             sawmill.Debug("Preloading textures...");
             var sw = Stopwatch.StartNew();
             var resList = GetTypeData<TextureResource>().Resources;
@@ -132,7 +133,7 @@ namespace Robust.Client.ResourceManagement
             {
                 try
                 {
-                    RSIResource.LoadPreTexture(_manager, data);
+                    RSIResource.LoadPreTexture(_manager, data, _configurationManager.GetCVar(CVars.LightNormals));
                 }
                 catch (Exception e)
                 {
@@ -221,6 +222,7 @@ namespace Robust.Client.ResourceManagement
             var height = offset.Y + deltaY;
             var croppedSheet = new Image<Rgba32>(maxSize, height);
             sheet.Blit(new UIBox2i(0, 0, maxSize, height), croppedSheet, default);
+
             FinalizeMetaAtlas(atlasList.Length - 1, croppedSheet);
 
             void FinalizeMetaAtlas(int toIndex, Image<Rgba32> sheet)

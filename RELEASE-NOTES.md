@@ -40,14 +40,15 @@ END TEMPLATE-->
 
 ### New features
 
-* Add roof flag to tiles to indicate lighting should not be drawn to them.
 * Add BeforeLighting overlay draw space for overlays that need to draw directly to lighting and want to do it immediately beforehand.
+* Change BlurLights to BlurRenderTarget and make it public for content usage.
 * Add ContentFlag to tiles for content-flag usage.
+* Add a basic mix shader for doing canvas blends.
+* Add GetClearColorEvent for content to override the clear color behavior.
 
 ### Bugfixes
 
-* Fix pushing renderer state not restoring stencil status.
-* Fix pushing renderer state not restoring the queued shader instance.
+* Fix pushing renderer state not restoring stencil status, blend status, queued shader instance scissor state.
 
 ### Other
 

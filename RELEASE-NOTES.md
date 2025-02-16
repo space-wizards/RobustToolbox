@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 246.0.0
+
+### Breaking changes
+
 * The fixes to renderer state may have inadvertantly broken some rendering code that relied upon the old behavior.
 * TileRenderFlag has been removed and now it's just a byte flag on the tile for content usage.
 
@@ -49,14 +72,6 @@ END TEMPLATE-->
 ### Bugfixes
 
 * Fix pushing renderer state not restoring stencil status, blend status, queued shader instance scissor state.
-
-### Other
-
-*None yet*
-
-### Internal
-
-*None yet*
 
 
 ## 245.1.0

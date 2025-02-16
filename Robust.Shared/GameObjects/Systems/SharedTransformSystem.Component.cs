@@ -61,21 +61,16 @@ public abstract partial class SharedTransformSystem
         RaiseLocalEvent(uid, ref ev);
     }
 
-    [Obsolete("Use Entity<T> variant")]
-    public bool AnchorEntity(
-        EntityUid uid,
-        TransformComponent xform,
-        EntityUid gridUid,
-        MapGridComponent grid,
-        Vector2i tileIndices)
-    {
-        return AnchorEntity((uid, xform), (gridUid, grid), tileIndices);
-    }
+    // AnchorEntity:
+    // - Entity<TransformComponent>, Entity<MapGridComponent>, Vector2i
+    // - Entity<TransformComponent>, Entity<MapGridComponent>? = null
+    //
+    // - [Obsolete] EntityUid, TransformComponent, EntityUid, MapGridComponent, Vector2i
+    // - [Obsolete] EntityUid, TransformComponent, MapGridComponent
+    // - [Obsolete] EntityUid, TransformComponent
+    // - [Obsolete] EntityUid
 
-    public bool AnchorEntity(
-        Entity<TransformComponent> entity,
-        Entity<MapGridComponent> grid,
-        Vector2i tileIndices)
+    public bool AnchorEntity(Entity<TransformComponent> entity, Entity<MapGridComponent> grid, Vector2i tileIndices)
     {
         var (uid, xform) = entity;
         if (!_map.AddToSnapGridCell(grid, grid, tileIndices, uid))
@@ -101,23 +96,6 @@ public abstract partial class SharedTransformSystem
         return true;
     }
 
-    [Obsolete("Use Entity<T> variants")]
-    public bool AnchorEntity(EntityUid uid, TransformComponent xform, MapGridComponent grid)
-    {
-        var tileIndices = _map.TileIndicesFor(grid.Owner, grid, xform.Coordinates);
-        return AnchorEntity(uid, xform, grid.Owner, grid, tileIndices);
-    }
-
-    public bool AnchorEntity(EntityUid uid)
-    {
-        return AnchorEntity(uid, XformQuery.GetComponent(uid));
-    }
-
-    public bool AnchorEntity(EntityUid uid, TransformComponent xform)
-    {
-        return AnchorEntity((uid, xform));
-    }
-
     public bool AnchorEntity(Entity<TransformComponent> entity, Entity<MapGridComponent>? grid = null)
     {
         DebugTools.Assert(grid == null || grid.Value.Owner == entity.Comp.GridUid,
@@ -132,6 +110,34 @@ public abstract partial class SharedTransformSystem
 
         var tileIndices =  _map.TileIndicesFor(grid.Value, grid.Value, entity.Comp.Coordinates);
         return AnchorEntity(entity, grid.Value, tileIndices);
+    }
+
+    [Obsolete("Use Entity<T> variant")]
+    public bool AnchorEntity(
+        EntityUid uid,
+        TransformComponent xform,
+        EntityUid gridUid,
+        MapGridComponent grid,
+        Vector2i tileIndices)
+    {
+        return AnchorEntity((uid, xform), (gridUid, grid), tileIndices);
+    }
+
+    [Obsolete("Use Entity<T> variants")]
+    public bool AnchorEntity(EntityUid uid, TransformComponent xform, MapGridComponent grid)
+    {
+        var tileIndices = _map.TileIndicesFor(grid.Owner, grid, xform.Coordinates);
+        return AnchorEntity(uid, xform, grid.Owner, grid, tileIndices);
+    }
+
+    public bool AnchorEntity(EntityUid uid, TransformComponent xform)
+    {
+        return AnchorEntity((uid, xform));
+    }
+
+    public bool AnchorEntity(EntityUid uid)
+    {
+        return AnchorEntity(uid, XformQuery.GetComponent(uid));
     }
 
     /// <inheritdoc cref="Unanchor(Entity{TransformComponent}, bool)"/>

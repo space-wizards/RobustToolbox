@@ -64,7 +64,7 @@ END TEMPLATE-->
   when warnings are logged.
 * The minimum supported map format / version has been increased from 2 to 3.
 * The server-side `MapLoaderSystem` and associated classes & structs has been moved to `Robust.Shared`, and has been significantly modified.
-  * The`TryLoad` and `Save` methods have been replaced with grid, map, generic entity variants. I.e, `SaveGrid`, `SaveMap`, and `SaveEntities`.
+  * The `TryLoad` and `Save` methods have been replaced with grid, map, generic entity variants. I.e, `SaveGrid`, `SaveMap`, and `SaveEntities`.
   * Most of the serialization logic and methods have been moved out of `MapLoaderSystem` and into new `EntitySerializer`
     and `EntityDeserializer` classes, which also replace the old `MapSerializationContext`.
   * The `MapLoadOptions` class has been split into `MapLoadOptions`, `SerializationOptions`, and `DeserializationOptions`

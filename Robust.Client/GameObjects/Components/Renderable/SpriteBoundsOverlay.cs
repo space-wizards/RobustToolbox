@@ -10,15 +10,15 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
-    public sealed class ShowSpriteBBCommand : LocalizedCommands
+    public sealed class ShowSpriteBBCommand : LocalizedEntityCommands
     {
+        [Dependency] private readonly SpriteBoundsSystem _spriteBoundsSystem = default!;
+
         public override string Command => "showspritebb";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            IoCManager.Resolve<IEntityManager>()
-                .System<SpriteBoundsSystem>()
-                .Enabled ^= true;
+            _spriteBoundsSystem.Enabled ^= true;
         }
     }
 

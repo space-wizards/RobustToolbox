@@ -64,7 +64,7 @@ namespace Robust.Client.Debugging
 
                 if (value && !_overlayManager.HasOverlay<EntityRotationOverlay>())
                 {
-                    _overlayManager.AddOverlay(new EntityRotationOverlay(_lookup, EntityManager));
+                    _overlayManager.AddOverlay(new EntityRotationOverlay(_lookup, _transform));
                 }
                 else
                 {
@@ -110,25 +110,24 @@ namespace Robust.Client.Debugging
         private sealed class EntityRotationOverlay : Overlay
         {
             private readonly EntityLookupSystem _lookup;
-            private readonly IEntityManager _entityManager;
+            private readonly SharedTransformSystem _transform;
 
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-            public EntityRotationOverlay(EntityLookupSystem lookup, IEntityManager entityManager)
+            public EntityRotationOverlay(EntityLookupSystem lookup, SharedTransformSystem transform)
             {
                 _lookup = lookup;
-                _entityManager = entityManager;
+                _transform = transform;
             }
 
             protected internal override void Draw(in OverlayDrawArgs args)
             {
                 const float stubLength = 0.25f;
                 var worldHandle = (DrawingHandleWorld) args.DrawingHandle;
-                var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
 
                 foreach (var entity in _lookup.GetEntitiesIntersecting(args.MapId, args.WorldBounds))
                 {
-                    var (center, worldRotation) = xformQuery.GetComponent(entity).GetWorldPositionRotation();
+                    var (center, worldRotation) = _transform.GetWorldPositionRotation(entity);
 
                     var drawLine = worldRotation.RotateVec(-Vector2.UnitY);
 

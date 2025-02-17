@@ -93,7 +93,7 @@ public sealed class SharedGridTraversalSystem : EntitySystem
 
         var mapPos = xform.ParentUid == xform.MapUid
             ? xform.LocalPosition
-            : Vector2.Transform(xform.LocalPosition, Transform(xform.ParentUid).LocalMatrix);
+            : Vector2.Transform(xform.LocalPosition, _transform.GetLocalMatrix(Transform(xform.ParentUid)));
 
         // Change parent if necessary
         if (_mapManager.TryFindGridAt(map, mapPos, out var gridUid, out _))

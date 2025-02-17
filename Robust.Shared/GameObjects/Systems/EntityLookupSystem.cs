@@ -465,7 +465,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         var mapTransform = new Transform(worldPos, worldRot);
 
         // TODO BROADPHASE PARENTING this just assumes local = world
-        var broadphaseTransform = new Transform(Vector2.Transform(mapTransform.Position, broadphaseXform.InvLocalMatrix), mapTransform.Quaternion2D.Angle - broadphaseXform.LocalRotation);
+        var broadphaseTransform = new Transform(Vector2.Transform(mapTransform.Position, _transform.GetInvLocalMatrix(broadphaseXform)), mapTransform.Quaternion2D.Angle - broadphaseXform.LocalRotation);
 
         foreach (var (id, fixture) in manager.Fixtures)
         {

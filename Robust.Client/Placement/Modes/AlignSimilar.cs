@@ -30,11 +30,12 @@ namespace Robust.Client.Placement.Modes
                 return;
             }
 
+            var transformSys = pManager.EntityManager.System<SharedTransformSystem>();
             var mapId = MouseCoords.GetMapId(pManager.EntityManager);
 
             var snapToEntities = EntitySystem.Get<EntityLookupSystem>().GetEntitiesInRange(MouseCoords, SnapToRange)
                 .Where(entity => pManager.EntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype == pManager.CurrentPrototype && pManager.EntityManager.GetComponent<TransformComponent>(entity).MapID == mapId)
-                .OrderBy(entity => (pManager.EntityManager.GetComponent<TransformComponent>(entity).WorldPosition - MouseCoords.ToMapPos(pManager.EntityManager, pManager.EntityManager.System<SharedTransformSystem>())).LengthSquared())
+                .OrderBy(entity => (transformSys.GetWorldPosition(entity) - MouseCoords.ToMapPos(pManager.EntityManager, pManager.EntityManager.System<SharedTransformSystem>())).LengthSquared())
                 .ToList();
 
             if (snapToEntities.Count == 0)
@@ -51,10 +52,11 @@ namespace Robust.Client.Placement.Modes
 
             var closestBounds = component.BaseRSI.Size;
 
+            var closestPos = transformSys.GetWorldPosition(closestTransform);
             var closestRect =
                 Box2.FromDimensions(
-                    closestTransform.WorldPosition.X - closestBounds.X / 2f,
-                    closestTransform.WorldPosition.Y - closestBounds.Y / 2f,
+                    closestPos.X - closestBounds.X / 2f,
+                    closestPos.Y - closestBounds.Y / 2f,
                     closestBounds.X, closestBounds.Y);
 
             var sides = new[]

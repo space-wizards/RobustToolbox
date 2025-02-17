@@ -57,6 +57,7 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
         var fixtureSystem = entitySystemManager.GetEntitySystem<FixtureSystem>();
         var physSystem = entitySystemManager.GetEntitySystem<SharedPhysicsSystem>();
         var gravSystem = entitySystemManager.GetEntitySystem<Gravity2DController>();
+        var xformSystem = entitySystemManager.GetEntitySystem<SharedTransformSystem>();
         MapId mapId;
 
         const int columnCount = 1;
@@ -115,7 +116,7 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
             }
 
             var bodyOne = bodies[0].Owner;
-            firstPos = entityManager.GetComponent<TransformComponent>(bodyOne).WorldPosition;
+            firstPos = xformSystem.GetWorldPosition(bodyOne);
         });
 
         await server.WaitRunTicks(1);
@@ -124,7 +125,7 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
         await server.WaitAssertion(() =>
         {
             var tempQualifier = bodies[0].Owner;
-            Assert.That(firstPos, Is.Not.EqualTo(entityManager.GetComponent<TransformComponent>(tempQualifier).WorldPosition));
+            Assert.That(firstPos, Is.Not.EqualTo(xformSystem.GetWorldPosition(tempQualifier)));
         });
 
         // Assert
@@ -139,7 +140,7 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
                 for (var i = 0; i < bodies.Length; i++)
                 {
                     var body = bodies[j * columnCount + i];
-                    var worldPos = entityManager.GetComponent<TransformComponent>(body.Owner).WorldPosition;
+                    var worldPos = xformSystem.GetWorldPosition(body.Owner);
 
                     // TODO: Multi-column support but I cbf right now
                     // Can't be more exact as some level of sinking is allowed.
@@ -162,6 +163,7 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
         var fixtureSystem = entitySystemManager.GetEntitySystem<FixtureSystem>();
         var physSystem = entitySystemManager.GetEntitySystem<SharedPhysicsSystem>();
         var gravSystem = entitySystemManager.GetEntitySystem<Gravity2DController>();
+        var xformSystem = entitySystemManager.GetEntitySystem<SharedTransformSystem>();
         MapId mapId;
 
         var columnCount = 1;
@@ -215,7 +217,7 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
             }
 
             EntityUid tempQualifier3 = bodies[0].Owner;
-            firstPos = entityManager.GetComponent<TransformComponent>(tempQualifier3).WorldPosition;
+            firstPos = xformSystem.GetWorldPosition(tempQualifier3);
         });
 
         await server.WaitRunTicks(1);
@@ -224,7 +226,7 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
         await server.WaitAssertion(() =>
         {
             EntityUid tempQualifier = bodies[0].Owner;
-            Assert.That(firstPos, Is.Not.EqualTo(entityManager.GetComponent<TransformComponent>(tempQualifier).WorldPosition));
+            Assert.That(firstPos, Is.Not.EqualTo(xformSystem.GetWorldPosition(tempQualifier)));
         });
 
         // Assert
@@ -239,7 +241,7 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
                 for (var i = 0; i < bodies.Length; i++)
                 {
                     var body = bodies[j * columnCount + i];
-                    var worldPos = entityManager.GetComponent<TransformComponent>(body.Owner).WorldPosition;
+                    var worldPos = xformSystem.GetWorldPosition(body.Owner);
 
                     var expectedY = 0.5f + i;
 

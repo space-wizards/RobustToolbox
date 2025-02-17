@@ -172,20 +172,21 @@ internal sealed partial class UITestControl
         private List<Entry> AddEntries()
         {
             var added = new List<Entry>();
+            var xformSys = _entMan.System<SharedTransformSystem>();
 
             var entry = AddEntry("Default", null);
             added.Add(entry);
 
             entry = AddEntry("Local Rotation", (e, time) =>
             {
-                e.Transform.LocalRotation = Angle.FromDegrees(time * _degreesPerSecond);
+                xformSys.SetLocalRotationNoLerp(e.Uid, Angle.FromDegrees(time * _degreesPerSecond), e.Transform);
                 e.View.InvalidateMeasure();
             });
             added.Add(entry);
 
             entry = AddEntry("Local Rotation (NoRot)", (e, time) =>
             {
-                e.Transform.LocalRotation = Angle.FromDegrees(time * _degreesPerSecond);
+                xformSys.SetLocalRotationNoLerp(e.Uid, Angle.FromDegrees(time * _degreesPerSecond), e.Transform);
                 e.View.InvalidateMeasure();
             });
             entry.Sprite.NoRotation = true;
@@ -218,7 +219,7 @@ internal sealed partial class UITestControl
                 e.Sprite.Scale = Vector2.One + new Vector2(0.5f * MathF.Sin(theta), 0.5f * MathF.Cos(theta));
                 e.Sprite.Offset = new(MathF.Sin((float) Angle.FromDegrees(time * _degreesPerSecond)), 0);
                 e.Sprite.Rotation = Angle.FromDegrees(0.5 * time * _degreesPerSecond);
-                e.Transform.LocalRotation = Angle.FromDegrees(0.25 * time * _degreesPerSecond);
+                xformSys.SetLocalRotationNoLerp(e.Uid, Angle.FromDegrees(0.25 * time * _degreesPerSecond), e.Transform);
                 e.View.InvalidateMeasure();
             });
             added.Add(entry);

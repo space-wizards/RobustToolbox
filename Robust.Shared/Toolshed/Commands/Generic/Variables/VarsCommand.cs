@@ -8,6 +8,6 @@ public sealed class VarsCommand : ToolshedCommand
     [CommandImplementation]
     public void Vars(IInvocationContext ctx)
     {
-        ctx.WriteLine(Toolshed.PrettyPrintType(ctx.GetVars().Select(x => $"{x} = {ctx.ReadVar(x)}"), out var more));
+        ctx.WriteLine(Toolshed.PrettyPrintType(ctx.GetVars().Select(x => $"{x} = {Toolshed.PrettyPrintType(ctx.ReadVar(x), out _)}"), out _));
     }
 }

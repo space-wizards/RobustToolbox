@@ -51,7 +51,7 @@ namespace Robust.Shared.Map
 
         public override string ToString()
         {
-            return Value.ToString();
+            return IsClientSide ? $"c{-Value}" : Value.ToString();
         }
 
         public bool IsClientSide => Value < 0;

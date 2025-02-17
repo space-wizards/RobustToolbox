@@ -37,8 +37,8 @@ namespace Robust.Client.UserInterface.CustomControls
                 return;
             }
 
-            OnClose?.Invoke();
             Parent.RemoveChild(this);
+            OnClose?.Invoke();
         }
 
         protected internal override void KeyBindDown(GUIBoundKeyEventArgs args)
@@ -103,6 +103,8 @@ namespace Robust.Client.UserInterface.CustomControls
             {
                 var cursor = CursorShape.Arrow;
                 var previewDragMode = GetDragModeFor(args.RelativePosition);
+                previewDragMode &= ~DragMode.Move;
+
                 switch (previewDragMode)
                 {
                     case DragMode.Top:
@@ -117,9 +119,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
                     case DragMode.Bottom | DragMode.Left:
                     case DragMode.Top | DragMode.Right:
-                        cursor = CursorShape.Crosshair;
-                        break;
-
                     case DragMode.Bottom | DragMode.Right:
                     case DragMode.Top | DragMode.Left:
                         cursor = CursorShape.Crosshair;
@@ -161,15 +160,6 @@ namespace Robust.Client.UserInterface.CustomControls
                 var rect = new UIBox2(left, top, right, bottom);
                 LayoutContainer.SetPosition(this, rect.TopLeft);
                 SetSize = rect.Size;
-
-                /*
-                var timing = IoCManager.Resolve<IGameTiming>();
-
-                var l = GetValue<float>(LayoutContainer.MarginLeftProperty);
-                var t = GetValue<float>(LayoutContainer.MarginTopProperty);
-
-                Logger.Debug($"{timing.CurFrame}: {rect.TopLeft}/({l}, {t}), {rect.Size}/{SetSize}");
-                */
             }
         }
 

@@ -49,13 +49,13 @@ public sealed class ProtoIdTypeParser<T> : TypeParser<ProtoId<T>>
         return true;
     }
 
-    public override CompletionResult TryAutocomplete(ParserContext ctx, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
     {
         if (_completions != null)
             return _completions;
 
         _proto.TryGetKindFrom<T>(out var kind);
-        var hint = $"<{kind} prototype>";
+        var hint = ToolshedCommand.GetArgHint(arg, typeof(ProtoId<T>));
 
         _completions = _proto.Count<T>() < 256
             ? CompletionResult.FromHintOptions( CompletionHelper.PrototypeIDs<T>(proto: _proto), hint)
@@ -76,12 +76,12 @@ public sealed class EntProtoIdTypeParser : TypeParser<EntProtoId>
         return true;
     }
 
-    public override CompletionResult TryAutocomplete(ParserContext parserContext, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext parserContext, CommandArgument? arg)
     {
         // TODO TOOLSHED Improve ProtoId completions
         // Completion options should be able to communicate to a client that it can populate the options by itself.
         // I.e., instead of dumping all entity prototypes on the client, tell it how to generate them locally.
-        return CompletionResult.FromHint($"<Entity prototype>");
+        return CompletionResult.FromHint(GetArgHint(arg));
     }
 }
 
@@ -106,9 +106,9 @@ public sealed class PrototypeInstanceTypeParser<T> : TypeParser<T>
         return false;
     }
 
-    public override CompletionResult? TryAutocomplete(ParserContext ctx, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
     {
-        return Toolshed.TryAutocomplete(ctx, typeof(ProtoId<T>), argName);
+        return Toolshed.TryAutocomplete(ctx, typeof(ProtoId<T>), arg);
     }
 }
 
@@ -137,7 +137,7 @@ internal sealed class PrototypeTypeParser<T> : TypeParser<Prototype<T>>
         return true;
     }
 
-    public override CompletionResult TryAutocomplete(ParserContext ctx, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
     {
         IEnumerable<CompletionOption> options;
 

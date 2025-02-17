@@ -5,7 +5,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Utility;
 using System;
-using System.Diagnostics;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Map.Components;
@@ -119,7 +119,8 @@ public abstract partial class SharedTransformSystem
 
     public bool AnchorEntity(Entity<TransformComponent> entity, Entity<MapGridComponent>? grid = null)
     {
-        DebugTools.Assert(grid == null || grid.Value.Owner == entity.Comp.GridUid);
+        DebugTools.Assert(grid == null || grid.Value.Owner == entity.Comp.GridUid,
+            $"Tried to anchor entity {Name(entity)} to a grid ({grid!.Value.Owner}) different from its GridUid ({entity.Comp.GridUid})");
 
         if (grid == null)
         {
@@ -213,7 +214,15 @@ public abstract partial class SharedTransformSystem
         }
         else if (_mapQuery.TryComp(uid, out var mapComp))
         {
-            DebugTools.AssertNotEqual(mapComp.MapId, MapId.Nullspace);
+            if (mapComp.MapId == MapId.Nullspace)
+            {
+#if !EXCEPTION_TOLERANCE
+                throw new Exception("Transform is initialising before map ids have been assigned?");
+#endif
+                Log.Error($"Transform is initialising before map ids have been assigned?");
+                _map.AssignMapId((uid, mapComp));
+            }
+
             xform.MapUid = uid;
             xform.MapID = mapComp.MapId;
         }

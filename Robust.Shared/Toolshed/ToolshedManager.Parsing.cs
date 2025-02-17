@@ -242,12 +242,12 @@ public sealed partial class ToolshedManager
     /// <summary>
     ///     iunno man it does autocomplete what more do u want
     /// </summary>
-    public CompletionResult? TryAutocomplete(ParserContext ctx, Type t, string? argName)
+    public CompletionResult? TryAutocomplete(ParserContext ctx, Type t, CommandArgument? arg)
     {
         DebugTools.AssertNull(ctx.Error);
         DebugTools.AssertNull(ctx.Completions);
         DebugTools.AssertEqual(ctx.GenerateCompletions, true);
-        return GetParserForType(t)?.TryAutocomplete(ctx, argName);
+        return GetParserForType(t)?.TryAutocomplete(ctx, arg);
     }
 
     /// <summary>

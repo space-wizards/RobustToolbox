@@ -2,26 +2,24 @@ using System.Collections.Generic;
 using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Console;
-using Robust.Shared.Containers;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics;
-using Robust.Shared.Utility;
 using Color = Robust.Shared.Maths.Color;
 
 namespace Robust.Client.GameObjects;
 
-public sealed class DebugEntityLookupCommand : LocalizedCommands
+public sealed class DebugEntityLookupCommand : LocalizedEntityCommands
 {
-    [Dependency] private readonly IEntityManager _entityManager = default!;
+    [Dependency] private readonly DebugEntityLookupSystem _system = default!;
 
     public override string Command => "togglelookup";
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
-        _entityManager.System<DebugEntityLookupSystem>().Enabled ^= true;
+        _system.Enabled ^= true;
     }
 }
 

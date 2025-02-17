@@ -12,13 +12,13 @@ namespace Robust.Client.GameObjects
 {
     public sealed class ShowSpriteBBCommand : LocalizedEntityCommands
     {
-        [Dependency] private readonly SpriteBoundsSystem _spriteBoundsSystem = default!;
+        [Dependency] private readonly SpriteBoundsSystem _system = default!;
 
         public override string Command => "showspritebb";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            _spriteBoundsSystem.Enabled ^= true;
+            _system.Enabled ^= true;
         }
     }
 

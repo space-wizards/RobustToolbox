@@ -129,6 +129,7 @@ public abstract partial class ToolshedCommand
                     if (param.Name == null || !argNames.Add(param.Name))
                         throw new InvalidCommandImplementation($"Command arguments must have a unique name");
                     hasAnyAttribute = true;
+                    ValidateArg(param);
                 }
 
                 if (param.HasCustomAttribute<PipedArgumentAttribute>())
@@ -180,6 +181,7 @@ public abstract partial class ToolshedCommand
                 // Implicit [CommandArgument]
                 if (param.Name == null || !argNames.Add(param.Name))
                     throw new InvalidCommandImplementation($"Command arguments must have a unique name");
+                ValidateArg(param);
             }
 
             var takesPipedGeneric = impl.HasCustomAttribute<TakesPipedTypeAsGenericAttribute>();
@@ -228,6 +230,18 @@ public abstract partial class ToolshedCommand
             if (!CommandImplementors.ContainsKey(key))
                 CommandImplementors[key] = new ToolshedCommandImplementor(subCmd, this, Toolshed, Loc);
         }
+    }
+
+    private void ValidateArg(ParameterInfo arg)
+    {
+        var isParams = arg.HasCustomAttribute<ParamArrayAttribute>();
+        if (!isParams)
+            return;
+
+        // I'm honestly not even sure if dotnet 9 collections use the same attribute, a quick search hasn't come
+        // up with anything.
+        if (!arg.ParameterType.IsArray)
+            throw new InvalidCommandImplementation(".net 9 params collections are not yet supported");
     }
 
     internal HashSet<Type> AcceptedTypes(string? subCommand)
@@ -289,6 +303,16 @@ public struct CommandArgumentBundle
     /// The type of input that will be piped into this command.
     /// </summary>
     public required Type? PipedType;
+
+    /// <summary>
+    /// The index where the command's name starts. Used for contextualising errors.
+    /// </summary>
+    public int NameStart;
+
+    /// <summary>
+    /// The index where the (sub)command's name ends. Used for contextualising errors.
+    /// </summary>
+    public int NameEnd;
 }
 
 internal readonly record struct CommandDiscriminator(Type? PipedType, Type[]? TypeArguments)

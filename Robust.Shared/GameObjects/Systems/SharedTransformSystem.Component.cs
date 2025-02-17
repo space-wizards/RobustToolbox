@@ -12,6 +12,7 @@ using Robust.Shared.Map.Components;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Robust.Shared.Containers;
+using TerraFX.Interop.Windows;
 
 namespace Robust.Shared.GameObjects;
 
@@ -60,28 +61,23 @@ public abstract partial class SharedTransformSystem
         RaiseLocalEvent(uid, ref ev);
     }
 
-    [Obsolete("Use Entity<T> variant")]
-    public bool AnchorEntity(
-        EntityUid uid,
-        TransformComponent xform,
-        EntityUid gridUid,
-        MapGridComponent grid,
-        Vector2i tileIndices)
-    {
-        return AnchorEntity((uid, xform), (gridUid, grid), tileIndices);
-    }
-
-    public bool AnchorEntity(
-        Entity<TransformComponent> entity,
-        Entity<MapGridComponent> grid,
-        Vector2i tileIndices)
+    /// <summary>
+    /// Attempts to anchor an entity to a specific tile on a specific grid.
+    /// </summary>
+    /// <param name="entity">The entity that will be attempted to anchor to <paramref name="grid"/> at <paramref name="tileIndices"/>.</param>
+    /// <param name="grid">The grid that <paramref name="entity"/> will attempt to anchor to.</param>
+    /// <param name="tileIndices">The location of the tile on <paramref name="grid"/> that <paramref name="entity"/> will attempt to anchor to.</param>
+    /// <returns>True if the entity was successfully anchored to the target tile on the target grid, false otherwise.</returns>
+    public bool AnchorEntity(Entity<TransformComponent> entity, Entity<MapGridComponent> grid, Vector2i tileIndices)
     {
         var (uid, xform) = entity;
+
         if (!_map.AddToSnapGridCell(grid, grid, tileIndices, uid))
             return false;
 
         var wasAnchored = entity.Comp._anchored;
         xform._anchored = true;
+
         var meta = MetaData(uid);
         Dirty(entity, meta);
 
@@ -100,46 +96,109 @@ public abstract partial class SharedTransformSystem
         return true;
     }
 
+    /// <summary>
+    /// Attempts to anchor an entity to a specific tile on a specific grid.
+    /// </summary>
+    /// <param name="entity">The entity that will attempt to anchor to <paramref name="grid"/> at <paramref name="tileIndices"/>.</param>
+    /// <param name="grid">The grid that <paramref name="entity"/> will attempt to anchor to. Defaults to <see cref="TransformComponent.GridUid"/> if omitted. </param>
+    /// <param name="tileIndices">The location of the tile on <paramref name="grid"/> that <paramref name="entity"/> will attempt to anchor to. Defaults to the tile at <see cref="TransformComponent.Coordinates"/> if omitted.</param>
+    /// <returns>True if the entity was successfully anchored to the target tile on the target grid, false otherwise.</returns>
+    public bool AnchorEntity(Entity<TransformComponent> entity, Entity<MapGridComponent>? grid = null, Vector2i? tileIndices = null)
+    {
+        if (grid is null)
+        {
+            var gridUid = entity.Comp.GridUid;
+            if (!_gridQuery.TryGetComponent(gridUid, out MapGridComponent? gridComp))
+                return false;
+
+            grid = (gridUid.Value, gridComp);
+        }
+
+        tileIndices ??= _map.TileIndicesFor(grid.Value, grid.Value, entity.Comp.Coordinates);
+        return AnchorEntity(entity, grid.Value, tileIndices.Value);
+    }
+
+    /// <summary>
+    /// Attempts to anchor an entity to a given tile.
+    /// </summary>
+    /// <param name="ent">The entity that will attempt to anchor to <paramref name="tile"/>.</param>
+    /// <param name="tile">A reference to an extant tile that <paramref name="ent"/> will attempt to anchor to.</param>
+    /// <returns>True if the entity was successfully anchored to the target tile, false otherwise.</returns>
+    public bool AnchorEntity(Entity<TransformComponent> ent, TileRef tile)
+    {
+        if (!_gridQuery.TryGetComponent(tile.GridUid, out var gridComp))
+            return false;
+
+        return AnchorEntity(ent, (tile.GridUid, gridComp), tile.GridIndices);
+    }
+
+    /// <inheritdoc cref="AnchorEntity(Entity{TransformComponent}, Entity{MapGridComponent}?, Vector2i?)"/>
+    public bool TryAnchorEntity(Entity<TransformComponent?> ent, Entity<MapGridComponent?>? grid = null, Vector2i? tileIndices = null)
+    {
+        if (!XformQuery.Resolve(ent, ref ent.Comp))
+            return false;
+
+        Entity<MapGridComponent>? gridEnt;
+        if (grid is { } gridVal)
+        {
+            if (!_gridQuery.Resolve(gridVal, ref gridVal.Comp))
+                return false; // Can't resolve through the Nullable<T>.Value.get accessor as it does not return a ref.
+
+            gridEnt = gridVal!;
+        }
+        else
+            gridEnt = null;
+
+        return AnchorEntity(ent!, gridEnt!, tileIndices);
+    }
+
+    /// <inheritdoc cref="AnchorEntity(Entity{TransformComponent}, TileRef)"/>
+    public bool TryAnchorEntity(Entity<TransformComponent?> ent, TileRef tile)
+    {
+        if (!XformQuery.Resolve(ent, ref ent.Comp))
+            return false;
+
+        return AnchorEntity(ent!, tile);
+    }
+
+    [Obsolete("Use Entity<T> variant")]
+    public bool AnchorEntity(
+        EntityUid uid,
+        TransformComponent xform,
+        EntityUid gridUid,
+        MapGridComponent grid,
+        Vector2i tileIndices)
+    {
+        return AnchorEntity((uid, xform), (gridUid, grid), tileIndices);
+    }
+
     [Obsolete("Use Entity<T> variants")]
     public bool AnchorEntity(EntityUid uid, TransformComponent xform, MapGridComponent grid)
     {
         var tileIndices = _map.TileIndicesFor(grid.Owner, grid, xform.Coordinates);
-        return AnchorEntity(uid, xform, grid.Owner, grid, tileIndices);
+        return AnchorEntity((uid, xform), (grid.Owner, grid), tileIndices);
     }
 
-    public bool AnchorEntity(EntityUid uid)
-    {
-        return AnchorEntity(uid, XformQuery.GetComponent(uid));
-    }
-
+    [Obsolete("Use Entity<T> variants")]
     public bool AnchorEntity(EntityUid uid, TransformComponent xform)
     {
         return AnchorEntity((uid, xform));
     }
 
-    public bool AnchorEntity(Entity<TransformComponent> entity, Entity<MapGridComponent>? grid = null)
+    [Obsolete("Use Entity<T> variants")]
+    public bool AnchorEntity(EntityUid uid)
     {
-        DebugTools.Assert(grid == null || grid.Value.Owner == entity.Comp.GridUid,
-            $"Tried to anchor entity {Name(entity)} to a grid ({grid!.Value.Owner}) different from its GridUid ({entity.Comp.GridUid})");
-
-        if (grid == null)
-        {
-            if (!TryComp(entity.Comp.GridUid, out MapGridComponent? gridComp))
-                return false;
-            grid = (entity.Comp.GridUid.Value, gridComp);
-        }
-
-        var tileIndices =  _map.TileIndicesFor(grid.Value, grid.Value, entity.Comp.Coordinates);
-        return AnchorEntity(entity, grid.Value, tileIndices);
+        return AnchorEntity((uid, XformQuery.GetComponent(uid)));
     }
 
-    public void Unanchor(EntityUid uid)
+    /// <summary>
+    /// Attempts to unanchor a given entity.
+    /// Does nothing if the entity is already unanchored.
+    /// </summary>
+    public void Unanchor(Entity<TransformComponent> entity, bool setPhysics = true)
     {
-        Unanchor(uid, XformQuery.GetComponent(uid));
-    }
+        var (uid, xform) = entity;
 
-    public void Unanchor(EntityUid uid, TransformComponent xform, bool setPhysics = true)
-    {
         if (!xform._anchored)
             return;
 
@@ -152,17 +211,75 @@ public abstract partial class SharedTransformSystem
         if (xform.LifeStage < ComponentLifeStage.Initialized)
             return;
 
-        if (_gridQuery.TryGetComponent(xform.GridUid, out var grid))
-        {
-            var tileIndices = _map.TileIndicesFor(xform.GridUid.Value, grid, xform.Coordinates);
-            _map.RemoveFromSnapGridCell(xform.GridUid.Value, grid, tileIndices, uid);
-        }
+        if (xform.GridUid is EntityUid gridUid && _gridQuery.TryGetComponent(gridUid, out var grid))
+            _map.RemoveFromSnapGridCell(gridUid, grid, xform.Coordinates, uid);
 
         if (!xform.Running)
             return;
 
         var ev = new AnchorStateChangedEvent(uid, xform);
         RaiseLocalEvent(uid, ref ev, true);
+    }
+
+    /// <inheritdoc cref="Unanchor(Entity{TransformComponent}, bool)"/>
+    public void TryUnanchor(Entity<TransformComponent?> entity, bool setPhysics = true)
+    {
+        if (!XformQuery.Resolve(entity, ref entity.Comp))
+            return;
+
+        Unanchor(entity!, setPhysics);
+        return;
+    }
+
+    /// <inheritdoc cref="Unanchor(Entity{TransformComponent}, bool)"/>
+    [Obsolete("Use Entity<T> varients")]
+    public void Unanchor(EntityUid uid)
+    {
+        Unanchor((uid, XformQuery.GetComponent(uid)));
+    }
+
+    /// <inheritdoc cref="Unanchor(Entity{TransformComponent}, bool)"/>
+    [Obsolete("Use Entity<T> varients")]
+    public void Unanchor(EntityUid uid, TransformComponent xform, bool setPhysics = true)
+    {
+        Unanchor((uid, xform), setPhysics);
+    }
+
+    /// <summary>
+    /// Anchors or unanchors an entity as needed.
+    /// </summary>
+    /// <returns>True if the entity was successfully anchored or unanchored, false otherwise. Will return true if the entity was already in the desired state.</returns>
+    public bool SetAnchor(Entity<TransformComponent> entity, bool value)
+    {
+        var (_, comp) = entity;
+
+        if (value == comp._anchored)
+            return true;
+
+        // This will be set again when the transform initializes, actually anchoring it.
+        if (!comp.Initialized)
+        {
+            comp._anchored = value;
+            return true;
+        }
+
+        if (value && _mapManager.TryFindGridAt(GetMapCoordinates(entity), out var gridUid, out var gridComp))
+            return AnchorEntity(entity, (gridUid, gridComp));
+
+        // An anchored entity is always parented to the grid.
+        // If Transform.Anchored is true in the prototype but the entity was not spawned with a grid as the parent,
+        // then this will be false.
+        Unanchor(entity);
+        return true;
+    }
+
+    /// <inheritdoc cref="SetAnchor"/>
+    public bool TrySetAnchor(Entity<TransformComponent?> entity, bool value)
+    {
+        if (!XformQuery.Resolve(entity, ref entity.Comp))
+            return false;
+
+        return SetAnchor(entity!, value);
     }
 
     #endregion
@@ -286,7 +403,7 @@ public abstract partial class SharedTransformSystem
 
         if (grid == null)
         {
-            Unanchor(uid, component);
+            Unanchor((uid, component));
             return;
         }
 
@@ -586,7 +703,7 @@ public abstract partial class SharedTransformSystem
         }
 
         if (xform.Anchored && unanchor)
-            Unanchor(uid, xform);
+            Unanchor((uid, xform));
 
         if (value.EntityId != xform.ParentUid && value.EntityId.IsValid())
         {
@@ -923,15 +1040,7 @@ public abstract partial class SharedTransformSystem
             }
             else if (!xform.Initialized)
             {
-                xform._anchored = newState.Anchored;
-            }
-            else if (newState.Anchored && !xform.Anchored && _mapManager.TryFindGridAt(GetMapCoordinates(xform), out var gridUid, out var grid))
-            {
-                AnchorEntity((uid, xform), (gridUid, grid));
-            }
-            else if (!newState.Anchored && xform.Anchored)
-            {
-                Unanchor(uid, xform);
+                SetAnchor((uid, xform), newState.Anchored);
             }
 
             if (oldAnchored != newState.Anchored && xform.Initialized)

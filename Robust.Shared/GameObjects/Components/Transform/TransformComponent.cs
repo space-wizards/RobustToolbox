@@ -224,25 +224,7 @@ namespace Robust.Shared.GameObjects
         {
             get => _anchored;
             [Obsolete("Use the SharedTransformSystem.AnchorEntity/Unanchor methods instead.")]
-            set
-            {
-                // This will be set again when the transform initializes, actually anchoring it.
-                if (!Initialized)
-                {
-                    _anchored = value;
-                }
-                else if (value && !_anchored && _mapManager.TryFindGridAt(MapPosition, out _, out var grid))
-                {
-                    _anchored = _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(Owner, this, grid);
-                }
-                else if (!value && _anchored)
-                {
-                    // An anchored entity is always parented to the grid.
-                    // If Transform.Anchored is true in the prototype but the entity was not spawned with a grid as the parent,
-                    // then this will be false.
-                    _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().Unanchor(Owner, this);
-                }
-            }
+            set { _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetAnchor((Owner, this), value); }
         }
 
         public TransformChildrenEnumerator ChildEnumerator => new(_children.GetEnumerator());

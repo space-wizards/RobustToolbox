@@ -1,8 +1,8 @@
-using System.Drawing;
 using System.Numerics;
 using Robust.Shared.GameStates;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using Robust.Shared.Maths;
 using Vector3 = Robust.Shared.Maths.Vector3;
 
 namespace Robust.Shared.GameObjects;

@@ -104,7 +104,7 @@ public sealed class ParticleSystem {
     /// <summary>
     /// A function which takes the life time of this particles and returns the Color of this particle
     /// </summary>
-    private Func<float,System.Drawing.Color> _color;
+    private Func<float, Color> _color;
     /// <summary>
     /// A function which takes the life time of this particles and returns the transform of this particle. Note that this is multiplied with the base transform.
     /// </summary>
@@ -134,7 +134,7 @@ public sealed class ParticleSystem {
         _fadein = args.Fadein is null ? () => 0 : args.Fadein;
         _spawnPosition = args.SpawnPosition is null ? () => Vector3.Zero : args.SpawnPosition;
         _spawnVelocity = args.SpawnVelocity is null ? () => Vector3.Zero : args.SpawnVelocity;
-        _color = args.Color is null ? (float lifetime) => System.Drawing.Color.White : args.Color;
+        _color = args.Color is null ? (float lifetime) => Color.White : args.Color;
         _transform = args.Transform is null ? (float lifetime) => Matrix3x2.Identity : args.Transform;
         _acceleration = args.Acceleration is null ? (float lifetime) => Vector3.Zero : args.Acceleration;
 
@@ -173,9 +173,9 @@ public sealed class ParticleSystem {
                 p.velocity += _acceleration(p.lifetime);
                 p.position += p.velocity*args.DeltaSeconds;
                 if(p.fadein > p.lifetime)
-                    p.color = System.Drawing.Color.FromArgb((int)Math.Clamp(p.lifetime/p.fadein * 255, 0, 255), p.color);
+                    p.color.A = Math.Clamp(p.lifetime/p.fadein, 0, 1);
                 if(p.fadeout > p.lifespan-p.lifetime)
-                    p.color = System.Drawing.Color.FromArgb((int)Math.Clamp((p.lifespan-p.lifetime)/p.fadeout* 255, 0, 255), p.color);
+                    p.color.A = Math.Clamp((p.lifespan-p.lifetime)/p.fadeout, 0, 1);
 
                 if(p.lifetime > p.lifespan || p.position.X > _upperBound.X || p.position.Y > _upperBound.Y || p.position.Z > _upperBound.Z || p.position.X < _lowerBound.X || p.position.Y < _lowerBound.Y || p.position.Z < _lowerBound.Z)
                     p.active = false;
@@ -217,7 +217,7 @@ internal sealed class Particle {
     public Vector3 position;
     public Vector3 velocity;
     public Matrix3x2 transform;
-    public System.Drawing.Color color;
+    public Color color;
     public float lifetime;
     public float lifespan;
     public float fadein;

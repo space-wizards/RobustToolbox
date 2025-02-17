@@ -1,9 +1,5 @@
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameStates;
 
 namespace Robust.Server.GameObjects;
 
-public sealed class ServerDynamicParticlesSystem : SharedDynamicParticlesSystem
-{
-
-}
+public sealed class ServerDynamicParticlesSystem : SharedDynamicParticlesSystem {}

@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.Numerics;
 using Robust.Shared.Maths;
+using Color = Robust.Shared.Maths.Color;
 using Vector3 = Robust.Shared.Maths.Vector3;
 
 namespace Robust.Client.Graphics;
@@ -67,7 +68,7 @@ public sealed class ParticleSystemArgs {
     /// <summary>
     /// A function which takes the life time of this particles and returns the Color of this particle
     /// </summary>
-    public Func<float,System.Drawing.Color>? Color;
+    public Func<float,Color>? Color;
     /// <summary>
     /// A function which takes the life time of this particles and returns the transform of this particle. Note that this is multiplied with the base transform.
     /// </summary>

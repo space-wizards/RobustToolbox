@@ -4,14 +4,10 @@ using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
-using System.Drawing;
 using Robust.Shared.Random;
-using SharpFont.PostScript;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Vector3 = Robust.Shared.Maths.Vector3;
 
 namespace Robust.Client.GameObjects;

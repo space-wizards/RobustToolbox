@@ -229,9 +229,13 @@ namespace Robust.Client.ResourceManagement
                         for (int nX = 0; nX < texture.Width; nX++)
                         for (int nY = 0; nY < texture.Height; nY++)
                         {
-                            var T = normalImage[nX, nY];
-                            T.A = texture[nX, nY].A;
-                            normalImage[nX, nY] = T;
+                            var CPixel = normalImage[nX, nY].ToVector4();
+                            var NormVector = new Vector3(CPixel.X, CPixel.Y, CPixel.Z);
+                            NormVector = NormVector * new Vector3(2f, 2f, 1f) - new Vector3(1f, 1f, 0f);
+                            NormVector.Normalize();
+                            NormVector = (NormVector + new Vector3(1f, 1f, 0f)) * new Vector3(0.5f, 0.5f, 1f);
+                            var NewColor = new Rgba32(NormVector.X, NormVector.Y, NormVector.Z, texture[nX, nY].A);
+                            normalImage[nX, nY] = NewColor;
                         }
 
                     reg.Src = (texture, normalImage);

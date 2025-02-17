@@ -488,6 +488,7 @@ namespace Robust.Client.Graphics.Clyde
                     }
 
                     lightShader.SetUniformMaybe("lightCenter", lightPos);
+                    lightShader.SetUniformMaybe("lightHeight", component.Height ?? 1f);
                     lightShader.SetUniformMaybe("lightIndex",
                         component.CastShadows ? (i + 0.5f) / ShadowTexture.Height : -1);
 

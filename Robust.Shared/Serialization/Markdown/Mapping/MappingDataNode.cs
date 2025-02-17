@@ -274,6 +274,26 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
         }
 
         /// <summary>
+        /// Variant of <see cref="Copy"/> that doesn't clone the keys or values.
+        /// </summary>
+        public MappingDataNode ShallowClone()
+        {
+            var newMapping = new MappingDataNode(_children.Count)
+            {
+                Tag = Tag,
+                Start = Start,
+                End = End
+            };
+
+            foreach (var (key, val) in _list)
+            {
+                newMapping.Add(key, val);
+            }
+
+            return newMapping;
+        }
+
+        /// <summary>
         ///     Variant of <see cref="Except(MappingDataNode)"/> that will recursively call except rather than only checking equality.
         /// </summary>
         public MappingDataNode? RecursiveExcept(MappingDataNode node)
@@ -400,7 +420,11 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
 
         public bool TryAdd(DataNode key, DataNode value)
         {
-            return _children.TryAdd(key, value);
+            if (!_children.TryAdd(key, value))
+                return false;
+
+            _list.Add(new(key, value));
+            return true;
         }
 
         public bool TryAddCopy(DataNode key, DataNode value)
@@ -410,6 +434,7 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
                 return false;
 
             entry = value.Copy();
+            _list.Add(new(key, entry));
             return true;
         }
     }

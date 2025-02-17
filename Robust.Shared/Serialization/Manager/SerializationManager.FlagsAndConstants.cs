@@ -57,12 +57,10 @@ namespace Robust.Shared.Serialization.Manager
 
                 foreach (var flagType in bitflagType.GetCustomAttributes<FlagsForAttribute>(true))
                 {
-                    if (_flagsMapping.ContainsKey(flagType.Tag))
+                    if (!_flagsMapping.TryAdd(flagType.Tag, bitflagType))
                     {
                         throw new NotSupportedException($"Multiple bitflag enums declared for the tag {flagType.Tag}.");
                     }
-
-                    _flagsMapping.Add(flagType.Tag, bitflagType);
 
                     var highestBit = bitflagType
                         .GetEnumValues()

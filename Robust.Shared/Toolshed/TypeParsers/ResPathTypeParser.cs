@@ -16,9 +16,9 @@ internal sealed class ResPathTypeParser : TypeParser<ResPath>
         return true;
     }
 
-    public override CompletionResult TryAutocomplete(ParserContext parserContext, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext parserContext, CommandArgument? arg)
     {
         // TODO TOOLSHED ResPath Completion
-        return CompletionResult.FromHint($"\"<{argName ?? nameof(ResPath)}>\"");
+        return CompletionResult.FromHint(GetArgHint(arg));
     }
 }

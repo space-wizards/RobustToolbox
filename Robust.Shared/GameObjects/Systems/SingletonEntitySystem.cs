@@ -17,9 +17,9 @@ public abstract partial class SingletonEntitySystem<T> : EntitySystem where T : 
     private Entity<T>? _cachedEntity;
 
     /// <summary>
-    /// Reference to the singleton instance of <typeparamref name="T"/>.
+    /// Reference to the singleton instance of Entity{<typeparamref name="T"/>}.
     /// </summary>
-    protected T Instance => _cachedEntity ??= FindOrCreateHolder();
+    protected Entity<T> Instance => _cachedEntity ??= FindOrCreateHolder();
 
     public override void Initialize()
     {

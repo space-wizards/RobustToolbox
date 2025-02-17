@@ -143,6 +143,24 @@ public sealed class ParticleSystem {
             _particles[i] = new();
     }
 
+    public void UpdateSystem(ParticleSystemArgs args){
+        _particleSystemSize = args.ParticleSystemSize;
+        _particleCount = args.ParticleCount;
+        _particlesPerSecond = args.ParticlesPerSecond;
+        _lowerBound = args.LowerDrawBound is null ? new Vector3(-_particleSystemSize.X, -_particleSystemSize.Y, float.MinValue) : args.LowerDrawBound.Value;
+        _upperBound = args.UpperDrawBound is null ? new Vector3(_particleSystemSize.X, _particleSystemSize.Y, float.MaxValue) : args.UpperDrawBound.Value;
+        _icon = args.Icon;
+        _baseTransform = args.BaseTransform is null ? Matrix3x2.Identity : args.BaseTransform.Value;
+        _lifespan = args.Lifespan is null ? () => int.MaxValue : args.Lifespan;
+        _fadeout = args.Fadeout is null ? () => 0 : args.Fadeout;
+        _fadein = args.Fadein is null ? () => 0 : args.Fadein;
+        _spawnPosition = args.SpawnPosition is null ? () => Vector3.Zero : args.SpawnPosition;
+        _spawnVelocity = args.SpawnVelocity is null ? () => Vector3.Zero : args.SpawnVelocity;
+        _color = args.Color is null ? (float lifetime) => System.Drawing.Color.White : args.Color;
+        _transform = args.Transform is null ? (float lifetime) => Matrix3x2.Identity : args.Transform;
+        _acceleration = args.Acceleration is null ? (float lifetime) => Vector3.Zero : args.Acceleration;
+    }
+
     public void FrameUpdate(FrameEventArgs args)
     {
         int particlesSpawned = 0;

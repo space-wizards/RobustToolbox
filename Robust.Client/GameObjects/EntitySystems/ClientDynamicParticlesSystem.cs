@@ -33,8 +33,8 @@ public sealed class ClientDynamicParticlesSystem : SharedDynamicParticlesSystem
 
     private void OnDynamicParticlesComponentChange(EntityUid uid, DynamicParticlesComponent component, ref ComponentChange args)
     {
-        _particlesManager.DestroyParticleSystem(uid);
-        component.particlesSystem = _particlesManager.CreateParticleSystem(uid, GetParticleSystemArgs(component));
+        if(_particlesManager.TryGetParticleSystem(uid, out var system))
+            system.UpdateSystem(GetParticleSystemArgs(component));
     }
 
     private void HandleComponentAdd(EntityUid uid, DynamicParticlesComponent component, ref ComponentAdd args)

@@ -574,11 +574,11 @@ public partial class EntitySystem
         return EntityManager.CopyComponent(source, target, sourceComponent, out component, meta);
     }
 
-    /// <inheritdoc cref="IEntityManager.CopyComponentGeneric{T}"/>
+    /// <inheritdoc cref="IEntityManager.CopyComponent{T}"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool CopyComp<T>(EntityUid source, EntityUid target, T sourceComponent, [NotNullWhen(true)] out T? component, MetaDataComponent? meta = null) where T : IComponent
     {
-        return EntityManager.CopyComponentGeneric(source, target, sourceComponent, out component, meta);
+        return EntityManager.CopyComponent(source, target, sourceComponent, out component, meta);
     }
 
     /// <inheritdoc cref="IEntityManager.CopyComponents"/>

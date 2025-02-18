@@ -1078,11 +1078,17 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc/>
         public bool CopyComponent(EntityUid source, EntityUid target, IComponent sourceComponent, [NotNullWhen(true)] out IComponent? component, MetaDataComponent? meta = null)
         {
-            return CopyComponentGeneric(source, target, sourceComponent, out component, meta);
+            if (!MetaQuery.Resolve(target, ref meta))
+            {
+                component = null;
+                return false;
+            }
+
+            return CopyComponentInternal(source, target, sourceComponent, out component, meta);
         }
 
         /// <inheritdoc/>
-        public bool CopyComponentGeneric<T>(EntityUid source, EntityUid target, T sourceComponent, [NotNullWhen(true)] out T? component, MetaDataComponent? meta = null) where T : IComponent
+        public bool CopyComponent<T>(EntityUid source, EntityUid target, T sourceComponent, [NotNullWhen(true)] out T? component, MetaDataComponent? meta = null) where T : IComponent
         {
             component = default;
 
@@ -1111,10 +1117,11 @@ namespace Robust.Shared.GameObjects
 
         private bool CopyComponentInternal<T>(EntityUid source, EntityUid target, T sourceComponent, [NotNullWhen(true)] out T? component, MetaDataComponent meta) where T : IComponent
         {
-            var compReg = ComponentFactory.GetRegistration(typeof(T));
+            var compReg = ComponentFactory.GetRegistration(sourceComponent.GetType());
             component = (T)ComponentFactory.GetComponent(compReg);
 
             _serManager.CopyTo(sourceComponent, ref component, notNullableOverride: true);
+            component.Owner = target;
 
             AddComponentInternal(target, component, compReg, true, false, meta);
             return true;

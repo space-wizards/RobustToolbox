@@ -379,7 +379,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="component">The copied component if successful.</param>
         /// <param name="meta">Optional metadata of the target entity.</param>
         /// <returns>Whether the component was successfully copied.</returns>
-        bool CopyComponentGeneric<T>(EntityUid source, EntityUid target, T sourceComponent, [NotNullWhen(true)] out T? component, MetaDataComponent? meta = null) where T : IComponent;
+        bool CopyComponent<T>(EntityUid source, EntityUid target, T sourceComponent, [NotNullWhen(true)] out T? component, MetaDataComponent? meta = null) where T : IComponent;
 
         /// <summary>
         /// Copy multiple components from source to target entity using existing component instances.

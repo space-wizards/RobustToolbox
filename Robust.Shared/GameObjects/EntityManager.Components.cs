@@ -197,17 +197,23 @@ namespace Robust.Shared.GameObjects
             {
                 var reg = _componentFactory.GetRegistration(name);
 
-                if (HasComponent(target, reg.Type))
+                if (removeExisting)
                 {
-                    if (!removeExisting)
-                        continue;
-
-                    RemoveComponent(target, reg.Type, metadata);
+                    var comp = _componentFactory.GetComponent(reg);
+                    _serManager.CopyTo(entry.Component, ref comp, notNullableOverride: true);
+                    AddComponentInternal(target, comp, reg, overwrite: true, metadata: metadata);
                 }
+                else
+                {
+                    if (HasComponent(target, reg))
+                    {
+                        continue;
+                    }
 
-                var comp = _componentFactory.GetComponent(reg);
-                _serManager.CopyTo(entry.Component, ref comp, notNullableOverride: true);
-                AddComponent(target, comp, metadata: metadata);
+                    var comp = _componentFactory.GetComponent(reg);
+                    _serManager.CopyTo(entry.Component, ref comp, notNullableOverride: true);
+                    AddComponentInternal(target, comp, reg, overwrite: false, metadata: metadata);
+                }
             }
         }
 
@@ -313,6 +319,22 @@ namespace Robust.Shared.GameObjects
 #pragma warning restore CS0618 // Type or member is obsolete
 
             AddComponentInternal(uid, component, overwrite, false, metadata);
+        }
+
+        private void AddComponentInternal<T>(
+            EntityUid uid,
+            T component,
+            ComponentRegistration compReg,
+            bool overwrite = false,
+            MetaDataComponent? metadata = null) where T : IComponent
+        {
+            if (!MetaQuery.Resolve(uid, ref metadata, false))
+                throw new ArgumentException($"Entity {uid} is not valid.", nameof(uid));
+
+            DebugTools.Assert(component.Owner == default);
+            component.Owner = uid;
+
+            AddComponentInternal(uid, component, compReg, overwrite, skipInit: false, metadata);
         }
 
         private void AddComponentInternal<T>(EntityUid uid, T component, bool overwrite, bool skipInit, MetaDataComponent? metadata) where T : IComponent
@@ -731,6 +753,14 @@ namespace Robust.Shared.GameObjects
             return uid.HasValue && HasComponent<T>(uid.Value);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
+        public bool HasComponent(EntityUid uid, ComponentRegistration reg)
+        {
+            var dict = _entTraitArray[reg.Idx.Value];
+            return dict.TryGetValue(uid, out var comp) && !comp.Deleted;
+        }
+
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
@@ -940,6 +970,23 @@ namespace Robust.Shared.GameObjects
             }
 
             component = default;
+            return false;
+        }
+
+        /// <inheritdoc />
+        public bool TryGetComponent(EntityUid uid, ComponentRegistration reg, [NotNullWhen(true)] out IComponent? component)
+        {
+            var dict = _entTraitArray[reg.Idx.Value];
+            if (dict.TryGetValue(uid, out var comp))
+            {
+                if (!comp.Deleted)
+                {
+                    component = comp;
+                    return true;
+                }
+            }
+
+            component = null;
             return false;
         }
 

@@ -94,6 +94,8 @@ internal sealed partial class PvsSystem : EntitySystem
     /// </summary>
     private readonly List<GameTick> _deletedTick = new();
 
+    private readonly HashSet<EntityUid> _toDelete = new();
+
     /// <summary>
     /// The sessions that are currently being processed. Note that this is in general used by parallel & async tasks.
     /// Hence player disconnection processing is deferred and only run via <see cref="ProcessDisconnections"/>.
@@ -127,7 +129,7 @@ internal sealed partial class PvsSystem : EntitySystem
         _metaQuery = GetEntityQuery<MetaDataComponent>();
         _xformQuery = GetEntityQuery<TransformComponent>();
 
-        SubscribeLocalEvent<MapChangedEvent>(OnMapChanged);
+        SubscribeLocalEvent<MapRemovedEvent>(OnMapChanged);
         SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoved);
         SubscribeLocalEvent<TransformComponent, TransformStartupEvent>(OnTransformStartup);
 
@@ -194,6 +196,12 @@ internal sealed partial class PvsSystem : EntitySystem
 
         // Construct & serialize the game state for each player (and for the replay).
         SerializeStates();
+
+        foreach (var uid in _toDelete)
+        {
+            EntityManager.QueueDeleteEntity(uid);
+        }
+        _toDelete.Clear();
 
         // Compress & send the states.
         SendStates();
@@ -465,18 +473,27 @@ internal sealed partial class PvsSystem : EntitySystem
 }
 
 [ByRefEvent]
-public struct ExpandPvsEvent(ICommonSession session)
+public struct ExpandPvsEvent(ICommonSession session, int mask)
 {
     public readonly ICommonSession Session = session;
 
     /// <summary>
-    /// List of entities that will get added to this session's PVS set.
+    /// List of entities that will get added to this session's PVS set. This will still respect visibility masks.
     /// </summary>
     public List<EntityUid>? Entities;
 
     /// <summary>
     /// List of entities that will get added to this session's PVS set. Unlike <see cref="Entities"/> this will also
-    /// recursively add all children of the given entity.
+    /// recursively add all children of the given entity. This will still respect visibility masks.
     /// </summary>
     public List<EntityUid>? RecursiveEntities;
+
+    /// <summary>
+    /// Visibility mask to use when adding entities. Defaults to the usual visibility mask for that client.
+    /// </summary>
+    /// <remarks>
+    /// Note that this mask will affect all global & session overrides from <see cref="PvsOverrideSystem"/> for this
+    /// client, not just the entities in <see cref="Entities"/> and <see cref="RecursiveEntities"/>.
+    /// </remarks>
+    public int VisMask = mask;
 }

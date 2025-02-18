@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using NFluidsynth;
 using Robust.Shared.Audio.Midi;
+using Robust.Shared.Audio.Mixers;
 
 namespace Robust.Client.Audio.Midi;
 
@@ -20,6 +21,11 @@ public interface IMidiManager
     ///     Gain of audio.
     /// </summary>
     float Gain { get; set; }
+
+    /// <summary>
+    ///     Audio mixer to play with.
+    /// </summary>
+    IAudioMixer? Mixer { get; set; }
 
     /// <summary>
     ///     This method tries to return a midi renderer ready to be used.

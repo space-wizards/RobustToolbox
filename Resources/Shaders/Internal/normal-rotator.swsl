@@ -1,6 +1,6 @@
 uniform highp float rotation;
-const highp float COLOR_POWER = 0.4586603;
-const highp float COLOR_POWERNT = 2.1802625;
+const highp float COLOR_POWER = 0.452;
+const highp float COLOR_POWERNT = 2.212;
 
 void fragment()
 {

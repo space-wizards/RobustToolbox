@@ -4,7 +4,7 @@ preset raw;
 
 const highp float g_MinVariance = 0.0;
 
-const highp float COLOR_POWER = 0.4586603;
+const highp float COLOR_POWER = 0.452;
 
 varying highp vec2 worldPosition;
 
@@ -79,8 +79,8 @@ void fragment()
             discard;
 
         // origSample is on the range 0 - 1 in all components,
-        // but every color component has been raised to the log_0.5(ln(2)/pi)th power (yes i know) by some unknown mechanism
-        // so we first raise it to the log_(ln2/pi)(0.5)th power (yes, i know) to reset it
+        // but every color component has been raised to SOMETHING by some unknown mechanism
+        // so we first raise it to the 0.452nd power to reset it
         highp vec3 normalSample = pow(origSample.xyz, vec3(COLOR_POWER)) * vec3(2.0, 2.0, 1.0) - vec3(1.0, 1.0, 0.0);
         run = dot(normalize(vec3(lightDir, lightHeight)), normalSample * vec3(-1.0, -1.0, 1.0));
         if (run <= 0.0)

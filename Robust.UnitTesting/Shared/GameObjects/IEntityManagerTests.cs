@@ -1,12 +1,14 @@
+using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.GameObjects
 {
     [TestFixture, Parallelizable]
-    sealed class EntityManagerTests
+    sealed partial class EntityManagerTests
     {
         private static ISimulation SimulationFactory()
         {

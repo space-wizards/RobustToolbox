@@ -1075,6 +1075,58 @@ namespace Robust.Shared.GameObjects
             return TryGetComponent(uid.Value, netId, out component, meta);
         }
 
+        /// <inheritdoc/>
+        public bool CopyComponent(EntityUid source, EntityUid target, IComponent sourceComponent, [NotNullWhen(true)] out IComponent? component, MetaDataComponent? meta = null)
+        {
+            if (!MetaQuery.Resolve(target, ref meta))
+            {
+                component = null;
+                return false;
+            }
+
+            return CopyComponentInternal(source, target, sourceComponent, out component, meta);
+        }
+
+        /// <inheritdoc/>
+        public bool CopyComponent<T>(EntityUid source, EntityUid target, T sourceComponent, [NotNullWhen(true)] out T? component, MetaDataComponent? meta = null) where T : IComponent
+        {
+            component = default;
+
+            if (!MetaQuery.Resolve(target, ref meta))
+                return false;
+
+            return CopyComponentInternal(source, target, sourceComponent, out component, meta);
+        }
+
+        /// <inheritdoc/>
+        public bool CopyComponents(EntityUid source, EntityUid target, MetaDataComponent? meta = null, params IComponent[] sourceComponents)
+        {
+            if (!MetaQuery.Resolve(target, ref meta))
+                return false;
+
+            var allSuccessful = true;
+
+            foreach (var comp in sourceComponents)
+            {
+                if (!CopyComponentInternal(source, target, comp, out _, meta))
+                    allSuccessful = false;
+            }
+
+            return allSuccessful;
+        }
+
+        private bool CopyComponentInternal<T>(EntityUid source, EntityUid target, T sourceComponent, [NotNullWhen(true)] out T? component, MetaDataComponent meta) where T : IComponent
+        {
+            var compReg = ComponentFactory.GetRegistration(sourceComponent.GetType());
+            component = (T)ComponentFactory.GetComponent(compReg);
+
+            _serManager.CopyTo(sourceComponent, ref component, notNullableOverride: true);
+            component.Owner = target;
+
+            AddComponentInternal(target, component, compReg, true, false, meta);
+            return true;
+        }
+
         public EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : IComponent
         {
             var comps = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];

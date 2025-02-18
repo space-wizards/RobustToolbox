@@ -204,12 +204,19 @@ namespace Robust.Client.UserInterface
                     font = defaultFont;
                 }
 
+                Vector2 backgroundColorBegin = new();
+                if (!context.BackgroundColor.TryPeek(out var backgroundColor))
+                    backgroundColor = null;
+
                 foreach (var rune in text.EnumerateRunes())
                 {
                     if (lineBreakIndex < LineBreaks.Count &&
                         LineBreaks[lineBreakIndex] == globalBreakCounter)
                     {
+                        if (backgroundColor is Color bg)
+                            handle.DrawLine(backgroundColorBegin, baseLine, bg);
                         baseLine = new Vector2(drawBox.Left, baseLine.Y + GetLineHeight(font, uiScale, lineHeightScale) + controlYAdvance);
+                        backgroundColorBegin = new Vector2(drawBox.Left, baseLine.Y - GetLineHeight(font, uiScale, lineHeightScale));
                         controlYAdvance = 0;
                         lineBreakIndex += 1;
                     }
@@ -219,6 +226,9 @@ namespace Robust.Client.UserInterface
 
                     globalBreakCounter += 1;
                 }
+
+                if (backgroundColor is Color bgEnd)
+                    handle.DrawLine(backgroundColorBegin, baseLine, bgEnd);
 
                 if (_tagControls == null || !_tagControls.TryGetValue(nodeIndex, out var control))
                     continue;

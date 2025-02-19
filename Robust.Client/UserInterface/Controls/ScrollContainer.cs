@@ -15,8 +15,8 @@ namespace Robust.Client.UserInterface.Controls
         private bool _vScrollVisible;
         private bool _hScrollVisible;
 
-        private readonly VScrollBar _vScrollBar;
-        private readonly HScrollBar _hScrollBar;
+        public readonly VScrollBar VScrollBar;
+        public readonly HScrollBar HScrollBar;
 
         private bool _suppressScrollValueChanged;
 
@@ -38,8 +38,8 @@ namespace Robust.Client.UserInterface.Controls
                     return;
 
                 _reserveScrollbarSpace = value;
-                _vScrollBar.ReservesSpace = value;
-                _hScrollBar.ReservesSpace = value;
+                VScrollBar.ReservesSpace = value;
+                HScrollBar.ReservesSpace = value;
             }
         }
 
@@ -53,24 +53,24 @@ namespace Robust.Client.UserInterface.Controls
             RectClipContent = true;
 
             Action<Range> ev = _scrollValueChanged;
-            _hScrollBar = new HScrollBar
+            HScrollBar = new HScrollBar
             {
                 Visible = _hScrollEnabled,
                 VerticalAlignment = VAlignment.Bottom,
                 HorizontalAlignment = HAlignment.Stretch
             };
-            _vScrollBar = new VScrollBar
+            VScrollBar = new VScrollBar
             {
                 Visible = _vScrollEnabled,
                 VerticalAlignment = VAlignment.Stretch,
                 HorizontalAlignment = HAlignment.Right
             };
-            AddChild(_hScrollBar);
-            AddChild(_vScrollBar);
-            _hScrollBar.OnValueChanged += ev;
-            _vScrollBar.OnValueChanged += ev;
-            _vScrollBar.ReservesSpace = ReserveScrollbarSpace;
-            _hScrollBar.ReservesSpace = ReserveScrollbarSpace;
+            AddChild(HScrollBar);
+            AddChild(VScrollBar);
+            HScrollBar.OnValueChanged += ev;
+            VScrollBar.OnValueChanged += ev;
+            VScrollBar.ReservesSpace = ReserveScrollbarSpace;
+            HScrollBar.ReservesSpace = ReserveScrollbarSpace;
         }
 
         public bool VScrollEnabled
@@ -97,14 +97,14 @@ namespace Robust.Client.UserInterface.Controls
         {
             if (_vScrollEnabled)
             {
-                _vScrollBar.Measure(availableSize);
-                availableSize.X -= _vScrollBar.DesiredSize.X;
+                VScrollBar.Measure(availableSize);
+                availableSize.X -= VScrollBar.DesiredSize.X;
             }
 
             if (_hScrollEnabled)
             {
-                _hScrollBar.Measure(availableSize);
-                availableSize.Y -= _hScrollBar.DesiredSize.Y;
+                HScrollBar.Measure(availableSize);
+                availableSize.Y -= HScrollBar.DesiredSize.Y;
             }
 
             var constraint = new Vector2(
@@ -124,17 +124,17 @@ namespace Robust.Client.UserInterface.Controls
                 return Vector2.Zero;
 
             if (_vScrollEnabled && size.Y >= availableSize.Y)
-                size.X += _vScrollBar.DesiredSize.X;
+                size.X += VScrollBar.DesiredSize.X;
 
             if (_hScrollEnabled && size.X >= availableSize.X)
-                size.Y += _hScrollBar.DesiredSize.Y;
+                size.Y += HScrollBar.DesiredSize.Y;
 
             return size;
         }
 
         protected override Vector2 ArrangeOverride(Vector2 finalSize)
         {
-            if (_vScrollBar?.Parent == null || _hScrollBar?.Parent == null)
+            if (VScrollBar?.Parent == null || HScrollBar?.Parent == null)
             {
                 // Just don't run this before we're properly initialized.
                 return Vector2.Zero;
@@ -144,7 +144,7 @@ namespace Robust.Client.UserInterface.Controls
 
             foreach (var child in Children)
             {
-                if (child == _vScrollBar || child == _hScrollBar)
+                if (child == VScrollBar || child == HScrollBar)
                 {
                     continue;
                 }
@@ -153,8 +153,8 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             var (cWidth, cHeight) = maxChildMinSize;
-            var hBarSize = _hScrollBar.DesiredSize.Y;
-            var vBarSize = _vScrollBar.DesiredSize.X;
+            var hBarSize = HScrollBar.DesiredSize.Y;
+            var vBarSize = VScrollBar.DesiredSize.X;
 
             var (sWidth, sHeight) = finalSize;
 
@@ -175,24 +175,24 @@ namespace Robust.Client.UserInterface.Controls
 
                 if (sWidth < cWidth && _hScrollEnabled && !MathHelper.CloseTo(sWidth, cWidth, 1e-3))
                 {
-                    _hScrollBar.Visible = _hScrollVisible = true;
-                    _hScrollBar.Page = sWidth;
-                    _hScrollBar.MaxValue = cWidth;
+                    HScrollBar.Visible = _hScrollVisible = true;
+                    HScrollBar.Page = sWidth;
+                    HScrollBar.MaxValue = cWidth;
                 }
                 else
                 {
-                    _hScrollBar.Visible = _hScrollVisible = false;
+                    HScrollBar.Visible = _hScrollVisible = false;
                 }
 
                 if (sHeight < cHeight && _vScrollEnabled && !MathHelper.CloseTo(sHeight, cHeight, 1e-3))
                 {
-                    _vScrollBar.Visible = _vScrollVisible = true;
-                    _vScrollBar.Page = sHeight;
-                    _vScrollBar.MaxValue = cHeight;
+                    VScrollBar.Visible = _vScrollVisible = true;
+                    VScrollBar.Page = sHeight;
+                    VScrollBar.MaxValue = cHeight;
                 }
                 else
                 {
-                    _vScrollBar.Visible = _vScrollVisible = false;
+                    VScrollBar.Visible = _vScrollVisible = false;
                 }
             }
             finally
@@ -203,12 +203,12 @@ namespace Robust.Client.UserInterface.Controls
 
             if (_vScrollVisible)
             {
-                _vScrollBar.Arrange(UIBox2.FromDimensions(Vector2.Zero, finalSize));
+                VScrollBar.Arrange(UIBox2.FromDimensions(Vector2.Zero, finalSize));
             }
 
             if (_hScrollVisible)
             {
-                _hScrollBar.Arrange(UIBox2.FromDimensions(Vector2.Zero, finalSize));
+                HScrollBar.Arrange(UIBox2.FromDimensions(Vector2.Zero, finalSize));
             }
 
             var realFinalSize = new Vector2(
@@ -217,7 +217,7 @@ namespace Robust.Client.UserInterface.Controls
 
             foreach (var child in Children)
             {
-                if (child == _vScrollBar || child == _hScrollBar)
+                if (child == VScrollBar || child == HScrollBar)
                 {
                     continue;
                 }
@@ -246,7 +246,7 @@ namespace Robust.Client.UserInterface.Controls
 
             if (_vScrollEnabled)
             {
-                _vScrollBar.ValueTarget -= args.Delta.Y * ScrollSpeedY;
+                VScrollBar.ValueTarget -= args.Delta.Y * ScrollSpeedY;
             }
 
             if (_hScrollEnabled)
@@ -258,7 +258,7 @@ namespace Robust.Client.UserInterface.Controls
                         -args.Delta.Y :
                         args.Delta.X;
 
-                _hScrollBar.ValueTarget += delta * ScrollSpeedX;
+                HScrollBar.ValueTarget += delta * ScrollSpeedX;
             }
 
             if (!_vScrollVisible && !_hScrollVisible)
@@ -271,24 +271,24 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.ChildAdded(newChild);
 
-            if (_vScrollBar?.Parent == null || _hScrollBar?.Parent == null)
+            if (VScrollBar?.Parent == null || HScrollBar?.Parent == null)
             {
                 // Just don't run this before we're properly initialized.
                 return;
             }
 
-            _vScrollBar?.SetPositionLast();
-            _hScrollBar?.SetPositionLast();
+            VScrollBar?.SetPositionLast();
+            HScrollBar?.SetPositionLast();
         }
 
         [Pure]
         public Vector2 GetScrollValue(bool ignoreVisible = false)
         {
             if (ignoreVisible)
-                return new(_hScrollBar.Value, _vScrollBar.Value);
+                return new(HScrollBar.Value, VScrollBar.Value);
 
-            var h = _hScrollBar.Value;
-            var v = _vScrollBar.Value;
+            var h = HScrollBar.Value;
+            var v = VScrollBar.Value;
             if (!_hScrollVisible)
             {
                 h = 0;
@@ -305,8 +305,8 @@ namespace Robust.Client.UserInterface.Controls
         public void SetScrollValue(Vector2 value)
         {
             _suppressScrollValueChanged = true;
-            _hScrollBar.Value = value.X;
-            _vScrollBar.Value = value.Y;
+            HScrollBar.Value = value.X;
+            VScrollBar.Value = value.Y;
             _suppressScrollValueChanged = false;
             InvalidateArrange();
             _queueScrolled = true;

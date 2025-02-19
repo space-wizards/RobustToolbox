@@ -59,7 +59,7 @@ void fragment()
         discard;
     }
 
-    highp float dist = dot(diff, diff) + lightHeight;
+    highp float dist = dot(diff, diff) + abs(lightHeight);
     highp float val = clamp((1.0 - clamp(sqrt(dist) / lightRange, 0.0, 1.0)) * (1.0 / (sqrt(dist + 1.0))), 0.0, 1.0);
 
     val *= lightPower;

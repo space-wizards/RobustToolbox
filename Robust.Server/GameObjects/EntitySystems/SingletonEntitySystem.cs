@@ -1,8 +1,9 @@
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Utility;
 
-namespace Robust.Shared.GameObjects;
+namespace Robust.Server.GameObjects;
 
 /// <summary>
 /// Extension of <see cref="EntitySystem"/> for use with singleton components.

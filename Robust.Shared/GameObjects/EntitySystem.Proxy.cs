@@ -175,7 +175,7 @@ public partial class EntitySystem
     protected void DirtyFields<T>(EntityUid uid, T comp, MetaDataComponent? meta, params ReadOnlySpan<string> fields)
         where T : IComponentDelta
     {
-        EntityManager.DirtyFields(uid, comp, meta);
+        EntityManager.DirtyFields(uid, comp, meta, fields);
     }
 
     /// <summary>

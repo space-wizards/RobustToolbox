@@ -29,7 +29,7 @@ internal partial class Clyde
 
             while (_windowingRunning)
             {
-                var res = SDL.SDL_WaitEvent(out Unsafe.NullRef<SDL.SDL_Event>());
+                var res = SDL.SDL_WaitEventRef(ref Unsafe.NullRef<SDL.SDL_Event>());
                 if (!res)
                 {
                     _sawmill.Error("Error while waiting on SDL3 events: {error}", SDL.SDL_GetError());

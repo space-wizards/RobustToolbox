@@ -9,6 +9,7 @@ public class EntityPrototypeView : SpriteView
 {
     private string? _currentPrototype;
     private EntityUid? _ourEntity;
+    private bool _isShowing;
 
     public EntityPrototypeView()
     {
@@ -22,8 +23,6 @@ public class EntityPrototypeView : SpriteView
 
     public void SetPrototype(EntProtoId? entProto)
     {
-        SpriteSystem ??= EntMan.System<SpriteSystem>();
-
         if (entProto == _currentPrototype
             && EntMan.TryGetComponent(Entity?.Owner, out MetaDataComponent? meta)
             && meta.EntityPrototype?.ID == _currentPrototype)
@@ -32,14 +31,10 @@ public class EntityPrototypeView : SpriteView
         }
 
         _currentPrototype = entProto;
-        SetEntity(null);
-        EntMan.DeleteEntity(_ourEntity);
 
-        if (_currentPrototype != null)
+        if (_ourEntity != null || _isShowing)
         {
-            _ourEntity = EntMan.Spawn(_currentPrototype);
-            SpriteSystem.ForceUpdate(_ourEntity.Value);
-            SetEntity(_ourEntity);
+            UpdateEntity();
         }
     }
 
@@ -48,12 +43,38 @@ public class EntityPrototypeView : SpriteView
         base.EnteredTree();
 
         if (_currentPrototype != null)
-            SetPrototype(_currentPrototype);
+        {
+            UpdateEntity();
+        }
+
+        _isShowing = true;
     }
 
     protected override void ExitedTree()
     {
         base.ExitedTree();
         EntMan.TryQueueDeleteEntity(_ourEntity);
+        _ourEntity = null;
+
+        _isShowing = false;
+    }
+
+    private void UpdateEntity()
+    {
+        SetEntity(null);
+        EntMan.DeleteEntity(_ourEntity);
+
+        if (_currentPrototype != null)
+        {
+            SpriteSystem ??= EntMan.System<SpriteSystem>();
+
+            _ourEntity = EntMan.Spawn(_currentPrototype);
+            SpriteSystem.ForceUpdate(_ourEntity.Value);
+            SetEntity(_ourEntity);
+        }
+        else
+        {
+            _ourEntity = null;
+        }
     }
 }

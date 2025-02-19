@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using Robust.Shared.Network;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -476,15 +477,32 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
         private Expression AssignIfNotDefaultExpression(int i, Expression obj, Expression value)
         {
+            var assigner = FieldAssigners[i];
+            Expression assignerExpr;
+
+            if (assigner is FieldInfo fieldInfo)
+                assignerExpr = Expression.Assign(Expression.Field(obj, fieldInfo), value);
+            else if (assigner is MethodInfo methodInfo)
+                assignerExpr = Expression.Call(obj, methodInfo, value);
+            else
+                assignerExpr = Expression.Invoke(Expression.Constant(assigner), obj, value);
+
             return Expression.IfThen(
                 Expression.Not(ExpressionUtils.EqualExpression(
                     Expression.Constant(DefaultValues[i], BaseFieldDefinitions[i].FieldType), value)),
-                Expression.Invoke(Expression.Constant(FieldAssigners[i]), obj, value));
+                assignerExpr);
         }
 
         private Expression AccessExpression(int i, Expression obj)
         {
-            return Expression.Invoke(Expression.Constant(FieldAccessors[i]), obj);
+            var accessor = FieldAccessors[i];
+            if (accessor is FieldInfo fieldInfo)
+                return Expression.Field(obj, fieldInfo);
+
+            if (accessor is MethodInfo methodInfo)
+                return Expression.Call(obj, methodInfo);
+
+            return Expression.Invoke(Expression.Constant(accessor), obj);
         }
 
         private Expression IsDefault(int i, Expression left, FieldDefinition fieldDefinition)

@@ -88,6 +88,13 @@ namespace Robust.Shared.GameObjects
         public Angle Rotation { get; set; }
 
         /// <summary>
+        ///     How "high up" the light is. 0 is considered to be the floor.
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        [DataField("height")]
+        public float? Height = 1f;
+
+        /// <summary>
         /// The resource path to the mask texture the light will use.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]

@@ -12,7 +12,7 @@ namespace Robust.Client.Graphics
     [PublicAPI]
     public sealed class AtlasTexture : Texture
     {
-        public AtlasTexture(Texture texture, UIBox2 subRegion) : base((Vector2i) subRegion.Size)
+        public AtlasTexture(Texture texture, UIBox2 subRegion, int? width = null) : base((Vector2i) subRegion.Size)
         {
             DebugTools.Assert(SubRegion.Right < texture.Width);
             DebugTools.Assert(SubRegion.Bottom < texture.Height);
@@ -20,6 +20,7 @@ namespace Robust.Client.Graphics
             DebugTools.Assert(SubRegion.Top >= 0);
 
             SubRegion = subRegion;
+            RegionWidth = width ?? (int)subRegion.Width;
             SourceTexture = texture;
         }
 
@@ -32,6 +33,11 @@ namespace Robust.Client.Graphics
         ///     Our sub region within our source, in pixel coordinates.
         /// </summary>
         public UIBox2 SubRegion { get; }
+
+        /// <summary>
+        ///     The width of the texture we came from, used for offsetting to get normals
+        /// </summary>
+        public int RegionWidth { get; }
 
         public override Color GetPixel(int x, int y)
         {

@@ -54,6 +54,22 @@ END TEMPLATE-->
 *None yet*
 
 
+## 247.1.0
+
+### New features
+
+* Added support for `Color[]` shader uniforms
+* Added optional minimumDistance parameter to `SharedJointSystem.CreateDistanceJoint()`
+
+### Bugfixes
+
+* Fixed `EntitySystem.DirtyFields()` not actually marking fields as dirty.
+
+### Other
+
+* Updated the Yamale map file format validator to support v7 map/grid files. 
+
+
 ## 247.0.0
 
 ### Breaking changes

@@ -21,9 +21,9 @@ internal sealed class ValueRefTypeParser<T, TAuto> : TypeParser<ValueRef<T, TAut
         return res;
     }
 
-    public override CompletionResult? TryAutocomplete(ParserContext parserContext, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext parserContext, CommandArgument? arg)
     {
-        return Toolshed.TryAutocomplete(parserContext, typeof(ValueRef<T, T>), argName);
+        return Toolshed.TryAutocomplete(parserContext, typeof(ValueRef<T, T>), arg);
     }
 }
 
@@ -84,13 +84,13 @@ internal sealed class ValueRefTypeParser<T> : TypeParser<ValueRef<T>>
     public static CompletionResult? TryAutocomplete(
         ToolshedManager shed,
         ParserContext ctx,
-        string? argName,
+        CommandArgument? arg,
         ITypeParser? parser)
     {
         ctx.ConsumeWhitespace();
         var rune = ctx.PeekRune();
         if (rune == new Rune('$'))
-            return shed.TryAutocomplete(ctx, typeof(VarRef<T>), argName);
+            return shed.TryAutocomplete(ctx, typeof(VarRef<T>), arg);
 
         if (rune == new Rune('{'))
         {
@@ -103,13 +103,13 @@ internal sealed class ValueRefTypeParser<T> : TypeParser<ValueRef<T>>
         if (parser == null)
             return CompletionResult.FromHint($"<variable or block of type {typeof(T).PrettyName()}>");
 
-        var res = parser.TryAutocomplete(ctx, null);
+        var res = parser.TryAutocomplete(ctx, arg);
         return res ?? CompletionResult.FromHint($"<variable, block, or value of type {typeof(T).PrettyName()}>");
     }
 
-    public override CompletionResult? TryAutocomplete(ParserContext ctx, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
     {
-        return TryAutocomplete(Toolshed, ctx, argName, null);
+        return TryAutocomplete(Toolshed, ctx, arg, null);
     }
 }
 
@@ -117,10 +117,10 @@ internal sealed class CustomValueRefTypeParser<T, TParser> : CustomTypeParser<Va
     where TParser : CustomTypeParser<T>, new()
     where T : notnull
 {
-    public override CompletionResult? TryAutocomplete(ParserContext ctx, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
     {
         var parser = Toolshed.GetCustomParser<TParser, T>();
-        return ValueRefTypeParser<T>.TryAutocomplete(Toolshed, ctx, argName, parser);
+        return ValueRefTypeParser<T>.TryAutocomplete(Toolshed, ctx, arg, parser);
     }
 
     public override bool TryParse(ParserContext ctx, [NotNullWhen(true)] out ValueRef<T>? result)

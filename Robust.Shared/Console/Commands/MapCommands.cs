@@ -138,7 +138,7 @@ internal sealed class ListMapsCommand : LocalizedEntityCommands
     {
         var msg = new StringBuilder();
 
-        foreach (var mapId in _map.GetAllMapIds().OrderBy(id => id.Value))
+        foreach (var mapId in _mapSystem.GetAllMapIds().OrderBy(id => id.Value))
         {
             if (!_mapSystem.TryGetMap(mapId, out var mapUid))
                 continue;

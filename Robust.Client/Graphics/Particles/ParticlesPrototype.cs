@@ -86,7 +86,7 @@ public sealed partial class ParticlesPrototype : IPrototype, ISerializationHooks
         result.Color = (float lifetime) => {
             return (System.Drawing.Color)Color.FromHex(ColorList[0]); //TODO
         };
-        result.Acceleration = (float lifetime) => Acceleration.GetNext();
+        result.Acceleration = (float lifetime, Vector3 velocity) => Acceleration.GetNext();
         result.SpawnPosition = SpawnPosition.GetNext;
         result.SpawnVelocity = SpawnVelocity.GetNext;
         result.Transform = (float lifetime) => {

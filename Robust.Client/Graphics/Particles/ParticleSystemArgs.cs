@@ -76,7 +76,7 @@ public sealed class ParticleSystemArgs {
     /// <summary>
     /// A function which takes the life time of this particles and returns the an acceleration to apply to this particle
     /// </summary>
-    public Func<float,Vector3>? Acceleration;
+    public Func<float,Vector3,Vector3>? Acceleration;
 
     public ParticleSystemArgs(Func<Texture> icon, Vector2i particleSystemSize, uint particleCount, float particlesPerSecond){
         Icon = icon;

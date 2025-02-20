@@ -112,7 +112,7 @@ public sealed class ParticleSystem {
     /// <summary>
     /// A function which takes the life time of this particles and returns the an acceleration to apply to this particle
     /// </summary>
-    private Func<float,Vector3> _acceleration;
+    private Func<float,Vector3,Vector3> _acceleration;
 
     /// <summary>
     /// Internal store for particles for this system
@@ -136,7 +136,7 @@ public sealed class ParticleSystem {
         _spawnVelocity = args.SpawnVelocity is null ? () => Vector3.Zero : args.SpawnVelocity;
         _color = args.Color is null ? (float lifetime) => Color.White : args.Color;
         _transform = args.Transform is null ? (float lifetime) => Matrix3x2.Identity : args.Transform;
-        _acceleration = args.Acceleration is null ? (float lifetime) => Vector3.Zero : args.Acceleration;
+        _acceleration = args.Acceleration is null ? (float lifetime, Vector3 velocity) => Vector3.Zero : args.Acceleration;
 
         _particles = new Particle[_particleCount];
         for(int i=0; i<_particleCount; i++)
@@ -167,7 +167,7 @@ public sealed class ParticleSystem {
         _spawnVelocity = args.SpawnVelocity is null ? () => Vector3.Zero : args.SpawnVelocity;
         _color = args.Color is null ? (float lifetime) => System.Drawing.Color.White : args.Color;
         _transform = args.Transform is null ? (float lifetime) => Matrix3x2.Identity : args.Transform;
-        _acceleration = args.Acceleration is null ? (float lifetime) => Vector3.Zero : args.Acceleration;
+        _acceleration = args.Acceleration is null ? (float lifetime, Vector3 velocity) => Vector3.Zero : args.Acceleration;
 
     }
 
@@ -180,7 +180,7 @@ public sealed class ParticleSystem {
                 p.lifetime += args.DeltaSeconds;
                 p.transform = _baseTransform * _transform(p.lifetime);
                 p.color = _color(p.lifetime);
-                p.velocity += _acceleration(p.lifetime);
+                p.velocity += _acceleration(p.lifetime, p.velocity);
                 p.position += p.velocity*args.DeltaSeconds;
                 if(p.fadein > p.lifetime)
                     p.color.A = Math.Clamp(p.lifetime/p.fadein, 0, 1);

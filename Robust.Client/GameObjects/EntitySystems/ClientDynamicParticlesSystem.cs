@@ -22,12 +22,12 @@ public sealed class ClientDynamicParticlesSystem : SharedDynamicParticlesSystem
 
     public override void Initialize() {
         base.Initialize();
-        SubscribeLocalEvent<DynamicParticlesComponent, ComponentChange>(OnDynamicParticlesComponentChange);
+        SubscribeLocalEvent<DynamicParticlesComponent, AfterAutoHandleStateEvent>(OnDynamicParticlesComponentChange);
         SubscribeLocalEvent<DynamicParticlesComponent, ComponentAdd>(HandleComponentAdd);
         SubscribeLocalEvent<DynamicParticlesComponent, ComponentRemove>(HandleComponentRemove);
     }
 
-    private void OnDynamicParticlesComponentChange(EntityUid uid, DynamicParticlesComponent component, ref ComponentChange args)
+    private void OnDynamicParticlesComponentChange(EntityUid uid, DynamicParticlesComponent component, ref AfterAutoHandleStateEvent args)
     {
         if(_particlesManager.TryGetParticleSystem(uid, out var system))
             system.UpdateSystem(GetParticleSystemArgs(component));

@@ -17,18 +17,20 @@ public sealed class ClientYamlParticlesSystem : SharedYamlParticlesSystem
 
     public override void Initialize() {
         base.Initialize();
-        SubscribeLocalEvent<YamlParticlesComponent, ComponentChange>(OnYamlParticlesComponentChange);
+        SubscribeLocalEvent<YamlParticlesComponent, AfterAutoHandleStateEvent>(OnYamlParticlesComponentChange);
         SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
         SubscribeLocalEvent<YamlParticlesComponent, ComponentAdd>(HandleComponentAdd);
         SubscribeLocalEvent<YamlParticlesComponent, ComponentRemove>(HandleComponentRemove);
     }
 
-    private void OnYamlParticlesComponentChange(EntityUid uid, YamlParticlesComponent component, ref ComponentChange args)
+    private void OnYamlParticlesComponentChange(EntityUid uid, YamlParticlesComponent component, ref AfterAutoHandleStateEvent args)
     {
-        _particlesManager.DestroyParticleSystem(uid);
         if(_prototypeManager.TryIndex<ParticlesPrototype>(component.ParticleType, out var prototype)){
             ParticleSystemArgs particleSystemArgs = prototype.GetParticleSystemArgs(_resourceCache);
-            _particlesManager.CreateParticleSystem(uid, particleSystemArgs);
+            if(_particlesManager.TryGetParticleSystem(uid, out var system))
+                system.UpdateSystem(particleSystemArgs);
+            else
+                _particlesManager.CreateParticleSystem(uid, particleSystemArgs);
         }
         else
         {
@@ -38,7 +40,6 @@ public sealed class ClientYamlParticlesSystem : SharedYamlParticlesSystem
 
     private void HandleComponentAdd(EntityUid uid, YamlParticlesComponent component, ref ComponentAdd args)
     {
-        component.ParticleType = "example";
         //do a lookup for YAML defined particles
         if(_prototypeManager.TryIndex<ParticlesPrototype>(component.ParticleType, out var prototype)){
             ParticleSystemArgs particleSystemArgs = prototype.GetParticleSystemArgs(_resourceCache);

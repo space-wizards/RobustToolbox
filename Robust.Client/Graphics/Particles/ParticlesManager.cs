@@ -210,13 +210,13 @@ public sealed class ParticleSystem {
     private static readonly Matrix3x2 FlipMatrix = Matrix3x2.Identity with {
             M22 = -1
         };
-    public void Draw(DrawingHandleWorld handle, Vector2 offset){
+    public void Draw(DrawingHandleWorld handle, Matrix3x2 transform){
 
         foreach (var particle in _particles)
         {
             if(particle.active){
-                handle.SetTransform(FlipMatrix * particle.transform);
-                handle.DrawTextureRect(particle.texture!, new Box2(particle.position.Xy+offset, particle.position.Xy+offset+particle.texture!.Size), particle.color);
+                handle.SetTransform(transform * particle.transform);
+                handle.DrawTextureRect(particle.texture!, new Box2(particle.position.Xy, (particle.position.Xy+particle.texture!.Size)), particle.color);
             }
         }
     }

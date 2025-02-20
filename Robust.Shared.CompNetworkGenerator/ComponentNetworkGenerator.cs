@@ -376,7 +376,39 @@ namespace Robust.Shared.CompNetworkGenerator
                         stateFields.Append($@"
         public {networkedType} {name} = default!;");
 
-                        if (IsCloneType(type))
+                        if (ImplementsInterface(type, GlobalIRobustCloneableName))
+                        {
+                            getField = $"component.{name}";
+                            cast = $"({castString})";
+
+                            var nullCast = nullable ? castString.Substring(0, castString.Length - 1) : castString;
+
+                            if (nullable)
+                            {
+                                handleStateSetters.Append($@"
+            component.{name} = state.{name} == null ? null! : state.{name}.Clone();");
+                                deltaHandleFields.Append($@"
+                    var {name}Value = {cast} {fieldHandleValue};
+                    if ({name}Value == null)
+                        component.{name} = null!;
+                    else
+                        component.{name} = {nullCast}({name}Value.Clone());");
+                                shallowClone.Append($@"
+                {name} = this.{name},");
+                                deltaApply.Add($"fullState.{name} = {name} == null ? null! : {name}.Clone();");
+                            }
+                            else
+                            {
+                                handleStateSetters.Append($@"
+            component.{name} = state.{name}.Clone();");
+                                deltaHandleFields.Append($@"
+                    component.{name} = {cast}({fieldHandleValue}.Clone());");
+                                shallowClone.Append($@"
+                {name} = this.{name},");
+                                deltaApply.Add($"fullState.{name} = {name}.Clone();");
+                            }
+                        }
+                        else if (IsCloneType(type))
                         {
                             getField = $"component.{name}";
                             cast = $"({castString})";
@@ -747,14 +779,10 @@ public partial class {componentName}{deltaInterface}
 
         private static bool IsCloneType(ITypeSymbol type)
         {
-            if (type is not INamedTypeSymbol named)
+            if (type is not INamedTypeSymbol named || !named.IsGenericType)
+            {
                 return false;
-
-            if (ImplementsInterface(named, GlobalIRobustCloneableName))
-                return true;
-
-            if (!named.IsGenericType)
-                return false;
+            }
 
             var constructed = named.ConstructedFrom.ToDisplayString(FullyQualifiedFormat);
             return constructed switch

@@ -34,7 +34,7 @@ public sealed partial class EntityManagerCopyTests
         var target = entManager.Spawn(null, new MapCoordinates(Vector2.Zero, mapId));
         Assert.That(!entManager.HasComponent<AComponent>(target));
 
-        entManager.CopyComponent(original, target, comp, out var targetComp);
+        var targetComp = entManager.CopyComponent(original, target, comp);
 
         Assert.That(targetComp!.Owner == target);
         Assert.That(targetComp.Value, Is.EqualTo(comp.Value));
@@ -65,7 +65,7 @@ public sealed partial class EntityManagerCopyTests
         var target = entManager.Spawn(null, new MapCoordinates(Vector2.Zero, mapId));
         Assert.That(!entManager.HasComponent<AComponent>(target));
 
-        entManager.CopyComponent(original, target, (IComponent) comp, out var targetComp);
+        var targetComp = entManager.CopyComponent(original, target, (IComponent) comp);
 
         Assert.That(targetComp!.Owner == target);
         Assert.That(((AComponent) targetComp).Value, Is.EqualTo(comp.Value));

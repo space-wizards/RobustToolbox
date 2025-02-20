@@ -359,6 +359,21 @@ namespace Robust.Shared.GameObjects
         bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, ushort netId, [NotNullWhen(true)] out IComponent? component, MetaDataComponent? meta = null);
 
         /// <summary>
+        /// Tries to run <see cref="CopyComponents"/> without throwing if the component doesn't exist.
+        /// </summary>
+        bool TryCopyComponent<T>(
+            EntityUid source,
+            EntityUid target,
+            ref T? sourceComponent,
+            [NotNullWhen(true)] out T? targetComp,
+            MetaDataComponent? meta = null) where T : IComponent;
+
+        /// <summary>
+        /// Tries to run <see cref="CopyComponents"/> without throwing if the components don't exist.
+        /// </summary>
+        bool TryCopyComponents(EntityUid source, EntityUid target, MetaDataComponent? meta = null, params Type[] sourceComponents);
+
+        /// <summary>
         ///     Copy a single component from source to target entity.
         /// </summary>
         /// <param name="source">The source entity to copy from.</param>
@@ -366,8 +381,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="sourceComponent">The source component instance to copy.</param>
         /// <param name="component">The copied component if successful.</param>
         /// <param name="meta">Optional metadata of the target entity.</param>
-        /// <returns>Whether the component was successfully copied.</returns>
-        bool CopyComponent(EntityUid source, EntityUid target, IComponent sourceComponent, [NotNullWhen(true)] out IComponent? component, MetaDataComponent? meta = null);
+        IComponent CopyComponent(EntityUid source, EntityUid target, IComponent sourceComponent, MetaDataComponent? meta = null);
 
         /// <summary>
         ///     Copy a single component from source to target entity.
@@ -378,8 +392,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="sourceComponent">The source component instance to copy.</param>
         /// <param name="component">The copied component if successful.</param>
         /// <param name="meta">Optional metadata of the target entity.</param>
-        /// <returns>Whether the component was successfully copied.</returns>
-        bool CopyComponent<T>(EntityUid source, EntityUid target, T sourceComponent, [NotNullWhen(true)] out T? component, MetaDataComponent? meta = null) where T : IComponent;
+        T CopyComponent<T>(EntityUid source, EntityUid target, T sourceComponent, MetaDataComponent? meta = null) where T : IComponent;
 
         /// <summary>
         /// Copy multiple components from source to target entity using existing component instances.
@@ -388,8 +401,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="target">The target entity to copy to.</param>
         /// <param name="meta">Optional metadata of the target entity.</param>
         /// <param name="sourceComponents">Array of component instances to copy.</param>
-        /// <returns>Whether all components were successfully copied.</returns>
-        bool CopyComponents(EntityUid source, EntityUid target, MetaDataComponent? meta = null, params IComponent[] sourceComponents);
+        void CopyComponents(EntityUid source, EntityUid target, MetaDataComponent? meta = null, params IComponent[] sourceComponents);
 
         /// <summary>
         /// Returns a cached struct enumerator with the specified component.

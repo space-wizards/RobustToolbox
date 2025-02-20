@@ -1076,55 +1076,94 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc/>
-        public bool CopyComponent(EntityUid source, EntityUid target, IComponent sourceComponent, [NotNullWhen(true)] out IComponent? component, MetaDataComponent? meta = null)
+        public bool TryCopyComponent<T>(EntityUid source, EntityUid target, ref T? sourceComponent, [NotNullWhen(true)] out T? targetComp, MetaDataComponent? meta = null) where T : IComponent
         {
             if (!MetaQuery.Resolve(target, ref meta))
             {
-                component = null;
+                targetComp = default;
                 return false;
             }
 
-            return CopyComponentInternal(source, target, sourceComponent, out component, meta);
+            if (sourceComponent == null && !TryGetComponent(source, out sourceComponent))
+            {
+                targetComp = default;
+                return false;
+            }
+
+            targetComp = CopyComponentInternal(source, target, sourceComponent, meta);
+            return true;
         }
 
         /// <inheritdoc/>
-        public bool CopyComponent<T>(EntityUid source, EntityUid target, T sourceComponent, [NotNullWhen(true)] out T? component, MetaDataComponent? meta = null) where T : IComponent
+        public bool TryCopyComponents(
+            EntityUid source,
+            EntityUid target,
+            MetaDataComponent? meta = null,
+            params Type[] sourceComponents)
         {
-            component = default;
-
-            if (!MetaQuery.Resolve(target, ref meta))
+            if (!MetaQuery.TryGetComponent(source, out meta))
                 return false;
 
-            return CopyComponentInternal(source, target, sourceComponent, out component, meta);
+            var allCopied = true;
+
+            foreach (var type in sourceComponents)
+            {
+                if (!TryGetComponent(source, type, out var srcComp))
+                {
+                    allCopied = false;
+                    continue;
+                }
+
+                CopyComponent(source, target, srcComp, meta: meta);
+            }
+
+            return allCopied;
         }
 
         /// <inheritdoc/>
-        public bool CopyComponents(EntityUid source, EntityUid target, MetaDataComponent? meta = null, params IComponent[] sourceComponents)
+        public IComponent CopyComponent(EntityUid source, EntityUid target, IComponent sourceComponent, MetaDataComponent? meta = null)
         {
             if (!MetaQuery.Resolve(target, ref meta))
-                return false;
+            {
+                throw new InvalidOperationException();
+            }
 
-            var allSuccessful = true;
+            return CopyComponentInternal(source, target, sourceComponent, meta);
+        }
+
+        /// <inheritdoc/>
+        public T CopyComponent<T>(EntityUid source, EntityUid target, T sourceComponent,MetaDataComponent? meta = null) where T : IComponent
+        {
+            if (!MetaQuery.Resolve(target, ref meta))
+            {
+                throw new InvalidOperationException();
+            }
+
+            return CopyComponentInternal(source, target, sourceComponent, meta);
+        }
+
+        /// <inheritdoc/>
+        public void CopyComponents(EntityUid source, EntityUid target, MetaDataComponent? meta = null, params IComponent[] sourceComponents)
+        {
+            if (!MetaQuery.Resolve(target, ref meta))
+                return;
 
             foreach (var comp in sourceComponents)
             {
-                if (!CopyComponentInternal(source, target, comp, out _, meta))
-                    allSuccessful = false;
+                CopyComponentInternal(source, target, comp, meta);
             }
-
-            return allSuccessful;
         }
 
-        private bool CopyComponentInternal<T>(EntityUid source, EntityUid target, T sourceComponent, [NotNullWhen(true)] out T? component, MetaDataComponent meta) where T : IComponent
+        private T CopyComponentInternal<T>(EntityUid source, EntityUid target, T sourceComponent, MetaDataComponent meta) where T : IComponent
         {
             var compReg = ComponentFactory.GetRegistration(sourceComponent.GetType());
-            component = (T)ComponentFactory.GetComponent(compReg);
+            var component = (T)ComponentFactory.GetComponent(compReg);
 
             _serManager.CopyTo(sourceComponent, ref component, notNullableOverride: true);
             component.Owner = target;
 
             AddComponentInternal(target, component, compReg, true, false, meta);
-            return true;
+            return component;
         }
 
         public EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : IComponent

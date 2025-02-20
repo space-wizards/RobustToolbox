@@ -567,25 +567,46 @@ public partial class EntitySystem
 
     #region Component Copy
 
+    /// <inheritdoc cref="IEntityManager.TryCopyComponent"/>
+    protected bool TryCopyComponent<T>(
+        EntityUid source,
+        EntityUid target,
+        ref T? sourceComponent,
+        [NotNullWhen(true)] out T? targetComp,
+        MetaDataComponent? meta = null) where T : IComponent
+    {
+        return EntityManager.TryCopyComponent(source, target, ref sourceComponent, out targetComp, meta);
+    }
+
+    /// <inheritdoc cref="IEntityManager.TryCopyComponents"/>
+    protected bool TryCopyComponents(
+        EntityUid source,
+        EntityUid target,
+        MetaDataComponent? meta = null,
+        params Type[] sourceComponents)
+    {
+        return EntityManager.TryCopyComponents(source, target, meta, sourceComponents);
+    }
+
     /// <inheritdoc cref="IEntityManager.CopyComponent"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool CopyComp(EntityUid source, EntityUid target, IComponent sourceComponent, [NotNullWhen(true)] out IComponent? component, MetaDataComponent? meta = null)
+    protected IComponent CopyComp(EntityUid source, EntityUid target, IComponent sourceComponent, MetaDataComponent? meta = null)
     {
-        return EntityManager.CopyComponent(source, target, sourceComponent, out component, meta);
+        return EntityManager.CopyComponent(source, target, sourceComponent, meta);
     }
 
     /// <inheritdoc cref="IEntityManager.CopyComponent{T}"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool CopyComp<T>(EntityUid source, EntityUid target, T sourceComponent, [NotNullWhen(true)] out T? component, MetaDataComponent? meta = null) where T : IComponent
+    protected T CopyComp<T>(EntityUid source, EntityUid target, T sourceComponent, MetaDataComponent? meta = null) where T : IComponent
     {
-        return EntityManager.CopyComponent(source, target, sourceComponent, out component, meta);
+        return EntityManager.CopyComponent(source, target, sourceComponent, meta);
     }
 
     /// <inheritdoc cref="IEntityManager.CopyComponents"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool CopyComps(EntityUid source, EntityUid target, MetaDataComponent? meta = null, params IComponent[] sourceComponents)
+    protected void CopyComps(EntityUid source, EntityUid target, MetaDataComponent? meta = null, params IComponent[] sourceComponents)
     {
-        return EntityManager.CopyComponents(source, target, meta, sourceComponents);
+        EntityManager.CopyComponents(source, target, meta, sourceComponents);
     }
 
     #endregion

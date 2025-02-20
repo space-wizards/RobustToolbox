@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
@@ -20,10 +21,7 @@ public sealed class ParticlesManager
     private Dictionary<EntityUid,ParticleSystem> _particleSystems = new();
     public void FrameUpdate(FrameEventArgs args)
     {
-        foreach (var particleSys in _particleSystems.Values)
-        {
-            particleSys.FrameUpdate(args);
-        }
+        Parallel.ForEach(_particleSystems.Values, (ParticleSystem particleSys) => particleSys.FrameUpdate(args));
     }
 
     public ParticleSystem CreateParticleSystem(EntityUid entity, ParticleSystemArgs args)

@@ -40,6 +40,8 @@ public sealed class ClientYamlParticlesSystem : SharedYamlParticlesSystem
 
     private void HandleComponentAdd(EntityUid uid, YamlParticlesComponent component, ref ComponentAdd args)
     {
+        if(string.IsNullOrEmpty(component.ParticleType))
+            return;
         //do a lookup for YAML defined particles
         if(_prototypeManager.TryIndex<ParticlesPrototype>(component.ParticleType, out var prototype)){
             ParticleSystemArgs particleSystemArgs = prototype.GetParticleSystemArgs(_resourceCache);

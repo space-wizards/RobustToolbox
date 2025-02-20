@@ -35,12 +35,11 @@ public sealed class ClientDynamicParticlesSystem : SharedDynamicParticlesSystem
 
     private void HandleComponentAdd(EntityUid uid, DynamicParticlesComponent component, ref ComponentAdd args)
     {
-        component.particlesSystem = _particlesManager.CreateParticleSystem(uid, GetParticleSystemArgs(component));
+        _particlesManager.CreateParticleSystem(uid, GetParticleSystemArgs(component));
     }
 
     private void HandleComponentRemove(EntityUid uid, DynamicParticlesComponent component, ref ComponentRemove args)
     {
-        component.particlesSystem = null;
         _particlesManager.DestroyParticleSystem(uid);
     }
 

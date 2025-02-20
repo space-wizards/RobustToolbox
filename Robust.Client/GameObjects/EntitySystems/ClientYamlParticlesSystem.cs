@@ -28,7 +28,7 @@ public sealed class ClientYamlParticlesSystem : SharedYamlParticlesSystem
         _particlesManager.DestroyParticleSystem(uid);
         if(_prototypeManager.TryIndex<ParticlesPrototype>(component.ParticleType, out var prototype)){
             ParticleSystemArgs particleSystemArgs = prototype.GetParticleSystemArgs(_resourceCache);
-            component.particlesSystem = _particlesManager.CreateParticleSystem(uid, particleSystemArgs);
+            _particlesManager.CreateParticleSystem(uid, particleSystemArgs);
         }
         else
         {
@@ -42,7 +42,7 @@ public sealed class ClientYamlParticlesSystem : SharedYamlParticlesSystem
         //do a lookup for YAML defined particles
         if(_prototypeManager.TryIndex<ParticlesPrototype>(component.ParticleType, out var prototype)){
             ParticleSystemArgs particleSystemArgs = prototype.GetParticleSystemArgs(_resourceCache);
-            component.particlesSystem = _particlesManager.CreateParticleSystem(uid, particleSystemArgs);
+            _particlesManager.CreateParticleSystem(uid, particleSystemArgs);
         }
         else
         {
@@ -52,7 +52,6 @@ public sealed class ClientYamlParticlesSystem : SharedYamlParticlesSystem
 
     private void HandleComponentRemove(EntityUid uid, YamlParticlesComponent component, ref ComponentRemove args)
     {
-        component.particlesSystem = null;
         _particlesManager.DestroyParticleSystem(uid);
     }
 

@@ -746,17 +746,7 @@ public partial class {componentName}{deltaInterface}
 
         private static bool IsCloneType(ITypeSymbol type)
         {
-            if (type is not INamedTypeSymbol named)
-            {
-                return false;
-            }
-
-            if (ImplementsInterface(named, nameof(ICloneable)))
-            {
-                return true;
-            }
-
-            if (!named.IsGenericType)
+            if (type is not INamedTypeSymbol named || !named.IsGenericType)
             {
                 return false;
             }
@@ -767,19 +757,6 @@ public partial class {componentName}{deltaInterface}
                 GlobalDictionaryName or GlobalHashSetName or GlobalListName => true,
                 _ => false
             };
-        }
-
-        private static bool ImplementsInterface(ITypeSymbol type, string interfaceName)
-        {
-            foreach (var interfaceType in type.AllInterfaces)
-            {
-                if (interfaceType.ToDisplayString().Contains(interfaceName))
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
     }
 }

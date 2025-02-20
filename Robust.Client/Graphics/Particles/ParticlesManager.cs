@@ -145,7 +145,16 @@ public sealed class ParticleSystem {
 
     public void UpdateSystem(ParticleSystemArgs args){
         _particleSystemSize = args.ParticleSystemSize;
-        _particleCount = args.ParticleCount;
+        if(_particleCount != args.ParticleCount){
+            _particleCount = args.ParticleCount;
+            Particle[] newParticles = new Particle[_particleCount];
+            for(int i = 0; i <_particleCount; i++)
+                if(i < _particles.Length)
+                    newParticles[i] = _particles[i];
+                else
+                    newParticles[i] = new();
+            _particles = newParticles;
+        }
         _particlesPerSecond = args.ParticlesPerSecond;
         _lowerBound = args.LowerDrawBound is null ? new Vector3(-_particleSystemSize.X, -_particleSystemSize.Y, float.MinValue) : args.LowerDrawBound.Value;
         _upperBound = args.UpperDrawBound is null ? new Vector3(_particleSystemSize.X, _particleSystemSize.Y, float.MaxValue) : args.UpperDrawBound.Value;
@@ -159,6 +168,7 @@ public sealed class ParticleSystem {
         _color = args.Color is null ? (float lifetime) => System.Drawing.Color.White : args.Color;
         _transform = args.Transform is null ? (float lifetime) => Matrix3x2.Identity : args.Transform;
         _acceleration = args.Acceleration is null ? (float lifetime) => Vector3.Zero : args.Acceleration;
+
     }
 
     public void FrameUpdate(FrameEventArgs args)

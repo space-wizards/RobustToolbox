@@ -60,7 +60,7 @@ public sealed class ClientYamlParticlesSystem : SharedYamlParticlesSystem
 
     private void OnPrototypesReloaded(PrototypesReloadedEventArgs args)
     {
-        if (!args.TryGetModified<EntityPrototype>(out var modified))
+        if (!args.TryGetModified<ParticlesPrototype>(out var modified))
             return;
         //TODO reload registered particles
     }

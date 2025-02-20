@@ -35,6 +35,7 @@ namespace Robust.Shared.CompNetworkGenerator
         private const string GlobalDictionaryName = "global::System.Collections.Generic.Dictionary<TKey, TValue>";
         private const string GlobalHashSetName = "global::System.Collections.Generic.HashSet<T>";
         private const string GlobalListName = "global::System.Collections.Generic.List<T>";
+        private const string GlobalIRobustCloneableName = "global::Robust.Shared.Serialization.IRobustCloneable";
 
         private static readonly SymbolDisplayFormat FullNullableFormat =
             FullyQualifiedFormat.WithMiscellaneousOptions(IncludeNullableReferenceTypeModifier);
@@ -746,10 +747,14 @@ public partial class {componentName}{deltaInterface}
 
         private static bool IsCloneType(ITypeSymbol type)
         {
-            if (type is not INamedTypeSymbol named || !named.IsGenericType)
-            {
+            if (type is not INamedTypeSymbol named)
                 return false;
-            }
+
+            if (ImplementsInterface(named, GlobalIRobustCloneableName))
+                return true;
+
+            if (!named.IsGenericType)
+                return false;
 
             var constructed = named.ConstructedFrom.ToDisplayString(FullyQualifiedFormat);
             return constructed switch
@@ -757,6 +762,20 @@ public partial class {componentName}{deltaInterface}
                 GlobalDictionaryName or GlobalHashSetName or GlobalListName => true,
                 _ => false
             };
+        }
+
+        private static bool ImplementsInterface(ITypeSymbol type, string interfaceName)
+        {
+            foreach (var interfaceType in type.AllInterfaces)
+            {
+                if (interfaceType.ToDisplayString(FullyQualifiedFormat).Contains(interfaceName)
+                    || interfaceType.ConstructedFrom.ToDisplayString(FullyQualifiedFormat).Contains(interfaceName))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

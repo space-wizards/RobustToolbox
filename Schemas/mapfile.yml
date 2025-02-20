@@ -2,12 +2,12 @@
 meta:
   format: int()
   postmapinit: bool(required=False)
-  time: string(required=False) # timestamp() expects yyyy-mm-dd
+  time: str(required=False) # timestamp() expects yyyy-mm-dd
   category: enum("Unknown", "Entity", "Grid", "Map", "Save", required=False) # FileCategory enum
-  engineVersion: string(required=False)
+  engineVersion: str(required=False)
   entityCount: int(required=False)
-  forkId: string(required=False)
-  forkVersion: string(required=False)
+  forkId: str(required=False)
+  forkVersion: str(required=False)
 tilemap: map(str(), key=int())
 orphans: list(int(), required=False)
 nullspace: list(int(), required=False)

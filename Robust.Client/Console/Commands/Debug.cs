@@ -199,6 +199,32 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    internal sealed class ShowVelocitiesCommand : LocalizedCommands
+    {
+        [Dependency] private readonly IEntitySystemManager _entitySystems = default!;
+
+        public override string Command => "showvel";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
+        {
+            var mgr = _entitySystems.GetEntitySystem<DebugDrawingSystem>();
+            mgr.DebugVelocities = !mgr.DebugVelocities;
+        }
+    }
+
+    internal sealed class ShowAngularVelocitiesCommand : LocalizedCommands
+    {
+        [Dependency] private readonly IEntitySystemManager _entitySystems = default!;
+
+        public override string Command => "showangvel";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
+        {
+            var mgr = _entitySystems.GetEntitySystem<DebugDrawingSystem>();
+            mgr.DebugAngularVelocities = !mgr.DebugAngularVelocities;
+        }
+    }
+
 #if DEBUG
     internal sealed class ShowRayCommand : LocalizedCommands
     {

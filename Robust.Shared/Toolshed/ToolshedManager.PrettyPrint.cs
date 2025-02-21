@@ -54,6 +54,20 @@ public sealed partial class ToolshedManager
             return t.PrettyName();
         }
 
+        if (value.GetType().IsAssignableTo(typeof(IDictionary)))
+        {
+            var dict = ((IDictionary) value).GetEnumerator();
+
+            var kvList = new List<string>();
+
+            while (dict.MoveNext())
+            {
+                kvList.Add($"({PrettyPrintType(dict.Key, out _)}, {PrettyPrintType(dict.Value, out _)}");
+            }
+
+            return $"Dictionary {{\n{string.Join(",\n", kvList)}\n}}";
+        }
+
         if (value is IEnumerable @enum)
         {
             var list = @enum.Cast<object?>().ToList();
@@ -65,20 +79,6 @@ public sealed partial class ToolshedManager
             if (more is not null)
                 return res + "... (output truncated, if possible tee the value into it's own variable)";
             return res;
-        }
-
-        if (value.GetType().IsAssignableTo(typeof(IDictionary)))
-        {
-            var dict = ((IDictionary) value).GetEnumerator();
-
-            var kvList = new List<string>();
-
-            do
-            {
-                kvList.Add($"({PrettyPrintType(dict.Key, out _)}, {PrettyPrintType(dict.Value, out _)}");
-            } while (dict.MoveNext());
-
-            return $"Dictionary {{\n{string.Join(",\n", kvList)}\n}}";
         }
 
         return value.ToString() ?? "[unrepresentable]";

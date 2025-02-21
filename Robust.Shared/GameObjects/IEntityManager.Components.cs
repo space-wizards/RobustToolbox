@@ -180,6 +180,14 @@ namespace Robust.Shared.GameObjects
         ///     Checks if the entity has a component type.
         /// </summary>
         /// <param name="uid">Entity UID to check.</param>
+        /// <param name="reg">The component registration to check for.</param>
+        /// <returns>True if the entity has the component type, otherwise false.</returns>
+        bool HasComponent(EntityUid uid, ComponentRegistration reg);
+
+        /// <summary>
+        ///     Checks if the entity has a component type.
+        /// </summary>
+        /// <param name="uid">Entity UID to check.</param>
         /// <param name="type">A trait or component type to check for.</param>
         /// <returns>True if the entity has the component type, otherwise false.</returns>
         bool HasComponent(EntityUid uid, Type type);
@@ -298,6 +306,15 @@ namespace Robust.Shared.GameObjects
         ///     Returns the component of a specific type.
         /// </summary>
         /// <param name="uid">Entity UID to check.</param>
+        /// <param name="reg">The component registration to check for.</param>
+        /// <param name="component">Component of the specified type (if exists).</param>
+        /// <returns>If the component existed in the entity.</returns>
+        bool TryGetComponent(EntityUid uid, ComponentRegistration reg, [NotNullWhen(true)] out IComponent? component);
+
+        /// <summary>
+        ///     Returns the component of a specific type.
+        /// </summary>
+        /// <param name="uid">Entity UID to check.</param>
         /// <param name="type">A trait or component type to check for.</param>
         /// <param name="component">Component of the specified type (if exists).</param>
         /// <returns>If the component existed in the entity.</returns>
@@ -340,6 +357,51 @@ namespace Robust.Shared.GameObjects
         /// <param name="component">Component with the specified network id.</param>
         /// <returns>If the component existed in the entity.</returns>
         bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, ushort netId, [NotNullWhen(true)] out IComponent? component, MetaDataComponent? meta = null);
+
+        /// <summary>
+        /// Tries to run <see cref="CopyComponents"/> without throwing if the component doesn't exist.
+        /// </summary>
+        bool TryCopyComponent<T>(
+            EntityUid source,
+            EntityUid target,
+            ref T? sourceComponent,
+            [NotNullWhen(true)] out T? targetComp,
+            MetaDataComponent? meta = null) where T : IComponent;
+
+        /// <summary>
+        /// Tries to run <see cref="CopyComponents"/> without throwing if the components don't exist.
+        /// </summary>
+        bool TryCopyComponents(EntityUid source, EntityUid target, MetaDataComponent? meta = null, params Type[] sourceComponents);
+
+        /// <summary>
+        ///     Copy a single component from source to target entity.
+        /// </summary>
+        /// <param name="source">The source entity to copy from.</param>
+        /// <param name="target">The target entity to copy to.</param>
+        /// <param name="sourceComponent">The source component instance to copy.</param>
+        /// <param name="component">The copied component if successful.</param>
+        /// <param name="meta">Optional metadata of the target entity.</param>
+        IComponent CopyComponent(EntityUid source, EntityUid target, IComponent sourceComponent, MetaDataComponent? meta = null);
+
+        /// <summary>
+        ///     Copy a single component from source to target entity.
+        /// </summary>
+        /// <typeparam name="T">The type of component to copy.</typeparam>
+        /// <param name="source">The source entity to copy from.</param>
+        /// <param name="target">The target entity to copy to.</param>
+        /// <param name="sourceComponent">The source component instance to copy.</param>
+        /// <param name="component">The copied component if successful.</param>
+        /// <param name="meta">Optional metadata of the target entity.</param>
+        T CopyComponent<T>(EntityUid source, EntityUid target, T sourceComponent, MetaDataComponent? meta = null) where T : IComponent;
+
+        /// <summary>
+        /// Copy multiple components from source to target entity using existing component instances.
+        /// </summary>
+        /// <param name="source">The source entity to copy from.</param>
+        /// <param name="target">The target entity to copy to.</param>
+        /// <param name="meta">Optional metadata of the target entity.</param>
+        /// <param name="sourceComponents">Array of component instances to copy.</param>
+        void CopyComponents(EntityUid source, EntityUid target, MetaDataComponent? meta = null, params IComponent[] sourceComponents);
 
         /// <summary>
         /// Returns a cached struct enumerator with the specified component.

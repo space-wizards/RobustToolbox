@@ -72,19 +72,43 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
         node.TryGetValue(new ValueDataNode("version"), out var versionNode);
         var version = ((ValueDataNode?) versionNode)?.AsInt() ?? 1;
 
-        for (ushort y = 0; y < chunk.ChunkSize; y++)
+        // Old map files will throw an error if they do not have a rotation/mirror byte stored.
+        if (version >= 7)
         {
-            for (ushort x = 0; x < chunk.ChunkSize; x++)
+            for (ushort y = 0; y < chunk.ChunkSize; y++)
             {
-                var id = version < 6 ? reader.ReadUInt16() : reader.ReadInt32();
-                var flags = reader.ReadByte();
-                var variant = reader.ReadByte();
+                for (ushort x = 0; x < chunk.ChunkSize; x++)
+                {
+                    var id = reader.ReadInt32();
+                    var flags = reader.ReadByte();
+                    var variant = reader.ReadByte();
+                    var rotation = reader.ReadByte();
+                    var mirrored = System.Convert.ToBoolean(reader.ReadByte());
 
-                var defName = tileMap[id];
-                id = tileDefinitionManager[defName].TileId;
+                    var defName = tileMap[id];
+                    id = tileDefinitionManager[defName].TileId;
 
-                var tile = new Tile(id, flags, variant);
-                chunk.TrySetTile(x, y, tile, out _, out _);
+                    var tile = new Tile(id, flags, variant);
+                    chunk.TrySetTile(x, y, tile, out _, out _);
+                }
+            }
+        }
+        else
+        {
+            for (ushort y = 0; y < chunk.ChunkSize; y++)
+            {
+                for (ushort x = 0; x < chunk.ChunkSize; x++)
+                {
+                    var id = version < 6 ? reader.ReadUInt16() : reader.ReadInt32();
+                    var flags = reader.ReadByte();
+                    var variant = reader.ReadByte();
+
+                    var defName = tileMap[id];
+                    id = tileDefinitionManager[defName].TileId;
+
+                    var tile = new Tile(id, flags, variant);
+                    chunk.TrySetTile(x, y, tile, out _, out _);
+                }
             }
         }
 
@@ -106,7 +130,7 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
         var gridNode = new ValueDataNode();
         root.Add("tiles", gridNode);
 
-        root.Add("version", new ValueDataNode("6"));
+        root.Add("version", new ValueDataNode("7"));
 
         gridNode.Value = SerializeTiles(value, context as EntitySerializer);
 
@@ -116,7 +140,7 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
     private static string SerializeTiles(MapChunk chunk, EntitySerializer? serializer)
     {
         // number of bytes written per tile, because sizeof(Tile) is useless.
-        const int structSize = 6;
+        const int structSize = 8;
 
         var nTiles = chunk.ChunkSize * chunk.ChunkSize * structSize;
         var barr = new byte[nTiles];
@@ -153,6 +177,8 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
                     writer.Write(yamlId);
                     writer.Write((byte) tile.Flags);
                     writer.Write(tile.Variant);
+                    writer.Write(tile.Rotation);
+                    writer.Write(System.Convert.ToByte(tile.Mirrored));
                 }
             }
         }

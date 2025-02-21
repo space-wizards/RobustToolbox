@@ -144,7 +144,7 @@ namespace Robust.Client.Placement
             if (mousePos.MapId == MapId.Nullspace)
                 yield break;
 
-            var (_, (x, y)) = EntityCoordinates.FromMap(pManager.StartPoint.EntityId, mousePos, transformSys, pManager.EntityManager) - pManager.StartPoint;
+            var (_, (x, y)) = transformSys.ToCoordinates(pManager.StartPoint.EntityId, mousePos) - pManager.StartPoint;
             float iterations;
             Vector2 distance;
             if (Math.Abs(x) > Math.Abs(y))
@@ -176,7 +176,7 @@ namespace Robust.Client.Placement
             if (mousePos.MapId == MapId.Nullspace)
                 yield break;
 
-            var placementdiff = EntityCoordinates.FromMap(pManager.StartPoint.EntityId, mousePos, transformSys, pManager.EntityManager) - pManager.StartPoint;
+            var placementdiff = transformSys.ToCoordinates(pManager.StartPoint.EntityId, mousePos) - pManager.StartPoint;
 
             var xSign = Math.Sign(placementdiff.X);
             var ySign = Math.Sign(placementdiff.Y);
@@ -264,13 +264,15 @@ namespace Robust.Client.Placement
         protected EntityCoordinates ScreenToCursorGrid(ScreenCoordinates coords)
         {
             var mapCoords = pManager.EyeManager.PixelToMap(coords.Position);
+            var transformSys = pManager.EntityManager.System<SharedTransformSystem>();
+
             if (!pManager.MapManager.TryFindGridAt(mapCoords, out var gridUid, out var grid))
             {
-                return EntityCoordinates.FromMap(pManager.MapManager, mapCoords);
+
+                return transformSys.ToCoordinates(mapCoords);
             }
 
-            var transformSys = pManager.EntityManager.System<SharedTransformSystem>();
-            return EntityCoordinates.FromMap(gridUid, mapCoords, transformSys, pManager.EntityManager);
+            return transformSys.ToCoordinates(gridUid, mapCoords);
         }
     }
 }

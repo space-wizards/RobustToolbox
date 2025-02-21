@@ -1,140 +1,219 @@
-using System.Numerics;
-using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Components;
+using System.Numerics;
 
-namespace Robust.Client.Debugging
+namespace Robust.Client.Debugging;
+
+/// <summary>
+/// A collection of visual debug overlays for the client game.
+/// </summary>
+public sealed class DebugDrawingSystem : EntitySystem
 {
+    [Dependency] private readonly IOverlayManager _overlayManager = default!;
+    [Dependency] private readonly EntityLookupSystem _lookup = default!;
+    [Dependency] private readonly SharedTransformSystem _transform = default!;
+
+    private bool _debugPositions;
+    private bool _debugRotations;
+    private bool _debugVelocities;
+    private bool _debugAngularVelocities;
+
     /// <summary>
-    /// A collection of visual debug overlays for the client game.
+    /// Toggles the visual overlay of the local origin for each entity on screen.
     /// </summary>
-    public sealed class DebugDrawingSystem : EntitySystem
+    public bool DebugPositions
     {
-        [Dependency] private readonly IOverlayManager _overlayManager = default!;
-        [Dependency] private readonly EntityLookupSystem _lookup = default!;
-        [Dependency] private readonly TransformSystem _transform = default!;
-
-
-        private bool _debugPositions;
-        private bool _debugRotations;
-
-        /// <summary>
-        /// Toggles the visual overlay of the local origin for each entity on screen.
-        /// </summary>
-        public bool DebugPositions
+        get => _debugPositions;
+        set
         {
-            get => _debugPositions;
-            set
+            if (value == DebugPositions)
             {
-                if (value == DebugPositions)
-                {
-                    return;
-                }
+                return;
+            }
 
-                _debugPositions = value;
+            _debugPositions = value;
 
-                if (value && !_overlayManager.HasOverlay<EntityPositionOverlay>())
-                {
-                    _overlayManager.AddOverlay(new EntityPositionOverlay(_lookup, EntityManager, _transform));
-                }
-                else
-                {
-                    _overlayManager.RemoveOverlay<EntityPositionOverlay>();
-                }
+            if (value && !_overlayManager.HasOverlay<EntityPositionOverlay>())
+            {
+                _overlayManager.AddOverlay(new EntityPositionOverlay(_lookup, _transform));
+            }
+            else
+            {
+                _overlayManager.RemoveOverlay<EntityPositionOverlay>();
             }
         }
+    }
 
-        /// <summary>
-        /// Toggles the visual overlay of the local rotation.
-        /// </summary>
-        public bool DebugRotations
+    /// <summary>
+    /// Toggles the visual overlay of the rotation for each entity on screen.
+    /// </summary>
+    public bool DebugRotations
+    {
+        get => _debugRotations;
+        set
         {
-            get => _debugRotations;
-            set
+            if (value == DebugRotations)
             {
-                if (value == DebugRotations)
-                {
-                    return;
-                }
+                return;
+            }
 
-                _debugRotations = value;
+            _debugRotations = value;
 
-                if (value && !_overlayManager.HasOverlay<EntityRotationOverlay>())
-                {
-                    _overlayManager.AddOverlay(new EntityRotationOverlay(_lookup, EntityManager));
-                }
-                else
-                {
-                    _overlayManager.RemoveOverlay<EntityRotationOverlay>();
-                }
+            if (value && !_overlayManager.HasOverlay<EntityRotationOverlay>())
+            {
+                _overlayManager.AddOverlay(new EntityRotationOverlay(_lookup, _transform));
+            }
+            else
+            {
+                _overlayManager.RemoveOverlay<EntityRotationOverlay>();
             }
         }
+    }
 
-        private sealed class EntityPositionOverlay : Overlay
+    /// <summary>
+    /// Toggles the visual overlay of the local velocity for each entity on screen.
+    /// </summary>
+    public bool DebugVelocities
+    {
+        get => _debugVelocities;
+        set
         {
-            private readonly EntityLookupSystem _lookup;
-            private readonly IEntityManager _entityManager;
-            private readonly SharedTransformSystem _transform;
-
-            public override OverlaySpace Space => OverlaySpace.WorldSpace;
-
-            public EntityPositionOverlay(EntityLookupSystem lookup, IEntityManager entityManager, SharedTransformSystem transform)
+            if (value == DebugVelocities)
             {
-                _lookup = lookup;
-                _entityManager = entityManager;
-                _transform = transform;
+                return;
             }
 
-            protected internal override void Draw(in OverlayDrawArgs args)
+            _debugVelocities = value;
+
+            if (value && !_overlayManager.HasOverlay<EntityVelocityOverlay>())
             {
-                const float stubLength = 0.25f;
-
-                var worldHandle = (DrawingHandleWorld) args.DrawingHandle;
-
-                foreach (var entity in _lookup.GetEntitiesIntersecting(args.MapId, args.WorldBounds))
-                {
-                    var (center, worldRotation) = _transform.GetWorldPositionRotation(entity);
-
-                    var xLine = worldRotation.RotateVec(Vector2.UnitX);
-                    var yLine = worldRotation.RotateVec(Vector2.UnitY);
-
-                    worldHandle.DrawLine(center, center + xLine * stubLength, Color.Red);
-                    worldHandle.DrawLine(center, center + yLine * stubLength, Color.Green);
-                }
+                _overlayManager.AddOverlay(new EntityVelocityOverlay(EntityManager, _lookup, _transform));
+            }
+            else
+            {
+                _overlayManager.RemoveOverlay<EntityVelocityOverlay>();
             }
         }
+    }
 
-        private sealed class EntityRotationOverlay : Overlay
+    /// <summary>
+    /// Toggles the visual overlay of the angular velocity for each entity on screen.
+    /// </summary>
+    public bool DebugAngularVelocities
+    {
+        get => _debugAngularVelocities;
+        set
         {
-            private readonly EntityLookupSystem _lookup;
-            private readonly IEntityManager _entityManager;
-
-            public override OverlaySpace Space => OverlaySpace.WorldSpace;
-
-            public EntityRotationOverlay(EntityLookupSystem lookup, IEntityManager entityManager)
+            if (value == DebugAngularVelocities)
             {
-                _lookup = lookup;
-                _entityManager = entityManager;
+                return;
             }
 
-            protected internal override void Draw(in OverlayDrawArgs args)
+            _debugAngularVelocities = value;
+
+            if (value && !_overlayManager.HasOverlay<EntityAngularVelocityOverlay>())
             {
-                const float stubLength = 0.25f;
-                var worldHandle = (DrawingHandleWorld) args.DrawingHandle;
-                var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
+                _overlayManager.AddOverlay(new EntityAngularVelocityOverlay(EntityManager, _lookup, _transform));
+            }
+            else
+            {
+                _overlayManager.RemoveOverlay<EntityAngularVelocityOverlay>();
+            }
+        }
+    }
+    private sealed class EntityPositionOverlay(EntityLookupSystem _lookup, SharedTransformSystem _transform) : Overlay
+    {
+        public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-                foreach (var entity in _lookup.GetEntitiesIntersecting(args.MapId, args.WorldBounds))
-                {
-                    var (center, worldRotation) = xformQuery.GetComponent(entity).GetWorldPositionRotation();
+        protected internal override void Draw(in OverlayDrawArgs args)
+        {
+            const float stubLength = 0.25f;
 
-                    var drawLine = worldRotation.RotateVec(-Vector2.UnitY);
+            var worldHandle = (DrawingHandleWorld) args.DrawingHandle;
 
-                    worldHandle.DrawLine(center, center + drawLine * stubLength, Color.Red);
-                }
+            foreach (var uid in _lookup.GetEntitiesIntersecting(args.MapId, args.WorldBounds))
+            {
+                var (center, worldRotation) = _transform.GetWorldPositionRotation(uid);
+
+                var xLine = worldRotation.RotateVec(Vector2.UnitX);
+                var yLine = worldRotation.RotateVec(Vector2.UnitY);
+
+                worldHandle.DrawLine(center, center + xLine * stubLength, Color.Red);
+                worldHandle.DrawLine(center, center + yLine * stubLength, Color.Green);
+            }
+        }
+    }
+
+    private sealed class EntityRotationOverlay(EntityLookupSystem _lookup, SharedTransformSystem _transform) : Overlay
+    {
+        public override OverlaySpace Space => OverlaySpace.WorldSpace;
+
+        protected internal override void Draw(in OverlayDrawArgs args)
+        {
+            const float stubLength = 0.25f;
+            var worldHandle = (DrawingHandleWorld) args.DrawingHandle;
+
+            foreach (var uid in _lookup.GetEntitiesIntersecting(args.MapId, args.WorldBounds))
+            {
+                var (center, worldRotation) = _transform.GetWorldPositionRotation(uid);
+
+                var drawLine = worldRotation.RotateVec(-Vector2.UnitY);
+
+                worldHandle.DrawLine(center, center + drawLine * stubLength, Color.Red);
+            }
+        }
+    }
+
+    private sealed class EntityVelocityOverlay(IEntityManager _entityManager, EntityLookupSystem _lookup, SharedTransformSystem _transform) : Overlay
+    {
+        public override OverlaySpace Space => OverlaySpace.WorldSpace;
+
+        protected internal override void Draw(in OverlayDrawArgs args)
+        {
+            const float multiplier = 0.2f;
+
+            var worldHandle = (DrawingHandleWorld) args.DrawingHandle;
+
+            var physicsQuery = _entityManager.GetEntityQuery<PhysicsComponent>();
+            foreach (var uid in _lookup.GetEntitiesIntersecting(args.MapId, args.WorldBounds))
+            {
+                if(!physicsQuery.TryGetComponent(uid, out var physicsComp))
+                    continue;
+
+                var center = _transform.GetWorldPosition(uid);
+                var localVelocity = physicsComp.LinearVelocity;
+
+                worldHandle.DrawLine(center, center + localVelocity * multiplier, Color.Yellow);
+            }
+        }
+    }
+
+    private sealed class EntityAngularVelocityOverlay(IEntityManager _entityManager, EntityLookupSystem _lookup, SharedTransformSystem _transform) : Overlay
+    {
+        public override OverlaySpace Space => OverlaySpace.WorldSpace;
+
+        protected internal override void Draw(in OverlayDrawArgs args)
+        {
+            const float multiplier = (float)(0.2 / (2 * System.Math.PI));
+
+            var worldHandle = (DrawingHandleWorld) args.DrawingHandle;
+
+            var physicsQuery = _entityManager.GetEntityQuery<PhysicsComponent>();
+            foreach (var uid in _lookup.GetEntitiesIntersecting(args.MapId, args.WorldBounds))
+            {
+                if(!physicsQuery.TryGetComponent(uid, out var physicsComp))
+                    continue;
+
+                var center = _transform.GetWorldPosition(uid);
+                var angularVelocity = physicsComp.AngularVelocity;
+
+                worldHandle.DrawCircle(center, angularVelocity * multiplier, angularVelocity > 0 ? Color.Magenta : Color.Blue, false);
             }
         }
     }
 }
+

@@ -302,6 +302,27 @@ namespace Robust.Client.UserInterface.Controls
             return new Vector2(h, v);
         }
 
+        [Pure]
+        public Vector2 GetScrollValueTarget(bool ignoreVisible = false)
+        {
+            if (ignoreVisible)
+                return new(_hScrollBar.ValueTarget, _vScrollBar.ValueTarget);
+
+            var h = _hScrollBar.ValueTarget;
+            var v = _vScrollBar.ValueTarget;
+            if (!_hScrollVisible)
+            {
+                h = 0;
+            }
+
+            if (!_vScrollVisible)
+            {
+                v = 0;
+            }
+
+            return new Vector2(h, v);
+        }
+
         public void SetScrollValue(Vector2 value)
         {
             _suppressScrollValueChanged = true;
@@ -310,6 +331,12 @@ namespace Robust.Client.UserInterface.Controls
             _suppressScrollValueChanged = false;
             InvalidateArrange();
             _queueScrolled = true;
+        }
+
+        public void SetScrollValueTarget(Vector2 value)
+        {
+            _hScrollBar.ValueTarget = value.X;
+            _vScrollBar.ValueTarget = value.Y;
         }
 
         private void _scrollValueChanged(Range obj)

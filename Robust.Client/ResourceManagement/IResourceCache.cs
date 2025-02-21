@@ -13,6 +13,7 @@ namespace Robust.Client.ResourceManagement;
 /// </summary>
 public interface IResourceCache : IResourceManager
 {
+    bool GetNormalsEnabled();
     T GetResource<T>(string path, bool useFallback = true)
         where T : BaseResource, new();
 

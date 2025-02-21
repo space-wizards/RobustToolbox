@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using OpenToolkit.Graphics.OpenGL4;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
@@ -27,8 +29,14 @@ namespace Robust.Client.Graphics.Clyde
 
         private List<Entity<MapGridComponent>> _grids = new();
 
-        private void _drawGrids(Viewport viewport, Box2 worldAABB, Box2Rotated worldBounds, IEye eye)
+        private void _drawGrids(Viewport viewport, Box2 worldAABB, Box2Rotated worldBounds, IEye eye, bool normal = false)
         {
+            if (normal && (!_lightManager.Enabled
+                           || !_lightManager.DrawLighting
+                           || !_cfg.GetCVar(CVars.LightNormals)
+                           || !_resourceCache.GetNormalsEnabled()))
+                return;
+
             var mapId = eye.Position.MapId;
             if (!_mapManager.MapExists(mapId))
             {
@@ -55,12 +63,16 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     SetTexture(TextureUnit.Texture0, _tileDefinitionManager.TileTextureAtlas);
                     SetTexture(TextureUnit.Texture1, _lightingReady ? viewport.LightRenderTarget.Texture : _stockTextureWhite);
-                    gridProgram = ActivateShaderInstance(_defaultShader.Handle).Item1;
+
+                    gridProgram = ActivateShaderInstance((normal ? _colorShader : _defaultShader).Handle).Item1;
+                    if (normal)
+                        gridProgram.SetUniformMaybe("InputColor", new Color(0.5f, 0.5f, 1f));
                     SetupGlobalUniformsImmediate(gridProgram, (ClydeTexture) _tileDefinitionManager.TileTextureAtlas);
 
                     gridProgram.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
                     gridProgram.SetUniformTextureMaybe(UniILightTexture, TextureUnit.Texture1);
-                    gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
+                    if (!normal)
+                        gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
                 }
 
                 var transform = _entityManager.GetComponent<TransformComponent>(mapGrid);

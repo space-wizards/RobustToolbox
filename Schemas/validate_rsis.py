@@ -61,6 +61,11 @@ def check_rsi(rsi: str, schema: Draft7Validator):
         return
 
     state_names = {state["name"] for state in meta_json["states"]}
+    for state in meta_json["states"]:
+        if state["bump"]:
+            state_names.insert(state["bump"])
+        if state["normal"]:
+            state_names.insert(state["normal"])
 
     # Go over contents of RSI directory and ensure there is no extra garbage.
     for name in os.listdir(rsi):

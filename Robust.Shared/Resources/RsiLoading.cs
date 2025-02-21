@@ -41,6 +41,9 @@ internal static class RsiLoading
         {
             var stateObject = manifestJson.States[stateI];
             var stateName = stateObject.Name;
+            var normalName = stateObject.Normal;
+            var bumpName = stateObject.Bump;
+            var flatNormal = stateObject.FlatNormal;
             int dirValue;
 
             if (stateObject.Directions is { } dirVal)
@@ -91,7 +94,7 @@ internal static class RsiLoading
                 }
             }
 
-            states[stateI] = new StateMetadata(stateName, dirValue, delays);
+            states[stateI] = new StateMetadata(stateName, normalName, bumpName, flatNormal, size, dirValue, delays);
         }
 
         var textureParams = TextureLoadParameters.Default;
@@ -104,7 +107,7 @@ internal static class RsiLoading
             };
         }
 
-        return new RsiMetadata(size, states, textureParams, manifestJson.MetaAtlas);
+        return new RsiMetadata(size, states, manifestJson.FlatNormal, textureParams, manifestJson.MetaAtlas);
     }
 
     public static void Warmup()
@@ -114,10 +117,11 @@ internal static class RsiLoading
         JsonSerializer.Deserialize<RsiJsonMetadata>(warmupJson, SerializerOptions);
     }
 
-    internal sealed class RsiMetadata(Vector2i size, StateMetadata[] states, TextureLoadParameters loadParameters, bool metaAtlas)
+    internal sealed class RsiMetadata(Vector2i size, StateMetadata[] states, bool? flatNormal, TextureLoadParameters loadParameters, bool metaAtlas)
     {
         public readonly Vector2i Size = size;
         public readonly StateMetadata[] States = states;
+        public readonly bool? FlatNormal = flatNormal;
         public readonly TextureLoadParameters LoadParameters = loadParameters;
         public readonly bool MetaAtlas = metaAtlas;
     }
@@ -125,12 +129,20 @@ internal static class RsiLoading
     internal sealed class StateMetadata
     {
         public readonly string StateId;
+        public readonly string? NormalId;
+        public readonly string? BumpId;
+        public readonly bool? FlatNormal;
+        public readonly Vector2i Size;
         public readonly int DirCount;
         public readonly float[][] Delays;
 
-        public StateMetadata(string stateId, int dirCount, float[][] delays)
+        public StateMetadata(string stateId, string? normalId, string? bumpId, bool? flatNormal, Vector2i size, int dirCount, float[][] delays)
         {
             StateId = stateId;
+            NormalId = normalId;
+            BumpId = bumpId;
+            FlatNormal = flatNormal;
+            Size = size;
             DirCount = dirCount;
 
             Delays = delays;
@@ -144,11 +156,12 @@ internal static class RsiLoading
     private sealed record RsiJsonMetadata(
         Vector2i Size,
         StateJsonMetadata[] States,
+        bool? FlatNormal,
         RsiJsonLoad? Load,
         bool MetaAtlas = true);
 
     [UsedImplicitly]
-    private sealed record StateJsonMetadata(string Name, int? Directions, float[][]? Delays);
+    private sealed record StateJsonMetadata(string Name, string? Normal, string? Bump, bool? FlatNormal, int? Directions, float[][]? Delays);
 
     [UsedImplicitly]
     private sealed record RsiJsonLoad(bool Srgb = true);

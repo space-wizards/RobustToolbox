@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using Robust.Client.Audio.Sources;
 using Robust.Shared.Audio.Sources;
 
 namespace Robust.Client.Audio;
@@ -11,7 +10,7 @@ namespace Robust.Client.Audio;
 public interface IAudioManager
 {
     IAudioSource? CreateAudioSource(AudioStream stream);
-  
+
     AudioStream LoadAudioOggVorbis(Stream stream, string? name = null);
 
     AudioStream LoadAudioWav(Stream stream, string? name = null);

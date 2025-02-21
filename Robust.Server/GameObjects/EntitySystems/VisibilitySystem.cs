@@ -6,7 +6,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects
 {
-    public sealed class VisibilitySystem : EntitySystem
+    public sealed class VisibilitySystem : SharedVisibilitySystem
     {
         [Dependency] private readonly PvsSystem _pvs = default!;
         [Dependency] private readonly IViewVariablesManager _vvManager = default!;
@@ -20,12 +20,12 @@ namespace Robust.Server.GameObjects
             base.Initialize();
             _xformQuery = GetEntityQuery<TransformComponent>();
             _metaQuery = GetEntityQuery<MetaDataComponent>();
-            _visibilityQuery = GetEntityQuery<VisibilityComponent>();
+            _visibilityQuery = GetEntityQuery<Shared.GameObjects.VisibilityComponent>();
             SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
             EntityManager.EntityInitialized += OnEntityInit;
 
-            _vvManager.GetTypeHandler<VisibilityComponent>()
-                .AddPath(nameof(VisibilityComponent.Layer), (_, comp) => comp.Layer, (uid, value, comp) =>
+            _vvManager.GetTypeHandler<Shared.GameObjects.VisibilityComponent>()
+                .AddPath(nameof(Shared.GameObjects.VisibilityComponent.Layer), (_, comp) => comp.Layer, (uid, value, comp) =>
                 {
                     if (!Resolve(uid, ref comp))
                         return;
@@ -40,9 +40,9 @@ namespace Robust.Server.GameObjects
             EntityManager.EntityInitialized -= OnEntityInit;
         }
 
-        public void AddLayer(Entity<VisibilityComponent?> ent, ushort layer, bool refresh = true)
+        public override void AddLayer(Entity<Shared.GameObjects.VisibilityComponent?> ent, ushort layer, bool refresh = true)
         {
-            ent.Comp ??= _visibilityQuery.CompOrNull(ent.Owner) ?? AddComp<VisibilityComponent>(ent.Owner);
+            ent.Comp ??= _visibilityQuery.CompOrNull(ent.Owner) ?? AddComp<Shared.GameObjects.VisibilityComponent>(ent.Owner);
 
             if ((layer & ent.Comp.Layer) == layer)
                 return;
@@ -53,7 +53,7 @@ namespace Robust.Server.GameObjects
                 RefreshVisibility(ent);
         }
 
-        public void RemoveLayer(Entity<VisibilityComponent?> ent, ushort layer, bool refresh = true)
+        public override void RemoveLayer(Entity<Shared.GameObjects.VisibilityComponent?> ent, ushort layer, bool refresh = true)
         {
             if (!_visibilityQuery.Resolve(ent.Owner, ref ent.Comp, false))
                 return;
@@ -67,9 +67,9 @@ namespace Robust.Server.GameObjects
                 RefreshVisibility(ent);
         }
 
-        public void SetLayer(Entity<VisibilityComponent?> ent, ushort layer, bool refresh = true)
+        public override void SetLayer(Entity<Shared.GameObjects.VisibilityComponent?> ent, ushort layer, bool refresh = true)
         {
-            ent.Comp ??= _visibilityQuery.CompOrNull(ent.Owner) ?? AddComp<VisibilityComponent>(ent.Owner);
+            ent.Comp ??= _visibilityQuery.CompOrNull(ent.Owner) ?? AddComp<Shared.GameObjects.VisibilityComponent>(ent.Owner);
 
             if (ent.Comp.Layer == layer)
                 return;
@@ -90,14 +90,14 @@ namespace Robust.Server.GameObjects
             RefreshVisibility(ent.Owner, null, ent.Comp);
         }
 
-        public void RefreshVisibility(EntityUid uid,
-            VisibilityComponent? visibilityComponent = null,
+        public override void RefreshVisibility(EntityUid uid,
+            Shared.GameObjects.VisibilityComponent? visibilityComponent = null,
             MetaDataComponent? meta = null)
         {
             RefreshVisibility((uid, visibilityComponent, meta));
         }
 
-        public void RefreshVisibility(Entity<VisibilityComponent?, MetaDataComponent?> ent)
+        public override void RefreshVisibility(Entity<Shared.GameObjects.VisibilityComponent?, MetaDataComponent?> ent)
         {
             if (!_metaQuery.Resolve(ent, ref ent.Comp2, false))
                 return;
@@ -132,7 +132,7 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        private ushort GetParentVisibilityMask(Entity<VisibilityComponent?> ent)
+        private ushort GetParentVisibilityMask(Entity<Shared.GameObjects.VisibilityComponent?> ent)
         {
             ushort visMask = 1; // apparently some content expects everything to have the first bit/flag set to true.
             if (_visibilityQuery.Resolve(ent.Owner, ref ent.Comp, false))

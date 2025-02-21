@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -174,6 +174,71 @@ namespace Robust.Client.UserInterface.Controls
             RecalculateContentHeight();
             if (_isAtBottom && ScrollFollowing)
                 _scrollBar.MoveToEnd();
+        }
+
+        /// <summary>
+        /// Replace the current list of items with the items in newItems.
+        /// newItems should be in the order which they should appear in the list,
+        /// and items are considered equal if the Item text is equal in each item.
+        ///
+        /// Provided the existing items have not been re-ordered relative to each
+        /// other, any items which already exist in the list are not destroyed,
+        /// which maintains consistency of scrollbars, selected items, etc.
+        /// </summary>
+        /// <param name="newItems">The list of items to update this list to</param>
+        public void SetItems(List<Item> newItems)
+        {
+            SetItems(newItems, (a,b) => string.Compare(a.Text, b.Text));
+        }
+
+        /// <inheritdoc />
+        /// <summary>
+        /// This variant allows for a custom equality operator to compare items, when
+        /// comparing the Item text is not desired.
+        /// </summary>
+        /// <param name="itemCmp">Comparison function to compare existing to new items.</param>
+        public void SetItems(List<Item> newItems, Comparison<Item> itemCmp)
+        {
+            // Walk through the existing items in this list and in newItems
+            // in parallel to synchronize our items with those in newItems.
+            int i = this.Count - 1;
+            int j = newItems.Count - 1;
+            while(i >= 0 && j >= 0)
+            {
+                var cmpResult = itemCmp(this[i], newItems[j]);
+                if (cmpResult == 0)
+                {
+                    // This item exists in both our list and `newItems`. Nothing to do.
+                    i--;
+                    j--;
+                }
+                else if (cmpResult > 0)
+                {
+                    // Item exists in our list, but not in `newItems`. Remove it.
+                    RemoveAt(i);
+                    i--;
+                }
+                else if (cmpResult < 0)
+                {
+                    // A new entry which doesn't exist in our list. Insert it.
+                    Insert(i + 1, newItems[j]);
+                    j--;
+                }
+            }
+
+            // Any remaining items in our list don't exist in `newItems` so remove them
+            while (i >= 0)
+            {
+                RemoveAt(i);
+                i--;
+            }
+
+            // And finally, any remaining items in `newItems` don't exist in our list. Create them.
+            while (j >= 0)
+            {
+                Insert(0, newItems[j]);
+                j--;
+            }
         }
 
         // Without this attribute, this would compile into a property called "Item", causing problems with the Item class.

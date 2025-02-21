@@ -18,6 +18,15 @@ public abstract partial class SingletonEntitySystem<T> : EntitySystem where T : 
 
     private Entity<T>? _cachedEntity;
 
+    /// <summary>
+    /// Is the singleton instance ready to access?
+    /// </summary>
+    /// <remarks>
+    /// This allows checking whether the instance reference has been created
+    /// without forcing it to spawn if it has not yet.
+    /// </remarks>
+    public bool IsReady => _cachedEntity != null;
+
     public override void Initialize()
     {
         base.Initialize();

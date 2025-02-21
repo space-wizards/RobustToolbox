@@ -39,6 +39,7 @@ namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
             Add(DebugMonitor.System, new DebugSystemPanel { HorizontalAlignment = HAlignment.Left });
             Add(DebugMonitor.Input, new DebugInputPanel { HorizontalAlignment = HAlignment.Left });
             Add(DebugMonitor.Prof, new LiveProfileViewControl());
+            Add(DebugMonitor.Version, new DebugVersionPanel(IoCManager.Resolve<IConfigurationManager>()) { HorizontalAlignment = HAlignment.Left });
 
             void Add(DebugMonitor monitor, Control instance)
             {

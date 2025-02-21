@@ -35,6 +35,7 @@ public abstract partial class SingletonEntitySystem<T> : EntitySystem where T : 
         SubscribeLocalEvent<T, ComponentShutdown>(OnComponentShutdown);
     }
 
+    [MustCallBase]
     protected virtual void OnComponentInit(Entity<T> entity, ref ComponentInit args)
     {
         DebugTools.Assert(_cachedEntity == null);
@@ -42,6 +43,7 @@ public abstract partial class SingletonEntitySystem<T> : EntitySystem where T : 
         _cachedEntity = entity;
     }
 
+    [MustCallBase]
     protected virtual void OnComponentShutdown(Entity<T> entity, ref ComponentShutdown args)
     {
         _cachedEntity = null;

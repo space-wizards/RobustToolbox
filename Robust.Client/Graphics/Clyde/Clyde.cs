@@ -21,6 +21,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using TextureWrapMode = Robust.Shared.Graphics.TextureWrapMode;
 
@@ -245,7 +246,7 @@ namespace Robust.Client.Graphics.Clyde
                 overrideVersion != null,
                 _windowing!.GetDescription());
 
-            GL.Enable(EnableCap.Blend);
+            IsBlending = true;
             if (_hasGLSrgb && !_isGLES)
             {
                 GL.Enable(EnableCap.FramebufferSrgb);

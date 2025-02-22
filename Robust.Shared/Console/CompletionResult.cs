@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Console;
 
@@ -17,7 +18,7 @@ public sealed record CompletionResult(CompletionOption[] Options, string? Hint)
     /// <summary>
     /// Type hint string for the current argument being typed.
     /// </summary>
-    public string? Hint { get; init; } = Hint;
+    public string? Hint { get; set; } = Hint;
 
     public static readonly CompletionResult Empty = new(Array.Empty<CompletionOption>(), null);
 
@@ -74,4 +75,14 @@ public enum CompletionOptionFlags
     /// (instead of adding a space to go to the next one).
     /// </summary>
     PartialCompletion = 1 << 0,
+
+    /// <summary>
+    /// Prevents suggestions containing spaces from being automatically wrapped in quotes.
+    /// </summary>
+    NoQuote = 1 << 1,
+
+    /// <summary>
+    /// Prevents suggestions from being escaped using <see cref="CommandParsing.Escape"/>.
+    /// </summary>
+    NoEscape = 1 << 2,
 }

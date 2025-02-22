@@ -16,7 +16,7 @@ internal record struct Polygon : IPhysShape
     [DataField]
     public Vector2[] Vertices;
 
-    public int VertexCount => Vertices.Length;
+    public byte VertexCount;
 
     public Vector2[] Normals;
 
@@ -42,6 +42,19 @@ internal record struct Polygon : IPhysShape
 
         Array.Copy(polyShape.Vertices, Vertices, Vertices.Length);
         Array.Copy(polyShape.Normals, Normals, Vertices.Length);
+        VertexCount = (byte) Vertices.Length;
+    }
+
+    /// <summary>
+    /// Manually constructed polygon for internal use to take advantage of pooling.
+    /// </summary>
+    internal Polygon(Vector2[] vertices, Vector2[] normals, Vector2 centroid, byte count)
+    {
+        Unsafe.SkipInit(out this);
+        Vertices = vertices;
+        Normals = normals;
+        Centroid = centroid;
+        VertexCount = count;
     }
 
     public Polygon(Box2 aabb)
@@ -61,22 +74,25 @@ internal record struct Polygon : IPhysShape
         Normals[2] = new Vector2(0.0f, 1.0f);
         Normals[3] = new Vector2(-1.0f, 0.0f);
 
+        VertexCount = 4;
         Centroid = aabb.Center;
     }
 
     public Polygon(Box2Rotated bounds)
     {
         Unsafe.SkipInit(out this);
+        Vertices = new Vector2[4];
+        Normals = new Vector2[4];
         Radius = 0f;
-        Span<Vector2> verts = stackalloc Vector2[4];
-        verts[0] = bounds.BottomLeft;
-        verts[1] = bounds.BottomRight;
-        verts[2] = bounds.TopRight;
-        verts[3] = bounds.TopLeft;
 
-        var hull = new PhysicsHull(verts, 4);
-        Set(hull);
+        Vertices[0] = bounds.BottomLeft;
+        Vertices[1] = bounds.BottomRight;
+        Vertices[2] = bounds.TopRight;
+        Vertices[3] = bounds.TopLeft;
 
+        CalculateNormals(Normals, 4);
+
+        VertexCount = 4;
         Centroid = bounds.Center;
     }
 
@@ -87,11 +103,13 @@ internal record struct Polygon : IPhysShape
 
         if (hull.Count < 3)
         {
-            Vertices = Array.Empty<Vector2>();
-            Normals = Array.Empty<Vector2>();
+            VertexCount = 0;
+            Vertices = [];
+            Normals = [];
             return;
         }
 
+        VertexCount = (byte) vertices.Length;
         Vertices = vertices;
         Normals = new Vector2[vertices.Length];
         Set(hull);
@@ -116,9 +134,14 @@ internal record struct Polygon : IPhysShape
         }
 
         // Compute normals. Ensure the edges have non-zero length.
-        for (var i = 0; i < vertexCount; i++)
+        CalculateNormals(Normals, vertexCount);
+    }
+
+    internal void CalculateNormals(Span<Vector2> normals, int count)
+    {
+        for (var i = 0; i < count; i++)
         {
-            var next = i + 1 < vertexCount ? i + 1 : 0;
+            var next = i + 1 < count ? i + 1 : 0;
             var edge = Vertices[next] - Vertices[i];
             DebugTools.Assert(edge.LengthSquared() > float.Epsilon * float.Epsilon);
 

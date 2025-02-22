@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -45,17 +46,23 @@ internal ref struct DistanceProxy
 
     // GJK using Voronoi regions (Christer Ericson) and Barycentric coordinates.
 
+    internal DistanceProxy(Vector2[] vertices, float radius)
+    {
+        Vertices = vertices;
+        Radius = radius;
+    }
+
     /// <summary>
     /// Initialize the proxy using the given shape. The shape
     /// must remain in scope while the proxy is in use.
     /// </summary>
     /// <param name="shape">The shape.</param>
-    public void Set(IPhysShape shape, int index)
+    internal void Set<T>(T shape, int index) where T : IPhysShape
     {
         switch (shape.ShapeType)
         {
             case ShapeType.Circle:
-                PhysShapeCircle circle = (PhysShapeCircle) shape;
+                var circle = Unsafe.As<PhysShapeCircle>(shape);
                 Buffer._00 = circle.Position;
                 Vertices = Buffer.AsSpan[..1];
                 Radius = circle.Radius;
@@ -64,20 +71,20 @@ internal ref struct DistanceProxy
             case ShapeType.Polygon:
                 if (shape is Polygon poly)
                 {
-                    Vertices = poly.Vertices;
+                    Vertices = poly.Vertices.AsSpan()[..poly.VertexCount];
                     Radius = poly.Radius;
                 }
                 else
                 {
-                    var polyShape = (PolygonShape) shape;
-                    Vertices = polyShape.Vertices;
+                    var polyShape = Unsafe.As<PolygonShape>(shape);
+                    Vertices = polyShape.Vertices.AsSpan()[..polyShape.VertexCount];
                     Radius = polyShape.Radius;
                 }
 
                 break;
 
             case ShapeType.Chain:
-                ChainShape chain = (ChainShape) shape;
+                var chain = Unsafe.As<ChainShape>(shape);
                 Debug.Assert(0 <= index && index < chain.Vertices.Length);
 
                 Buffer._00 = chain.Vertices[index];
@@ -87,7 +94,7 @@ internal ref struct DistanceProxy
                 Radius = chain.Radius;
                 break;
             case ShapeType.Edge:
-                EdgeShape edge = (EdgeShape) shape;
+                var edge = Unsafe.As<EdgeShape>(shape);
 
                 Buffer._00 = edge.Vertex1;
                 Buffer._01 = edge.Vertex2;
@@ -142,6 +149,13 @@ internal ref struct DistanceProxy
         }
 
         return Vertices[bestIndex];
+    }
+
+    internal static DistanceProxy MakeProxy(Vector2[] vertices, int count, float radius )
+    {
+        count = Math.Min(count, PhysicsConstants.MaxPolygonVertices);
+        var proxy = new DistanceProxy(vertices[..count], radius);
+        return proxy;
     }
 }
 
@@ -306,6 +320,16 @@ internal struct Simplex
         }
     }
 
+    public static Vector2 Weight2( float a1, Vector2 w1, float a2, Vector2 w2 )
+    {
+        return new Vector2(a1 * w1.X + a2 * w2.X, a1 * w1.Y + a2 * w2.Y);
+    }
+
+    public static Vector2 Weight3(float a1, Vector2 w1, float a2, Vector2 w2, float a3, Vector2 w3 )
+    {
+        return new Vector2(a1 * w1.X + a2 * w2.X + a3 * w3.X, a1 * w1.Y + a2 * w2.Y + a3 * w3.Y);
+    }
+
     internal Vector2 GetClosestPoint()
     {
         switch (Count)
@@ -327,6 +351,226 @@ internal struct Simplex
                 Debug.Assert(false);
                 return Vector2.Zero;
         }
+    }
+
+    public static Vector2 ComputeSimplexClosestPoint(Simplex s)
+    {
+        switch (s.Count)
+        {
+            case 0:
+                DebugTools.Assert(false);
+                return Vector2.Zero;
+
+            case 1:
+                return s.V._00.W;
+
+            case 2:
+                return Weight2(s.V._00.A, s.V._00.W, s.V._01.A, s.V._01.W);
+
+            case 3:
+                return Vector2.Zero;
+
+            default:
+                DebugTools.Assert(false);
+                return Vector2.Zero;
+        }
+    }
+
+    public static void ComputeSimplexWitnessPoints(ref Vector2 a, ref Vector2 b, Simplex s)
+    {
+        switch (s.Count)
+        {
+            case 0:
+                DebugTools.Assert(false);
+                break;
+
+            case 1:
+                a = s.V._00.WA;
+                b = s.V._00.WB;
+                break;
+
+            case 2:
+                a = Weight2(s.V._00.A, s.V._00.WA, s.V._01.A, s.V._01.WA);
+                b = Weight2(s.V._00.A, s.V._00.WB, s.V._01.A, s.V._01.WB);
+                break;
+
+            case 3:
+                a = Weight3(s.V._00.A, s.V._00.WA, s.V._01.A, s.V._01.WA, s.V._02.A, s.V._02.WA);
+                // TODO_ERIN why are these not equal?
+                //*b = b2Weight3(s->v1.a, s->v1.wB, s->v2.a, s->v2.wB, s->v3.a, s->v3.wB);
+                b = a;
+                break;
+
+            default:
+                DebugTools.Assert(false);
+                break;
+        }
+    }
+
+    // Solve a line segment using barycentric coordinates.
+    //
+    // p = a1 * w1 + a2 * w2
+    // a1 + a2 = 1
+    //
+    // The vector from the origin to the closest point on the line is
+    // perpendicular to the line.
+    // e12 = w2 - w1
+    // dot(p, e) = 0
+    // a1 * dot(w1, e) + a2 * dot(w2, e) = 0
+    //
+    // 2-by-2 linear system
+    // [1      1     ][a1] = [1]
+    // [w1.e12 w2.e12][a2] = [0]
+    //
+    // Define
+    // d12_1 =  dot(w2, e12)
+    // d12_2 = -dot(w1, e12)
+    // d12 = d12_1 + d12_2
+    //
+    // Solution
+    // a1 = d12_1 / d12
+    // a2 = d12_2 / d12
+    public static void SolveSimplex2(ref Simplex s)
+    {
+	    var w1 = s.V._00.W;
+	    var w2 = s.V._01.W;
+	    var e12 = Vector2.Subtract(w2, w1);
+
+	    // w1 region
+	    float d12_2 = -Vector2.Dot(w1, e12);
+	    if (d12_2 <= 0.0f)
+	    {
+		    // a2 <= 0, so we clamp it to 0
+		    s.V._00.A = 1.0f;
+		    s.Count = 1;
+		    return;
+	    }
+
+	    // w2 region
+	    float d12_1 = Vector2.Dot(w2, e12);
+	    if (d12_1 <= 0.0f)
+	    {
+		    // a1 <= 0, so we clamp it to 0
+		    s.V._01.A = 1.0f;
+		    s.Count = 1;
+		    s.V._00 = s.V._01;
+		    return;
+	    }
+
+	    // Must be in e12 region.
+	    float inv_d12 = 1.0f / ( d12_1 + d12_2 );
+	    s.V._00.A = d12_1 * inv_d12;
+	    s.V._01.A = d12_2 * inv_d12;
+	    s.Count = 2;
+    }
+
+    public static void SolveSimplex3(ref Simplex s)
+    {
+	    var w1 = s.V._00.W;
+        var w2 = s.V._01.W;
+        var w3 = s.V._02.W;
+
+	    // Edge12
+	    // [1      1     ][a1] = [1]
+	    // [w1.e12 w2.e12][a2] = [0]
+	    // a3 = 0
+	    var e12 = Vector2.Subtract(w2, w1);
+	    float w1e12 = Vector2.Dot(w1, e12);
+	    float w2e12 = Vector2.Dot(w2, e12);
+	    float d12_1 = w2e12;
+	    float d12_2 = -w1e12;
+
+	    // Edge13
+	    // [1      1     ][a1] = [1]
+	    // [w1.e13 w3.e13][a3] = [0]
+	    // a2 = 0
+	    var e13 = Vector2.Subtract(w3, w1);
+	    float w1e13 = Vector2.Dot(w1, e13);
+	    float w3e13 = Vector2.Dot(w3, e13);
+	    float d13_1 = w3e13;
+	    float d13_2 = -w1e13;
+
+	    // Edge23
+	    // [1      1     ][a2] = [1]
+	    // [w2.e23 w3.e23][a3] = [0]
+	    // a1 = 0
+	    var e23 = Vector2.Subtract(w3, w2);
+	    float w2e23 = Vector2.Dot(w2, e23);
+	    float w3e23 = Vector2.Dot(w3, e23);
+	    float d23_1 = w3e23;
+	    float d23_2 = -w2e23;
+
+	    // Triangle123
+	    float n123 = Vector2Helpers.Cross(e12, e13);
+
+	    float d123_1 = n123 * Vector2Helpers.Cross(w2, w3);
+	    float d123_2 = n123 * Vector2Helpers.Cross(w3, w1);
+	    float d123_3 = n123 * Vector2Helpers.Cross(w1, w2);
+
+	    // w1 region
+	    if (d12_2 <= 0.0f && d13_2 <= 0.0f)
+	    {
+		    s.V._00.A = 1.0f;
+		    s.Count = 1;
+		    return;
+	    }
+
+	    // e12
+	    if (d12_1 > 0.0f && d12_2 > 0.0f && d123_3 <= 0.0f)
+	    {
+		    float inv_d12 = 1.0f / ( d12_1 + d12_2 );
+		    s.V._00.A = d12_1 * inv_d12;
+		    s.V._01.A = d12_2 * inv_d12;
+		    s.Count = 2;
+		    return;
+	    }
+
+	    // e13
+	    if (d13_1 > 0.0f && d13_2 > 0.0f && d123_2 <= 0.0f)
+	    {
+		    float inv_d13 = 1.0f / ( d13_1 + d13_2 );
+		    s.V._00.A = d13_1 * inv_d13;
+		    s.V._02.A = d13_2 * inv_d13;
+		    s.Count = 2;
+		    s.V._01 = s.V._02;
+		    return;
+	    }
+
+	    // w2 region
+	    if (d12_1 <= 0.0f && d23_2 <= 0.0f)
+	    {
+		    s.V._01.A = 1.0f;
+		    s.Count = 1;
+		    s.V._00 = s.V._01;
+		    return;
+	    }
+
+	    // w3 region
+	    if (d13_1 <= 0.0f && d23_1 <= 0.0f)
+	    {
+		    s.V._02.A = 1.0f;
+		    s.Count = 1;
+		    s.V._00 = s.V._02;
+		    return;
+	    }
+
+	    // e23
+	    if (d23_1 > 0.0f && d23_2 > 0.0f && d123_1 <= 0.0f)
+	    {
+		    float inv_d23 = 1.0f / ( d23_1 + d23_2 );
+		    s.V._01.A = d23_1 * inv_d23;
+		    s.V._02.A = d23_2 * inv_d23;
+		    s.Count = 2;
+		    s.V._00 = s.V._02;
+		    return;
+	    }
+
+	    // Must be in triangle123
+	    float inv_d123 = 1.0f / (d123_1 + d123_2 + d123_3);
+	    s.V._00.A = d123_1 * inv_d123;
+	    s.V._01.A = d123_2 * inv_d123;
+	    s.V._02.A = d123_3 * inv_d123;
+	    s.Count = 3;
     }
 
     internal void GetWitnessPoints(out Vector2 pA, out Vector2 pB)

@@ -104,6 +104,11 @@ public sealed partial class AudioSystem : SharedAudioSystem
         var entity = SetupAudio(specifier, audioParams);
         // Move it after setting it up
         XformSystem.SetCoordinates(entity, new EntityCoordinates(uid, Vector2.Zero));
+
+        // TODO AUDIO
+        // Add methods that allow for custom audio range.
+        // Some methods try to reduce the audio range, resulting in a custom filter which then unnecessarily has to
+        // use PVS overrides. PlayEntity with a reduced range shouldn't need PVS overrides at all.
         AddAudioFilter(entity, entity.Comp, playerFilter);
 
         return (entity, entity.Comp);

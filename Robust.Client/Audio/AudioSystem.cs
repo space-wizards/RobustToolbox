@@ -514,7 +514,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         var (entity, component) = CreateAndStartPlayingStream(audioParams, specifier, stream);
         component.Global = true;
         component.Source.Global = true;
-        Dirty(entity, component);
+        DirtyField(entity, component, nameof(AudioComponent.Global));
         return (entity, component);
     }
 

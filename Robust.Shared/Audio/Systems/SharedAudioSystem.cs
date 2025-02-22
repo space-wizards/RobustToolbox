@@ -37,6 +37,8 @@ public abstract partial class SharedAudioSystem : EntitySystem
     [Dependency] protected readonly MetaDataSystem MetadataSys = default!;
     [Dependency] protected readonly SharedTransformSystem XformSystem = default!;
 
+    private const float AudioDespawnBuffer = 1f;
+
     /// <summary>
     /// Default max range at which the sound can be heard.
     /// </summary>
@@ -105,6 +107,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
         if (entity.Comp.PauseTime != null)
         {
             entity.Comp.PauseTime = entity.Comp.PauseTime.Value + timeOffset;
+            DirtyField(entity, nameof(AudioComponent.PauseTime));
 
             // Paused audio doesn't have TimedDespawn so.
         }
@@ -112,6 +115,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
         {
             // Bump it back so the actual playback positions moves forward
             entity.Comp.AudioStart -= timeOffset;
+            DirtyField(entity, nameof(AudioComponent.AudioStart));
 
             // need to ensure it doesn't despawn too early.
             if (TryComp(entity.Owner, out TimedDespawnComponent? despawn))
@@ -121,8 +125,6 @@ public abstract partial class SharedAudioSystem : EntitySystem
         }
 
         entity.Comp.PlaybackPosition = position;
-        // Network the new playback position.
-        Dirty(entity);
     }
 
     /// <summary>
@@ -191,6 +193,9 @@ public abstract partial class SharedAudioSystem : EntitySystem
             var pauseOffset = Timing.CurTime - component.PauseTime;
             component.AudioStart += pauseOffset ?? TimeSpan.Zero;
             component.PlaybackPosition = (float) (Timing.CurTime - component.AudioStart).TotalSeconds;
+
+            DirtyField(entity.Value, component, nameof(AudioComponent.AudioStart));
+            DirtyField(entity.Value, component, nameof(AudioComponent.PlaybackPosition));
         }
 
         // If we were stopped then played then restart audiostart to now.
@@ -198,6 +203,9 @@ public abstract partial class SharedAudioSystem : EntitySystem
         {
             component.AudioStart = Timing.CurTime;
             component.PauseTime = null;
+
+            DirtyField(entity.Value, component, nameof(AudioComponent.AudioStart));
+            DirtyField(entity.Value, component, nameof(AudioComponent.PauseTime));
         }
 
         switch (state)
@@ -205,17 +213,21 @@ public abstract partial class SharedAudioSystem : EntitySystem
             case AudioState.Stopped:
                 component.AudioStart = Timing.CurTime;
                 component.PauseTime = null;
+                DirtyField(entity.Value, component, nameof(AudioComponent.AudioStart));
+                DirtyField(entity.Value, component, nameof(AudioComponent.PauseTime));
                 component.StopPlaying();
                 RemComp<TimedDespawnComponent>(entity.Value);
                 break;
             case AudioState.Paused:
                 // Set it to current time so we can easily unpause it later.
                 component.PauseTime = Timing.CurTime;
+                DirtyField(entity.Value, component, nameof(AudioComponent.PauseTime));
                 component.Pause();
                 RemComp<TimedDespawnComponent>(entity.Value);
                 break;
             case AudioState.Playing:
                 component.PauseTime = null;
+                DirtyField(entity.Value, component, nameof(AudioComponent.PauseTime));
                 component.StartPlaying();
 
                 // Reset TimedDespawn so the audio still gets cleaned up.
@@ -224,13 +236,13 @@ public abstract partial class SharedAudioSystem : EntitySystem
                 {
                     var timed = EnsureComp<TimedDespawnComponent>(entity.Value);
                     var audioLength = GetAudioLength(component.FileName);
-                    timed.Lifetime = (float) audioLength.TotalSeconds + 0.01f;
+                    timed.Lifetime = (float) audioLength.TotalSeconds + AudioDespawnBuffer;
                 }
                 break;
         }
 
         component.State = state;
-        Dirty(entity.Value, component);
+        DirtyField(entity.Value, component, nameof(AudioComponent.State));
     }
 
     protected void SetZOffset(float value)
@@ -339,7 +351,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
 
             var despawn = AddComp<TimedDespawnComponent>(uid);
             // Don't want to clip audio too short due to imprecision.
-            despawn.Lifetime = (float) length.Value.TotalSeconds + 0.01f;
+            despawn.Lifetime = (float) length.Value.TotalSeconds + AudioDespawnBuffer;
         }
 
         if (comp.Params.Variation != null && comp.Params.Variation.Value != 0f)
@@ -402,7 +414,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
 
         component.Params.Volume = value;
         component.Volume = value;
-        Dirty(entity.Value, component);
+        DirtyField(entity.Value, component, nameof(AudioComponent.Params));
     }
 
     #endregion

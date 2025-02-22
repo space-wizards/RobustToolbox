@@ -641,7 +641,7 @@ public sealed class EntitySerializer : ISerializationContext,
         var map = new MappingDataNode();
         foreach (var (tileId, yamlTileId) in _tileMap.OrderBy(x => x.Key))
         {
-            // This can come up if tests try to serialize test maps with custom / Zplaceholder tile ids without registering them with the tile def manager..
+            // This can come up if tests try to serialize test maps with custom / placeholder tile ids without registering them with the tile def manager..
             if (!_tileDef.TryGetDefinition(tileId, out var def))
                 throw new Exception($"Attempting to serialize a tile {tileId} with no valid tile definition.");
 

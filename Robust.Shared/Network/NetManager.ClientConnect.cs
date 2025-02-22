@@ -96,7 +96,7 @@ namespace Robust.Shared.Network
             {
                 await CCDoHandshake(winningPeer, winningConnection, userNameRequest, mainCancelToken);
             }
-            catch (Exception e) when (e is OperationCanceledException or TaskCanceledException)
+            catch (OperationCanceledException)
             {
                 winningPeer.Peer.Shutdown("Cancelled");
                 _toCleanNetPeers.Add(winningPeer.Peer);
@@ -319,7 +319,7 @@ namespace Robust.Shared.Network
                         throw new Exception($"Connection failed: {reason}");
                     }
 
-                    return new ConnectionAttempt(peerData, connection);
+                    return new ConnectionAttempt(peerData, connection, this);
                 }
                 catch (Exception)
                 {
@@ -361,7 +361,7 @@ namespace Robust.Shared.Network
 
                 return (result.Peer, result.Connection);
             }
-            catch (Exception e) when (e is OperationCanceledException or TaskCanceledException)
+            catch (OperationCanceledException)
             {
                 // Connection attempt was cancelled, nothing to see here
                 OnConnectFailed("Connection attempt cancelled.");
@@ -459,8 +459,7 @@ namespace Robust.Shared.Network
 
         private sealed record JoinRequest(string Hash, string? Hwid);
 
-        [Virtual]
-        private class ConnectionAttempt(NetPeerData peer, NetConnection connection) : IDisposable
+        private sealed class ConnectionAttempt(NetPeerData peer, NetConnection connection, NetManager netManager) : IDisposable
         {
             public NetPeerData Peer { get; } = peer;
             public NetConnection Connection { get; } = connection;
@@ -468,6 +467,7 @@ namespace Robust.Shared.Network
             public void Dispose()
             {
                 Peer.Peer.Shutdown("Disposing unused connection attempt");
+                netManager._toCleanNetPeers.Add(Peer.Peer);
             }
         }
     }

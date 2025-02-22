@@ -271,7 +271,10 @@ public sealed class EntitySerializer : ISerializationContext,
         foreach (var (origId, prototypeId) in savedMap)
         {
             if (_tileDef.TryGetDefinition(prototypeId, out var definition))
+            {
                 _tileMap.TryAdd(definition.TileId, origId);
+                _yamlTileIds.Add(origId); // Make sure we record the IDs we're using so when we need to reserve new ones we can
+            }
         }
     }
 
@@ -645,8 +648,7 @@ public sealed class EntitySerializer : ISerializationContext,
             if (!_tileDef.TryGetDefinition(tileId, out var def))
                 throw new Exception($"Attempting to serialize a tile {tileId} with no valid tile definition.");
 
-            // If the tilemap changes between saves, we will need to reallocate the tile ID, GetYamlTileId does that for us.
-            var yamlId = GetYamlTileId(tileId).ToString(CultureInfo.InvariantCulture);
+            var yamlId = yamlTileId.ToString(CultureInfo.InvariantCulture);
             map.Add(yamlId, def.ID);
         }
         return map;

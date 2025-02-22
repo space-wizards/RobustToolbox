@@ -696,7 +696,7 @@ Types:
       - "bool IsMatch(string, string, System.Text.RegularExpressions.RegexOptions, System.TimeSpan)"
       - "int GroupNumberFromName(string)"
       - "int[] GetGroupNumbers()"
-      - "string Escape()"
+      - "string Escape(string)"
       - "string GroupNameFromNumber(int)"
       - "string Replace(string, string)"
       - "string Replace(string, string, int)"

@@ -39,6 +39,25 @@ END TEMPLATE-->
 
 ### New features
 
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 247.2.0
+
+### New features
+
 * Added functions for copying components to `IEntityManager` and `EntitySystem`.
 * Sound played from sound collections is now sent as "collection ID + index" over the network instead of the final filename.
   * This enables integration of future accessibility systems.
@@ -53,10 +72,6 @@ END TEMPLATE-->
 * Fix `Regex.Escape(string)` not being available in sandbox.
 * Prototypes that parent themselves directly won't cause the game to hang on an infinite loop anymore.
 * Fixed disconnecting during a connection attempt leaving the client stuck in a phantom state.
-
-### Other
-
-*None yet*
 
 ### Internal
 

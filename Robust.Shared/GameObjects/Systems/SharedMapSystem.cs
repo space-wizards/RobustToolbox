@@ -159,9 +159,9 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Creates a new instance of this class.
         /// </summary>
-        public TileChangedEvent(EntityUid uid, TileRef newTile, Tile oldTile, Vector2i chunkIndex)
+        public TileChangedEvent(Entity<MapGridComponent> entity, TileRef newTile, Tile oldTile, Vector2i chunkIndex)
         {
-            Entity = uid;
+            Entity = entity;
             NewTile = newTile;
             OldTile = oldTile;
             ChunkIndex = chunkIndex;
@@ -173,9 +173,9 @@ namespace Robust.Shared.GameObjects
         public bool EmptyChanged => OldTile.IsEmpty != NewTile.Tile.IsEmpty;
 
         /// <summary>
-        ///     EntityUid of the grid with the tile-change. TileRef stores the GridId.
+        ///     Entity of the grid with the tile-change. TileRef stores the GridId.
         /// </summary>
-        public readonly EntityUid Entity;
+        public readonly Entity<MapGridComponent> Entity;
 
         /// <summary>
         ///     New tile that replaced the old one.

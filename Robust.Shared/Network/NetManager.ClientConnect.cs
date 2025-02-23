@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -11,7 +10,6 @@ using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Lidgren.Network;
-using Robust.Shared.Log;
 using Robust.Shared.Network.Messages.Handshake;
 using Robust.Shared.Utility;
 using SpaceWizards.Sodium;
@@ -98,7 +96,7 @@ namespace Robust.Shared.Network
             {
                 await CCDoHandshake(winningPeer, winningConnection, userNameRequest, mainCancelToken);
             }
-            catch (TaskCanceledException)
+            catch (OperationCanceledException)
             {
                 winningPeer.Peer.Shutdown("Cancelled");
                 _toCleanNetPeers.Add(winningPeer.Peer);
@@ -120,7 +118,10 @@ namespace Robust.Shared.Network
             _logger.Debug("Handshake completed, connection established.");
         }
 
-        private async Task CCDoHandshake(NetPeerData peer, NetConnection connection, string userNameRequest,
+        private async Task CCDoHandshake(
+            NetPeerData peer,
+            NetConnection connection,
+            string userNameRequest,
             CancellationToken cancel)
         {
             var encrypt = _config.GetCVar(CVars.NetEncrypt);
@@ -289,37 +290,51 @@ namespace Robust.Shared.Network
         private async Task<(NetPeerData winningPeer, NetConnection winningConnection)?>
             CCHappyEyeballs(int port, IPAddress first, IPAddress? second, CancellationToken mainCancelToken)
         {
-            NetPeerData CreatePeerForIp(IPAddress address)
+            // Try to establish a connection with an IP address and wait for it to either connect or fail
+            // Returns a disposable wrapper around the peer/connection because ParallelTask
+            async Task<ConnectionAttempt> AttemptConnection(IPAddress address, CancellationToken cancel)
             {
                 var config = _getBaseNetPeerConfig();
-                if (address.AddressFamily == AddressFamily.InterNetworkV6)
-                {
-                    config.LocalAddress = IPAddress.IPv6Any;
-                }
-                else
-                {
-                    config.LocalAddress = IPAddress.Any;
-                }
+                config.LocalAddress = address.AddressFamily == AddressFamily.InterNetworkV6
+                    ? IPAddress.IPv6Any
+                    : IPAddress.Any;
 
                 var peer = new NetPeer(config);
                 peer.Start();
-                var data = new NetPeerData(peer);
-                _netPeers.Add(data);
-                return data;
+                var peerData = new NetPeerData(peer);
+                _netPeers.Add(peerData);
+
+                var connection = peer.Connect(new IPEndPoint(address, port));
+
+                try
+                {
+                    // We need AwaitNonInitStatusChange to properly handle connection state transitions
+                    var reason = await AwaitNonInitStatusChange(connection, cancel);
+
+                    if (connection.Status != NetConnectionStatus.Connected)
+                    {
+                        // Connection failed, clean up and yeet an exception
+                        peer.Shutdown(reason);
+                        _toCleanNetPeers.Add(peer);
+                        throw new Exception($"Connection failed: {reason}");
+                    }
+
+                    return new ConnectionAttempt(peerData, connection, this);
+                }
+                catch (Exception)
+                {
+                    // Something went wrong!
+                    peer.Shutdown("Connection attempt failed");
+                    _toCleanNetPeers.Add(peer);
+                    throw;
+                }
             }
 
-            // Create first peer.
-            var firstPeer = CreatePeerForIp(first);
-            var firstConnection = firstPeer.Peer.Connect(new IPEndPoint(first, port));
-            NetPeerData? secondPeer = null;
-            NetConnection? secondConnection = null;
-            string? secondReason = null;
-
+            // Waits for a connection's status to change from InitiatedConnect to anything else
             async Task<string> AwaitNonInitStatusChange(NetConnection connection, CancellationToken cancellationToken)
             {
-                NetConnectionStatus status;
                 string reason;
-
+                NetConnectionStatus status;
                 do
                 {
                     reason = await AwaitStatusChange(connection, cancellationToken);
@@ -329,124 +344,37 @@ namespace Robust.Shared.Network
                 return reason;
             }
 
-            async Task ConnectSecondDelayed(CancellationToken cancellationToken)
-            {
-                DebugTools.AssertNotNull(second);
-                // Connecting via second peer is delayed by 25ms to give an advantage to IPv6, if it works.
-                var delay = TimeSpan.FromSeconds(_config.GetCVar(CVars.NetHappyEyeballsDelay));
-                await Task.Delay(delay, cancellationToken);
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    return;
-                }
-
-                secondPeer = CreatePeerForIp(second);
-                secondConnection = secondPeer.Peer.Connect(new IPEndPoint(second, port));
-
-                secondReason = await AwaitNonInitStatusChange(secondConnection, cancellationToken);
-            }
-
-            NetPeerData? winningPeer;
-            NetConnection? winningConnection;
-            string? firstReason = null;
             try
             {
-                if (second != null)
-                {
-                    // We have two addresses to try.
-                    var cancellation = CancellationTokenSource.CreateLinkedTokenSource(mainCancelToken);
-                    var firstPeerChanged = AwaitNonInitStatusChange(firstConnection, cancellation.Token);
-                    var secondPeerChanged = ConnectSecondDelayed(cancellation.Token);
+                // Create list of IPs to try
+                var addresses = second != null
+                    ? new[] { first, second }
+                    : new[] { first };
 
-                    var firstChange = await Task.WhenAny(firstPeerChanged, secondPeerChanged);
+                // Use ParallelTask to handle the connection attempts
+                var delay = TimeSpan.FromSeconds(_config.GetCVar(CVars.NetHappyEyeballsDelay));
+                var (result, _) = await HappyEyeballsHttp.ParallelTask(
+                    addresses.Length,
+                    (i, token) => AttemptConnection(addresses[i], token),
+                    delay,
+                    mainCancelToken);
 
-                    if (firstChange == firstPeerChanged)
-                    {
-                        _logger.Debug("First peer status changed.");
-                        // First peer responded first.
-                        if (firstConnection.Status == NetConnectionStatus.Connected)
-                        {
-                            // First peer won!
-                            _logger.Debug("First peer succeeded.");
-                            cancellation.Cancel();
-                            if (secondPeer != null)
-                            {
-                                secondPeer.Peer.Shutdown("First connection attempt won.");
-                                _toCleanNetPeers.Add(secondPeer.Peer);
-                            }
-
-                            winningPeer = firstPeer;
-                            winningConnection = firstConnection;
-                        }
-                        else
-                        {
-                            // First peer failed, try the second one I guess.
-                            _logger.Debug("First peer failed.");
-                            firstPeer.Peer.Shutdown("You failed.");
-                            _toCleanNetPeers.Add(firstPeer.Peer);
-                            firstReason = await firstPeerChanged;
-                            await secondPeerChanged;
-                            winningPeer = secondPeer;
-                            winningConnection = secondConnection;
-                        }
-                    }
-                    else
-                    {
-                        if (secondConnection!.Status == NetConnectionStatus.Connected)
-                        {
-                            // Second peer won!
-                            _logger.Debug("Second peer succeeded.");
-                            cancellation.Cancel();
-                            firstPeer.Peer.Shutdown("Second connection attempt won.");
-                            _toCleanNetPeers.Add(firstPeer.Peer);
-                            winningPeer = secondPeer;
-                            winningConnection = secondConnection;
-                        }
-                        else
-                        {
-                            // First peer failed, try the second one I guess.
-                            _logger.Debug("Second peer failed.");
-                            secondPeer!.Peer.Shutdown("You failed.");
-                            _toCleanNetPeers.Add(secondPeer.Peer);
-                            firstReason = await firstPeerChanged;
-                            winningPeer = firstPeer;
-                            winningConnection = firstConnection;
-                        }
-                    }
-                }
-                else
-                {
-                    // Only one address to try. Pretty straight forward.
-                    firstReason = await AwaitNonInitStatusChange(firstConnection, mainCancelToken);
-                    winningPeer = firstPeer;
-                    winningConnection = firstConnection;
-                }
+                return (result.Peer, result.Connection);
             }
-            catch (TaskCanceledException)
+            catch (OperationCanceledException)
             {
-                firstPeer.Peer.Shutdown("Cancelled");
-                _toCleanNetPeers.Add(firstPeer.Peer);
-                if (secondPeer != null)
-                {
-                    // ReSharper disable once PossibleNullReferenceException
-                    secondPeer.Peer.Shutdown("Cancelled");
-                    _toCleanNetPeers.Add(secondPeer.Peer);
-                }
-
+                // Connection attempt was cancelled, nothing to see here
+                OnConnectFailed("Connection attempt cancelled.");
                 return null;
             }
-
-            // winningPeer can still be failed at this point.
-            // If it is, neither succeeded. RIP.
-            if (winningConnection!.Status != NetConnectionStatus.Connected)
+            catch (AggregateException ae)
             {
-                winningPeer!.Peer.Shutdown("You failed");
-                _toCleanNetPeers.Add(winningPeer.Peer);
-                OnConnectFailed((secondReason ?? firstReason)!);
+                // ParallelTask throws AggregateException with all connection failures
+                // We just take the first one
+                var message = ae.InnerExceptions.First().Message;
+                OnConnectFailed(message);
                 return null;
             }
-
-            return (winningPeer!, winningConnection);
         }
 
         private Task<string> AwaitStatusChange(NetConnection connection, CancellationToken cancellationToken = default)
@@ -471,7 +399,8 @@ namespace Robust.Shared.Network
             return tcs.Task;
         }
 
-        private Task<NetIncomingMessage> AwaitData(NetConnection connection,
+        private Task<NetIncomingMessage> AwaitData(
+            NetConnection connection,
             CancellationToken cancellationToken = default)
         {
             if (_awaitingData.ContainsKey(connection))
@@ -529,5 +458,17 @@ namespace Robust.Shared.Network
         }
 
         private sealed record JoinRequest(string Hash, string? Hwid);
+
+        private sealed class ConnectionAttempt(NetPeerData peer, NetConnection connection, NetManager netManager) : IDisposable
+        {
+            public NetPeerData Peer { get; } = peer;
+            public NetConnection Connection { get; } = connection;
+
+            public void Dispose()
+            {
+                Peer.Peer.Shutdown("Disposing unused connection attempt");
+                netManager._toCleanNetPeers.Add(Peer.Peer);
+            }
+        }
     }
 }

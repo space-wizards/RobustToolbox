@@ -41,19 +41,23 @@ public sealed class PreferOtherTypeFixer : CodeFixProvider
     {
         var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken);
         var span = diagnostic.Location.SourceSpan;
-        var token = root?.FindToken(span.Start).Parent?.AncestorsAndSelf().OfType<VariableDeclarationSyntax>().First();
+        var token = root?.FindToken(span.Start).Parent?.AncestorsAndSelf().OfType<GenericNameSyntax>().First();
 
         if (token == null)
             return;
 
+        var replacement = diagnostic.Properties[PreferOtherTypeAnalyzer.ReplacementType];
+        if (replacement == null)
+            return;
+
         context.RegisterCodeFix(CodeAction.Create(
             "Replace type",
-            c => ReplaceType(context.Document, token, c),
+            c => ReplaceType(context.Document, token, replacement, c),
             "Replace type"
         ), diagnostic);
     }
 
-    private static async Task<Document> ReplaceType(Document document, VariableDeclarationSyntax syntax, CancellationToken cancellation)
+    private static async Task<Document> ReplaceType(Document document, GenericNameSyntax syntax, string replacement, CancellationToken cancellation)
     {
         var root = (CompilationUnitSyntax?) await document.GetSyntaxRootAsync(cancellation);
         var model = await document.GetSemanticModelAsync(cancellation);
@@ -61,37 +65,9 @@ public sealed class PreferOtherTypeFixer : CodeFixProvider
         if (model == null)
             return document;
 
-        if (syntax.Type is not GenericNameSyntax genericNameSyntax)
-            return document;
-        var genericTypeSyntax = genericNameSyntax.TypeArgumentList.Arguments[0];
-        if (model.GetSymbolInfo(genericTypeSyntax).Symbol is not {} genericTypeSymbol)
-            return document;
+        var replacementSyntax = SyntaxFactory.IdentifierName(replacement);
 
-        var symbolInfo = model.GetSymbolInfo(syntax.Type);
-        if (symbolInfo.Symbol?.GetAttributes() is not { } attributes)
-            return document;
-
-        foreach (var attribute in attributes)
-        {
-            if (attribute.AttributeClass?.Name != PreferOtherTypeAttributeName)
-                continue;
-
-            if (attribute.ConstructorArguments[0].Value is not ITypeSymbol checkedTypeSymbol)
-                continue;
-
-            if (!SymbolEqualityComparer.Default.Equals(checkedTypeSymbol, genericTypeSymbol))
-                continue;
-
-            if (attribute.ConstructorArguments[1].Value is not ITypeSymbol replacementTypeSymbol)
-                continue;
-
-            var replacementIdentifier = SyntaxFactory.IdentifierName(replacementTypeSymbol.Name);
-            var replacementSyntax = syntax.WithType(replacementIdentifier);
-
-            root = root!.ReplaceNode(syntax, replacementSyntax);
-            return document.WithSyntaxRoot(root);
-        }
-
-        return document;
+        root = root!.ReplaceNode(syntax, replacementSyntax);
+        return document.WithSyntaxRoot(root);
     }
 }

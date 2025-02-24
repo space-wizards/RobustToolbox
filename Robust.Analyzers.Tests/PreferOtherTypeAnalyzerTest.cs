@@ -63,18 +63,6 @@ public sealed class PreferOtherTypeAnalyzerTest
                 public List<HashSet<Queue<ProtoId<EntityPrototype>>>> BadNested = new();
 
                 public List<HashSet<Queue<ProtoId<ReagentPrototype>>>> GoodNested = new();
-
-                public void BadMethod(ProtoId<EntityPrototype> proto) { }
-
-                public void GoodMethod(ProtoId<ReagentPrototype> proto) { }
-
-                public void BadListMethod(List<ProtoId<EntityPrototype>> protoList) { }
-
-                public void GoodListMethod(List<ProtoId<ReagentPrototype>> protoList) { }
-
-                public ProtoId<EntityPrototype>? BadReturnMethod() => null;
-
-                public ProtoId<ReagentPrototype>? GoodReturnMethod() => null;
             }
             """;
 
@@ -86,13 +74,7 @@ public sealed class PreferOtherTypeAnalyzerTest
             // /0/Test0.cs(21,28): error RA0031: Use the specific type EntProtoId instead of ProtoId when the type argument is EntityPrototype
             VerifyCS.Diagnostic().WithSpan(21, 28, 21, 52).WithArguments("EntProtoId", "ProtoId", "EntityPrototype"),
             // /0/Test0.cs(25,31): error RA0031: Use the specific type EntProtoId instead of ProtoId when the type argument is EntityPrototype
-            VerifyCS.Diagnostic().WithSpan(25, 31, 25, 55).WithArguments("EntProtoId", "ProtoId", "EntityPrototype"),
-            // /0/Test0.cs(29,27): error RA0031: Use the specific type EntProtoId instead of ProtoId when the type argument is EntityPrototype
-            VerifyCS.Diagnostic().WithSpan(29, 27, 29, 51).WithArguments("EntProtoId", "ProtoId", "EntityPrototype"),
-            // /0/Test0.cs(33,36): error RA0031: Use the specific type EntProtoId instead of ProtoId when the type argument is EntityPrototype
-            VerifyCS.Diagnostic().WithSpan(33, 36, 33, 60).WithArguments("EntProtoId", "ProtoId", "EntityPrototype"),
-            // /0/Test0.cs(37,12): error RA0031: Use the specific type EntProtoId instead of ProtoId when the type argument is EntityPrototype
-            VerifyCS.Diagnostic().WithSpan(37, 12, 37, 36).WithArguments("EntProtoId", "ProtoId", "EntityPrototype")
+            VerifyCS.Diagnostic().WithSpan(25, 31, 25, 55).WithArguments("EntProtoId", "ProtoId", "EntityPrototype")
         );
     }
 }

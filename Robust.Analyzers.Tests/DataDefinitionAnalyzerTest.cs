@@ -28,7 +28,7 @@ public sealed class DataDefinitionAnalyzerTest
     }
 
     [Test]
-    public async Task Test()
+    public async Task NoVVReadOnlyTest()
     {
         const string code = """
             using System;
@@ -85,6 +85,47 @@ public sealed class DataDefinitionAnalyzerTest
         await Verifier(code,
             // /0/Test0.cs(35,17): info RA0028: Data field Bad in data definition Foo has ViewVariables attribute with ReadWrite access, which is redundant
             VerifyCS.Diagnostic(DataDefinitionAnalyzer.DataFieldNoVVReadWriteRule).WithSpan(35, 17, 35, 50).WithArguments("Bad", "Foo")
+        );
+    }
+
+    [Test]
+    public async Task NotYamlSerializableTest()
+    {
+        const string code = """
+            using System;
+            using Robust.Shared.Serialization.Manager.Attributes;
+
+            namespace Robust.Shared.Serialization.Manager.Attributes
+            {
+                public class DataFieldBaseAttribute : Attribute;
+                public class DataFieldAttribute : DataFieldBaseAttribute;
+                public sealed class DataDefinitionAttribute : Attribute;
+                public sealed class NotYamlSerializableAttribute : Attribute;
+            }
+
+            [NotYamlSerializable]
+            public sealed class NotSerializableClass { }
+
+            [DataDefinition]
+            public sealed partial class Foo
+            {
+                [DataField]
+                public NotSerializableClass BadField;
+
+                [DataField]
+                public NotSerializableClass BadProperty { get; set; }
+
+                public NotSerializableClass GoodField; // Not a DataField, not a problem
+
+                public NotSerializableClass GoodProperty { get; set; } // Not a DataField, not a problem
+            }
+            """;
+
+        await Verifier(code,
+            // /0/Test0.cs(19,12): error RA0033: Data field BadField in data definition Foo is type NotSerializableClass, which is not YAML serializable
+            VerifyCS.Diagnostic(DataDefinitionAnalyzer.DataFieldYamlSerializableRule).WithSpan(19, 12, 19, 32).WithArguments("BadField", "Foo", "NotSerializableClass"),
+            // /0/Test0.cs(22,12): error RA0033: Data field BadProperty in data definition Foo is type NotSerializableClass, which is not YAML serializable
+            VerifyCS.Diagnostic(DataDefinitionAnalyzer.DataFieldYamlSerializableRule).WithSpan(22, 12, 22, 32).WithArguments("BadProperty", "Foo", "NotSerializableClass")
         );
     }
 }

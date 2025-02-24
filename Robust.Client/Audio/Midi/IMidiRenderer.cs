@@ -24,6 +24,11 @@ public interface IMidiRenderer : IDisposable
     internal IBufferedAudioSource Source { get; }
 
     /// <summary>
+    ///     Mixable audio source reference to apply mixing.
+    /// </summary>
+    internal IMixableAudioSource MixableSource { get; }
+
+    /// <summary>
     ///     Whether this renderer has been disposed or not.
     /// </summary>
     bool Disposed { get; }

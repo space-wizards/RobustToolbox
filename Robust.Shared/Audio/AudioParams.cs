@@ -1,10 +1,12 @@
-﻿using Robust.Shared.Serialization;
+using Robust.Shared.Serialization;
 using System;
 using System.Diagnostics.Contracts;
+using Robust.Shared.Audio.Mixers;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Prototypes;
 
 namespace Robust.Shared.Audio
 {
@@ -77,6 +79,12 @@ namespace Robust.Shared.Audio
         /// </summary>
         [DataField]
         public float? Variation { get; set; } = null;
+
+        /// <summary>
+        ///     Output mixer to use, if any.
+        /// </summary>
+        [DataField]
+        public ProtoId<AudioMixerPrototype>? MixerProto { get; set; }
 
         // For the max distance value: it's 2000 in Godot, but I assume that's PIXELS due to the 2D positioning,
         // so that's divided by 32 (EyeManager.PIXELSPERMETER).
@@ -212,6 +220,17 @@ namespace Robust.Shared.Audio
         {
             var me = this;
             me.PlayOffsetSeconds = offset;
+            return me;
+        }
+
+        /// <summary>
+        ///     Returns a copy of this instance with a mixer set, for easy chaining.
+        /// </summary>
+        [Pure]
+        public readonly AudioParams WithMixer(ProtoId<AudioMixerPrototype>? mixerProto)
+        {
+            var me = this;
+            me.MixerProto = mixerProto;
             return me;
         }
     }

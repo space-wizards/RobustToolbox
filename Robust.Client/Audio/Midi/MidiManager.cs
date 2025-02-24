@@ -9,6 +9,7 @@ using NFluidsynth;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Audio.Midi;
+using Robust.Shared.Audio.Mixers;
 using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
@@ -81,6 +82,7 @@ internal sealed partial class MidiManager : IMidiManager
     private Thread? _midiThread;
     private ISawmill _midiSawmill = default!;
     private float _gain = 0f;
+    private IAudioMixer? _audioMixer;
     private bool _volumeDirty = true;
 
     // Not reliable until Fluidsynth is initialized!
@@ -95,7 +97,21 @@ internal sealed partial class MidiManager : IMidiManager
             if (MathHelper.CloseToPercent(_gain, clamped))
                 return;
 
-            _cfgMan.SetCVar(CVars.MidiVolume, clamped);
+            _gain = value;
+            _volumeDirty = true;
+        }
+    }
+
+    [ViewVariables(VVAccess.ReadWrite)]
+    public IAudioMixer? Mixer
+    {
+        get => _audioMixer;
+        set
+        {
+            if (_audioMixer == value)
+                return;
+
+            _audioMixer = value;
             _volumeDirty = true;
         }
     }
@@ -144,12 +160,6 @@ internal sealed partial class MidiManager : IMidiManager
     private void InitializeFluidsynth()
     {
         if (FluidsynthInitialized || _failedInitialize) return;
-
-        _cfgMan.OnValueChanged(CVars.MidiVolume, value =>
-        {
-            _gain = value;
-            _volumeDirty = true;
-        }, true);
 
         _midiSawmill = _logger.GetSawmill("midi");
 #if DEBUG
@@ -396,7 +406,8 @@ internal sealed partial class MidiManager : IMidiManager
 
             if (_volumeDirty)
             {
-                renderer.Source.Gain = Gain;
+                renderer.MixableSource.Gain = Gain;
+                renderer.MixableSource.SetMixer(_audioMixer);
             }
 
             if (!renderer.Mono)
@@ -429,14 +440,14 @@ internal sealed partial class MidiManager : IMidiManager
             // If it's on a different map then just mute it, not pause.
             if (mapPos.MapId == MapId.Nullspace || mapPos.MapId != listener.MapId)
             {
-                renderer.Source.Gain = 0f;
+                renderer.MixableSource.Gain = 0f;
                 return;
             }
 
             // Was previously muted maybe so try unmuting it?
-            if (renderer.Source.Gain == 0f)
+            if (renderer.MixableSource.Gain == 0f)
             {
-                renderer.Source.Gain = Gain;
+                renderer.MixableSource.Gain = Gain;
             }
 
             var worldPos = mapPos.Position;
@@ -448,7 +459,7 @@ internal sealed partial class MidiManager : IMidiManager
             if (distance > renderer.Source.MaxDistance)
             {
                 // Still keeps the source playing, just with no volume.
-                renderer.Source.Gain = 0f;
+                renderer.MixableSource.Gain = 0f;
                 return;
             }
 

@@ -58,6 +58,9 @@ public sealed class PreferOtherTypeFixerTest
                 public List<ProtoId<EntityPrototype>> FooList = new();
                 public Dictionary<int, ProtoId<EntityPrototype>> FooDictionary = new();
                 public Dictionary<List<ProtoId<EntityPrototype>>, Queue<ProtoId<EntityPrototype>>> FooNested = new();
+                public void FooMethod(ProtoId<EntityPrototype> foo) { }
+                public void FooListMethod(List<ProtoId<EntityPrototype>> fooList) { }
+                public ProtoId<EntityPrototype>? FooReturnMethod() => null;
             }
             """;
 
@@ -78,6 +81,9 @@ public sealed class PreferOtherTypeFixerTest
                 public List<EntProtoId> FooList = new();
                 public Dictionary<int, EntProtoId> FooDictionary = new();
                 public Dictionary<List<EntProtoId>, Queue<EntProtoId>> FooNested = new();
+                public void FooMethod(EntProtoId foo) { }
+                public void FooListMethod(List<EntProtoId> fooList) { }
+                public EntProtoId? FooReturnMethod() => null;
             }
             """;
 
@@ -91,7 +97,13 @@ public sealed class PreferOtherTypeFixerTest
             // /0/Test0.cs(16,61): error RA0031: Use the specific type EntProtoId instead of ProtoId when the type argument is EntityPrototype
             VerifyCS.Diagnostic().WithSpan(16, 61, 16, 85).WithArguments("EntProtoId", "ProtoId", "EntityPrototype"),
             // /0/Test0.cs(16,28): error RA0031: Use the specific type EntProtoId instead of ProtoId when the type argument is EntityPrototype
-            VerifyCS.Diagnostic().WithSpan(16, 28, 16, 52).WithArguments("EntProtoId", "ProtoId", "EntityPrototype")
+            VerifyCS.Diagnostic().WithSpan(16, 28, 16, 52).WithArguments("EntProtoId", "ProtoId", "EntityPrototype"),
+            // /0/Test0.cs(17,27): error RA0031: Use the specific type EntProtoId instead of ProtoId when the type argument is EntityPrototype
+            VerifyCS.Diagnostic().WithSpan(17, 27, 17, 51).WithArguments("EntProtoId", "ProtoId", "EntityPrototype"),
+            // /0/Test0.cs(18,36): error RA0031: Use the specific type EntProtoId instead of ProtoId when the type argument is EntityPrototype
+            VerifyCS.Diagnostic().WithSpan(18, 36, 18, 60).WithArguments("EntProtoId", "ProtoId", "EntityPrototype"),
+            // /0/Test0.cs(19,12): error RA0031: Use the specific type EntProtoId instead of ProtoId when the type argument is EntityPrototype
+            VerifyCS.Diagnostic().WithSpan(19, 12, 19, 36).WithArguments("EntProtoId", "ProtoId", "EntityPrototype")
         );
     }
 }

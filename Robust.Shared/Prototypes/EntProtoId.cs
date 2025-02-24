@@ -17,7 +17,6 @@ namespace Robust.Shared.Prototypes;
 /// </remarks>
 /// <remarks><seealso cref="ProtoId{T}"/> for a wrapper of other prototype kinds.</remarks>
 [Serializable, NetSerializable]
-[SuppressMessage("Usage", "RA0031:Use the specific type")]
 public readonly record struct EntProtoId(string Id) : IEquatable<string>, IComparable<EntProtoId>, IAsType<string>,
     IAsType<ProtoId<EntityPrototype>>
 {

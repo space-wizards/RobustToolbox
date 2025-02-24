@@ -197,21 +197,21 @@ public sealed class TestEnumerableCommand : ToolshedCommand
 public sealed class TestNestedArrayCommand : ToolshedCommand
 {
     [CommandImplementation]
-    public EntProtoId[] Impl() => Array.Empty<EntProtoId>();
+    public ProtoId<EntityPrototype>[] Impl() => Array.Empty<ProtoId<EntityPrototype>>();
 }
 
 [ToolshedCommand]
 public sealed class TestNestedListCommand : ToolshedCommand
 {
     [CommandImplementation]
-    public List<EntProtoId> Impl() => new();
+    public List<ProtoId<EntityPrototype>> Impl() => new();
 }
 
 [ToolshedCommand]
 public sealed class TestNestedEnumerableCommand : ToolshedCommand
 {
-    private static EntProtoId[] _arr = Array.Empty<EntProtoId>();
+    private static ProtoId<EntityPrototype>[] _arr = Array.Empty<ProtoId<EntityPrototype>>();
 
     [CommandImplementation]
-    public IEnumerable<EntProtoId> Impl() => _arr.OrderByDescending(x => x.Id);
+    public IEnumerable<ProtoId<EntityPrototype>> Impl() => _arr.OrderByDescending(x => x.Id);
 }

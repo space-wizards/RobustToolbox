@@ -12,8 +12,6 @@ namespace Robust.Analyzers;
 [ExportCodeFixProvider(LanguageNames.CSharp)]
 public sealed class PreferOtherTypeFixer : CodeFixProvider
 {
-    private const string PreferOtherTypeAttributeName = "PreferOtherTypeAttribute";
-
     public override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(
         IdPreferOtherType
     );

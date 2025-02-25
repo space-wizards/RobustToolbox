@@ -427,7 +427,7 @@ cmd-entfo-help = Usage: entfo <entityuid>
     The entity UID can be prefixed with 'c' to convert it to a client entity UID.
 
 cmd-fuck-desc = Throws an exception
-cmd-fuck-help = Throws an exception
+cmd-fuck-help = Usage: fuck
 
 cmd-showpos-desc = Show the position of all entities on the screen.
 cmd-showpos-help = Usage: showpos

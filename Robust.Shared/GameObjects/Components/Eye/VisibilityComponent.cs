@@ -1,14 +1,13 @@
-using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization.Manager.Attributes;
 
-namespace Robust.Server.GameObjects
+namespace Robust.Shared.GameObjects
 {
     /// <summary>
     /// Controls PVS visibility of entities. THIS COMPONENT CONTROLS WHETHER ENTITIES ARE NETWORKED TO PLAYERS
     /// AND SHOULD NOT BE USED AS THE SOLE WAY TO HIDE AN ENTITY FROM A PLAYER.
     /// </summary>
     [RegisterComponent]
-    [Access(typeof(VisibilitySystem))]
+    [Access(typeof(SharedVisibilitySystem))]
     public sealed partial class VisibilityComponent : Component
     {
         /// <summary>

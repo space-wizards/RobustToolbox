@@ -91,7 +91,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  Assert.That(sContainerSys.Insert(itemUid, container));
 
                  // Modify visibility layer so that the item does not get sent ot the player
-                 sEntManager.System<VisibilitySystem>().AddLayer(itemUid, 10 );
+                 sEntManager.System<SharedVisibilitySystem>().AddLayer(itemUid, 10 );
              });
 
              // Needs minimum 4 to sync to client because buffer size is 3
@@ -119,7 +119,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
              await server.WaitAssertion(() =>
              {
                  // Modify visibility layer so it now gets sent to the client
-                 sEntManager.System<VisibilitySystem>().RemoveLayer(itemUid, 10 );
+                 sEntManager.System<SharedVisibilitySystem>().RemoveLayer(itemUid, 10 );
              });
 
              await server.WaitRunTicks(1);
@@ -219,7 +219,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  sContainerSys.Insert(sItemUid, container);
 
                  // Modify visibility layer so that the item does not get sent ot the player
-                 sEntManager.System<VisibilitySystem>().AddLayer(sItemUid, 10 );
+                 sEntManager.System<SharedVisibilitySystem>().AddLayer(sItemUid, 10 );
              });
 
             await server.WaitRunTicks(1);

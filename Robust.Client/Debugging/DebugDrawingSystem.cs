@@ -187,7 +187,8 @@ public sealed class DebugDrawingSystem : EntitySystem
                 var center = _transform.GetWorldPosition(uid);
                 var localVelocity = physicsComp.LinearVelocity;
 
-                worldHandle.DrawLine(center, center + localVelocity * multiplier, Color.Yellow);
+                if (localVelocity != Vector2.Zero)
+                    worldHandle.DrawLine(center, center + localVelocity * multiplier, Color.Yellow);
             }
         }
     }
@@ -211,7 +212,8 @@ public sealed class DebugDrawingSystem : EntitySystem
                 var center = _transform.GetWorldPosition(uid);
                 var angularVelocity = physicsComp.AngularVelocity;
 
-                worldHandle.DrawCircle(center, angularVelocity * multiplier, angularVelocity > 0 ? Color.Magenta : Color.Blue, false);
+                if (angularVelocity != 0.0f)
+                    worldHandle.DrawCircle(center, angularVelocity * multiplier, angularVelocity > 0 ? Color.Magenta : Color.Blue, false);
             }
         }
     }

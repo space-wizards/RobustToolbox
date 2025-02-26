@@ -171,7 +171,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
             if (position > GetAudioLengthImpl(entity.Comp.FileName).TotalSeconds - _audioEndBuffer)
             {
                 entity.Comp.StopPlaying();
-                entity.Comp.State = AudioState.Stopped;
                 return;
             }
         }
@@ -264,7 +263,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
         else if (offset > length.Value.TotalSeconds - _audioEndBuffer)
         {
             component.StopPlaying();
-            component.State = AudioState.Stopped;
             return;
         }
 

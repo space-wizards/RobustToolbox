@@ -85,6 +85,12 @@ public sealed class ClientDynamicParticlesSystem : SharedDynamicParticlesSystem
                 return () => high;
             case ParticlePropertyType.RandomUniform:
                 return () => random.NextFloat(low, high);
+            case ParticlePropertyType.RandomNormal:
+                return () => (float) Math.Clamp(random.NextGaussian((low+high)/2, (high-low)/6), low, high);
+            case ParticlePropertyType.RandomLinear:
+                return () => MathF.Sqrt(random.NextFloat(0, 1)) * (high - low) + low;
+            case ParticlePropertyType.RandomSquare:
+                return () => MathF.Cbrt(random.NextFloat(0, 1)) * (high - low) + low;
             default:
                 throw new NotImplementedException();
         }

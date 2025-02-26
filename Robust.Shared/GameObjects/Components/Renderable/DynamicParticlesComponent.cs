@@ -62,5 +62,8 @@ public sealed partial class DynamicParticlesComponent : Component {
 
 public enum ParticlePropertyType {
     HighValue,
-    RandomUniform
+    RandomUniform,
+    RandomNormal, //gaussian
+    RandomLinear, //monotonically increasing probabilty of sampling (triangular distribution with hinge on the low point)
+    RandomSquare //proportional to square of value (parabolic distribution)
 }

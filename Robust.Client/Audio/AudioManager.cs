@@ -140,6 +140,11 @@ internal sealed partial class AudioManager : IAudioInternal
         }
     }
 
+    internal void LogError(string message)
+    {
+        OpenALSawmill.Error(message);
+    }
+
     /// <summary>
     /// Like _checkAlError but allows custom data to be passed in as relevant.
     /// </summary>

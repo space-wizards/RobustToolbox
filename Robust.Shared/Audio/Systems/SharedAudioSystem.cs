@@ -37,7 +37,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
     [Dependency] protected readonly MetaDataSystem MetadataSys = default!;
     [Dependency] protected readonly SharedTransformSystem XformSystem = default!;
 
-    private const float AudioDespawnBuffer = 1f;
+    public const float AudioDespawnBuffer = 1f;
 
     /// <summary>
     /// Default max range at which the sound can be heard.

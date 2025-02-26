@@ -208,6 +208,12 @@ public abstract class BaseAudioSource : IAudioSource
         }
         set
         {
+            if (float.IsNaN(value))
+            {
+                Master.LogError($"Tried to set NaN gain, setting audio source to 0f: {Environment.StackTrace}");
+                value = 0f;
+            }
+
             _checkDisposed();
             var priorOcclusion = 1f;
             if (!IsEfxSupported)

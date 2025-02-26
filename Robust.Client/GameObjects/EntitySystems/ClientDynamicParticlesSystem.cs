@@ -100,10 +100,8 @@ public sealed class ClientDynamicParticlesSystem : SharedDynamicParticlesSystem
         switch (type) {
             case ParticlePropertyType.HighValue:
                 return () => high;
-            case ParticlePropertyType.RandomUniform:
-                return () => new Vector2(random.NextFloat(low.X, high.X), random.NextFloat(low.Y, high.Y));
             default:
-                throw new NotImplementedException();
+                return () => new Vector2(GetGeneratorFloat(low.X, high.X, type)(), GetGeneratorFloat(low.Y, high.Y, type)());
         }
     }
 
@@ -111,10 +109,8 @@ public sealed class ClientDynamicParticlesSystem : SharedDynamicParticlesSystem
         switch (type) {
             case ParticlePropertyType.HighValue:
                 return () => high;
-            case ParticlePropertyType.RandomUniform:
-                return () => new Vector3(random.NextFloat(low.X, high.X), random.NextFloat(low.Y, high.Y), random.NextFloat(low.Z, high.Z));
             default:
-                throw new NotImplementedException();
+                return () => new Vector3(GetGeneratorFloat(low.X, high.X, type)(), GetGeneratorFloat(low.Y, high.Y, type)(), GetGeneratorFloat(low.Z, high.Z, type)());
         }
     }
 }

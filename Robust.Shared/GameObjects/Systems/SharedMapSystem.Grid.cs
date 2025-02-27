@@ -309,6 +309,7 @@ public abstract partial class SharedMapSystem
         ChunkDatum data)
     {
         var counter = 0;
+        var gridEnt = new Entity<MapGridComponent>(uid, component);
 
         if (data.IsDeleted())
         {
@@ -326,10 +327,12 @@ public abstract partial class SharedMapSystem
 
                     var gridIndices = deletedChunk.ChunkTileToGridTile((x, y));
                     var newTileRef = new TileRef(uid, gridIndices, Tile.Empty);
-                    _mapInternal.RaiseOnTileChanged(newTileRef, oldTile, index);
+                    _mapInternal.RaiseOnTileChanged(gridEnt, newTileRef, oldTile, index);
                 }
             }
 
+            deletedChunk.CachedBounds = Box2i.Empty;
+            deletedChunk.SuppressCollisionRegeneration = false;
             return;
         }
 
@@ -350,9 +353,11 @@ public abstract partial class SharedMapSystem
 
                 var gridIndices = chunk.ChunkTileToGridTile((x, y));
                 var newTileRef = new TileRef(uid, gridIndices, tile);
-                _mapInternal.RaiseOnTileChanged(newTileRef, oldTile, index);
+                _mapInternal.RaiseOnTileChanged(gridEnt, newTileRef, oldTile, index);
             }
         }
+
+        DebugTools.Assert(chunk.Fixtures.SetEquals(data.Fixtures));
 
         // These should never refer to the same object
         DebugTools.AssertNotEqual(chunk.Fixtures, data.Fixtures);
@@ -1614,7 +1619,7 @@ public abstract partial class SharedMapSystem
         if (!MapManager.SuppressOnTileChanged)
         {
             var newTileRef = new TileRef(uid, gridTile, newTile);
-            _mapInternal.RaiseOnTileChanged(newTileRef, oldTile, mapChunk.Indices);
+            _mapInternal.RaiseOnTileChanged((uid, grid), newTileRef, oldTile, mapChunk.Indices);
         }
 
         if (shapeChanged && !mapChunk.SuppressCollisionRegeneration)

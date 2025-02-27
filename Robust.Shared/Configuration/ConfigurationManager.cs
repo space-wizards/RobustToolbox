@@ -307,7 +307,6 @@ namespace Robust.Shared.Configuration
                 {
                     // Always write if it was present when reading from the config file, otherwise:
                     // Don't write if Archive flag is not set.
-                    // Don't write if the cVar is for <client / server> and it's not us
                     // Don't write if the cVar is the default value.
                     if (!cvar.Value.ConfigModified
                         && !((cvar.Value.Flags & CVar.ARCHIVE) != 0 &&

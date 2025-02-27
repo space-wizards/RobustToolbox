@@ -52,12 +52,13 @@ public sealed class ValidateMemberAnalyzer : DiagnosticAnalyzer
         if (context.Compilation.GetTypeByMetadataName(ValidateMemberType) is not { } validateMemberAttribute)
             return;
 
-        // Get a set containing all the members of the target type and its ancestors
-        var members = targetType.GetBaseTypesAndThis().SelectMany(n => n.GetMembers()).ToImmutableHashSet(SymbolEqualityComparer.Default);
+        // We defer building this set until we need it later, so we don't have to build it for every single method invocation!
+        ImmutableHashSet<ISymbol>? members = null;
 
         // Check each parameter of the method
         foreach (var parameterContext in node.ArgumentList.Arguments)
         {
+
             // Get the symbol for this parameter
             if (context.SemanticModel.GetOperation(parameterContext) is not IArgumentOperation op || op.Parameter is null)
                 continue;
@@ -71,6 +72,9 @@ public sealed class ValidateMemberAnalyzer : DiagnosticAnalyzer
             // We use GetConstantValue to resolve compile-time values - i.e. the result of nameof()
             if (context.SemanticModel.GetConstantValue(parameterContext.Expression).Value is not string fieldName)
                 continue;
+
+            // Get a set containing all the members of the target type and its ancestors
+            members ??= targetType.GetBaseTypesAndThis().SelectMany(n => n.GetMembers()).ToImmutableHashSet(SymbolEqualityComparer.Default);
 
             // Check each member of the target type to see if it matches our passed in value
             var found = false;

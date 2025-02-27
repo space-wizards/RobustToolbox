@@ -273,7 +273,13 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
     /// <param name="markupNode">The node to be inserted; may not be a text node.</param>
     public void InsertAroundMessage(MarkupNode markupNode)
     {
-        ArgumentNullException.ThrowIfNull(markupNode.Name);
+        if (markupNode.Name == null)
+        {
+            throw new ArgumentException(
+                "Argument is supposed to be tag, but was plain text. Cannot wrap message with plain text.",
+                nameof(markupNode)
+            );
+        }
 
         InsertAtIndex(markupNode, 0, _nodes.Count);
     }
@@ -284,7 +290,13 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
     /// <param name="markupNode">The node to be inserted; may not be a text node.</param>
     public void InsertAroundText(MarkupNode markupNode)
     {
-        ArgumentNullException.ThrowIfNull(markupNode.Name);
+        if (markupNode.Name == null)
+        {
+            throw new ArgumentException(
+                "Argument is supposed to be tag, but was plain text. Cannot wrap message with plain text.",
+                nameof(markupNode)
+            );
+        }
 
         var firstIndex = _nodes.FindIndex(x => x.Name == null);
         var lastIndex = _nodes.FindLastIndex(x => x.Name == null);
@@ -300,8 +312,14 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
     /// <param name="matchCase">If true, the string case must match exactly.</param>
     public void InsertAroundString(MarkupNode markupNode, string stringText, bool matchCase = true)
     {
-        ArgumentNullException.ThrowIfNull(markupNode.Name);
-
+        if (markupNode.Name == null)
+        {
+            throw new ArgumentException(
+                "Argument is supposed to be tag, but was plain text. Cannot wrap message with plain text.",
+                nameof(markupNode)
+            );
+        }
+        
         for (int i = 0; i < _nodes.Count; i++)
         {
             var node = _nodes[i];

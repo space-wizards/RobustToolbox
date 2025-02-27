@@ -317,8 +317,9 @@ namespace Robust.Shared.Configuration
                     }
 
                     // If cVar for other assembly then discard
-                    if (((cvar.Value.Flags & CVar.SERVER) == CVar.SERVER && !_isServer)
-                        || ((cvar.Value.Flags & CVar.CLIENT) == CVar.CLIENT && _isServer))
+                    // If it's set for both then we'll just let it through.
+                    if (((cvar.Value.Flags & (CVar.CLIENT | CVar.SERVER)) == CVar.SERVER && !_isServer)
+                        || ((cvar.Value.Flags & (CVar.CLIENT | CVar.SERVER)) == CVar.CLIENT && _isServer))
                     {
                         continue;
                     }

@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added a new `MapLoaderSystem.TryLoadGrid()` override that loads a grid onto a newly created map.
 
 ### Bugfixes
 

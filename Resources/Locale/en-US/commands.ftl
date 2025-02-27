@@ -293,7 +293,7 @@ cmd-lsgrid-desc = Lists grids.
 cmd-lsgrid-help = lsgrid
 
 cmd-addmap-desc = Adds a new empty map to the round. If the mapID already exists, this command does nothing.
-cmd-addmap-help = addmap <mapID> [initialize]
+cmd-addmap-help = addmap <mapID> [pre-init]
 
 cmd-rmmap-desc = Removes a map from the world. You cannot remove nullspace.
 cmd-rmmap-help = rmmap <mapId>

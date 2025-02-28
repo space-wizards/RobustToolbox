@@ -378,7 +378,9 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
             if (i + 2 >= _nodes.Count)
                 break;
 
-            i = _nodes.FindIndex(i + 2, x => x.Name == tagText && !x.Closing);
+            // we add 2 new elements and want to skip 1 element we found previously
+            const int offset = 3;
+            i = _nodes.FindIndex(i + offset, x => x.Name == tagText && !x.Closing);
         }
     }
 
@@ -398,7 +400,10 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
             if (i + 2 >= _nodes.Count)
                 break;
 
-            i = _nodes.FindIndex(i + 2, x => x.Name == tagText && x.Closing);
+            // standing on closing node (which we want to skip)
+            // we add 2 nodes (second one is closing node which we want to skip too)
+            const int offset = 3;
+            i = _nodes.FindIndex(i + offset, x => x.Name == tagText && x.Closing);
         }
     }
 
@@ -410,13 +415,25 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
     /// <param name="tagText">The tag to search for.</param>
     public void InsertInsideTag(MarkupNode markupNode, string tagText)
     {
-        ArgumentNullException.ThrowIfNull(markupNode.Name);
+        if (markupNode.Name == null)
+        {
+            throw new ArgumentException(
+                "Argument is supposed to be tag, but was plain text. " +
+                "Plain text node is not supported for this operation.",
+                nameof(markupNode)
+            );
+        }
 
         var openingNodeCount = _nodes.Count(x => x.Name == tagText && !x.Closing);
         var closingNodeCount = _nodes.Count(x => x.Name == tagText && x.Closing);
 
         if (openingNodeCount != closingNodeCount)
-            throw new Exception("Opening and Closing node count mismatch.");
+        {
+            throw new InvalidOperationException(
+                $"Opening and Closing node count with name '{tagText}' mismatch, FormattedMessage is in " +
+                "invalid state - cannot manipulate use tags nesting api."
+            );
+        }
 
         if (openingNodeCount == 0)
             return;
@@ -452,13 +469,25 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
     /// <param name="tagText">The tag to search for.</param>
     public void InsertOutsideTag(MarkupNode markupNode, string tagText)
     {
-        ArgumentNullException.ThrowIfNull(markupNode.Name);
+        if (markupNode.Name == null)
+        {
+            throw new ArgumentException(
+                "Argument is supposed to be tag, but was plain text. " +
+                "Plain text node is not supported for this operation.",
+                nameof(markupNode)
+            );
+        }
 
         var openingNodeCount = _nodes.Count(x => x.Name == tagText && !x.Closing);
         var closingNodeCount = _nodes.Count(x => x.Name == tagText && x.Closing);
 
         if (openingNodeCount != closingNodeCount)
-            throw new Exception("Opening and Closing node count mismatch.");
+        {
+            throw new InvalidOperationException(
+                $"Opening and Closing node count with name '{tagText}' mismatch, FormattedMessage is in " +
+                "invalid state - cannot manipulate use tags nesting api."
+            );
+        }
 
         if (openingNodeCount == 0)
             return;

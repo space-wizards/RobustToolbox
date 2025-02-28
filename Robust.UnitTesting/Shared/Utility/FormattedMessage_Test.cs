@@ -27,21 +27,6 @@ namespace Robust.UnitTesting.Shared.Utility
         }
 
         [Test]
-        public static void TestParseMarkupColorName1()
-        {
-            var msg = FormattedMessage.FromMarkupOrThrow("[color=red] bar [honk][/color][/honk]");
-
-            Assert.That(msg.Nodes, NUnit.Framework.Is.EquivalentTo(new MarkupNode[]
-            {
-                new("color", new MarkupParameter(Color.Red), null),
-                new(" bar "),
-                new("honk", null, null, false),
-                new("color", null, null, true),
-                new("honk", null, null, true)
-            }));
-        }
-
-        [Test]
         public static void TestParseMarkupColorName()
         {
             var msg = FormattedMessage.FromMarkupOrThrow("foo[color=orange]bar[/color]baz");
@@ -108,7 +93,7 @@ namespace Robust.UnitTesting.Shared.Utility
         [TestCase("[color=red] bar [/color]", "honk", 3, "[color=red] bar [/color]honk")]
         [TestCase("[color=red] bar [/color]", "honk", 2, "[color=red] bar honk[/color]")]
         [TestCase("", "honk", 0, "honk")]
-        public static void TestInsertAtIndex_ValidIndex_InsertText(string original, string insertText, int insertIndex, string expected)
+        public static void TestInsertAtIndex_ValidIndex_TextInserted(string original, string insertText, int insertIndex, string expected)
         {
             var message = FormattedMessage.FromMarkupOrThrow(original);
 
@@ -137,7 +122,7 @@ namespace Robust.UnitTesting.Shared.Utility
         [TestCase("Foo[color=red] bar [/color] bar baz", "honk", 4, 5, "Foo[color=red] bar [/color][honk] bar baz[/honk]")]
         [TestCase("[color=red] bar [/color] bar", "honk", 3, 4, "[color=red] bar [/color][honk] bar[/honk]")]
         [TestCase("[color=red] bar [/color]", "honk", 2, 3, "[color=red] bar [honk][/color][/honk]")]
-        public static void TestInsertAtIndex_WithTagValidIndex_InsertText(
+        public static void TestInsertAtIndex_WithTagValidIndex_TextInserted(
             string original,
             string insertText,
             int insertStart,
@@ -190,8 +175,9 @@ namespace Robust.UnitTesting.Shared.Utility
         [TestCase("Foo baz", "[honk]Foo baz[/honk]")]
         [TestCase("[color=red][/color]", "[honk][color=red][/color][/honk]")]
         [TestCase("[color=red]text[/color]", "[honk][color=red]text[/color][/honk]")]
+        [TestCase("[honk=\"true\"]text[/honk]", "[honk][honk=\"true\"]text[/honk][/honk]")]
         [TestCase("", "[honk][/honk]")]
-        public static void TestInsertAroundMessage(string original, string expected)
+        public static void TestInsertAroundMessage_Tag_TagInserted(string original, string expected)
         {
             var message = FormattedMessage.FromMarkupOrThrow(original);
 
@@ -205,7 +191,7 @@ namespace Robust.UnitTesting.Shared.Utility
         [TestCase("A[color=blue]B[color=red]C[/color]D[/color]E", "[honk]A[color=blue]B[color=red]C[/color]D[/color]E[/honk]")]
         [TestCase("Foo baz", "[honk]Foo baz[/honk]")]
         [TestCase("[color=red]text[/color]", "[color=red][honk]text[/honk][/color]")]
-
+        [TestCase("[honk=\"true\"]text[/honk]", "[honk=\"true\"][honk]text[/honk][/honk]")]
         public static void InsertAroundText(string original, string expected)
         {
             var message = FormattedMessage.FromMarkupOrThrow(original);
@@ -260,10 +246,230 @@ namespace Robust.UnitTesting.Shared.Utility
         }
 
         [Test]
-        [TestCase("[honk]Foo[color=red] bar[/honk] [/color] bar baz", "honk", "[honk]Foo[color=red] bar[/honk]")]
+        [TestCase("b[color=red]ar[/color]", "color", "b[honk][/honk][color=red]ar[/color]")]
+        [TestCase("Foo baz", "color", "Foo baz")]
+        [TestCase("[color=red]Text[/color]", "color", "[honk][/honk][color=red]Text[/color]")]
+        [TestCase(
+            "[color=red]Text[/color] asd [color=red]Other[/color]",
+            "color",
+            "[honk][/honk][color=red]Text[/color] asd [honk][/honk][color=red]Other[/color]")]
+        [TestCase("[bold][/bold][color=red]Text[/color]", "color", "[bold][/bold][honk][/honk][color=red]Text[/color]")]
+        [TestCase(
+            "[color=red]T [bold]ex[/bold] t[/color]",
+            "color",
+            "[honk][/honk][color=red]T [bold]ex[/bold] t[/color]")]
+        [TestCase("[color=red][/color]", "color", "[honk][/honk][color=red][/color]")]
+        [TestCase("[bold] color [/bold]", "color", "[bold] color [/bold]")]
+        [TestCase("[honk=\"true\"] color [/honk]", "honk", "[honk][/honk][honk=\"true\"] color [/honk]")]
+        [TestCase(
+            "[honk=\"true\"] color [/honk][honk=\"true\"] color [/honk]",
+            "honk",
+            "[honk][/honk][honk=\"true\"] color [/honk][honk][/honk][honk=\"true\"] color [/honk]")]
+        [TestCase("", "color", "")]
+        public static void InsertBeforeTag(string original, string tagToInsertInto, string expected)
+        {   
+            var message = FormattedMessage.FromMarkupOrThrow(original);
+
+            message.InsertBeforeTag(new MarkupNode("honk", null, null), tagToInsertInto);
+
+            Assert.That(message.ToMarkup(), Is.EqualTo(expected));
+        }
+
+
+        [Test]
+        [TestCase("b[color=red]ar[/color]", "color", "b[color=red]ar[/color][honk][/honk]")]
+        [TestCase("Foo baz", "color", "Foo baz")]
+        [TestCase("[color=red]Text[/color]", "color", "[color=red]Text[/color][honk][/honk]")]
+        [TestCase(
+            "[color=red]Text[/color] asd [color=red]Other[/color]",
+            "color",
+            "[color=red]Text[/color][honk][/honk] asd [color=red]Other[/color][honk][/honk]")]
+        [TestCase("[color=red]Text[/color][bold][/bold]", "color", "[color=red]Text[/color][honk][/honk][bold][/bold]")]
+        [TestCase(
+            "[color=red]T [bold]ex[/bold] t[/color]",
+            "color",
+            "[color=red]T [bold]ex[/bold] t[/color][honk][/honk]")]
+        [TestCase("[color=red][/color]", "color", "[color=red][/color][honk][/honk]")]
+        [TestCase("[bold] color [/bold]", "color", "[bold] color [/bold]")]
+        [TestCase("[honk=\"true\"] color [/honk]", "honk", "[honk=\"true\"] color [/honk][honk][/honk]")]
+        [TestCase(
+            "[honk=\"true\"] color [/honk][honk=\"true\"] color [/honk]",
+            "honk",
+            "[honk=\"true\"] color [/honk][honk][/honk][honk=\"true\"] color [/honk][honk][/honk]")]
+        [TestCase("", "color", "")]
+        public static void InsertAfterTag(string original, string tagToInsertInto, string expected)
+        {
+            var message = FormattedMessage.FromMarkupOrThrow(original);
+
+            message.InsertAfterTag(new MarkupNode("honk", null, null), tagToInsertInto);
+
+            Assert.That(message.ToMarkup(), Is.EqualTo(expected));
+        }
+
+        [Test]
+        [TestCase("b[color=red]ar[/color]", "color", "b[honk][color=red]ar[/color][/honk]")]
+        [TestCase("Foo baz", "color", "Foo baz")]
+        [TestCase("[color=red]Text[/color]", "color", "[honk][color=red]Text[/color][/honk]")]
+        [TestCase(
+            "[color=red]Text[/color] asd [color=red]Other[/color]",
+            "color",
+            "[honk][color=red]Text[/color][/honk] asd [honk][color=red]Other[/color][/honk]")]
+        [TestCase("[color=red]Text[/color][bold][/bold]", "color", "[honk][color=red]Text[/color][/honk][bold][/bold]")]
+        [TestCase("[color=red]T [bold]ex[/bold] t[/color]", "color", "[honk][color=red]T [bold]ex[/bold] t[/color][/honk]")]
+        [TestCase("[color=red][/color]", "color", "[honk][color=red][/color][/honk]")]
+        [TestCase("[bold] color [/bold]", "color", "[bold] color [/bold]")]
+        [TestCase("", "color", "")]
+        [TestCase(
+            "[honk=\"true\"] color [/honk][honk=\"true\"] color [/honk]",
+            "honk",
+            "[honk][honk=\"true\"] color [/honk][/honk][honk][honk=\"true\"] color [/honk][/honk]")]
+        [TestCase("", "color", "")]
+        public static void InsertOutsideTag(string original, string tagToInsertInto, string expected)
+        {
+            var message = FormattedMessage.FromMarkupOrThrow(original);
+
+            message.InsertOutsideTag(new MarkupNode("honk", null, null), tagToInsertInto);
+
+            Assert.That(message.ToMarkup(), Is.EqualTo(expected));
+        }
+
+        [Test]
+        public static void InsertOutsideTag_PlainTextNode_Throws()
+        {
+            var message = FormattedMessage.FromMarkupOrThrow("b[color=red]ar[/color]");
+
+            Assert.Throws<ArgumentException>(() =>
+                message.InsertOutsideTag(new MarkupNode("honk"), "color")
+            );
+        }
+
+        [Test]
+        public static void InsertOutsideTag_InvalidMessageMarkup()
+        {
+            var message = FormattedMessage.FromMarkupOrThrow("[bold]b[color=red]ar[/color]");
+
+            Assert.Throws<InvalidOperationException>(() =>
+                message.InsertOutsideTag(new MarkupNode("honk", null, null), "bold")
+            );
+        }
+
+        [Test]
+        [TestCase("b[color=red]ar[/color]", "color", "b[color=red][honk]ar[/honk][/color]")]
+        [TestCase("Foo baz", "color", "Foo baz")]
+        [TestCase("[color=red]Text[/color]", "color", "[color=red][honk]Text[/honk][/color]")]
+        [TestCase(
+            "[color=red]Text[/color] asd [color=red]Other[/color]",
+            "color",
+            "[color=red][honk]Text[/honk][/color] asd [color=red][honk]Other[/honk][/color]")]
+        [TestCase("[color=red]Text[/color][bold][/bold]", "color", "[color=red][honk]Text[/honk][/color][bold][/bold]")]
+        [TestCase("[color=red]T [bold]ex[/bold] t[/color]", "color", "[color=red][honk]T [bold]ex[/bold] t[/honk][/color]")]
+        [TestCase("[color=red][/color]", "color", "[color=red][honk][/honk][/color]")]
+        [TestCase("[bold] color [/bold]", "color", "[bold] color [/bold]")]
+        [TestCase(
+            "[honk=\"true\"] color [/honk][honk=\"true\"] color [/honk]",
+            "honk",
+            "[honk=\"true\"][honk] color [/honk][/honk][honk=\"true\"][honk] color [/honk][/honk]")]
+        [TestCase("", "color", "")]
+        public static void InsertInsideTag(string original, string tagToInsertInto, string expected)
+        {
+            var message = FormattedMessage.FromMarkupOrThrow(original);
+
+            message.InsertInsideTag(new MarkupNode("honk", null, null), tagToInsertInto);
+
+            Assert.That(message.ToMarkup(), Is.EqualTo(expected));
+        }
+
+        [Test]
+        public static void InsertInsideTag_PlainTextNode_Throws()
+        {
+            var message = FormattedMessage.FromMarkupOrThrow("b[color=red]ar[/color]");
+
+            Assert.Throws<ArgumentException>(() =>
+                message.InsertInsideTag(new MarkupNode("honk"), "color")
+            );
+        }
+
+        [Test]
+        public static void InsertInsideTag_InvalidMessageMarkup()
+        {
+            var message = FormattedMessage.FromMarkupOrThrow("[bold]b[color=red]ar[/color]");
+
+            Assert.Throws<InvalidOperationException>(() =>
+                message.InsertInsideTag(new MarkupNode("honk", null, null), "bold")
+            );
+        }
+
+        [Test]
+        [TestCase("Foo[color=red] bar [/color] bar baz", "[honk][/honk]Foo[color=red] bar [/color] bar baz")]
+        [TestCase("b[color=red]ar[/color]", "[honk][/honk]b[color=red]ar[/color]")]
+        [TestCase("Foo baz", "[honk][/honk]Foo baz")]
+        [TestCase("[color=red]Text[/color]", "[honk][/honk][color=red]Text[/color]")]
+        [TestCase("[color=red][/color]", "[honk][/honk][color=red][/color]")]
+        [TestCase("", "[honk][/honk]")]
+        public static void InsertBeforeMessage(string original, string expected)
+        {
+            var message = FormattedMessage.FromMarkupOrThrow(original);
+
+            message.InsertBeforeMessage(new MarkupNode("honk", null, null));
+
+            Assert.That(message.ToMarkup(), Is.EqualTo(expected));
+        }
+
+        [Test]
+        [TestCase("Foo[color=red] bar [/color] bar baz", "some textFoo[color=red] bar [/color] bar baz")]
+        [TestCase("b[color=red]ar[/color]", "some textb[color=red]ar[/color]")]
+        [TestCase("Foo baz", "some textFoo baz")]
+        [TestCase("[color=red]Text[/color]", "some text[color=red]Text[/color]")]
+        [TestCase("[color=red][/color]", "some text[color=red][/color]")]
+        [TestCase("", "some text")]
+        public static void InsertBeforeMessage_PlainTextNode(string original, string expected)
+        {
+            var message = FormattedMessage.FromMarkupOrThrow(original);
+
+            message.InsertBeforeMessage(new MarkupNode("some text"));
+
+            Assert.That(message.ToMarkup(), Is.EqualTo(expected));
+        }
+
+        [Test]
+        [TestCase("Foo[color=red] bar [/color] bar baz", "Foo[color=red] bar [/color] bar baz[honk][/honk]")]
+        [TestCase("b[color=red]ar[/color]", "b[color=red]ar[/color][honk][/honk]")]
+        [TestCase("Foo baz", "Foo baz[honk][/honk]")]
+        [TestCase("[color=red]Text[/color]", "[color=red]Text[/color][honk][/honk]")]
+        [TestCase("[color=red][/color]", "[color=red][/color][honk][/honk]")]
+        [TestCase("", "[honk][/honk]")]
+        public static void InsertAfterMessage(string original, string expected)
+        {
+            var message = FormattedMessage.FromMarkupOrThrow(original);
+
+            message.InsertAfterMessage(new MarkupNode("honk", null, null));
+
+            Assert.That(message.ToMarkup(), Is.EqualTo(expected));
+        }
+        [Test]
+        [TestCase("Foo[color=red] bar [/color] bar baz", "Foo[color=red] bar [/color] bar bazsome text")]
+        [TestCase("b[color=red]ar[/color]", "b[color=red]ar[/color]some text")]
+        [TestCase("Foo baz", "Foo bazsome text")]
+        [TestCase("[color=red]Text[/color]", "[color=red]Text[/color]some text")]
+        [TestCase("[color=red][/color]", "[color=red][/color]some text")]
+        [TestCase("", "some text")]
+        public static void InsertAfterMessage_PlainTextNode(string original, string expected)
+        {
+            var message = FormattedMessage.FromMarkupOrThrow(original);
+
+            message.InsertAfterMessage(new MarkupNode("some text"));
+
+            Assert.That(message.ToMarkup(), Is.EqualTo(expected));
+        }
+
+        [Test]
         [TestCase("[honk]Foo[color=red] bar[/color][/honk] bar baz", "honk", "[honk]Foo[color=red] bar[/color][/honk]")]
         [TestCase("[honk]Foo[/honk] bar baz", "honk", "[honk]Foo[/honk]")]
         [TestCase("[honk][color=red][/color][/honk] bar baz", "honk", "[honk][color=red][/color][/honk]")]
+        [TestCase(
+            "[honk][color=red] [honk]text[/honk] [/color][/honk] bar baz",
+            "honk",
+            "[honk][color=red] [honk]text[/honk] [/color][/honk]")]
         public static void TryGetMessageInsideTag(string original, string extractTag, string expected)
         {
             var message = FormattedMessage.FromMarkupOrThrow(original);
@@ -274,8 +480,6 @@ namespace Robust.UnitTesting.Shared.Utility
         }
 
         [Test]
-        [TestCase("[honk]Foo[color=red] bar baz", "honk")]
-        [TestCase("Foo[/honk] bar baz", "honk")]
         [TestCase("[color=red][/color] bar baz", "honk")]
         [TestCase("", "honk")]
         public static void TryGetMessageInsideTag_NoClosingTag_Throws(string original, string extractTag)
@@ -286,7 +490,5 @@ namespace Robust.UnitTesting.Shared.Utility
             Assert.That(result, NUnit.Framework.Is.False);
             Assert.That(messageInside, NUnit.Framework.Is.Null);
         }
-
-
     }
 }

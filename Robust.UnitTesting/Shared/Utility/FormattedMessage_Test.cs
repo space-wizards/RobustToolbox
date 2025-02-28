@@ -275,6 +275,35 @@ namespace Robust.UnitTesting.Shared.Utility
             Assert.That(message.ToMarkup(), Is.EqualTo(expected));
         }
 
+        [Test]
+        [TestCase("b[color=red]ar[/color]", "color", "bhonk[color=red]ar[/color]")]
+        [TestCase("Foo baz", "color", "Foo baz")]
+        [TestCase("[color=red]Text[/color]", "color", "honk[color=red]Text[/color]")]
+        [TestCase(
+            "[color=red]Text[/color] asd [color=red]Other[/color]",
+            "color",
+            "honk[color=red]Text[/color] asd honk[color=red]Other[/color]")]
+        [TestCase("[bold][/bold][color=red]Text[/color]", "color", "[bold][/bold]honk[color=red]Text[/color]")]
+        [TestCase(
+            "[color=red]T [bold]ex[/bold] t[/color]",
+            "color",
+            "honk[color=red]T [bold]ex[/bold] t[/color]")]
+        [TestCase("[color=red][/color]", "color", "honk[color=red][/color]")]
+        [TestCase("[bold] color [/bold]", "color", "[bold] color [/bold]")]
+        [TestCase("[honk=\"true\"] color [/honk]", "honk", "honk[honk=\"true\"] color [/honk]")]
+        [TestCase(
+            "[honk=\"true\"] color [/honk][honk=\"true\"] color [/honk]",
+            "honk",
+            "honk[honk=\"true\"] color [/honk]honk[honk=\"true\"] color [/honk]")]
+        [TestCase("", "color", "")]
+        public static void InsertBeforeTag_PlainText_TextInserted(string original, string tagToInsertInto, string expected)
+        {
+            var message = FormattedMessage.FromMarkupOrThrow(original);
+
+            message.InsertBeforeTag(new MarkupNode("honk"), tagToInsertInto);
+
+            Assert.That(message.ToMarkup(), Is.EqualTo(expected));
+        }
 
         [Test]
         [TestCase("b[color=red]ar[/color]", "color", "b[color=red]ar[/color][honk][/honk]")]
@@ -474,7 +503,7 @@ namespace Robust.UnitTesting.Shared.Utility
         {
             var message = FormattedMessage.FromMarkupOrThrow(original);
 
-            var result = message.TryGetMessageInsideTag(out var messageInside, extractTag);
+            var result = message.TryGetMessageInsideTag(extractTag, out var messageInside);
             Assert.That(result, NUnit.Framework.Is.True);
             Assert.That(messageInside!.ToMarkup(), NUnit.Framework.Is.EqualTo(expected));
         }
@@ -486,7 +515,7 @@ namespace Robust.UnitTesting.Shared.Utility
         {
             var message = FormattedMessage.FromMarkupOrThrow(original);
 
-            var result = message.TryGetMessageInsideTag(out var messageInside, extractTag);
+            var result = message.TryGetMessageInsideTag(extractTag, out var messageInside);
             Assert.That(result, NUnit.Framework.Is.False);
             Assert.That(messageInside, NUnit.Framework.Is.Null);
         }

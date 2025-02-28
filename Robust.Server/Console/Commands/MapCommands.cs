@@ -207,8 +207,13 @@ namespace Robust.Server.Console.Commands
             }
 
             shell.WriteLine(Loc.GetString("cmd-savemap-attempt", ("mapId", mapId), ("path", args[1])));
-            _system.GetEntitySystem<MapLoaderSystem>().TrySaveMap(mapId, new ResPath(args[1]));
-            shell.WriteLine(Loc.GetString("cmd-savemap-success"));
+            bool saveSuccess = _system.GetEntitySystem<MapLoaderSystem>().TrySaveMap(mapId, new ResPath(args[1]));
+            if(saveSuccess){
+		    shell.WriteLine(Loc.GetString("cmd-savemap-success"));
+	    }
+	    else{
+		    shell.WriteError(Loc.GetString("cmd-savemap-error"));
+	    }
         }
     }
 

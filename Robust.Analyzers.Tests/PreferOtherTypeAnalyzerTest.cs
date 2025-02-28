@@ -69,6 +69,8 @@ public sealed class PreferOtherTypeAnalyzerTest
                 public ProtoId<EntityPrototype> BadProperty => new();
 
                 public ProtoId<EntityPrototype>[] BadArray = [];
+
+                public ProtoId<EntityPrototype>? BadNullable;
             }
             """;
 
@@ -86,7 +88,9 @@ public sealed class PreferOtherTypeAnalyzerTest
             // /0/Test0.cs(31,12): error RA0031: Use the specific type EntProtoId instead of ProtoId when the type argument is EntityPrototype
             VerifyCS.Diagnostic().WithSpan(31, 12, 31, 36).WithArguments("EntProtoId", "ProtoId", "EntityPrototype"),
             // /0/Test0.cs(33,12): error RA0031: Use the specific type EntProtoId instead of ProtoId when the type argument is EntityPrototype
-            VerifyCS.Diagnostic().WithSpan(33, 12, 33, 36).WithArguments("EntProtoId", "ProtoId", "EntityPrototype")
+            VerifyCS.Diagnostic().WithSpan(33, 12, 33, 36).WithArguments("EntProtoId", "ProtoId", "EntityPrototype"),
+            // /0/Test0.cs(35,12): error RA0031: Use the specific type EntProtoId instead of ProtoId when the type argument is EntityPrototype
+            VerifyCS.Diagnostic().WithSpan(35, 12, 35, 36).WithArguments("EntProtoId", "ProtoId", "EntityPrototype")
         );
     }
 }

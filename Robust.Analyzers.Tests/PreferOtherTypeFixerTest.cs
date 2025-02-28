@@ -61,6 +61,7 @@ public sealed class PreferOtherTypeFixerTest
                 public ProtoId<EntityPrototype> FooReturn() => new();
                 public ProtoId<EntityPrototype> FooProperty => new();
                 public ProtoId<EntityPrototype>[] FooArray = [];
+                public ProtoId<EntityPrototype>? FooNullable;
             }
             """;
 
@@ -84,6 +85,7 @@ public sealed class PreferOtherTypeFixerTest
                 public EntProtoId FooReturn() => new();
                 public EntProtoId FooProperty => new();
                 public EntProtoId[] FooArray = [];
+                public EntProtoId? FooNullable;
             }
             """;
 
@@ -103,7 +105,9 @@ public sealed class PreferOtherTypeFixerTest
             // /0/Test0.cs(18,12): error RA0031: Use the specific type EntProtoId instead of ProtoId when the type argument is EntityPrototype
             VerifyCS.Diagnostic().WithSpan(18, 12, 18, 36).WithArguments("EntProtoId", "ProtoId", "EntityPrototype"),
             // /0/Test0.cs(19,12): error RA0031: Use the specific type EntProtoId instead of ProtoId when the type argument is EntityPrototype
-            VerifyCS.Diagnostic().WithSpan(19, 12, 19, 36).WithArguments("EntProtoId", "ProtoId", "EntityPrototype")
+            VerifyCS.Diagnostic().WithSpan(19, 12, 19, 36).WithArguments("EntProtoId", "ProtoId", "EntityPrototype"),
+            // /0/Test0.cs(20,12): error RA0031: Use the specific type EntProtoId instead of ProtoId when the type argument is EntityPrototype
+            VerifyCS.Diagnostic().WithSpan(20, 12, 20, 36).WithArguments("EntProtoId", "ProtoId", "EntityPrototype")
         );
     }
 }

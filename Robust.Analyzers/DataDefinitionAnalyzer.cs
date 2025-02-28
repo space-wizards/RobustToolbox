@@ -51,7 +51,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         "Make sure to remove the readonly modifier."
     );
 
-    private static readonly DiagnosticDescriptor DataFieldPropertyWritableRule = new(
+    public static readonly DiagnosticDescriptor DataFieldPropertyWritableRule = new(
         Diagnostics.IdDataFieldPropertyWritable,
         "Data field property must have a setter",
         "Data field property {0} in data definition {1} does not have a setter",
@@ -186,7 +186,8 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
 
         if (IsReadOnlyDataField(type, propertySymbol))
         {
-            context.ReportDiagnostic(Diagnostic.Create(DataFieldPropertyWritableRule, context.Node.GetLocation(), propertySymbol.Name, type.Name));
+            var location = property.AccessorList != null ? property.AccessorList.GetLocation() : property.GetLocation();
+            context.ReportDiagnostic(Diagnostic.Create(DataFieldPropertyWritableRule, location, propertySymbol.Name, type.Name));
         }
 
         if (HasRedundantTag(propertySymbol))

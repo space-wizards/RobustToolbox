@@ -118,4 +118,35 @@ public sealed class DataDefinitionAnalyzerTest
             VerifyCS.Diagnostic(DataDefinitionAnalyzer.DataFieldWritableRule).WithSpan(15, 12, 15, 20).WithArguments("Bad", "Foo")
         );
     }
+
+    [Test]
+    public async Task ReadOnlyPropertyTest()
+    {
+        const string code = """
+            using System;
+            using Robust.Shared.Serialization.Manager.Attributes;
+
+            namespace Robust.Shared.Serialization.Manager.Attributes
+            {
+                public class DataFieldBaseAttribute : Attribute;
+                public class DataFieldAttribute : DataFieldBaseAttribute;
+                public sealed class DataDefinitionAttribute : Attribute;
+            }
+
+            [DataDefinition]
+            public sealed partial class Foo
+            {
+                [DataField]
+                public int Bad { get; }
+
+                [DataField]
+                public int Good { get; private set; }
+            }
+            """;
+
+        await Verifier(code,
+            // /0/Test0.cs(15,20): error RA0020: Data field property Bad in data definition Foo does not have a setter
+            VerifyCS.Diagnostic(DataDefinitionAnalyzer.DataFieldPropertyWritableRule).WithSpan(15, 20, 15, 28).WithArguments("Bad", "Foo")
+        );
+    }
 }

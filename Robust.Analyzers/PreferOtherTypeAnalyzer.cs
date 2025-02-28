@@ -31,43 +31,19 @@ public sealed class PreferOtherTypeAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.ReportDiagnostics | GeneratedCodeAnalysisFlags.Analyze);
         context.EnableConcurrentExecution();
-        context.RegisterSyntaxNodeAction(AnalyzeField, SyntaxKind.VariableDeclaration);
-        context.RegisterSyntaxNodeAction(AnalyzeField, SyntaxKind.MethodDeclaration);
-        context.RegisterSyntaxNodeAction(AnalyzeField, SyntaxKind.PropertyDeclaration);
+        context.RegisterSyntaxNodeAction(AnalyzeField, SyntaxKind.GenericName);
     }
 
     private void AnalyzeField(SyntaxNodeAnalysisContext context)
     {
-        switch (context.Node)
-        {
-            case VariableDeclarationSyntax variableDeclaration:
-                CheckType(variableDeclaration.Type, context);
-                break;
-            case MethodDeclarationSyntax methodDeclaration:
-                CheckType(methodDeclaration.ReturnType, context);
-                break;
-            case PropertyDeclarationSyntax propertyDeclaration:
-                CheckType(propertyDeclaration.Type, context);
-                break;
-        }
+        if (context.Node is not GenericNameSyntax genericName)
+            return;
+        CheckType(genericName, context);
     }
 
     private void CheckType(TypeSyntax syntax, SyntaxNodeAnalysisContext context)
     {
         var preferOtherTypeAttribute = context.Compilation.GetTypeByMetadataName(AttributeType);
-
-        // Check for nested generics
-        if (syntax is GenericNameSyntax nestedGeneric)
-        {
-            foreach (var nestedTypeSymbol in nestedGeneric.TypeArgumentList.Arguments)
-            {
-                CheckType(nestedTypeSymbol, context);
-            }
-        }
-        if (syntax is ArrayTypeSyntax arraySyntax)
-        {
-            CheckType(arraySyntax.ElementType, context);
-        }
 
         // Get the type of the generic being used
         if (syntax is not GenericNameSyntax genericName)

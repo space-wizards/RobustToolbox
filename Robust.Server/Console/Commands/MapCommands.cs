@@ -44,12 +44,14 @@ namespace Robust.Server.Console.Commands
             }
 
             bool saveSuccess = _ent.System<MapLoaderSystem>().TrySaveGrid(uid, new ResPath(args[1]));
-	    if(saveSuccess){
-		    shell.WriteLine("Save successful. Look in the user data directory.");
-	    }
-	    else{
-		    shell.WriteError("Save unsuccessful!");
-	    }
+            if(saveSuccess)
+            {
+                    shell.WriteLine("Save successful. Look in the user data directory.");
+            }
+            else
+            {
+                    shell.WriteError("Save unsuccessful!");
+            }
         }
 
         public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
@@ -213,12 +215,14 @@ namespace Robust.Server.Console.Commands
 
             shell.WriteLine(Loc.GetString("cmd-savemap-attempt", ("mapId", mapId), ("path", args[1])));
             bool saveSuccess = _system.GetEntitySystem<MapLoaderSystem>().TrySaveMap(mapId, new ResPath(args[1]));
-            if(saveSuccess){
-		    shell.WriteLine(Loc.GetString("cmd-savemap-success"));
-	    }
-	    else{
-		    shell.WriteError(Loc.GetString("cmd-savemap-error"));
-	    }
+            if(saveSuccess)
+            {
+                    shell.WriteLine(Loc.GetString("cmd-savemap-success"));
+            }
+            else
+            {
+                    shell.WriteError(Loc.GetString("cmd-savemap-error"));
+            }
         }
     }
 

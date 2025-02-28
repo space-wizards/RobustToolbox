@@ -17,8 +17,7 @@ namespace Robust.Shared.Prototypes;
 /// </remarks>
 /// <remarks><seealso cref="ProtoId{T}"/> for a wrapper of other prototype kinds.</remarks>
 [Serializable, NetSerializable]
-public readonly record struct EntProtoId(string Id) : IEquatable<string>, IComparable<EntProtoId>, IAsType<string>,
-    IAsType<ProtoId<EntityPrototype>>
+public readonly record struct EntProtoId(string Id) : IEquatable<string>, IComparable<EntProtoId>, IAsType<string>
 {
     public static implicit operator string(EntProtoId protoId)
     {
@@ -51,10 +50,6 @@ public readonly record struct EntProtoId(string Id) : IEquatable<string>, ICompa
     }
 
     string IAsType<string>.AsType() => Id;
-
-    #pragma warning disable RA0031 // Use the specific type
-    ProtoId<EntityPrototype> IAsType<ProtoId<EntityPrototype>>.AsType() => new(Id);
-    #pragma warning restore RA0031 // Use the specific type
 
     public override string ToString() => Id ?? string.Empty;
 }

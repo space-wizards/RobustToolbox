@@ -43,8 +43,13 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            _ent.System<MapLoaderSystem>().TrySaveGrid(uid, new ResPath(args[1]));
-            shell.WriteLine("Save successful. Look in the user data directory.");
+            bool saveSuccess = _ent.System<MapLoaderSystem>().TrySaveGrid(uid, new ResPath(args[1]));
+	    if(saveSuccess){
+		    shell.WriteLine("Save successful. Look in the user data directory.");
+	    }
+	    else{
+		    shell.WriteError("Save unsuccessful!");
+	    }
         }
 
         public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)

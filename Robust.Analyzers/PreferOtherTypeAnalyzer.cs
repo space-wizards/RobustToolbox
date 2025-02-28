@@ -31,10 +31,10 @@ public sealed class PreferOtherTypeAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.ReportDiagnostics | GeneratedCodeAnalysisFlags.Analyze);
         context.EnableConcurrentExecution();
-        context.RegisterSyntaxNodeAction(AnalyzeField, SyntaxKind.GenericName);
+        context.RegisterSyntaxNodeAction(AnalyzeGeneric, SyntaxKind.GenericName);
     }
 
-    private void AnalyzeField(SyntaxNodeAnalysisContext context)
+    private void AnalyzeGeneric(SyntaxNodeAnalysisContext context)
     {
         if (context.Node is not GenericNameSyntax genericName)
             return;

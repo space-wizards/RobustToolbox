@@ -25,7 +25,7 @@ public sealed class EntProtoIdSerializer : ITypeSerializer<EntProtoId, ValueData
         if (prototypes.TryGetKindFrom<EntityPrototype>(out _) && prototypes.HasMapping<EntityPrototype>(node.Value))
         {
             if (!prototypes.TryIndex<EntityPrototype>(node.Value, out _))
-                return new ErrorNode(node, $"{typeof(EntityPrototype)} {node.Value} is abstract!");
+                return new ErrorNode(node, $"{nameof(EntityPrototype)} {node.Value} is abstract!");
 
             return new ValidatedValueNode(node);
         }

@@ -68,37 +68,26 @@ public sealed class ValidateMemberAnalyzer : DiagnosticAnalyzer
             if (!HasAttribute(parameterSymbol, validateMemberAttribute))
                 continue;
 
-            // Get a set containing all the members of the target type and its ancestors
-            members ??= targetType.GetBaseTypesAndThis().SelectMany(n => n.GetMembers()).ToImmutableHashSet(SymbolEqualityComparer.Default);
-
-            if (parameterContext.Expression is CollectionExpressionSyntax collectionExpression)
-            {
-                foreach (var element in collectionExpression.Elements)
-                {
-                    if (element is not ExpressionElementSyntax expressionElement)
-                        continue;
-                    if (context.SemanticModel.GetConstantValue(expressionElement.Expression).Value is not string field)
-                        continue;
-                    if (!CheckField(field, members))
-                    {
-                        context.ReportDiagnostic(Diagnostic.Create(
-                            ValidateMemberDescriptor,
-                            parameterContext.GetLocation(),
-                            field,
-                            targetType.Name
-                    ));
-                    }
-                }
-                return;
-            }
-
             // Find the value passed for this parameter.
             // We use GetConstantValue to resolve compile-time values - i.e. the result of nameof()
             if (context.SemanticModel.GetConstantValue(parameterContext.Expression).Value is not string fieldName)
                 continue;
 
+            // Get a set containing all the members of the target type and its ancestors
+            members ??= targetType.GetBaseTypesAndThis().SelectMany(n => n.GetMembers()).ToImmutableHashSet(SymbolEqualityComparer.Default);
+
+            // Check each member of the target type to see if it matches our passed in value
+            var found = false;
+            foreach (var member in members)
+            {
+                if (member.Name == fieldName)
+                {
+                    found = true;
+                    continue;
+                }
+            }
             // If we didn't find it, report the violation
-            if (!CheckField(fieldName, members))
+            if (!found)
                 context.ReportDiagnostic(Diagnostic.Create(
                     ValidateMemberDescriptor,
                     parameterContext.GetLocation(),
@@ -106,19 +95,6 @@ public sealed class ValidateMemberAnalyzer : DiagnosticAnalyzer
                     targetType.Name
                     ));
         }
-    }
-
-    private bool CheckField(string fieldName, ImmutableHashSet<ISymbol> members)
-    {
-        // Check each member of the target type to see if it matches our passed in value
-        foreach (var member in members)
-        {
-            if (member.Name == fieldName)
-            {
-                return true;
-            }
-        }
-        return false;
     }
 
     private bool HasAttribute(ISymbol type, INamedTypeSymbol attributeType)

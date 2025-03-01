@@ -193,32 +193,25 @@ public sealed class TestEnumerableCommand : ToolshedCommand
     public IEnumerable<int> Impl() => _arr.Select(x => 2 * x);
 }
 
-[Prototype]
-public sealed class CommandTestPrototype : IPrototype
-{
-    [IdDataField]
-    public string ID { get; private set;} = default!;
-}
-
 [ToolshedCommand]
 public sealed class TestNestedArrayCommand : ToolshedCommand
 {
     [CommandImplementation]
-    public ProtoId<CommandTestPrototype>[] Impl() => [];
+    public ProtoId<EntityCategoryPrototype>[] Impl() => [];
 }
 
 [ToolshedCommand]
 public sealed class TestNestedListCommand : ToolshedCommand
 {
     [CommandImplementation]
-    public List<ProtoId<CommandTestPrototype>> Impl() => new();
+    public List<ProtoId<EntityCategoryPrototype>> Impl() => new();
 }
 
 [ToolshedCommand]
 public sealed class TestNestedEnumerableCommand : ToolshedCommand
 {
-    private static ProtoId<CommandTestPrototype>[] _arr = [];
+    private static ProtoId<EntityCategoryPrototype>[] _arr = [];
 
     [CommandImplementation]
-    public IEnumerable<ProtoId<CommandTestPrototype>> Impl() => _arr.OrderByDescending(x => x.Id);
+    public IEnumerable<ProtoId<EntityCategoryPrototype>> Impl() => _arr.OrderByDescending(x => x.Id);
 }

@@ -383,11 +383,11 @@ public sealed class ToolshedTests : ToolshedTest
             AssertResult("testenumerable testenumerableinfer 1", typeof(int));
 
             // Repeat but with nested types. i.e. extracting T when piping ProtoId<T> -> IEnumerable<ProtoId<T>>
-            AssertResult("testnestedarray testnestedarrayinfer", typeof(CommandTestPrototype));
-            AssertResult("testnestedlist testnestedlistinfer", typeof(CommandTestPrototype));
-            AssertResult("testnestedarray testnestedenumerableinfer", typeof(CommandTestPrototype));
-            AssertResult("testnestedlist testnestedenumerableinfer", typeof(CommandTestPrototype));
-            AssertResult("testnestedenumerable testnestedenumerableinfer", typeof(CommandTestPrototype));
+            AssertResult("testnestedarray testnestedarrayinfer", typeof(EntityCategoryPrototype));
+            AssertResult("testnestedlist testnestedlistinfer", typeof(EntityCategoryPrototype));
+            AssertResult("testnestedarray testnestedenumerableinfer", typeof(EntityCategoryPrototype));
+            AssertResult("testnestedlist testnestedenumerableinfer", typeof(EntityCategoryPrototype));
+            AssertResult("testnestedenumerable testnestedenumerableinfer", typeof(EntityCategoryPrototype));
 
             // The map command used to work when the piped type was passed as an IEnumerable<T> directly, but would fail
             // when given a List<T> or something else that implemented the interface.

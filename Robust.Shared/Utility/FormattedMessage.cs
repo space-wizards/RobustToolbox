@@ -240,7 +240,7 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
 
     /// <summary>
     /// Helper method that inserts a node at a specific index.
-    /// Unless a node is text, an end index must be specified for the closing node.
+    /// Unless a node is text, an end index must be specified where closing part of node should be placed.
     /// </summary>
     /// <param name="markupNode">The node to be inserted.</param>
     /// <param name="startIndex">The index of the opening node.</param>
@@ -248,7 +248,7 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
     public void InsertAtIndex(MarkupNode markupNode, int startIndex, int? endIndex = null)
     {
         if (startIndex > _nodes.Count)
-            throw new ArgumentOutOfRangeException("startIndex", "startIndex must be less than or equal to the number of nodes.");
+            throw new ArgumentOutOfRangeException(nameof(startIndex), "startIndex must be less than or equal to the number of nodes.");
 
         if (markupNode.Name == null)
         {
@@ -256,35 +256,46 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
             return;
         }
 
-        ArgumentNullException.ThrowIfNull(endIndex);
-        if (endIndex > _nodes.Count)
-            throw new ArgumentOutOfRangeException("endIndex", "endIndex must be less than or equal to the number of nodes.");
+        if (!endIndex.HasValue || endIndex > _nodes.Count)
+            throw new ArgumentOutOfRangeException(nameof(endIndex), "endIndex must be less than or equal to the number of nodes.");
 
         if (startIndex > endIndex.Value)
-            throw new ArgumentException("startIndex must be less than or equal to endIndex.");
+            throw new ArgumentException("startIndex must be less than or equal to endIndex.", nameof(startIndex));
 
         _nodes.Insert(startIndex, markupNode);
         _nodes.Insert(endIndex.Value + 1, new MarkupNode(markupNode.Name, null, null, true));
     }
 
     /// <summary>
-    /// Helper method that inserts a node around the message.
+    /// Helper method that wraps a node around the message.
     /// </summary>
     /// <param name="markupNode">The node to be inserted; may not be a text node.</param>
     public void InsertAroundMessage(MarkupNode markupNode)
     {
-        ArgumentNullException.ThrowIfNull(markupNode.Name);
+        if (markupNode.Name == null)
+        {
+            throw new ArgumentException(
+                "Argument is supposed to be tag, but was plain text. Cannot wrap message with plain text.",
+                nameof(markupNode)
+            );
+        }
 
         InsertAtIndex(markupNode, 0, _nodes.Count);
     }
 
     /// <summary>
-    /// Helper method that inserts a node surrounding the first and last text node.
+    /// Helper method that wraps a node around the first and last text nodes of message.
     /// </summary>
     /// <param name="markupNode">The node to be inserted; may not be a text node.</param>
     public void InsertAroundText(MarkupNode markupNode)
     {
-        ArgumentNullException.ThrowIfNull(markupNode.Name);
+        if (markupNode.Name == null)
+        {
+            throw new ArgumentException(
+                "Argument is supposed to be tag, but was plain text. Cannot wrap message with plain text.",
+                nameof(markupNode)
+            );
+        }
 
         var firstIndex = _nodes.FindIndex(x => x.Name == null);
         var lastIndex = _nodes.FindLastIndex(x => x.Name == null);
@@ -293,59 +304,75 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
     }
 
     /// <summary>
-    /// Helper method that inserts a node around a string.
+    /// Helper method that inserts a tag node around each occurrence of specified string.
     /// </summary>
     /// <param name="markupNode">The node to be inserted; may not be a text node.</param>
     /// <param name="stringText">The string to look for when inserting.</param>
     /// <param name="matchCase">If true, the string case must match exactly.</param>
     public void InsertAroundString(MarkupNode markupNode, string stringText, bool matchCase = true)
     {
-        ArgumentNullException.ThrowIfNull(markupNode.Name);
+        if (markupNode.Name == null)
+        {
+            throw new ArgumentException(
+                "Argument is supposed to be tag, but was plain text. Cannot wrap message with plain text.",
+                nameof(markupNode)
+            );
+        }
 
-        for (int i = 0; i < _nodes.Count; i++)
+        var i = 0;
+        while (i < _nodes.Count)
         {
             var node = _nodes[i];
 
-            if (node.Name == null && node.Value.StringValue != null)
+            if (node.Name != null || node.Value.StringValue == null)
             {
-                var stringNode = node.Value.StringValue;
-                var stringLocation = matchCase ? stringNode.IndexOf(stringText, StringComparison.Ordinal) : stringNode.IndexOf(stringText, StringComparison.OrdinalIgnoreCase);
-
-                if (stringLocation != -1)
-                {
-                    // Original node needs to be removed, to make room for the new ones.
-                    _nodes.RemoveAt(i);
-
-                    // j keeps track of the number of added nodes.
-                    var j = 0;
-
-                    var beforeText = stringNode.Substring(0, stringLocation);
-                    if (beforeText != "")
-                    {
-                        InsertAtIndex(new MarkupNode(beforeText), i);
-                        j++;
-                    }
-
-                    InsertAtIndex(new MarkupNode(stringNode.Substring(stringLocation, stringText.Length)), i + j);
-                    InsertAtIndex(markupNode, i + j, i + j + 1);
-
-                    j += 3;
-
-                    var afterText = stringNode.Substring(stringLocation + stringText.Length);
-                    if (afterText != "")
-                    {
-                        InsertAtIndex(new MarkupNode(afterText), i + j);
-                    }
-
-                    // We make sure to move the i forwards, searching for additional instances of the string.
-                    i += j - 2;
-                }
+                i++;
+                continue;
             }
+
+            var nodeText = node.Value.StringValue;
+            var matchStartIndex = matchCase
+                ? nodeText.IndexOf(stringText, StringComparison.Ordinal)
+                : nodeText.IndexOf(stringText, StringComparison.OrdinalIgnoreCase);
+
+            if (matchStartIndex == -1)
+            {
+                i++;
+                continue;
+            }
+
+            // Original node needs to be removed, to make room for the new ones.
+            _nodes.RemoveAt(i);
+
+            // 'j' keeps track of the number of added nodes.
+            var j = 0;
+
+            var beforeText = nodeText.Substring(0, matchStartIndex);
+            if (beforeText != String.Empty)
+            {
+                InsertAtIndex(new MarkupNode(beforeText), i);
+                j++;
+            }
+
+            InsertAtIndex(new MarkupNode(nodeText.Substring(matchStartIndex, stringText.Length)), i + j);
+            InsertAtIndex(markupNode, i + j, i + j + 1);
+
+            // added 2 tags - opening/closing, and 1 plain text
+            j += 3;
+
+            var afterText = nodeText.Substring(matchStartIndex + stringText.Length);
+            if (afterText != String.Empty)
+            {
+                InsertAtIndex(new MarkupNode(afterText), i + j);
+            }
+
+            // We make sure to move the 'i' forwards, searching for additional instances of the string.
+            i += 1 + j - 2 ;
         }
     }
 
     /// <summary>
-    /// Helper function that inserts a node before tags of a specific type.
+    /// Helper function that inserts a node before each opening tag of a specific type.
     /// </summary>
     /// <param name="markupNode">The node to be inserted.</param>
     /// <param name="tagText">The tag to search for.</param>
@@ -360,12 +387,14 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
             if (i + 2 >= _nodes.Count)
                 break;
 
-            i = _nodes.FindIndex(i + 2, x => x.Name == tagText && !x.Closing);
+            // we add 2 new elements and want to skip 1 element we found previously
+            const int offset = 3;
+            i = _nodes.FindIndex(i + offset, x => x.Name == tagText && !x.Closing);
         }
     }
 
     /// <summary>
-    /// Helper function that inserts a node after tags of a specific type.
+    /// Helper function that inserts a node after each closing tags of a specific type.
     /// </summary>
     /// <param name="markupNode">The node to be inserted.</param>
     /// <param name="tagText">The tag to search for.</param>
@@ -380,91 +409,109 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
             if (i + 2 >= _nodes.Count)
                 break;
 
-            i = _nodes.FindIndex(i + 2, x => x.Name == tagText && x.Closing);
+            // standing on closing node (which we want to skip)
+            // we add 2 nodes (second one is closing node which we want to skip too)
+            const int offset = 3;
+            i = _nodes.FindIndex(i + offset, x => x.Name == tagText && x.Closing);
         }
     }
 
     /// <summary>
-    /// Helper function that inserts a node inside of other nodes of a specific type.
+    /// Helper function that nests a node inside other nodes of a specific type.
     /// The new node encloses any other nodes that the target node encloses.
     /// </summary>
     /// <param name="markupNode">The node to be inserted; may not be a text node.</param>
     /// <param name="tagText">The tag to search for.</param>
     public void InsertInsideTag(MarkupNode markupNode, string tagText)
     {
-        ArgumentNullException.ThrowIfNull(markupNode.Name);
+        if (markupNode.Name == null)
+        {
+            throw new ArgumentException(
+                "Argument is supposed to be tag, but was plain text. " +
+                "Plain text node is not supported for this operation.",
+                nameof(markupNode)
+            );
+        }
 
         var openingNodeCount = _nodes.Count(x => x.Name == tagText && !x.Closing);
         var closingNodeCount = _nodes.Count(x => x.Name == tagText && x.Closing);
 
         if (openingNodeCount != closingNodeCount)
-            throw new Exception("Opening and Closing node count mismatch.");
+        {
+            throw new InvalidOperationException(
+                $"Opening and Closing node count with name '{tagText}' mismatch, FormattedMessage is in " +
+                "invalid state - cannot manipulate use tags nesting api."
+            );
+        }
 
         if (openingNodeCount == 0)
             return;
 
-        var i = _nodes.FindIndex(x => x.Name == tagText && !x.Closing);
-        while (i > -1)
+        var i = 0;
+        while (i < _nodes.Count)
         {
-            _nodes.Insert(i + 1, markupNode);
+            var node = _nodes[i];
+            if (node.Name != tagText)
+            {
+                i++;
+                continue;
+            }
 
-            if (i + 2 >= _nodes.Count)
-                break;
+            if (!node.Closing)
+                _nodes.Insert(i + 1, markupNode);
+            else
+                _nodes.Insert(i, new MarkupNode(markupNode.Name, null, null, closing: true));
 
-            i = _nodes.FindIndex(i + 2, x => x.Name == tagText && !x.Closing);
-        }
-
-        var j = _nodes.FindIndex(x => x.Name == tagText && x.Closing);
-        while (j > -1)
-        {
-            _nodes.Insert(j, new MarkupNode(markupNode.Name, null, null, true));
-
-            if (j + 2 >= _nodes.Count)
-                break;
-
-            j = _nodes.FindIndex(j + 2, x => x.Name == tagText && x.Closing);
+            i += 2;
         }
     }
 
     /// <summary>
-    /// Helper function that inserts a node around other nodes of a specific type.
-    /// The new node encloses any other nodes that the target node encloses.
+    /// Helper function that wraps a node around other nodes of a specific type.
     /// </summary>
     /// <param name="markupNode">The node to be inserted; may not be a text node.</param>
     /// <param name="tagText">The tag to search for.</param>
     public void InsertOutsideTag(MarkupNode markupNode, string tagText)
     {
-        ArgumentNullException.ThrowIfNull(markupNode.Name);
+        if (markupNode.Name == null)
+        {
+            throw new ArgumentException(
+                "Argument is supposed to be tag, but was plain text. " +
+                "Plain text node is not supported for this operation.",
+                nameof(markupNode)
+            );
+        }
 
         var openingNodeCount = _nodes.Count(x => x.Name == tagText && !x.Closing);
         var closingNodeCount = _nodes.Count(x => x.Name == tagText && x.Closing);
 
         if (openingNodeCount != closingNodeCount)
-            throw new Exception("Opening and Closing node count mismatch.");
+        {
+            throw new InvalidOperationException(
+                $"Opening and Closing node count with name '{tagText}' mismatch, FormattedMessage is in " +
+                "invalid state - cannot manipulate use tags nesting api."
+            );
+        }
 
         if (openingNodeCount == 0)
             return;
 
-        var i = _nodes.FindIndex(x => x.Name == tagText && !x.Closing);
-        while (i > -1)
+        var i = 0;
+        while (i < _nodes.Count)
         {
-            _nodes.Insert(i, markupNode);
+            var node = _nodes[i];
+            if (node.Name != tagText)
+            {
+                i++;
+                continue;
+            }
 
-            if (i + 2 >= _nodes.Count)
-                break;
+            if (!node.Closing)
+                _nodes.Insert(i, markupNode);
+            else
+                _nodes.Insert(i+ 1, new MarkupNode(markupNode.Name, null, null, closing: true));
 
-            i = _nodes.FindIndex(i + 2, x => x.Name == tagText && !x.Closing);
-        }
-
-        var j = _nodes.FindIndex(x => x.Name == tagText && x.Closing);
-        while (j > -1)
-        {
-            _nodes.Insert(j + 1, new MarkupNode(markupNode.Name, null, null, true));
-
-            if (j + 2 >= _nodes.Count)
-                break;
-
-            j = _nodes.FindIndex(j + 2, x => x.Name == tagText && x.Closing);
+            i += 2;
         }
     }
 
@@ -487,39 +534,44 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
     }
 
     /// <summary>
-    /// Helper function that tries to find the first instance of a tag and returns a FormattedMessage containing the nodes inside.
+    /// Helper function that tries to find the first instance of a tag and returns
+    /// a FormattedMessage containing the found node with all nodes, nested inside.
     /// </summary>
-    /// <param name="returnMessage">The message inside of the chosen tag.</param>
+    /// <param name="result">The message with all markup nodes inside chosen tag.</param>
     /// <param name="tagText">The tag to search for.</param>
-    public bool TryGetMessageInsideTag(out FormattedMessage? returnMessage, string tagText)
+    public bool TryGetMessageInsideTag(string tagText, out FormattedMessage? result)
     {
-        returnMessage = null;
+        result = null;
+        
+        var openingNodeIndex = _nodes.FindIndex(x => x.Name == tagText && !x.Closing);
+        var currentNodeIndex = openingNodeIndex + 1;
 
-        var openingNode = _nodes.FindIndex(x => x.Name == tagText && !x.Closing);
-        var nextNode = openingNode;
-        var nodeCount = 1;
-
-        if (openingNode == -1)
+        if (openingNodeIndex == -1)
             return false;
 
-        while (nodeCount > 0)
+        var nodeCount = 1;
+        while (currentNodeIndex < _nodes.Count)
         {
-            nextNode = _nodes.FindIndex(nextNode + 1, x => x.Name == tagText);
-            if (!_nodes[nextNode].Closing)
-            {
-                nodeCount++;
-            }
-            else
-            {
+            var node = _nodes[currentNodeIndex];
+            currentNodeIndex++;
+
+            if (node.Name != tagText)
+                continue;
+
+            if (node.Closing)
                 nodeCount--;
-            }
+            else
+                nodeCount++;
+
+            if (nodeCount == 0)
+                break;
         }
 
-        if (nextNode == -1)
+        if (currentNodeIndex == openingNodeIndex)
             return false;
 
-        var resultingRange = _nodes.GetRange(openingNode, nextNode - openingNode + 1);
-        returnMessage = new FormattedMessage(resultingRange);
+        var resultingRange = _nodes.GetRange(openingNodeIndex, currentNodeIndex - openingNodeIndex);
+        result = new FormattedMessage(resultingRange);
         return true;
     }
 

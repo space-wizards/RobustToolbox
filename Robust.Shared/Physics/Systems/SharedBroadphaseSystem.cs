@@ -1,13 +1,12 @@
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
 using Microsoft.Extensions.ObjectPool;
+using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
@@ -412,24 +411,34 @@ namespace Robust.Shared.Physics.Systems
             }, aabb, true);
         }
 
+        [Obsolete("Use Entity<T> variant")]
         public void RegenerateContacts(EntityUid uid, PhysicsComponent body, FixturesComponent? fixtures = null, TransformComponent? xform = null)
         {
-            _physicsSystem.DestroyContacts(body);
-            if (!Resolve(uid, ref xform, ref fixtures))
+            RegenerateContacts((uid, body, fixtures, xform));
+        }
+
+        public void RegenerateContacts(Entity<PhysicsComponent?, FixturesComponent?, TransformComponent?> entity)
+        {
+            if (!Resolve(entity.Owner, ref entity.Comp1))
                 return;
 
-            if (xform.MapUid == null)
+            _physicsSystem.DestroyContacts(entity.Comp1);
+
+            if (!Resolve(entity.Owner, ref entity.Comp2 , ref entity.Comp3))
                 return;
 
-            if (!_xformQuery.TryGetComponent(xform.Broadphase?.Uid, out var broadphase))
+            if (entity.Comp3.MapUid == null)
                 return;
 
-            _physicsSystem.SetAwake((uid, body), true);
+            if (!_xformQuery.TryGetComponent(entity.Comp3.Broadphase?.Uid, out var broadphase))
+                return;
+
+            _physicsSystem.SetAwake(entity!, true);
 
             var matrix = _transform.GetWorldMatrix(broadphase);
-            foreach (var fixture in fixtures.Fixtures.Values)
+            foreach (var fixture in entity.Comp2.Fixtures.Values)
             {
-                TouchProxies(xform.MapUid.Value, matrix, fixture);
+                TouchProxies(entity.Comp3.MapUid.Value, matrix, fixture);
             }
         }
 
@@ -471,37 +480,66 @@ namespace Robust.Shared.Physics.Systems
             TouchProxies(xform.MapUid.Value, matrix, fixture);
         }
 
-        // TODO: The below is slow and should just query the map's broadphase directly. The problem is that
-        // there's some ordering stuff going on where the broadphase has queued all of its updates but hasn't applied
-        // them yet so this query will fail on initialization which chains into a whole lot of issues.
-        internal IEnumerable<(EntityUid uid, BroadphaseComponent comp)> GetBroadphases(MapId mapId, Box2 aabb)
+        internal void GetBroadphases(MapId mapId, Box2 aabb, BroadphaseCallback callback)
         {
-            // TODO Okay so problem: If we just do Encloses that's a lot faster BUT it also means we don't return the
-            // map's broadphase which avoids us iterating over it for 99% of bodies.
+            var internalState = (callback, _broadphaseQuery);
 
-            if (mapId == MapId.Nullspace) yield break;
+            if (!_map.TryGetMap(mapId, out var map))
+                return;
 
-            var enumerator = AllEntityQuery<BroadphaseComponent, TransformComponent>();
+            if (_broadphaseQuery.TryGetComponent(map.Value, out var mapBroadphase))
+                callback((map.Value, mapBroadphase));
 
-            while (enumerator.MoveNext(out var bUid, out var broadphase, out var xform))
-            {
-                if (xform.MapID != mapId) continue;
-
-                if (!EntityManager.TryGetComponent(bUid, out MapGridComponent? mapGrid))
+            _mapManager.FindGridsIntersecting(map.Value,
+                aabb,
+                ref internalState,
+                static (
+                    EntityUid uid,
+                    MapGridComponent _,
+                    ref (BroadphaseCallback callback, EntityQuery<BroadphaseComponent> _broadphaseQuery) tuple) =>
                 {
-                    yield return (bUid, broadphase);
-                    continue;
-                }
+                    if (tuple._broadphaseQuery.TryComp(uid, out var broadphase))
+                        tuple.callback((uid, broadphase));
 
-                // Won't worry about accurate bounds checks as it's probably slower in most use cases.
-                var chunkEnumerator = _map.GetMapChunks(bUid, mapGrid, aabb);
-
-                if (chunkEnumerator.MoveNext(out _))
-                {
-                    yield return (bUid, broadphase);
-                }
-            }
+                    return true;
+                },
+                // Approx because we don't really need accurate checks for these most of the time.
+                approx: true,
+                includeMap: false);
         }
+
+        internal void GetBroadphases<TState>(MapId mapId, Box2 aabb, ref TState state, BroadphaseCallback<TState> callback)
+        {
+            var internalState = (state, callback, _broadphaseQuery);
+
+            if (!_map.TryGetMap(mapId, out var map))
+                return;
+
+            if (_broadphaseQuery.TryGetComponent(map.Value, out var mapBroadphase))
+                callback((map.Value, mapBroadphase), ref state);
+
+            _mapManager.FindGridsIntersecting(map.Value,
+                aabb,
+                ref internalState,
+                static (
+                    EntityUid uid,
+                    MapGridComponent _,
+                    ref (TState state, BroadphaseCallback<TState> callback, EntityQuery<BroadphaseComponent> _broadphaseQuery) tuple) =>
+                {
+                    if (tuple._broadphaseQuery.TryComp(uid, out var broadphase))
+                        tuple.callback((uid, broadphase), ref tuple.state);
+                    return true;
+                },
+                // Approx because we don't really need accurate checks for these most of the time.
+                approx: true,
+                includeMap: false);
+
+            state = internalState.state;
+        }
+
+        internal delegate void BroadphaseCallback(Entity<BroadphaseComponent> entity);
+
+        internal delegate void BroadphaseCallback<TState>(Entity<BroadphaseComponent> entity, ref TState state);
 
         private record struct BroadphaseContactJob() : IParallelRobustJob
         {

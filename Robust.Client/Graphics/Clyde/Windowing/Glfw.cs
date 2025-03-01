@@ -25,10 +25,6 @@ namespace Robust.Client.Graphics.Clyde
             private bool _glfwInitialized;
             private bool _win32Experience;
 
-            // While GLFW does not provide proper IME APIs, we can at least emulate SDL2's StartTextInput() system.
-            // This will ensure some level of consistency between the backends.
-            private bool _textInputActive;
-
             public GlfwWindowingImpl(Clyde clyde, IDependencyCollection deps)
             {
                 _clyde = clyde;

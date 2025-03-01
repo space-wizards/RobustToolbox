@@ -628,6 +628,43 @@ namespace Robust.Shared
         public static readonly CVarDef<string> StatusConnectAddress =
             CVarDef.Create("status.connectaddress", "", CVar.ARCHIVE | CVar.SERVERONLY);
 
+        /// <summary>
+        /// HTTP(S) link to a privacy policy that the user must accept to connect to the server.
+        /// </summary>
+        /// <remarks>
+        /// This must be set along with <see cref="StatusPrivacyPolicyIdentifier"/> and
+        /// <see cref="StatusPrivacyPolicyVersion"/> for the user to be prompted about a privacy policy.
+        /// </remarks>
+        public static readonly CVarDef<string> StatusPrivacyPolicyLink =
+            CVarDef.Create("status.privacy_policy_link", "https://example.com/privacy", CVar.SERVER | CVar.REPLICATED);
+
+        /// <summary>
+        /// An identifier for privacy policy specified by <see cref="StatusPrivacyPolicyLink"/>.
+        /// This must be globally unique.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This value must be globally unique per server community. Servers that want to enforce a
+        /// privacy policy should set this to a value that is unique to their server and, preferably, recognizable.
+        /// </para>
+        /// <para>
+        /// This value is stored by the launcher to keep track of what privacy policies a player has accepted.
+        /// </para>
+        /// </remarks>
+        public static readonly CVarDef<string> StatusPrivacyPolicyIdentifier =
+            CVarDef.Create("status.privacy_policy_identifier", "", CVar.SERVER | CVar.REPLICATED);
+
+        /// <summary>
+        /// A "version" for the privacy policy specified by <see cref="StatusPrivacyPolicyLink"/>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This parameter is stored by the launcher and should be modified whenever your server's privacy policy changes.
+        /// </para>
+        /// </remarks>
+        public static readonly CVarDef<string> StatusPrivacyPolicyVersion =
+            CVarDef.Create("status.privacy_policy_version", "", CVar.SERVER | CVar.REPLICATED);
+
         /*
          * BUILD
          */
@@ -1106,6 +1143,14 @@ namespace Robust.Shared
             CVarDef.Create("display.thread_window_blit", true, CVar.CLIENTONLY);
 
         /// <summary>
+        /// Diagnostic flag for testing. When using a separate thread for multi-window blitting,
+        /// should the worker be unblocked before the SwapBuffers(). Setting to true may improve
+        /// performance but may cause crashes or rendering errors.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayThreadUnlockBeforeSwap =
+            CVarDef.Create("display.thread_unlock_before_swap", false, CVar.CLIENTONLY);
+
+        /// <summary>
         /// Buffer size of input command channel from windowing thread to main game thread.
         /// </summary>
         public static readonly CVarDef<int> DisplayInputBufferSize =
@@ -1187,6 +1232,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<float> AudioRaycastLength =
             CVarDef.Create("audio.raycast_length", SharedAudioSystem.DefaultSoundRange, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Maximum offset for audio to be played at from its full duration. If it's past this then the audio won't be played.
+        /// </summary>
+        public static readonly CVarDef<float> AudioEndBuffer =
+            CVarDef.Create("audio.end_buffer", 0.01f, CVar.REPLICATED);
 
         /// <summary>
         /// Tickrate for audio calculations.
@@ -1304,10 +1355,10 @@ namespace Robust.Shared
         /// MaxLinVelocity is compared to the dot product of linearVelocity * frameTime.
         /// </summary>
         /// <remarks>
-        /// Default is 35 m/s. Around half a tile per tick at 60 ticks per second.
+        /// Default is 400 m/s in-line with Box2c. Box2d used 120m/s.
         /// </remarks>
         public static readonly CVarDef<float> MaxLinVelocity =
-            CVarDef.Create("physics.maxlinvelocity", 35f, CVar.SERVER | CVar.REPLICATED);
+            CVarDef.Create("physics.maxlinvelocity", 400f, CVar.SERVER | CVar.REPLICATED);
 
         /// <summary>
         /// Maximum angular velocity in full rotations per second.
@@ -1318,7 +1369,6 @@ namespace Robust.Shared
         /// </remarks>
         public static readonly CVarDef<float> MaxAngVelocity =
             CVarDef.Create("physics.maxangvelocity", 15f);
-
 
         /*
          * User interface

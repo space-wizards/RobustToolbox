@@ -22,6 +22,7 @@ namespace Robust.UnitTesting.Shared.Map
             var mapManager = server.ResolveDependency<IMapManager>();
             var entManager = server.ResolveDependency<IEntityManager>();
             var physSystem = server.ResolveDependency<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>();
+            var mapSystem = server.ResolveDependency<IEntitySystemManager>().GetEntitySystem<SharedMapSystem>();
 
             MapId mapId;
             Entity<MapGridComponent>? gridId1 = null;
@@ -69,8 +70,8 @@ namespace Robust.UnitTesting.Shared.Map
 
             await server.WaitAssertion(() =>
             {
-                gridId1?.Comp.SetTile(new Vector2i(0, 0), new Tile(1));
-                gridId2?.Comp.SetTile(new Vector2i(0, 0), new Tile(1));
+                mapSystem.SetTile(gridId1!.Value, new Vector2i(0, 0), new Tile(1));
+                mapSystem.SetTile(gridId2!.Value, new Vector2i(0, 0), new Tile(1));
             });
 
             await server.WaitRunTicks(1);

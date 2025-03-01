@@ -19,6 +19,10 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+
+    <!-- Needed to pin transitive dependency versions. -->
+    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" />
+    <PackageReference Include="System.Formats.Asn1" />
   </ItemGroup>
 
   <Import Project="..\MSBuild\Robust.Properties.targets" />

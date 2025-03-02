@@ -60,6 +60,8 @@ public sealed class PrototypeAnalyzer : DiagnosticAnalyzer
                     classSymbol.Name,
                     specifiedName));
             }
+            // There's no need to check any remaining attributes; we're done.
+            return;
         }
     }
 

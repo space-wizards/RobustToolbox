@@ -26,7 +26,17 @@ public sealed class PrototypeAnalyzer : DiagnosticAnalyzer
         "Remove the redundant type specification."
     );
 
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [PrototypeRedundantTypeRule];
+    public static readonly DiagnosticDescriptor PrototypeEndsWithPrototypeRule = new(
+        Diagnostics.IdPrototypeEndsWithPrototype,
+        "Prototype name must end with the word Prototype",
+        "Prototype {0} does not end with the word Prototype",
+        "Usage",
+        DiagnosticSeverity.Warning,
+        true,
+        "Add the word Prototype to the end of the class name or manually specify a name in the Prototype attribute."
+    );
+
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [PrototypeRedundantTypeRule, PrototypeEndsWithPrototypeRule];
 
     public override void Initialize(AnalysisContext context)
     {
@@ -49,11 +59,21 @@ public sealed class PrototypeAnalyzer : DiagnosticAnalyzer
                 continue;
 
             if (attribute.ConstructorArguments[0].Value is not string specifiedName)
+            {
+                if (!classSymbol.Name.EndsWith(PrototypeUtility.PrototypeNameEnding))
+                {
+                    context.ReportDiagnostic(Diagnostic.Create(PrototypeEndsWithPrototypeRule,
+                        classDeclarationSyntax.Identifier.GetLocation(),
+                        classSymbol.Name));
+                }
                 continue;
+            }
 
             var autoName = PrototypeUtility.CalculatePrototypeName(classSymbol.Name);
+
             if (autoName == specifiedName)
             {
+                classDeclarationSyntax.Identifier.GetLocation();
                 var location = TryGetPrototypeAttribute(classDeclarationSyntax, out var protoNode) ? protoNode.GetLocation() : classDeclarationSyntax.GetLocation();
                 context.ReportDiagnostic(Diagnostic.Create(PrototypeRedundantTypeRule,
                     location,

@@ -37,6 +37,7 @@ public static class Diagnostics
     public const string IdPreferOtherType = "RA0031";
     public const string IdDuplicateDependency = "RA0032";
     public const string IdPrototypeRedundantType = "RA0035";
+    public const string IdPrototypeEndsWithPrototype = "RA0036";
 
     public static SuppressionDescriptor MeansImplicitAssignment =>
         new SuppressionDescriptor("RADC1000", "CS0649", "Marked as implicitly assigned.");

@@ -76,7 +76,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
         {
             DebugTools.Assert(count is >= 3 and <= PhysicsConstants.MaxPolygonVertices);
 
-            var hull = PhysicsHull.ComputeHull(vertices, count);
+            var hull = InternalPhysicsHull.ComputeHull(vertices, count);
 
             if (hull.Count < 3)
             {
@@ -87,7 +87,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
             return true;
         }
 
-        internal void Set(PhysicsHull hull)
+        internal void Set(InternalPhysicsHull hull)
         {
             DebugTools.Assert(hull.Count >= 3);
             var vertexCount = hull.Count;
@@ -119,14 +119,14 @@ namespace Robust.Shared.Physics.Collision.Shapes
             if (count is < 3 or > PhysicsConstants.MaxPolygonVertices)
                 return false;
 
-            var hull = new PhysicsHull();
+            var hull = new InternalPhysicsHull();
             for (var i = 0; i < count; i++)
             {
                 hull.Points[i] = Vertices[i];
             }
 
             hull.Count = count;
-            return PhysicsHull.ValidateHull(hull);
+            return InternalPhysicsHull.ValidateHull(hull);
         }
 
         private static Vector2 ComputeCentroid(Vector2[] vs, int count)
@@ -199,7 +199,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
             verts[2] = bounds.TopRight;
             verts[3] = bounds.TopLeft;
 
-            var hull = new PhysicsHull(verts, 4);
+            var hull = new InternalPhysicsHull(verts, 4);
             Set(hull);
         }
 

@@ -53,7 +53,7 @@ public sealed class ParticleSystemArgs {
     /// <summary>
     /// A function which returns a Texture which is this particles texture at spawning
     /// </summary>
-    public Func<Texture> Icon;
+    public Func<Texture?> Icon;
     /// <summary>
     /// A function which returns a Vector3 which is this particles position at spawning
     /// </summary>
@@ -78,7 +78,7 @@ public sealed class ParticleSystemArgs {
     /// </summary>
     public Func<float,Vector3,Vector3>? Acceleration;
 
-    public ParticleSystemArgs(Func<Texture> icon, Vector2i particleSystemSize, uint particleCount, float particlesPerSecond){
+    public ParticleSystemArgs(Func<Texture?> icon, Vector2i particleSystemSize, uint particleCount, float particlesPerSecond){
         Icon = icon;
         ParticleSystemSize = particleSystemSize;
         ParticleCount = particleCount;

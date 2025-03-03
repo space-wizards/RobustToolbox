@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 using Vector3 = Robust.Shared.Maths.Vector3;
 
 
@@ -85,9 +86,9 @@ public sealed class ParticleSystem {
     /// </summary>
     private Func<float> _fadein;
     /// <summary>
-    /// A function which returns a Texture which is this particles texture at spawning
+    /// A function which returns a Texture which is this particles texture at spawning. Null textures will be re-evaluated each frame until not null
     /// </summary>
-    private Func<Texture> _icon;
+    private Func<Texture?> _icon;
     /// <summary>
     /// A function which returns a Vector3 which is this particles position at spawning
     /// </summary>
@@ -178,7 +179,7 @@ public sealed class ParticleSystem {
                 p.lifetime += args.DeltaSeconds;
                 p.transform = _baseTransform * _transform(p.lifetime);
                 p.color = _color(p.lifetime);
-                p.velocity += _acceleration(p.lifetime, p.velocity);
+                p.velocity += _acceleration(p.lifetime, p.velocity) * args.DeltaSeconds;
                 p.position += p.velocity*args.DeltaSeconds;
                 if(p.fadein > p.lifetime)
                     p.color.A = Math.Clamp(p.lifetime/p.fadein, 0, 1);
@@ -187,6 +188,9 @@ public sealed class ParticleSystem {
 
                 if(p.lifetime > p.lifespan || p.position.X > _upperBound.X || p.position.Y > _upperBound.Y || p.position.Z > _upperBound.Z || p.position.X < _lowerBound.X || p.position.Y < _lowerBound.Y || p.position.Z < _lowerBound.Z)
                     p.active = false;
+
+                if(p.texture is null)
+                    p.texture = _icon();
             }
             if (!p.active && particlesSpawned < _particlesPerSecond*args.DeltaSeconds) {
                 p.lifetime = 0;
@@ -205,10 +209,10 @@ public sealed class ParticleSystem {
     }
 
     public void Draw(DrawingHandleWorld handle, Matrix3x2 transform){
-
+        Array.Sort(_particles, (p1, p2) => p1.position.Z.CompareTo(p2.position.Z));
         foreach (var particle in _particles)
         {
-            if(particle.active){
+            if(particle.active && particle.texture is not null){
                 handle.SetTransform(particle.transform * transform);
                 handle.DrawTextureRect(particle.texture!, new Box2(particle.position.Xy, (particle.position.Xy+particle.texture!.Size)), particle.color);
             }

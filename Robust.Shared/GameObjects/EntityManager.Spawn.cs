@@ -206,4 +206,16 @@ public partial class EntityManager
 
         return uid;
     }
+
+    #region Prediction
+
+    /// <summary>
+    /// Flags an entity as being a predicted spawn.
+    /// </summary>
+    public virtual void FlagPredicted(Entity<MetaDataComponent?> entity)
+    {
+
+    }
+
+    #endregion
 }

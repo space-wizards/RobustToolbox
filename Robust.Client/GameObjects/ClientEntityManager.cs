@@ -291,5 +291,14 @@ namespace Robust.Client.GameObjects
             }
         }
         #endregion
+
+        public override void FlagPredicted(Entity<MetaDataComponent?> entity)
+        {
+            if (!MetaQuery.Resolve(entity.Owner, ref entity.Comp, false))
+                return;
+
+            DebugTools.Assert(!IsClientSide(entity.Owner, entity.Comp));
+            EnsureComponent<PredictedSpawnComponent>(entity.Owner);
+        }
     }
 }

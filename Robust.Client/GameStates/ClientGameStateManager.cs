@@ -776,6 +776,18 @@ namespace Robust.Client.GameStates
             var xforms = _entities.GetEntityQuery<TransformComponent>();
             var xformSys = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
 
+            // Cleanup predicted entities
+            var predictedQuery = _entities.AllEntityQueryEnumerator<PredictedSpawnComponent, MetaDataComponent>();
+
+            while (predictedQuery.MoveNext(out var uid, out _, out var metadata))
+            {
+                if (metadata.CreationTick > curState.ToSequence)
+                    continue;
+
+                DebugTools.Assert(_entities.IsClientSide(uid));
+                _entities.DeleteEntity(uid);
+            }
+
             var enteringPvs = 0;
             _toApply.Clear();
             _created.Clear();

@@ -564,7 +564,7 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
     /// </summary>
     /// <param name="result">The message with all markup nodes inside chosen tag.</param>
     /// <param name="tagText">The tag to search for.</param>
-    public bool TryGetMessageInsideTag(string tagText, out FormattedMessage? result)
+    public bool TryGetMessageInsideTag(string tagText, [NotNullWhen(true)] out FormattedMessage? result)
     {
         result = null;
         

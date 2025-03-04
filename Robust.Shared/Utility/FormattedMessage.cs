@@ -82,6 +82,15 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
     }
 
     /// <summary>
+    /// Create new formatted message from provided markup nodes.
+    /// </summary>
+    public static FormattedMessage FromNodes(IEnumerable<MarkupNode> nodes)
+    {
+        var nodesListClones = nodes.ToList();
+        return new FormattedMessage(nodesListClones);
+    }
+
+    /// <summary>
     /// Attempt to create a new formatted message from some markup text.
     /// </summary>
     public static bool TryFromMarkup(string markup, [NotNullWhen(true)] out FormattedMessage? msg)
@@ -598,6 +607,38 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
         var resultingRange = _nodes.GetRange(openingNodeIndex, currentNodeIndex - openingNodeIndex);
         result = new FormattedMessage(resultingRange);
         return true;
+    }
+
+    /// <summary>
+    /// Replaces plain text node with other node. If node is not part of message - does nothing.
+    /// </summary>
+    /// <param name="nodeToReplace">Node that should be replaced; must be text node.</param>
+    /// <param name="replacementNode">Node that should take place of replaced node; must be text node.</param>
+    public void ReplaceTextNode(MarkupNode nodeToReplace, MarkupNode replacementNode)
+    {
+        if (nodeToReplace.Name != null)
+        {
+            throw new ArgumentException(
+                "Argument is not plain text node, other types of nodes are not supported",
+                nameof(nodeToReplace)
+            );
+        }
+
+        if (replacementNode.Name != null)
+        {
+            throw new ArgumentException(
+                "Argument is not plain text node, other types of nodes are not supported",
+                nameof(replacementNode)
+            );
+        }
+
+        var indexToReplace = _nodes.IndexOf(nodeToReplace);
+        if (indexToReplace == -1)
+        {
+            return;
+        }
+
+        _nodes[indexToReplace] = replacementNode;
     }
 
     # endregion

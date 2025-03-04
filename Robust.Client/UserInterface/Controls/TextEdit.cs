@@ -38,7 +38,6 @@ namespace Robust.Client.UserInterface.Controls;
 public sealed class TextEdit : Control
 {
     [Dependency] private readonly IClipboardManager _clipboard = null!;
-    [Dependency] private readonly IClyde _clyde = null!;
 
     // @formatter:off
     public const string StylePropertyCursorColor    = "cursor-color";

@@ -95,7 +95,7 @@ public sealed partial class MapLoaderSystem
         }
         catch (Exception e)
         {
-            Log.Error($"Caught exception while creating entities: {e}");
+            Log.Error($"Caught exception while creating entities for map {file}: {e}");
             Delete(deserializer.Result);
             throw;
         }
@@ -103,7 +103,7 @@ public sealed partial class MapLoaderSystem
         if (opts.ExpectedCategory is { } exp && exp != deserializer.Result.Category)
         {
             // Did someone try to load a map file as a grid or vice versa?
-            Log.Error($"File does not contain the expected data. Expected {exp} but got {deserializer.Result.Category}");
+            Log.Error($"Map {file} does not contain the expected data. Expected {exp} but got {deserializer.Result.Category}");
             Delete(deserializer.Result);
             return false;
         }

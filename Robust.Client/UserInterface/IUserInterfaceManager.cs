@@ -105,6 +105,11 @@ namespace Robust.Client.UserInterface
         /// </summary>
         ICursor? WorldCursor { get; set; }
 
+        /// <summary>
+        ///     Ignore cursor changing when the mouse hover some UI control.
+        /// </summary>
+        bool IgnoreCursorChange { get; set; }
+
         void PushModal(Control modal);
         WindowRoot CreateWindowRoot(IClydeWindow window);
         void DestroyWindowRoot(IClydeWindow window);

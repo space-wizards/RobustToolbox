@@ -320,7 +320,7 @@ namespace Robust.Client.UserInterface
                 }
             }
 
-            if (_needUpdateActiveCursor)
+            if (_needUpdateActiveCursor && !IgnoreCursorChange)
             {
                 _needUpdateActiveCursor = false;
                 UpdateActiveCursor();

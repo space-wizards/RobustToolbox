@@ -4,37 +4,6 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
-public record struct ArchEntity : IFluentEntityUid
-{
-    public EntityUid Owner;
-    EntityUid IFluentEntityUid.FluentOwner => Owner;
-
-    internal Archetype? _archetype;
-    internal Chunk? Chunk;
-
-    /// <summary>
-    /// Id of the chunk the entity is stored in.
-    /// </summary>
-    internal int ChunkId;
-
-    /// <summary>
-    /// Index of this entity into its chunk.
-    /// </summary>
-    internal int ChunkIndex;
-
-    public ArchEntity(EntityUid owner)
-    {
-        Owner = owner;
-    }
-
-    public static implicit operator EntityUid(ArchEntity ent)
-    {
-        return ent.Owner;
-    }
-
-    public override int GetHashCode() => Owner.GetHashCode();
-}
-
 public record struct Entity<T> : IFluentEntityUid
     where T : IComponent?
 {

@@ -5,6 +5,7 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
@@ -102,6 +103,8 @@ namespace Robust.Client.UserInterface.CustomControls
             {
                 var cursor = CursorShape.Arrow;
                 var previewDragMode = GetDragModeFor(args.RelativePosition);
+                previewDragMode &= ~DragMode.Move;
+
                 switch (previewDragMode)
                 {
                     case DragMode.Top:
@@ -116,9 +119,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
                     case DragMode.Bottom | DragMode.Left:
                     case DragMode.Top | DragMode.Right:
-                        cursor = CursorShape.Crosshair;
-                        break;
-
                     case DragMode.Bottom | DragMode.Right:
                     case DragMode.Top | DragMode.Left:
                         cursor = CursorShape.Crosshair;
@@ -160,15 +160,6 @@ namespace Robust.Client.UserInterface.CustomControls
                 var rect = new UIBox2(left, top, right, bottom);
                 LayoutContainer.SetPosition(this, rect.TopLeft);
                 SetSize = rect.Size;
-
-                /*
-                var timing = IoCManager.Resolve<IGameTiming>();
-
-                var l = GetValue<float>(LayoutContainer.MarginLeftProperty);
-                var t = GetValue<float>(LayoutContainer.MarginTopProperty);
-
-                Logger.Debug($"{timing.CurFrame}: {rect.TopLeft}/({l}, {t}), {rect.Size}/{SetSize}");
-                */
             }
         }
 
@@ -227,6 +218,16 @@ namespace Robust.Client.UserInterface.CustomControls
 
             Opened();
             OnOpen?.Invoke();
+        }
+
+        /// <summary>
+        /// Opens the window and places it at the specified position.
+        /// </summary>
+        public void Open(Vector2 position)
+        {
+            Measure(Vector2Helpers.Infinity);
+            Open();
+            LayoutContainer.SetPosition(this, position);
         }
 
         public void OpenCentered() => OpenCenteredAt(new Vector2(0.5f, 0.5f));

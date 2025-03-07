@@ -41,33 +41,10 @@ internal partial class MapManager
         return CreateGrid(map, options.Value.ChunkSize, default);
     }
 
-    [Obsolete("Use GetComponent<MapGridComponent>(uid)")]
-    public MapGridComponent GetGrid(EntityUid gridId)
-        => EntityManager.GetComponent<MapGridComponent>(gridId);
-
     [Obsolete("Use HasComponent<MapGridComponent>(uid)")]
     public bool IsGrid(EntityUid uid)
     {
         return EntityManager.HasComponent<MapGridComponent>(uid);
-    }
-
-    [Obsolete("Use TryGetComponent(uid, out MapGridComponent? grid)")]
-    public bool TryGetGrid([NotNullWhen(true)] EntityUid? euid, [MaybeNullWhen(false)] out MapGridComponent grid)
-    {
-        if (EntityManager.TryGetComponent(euid, out MapGridComponent? comp))
-        {
-            grid = comp;
-            return true;
-        }
-
-        grid = default;
-        return false;
-    }
-
-    [Obsolete("Use HasComponent<MapGridComponent>(uid)")]
-    public bool GridExists([NotNullWhen(true)] EntityUid? euid)
-    {
-        return EntityManager.HasComponent<MapGridComponent>(euid);
     }
 
     public IEnumerable<MapGridComponent> GetAllMapGrids(MapId mapId)
@@ -153,6 +130,9 @@ internal partial class MapManager
         EntityManager.System<MetaDataSystem>().SetEntityName(gridEnt, $"grid", meta);
         EntityManager.InitializeComponents(gridEnt, meta);
         EntityManager.StartComponents(gridEnt);
+        // Note that this does not actually map-initialize the grid entity, even if the map its being spawn on has already been initialized.
+        // I don't know whether that is intentional or not.
+
         return (gridEnt, grid);
     }
 }

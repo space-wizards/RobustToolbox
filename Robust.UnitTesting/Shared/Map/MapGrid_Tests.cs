@@ -37,12 +37,12 @@ namespace Robust.UnitTesting.Shared.Map
             gridOptions.ChunkSize = 8;
             var grid = mapMan.CreateGridEntity(mapId, gridOptions);
 
-            mapSystem.SetTile(grid, new Vector2i(-9, -1), new Tile(1, (TileRenderFlag)1, 1));
+            mapSystem.SetTile(grid, new Vector2i(-9, -1), new Tile(typeId: 1, flags: 1, variant: 1));
             var result = mapSystem.GetTileRef(grid.Owner, grid.Comp, new Vector2i(-9, -1));
 
             Assert.That(grid.Comp.ChunkCount, Is.EqualTo(1));
             Assert.That(mapSystem.GetMapChunks(grid.Owner, grid.Comp).Keys.ToList()[0], Is.EqualTo(new Vector2i(-2, -1)));
-            Assert.That(result, Is.EqualTo(new TileRef(grid.Owner, new Vector2i(-9,-1), new Tile(1, (TileRenderFlag)1, 1))));
+            Assert.That(result, Is.EqualTo(new TileRef(grid.Owner, new Vector2i(-9,-1), new Tile(typeId: 1, flags: 1, variant: 1))));
         }
 
         /// <summary>
@@ -169,14 +169,14 @@ namespace Robust.UnitTesting.Shared.Map
             gridOptions.ChunkSize = 8;
             var grid = mapMan.CreateGridEntity(mapId, gridOptions);
 
-            mapSystem.SetTile(grid, new Vector2i(-9, -1), new Tile(1, (TileRenderFlag)1, 1));
+            mapSystem.SetTile(grid, new Vector2i(-9, -1), new Tile(typeId: 1, flags: 1, variant: 1));
 
             var foundTile = mapSystem.TryGetTileRef(grid.Owner, grid.Comp, new Vector2i(-9, -1), out var tileRef);
 
             Assert.That(foundTile, Is.True);
             Assert.That(grid.Comp.ChunkCount, Is.EqualTo(1));
             Assert.That(mapSystem.GetMapChunks(grid.Owner, grid.Comp).Keys.ToList()[0], Is.EqualTo(new Vector2i(-2, -1)));
-            Assert.That(tileRef, Is.EqualTo(new TileRef(grid.Owner, new Vector2i(-9, -1), new Tile(1, (TileRenderFlag)1, 1))));
+            Assert.That(tileRef, Is.EqualTo(new TileRef(grid.Owner, new Vector2i(-9, -1), new Tile(typeId: 1, flags: 1, variant: 1))));
         }
 
         [Test]

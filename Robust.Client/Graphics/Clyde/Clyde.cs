@@ -21,6 +21,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using TextureWrapMode = Robust.Shared.Graphics.TextureWrapMode;
 
@@ -32,7 +33,6 @@ namespace Robust.Client.Graphics.Clyde
     internal sealed partial class Clyde : IClydeInternal, IPostInjectInit, IEntityEventSubscriber
     {
         [Dependency] private readonly IClydeTileDefinitionManager _tileDefinitionManager = default!;
-        [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly ILightManager _lightManager = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
@@ -246,7 +246,7 @@ namespace Robust.Client.Graphics.Clyde
                 overrideVersion != null,
                 _windowing!.GetDescription());
 
-            GL.Enable(EnableCap.Blend);
+            IsBlending = true;
             if (_hasGLSrgb && !_isGLES)
             {
                 GL.Enable(EnableCap.FramebufferSrgb);

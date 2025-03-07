@@ -109,8 +109,8 @@ namespace Robust.Client.Graphics.Clyde
                 case "glfw":
                     winImpl = new GlfwWindowingImpl(this, _deps);
                     break;
-                case "sdl2":
-                    winImpl = new Sdl2WindowingImpl(this, _deps);
+                case "sdl3":
+                    winImpl = new Sdl3WindowingImpl(this, _deps);
                     break;
                 default:
                     _logManager.GetSawmill("clyde.win").Log(
@@ -343,6 +343,8 @@ namespace Robust.Client.Graphics.Clyde
                 if (isMain)
                     _mainWindow = reg;
 
+                reg.IsVisible = parameters.Visible;
+
                 _windows.Add(reg);
                 _windowHandles.Add(reg.Handle);
 
@@ -444,6 +446,12 @@ namespace Robust.Client.Graphics.Clyde
             _windowing!.CursorSet(_mainWindow!, cursor);
         }
 
+        private void SetWindowSize(WindowReg reg, Vector2i size)
+        {
+            DebugTools.AssertNotNull(_windowing);
+
+            _windowing!.WindowSetSize(reg, size);
+        }
 
         private void SetWindowVisible(WindowReg reg, bool visible)
         {
@@ -459,26 +467,7 @@ namespace Robust.Client.Graphics.Clyde
             _windowing!.RunOnWindowThread(a);
         }
 
-        public void TextInputSetRect(UIBox2i rect)
-        {
-            DebugTools.AssertNotNull(_windowing);
-
-            _windowing!.TextInputSetRect(rect);
-        }
-
-        public void TextInputStart()
-        {
-            DebugTools.AssertNotNull(_windowing);
-
-            _windowing!.TextInputStart();
-        }
-
-        public void TextInputStop()
-        {
-            DebugTools.AssertNotNull(_windowing);
-
-            _windowing!.TextInputStop();
-        }
+        public IFileDialogManager? FileDialogImpl => _windowing as IFileDialogManager;
 
         private abstract class WindowReg
         {
@@ -533,7 +522,11 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde.DoDestroyWindow(Reg);
             }
 
-            public Vector2i Size => Reg.FramebufferSize;
+            public Vector2i Size
+            {
+                get => Reg.FramebufferSize;
+                set => _clyde.SetWindowSize(Reg, value);
+            }
 
             public IRenderTarget RenderTarget => Reg.RenderTarget;
 
@@ -576,6 +569,27 @@ namespace Robust.Client.Graphics.Clyde
             {
                 add => Reg.Resized += value;
                 remove => Reg.Resized -= value;
+            }
+
+            public void TextInputSetRect(UIBox2i rect, int cursor)
+            {
+                DebugTools.AssertNotNull(_clyde._windowing);
+
+                _clyde._windowing!.TextInputSetRect(Reg, rect, cursor);
+            }
+
+            public void TextInputStart()
+            {
+                DebugTools.AssertNotNull(_clyde._windowing);
+
+                _clyde._windowing!.TextInputStart(Reg);
+            }
+
+            public void TextInputStop()
+            {
+                DebugTools.AssertNotNull(_clyde._windowing);
+
+                _clyde._windowing!.TextInputStop(Reg);
             }
 
             public nint? WindowsHWnd => _clyde._windowing!.WindowGetWin32Window(Reg);

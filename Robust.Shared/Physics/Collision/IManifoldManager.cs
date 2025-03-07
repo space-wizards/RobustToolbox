@@ -12,7 +12,9 @@ internal interface IManifoldManager
 
     void ReturnEdge(EdgeShape edge);
 
-    bool TestOverlap(IPhysShape shapeA, int indexA, IPhysShape shapeB, int indexB, in Transform xfA, in Transform xfB);
+    bool TestOverlap<T, U>(T shapeA, int indexA, U shapeB, int indexB, in Transform xfA, in Transform xfB)
+        where T : IPhysShape
+        where U : IPhysShape;
 
     void CollideCircles(ref Manifold manifold, PhysShapeCircle circleA, in Transform xfA,
         PhysShapeCircle circleB, in Transform xfB);

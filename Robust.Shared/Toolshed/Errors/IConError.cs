@@ -5,6 +5,13 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.Errors;
 
+// TODO TOOLSHED Localize Errors
+// Requires reworking the IConError interface to take in an ILocalizationManager
+
+// TODO TOOLSHED Rework IConError
+// A bunch of the errors are structs, but they get boxed anyways.  So might as well make them all inherit from a base
+// class, so that we don't need to constantly re-define the properties.
+
 /// <summary>
 ///     A Toolshed-oriented representation of an error.
 ///     Contains metadata about where in an executed command it occurred, and supports formatting.
@@ -100,6 +107,13 @@ public static class ConHelpers
     {
         var msg = FormattedMessage.FromUnformatted(input[..span.X]);
         msg.PushColor(color);
+        if (span.Y >= input.Length)
+        {
+            msg.AddText(input[span.X..]);
+            msg.Pop();
+            return msg;
+        }
+
         msg.AddText(input[span.X..span.Y]);
         msg.Pop();
         msg.AddText(input[span.Y..]);
@@ -118,4 +132,13 @@ public static class ConHelpers
         builder.Append('^', span.Y - span.X);
         return FormattedMessage.FromUnformatted(builder.ToString());
     }
+}
+
+public abstract class ConError : IConError
+{
+    public abstract FormattedMessage DescribeInner();
+
+    public string? Expression { get; set; }
+    public Vector2i? IssueSpan { get; set; }
+    public StackTrace? Trace { get; set; }
 }

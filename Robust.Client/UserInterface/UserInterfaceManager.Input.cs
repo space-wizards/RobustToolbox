@@ -35,6 +35,7 @@ internal partial class UserInterfaceManager
                 return;
             _controlFocused?.ControlFocusExited();
             _controlFocused = value;
+            _needUpdateActiveCursor = true;
         }
     }
 
@@ -312,7 +313,10 @@ internal partial class UserInterfaceManager
 
     private void _clearTooltip()
     {
-        if (!_showingTooltip) return;
+        _resetTooltipTimer();
+
+        if (!_showingTooltip)
+            return;
 
         if (_suppliedTooltip != null)
         {
@@ -321,7 +325,6 @@ internal partial class UserInterfaceManager
         }
 
         CurrentlyHovered?.PerformHideTooltip();
-        _resetTooltipTimer();
         _showingTooltip = false;
     }
 

@@ -75,19 +75,6 @@ namespace Robust.Shared.GameObjects
         IComponent AddComponent(EntityUid uid, ushort netId, MetaDataComponent? meta = null);
 
         /// <summary>
-        ///     Adds an uninitialized Component type to an entity.
-        /// </summary>
-        /// <remarks>
-        ///     This function returns a disposable initialize handle that you can use in a <see langword="using" /> statement, to set up a component
-        ///     before initialization is ran on it.
-        /// </remarks>
-        /// <typeparam name="T">Concrete component type to add.</typeparam>
-        /// <param name="uid">Entity being modified.</param>
-        /// <returns>Component initialization handle. When you are done setting up the component, make sure to dispose this.</returns>
-        [Obsolete]
-        EntityManager.CompInitializeHandle<T> AddComponentUninitialized<T>(EntityUid uid) where T : IComponent, new();
-
-        /// <summary>
         ///     Adds a Component to an entity. If the entity is already Initialized, the component will
         ///     automatically be Initialized and Started.
         /// </summary>
@@ -188,6 +175,14 @@ namespace Robust.Shared.GameObjects
         /// <param name="uid">Entity UID to check.</param>
         /// <returns>True if the entity has the component type, otherwise false.</returns>
         bool HasComponent<T>([NotNullWhen(true)] EntityUid? uid) where T : IComponent;
+
+        /// <summary>
+        ///     Checks if the entity has a component type.
+        /// </summary>
+        /// <param name="uid">Entity UID to check.</param>
+        /// <param name="reg">The component registration to check for.</param>
+        /// <returns>True if the entity has the component type, otherwise false.</returns>
+        bool HasComponent(EntityUid uid, ComponentRegistration reg);
 
         /// <summary>
         ///     Checks if the entity has a component type.
@@ -311,6 +306,15 @@ namespace Robust.Shared.GameObjects
         ///     Returns the component of a specific type.
         /// </summary>
         /// <param name="uid">Entity UID to check.</param>
+        /// <param name="reg">The component registration to check for.</param>
+        /// <param name="component">Component of the specified type (if exists).</param>
+        /// <returns>If the component existed in the entity.</returns>
+        bool TryGetComponent(EntityUid uid, ComponentRegistration reg, [NotNullWhen(true)] out IComponent? component);
+
+        /// <summary>
+        ///     Returns the component of a specific type.
+        /// </summary>
+        /// <param name="uid">Entity UID to check.</param>
         /// <param name="type">A trait or component type to check for.</param>
         /// <param name="component">Component of the specified type (if exists).</param>
         /// <returns>If the component existed in the entity.</returns>
@@ -353,6 +357,51 @@ namespace Robust.Shared.GameObjects
         /// <param name="component">Component with the specified network id.</param>
         /// <returns>If the component existed in the entity.</returns>
         bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, ushort netId, [NotNullWhen(true)] out IComponent? component, MetaDataComponent? meta = null);
+
+        /// <summary>
+        /// Tries to run <see cref="CopyComponents"/> without throwing if the component doesn't exist.
+        /// </summary>
+        bool TryCopyComponent<T>(
+            EntityUid source,
+            EntityUid target,
+            ref T? sourceComponent,
+            [NotNullWhen(true)] out T? targetComp,
+            MetaDataComponent? meta = null) where T : IComponent;
+
+        /// <summary>
+        /// Tries to run <see cref="CopyComponents"/> without throwing if the components don't exist.
+        /// </summary>
+        bool TryCopyComponents(EntityUid source, EntityUid target, MetaDataComponent? meta = null, params Type[] sourceComponents);
+
+        /// <summary>
+        ///     Copy a single component from source to target entity.
+        /// </summary>
+        /// <param name="source">The source entity to copy from.</param>
+        /// <param name="target">The target entity to copy to.</param>
+        /// <param name="sourceComponent">The source component instance to copy.</param>
+        /// <param name="component">The copied component if successful.</param>
+        /// <param name="meta">Optional metadata of the target entity.</param>
+        IComponent CopyComponent(EntityUid source, EntityUid target, IComponent sourceComponent, MetaDataComponent? meta = null);
+
+        /// <summary>
+        ///     Copy a single component from source to target entity.
+        /// </summary>
+        /// <typeparam name="T">The type of component to copy.</typeparam>
+        /// <param name="source">The source entity to copy from.</param>
+        /// <param name="target">The target entity to copy to.</param>
+        /// <param name="sourceComponent">The source component instance to copy.</param>
+        /// <param name="component">The copied component if successful.</param>
+        /// <param name="meta">Optional metadata of the target entity.</param>
+        T CopyComponent<T>(EntityUid source, EntityUid target, T sourceComponent, MetaDataComponent? meta = null) where T : IComponent;
+
+        /// <summary>
+        /// Copy multiple components from source to target entity using existing component instances.
+        /// </summary>
+        /// <param name="source">The source entity to copy from.</param>
+        /// <param name="target">The target entity to copy to.</param>
+        /// <param name="meta">Optional metadata of the target entity.</param>
+        /// <param name="sourceComponents">Array of component instances to copy.</param>
+        void CopyComponents(EntityUid source, EntityUid target, MetaDataComponent? meta = null, params IComponent[] sourceComponents);
 
         /// <summary>
         /// Returns a cached struct enumerator with the specified component.
@@ -424,6 +473,30 @@ namespace Robust.Shared.GameObjects
         (EntityUid Uid, T Component)[] AllComponents<T>() where T : IComponent;
 
         /// <summary>
+        /// Returns an array of all entities that have the given component.
+        /// Use sparingly.
+        /// </summary>
+        Entity<T>[] AllEntities<T>() where T : IComponent;
+
+        /// <summary>
+        /// Returns an array of all entities that have the given component.
+        /// Use sparingly.
+        /// </summary>
+        Entity<IComponent>[] AllEntities(Type tComp);
+
+        /// <summary>
+        /// Returns an array uids of all entities that have the given component.
+        /// Use sparingly.
+        /// </summary>
+        EntityUid[] AllEntityUids<T>() where T : IComponent;
+
+        /// <summary>
+        /// Returns an array uids of all entities that have the given component.
+        /// Use sparingly.
+        /// </summary>
+        EntityUid[] AllEntityUids(Type tComp);
+
+        /// <summary>
         /// Returns all instances of a component in a List.
         /// Use sparingly.
         /// </summary>
@@ -433,6 +506,13 @@ namespace Robust.Shared.GameObjects
         /// <see cref="ComponentQueryEnumerator"/>
         /// </summary>
         public ComponentQueryEnumerator ComponentQueryEnumerator(ComponentRegistry registry);
+
+        /// <summary>
+        /// <see cref="CompRegistryQueryEnumerator"/>
+        /// </summary>
+        public CompRegistryEntityEnumerator CompRegistryQueryEnumerator(ComponentRegistry registry);
+
+        AllEntityQueryEnumerator<IComponent> AllEntityQueryEnumerator(Type comp);
 
         AllEntityQueryEnumerator<TComp1> AllEntityQueryEnumerator<TComp1>()
             where TComp1 : IComponent;

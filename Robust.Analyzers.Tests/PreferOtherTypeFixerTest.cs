@@ -1,10 +1,9 @@
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
-using Microsoft.CodeAnalysis.Testing.Verifiers;
 using NUnit.Framework;
 using VerifyCS =
-    Microsoft.CodeAnalysis.CSharp.Testing.NUnit.AnalyzerVerifier<Robust.Analyzers.PreferOtherTypeAnalyzer>;
+    Microsoft.CodeAnalysis.CSharp.Testing.CSharpAnalyzerVerifier<Robust.Analyzers.PreferOtherTypeAnalyzer, Microsoft.CodeAnalysis.Testing.DefaultVerifier>;
 
 namespace Robust.Analyzers.Tests;
 
@@ -12,7 +11,7 @@ public sealed class PreferOtherTypeFixerTest
 {
     private static Task Verifier(string code, string fixedCode, params DiagnosticResult[] expected)
     {
-        var test = new CSharpCodeFixTest<PreferOtherTypeAnalyzer, PreferOtherTypeFixer, NUnitVerifier>()
+        var test = new CSharpCodeFixTest<PreferOtherTypeAnalyzer, PreferOtherTypeFixer, DefaultVerifier>()
         {
             TestState =
             {

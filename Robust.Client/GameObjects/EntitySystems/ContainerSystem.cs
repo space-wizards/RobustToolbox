@@ -5,7 +5,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Network;
 using Robust.Shared.Utility;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -17,7 +16,6 @@ namespace Robust.Client.GameObjects
 {
     public sealed class ContainerSystem : SharedContainerSystem
     {
-        [Dependency] private readonly INetManager _netMan = default!;
         [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
         [Dependency] private readonly PointLightSystem _lightSys = default!;
@@ -242,7 +240,7 @@ namespace Robust.Client.GameObjects
 #if DEBUG
             var uid = GetEntity(netEntity);
 
-            if (TryComp<MetaDataComponent>(uid, out var meta))
+            if (TryComp(uid, out MetaDataComponent? meta))
             {
                 DebugTools.Assert((meta.Flags & ( MetaDataFlags.Detached | MetaDataFlags.InContainer) ) == MetaDataFlags.Detached,
                     $"Adding entity {ToPrettyString(uid)} to list of expected entities for container {container.ID} in {ToPrettyString(container.Owner)}, despite it already being in a container.");

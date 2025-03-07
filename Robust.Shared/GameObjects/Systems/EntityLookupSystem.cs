@@ -4,22 +4,18 @@ using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Robust.Shared.Containers;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.BroadPhase;
 using Robust.Shared.Physics.Collision;
-using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
-using TerraFX.Interop.Windows;
 
 namespace Robust.Shared.GameObjects;
 
@@ -128,7 +124,8 @@ public sealed partial class EntityLookupSystem : EntitySystem
         SubscribeLocalEvent<BroadphaseComponent, EntityTerminatingEvent>(OnBroadphaseTerminating);
         SubscribeLocalEvent<BroadphaseComponent, ComponentAdd>(OnBroadphaseAdd);
         SubscribeLocalEvent<BroadphaseComponent, ComponentInit>(OnBroadphaseInit);
-        SubscribeLocalEvent<MapChangedEvent>(OnMapChange);
+        SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
+        SubscribeLocalEvent<MapCreatedEvent>(OnMapChange);
 
         _transform.OnBeforeMoveEvent += OnMove;
         EntityManager.EntityInitialized += OnEntityInit;
@@ -197,12 +194,18 @@ public sealed partial class EntityLookupSystem : EntitySystem
         }
     }
 
-    private void OnMapChange(MapChangedEvent ev)
+    private void OnMapChange(MapCreatedEvent ev)
     {
-        if (ev.Created && ev.Map != MapId.Nullspace)
+        if (ev.MapId != MapId.Nullspace)
         {
             EnsureComp<BroadphaseComponent>(ev.Uid);
         }
+    }
+
+    private void OnGridAdd(GridAddEvent ev)
+    {
+        // Must be done before initialization as that's when broadphase data starts getting set.
+        EnsureComp<BroadphaseComponent>(ev.EntityUid);
     }
 
     private void OnBroadphaseAdd(Entity<BroadphaseComponent> broadphase, ref ComponentAdd args)
@@ -516,7 +519,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
     {
         DebugTools.Assert(!_container.IsEntityOrParentInContainer(uid));
         DebugTools.Assert(xform.Broadphase == null || xform.Broadphase == new BroadphaseData(broadUid, default, false, staticBody));
-        xform.Broadphase ??= new BroadphaseData(broadUid, EntityUid.Invalid, false, staticBody);
+        xform.Broadphase ??= new(broadUid, default, false, staticBody);
         (staticBody ? broadphase.StaticSundriesTree : broadphase.SundriesTree).AddOrUpdate(uid, aabb);
     }
 

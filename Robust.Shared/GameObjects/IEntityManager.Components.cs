@@ -507,11 +507,6 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public ComponentQueryEnumerator ComponentQueryEnumerator(ComponentRegistry registry);
 
-        /// <summary>
-        /// <see cref="CompRegistryQueryEnumerator"/>
-        /// </summary>
-        public CompRegistryEntityEnumerator CompRegistryQueryEnumerator(ComponentRegistry registry);
-
         AllEntityQueryEnumerator<IComponent> AllEntityQueryEnumerator(Type comp);
 
         AllEntityQueryEnumerator<TComp1> AllEntityQueryEnumerator<TComp1>()

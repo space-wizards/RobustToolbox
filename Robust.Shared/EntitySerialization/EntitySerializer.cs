@@ -489,7 +489,7 @@ public sealed class EntitySerializer : ISerializationContext,
             xform._localRotation = 0;
         }
 
-        foreach (var component in EntMan.GetComponentsInternal(uid))
+        foreach (var component in EntMan.GetComponents(uid))
         {
             var compType = component.GetType();
 
@@ -944,7 +944,7 @@ public sealed class EntitySerializer : ISerializationContext,
         ISerializationContext? context,
         ISerializationManager.InstantiationDelegate<EntityUid>? _)
     {
-        return node.Value == "invalid" ? EntityUid.Invalid : EntityUid.Parse(node.Value);
+        return node.Value == "invalid" ? EntityUid.Invalid : EntityUid.Parse(node.Value, "0");
     }
 
     public ValidationNode Validate(

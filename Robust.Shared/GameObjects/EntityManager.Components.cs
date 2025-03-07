@@ -10,6 +10,7 @@ using System.Threading;
 using Arch.Core;
 using Arch.Core.Extensions.Dangerous;
 using Arch.Core.Utils;
+using Collections.Pooled;
 using CommunityToolkit.HighPerformance.Helpers;
 using JetBrains.Annotations;
 using Robust.Shared.GameStates;
@@ -92,11 +93,10 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public int Count(Type component)
+        public int Count(Type type)
         {
-            DebugTools.Assert(component.IsAssignableTo(typeof(IComponent)));
-            var dict = _entTraitDict[component];
-            return dict.Count;
+            DebugTools.Assert(type.IsAssignableTo(typeof(IComponent)));
+            return _world.CountEntities(new QueryDescription(all: [type]));
         }
 
         [Obsolete("Use InitializeEntity")]
@@ -177,7 +177,7 @@ namespace Robust.Shared.GameObjects
                 {
                     var comp = _componentFactory.GetComponent(reg);
                     _serManager.CopyTo(entry.Component, ref comp, notNullableOverride: true);
-                    AddComponentInternal(target, comp, reg, overwrite: true, metadata: metadata);
+                    AddComponentInternal(target, comp, reg, skipInit: false, metadata: metadata);
                 }
                 else
                 {
@@ -188,7 +188,7 @@ namespace Robust.Shared.GameObjects
 
                     var comp = _componentFactory.GetComponent(reg);
                     _serManager.CopyTo(entry.Component, ref comp, notNullableOverride: true);
-                    AddComponentInternal(target, comp, reg, overwrite: false, metadata: metadata);
+                    AddComponentInternal(target, comp, reg, skipInit: false, metadata: metadata);
                 }
             }
         }
@@ -267,11 +267,11 @@ namespace Robust.Shared.GameObjects
         public void AddComponent(
             EntityUid uid,
             EntityPrototype.ComponentRegistryEntry entry,
-            bool overwrite = false,
             MetaDataComponent? metadata = null)
         {
-            var copy = _componentFactory.GetComponent(entry);
-            AddComponentInternal(uid, copy, false, metadata);
+            var compReg = _componentFactory.GetRegistration(entry.Component.GetType());
+            var copy = _componentFactory.GetComponent(compReg);
+            AddComponentInternal(uid, copy, compReg, skipInit: false, metadata);
         }
 
         /// <inheritdoc />
@@ -294,20 +294,8 @@ namespace Robust.Shared.GameObjects
             }
 #pragma warning restore CS0618 // Type or member is obsolete
 
-            AddComponentInternal(uid, component, false, metadata);
+            AddComponentInternal(uid, component, _componentFactory.GetRegistration(typeof(T)), false, metadata);
         }
-
-        private void AddComponentInternal<T>(EntityUid uid, T component, ComponentRegistration compReg, bool skipInit, MetaDataComponent? metadata = null) where T : IComponent
-        {
-            if (!MetaQuery.ResolveInternal(uid, ref metadata, false))
-                throw new ArgumentException($"Entity {uid} is not valid.", nameof(uid));
-
-            // get interface aliases for mapping
-            var reg = _componentFactory.GetRegistration(component);
-            AddComponentInternal(uid, component, reg, skipInit, metadata);
-        }
-
-        // TODO: Clean up this mess.
 
         internal void AddComponentInternalOnly<T>(EntityUid uid, T component, ComponentRegistration reg,
             MetaDataComponent? metadata = null) where T : IComponent
@@ -1095,7 +1083,7 @@ namespace Robust.Shared.GameObjects
             _serManager.CopyTo(sourceComponent, ref component, notNullableOverride: true);
             component.Owner = target;
 
-            AddComponentInternal(target, component, compReg, true, false, meta);
+            AddComponentInternal(target, component, compReg, skipInit: false, meta);
             return component;
         }
 
@@ -1118,7 +1106,7 @@ namespace Robust.Shared.GameObjects
         {
             foreach (var obj in _world.GetAllComponents(uid))
             {
-                var comp = (IComponent)(obj!);
+                var comp = (IComponent)obj!;
 
                 if (comp.Deleted) continue;
 
@@ -1298,8 +1286,7 @@ namespace Robust.Shared.GameObjects
         public AllEntityQueryEnumerator<IComponent> AllEntityQueryEnumerator(Type comp)
         {
             DebugTools.Assert(comp.IsAssignableTo(typeof(IComponent)));
-            var trait = _entTraitArray[_componentFactory.GetIndex(comp).Value];
-            return new AllEntityQueryEnumerator<IComponent>(trait);
+            return new AllEntityQueryEnumerator<IComponent>(_world);
         }
 
         public AllEntityQueryEnumerator<TComp1> AllEntityQueryEnumerator<TComp1>()

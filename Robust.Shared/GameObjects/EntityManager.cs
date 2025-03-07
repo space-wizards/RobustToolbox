@@ -323,7 +323,7 @@ namespace Robust.Shared.GameObjects
 
         public EntityUid CreateEntityUninitialized(string? prototypeName, out MetaDataComponent meta, ComponentRegistry? overrides = null)
         {
-            return CreateEntity(prototypeName, out meta, overrides);
+            return CreateEntity(prototypeName, out meta, out _, overrides);
         }
 
         /// <inheritdoc />
@@ -758,18 +758,21 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public virtual void FlushEntities()
         {
-            _sawmill.Info($"Flushing entities. Entity count: {Entities.Count}");
+            _sawmill.Info($"Flushing entities. Entity count: {EntityCount}");
             BeforeEntityFlush?.Invoke();
             FlushEntitiesInternal();
 
-            if (Entities.Count != 0)
+            if (EntityCount != 0)
             {
-                _sawmill.Error($"Failed to flush all entities. Entity count: {Entities.Count}");
+                _sawmill.Error($"Failed to flush all entities. Entity count: {EntityCount}");
                 // Dump entity info, but avoid dumping ~50k errors if for whatever reason we failed to delete almost all entities.
                 // Using 512 as the limit, in case the problem entities are related to player counts on high-pop servers.
-                if (Entities.Count < 512)
+                if (EntityCount < 512)
                 {
-                    foreach (var uid in Entities)
+                    var entList = new PooledList<EntityReference>();
+                    _world.GetEntities(_archMetaQuery, entList.Span);
+
+                    foreach (var uid in entList)
                     {
                         _sawmill.Error($"Entity exists after flush: {ToPrettyString(uid)}");
                     }
@@ -782,8 +785,8 @@ namespace Robust.Shared.GameObjects
             FlushEntitiesInternal();
 #endif
 
-            if (Entities.Count != 0)
-                throw new Exception($"Failed to flush all entities. Entity count: {Entities.Count}");
+            if (EntityCount != 0)
+                throw new Exception($"Failed to flush all entities. Entity count: {EntityCount}");
 
             AfterEntityFlush?.Invoke();
         }
@@ -859,7 +862,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc cref="AllocEntity(Robust.Shared.Prototypes.EntityPrototype?,out Robust.Shared.GameObjects.MetaDataComponent)"/>
-        internal EntityUid AllocEntity(EntityPrototype? prototype) => AllocEntity(prototype, out _);
+        internal EntityUid AllocEntity(EntityPrototype? prototype) => AllocEntity(prototype, out _, out _);
 
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
@@ -886,14 +889,14 @@ namespace Robust.Shared.GameObjects
             _eventBus.OnEntityAdded(uid);
 
             // add the required MetaDataComponent directly.
-            AddComponentInternal(uid, metadata, _metaReg, true, metadata);
+            AddComponentInternal(uid, metadata, _metaReg, skipInit: true, metadata);
 
             // allocate the required TransformComponent
             xform = Unsafe.As<TransformComponent>(_componentFactory.GetComponent(_xformReg));
 #pragma warning disable CS0618 // Type or member is obsolete
             xform.Owner = uid;
 #pragma warning restore CS0618 // Type or member is obsolete
-            AddComponentInternal(uid, xform, true, metadata);
+            AddComponentInternal(uid, xform, _xformReg, skipInit: true, metadata);
 
             return uid;
         }

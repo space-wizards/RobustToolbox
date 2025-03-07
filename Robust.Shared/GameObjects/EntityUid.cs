@@ -68,7 +68,7 @@ namespace Robust.Shared.GameObjects
 
         public static bool TryParse(ReadOnlySpan<char> uid, ReadOnlySpan<char> version, out EntityUid entityUid)
         {
-            if (!int.TryParse(uid, out var id))
+            try
             {
                 entityUid = Parse(uid, version);
                 return true;
@@ -78,9 +78,6 @@ namespace Robust.Shared.GameObjects
                 entityUid = Invalid;
                 return false;
             }
-
-            entityUid = new(id);
-            return true;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

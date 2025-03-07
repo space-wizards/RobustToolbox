@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -56,12 +57,12 @@ internal ref struct DistanceProxy
     /// must remain in scope while the proxy is in use.
     /// </summary>
     /// <param name="shape">The shape.</param>
-    public void Set(IPhysShape shape, int index)
+    internal void Set<T>(T shape, int index) where T : IPhysShape
     {
         switch (shape.ShapeType)
         {
             case ShapeType.Circle:
-                PhysShapeCircle circle = (PhysShapeCircle) shape;
+                var circle = Unsafe.As<PhysShapeCircle>(shape);
                 Buffer._00 = circle.Position;
                 Vertices = Buffer.AsSpan[..1];
                 Radius = circle.Radius;
@@ -70,20 +71,20 @@ internal ref struct DistanceProxy
             case ShapeType.Polygon:
                 if (shape is Polygon poly)
                 {
-                    Vertices = poly.Vertices;
+                    Vertices = poly.Vertices.AsSpan()[..poly.VertexCount];
                     Radius = poly.Radius;
                 }
                 else
                 {
-                    var polyShape = (PolygonShape) shape;
-                    Vertices = polyShape.Vertices;
+                    var polyShape = Unsafe.As<PolygonShape>(shape);
+                    Vertices = polyShape.Vertices.AsSpan()[..polyShape.VertexCount];
                     Radius = polyShape.Radius;
                 }
 
                 break;
 
             case ShapeType.Chain:
-                ChainShape chain = (ChainShape) shape;
+                var chain = Unsafe.As<ChainShape>(shape);
                 Debug.Assert(0 <= index && index < chain.Vertices.Length);
 
                 Buffer._00 = chain.Vertices[index];
@@ -93,7 +94,7 @@ internal ref struct DistanceProxy
                 Radius = chain.Radius;
                 break;
             case ShapeType.Edge:
-                EdgeShape edge = (EdgeShape) shape;
+                var edge = Unsafe.As<EdgeShape>(shape);
 
                 Buffer._00 = edge.Vertex1;
                 Buffer._01 = edge.Vertex2;

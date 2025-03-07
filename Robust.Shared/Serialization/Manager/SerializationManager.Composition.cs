@@ -26,14 +26,36 @@ public partial class SerializationManager
 
     public DataNode PushComposition(Type type, DataNode[] parents, DataNode child, ISerializationContext? context = null)
     {
+        // TODO SERIALIZATION
+        // Add variant that doesn't require a parent array.
+
+        // TODO SERIALIZATION
+        // Change inheritance pushing so that it modifies the passed in child. This avoids re-creating the child
+        // multiple times when there are multiple children.
+        //
+        // I.e., change the PushCompositionDelegate signature to not have a return value, and also add an override
+        // of this method that modified the given child.
+
+        if (parents.Length == 0)
+            return child.Copy();
+
         DebugTools.Assert(parents.All(x => x.GetType() == child.GetType()));
+
+
+        // the child.Clone() statement to the beginning here, then make the delegate modify the clone.
+        // Currently pusing more than one parent requires multiple unnecessary clones.
 
         var pusher = GetOrCreatePushCompositionDelegate(type, child);
 
         var node = child;
-        for (int i = 0; i < parents.Length; i++)
+        foreach (var parent in parents)
         {
-            node = pusher(type, parents[i], node, context);
+            var newNode = pusher(type, parent, node, context);
+
+            // Currently delegate pusher should be returning a new instance, and not modifying the passed in child.
+            DebugTools.Assert(!ReferenceEquals(newNode, node));
+
+            node = newNode;
         }
 
         return node;
@@ -95,7 +117,7 @@ public partial class SerializationManager
                         Expression.Convert(parentParam, nodeType)),
                     MappingDataNode => Expression.Call(
                         instanceConst,
-                        nameof(PushInheritanceMapping),
+                        nameof(CombineMappings),
                         Type.EmptyTypes,
                         Expression.Convert(childParam, nodeType),
                         Expression.Convert(parentParam, nodeType)),
@@ -117,32 +139,26 @@ public partial class SerializationManager
         //todo implement different inheritancebehaviours for yamlfield
         // I have NFI what this comment means.
 
-        var result = new SequenceDataNode(child.Count + parent.Count);
+        var result = child.Copy();
         foreach (var entry in parent)
         {
-            result.Add(entry);
-        }
-        foreach (var entry in child)
-        {
-            result.Add(entry);
+            result.Add(entry.Copy());
         }
 
         return result;
     }
 
-    private MappingDataNode PushInheritanceMapping(MappingDataNode child, MappingDataNode parent)
+    public MappingDataNode CombineMappings(MappingDataNode child, MappingDataNode parent)
     {
         //todo implement different inheritancebehaviours for yamlfield
         // I have NFI what this comment means.
+        // I still don't know what it means, but if it's talking about the always/never push inheritance attributes,
+        // make sure it doesn't break entity serialization.
 
-        var result = new MappingDataNode(child.Count + parent.Count);
+        var result = child.Copy();
         foreach (var (k, v) in parent)
         {
-            result[k] = v;
-        }
-        foreach (var (k, v) in child)
-        {
-            result[k] = v;
+            result.TryAddCopy(k, v);
         }
 
         return result;

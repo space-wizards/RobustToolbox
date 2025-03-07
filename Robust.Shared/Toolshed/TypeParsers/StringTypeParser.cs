@@ -11,8 +11,8 @@ namespace Robust.Shared.Toolshed.TypeParsers;
 
 internal sealed class StringTypeParser : TypeParser<string>
 {
-    // Completion option for hinting that all strings must start with an quote
-    private static readonly CompletionOption[] Option = [new("\"", Flags: CompletionOptionFlags.PartialCompletion)];
+    // Completion option for hinting that all strings must start with a quote
+    private static readonly CompletionOption[] Option = [new("\"", Flags: CompletionOptionFlags.PartialCompletion | CompletionOptionFlags.NoEscape)];
 
     public override bool TryParse(ParserContext ctx, [NotNullWhen(true)] out string? result)
     {
@@ -70,9 +70,9 @@ internal sealed class StringTypeParser : TypeParser<string>
         return false;
     }
 
-    public override CompletionResult TryAutocomplete(ParserContext parserContext, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext parserContext, CommandArgument? arg)
     {
-        var hint = argName != null ? $"<{argName}> (string)" : "<string>";
+        var hint = GetArgHint(arg);
         parserContext.ConsumeWhitespace();
         return parserContext.PeekRune() == new Rune('"')
             ? CompletionResult.FromHint(hint)

@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map;
@@ -16,9 +17,9 @@ public readonly struct Tile : IEquatable<Tile>, ISpanFormattable
     public readonly int TypeId;
 
     /// <summary>
-    ///     Rendering flags.
+    ///     Custom flags for additional tile-data.
     /// </summary>
-    public readonly TileRenderFlag Flags;
+    public readonly byte Flags;
 
     /// <summary>
     /// Variant of this tile to render.
@@ -39,9 +40,9 @@ public readonly struct Tile : IEquatable<Tile>, ISpanFormattable
     ///     Creates a new instance of a grid tile.
     /// </summary>
     /// <param name="typeId">Internal type ID.</param>
-    /// <param name="flags">Flags used by toolbox's rendering.</param>
+    /// <param name="flags">Custom tile flags for usage.</param>
     /// <param name="variant">The visual variant this tile is using.</param>
-    public Tile(int typeId, TileRenderFlag flags = 0, byte variant = 0)
+    public Tile(int typeId, byte flags = 0, byte variant = 0)
     {
         TypeId = typeId;
         Flags = flags;
@@ -112,9 +113,19 @@ public readonly struct Tile : IEquatable<Tile>, ISpanFormattable
             return (TypeId.GetHashCode() * 397) ^ Flags.GetHashCode() ^ Variant.GetHashCode();
         }
     }
+
+    [Pure]
+    public Tile WithVariant(byte variant)
+    {
+        return new Tile(TypeId, Flags, variant);
+    }
+
+    [Pure]
+    public Tile WithFlag(byte flag)
+    {
+        return new Tile(TypeId, flags: flag, variant: Variant);
+    }
 }
 
-public enum TileRenderFlag : byte
-{
+public sealed class TileFlagLayer {}
 
-}

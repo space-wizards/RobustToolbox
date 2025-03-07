@@ -99,7 +99,7 @@ internal record struct Polygon : IPhysShape
     public Polygon(Vector2[] vertices)
     {
         Unsafe.SkipInit(out this);
-        var hull = PhysicsHull.ComputeHull(vertices, vertices.Length);
+        var hull = InternalPhysicsHull.ComputeHull(vertices, vertices.Length);
 
         if (hull.Count < 3)
         {
@@ -121,7 +121,7 @@ internal record struct Polygon : IPhysShape
         return new Polygon(polyShape);
     }
 
-    private void Set(PhysicsHull hull)
+    private void Set(InternalPhysicsHull hull)
     {
         DebugTools.Assert(hull.Count >= 3);
         var vertexCount = hull.Count;

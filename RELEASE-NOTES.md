@@ -54,6 +54,29 @@ END TEMPLATE-->
 *None yet*
 
 
+## 247.2.0
+
+### New features
+
+* Added functions for copying components to `IEntityManager` and `EntitySystem`.
+* Sound played from sound collections is now sent as "collection ID + index" over the network instead of the final filename.
+  * This enables integration of future accessibility systems.
+  * Added a new `ResolvedSoundSpecifier` to represent played sounds. Methods that previously took a filename now take a `ResolvedSoundSpecifier`, with an implicit cast from string being interpreted as a raw filename.
+* `VisibilitySystem` has been made accessible to shared as `SharedVisibilitySystem`.
+* `ScrollContainer` now has properties exposing `Value` and `ValueTarget` on its internal scroll bars.
+
+### Bugfixes
+
+* Fix prototype hot reload crashing when adding a new component already exists on an entity.
+* Fix maps failing to save in some cases related to tilemap IDs.
+* Fix `Regex.Escape(string)` not being available in sandbox.
+* Prototypes that parent themselves directly won't cause the game to hang on an infinite loop anymore.
+* Fixed disconnecting during a connection attempt leaving the client stuck in a phantom state.
+
+### Internal
+
+* More warning cleanup.
+
 ## 247.1.0
 
 ### New features
@@ -67,7 +90,7 @@ END TEMPLATE-->
 
 ### Other
 
-* Updated the Yamale map file format validator to support v7 map/grid files. 
+* Updated the Yamale map file format validator to support v7 map/grid files.
 
 
 ## 247.0.0

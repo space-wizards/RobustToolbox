@@ -35,7 +35,6 @@ namespace Robust.Shared.Physics.Systems
         public bool TryCollideRect(Box2 collider, MapId mapId, bool approximate = true)
         {
             var state = (collider, mapId, found: false);
-            var broadphases = new ValueList<Entity<BroadphaseComponent>>();
 
             _broadphase.GetBroadphases(mapId,
                 collider,

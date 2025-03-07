@@ -1075,6 +1075,97 @@ namespace Robust.Shared.GameObjects
             return TryGetComponent(uid.Value, netId, out component, meta);
         }
 
+        /// <inheritdoc/>
+        public bool TryCopyComponent<T>(EntityUid source, EntityUid target, ref T? sourceComponent, [NotNullWhen(true)] out T? targetComp, MetaDataComponent? meta = null) where T : IComponent
+        {
+            if (!MetaQuery.Resolve(target, ref meta))
+            {
+                targetComp = default;
+                return false;
+            }
+
+            if (sourceComponent == null && !TryGetComponent(source, out sourceComponent))
+            {
+                targetComp = default;
+                return false;
+            }
+
+            targetComp = CopyComponentInternal(source, target, sourceComponent, meta);
+            return true;
+        }
+
+        /// <inheritdoc/>
+        public bool TryCopyComponents(
+            EntityUid source,
+            EntityUid target,
+            MetaDataComponent? meta = null,
+            params Type[] sourceComponents)
+        {
+            if (!MetaQuery.TryGetComponent(target, out meta))
+                return false;
+
+            var allCopied = true;
+
+            foreach (var type in sourceComponents)
+            {
+                if (!TryGetComponent(source, type, out var srcComp))
+                {
+                    allCopied = false;
+                    continue;
+                }
+
+                CopyComponent(source, target, srcComp, meta: meta);
+            }
+
+            return allCopied;
+        }
+
+        /// <inheritdoc/>
+        public IComponent CopyComponent(EntityUid source, EntityUid target, IComponent sourceComponent, MetaDataComponent? meta = null)
+        {
+            if (!MetaQuery.Resolve(target, ref meta))
+            {
+                throw new InvalidOperationException();
+            }
+
+            return CopyComponentInternal(source, target, sourceComponent, meta);
+        }
+
+        /// <inheritdoc/>
+        public T CopyComponent<T>(EntityUid source, EntityUid target, T sourceComponent,MetaDataComponent? meta = null) where T : IComponent
+        {
+            if (!MetaQuery.Resolve(target, ref meta))
+            {
+                throw new InvalidOperationException();
+            }
+
+            return CopyComponentInternal(source, target, sourceComponent, meta);
+        }
+
+        /// <inheritdoc/>
+        public void CopyComponents(EntityUid source, EntityUid target, MetaDataComponent? meta = null, params IComponent[] sourceComponents)
+        {
+            if (!MetaQuery.Resolve(target, ref meta))
+                return;
+
+            foreach (var comp in sourceComponents)
+            {
+                CopyComponentInternal(source, target, comp, meta);
+            }
+        }
+
+        private T CopyComponentInternal<T>(EntityUid source, EntityUid target, T sourceComponent, MetaDataComponent meta) where T : IComponent
+        {
+            var compReg = ComponentFactory.GetRegistration(sourceComponent.GetType());
+            var component = (T)ComponentFactory.GetComponent(compReg);
+
+            _serManager.CopyTo(sourceComponent, ref component, notNullableOverride: true);
+            component.Owner = target;
+
+            AddComponentInternal(target, component, compReg, true, false, meta);
+            return component;
+        }
+
         public EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : IComponent
         {
             var comps = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];

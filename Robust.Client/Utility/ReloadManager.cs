@@ -122,7 +122,7 @@ internal sealed class ReloadManager : IReloadManager
 
             _tasks.RunOnMainThread(() =>
             {
-                var fullPath = args.FullPath;
+                var fullPath = args.FullPath.Replace(Path.DirectorySeparatorChar, '/');
                 var file = new ResPath(fullPath);
 
                 foreach (var rootIter in _res.GetContentRoots())

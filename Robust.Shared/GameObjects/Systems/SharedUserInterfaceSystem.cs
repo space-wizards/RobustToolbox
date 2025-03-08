@@ -279,7 +279,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         }
     }
 
-    protected virtual void OnUserInterfaceShutdown(Entity<UserInterfaceComponent> ent, ref ComponentShutdown args)
+    protected void OnUserInterfaceShutdown(Entity<UserInterfaceComponent> ent, ref ComponentShutdown args)
     {
         var ents = new ValueList<EntityUid>();
         foreach (var (key, acts) in ent.Comp.Actors)
@@ -1096,7 +1096,11 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
                         uiComp.ClientOpenInterfaces.Remove(bui.UiKey);
                     }
 
-                    SavePosition(bui);
+                    if (!TerminatingOrDeleted(bui.Owner))
+                    {
+                        SavePosition(bui);
+                    }
+
                     bui.Dispose();
                 }
             }

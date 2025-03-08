@@ -40,7 +40,7 @@ namespace Robust.UnitTesting.Shared.Physics
 
             for (var i = 0; i < aabbs1.Length; ++i)
             {
-                dt.CreateProxy(aabbs1[i], i);
+                dt.CreateProxy(aabbs1[i], uint.MaxValue, i);
             }
 
             var point = new Vector2(0, 0);

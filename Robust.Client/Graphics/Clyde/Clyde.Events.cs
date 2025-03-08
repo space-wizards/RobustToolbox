@@ -109,6 +109,9 @@ namespace Robust.Client.Graphics.Clyde
 
         private void SendWindowResized(WindowReg reg, Vector2i oldSize)
         {
+            if (!reg.IsVisible) // Only send this for open windows
+                return;
+
             var loaded = RtToLoaded(reg.RenderTarget);
             loaded.Size = reg.FramebufferSize;
 

@@ -335,98 +335,117 @@ namespace Robust.Shared.Prototypes
         }
 
         /// <inheritdoc />
-        public void ReloadPrototypes(Dictionary<Type, HashSet<string>> modified,
+        public void ReloadPrototypes(
+            Dictionary<Type, HashSet<string>> modified,
             Dictionary<Type, HashSet<string>>? removed = null)
         {
-#if TOOLS
             var prototypeTypeOrder = modified.Keys.ToList();
             prototypeTypeOrder.Sort(SortPrototypesByPriority);
 
-            var pushed = new Dictionary<Type, HashSet<string>>();
+            var byType = new Dictionary<Type, PrototypesReloadedEventArgs.PrototypeChangeSet>();
             var modifiedKinds = new HashSet<KindData>();
+            var toProcess = new HashSet<string>();
+            var processQueue = new Queue<string>();
 
             foreach (var kind in prototypeTypeOrder)
             {
+                var modifiedInstances = new Dictionary<string, IPrototype>();
                 var kindData = _kinds[kind];
-                if (!kind.IsAssignableTo(typeof(IInheritingPrototype)))
-                {
-                    foreach (var id in modified[kind])
-                    {
-                        var prototype = (IPrototype)_serializationManager.Read(kind, kindData.Results[id])!;
-                        kindData.UnfrozenInstances ??= kindData.Instances.ToDictionary();
-                        kindData.UnfrozenInstances[id] = prototype;
-                        modifiedKinds.Add(kindData);
-                    }
 
-                    continue;
-                }
+                var tree = kindData.Inheritance;
+                toProcess.Clear();
+                processQueue.Clear();
 
-                var tree = kindData.Inheritance!;
-                var processQueue = new Queue<string>();
+                DebugTools.AssertEqual(kind.IsAssignableTo(typeof(IInheritingPrototype)), tree != null);
+                DebugTools.Assert(tree != null || kindData.RawResults == kindData.Results);
+
                 foreach (var id in modified[kind])
                 {
+                    AddToQueue(id);
+                }
+
+                void AddToQueue(string id)
+                {
+                    if (!toProcess.Add(id))
+                        return;
                     processQueue.Enqueue(id);
+
+                    if (tree == null)
+                        return;
+
+                    if (!tree.TryGetChildren(id, out var children))
+                        return;
+
+                    foreach (var child in children!)
+                    {
+                        AddToQueue(child);
+                    }
                 }
 
                 while (processQueue.TryDequeue(out var id))
                 {
-                    var pushedSet = pushed.GetOrNew(kind);
-
-                    if (tree.TryGetParents(id, out var parents))
+                    DebugTools.Assert(toProcess.Contains(id));
+                    if (tree != null)
                     {
-                        var nonPushedParent = false;
-                        foreach (var parent in parents)
+                        if (tree.TryGetParents(id, out var parents))
                         {
-                            //our parent has been reloaded and has not been added to the pushedSet yet
-                            if (modified[kind].Contains(parent) && !pushedSet.Contains(parent))
+                            DebugTools.Assert(parents.Length > 0);
+                            var nonPushedParent = false;
+                            foreach (var parent in parents)
                             {
-                                //we re-queue ourselves at the end of the queue
+                                if (!toProcess.Contains(parent))
+                                    continue;
+
+                                // our parent has been modified, but has not yet been processed.
+                                // we re-queue ourselves at the end of the queue.
+                                DebugTools.Assert(processQueue.Contains(parent));
                                 processQueue.Enqueue(id);
                                 nonPushedParent = true;
                                 break;
                             }
+
+                            if (nonPushedParent)
+                                continue;
+
+                            var parentMaps = new MappingDataNode[parents.Length];
+                            for (var i = 0; i < parentMaps.Length; i++)
+                            {
+                                parentMaps[i] = kindData.Results[parents[i]];
+                            }
+
+                            kindData.Results[id] = _serializationManager.PushCompositionWithGenericNode(
+                                kind,
+                                parentMaps,
+                                kindData.RawResults[id]);
                         }
-
-                        if (nonPushedParent)
-                            continue;
-
-                        var parentMaps = new MappingDataNode[parents.Length];
-                        for (var i = 0; i < parentMaps.Length; i++)
+                        else
                         {
-                            parentMaps[i] = kindData.Results[parents[i]];
+                            kindData.Results[id] = kindData.RawResults[id];
                         }
-
-                        kindData.Results[id] = _serializationManager.PushCompositionWithGenericNode(
-                            kind,
-                            parentMaps,
-                            kindData.Results[id]);
                     }
 
+                    toProcess.Remove(id);
 
                     var prototype = TryReadPrototype(kind, id, kindData.Results[id], SerializationHookContext.DontSkipHooks);
-                    if (prototype != null)
-                    {
-                        kindData.UnfrozenInstances ??= kindData.Instances.ToDictionary();
-                        kindData.UnfrozenInstances[id] = prototype;
-                        modifiedKinds.Add(kindData);
-                    }
+                    if (prototype == null)
+                        continue;
 
-                    pushedSet.Add(id);
+                    kindData.UnfrozenInstances ??= kindData.Instances.ToDictionary();
+                    kindData.UnfrozenInstances[id] = prototype;
+                    modifiedInstances.Add(id, prototype);
                 }
+
+                if (modifiedInstances.Count == 0)
+                    continue;
+
+                byType.Add(kindData.Type, new(modifiedInstances));
+                modifiedKinds.Add(kindData);
             }
 
             Freeze(modifiedKinds);
+
             if (modifiedKinds.Any(x => x.Type == typeof(EntityPrototype) || x.Type == typeof(EntityCategoryPrototype)))
                 UpdateCategories();
-#endif
-
-            //todo paul i hate it but i am not opening that can of worms in this refactor
-            var byType = modified
-                .ToDictionary(
-                    g => g.Key,
-                    g => new PrototypesReloadedEventArgs.PrototypeChangeSet(
-                        g.Value.Where(x => _kinds[g.Key].Instances.ContainsKey(x))
-                            .ToDictionary(a => a, a => _kinds[g.Key].Instances[a])));
 
             var modifiedTypes = new HashSet<Type>(byType.Keys);
             if (removed != null)
@@ -592,11 +611,9 @@ namespace Robust.Shared.Prototypes
 
             // var sw = RStopwatch.StartNew();
 
-            var results = new Dictionary<string, InheritancePushDatum>(
-                data.Results.Select(k => new KeyValuePair<string, InheritancePushDatum>(
-                    k.Key,
-                    new InheritancePushDatum(k.Value, tree.GetParentsCount(k.Key))))
-            );
+            var results = data.RawResults.ToDictionary(
+                k => k.Key,
+                k => new InheritancePushDatum(k.Value, tree.GetParentsCount(k.Key)));
 
             using var countDown = new CountdownEvent(results.Count);
 
@@ -824,22 +841,10 @@ namespace Robust.Shared.Prototypes
         public bool TryGetKindFrom(Type type, [NotNullWhen(true)] out string? kind)
         {
             kind = null;
-
-            // If the type doesn't implement IPrototype, this fails.
-            if (!(typeof(IPrototype).IsAssignableFrom(type)))
+            if (!_kinds.TryGetValue(type, out var kindData))
                 return false;
 
-            var attribute = (PrototypeAttribute?)Attribute.GetCustomAttribute(type, typeof(PrototypeAttribute));
-
-            // If the prototype type doesn't have the attribute, this fails.
-            if (attribute == null)
-                return false;
-
-            // If the variant isn't registered, this fails.
-            if (attribute.Type == null || !HasKind(attribute.Type))
-                return false;
-
-            kind = attribute.Type;
+            kind = kindData.Name;
             return true;
         }
 
@@ -945,13 +950,13 @@ namespace Robust.Shared.Prototypes
                     "No " + nameof(PrototypeAttribute) + " to give it a type string.");
             }
 
-            attribute.Type ??= CalculatePrototypeName(kind);
+            var name = attribute.Type ?? CalculatePrototypeName(kind);
 
-            if (_kindNames.TryGetValue(attribute.Type, out var name))
+            if (_kindNames.TryGetValue(name, out var existing))
             {
                 throw new InvalidImplementationException(kind,
                     typeof(IPrototype),
-                    $"Duplicate prototype type ID: {attribute.Type}. Current: {name}");
+                    $"Duplicate prototype type ID: {attribute.Type}. Current: {existing}");
             }
 
             var foundIdAttribute = false;
@@ -1019,28 +1024,37 @@ namespace Robust.Shared.Prototypes
                     $"Did not find any member annotated with the {nameof(ParentDataFieldAttribute)} and/or {nameof(AbstractDataFieldAttribute)}");
             }
 
-            _kindNames[attribute.Type] = kind;
+            _kindNames[name] = kind;
             _kindPriorities[kind] = attribute.LoadPriority;
 
-            var kindData = new KindData(kind);
+            var kindData = new KindData(kind, name);
             kinds[kind] = kindData;
 
             if (kind.IsAssignableTo(typeof(IInheritingPrototype)))
                 kindData.Inheritance = new MultiRootInheritanceGraph<string>();
+            else
+                kindData.Results = kindData.RawResults;
         }
 
         /// <inheritdoc />
         public event Action<PrototypesReloadedEventArgs>? PrototypesReloaded;
 
-        private sealed class KindData(Type kind)
+        private sealed class KindData(Type kind, string name)
         {
             public Dictionary<string, IPrototype>? UnfrozenInstances;
 
             public FrozenDictionary<string, IPrototype> Instances = FrozenDictionary<string, IPrototype>.Empty;
 
-            public readonly Dictionary<string, MappingDataNode> Results = new();
+            public Dictionary<string, MappingDataNode> Results = new();
+
+            /// <summary>
+            /// Variant of <see cref="Results"/> prior to inheritance pushing. If the kind does not have inheritance,
+            /// then this is just the same dictionary.
+            /// </summary>
+            public readonly Dictionary<string, MappingDataNode> RawResults = new();
 
             public readonly Type Type = kind;
+            public readonly string Name = name;
 
             // Only initialized if prototype is inheriting.
             public MultiRootInheritanceGraph<string>? Inheritance;

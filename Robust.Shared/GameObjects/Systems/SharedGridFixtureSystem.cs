@@ -153,7 +153,6 @@ namespace Robust.Shared.GameObjects
                 newFixtures.Add(($"grid_chunk-{bounds.Left}-{bounds.Bottom}", newFixture));
             }
 
-            var toRemove = new ValueList<(string Id, Fixture Fixture)>();
             // Check if we even need to issue an eventbus event
             var updated = false;
 
@@ -167,6 +166,13 @@ namespace Robust.Shared.GameObjects
                 for (var i = newFixtures.Count - 1; i >= 0; i--)
                 {
                     var fixture = newFixtures[i].Fixture;
+
+                    // TODO GRIDS
+                    // Fix this
+                    // This **only** works if we assume the density is always the default (PhysicsConstants.DefaultDensity).
+                    // Hence, this always fails in SS14 because ShuttleSystem.OnGridFixtureChange changes the density.
+                    // So it constantly creats & destroys fixtures unnecessarily
+                    // AAAAA
                     if (!oldFixture.Equals(fixture))
                         continue;
 
@@ -175,21 +181,16 @@ namespace Robust.Shared.GameObjects
                     break;
                 }
 
+                if (existing)
+                    continue;
+
                 // Doesn't align with any new fixtures so delete
-                if (existing) continue;
-
-                toRemove.Add((oldId, oldFixture));
+                chunk.Fixtures.Remove(oldId);
+                _fixtures.DestroyFixture(uid, oldId, oldFixture, false, body: body, manager: manager, xform: xform);
+                updated = true;
             }
 
-            foreach (var (id, fixture) in toRemove.Span)
-            {
-                // TODO add a DestroyFixture() override that takes in a list.
-                // reduced broadphase lookups
-                chunk.Fixtures.Remove(id);
-                _fixtures.DestroyFixture(uid, id, fixture, false, body: body, manager: manager, xform: xform);
-            }
-
-            if (newFixtures.Count > 0 || toRemove.Count > 0)
+            if (newFixtures.Count > 0)
             {
                 updated = true;
             }
@@ -200,10 +201,11 @@ namespace Robust.Shared.GameObjects
                 chunk.Fixtures.Add(id);
                 var existingFixture = _fixtures.GetFixtureOrNull(uid, id, manager: manager);
                 // Check if it's the same (otherwise remove anyway).
+                // TODO GRIDS
+                // wasn't this already checked?
                 if (existingFixture?.Shape is PolygonShape poly &&
                     poly.EqualsApprox((PolygonShape) fixture.Shape))
                 {
-
                     continue;
                 }
 

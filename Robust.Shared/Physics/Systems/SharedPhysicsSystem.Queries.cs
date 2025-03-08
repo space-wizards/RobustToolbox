@@ -35,7 +35,6 @@ namespace Robust.Shared.Physics.Systems
         public bool TryCollideRect(Box2 collider, MapId mapId, bool approximate = true)
         {
             var state = (collider, mapId, found: false);
-            var broadphases = new ValueList<Entity<BroadphaseComponent>>();
 
             _broadphase.GetBroadphases(mapId,
                 collider,
@@ -202,27 +201,27 @@ namespace Robust.Shared.Physics.Systems
             return bodies;
         }
 
-        public HashSet<EntityUid> GetContactingEntities(EntityUid uid, PhysicsComponent? body = null, bool approximate = false)
+        public void GetContactingEntities(Entity<PhysicsComponent?> ent, HashSet<EntityUid> contacting, bool approximate = false)
         {
-            // HashSet to ensure that we only return each entity once, instead of once per colliding fixture.
-            var result = new HashSet<EntityUid>();
+            if (!Resolve(ent.Owner, ref ent.Comp))
+                return;
 
-            if (!Resolve(uid, ref body))
-                return result;
-
-            var node = body.Contacts.First;
+            var node = ent.Comp.Contacts.First;
 
             while (node != null)
             {
                 var contact = node.Value;
                 node = node.Next;
 
-                if (!approximate && !contact.IsTouching)
-                    continue;
-
-                result.Add(uid == contact.EntityA ? contact.EntityB : contact.EntityA);
+                if (approximate || contact.IsTouching)
+                    contacting.Add(ent.Owner == contact.EntityA ? contact.EntityB : contact.EntityA);
             }
+        }
 
+        public HashSet<EntityUid> GetContactingEntities(EntityUid uid, PhysicsComponent? body = null, bool approximate = false)
+        {
+            var result = new HashSet<EntityUid>();
+            GetContactingEntities((uid, body), result, approximate);
             return result;
         }
 

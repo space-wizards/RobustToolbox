@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
@@ -186,7 +186,9 @@ public static class CompletionHelper
 
     public static IEnumerable<CompletionOption> MapUids(IEntityManager? entManager = null)
     {
-        return Components<MapComponent>(string.Empty, entManager);
+        IoCManager.Resolve(ref entManager);
+
+        return Components<MapComponent>(string.Empty, entManager, limit: 128);
     }
 
     /// <summary>
@@ -194,7 +196,7 @@ public static class CompletionHelper
     /// </summary>
     public static IEnumerable<CompletionOption> NetEntities(string text, IEntityManager? entManager = null, int limit = 20)
     {
-        if (!NetEntity.TryParse(text, out _))
+        if (text != string.Empty && !NetEntity.TryParse(text, out _))
             yield break;
 
         IoCManager.Resolve(ref entManager);
@@ -214,7 +216,7 @@ public static class CompletionHelper
 
     public static IEnumerable<CompletionOption> Components<T>(string text, IEntityManager? entManager = null, int limit = 20) where T : IComponent
     {
-        if (!NetEntity.TryParse(text, out _))
+        if (text != string.Empty && !NetEntity.TryParse(text, out _))
             yield break;
 
         IoCManager.Resolve(ref entManager);

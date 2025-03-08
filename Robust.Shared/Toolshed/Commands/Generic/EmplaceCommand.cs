@@ -174,8 +174,14 @@ public sealed class EmplaceCommand : ToolshedCommand
     {
         public static bool TryParse(ParserContext ctx, [NotNullWhen(true)] out CommandRun? result)
         {
+            if (ctx.Bundle.PipedType == null)
+            {
+                result = null;
+                return false;
+            }
+
             // If the piped type is IEnumerable<T> we want to extract the type T.
-            var pipeInferredType = ctx.Bundle.PipedType!;
+            var pipeInferredType = ctx.Bundle.PipedType;
             if (pipeInferredType.IsGenericType(typeof(IEnumerable<>)))
                 pipeInferredType = pipeInferredType.GetGenericArguments()[0];
 
@@ -219,7 +225,7 @@ public sealed class EmplaceCommand : ToolshedCommand
             return true;
         }
 
-        public override CompletionResult? TryAutocomplete(ParserContext ctx, string? argName)
+        public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
         {
             TryParse(ctx, out _);
             return ctx.Completions;
@@ -231,6 +237,7 @@ public sealed class EmplaceCommand : ToolshedCommand
     /// </summary>
     private sealed class EmplaceBlockOutputParser : CustomTypeParser<Type>
     {
+        public override bool ShowTypeArgSignature => false;
         public override bool TryParse(ParserContext ctx, [NotNullWhen(true)] out Type? result)
         {
             result = null;
@@ -246,7 +253,7 @@ public sealed class EmplaceCommand : ToolshedCommand
             return true;
         }
 
-        public override CompletionResult? TryAutocomplete(ParserContext ctx, string? argName)
+        public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
         {
             EmplaceBlockParser.TryParse(ctx, out _);
             return ctx.Completions;

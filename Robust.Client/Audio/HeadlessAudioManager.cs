@@ -108,11 +108,11 @@ internal sealed class HeadlessAudioManager : IAudioInternal
     public AudioStream LoadAudioRaw(ReadOnlySpan<short> samples, int channels, int sampleRate, string? name = null)
     {
         var length = TimeSpan.FromSeconds((double) samples.Length / channels / sampleRate);
-        return new AudioStream(_audioBuffer++, null, length, channels, name);
+        return new AudioStream(this, _audioBuffer++, null, length, channels, name);
     }
 
     private AudioStream AudioStreamFromMetadata(AudioMetadata metadata, string? name)
     {
-        return new AudioStream(_audioBuffer++, null, metadata.Length, metadata.ChannelCount, name, metadata.Title, metadata.Artist);
+        return new AudioStream(this, _audioBuffer++, null, metadata.Length, metadata.ChannelCount, name, metadata.Title, metadata.Artist);
     }
 }

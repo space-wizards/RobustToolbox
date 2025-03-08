@@ -23,21 +23,18 @@ public sealed class PhysicsMap_Test
     {
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
-        var mapManager = sim.Resolve<IMapManager>();
-        var system = entManager.EntitySysManager;
-        var physSystem = system.GetEntitySystem<SharedPhysicsSystem>();
-        var fixtureSystem = system.GetEntitySystem<FixtureSystem>();
-        var xformSystem = system.GetEntitySystem<SharedTransformSystem>();
+        var mapSystem = entManager.System<SharedMapSystem>();
+        var physSystem = entManager.System<SharedPhysicsSystem>();
+        var fixtureSystem = entManager.System<FixtureSystem>();
+        var xformSystem = entManager.System<SharedTransformSystem>();
 
-        var mapId = sim.CreateMap().MapId;
-        var mapId2 = sim.CreateMap().MapId;
-        var mapUid = mapManager.GetMapEntityId(mapId);
-        var mapUid2 = mapManager.GetMapEntityId(mapId2);
+        var mapUid = mapSystem.CreateMap();
+        var mapUid2 = mapSystem.CreateMap();
 
         var physicsMap = entManager.GetComponent<PhysicsMapComponent>(mapUid);
         var physicsMap2 = entManager.GetComponent<PhysicsMapComponent>(mapUid2);
 
-        var parent = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
+        var parent = entManager.SpawnEntity(null, new EntityCoordinates(mapUid, Vector2.Zero));
         var parentXform = entManager.GetComponent<TransformComponent>(parent);
         var parentBody = entManager.AddComponent<PhysicsComponent>(parent);
 

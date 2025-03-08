@@ -30,7 +30,8 @@ namespace Robust.Client.Graphics.Clyde
         private void _drawGrids(Viewport viewport, Box2 worldAABB, Box2Rotated worldBounds, IEye eye)
         {
             var mapId = eye.Position.MapId;
-            if (!_mapManager.MapExists(mapId))
+            var mapSystem = _entityManager.System<SharedMapSystem>();
+            if (!mapSystem.MapExists(mapId))
             {
                 // fall back to nullspace map
                 mapId = MapId.Nullspace;
@@ -42,7 +43,6 @@ namespace Robust.Client.Graphics.Clyde
             var requiresFlush = true;
             GLShaderProgram gridProgram = default!;
             var gridOverlays = GetOverlaysForSpace(OverlaySpace.WorldSpaceGrids);
-            var mapSystem = _entityManager.System<SharedMapSystem>();
 
             foreach (var mapGrid in _grids)
             {

@@ -11,8 +11,7 @@ namespace Robust.Shared.Map.Commands;
 /// </summary>
 public sealed class AmbientLightCommand : IConsoleCommand
 {
-    [Dependency] private readonly IMapManager _mapManager = default!;
-    [Dependency] private readonly IEntitySystemManager _systems = default!;
+    [Dependency] private readonly IEntityManager _entityManager = default!;
 
     public string Command => $"setambientlight";
     public string Description => Loc.GetString("cmd-set-ambient-light-desc");
@@ -33,7 +32,9 @@ public sealed class AmbientLightCommand : IConsoleCommand
 
         var mapId = new MapId(mapInt);
 
-        if (!_mapManager.MapExists(mapId))
+        var mapSystem = _entityManager.System<SharedMapSystem>();
+
+        if (!mapSystem.MapExists(mapId))
         {
             shell.WriteError(Loc.GetString("cmd-parse-failure-mapid"));
             return;
@@ -49,7 +50,6 @@ public sealed class AmbientLightCommand : IConsoleCommand
         }
 
         var color = Color.FromSrgb(new Color(r, g, b, a));
-        var mapSystem = _systems.GetEntitySystem<SharedMapSystem>();
         mapSystem.SetAmbientLight(mapId, color);
     }
 }

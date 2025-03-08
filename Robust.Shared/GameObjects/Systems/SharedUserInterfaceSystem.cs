@@ -1064,11 +1064,11 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             {
                 if (open)
                 {
-                    bui.Open();
 #if EXCEPTION_TOLERANCE
                     try
                     {
 #endif
+                    bui.Open();
 
                     if (UIQuery.TryComp(bui.Owner, out var uiComp))
                     {
@@ -1096,12 +1096,24 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
                         uiComp.ClientOpenInterfaces.Remove(bui.UiKey);
                     }
 
+#if EXCEPTION_TOLERANCE
+                    try
+                    {
+#endif
                     if (!TerminatingOrDeleted(bui.Owner))
                     {
                         SavePosition(bui);
                     }
 
                     bui.Dispose();
+#if EXCEPTION_TOLERANCE
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(
+                            $"Caught exception while attempting to dispose of a BUI {bui.UiKey} with type {bui.GetType()} on entity {ToPrettyString(bui.Owner)}. Exception: {e}");
+                    }
+#endif
                 }
             }
 

@@ -19,6 +19,7 @@
     <PackageReference Include="SixLabors.ImageSharp" />
     <PackageReference Include="OpenToolkit.Graphics" PrivateAssets="compile" />
     <PackageReference Include="OpenTK.OpenAL" PrivateAssets="compile" />
+    <PackageReference Include="VorbisPizza" PrivateAssets="compile" />
     <PackageReference Include="SpaceWizards.SharpFont" PrivateAssets="compile" />
     <PackageReference Include="Robust.Natives" />
     <PackageReference Include="TerraFX.Interop.Windows" PrivateAssets="compile" />

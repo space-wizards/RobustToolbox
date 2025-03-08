@@ -156,6 +156,7 @@ cmd-savemap-not-exist = Target map does not exist.
 cmd-savemap-init-warning = Attempted to save a post-init map without forcing the save.
 cmd-savemap-attempt = Attempting to save map {$mapId} to {$path}.
 cmd-savemap-success = Map successfully saved.
+cmd-savemap-error = Could not save map! See server log for details.
 cmd-hint-savemap-id = <MapID>
 cmd-hint-savemap-path = <Path>
 cmd-hint-savemap-force = [bool]

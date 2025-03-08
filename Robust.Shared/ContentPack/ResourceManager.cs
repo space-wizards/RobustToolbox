@@ -379,8 +379,7 @@ namespace Robust.Shared.ContentPack
             {
                 if (root is DirLoader loader)
                 {
-                    // Sanitise platform specific path.
-                    var rootDir = loader.GetPath(new ResPath(@"/")).Replace(Path.DirectorySeparatorChar, '/');
+                    var rootDir = loader.GetPath(new ResPath(@"/"));
 
                     yield return new ResPath(rootDir);
                 }

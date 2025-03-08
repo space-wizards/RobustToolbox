@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using NUnit.Framework;
+using Robust.Shared.GameObjects;
 
 namespace Robust.UnitTesting.Shared.Spawning;
 
@@ -42,7 +43,11 @@ public sealed class TrySpawnInContainerTest : EntitySpawnHelpersTest
             Assert.That(EntMan.EntityExists(uid), Is.False);
         });
 
-        await Server.WaitPost(() =>MapMan.DeleteMap(MapId));
+        await Server.WaitPost(() =>
+        {
+            var mapSystem = EntMan.System<SharedMapSystem>();
+            mapSystem.DeleteMap(MapId);
+        });
         Server.Dispose();
     }
 }

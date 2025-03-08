@@ -54,6 +54,24 @@ END TEMPLATE-->
 *None yet*
 
 
+## 248.0.0
+
+### Breaking changes
+
+* Audio that is short in duration (0.01s by default) won't be played if it's coming into PVS range. Likewise audio that has just come into audio range will play from the start. This is liable to change in the future as support for rhythm-perfect audio is implemented.
+* Audio Despawn buffer increased from 0.01s to 1s to avoid some instances of clipping. This shouldn't affect anything you're doing.
+
+### New features
+
+* Add some Regex + StringBuilder methods to the whitelist.
+* Make PhysicsHull public for content to be able to construct convex polygons from their own vertices.
+
+### Bugfixes
+
+* Potentially fix some instances of PlaybackPosition being invalid for audio.
+* Fix TryCopyComponents using the wrong MetadataComponent.
+
+
 ## 247.2.0
 
 ### New features

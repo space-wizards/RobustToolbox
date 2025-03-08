@@ -203,6 +203,35 @@ public sealed partial class MapLoaderSystem
         return false;
     }
 
+    /// <summary>
+    /// Tries to load a grid entity from a file and parent it to a newly created map.
+    /// If the file does not contain exactly one grid, this will return false and delete loaded entities.
+    /// </summary>
+    public bool TryLoadGrid(
+        ResPath path,
+        [NotNullWhen(true)] out Entity<MapComponent>? map,
+        [NotNullWhen(true)] out Entity<MapGridComponent>? grid,
+        DeserializationOptions? options = null,
+        Vector2 offset = default,
+        Angle rot = default)
+    {
+        var opts = options ?? DeserializationOptions.Default;
+
+        var mapUid = _mapSystem.CreateMap(out var mapId, runMapInit: opts.InitializeMaps);
+        if (opts.PauseMaps)
+            _mapSystem.SetPaused(mapUid, true);
+
+        if (!TryLoadGrid(mapId, path, out grid, options, offset, rot))
+        {
+            Del(mapUid);
+            map = null;
+            return false;
+        }
+
+        map = new(mapUid, Comp<MapComponent>(mapUid));
+        return true;
+    }
+
     private void ApplyTransform(EntityDeserializer deserializer, MapLoadOptions opts)
     {
         if (opts.Rotation == Angle.Zero && opts.Offset == Vector2.Zero)

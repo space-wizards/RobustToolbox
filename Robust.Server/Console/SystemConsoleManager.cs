@@ -174,7 +174,8 @@ namespace Robust.Server.Console
             while (Con.KeyAvailable)
             {
                 ConsoleKeyInfo key = Con.ReadKey(true);
-                Con.SetCursorPosition(0, Con.CursorTop);
+                if (Con.WindowWidth > 0)
+               		Con.SetCursorPosition(0, Con.CursorTop);
                 if (!Char.IsControl(key.KeyChar))
                 {
                     currentBuffer = currentBuffer.Insert(internalCursor++, key.KeyChar.ToString());
@@ -277,6 +278,7 @@ namespace Robust.Server.Console
 
         public void DrawCommandLine()
         {
+            if (Con.WindowWidth <= 0) return;
             ClearCurrentLine();
             Con.SetCursorPosition(0, Con.CursorTop);
             Con.Write("> " + currentBuffer);

@@ -13,7 +13,7 @@ internal sealed class BuildInfoCommand : ToolshedCommand
     private static readonly string Gold = Color.Gold.ToHex();
 
     [CommandImplementation]
-    public void BuildInfo([CommandInvocationContext] IInvocationContext ctx)
+    public void BuildInfo(IInvocationContext ctx)
     {
         var game = _cfg.GetCVar(CVars.BuildForkId);
         var buildCommit = _cfg.GetCVar(CVars.BuildHash);

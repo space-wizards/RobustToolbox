@@ -96,7 +96,8 @@ namespace Robust.Client.Graphics.Clyde
 
             private void ProcessEventChar(EventChar ev)
             {
-                if (!_textInputActive)
+                var windowReg = FindWindow(ev.Window);
+                if (windowReg is not { TextInputActive: true })
                     return;
 
                 _clyde.SendText(new TextEnteredEventArgs(new Rune(ev.CodePoint).ToString()));

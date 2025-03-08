@@ -67,7 +67,6 @@ namespace Robust.Server
             deps.Register<IResourceManagerInternal, ResourceManager>();
             deps.Register<EntityManager, ServerEntityManager>();
             deps.Register<IServerEntityManager, ServerEntityManager>();
-            deps.Register<IServerEntityManagerInternal, ServerEntityManager>();
             deps.Register<IServerGameStateManager, ServerGameStateManager>();
             deps.Register<IReplayRecordingManager, ReplayRecordingManager>();
             deps.Register<IReplayRecordingManagerInternal, ReplayRecordingManager>();
@@ -79,6 +78,7 @@ namespace Robust.Server
             deps.Register<IViewVariablesManager, ServerViewVariablesManager>();
             deps.Register<IServerViewVariablesInternal, ServerViewVariablesManager>();
             deps.Register<IWatchdogApi, WatchdogApi>();
+            deps.Register<IWatchdogApiInternal, WatchdogApi>();
             deps.Register<IScriptHost, ScriptHost>();
             deps.Register<IMetricsManager, MetricsManager>();
             deps.Register<IMetricsManagerInternal, MetricsManager>();
@@ -97,6 +97,7 @@ namespace Robust.Server
             deps.Register<NetworkResourceManager>();
             deps.Register<IHttpClientHolder, HttpClientHolder>();
             deps.Register<UploadedContentManager>();
+             deps.Register<IHWId, DummyHWId>();
         }
     }
 }

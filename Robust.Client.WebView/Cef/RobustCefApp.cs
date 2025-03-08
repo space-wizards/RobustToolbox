@@ -44,6 +44,8 @@ namespace Robust.Client.WebView.Cef
             //commandLine.AppendSwitch("--disable-gpu-compositing");
             //commandLine.AppendSwitch("--in-process-gpu");
 
+            commandLine.AppendSwitch("--off-screen-rendering-enabled");
+
             commandLine.AppendSwitch("disable-threaded-scrolling", "1");
             commandLine.AppendSwitch("disable-features", "TouchpadAndWheelScrollLatching,AsyncWheelEvents");
 

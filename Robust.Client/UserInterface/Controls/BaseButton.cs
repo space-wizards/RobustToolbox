@@ -26,6 +26,7 @@ namespace Robust.Client.UserInterface.Controls
         private bool _enableAllKeybinds;
         private ButtonGroup? _group;
         private bool _toggleMode;
+        private bool _muteSounds;
 
         /// <summary>
         ///     Specifies the group this button belongs to.
@@ -135,7 +136,8 @@ namespace Robust.Client.UserInterface.Controls
             if (Pressed != value)
                 return;
 
-            UserInterfaceManager.ClickSound();
+            if (!MuteSounds)
+                UserInterfaceManager.ClickSound();
         }
 
         /// <summary>
@@ -197,6 +199,16 @@ namespace Robust.Client.UserInterface.Controls
                     return DrawModeEnum.Normal;
                 }
             }
+        }
+
+        /// <summary>
+        ///     If <c>true</c>, this button will not emit sounds when the mouse is pressed or hovered over.
+        /// </summary>
+        [ViewVariables]
+        public bool MuteSounds
+        {
+            get => _muteSounds;
+            set => _muteSounds = value;
         }
 
         /// <summary>
@@ -298,7 +310,8 @@ namespace Robust.Client.UserInterface.Controls
                     }
                     else
                     {
-                        UserInterfaceManager.ClickSound();
+                        if (!MuteSounds)
+                            UserInterfaceManager.ClickSound();
                     }
 
                     OnPressed?.Invoke(buttonEventArgs);
@@ -353,7 +366,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.MouseEntered();
 
-            if (!Disabled)
+            if (!Disabled && !MuteSounds)
             {
                 UserInterfaceManager.HoverSound();
             }

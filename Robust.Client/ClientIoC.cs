@@ -8,6 +8,7 @@ using Robust.Client.GameObjects;
 using Robust.Client.GameStates;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Clyde;
+using Robust.Client.HWId;
 using Robust.Client.Input;
 using Robust.Client.Map;
 using Robust.Client.Placement;
@@ -158,6 +159,7 @@ namespace Robust.Client
 
             deps.Register<IXamlProxyHelper, XamlProxyHelper>();
             deps.Register<MarkupTagManager>();
+            deps.Register<IHWId, BasicHWId>();
         }
     }
 }

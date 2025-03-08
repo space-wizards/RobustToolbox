@@ -10,6 +10,8 @@ public interface IBroadPhase
 {
     int Count { get; }
 
+    public B2DynamicTree<FixtureProxy> Tree { get; }
+
     Box2 GetFatAabb(DynamicTree.Proxy proxy);
 
     DynamicTree.Proxy AddProxy(ref FixtureProxy proxy);

@@ -428,10 +428,19 @@ cmd-entfo-help = Usage: entfo <entityuid>
     The entity UID can be prefixed with 'c' to convert it to a client entity UID.
 
 cmd-fuck-desc = Throws an exception
-cmd-fuck-help = Throws an exception
+cmd-fuck-help = Usage: fuck
 
-cmd-showpos-desc = Enables debug drawing over all entity positions in the game.
+cmd-showpos-desc = Show the position of all entities on the screen.
 cmd-showpos-help = Usage: showpos
+
+cmd-showrot-desc = Show the rotation of all entities on the screen.
+cmd-showrot-help = Usage: showrot
+
+cmd-showvel-desc = Show the local velocity of all entites on the screen.
+cmd-showvel-help = Usage: showvel
+
+cmd-showangvel-desc = Show the angular velocity of all entities on the screen.
+cmd-showangvel-help = Usage: showangvel
 
 cmd-sggcell-desc = Lists entities on a snap grid cell.
 cmd-sggcell-help = Usage: sggcell <gridID> <vector2i>\nThat vector2i param is in the form x<int>,y<int>.

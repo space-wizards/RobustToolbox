@@ -188,7 +188,7 @@ public static class CompletionHelper
     {
         IoCManager.Resolve(ref entManager);
 
-        return Components<MapComponent>(string.Empty, entManager, limit: int.MaxValue); // faster just to pass the max value than bother unlimiting it.
+        return Components<MapComponent>(string.Empty, entManager, limit: 128);
     }
 
     /// <summary>

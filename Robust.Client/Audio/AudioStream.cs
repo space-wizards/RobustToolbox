@@ -9,11 +9,12 @@ namespace Robust.Client.Audio;
 public sealed class AudioStream : IDisposable
 {
     private IAudioInternal _audio;
+    private bool _disposed;
 
     /// <summary>
     /// Buffer ID for this audio in AL.
     /// </summary>
-    internal int BufferId { get; }
+    internal int BufferId { get; private set; }
 
     public TimeSpan Length { get; }
     internal IClydeHandle? ClydeHandle { get; }
@@ -36,6 +37,17 @@ public sealed class AudioStream : IDisposable
 
     public void Dispose()
     {
-        _audio.Remove(this);
+        if (!_disposed)
+        {
+            _audio.Remove(this);
+            BufferId = 0;
+        }
+
+        _disposed = true;
+    }
+
+    ~AudioStream()
+    {
+        Dispose();
     }
 }

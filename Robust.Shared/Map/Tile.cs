@@ -1,6 +1,7 @@
 ﻿using System;
+using System.ComponentModel;
 using JetBrains.Annotations;
-using Robust.Shared.Serialization;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map;
@@ -27,6 +28,16 @@ public readonly struct Tile : IEquatable<Tile>, ISpanFormattable
     public readonly byte Variant;
 
     /// <summary>
+    /// Rotation of this tile to render.
+    /// </summary>
+    public readonly byte Rotation;
+
+    /// <summary>
+    /// Whether the tile should be rendered mirrored.
+    /// </summary>
+    public readonly bool Mirrored;
+
+    /// <summary>
     ///     An empty tile that can be compared against.
     /// </summary>
     public static readonly Tile Empty = new(0);
@@ -42,11 +53,35 @@ public readonly struct Tile : IEquatable<Tile>, ISpanFormattable
     /// <param name="typeId">Internal type ID.</param>
     /// <param name="flags">Custom tile flags for usage.</param>
     /// <param name="variant">The visual variant this tile is using.</param>
-    public Tile(int typeId, byte flags = 0, byte variant = 0)
+    /// <param name="rotation">The rotation this tile is using.</param>
+    /// <param name="mirrored">Whether the tile is mirrored.</param>
+    public Tile(int typeId, byte flags = 0, byte variant = 0, byte rotation = 0, bool mirrored = false)
     {
         TypeId = typeId;
         Flags = flags;
         Variant = variant;
+        Rotation = rotation;
+        Mirrored = mirrored;
+    }
+
+    public static byte DirectionToByte(Direction direction, bool throwIfDiagonal = false)
+    {
+        switch (direction)
+        {
+            case Direction.South:
+                return 0;
+            case Direction.East:
+                return 1;
+            case Direction.North:
+                return 2;
+            case Direction.West:
+                return 3;
+            default:
+                if (throwIfDiagonal)
+                    throw new InvalidEnumArgumentException("direction", (int)direction, typeof(Direction));
+                else
+                    return 0;
+        }
     }
 
     /// <summary>
@@ -71,7 +106,7 @@ public readonly struct Tile : IEquatable<Tile>, ISpanFormattable
     /// <returns>String representation of this Tile.</returns>
     public override string ToString()
     {
-        return $"Tile {TypeId}, {Flags}, {Variant}";
+        return $"Tile {TypeId}, {Flags}, {Variant}, {Rotation}, {Mirrored}";
     }
 
     public string ToString(string? format, IFormatProvider? formatProvider)
@@ -94,7 +129,7 @@ public readonly struct Tile : IEquatable<Tile>, ISpanFormattable
     /// <inheritdoc />
     public bool Equals(Tile other)
     {
-        return TypeId == other.TypeId && Flags == other.Flags && Variant == other.Variant;
+        return TypeId == other.TypeId && Flags == other.Flags && Variant == other.Variant && Rotation == other.Rotation && Mirrored == other.Mirrored;
     }
 
     /// <inheritdoc />
@@ -110,7 +145,7 @@ public readonly struct Tile : IEquatable<Tile>, ISpanFormattable
     {
         unchecked
         {
-            return (TypeId.GetHashCode() * 397) ^ Flags.GetHashCode() ^ Variant.GetHashCode();
+            return (TypeId.GetHashCode() * 397) ^ Flags.GetHashCode() ^ Variant.GetHashCode() ^ Rotation.GetHashCode() ^ Mirrored.GetHashCode();
         }
     }
 

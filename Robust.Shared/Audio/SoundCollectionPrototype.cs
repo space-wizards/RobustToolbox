@@ -6,7 +6,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Audio;
 
-[Prototype("soundCollection")]
+[Prototype]
 public sealed partial class SoundCollectionPrototype : IPrototype
 {
     [ViewVariables]

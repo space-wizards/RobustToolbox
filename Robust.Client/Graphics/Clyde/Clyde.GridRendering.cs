@@ -174,37 +174,40 @@ namespace Robust.Client.Graphics.Clyde
                     var rRightTop = (region.Right, region.Top);
                     var rLeftTop = (region.Left, region.Top);
 
-                    // Rotate the tile
-                    for (int r = 0; r < tile.Rotation; r++)
+                    if (_tileDefinitionManager[tile.TypeId].AllowRotationMirror)
                     {
-                        (rLeftBottom, rRightBottom, rRightTop, rLeftTop) =
-                            (rLeftTop, rLeftBottom, rRightBottom, rRightTop);
-                    }
-
-                    // Mirror on the x-axis
-                    if (tile.Mirrored)
-                    {
-                        if (tile.Rotation % 2 == 0)
+                        // Rotate the tile
+                        for (int r = 0; r < tile.Rotation; r++)
                         {
-                            rLeftBottom = (rLeftBottom.Item1.Equals(region.Left) ? region.Right : region.Left,
-                                rLeftBottom.Item2);
-                            rRightBottom = (rRightBottom.Item1.Equals(region.Left) ? region.Right : region.Left,
-                                rRightBottom.Item2);
-                            rRightTop = (rRightTop.Item1.Equals(region.Left) ? region.Right : region.Left,
-                                rRightTop.Item2);
-                            rLeftTop = (rLeftTop.Item1.Equals(region.Left) ? region.Right : region.Left,
-                                rLeftTop.Item2);
+                            (rLeftBottom, rRightBottom, rRightTop, rLeftTop) =
+                                (rLeftTop, rLeftBottom, rRightBottom, rRightTop);
                         }
-                        else
+
+                        // Mirror on the x-axis
+                        if (tile.Mirrored)
                         {
-                            rLeftBottom = (rLeftBottom.Item1,
-                                rLeftBottom.Item2.Equals(region.Bottom) ? region.Top : region.Bottom);
-                            rRightBottom = (rRightBottom.Item1,
-                                rRightBottom.Item2.Equals(region.Bottom) ? region.Top : region.Bottom);
-                            rRightTop = (rRightTop.Item1,
-                                rRightTop.Item2.Equals(region.Bottom) ? region.Top : region.Bottom);
-                            rLeftTop = (rLeftTop.Item1,
-                                rLeftTop.Item2.Equals(region.Bottom) ? region.Top : region.Bottom);
+                            if (tile.Rotation % 2 == 0)
+                            {
+                                rLeftBottom = (rLeftBottom.Item1.Equals(region.Left) ? region.Right : region.Left,
+                                    rLeftBottom.Item2);
+                                rRightBottom = (rRightBottom.Item1.Equals(region.Left) ? region.Right : region.Left,
+                                    rRightBottom.Item2);
+                                rRightTop = (rRightTop.Item1.Equals(region.Left) ? region.Right : region.Left,
+                                    rRightTop.Item2);
+                                rLeftTop = (rLeftTop.Item1.Equals(region.Left) ? region.Right : region.Left,
+                                    rLeftTop.Item2);
+                            }
+                            else
+                            {
+                                rLeftBottom = (rLeftBottom.Item1,
+                                    rLeftBottom.Item2.Equals(region.Bottom) ? region.Top : region.Bottom);
+                                rRightBottom = (rRightBottom.Item1,
+                                    rRightBottom.Item2.Equals(region.Bottom) ? region.Top : region.Bottom);
+                                rRightTop = (rRightTop.Item1,
+                                    rRightTop.Item2.Equals(region.Bottom) ? region.Top : region.Bottom);
+                                rLeftTop = (rLeftTop.Item1,
+                                    rLeftTop.Item2.Equals(region.Bottom) ? region.Top : region.Bottom);
+                            }
                         }
                     }
 

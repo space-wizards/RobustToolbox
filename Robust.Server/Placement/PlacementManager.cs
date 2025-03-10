@@ -179,7 +179,10 @@ namespace Robust.Server.Placement
             }
             else
             {
-                PlaceNewTile(tileType, coordinates, msg.MsgChannel.UserId, Tile.DirectionToByte(dirRcv), msg.Mirrored);
+                if (_tileDefinitionManager[tileType].AllowRotationMirror)
+                    PlaceNewTile(tileType, coordinates, msg.MsgChannel.UserId, Tile.DirectionToByte(dirRcv), msg.Mirrored);
+                else
+                    PlaceNewTile(tileType, coordinates, msg.MsgChannel.UserId, Tile.DirectionToByte(Direction.South), false);
             }
         }
 

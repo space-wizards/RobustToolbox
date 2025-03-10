@@ -28,6 +28,7 @@ public sealed class TileSpawningUIController : UIController
     private readonly List<ITileDefinition> _shownTiles = new();
     private bool _clearingTileSelections;
     private bool _eraseTile;
+    private bool _mirrorableTile; // Tracks if the chosen tile even can be mirrored.
     private bool _mirroredTile;
 
     public override void Initialize()
@@ -114,6 +115,7 @@ public sealed class TileSpawningUIController : UIController
         _window.TileList.OnItemDeselected += OnTileItemDeselected;
         _window.EraseButton.Pressed = _eraseTile;
         _window.EraseButton.OnToggled += OnTileEraseToggled;
+        _window.MirroredButton.Disabled = !_mirrorableTile;
         _window.MirroredButton.Pressed = _mirroredTile;
         _window.MirroredButton.OnToggled += OnTileMirroredToggled;
         BuildTileList();
@@ -195,6 +197,13 @@ public sealed class TileSpawningUIController : UIController
     {
         if (_window == null || _window.Disposed)
             return;
+
+        if (_placement.CurrentPermission != null && _placement.CurrentPermission.IsTile)
+        {
+            var allowed = _tiles[_placement.CurrentPermission.TileType].AllowRotationMirror;
+            _mirrorableTile = allowed;
+            _window.MirroredButton.Disabled = !_mirrorableTile;
+        }
 
         _mirroredTile = _placement.Mirrored;
         _window.MirroredButton.Pressed = _mirroredTile;

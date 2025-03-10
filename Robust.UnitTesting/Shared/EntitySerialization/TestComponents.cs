@@ -4,6 +4,7 @@ using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 
@@ -44,10 +45,13 @@ public sealed partial class EntitySaveTestComponent : Component
 /// <summary>
 /// Dummy tile definition for serializing grids.
 /// </summary>
+[Prototype("testTileDef")]
 public sealed class TileDef(string id) : ITileDefinition
 {
     public ushort TileId { get; set; }
     public string Name => id;
+
+    [IdDataField]
     public string ID => id;
     public ResPath? Sprite => null;
     public Dictionary<Direction, ResPath> EdgeSprites => new();

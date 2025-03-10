@@ -5,6 +5,9 @@ using Robust.Shared.Audio.Systems;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
+using Robust.Shared.Log;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Audio
 {
@@ -29,11 +32,25 @@ namespace Robust.Shared.Audio
     [DataDefinition]
     public partial struct AudioParams
     {
+        private float _volume = Default.Volume;
+
         /// <summary>
         ///     Base volume to play the audio at, in dB.
         /// </summary>
         [DataField]
-        public float Volume { get; set; } = Default.Volume;
+        public float Volume
+        {
+            get => _volume;
+            set
+            {
+                if (float.IsNaN(value))
+                {
+                    value = float.NegativeInfinity;
+                }
+
+                _volume = value;
+            }
+        }
 
         /// <summary>
         ///     Scale for the audio pitch.

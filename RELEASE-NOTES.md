@@ -54,6 +54,67 @@ END TEMPLATE-->
 *None yet*
 
 
+## 248.0.0
+
+### Breaking changes
+
+* Use `Entity<MapGridComponent>` for TileChangedEvent instead of EntityUid.
+* Audio files are no longer tempo perfect when being played if the offset is small. At some point in the future an AudioParams bool is likely to be added to enforce this.
+* MoveProxy method args got changed in the B2DynamicTree update.
+* ResPath will now assert in debug if you pass in an invalid path containing the non-standardized directory separator.
+
+### New features
+
+* Added a new `MapLoaderSystem.TryLoadGrid()` override that loads a grid onto a newly created map.
+* Added a CVar for the endbuffer for audio. If an audio file will play below this length (for PVS reasons) it will be ignored.
+* Added Regex.Count + StringBuilder.Chars setter to the sandbox.
+* Added a public API for PhysicsHull.
+* Made MapLoader log more helpful.
+* Add TryLoadGrid override that also creates a map at the same time.
+* Updated B2Dynamictree to the latest Box2D V3 version.
+* Added SetItems to ItemList control to set items without removing the existing ones.
+* Shaders, textures, and audio will now hot reload automatically to varying degrees. Also added IReloadManager to handle watching for file-system changes and relaying events.
+* Wrap BUI disposes in a try-catch in case of exceptions.
+
+
+### Bugfixes
+
+* Fix some instances of invalid PlaybackPositions being set.
+* Play audio from the start of a file if it's only just come into PVS range / had its state handled.
+* Fix TryCopyComponents.
+* Use shell.WriteError if TryLoad fails for mapping commands.
+* Fix UI control position saving causing exceptions where the entity is cleaned-up alongside a state change.
+* Fix Map NetId completions.
+* Fix some ResPath calls using the wrong paths.
+
+### Internal
+
+* Remove some unused local variables and the associated warnings.
+
+
+## 247.2.0
+
+### New features
+
+* Added functions for copying components to `IEntityManager` and `EntitySystem`.
+* Sound played from sound collections is now sent as "collection ID + index" over the network instead of the final filename.
+  * This enables integration of future accessibility systems.
+  * Added a new `ResolvedSoundSpecifier` to represent played sounds. Methods that previously took a filename now take a `ResolvedSoundSpecifier`, with an implicit cast from string being interpreted as a raw filename.
+* `VisibilitySystem` has been made accessible to shared as `SharedVisibilitySystem`.
+* `ScrollContainer` now has properties exposing `Value` and `ValueTarget` on its internal scroll bars.
+
+### Bugfixes
+
+* Fix prototype hot reload crashing when adding a new component already exists on an entity.
+* Fix maps failing to save in some cases related to tilemap IDs.
+* Fix `Regex.Escape(string)` not being available in sandbox.
+* Prototypes that parent themselves directly won't cause the game to hang on an infinite loop anymore.
+* Fixed disconnecting during a connection attempt leaving the client stuck in a phantom state.
+
+### Internal
+
+* More warning cleanup.
+
 ## 247.1.0
 
 ### New features
@@ -67,7 +128,7 @@ END TEMPLATE-->
 
 ### Other
 
-* Updated the Yamale map file format validator to support v7 map/grid files. 
+* Updated the Yamale map file format validator to support v7 map/grid files.
 
 
 ## 247.0.0

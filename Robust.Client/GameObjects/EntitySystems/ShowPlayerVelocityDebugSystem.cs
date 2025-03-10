@@ -5,12 +5,11 @@ using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 
 namespace Robust.Client.GameObjects
 {
-    public sealed class VelocityDebugSystem : EntitySystem
+    public sealed class ShowPlayerVelocityDebugSystem : EntitySystem
     {
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;

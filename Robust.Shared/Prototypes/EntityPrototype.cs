@@ -141,19 +141,19 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         [ViewVariables]
         [ParentDataFieldAttribute(typeof(AbstractPrototypeIdArraySerializer<EntityPrototype>))]
-        public string[]? Parents { get; }
+        public string[]? Parents { get; private set; }
 
         [ViewVariables]
         [NeverPushInheritance]
         [AbstractDataField]
-        public bool Abstract { get; }
+        public bool Abstract { get; private set; }
 
         /// <summary>
         /// A dictionary mapping the component type list to the YAML mapping containing their settings.
         /// </summary>
         [DataField("components")]
         [AlwaysPushInheritance]
-        public ComponentRegistry Components { get; } = new();
+        public ComponentRegistry Components = new();
 
         public EntityPrototype()
         {
@@ -286,7 +286,7 @@ namespace Robust.Shared.Prototypes
         }
 
         [DataRecord]
-        public record ComponentRegistryEntry(IComponent Component, MappingDataNode Mapping);
+        public partial record ComponentRegistryEntry(IComponent Component, MappingDataNode Mapping);
 
         [DataDefinition]
         public sealed partial class EntityPlacementProperties

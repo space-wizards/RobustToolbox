@@ -42,6 +42,24 @@ namespace Robust.UnitTesting.Shared.Utility
         }
 
         [Test]
+        public static void FromNodes()
+        {
+            var original = new MarkupNode[]
+            {
+                new("foo"),
+                new("color", new MarkupParameter(Color.Orange), null),
+                new("bar"),
+                new("color", null, null, true),
+                new("baz")
+            };
+
+            var msg = FormattedMessage.FromNodes(original);
+
+            Assert.That(msg.Nodes, NUnit.Framework.Is.Not.SameAs(msg)); // not the same reference
+            Assert.That(msg.Nodes, NUnit.Framework.Is.EqualTo(msg)); // but same collection
+        }
+
+        [Test]
         [TestCase("foo[color=#aabbcc bar")]
         public static void TestParsePermissiveMarkup(string text)
         {
@@ -518,6 +536,45 @@ namespace Robust.UnitTesting.Shared.Utility
             var result = message.TryGetMessageInsideTag(extractTag, out var messageInside);
             Assert.That(result, NUnit.Framework.Is.False);
             Assert.That(messageInside, NUnit.Framework.Is.Null);
+        }
+
+        [Test]
+        public static void Replace_UseTextNode_TextReplaced()
+        {
+            var message = FormattedMessage.FromMarkupOrThrow("[color=red][/color] bar baz[honk] fu [/honk]");
+
+            var honkNode = message.Nodes.First(x => x.Value.StringValue == " fu ");
+            var expected = new MarkupNode("weh");
+
+            message.ReplaceTextNode(honkNode, expected);
+
+            Assert.That(message.Nodes[4], NUnit.Framework.Is.EqualTo(expected));
+            Assert.That(message.ToMarkup(), NUnit.Framework.Is.EqualTo("[color=red][/color] bar baz[honk]weh[/honk]"));
+        }
+
+        [Test]
+        public static void Replace_NodeDoesNotBelongMessage_DoesNothing()
+        {
+            const string originalMarkup = "[color=red][/color] bar baz[honk] fu [/honk]";
+            var message = FormattedMessage.FromMarkupOrThrow(originalMarkup);
+
+            var expected = new MarkupNode("weh");
+
+            message.ReplaceTextNode(new MarkupNode("hew"), expected);
+
+            Assert.That(message.ToMarkup(), NUnit.Framework.Is.EqualTo(originalMarkup));
+        }
+
+        [Test]
+        public static void Replace_UseOpeningNode_Throws()
+        {
+            var message = FormattedMessage.FromMarkupOrThrow("[color=red][/color] bar baz[honk] fu [/honk]");
+
+            var honkNode = message.Nodes.First(x => x.Value.StringValue == " fu ");
+            var expected = new MarkupNode("weh", null, null);
+
+            Assert.Throws<ArgumentException>(() => message.ReplaceTextNode(honkNode, expected));
+            Assert.Throws<ArgumentException>(() => message.ReplaceTextNode(expected, honkNode));
         }
     }
 }

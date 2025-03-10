@@ -126,7 +126,7 @@ namespace Robust.Client.Placement
 
                 sprite.Color = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
                 var rot = args.Viewport.Eye?.Rotation ?? default;
-                spriteSys.Render(uid.Value, sprite, args.WorldHandle, rot, worldRot, worldPos);
+                spriteSys.RenderSprite((uid.Value, sprite), args.WorldHandle, rot, worldRot, worldPos);
             }
         }
 

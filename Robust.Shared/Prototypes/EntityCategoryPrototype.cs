@@ -9,7 +9,7 @@ namespace Robust.Shared.Prototypes;
 /// Prototype that represents some entity prototype category.
 /// Useful for sorting or grouping entity prototypes for mapping/spawning UIs.
 /// </summary>
-[Prototype("entityCategory")]
+[Prototype]
 public sealed partial class EntityCategoryPrototype : IPrototype
 {
     [IdDataField] public string ID { get; private set; } = default!;

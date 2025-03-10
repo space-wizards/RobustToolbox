@@ -20,6 +20,7 @@ internal sealed class TeleportCommand : LocalizedEntityCommands
     [Dependency] private readonly IMapManager _map = default!;
     [Dependency] private readonly IEntityManager _entityManager = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
+    [Dependency] private readonly SharedMapSystem _mapSystem = default!;
 
     public override string Command => "tp";
     public override bool RequireServerOrSingleplayer => true;
@@ -46,7 +47,7 @@ internal sealed class TeleportCommand : LocalizedEntityCommands
         else
             mapId = transform.MapID;
 
-        if (!_map.MapExists(mapId))
+        if (!_mapSystem.MapExists(mapId))
         {
             shell.WriteError($"Map {mapId} doesn't exist!");
             return;
@@ -60,7 +61,7 @@ internal sealed class TeleportCommand : LocalizedEntityCommands
         }
         else
         {
-            var mapEnt = _map.GetMapEntityIdOrThrow(mapId);
+            var mapEnt = _mapSystem.GetMap(mapId);
             _transform.SetWorldPosition((entity, transform), position);
             _transform.SetParent(entity, transform, mapEnt);
         }

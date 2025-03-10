@@ -26,6 +26,7 @@ namespace Robust.Shared.Physics.Systems
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
         [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
         [Dependency] private readonly SharedMapSystem _map = default!;
+        [Dependency] private readonly SharedMapSystem _mapSystem = default!;
         [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
 
@@ -196,7 +197,7 @@ namespace Robust.Shared.Physics.Systems
             if (moveBuffer.Count == 0)
                 return;
 
-            _contactJob.MapUid = _mapManager.GetMapEntityIdOrThrow(mapId);
+            _contactJob.MapUid = _mapSystem.GetMap(mapId);
             _contactJob.MoveBuffer.Clear();
 
             foreach (var (proxy, aabb) in moveBuffer)

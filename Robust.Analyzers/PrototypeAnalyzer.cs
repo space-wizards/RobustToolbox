@@ -80,6 +80,10 @@ public sealed class PrototypeAnalyzer : DiagnosticAnalyzer
         // Check for name redundancy
         if (autoName == specifiedName)
         {
+            // If the class name does not end with "Prototype", allow the redundancy
+            if (!classSymbol.Name.EndsWith(PrototypeUtility.PrototypeNameEnding))
+                return;
+
             classDeclarationSyntax.Identifier.GetLocation();
             var location = TryGetPrototypeAttribute(classDeclarationSyntax, out var protoNode) ? protoNode.GetLocation() : classDeclarationSyntax.GetLocation();
             context.ReportDiagnostic(Diagnostic.Create(PrototypeRedundantTypeRule,

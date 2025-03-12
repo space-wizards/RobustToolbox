@@ -80,6 +80,9 @@ public sealed class PrototypeAnalyzerTest
             {
                 public const string ProtoName = "someOtherNameEntirely";
             }
+
+            [Prototype("goodDoesNotEndWithPrototypeWord")]
+            public sealed partial class GoodDoesNotEndWithPrototypeWord : IPrototype;
             """;
 
         await Verifier(code,

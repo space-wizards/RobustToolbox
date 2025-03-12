@@ -126,7 +126,7 @@ namespace Robust.Client.Graphics.Clyde
             DebugTools.Assert(space != OverlaySpace.ScreenSpaceBelowWorld && space != OverlaySpace.ScreenSpace);
 
             var mapId = vp.Eye!.Position.MapId;
-            var args = new OverlayDrawArgs(space, null, vp, _renderHandle, new UIBox2i((0, 0), vp.Size), _mapSystem.GetMapOrInvalid(mapId), mapId, worldBox, worldBounds);
+            var args = new OverlayDrawArgs(space, null, vp, _renderHandle, new UIBox2i((0, 0), vp.Size), _mapSystem.GetMap(mapId), mapId, worldBox, worldBounds);
 
             if (!overlay.BeforeDraw(args))
                 return;
@@ -178,7 +178,7 @@ namespace Robust.Client.Graphics.Clyde
             var worldAABB = worldBounds.CalcBoundingBox();
             var mapId = vp.Eye!.Position.MapId;
 
-            var args = new OverlayDrawArgs(space, vpControl, vp, handle, bounds, _mapSystem.GetMapOrInvalid(mapId), mapId, worldAABB, worldBounds);
+            var args = new OverlayDrawArgs(space, vpControl, vp, handle, bounds, _mapSystem.GetMap(mapId), mapId, worldAABB, worldBounds);
 
             foreach (var overlay in list)
             {

@@ -27,12 +27,13 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var sim = SimulationFactory();
             var mapMan = sim.Resolve<IMapManager>();
+            var mapSystem = sim.Resolve<IEntitySystemManager>().GetEntitySystem<SharedMapSystem>();
 
             var mapID = sim.CreateMap().MapId;
 
             mapMan.Restart();
 
-            Assert.That(mapMan.MapExists(mapID), Is.False);
+            Assert.That(mapSystem.MapExists(mapID), Is.False);
         }
 
         /// <summary>

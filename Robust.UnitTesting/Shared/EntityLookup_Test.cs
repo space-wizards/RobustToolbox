@@ -102,7 +102,7 @@ namespace Robust.UnitTesting.Shared
             var outcome = lookup.AnyLocalEntitiesIntersecting(grid.Owner, queryBounds, LookupFlags.All);
 
             Assert.That(outcome, Is.EqualTo(result));
-            mapManager.DeleteMap(spawnPos.MapId);
+            mapSystem.DeleteMap(spawnPos.MapId);
         }
 
         [Test, TestCaseSource(nameof(Box2Cases))]
@@ -127,7 +127,7 @@ namespace Robust.UnitTesting.Shared
             var outcome = lookup.AnyLocalEntitiesIntersecting(grid.Owner, queryBounds, LookupFlags.All);
 
             Assert.That(outcome, Is.EqualTo(result));
-            mapManager.DeleteMap(spawnPos.MapId);
+            mapSystem.DeleteMap(spawnPos.MapId);
         }
 
         /// <summary>
@@ -156,7 +156,7 @@ namespace Robust.UnitTesting.Shared
             lookup.GetLocalEntitiesIntersecting(grid.Owner, queryBounds, entities);
 
             Assert.That(entities.Count > 0, Is.EqualTo(result));
-            mapManager.DeleteMap(spawnPos.MapId);
+            mapSystem.DeleteMap(spawnPos.MapId);
         }
 
         /// <summary>
@@ -185,7 +185,7 @@ namespace Robust.UnitTesting.Shared
             lookup.GetLocalEntitiesIntersecting(grid.Owner, queryTile, entities);
 
             Assert.That(entities.Count > 0, Is.EqualTo(result));
-            mapManager.DeleteMap(spawnPos.MapId);
+            mapSystem.DeleteMap(spawnPos.MapId);
         }
 
         #endregion
@@ -201,6 +201,7 @@ namespace Robust.UnitTesting.Shared
             var lookup = server.Resolve<IEntitySystemManager>().GetEntitySystem<EntityLookupSystem>();
             var entManager = server.Resolve<IEntityManager>();
             var mapManager = server.Resolve<IMapManager>();
+            var mapSystem = entManager.System<SharedMapSystem>();
 
             entManager.System<SharedMapSystem>().CreateMap(spawnPos.MapId);
 
@@ -210,7 +211,7 @@ namespace Robust.UnitTesting.Shared
                 entManager.Spawn(null, spawnPos);
 
             Assert.That(lookup.GetEntitiesInRange(queryPos.MapId, queryPos.Position, range).Count > 0, Is.EqualTo(result));
-            mapManager.DeleteMap(spawnPos.MapId);
+            mapSystem.DeleteMap(spawnPos.MapId);
         }
 
         [Test, TestCaseSource(nameof(IntersectingCases))]
@@ -236,7 +237,7 @@ namespace Robust.UnitTesting.Shared
             var bounds = new Box2Rotated(Box2.CenteredAround(queryPos.Position, new Vector2(range, range)));
 
             Assert.That(lookup.GetEntitiesIntersecting(queryPos.MapId, bounds).Count > 0, Is.EqualTo(result));
-            mapManager.DeleteMap(spawnPos.MapId);
+            mapSystem.DeleteMap(spawnPos.MapId);
         }
 
         [Test, TestCaseSource(nameof(InRangeCases))]
@@ -260,7 +261,7 @@ namespace Robust.UnitTesting.Shared
 
             _ = entManager.SpawnEntity(null, spawnPos);
             Assert.That(lookup.GetEntitiesInRange(queryPos.MapId, queryPos.Position, range).Count > 0, Is.EqualTo(result));
-            mapManager.DeleteMap(spawnPos.MapId);
+            mapSystem.DeleteMap(spawnPos.MapId);
         }
 
         [Test, TestCaseSource(nameof(InRangeCases))]
@@ -272,6 +273,7 @@ namespace Robust.UnitTesting.Shared
             var lookup = server.Resolve<IEntitySystemManager>().GetEntitySystem<EntityLookupSystem>();
             var entManager = server.Resolve<IEntityManager>();
             var mapManager = server.Resolve<IMapManager>();
+            var mapSystem = entManager.System<SharedMapSystem>();
 
             entManager.System<SharedMapSystem>().CreateMap(spawnPos.MapId);
 
@@ -281,7 +283,7 @@ namespace Robust.UnitTesting.Shared
                 entManager.Spawn(null, spawnPos);
 
             Assert.That(lookup.GetEntitiesInRange(queryPos.MapId, queryPos.Position, range).Count > 0, Is.EqualTo(result));
-            mapManager.DeleteMap(spawnPos.MapId);
+            mapSystem.DeleteMap(spawnPos.MapId);
         }
 
         /// <summary>
@@ -309,7 +311,7 @@ namespace Robust.UnitTesting.Shared
             var outcome = lookup.AnyLocalEntitiesIntersecting(grid.Owner, queryBounds, LookupFlags.All);
 
             Assert.That(outcome, Is.EqualTo(result));
-            mapManager.DeleteMap(spawnPos.MapId);
+            mapSystem.DeleteMap(spawnPos.MapId);
         }
 
         /// <summary>
@@ -338,7 +340,7 @@ namespace Robust.UnitTesting.Shared
             lookup.GetLocalEntitiesIntersecting(grid.Owner, queryBounds, entities);
 
             Assert.That(entities.Count > 0, Is.EqualTo(result));
-            mapManager.DeleteMap(spawnPos.MapId);
+            mapSystem.DeleteMap(spawnPos.MapId);
         }
 
         #endregion
@@ -383,7 +385,7 @@ namespace Robust.UnitTesting.Shared
 
             entManager.DeleteEntity(dummy);
             entManager.DeleteEntity(grid);
-            mapManager.DeleteMap(mapId);
+            mapSystem.DeleteMap(mapId);
         }
     }
 }

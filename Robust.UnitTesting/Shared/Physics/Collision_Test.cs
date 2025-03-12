@@ -25,6 +25,7 @@ using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
@@ -122,12 +123,15 @@ public sealed class Collision_Test
     {
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
-        var mapManager = sim.Resolve<IMapManager>();
+        var mapSystem = entManager.System<SharedMapSystem>();
         var fixtures = entManager.System<FixtureSystem>();
         var physics = entManager.System<SharedPhysicsSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
-        var mapId = sim.CreateMap().MapId;
-        var mapId2 = sim.CreateMap().MapId;
+
+        var mapUid = mapSystem.CreateMap();
+        var mapId = entManager.GetComponent<MapComponent>(mapUid).MapId;
+        var mapUid2 = mapSystem.CreateMap();
+        var mapId2 = entManager.GetComponent<MapComponent>(mapUid).MapId;
 
         var ent1 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
         var ent2 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
@@ -151,7 +155,7 @@ public sealed class Collision_Test
         Assert.That(body1.ContactCount == 1 && body2.ContactCount == 1);
 
         // Reparent body2 and assert the contact is destroyed
-        xformSystem.SetParent(ent2, mapManager.GetMapEntityId(mapId2));
+        xformSystem.SetParent(ent2, mapUid2);
         physics.Update(0.01f);
 
         Assert.That(body1.ContactCount == 0 && body2.ContactCount == 0);

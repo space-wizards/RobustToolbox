@@ -121,7 +121,11 @@ public sealed class SpawnNextToOrDropTest : EntitySpawnHelpersTest
             Assert.That(EntMan.GetComponent<MetaDataComponent>(uid).EntityLifeStage, Is.LessThan(EntityLifeStage.MapInitialized));
         });
 
-        await Server.WaitPost(() =>MapMan.DeleteMap(MapId));
+        await Server.WaitPost(() =>
+        {
+            var mapSystem = EntMan.System<SharedMapSystem>();
+            mapSystem.DeleteMap(MapId);
+        });
         Server.Dispose();
     }
 }

@@ -68,6 +68,18 @@ public sealed class PrototypeAnalyzerTest
 
             [Prototype("badMatched")]
             public sealed partial class BadMatchedPrototype : IPrototype;
+
+            [Prototype(ProtoName)]
+            public sealed partial class GoodNonLiteralMatchedPrototype : IPrototype
+            {
+                public const string ProtoName = "goodNonLiteralMatched";
+            }
+
+            [Prototype(ProtoName)]
+            public sealed partial class GoodNonLiteralUnmatchedPrototype : IPrototype
+            {
+                public const string ProtoName = "someOtherNameEntirely";
+            }
             """;
 
         await Verifier(code,

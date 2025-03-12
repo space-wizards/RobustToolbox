@@ -208,9 +208,7 @@ namespace Robust.Shared.GameObjects
                     return false;
                 }
 
-                var diff = compMapping.Except(protoMapping);
-
-                if (diff != null && diff.Children.Count != 0)
+                if (compMapping.AnyExcept(protoMapping))
                     return false;
             }
 

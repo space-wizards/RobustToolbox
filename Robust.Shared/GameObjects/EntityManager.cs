@@ -189,9 +189,11 @@ namespace Robust.Shared.GameObjects
                     return false;
 
                 var compType = component.GetType();
-                var compName = _componentFactory.GetComponentName(compType);
-                if (compName == _xformName || compName == _metaReg.Name)
+
+                if (compType == typeof(TransformComponent) || compType == typeof(MetaDataComponent))
                     continue;
+
+                var compName = _componentFactory.GetComponentName(compType);
 
                 // If the component isn't on the prototype then it's custom.
                 if (!protoData.TryGetValue(compName, out var protoMapping))

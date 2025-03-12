@@ -30,7 +30,7 @@ public sealed class PrototypeAnalyzer : DiagnosticAnalyzer
         "Prototype name must end with the word Prototype",
         "Prototype {0} does not end with the word Prototype",
         "Usage",
-        DiagnosticSeverity.Warning,
+        DiagnosticSeverity.Error,
         true,
         "Add the word Prototype to the end of the class name or manually specify a name in the Prototype attribute."
     );

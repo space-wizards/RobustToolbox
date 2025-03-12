@@ -44,7 +44,7 @@ public sealed class GenIdStorage<T> : IGenIdStorage<GenIdStorage<T>.Key, T> {
         /// <remarks>
         /// A negative index and the maximum possible version number should prevent this from colliding with any naturally produced keys.
         /// </remarks>
-        public readonly static Key Invalid = new(-1, -1);
+        public readonly static Key Invalid = new(SENTINEL, -1);
     }
 
     /// <summary>

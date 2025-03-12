@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 
 namespace Robust.Shared.Collections;
 
@@ -32,8 +31,25 @@ public interface IGenIdStorage<K, T> : IEnumerable<KeyValueRef<K, T>> {
     public abstract IReadOnlyCollection<T> Values { get; }
 
     /// <summary>
+    /// Creates a new storage container from a set of unique key/value pairs
+    /// </summary>
+    /// <exception cref="InvalidOperationException"/>
+    /// <param name="pairs"></param>
+    /// <returns></returns>
+    public abstract static IGenIdStorage<K, T> FromEnumerable(IEnumerable<KeyValuePair<K, T>> pairs);
+
+    /// <summary>
+    /// Creates a new storage container from a set of unique key/value pairs
+    /// </summary>
+    /// <exception cref="InvalidOperationException"/>
+    /// <param name="pairs"></param>
+    /// <returns></returns>
+    public abstract static IGenIdStorage<K, T> FromEnumerable(IEnumerable<(K, T)> pairs);
+
+    /// <summary>
     /// Allocates storage for a value in this collection.
     /// </summary>
+    /// <remarks>Backwards compat with old Pow3r API</remarks>
     /// <param name="key">A key indexing the newly allocated slot.</param>
     /// <returns>A reference to the allocated slot.</returns>
     public abstract ref T Allocate(out K key);
@@ -41,6 +57,7 @@ public interface IGenIdStorage<K, T> : IEnumerable<KeyValueRef<K, T>> {
     /// <summary>
     /// Frees the value stored in a given slot and invalidates its associated key.
     /// </summary>
+    /// <remarks>Backwards compat with old Pow3r API</remarks>
     /// <param name="key">A key indexing a currently allocated slot in this storage.</param>
     public abstract void Free(in K key);
 
@@ -48,10 +65,18 @@ public interface IGenIdStorage<K, T> : IEnumerable<KeyValueRef<K, T>> {
     /// Fetches a reference to a value contained by this storage.
     /// Will throw an exception if the specified value does not exist.
     /// </summary>
+    /// <remarks>Backwards compat with old Pow3r API</remarks>
     /// <param name="key">A key indexing a value contained by this storage.</param>
     /// <exception cref="KeyNotFoundException">Thrown if the given <paramref name="key"/> did not infact, index a value in this storage.</exception>
     /// <returns>A reference to the value in this storage which is indexed by the given <paramref name="key"/>.</returns>
     public abstract ref T this[in K key] { get; }
+
+    /// <summary>
+    /// Checks whether this storage contains a value associated with a given <paramref name="key"/>.
+    /// </summary>
+    /// <param name="key">A key which may or may not index a value contained by this storage.</param>
+    /// <returns>True if the storage contains a value indexed by the given <paramref name="key"/> or false if no such value exists.</returns>
+    public abstract bool ContainsKey(in K key);
 
     /// <summary>
     /// Discards all values in this storage.
@@ -72,11 +97,7 @@ public interface IGenIdStorage<K, T> : IEnumerable<KeyValueRef<K, T>> {
     /// </summary>
     /// <param name="value">The value to insert into this storage.</param>
     /// <returns>The key indexing the inserted value.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public sealed K Insert(in T value) {
-        Allocate(out var key) = value;
-        return key;
-    }
+    public abstract K Insert(in T value);
 
     /// <summary>
     /// Removes the value indexed by the given <paramref name="key"/> from this storage, if one exists.
@@ -88,8 +109,7 @@ public interface IGenIdStorage<K, T> : IEnumerable<KeyValueRef<K, T>> {
     public abstract bool TryRemove(in K key, [MaybeNullWhen(false)] out T value);
 
     /// <inheritdoc cref="TryRemove(in K, out T)"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public sealed bool TryRemove(in K key) => TryRemove(key, out _);
+    public abstract bool TryRemove(in K key);
 
     /// <summary>
     /// Attempts to fetch a reference to a value contained by this storage.
@@ -106,11 +126,5 @@ public interface IGenIdStorage<K, T> : IEnumerable<KeyValueRef<K, T>> {
     /// <param name="key">A key which may or may not index a value contained by this storage.</param>
     /// <param name="value">Set to the value indexed by the given <paramref name="key"/> if one exists, or a default value of it doesn't.</param>
     /// <returns>True if a value indexed by the given <paramref name="key"/> was successfully retrieved, or false if it wasn't.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public sealed bool TryGet(in K key, [MaybeNullWhen(false)] out T value)
-    {
-        ref var @ref = ref TryGetRef(key, out var success);
-        value = success ? @ref : default;
-        return success;
-    }
+    public abstract bool TryGet(in K key, [MaybeNullWhen(false)] out T value);
 }

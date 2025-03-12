@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.Utility;
@@ -19,7 +21,7 @@ public sealed class GenIdStorage<T> : IGenIdStorage<GenIdStorage<T>.Key, T> {
     // Disadvantages are that storage cannot be shrunk, and sparse storage is inefficient space wise.
     // Also this implementation does not have optimizations necessary to make sparse iteration efficient.
     //
-    // The idea here is that the index type (NodeId in this case) has both an index and a generation.
+    // The idea here is that the index type (Key in this case) has both an index and a generation.
     // The index is an integer index into the storage array, the generation is used to avoid use-after-free.
     //
     // Empty slots in the array form a linked list of free slots.
@@ -27,7 +29,7 @@ public sealed class GenIdStorage<T> : IGenIdStorage<GenIdStorage<T>.Key, T> {
     //
     // When we free a node, we bump the generation of the slot and make it the head of the linked list.
     // The generation being bumped means that any IDs to this slot will fail to resolve (generation mismatch).
-    // The generation eventually wraps around, but if we've gone through 2^32 values in a single slot any old keys have probably been dropped.
+    // The generation eventually wraps around, but if we've gone through 2^32 values in a single slot any old keys for that slot have probably been dropped.
 
     /// <summary>
     /// The type of key used by this collection.
@@ -53,7 +55,7 @@ public sealed class GenIdStorage<T> : IGenIdStorage<GenIdStorage<T>.Key, T> {
     /// You could save 4 bytes/slot by turning this into a tagged union.
     /// Unfortunately, C# does not like having reference types and value types overlapping in memory.
     /// </remarks>
-    internal struct Slot
+    private struct Slot
     {
         /// <summary>
         /// The 'generation' of this slot.
@@ -64,6 +66,7 @@ public sealed class GenIdStorage<T> : IGenIdStorage<GenIdStorage<T>.Key, T> {
         /// <summary>
         /// The index of the next empty slot in the storage array.
         /// May be <see cref="SENTINEL"/> if this is the last free slot.
+        /// Must be <see cref="OCCUPIED"/> if this slot contains a value.
         /// </summary>
         public int NextFree;
 
@@ -80,12 +83,24 @@ public sealed class GenIdStorage<T> : IGenIdStorage<GenIdStorage<T>.Key, T> {
         {
             [Pure]
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => (Version & 1) != 0;
+            get => Version == OCCUPIED;
+        }
+
+        /// <summary>
+        /// Inverse of <see cref="IsOccupied"/>.
+        /// </summary>
+        public readonly bool IsEmpty
+        {
+            [Pure]
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => !IsOccupied;
         }
     }
 
+    /// <inheritdoc cref="IGenIdStorage{K, T}.Count"/>
     public int Count { get; private set; }
 
+    /// <inheritdoc cref="IGenIdStorage{K, T}.Capacity"/>
     public int Capacity => _slots.Length;
 
     /// <summary>
@@ -104,6 +119,17 @@ public sealed class GenIdStorage<T> : IGenIdStorage<GenIdStorage<T>.Key, T> {
     /// </summary>
     private const int SENTINEL = -1;
 
+    /// <summary>
+    /// An invalid index used to indicate that a slot is occupied.
+    /// </summary>
+    private const int OCCUPIED = -2;
+
+#region Constructors
+
+    /// <summary>
+    /// Constructs a new GenIdStorage instance.
+    /// Does not immediately allocate space for storing values.
+    /// </summary>
     public GenIdStorage()
     {
         Count = 0;
@@ -111,11 +137,111 @@ public sealed class GenIdStorage<T> : IGenIdStorage<GenIdStorage<T>.Key, T> {
         _nextFree = SENTINEL;
     }
 
+    /// <summary>
+    /// Constructs a new GenIdStorage instance.
+    /// Allocates memory for storing <paramref name="capacity"/> values.
+    /// </summary>
+    /// <param name="capacity">The number of values this should allocate memory to store.</param>
     public GenIdStorage(int capacity) : this()
     {
-        if (capacity > 0)
-            ReAllocateTo(capacity);
+        Resize(capacity);
     }
+
+    /// <inheritdoc cref="IGenIdStorage{K, T}.FromEnumerable(IEnumerable{KeyValuePair{K, T}})"/>
+    public static GenIdStorage<T> FromEnumerable(IEnumerable<KeyValuePair<Key, T>> pairs)
+    {
+        var storage = new GenIdStorage<T>();
+
+        var cache = pairs.ToArray();
+
+        if (cache.Length == 0)
+            return storage;
+
+        // Allocate just enough memory so store all of the
+        var maxSlot = cache.Max(pair => pair.Key.Index);
+
+        if (maxSlot < cache.Length - 1)
+        {
+            // Pigeonhole check:
+            // There are cache.Length keys and the minimum valid key index is 0
+            // So assuming the most densly packed valid unique keys possible we'd have one key for each integer in the range [0, cache.Length)
+            // This gives a minimum maximum key value of cache.Length - 1.
+            // In order for the maximum key value to be less than this, either there are invalid keys (index < 0) or there are duplicate key indices.
+            throw new InvalidOperationException("invalid or duplicate key index");
+        }
+
+        var slots = new Slot[maxSlot + 1];
+
+        foreach (var (key, value) in cache)
+        {
+            ref var slot = ref slots[key.Index];
+
+            if (slot.IsOccupied)
+                throw new InvalidOperationException("duplicate key index");
+
+            slot.Version = key.Version;
+            slot.Value = value;
+            slot.NextFree = OCCUPIED;
+        }
+
+        var nextFree = SENTINEL;
+
+        if (slots.Length > cache.Length)
+        {
+            // If there are more slots than values then some of them are empty
+            // Thus we need to initialize the free list
+
+            for (int index = slots.Length - 1; index >= 0 /*and this is why we use an int*/; --index)
+            {
+                ref var slot = ref slots[index];
+
+                if (slot.IsOccupied)
+                    continue;
+
+                slot.NextFree = nextFree;
+                nextFree = index;
+            }
+        }
+
+        return FromParts(slots, nextFree);
+    }
+
+    /// <inheritdoc cref="IGenIdStorage{K, T}.FromEnumerable(IEnumerable{ValueTuple{K, T}})"/>
+    public static GenIdStorage<T> FromEnumerable(IEnumerable<(Key, T)> pairs)
+    {
+        static IEnumerable<KeyValuePair<Key, T>> ToKeyValuePairs(IEnumerable<(Key, T)> pairs)
+        {
+            foreach (var (key, value) in pairs)
+            {
+                yield return new(key, value);
+            }
+        }
+
+        return FromEnumerable(ToKeyValuePairs(pairs));
+    }
+
+    /// <inheritdoc cref="IGenIdStorage{K, T}.FromEnumerable(IEnumerable{KeyValuePair{K, T}})"/>
+    static IGenIdStorage<Key, T> IGenIdStorage<Key, T>.FromEnumerable(IEnumerable<KeyValuePair<Key, T>> pairs) => GenIdStorage<T>.FromEnumerable(pairs);
+
+    /// <inheritdoc cref="IGenIdStorage{K, T}.FromEnumerable(IEnumerable{ValueTuple{K, T}})"/>
+    static IGenIdStorage<Key, T> IGenIdStorage<Key, T>.FromEnumerable(IEnumerable<(Key, T)> pairs) => GenIdStorage<T>.FromEnumerable(pairs);
+
+    /// <summary>
+    /// Creates a new instance from a slot array and free slot head index.
+    /// </summary>
+    /// <param name="slots">The slot the storage should use.</param>
+    /// <param name="nextFree">The index of the first free storage slot </param>
+    /// <returns></returns>
+    private static GenIdStorage<T> FromParts(Slot[] slots, int nextFree)
+    {
+        return new()
+        {
+            _slots = slots,
+            _nextFree = nextFree,
+        };
+    }
+
+#endregion Constructors
 
 #region IGenIdStorage<T> impls
 
@@ -124,8 +250,8 @@ public sealed class GenIdStorage<T> : IGenIdStorage<GenIdStorage<T>.Key, T> {
     {
         if (_nextFree == SENTINEL)
         {
-            DebugTools.Assert(Count == Capacity, "");
-            ReAllocate();
+            DebugTools.Assert(Count == Capacity, "count or _nextFree desynced");
+            Grow();
         }
 
         var index = _nextFree;
@@ -134,6 +260,7 @@ public sealed class GenIdStorage<T> : IGenIdStorage<GenIdStorage<T>.Key, T> {
         DebugTools.Assert(!slot.IsOccupied, "attempted to allocate an occupied slot");
 
         _nextFree = slot.NextFree;
+        slot.NextFree = OCCUPIED;
         slot.Version += 1;
         Count += 1;
 
@@ -176,6 +303,20 @@ public sealed class GenIdStorage<T> : IGenIdStorage<GenIdStorage<T>.Key, T> {
         }
     }
 
+    /// <inheritdoc cref="IGenIdStorage{K, T}.ContainsKey(in K)"/>
+    public bool ContainsKey(in Key key)
+    {
+        if (key.Index < 0 || key.Index >= _slots.Length)
+            return false;
+
+        ref var slot = ref _slots[key.Index];
+
+        if (slot.Version != key.Version || !slot.IsOccupied)
+            return false;
+
+        return true;
+    }
+
     /// <inheritdoc cref="IGenIdStorage{K, T}.Clear()"/>
     public void Clear()
     {
@@ -203,28 +344,22 @@ public sealed class GenIdStorage<T> : IGenIdStorage<GenIdStorage<T>.Key, T> {
     }
 
     /// <inheritdoc cref="IGenIdStorage{K, T}.Resize(int)"/>
-    /// <exception cref="InvalidOperationException">Thrown if the storage is occupied.</exception>
-    public void Resize(int capacity)
+    public void Resize(int newCapacity)
     {
-        if (Count != 0)
-            throw new InvalidOperationException("attempted to resize an occupied GenIdStorage");
-
-        if (capacity == 0)
+        var oldCapacity = Capacity;
+        switch (newCapacity.CompareTo(oldCapacity))
         {
-            _slots = [];
-            _nextFree = SENTINEL;
-            return;
+            case 0:
+                return; // NOP
+            case < 0:
+                ShrinkTo(newCapacity);
+                return;
+            case > 0:
+                GrowTo(newCapacity);
+                return;
         }
 
-        Array.Resize(ref _slots, capacity);
-
-        for (var i = 0; i < capacity - 1; ++i)
-        {
-            ref var _slot = ref _slots[i];
-            _slot.NextFree = i + 1;
-        }
-        _slots[^1].NextFree = SENTINEL;
-        _nextFree = 0;
+        throw new UnreachableException("congrats, you broke integer comparison");
     }
 
     /// <inheritdoc cref="IGenIdStorage{K, T}.TryRemove(in K)"/>
@@ -276,6 +411,30 @@ public sealed class GenIdStorage<T> : IGenIdStorage<GenIdStorage<T>.Key, T> {
 
         success = true;
         return ref slot.Value;
+    }
+
+    /// <inheritdoc cref="IGenIdStorage{K, T}.Insert(in T)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Key Insert(in T value)
+    {
+        Allocate(out var key) = value;
+        return key;
+    }
+
+    /// <inheritdoc cref="IGenIdStorage{K, T}.TryRemove(in K)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool TryRemove(in Key key)
+    {
+        return TryRemove(key, out _);
+    }
+
+    /// <inheritdoc cref="IGenIdStorage{K, T}.TryGet(in K, out T)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool TryGet(in Key key, [MaybeNullWhen(false)] out T value)
+    {
+        ref var @ref = ref TryGetRef(key, out var success);
+        value = success ? @ref : default;
+        return success;
     }
 
 #endregion IGenIdStorage<T> impls
@@ -356,8 +515,8 @@ public sealed class GenIdStorage<T> : IGenIdStorage<GenIdStorage<T>.Key, T> {
     /// </summary>
     public struct KeyValuePairsEnumerator(GenIdStorage<T> from) : IEnumerator<KeyValueRef<Key, T>>
     {
-        internal Slot[] _slots = from._slots;
-        internal int _index = -1;
+        private readonly Slot[] _slots = from._slots;
+        private int _index = -1;
 
         public readonly KeyValueRef<Key, T> Current
         {
@@ -372,12 +531,12 @@ public sealed class GenIdStorage<T> : IGenIdStorage<GenIdStorage<T>.Key, T> {
 
         public bool MoveNext()
         {
-            for (; _index < _slots.Length; ++_index)
+            do
             {
-                ref var slot = ref _slots[_index];
-                if (slot.IsOccupied)
+                if (_slots[++_index].IsOccupied)
                     return true;
             }
+            while (_index < _slots.Length);
 
             return false;
         }
@@ -387,7 +546,7 @@ public sealed class GenIdStorage<T> : IGenIdStorage<GenIdStorage<T>.Key, T> {
             _index = -1;
         }
 
-        public void Dispose() { }
+        public readonly void Dispose() { }
     }
 
     /// <inheritdoc cref="IGenIdStorage{K, T}.Keys"/>
@@ -412,28 +571,27 @@ public sealed class GenIdStorage<T> : IGenIdStorage<GenIdStorage<T>.Key, T> {
     /// <summary>
     /// ~Doubles the capacity of the collection.
     /// </summary>
-    private void ReAllocate()
+    private void Grow()
     {
+        DebugTools.Assert(_nextFree == SENTINEL, "");
+
         var oldCapacity = _slots.Length;
         var newCapacity = Math.Max(oldCapacity, 2) * 2;
-        ReAllocateTo(newCapacity);
+        Resize(newCapacity);
     }
 
     /// <summary>
-    /// Attempts to set the capacity of the collection.
-    /// Will fail if it attempts to shrink the collection.
+    /// Increases the number of slots available to this storage.
     /// </summary>
-    /// <exception cref="InvalidOperationException"/>
-    /// <param name="newCapacity">The number of slots the collection should have after the reallocation.</param>
-    private void ReAllocateTo(int newCapacity)
+    /// <param name="newCapacity">The number of slots the storage should be resized to contain. Must be greater than <see cref="Capacity"/>.</param>
+    private void GrowTo(int newCapacity)
     {
         var oldCapacity = _slots.Length;
-
-        if (newCapacity < oldCapacity)
-            throw new InvalidOperationException("cannot shrink GenIdStorage");
+        DebugTools.Assert(newCapacity < Capacity, "attempted to grow a GenIdStorage to a smaller capacity");
 
         Array.Resize(ref _slots, newCapacity);
 
+        // Set up free linked list in new slots:
         for (var i = oldCapacity; i < newCapacity - 1; ++i)
         {
             ref var slot = ref _slots[i];
@@ -441,7 +599,41 @@ public sealed class GenIdStorage<T> : IGenIdStorage<GenIdStorage<T>.Key, T> {
             slot.Version = 0;
             slot.NextFree = i + 1;
         }
+
         _slots[^1].NextFree = _nextFree;
         _nextFree = oldCapacity;
+    }
+
+    /// <summary>
+    /// Decreases the number of slots available to this storage.
+    /// Requires that the storage is empty.
+    /// </summary>
+    /// <param name="newCapacity">The number of slots the storage should be resized to contain. Must be less than <see cref="Capacity"/>.</param>
+    /// <exception cref="InvalidOperationException">Attempted to shrink the storage while it contained values.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Attempted to shrink the storage to a negative capacity.</exception>
+    private void ShrinkTo(int newCapacity)
+    {
+        DebugTools.Assert(newCapacity < Capacity, "attempted to shrink a GenIdStorage to a larger capacity");
+
+        if (Count != 0)
+            throw new InvalidOperationException("attempted to shrink an occupied GenIdStorage");
+
+        if (newCapacity == 0)
+        {
+            _slots = [];
+            _nextFree = SENTINEL;
+            return;
+        }
+
+        Array.Resize(ref _slots, newCapacity);
+
+        for (var i = 0; i < newCapacity - 1; ++i)
+        {
+            ref var _slot = ref _slots[i];
+            _slot.NextFree = i + 1;
+        }
+
+        _slots[^1].NextFree = SENTINEL;
+        _nextFree = 0;
     }
 }

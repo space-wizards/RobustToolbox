@@ -7,7 +7,7 @@ using VerifyCS =
 
 namespace Robust.Analyzers.Tests;
 
-//[Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
+[Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
 public sealed class PrototypeAnalyzerTest
 {
     private static Task Verifier(string code, params DiagnosticResult[] expected)

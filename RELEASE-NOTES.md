@@ -54,6 +54,63 @@ END TEMPLATE-->
 *None yet*
 
 
+## 248.0.2
+
+### Bugfixes
+
+* Don't throw in overlay rendering if MapUid not found.
+
+### Internal
+
+* Reduce EntityManager.IsDefault allocations.
+
+
+## 248.0.1
+
+### Bugfixes
+
+* Bump ImageSharp version.
+* Fix instances of NaN gain for audio where a negative-infinity value is being used for volume.
+
+
+## 248.0.0
+
+### Breaking changes
+
+* Use `Entity<MapGridComponent>` for TileChangedEvent instead of EntityUid.
+* Audio files are no longer tempo perfect when being played if the offset is small. At some point in the future an AudioParams bool is likely to be added to enforce this.
+* MoveProxy method args got changed in the B2DynamicTree update.
+* ResPath will now assert in debug if you pass in an invalid path containing the non-standardized directory separator.
+
+### New features
+
+* Added a new `MapLoaderSystem.TryLoadGrid()` override that loads a grid onto a newly created map.
+* Added a CVar for the endbuffer for audio. If an audio file will play below this length (for PVS reasons) it will be ignored.
+* Added Regex.Count + StringBuilder.Chars setter to the sandbox.
+* Added a public API for PhysicsHull.
+* Made MapLoader log more helpful.
+* Add TryLoadGrid override that also creates a map at the same time.
+* Updated B2Dynamictree to the latest Box2D V3 version.
+* Added SetItems to ItemList control to set items without removing the existing ones.
+* Shaders, textures, and audio will now hot reload automatically to varying degrees. Also added IReloadManager to handle watching for file-system changes and relaying events.
+* Wrap BUI disposes in a try-catch in case of exceptions.
+
+
+### Bugfixes
+
+* Fix some instances of invalid PlaybackPositions being set.
+* Play audio from the start of a file if it's only just come into PVS range / had its state handled.
+* Fix TryCopyComponents.
+* Use shell.WriteError if TryLoad fails for mapping commands.
+* Fix UI control position saving causing exceptions where the entity is cleaned-up alongside a state change.
+* Fix Map NetId completions.
+* Fix some ResPath calls using the wrong paths.
+
+### Internal
+
+* Remove some unused local variables and the associated warnings.
+
+
 ## 247.2.0
 
 ### New features

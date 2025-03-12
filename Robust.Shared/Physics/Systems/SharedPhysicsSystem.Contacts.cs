@@ -618,6 +618,24 @@ public abstract partial class SharedPhysicsSystem
         ArrayPool<Vector2>.Shared.Return(worldPoints);
     }
 
+    private record struct UpdateTreesJob : IRobustJob
+    {
+        public IEntityManager EntManager;
+
+        public void Execute()
+        {
+            var query = EntManager.AllEntityQueryEnumerator<BroadphaseComponent>();
+
+            while (query.MoveNext(out var broadphase))
+            {
+                broadphase.DynamicTree.Rebuild(false);
+                broadphase.StaticTree.Rebuild(false);
+                broadphase.SundriesTree._b2Tree.Rebuild(false);
+                broadphase.StaticSundriesTree._b2Tree.Rebuild(false);
+            }
+        }
+    }
+
     private void BuildManifolds(Contact[] contacts, int count, ContactStatus[] status, Vector2[] worldPoints)
     {
         if (count == 0)

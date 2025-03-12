@@ -54,7 +54,23 @@ END TEMPLATE-->
 *None yet*
 
 
+## 248.0.2
+
+### Bugfixes
+
+* Don't throw in overlay rendering if MapUid not found.
+
+### Internal
+
+* Reduce EntityManager.IsDefault allocations.
+
+
 ## 248.0.1
+
+### Bugfixes
+
+* Bump ImageSharp version.
+* Fix instances of NaN gain for audio where a negative-infinity value is being used for volume.
 
 
 ## 248.0.0

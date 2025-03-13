@@ -12,7 +12,7 @@ namespace Robust.Shared.Audio;
 public sealed partial class AudioPresetPrototype : IPrototype
 {
     [IdDataField]
-    public string ID { get; } = default!;
+    public string ID { get; private set; } = default!;
 
     /// <summary>
     /// Should the engine automatically create an auxiliary audio effect slot for this.

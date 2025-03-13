@@ -52,6 +52,11 @@ namespace Robust.Shared.Map
         byte Variants { get; }
 
         /// <summary>
+        ///     Allows the tile to be rotated/mirrored when placed on a grid.
+        /// </summary>
+        bool AllowRotationMirror => false;
+
+        /// <summary>
         ///     Assign a new value to <see cref="TileId"/>, used when registering the tile definition.
         /// </summary>
         /// <param name="id">The new tile ID for this tile definition.</param>

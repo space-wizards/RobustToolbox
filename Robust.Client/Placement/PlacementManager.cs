@@ -174,6 +174,18 @@ namespace Robust.Client.Placement
 
         private Direction _direction = Direction.South;
 
+        private bool _mirrored;
+
+        public bool Mirrored
+        {
+            get => _mirrored;
+            set
+            {
+                _mirrored = value;
+                MirroredChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
         /// <inheritdoc />
         public Direction Direction
         {
@@ -187,6 +199,9 @@ namespace Robust.Client.Placement
 
         /// <inheritdoc />
         public event EventHandler? DirectionChanged;
+
+        /// <inheritdoc />
+        public event EventHandler? MirroredChanged;
 
         private PlacementOverlay _drawOverlay = default!;
         private bool _isActive;
@@ -772,7 +787,10 @@ namespace Robust.Client.Placement
                     var grid = EntityManager.GetComponent<MapGridComponent>(gridId);
 
                     // no point changing the tile to the same thing.
-                    if (Maps.GetTileRef(gridId, grid, coordinates).Tile.TypeId == CurrentPermission.TileType)
+                    var tileRef = Maps.GetTileRef(gridId, grid, coordinates).Tile;
+                    if (tileRef.TypeId == CurrentPermission.TileType &&
+                        tileRef.Mirrored == Mirrored &&
+                        tileRef.Rotation == Tile.DirectionToByte(Direction))
                         return;
                 }
 
@@ -796,9 +814,14 @@ namespace Robust.Client.Placement
             };
 
             if (CurrentPermission.IsTile)
+            {
                 message.TileType = CurrentPermission.TileType;
+                message.Mirrored = Mirrored;
+            }
             else
+            {
                 message.EntityTemplateName = CurrentPermission.EntityType;
+            }
 
             // world x and y
             message.NetCoordinates = EntityManager.GetNetCoordinates(coordinates);

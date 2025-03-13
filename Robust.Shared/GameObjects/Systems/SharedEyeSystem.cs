@@ -161,7 +161,7 @@ public abstract class SharedEyeSystem : EntitySystem
 
     /// <summary>
     /// Overwrites visibility mask of an entity's eye.
-    /// If you wish for other systems to potentially change it consider raising <see cref="UpdateVisibilityMask"/>.
+    /// If you wish for other systems to potentially change it consider raising <see cref="RefreshVisibilityMask"/>.
     /// </summary>
     public void SetVisibilityMask(EntityUid uid, int value, EyeComponent? eyeComponent = null)
     {
@@ -178,7 +178,7 @@ public abstract class SharedEyeSystem : EntitySystem
     /// <summary>
     /// Updates the visibility mask for an entity by raising a <see cref="GetVisMaskEvent"/>
     /// </summary>
-    public void UpdateVisibilityMask(Entity<EyeComponent?> entity)
+    public void RefreshVisibilityMask(Entity<EyeComponent?> entity)
     {
         if (!Resolve(entity.Owner, ref entity.Comp, false))
             return;

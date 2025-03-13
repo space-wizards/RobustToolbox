@@ -159,6 +159,10 @@ public abstract class SharedEyeSystem : EntitySystem
         eye.Comp.PvsScale = Math.Clamp(scale, 0.1f, 100f);
     }
 
+    /// <summary>
+    /// Overwrites visibility mask of an entity's eye.
+    /// If you wish for other systems to potentially change it consider raising <see cref="UpdateVisibilityMask"/>.
+    /// </summary>
     public void SetVisibilityMask(EntityUid uid, int value, EyeComponent? eyeComponent = null)
     {
         if (!Resolve(uid, ref eyeComponent))
@@ -170,4 +174,32 @@ public abstract class SharedEyeSystem : EntitySystem
         eyeComponent.VisibilityMask = value;
         DirtyField(uid, eyeComponent, nameof(EyeComponent.VisibilityMask));
     }
+
+    /// <summary>
+    /// Updates the visibility mask for an entity by raising a <see cref="GetVisMaskEvent"/>
+    /// </summary>
+    public void UpdateVisibilityMask(Entity<EyeComponent?> entity)
+    {
+        if (!Resolve(entity.Owner, ref entity.Comp))
+            return;
+
+        var ev = new GetVisMaskEvent()
+        {
+            Entity = entity.Owner,
+        };
+        RaiseLocalEvent(entity.Owner, ref ev, true);
+
+        SetVisibilityMask(entity.Owner, ev.VisibilityMask, entity.Comp);
+    }
+}
+
+/// <summary>
+/// Event raised to update the vismask of an entity's eye.
+/// </summary>
+[ByRefEvent]
+public record struct GetVisMaskEvent()
+{
+    public EntityUid Entity;
+
+    public int VisibilityMask = EyeComponent.DefaultVisibilityMask;
 }

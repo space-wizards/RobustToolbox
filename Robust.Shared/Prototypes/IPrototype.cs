@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using Robust.Shared.Localization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
@@ -30,6 +31,20 @@ namespace Robust.Shared.Prototypes
         string[]? Parents { get; }
 
         bool Abstract { get; }
+    }
+
+    public interface ILocalizedPrototype
+    {
+
+        [DataField("name")] public string? SetName { get; }
+
+        [DataField("description")] public string? SetDesc { get; }
+
+        [ViewVariables] public string Name { get; }
+
+        [ViewVariables] public string Description { get; }
+
+        public string? CustomLocalizationPrefix { get; }
     }
 
     public sealed class IdDataFieldAttribute : DataFieldAttribute

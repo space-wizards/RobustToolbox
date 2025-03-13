@@ -180,7 +180,7 @@ public abstract class SharedEyeSystem : EntitySystem
     /// </summary>
     public void UpdateVisibilityMask(Entity<EyeComponent?> entity)
     {
-        if (!Resolve(entity.Owner, ref entity.Comp))
+        if (!Resolve(entity.Owner, ref entity.Comp, false))
             return;
 
         var ev = new GetVisMaskEvent()

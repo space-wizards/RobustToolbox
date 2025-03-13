@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* `BoxContainer` no longer causes stretching children to go below their minimum size.
 
 ### Other
 

@@ -1,3 +1,5 @@
+using Robust.Shared.Serialization.Manager.Attributes;
+
 namespace Robust.Shared.GameObjects;
 
 /// <summary>
@@ -15,5 +17,6 @@ public sealed partial class VisibilityComponent : Component
     /// <remarks>
     /// Not serialized as visibility is normally immediate (i.e. prior to MapInit) and content should be handling it as such.
     /// </remarks>
+    [DataField(readOnly: true)]
     public ushort Layer = 1;
 }

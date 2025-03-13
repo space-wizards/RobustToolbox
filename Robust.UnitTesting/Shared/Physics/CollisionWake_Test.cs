@@ -43,9 +43,9 @@ namespace Robust.UnitTesting.Shared.Physics
             var entManager = server.ResolveDependency<IEntityManager>();
             var mapManager = server.ResolveDependency<IMapManager>();
             var mapSystem = entManager.System<SharedMapSystem>();
-            var transformSystem = entManager.System<SharedTransformSystem>();
 
             Entity<MapGridComponent> grid = default!;
+            EntityUid mapUid = default!;
             MapId mapId = default!;
             PhysicsComponent entityOnePhysics = default!;
             TransformComponent xform = default!;
@@ -53,14 +53,15 @@ namespace Robust.UnitTesting.Shared.Physics
 
             await server.WaitPost(() =>
             {
-                mapSystem.CreateMap(out mapId);
+                mapUid = mapSystem.CreateMap();
+                mapId = entManager.GetComponent<MapComponent>(mapUid).MapId;
+
                 grid = mapManager.CreateGridEntity(mapId);
                 mapSystem.SetTile(grid, Vector2i.Zero, new Tile(1));
 
                 var entityOne = entManager.SpawnEntity("CollisionWakeTestItem", new MapCoordinates(Vector2.One * 2f, mapId));
                 entityOnePhysics = entManager.GetComponent<PhysicsComponent>(entityOne);
                 xform = entManager.GetComponent<TransformComponent>(entityOne);
-                mapSystem.TryGetMap(mapId, out var mapUid);
                 Assert.That(xform.ParentUid == mapUid);
 
                 var entityTwo = entManager.SpawnEntity("CollisionWakeTestItem", new EntityCoordinates(grid, new Vector2(0.5f, 0.5f)));
@@ -78,9 +79,8 @@ namespace Robust.UnitTesting.Shared.Physics
                 Assert.That(entityOnePhysics.CanCollide, Is.EqualTo(true));
 
                 xform.LocalPosition = new Vector2(0.5f, 0.5f);
-                xform.AttachParent(grid);
+                xform.AttachParent(grid.Owner);
 
-                // Entity 2 should immediately not be collidable on spawn
                 Assert.That(entityTwoPhysics.Awake, Is.EqualTo(false));
                 Assert.That(entityTwoPhysics.CanCollide, Is.EqualTo(false));
             });
@@ -93,7 +93,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 Assert.That(entityOnePhysics.CanCollide, Is.EqualTo(false));
 
                 xform.LocalPosition = Vector2.One * 2f;
-                xform.AttachParent(mapManager.GetMapEntityId(mapId));
+                xform.AttachParent(mapUid);
             });
 
             // Juussttt in case we'll re-parent it to the map and check its collision is back on.

@@ -20,13 +20,13 @@ public sealed class Fixtures_Test
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
 
         var entManager = sim.Resolve<IEntityManager>();
-        var mapManager = sim.Resolve<IMapManager>();
+        var mapSystem = entManager.System<SharedMapSystem>();
         var sysManager = sim.Resolve<IEntitySystemManager>();
         var fixturesSystem = sysManager.GetEntitySystem<FixtureSystem>();
         var physicsSystem = sysManager.GetEntitySystem<SharedPhysicsSystem>();
-        var map = sim.CreateMap().MapId;
+        var mapId = sim.CreateMap().MapId;
 
-        var ent = sim.SpawnEntity(null, new MapCoordinates(Vector2.Zero, map));
+        var ent = sim.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
         var body = entManager.AddComponent<PhysicsComponent>(ent);
         physicsSystem.SetBodyType(ent, BodyType.Dynamic, body: body);
         var fixture = new Fixture();
@@ -36,6 +36,6 @@ public sealed class Fixtures_Test
         Assert.That(fixture.Density, Is.EqualTo(10f));
         Assert.That(body.Mass, Is.EqualTo(10f));
 
-        mapManager.DeleteMap(map);
+        mapSystem.DeleteMap(mapId);
     }
 }

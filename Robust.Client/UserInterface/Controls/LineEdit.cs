@@ -8,6 +8,7 @@ using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;

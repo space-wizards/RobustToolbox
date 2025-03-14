@@ -427,6 +427,8 @@ internal partial class UserInterfaceManager
         }
     }
 
+    public bool IgnoreCursorChange { get; set; } = false;
+
     private (Control control, Vector2 rel)? MouseGetControlAndRel(ScreenCoordinates coordinates)
     {
         if (!_windowsToRoot.TryGetValue(coordinates.Window, out var root))

@@ -137,6 +137,7 @@ public sealed class RequiresAttributeAnalyzer : DiagnosticAnalyzer
         return false;
     }
 
+    // Modified from https://stackoverflow.com/questions/55523130/roslyn-is-isymbol-getattributes-returns-inherited-attributes
     private List<AttributeData> GetAllAttributes(ISymbol? symbol)
     {
         List<AttributeData> attributes = symbol?.GetAttributes().ToList() ?? [];
@@ -153,6 +154,7 @@ public sealed class RequiresAttributeAnalyzer : DiagnosticAnalyzer
         return attributes;
     }
 
+    // Modified from https://stackoverflow.com/questions/55523130/roslyn-is-isymbol-getattributes-returns-inherited-attributes
     private bool AttributeIsInherited(AttributeData attribute)
     {
         if (attribute.AttributeClass == null)

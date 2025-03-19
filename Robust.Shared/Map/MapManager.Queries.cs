@@ -8,6 +8,7 @@ using Robust.Shared.Map.Enumerators;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
+using Robust.Shared.Physics.Shapes;
 
 namespace Robust.Shared.Map;
 
@@ -224,9 +225,8 @@ internal partial class MapManager
 
     public void FindGridsIntersecting(EntityUid mapEnt, Box2 worldAABB, GridCallback callback, bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap)
     {
-        var polygon = _physics.GetPooled(worldAABB);
+        var polygon = new FastPolygon(worldAABB);
         FindGridsIntersecting(mapEnt, polygon, worldAABB, Transform.Empty, callback, approx, includeMap);
-        _physics.ReturnPooled(polygon);
     }
 
     public void FindGridsIntersecting<TState>(EntityUid mapEnt, Box2 worldAABB, ref TState state, GridCallback<TState> callback, bool approx = IMapManager.Approximate, bool includeMap = IMapManager.IncludeMap)

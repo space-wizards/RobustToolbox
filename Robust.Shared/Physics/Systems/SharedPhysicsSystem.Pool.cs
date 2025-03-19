@@ -1,3 +1,4 @@
+using System;
 using System.Buffers;
 using System.Numerics;
 using Microsoft.Extensions.ObjectPool;
@@ -8,6 +9,19 @@ namespace Robust.Shared.Physics.Systems;
 
 public abstract partial class SharedPhysicsSystem
 {
+    internal void GetPolygon(Box2 box, Span<Vector2> vertices, Span<Vector2> normals)
+    {
+        vertices[0] = box.BottomLeft;
+        vertices[1] = box.BottomRight;
+        vertices[2] = box.TopRight;
+        vertices[3] = box.TopLeft;
+
+        normals[0] = new Vector2(0.0f, -1.0f);
+        normals[1] = new Vector2(1.0f, 0.0f);
+        normals[2] = new Vector2(0.0f, 1.0f);
+        normals[3] = new Vector2(-1.0f, 0.0f);
+    }
+
     /// <summary>
     /// Gets a polygon with pooled arrays backing it.
     /// </summary>

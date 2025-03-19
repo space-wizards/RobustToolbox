@@ -150,6 +150,15 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             Friction = MathF.Sqrt((FixtureA?.Friction ?? 0.0f) * (FixtureB?.Friction ?? 0.0f));
         }
 
+        public void GetWorldManifold(Transform transformA, Transform transformB, out Vector2 normal)
+        {
+            var shapeA = FixtureA?.Shape!;
+            var shapeB = FixtureB?.Shape!;
+            Span<Vector2> points = stackalloc Vector2[PhysicsConstants.MaxPolygonVertices];
+
+            SharedPhysicsSystem.InitializeManifold(ref Manifold, transformA, transformB, shapeA.Radius, shapeB.Radius, out normal, points);
+        }
+
         /// <summary>
         /// Gets the world manifold.
         /// </summary>
@@ -199,7 +208,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 // stored impulses to warm start the solver.
                 for (var i = 0; i < Manifold.PointCount; ++i)
                 {
-                    var mp2 = Manifold.Points[i];
+                    ref var mp2 = ref Manifold.Points[i];
                     mp2.NormalImpulse = 0.0f;
                     mp2.TangentImpulse = 0.0f;
                     var id2 = mp2.Id;
@@ -215,8 +224,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                             break;
                         }
                     }
-
-                    Manifold.Points[i] = mp2;
                 }
 
                 if (touching != wasTouching)

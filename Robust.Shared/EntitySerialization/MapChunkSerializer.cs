@@ -139,7 +139,7 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
     private static string SerializeTiles(MapChunk chunk, EntitySerializer? serializer)
     {
         // number of bytes written per tile, because sizeof(Tile) is useless.
-        const int structSize = 8;
+        const int structSize = 7;
 
         var nTiles = chunk.ChunkSize * chunk.ChunkSize * structSize;
         var barr = new byte[nTiles];

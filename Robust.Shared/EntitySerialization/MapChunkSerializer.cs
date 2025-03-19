@@ -157,6 +157,7 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
                         writer.Write(tile.TypeId);
                         writer.Write((byte) tile.Flags);
                         writer.Write(tile.Variant);
+                        writer.Write(tile.RotationMirroring);
                     }
                 }
                 return Convert.ToBase64String(barr);

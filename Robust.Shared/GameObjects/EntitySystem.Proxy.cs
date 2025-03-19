@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.Containers;
+using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
@@ -143,7 +144,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="Dirty{T}"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
+    protected void Dirty(EntityUid uid, [RequiresAttribute(typeof(NetworkedComponentAttribute))] IComponent component, MetaDataComponent? meta = null)
     {
         EntityManager.Dirty(uid, component, meta);
     }
@@ -182,7 +183,7 @@ public partial class EntitySystem
     ///     Marks a component as dirty. This also implicitly dirties the entity this component belongs to.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void Dirty<T>(Entity<T> ent, MetaDataComponent? meta = null) where T : IComponent?
+    protected void Dirty<[RequiresAttribute(typeof(NetworkedComponentAttribute))] T>(Entity<T> ent, MetaDataComponent? meta = null) where T : IComponent?
     {
         var comp = ent.Comp;
         if (comp == null && !EntityManager.TryGetComponent(ent.Owner, out comp))
@@ -193,7 +194,9 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="Dirty{T}"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void Dirty<T1, T2>(Entity<T1, T2> ent, MetaDataComponent? meta = null)
+    protected void Dirty<[RequiresAttribute(typeof(NetworkedComponentAttribute))] T1,
+        [RequiresAttribute(typeof(NetworkedComponentAttribute))] T2>
+        (Entity<T1, T2> ent, MetaDataComponent? meta = null)
         where T1 : IComponent
         where T2 : IComponent
     {
@@ -202,7 +205,10 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="Dirty{T}"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void Dirty<T1, T2, T3>(Entity<T1, T2, T3> ent, MetaDataComponent? meta = null)
+    protected void Dirty<[RequiresAttribute(typeof(NetworkedComponentAttribute))] T1,
+        [RequiresAttribute(typeof(NetworkedComponentAttribute))] T2,
+        [RequiresAttribute(typeof(NetworkedComponentAttribute))] T3>
+        (Entity<T1, T2, T3> ent, MetaDataComponent? meta = null)
         where T1 : IComponent
         where T2 : IComponent
         where T3 : IComponent
@@ -212,7 +218,11 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="Dirty{T}"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void Dirty<T1, T2, T3, T4>(Entity<T1, T2, T3, T4> ent, MetaDataComponent? meta = null)
+    protected void Dirty<[RequiresAttribute(typeof(NetworkedComponentAttribute))] T1,
+        [RequiresAttribute(typeof(NetworkedComponentAttribute))] T2,
+        [RequiresAttribute(typeof(NetworkedComponentAttribute))] T3,
+        [RequiresAttribute(typeof(NetworkedComponentAttribute))] T4>
+        (Entity<T1, T2, T3, T4> ent, MetaDataComponent? meta = null)
         where T1 : IComponent
         where T2 : IComponent
         where T3 : IComponent

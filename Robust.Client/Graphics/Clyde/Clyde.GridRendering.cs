@@ -177,16 +177,16 @@ namespace Robust.Client.Graphics.Clyde
                     if (_tileDefinitionManager[tile.TypeId].AllowRotationMirror)
                     {
                         // Rotate the tile
-                        for (int r = 0; r < tile.Rotation; r++)
+                        for (int r = 0; r < tile.RotationMirroring % 2; r++)
                         {
                             (rLeftBottom, rRightBottom, rRightTop, rLeftTop) =
                                 (rLeftTop, rLeftBottom, rRightBottom, rRightTop);
                         }
 
                         // Mirror on the x-axis
-                        if (tile.Mirrored)
+                        if (tile.RotationMirroring >= 4)
                         {
-                            if (tile.Rotation % 2 == 0)
+                            if (tile.RotationMirroring % 2 == 0)
                             {
                                 rLeftBottom = (rLeftBottom.Item1.Equals(region.Left) ? region.Right : region.Left,
                                     rLeftBottom.Item2);

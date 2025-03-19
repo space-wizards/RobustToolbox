@@ -28,14 +28,9 @@ public readonly struct Tile : IEquatable<Tile>, ISpanFormattable
     public readonly byte Variant;
 
     /// <summary>
-    /// Rotation of this tile to render.
+    /// Rotation and mirroring of this tile to render. 0-3 is normal, 4-7 is mirrored.
     /// </summary>
-    public readonly byte Rotation;
-
-    /// <summary>
-    /// Whether the tile should be rendered mirrored.
-    /// </summary>
-    public readonly bool Mirrored;
+    public readonly byte RotationMirroring;
 
     /// <summary>
     ///     An empty tile that can be compared against.
@@ -53,15 +48,13 @@ public readonly struct Tile : IEquatable<Tile>, ISpanFormattable
     /// <param name="typeId">Internal type ID.</param>
     /// <param name="flags">Custom tile flags for usage.</param>
     /// <param name="variant">The visual variant this tile is using.</param>
-    /// <param name="rotation">The rotation this tile is using.</param>
-    /// <param name="mirrored">Whether the tile is mirrored.</param>
-    public Tile(int typeId, byte flags = 0, byte variant = 0, byte rotation = 0, bool mirrored = false)
+    /// <param name="rotationMirroring">The rotation and mirroring this tile is using.</param>
+    public Tile(int typeId, byte flags = 0, byte variant = 0, byte rotationMirroring = 0)
     {
         TypeId = typeId;
         Flags = flags;
         Variant = variant;
-        Rotation = rotation;
-        Mirrored = mirrored;
+        RotationMirroring = rotationMirroring;
     }
 
     public static byte DirectionToByte(Direction direction, bool throwIfDiagonal = false)
@@ -106,7 +99,7 @@ public readonly struct Tile : IEquatable<Tile>, ISpanFormattable
     /// <returns>String representation of this Tile.</returns>
     public override string ToString()
     {
-        return $"Tile {TypeId}, {Flags}, {Variant}, {Rotation}, {Mirrored}";
+        return $"Tile {TypeId}, {Flags}, {Variant}, {RotationMirroring}";
     }
 
     public string ToString(string? format, IFormatProvider? formatProvider)
@@ -129,7 +122,7 @@ public readonly struct Tile : IEquatable<Tile>, ISpanFormattable
     /// <inheritdoc />
     public bool Equals(Tile other)
     {
-        return TypeId == other.TypeId && Flags == other.Flags && Variant == other.Variant && Rotation == other.Rotation && Mirrored == other.Mirrored;
+        return TypeId == other.TypeId && Flags == other.Flags && Variant == other.Variant && RotationMirroring == other.RotationMirroring;
     }
 
     /// <inheritdoc />
@@ -145,7 +138,7 @@ public readonly struct Tile : IEquatable<Tile>, ISpanFormattable
     {
         unchecked
         {
-            return (TypeId.GetHashCode() * 397) ^ Flags.GetHashCode() ^ Variant.GetHashCode() ^ Rotation.GetHashCode() ^ Mirrored.GetHashCode();
+            return (TypeId.GetHashCode() * 397) ^ Flags.GetHashCode() ^ Variant.GetHashCode() ^ RotationMirroring.GetHashCode();
         }
     }
 

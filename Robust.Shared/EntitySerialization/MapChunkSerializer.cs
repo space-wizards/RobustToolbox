@@ -82,13 +82,12 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
                     var id = reader.ReadInt32();
                     var flags = reader.ReadByte();
                     var variant = reader.ReadByte();
-                    var rotation = reader.ReadByte();
-                    var mirrored = System.Convert.ToBoolean(reader.ReadByte());
+                    var rotationMirroring = reader.ReadByte();
 
                     var defName = tileMap[id];
                     id = tileDefinitionManager[defName].TileId;
 
-                    var tile = new Tile(id, flags, variant);
+                    var tile = new Tile(id, flags, variant, rotationMirroring);
                     chunk.TrySetTile(x, y, tile, out _, out _);
                 }
             }
@@ -177,8 +176,7 @@ internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingData
                     writer.Write(yamlId);
                     writer.Write((byte) tile.Flags);
                     writer.Write(tile.Variant);
-                    writer.Write(tile.Rotation);
-                    writer.Write(System.Convert.ToByte(tile.Mirrored));
+                    writer.Write(tile.RotationMirroring);
                 }
             }
         }

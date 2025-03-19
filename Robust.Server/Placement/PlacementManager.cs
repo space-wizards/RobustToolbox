@@ -196,7 +196,7 @@ namespace Robust.Server.Placement
             if (_entityManager.TryGetComponent(coordinates.EntityId, out grid)
                 || _mapManager.TryFindGridAt(_xformSystem.ToMapCoordinates(coordinates), out gridId, out grid))
             {
-                _maps.SetTile(gridId, grid, coordinates, new Tile(tileType, rotation: direction, mirrored: mirrored));
+                _maps.SetTile(gridId, grid, coordinates, new Tile(tileType, rotationMirroring: (byte)(direction + (mirrored ? 4 : 0))));
 
                 var placementEraseEvent = new PlacementTileEvent(tileType, coordinates, placingUserId);
                 _entityManager.EventBus.RaiseEvent(EventSource.Local, placementEraseEvent);
@@ -210,7 +210,7 @@ namespace Robust.Server.Placement
 
                 _xformSystem.SetWorldPosition(newGridXform, coordinates.Position - newGrid.Comp.TileSizeHalfVector); // assume bottom left tile origin
                 var tilePos = _maps.WorldToTile(newGrid.Owner, newGrid.Comp, coordinates.Position);
-                _maps.SetTile(newGrid.Owner, newGrid.Comp, tilePos, new Tile(tileType, rotation: direction, mirrored: mirrored));
+                _maps.SetTile(newGrid.Owner, newGrid.Comp, tilePos, new Tile(tileType, rotationMirroring: (byte)(direction + (mirrored ? 4 : 0))));
 
                 var placementEraseEvent = new PlacementTileEvent(tileType, coordinates, placingUserId);
                 _entityManager.EventBus.RaiseEvent(EventSource.Local, placementEraseEvent);

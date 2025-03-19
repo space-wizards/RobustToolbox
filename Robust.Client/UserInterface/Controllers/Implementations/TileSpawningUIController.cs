@@ -77,11 +77,7 @@ public sealed class TileSpawningUIController : UIController
         if (_window == null || _window.Disposed)
             return;
 
-        if (args.Pressed)
-            _placement.Mirrored = true;
-        else
-            _placement.Mirrored = false;
-
+        _placement.Mirrored = args.Pressed;
         _mirroredTile = _placement.Mirrored;
 
         args.Button.Pressed = args.Pressed;

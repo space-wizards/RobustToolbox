@@ -789,8 +789,7 @@ namespace Robust.Client.Placement
                     // no point changing the tile to the same thing.
                     var tileRef = Maps.GetTileRef(gridId, grid, coordinates).Tile;
                     if (tileRef.TypeId == CurrentPermission.TileType &&
-                        tileRef.Mirrored == Mirrored &&
-                        tileRef.Rotation == Tile.DirectionToByte(Direction))
+                        tileRef.RotationMirroring == Tile.DirectionToByte(Direction) + (Mirrored ? 4 : 0))
                         return;
                 }
 

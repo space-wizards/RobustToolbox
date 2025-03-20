@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* Added a debug overlay for the velocity and anglular velocity of all entities on the screen. Use the `showvel` and `showangvel` commands to toggle it.
+* Added a debug overlay for the linear and angular velocity of all entities on the screen. Use the `showvel` and `showangvel` commands to toggle it.
 
 ### Bugfixes
 

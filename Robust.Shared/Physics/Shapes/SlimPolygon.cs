@@ -28,7 +28,7 @@ internal record struct SlimPolygon : IPhysShape
     public byte VertexCount => 4;
 
     public int ChildCount => 1;
-    public float Radius { get; set; }
+    public float Radius { get; set; } = PhysicsConstants.PolygonRadius;
     public ShapeType ShapeType => ShapeType.Polygon;
 
     public SlimPolygon(Box2 box)

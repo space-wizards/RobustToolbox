@@ -12,7 +12,7 @@ namespace Robust.Shared.Physics.Shapes;
 internal record struct Polygon : IPhysShape
 {
     [DataField]
-    public byte VertexCount;
+    public byte VertexCount { get; internal set; }
 
     /// <summary>
     /// Vertices associated with this polygon. Will be sliced to <see cref="VertexCount"/>
@@ -32,7 +32,7 @@ internal record struct Polygon : IPhysShape
     public Vector2 Centroid;
 
     public int ChildCount => 1;
-    public float Radius { get; set; }
+    public float Radius { get; set; } = PhysicsConstants.PolygonRadius;
     public ShapeType ShapeType => ShapeType.Polygon;
 
     // Hopefully this one is short-lived for a few months
@@ -95,6 +95,7 @@ internal record struct Polygon : IPhysShape
         normals[..VertexCount].CopyTo(_normals.AsSpan);
         Centroid = centroid;
         VertexCount = count;
+        Radius = 0f;
     }
 
     public Polygon(Vector2[] vertices)

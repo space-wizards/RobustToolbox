@@ -215,6 +215,12 @@ namespace Robust.Shared.Physics.Systems
                     var polygon = (PolygonShape) aabb;
                     GetMassData(polygon, ref data, density);
                     break;
+                case Polygon fastPoly:
+                    GetMassData(new PolygonShape(fastPoly), ref data, density);
+                    break;
+                case SlimPolygon slim:
+                    GetMassData(new PolygonShape(slim), ref data, density);
+                    break;
                 case PolygonShape poly:
                     // Polygon mass, centroid, and inertia.
                     // Let rho be the polygon density in mass per unit area.

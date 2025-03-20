@@ -52,6 +52,39 @@ internal record struct Polygon : IPhysShape
         polyShape.Normals.AsSpan()[..VertexCount].CopyTo(_normals.AsSpan);
     }
 
+    public Polygon(Box2 box)
+    {
+        Unsafe.SkipInit(out this);
+        Radius = 0f;
+        VertexCount = 4;
+
+        _vertices._00 = box.BottomLeft;
+        _vertices._01 = box.BottomRight;
+        _vertices._02 = box.TopRight;
+        _vertices._03 = box.TopLeft;
+
+        _normals._00 = new Vector2(0.0f, -1.0f);
+        _normals._01 = new Vector2(1.0f, 0.0f);
+        _normals._02 = new Vector2(0.0f, 1.0f);
+        _normals._03 = new Vector2(-1.0f, 0.0f);
+    }
+
+    public Polygon(Box2Rotated bounds)
+    {
+        Unsafe.SkipInit(out this);
+        Radius = 0f;
+        VertexCount = 4;
+
+        _vertices._00 = bounds.BottomLeft;
+        _vertices._01 = bounds.BottomRight;
+        _vertices._02 = bounds.TopRight;
+        _vertices._03 = bounds.TopLeft;
+
+        CalculateNormals(_vertices.AsSpan, _normals.AsSpan, 4);
+
+        Centroid = bounds.Center;
+    }
+
     /// <summary>
     /// Manually constructed polygon for internal use to take advantage of pooling.
     /// </summary>

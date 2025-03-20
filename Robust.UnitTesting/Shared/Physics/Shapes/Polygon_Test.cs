@@ -9,6 +9,19 @@ namespace Robust.UnitTesting.Shared.Physics;
 [TestFixture]
 public sealed class Polygon_Test
 {
+    /// <summary>
+    /// Check that Slim and normal Polygon are equals
+    /// </summary>
+    [Test]
+    public void TestSlim()
+    {
+        var slim = new SlimPolygon(Box2.UnitCentered.Translated(Vector2.One));
+
+        var poly = new Polygon(Box2.UnitCentered.Translated(Vector2.One));
+
+        Assert.That(slim.Equals(poly));
+    }
+
     [Test]
     public void TestAABB()
     {

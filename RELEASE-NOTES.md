@@ -39,11 +39,11 @@ END TEMPLATE-->
 
 ### New features
 
-* Added a debug overlay for the linear and angular velocity of all entities on the screen. Use the `showvel` and `showangvel` commands to toggle it.
+*None yet*
 
 ### Bugfixes
 
-* `BoxContainer` no longer causes stretching children to go below their minimum size.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,30 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 249.0.0
+
+### Breaking changes
+
+* Layer is now read-only on VisibilityComponent and isn't serialized.
+
+### New features
+
+* Added a debug overlay for the linear and angular velocity of all entities on the screen. Use the `showvel` and `showangvel` commands to toggle it.
+* Add a GetWorldManifold overload that doesn't require a span of points.
+* Added a GetVisMaskEvent. Calling `RefreshVisibilityMask` will raise it and subscribers can update the vismask via the event rather than subscribers having to each manually try and handle the vismask directly.
+
+### Bugfixes
+
+* `BoxContainer` no longer causes stretching children to go below their minimum size.
+* Fix lights on other grids getting clipped due to ignoring the light range cvar.
+* Fix the `showvelocities` command.
+* Fix the DirtyFields overload not being sandbox safe for content.
+
+### Internal
+
+* Polygon vertices are now inlined with FixedArray8 and a separate SlimPolygon using FixedArray4 for hot paths rather than using pooled arrays.
 
 
 ## 248.0.2

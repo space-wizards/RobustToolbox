@@ -69,14 +69,14 @@ internal ref struct DistanceProxy
                 if (shape is Polygon poly)
                 {
                     Span<Vector2> verts = new Vector2[poly.VertexCount];
-                    poly._vertices.AsSpan.CopyTo(verts);
+                    poly._vertices.AsSpan[..poly.VertexCount].CopyTo(verts);
                     Vertices = verts;
                     Radius = poly.Radius;
                 }
                 else if (shape is SlimPolygon fast)
                 {
                     Span<Vector2> verts = new Vector2[fast.VertexCount];
-                    fast._vertices.AsSpan.CopyTo(verts);
+                    fast._vertices.AsSpan[..fast.VertexCount].CopyTo(verts);
                     Vertices = verts;
                     Radius = fast.Radius;
                 }

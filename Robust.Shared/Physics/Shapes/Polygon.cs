@@ -11,14 +11,17 @@ namespace Robust.Shared.Physics.Shapes;
 // Internal so people don't use it when it will have breaking changes very soon.
 internal record struct Polygon : IPhysShape
 {
-    public static Polygon Empty = new(Box2.Empty);
-
     [DataField]
-    public Vector2[] Vertices;
-
     public byte VertexCount;
 
-    public Vector2[] Normals;
+    //public Vector2[] Vertices => _vertices.AsSpan[..VertexCount].ToArray();
+
+    //public Vector2[] Normals => _normals.AsSpan[..VertexCount].ToArray();
+
+    [DataField]
+    internal FixedArray8<Vector2> _vertices;
+
+    internal FixedArray8<Vector2> _normals;
 
     public Vector2 Centroid;
 
@@ -35,65 +38,24 @@ internal record struct Polygon : IPhysShape
     public Polygon(PolygonShape polyShape)
     {
         Unsafe.SkipInit(out this);
-        Vertices = new Vector2[polyShape.VertexCount];
-        Normals = new Vector2[polyShape.Normals.Length];
         Radius = polyShape.Radius;
         Centroid = polyShape.Centroid;
+        VertexCount = (byte) polyShape.VertexCount;
 
-        Array.Copy(polyShape.Vertices, Vertices, Vertices.Length);
-        Array.Copy(polyShape.Normals, Normals, Vertices.Length);
-        VertexCount = (byte) Vertices.Length;
+        polyShape.Vertices.AsSpan()[..VertexCount].CopyTo(_vertices.AsSpan);
+        polyShape.Normals.AsSpan()[..VertexCount].CopyTo(_normals.AsSpan);
     }
 
     /// <summary>
     /// Manually constructed polygon for internal use to take advantage of pooling.
     /// </summary>
-    internal Polygon(Vector2[] vertices, Vector2[] normals, Vector2 centroid, byte count)
+    internal Polygon(ReadOnlySpan<Vector2> vertices, ReadOnlySpan<Vector2> normals, Vector2 centroid, byte count)
     {
         Unsafe.SkipInit(out this);
-        Vertices = vertices;
-        Normals = normals;
+        vertices[..VertexCount].CopyTo(_vertices.AsSpan);
+        normals[..VertexCount].CopyTo(_normals.AsSpan);
         Centroid = centroid;
         VertexCount = count;
-    }
-
-    public Polygon(Box2 aabb)
-    {
-        Unsafe.SkipInit(out this);
-        Vertices = new Vector2[4];
-        Normals = new Vector2[4];
-        Radius = 0f;
-
-        Vertices[0] = aabb.BottomLeft;
-        Vertices[1] = aabb.BottomRight;
-        Vertices[2] = aabb.TopRight;
-        Vertices[3] = aabb.TopLeft;
-
-        Normals[0] = new Vector2(0.0f, -1.0f);
-        Normals[1] = new Vector2(1.0f, 0.0f);
-        Normals[2] = new Vector2(0.0f, 1.0f);
-        Normals[3] = new Vector2(-1.0f, 0.0f);
-
-        VertexCount = 4;
-        Centroid = aabb.Center;
-    }
-
-    public Polygon(Box2Rotated bounds)
-    {
-        Unsafe.SkipInit(out this);
-        Vertices = new Vector2[4];
-        Normals = new Vector2[4];
-        Radius = 0f;
-
-        Vertices[0] = bounds.BottomLeft;
-        Vertices[1] = bounds.BottomRight;
-        Vertices[2] = bounds.TopRight;
-        Vertices[3] = bounds.TopLeft;
-
-        CalculateNormals(Normals, 4);
-
-        VertexCount = 4;
-        Centroid = bounds.Center;
     }
 
     public Polygon(Vector2[] vertices)
@@ -104,16 +66,15 @@ internal record struct Polygon : IPhysShape
         if (hull.Count < 3)
         {
             VertexCount = 0;
-            Vertices = [];
-            Normals = [];
             return;
         }
 
         VertexCount = (byte) vertices.Length;
-        Vertices = vertices;
-        Normals = new Vector2[vertices.Length];
+        var vertSpan = _vertices.AsSpan;
+
+        vertices.AsSpan().CopyTo(vertSpan);
         Set(hull);
-        Centroid = ComputeCentroid(Vertices);
+        Centroid = ComputeCentroid(vertSpan);
     }
 
     public static explicit operator Polygon(PolygonShape polyShape)
@@ -125,32 +86,32 @@ internal record struct Polygon : IPhysShape
     {
         DebugTools.Assert(hull.Count >= 3);
         var vertexCount = hull.Count;
-        Array.Resize(ref Vertices, vertexCount);
-        Array.Resize(ref Normals, vertexCount);
+        var verts = _vertices.AsSpan;
+        var norms = _normals.AsSpan;
 
         for (var i = 0; i < vertexCount; i++)
         {
-            Vertices[i] = hull.Points[i];
+            verts[i] = hull.Points[i];
         }
 
         // Compute normals. Ensure the edges have non-zero length.
-        CalculateNormals(Normals, vertexCount);
+        CalculateNormals(verts, norms, vertexCount);
     }
 
-    internal void CalculateNormals(Span<Vector2> normals, int count)
+    public static void CalculateNormals(ReadOnlySpan<Vector2> vertices, Span<Vector2> normals, int count)
     {
         for (var i = 0; i < count; i++)
         {
             var next = i + 1 < count ? i + 1 : 0;
-            var edge = Vertices[next] - Vertices[i];
+            var edge = vertices[next] - vertices[i];
             DebugTools.Assert(edge.LengthSquared() > float.Epsilon * float.Epsilon);
 
             var temp = Vector2Helpers.Cross(edge, 1f);
-            Normals[i] = temp.Normalized();
+            normals[i] = temp.Normalized();
         }
     }
 
-    private static Vector2 ComputeCentroid(Vector2[] vs)
+    public static Vector2 ComputeCentroid(ReadOnlySpan<Vector2> vs)
     {
         var count = vs.Length;
         DebugTools.Assert(count >= 3);
@@ -191,13 +152,15 @@ internal record struct Polygon : IPhysShape
 
     public Box2 ComputeAABB(Transform transform, int childIndex)
     {
+        DebugTools.Assert(VertexCount > 0);
         DebugTools.Assert(childIndex == 0);
-        var lower = Transform.Mul(transform, Vertices[0]);
+        var verts = _vertices.AsSpan;
+        var lower = Transform.Mul(transform, verts[0]);
         var upper = lower;
 
         for (var i = 1; i < VertexCount; ++i)
         {
-            var v = Transform.Mul(transform, Vertices[i]);
+            var v = Transform.Mul(transform, verts[i]);
             lower = Vector2.Min(lower, v);
             upper = Vector2.Max(upper, v);
         }
@@ -208,12 +171,20 @@ internal record struct Polygon : IPhysShape
 
     public bool Equals(IPhysShape? other)
     {
-        if (other is not PolygonShape poly) return false;
-        if (VertexCount != poly.VertexCount) return false;
+        return other is Polygon poly && Equals(poly);
+    }
+
+    public bool Equals(Polygon other)
+    {
+        if (VertexCount != other.VertexCount) return false;
+
+        var ourVerts = _vertices.AsSpan;
+        var otherVerts = other._vertices.AsSpan;
+
         for (var i = 0; i < VertexCount; i++)
         {
-            var vert = Vertices[i];
-            if (!vert.Equals(poly.Vertices[i])) return false;
+            var vert = ourVerts[i];
+            if (!vert.Equals(otherVerts[i])) return false;
         }
 
         return true;
@@ -221,6 +192,6 @@ internal record struct Polygon : IPhysShape
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(VertexCount, Vertices.AsSpan(0, VertexCount).ToArray(), Radius);
+        return HashCode.Combine(VertexCount, _vertices.AsSpan.ToArray(), Radius);
     }
 }

@@ -12,7 +12,7 @@ public sealed class Polygon_Test
     [Test]
     public void TestAABB()
     {
-        var shape = new Polygon(Box2.UnitCentered.Translated(Vector2.One));
+        var shape = new SlimPolygon(Box2.UnitCentered.Translated(Vector2.One));
 
         Assert.That(shape.ComputeAABB(Transform.Empty, 0), Is.EqualTo(Box2.UnitCentered.Translated(Vector2.One)));
     }
@@ -20,8 +20,8 @@ public sealed class Polygon_Test
     [Test]
     public void TestBox2()
     {
-        var shape = new Polygon(Box2.UnitCentered.Translated(Vector2.One));
-        Assert.That(shape.Vertices, Is.EqualTo(new Vector2[]
+        var shape = new SlimPolygon(Box2.UnitCentered.Translated(Vector2.One));
+        Assert.That(shape._vertices.AsSpan.ToArray(), Is.EqualTo(new Vector2[]
         {
             new Vector2(0.5f, 0.5f),
             new Vector2(1.5f, 0.5f),
@@ -33,9 +33,9 @@ public sealed class Polygon_Test
     [Test]
     public void TestBox2Rotated()
     {
-        var shape = new Polygon(new Box2Rotated(Box2.UnitCentered, Angle.FromDegrees(90)));
+        var shape = new SlimPolygon(new Box2Rotated(Box2.UnitCentered, Angle.FromDegrees(90)));
 
-        Assert.That(shape.Vertices, Is.EqualTo(new Vector2[]
+        Assert.That(shape._vertices.AsSpan.ToArray(), Is.EqualTo(new Vector2[]
         {
             new Vector2(0.5f, -0.5f),
             new Vector2(0.5f, 0.5f),

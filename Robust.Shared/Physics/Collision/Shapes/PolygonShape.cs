@@ -175,8 +175,12 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         internal PolygonShape(Polygon poly)
         {
-            Vertices = poly.Vertices;
-            Normals = poly.Normals;
+            Vertices = new Vector2[poly.VertexCount];
+            Normals = new Vector2[poly.VertexCount];
+
+            poly._vertices.AsSpan[..VertexCount].CopyTo(Vertices);
+            poly._normals.AsSpan[..VertexCount].CopyTo(Normals);
+
             Centroid = poly.Centroid;
         }
 

@@ -121,9 +121,8 @@ public sealed partial class EntityLookupSystem
         if (!_broadQuery.Resolve(lookupUid, ref lookup))
             return;
 
-        var polygon = _physics.GetPooled(localAABB);
+        var polygon = new SlimPolygon(localAABB);
         AddEntitiesIntersecting(lookupUid, intersecting, polygon, localAABB, Physics.Transform.Empty, flags, query, lookup);
-        _physics.ReturnPooled(polygon);
     }
 
     private void AddEntitiesIntersecting<T, TShape>(
@@ -252,11 +251,10 @@ public sealed partial class EntityLookupSystem
         if (!_broadQuery.Resolve(lookupUid, ref lookup))
             return false;
 
-        var polygon = _physics.GetPooled(localAABB);
+        var polygon = new SlimPolygon(localAABB);
         var (lookupPos, lookupRot) = _transform.GetWorldPositionRotation(lookupUid);
         var transform = new Transform(lookupPos, lookupRot);
         var result = AnyComponentsIntersecting(lookupUid, polygon, localAABB, transform, flags, query, ignored, lookup);
-        _physics.ReturnPooled(polygon);
 
         return result;
     }
@@ -427,10 +425,9 @@ public sealed partial class EntityLookupSystem
 
     public bool AnyComponentsIntersecting(Type type, MapId mapId, Box2 worldAABB, EntityUid? ignored = null, LookupFlags flags = DefaultFlags)
     {
-        var polygon = _physics.GetPooled(worldAABB);
+        var polygon = new SlimPolygon(worldAABB);
         var transform = Physics.Transform.Empty;
         var result = AnyComponentsIntersecting(type, mapId, polygon, transform, ignored, flags);
-        _physics.ReturnPooled(polygon);
         return result;
     }
 
@@ -496,33 +493,30 @@ public sealed partial class EntityLookupSystem
         if (mapId == MapId.Nullspace)
             return;
 
-        var polygon = _physics.GetPooled(worldAABB);
+        var polygon = new SlimPolygon(worldAABB);
         var transform = Physics.Transform.Empty;
 
         GetEntitiesIntersecting(type, mapId, polygon, transform, intersecting, flags);
-        _physics.ReturnPooled(polygon);
     }
 
     public void GetEntitiesIntersecting<T>(MapId mapId, Box2Rotated worldBounds, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
     {
         if (mapId == MapId.Nullspace) return;
 
-        var polygon = _physics.GetPooled(worldBounds);
+        var polygon = new SlimPolygon(worldBounds);
         var shapeTransform = Physics.Transform.Empty;
 
         GetEntitiesIntersecting(mapId, polygon, shapeTransform, entities, flags);
-        _physics.ReturnPooled(polygon);
     }
 
     public void GetEntitiesIntersecting<T>(MapId mapId, Box2 worldAABB, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
     {
         if (mapId == MapId.Nullspace) return;
 
-        var polygon = _physics.GetPooled(worldAABB);
+        var polygon = new SlimPolygon(worldAABB);
         var shapeTransform = Physics.Transform.Empty;
 
         GetEntitiesIntersecting(mapId, polygon, shapeTransform, entities, flags);
-        _physics.ReturnPooled(polygon);
     }
 
     #endregion

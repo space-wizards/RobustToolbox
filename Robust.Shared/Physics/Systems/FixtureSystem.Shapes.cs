@@ -43,10 +43,12 @@ namespace Robust.Shared.Physics.Systems
                 case Polygon poly:
                 {
                     var pLocal = Physics.Transform.MulT(xform.Quaternion2D, worldPoint - xform.Position);
+                    var norms = poly._normals.AsSpan;
+                    var verts = poly._vertices.AsSpan;
 
                     for (var i = 0; i < poly.VertexCount; i++)
                     {
-                        var dot = Vector2.Dot(poly.Normals[i], pLocal - poly.Vertices[i]);
+                        var dot = Vector2.Dot(norms[i], pLocal - verts[i]);
                         if (dot > 0f) return false;
                     }
 

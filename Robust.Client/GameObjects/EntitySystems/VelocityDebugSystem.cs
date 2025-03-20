@@ -15,8 +15,23 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly TransformSystem _transform = default!;
+        [Dependency] private readonly IUserInterfaceManager _uiManager = default!;
 
-        internal bool Enabled { get; set; }
+        internal bool Enabled
+        {
+            get => _label.Parent != null;
+            set
+            {
+                if (value)
+                {
+                    _uiManager.WindowRoot.AddChild(_label);
+                }
+                else
+                {
+                    _label.Orphan();
+                }
+            }
+        }
 
         private Label _label = default!;
 
@@ -24,7 +39,6 @@ namespace Robust.Client.GameObjects
         {
             base.Initialize();
             _label = new Label();
-            IoCManager.Resolve<IUserInterfaceManager>().StateRoot.AddChild(_label);
         }
 
         public override void FrameUpdate(float frameTime)

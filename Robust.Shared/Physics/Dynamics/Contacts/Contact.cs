@@ -208,7 +208,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 // stored impulses to warm start the solver.
                 for (var i = 0; i < Manifold.PointCount; ++i)
                 {
-                    ref var mp2 = ref Manifold.Points[i];
+                    var mp2 = Manifold.Points[i];
                     mp2.NormalImpulse = 0.0f;
                     mp2.TangentImpulse = 0.0f;
                     var id2 = mp2.Id;
@@ -224,6 +224,8 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                             break;
                         }
                     }
+
+                    Manifold.Points[i] = mp2;
                 }
 
                 if (touching != wasTouching)

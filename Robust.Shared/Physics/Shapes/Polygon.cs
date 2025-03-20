@@ -14,9 +14,9 @@ internal record struct Polygon : IPhysShape
     [DataField]
     public byte VertexCount;
 
-    //public Vector2[] Vertices => _vertices.AsSpan[..VertexCount].ToArray();
+    public Vector2[] Vertices => _vertices.AsSpan[..VertexCount].ToArray();
 
-    //public Vector2[] Normals => _normals.AsSpan[..VertexCount].ToArray();
+    public Vector2[] Normals => _normals.AsSpan[..VertexCount].ToArray();
 
     [DataField]
     internal FixedArray8<Vector2> _vertices;

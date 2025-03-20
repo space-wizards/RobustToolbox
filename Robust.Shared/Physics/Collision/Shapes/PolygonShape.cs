@@ -173,6 +173,17 @@ namespace Robust.Shared.Physics.Collision.Shapes
         {
         }
 
+        internal PolygonShape(SlimPolygon poly)
+        {
+            Vertices = new Vector2[poly.VertexCount];
+            Normals = new Vector2[poly.VertexCount];
+
+            poly._vertices.AsSpan[..VertexCount].CopyTo(Vertices);
+            poly._normals.AsSpan[..VertexCount].CopyTo(Normals);
+
+            Centroid = poly.Centroid;
+        }
+
         internal PolygonShape(Polygon poly)
         {
             Vertices = new Vector2[poly.VertexCount];

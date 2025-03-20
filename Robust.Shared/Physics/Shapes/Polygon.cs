@@ -14,6 +14,12 @@ internal record struct Polygon : IPhysShape
     [DataField]
     public byte VertexCount;
 
+    /// <summary>
+    /// Vertices associated with this polygon. Will be sliced to <see cref="VertexCount"/>
+    /// </summary>
+    /// <remarks>
+    /// Consider using _vertices if doing engine work.
+    /// </remarks>
     public Vector2[] Vertices => _vertices.AsSpan[..VertexCount].ToArray();
 
     public Vector2[] Normals => _normals.AsSpan[..VertexCount].ToArray();
@@ -171,10 +177,31 @@ internal record struct Polygon : IPhysShape
 
     public bool Equals(IPhysShape? other)
     {
+        if (other is SlimPolygon slim)
+        {
+            return Equals(slim);
+        }
+
         return other is Polygon poly && Equals(poly);
     }
 
     public bool Equals(Polygon other)
+    {
+        if (VertexCount != other.VertexCount) return false;
+
+        var ourVerts = _vertices.AsSpan;
+        var otherVerts = other._vertices.AsSpan;
+
+        for (var i = 0; i < VertexCount; i++)
+        {
+            var vert = ourVerts[i];
+            if (!vert.Equals(otherVerts[i])) return false;
+        }
+
+        return true;
+    }
+
+    public bool Equals(SlimPolygon other)
     {
         if (VertexCount != other.VertexCount) return false;
 

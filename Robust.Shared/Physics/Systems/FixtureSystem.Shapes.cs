@@ -40,6 +40,20 @@ namespace Robust.Shared.Physics.Systems
 
                     return true;
                 }
+                case SlimPolygon slim:
+                {
+                    var pLocal = Physics.Transform.MulT(xform.Quaternion2D, worldPoint - xform.Position);
+                    var norms = slim._normals.AsSpan;
+                    var verts = slim._vertices.AsSpan;
+
+                    for (var i = 0; i < slim.VertexCount; i++)
+                    {
+                        var dot = Vector2.Dot(norms[i], pLocal - verts[i]);
+                        if (dot > 0f) return false;
+                    }
+
+                    return true;
+                }
                 case Polygon poly:
                 {
                     var pLocal = Physics.Transform.MulT(xform.Quaternion2D, worldPoint - xform.Position);
@@ -88,6 +102,10 @@ namespace Robust.Shared.Physics.Systems
                     var polygon = (PolygonShape) aabb;
                     GetMassData(polygon, ref data, density);
                     break;
+                case Polygon fastPoly:
+                    return GetMassData(new PolygonShape(fastPoly), density);
+                case SlimPolygon slim:
+                    return GetMassData(new PolygonShape(slim), density);
                 case PolygonShape poly:
                     // Polygon mass, centroid, and inertia.
                     // Let rho be the polygon density in mass per unit area.

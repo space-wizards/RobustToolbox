@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision.Shapes;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Shapes;
@@ -11,9 +12,15 @@ namespace Robust.Shared.Physics.Shapes;
 /// Polygon backed by FixedArray4 to be smaller.
 /// Useful for internal ops where the inputs are boxes to avoid the additional padding.
 /// </summary>
-internal struct SlimPolygon : IPhysShape
+internal record struct SlimPolygon : IPhysShape
 {
+    public Vector2[] Vertices => _vertices.AsSpan[..VertexCount].ToArray();
+
+    public Vector2[] Normals => _normals.AsSpan[..VertexCount].ToArray();
+
+    [DataField]
     public FixedArray4<Vector2> _vertices;
+
     public FixedArray4<Vector2> _normals;
 
     public Vector2 Centroid;
@@ -76,11 +83,21 @@ internal struct SlimPolygon : IPhysShape
 
     public bool Equals(SlimPolygon other)
     {
-        return Radius.Equals(other.Radius) && _vertices.Equals(other._vertices);
+        return Radius.Equals(other.Radius) && _vertices.AsSpan[..VertexCount].SequenceEqual(other._vertices.AsSpan[..VertexCount]);
+    }
+
+    public readonly override int GetHashCode()
+    {
+        return HashCode.Combine(_vertices, _normals, Centroid, Radius);
     }
 
     public bool Equals(IPhysShape? other)
     {
-        throw new NotImplementedException();
+        if (other is Polygon poly)
+        {
+            return poly.Equals(this);
+        }
+
+        return other is SlimPolygon slim && Equals(slim);
     }
 }

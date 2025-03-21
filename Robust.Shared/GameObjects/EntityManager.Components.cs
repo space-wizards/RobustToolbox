@@ -593,6 +593,15 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
+            // No shutdown logic for components that are before the Initializing stage
+            if (component.LifeStage < ComponentLifeStage.Initializing)
+            {
+                DebugTools.Assert("Tried to defer component removal on a pre-initialized component. Use RemoveComponent instead!");
+
+                // Could fall back to immediate removal?
+                return;
+            }
+
             if (!_deleteSet.Add(component))
             {
                 // already deferred deletion

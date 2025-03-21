@@ -12,6 +12,8 @@ class License(Validator):
         "CC-BY-NC-4.0",
         "CC-BY-NC-SA-3.0",
         "CC-BY-NC-SA-4.0",
+        "CC-BY-ND-3.0",
+        "CC-BY-ND-4.0",
         "CC0-1.0",
         "MIT",
         "Custom" # implies that the license is described in the copyright field.

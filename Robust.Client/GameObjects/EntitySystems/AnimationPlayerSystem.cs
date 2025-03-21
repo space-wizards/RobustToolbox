@@ -76,7 +76,7 @@ namespace Robust.Client.GameObjects
             foreach (var key in remie)
             {
                 component.PlayingAnimations.Remove(key);
-                var completedEvent = new AnimationCompletedEvent {Uid = uid, Key = key, Finished = true, AnimationPlayer = component};
+                var completedEvent = new AnimationCompletedEvent(component, key, true) {Uid = uid};
                 EntityManager.EventBus.RaiseLocalEvent(uid, completedEvent, true);
             }
 
@@ -187,7 +187,7 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            var completedEvent = new AnimationCompletedEvent {Uid = entity.Owner, Key = key, Finished = false, AnimationPlayer = entity.Comp};
+            var completedEvent = new AnimationCompletedEvent(entity.Comp, key, false) {Uid = entity.Owner};
             EntityManager.EventBus.RaiseLocalEvent(entity.Owner, completedEvent, true);
         }
 
@@ -202,7 +202,23 @@ namespace Robust.Client.GameObjects
     /// </summary>
     public sealed class AnimationCompletedEvent : EntityEventArgs
     {
+        /// <summary>
+        /// The entity associated with the event.
+        /// </summary>
+        /// <remarks>
+        /// This field is redundant since the event was raised on the entity in question.
+        /// </remarks>
+        [Obsolete]
         public EntityUid Uid { get; init; }
+
+        /// <summary>
+        /// The animation player component associated with the entity this event was raised on.
+        /// </summary>
+        public AnimationPlayerComponent AnimationPlayer { get; init; }
+
+        /// <summary>
+        /// The key associated with the animation that was completed.
+        /// </summary>
         public string Key { get; init; } = string.Empty;
 
         /// <summary>
@@ -211,9 +227,11 @@ namespace Robust.Client.GameObjects
         /// </summary>
         public bool Finished { get; init; }
 
-        /// <summary>
-        /// The entity animation player component
-        /// </summary>
-        public AnimationPlayerComponent? AnimationPlayer { get; init; }
+        public AnimationCompletedEvent(AnimationPlayerComponent animationPlayer, string key, bool finished = true)
+        {
+            AnimationPlayer = animationPlayer;
+            Key = key;
+            Finished = finished;
+        }
     }
 }

@@ -37,6 +37,15 @@ public struct ChunkIndicesEnumerator
         _yIndex = _chunkLB.Y;
     }
 
+    public ChunkIndicesEnumerator(Box2 localAABB, Vector2i chunkSize)
+    {
+        _chunkLB = (localAABB.BottomLeft / chunkSize).Floored();
+        _chunkRT = (localAABB.TopRight / chunkSize).Floored();
+
+        _xIndex = _chunkLB.X;
+        _yIndex = _chunkLB.Y;
+    }
+
     public bool MoveNext([NotNullWhen(true)] out Vector2i? indices)
     {
         if (_yIndex > _chunkRT.Y)

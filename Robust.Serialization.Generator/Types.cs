@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -94,13 +93,13 @@ internal static class Types
         return false;
     }
 
-    internal static IEnumerable<string> GetImplicitDataDefinitionInterfaces(ITypeSymbol type, bool all)
+    internal static IEnumerable<ITypeSymbol> GetImplicitDataDefinitionInterfaces(ITypeSymbol type, bool all)
     {
         var interfaces = all ? type.AllInterfaces : type.Interfaces;
         foreach (var @interface in interfaces)
         {
             if (IsImplicitDataDefinitionInterface(@interface))
-                yield return @interface.ToDisplayString();
+                yield return @interface;
         }
     }
 

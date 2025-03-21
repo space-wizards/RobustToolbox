@@ -19,110 +19,115 @@ public class Generator : IIncrementalGenerator
 
     public void Initialize(IncrementalGeneratorInitializationContext initContext)
     {
-        IncrementalValuesProvider<(string name, string code)?> dataDefinitions = initContext.SyntaxProvider
-            .CreateSyntaxProvider(
-                static (node, _) => node is TypeDeclarationSyntax,
-                static (context, _) =>
-                {
-                    var type = (TypeDeclarationSyntax)context.Node;
-                    var symbol = (ITypeSymbol)context.SemanticModel.GetDeclaredSymbol(type)!;
-                    if (!IsDataDefinition(symbol))
-                        return null;
+        IncrementalValuesProvider<TypeDeclarationSyntax> dataDefinitions = initContext.SyntaxProvider.CreateSyntaxProvider(
+            static (node, _) => node is TypeDeclarationSyntax,
+            static (context, _) =>
+            {
+                var type = (TypeDeclarationSyntax) context.Node;
+                var symbol = (ITypeSymbol) context.SemanticModel.GetDeclaredSymbol(type)!;
+                return IsDataDefinition(symbol) ? type : null;
+            }
+        ).Where(static type => type != null)!;
 
-                    return GenerateForDataDefinition(type, symbol);
-                }
-            )
-            .Where(static type => type != null);
-
+        var comparer = new DataDefinitionComparer();
         initContext.RegisterSourceOutput(
-            dataDefinitions,
+            initContext.CompilationProvider.Combine(dataDefinitions.WithComparer(comparer).Collect()),
             static (sourceContext, source) =>
             {
-                // TODO: deduplicate based on name?
-                var (name, code) = source!.Value;
+                var (compilation, declarations) = source;
+                var builder = new StringBuilder();
+                var containingTypes = new Stack<INamedTypeSymbol>();
+                var declarationsGenerated = new HashSet<string>();
+                var deltaType = compilation.GetTypeByMetadataName(ComponentDeltaInterfaceName)!;
 
-                sourceContext.AddSource(name, code);
+                foreach (var declaration in declarations)
+                {
+                    builder.Clear();
+                    containingTypes.Clear();
+
+                    var type = compilation.GetSemanticModel(declaration.SyntaxTree).GetDeclaredSymbol(declaration)!;
+
+                    var symbolName = type
+                        .ToDisplayString()
+                        .Replace('<', '{')
+                        .Replace('>', '}');
+
+                    if (!declarationsGenerated.Add(symbolName))
+                        continue;
+
+                    var nonPartial = !IsPartial(declaration);
+
+                    var namespaceString = type.ContainingNamespace.IsGlobalNamespace
+                        ? string.Empty
+                        : $"namespace {type.ContainingNamespace.ToDisplayString()};";
+
+                    var containingType = type.ContainingType;
+                    while (containingType != null)
+                    {
+                        containingTypes.Push(containingType);
+                        containingType = containingType.ContainingType;
+                    }
+
+                    var containingTypesStart = new StringBuilder();
+                    var containingTypesEnd = new StringBuilder();
+                    foreach (var parent in containingTypes)
+                    {
+                        var syntax = (ClassDeclarationSyntax) parent.DeclaringSyntaxReferences[0].GetSyntax();
+                        if (!IsPartial(syntax))
+                        {
+                            nonPartial = true;
+                            continue;
+                        }
+
+                        containingTypesStart.AppendLine($"{GetPartialTypeDefinitionLine(parent)}\n{{");
+                        containingTypesEnd.AppendLine("}");
+                    }
+
+                    var definition = GetDataDefinition(type);
+                    if (nonPartial || definition.InvalidFields)
+                        continue;
+
+                    builder.AppendLine($$"""
+#nullable enable
+using System;
+using Robust.Shared.Analyzers;
+using Robust.Shared.IoC;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Manager.Exceptions;
+using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CS0612 // Type or member is obsolete
+#pragma warning disable CS0108 // Member hides inherited member; missing new keyword
+#pragma warning disable RA0002 // Robust access analyzer
+
+{{namespaceString}}
+
+{{containingTypesStart}}
+
+{{GetPartialTypeDefinitionLine(type)}} : ISerializationGenerated<{{definition.GenericTypeName}}>
+{
+    {{GetConstructor(definition)}}
+
+    {{GetCopyMethods(definition, deltaType)}}
+
+    {{GetInstantiators(definition, deltaType)}}
+}
+
+{{containingTypesEnd}}
+""");
+
+                    var sourceText = CSharpSyntaxTree
+                        .ParseText(builder.ToString())
+                        .GetRoot()
+                        .NormalizeWhitespace()
+                        .ToFullString();
+
+                    sourceContext.AddSource($"{symbolName}.g.cs", sourceText);
+                }
             }
         );
-    }
-
-    private static (string, string)? GenerateForDataDefinition(
-        TypeDeclarationSyntax declaration,
-        ITypeSymbol type)
-    {
-        var builder = new StringBuilder();
-        var containingTypes = new Stack<INamedTypeSymbol>();
-        containingTypes.Clear();
-
-        var symbolName = type
-            .ToDisplayString()
-            .Replace('<', '{')
-            .Replace('>', '}');
-
-        var nonPartial = !IsPartial(declaration);
-
-        var namespaceString = type.ContainingNamespace.IsGlobalNamespace
-            ? string.Empty
-            : $"namespace {type.ContainingNamespace.ToDisplayString()};";
-
-        var containingType = type.ContainingType;
-        while (containingType != null)
-        {
-            containingTypes.Push(containingType);
-            containingType = containingType.ContainingType;
-        }
-
-        var containingTypesStart = new StringBuilder();
-        var containingTypesEnd = new StringBuilder();
-        foreach (var parent in containingTypes)
-        {
-            var syntax = (ClassDeclarationSyntax)parent.DeclaringSyntaxReferences[0].GetSyntax();
-            if (!IsPartial(syntax))
-            {
-                nonPartial = true;
-                continue;
-            }
-
-            containingTypesStart.AppendLine($"{GetPartialTypeDefinitionLine(parent)}\n{{");
-            containingTypesEnd.AppendLine("}");
-        }
-
-        var definition = GetDataDefinition(type);
-        if (nonPartial || definition.InvalidFields)
-            return null;
-
-        builder.AppendLine($$"""
-            #nullable enable
-            using System;
-            using Robust.Shared.Analyzers;
-            using Robust.Shared.IoC;
-            using Robust.Shared.GameObjects;
-            using Robust.Shared.Serialization;
-            using Robust.Shared.Serialization.Manager;
-            using Robust.Shared.Serialization.Manager.Exceptions;
-            using Robust.Shared.Serialization.TypeSerializers.Interfaces;
-            #pragma warning disable CS0618 // Type or member is obsolete
-            #pragma warning disable CS0612 // Type or member is obsolete
-            #pragma warning disable CS0108 // Member hides inherited member; missing new keyword
-            #pragma warning disable RA0002 // Robust access analyzer
-
-            {{namespaceString}}
-
-            {{containingTypesStart}}
-
-            {{GetPartialTypeDefinitionLine(type)}} : ISerializationGenerated<{{definition.GenericTypeName}}>
-            {
-                {{GetConstructor(definition)}}
-
-                {{GetCopyMethods(definition)}}
-
-                {{GetInstantiators(definition)}}
-            }
-
-            {{containingTypesEnd}}
-            """);
-
-        return ($"{symbolName}.g.cs", builder.ToString());
     }
 
     private static DataDefinition GetDataDefinition(ITypeSymbol definition)
@@ -191,7 +196,7 @@ public class Generator : IIncrementalGenerator
          return builder.ToString();
      }
 
-    private static string GetCopyMethods(DataDefinition definition)
+    private static string GetCopyMethods(DataDefinition definition, ITypeSymbol deltaType)
     {
         var builder = new StringBuilder();
 
@@ -262,36 +267,36 @@ public class Generator : IIncrementalGenerator
                              {{baseCopy}}
                              """);
 
-        foreach (var interfaceName in InternalGetImplicitDataDefinitionInterfaces(definition.Type, true))
+        foreach (var @interface in InternalGetImplicitDataDefinitionInterfaces(definition.Type, true, deltaType))
         {
-            var interfaceModifiers = baseType != null &&
-                                     baseType.AllInterfaces.Any(i => i.ToDisplayString() == interfaceName)
+            var interfaceModifiers = baseType != null && baseType.AllInterfaces.Contains(@interface, SymbolEqualityComparer.Default)
                 ? "override "
                 : modifiers;
+            var interfaceName = @interface.ToDisplayString();
 
             builder.AppendLine($$"""
-                /// <seealso cref="ISerializationManager.CopyTo"/>
-                [Obsolete("Use ISerializationManager.CopyTo instead")]
-                public {{interfaceModifiers}} void InternalCopy(ref {{interfaceName}} target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null)
-                {
-                    var def = ({{definition.GenericTypeName}}) target;
-                    Copy(ref def, serialization, hookCtx, context);
-                    target = def;
-                }
+                                 /// <seealso cref="ISerializationManager.CopyTo"/>
+                                 [Obsolete("Use ISerializationManager.CopyTo instead")]
+                                 public {{interfaceModifiers}} void InternalCopy(ref {{interfaceName}} target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null)
+                                 {
+                                     var def = ({{definition.GenericTypeName}}) target;
+                                     Copy(ref def, serialization, hookCtx, context);
+                                     target = def;
+                                 }
 
-                /// <seealso cref="ISerializationManager.CopyTo"/>
-                [Obsolete("Use ISerializationManager.CopyTo instead")]
-                public {{interfaceModifiers}} void Copy(ref {{interfaceName}} target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null)
-                {
-                    InternalCopy(ref target, serialization, hookCtx, context);
-                }
-                """);
+                                 /// <seealso cref="ISerializationManager.CopyTo"/>
+                                 [Obsolete("Use ISerializationManager.CopyTo instead")]
+                                 public {{interfaceModifiers}} void Copy(ref {{interfaceName}} target, ISerializationManager serialization, SerializationHookContext hookCtx, ISerializationContext? context = null)
+                                 {
+                                     InternalCopy(ref target, serialization, hookCtx, context);
+                                 }
+                                 """);
         }
 
         return builder.ToString();
     }
 
-    private static string GetInstantiators(DataDefinition definition)
+    private static string GetInstantiators(DataDefinition definition, ITypeSymbol deltaType)
     {
         var builder = new StringBuilder();
         var modifiers = string.Empty;
@@ -325,28 +330,27 @@ public class Generator : IIncrementalGenerator
                                  """);
         }
 
-        foreach (var interfaceName in InternalGetImplicitDataDefinitionInterfaces(definition.Type, false))
+        foreach (var @interface in InternalGetImplicitDataDefinitionInterfaces(definition.Type, false, deltaType))
         {
+            var interfaceName = @interface.ToDisplayString();
             builder.AppendLine($$"""
-                {{interfaceName}} {{interfaceName}}.Instantiate()
-                {
-                    return Instantiate();
-                }
+                                 {{interfaceName}} {{interfaceName}}.Instantiate()
+                                 {
+                                     return Instantiate();
+                                 }
 
-                {{interfaceName}} ISerializationGenerated<{{interfaceName}}>.Instantiate()
-                {
-                    return Instantiate();
-                }
-                """);
+                                 {{interfaceName}} ISerializationGenerated<{{interfaceName}}>.Instantiate()
+                                 {
+                                     return Instantiate();
+                                 }
+                                 """);
         }
 
         return builder.ToString();
     }
 
     [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
-    private static IEnumerable<string> InternalGetImplicitDataDefinitionInterfaces(
-        ITypeSymbol type,
-        bool all)
+    private static IEnumerable<ITypeSymbol> InternalGetImplicitDataDefinitionInterfaces(ITypeSymbol type, bool all, ITypeSymbol deltaType)
     {
         var symbols = GetImplicitDataDefinitionInterfaces(type, all);
 
@@ -364,10 +368,10 @@ public class Generator : IIncrementalGenerator
             return symbols;
         }
 
-        if (symbols.Any(x => x == ComponentDeltaInterfaceName))
+        if (symbols.Any(x => x.ToDisplayString() == deltaType.ToDisplayString()))
             return symbols;
 
-        return symbols.Append(ComponentDeltaInterfaceName);
+        return symbols.Append(deltaType);
     }
 
     // TODO serveronly? do we care? who knows!!

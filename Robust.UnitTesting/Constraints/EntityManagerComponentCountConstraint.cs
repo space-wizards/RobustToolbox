@@ -14,8 +14,7 @@ public sealed class EntityManagerComponentCountConstraint<T>(int count) : Constr
 
     public override ConstraintResult ApplyTo<TActual>(TActual actual)
     {
-        if (actual is not IEntityManager entMan)
-            throw new ArgumentException($"Expected IEntityManager but was {actual?.GetType()}");
+        var entMan = ConstraintUtils.RequireActual<IEntityManager>(actual);
         var allComps = entMan.AllComponents<T>();
         var entsWithComp = allComps.Select(e => entMan.ToPrettyString(e.Uid));
         return new ConstraintResult(this, $"{allComps.Length} entities: {string.Join(", ", entsWithComp)}");

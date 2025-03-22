@@ -1,4 +1,3 @@
-using System;
 using NUnit.Framework.Constraints;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Prototypes;
@@ -13,9 +12,7 @@ public sealed class EntityPrototypeComponentConstraint<T>(IComponentFactory comp
 
     public override ConstraintResult ApplyTo<TActual>(TActual actual)
     {
-        if (actual is not EntityPrototype entProto)
-            throw new ArgumentException($"Expected EntityPrototype but was {actual?.GetType()}");
-
+        var entProto = ConstraintUtils.RequireActual<EntityPrototype>(actual);
         // List all components defined on the prototype, highlighting any that match (for use with Not constraint)
         var components = entProto.Components.Keys.HighlightMatches(_compFactory.GetComponentName<T>());
         // Identify the protoId in the result message to help with debugging

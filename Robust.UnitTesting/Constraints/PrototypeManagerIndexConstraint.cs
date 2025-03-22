@@ -22,9 +22,7 @@ public sealed class PrototypeManagerIndexConstraint<T> : Constraint
 
     public override ConstraintResult ApplyTo<TActual>(TActual actual)
     {
-        if (actual is not IPrototypeManager protoMan)
-            throw new ArgumentException($"Expected IPrototypeManager but was {actual?.GetType()}");
-
+        var protoMan = ConstraintUtils.RequireActual<IPrototypeManager>(actual);
         // We don't use string.Join because some kinds (EntityPrototype) have a zillion instances.
         // The default writer only prints a portion of the list, which is fine.
         return new ConstraintResult(this, protoMan.GetInstances<T>().Keys, protoMan.HasIndex<T>(_protoId));

@@ -7,6 +7,12 @@ namespace Robust.UnitTesting.Constraints;
 
 internal static class ConstraintUtils
 {
+    public static T RequireActual<T>(object? actual)
+    {
+        if (actual is T cast)
+            return cast;
+        throw new ArgumentException($"Expected {typeof(T)} but was {actual?.GetType()}");
+    }
     public static EntityUid GetEntityUid(object? actual)
     {
         EntityUid? uid = null;

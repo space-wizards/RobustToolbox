@@ -1,3 +1,4 @@
+using Robust.Shared.GameObjects;
 using Robust.Shared.Prototypes;
 using Robust.UnitTesting.Constraints;
 
@@ -9,5 +10,11 @@ public sealed class Has : NUnit.Framework.Has
         where T : class, IPrototype
     {
         return new(protoId);
+    }
+
+    public static EntityPrototypeComponentConstraint<T> Component<T>(IComponentFactory componentFactory)
+        where T : IComponent, new()
+    {
+        return new(componentFactory);
     }
 }

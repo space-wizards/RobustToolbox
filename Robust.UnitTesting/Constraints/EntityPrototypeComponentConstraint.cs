@@ -10,13 +10,16 @@ public sealed class EntityPrototypeComponentConstraint<T>(IComponentFactory comp
     where T : IComponent, new()
 {
     private readonly IComponentFactory _compFactory = compFactory;
-    public override string Description => $"found component of type {typeof(T).Name}";
+    public override string Description => _compFactory.GetComponentName<T>();
 
     public override ConstraintResult ApplyTo<TActual>(TActual actual)
     {
         if (actual is not EntityPrototype entProto)
             throw new ArgumentException($"Expected EntityPrototype but was {actual?.GetType()}");
 
-        return new ConstraintResult(this, entProto.Components.Keys.ToArray(), entProto.TryGetComponent<T>(out _, _compFactory));
+        // List all components defined on the prototype, highlighting any that match (for use with Not constraint)
+        var components = entProto.Components.Keys.Select(c => c == _compFactory.GetComponentName<T>() ? $"***{c}***" : c);
+        // Identify the protoId in the result message to help with debugging
+        return new ConstraintResult(this, $"{entProto.ID}: < {string.Join(", ", components)} >", entProto.TryGetComponent<T>(out _, _compFactory));
     }
 }

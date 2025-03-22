@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using NUnit.Framework.Constraints;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Prototypes;
@@ -18,7 +17,7 @@ public sealed class EntityPrototypeComponentConstraint<T>(IComponentFactory comp
             throw new ArgumentException($"Expected EntityPrototype but was {actual?.GetType()}");
 
         // List all components defined on the prototype, highlighting any that match (for use with Not constraint)
-        var components = entProto.Components.Keys.Select(c => c == _compFactory.GetComponentName<T>() ? $"***{c}***" : c);
+        var components = entProto.Components.Keys.HighlightMatches(_compFactory.GetComponentName<T>());
         // Identify the protoId in the result message to help with debugging
         return new ConstraintResult(this, $"{entProto.ID}: < {string.Join(", ", components)} >", entProto.TryGetComponent<T>(out _, _compFactory));
     }

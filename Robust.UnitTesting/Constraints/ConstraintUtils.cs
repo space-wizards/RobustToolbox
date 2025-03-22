@@ -1,5 +1,6 @@
 using System;
-using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.GameObjects;
 
 namespace Robust.UnitTesting.Constraints;
@@ -23,5 +24,10 @@ internal static class ConstraintUtils
         if (uid is null)
             throw new ArgumentException($"Expected EntityUid or Entity but was {actual?.GetType()}");
         return uid.Value;
+    }
+
+    public static IEnumerable<string> HighlightMatches(this IEnumerable<string> items, string match)
+    {
+        return items.Select(i => i.Equals(match) ? $"***{i}***" : i.ToString());
     }
 }

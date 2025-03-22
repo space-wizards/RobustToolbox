@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using NUnit.Framework.Constraints;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Prototypes;
@@ -16,6 +17,6 @@ public sealed class EntityPrototypeComponentConstraint<T>(IComponentFactory comp
         if (actual is not EntityPrototype entProto)
             throw new ArgumentException($"Expected EntityPrototype but was {actual?.GetType()}");
 
-        return new ConstraintResult(this, actual, entProto.TryGetComponent<T>(out _, _compFactory));
+        return new ConstraintResult(this, entProto.Components.Keys.ToArray(), entProto.TryGetComponent<T>(out _, _compFactory));
     }
 }

@@ -8,6 +8,7 @@ namespace Robust.UnitTesting;
 
 public static class ConstraintExtensions
 {
+    /// <inheritdoc cref="Has.Index{T}(ProtoId{T})"/>
     public static PrototypeManagerIndexConstraint<T> Index<T>(this ConstraintExpression expression, ProtoId<T> protoId)
         where T : class, IPrototype
     {
@@ -16,6 +17,7 @@ public static class ConstraintExtensions
         return constraint;
     }
 
+    /// <inheritdoc cref="Has.Index(EntProtoId)"/>
     public static PrototypeManagerIndexConstraint<EntityPrototype> Index(this ConstraintExpression expression, EntProtoId protoId)
     {
         var constraint = new PrototypeManagerIndexConstraint<EntityPrototype>(protoId);
@@ -23,6 +25,7 @@ public static class ConstraintExtensions
         return constraint;
     }
 
+    /// <inheritdoc cref="Has.Component{T}(IComponentFactory)"/>
     public static EntityPrototypeComponentConstraint<T> Component<T>(this ConstraintExpression expression, IComponentFactory compFactory)
         where T : IComponent, new()
     {
@@ -31,6 +34,7 @@ public static class ConstraintExtensions
         return constraint;
     }
 
+    /// <inheritdoc cref="Has.Component{T}(IEntityManager)"/>
     public static EntityComponentConstraint<T> Component<T>(this ConstraintExpression expression, IEntityManager entityManager)
         where T : IComponent, new()
     {
@@ -39,6 +43,7 @@ public static class ConstraintExtensions
         return constraint;
     }
 
+    /// <inheritdoc cref="Is.Deleted(IEntityManager)"/>
     public static EntityDeletedConstraint Deleted(this ConstraintExpression expression, IEntityManager entMan)
     {
         var constraint = new EntityDeletedConstraint(entMan);
@@ -46,6 +51,7 @@ public static class ConstraintExtensions
         return constraint;
     }
 
+    /// <inheritdoc cref="Is.OnMap(MapId, IEntityManager)"/>
     public static EntityOnMapConstraint OnMap(this ConstraintExpression expression, MapId mapId, IEntityManager entMan)
     {
         var constraint = new EntityOnMapConstraint(mapId, entMan);
@@ -53,6 +59,7 @@ public static class ConstraintExtensions
         return constraint;
     }
 
+    /// <inheritdoc cref="Is.InNullspace(IEntityManager)"/>
     public static EntityOnMapConstraint InNullspace(this ConstraintExpression expression, IEntityManager entMan)
     {
         var constraint = new EntityOnMapConstraint(MapId.Nullspace, entMan);
@@ -60,6 +67,7 @@ public static class ConstraintExtensions
         return constraint;
     }
 
+    /// <inheritdoc cref="Is.InRangeOf(EntityUid, float, SharedTransformSystem)"/>
     public static EntityInRangeOfConstraint InRangeOf(this ConstraintExpression expression, EntityUid other, float range, SharedTransformSystem xformSystem)
     {
         var constraint = new EntityInRangeOfConstraint(other, range, xformSystem);
@@ -67,6 +75,7 @@ public static class ConstraintExtensions
         return constraint;
     }
 
+    /// <inheritdoc cref="Is.InRangeOf(EntityUid, float, IEntityManager)"/>
     public static EntityInRangeOfConstraint InRangeOf(this ConstraintExpression expression, EntityUid other, float range, IEntityManager entMan)
     {
         var constraint = new EntityInRangeOfConstraint(other, range, entMan.System<SharedTransformSystem>());

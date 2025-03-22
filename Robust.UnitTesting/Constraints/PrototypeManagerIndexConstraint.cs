@@ -4,18 +4,18 @@ using Robust.Shared.Prototypes;
 
 namespace Robust.UnitTesting.Constraints;
 
-public sealed class PrototypeIndexConstraint<T> : Constraint
+public sealed class PrototypeManagerIndexConstraint<T> : Constraint
     where T : class, IPrototype
 {
     private readonly string _protoId;
     public override string Description  => $"Found {typeof(T).Name} with ID {_protoId}";
 
-    public PrototypeIndexConstraint(ProtoId<T> protoId)
+    public PrototypeManagerIndexConstraint(ProtoId<T> protoId)
     {
         _protoId = protoId;
     }
 
-    public PrototypeIndexConstraint(string protoId)
+    public PrototypeManagerIndexConstraint(string protoId)
     {
         _protoId = protoId;
     }

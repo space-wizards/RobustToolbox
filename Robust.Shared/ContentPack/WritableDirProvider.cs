@@ -13,6 +13,8 @@ namespace Robust.Shared.ContentPack
         /// <inheritdoc />
         public string RootDir { get; }
 
+        public ResPath? RootPath { get; }
+
         /// <summary>
         /// Constructs an instance of <see cref="WritableDirProvider"/>.
         /// </summary>
@@ -21,6 +23,8 @@ namespace Robust.Shared.ContentPack
         {
             // FullName does not have a trailing separator, and we MUST have a separator.
             RootDir = rootDir.FullName + Path.DirectorySeparatorChar.ToString();
+
+            RootPath = new ResPath(RootDir.Replace(Path.DirectorySeparatorChar, '/'));
         }
 
         #region File Access

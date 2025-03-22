@@ -28,6 +28,9 @@ namespace Robust.Shared.ContentPack
         /// <inheritdoc />
         public string? RootDir => null;
 
+        /// <inheritdoc />
+        public ResPath? RootPath => null;
+
         public void CreateDir(ResPath path)
         {
             if (!path.IsRooted)

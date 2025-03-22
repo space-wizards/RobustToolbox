@@ -12,10 +12,15 @@ namespace Robust.Shared.ContentPack
     public interface IWritableDirProvider
     {
         /// <summary>
-        /// The root path of this provider.
+        /// The absolute root path of this provider.
         /// Can be null if it's a virtual provider.
         /// </summary>
         string? RootDir { get; }
+
+        /// <summary>
+        /// ResPath version of <see cref="RootDir"/>
+        /// </summary>
+        public ResPath? RootPath { get; }
 
         /// <summary>
         /// Creates a directory. If the directory exists, does nothing.

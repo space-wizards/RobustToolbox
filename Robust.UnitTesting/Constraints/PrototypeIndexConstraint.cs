@@ -1,5 +1,4 @@
 using System;
-using NUnit.Framework;
 using NUnit.Framework.Constraints;
 using Robust.Shared.Prototypes;
 
@@ -34,14 +33,6 @@ public sealed class PrototypeIndexConstraint<T> : Constraint
         public override void WriteActualValueTo(MessageWriter writer)
         {
             writer.Write("Failure");
-            //base.WriteActualValueTo(writer);
         }
-        // public override void WriteAdditionalLinesTo(MessageWriter writer)
-        // {
-        //     if (constraint is not PrototypeIndexConstraint<T> indexConstraint)
-        //         throw new InvalidOperationException();
-        //     var protoId = indexConstraint._protoId;
-        //     writer.WriteLine($"Failed to index {typeof(T).Name} with ID {protoId.Id}");
-        // }
     }
 }

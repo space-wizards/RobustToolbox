@@ -7,14 +7,8 @@ namespace Robust.UnitTesting;
 public sealed class Has : NUnit.Framework.Has
 {
     public static PrototypeManagerIndexConstraint<T> Index<T>(ProtoId<T> protoId)
-        where T : class, IPrototype
-    {
-        return new(protoId);
-    }
+        where T : class, IPrototype => new(protoId);
 
     public static EntityPrototypeComponentConstraint<T> Component<T>(IComponentFactory componentFactory)
-        where T : IComponent, new()
-    {
-        return new(componentFactory);
-    }
+        where T : IComponent, new() => new(componentFactory);
 }

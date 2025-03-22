@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using Robust.Shared.GameObjects;
 
 namespace Robust.UnitTesting.Constraints;
@@ -12,7 +13,7 @@ internal static class ConstraintUtils
             uid = ent;
         else
         {
-            var field = actual?.GetType().GetField("Owner");
+            var field = actual?.GetType().GetField("Owner") ?? actual?.GetType().GetField("Item1");
             if (field is not null)
             {
                 uid = (EntityUid?)field.GetValue(actual);

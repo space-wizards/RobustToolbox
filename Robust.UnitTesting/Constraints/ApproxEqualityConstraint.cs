@@ -2,7 +2,7 @@ using System.Numerics;
 using NUnit.Framework.Constraints;
 using Robust.Shared.Maths;
 
-namespace Robust.UnitTesting
+namespace Robust.UnitTesting.Constraints
 {
     public sealed class ApproxEqualityConstraint : Constraint
     {

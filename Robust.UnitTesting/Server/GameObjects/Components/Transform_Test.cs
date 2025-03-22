@@ -10,6 +10,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Timing;
+using Robust.UnitTesting.Constraints;
 
 namespace Robust.UnitTesting.Server.GameObjects.Components
 {

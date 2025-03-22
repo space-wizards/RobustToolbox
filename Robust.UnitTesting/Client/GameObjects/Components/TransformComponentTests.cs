@@ -5,6 +5,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
+using Robust.UnitTesting.Constraints;
 using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Client.GameObjects.Components

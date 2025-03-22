@@ -25,6 +25,6 @@ public sealed class PrototypeManagerIndexConstraint<T> : Constraint
         if (actual is not IPrototypeManager protoMan)
             throw new ArgumentException($"Expected IPrototypeManager but was {actual?.GetType()}");
 
-        return new ConstraintResult(this, null, protoMan.HasIndex<T>(_protoId));
+        return new ConstraintResult(this, protoMan.GetInstances<T>().Keys, protoMan.HasIndex<T>(_protoId));
     }
 }

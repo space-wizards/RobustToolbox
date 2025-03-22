@@ -1,5 +1,6 @@
 using NUnit.Framework.Constraints;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.UnitTesting.Constraints;
 
@@ -41,6 +42,13 @@ public static class ConstraintExtensions
     public static EntityDeletedConstraint Deleted(this ConstraintExpression expression, IEntityManager entMan)
     {
         var constraint = new EntityDeletedConstraint(entMan);
+        expression.Append(constraint);
+        return constraint;
+    }
+
+    public static EntityOnMapConstraint OnMap(this ConstraintExpression expression, MapId mapId, IEntityManager entMan)
+    {
+        var constraint = new EntityOnMapConstraint(mapId, entMan);
         expression.Append(constraint);
         return constraint;
     }

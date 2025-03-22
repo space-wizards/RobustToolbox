@@ -1,4 +1,5 @@
 ﻿using Robust.Shared.GameObjects;
+using Robust.Shared.Map;
 using Robust.UnitTesting.Constraints;
 
 namespace Robust.UnitTesting
@@ -11,5 +12,7 @@ namespace Robust.UnitTesting
         }
 
         public static EntityDeletedConstraint Deleted(IEntityManager entMan) => new(entMan);
+
+        public static EntityOnMapConstraint OnMap(MapId mapId, IEntityManager entMan) => new(mapId, entMan);
     }
 }

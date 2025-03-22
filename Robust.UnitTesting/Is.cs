@@ -14,5 +14,7 @@ namespace Robust.UnitTesting
         public static EntityDeletedConstraint Deleted(IEntityManager entMan) => new(entMan);
 
         public static EntityOnMapConstraint OnMap(MapId mapId, IEntityManager entMan) => new(mapId, entMan);
+
+        public static EntityOnMapConstraint InNullspace(IEntityManager entMan) => new(MapId.Nullspace, entMan);
     }
 }

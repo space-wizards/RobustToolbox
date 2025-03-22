@@ -52,4 +52,11 @@ public static class ConstraintExtensions
         expression.Append(constraint);
         return constraint;
     }
+
+    public static EntityOnMapConstraint InNullspace(this ConstraintExpression expression, IEntityManager entMan)
+    {
+        var constraint = new EntityOnMapConstraint(MapId.Nullspace, entMan);
+        expression.Append(constraint);
+        return constraint;
+    }
 }

@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix serialization source generator breaking if a class has two partial locations.
 
 ### Other
 

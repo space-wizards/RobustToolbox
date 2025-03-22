@@ -14,7 +14,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ImplicitUsings>enable</ImplicitUsings>
     <PolySharpIncludeGeneratedTypes>System.Index;System.Diagnostics.CodeAnalysis.NotNullWhenAttribute;System.Runtime.CompilerServices.IsExternalInit;System.Diagnostics.CodeAnalysis.DoesNotReturnAttribute</PolySharpIncludeGeneratedTypes>
-    <NoWarn>RS2008</NoWarn>
+    <NoWarn>RS2008;RS1038</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

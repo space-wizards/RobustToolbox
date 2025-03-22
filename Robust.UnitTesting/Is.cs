@@ -1,4 +1,7 @@
-﻿namespace Robust.UnitTesting
+﻿using Robust.Shared.GameObjects;
+using Robust.UnitTesting.Constraints;
+
+namespace Robust.UnitTesting
 {
     public sealed class Is : NUnit.Framework.Is
     {
@@ -6,5 +9,7 @@
         {
             return new(expected, tolerance);
         }
+
+        public static EntityDeletedConstraint Deleted(IEntityManager entMan) => new(entMan);
     }
 }

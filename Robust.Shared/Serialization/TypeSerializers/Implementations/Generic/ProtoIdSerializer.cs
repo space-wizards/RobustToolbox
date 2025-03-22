@@ -20,8 +20,13 @@ public sealed class ProtoIdSerializer<T> : ITypeSerializer<ProtoId<T>, ValueData
     public ValidationNode Validate(ISerializationManager serialization, ValueDataNode node, IDependencyCollection dependencies, ISerializationContext? context = null)
     {
         var prototypes = dependencies.Resolve<IPrototypeManager>();
-        if (prototypes.TryGetKindFrom<T>(out _) && prototypes.HasMapping<T>(node.Value))
+        if (prototypes.TryGetKindFrom<T>(out _))
+        {
+            if (!prototypes.HasIndex<T>(node.Value))
+                return new ErrorNode(node, $"{typeof(T)} {node.Value} is abstract!");
+
             return new ValidatedValueNode(node);
+        }
 
         return new ErrorNode(node, $"No {typeof(T)} found with id {node.Value}");
     }

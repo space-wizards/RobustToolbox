@@ -90,4 +90,13 @@ public static class ConstraintExtensions
         expression.Append(constraint);
         return constraint;
     }
+
+    /// <inheritdoc cref="Has.ComponentCount{T}(int)"/>
+    public static EntityManagerComponentCountConstraint<T> ComponentCount<T>(this ConstraintExpression expression, int count)
+        where T : IComponent
+    {
+        var constraint = new EntityManagerComponentCountConstraint<T>(count);
+        expression.Append(constraint);
+        return constraint;
+    }
 }

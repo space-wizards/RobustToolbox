@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.Contracts;
 using System.Numerics;
 
 namespace Robust.Shared.Maths
@@ -238,6 +239,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="dir"></param>
         /// <returns></returns>
+        [Pure]
         public static Angle ToAngle(this Direction dir)
         {
             var ang = Segment * (int) dir;

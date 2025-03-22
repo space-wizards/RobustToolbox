@@ -76,7 +76,7 @@ namespace Robust.Client.GameObjects
             foreach (var key in remie)
             {
                 component.PlayingAnimations.Remove(key);
-                var completedEvent = new AnimationCompletedEvent(component, key, true) {Uid = uid};
+                var completedEvent = new AnimationCompletedEvent(uid, component, key, true);
                 EntityManager.EventBus.RaiseLocalEvent(uid, completedEvent, true);
             }
 
@@ -187,7 +187,7 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            var completedEvent = new AnimationCompletedEvent(entity.Comp, key, false) {Uid = entity.Owner};
+            var completedEvent = new AnimationCompletedEvent(entity.Owner, entity.Comp, key, false);
             EntityManager.EventBus.RaiseLocalEvent(entity.Owner, completedEvent, true);
         }
 
@@ -205,10 +205,6 @@ namespace Robust.Client.GameObjects
         /// <summary>
         /// The entity associated with the event.
         /// </summary>
-        /// <remarks>
-        /// This field is redundant since the event was raised on the entity in question.
-        /// </remarks>
-        [Obsolete]
         public EntityUid Uid { get; init; }
 
         /// <summary>
@@ -223,12 +219,13 @@ namespace Robust.Client.GameObjects
 
         /// <summary>
         /// If true, the animation finished by getting to its natural end.
-        /// If false, it was removed prematurely via <see cref="AnimationPlayerSystem.Stop(Robust.Client.GameObjects.AnimationPlayerComponent,string)"/> or similar overloads.
+        /// If false, it was removed prematurely via <see cref="AnimationPlayerSystem.Stop(EntityUid,AnimationPlayerComponent,string)"/> or similar overloads.
         /// </summary>
         public bool Finished { get; init; }
 
-        public AnimationCompletedEvent(AnimationPlayerComponent animationPlayer, string key, bool finished = true)
+        public AnimationCompletedEvent(EntityUid uid, AnimationPlayerComponent animationPlayer, string key, bool finished = true)
         {
+            Uid = uid;
             AnimationPlayer = animationPlayer;
             Key = key;
             Finished = finished;

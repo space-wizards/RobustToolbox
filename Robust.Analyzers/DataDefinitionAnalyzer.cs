@@ -18,6 +18,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
     private const string ImplicitDataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.ImplicitDataDefinitionForInheritorsAttribute";
     private const string DataFieldBaseNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataFieldBaseAttribute";
     private const string ViewVariablesNamespace = "Robust.Shared.ViewVariables.ViewVariablesAttribute";
+    private const string NotYamlSerializableName = "Robust.Shared.Serialization.Manager.Attributes.NotYamlSerializableAttribute";
     private const string DataFieldAttributeName = "DataField";
     private const string ViewVariablesAttributeName = "ViewVariables";
 
@@ -81,9 +82,19 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         "Make sure to remove the ViewVariables attribute."
     );
 
+    public static readonly DiagnosticDescriptor DataFieldYamlSerializableRule = new(
+        Diagnostics.IdDataFieldYamlSerializable,
+        "Data field type is not YAML serializable",
+        "Data field {0} in data definition {1} is type {2}, which is not YAML serializable",
+        "Usage",
+        DiagnosticSeverity.Error,
+        true,
+        "Make sure to use a type that is YAML serializable."
+    );
+
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
         DataDefinitionPartialRule, NestedDataDefinitionPartialRule, DataFieldWritableRule, DataFieldPropertyWritableRule,
-        DataFieldRedundantTagRule, DataFieldNoVVReadWriteRule
+        DataFieldRedundantTagRule, DataFieldNoVVReadWriteRule, DataFieldYamlSerializableRule
     );
 
     public override void Initialize(AnalysisContext context)
@@ -163,6 +174,19 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
                 TryGetAttributeLocation(field, ViewVariablesAttributeName, out var location);
                 context.ReportDiagnostic(Diagnostic.Create(DataFieldNoVVReadWriteRule, location, fieldSymbol.Name, type.Name));
             }
+
+            if (context.SemanticModel.GetSymbolInfo(field.Declaration.Type).Symbol is not ITypeSymbol fieldTypeSymbol)
+                continue;
+
+            if (IsNotYamlSerializable(fieldSymbol, fieldTypeSymbol))
+            {
+                context.ReportDiagnostic(Diagnostic.Create(DataFieldYamlSerializableRule,
+                    (context.Node as FieldDeclarationSyntax)?.Declaration.Type.GetLocation(),
+                    fieldSymbol.Name,
+                    type.Name,
+                    fieldTypeSymbol.MetadataName
+                ));
+            }
         }
     }
 
@@ -198,6 +222,19 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         {
             TryGetAttributeLocation(property, ViewVariablesAttributeName, out var location);
             context.ReportDiagnostic(Diagnostic.Create(DataFieldNoVVReadWriteRule, location, propertySymbol.Name, type.Name));
+        }
+
+        if (context.SemanticModel.GetSymbolInfo(property.Type).Symbol is not ITypeSymbol propertyTypeSymbol)
+            return;
+
+        if (IsNotYamlSerializable(propertySymbol, propertyTypeSymbol))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(DataFieldYamlSerializableRule,
+                (context.Node as PropertyDeclarationSyntax)?.Type.GetLocation(),
+                propertySymbol.Name,
+                type.Name,
+                propertyTypeSymbol.Name
+            ));
         }
     }
 
@@ -365,6 +402,14 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
             return false;
 
         return (VVAccess)accessByte == VVAccess.ReadWrite;
+    }
+
+    private static bool IsNotYamlSerializable(ISymbol field, ITypeSymbol type)
+    {
+        if (!IsDataField(field, out _, out _))
+            return false;
+
+        return HasAttribute(type, NotYamlSerializableName);
     }
 
     private static bool IsImplicitDataDefinition(ITypeSymbol type)

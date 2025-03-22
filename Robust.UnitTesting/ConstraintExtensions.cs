@@ -59,4 +59,18 @@ public static class ConstraintExtensions
         expression.Append(constraint);
         return constraint;
     }
+
+    public static EntityInRangeOfConstraint InRangeOf(this ConstraintExpression expression, EntityUid other, float range, SharedTransformSystem xformSystem)
+    {
+        var constraint = new EntityInRangeOfConstraint(other, range, xformSystem);
+        expression.Append(constraint);
+        return constraint;
+    }
+
+    public static EntityInRangeOfConstraint InRangeOf(this ConstraintExpression expression, EntityUid other, float range, IEntityManager entMan)
+    {
+        var constraint = new EntityInRangeOfConstraint(other, range, entMan.System<SharedTransformSystem>());
+        expression.Append(constraint);
+        return constraint;
+    }
 }

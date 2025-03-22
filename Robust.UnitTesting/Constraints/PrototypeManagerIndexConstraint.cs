@@ -8,7 +8,7 @@ public sealed class PrototypeManagerIndexConstraint<T> : Constraint
     where T : class, IPrototype
 {
     private readonly string _protoId;
-    public override string Description  => $"Found {typeof(T).Name} with ID {_protoId}";
+    public override string Description => $"Found {typeof(T).Name} with ID {_protoId}";
 
     public PrototypeManagerIndexConstraint(ProtoId<T> protoId)
     {
@@ -25,14 +25,6 @@ public sealed class PrototypeManagerIndexConstraint<T> : Constraint
         if (actual is not IPrototypeManager protoMan)
             throw new ArgumentException($"Expected IPrototypeManager but was {actual?.GetType()}");
 
-        return new Result(this, actual, protoMan.HasIndex(_protoId));
-    }
-
-    public sealed class Result(IConstraint constraint, object? actualValue, bool isSuccess) : ConstraintResult(constraint, actualValue, isSuccess)
-    {
-        public override void WriteActualValueTo(MessageWriter writer)
-        {
-            writer.Write("Failure");
-        }
+        return new ConstraintResult(this, null, protoMan.HasIndex<T>(_protoId));
     }
 }

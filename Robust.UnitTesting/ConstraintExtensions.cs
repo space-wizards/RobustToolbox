@@ -8,6 +8,14 @@ namespace Robust.UnitTesting;
 
 public static class ConstraintExtensions
 {
+    /// <inheritdoc cref="Is.Approximately(object, double?)"/>
+    public static ApproxEqualityConstraint Approximately(this ConstraintExpression expression, object expected, double? tolerance = null)
+    {
+        var constraint = new ApproxEqualityConstraint(expected, tolerance);
+        expression.Append(constraint);
+        return constraint;
+    }
+
     /// <inheritdoc cref="Has.Index{T}(ProtoId{T})"/>
     public static PrototypeManagerIndexConstraint<T> Index<T>(this ConstraintExpression expression, ProtoId<T> protoId)
         where T : class, IPrototype

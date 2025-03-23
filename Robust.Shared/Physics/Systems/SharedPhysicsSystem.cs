@@ -62,12 +62,11 @@ namespace Robust.Shared.Physics.Systems
         public bool MetricsEnabled { get; protected set; }
 
         private   EntityQuery<FixturesComponent> _fixturesQuery;
-        private   EntityQuery<Gravity2DComponent> _gravityQuery;
         protected EntityQuery<JointComponent> JointQuery;
         protected EntityQuery<JointRelayTargetComponent> RelayTargetQuery;
         protected EntityQuery<MetaDataComponent> MetaQuery;
         protected EntityQuery<PhysicsComponent> PhysicsQuery;
-        protected EntityQuery<TransformComponent> _xformQuery;
+        protected EntityQuery<TransformComponent> XformQuery;
         private   EntityQuery<CollideOnAnchorComponent> _anchorQuery;
 
         private ComponentRegistration _physicsReg = default!;
@@ -104,12 +103,11 @@ namespace Robust.Shared.Physics.Systems
             _angularVelocityIndex = 10;
 
             _fixturesQuery = GetEntityQuery<FixturesComponent>();
-            _gravityQuery = GetEntityQuery<Gravity2DComponent>();
             JointQuery = GetEntityQuery<JointComponent>();
             RelayTargetQuery = GetEntityQuery<JointRelayTargetComponent>();
             MetaQuery = GetEntityQuery<MetaDataComponent>();
             PhysicsQuery = GetEntityQuery<PhysicsComponent>();
-            _xformQuery = GetEntityQuery<TransformComponent>();
+            XformQuery = GetEntityQuery<TransformComponent>();
             _anchorQuery = GetEntityQuery<CollideOnAnchorComponent>();
 
             SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
@@ -214,7 +212,7 @@ namespace Robust.Shared.Physics.Systems
 
             foreach (var child in xform._children)
             {
-                if (_xformQuery.TryGetComponent(child, out var childXform))
+                if (XformQuery.TryGetComponent(child, out var childXform))
                 {
                     PhysicsQuery.TryGetComponent(child, out var childBody);
                     RecursiveMapUpdate(child, childXform, childBody);

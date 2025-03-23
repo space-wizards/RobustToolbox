@@ -10,6 +10,18 @@ namespace Robust.Shared.Physics.Systems;
 
 public partial class SharedPhysicsSystem
 {
+    [ViewVariables]
+    public Vector2 Gravity { get; private set; }
+
+    public void SetGravity(Vector2 value)
+    {
+        if (Gravity.Equals(value))
+            return;
+
+        Gravity = value;
+        // TODO: Network + datafield
+    }
+
     // Box2D has a bunch of methods that work on worlds but in our case separate EntityManager instances are
     // separate worlds so we can just treat the physics system as the world.
     private bool _autoClearForces;

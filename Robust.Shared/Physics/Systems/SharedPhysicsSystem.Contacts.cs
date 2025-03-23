@@ -268,8 +268,8 @@ public abstract partial class SharedPhysicsSystem
 
         DebugTools.Assert(!fixtureB.Contacts.ContainsKey(fixtureA));
 
-        var xformA = _xformQuery.GetComponent(uidA);
-        var xformB = _xformQuery.GetComponent(uidB);
+        var xformA = XformQuery.GetComponent(uidA);
+        var xformB = XformQuery.GetComponent(uidB);
 
         // Does a joint override collision? Is at least one body dynamic?
         if (!ShouldCollide(uidA, uidB, bodyA, bodyB, fixtureA, fixtureB, xformA, xformB))
@@ -424,8 +424,8 @@ public abstract partial class SharedPhysicsSystem
                 continue;
             }
 
-            var xformA = _xformQuery.GetComponent(uidA);
-            var xformB = _xformQuery.GetComponent(uidB);
+            var xformA = XformQuery.GetComponent(uidA);
+            var xformB = XformQuery.GetComponent(uidB);
 
             // Is this contact flagged for filtering?
             if ((contact.Flags & ContactFlags.Filter) != 0x0)
@@ -515,8 +515,8 @@ public abstract partial class SharedPhysicsSystem
                     // Instead of transforming both boxes (which enlarges both aabbs), maybe just transform one box.
                     // I.e. use (matrixA * invMatrixB).TransformBox(). Or (invMatrixB * matrixA), whichever is correct.
                     // Alternatively, maybe just directly construct the relative transform matrix?
-                    var proxyAWorldAABB = _transform.GetWorldMatrix(_xformQuery.GetComponent(broadphaseA.Value), _xformQuery).TransformBox(proxyA.AABB);
-                    var proxyBWorldAABB = _transform.GetWorldMatrix(_xformQuery.GetComponent(broadphaseB.Value), _xformQuery).TransformBox(proxyB.AABB);
+                    var proxyAWorldAABB = _transform.GetWorldMatrix(XformQuery.GetComponent(broadphaseA.Value), XformQuery).TransformBox(proxyA.AABB);
+                    var proxyBWorldAABB = _transform.GetWorldMatrix(XformQuery.GetComponent(broadphaseB.Value), XformQuery).TransformBox(proxyB.AABB);
                     overlap = proxyAWorldAABB.Intersects(proxyBWorldAABB);
                 }
             }

@@ -57,7 +57,7 @@ namespace Robust.Client.Physics
             {
                 if (body.BodyType == BodyType.Static ||
                     LerpData.TryGetValue(body.Owner, out var lerpData) ||
-                    !_xformQuery.TryGetComponent(body.Owner, out var xform) ||
+                    !XformQuery.TryGetComponent(body.Owner, out var xform) ||
                     lerpData.ParentUid == xform.ParentUid)
                 {
                     continue;

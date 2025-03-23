@@ -731,12 +731,8 @@ public abstract partial class SharedPhysicsSystem
         var positions = ArrayPool<Vector2>.Shared.Rent(bodyCount);
         var angles = ArrayPool<float>.Shared.Rent(bodyCount);
         var offset = island.Offset;
-        var gravity = Vector2.Zero;
+        var gravity = Gravity;
 
-        if (_gravityQuery.TryComp(island.MapUid, out var gravity2D))
-        {
-            gravity = gravity2D.Gravity;
-        }
 
         for (var i = 0; i < island.Bodies.Count; i++)
         {
@@ -999,9 +995,9 @@ public abstract partial class SharedPhysicsSystem
             if (body.BodyType == BodyType.Static)
                 continue;
 
-            var xform = _xformQuery.GetComponent(body.Owner);
-            var parentXform = _xformQuery.GetComponent(xform.ParentUid);
-            var (_, parentRot, parentInvMatrix) = parentXform.GetWorldPositionRotationInvMatrix(_xformQuery);
+            var xform = XformQuery.GetComponent(body.Owner);
+            var parentXform = XformQuery.GetComponent(xform.ParentUid);
+            var (_, parentRot, parentInvMatrix) = parentXform.GetWorldPositionRotationInvMatrix(XformQuery);
             var worldRot = (float) (parentRot + xform._localRotation);
 
             var angle = angles[i];
@@ -1048,7 +1044,7 @@ public abstract partial class SharedPhysicsSystem
             var uid = body.Owner;
             var position = positions[offset + i];
             var angle = angles[offset + i];
-            var xform = _xformQuery.GetComponent(uid);
+            var xform = XformQuery.GetComponent(uid);
 
             // Temporary NaN guards until PVS is fixed.
             if (!float.IsNaN(position.X) && !float.IsNaN(position.Y))

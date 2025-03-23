@@ -26,7 +26,7 @@ public sealed partial class EntityLookupSystem
         if (!_broadQuery.Resolve(lookupUid, ref lookup))
             return;
 
-        var lookupPoly = new Polygon(localAABB);
+        var lookupPoly = new SlimPolygon(localAABB);
         AddEntitiesIntersecting(lookupUid, intersecting, lookupPoly, localAABB, Physics.Transform.Empty, flags, lookup);
     }
 
@@ -40,7 +40,7 @@ public sealed partial class EntityLookupSystem
         if (!_broadQuery.Resolve(lookupUid, ref lookup))
             return;
 
-        var shape = new Polygon(localBounds);
+        var shape = new SlimPolygon(localBounds);
         var localAABB = localBounds.CalcBoundingBox();
 
         AddEntitiesIntersecting(lookupUid, intersecting, shape, localAABB, Physics.Transform.Empty, flags);
@@ -55,7 +55,7 @@ public sealed partial class EntityLookupSystem
         if (!_broadQuery.Resolve(lookupUid, ref lookup))
             return false;
 
-        var shape = new Polygon(localAABB);
+        var shape = new SlimPolygon(localAABB);
         return AnyEntitiesIntersecting(lookupUid, shape, localAABB, Physics.Transform.Empty, flags, ignored, lookup);
     }
 

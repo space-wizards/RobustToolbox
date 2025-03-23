@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -350,6 +351,29 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             }
 
             return mappingNode._children.Count == 0 ? null : mappingNode;
+        }
+
+        /// <summary>
+        /// Returns true if there are any nodes on this node that aren't in the other node.
+        /// </summary>
+        [Pure]
+        public bool AnyExcept(MappingDataNode node)
+        {
+            foreach (var (key, val) in _list)
+            {
+                var other = node._list.FirstOrNull(p => p.Key.Equals(key));
+
+                if (other == null)
+                {
+                    return true;
+                }
+
+                // We only keep the entry if the values are not equal
+                if (!val.Equals(other.Value.Value))
+                    return true;
+            }
+
+            return false;
         }
 
         public override bool Equals(object? obj)

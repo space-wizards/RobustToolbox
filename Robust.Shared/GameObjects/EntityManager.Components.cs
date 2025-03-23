@@ -1101,7 +1101,7 @@ namespace Robust.Shared.GameObjects
             MetaDataComponent? meta = null,
             params Type[] sourceComponents)
         {
-            if (!MetaQuery.TryGetComponent(source, out meta))
+            if (!MetaQuery.TryGetComponent(target, out meta))
                 return false;
 
             var allCopied = true;

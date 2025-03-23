@@ -57,7 +57,8 @@ namespace Robust.Shared.Physics.Systems
                 _mapManager = _mapManager,
                 System = this,
                 BroadphaseExpand = _broadphaseExpand,
-                XformQuery = EntityManager.TransformQuery,
+                // TODO: EntityManager one isn't ready yet?
+                XformQuery = GetEntityQuery<TransformComponent>(),
             };
 
             _broadphaseQuery = GetEntityQuery<BroadphaseComponent>();

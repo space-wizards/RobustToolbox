@@ -4,13 +4,10 @@ using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Components;
-using Robust.Shared.Physics.Controllers;
-using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
@@ -65,7 +62,7 @@ namespace Robust.Shared.Physics.Systems
         public bool MetricsEnabled { get; protected set; }
 
         private   EntityQuery<FixturesComponent> _fixturesQuery;
-        private EntityQuery<Gravity2DComponent> _gravityQuery;
+        private   EntityQuery<Gravity2DComponent> _gravityQuery;
         protected EntityQuery<JointComponent> JointQuery;
         protected EntityQuery<JointRelayTargetComponent> RelayTargetQuery;
         protected EntityQuery<MetaDataComponent> MetaQuery;

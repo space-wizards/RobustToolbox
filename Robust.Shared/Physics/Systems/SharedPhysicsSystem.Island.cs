@@ -733,7 +733,7 @@ public abstract partial class SharedPhysicsSystem
         var offset = island.Offset;
         var gravity = Vector2.Zero;
 
-        if (TryComp(island.MapUid, out Gravity2DComponent? gravity2D))
+        if (_gravityQuery.TryComp(island.MapUid, out var gravity2D))
         {
             gravity = gravity2D.Gravity;
         }

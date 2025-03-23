@@ -34,7 +34,7 @@ public sealed class BoxStackCommand : IConsoleCommand
 
         var fixtureSystem = _entManager.System<FixtureSystem>();
         var physSystem = _entManager.System<SharedPhysicsSystem>();
-        physSystem.SetGravity(mapId, new Vector2(0f, -9.8f));
+        physSystem.SetGravity(new Vector2(0f, -9.8f));
 
         var groundUid = _entManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
         var ground = _entManager.AddComponent<PhysicsComponent>(groundUid);

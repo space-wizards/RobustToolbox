@@ -65,7 +65,7 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
         await server.WaitPost(() =>
         {
             var mapUid = entityManager.System<SharedMapSystem>().CreateMap(out var mapId);
-            physSystem.SetGravity(mapUid, new Vector2(0f, -9.8f));
+            physSystem.SetGravity(new Vector2(0f, -9.8f));
 
             var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
             var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);
@@ -170,7 +170,7 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
         await server.WaitPost(() =>
         {
             var mapUid = entityManager.System<SharedMapSystem>().CreateMap(out mapId);
-            physSystem.SetGravity(mapUid, new Vector2(0f, -9.8f));
+            physSystem.SetGravity(new Vector2(0f, -9.8f));
 
             var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
             var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);

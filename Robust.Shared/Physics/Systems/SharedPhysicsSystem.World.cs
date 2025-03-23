@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Robust.Shared.GameObjects;
@@ -21,11 +22,18 @@ public partial class SharedPhysicsSystem
     public readonly Dictionary<EntityUid, (EntityUid ParentUid, Vector2 LocalPosition, Angle LocalRotation)>
         LerpData = new();
 
+    // TODO: MoveBuffer should be broadphase local
+    // Remove recursive grid from entitylookupsystem
+    // Need to triplecheclk that one test
+
+    // Previously we stored the WorldAABB of the proxy being moved and tracked state.
+    // The issue is that if something moves multiple times in a tick it can add up, plus it's also done on hotpaths such as physics.
+    // As such we defer it until we actually try and get contacts, then we can run them in parallel.
     /// <summary>
     /// Keep a buffer of everything that moved in a tick. This will be used to check for physics contacts.
     /// </summary>
     [ViewVariables]
-    public readonly Dictionary<FixtureProxy, Box2> MoveBuffer = new();
+    internal readonly HashSet<FixtureProxy> MoveBuffer = new();
 
     /// <summary>
     /// Track moved grids to know if we need to run checks for them driving over entities.

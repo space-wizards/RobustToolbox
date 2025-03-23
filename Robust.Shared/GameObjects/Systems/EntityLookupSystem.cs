@@ -303,7 +303,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         var tree = body.BodyType == BodyType.Static ? broadphase.StaticTree : broadphase.DynamicTree;
         DebugTools.Assert(fixture.ProxyCount == 0);
 
-        AddOrMoveProxies(uid, fixtureId, fixture, body, tree, broadphaseTransform, mapTransform);
+        AddOrMoveProxies(uid, fixtureId, fixture, body, tree, broadphaseTransform);
     }
 
     internal void DestroyProxies(EntityUid uid, string fixtureId, Fixture fixture, TransformComponent xform, BroadphaseComponent broadphase)
@@ -442,7 +442,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
         foreach (var (id, fixture) in manager.Fixtures)
         {
-            AddOrMoveProxies(uid, id, fixture, body, tree, broadphaseTransform, mapTransform);
+            AddOrMoveProxies(uid, id, fixture, body, tree, broadphaseTransform);
         }
     }
 
@@ -452,8 +452,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         Fixture fixture,
         PhysicsComponent body,
         IBroadPhase tree,
-        Transform broadphaseTransform,
-        Transform mapTransform)
+        Transform broadphaseTransform)
     {
         var moveBuffer = _physics.MoveBuffer;
 
@@ -466,7 +465,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
                 var proxy = fixture.Proxies[i];
                 tree.MoveProxy(proxy.ProxyId, bounds);
                 proxy.AABB = bounds;
-                moveBuffer[proxy] = fixture.Shape.ComputeAABB(mapTransform, i);
+                moveBuffer.Add(proxy);
             }
 
             return;
@@ -482,7 +481,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
             proxy.ProxyId = tree.AddProxy(ref proxy);
             proxy.AABB = bounds;
             proxies[i] = proxy;
-            moveBuffer[proxy] = fixture.Shape.ComputeAABB(mapTransform, i);
+            moveBuffer.Add(proxy);
         }
 
         fixture.Proxies = proxies;
@@ -543,61 +542,6 @@ public sealed partial class EntityLookupSystem : EntitySystem
         DebugTools.Assert(HasComp<MapGridComponent>(args.Sender));
         DebugTools.Assert(!newMap.IsValid() || HasComp<MapComponent>(newMap));
         DebugTools.Assert(!oldMap.IsValid() || HasComp<MapComponent>(oldMap));
-
-        foreach (var child in args.Component._children)
-        {
-            RecursiveOnGridChangedMap(child);
-        }
-    }
-
-    private void RecursiveOnGridChangedMap(EntityUid uid)
-    {
-        if (!_xformQuery.TryGetComponent(uid, out var xform))
-            return;
-
-        foreach (var child in xform._children)
-        {
-            RecursiveOnGridChangedMap(child);
-        }
-
-        if (xform.Broadphase is not { CanCollide: true })
-            return;
-
-        if (!_fixturesQuery.TryGetComponent(uid, out var fixtures))
-            return;
-
-        // No MoveBuffer
-        if (xform.MapUid == null)
-        {
-            foreach (var fixture in fixtures.Fixtures.Values)
-            {
-                for (var i = 0; i < fixture.ProxyCount; i++)
-                {
-                    var proxy = fixture.Proxies[i];
-                    DebugTools.Assert(_physics.MoveBuffer.ContainsKey(proxy));
-                    _physics.MoveBuffer.Remove(proxy);
-                }
-            }
-        }
-        else
-        {
-            // TODO PERFORMANCE
-            // track world position while recursively iterating down through children.
-
-            // TODO: Could just get the parent's matrix change and apply that to all of the children, would be way faster.
-            // Just requires on us relying that the old Box2 is accurate (which it really should be).
-            var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform);
-            var mapTransform = new Transform(worldPos, worldRot);
-
-            foreach (var fixture in fixtures.Fixtures.Values)
-            {
-                for (var i = 0; i < fixture.ProxyCount; i++)
-                {
-                    var proxy = fixture.Proxies[i];
-                    _physics.MoveBuffer[proxy] = fixture.Shape.ComputeAABB(mapTransform, i);
-                }
-            }
-        }
     }
 
     private void UpdateParent(EntityUid uid, TransformComponent xform)

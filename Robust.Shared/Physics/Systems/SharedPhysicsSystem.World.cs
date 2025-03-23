@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Robust.Shared.GameObjects;
@@ -13,18 +12,17 @@ public partial class SharedPhysicsSystem
 {
     // Box2D has a bunch of methods that work on worlds but in our case separate EntityManager instances are
     // separate worlds so we can just treat the physics system as the world.
-
-    public bool AutoClearForces;
+    private bool _autoClearForces;
 
     /// <summary>
     /// When substepping the client needs to know about the first position to use for lerping.
     /// </summary>
-    public readonly Dictionary<EntityUid, (EntityUid ParentUid, Vector2 LocalPosition, Angle LocalRotation)>
+    protected readonly Dictionary<EntityUid, (EntityUid ParentUid, Vector2 LocalPosition, Angle LocalRotation)>
         LerpData = new();
 
-    // TODO: MoveBuffer should be broadphase local
-    // Remove recursive grid from entitylookupsystem
-    // Need to triplecheclk that one test
+    // TODO:
+    // - Need to triplecheck that one test
+    // - Add test that movebuffer removes entities moved to nullspace.
 
     // Previously we stored the WorldAABB of the proxy being moved and tracked state.
     // The issue is that if something moves multiple times in a tick it can add up, plus it's also done on hotpaths such as physics.
@@ -39,7 +37,7 @@ public partial class SharedPhysicsSystem
     /// Track moved grids to know if we need to run checks for them driving over entities.
     /// </summary>
     [ViewVariables]
-    public HashSet<EntityUid> MovedGrids = new();
+    internal HashSet<EntityUid> MovedGrids = new();
 
     /// <summary>
     ///     All awake bodies on this map.
@@ -50,5 +48,5 @@ public partial class SharedPhysicsSystem
     /// <summary>
     ///     Store last tick's invDT
     /// </summary>
-    internal float _invDt0;
+    private float _invDt0;
 }

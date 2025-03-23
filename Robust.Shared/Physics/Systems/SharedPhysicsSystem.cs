@@ -152,7 +152,7 @@ namespace Robust.Shared.Physics.Systems
 
         private void OnAutoClearChange(bool value)
         {
-            AutoClearForces = value;
+            _autoClearForces = value;
         }
 
         private void UpdateSubsteps(int obj)

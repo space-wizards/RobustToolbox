@@ -242,7 +242,8 @@ public sealed class Broadphase_Test
             Assert.That(lookup.FindBroadphase(child), Is.EqualTo(broadphase));
             Assert.That(parentXform.Broadphase == new BroadphaseData(map, false, false));
             Assert.That(childXform.Broadphase == new BroadphaseData(map, true, true));
-            Assert.That(physSystem.MoveBuffer[childFixtures.Fixtures.First().Value.Proxies.First()].Center.EqualsApprox(pos));
+            Assert.That(false);
+            //Assert.That(physSystem.MoveBuffer[childFixtures.Fixtures.First().Value.Proxies.First()].Center.EqualsApprox(pos));
         };
         AssertMap(mapA, mapB, new Vector2(200, 200));
 
@@ -274,7 +275,8 @@ public sealed class Broadphase_Test
             Assert.That(lookup.FindBroadphase(child), Is.EqualTo(broadphase));
             Assert.That(parentXform.Broadphase == new BroadphaseData(grid, false, false));
             Assert.That(childXform.Broadphase == new BroadphaseData(grid, true, true));
-            Assert.That(physSystem.MoveBuffer[childFixtures.Fixtures.First().Value.Proxies.First()].Center.EqualsApprox(pos));
+            Assert.That(false);
+            //Assert.That(physSystem.MoveBuffer[childFixtures.Fixtures.First().Value.Proxies.First()].Center.EqualsApprox(pos));
         };
         AssertGrid(gridA, mapA, mapB, Vector2.Zero);
 

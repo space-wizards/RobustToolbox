@@ -9,32 +9,34 @@ public partial class SharedPhysicsSystem
 {
     #region AddRemove
 
-    internal void AddAwakeBody(EntityUid uid, PhysicsComponent body)
+    internal void AddAwakeBody(Entity<PhysicsComponent, TransformComponent> ent)
     {
+        var body = ent.Comp1;
+
         if (!body.CanCollide)
         {
-            Log.Error($"Tried to add non-colliding {ToPrettyString(uid)} as an awake body to map!");
+            Log.Error($"Tried to add non-colliding {ToPrettyString(ent)} as an awake body to map!");
             DebugTools.Assert(false);
             return;
         }
 
         if (body.BodyType == BodyType.Static)
         {
-            Log.Error($"Tried to add static body {ToPrettyString(uid)} as an awake body to map!");
+            Log.Error($"Tried to add static body {ToPrettyString(ent)} as an awake body to map!");
             DebugTools.Assert(false);
             return;
         }
 
         DebugTools.Assert(body.Awake);
-        DebugTools.Assert(!AwakeBodies.Contains(body));
-        AwakeBodies.Add(body);
+        DebugTools.Assert(!AwakeBodies.Contains(ent));
+        AwakeBodies.Add(ent);
     }
 
-    internal void RemoveSleepBody(EntityUid uid, PhysicsComponent body)
+    internal void RemoveSleepBody(Entity<PhysicsComponent, TransformComponent> ent)
     {
-        DebugTools.Assert(!body.Awake);
-        DebugTools.Assert(AwakeBodies.Contains(body));
-        AwakeBodies.Remove(body);
+        DebugTools.Assert(!ent.Comp1.Awake);
+        DebugTools.Assert(AwakeBodies.Contains(ent));
+        AwakeBodies.Remove(ent);
     }
 
 

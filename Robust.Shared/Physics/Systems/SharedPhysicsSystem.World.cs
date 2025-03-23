@@ -37,7 +37,7 @@ public partial class SharedPhysicsSystem
     ///     All awake bodies on this map.
     /// </summary>
     [ViewVariables]
-    public readonly HashSet<PhysicsComponent> AwakeBodies = new();
+    public readonly HashSet<Entity<PhysicsComponent, TransformComponent>> AwakeBodies = new();
 
     /// <summary>
     ///     Store last tick's invDT

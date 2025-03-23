@@ -22,25 +22,29 @@ public sealed class Gravity2DController : VirtualController
 
     private ISawmill _sawmill = default!;
 
+    private EntityQuery<Gravity2DComponent> _gravityQuery;
+    private EntityQuery<PhysicsComponent> _physicsQuery;
+
     public override void Initialize()
     {
         base.Initialize();
         _sawmill = Logger.GetSawmill("physics");
-        SubscribeLocalEvent<Gravity2DComponent, ComponentGetState>(OnGetState);
-        SubscribeLocalEvent<Gravity2DComponent, ComponentHandleState>(OnHandleState);
+
+        _gravityQuery = GetEntityQuery<Gravity2DComponent>();
+        _physicsQuery = GetEntityQuery<PhysicsComponent>();
     }
 
-    private void OnGetState(EntityUid uid, Gravity2DComponent component, ref ComponentGetState args)
+    public override void UpdateBeforeSolve(bool prediction, float frameTime)
     {
-        args.State = new Gravity2DComponentState() { Gravity = component.Gravity };
-    }
+        base.UpdateBeforeSolve(prediction, frameTime);
 
-    private void OnHandleState(EntityUid uid, Gravity2DComponent component, ref ComponentHandleState args)
-    {
-        if (args.Current is not Gravity2DComponentState state)
-            return;
+        foreach (var ent in _physics.AwakeBodies)
+        {
+            if (!_gravityQuery.TryComp(ent.Comp2.MapUid, out var gravity))
+                continue;
 
-        component.Gravity = state.Gravity;
+            PhysicsSystem.SetLinearVelocity(ent.Owner, ent.Comp1.LinearVelocity + gravity.Gravity * frameTime, body: ent.Comp1);
+        }
     }
 
     public Vector2 GetGravity(EntityUid uid, Gravity2DComponent? component = null)
@@ -66,7 +70,7 @@ public sealed class Gravity2DController : VirtualController
             return;
 
         gravity.Gravity = value;
-        WakeBodiesRecursive(uid, GetEntityQuery<TransformComponent>(), GetEntityQuery<PhysicsComponent>());
+        WakeBodiesRecursive(uid);
         Dirty(uid, gravity);
     }
 
@@ -79,22 +83,22 @@ public sealed class Gravity2DController : VirtualController
             return;
 
         gravity.Gravity = value;
-        WakeBodiesRecursive(mapUid, GetEntityQuery<TransformComponent>(), GetEntityQuery<PhysicsComponent>());
+        WakeBodiesRecursive(mapUid);
         Dirty(mapUid, gravity);
     }
 
-    private void WakeBodiesRecursive(EntityUid uid, EntityQuery<TransformComponent> xformQuery, EntityQuery<PhysicsComponent> bodyQuery)
+    private void WakeBodiesRecursive(EntityUid uid)
     {
-        if (bodyQuery.TryGetComponent(uid, out var body) &&
+        if (_physicsQuery.TryGetComponent(uid, out var body) &&
             body.BodyType == BodyType.Dynamic)
         {
             _physics.WakeBody(uid, body: body);
         }
 
-        var xform = xformQuery.GetComponent(uid);
+        var xform = EntityManager.TransformQuery.GetComponent(uid);
         foreach (var child in xform._children)
         {
-            WakeBodiesRecursive(child, xformQuery, bodyQuery);
+            WakeBodiesRecursive(child);
         }
     }
 

@@ -171,7 +171,7 @@ public abstract partial class SharedPhysicsSystem
     // Caching for island generation.
     private readonly HashSet<PhysicsComponent> _islandSet = new(64);
     private readonly Stack<PhysicsComponent> _bodyStack = new(64);
-    private readonly List<PhysicsComponent> _awakeBodyList = new(256);
+    private readonly List<Entity<PhysicsComponent, TransformComponent>> _awakeBodyList = new(256);
 
     // Config
     private bool _warmStarting;
@@ -279,11 +279,22 @@ public abstract partial class SharedPhysicsSystem
 
     private void ClearForces()
     {
-        foreach (var body in AwakeBodies)
+        foreach (var ent in AwakeBodies)
         {
-            // TODO: Netsync (need delta fields pr).
-            body.Force = Vector2.Zero;
-            body.Torque = 0.0f;
+            var uid = ent.Owner;
+            var body = ent.Comp1;
+
+            if (body.Force != Vector2.Zero)
+            {
+                body.Force = Vector2.Zero;
+                DirtyField(uid, body, nameof(PhysicsComponent.Force));
+            }
+
+            if (body.Torque != 0f)
+            {
+                body.Torque = 0f;
+                DirtyField(uid, body, nameof(PhysicsComponent.Torque));
+            }
         }
     }
 
@@ -312,8 +323,11 @@ public abstract partial class SharedPhysicsSystem
         var islandJoints = new List<(Joint Original, Joint Joint)>();
 
         // Build the relevant islands / graphs for all bodies.
-        foreach (var seed in _awakeBodyList)
+        foreach (var ent in _awakeBodyList)
         {
+            var xform = ent.Comp2;
+            var seed = ent.Comp1;
+
             // I tried not running prediction for non-contacted entities but unfortunately it looked like shit
             // when contact broke so if you want to try that then GOOD LUCK.
             if (seed.Island) continue;
@@ -323,7 +337,7 @@ public abstract partial class SharedPhysicsSystem
             if (!metaQuery.TryGetComponent(seedUid, out var metadata))
             {
                 Log.Error($"Found deleted entity {ToPrettyString(seedUid)} on map!");
-                RemoveSleepBody(seedUid, seed);
+                RemoveSleepBody(ent);
                 continue;
             }
 

@@ -488,9 +488,9 @@ public partial class SharedPhysicsSystem
         }
 
         if (body.Awake)
-            AddAwakeBody(uid, body);
+            AddAwakeBody((uid, body, Transform(uid)));
         else
-            RemoveSleepBody(uid, body);
+            RemoveSleepBody((uid, body, Transform(uid)));
     }
 
     public void TrySetBodyType(EntityUid uid, BodyType value, FixturesComponent? manager = null, PhysicsComponent? body = null, TransformComponent? xform = null)

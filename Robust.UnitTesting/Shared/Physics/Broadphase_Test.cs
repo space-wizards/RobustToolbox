@@ -232,7 +232,7 @@ public sealed class Broadphase_Test
         Assert.That(childBody.CanCollide);
 
         // Initially on mapA
-        var AssertMap = (EntityUid map, EntityUid otherMap) =>
+        var AssertMap = (EntityUid map, EntityUid otherMap, Vector2 pos) =>
         {
             var broadphase = entManager.GetComponent<BroadphaseComponent>(map);
             Assert.That(parentXform.ParentUid == map);
@@ -242,9 +242,9 @@ public sealed class Broadphase_Test
             Assert.That(lookup.FindBroadphase(child), Is.EqualTo(broadphase));
             Assert.That(parentXform.Broadphase == new BroadphaseData(map, false, false));
             Assert.That(childXform.Broadphase == new BroadphaseData(map, true, true));
-            Assert.That(physSystem.MoveBuffer[childFixtures.Fixtures.First().Value.Proxies.First()].Center.EqualsApprox(new Vector2(10, 10)));
+            Assert.That(physSystem.MoveBuffer[childFixtures.Fixtures.First().Value.Proxies.First()].Center.EqualsApprox(pos));
         };
-        AssertMap(mapA, mapB);
+        AssertMap(mapA, mapB, new Vector2(200, 200));
 
         // we are now going to test several broadphase updates where we relocate the parent entity such that it moves:
         // - map to map with a map change
@@ -256,12 +256,12 @@ public sealed class Broadphase_Test
         // - grid to map without a map change
 
         // Move to map B (map to map with a map change)
-        xforms.SetCoordinates(parent, new EntityCoordinates(mapB, new Vector2(200, 200)));
-        AssertMap(mapB, mapA);
+        xforms.SetCoordinates(parent, new EntityCoordinates(mapB, new Vector2(100, 100)));
+        AssertMap(mapB, mapA, new Vector2(100, 100));
 
         // Move to gridA on mapA (map to grid with a map change)
         xforms.SetCoordinates(parent, new EntityCoordinates(gridA, default));
-        var AssertGrid = (EntityUid grid, EntityUid map, EntityUid otherMap) =>
+        var AssertGrid = (EntityUid grid, EntityUid map, EntityUid otherMap, Vector2 pos) =>
         {
             var broadphase = entManager.GetComponent<BroadphaseComponent>(grid);
             var gridXform = entManager.GetComponent<TransformComponent>(grid);
@@ -274,39 +274,39 @@ public sealed class Broadphase_Test
             Assert.That(lookup.FindBroadphase(child), Is.EqualTo(broadphase));
             Assert.That(parentXform.Broadphase == new BroadphaseData(grid, false, false));
             Assert.That(childXform.Broadphase == new BroadphaseData(grid, true, true));
-            // MoveBuffer should be around Map B.
-            Assert.That(physSystem.MoveBuffer[childFixtures.Fixtures.First().Value.Proxies.First()].Center.EqualsApprox(new Vector2(200, 200)));
+            Assert.That(physSystem.MoveBuffer[childFixtures.Fixtures.First().Value.Proxies.First()].Center.EqualsApprox(pos));
         };
-        AssertGrid(gridA, mapA, mapB);
+        AssertGrid(gridA, mapA, mapB, Vector2.Zero);
 
         // Move to gridB on mapB (grid to grid with a map change)
         xforms.SetCoordinates(parent, new EntityCoordinates(gridB, default));
-        AssertGrid(gridB, mapB, mapA);
+        AssertGrid(gridB, mapB, mapA, Vector2.Zero);
 
         // move to mapA (grid to map with a map change)
         xforms.SetCoordinates(parent, new EntityCoordinates(mapA, new Vector2(200, 200)));
-        AssertMap(mapA, mapB);
+        AssertMap(mapA, mapB, new Vector2(200, 200));
 
         // move to gridA on mapA (map to grid without a map change)
         xforms.SetCoordinates(parent, new EntityCoordinates(gridA, default));
-        AssertGrid(gridA, mapA, mapB);
+        AssertGrid(gridA, mapA, mapB, Vector2.Zero);
 
         // move to gridC on mapA (grid to grid without a map change)
         xforms.SetCoordinates(parent, new EntityCoordinates(gridC, default));
-        AssertGrid(gridC, mapA, mapB);
+        AssertGrid(gridC, mapA, mapB, new Vector2(10, 10));
 
         // move to gridC on mapA (grid to map without a map change)
-        xforms.SetCoordinates(parent, new EntityCoordinates(mapA, new Vector2(200, 200)));
-        AssertMap(mapA, mapB);
+        xforms.SetCoordinates(parent, new EntityCoordinates(mapA, new Vector2(50, 50)));
+        AssertMap(mapA, mapB, new Vector2(50, 50));
 
         // Finally, we check if the broadphase updates if the whole grid moves, instead of just the entity
         // first, move it to a grid:
         xforms.SetCoordinates(parent, new EntityCoordinates(gridC, default));
-        AssertGrid(gridC, mapA, mapB);
+        AssertGrid(gridC, mapA, mapB, new Vector2(10, 10));
 
         // then move the grid to a new map:
         xforms.SetCoordinates(gridC, new EntityCoordinates(mapB, new Vector2(200,200)));
-        AssertGrid(gridC, mapB, mapA);
+        // Asserting child pos NOT gridC pos.
+        AssertGrid(gridC, mapB, mapA, new Vector2(10, 10));
     }
 
     /// <summary>

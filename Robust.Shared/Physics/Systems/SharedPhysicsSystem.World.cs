@@ -29,7 +29,7 @@ public partial class SharedPhysicsSystem
     /// <summary>
     /// When substepping the client needs to know about the first position to use for lerping.
     /// </summary>
-    protected readonly Dictionary<EntityUid, (EntityUid ParentUid, Vector2 LocalPosition, Angle LocalRotation)>
+    protected readonly Dictionary<EntityUid, EntityUid>
         LerpData = new();
 
     // TODO:

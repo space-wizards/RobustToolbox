@@ -417,6 +417,16 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
             throw new InvalidOperationException();
         }
+
+        public PhysicsComponent OtherBody(EntityUid uid)
+        {
+            if (uid == EntityA)
+                return BodyB!;
+            else if (uid == EntityB)
+                return BodyA!;
+
+            throw new InvalidOperationException();
+        }
     }
 
     [Flags]

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Physics;
@@ -25,7 +26,7 @@ namespace Robust.Client.Physics
 
         protected override void Cleanup(float frameTime)
         {
-            var toRemove = new List<Entity<PhysicsComponent, TransformComponent>>();
+            var toRemove = new ValueList<Entity<PhysicsComponent, TransformComponent>>();
 
             // Because we're not predicting 99% of bodies its sleep timer never gets incremented so we'll just do it ourselves.
             // (and serializing it over the network isn't necessary?)
@@ -51,19 +52,21 @@ namespace Robust.Client.Physics
             base.Cleanup(frameTime);
         }
 
-        protected override void UpdateLerpData(List<PhysicsComponent> bodies)
+        protected override void UpdateLerpData(List<Entity<PhysicsComponent, TransformComponent>> bodies)
         {
-            foreach (var body in bodies)
+            foreach (var bodyEnt in bodies)
             {
+                var body = bodyEnt.Comp1;
+                var xform = bodyEnt.Comp2;
+
                 if (body.BodyType == BodyType.Static ||
-                    LerpData.TryGetValue(body.Owner, out var lerpData) ||
-                    !XformQuery.TryGetComponent(body.Owner, out var xform) ||
-                    lerpData.ParentUid == xform.ParentUid)
+                    LerpData.TryGetValue(bodyEnt, out var lerpData) ||
+                    lerpData == xform.ParentUid)
                 {
                     continue;
                 }
 
-                LerpData[xform.Owner] = (xform.ParentUid, xform.LocalPosition, xform.LocalRotation);
+                LerpData[bodyEnt.Owner] = xform.ParentUid;
             }
         }
 
@@ -73,12 +76,11 @@ namespace Robust.Client.Physics
         protected override void FinalStep()
         {
             base.FinalStep();
-            var xformQuery = GetEntityQuery<TransformComponent>();
 
-            foreach (var (uid, (parentUid, position, rotation)) in LerpData)
+            foreach (var (uid, parentUid) in LerpData)
             {
-                if (!xformQuery.TryGetComponent(uid, out var xform) ||
-                    !parentUid.IsValid())
+                // Can't just re-use xform from before as movement events may cause event subs to fire.
+                if (!XformQuery.TryGetComponent(uid, out var xform) || !parentUid.IsValid())
                 {
                     continue;
                 }

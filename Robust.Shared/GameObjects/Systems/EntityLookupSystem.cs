@@ -303,7 +303,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         var tree = body.BodyType == BodyType.Static ? broadphase.StaticTree : broadphase.DynamicTree;
         DebugTools.Assert(fixture.ProxyCount == 0);
 
-        AddOrMoveProxies(uid, fixtureId, fixture, body, tree, broadphaseTransform);
+        AddOrMoveProxies((uid, body, xform), fixtureId, fixture, tree, broadphaseTransform);
     }
 
     internal void DestroyProxies(EntityUid uid, string fixtureId, Fixture fixture, TransformComponent xform, BroadphaseComponent broadphase)
@@ -442,19 +442,19 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
         foreach (var (id, fixture) in manager.Fixtures)
         {
-            AddOrMoveProxies(uid, id, fixture, body, tree, broadphaseTransform);
+            AddOrMoveProxies((uid, body, xform), id, fixture, tree, broadphaseTransform);
         }
     }
 
     private void AddOrMoveProxies(
-        EntityUid uid,
+        Entity<PhysicsComponent, TransformComponent> ent,
         string fixtureId,
         Fixture fixture,
-        PhysicsComponent body,
         IBroadPhase tree,
         Transform broadphaseTransform)
     {
         var moveBuffer = _physics.MoveBuffer;
+
 
         // Moving
         if (fixture.ProxyCount > 0)
@@ -477,7 +477,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         for (var i = 0; i < count; i++)
         {
             var bounds = fixture.Shape.ComputeAABB(broadphaseTransform, i);
-            var proxy = new FixtureProxy(uid, body, bounds, fixtureId, fixture, i);
+            var proxy = new FixtureProxy(ent.Owner, ent.Comp1, ent.Comp2, bounds, fixtureId, fixture, i);
             proxy.ProxyId = tree.AddProxy(ref proxy);
             proxy.AABB = bounds;
             proxies[i] = proxy;

@@ -271,7 +271,7 @@ namespace Robust.Shared.Physics.Systems
 
                 var transform = _physicsSystem.GetPhysicsTransform(gridUid);
                 var state = (
-                    new Entity<FixturesComponent, MapGridComponent, PhysicsComponent>(gridUid, fixture, grid, physics),
+                    new Entity<FixturesComponent, MapGridComponent, PhysicsComponent, TransformComponent>(gridUid, fixture, grid, physics, xform),
                     transform,
                     worldMatrix,
                     invWorldMatrix,
@@ -284,7 +284,7 @@ namespace Robust.Shared.Physics.Systems
 
                 _mapManager.FindGridsIntersecting(xform.MapID, aabb, ref state,
                     static (EntityUid uid, MapGridComponent component,
-                        ref (Entity<FixturesComponent, MapGridComponent, PhysicsComponent> grid,
+                        ref (Entity<FixturesComponent, MapGridComponent, PhysicsComponent, TransformComponent> grid,
                             Transform transform,
                             Matrix3x2 worldMatrix,
                             Matrix3x2 invWorldMatrix,
@@ -301,7 +301,7 @@ namespace Robust.Shared.Physics.Systems
                             return true;
                         }
 
-                        var (_, _, otherGridMatrix, otherGridInvMatrix) =  tuple.xformSystem.GetWorldPositionRotationMatrixWithInv(collidingXform, tuple.xformQuery);
+                        var (_, _, otherGridMatrix, otherGridInvMatrix) =  tuple.xformSystem.GetWorldPositionRotationMatrixWithInv(collidingXform);
                         var otherGridBounds = otherGridMatrix.TransformBox(component.LocalAABB);
                         var otherTransform = tuple._physicsSystem.GetPhysicsTransform(uid);
 
@@ -342,7 +342,10 @@ namespace Robust.Shared.Physics.Systems
                                                 var otherAABB = otherFixture.Shape.ComputeAABB(otherTransform, j);
 
                                                 if (!fixAABB.Intersects(otherAABB)) continue;
-                                                tuple._physicsSystem.AddPair(tuple.grid.Owner, uid,
+
+                                                tuple._physicsSystem.AddPair(
+                                                    (tuple.grid.Owner, tuple.grid.Comp3, tuple.grid.Comp4),
+                                                    (uid, physicsB, collidingXform),
                                                     ourId, otherId,
                                                     fixture, i,
                                                     otherFixture, j,

@@ -80,6 +80,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         public PhysicsComponent? BodyA;
         public PhysicsComponent? BodyB;
 
+        public TransformComponent? XformA;
+        public TransformComponent? XformB;
+
         public Manifold Manifold;
 
         internal ContactType Type;

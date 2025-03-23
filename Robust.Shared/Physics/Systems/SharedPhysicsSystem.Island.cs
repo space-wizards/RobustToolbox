@@ -402,8 +402,9 @@ public abstract partial class SharedPhysicsSystem
                     if (other.Island) continue;
 
                     var otherEnt = contact.OtherEnt(bodyUid);
+                    var otherXform = contact.OtherTransform(bodyUid);
                     // TODO: Store this transform on the component directly.
-                    _bodyStack.Push(new Entity<PhysicsComponent, TransformComponent>(otherEnt, other, XformQuery.GetComponent(otherEnt)));
+                    _bodyStack.Push(new Entity<PhysicsComponent, TransformComponent>(otherEnt, other, otherXform));
                     other.Island = true;
                 }
 

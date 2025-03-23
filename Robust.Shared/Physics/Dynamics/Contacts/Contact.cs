@@ -430,6 +430,16 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
             throw new InvalidOperationException();
         }
+
+        public TransformComponent OtherTransform(EntityUid uid)
+        {
+            if (uid == EntityA)
+                return XformB!;
+            else if (uid == EntityB)
+                return XformA!;
+
+            throw new InvalidOperationException();
+        }
     }
 
     [Flags]

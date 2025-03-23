@@ -34,8 +34,6 @@ public sealed class Gravity2DController : VirtualController
 
     public Vector2 GetGravity(EntityUid uid, Gravity2DComponent? component = null)
     {
-        return PhysicsSystem.Gravity;
-
         if (!Resolve(uid, ref component, false))
             return Vector2.Zero;
 
@@ -44,8 +42,6 @@ public sealed class Gravity2DController : VirtualController
 
     public void SetGravity(EntityUid uid, Vector2 value)
     {
-        PhysicsSystem.Gravity = value;
-
         if (!HasComp<MapComponent>(uid))
         {
             _sawmill.Error($"Tried to set 2D gravity for an entity that isn't a map?");
@@ -65,7 +61,6 @@ public sealed class Gravity2DController : VirtualController
 
     public void SetGravity(MapId mapId, Vector2 value)
     {
-        PhysicsSystem.Gravity = value;
         var mapUid = _mapSystem.GetMap(mapId);
         var gravity = EnsureComp<Gravity2DComponent>(mapUid);
 
@@ -90,5 +85,11 @@ public sealed class Gravity2DController : VirtualController
         {
             WakeBodiesRecursive(child);
         }
+    }
+
+    [Serializable, NetSerializable]
+    private sealed class Gravity2DComponentState : ComponentState
+    {
+        public Vector2 Gravity;
     }
 }

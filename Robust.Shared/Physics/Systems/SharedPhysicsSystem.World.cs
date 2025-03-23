@@ -13,9 +13,6 @@ public partial class SharedPhysicsSystem
     // Box2D has a bunch of methods that work on worlds but in our case separate EntityManager instances are
     // separate worlds so we can just treat the physics system as the world.
 
-    [Obsolete("Temporary gravity until v3")]
-    public Vector2 Gravity;
-
     public bool AutoClearForces;
 
     /// <summary>

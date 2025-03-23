@@ -51,13 +51,13 @@ namespace Robust.Client.Physics
             base.Cleanup(frameTime);
         }
 
-        protected override void UpdateLerpData(List<PhysicsComponent> bodies, EntityQuery<TransformComponent> xformQuery)
+        protected override void UpdateLerpData(List<PhysicsComponent> bodies)
         {
             foreach (var body in bodies)
             {
                 if (body.BodyType == BodyType.Static ||
                     LerpData.TryGetValue(body.Owner, out var lerpData) ||
-                    !xformQuery.TryGetComponent(body.Owner, out var xform) ||
+                    !_xformQuery.TryGetComponent(body.Owner, out var xform) ||
                     lerpData.ParentUid == xform.ParentUid)
                 {
                     continue;

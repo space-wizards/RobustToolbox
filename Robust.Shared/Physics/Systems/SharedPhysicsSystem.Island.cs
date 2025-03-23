@@ -146,6 +146,11 @@ public abstract partial class SharedPhysicsSystem
         List<(Joint Joint, float Error)> BrokenJoints)
     {
         /// <summary>
+        /// MapUid for the island.
+        /// </summary>
+        public EntityUid MapUid;
+
+        /// <summary>
         /// Island index to be used for bodies to identify which island they're in.
         /// </summary>
         public readonly int Index = Index;
@@ -328,6 +333,12 @@ public abstract partial class SharedPhysicsSystem
             if (seed.Island) continue;
 
             var seedUid = seed.Owner;
+            var mapUid = xform.MapUid;
+
+            if (mapUid == null)
+            {
+                continue;
+            }
 
             if (!MetaQuery.TryGetComponent(seedUid, out var metadata))
             {
@@ -494,12 +505,16 @@ public abstract partial class SharedPhysicsSystem
             if (contacts.Count == 0 && joints.Count == 0)
             {
                 DebugTools.Assert(bodies.Count == 1 && bodies[0].BodyType != BodyType.Static);
+                loneIsland.MapUid = mapUid.Value;
                 loneIsland.Bodies.Add(bodies[0]);
                 idx = loneIsland.Index;
             }
             else
             {
-                var data = new IslandData(islandIndex++, false, bodies, contacts, joints, new List<(Joint Joint, float Error)>());
+                var data = new IslandData(islandIndex++, false, bodies, contacts, joints, new List<(Joint Joint, float Error)>())
+                {
+                    MapUid = mapUid.Value
+                };
                 islands.Add(data);
                 idx = data.Index;
             }
@@ -613,13 +628,12 @@ public abstract partial class SharedPhysicsSystem
 
         var totalBodies = 0;
         var actualIslands = islands.ToArray();
-        var xformQuery = GetEntityQuery<TransformComponent>();
 
         for (var i = 0; i < islands.Count; i++)
         {
             ref var island = ref actualIslands[i];
             island.Offset = totalBodies;
-            UpdateLerpData(island.Bodies, xformQuery);
+            UpdateLerpData(island.Bodies);
 
 #if DEBUG
             RaiseLocalEvent(new IslandSolveMessage(island.Bodies));
@@ -645,8 +659,6 @@ public abstract partial class SharedPhysicsSystem
             MaxDegreeOfParallelism = _parallel.ParallelProcessCount,
         };
 
-        var gravity = Gravity;
-
         while (iBegin < actualIslands.Length)
         {
             ref var island = ref actualIslands[iBegin];
@@ -654,14 +666,14 @@ public abstract partial class SharedPhysicsSystem
             if (!InternalParallel(island))
                 break;
 
-            SolveIsland(ref island, in data, gravity, options, prediction, solvedPositions, solvedAngles, linearVelocities, angularVelocities, sleepStatus);
+            SolveIsland(ref island, in data, options, prediction, solvedPositions, solvedAngles, linearVelocities, angularVelocities, sleepStatus);
             iBegin++;
         }
 
         Parallel.For(iBegin, actualIslands.Length, options, i =>
         {
             ref var island = ref actualIslands[i];
-            SolveIsland(ref island, in data, gravity, null, prediction, solvedPositions, solvedAngles, linearVelocities, angularVelocities, sleepStatus);
+            SolveIsland(ref island, in data, null, prediction, solvedPositions, solvedAngles, linearVelocities, angularVelocities, sleepStatus);
         });
 
         // Update data sequentially
@@ -669,7 +681,7 @@ public abstract partial class SharedPhysicsSystem
         {
             var island = actualIslands[i];
 
-            UpdateBodies(in island, solvedPositions, solvedAngles, linearVelocities, angularVelocities, xformQuery);
+            UpdateBodies(in island, solvedPositions, solvedAngles, linearVelocities, angularVelocities);
             SleepBodies(in island, sleepStatus);
         }
 
@@ -685,7 +697,7 @@ public abstract partial class SharedPhysicsSystem
     /// If this is the first time a body has been updated this tick update its position for lerping.
     /// Due to substepping we have to check it every time.
     /// </summary>
-    protected virtual void UpdateLerpData(List<PhysicsComponent> bodies, EntityQuery<TransformComponent> xformQuery)
+    protected virtual void UpdateLerpData(List<PhysicsComponent> bodies)
     {
 
     }
@@ -707,7 +719,6 @@ public abstract partial class SharedPhysicsSystem
     private void SolveIsland(
         ref IslandData island,
         in SolverData data,
-        Vector2 gravity,
         ParallelOptions? options,
         bool prediction,
         Vector2[] solvedPositions,
@@ -720,13 +731,18 @@ public abstract partial class SharedPhysicsSystem
         var positions = ArrayPool<Vector2>.Shared.Rent(bodyCount);
         var angles = ArrayPool<float>.Shared.Rent(bodyCount);
         var offset = island.Offset;
-        var xformQuery = GetEntityQuery<TransformComponent>();
+        var gravity = Vector2.Zero;
+
+        if (TryComp(island.MapUid, out Gravity2DComponent? gravity2D))
+        {
+            gravity = gravity2D.Gravity;
+        }
 
         for (var i = 0; i < island.Bodies.Count; i++)
         {
             var body = island.Bodies[i];
             var (worldPos, worldRot) =
-                _transform.GetWorldPositionRotation(xformQuery.GetComponent(body.Owner), xformQuery);
+                _transform.GetWorldPositionRotation(body.Owner);
 
             var transform = new Transform(worldPos, worldRot);
             var position = Physics.Transform.Mul(transform, body.LocalCenter);
@@ -778,7 +794,6 @@ public abstract partial class SharedPhysicsSystem
         }
 
         var jointCount = island.Joints.Count;
-        var bodyQuery = GetEntityQuery<PhysicsComponent>();
 
         if (jointCount > 0)
         {
@@ -787,8 +802,8 @@ public abstract partial class SharedPhysicsSystem
                 var joint = island.Joints[i].Joint;
                 if (!joint.Enabled) continue;
 
-                var bodyA = bodyQuery.GetComponent(joint.BodyAUid);
-                var bodyB = bodyQuery.GetComponent(joint.BodyBUid);
+                var bodyA = PhysicsQuery.GetComponent(joint.BodyAUid);
+                var bodyB = PhysicsQuery.GetComponent(joint.BodyBUid);
                 joint.InitVelocityConstraints(in data, in island, bodyA, bodyB, positions, angles, linearVelocities, angularVelocities);
             }
         }
@@ -890,12 +905,12 @@ public abstract partial class SharedPhysicsSystem
                 var start = i * FinaliseBodies;
                 var end = Math.Min(bodyCount, start + FinaliseBodies);
 
-                FinalisePositions(start, end, offset, bodies, xformQuery, positions, angles, solvedPositions, solvedAngles);
+                FinalisePositions(start, end, offset, bodies,  positions, angles, solvedPositions, solvedAngles);
             });
         }
         else
         {
-            FinalisePositions(0, bodyCount, offset, bodies,xformQuery, positions, angles, solvedPositions, solvedAngles);
+            FinalisePositions(0, bodyCount, offset, bodies, positions, angles, solvedPositions, solvedAngles);
         }
 
         // Check sleep status for all of the bodies
@@ -975,7 +990,7 @@ public abstract partial class SharedPhysicsSystem
         ArrayPool<ContactPositionConstraint>.Shared.Return(positionConstraints);
     }
 
-    private void FinalisePositions(int start, int end, int offset, List<PhysicsComponent> bodies, EntityQuery<TransformComponent> xformQuery, Vector2[] positions, float[] angles, Vector2[] solvedPositions, float[] solvedAngles)
+    private void FinalisePositions(int start, int end, int offset, List<PhysicsComponent> bodies, Vector2[] positions, float[] angles, Vector2[] solvedPositions, float[] solvedAngles)
     {
         for (var i = start; i < end; i++)
         {
@@ -984,9 +999,9 @@ public abstract partial class SharedPhysicsSystem
             if (body.BodyType == BodyType.Static)
                 continue;
 
-            var xform = xformQuery.GetComponent(body.Owner);
-            var parentXform = xformQuery.GetComponent(xform.ParentUid);
-            var (_, parentRot, parentInvMatrix) = parentXform.GetWorldPositionRotationInvMatrix(xformQuery);
+            var xform = _xformQuery.GetComponent(body.Owner);
+            var parentXform = _xformQuery.GetComponent(xform.ParentUid);
+            var (_, parentRot, parentInvMatrix) = parentXform.GetWorldPositionRotationInvMatrix(_xformQuery);
             var worldRot = (float) (parentRot + xform._localRotation);
 
             var angle = angles[i];
@@ -1009,8 +1024,7 @@ public abstract partial class SharedPhysicsSystem
         Vector2[] positions,
         float[] angles,
         Vector2[] linearVelocities,
-        float[] angularVelocities,
-        EntityQuery<TransformComponent> xformQuery)
+        float[] angularVelocities)
     {
         foreach (var (joint, error) in island.BrokenJoints)
         {
@@ -1034,12 +1048,12 @@ public abstract partial class SharedPhysicsSystem
             var uid = body.Owner;
             var position = positions[offset + i];
             var angle = angles[offset + i];
-            var xform = xformQuery.GetComponent(uid);
+            var xform = _xformQuery.GetComponent(uid);
 
             // Temporary NaN guards until PVS is fixed.
             if (!float.IsNaN(position.X) && !float.IsNaN(position.Y))
             {
-                _transform.SetLocalPositionRotation(xform, xform.LocalPosition + position, xform.LocalRotation + angle);
+                _transform.SetLocalPositionRotation(uid, xform.LocalPosition + position, xform.LocalRotation + angle, xform: xform);
             }
 
             var linVelocity = linearVelocities[offset + i];

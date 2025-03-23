@@ -65,13 +65,13 @@ namespace Robust.Shared.Physics.Systems
         public bool MetricsEnabled { get; protected set; }
 
         private   EntityQuery<FixturesComponent> _fixturesQuery;
+        private EntityQuery<Gravity2DComponent> _gravityQuery;
         protected EntityQuery<JointComponent> JointQuery;
         protected EntityQuery<JointRelayTargetComponent> RelayTargetQuery;
         protected EntityQuery<MetaDataComponent> MetaQuery;
         protected EntityQuery<PhysicsComponent> PhysicsQuery;
-        private   EntityQuery<TransformComponent> _xformQuery;
+        protected EntityQuery<TransformComponent> _xformQuery;
         private   EntityQuery<CollideOnAnchorComponent> _anchorQuery;
-        protected EntityQuery<MapComponent> MapQuery;
 
         private ComponentRegistration _physicsReg = default!;
         private byte _angularVelocityIndex;
@@ -107,13 +107,13 @@ namespace Robust.Shared.Physics.Systems
             _angularVelocityIndex = 10;
 
             _fixturesQuery = GetEntityQuery<FixturesComponent>();
+            _gravityQuery = GetEntityQuery<Gravity2DComponent>();
             JointQuery = GetEntityQuery<JointComponent>();
             RelayTargetQuery = GetEntityQuery<JointRelayTargetComponent>();
             MetaQuery = GetEntityQuery<MetaDataComponent>();
             PhysicsQuery = GetEntityQuery<PhysicsComponent>();
             _xformQuery = GetEntityQuery<TransformComponent>();
             _anchorQuery = GetEntityQuery<CollideOnAnchorComponent>();
-            MapQuery = GetEntityQuery<MapComponent>();
 
             SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
             SubscribeLocalEvent<CollisionChangeEvent>(OnCollisionChange);

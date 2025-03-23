@@ -175,8 +175,7 @@ public abstract partial class SharedPhysicsSystem
     }
 
     // Caching for island generation.
-    private readonly List<Entity<PhysicsComponent, TransformComponent>> _islandList = new();
-    private readonly HashSet<EntityUid> _islandSet = new(64);
+    private readonly HashSet<Entity<PhysicsComponent, TransformComponent>> _islandSet = new(64);
     private readonly Stack<Entity<PhysicsComponent, TransformComponent>> _bodyStack = new(64);
     private readonly List<Entity<PhysicsComponent, TransformComponent>> _awakeBodyList = new(256);
 
@@ -373,10 +372,7 @@ public abstract partial class SharedPhysicsSystem
 
                 bodies.Add(bodyEnt);
 
-                if (_islandSet.Add(bodyEnt.Owner))
-                {
-                    _islandList.Add(bodyEnt);
-                }
+                _islandSet.Add(bodyEnt);
 
                 // Static bodies don't propagate islands
                 if (body.BodyType == BodyType.Static) continue;
@@ -592,7 +588,7 @@ public abstract partial class SharedPhysicsSystem
 
     protected virtual void Cleanup(float frameTime)
     {
-        foreach (var bodyEnt in _islandList)
+        foreach (var bodyEnt in _islandSet)
         {
             var body = bodyEnt.Comp1;
 
@@ -607,7 +603,7 @@ public abstract partial class SharedPhysicsSystem
             // So Box2D would update broadphase here buutttt we'll just wait until MoveEvent queue is used.
         }
 
-        _islandList.Clear();
+        _islandSet.Clear();
         _islandSet.Clear();
         _awakeBodyList.Clear();
     }

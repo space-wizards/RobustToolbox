@@ -305,11 +305,6 @@ public abstract partial class SharedPhysicsSystem
         _islandSet.EnsureCapacity(AwakeBodies.Count);
         _awakeBodyList.AddRange(AwakeBodies);
 
-        var bodyQuery = GetEntityQuery<PhysicsComponent>();
-        var metaQuery = GetEntityQuery<MetaDataComponent>();
-        var jointQuery = GetEntityQuery<JointComponent>();
-        var jointRelayQuery = GetEntityQuery<JointRelayTargetComponent>();
-
         var islandIndex = 0;
         var loneIsland = new IslandData(
             islandIndex++,
@@ -334,7 +329,7 @@ public abstract partial class SharedPhysicsSystem
 
             var seedUid = seed.Owner;
 
-            if (!metaQuery.TryGetComponent(seedUid, out var metadata))
+            if (!MetaQuery.TryGetComponent(seedUid, out var metadata))
             {
                 Log.Error($"Found deleted entity {ToPrettyString(seedUid)} on map!");
                 RemoveSleepBody(ent);
@@ -401,11 +396,11 @@ public abstract partial class SharedPhysicsSystem
                 }
 
                 // Handle joints
-                if (jointRelayQuery.TryGetComponent(bodyUid, out var relayComp))
+                if (RelayTargetQuery.TryGetComponent(bodyUid, out var relayComp))
                 {
                     foreach (var relay in relayComp.Relayed)
                     {
-                        if (!jointQuery.TryGetComponent(relay, out var jointComp))
+                        if (!JointQuery.TryGetComponent(relay, out var jointComp))
                             continue;
 
                         foreach (var joint in jointComp.GetJoints.Values)
@@ -417,14 +412,14 @@ public abstract partial class SharedPhysicsSystem
                             var uidB = joint.BodyBUid;
                             DebugTools.AssertNotEqual(uidA, uidB);
 
-                            if (jointQuery.TryGetComponent(uidA, out var jointCompA) &&
+                            if (JointQuery.TryGetComponent(uidA, out var jointCompA) &&
                                 jointCompA.Relay != null)
                             {
                                 DebugTools.AssertNotEqual(uidB, jointCompA.Relay.Value);
                                 uidA = jointCompA.Relay.Value;
                             }
 
-                            if (jointQuery.TryGetComponent(uidB, out var jointCompB) &&
+                            if (JointQuery.TryGetComponent(uidB, out var jointCompB) &&
                                 jointCompB.Relay != null)
                             {
                                 DebugTools.AssertNotEqual(uidA, jointCompB.Relay.Value);
@@ -438,7 +433,7 @@ public abstract partial class SharedPhysicsSystem
                     }
                 }
 
-                if (jointQuery.TryGetComponent(bodyUid, out var jointComponent) &&
+                if (JointQuery.TryGetComponent(bodyUid, out var jointComponent) &&
                     jointComponent.Relay == null)
                 {
                     foreach (var joint in jointComponent.Joints.Values)
@@ -449,13 +444,13 @@ public abstract partial class SharedPhysicsSystem
                         var uidA = joint.BodyAUid;
                         var uidB = joint.BodyBUid;
 
-                        if (jointQuery.TryGetComponent(uidA, out var jointCompA) &&
+                        if (JointQuery.TryGetComponent(uidA, out var jointCompA) &&
                             jointCompA.Relay != null)
                         {
                             uidA = jointCompA.Relay.Value;
                         }
 
-                        if (jointQuery.TryGetComponent(uidB, out var jointCompB) &&
+                        if (JointQuery.TryGetComponent(uidB, out var jointCompB) &&
                             jointCompB.Relay != null)
                         {
                             uidB = jointCompB.Relay.Value;
@@ -469,8 +464,8 @@ public abstract partial class SharedPhysicsSystem
 
                 foreach (var (original, joint) in islandJoints)
                 {
-                    var bodyA = bodyQuery.GetComponent(joint.BodyAUid);
-                    var bodyB = bodyQuery.GetComponent(joint.BodyBUid);
+                    var bodyA = PhysicsQuery.GetComponent(joint.BodyAUid);
+                    var bodyB = PhysicsQuery.GetComponent(joint.BodyBUid);
 
                     if (!bodyA.CanCollide || !bodyB.CanCollide)
                         continue;

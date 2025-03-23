@@ -64,10 +64,13 @@ namespace Robust.Shared.Physics.Systems
 
         public bool MetricsEnabled { get; protected set; }
 
-        private EntityQuery<FixturesComponent> _fixturesQuery;
+        private   EntityQuery<FixturesComponent> _fixturesQuery;
+        protected EntityQuery<JointComponent> JointQuery;
+        protected EntityQuery<JointRelayTargetComponent> RelayTargetQuery;
+        protected EntityQuery<MetaDataComponent> MetaQuery;
         protected EntityQuery<PhysicsComponent> PhysicsQuery;
-        private EntityQuery<TransformComponent> _xformQuery;
-        private EntityQuery<CollideOnAnchorComponent> _anchorQuery;
+        private   EntityQuery<TransformComponent> _xformQuery;
+        private   EntityQuery<CollideOnAnchorComponent> _anchorQuery;
         protected EntityQuery<MapComponent> MapQuery;
 
         private ComponentRegistration _physicsReg = default!;
@@ -104,6 +107,9 @@ namespace Robust.Shared.Physics.Systems
             _angularVelocityIndex = 10;
 
             _fixturesQuery = GetEntityQuery<FixturesComponent>();
+            JointQuery = GetEntityQuery<JointComponent>();
+            RelayTargetQuery = GetEntityQuery<JointRelayTargetComponent>();
+            MetaQuery = GetEntityQuery<MetaDataComponent>();
             PhysicsQuery = GetEntityQuery<PhysicsComponent>();
             _xformQuery = GetEntityQuery<TransformComponent>();
             _anchorQuery = GetEntityQuery<CollideOnAnchorComponent>();

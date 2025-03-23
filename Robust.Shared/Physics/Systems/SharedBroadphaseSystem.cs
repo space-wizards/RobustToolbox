@@ -100,8 +100,7 @@ namespace Robust.Shared.Physics.Systems
         /// <summary>
         /// Check the AABB for each moved broadphase fixture and add any colliding entities to the movebuffer in case.
         /// </summary>
-        private void FindGridContacts(
-            HashSet<EntityUid> movedGrids)
+        private void FindGridContacts(HashSet<EntityUid> movedGrids)
         {
             // None moved this tick
             if (movedGrids.Count == 0) return;
@@ -164,8 +163,8 @@ namespace Robust.Shared.Physics.Systems
         internal void FindNewContacts()
         {
             var moveBuffer = _physicsSystem.MoveBuffer;
-
             var movedGrids = _physicsSystem.MovedGrids;
+
             _gridMoveBuffer.Clear();
 
             // Find any entities being driven over that might need to be considered

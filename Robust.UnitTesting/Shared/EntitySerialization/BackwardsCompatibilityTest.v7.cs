@@ -207,7 +207,6 @@ entities:
     - type: Map
       mapInitialized: True
     - type: GridTree
-    - type: MovedGrids
     - type: Broadphase
     - type: OccluderTree
     - type: EntitySaveTest
@@ -263,7 +262,6 @@ entities:
     - type: Map
       mapPaused: True
     - type: GridTree
-    - type: MovedGrids
     - type: Broadphase
     - type: OccluderTree
     - type: EntitySaveTest
@@ -287,7 +285,6 @@ entities:
     - type: Map
       mapInitialized: True
     - type: GridTree
-    - type: MovedGrids
     - type: Broadphase
     - type: OccluderTree
     - type: EntitySaveTest

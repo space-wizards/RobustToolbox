@@ -4,22 +4,18 @@ using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Robust.Shared.Containers;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.BroadPhase;
 using Robust.Shared.Physics.Collision;
-using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
-using TerraFX.Interop.Windows;
 
 namespace Robust.Shared.GameObjects;
 
@@ -127,7 +123,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         SubscribeLocalEvent<BroadphaseComponent, ComponentAdd>(OnBroadphaseAdd);
         SubscribeLocalEvent<BroadphaseComponent, ComponentInit>(OnBroadphaseInit);
         SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
-        SubscribeLocalEvent<MapChangedEvent>(OnMapChange);
+        SubscribeLocalEvent<MapCreatedEvent>(OnMapChange);
 
         _transform.OnBeforeMoveEvent += OnMove;
         EntityManager.EntityInitialized += OnEntityInit;
@@ -189,9 +185,9 @@ public sealed partial class EntityLookupSystem : EntitySystem
         }
     }
 
-    private void OnMapChange(MapChangedEvent ev)
+    private void OnMapChange(MapCreatedEvent ev)
     {
-        if (ev.Created && ev.Map != MapId.Nullspace)
+        if (ev.MapId != MapId.Nullspace)
         {
             EnsureComp<BroadphaseComponent>(ev.Uid);
         }
@@ -468,7 +464,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
             {
                 var bounds = fixture.Shape.ComputeAABB(broadphaseTransform, i);
                 var proxy = fixture.Proxies[i];
-                tree.MoveProxy(proxy.ProxyId, bounds, Vector2.Zero);
+                tree.MoveProxy(proxy.ProxyId, bounds);
                 proxy.AABB = bounds;
                 moveBuffer[proxy] = fixture.Shape.ComputeAABB(mapTransform, i);
             }

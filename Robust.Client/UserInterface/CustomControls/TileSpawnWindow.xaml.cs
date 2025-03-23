@@ -10,4 +10,11 @@ public sealed partial class TileSpawnWindow : DefaultWindow
     {
         RobustXamlLoader.Load(this);
     }
+
+    protected override void Opened()
+    {
+        base.Opened();
+        
+        SearchBar.GrabKeyboardFocus();
+    }
 }

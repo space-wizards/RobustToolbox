@@ -2,9 +2,6 @@
 using NUnit.Framework;
 using Robust.Shared.Utility;
 
-// ReSharper disable AccessToStaticMemberViaDerivedType
-
-
 namespace Robust.UnitTesting.Shared.Utility;
 
 [TestFixture]

@@ -1,4 +1,8 @@
-﻿command-description-tpto =
+﻿command-help-usage =
+    Usage:
+command-help-invertible =
+    The behaviour of this command can be inverted using the "not" prefix.
+command-description-tpto =
     Teleport the given entities to some target entity.
 command-description-player-list =
     Returns a list of all player sessions.
@@ -19,7 +23,7 @@ command-description-buildinfo =
 command-description-cmd-list =
     Returns a list of all commands, for this side.
 command-description-explain =
-    Explains the given expression, providing command descriptions and signatures.
+    Explains the given expression, providing command descriptions and signatures. This only works for valid expressions, it can't explain commands that it fails to parse.
 command-description-search =
     Searches through the input for the provided value.
 command-description-stopwatch =
@@ -38,8 +42,7 @@ command-description-as =
 command-description-count =
     Counts the amount of entries in it's input, returning an integer.
 command-description-map =
-    Maps the input over the given block, with the provided expected return type.
-    This command may be modified to not need an explicit return type in the future.
+    Maps the input over the given block.
 command-description-select =
     Selects N objects or N% of objects from the input.
     One can additionally invert this command with not to make it select everything except N objects instead.
@@ -53,10 +56,8 @@ command-description-entities =
     Returns all entities on the server.
 command-description-paused =
     Filters the input entities by whether or not they are paused.
-    This command can be inverted with not.
 command-description-with =
     Filters the input entities by whether or not they have the given component.
-    This command can be inverted with not.
 command-description-fuck =
     Throws an exception.
 command-description-ecscomp-listty =
@@ -95,6 +96,8 @@ command-description-vars =
     Provides a list of all variables set in this session.
 command-description-any =
     Returns true if there's any values in the input, otherwise false.
+command-description-contains =
+    Returns whether the input enumerable contains the specified value.
 command-description-ArrowCommand =
     Assigns the input to a variable.
 command-description-isempty =
@@ -119,6 +122,8 @@ command-description-splat =
     "Splats" a block, value, or variable, creating N copies of it in a list.
 command-description-val =
     Casts the given value, block, or variable to the given type. This is mostly a workaround for current limitations of variables.
+command-description-var =
+    Returns the contents of the given variable. This will attempt to automatically infer a variables type. Compound commands that modify a variable may need to use the 'val' command instead.
 command-description-actor-controlled =
     Filters entities by whether or not they're actively controlled.
 command-description-actor-session =
@@ -143,7 +148,7 @@ command-description-max =
     Returns the maximum of two values.
 command-description-BitAndCommand =
     Performs bitwise AND.
-command-description-BitOrCommand =
+command-description-bitor =
     Performs bitwise OR.
 command-description-BitXorCommand =
     Performs bitwise XOR.
@@ -197,11 +202,11 @@ command-description-mappos =
 command-description-pos =
     Returns an entity's coordinates.
 command-description-tp-coords =
-    Teleports the target to the given coordinates.
+    Teleports the given entities to the target coordinates.
 command-description-tp-to =
-    Teleports the target to the given other entity.
+    Teleports the given entities to the target entity.
 command-description-tp-into =
-    Teleports the target "into" the given other entity, attaching it at (0 0) relative to it.
+    Teleports the given entities "into" the target entity, attaching it at (0 0) relative to it.
 command-description-comp-get =
     Gets the given component from the given entity.
 command-description-comp-add =
@@ -219,9 +224,9 @@ command-description-MulVecCommand =
 command-description-DivVecCommand =
     Divides every element in the input by a scalar (single value).
 command-description-rng-to =
-    Returns a number from its input to its argument (i.e. n..m inclusive)
+    Returns a number between the input (inclusive) and the argument (exclusive).
 command-description-rng-from =
-    Returns a number to its input from its argument (i.e. m..n inclusive)
+    Returns a number between the argument (inclusive) and the input (exclusive))
 command-description-rng-prob =
     Returns a boolean based on the input probability/chance (from 0 to 1)
 command-description-sum =
@@ -271,7 +276,7 @@ command-description-ModVecCommand =
     Performs the modulus operation over the input with the given constant right-hand value.
 command-description-BitAndNotCommand =
     Performs bitwise AND-NOT over the input.
-command-description-BitOrNotCommand =
+command-description-bitornot =
     Performs bitwise OR-NOT over the input.
 command-description-BitXnorCommand =
     Performs bitwise XNOR over the input.

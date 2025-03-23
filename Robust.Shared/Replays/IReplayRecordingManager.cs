@@ -2,6 +2,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using System;
 using System.Collections.Generic;
+using System.IO.Compression;
 using System.Threading.Tasks;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameStates;
@@ -71,7 +72,16 @@ public interface IReplayRecordingManager
     /// This gets invoked whenever a replay recording is stopping. Subscribers can use this to add extra yaml data to the
     /// recording's metadata file.
     /// </summary>
+    /// <seealso cref="RecordingStopped2"/>
     event Action<MappingDataNode> RecordingStopped;
+
+    /// <summary>
+    /// This gets invoked whenever a replay recording is stopping. Subscribers can use this to add extra data to the replay.
+    /// </summary>
+    /// <remarks>
+    /// This is effectively a more powerful version of <see cref="RecordingStopped"/>.
+    /// </remarks>
+    event Action<ReplayRecordingStopped> RecordingStopped2;
 
     /// <summary>
     /// This gets invoked after a replay recording has finished and provides information about where the replay data
@@ -132,6 +142,27 @@ public interface IReplayRecordingManager
 }
 
 /// <summary>
+/// Event object used by <see cref="IReplayRecordingManager.RecordingStopped2"/>.
+/// Allows modifying metadata and adding more data to replay files.
+/// </summary>
+public sealed class ReplayRecordingStopped
+{
+    /// <summary>
+    /// Mutable metadata that will be saved to the replay's metadata file.
+    /// </summary>
+    public required MappingDataNode Metadata { get; init; }
+
+    /// <summary>
+    /// A writer that allows arbitrary file writing into the replay file.
+    /// </summary>
+    public required IReplayFileWriter Writer { get; init; }
+
+    internal ReplayRecordingStopped()
+    {
+    }
+}
+
+/// <summary>
 /// Event data for <see cref="IReplayRecordingManager.RecordingFinished"/>.
 /// </summary>
 /// <param name="Directory">The writable dir provider in which the replay is being recorded.</param>
@@ -147,6 +178,31 @@ public record ReplayRecordingFinished(IWritableDirProvider Directory, ResPath Pa
 /// <param name="Size">The total compressed size of the replay data blobs.</param>
 /// <param name="UncompressedSize">The total uncompressed size of the replay data blobs.</param>
 public record struct ReplayRecordingStats(TimeSpan Time, uint Ticks, long Size, long UncompressedSize);
+
+/// <summary>
+/// Allows writing extra files directly into the replay file.
+/// </summary>
+/// <seealso cref="ReplayRecordingStopped"/>
+/// <seealso cref="IReplayRecordingManager.RecordingStopped2"/>
+public interface IReplayFileWriter
+{
+    /// <summary>
+    /// The base directory inside the replay directory you should generally be writing to.
+    /// This is equivalent to <see cref="ReplayConstants.ReplayZipFolder"/>.
+    /// </summary>
+    ResPath BaseReplayPath { get; }
+
+    /// <summary>
+    /// Writes arbitrary data into a file in the replay.
+    /// </summary>
+    /// <param name="path">The file path to write to.</param>
+    /// <param name="bytes">The bytes to write to the file.</param>
+    /// <param name="compressionLevel">How much to compress the file.</param>
+    void WriteBytes(
+        ResPath path,
+        ReadOnlyMemory<byte> bytes,
+        CompressionLevel compressionLevel = CompressionLevel.Optimal);
+}
 
 /// <summary>
 /// Engine-internal functions for <see cref="IReplayRecordingManager"/>.

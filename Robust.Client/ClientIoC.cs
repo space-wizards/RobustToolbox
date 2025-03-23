@@ -8,6 +8,7 @@ using Robust.Client.GameObjects;
 using Robust.Client.GameStates;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Clyde;
+using Robust.Client.HWId;
 using Robust.Client.Input;
 using Robust.Client.Map;
 using Robust.Client.Placement;
@@ -45,6 +46,7 @@ using Robust.Shared.Replays;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 using Robust.Shared.Upload;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client
@@ -101,6 +103,7 @@ namespace Robust.Client
             deps.Register<ProfViewManager>();
             deps.Register<IGamePrototypeLoadManager, GamePrototypeLoadManager>();
             deps.Register<NetworkResourceManager>();
+            deps.Register<IReloadManager, ReloadManager>();
 
             switch (mode)
             {
@@ -158,6 +161,7 @@ namespace Robust.Client
 
             deps.Register<IXamlProxyHelper, XamlProxyHelper>();
             deps.Register<MarkupTagManager>();
+            deps.Register<IHWId, BasicHWId>();
         }
     }
 }

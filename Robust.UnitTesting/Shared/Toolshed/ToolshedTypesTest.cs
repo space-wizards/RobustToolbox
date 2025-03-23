@@ -11,7 +11,7 @@ public sealed partial class ToolshedTypesTest : ToolshedTest
 {
     // Assert that T -> IEnumerable<T> holds.
     [Test]
-    public async Task EnumerableAutoCast()
+    public void EnumerableAutoCast()
     {
         Assert.That(Toolshed.IsTransformableTo(typeof(int), typeof(IEnumerable<int>)));
         var l = Expression
@@ -24,7 +24,7 @@ public sealed partial class ToolshedTypesTest : ToolshedTest
 
     // Assert that T -> IEnumerable<T'> where T: T' holds.
     [Test]
-    public async Task EnumerableSubtypeAutocast()
+    public void EnumerableSubtypeAutocast()
     {
         Assert.That(Toolshed.IsTransformableTo(typeof(int), typeof(IEnumerable<IComparable>)));
         var l = Expression
@@ -37,7 +37,7 @@ public sealed partial class ToolshedTypesTest : ToolshedTest
 
     // Assert that T -> object.
     [Test]
-    public async Task CastToObject()
+    public void CastToObject()
     {
         Assert.That(Toolshed.IsTransformableTo(typeof(int), typeof(object)));
         var l = Expression

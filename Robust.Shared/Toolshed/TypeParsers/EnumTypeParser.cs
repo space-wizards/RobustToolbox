@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
 using Robust.Shared.Console;
 using Robust.Shared.Maths;
 using Robust.Shared.Toolshed.Errors;
@@ -11,53 +10,48 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Toolshed.TypeParsers;
 
 public sealed class EnumTypeParser<T> : TypeParser<T>
-    where T: unmanaged, Enum
+    where T : unmanaged, Enum
 {
-    public override bool TryParse(ParserContext parserContext, [NotNullWhen(true)] out object? result,
-        out IConError? error)
+    public override bool TryParse(ParserContext ctx, [NotNullWhen(true)] out T result)
     {
-        var word = parserContext.GetWord(ParserContext.IsToken);
+        var word = ctx.GetWord(ParserContext.IsToken);
         if (word is null)
         {
-            if (parserContext.PeekChar() is null)
+            if (ctx.PeekRune() is null)
             {
-                error = new OutOfInputError();
-                result = null;
+                ctx.Error = new OutOfInputError();
+                result = default;
                 return false;
             }
-            else
-            {
-                error = new InvalidEnum<T>(parserContext.GetWord()!);
-                result = null;
-                return false;
 
-            }
+            ctx.Error = new InvalidEnum<T>(ctx.GetWord()!);
+            result = default;
+            return false;
         }
 
         if (!Enum.TryParse<T>(word, ignoreCase: true, out var value))
         {
-            result = null;
-            error = new InvalidEnum<T>(word);
+            result = default;
+            ctx.Error = new InvalidEnum<T>(word);
             return false;
         }
 
         result = value;
-        error = null;
         return true;
     }
 
-    public override async ValueTask<(CompletionResult? result, IConError? error)> TryAutocomplete(ParserContext parserContext, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext parserContext, CommandArgument? arg)
     {
-        return (CompletionResult.FromOptions(Enum.GetNames<T>()), null);
+        return CompletionResult.FromHintOptions(Enum.GetNames<T>(), GetArgHint(arg));
     }
 }
 
 public record InvalidEnum<T>(string Value) : IConError
-    where T: unmanaged, Enum
+    where T : unmanaged, Enum
 {
     public FormattedMessage DescribeInner()
     {
-        var msg = FormattedMessage.FromMarkup($"The value {Value} is not a valid {typeof(T).PrettyName()}.");
+        var msg = FormattedMessage.FromUnformatted($"The value {Value} is not a valid {typeof(T).PrettyName()}.");
         msg.AddText($"Valid values are: {string.Join(", ", Enum.GetNames<T>())}");
         return msg;
     }

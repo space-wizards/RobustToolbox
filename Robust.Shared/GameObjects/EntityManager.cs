@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -92,6 +93,14 @@ namespace Robust.Shared.GameObjects
         public event Action<Entity<MetaDataComponent>>? EntityAdded;
         public event Action<Entity<MetaDataComponent>>? EntityInitialized;
         public event Action<Entity<MetaDataComponent>>? EntityDeleted;
+
+        /// <summary>
+        /// Internal termination event handlers. This is mainly for exception tolerance, we want to ensure that PVS,
+        /// and other important engine systems can get updated before some content code throws an exception.
+        /// </summary>
+        internal event TerminatingEventHandler? BeforeEntityTerminating;
+        public delegate void TerminatingEventHandler(ref EntityTerminatingEvent ev);
+
         public event Action? BeforeEntityFlush;
         public event Action? AfterEntityFlush;
 
@@ -117,6 +126,10 @@ namespace Robust.Shared.GameObjects
 
         public bool Initialized { get; protected set; }
 
+#if DEBUG
+        private int _mainThreadId;
+#endif
+
         /// <summary>
         /// Constructs a new instance of <see cref="EntityManager"/>.
         /// </summary>
@@ -137,6 +150,10 @@ namespace Robust.Shared.GameObjects
             _xformName = _xformReg.Name;
             _sawmill = LogManager.GetSawmill("entity");
             _resolveSawmill = LogManager.GetSawmill("resolve");
+
+#if DEBUG
+            _mainThreadId = Environment.CurrentManagedThreadId;
+#endif
 
             Initialized = true;
         }
@@ -172,9 +189,11 @@ namespace Robust.Shared.GameObjects
                     return false;
 
                 var compType = component.GetType();
-                var compName = _componentFactory.GetComponentName(compType);
-                if (compName == _xformName || compName == _metaReg.Name)
+
+                if (compType == typeof(TransformComponent) || compType == typeof(MetaDataComponent))
                     continue;
+
+                var compName = _componentFactory.GetComponentName(compType);
 
                 // If the component isn't on the prototype then it's custom.
                 if (!protoData.TryGetValue(compName, out var protoMapping))
@@ -191,9 +210,7 @@ namespace Robust.Shared.GameObjects
                     return false;
                 }
 
-                var diff = compMapping.Except(protoMapping);
-
-                if (diff != null && diff.Children.Count != 0)
+                if (compMapping.AnyExcept(protoMapping))
                     return false;
             }
 
@@ -294,9 +311,14 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, ComponentRegistry? overrides = null)
+        public EntityUid CreateEntityUninitialized(string? prototypeName, ComponentRegistry? overrides = null)
         {
             return CreateEntity(prototypeName, out _, overrides);
+        }
+
+        public EntityUid CreateEntityUninitialized(string? prototypeName, out MetaDataComponent meta, ComponentRegistry? overrides = null)
+        {
+            return CreateEntity(prototypeName, out meta, overrides);
         }
 
         /// <inheritdoc />
@@ -511,6 +533,8 @@ namespace Robust.Shared.GameObjects
             if (!Started)
                 return;
 
+            ThreadCheck();
+
             if (meta.EntityLifeStage >= EntityLifeStage.Deleted)
                 return;
 
@@ -529,7 +553,28 @@ namespace Robust.Shared.GameObjects
 
             TransformComponent? parentXform = null;
             if (xform.ParentUid.IsValid())
-                TransformQuery.Resolve(xform.ParentUid, ref parentXform);
+            {
+                if (xform.LifeStage < ComponentLifeStage.Initialized)
+                {
+                    // Entity is being deleted before initialization ever finished.
+                    // The entity will not yet have been added to the parent's transform component.
+                    // This is seemingly pretty error prone ATM, and I'm not even sure if it should be supported?
+
+                    // Just in case it HAS somehow been added, make sure we remove it.
+                    if (TransformQuery.TryComp(xform.ParentUid, out parentXform) && parentXform._children.Remove(e))
+                        DebugTools.Assert($"Child entity {ToPrettyString(e)} was added to the parent's child set prior to being initialized?");
+
+                    parentXform = null;
+                    xform._parent = EntityUid.Invalid;
+                    xform._anchored = false;
+                }
+                else
+                {
+                    // Use resolve for automatic error logging.
+                    // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+                    TransformQuery.Resolve(xform.ParentUid, ref parentXform);
+                }
+            }
 
             // Then actually delete them
             RecursiveDeleteEntity(e, meta, xform, parentXform);
@@ -545,6 +590,7 @@ namespace Robust.Shared.GameObjects
             try
             {
                 var ev = new EntityTerminatingEvent((uid, metadata));
+                BeforeEntityTerminating?.Invoke(ref ev);
                 EventBus.RaiseLocalEvent(uid, ref ev, true);
             }
             catch (Exception e)
@@ -681,7 +727,38 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public virtual void FlushEntities()
         {
+            _sawmill.Info($"Flushing entities. Entity count: {Entities.Count}");
             BeforeEntityFlush?.Invoke();
+            FlushEntitiesInternal();
+
+            if (Entities.Count != 0)
+            {
+                _sawmill.Error($"Failed to flush all entities. Entity count: {Entities.Count}");
+                // Dump entity info, but avoid dumping ~50k errors if for whatever reason we failed to delete almost all entities.
+                // Using 512 as the limit, in case the problem entities are related to player counts on high-pop servers.
+                if (Entities.Count < 512)
+                {
+                    foreach (var uid in Entities)
+                    {
+                        _sawmill.Error($"Entity exists after flush: {ToPrettyString(uid)}");
+                    }
+                }
+            }
+
+#if EXCEPTION_TOLERANCE
+            // Attempt to flush entities a second time, just in case something somehow caused an entity to be spawned
+            // while flushing entities
+            FlushEntitiesInternal();
+#endif
+
+            if (Entities.Count != 0)
+                throw new Exception($"Failed to flush all entities. Entity count: {Entities.Count}");
+
+            AfterEntityFlush?.Invoke();
+        }
+
+        private void FlushEntitiesInternal()
+        {
             QueuedDeletions.Clear();
             QueuedDeletionsSet.Clear();
 
@@ -727,17 +804,12 @@ namespace Robust.Shared.GameObjects
 #endif
                 }
             }
-
-            if (Entities.Count != 0)
-                _sawmill.Error("Entities were spawned while flushing entities.");
-
-            AfterEntityFlush?.Invoke();
         }
 
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
-        private protected EntityUid AllocEntity(
+        protected internal EntityUid AllocEntity(
             EntityPrototype? prototype,
             out MetaDataComponent metadata)
         {
@@ -747,11 +819,16 @@ namespace Robust.Shared.GameObjects
             return entity;
         }
 
+        /// <inheritdoc cref="AllocEntity(Robust.Shared.Prototypes.EntityPrototype?,out Robust.Shared.GameObjects.MetaDataComponent)"/>
+        internal EntityUid AllocEntity(EntityPrototype? prototype) => AllocEntity(prototype, out _);
+
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
         private EntityUid AllocEntity(out MetaDataComponent metadata)
         {
+            ThreadCheck();
+
             var uid = GenerateEntityUid();
 
 #if DEBUG
@@ -824,21 +901,9 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private protected void LoadEntity(EntityUid entity, IEntityLoadContext? context)
-        {
-            EntityPrototype.LoadEntity((entity, MetaQuery.GetComponent(entity)), ComponentFactory, this, _serManager, context);
-        }
-
-        private protected void LoadEntity(EntityUid entity, IEntityLoadContext? context, EntityPrototype? prototype)
-        {
-            var meta = MetaQuery.GetComponent(entity);
-            DebugTools.Assert(meta.EntityPrototype == prototype);
-            EntityPrototype.LoadEntity((entity, meta), ComponentFactory, this, _serManager, context);
-        }
-
         public void InitializeAndStartEntity(EntityUid entity, MapId? mapId = null)
         {
-            var doMapInit = _mapManager.IsMapInitialized(mapId ?? TransformQuery.GetComponent(entity).MapID);
+            var doMapInit = _mapSystem.IsInitialized(mapId ?? TransformQuery.GetComponent(entity).MapID);
             InitializeAndStartEntity(entity, doMapInit);
         }
 
@@ -864,15 +929,35 @@ namespace Robust.Shared.GameObjects
 
         public void InitializeEntity(EntityUid entity, MetaDataComponent? meta = null)
         {
+            // Ideally, entities only ever get initialized once their parent has already been initialized.
+            // Note that this doesn't guarantee that an uninitialized entity will never have initialized children.
+            // In particular, for the client this might happen when applying a new game state that re-parents an
+            // existing entity to a newly created entity. The new entity only gets initialiuzed & started at the end,
+            // after the old/existing entity was already moved to the new parent.
+            DebugTools.Assert(TransformQuery.GetComponent(entity).ParentUid is not { Valid: true } parent
+                || MetaQuery.GetComponent(parent).EntityLifeStage >= EntityLifeStage.Initialized);
+
             DebugTools.AssertOwner(entity, meta);
             meta ??= GetComponent<MetaDataComponent>(entity);
+#pragma warning disable CS0618 // Type or member is obsolete
             InitializeComponents(entity, meta);
+#pragma warning restore CS0618 // Type or member is obsolete
             EntityInitialized?.Invoke((entity, meta));
         }
 
         public void StartEntity(EntityUid entity)
         {
+            // Ideally, entities only ever get initialized once their parent has already been initialized.
+            // Note that this doesn't guarantee that an uninitialized entity will never have initialized children.
+            // In particular, for the client this might happen when applying a new game state that re-parents an
+            // existing entity to a newly created entity. The new entity only gets initialiuzed & started at the end,
+            // after the old/existing entity was already moved to the new parent.
+            DebugTools.Assert(TransformQuery.GetComponent(entity).ParentUid is not { Valid: true } parent
+                              || MetaQuery.GetComponent(parent).EntityLifeStage >= EntityLifeStage.Initialized);
+
+#pragma warning disable CS0618 // Type or member is obsolete
             StartComponents(entity);
+#pragma warning restore CS0618 // Type or member is obsolete
         }
 
         public void RunMapInit(EntityUid entity, MetaDataComponent meta)
@@ -953,6 +1038,16 @@ namespace Robust.Shared.GameObjects
         /// Generates a unique network id and increments <see cref="NextNetworkId"/>
         /// </summary>
         protected virtual NetEntity GenerateNetEntity() => new(NextNetworkId++);
+
+        [Conditional("DEBUG")]
+        protected void ThreadCheck()
+        {
+#if DEBUG
+            DebugTools.Assert(
+                Environment.CurrentManagedThreadId == _mainThreadId,
+                "Environment.CurrentManagedThreadId == _mainThreadId");
+#endif
+        }
     }
 
     public enum EntityMessageType : byte

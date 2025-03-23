@@ -14,8 +14,6 @@ using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.List;
 using YamlDotNet.RepresentationModel;
 
-// ReSharper disable AccessToStaticMemberViaDerivedType
-
 namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers.Custom.Prototype
 {
     [TestFixture]

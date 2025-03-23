@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -19,6 +20,10 @@ namespace Robust.Server.GameStates;
 /// </summary>
 internal sealed class PvsSession(ICommonSession session, ResizableMemoryRegion<PvsData> memoryRegion)
 {
+#if DEBUG
+    public HashSet<NetEntity> ToSendSet = new();
+#endif
+
     public readonly ICommonSession Session = session;
 
     public readonly ResizableMemoryRegion<PvsData> DataMemory = memoryRegion;
@@ -179,6 +184,9 @@ internal struct PvsMetadata
     public NetEntity NetEntity;
 
     public GameTick LastModifiedTick;
+
+    // TODO PVS maybe store as int?
+    // Theres extra space anyways, and the mask checks always need to convert to an int first, so it'd probably be faster too.
     public ushort VisMask;
     public EntityLifeStage LifeStage;
 #if DEBUG
@@ -190,6 +198,15 @@ internal struct PvsMetadata
     private byte Pad0;
     public uint Marker;
 #endif
+
+    [Conditional("DEBUG")]
+    public void Validate(MetaDataComponent comp)
+    {
+        DebugTools.AssertEqual(NetEntity, comp.NetEntity);
+        DebugTools.AssertEqual(VisMask, comp.VisibilityMask);
+        DebugTools.Assert(LifeStage == comp.EntityLifeStage);
+        DebugTools.Assert(LastModifiedTick == comp.EntityLastModifiedTick || LastModifiedTick.Value == 0);
+    }
 }
 
 [StructLayout(LayoutKind.Sequential, Size = 16)]

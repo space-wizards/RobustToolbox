@@ -206,14 +206,6 @@ internal sealed class MidiRenderer : IMidiRenderer
     }
 
     [ViewVariables(VVAccess.ReadWrite)]
-    [Obsolete($"Use {nameof(VelocityOverride)} instead, you can set it to 127 to achieve the same effect.")]
-    public bool VolumeBoost
-    {
-        get => VelocityOverride == 127;
-        set => VelocityOverride = value ? 127 : null;
-    }
-
-    [ViewVariables(VVAccess.ReadWrite)]
     public EntityUid? TrackingEntity { get; set; } = null;
 
     [ViewVariables(VVAccess.ReadWrite)]

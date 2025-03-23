@@ -26,7 +26,7 @@ public sealed partial class EntityLookupSystem
         if (!_broadQuery.Resolve(lookupUid, ref lookup))
             return;
 
-        var lookupPoly = new Polygon(localAABB);
+        var lookupPoly = new SlimPolygon(localAABB);
         AddEntitiesIntersecting(lookupUid, intersecting, lookupPoly, localAABB, Physics.Transform.Empty, flags, lookup);
     }
 
@@ -40,7 +40,7 @@ public sealed partial class EntityLookupSystem
         if (!_broadQuery.Resolve(lookupUid, ref lookup))
             return;
 
-        var shape = new Polygon(localBounds);
+        var shape = new SlimPolygon(localBounds);
         var localAABB = localBounds.CalcBoundingBox();
 
         AddEntitiesIntersecting(lookupUid, intersecting, shape, localAABB, Physics.Transform.Empty, flags);
@@ -55,7 +55,7 @@ public sealed partial class EntityLookupSystem
         if (!_broadQuery.Resolve(lookupUid, ref lookup))
             return false;
 
-        var shape = new Polygon(localAABB);
+        var shape = new SlimPolygon(localAABB);
         return AnyEntitiesIntersecting(lookupUid, shape, localAABB, Physics.Transform.Empty, flags, ignored, lookup);
     }
 
@@ -66,6 +66,16 @@ public sealed partial class EntityLookupSystem
 
         GetLocalEntitiesIntersecting(gridId, gridIndices, intersecting, enlargement, flags, gridComp);
         return intersecting;
+    }
+
+    /// <summary>
+    /// Gets entities intersecting to the relative broadphase entity. Does NOT turn the transform into local terms.
+    /// </summary>
+    public void GetLocalEntitiesIntersecting(EntityUid gridUid, IPhysShape shape, Transform localTransform, HashSet<EntityUid> intersecting, LookupFlags flags = DefaultFlags, BroadphaseComponent? lookup = null)
+    {
+        var localAABB = shape.ComputeAABB(localTransform, 0);
+        AddEntitiesIntersecting(gridUid, intersecting, shape, localAABB, localTransform, flags: flags, lookup: lookup);
+        AddContained(intersecting, flags);
     }
 
     /// <summary>

@@ -94,9 +94,9 @@ namespace Robust.Shared.GameObjects
             {
                 UpdateFixture(uid, chunk, rectangles, body, manager, xform);
 
-                foreach (var (id, fixture) in chunk.Fixtures)
+                foreach (var id in chunk.Fixtures)
                 {
-                    fixtures[id] = fixture;
+                    fixtures[id] = manager.Fixtures[id];
                 }
             }
 
@@ -153,12 +153,12 @@ namespace Robust.Shared.GameObjects
                 newFixtures.Add(($"grid_chunk-{bounds.Left}-{bounds.Bottom}", newFixture));
             }
 
-            var toRemove = new ValueList<(string Id, Fixture Fixture)>();
             // Check if we even need to issue an eventbus event
             var updated = false;
 
-            foreach (var (oldId, oldFixture) in chunk.Fixtures)
+            foreach (var oldId in chunk.Fixtures)
             {
+                var oldFixture = manager.Fixtures[oldId];
                 var existing = false;
 
                 // Handle deleted / updated fixtures
@@ -166,6 +166,13 @@ namespace Robust.Shared.GameObjects
                 for (var i = newFixtures.Count - 1; i >= 0; i--)
                 {
                     var fixture = newFixtures[i].Fixture;
+
+                    // TODO GRIDS
+                    // Fix this
+                    // This **only** works if we assume the density is always the default (PhysicsConstants.DefaultDensity).
+                    // Hence, this always fails in SS14 because ShuttleSystem.OnGridFixtureChange changes the density.
+                    // So it constantly creats & destroys fixtures unnecessarily
+                    // AAAAA
                     if (!oldFixture.Equals(fixture))
                         continue;
 
@@ -174,21 +181,16 @@ namespace Robust.Shared.GameObjects
                     break;
                 }
 
+                if (existing)
+                    continue;
+
                 // Doesn't align with any new fixtures so delete
-                if (existing) continue;
-
-                toRemove.Add((oldId, oldFixture));
+                chunk.Fixtures.Remove(oldId);
+                _fixtures.DestroyFixture(uid, oldId, oldFixture, false, body: body, manager: manager, xform: xform);
+                updated = true;
             }
 
-            foreach (var (id, fixture) in toRemove.Span)
-            {
-                // TODO add a DestroyFixture() override that takes in a list.
-                // reduced broadphase lookups
-                chunk.Fixtures.Remove(id);
-                _fixtures.DestroyFixture(uid, id, fixture, false, body: body, manager: manager, xform: xform);
-            }
-
-            if (newFixtures.Count > 0 || toRemove.Count > 0)
+            if (newFixtures.Count > 0)
             {
                 updated = true;
             }
@@ -196,16 +198,17 @@ namespace Robust.Shared.GameObjects
             // Anything remaining is a new fixture (or at least, may have not serialized onto the chunk yet).
             foreach (var (id, fixture) in newFixtures.Span)
             {
+                chunk.Fixtures.Add(id);
                 var existingFixture = _fixtures.GetFixtureOrNull(uid, id, manager: manager);
                 // Check if it's the same (otherwise remove anyway).
+                // TODO GRIDS
+                // wasn't this already checked?
                 if (existingFixture?.Shape is PolygonShape poly &&
                     poly.EqualsApprox((PolygonShape) fixture.Shape))
                 {
-                    chunk.Fixtures.Add(id, existingFixture);
                     continue;
                 }
 
-                chunk.Fixtures.Add(id, fixture);
                 _fixtures.CreateFixture(uid, id, fixture, false, manager, body, xform);
             }
 

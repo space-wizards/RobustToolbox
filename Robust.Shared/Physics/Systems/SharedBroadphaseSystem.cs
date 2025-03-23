@@ -57,6 +57,7 @@ namespace Robust.Shared.Physics.Systems
                 _mapManager = _mapManager,
                 System = this,
                 BroadphaseExpand = _broadphaseExpand,
+                XformQuery = EntityManager.TransformQuery,
             };
 
             _broadphaseQuery = GetEntityQuery<BroadphaseComponent>();
@@ -104,11 +105,9 @@ namespace Robust.Shared.Physics.Systems
             // None moved this tick
             if (movedGrids.Count == 0) return;
 
-            var world = _physicsSystem.World;
-
             // This is so that if we're on a broadphase that's moving (e.g. a grid) we need to make sure anything
             // we move over is getting checked for collisions, and putting it on the movebuffer is the easiest way to do so.
-            var moveBuffer = world.MoveBuffer;
+            var moveBuffer = _physicsSystem.MoveBuffer;
 
             foreach (var gridUid in movedGrids)
             {
@@ -163,9 +162,9 @@ namespace Robust.Shared.Physics.Systems
         /// </summary>
         internal void FindNewContacts()
         {
-            var moveBuffer = _physicsSystem.World.MoveBuffer;
+            var moveBuffer = _physicsSystem.MoveBuffer;
 
-            var movedGrids = _physicsSystem.World.MovedGrids;
+            var movedGrids = _physicsSystem.MovedGrids;
             _gridMoveBuffer.Clear();
 
             // Find any entities being driven over that might need to be considered
@@ -187,61 +186,55 @@ namespace Robust.Shared.Physics.Systems
             if (moveBuffer.Count == 0)
                 return;
 
-            var mapQuery = EntityQueryEnumerator<MapComponent>();
+            _contactJob.MoveBuffer.Clear();
 
-            while (mapQuery.MoveNext(out var mapUid, out var mapComp))
+            foreach (var (proxy, aabb) in moveBuffer)
             {
-                _contactJob.MapUid = _mapManager.GetMapEntityIdOrThrow(mapComp.MapId);
-                _contactJob.MoveBuffer.Clear();
-
-                foreach (var (proxy, aabb) in moveBuffer)
-                {
-                    _contactJob.MoveBuffer.Add((proxy, aabb));
-                }
-
-                for (var i = _contactJob.ContactBuffer.Count; i < _contactJob.MoveBuffer.Count; i++)
-                {
-                    _contactJob.ContactBuffer.Add(new List<FixtureProxy>());
-                }
-
-                var count = moveBuffer.Count;
-
-                _parallel.ProcessNow(_contactJob, count);
-
-                for (var i = 0; i < count; i++)
-                {
-                    var proxies = _contactJob.ContactBuffer[i];
-
-                    if (proxies.Count == 0)
-                        continue;
-
-                    var proxyA = _contactJob.MoveBuffer[i].Proxy;
-                    var proxyABody = proxyA.Body;
-
-                    _fixturesQuery.TryGetComponent(proxyA.Entity, out var manager);
-
-                    foreach (var other in proxies)
-                    {
-                        var otherBody = other.Body;
-
-                        // Because we may be colliding with something asleep (due to the way grid movement works) need
-                        // to make sure the contact doesn't fail.
-                        // This is because we generate a contact across 2 different broadphases where both bodies aren't
-                        // moving locally but are moving in world-terms.
-                        if (proxyA.Fixture.Hard && other.Fixture.Hard &&
-                            (_gridMoveBuffer.ContainsKey(proxyA) || _gridMoveBuffer.ContainsKey(other)))
-                        {
-                            _physicsSystem.WakeBody(proxyA.Entity, force: true, manager: manager, body: proxyABody);
-                            _physicsSystem.WakeBody(other.Entity, force: true, body: otherBody);
-                        }
-
-                        _physicsSystem.AddPair(proxyA.FixtureId, other.FixtureId, proxyA, other);
-                    }
-                }
-
-                moveBuffer.Clear();
-                movedGrids.Clear();
+                _contactJob.MoveBuffer.Add((proxy, aabb));
             }
+
+            for (var i = _contactJob.ContactBuffer.Count; i < _contactJob.MoveBuffer.Count; i++)
+            {
+                _contactJob.ContactBuffer.Add(new List<FixtureProxy>());
+            }
+
+            var count = moveBuffer.Count;
+
+            _parallel.ProcessNow(_contactJob, count);
+
+            for (var i = 0; i < count; i++)
+            {
+                var proxies = _contactJob.ContactBuffer[i];
+
+                if (proxies.Count == 0)
+                    continue;
+
+                var proxyA = _contactJob.MoveBuffer[i].Proxy;
+                var proxyABody = proxyA.Body;
+
+                _fixturesQuery.TryGetComponent(proxyA.Entity, out var manager);
+
+                foreach (var other in proxies)
+                {
+                    var otherBody = other.Body;
+
+                    // Because we may be colliding with something asleep (due to the way grid movement works) need
+                    // to make sure the contact doesn't fail.
+                    // This is because we generate a contact across 2 different broadphases where both bodies aren't
+                    // moving locally but are moving in world-terms.
+                    if (proxyA.Fixture.Hard && other.Fixture.Hard &&
+                        (_gridMoveBuffer.ContainsKey(proxyA) || _gridMoveBuffer.ContainsKey(other)))
+                    {
+                        _physicsSystem.WakeBody(proxyA.Entity, force: true, manager: manager, body: proxyABody);
+                        _physicsSystem.WakeBody(other.Entity, force: true, body: otherBody);
+                    }
+
+                    _physicsSystem.AddPair(proxyA.FixtureId, other.FixtureId, proxyA, other);
+                }
+            }
+
+            moveBuffer.Clear();
+            movedGrids.Clear();
         }
 
         private void HandleGridCollisions(HashSet<EntityUid> movedGrids)
@@ -465,7 +458,7 @@ namespace Robust.Shared.Physics.Systems
         private void AddToMoveBuffer(FixtureProxy proxy, Box2 aabb)
         {
             DebugTools.Assert(proxy.Body.CanCollide);
-            _physicsSystem.World.MoveBuffer[proxy] = aabb;
+            _physicsSystem.MoveBuffer[proxy] = aabb;
         }
 
         public void Refilter(EntityUid uid, Fixture fixture, TransformComponent? xform = null)
@@ -556,7 +549,7 @@ namespace Robust.Shared.Physics.Systems
 
             public float BroadphaseExpand;
 
-            public EntityUid MapUid;
+            public EntityQuery<TransformComponent> XformQuery;
 
             public List<List<FixtureProxy>> ContactBuffer = new();
             public List<(FixtureProxy Proxy, Box2 WorldAABB)> MoveBuffer = new();
@@ -569,13 +562,15 @@ namespace Robust.Shared.Physics.Systems
                 var buffer = ContactBuffer[index];
                 buffer.Clear();
 
+                var mapUid = XformQuery.GetComponent(proxy.Entity).MapUid ?? EntityUid.Invalid;
+
                 var proxyBody = proxy.Body;
                 DebugTools.Assert(!proxyBody.Deleted);
 
                 var state = (System, proxy, worldAABB, buffer);
 
                 // Get every broadphase we may be intersecting.
-                _mapManager.FindGridsIntersecting(MapUid, worldAABB.Enlarged(BroadphaseExpand), ref state,
+                _mapManager.FindGridsIntersecting(mapUid, worldAABB.Enlarged(BroadphaseExpand), ref state,
                     static (EntityUid uid, MapGridComponent _, ref (
                         SharedBroadphaseSystem system,
                         FixtureProxy proxy,
@@ -591,7 +586,7 @@ namespace Robust.Shared.Physics.Systems
 
                 // Struct ref moment, I have no idea what's fastest.
                 buffer = state.buffer;
-                System.FindPairs(proxy, worldAABB, MapUid, buffer);
+                System.FindPairs(proxy, worldAABB, mapUid, buffer);
             }
         }
     }

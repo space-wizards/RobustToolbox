@@ -42,6 +42,7 @@ namespace Robust.Shared.Physics.Systems
                 Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
             });
 
+        [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly IManifoldManager _manifoldManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IParallelManager _parallel = default!;
@@ -117,7 +118,6 @@ namespace Robust.Shared.Physics.Systems
             SubscribeLocalEvent<PhysicsComponent, ComponentHandleState>(OnPhysicsHandleState);
             InitializeIsland();
             InitializeContacts();
-            InitializeWorld();
 
             Subs.CVar(_cfg, CVars.AutoClearForces, OnAutoClearChange);
             Subs.CVar(_cfg, CVars.NetTickrate, UpdateSubsteps, true);
@@ -149,7 +149,7 @@ namespace Robust.Shared.Physics.Systems
 
         private void OnAutoClearChange(bool value)
         {
-            World.AutoClearForces = value;
+            AutoClearForces = value;
         }
 
         private void UpdateSubsteps(int obj)
@@ -239,7 +239,6 @@ namespace Robust.Shared.Physics.Systems
             base.Shutdown();
 
             ShutdownContacts();
-            ShutdownWorld();
         }
 
         private void HandleContainerRemoved(EntityUid uid, PhysicsComponent physics, EntGotRemovedFromContainerMessage message)

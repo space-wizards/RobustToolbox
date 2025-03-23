@@ -395,7 +395,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
     internal void DestroyProxies(Fixture fixture, IBroadPhase tree)
     {
-        var buffer = _physics.World.MoveBuffer;
+        var buffer = _physics.MoveBuffer;
         for (var i = 0; i < fixture.ProxyCount; i++)
         {
             var proxy = fixture.Proxies[i];
@@ -455,7 +455,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         Transform broadphaseTransform,
         Transform mapTransform)
     {
-        var moveBuffer = _physics.World.MoveBuffer;
+        var moveBuffer = _physics.MoveBuffer;
 
         // Moving
         if (fixture.ProxyCount > 0)

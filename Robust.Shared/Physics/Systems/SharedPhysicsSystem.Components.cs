@@ -487,11 +487,25 @@ public partial class SharedPhysicsSystem
             body.Awake = true;
         }
 
-        UpdateMapAwakeState(uid, body);
+        if (value)
+        {
+            DebugTools.Assert(!AwakeBodies.Contains(ent.Comp));
+            AwakeBodies.Add(ent.Comp);
+        }
+        else
+        {
+            DebugTools.Assert(AwakeBodies.Contains(ent.Comp));
+            AwakeBodies.Remove(ent.Comp);
+        }
+
+        UpdateAwakeState(ent);
     }
 
-    private void UpdateAwakeState(EntityUid uid, PhysicsComponent body)
+    private void UpdateAwakeState(Entity<PhysicsComponent> entity)
     {
+        var uid = entity.Owner;
+        var body = entity.Comp;
+
         if (body.Awake)
             AddAwakeBody(uid, body);
         else

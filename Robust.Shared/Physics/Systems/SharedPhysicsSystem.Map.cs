@@ -26,12 +26,15 @@ public partial class SharedPhysicsSystem
         }
 
         DebugTools.Assert(body.Awake);
-        World.AwakeBodies.Add(body);
+        DebugTools.Assert(!AwakeBodies.Contains(body));
+        AwakeBodies.Add(body);
     }
 
     internal void RemoveSleepBody(EntityUid uid, PhysicsComponent body)
     {
-        World.AwakeBodies.Remove(body);
+        DebugTools.Assert(!body.Awake);
+        DebugTools.Assert(AwakeBodies.Contains(body));
+        AwakeBodies.Remove(body);
     }
 
 

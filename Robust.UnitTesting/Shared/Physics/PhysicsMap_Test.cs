@@ -12,7 +12,7 @@ using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.Physics;
 
-[TestFixture, TestOf(typeof(PhysicsMapComponent))]
+[TestFixture]
 public sealed class PhysicsMap_Test
 {
     /// <summary>
@@ -34,9 +34,6 @@ public sealed class PhysicsMap_Test
         var mapUid = mapManager.GetMapEntityId(mapId);
         var mapUid2 = mapManager.GetMapEntityId(mapId2);
 
-        var physicsMap = entManager.GetComponent<PhysicsMapComponent>(mapUid);
-        var physicsMap2 = entManager.GetComponent<PhysicsMapComponent>(mapUid2);
-
         var parent = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
         var parentXform = entManager.GetComponent<TransformComponent>(parent);
         var parentBody = entManager.AddComponent<PhysicsComponent>(parent);
@@ -45,7 +42,7 @@ public sealed class PhysicsMap_Test
         physSystem.SetSleepingAllowed(parent, parentBody, false);
         fixtureSystem.CreateFixture(parent, "fix1", new Fixture(new PhysShapeCircle(0.5f), 0, 0, false), body: parentBody);
         physSystem.WakeBody(parent);
-        Assert.That(physicsMap.AwakeBodies, Does.Contain(parentBody));
+        Assert.That(physSystem.AwakeBodies, Does.Contain(parentBody));
 
         var child = entManager.SpawnEntity(null, new EntityCoordinates(parent, Vector2.Zero));
         var childBody = entManager.AddComponent<PhysicsComponent>(child);
@@ -55,16 +52,14 @@ public sealed class PhysicsMap_Test
         fixtureSystem.CreateFixture(child, "fix1", new Fixture(new PhysShapeCircle(0.5f), 0, 0, false), body: childBody);
         physSystem.WakeBody(child, body: childBody);
 
-        Assert.That(physicsMap.AwakeBodies, Does.Contain(childBody));
+        Assert.That(physSystem.AwakeBodies, Does.Contain(childBody));
 
         xformSystem.SetParent(parent, parentXform, mapUid2);
 
-        Assert.That(physicsMap.AwakeBodies, Is.Empty);
-        Assert.That(physicsMap2.AwakeBodies, Has.Count.EqualTo(2));
+        Assert.That(physSystem.AwakeBodies, Has.Count.EqualTo(2));
 
         xformSystem.SetParent(parent, parentXform, mapUid);
 
-        Assert.That(physicsMap.AwakeBodies, Has.Count.EqualTo(2));
-        Assert.That(physicsMap2.AwakeBodies, Is.Empty);
+        Assert.That(physSystem.AwakeBodies, Has.Count.EqualTo(2));
     }
 }

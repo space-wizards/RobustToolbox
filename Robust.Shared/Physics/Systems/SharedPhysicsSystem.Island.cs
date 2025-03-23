@@ -263,7 +263,7 @@ public abstract partial class SharedPhysicsSystem
     public void Step(float frameTime, bool prediction)
     {
         var invDt = frameTime > 0.0f ? 1.0f / frameTime : 0.0f;
-        var dtRatio = World._invDt0 * frameTime;
+        var dtRatio = _invDt0 * frameTime;
 
         // Integrate velocities, solve velocity constraints, and do integration.
         Solve(frameTime, dtRatio, invDt, prediction);
@@ -271,15 +271,15 @@ public abstract partial class SharedPhysicsSystem
         // TODO: SolveTOI
 
         // Box2d recommends clearing (if you are) during fixed updates rather than variable if you are using it
-        if (!prediction && World.AutoClearForces)
+        if (!prediction && AutoClearForces)
             ClearForces();
 
-        World._invDt0 = invDt;
+        _invDt0 = invDt;
     }
 
     private void ClearForces()
     {
-        foreach (var body in World.AwakeBodies)
+        foreach (var body in AwakeBodies)
         {
             // TODO: Netsync (need delta fields pr).
             body.Force = Vector2.Zero;
@@ -290,9 +290,9 @@ public abstract partial class SharedPhysicsSystem
     private void Solve(float frameTime, float dtRatio, float invDt, bool prediction)
     {
         // Build and simulated islands from awake bodies.
-        _bodyStack.EnsureCapacity(World.AwakeBodies.Count);
-        _islandSet.EnsureCapacity(World.AwakeBodies.Count);
-        _awakeBodyList.AddRange(World.AwakeBodies);
+        _bodyStack.EnsureCapacity(AwakeBodies.Count);
+        _islandSet.EnsureCapacity(AwakeBodies.Count);
+        _awakeBodyList.AddRange(AwakeBodies);
 
         var bodyQuery = GetEntityQuery<PhysicsComponent>();
         var metaQuery = GetEntityQuery<MetaDataComponent>();

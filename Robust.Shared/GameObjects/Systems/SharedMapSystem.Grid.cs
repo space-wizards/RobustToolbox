@@ -165,7 +165,7 @@ public abstract partial class SharedMapSystem
             gridTree.Tree.MoveProxy(component.MapProxy, in aabb);
         }
 
-        _physics.World.MovedGrids.Add(uid);
+        _physics.MovedGrids.Add(uid);
     }
 
     private void OnGridMove(EntityUid uid, MapGridComponent component, ref MoveEvent args)
@@ -187,7 +187,7 @@ public abstract partial class SharedMapSystem
             gridTree.Tree.MoveProxy(component.MapProxy, in aabb);
         }
 
-        _physics.World.MovedGrids.Add(uid);
+        _physics.MovedGrids.Add(uid);
     }
 
     private void OnParentChange(EntityUid uid, MapGridComponent component, ref MoveEvent args)
@@ -221,14 +221,14 @@ public abstract partial class SharedMapSystem
         var oldMapUid = GetMapOrInvalid(oldMap.MapId);
         if (component.MapProxy != DynamicTree.Proxy.Free)
         {
-            _physics.World.MovedGrids.Remove(uid);
+            _physics.MovedGrids.Remove(uid);
             RemoveGrid(uid, component, oldMapUid);
         }
 
         DebugTools.Assert(component.MapProxy == DynamicTree.Proxy.Free);
         if (xform.MapUid != null)
         {
-            _physics.World.MovedGrids.Add(uid);
+            _physics.MovedGrids.Add(uid);
             AddGrid(uid, component);
         }
     }
@@ -514,7 +514,7 @@ public abstract partial class SharedMapSystem
 
             if (xform.MapUid != null)
             {
-                _physics.World.MovedGrids.Add(uid);
+                _physics.MovedGrids.Add(uid);
             }
         }
 
@@ -568,7 +568,7 @@ public abstract partial class SharedMapSystem
 
         if (xform.MapUid != null)
         {
-            _physics.World.MovedGrids.Add(uid);
+            _physics.MovedGrids.Add(uid);
         }
     }
 
@@ -583,7 +583,7 @@ public abstract partial class SharedMapSystem
 
         if (mapUid.IsValid())
         {
-            _physics.World.MovedGrids.Remove(uid);
+            _physics.MovedGrids.Remove(uid);
         }
     }
 

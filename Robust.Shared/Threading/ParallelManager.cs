@@ -22,24 +22,24 @@ public interface IParallelManager
     /// Takes in a job that gets flushed.
     /// </summary>
     /// <param name="job"></param>
-    WaitHandle Process(IRobustJob job);
+    WaitHandle Process<T>(T job) where T : IRobustJob;
 
-    public void ProcessNow(IRobustJob job);
+    public void ProcessNow<T>(T job) where T : IRobustJob;
 
     /// <summary>
     /// Takes in a parallel job and runs it the specified amount.
     /// </summary>
-    void ProcessNow(IParallelRobustJob jobs, int amount);
+    void ProcessNow<T>(T jobs, int amount) where T : IParallelRobustJob;
 
     /// <summary>
     /// Processes a robust job sequentially if desired.
     /// </summary>
-    void ProcessSerialNow(IParallelRobustJob jobs, int amount);
+    void ProcessSerialNow<T>(T jobs, int amount) where T : IParallelRobustJob;
 
     /// <summary>
     /// Takes in a parallel job and runs it without blocking.
     /// </summary>
-    WaitHandle Process(IParallelRobustJob jobs, int amount);
+    WaitHandle Process<T>(T jobs, int amount) where T : IParallelRobustJob;
 }
 
 internal interface IParallelManagerInternal : IParallelManager
@@ -87,7 +87,7 @@ internal sealed class ParallelManager : IParallelManagerInternal
         changed();
     }
 
-    private InternalJob GetJob(IRobustJob job)
+    private InternalJob GetJob<T>(T job) where T: IRobustJob
     {
         var robustJob = _jobPool.Get();
         robustJob.Event.Reset();
@@ -95,7 +95,7 @@ internal sealed class ParallelManager : IParallelManagerInternal
         return robustJob;
     }
 
-    private InternalParallelJob GetParallelJob(IParallelRobustJob job, int start, int end, ParallelTracker tracker)
+    private InternalParallelJob GetParallelJob<T>(T job, int start, int end, ParallelTracker tracker) where T : IParallelRobustJob
     {
         var internalJob = _parallelPool.Get();
         internalJob.Set(_sawmill, job, start, end, tracker, _parallelPool);
@@ -116,7 +116,7 @@ internal sealed class ParallelManager : IParallelManagerInternal
     }
 
     /// <inheritdoc/>
-    public WaitHandle Process(IRobustJob job)
+    public WaitHandle Process<T>(T job) where T : IRobustJob
     {
         var subJob = GetJob(job);
         // From what I can tell preferLocal is more of a !forceGlobal flag.
@@ -125,13 +125,13 @@ internal sealed class ParallelManager : IParallelManagerInternal
         return subJob.Event.WaitHandle;
     }
 
-    public void ProcessNow(IRobustJob job)
+    public void ProcessNow<T>(T job) where T : IRobustJob
     {
         job.Execute();
     }
 
     /// <inheritdoc/>
-    public void ProcessNow(IParallelRobustJob job, int amount)
+    public void ProcessNow<T>(T job, int amount) where T : IParallelRobustJob
     {
         var batches = amount / (float) job.BatchSize;
 
@@ -148,7 +148,7 @@ internal sealed class ParallelManager : IParallelManagerInternal
     }
 
     /// <inheritdoc/>
-    public void ProcessSerialNow(IParallelRobustJob jobs, int amount)
+    public void ProcessSerialNow<T>(T jobs, int amount) where T : IParallelRobustJob
     {
         for (var i = 0; i < amount; i++)
         {
@@ -157,7 +157,7 @@ internal sealed class ParallelManager : IParallelManagerInternal
     }
 
     /// <inheritdoc/>
-    public WaitHandle Process(IParallelRobustJob job, int amount)
+    public WaitHandle Process<T>(T job, int amount) where T : IParallelRobustJob
     {
         var tracker = InternalProcess(job, amount);
         return tracker.Event.WaitHandle;
@@ -167,7 +167,7 @@ internal sealed class ParallelManager : IParallelManagerInternal
     /// Runs a parallel job internally. Used so we can pool the tracker task for ProcessParallelNow
     /// and not rely on external callers to return it where they don't want to wait.
     /// </summary>
-    private ParallelTracker InternalProcess(IParallelRobustJob job, int amount)
+    private ParallelTracker InternalProcess<T>(T job, int amount) where T : IParallelRobustJob
     {
         var batches = (int) MathF.Ceiling(amount / (float) job.BatchSize);
         var batchSize = job.BatchSize;

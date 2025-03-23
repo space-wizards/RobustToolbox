@@ -645,6 +645,8 @@ public abstract partial class SharedPhysicsSystem
             MaxDegreeOfParallelism = _parallel.ParallelProcessCount,
         };
 
+        var gravity = Gravity;
+
         while (iBegin < actualIslands.Length)
         {
             ref var island = ref actualIslands[iBegin];
@@ -652,14 +654,14 @@ public abstract partial class SharedPhysicsSystem
             if (!InternalParallel(island))
                 break;
 
-            SolveIsland(ref island, in data, options, prediction, solvedPositions, solvedAngles, linearVelocities, angularVelocities, sleepStatus);
+            SolveIsland(ref island, in data, gravity, options, prediction, solvedPositions, solvedAngles, linearVelocities, angularVelocities, sleepStatus);
             iBegin++;
         }
 
         Parallel.For(iBegin, actualIslands.Length, options, i =>
         {
             ref var island = ref actualIslands[i];
-            SolveIsland(ref island, in data, null, prediction, solvedPositions, solvedAngles, linearVelocities, angularVelocities, sleepStatus);
+            SolveIsland(ref island, in data, gravity, null, prediction, solvedPositions, solvedAngles, linearVelocities, angularVelocities, sleepStatus);
         });
 
         // Update data sequentially
@@ -705,6 +707,7 @@ public abstract partial class SharedPhysicsSystem
     private void SolveIsland(
         ref IslandData island,
         in SolverData data,
+        Vector2 gravity,
         ParallelOptions? options,
         bool prediction,
         Vector2[] solvedPositions,
@@ -739,7 +742,15 @@ public abstract partial class SharedPhysicsSystem
             // if the body cannot move, nothing to do here
             if (body.BodyType == BodyType.Dynamic)
             {
-                linearVelocity += body.Force * data.FrameTime * body.InvMass;
+                if (body.IgnoreGravity)
+                {
+                    linearVelocity += body.Force * data.FrameTime * body.InvMass;
+                }
+                else
+                {
+                    linearVelocity += (gravity + body.Force * body.InvMass) * data.FrameTime;
+                }
+
                 angularVelocity += body.InvI * body.Torque * data.FrameTime;
 
                 linearVelocity *= Math.Clamp(1.0f - data.FrameTime * body.LinearDamping, 0.0f, 1.0f);

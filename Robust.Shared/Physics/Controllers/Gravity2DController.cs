@@ -22,7 +22,6 @@ public sealed class Gravity2DController : VirtualController
 
     private ISawmill _sawmill = default!;
 
-    private EntityQuery<Gravity2DComponent> _gravityQuery;
     private EntityQuery<PhysicsComponent> _physicsQuery;
 
     public override void Initialize()
@@ -30,25 +29,13 @@ public sealed class Gravity2DController : VirtualController
         base.Initialize();
         _sawmill = Logger.GetSawmill("physics");
 
-        _gravityQuery = GetEntityQuery<Gravity2DComponent>();
         _physicsQuery = GetEntityQuery<PhysicsComponent>();
-    }
-
-    public override void UpdateBeforeSolve(bool prediction, float frameTime)
-    {
-        base.UpdateBeforeSolve(prediction, frameTime);
-
-        foreach (var ent in _physics.AwakeBodies)
-        {
-            if (!_gravityQuery.TryComp(ent.Comp2.MapUid, out var gravity))
-                continue;
-
-            PhysicsSystem.SetLinearVelocity(ent.Owner, ent.Comp1.LinearVelocity + gravity.Gravity * frameTime, body: ent.Comp1);
-        }
     }
 
     public Vector2 GetGravity(EntityUid uid, Gravity2DComponent? component = null)
     {
+        return PhysicsSystem.Gravity;
+
         if (!Resolve(uid, ref component, false))
             return Vector2.Zero;
 
@@ -57,6 +44,8 @@ public sealed class Gravity2DController : VirtualController
 
     public void SetGravity(EntityUid uid, Vector2 value)
     {
+        PhysicsSystem.Gravity = value;
+
         if (!HasComp<MapComponent>(uid))
         {
             _sawmill.Error($"Tried to set 2D gravity for an entity that isn't a map?");
@@ -76,6 +65,7 @@ public sealed class Gravity2DController : VirtualController
 
     public void SetGravity(MapId mapId, Vector2 value)
     {
+        PhysicsSystem.Gravity = value;
         var mapUid = _mapSystem.GetMap(mapId);
         var gravity = EnsureComp<Gravity2DComponent>(mapUid);
 
@@ -100,11 +90,5 @@ public sealed class Gravity2DController : VirtualController
         {
             WakeBodiesRecursive(child);
         }
-    }
-
-    [Serializable, NetSerializable]
-    private sealed class Gravity2DComponentState : ComponentState
-    {
-        public Vector2 Gravity;
     }
 }

@@ -206,7 +206,6 @@ entities:
     - type: Transform
     - type: Map
       mapInitialized: True
-    - type: PhysicsMap
     - type: GridTree
     - type: MovedGrids
     - type: Broadphase
@@ -263,7 +262,6 @@ entities:
     - type: Transform
     - type: Map
       mapPaused: True
-    - type: PhysicsMap
     - type: GridTree
     - type: MovedGrids
     - type: Broadphase
@@ -288,7 +286,6 @@ entities:
     - type: Transform
     - type: Map
       mapInitialized: True
-    - type: PhysicsMap
     - type: GridTree
     - type: MovedGrids
     - type: Broadphase

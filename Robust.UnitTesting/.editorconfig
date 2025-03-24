@@ -1,0 +1,4 @@
+﻿[*.cs]
+# Doing this via EditorConfig seems to be the only way to suppress in an entire project.
+# This warning conflicts with NUnit's recommendation to subtype the "Is" type.
+resharper_access_to_static_member_via_derived_type_highlighting=none

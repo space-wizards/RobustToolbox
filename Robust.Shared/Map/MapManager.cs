@@ -13,13 +13,13 @@ namespace Robust.Shared.Map;
 [Virtual]
 internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 {
-    [field: Dependency] public IGameTiming GameTiming { get; } = default!;
-    [field: Dependency] public IEntityManager EntityManager { get; } = default!;
+    [Dependency] public readonly IGameTiming GameTiming = default!;
+    [Dependency] public readonly IEntityManager EntityManager = default!;
     [Dependency] private readonly IManifoldManager _manifolds = default!;
-
+    [Dependency] private readonly ILogManager _logManager = default!;
     [Dependency] private readonly IConsoleHost _conhost = default!;
 
-    private ISawmill _sawmill => _mapSystem.Log;
+    private ISawmill _sawmill = default!;
 
     private SharedMapSystem _mapSystem = default!;
     private SharedPhysicsSystem _physics = default!;
@@ -34,6 +34,7 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
         _gridTreeQuery = EntityManager.GetEntityQuery<GridTreeComponent>();
         _gridQuery = EntityManager.GetEntityQuery<MapGridComponent>();
         InitializeMapPausing();
+        _sawmill = _logManager.GetSawmill("system.map");
     }
 
     /// <inheritdoc />

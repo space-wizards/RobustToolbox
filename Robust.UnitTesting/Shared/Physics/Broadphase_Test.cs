@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using NUnit.Framework;
@@ -25,11 +26,13 @@ public sealed class Broadphase_Test
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
         var mapManager = sim.Resolve<IMapManager>();
+        var mapSys = entManager.System<SharedMapSystem>();
+        var xformSys = entManager.System<SharedTransformSystem>();
 
         var (mapEnt, mapId) = sim.CreateMap();
         var grid = mapManager.CreateGridEntity(mapId);
 
-        grid.Comp.SetTile(Vector2i.Zero, new Tile(1));
+        mapSys.SetTile(grid, Vector2i.Zero, new Tile(1));
         Assert.That(entManager.HasComponent<BroadphaseComponent>(grid));
         var broadphase = entManager.GetComponent<BroadphaseComponent>(grid);
 
@@ -40,7 +43,7 @@ public sealed class Broadphase_Test
         var broadphaseData = xform.Broadphase;
         Assert.That(broadphaseData!.Value.Uid, Is.EqualTo(grid.Owner));
 
-        xform.Coordinates = new EntityCoordinates(mapEnt, Vector2.One);
+        xformSys.SetCoordinates(ent, new EntityCoordinates(mapEnt, Vector2.One));
         Assert.That(broadphase.SundriesTree, Does.Not.Contain(ent));
 
         Assert.That(entManager.GetComponent<BroadphaseComponent>(mapEnt).SundriesTree, Does.Contain(ent));
@@ -59,12 +62,14 @@ public sealed class Broadphase_Test
         var mapManager = sim.Resolve<IMapManager>();
         var fixturesSystem = entManager.EntitySysManager.GetEntitySystem<FixtureSystem>();
         var physicsSystem = entManager.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>();
+        var mapSys = entManager.System<SharedMapSystem>();
+        var xformSys = entManager.System<SharedTransformSystem>();
 
         var (mapEnt, mapId) = sim.CreateMap();
         var grid = mapManager.CreateGridEntity(mapId);
         var gridUid = grid.Owner;
 
-        grid.Comp.SetTile(Vector2i.Zero, new Tile(1));
+        mapSys.SetTile(grid, Vector2i.Zero, new Tile(1));
         Assert.That(entManager.HasComponent<BroadphaseComponent>(gridUid));
         var broadphase = entManager.GetComponent<BroadphaseComponent>(gridUid);
 
@@ -90,7 +95,7 @@ public sealed class Broadphase_Test
         Assert.That(broadphase.StaticTree.GetProxy(fixture.Proxies[0].ProxyId)!.Equals(fixture.Proxies[0]));
 
         // Now check we go to the map's tree correctly.
-        xform.Coordinates = new EntityCoordinates(mapEnt, Vector2.One);
+        xformSys.SetCoordinates(ent, new EntityCoordinates(mapEnt, Vector2.One));
         Assert.That(entManager.GetComponent<BroadphaseComponent>(mapEnt).StaticTree.GetProxy(fixture.Proxies[0].ProxyId)!.Equals(fixture.Proxies[0]));
         Assert.That(xform.Broadphase!.Value.Uid.Equals(mapEnt));
     }
@@ -107,21 +112,22 @@ public sealed class Broadphase_Test
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
         var mapManager = sim.Resolve<IMapManager>();
+        var mapSys = entManager.System<SharedMapSystem>();
+        var xformSys = entManager.System<SharedTransformSystem>();
 
-        var mapId1 = sim.CreateMap().MapId;
-        var mapId2 = sim.CreateMap().MapId;
+        var (map1, mapId1) = sim.CreateMap();
+        var (map2, _) = sim.CreateMap();
         var grid = mapManager.CreateGridEntity(mapId1);
-        var xform = entManager.GetComponent<TransformComponent>(grid);
 
-        grid.Comp.SetTile(Vector2i.Zero, new Tile(1));
-        var mapBroadphase1 = entManager.GetComponent<BroadphaseComponent>(mapManager.GetMapEntityId(mapId1));
-        var mapBroadphase2 = entManager.GetComponent<BroadphaseComponent>(mapManager.GetMapEntityId(mapId2));
+        mapSys.SetTile(grid, Vector2i.Zero, new Tile(1));
+        var mapBroadphase1 = entManager.GetComponent<BroadphaseComponent>(map1);
+        var mapBroadphase2 = entManager.GetComponent<BroadphaseComponent>(map2);
         entManager.TickUpdate(0.016f, false);
 #pragma warning disable NUnit2046
         Assert.That(mapBroadphase1.DynamicTree.Count, Is.EqualTo(0));
 #pragma warning restore NUnit2046
 
-        xform.Coordinates = new EntityCoordinates(mapManager.GetMapEntityId(mapId2), Vector2.Zero);
+        xformSys.SetCoordinates(grid, new EntityCoordinates(map1, Vector2.One));
         entManager.TickUpdate(0.016f, false);
 #pragma warning disable NUnit2046
         Assert.That(mapBroadphase2.DynamicTree.Count, Is.EqualTo(0));
@@ -140,13 +146,14 @@ public sealed class Broadphase_Test
         var system = entManager.EntitySysManager;
         var physicsSystem = system.GetEntitySystem<SharedPhysicsSystem>();
         var lookup = system.GetEntitySystem<EntityLookupSystem>();
+        var mapSys = entManager.System<SharedMapSystem>();
 
-        var mapId = sim.CreateMap().MapId;
+        var (map, mapId) = sim.CreateMap();
         var grid = mapManager.CreateGridEntity(mapId);
 
-        grid.Comp.SetTile(Vector2i.Zero, new Tile(1));
+        mapSys.SetTile(grid, Vector2i.Zero, new Tile(1));
         var gridBroadphase = entManager.GetComponent<BroadphaseComponent>(grid);
-        var mapBroadphase = entManager.GetComponent<BroadphaseComponent>(mapManager.GetMapEntityId(mapId));
+        var mapBroadphase = entManager.GetComponent<BroadphaseComponent>(map);
 
         Assert.That(entManager.EntityQuery<BroadphaseComponent>(true).Count(), Is.EqualTo(2));
 
@@ -169,7 +176,7 @@ public sealed class Broadphase_Test
         Assert.That(lookup.FindBroadphase(child1), Is.EqualTo(gridBroadphase));
 
         // They should get deparented to the map and updated to the map's broadphase instead.
-        grid.Comp.SetTile(Vector2i.Zero, Tile.Empty);
+        mapSys.SetTile(grid, Vector2i.Zero, Tile.Empty);
         Assert.That(lookup.FindBroadphase(parent), Is.EqualTo(mapBroadphase));
         Assert.That(lookup.FindBroadphase(child1), Is.EqualTo(mapBroadphase));
         Assert.That(lookup.FindBroadphase(child2), Is.EqualTo(mapBroadphase));
@@ -191,6 +198,7 @@ public sealed class Broadphase_Test
         var xforms = system.GetEntitySystem<SharedTransformSystem>();
         var physSystem = system.GetEntitySystem<SharedPhysicsSystem>();
         var fixtures = system.GetEntitySystem<FixtureSystem>();
+        var mapSys = entManager.System<SharedMapSystem>();
 
         // setup maps
         var (mapA, mapAId) = sim.CreateMap();
@@ -204,9 +212,9 @@ public sealed class Broadphase_Test
         var gridB = gridBComp.Owner;
         var gridC = gridCComp.Owner;
         xforms.SetLocalPosition(gridC, new Vector2(10, 10));
-        gridAComp.Comp.SetTile(Vector2i.Zero, new Tile(1));
-        gridBComp.Comp.SetTile(Vector2i.Zero, new Tile(1));
-        gridCComp.Comp.SetTile(Vector2i.Zero, new Tile(1));
+        mapSys.SetTile(gridAComp, Vector2i.Zero, new Tile(1));
+        mapSys.SetTile(gridBComp, Vector2i.Zero, new Tile(1));
+        mapSys.SetTile(gridCComp, Vector2i.Zero, new Tile(1));
 
         // set up test entities
         var parent = entManager.SpawnEntity(null, new EntityCoordinates(mapA, new Vector2(200,200)));

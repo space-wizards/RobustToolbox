@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.IoC;
@@ -33,9 +32,9 @@ namespace Robust.Client.UserInterface.Controls
         public IClydeWindow? Owner { get; set; }
 
         /// <summary>
-        /// Whether the window is currently open.
+        /// Whether the window is created and currently open.
         /// </summary>
-        public bool IsOpen => ClydeWindow != null;
+        public bool IsOpen => ClydeWindow?.IsVisible ?? false;
 
         /// <summary>
         /// The title of the window.
@@ -97,12 +96,13 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         /// <summary>
-        /// Show the window to the user.
+        /// Create the window if not already created.
+        /// This window is not visible by default, call <see cref="Show"/> to display it.
         /// </summary>
-        public void Show()
+        public IClydeWindow Create()
         {
-            if (IsOpen)
-                return;
+            if (ClydeWindow != null)
+                return ClydeWindow;
 
             var parameters = new WindowCreateParameters();
 
@@ -127,6 +127,7 @@ namespace Robust.Client.UserInterface.Controls
             parameters.Styles = WindowStyles;
             parameters.Owner = Owner;
             parameters.StartupLocation = StartupLocation;
+            parameters.Visible = false;
 
             ClydeWindow = _clyde.CreateWindow(parameters);
             ClydeWindow.RequestClosed += OnWindowRequestClosed;
@@ -135,6 +136,19 @@ namespace Robust.Client.UserInterface.Controls
 
             _root = UserInterfaceManager.CreateWindowRoot(ClydeWindow);
             _root.AddChild(this);
+
+            // Resize the window by our UIScale
+            ClydeWindow.Size = new((int)(ClydeWindow.Size.X * UIScale), (int)(ClydeWindow.Size.Y * UIScale));
+            return ClydeWindow;
+        }
+
+        /// <summary>
+        /// Show the window to the user, creating it if necessary
+        /// </summary>
+        public void Show()
+        {
+            ClydeWindow = Create();
+            ClydeWindow.IsVisible = true;
 
             Shown();
         }
@@ -179,7 +193,7 @@ namespace Robust.Client.UserInterface.Controls
 
         private void OnWindowResized(WindowResizedEventArgs obj)
         {
-            SetSize = obj.NewSize;
+            SetSize = obj.NewSize / UIScale;
         }
 
         private void RealClosed()

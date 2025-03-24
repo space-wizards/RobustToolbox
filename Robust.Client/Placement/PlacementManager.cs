@@ -27,6 +27,7 @@ namespace Robust.Client.Placement
 {
     public sealed partial class PlacementManager : IPlacementManager, IDisposable, IEntityEventSubscriber
     {
+        [Dependency] private readonly ILogManager _logManager = default!;
         [Dependency] private readonly IClientNetManager _networkManager = default!;
         [Dependency] internal readonly IPlayerManager PlayerManager = default!;
         [Dependency] internal readonly IResourceCache ResourceCache = default!;
@@ -41,6 +42,11 @@ namespace Robust.Client.Placement
         [Dependency] private readonly IBaseClient _baseClient = default!;
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
         [Dependency] internal readonly IClyde Clyde = default!;
+
+        private ISawmill _sawmill = default!;
+
+        private SharedMapSystem Maps => EntityManager.System<SharedMapSystem>();
+        private SharedTransformSystem XformSystem => EntityManager.System<SharedTransformSystem>();
 
         /// <summary>
         ///     How long before a pending tile change is dropped.
@@ -188,6 +194,7 @@ namespace Robust.Client.Placement
         public void Initialize()
         {
             _drawingShader = _prototypeManager.Index<ShaderPrototype>("unshaded").Instance();
+            _sawmill = _logManager.GetSawmill("placement");
 
             _networkManager.RegisterNetMessage<MsgPlacement>(HandlePlacementMessage);
 
@@ -337,7 +344,11 @@ namespace Robust.Client.Placement
 
         private void HandleTileChanged(ref TileChangedEvent args)
         {
-            var coords = EntityManager.GetComponent<MapGridComponent>(args.NewTile.GridUid).GridTileToLocal(args.NewTile.GridIndices);
+            var coords = Maps.GridTileToLocal(
+                args.NewTile.GridUid,
+                EntityManager.GetComponent<MapGridComponent>(args.NewTile.GridUid),
+                args.NewTile.GridIndices);
+
             _pendingTileChanges.RemoveAll(c => c.Item1 == coords);
         }
 
@@ -475,7 +486,7 @@ namespace Robust.Client.Placement
 
             if (!_modeDictionary.TryFirstOrNull(pair => pair.Key.Equals(CurrentPermission.PlacementOption), out KeyValuePair<string, Type>? placeMode))
             {
-                Logger.LogS(LogLevel.Warning, nameof(PlacementManager), $"Invalid placement mode `{CurrentPermission.PlacementOption}`");
+                _sawmill.Log(LogLevel.Warning, $"Invalid placement mode `{CurrentPermission.PlacementOption}`");
                 Clear();
                 return;
             }
@@ -525,14 +536,14 @@ namespace Robust.Client.Placement
             }
             else
             {
+                var mousePosition = EyeManager.PixelToMap(InputManager.MouseScreenPosition);
                 var map = EntityManager.GetComponent<TransformComponent>(ent).MapID;
-                if (map == MapId.Nullspace || !Eraser)
+                if (map == MapId.Nullspace || !Eraser || mousePosition.MapId == MapId.Nullspace)
                 {
                     coordinates = new EntityCoordinates();
                     return false;
                 }
-                coordinates = EntityCoordinates.FromMap(MapManager,
-                                                        EyeManager.PixelToMap(InputManager.MouseScreenPosition));
+                coordinates = XformSystem.ToCoordinates(mousePosition);
                 return true;
             }
         }
@@ -648,7 +659,7 @@ namespace Robust.Client.Placement
                 PlayerManager.LocalEntity is not {Valid: true} controlled)
                 return;
 
-            var worldPos = EntityManager.GetComponent<TransformComponent>(controlled).WorldPosition;
+            var worldPos = XformSystem.GetWorldPosition(controlled);
 
             args.WorldHandle.DrawCircle(worldPos, CurrentPermission.Range, new Color(1, 1, 1, 0.25f));
         }
@@ -754,14 +765,14 @@ namespace Robust.Client.Placement
 
             if (CurrentPermission.IsTile)
             {
-                var gridIdOpt = coordinates.GetGridUid(EntityManager);
+                var gridIdOpt = XformSystem.GetGrid(coordinates);
                 // If we have actually placed something on a valid grid...
-                if (gridIdOpt is EntityUid gridId && gridId.IsValid())
+                if (gridIdOpt is { } gridId && gridId.IsValid())
                 {
                     var grid = EntityManager.GetComponent<MapGridComponent>(gridId);
 
                     // no point changing the tile to the same thing.
-                    if (grid.GetTileRef(coordinates).Tile.TypeId == CurrentPermission.TileType)
+                    if (Maps.GetTileRef(gridId, grid, coordinates).Tile.TypeId == CurrentPermission.TileType)
                         return;
                 }
 

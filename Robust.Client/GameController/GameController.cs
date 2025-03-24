@@ -19,6 +19,7 @@ using Robust.Client.State;
 using Robust.Client.Upload;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.RichText;
+using Robust.Client.UserInterface.XAML.Proxy;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
 using Robust.Client.WebViewHook;
@@ -53,6 +54,8 @@ namespace Robust.Client
         [Dependency] private readonly IResourceCacheInternal _resourceCache = default!;
         [Dependency] private readonly IResourceManagerInternal _resManager = default!;
         [Dependency] private readonly IRobustSerializer _serializer = default!;
+        [Dependency] private readonly IXamlProxyManager _xamlProxyManager = default!;
+        [Dependency] private readonly IXamlHotReloadManager _xamlHotReloadManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         [Dependency] private readonly IClientNetManager _networkManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
@@ -90,6 +93,7 @@ namespace Robust.Client
         [Dependency] private readonly IReplayPlaybackManager _replayPlayback = default!;
         [Dependency] private readonly IReplayRecordingManagerInternal _replayRecording = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IReloadManager _reload = default!;
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -109,14 +113,28 @@ namespace Robust.Client
             _commandLineArgs = args;
         }
 
+        public string GameTitle()
+        {
+            return Options.DefaultWindowTitle ?? _resourceManifest!.DefaultWindowTitle ?? "RobustToolbox";
+        }
+
+        public string WindowIconSet()
+        {
+            return Options.WindowIconSet?.ToString() ?? _resourceManifest!.WindowIconSet ?? "";
+        }
+
+        public string SplashLogo()
+        {
+            return Options.SplashLogo?.ToString() ?? _resourceManifest!.SplashLogo ?? "";
+        }
+
         internal bool StartupContinue(DisplayMode displayMode)
         {
             DebugTools.AssertNotNull(_resourceManifest);
 
             _clyde.InitializePostWindowing();
             _audio.InitializePostWindowing();
-            _clyde.SetWindowTitle(
-                Options.DefaultWindowTitle ?? _resourceManifest!.DefaultWindowTitle ?? "RobustToolbox");
+            _clyde.SetWindowTitle(GameTitle());
 
             _taskManager.Initialize();
             _parallelMgr.Initialize();
@@ -168,9 +186,12 @@ namespace Robust.Client
             // before prototype load.
             ProgramShared.FinishCheckBadFileExtensions(checkBadExtensions);
 
+            _reload.Initialize();
             _reflectionManager.Initialize();
             _prototypeManager.Initialize();
             _prototypeManager.LoadDefaultPrototypes();
+            _xamlProxyManager.Initialize();
+            _xamlHotReloadManager.Initialize();
             _userInterfaceManager.Initialize();
             _eyeManager.Initialize();
             _entityManager.Initialize();
@@ -394,10 +415,8 @@ namespace Robust.Client
                 // Handle GameControllerOptions implicit CVar overrides.
                 _configurationManager.OverrideConVars(new[]
                 {
-                    (CVars.DisplayWindowIconSet.Name,
-                        options.WindowIconSet?.ToString() ?? _resourceManifest.WindowIconSet ?? ""),
-                    (CVars.DisplaySplashLogo.Name,
-                        options.SplashLogo?.ToString() ?? _resourceManifest.SplashLogo ?? "")
+                    (CVars.DisplayWindowIconSet.Name, WindowIconSet()),
+                    (CVars.DisplaySplashLogo.Name, SplashLogo())
                 });
             }
 

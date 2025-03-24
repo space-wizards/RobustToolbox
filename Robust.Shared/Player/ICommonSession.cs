@@ -33,9 +33,12 @@ public interface ICommonSession
     string Name { get; }
 
     /// <summary>
-    /// Current connection latency of this session from the server to their client.
+    /// Current connection latency of this session. If <see cref="Channel"/> is not null this simply returns
+    /// <see cref="INetChannel.Ping"/>. This is not currently usable by client-side code that wants to try access ping
+    /// information of other players.
     /// </summary>
     short Ping { get; }
+    // TODO PlayerManager ping networking.
 
     /// <summary>
     /// The current network channel for this session.
@@ -44,7 +47,7 @@ public interface ICommonSession
     /// On the Server every player has a network channel,
     /// on the Client only the LocalPlayer has a network channel, and that channel points to the server.
     /// </remarks>
-    INetChannel Channel { get; [Obsolete] set; }
+    INetChannel Channel { get; set; }
 
     LoginType AuthType { get; }
 
@@ -64,9 +67,6 @@ public interface ICommonSession
     /// Class for storing arbitrary session-specific data that is not lost upon reconnect.
     /// </summary>
     SessionData Data { get; }
-
-    [Obsolete("Just use the Channel field instead.")]
-    INetChannel ConnectedClient => Channel;
 
     /// <summary>
     /// If true, this indicates that this is a client-side session, and should be ignored when applying a server's

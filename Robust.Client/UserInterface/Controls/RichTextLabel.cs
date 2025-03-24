@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
@@ -44,9 +44,12 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 if (value == null)
+                {
                     _message?.Clear();
-                else
-                    _message?.AddMarkupPermissive(value);
+                    return;
+                }
+
+                SetMessage(FormattedMessage.FromMarkupPermissive(value));
             }
         }
 

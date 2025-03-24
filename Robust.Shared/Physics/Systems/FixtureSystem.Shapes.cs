@@ -3,6 +3,7 @@ using System.Numerics;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Shapes;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Systems
@@ -28,6 +29,7 @@ namespace Robust.Shared.Physics.Systems
                     var distance = worldPoint - center;
                     return Vector2.Dot(distance, distance) <= circle.Radius * circle.Radius;
                 case PolygonShape poly:
+                {
                     var pLocal = Physics.Transform.MulT(xform.Quaternion2D, worldPoint - xform.Position);
 
                     for (var i = 0; i < poly.VertexCount; i++)
@@ -37,6 +39,35 @@ namespace Robust.Shared.Physics.Systems
                     }
 
                     return true;
+                }
+                case SlimPolygon slim:
+                {
+                    var pLocal = Physics.Transform.MulT(xform.Quaternion2D, worldPoint - xform.Position);
+                    var norms = slim._normals.AsSpan;
+                    var verts = slim._vertices.AsSpan;
+
+                    for (var i = 0; i < slim.VertexCount; i++)
+                    {
+                        var dot = Vector2.Dot(norms[i], pLocal - verts[i]);
+                        if (dot > 0f) return false;
+                    }
+
+                    return true;
+                }
+                case Polygon poly:
+                {
+                    var pLocal = Physics.Transform.MulT(xform.Quaternion2D, worldPoint - xform.Position);
+                    var norms = poly._normals.AsSpan;
+                    var verts = poly._vertices.AsSpan;
+
+                    for (var i = 0; i < poly.VertexCount; i++)
+                    {
+                        var dot = Vector2.Dot(norms[i], pLocal - verts[i]);
+                        if (dot > 0f) return false;
+                    }
+
+                    return true;
+                }
                 default:
                     throw new ArgumentOutOfRangeException($"No implemented TestPoint for {shape.GetType()}");
             }
@@ -71,6 +102,10 @@ namespace Robust.Shared.Physics.Systems
                     var polygon = (PolygonShape) aabb;
                     GetMassData(polygon, ref data, density);
                     break;
+                case Polygon fastPoly:
+                    return GetMassData(new PolygonShape(fastPoly), density);
+                case SlimPolygon slim:
+                    return GetMassData(new PolygonShape(slim), density);
                 case PolygonShape poly:
                     // Polygon mass, centroid, and inertia.
                     // Let rho be the polygon density in mass per unit area.
@@ -179,6 +214,12 @@ namespace Robust.Shared.Physics.Systems
                 case PhysShapeAabb aabb:
                     var polygon = (PolygonShape) aabb;
                     GetMassData(polygon, ref data, density);
+                    break;
+                case Polygon fastPoly:
+                    GetMassData(new PolygonShape(fastPoly), ref data, density);
+                    break;
+                case SlimPolygon slim:
+                    GetMassData(new PolygonShape(slim), ref data, density);
                     break;
                 case PolygonShape poly:
                     // Polygon mass, centroid, and inertia.

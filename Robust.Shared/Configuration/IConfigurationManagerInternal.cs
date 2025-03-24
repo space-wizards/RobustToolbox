@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -7,6 +8,7 @@ namespace Robust.Shared.Configuration
     {
         void OverrideConVars(IEnumerable<(string key, string value)> cVars);
         void LoadCVarsFromAssembly(Assembly assembly);
+        void LoadCVarsFromType(Type containingType);
 
         void Initialize(bool isServer);
 

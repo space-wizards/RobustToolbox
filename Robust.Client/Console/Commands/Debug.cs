@@ -173,29 +173,51 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal sealed class ShowPositionsCommand : LocalizedCommands
+    internal sealed class ShowPositionsCommand : LocalizedEntityCommands
     {
-        [Dependency] private readonly IEntitySystemManager _entitySystems = default!;
+        [Dependency] private readonly DebugDrawingSystem _debugDrawing = default!;
 
         public override string Command => "showpos";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var mgr = _entitySystems.GetEntitySystem<DebugDrawingSystem>();
-            mgr.DebugPositions = !mgr.DebugPositions;
+            _debugDrawing.DebugPositions = !_debugDrawing.DebugPositions;
         }
     }
 
-    internal sealed class ShowRotationsCommand : LocalizedCommands
+    internal sealed class ShowRotationsCommand : LocalizedEntityCommands
     {
-        [Dependency] private readonly IEntitySystemManager _entitySystems = default!;
+        [Dependency] private readonly DebugDrawingSystem _debugDrawing = default!;
 
         public override string Command => "showrot";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var mgr = _entitySystems.GetEntitySystem<DebugDrawingSystem>();
-            mgr.DebugRotations = !mgr.DebugRotations;
+            _debugDrawing.DebugRotations = !_debugDrawing.DebugRotations;
+        }
+    }
+
+    internal sealed class ShowVelocitiesCommand : LocalizedEntityCommands
+    {
+        [Dependency] private readonly DebugDrawingSystem _debugDrawing = default!;
+
+        public override string Command => "showvel";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
+        {
+            _debugDrawing.DebugVelocities = !_debugDrawing.DebugVelocities;
+        }
+    }
+
+    internal sealed class ShowAngularVelocitiesCommand : LocalizedEntityCommands
+    {
+        [Dependency] private readonly DebugDrawingSystem _debugDrawing = default!;
+
+        public override string Command => "showangvel";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
+        {
+            _debugDrawing.DebugAngularVelocities = !_debugDrawing.DebugAngularVelocities;
         }
     }
 
@@ -579,7 +601,20 @@ namespace Robust.Client.Console.Commands
         private static string GetMemberValue(MemberInfo? member, Control control, string separator, string
                 wrap = "{0}")
         {
-            var value = member?.GetValue(control);
+            object? value = null;
+            try
+            {
+                value = member?.GetValue(control);
+            }
+            catch (TargetInvocationException exception)
+            {
+                var exceptionToPrint = exception.InnerException ?? exception;
+                value = $"{exceptionToPrint.GetType()}: {exceptionToPrint.Message}";
+            }
+            catch (Exception exception)
+            {
+                value = $"{exception.GetType()}: {exception.Message}";
+            }
             var o = value switch
             {
                 ICollection<Control> controls => string.Join(separator,

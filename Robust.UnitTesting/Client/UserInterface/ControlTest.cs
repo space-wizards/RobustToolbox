@@ -84,7 +84,7 @@ namespace Robust.UnitTesting.Client.UserInterface
             control1.Visible = true;
             Assert.That(control2.VisibleInTree, Is.False);
 
-            control1.Dispose();
+            control1.Orphan();
         }
 
         [Test]

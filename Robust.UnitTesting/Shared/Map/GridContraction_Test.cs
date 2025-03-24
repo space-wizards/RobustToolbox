@@ -18,6 +18,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             var entManager = server.ResolveDependency<IEntityManager>();
             var mapManager = server.ResolveDependency<IMapManager>();
+            var mapSystem = entManager.EntitySysManager.GetEntitySystem<SharedMapSystem>();
 
             await server.WaitAssertion(() =>
             {
@@ -27,12 +28,12 @@ namespace Robust.UnitTesting.Shared.Map
 
                 for (var i = 0; i < 10; i++)
                 {
-                    grid.Comp.SetTile(new Vector2i(i, 0), new Tile(1));
+                    mapSystem.SetTile(grid, new Vector2i(i, 0), new Tile(1));
                 }
 
                 for (var i = 10; i >= 0; i--)
                 {
-                    grid.Comp.SetTile(new Vector2i(i, 0), Tile.Empty);
+                    mapSystem.SetTile(grid, new Vector2i(i, 0), Tile.Empty);
                 }
 
                 Assert.That(entManager.Deleted(gridEntity));
@@ -56,6 +57,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             var entManager = server.ResolveDependency<IEntityManager>();
             var mapManager = server.ResolveDependency<IMapManager>();
+            var mapSystem = entManager.System<SharedMapSystem>();
 
             await server.WaitAssertion(() =>
             {
@@ -64,12 +66,12 @@ namespace Robust.UnitTesting.Shared.Map
 
                 for (var i = 0; i < 10; i++)
                 {
-                    grid.Comp.SetTile(new Vector2i(i, 0), new Tile(1));
+                    mapSystem.SetTile(grid, new Vector2i(i, 0), new Tile(1));
                 }
 
                 for (var i = 10; i >= 0; i--)
                 {
-                    grid.Comp.SetTile(new Vector2i(i, 0), Tile.Empty);
+                    mapSystem.SetTile(grid, new Vector2i(i, 0), Tile.Empty);
                 }
 
                 Assert.That(!((!entManager.EntityExists(grid) ? EntityLifeStage.Deleted : entManager.GetComponent<MetaDataComponent>(grid).EntityLifeStage) >= EntityLifeStage.Deleted));

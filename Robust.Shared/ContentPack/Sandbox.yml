@@ -10,6 +10,8 @@ AllowedVerifierErrors:
 - InterfaceMethodNotImplemented
 
 # EVERYTHING in these namespaces is allowed.
+# Note that, due to a historical bug in the sandbox, any namespace _prefixed_ with one of these
+# is also allowed. (For instance, RobustBats.X, or ContentFarm.Y)
 WhitelistedNamespaces:
 - Robust
 - Content
@@ -84,12 +86,146 @@ Types:
       - "bool get_HasContents()"
   Lidgren.Network:
     NetBuffer:
-      All: True
+      Methods:
+      - "byte[] get_Data()"
+      - "void set_Data(byte[])"
+      - "int get_LengthBytes()"
+      - "void set_LengthBytes(int)"
+      - "int get_LengthBits()"
+      - "void set_LengthBits(int)"
+      - "long get_Position()"
+      - "void set_Position(long)"
+      - "int get_PositionInBytes()"
+      - "byte[] PeekDataBuffer()"
+      - "bool PeekBoolean()"
+      - "byte PeekByte()"
+      - "sbyte PeekSByte()"
+      - "byte PeekByte(int)"
+      - "System.Span`1<byte> PeekBytes(System.Span`1<byte>)"
+      - "byte[] PeekBytes(int)"
+      - "void PeekBytes(byte[], int, int)"
+      - "short PeekInt16()"
+      - "ushort PeekUInt16()"
+      - "int PeekInt32()"
+      - "int PeekInt32(int)"
+      - "uint PeekUInt32()"
+      - "uint PeekUInt32(int)"
+      - "ulong PeekUInt64()"
+      - "long PeekInt64()"
+      - "ulong PeekUInt64(int)"
+      - "long PeekInt64(int)"
+      - "float PeekFloat()"
+      - "System.Half PeekHalf()"
+      - "float PeekSingle()"
+      - "double PeekDouble()"
+      - "string PeekString()"
+      - "int PeekStringSize()"
+      - "bool ReadBoolean()"
+      - "byte ReadByte()"
+      - "bool ReadByte(ref byte)"
+      - "sbyte ReadSByte()"
+      - "byte ReadByte(int)"
+      - "System.Span`1<byte> ReadBytes(System.Span`1<byte>)"
+      - "byte[] ReadBytes(int)"
+      - "bool ReadBytes(int, ref byte[])"
+      - "bool TryReadBytes(System.Span`1<byte>)"
+      - "void ReadBytes(byte[], int, int)"
+      - "void ReadBits(System.Span`1<byte>, int)"
+      - "void ReadBits(byte[], int, int)"
+      - "short ReadInt16()"
+      - "ushort ReadUInt16()"
+      - "int ReadInt32()"
+      - "bool ReadInt32(ref int)"
+      - "int ReadInt32(int)"
+      - "uint ReadUInt32()"
+      - "bool ReadUInt32(ref uint)"
+      - "uint ReadUInt32(int)"
+      - "ulong ReadUInt64()"
+      - "long ReadInt64()"
+      - "ulong ReadUInt64(int)"
+      - "long ReadInt64(int)"
+      - "float ReadFloat()"
+      - "System.Half ReadHalf()"
+      - "float ReadSingle()"
+      - "bool ReadSingle(ref float)"
+      - "double ReadDouble()"
+      - "uint ReadVariableUInt32()"
+      - "bool ReadVariableUInt32(ref uint)"
+      - "int ReadVariableInt32()"
+      - "long ReadVariableInt64()"
+      - "ulong ReadVariableUInt64()"
+      - "float ReadSignedSingle(int)"
+      - "float ReadUnitSingle(int)"
+      - "float ReadRangedSingle(float, float, int)"
+      - "int ReadRangedInteger(int, int)"
+      - "long ReadRangedInteger(long, long)"
+      - "string ReadString()"
+      - "bool ReadString(ref string)"
+      - "double ReadTime(Lidgren.Network.NetConnection, bool)"
+      - "System.Net.IPEndPoint ReadIPEndPoint()"
+      - "void SkipPadBits()"
+      - "void ReadPadBits()"
+      - "void SkipPadBits(int)"
+      - "void EnsureBufferSize(int)"
+      - "void Write(bool)"
+      - "void Write(byte)"
+      - "void WriteAt(int, byte)"
+      - "void Write(sbyte)"
+      - "void Write(byte, int)"
+      - "void Write(byte[])"
+      - "void Write(System.ReadOnlySpan`1<byte>)"
+      - "void Write(byte[], int, int)"
+      - "void Write(ushort)"
+      - "void WriteAt(int, ushort)"
+      - "void Write(ushort, int)"
+      - "void Write(short)"
+      - "void WriteAt(int, short)"
+      - "void Write(int)"
+      - "void WriteAt(int, int)"
+      - "void Write(uint)"
+      - "void WriteAt(int, uint)"
+      - "void Write(uint, int)"
+      - "void Write(int, int)"
+      - "void Write(ulong)"
+      - "void WriteAt(int, ulong)"
+      - "void Write(ulong, int)"
+      - "void Write(long)"
+      - "void Write(long, int)"
+      - "void Write(System.Half)"
+      - "void Write(float)"
+      - "void Write(double)"
+      - "int WriteVariableUInt32(uint)"
+      - "int WriteVariableInt32(int)"
+      - "int WriteVariableInt64(long)"
+      - "int WriteVariableUInt64(ulong)"
+      - "void WriteSignedSingle(float, int)"
+      - "void WriteUnitSingle(float, int)"
+      - "void WriteRangedSingle(float, float, float, int)"
+      - "int WriteRangedInteger(int, int, int)"
+      - "int WriteRangedInteger(long, long, long)"
+      - "void Write(string)"
+      - "void Write(System.Net.IPEndPoint)"
+      - "void WriteTime(bool)"
+      - "void WriteTime(double, bool)"
+      - "void WritePadBits()"
+      - "void WritePadBits(int)"
+      - "void Write(Lidgren.Network.NetBuffer)"
+      - "void Zero(int)"
+      - "void .ctor()"
     NetDeliveryMethod: { }
     NetIncomingMessage:
-      All: True
+      Methods:
+      - "Lidgren.Network.NetIncomingMessageType get_MessageType()"
+      - "Lidgren.Network.NetDeliveryMethod get_DeliveryMethod()"
+      - "int get_SequenceChannel()"
+      - "System.Net.IPEndPoint get_SenderEndPoint()"
+      - "Lidgren.Network.NetConnection get_SenderConnection()"
+      - "double get_ReceiveTime()"
+      - "double ReadTime(bool)"
+      - "string ToString()"
     NetOutgoingMessage:
-      All: True
+      Methods:
+      - "string ToString()"
   Nett:
     CommentLocation: { } # Enum
     Toml:
@@ -331,6 +467,8 @@ Types:
     IComponent: { All: True }
     IContainer: { All: True }
     ITypeDescriptorContext: { All: True }
+    EditorBrowsableAttribute: { All: True }
+    EditorBrowsableState: { All: True }
   System.Diagnostics.CodeAnalysis:
     AllowNullAttribute: { All: True }
     DisallowNullAttribute: { All: True }
@@ -344,6 +482,7 @@ Types:
     NotNullAttribute: { All: True }
     NotNullIfNotNullAttribute: { All: True }
     NotNullWhenAttribute: { All: True }
+    SetsRequiredMembersAttribute: { All : True}
     SuppressMessageAttribute: { All: True }
   System.Diagnostics:
     DebuggableAttribute: { All: True }
@@ -452,7 +591,6 @@ Types:
     Vector2: { All: True }
     Vector3: { All: True }
     Vector4: { All: True }
-    Matrix3x2: { All: True }
   System.Reflection:
     Assembly:
       Methods:
@@ -507,6 +645,7 @@ Types:
     IAsyncStateMachine: { All: True }
     InternalsVisibleToAttribute: { All: True }
     InterpolatedStringHandlerAttribute: { All: True }
+    InterpolatedStringHandlerArgumentAttribute: { All: True }
     IsByRefLikeAttribute: { All: True }
     IsExternalInit: { All: True }
     IsReadOnlyAttribute: { All: True }
@@ -516,8 +655,11 @@ Types:
     NullableContextAttribute: { All: True }
     PreserveBaseOverridesAttribute: { All: True }
     RefSafetyRulesAttribute: { All: True }
+    RequiredMemberAttribute: { All: True }
+    RequiresLocationAttribute: { All: True }
     RuntimeCompatibilityAttribute: { All: True }
     RuntimeHelpers: { All: True }
+    SwitchExpressionException: { All: True }
     TaskAwaiter: { All: True }
     TaskAwaiter`1: { All: True }
     TupleElementNamesAttribute: { All: True }
@@ -554,7 +696,7 @@ Types:
       - "bool IsMatch(string, string, System.Text.RegularExpressions.RegexOptions, System.TimeSpan)"
       - "int GroupNumberFromName(string)"
       - "int[] GetGroupNumbers()"
-      - "string Escape()"
+      - "string Escape(string)"
       - "string GroupNameFromNumber(int)"
       - "string Replace(string, string)"
       - "string Replace(string, string, int)"
@@ -583,17 +725,26 @@ Types:
       - "System.Text.RegularExpressions.Match Match(string, string)"
       - "System.Text.RegularExpressions.Match Match(string, string, System.Text.RegularExpressions.RegexOptions)"
       - "System.Text.RegularExpressions.Match Match(string, string, System.Text.RegularExpressions.RegexOptions, System.TimeSpan)"
-      - "System.Text.RegularExpressions.Match[] Matches(string)"
-      - "System.Text.RegularExpressions.Match[] Matches(string, int)"
-      - "System.Text.RegularExpressions.Match[] Matches(string, string)"
-      - "System.Text.RegularExpressions.Match[] Matches(string, string, System.Text.RegularExpressions.RegexOptions)"
-      - "System.Text.RegularExpressions.Match[] Matches(string, string, System.Text.RegularExpressions.RegexOptions, System.TimeSpan)"
+      - "System.Text.RegularExpressions.MatchCollection Matches(string)"
+      - "System.Text.RegularExpressions.MatchCollection Matches(string, int)"
+      - "System.Text.RegularExpressions.MatchCollection Matches(string, string)"
+      - "System.Text.RegularExpressions.MatchCollection Matches(string, string, System.Text.RegularExpressions.RegexOptions)"
+      - "System.Text.RegularExpressions.MatchCollection Matches(string, string, System.Text.RegularExpressions.RegexOptions, System.TimeSpan)"
       - "System.Text.RegularExpressions.RegexOptions get_Options()"
       - "System.TimeSpan get_MatchTimeout()"
       - "void .ctor()"
       - "void .ctor(string)"
       - "void .ctor(string, System.Text.RegularExpressions.RegexOptions)"
       - "void .ctor(string, System.Text.RegularExpressions.RegexOptions, System.TimeSpan)"
+      - "int Count(string)"
+      - "int Count(System.ReadOnlySpan`1<char>)"
+      - "int Count(System.ReadOnlySpan`1<char>, int)"
+      - "int Count(string, string)"
+      - "int Count(string, string, System.Text.RegularExpressions.RegexOptions)"
+      - "int Count(string, string, System.Text.RegularExpressions.RegexOptions, System.TimeSpan)"
+      - "int Count(System.ReadOnlySpan`1<char>, string)"
+      - "int Count(System.ReadOnlySpan`1<char>, string, System.Text.RegularExpressions.RegexOptions)"
+      - "int Count(System.ReadOnlySpan`1<char>, string, System.Text.RegularExpressions.RegexOptions, System.TimeSpan)"
     RegexMatchTimeoutException: { All: True }
     RegexOptions: { } # Enum
     RegexParseError: { }
@@ -647,6 +798,7 @@ Types:
       - "bool Equals(System.ReadOnlySpan`1<char>)"
       - "bool Equals(System.Text.StringBuilder)"
       - "char get_Chars(int)"
+      - "void set_Chars(int, char)"
       - "int EnsureCapacity(int)"
       - "int get_Capacity()"
       - "int get_Length()"
@@ -919,6 +1071,7 @@ Types:
     DateTime: { All: True }
     DateTimeKind: { } # Enum
     DateTimeOffset: { All: True }
+    Decimal: { All: True }
     Delegate:
       Methods:
       - "System.Delegate Combine(System.Delegate, System.Delegate)"
@@ -1056,6 +1209,7 @@ Types:
     RuntimeFieldHandle: { }
     RuntimeMethodHandle: { }
     RuntimeTypeHandle: { }
+    STAThreadAttribute: { All: True }
     SByte: { All: True }
     Single: { All: True }
     Span`1:
@@ -1226,6 +1380,7 @@ Types:
       - "string[] Split(char, int, System.StringSplitOptions)"
       - "string[] Split(char, System.StringSplitOptions)"
       - "string[] Split(char[])"
+      - "string[] Split(System.ReadOnlySpan`1<char>)"
       - "string[] Split(char[], int)"
       - "string[] Split(char[], int, System.StringSplitOptions)"
       - "string[] Split(char[], System.StringSplitOptions)"

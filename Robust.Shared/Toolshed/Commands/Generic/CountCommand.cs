@@ -7,8 +7,8 @@ namespace Robust.Shared.Toolshed.Commands.Generic;
 public sealed class CountCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
-    public int Count<T>([PipedArgument] IEnumerable<T> enumerable)
+    public int Count<T>([PipedArgument] IEnumerable<T> input)
     {
-        return enumerable.Count();
+        return input.Count();
     }
 }

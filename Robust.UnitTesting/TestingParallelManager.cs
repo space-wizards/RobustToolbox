@@ -41,11 +41,11 @@ public sealed class TestingParallelManager : IParallelManagerInternal
     }
 
     /// <inheritdoc/>
-    public void ProcessSerialNow<T>(T jobs, int amount) where T : IParallelRobustJob
+    public void ProcessSerialNow<T>(T job, int amount) where T : IParallelRobustJob
     {
         for (var i = 0; i < amount; i++)
         {
-            jobs.Execute(i);
+            job.Execute(i);
         }
     }
 

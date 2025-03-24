@@ -22,6 +22,8 @@ namespace Robust.Client.UserInterface.Controls
 
         public const string StylePropertyStyleBox = "stylebox";
 
+        public bool ShowScrollDownButton { get; set; } = false;
+
         private readonly RingBufferList<RichTextEntry> _entries = new();
         private bool _isAtBottom = true;
 
@@ -64,7 +66,7 @@ namespace Robust.Client.UserInterface.Controls
             _scrollBar.OnValueChanged += _ =>
             {
                 _isAtBottom = _scrollBar.IsAtEnd;
-                _scrollDownButton.Visible = !_isAtBottom;
+                _scrollDownButton.Visible = ShowScrollDownButton && !_isAtBottom;
             };
         }
 
@@ -206,7 +208,7 @@ namespace Robust.Client.UserInterface.Controls
             var styleBoxSize = _getStyleBox()?.MinimumSize.Y ?? 0;
 
             _scrollBar.Page = UIScale * (Height - styleBoxSize);
-            _scrollDownButton.Visible = !_scrollBar.IsAtEnd;
+            _scrollDownButton.Visible = ShowScrollDownButton && !_scrollBar.IsAtEnd;
             _invalidateEntries();
         }
 

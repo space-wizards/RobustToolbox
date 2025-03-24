@@ -167,7 +167,7 @@ namespace Robust.Shared.GameObjects
                 if (!Initialized)
                     return;
 
-                _entMan.System<SharedTransformSystem>().RaiseMoveEvent((Owner, this, meta), _parent, _localPosition, oldRotation, MapUid);
+                _entMan.System<SharedTransformSystem>().RaiseMoveEvent((Owner, this, meta), _parent, _localPosition, oldRotation, MapUid, checkTraversal: false);
             }
         }
 

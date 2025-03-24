@@ -96,12 +96,28 @@ internal sealed class ParallelManager : IParallelManagerInternal
     {
         var tracker = _trackerPool.Get();
         tracker.Event.Reset();
-        var subJob = new InternalJob<T>(job, tracker, _sawmill);
+        var subJob = new InternalJobState<T>(job, tracker, _sawmill);
 
         // From what I can tell preferLocal is more of a !forceGlobal flag.
         // Also UnsafeQueue should be fine as long as we don't use async locals.
-        ThreadPool.UnsafeQueueUserWorkItem(subJob, true);
+        ThreadPool.UnsafeQueueUserWorkItem(Execute, subJob, true);
         return subJob.Tracker.Event.WaitHandle;
+    }
+
+    private static void Execute<T>(InternalJobState<T> job) where T : IRobustJob
+    {
+        try
+        {
+            job.Job.Execute();
+        }
+        catch (Exception exc)
+        {
+            job.Sawmill.Error($"Exception in ParallelManager: {exc.StackTrace}");
+        }
+        finally
+        {
+            job.Tracker.Event.Set();
+        }
     }
 
     public void ProcessNow<T>(T job) where T : IRobustJob
@@ -168,87 +184,70 @@ internal sealed class ParallelManager : IParallelManagerInternal
         {
             var start = i * batchSize;
             var end = Math.Min(start + batchSize, amount);
-            var subJob = new InternalParallelJob<T>(job, tracker, _sawmill, start, end);
+            var subJob = new InternalParallelJobState<T>(job, tracker, _sawmill, start, end);
 
             // From what I can tell preferLocal is more of a !forceGlobal flag.
             // Also UnsafeQueue should be fine as long as we don't use async locals.
-            ThreadPool.UnsafeQueueUserWorkItem(subJob, true);
+            ThreadPool.UnsafeQueueUserWorkItem(Execute, subJob, true);
         }
 
         return tracker;
     }
 
-    private readonly record struct InternalJob<T> : IThreadPoolWorkItem
-        where T : IRobustJob
+    private static void Execute<T>(InternalParallelJobState<T> job) where T : IParallelRobustJob
     {
-        internal readonly ParallelTracker Tracker;
+        var index = 0;
 
-        private readonly T _job;
-        private readonly ISawmill _sawmill;
-
-        public InternalJob(T job, ParallelTracker tracker, ISawmill sawmill)
+        try
         {
-            _job = job;
-            Tracker = tracker;
-            _sawmill = sawmill;
+            for (index = job.Start; index < job.End; index++)
+            {
+                job.Job.Execute(index);
+            }
         }
-
-        public void Execute()
+        catch (Exception exc)
         {
-            try
-            {
-                _job.Execute();
-            }
-            catch (Exception exc)
-            {
-                _sawmill.Error($"Exception in ParallelManager: {exc.StackTrace}");
-            }
-            finally
-            {
-                Tracker.Event.Set();
-            }
+            job.Sawmill.Error($"Exception in ParallelManager on job {index}: {exc.StackTrace}");
+        }
+        finally
+        {
+            job.Tracker.Set();
         }
     }
 
-    private readonly record struct InternalParallelJob<T> : IThreadPoolWorkItem
+    private readonly record struct InternalJobState<T> where T : IRobustJob
+    {
+        internal readonly ParallelTracker Tracker;
+
+        internal readonly T Job;
+        internal readonly ISawmill Sawmill;
+
+        public InternalJobState(T job, ParallelTracker tracker, ISawmill sawmill)
+        {
+            Job = job;
+            Tracker = tracker;
+            Sawmill = sawmill;
+        }
+    }
+
+    private readonly record struct InternalParallelJobState<T>
         where T : IParallelRobustJob
     {
         internal readonly ParallelTracker Tracker;
 
-        private readonly int _start;
-        private readonly int _end;
+        internal readonly int Start;
+        internal readonly int End;
 
-        private readonly T _job;
-        private readonly ISawmill _sawmill;
+        internal readonly T Job;
+        internal readonly ISawmill Sawmill;
 
-        public InternalParallelJob(T job, ParallelTracker tracker, ISawmill sawmill, int start, int end)
+        public InternalParallelJobState(T job, ParallelTracker tracker, ISawmill sawmill, int start, int end)
         {
-            _job = job;
+            Job = job;
             Tracker = tracker;
-            _sawmill = sawmill;
-            _start = start;
-            _end = end;
-        }
-
-        public void Execute()
-        {
-            var index = 0;
-
-            try
-            {
-                for (index = _start; index < _end; index++)
-                {
-                    _job.Execute(index);
-                }
-            }
-            catch (Exception exc)
-            {
-                _sawmill.Error($"Exception in ParallelManager on job {index}: {exc.StackTrace}");
-            }
-            finally
-            {
-                Tracker.Set();
-            }
+            Sawmill = sawmill;
+            Start = start;
+            End = end;
         }
     }
 }

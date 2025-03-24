@@ -54,6 +54,7 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly IEntitySystemManager _systemManager = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
         [Dependency] private readonly IRuntimeLog _runtime = default!;
+        [Dependency] private readonly IClipboardManager _clipboard = null!;
 
         private IAudioSource? _clickSource;
         private IAudioSource? _hoverSource;
@@ -214,8 +215,13 @@ namespace Robust.Client.UserInterface
         {
             using (_prof.Group("Update"))
             {
+                // Update hovered. Can't rely upon mouse movement due to New controls potentially coming up.
+                UpdateHovered();
+
                 foreach (var root in _roots)
                 {
+                    CheckRootUIScaleUpdate(root);
+
                     using (_prof.Group("Root"))
                     {
                         var totalUpdated = root.DoFrameUpdateRecursive(args);
@@ -329,6 +335,30 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        public void RenderControl(in Control.ControlRenderArguments args, Control control)
+        {
+            var _ = 0;
+            RenderControl(args.Handle,
+                ref _,
+                control,
+                args.Position,
+                args.Modulate,
+                args.ScissorBox,
+                args.CoordinateTransform);
+        }
+
+        public void RenderControl(IRenderHandle handle, Control control, Vector2i position)
+        {
+            var _ = 0;
+            RenderControl(handle,
+                ref _,
+                control,
+                position,
+                Color.White,
+                null,
+                Matrix3x2.Identity);
+        }
+
         public void RenderControl(IRenderHandle renderHandle, ref int total, Control control, Vector2i position, Color modulate,
             UIBox2i? scissorBox, Matrix3x2 coordinateTransform)
         {
@@ -387,7 +417,7 @@ namespace Robust.Client.UserInterface
                 // Handle modulation with care.
                 var oldMod = handle.Modulate;
                 handle.Modulate = modulate * control.ActualModulateSelf;
-                control.DrawInternal(renderHandle);
+                control.Draw(renderHandle);
                 handle.Modulate = oldMod;
                 handle.UseShader(null);
             }
@@ -403,10 +433,11 @@ namespace Robust.Client.UserInterface
 
             control.PreRenderChildren(ref args);
 
-            foreach (var child in control.Children)
+            for (var index = 0; index < control.ChildCount; index++)
             {
+                var child = control.GetChild(index);
                 var pos = position + (Vector2i)Vector2.Transform(child.PixelPosition, coordinateTransform);
-                control.RenderChildOverride(ref args, child.GetPositionInParent(), pos);
+                control.RenderChildOverride(ref args, index, pos);
             }
 
             control.PostRenderChildren(ref args);

@@ -8,9 +8,13 @@ using Robust.Server.Debugging;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
 using Robust.Server.Physics;
+using Robust.Shared.ComponentTrees;
 using Robust.Shared.Configuration;
+using Robust.Shared.Console;
 using Robust.Shared.Containers;
 using Robust.Shared.ContentPack;
+using Robust.Shared.EntitySerialization.Components;
+using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -26,6 +30,7 @@ using Robust.Shared.Threading;
 using Robust.Shared.Utility;
 using InputSystem = Robust.Server.GameObjects.InputSystem;
 using MapSystem = Robust.Server.GameObjects.MapSystem;
+using PointLightComponent = Robust.Client.GameObjects.PointLightComponent;
 
 namespace Robust.UnitTesting
 {
@@ -126,8 +131,8 @@ namespace Robust.UnitTesting
             if (Project == UnitTestProject.Client)
             {
                 systems.LoadExtraSystemType<ClientMetaDataSystem>();
-                systems.LoadExtraSystemType<Robust.Server.Containers.ContainerSystem>();
-                systems.LoadExtraSystemType<Robust.Server.GameObjects.TransformSystem>();
+                systems.LoadExtraSystemType<ContainerSystem>();
+                systems.LoadExtraSystemType<Robust.Client.GameObjects.TransformSystem>();
                 systems.LoadExtraSystemType<Robust.Client.Physics.BroadPhaseSystem>();
                 systems.LoadExtraSystemType<Robust.Client.Physics.JointSystem>();
                 systems.LoadExtraSystemType<Robust.Client.Physics.PhysicsSystem>();
@@ -135,6 +140,12 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<PrototypeReloadSystem>();
                 systems.LoadExtraSystemType<Robust.Client.Debugging.DebugPhysicsSystem>();
                 systems.LoadExtraSystemType<Robust.Client.GameObjects.MapSystem>();
+                systems.LoadExtraSystemType<Robust.Client.GameObjects.PointLightSystem>();
+                systems.LoadExtraSystemType<LightTreeSystem>();
+                systems.LoadExtraSystemType<RecursiveMoveSystem>();
+                systems.LoadExtraSystemType<SpriteSystem>();
+                systems.LoadExtraSystemType<SpriteTreeSystem>();
+                systems.LoadExtraSystemType<GridChunkBoundsDebugSystem>();
             }
             else
             {
@@ -148,7 +159,6 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<DebugRayDrawingSystem>();
                 systems.LoadExtraSystemType<PrototypeReloadSystem>();
                 systems.LoadExtraSystemType<DebugPhysicsSystem>();
-                systems.LoadExtraSystemType<MapLoaderSystem>();
                 systems.LoadExtraSystemType<InputSystem>();
                 systems.LoadExtraSystemType<PvsOverrideSystem>();
                 systems.LoadExtraSystemType<MapSystem>();
@@ -156,6 +166,10 @@ namespace Robust.UnitTesting
 
             var entMan = deps.Resolve<IEntityManager>();
             var mapMan = deps.Resolve<IMapManager>();
+
+            // Avoid discovering EntityCommands since they may depend on systems
+            // that aren't available in a unit test context.
+            deps.Resolve<EntityConsoleHost>().DiscoverCommands = false;
 
             // Required components for the engine to work
             // Why are we still here? Just to suffer? Why can't we just use [RegisterComponent] magic?
@@ -166,10 +180,13 @@ namespace Robust.UnitTesting
             if (ExtraComponents != null)
                 compFactory.RegisterTypes(ExtraComponents);
 
-            if (Project == UnitTestProject.Server)
+            compFactory.RegisterClass<MapSaveTileMapComponent>();
+            compFactory.RegisterClass<YamlUidComponent>();
+
+            if (Project != UnitTestProject.Server)
             {
-                compFactory.RegisterClass<MapSaveTileMapComponent>();
-                compFactory.RegisterClass<MapSaveIdComponent>();
+                compFactory.RegisterClass<PointLightComponent>();
+                compFactory.RegisterClass<SpriteComponent>();
             }
 
             deps.Resolve<IParallelManagerInternal>().Initialize();

@@ -23,7 +23,6 @@ namespace Robust.Shared.GameObjects
     public sealed partial class TransformComponent : Component, IComponentDebug
     {
         [Dependency] private readonly IEntityManager _entMan = default!;
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
 
         // Currently this field just exists for VV. In future, it might become a real field
         [ViewVariables, PublicAPI]
@@ -387,9 +386,6 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        [Obsolete("Use ChildEnumerator")]
-        public IEnumerable<EntityUid> ChildEntities => _children;
-
         public TransformChildrenEnumerator ChildEnumerator => new(_children.GetEnumerator());
 
         [ViewVariables] public int ChildCount => _children.Count;
@@ -404,35 +400,6 @@ namespace Robust.Shared.GameObjects
         public void AttachToGridOrMap()
         {
             _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AttachToGridOrMap(Owner, this);
-        }
-
-        /// <summary>
-        /// Sets another entity as the parent entity, maintaining world position.
-        /// </summary>
-        /// <param name="newParent"></param>
-        [Obsolete("Use TransformSystem.SetParent() instead")]
-        public void AttachParent(TransformComponent newParent)
-        {
-            _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(Owner, this, newParent.Owner, newParent);
-        }
-
-        internal void ChangeMapId(MapId newMapId, EntityQuery<TransformComponent> xformQuery)
-        {
-            if (newMapId == MapID)
-                return;
-
-            EntityUid? newUid = newMapId == MapId.Nullspace ? null : _mapManager.GetMapEntityId(newMapId);
-
-            //Set Paused state
-            var mapPaused = _mapManager.IsMapPaused(newMapId);
-            var metaEnts = _entMan.GetEntityQuery<MetaDataComponent>();
-            var metaData = metaEnts.GetComponent(Owner);
-            var metaSystem = _entMan.EntitySysManager.GetEntitySystem<MetaDataSystem>();
-            metaSystem.SetEntityPaused(Owner, mapPaused, metaData);
-
-            MapUid = newUid;
-            MapID = newMapId;
-            UpdateChildMapIdsRecursive(MapID, newUid, mapPaused, xformQuery, metaEnts, metaSystem);
         }
 
         internal void UpdateChildMapIdsRecursive(
@@ -478,14 +445,6 @@ namespace Robust.Shared.GameObjects
             return (worldPos, worldRot);
         }
 
-        /// <see cref="GetWorldPositionRotation()"/>
-        [Obsolete("Use the system method instead")]
-        public (Vector2 WorldPosition, Angle WorldRotation) GetWorldPositionRotation(EntityQuery<TransformComponent> xforms)
-        {
-            var (worldPos, worldRot, _) = GetWorldPositionRotationMatrix(xforms);
-            return (worldPos, worldRot);
-        }
-
         /// <summary>
         /// Get the WorldPosition, WorldRotation, and WorldMatrix of this entity faster than each individually.
         /// </summary>
@@ -520,16 +479,6 @@ namespace Robust.Shared.GameObjects
         {
             var xforms = _entMan.GetEntityQuery<TransformComponent>();
             return GetWorldPositionRotationMatrix(xforms);
-        }
-
-        /// <summary>
-        /// Get the WorldPosition, WorldRotation, and InvWorldMatrix of this entity faster than each individually.
-        /// </summary>
-        [Obsolete("Use the system method instead")]
-        public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 InvWorldMatrix) GetWorldPositionRotationInvMatrix()
-        {
-            var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
-            return GetWorldPositionRotationInvMatrix(xformQuery);
         }
 
         /// <summary>
@@ -661,22 +610,19 @@ namespace Robust.Shared.GameObjects
     /// Raised when the Anchor state of the transform is changed.
     /// </summary>
     [ByRefEvent]
-    public readonly struct AnchorStateChangedEvent
+    public readonly struct AnchorStateChangedEvent(
+        EntityUid entity,
+        TransformComponent transform,
+        bool detaching = false)
     {
-        public readonly TransformComponent Transform;
-        public EntityUid Entity => Transform.Owner;
+        public readonly TransformComponent Transform = transform;
+        public EntityUid Entity { get; } = entity;
         public bool Anchored => Transform.Anchored;
 
         /// <summary>
         ///     If true, the entity is being detached to null-space
         /// </summary>
-        public readonly bool Detaching;
-
-        public AnchorStateChangedEvent(TransformComponent transform, bool detaching = false)
-        {
-            Detaching = detaching;
-            Transform = transform;
-        }
+        public readonly bool Detaching = detaching;
     }
 
     /// <summary>

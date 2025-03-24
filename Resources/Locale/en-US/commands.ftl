@@ -157,6 +157,7 @@ cmd-savemap-not-exist = Target map does not exist.
 cmd-savemap-init-warning = Attempted to save a post-init map without forcing the save.
 cmd-savemap-attempt = Attempting to save map {$mapId} to {$path}.
 cmd-savemap-success = Map successfully saved.
+cmd-savemap-error = Could not save map! See server log for details.
 cmd-hint-savemap-id = <MapID>
 cmd-hint-savemap-path = <Path>
 cmd-hint-savemap-force = [bool]
@@ -294,7 +295,7 @@ cmd-lsgrid-desc = Lists grids.
 cmd-lsgrid-help = lsgrid
 
 cmd-addmap-desc = Adds a new empty map to the round. If the mapID already exists, this command does nothing.
-cmd-addmap-help = addmap <mapID> [initialize]
+cmd-addmap-help = addmap <mapID> [pre-init]
 
 cmd-rmmap-desc = Removes a map from the world. You cannot remove nullspace.
 cmd-rmmap-help = rmmap <mapId>
@@ -428,10 +429,19 @@ cmd-entfo-help = Usage: entfo <entityuid>
     The entity UID can be prefixed with 'c' to convert it to a client entity UID.
 
 cmd-fuck-desc = Throws an exception
-cmd-fuck-help = Throws an exception
+cmd-fuck-help = Usage: fuck
 
-cmd-showpos-desc = Enables debug drawing over all entity positions in the game.
+cmd-showpos-desc = Show the position of all entities on the screen.
 cmd-showpos-help = Usage: showpos
+
+cmd-showrot-desc = Show the rotation of all entities on the screen.
+cmd-showrot-help = Usage: showrot
+
+cmd-showvel-desc = Show the local velocity of all entites on the screen.
+cmd-showvel-help = Usage: showvel
+
+cmd-showangvel-desc = Show the angular velocity of all entities on the screen.
+cmd-showangvel-help = Usage: showangvel
 
 cmd-sggcell-desc = Lists entities on a snap grid cell.
 cmd-sggcell-help = Usage: sggcell <gridID> <vector2i>\nThat vector2i param is in the form x<int>,y<int>.

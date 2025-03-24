@@ -137,8 +137,8 @@ public sealed partial class ManagerTests : SerializationTest
         new object[]
         {
             SerializerRanDataNode,
-            SerializerClass.SerializerReturn,
-            SerializerClass.SerializerReturnAlt,
+            (object)SerializerClass.SerializerReturn,
+            (object)SerializerClass.SerializerReturnAlt,
             false,
             new Func<SerializerClass, object>[]
             {
@@ -149,8 +149,8 @@ public sealed partial class ManagerTests : SerializationTest
         new object[]
         {
             SerializerRanCustomDataNode,
-            SerializerClass.SerializerCustomReturn,
-            SerializerClass.SerializerCustomReturnAlt,
+            (object)SerializerClass.SerializerCustomReturn,
+            (object)SerializerClass.SerializerCustomReturnAlt,
             true,
             new Func<SerializerClass, object>[]
             {
@@ -229,8 +229,8 @@ public sealed partial class ManagerTests : SerializationTest
         new object[]
         {
             SerializerRanDataNode,
-            SerializerStruct.SerializerReturn,
-            SerializerStruct.SerializerReturnAlt,
+            (object)SerializerStruct.SerializerReturn,
+            (object)SerializerStruct.SerializerReturnAlt,
             false,
             new Func<SerializerStruct, object>[]
             {
@@ -241,8 +241,8 @@ public sealed partial class ManagerTests : SerializationTest
         new object[]
         {
             SerializerRanCustomDataNode,
-            SerializerStruct.SerializerCustomReturn,
-            SerializerStruct.SerializerCustomReturnAlt,
+            (object)SerializerStruct.SerializerCustomReturn,
+            (object)SerializerStruct.SerializerCustomReturnAlt,
             true,
             new Func<SerializerStruct, object>[]
             {

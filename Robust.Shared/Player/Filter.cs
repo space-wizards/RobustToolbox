@@ -45,16 +45,8 @@ namespace Robust.Shared.Player
         {
             IoCManager.Resolve(ref entityManager, ref playerMan, ref cfgMan);
             var transform = entityManager.GetComponent<TransformComponent>(origin);
-            return AddPlayersByPvs(transform.MapPosition, rangeMultiplier, entityManager, playerMan, cfgMan);
-        }
-
-        /// <summary>
-        ///     Adds all players inside an entity's PVS.
-        ///     The current PVS range will be multiplied by <see cref="rangeMultiplier"/>.
-        /// </summary>
-        public Filter AddPlayersByPvs(TransformComponent origin, float rangeMultiplier = 2f)
-        {
-            return AddPlayersByPvs(origin.MapPosition, rangeMultiplier);
+            var transformSystem = entityManager.System<SharedTransformSystem>();
+            return AddPlayersByPvs(transformSystem.GetMapCoordinates(transform), rangeMultiplier, entityManager, playerMan, cfgMan);
         }
 
         /// <summary>
@@ -64,7 +56,8 @@ namespace Robust.Shared.Player
         public Filter AddPlayersByPvs(EntityCoordinates origin, float rangeMultiplier = 2f, IEntityManager? entityMan = null, ISharedPlayerManager? playerMan = null)
         {
             IoCManager.Resolve(ref entityMan, ref playerMan);
-            return AddPlayersByPvs(origin.ToMap(entityMan, entityMan.System<SharedTransformSystem>()), rangeMultiplier, entityMan, playerMan);
+            var system = entityMan.System<SharedTransformSystem>();
+            return AddPlayersByPvs(system.ToMapCoordinates(origin), rangeMultiplier, entityMan, playerMan);
         }
 
         /// <summary>
@@ -168,12 +161,13 @@ namespace Robust.Shared.Player
         {
             IoCManager.Resolve(ref playerMan, ref entMan);
             var xformQuery = entMan.GetEntityQuery<TransformComponent>();
+            var xformSystem = entMan.System<SharedTransformSystem>();
 
             return AddWhere(session =>
                 session.AttachedEntity != null &&
                 xformQuery.TryGetComponent(session.AttachedEntity.Value, out var xform) &&
                 xform.MapID == position.MapId &&
-                (xform.WorldPosition - position.Position).Length() < range, playerMan);
+                (xformSystem.GetWorldPosition(xform) - position.Position).Length() < range, playerMan);
         }
 
         /// <summary>
@@ -211,7 +205,7 @@ namespace Robust.Shared.Player
         /// <summary>
         ///    Removes players from the filter.
         /// </summary>
-        public Filter RemovePlayers(params ICommonSession[] players) => RemovePlayers(players);
+        public Filter RemovePlayers(params ICommonSession[] players) => RemovePlayers((IEnumerable<ICommonSession>) players);
 
         /// <summary>
         ///     Removes a single player from the filter, specified by the entity to which they are attached.
@@ -232,7 +226,7 @@ namespace Robust.Shared.Player
         /// <summary>
         ///     Removes players from the filter, specified by the entities to which they are attached.
         /// </summary>
-        public Filter RemovePlayersByAttachedEntity(params EntityUid[] uids) => RemovePlayersByAttachedEntity(uids);
+        public Filter RemovePlayersByAttachedEntity(params EntityUid[] uids) => RemovePlayersByAttachedEntity((IEnumerable<EntityUid>) uids);
 
         /// <summary>
         ///     Removes all players from the filter that match a predicate.
@@ -260,12 +254,13 @@ namespace Robust.Shared.Player
         {
             IoCManager.Resolve(ref entMan);
             var xformQuery = entMan.GetEntityQuery<TransformComponent>();
+            var xformSystem = entMan.System<SharedTransformSystem>();
 
             return RemoveWhere(session =>
                 session.AttachedEntity != null &&
                 xformQuery.TryGetComponent(session.AttachedEntity.Value, out var xform) &&
                 xform.MapID == position.MapId &&
-                (xform.WorldPosition - position.Position).Length() < range);
+                (xformSystem.GetWorldPosition(xform) - position.Position).Length() < range);
         }
 
         /// <summary>
@@ -365,14 +360,6 @@ namespace Robust.Shared.Player
         public static Filter Pvs(EntityUid origin, float rangeMultiplier = 2f, IEntityManager? entityManager = null, ISharedPlayerManager? playerManager = null, IConfigurationManager? cfgManager = null)
         {
             return Empty().AddPlayersByPvs(origin, rangeMultiplier, entityManager, playerManager, cfgManager);
-        }
-
-        /// <summary>
-        ///     A filter with every player whose PVS overlaps this point.
-        /// </summary>
-        public static Filter Pvs(TransformComponent origin, float rangeMultiplier = 2f)
-        {
-            return Empty().AddPlayersByPvs(origin, rangeMultiplier);
         }
 
         /// <summary>

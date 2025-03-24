@@ -77,6 +77,22 @@ namespace Robust.Shared.GameObjects
         /// <returns>The availability of the component.</returns>
         ComponentAvailability GetComponentAvailability(string componentName, bool ignoreCase = false);
 
+        public void RegisterNetworkedFields<T>(params string[] fields) where T : IComponent;
+
+        public void RegisterNetworkedFields(ComponentRegistration compReg, params string[] fields);
+
+        /// <summary>
+        /// Slow-path for Type -> CompIdx mapping without generics.
+        /// </summary>
+        [Pure]
+        CompIdx GetIndex(Type type);
+
+        /// <summary>
+        /// Slow-path to get the component index for a specified type.
+        /// </summary>
+        [Pure]
+        int GetArrayIndex(Type type);
+
         /// <summary>
         /// Registers a component class with the factory.
         /// </summary>
@@ -99,6 +115,8 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="postfix">If provided, will only ignore components ending with the postfix.</param>
         void IgnoreMissingComponents(string postfix = "");
+
+        IComponent GetComponent(EntityPrototype.ComponentRegistryEntry entry);
 
         /// <summary>
         /// Gets a new component instantiated of the specified type.

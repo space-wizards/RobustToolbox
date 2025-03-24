@@ -30,6 +30,7 @@ using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 using static Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer;
 using Direction = Robust.Shared.Maths.Direction;
 using Vector4 = Robust.Shared.Maths.Vector4;
+using SysVec4 = System.Numerics.Vector4;
 
 namespace Robust.Client.GameObjects
 {
@@ -753,12 +754,20 @@ namespace Robust.Client.GameObjects
                 if (layerDatum.Shader == string.Empty)
                 {
                     layer.ShaderPrototype = null;
+                    layer.UnShaded = false;
+                    layer.Shader = null;
+                }
+                else if (layerDatum.Shader == SpriteSystem.UnshadedId.Id)
+                {
+                    layer.ShaderPrototype = SpriteSystem.UnshadedId;
+                    layer.UnShaded = true;
                     layer.Shader = null;
                 }
                 else if (prototypes.TryIndex<ShaderPrototype>(layerDatum.Shader, out var prototype))
                 {
                     layer.ShaderPrototype = layerDatum.Shader;
                     layer.Shader = prototype.Instance();
+                    layer.UnShaded = false;
                 }
                 else
                 {
@@ -835,11 +844,28 @@ namespace Robust.Client.GameObjects
             if (!TryGetLayer(layer, out var theLayer, true))
                 return;
 
+            if (shader == null)
+            {
+                theLayer.UnShaded = false;
+                theLayer.Shader = null;
+                theLayer.ShaderPrototype = null;
+                return;
+            }
+
+            if (prototype == SpriteSystem.UnshadedId.Id)
+            {
+                theLayer.UnShaded = true;
+                theLayer.ShaderPrototype = SpriteSystem.UnshadedId;
+                theLayer.Shader = null;
+                return;
+            }
+
+            theLayer.UnShaded = false;
             theLayer.Shader = shader;
             theLayer.ShaderPrototype = prototype;
         }
 
-        public void LayerSetShader(object layerKey, ShaderInstance shader, string? prototype = null)
+        public void LayerSetShader(object layerKey, ShaderInstance? shader, string? prototype = null)
         {
             if (!LayerMapTryGet(layerKey, out var layer, true))
                 return;
@@ -1379,7 +1405,7 @@ namespace Robust.Client.GameObjects
 
             // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
             var ev = new QueueSpriteTreeUpdateEvent(entities.GetComponent<TransformComponent>(Owner));
-            entities.EventBus.RaiseComponentEvent(this, ref ev);
+            entities.EventBus.RaiseComponentEvent(Owner, this, ref ev);
         }
 
         private void QueueUpdateIsInert()
@@ -1389,7 +1415,7 @@ namespace Robust.Client.GameObjects
 
             // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
             var ev = new SpriteUpdateInertEvent();
-            entities.EventBus.RaiseComponentEvent(this, ref ev);
+            entities.EventBus.RaiseComponentEvent(Owner, this, ref ev);
         }
 
         [Obsolete("Use SpriteSystem instead.")]
@@ -1493,9 +1519,17 @@ namespace Robust.Client.GameObjects
         {
             [ViewVariables] private readonly SpriteComponent _parent;
 
-            [ViewVariables] public string? ShaderPrototype;
+            [ViewVariables] public ProtoId<ShaderPrototype>? ShaderPrototype;
             [ViewVariables] public ShaderInstance? Shader;
             [ViewVariables] public Texture? Texture;
+
+            /// <summary>
+            /// If true, then this layer is drawn without lighting applied.
+            /// Unshaded layers are given special treatment and don't just use the unshaded-shader to avoid having to
+            /// unnecessarily swap out the light texture. This helps the number of batches that need to be sent to the
+            /// GPU while drawing sprites.
+            /// </summary>
+            [ViewVariables] internal bool UnShaded;
 
             private RSI? _rsi;
             [ViewVariables] public RSI? RSI
@@ -1663,6 +1697,7 @@ namespace Robust.Client.GameObjects
                 if (toClone.Shader != null)
                 {
                     Shader = toClone.Shader.Mutable ? toClone.Shader.Duplicate() : toClone.Shader;
+                    UnShaded = toClone.UnShaded;
                     ShaderPrototype = toClone.ShaderPrototype;
                 }
                 Texture = toClone.Texture;
@@ -2078,6 +2113,20 @@ namespace Robust.Client.GameObjects
                     drawingHandle.UseShader(Shader);
 
                 var layerColor = _parent.color * Color;
+
+                DebugTools.Assert(layerColor is {R: >= 0, G: >= 0, B: >= 0, A: >= 0}, "Negative colour modulation");
+
+                if (UnShaded)
+                {
+                    DebugTools.AssertNull(Shader);
+
+                    // Negative modulation values are used to disable light shading in the default shader.
+                    // Specifically we set colour = -1 - colour
+                    // This ensures that non-negative values become negative & is trivially invertible.
+                    // Alternatively we could just clamp the colour to [0,1] and subtract a constant.
+                    layerColor = new(new SysVec4(-1) - layerColor.RGBA);
+                }
+
                 var textureSize = texture.Size / (float)EyeManager.PixelsPerMeter;
                 var quad = Box2.FromDimensions(textureSize/-2, textureSize);
 

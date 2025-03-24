@@ -12,7 +12,7 @@ namespace Robust.UnitTesting
         public GameControllerOptions Options { get; } = new();
         public bool ContentStart { get; set; }
 
-        public event Action<FrameEventArgs>? TickUpdateOverride;
+        public event Action<FrameEventArgs>? TickUpdateOverride { add { } remove { } }
 
         public void Shutdown(string? reason = null)
         {
@@ -65,6 +65,21 @@ namespace Robust.UnitTesting
 
         public void OverrideMainLoop(IGameLoop gameLoop)
         {
+        }
+
+        public string GameTitle()
+        {
+            return "RobustToolbox";
+        }
+
+        public string WindowIconSet()
+        {
+            return "";
+        }
+
+        public string SplashLogo()
+        {
+            return "";
         }
     }
 }

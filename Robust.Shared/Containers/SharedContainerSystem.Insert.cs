@@ -40,8 +40,8 @@ public abstract partial class SharedContainerSystem
 
         DebugTools.AssertOwner(container.Owner, containerXform);
         DebugTools.AssertOwner(toInsert, physics);
-        DebugTools.Assert(!container.ExpectedEntities.Contains(GetNetEntity(toInsert)));
-        DebugTools.Assert(container.Manager.Containers.ContainsKey(container.ID));
+        DebugTools.Assert(!container.ExpectedEntities.Contains(GetNetEntity(toInsert)), "entity is expected");
+        DebugTools.Assert(container.Manager.Containers.ContainsKey(container.ID), "manager does not own the container");
 
         // If someone is attempting to insert an entity into a container that is getting deleted, then we will
         // automatically delete that entity. I.e., the insertion automatically "succeeds" and both entities get deleted.
@@ -82,14 +82,14 @@ public abstract partial class SharedContainerSystem
         }
 
         // Update metadata first, so that parent change events can check IsInContainer.
-        DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) == 0);
+        DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) == 0, "invalid metadata flags before insertion");
         meta.Flags |= MetaDataFlags.InContainer;
 
         // Remove the entity and any children from broadphases.
         // This is done before changing can collide to avoid unecceary updates.
         // TODO maybe combine with RecursivelyUpdatePhysics to avoid fetching components and iterating parents twice?
         _lookup.RemoveFromEntityTree(toInsert, transform);
-        DebugTools.Assert(transform.Broadphase == null || !transform.Broadphase.Value.IsValid());
+        DebugTools.Assert(transform.Broadphase == null || !transform.Broadphase.Value.IsValid(), "invalid broadphase");
 
         // Avoid unnecessary broadphase updates while unanchoring, changing physics collision, and re-parenting.
         var old = transform.Broadphase;
@@ -111,7 +111,7 @@ public abstract partial class SharedContainerSystem
         transform.Broadphase = old;
 
         // the transform.AttachParent() could previously result in the flag being unset, so check that this hasn't happened.
-        DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0);
+        DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0, "invalid metadata flags after insertion");
 
         // Implementation specific insert logic
         container.InternalInsert(toInsert, EntityManager);
@@ -125,11 +125,11 @@ public abstract partial class SharedContainerSystem
         RaiseLocalEvent(toInsert, new EntGotInsertedIntoContainerMessage(toInsert, container), true);
 
         // The sheer number of asserts tells you about how little I trust container and parenting code.
-        DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0);
-        DebugTools.Assert(!transform.Anchored);
-        DebugTools.Assert(transform.LocalPosition == Vector2.Zero);
-        DebugTools.Assert(MathHelper.CloseTo(transform.LocalRotation.Theta, Angle.Zero));
-        DebugTools.Assert(!PhysicsQuery.TryGetComponent(toInsert, out var phys) || (!phys.Awake && !phys.CanCollide));
+        DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) != 0, "invalid metadata flags after events");
+        DebugTools.Assert(!transform.Anchored, "entity is anchored");
+        DebugTools.AssertEqual(transform.LocalPosition, Vector2.Zero);
+        DebugTools.Assert(MathHelper.CloseTo(transform.LocalRotation.Theta, Angle.Zero), "Angle is not zero");
+        DebugTools.Assert(!PhysicsQuery.TryGetComponent(toInsert, out var phys) || (!phys.Awake && !phys.CanCollide), "Invalid physics");
 
         Dirty(container.Owner, container.Manager);
         return true;
@@ -197,6 +197,10 @@ public abstract partial class SharedContainerSystem
     {
         if (entity.Comp2 is { } physics)
         {
+            // TODO CONTAINER
+            // Is this actually needed?
+            // I.e., shouldn't this just do a if (_timing.ApplyingState) return
+
             // Here we intentionally don't dirty the physics comp. Client-side state handling will apply these same
             // changes. This also ensures that the server doesn't have to send the physics comp state to every
             // player for any entity inside of a container during init.

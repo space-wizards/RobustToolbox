@@ -143,7 +143,7 @@ namespace Robust.Server.Placement
                         _factory.GetComponentName(typeof(PlacementReplacementComponent)), out var compRegistry))
                 {
                     var key = ((PlacementReplacementComponent)compRegistry.Component).Key;
-                    var gridUid = coordinates.GetGridUid(_entityManager);
+                    var gridUid = _xformSystem.GetGrid(coordinates);
 
                     if (_entityManager.TryGetComponent<MapGridComponent>(gridUid, out var grid))
                     {
@@ -191,7 +191,7 @@ namespace Robust.Server.Placement
 
             EntityUid gridId = coordinates.EntityId;
             if (_entityManager.TryGetComponent(coordinates.EntityId, out grid)
-                || _mapManager.TryFindGridAt(coordinates.ToMap(_entityManager, _xformSystem), out gridId, out grid))
+                || _mapManager.TryFindGridAt(_xformSystem.ToMapCoordinates(coordinates), out gridId, out grid))
             {
                 _maps.SetTile(gridId, grid, coordinates, new Tile(tileType));
 
@@ -200,10 +200,13 @@ namespace Robust.Server.Placement
             }
             else if (tileType != 0) // create a new grid
             {
-                var newGrid = _mapManager.CreateGridEntity(coordinates.GetMapId(_entityManager));
-                var newGridXform = _entityManager.GetComponent<TransformComponent>(newGrid);
+                var newGrid = _mapManager.CreateGridEntity(_xformSystem.GetMapId(coordinates));
+                var newGridXform = new Entity<TransformComponent>(
+                    newGrid.Owner,
+                    _entityManager.GetComponent<TransformComponent>(newGrid));
+
                 _xformSystem.SetWorldPosition(newGridXform, coordinates.Position - newGrid.Comp.TileSizeHalfVector); // assume bottom left tile origin
-                var tilePos = newGrid.Comp.WorldToTile(coordinates.Position);
+                var tilePos = _maps.WorldToTile(newGrid.Owner, newGrid.Comp, coordinates.Position);
                 _maps.SetTile(newGrid.Owner, newGrid.Comp, tilePos, new Tile(tileType));
 
                 var placementEraseEvent = new PlacementTileEvent(tileType, coordinates, placingUserId);
@@ -228,7 +231,7 @@ namespace Robust.Server.Placement
         {
             EntityCoordinates start = _entityManager.GetCoordinates(msg.NetCoordinates);
             Vector2 rectSize = msg.RectSize;
-            foreach (var entity in _lookup.GetEntitiesIntersecting(start.GetMapId(_entityManager),
+            foreach (var entity in _lookup.GetEntitiesIntersecting(_xformSystem.GetMapId(start),
                 new Box2(start.Position, start.Position + rectSize)))
             {
                 if (_entityManager.Deleted(entity) ||

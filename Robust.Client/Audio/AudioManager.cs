@@ -5,6 +5,7 @@ using System.Threading;
 using OpenTK.Audio.OpenAL;
 using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
 using Robust.Client.Audio.Sources;
+using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
@@ -17,13 +18,15 @@ internal sealed partial class AudioManager : IAudioInternal
 {
     [Shared.IoC.Dependency] private readonly IConfigurationManager _cfg = default!;
     [Shared.IoC.Dependency] private readonly ILogManager _logMan = default!;
+    [Shared.IoC.Dependency] private readonly IReloadManager _reload = default!;
+    [Shared.IoC.Dependency] private readonly IResourceCache _cache = default!;
 
     private Thread? _gameThread;
 
     private ALDevice _openALDevice;
     private ALContext _openALContext;
 
-    private readonly List<LoadedAudioSample> _audioSampleBuffers = new();
+    private readonly Dictionary<int, LoadedAudioSample> _audioSampleBuffers = new();
 
     private readonly Dictionary<int, WeakReference<BaseAudioSource>> _audioSources =
         new();
@@ -116,6 +119,22 @@ internal sealed partial class AudioManager : IAudioInternal
         IsEfxSupported = HasAlDeviceExtension("ALC_EXT_EFX");
 
         _cfg.OnValueChanged(CVars.AudioMasterVolume, SetMasterGain, true);
+
+        _reload.Register("/Audio", "*.ogg");
+        _reload.Register("/Audio", "*.wav");
+
+        _reload.OnChanged += OnReload;
+    }
+
+    private void OnReload(ResPath args)
+    {
+        if (args.Extension != "ogg" &&
+            args.Extension != "wav")
+        {
+            return;
+        }
+
+        _cache.ReloadResource<AudioResource>(args);
     }
 
     internal bool IsMainThread()
@@ -140,15 +159,19 @@ internal sealed partial class AudioManager : IAudioInternal
         }
     }
 
+    internal void LogError(string message)
+    {
+        OpenALSawmill.Error(message);
+    }
+
     /// <summary>
     /// Like _checkAlError but allows custom data to be passed in as relevant.
     /// </summary>
-    internal void LogALError(string message, [CallerMemberName] string callerMember = "", [CallerLineNumber] int callerLineNumber = -1)
+    internal void LogALError(ALErrorInterpolatedStringHandler message, [CallerMemberName] string callerMember = "", [CallerLineNumber] int callerLineNumber = -1)
     {
-        var error = AL.GetError();
-        if (error != ALError.NoError)
+        if (message.Error != ALError.NoError)
         {
-            OpenALSawmill.Error("[{0}:{1}] AL error: {2}, {3}. Stacktrace is {4}", callerMember, callerLineNumber, error, message, Environment.StackTrace);
+            OpenALSawmill.Error("[{0}:{1}] AL error: {2}, {3}. Stacktrace is {4}", callerMember, callerLineNumber, message.Error, message.ToStringAndClear(), Environment.StackTrace);
         }
     }
 
@@ -169,5 +192,33 @@ internal sealed partial class AudioManager : IAudioInternal
         {
             BufferHandle = bufferHandle;
         }
+    }
+
+    [InterpolatedStringHandler]
+    internal ref struct ALErrorInterpolatedStringHandler
+    {
+        private DefaultInterpolatedStringHandler _handler;
+        public ALError Error;
+
+        public ALErrorInterpolatedStringHandler(int literalLength, int formattedCount, out bool shouldAppend)
+        {
+            Error = AL.GetError();
+            if (Error == ALError.NoError)
+            {
+                shouldAppend = false;
+                _handler = default;
+            }
+            else
+            {
+                shouldAppend = true;
+                _handler = new DefaultInterpolatedStringHandler(literalLength, formattedCount);
+            }
+        }
+
+        public string ToStringAndClear() => _handler.ToStringAndClear();
+        public override string ToString() => _handler.ToString();
+        public void AppendLiteral(string value) => _handler.AppendLiteral(value);
+        public void AppendFormatted<T>(T value) => _handler.AppendFormatted(value);
+        public void AppendFormatted<T>(T value, string? format) => _handler.AppendFormatted(value, format);
     }
 }

@@ -64,6 +64,8 @@ internal abstract class BaseRobustCefClient : CefClient
             string title,
             string defaultFilePath,
             string[] acceptFilters,
+            string[] acceptExtensions,
+            string[] acceptDescriptions,
             CefFileDialogCallback callback)
         {
             callback.Cancel();

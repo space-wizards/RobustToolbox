@@ -20,7 +20,6 @@ namespace Robust.Client.GameObjects
     /// </summary>
     public sealed class InputSystem : SharedInputSystem, IPostInjectInit
     {
-        [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IClientGameStateManager _stateManager = default!;
@@ -196,7 +195,7 @@ namespace Robust.Client.GameObjects
                 wOffset = new Vector2(wX, wY);
             }
 
-            var coords = EntityCoordinates.FromMap(pent, _transform.GetMapCoordinates(pent).Offset(wOffset), _transform, EntityManager);
+            var coords = _transform.ToCoordinates(pent, _transform.GetMapCoordinates(pent).Offset(wOffset));
             var funcId = _inputManager.NetworkBindMap.KeyFunctionID(keyFunction);
 
             var message = new ClientFullInputCmdMessage(_timing.CurTick,

@@ -6,7 +6,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects
 {
-    public sealed class VisibilitySystem : EntitySystem
+    public sealed class VisibilitySystem : SharedVisibilitySystem
     {
         [Dependency] private readonly PvsSystem _pvs = default!;
         [Dependency] private readonly IViewVariablesManager _vvManager = default!;
@@ -40,13 +40,7 @@ namespace Robust.Server.GameObjects
             EntityManager.EntityInitialized -= OnEntityInit;
         }
 
-        [Obsolete("Use Entity<T> variant")]
-        public void AddLayer(EntityUid uid, VisibilityComponent component, int layer, bool refresh = true)
-        {
-            AddLayer((uid, component), (ushort)layer, refresh);
-        }
-
-        public void AddLayer(Entity<VisibilityComponent?> ent, ushort layer, bool refresh = true)
+        public override void AddLayer(Entity<VisibilityComponent?> ent, ushort layer, bool refresh = true)
         {
             ent.Comp ??= _visibilityQuery.CompOrNull(ent.Owner) ?? AddComp<VisibilityComponent>(ent.Owner);
 
@@ -59,14 +53,7 @@ namespace Robust.Server.GameObjects
                 RefreshVisibility(ent);
         }
 
-
-        [Obsolete("Use Entity<T> variant")]
-        public void RemoveLayer(EntityUid uid, VisibilityComponent component, int layer, bool refresh = true)
-        {
-            RemoveLayer((uid, component), (ushort)layer, refresh);
-        }
-
-        public void RemoveLayer(Entity<VisibilityComponent?> ent, ushort layer, bool refresh = true)
+        public override void RemoveLayer(Entity<VisibilityComponent?> ent, ushort layer, bool refresh = true)
         {
             if (!_visibilityQuery.Resolve(ent.Owner, ref ent.Comp, false))
                 return;
@@ -80,13 +67,7 @@ namespace Robust.Server.GameObjects
                 RefreshVisibility(ent);
         }
 
-        [Obsolete("Use Entity<T> variant")]
-        public void SetLayer(EntityUid uid, VisibilityComponent component, int layer, bool refresh = true)
-        {
-            SetLayer((uid, component), (ushort)layer, refresh);
-        }
-
-        public void SetLayer(Entity<VisibilityComponent?> ent, ushort layer, bool refresh = true)
+        public override void SetLayer(Entity<VisibilityComponent?> ent, ushort layer, bool refresh = true)
         {
             ent.Comp ??= _visibilityQuery.CompOrNull(ent.Owner) ?? AddComp<VisibilityComponent>(ent.Owner);
 
@@ -109,14 +90,14 @@ namespace Robust.Server.GameObjects
             RefreshVisibility(ent.Owner, null, ent.Comp);
         }
 
-        public void RefreshVisibility(EntityUid uid,
+        public override void RefreshVisibility(EntityUid uid,
             VisibilityComponent? visibilityComponent = null,
             MetaDataComponent? meta = null)
         {
             RefreshVisibility((uid, visibilityComponent, meta));
         }
 
-        public void RefreshVisibility(Entity<VisibilityComponent?, MetaDataComponent?> ent)
+        public override void RefreshVisibility(Entity<VisibilityComponent?, MetaDataComponent?> ent)
         {
             if (!_metaQuery.Resolve(ent, ref ent.Comp2, false))
                 return;

@@ -1,5 +1,6 @@
 using System.Numerics;
 using NUnit.Framework;
+using Robust.Server.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -32,7 +33,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var ent1 = entMan.SpawnEntity(null, new MapCoordinates(Vector2.Zero, map));
 
             entMan.System<AnchoredSystemTests.MoveEventTestSystem>().ResetCounters();
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).LocalPosition = Vector2.One;
+            entMan.System<TransformSystem>().SetLocalPosition(ent1, Vector2.One);
             entMan.System<AnchoredSystemTests.MoveEventTestSystem>().AssertMoved(false);
         }
 

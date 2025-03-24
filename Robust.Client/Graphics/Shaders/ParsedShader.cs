@@ -221,10 +221,12 @@ namespace Robust.Client.Graphics
 
         public static bool TypeSupportsArrays(this ShaderDataType type)
         {
-            // TODO: add support for int, and vec3/4 arrays
+            // TODO: add support for int, and vec3 arrays
             return
                 (type == ShaderDataType.Float) ||
-                (type == ShaderDataType.Vec2);
+                (type == ShaderDataType.Vec2) ||
+                (type == ShaderDataType.Bool) ||
+                (type == ShaderDataType.Vec4);
         }
 
         [SuppressMessage("ReSharper", "StringLiteralTypo")]

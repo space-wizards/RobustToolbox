@@ -193,16 +193,6 @@ namespace Robust.Shared.Containers
             return true;
         }
 
-        [Obsolete("Use variant without skipExistCheck argument")]
-        public bool TryGetContainingContainer(
-            EntityUid uid,
-            EntityUid containedUid,
-            [NotNullWhen(true)] out BaseContainer? container,
-            bool skipExistCheck)
-        {
-            return TryGetContainingContainer(uid, containedUid, out container);
-        }
-
         public bool TryGetContainingContainer(
             EntityUid uid,
             EntityUid containedUid,
@@ -377,7 +367,7 @@ namespace Robust.Shared.Containers
             if (!xform.ParentUid.Valid)
                 return false;
 
-            if (entityQuery.Resolve(xform.ParentUid, ref foundComponent, false))
+            if (entityQuery.TryComp(xform.ParentUid, out foundComponent))
                 return true;
 
             return TryFindComponentOnEntityContainerOrParent(xform.ParentUid, entityQuery, ref foundComponent);
@@ -659,7 +649,9 @@ namespace Robust.Shared.Containers
             if (!transform.Comp.ParentUid.IsValid()
                 || !TryGetContainingContainer(transform.Comp.ParentUid, out var container)
                 || !TryInsertIntoContainer(transform, container))
-                transform.Comp.AttachToGridOrMap();
+            {
+                _transform.AttachToGridOrMap(transform, transform.Comp);
+            }
         }
 
         private bool TryInsertIntoContainer(Entity<TransformComponent> transform, BaseContainer container)

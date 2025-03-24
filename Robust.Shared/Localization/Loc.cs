@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
@@ -19,7 +20,8 @@ namespace Robust.Shared.Localization;
 [PublicAPI]
 public static class Loc
 {
-    private static ILocalizationManager LocalizationManager => _localizationManagerHash ?? IoCManager.Resolve<ILocalizationManager>();
+    private static ILocalizationManager LocalizationManager =>
+        _localizationManagerHash ?? IoCManager.Resolve<ILocalizationManager>();
 
     /// <summary>
     /// Do not use this field. Use <see cref="Loc.LocalizationManager"/>
@@ -41,6 +43,7 @@ public static class Loc
         return LocalizationManager.GetString(messageId);
     }
 
+    [Obsolete("Use ILocalizationManager")]
     public static bool TryGetString(string messageId, [NotNullWhen(true)] out string? message)
     {
         return LocalizationManager.TryGetString(messageId, out message);
@@ -49,11 +52,12 @@ public static class Loc
     /// <summary>
     /// Version of <see cref="GetString(string)"/> that supports arguments.
     /// </summary>
-    public static string GetString(string messageId, params (string,object)[] args)
+    public static string GetString(string messageId, params (string, object)[] args)
     {
         return LocalizationManager.GetString(messageId, args);
     }
 
+    [Obsolete("Use ILocalizationManager")]
     public static bool TryGetString(
         string messageId,
         [NotNullWhen(true)] out string? value,
@@ -61,4 +65,6 @@ public static class Loc
     {
         return LocalizationManager.TryGetString(messageId, out value, args);
     }
+}
+
 }

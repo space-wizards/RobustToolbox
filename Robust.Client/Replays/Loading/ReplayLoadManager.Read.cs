@@ -52,7 +52,7 @@ public sealed partial class ReplayLoadManager
             var uncompressedSize = BitConverter.ToInt32(intBuf);
 
             var decompressedStream = new MemoryStream(uncompressedSize);
-            decompressStream.CopyTo(decompressedStream, uncompressedSize);
+            decompressStream.CopyTo(decompressedStream);
             decompressedStream.Position = 0;
             DebugTools.Assert(uncompressedSize == decompressedStream.Length);
 
@@ -162,9 +162,7 @@ public sealed partial class ReplayLoadManager
         }
 
         using var stringFile = fileReader.Open(FileStrings);
-        var stringData = new byte[stringFile.Length];
-        stringFile.ReadExactly(stringData);
-        _serializer.SetStringSerializerPackage(stringHash, stringData);
+        _serializer.SetStringSerializerPackage(stringHash, stringFile.CopyToArray());
 
         using var cvarsFile = fileReader.Open(FileCvars);
         // Note, this does not invoke the received-initial-cvars event. But at least currently, that doesn't matter

@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.InteropServices;
 using System.Threading;
 using Lidgren.Network;
 using Robust.Shared.Audio;
@@ -70,7 +69,7 @@ namespace Robust.Shared
         /// <seealso cref="NetMtuExpand"/>
         /// <seealso cref="NetMtuIpv6"/>
         public static readonly CVarDef<int> NetMtu =
-            CVarDef.Create("net.mtu", 900, CVar.ARCHIVE);
+            CVarDef.Create("net.mtu", 700, CVar.ARCHIVE);
 
         /// <summary>
         /// Maximum UDP payload size to send by default, for IPv6.
@@ -290,7 +289,7 @@ namespace Robust.Shared
         /// This influences both how frequently game code processes, and how frequently updates are sent to clients.
         /// </summary>
         public static readonly CVarDef<int> NetTickrate =
-            CVarDef.Create("net.tickrate", 60, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+            CVarDef.Create("net.tickrate", 30, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
         /// Offset CurTime at server start by this amount (in seconds).
@@ -382,6 +381,30 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> NetLidgrenLogError =
             CVarDef.Create("net.lidgren_log_error", true);
+
+        /// <summary>
+        /// If true, run network message encryption on another thread.
+        /// </summary>
+        public static readonly CVarDef<bool> NetEncryptionThread =
+            CVarDef.Create("net.encryption_thread", true);
+
+        /// <summary>
+        /// Outstanding buffer size used by <see cref="NetEncryptionThread"/>.
+        /// </summary>
+        public static readonly CVarDef<int> NetEncryptionThreadChannelSize =
+            CVarDef.Create("net.encryption_thread_channel_size", 16);
+
+        /// <summary>
+        /// Whether the server should request HWID system for client identification.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Note that modern HWIDs are only available if the connection is authenticated.
+        /// </para>
+        /// </remarks>
+        public static readonly CVarDef<bool> NetHWId =
+            CVarDef.Create("net.hwid", true, CVar.SERVERONLY);
+
 
         /**
          * SUS
@@ -605,6 +628,43 @@ namespace Robust.Shared
         public static readonly CVarDef<string> StatusConnectAddress =
             CVarDef.Create("status.connectaddress", "", CVar.ARCHIVE | CVar.SERVERONLY);
 
+        /// <summary>
+        /// HTTP(S) link to a privacy policy that the user must accept to connect to the server.
+        /// </summary>
+        /// <remarks>
+        /// This must be set along with <see cref="StatusPrivacyPolicyIdentifier"/> and
+        /// <see cref="StatusPrivacyPolicyVersion"/> for the user to be prompted about a privacy policy.
+        /// </remarks>
+        public static readonly CVarDef<string> StatusPrivacyPolicyLink =
+            CVarDef.Create("status.privacy_policy_link", "https://example.com/privacy", CVar.SERVER | CVar.REPLICATED);
+
+        /// <summary>
+        /// An identifier for privacy policy specified by <see cref="StatusPrivacyPolicyLink"/>.
+        /// This must be globally unique.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This value must be globally unique per server community. Servers that want to enforce a
+        /// privacy policy should set this to a value that is unique to their server and, preferably, recognizable.
+        /// </para>
+        /// <para>
+        /// This value is stored by the launcher to keep track of what privacy policies a player has accepted.
+        /// </para>
+        /// </remarks>
+        public static readonly CVarDef<string> StatusPrivacyPolicyIdentifier =
+            CVarDef.Create("status.privacy_policy_identifier", "", CVar.SERVER | CVar.REPLICATED);
+
+        /// <summary>
+        /// A "version" for the privacy policy specified by <see cref="StatusPrivacyPolicyLink"/>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This parameter is stored by the launcher and should be modified whenever your server's privacy policy changes.
+        /// </para>
+        /// </remarks>
+        public static readonly CVarDef<string> StatusPrivacyPolicyVersion =
+            CVarDef.Create("status.privacy_policy_version", "", CVar.SERVER | CVar.REPLICATED);
+
         /*
          * BUILD
          */
@@ -659,6 +719,13 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<string> BuildManifestHash =
             CVarDef.Create("build.manifest_hash", "");
+
+        /// <summary>
+        /// Allows you to disable the display of all entities in the spawn menu that are not labeled with the ShowSpawnMenu category.
+        /// This is useful for forks that just want to disable the standard upstream content
+        /// </summary>
+        public static readonly CVarDef<string> EntitiesCategoryFilter =
+            CVarDef.Create("build.entities_category_filter", "");
 
         /*
          * WATCHDOG
@@ -1076,6 +1143,14 @@ namespace Robust.Shared
             CVarDef.Create("display.thread_window_blit", true, CVar.CLIENTONLY);
 
         /// <summary>
+        /// Diagnostic flag for testing. When using a separate thread for multi-window blitting,
+        /// should the worker be unblocked before the SwapBuffers(). Setting to true may improve
+        /// performance but may cause crashes or rendering errors.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayThreadUnlockBeforeSwap =
+            CVarDef.Create("display.thread_unlock_before_swap", false, CVar.CLIENTONLY);
+
+        /// <summary>
         /// Buffer size of input command channel from windowing thread to main game thread.
         /// </summary>
         public static readonly CVarDef<int> DisplayInputBufferSize =
@@ -1157,6 +1232,19 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<float> AudioRaycastLength =
             CVarDef.Create("audio.raycast_length", SharedAudioSystem.DefaultSoundRange, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Maximum offset for audio to be played at from its full duration. If it's past this then the audio won't be played.
+        /// </summary>
+        public static readonly CVarDef<float> AudioEndBuffer =
+            CVarDef.Create("audio.end_buffer", 0.01f, CVar.REPLICATED);
+
+        /// <summary>
+        /// Tickrate for audio calculations.
+        /// OpenAL recommends 30TPS. This is to avoid running raycasts every frame especially for high-refresh rate monitors.
+        /// </summary>
+        public static readonly CVarDef<int> AudioTickRate =
+            CVarDef.Create("audio.tick_rate", 30, CVar.CLIENTONLY);
 
         public static readonly CVarDef<float> AudioZOffset =
             CVarDef.Create("audio.z_offset", -5f, CVar.REPLICATED);
@@ -1267,10 +1355,10 @@ namespace Robust.Shared
         /// MaxLinVelocity is compared to the dot product of linearVelocity * frameTime.
         /// </summary>
         /// <remarks>
-        /// Default is 35 m/s. Around half a tile per tick at 60 ticks per second.
+        /// Default is 400 m/s in-line with Box2c. Box2d used 120m/s.
         /// </remarks>
         public static readonly CVarDef<float> MaxLinVelocity =
-            CVarDef.Create("physics.maxlinvelocity", 35f);
+            CVarDef.Create("physics.maxlinvelocity", 400f, CVar.SERVER | CVar.REPLICATED);
 
         /// <summary>
         /// Maximum angular velocity in full rotations per second.
@@ -1281,7 +1369,6 @@ namespace Robust.Shared
         /// </remarks>
         public static readonly CVarDef<float> MaxAngVelocity =
             CVarDef.Create("physics.maxangvelocity", 15f);
-
 
         /*
          * User interface
@@ -1374,7 +1461,7 @@ namespace Robust.Shared
         /// the purpose of using an atlas if it gets too small.
         /// </summary>
         public static readonly CVarDef<int> ResRSIAtlasSize =
-            CVarDef.Create("res.rsi_atlas_size", 8192, CVar.CLIENTONLY);
+            CVarDef.Create("res.rsi_atlas_size", 12288, CVar.CLIENTONLY);
 
         // TODO: Currently unimplemented.
         /// <summary>
@@ -1560,6 +1647,12 @@ namespace Robust.Shared
         public static readonly CVarDef<int> ConCompletionMargin =
             CVarDef.Create("con.completion_margin", 3, CVar.CLIENTONLY);
 
+        /// <summary>
+        /// Maximum amount of entries stored by the debug console.
+        /// </summary>
+        public static readonly CVarDef<int> ConMaxEntries =
+            CVarDef.Create("con.max_entries", 3_000, CVar.CLIENTONLY);
+
         /*
          * THREAD
          */
@@ -1611,6 +1704,16 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<long> ReplayMaxUncompressedSize = CVarDef.Create("replay.max_uncompressed_size",
             1024L * 1024, CVar.ARCHIVE);
+
+        /// <summary>
+        /// Size of the replay (in kilobytes) at which point the replay is considered "large",
+        /// and replay clients should enable server GC (if possible) to improve performance.
+        /// </summary>
+        /// <remarks>
+        /// Set to -1 to never make replays use server GC.
+        /// </remarks>
+        public static readonly CVarDef<long> ReplayServerGCSizeThreshold =
+            CVarDef.Create("replay.server_gc_size_threshold", 50L * 1024);
 
         /// <summary>
         /// Uncompressed size of individual files created by the replay (in kilobytes), where each file contains data
@@ -1753,6 +1856,24 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> LaunchContentBundle =
             CVarDef.Create("launch.content_bundle", false, CVar.CLIENTONLY);
+
+        /*
+         * TOOLSHED
+         */
+
+        /// <summary>
+        ///     The max range that can be passed to the nearby toolshed command.
+        ///     Any higher value will cause an exception.
+        /// </summary>
+        public static readonly CVarDef<int> ToolshedNearbyLimit =
+            CVarDef.Create("toolshed.nearby_limit", 200, CVar.SERVER | CVar.REPLICATED);
+
+        /// <summary>
+        ///     The max amount of entities that can be passed to the nearby toolshed command.
+        ///     Any higher value will cause an exception.
+        /// </summary>
+        public static readonly CVarDef<int> ToolshedNearbyEntitiesLimit =
+            CVarDef.Create("toolshed.nearby_entities_limit", 5, CVar.SERVER | CVar.REPLICATED);
 
         /*
          * Localization

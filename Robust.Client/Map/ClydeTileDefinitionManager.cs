@@ -1,29 +1,29 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
-using Robust.Client.Map;
-using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
-using Robust.Shared.GameObjects;
-using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Toolshed;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
 namespace Robust.Client.Map
 {
-    internal sealed class ClydeTileDefinitionManager : TileDefinitionManager, IClydeTileDefinitionManager
+    internal sealed class ClydeTileDefinitionManager : TileDefinitionManager, IClydeTileDefinitionManager, IPostInjectInit
     {
+        [Dependency] private readonly IPrototypeManager _protoManager = default!;
+        [Dependency] private readonly IReloadManager _reload = default!;
         [Dependency] private readonly IResourceManager _manager = default!;
+        [Dependency] private readonly ILogManager _logManager = default!;
+
+        private ISawmill _sawmill = default!;
 
         private Texture? _tileTextureAtlas;
 
@@ -53,6 +53,30 @@ namespace Robust.Client.Map
         public override void Initialize()
         {
             base.Initialize();
+
+            _protoManager.PrototypesReloaded += OnProtoReload;
+
+            _reload.Register("/Textures/Tiles", "*.png");
+            _reload.OnChanged += OnReload;
+
+            _genTextureAtlas();
+        }
+
+        private void OnProtoReload(PrototypesReloadedEventArgs obj)
+        {
+            if (!obj.WasModified<ITileDefinition>())
+                return;
+
+            _genTextureAtlas();
+        }
+
+        private void OnReload(ResPath obj)
+        {
+            if (obj.Extension != "png")
+                return;
+
+            if (!obj.TryRelativeTo(new ResPath("/Textures/Tiles"), out _))
+                return;
 
             _genTextureAtlas();
         }
@@ -98,8 +122,7 @@ namespace Robust.Client.Map
             if (imgWidth >= 2048 || imgHeight >= 2048)
             {
                 // Sanity warning, some machines don't have textures larger than this and need multiple atlases.
-                Logger.WarningS("clyde",
-                    $"Tile texture atlas is ({imgWidth} x {imgHeight}), larger than 2048 x 2048. If you really need {tileCount} tiles, file an issue on RobustToolbox.");
+                _sawmill.Warning($"Tile texture atlas is ({imgWidth} x {imgHeight}), larger than 2048 x 2048. If you really need {tileCount} tiles, file an issue on RobustToolbox.");
             }
 
             var column = 1;
@@ -150,6 +173,11 @@ namespace Robust.Client.Map
             }
 
             _tileTextureAtlas = Texture.LoadFromImage(sheet, "Tile Atlas");
+        }
+
+        void IPostInjectInit.PostInject()
+        {
+            _sawmill = _logManager.GetSawmill("clyde");
         }
     }
 

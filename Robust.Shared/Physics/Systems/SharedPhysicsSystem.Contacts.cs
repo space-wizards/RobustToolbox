@@ -30,7 +30,10 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using JetBrains.Annotations;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
@@ -120,6 +123,7 @@ public abstract partial class SharedPhysicsSystem
 
         public bool Return(Contact obj)
         {
+            DebugTools.Assert(obj.Flags is ContactFlags.None or ContactFlags.Deleted);
             SetContact(obj,
                 false,
                 EntityUid.Invalid, EntityUid.Invalid,
@@ -142,7 +146,7 @@ public abstract partial class SharedPhysicsSystem
     {
         contact.Enabled = enabled;
         contact.IsTouching = false;
-        contact.Flags = ContactFlags.None | ContactFlags.PreInit;
+        DebugTools.Assert(contact.Flags is ContactFlags.None or ContactFlags.PreInit or ContactFlags.Deleted);
         // TOIFlag = false;
 
         contact.EntityA = uidA;
@@ -226,6 +230,8 @@ public abstract partial class SharedPhysicsSystem
 
         // Pull out a spare contact object
         var contact = _contactPool.Get();
+        DebugTools.Assert(contact.Flags is ContactFlags.None or ContactFlags.Deleted);
+        contact.Flags = ContactFlags.PreInit;
 
         // Edge+Polygon is non-symmetrical due to the way Erin handles collision type registration.
         if ((type1 >= type2 || (type1 == ShapeType.Edge && type2 == ShapeType.Polygon)) && !(type2 == ShapeType.Edge && type1 == ShapeType.Polygon))
@@ -311,13 +317,26 @@ public abstract partial class SharedPhysicsSystem
                  (fixtureB.CollisionMask & fixtureA.CollisionLayer) == 0x0);
     }
 
-    public bool DestroyContact(Contact contact)
+    public void DestroyContact(Contact contact)
     {
-        if ((contact.Flags & ContactFlags.Deleting) != 0x0)
-            return false;
+        DestroyContact(contact, null, out _);
+    }
 
-        Fixture fixtureA = contact.FixtureA!;
-        Fixture fixtureB = contact.FixtureB!;
+    internal void DestroyContact(Contact contact, LinkedListNode<Contact>? node, out LinkedListNode<Contact>? next)
+    {
+        // EndCollideEvent may cause knock on effects that cause contacts to be destroyed.
+        // This check prevents us from trying to destroy a contact that is already being, or already has been, destroyed.
+        if ((contact.Flags & (ContactFlags.Deleting | ContactFlags.Deleted)) != 0x0)
+        {
+            next = node?.Next;
+            return;
+        }
+
+        DebugTools.Assert((contact.Flags & ContactFlags.PreInit) == 0);
+        // Contact flag might be None here as CollideContacts() might destroy the contact after having removed the PreInit flag
+
+        var fixtureA = contact.FixtureA!;
+        var fixtureB = contact.FixtureB!;
         var bodyA = contact.BodyA!;
         var bodyB = contact.BodyB!;
         var aUid = contact.EntityA;
@@ -341,6 +360,11 @@ public abstract partial class SharedPhysicsSystem
                 SetAwake((bUid, bodyB), true);
         }
 
+        // Fetch next node AFTER all event raising has finished.
+        // This ensures that we actually get the next node in case the linked list was modified by the events that were
+        // raised
+        next = node?.Next;
+
         // Remove from the world
         _activeContacts.Remove(contact.MapNode);
 
@@ -356,10 +380,8 @@ public abstract partial class SharedPhysicsSystem
         DebugTools.Assert(bodyB.Contacts.Contains(contact.BodyBNode.Value));
         bodyB.Contacts.Remove(contact.BodyBNode);
 
-        // Insert into the pool.
+        contact.Flags = ContactFlags.Deleted;
         _contactPool.Return(contact);
-
-        return true;
     }
 
     internal void CollideContacts()
@@ -596,6 +618,24 @@ public abstract partial class SharedPhysicsSystem
         ArrayPool<Vector2>.Shared.Return(worldPoints);
     }
 
+    private record struct UpdateTreesJob : IRobustJob
+    {
+        public IEntityManager EntManager;
+
+        public void Execute()
+        {
+            var query = EntManager.AllEntityQueryEnumerator<BroadphaseComponent>();
+
+            while (query.MoveNext(out var broadphase))
+            {
+                broadphase.DynamicTree.Rebuild(false);
+                broadphase.StaticTree.Rebuild(false);
+                broadphase.SundriesTree._b2Tree.Rebuild(false);
+                broadphase.StaticSundriesTree._b2Tree.Rebuild(false);
+            }
+        }
+    }
+
     private void BuildManifolds(Contact[] contacts, int count, ContactStatus[] status, Vector2[] worldPoints)
     {
         if (count == 0)
@@ -738,6 +778,108 @@ public abstract partial class SharedPhysicsSystem
 
         if (preventCollideMessage.Cancelled)
             return false;
+
+        return true;
+    }
+
+    /// <summary>
+    /// Will destroy all contacts and queue for rebuild.
+    /// Useful if you have one that may no longer be relevant and don't want to destroy it directly.
+    /// </summary>
+    public void RegenerateContacts(Entity<PhysicsComponent?> entity)
+    {
+        if (!PhysicsQuery.Resolve(entity.Owner, ref entity.Comp))
+            return;
+
+        _broadphase.RegenerateContacts(entity.Owner, entity.Comp);
+    }
+
+    /// <summary>
+    /// Returns the number of touching contacts this entity has.
+    /// </summary>
+    /// <param name="ignoredFixtureId">Fixture we should ignore if applicable</param>
+    [Pure]
+    public int GetTouchingContacts(Entity<FixturesComponent?> entity, string? ignoredFixtureId = null)
+    {
+        if (!_fixturesQuery.Resolve(entity.Owner, ref entity.Comp))
+            return 0;
+
+        var count = 0;
+
+        foreach (var (id, fixture) in entity.Comp.Fixtures)
+        {
+            if (ignoredFixtureId == id)
+                continue;
+
+            foreach (var contact in fixture.Contacts.Values)
+            {
+                if (!contact.IsTouching)
+                    continue;
+
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    /// <summary>
+    /// Returns all of this entity's contacts.
+    /// </summary>
+    [Pure]
+    public ContactEnumerator GetContacts(Entity<FixturesComponent?> entity, bool includeDeleting = false)
+    {
+        _fixturesQuery.Resolve(entity.Owner, ref entity.Comp);
+        return new ContactEnumerator(entity.Comp, includeDeleting);
+    }
+}
+
+public record struct ContactEnumerator
+{
+    public static readonly ContactEnumerator Empty = new(null);
+
+    private Dictionary<string, Fixture>.ValueCollection.Enumerator _fixtureEnumerator;
+    private Dictionary<Fixture, Contact>.ValueCollection.Enumerator _contactEnumerator;
+
+    /// <summary>
+    /// Also include deleting contacts.
+    /// This typically includes the current contact if you're invoking this in the eventbus for an EndCollideEvent.
+    /// </summary>
+    public bool IncludeDeleting;
+
+    public ContactEnumerator(FixturesComponent? fixtures, bool includeDeleting = false)
+    {
+        IncludeDeleting = includeDeleting;
+
+        if (fixtures == null || fixtures.Fixtures.Count == 0)
+        {
+            this = Empty;
+            return;
+        }
+
+        _fixtureEnumerator = fixtures.Fixtures.Values.GetEnumerator();
+        _fixtureEnumerator.MoveNext();
+        _contactEnumerator = _fixtureEnumerator.Current.Contacts.Values.GetEnumerator();
+    }
+
+    public bool MoveNext([NotNullWhen(true)] out Contact? contact)
+    {
+        if (!_contactEnumerator.MoveNext())
+        {
+            if (!_fixtureEnumerator.MoveNext())
+            {
+                contact = null;
+                return false;
+            }
+
+            _contactEnumerator = _fixtureEnumerator.Current.Contacts.Values.GetEnumerator();
+            return MoveNext(out contact);
+        }
+
+        contact = _contactEnumerator.Current;
+
+        if (!IncludeDeleting && contact.Deleting)
+            return MoveNext(out contact);
 
         return true;
     }

@@ -153,6 +153,11 @@ namespace Robust.Shared.GameObjects
             where T3 : IComponent
             where T4 : IComponent;
 
+        /// <summary>
+        /// Tries to QueueDeleteEntity if the entity is not already deleted.
+        /// </summary>
+        public bool TryQueueDeleteEntity(EntityUid? uid);
+
         public void QueueDeleteEntity(EntityUid? uid);
 
         public bool IsQueuedForDeletion(EntityUid uid);

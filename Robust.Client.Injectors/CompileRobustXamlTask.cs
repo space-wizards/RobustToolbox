@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
+using Robust.Xaml;
 
 namespace Robust.Build.Tasks
 {
@@ -37,10 +37,12 @@ namespace Robust.Build.Tasks
             var msg = $"CompileRobustXamlTask -> AssemblyFile:{AssemblyFile}, ProjectDirectory:{ProjectDirectory}, OutputPath:{OutputPath}";
             BuildEngine.LogMessage(msg, MessageImportance.High);
 
-            var res = XamlCompiler.Compile(BuildEngine, input,
+            var res = XamlAotCompiler.Compile(
+                BuildEngine, input,
                 File.ReadAllLines(ReferencesFilePath).Where(l => !string.IsNullOrWhiteSpace(l)).ToArray(),
-                ProjectDirectory, OutputPath,
-                (SignAssembly && !DelaySign) ? AssemblyOriginatorKeyFile : null);
+                 OutputPath,
+                (SignAssembly && !DelaySign) ? AssemblyOriginatorKeyFile : null
+            );
             if (!res.success)
                 return false;
             if (!res.writtentofile)
@@ -65,22 +67,24 @@ namespace Robust.Build.Tasks
             return true;
         }
 
+        // PYREX NOTE: This project was comically null-unsafe before I touched it. I'm just marking what it did accurately
         [Required]
-        public string ReferencesFilePath { get; set; }
-
-        [Required]
-        public string ProjectDirectory { get; set; }
+        public string ReferencesFilePath { get; set; } = null!;
 
         [Required]
-        public string AssemblyFile { get; set; }
+
+        public string ProjectDirectory { get; set; } = null!;
 
         [Required]
-        public string OriginalCopyPath { get; set; }
+        public string AssemblyFile { get; set; } = null!;
 
-        public string OutputPath { get; set; }
-        public string UpdateBuildIndicator { get; set; }
+        [Required]
+        public string? OriginalCopyPath { get; set; } = null;
 
-        public string AssemblyOriginatorKeyFile { get; set; }
+        public string? OutputPath { get; set; }
+        public string UpdateBuildIndicator { get; set; } = null!;
+
+        public string AssemblyOriginatorKeyFile { get; set; } = null!;
         public bool SignAssembly { get; set; }
         public bool DelaySign { get; set; }
 
@@ -95,7 +99,7 @@ namespace Robust.Build.Tasks
             return rv;
         }
 
-        public IBuildEngine BuildEngine { get; set; }
-        public ITaskHost HostObject { get; set; }
+        public IBuildEngine BuildEngine { get; set; } = null!;
+        public ITaskHost HostObject { get; set; } = null!;
     }
 }

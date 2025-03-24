@@ -8,7 +8,7 @@ public sealed class NotForServerConsoleError : IConError
 {
     public FormattedMessage DescribeInner()
     {
-        return FormattedMessage.FromMarkup(
+        return FormattedMessage.FromUnformatted(
             "You must be logged in with a client to use this, the server console isn't workable.");
     }
 

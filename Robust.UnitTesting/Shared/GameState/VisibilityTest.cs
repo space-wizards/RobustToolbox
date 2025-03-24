@@ -44,7 +44,7 @@ public sealed partial class VisibilityTest : RobustIntegrationTest
                 metaComp[i] = server.EntMan.GetComponent<MetaDataComponent>(ent);
                 visComp[i] = server.EntMan.AddComponent<VisibilityComponent>(ent);
 
-                vis.AddLayer(ent, visComp[i], 1 << i);
+                vis.AddLayer((ent, visComp[i]), (ushort)(1 << i));
                 if (i > 0)
                     xforms.SetParent(ent, ents[i - 1]);
             }
@@ -62,7 +62,7 @@ public sealed partial class VisibilityTest : RobustIntegrationTest
         // Adding a layer to the root entity's mask will apply it to all children
         var extraMask = 1 << (N + 1);
         mask = RequiredMask | extraMask;
-        vis.AddLayer(ents[0], visComp[0], extraMask);
+        vis.AddLayer((ents[0], visComp[0]), (ushort)extraMask);
         for (int i = 0; i < N; i++)
         {
             mask |= 1 << i;
@@ -71,7 +71,7 @@ public sealed partial class VisibilityTest : RobustIntegrationTest
         }
 
         // Removing the removes it from all children.
-        vis.RemoveLayer(ents[0], visComp[0], extraMask);
+        vis.RemoveLayer((ents[0], visComp[0]), (ushort)extraMask);
         mask = RequiredMask;
         for (int i = 0; i < N; i++)
         {
@@ -101,7 +101,7 @@ public sealed partial class VisibilityTest : RobustIntegrationTest
         }
 
         // Re-attaching the entity also updates the masks.
-        await server.WaitPost(() => xforms.SetParent(ents[split], ents[split-1]));
+        await server.WaitPost(() => xforms.SetParent(ents[split], ents[split - 1]));
         mask = RequiredMask;
         for (int i = 0; i < N; i++)
         {
@@ -111,7 +111,7 @@ public sealed partial class VisibilityTest : RobustIntegrationTest
         }
 
         // Setting a mask on a child does not propagate upwards, only downwards
-        vis.AddLayer(ents[split], visComp[split], extraMask);
+        vis.AddLayer((ents[split], visComp[split]), (ushort)extraMask);
         mask = RequiredMask;
         for (int i = 0; i < split; i++)
         {

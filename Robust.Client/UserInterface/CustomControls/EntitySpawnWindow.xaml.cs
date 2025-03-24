@@ -44,7 +44,7 @@ namespace Robust.Client.UserInterface.CustomControls
         }
 
         // Create a spawn button and insert it into the start or end of the list.
-        public EntitySpawnButton InsertEntityButton(EntityPrototype prototype, bool insertFirst, int index, List<Texture> textures)
+        public EntitySpawnButton InsertEntityButton(EntityPrototype prototype, bool insertFirst, int index)
         {
             var button = new EntitySpawnButton
             {
@@ -59,6 +59,7 @@ namespace Robust.Client.UserInterface.CustomControls
             }
 
             button.EntityLabel.Text = entityLabelText;
+            button.ActualButton.ToolTip = prototype.Description;
 
             if (prototype == SelectedPrototype)
             {
@@ -67,7 +68,7 @@ namespace Robust.Client.UserInterface.CustomControls
             }
 
             var rect = button.EntityTextureRects;
-            rect.Textures = textures;
+            rect.SetPrototype(prototype.ID);
 
             PrototypeList.AddChild(button);
             if (insertFirst)

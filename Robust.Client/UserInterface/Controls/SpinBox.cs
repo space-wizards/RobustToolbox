@@ -1,4 +1,3 @@
-using Robust.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -15,9 +14,10 @@ namespace Robust.Client.UserInterface.Controls
         public const string RightButtonStyle = "spinbox-right";
         public const string MiddleButtonStyle = "spinbox-middle";
         public LineEdit LineEditControl { get; }
-        private List<Button> _leftButtons = new();
-        private List<Button> _rightButtons = new();
+        private List<SpinBoxButton> _leftButtons = new();
+        private List<SpinBoxButton> _rightButtons = new();
         private int _stepSize = 1;
+        private bool _buttonsDisabled;
 
         /// <summary>
         ///     Determines whether the SpinBox value gets changed by the input text.
@@ -30,12 +30,7 @@ namespace Robust.Client.UserInterface.Controls
             get => _value;
             set
             {
-                if (IsValid != null && !IsValid(value))
-                {
-                    return;
-                }
-                _value = value;
-                LineEditControl.Text = value.ToString();
+                OverrideValue(value);
                 ValueChanged?.Invoke(new ValueChangedEventArgs(value));
             }
         }
@@ -52,6 +47,7 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
             _value = value;
+            UpdateButtonCanPress();
             LineEditControl.Text = value.ToString();
         }
 
@@ -87,6 +83,7 @@ namespace Robust.Client.UserInterface.Controls
             ClearButtons();
             AddLeftButton(-1, "-");
             AddRightButton(1, "+");
+            UpdateButtonCanPress();
         }
 
         /// <summary>
@@ -94,8 +91,8 @@ namespace Robust.Client.UserInterface.Controls
         /// </summary>
         public void AddRightButton(int num, string text)
         {
-            var button = new Button { Text = text };
-            button.OnPressed += (args) => Value += num;
+            var button = new SpinBoxButton(num) { Text = text };
+            button.OnPressed += _ => Value += num;
             AddChild(button);
             button.AddStyleClass(RightButtonStyle);
             if (_rightButtons.Count > 0)
@@ -111,8 +108,8 @@ namespace Robust.Client.UserInterface.Controls
         /// </summary>
         public void AddLeftButton(int num, string text)
         {
-            var button = new Button { Text = text };
-            button.OnPressed += (args) => Value += num;
+            var button = new SpinBoxButton(num) { Text = text };
+            button.OnPressed += _ => Value += num;
             AddChild(button);
             button.SetPositionInParent(_leftButtons.Count);
             button.AddStyleClass(_leftButtons.Count == 0 ? LeftButtonStyle : MiddleButtonStyle);
@@ -130,11 +127,11 @@ namespace Robust.Client.UserInterface.Controls
             ClearButtons();
             foreach (var num in leftButtons)
             {
-                AddLeftButton(num, num.ToString());
+                AddLeftButton(num, num.ToString("+#;-#;0"));
             }
             foreach (var num in rightButtons)
             {
-                AddRightButton(num, num.ToString());
+                AddRightButton(num, num.ToString("+#;-#;0"));
             }
         }
 
@@ -161,6 +158,24 @@ namespace Robust.Client.UserInterface.Controls
             foreach (var rightButton in _rightButtons)
             {
                 rightButton.Disabled = disabled;
+            }
+
+            _buttonsDisabled = disabled;
+        }
+
+        private void UpdateButtonCanPress()
+        {
+            if (IsValid == null)
+                return;
+
+            foreach (var button in _leftButtons)
+            {
+                button.Disabled = !IsValid(_value + button.Value) || _buttonsDisabled;
+            }
+
+            foreach (var button in _rightButtons)
+            {
+                button.Disabled = !IsValid(_value + button.Value) || _buttonsDisabled;
             }
         }
 
@@ -194,6 +209,16 @@ namespace Robust.Client.UserInterface.Controls
                 Value += _stepSize;
             else if (args.Delta.Y < 0)
                 Value -= _stepSize;
+        }
+
+        private sealed class SpinBoxButton : Button
+        {
+            public readonly int Value;
+
+            public SpinBoxButton(int value)
+            {
+                Value = value;
+            }
         }
     }
 

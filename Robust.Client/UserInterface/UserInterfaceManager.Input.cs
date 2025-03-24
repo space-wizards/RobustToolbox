@@ -35,6 +35,7 @@ internal partial class UserInterfaceManager
                 return;
             _controlFocused?.ControlFocusExited();
             _controlFocused = value;
+            _needUpdateActiveCursor = true;
         }
     }
 
@@ -148,7 +149,7 @@ internal partial class UserInterfaceManager
         var newHovered = MouseGetControl(mouseMoveEventArgs.Position);
         SetHovered(newHovered);
 
-        var target = ControlFocused ?? newHovered;
+        var target = ControlFocused ?? CurrentlyHovered;
         if (target != null)
         {
             var pos = mouseMoveEventArgs.Position.Position;
@@ -164,7 +165,7 @@ internal partial class UserInterfaceManager
 
     public void UpdateHovered()
     {
-        var ctrl =  MouseGetControl(_inputManager.MouseScreenPosition);
+        var ctrl = MouseGetControl(_inputManager.MouseScreenPosition);
         SetHovered(ctrl);
     }
 
@@ -312,7 +313,10 @@ internal partial class UserInterfaceManager
 
     private void _clearTooltip()
     {
-        if (!_showingTooltip) return;
+        _resetTooltipTimer();
+
+        if (!_showingTooltip)
+            return;
 
         if (_suppliedTooltip != null)
         {
@@ -321,7 +325,6 @@ internal partial class UserInterfaceManager
         }
 
         CurrentlyHovered?.PerformHideTooltip();
-        _resetTooltipTimer();
         _showingTooltip = false;
     }
 

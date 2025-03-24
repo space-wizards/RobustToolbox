@@ -173,29 +173,51 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal sealed class ShowPositionsCommand : LocalizedCommands
+    internal sealed class ShowPositionsCommand : LocalizedEntityCommands
     {
-        [Dependency] private readonly IEntitySystemManager _entitySystems = default!;
+        [Dependency] private readonly DebugDrawingSystem _debugDrawing = default!;
 
         public override string Command => "showpos";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var mgr = _entitySystems.GetEntitySystem<DebugDrawingSystem>();
-            mgr.DebugPositions = !mgr.DebugPositions;
+            _debugDrawing.DebugPositions = !_debugDrawing.DebugPositions;
         }
     }
 
-    internal sealed class ShowRotationsCommand : LocalizedCommands
+    internal sealed class ShowRotationsCommand : LocalizedEntityCommands
     {
-        [Dependency] private readonly IEntitySystemManager _entitySystems = default!;
+        [Dependency] private readonly DebugDrawingSystem _debugDrawing = default!;
 
         public override string Command => "showrot";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var mgr = _entitySystems.GetEntitySystem<DebugDrawingSystem>();
-            mgr.DebugRotations = !mgr.DebugRotations;
+            _debugDrawing.DebugRotations = !_debugDrawing.DebugRotations;
+        }
+    }
+
+    internal sealed class ShowVelocitiesCommand : LocalizedEntityCommands
+    {
+        [Dependency] private readonly DebugDrawingSystem _debugDrawing = default!;
+
+        public override string Command => "showvel";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
+        {
+            _debugDrawing.DebugVelocities = !_debugDrawing.DebugVelocities;
+        }
+    }
+
+    internal sealed class ShowAngularVelocitiesCommand : LocalizedEntityCommands
+    {
+        [Dependency] private readonly DebugDrawingSystem _debugDrawing = default!;
+
+        public override string Command => "showangvel";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
+        {
+            _debugDrawing.DebugAngularVelocities = !_debugDrawing.DebugAngularVelocities;
         }
     }
 
@@ -291,9 +313,9 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal sealed class SnapGridGetCell : LocalizedCommands
+    internal sealed class SnapGridGetCell : LocalizedEntityCommands
     {
-        [Dependency] private readonly IEntityManager _entManager = default!;
+        [Dependency] private readonly SharedMapSystem _map = default!;
 
         public override string Command => "sggcell";
 
@@ -319,9 +341,10 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            if (_entManager.TryGetComponent<MapGridComponent>(_entManager.GetEntity(gridNet), out var grid))
+            var gridEnt = EntityManager.GetEntity(gridNet);
+            if (EntityManager.TryGetComponent<MapGridComponent>(gridEnt, out var grid))
             {
-                foreach (var entity in grid.GetAnchoredEntities(new Vector2i(
+                foreach (var entity in _map.GetAnchoredEntities(gridEnt, grid, new Vector2i(
                              int.Parse(indices.Split(',')[0], CultureInfo.InvariantCulture),
                              int.Parse(indices.Split(',')[1], CultureInfo.InvariantCulture))))
                 {
@@ -425,9 +448,9 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal sealed class GridTileCount : LocalizedCommands
+    internal sealed class GridTileCount : LocalizedEntityCommands
     {
-        [Dependency] private readonly IEntityManager _entManager = default!;
+        [Dependency] private readonly SharedMapSystem _map = default!;
 
         public override string Command => "gridtc";
 
@@ -440,15 +463,15 @@ namespace Robust.Client.Console.Commands
             }
 
             if (!NetEntity.TryParse(args[0], out var gridUidNet) ||
-                !_entManager.TryGetEntity(gridUidNet, out var gridUid))
+                !EntityManager.TryGetEntity(gridUidNet, out var gridUid))
             {
                 shell.WriteLine($"{args[0]} is not a valid entity UID.");
                 return;
             }
 
-            if (_entManager.TryGetComponent<MapGridComponent>(gridUid, out var grid))
+            if (EntityManager.TryGetComponent<MapGridComponent>(gridUid, out var grid))
             {
-                shell.WriteLine(grid.GetAllTiles().Count().ToString());
+                shell.WriteLine(_map.GetAllTiles(gridUid.Value, grid).Count().ToString());
             }
             else
             {
@@ -578,7 +601,20 @@ namespace Robust.Client.Console.Commands
         private static string GetMemberValue(MemberInfo? member, Control control, string separator, string
                 wrap = "{0}")
         {
-            var value = member?.GetValue(control);
+            object? value = null;
+            try
+            {
+                value = member?.GetValue(control);
+            }
+            catch (TargetInvocationException exception)
+            {
+                var exceptionToPrint = exception.InnerException ?? exception;
+                value = $"{exceptionToPrint.GetType()}: {exceptionToPrint.Message}";
+            }
+            catch (Exception exception)
+            {
+                value = $"{exception.GetType()}: {exception.Message}";
+            }
             var o = value switch
             {
                 ICollection<Control> controls => string.Join(separator,
@@ -680,12 +716,12 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal sealed class ChunkInfoCommand : LocalizedCommands
+    internal sealed class ChunkInfoCommand : LocalizedEntityCommands
     {
-        [Dependency] private readonly IEntityManager _entManager = default!;
         [Dependency] private readonly IMapManager _map = default!;
         [Dependency] private readonly IEyeManager _eye = default!;
         [Dependency] private readonly IInputManager _input = default!;
+        [Dependency] private readonly SharedMapSystem _mapSystem = default!;
 
         public override string Command => "chunkinfo";
 
@@ -699,8 +735,8 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var mapSystem = _entManager.System<SharedMapSystem>();
-            var chunkIndex = mapSystem.LocalToChunkIndices(gridUid, grid, grid.MapToGrid(mousePos));
+            var mapSystem = EntityManager.System<SharedMapSystem>();
+            var chunkIndex = mapSystem.LocalToChunkIndices(gridUid, grid, _mapSystem.MapToGrid(gridUid, mousePos));
             var chunk = mapSystem.GetOrAddChunk(gridUid, grid, chunkIndex);
 
             shell.WriteLine($"worldBounds: {mapSystem.CalcWorldAABB(gridUid, grid, chunk)} localBounds: {chunk.CachedBounds}");

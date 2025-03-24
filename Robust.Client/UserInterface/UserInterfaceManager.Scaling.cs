@@ -123,7 +123,12 @@ internal partial class UserInterfaceManager
 
         private void UpdateUIScale(WindowRoot root)
         {
-            root.UIScaleSet = CalculateAutoScale(root);
+            var newScale = CalculateAutoScale(root);
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
+            if (newScale == root.UIScaleSet)
+                return;
+
+            root.UIScaleSet = newScale;
             _propagateUIScaleChanged(root);
             root.InvalidateMeasure();
         }
@@ -142,7 +147,21 @@ internal partial class UserInterfaceManager
         {
             if (!_windowsToRoot.TryGetValue(windowResizedEventArgs.Window.Id, out var root))
                 return;
-            UpdateUIScale(root);
+
+            root.UIScaleUpdateNeeded = true;
             root.InvalidateMeasure();
+        }
+
+        private void CheckRootUIScaleUpdate(WindowRoot root)
+        {
+            if (!root.UIScaleUpdateNeeded)
+                return;
+
+            using (_prof.Group("UIScaleUpdate"))
+            {
+                UpdateUIScale(root);
+            }
+
+            root.UIScaleUpdateNeeded = false;
         }
 }

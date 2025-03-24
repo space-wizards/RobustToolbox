@@ -7,8 +7,6 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
-using Robust.Shared.Network;
-using Robust.Shared.Network.Messages;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -26,49 +24,6 @@ internal sealed partial class PvsSystem
     internal readonly Dictionary<ICommonSession, PvsSession> PlayerData = new();
 
     private List<ICommonSession> _disconnected = new();
-
-    private void SendStateUpdate(ICommonSession session, PvsThreadResources resources)
-    {
-        var data = GetOrNewPvsSession(session);
-        ComputeSessionState(data);
-
-        InterlockedHelper.Min(ref _oldestAck, data.FromTick.Value);
-
-        // actually send the state
-        var msg = new MsgState
-        {
-            State = data.State,
-            CompressionContext = resources.CompressionContext
-        };
-
-        // PVS benchmarks use dummy sessions.
-        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-        if (session.Channel is not DummyChannel)
-        {
-            _netMan.ServerSendMessage(msg, session.Channel);
-            if (msg.ShouldSendReliably())
-            {
-                data.RequestedFull = false;
-                data.LastReceivedAck = _gameTiming.CurTick;
-                lock (PendingAcks)
-                {
-                    PendingAcks.Add(session);
-                }
-            }
-        }
-        else
-        {
-            // Always "ack" dummy sessions.
-            data.LastReceivedAck = _gameTiming.CurTick;
-            data.RequestedFull = false;
-            lock (PendingAcks)
-            {
-                PendingAcks.Add(session);
-            }
-        }
-
-        data.ClearState();
-    }
 
     private PvsSession GetOrNewPvsSession(ICommonSession session)
     {
@@ -104,7 +59,7 @@ internal sealed partial class PvsSystem
             session.PlayerStates,
             _deletedEntities);
 
-        session.State.ForceSendReliably = session.RequestedFull
+        session.ForceSendReliably = session.RequestedFull
                                           || _gameTiming.CurTick > session.LastReceivedAck + (uint) ForceAckThreshold;
     }
 
@@ -125,14 +80,17 @@ internal sealed partial class PvsSystem
         // Update visibility masks & viewer positions
         // TODO PVS do this before sending state.
         // I,e, we already enumerate over all eyes when computing visible chunks.
-        Span<MapCoordinates> positions = stackalloc MapCoordinates[session.Viewers.Length];
+        Span<(MapCoordinates pos, float scale)> positions = stackalloc (MapCoordinates, float)[session.Viewers.Length];
         int i = 0;
         foreach (var viewer in session.Viewers)
         {
             if (viewer.Comp2 != null)
                 session.VisMask |= viewer.Comp2.VisibilityMask;
 
-            positions[i++] = _transform.GetMapCoordinates(viewer.Owner, viewer.Comp1);
+            var mapCoordinates = _transform.GetMapCoordinates(viewer.Owner, viewer.Comp1);
+            mapCoordinates = mapCoordinates.Offset(viewer.Comp2?.Offset ?? Vector2.Zero);
+            var scale = MathF.Max((viewer.Comp2?.PvsScale ?? 1), 0.1f);
+            positions[i++] = (mapCoordinates, scale);
         }
 
         if (!CullingEnabled || session.DisableCulling)
@@ -157,7 +115,7 @@ internal sealed partial class PvsSystem
             DebugTools.Assert(!chunk.UpdateQueued);
             DebugTools.Assert(!chunk.Dirty);
 
-            foreach (var pos in positions)
+            foreach (var (pos, scale) in positions)
             {
                 if (pos.MapId != chunk.Position.MapId)
                     continue;
@@ -165,8 +123,9 @@ internal sealed partial class PvsSystem
                 dist = Math.Min(dist, (pos.Position - chunk.Position.Position).LengthSquared());
 
                 var relative = Vector2.Transform(pos.Position, chunk.InvWorldMatrix)  - chunk.Centre;
+
                 relative = Vector2.Abs(relative);
-                chebDist = Math.Min(chebDist, Math.Max(relative.X, relative.Y));
+                chebDist = Math.Min(chebDist, Math.Max(relative.X, relative.Y) / scale);
             }
 
             distances.Add(dist);

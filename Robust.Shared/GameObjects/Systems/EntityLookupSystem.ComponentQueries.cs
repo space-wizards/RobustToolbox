@@ -10,9 +10,9 @@ using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Shapes;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
-using TerraFX.Interop.Windows;
 
 namespace Robust.Shared.GameObjects;
 
@@ -67,7 +67,7 @@ public sealed partial class EntityLookupSystem
     /// <summary>
     /// Common method to determine if an entity overlaps the specified shape.
     /// </summary>
-    private bool IsIntersecting(MapId mapId, EntityUid uid, TransformComponent xform, IPhysShape shape, Transform shapeTransform, Box2 worldAABB, LookupFlags flags)
+    private bool IsIntersecting<TShape>(MapId mapId, EntityUid uid, TransformComponent xform, TShape shape, Transform shapeTransform, Box2 worldAABB, LookupFlags flags) where TShape : IPhysShape
     {
         var (entPos, entRot) = _transform.GetWorldPositionRotation(xform);
 
@@ -121,39 +121,29 @@ public sealed partial class EntityLookupSystem
         if (!_broadQuery.Resolve(lookupUid, ref lookup))
             return;
 
-        var lookupPoly = new PolygonShape();
-        lookupPoly.SetAsBox(localAABB);
-        var (lookupPos, lookupRot) = _transform.GetWorldPositionRotation(lookupUid);
-        var transform = new Transform(lookupPos, lookupRot);
-
-        AddEntitiesIntersecting(lookupUid, intersecting, lookupPoly, transform, flags, query, lookup);
+        var polygon = new SlimPolygon(localAABB);
+        AddEntitiesIntersecting(lookupUid, intersecting, polygon, localAABB, Physics.Transform.Empty, flags, query, lookup);
     }
 
-    private void AddEntitiesIntersecting<T>(
+    private void AddEntitiesIntersecting<T, TShape>(
         EntityUid lookupUid,
         HashSet<Entity<T>> intersecting,
-        IPhysShape shape,
-        Transform shapeTransform,
+        TShape shape,
+        Box2 localAABB,
+        Transform localTransform,
         LookupFlags flags,
         EntityQuery<T> query,
-        BroadphaseComponent? lookup = null) where T : IComponent
+        BroadphaseComponent? lookup = null)
+        where T : IComponent
+       where TShape : IPhysShape
     {
         if (!_broadQuery.Resolve(lookupUid, ref lookup))
             return;
 
-        // Shape gets passed in via local terms
-        // Transform is in world terms
-        // Need to convert both back to lookup-local for AABB.
-        var (_, lookupRot, lookupInvMatrix) = _transform.GetWorldPositionRotationInvMatrix(lookupUid);
-        var lookupTransform = new Transform(Vector2.Transform(shapeTransform.Position, lookupInvMatrix),
-            shapeTransform.Quaternion2D.Angle - lookupRot);
-
-        var localAABB = shape.ComputeAABB(lookupTransform, 0);
-
-        var state = new QueryState<T>(
+        var state = new QueryState<T, TShape>(
             intersecting,
             shape,
-            shapeTransform,
+            localTransform,
             _fixtures,
             _physics,
             _manifoldManager,
@@ -185,7 +175,7 @@ public sealed partial class EntityLookupSystem
 
         return;
 
-        static bool PhysicsQuery<T>(ref QueryState<T> state, in FixtureProxy value) where T : IComponent
+        static bool PhysicsQuery(ref QueryState<T, TShape> state, in FixtureProxy value)
         {
             if (!state.Sensors && !value.Fixture.Hard)
                 return true;
@@ -195,7 +185,7 @@ public sealed partial class EntityLookupSystem
 
             if (!state.Approximate)
             {
-                var intersectingTransform = state.Physics.GetPhysicsTransform(value.Entity);
+                var intersectingTransform = state.Physics.GetLocalPhysicsTransform(value.Entity);
                 if (!state.Manifolds.TestOverlap(state.Shape, 0, value.Fixture.Shape, value.ChildIndex, state.Transform, intersectingTransform))
                 {
                     return true;
@@ -206,7 +196,7 @@ public sealed partial class EntityLookupSystem
             return true;
         }
 
-        static bool SundriesQuery<T>(ref QueryState<T> state, in EntityUid value) where T : IComponent
+        static bool SundriesQuery(ref QueryState<T, TShape> state, in EntityUid value)
         {
             if (!state.Query.TryGetComponent(value, out var comp))
                 return true;
@@ -217,7 +207,7 @@ public sealed partial class EntityLookupSystem
                 return true;
             }
 
-            var intersectingTransform = state.Physics.GetPhysicsTransform(value);
+            var intersectingTransform = state.Physics.GetLocalPhysicsTransform(value);
 
             if (state.FixturesQuery.TryGetComponent(value, out var fixtures))
             {
@@ -261,22 +251,25 @@ public sealed partial class EntityLookupSystem
         if (!_broadQuery.Resolve(lookupUid, ref lookup))
             return false;
 
-        var shape = new PolygonShape();
-        shape.SetAsBox(localAABB);
+        var polygon = new SlimPolygon(localAABB);
         var (lookupPos, lookupRot) = _transform.GetWorldPositionRotation(lookupUid);
         var transform = new Transform(lookupPos, lookupRot);
+        var result = AnyComponentsIntersecting(lookupUid, polygon, localAABB, transform, flags, query, ignored, lookup);
 
-        return AnyComponentsIntersecting(lookupUid, shape, transform, flags, query, ignored, lookup);
+        return result;
     }
 
-    private bool AnyComponentsIntersecting<T>(
+    private bool AnyComponentsIntersecting<T, TShape>(
         EntityUid lookupUid,
-        IPhysShape shape,
+        TShape shape,
+        Box2 localAABB,
         Transform shapeTransform,
         LookupFlags flags,
         EntityQuery<T> query,
         EntityUid? ignored = null,
-        BroadphaseComponent? lookup = null) where T : IComponent
+        BroadphaseComponent? lookup = null)
+        where T : IComponent
+       where TShape : IPhysShape
     {
         /*
          * Unfortunately this is split from the other query as we can short-circuit here, hence the code duplication.
@@ -286,13 +279,7 @@ public sealed partial class EntityLookupSystem
         if (!_broadQuery.Resolve(lookupUid, ref lookup))
             return false;
 
-        var (_, lookupRot, lookupInvMatrix) = _transform.GetWorldPositionRotationInvMatrix(lookupUid);
-        var lookupTransform = new Transform(Vector2.Transform(shapeTransform.Position, lookupInvMatrix),
-            shapeTransform.Quaternion2D.Angle - lookupRot);
-
-        var localAABB = shape.ComputeAABB(lookupTransform, 0);
-
-        var state = new AnyQueryState<T>(false,
+        var state = new AnyQueryState<T, TShape>(false,
             ignored,
             shape,
             shapeTransform,
@@ -334,7 +321,7 @@ public sealed partial class EntityLookupSystem
 
         return state.Found;
 
-        static bool PhysicsQuery<T>(ref AnyQueryState<T> state, in FixtureProxy value) where T : IComponent
+        static bool PhysicsQuery(ref AnyQueryState<T, TShape> state, in FixtureProxy value)
         {
             if (value.Entity == state.Ignored)
                 return true;
@@ -359,7 +346,7 @@ public sealed partial class EntityLookupSystem
             return false;
         }
 
-        static bool SundriesQuery(ref AnyQueryState<T> state, in EntityUid value)
+        static bool SundriesQuery(ref AnyQueryState<T, TShape> state, in EntityUid value)
         {
             if (state.Ignored == value)
                 return true;
@@ -438,14 +425,13 @@ public sealed partial class EntityLookupSystem
 
     public bool AnyComponentsIntersecting(Type type, MapId mapId, Box2 worldAABB, EntityUid? ignored = null, LookupFlags flags = DefaultFlags)
     {
-        var shape = new PolygonShape();
-        shape.SetAsBox(worldAABB);
+        var polygon = new SlimPolygon(worldAABB);
         var transform = Physics.Transform.Empty;
-
-        return AnyComponentsIntersecting(type, mapId, shape, transform, ignored, flags);
+        var result = AnyComponentsIntersecting(type, mapId, polygon, transform, ignored, flags);
+        return result;
     }
 
-    public bool AnyComponentsIntersecting(Type type, MapId mapId, IPhysShape shape, Transform shapeTransform, EntityUid? ignored = null, LookupFlags flags = DefaultFlags)
+    public bool AnyComponentsIntersecting<T>(Type type, MapId mapId, T shape, Transform shapeTransform, EntityUid? ignored = null, LookupFlags flags = DefaultFlags) where T : IPhysShape
     {
         DebugTools.Assert(typeof(IComponent).IsAssignableFrom(type));
         if (mapId == MapId.Nullspace)
@@ -494,7 +480,7 @@ public sealed partial class EntityLookupSystem
             }
 
             // Get map entities
-            var mapUid = _mapManager.GetMapEntityId(mapId);
+            var mapUid = _map.GetMapOrInvalid(mapId);
             AnyLocalComponentsIntersecting(mapUid, worldAABB, flags, query, ignored);
         }
 
@@ -507,29 +493,37 @@ public sealed partial class EntityLookupSystem
         if (mapId == MapId.Nullspace)
             return;
 
-        var shape = new PolygonShape();
-        shape.SetAsBox(worldAABB);
+        var polygon = new SlimPolygon(worldAABB);
         var transform = Physics.Transform.Empty;
 
-        GetEntitiesIntersecting(type, mapId, shape, transform, intersecting, flags);
+        GetEntitiesIntersecting(type, mapId, polygon, transform, intersecting, flags);
+    }
+
+    public void GetEntitiesIntersecting<T>(MapId mapId, Box2Rotated worldBounds, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
+    {
+        if (mapId == MapId.Nullspace) return;
+
+        var polygon = new SlimPolygon(worldBounds);
+        var shapeTransform = Physics.Transform.Empty;
+
+        GetEntitiesIntersecting(mapId, polygon, shapeTransform, entities, flags);
     }
 
     public void GetEntitiesIntersecting<T>(MapId mapId, Box2 worldAABB, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
     {
         if (mapId == MapId.Nullspace) return;
 
-        var shape = new PolygonShape();
-        shape.SetAsBox(worldAABB);
+        var polygon = new SlimPolygon(worldAABB);
         var shapeTransform = Physics.Transform.Empty;
 
-        GetEntitiesIntersecting(mapId, shape, shapeTransform, entities, flags);
+        GetEntitiesIntersecting(mapId, polygon, shapeTransform, entities, flags);
     }
 
     #endregion
 
     #region IPhysShape
 
-    public void GetEntitiesIntersecting(Type type, MapId mapId, IPhysShape shape, Transform shapeTransform, HashSet<Entity<IComponent>> intersecting, LookupFlags flags = DefaultFlags)
+    public void GetEntitiesIntersecting<T>(Type type, MapId mapId, T shape, Transform shapeTransform, HashSet<Entity<IComponent>> intersecting, LookupFlags flags = DefaultFlags) where T : IPhysShape
     {
         DebugTools.Assert(typeof(IComponent).IsAssignableFrom(type));
         if (mapId == MapId.Nullspace)
@@ -554,23 +548,30 @@ public sealed partial class EntityLookupSystem
             var query = EntityManager.GetEntityQuery(type);
 
             // Get grid entities
-            var state = new GridQueryState<IComponent>(intersecting, shape, shapeTransform, this, flags, query);
+            var state = new GridQueryState<IComponent, T>(intersecting, shape, shapeTransform, this, _physics, flags, query);
 
             _mapManager.FindGridsIntersecting(mapId, worldAABB, ref state,
-                static (EntityUid uid, MapGridComponent grid, ref GridQueryState<IComponent> state) =>
+                static (EntityUid uid, MapGridComponent grid, ref GridQueryState<IComponent, T> state) =>
                 {
-                    state.Lookup.AddEntitiesIntersecting(uid, state.Intersecting, state.Shape, state.Transform, state.Flags, state.Query);
+                    var localTransform = state.Physics.GetRelativePhysicsTransform(state.Transform, uid);
+                    var localAabb = state.Shape.ComputeAABB(localTransform, 0);
+                    state.Lookup.AddEntitiesIntersecting(uid, state.Intersecting, state.Shape, localAabb, localTransform, state.Flags, state.Query);
                     return true;
                 }, approx: true, includeMap: false);
 
-            var mapUid = _mapManager.GetMapEntityId(mapId);
-            AddEntitiesIntersecting(mapUid, intersecting, shape, shapeTransform, flags, query);
+            var mapUid = _map.GetMapOrInvalid(mapId);
+            var localTransform = state.Physics.GetRelativePhysicsTransform(state.Transform, mapUid);
+            var localAabb = state.Shape.ComputeAABB(localTransform, 0);
+
+            AddEntitiesIntersecting(mapUid, intersecting, shape, localAabb, localTransform, flags, query);
 
             AddContained(intersecting, flags, query);
         }
     }
 
-    public void GetEntitiesIntersecting<T>(MapId mapId, IPhysShape shape, Transform shapeTransform, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
+    public void GetEntitiesIntersecting<T, TShape>(MapId mapId, TShape shape, Transform shapeTransform, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags)
+        where T : IComponent
+        where TShape : IPhysShape
     {
         if (mapId == MapId.Nullspace) return;
 
@@ -593,19 +594,23 @@ public sealed partial class EntityLookupSystem
             var query = GetEntityQuery<T>();
 
             // Get grid entities
-            var state = new GridQueryState<T>(entities, shape, shapeTransform, this, flags, query);
+            var state = new GridQueryState<T, TShape>(entities, shape, shapeTransform, this, _physics, flags, query);
 
             _mapManager.FindGridsIntersecting(mapId, worldAABB, ref state,
-                static (EntityUid uid, MapGridComponent grid, ref GridQueryState<T> state) =>
+                static (EntityUid uid, MapGridComponent grid, ref GridQueryState<T, TShape> state) =>
                 {
-                    state.Lookup.AddEntitiesIntersecting(uid, state.Intersecting, state.Shape, state.Transform, state.Flags, state.Query);
+                    var localTransform = state.Physics.GetRelativePhysicsTransform(state.Transform, uid);
+                    var localAabb = state.Shape.ComputeAABB(localTransform, 0);
+                    state.Lookup.AddEntitiesIntersecting(uid, state.Intersecting, state.Shape, localAabb, localTransform, state.Flags, state.Query);
                     return true;
                 }, approx: true, includeMap: false);
 
             // Get map entities
-            var mapUid = _mapManager.GetMapEntityId(mapId);
-            AddEntitiesIntersecting(mapUid, entities, shape, shapeTransform, flags, query);
+            var mapUid = _map.GetMapOrInvalid(mapId);
+            var localTransform = state.Physics.GetRelativePhysicsTransform(state.Transform, mapUid);
+            var localAabb = state.Shape.ComputeAABB(localTransform, 0);
 
+            AddEntitiesIntersecting(mapUid, entities, shape, localAabb, localTransform, flags, query);
             AddContained(entities, flags, query);
         }
     }
@@ -614,16 +619,16 @@ public sealed partial class EntityLookupSystem
 
     #region EntityCoordinates
 
-    public void GetEntitiesInRange<T>(EntityCoordinates coordinates, float range, HashSet<Entity<T>> entities) where T : IComponent
+    public void GetEntitiesInRange<T>(EntityCoordinates coordinates, float range, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
     {
         var mapPos = coordinates.ToMap(EntityManager, _transform);
-        GetEntitiesInRange(mapPos, range, entities);
+        GetEntitiesInRange(mapPos, range, entities, flags);
     }
 
-    public HashSet<Entity<T>> GetEntitiesInRange<T>(EntityCoordinates coordinates, float range) where T : IComponent
+    public HashSet<Entity<T>> GetEntitiesInRange<T>(EntityCoordinates coordinates, float range, LookupFlags flags = DefaultFlags) where T : IComponent
     {
         var entities = new HashSet<Entity<T>>();
-        GetEntitiesInRange(coordinates, range, entities);
+        GetEntitiesInRange(coordinates, range, entities, flags);
         return entities;
     }
 
@@ -642,12 +647,6 @@ public sealed partial class EntityLookupSystem
     {
         DebugTools.Assert(typeof(IComponent).IsAssignableFrom(type));
         GetEntitiesInRange(type, coordinates.MapId, coordinates.Position, range, entities, flags);
-    }
-
-    [Obsolete]
-    public HashSet<T> GetComponentsInRange<T>(MapCoordinates coordinates, float range) where T : IComponent
-    {
-        return GetComponentsInRange<T>(coordinates.MapId, coordinates.Position, range);
     }
 
     public void GetEntitiesInRange<T>(MapCoordinates coordinates, float range, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
@@ -678,23 +677,17 @@ public sealed partial class EntityLookupSystem
         GetEntitiesIntersecting(type, mapId, circle, transform, entities, flags);
     }
 
-    [Obsolete]
-    public HashSet<T> GetComponentsInRange<T>(MapId mapId, Vector2 worldPos, float range) where T : IComponent
-    {
-        var entities = new HashSet<Entity<T>>();
-        GetEntitiesInRange(mapId, worldPos, range, entities);
-        return [..entities.Select(e => e.Comp)];
-    }
-
     public void GetEntitiesInRange<T>(MapId mapId, Vector2 worldPos, float range, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
     {
-        var shape = new PhysShapeCircle(range);
-        var transform = new Transform(worldPos, 0f);
+        var shape = new PhysShapeCircle(range, worldPos);
+        var transform = Physics.Transform.Empty;
 
         GetEntitiesInRange(mapId, shape, transform, entities, flags);
     }
 
-    public void GetEntitiesInRange<T>(MapId mapId, IPhysShape shape, Transform transform, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
+    public void GetEntitiesInRange<T, TShape>(MapId mapId, TShape shape, Transform transform, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags)
+        where T : IComponent
+        where TShape : IPhysShape
     {
         DebugTools.Assert(shape.Radius > 0, "Range must be a positive float");
 
@@ -739,6 +732,77 @@ public sealed partial class EntityLookupSystem
 
     #endregion
 
+    #region Local
+
+    /// <summary>
+    /// Gets the entities intersecting the specified broadphase entity using a local AABB.
+    /// </summary>
+    public void GetLocalEntitiesIntersecting<T>(
+        EntityUid gridUid,
+        Vector2i localTile,
+        HashSet<Entity<T>> intersecting,
+        float enlargement = TileEnlargementRadius,
+        LookupFlags flags = DefaultFlags,
+        MapGridComponent? gridComp = null) where T : IComponent
+    {
+        ushort tileSize = 1;
+
+        if (_gridQuery.Resolve(gridUid, ref gridComp))
+        {
+            tileSize = gridComp.TileSize;
+        }
+
+        var localAABB = GetLocalBounds(localTile, tileSize);
+        localAABB = localAABB.Enlarged(enlargement);
+        GetLocalEntitiesIntersecting(gridUid, localAABB, intersecting, flags);
+    }
+
+    /// <summary>
+    /// Gets the entities intersecting the specified broadphase entity using a local AABB.
+    /// </summary>
+    public void GetLocalEntitiesIntersecting<T>(
+        EntityUid gridUid,
+        Box2 localAABB,
+        HashSet<Entity<T>> intersecting,
+        LookupFlags flags = DefaultFlags) where T : IComponent
+    {
+        var query = GetEntityQuery<T>();
+        AddLocalEntitiesIntersecting(gridUid, intersecting, localAABB, flags, query);
+        AddContained(intersecting, flags, query);
+    }
+
+    /// <summary>
+    /// Gets the entities intersecting the specified broadphase entity using a local AABB.
+    /// </summary>
+    public void GetLocalEntitiesIntersecting<T>(
+        Entity<BroadphaseComponent> grid,
+        Box2 localAABB,
+        HashSet<Entity<T>> intersecting,
+        EntityQuery<T> query,
+        LookupFlags flags = DefaultFlags) where T : IComponent
+    {
+        AddLocalEntitiesIntersecting(grid, intersecting, localAABB, flags, query, grid.Comp);
+        AddContained(intersecting, flags, query);
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Gets entities with the specified component with the specified grid.
+    /// </summary>
+    public void GetGridEntities<TComp1>(EntityUid gridUid, HashSet<Entity<TComp1>> entities) where TComp1 : IComponent
+    {
+        var query = AllEntityQuery<TComp1, TransformComponent>();
+
+        while (query.MoveNext(out var uid, out var comp, out var xform))
+        {
+            if (xform.GridUid != gridUid)
+                continue;
+
+            entities.Add((uid, comp));
+        }
+    }
+
     /// <summary>
     /// Gets entities with the specified component with the specified parent.
     /// </summary>
@@ -773,19 +837,21 @@ public sealed partial class EntityLookupSystem
         }
     }
 
-    private readonly record struct GridQueryState<T>(
+    private readonly record struct GridQueryState<T, TShape>(
         HashSet<Entity<T>> Intersecting,
-        IPhysShape Shape,
+        TShape Shape,
         Transform Transform,
         EntityLookupSystem Lookup,
+        SharedPhysicsSystem Physics,
         LookupFlags Flags,
         EntityQuery<T> Query
-    ) where T : IComponent;
+    ) where T : IComponent
+        where TShape : IPhysShape;
 
-    private record struct AnyQueryState<T>(
+    private record struct AnyQueryState<T, TShape>(
         bool Found,
         EntityUid? Ignored,
-        IPhysShape Shape,
+        TShape Shape,
         Transform Transform,
         FixtureSystem Fixtures,
         SharedPhysicsSystem Physics,
@@ -793,11 +859,12 @@ public sealed partial class EntityLookupSystem
         EntityQuery<T> Query,
         EntityQuery<FixturesComponent> FixturesQuery,
         LookupFlags Flags
-    ) where T : IComponent;
+    ) where T : IComponent
+     where TShape : IPhysShape;
 
-    private readonly record struct QueryState<T>(
+    private readonly record struct QueryState<T, TShape>(
         HashSet<Entity<T>> Intersecting,
-        IPhysShape Shape,
+        TShape Shape,
         Transform Transform,
         FixtureSystem Fixtures,
         SharedPhysicsSystem Physics,
@@ -806,5 +873,6 @@ public sealed partial class EntityLookupSystem
         EntityQuery<FixturesComponent> FixturesQuery,
         bool Sensors,
         bool Approximate
-    ) where T : IComponent;
+    ) where T : IComponent
+     where TShape : IPhysShape;
 }

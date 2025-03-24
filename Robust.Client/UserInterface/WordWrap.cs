@@ -2,6 +2,7 @@
 using System.Diagnostics.Contracts;
 using System.Text;
 using Robust.Client.Graphics;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
@@ -133,20 +134,21 @@ internal struct WordWrap
         {
             if (!WordStartBreakIndex.HasValue)
             {
-                Logger.Error(
+                var logger = IoCManager.Resolve<ISawmill>();
+                logger.Error(
                     "Assert fail inside RichTextEntry.Update, " +
                     "wordStartBreakIndex is null on method end w/ word wrap required. " +
                     "Dumping relevant stuff. Send this to PJB.");
-                // Logger.Error($"Message: {Message}");
-                Logger.Error($"maxSizeX: {_maxSizeX}");
-                Logger.Error($"maxUsedWidth: {MaxUsedWidth}");
-                Logger.Error($"breakIndexCounter: {BreakIndexCounter}");
-                Logger.Error("wordStartBreakIndex: null (duh)");
-                Logger.Error($"wordSizePixels: {WordSizePixels}");
-                Logger.Error($"posX: {PosX}");
-                Logger.Error($"lastChar: {LastRune}");
-                Logger.Error($"forceSplitData: {ForceSplitData}");
-                // Logger.Error($"LineBreaks: {string.Join(", ", LineBreaks)}");
+                // logger.Error($"Message: {Message}");
+                logger.Error($"maxSizeX: {_maxSizeX}");
+                logger.Error($"maxUsedWidth: {MaxUsedWidth}");
+                logger.Error($"breakIndexCounter: {BreakIndexCounter}");
+                logger.Error("wordStartBreakIndex: null (duh)");
+                logger.Error($"wordSizePixels: {WordSizePixels}");
+                logger.Error($"posX: {PosX}");
+                logger.Error($"lastChar: {LastRune}");
+                logger.Error($"forceSplitData: {ForceSplitData}");
+                // logger.Error($"LineBreaks: {string.Join(", ", LineBreaks)}");
 
                 throw new Exception(
                     "wordStartBreakIndex can only be null if the word begins at a new line," +

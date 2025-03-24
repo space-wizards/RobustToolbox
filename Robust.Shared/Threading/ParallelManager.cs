@@ -242,7 +242,7 @@ internal sealed class ParallelManager : IParallelManagerInternal
                 }
                 finally
                 {
-                    Tracker.Event.Set();
+                    Tracker.Set();
                 }
             }
         }

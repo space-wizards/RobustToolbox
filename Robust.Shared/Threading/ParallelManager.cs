@@ -211,7 +211,7 @@ internal sealed class ParallelManager : IParallelManagerInternal
     private readonly record struct InternalParallelJob<T> : IThreadPoolWorkItem
         where T : IParallelRobustJob
     {
-        internal readonly ParallelTracker _tracker;
+        internal readonly ParallelTracker Tracker;
 
         private readonly int _start;
         private readonly int _end;
@@ -222,7 +222,7 @@ internal sealed class ParallelManager : IParallelManagerInternal
         public InternalParallelJob(T job, ParallelTracker tracker, ISawmill sawmill, int start, int end)
         {
             _job = job;
-            _tracker = tracker;
+            Tracker = tracker;
             _sawmill = sawmill;
             _start = start;
             _end = end;
@@ -242,7 +242,7 @@ internal sealed class ParallelManager : IParallelManagerInternal
                 }
                 finally
                 {
-                    _tracker.Event.Set();
+                    Tracker.Event.Set();
                 }
             }
         }

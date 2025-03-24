@@ -267,30 +267,32 @@ namespace Robust.UnitTesting.Shared.Map
             var grid = mapManager.CreateGridEntity(mapId);
             var gridEnt = grid.Owner;
             var newEnt = entityManager.CreateEntityUninitialized(null, new EntityCoordinates(grid, Vector2.Zero));
+            var newEntXform = entityManager.GetComponent<TransformComponent>(newEnt);
 
-            Assert.That(xformSys.WithEntityId(entityManager.GetComponent<TransformComponent>(newEnt).Coordinates, mapEnt).Position, Is.EqualTo(Vector2.Zero));
+            Assert.That(xformSys.WithEntityId(newEntXform.Coordinates, mapEnt).Position, Is.EqualTo(Vector2.Zero));
 
             xformSys.SetLocalPosition(newEnt, Vector2.One);
 
-            Assert.That(entityManager.GetComponent<TransformComponent>(newEnt).Coordinates.Position, Is.EqualTo(Vector2.One));
-            Assert.That(xformSys.WithEntityId(entityManager.GetComponent<TransformComponent>(newEnt).Coordinates, mapEnt).Position, Is.EqualTo(Vector2.One));
+            Assert.That(newEntXform.Coordinates.Position, Is.EqualTo(Vector2.One));
+            Assert.That(xformSys.WithEntityId(newEntXform.Coordinates, mapEnt).Position, Is.EqualTo(Vector2.One));
 
             xformSys.SetLocalPosition(gridEnt, Vector2.One);
 
-            Assert.That(entityManager.GetComponent<TransformComponent>(newEnt).Coordinates.Position, Is.EqualTo(Vector2.One));
-            Assert.That(xformSys.WithEntityId(entityManager.GetComponent<TransformComponent>(newEnt).Coordinates, mapEnt).Position, Is.EqualTo(new Vector2(2, 2)));
+            Assert.That(newEntXform.Coordinates.Position, Is.EqualTo(Vector2.One));
+            Assert.That(xformSys.WithEntityId(newEntXform.Coordinates, mapEnt).Position, Is.EqualTo(new Vector2(2, 2)));
 
             var newEntTwo = entityManager.CreateEntityUninitialized(null, new EntityCoordinates(newEnt, Vector2.Zero));
+            var newEntTwoXform = entityManager.GetComponent<TransformComponent>(newEntTwo);
 
-            Assert.That(entityManager.GetComponent<TransformComponent>(newEntTwo).Coordinates.Position, Is.EqualTo(Vector2.Zero));
-            Assert.That(xformSys.WithEntityId(entityManager.GetComponent<TransformComponent>(newEntTwo).Coordinates, mapEnt).Position, Is.EqualTo(xformSys.WithEntityId(entityManager.GetComponent<TransformComponent>(newEnt).Coordinates, mapEnt).Position));
-            Assert.That(xformSys.WithEntityId(entityManager.GetComponent<TransformComponent>(newEntTwo).Coordinates, gridEnt).Position, Is.EqualTo(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEnt).Coordinates.Position));
+            Assert.That(newEntTwoXform.Coordinates.Position, Is.EqualTo(Vector2.Zero));
+            Assert.That(xformSys.WithEntityId(newEntTwoXform.Coordinates, mapEnt).Position, Is.EqualTo(xformSys.WithEntityId(newEntXform.Coordinates, mapEnt).Position));
+            Assert.That(xformSys.WithEntityId(newEntTwoXform.Coordinates, gridEnt).Position, Is.EqualTo(newEntXform.Coordinates.Position));
 
             xformSys.SetLocalPosition(newEntTwo, -Vector2.One);
 
-            Assert.That(entityManager.GetComponent<TransformComponent>(newEntTwo).Coordinates.Position, Is.EqualTo(-Vector2.One));
-            Assert.That(xformSys.WithEntityId(entityManager.GetComponent<TransformComponent>(newEntTwo).Coordinates, mapEnt).Position, Is.EqualTo(Vector2.One));
-            Assert.That(xformSys.WithEntityId(entityManager.GetComponent<TransformComponent>(newEntTwo).Coordinates, gridEnt).Position, Is.EqualTo(Vector2.Zero));
+            Assert.That(newEntTwoXform.Coordinates.Position, Is.EqualTo(-Vector2.One));
+            Assert.That(xformSys.WithEntityId(newEntTwoXform.Coordinates, mapEnt).Position, Is.EqualTo(Vector2.One));
+            Assert.That(xformSys.WithEntityId(newEntTwoXform.Coordinates, gridEnt).Position, Is.EqualTo(Vector2.Zero));
         }
     }
 }

@@ -16,6 +16,8 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class OutputPanel : Control
     {
+        public const string StyleClassOutputPanelScrollDownButton = "outputPanelScrollDownButton";
+
         [Dependency] private readonly MarkupTagManager _tagManager = default!;
 
         public const string StylePropertyStyleBox = "stylebox";
@@ -49,7 +51,7 @@ namespace Robust.Client.UserInterface.Controls
             AddChild(_scrollDownButton = new Button()
             {
                 Name = "scrollLiveBtn",
-                StyleClasses = { "chatScrollDownButton" },
+                StyleClasses = { StyleClassOutputPanelScrollDownButton },
                 VerticalAlignment = VAlignment.Bottom,
                 HorizontalAlignment = HAlignment.Center,
                 Text = String.Format("⬇    {0}    ⬇", Loc.GetString("hud-output-scroll-down")),

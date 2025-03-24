@@ -54,7 +54,7 @@ namespace Robust.Client.UserInterface.Controls
                 StyleClasses = { StyleClassOutputPanelScrollDownButton },
                 VerticalAlignment = VAlignment.Bottom,
                 HorizontalAlignment = HAlignment.Center,
-                Text = String.Format("⬇    {0}    ⬇", Loc.GetString("hud-output-scroll-down")),
+                Text = String.Format("⬇    {0}    ⬇", Loc.GetString("output-panel-scroll-down-button-text")),
                 MaxWidth = 300,
                 Visible = false,
             });

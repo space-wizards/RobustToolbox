@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
@@ -86,7 +87,7 @@ namespace Robust.Shared.Utility
         public Span<T> AsSpan => MemoryMarshal.CreateSpan(ref _00, 2);
     }
 
-    internal struct FixedArray4<T>
+    internal struct FixedArray4<T> : IEquatable<FixedArray4<T>>
     {
         public T _00;
         public T _01;
@@ -94,9 +95,27 @@ namespace Robust.Shared.Utility
         public T _03;
 
         public Span<T> AsSpan => MemoryMarshal.CreateSpan(ref _00, 4);
+
+        public bool Equals(FixedArray4<T> other)
+        {
+            return _00?.Equals(other._00) == true &&
+                   _01?.Equals(other._01) == true &&
+                   _02?.Equals(other._02) == true &&
+                   _03?.Equals(other._03) == true;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is FixedArray4<T> other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(_00, _01, _02, _03);
+        }
     }
 
-    internal struct FixedArray8<T>
+    internal struct FixedArray8<T> : IEquatable<FixedArray8<T>>
     {
         public T _00;
         public T _01;
@@ -108,6 +127,28 @@ namespace Robust.Shared.Utility
         public T _07;
 
         public Span<T> AsSpan => MemoryMarshal.CreateSpan(ref _00, 8);
+
+        public bool Equals(FixedArray8<T> other)
+        {
+            return _00?.Equals(other._00) == true &&
+                   _01?.Equals(other._01) == true &&
+                   _02?.Equals(other._02) == true &&
+                   _03?.Equals(other._03) == true &&
+                   _04?.Equals(other._04) == true &&
+                   _05?.Equals(other._05) == true &&
+                   _06?.Equals(other._06) == true &&
+                   _07?.Equals(other._07) == true;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is FixedArray8<T> other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(_00, _01, _02, _03, _04, _05, _06, _07);
+        }
     }
 
     internal struct FixedArray16<T>

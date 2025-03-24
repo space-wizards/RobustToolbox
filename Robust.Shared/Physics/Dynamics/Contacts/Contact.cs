@@ -150,6 +150,15 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             Friction = MathF.Sqrt((FixtureA?.Friction ?? 0.0f) * (FixtureB?.Friction ?? 0.0f));
         }
 
+        public void GetWorldManifold(Transform transformA, Transform transformB, out Vector2 normal)
+        {
+            var shapeA = FixtureA?.Shape!;
+            var shapeB = FixtureB?.Shape!;
+            Span<Vector2> points = stackalloc Vector2[PhysicsConstants.MaxPolygonVertices];
+
+            SharedPhysicsSystem.InitializeManifold(ref Manifold, transformA, transformB, shapeA.Radius, shapeB.Radius, out normal, points);
+        }
+
         /// <summary>
         /// Gets the world manifold.
         /// </summary>

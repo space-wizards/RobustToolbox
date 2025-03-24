@@ -35,7 +35,10 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* The default shader now interprets negative color modulation as a flag that indicates that the light map should be ignored.
+  * This can be used to avoid having to change the light map texture, thus reducing draw batches.
+  * Sprite layers that are set to use the "unshaded" shader prototype now use this.
+  * Any fragment shaders that previously the `VtxModulate` colour modulation variable should instead use the new `MODULATE` variable, as the former may now contain negative values.
 
 ### New features
 
@@ -43,7 +46,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix serialization source generator breaking if a class has two partial locations.
 
 ### Other
 
@@ -52,6 +55,49 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 249.0.0
+
+### Breaking changes
+
+* Layer is now read-only on VisibilityComponent and isn't serialized.
+
+### New features
+
+* Added a debug overlay for the linear and angular velocity of all entities on the screen. Use the `showvel` and `showangvel` commands to toggle it.
+* Add a GetWorldManifold overload that doesn't require a span of points.
+* Added a GetVisMaskEvent. Calling `RefreshVisibilityMask` will raise it and subscribers can update the vismask via the event rather than subscribers having to each manually try and handle the vismask directly.
+
+### Bugfixes
+
+* `BoxContainer` no longer causes stretching children to go below their minimum size.
+* Fix lights on other grids getting clipped due to ignoring the light range cvar.
+* Fix the `showvelocities` command.
+* Fix the DirtyFields overload not being sandbox safe for content.
+
+### Internal
+
+* Polygon vertices are now inlined with FixedArray8 and a separate SlimPolygon using FixedArray4 for hot paths rather than using pooled arrays.
+
+
+## 248.0.2
+
+### Bugfixes
+
+* Don't throw in overlay rendering if MapUid not found.
+
+### Internal
+
+* Reduce EntityManager.IsDefault allocations.
+
+
+## 248.0.1
+
+### Bugfixes
+
+* Bump ImageSharp version.
+* Fix instances of NaN gain for audio where a negative-infinity value is being used for volume.
 
 
 ## 248.0.0

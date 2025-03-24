@@ -6,6 +6,7 @@ using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Threading;
 
@@ -122,6 +123,7 @@ internal sealed class ParallelManager : IParallelManagerInternal
 
         var tracker = InternalProcess(job, amount);
         tracker.Event.WaitHandle.WaitOne();
+        DebugTools.Assert(tracker.PendingTasks == 0);
         _trackerPool.Return(tracker);
     }
 
@@ -230,20 +232,22 @@ internal sealed class ParallelManager : IParallelManagerInternal
 
         public void Execute()
         {
-            for (var i = _start; i < _end; i++)
+            var index = 0;
+
+            try
             {
-                try
+                for (index = _start; index < _end; index++)
                 {
-                    _job.Execute(i);
+                    _job.Execute(index);
                 }
-                catch (Exception exc)
-                {
-                    _sawmill.Error($"Exception in ParallelManager: {exc.StackTrace}");
-                }
-                finally
-                {
-                    Tracker.Set();
-                }
+            }
+            catch (Exception exc)
+            {
+                _sawmill.Error($"Exception in ParallelManager on job {index}: {exc.StackTrace}");
+            }
+            finally
+            {
+                Tracker.Set();
             }
         }
     }

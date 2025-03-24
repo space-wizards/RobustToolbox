@@ -35,7 +35,10 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* The default shader now interprets negative color modulation as a flag that indicates that the light map should be ignored.
+  * This can be used to avoid having to change the light map texture, thus reducing draw batches.
+  * Sprite layers that are set to use the "unshaded" shader prototype now use this.
+  * Any fragment shaders that previously the `VtxModulate` colour modulation variable should instead use the new `MODULATE` variable, as the former may now contain negative values.
 
 ### New features
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.EntitySerialization;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
@@ -96,16 +97,9 @@ namespace Robust.Shared.Prototypes
         [DataField("localizationId")]
         public string? CustomLocalizationID { get; private set; }
 
-
         /// <summary>
         ///     If true, this object should not show up in the entity spawn panel.
         /// </summary>
-        [ViewVariables]
-        [NeverPushInheritance]
-        [DataField("noSpawn")]
-        [Obsolete("Use HideSpawnMenu")]
-        public bool NoSpawn { get; private set; }
-
         [Access(typeof(PrototypeManager))]
         public bool HideSpawnMenu { get; internal set; }
 
@@ -275,7 +269,7 @@ namespace Robust.Shared.Prototypes
                 component = newComponent;
             }
 
-            if (context is not MapSerializationContext map)
+            if (context is not EntityDeserializer map)
             {
                 serManager.CopyTo(data, ref component, context, notNullableOverride: true);
                 return;
@@ -409,7 +403,7 @@ namespace Robust.Shared.Prototypes
         }*/
     }
 
-    public sealed class ComponentRegistry : Dictionary<string, EntityPrototype.ComponentRegistryEntry>, IEntityLoadContext, ISerializationContext
+    public sealed class ComponentRegistry : Dictionary<string, EntityPrototype.ComponentRegistryEntry>, IEntityLoadContext
     {
         public ComponentRegistry()
         {
@@ -436,8 +430,5 @@ namespace Robust.Shared.Prototypes
         {
             return false; //Registries cannot represent the "remove this component" state.
         }
-
-        public SerializationManager.SerializerProvider SerializerProvider { get; } = new();
-        public bool WritingReadingPrototypes { get; } = true;
     }
 }

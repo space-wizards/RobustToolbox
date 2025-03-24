@@ -154,6 +154,10 @@ public abstract partial class ToolshedCommand
         where T: EntitySystem
         => EntitySystemManager.GetEntitySystem<T>();
 
+    // GetSys is just too many letters to type
+    [PublicAPI, MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected T Sys<T>() where T: EntitySystem => EntitySystemManager.GetEntitySystem<T>();
+
     /// <summary>
     ///     A shorthand for retrieving an entity query.
     /// </summary>

@@ -39,33 +39,10 @@ internal partial class MapManager
         return CreateGrid(map, options.Value.ChunkSize, default);
     }
 
-    [Obsolete("Use GetComponent<MapGridComponent>(uid)")]
-    public MapGridComponent GetGrid(EntityUid gridId)
-        => EntityManager.GetComponent<MapGridComponent>(gridId);
-
     [Obsolete("Use HasComponent<MapGridComponent>(uid)")]
     public bool IsGrid(EntityUid uid)
     {
         return EntityManager.HasComponent<MapGridComponent>(uid);
-    }
-
-    [Obsolete("Use TryGetComponent(uid, out MapGridComponent? grid)")]
-    public bool TryGetGrid([NotNullWhen(true)] EntityUid? euid, [MaybeNullWhen(false)] out MapGridComponent grid)
-    {
-        if (EntityManager.TryGetComponent(euid, out MapGridComponent? comp))
-        {
-            grid = comp;
-            return true;
-        }
-
-        grid = default;
-        return false;
-    }
-
-    [Obsolete("Use HasComponent<MapGridComponent>(uid)")]
-    public bool GridExists([NotNullWhen(true)] EntityUid? euid)
-    {
-        return EntityManager.HasComponent<MapGridComponent>(euid);
     }
 
     public IEnumerable<MapGridComponent> GetAllMapGrids(MapId mapId)
@@ -119,14 +96,13 @@ internal partial class MapManager
     /// </summary>
     /// <param name="tileRef">A reference to the new tile.</param>
     /// <param name="oldTile">The old tile that got replaced.</param>
-    public void RaiseOnTileChanged(TileRef tileRef, Tile oldTile, Vector2i chunk)
+    void IMapManagerInternal.RaiseOnTileChanged(Entity<MapGridComponent> entity, TileRef tileRef, Tile oldTile, Vector2i chunk)
     {
         if (SuppressOnTileChanged)
             return;
 
-        var euid = tileRef.GridUid;
-        var ev = new TileChangedEvent(euid, tileRef, oldTile, chunk);
-        EntityManager.EventBus.RaiseLocalEvent(euid, ref ev, true);
+        var ev = new TileChangedEvent(entity, tileRef, oldTile, chunk);
+        EntityManager.EventBus.RaiseLocalEvent(entity.Owner, ref ev, true);
     }
 
     protected Entity<MapGridComponent> CreateGrid(EntityUid map, ushort chunkSize, EntityUid forcedGridEuid)
@@ -148,6 +124,9 @@ internal partial class MapManager
         EntityManager.System<MetaDataSystem>().SetEntityName(gridEnt, $"grid", meta);
         EntityManager.InitializeComponents(gridEnt, meta);
         EntityManager.StartComponents(gridEnt);
+        // Note that this does not actually map-initialize the grid entity, even if the map its being spawn on has already been initialized.
+        // I don't know whether that is intentional or not.
+
         return (gridEnt, grid);
     }
 }

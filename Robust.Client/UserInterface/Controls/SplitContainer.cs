@@ -268,12 +268,15 @@ namespace Robust.Client.UserInterface.Controls
                 var first = GetChild(0);
                 var second = GetChild(1);
 
-                firstMinSize ??= (Vertical ? first.DesiredSize.Y : first.DesiredSize.X);
-                secondMinSize ??= (Vertical ? second.DesiredSize.Y : second.DesiredSize.X);
-                var size = Vertical ? controlSize.Y : controlSize.X;
+                if (first.IsMeasureValid && second.IsMeasureValid)
+                {
+                    firstMinSize ??= (Vertical ? first.DesiredSize.Y : first.DesiredSize.X);
+                    secondMinSize ??= (Vertical ? second.DesiredSize.Y : second.DesiredSize.X);
+                    var size = Vertical ? controlSize.Y : controlSize.X;
 
-                _splitStart = MathHelper.Clamp(_splitStart, firstMinSize.Value,
-                    size - (secondMinSize.Value + _splitWidth));
+                    _splitStart = MathHelper.Clamp(_splitStart, firstMinSize.Value,
+                        size - (secondMinSize.Value + _splitWidth));
+                }
             }
         }
 

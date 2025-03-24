@@ -23,6 +23,7 @@ namespace Robust.Client.WebView.Cef
             var info = CefWindowInfo.Create();
             info.Bounds = new CefRectangle(0, 0, createParams.Width, createParams.Height);
             info.SetAsPopup(mainHWnd, "ss14cef");
+             info.RuntimeStyle = CefRuntimeStyle.Alloy;
 
             var impl = new WebViewWindowImpl(this);
 

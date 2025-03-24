@@ -18,3 +18,9 @@
   description: entity-category-desc-hide
   hideSpawnMenu: true
   inheritable: false
+
+# Entity prototypes added by the fork. With CVar you can hide all entities without this category
+- type: entityCategory
+  id: ForkFiltered
+  name: entity-category-name-fork
+  description: entity-category-desc-fork

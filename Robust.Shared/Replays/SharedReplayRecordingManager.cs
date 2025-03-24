@@ -58,6 +58,7 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
     // Config variables.
     private long _maxCompressedSize;
     private long _maxUncompressedSize;
+    private long _serverGCSizeThreshold;
     private int _tickBatchSize;
     private bool _enabled;
 
@@ -71,6 +72,7 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
 
         NetConf.OnValueChanged(CVars.ReplayMaxCompressedSize, (v) => _maxCompressedSize = SaturatingMultiplyKb(v), true);
         NetConf.OnValueChanged(CVars.ReplayMaxUncompressedSize, (v) => _maxUncompressedSize = SaturatingMultiplyKb(v), true);
+        NetConf.OnValueChanged(CVars.ReplayServerGCSizeThreshold, (v) => _serverGCSizeThreshold = SaturatingMultiplyKb(v), true);
         NetConf.OnValueChanged(CVars.ReplayTickBatchSize, (v) => _tickBatchSize = Math.Min(v, MaxTickBatchSize) * 1024, true);
         NetConf.OnValueChanged(CVars.NetPvsCompressLevel, OnCompressionChanged);
     }
@@ -238,7 +240,6 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
 
         try
         {
-            WriteContentBundleInfo(_recState);
             WriteInitialMetadata(name, _recState);
         }
         catch
@@ -391,6 +392,7 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
         // this just overwrites the previous yml with additional data.
         var document = new YamlDocument(yamlMetadata.ToYaml());
         WriteYaml(recState, ReplayZipFolder / FileMetaFinal, document);
+        WriteContentBundleInfo(recState);
 
         UpdateWriteTasks();
         Reset();
@@ -412,6 +414,7 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
 
         var document = new JsonObject
         {
+            ["server_gc"] = ShouldEnableServerGC(recState),
             ["engine_version"] = info.EngineVersion,
             ["base_build"] = new JsonObject
             {
@@ -427,6 +430,14 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
 
         var bytes = JsonSerializer.SerializeToUtf8Bytes(document);
         WriteBytes(recState, new ResPath("rt_content_bundle.json"), bytes);
+    }
+
+    private bool ShouldEnableServerGC(RecordingState recState)
+    {
+        if (_serverGCSizeThreshold < 0)
+            return false;
+
+        return recState.CompressedSize >= _serverGCSizeThreshold;
     }
 
     /// <summary>

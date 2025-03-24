@@ -9,7 +9,7 @@ public record SessionHasNoEntityError(ICommonSession Session) : IConError
 {
     public FormattedMessage DescribeInner()
     {
-        return FormattedMessage.FromMarkupOrThrow($"The user {Session.Name} has no attached entity.");
+        return FormattedMessage.FromUnformatted($"The user {Session.Name} has no attached entity.");
     }
 
     public string? Expression { get; set; }

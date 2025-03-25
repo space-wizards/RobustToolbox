@@ -134,21 +134,22 @@ internal struct WordWrap
         {
             if (!WordStartBreakIndex.HasValue)
             {
-                var logger = IoCManager.Resolve<ISawmill>();
-                logger.Error(
+                var sawmill = IoCManager.Resolve<ILogManager>().GetSawmill("word_wrap");
+
+                sawmill.Error(
                     "Assert fail inside RichTextEntry.Update, " +
                     "wordStartBreakIndex is null on method end w/ word wrap required. " +
                     "Dumping relevant stuff. Send this to PJB.");
-                // logger.Error($"Message: {Message}");
-                logger.Error($"maxSizeX: {_maxSizeX}");
-                logger.Error($"maxUsedWidth: {MaxUsedWidth}");
-                logger.Error($"breakIndexCounter: {BreakIndexCounter}");
-                logger.Error("wordStartBreakIndex: null (duh)");
-                logger.Error($"wordSizePixels: {WordSizePixels}");
-                logger.Error($"posX: {PosX}");
-                logger.Error($"lastChar: {LastRune}");
-                logger.Error($"forceSplitData: {ForceSplitData}");
-                // logger.Error($"LineBreaks: {string.Join(", ", LineBreaks)}");
+                // sawmill.Error($"Message: {Message}");
+                sawmill.Error($"maxSizeX: {_maxSizeX}");
+                sawmill.Error($"maxUsedWidth: {MaxUsedWidth}");
+                sawmill.Error($"breakIndexCounter: {BreakIndexCounter}");
+                sawmill.Error("wordStartBreakIndex: null (duh)");
+                sawmill.Error($"wordSizePixels: {WordSizePixels}");
+                sawmill.Error($"posX: {PosX}");
+                sawmill.Error($"lastChar: {LastRune}");
+                sawmill.Error($"forceSplitData: {ForceSplitData}");
+                // sawmill.Error($"LineBreaks: {string.Join(", ", LineBreaks)}");
 
                 throw new Exception(
                     "wordStartBreakIndex can only be null if the word begins at a new line," +

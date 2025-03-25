@@ -20,7 +20,7 @@ public abstract partial class EntitySpawnHelpersTest : RobustIntegrationTest
 {
     protected ServerIntegrationInstance Server = default!;
     protected IEntityManager EntMan = default!;
-    protected IMapManager MapMan = default!;
+    protected SharedMapSystem MapSys = default!;
     protected SharedTransformSystem Xforms = default!;
     protected SharedContainerSystem Container = default!;
 
@@ -41,8 +41,8 @@ public abstract partial class EntitySpawnHelpersTest : RobustIntegrationTest
     {
         Server = StartServer();
         await Server.WaitIdleAsync();
-        MapMan = Server.ResolveDependency<IMapManager>();
         EntMan = Server.ResolveDependency<IEntityManager>();
+        MapSys = EntMan.System<SharedMapSystem>();
         Xforms = EntMan.System<SharedTransformSystem>();
         Container = EntMan.System<SharedContainerSystem>();
 

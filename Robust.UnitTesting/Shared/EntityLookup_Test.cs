@@ -200,7 +200,6 @@ namespace Robust.UnitTesting.Shared
 
             var lookup = server.Resolve<IEntitySystemManager>().GetEntitySystem<EntityLookupSystem>();
             var entManager = server.Resolve<IEntityManager>();
-            var mapManager = server.Resolve<IMapManager>();
             var mapSystem = entManager.System<SharedMapSystem>();
 
             entManager.System<SharedMapSystem>().CreateMap(spawnPos.MapId);
@@ -272,7 +271,6 @@ namespace Robust.UnitTesting.Shared
 
             var lookup = server.Resolve<IEntitySystemManager>().GetEntitySystem<EntityLookupSystem>();
             var entManager = server.Resolve<IEntityManager>();
-            var mapManager = server.Resolve<IMapManager>();
             var mapSystem = entManager.System<SharedMapSystem>();
 
             entManager.System<SharedMapSystem>().CreateMap(spawnPos.MapId);

@@ -384,7 +384,6 @@ namespace Robust.Client.GameStates
                     _processor.UpdateFullRep(curState);
                 }
 
-                IEnumerable<NetEntity> createdEntities;
                 using (_prof.Group("ApplyGameState"))
                 {
                     if (_timing.LastProcessedTick < targetProcessedTick && nextState != null)

@@ -298,16 +298,13 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<JointComponent>();
             compFactory.RegisterClass<EyeComponent>();
             compFactory.RegisterClass<GridTreeComponent>();
-            compFactory.RegisterClass<MovedGridsComponent>();
             compFactory.RegisterClass<JointRelayTargetComponent>();
             compFactory.RegisterClass<BroadphaseComponent>();
             compFactory.RegisterClass<ContainerManagerComponent>();
-            compFactory.RegisterClass<PhysicsMapComponent>();
             compFactory.RegisterClass<FixturesComponent>();
             compFactory.RegisterClass<CollisionWakeComponent>();
             compFactory.RegisterClass<OccluderComponent>();
             compFactory.RegisterClass<OccluderTreeComponent>();
-            compFactory.RegisterClass<Gravity2DComponent>();
             compFactory.RegisterClass<CollideOnAnchorComponent>();
             compFactory.RegisterClass<ActorComponent>();
 
@@ -321,7 +318,6 @@ namespace Robust.UnitTesting.Server
             var entitySystemMan = container.Resolve<IEntitySystemManager>();
 
             entitySystemMan.LoadExtraSystemType<PhysicsSystem>();
-            entitySystemMan.LoadExtraSystemType<Gravity2DController>();
             entitySystemMan.LoadExtraSystemType<SharedGridTraversalSystem>();
             entitySystemMan.LoadExtraSystemType<ContainerSystem>();
             entitySystemMan.LoadExtraSystemType<JointSystem>();

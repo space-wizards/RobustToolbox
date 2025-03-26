@@ -53,12 +53,10 @@ namespace Robust.UnitTesting
                 typeof(MetaDataComponent),
                 typeof(TransformComponent),
                 typeof(PhysicsComponent),
-                typeof(PhysicsMapComponent),
                 typeof(BroadphaseComponent),
                 typeof(FixturesComponent),
                 typeof(JointComponent),
                 typeof(GridTreeComponent),
-                typeof(MovedGridsComponent),
                 typeof(JointRelayTargetComponent),
                 typeof(OccluderComponent),
                 typeof(OccluderTreeComponent),
@@ -66,7 +64,6 @@ namespace Robust.UnitTesting
                 typeof(LightTreeComponent),
                 typeof(CollisionWakeComponent),
                 typeof(CollideOnAnchorComponent),
-                typeof(Gravity2DComponent),
                 typeof(ActorComponent)
             };
 
@@ -125,7 +122,6 @@ namespace Robust.UnitTesting
 
             systems.LoadExtraSystemType<SharedGridTraversalSystem>();
             systems.LoadExtraSystemType<FixtureSystem>();
-            systems.LoadExtraSystemType<Gravity2DController>();
             systems.LoadExtraSystemType<CollisionWakeSystem>();
 
             if (Project == UnitTestProject.Client)

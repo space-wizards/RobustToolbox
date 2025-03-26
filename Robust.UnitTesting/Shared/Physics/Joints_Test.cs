@@ -93,7 +93,7 @@ public sealed class Joints_Test
         Assert.That(entManager.HasComponent<JointComponent>(ent1), Is.EqualTo(true));
 
         // We should have a contact in both situations.
-        broadphaseSystem.FindNewContacts(mapId);
+        broadphaseSystem.FindNewContacts();
         Assert.That(body1.Contacts, Has.Count.EqualTo(1));
 
         // Alright now try the other way
@@ -103,7 +103,7 @@ public sealed class Joints_Test
         jointSystem.Update(0.016f);
         Assert.That(entManager.HasComponent<JointComponent>(ent1));
 
-        broadphaseSystem.FindNewContacts(mapId);
+        broadphaseSystem.FindNewContacts();
         Assert.That(body1.Contacts, Has.Count.EqualTo(1));
 
         mapManager.DeleteMap(mapId);

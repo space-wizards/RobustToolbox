@@ -90,19 +90,16 @@ public sealed partial class PhysicsSystem
         // existing contacts for predicted entities before performing any actual prediction.
 
         var contacts = new List<Contact>();
-        var maps = new HashSet<EntityUid>();
 
         var enumerator = AllEntityQuery<PredictedPhysicsComponent, PhysicsComponent, TransformComponent>();
+        _broadphase.FindNewContacts();
+
         while (enumerator.MoveNext(out _, out var physics, out var xform))
         {
             DebugTools.Assert(physics.Predict);
 
             if (xform.MapUid is not { } map)
                 continue;
-
-            if (maps.Add(map) && PhysMapQuery.TryGetComponent(map, out var physMap) &&
-                MapQuery.TryGetComponent(map, out var mapComp))
-                _broadphase.FindNewContacts(physMap, mapComp.MapId);
 
             contacts.AddRange(physics.Contacts);
         }

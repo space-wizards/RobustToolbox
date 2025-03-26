@@ -23,10 +23,8 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
@@ -487,14 +485,17 @@ public partial class SharedPhysicsSystem
             body.Awake = true;
         }
 
-        UpdateMapAwakeState(uid, body);
+        if (body.Awake)
+            AddAwakeBody((uid, body, Transform(uid)));
+        else
+            RemoveSleepBody((uid, body, Transform(uid)));
     }
 
     public void TrySetBodyType(EntityUid uid, BodyType value, FixturesComponent? manager = null, PhysicsComponent? body = null, TransformComponent? xform = null)
     {
         if (_fixturesQuery.Resolve(uid, ref manager, false) &&
            PhysicsQuery.Resolve(uid, ref body, false) &&
-           _xformQuery.Resolve(uid, ref xform, false))
+           XformQuery.Resolve(uid, ref xform, false))
         {
             SetBodyType(uid, value, manager, body, xform);
         }
@@ -704,7 +705,7 @@ public partial class SharedPhysicsSystem
 
     public Transform GetRelativePhysicsTransform(Transform worldTransform, Entity<TransformComponent?> relative)
     {
-        if (!_xformQuery.Resolve(relative.Owner, ref relative.Comp))
+        if (!XformQuery.Resolve(relative.Owner, ref relative.Comp))
             return Physics.Transform.Empty;
 
         var (_, broadphaseRot, _, broadphaseInv) = _transform.GetWorldPositionRotationMatrixWithInv(relative.Comp);
@@ -720,8 +721,8 @@ public partial class SharedPhysicsSystem
         Entity<TransformComponent?> entity,
         Entity<TransformComponent?> relative)
     {
-        if (!_xformQuery.Resolve(entity.Owner, ref entity.Comp) ||
-            !_xformQuery.Resolve(relative.Owner, ref relative.Comp))
+        if (!XformQuery.Resolve(entity.Owner, ref entity.Comp) ||
+            !XformQuery.Resolve(relative.Owner, ref relative.Comp))
         {
             return Physics.Transform.Empty;
         }
@@ -737,7 +738,7 @@ public partial class SharedPhysicsSystem
     /// </summary>
     public Transform GetLocalPhysicsTransform(EntityUid uid, TransformComponent? xform = null)
     {
-        if (!_xformQuery.Resolve(uid, ref xform) || xform.Broadphase == null)
+        if (!XformQuery.Resolve(uid, ref xform) || xform.Broadphase == null)
             return Physics.Transform.Empty;
 
         var broadphase = xform.Broadphase.Value.Uid;
@@ -752,7 +753,7 @@ public partial class SharedPhysicsSystem
 
     public Transform GetPhysicsTransform(EntityUid uid, TransformComponent? xform = null)
     {
-        if (!_xformQuery.Resolve(uid, ref xform))
+        if (!XformQuery.Resolve(uid, ref xform))
             return Physics.Transform.Empty;
 
         var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform);

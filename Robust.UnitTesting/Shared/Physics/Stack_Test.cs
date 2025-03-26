@@ -52,13 +52,10 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
         await server.WaitIdleAsync();
 
         var entityManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var entitySystemManager = server.ResolveDependency<IEntitySystemManager>();
         var fixtureSystem = entitySystemManager.GetEntitySystem<FixtureSystem>();
         var physSystem = entitySystemManager.GetEntitySystem<SharedPhysicsSystem>();
-        var gravSystem = entitySystemManager.GetEntitySystem<Gravity2DController>();
         var transformSystem = entitySystemManager.GetEntitySystem<SharedTransformSystem>();
-        MapId mapId;
 
         const int columnCount = 1;
         const int rowCount = 15;
@@ -67,8 +64,8 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
 
         await server.WaitPost(() =>
         {
-            var mapUid = entityManager.System<SharedMapSystem>().CreateMap(out mapId);
-            gravSystem.SetGravity(mapUid, new Vector2(0f, -9.8f));
+            var mapUid = entityManager.System<SharedMapSystem>().CreateMap(out var mapId);
+            physSystem.SetGravity(new Vector2(0f, -9.8f));
 
             var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
             var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);
@@ -162,7 +159,6 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
         var entitySystemManager = server.ResolveDependency<IEntitySystemManager>();
         var fixtureSystem = entitySystemManager.GetEntitySystem<FixtureSystem>();
         var physSystem = entitySystemManager.GetEntitySystem<SharedPhysicsSystem>();
-        var gravSystem = entitySystemManager.GetEntitySystem<Gravity2DController>();
         var transformSystem = entitySystemManager.GetEntitySystem<SharedTransformSystem>();
         MapId mapId;
 
@@ -174,7 +170,7 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
         await server.WaitPost(() =>
         {
             var mapUid = entityManager.System<SharedMapSystem>().CreateMap(out mapId);
-            gravSystem.SetGravity(mapUid, new Vector2(0f, -9.8f));
+            physSystem.SetGravity(new Vector2(0f, -9.8f));
 
             var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
             var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);

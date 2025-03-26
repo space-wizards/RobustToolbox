@@ -80,6 +80,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         public PhysicsComponent? BodyA;
         public PhysicsComponent? BodyB;
 
+        public TransformComponent? XformA;
+        public TransformComponent? XformB;
+
         public Manifold Manifold;
 
         internal ContactType Type;
@@ -414,6 +417,26 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 return (FixtureBId, FixtureB!);
             else if (uid == EntityB)
                 return (FixtureAId, FixtureA!);
+
+            throw new InvalidOperationException();
+        }
+
+        public PhysicsComponent OtherBody(EntityUid uid)
+        {
+            if (uid == EntityA)
+                return BodyB!;
+            else if (uid == EntityB)
+                return BodyA!;
+
+            throw new InvalidOperationException();
+        }
+
+        public TransformComponent OtherTransform(EntityUid uid)
+        {
+            if (uid == EntityA)
+                return XformB!;
+            else if (uid == EntityB)
+                return XformA!;
 
             throw new InvalidOperationException();
         }

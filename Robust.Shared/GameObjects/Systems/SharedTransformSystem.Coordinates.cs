@@ -111,7 +111,7 @@ public abstract partial class SharedTransformSystem
 
     public EntityUid? GetGrid(Entity<TransformComponent?> entity)
     {
-        return !Resolve(entity, ref entity.Comp) ? null : entity.Comp.GridUid;
+        return !Resolve(entity, ref entity.Comp, logMissing:false) ? null : entity.Comp.GridUid;
     }
 
     /// <summary>

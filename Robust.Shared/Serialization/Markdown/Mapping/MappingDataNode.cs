@@ -122,13 +122,8 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
         bool IDictionary<string, DataNode>.Remove(string key)
             => ((IDictionary<string, DataNode>)this).Remove(key);
 
-        [Obsolete("Use TryGet")]
         public bool TryGetValue(string key, [NotNullWhen(true)] out DataNode? value)
             => TryGet(key, out value);
-
-        [Obsolete("Use TryGet")]
-        public bool TryGetValue(ValueDataNode key, [NotNullWhen(true)] out DataNode? value)
-            => TryGet(key.Value, out value);
 
         // TODO consider changing these to unsorted collections
         // I.e., just redirect to _children.Keys to avoid hidden linq & allocations.
@@ -382,7 +377,9 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             return true;
         }
 
-        public IEnumerator<KeyValuePair<string, DataNode>> GetEnumerator() => _list.GetEnumerator();
+        public List<KeyValuePair<string, DataNode>>.Enumerator GetEnumerator() => _list.GetEnumerator();
+        IEnumerator<KeyValuePair<string, DataNode>> IEnumerable<KeyValuePair<string, DataNode>>.GetEnumerator() =>
+            _list.GetEnumerator();
 
         public override int GetHashCode()
         {
@@ -468,6 +465,10 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             get => this[key.Value];
             set => this[key.Value] = value;
         }
+
+        [Obsolete("Use string keys instead of ValueDataNode")]
+        public bool TryGetValue(ValueDataNode key, [NotNullWhen(true)] out DataNode? value)
+            => TryGet(key.Value, out value);
 
         [Obsolete("Use string keys instead of ValueDataNode")]
         public bool TryGet<T>(ValueDataNode key, [NotNullWhen(true)] out T? node) where T : DataNode

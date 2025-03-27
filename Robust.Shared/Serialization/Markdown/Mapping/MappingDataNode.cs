@@ -129,6 +129,9 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
         [Obsolete("Use TryGet")]
         public bool TryGetValue(ValueDataNode key, [NotNullWhen(true)] out DataNode? value)
             => TryGet(key.Value, out value);
+
+        // TODO consider changing these to unsorted collections
+        // I.e., just redirect to _children.Keys to avoid hidden linq & allocations.
         public ICollection<string> Keys => _list.Select(x => x.Key).ToArray();
         public ICollection<DataNode> Values => _list.Select(x => x.Value).ToArray();
 
@@ -193,6 +196,7 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
                 }
                 else
                 {
+                    // This is matches the ValueDataNode -> YamlScalarNode cast operator
                     yamlKeyNode = new(key)
                     {
                         Style = ValueDataNode.IsNullLiteral(key) || string.IsNullOrWhiteSpace(key)

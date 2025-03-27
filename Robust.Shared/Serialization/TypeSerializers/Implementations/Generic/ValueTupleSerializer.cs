@@ -7,10 +7,13 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
+using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 {
+    AAAA
+        This needs to be converted to use sequence nodes.
     [TypeSerializer]
     public sealed class ValueTupleSerializer<T1, T2> : ITypeSerializer<ValueTuple<T1, T2>, MappingDataNode>, ITypeCopyCreator<ValueTuple<T1, T2>>
     {
@@ -23,7 +26,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
                 throw new InvalidMappingException("Less than or more than 1 mappings provided to ValueTupleSerializer");
 
             var entry = node.Children.First();
-            var v1 = serializationManager.Read<T1>(entry.Key, hookCtx, context);
+            var v1 = serializationManager.Read<T1>(node.GetKeyNode(entry.Key), hookCtx, context);
             var v2 = serializationManager.Read<T2>(entry.Value, hookCtx, context);
 
             return (v1, v2);
@@ -39,7 +42,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             var dict = new Dictionary<ValidationNode, ValidationNode>
             {
                 {
-                    serializationManager.ValidateNode<T1>(entry.Key, context),
+                    serializationManager.ValidateNode<T1>(node.GetKeyNode(entry.Key), context),
                     serializationManager.ValidateNode<T2>(entry.Value, context)
                 }
             };
@@ -53,8 +56,12 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         {
             var mapping = new MappingDataNode();
 
+            var keyNode = serializationManager.WriteValue(value.Item1, alwaysWrite, context);
+            if (keyNode is not ValueDataNode valueNode)
+                throw new NotSupportedException();
+
             mapping.Add(
-                serializationManager.WriteValue<T1>(value.Item1, alwaysWrite, context),
+                valueNode.Value,
                 serializationManager.WriteValue<T2>(value.Item2, alwaysWrite, context));
 
             return mapping;

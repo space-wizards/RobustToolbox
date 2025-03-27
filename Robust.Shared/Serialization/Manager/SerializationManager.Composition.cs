@@ -27,24 +27,16 @@ public partial class SerializationManager
     public DataNode PushComposition(Type type, DataNode[] parents, DataNode child, ISerializationContext? context = null)
     {
         // TODO SERIALIZATION
-        // Add variant that doesn't require a parent array.
-
-        // TODO SERIALIZATION
         // Change inheritance pushing so that it modifies the passed in child. This avoids re-creating the child
-        // multiple times when there are multiple children.
+        // multiple times when there are multiple parents.
         //
         // I.e., change the PushCompositionDelegate signature to not have a return value, and also add an override
-        // of this method that modified the given child.
+        // of this method that modifies the given child.
 
         if (parents.Length == 0)
             return child.Copy();
 
         DebugTools.Assert(parents.All(x => x.GetType() == child.GetType()));
-
-
-        // the child.Clone() statement to the beginning here, then make the delegate modify the clone.
-        // Currently pusing more than one parent requires multiple unnecessary clones.
-
         var pusher = GetOrCreatePushCompositionDelegate(type, child);
 
         var node = child;
@@ -178,7 +170,8 @@ public partial class SerializationManager
             {
                 // tag is set on data definition creation
                 if(!processedTags.Add(dfa.Tag!)) continue; //tag was already processed, probably because we are using the same tag in an include
-                var key = new ValueDataNode(dfa.Tag);
+
+                var key = dfa.Tag!;
                 if (parent.TryGetValue(key, out var parentValue))
                 {
                     if (newMapping.TryGetValue(key, out var childValue))

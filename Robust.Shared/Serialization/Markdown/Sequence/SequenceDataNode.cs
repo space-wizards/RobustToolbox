@@ -192,6 +192,7 @@ namespace Robust.Shared.Serialization.Markdown.Sequence
             return true;
         }
 
+        [Obsolete("Use SerializationManager.PushComposition()")]
         public override SequenceDataNode PushInheritance(SequenceDataNode node)
         {
             var newNode = Copy();

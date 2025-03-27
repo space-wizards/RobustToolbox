@@ -95,8 +95,17 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
                 _keyNodes?.Remove(key);
             }
         }
+
         public int IndexOf(string key)
         {
+            // TODO MappingDataNode
+            // Consider having a Dictionary<string,int> for faster lookups?
+            // IndexOf() gets called in Remove(), which itself gets called frequently (e.g., per serialized component,
+            // per entity, when loading a map.
+            //
+            // Then again, if most mappings only contain 1-4 entries, this list search is comparable in speed, reduces
+            // allocations, and makes adding/inserting entries faster.
+
             for (var index = 0; index < _list.Count; index++)
             {
                 if (_list[index].Key == key)
@@ -113,8 +122,13 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
         bool IDictionary<string, DataNode>.Remove(string key)
             => ((IDictionary<string, DataNode>)this).Remove(key);
 
-        public bool TryGetValue(string key, [NotNullWhen(true)] out DataNode? value) => TryGet(key, out value);
+        [Obsolete("Use TryGet")]
+        public bool TryGetValue(string key, [NotNullWhen(true)] out DataNode? value)
+            => TryGet(key, out value);
 
+        [Obsolete("Use TryGet")]
+        public bool TryGetValue(ValueDataNode key, [NotNullWhen(true)] out DataNode? value)
+            => TryGet(key.Value, out value);
         public ICollection<string> Keys => _list.Select(x => x.Key).ToArray();
         public ICollection<DataNode> Values => _list.Select(x => x.Value).ToArray();
 
@@ -161,9 +175,9 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             return true;
         }
 
-        public T Cast<T>(string index) where T : DataNode
+        public T Cast<T>(string key) where T : DataNode
         {
-            return (T) this[index];
+            return (T) this[key];
         }
 
         public YamlMappingNode ToYaml()
@@ -434,5 +448,48 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             _list.Add(new(key, entry));
             return true;
         }
+
+        // These methods are probably fine to keep around as helper methods, but are currently marked as obsolete
+        // so that people don't uneccesarily allocate a ValueDataNode. I.e., to prevent people from using code like
+        // mapping.TryGet(new ValueDataNode("key"), ...)
+        #region ValueDataNode Helpers
+
+        [Obsolete("Use string keys instead of ValueDataNode")]
+        public bool TryGet(ValueDataNode key, [NotNullWhen(true)] out DataNode? value)
+            => TryGet(key.Value, out value);
+
+        [Obsolete("Use string keys instead of ValueDataNode")]
+        public DataNode this[ValueDataNode key]
+        {
+            get => this[key.Value];
+            set => this[key.Value] = value;
+        }
+
+        [Obsolete("Use string keys instead of ValueDataNode")]
+        public bool TryGet<T>(ValueDataNode key, [NotNullWhen(true)] out T? node) where T : DataNode
+            => TryGet(key.Value, out node);
+
+        [Obsolete("Use string keys instead of ValueDataNode")]
+        public bool Has(ValueDataNode key) => Has(key.Value);
+
+        [Obsolete("Use string keys instead of ValueDataNode")]
+        public T Cast<T>(ValueDataNode key) where T : DataNode => Cast<T>(key.Value);
+
+        [Obsolete("Use string keys instead of ValueDataNode")]
+        public void Add(KeyValuePair<ValueDataNode, DataNode> item) => Add(item.Key, item.Value);
+
+        [Obsolete("Use string keys instead of ValueDataNode")]
+        public MappingDataNode Add(ValueDataNode key, DataNode node) => Add(key.Value, node);
+
+        [Obsolete("Use string keys instead of ValueDataNode")]
+        public void InsertAt(int index, ValueDataNode key, DataNode value) => InsertAt(index, key.Value, value);
+
+        [Obsolete("Use string keys instead of ValueDataNode")]
+        public bool Contains(KeyValuePair<ValueDataNode, DataNode> item) => _children.ContainsKey(item.Key.Value);
+
+        [Obsolete("Use string keys instead of ValueDataNode")]
+        public bool Remove(ValueDataNode key) => Remove(key.Value);
+
+        #endregion
     }
 }

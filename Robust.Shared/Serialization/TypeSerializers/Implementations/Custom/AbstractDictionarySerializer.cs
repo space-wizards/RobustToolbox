@@ -58,7 +58,7 @@ public sealed class AbstractDictionarySerializer<TValue> : ITypeSerializer<Dicti
         {
             // TODO SERIALIZATION
             // Add some way to directly return a string w/o allocating a ValueDataNode
-            var keyNode = serializationManager.WriteValue(key, alwaysWrite, context, notNullableOverride: true);
+            var keyNode = serializationManager.WriteValue(key.Name, alwaysWrite, context, notNullableOverride: true);
             if (keyNode is not ValueDataNode valueNode)
                 throw new NotSupportedException();
 

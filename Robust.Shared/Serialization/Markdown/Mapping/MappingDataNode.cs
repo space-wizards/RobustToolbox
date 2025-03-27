@@ -368,8 +368,8 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
 
             foreach (var (key, otherValue) in other)
             {
-                if (!_children.TryGetValue(key, out var ownValue) ||
-                    !otherValue.Equals(ownValue))
+                if (!_children.TryGetValue(key, out var ownValue)
+                    || !otherValue.Equals(ownValue))
                 {
                     return false;
                 }

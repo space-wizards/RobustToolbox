@@ -389,13 +389,13 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [Obsolete("use override with an EntityUid or Entity<T>")]
-        public void Dirty(IComponent component, MetaDataComponent? meta = null)
+        public void Dirty([RequiresAttribute(typeof(NetworkedComponentAttribute))] IComponent component, MetaDataComponent? meta = null)
         {
             Dirty(component.Owner, component, meta);
         }
 
         /// <inheritdoc />
-        public virtual void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
+        public virtual void Dirty(EntityUid uid, [RequiresAttribute(typeof(NetworkedComponentAttribute))] IComponent component, MetaDataComponent? meta = null)
         {
             DebugTools.Assert(component.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
                 $"Attempted to dirty a non-networked component: {component.GetType()}");
@@ -412,7 +412,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual void Dirty<T>(Entity<T> ent, MetaDataComponent? meta = null) where T : IComponent
+        public virtual void Dirty<[RequiresAttribute(typeof(NetworkedComponentAttribute))] T>(Entity<T> ent, MetaDataComponent? meta = null) where T : IComponent
         {
             DebugTools.Assert(ent.Comp.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
                 $"Attempted to dirty a non-networked component: {ent.Comp.GetType()}");
@@ -428,7 +428,9 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual void Dirty<T1, T2>(Entity<T1, T2> ent, MetaDataComponent? meta = null)
+        public virtual void Dirty<[RequiresAttribute(typeof(NetworkedComponentAttribute))] T1,
+            [RequiresAttribute(typeof(NetworkedComponentAttribute))]T2>
+            (Entity<T1, T2> ent, MetaDataComponent? meta = null)
             where T1 : IComponent
             where T2 : IComponent
         {
@@ -445,7 +447,10 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual void Dirty<T1, T2, T3>(Entity<T1, T2, T3> ent, MetaDataComponent? meta = null)
+        public virtual void Dirty<[RequiresAttribute(typeof(NetworkedComponentAttribute))] T1,
+            [RequiresAttribute(typeof(NetworkedComponentAttribute))] T2,
+            [RequiresAttribute(typeof(NetworkedComponentAttribute))] T3>
+            (Entity<T1, T2, T3> ent, MetaDataComponent? meta = null)
             where T1 : IComponent
             where T2 : IComponent
             where T3 : IComponent
@@ -466,7 +471,11 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual void Dirty<T1, T2, T3, T4>(Entity<T1, T2, T3, T4> ent, MetaDataComponent? meta = null)
+        public virtual void Dirty<[RequiresAttribute(typeof(NetworkedComponentAttribute))] T1,
+            [RequiresAttribute(typeof(NetworkedComponentAttribute))] T2,
+            [RequiresAttribute(typeof(NetworkedComponentAttribute))] T3,
+            [RequiresAttribute(typeof(NetworkedComponentAttribute))] T4>
+            (Entity<T1, T2, T3, T4> ent, MetaDataComponent? meta = null)
             where T1 : IComponent
             where T2 : IComponent
             where T3 : IComponent

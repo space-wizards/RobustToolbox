@@ -535,7 +535,7 @@ public partial class SharedPhysicsSystem
             DirtyFields(uid, body, null, nameof(PhysicsComponent.Force), nameof(PhysicsComponent.Torque));
         }
 
-        _broadphase.RegenerateContacts(uid, body, manager, xform);
+        _broadphase.RegenerateContacts((uid, body, manager, xform));
 
         if (body.Initialized)
         {

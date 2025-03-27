@@ -47,6 +47,7 @@ END TEMPLATE-->
 ### Bugfixes
 
 * Fix serialization source generator breaking if a class has two partial locations.
+* Fix map saving throwing a `DirectoryNotFoundException` when given a path with a non-existent directory. Now it once again creates any missing directories.
 
 ### Other
 

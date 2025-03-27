@@ -36,13 +36,13 @@ END TEMPLATE-->
 ### Breaking changes
 
 * Yaml mappings/dictionaries now only support string keys instead of generic nodes
-  * Several `MappingDataNode` method arguments or return values now use strings instead of a DataNode object
-  * The MappingDataNode class has various helper methods that still accept a `ValueDataNode`, but these methods are marked as obsolete and may be removed in the future.
+  * Several MappingDataNode method arguments or return values now use strings instead of a DataNode object
+  * The MappingDataNode class has various helper methods that still accept a ValueDataNode, but these methods are marked as obsolete and may be removed in the future.
   * yaml validators should use `MappingDataNode.GetKeyNode()` when validating mapping keys, so that errors can print node start & end information
-* ValueTuples yaml serialization has changed
+* ValueTuple yaml serialization has changed
   * Previously they would get serialized into a single mapping with one entry (i.e., `{foo : bar }` 
   * Now they serialize into a sequence (i.e., `[foo, bar]`
-  * The ValueTuple serializer will still try to read mappings, but may fail if the previously serialized "key" can't be read as a simple string
+  * The ValueTuple serializer will still try to read mappings, but due to the MappingDataNode this may fail if the previously serialized "key" can't be read as a simple string
 
 ### New features
 

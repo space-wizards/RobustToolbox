@@ -111,7 +111,7 @@ public abstract partial class SharedTransformSystem
 
     public EntityUid? GetGrid(Entity<TransformComponent?> entity)
     {
-        return !Resolve(entity, ref entity.Comp) ? null : entity.Comp.GridUid;
+        return !Resolve(entity, ref entity.Comp, logMissing:false) ? null : entity.Comp.GridUid;
     }
 
     /// <summary>
@@ -124,7 +124,7 @@ public abstract partial class SharedTransformSystem
 
     public MapId GetMapId(Entity<TransformComponent?> entity)
     {
-        return !Resolve(entity, ref entity.Comp) ? MapId.Nullspace : entity.Comp.MapID;
+        return !Resolve(entity, ref entity.Comp, logMissing: false) ? MapId.Nullspace : entity.Comp.MapID;
     }
 
     /// <summary>
@@ -137,7 +137,7 @@ public abstract partial class SharedTransformSystem
 
     public EntityUid? GetMap(Entity<TransformComponent?> entity)
     {
-        return !Resolve(entity, ref entity.Comp) ? null : entity.Comp.MapUid;
+        return !Resolve(entity, ref entity.Comp, logMissing: false) ? null : entity.Comp.MapUid;
     }
 
     /// <summary>
@@ -167,10 +167,10 @@ public abstract partial class SharedTransformSystem
     /// </summary>
     public bool InRange(Entity<TransformComponent?> entA, Entity<TransformComponent?> entB,  float range)
     {
-        if (!Resolve(entA, ref entA.Comp))
+        if (!Resolve(entA, ref entA.Comp, logMissing: false))
             return false;
 
-        if (!Resolve(entB, ref entB.Comp))
+        if (!Resolve(entB, ref entB.Comp, logMissing: false))
             return false;
 
         if (!entA.Comp.ParentUid.IsValid() || !entB.Comp.ParentUid.IsValid())

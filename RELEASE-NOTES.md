@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Add a new `SerializationManager.PushComposition()` overload that takes in a single parent instead of an array of parents.
 
 ### Bugfixes
 

@@ -384,9 +384,16 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             if (_children.Count != other._children.Count)
                 return false;
 
-            // Given that keys are unique and we do not care about the ordering, we know that if removing identical
-            // key-value pairs leaves us with an empty list then the mappings are equal.
-            return Except(other) == null && Tag == other.Tag;
+            foreach (var (key, otherValue) in other)
+            {
+                if (!_children.TryGetValue(key, out var ownValue) ||
+                    !otherValue.Equals(ownValue))
+                {
+                    return false;
+                }
+            }
+
+            return Tag == other.Tag;
         }
 
         public override MappingDataNode PushInheritance(MappingDataNode node)

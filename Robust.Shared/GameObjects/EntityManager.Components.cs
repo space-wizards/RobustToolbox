@@ -595,12 +595,23 @@ namespace Robust.Shared.GameObjects
 
             if (!_deleteSet.Add(component))
             {
-                // already deferred deletion
+                // Already deferring deletion
+                DebugTools.Assert(component.LifeStage >= ComponentLifeStage.Stopped);
                 return;
             }
 
-            if (component.LifeStage >= ComponentLifeStage.Initialized && component.LifeStage <= ComponentLifeStage.Running)
+            DebugTools.Assert(component.LifeStage >= ComponentLifeStage.Added);
+
+            if (component.LifeStage is >= ComponentLifeStage.Initialized and < ComponentLifeStage.Stopping)
                 LifeShutdown(uid, component, _componentFactory.GetIndex(component.GetType()));
+            else if (component.LifeStage == ComponentLifeStage.Added)
+            {
+                // The component was added, but never initialized or started. It's kinda weird to add and then
+                // immediately defer-remove a component, but oh well. Let's just set the life stage directly and not
+                // raise shutdown events? The removal events will still get called later.
+                // This is also what LifeShutdown() would also do, albeit behind a DebugAssert.
+                component.LifeStage = ComponentLifeStage.Stopped;
+            }
 #if EXCEPTION_TOLERANCE
             }
             catch (Exception e)

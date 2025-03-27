@@ -14,6 +14,10 @@ tile-spawn-window-title = Place Tiles
 
 console-line-edit-placeholder = Command Here
 
+## OutputPanel
+
+output-panel-scroll-down-button-text = Scroll Down
+
 ## Common Used
 
 window-erase-button-text = Erase Mode

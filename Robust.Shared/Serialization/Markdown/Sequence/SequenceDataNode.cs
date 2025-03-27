@@ -133,7 +133,8 @@ namespace Robust.Shared.Serialization.Markdown.Sequence
             return newSequence;
         }
 
-        public IEnumerator<DataNode> GetEnumerator() => _nodes.GetEnumerator();
+        public List<DataNode>.Enumerator GetEnumerator() => _nodes.GetEnumerator();
+        IEnumerator<DataNode> IEnumerable<DataNode>.GetEnumerator() => _nodes.GetEnumerator();
 
         public override int GetHashCode()
         {

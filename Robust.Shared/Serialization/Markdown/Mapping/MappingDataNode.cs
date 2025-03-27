@@ -18,12 +18,12 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
         private readonly List<KeyValuePair<string,DataNode>> _list;
 
         /// <summary>
-        /// ValueDataNodes associated with each key.
-        /// This is used for yaml validation / error reporting.
+        /// ValueDataNodes associated with each key. This is used for yaml validation / error reporting.
         /// I.e., if a key is meant to be an EntityPrototype ID, we want to print an error that points to the
-        /// corresponding yaml lines
+        /// corresponding yaml lines.
         /// </summary>
-        private readonly Dictionary<string, ValueDataNode>? _keyNodes;
+        private IReadOnlyDictionary<string, ValueDataNode>? _keyNodes;
+        // TODO avoid populating this unless we are running the yaml linter?
 
         public override bool IsEmpty => _children.Count == 0;
         public int Count => _children.Count;
@@ -46,7 +46,7 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
         {
             _children = new(mapping.Children.Count);
             _list = new(mapping.Children.Count);
-            _keyNodes = new(mapping.Children.Count);
+            var keyNodes = new Dictionary<string, ValueDataNode>(mapping.Children.Count);
             foreach (var (keyNode, val) in mapping.Children)
             {
                 if (keyNode is not YamlScalarNode scalarNode)
@@ -54,9 +54,10 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
 
                 var valueNode = new ValueDataNode(scalarNode);
                 Add(valueNode.Value, val.ToDataNode());
-                _keyNodes.Add(valueNode.Value, valueNode);
+                keyNodes.Add(valueNode.Value, valueNode);
             }
 
+            _keyNodes = keyNodes;
             Tag = mapping.Tag.IsEmpty ? null : mapping.Tag.Value;
         }
 
@@ -92,7 +93,6 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
 
                 _list[index] = new(key, value);
                 _children[key] = value;
-                _keyNodes?.Remove(key);
             }
         }
 
@@ -174,7 +174,6 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
                 throw new Exception("Key exists in Children, but not list?");
 
             _list.RemoveAt(index);
-            _keyNodes?.Remove(key);
             return true;
         }
 
@@ -268,6 +267,7 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
                 newMapping.Add(key, val.Copy());
             }
 
+            newMapping._keyNodes = _keyNodes;
             return newMapping;
         }
 

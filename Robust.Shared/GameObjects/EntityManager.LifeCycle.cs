@@ -16,6 +16,7 @@ public partial class EntityManager
     /// </summary>
     internal void LifeAddToEntity(EntityUid uid, IComponent component, CompIdx idx)
     {
+        DebugTools.Assert(!_deleteSet.Contains(component));
         DebugTools.Assert(component.LifeStage == ComponentLifeStage.PreAdd);
 
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -34,6 +35,7 @@ public partial class EntityManager
     /// </summary>
     internal void LifeInitialize(EntityUid uid, IComponent component, CompIdx idx)
     {
+        DebugTools.Assert(!_deleteSet.Contains(component));
         DebugTools.Assert(component.LifeStage == ComponentLifeStage.Added);
 
         component.LifeStage = ComponentLifeStage.Initializing;
@@ -47,6 +49,7 @@ public partial class EntityManager
     /// </summary>
     internal void LifeStartup(EntityUid uid, IComponent component, CompIdx idx)
     {
+        DebugTools.Assert(!_deleteSet.Contains(component));
         DebugTools.Assert(component.LifeStage == ComponentLifeStage.Initialized);
 
         component.LifeStage = ComponentLifeStage.Starting;

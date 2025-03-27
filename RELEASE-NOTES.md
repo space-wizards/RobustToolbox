@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 250.0.0
+
+### Breaking changes
+
 * The default shader now interprets negative color modulation as a flag that indicates that the light map should be ignored.
   * This can be used to avoid having to change the light map texture, thus reducing draw batches.
   * Sprite layers that are set to use the "unshaded" shader prototype now use this.
@@ -50,20 +73,24 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Add OtherBody API to contacts.
+* Make FormattedMessages Equatable.
+* AnimationCompletionEvent now has the AnimationPlayerComponent.
+* Add entity description as a tooltip on the entity spawn panel.
 
 ### Bugfixes
 
 * Fix serialization source generator breaking if a class has two partial locations.
 * Fix map saving throwing a `DirectoryNotFoundException` when given a path with a non-existent directory. Now it once again creates any missing directories.
+* Fix map loading taking a significant time due to MappingDataNode.Equals calls being slow.
 
 ### Other
 
-*None yet*
+* Add Pure to some Angle methods.
 
 ### Internal
 
-*None yet*
+* Cleanup some warnings in classes.
 
 
 ## 249.0.0

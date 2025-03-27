@@ -342,8 +342,7 @@ public partial class PrototypeManager
         {
             if (abstractNode is not ValueDataNode abstractValueNode)
             {
-                mapping.Remove(abstractNode);
-                mapping.Add("abstract", "true");
+                mapping["abstract"] = new ValueDataNode("true");
                 return;
             }
 

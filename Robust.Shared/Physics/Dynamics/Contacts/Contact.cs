@@ -419,6 +419,17 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         }
 
         [Pure, PublicAPI]
+        public PhysicsComponent OurBody(EntityUid uid)
+        {
+            if (uid == EntityA)
+                return BodyA!;
+            else if (uid == EntityB)
+                return BodyB!;
+
+            throw new InvalidOperationException();
+        }
+
+        [Pure, PublicAPI]
         public PhysicsComponent OtherBody(EntityUid uid)
         {
             if (uid == EntityA)

@@ -114,7 +114,7 @@ internal sealed partial class MidiManager : IMidiManager
         "/usr/share/sounds/sf2/TimGM6mb.sf2",
     };
 
-    private static readonly string WindowsSoundfont = $@"{Environment.GetEnvironmentVariable("SystemRoot")}\system32\drivers\gm.dls";
+    private static readonly ResPath WindowsSoundfont = new($"{Environment.GetEnvironmentVariable("SystemRoot")}\\system32\\drivers\\gm.dls".Replace(Path.DirectorySeparatorChar, '/'));
 
     private const string OsxSoundfont =
         "/System/Library/Components/CoreAudio.component/Contents/Resources/gs_instruments.dls";
@@ -300,10 +300,12 @@ internal sealed partial class MidiManager : IMidiManager
             }
             else if (OperatingSystem.IsWindows())
             {
-                if (File.Exists(WindowsSoundfont) && SoundFont.IsSoundFont(WindowsSoundfont))
+                var windowsFont = WindowsSoundfont.ToRelativeSystemPath();
+
+                if (File.Exists(windowsFont) && SoundFont.IsSoundFont(windowsFont))
                 {
                     _midiSawmill.Debug($"Loading OS soundfont {WindowsSoundfont}");
-                    renderer.LoadSoundfont(WindowsSoundfont);
+                    renderer.LoadSoundfont(WindowsSoundfont.CanonPath);
                 }
             }
 
@@ -327,9 +329,9 @@ internal sealed partial class MidiManager : IMidiManager
                 renderer.LoadSoundfont(file.ToString());
             }
 
-            var userDataPath = _resourceManager.UserData.RootDir == null
+            var userDataPath = _resourceManager.UserData.RootPath == null
                 ? CustomSoundfontDirectory
-                : new ResPath(_resourceManager.UserData.RootDir) / CustomSoundfontDirectory.ToRelativePath();
+                : _resourceManager.UserData.RootPath.Value / CustomSoundfontDirectory.ToRelativePath();
 
             // Load every soundfont from the user data directory last, since those may override any other soundfont.
             _midiSawmill.Debug($"Loading soundfonts from user data directory {userDataPath}");

@@ -87,4 +87,31 @@ public abstract class SharedPointLightSystem : EntitySystem
         comp.Softness = value;
         Dirty(uid, comp);
     }
+
+
+    /// <summary>
+    ///     Copy visuals from one pointlight to another.
+    /// </summary>
+    public void CopyVisuals(EntityUid uid, SharedPointLightComponent otherPointLight, SharedPointLightComponent? pointlight = null, bool forceDisabled = false)
+    {
+        if (!Resolve(uid, ref pointlight))
+            return;
+
+        pointlight.Color = otherPointLight.Color;
+        pointlight.Energy = otherPointLight.Energy;
+        pointlight.Offset = otherPointLight.Offset;
+        pointlight.Radius = otherPointLight.Radius;
+        pointlight.Softness = otherPointLight.Softness;
+        pointlight.CastShadows = otherPointLight.CastShadows;
+        pointlight.Rotation = otherPointLight.Rotation;
+        pointlight.MaskAutoRotate = otherPointLight.MaskAutoRotate;
+        pointlight.MaskPath = otherPointLight.MaskPath;
+        pointlight.ContainerOccluded = otherPointLight.ContainerOccluded;
+        pointlight.NetSyncEnabled = false;
+
+        if (forceDisabled)
+            pointlight.Enabled = false;
+
+        Dirty(uid, pointlight);
+    }
 }

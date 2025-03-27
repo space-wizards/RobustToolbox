@@ -120,5 +120,14 @@ namespace Robust.Client.GameObjects
                 _lightTree.QueueTreeUpdate(uid, clientComp);
         }
         #endregion
+
+        public void CopyVisuals(EntityUid uid, PointLightComponent otherPointLight, PointLightComponent? pointlight = null) {
+            base.CopyVisuals(uid, otherPointLight, pointlight);
+
+            if (!Resolve(uid, ref pointlight))
+                return;
+
+            SetMask(pointlight.MaskPath, pointlight);
+        }
     }
 }

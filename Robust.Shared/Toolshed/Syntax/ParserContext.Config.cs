@@ -26,6 +26,7 @@ public sealed partial class ParserContext
                && c != new Rune('\'')
                && c != new Rune(':')
                && c != new Rune(';')
+               && c != new Rune('|')
                && c != new Rune('$')
                && !Rune.IsControl(c);
     }

@@ -184,6 +184,9 @@ internal struct PvsMetadata
     public NetEntity NetEntity;
 
     public GameTick LastModifiedTick;
+
+    // TODO PVS maybe store as int?
+    // Theres extra space anyways, and the mask checks always need to convert to an int first, so it'd probably be faster too.
     public ushort VisMask;
     public EntityLifeStage LifeStage;
 #if DEBUG

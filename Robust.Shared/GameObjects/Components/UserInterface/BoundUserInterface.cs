@@ -43,6 +43,7 @@ namespace Robust.Shared.GameObjects
         ///     Invoked when the UI is opened.
         ///     Do all creation and opening of things like windows in here.
         /// </summary>
+        [MustCallBase]
         protected internal virtual void Open()
         {
             if (IsOpened)

@@ -77,6 +77,22 @@ namespace Robust.Shared.Physics.Systems
             _broadphaseExpand = value;
         }
 
+        public void Rebuild(BroadphaseComponent component, bool fullBuild)
+        {
+            component.StaticTree.Rebuild(fullBuild);
+            component.DynamicTree.Rebuild(fullBuild);
+            component.SundriesTree._b2Tree.Rebuild(fullBuild);
+            component.StaticSundriesTree._b2Tree.Rebuild(fullBuild);
+        }
+
+        public void RebuildBottomUp(BroadphaseComponent component)
+        {
+            component.StaticTree.RebuildBottomUp();
+            component.DynamicTree.RebuildBottomUp();
+            component.SundriesTree._b2Tree.RebuildBottomUp();
+            component.StaticSundriesTree._b2Tree.RebuildBottomUp();
+        }
+
         #region Find Contacts
 
         /// <summary>

@@ -46,6 +46,7 @@ using Robust.Shared.Replays;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 using Robust.Shared.Upload;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client
@@ -102,6 +103,7 @@ namespace Robust.Client
             deps.Register<ProfViewManager>();
             deps.Register<IGamePrototypeLoadManager, GamePrototypeLoadManager>();
             deps.Register<NetworkResourceManager>();
+            deps.Register<IReloadManager, ReloadManager>();
 
             switch (mode)
             {

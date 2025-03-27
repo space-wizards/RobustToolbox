@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Player;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Toolshed;
 using Robust.Shared.Toolshed.Commands.Generic;
 using Robust.Shared.Toolshed.Syntax;
@@ -118,8 +120,8 @@ public sealed class ToolshedTests : ToolshedTest
             // Terminators don't actually discard the final output type if it is the end of the command.;
             AssertResult("testint;", 1);
             AssertResult("testint; testint;", 1);
-            AssertResult("i 2 + { i 2; }", 4);
-            AssertResult("i 2 + { i 2; ; } ;; ;", 4);
+            ParseError<WrongCommandReturn>("i 2 + { i 2; }");
+            ParseError<WrongCommandReturn>("i 2 + { i 2; ; } ;; ;");
         });
     }
 
@@ -187,6 +189,216 @@ public sealed class ToolshedTests : ToolshedTest
     }
 
     [Test]
+    public async Task TestTerminators()
+    {
+        await Server.WaitAssertion(() =>
+        {
+            // Baseline check that these commands work:
+            AssertResult("i 1", 1);
+            AssertResult("i 1 + 1", 2);
+            AssertResult("i { i 1 }", 1);
+
+            // Trailing terminators have no clear effect.
+            AssertResult("i 1;", 1);
+            AssertResult("i { i 1 };", 1);
+
+            // Simple explicit piping works
+            AssertResult("i 1 | + 1", 2);
+
+            // Explicit pipes imply a command is expected. Ending a command or a block after a pipe should error.
+            ParseError<OutOfInputError>("i 1 |");
+            ParseError<UnexpectedCloseBrace>("i { i 1 | }");
+
+            // A terminator inside a block or command run doesn't pipe anything;
+            ParseError<NoImplementationError>("i 1 ; + 1");
+            ParseError<WrongCommandReturn>("i { i 1 ; }");
+
+            // Check double terminators
+            // A starting terminators/pipes will try to be parsed as a command.
+            ParseError<NotValidCommandError>("|");
+            ParseError<NotValidCommandError>(";");
+            ParseError<NotValidCommandError>(";;");
+            ParseError<NotValidCommandError>("||");
+            ParseError<NotValidCommandError>("|;");
+            ParseError<NotValidCommandError>(";|");
+            AssertResult("i 1 ;;", 1);
+
+            // Consecutive pipes will try to parse the second one as the command, which will not succeed.
+            ParseError<NotValidCommandError>("i 1 ||");
+            ParseError<NotValidCommandError>("i 1 |;");
+            ParseError<NotValidCommandError>("i 1 ;|");
+            AssertResult("i 1 ;; i 1", 1);
+            ParseError<NotValidCommandError>("i 1 || i 1");
+            ParseError<NotValidCommandError>("i 1 |; i 1");
+            ParseError<NotValidCommandError>("i 1 ;| i 1");
+            ParseError<NoImplementationError>("i 1 ;; + 1");
+            ParseError<NotValidCommandError>("i 1 || + 1");
+            ParseError<NotValidCommandError>("i 1 |; + 1");
+            ParseError<NotValidCommandError>("i 1 ;| + 1");
+        });
+    }
+
+    [Test]
+    public async Task TestOptionalArgs()
+    {
+        await Server.WaitAssertion(() =>
+        {
+            // Check that straightforward optional args work.
+            ParseError<ExpectedArgumentError>("testoptionalargs ");
+            AssertResult("testoptionalargs 1", new[] {1, 0, 1});
+            AssertResult("testoptionalargs 1 2", new[] {1, 2, 1});
+            AssertResult("testoptionalargs 1 2 3", new[] {1, 2, 3});
+            AssertResult("testoptionalargs 1 2 3 append 4", new[] {1, 2, 3, 4});
+            ParseError<UnknownCommandError>("testoptionalargs 1 2 3 4");
+            ParseError<InvalidNumber<int>>("testoptionalargs 1 append 4");
+            ParseError<InvalidNumber<int>>("testoptionalargs 1 2 append 4");
+
+            // Check that semicolon terminators interrupt optional args
+            ParseError<ExpectedArgumentError>("testoptionalargs ;");
+            AssertResult("testoptionalargs 1;", new[] {1, 0, 1});
+            AssertResult("testoptionalargs 1 2;", new[] {1, 2, 1});
+            AssertResult("testoptionalargs 1 2 3;", new[] {1, 2, 3});
+            ParseError<UnknownCommandError>("testoptionalargs 1 2 3; 4");
+            AssertResult("testoptionalargs 1 2; i 3", 3);
+            AssertResult("testoptionalargs 1 2 3; i 4", 4);
+
+            // Check that explicit pipes interrupt optional args
+            ParseError<ExpectedArgumentError>("testoptionalargs |");
+            ParseError<OutOfInputError>("testoptionalargs 1 |");
+            AssertResult("testoptionalargs 1 | append 4", new[] {1, 0, 1, 4});
+            AssertResult("testoptionalargs 1 2 | append 4", new[] {1, 2, 1, 4});
+            AssertResult("testoptionalargs 1 2 3 | append 4", new[] {1, 2, 3, 4});
+
+            // Check that variables and blocks can be used to specify optional args;
+            AssertResult("i -1 => $i", -1);
+            AssertResult("testoptionalargs 1 $i", new[] {1, -1, 1});
+            AssertResult("testoptionalargs 1 $i 2", new[] {1, -1, 2});
+            AssertResult("testoptionalargs 1 { i -1 }", new[] {1, -1, 1});
+            AssertResult("testoptionalargs 1 { i -1 } 2", new[] {1, -1, 2});
+
+            // Repeat the above groups of tests, but within a command block.
+            // I.e., wrap the commands in "i 1 join { <old command> }" to prepend "1" to the results.
+
+            // This first block also effectively checks that closing braces can interrupt optional args
+            ParseError<ExpectedArgumentError>("i 1 join { testoptionalargs } ");
+            AssertResult("i 1 join { testoptionalargs 1 } ", new[] {1, 1, 0, 1});
+            AssertResult("i 1 join { testoptionalargs 1 2 }", new[] {1, 1, 2, 1});
+            AssertResult("i 1 join { testoptionalargs 1 2 3 }", new[] {1, 1, 2, 3});
+            AssertResult("i 1 join { testoptionalargs 1 2 3 append 4 }", new[] {1, 1, 2, 3, 4});
+            ParseError<UnknownCommandError>("testoptionalargs 1 2 3 4 }");
+            ParseError<InvalidNumber<int>>("testoptionalargs 1 2 i 3 }");
+            ParseError<NoImplementationError>("testoptionalargs 1 2 3 i 4 }");
+
+            ParseError<ExpectedArgumentError>("i 1 join { testoptionalargs | }");
+            ParseError<UnexpectedCloseBrace>("i 1 join { testoptionalargs 1 | }");
+            AssertResult("i 1 join { testoptionalargs 1 | append 4 }", new[] {1, 1, 0, 1, 4});
+            AssertResult("i 1 join { testoptionalargs 1 2 | append 4 }", new[] {1, 1, 2, 1, 4});
+            AssertResult("i 1 join { testoptionalargs 1 2 3 | append 4 }", new[] {1, 1, 2, 3, 4});
+
+            AssertResult("i 1 join { testoptionalargs 1 $i }", new[] {1, 1, -1, 1});
+            AssertResult("i 1 join { testoptionalargs 1 $i 2 }", new[] {1, 1, -1, 2});
+            AssertResult("i 1 join { testoptionalargs 1 { i -1 } }", new[] {1, 1, -1, 1});
+            AssertResult("i 1 join { testoptionalargs 1 { i -1 } 2 }", new[] {1, 1, -1, 2});
+        });
+    }
+
+    [Test]
+    public async Task TestParamsCollections()
+    {
+        await Server.WaitAssertion(() =>
+        {
+            // Check that straightforward optional args work.
+            ParseError<ExpectedArgumentError>("testparamscollection");
+            AssertResult("testparamsonly", new int[] {});
+            AssertResult("testparamscollection 1", new[] {1, 0});
+            AssertResult("testparamscollection 1 2", new[] {1, 2});
+            AssertResult("testparamscollection 1 2 3", new[] {1, 2, 3});
+            AssertResult("testparamscollection 1 2 3 4", new[] {1, 2, 3, 4});
+            ParseError<InvalidNumber<int>>("testparamscollection 1 2 append 4");
+            ParseError<InvalidNumber<int>>("testparamscollection 1 2 3 append 4");
+            ParseError<InvalidNumber<int>>("testparamscollection 1 2 3 4 append 4");
+
+            // Check that semicolon terminators interrupt optional args
+            ParseError<ExpectedArgumentError>("testparamscollection ;");
+            AssertResult("testparamsonly;", new int[] { });
+            AssertResult("testparamscollection 1;", new[] {1, 0});
+            AssertResult("testparamscollection 1 2;", new[] {1, 2});
+            AssertResult("testparamscollection 1 2 3;", new[] {1, 2, 3});
+            AssertResult("testparamscollection 1 2 3 4;", new[] {1, 2, 3, 4});
+            AssertResult("testparamscollection 1 2; i 4", 4);
+            AssertResult("testparamscollection 1 2 3; i 4", 4);
+            AssertResult("testparamscollection 1 2 3 4; i 4", 4);
+
+            // Check that explicit pipes interrupt optional args
+            ParseError<ExpectedArgumentError>("testparamscollection |");
+            ParseError<OutOfInputError>("testparamsonly |");
+            ParseError<OutOfInputError>("testparamscollection 1 |");
+            ParseError<OutOfInputError>("testparamscollection 1 2 |");
+            ParseError<OutOfInputError>("testparamscollection 1 2 3 |");
+            ParseError<OutOfInputError>("testparamscollection 1 2 3 4 |");
+            AssertResult("testparamsonly | append 1", new[] {1});
+            AssertResult("testparamscollection 1 | append 1", new[] {1, 0, 1});
+            AssertResult("testparamscollection 1 2 | append 1", new[] {1, 2, 1});
+            AssertResult("testparamscollection 1 2 3 | append 1", new[] {1, 2, 3, 1});
+            AssertResult("testparamscollection 1 2 3 4 | append 1", new[] {1, 2, 3, 4, 1});
+
+            // Check that variables and blocks can be used to specify args inside params arrays;
+            AssertResult("i -1 => $i", -1);
+            AssertResult("testparamscollection 1 2 3 $i 5", new[] {1, 2, 3, -1, 5});
+            AssertResult("testparamscollection 1 2 3 { i -1 } 5", new[] {1, 2, 3, -1, 5});
+
+            // Check that closing braces interrupt optional args
+            AssertResult("i 1 join { testparamsonly }", new[] {1});
+            AssertResult("i 1 join { testparamscollection 1 }", new[] {1, 1, 0});
+            AssertResult("i 1 join { testparamscollection 1 2 }", new[] {1, 1, 2});
+            AssertResult("i 1 join { testparamscollection 1 2 3 }", new[] {1, 1, 2, 3});
+            AssertResult("i 1 join { testparamscollection 1 2 3 4 }", new[] {1, 1, 2, 3, 4});
+        });
+    }
+
+    /// <summary>
+    /// Check that the type of generic parameters can be correctly inferred from the piped-in value. I.e., when check
+    /// that if we pipe a <see cref="List{T}"/> into a command that takes an <see cref="IEnumerable{T}"/>, the value of
+    /// the generic parameter can be properly inferred.
+    /// </summary>
+    [Test]
+    [TestOf(typeof(TakesPipedTypeAsGenericAttribute))]
+    public async Task TestGenericPipeInference()
+    {
+        await Server.WaitAssertion(() =>
+        {
+            // Pipe T[] -> T[]
+            AssertResult("testarray testarrayinfer 1", typeof(int));
+
+            // Pipe List<T> -> List<T>
+            AssertResult("testlist testlistinfer 1", typeof(int));
+
+            // Pipe T[] -> IEnumerable<T>
+            AssertResult("testarray testenumerableinfer 1", typeof(int));
+
+            // Pipe List<T> -> IEnumerable<T>
+            AssertResult("testlist testenumerableinfer 1", typeof(int));
+
+            // Pipe IEnumerable<T> -> IEnumerable<T>
+            AssertResult("testenumerable testenumerableinfer 1", typeof(int));
+
+            // Repeat but with nested types. i.e. extracting T when piping ProtoId<T> -> IEnumerable<ProtoId<T>>
+            AssertResult("testnestedarray testnestedarrayinfer", typeof(EntityCategoryPrototype));
+            AssertResult("testnestedlist testnestedlistinfer", typeof(EntityCategoryPrototype));
+            AssertResult("testnestedarray testnestedenumerableinfer", typeof(EntityCategoryPrototype));
+            AssertResult("testnestedlist testnestedenumerableinfer", typeof(EntityCategoryPrototype));
+            AssertResult("testnestedenumerable testnestedenumerableinfer", typeof(EntityCategoryPrototype));
+
+            // The map command used to work when the piped type was passed as an IEnumerable<T> directly, but would fail
+            // when given a List<T> or something else that implemented the interface.
+            // In particular, this would become relevant when using command variables (which store enumerables as a List<T>).
+            AssertResult("i 1 to 4 map { * 2 }", new[] {2, 4, 6, 8});
+            InvokeCommand("i 1 to 4 => $x", out _);
+            AssertResult("var $x map { * 2 }", new[] {2, 4, 6, 8});
+        });
+    }
+
+    [Test]
     public async Task TestCompletions()
     {
         await Server.WaitAssertion(() =>
@@ -199,14 +411,14 @@ public sealed class ToolshedTests : ToolshedTest
             AssertCompletionEmpty($"testvoid ");
 
             // Without a whitespace, they will still suggest the hint for the command that is currently being typed.
-            AssertCompletionHint("i 1", "Int32");
+            AssertCompletionHint("i 1", "<value (Int32)>");
             AssertCompletionSingle($"i 1 => $x", "$x");
             AssertCompletionContains($"testvoid", "testvoid");
 
             // If an error occurs while parsing something, but tha error is not at the end of the command, we should
             // not generate completions. I.e., we don't want to mislead people into thinking a command is valid and is
             // expecting additional arguments.
-            AssertCompletionHint("i a", "Int32");
+            AssertCompletionHint("i a", "<value (Int32)>");
             AssertCompletionEmpty("i a ");
             AssertCompletionEmpty("i a 1");
             AssertCompletionSingle("i $", "$x");
@@ -239,13 +451,13 @@ public sealed class ToolshedTests : ToolshedTest
 
             // Check completions when typing out: testintstrarg 1 "a"
             AssertCompletionContains("testintstrarg", "testintstrarg");
-            AssertCompletionHint("testintstrarg ", "Int32");
-            AssertCompletionHint("testintstrarg 1", "Int32");
+            AssertCompletionHint("testintstrarg ", "<i (Int32)>");
+            AssertCompletionHint("testintstrarg 1", "<i (Int32)>");
             AssertCompletionSingle("testintstrarg 1 ", "\"");
-            AssertCompletionHint("testintstrarg 1 \"", "<string>");
-            AssertCompletionHint("testintstrarg 1 \"a\"", "<string>");
+            AssertCompletionHint("testintstrarg 1 \"", "<str (String)>");
+            AssertCompletionHint("testintstrarg 1 \"a\"", "<str (String)>");
             AssertCompletionEmpty("testintstrarg 1 \"a\" ");
-            AssertCompletionHint("testintstrarg 1 \"a\" + ", "Int32");
+            AssertCompletionHint("testintstrarg 1 \"a\" + ", "<y (Int32)>");
 
             AssertCompletionContains("i 5 iota reduce { ma", "max");
             AssertCompletionContains("i 5 iota reduce { max $", "$x", "$value");

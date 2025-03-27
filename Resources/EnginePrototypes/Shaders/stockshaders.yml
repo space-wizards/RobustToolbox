@@ -4,6 +4,12 @@
   kind: canvas
   light_mode: unshaded
 
+# Simple mix blend
+- type: shader
+  id: Mix
+  kind: canvas
+  blend_mode: Mix
+
 - type: shader
   id: shaded
   kind: canvas

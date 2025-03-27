@@ -3,6 +3,7 @@ using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -12,7 +13,7 @@ namespace Robust.Shared.GameObjects;
 /// <summary>
 /// Network identifier for entities; used by client and server to refer to the same entity where their local <see cref="EntityUid"/> may differ.
 /// </summary>
-[Serializable, NetSerializable]
+[Serializable, NetSerializable, CopyByRef]
 public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>, ISpanFormattable
 {
     public readonly int Id;

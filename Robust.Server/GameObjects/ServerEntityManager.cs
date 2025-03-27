@@ -27,7 +27,7 @@ namespace Robust.Server.GameObjects
     /// Manager for entities -- controls things like template loading and instantiation
     /// </summary>
     [UsedImplicitly] // DI Container
-    public sealed class ServerEntityManager : EntityManager, IServerEntityManagerInternal
+    public sealed class ServerEntityManager : EntityManager, IServerEntityManager
     {
         private static readonly Gauge EntitiesCount = Metrics.CreateGauge(
             "robust_entities_count",
@@ -59,32 +59,6 @@ namespace Robust.Server.GameObjects
         {
             base.Startup();
             _pvs = System<PvsSystem>();
-        }
-
-        EntityUid IServerEntityManagerInternal.AllocEntity(EntityPrototype? prototype)
-        {
-            return AllocEntity(prototype, out _);
-        }
-
-        void IServerEntityManagerInternal.FinishEntityLoad(EntityUid entity, IEntityLoadContext? context)
-        {
-            LoadEntity(entity, context);
-        }
-
-        void IServerEntityManagerInternal.FinishEntityLoad(EntityUid entity, EntityPrototype? prototype, IEntityLoadContext? context)
-        {
-            LoadEntity(entity, context, prototype);
-        }
-
-        void IServerEntityManagerInternal.FinishEntityInitialization(EntityUid entity, MetaDataComponent? meta)
-        {
-            InitializeEntity(entity, meta);
-        }
-
-        [Obsolete("Use StartEntity")]
-        void IServerEntityManagerInternal.FinishEntityStartup(EntityUid entity)
-        {
-            StartEntity(entity);
         }
 
         internal override EntityUid CreateEntity(string? prototypeName, out MetaDataComponent metadata, IEntityLoadContext? context = null)

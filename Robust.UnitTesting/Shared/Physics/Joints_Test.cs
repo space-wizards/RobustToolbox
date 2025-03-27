@@ -24,8 +24,8 @@ public sealed class Joints_Test
         var sim = factory.InitializeInstance();
 
         var entManager = sim.Resolve<IEntityManager>();
-        var mapManager = sim.Resolve<IMapManager>();
         var jointSystem = entManager.System<SharedJointSystem>();
+        var mapSystem = entManager.System<SharedMapSystem>();
 
         var mapId = sim.CreateMap().MapId;
 
@@ -53,7 +53,7 @@ public sealed class Joints_Test
             Assert.That(entManager.GetComponent<JointRelayTargetComponent>(uidC).Relayed, Is.Empty);
             Assert.That(entManager.GetComponent<JointComponent>(uidA).Relay, Is.EqualTo(null));
         });
-        mapManager.DeleteMap(mapId);
+        mapSystem.DeleteMap(mapId);
     }
 
     /// <summary>
@@ -65,11 +65,11 @@ public sealed class Joints_Test
         var factory = RobustServerSimulation.NewSimulation();
         var server = factory.InitializeInstance();
         var entManager = server.Resolve<IEntityManager>();
-        var mapManager = server.Resolve<IMapManager>();
         var fixtureSystem = entManager.EntitySysManager.GetEntitySystem<FixtureSystem>();
         var jointSystem = entManager.EntitySysManager.GetEntitySystem<JointSystem>();
         var broadphaseSystem = entManager.EntitySysManager.GetEntitySystem<SharedBroadphaseSystem>();
         var physicsSystem = server.Resolve<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>();
+        var mapSystem = entManager.System<SharedMapSystem>();
 
         var mapId = server.CreateMap().MapId;
 
@@ -106,6 +106,6 @@ public sealed class Joints_Test
         broadphaseSystem.FindNewContacts(mapId);
         Assert.That(body1.Contacts, Has.Count.EqualTo(1));
 
-        mapManager.DeleteMap(mapId);
+        mapSystem.DeleteMap(mapId);
     }
 }

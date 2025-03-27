@@ -116,7 +116,7 @@ public sealed class SpawnInContainerOrDropTest : EntitySpawnHelpersTest
             Assert.That(xform.GridUid, Is.Null);
         });
 
-        await Server.WaitPost(() =>MapMan.DeleteMap(MapId));
+        await Server.WaitPost(() => MapSys.DeleteMap(MapId));
         Server.Dispose();
     }
 }

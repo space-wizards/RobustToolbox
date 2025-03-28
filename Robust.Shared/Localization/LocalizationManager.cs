@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
@@ -12,6 +13,7 @@ using Linguini.Shared.Types.Bundle;
 using Linguini.Syntax.Ast;
 using Linguini.Syntax.Parser;
 using Linguini.Syntax.Parser.Error;
+using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -24,6 +26,7 @@ namespace Robust.Shared.Localization
 {
     internal sealed partial class LocalizationManager : ILocalizationManagerInternal, IPostInjectInit
     {
+        [Dependency] private readonly IConfigurationManager _configuration = default!;
         [Dependency] private readonly IResourceManager _res = default!;
         [Dependency] private readonly ILogManager _log = default!;
         [Dependency] private readonly IPrototypeManager _prototype = default!;
@@ -39,6 +42,24 @@ namespace Robust.Shared.Localization
         {
             _logSawmill = _log.GetSawmill("loc");
             _prototype.PrototypesReloaded += OnPrototypesReloaded;
+        }
+
+        public CultureInfo SetDefaultCulture()
+        {
+            var defaultCode = _configuration.GetCVar(CVars.LocDefaultCultureName);
+            var code = _configuration.GetCVar(CVars.LocCultureName);
+
+            if (!CultureInfoHelper.TryGetCultureInfo(code, out var culture))
+            {
+                // He'll throw out the exception if he can't find a default culture
+                CultureInfoHelper.GetCultureInfo(defaultCode, out culture);
+            }
+
+            SetCulture(culture);
+
+            // Return the culture for further work with it,
+            // like of adding functions
+            return culture;
         }
 
         public string GetString(string messageId)
@@ -337,6 +358,17 @@ namespace Robust.Shared.Localization
             }
         }
 
+        public void SetCulture(CultureInfo culture)
+        {
+            if (!HasCulture(culture))
+                LoadCulture(culture);
+
+            if (DefaultCulture?.Equals(culture) ?? false)
+                return;
+
+            DefaultCulture = culture;
+        }
+
         public bool HasCulture(CultureInfo culture)
         {
             return _contexts.ContainsKey(culture);
@@ -344,6 +376,9 @@ namespace Robust.Shared.Localization
 
         public void LoadCulture(CultureInfo culture)
         {
+            // Attempting to load an already loaded culture
+            Debug.Assert(!HasCulture(culture));
+
             var bundle = LinguiniBuilder.Builder()
                 .CultureInfo(culture)
                 .SkipResources()
@@ -356,6 +391,20 @@ namespace Robust.Shared.Localization
 
             _initData(_res, culture, bundle);
             DefaultCulture ??= culture;
+        }
+
+        public List<CultureInfo> GetFoundCultures()
+        {
+            var result = new List<CultureInfo>();
+            foreach (var name in _res.ContentGetDirectoryEntries(new ResPath("/Locale")))
+            {
+                // Remove last "/" symbol
+                // Example "en-US/" -> "en-US"
+                var cultureName = name.Remove(name.Length - 1, 1);
+                result.Add(new CultureInfo(cultureName));
+            }
+
+            return result;
         }
 
         public void SetFallbackCluture(params CultureInfo[] cultures)

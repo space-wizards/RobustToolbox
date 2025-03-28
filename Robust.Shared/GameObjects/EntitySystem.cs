@@ -95,12 +95,12 @@ namespace Robust.Shared.GameObjects
 
         #region Event Proxy
 
-        protected void RaiseLocalEvent<T>(T message) where T : notnull
+        protected void RaiseLocalEvent<T>(T message) where T : notnull, allows ref struct
         {
             EntityManager.EventBus.RaiseEvent(EventSource.Local, message);
         }
 
-        protected void RaiseLocalEvent<T>(ref T message) where T : notnull
+        protected void RaiseLocalEvent<T>(ref T message) where T : notnull, allows ref struct
         {
             EntityManager.EventBus.RaiseEvent(EventSource.Local, ref message);
         }
@@ -154,7 +154,7 @@ namespace Robust.Shared.GameObjects
         }
 
         protected void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = false)
-            where TEvent : notnull
+            where TEvent : notnull, allows ref struct
         {
             EntityManager.EventBus.RaiseLocalEvent(uid, args, broadcast);
         }
@@ -165,7 +165,7 @@ namespace Robust.Shared.GameObjects
         }
 
         protected void RaiseLocalEvent<TEvent>(EntityUid uid, ref TEvent args, bool broadcast = false)
-            where TEvent : notnull
+            where TEvent : notnull, allows ref struct
         {
             EntityManager.EventBus.RaiseLocalEvent(uid, ref args, broadcast);
         }

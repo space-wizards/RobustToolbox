@@ -84,6 +84,19 @@ internal partial class AudioManager
         AL.Listener(ALListenerfv.Orientation, ref at, ref up);
     }
 
+    void IAudioInternal.Remove(AudioStream stream)
+    {
+        if (stream.ClydeHandle == null)
+            return;
+
+        if (!_audioSampleBuffers.Remove(stream.BufferId))
+        {
+            return;
+        }
+
+        AL.DeleteBuffer(stream.BufferId);
+    }
+
     /// <inheritdoc/>
     public AudioStream LoadAudioOggVorbis(Stream stream, string? name = null)
     {
@@ -120,9 +133,9 @@ internal partial class AudioManager
         _checkAlError();
 
         var handle = new ClydeHandle(_audioSampleBuffers.Count);
-        _audioSampleBuffers.Add(new LoadedAudioSample(buffer));
+        _audioSampleBuffers.Add(buffer, new LoadedAudioSample(buffer));
         var length = TimeSpan.FromSeconds(vorbis.TotalSamples / (double) vorbis.SampleRate);
-        return new AudioStream(handle, length, (int) vorbis.Channels, name, vorbis.Title, vorbis.Artist);
+        return new AudioStream(this, buffer, handle, length, (int) vorbis.Channels, name, vorbis.Title, vorbis.Artist);
     }
 
     /// <inheritdoc/>
@@ -179,9 +192,9 @@ internal partial class AudioManager
         _checkAlError();
 
         var handle = new ClydeHandle(_audioSampleBuffers.Count);
-        _audioSampleBuffers.Add(new LoadedAudioSample(buffer));
+        _audioSampleBuffers.Add(buffer, new LoadedAudioSample(buffer));
         var length = TimeSpan.FromSeconds(wav.Data.Length / (double) wav.BlockAlign / wav.SampleRate);
-        return new AudioStream(handle, length, wav.NumChannels, name);
+        return new AudioStream(this, buffer, handle, length, wav.NumChannels, name);
     }
 
     /// <inheritdoc/>
@@ -210,8 +223,8 @@ internal partial class AudioManager
 
         var handle = new ClydeHandle(_audioSampleBuffers.Count);
         var length = TimeSpan.FromSeconds((double) samples.Length / channels / sampleRate);
-        _audioSampleBuffers.Add(new LoadedAudioSample(buffer));
-        return new AudioStream(handle, length, channels, name);
+        _audioSampleBuffers.Add(buffer, new LoadedAudioSample(buffer));
+        return new AudioStream(this, buffer, handle, length, channels, name);
     }
 
     public void SetMasterGain(float newGain)
@@ -293,7 +306,7 @@ internal partial class AudioManager
 
         // ReSharper disable once PossibleInvalidOperationException
         // TODO: This really shouldn't be indexing based on the ClydeHandle...
-        AL.Source(source, ALSourcei.Buffer, _audioSampleBuffers[(int) stream.ClydeHandle!.Value].BufferHandle);
+        AL.Source(source, ALSourcei.Buffer, _audioSampleBuffers[stream.BufferId].BufferHandle);
 
         var audioSource = new AudioSource(this, source, stream);
         _audioSources.Add(source, new WeakReference<BaseAudioSource>(audioSource));
@@ -370,5 +383,12 @@ internal partial class AudioManager
         }
 
         _bufferedAudioSources.Clear();
+
+        foreach (var buffer in _audioSampleBuffers.Values)
+        {
+            DeleteAudioBufferOnMainThread(buffer.BufferHandle);
+        }
+
+        _audioSampleBuffers.Clear();
     }
 }

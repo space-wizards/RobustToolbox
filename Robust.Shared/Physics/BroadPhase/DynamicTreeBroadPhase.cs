@@ -28,18 +28,18 @@ public sealed class DynamicTreeBroadPhase : IBroadPhase
 
     public Box2 GetFatAabb(DynamicTree.Proxy proxy)
     {
-        return _tree.GetFatAabb(proxy);
+        return _tree.GetUserData(proxy)!.AABB;
     }
 
     public DynamicTree.Proxy AddProxy(ref FixtureProxy proxy)
     {
-        var proxyId = _tree.CreateProxy(proxy.AABB, proxy);
+        var proxyId = _tree.CreateProxy(proxy.AABB, uint.MaxValue, proxy);
         return proxyId;
     }
 
-    public bool MoveProxy(DynamicTree.Proxy proxy, in Box2 aabb, Vector2 displacement)
+    public void MoveProxy(DynamicTree.Proxy proxy, in Box2 aabb)
     {
-        return _tree.MoveProxy(proxy, in aabb, displacement);
+        _tree.MoveProxy(proxy, in aabb);
     }
 
     public void RemoveProxy(DynamicTree.Proxy proxy)
@@ -130,6 +130,16 @@ public sealed class DynamicTreeBroadPhase : IBroadPhase
         var tuple = (state, callback, _tree, approx ? null : _extractAabb, ray);
         _tree.RayCast(ref tuple, DelegateCache<TState>.RayQueryState, ray);
         state = tuple.state;
+    }
+
+    public void Rebuild(bool fullBuild)
+    {
+        _tree.Rebuild(fullBuild);
+    }
+
+    public void RebuildBottomUp()
+    {
+        _tree.RebuildBottomUp();
     }
 
     private static bool AabbQueryStateCallback<TState>(ref (TState state, B2DynamicTree<FixtureProxy> tree, DynamicTree<FixtureProxy>.QueryCallbackDelegate<TState> callback, Box2 aabb, bool approx, DynamicTree<FixtureProxy>.ExtractAabbDelegate extract) tuple, DynamicTree.Proxy proxy)

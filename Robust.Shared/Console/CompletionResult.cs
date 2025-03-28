@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Console;
 
@@ -74,4 +75,14 @@ public enum CompletionOptionFlags
     /// (instead of adding a space to go to the next one).
     /// </summary>
     PartialCompletion = 1 << 0,
+
+    /// <summary>
+    /// Prevents suggestions containing spaces from being automatically wrapped in quotes.
+    /// </summary>
+    NoQuote = 1 << 1,
+
+    /// <summary>
+    /// Prevents suggestions from being escaped using <see cref="CommandParsing.Escape"/>.
+    /// </summary>
+    NoEscape = 1 << 2,
 }

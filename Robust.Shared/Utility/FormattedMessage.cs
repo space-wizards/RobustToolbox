@@ -16,7 +16,7 @@ namespace Robust.Shared.Utility;
 /// </summary>
 [PublicAPI]
 [Serializable, NetSerializable]
-public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
+public sealed partial class FormattedMessage : IEquatable<FormattedMessage>, IReadOnlyList<MarkupNode>
 {
     public static FormattedMessage Empty => new();
 
@@ -276,6 +276,18 @@ public sealed partial class FormattedMessage : IReadOnlyList<MarkupNode>
     IEnumerator<MarkupNode> IEnumerable<MarkupNode>.GetEnumerator()
     {
         return GetEnumerator();
+    }
+
+    /// <inheritdoc />
+    public bool Equals(FormattedMessage? other)
+    {
+        return other?.ToMarkup() == ToMarkup();
+    }
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+    {
+        return ToMarkup().GetHashCode();
     }
 
     /// <returns>The string without markup tags.</returns>

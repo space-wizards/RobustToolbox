@@ -94,13 +94,13 @@ internal static class Types
         return false;
     }
 
-    internal static IEnumerable<ITypeSymbol> GetImplicitDataDefinitionInterfaces(ITypeSymbol type, bool all)
+    internal static IEnumerable<string> GetImplicitDataDefinitionInterfaces(ITypeSymbol type, bool all)
     {
         var interfaces = all ? type.AllInterfaces : type.Interfaces;
         foreach (var @interface in interfaces)
         {
             if (IsImplicitDataDefinitionInterface(@interface))
-                yield return @interface;
+                yield return @interface.ToDisplayString();
         }
     }
 

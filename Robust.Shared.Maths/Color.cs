@@ -682,6 +682,7 @@ namespace Robust.Shared.Maths
         ///     (which is copied to the output's Alpha value).
         ///     Each has a range of 0.0 to 1.0.
         /// </param>
+        [Obsolete("The HCY color space is mathematically incorrect and these functions are broken, use something else")]
         public static Color FromHcy(Vector4 hcy)
         {
             var hue = hcy.X * 360.0f;
@@ -750,6 +751,7 @@ namespace Robust.Shared.Maths
         /// </returns>
         /// <param name="rgb">Color value to convert.</param>
         [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
+        [Obsolete("The HCY color space is mathematically incorrect and these functions are broken, use something else")]
         public static Vector4 ToHcy(Color rgb)
         {
             var max = MathF.Max(rgb.R, MathF.Max(rgb.G, rgb.B));

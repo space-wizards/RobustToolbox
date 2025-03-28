@@ -33,6 +33,8 @@ PLATFORM_LINUX = "linux-x64"
 PLATFORM_LINUX_ARM64 = "linux-arm64"
 PLATFORM_MACOS = "osx-x64"
 
+TARGET_FRAMEWORK = "net9.0"
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Packages the Robust.Client.WebView module for release on all platforms.")
@@ -85,7 +87,7 @@ def build_windows(skip_build: bool) -> None:
     # Run a full build.
     print(Fore.GREEN + "Building project for Windows x64..." + Style.RESET_ALL)
 
-    base_bin = p("Robust.Client.WebView", "bin", "Release", "net8.0")
+    base_bin = p("Robust.Client.WebView", "bin", "Release", TARGET_FRAMEWORK)
 
     if not skip_build:
         build_client_rid("Windows", "win-x64")
@@ -144,7 +146,7 @@ def build_linux(skip_build: bool) -> None:
     # Run a full build.
     print(Fore.GREEN + "Building project for Linux x64..." + Style.RESET_ALL)
 
-    base_bin = p("Robust.Client.WebView", "bin", "Release", "net8.0")
+    base_bin = p("Robust.Client.WebView", "bin", "Release", TARGET_FRAMEWORK)
 
     if not skip_build:
         build_client_rid("Linux", "linux-x64")

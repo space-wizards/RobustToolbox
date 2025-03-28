@@ -88,6 +88,7 @@ public sealed class SharedGridTraversalSystem : EntitySystem
 
     public void CheckTraversal(EntityUid entity, TransformComponent xform, EntityUid map)
     {
+        // TODO: This should probably check center of mass.
         DebugTools.Assert(!HasComp<MapGridComponent>(entity));
         DebugTools.Assert(!HasComp<MapComponent>(entity));
 

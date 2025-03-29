@@ -22,7 +22,16 @@ namespace Robust.Client.UserInterface.Controls
 
         public const string StylePropertyStyleBox = "stylebox";
 
-        public bool ShowScrollDownButton { get; set; } = false;
+        public bool ShowScrollDownButton
+        {
+            get => _showScrollDownButton;
+            set
+            {
+                _showScrollDownButton = value;
+                _updateScrollButtonVisibility();
+            }
+        }
+        private bool _showScrollDownButton;
 
         private readonly RingBufferList<RichTextEntry> _entries = new();
         private bool _isAtBottom = true;

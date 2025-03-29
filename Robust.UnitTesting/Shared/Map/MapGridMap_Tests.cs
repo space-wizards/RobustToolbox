@@ -39,6 +39,7 @@ public sealed class MapGridMap_Tests
 
         var entManager = sim.Resolve<IEntityManager>();
         var mapManager = sim.Resolve<IMapManager>();
+        var mapSystem = entManager.System<SharedMapSystem>();
 
         var mapId = sim.CreateMap().MapId;
         mapManager.CreateGridEntity(mapId);
@@ -49,6 +50,6 @@ public sealed class MapGridMap_Tests
             entManager.TickUpdate(0.016f, false);
         });
 
-        mapManager.DeleteMap(mapId);
+        mapSystem.DeleteMap(mapId);
     }
 }

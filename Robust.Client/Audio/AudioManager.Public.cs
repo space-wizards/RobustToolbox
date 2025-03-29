@@ -104,6 +104,12 @@ internal partial class AudioManager
 
         var buffer = AL.GenBuffer();
 
+        _checkAlError();
+        if (buffer == 0)
+        {
+            throw new InvalidOperationException("Unable to generate OpenAL buffer.");
+        }
+
         ALFormat format;
         // NVorbis only supports loading into floats.
         // If this becomes a problem due to missing extension support (doubt it but ok),
@@ -144,6 +150,11 @@ internal partial class AudioManager
         var wav = AudioLoaderWav.LoadAudioData(stream);
 
         var buffer = AL.GenBuffer();
+        _checkAlError();
+        if (buffer == 0)
+        {
+            throw new InvalidOperationException("Unable to generate OpenAL buffer.");
+        }
 
         ALFormat format;
         if (wav.BitsPerSample == 16)
@@ -210,6 +221,10 @@ internal partial class AudioManager
 
         var buffer = AL.GenBuffer();
         _checkAlError();
+        if (buffer == 0)
+        {
+            throw new InvalidOperationException("Unable to generate OpenAL buffer.");
+        }
 
         unsafe
         {
@@ -296,6 +311,12 @@ internal partial class AudioManager
 
     public IAudioSource? CreateAudioSource(AudioStream stream)
     {
+        if (stream.BufferId == 0)
+        {
+            OpenALSawmill.Error("Failed to get audio buffer: buffer ID is 0. Is AL.GenBuffer fail?");
+            return null;
+        }
+
         var source = AL.GenSource();
 
         if (!AL.IsSource(source))

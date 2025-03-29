@@ -66,7 +66,7 @@ namespace Robust.Client.UserInterface.Controls
             _scrollBar.OnValueChanged += _ =>
             {
                 _isAtBottom = _scrollBar.IsAtEnd;
-                _scrollDownButton.Visible = ShowScrollDownButton && !_isAtBottom;
+                _updateScrollButtonVisibility();
             };
         }
 
@@ -208,7 +208,7 @@ namespace Robust.Client.UserInterface.Controls
             var styleBoxSize = _getStyleBox()?.MinimumSize.Y ?? 0;
 
             _scrollBar.Page = UIScale * (Height - styleBoxSize);
-            _scrollDownButton.Visible = ShowScrollDownButton && !_scrollBar.IsAtEnd;
+            _updateScrollButtonVisibility();
             _invalidateEntries();
         }
 
@@ -308,6 +308,11 @@ namespace Robust.Client.UserInterface.Controls
                 _invalidateEntries();
                 _invalidOnVisible = false;
             }
+        }
+
+        private void _updateScrollButtonVisibility()
+        {
+            _scrollDownButton.Visible = ShowScrollDownButton && !_isAtBottom;
         }
     }
 }

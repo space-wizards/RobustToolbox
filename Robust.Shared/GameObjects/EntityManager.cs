@@ -412,6 +412,26 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        public void Dirty<T>(EntityUid uid, T component, MetaDataComponent? meta = null) where T : IComponent?
+        {
+            if (component == null)
+                return;
+
+            DebugTools.Assert(component.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),
+                $"Attempted to dirty a non-networked component: {component.GetType()}");
+            DebugTools.AssertOwner(uid, component);
+
+            if (component.LifeStage >= ComponentLifeStage.Removing || !component.NetSyncEnabled)
+                return;
+
+            if (component.LastModifiedTick == CurrentTick)
+                return;
+
+            DirtyEntity(uid, meta);
+            component.LastModifiedTick = CurrentTick;
+        }
+
+        /// <inheritdoc />
         public virtual void Dirty<T>(Entity<T> ent, MetaDataComponent? meta = null) where T : IComponent
         {
             DebugTools.Assert(ent.Comp.GetType().HasCustomAttribute<NetworkedComponentAttribute>(),

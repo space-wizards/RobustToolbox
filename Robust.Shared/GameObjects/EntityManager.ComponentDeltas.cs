@@ -1,10 +1,12 @@
 using System;
+using System.Diagnostics.Contracts;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects;
 
 public abstract partial class EntityManager
 {
+    [Pure]
     public uint GetModifiedFields(IComponentDelta delta, GameTick fromTick)
     {
         uint fields = 0;
@@ -23,42 +25,87 @@ public abstract partial class EntityManager
         return fields;
     }
 
-    public void DirtyField(EntityUid uid, IComponentDelta comp, string fieldName, MetaDataComponent? metadata = null)
+    [Pure]
+    public uint GetModifiedFields<T>(T delta, GameTick fromTick) where T : IComponentDelta
     {
-        var compReg = ComponentFactory.GetRegistration(comp);
+        uint fields = 0;
 
-        if (!compReg.NetworkedFieldLookup.TryGetValue(fieldName, out var idx))
+        for (var i = 0; i < delta.LastModifiedFields.Length; i++)
         {
-            _sawmill.Error($"Tried to dirty delta field {fieldName} on {ToPrettyString(uid)} that isn't implemented.");
-            return;
+            var lastUpdate = delta.LastModifiedFields[i];
+
+            // Field not dirty
+            if (lastUpdate < fromTick)
+                continue;
+
+            fields |= (uint) (1 << i);
         }
 
-        var curTick = _gameTiming.CurTick;
-        comp.LastFieldUpdate = curTick;
-        comp.LastModifiedFields[idx] = curTick;
-        Dirty(uid, comp, metadata);
+        return fields;
     }
 
-    public virtual void DirtyField<T>(EntityUid uid, T comp, string fieldName, MetaDataComponent? metadata = null)
+    private bool TryDirtyField<T>(EntityUid uid, T comp, string fieldName, MetaDataComponent? metadata)
         where T : IComponentDelta
     {
         var compReg = ComponentFactory.GetRegistration(CompIdx.Index<T>());
 
         // TODO
         // consider storing this on MetaDataComponent?
-        // We alsready store other dirtying information there anyways, and avoids having to fetch the registration.
+        // We already store other dirtying information there anyways, and avoids having to fetch the registration.
         if (!compReg.NetworkedFieldLookup.TryGetValue(fieldName, out var idx))
         {
             _sawmill.Error($"Tried to dirty delta field {fieldName} on {ToPrettyString(uid)} that isn't implemented.");
-            return;
+            return false;
         }
 
         var curTick = _gameTiming.CurTick;
         comp.LastFieldUpdate = curTick;
         comp.LastModifiedFields[idx] = curTick;
         Dirty(uid, comp, metadata);
+        return true;
     }
 
+    /// <inheritdoc />
+    public bool TryDirtyField<T, U>(EntityUid uid, T component, string fieldName, ref U? field, U? value, MetaDataComponent? metadata = null)
+        where T : IComponentDelta
+        where U : IEquatable<U>?
+    {
+        if (field?.Equals(value) == true)
+            return false;
+
+        if (!TryDirtyField(uid, component, fieldName, metadata))
+            return false;
+
+        field = value;
+        return true;
+    }
+
+    public bool TryDirtyField<T, U>(Entity<T?> ent, string fieldName, ref U? field, U? value, MetaDataComponent? metadata = null)
+        where T : IComponentDelta
+        where U : IEquatable<U>?
+    {
+        var comp = ent.Comp;
+
+        if (comp == null || !TryGetComponent(ent.Owner, out comp))
+            return false;
+
+        return TryDirtyField(ent.Owner, comp, fieldName, ref field, value, metadata);
+    }
+
+    /// <inheritdoc />
+    public void DirtyField(EntityUid uid, IComponentDelta comp, string fieldName, MetaDataComponent? metadata = null)
+    {
+        TryDirtyField(uid, comp, fieldName, metadata);
+    }
+
+    /// <inheritdoc />
+    public virtual void DirtyField<T>(EntityUid uid, T comp, string fieldName, MetaDataComponent? metadata = null)
+        where T : IComponentDelta
+    {
+        TryDirtyField(uid, comp, fieldName, metadata);
+    }
+
+    /// <inheritdoc />
     public virtual void DirtyFields<T>(EntityUid uid, T comp, MetaDataComponent? meta, params string[] fields)
         where T : IComponentDelta
     {

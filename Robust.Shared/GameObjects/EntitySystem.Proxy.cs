@@ -148,6 +148,34 @@ public partial class EntitySystem
         EntityManager.Dirty(uid, component, meta);
     }
 
+    /// <inheritdoc cref="Dirty{T}"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void Dirty<T>(EntityUid uid, T component, MetaDataComponent? meta = null) where T : IComponent
+    {
+        EntityManager.Dirty(uid, component, meta);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool TryDirtyField<T, U>(
+        EntityUid uid,
+        T component,
+        string fieldName,
+        ref U? field,
+        U? value,
+        MetaDataComponent? metadata = null)
+        where T : IComponentDelta, IComponent
+        where U : IEquatable<U>?
+    {
+        return EntityManager.TryDirtyField(uid, component, fieldName, ref field, value, metadata);
+    }
+
+    public bool TryDirtyField<T, U>(Entity<T?> ent, string fieldName, ref U? field, U? value, MetaDataComponent? metadata = null)
+        where T : IComponentDelta, IComponent
+        where U : IEquatable<U>?
+    {
+        return EntityManager.TryDirtyField(ent, fieldName, ref field, value, metadata);
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void DirtyField(EntityUid uid, IComponentDelta delta, string fieldName, MetaDataComponent? meta = null)
     {

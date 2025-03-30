@@ -162,6 +162,23 @@ namespace Robust.Shared.Utility
         }
 
         [Conditional("DEBUG")]
+        public static void AssertOwner<T>(EntityUid? uid, T component) where T : IComponent?
+        {
+            if (component == null)
+                return;
+
+            if (uid == null)
+                throw new DebugAssertException($"Null entity uid cannot own a component. Component: {component.GetType().Name}");
+
+            // Whenever .owner is removed this will need to be replaced by something.
+            // As long as components are just reference types, we could just get the component and check if the references are equal?
+#pragma warning disable CS0618 // Type or member is obsolete
+            if (component.Owner != uid)
+#pragma warning restore CS0618 // Type or member is obsolete
+                throw new DebugAssertException($"Entity {uid} is not the owner of the component. Component: {component.GetType().Name}");
+        }
+
+        [Conditional("DEBUG")]
         public static void AssertOwner(EntityUid? uid, IComponent? component)
         {
             if (component == null)

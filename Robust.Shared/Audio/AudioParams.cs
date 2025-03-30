@@ -30,7 +30,7 @@ namespace Robust.Shared.Audio
     /// </summary>
     [Serializable, NetSerializable]
     [DataDefinition]
-    public partial struct AudioParams
+    public partial struct AudioParams : IEquatable<AudioParams>
     {
         private float _volume = Default.Volume;
 
@@ -230,6 +230,28 @@ namespace Robust.Shared.Audio
             var me = this;
             me.PlayOffsetSeconds = offset;
             return me;
+        }
+
+        public bool Equals(AudioParams other)
+        {
+            return _volume.Equals(other._volume) &&
+                   _pitch.Equals(other._pitch) &&
+                   MaxDistance.Equals(other.MaxDistance) &&
+                   RolloffFactor.Equals(other.RolloffFactor) &&
+                   ReferenceDistance.Equals(other.ReferenceDistance) &&
+                   Loop == other.Loop &&
+                   PlayOffsetSeconds.Equals(other.PlayOffsetSeconds) &&
+                   Nullable.Equals(Variation, other.Variation);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is AudioParams other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(_volume, _pitch, MaxDistance, RolloffFactor, ReferenceDistance, Loop, PlayOffsetSeconds, Variation);
         }
     }
 }

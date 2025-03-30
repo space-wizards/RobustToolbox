@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Map;
@@ -6,6 +7,19 @@ namespace Robust.Shared.GameObjects;
 
 public partial interface IEntityManager
 {
+    /// <summary>
+    /// Variant of <see cref="DirtyField"/> that checks if the field value is updated or not before dirtying.
+    /// </summary>
+    public bool TryDirtyField<T, U>(
+        EntityUid uid,
+        T component,
+        string fieldName,
+        ref U? field,
+        U? value,
+        MetaDataComponent? metadata = null)
+        where T : IComponentDelta
+        where U : IEquatable<U>?;
+
     public void DirtyField(EntityUid uid, IComponentDelta delta, string fieldName, MetaDataComponent? metadata = null);
 
     public void DirtyField<T>(EntityUid uid, T component, string fieldName, MetaDataComponent? metadata = null)

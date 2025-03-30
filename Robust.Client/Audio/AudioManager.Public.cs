@@ -313,7 +313,7 @@ internal partial class AudioManager
     {
         if (stream.BufferId == 0)
         {
-            OpenALSawmill.Error("Failed to get audio buffer: buffer ID is 0. Is AL.GenBuffer fail?");
+            OpenALSawmill.Error("Failed to get audio buffer: the buffer ID is 0. Has the audio stream been disposed?", Environment.StackTrace);
             return null;
         }
 

@@ -102,6 +102,12 @@ namespace Robust.UnitTesting.Shared.Localization
   - type: Grammar
     attributes:
       gender: Female
+
+- type: entity
+  id: ApostropheTestEntityEndingWithT
+
+- type: entity
+  id: ApostropheTestEntityEndingWithS
 ";
 
         private const string FluentCode = @"
@@ -121,6 +127,10 @@ ent-GenderTestEntityNoComp = Gender Test Entity
   .otherAttrib = sausages
 
 ent-GenderTestEntityWithComp = Gender Test Entity 2
+
+ent-ApostropheTestEntityEndingWithT = Struct
+
+ent-ApostropheTestEntityEndingWithS = Class
 
 ent-PropsInLoc = A
   .desc = B
@@ -153,6 +163,8 @@ test-message-proper = { PROPER($entity) ->
 }
 
 test-message-custom-attrib = { ATTRIB($entity, ""otherAttrib"") }
+
+test-message-apostrophe-s = { APOSTROPHE-S($entity) }
 ";
 
         [Test]
@@ -168,20 +180,26 @@ test-message-custom-attrib = { ATTRIB($entity, ""otherAttrib"") }
         [Test]
         public void TestCustomFunctions()
         {
-            var entMan          = IoCManager.Resolve<IEntityManager>();
-            var testEntNoComp   = entMan.CreateEntityUninitialized("GenderTestEntityNoComp");
-            var testEntWithComp = entMan.CreateEntityUninitialized("GenderTestEntityWithComp");
+            var entMan              = IoCManager.Resolve<IEntityManager>();
+            var testEntNoComp       = entMan.CreateEntityUninitialized("GenderTestEntityNoComp");
+            var testEntWithComp     = entMan.CreateEntityUninitialized("GenderTestEntityWithComp");
+            var testEntEndingWithT  = entMan.CreateEntityUninitialized("ApostropheTestEntityEndingWithT");
+            var testEntEndingWithS  = entMan.CreateEntityUninitialized("ApostropheTestEntityEndingWithS");
 
             var loc               = IoCManager.Resolve<ILocalizationManager>();
             var genderFromAttrib  = loc.GetString("test-message-gender", ("entity", testEntNoComp));
             var genderFromGrammar = loc.GetString("test-message-gender", ("entity", testEntWithComp));
             var customAttrib      = loc.GetString("test-message-custom-attrib", ("entity", testEntNoComp));
+            var apostropheT       = loc.GetString("test-message-apostrophe-s", ("entity", testEntEndingWithT));
+            var apostropheS       = loc.GetString("test-message-apostrophe-s", ("entity", testEntEndingWithS));
 
             Assert.Multiple(() =>
             {
                 Assert.That(genderFromAttrib, Is.EqualTo("male"));
                 Assert.That(genderFromGrammar, Is.EqualTo("female"));
                 Assert.That(customAttrib, Is.EqualTo("sausages"));
+                Assert.That(apostropheT, Is.EqualTo("Struct's"));
+                Assert.That(apostropheS, Is.EqualTo("Class'"));
             });
         }
 

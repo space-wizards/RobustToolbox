@@ -40,6 +40,7 @@ namespace Robust.Shared.Localization
             // Misc
             AddCtxFunction(bundle, "ATTRIB", args => FuncAttrib(bundle, args));
             AddCtxFunction(bundle, "CAPITALIZE", FuncCapitalize);
+            AddCtxFunction(bundle, "APOSTROPHE-S", FuncApostropheS);
             AddCtxFunction(bundle, "INDEFINITE", FuncIndefinite);
         }
 
@@ -60,6 +61,23 @@ namespace Robust.Shared.Localization
             if (!String.IsNullOrEmpty(input))
                 return new LocValueString(input[0].ToString().ToUpper() + input.Substring(1));
             else return new LocValueString("");
+        }
+
+        /// <summary>
+        /// Returns the string passed in, with ' appended if it ends with
+        /// the letter s, or 's otherwise.
+        /// </summary>
+        /// <remarks>
+        /// Intended to get the possesive form of an arbitrary string
+        /// ("a slugcat's hand") while avoiding clumsy formatting for words that
+        /// end with S ("fifty slugcats' hands" as opposed to "fifty slugcats's hands").
+        /// </remarks>
+        private ILocValue FuncApostropheS(LocArgs args)
+        {
+            var input = args.Args[0].Format(new LocContext());
+            if (string.IsNullOrEmpty(input))
+                return new LocValueString("");
+            return new LocValueString(input.ToLower().EndsWith('s') ? $"{input}'" : $"{input}'s");
         }
 
         private static readonly string[] IndefExceptions = { "euler", "heir", "honest" };

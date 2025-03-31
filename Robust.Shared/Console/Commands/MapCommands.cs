@@ -33,9 +33,23 @@ sealed class AddMapCommand : LocalizedEntityCommands
 
         shell.WriteError($"Map with ID {mapId} already exists!");
     }
+
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    {
+        switch (args.Length)
+        {
+            case 1:
+                var mapId = _mapSystem.GetNextMapId();
+                return CompletionResult.FromHint($"{mapId}");
+            case 2:
+                return CompletionResult.FromHint("runMapInit [true / false]");
+            default:
+                return CompletionResult.Empty;
+        }
+    }
 }
 
-sealed class RemoveMapCommand : LocalizedCommands
+sealed class RemoveMapCommand : LocalizedEntityCommands
 {
     [Dependency] private readonly IMapManager _map = default!;
 
@@ -60,6 +74,14 @@ sealed class RemoveMapCommand : LocalizedCommands
 
         _map.DeleteMap(mapId);
         shell.WriteLine($"Map {mapId.Value} was removed.");
+    }
+
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    {
+        if (args.Length != 1)
+            return CompletionResult.Empty;
+
+        return CompletionResult.FromHintOptions(CompletionHelper.MapIds(args[0], entManager: EntityManager), "map");
     }
 }
 
@@ -86,6 +108,14 @@ sealed class RemoveGridCommand : LocalizedEntityCommands
 
         EntityManager.DeleteEntity(gridId);
         shell.WriteLine($"Grid {gridId} was removed.");
+    }
+
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    {
+        if (args.Length != 1)
+            return CompletionResult.Empty;
+
+        return CompletionResult.FromHintOptions(CompletionHelper.Components<MapGridComponent>(args[0], entManager: EntityManager), "grid");
     }
 }
 
@@ -152,7 +182,8 @@ internal sealed class ListMapsCommand : LocalizedEntityCommands
                 string.Join(",", _map.GetAllGrids(mapId).Select(grid => grid.Owner)));
         }
 
-        shell.WriteLine(msg.ToString());
+        // Trim the newline
+        shell.WriteLine(msg.ToString()[..^1]);
     }
 }
 
@@ -182,6 +213,6 @@ internal sealed class ListGridsCommand : LocalizedEntityCommands
                 uid, xform.MapID, uid, worldPos.X, worldPos.Y);
         }
 
-        shell.WriteLine(msg.ToString());
+        shell.WriteLine(msg.ToString()[..^1]);
     }
 }

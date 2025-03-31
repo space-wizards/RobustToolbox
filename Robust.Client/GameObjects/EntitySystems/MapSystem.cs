@@ -1,3 +1,4 @@
+using System.Diagnostics.Contracts;
 using Robust.Client.Graphics;
 using Robust.Client.Map;
 using Robust.Client.ResourceManagement;
@@ -13,13 +14,14 @@ public sealed class MapSystem : SharedMapSystem
     [Dependency] private readonly IResourceCache _resource = default!;
     [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager = default!;
 
-    protected override MapId GetNextMapId()
+    [Pure]
+    internal override MapId GetNextMapId()
     {
         // Client-side map entities use negative map Ids to avoid conflict with server-side maps.
-        var id = new MapId(--LastMapId);
+        var id = new MapId(LastMapId - 1);
         while (MapExists(id) || UsedIds.Contains(id))
         {
-            id = new MapId(--LastMapId);
+            id = new MapId(id.Value - 1);
         }
         return id;
     }

@@ -96,6 +96,7 @@ namespace Robust.Shared.GameObjects
 
             // If we're attached to the map we'll also just never disable collision due to how grid movement works.
             var canCollide = body.Awake ||
+                             body.ContactCount > 0 ||
                               (TryComp(uid, out JointComponent? jointComponent) && jointComponent.JointCount > 0) ||
                               xform.GridUid == null;
 

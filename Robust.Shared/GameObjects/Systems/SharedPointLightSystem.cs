@@ -92,26 +92,26 @@ public abstract class SharedPointLightSystem : EntitySystem
     /// <summary>
     ///     Copy visuals from one pointlight to another.
     /// </summary>
-    public void CopyVisuals(EntityUid uid, SharedPointLightComponent otherPointLight, SharedPointLightComponent? pointlight = null, bool forceDisabled = false)
+    public void CopyVisuals(Entity<SharedPointLightComponent?> pointLightEntity, SharedPointLightComponent? otherPointLight = null, bool forceDisabled = false)
     {
-        if (!Resolve(uid, ref pointlight))
+        if (pointLightEntity.Comp is not SharedPointLightComponent pointLight || otherPointLight == null)
             return;
 
-        pointlight.Color = otherPointLight.Color;
-        pointlight.Energy = otherPointLight.Energy;
-        pointlight.Offset = otherPointLight.Offset;
-        pointlight.Radius = otherPointLight.Radius;
-        pointlight.Softness = otherPointLight.Softness;
-        pointlight.CastShadows = otherPointLight.CastShadows;
-        pointlight.Rotation = otherPointLight.Rotation;
-        pointlight.MaskAutoRotate = otherPointLight.MaskAutoRotate;
-        pointlight.MaskPath = otherPointLight.MaskPath;
-        pointlight.ContainerOccluded = otherPointLight.ContainerOccluded;
-        pointlight.NetSyncEnabled = false;
+        pointLight.Color = otherPointLight.Color;
+        pointLight.Energy = otherPointLight.Energy;
+        pointLight.Offset = otherPointLight.Offset;
+        pointLight.Radius = otherPointLight.Radius;
+        pointLight.Softness = otherPointLight.Softness;
+        pointLight.CastShadows = otherPointLight.CastShadows;
+        pointLight.Rotation = otherPointLight.Rotation;
+        pointLight.MaskAutoRotate = otherPointLight.MaskAutoRotate;
+        pointLight.MaskPath = otherPointLight.MaskPath;
+        pointLight.ContainerOccluded = otherPointLight.ContainerOccluded;
+        pointLight.NetSyncEnabled = false;
 
         if (forceDisabled)
-            pointlight.Enabled = false;
+            pointLight.Enabled = false;
 
-        Dirty(uid, pointlight);
+        Dirty(pointLightEntity);
     }
 }

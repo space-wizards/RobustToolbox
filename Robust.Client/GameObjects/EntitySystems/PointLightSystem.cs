@@ -121,10 +121,10 @@ namespace Robust.Client.GameObjects
         }
         #endregion
 
-        public void CopyVisuals(EntityUid uid, PointLightComponent otherPointLight, PointLightComponent? pointlight = null) {
-            base.CopyVisuals(uid, otherPointLight, pointlight);
+        public void CopyVisuals(Entity<SharedPointLightComponent?> pointLightEntity, PointLightComponent? otherPointLight = null) {
+            base.CopyVisuals(pointLightEntity, otherPointLight);
 
-            if (!Resolve(uid, ref pointlight))
+            if (pointLightEntity.Comp is not PointLightComponent pointlight)
                 return;
 
             SetMask(pointlight.MaskPath, pointlight);

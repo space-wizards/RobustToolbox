@@ -130,8 +130,8 @@ namespace Robust.Shared.Utility
         {
             return EqualityComparer<T>.Default.Equals(_00, other._00) &&
                    EqualityComparer<T>.Default.Equals(_01, other._01) &&
-                   EqualityComparer<T>.Default.Equals(_01, other._02) &&
-                   EqualityComparer<T>.Default.Equals(_01, other._03);
+                   EqualityComparer<T>.Default.Equals(_02, other._02) &&
+                   EqualityComparer<T>.Default.Equals(_03, other._03);
         }
 
         public override bool Equals(object? obj)

@@ -232,11 +232,10 @@ namespace Robust.Shared.Localization
         }
 
         /// <summary>
-        /// Returns the string passed in, with ' appended if it ends with
-        /// the letter s, or 's otherwise.
+        /// Returns the possessive form of the noun passed in, by appending 's or ' as appropriate.
         /// </summary>
         /// <remarks>
-        /// Intended to get the possesive form of an arbitrary string
+        /// Intended to get the possessive form of an arbitrary string
         /// ("a slugcat's hand") while avoiding clumsy formatting for words that
         /// end with S ("fifty slugcats' hands" as opposed to "fifty slugcats's hands").
         /// </remarks>

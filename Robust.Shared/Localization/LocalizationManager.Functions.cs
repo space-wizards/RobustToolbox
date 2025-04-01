@@ -40,7 +40,7 @@ namespace Robust.Shared.Localization
             // Misc
             AddCtxFunction(bundle, "ATTRIB", args => FuncAttrib(bundle, args));
             AddCtxFunction(bundle, "CAPITALIZE", FuncCapitalize);
-            AddCtxFunction(bundle, "APOSTROPHE-S", FuncApostropheS);
+            AddCtxFunction(bundle, "POSS-NOUN", FuncPossNoun);
             AddCtxFunction(bundle, "INDEFINITE", FuncIndefinite);
         }
 
@@ -72,7 +72,7 @@ namespace Robust.Shared.Localization
         /// ("a slugcat's hand") while avoiding clumsy formatting for words that
         /// end with S ("fifty slugcats' hands" as opposed to "fifty slugcats's hands").
         /// </remarks>
-        private ILocValue FuncApostropheS(LocArgs args)
+        private ILocValue FuncPossNoun(LocArgs args)
         {
             var input = args.Args[0].Format(new LocContext());
             if (string.IsNullOrEmpty(input))

@@ -104,10 +104,10 @@ namespace Robust.UnitTesting.Shared.Localization
       gender: Female
 
 - type: entity
-  id: ApostropheTestEntityEndingWithT
+  id: TestEntityEndingWithT
 
 - type: entity
-  id: ApostropheTestEntityEndingWithS
+  id: TestEntityEndingWithS
 ";
 
         private const string FluentCode = @"
@@ -128,9 +128,9 @@ ent-GenderTestEntityNoComp = Gender Test Entity
 
 ent-GenderTestEntityWithComp = Gender Test Entity 2
 
-ent-ApostropheTestEntityEndingWithT = Struct
+ent-TestEntityEndingWithT = Struct
 
-ent-ApostropheTestEntityEndingWithS = Class
+ent-TestEntityEndingWithS = Class
 
 ent-PropsInLoc = A
   .desc = B
@@ -164,7 +164,7 @@ test-message-proper = { PROPER($entity) ->
 
 test-message-custom-attrib = { ATTRIB($entity, ""otherAttrib"") }
 
-test-message-apostrophe-s = { APOSTROPHE-S($entity) }
+test-message-poss-noun = { POSS-NOUN($entity) }
 ";
 
         [Test]
@@ -183,23 +183,23 @@ test-message-apostrophe-s = { APOSTROPHE-S($entity) }
             var entMan              = IoCManager.Resolve<IEntityManager>();
             var testEntNoComp       = entMan.CreateEntityUninitialized("GenderTestEntityNoComp");
             var testEntWithComp     = entMan.CreateEntityUninitialized("GenderTestEntityWithComp");
-            var testEntEndingWithT  = entMan.CreateEntityUninitialized("ApostropheTestEntityEndingWithT");
-            var testEntEndingWithS  = entMan.CreateEntityUninitialized("ApostropheTestEntityEndingWithS");
+            var testEntEndingWithT  = entMan.CreateEntityUninitialized("TestEntityEndingWithT");
+            var testEntEndingWithS  = entMan.CreateEntityUninitialized("TestEntityEndingWithS");
 
             var loc               = IoCManager.Resolve<ILocalizationManager>();
             var genderFromAttrib  = loc.GetString("test-message-gender", ("entity", testEntNoComp));
             var genderFromGrammar = loc.GetString("test-message-gender", ("entity", testEntWithComp));
             var customAttrib      = loc.GetString("test-message-custom-attrib", ("entity", testEntNoComp));
-            var apostropheT       = loc.GetString("test-message-apostrophe-s", ("entity", testEntEndingWithT));
-            var apostropheS       = loc.GetString("test-message-apostrophe-s", ("entity", testEntEndingWithS));
+            var possNounT       = loc.GetString("test-message-poss-noun", ("entity", testEntEndingWithT));
+            var possNounS       = loc.GetString("test-message-poss-noun", ("entity", testEntEndingWithS));
 
             Assert.Multiple(() =>
             {
                 Assert.That(genderFromAttrib, Is.EqualTo("male"));
                 Assert.That(genderFromGrammar, Is.EqualTo("female"));
                 Assert.That(customAttrib, Is.EqualTo("sausages"));
-                Assert.That(apostropheT, Is.EqualTo("Struct's"));
-                Assert.That(apostropheS, Is.EqualTo("Class'"));
+                Assert.That(possNounT, Is.EqualTo("Struct's"));
+                Assert.That(possNounS, Is.EqualTo("Class'"));
             });
         }
 

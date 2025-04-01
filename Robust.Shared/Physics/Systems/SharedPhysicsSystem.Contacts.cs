@@ -113,10 +113,7 @@ public abstract partial class SharedPhysicsSystem
 #if DEBUG
             contact._debugPhysics = _debugPhysicsSystem;
 #endif
-            contact.Manifold = new Manifold
-            {
-                Points = new ManifoldPoint[2]
-            };
+            contact.Manifold = new Manifold();
 
             return contact;
         }

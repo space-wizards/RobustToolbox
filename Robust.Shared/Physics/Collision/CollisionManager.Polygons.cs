@@ -238,6 +238,8 @@ internal sealed partial class CollisionManager
         manifold.LocalPoint = planePoint;
 
         int pointCount = 0;
+        var points = manifold.Points.AsSpan;
+
         for (int i = 0; i < 2; ++i)
         {
             Vector2 value = clipPoints2[i].V;
@@ -245,7 +247,7 @@ internal sealed partial class CollisionManager
 
             if (separation <= totalRadius)
             {
-                ref var cp = ref manifold.Points[pointCount];
+                ref var cp = ref points[pointCount];
                 cp.LocalPoint = Transform.MulT(xf2, clipPoints2[i].V);
                 cp.Id = clipPoints2[i].ID;
 

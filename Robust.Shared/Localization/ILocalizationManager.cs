@@ -120,7 +120,7 @@ namespace Robust.Shared.Localization
         CultureInfo SetDefaultCulture();
 
         /// <summary>
-        /// Returns all locale derictories from the game's resources.
+        /// Returns all locale directories from the game's resources.
         /// </summary>
         List<CultureInfo> GetFoundCultures();
 

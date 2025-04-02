@@ -26,6 +26,8 @@ namespace Robust.Shared.Localization
 {
     internal sealed partial class LocalizationManager : ILocalizationManagerInternal, IPostInjectInit
     {
+        private static readonly ResPath LocaleDirPath = new("/Locale");
+
         [Dependency] private readonly IConfigurationManager _configuration = default!;
         [Dependency] private readonly IResourceManager _res = default!;
         [Dependency] private readonly ILogManager _log = default!;
@@ -46,15 +48,9 @@ namespace Robust.Shared.Localization
 
         public CultureInfo SetDefaultCulture()
         {
-            var defaultCode = _configuration.GetCVar(CVars.LocDefaultCultureName);
             var code = _configuration.GetCVar(CVars.LocCultureName);
 
-            if (!CultureInfoHelper.TryGetCultureInfo(code, out var culture))
-            {
-                // He'll throw out the exception if he can't find a default culture
-                CultureInfoHelper.GetCultureInfo(defaultCode, out culture);
-            }
-
+            var culture = CultureInfo.GetCultureInfo(code, predefinedOnly: false);
             SetCulture(culture);
 
             // Return the culture for further work with it,
@@ -363,7 +359,7 @@ namespace Robust.Shared.Localization
             if (!HasCulture(culture))
                 LoadCulture(culture);
 
-            if (DefaultCulture?.Equals(culture) ?? false)
+            if (DefaultCulture?.NameEquals(culture) ?? false)
                 return;
 
             DefaultCulture = culture;
@@ -377,7 +373,8 @@ namespace Robust.Shared.Localization
         public void LoadCulture(CultureInfo culture)
         {
             // Attempting to load an already loaded culture
-            Debug.Assert(!HasCulture(culture));
+            if (HasCulture(culture))
+                throw new InvalidOperationException("Culture is already loaded");
 
             var bundle = LinguiniBuilder.Builder()
                 .CultureInfo(culture)
@@ -396,12 +393,12 @@ namespace Robust.Shared.Localization
         public List<CultureInfo> GetFoundCultures()
         {
             var result = new List<CultureInfo>();
-            foreach (var name in _res.ContentGetDirectoryEntries(new ResPath("/Locale")))
+            foreach (var name in _res.ContentGetDirectoryEntries(LocaleDirPath))
             {
                 // Remove last "/" symbol
                 // Example "en-US/" -> "en-US"
-                var cultureName = name.Remove(name.Length - 1, 1);
-                result.Add(new CultureInfo(cultureName));
+                var cultureName = name.TrimEnd('/');
+                result.Add(CultureInfo.GetCultureInfo(cultureName, predefinedOnly: false));
             }
 
             return result;
@@ -487,7 +484,7 @@ namespace Robust.Shared.Localization
             // Load data from .ftl files.
             // Data is loaded from /Locale/<language-code>/*
 
-            var root = new ResPath($"/Locale/{culture.Name}/");
+            var root = LocaleDirPath / culture.Name;
 
             var files = resourceManager.ContentFindFiles(root)
                 .Where(c => c.Filename.EndsWith(".ftl", StringComparison.InvariantCultureIgnoreCase))

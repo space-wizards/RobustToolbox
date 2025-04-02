@@ -1879,12 +1879,6 @@ namespace Robust.Shared
          * Localization
          */
 
-        /// <summary>
-        /// Default value that will apply if loading <see cref="CVars.LocCultureName"/> fails.
-        /// </summary>
-        public static readonly CVarDef<string> LocDefaultCultureName =
-            CVarDef.Create("loc.default_culture_name", "en-US");
-
         public static readonly CVarDef<string> LocCultureName =
             CVarDef.Create("loc.culture_name", "en-US", CVar.ARCHIVE);
     }

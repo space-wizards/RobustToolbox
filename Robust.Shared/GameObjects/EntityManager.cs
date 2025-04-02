@@ -193,9 +193,11 @@ namespace Robust.Shared.GameObjects
                     return false;
 
                 var compType = component.GetType();
-                var compName = _componentFactory.GetComponentName(compType);
-                if (compName == _xformName || compName == _metaReg.Name)
+
+                if (compType == typeof(TransformComponent) || compType == typeof(MetaDataComponent))
                     continue;
+
+                var compName = _componentFactory.GetComponentName(compType);
 
                 // If the component isn't on the prototype then it's custom.
                 if (!protoData.TryGetValue(compName, out var protoMapping))
@@ -212,9 +214,7 @@ namespace Robust.Shared.GameObjects
                     return false;
                 }
 
-                var diff = compMapping.Except(protoMapping);
-
-                if (diff != null && diff.Children.Count != 0)
+                if (compMapping.AnyExcept(protoMapping))
                     return false;
             }
 

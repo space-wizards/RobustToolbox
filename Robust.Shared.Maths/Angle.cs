@@ -93,6 +93,7 @@ namespace Robust.Shared.Maths
         private const double CardinalSegment = 2 * Math.PI / 4.0; // Cut the circle into 4 pieces
         private const double CardinalOffset = CardinalSegment / 2.0; // offset the pieces by 1/2 their size
 
+        [Pure]
         public readonly Direction GetCardinalDir()
         {
             var ang = Theta % (2 * Math.PI);
@@ -167,6 +168,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Removes revolutions from a positive or negative angle to make it as small as possible.
         /// </summary>
+        [Pure]
         public readonly Angle Reduced()
         {
             return new(Reduce(Theta));
@@ -213,11 +215,13 @@ namespace Robust.Shared.Maths
             return !(a == b);
         }
 
+        [Pure]
         public readonly Angle Opposite()
         {
             return new Angle(FlipPositive(Theta-Math.PI));
         }
 
+        [Pure]
         public readonly Angle FlipPositive()
         {
             return new(FlipPositive(Theta));

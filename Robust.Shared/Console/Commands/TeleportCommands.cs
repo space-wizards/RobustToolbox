@@ -67,6 +67,17 @@ internal sealed class TeleportCommand : LocalizedEntityCommands
 
         shell.WriteLine($"Teleported {shell.Player} to {mapId}:{posX},{posY}.");
     }
+
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    {
+        return args.Length switch
+        {
+            1 => CompletionResult.FromHint("<x>"),
+            2 => CompletionResult.FromHint("<y>"),
+            3 => CompletionResult.FromHintOptions(CompletionHelper.MapIds(_entityManager), "[MapId]"),
+            _ => CompletionResult.Empty
+        };
+    }
 }
 
 public sealed class TeleportToCommand : LocalizedEntityCommands

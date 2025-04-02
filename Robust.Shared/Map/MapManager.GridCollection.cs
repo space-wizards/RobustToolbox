@@ -98,14 +98,13 @@ internal partial class MapManager
     /// </summary>
     /// <param name="tileRef">A reference to the new tile.</param>
     /// <param name="oldTile">The old tile that got replaced.</param>
-    public void RaiseOnTileChanged(TileRef tileRef, Tile oldTile, Vector2i chunk)
+    void IMapManagerInternal.RaiseOnTileChanged(Entity<MapGridComponent> entity, TileRef tileRef, Tile oldTile, Vector2i chunk)
     {
         if (SuppressOnTileChanged)
             return;
 
-        var euid = tileRef.GridUid;
-        var ev = new TileChangedEvent(euid, tileRef, oldTile, chunk);
-        EntityManager.EventBus.RaiseLocalEvent(euid, ref ev, true);
+        var ev = new TileChangedEvent(entity, tileRef, oldTile, chunk);
+        EntityManager.EventBus.RaiseLocalEvent(entity.Owner, ref ev, true);
     }
 
     protected Entity<MapGridComponent> CreateGrid(EntityUid map, ushort chunkSize, EntityUid forcedGridEuid)

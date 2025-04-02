@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.Console;
-using Robust.Shared.IoC;
 using Robust.Shared.Localization;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.Console.Commands;
 
@@ -18,7 +15,6 @@ internal sealed class LocalizationSetCulture : LocalizedCommands
     private const int ArgumentCount = 1;
 
     public override string Command => Name;
-    public override string Help => $"{Name} <cultureName>";
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
@@ -35,12 +31,15 @@ internal sealed class LocalizationSetCulture : LocalizedCommands
         }
         catch (CultureNotFoundException)
         {
-            shell.WriteError(Loc.GetString("cmd-parse-failure-cultureinfo", ("args", args[0])));
+            shell.WriteError(Loc.GetString("cmd-parse-failure-cultureinfo", ("arg", args[0])));
             return;
         }
 
         LocalizationManager.SetCulture(culture);
-        shell.WriteLine($"Localization changed to {culture.Name}");
+        shell.WriteLine(LocalizationManager.GetString("cmd-localization_set_culture-changed",
+            ("code", culture.Name),
+            ("nativeName", culture.NativeName),
+            ("englishName", culture.EnglishName)));
     }
 
     public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)

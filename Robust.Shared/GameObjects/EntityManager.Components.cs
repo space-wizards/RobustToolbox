@@ -881,7 +881,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T? component) where T : IComponent?
         {
-            if (_world.TryGetAlive(uid, out component))
+            if (_world.TryGet(uid, out component))
             {
                 DebugTools.Assert(component != null);
                 if (!component.Deleted)

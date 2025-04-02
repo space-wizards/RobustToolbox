@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fix serialization source generator breaking if a class has two partial locations.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,37 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 250.0.0
+
+### Breaking changes
+
+* The default shader now interprets negative color modulation as a flag that indicates that the light map should be ignored.
+  * This can be used to avoid having to change the light map texture, thus reducing draw batches.
+  * Sprite layers that are set to use the "unshaded" shader prototype now use this.
+  * Any fragment shaders that previously the `VtxModulate` colour modulation variable should instead use the new `MODULATE` variable, as the former may now contain negative values.
+
+### New features
+
+* Add OtherBody API to contacts.
+* Make FormattedMessages Equatable.
+* AnimationCompletionEvent now has the AnimationPlayerComponent.
+* Add entity description as a tooltip on the entity spawn panel.
+
+### Bugfixes
+
+* Fix serialization source generator breaking if a class has two partial locations.
+* Fix map saving throwing a `DirectoryNotFoundException` when given a path with a non-existent directory. Now it once again creates any missing directories.
+* Fix map loading taking a significant time due to MappingDataNode.Equals calls being slow.
+
+### Other
+
+* Add Pure to some Angle methods.
+
+### Internal
+
+* Cleanup some warnings in classes.
 
 
 ## 249.0.0

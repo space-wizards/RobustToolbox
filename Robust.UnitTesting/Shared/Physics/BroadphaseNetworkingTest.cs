@@ -15,8 +15,6 @@ using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Player;
 
-// ReSharper disable AccessToStaticMemberViaDerivedType
-
 namespace Robust.UnitTesting.Shared.Physics;
 
 public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
@@ -44,6 +42,7 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
         var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
         var fixturesSystem = sEntMan.EntitySysManager.GetEntitySystem<FixtureSystem>();
         var physicsSystem = sEntMan.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>();
+        var mapSystem = sEntMan.EntitySysManager.GetEntitySystem<SharedMapSystem>();
 
         Assert.DoesNotThrow(() => client.SetConnectTarget(server));
         client.Post(() => netMan.ClientConnect(null!, 0, null!));
@@ -60,9 +59,9 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
         EntityUid map1 = default;
         await server.WaitPost(() =>
         {
-            map1 = sEntMan.System<SharedMapSystem>().CreateMap(out var mapId);
+            map1 = mapSystem.CreateMap(out var mapId);
             var gridEnt = mapMan.CreateGridEntity(mapId);
-            gridEnt.Comp.SetTile(Vector2i.Zero, new Tile(1));
+            mapSystem.SetTile(gridEnt, Vector2i.Zero, new Tile(1));
             grid1 = gridEnt.Owner;
         });
 
@@ -131,9 +130,9 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
         await server.WaitPost(() =>
         {
             // Create grid
-            map2 = sEntMan.System<SharedMapSystem>().CreateMap(out var mapId);
+            map2 = mapSystem.CreateMap(out var mapId);
             var gridEnt = mapMan.CreateGridEntity(mapId);
-            gridEnt.Comp.SetTile(Vector2i.Zero, new Tile(1));
+            mapSystem.SetTile(gridEnt, Vector2i.Zero, new Tile(1));
             grid2 = gridEnt.Owner;
 
             // Move player

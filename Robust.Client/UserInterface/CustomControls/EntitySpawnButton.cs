@@ -29,7 +29,7 @@ public sealed class EntitySpawnButton : Control
             {
                 (EntityTextureRects = new EntityPrototypeView
                 {
-                    MinSize = new Vector2(32, 32),
+                    SetSize = new Vector2(32, 32),
                     HorizontalAlignment = HAlignment.Center,
                     VerticalAlignment = VAlignment.Center,
                     Stretch = SpriteView.StretchMode.Fill

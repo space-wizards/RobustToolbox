@@ -1,9 +1,11 @@
 using System;
 using System.Numerics;
+using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
@@ -101,6 +103,8 @@ namespace Robust.Client.UserInterface.CustomControls
             {
                 var cursor = CursorShape.Arrow;
                 var previewDragMode = GetDragModeFor(args.RelativePosition);
+                previewDragMode &= ~DragMode.Move;
+
                 switch (previewDragMode)
                 {
                     case DragMode.Top:
@@ -115,9 +119,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
                     case DragMode.Bottom | DragMode.Left:
                     case DragMode.Top | DragMode.Right:
-                        cursor = CursorShape.Crosshair;
-                        break;
-
                     case DragMode.Bottom | DragMode.Right:
                     case DragMode.Top | DragMode.Left:
                         cursor = CursorShape.Crosshair;
@@ -159,15 +160,6 @@ namespace Robust.Client.UserInterface.CustomControls
                 var rect = new UIBox2(left, top, right, bottom);
                 LayoutContainer.SetPosition(this, rect.TopLeft);
                 SetSize = rect.Size;
-
-                /*
-                var timing = IoCManager.Resolve<IGameTiming>();
-
-                var l = GetValue<float>(LayoutContainer.MarginLeftProperty);
-                var t = GetValue<float>(LayoutContainer.MarginTopProperty);
-
-                Logger.Debug($"{timing.CurFrame}: {rect.TopLeft}/({l}, {t}), {rect.Size}/{SetSize}");
-                */
             }
         }
 
@@ -228,12 +220,31 @@ namespace Robust.Client.UserInterface.CustomControls
             OnOpen?.Invoke();
         }
 
+        /// <summary>
+        /// Opens the window and places it at the specified position.
+        /// </summary>
+        public void Open(Vector2 position)
+        {
+            Measure(Vector2Helpers.Infinity);
+            Open();
+            LayoutContainer.SetPosition(this, position);
+        }
+
         public void OpenCentered() => OpenCenteredAt(new Vector2(0.5f, 0.5f));
 
         public void OpenToLeft() => OpenCenteredAt(new Vector2(0, 0.5f));
         public void OpenCenteredLeft() => OpenCenteredAt(new Vector2(0.25f, 0.5f));
         public void OpenToRight() => OpenCenteredAt(new Vector2(1, 0.5f));
         public void OpenCenteredRight() => OpenCenteredAt(new Vector2(0.75f, 0.5f));
+
+        /// <summary>
+        /// Opens a window and centers it relative to the screen position.
+        /// </summary>
+        public void OpenScreenAt(Vector2 relativePosition, IClyde clyde)
+        {
+            var adjusted = relativePosition / clyde.ScreenSize;
+            OpenCenteredAt(adjusted);
+        }
 
         /// <summary>
         ///     Opens a window, attempting to place the center of the window at some relative point on the screen.

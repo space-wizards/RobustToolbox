@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using Robust.Shared.IoC;
-using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 
 namespace Robust.Shared.Map
@@ -12,9 +8,8 @@ namespace Robust.Shared.Map
     [Virtual]
     internal class TileDefinitionManager : ITileDefinitionManager
     {
-        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         protected readonly List<ITileDefinition> TileDefs;
-        private FrozenDictionary<string, ITileDefinition> _tileNames = FrozenDictionary<string, ITileDefinition>.Empty;
+        private readonly Dictionary<string, ITileDefinition> _tileNames;
         private readonly Dictionary<string, List<string>> _awaitingAliases;
 
         /// <summary>
@@ -23,15 +18,12 @@ namespace Robust.Shared.Map
         public TileDefinitionManager()
         {
             TileDefs = new List<ITileDefinition>();
+            _tileNames = new Dictionary<string, ITileDefinition>();
             _awaitingAliases = new();
         }
 
         public virtual void Initialize()
         {
-            foreach (var prototype in _prototypeManager.EnumeratePrototypes<TileAliasPrototype>())
-            {
-                AssignAlias(prototype.ID, prototype.Target);
-            }
         }
 
         public virtual void Register(ITileDefinition tileDef)
@@ -45,51 +37,9 @@ namespace Robust.Shared.Map
             var id = checked((ushort) TileDefs.Count);
             tileDef.AssignTileId(id);
             TileDefs.Add(tileDef);
-            var names = _tileNames.ToDictionary();
-            names[name] = tileDef;
-            _tileNames = names.ToFrozenDictionary();
-
-            AliasingHandleDeferred(name);
+            _tileNames[name] = tileDef;
         }
 
-        private void AliasingHandleDeferred(string name)
-        {
-            // Aliases may have been held back due to tiles not being registered yet, handle this.
-            if (_awaitingAliases.ContainsKey(name))
-            {
-                var list = _awaitingAliases[name];
-                _awaitingAliases.Remove(name);
-                foreach (var alias in list)
-                {
-                    AssignAlias(alias, name);
-                }
-            }
-        }
-
-
-        public virtual void AssignAlias(string src, string dst)
-        {
-            if (_tileNames.ContainsKey(src))
-            {
-                throw new ArgumentException("Another tile definition or alias with the same name has already been registered.", nameof(src));
-            }
-
-            if (_tileNames.TryGetValue(dst, out var value))
-            {
-                // Simple enough, source to destination.
-                var names = _tileNames.ToDictionary();
-                names[src] = value;
-                _tileNames = names.ToFrozenDictionary();
-                AliasingHandleDeferred(src);
-            }
-            else
-            {
-                // Less simple - stash this alias for later so it appears when the target does.
-                if (!_awaitingAliases.ContainsKey(dst))
-                    _awaitingAliases[dst] = new();
-                _awaitingAliases[dst].Add(src);
-            }
-        }
 
         public Tile GetVariantTile(string name, IRobustRandom random)
         {

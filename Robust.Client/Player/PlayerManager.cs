@@ -167,7 +167,6 @@ namespace Robust.Client.Player
                 if (_client.RunLevel != ClientRunLevel.SinglePlayerGame)
                     Sawmill.Warning($"Attaching local player to an entity {EntManager.ToPrettyString(uid)} without an eye. This eye will not be netsynced and may cause issues.");
                 var eye = (EyeComponent) Factory.GetComponent(typeof(EyeComponent));
-                eye.Owner = uid.Value;
                 eye.NetSyncEnabled = false;
                 EntManager.AddComponent(uid.Value, eye);
             }
@@ -262,7 +261,6 @@ namespace Robust.Client.Player
                     // This is a new userid, so we create a new session.
                     DebugTools.Assert(state.UserId != LocalPlayer?.UserId);
                     var newSession = (ICommonSessionInternal)CreateAndAddSession(state.UserId, state.Name);
-                    newSession.SetPing(state.Ping);
                     SetStatus(newSession, state.Status);
                     SetAttachedEntity(newSession, controlled, out _, true);
                     dirty = true;
@@ -272,7 +270,6 @@ namespace Robust.Client.Player
                 // Check if the data is actually different
                 if (session.Name == state.Name
                     && session.Status == state.Status
-                    && session.Ping == state.Ping
                     && session.AttachedEntity == controlled)
                 {
                     continue;
@@ -281,7 +278,6 @@ namespace Robust.Client.Player
                 dirty = true;
                 var local = (ICommonSessionInternal)session;
                 local.SetName(state.Name);
-                local.SetPing(state.Ping);
                 SetStatus(local, state.Status);
                 SetAttachedEntity(local, controlled, out _, true);
             }

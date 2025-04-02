@@ -6,7 +6,6 @@ using Robust.Client.ResourceManagement;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
@@ -16,8 +15,6 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
-        [Dependency] private readonly IEntityManager _entityManager = default!;
-
         private readonly Dictionary<EntityUid, Dictionary<Vector2i, MapChunkData>> _mapChunkData =
             new();
 
@@ -47,7 +44,6 @@ namespace Robust.Client.Graphics.Clyde
             GLShaderProgram gridProgram = default!;
             var gridOverlays = GetOverlaysForSpace(OverlaySpace.WorldSpaceGrids);
             var mapSystem = _entityManager.System<SharedMapSystem>();
-            var xformSystem = _entityManager.System<SharedTransformSystem>();
 
             foreach (var mapGrid in _grids)
             {
@@ -68,7 +64,7 @@ namespace Robust.Client.Graphics.Clyde
                     gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
                 }
 
-                gridProgram.SetUniform(UniIModelMatrix, xformSystem.GetWorldMatrix(mapGrid));
+                gridProgram.SetUniform(UniIModelMatrix, _transformSystem.GetWorldMatrix(mapGrid));
                 var enumerator = mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, worldBounds);
 
                 // Handle base texture updates.

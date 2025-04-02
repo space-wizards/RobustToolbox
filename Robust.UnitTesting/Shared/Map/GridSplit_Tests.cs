@@ -53,7 +53,7 @@ public sealed class GridSplit_Tests
         mapSystem.SetTile(gridEnt, new Vector2i(2, 0), Tile.Empty);
         Assert.That(mapManager.GetAllGrids(mapId).Count(), Is.EqualTo(2));
 
-        mapManager.DeleteMap(mapId);
+        mapSystem.DeleteMap(mapId);
     }
 
     [Test]
@@ -75,7 +75,7 @@ public sealed class GridSplit_Tests
         mapSystem.SetTile(gridEnt, new Vector2i(1, 0), Tile.Empty);
         Assert.That(mapManager.GetAllGrids(mapId).Count(), Is.EqualTo(2));
 
-        mapManager.DeleteMap(mapId);
+        mapSystem.DeleteMap(mapId);
     }
 
     [Test]
@@ -106,7 +106,7 @@ public sealed class GridSplit_Tests
         mapSystem.SetTile(gridEnt, new Vector2i(1, 0), Tile.Empty);
         Assert.That(mapManager.GetAllGrids(mapId).Count(), Is.EqualTo(2));
 
-        mapManager.DeleteMap(mapId);
+        mapSystem.DeleteMap(mapId);
     }
 
     [Test]
@@ -130,7 +130,7 @@ public sealed class GridSplit_Tests
         mapSystem.SetTile(gridEnt, new Vector2i(1, 0), Tile.Empty);
         Assert.That(mapManager.GetAllGrids(mapId).Count(), Is.EqualTo(3));
 
-        mapManager.DeleteMap(mapId);
+        mapSystem.DeleteMap(mapId);
     }
 
     /// <summary>
@@ -143,6 +143,7 @@ public sealed class GridSplit_Tests
         var entManager = sim.Resolve<IEntityManager>();
         var mapManager = sim.Resolve<IMapManager>();
         var mapSystem = sim.Resolve<IEntityManager>().System<SharedMapSystem>();
+        var transformSystem = sim.Resolve<IEntityManager>().System<SharedTransformSystem>();
         var mapId = sim.CreateMap().MapId;
         var gridEnt = mapManager.CreateGridEntity(mapId);
         var grid = gridEnt.Comp;
@@ -158,13 +159,14 @@ public sealed class GridSplit_Tests
         var dummyXform = entManager.GetComponent<TransformComponent>(dummy);
         var anchored = entManager.SpawnEntity(null, new EntityCoordinates(gridEnt, new Vector2(3.5f, 0.5f)));
         var anchoredXform = entManager.GetComponent<TransformComponent>(anchored);
-        anchoredXform.Anchored = true;
+
+        transformSystem.AnchorEntity((anchored, anchoredXform), gridEnt);
         Assert.That(anchoredXform.Anchored);
 
         mapSystem.SetTile(gridEnt, new Vector2i(2, 0), Tile.Empty);
         Assert.That(mapManager.GetAllGrids(mapId).Count(), Is.EqualTo(2));
 
-        var newGrid = mapManager.GetAllMapGrids(mapId).First(x => x != grid);
+        var newGrid = mapManager.GetAllGrids(mapId).First(x => x.Comp != grid);
         var newGridXform = entManager.GetComponent<TransformComponent>(newGrid.Owner);
 
         Assert.Multiple(() =>
@@ -179,6 +181,6 @@ public sealed class GridSplit_Tests
             Assert.That(dummyXform.GridUid, Is.EqualTo(newGrid.Owner));
             Assert.That(newGridXform._children, Does.Contain(dummy));
         });
-        mapManager.DeleteMap(mapId);
+        mapSystem.DeleteMap(mapId);
     }
 }

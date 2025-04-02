@@ -1,17 +1,30 @@
 <Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="..\MSBuild\Robust.Engine.props" />
 
+    <!--
+    PJB3005 (2024-08-24)
+    So the reason that Robust.Client.Injectors is NS2.0 is that Visual Studio 
+    still ships a .NET FX based MSBuild for some godforsaken reason. This means 
+    that when having Robust.Client.Injectors loaded directly by the main MSBuild 
+    process... that would break.
+
+    Except we don't do that anyways right now due to file locking issues, so maybe 
+    it's fine to give up on that. Whatever. 
+    -->
     <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
-        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+      <TargetFramework>netstandard2.0</TargetFramework>
+      <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+      <LangVersion>8.0</LangVersion>
+      <Nullable>enable</Nullable>
     </PropertyGroup>
 
     <ItemGroup>
       <PackageReference Include="Microsoft.Build.Framework" Version="17.8.3" />
       <PackageReference Include="Mono.Cecil" Version="0.11.5" />
-      <PackageReference Include="Pidgin" Version="2.5.0" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\XamlX\src\XamlX.IL.Cecil\XamlX.IL.Cecil.csproj" />
+      <ProjectReference Include="..\Robust.Xaml\Robust.Xaml.csproj" />
     </ItemGroup>
 </Project>

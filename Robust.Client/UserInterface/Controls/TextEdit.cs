@@ -38,7 +38,6 @@ namespace Robust.Client.UserInterface.Controls;
 public sealed class TextEdit : Control
 {
     [Dependency] private readonly IClipboardManager _clipboard = null!;
-    [Dependency] private readonly IClyde _clyde = null!;
 
     // @formatter:off
     public const string StylePropertyCursorColor    = "cursor-color";
@@ -1366,15 +1365,16 @@ public sealed class TextEdit : Control
                             baseLine.Y + descent),
                         cursorColor);
 
-                    if (UserInterfaceManager.KeyboardFocused == _master)
+                    if (UserInterfaceManager.KeyboardFocused == _master && Root?.Window is { } window)
                     {
                         var box = (UIBox2i)new UIBox2(
-                            baseLine.X,
+                            drawBox.Left,
                             baseLine.Y - height + descent,
                             drawBox.Right,
                             baseLine.Y + descent);
+                        var cursorOffset = baseLine.X - drawBox.Left;
 
-                        _master._clyde.TextInputSetRect(box.Translated(GlobalPixelPosition));
+                        window.TextInputSetRect(box.Translated(GlobalPixelPosition), (int) cursorOffset);
                     }
                 }
 
@@ -1446,7 +1446,7 @@ public sealed class TextEdit : Control
 
         if (Editable)
         {
-            _clyde.TextInputStart();
+            Root?.Window?.TextInputStart();
         }
     }
 
@@ -1454,7 +1454,7 @@ public sealed class TextEdit : Control
     {
         base.KeyboardFocusExited();
 
-        _clyde.TextInputStop();
+        Root?.Window?.TextInputStop();
         AbortIme(delete: false);
     }
 

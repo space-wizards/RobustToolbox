@@ -67,6 +67,17 @@ internal sealed class TeleportCommand : LocalizedEntityCommands
 
         shell.WriteLine($"Teleported {shell.Player} to {mapId}:{posX},{posY}.");
     }
+
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    {
+        return args.Length switch
+        {
+            1 => CompletionResult.FromHint("<x>"),
+            2 => CompletionResult.FromHint("<y>"),
+            3 => CompletionResult.FromHintOptions(CompletionHelper.MapIds(_entityManager), "[MapId]"),
+            _ => CompletionResult.Empty
+        };
+    }
 }
 
 public sealed class TeleportToCommand : LocalizedEntityCommands
@@ -145,7 +156,7 @@ public sealed class TeleportToCommand : LocalizedEntityCommands
             return true;
         }
 
-        if (_players.Sessions.TryFirstOrDefault(x => x.Channel.UserName == str, out var session)
+        if (_players.TryGetSessionByUsername(str, out var session)
             && _entities.TryGetComponent(session.AttachedEntity, out transform))
         {
             victimUid = session.AttachedEntity;

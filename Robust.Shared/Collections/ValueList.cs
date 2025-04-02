@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -590,6 +591,12 @@ public struct ValueList<T> : IEnumerable<T>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AddRange(Span<T> span)
     {
+        AddRange((ReadOnlySpan<T>) span);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AddRange(ReadOnlySpan<T> span)
+    {
         var spanCount = span.Length;
         EnsureCapacity(Count + spanCount);
         var target = new Span<T>(_items, Count, spanCount);
@@ -617,5 +624,73 @@ public struct ValueList<T> : IEnumerable<T>
         {
             Add(result);
         }
+    }
+
+    /// <summary>
+    /// Push a value onto the end of this list. This is equivalent to <see cref="Add"/>.
+    /// </summary>
+    /// <remarks>
+    /// This method is added to provide completeness with other stack-like functions.
+    /// </remarks>
+    /// <param name="item">The item to add to the list.</param>
+    public void Push(T item)
+    {
+        Add(item);
+    }
+
+    /// <summary>
+    /// Remove and return the value at the end of the list.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown if the list is empty.</exception>
+    public T Pop()
+    {
+        if (!TryPop(out var value))
+            throw new InvalidOperationException("List is empty");
+
+        return value;
+    }
+
+    /// <summary>
+    /// Return the value at the end of the list, but do not remove it.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown if the list is empty.</exception>
+    public T Peek()
+    {
+        if (!TryPeek(out var value))
+            throw new InvalidOperationException("List is empty");
+
+        return value;
+    }
+
+    /// <summary>
+    /// Remove and return the value at the end of the list, only if the list is not empty.
+    /// </summary>
+    /// <returns>True if the list was not empty and an item was removed.</returns>
+    public bool TryPop([MaybeNullWhen(false)] out T value)
+    {
+        if (Count == 0)
+        {
+            value = default;
+            return false;
+        }
+
+        value = _items![--Count];
+        return true;
+    }
+
+    /// <summary>
+    /// Remove and return the value at the end of the list, only if the list is not empty.
+    /// </summary>
+    /// <returns>True if the list was not empty and an item was removed.</returns>
+    public bool TryPeek([MaybeNullWhen(false)] out T value)
+    {
+        if (Count == 0)
+        {
+            value = default;
+            return false;
+        }
+
+        value = _items![Count];
+        return true;
     }
 }

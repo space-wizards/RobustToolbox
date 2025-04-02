@@ -337,6 +337,11 @@ namespace Robust.Shared.Localization
             }
         }
 
+        public bool HasCulture(CultureInfo culture)
+        {
+            return _contexts.ContainsKey(culture);
+        }
+
         public void LoadCulture(CultureInfo culture)
         {
             var bundle = LinguiniBuilder.Builder()

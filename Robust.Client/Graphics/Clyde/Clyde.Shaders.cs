@@ -485,6 +485,13 @@ namespace Robust.Client.Graphics.Clyde
                 data.Parameters[name] = value;
             }
 
+            private protected override void SetParameterImpl(string name, Color[] value)
+            {
+                var data = Parent._shaderInstances[Handle];
+                data.ParametersDirty = true;
+                data.Parameters[name] = value;
+            }
+
             private protected override void SetParameterImpl(string name, int value)
             {
                 var data = Parent._shaderInstances[Handle];
@@ -505,6 +512,14 @@ namespace Robust.Client.Graphics.Clyde
                 data.ParametersDirty = true;
                 data.Parameters[name] = value;
             }
+
+            private protected override void SetParameterImpl(string name, bool[] value)
+            {
+                var data = Parent._shaderInstances[Handle];
+                data.ParametersDirty = true;
+                data.Parameters[name] = value;
+            }
+
 
             private protected override void SetParameterImpl(string name, in Matrix3x2 value)
             {

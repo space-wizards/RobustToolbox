@@ -1,0 +1,9 @@
+{
+    "$schema": "http://json.schemastore.org/launchsettings.json",
+    "profiles": {
+        "Comp State Generator": {
+            "commandName": "DebugRoslynComponent",
+            "targetProject": "../../Content.Shared/Content.Shared.csproj"
+        }
+    }
+}

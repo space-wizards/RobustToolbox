@@ -53,16 +53,6 @@ namespace Robust.Shared.Player
         ///     Adds all players inside an entity's PVS.
         ///     The current PVS range will be multiplied by <see cref="rangeMultiplier"/>.
         /// </summary>
-        [Obsolete("Use overload that takes in managers")]
-        public Filter AddPlayersByPvs(TransformComponent origin, float rangeMultiplier = 2f)
-        {
-            return AddPlayersByPvs(origin.MapPosition, rangeMultiplier);
-        }
-
-        /// <summary>
-        ///     Adds all players inside an entity's PVS.
-        ///     The current PVS range will be multiplied by <see cref="rangeMultiplier"/>.
-        /// </summary>
         public Filter AddPlayersByPvs(EntityCoordinates origin, float rangeMultiplier = 2f, IEntityManager? entityMan = null, ISharedPlayerManager? playerMan = null)
         {
             IoCManager.Resolve(ref entityMan, ref playerMan);
@@ -370,15 +360,6 @@ namespace Robust.Shared.Player
         public static Filter Pvs(EntityUid origin, float rangeMultiplier = 2f, IEntityManager? entityManager = null, ISharedPlayerManager? playerManager = null, IConfigurationManager? cfgManager = null)
         {
             return Empty().AddPlayersByPvs(origin, rangeMultiplier, entityManager, playerManager, cfgManager);
-        }
-
-        /// <summary>
-        ///     A filter with every player whose PVS overlaps this point.
-        /// </summary>
-        [Obsolete("Use overload that takes in managers")]
-        public static Filter Pvs(TransformComponent origin, float rangeMultiplier = 2f)
-        {
-            return Empty().AddPlayersByPvs(origin, rangeMultiplier);
         }
 
         /// <summary>

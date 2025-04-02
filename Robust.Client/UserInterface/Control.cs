@@ -549,7 +549,7 @@ namespace Robust.Client.UserInterface
         {
         }
 
-        internal virtual void DrawInternal(IRenderHandle renderHandle)
+        protected internal virtual void Draw(IRenderHandle renderHandle)
         {
             Draw(renderHandle.DrawingHandleScreen);
         }
@@ -602,6 +602,7 @@ namespace Robust.Client.UserInterface
         ///     Dispose this control, its own scene control, and all its children.
         ///     Basically the big delete button.
         /// </summary>
+        [Obsolete("Controls should only be removed from UI tree instead of being disposed")]
         public void Dispose()
         {
             if (Disposed)
@@ -613,6 +614,7 @@ namespace Robust.Client.UserInterface
             Disposed = true;
         }
 
+        [Obsolete("Controls should only be removed from UI tree instead of being disposed")]
         protected virtual void Dispose(bool disposing)
         {
             if (!disposing)
@@ -760,7 +762,23 @@ namespace Robust.Client.UserInterface
                 throw new InvalidOperationException("The provided control is not a direct child of this control.");
             }
 
-            _orderedChildren.Remove(child);
+            var childIndex = _orderedChildren.IndexOf(child);
+            RemoveChild(childIndex);
+        }
+
+        /// <summary>
+        ///     Removes the child at a specific index from this control.
+        /// </summary>
+        /// <param name="childIndex">The index of the child to remove.</param>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///     Thrown if the provided child index is out of range
+        /// </exception>
+        public void RemoveChild(int childIndex)
+        {
+            DebugTools.Assert(!Disposed, "Control has been disposed.");
+
+            var child = _orderedChildren[childIndex];
+            _orderedChildren.RemoveAt(childIndex);
 
             child.Parent = null;
 

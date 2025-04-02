@@ -21,12 +21,15 @@
     <PackageReference Include="OpenTK.OpenAL" PrivateAssets="compile" />
     <PackageReference Include="SpaceWizards.SharpFont" PrivateAssets="compile" />
     <PackageReference Include="Robust.Natives" />
-    <PackageReference Include="System.Numerics.Vectors"  />
     <PackageReference Include="TerraFX.Interop.Windows" PrivateAssets="compile" />
     <PackageReference Condition="'$(RobustToolsBuild)' == 'True'" Include="JetBrains.Profiler.Api" PrivateAssets="compile" />
     <PackageReference Include="SpaceWizards.Sodium" PrivateAssets="compile" />
     <PackageReference Include="Microsoft.NET.ILLink.Tasks" />
     <PackageReference Include="TerraFX.Interop.Xlib" />
+
+    <!-- Needed to pin transitive dependency versions. -->
+    <PackageReference Include="System.Text.Json" />
+    <PackageReference Include="Newtonsoft.Json" />
   </ItemGroup>
   <ItemGroup Condition="'$(EnableClientScripting)' == 'True'">
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" PrivateAssets="compile" />
@@ -42,6 +45,10 @@
     <ProjectReference Include="..\Robust.LoaderApi\Robust.LoaderApi\Robust.LoaderApi.csproj" />
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
     <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(RobustToolsBuild)' == 'True'">
+    <ProjectReference Include="..\Robust.Xaml\Robust.Xaml.csproj" />
   </ItemGroup>
 
   <!-- Shader embedding -->

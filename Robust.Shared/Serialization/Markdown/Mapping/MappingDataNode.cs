@@ -2,7 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Utility;
@@ -273,6 +275,26 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
         }
 
         /// <summary>
+        /// Variant of <see cref="Copy"/> that doesn't clone the keys or values.
+        /// </summary>
+        public MappingDataNode ShallowClone()
+        {
+            var newMapping = new MappingDataNode(_children.Count)
+            {
+                Tag = Tag,
+                Start = Start,
+                End = End
+            };
+
+            foreach (var (key, val) in _list)
+            {
+                newMapping.Add(key, val);
+            }
+
+            return newMapping;
+        }
+
+        /// <summary>
         ///     Variant of <see cref="Except(MappingDataNode)"/> that will recursively call except rather than only checking equality.
         /// </summary>
         public MappingDataNode? RecursiveExcept(MappingDataNode node)
@@ -331,6 +353,29 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             return mappingNode._children.Count == 0 ? null : mappingNode;
         }
 
+        /// <summary>
+        /// Returns true if there are any nodes on this node that aren't in the other node.
+        /// </summary>
+        [Pure]
+        public bool AnyExcept(MappingDataNode node)
+        {
+            foreach (var (key, val) in _list)
+            {
+                var other = node._list.FirstOrNull(p => p.Key.Equals(key));
+
+                if (other == null)
+                {
+                    return true;
+                }
+
+                // We only keep the entry if the values are not equal
+                if (!val.Equals(other.Value.Value))
+                    return true;
+            }
+
+            return false;
+        }
+
         public override bool Equals(object? obj)
         {
             if (obj is not MappingDataNode other)
@@ -339,9 +384,16 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             if (_children.Count != other._children.Count)
                 return false;
 
-            // Given that keys are unique and we do not care about the ordering, we know that if removing identical
-            // key-value pairs leaves us with an empty list then the mappings are equal.
-            return Except(other) == null && Tag == other.Tag;
+            foreach (var (key, otherValue) in other)
+            {
+                if (!_children.TryGetValue(key, out var ownValue) ||
+                    !otherValue.Equals(ownValue))
+                {
+                    return false;
+                }
+            }
+
+            return Tag == other.Tag;
         }
 
         public override MappingDataNode PushInheritance(MappingDataNode node)
@@ -396,5 +448,25 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
 
         public int Count => _children.Count;
         public bool IsReadOnly => false;
+
+        public bool TryAdd(DataNode key, DataNode value)
+        {
+            if (!_children.TryAdd(key, value))
+                return false;
+
+            _list.Add(new(key, value));
+            return true;
+        }
+
+        public bool TryAddCopy(DataNode key, DataNode value)
+        {
+            ref var entry = ref CollectionsMarshal.GetValueRefOrAddDefault(_children, key, out var exists);
+            if (exists)
+                return false;
+
+            entry = value.Copy();
+            _list.Add(new(key, entry));
+            return true;
+        }
     }
 }

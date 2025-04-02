@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using Robust.Shared.Maths;
 
@@ -56,7 +57,7 @@ namespace Robust.Client.UserInterface.Controls
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
             // Account for separation.
-            var separation = ActualSeparation * (ChildCount - 1);
+            var separation = ActualSeparation * (Children.Where(c => c.Visible).Count() - 1);
             var desiredSize = Vector2.Zero;
             if (Vertical)
             {
@@ -70,20 +71,10 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             // First, we measure non-stretching children.
-            var stretching = new List<Control>();
-            float totalStretchRatio = 0;
             foreach (var child in Children)
             {
                 if (!child.Visible)
                     continue;
-
-                var stretch = Vertical ? child.VerticalExpand : child.HorizontalExpand;
-                if (stretch)
-                {
-                    totalStretchRatio += child.SizeFlagsStretchRatio;
-                    stretching.Add(child);
-                    continue;
-                }
 
                 child.Measure(availableSize);
 
@@ -101,48 +92,20 @@ namespace Robust.Client.UserInterface.Controls
                 }
             }
 
-            if (stretching.Count == 0)
-                return desiredSize;
-
-            // Then we measure stretching children
-            foreach (var child in stretching)
-            {
-                var size = availableSize;
-                if (Vertical)
-                {
-                    size.Y *= child.SizeFlagsStretchRatio / totalStretchRatio;
-                    child.Measure(size);
-                    desiredSize.Y += child.DesiredSize.Y;
-                    desiredSize.X = Math.Max(desiredSize.X, child.DesiredSize.X);
-                }
-                else
-                {
-                    size.X *= child.SizeFlagsStretchRatio / totalStretchRatio;
-                    child.Measure(size);
-                    desiredSize.X += child.DesiredSize.X;
-                    desiredSize.Y = Math.Max(desiredSize.Y, child.DesiredSize.Y);
-                }
-
-                // TODO Maybe make BoxContainer.MeasureOverride more rigorous.
-                // This should check if size < desired size. If it is, treat child as non-stretching (see the code in
-                // ArrangeOverride). This requires remeasuring all stretching controls + the control that just became
-                // non-stretching. But the re-measured controls might then become smaller (e.g. rich text wrapping),
-                // leading to a recursion problem.
-            }
-
             return desiredSize;
         }
 
         protected override Vector2 ArrangeOverride(Vector2 finalSize)
         {
             var separation = ActualSeparation;
+            var visibleChildCount = Children.Where(c => c.Visible).Count();
 
             var stretchAvail = Vertical ? finalSize.Y : finalSize.X;
-            stretchAvail -= separation * (ChildCount - 1);
+            stretchAvail -= separation * (visibleChildCount - 1);
             stretchAvail = Math.Max(0, stretchAvail);
 
             // Step one: figure out the sizes of all our children and whether they want to stretch.
-            var sizeList = new List<(Control control, float size, bool stretch)>(ChildCount);
+            var sizeList = new List<(Control control, float size, bool stretch)>(visibleChildCount);
             var totalStretchRatio = 0f;
             foreach (var child in Children)
             {

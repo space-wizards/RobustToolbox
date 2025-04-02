@@ -18,6 +18,7 @@ namespace Robust.Client.Graphics
         /// </summary>
         IRenderTexture RenderTarget { get; }
         IRenderTexture LightRenderTarget { get; }
+
         IEye? Eye { get; set; }
         Vector2i Size { get; }
 
@@ -66,7 +67,7 @@ namespace Robust.Client.Graphics
         ///     Not relative to the current transform of <see cref="handle"/>.
         /// </param>
         public void RenderScreenOverlaysBelow(
-            DrawingHandleScreen handle,
+            IRenderHandle handle,
             IViewportControl control,
             in UIBox2i viewportBounds);
 
@@ -80,7 +81,7 @@ namespace Robust.Client.Graphics
         ///     Not relative to the current transform of <see cref="handle"/>.
         /// </param>
         public void RenderScreenOverlaysAbove(
-            DrawingHandleScreen handle,
+            IRenderHandle handle,
             IViewportControl control,
             in UIBox2i viewportBounds);
     }

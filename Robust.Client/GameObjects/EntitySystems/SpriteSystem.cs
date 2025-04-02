@@ -30,11 +30,14 @@ namespace Robust.Client.GameObjects
     public sealed partial class SpriteSystem : EntitySystem
     {
         [Dependency] private readonly IConfigurationManager _cfg = default!;
+        [Dependency] private readonly IEyeManager _eye = default!;
         [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] private readonly IPrototypeManager _proto = default!;
         [Dependency] private readonly IResourceCache _resourceCache = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private readonly SharedTransformSystem _xforms = default!;
 
+        public static readonly ProtoId<ShaderPrototype> UnshadedId = "unshaded";
         private readonly Queue<SpriteComponent> _inertUpdateQueue = new();
 
         /// <summary>

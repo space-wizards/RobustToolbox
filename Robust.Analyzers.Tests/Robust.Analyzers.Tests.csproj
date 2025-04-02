@@ -11,7 +11,10 @@
     <EmbeddedResource Include="..\Robust.Shared\Analyzers\AccessAttribute.cs" LogicalName="Robust.Shared.Analyzers.AccessAttribute.cs" LinkBase="Implementations" />
     <EmbeddedResource Include="..\Robust.Shared\Analyzers\AccessPermissions.cs" LogicalName="Robust.Shared.Analyzers.AccessPermissions.cs" LinkBase="Implementations" />
     <EmbeddedResource Include="..\Robust.Shared\Analyzers\MustCallBaseAttribute.cs" LogicalName="Robust.Shared.IoC.MustCallBaseAttribute.cs" LinkBase="Implementations" />
+    <EmbeddedResource Include="..\Robust.Shared\Analyzers\PreferNonGenericVariantForAttribute.cs" LogicalName="Robust.Shared.Analyzers.PreferNonGenericVariantForAttribute.cs" LinkBase="Implementations" />
+    <EmbeddedResource Include="..\Robust.Shared\Analyzers\PreferOtherTypeAttribute.cs" LogicalName="Robust.Shared.Analyzers.PreferOtherTypeAttribute.cs" LinkBase="Implementations" />
     <EmbeddedResource Include="..\Robust.Shared\IoC\DependencyAttribute.cs" LogicalName="Robust.Shared.IoC.DependencyAttribute.cs" LinkBase="Implementations" />
+    <EmbeddedResource Include="..\Robust.Shared\GameObjects\EventBusAttributes.cs" LogicalName="Robust.Shared.GameObjects.EventBusAttributes.cs" LinkBase="Implementations" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -25,12 +28,17 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzer.Testing"/>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp"/>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing.NUnit"/>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces"/>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing"/>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing"/>
     <PackageReference Include="NUnit"/>
     <PackageReference Include="NUnit3TestAdapter"/>
     <PackageReference Include="NUnit.Analyzers"/>
     <PackageReference Include="Microsoft.NET.Test.Sdk"/>
+
+    <!-- Needed to fix transitive dependency versions -->
+    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
+    <PackageReference Include="System.Formats.Asn1" />
   </ItemGroup>
 
   <ItemGroup>

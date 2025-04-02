@@ -10,8 +10,11 @@ using Robust.Server.GameStates;
 using Robust.Server.Physics;
 using Robust.Shared.ComponentTrees;
 using Robust.Shared.Configuration;
+using Robust.Shared.Console;
 using Robust.Shared.Containers;
 using Robust.Shared.ContentPack;
+using Robust.Shared.EntitySerialization.Components;
+using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -156,7 +159,6 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<DebugRayDrawingSystem>();
                 systems.LoadExtraSystemType<PrototypeReloadSystem>();
                 systems.LoadExtraSystemType<DebugPhysicsSystem>();
-                systems.LoadExtraSystemType<MapLoaderSystem>();
                 systems.LoadExtraSystemType<InputSystem>();
                 systems.LoadExtraSystemType<PvsOverrideSystem>();
                 systems.LoadExtraSystemType<MapSystem>();
@@ -164,6 +166,10 @@ namespace Robust.UnitTesting
 
             var entMan = deps.Resolve<IEntityManager>();
             var mapMan = deps.Resolve<IMapManager>();
+
+            // Avoid discovering EntityCommands since they may depend on systems
+            // that aren't available in a unit test context.
+            deps.Resolve<EntityConsoleHost>().DiscoverCommands = false;
 
             // Required components for the engine to work
             // Why are we still here? Just to suffer? Why can't we just use [RegisterComponent] magic?
@@ -174,12 +180,10 @@ namespace Robust.UnitTesting
             if (ExtraComponents != null)
                 compFactory.RegisterTypes(ExtraComponents);
 
-            if (Project == UnitTestProject.Server)
-            {
-                compFactory.RegisterClass<MapSaveTileMapComponent>();
-                compFactory.RegisterClass<MapSaveIdComponent>();
-            }
-            else
+            compFactory.RegisterClass<MapSaveTileMapComponent>();
+            compFactory.RegisterClass<YamlUidComponent>();
+
+            if (Project != UnitTestProject.Server)
             {
                 compFactory.RegisterClass<PointLightComponent>();
                 compFactory.RegisterClass<SpriteComponent>();

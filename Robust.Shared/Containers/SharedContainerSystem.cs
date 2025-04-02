@@ -537,7 +537,7 @@ namespace Robust.Shared.Containers
         /// The resulting collection includes the container directly containing the entity (if any),
         /// the container containing that container, and so on until reaching the outermost container.
         /// </remarks>
-        public IEnumerable<BaseContainer> EnumerateContainingContainers(Entity<TransformComponent?> ent)
+        public IEnumerable<BaseContainer> GetContainingContainers(Entity<TransformComponent?> ent)
         {
             if (!ent.Owner.IsValid())
                 yield break;

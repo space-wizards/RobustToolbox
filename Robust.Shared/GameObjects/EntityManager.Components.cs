@@ -824,7 +824,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetComponent<T>(EntityUid uid) where T : IComponent
         {
-            if (_world.TryGetAlive(uid, out T? comp))
+            if (_world.TryGet(uid, out T? comp))
                 return comp!;
 
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(T)}");
@@ -1805,7 +1805,7 @@ namespace Robust.Shared.GameObjects
                         return false;
                     }
 
-                    _index = _chunkEnumerator.Current.Size - 1;
+                    _index = _chunkEnumerator.Current.Count - 1;
                 }
 
                 // Deletion check moment
@@ -1815,7 +1815,7 @@ namespace Robust.Shared.GameObjects
                         return MoveNext(out uid);
                 }
 
-                uid = _chunkEnumerator.Current.EntityReference(_index);
+                uid = _chunkEnumerator.Current.Entity(_index);
                 return true;
             }
         }
@@ -1882,7 +1882,7 @@ namespace Robust.Shared.GameObjects
                         return false;
                     }
 
-                    _index = _chunkEnumerator.Current.Size - 1;
+                    _index = _chunkEnumerator.Current.Count - 1;
                     _chunkEnumerator.Current.GetArray(out _comp1Array, out _metaArray);
                 }
 
@@ -1949,7 +1949,7 @@ namespace Robust.Shared.GameObjects
                         return false;
                     }
 
-                    _index = _chunkEnumerator.Current.Size - 1;
+                    _index = _chunkEnumerator.Current.Count - 1;
                     _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array, out _metaArray);
                 }
 
@@ -2026,7 +2026,7 @@ namespace Robust.Shared.GameObjects
                         return false;
                     }
 
-                    _index = _chunkEnumerator.Current.Size - 1;
+                    _index = _chunkEnumerator.Current.Count - 1;
                     _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array, out _comp3Array, out _metaArray);
                 }
 
@@ -2110,7 +2110,7 @@ namespace Robust.Shared.GameObjects
                         return false;
                     }
 
-                    _index = _chunkEnumerator.Current.Size - 1;
+                    _index = _chunkEnumerator.Current.Count - 1;
                     _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array, out _comp3Array, out _comp4Array, out _metaArray);
                 }
 
@@ -2147,7 +2147,7 @@ namespace Robust.Shared.GameObjects
             _chunkEnumerator = world.Query(new QueryDescription().WithAll<TComp1>()).ChunkIterator(world).GetEnumerator();
             if (_chunkEnumerator.MoveNext())
             {
-                _index = _chunkEnumerator.Current.Size;
+                _index = _chunkEnumerator.Current.Count;
                 _comp1Array = _chunkEnumerator.Current.GetArray<TComp1>();
             }
             else
@@ -2162,7 +2162,7 @@ namespace Robust.Shared.GameObjects
         {
             if (MoveNext(out comp1))
             {
-                uid = _chunkEnumerator.Current.EntityReference(_index);
+                uid = _chunkEnumerator.Current.Entity(_index);
                 DebugTools.AssertOwner(uid, comp1);
                 return true;
             }
@@ -2184,7 +2184,7 @@ namespace Robust.Shared.GameObjects
                         return false;
                     }
 
-                    _index = _chunkEnumerator.Current.Size - 1;
+                    _index = _chunkEnumerator.Current.Count - 1;
                     _comp1Array = _chunkEnumerator.Current.GetArray<TComp1>();
                 }
 
@@ -2215,7 +2215,7 @@ namespace Robust.Shared.GameObjects
             _chunkEnumerator = world.Query(new QueryDescription().WithAll<TComp1, TComp2>()).ChunkIterator(world).GetEnumerator();
             if (_chunkEnumerator.MoveNext())
             {
-                _index = _chunkEnumerator.Current.Size;
+                _index = _chunkEnumerator.Current.Count;
                 _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array);
             }
             else
@@ -2230,7 +2230,7 @@ namespace Robust.Shared.GameObjects
         {
             if (MoveNext(out comp1, out comp2))
             {
-                uid = _chunkEnumerator.Current.EntityReference(_index);
+                uid = _chunkEnumerator.Current.Entity(_index);
                 DebugTools.AssertOwner(uid, comp1);
                 DebugTools.AssertOwner(uid, comp2);
                 return true;
@@ -2255,7 +2255,7 @@ namespace Robust.Shared.GameObjects
                         return false;
                     }
 
-                    _index = _chunkEnumerator.Current.Size - 1;
+                    _index = _chunkEnumerator.Current.Count - 1;
                     _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array);
                 }
 
@@ -2291,7 +2291,7 @@ namespace Robust.Shared.GameObjects
             _chunkEnumerator = world.Query(new QueryDescription().WithAll<TComp1, TComp2, TComp3>()).ChunkIterator(world).GetEnumerator();
             if (_chunkEnumerator.MoveNext())
             {
-                _index = _chunkEnumerator.Current.Size;
+                _index = _chunkEnumerator.Current.Count;
                 _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array, out _comp3Array);
             }
         }
@@ -2303,7 +2303,7 @@ namespace Robust.Shared.GameObjects
         {
             if (MoveNext(out comp1, out comp2, out comp3))
             {
-                uid = _chunkEnumerator.Current.EntityReference(_index);
+                uid = _chunkEnumerator.Current.Entity(_index);
                 DebugTools.AssertOwner(uid, comp1);
                 DebugTools.AssertOwner(uid, comp2);
                 DebugTools.AssertOwner(uid, comp3);
@@ -2333,7 +2333,7 @@ namespace Robust.Shared.GameObjects
                         return false;
                     }
 
-                    _index = _chunkEnumerator.Current.Size - 1;
+                    _index = _chunkEnumerator.Current.Count - 1;
                     _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array, out _comp3Array);
                 }
 
@@ -2369,7 +2369,7 @@ namespace Robust.Shared.GameObjects
             _chunkEnumerator = world.Query(new QueryDescription().WithAll<TComp1, TComp2, TComp3, TComp4>()).ChunkIterator(world).GetEnumerator();
             if (_chunkEnumerator.MoveNext())
             {
-                _index = _chunkEnumerator.Current.Size;
+                _index = _chunkEnumerator.Current.Count;
                 _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array, out _comp3Array, out _comp4Array);
             }
         }
@@ -2382,7 +2382,7 @@ namespace Robust.Shared.GameObjects
         {
             if (MoveNext(out comp1, out comp2, out comp3, out comp4))
             {
-                uid = _chunkEnumerator.Current.EntityReference(_index);
+                uid = _chunkEnumerator.Current.Entity(_index);
                 DebugTools.AssertOwner(uid, comp1);
                 DebugTools.AssertOwner(uid, comp2);
                 DebugTools.AssertOwner(uid, comp3);
@@ -2415,7 +2415,7 @@ namespace Robust.Shared.GameObjects
                         return false;
                     }
 
-                    _index = _chunkEnumerator.Current.Size - 1;
+                    _index = _chunkEnumerator.Current.Count - 1;
                     _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array, out _comp3Array, out _comp4Array);
                 }
 

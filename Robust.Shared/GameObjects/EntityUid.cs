@@ -41,12 +41,6 @@ namespace Robust.Shared.GameObjects
             Version = Invalid.Version;
         }
 
-        internal EntityUid(EntityReference reference)
-        {
-            Id = reference.Entity.Id + ArchUidOffset;
-            Version = reference.Version + ArchVersionOffset;
-        }
-
         /// <summary>
         ///     Creates an instance of this structure, with the given network ID.
         /// </summary>
@@ -83,7 +77,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static EntityUid FromArch(in World world, in Entity entity)
         {
-            return new EntityUid(entity.Id + ArchUidOffset, world.Reference(entity).Version + ArchVersionOffset);
+            return new EntityUid(entity.Id + ArchUidOffset, entity.Version + ArchVersionOffset);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -148,17 +142,12 @@ namespace Robust.Shared.GameObjects
 
         public static implicit operator Entity(EntityUid self)
         {
-            return DangerousEntityExtensions.CreateEntityStruct(self.Id - ArchUidOffset, 0);
+            return DangerousEntityExtensions.CreateEntityStruct(self.Id - ArchUidOffset, 0, self.Version - ArchVersionOffset);
         }
 
-        public static implicit operator EntityReference(EntityUid other)
+        public static implicit operator EntityUid(Entity other)
         {
-            return DangerousEntityExtensions.CreateEntityReferenceStruct(other.Id - ArchUidOffset, other.Version - ArchVersionOffset, 0);
-        }
-
-        public static implicit operator EntityUid(EntityReference other)
-        {
-            return new EntityUid(other);
+            return new EntityUid(other.Id + ArchUidOffset, other.Version + ArchVersionOffset);
         }
 
         /// <inheritdoc />

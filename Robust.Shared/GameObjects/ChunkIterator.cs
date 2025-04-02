@@ -35,7 +35,7 @@ internal struct ArchChunkEnumerator
 
     public bool MoveNext()
     {
-        if (--_chunkIndex >= 0 && Current.Size > 0)
+        if (--_chunkIndex >= 0 && Current.Count > 0)
         {
             return true;
         }

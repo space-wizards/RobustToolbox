@@ -372,7 +372,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<EntityUid> GetEntities()
         {
-            using var ents = new PooledList<EntityReference>(_world.Size);
+            using var ents = new PooledList<Entity>(_world.Size);
             _world.GetEntities(_archMetaQuery, ents.Span);
 
             foreach (var entity in ents)
@@ -730,7 +730,7 @@ namespace Robust.Shared.GameObjects
 
         public bool Deleted(EntityUid uid)
         {
-            return !_world.TryGetAlive(uid, out MetaDataComponent? comp) || comp!.EntityLifeStage > EntityLifeStage.Terminating;
+            return !_world.TryGet(uid, out MetaDataComponent? comp) || comp!.EntityLifeStage > EntityLifeStage.Terminating;
         }
 
         /// <summary>
@@ -739,13 +739,13 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal bool IsAlive(EntityUid uid)
         {
-            return ((EntityReference) uid).IsAlive(_world);
+            return _world.IsAlive(uid);
         }
 
-        internal bool TryAlive(EntityUid uid, out EntityReference entity)
+        internal bool TryAlive(EntityUid uid, out Entity entity)
         {
             entity = uid;
-            return entity.IsAlive(_world);
+            return _world.IsAlive(entity);
         }
 
         public bool Deleted([NotNullWhen(false)] EntityUid? uid)
@@ -769,7 +769,7 @@ namespace Robust.Shared.GameObjects
                 // Using 512 as the limit, in case the problem entities are related to player counts on high-pop servers.
                 if (EntityCount < 512)
                 {
-                    var entList = new PooledList<EntityReference>();
+                    var entList = new PooledList<Entity>();
                     _world.GetEntities(_archMetaQuery, entList.Span);
 
                     foreach (var uid in entList)

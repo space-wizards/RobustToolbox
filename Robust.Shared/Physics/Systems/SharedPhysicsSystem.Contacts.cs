@@ -350,10 +350,10 @@ public abstract partial class SharedPhysicsSystem
 
         if (contact.Manifold.PointCount > 0 && contact.FixtureA?.Hard == true && contact.FixtureB?.Hard == true)
         {
-            if (bodyA.CanCollide)
+            if (bodyA.CanCollide && !TerminatingOrDeleted(aUid))
                 SetAwake((aUid, bodyA), true);
 
-            if (bodyB.CanCollide)
+            if (bodyB.CanCollide && !TerminatingOrDeleted(bUid))
                 SetAwake((bUid, bodyB), true);
         }
 

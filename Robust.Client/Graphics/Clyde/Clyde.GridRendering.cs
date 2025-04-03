@@ -23,6 +23,9 @@ namespace Robust.Client.Graphics.Clyde
         /// </summary>
         private HashSet<Type> _erroredGridOverlays = new();
 
+        private Vertex2D[]? _chunkMeshBuilderVertexBuffer;
+        private ushort[]? _chunkMeshBuilderIndexBuffer;
+
         private int _verticesPerChunk(MapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * 4;
         private int _indicesPerChunk(MapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * GetQuadBatchIndexCount();
 
@@ -71,11 +74,7 @@ namespace Robust.Client.Graphics.Clyde
                 while (enumerator.MoveNext(out var chunk))
                 {
                     DebugTools.Assert(chunk.FilledTiles > 0);
-                    if (!data.TryGetValue(chunk.Indices, out var datum))
-                    {
-                        data[chunk.Indices] = datum = new MapChunkData();
-                        _initChunkBuffers(mapGrid, chunk, datum);
-                    }
+                    var datum = EnsureChunkInitialized(data, chunk, mapGrid);
 
                     if (!datum.Dirty)
                         continue;
@@ -94,12 +93,7 @@ namespace Robust.Client.Graphics.Clyde
                             if (!mapGrid.Comp.Chunks.TryGetValue(neighbor, out var neighborChunk))
                                 continue;
 
-                            if (!data.TryGetValue(neighborChunk.Indices, out var neighborDatum))
-                            {
-                                data[neighborChunk.Indices] = neighborDatum = new MapChunkData();
-                                _initChunkBuffers(mapGrid, chunk, neighborDatum);
-                            }
-
+                            var neighborDatum = EnsureChunkInitialized(data, neighborChunk, mapGrid);
                             neighborDatum.EdgeDirty = true;
                         }
                     }
@@ -176,6 +170,17 @@ namespace Robust.Client.Graphics.Clyde
             CullEmptyChunks();
         }
 
+        private MapChunkData EnsureChunkInitialized(Dictionary<Vector2i, MapChunkData> data, MapChunk chunk, Entity<MapGridComponent> mapGrid)
+        {
+            if (!data.TryGetValue(chunk.Indices, out var datum))
+            {
+                data[chunk.Indices] = datum = new MapChunkData();
+                _initChunkBuffers(mapGrid, chunk, datum);
+            }
+
+            return datum;
+        }
+
         private void CullEmptyChunks()
         {
             foreach (var (grid, chunks) in _mapChunkData)
@@ -197,8 +202,8 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _updateChunkMesh(Entity<MapGridComponent> grid, MapChunk chunk, MapChunkData datum)
         {
-            Span<ushort> indexBuffer = stackalloc ushort[_indicesPerChunk(chunk)];
-            Span<Vertex2D> vertexBuffer = stackalloc Vertex2D[_verticesPerChunk(chunk)];
+            Span<ushort> indexBuffer = EnsureSize(ref _chunkMeshBuilderIndexBuffer, _indicesPerChunk(chunk));
+            Span<Vertex2D> vertexBuffer = EnsureSize(ref _chunkMeshBuilderVertexBuffer, _verticesPerChunk(chunk));
 
             var i = 0;
             var chunkSize = grid.Comp.ChunkSize;
@@ -231,14 +236,7 @@ namespace Robust.Client.Graphics.Clyde
                             region = regionMaybe[tile.Variant];
                         }
 
-                        var vIdx = i * 4;
-                        vertexBuffer[vIdx + 0] = new Vertex2D(gridX, gridY, region.Left, region.Bottom, Color.White);
-                        vertexBuffer[vIdx + 1] = new Vertex2D(gridX + 1, gridY, region.Right, region.Bottom, Color.White);
-                        vertexBuffer[vIdx + 2] = new Vertex2D(gridX + 1, gridY + 1, region.Right, region.Top, Color.White);
-                        vertexBuffer[vIdx + 3] = new Vertex2D(gridX, gridY + 1, region.Left, region.Top, Color.White);
-                        var nIdx = i * GetQuadBatchIndexCount();
-                        var tIdx = (ushort)(i * 4);
-                        QuadBatchIndexWrite(indexBuffer, ref nIdx, tIdx);
+                        WriteTileToBuffers(i, gridX, gridY, vertexBuffer, indexBuffer, region);
                         i += 1;
                     }
                 }
@@ -261,8 +259,8 @@ namespace Robust.Client.Graphics.Clyde
         private void _updateChunkEdges(Entity<MapGridComponent> grid, MapChunk chunk, MapChunkData datum)
         {
             // Need a buffer that can potentially store all neighbor tiles
-            Span<ushort> indexBuffer = stackalloc ushort[_indicesPerChunk(chunk) * 8];
-            Span<Vertex2D> vertexBuffer = stackalloc Vertex2D[_verticesPerChunk(chunk) * 8];
+            Span<ushort> indexBuffer = EnsureSize(ref _chunkMeshBuilderIndexBuffer, _indicesPerChunk(chunk) * 8);
+            Span<Vertex2D> vertexBuffer = EnsureSize(ref _chunkMeshBuilderVertexBuffer, _verticesPerChunk(chunk) * 8);
 
             var i = 0;
             var chunkSize = grid.Comp.ChunkSize;
@@ -306,17 +304,8 @@ namespace Robust.Client.Graphics.Clyde
                             if (regionMaybe == null)
                                 continue;
 
-                            // TODO: Remove the copy-paste shit from above.
                             var region = regionMaybe[0];
-
-                            var vIdx = i * 4;
-                            vertexBuffer[vIdx + 0] = new Vertex2D(gridX, gridY, region.Left, region.Bottom, Color.White);
-                            vertexBuffer[vIdx + 1] = new Vertex2D(gridX + 1, gridY, region.Right, region.Bottom, Color.White);
-                            vertexBuffer[vIdx + 2] = new Vertex2D(gridX + 1, gridY + 1, region.Right, region.Top, Color.White);
-                            vertexBuffer[vIdx + 3] = new Vertex2D(gridX, gridY + 1, region.Left, region.Top, Color.White);
-                            var nIdx = i * GetQuadBatchIndexCount();
-                            var tIdx = (ushort)(i * 4);
-                            QuadBatchIndexWrite(indexBuffer, ref nIdx, tIdx);
+                            WriteTileToBuffers(i, gridX, gridY, vertexBuffer, indexBuffer, region);
                             i += 1;
                         }
                     }
@@ -420,6 +409,32 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             _mapChunkData.Remove(gridId);
+        }
+
+        private static T[] EnsureSize<T>(ref T[]? field, int size)
+        {
+            if (field == null || field.Length < size)
+                field = new T[size];
+
+            return field;
+        }
+
+        private void WriteTileToBuffers(
+            int i,
+            int gridX,
+            int gridY,
+            Span<Vertex2D> vertexBuffer,
+            Span<ushort> indexBuffer,
+            Box2 region)
+        {
+            var vIdx = i * 4;
+            vertexBuffer[vIdx + 0] = new Vertex2D(gridX, gridY, region.Left, region.Bottom, Color.White);
+            vertexBuffer[vIdx + 1] = new Vertex2D(gridX + 1, gridY, region.Right, region.Bottom, Color.White);
+            vertexBuffer[vIdx + 2] = new Vertex2D(gridX + 1, gridY + 1, region.Right, region.Top, Color.White);
+            vertexBuffer[vIdx + 3] = new Vertex2D(gridX, gridY + 1, region.Left, region.Top, Color.White);
+            var nIdx = i * GetQuadBatchIndexCount();
+            var tIdx = (ushort)(i * 4);
+            QuadBatchIndexWrite(indexBuffer, ref nIdx, tIdx);
         }
 
         private sealed class MapChunkData

@@ -29,7 +29,6 @@ public sealed class ForbidLiteralAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.ReportDiagnostics);
         context.EnableConcurrentExecution();
-        //context.RegisterSyntaxNodeAction(AnalyzeExpression, SyntaxKind.InvocationExpression);
         context.RegisterOperationAction(AnalyzeOperation, OperationKind.Invocation);
     }
 

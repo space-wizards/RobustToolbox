@@ -171,7 +171,8 @@ namespace Robust.Shared.Audio
         public readonly AudioParams AddVariation(float? variation)
         {
             var me = this;
-            me.Variation += variation;
+            me.Variation ??= 0.1f;
+            me.Variation *= variation;
             return me;
         }
 

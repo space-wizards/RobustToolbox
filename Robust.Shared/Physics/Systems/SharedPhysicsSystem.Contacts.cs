@@ -788,7 +788,7 @@ public abstract partial class SharedPhysicsSystem
         if (!PhysicsQuery.Resolve(entity.Owner, ref entity.Comp))
             return;
 
-        _broadphase.RegenerateContacts(entity.Owner, entity.Comp);
+        _broadphase.RegenerateContacts(entity);
     }
 
     /// <summary>

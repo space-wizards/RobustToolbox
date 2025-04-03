@@ -85,6 +85,16 @@ public static class DataNodeParser
         return node;
     }
 
+    private static string ParseKey(Parser parser)
+    {
+        var ev = parser.Consume<Scalar>();
+
+        if (!ev.Anchor.IsEmpty)
+            throw new NotSupportedException();
+
+        return ev.Value;
+    }
+
     private static SequenceDataNode ParseSequence(Parser parser, DocumentState state)
     {
         var ev = parser.Consume<SequenceStart>();
@@ -124,12 +134,11 @@ public static class DataNodeParser
         MappingEnd mapEnd;
         while (!parser.TryConsume(out mapEnd))
         {
-            var key = Parse(parser, state);
+            var key = ParseKey(parser);
             var value = Parse(parser, state);
 
             node.Add(key, value);
 
-            unresolvedAlias |= key is DataNodeAlias;
             unresolvedAlias |= value is DataNodeAlias;
         }
 
@@ -173,17 +182,16 @@ public static class DataNodeParser
 
     private static void ResolveMappingAliases(MappingDataNode mapping, DocumentState state)
     {
-        var swaps = new ValueList<(DataNode key, DataNode value)>();
+        var swaps = new ValueList<(string key, DataNode value)>();
 
         foreach (var (key, value) in mapping)
         {
-            if (key is not DataNodeAlias && value is not DataNodeAlias)
+            if (value is not DataNodeAlias valueAlias)
                 return;
 
-            var newKey = key is DataNodeAlias keyAlias ? ResolveAlias(keyAlias, state) : key;
-            var newValue = value is DataNodeAlias valueAlias ? ResolveAlias(valueAlias, state) : value;
+            var newValue = ResolveAlias(valueAlias, state);
 
-            swaps.Add((newKey, newValue));
+            swaps.Add((key, newValue));
             mapping.Remove(key);
         }
 
@@ -242,6 +250,7 @@ public static class DataNodeParser
             throw new NotSupportedException();
         }
 
+        [Obsolete("Use SerializationManager.PushComposition()")]
         public override DataNode PushInheritance(DataNode parent)
         {
             throw new NotSupportedException();

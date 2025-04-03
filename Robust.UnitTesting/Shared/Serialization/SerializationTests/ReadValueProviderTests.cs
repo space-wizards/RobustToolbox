@@ -77,7 +77,7 @@ public sealed partial class ReadValueProviderTests : SerializationTest
     public void DataDefinitionMappingBaseTest()
     {
         var data = "someData";
-        var mapping = new MappingDataNode(new Dictionary<DataNode, DataNode>{{ new ValueDataNode("data"), new ValueDataNode(data) }})
+        var mapping = new MappingDataNode(new Dictionary<string, DataNode>{{ "data", new ValueDataNode(data) }})
         {
             Tag = $"!type:{nameof(DataDefinitionValueProviderTestDummy)}"
         };

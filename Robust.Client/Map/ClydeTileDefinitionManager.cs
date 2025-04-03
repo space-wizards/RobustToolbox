@@ -11,6 +11,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -92,6 +93,7 @@ namespace Robust.Client.Map
 
         internal void _genTextureAtlas()
         {
+            var sw = RStopwatch.StartNew();
             var tileRegs = new Dictionary<(int Id, Direction Direction), Box2[]>();
             _tileTextureAtlas = null;
 
@@ -250,6 +252,7 @@ namespace Robust.Client.Map
 
             _tileRegions = tileRegs.ToFrozenDictionary();
             _tileTextureAtlas = Texture.LoadFromImage(sheet, "Tile Atlas");
+            _sawmill.Debug($"Tile atlas took {sw.Elapsed} to build");
         }
 
         private void BumpColumn(ref int row, ref int column, int dimensionX)

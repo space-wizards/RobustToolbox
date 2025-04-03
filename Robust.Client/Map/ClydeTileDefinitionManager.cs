@@ -238,7 +238,7 @@ namespace Robust.Client.Map
                             image.Blit(box, sheet, point);
 
                             // If you ever need edge variants then you could just bump this.
-                            var edgeList = new Box2[def.EdgeSprites.Count];
+                            var edgeList = new Box2[1];
                             edgeList[0] = Box2.FromDimensions(
                                 point.X / w, (h - point.Y - EyeManager.PixelsPerMeter) / h,
                                 tileSize / w, tileSize / h);

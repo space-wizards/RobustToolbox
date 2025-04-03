@@ -23,7 +23,7 @@ namespace Robust.Shared.GameObjects
         /// <seealso cref="SubscribeEvent{T}(EventSource, IEntityEventSubscriber, EntityEventRefHandler{T})"/>
         // [Obsolete("Subscribe to the event by ref instead (EntityEventRefHandler)")]
         void SubscribeEvent<T>(EventSource source, IEntityEventSubscriber subscriber,
-            EntityEventHandler<T> eventHandler) where T : notnull;
+            EntityEventHandler<T> eventHandler) where T : notnull, allows ref struct;
 
         /// <seealso cref="SubscribeEvent{T}(EventSource, IEntityEventSubscriber, EntityEventRefHandler{T})"/>
         // [Obsolete("Subscribe to the event by ref instead (EntityEventRefHandler)")]
@@ -34,10 +34,10 @@ namespace Robust.Shared.GameObjects
             Type orderType,
             Type[]? before = null,
             Type[]? after = null)
-            where T : notnull;
+            where T : notnull, allows ref struct;
 
         void SubscribeEvent<T>(EventSource source, IEntityEventSubscriber subscriber,
-            EntityEventRefHandler<T> eventHandler) where T : notnull;
+            EntityEventRefHandler<T> eventHandler) where T : notnull, allows ref struct;
 
         void SubscribeEvent<T>(
             EventSource source,
@@ -46,7 +46,7 @@ namespace Robust.Shared.GameObjects
             Type orderType,
             Type[]? before = null,
             Type[]? after = null)
-            where T : notnull;
+            where T : notnull, allows ref struct;
 
         /// <summary>
         /// Unsubscribes all event handlers of a given type.
@@ -54,7 +54,7 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="T">Event type being unsubscribed from.</typeparam>
         /// <param name="source"></param>
         /// <param name="subscriber">Subscriber that owns the handlers.</param>
-        void UnsubscribeEvent<T>(EventSource source, IEntityEventSubscriber subscriber) where T : notnull;
+        void UnsubscribeEvent<T>(EventSource source, IEntityEventSubscriber subscriber) where T : notnull, allows ref struct;
 
         /// <summary>
         /// Immediately raises an event onto the bus.
@@ -63,9 +63,9 @@ namespace Robust.Shared.GameObjects
         /// <param name="toRaise">Event being raised.</param>
         void RaiseEvent(EventSource source, object toRaise);
 
-        void RaiseEvent<T>(EventSource source, T toRaise) where T : notnull;
+        void RaiseEvent<T>(EventSource source, T toRaise) where T : notnull, allows ref struct;
 
-        void RaiseEvent<T>(EventSource source, ref T toRaise) where T : notnull;
+        void RaiseEvent<T>(EventSource source, ref T toRaise) where T : notnull, allows ref struct;
 
         /// <summary>
         /// Queues an event to be raised at a later time.
@@ -146,7 +146,7 @@ namespace Robust.Shared.GameObjects
             EventSource source,
             IEntityEventSubscriber subscriber,
             EntityEventHandler<T> eventHandler)
-            where T : notnull
+            where T : notnull, allows ref struct
         {
             if (eventHandler == null)
                 throw new ArgumentNullException(nameof(eventHandler));
@@ -162,7 +162,7 @@ namespace Robust.Shared.GameObjects
             Type orderType,
             Type[]? before = null,
             Type[]? after = null)
-            where T : notnull
+            where T : notnull, allows ref struct
         {
             if (eventHandler == null)
                 throw new ArgumentNullException(nameof(eventHandler));
@@ -174,7 +174,7 @@ namespace Robust.Shared.GameObjects
         }
 
         public void SubscribeEvent<T>(EventSource source, IEntityEventSubscriber subscriber,
-            EntityEventRefHandler<T> eventHandler) where T : notnull
+            EntityEventRefHandler<T> eventHandler) where T : notnull, allows ref struct
         {
             SubscribeEventCommon<T>(source, subscriber, (ref Unit ev) =>
             {
@@ -185,7 +185,7 @@ namespace Robust.Shared.GameObjects
 
         public void SubscribeEvent<T>(EventSource source, IEntityEventSubscriber subscriber,
             EntityEventRefHandler<T> eventHandler,
-            Type orderType, Type[]? before = null, Type[]? after = null) where T : notnull
+            Type orderType, Type[]? before = null, Type[]? after = null) where T : notnull, allows ref struct
         {
             var order = CreateOrderingData(orderType, before, after);
 
@@ -203,7 +203,7 @@ namespace Robust.Shared.GameObjects
             object equalityToken,
             OrderingData? order,
             bool byRef)
-            where T : notnull
+            where T : notnull, allows ref struct
         {
             if (source == EventSource.None)
                 throw new ArgumentOutOfRangeException(nameof(source));
@@ -240,7 +240,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void UnsubscribeEvent<T>(EventSource source, IEntityEventSubscriber subscriber) where T : notnull
+        public void UnsubscribeEvent<T>(EventSource source, IEntityEventSubscriber subscriber) where T : notnull, allows ref struct
         {
             if (source == EventSource.None)
                 throw new ArgumentOutOfRangeException(nameof(source));
@@ -267,7 +267,7 @@ namespace Robust.Shared.GameObjects
             ProcessSingleEvent(source, ref unitRef, eventType);
         }
 
-        public void RaiseEvent<T>(EventSource source, T toRaise) where T : notnull
+        public void RaiseEvent<T>(EventSource source, T toRaise) where T : notnull, allows ref struct
         {
             if (source == EventSource.None)
                 throw new ArgumentOutOfRangeException(nameof(source));
@@ -275,7 +275,7 @@ namespace Robust.Shared.GameObjects
             ProcessSingleEvent(source, ref Unsafe.As<T, Unit>(ref toRaise), typeof(T));
         }
 
-        public void RaiseEvent<T>(EventSource source, ref T toRaise) where T : notnull
+        public void RaiseEvent<T>(EventSource source, ref T toRaise) where T : notnull, allows ref struct
         {
             if (source == EventSource.None)
                 throw new ArgumentOutOfRangeException(nameof(source));

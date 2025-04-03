@@ -895,6 +895,26 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetComponent<T, TU>(EntityUid uid, [NotNullWhen(true)] out T? component, [NotNullWhen(true)] out TU? component2)
+            where T : IComponent?
+            where TU: IComponent?
+        {
+            if (_world.TryGet(uid, out component, out component2))
+            {
+                DebugTools.Assert(component != null);
+                if (!component.Deleted && !component2.Deleted)
+                {
+                    return true;
+                }
+            }
+
+            component = default;
+            component2 = default;
+            return false;
+        }
+
+        /// <inheritdoc />
         public bool TryGetComponent<T>([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out T? component) where T : IComponent?
         {
             if (!uid.HasValue)
@@ -1117,7 +1137,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public int ComponentCount(EntityUid uid)
         {
-            return _world.GetArchetype(uid).Types.Length;
+            return _world.GetArchetype(uid).Signature.Count;
         }
 
         /// <summary>
@@ -1466,16 +1486,16 @@ namespace Robust.Shared.GameObjects
                 var components = chunk.GetArray(type);
                 var metas = includePaused ? default : chunk.GetArray<MetaDataComponent>();
 
-                for (var i = 0; i < chunk.Size; i++)
+                for (var i = 0; i < chunk.Count; i++)
                 {
-                    var comp = (IComponent)(components.GetValue(i))!;
+                    var comp = (IComponent)components.GetValue(i)!;
                     if (comp.Deleted)
                         continue;
 
                     if (!includePaused && metas![i].EntityPaused)
                         continue;
 
-                    yield return (chunk.EntityReferences[i], comp);
+                    yield return (chunk.Entity(i), comp);
                 }
             }
         }
@@ -1789,7 +1809,7 @@ namespace Robust.Shared.GameObjects
             _chunkEnumerator = query.ChunkIterator(world).GetEnumerator();
             if (_chunkEnumerator.MoveNext())
             {
-                _index = _chunkEnumerator.Current.Size;
+                _index = _chunkEnumerator.Current.Count;
             }
         }
 
@@ -1850,7 +1870,7 @@ namespace Robust.Shared.GameObjects
             _chunkEnumerator = _query.ChunkIterator(_world).GetEnumerator();
             if (_chunkEnumerator.MoveNext())
             {
-                _index = _chunkEnumerator.Current.Size;
+                _index = _chunkEnumerator.Current.Count;
                 _chunkEnumerator.Current.GetArray(out _comp1Array, out _metaArray);
             }
         }
@@ -1859,7 +1879,7 @@ namespace Robust.Shared.GameObjects
         {
             if (MoveNext(out comp1))
             {
-                uid = _chunkEnumerator.Current.EntityReference(_index);
+                uid = _chunkEnumerator.Current.Entity(_index);
                 DebugTools.AssertOwner(uid, comp1);
                 return true;
             }
@@ -1915,7 +1935,7 @@ namespace Robust.Shared.GameObjects
             _chunkEnumerator = world.Query(new QueryDescription().WithAll<TComp1, TComp2, MetaDataComponent>()).ChunkIterator(world).GetEnumerator();
             if (_chunkEnumerator.MoveNext())
             {
-                _index = _chunkEnumerator.Current.Size;
+                _index = _chunkEnumerator.Current.Count;
                 _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array, out _metaArray);
             }
         }
@@ -1924,7 +1944,7 @@ namespace Robust.Shared.GameObjects
         {
             if (MoveNext(out comp1, out comp2))
             {
-                uid = _chunkEnumerator.Current.EntityReference(_index);
+                uid = _chunkEnumerator.Current.Entity(_index);
                 DebugTools.AssertOwner(uid, comp1);
                 DebugTools.AssertOwner(uid, comp2);
                 return true;
@@ -1984,7 +2004,7 @@ namespace Robust.Shared.GameObjects
             _chunkEnumerator = world.Query(new QueryDescription().WithAll<TComp1, TComp2, TComp3, MetaDataComponent>()).ChunkIterator(world).GetEnumerator();
             if (_chunkEnumerator.MoveNext())
             {
-                _index = _chunkEnumerator.Current.Size;
+                _index = _chunkEnumerator.Current.Count;
                 _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array, out _comp3Array, out _metaArray);
             }
         }
@@ -1996,7 +2016,7 @@ namespace Robust.Shared.GameObjects
         {
             if (MoveNext(out comp1, out comp2, out comp3))
             {
-                uid = _chunkEnumerator.Current.EntityReference(_index);
+                uid = _chunkEnumerator.Current.Entity(_index);
                 DebugTools.AssertOwner(uid, comp1);
                 DebugTools.AssertOwner(uid, comp2);
                 DebugTools.AssertOwner(uid, comp3);
@@ -2064,7 +2084,7 @@ namespace Robust.Shared.GameObjects
             _chunkEnumerator = world.Query(new QueryDescription().WithAll<TComp1, TComp2, TComp3, TComp4, MetaDataComponent>()).ChunkIterator(world).GetEnumerator();
             if (_chunkEnumerator.MoveNext())
             {
-                _index = _chunkEnumerator.Current.Size;
+                _index = _chunkEnumerator.Current.Count;
                 _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array, out _comp3Array, out _comp4Array, out _metaArray);
             }
         }
@@ -2077,7 +2097,7 @@ namespace Robust.Shared.GameObjects
         {
             if (MoveNext(out comp1, out comp2, out comp3, out comp4))
             {
-                uid = _chunkEnumerator.Current.EntityReference(_index);
+                uid = _chunkEnumerator.Current.Entity(_index);
                 DebugTools.AssertOwner(uid, comp1);
                 DebugTools.AssertOwner(uid, comp2);
                 DebugTools.AssertOwner(uid, comp3);

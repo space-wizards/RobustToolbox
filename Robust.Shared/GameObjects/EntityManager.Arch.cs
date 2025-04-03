@@ -32,21 +32,13 @@ public partial class EntityManager
 
     protected void DestroyArch(EntityUid uid)
     {
-        var reference = _world.Reference(uid);
-
-        if (!_world.IsAlive(reference))
-        {
-            throw new InvalidOperationException("Tried to delete an invalid entity reference");
-        }
-
-        _world.Destroy(reference);
+        _world.Destroy(uid);
     }
 
     private void SpawnEntityArch(out EntityUid entity)
     {
         var archEnt = _world.Create(DefaultArchetype);
-        var reference = _world.Reference(archEnt);
-        entity = new EntityUid(reference);
+        entity = new EntityUid(archEnt);
     }
 
     public void CleanupArch()
@@ -86,14 +78,6 @@ public partial class EntityManager
         }
 
         return compTypes;
-    }
-
-    /// <summary>
-    /// Reserves additional slots for the specified ComponentTypes.
-    /// </summary>
-    internal void Reserve(ComponentType[] compTypes, int count)
-    {
-        _world.Reserve(compTypes, count);
     }
 
     /// <summary>

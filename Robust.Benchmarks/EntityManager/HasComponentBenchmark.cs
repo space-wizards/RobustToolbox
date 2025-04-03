@@ -49,7 +49,7 @@ public partial class HasComponentBenchmark
     {
         for (var i = 2; i <= N+1; i++)
         {
-            var uid = new EntityUid(i);
+            var uid = new EntityUid(i, EntityUid.FirstUid.Version);
             var result = _entityManager.HasComponent<A>(uid);
             Consumer.Consume(result);
         }
@@ -60,7 +60,7 @@ public partial class HasComponentBenchmark
     {
         for (var i = 2; i <= N+1; i++)
         {
-            var uid = new EntityUid(i);
+            var uid = new EntityUid(i, EntityUid.FirstUid.Version);
             var result = _entityManager.HasComponent(uid, _compReg);
             Consumer.Consume(result);
         }
@@ -71,7 +71,7 @@ public partial class HasComponentBenchmark
     {
         for (var i = 2; i <= N+1; i++)
         {
-            var uid = new EntityUid(i);
+            var uid = new EntityUid(i, EntityUid.FirstUid.Version);
             var result = _entityManager.HasComponent(uid, typeof(A));
             Consumer.Consume(result);
         }
@@ -82,7 +82,7 @@ public partial class HasComponentBenchmark
     {
         for (var i = 2; i <= N+1; i++)
         {
-            var uid = new EntityUid(i);
+            var uid = new EntityUid(i, EntityUid.FirstUid.Version);
             var type = _dummyA.GetType();
             var result = _entityManager.HasComponent(uid, type);
             Consumer.Consume(result);

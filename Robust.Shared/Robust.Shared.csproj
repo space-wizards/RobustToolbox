@@ -31,10 +31,10 @@
 
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Arch\Arch\src\Arch\Arch.csproj" />
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />
     <ProjectReference Include="..\NetSerializer\NetSerializer\NetSerializer.csproj" />
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
-    <ProjectReference Include="..\Arch\Arch.csproj" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Utility\TypeAbbreviations.yaml">

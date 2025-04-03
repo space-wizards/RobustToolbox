@@ -22,8 +22,8 @@ public sealed class ArchTests
         var entManager = sim.Resolve<IEntityManager>();
 
         var entity = entManager.Spawn(null, MapCoordinates.Nullspace);
-        var entReference = DangerousEntityExtensions.CreateEntityReferenceStruct(0, 1, 0);
-        Assert.That(entity.Id, Is.EqualTo(entReference.Entity.Id + EntityUid.ArchUidOffset));
+        var entReference = DangerousEntityExtensions.CreateEntityStruct(0, 1, 0);
+        Assert.That(entity.Id, Is.EqualTo(entReference.Id + EntityUid.ArchUidOffset));
         Assert.That(entity.Version, Is.EqualTo(entReference.Version + EntityUid.ArchVersionOffset));
 
         entManager.DeleteEntity(entity);

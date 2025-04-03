@@ -25,7 +25,7 @@ public abstract partial class EntitySpawnHelpersTest : RobustIntegrationTest
     protected SharedContainerSystem Container = default!;
 
     // Even if unused, content / downstream tests might use this class, so removal would be a breaking change?
-    protected IMapManager MapMan = default!; 
+    protected IMapManager MapMan = default!;
 
     protected EntityUid Map;
     protected MapId MapId;

@@ -41,6 +41,12 @@ namespace Robust.Shared.GameObjects
             Version = Invalid.Version;
         }
 
+        internal EntityUid(Entity arch)
+        {
+            Id = arch.Id + ArchUidOffset;
+            Version = arch.Version + ArchVersionOffset;
+        }
+
         /// <summary>
         ///     Creates an instance of this structure, with the given network ID.
         /// </summary>

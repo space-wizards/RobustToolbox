@@ -8,7 +8,6 @@
       <NoWarn>RA0003</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Arch\Arch.csproj" />
     <ProjectReference Include="..\Robust.Server\Robust.Server.csproj" />
     <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
     <ProjectReference Include="..\Robust.UnitTesting\Robust.UnitTesting.csproj" />

@@ -303,8 +303,9 @@ Had full state: {LastFullState != null}"
 
         public void ClearDetachQueue() => _pvsDetachMessages.Clear();
 
-        public void GetEntitiesToDetach(IList<(GameTick Tick, List<NetEntity> Entities)> result, GameTick toTick, int budget)
+        public List<(GameTick Tick, List<NetEntity> Entities)> GetEntitiesToDetach(GameTick toTick, int budget)
         {
+            var result = new List<(GameTick Tick, List<NetEntity> Entities)>();
             foreach (var (tick, entities) in _pvsDetachMessages)
             {
                 if (tick > toTick)
@@ -323,6 +324,7 @@ Had full state: {LastFullState != null}"
                 entities.RemoveRange(index, budget);
                 break;
             }
+            return result;
         }
 
         private bool TryGetDeltaState(out GameState? curState, out GameState? nextState)

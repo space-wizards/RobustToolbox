@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added `DirectionExtensions.AllDirections`, which contains a list of all `Direction`s for easy enumeration.
 
 ### Bugfixes
 

@@ -24,27 +24,23 @@ public partial class SerializationManager
 
     private readonly ConcurrentDictionary<(Type value, Type node), PushCompositionDelegate> _compositionPushers = new();
 
-    public DataNode PushComposition(Type type, DataNode[] parents, DataNode child, ISerializationContext? context = null)
+    public DataNode PushComposition(
+        Type type,
+        DataNode[] parents,
+        DataNode child,
+        ISerializationContext? context = null)
     {
         // TODO SERIALIZATION
-        // Add variant that doesn't require a parent array.
-
-        // TODO SERIALIZATION
         // Change inheritance pushing so that it modifies the passed in child. This avoids re-creating the child
-        // multiple times when there are multiple children.
+        // multiple times when there are multiple parents.
         //
         // I.e., change the PushCompositionDelegate signature to not have a return value, and also add an override
-        // of this method that modified the given child.
+        // of this method that modifies the given child.
 
         if (parents.Length == 0)
             return child.Copy();
 
         DebugTools.Assert(parents.All(x => x.GetType() == child.GetType()));
-
-
-        // the child.Clone() statement to the beginning here, then make the delegate modify the clone.
-        // Currently pusing more than one parent requires multiple unnecessary clones.
-
         var pusher = GetOrCreatePushCompositionDelegate(type, child);
 
         var node = child;
@@ -59,6 +55,22 @@ public partial class SerializationManager
         }
 
         return node;
+    }
+
+    public DataNode PushComposition(
+        Type type,
+        DataNode parent,
+        DataNode child,
+        ISerializationContext? context = null)
+    {
+        DebugTools.AssertEqual(parent.GetType(), child.GetType());
+        var pusher = GetOrCreatePushCompositionDelegate(type, child);
+
+        var newNode = pusher(type, parent, child, context);
+
+        // Currently delegate pusher should be returning a new instance, and not modifying the passed in child.
+        DebugTools.Assert(!ReferenceEquals(newNode, child));
+        return newNode;
     }
 
     private PushCompositionDelegate GetOrCreatePushCompositionDelegate(Type type, DataNode node)
@@ -185,7 +197,7 @@ public partial class SerializationManager
                     {
                         if (field.InheritanceBehavior == InheritanceBehavior.Always)
                         {
-                            newMapping[key] = PushComposition(field.FieldType, new[] { parentValue }, childValue, context);
+                            newMapping[key] = PushComposition(field.FieldType, parentValue, childValue, context);
                         }
                     }
                     else

@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Significantly optimized tile edge rendering.
 
 ### Internal
 

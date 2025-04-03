@@ -238,7 +238,7 @@ namespace Robust.Shared.Physics.Systems
                     DebugTools.Assert(body.Awake);
                 }
                 else
-                    DebugTools.Assert(oldMap?.AwakeBodies.Contains(body) != true);
+                    DebugTools.Assert(oldMap?.AwakeBodies.Contains((uid, body)) != true);
             }
 
             _joints.ClearJoints(uid);

@@ -174,79 +174,72 @@ namespace Robust.Client.Map
                 tileRegs.Add((def.TileId, Direction.Invalid), regionList);
 
                 // Edges
-                if (def.EdgeSprites.Count > 0)
+                if (def.EdgeSprites.Count <= 0)
+                    continue;
+
+                foreach (var direction in DirectionExtensions.AllDirections)
                 {
-                    for (var x = -1; x <= 1; x++)
+                    if (!def.EdgeSprites.TryGetValue(direction, out var edge))
+                        continue;
+
+                    using (var stream = _manager.ContentFileRead(edge))
                     {
-                        for (var y = -1; y <= 1; y++)
-                        {
-                            if (x == 0 && y == 0)
-                                continue;
-
-                            var direction = new Vector2i(x, y).AsDirection();
-                            if (!def.EdgeSprites.TryGetValue(direction, out var edge))
-                                continue;
-
-                            using (var stream = _manager.ContentFileRead(edge))
-                            {
-                                image = Image.Load<Rgba32>(stream);
-                            }
-
-                            if (image.Width != tileSize || image.Height != tileSize)
-                            {
-                                throw new NotSupportedException(
-                                    $"Unable to load {path}, due to being unable to use tile textures with a dimension other than {tileSize}x{tileSize}.");
-                            }
-
-                            Angle angle = Angle.Zero;
-
-                            switch (direction)
-                            {
-                                // Corner sprites
-                                case Direction.SouthEast:
-                                    break;
-                                case Direction.NorthEast:
-                                    angle = new Angle(MathF.PI / 2f);
-                                    break;
-                                case Direction.NorthWest:
-                                    angle = new Angle(MathF.PI);
-                                    break;
-                                case Direction.SouthWest:
-                                    angle = new Angle(MathF.PI * 1.5f);
-                                    break;
-                                // Edge sprites
-                                case Direction.South:
-                                    break;
-                                case Direction.East:
-                                    angle = new Angle(MathF.PI / 2f);
-                                    break;
-                                case Direction.North:
-                                    angle = new Angle(MathF.PI);
-                                    break;
-                                case Direction.West:
-                                    angle = new Angle(MathF.PI * 1.5f);
-                                    break;
-                            }
-
-                            if (angle != Angle.Zero)
-                            {
-                                image.Mutate(o => o.Rotate((float)-angle.Degrees));
-                            }
-
-                            var point = new Vector2i(column * tileSize, row * tileSize);
-                            var box = new UIBox2i(0, 0, tileSize, tileSize);
-                            image.Blit(box, sheet, point);
-
-                            // If you ever need edge variants then you could just bump this.
-                            var edgeList = new Box2[1];
-                            edgeList[0] = Box2.FromDimensions(
-                                point.X / w, (h - point.Y - EyeManager.PixelsPerMeter) / h,
-                                tileSize / w, tileSize / h);
-
-                            tileRegs.Add((def.TileId, direction), edgeList);
-                            BumpColumn(ref row, ref column, dimensionX);
-                        }
+                        image = Image.Load<Rgba32>(stream);
                     }
+
+                    if (image.Width != tileSize || image.Height != tileSize)
+                    {
+                        throw new NotSupportedException(
+                            $"Unable to load {path}, due to being unable to use tile textures with a dimension other than {tileSize}x{tileSize}.");
+                    }
+
+                    Angle angle = Angle.Zero;
+
+                    switch (direction)
+                    {
+                        // Corner sprites
+                        case Direction.SouthEast:
+                            break;
+                        case Direction.NorthEast:
+                            angle = new Angle(MathF.PI / 2f);
+                            break;
+                        case Direction.NorthWest:
+                            angle = new Angle(MathF.PI);
+                            break;
+                        case Direction.SouthWest:
+                            angle = new Angle(MathF.PI * 1.5f);
+                            break;
+                        // Edge sprites
+                        case Direction.South:
+                            break;
+                        case Direction.East:
+                            angle = new Angle(MathF.PI / 2f);
+                            break;
+                        case Direction.North:
+                            angle = new Angle(MathF.PI);
+                            break;
+                        case Direction.West:
+                            angle = new Angle(MathF.PI * 1.5f);
+                            break;
+                    }
+
+                    if (angle != Angle.Zero)
+                    {
+                        image.Mutate(o => o.Rotate((float)-angle.Degrees));
+                    }
+
+                    var point = new Vector2i(column * tileSize, row * tileSize);
+                    var box = new UIBox2i(0, 0, tileSize, tileSize);
+                    image.Blit(box, sheet, point);
+
+                    // If you ever need edge variants then you could just bump this.
+                    var edgeList = new Box2[1];
+                    edgeList[0] = Box2.FromDimensions(
+                        point.X / w, (h - point.Y - EyeManager.PixelsPerMeter) / h,
+                        tileSize / w, tileSize / h);
+
+                    tileRegs.Add((def.TileId, direction), edgeList);
+                    BumpColumn(ref row, ref column, dimensionX);
                 }
             }
 

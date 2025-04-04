@@ -281,13 +281,28 @@ public sealed partial class FormattedMessage : IEquatable<FormattedMessage>, IRe
     /// <inheritdoc />
     public bool Equals(FormattedMessage? other)
     {
-        return other?.ToMarkup() == ToMarkup();
+        if (_nodes.Count != other?._nodes.Count)
+            return false;
+
+        for (var i = 0; i < _nodes.Count; i++)
+        {
+            if (!_nodes[i].Equals(other?._nodes[i]))
+                return false;
+        }
+
+        return true;
     }
 
     /// <inheritdoc />
     public override int GetHashCode()
     {
-        return ToMarkup().GetHashCode();
+        var hash = 0;
+        foreach (var node in _nodes)
+        {
+            hash = HashCode.Combine(hash, node.GetHashCode());
+        }
+
+        return hash;
     }
 
     /// <returns>The string without markup tags.</returns>

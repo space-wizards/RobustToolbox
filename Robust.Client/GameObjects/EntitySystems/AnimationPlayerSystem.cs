@@ -1,26 +1,81 @@
 using System;
 using System.Collections.Generic;
 using Robust.Client.Animations;
+using Robust.Client.Graphics;
+using Robust.Shared.Animations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
-    public sealed class AnimationPlayerSystem : EntitySystem
+    public sealed class AnimationPlayerSystem : SharedAnimationPlayerSystem
     {
         private readonly List<Entity<AnimationPlayerComponent>> _activeAnimations = new();
 
         private EntityQuery<AnimationPlayerComponent> _playerQuery;
+        private EntityQuery<SpriteComponent> _spriteQuery;
         private EntityQuery<MetaDataComponent> _metaQuery;
 
         [Dependency] private readonly IComponentFactory _compFact = default!;
+        [Dependency] private readonly IGameTiming _timing = default!;
 
         public override void Initialize()
         {
             base.Initialize();
+
+            SubscribeNetworkEvent<AnimationFlickEvent>(OnAnimationFlick);
+
             _playerQuery = GetEntityQuery<AnimationPlayerComponent>();
+            _spriteQuery = GetEntityQuery<SpriteComponent>();
             _metaQuery = GetEntityQuery<MetaDataComponent>();
+        }
+
+        private void OnAnimationFlick(AnimationFlickEvent ev)
+        {
+            if (!TryGetEntity(ev.Entity, out var uid))
+                return;
+            Flick(uid.Value, ev.StateId, ev.LayerKey);
+        }
+
+        public override void Flick(EntityUid uid, string stateId, object layerKey)
+        {
+            if (!_spriteQuery.TryGetComponent(uid, out var sprite))
+                return;
+
+            if (sprite.LayerGetActualRSI(layerKey) is not { } rsi || !rsi.TryGetState(stateId, out var state))
+                return;
+
+            if (!_playerQuery.TryGetComponent(uid, out var component))
+            {
+                component = EnsureComp<AnimationPlayerComponent>(uid);
+            }
+
+            if (!_timing.IsFirstTimePredicted)
+                return;
+
+            var key = $"flick-{layerKey}";
+            if (HasRunningAnimation(uid, component, key))
+                Stop(uid, component, key);
+
+            var animation = new Animation
+            {
+                Length = TimeSpan.FromSeconds(state.TotalDelay),
+                AnimationTracks =
+                {
+                    new AnimationTrackSpriteFlick
+                    {
+                        LayerKey = layerKey,
+                        KeyFrames =
+                        {
+                            new AnimationTrackSpriteFlick.KeyFrame(new RSI.StateId(stateId), 0f)
+                        },
+                    }
+                }
+            };
+
+            Play((uid, component), animation, key);
         }
 
         public override void FrameUpdate(float frameTime)
@@ -76,7 +131,7 @@ namespace Robust.Client.GameObjects
             foreach (var key in remie)
             {
                 component.PlayingAnimations.Remove(key);
-                var completedEvent = new AnimationCompletedEvent(uid, component, key, true);
+                var completedEvent = new AnimationCompletedEvent(uid, component, key);
                 EntityManager.EventBus.RaiseLocalEvent(uid, completedEvent, true);
             }
 

@@ -39,6 +39,7 @@ namespace Robust.Client.GameObjects
             Flick(uid.Value, ev.StateId, ev.LayerKey);
         }
 
+        /// <inheritdoc/>
         public override void Flick(EntityUid uid, string stateId, object layerKey)
         {
             if (!_spriteQuery.TryGetComponent(uid, out var sprite))

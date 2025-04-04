@@ -297,11 +297,9 @@ public sealed partial class FormattedMessage : IEquatable<FormattedMessage>, IRe
     public override int GetHashCode()
     {
         var hash = 0;
-        var i = 1;
         foreach (var node in _nodes)
         {
-            hash += node.GetHashCode() * i;
-            i++;
+            hash = HashCode.Combine(hash, node.GetHashCode());
         }
 
         return hash;

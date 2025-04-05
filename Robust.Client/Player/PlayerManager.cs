@@ -269,6 +269,7 @@ namespace Robust.Client.Player
 
                 // Check if the data is actually different
                 if (session.Name == state.Name
+                    &&session.DisplayName == state.DisplayName
                     && session.Status == state.Status
                     && session.AttachedEntity == controlled)
                 {
@@ -278,6 +279,7 @@ namespace Robust.Client.Player
                 dirty = true;
                 var local = (ICommonSessionInternal)session;
                 local.SetName(state.Name);
+                local.SetDisplayName(state.DisplayName);
                 SetStatus(local, state.Status);
                 SetAttachedEntity(local, controlled, out _, true);
             }

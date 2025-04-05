@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -244,6 +245,23 @@ internal abstract partial class SharedPlayerManager
     {
         ((ICommonSessionInternal) session).SetName(name);
         UpdateState(session);
+    }
+
+    public void SetDisplayName(ICommonSession session, string? name)
+    {
+        ((ICommonSessionInternal) session).SetDisplayName(name);
+        UpdateState(session);
+    }
+
+    public string GetDisplayName(ICommonSession session)
+    {
+        return session.DisplayName != string.Empty ? session.DisplayName : session.Name;
+    }
+
+    public string GetTruthfulNameString(ICommonSession session)
+    {
+        return $"{session.Name}" +
+               $"{(session.DisplayName != string.Empty ? $" ({session.DisplayName})" : "")}";
     }
 
     public void JoinGame(ICommonSession session)

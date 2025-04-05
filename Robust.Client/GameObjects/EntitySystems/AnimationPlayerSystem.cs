@@ -42,10 +42,10 @@ namespace Robust.Client.GameObjects
         /// <inheritdoc/>
         public override void Flick(EntityUid uid, string stateId, object layerKey)
         {
-            if (!_spriteQuery.TryGetComponent(uid, out var sprite))
+            if (!_timing.IsFirstTimePredicted)
                 return;
 
-            if (sprite.LayerGetActualRSI(layerKey) is not { } rsi || !rsi.TryGetState(stateId, out var state))
+            if (!_spriteQuery.TryGetComponent(uid, out var sprite))
                 return;
 
             if (!_playerQuery.TryGetComponent(uid, out var component))
@@ -53,12 +53,14 @@ namespace Robust.Client.GameObjects
                 component = EnsureComp<AnimationPlayerComponent>(uid);
             }
 
-            if (!_timing.IsFirstTimePredicted)
-                return;
-
             var key = $"flick-{layerKey}";
             if (HasRunningAnimation(uid, component, key))
-                Stop(uid, component, key);
+                return;
+
+            if (sprite.LayerGetActualRSI(layerKey) is not { } rsi || !rsi.TryGetState(stateId, out var state))
+                return;
+            var layerId = sprite.LayerMapGet(layerKey);
+            var oldState = sprite.LayerGetState(layerId);
 
             var animation = new Animation
             {
@@ -70,7 +72,8 @@ namespace Robust.Client.GameObjects
                         LayerKey = layerKey,
                         KeyFrames =
                         {
-                            new AnimationTrackSpriteFlick.KeyFrame(new RSI.StateId(stateId), 0f)
+                            new AnimationTrackSpriteFlick.KeyFrame(new RSI.StateId(stateId), 0f),
+                            new AnimationTrackSpriteFlick.KeyFrame(oldState, state.TotalDelay),
                         },
                     }
                 }

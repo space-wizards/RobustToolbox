@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
+using Arch.Core;
+using Arch.Core.Utils;
 using Robust.Shared.Collections;
 using Robust.Shared.GameStates;
 
@@ -21,6 +23,11 @@ public sealed class ComponentRegistration
     public string Name { get; }
 
     public CompIdx Idx { get; }
+
+    /// <summary>
+    /// Arch internal type.
+    /// </summary>
+    internal ComponentType ArchType;
 
     /// <summary>
     /// If this is true, the component will not be saved when saving a map/grid.
@@ -55,6 +62,7 @@ public sealed class ComponentRegistration
         Type = type;
         Idx = idx;
         Unsaved = unsaved;
+        ArchType = ComponentRegistry.Add(type);
     }
 
     public override string ToString()

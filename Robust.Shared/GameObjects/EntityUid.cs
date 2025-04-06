@@ -33,7 +33,7 @@ namespace Robust.Shared.GameObjects
         public static readonly EntityUid FirstUid = new(0 + ArchUidOffset, 1 + ArchVersionOffset);
 
         internal const int ArchUidOffset = 1;
-        internal const int ArchVersionOffset = 1;
+        internal const int ArchVersionOffset = 0;
 
         public EntityUid()
         {

@@ -269,7 +269,7 @@ namespace Robust.Client.Player
 
                 // Check if the data is actually different
                 if (session.Name == state.Name
-                    &&session.DisplayName == state.DisplayName
+                    && session.DisplayName == state.DisplayName
                     && session.Status == state.Status
                     && session.AttachedEntity == controlled)
                 {

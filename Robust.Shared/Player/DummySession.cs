@@ -19,7 +19,7 @@ internal sealed class DummySession : ICommonSessionInternal
     public SessionStatus Status { get; set; } = SessionStatus.Connecting;
     public NetUserId UserId => UserData.UserId;
     public string Name  => UserData.UserName;
-    public string DisplayName { get; set; } =  string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
 
     public short Ping { get; set; }
 
@@ -75,7 +75,7 @@ internal sealed class DummySession : ICommonSessionInternal
 
     public void SetDisplayName(string? name)
     {
-        throw new NotSupportedException();
+        DisplayName = name ?? string.Empty;
     }
 
     public void SetChannel(INetChannel channel)

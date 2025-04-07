@@ -889,14 +889,14 @@ namespace Robust.Shared.GameObjects
             _eventBus.OnEntityAdded(uid);
 
             // add the required MetaDataComponent directly.
-            AddComponentInternal(uid, metadata, _metaReg, skipInit: true, metadata);
+            AddComponentInternal(uid, metadata, _metaReg, skipInit: true, overwrite: false, metadata);
 
             // allocate the required TransformComponent
             xform = Unsafe.As<TransformComponent>(_componentFactory.GetComponent(_xformReg));
 #pragma warning disable CS0618 // Type or member is obsolete
             xform.Owner = uid;
 #pragma warning restore CS0618 // Type or member is obsolete
-            AddComponentInternal(uid, xform, _xformReg, skipInit: true, metadata);
+            AddComponentInternal(uid, xform, _xformReg, skipInit: true, overwrite: false, metadata);
 
             return uid;
         }

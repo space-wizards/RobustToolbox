@@ -217,6 +217,7 @@ namespace Robust.Shared.Prototypes
             var ctx = context as ISerializationContext;
             using var compTypes = new PooledList<ComponentType>();
             using var addComps = new PooledList<object>();
+            using var compRegs = new PooledList<ComponentRegistration>();
 
             if (prototype != null)
             {
@@ -234,6 +235,7 @@ namespace Robust.Shared.Prototypes
 
                     if (add)
                     {
+                        compRegs.Add(compReg);
                         compTypes.Add(compReg.Type);
                         addComps.Add(comp);
                     }
@@ -263,6 +265,7 @@ namespace Robust.Shared.Prototypes
 
                     if (add)
                     {
+                        compRegs.Add(compReg);
                         compTypes.Add(compReg.Type);
                         addComps.Add(comp);
                     }
@@ -274,9 +277,11 @@ namespace Robust.Shared.Prototypes
             {
                 entityManager.AddComponentRange(ent.Owner, compTypes);
 
-                foreach (var comp in addComps)
+                for (var i = 0; i < addComps.Count; i++)
                 {
-                    entityManager.AddComponent(ent.Owner, (IComponent) comp, ent.Comp);
+                    var comp = addComps[i];
+                    var oldArc = entityManager._world.GetArchetype(ent.Owner);
+                    entityManager.AddComponentInternal(ent.Owner, (IComponent) comp, compRegs[i], skipInit: false, overwrite: false, ent.Comp);
                 }
             }
         }

@@ -18,7 +18,7 @@ public partial class EntityManager
      * - Our invalid EntityUid is different to arch's because we treat "default" (i.e. uid of 0,0) as the bad one so we can easily know if an entity is bad.
      */
 
-    private World _world = default!;
+    internal World _world = default!;
 
     private static readonly ComponentType[] DefaultArchetype = new ComponentType[]
     {
@@ -52,7 +52,7 @@ public partial class EntityManager
         var sw = new Stopwatch();
         sw.Start();
         var arc = _world.Archetypes.Count;
-        // _world.TrimExcess();
+        _world.TrimExcess();
         arc -= _world.Archetypes.Count;
         sw.Stop();
         _sawmill.Debug($"Trimming {arc} archetypes took {sw.Elapsed.TotalMilliseconds} milliseconds");

@@ -25,7 +25,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     An Invalid entity UID you can compare against.
         /// </summary>
-        public static readonly EntityUid Invalid = new(-1 + ArchUidOffset, -1 + ArchVersionOffset);
+        public static readonly EntityUid Invalid = new(0, 0);
 
         /// <summary>
         ///     The first entity UID the entityManager should use when the manager is initialized.

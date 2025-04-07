@@ -12,6 +12,12 @@ namespace Robust.Shared.GameObjects;
 
 public partial class EntityManager
 {
+    /*
+     * Okay this is just a thoughts dump where you may be asking "why blank"
+     * - We do null checks for components because bulk add / remove changes leave null slots on entities where we may be running other operations in the meantime.
+     * - Our invalid EntityUid is different to arch's because we treat "default" (i.e. uid of 0,0) as the bad one so we can easily know if an entity is bad.
+     */
+
     private World _world = default!;
 
     private static readonly ComponentType[] DefaultArchetype = new ComponentType[]

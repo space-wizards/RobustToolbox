@@ -1352,39 +1352,51 @@ namespace Robust.Client.GameStates
                 // the entity. most notably, all entities will have been ejected from their containers.
                 using var addTypes = new PooledList<ComponentType>();
                 using var addComps = new PooledList<IComponent>();
+                using var compRegs = new PooledList<ComponentRegistration>();
 
                 foreach (var (id, state) in _processor.GetLastServerStates(data.NetEntity))
                 {
                     if (!data.Meta.NetComponents.TryGetValue(id, out var comp))
                     {
-                        comp = _compFactory.GetComponent(id);
-                        addComps.Add(_compFactory.GetComponent(id));
-                        addTypes.Add(comp.GetType());
+                        var compReg = _compFactory.GetRegistration(id);
+                        comp = _compFactory.GetComponent(compReg);
+                        compRegs.Add(compReg);
+                        addComps.Add(comp);
+                        addTypes.Add(compReg.ArchType);
                     }
 
                     _compStateWork[id] = (comp, state, null);
                 }
 
-                // Run the archetype change once.
-                _entities.AddComponentRange(data.Uid, addTypes);
-
-                foreach (var comp in addComps)
+                if (addTypes.Count > 0)
                 {
-                    _entities.AddComponent(data.Uid, comp, metadata: data.Meta);
+                    // Run the archetype change once.
+                    _entities.AddComponentRange(data.Uid, addTypes);
+
+                    for (var i = 0; i < addComps.Count; i++)
+                    {
+                        var comp = addComps[i];
+                        var compReg = compRegs[i];
+                        // Need to overwrite because 1 comp may suddenly add a bunch more comps
+                        _entities.AddComponentInternal(data.Uid, comp, compReg, skipInit: false, overwrite: true, metadata: data.Meta);
+                    }
                 }
             }
             else if (data.CurState != null)
             {
                 using var addTypes = new PooledList<ComponentType>();
                 using var addComps = new PooledList<IComponent>();
+                using var compRegs = new PooledList<ComponentRegistration>();
 
                 foreach (var compChange in data.CurState.ComponentChanges.Span)
                 {
                     if (!data.Meta.NetComponents.TryGetValue(compChange.NetID, out var comp))
                     {
-                        comp = _compFactory.GetComponent(compChange.NetID);
+                        var compReg = _compFactory.GetRegistration(compChange.NetID);
+                        comp = _compFactory.GetComponent(compReg);
+                        compRegs.Add(compReg);
                         addComps.Add(comp);
-                        addTypes.Add(comp.GetType());
+                        addTypes.Add(compReg.ArchType);
                     }
                     else if (compChange.LastModifiedTick <= data.LastApplied && data.LastApplied != GameTick.Zero)
                     {
@@ -1394,12 +1406,18 @@ namespace Robust.Client.GameStates
                     _compStateWork[compChange.NetID] = (comp, compChange.State, null);
                 }
 
-                // Run the archetype change once.
-                _entities.AddComponentRange(data.Uid, addTypes);
-
-                foreach (var comp in addComps)
+                if (addTypes.Count > 0)
                 {
-                    _entities.AddComponent(data.Uid, comp, metadata: data.Meta);
+                    // Run the archetype change once.
+                    _entities.AddComponentRange(data.Uid, addTypes);
+
+                    for (var i = 0; i < addComps.Count; i++)
+                    {
+                        var comp = addComps[i];
+                        var compReg = compRegs[i];
+                        // Need to overwrite because 1 comp may suddenly add a bunch more comps
+                        _entities.AddComponentInternal(data.Uid, comp, compReg, skipInit: false, overwrite: true, metadata: data.Meta);
+                    }
                 }
             }
 

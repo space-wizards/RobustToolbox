@@ -170,6 +170,7 @@ namespace Robust.Shared.GameObjects
                 {
                     var comp = _componentFactory.GetComponent(reg);
                     _serManager.CopyTo(entry.Component, ref comp, notNullableOverride: true);
+                    comp.Owner = target;
                     AddComponentInternal(target, comp, reg, skipInit: false, overwrite: true, metadata: metadata);
                 }
                 else
@@ -181,6 +182,7 @@ namespace Robust.Shared.GameObjects
 
                     var comp = _componentFactory.GetComponent(reg);
                     _serManager.CopyTo(entry.Component, ref comp, notNullableOverride: true);
+                    comp.Owner = target;
                     AddComponentInternal(target, comp, reg, skipInit: false, overwrite: false, metadata: metadata);
                 }
             }

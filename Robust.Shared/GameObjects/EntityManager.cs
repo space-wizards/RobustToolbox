@@ -373,7 +373,7 @@ namespace Robust.Shared.GameObjects
         public IEnumerable<EntityUid> GetEntities()
         {
             using var ents = new PooledList<Entity>(_world.Size);
-            _world.GetEntities(_archMetaQuery, ents.Span);
+            _world.GetEntities(_archMetaQuery, ents);
 
             foreach (var entity in ents)
             {

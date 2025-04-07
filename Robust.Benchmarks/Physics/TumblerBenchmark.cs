@@ -45,6 +45,8 @@ public class PhysicsTumblerBenchmark
 
         if (entManager.TryGetComponent(mapUid, out BroadphaseComponent? mapBroadphase))
             entManager.System<SharedBroadphaseSystem>().RebuildBottomUp(mapBroadphase);
+
+        entManager.CleanupArch();
     }
 
     [Benchmark]

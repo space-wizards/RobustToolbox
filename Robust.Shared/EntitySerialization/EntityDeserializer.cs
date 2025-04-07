@@ -4,6 +4,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.Serialization;
+using Arch.Core.Utils;
+using Collections.Pooled;
 using JetBrains.Annotations;
 using Robust.Shared.EntitySerialization.Components;
 using Robust.Shared.EntitySerialization.Systems;
@@ -23,6 +25,7 @@ using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using ComponentRegistry = Arch.Core.Utils.ComponentRegistry;
 
 namespace Robust.Shared.EntitySerialization;
 
@@ -566,6 +569,8 @@ public sealed class EntityDeserializer :
         _log.Debug($"Loaded {Entities.Count} entities in {_stopwatch.Elapsed}");
     }
 
+    private Dictionary<string, EntityPrototype.ComponentRegistryEntry> _loadComps = new();
+
     private void LoadEntity(
         EntityUid uid,
         MetaDataComponent meta,
@@ -599,10 +604,15 @@ public sealed class EntityDeserializer :
             }
         }
 
+        using var compRegs = new PooledList<ComponentRegistration>();
+        using var compTypes = new PooledList<ComponentType>();
+
         // Iterate over the prototype's components, and add them to the entity unless the entity has data relevant to
         // that component from the map file
         if (proto != null)
         {
+            _loadComps.Clear();
+
             foreach (var (name, entry) in proto.Components)
             {
                 if (missingComps != null && missingComps.Contains(name))
@@ -611,13 +621,25 @@ public sealed class EntityDeserializer :
                 if (_components.ContainsKey(name))
                     continue;
 
-                CurrentComponent = name;
+                _loadComps.Add(name, entry);
                 var compReg = _factory.GetRegistration(name);
+                compRegs.Add(compReg);
+                compTypes.Add(compReg.ArchType);
+            }
 
-                if (!EntMan.TryGetComponent(uid, compReg.Idx, out var component))
+            EntMan._world.AddRange(uid, compTypes.Span);
+
+            var idx = 0;
+            foreach (var (name, entry) in _loadComps)
+            {
+                CurrentComponent = name;
+                var compReg = compRegs[idx++];
+
+                if (!EntMan.TryGetComponent(uid, compReg.ArchType, out var component))
                 {
                     var newComponent = _factory.GetComponent(compReg);
-                    EntMan.AddComponent(uid, newComponent);
+                    newComponent.Owner = uid;
+                    EntMan.AddComponentInternal(uid, newComponent, compReg, skipInit: false, overwrite: false, meta);
                     component = newComponent;
                 }
 
@@ -628,6 +650,11 @@ public sealed class EntityDeserializer :
             }
         }
 
+        _loadComps.Clear();
+        compRegs.Clear();
+        compTypes.Clear();
+
+        // TODO: Avoid archetype changes
         // Finally, copy over the entity specific information
         foreach (var (name, data) in _components)
         {

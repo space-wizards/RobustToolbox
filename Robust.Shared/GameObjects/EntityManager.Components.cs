@@ -326,8 +326,7 @@ namespace Robust.Shared.GameObjects
                 _world.Add(uid, (object)component);
             else
             {
-                // Okay so technically it may have an existing one not null but pointing to a stale component
-                // hence just set it and act casual.
+                DebugTools.Assert(!_world.TryGet(uid, reg.ArchType, out var existing) || existing == null);
                 _world.Set(uid, (object)component);
             }
 

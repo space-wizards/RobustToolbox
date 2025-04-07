@@ -114,7 +114,7 @@ namespace Robust.Shared.Physics.Systems
             PhysMapQuery = GetEntityQuery<PhysicsMapComponent>();
             MapQuery = GetEntityQuery<MapComponent>();
 
-            SubscribeLocalEvent<GridInitializeEvent>(OnGridInitialize);
+            SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
             SubscribeLocalEvent<CollisionChangeEvent>(OnCollisionChange);
             SubscribeLocalEvent<PhysicsComponent, EntGotRemovedFromContainerMessage>(HandleContainerRemoved);
             SubscribeLocalEvent<PhysicsMapComponent, ComponentInit>(HandlePhysicsMapInit);
@@ -254,7 +254,7 @@ namespace Robust.Shared.Physics.Systems
             }
         }
 
-        private void OnGridInitialize(GridInitializeEvent ev)
+        private void OnGridAdd(GridAddEvent ev)
         {
             var guid = ev.EntityUid;
 

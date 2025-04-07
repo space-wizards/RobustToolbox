@@ -113,9 +113,6 @@ internal partial class MapManager
 
         var grid = EntityManager.AddComponent<MapGridComponent>(gridEnt);
         grid.ChunkSize = chunkSize;
-        EntityManager.AddComponent<PhysicsComponent>(gridEnt);
-        EntityManager.AddComponent<FixturesComponent>(gridEnt);
-        EntityManager.AddComponent<BroadphaseComponent>(gridEnt);
 
         _sawmill.Debug($"Binding new grid {gridEnt}");
 

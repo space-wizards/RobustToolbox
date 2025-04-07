@@ -299,8 +299,6 @@ namespace Robust.Shared.GameObjects
         {
             ThreadCheck();
 
-            DebugTools.AssertOwner(uid, component);
-
             // We can't use typeof(T) here in case T is just Component
             DebugTools.Assert(component is MetaDataComponent ||
                               (metadata ?? MetaQuery.GetComponent(uid)).EntityLifeStage < EntityLifeStage.Terminating,
@@ -326,7 +324,8 @@ namespace Robust.Shared.GameObjects
                 _world.Add(uid, (object)component);
             else
             {
-                DebugTools.Assert(!_world.TryGet(uid, reg.ArchType, out var existing) || existing == null);
+                // Overwrite doesn't trigger archetype change so the ref is stale, but we'll bulldoze it anyway here so doesn't matter if it's not-null.
+                DebugTools.Assert(overwrite || (!_world.TryGet(uid, reg.ArchType, out var existing) || existing == null));
                 _world.Set(uid, (object)component);
             }
 
@@ -381,12 +380,7 @@ namespace Robust.Shared.GameObjects
 
         internal void AddComponentInternal<T>(EntityUid uid, T component, ComponentRegistration reg, bool skipInit, bool overwrite = false, MetaDataComponent? metadata = null) where T : IComponent
         {
-            if (uid != component.Owner)
-            {
-                DebugTools.Assert(!component.Owner.Valid);
-                component.Owner = uid;
-            }
-
+            DebugTools.AssertOwner(uid, component);
             AddComponentInternalOnly(uid, component, reg, overwrite: overwrite, metadata);
             AddComponentEvents(uid, component, reg, skipInit, metadata);
         }
@@ -574,6 +568,7 @@ namespace Robust.Shared.GameObjects
             MetaDataComponent? meta = null)
         {
             ThreadCheck();
+            DebugTools.AssertOwner(uid, component);
 
             if (component.Deleted)
             {

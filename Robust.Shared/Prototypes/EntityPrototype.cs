@@ -273,8 +273,6 @@ namespace Robust.Shared.Prototypes
             if (addComps.Count > 0)
             {
                 entityManager.AddComponentRange(ent.Owner, compTypes);
-                var world = entityManager.GetWorld();
-                world.SetRange(ent.Owner, addComps.Span);
 
                 foreach (var comp in addComps)
                 {

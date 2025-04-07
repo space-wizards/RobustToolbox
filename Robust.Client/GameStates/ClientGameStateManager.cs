@@ -1360,6 +1360,7 @@ namespace Robust.Client.GameStates
                     {
                         var compReg = _compFactory.GetRegistration(id);
                         comp = _compFactory.GetComponent(compReg);
+                        comp.Owner = data.Uid;
                         compRegs.Add(compReg);
                         addComps.Add(comp);
                         addTypes.Add(compReg.ArchType);
@@ -1394,6 +1395,7 @@ namespace Robust.Client.GameStates
                     {
                         var compReg = _compFactory.GetRegistration(compChange.NetID);
                         comp = _compFactory.GetComponent(compReg);
+                        comp.Owner = data.Uid;
                         compRegs.Add(compReg);
                         addComps.Add(comp);
                         addTypes.Add(compReg.ArchType);

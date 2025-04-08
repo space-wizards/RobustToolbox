@@ -101,7 +101,7 @@ public sealed class GridReparentVelocity_Test
 
     // Moves an object off of a moving grid, checks for conservation of linear velocity.
     [Test]
-    public async Task TestLinearVelocityOnlyMoveOffGrid()
+    public void TestLinearVelocityOnlyMoveOffGrid()
     {
         // Spawn our test object in the middle of the grid, ensure it has no damping.
         _objUid = SetupTestObject(new EntityCoordinates(_gridUid, 0.5f, 0.5f));
@@ -129,7 +129,7 @@ public sealed class GridReparentVelocity_Test
 
     [Test]
     // Moves an object onto a moving grid, checks for conservation of linear velocity.
-    public async Task TestLinearVelocityOnlyMoveOntoGrid()
+    public void TestLinearVelocityOnlyMoveOntoGrid()
     {
         // Spawn our test object 1 m off of the middle of the grid in both directions.
         _objUid = SetupTestObject(new EntityCoordinates(_mapUid, 1.5f, 1.5f));
@@ -157,7 +157,7 @@ public sealed class GridReparentVelocity_Test
 
     [Test]
     // Moves a rotating object off of a rotating grid, checks for conservation of angular velocity.
-    public async Task TestLinearAndAngularVelocityMoveOffGrid()
+    public void TestLinearAndAngularVelocityMoveOffGrid()
     {
         // Spawn our test object in the middle of the grid.
         _objUid = SetupTestObject(new EntityCoordinates(_gridUid, 0.5f, 0.5f));
@@ -190,7 +190,7 @@ public sealed class GridReparentVelocity_Test
 
     [Test]
     // Moves a rotating object onto a rotating grid, checks for conservation of angular velocity.
-    public async Task TestLinearAndAngularVelocityMoveOntoGrid()
+    public void TestLinearAndAngularVelocityMoveOntoGrid()
     {
         // Spawn our test object 1 m off of the middle of the grid in both directions.
         _objUid = SetupTestObject(new EntityCoordinates(_mapUid, 1.5f, 1.5f));

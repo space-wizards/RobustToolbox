@@ -195,7 +195,6 @@ namespace Robust.Client.ResourceManagement
             var deltaY = 0;
             Vector2i offset = default;
             int atlasRsiIndexStart = 0;
-            int atlasCount = 0;
             int filledPixels = 0;
             for (int i = 0; i < atlasList.Length; i++)
             {
@@ -223,7 +222,7 @@ namespace Robust.Client.ResourceManagement
                 }
 
                 deltaY = Math.Max(deltaY, rsi.AtlasSheet.Height);
-                rsiPositions[i] = (atlasCount, offset);
+                rsiPositions[i] = (finalMetaAtlases.Count, offset);
                 offset.X += rsi.AtlasSheet.Width;
                 filledPixels += rsi.AtlasSheet.Width * rsi.AtlasSheet.Height;
             }
@@ -308,7 +307,7 @@ namespace Robust.Client.ResourceManagement
             sawmill.Debug(
                 "Preloaded {CountLoaded} RSIs into {CountAtlas} Atlas(es?) ({CountNotAtlas} not atlassed, {CountErrored} errored) in {LoadTime}",
                 rsiList.Length,
-                atlasCount,
+                finalMetaAtlases.Count,
                 nonAtlasList.Length,
                 errors,
                 sw.Elapsed);

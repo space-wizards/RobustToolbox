@@ -149,7 +149,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
 
             if (IsReadOnlyDataField(type, fieldSymbol))
             {
-                TryGetModifierLocation(field, "readonly", out var location);
+                TryGetModifierLocation(field, SyntaxKind.ReadOnlyKeyword, out var location);
                 context.ReportDiagnostic(Diagnostic.Create(DataFieldWritableRule, location, fieldSymbol.Name, type.Name));
             }
 
@@ -287,11 +287,11 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         return false;
     }
 
-    private static bool TryGetModifierLocation(MemberDeclarationSyntax syntax, string modifierName, out Location location)
+    private static bool TryGetModifierLocation(MemberDeclarationSyntax syntax, SyntaxKind modifierKind, out Location location)
     {
         foreach (var modifier in syntax.Modifiers)
         {
-            if (modifier.ValueText == modifierName)
+            if (modifier.IsKind(modifierKind))
             {
                 location = modifier.GetLocation();
                 return true;

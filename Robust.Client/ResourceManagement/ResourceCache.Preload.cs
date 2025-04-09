@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -180,61 +181,89 @@ namespace Robust.Client.ResourceManagement
 
             // Each RSI sub atlas has a different size.
             // Even if we iterate through them once to estimate total area, I have NFI how to sanely estimate an optimal square-texture size.
-            // So fuck it, just default to letting it be as large as it needs to and crop it as needed?
+            // So fuck it, just default to adding them in from smallest to largest.
             var maxSize = Math.Min(GL.GetInteger(GetPName.MaxTextureSize), _configurationManager.GetCVar(CVars.ResRSIAtlasSize));
-            var sheet = new Image<Rgba32>(maxSize, maxSize);
 
+            // (final meta atlas index, offset)
+            var rsiPositions = new (int, Vector2i)[atlasList.Length];
+
+            // (start rsi index, end rsi index, final meta atlas reference).
+            var finalMetaAtlases = new List<(int, int, Image<Rgba32>)>();
+
+            // First calculate the position of all sub atlases in the actual atlases.
+            // This allows us to get the correct size of the atlases before allocating them.
             var deltaY = 0;
             Vector2i offset = default;
-            int finalized = -1;
+            int atlasRsiIndexStart = 0;
             int atlasCount = 0;
+            int filledPixels = 0;
             for (int i = 0; i < atlasList.Length; i++)
             {
                 var rsi = atlasList[i];
                 if (rsi.Bad)
                     continue;
 
-                DebugTools.Assert(rsi.AtlasSheet.Width < sheet.Width);
-                DebugTools.Assert(rsi.AtlasSheet.Height < sheet.Height);
+                DebugTools.Assert(rsi.AtlasSheet.Width < maxSize);
+                DebugTools.Assert(rsi.AtlasSheet.Height < maxSize);
 
-                if (offset.X + rsi.AtlasSheet.Width > sheet.Width)
+                if (offset.X + rsi.AtlasSheet.Width > maxSize)
                 {
                     offset.X = 0;
                     offset.Y += deltaY;
                 }
 
-                if (offset.Y + rsi.AtlasSheet.Height > sheet.Height)
+                // Make a new atlas - there isn't enough room on only one.
+                if (offset.Y + rsi.AtlasSheet.Height > maxSize)
                 {
-                    FinalizeMetaAtlas(i-1, sheet);
-                    sheet = new Image<Rgba32>(maxSize, maxSize);
+                    AddAtlas(atlasRsiIndexStart, i);
                     deltaY = 0;
                     offset = default;
+                    atlasRsiIndexStart = i + 1;
+                    filledPixels = 0;
                 }
 
                 deltaY = Math.Max(deltaY, rsi.AtlasSheet.Height);
-                var box = new UIBox2i(0, 0, rsi.AtlasSheet.Width, rsi.AtlasSheet.Height);
-                rsi.AtlasSheet.Blit(box, sheet, offset);
-                rsi.AtlasOffset = offset;
+                rsiPositions[i] = (atlasCount, offset);
                 offset.X += rsi.AtlasSheet.Width;
+                filledPixels += rsi.AtlasSheet.Width * rsi.AtlasSheet.Height;
             }
 
-            var height = offset.Y + deltaY;
-            var croppedSheet = new Image<Rgba32>(maxSize, height);
-            sheet.Blit(new UIBox2i(0, 0, maxSize, height), croppedSheet, default);
-            FinalizeMetaAtlas(atlasList.Length - 1, croppedSheet);
+            AddAtlas(atlasRsiIndexStart, atlasList.Length-1);
 
-            void FinalizeMetaAtlas(int toIndex, Image<Rgba32> sheet)
+            // Load the RSI atlases into their respective final atlas.
+            for (var i = 0; i < atlasList.Length; i++)
             {
-                var fromIndex = finalized + 1;
+                var rsi = atlasList[i];
+                var atlasIndex = rsiPositions[i].Item1;
+                var newOff = rsiPositions[i].Item2;
+                var box = new UIBox2i(0, 0, rsi.AtlasSheet.Width, rsi.AtlasSheet.Height);
+
+                rsi.AtlasSheet.Blit(box, finalMetaAtlases[atlasIndex].Item3, newOff);
+                rsi.AtlasOffset = newOff;
+            }
+
+            foreach (var atlas in finalMetaAtlases)
+            {
+                FinalizeMetaAtlas(atlas.Item1, atlas.Item2, atlas.Item3);
+            }
+
+            void FinalizeMetaAtlas(int fromIndex, int toIndex, Image<Rgba32> sheet)
+            {
                 var atlas = Clyde.LoadTextureFromImage(sheet, $"Meta atlas {fromIndex}-{toIndex}");
                 for (int i = fromIndex; i <= toIndex; i++)
                 {
                     var rsi = atlasList[i];
                     rsi.AtlasTexture = atlas;
                 }
+            }
 
-                finalized = toIndex;
-                atlasCount++;
+            void AddAtlas(int fromIndex, int toIndex)
+            {
+                var width = maxSize;
+                var height = offset.Y + deltaY;
+
+                finalMetaAtlases.Add((fromIndex, toIndex, new Image<Rgba32>(width, height)));
+                sawmill.Info($"Atlas {finalMetaAtlases.Count-1} - Cropped utilization: {(float)filledPixels / (maxSize * height):P2}, fill percentage: {(float)height / maxSize:P2}");
             }
 
             Parallel.ForEach(rsiList, data =>

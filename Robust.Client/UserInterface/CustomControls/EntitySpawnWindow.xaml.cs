@@ -59,6 +59,7 @@ namespace Robust.Client.UserInterface.CustomControls
             }
 
             button.EntityLabel.Text = entityLabelText;
+            button.ActualButton.ToolTip = prototype.Description;
 
             if (prototype == SelectedPrototype)
             {

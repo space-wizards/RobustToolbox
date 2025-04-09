@@ -35,13 +35,20 @@ public class Generator : IIncrementalGenerator
             .Where(static type => type != null);
 
         initContext.RegisterSourceOutput(
-            dataDefinitions,
-            static (sourceContext, source) =>
+            dataDefinitions.Collect(),
+            static (sourceContext, sources) =>
             {
-                // TODO: deduplicate based on name?
-                var (name, code) = source!.Value;
+                var done = new HashSet<string>();
 
-                sourceContext.AddSource(name, code);
+                foreach (var source in sources)
+                {
+                    var (name, code) = source!.Value;
+
+                    if (!done.Add(name))
+                        continue;
+
+                    sourceContext.AddSource(name, code);
+                }
             }
         );
     }

@@ -71,20 +71,10 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             // First, we measure non-stretching children.
-            var stretching = new List<Control>();
-            float totalStretchRatio = 0;
             foreach (var child in Children)
             {
                 if (!child.Visible)
                     continue;
-
-                var stretch = Vertical ? child.VerticalExpand : child.HorizontalExpand;
-                if (stretch)
-                {
-                    totalStretchRatio += child.SizeFlagsStretchRatio;
-                    stretching.Add(child);
-                    continue;
-                }
 
                 child.Measure(availableSize);
 
@@ -100,35 +90,6 @@ namespace Robust.Client.UserInterface.Controls
                     desiredSize.Y = Math.Max(desiredSize.Y, child.DesiredSize.Y);
                     availableSize.X = Math.Max(0, availableSize.X - child.DesiredSize.X);
                 }
-            }
-
-            if (stretching.Count == 0)
-                return desiredSize;
-
-            // Then we measure stretching children
-            foreach (var child in stretching)
-            {
-                var size = availableSize;
-                if (Vertical)
-                {
-                    size.Y *= child.SizeFlagsStretchRatio / totalStretchRatio;
-                    child.Measure(size);
-                    desiredSize.Y += child.DesiredSize.Y;
-                    desiredSize.X = Math.Max(desiredSize.X, child.DesiredSize.X);
-                }
-                else
-                {
-                    size.X *= child.SizeFlagsStretchRatio / totalStretchRatio;
-                    child.Measure(size);
-                    desiredSize.X += child.DesiredSize.X;
-                    desiredSize.Y = Math.Max(desiredSize.Y, child.DesiredSize.Y);
-                }
-
-                // TODO Maybe make BoxContainer.MeasureOverride more rigorous.
-                // This should check if size < desired size. If it is, treat child as non-stretching (see the code in
-                // ArrangeOverride). This requires remeasuring all stretching controls + the control that just became
-                // non-stretching. But the re-measured controls might then become smaller (e.g. rich text wrapping),
-                // leading to a recursion problem.
             }
 
             return desiredSize;

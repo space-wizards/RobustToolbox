@@ -21,12 +21,9 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Shapes;
@@ -46,7 +43,7 @@ internal ref struct DistanceProxy
 
     // GJK using Voronoi regions (Christer Ericson) and Barycentric coordinates.
 
-    internal DistanceProxy(Vector2[] vertices, float radius)
+    internal DistanceProxy(ReadOnlySpan<Vector2> vertices, float radius)
     {
         Vertices = vertices;
         Radius = radius;
@@ -71,8 +68,17 @@ internal ref struct DistanceProxy
             case ShapeType.Polygon:
                 if (shape is Polygon poly)
                 {
-                    Vertices = poly.Vertices.AsSpan()[..poly.VertexCount];
+                    Span<Vector2> verts = new Vector2[poly.VertexCount];
+                    poly._vertices.AsSpan[..poly.VertexCount].CopyTo(verts);
+                    Vertices = verts;
                     Radius = poly.Radius;
+                }
+                else if (shape is SlimPolygon fast)
+                {
+                    Span<Vector2> verts = new Vector2[fast.VertexCount];
+                    fast._vertices.AsSpan[..fast.VertexCount].CopyTo(verts);
+                    Vertices = verts;
+                    Radius = fast.Radius;
                 }
                 else
                 {
@@ -151,7 +157,7 @@ internal ref struct DistanceProxy
         return Vertices[bestIndex];
     }
 
-    internal static DistanceProxy MakeProxy(Vector2[] vertices, int count, float radius )
+    internal static DistanceProxy MakeProxy(ReadOnlySpan<Vector2> vertices, int count, float radius )
     {
         count = Math.Min(count, PhysicsConstants.MaxPolygonVertices);
         var proxy = new DistanceProxy(vertices[..count], radius);

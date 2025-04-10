@@ -117,7 +117,7 @@ namespace Robust.Client.GameObjects
                 base.DirtyField(uid, comp, fieldName, metadata);
         }
 
-        public override void DirtyFields<T>(EntityUid uid, T comp, MetaDataComponent? meta, params ReadOnlySpan<string> fields)
+        public override void DirtyFields<T>(EntityUid uid, T comp, MetaDataComponent? meta, params string[] fields)
         {
             // TODO Prediction
             // does the client actually need to dirty the field?

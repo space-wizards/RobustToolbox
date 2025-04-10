@@ -490,7 +490,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
             {
                 var bounds = fixture.Shape.ComputeAABB(broadphaseTransform, i);
                 var proxy = fixture.Proxies[i];
-                tree.MoveProxy(proxy.ProxyId, bounds, Vector2.Zero);
+                tree.MoveProxy(proxy.ProxyId, bounds);
                 proxy.AABB = bounds;
                 moveBuffer[proxy] = fixture.Shape.ComputeAABB(mapTransform, i);
             }

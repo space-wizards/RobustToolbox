@@ -67,7 +67,6 @@ public abstract partial class SharedPhysicsSystem
             velocityConstraint.TangentSpeed = contact.TangentSpeed;
             velocityConstraint.IndexA = bodyA.IslandIndex[island.Index];
             velocityConstraint.IndexB = bodyB.IslandIndex[island.Index];
-            Array.Resize(ref velocityConstraint.Points, 2);
             // Don't need to reset point data as it all gets set below.
 
             var (invMassA, invMassB) = GetInvMass(bodyA, bodyB);
@@ -87,7 +86,6 @@ public abstract partial class SharedPhysicsSystem
             (positionConstraint.InvMassA, positionConstraint.InvMassB) = (invMassA, invMassB);
             positionConstraint.LocalCenterA = bodyA.LocalCenter;
             positionConstraint.LocalCenterB = bodyB.LocalCenter;
-            Array.Resize(ref positionConstraint.LocalPoints, 2);
 
             positionConstraint.InvIA = bodyA.InvI;
             positionConstraint.InvIB = bodyB.InvI;
@@ -97,11 +95,14 @@ public abstract partial class SharedPhysicsSystem
             positionConstraint.RadiusA = radiusA;
             positionConstraint.RadiusB = radiusB;
             positionConstraint.Type = manifold.Type;
+            var points = manifold.Points.AsSpan;
+            var posPoints = positionConstraint.LocalPoints.AsSpan;
+            var velPoints = velocityConstraint.Points.AsSpan;
 
             for (var j = 0; j < pointCount; ++j)
             {
-                var contactPoint = manifold.Points[j];
-                ref var constraintPoint = ref velocityConstraint.Points[j];
+                var contactPoint = points[j];
+                ref var constraintPoint = ref velPoints[j];
 
                 if (_warmStarting)
                 {
@@ -120,7 +121,7 @@ public abstract partial class SharedPhysicsSystem
                 constraintPoint.TangentMass = 0.0f;
                 constraintPoint.VelocityBias = 0.0f;
 
-                positionConstraint.LocalPoints[j] = contactPoint.LocalPoint;
+                posPoints[j] = contactPoint.LocalPoint;
             }
         }
     }
@@ -220,10 +221,11 @@ public abstract partial class SharedPhysicsSystem
             velocityConstraint.Normal = normal;
 
             int pointCount = velocityConstraint.PointCount;
+            var velPoints = velocityConstraint.Points.AsSpan;
 
             for (int j = 0; j < pointCount; ++j)
             {
-                ref var vcp = ref velocityConstraint.Points[j];
+                ref var vcp = ref velPoints[j];
 
                 vcp.RelativeVelocityA = points[j] - centerA;
                 vcp.RelativeVelocityB = points[j] - centerB;
@@ -256,8 +258,8 @@ public abstract partial class SharedPhysicsSystem
             // If we have two points, then prepare the block solver.
             if (velocityConstraint.PointCount == 2)
             {
-                var vcp1 = velocityConstraint.Points[0];
-                var vcp2 = velocityConstraint.Points[1];
+                var vcp1 = velocityConstraint.Points._00;
+                var vcp2 = velocityConstraint.Points._01;
 
                 var rn1A = Vector2Helpers.Cross(vcp1.RelativeVelocityA, velocityConstraint.Normal);
                 var rn1B = Vector2Helpers.Cross(vcp1.RelativeVelocityB, velocityConstraint.Normal);
@@ -299,6 +301,7 @@ public abstract partial class SharedPhysicsSystem
         for (var i = 0; i < island.Contacts.Count; ++i)
         {
             var velocityConstraint = velocityConstraints[i];
+            var velPoints = velocityConstraint.Points.AsSpan;
 
             var indexA = velocityConstraint.IndexA;
             var indexB = velocityConstraint.IndexB;
@@ -318,7 +321,7 @@ public abstract partial class SharedPhysicsSystem
 
             for (var j = 0; j < pointCount; ++j)
             {
-                var constraintPoint = velocityConstraint.Points[j];
+                var constraintPoint = velPoints[j];
                 var P = normal * constraintPoint.NormalImpulse + tangent * constraintPoint.TangentImpulse;
                 angVelocityA -= invIA * Vector2Helpers.Cross(constraintPoint.RelativeVelocityA, P);
                 linVelocityA -= P * invMassA;
@@ -386,12 +389,13 @@ public abstract partial class SharedPhysicsSystem
             var friction = velocityConstraint.Friction;
 
             DebugTools.Assert(pointCount is 1 or 2);
+            var velPoints = velocityConstraint.Points.AsSpan;
 
             // Solve tangent constraints first because non-penetration is more important
             // than friction.
             for (var j = 0; j < pointCount; ++j)
             {
-                ref var velConstraintPoint = ref velocityConstraint.Points[j];
+                ref var velConstraintPoint = ref velPoints[j];
 
                 // Relative velocity at contact
                 var dv = vB + Vector2Helpers.Cross(wB, velConstraintPoint.RelativeVelocityB) - vA - Vector2Helpers.Cross(wA, velConstraintPoint.RelativeVelocityA);
@@ -419,7 +423,7 @@ public abstract partial class SharedPhysicsSystem
             // Solve normal constraints
             if (velocityConstraint.PointCount == 1)
             {
-                ref var vcp = ref velocityConstraint.Points[0];
+                ref var vcp = ref velocityConstraint.Points._00;
 
                 // Relative velocity at contact
                 Vector2 dv = vB + Vector2Helpers.Cross(wB, vcp.RelativeVelocityB) - vA - Vector2Helpers.Cross(wA, vcp.RelativeVelocityA);
@@ -476,8 +480,8 @@ public abstract partial class SharedPhysicsSystem
                 //    = A * x + b'
                 // b' = b - A * a;
 
-                ref var cp1 = ref velocityConstraint.Points[0];
-                ref var cp2 = ref velocityConstraint.Points[1];
+                ref var cp1 = ref velocityConstraint.Points._00;
+                ref var cp2 = ref velocityConstraint.Points._01;
 
                 Vector2 a = new Vector2(cp1.NormalImpulse, cp2.NormalImpulse);
                 DebugTools.Assert(a.X >= 0.0f && a.Y >= 0.0f);
@@ -643,14 +647,16 @@ public abstract partial class SharedPhysicsSystem
     {
         for (var i = 0; i < island.Contacts.Count; ++i)
         {
-            ContactVelocityConstraint velocityConstraint = velocityConstraints[i];
+            var velocityConstraint = velocityConstraints[i];
             ref var manifold = ref island.Contacts[velocityConstraint.ContactIndex].Manifold;
+            var manPoints = manifold.Points.AsSpan;
+            var velPoints = velocityConstraint.Points.AsSpan;
 
             for (var j = 0; j < velocityConstraint.PointCount; ++j)
             {
-                ref var point = ref manifold.Points[j];
-                point.NormalImpulse = velocityConstraint.Points[j].NormalImpulse;
-                point.TangentImpulse = velocityConstraint.Points[j].TangentImpulse;
+                ref var point = ref manPoints[j];
+                point.NormalImpulse = velPoints[j].NormalImpulse;
+                point.TangentImpulse = velPoints[j].TangentImpulse;
             }
         }
     }
@@ -794,7 +800,7 @@ public abstract partial class SharedPhysicsSystem
             {
                 normal = new Vector2(1.0f, 0.0f);
                 Vector2 pointA = Physics.Transform.Mul(xfA, manifold.LocalPoint);
-                Vector2 pointB = Physics.Transform.Mul(xfB, manifold.Points[0].LocalPoint);
+                Vector2 pointB = Physics.Transform.Mul(xfB, manifold.Points._00.LocalPoint);
 
                 if ((pointA - pointB).LengthSquared() > float.Epsilon * float.Epsilon)
                 {
@@ -812,10 +818,11 @@ public abstract partial class SharedPhysicsSystem
             {
                 normal = Physics.Transform.Mul(xfA.Quaternion2D, manifold.LocalNormal);
                 Vector2 planePoint = Physics.Transform.Mul(xfA, manifold.LocalPoint);
+                var manPoints = manifold.Points.AsSpan;
 
                 for (int i = 0; i < manifold.PointCount; ++i)
                 {
-                    Vector2 clipPoint = Physics.Transform.Mul(xfB, manifold.Points[i].LocalPoint);
+                    Vector2 clipPoint = Physics.Transform.Mul(xfB, manPoints[i].LocalPoint);
                     Vector2 cA = clipPoint + normal * (radiusA - Vector2.Dot(clipPoint - planePoint, normal));
                     Vector2 cB = clipPoint - normal * radiusB;
                     points[i] = (cA + cB) * 0.5f;
@@ -827,10 +834,11 @@ public abstract partial class SharedPhysicsSystem
             {
                 normal = Physics.Transform.Mul(xfB.Quaternion2D, manifold.LocalNormal);
                 Vector2 planePoint = Physics.Transform.Mul(xfB, manifold.LocalPoint);
+                var manPoints = manifold.Points.AsSpan;
 
                 for (int i = 0; i < manifold.PointCount; ++i)
                 {
-                    Vector2 clipPoint = Physics.Transform.Mul(xfA, manifold.Points[i].LocalPoint);
+                    Vector2 clipPoint = Physics.Transform.Mul(xfA, manPoints[i].LocalPoint);
                     Vector2 cB = clipPoint + normal * (radiusB - Vector2.Dot(clipPoint - planePoint, normal));
                     Vector2 cA = clipPoint - normal * radiusA;
                     points[i] = (cA + cB) * 0.5f;
@@ -863,7 +871,7 @@ public abstract partial class SharedPhysicsSystem
                 case ManifoldType.Circles:
                     {
                         Vector2 pointA = Physics.Transform.Mul(xfA, pc.LocalPoint);
-                        Vector2 pointB = Physics.Transform.Mul(xfB, pc.LocalPoints[0]);
+                        Vector2 pointB = Physics.Transform.Mul(xfB, pc.LocalPoints._00);
                         normal = pointB - pointA;
 
                         //FPE: Fix to handle zero normalization
@@ -877,10 +885,11 @@ public abstract partial class SharedPhysicsSystem
 
                 case ManifoldType.FaceA:
                     {
+                        var pcPoints = pc.LocalPoints.AsSpan;
                         normal = Physics.Transform.Mul(xfA.Quaternion2D, pc.LocalNormal);
                         Vector2 planePoint = Physics.Transform.Mul(xfA, pc.LocalPoint);
 
-                        Vector2 clipPoint = Physics.Transform.Mul(xfB, pc.LocalPoints[index]);
+                        Vector2 clipPoint = Physics.Transform.Mul(xfB, pcPoints[index]);
                         separation = Vector2.Dot(clipPoint - planePoint, normal) - pc.RadiusA - pc.RadiusB;
                         point = clipPoint;
                     }
@@ -888,10 +897,11 @@ public abstract partial class SharedPhysicsSystem
 
                 case ManifoldType.FaceB:
                     {
+                        var pcPoints = pc.LocalPoints.AsSpan;
                         normal = Physics.Transform.Mul(xfB.Quaternion2D, pc.LocalNormal);
                         Vector2 planePoint = Physics.Transform.Mul(xfB, pc.LocalPoint);
 
-                        Vector2 clipPoint = Physics.Transform.Mul(xfA, pc.LocalPoints[index]);
+                        Vector2 clipPoint = Physics.Transform.Mul(xfA, pcPoints[index]);
                         separation = Vector2.Dot(clipPoint - planePoint, normal) - pc.RadiusA - pc.RadiusB;
                         point = clipPoint;
 

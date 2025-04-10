@@ -50,7 +50,7 @@ public sealed class TrySpawnNextToTest : EntitySpawnHelpersTest
             Assert.That(EntMan.EntityExists(uid), Is.False);
         });
 
-        await Server.WaitPost(() =>MapMan.DeleteMap(MapId));
+        await Server.WaitPost(() => MapSys.DeleteMap(MapId));
         Server.Dispose();
     }
 }

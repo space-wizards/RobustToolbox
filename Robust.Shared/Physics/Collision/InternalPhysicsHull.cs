@@ -1,6 +1,5 @@
 using System;
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -9,21 +8,23 @@ namespace Robust.Shared.Physics;
 /// <summary>
 /// Convex hull used for poly collision.
 /// </summary>
-internal ref struct PhysicsHull()
+internal ref struct InternalPhysicsHull
 {
     public Span<Vector2> Points;
     public int Count;
 
-    public PhysicsHull(Span<Vector2> vertices, int count) : this()
+    internal InternalPhysicsHull(Span<Vector2> vertices, int count) : this()
     {
         Count = count;
         Points = vertices[..count];
     }
 
-    private static PhysicsHull RecurseHull(Vector2 p1, Vector2 p2, Span<Vector2> ps, int count)
+    private static InternalPhysicsHull RecurseHull(Vector2 p1, Vector2 p2, Span<Vector2> ps, int count)
     {
-        PhysicsHull hull = new();
-        hull.Count = 0;
+        InternalPhysicsHull hull = new()
+        {
+            Count = 0
+        };
 
         if (count == 0)
         {
@@ -69,10 +70,10 @@ internal ref struct PhysicsHull()
         var bestPoint = ps[bestIndex];
 
         // compute hull to the right of p1-bestPoint
-        PhysicsHull hull1 = RecurseHull(p1, bestPoint, rightPoints, rightCount);
+        InternalPhysicsHull hull1 = RecurseHull(p1, bestPoint, rightPoints, rightCount);
 
         // compute hull to the right of bestPoint-p2
-        PhysicsHull hull2 = RecurseHull(bestPoint, p2, rightPoints, rightCount);
+        InternalPhysicsHull hull2 = RecurseHull(bestPoint, p2, rightPoints, rightCount);
 
         // stich together hulls
         for (var i = 0; i < hull1.Count; ++i)
@@ -96,9 +97,9 @@ internal ref struct PhysicsHull()
     // - merges vertices based on b2_linearSlop
     // - removes collinear points using b2_linearSlop
     // - returns an empty hull if it fails
-    public static PhysicsHull ComputeHull(ReadOnlySpan<Vector2> points, int count)
+    public static InternalPhysicsHull ComputeHull(ReadOnlySpan<Vector2> points, int count)
     {
-        PhysicsHull hull = new();
+        InternalPhysicsHull hull = new();
 
         if (count is < 3 or > PhysicsConstants.MaxPolygonVertices)
         {
@@ -287,7 +288,7 @@ internal ref struct PhysicsHull()
 	    return hull;
     }
 
-    public static bool ValidateHull(PhysicsHull hull)
+    public static bool ValidateHull(InternalPhysicsHull hull)
     {
         if (hull.Count < 3 || PhysicsConstants.MaxPolygonVertices < hull.Count)
         {

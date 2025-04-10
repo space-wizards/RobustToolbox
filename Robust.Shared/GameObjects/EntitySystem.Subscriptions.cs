@@ -193,7 +193,7 @@ namespace Robust.Shared.GameObjects
                 ComponentEventHandler<TComp, TEvent> handler,
                 Type[]? before = null, Type[]? after = null)
                 where TComp : IComponent
-                where TEvent : EntityEventArgs
+                where TEvent : notnull
             {
                 System.SubscribeLocalEvent(handler, before, after);
             }
@@ -206,7 +206,7 @@ namespace Robust.Shared.GameObjects
                 ComponentEventRefHandler<TComp, TEvent> handler,
                 Type[]? before = null, Type[]? after = null)
                 where TComp : IComponent
-                where TEvent : EntityEventArgs
+                where TEvent : notnull
             {
                 System.SubscribeLocalEvent(handler, before, after);
             }
@@ -219,7 +219,7 @@ namespace Robust.Shared.GameObjects
                 EntityEventRefHandler<TComp, TEvent> handler,
                 Type[]? before = null, Type[]? after = null)
                 where TComp : IComponent
-                where TEvent : EntityEventArgs
+                where TEvent : notnull
             {
                 System.SubscribeLocalEvent(handler, before, after);
             }
@@ -229,7 +229,7 @@ namespace Robust.Shared.GameObjects
             /// </summary>
             /// <remarks>
             /// This can be used by extension methods for <see cref="Subscriptions"/>
-            /// to unsubscribe from from external sources such as CVars.
+            /// to unsubscribe from external sources such as CVars.
             /// </remarks>
             /// <param name="action">An action to be ran when the entity system is shut down.</param>
             public void RegisterUnsubscription(Action action)

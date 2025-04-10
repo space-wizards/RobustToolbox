@@ -1139,6 +1139,7 @@ namespace Robust.Client.GameStates
 
             var xforms = _entities.GetEntityQuery<TransformComponent>();
             var metas = _entities.GetEntityQuery<MetaDataComponent>();
+            var predictedSpawns = _entities.GetEntityQuery<PredictedSpawnComponent>();
             var xformSys = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
 
             _toDelete.Clear();
@@ -1149,7 +1150,7 @@ namespace Robust.Client.GameStates
             while (metaQuery.MoveNext(out var ent, out var metadata, out var xform))
             {
                 var netEnt = metadata.NetEntity;
-                if (metadata.NetEntity.IsClientSide())
+                if (metadata.NetEntity.IsClientSide() && !predictedSpawns.HasComp(ent))
                 {
                     if (deleteClientEntities)
                         _toDelete.Add(ent);
@@ -1176,7 +1177,8 @@ namespace Robust.Client.GameStates
 
                     if (deleteClientChildren
                         && !deleteClientEntities // don't add duplicates
-                        && _entities.IsClientSide(child))
+                        && _entities.IsClientSide(child)
+                        && !predictedSpawns.HasComp(child))
                     {
                         _toDelete.Add(child);
                     }

@@ -297,7 +297,7 @@ namespace Robust.Client.GameObjects
             if (!MetaQuery.Resolve(entity.Owner, ref entity.Comp, false))
                 return;
 
-            DebugTools.Assert(!IsClientSide(entity.Owner, entity.Comp));
+            DebugTools.Assert(IsClientSide(entity.Owner, entity.Comp));
             EnsureComponent<PredictedSpawnComponent>(entity.Owner);
         }
     }

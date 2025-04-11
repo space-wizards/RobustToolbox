@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Default lighting options have been lowered. `LightResolutionScale` is now `0.3` from `0.5` and `LightSoftShadows` is now `false`. This saves a decent bit of GPU usage while looking near identical.
 
 ### Internal
 

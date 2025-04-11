@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 252.0.0
+
+### Breaking changes
+
+* BoundUserInterfaceMessageAttempt is raised directed against entities and no longer broadcast.
+
+
 ## 251.0.0
 
 ### Breaking changes

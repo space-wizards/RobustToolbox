@@ -853,7 +853,7 @@ namespace Robust.Shared
         /// relative to the viewport framebuffer size.
         /// </summary>
         public static readonly CVarDef<float> LightResolutionScale =
-            CVarDef.Create("light.resolution_scale", 0.5f, CVar.CLIENTONLY | CVar.ARCHIVE);
+            CVarDef.Create("light.resolution_scale", 0.3f, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         /// <summary>
         /// Maximum amount of shadow-casting lights that can be rendered in a single viewport at once.
@@ -865,7 +865,7 @@ namespace Robust.Shared
         /// Whether to give shadows a soft edge when rendering.
         /// </summary>
         public static readonly CVarDef<bool> LightSoftShadows =
-            CVarDef.Create("light.soft_shadows", true, CVar.CLIENTONLY | CVar.ARCHIVE);
+            CVarDef.Create("light.soft_shadows", false, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         /// <summary>
         /// Apply a gaussian blur to the final lighting framebuffer to smoothen it out a little.

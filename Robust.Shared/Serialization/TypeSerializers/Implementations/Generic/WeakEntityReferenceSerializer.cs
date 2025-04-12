@@ -1,6 +1,6 @@
-﻿using Robust.Shared.GameObjects;
+﻿using Robust.Shared.EntitySerialization;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Map;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
@@ -40,9 +40,9 @@ public sealed class WeakEntityReferenceSerializer<T> :
     {
         NetEntity val = value.Entity;
 
-        if (context is MapSerializationContext ctx)
+        if (context is EntitySerializer seri)
         {
-            if (!ctx.EntityManager.TryGetEntity(val, out var uid) || !ctx.EntityManager.HasComponent<T>(uid))
+            if (!seri.EntMan.TryGetEntity(val, out var uid) || !seri.EntMan.HasComponent<T>(uid))
                 val = NetEntity.Invalid;
         }
 

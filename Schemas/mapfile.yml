@@ -21,6 +21,8 @@ proto:
 ---
 entity:
   uid: int()
+  paused: bool(required=False)
+  mapInit: bool(required=False)
   components: list(comp())
   missingComponents: list(str(), required=False)
 

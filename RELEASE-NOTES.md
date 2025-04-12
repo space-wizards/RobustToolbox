@@ -40,6 +40,8 @@ END TEMPLATE-->
 ### New features
 
 * Add a new `SerializationManager.PushComposition()` overload that takes in a single parent instead of an array of parents.
+* `BoundUserInterfaceMessageAttempt` once again gets raised as a broadcast event, in addition to being directed.
+  * This effectively reverts the breaking part of the changes made in v252.0.0
 
 ### Bugfixes
 

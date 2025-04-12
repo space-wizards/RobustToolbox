@@ -185,8 +185,12 @@ namespace Robust.Client.Graphics.Clyde
             var mapUid = EntityUid.Invalid;
 
             // Screen space overlays may be getting used before entity manager & entity systems have been initialized.
-            if (_entityManager.Started)
+            // This might mean that _mapSystem is currently null.
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+            if (_entityManager.Started && _mapSystem != null)
                 mapUid = _mapSystem.GetMapOrInvalid(mapId);
+
+            DebugTools.Assert(_mapSystem != null || !_entityManager.Initialized);
 
             var args = new OverlayDrawArgs(space, vpControl, vp, handle, bounds, mapUid, mapId, worldAABB, worldBounds);
 

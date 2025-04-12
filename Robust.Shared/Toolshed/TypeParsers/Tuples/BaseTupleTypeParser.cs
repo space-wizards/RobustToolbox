@@ -34,7 +34,7 @@ public abstract class BaseTupleTypeParser<TParses> : TypeParser<TParses>
         return true;
     }
 
-    public override CompletionResult? TryAutocomplete(ParserContext parserContext, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext parserContext, CommandArgument? arg)
     {
         foreach (var field in Fields)
         {
@@ -44,7 +44,7 @@ public abstract class BaseTupleTypeParser<TParses> : TypeParser<TParses>
                 continue;
 
             parserContext.Restore(checkpoint);
-            return Toolshed.TryAutocomplete(parserContext, field, argName);
+            return Toolshed.TryAutocomplete(parserContext, field, null);
         }
 
         return null;

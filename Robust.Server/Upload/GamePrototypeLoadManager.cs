@@ -50,14 +50,14 @@ public sealed class GamePrototypeLoadManager : SharedPrototypeLoadManager
 
     internal void SendToNewUser(INetChannel channel)
     {
+        if (LoadedPrototypes.Count == 0)
+            return;
+
         // Just dump all the prototypes on connect, before them missing could be an issue.
-        foreach (var prototype in LoadedPrototypes)
+        var msg = new GamePrototypeLoadMessage
         {
-            var msg = new GamePrototypeLoadMessage
-            {
-                PrototypeData = prototype
-            };
-            channel.SendMessage(msg);
-        }
+            PrototypeData = string.Join("\n\n", LoadedPrototypes)
+        };
+        channel.SendMessage(msg);
     }
 }

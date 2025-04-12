@@ -16,32 +16,40 @@ public sealed class ExplainCommand : ToolshedCommand
         var builder = new StringBuilder();
         foreach (var (cmd, _) in expr.Commands)
         {
+            builder.AppendLine();
             var name = cmd.Implementor.FullName;
             builder.AppendLine($"{name} - {cmd.Implementor.Description()}");
+
+            var piped = cmd.PipedType?.PrettyName() ?? "[none]";
+            builder.AppendLine($"Pipe input: {piped}");
+            builder.AppendLine($"Pipe output: {cmd.ReturnType.PrettyName()}");
+
+            builder.Append($"Signature:\n  ");
 
             if (cmd.PipedType != null)
             {
                 var pipeArg = cmd.Method.Base.PipeArg;
                 DebugTools.AssertNotNull(pipeArg);
-                builder.Append($"<{pipeArg?.Name} ({ToolshedCommandImplementor.GetFriendlyName(cmd.PipedType)})> -> ");
+
+                var locKey = $"command-arg-sig-{cmd.Implementor.LocName}-{pipeArg?.Name}";
+                if (Loc.TryGetString(locKey, out var msg))
+                {
+                    builder.Append(msg);
+                    builder.Append(" → ");
+                }
+                else
+                {
+                    builder.Append($"<{pipeArg?.Name}> → "); // No type information, as that is already given above.
+                }
             }
 
             if (cmd.Bundle.Inverted)
                 builder.Append("not ");
 
-            builder.Append($"{name}");
-            foreach (var (argName, argType, _) in cmd.Method.Args)
-            {
-                builder.Append($" <{argName} ({ToolshedCommandImplementor.GetFriendlyName(argType)})>");
-            }
-
-            builder.AppendLine();
-            var piped = cmd.PipedType?.PrettyName() ?? "[none]";
-            var returned = cmd.ReturnType?.PrettyName() ?? "[none]";
-            builder.AppendLine($"{piped} -> {returned}");
+            cmd.Implementor.AddMethodSignature(builder, cmd.Method.Args, cmd.Bundle.TypeArguments);
             builder.AppendLine();
         }
 
-        ctx.WriteLine(builder.ToString());
+        ctx.WriteLine(builder.ToString().TrimEnd());
     }
 }

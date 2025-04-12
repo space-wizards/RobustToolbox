@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using JetBrains.Annotations;
@@ -95,10 +96,33 @@ namespace Robust.Shared.Localization
         CultureInfo? DefaultCulture { get; set; }
 
         /// <summary>
+        /// Checks if the culture is loaded, if not,
+        /// loads it via <see cref="ILocalizationManager.LoadCulture"/>
+        /// and then set it as <see cref="ILocalizationManager.DefaultCulture"/>.
+        /// </summary>
+        void SetCulture(CultureInfo culture);
+
+        /// <summary>
+        /// Checks to see if the culture has been loaded.
+        /// </summary>
+        bool HasCulture(CultureInfo culture);
+
+        /// <summary>
         ///     Load data for a culture.
         /// </summary>
         /// <param name="culture"></param>
         void LoadCulture(CultureInfo culture);
+
+        /// <summary>
+        /// Loads <see cref="CultureInfo"/> obtained from <see cref="CVars.LocCultureName"/>,
+        /// they are different for client and server, and also can be saved.
+        /// </summary>
+        CultureInfo SetDefaultCulture();
+
+        /// <summary>
+        /// Returns all locale directories from the game's resources.
+        /// </summary>
+        List<CultureInfo> GetFoundCultures();
 
         /// <summary>
         ///     Sets culture to be used in the absence of the main one.

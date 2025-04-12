@@ -38,7 +38,8 @@ namespace Robust.Shared.EntitySerialization;
 /// </remarks>
 public sealed class EntitySerializer : ISerializationContext,
     ITypeSerializer<EntityUid, ValueDataNode>,
-    ITypeSerializer<NetEntity, ValueDataNode>
+    ITypeSerializer<NetEntity, ValueDataNode>,
+    ITypeSerializer<WeakEntityReference, ValueDataNode>
 {
     public const int MapFormatVersion = 7;
     // v6->v7: PR #5572 - Added more metadata, List maps/grids/orphans, include some life-stage information
@@ -868,12 +869,12 @@ public sealed class EntitySerializer : ISerializationContext,
         return new ValidatedValueNode(node);
     }
 
-    public DataNode Write(
+    DataNode ITypeWriter<EntityUid>.Write(
         ISerializationManager serializationManager,
         EntityUid value,
         IDependencyCollection dependencies,
-        bool alwaysWrite = false,
-        ISerializationContext? context = null)
+        bool alwaysWrite,
+        ISerializationContext? context)
     {
         if (YamlUidMap.TryGetValue(value, out var yamlId))
             return new ValueDataNode(yamlId.ToString(CultureInfo.InvariantCulture));
@@ -947,11 +948,11 @@ public sealed class EntitySerializer : ISerializationContext,
         return node.Value == "invalid" ? EntityUid.Invalid : EntityUid.Parse(node.Value);
     }
 
-    public ValidationNode Validate(
+    ValidationNode ITypeValidator<NetEntity, ValueDataNode>.Validate(
         ISerializationManager serializationManager,
         ValueDataNode node,
         IDependencyCollection dependencies,
-        ISerializationContext? context = null)
+        ISerializationContext? context)
     {
         if (node.Value == "invalid")
             return new ValidatedValueNode(node);
@@ -962,26 +963,67 @@ public sealed class EntitySerializer : ISerializationContext,
         return new ValidatedValueNode(node);
     }
 
-    public NetEntity Read(
+    NetEntity ITypeReader<NetEntity, ValueDataNode>.Read(
         ISerializationManager serializationManager,
         ValueDataNode node,
         IDependencyCollection dependencies,
         SerializationHookContext hookCtx,
-        ISerializationContext? context = null,
-        ISerializationManager.InstantiationDelegate<NetEntity>? instanceProvider = null)
+        ISerializationContext? context,
+        ISerializationManager.InstantiationDelegate<NetEntity>? instanceProvider)
     {
         return node.Value == "invalid" ? NetEntity.Invalid : NetEntity.Parse(node.Value);
     }
 
-    public DataNode Write(
+    DataNode ITypeWriter<NetEntity>.Write(
         ISerializationManager serializationManager,
         NetEntity value,
         IDependencyCollection dependencies,
-        bool alwaysWrite = false,
-        ISerializationContext? context = null)
+        bool alwaysWrite,
+        ISerializationContext? context)
     {
         var uid = EntMan.GetEntity(value);
         return serializationManager.WriteValue(uid, alwaysWrite, context);
+    }
+
+    ValidationNode ITypeValidator<WeakEntityReference, ValueDataNode>.Validate(
+        ISerializationManager serializationManager,
+        ValueDataNode node,
+        IDependencyCollection dependencies,
+        ISerializationContext? context)
+    {
+        if (node.Value == "invalid")
+            return new ValidatedValueNode(node);
+
+        if (!int.TryParse(node.Value, out _))
+            return new ErrorNode(node, "Invalid NetEntity");
+
+        return new ValidatedValueNode(node);
+    }
+
+    WeakEntityReference ITypeReader<WeakEntityReference, ValueDataNode>.Read(
+        ISerializationManager serializationManager,
+        ValueDataNode node,
+        IDependencyCollection dependencies,
+        SerializationHookContext hookCtx,
+        ISerializationContext? context,
+        ISerializationManager.InstantiationDelegate<WeakEntityReference>? instanceProvider)
+    {
+        return node.Value == "invalid"
+            ? WeakEntityReference.Invalid
+            : new(NetEntity.Parse(node.Value));
+    }
+
+    DataNode ITypeWriter<WeakEntityReference>.Write(
+        ISerializationManager serializationManager,
+        WeakEntityReference value,
+        IDependencyCollection dependencies,
+        bool alwaysWrite,
+        ISerializationContext? context)
+    {
+        if (EntMan.TryGetEntity(value.Entity, out var uid) && YamlUidMap.TryGetValue(uid.Value, out var yamlId))
+            return new ValueDataNode(yamlId.ToString(CultureInfo.InvariantCulture));
+
+        return new ValueDataNode("invalid");
     }
 
     #endregion

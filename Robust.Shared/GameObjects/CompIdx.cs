@@ -20,7 +20,7 @@ public readonly struct CompIdx : IEquatable<CompIdx>
 
     internal static int ArrayIndex<T>() => Index<T>().Value;
 
-    internal static FrozenDictionary<Type, CompIdx> _compLookup = FrozenDictionary<Type, CompIdx>.Empty;
+    private static FrozenDictionary<Type, CompIdx> _compLookup = FrozenDictionary<Type, CompIdx>.Empty;
 
     internal static CompIdx RegisterIndex(Type type)
     {

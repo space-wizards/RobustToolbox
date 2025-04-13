@@ -20,24 +20,12 @@ public readonly struct CompIdx : IEquatable<CompIdx>
 
     internal static int ArrayIndex<T>() => Index<T>().Value;
 
-    private static FrozenDictionary<Type, CompIdx> _compLookup = FrozenDictionary<Type, CompIdx>.Empty;
-
-    internal static CompIdx RegisterIndex(Type type)
+    internal static CompIdx GetIndex(Type type)
     {
-        var idx = (CompIdx)typeof(Store<>)
+        return (CompIdx)typeof(Store<>)
             .MakeGenericType(type)
             .GetField(nameof(Store<int>.Index), BindingFlags.Static | BindingFlags.Public)!
             .GetValue(null)!;
-
-        var dict = _compLookup.ToDictionary();
-        dict[type] = idx;
-        _compLookup = dict.ToFrozenDictionary();
-        return idx;
-    }
-
-    internal static CompIdx GetIndex(Type type)
-    {
-        return _compLookup[type];
     }
 
     internal static void AssignArray<T>(ref T[] array, CompIdx idx, T value)

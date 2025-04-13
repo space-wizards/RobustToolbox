@@ -475,7 +475,7 @@ namespace Robust.Shared.GameObjects
             for (int i = 0; i < types.Length; i++)
             {
                 var type = types[i];
-                var idx = CompIdx.RegisterIndex(type);
+                var idx = CompIdx.GetIndex(type);
                 typeToidx[type] = idx;
 
                 added[i] = Register(type, idx, names, lowerCaseNames, typesDict, idxToType, ignored, overwrite);

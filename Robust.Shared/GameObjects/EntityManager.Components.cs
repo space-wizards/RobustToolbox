@@ -405,7 +405,7 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, type, out var comp))
                 return false;
 
-            RemoveComponentImmediate(uid, comp, CompIdx.GetIndex(type), false, true, meta);
+            RemoveComponentImmediate(uid, comp, _componentFactory.GetIndex(type), false, true, meta);
             return true;
         }
 
@@ -419,7 +419,7 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, netId, out var comp, meta))
                 return false;
 
-            RemoveComponentImmediate(uid, comp, CompIdx.GetIndex(comp.GetType()), false, true, meta);
+            RemoveComponentImmediate(uid, comp, _componentFactory.GetIndex(comp.GetType()), false, true, meta);
             return true;
         }
 
@@ -427,7 +427,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
         {
-            RemoveComponentImmediate(uid, component, CompIdx.GetIndex(component.GetType()), false, true, meta);
+            RemoveComponentImmediate(uid, component, _componentFactory.GetIndex(component.GetType()), false, true, meta);
         }
 
         /// <inheritdoc />
@@ -475,7 +475,7 @@ namespace Robust.Shared.GameObjects
             for (var i = objComps.Length - 1; i >= 0; i--)
             {
                 var comp = (IComponent) objComps[i]!;
-                RemoveComponentImmediate(uid, comp, CompIdx.GetIndex(comp.GetType()), terminating: false, archetypeChange: false, meta);
+                RemoveComponentImmediate(uid, comp, _componentFactory.GetIndex(comp.GetType()), terminating: false, archetypeChange: false, meta);
             }
         }
 
@@ -491,7 +491,7 @@ namespace Robust.Shared.GameObjects
 
                 try
                 {
-                    RemoveComponentImmediate(uid, comp, CompIdx.GetIndex(comp.GetType()), terminating: true, archetypeChange: false, meta);
+                    RemoveComponentImmediate(uid, comp, _componentFactory.GetIndex(comp.GetType()), terminating: true, archetypeChange: false, meta);
                 }
                 catch (Exception exc)
                 {
@@ -560,7 +560,7 @@ namespace Robust.Shared.GameObjects
         {
             // I hate this but also didn't want the MetaQuery.GetComponent overhead.
             // and with archetypes we want to avoid moves at all costs.
-            RemoveComponentImmediate(uid, component, CompIdx.GetIndex(component.GetType()), terminating: terminating, archetypeChange: archetypeChange, metadata);
+            RemoveComponentImmediate(uid, component, _componentFactory.GetIndex(component.GetType()), terminating: terminating, archetypeChange: archetypeChange, metadata);
         }
 
         /// <summary>
@@ -650,7 +650,7 @@ namespace Robust.Shared.GameObjects
                 _runtimeLog.LogException(e, nameof(CullRemovedComponents));
             }
 #endif
-                DeleteComponent(uid, component, CompIdx.GetIndex(component.GetType()), terminating: false, archetypeChange: true);
+                DeleteComponent(uid, component, _componentFactory.GetIndex(component.GetType()), terminating: false, archetypeChange: true);
             }
 
             _deleteSet.Clear();

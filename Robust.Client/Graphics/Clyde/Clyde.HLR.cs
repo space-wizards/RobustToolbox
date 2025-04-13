@@ -190,7 +190,7 @@ namespace Robust.Client.Graphics.Clyde
             if (_entityManager.Started && _mapSystem != null)
                 mapUid = _mapSystem.GetMapOrInvalid(mapId);
 
-            DebugTools.Assert(_mapSystem != null || !_entityManager.Initialized);
+            DebugTools.Assert(_mapSystem != null || !_entityManager.Started);
 
             var args = new OverlayDrawArgs(space, vpControl, vp, handle, bounds, mapUid, mapId, worldAABB, worldBounds);
 

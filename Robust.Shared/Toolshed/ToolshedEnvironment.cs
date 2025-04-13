@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Console;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Reflection;
@@ -16,7 +17,7 @@ public sealed class ToolshedEnvironment
     [Dependency] private readonly IReflectionManager _reflection = default!;
     [Dependency] private readonly ILogManager _logManager = default!;
     [Dependency] private readonly ToolshedManager _toolshedManager = default!;
-    [Dependency] private readonly IDependencyCollection _dependency = default!;
+    [Dependency] private readonly EntityManager _entMan = default!;
 
     // Dictionary of commands, not including sub-commands
     private readonly Dictionary<string, ToolshedCommand> _commands = new();
@@ -84,6 +85,9 @@ public sealed class ToolshedEnvironment
         var watch = new Stopwatch();
         watch.Start();
 
+        if (!_entMan.Started)
+            throw new Exception("EntityManager & Systems need to be started first");
+
         foreach (var ty in commands)
         {
             if (!ty.IsAssignableTo(typeof(ToolshedCommand)))
@@ -93,7 +97,7 @@ public sealed class ToolshedEnvironment
             }
 
             var cmd = (ToolshedCommand)Activator.CreateInstance(ty)!;
-            _dependency.InjectDependencies(cmd, oneOff: true);
+            _entMan.EntitySysManager.DependencyCollection.InjectDependencies(cmd, oneOff: true);
             cmd.Init();
             _commands.Add(cmd.Name, cmd);
 

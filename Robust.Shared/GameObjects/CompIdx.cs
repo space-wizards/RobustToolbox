@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using Arch.Core;
@@ -18,12 +20,24 @@ public readonly struct CompIdx : IEquatable<CompIdx>
 
     internal static int ArrayIndex<T>() => Index<T>().Value;
 
-    internal static CompIdx GetIndex(Type type)
+    internal static FrozenDictionary<Type, CompIdx> _compLookup = FrozenDictionary<Type, CompIdx>.Empty;
+
+    internal static CompIdx RegisterIndex(Type type)
     {
-        return (CompIdx)typeof(Store<>)
+        var idx = (CompIdx)typeof(Store<>)
             .MakeGenericType(type)
             .GetField(nameof(Store<int>.Index), BindingFlags.Static | BindingFlags.Public)!
             .GetValue(null)!;
+
+        var dict = _compLookup.ToDictionary();
+        dict[type] = idx;
+        _compLookup = dict.ToFrozenDictionary();
+        return idx;
+    }
+
+    internal static CompIdx GetIndex(Type type)
+    {
+        return _compLookup[type];
     }
 
     internal static void AssignArray<T>(ref T[] array, CompIdx idx, T value)

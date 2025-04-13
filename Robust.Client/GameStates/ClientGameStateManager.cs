@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Arch.Core;
 using Arch.Core.Utils;
 using Collections.Pooled;
 using JetBrains.Annotations;

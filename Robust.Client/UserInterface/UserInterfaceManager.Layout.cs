@@ -7,6 +7,7 @@ using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface;
 internal sealed partial class UserInterfaceManager
@@ -60,7 +61,7 @@ internal sealed partial class UserInterfaceManager
                 Title = string.IsNullOrEmpty(title) ? Loc.GetString("popup-title") : title,
             };
 
-            var label = new RichTextLabel { Text = $"[color=white]{contents}[/color]" };
+            var label = new RichTextLabel { Text = $"[color=white]{FormattedMessage.EscapeText(contents)}[/color]" };
 
             var vBox = new BoxContainer
             {

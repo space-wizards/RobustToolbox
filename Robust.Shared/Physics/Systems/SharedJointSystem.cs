@@ -19,6 +19,7 @@ public abstract partial class SharedJointSystem : EntitySystem
     [Dependency] private readonly SharedContainerSystem _container = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
     [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private readonly SharedTransformSystem _transform = default!;
 
     private EntityQuery<JointComponent> _jointsQuery;
     private EntityQuery<PhysicsComponent> _physicsQuery;
@@ -237,7 +238,7 @@ public abstract partial class SharedJointSystem : EntitySystem
         string? id = null,
         TransformComponent? xformA = null,
         TransformComponent? xformB = null,
-        int? minimumDistance = null)
+        float? minimumDistance = null)
     {
         if (!Resolve(bodyA, ref xformA) || !Resolve(bodyB, ref xformB))
         {
@@ -247,8 +248,8 @@ public abstract partial class SharedJointSystem : EntitySystem
         anchorA ??= Vector2.Zero;
         anchorB ??= Vector2.Zero;
 
-        var vecA = Vector2.Transform(anchorA.Value, xformA.WorldMatrix);
-        var vecB = Vector2.Transform(anchorB.Value, xformB.WorldMatrix);
+        var vecA = Vector2.Transform(anchorA.Value, _transform.GetWorldMatrix(xformA));
+        var vecB = Vector2.Transform(anchorB.Value, _transform.GetWorldMatrix(xformB));
         var length = (vecA - vecB).Length();
         if (minimumDistance != null)
             length = Math.Max(minimumDistance.Value, length);

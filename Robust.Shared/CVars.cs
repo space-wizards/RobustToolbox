@@ -1874,5 +1874,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> ToolshedNearbyEntitiesLimit =
             CVarDef.Create("toolshed.nearby_entities_limit", 5, CVar.SERVER | CVar.REPLICATED);
+
+        /*
+         * Localization
+         */
+
+        public static readonly CVarDef<string> LocCultureName =
+            CVarDef.Create("loc.culture_name", "en-US", CVar.ARCHIVE);
     }
 }

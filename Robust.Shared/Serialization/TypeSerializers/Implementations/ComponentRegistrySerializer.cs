@@ -206,7 +206,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                     {
                         newCompReg[idx] = serializationManager.PushCompositionWithGenericNode(
                             reg.Type,
-                            new[] { parent[mapping] },
+                            parent[mapping],
                             newCompReg[idx],
                             context);
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Arch.Core;
 using Arch.Core.Utils;
 using Collections.Pooled;
 using Robust.Shared.EntitySerialization;

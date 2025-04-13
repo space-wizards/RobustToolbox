@@ -860,7 +860,6 @@ namespace Robust.Shared.GameObjects
             return (meta ?? MetaQuery.GetComponentInternal(uid)).NetComponents[netId];
         }
 
-        /// <inheritdoc />
         [Pure]
         public IComponent GetComponentInternal(EntityUid uid, CompIdx type)
         {
@@ -920,11 +919,11 @@ namespace Robust.Shared.GameObjects
             return TryGetComponent(uid, reg.ArchType, out component);
         }
 
-        internal bool TryGetComponent(EntityUid uid, ComponentType type, [NotNullWhen(true)] out IComponent? component)
+        internal bool TryGetComponent<T>(EntityUid uid, ComponentType type, [NotNullWhen(true)] out IComponent? component)
         {
             if (uid.Valid && _world.TryGet(uid, type, out var comp) && comp != null)
             {
-                component = (IComponent)comp!;
+                component = (IComponent) comp;
 
                 if (!component.Deleted)
                 {
@@ -936,11 +935,11 @@ namespace Robust.Shared.GameObjects
             return false;
         }
 
-        internal bool TryGetComponent<T>(EntityUid uid, ComponentType type, [NotNullWhen(true)] out T? component) where T : IComponent
+        internal bool TryGetComponent<T>(EntityUid uid, ComponentType type, [NotNullWhen(true)] out T? component) where T : IComponent?
         {
             if (uid.Valid && _world.TryGet(uid, type, out var comp) && comp != null)
             {
-                component = (T) comp!;
+                component = (T) comp;
 
                 if (!component.Deleted)
                 {
@@ -958,9 +957,14 @@ namespace Robust.Shared.GameObjects
             return TryGetComponent(uid, (ComponentType) type, out component);
         }
 
+        public bool TryGetComponent<T>(EntityUid uid, CompIdx type, [NotNullWhen(true)] out T? component) where T : IComponent?
+        {
+            return TryGetComponent(uid, type.Type, out component);
+        }
+
         public bool TryGetComponent(EntityUid uid, CompIdx type, [NotNullWhen(true)] out IComponent? component)
         {
-            return TryGetComponent(uid, type.Type.Type, out component);
+            return TryGetComponent(uid, type.Type, out component);
         }
 
         /// <inheritdoc />

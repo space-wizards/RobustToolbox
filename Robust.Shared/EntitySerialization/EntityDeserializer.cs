@@ -1,12 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.Serialization;
-using Arch.Core.Utils;
+using Arch.Core;
 using Collections.Pooled;
-using JetBrains.Annotations;
 using Robust.Shared.EntitySerialization.Components;
 using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.GameObjects;
@@ -25,7 +22,6 @@ using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
-using ComponentRegistry = Arch.Core.Utils.ComponentRegistry;
 
 namespace Robust.Shared.EntitySerialization;
 

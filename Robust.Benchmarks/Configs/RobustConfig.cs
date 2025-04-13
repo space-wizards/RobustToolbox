@@ -18,11 +18,11 @@ using Robust.Benchmarks.Exporters;
 
 namespace Robust.Benchmarks.Configs;
 
-public sealed class DefaultSQLConfig : IConfig
+public sealed class RobustConfig : IConfig
 {
-    public static readonly IConfig Instance = new DefaultSQLConfig();
+    public static readonly IConfig Instance = new RobustConfig();
 
-    private DefaultSQLConfig(){}
+    private RobustConfig(){}
 
     public IEnumerable<IExporter> GetExporters()
     {
@@ -58,6 +58,6 @@ public sealed class DefaultSQLConfig : IConfig
     public string ArtifactsPath => DefaultConfig.Instance.ArtifactsPath;
     public CultureInfo CultureInfo => DefaultConfig.Instance.CultureInfo!;
     public ConfigOptions Options => DefaultConfig.Instance.Options;
-    public TimeSpan BuildTimeout => DefaultConfig.Instance.BuildTimeout;
+    public TimeSpan BuildTimeout => TimeSpan.FromMinutes(3);
     public IReadOnlyList<Conclusion> ConfigAnalysisConclusion => DefaultConfig.Instance.ConfigAnalysisConclusion;
 }

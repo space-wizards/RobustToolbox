@@ -8,6 +8,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -46,11 +47,11 @@ namespace Robust.Server.Console.Commands
             bool saveSuccess = _ent.System<MapLoaderSystem>().TrySaveGrid(uid, new ResPath(args[1]));
             if(saveSuccess)
             {
-                    shell.WriteLine("Save successful. Look in the user data directory.");
+                shell.WriteLine("Save successful. Look in the user data directory.");
             }
             else
             {
-                    shell.WriteError("Save unsuccessful!");
+                shell.WriteError("Save unsuccessful!");
             }
         }
 
@@ -59,7 +60,7 @@ namespace Robust.Server.Console.Commands
             switch (args.Length)
             {
                 case 1:
-                    return CompletionResult.FromHint(Loc.GetString("cmd-hint-savebp-id"));
+                    return CompletionResult.FromHintOptions(CompletionHelper.Components<MapGridComponent>(args[0], _ent), Loc.GetString("cmd-hint-savebp-id"));
                 case 2:
                     var opts = CompletionHelper.UserFilePath(args[1], _resource.UserData);
                     return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-hint-savemap-path"));
@@ -159,6 +160,7 @@ namespace Robust.Server.Console.Commands
 
     public sealed class SaveMap : LocalizedCommands
     {
+        [Dependency] private readonly IEntityManager _entManager = default!;
         [Dependency] private readonly IEntitySystemManager _system = default!;
         [Dependency] private readonly IResourceManager _resource = default!;
 
@@ -169,7 +171,7 @@ namespace Robust.Server.Console.Commands
             switch (args.Length)
             {
                 case 1:
-                    return CompletionResult.FromHint(Loc.GetString("cmd-hint-savemap-id"));
+                    return CompletionResult.FromHintOptions(CompletionHelper.MapIds(_entManager), Loc.GetString("cmd-hint-savemap-id"));
                 case 2:
                     var opts = CompletionHelper.UserFilePath(args[1], _resource.UserData);
                     return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-hint-savemap-path"));

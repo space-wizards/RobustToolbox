@@ -35,10 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* The default shader now interprets negative color modulation as a flag that indicates that the light map should be ignored.
-  * This can be used to avoid having to change the light map texture, thus reducing draw batches.
-  * Sprite layers that are set to use the "unshaded" shader prototype now use this.
-  * Any fragment shaders that previously the `VtxModulate` colour modulation variable should instead use the new `MODULATE` variable, as the former may now contain negative values.
+*None yet*
 
 ### New features
 
@@ -46,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fix serialization source generator breaking if a class has two partial locations.
+*None yet*
 
 ### Other
 
@@ -55,6 +52,102 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 253.0.0
+
+### New features
+
+* Add a new `SerializationManager.PushComposition()` overload that takes in a single parent instead of an array of parents.
+* `BoundUserInterfaceMessageAttempt` once again gets raised as a broadcast event, in addition to being directed.
+  * This effectively reverts the breaking part of the changes made in v252.0.0
+* Fix CreateDistanceJoint using an int instead of a float for minimum distance.
+
+### Bugfixes
+
+* Fix deferred component removal not setting the component's life stage to `ComponentLifeStage.Stopped` if the component has not yet been initialised.
+* Fix some `EntitySystem.Resolve()` overloads not respecting the optional `logMissing` argument.
+* Fix screen-space overlays not being useable without first initializing/starting entity manager & systems
+* ItemList is now significantly optimized. VV's `AddComponent` window in particular should be much faster.
+* Fix some more MapValidator fields.
+* Fix popup text overflowing the sides of the screen.
+* Improve location reporting for non-writeable datafields via analyzer.
+
+### Other
+
+* TestPoint now uses generics rather than IPhysShape directly.
+
+
+## 252.0.0
+
+### Breaking changes
+
+* BoundUserInterfaceMessageAttempt is raised directed against entities and no longer broadcast.
+
+
+## 251.0.0
+
+### Breaking changes
+
+* Localization is now separate between client and server and is handled via cvar.
+* Contacting entities no longer can be disabled for CollisionWake to avoid destroying the contacts unnecessarily.
+
+### New features
+
+* Added `DirectionExtensions.AllDirections`, which contains a list of all `Direction`s for easy enumeration.
+* Add ForbidLiteralAttribute.
+* Log late MsgEntity again.
+* Show entity name in `physics shapeinfo` output.
+* Make SubscribeLocalEvent not require EntityEventArgs.
+* Add autocomplete to `tp` command.
+* Add button to jump to live chat when scrolled up.
+* Add autocomplete to `savemap` and `savegrid`.
+
+### Bugfixes
+
+* Fix velocity not re-applying correctly on re-parenting.
+* Fix Equatable on FormattedMessage.
+* Fix SharedTransformSystem methods logging errors on resolves.
+
+### Other
+
+* Significantly optimized tile edge rendering.
+
+### Internal
+
+* Remove duplicate GetMassData method.
+* Inline manifold points for physics.
+
+
+## 250.0.0
+
+### Breaking changes
+
+* The default shader now interprets negative color modulation as a flag that indicates that the light map should be ignored.
+  * This can be used to avoid having to change the light map texture, thus reducing draw batches.
+  * Sprite layers that are set to use the "unshaded" shader prototype now use this.
+  * Any fragment shaders that previously the `VtxModulate` colour modulation variable should instead use the new `MODULATE` variable, as the former may now contain negative values.
+
+### New features
+
+* Add OtherBody API to contacts.
+* Make FormattedMessages Equatable.
+* AnimationCompletionEvent now has the AnimationPlayerComponent.
+* Add entity description as a tooltip on the entity spawn panel.
+
+### Bugfixes
+
+* Fix serialization source generator breaking if a class has two partial locations.
+* Fix map saving throwing a `DirectoryNotFoundException` when given a path with a non-existent directory. Now it once again creates any missing directories.
+* Fix map loading taking a significant time due to MappingDataNode.Equals calls being slow.
+
+### Other
+
+* Add Pure to some Angle methods.
+
+### Internal
+
+* Cleanup some warnings in classes.
 
 
 ## 249.0.0

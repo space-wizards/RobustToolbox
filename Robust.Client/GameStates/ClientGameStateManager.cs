@@ -13,6 +13,7 @@ using Robust.Client.Physics;
 using Robust.Client.Player;
 using Robust.Client.Timing;
 using Robust.Shared;
+using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.Containers;
@@ -564,6 +565,21 @@ namespace Robust.Client.GameStates
             var metaQuery = _entities.GetEntityQuery<MetaDataComponent>();
             RemQueue<IComponent> toRemove = new();
 
+            // Handle predicted entity spawns.
+            var predicted = new ValueList<EntityUid>();
+            var predictedQuery = _entities.AllEntityQueryEnumerator<PredictedSpawnComponent>();
+
+            while (predictedQuery.MoveNext(out var uid, out var _))
+            {
+                predicted.Add(uid);
+            }
+
+            // Entity will get re-created as part of the tick.
+            foreach (var ent in predicted)
+            {
+                _entities.DeleteEntity(ent);
+            }
+
             foreach (var entity in system.DirtyEntities)
             {
                 DebugTools.Assert(toRemove.Count == 0);
@@ -776,18 +792,6 @@ namespace Robust.Client.GameStates
             var metas = _entities.GetEntityQuery<MetaDataComponent>();
             var xforms = _entities.GetEntityQuery<TransformComponent>();
             var xformSys = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
-
-            // Cleanup predicted entities
-            var predictedQuery = _entities.AllEntityQueryEnumerator<PredictedSpawnComponent, MetaDataComponent>();
-
-            while (predictedQuery.MoveNext(out var uid, out _, out var metadata))
-            {
-                if (metadata.CreationTick > curState.ToSequence)
-                    continue;
-
-                DebugTools.Assert(_entities.IsClientSide(uid));
-                _entities.DeleteEntity(uid);
-            }
 
             var enteringPvs = 0;
             _toApply.Clear();

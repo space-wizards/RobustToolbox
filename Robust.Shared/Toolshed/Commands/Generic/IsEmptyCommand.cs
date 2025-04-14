@@ -3,7 +3,9 @@ using System.Linq;
 
 namespace Robust.Shared.Toolshed.Commands.Generic;
 
-[ToolshedCommand]
+// TODO TOOLSHED
+// Combine with other "is...." commands into is:empty
+[ToolshedCommand(Name = "isempty")]
 public sealed class IsEmptyCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]

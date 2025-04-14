@@ -55,7 +55,7 @@ public abstract partial class ToolshedCommand
     public string Name { get; private set; } = default!;
 
     /// <summary>
-    ///     Whether or not this command has subcommands.
+    ///     Whether this command has subcommands.
     /// </summary>
     public bool HasSubCommands;
 
@@ -78,7 +78,7 @@ public abstract partial class ToolshedCommand
     {
     }
 
-    internal void Init()
+    internal void Init(bool snakeCase)
     {
         var type = GetType();
         var name = type.GetCustomAttribute<ToolshedCommandAttribute>()!.Name;
@@ -89,7 +89,12 @@ public abstract partial class ToolshedCommand
             if (!typeName.EndsWith(commandStr))
                 throw new InvalidCommandImplementation($"Command {type} must end with the word Command");
 
-            name = typeName[..^commandStr.Length].ToLowerInvariant();
+            name = typeName[..^commandStr.Length];
+
+            if (name.ToSnakeCase() != name.ToLower())
+                System.Console.WriteLine(name);
+
+            name = snakeCase ? name.ToSnakeCase() : name.ToLowerInvariant();
         }
 
         if (string.IsNullOrEmpty(name) || !name.EnumerateRunes().All(ParserContext.IsCommandToken))

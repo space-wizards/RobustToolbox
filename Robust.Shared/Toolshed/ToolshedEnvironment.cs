@@ -63,22 +63,24 @@ public sealed class ToolshedEnvironment
     /// <summary>
     ///     Initializes a default toolshed context.
     /// </summary>
-    public ToolshedEnvironment()
+    /// <param name="snakeCase">Whether to use snake-case when auto-generating command names</param>
+    public ToolshedEnvironment(bool snakeCase = false)
     {
         IoCManager.InjectDependencies(this);
-        Init(_reflection.FindTypesWithAttribute<ToolshedCommandAttribute>());
+        Init(_reflection.FindTypesWithAttribute<ToolshedCommandAttribute>(), snakeCase);
     }
 
     /// <summary>
     /// Initialized a toolshed context with only the specified toolshed commands.
     /// </summary>
-    public ToolshedEnvironment(IEnumerable<Type> commands)
+    /// <param name="snakeCase">Whether to use snake-case when auto-generating command names</param>
+    public ToolshedEnvironment(IEnumerable<Type> commands, bool snakeCase = false)
     {
         IoCManager.InjectDependencies(this);
-        Init(commands);
+        Init(commands, snakeCase);
     }
 
-    private void Init(IEnumerable<Type> commands)
+    private void Init(IEnumerable<Type> commands, bool snakeCase)
     {
         _log = _logManager.GetSawmill("toolshed");
         var watch = new Stopwatch();
@@ -94,7 +96,7 @@ public sealed class ToolshedEnvironment
 
             var cmd = (ToolshedCommand)Activator.CreateInstance(ty)!;
             _dependency.InjectDependencies(cmd, oneOff: true);
-            cmd.Init();
+            cmd.Init(snakeCase);
             _commands.Add(cmd.Name, cmd);
 
             var list = new List<CommandSpec>();

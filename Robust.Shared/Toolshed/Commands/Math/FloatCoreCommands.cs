@@ -6,7 +6,7 @@ using System.Numerics;
 namespace Robust.Shared.Toolshed.Commands.Math;
 
 #region Constants
-[ToolshedCommand]
+[ToolshedCommand(Name = "fpi")]
 public sealed class FPiCommand : ToolshedCommand
 {
     [CommandImplementation]
@@ -20,21 +20,21 @@ public sealed class FECommand : ToolshedCommand
     public float Const() => float.E;
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "ftau")]
 public sealed class FTauCommand : ToolshedCommand
 {
     [CommandImplementation]
     public float Const() => float.Tau;
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "fepsilon")]
 public sealed class FEpsilonCommand : ToolshedCommand
 {
     [CommandImplementation]
     public float Const() => float.Epsilon;
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "dpi")]
 public sealed class DPiCommand : ToolshedCommand
 {
     [CommandImplementation]
@@ -48,21 +48,21 @@ public sealed class DECommand : ToolshedCommand
     public double Const() => double.E;
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "dtau")]
 public sealed class DTauCommand : ToolshedCommand
 {
     [CommandImplementation]
     public double Const() => double.Tau;
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "depsilon")]
 public sealed class DEpsilonCommand : ToolshedCommand
 {
     [CommandImplementation]
     public double Const() => double.Epsilon;
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "hpi")]
 public sealed class HPiCommand : ToolshedCommand
 {
     [CommandImplementation]
@@ -76,14 +76,14 @@ public sealed class HECommand : ToolshedCommand
     public Half Const() => Half.E;
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "htau")]
 public sealed class HTauCommand : ToolshedCommand
 {
     [CommandImplementation]
     public Half Const() => Half.Tau;
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "hepsilon")]
 public sealed class HEpsilonCommand : ToolshedCommand
 {
     [CommandImplementation]
@@ -156,7 +156,7 @@ public sealed class TruncCommand : ToolshedCommand
         => x.Select(Operation);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "round2frac")]
 public sealed class Round2FracCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -174,7 +174,7 @@ public sealed class Round2FracCommand : ToolshedCommand
 #endregion
 
 #region Bitfiddling
-[ToolshedCommand]
+[ToolshedCommand(Name = "exponentbytecount")]
 public sealed class ExponentByteCountCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -190,7 +190,7 @@ public sealed class ExponentByteCountCommand : ToolshedCommand
         => x.Select(Operation);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "significandbytecount")]
 public sealed class SignificandByteCountCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -206,7 +206,7 @@ public sealed class SignificandByteCountCommand : ToolshedCommand
         => x.Select(Operation);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "significandbitcount")]
 public sealed class SignificandBitCountCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -222,7 +222,7 @@ public sealed class SignificandBitCountCommand : ToolshedCommand
         => x.Select(Operation);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "exponentshortestbitcount")]
 public sealed class ExponentShortestBitCountCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -236,7 +236,7 @@ public sealed class ExponentShortestBitCountCommand : ToolshedCommand
         => x.Select(Operation);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "stepnext")]
 public sealed class StepNextCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -248,7 +248,7 @@ public sealed class StepNextCommand : ToolshedCommand
         => x.Select(Operation);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "stepprev")]
 public sealed class StepPrevCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]

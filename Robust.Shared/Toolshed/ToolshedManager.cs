@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Console;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -39,15 +41,39 @@ public sealed partial class ToolshedManager
 
     private Dictionary<NetUserId, OldShellInvocationContext> _contexts = new();
 
+    [MemberNotNullWhen(true, nameof(_defaultEnvironment))]
+    public bool Started => _defaultEnvironment != null;
+    public bool Initialized { get; private set; }
+
     /// <summary>
     ///     If you're not an engine developer, you probably shouldn't call this.
     /// </summary>
     public void Initialize()
     {
+        if (Initialized)
+            throw new Exception("Already initialized");
+
+        Initialized = true;
         _log = _logManager.GetSawmill("toolshed");
 
         InitializeParser();
         _player.PlayerStatusChanged += OnStatusChanged;
+    }
+
+    /// <summary>
+    /// Initialize the default toolshed environment and discover toolshed commands
+    /// </summary>
+    /// <param name="snakeCase">Whether to use snake-case when auto-generating command names</param>
+    [MemberNotNull(nameof(_defaultEnvironment))]
+    public void Startup(bool snakeCase = false)
+    {
+        if (!Initialized)
+            throw new Exception("Not yet initialized");
+
+        if (Started)
+            throw new Exception("Already started");
+
+        _defaultEnvironment = new ToolshedEnvironment(snakeCase);
     }
 
     private void OnStatusChanged(object? sender, SessionStatusEventArgs e)

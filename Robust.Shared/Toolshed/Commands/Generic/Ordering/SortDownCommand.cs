@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Robust.Shared.Toolshed.Syntax;
 
 namespace Robust.Shared.Toolshed.Commands.Generic.Ordering;
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "sortdown")]
 public sealed class SortDownCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]

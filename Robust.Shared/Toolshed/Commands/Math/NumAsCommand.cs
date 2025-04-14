@@ -6,7 +6,7 @@ using Robust.Shared.Toolshed.TypeParsers;
 
 namespace Robust.Shared.Toolshed.Commands.Math;
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "checkedto")]
 public sealed class CheckedToCommand : ToolshedCommand
 {
     private static Type[] _parsers = [typeof(TypeTypeParser)];
@@ -27,7 +27,7 @@ public sealed class CheckedToCommand : ToolshedCommand
         => x.Select(Operation<TOut, T>);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "saturateto")]
 public sealed class SaturateToCommand : ToolshedCommand
 {
     private static Type[] _parsers = [typeof(TypeTypeParser)];
@@ -48,7 +48,7 @@ public sealed class SaturateToCommand : ToolshedCommand
         => x.Select(Operation<TOut, T>);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "truncto")]
 public sealed class TruncToCommand : ToolshedCommand
 {
     private static Type[] _parsers = [typeof(TypeTypeParser)];

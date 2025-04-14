@@ -8,7 +8,7 @@ namespace Robust.Shared.Toolshed;
 
 public sealed partial class ToolshedManager
 {
-    private ToolshedEnvironment? _defaultEnvironment = default!;
+    private ToolshedEnvironment? _defaultEnvironment;
 
     /// <summary>
     ///     The active permission controller, if any.
@@ -39,7 +39,10 @@ public sealed partial class ToolshedManager
             if (_net.IsClient)
                 throw new NotImplementedException("Toolshed is not yet ready for client-side use.");
 #endif
-           _defaultEnvironment ??= new();
+
+            if (!Started)
+                Startup();
+
             return _defaultEnvironment;
         }
     }

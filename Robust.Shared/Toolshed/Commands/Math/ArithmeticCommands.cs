@@ -295,7 +295,7 @@ public sealed class BitAndNotCommand : ToolshedCommand
         });
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "bitor")]
 public sealed class BitOrCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -314,7 +314,7 @@ public sealed class BitOrCommand : ToolshedCommand
         });
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "bitornot")]
 public sealed class BitOrNotCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]

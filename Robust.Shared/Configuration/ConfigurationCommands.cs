@@ -8,6 +8,58 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Configuration
 {
+    public static class CVarCommandUtil
+    {
+        /// <summary>
+        /// Parses a string into an object of the given type.
+        /// </summary>
+        /// <exception cref="FormatException">Thrown if the string could not be parsed into the given type.</exception>
+        /// <exception cref="NotSupportedException">Thrown if the type is not supported.</exception>
+        public static object ParseObject(Type type, string input)
+        {
+            if (type == typeof(bool))
+            {
+                if (bool.TryParse(input, out var val))
+                    return val;
+
+                if (Parse.TryInt32(input, out var intVal))
+                {
+                    if (intVal == 0) return false;
+                    if (intVal == 1) return true;
+                }
+
+                throw new FormatException($"Could not parse bool value: {input}");
+            }
+
+            if (type == typeof(string))
+            {
+                return input;
+            }
+
+            if (type == typeof(int))
+            {
+                return Parse.Int32(input);
+            }
+
+            if (type == typeof(float))
+            {
+                return Parse.Float(input);
+            }
+
+            if (type == typeof(long))
+            {
+                return long.Parse(input);
+            }
+
+            if (type == typeof(ushort))
+            {
+                return ushort.Parse(input);
+            }
+
+            throw new NotSupportedException();
+        }
+    }
+
     [SuppressMessage("ReSharper", "StringLiteralTypo")]
     internal sealed class CVarCommand : LocalizedCommands
     {
@@ -51,7 +103,7 @@ namespace Robust.Shared.Configuration
                 var type = _cfg.GetCVarType(name);
                 try
                 {
-                    var parsed = ParseObject(type, value);
+                    var parsed = CVarCommandUtil.ParseObject(type, value);
                     _cfg.SetCVar(name, parsed);
                 }
                 catch (FormatException)
@@ -94,50 +146,6 @@ namespace Robust.Shared.Configuration
                 value = $"{value[..51]}…";
 
             return value;
-        }
-
-        private static object ParseObject(Type type, string input)
-        {
-            if (type == typeof(bool))
-            {
-                if (bool.TryParse(input, out var val))
-                    return val;
-
-                if (Parse.TryInt32(input, out var intVal))
-                {
-                    if (intVal == 0) return false;
-                    if (intVal == 1) return true;
-                }
-
-                throw new FormatException($"Could not parse bool value: {input}");
-            }
-
-            if (type == typeof(string))
-            {
-                return input;
-            }
-
-            if (type == typeof(int))
-            {
-                return Parse.Int32(input);
-            }
-
-            if (type == typeof(float))
-            {
-                return Parse.Float(input);
-            }
-
-            if (type == typeof(long))
-            {
-                return long.Parse(input);
-            }
-
-            if (type == typeof(ushort))
-            {
-                return ushort.Parse(input);
-            }
-
-            throw new NotSupportedException();
         }
     }
 

@@ -1,26 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Shared.Toolshed.Syntax;
+using Robust.Shared.Toolshed.TypeParsers;
 
 namespace Robust.Shared.Toolshed.Commands.Generic;
 
-[ToolshedCommand, MapLikeCommand]
+[ToolshedCommand]
 public sealed class TeeCommand : ToolshedCommand
 {
-    public override Type[] TypeParameterParsers => new[] {typeof(Type)};
+    private static Type[] _parsers = [typeof(MapBlockOutputParser)];
+    public override Type[] TypeParameterParsers => _parsers;
 
+    // Take in some input, use it to evaluate some block, and then just keep passing along the input, disregarding the
+    // output of the block. I.e., this behaves like the standard tee tee command, where the block is the "file".
     [CommandImplementation, TakesPipedTypeAsGeneric]
-    public IEnumerable<TOut> Tee<TOut, TIn>(
-            [CommandInvocationContext] IInvocationContext ctx,
+    public IEnumerable<TIn> Tee<TOut, TIn>(
+            IInvocationContext ctx,
             [PipedArgument] IEnumerable<TIn> value,
-            [CommandArgument] Block<TIn, TOut> block
+            Block<TIn, TOut> block
         )
     {
-        return value.Select(x =>
+        foreach (var x in value)
         {
             block.Invoke(x, ctx);
-            return x;
-        }).Where(x => x != null).Cast<TOut>();
+            if (ctx.HasErrors)
+                yield break;
+            yield return x;
+        }
     }
 }

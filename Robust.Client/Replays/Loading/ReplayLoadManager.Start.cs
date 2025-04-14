@@ -95,9 +95,21 @@ public sealed partial class ReplayLoadManager
         _gameState.ClearDetachQueue();
         _gameState.ApplyGameState(checkpoint.State, next);
 
+        // Sort entities to ensure that we initialize parents before children
+        var sorted = new List<EntityUid>(entities.Count);
+        var added = new HashSet<EntityUid>(entities.Count);
+        var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
+        foreach (var uid in entities)
+        {
+            AddSorted(uid, sorted, added, xformQuery);
+        }
+        DebugTools.AssertEqual(sorted.Count, entities.Count);
+        DebugTools.AssertEqual(added.Count, entities.Count);
+        await callback(i, total, LoadingState.Initializing, false);
+
         i = 0;
         var query = _entMan.GetEntityQuery<MetaDataComponent>();
-        foreach (var uid in entities)
+        foreach (var uid in sorted)
         {
             _entMan.InitializeEntity(uid, query.GetComponent(uid));
             if (i++ % 50 == 0)
@@ -109,7 +121,7 @@ public sealed partial class ReplayLoadManager
 
         i = 0;
         await callback(0, total, LoadingState.Starting, true);
-        foreach (var uid in entities)
+        foreach (var uid in sorted)
         {
             _entMan.StartEntity(uid);
             if (i++ % 50 == 0)
@@ -131,5 +143,17 @@ public sealed partial class ReplayLoadManager
         data.CurrentIndex = 0;
         _replayPlayback.StartReplay(data);
         _timing.Paused = false;
+    }
+
+    private void AddSorted(EntityUid uid, List<EntityUid> sortedList, HashSet<EntityUid> added, EntityQuery<TransformComponent> query)
+    {
+        if (!added.Add(uid))
+            return;
+
+        var parent = query.Comp(uid).ParentUid;
+        if (parent != EntityUid.Invalid)
+            AddSorted(parent, sortedList, added, query);
+
+        sortedList.Add(uid);
     }
 }

@@ -87,7 +87,6 @@ public sealed class TileSpawningUIController : UIController
             return;
         _window = UIManager.CreateWindow<TileSpawnWindow>();
         LayoutContainer.SetAnchorPreset(_window,LayoutContainer.LayoutPreset.CenterLeft);
-        _window.SearchBar.GrabKeyboardFocus();
         _window.ClearButton.OnPressed += OnTileClearPressed;
         _window.SearchBar.OnTextChanged += OnTileSearchChanged;
         _window.TileList.OnItemSelected += OnTileItemSelected;

@@ -7,7 +7,7 @@ namespace Robust.Shared.Audio.Components;
 /// <summary>
 /// Marks this entity as being spawned for audio presets in case we need to reload.
 /// </summary>
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState, Access(typeof(SharedAudioSystem))]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(fieldDeltas: true), Access(typeof(SharedAudioSystem))]
 public sealed partial class AudioPresetComponent : Component
 {
     [AutoNetworkedField]

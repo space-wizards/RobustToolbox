@@ -3,14 +3,22 @@ using System.Collections.Generic;
 using Robust.Shared.GameStates;
 using Robust.Shared.Player;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Timing;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
     [RegisterComponent, NetworkedComponent, Access(typeof(SharedUserInterfaceSystem))]
-    public sealed partial class UserInterfaceComponent : Component
+    public sealed partial class UserInterfaceComponent : Component, IComponentDelta
     {
+        /// <inheritdoc />
+        public GameTick LastFieldUpdate { get; set; }
+
+        /// <inheritdoc />
+        public GameTick[] LastModifiedFields { get; set; }
+
         /// <summary>
         /// The currently open interfaces. Used clientside to store the UI.
         /// </summary>
@@ -30,19 +38,71 @@ namespace Robust.Shared.GameObjects
         /// Legacy data, new BUIs should be using comp states.
         /// </summary>
         public Dictionary<Enum, BoundUserInterfaceState> States = new();
+    }
 
-        [Serializable, NetSerializable]
-        internal sealed class UserInterfaceComponentState(
-            Dictionary<Enum, List<NetEntity>> actors,
-            Dictionary<Enum, BoundUserInterfaceState> states,
-            Dictionary<Enum, InterfaceData> data)
-            : IComponentState
+    [Serializable, NetSerializable]
+    internal sealed class UserInterfaceComponentState(
+        Dictionary<Enum, List<NetEntity>> actors,
+        Dictionary<Enum, BoundUserInterfaceState> states,
+        Dictionary<Enum, InterfaceData> data)
+        : IComponentState
+    {
+        public Dictionary<Enum, List<NetEntity>> Actors = actors;
+
+        public Dictionary<Enum, BoundUserInterfaceState> States = states;
+
+        public Dictionary<Enum, InterfaceData> Data = data;
+    }
+
+    [Serializable, NetSerializable]
+    internal sealed class UserInterfaceActorsDeltaState : IComponentDeltaState<UserInterfaceComponentState>
+    {
+        public Dictionary<Enum, List<NetEntity>> Actors = new();
+
+        public void ApplyToFullState(UserInterfaceComponentState fullState)
         {
-            public Dictionary<Enum, List<NetEntity>> Actors = actors;
+            fullState.Actors.Clear();
 
-            public Dictionary<Enum, BoundUserInterfaceState> States = states;
+            foreach (var (key, value) in Actors)
+            {
+                fullState.Actors.Add(key, value);
+            }
+        }
 
-            public Dictionary<Enum, InterfaceData> Data = data;
+        public UserInterfaceComponentState CreateNewFullState(UserInterfaceComponentState fullState)
+        {
+            var newState = new UserInterfaceComponentState(
+                new Dictionary<Enum, List<NetEntity>>(Actors),
+                new(fullState.States),
+                new(fullState.Data));
+
+            return newState;
+        }
+    }
+
+    [Serializable, NetSerializable]
+    internal sealed class UserInterfaceStatesDeltaState : IComponentDeltaState<UserInterfaceComponentState>
+    {
+        public Dictionary<Enum, BoundUserInterfaceState> States = new();
+
+        public void ApplyToFullState(UserInterfaceComponentState fullState)
+        {
+            fullState.States.Clear();
+
+            foreach (var (key, value) in States)
+            {
+                fullState.States.Add(key, value);
+            }
+        }
+
+        public UserInterfaceComponentState CreateNewFullState(UserInterfaceComponentState fullState)
+        {
+            var newState = new UserInterfaceComponentState(
+                new Dictionary<Enum, List<NetEntity>>(fullState.Actors),
+                new(States),
+                new(fullState.Data));
+
+            return newState;
         }
     }
 
@@ -69,6 +129,12 @@ namespace Robust.Shared.GameObjects
         [DataField]
         public bool RequireInputValidation = true;
 
+        public InterfaceData(string clientType, float interactionRange = 2f, bool requireInputValidation = true)
+        {
+            ClientType = clientType;
+            InteractionRange = interactionRange;
+            RequireInputValidation = requireInputValidation;
+        }
         public InterfaceData(InterfaceData data)
         {
             ClientType = data.ClientType;

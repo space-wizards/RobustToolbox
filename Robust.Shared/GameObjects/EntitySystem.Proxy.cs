@@ -885,6 +885,74 @@ public partial class EntitySystem
 
     #endregion
 
+    #region PredictedSpawning
+
+    protected void FlagPredicted(Entity<MetaDataComponent?> ent)
+    {
+        EntityManager.FlagPredicted(ent);
+    }
+
+    /// <inheritdoc cref="IEntityManager.SpawnAttachedTo" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid PredictedSpawnAttachedTo(string? prototype, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
+        => EntityManager.PredictedSpawnAttachedTo(prototype, coordinates, overrides);
+
+    /// <inheritdoc cref="IEntityManager.SpawnAtPosition" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid PredictedSpawnAtPosition(string? prototype, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
+        => EntityManager.PredictedSpawnAtPosition(prototype, coordinates, overrides);
+
+    /// <inheritdoc cref="IEntityManager.TrySpawnInContainer" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool PredictedTrySpawnInContainer(
+        string? protoName,
+        EntityUid containerUid,
+        string containerId,
+        [NotNullWhen(true)] out EntityUid? uid,
+        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null)
+    {
+        return EntityManager.PredictedTrySpawnInContainer(protoName, containerUid, containerId, out uid, containerComp, overrides);
+    }
+
+    /// <inheritdoc cref="IEntityManager.TrySpawnNextTo" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool PredictedTrySpawnNextTo(
+        string? protoName,
+        EntityUid target,
+        [NotNullWhen(true)] out EntityUid? uid,
+        TransformComponent? xform = null,
+        ComponentRegistry? overrides = null)
+    {
+        return EntityManager.PredictedTrySpawnNextTo(protoName, target, out uid, xform, overrides);
+    }
+
+    /// <inheritdoc cref="IEntityManager.SpawnNextToOrDrop" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid PredictedSpawnNextToOrDrop(
+        string? protoName,
+        EntityUid target,
+        TransformComponent? xform = null,
+        ComponentRegistry? overrides = null)
+    {
+        return EntityManager.PredictedSpawnNextToOrDrop(protoName, target, xform, overrides);
+    }
+
+    /// <inheritdoc cref="IEntityManager.SpawnInContainerOrDrop" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid PredictedSpawnInContainerOrDrop(
+        string? protoName,
+        EntityUid containerUid,
+        string containerId,
+        TransformComponent? xform = null,
+        ContainerManagerComponent? container = null,
+        ComponentRegistry? overrides = null)
+    {
+        return EntityManager.PredictedSpawnInContainerOrDrop(protoName, containerUid, containerId, xform, container, overrides);
+    }
+
+    #endregion
+
     #region Utils
 
     /// <summary>

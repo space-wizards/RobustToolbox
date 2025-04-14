@@ -328,15 +328,5 @@ namespace Robust.Client.GameObjects
                 _xforms.DetachEntity(uid.Value, xform);
             }
         }
-
-        /// <inheritdoc />
-        public override void FlagPredicted(Entity<MetaDataComponent?> entity)
-        {
-            if (!MetaQuery.Resolve(entity.Owner, ref entity.Comp, false))
-                return;
-
-            DebugTools.Assert(IsClientSide(entity.Owner, entity.Comp));
-            EnsureComponent<Shared.GameObjects.PredictedSpawnComponent>(entity.Owner);
-        }
     }
 }

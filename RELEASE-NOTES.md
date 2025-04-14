@@ -42,6 +42,7 @@ END TEMPLATE-->
 * Add a new `SerializationManager.PushComposition()` overload that takes in a single parent instead of an array of parents.
 * `BoundUserInterfaceMessageAttempt` once again gets raised as a broadcast event, in addition to being directed.
   * This effectively reverts the breaking part of the changes made in v252.0.0
+* ToolshedCommands that use auto-generated command names can now optionally use `snake_case`. This can be configured by passing an optional argument to `ToolshedManager.Startup()`.
 
 ### Bugfixes
 

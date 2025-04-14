@@ -1,7 +1,9 @@
 using System;
+using System.Diagnostics.Contracts;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 
 namespace Robust.Shared.GameObjects;
 
@@ -11,6 +13,69 @@ public abstract partial class SharedTransformSystem
      * Helper methods for working with EntityCoordinates / MapCoordinates.
      * For grid methods see SharedMapSystem.Coordinates
      */
+
+    /// <summary>
+    /// Tries to snap these grids to coordinate if possible.
+    /// </summary>
+    [Pure]
+    public EntityCoordinates SnapToGrid(EntityCoordinates input)
+    {
+        var gridId = GetGrid(input);
+
+        if (gridId == null)
+        {
+            var mapPos = ToMapCoordinates(input);
+            var mapX = (int)Math.Floor(mapPos.X) + 0.5f;
+            var mapY = (int)Math.Floor(mapPos.Y) + 0.5f;
+            mapPos = new MapCoordinates(new Vector2(mapX, mapY), mapPos.MapId);
+            return ToCoordinates(input.EntityId, mapPos);
+        }
+
+        var grid = _gridQuery.Comp(gridId.Value);
+        var tileSize = grid.TileSize;
+        var localPos = WithEntityId(input, gridId.Value).Position;
+        var x = (int)Math.Floor(localPos.X / tileSize) + tileSize / 2f;
+        var y = (int)Math.Floor(localPos.Y / tileSize) + tileSize / 2f;
+        var gridPos = new EntityCoordinates(gridId.Value, new Vector2(x, y));
+        return WithEntityId(gridPos, input.EntityId);
+    }
+
+    [Pure]
+    public EntityCoordinates SnapToGrid(EntityCoordinates input, MapGridComponent grid)
+    {
+        var tileSize = grid.TileSize;
+
+        var localPos = input.Position;
+
+        var x = (int)Math.Floor(localPos.X / tileSize) + tileSize / 2f;
+        var y = (int)Math.Floor(localPos.Y / tileSize) + tileSize / 2f;
+
+        return new EntityCoordinates(input.EntityId, x, y);
+    }
+
+    /// <summary>
+    /// Tries to snap the supplied input coordinates to output if a grid is found.
+    /// </summary>
+    [Pure]
+    public bool TrySnapToGrid(EntityCoordinates input, out EntityCoordinates output)
+    {
+        var gridId = GetGrid(input);
+
+        if (gridId == null)
+        {
+            output = EntityCoordinates.Invalid;
+            return false;
+        }
+
+        var grid = _gridQuery.Comp(gridId.Value);
+        var tileSize = grid.TileSize;
+        var localPos = WithEntityId(input, gridId.Value).Position;
+        var x = (int)Math.Floor(localPos.X / tileSize) + tileSize / 2f;
+        var y = (int)Math.Floor(localPos.Y / tileSize) + tileSize / 2f;
+        var gridPos = new EntityCoordinates(gridId.Value, new Vector2(x, y));
+        output = WithEntityId(gridPos, input.EntityId);
+        return true;
+    }
 
     /// <summary>
     ///     Verifies that this set of coordinates can be currently resolved to a location.

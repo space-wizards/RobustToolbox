@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -1525,6 +1526,23 @@ public abstract partial class SharedMapSystem
         var parentMapId = _xformQuery.GetComponent(uid).MapID;
 
         return new(GridTileToWorldPos(uid, grid, gridTile), parentMapId);
+    }
+
+    /// <summary>
+    /// Tries to resolves coordinates to a corresponding tileRef. Consider using the other methods if you already have the grid.
+    /// </summary>
+    [Pure]
+    public bool TryGetTileRef(EntityCoordinates coordinates, out TileRef tileRef)
+    {
+        var grid = _transform.GetGrid(coordinates);
+
+        if (!TryComp(grid, out MapGridComponent? mapGrid))
+        {
+            tileRef = TileRef.Zero;
+            return false;
+        }
+
+        return TryGetTileRef(grid.Value, mapGrid, coordinates, out tileRef);
     }
 
     public bool TryGetTileRef(EntityUid uid, MapGridComponent grid, Vector2i indices, out TileRef tile)

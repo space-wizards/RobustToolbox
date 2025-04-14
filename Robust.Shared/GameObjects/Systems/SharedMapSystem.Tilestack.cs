@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
@@ -19,11 +20,11 @@ public abstract partial class SharedMapSystem
     }
 
     /// <summary>
-    ///     Deletes the tilestack if the tile is empty.
+    ///     Deletes the tilestack if the tile is manually changed.
     /// </summary>
     private void OnTileChanged(ref TileChangedEvent ev)
     {
-        return;
+        DeleteTilestack(ev.ChunkIndex, ev.Entity.Owner, ev.Entity.Comp);
     }
 
     /// <summary>
@@ -51,5 +52,28 @@ public abstract partial class SharedMapSystem
         if (!TryTilestack(gridIndices, gridUid, out var tilestack))
             return;
         tilestack!.Add(curTile.Tile);
+    }
+
+    /// <summary>
+    ///     Removes the top tile from the tilestack, does nothing if there is no tilestack.
+    /// </summary>
+    public void RemoveLayer(Vector2i gridIndices, EntityUid gridUid, MapGridComponent grid)
+    {
+        if (!TryTilestack(gridIndices, gridUid, out var tilestack) || !TryComp<TilestackMapGridComponent>(gridUid, out var comp))
+            return;
+        SetTile(gridUid, grid, gridIndices, tilestack![^1]);
+        tilestack.RemoveAt(tilestack.Count - 1);
+        if (tilestack.Count == 0)
+            comp.Data.Remove(gridIndices);
+    }
+
+    /// <summary>
+    ///     Removes the tilestack at the position entirely.
+    /// </summary>
+    public void DeleteTilestack(Vector2i gridIndices, EntityUid gridUid, MapGridComponent grid)
+    {
+        if (!TryComp<TilestackMapGridComponent>(gridUid, out var comp))
+            return;
+        comp.Data.Remove(gridIndices);
     }
 }

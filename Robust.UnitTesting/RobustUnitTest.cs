@@ -67,7 +67,8 @@ namespace Robust.UnitTesting
                 typeof(CollisionWakeComponent),
                 typeof(CollideOnAnchorComponent),
                 typeof(Gravity2DComponent),
-                typeof(ActorComponent)
+                typeof(ActorComponent),
+                typeof(TilestackMapGridComponent)
             };
 
         public virtual UnitTestProject Project => UnitTestProject.Server;

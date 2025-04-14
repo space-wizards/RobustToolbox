@@ -782,6 +782,20 @@ public partial class EntitySystem
         EntityManager.QueueDeleteEntity(uid);
     }
 
+    /// <inheritdoc cref="IEntityManager.DeleteEntity(EntityUid)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void PredictedDel(EntityUid? uid)
+    {
+        EntityManager.PredictedDeleteEntity(uid);
+    }
+
+    /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void PredictedQueueDel(EntityUid? uid)
+    {
+        EntityManager.PredictedQueueDeleteEntity(uid);
+    }
+
     /// <inheritdoc cref="IEntityManager.TryQueueDeleteEntity(EntityUid?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool TryQueueDel(EntityUid? uid)

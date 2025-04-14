@@ -292,13 +292,51 @@ namespace Robust.Client.GameObjects
         }
         #endregion
 
+        /// <inheritdoc />
+        public override void PredictedDeleteEntity(EntityUid? uid)
+        {
+            if (Deleted(uid) || !TransformQuery.TryComp(uid.Value, out var xform))
+                return;
+
+            // So there's 3 scenarios:
+            // 1. Networked entity we just move to nullspace and rely on state handling.
+            // 2. Clientside predicted entity we move to nullspace and also rely on state handling.
+            // 3. Clientside only entity that actually needs deleting here.
+
+            if (HasComponent<PredictedSpawnComponent>(uid))
+            {
+                DeleteEntity(uid.Value);
+            }
+            else
+            {
+                _xforms.DetachEntity(uid.Value, xform);
+            }
+        }
+
+        /// <inheritdoc />
+        public override void PredictedQueueDeleteEntity(EntityUid? uid)
+        {
+            if (uid == null || IsQueuedForDeletion(uid.Value) || !TransformQuery.TryComp(uid.Value, out var xform))
+                return;
+
+            if (HasComponent<PredictedSpawnComponent>(uid.Value))
+            {
+                QueueDeleteEntity(uid.Value);
+            }
+            else
+            {
+                _xforms.DetachEntity(uid.Value, xform);
+            }
+        }
+
+        /// <inheritdoc />
         public override void FlagPredicted(Entity<MetaDataComponent?> entity)
         {
             if (!MetaQuery.Resolve(entity.Owner, ref entity.Comp, false))
                 return;
 
             DebugTools.Assert(IsClientSide(entity.Owner, entity.Comp));
-            EnsureComponent<PredictedSpawnComponent>(entity.Owner);
+            EnsureComponent<Shared.GameObjects.PredictedSpawnComponent>(entity.Owner);
         }
     }
 }

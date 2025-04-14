@@ -211,6 +211,8 @@ public partial class EntityManager
 
     /// <summary>
     /// Flags an entity as being a predicted spawn.
+    /// This means it will be cleaned up via <see cref="ClientGameStateManager"/> under the assumption a server entity will eventually come in.
+    /// If you have an entity that is only clientside then you should not use this method.
     /// </summary>
     public virtual void FlagPredicted(Entity<MetaDataComponent?> entity)
     {

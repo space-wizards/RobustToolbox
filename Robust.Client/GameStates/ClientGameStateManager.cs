@@ -29,6 +29,7 @@ using Robust.Shared.Profiling;
 using Robust.Shared.Replays;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using PredictedSpawnComponent = Robust.Shared.GameObjects.PredictedSpawnComponent;
 
 namespace Robust.Client.GameStates
 {

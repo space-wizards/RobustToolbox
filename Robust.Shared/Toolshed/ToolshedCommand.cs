@@ -78,6 +78,11 @@ public abstract partial class ToolshedCommand
     {
     }
 
+    internal void Init()
+    {
+        Init(false);
+    }
+
     internal void Init(bool snakeCase)
     {
         var type = GetType();

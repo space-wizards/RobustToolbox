@@ -9,6 +9,7 @@ using Robust.Client.Graphics;
 using Robust.Client.Utility;
 using Robust.Shared;
 using Robust.Shared.Audio;
+using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Graphics;
@@ -188,7 +189,7 @@ namespace Robust.Client.ResourceManagement
             var rsiPositions = new (int, Vector2i)[atlasList.Length];
 
             // (start rsi index, end rsi index, final meta atlas reference).
-            var finalMetaAtlases = new List<(int, int, Image<Rgba32>)>();
+            var finalMetaAtlases = new ValueList<(int, int, Image<Rgba32>)>();
 
             // First calculate the position of all sub atlases in the actual atlases.
             // This allows us to get the correct size of the atlases before allocating them.

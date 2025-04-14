@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* `ToolshedEnvironment` initialization  now requires that entity systems have already been initialized first.
+* `ToolshedEnvironment` initialization now requires that entity systems have already been initialized first.
 
 ### New features
 

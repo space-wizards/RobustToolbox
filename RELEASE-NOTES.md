@@ -39,16 +39,11 @@ END TEMPLATE-->
 
 ### New features
 
-* Add a new `SerializationManager.PushComposition()` overload that takes in a single parent instead of an array of parents.
-* `BoundUserInterfaceMessageAttempt` once again gets raised as a broadcast event, in addition to being directed.
-  * This effectively reverts the breaking part of the changes made in v252.0.0
 * Toolshed can now inject entity systems as dependencies
 
 ### Bugfixes
 
-* Fix deferred component removal not setting the component's life stage to `ComponentLifeStage.Stopped` if the component has not yet been initialised.
-* Fix some `EntitySystem.Resolve()` overloads not respecting the optional `logMissing` argument.
-* Fix screen-space overlays not being useable without first initializing/starting entity manager & systems
+*None yet*
 
 ### Other
 
@@ -57,6 +52,30 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 253.0.0
+
+### New features
+
+* Add a new `SerializationManager.PushComposition()` overload that takes in a single parent instead of an array of parents.
+* `BoundUserInterfaceMessageAttempt` once again gets raised as a broadcast event, in addition to being directed.
+  * This effectively reverts the breaking part of the changes made in v252.0.0
+* Fix CreateDistanceJoint using an int instead of a float for minimum distance.
+
+### Bugfixes
+
+* Fix deferred component removal not setting the component's life stage to `ComponentLifeStage.Stopped` if the component has not yet been initialised.
+* Fix some `EntitySystem.Resolve()` overloads not respecting the optional `logMissing` argument.
+* Fix screen-space overlays not being useable without first initializing/starting entity manager & systems
+* ItemList is now significantly optimized. VV's `AddComponent` window in particular should be much faster.
+* Fix some more MapValidator fields.
+* Fix popup text overflowing the sides of the screen.
+* Improve location reporting for non-writeable datafields via analyzer.
+
+### Other
+
+* TestPoint now uses generics rather than IPhysShape directly.
 
 
 ## 252.0.0

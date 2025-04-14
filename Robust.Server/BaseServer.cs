@@ -9,7 +9,6 @@ using Robust.Server.DataMetrics;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
 using Robust.Server.Log;
-using Robust.Server.Placement;
 using Robust.Server.Player;
 using Robust.Server.Scripting;
 using Robust.Server.ServerHub;
@@ -97,7 +96,6 @@ namespace Robust.Server
         [Dependency] private readonly IParallelManagerInternal _parallelMgr = default!;
         [Dependency] private readonly ProfManager _prof = default!;
         [Dependency] private readonly IPrototypeManagerInternal _prototype = default!;
-        [Dependency] private readonly IPlacementManager _placement = default!;
         [Dependency] private readonly IServerViewVariablesInternal _viewVariables = default!;
         [Dependency] private readonly ISerializationManager _serialization = default!;
         [Dependency] private readonly IStatusHost _statusHost = default!;
@@ -349,7 +347,6 @@ namespace Robust.Server
             _config.SetupNetworking();
             _playerManager.Initialize(MaxPlayers);
             _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
-            _placement.Initialize();
             _viewVariables.Initialize();
 
             // Call Init in game assemblies.

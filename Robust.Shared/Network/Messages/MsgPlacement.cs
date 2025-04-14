@@ -11,10 +11,9 @@ using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Network.Messages
 {
-    public sealed class MsgPlacement : NetMessage
+    [Serializable, NetSerializable]
+    public sealed class MsgPlacement : EntityEventArgs
     {
-        public override MsgGroups MsgGroup => MsgGroups.Command;
-
         public PlacementManagerMessage PlaceType { get; set; }
         public string Align { get; set; }
 
@@ -33,75 +32,5 @@ namespace Robust.Shared.Network.Messages
         public string ObjType { get; set; }
         public string AlignOption { get; set; }
         public Vector2 RectSize { get; set; }
-
-        public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
-        {
-            PlaceType = (PlacementManagerMessage) buffer.ReadByte();
-            switch (PlaceType)
-            {
-                case PlacementManagerMessage.RequestPlacement:
-                    Align = buffer.ReadString();
-                    IsTile = buffer.ReadBoolean();
-                    Replacement = buffer.ReadBoolean();
-
-                    if (IsTile) TileType = buffer.ReadInt32();
-                    else EntityTemplateName = buffer.ReadString();
-
-                    NetCoordinates = buffer.ReadNetCoordinates();
-                    DirRcv = (Direction)buffer.ReadByte();
-                    break;
-                case PlacementManagerMessage.StartPlacement:
-                    Range = buffer.ReadInt32();
-                    IsTile = buffer.ReadBoolean();
-                    ObjType = buffer.ReadString();
-                    AlignOption = buffer.ReadString();
-                    break;
-                case PlacementManagerMessage.CancelPlacement:
-                case PlacementManagerMessage.PlacementFailed:
-                    throw new NotImplementedException();
-                case PlacementManagerMessage.RequestEntRemove:
-                    EntityUid = new NetEntity(buffer.ReadInt32());
-                    break;
-                case PlacementManagerMessage.RequestRectRemove:
-                    NetCoordinates = buffer.ReadNetCoordinates();
-                    RectSize = buffer.ReadVector2();
-                    break;
-            }
-        }
-
-        public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
-        {
-            buffer.Write((byte)PlaceType);
-            switch (PlaceType)
-            {
-                case PlacementManagerMessage.RequestPlacement:
-                    buffer.Write(Align);
-                    buffer.Write(IsTile);
-                    buffer.Write(Replacement);
-
-                    if(IsTile) buffer.Write(TileType);
-                    else buffer.Write(EntityTemplateName);
-
-                    buffer.Write(NetCoordinates);
-                    buffer.Write((byte)DirRcv);
-                    break;
-                case PlacementManagerMessage.StartPlacement:
-                    buffer.Write(Range);
-                    buffer.Write(IsTile);
-                    buffer.Write(ObjType);
-                    buffer.Write(AlignOption);
-                    break;
-                case PlacementManagerMessage.CancelPlacement:
-                case PlacementManagerMessage.PlacementFailed:
-                    throw new NotImplementedException();
-                case PlacementManagerMessage.RequestEntRemove:
-                    buffer.Write((int)EntityUid);
-                    break;
-                case PlacementManagerMessage.RequestRectRemove:
-                    buffer.Write(NetCoordinates);
-                    buffer.Write(RectSize);
-                    break;
-            }
-        }
     }
 }

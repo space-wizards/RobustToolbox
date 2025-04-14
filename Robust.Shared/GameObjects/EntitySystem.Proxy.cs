@@ -826,8 +826,8 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.SpawnAttachedTo" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected EntityUid SpawnAttachedTo(string? prototype, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
-        => EntityManager.SpawnAttachedTo(prototype, coordinates, overrides);
+    protected EntityUid SpawnAttachedTo(string? prototype, EntityCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default)
+        => EntityManager.SpawnAttachedTo(prototype, coordinates, overrides, rotation);
 
     /// <inheritdoc cref="IEntityManager.SpawnAtPosition" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -894,8 +894,8 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.SpawnAttachedTo" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected EntityUid PredictedSpawnAttachedTo(string? prototype, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
-        => EntityManager.PredictedSpawnAttachedTo(prototype, coordinates, overrides);
+    protected EntityUid PredictedSpawnAttachedTo(string? prototype, EntityCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default)
+        => EntityManager.PredictedSpawnAttachedTo(prototype, coordinates, overrides, rotation);
 
     /// <inheritdoc cref="IEntityManager.SpawnAtPosition" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

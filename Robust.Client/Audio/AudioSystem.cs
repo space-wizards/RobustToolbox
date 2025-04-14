@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using OpenTK.Audio.OpenAL;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.Player;
@@ -56,6 +57,8 @@ public sealed partial class AudioSystem : SharedAudioSystem
     private EntityQuery<PhysicsComponent> _physicsQuery;
 
     private float _maxRayLength;
+    private float _zOffset;
+    private float _audioEndBuffer;
 
     public override float ZOffset
     {
@@ -78,8 +81,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
             }
         }
     }
-
-    private float _zOffset;
 
     /// <inheritdoc />
     public override void Initialize()
@@ -108,10 +109,16 @@ public sealed partial class AudioSystem : SharedAudioSystem
         SubscribeNetworkEvent<PlayAudioEntityMessage>(OnEntityAudio);
         SubscribeNetworkEvent<PlayAudioPositionalMessage>(OnEntityCoordinates);
 
+        Subs.CVar(CfgManager, CVars.AudioEndBuffer, OnAudioBuffer, true);
         Subs.CVar(CfgManager, CVars.AudioAttenuation, OnAudioAttenuation, true);
         Subs.CVar(CfgManager, CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
         Subs.CVar(CfgManager, CVars.AudioTickRate, OnAudioTickRate, true);
         InitializeLimit();
+    }
+
+    private void OnAudioBuffer(float value)
+    {
+        _audioEndBuffer = value;
     }
 
     private void OnAudioTickRate(int obj)
@@ -120,8 +127,13 @@ public sealed partial class AudioSystem : SharedAudioSystem
         _audioFrameTimeRemaining = MathF.Min(_audioFrameTimeRemaining, _audioFrameTime);
     }
 
-    private void OnAudioState(EntityUid uid, AudioComponent component, ref AfterAutoHandleStateEvent args)
+    private void OnAudioState(Entity<AudioComponent> entity, ref AfterAutoHandleStateEvent args)
     {
+        var component = entity.Comp;
+
+        if (component.LifeStage < ComponentLifeStage.Initialized)
+            return;
+
         ApplyAudioParams(component.Params, component);
         component.Source.Global = component.Global;
 
@@ -145,20 +157,28 @@ public sealed partial class AudioSystem : SharedAudioSystem
             case AudioState.Stopped:
                 component.StopPlaying();
                 component.PlaybackPosition = 0f;
-                break;
+                return;
         }
 
         // If playback position changed then update it.
-        if (!string.IsNullOrEmpty(component.FileName))
-        {
-            var position = (float) ((component.PauseTime ?? Timing.CurTime) - component.AudioStart).TotalSeconds;
-            var currentPosition = component.Source.PlaybackPosition;
-            var diff = Math.Abs(position - currentPosition);
+        var position = (float) ((entity.Comp.PauseTime ?? Timing.CurTime) - entity.Comp.AudioStart).TotalSeconds;
+        var currentPosition = entity.Comp.Source.PlaybackPosition;
+        var diff = Math.Abs(position - currentPosition);
 
-            if (diff > 0.1f)
+        // Don't try to set the audio too far ahead.
+        if (!string.IsNullOrEmpty(entity.Comp.FileName))
+        {
+            if (position > GetAudioLengthImpl(entity.Comp.FileName).TotalSeconds - _audioEndBuffer)
             {
-                component.PlaybackPosition = position;
+                entity.Comp.StopPlaying();
+                return;
             }
+        }
+
+        // If the difference is minor then we'll just keep playing it.
+        if (diff > 0.1f)
+        {
+            entity.Comp.PlaybackPosition = position;
         }
     }
 
@@ -207,6 +227,10 @@ public sealed partial class AudioSystem : SharedAudioSystem
     private void SetupSource(Entity<AudioComponent> entity, AudioResource audioResource, TimeSpan? length = null)
     {
         var component = entity.Comp;
+        length ??= GetAudioLength(component.FileName);
+
+        // If audio came into range then start playback at the correct position.
+        var offset = ((entity.Comp.PauseTime ?? Timing.CurTime) - component.AudioStart).TotalSeconds;
 
         if (TryAudioLimit(component.FileName))
         {
@@ -230,10 +254,17 @@ public sealed partial class AudioSystem : SharedAudioSystem
         // Don't play until first frame so occlusion etc. are correct.
         component.Gain = 0f;
 
-        length ??= GetAudioLength(component.FileName);
-
-        // If audio came into range then start playback at the correct position.
-        var offset = (Timing.CurTime - component.AudioStart).TotalSeconds % length.Value.TotalSeconds;
+        // If the offset < buffer than just play it from the start.
+        if (offset < AudioDespawnBuffer)
+        {
+            offset = 0;
+        }
+        // Not enough audio to play
+        else if (offset > length.Value.TotalSeconds - _audioEndBuffer)
+        {
+            component.StopPlaying();
+            return;
+        }
 
         if (offset > 0)
         {
@@ -415,6 +446,16 @@ public sealed partial class AudioSystem : SharedAudioSystem
         return occlusion;
     }
 
+    private bool TryGetAudio(ResolvedSoundSpecifier specifier, [NotNullWhen(true)] out AudioResource? audio)
+    {
+        var filename = GetAudioPath(specifier);
+        if (_resourceCache.TryGetResource(new ResPath(filename), out audio))
+            return true;
+
+        Log.Error($"Server tried to play audio file {filename} which does not exist.");
+        return false;
+    }
+
     private bool TryGetAudio(string filename, [NotNullWhen(true)] out AudioResource? audio)
     {
         if (_resourceCache.TryGetResource(new ResPath(filename), out audio))
@@ -433,15 +474,15 @@ public sealed partial class AudioSystem : SharedAudioSystem
         return false;
     }
 
-    public override (EntityUid Entity, AudioComponent Component)? PlayPvs(string? filename, EntityCoordinates coordinates,
+    public override (EntityUid Entity, AudioComponent Component)? PlayPvs(ResolvedSoundSpecifier? specifier, EntityCoordinates coordinates,
         AudioParams? audioParams = null)
     {
-        return PlayStatic(filename, Filter.Local(), coordinates, true, audioParams);
+        return PlayStatic(specifier, Filter.Local(), coordinates, true, audioParams);
     }
 
-    public override (EntityUid Entity, AudioComponent Component)? PlayPvs(string? filename, EntityUid uid, AudioParams? audioParams = null)
+    public override (EntityUid Entity, AudioComponent Component)? PlayPvs(ResolvedSoundSpecifier? specifier, EntityUid uid, AudioParams? audioParams = null)
     {
-        return PlayEntity(filename, Filter.Local(), uid, true, audioParams);
+        return PlayEntity(specifier, Filter.Local(), uid, true, audioParams);
     }
 
     /// <inheritdoc />
@@ -477,21 +518,21 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// </summary>
     /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
     /// <param name="audioParams"></param>
-    private (EntityUid Entity, AudioComponent Component)? PlayGlobal(string? filename, AudioParams? audioParams = null, bool recordReplay = true)
+    private (EntityUid Entity, AudioComponent Component)? PlayGlobal(ResolvedSoundSpecifier? specifier, AudioParams? audioParams = null, bool recordReplay = true)
     {
-        if (string.IsNullOrEmpty(filename))
+        if (specifier is null)
             return null;
 
         if (recordReplay && _replayRecording.IsRecording)
         {
             _replayRecording.RecordReplayMessage(new PlayAudioGlobalMessage
             {
-                FileName = filename,
+                Specifier = specifier,
                 AudioParams = audioParams ?? AudioParams.Default
             });
         }
 
-        return TryGetAudio(filename, out var audio) ? PlayGlobal(audio, audioParams) : default;
+        return TryGetAudio(specifier, out var audio) ? PlayGlobal(audio, specifier, audioParams) : default;
     }
 
     /// <summary>
@@ -499,12 +540,12 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// </summary>
     /// <param name="stream">The audio stream to play.</param>
     /// <param name="audioParams"></param>
-    public (EntityUid Entity, AudioComponent Component)? PlayGlobal(AudioStream stream, AudioParams? audioParams = null)
+    public (EntityUid Entity, AudioComponent Component)? PlayGlobal(AudioStream stream, ResolvedSoundSpecifier? specifier, AudioParams? audioParams = null)
     {
-        var (entity, component) = CreateAndStartPlayingStream(audioParams, stream);
+        var (entity, component) = CreateAndStartPlayingStream(audioParams, specifier, stream);
         component.Global = true;
         component.Source.Global = true;
-        Dirty(entity, component);
+        DirtyField(entity, component, nameof(AudioComponent.Global));
         return (entity, component);
     }
 
@@ -513,22 +554,22 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// </summary>
     /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
     /// <param name="entity">The entity "emitting" the audio.</param>
-    private (EntityUid Entity, AudioComponent Component)? PlayEntity(string? filename, EntityUid entity, AudioParams? audioParams = null, bool recordReplay = true)
+    private (EntityUid Entity, AudioComponent Component)? PlayEntity(ResolvedSoundSpecifier? specifier, EntityUid entity, AudioParams? audioParams = null, bool recordReplay = true)
     {
-        if (string.IsNullOrEmpty(filename))
+        if (specifier is null)
             return null;
 
         if (recordReplay && _replayRecording.IsRecording)
         {
             _replayRecording.RecordReplayMessage(new PlayAudioEntityMessage
             {
-                FileName = filename,
+                Specifier = specifier,
                 NetEntity = GetNetEntity(entity),
                 AudioParams = audioParams ?? AudioParams.Default
             });
         }
 
-        return TryGetAudio(filename, out var audio) ? PlayEntity(audio, entity, audioParams) : default;
+        return TryGetAudio(specifier, out var audio) ? PlayEntity(audio, entity, specifier, audioParams) : default;
     }
 
     /// <summary>
@@ -537,7 +578,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <param name="stream">The audio stream to play.</param>
     /// <param name="entity">The entity "emitting" the audio.</param>
     /// <param name="audioParams"></param>
-    public (EntityUid Entity, AudioComponent Component)? PlayEntity(AudioStream stream, EntityUid entity, AudioParams? audioParams = null)
+    public (EntityUid Entity, AudioComponent Component)? PlayEntity(AudioStream stream, EntityUid entity, ResolvedSoundSpecifier? specifier, AudioParams? audioParams = null)
     {
         if (TerminatingOrDeleted(entity))
         {
@@ -545,7 +586,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
             return null;
         }
 
-        var playing = CreateAndStartPlayingStream(audioParams, stream);
+        var playing = CreateAndStartPlayingStream(audioParams, specifier, stream);
         _xformSys.SetCoordinates(playing.Entity, new EntityCoordinates(entity, Vector2.Zero));
 
         return playing;
@@ -557,22 +598,22 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
     /// <param name="coordinates">The coordinates at which to play the audio.</param>
     /// <param name="audioParams"></param>
-    private (EntityUid Entity, AudioComponent Component)? PlayStatic(string? filename, EntityCoordinates coordinates, AudioParams? audioParams = null, bool recordReplay = true)
+    private (EntityUid Entity, AudioComponent Component)? PlayStatic(ResolvedSoundSpecifier? specifier, EntityCoordinates coordinates, AudioParams? audioParams = null, bool recordReplay = true)
     {
-        if (string.IsNullOrEmpty(filename))
+        if (specifier is null)
             return null;
 
         if (recordReplay && _replayRecording.IsRecording)
         {
             _replayRecording.RecordReplayMessage(new PlayAudioPositionalMessage
             {
-                FileName = filename,
+                Specifier = specifier,
                 Coordinates = GetNetCoordinates(coordinates),
                 AudioParams = audioParams ?? AudioParams.Default
             });
         }
 
-        return TryGetAudio(filename, out var audio) ? PlayStatic(audio, coordinates, audioParams) : default;
+        return TryGetAudio(specifier, out var audio) ? PlayStatic(audio, coordinates, specifier, audioParams) : default;
     }
 
     /// <summary>
@@ -581,7 +622,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// <param name="stream">The audio stream to play.</param>
     /// <param name="coordinates">The coordinates at which to play the audio.</param>
     /// <param name="audioParams"></param>
-    public (EntityUid Entity, AudioComponent Component)? PlayStatic(AudioStream stream, EntityCoordinates coordinates, AudioParams? audioParams = null)
+    public (EntityUid Entity, AudioComponent Component)? PlayStatic(AudioStream stream, EntityCoordinates coordinates, ResolvedSoundSpecifier? specifier, AudioParams? audioParams = null)
     {
         if (TerminatingOrDeleted(coordinates.EntityId))
         {
@@ -589,33 +630,33 @@ public sealed partial class AudioSystem : SharedAudioSystem
             return null;
         }
 
-        var playing = CreateAndStartPlayingStream(audioParams, stream);
+        var playing = CreateAndStartPlayingStream(audioParams, specifier, stream);
         _xformSys.SetCoordinates(playing.Entity, coordinates);
         return playing;
     }
 
     /// <inheritdoc />
-    public override (EntityUid Entity, AudioComponent Component)? PlayGlobal(string? filename, Filter playerFilter, bool recordReplay, AudioParams? audioParams = null)
+    public override (EntityUid Entity, AudioComponent Component)? PlayGlobal(ResolvedSoundSpecifier? specifier, Filter playerFilter, bool recordReplay, AudioParams? audioParams = null)
     {
-        return PlayGlobal(filename, audioParams);
+        return PlayGlobal(specifier, audioParams);
     }
 
     /// <inheritdoc />
-    public override (EntityUid Entity, AudioComponent Component)? PlayEntity(string? filename, Filter playerFilter, EntityUid entity, bool recordReplay, AudioParams? audioParams = null)
+    public override (EntityUid Entity, AudioComponent Component)? PlayEntity(ResolvedSoundSpecifier? specifier, Filter playerFilter, EntityUid entity, bool recordReplay, AudioParams? audioParams = null)
     {
-        return PlayEntity(filename, entity, audioParams);
+        return PlayEntity(specifier, entity, audioParams);
     }
 
     /// <inheritdoc />
-    public override (EntityUid Entity, AudioComponent Component)? PlayStatic(string? filename, Filter playerFilter, EntityCoordinates coordinates, bool recordReplay, AudioParams? audioParams = null)
+    public override (EntityUid Entity, AudioComponent Component)? PlayStatic(ResolvedSoundSpecifier? specifier, Filter playerFilter, EntityCoordinates coordinates, bool recordReplay, AudioParams? audioParams = null)
     {
-        return PlayStatic(filename, coordinates, audioParams);
+        return PlayStatic(specifier, coordinates, audioParams);
     }
 
     /// <inheritdoc />
-    public override (EntityUid Entity, AudioComponent Component)? PlayGlobal(string? filename, ICommonSession recipient, AudioParams? audioParams = null)
+    public override (EntityUid Entity, AudioComponent Component)? PlayGlobal(ResolvedSoundSpecifier? specifier, ICommonSession recipient, AudioParams? audioParams = null)
     {
-        return PlayGlobal(filename, audioParams);
+        return PlayGlobal(specifier, audioParams);
     }
 
     public override void LoadStream<T>(Entity<AudioComponent> entity, T stream)
@@ -629,39 +670,39 @@ public sealed partial class AudioSystem : SharedAudioSystem
     }
 
     /// <inheritdoc />
-    public override (EntityUid Entity, AudioComponent Component)? PlayGlobal(string? filename, EntityUid recipient, AudioParams? audioParams = null)
+    public override (EntityUid Entity, AudioComponent Component)? PlayGlobal(ResolvedSoundSpecifier? specifier, EntityUid recipient, AudioParams? audioParams = null)
     {
-        return PlayGlobal(filename, audioParams);
+        return PlayGlobal(specifier, audioParams);
     }
 
     /// <inheritdoc />
-    public override (EntityUid Entity, AudioComponent Component)? PlayEntity(string? filename, ICommonSession recipient, EntityUid uid, AudioParams? audioParams = null)
+    public override (EntityUid Entity, AudioComponent Component)? PlayEntity(ResolvedSoundSpecifier? specifier, ICommonSession recipient, EntityUid uid, AudioParams? audioParams = null)
     {
-        return PlayEntity(filename, uid, audioParams);
+        return PlayEntity(specifier, uid, audioParams);
     }
 
     /// <inheritdoc />
-    public override (EntityUid Entity, AudioComponent Component)? PlayEntity(string? filename, EntityUid recipient, EntityUid uid, AudioParams? audioParams = null)
+    public override (EntityUid Entity, AudioComponent Component)? PlayEntity(ResolvedSoundSpecifier? specifier, EntityUid recipient, EntityUid uid, AudioParams? audioParams = null)
     {
-        return PlayEntity(filename, uid, audioParams);
+        return PlayEntity(specifier, uid, audioParams);
     }
 
     /// <inheritdoc />
-    public override (EntityUid Entity, AudioComponent Component)? PlayStatic(string? filename, ICommonSession recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
+    public override (EntityUid Entity, AudioComponent Component)? PlayStatic(ResolvedSoundSpecifier? specifier, ICommonSession recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
-        return PlayStatic(filename, coordinates, audioParams);
+        return PlayStatic(specifier, coordinates, audioParams);
     }
 
     /// <inheritdoc />
-    public override (EntityUid Entity, AudioComponent Component)? PlayStatic(string? filename, EntityUid recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
+    public override (EntityUid Entity, AudioComponent Component)? PlayStatic(ResolvedSoundSpecifier? specifier, EntityUid recipient, EntityCoordinates coordinates, AudioParams? audioParams = null)
     {
-        return PlayStatic(filename, coordinates, audioParams);
+        return PlayStatic(specifier, coordinates, audioParams);
     }
 
-    private (EntityUid Entity, AudioComponent Component) CreateAndStartPlayingStream(AudioParams? audioParams, AudioStream stream)
+    private (EntityUid Entity, AudioComponent Component) CreateAndStartPlayingStream(AudioParams? audioParams, ResolvedSoundSpecifier? specifier, AudioStream stream)
     {
         var audioP = audioParams ?? AudioParams.Default;
-        var entity = SetupAudio(null, audioP, initialize: false, length: stream.Length);
+        var entity = SetupAudio(specifier, audioP, initialize: false, length: stream.Length);
         LoadStream(entity, stream);
         EntityManager.InitializeAndStartEntity(entity);
         var comp = entity.Comp;
@@ -669,7 +710,8 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
         // TODO clamp the offset inside of SetPlaybackPosition() itself.
         var offset = audioP.PlayOffsetSeconds;
-        offset = Math.Clamp(offset, 0f, (float) stream.Length.TotalSeconds - 0.01f);
+        var maxOffset = Math.Max((float) stream.Length.TotalSeconds - 0.01f, 0f);
+        offset = Math.Clamp(offset, 0f, maxOffset);
         source.PlaybackPosition = offset;
 
         // For server we will rely on the adjusted one but locally we will have to adjust it ourselves.
@@ -693,17 +735,17 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
     private void OnEntityCoordinates(PlayAudioPositionalMessage ev)
     {
-        PlayStatic(ev.FileName, GetCoordinates(ev.Coordinates), ev.AudioParams, false);
+        PlayStatic(ev.Specifier, GetCoordinates(ev.Coordinates), ev.AudioParams, false);
     }
 
     private void OnEntityAudio(PlayAudioEntityMessage ev)
     {
-        PlayEntity(ev.FileName, GetEntity(ev.NetEntity), ev.AudioParams, false);
+        PlayEntity(ev.Specifier, GetEntity(ev.NetEntity), ev.AudioParams, false);
     }
 
     private void OnGlobalAudio(PlayAudioGlobalMessage ev)
     {
-        PlayGlobal(ev.FileName, ev.AudioParams, false);
+        PlayGlobal(ev.Specifier, ev.AudioParams, false);
     }
 
     protected override TimeSpan GetAudioLengthImpl(string filename)

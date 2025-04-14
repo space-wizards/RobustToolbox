@@ -15,11 +15,7 @@ internal sealed class NearbyCommand : ToolshedCommand
     private EntityLookupSystem? _lookup;
 
     [CommandImplementation]
-    public IEnumerable<EntityUid> Nearby(
-            [CommandInvocationContext] IInvocationContext ctx,
-            [PipedArgument] IEnumerable<EntityUid> input,
-            [CommandArgument] float range
-        )
+    public IEnumerable<EntityUid> Nearby([PipedArgument] IEnumerable<EntityUid> input, float range)
     {
         var rangeLimit = _cfg.GetCVar(CVars.ToolshedNearbyLimit);
         if (range > rangeLimit)

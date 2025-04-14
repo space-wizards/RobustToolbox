@@ -467,6 +467,8 @@ Types:
     IComponent: { All: True }
     IContainer: { All: True }
     ITypeDescriptorContext: { All: True }
+    EditorBrowsableAttribute: { All: True }
+    EditorBrowsableState: { All: True }
   System.Diagnostics.CodeAnalysis:
     AllowNullAttribute: { All: True }
     DisallowNullAttribute: { All: True }
@@ -654,6 +656,7 @@ Types:
     PreserveBaseOverridesAttribute: { All: True }
     RefSafetyRulesAttribute: { All: True }
     RequiredMemberAttribute: { All: True }
+    RequiresLocationAttribute: { All: True }
     RuntimeCompatibilityAttribute: { All: True }
     RuntimeHelpers: { All: True }
     SwitchExpressionException: { All: True }
@@ -693,7 +696,7 @@ Types:
       - "bool IsMatch(string, string, System.Text.RegularExpressions.RegexOptions, System.TimeSpan)"
       - "int GroupNumberFromName(string)"
       - "int[] GetGroupNumbers()"
-      - "string Escape()"
+      - "string Escape(string)"
       - "string GroupNameFromNumber(int)"
       - "string Replace(string, string)"
       - "string Replace(string, string, int)"
@@ -722,17 +725,26 @@ Types:
       - "System.Text.RegularExpressions.Match Match(string, string)"
       - "System.Text.RegularExpressions.Match Match(string, string, System.Text.RegularExpressions.RegexOptions)"
       - "System.Text.RegularExpressions.Match Match(string, string, System.Text.RegularExpressions.RegexOptions, System.TimeSpan)"
-      - "System.Text.RegularExpressions.Match[] Matches(string)"
-      - "System.Text.RegularExpressions.Match[] Matches(string, int)"
-      - "System.Text.RegularExpressions.Match[] Matches(string, string)"
-      - "System.Text.RegularExpressions.Match[] Matches(string, string, System.Text.RegularExpressions.RegexOptions)"
-      - "System.Text.RegularExpressions.Match[] Matches(string, string, System.Text.RegularExpressions.RegexOptions, System.TimeSpan)"
+      - "System.Text.RegularExpressions.MatchCollection Matches(string)"
+      - "System.Text.RegularExpressions.MatchCollection Matches(string, int)"
+      - "System.Text.RegularExpressions.MatchCollection Matches(string, string)"
+      - "System.Text.RegularExpressions.MatchCollection Matches(string, string, System.Text.RegularExpressions.RegexOptions)"
+      - "System.Text.RegularExpressions.MatchCollection Matches(string, string, System.Text.RegularExpressions.RegexOptions, System.TimeSpan)"
       - "System.Text.RegularExpressions.RegexOptions get_Options()"
       - "System.TimeSpan get_MatchTimeout()"
       - "void .ctor()"
       - "void .ctor(string)"
       - "void .ctor(string, System.Text.RegularExpressions.RegexOptions)"
       - "void .ctor(string, System.Text.RegularExpressions.RegexOptions, System.TimeSpan)"
+      - "int Count(string)"
+      - "int Count(System.ReadOnlySpan`1<char>)"
+      - "int Count(System.ReadOnlySpan`1<char>, int)"
+      - "int Count(string, string)"
+      - "int Count(string, string, System.Text.RegularExpressions.RegexOptions)"
+      - "int Count(string, string, System.Text.RegularExpressions.RegexOptions, System.TimeSpan)"
+      - "int Count(System.ReadOnlySpan`1<char>, string)"
+      - "int Count(System.ReadOnlySpan`1<char>, string, System.Text.RegularExpressions.RegexOptions)"
+      - "int Count(System.ReadOnlySpan`1<char>, string, System.Text.RegularExpressions.RegexOptions, System.TimeSpan)"
     RegexMatchTimeoutException: { All: True }
     RegexOptions: { } # Enum
     RegexParseError: { }
@@ -786,6 +798,7 @@ Types:
       - "bool Equals(System.ReadOnlySpan`1<char>)"
       - "bool Equals(System.Text.StringBuilder)"
       - "char get_Chars(int)"
+      - "void set_Chars(int, char)"
       - "int EnsureCapacity(int)"
       - "int get_Capacity()"
       - "int get_Length()"
@@ -1196,6 +1209,7 @@ Types:
     RuntimeFieldHandle: { }
     RuntimeMethodHandle: { }
     RuntimeTypeHandle: { }
+    STAThreadAttribute: { All: True }
     SByte: { All: True }
     Single: { All: True }
     Span`1:
@@ -1366,6 +1380,7 @@ Types:
       - "string[] Split(char, int, System.StringSplitOptions)"
       - "string[] Split(char, System.StringSplitOptions)"
       - "string[] Split(char[])"
+      - "string[] Split(System.ReadOnlySpan`1<char>)"
       - "string[] Split(char[], int)"
       - "string[] Split(char[], int, System.StringSplitOptions)"
       - "string[] Split(char[], System.StringSplitOptions)"

@@ -19,9 +19,15 @@ public sealed class AutoGenerateComponentStateAttribute : Attribute
     /// </summary>
     public bool RaiseAfterAutoHandleState;
 
-    public AutoGenerateComponentStateAttribute(bool raiseAfterAutoHandleState = false)
+    /// <summary>
+    ///     Should delta states be generated for every field.
+    /// </summary>
+    public bool FieldDeltas;
+
+    public AutoGenerateComponentStateAttribute(bool raiseAfterAutoHandleState = false, bool fieldDeltas = false)
     {
         RaiseAfterAutoHandleState = raiseAfterAutoHandleState;
+        FieldDeltas = fieldDeltas;
     }
 }
 

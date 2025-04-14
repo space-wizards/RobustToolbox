@@ -92,7 +92,7 @@ namespace Robust.Client.Graphics
 
         public abstract void DrawTextureRectRegion(Texture texture, UIBox2 rect, UIBox2? subRegion = null, Color? modulate = null);
 
-        public void DrawTexture(Texture texture, Vector2 position, Color? modulate = null)
+        public override void DrawTexture(Texture texture, Vector2 position, Color? modulate = null)
         {
             CheckDisposed();
 

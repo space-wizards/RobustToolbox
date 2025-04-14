@@ -278,10 +278,11 @@ namespace Robust.Shared.Physics.Systems
         /// <param name="state">A custom state to pass to the predicate.</param>
         /// <param name="predicate">A predicate to check whether to ignore an entity or not. If it returns true, it will be ignored.</param>
         /// <param name="returnOnFirstHit">If true, will only include the first hit entity in results. Otherwise, returns all of them.</param>
+        /// <param name="collideWithNonHardFixtures">If true, will also consider non-hard fixtures for collisions.</param>
         /// <remarks>You can avoid variable capture in many cases by using this method and passing a custom state to the predicate.</remarks>
         /// <returns>A result object describing the hit, if any.</returns>
         public IEnumerable<RayCastResults> IntersectRayWithPredicate<TState>(MapId mapId, CollisionRay ray, TState state,
-            Func<EntityUid, TState, bool> predicate, float maxLength = 50F, bool returnOnFirstHit = true)
+            Func<EntityUid, TState, bool> predicate, float maxLength = 50F, bool returnOnFirstHit = true, bool collideWithNonHardFixtures = false )
         {
             List<RayCastResults> results = new();
             var endPoint = ray.Position + ray.Direction.Normalized() * maxLength;
@@ -313,7 +314,7 @@ namespace Robust.Shared.Physics.Systems
                             if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
                                 return true;
 
-                            if (!proxy.Fixture.Hard)
+                            if (!collideWithNonHardFixtures && !proxy.Fixture.Hard)
                                 return true;
 
                             if (predicate.Invoke(proxy.Entity, state) == true)
@@ -349,7 +350,7 @@ namespace Robust.Shared.Physics.Systems
                             if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
                                 return true;
 
-                            if (!proxy.Fixture.Hard)
+                            if (!collideWithNonHardFixtures && !proxy.Fixture.Hard)
                                 return true;
 
                             if (predicate.Invoke(proxy.Entity, state) == true)

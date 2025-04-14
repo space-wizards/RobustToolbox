@@ -441,7 +441,7 @@ namespace Robust.Client.Graphics.Clyde
             if (rotationMirroring != 0)
             {
                 // Rotate the tile
-                for (int r = 0; r < rotationMirroring % 2; r++)
+                for (int r = 0; r < rotationMirroring % 4; r++)
                 {
                     (rLeftBottom, rRightBottom, rRightTop, rLeftTop) =
                         (rLeftTop, rLeftBottom, rRightBottom, rRightTop);

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -18,7 +17,6 @@ public sealed class ToolshedEnvironment
     [Dependency] private readonly ILogManager _logManager = default!;
     [Dependency] private readonly ToolshedManager _toolshedManager = default!;
     [Dependency] private readonly IDependencyCollection _dependency = default!;
-    [Dependency] private readonly IConfigurationManager _cfg = default!;
 
     // Dictionary of commands, not including sub-commands
     private readonly Dictionary<string, ToolshedCommand> _commands = new();
@@ -85,7 +83,6 @@ public sealed class ToolshedEnvironment
         _log = _logManager.GetSawmill("toolshed");
         var watch = new Stopwatch();
         watch.Start();
-        var snek = _cfg.GetCVar(CVars.ToolshedSnakeCase);
 
         foreach (var ty in commands)
         {
@@ -97,7 +94,7 @@ public sealed class ToolshedEnvironment
 
             var cmd = (ToolshedCommand)Activator.CreateInstance(ty)!;
             _dependency.InjectDependencies(cmd, oneOff: true);
-            cmd.Init(snek);
+            cmd.Init();
             _commands.Add(cmd.Name, cmd);
 
             var list = new List<CommandSpec>();

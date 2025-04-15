@@ -41,39 +41,15 @@ public sealed partial class ToolshedManager
 
     private Dictionary<NetUserId, OldShellInvocationContext> _contexts = new();
 
-    [MemberNotNullWhen(true, nameof(_defaultEnvironment))]
-    public bool Started { get; private set; }
-    public bool Initialized { get; private set; }
-
     /// <summary>
     ///     If you're not an engine developer, you probably shouldn't call this.
     /// </summary>
     public void Initialize()
     {
-        if (Initialized)
-            throw new Exception("Already initialized");
-
-        Initialized = true;
         _log = _logManager.GetSawmill("toolshed");
 
         InitializeParser();
         _player.PlayerStatusChanged += OnStatusChanged;
-    }
-
-    /// <summary>
-    /// Initialize the default toolshed environment and discover toolshed commands
-    /// </summary>
-    [MemberNotNull(nameof(_defaultEnvironment))]
-    public void Startup()
-    {
-        if (!Initialized)
-            throw new Exception("Not yet initialized");
-
-        if (Started)
-            throw new Exception("Already started");
-
-        Started = true;
-        _defaultEnvironment = new ToolshedEnvironment();
     }
 
     private void OnStatusChanged(object? sender, SessionStatusEventArgs e)

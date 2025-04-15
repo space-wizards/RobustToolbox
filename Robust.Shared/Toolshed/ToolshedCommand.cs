@@ -80,11 +80,6 @@ public abstract partial class ToolshedCommand
 
     internal void Init()
     {
-        Init(false);
-    }
-
-    internal void Init(bool snakeCase)
-    {
         var type = GetType();
         var name = type.GetCustomAttribute<ToolshedCommandAttribute>()!.Name;
         if (name is null)
@@ -94,8 +89,7 @@ public abstract partial class ToolshedCommand
             if (!typeName.EndsWith(commandStr))
                 throw new InvalidCommandImplementation($"Command {type} must end with the word Command");
 
-            name = typeName[..^commandStr.Length];
-            name = snakeCase ? name.ToSnakeCase() : name.ToLowerInvariant();
+            name = typeName[..^commandStr.Length].ToSnakeCase();
         }
 
         if (string.IsNullOrEmpty(name) || !name.EnumerateRunes().All(ParserContext.IsCommandToken))

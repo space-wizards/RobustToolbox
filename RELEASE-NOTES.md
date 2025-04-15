@@ -35,11 +35,11 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Auto-generated ToolshedCommand command names will now use `snake_case`, instead of simply using `ToLowerCase()`.
 
 ### New features
 
-* ToolshedCommands that use auto-generated command names can now optionally use `snake_case`. This can be configured via a new `toolshed.snake_case` cvar.
+*None yet*
 
 ### Bugfixes
 

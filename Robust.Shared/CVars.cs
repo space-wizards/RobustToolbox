@@ -1875,12 +1875,6 @@ namespace Robust.Shared
         public static readonly CVarDef<int> ToolshedNearbyEntitiesLimit =
             CVarDef.Create("toolshed.nearby_entities_limit", 5, CVar.SERVER | CVar.REPLICATED);
 
-        /// <summary>
-        ///     If true, this will use snake_case when auto-generating command names from C# classes.
-        /// </summary>
-        public static readonly CVarDef<bool> ToolshedSnakeCase =
-            CVarDef.Create("toolshed.snake_case", false, CVar.SERVER | CVar.REPLICATED);
-
         /*
          * Localization
          */

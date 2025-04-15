@@ -95,10 +95,6 @@ public abstract partial class ToolshedCommand
                 throw new InvalidCommandImplementation($"Command {type} must end with the word Command");
 
             name = typeName[..^commandStr.Length];
-
-            if (name.ToSnakeCase() != name.ToLower())
-                System.Console.WriteLine(name);
-
             name = snakeCase ? name.ToSnakeCase() : name.ToLowerInvariant();
         }
 

@@ -65,7 +65,6 @@ public sealed class ToolshedEnvironment
     /// <summary>
     ///     Initializes a default toolshed context.
     /// </summary>
-    /// <param name="snakeCase">Whether to use snake-case when auto-generating command names</param>
     public ToolshedEnvironment()
     {
         IoCManager.InjectDependencies(this);
@@ -75,7 +74,6 @@ public sealed class ToolshedEnvironment
     /// <summary>
     /// Initialized a toolshed context with only the specified toolshed commands.
     /// </summary>
-    /// <param name="snakeCase">Whether to use snake-case when auto-generating command names</param>
     public ToolshedEnvironment(IEnumerable<Type> commands)
     {
         IoCManager.InjectDependencies(this);

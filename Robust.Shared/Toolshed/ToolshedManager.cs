@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -36,6 +37,7 @@ public sealed partial class ToolshedManager
 #endif
     [Dependency] private readonly ISharedPlayerManager _player = default!;
     [Dependency] private readonly IConsoleHost _conHost = default!;
+    [Dependency] internal readonly IConfigurationManager _cfg = default!;
 
     private ISawmill _log = default!;
 
@@ -63,9 +65,8 @@ public sealed partial class ToolshedManager
     /// <summary>
     /// Initialize the default toolshed environment and discover toolshed commands
     /// </summary>
-    /// <param name="snakeCase">Whether to use snake-case when auto-generating command names</param>
     [MemberNotNull(nameof(_defaultEnvironment))]
-    public void Startup(bool snakeCase = false)
+    public void Startup()
     {
         if (!Initialized)
             throw new Exception("Not yet initialized");
@@ -74,7 +75,8 @@ public sealed partial class ToolshedManager
             throw new Exception("Already started");
 
         Started = true;
-        _defaultEnvironment = new ToolshedEnvironment(snakeCase);
+        var snek = _cfg.GetCVar(CVars.ToolshedSnakeCase);
+        _defaultEnvironment = new ToolshedEnvironment(snek);
     }
 
     private void OnStatusChanged(object? sender, SessionStatusEventArgs e)

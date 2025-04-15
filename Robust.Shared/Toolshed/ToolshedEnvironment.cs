@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -17,6 +18,7 @@ public sealed class ToolshedEnvironment
     [Dependency] private readonly ILogManager _logManager = default!;
     [Dependency] private readonly ToolshedManager _toolshedManager = default!;
     [Dependency] private readonly IDependencyCollection _dependency = default!;
+    [Dependency] private readonly IConfigurationManager _cfg = default!;
 
     // Dictionary of commands, not including sub-commands
     private readonly Dictionary<string, ToolshedCommand> _commands = new();
@@ -64,27 +66,28 @@ public sealed class ToolshedEnvironment
     ///     Initializes a default toolshed context.
     /// </summary>
     /// <param name="snakeCase">Whether to use snake-case when auto-generating command names</param>
-    public ToolshedEnvironment(bool snakeCase = false)
+    public ToolshedEnvironment()
     {
         IoCManager.InjectDependencies(this);
-        Init(_reflection.FindTypesWithAttribute<ToolshedCommandAttribute>(), snakeCase);
+        Init(_reflection.FindTypesWithAttribute<ToolshedCommandAttribute>());
     }
 
     /// <summary>
     /// Initialized a toolshed context with only the specified toolshed commands.
     /// </summary>
     /// <param name="snakeCase">Whether to use snake-case when auto-generating command names</param>
-    public ToolshedEnvironment(IEnumerable<Type> commands, bool snakeCase = false)
+    public ToolshedEnvironment(IEnumerable<Type> commands)
     {
         IoCManager.InjectDependencies(this);
-        Init(commands, snakeCase);
+        Init(commands);
     }
 
-    private void Init(IEnumerable<Type> commands, bool snakeCase)
+    private void Init(IEnumerable<Type> commands)
     {
         _log = _logManager.GetSawmill("toolshed");
         var watch = new Stopwatch();
         watch.Start();
+        var snek = _cfg.GetCVar(CVars.ToolshedSnakeCase);
 
         foreach (var ty in commands)
         {
@@ -96,7 +99,7 @@ public sealed class ToolshedEnvironment
 
             var cmd = (ToolshedCommand)Activator.CreateInstance(ty)!;
             _dependency.InjectDependencies(cmd, oneOff: true);
-            cmd.Init(snakeCase);
+            cmd.Init(snek);
             _commands.Add(cmd.Name, cmd);
 
             var list = new List<CommandSpec>();

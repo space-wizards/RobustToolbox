@@ -35,7 +35,15 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Toolshed related changes:
+  * Toolshed Commands can now be executed from the client-side shell and will be automatically registered, which may cause command name conflicts.
+  * ToolshedManager must now be started before the default environment can be used.
+  * ToolshedCommands may now depend on entity system, and ToolshedManager will now only start & load the default environment after EntityManager (like `IEntityConsoleHost` and `IEntityConsoleCommands`).
+* `ConsoleHost`s and related classes/interfaces have been significantly modified, including:
+  * `IConGroupController`, `IConGroupControllerImplementation`, and `ConGroupController`, have been moved from server to `Robust.Shared.Console`.
+  * The client now also needs to set `IConGroupController.Implementation`, otherwise ConsoleHost permission checks will fail when using the default `IConGroupController`.
+  * `IConsoleHost.AvailableCommands` will now contain proxy commands for some ToolshedCommands via the new `ToolshedProxyCommand` class.
+  * `IConsoleHost` now has several new methods & properties that must be implemented, and Several methods in `ConsoleHost` & the sever & client equivalent have been renamed or moved to the shared class.
 
 ### New features
 

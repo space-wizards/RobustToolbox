@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using Robust.Server.Console;
 using Robust.Server.Player;
 using Robust.Shared.Audio;
+using Robust.Shared.Console;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;

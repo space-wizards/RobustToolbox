@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Robust.Shared.Player;
 using Robust.Shared.Reflection;
+using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Console
@@ -33,6 +34,8 @@ namespace Robust.Shared.Console
     /// </summary>
     public interface IConsoleHost
     {
+        void Initialize();
+
         /// <summary>
         /// Is the shell running on the client?
         /// </summary>
@@ -49,9 +52,45 @@ namespace Robust.Shared.Console
         IConsoleShell LocalShell { get; }
 
         /// <summary>
-        /// A map of (commandName -> ICommand) of every registered command in the shell.
+        /// All currently available commands in the shell indexed by the command name.
         /// </summary>
+        /// <remarks>
+        /// This will generally contain a combination of currently available locally defined commands and proxies for
+        /// some toolshed commands, specifically all of those that don't require a piped input and can thus be used to
+        /// initiate a toolshed <see cref="CommandRun"/>.
+        ///
+        /// If this is a client, this will also contain proxies for remotely executing server-side commands.
+        /// </remarks>
         IReadOnlyDictionary<string, IConsoleCommand> AvailableCommands { get; }
+
+        /// <summary>
+        /// All locally registered commands in the shell indexed by the command name.
+        /// </summary>
+        /// <remarks>
+        /// Unlike <see cref="AvailableCommands"/>, this only ever contains locally defined commands. This does not
+        /// contain locally defined toolshed commands, nor does it contain proxies for remotely executed commands.
+        /// </remarks>
+        IReadOnlyDictionary<string, IConsoleCommand> RegisteredCommands { get; }
+
+        /// <summary>
+        /// Currently available remotely executable commands. I.e., on the client these will be proxy commands that
+        /// will attempt to execute a command on the server.
+        /// </summary>
+        IReadOnlyDictionary<string, IConsoleCommand> RemoteCommands { get; }
+
+        /// <summary>
+        /// Whether the given command is currently available.
+        /// </summary>
+        /// <remarks>
+        /// This can be used to restrict some commands in some game modes (i.e., single-player only commands).
+        /// </remarks>
+        bool IsAvailable(IConsoleCommand cmd) => true;
+
+        /// <summary>
+        /// This re-computes the <see cref="AvailableCommands"/>. This should be called whenever command availability
+        /// might change (<see cref="IsAvailable"/>).
+        /// </summary>
+        void UpdateAvailableCommands();
 
         /// <summary>
         /// Invoked before any console command is executed.

@@ -513,19 +513,19 @@ internal sealed class ToolshedCommandImplementor
     {
         var dis = new CommandDiscriminator(args.PipedType, args.TypeArguments);
         if (!Implementations.TryGetValue(dis, out var impl))
-            Implementations[dis] = impl = GetImplementationInternal(args, method);
+            Implementations[dis] = impl = GetImplementationInternal(args.PipedType, method);
 
         return impl;
     }
 
-    internal Func<CommandInvocationArguments, object?> GetImplementationInternal(CommandArgumentBundle cmdArgs, ConcreteCommandMethod method)
+    internal Func<CommandInvocationArguments, object?> GetImplementationInternal(Type? pipedType, ConcreteCommandMethod method)
     {
         var args = Expression.Parameter(typeof(CommandInvocationArguments));
         var paramList = new List<Expression>();
 
         foreach (var param in method.Info.GetParameters())
         {
-            paramList.Add(GetParamExpr(param, cmdArgs.PipedType, args));
+            paramList.Add(GetParamExpr(param, pipedType, args));
         }
 
         Expression partialShim = Expression.Call(Expression.Constant(Owner), method.Info, paramList);
@@ -570,6 +570,8 @@ internal sealed class ToolshedCommandImplementor
         return GetArgExpr(param, args);
     }
 
+    // Used to get an expression that is equivalent to:
+    // ValueRef<T>.EvaluateParameter(args.Arguments[param.Name], args.Context)
     private Expression GetArgExpr(ParameterInfo param, ParameterExpression args)
     {
         // args.Arguments[param.Name]
@@ -599,6 +601,7 @@ internal sealed class ToolshedCommandImplementor
                 .GetMethod(nameof(ValueRef<int>.EvaluateParameter), BindingFlags.Static | BindingFlags.NonPublic)!;
         }
 
+        // ValueRef<T>.EvaluateParameter(args.Arguments[param.Name], args.Context)
         return Expression.Call(evalMethod, argValue, ctx);
     }
 

@@ -1,9 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Console;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
@@ -29,25 +32,102 @@ public sealed partial class ToolshedManager
     [Dependency] private readonly IEntityManager _entity = default!;
     [Dependency] private readonly IReflectionManager _reflection = default!;
     [Dependency] private readonly ILogManager _logManager = default!;
-#if !CLIENT_SCRIPTING
-    [Dependency] private readonly INetManager _net = default!;
-#endif
     [Dependency] private readonly ISharedPlayerManager _player = default!;
     [Dependency] private readonly IConsoleHost _conHost = default!;
+    [Dependency] internal readonly ILocalizationManager Loc = default!;
 
     private ISawmill _log = default!;
 
     private Dictionary<NetUserId, OldShellInvocationContext> _contexts = new();
+    private List<string> _registeredCommands = new();
+
+    /// <summary>
+    /// Invoked after commands have been loaded into the default environment.
+    /// </summary>
+    public event Action? CommandsLoaded;
+
+    [MemberNotNullWhen(true, nameof(_defaultEnvironment))]
+    public bool Started { get; private set; }
+    public bool Initialized { get; private set; }
 
     /// <summary>
     ///     If you're not an engine developer, you probably shouldn't call this.
     /// </summary>
     public void Initialize()
     {
+        if (Initialized)
+            throw new Exception("Already initialized");
+
+        Initialized = true;
         _log = _logManager.GetSawmill("toolshed");
 
         InitializeParser();
         _player.PlayerStatusChanged += OnStatusChanged;
+    }
+
+    /// <summary>
+    /// Initialize the default toolshed environment and discover toolshed commands
+    /// </summary>
+    [MemberNotNull(nameof(_defaultEnvironment))]
+    public void Startup()
+    {
+        if (!Initialized)
+            throw new Exception("Not yet initialized");
+
+        if (Started)
+            throw new Exception("Already started");
+
+        Started = true;
+        _defaultEnvironment = new ToolshedEnvironment();
+
+        UpdateRegistrations();
+    }
+
+    public void Shutdown()
+    {
+        if (!Started)
+            throw new Exception("Not started");
+
+        Started = false;
+        _defaultEnvironment = null;
+
+        _conHost.BeginRegistrationRegion();
+        foreach (var cmd in _registeredCommands)
+        {
+            _conHost.UnregisterCommand(cmd);
+        }
+        _conHost.EndRegistrationRegion();
+        _registeredCommands.Clear();
+    }
+
+    private void UpdateRegistrations()
+    {
+        _conHost.BeginRegistrationRegion();
+        foreach (var toolCmd in DefaultEnvironment.CommandsTakingType(null))
+        {
+            var name = toolCmd.FullName();
+            if (_conHost.RegisteredCommands.ContainsKey(name))
+                continue;
+
+            var cmd = new ToolshedProxyCommand(toolCmd, this);
+            _conHost.RegisterCommand(cmd);
+            _registeredCommands.Add(name);
+        }
+
+        _conHost.EndRegistrationRegion();
+        CommandsLoaded?.Invoke();
+    }
+
+    /// <summary>
+    /// Manually add a toolshed command to the default enviroment and register it with the console host.
+    /// </summary>
+    public void RegisterCommand<T>() where T : ToolshedCommand, new()
+    {
+        if (!Started)
+            throw new Exception("Not started");
+
+        _defaultEnvironment.RegisterCommand<T>();
+        UpdateRegistrations();
     }
 
     private void OnStatusChanged(object? sender, SessionStatusEventArgs e)
@@ -162,7 +242,7 @@ public sealed partial class ToolshedManager
         return true;
     }
 
-    public CompletionResult? GetCompletions(ConsoleShell shell, string command)
+    public CompletionResult? GetCompletions(IConsoleShell shell, string command)
     {
         var idx = shell.Player?.UserId ?? new NetUserId();
         if (!_contexts.TryGetValue(idx, out var ourCtx))

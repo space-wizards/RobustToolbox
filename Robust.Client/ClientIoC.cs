@@ -141,6 +141,7 @@ namespace Robust.Client
             deps.Register<IClientViewVariablesManager, ClientViewVariablesManager>();
             deps.Register<IClientViewVariablesManagerInternal, ClientViewVariablesManager>();
             deps.Register<IClientConGroupController, ClientConGroupController>();
+            deps.Register<IConGroupController, ClientConGroupController>();
             deps.Register<IScriptClient, ScriptClient>();
             deps.Register<IRobustSerializer, ClientRobustSerializer>();
             deps.Register<IRobustSerializerInternal, ClientRobustSerializer>();

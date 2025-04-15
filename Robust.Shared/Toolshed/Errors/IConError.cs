@@ -12,6 +12,10 @@ namespace Robust.Shared.Toolshed.Errors;
 // A bunch of the errors are structs, but they get boxed anyways.  So might as well make them all inherit from a base
 // class, so that we don't need to constantly re-define the properties.
 
+// TODO TOOLSHED
+// apparently StackTrace is not whitelisted
+// So cannot define errors in content.shared or client.
+
 /// <summary>
 ///     A Toolshed-oriented representation of an error.
 ///     Contains metadata about where in an executed command it occurred, and supports formatting.

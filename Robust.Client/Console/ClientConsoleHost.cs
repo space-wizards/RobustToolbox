@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,7 +15,6 @@ using Robust.Shared.Network.Messages;
 using Robust.Shared.Player;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
-using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.Console
 {
@@ -48,25 +46,32 @@ namespace Robust.Client.Console
 
     /// <inheritdoc cref="IClientConsoleHost" />
     [Virtual]
-    internal partial class ClientConsoleHost : ConsoleHost, IClientConsoleHost, IConsoleHostInternal, IPostInjectInit
+    internal partial class ClientConsoleHost : ConsoleHost, IClientConsoleHost, IConsoleHostInternal
     {
-        [Dependency] private readonly IClientConGroupController _conGroup = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly IPlayerManager _player = default!;
         [Dependency] private readonly IBaseClient _client = default!;
-        [Dependency] private readonly ILogManager _logMan = default!;
-
-        [ViewVariables] private readonly Dictionary<string, IConsoleCommand> _availableServerCommands = new();
 
         private bool _requestedCommands;
-        private ISawmill _logger = default!;
+
+        /// <summary>
+        /// Sawmill associated with the console. Text that is manually written to the console should be
+        /// logged via this logger.
+        /// </summary>
+        /// <remarks>
+        /// The console also automatically echoes most logged messages, but will exempt any coming from this
+        /// logger to avoid duplicates.
+        /// </remarks>
         private ISawmill _conLogger = default!;
+        public const string ConsoleSawmill = "CON";
 
         public ClientConsoleHost() : base(isServer: false) {}
 
-        /// <inheritdoc />
-        public void Initialize()
+        public override void Initialize()
         {
+            base.Initialize();
+            _conLogger = LogManager.GetSawmill(ConsoleSawmill);
+
             NetManager.RegisterNetMessage<MsgConCmdReg>(HandleConCmdReg);
             NetManager.RegisterNetMessage<MsgConCmdAck>(HandleConCmdAck);
             NetManager.RegisterNetMessage<MsgConCmd>(ProcessCommand);
@@ -83,9 +88,6 @@ namespace Robust.Client.Console
             LogManager.RootSawmill.AddHandler(new DebugConsoleLogHandler(this));
         }
 
-        private readonly Dictionary<string, IConsoleCommand> _availableCommands = new();
-        public override IReadOnlyDictionary<string, IConsoleCommand> AvailableCommands => _availableCommands;
-
         private void OnLevelChanged(object? sender, RunLevelChangedEventArgs e)
         {
             UpdateAvailableCommands();
@@ -93,32 +95,24 @@ namespace Robust.Client.Console
 
         private void OnNetworkDisconnected(object? sender, NetDisconnectedArgs e)
         {
-            _availableServerCommands.Clear();
+            RemoteCommands.Clear();
             _requestedCommands = false;
             UpdateAvailableCommands();
         }
 
-        protected override void UpdateAvailableCommands()
+        public override bool IsAvailable(IConsoleCommand cmd)
         {
-            _availableCommands.Clear();
+            if (!base.IsAvailable(cmd))
+                return false;
 
-            foreach (var (name, cmd) in RegisteredCommands)
-            {
-                if (!cmd.RequireServerOrSingleplayer || (_client.RunLevel is ClientRunLevel.Initialize or ClientRunLevel.SinglePlayerGame))
-                    _availableCommands.Add(name, cmd);
-            }
-
-            foreach (var (name, cmd) in _availableServerCommands)
-            {
-                _availableCommands.TryAdd(name, cmd);
-            }
+            return !cmd.RequireServerOrSingleplayer
+                   || (_client.RunLevel is ClientRunLevel.Initialize or ClientRunLevel.SinglePlayerGame);
         }
 
         private void ProcessCommand(MsgConCmd message)
         {
-            string? text = message.Text;
-            LogManager.GetSawmill(SawmillName).Info($"SERVER:{text}");
-
+            var text = message.Text;
+            Sawmill.Info($"SERVER:{text}");
             ExecuteCommand(null, text);
         }
 
@@ -152,8 +146,6 @@ namespace Robust.Client.Console
             return cmd is ServerDummyCommand;
         }
 
-        public override event ConAnyCommandCallback? AnyCommandExecuted;
-
         /// <inheritdoc />
         public override void ExecuteCommand(ICommonSession? session, string command)
         {
@@ -168,40 +160,14 @@ namespace Robust.Client.Console
             // echo the command locally
             OutputText(msg, true, false);
 
-            //Commands are processed locally and then sent to the server to be processed there again.
-            var args = new List<string>();
-
-            CommandParsing.ParseArguments(command, args);
-
-            var commandName = args[0];
-
-            if (!AvailableCommands.TryGetValue(commandName, out var cmd))
-            {
-                WriteError(null, "Unknown command: " + commandName);
-                return;
-            }
-
-            if (!CanExecute(commandName))
-            {
-                WriteError(null, $"Insufficient perms for command: {commandName}");
-                return;
-            }
-
-            args.RemoveAt(0);
             var shell = new ConsoleShell(this, session ?? _player.LocalSession, session == null);
-            var cmdArgs = args.ToArray();
-
-            AnyCommandExecuted?.Invoke(shell, commandName, command, cmdArgs);
-            cmd.Execute(shell, command, cmdArgs);
+            ExecuteInShell(shell, command);
         }
 
-        private bool CanExecute(string cmdName)
+        protected override bool ShellCanExecute(IConsoleShell shell, IConsoleCommand cmd)
         {
-            // When not connected to a server, you can run all local commands.
-            // When connected to a server, you can only run commands according to the con group controller.
-
-            return _player.LocalSession is not { Status: > SessionStatus.Connecting }
-                   || _conGroup.CanCommand(cmdName);
+            return shell.Player is not {Status: > SessionStatus.Connecting}
+                   || base.ShellCanExecute(shell, cmd);
         }
 
         /// <inheritdoc />
@@ -251,17 +217,17 @@ namespace Robust.Client.Console
         {
             foreach (var cmd in msg.Commands)
             {
-                string? commandName = cmd.Name;
+                var commandName = cmd.Name;
 
                 // Do not do duplicate commands.
-                if (_availableServerCommands.ContainsKey(commandName))
+                if (RemoteCommands.ContainsKey(commandName))
                 {
-                    _logger.Error($"Server sent duplicate console command {commandName}");
+                    Sawmill.Error($"Server sent duplicate console command {commandName}");
                     continue;
                 }
 
                 var command = new ServerDummyCommand(commandName, cmd.Help, cmd.Description);
-                _availableServerCommands[commandName] = command;
+                RemoteCommands[commandName] = command;
             }
 
             UpdateAvailableCommands();
@@ -282,12 +248,6 @@ namespace Robust.Client.Console
             NetManager.ClientSendMessage(msg);
 
             _requestedCommands = true;
-        }
-
-        void IPostInjectInit.PostInject()
-        {
-            _logger = _logMan.GetSawmill("console");
-            _conLogger = _logMan.GetSawmill("CON");
         }
 
         /// <summary>

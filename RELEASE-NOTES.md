@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* ToolshedCommands that use auto-generated command names can now optionally use `snake_case`. This can be configured by passing an optional argument to `ToolshedManager.Startup()`.
+* ToolshedCommands that use auto-generated command names can now optionally use `snake_case`. This can be configured via a new `toolshed.snake_case` cvar.
 
 ### Bugfixes
 

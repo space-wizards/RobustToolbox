@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Containers;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 
 namespace Robust.Shared.GameObjects;
 

@@ -194,10 +194,12 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public void SendSystemNetworkMessage(EntityEventArgs message, INetChannel targetConnection)
         {
-            var newMsg = new MsgEntity();
-            newMsg.Type = EntityMessageType.SystemMessage;
-            newMsg.SystemMessage = message;
-            newMsg.SourceTick = _gameTiming.CurTick;
+            var newMsg = new MsgEntity
+            {
+                Type = EntityMessageType.SystemMessage,
+                SystemMessage = message,
+                SourceTick = _gameTiming.CurTick
+            };
 
             _networkManager.ServerSendMessage(newMsg, targetConnection);
         }

@@ -13,6 +13,7 @@ using Robust.Client.Physics;
 using Robust.Client.Player;
 using Robust.Client.Timing;
 using Robust.Shared;
+using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.Containers;
@@ -562,6 +563,21 @@ namespace Robust.Client.GameStates
             var system = _entitySystemManager.GetEntitySystem<ClientDirtySystem>();
             var metaQuery = _entities.GetEntityQuery<MetaDataComponent>();
             RemQueue<IComponent> toRemove = new();
+
+            // Handle predicted entity spawns.
+            var predicted = new ValueList<EntityUid>();
+            var predictedQuery = _entities.AllEntityQueryEnumerator<PredictedSpawnComponent>();
+
+            while (predictedQuery.MoveNext(out var uid, out var _))
+            {
+                predicted.Add(uid);
+            }
+
+            // Entity will get re-created as part of the tick.
+            foreach (var ent in predicted)
+            {
+                _entities.DeleteEntity(ent);
+            }
 
             foreach (var entity in system.DirtyEntities)
             {

@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Containers;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 
 namespace Robust.Shared.GameObjects;
 
@@ -206,4 +207,91 @@ public partial class EntityManager
 
         return uid;
     }
+
+    #region Prediction
+
+    public virtual EntityUid PredictedSpawnAttachedTo(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default)
+    {
+        return SpawnAttachedTo(protoName, coordinates, overrides, rotation);
+    }
+
+    public virtual EntityUid PredictedSpawn(string? protoName = null, ComponentRegistry? overrides = null, bool doMapInit = true)
+    {
+        return Spawn(protoName, overrides, doMapInit);
+    }
+
+    public virtual EntityUid PredictedSpawn(string? protoName, MapCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default!)
+    {
+        return Spawn(protoName, coordinates, overrides, rotation);
+    }
+
+    public virtual EntityUid PredictedSpawnAtPosition(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
+    {
+        return SpawnAtPosition(protoName, coordinates, overrides);
+    }
+
+    public virtual bool PredictedTrySpawnNextTo(
+        string? protoName,
+        EntityUid target,
+        [NotNullWhen(true)] out EntityUid? uid,
+        TransformComponent? xform = null,
+        ComponentRegistry? overrides = null)
+    {
+        return TrySpawnNextTo(protoName, target, out uid, xform, overrides);
+    }
+
+    public virtual bool PredictedTrySpawnInContainer(
+        string? protoName,
+        EntityUid containerUid,
+        string containerId,
+        [NotNullWhen(true)] out EntityUid? uid,
+        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null)
+    {
+        return TrySpawnInContainer(protoName, containerUid, containerId, out uid, containerComp, overrides);
+    }
+
+    public virtual EntityUid PredictedSpawnNextToOrDrop(string? protoName, EntityUid target, TransformComponent? xform = null, ComponentRegistry? overrides = null)
+    {
+        return SpawnNextToOrDrop(protoName, target, xform, overrides);
+    }
+
+    public virtual EntityUid PredictedSpawnInContainerOrDrop(
+        string? protoName,
+        EntityUid containerUid,
+        string containerId,
+        TransformComponent? xform = null,
+        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null)
+    {
+        return SpawnInContainerOrDrop(protoName, containerUid, containerId, xform, containerComp, overrides);
+    }
+
+    public virtual EntityUid PredictedSpawnInContainerOrDrop(
+        string? protoName,
+        EntityUid containerUid,
+        string containerId,
+        out bool inserted,
+        TransformComponent? xform = null,
+        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null)
+    {
+        return SpawnInContainerOrDrop(protoName,
+            containerUid,
+            containerId,
+            out inserted,
+            xform,
+            containerComp,
+            overrides);
+    }
+
+    /// <summary>
+    /// Flags an entity as being a predicted spawn and should be deleted when its corresponding tick comes in.
+    /// </summary>
+    public virtual void FlagPredicted(Entity<MetaDataComponent?> ent)
+    {
+
+    }
+
+    #endregion
 }

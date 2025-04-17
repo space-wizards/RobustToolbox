@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Immutable;
+using System.Diagnostics.Contracts;
 using System.Numerics;
 
 namespace Robust.Shared.Maths
@@ -36,6 +38,21 @@ namespace Robust.Shared.Maths
     /// </summary>
     public static class DirectionExtensions
     {
+        /// <summary>
+        /// A list of all cardinal and diagonal <see cref="Direction"/>s.
+        /// </summary>
+        public static readonly ImmutableArray<Direction> AllDirections =
+        [
+            Direction.South,
+            Direction.SouthEast,
+            Direction.East,
+            Direction.NorthEast,
+            Direction.North,
+            Direction.NorthWest,
+            Direction.West,
+            Direction.SouthWest
+        ];
+
         private const double Segment = 2 * Math.PI / 8.0; // Cut the circle into 8 pieces
 
         public static Direction AsDir(this DirectionFlag directionFlag)
@@ -238,6 +255,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="dir"></param>
         /// <returns></returns>
+        [Pure]
         public static Angle ToAngle(this Direction dir)
         {
             var ang = Segment * (int) dir;

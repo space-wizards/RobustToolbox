@@ -267,7 +267,7 @@ namespace Robust.Client.Placement
         {
             var mapCoords = pManager.EyeManager.PixelToMap(coords.Position);
             var transformSys = pManager.EntityManager.System<SharedTransformSystem>();
-            if (!pManager.MapManager.TryFindGridAt(mapCoords, out var gridUid, out var grid))
+            if (!pManager.MapManager.TryFindGridAt(mapCoords, out var gridUid, out _))
             {
                 return transformSys.ToCoordinates(mapCoords);
             }

@@ -115,10 +115,6 @@ namespace Robust.Client
         /// <inheritdoc />
         public void DisconnectFromServer(string reason)
         {
-            DebugTools.Assert(RunLevel > ClientRunLevel.Initialize);
-            DebugTools.Assert(_net.IsConnected);
-            // run level changed in OnNetDisconnect()
-            // are both of these *really* needed?
             _net.ClientDisconnect(reason);
         }
 

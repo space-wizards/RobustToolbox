@@ -17,14 +17,13 @@ namespace Robust.Shared.Physics.Systems;
 public abstract partial class SharedJointSystem : EntitySystem
 {
     [Dependency] private readonly SharedContainerSystem _container = default!;
-    [Dependency] private readonly SharedTransformSystem _xform = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
     [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private readonly SharedTransformSystem _transform = default!;
 
     private EntityQuery<JointComponent> _jointsQuery;
     private EntityQuery<PhysicsComponent> _physicsQuery;
     private EntityQuery<JointRelayTargetComponent> _relayQuery;
-    private EntityQuery<TransformComponent> _xformQuery;
 
     // To avoid issues with component states we'll queue up all dirty joints and check it every tick to see if
     // we can delete the component.
@@ -38,7 +37,6 @@ public abstract partial class SharedJointSystem : EntitySystem
 
         _jointsQuery = GetEntityQuery<JointComponent>();
         _relayQuery = GetEntityQuery<JointRelayTargetComponent>();
-        _xformQuery = GetEntityQuery<TransformComponent>();
         _physicsQuery = GetEntityQuery<PhysicsComponent>();
         UpdatesOutsidePrediction = true;
 
@@ -237,7 +235,8 @@ public abstract partial class SharedJointSystem : EntitySystem
         Vector2? anchorB = null,
         string? id = null,
         TransformComponent? xformA = null,
-        TransformComponent? xformB = null)
+        TransformComponent? xformB = null,
+        float? minimumDistance = null)
     {
         if (!Resolve(bodyA, ref xformA) || !Resolve(bodyB, ref xformB))
         {
@@ -247,9 +246,13 @@ public abstract partial class SharedJointSystem : EntitySystem
         anchorA ??= Vector2.Zero;
         anchorB ??= Vector2.Zero;
 
-        var length = Vector2.Transform(anchorA.Value, _xform.GetWorldMatrix(xformA)) - Vector2.Transform(anchorB.Value, _xform.GetWorldMatrix(xformB));
+        var vecA = Vector2.Transform(anchorA.Value, _transform.GetWorldMatrix(xformA));
+        var vecB = Vector2.Transform(anchorB.Value, _transform.GetWorldMatrix(xformB));
+        var length = (vecA - vecB).Length();
+        if (minimumDistance != null)
+            length = Math.Max(minimumDistance.Value, length);
 
-        var joint = new DistanceJoint(bodyA, bodyB, anchorA.Value, anchorB.Value, length.Length());
+        var joint = new DistanceJoint(bodyA, bodyB, anchorA.Value, anchorB.Value, length);
         id ??= GetJointId(joint);
         joint.ID = id;
         AddJoint(joint);
@@ -343,7 +346,7 @@ public abstract partial class SharedJointSystem : EntitySystem
         if (!Resolve(uid, ref xform))
             return Vector2.Zero;
 
-        return Physics.Transform.MulT(new Quaternion2D((float)_xform.GetWorldRotation(xform).Theta), worldVector);
+        return Physics.Transform.MulT(new Quaternion2D((float) _transform.GetWorldRotation(xform).Theta), worldVector);
     }
 
     #endregion

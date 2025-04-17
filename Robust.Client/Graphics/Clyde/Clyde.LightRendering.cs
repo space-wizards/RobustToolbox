@@ -98,9 +98,11 @@ namespace Robust.Client.Graphics.Clyde
         private LightCapacityComparer _lightCap = new();
         private ShadowCapacityComparer _shadowCap = new ShadowCapacityComparer();
 
+        private float _maxLightRadius;
+
         private unsafe void InitLighting()
         {
-
+            _cfg.OnValueChanged(CVars.MaxLightRadius, val => { _maxLightRadius = val;}, true);
 
             // Other...
             LoadLightingShaders();
@@ -617,8 +619,9 @@ namespace Robust.Client.Graphics.Clyde
             // Use worldbounds for this one as we only care if the light intersects our actual bounds
             var xforms = _entityManager.GetEntityQuery<TransformComponent>();
             var state = (this, count: 0, shadowCastingCount: 0, xforms, worldAABB);
+            var lightAabb = worldAABB.Enlarged(_maxLightRadius);
 
-            foreach (var (uid, comp) in _lightTreeSystem.GetIntersectingTrees(map, worldAABB))
+            foreach (var (uid, comp) in _lightTreeSystem.GetIntersectingTrees(map, lightAabb))
             {
                 var bounds = _transformSystem.GetInvWorldMatrix(uid, xforms).TransformBox(worldBounds);
                 comp.Tree.QueryAabb(ref state, LightQuery, bounds);

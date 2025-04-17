@@ -357,7 +357,7 @@ public abstract partial class SharedPhysicsSystem
                 if (body.BodyType == BodyType.Static) continue;
 
                 // As static bodies can never be awake (unlike Farseer) we'll set this after the check.
-                SetAwake((bodyUid, body), true, updateSleepTime: false);
+                SetAwake(bodyUid, body, true, updateSleepTime: false);
 
                 var node = body.Contacts.First;
 
@@ -976,7 +976,7 @@ public abstract partial class SharedPhysicsSystem
 
             var xform = xformQuery.GetComponent(body.Owner);
             var parentXform = xformQuery.GetComponent(xform.ParentUid);
-            var (_, parentRot, parentInvMatrix) = _transform.GetWorldPositionRotationInvMatrix(parentXform);
+            var (_, parentRot, parentInvMatrix) = parentXform.GetWorldPositionRotationInvMatrix(xformQuery);
             var worldRot = (float) (parentRot + xform._localRotation);
 
             var angle = angles[i];
@@ -1026,12 +1026,6 @@ public abstract partial class SharedPhysicsSystem
             var angle = angles[offset + i];
             var xform = xformQuery.GetComponent(uid);
 
-            // Temporary NaN guards until PVS is fixed.
-            if (!float.IsNaN(position.X) && !float.IsNaN(position.Y))
-            {
-                _transform.SetLocalPositionRotation(uid, xform.LocalPosition + position, xform.LocalRotation + angle, xform);
-            }
-
             var linVelocity = linearVelocities[offset + i];
             var physicsDirtied = false;
 
@@ -1045,6 +1039,16 @@ public abstract partial class SharedPhysicsSystem
             if (!float.IsNaN(angVelocity))
             {
                 physicsDirtied |= SetAngularVelocity(uid, angVelocity, false, body: body);
+            }
+
+            // Temporary NaN guards until PVS is fixed.
+            // May reparent object and change body's velocity.
+            if (!float.IsNaN(position.X) && !float.IsNaN(position.Y))
+            {
+                _transform.SetLocalPositionRotation(uid,
+                    xform.LocalPosition + position,
+                    xform.LocalRotation + angle,
+                    xform);
             }
 
             if (physicsDirtied)
@@ -1065,7 +1069,7 @@ public abstract partial class SharedPhysicsSystem
 
             var body = island.Bodies[i];
 
-            SetAwake((body.Owner, body), false);
+            SetAwake(body.Owner, body, false);
         }
     }
 }

@@ -1045,7 +1045,10 @@ public abstract partial class SharedPhysicsSystem
             // May reparent object and change body's velocity.
             if (!float.IsNaN(position.X) && !float.IsNaN(position.Y))
             {
-                _transform.SetLocalPositionRotation(xform, xform.LocalPosition + position, xform.LocalRotation + angle);
+                _transform.SetLocalPositionRotation(uid,
+                    xform.LocalPosition + position,
+                    xform.LocalRotation + angle,
+                    xform);
             }
 
             if (physicsDirtied)

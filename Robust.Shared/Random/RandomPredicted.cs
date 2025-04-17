@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
@@ -13,13 +14,19 @@ public static class RandomPredicted
     /// </summary>
     /// <param name="random">The <see cref="IRobustRandom"/> instance.</param>
     /// <param name="timing">The <see cref="IGameTiming"/> to use for seeding.</param>
+    /// <param name="seed">Additional seed value to mix with the tick for unique sequences.</param>
     /// <remarks>
     /// NOTE: This means the client can guess what the number will be based on the current tick,
     /// do NOT use this for sensitive applications.
     /// </remarks>
-    public static System.Random GetPredictedRandom(this IRobustRandom random, IGameTiming timing)
+    [PublicAPI]
+    public static System.Random GetPredictedRandom(this IRobustRandom random, IGameTiming timing, int seed = 0)
     {
-        return new System.Random((int)timing.CurTick.Value);
+        var tickValue = (int) timing.CurTick.Value;
+
+        var combinedSeed = HashCode.Combine(tickValue, seed);
+
+        return new System.Random(combinedSeed);
     }
 
     /// <summary>
@@ -27,10 +34,12 @@ public static class RandomPredicted
     /// </summary>
     /// <param name="random">The <see cref="IRobustRandom"/> instance.</param>
     /// <param name="timing">The <see cref="IGameTiming"/> to use for seeding.</param>
+    /// <param name="seed">Additional seed value to mix with the tick for unique sequences.</param>
     /// <inheritdoc cref="GetPredictedRandom" path="/remarks"/>
-    public static float NextFloatPredicted(this IRobustRandom random, IGameTiming timing)
+    [PublicAPI]
+    public static float NextFloatPredicted(this IRobustRandom random, IGameTiming timing, int seed = 0)
     {
-        return random.GetPredictedRandom(timing).NextFloat();
+        return random.GetPredictedRandom(timing, seed).NextFloat();
     }
 
     /// <summary>
@@ -40,10 +49,12 @@ public static class RandomPredicted
     /// <param name="timing">The <see cref="IGameTiming"/> to use for seeding.</param>
     /// <param name="minValue">Random value should be greater or equal to this value.</param>
     /// <param name="maxValue">Random value should be less than this value.</param>
+    /// <param name="seed">Additional seed value to mix with the tick for unique sequences.</param>
     /// <inheritdoc cref="GetPredictedRandom" path="/remarks"/>
-    public static float NextFloatPredicted(this IRobustRandom random, IGameTiming timing, float minValue, float maxValue)
+    [PublicAPI]
+    public static float NextFloatPredicted(this IRobustRandom random, IGameTiming timing, float minValue, float maxValue, int seed = 0)
     {
-        return random.GetPredictedRandom(timing).NextFloat(minValue, maxValue);
+        return random.GetPredictedRandom(timing, seed).NextFloat(minValue, maxValue);
     }
 
     /// <summary>
@@ -52,10 +63,12 @@ public static class RandomPredicted
     /// <param name="random">The <see cref="IRobustRandom"/> instance.</param>
     /// <param name="timing">The <see cref="IGameTiming"/> to use for seeding.</param>
     /// <param name="maxValue">Random value should be less than this value.</param>
+    /// <param name="seed">Additional seed value to mix with the tick for unique sequences.</param>
     /// <inheritdoc cref="GetPredictedRandom" path="/remarks"/>
-    public static float NextFloatPredicted(this IRobustRandom random, IGameTiming timing, float maxValue)
+    [PublicAPI]
+    public static float NextFloatPredicted(this IRobustRandom random, IGameTiming timing, float maxValue, int seed = 0)
     {
-        return random.GetPredictedRandom(timing).NextFloat() * maxValue;
+        return random.GetPredictedRandom(timing, seed).NextFloat() * maxValue;
     }
 
     /// <summary>
@@ -63,10 +76,12 @@ public static class RandomPredicted
     /// </summary>
     /// <param name="random">The <see cref="IRobustRandom"/> instance.</param>
     /// <param name="timing">The <see cref="IGameTiming"/> to use for seeding.</param>
+    /// <param name="seed">Additional seed value to mix with the tick for unique sequences.</param>
     /// <inheritdoc cref="GetPredictedRandom" path="/remarks"/>
-    public static int NextPredicted(this IRobustRandom random, IGameTiming timing)
+    [PublicAPI]
+    public static int NextPredicted(this IRobustRandom random, IGameTiming timing, int seed = 0)
     {
-        return random.GetPredictedRandom(timing).Next();
+        return random.GetPredictedRandom(timing, seed).Next();
     }
 
     /// <summary>
@@ -75,10 +90,12 @@ public static class RandomPredicted
     /// <param name="random">The <see cref="IRobustRandom"/> instance.</param>
     /// <param name="timing">The <see cref="IGameTiming"/> to use for seeding.</param>
     /// <param name="maxValue">Random value should be less than this value.</param>
+    /// <param name="seed">Additional seed value to mix with the tick for unique sequences.</param>
     /// <inheritdoc cref="GetPredictedRandom" path="/remarks"/>
-    public static int NextPredicted(this IRobustRandom random, IGameTiming timing, int maxValue)
+    [PublicAPI]
+    public static int NextPredictedMax(this IRobustRandom random, IGameTiming timing, int maxValue, int seed = 0)
     {
-        return random.GetPredictedRandom(timing).Next(maxValue);
+        return random.GetPredictedRandom(timing, seed).Next(maxValue);
     }
 
     /// <summary>
@@ -88,10 +105,12 @@ public static class RandomPredicted
     /// <param name="timing">The <see cref="IGameTiming"/> to use for seeding.</param>
     /// <param name="minValue">Random value should be greater or equal to this value.</param>
     /// <param name="maxValue">Random value should be less than this value.</param>
+    /// <param name="seed">Additional seed value to mix with the tick for unique sequences.</param>
     /// <inheritdoc cref="GetPredictedRandom" path="/remarks"/>
-    public static int NextPredicted(this IRobustRandom random, IGameTiming timing, int minValue, int maxValue)
+    [PublicAPI]
+    public static int NextPredictedRange(this IRobustRandom random, IGameTiming timing, int minValue, int maxValue, int seed = 0)
     {
-        return random.GetPredictedRandom(timing).Next(minValue, maxValue);
+        return random.GetPredictedRandom(timing, seed).Next(minValue, maxValue);
     }
 
     /// <summary>
@@ -99,10 +118,12 @@ public static class RandomPredicted
     /// </summary>
     /// <param name="random">The <see cref="IRobustRandom"/> instance.</param>
     /// <param name="timing">The <see cref="IGameTiming"/> to use for seeding.</param>
+    /// <param name="seed">Additional seed value to mix with the tick for unique sequences.</param>
     /// <inheritdoc cref="GetPredictedRandom" path="/remarks"/>
-    public static double NextDoublePredicted(this IRobustRandom random, IGameTiming timing)
+    [PublicAPI]
+    public static double NextDoublePredicted(this IRobustRandom random, IGameTiming timing, int seed = 0)
     {
-        return random.GetPredictedRandom(timing).NextDouble();
+        return random.GetPredictedRandom(timing, seed).NextDouble();
     }
 
     /// <summary>
@@ -112,10 +133,12 @@ public static class RandomPredicted
     /// <param name="timing">The <see cref="IGameTiming"/> to use for seeding.</param>
     /// <param name="minValue">Random value should be greater or equal to this value.</param>
     /// <param name="maxValue">Random value should be less than this value.</param>
+    /// <param name="seed">Additional seed value to mix with the tick for unique sequences.</param>
     /// <inheritdoc cref="GetPredictedRandom" path="/remarks"/>
-    public static double NextDoublePredicted(this IRobustRandom random, IGameTiming timing, double minValue, double maxValue)
+    [PublicAPI]
+    public static double NextDoublePredicted(this IRobustRandom random, IGameTiming timing, double minValue, double maxValue, int seed = 0)
     {
-        return random.GetPredictedRandom(timing).NextDouble() * (maxValue - minValue) + minValue;
+        return random.GetPredictedRandom(timing, seed).NextDouble() * (maxValue - minValue) + minValue;
     }
 
     /// <summary>
@@ -123,10 +146,12 @@ public static class RandomPredicted
     /// </summary>
     /// <param name="random">The <see cref="IRobustRandom"/> instance.</param>
     /// <param name="timing">The <see cref="IGameTiming"/> to use for seeding.</param>
+    /// <param name="seed">Additional seed value to mix with the tick for unique sequences.</param>
     /// <inheritdoc cref="GetPredictedRandom" path="/remarks"/>
-    public static byte NextBytePredicted(this IRobustRandom random, IGameTiming timing)
+    [PublicAPI]
+    public static byte NextBytePredicted(this IRobustRandom random, IGameTiming timing, int seed = 0)
     {
-        return (byte)random.GetPredictedRandom(timing).Next(byte.MaxValue);
+        return (byte)random.GetPredictedRandom(timing, seed).Next(byte.MaxValue);
     }
 
     /// <summary>
@@ -135,10 +160,12 @@ public static class RandomPredicted
     /// <param name="random">The <see cref="IRobustRandom"/> instance.</param>
     /// <param name="timing">The <see cref="IGameTiming"/> to use for seeding.</param>
     /// <param name="buffer">Buffer to fill with random bytes.</param>
+    /// <param name="seed">Additional seed value to mix with the tick for unique sequences.</param>
     /// <inheritdoc cref="GetPredictedRandom" path="/remarks"/>
-    public static void NextBytesPredicted(this IRobustRandom random, IGameTiming timing, byte[] buffer)
+    [PublicAPI]
+    public static void NextBytesPredicted(this IRobustRandom random, IGameTiming timing, byte[] buffer, int seed = 0)
     {
-        random.GetPredictedRandom(timing).NextBytes(buffer);
+        random.GetPredictedRandom(timing, seed).NextBytes(buffer);
     }
 
     /// <summary>
@@ -146,10 +173,12 @@ public static class RandomPredicted
     /// </summary>
     /// <param name="random">The <see cref="IRobustRandom"/> instance.</param>
     /// <param name="timing">The <see cref="IGameTiming"/> to use for seeding.</param>
+    /// <param name="seed">Additional seed value to mix with the tick for unique sequences.</param>
     /// <inheritdoc cref="GetPredictedRandom" path="/remarks"/>
-    public static Angle NextAnglePredicted(this IRobustRandom random, IGameTiming timing)
+    [PublicAPI]
+    public static Angle NextAnglePredicted(this IRobustRandom random, IGameTiming timing, int seed = 0)
     {
-        return random.GetPredictedRandom(timing).NextAngle();
+        return random.GetPredictedRandom(timing, seed).NextAngle();
     }
 
     /// <summary>
@@ -159,10 +188,12 @@ public static class RandomPredicted
     /// <param name="timing">The <see cref="IGameTiming"/> to use for seeding.</param>
     /// <param name="minValue">Random value should be greater or equal to this value.</param>
     /// <param name="maxValue">Random value should be less than this value.</param>
+    /// <param name="seed">Additional seed value to mix with the tick for unique sequences.</param>
     /// <inheritdoc cref="GetPredictedRandom" path="/remarks"/>
-    public static Angle NextAnglePredicted(this IRobustRandom random, IGameTiming timing, Angle minValue, Angle maxValue)
+    [PublicAPI]
+    public static Angle NextAnglePredicted(this IRobustRandom random, IGameTiming timing, Angle minValue, Angle maxValue, int seed = 0)
     {
-        return random.GetPredictedRandom(timing).NextAngle(minValue, maxValue);
+        return random.GetPredictedRandom(timing, seed).NextAngle(minValue, maxValue);
     }
 
     /// <summary>
@@ -171,10 +202,12 @@ public static class RandomPredicted
     /// <param name="random">The <see cref="IRobustRandom"/> instance.</param>
     /// <param name="timing">The <see cref="IGameTiming"/> to use for seeding.</param>
     /// <param name="list">The collection to shuffle.</param>
+    /// <param name="seed">Additional seed value to mix with the tick for unique sequences.</param>
     /// <inheritdoc cref="GetPredictedRandom" path="/remarks"/>
-    public static void ShufflePredicted<T>(this IRobustRandom random, IGameTiming timing, IList<T> list)
+    [PublicAPI]
+    public static void ShufflePredicted<T>(this IRobustRandom random, IGameTiming timing, IList<T> list, int seed = 0)
     {
-        var predictedRandom = random.GetPredictedRandom(timing);
+        var predictedRandom = random.GetPredictedRandom(timing, seed);
         predictedRandom.Shuffle(list);
     }
 
@@ -184,10 +217,12 @@ public static class RandomPredicted
     /// <param name="random">The <see cref="IRobustRandom"/> instance.</param>
     /// <param name="timing">The <see cref="IGameTiming"/> to use for seeding.</param>
     /// <param name="list">The collection to pick from.</param>
+    /// <param name="seed">Additional seed value to mix with the tick for unique sequences.</param>
     /// <inheritdoc cref="GetPredictedRandom" path="/remarks"/>
-    public static T PickPredicted<T>(this IRobustRandom random, IGameTiming timing, IReadOnlyList<T> list)
+    [PublicAPI]
+    public static T PickPredicted<T>(this IRobustRandom random, IGameTiming timing, IReadOnlyList<T> list, int seed = 0)
     {
-        var index = random.NextPredicted(timing, list.Count);
+        var index = random.NextPredictedMax(timing, list.Count, seed);
         return list[index];
     }
 
@@ -197,9 +232,11 @@ public static class RandomPredicted
     /// <param name="random">The <see cref="IRobustRandom"/> instance.</param>
     /// <param name="timing">The <see cref="IGameTiming"/> to use for seeding.</param>
     /// <param name="chance">The chance to pass, from 0 to 1.</param>
+    /// <param name="seed">Additional seed value to mix with the tick for unique sequences.</param>
     /// <inheritdoc cref="GetPredictedRandom" path="/remarks"/>
-    public static bool ProbPredicted(this IRobustRandom random, IGameTiming timing, float chance)
+    [PublicAPI]
+    public static bool ProbPredicted(this IRobustRandom random, IGameTiming timing, float chance, int seed = 0)
     {
-        return random.NextDoublePredicted(timing) < chance;
+        return random.NextDoublePredicted(timing, seed) < chance;
     }
 }

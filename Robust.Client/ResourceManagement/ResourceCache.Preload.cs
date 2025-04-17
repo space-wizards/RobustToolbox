@@ -18,10 +18,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
-using Vector3 = System.Numerics.Vector3;
 
 namespace Robust.Client.ResourceManagement
 {
@@ -185,7 +182,7 @@ namespace Robust.Client.ResourceManagement
             // and cutting is free. The sorting is done by a slightly modified FFDH algorithm. The algorithm is exactly
             // the same as the standard FFDH algorithm with one main difference: We create new "levels" above placed
             // blocks. For example if the first block was 10x20, then the second was 10x10 units, we would create a
-            // 10x10 level bove the second block that would be treated as a normal level. This increases the packing
+            // 10x10 level above the second block that would be treated as a normal level. This increases the packing
             // efficiency from ~85% to ~95% with very little extra computational effort. The algorithm appears to be
             // ~97% effective for storing SS14s RSIs.
             //
@@ -201,16 +198,16 @@ namespace Robust.Client.ResourceManagement
 
             // THIS IS NOT GUARANTEED TO HAVE ANY PARTICULARLY LOGICAL ORDERING.
             // E.G you could have atlas 1 RSIs appear *before* you're done seeing atlas 2 RSIs.
-            var levels = new List<Level>();
+            var levels = new ValueList<Level>();
 
             // List of all the image atlases.
-            var imageAtlases = new List<Image<Rgba32>>();
+            var imageAtlases = new ValueList<Image<Rgba32>>();
 
             // List of all the actual atlases.
-            var finalAtlases = new List<OwnedTexture>();
+            var finalAtlases = new ValueList<OwnedTexture>();
 
             // Number of total pixels in each atlas.
-            var finalPixels = new List<int>();
+            var finalPixels = new ValueList<int>();
 
             // First we just find the location of all the RSIs in the atlas before actually placing them.
             // This allows us to effectively determine how much space we need to allocate for the images.
@@ -297,15 +294,10 @@ namespace Robust.Client.ResourceManagement
                 {
                     var box = new UIBox2i(0, 0, rsi.AtlasSheet.Width, rsi.AtlasSheet.Height);
 
-                    // var random = new Random();
-                    // var color = new Rgba32((byte)random.Next(256), (byte)random.Next(256), (byte)random.Next(256));
-                    // var image = new Image<Rgba32>(rsi.AtlasSheet.Width, rsi.AtlasSheet.Height, color);
-
                     rsi.AtlasSheet.Blit(box, imageAtlases[level.AtlasId], rsi.AtlasOffset);
                     finalPixels[level.AtlasId] += rsi.AtlasSheet.Width * rsi.AtlasSheet.Height;
                 }
             }
-            // atlases[0].Save("debug_output2.png", new PngEncoder());
 
             // Finalize the atlases.
             for (var i = 0; i < imageAtlases.Count; i++)

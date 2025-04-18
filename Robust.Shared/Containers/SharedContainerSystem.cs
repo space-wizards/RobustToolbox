@@ -404,18 +404,18 @@ namespace Robust.Shared.Containers
         /// <summary>
         /// Recursively get all entities with Component T in all containers on the entity
         /// </summary>
-        /// <param name="containter">The root container to search in.</param>
+        /// <param name="root">The root container to search in.</param>
         /// <param name="maxDepth">The max depth that will be searched before aborting.</param>
         /// <typeparam name="T">The component being searched for.</typeparam>
         /// <returns>All entities with component T in container and all children</returns>
         public HashSet<Entity<T?>> RecursiveGetAllEntitiesWithComp<T>(
-            Entity<ContainerManagerComponent> containter,
+            Entity<ContainerManagerComponent> root,
             int maxDepth = 1000) where T : Component
         {
             var entities = new HashSet<Entity<T?>>();
 
             var stack = new Stack<EntityUid>();
-            stack.Push(containter);
+            stack.Push(root);
 
             while (stack.Count > 0)
             {

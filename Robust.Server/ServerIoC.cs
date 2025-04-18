@@ -4,7 +4,6 @@ using Robust.Server.Console;
 using Robust.Server.DataMetrics;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
-using Robust.Server.Placement;
 using Robust.Server.Player;
 using Robust.Server.Prototypes;
 using Robust.Server.Reflection;
@@ -58,7 +57,6 @@ namespace Robust.Server
             deps.Register<IEntityManager, ServerEntityManager>();
             deps.Register<IEntityNetworkManager, ServerEntityManager>();
             deps.Register<IServerEntityNetworkManager, ServerEntityManager>();
-            deps.Register<IPlacementManager, PlacementManager>();
             deps.Register<IPlayerManager, PlayerManager>();
             deps.Register<ISharedPlayerManager, PlayerManager>();
             deps.Register<IPrototypeManager, ServerPrototypeManager>();

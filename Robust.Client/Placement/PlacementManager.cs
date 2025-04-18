@@ -27,21 +27,20 @@ namespace Robust.Client.Placement
 {
     public sealed partial class PlacementManager : IPlacementManager, IDisposable, IEntityEventSubscriber
     {
-        [Dependency] private readonly ILogManager _logManager = default!;
-        [Dependency] private readonly IClientNetManager _networkManager = default!;
-        [Dependency] internal readonly IPlayerManager PlayerManager = default!;
-        [Dependency] internal readonly IResourceCache ResourceCache = default!;
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] internal readonly IMapManager MapManager = default!;
-        [Dependency] private readonly IGameTiming _time = default!;
-        [Dependency] internal readonly IEyeManager EyeManager = default!;
-        [Dependency] internal readonly IInputManager InputManager = default!;
-        [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
-        [Dependency] internal readonly IEntityManager EntityManager = default!;
-        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-        [Dependency] private readonly IBaseClient _baseClient = default!;
-        [Dependency] private readonly IOverlayManager _overlayManager = default!;
-        [Dependency] internal readonly IClyde Clyde = default!;
+        [Dependency] private   readonly IBaseClient _baseClient = default!;
+        [Dependency] internal  readonly IClyde Clyde = default!;
+        [Dependency] internal  readonly IEntityManager EntityManager = default!;
+        [Dependency] private   readonly IEntitySystemManager _entitySystemManager = default!;
+        [Dependency] internal  readonly IEyeManager EyeManager = default!;
+        [Dependency] private   readonly IGameTiming _time = default!;
+        [Dependency] internal  readonly IInputManager InputManager = default!;
+        [Dependency] private   readonly ILogManager _logManager = default!;
+        [Dependency] internal  readonly IMapManager MapManager = default!;
+        [Dependency] private   readonly IOverlayManager _overlayManager = default!;
+        [Dependency] internal  readonly IPlayerManager PlayerManager = default!;
+        [Dependency] private   readonly IPrototypeManager _prototypeManager = default!;
+        [Dependency] private   readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] internal  readonly IResourceCache ResourceCache = default!;
 
         private ISawmill _sawmill = default!;
 
@@ -196,7 +195,7 @@ namespace Robust.Client.Placement
             _drawingShader = _prototypeManager.Index<ShaderPrototype>("unshaded").Instance();
             _sawmill = _logManager.GetSawmill("placement");
 
-            _networkManager.RegisterNetMessage<MsgPlacement>(HandlePlacementMessage);
+            EntityManager.EventBus.SubscribeEvent<MsgPlacement>(EventSource.Network, this, HandlePlacementMessage);
 
             _modeDictionary.Clear();
             foreach (var type in _reflectionManager.GetAllChildren<PlacementMode>())
@@ -440,7 +439,7 @@ namespace Robust.Client.Placement
             var msg = new MsgPlacement();
             msg.PlaceType = PlacementManagerMessage.RequestEntRemove;
             msg.EntityUid = EntityManager.GetNetEntity(entity);
-            _networkManager.ClientSendMessage(msg);
+            EntityManager.RaisePredictiveEvent(msg);
         }
 
         public void HandleRectDeletion(EntityCoordinates start, Box2 rect)
@@ -449,7 +448,7 @@ namespace Robust.Client.Placement
             msg.PlaceType = PlacementManagerMessage.RequestRectRemove;
             msg.NetCoordinates = new NetCoordinates(EntityManager.GetNetEntity(StartPoint.EntityId), rect.BottomLeft);
             msg.RectSize = rect.Size;
-            _networkManager.ClientSendMessage(msg);
+            EntityManager.RaisePredictiveEvent(msg);
         }
 
         public void ToggleEraser()
@@ -805,7 +804,7 @@ namespace Robust.Client.Placement
 
             message.DirRcv = Direction;
 
-            _networkManager.ClientSendMessage(message);
+            EntityManager.RaisePredictiveEvent(message);
         }
 
         public enum PlacementTypes : byte

@@ -71,8 +71,8 @@ namespace Robust.Shared.Containers
 
             #if DEBUG
             // TODO make this a proper debug assert when gun code no longer fudges client-side spawn prediction.
-            if (entMan.IsClientSide(toInsert) && !entMan.IsClientSide(Owner) && Manager.NetSyncEnabled)
-                Logger.Warning("Inserting a client-side entity into a networked container slot. This will block the container slot and may cause issues.");
+            if (entMan.IsClientSide(toInsert) && !entMan.IsClientSide(Owner) && Manager.NetSyncEnabled && !entMan.HasComponent<PredictedSpawnComponent>(toInsert))
+                DebugTools.Assert("Inserting a client-side entity into a networked container slot. This will block the container slot and may cause issues.");
             #endif
             ContainedEntity = toInsert;
         }

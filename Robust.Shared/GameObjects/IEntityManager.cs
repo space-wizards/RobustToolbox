@@ -163,6 +163,16 @@ namespace Robust.Shared.GameObjects
         public bool IsQueuedForDeletion(EntityUid uid);
 
         /// <summary>
+        /// Tries to predict entity deletion. On the server it runs the normal code path and on the client the entity is detached.
+        /// </summary>
+        void PredictedDeleteEntity(EntityUid? uid);
+
+        /// <summary>
+        /// Tries to predict entity deletion. On the server it runs the normal code path and on the client the entity is detached.
+        /// </summary>
+        void PredictedQueueDeleteEntity(EntityUid? uid);
+
+        /// <summary>
         /// Shuts-down and removes the entity with the given <see cref="Robust.Shared.GameObjects.EntityUid"/>. This is also broadcast to all clients.
         /// </summary>
         /// <param name="uid">Uid of entity to remove.</param>

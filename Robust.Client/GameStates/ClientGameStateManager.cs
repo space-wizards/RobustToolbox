@@ -13,6 +13,7 @@ using Robust.Client.Physics;
 using Robust.Client.Player;
 using Robust.Client.Timing;
 using Robust.Shared;
+using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.Containers;
@@ -29,6 +30,7 @@ using Robust.Shared.Profiling;
 using Robust.Shared.Replays;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using PredictedSpawnComponent = Robust.Shared.GameObjects.PredictedSpawnComponent;
 
 namespace Robust.Client.GameStates
 {
@@ -562,6 +564,21 @@ namespace Robust.Client.GameStates
             var system = _entitySystemManager.GetEntitySystem<ClientDirtySystem>();
             var metaQuery = _entities.GetEntityQuery<MetaDataComponent>();
             RemQueue<IComponent> toRemove = new();
+
+            // Handle predicted entity spawns.
+            var predicted = new ValueList<EntityUid>();
+            var predictedQuery = _entities.AllEntityQueryEnumerator<PredictedSpawnComponent>();
+
+            while (predictedQuery.MoveNext(out var uid, out var _))
+            {
+                predicted.Add(uid);
+            }
+
+            // Entity will get re-created as part of the tick.
+            foreach (var ent in predicted)
+            {
+                _entities.DeleteEntity(ent);
+            }
 
             foreach (var entity in system.DirtyEntities)
             {
@@ -1127,6 +1144,7 @@ namespace Robust.Client.GameStates
 
             var xforms = _entities.GetEntityQuery<TransformComponent>();
             var metas = _entities.GetEntityQuery<MetaDataComponent>();
+            var predictedSpawns = _entities.GetEntityQuery<PredictedSpawnComponent>();
             var xformSys = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
 
             _toDelete.Clear();
@@ -1137,7 +1155,7 @@ namespace Robust.Client.GameStates
             while (metaQuery.MoveNext(out var ent, out var metadata, out var xform))
             {
                 var netEnt = metadata.NetEntity;
-                if (metadata.NetEntity.IsClientSide())
+                if (metadata.NetEntity.IsClientSide() && !predictedSpawns.HasComp(ent))
                 {
                     if (deleteClientEntities)
                         _toDelete.Add(ent);
@@ -1164,7 +1182,8 @@ namespace Robust.Client.GameStates
 
                     if (deleteClientChildren
                         && !deleteClientEntities // don't add duplicates
-                        && _entities.IsClientSide(child))
+                        && _entities.IsClientSide(child)
+                        && !predictedSpawns.HasComp(child))
                     {
                         _toDelete.Add(child);
                     }

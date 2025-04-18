@@ -48,7 +48,7 @@ namespace Robust.Shared.GameObjects
 
         // I feel like PJB might shed me for putting a system dependency here, but its required for setting entity
         // positions on spawn....
-        private SharedTransformSystem _xforms = default!;
+        protected SharedTransformSystem _xforms = default!;
         private SharedContainerSystem _containers = default!;
 
         public EntityQuery<MetaDataComponent> MetaQuery;
@@ -692,6 +692,18 @@ namespace Robust.Shared.GameObjects
         }
 
         public bool IsQueuedForDeletion(EntityUid uid) => QueuedDeletionsSet.Contains(uid);
+
+        /// <inheritdoc />
+        public virtual void PredictedDeleteEntity(EntityUid? uid)
+        {
+            DeleteEntity(uid);
+        }
+
+        /// <inheritdoc />
+        public virtual void PredictedQueueDeleteEntity(EntityUid? uid)
+        {
+            QueueDeleteEntity(uid);
+        }
 
         public bool EntityExists(EntityUid uid)
         {

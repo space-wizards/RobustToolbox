@@ -314,8 +314,8 @@ namespace Robust.Client.Graphics.Clyde
                             if (tile.TypeId == neighborTile.TypeId || neighborDef.EdgeSprites.Count == 0)
                                 continue;
 
-                            // If neighbor is a lower priority then us then don't draw on our tile.
-                            if (neighborDef.EdgeSpritePriority < tileDef.EdgeSpritePriority)
+                            // If neighbor is a lower or same priority then us then don't draw on our tile.
+                            if (neighborDef.EdgeSpritePriority <= tileDef.EdgeSpritePriority)
                                 continue;
 
                             var direction = new Vector2i(nx, ny).AsDirection().GetOpposite();

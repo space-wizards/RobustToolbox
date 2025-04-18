@@ -446,11 +446,14 @@ public abstract partial class SharedAudioSystem : EntitySystem
     /// <remarks>
     /// Returns null so you can inline the call.
     /// </remarks>
-    public EntityUid? Stop(EntityUid? uid, Components.AudioComponent? component = null)
+    public EntityUid? Stop(EntityUid? uid, AudioComponent? component = null)
     {
         // One morbillion warnings for logging missing.
         if (uid == null || !Resolve(uid.Value, ref component, false))
+        {
+            DebugTools.Assert(TerminatingOrDeleted(uid));
             return null;
+        }
 
         if (!Timing.IsFirstTimePredicted || (_netManager.IsClient && !IsClientSide(uid.Value)))
             return null;

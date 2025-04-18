@@ -401,6 +401,47 @@ namespace Robust.Shared.Containers
             return TryFindComponentsOnEntityContainerOrParent(xform.ParentUid, entityQuery, foundComponents);
         }
 
+        /// <summary>
+        /// Recursively get all entities with Component T in all containers on the entity
+        /// </summary>
+        /// <param name="containter">The root container to search in.</param>
+        /// <param name="maxDepth">The max depth that will be searched before aborting.</param>
+        /// <typeparam name="T">The component being searched for.</typeparam>
+        /// <returns>All entities with component T in container and all children</returns>
+        public HashSet<Entity<T?>> RecursiveGetAllEntitiesWithComp<T>(
+            Entity<ContainerManagerComponent> containter,
+            int maxDepth = 1000) where T : Component
+        {
+            var entities = new HashSet<Entity<T?>>();
+
+            var stack = new Stack<EntityUid>();
+            stack.Push(containter);
+
+            while (stack.Count > 0)
+            {
+                var currentUid = stack.Pop();
+
+                if (!HasComp<ContainerManagerComponent>(currentUid))
+                    continue;
+
+                foreach (var container in GetAllContainers(currentUid).ToList())
+                {
+                    foreach (var entity in container.ContainedEntities.ToList())
+                    {
+                        if (HasComp<T>(entity))
+                        {
+                            entities.Add(entity);
+                            continue;
+                        }
+
+                        if (stack.Count < maxDepth) // Unlikely to have over 1000 nested entities unless there is an infinite loop.
+                            stack.Push(entity); // Process this entity's containers next
+                    }
+                }
+            }
+            return entities;
+        }
+
 
         [Obsolete("Use Entity<T> variant")]
         public bool IsInSameOrNoContainer(EntityUid user, EntityUid other)

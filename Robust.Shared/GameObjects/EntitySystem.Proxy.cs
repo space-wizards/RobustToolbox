@@ -165,6 +165,13 @@ public partial class EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void DirtyField<T>(Entity<T> entity, string fieldName, MetaDataComponent? meta = null)
+        where T : IComponentDelta
+    {
+        DirtyField((entity, entity), fieldName, meta);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void DirtyField<T>(EntityUid uid, T component, string fieldName, MetaDataComponent? meta = null)
         where T : IComponentDelta
     {
@@ -186,6 +193,13 @@ public partial class EntitySystem
             return;
 
         EntityManager.DirtyFields(ent, ent.Comp, meta, fields);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void DirtyFields<T>(Entity<T> ent, MetaDataComponent? meta, params string[] fields)
+        where T : IComponentDelta
+    {
+        DirtyFields((ent, ent), meta, fields);
     }
 
     /// <summary>

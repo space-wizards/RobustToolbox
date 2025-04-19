@@ -383,13 +383,29 @@ namespace Robust.Shared.CompNetworkGenerator
 
                             var nullCast = nullable ? castString.Substring(0, castString.Length - 1) : castString;
 
-                            if (nullable)
+                            // Only need new ctor if we definitely need to clone states
+                            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue($"build_property.CloneStates",
+                                    out _))
                             {
-                                getField = $"component.{name} == null ? null : new(component.{name})";
+                                if (nullable)
+                                {
+                                    getField = $"component.{name} == null ? null : new(component.{name})";
+                                }
+                                else
+                                {
+                                    getField = $"new(component.{name})";
+                                }
                             }
                             else
                             {
-                                getField = $"new(component.{name})";
+                                if (nullable)
+                                {
+                                    getField = $"component.{name} == null ? null : component.{name}";
+                                }
+                                else
+                                {
+                                    getField = $"component.{name}";
+                                }
                             }
 
                             handleStateSetters.Append($@"

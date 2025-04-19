@@ -55,11 +55,8 @@ namespace Robust.Shared.Console
         /// All currently available commands in the shell indexed by the command name.
         /// </summary>
         /// <remarks>
-        /// This will generally contain a combination of currently available locally defined commands and proxies for
-        /// some toolshed commands, specifically all of those that don't require a piped input and can thus be used to
-        /// initiate a toolshed <see cref="CommandRun"/>.
-        ///
-        /// If this is a client, this will also contain proxies for remotely executing server-side commands.
+        /// This will generally contain a combination of currently available locally defined commands, and if this is
+        /// a client, proxies for remotely executing server-side commands.
         /// </remarks>
         IReadOnlyDictionary<string, IConsoleCommand> AvailableCommands { get; }
 
@@ -71,26 +68,6 @@ namespace Robust.Shared.Console
         /// contain locally defined toolshed commands, nor does it contain proxies for remotely executed commands.
         /// </remarks>
         IReadOnlyDictionary<string, IConsoleCommand> RegisteredCommands { get; }
-
-        /// <summary>
-        /// Currently available remotely executable commands. I.e., on the client these will be proxy commands that
-        /// will attempt to execute a command on the server.
-        /// </summary>
-        IReadOnlyDictionary<string, IConsoleCommand> RemoteCommands { get; }
-
-        /// <summary>
-        /// Whether the given command is currently available.
-        /// </summary>
-        /// <remarks>
-        /// This can be used to restrict some commands in some game modes (i.e., single-player only commands).
-        /// </remarks>
-        bool IsAvailable(IConsoleCommand cmd) => true;
-
-        /// <summary>
-        /// This re-computes the <see cref="AvailableCommands"/>. This should be called whenever command availability
-        /// might change (<see cref="IsAvailable"/>).
-        /// </summary>
-        void UpdateAvailableCommands();
 
         /// <summary>
         /// Invoked before any console command is executed.

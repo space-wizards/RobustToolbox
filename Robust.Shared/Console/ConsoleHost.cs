@@ -41,9 +41,6 @@ namespace Robust.Shared.Console
         [ViewVariables]
         IReadOnlyDictionary<string, IConsoleCommand> IConsoleHost.AvailableCommands => AvailableCommands;
 
-        [ViewVariables]
-        IReadOnlyDictionary<string, IConsoleCommand> IConsoleHost.RemoteCommands => RemoteCommands;
-
         [ViewVariables] private readonly HashSet<string> _autoRegisteredCommands = [];
         private bool _isInRegistrationRegion;
 
@@ -98,6 +95,7 @@ namespace Robust.Shared.Console
         public void UpdateAvailableCommands()
         {
             AvailableCommands.Clear();
+            AvailableCommands.EnsureCapacity(RegisteredCommands.Count + RemoteCommands.Count);
 
             foreach (var (name, cmd) in RegisteredCommands)
             {
@@ -107,8 +105,6 @@ namespace Robust.Shared.Console
 
             foreach (var (name, cmd) in RemoteCommands)
             {
-                // Remote commands are always assumed to be currently available.
-                // If they are unavailable, they should have been removed somehow (e.g., when disconnecting from the server).
                 DebugTools.Assert(IsAvailable(cmd));
                 AvailableCommands.TryAdd(name, cmd);
             }
@@ -511,6 +507,6 @@ namespace Robust.Shared.Console
             }
         }
 
-        public virtual bool IsAvailable(IConsoleCommand cmd) => true;
+        protected virtual bool IsAvailable(IConsoleCommand cmd) => true;
     }
 }

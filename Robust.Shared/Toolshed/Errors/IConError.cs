@@ -13,7 +13,7 @@ namespace Robust.Shared.Toolshed.Errors;
 // class, so that we don't need to constantly re-define the properties.
 
 // TODO TOOLSHED
-// apparently StackTrace is not whitelisted
+// apparently StackTrace is not whitelisted by the sandbox?
 // So cannot define errors in content.shared or client.
 
 /// <summary>

@@ -100,7 +100,7 @@ namespace Robust.Client.Console
             UpdateAvailableCommands();
         }
 
-        public override bool IsAvailable(IConsoleCommand cmd)
+        protected override bool IsAvailable(IConsoleCommand cmd)
         {
             if (!base.IsAvailable(cmd))
                 return false;

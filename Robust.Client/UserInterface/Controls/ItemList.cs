@@ -344,6 +344,9 @@ namespace Robust.Client.UserInterface.Controls
                     continue;
 
                 var item = _itemList[i];
+                if (!item.Selected)
+                    continue;
+
                 item.Selected = false;
             }
         }

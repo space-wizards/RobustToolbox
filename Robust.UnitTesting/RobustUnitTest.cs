@@ -27,6 +27,7 @@ using Robust.Shared.Physics.Systems;
 using Robust.Shared.Player;
 using Robust.Shared.Reflection;
 using Robust.Shared.Threading;
+using Robust.Shared.Toolshed;
 using Robust.Shared.Utility;
 using InputSystem = Robust.Server.GameObjects.InputSystem;
 using MapSystem = Robust.Server.GameObjects.MapSystem;
@@ -206,6 +207,7 @@ namespace Robust.UnitTesting
             modLoader.Assemblies = contentAssemblies;
             modLoader.TryLoadModulesFrom(ResPath.Root, "");
 
+            deps.Resolve<ToolshedManager>().Initialize();
             entMan.Startup();
             mapMan.Startup();
         }

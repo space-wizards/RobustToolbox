@@ -19,10 +19,15 @@ public sealed class ScaleCommand : LocalizedCommands
 
     public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
     {
-        if (args.Length != 1)
-            return CompletionResult.Empty;
-
-        return CompletionResult.FromOptions(CompletionHelper.NetEntities(args[0], entManager: _entityManager));
+        switch (args.Length)
+        {
+            case 1:
+                return CompletionResult.FromOptions(CompletionHelper.NetEntities(args[0], entManager: _entityManager));
+            case 2:
+                return CompletionResult.FromHint(Loc.GetString("cmd-hint-float"));
+            default:
+                return CompletionResult.Empty;
+        }
     }
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)

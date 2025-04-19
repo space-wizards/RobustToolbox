@@ -402,46 +402,55 @@ namespace Robust.Shared.Containers
         }
 
         /// <summary>
-        /// Recursively get all entities with Component T in all containers on the entity
+        /// Recursively collects all entities with Component T in all containers on the entity.
         /// </summary>
-        /// <param name="root">The root container to search in.</param>
-        /// <param name="maxDepth">The max depth that will be searched before aborting.</param>
-        /// <typeparam name="T">The component being searched for.</typeparam>
-        /// <returns>All entities with component T in container and all children</returns>
-        public HashSet<Entity<T?>> RecursiveGetAllEntitiesWithComp<T>(
+        /// <typeparam name="T">The component to search for.</typeparam>
+        /// <param name="root">The root entity to begin the search from.</param>
+        /// <param name="matchingEntities">Optional pre-allocated collection to store results.</param>
+        /// <param name="stack">Optional pre-allocated stack for traversal.</param>
+        /// <returns>
+        /// A <see cref="HashSet{T}"/> containing all found entities with component <typeparamref name="T"/>.
+        /// If <paramref name="matchingEntities"/> was provided, returns the same instance with the added entities.
+        /// </returns>
+        public HashSet<Entity<T>> RecursiveGetAllEntitiesWithComp<T>(
             Entity<ContainerManagerComponent> root,
-            int maxDepth = 1000) where T : Component
+            HashSet<Entity<T>>? matchingEntities = null,
+            Stack<EntityUid>? stack = null)
+            where T : IComponent
         {
-            var entities = new HashSet<Entity<T?>>();
+            matchingEntities ??= new HashSet<Entity<T>>();
+            stack ??= new Stack<EntityUid>();
+            stack.Clear();
 
-            var stack = new Stack<EntityUid>();
+            var allTargetComps = EntityQueryEnumerator<T>();
+            var targetEnts = new HashSet<EntityUid>();
+            while (allTargetComps.MoveNext(out var targetEnt, out _))
+            {
+                targetEnts.Add(targetEnt);
+            }
+
             stack.Push(root);
 
             while (stack.Count > 0)
             {
                 var currentUid = stack.Pop();
 
-                if (!HasComp<ContainerManagerComponent>(currentUid))
-                    continue;
+                if (HasComp<T>(currentUid))
+                    matchingEntities.Add(currentUid!);
 
-                foreach (var container in GetAllContainers(currentUid).ToList())
+                foreach (var container in GetAllContainers(currentUid))
                 {
-                    foreach (var entity in container.ContainedEntities.ToList())
+                    foreach (var entity in container.ContainedEntities)
                     {
-                        if (HasComp<T>(entity))
+                        if (targetEnts.Contains(entity))
                         {
-                            entities.Add(entity);
-                            continue;
+                            stack.Push(entity);
                         }
-
-                        if (stack.Count < maxDepth) // Unlikely to have over 1000 nested entities unless there is an infinite loop.
-                            stack.Push(entity); // Process this entity's containers next
                     }
                 }
             }
-            return entities;
+            return matchingEntities;
         }
-
 
         [Obsolete("Use Entity<T> variant")]
         public bool IsInSameOrNoContainer(EntityUid user, EntityUid other)

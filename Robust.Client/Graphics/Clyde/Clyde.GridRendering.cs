@@ -254,7 +254,11 @@ namespace Robust.Client.Graphics.Clyde
                             region = regionMaybe[tile.Variant];
                         }
 
-                        WriteTileToBuffers(i, gridX, gridY, vertexBuffer, indexBuffer, region);
+                        var rotationMirroring = _tileDefinitionManager[tile.TypeId].AllowRotationMirror
+                            ? tile.RotationMirroring
+                            : 0;
+
+                        WriteTileToBuffers(i, gridX, gridY, vertexBuffer, indexBuffer, region, rotationMirroring);
                         i += 1;
                     }
                 }
@@ -325,7 +329,7 @@ namespace Robust.Client.Graphics.Clyde
                                 continue;
 
                             var region = regionMaybe[0];
-                            WriteTileToBuffers(i, gridX, gridY, vertexBuffer, indexBuffer, region);
+                            WriteTileToBuffers(i, gridX, gridY, vertexBuffer, indexBuffer, region, 0);
                             i += 1;
                         }
                     }
@@ -445,13 +449,57 @@ namespace Robust.Client.Graphics.Clyde
             int gridY,
             Span<Vertex2D> vertexBuffer,
             Span<ushort> indexBuffer,
-            Box2 region)
+            Box2 region,
+            int rotationMirroring)
         {
+            var rLeftBottom = (region.Left, region.Bottom);
+            var rRightBottom = (region.Right, region.Bottom);
+            var rRightTop = (region.Right, region.Top);
+            var rLeftTop = (region.Left, region.Top);
+
+            // The vertices must be changed if there's any rotation or mirroring to the tile
+            if (rotationMirroring != 0)
+            {
+                // Rotate the tile
+                for (int r = 0; r < rotationMirroring % 4; r++)
+                {
+                    (rLeftBottom, rRightBottom, rRightTop, rLeftTop) =
+                        (rLeftTop, rLeftBottom, rRightBottom, rRightTop);
+                }
+
+                // Mirror on the x-axis
+                if (rotationMirroring >= 4)
+                {
+                    if (rotationMirroring % 2 == 0)
+                    {
+                        rLeftBottom = (rLeftBottom.Item1.Equals(region.Left) ? region.Right : region.Left,
+                            rLeftBottom.Item2);
+                        rRightBottom = (rRightBottom.Item1.Equals(region.Left) ? region.Right : region.Left,
+                            rRightBottom.Item2);
+                        rRightTop = (rRightTop.Item1.Equals(region.Left) ? region.Right : region.Left,
+                            rRightTop.Item2);
+                        rLeftTop = (rLeftTop.Item1.Equals(region.Left) ? region.Right : region.Left,
+                            rLeftTop.Item2);
+                    }
+                    else
+                    {
+                        rLeftBottom = (rLeftBottom.Item1,
+                            rLeftBottom.Item2.Equals(region.Bottom) ? region.Top : region.Bottom);
+                        rRightBottom = (rRightBottom.Item1,
+                            rRightBottom.Item2.Equals(region.Bottom) ? region.Top : region.Bottom);
+                        rRightTop = (rRightTop.Item1,
+                            rRightTop.Item2.Equals(region.Bottom) ? region.Top : region.Bottom);
+                        rLeftTop = (rLeftTop.Item1,
+                            rLeftTop.Item2.Equals(region.Bottom) ? region.Top : region.Bottom);
+                    }
+                }
+            }
+
             var vIdx = i * 4;
-            vertexBuffer[vIdx + 0] = new Vertex2D(gridX, gridY, region.Left, region.Bottom, Color.White);
-            vertexBuffer[vIdx + 1] = new Vertex2D(gridX + 1, gridY, region.Right, region.Bottom, Color.White);
-            vertexBuffer[vIdx + 2] = new Vertex2D(gridX + 1, gridY + 1, region.Right, region.Top, Color.White);
-            vertexBuffer[vIdx + 3] = new Vertex2D(gridX, gridY + 1, region.Left, region.Top, Color.White);
+            vertexBuffer[vIdx + 0] = new Vertex2D(gridX, gridY, rLeftBottom.Left, rLeftBottom.Bottom, Color.White);
+            vertexBuffer[vIdx + 1] = new Vertex2D(gridX + 1, gridY, rRightBottom.Right, rRightBottom.Bottom, Color.White);
+            vertexBuffer[vIdx + 2] = new Vertex2D(gridX + 1, gridY + 1, rRightTop.Right, rRightTop.Top, Color.White);
+            vertexBuffer[vIdx + 3] = new Vertex2D(gridX, gridY + 1, rLeftTop.Left, rLeftTop.Top, Color.White);
             var nIdx = i * GetQuadBatchIndexCount();
             var tIdx = (ushort)(i * 4);
             QuadBatchIndexWrite(indexBuffer, ref nIdx, tIdx);

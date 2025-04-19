@@ -492,6 +492,39 @@ namespace Robust.Shared.Containers
         }
 
         /// <summary>
+        /// Returns the full chain of containers containing the entity passed in, from innermost to outermost.
+        /// </summary>
+        /// <remarks>
+        /// The resulting collection includes the container directly containing the entity (if any),
+        /// the container containing that container, and so on until reaching the outermost container.
+        /// </remarks>
+        public IEnumerable<BaseContainer> GetContainingContainers(Entity<TransformComponent?> ent)
+        {
+            if (!ent.Owner.IsValid())
+                yield break;
+
+            if (!Resolve(ent, ref ent.Comp))
+                yield break;
+
+            var child = ent.Owner;
+            var parent = ent.Comp.ParentUid;
+
+            while (parent.IsValid())
+            {
+                if (((MetaQuery.GetComponent(child).Flags & MetaDataFlags.InContainer) == MetaDataFlags.InContainer) &&
+                    _managerQuery.TryGetComponent(parent, out var conManager) &&
+                    TryGetContainingContainer(parent, child, out var parentContainer, conManager))
+                {
+                    yield return parentContainer;
+                }
+
+                var parentXform = TransformQuery.GetComponent(parent);
+                child = parent;
+                parent = parentXform.ParentUid;
+            }
+        }
+
+        /// <summary>
         /// Gets the top-most container in the hierarchy for this entity, if it exists.
         /// </summary>
         public bool TryGetOuterContainer(EntityUid uid, TransformComponent xform, [NotNullWhen(true)] out BaseContainer? container)

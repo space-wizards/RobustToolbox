@@ -102,6 +102,12 @@ namespace Robust.UnitTesting.Shared.Localization
   - type: Grammar
     attributes:
       gender: Female
+
+- type: entity
+  id: TestEntityEndingWithT
+
+- type: entity
+  id: TestEntityEndingWithS
 ";
 
         private const string FluentCode = @"
@@ -121,6 +127,10 @@ ent-GenderTestEntityNoComp = Gender Test Entity
   .otherAttrib = sausages
 
 ent-GenderTestEntityWithComp = Gender Test Entity 2
+
+ent-TestEntityEndingWithT = Struct
+
+ent-TestEntityEndingWithS = Class
 
 ent-PropsInLoc = A
   .desc = B
@@ -153,6 +163,8 @@ test-message-proper = { PROPER($entity) ->
 }
 
 test-message-custom-attrib = { ATTRIB($entity, ""otherAttrib"") }
+
+test-message-poss-noun = { POSS-NOUN($entity) }
 ";
 
         [Test]
@@ -168,20 +180,26 @@ test-message-custom-attrib = { ATTRIB($entity, ""otherAttrib"") }
         [Test]
         public void TestCustomFunctions()
         {
-            var entMan          = IoCManager.Resolve<IEntityManager>();
-            var testEntNoComp   = entMan.CreateEntityUninitialized("GenderTestEntityNoComp");
-            var testEntWithComp = entMan.CreateEntityUninitialized("GenderTestEntityWithComp");
+            var entMan              = IoCManager.Resolve<IEntityManager>();
+            var testEntNoComp       = entMan.CreateEntityUninitialized("GenderTestEntityNoComp");
+            var testEntWithComp     = entMan.CreateEntityUninitialized("GenderTestEntityWithComp");
+            var testEntEndingWithT  = entMan.CreateEntityUninitialized("TestEntityEndingWithT");
+            var testEntEndingWithS  = entMan.CreateEntityUninitialized("TestEntityEndingWithS");
 
             var loc               = IoCManager.Resolve<ILocalizationManager>();
             var genderFromAttrib  = loc.GetString("test-message-gender", ("entity", testEntNoComp));
             var genderFromGrammar = loc.GetString("test-message-gender", ("entity", testEntWithComp));
             var customAttrib      = loc.GetString("test-message-custom-attrib", ("entity", testEntNoComp));
+            var possNounT       = loc.GetString("test-message-poss-noun", ("entity", testEntEndingWithT));
+            var possNounS       = loc.GetString("test-message-poss-noun", ("entity", testEntEndingWithS));
 
             Assert.Multiple(() =>
             {
                 Assert.That(genderFromAttrib, Is.EqualTo("male"));
                 Assert.That(genderFromGrammar, Is.EqualTo("female"));
                 Assert.That(customAttrib, Is.EqualTo("sausages"));
+                Assert.That(possNounT, Is.EqualTo("Struct's"));
+                Assert.That(possNounS, Is.EqualTo("Class'"));
             });
         }
 

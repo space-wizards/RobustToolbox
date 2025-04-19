@@ -1361,7 +1361,7 @@ public abstract partial class SharedTransformSystem
         }
         else
         {
-            if (!_mapManager.IsMap(uid))
+            if (!HasComp<MapComponent>(uid))
                 Log.Warning($"Failed to attach entity to map or grid. Entity: ({ToPrettyString(uid)}). Trace: {Environment.StackTrace}");
 
             DetachEntity(uid, xform);

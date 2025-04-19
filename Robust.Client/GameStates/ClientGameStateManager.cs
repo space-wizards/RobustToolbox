@@ -13,6 +13,7 @@ using Robust.Client.Physics;
 using Robust.Client.Player;
 using Robust.Client.Timing;
 using Robust.Shared;
+using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.Containers;
@@ -384,7 +385,6 @@ namespace Robust.Client.GameStates
                     _processor.UpdateFullRep(curState);
                 }
 
-                IEnumerable<NetEntity> createdEntities;
                 using (_prof.Group("ApplyGameState"))
                 {
                     if (_timing.LastProcessedTick < targetProcessedTick && nextState != null)
@@ -564,6 +564,21 @@ namespace Robust.Client.GameStates
             var metaQuery = _entities.GetEntityQuery<MetaDataComponent>();
             RemQueue<IComponent> toRemove = new();
 
+            // Handle predicted entity spawns.
+            var predicted = new ValueList<EntityUid>();
+            var predictedQuery = _entities.AllEntityQueryEnumerator<PredictedSpawnComponent>();
+
+            while (predictedQuery.MoveNext(out var uid, out var _))
+            {
+                predicted.Add(uid);
+            }
+
+            // Entity will get re-created as part of the tick.
+            foreach (var ent in predicted)
+            {
+                _entities.DeleteEntity(ent);
+            }
+
             foreach (var entity in system.DirtyEntities)
             {
                 DebugTools.Assert(toRemove.Count == 0);
@@ -699,8 +714,9 @@ namespace Robust.Client.GameStates
 
 #if !EXCEPTION_TOLERANCE
                     throw new KeyNotFoundException();
-#endif
+#else
                     continue;
+#endif
                 }
 
                 var compData = _compDataPool.Get();
@@ -961,8 +977,9 @@ namespace Robust.Client.GameStates
                 RequestFullState();
 #if !EXCEPTION_TOLERANCE
                 throw;
-#endif
+#else
                 return;
+#endif
             }
 
             if (data.Created)
@@ -980,8 +997,9 @@ namespace Robust.Client.GameStates
                     RequestFullState();
 #if !EXCEPTION_TOLERANCE
                     throw;
-#endif
+#else
                     return;
+#endif
                 }
             }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using Robust.Shared.Maths;
 using Robust.Shared.Toolshed.Errors;
@@ -32,6 +33,22 @@ public abstract class ValueRef<T>
                 $"Input: {obj}")
         };
     }
+
+    internal static T[] EvaluateParamsCollection(object? obj, IInvocationContext ctx)
+    {
+        if (obj is not List<object?> parsedValues)
+            throw new Exception("Failed to parse command parameter. This likely is a toolshed bug and should be reported.");
+
+        var i = 0;
+        var arr = new T[parsedValues.Count];
+        foreach (var parsed in parsedValues)
+        {
+            arr[i++] = EvaluateParameter(parsed, ctx)!;
+        }
+
+        return arr;
+    }
+
 }
 
 [Obsolete("Use EntProtoId / ProtoId<T>")]

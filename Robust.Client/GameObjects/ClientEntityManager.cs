@@ -117,7 +117,7 @@ namespace Robust.Client.GameObjects
                 base.DirtyField(uid, comp, fieldName, metadata);
         }
 
-        public override void DirtyFields<T>(EntityUid uid, T comp, MetaDataComponent? meta, params ReadOnlySpan<string> fields)
+        public override void DirtyFields<T>(EntityUid uid, T comp, MetaDataComponent? meta, params string[] fields)
         {
             // TODO Prediction
             // does the client actually need to dirty the field?
@@ -291,5 +291,42 @@ namespace Robust.Client.GameObjects
             }
         }
         #endregion
+
+        /// <inheritdoc />
+        public override void PredictedDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
+        {
+            if (Deleted(ent.Owner) || !TransformQuery.Resolve(ent.Owner, ref ent.Comp2))
+                return;
+
+            // So there's 3 scenarios:
+            // 1. Networked entity we just move to nullspace and rely on state handling.
+            // 2. Clientside predicted entity we delete and rely on state handling.
+            // 3. Clientside only entity that actually needs deleting here.
+
+            if (HasComponent<PredictedSpawnComponent>(ent.Owner))
+            {
+                DeleteEntity(ent);
+            }
+            else
+            {
+                _xforms.DetachEntity(ent, ent.Comp2);
+            }
+        }
+
+        /// <inheritdoc />
+        public override void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
+        {
+            if (IsQueuedForDeletion(ent.Owner) || !TransformQuery.Resolve(ent.Owner, ref ent.Comp2))
+                return;
+
+            if (HasComponent<PredictedSpawnComponent>(ent.Owner))
+            {
+                QueueDeleteEntity(ent);
+            }
+            else
+            {
+                _xforms.DetachEntity(ent.Owner, ent.Comp2);
+            }
+        }
     }
 }

@@ -303,7 +303,7 @@ namespace Robust.Client.GameObjects
             while (parent.IsValid() && (!spriteOccluded || !lightOccluded))
             {
                 var parentXform = TransformQuery.GetComponent(parent);
-                if (TryComp<ContainerManagerComponent>(parent, out var manager) && manager.TryGetContainer(child, out var container))
+                if (TryComp<ContainerManagerComponent>(parent, out var manager) && TryGetContainingContainer(parent, child, out var container, manager))
                 {
                     spriteOccluded = spriteOccluded || !container.ShowContents;
                     lightOccluded = lightOccluded || container.OccludesLight;
@@ -344,7 +344,7 @@ namespace Robust.Client.GameObjects
                     var childLightOccluded = lightOccluded;
 
                     // We already know either sprite or light is not occluding so need to check container.
-                    if (manager.TryGetContainer(child, out var container))
+                    if (TryGetContainingContainer(entity, child, out var container, manager))
                     {
                         childSpriteOccluded = childSpriteOccluded || !container.ShowContents;
                         childLightOccluded = childLightOccluded || container.OccludesLight;

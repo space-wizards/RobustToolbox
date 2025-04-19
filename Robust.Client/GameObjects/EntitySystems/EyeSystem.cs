@@ -62,7 +62,7 @@ public sealed class EyeSystem : SharedEyeSystem
                 eyeComponent.Target = null;
             }
 
-            eyeComponent.Eye.Position = xform.MapPosition;
+            eyeComponent.Eye.Position = TransformSystem.GetMapCoordinates(xform);
         }
     }
 }

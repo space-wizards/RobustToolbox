@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Microsoft.Extensions.ObjectPool;
 using Prometheus;
+using Robust.Shared.CPUJob.JobQueues;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
@@ -62,13 +64,27 @@ internal sealed partial class PvsSystem
         return _parallelManager.Process(_ackJob, _ackJob.Count);
     }
 
-    private record struct PvsAckJob(PvsSystem _pvs) : IParallelRobustJob
+    private sealed class PvsAckJob : ParallelRobustJob
     {
-        public int BatchSize => 2;
-        private PvsSystem _pvs = _pvs;
+        private static readonly ObjectPool<PvsAckJob> _jobPool = new DefaultObjectPool<PvsAckJob>(new DefaultPooledObjectPolicy<PvsAckJob>());
+
+        public override int BatchSize => 2;
+        private PvsSystem _pvs = default!;
         public int Count => _pvs._toAck.Count;
 
-        public void Execute(int index)
+        public override ParallelRobustJob Clone()
+        {
+            var job = _jobPool.Get();
+            job._pvs = _pvs;
+            return job;
+        }
+
+        public override void Shutdown()
+        {
+            _jobPool.Return(this);
+        }
+
+        public override void Execute(int index)
         {
             try
             {
@@ -81,13 +97,28 @@ internal sealed partial class PvsSystem
         }
     }
 
-    private record struct PvsChunkJob(PvsSystem _pvs) : IParallelRobustJob
+    private sealed class PvsChunkJob : ParallelRobustJob
     {
-        public int BatchSize => 2;
-        private PvsSystem _pvs = _pvs;
+        private static readonly DefaultObjectPool<PvsChunkJob> JobPool =
+            new(new DefaultPooledObjectPolicy<PvsChunkJob>());
+
+        public override int BatchSize => 2;
+        private PvsSystem _pvs = default!;
         public int Count => _pvs._dirtyChunks.Count;
 
-        public void Execute(int index)
+        public override ParallelRobustJob Clone()
+        {
+            var job = JobPool.Get();
+            job._pvs = _pvs;
+            return job;
+        }
+
+        public override void Shutdown()
+        {
+            JobPool.Return(this);
+        }
+
+        public override void Execute(int index)
         {
             try
             {

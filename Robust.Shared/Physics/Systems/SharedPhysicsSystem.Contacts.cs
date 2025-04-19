@@ -36,6 +36,7 @@ using System.Numerics;
 using JetBrains.Annotations;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
@@ -615,11 +616,17 @@ public abstract partial class SharedPhysicsSystem
         ArrayPool<Vector2>.Shared.Return(worldPoints);
     }
 
-    private record struct UpdateTreesJob : IRobustJob
+    private sealed class UpdateTreesJob : RobustJob
     {
         public IEntityManager EntManager;
 
-        public void Execute()
+
+        public UpdateTreesJob(IEntityManager entManager)
+        {
+            EntManager = entManager;
+        }
+
+        public override void Execute()
         {
             var query = EntManager.AllEntityQueryEnumerator<BroadphaseComponent>();
 
@@ -668,18 +675,38 @@ public abstract partial class SharedPhysicsSystem
         ArrayPool<bool>.Shared.Return(wake);
     }
 
-    private record struct ManifoldsJob : IParallelRobustJob
+    private sealed class ManifoldsJob : ParallelRobustJob
     {
-        public int BatchSize => ContactsPerThread;
+        private static readonly ObjectPool<ManifoldsJob> _jobPool =
+            new DefaultObjectPool<ManifoldsJob>(new DefaultPooledObjectPolicy<ManifoldsJob>());
 
-        public SharedPhysicsSystem Physics;
+        public override int BatchSize => ContactsPerThread;
 
-        public Contact[] Contacts;
-        public ContactStatus[] Status;
-        public Vector2[] WorldPoints;
-        public bool[] Wake;
+        public SharedPhysicsSystem Physics = default!;
 
-        public void Execute(int index)
+        public Contact[] Contacts = default!;
+        public ContactStatus[] Status = default!;
+        public Vector2[] WorldPoints = default!;
+        public bool[] Wake = default!;
+
+        public override ParallelRobustJob Clone()
+        {
+            var job = _jobPool.Get();
+            job.Physics = Physics;
+            job.Contacts = Contacts;
+            job.Status = Status;
+            job.WorldPoints = WorldPoints;
+            job.Wake = Wake;
+
+            return job;
+        }
+
+        public override void Shutdown()
+        {
+            _jobPool.Return(this);
+        }
+
+        public override void Execute(int index)
         {
             Physics.UpdateContact(Contacts, index, Status, Wake, WorldPoints);
         }

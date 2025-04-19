@@ -18,7 +18,7 @@ public sealed class TestingParallelManager : IParallelManagerInternal
         return;
     }
 
-    public WaitHandle Process<T>(T job) where T : IRobustJob
+    public WaitHandle Process<T>(T job) where T : RobustJob
     {
         job.Execute();
         var ev = new ManualResetEventSlim();
@@ -26,7 +26,7 @@ public sealed class TestingParallelManager : IParallelManagerInternal
         return ev.WaitHandle;
     }
 
-    public void ProcessNow<T>(T job) where T: IRobustJob
+    public void ProcessNow<T>(T job) where T: RobustJob
     {
         job.Execute();
     }

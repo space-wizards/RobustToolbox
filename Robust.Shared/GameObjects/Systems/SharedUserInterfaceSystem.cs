@@ -5,6 +5,7 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
+using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.Collections;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
@@ -34,7 +35,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     protected EntityQuery<UserInterfaceComponent> UIQuery;
     protected EntityQuery<UserInterfaceUserComponent> UserQuery;
 
-    private ActorRangeCheckJob _rangeJob;
+    private ActorRangeCheckJob _rangeJob = default!;
 
     /// <summary>
     /// Defer BUIs during state handling so client doesn't spam a BUI constantly during prediction.
@@ -1228,13 +1229,33 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// <summary>
     /// Used for running UI raycast checks in parallel.
     /// </summary>
-    private record struct ActorRangeCheckJob() : IParallelRobustJob
+    private sealed class ActorRangeCheckJob : ParallelRobustJob
     {
-        public required EntityQuery<TransformComponent> XformQuery;
-        public required SharedUserInterfaceSystem System;
-        public readonly List<(EntityUid Ui, Enum Key, InterfaceData Data, EntityUid Actor, bool Result)> ActorRanges = new();
+        private static readonly ObjectPool<ActorRangeCheckJob> _jobPool =
+            new DefaultObjectPool<ActorRangeCheckJob>(new DefaultPooledObjectPolicy<ActorRangeCheckJob>());
 
-        public void Execute(int index)
+        public EntityQuery<TransformComponent> XformQuery;
+        public SharedUserInterfaceSystem System = default!;
+        public List<(EntityUid Ui, Enum Key, InterfaceData Data, EntityUid Actor, bool Result)> ActorRanges = new();
+
+        public override ParallelRobustJob Clone()
+        {
+            var job = _jobPool.Get();
+
+            job.XformQuery = XformQuery;
+            job.System = System;
+            job.ActorRanges = ActorRanges;
+
+            return job;
+        }
+
+        public override void Shutdown()
+        {
+            _jobPool.Return(this);
+        }
+
+
+        public override void Execute(int index)
         {
             var data = ActorRanges[index];
 

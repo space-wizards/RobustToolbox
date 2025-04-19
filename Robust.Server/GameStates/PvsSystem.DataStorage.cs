@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Microsoft.Extensions.ObjectPool;
 using Robust.Shared;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Threading;
@@ -366,15 +367,31 @@ internal sealed partial class PvsSystem
         _dataFreeListHead = index;
     }
 
-    private record struct PvsDeletionsJob(PvsSystem _pvs) : IParallelRobustJob
+    private sealed class PvsDeletionsJob : ParallelRobustJob
     {
-        public int BatchSize => 8;
-        private PvsSystem _pvs = _pvs;
+        private static readonly ObjectPool<PvsDeletionsJob> _jobPool =
+            new DefaultObjectPool<PvsDeletionsJob>(new DefaultPooledObjectPolicy<PvsDeletionsJob>());
+
+        public override int BatchSize => 8;
+        private PvsSystem _pvs = default!;
         public List<PvsIndex> ToClear = new();
 
         public int Count => ToClear.Count;
 
-        public void Execute(int index)
+        public override ParallelRobustJob Clone()
+        {
+            var job = _jobPool.Get();
+            job._pvs = _pvs;
+            job.ToClear = ToClear;
+            return job;
+        }
+
+        public override void Shutdown()
+        {
+            _jobPool.Return(this);
+        }
+
+        public override void Execute(int index)
         {
             _pvs.ClearEntityPvsData(ToClear[index]);
         }

@@ -51,6 +51,7 @@ namespace Robust.Shared.GameObjects
 
             InitializeMap();
             InitializeGrid();
+            InitializeTilestacking();
 
             SubscribeLocalEvent<MapLightComponent, ComponentGetState>(OnMapLightGetState);
             SubscribeLocalEvent<MapLightComponent, ComponentHandleState>(OnMapLightHandleState);

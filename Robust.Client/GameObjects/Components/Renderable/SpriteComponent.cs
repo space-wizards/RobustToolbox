@@ -41,8 +41,9 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IPrototypeManager prototypes = default!;
         [Dependency] private readonly IEntityManager entities = default!;
         [Dependency] private readonly IReflectionManager reflection = default!;
-        [Dependency] private readonly IEyeManager eyeManager = default!;
-        [Dependency] private readonly IComponentFactory factory = default!;
+
+        private const string SawmillName = "go.comp.sprite";
+        private readonly ISawmill sawmill = Logger.GetSawmill(SawmillName);
 
         /// <summary>
         ///     See <see cref="CVars.RenderSpriteDirectionBias"/>.
@@ -105,7 +106,7 @@ namespace Robust.Client.GameObjects
                 if (MathF.Abs(value.X) < 0.005f || MathF.Abs(value.Y) < 0.005f)
                 {
                     // Scales of ~0.0025 or lower can lead to singular matrices due to rounding errors.
-                    Logger.Error($"Attempted to set layer sprite scale to very small values. Entity: {entities.ToPrettyString(Owner)}. Scale: {value}");
+                    sawmill.Error($"Attempted to set layer sprite scale to very small values. Entity: {entities.ToPrettyString(Owner)}. Scale: {value}");
                     return;
                 }
 
@@ -201,8 +202,7 @@ namespace Robust.Client.GameObjects
                     }
                     else
                     {
-                        Logger.ErrorS(LogCategory,
-                            "Layer '{0}'no longer has state '{1}' due to base RSI change. Trace:\n{2}",
+                        sawmill.Error("Layer '{0}'no longer has state '{1}' due to base RSI change. Trace:\n{2}",
                             i, layer.State, Environment.StackTrace);
                         layer.Texture = null;
                     }
@@ -283,8 +283,6 @@ namespace Robust.Client.GameObjects
 
         [ViewVariables(VVAccess.ReadWrite)] public uint RenderOrder { get; set; }
 
-        public const string LogCategory = "go.comp.sprite";
-
         [ViewVariables(VVAccess.ReadWrite)] public bool IsInert { get; internal set; }
 
         void ISerializationHooks.AfterDeserialization()
@@ -303,7 +301,7 @@ namespace Robust.Client.GameObjects
                     }
                     else
                     {
-                        Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'.", rsiPath);
+                        sawmill.Error("Unable to load RSI '{0}'.", rsiPath);
                     }
                 }
             }
@@ -430,7 +428,7 @@ namespace Robust.Client.GameObjects
 
             if (!result && logError)
             {
-                Logger.ErrorS(LogCategory, "{0} - Layer with key '{1}' does not exist! Trace:\n{2}",
+                sawmill.Error("{0} - Layer with key '{1}' does not exist! Trace:\n{2}",
                     entities.ToPrettyString(Owner), key, Environment.StackTrace);
             }
 
@@ -447,7 +445,7 @@ namespace Robust.Client.GameObjects
 
             if (logError)
             {
-                Logger.ErrorS(LogCategory, "{0} - Layer index '{1}' does not exist! Trace:\n{2}",
+                sawmill.Error("{0} - Layer index '{1}' does not exist! Trace:\n{2}",
                     entities.ToPrettyString(Owner), index, Environment.StackTrace);
             }
 
@@ -512,12 +510,11 @@ namespace Robust.Client.GameObjects
             {
                 if (texturePath.Extension == "rsi")
                 {
-                    Logger.ErrorS(LogCategory,
-                        "Expected texture but got rsi '{0}', did you mean 'sprite:' instead of 'texture:'?",
+                    sawmill.Error("Expected texture but got rsi '{0}', did you mean 'sprite:' instead of 'texture:'?",
                         texturePath);
                 }
 
-                Logger.ErrorS(LogCategory, "Unable to load texture '{0}'. Trace:\n{1}", texturePath,
+                sawmill.Error("Unable to load texture '{0}'. Trace:\n{1}", texturePath,
                     Environment.StackTrace);
             }
 
@@ -539,7 +536,7 @@ namespace Robust.Client.GameObjects
             }
             else
             {
-                Logger.ErrorS(LogCategory, "State does not exist in RSI: '{0}'. Trace:\n{1}", stateId,
+                sawmill.Error("State does not exist in RSI: '{0}'. Trace:\n{1}", stateId,
                     Environment.StackTrace);
             }
 
@@ -565,7 +562,7 @@ namespace Robust.Client.GameObjects
         {
             if (!resourceCache.TryGetResource<RSIResource>(TextureRoot / rsiPath, out var res))
             {
-                Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, Environment.StackTrace);
+                sawmill.Error("Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, Environment.StackTrace);
             }
 
             return AddLayer(stateId, res?.RSI, newIndex);
@@ -585,7 +582,7 @@ namespace Robust.Client.GameObjects
             }
             else
             {
-                Logger.ErrorS(LogCategory, "State does not exist in RSI: '{0}'. Trace:\n{1}", stateId,
+                sawmill.Error("State does not exist in RSI: '{0}'. Trace:\n{1}", stateId,
                     Environment.StackTrace);
             }
 
@@ -701,7 +698,7 @@ namespace Robust.Client.GameObjects
                 }
                 else
                 {
-                    Logger.ErrorS(LogCategory, "Unable to load layer RSI '{0}'.", path);
+                    sawmill.Error("Unable to load layer RSI '{0}'.", path);
                 }
             }
 
@@ -710,8 +707,7 @@ namespace Robust.Client.GameObjects
                 var theRsi = layer.RSI ?? BaseRSI;
                 if (theRsi == null)
                 {
-                    Logger.ErrorS(LogCategory,
-                        "Layer has no RSI to load states from. Cannot use 'state' property. ({0})",
+                    sawmill.Error("Layer has no RSI to load states from. Cannot use 'state' property. ({0})",
                         layerDatum.State);
                 }
                 else
@@ -727,8 +723,7 @@ namespace Robust.Client.GameObjects
                     }
                     else
                     {
-                        Logger.ErrorS(LogCategory,
-                            $"State '{stateid}' not found in RSI: '{theRsi.Path}'.",
+                        sawmill.Error($"State '{stateid}' not found in RSI: '{theRsi.Path}'.",
                             stateid);
                     }
                 }
@@ -738,9 +733,7 @@ namespace Robust.Client.GameObjects
             {
                 if (layer.State.IsValid)
                 {
-                    Logger.ErrorS(LogCategory,
-                        "Cannot specify 'texture' on a layer if it has an RSI state specified."
-                    );
+                    sawmill.Error("Cannot specify 'texture' on a layer if it has an RSI state specified.");
                 }
                 else
                 {
@@ -771,8 +764,7 @@ namespace Robust.Client.GameObjects
                 }
                 else
                 {
-                    Logger.ErrorS(LogCategory,
-                        "Shader prototype '{0}' does not exist.",
+                    sawmill.Error("Shader prototype '{0}' does not exist.",
                         layerDatum.Shader);
                 }
             }
@@ -786,7 +778,7 @@ namespace Robust.Client.GameObjects
                     if (LayerMap.TryGetValue(key, out var mappedIndex))
                     {
                         if (mappedIndex != index)
-                            Logger.ErrorS(LogCategory, "Duplicate layer map key definition: {0}", key);
+                            sawmill.Error("Duplicate layer map key definition: {0}", key);
                         continue;
                     }
 
@@ -877,7 +869,7 @@ namespace Robust.Client.GameObjects
         {
             if (!prototypes.TryIndex<ShaderPrototype>(shaderName, out var prototype))
             {
-                Logger.ErrorS(LogCategory, "Shader prototype '{0}' does not exist. Trace:\n{1}", shaderName,
+                sawmill.Error("Shader prototype '{0}' does not exist. Trace:\n{1}", shaderName,
                     Environment.StackTrace);
 
                 LayerSetShader(layer, null, null);
@@ -952,12 +944,11 @@ namespace Robust.Client.GameObjects
             {
                 if (texturePath.Extension == "rsi")
                 {
-                    Logger.ErrorS(LogCategory,
-                        "Expected texture but got rsi '{0}', did you mean 'sprite:' instead of 'texture:'?",
+                    sawmill.Error("Expected texture but got rsi '{0}', did you mean 'sprite:' instead of 'texture:'?",
                         texturePath);
                 }
 
-                Logger.ErrorS(LogCategory, "Unable to load texture '{0}'. Trace:\n{1}", texturePath,
+                sawmill.Error("Unable to load texture '{0}'. Trace:\n{1}", texturePath,
                     Environment.StackTrace);
             }
 
@@ -997,7 +988,7 @@ namespace Robust.Client.GameObjects
             var actualRsi = theLayer.RSI ?? BaseRSI;
             if (actualRsi == null)
             {
-                Logger.ErrorS(LogCategory, "No RSI to pull new state from! Trace:\n{0}", Environment.StackTrace);
+                sawmill.Error("No RSI to pull new state from! Trace:\n{0}", Environment.StackTrace);
                 theLayer.Texture = null;
             }
             else
@@ -1010,7 +1001,7 @@ namespace Robust.Client.GameObjects
                 }
                 else
                 {
-                    Logger.ErrorS(LogCategory, "State '{0}' does not exist in RSI {1}. Trace:\n{2}", stateId,
+                    sawmill.Error("State '{0}' does not exist in RSI {1}. Trace:\n{2}", stateId,
                         actualRsi.Path, Environment.StackTrace);
                     theLayer.Texture = null;
                 }
@@ -1042,7 +1033,7 @@ namespace Robust.Client.GameObjects
         {
             if (!resourceCache.TryGetResource<RSIResource>(TextureRoot / rsiPath, out var res))
             {
-                Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, Environment.StackTrace);
+                sawmill.Error("Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, Environment.StackTrace);
             }
 
             LayerSetState(layer, stateId, res?.RSI);
@@ -1086,7 +1077,7 @@ namespace Robust.Client.GameObjects
         {
             if (!resourceCache.TryGetResource<RSIResource>(TextureRoot / rsiPath, out var res))
             {
-                Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, Environment.StackTrace);
+                sawmill.Error("Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, Environment.StackTrace);
             }
 
             LayerSetRSI(layer, res?.RSI);
@@ -1362,7 +1353,7 @@ namespace Robust.Client.GameObjects
                             layer.Render(drawingHandle, ref transformSprite, angle, overrideDirection);
                             break;
                         default:
-                            Logger.Error($"Tried to render a layer with unknown rendering stragegy: {layer.RenderingStrategy}");
+                            sawmill.Error($"Tried to render a layer with unknown rendering stragegy: {layer.RenderingStrategy}");
                             break;
                     }
                 }
@@ -1523,6 +1514,8 @@ namespace Robust.Client.GameObjects
             [ViewVariables] public ShaderInstance? Shader;
             [ViewVariables] public Texture? Texture;
 
+            private readonly ISawmill _sawmill;
+
             /// <summary>
             /// If true, then this layer is drawn without lighting applied.
             /// Unshaded layers are given special treatment and don't just use the unshaded-shader to avoid having to
@@ -1592,7 +1585,7 @@ namespace Robust.Client.GameObjects
                     if (MathF.Abs(value.X) < 0.005f || MathF.Abs(value.Y) < 0.005f)
                     {
                         // Scales of ~0.0025 or lower can lead to singular matrices due to rounding errors.
-                        Logger.Error($"Attempted to set layer sprite scale to very small values. Entity: {_parent.entities.ToPrettyString(_parent.Owner)}. Scale: {value}");
+                        _sawmill.Error($"Attempted to set layer sprite scale to very small values. Entity: {_parent.entities.ToPrettyString(_parent.Owner)}. Scale: {value}");
                         return;
                     }
 
@@ -1689,11 +1682,13 @@ namespace Robust.Client.GameObjects
             public Layer(SpriteComponent parent)
             {
                 _parent = parent;
+                _sawmill = parent.sawmill;
             }
 
             public Layer(Layer toClone, SpriteComponent parentSprite)
             {
                 _parent = parentSprite;
+                _sawmill = parentSprite.sawmill;
                 if (toClone.Shader != null)
                 {
                     Shader = toClone.Shader.Mutable ? toClone.Shader.Duplicate() : toClone.Shader;
@@ -1852,7 +1847,7 @@ namespace Robust.Client.GameObjects
                 var actualRsi = ActualRsi;
                 if (actualRsi == null)
                 {
-                    Logger.ErrorS(LogCategory, "No RSI to pull new state from! Trace:\n{0}", Environment.StackTrace);
+                    _sawmill.Error("No RSI to pull new state from! Trace:\n{0}", Environment.StackTrace);
                     Texture = null;
                 }
                 else
@@ -1863,7 +1858,7 @@ namespace Robust.Client.GameObjects
                     }
                     else
                     {
-                        Logger.ErrorS(LogCategory, "State '{0}' does not exist in set RSI ({1}). Trace:\n{2}", State, rsi?.Path.CanonPath ?? "null",
+                        _sawmill.Error("State '{0}' does not exist in set RSI ({1}). Trace:\n{2}", State, rsi?.Path.CanonPath ?? "null",
                             Environment.StackTrace);
                         Texture = null;
                     }
@@ -1886,14 +1881,14 @@ namespace Robust.Client.GameObjects
                 if (rsi == null)
                 {
                     state = GetFallbackState(_parent.resourceCache);
-                    Logger.ErrorS(LogCategory, "No RSI to pull new state from! Trace:\n{0}", Environment.StackTrace);
+                    _sawmill.Error("No RSI to pull new state from! Trace:\n{0}", Environment.StackTrace);
                 }
                 else
                 {
                     if (!rsi.TryGetState(stateId, out state))
                     {
                         state = GetFallbackState(_parent.resourceCache);
-                        Logger.ErrorS(LogCategory, "State '{0}' does not exist in RSI. Trace:\n{1}", stateId,
+                        _sawmill.Error("State '{0}' does not exist in RSI. Trace:\n{1}", stateId,
                             Environment.StackTrace);
                     }
                 }

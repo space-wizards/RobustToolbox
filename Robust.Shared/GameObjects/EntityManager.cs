@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Runtime.CompilerServices;
+using Arch.Core;
+using Arch.Core.Extensions;
+using Arch.Core.Utils;
+using Collections.Pooled;
 using Prometheus;
 using Robust.Shared.Console;
 using Robust.Shared.Containers;
@@ -22,6 +25,9 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using System.Runtime.CompilerServices;
+using Arch.Core.Extensions.Dangerous;
+using ComponentRegistry = Robust.Shared.Prototypes.ComponentRegistry;
 
 namespace Robust.Shared.GameObjects
 {
@@ -51,6 +57,8 @@ namespace Robust.Shared.GameObjects
         protected SharedTransformSystem _xforms = default!;
         private SharedContainerSystem _containers = default!;
 
+        private QueryDescription _archMetaQuery = new QueryDescription().WithAll<MetaDataComponent>();
+
         public EntityQuery<MetaDataComponent> MetaQuery;
         public EntityQuery<TransformComponent> TransformQuery;
         private EntityQuery<PhysicsComponent> _physicsQuery;
@@ -76,14 +84,7 @@ namespace Robust.Shared.GameObjects
 
         private EntityDiffContext _context = new();
 
-        /// <summary>
-        ///     All entities currently stored in the manager.
-        /// </summary>
-        protected readonly HashSet<EntityUid> Entities = new();
-
         private EntityEventBus _eventBus = null!;
-
-        protected int NextEntityUid = (int) EntityUid.FirstUid;
 
         protected int NextNetworkId = (int) NetEntity.First;
 
@@ -144,6 +145,7 @@ namespace Robust.Shared.GameObjects
 
             _eventBus = new EntityEventBus(this, _reflection);
 
+            InitializeArch();
             InitializeComponents();
             _metaReg = _componentFactory.GetRegistration(typeof(MetaDataComponent));
             _xformReg = _componentFactory.GetRegistration(typeof(TransformComponent));
@@ -176,15 +178,17 @@ namespace Robust.Shared.GameObjects
             }
 
             var protoData = PrototypeManager.GetPrototypeData(prototype);
-            var comps = _entCompIndex[uid];
+            var comps = _world.GetAllComponents(uid);
 
             // Fast check if the component counts match.
             // Note that transform and metadata are not included in the prototype data.
-            if (protoData.Count + 2 != comps.Count)
+            if (protoData.Count + 2 != comps.Length)
                 return false;
 
-            foreach (var component in comps)
+            foreach (var comp in comps)
             {
+                var component = (IComponent)comp!;
+
                 if (component.Deleted)
                     return false;
 
@@ -244,6 +248,7 @@ namespace Robust.Shared.GameObjects
             FlushEntities();
             _eventBus.ClearSubscriptions();
             _entitySystemManager.Shutdown();
+            ShutdownArch();
             ClearComponents();
             ShuttingDown = false;
             Started = false;
@@ -252,12 +257,12 @@ namespace Robust.Shared.GameObjects
 
         public virtual void Cleanup()
         {
-            _componentFactory.ComponentsAdded -= OnComponentsAdded;
             ShuttingDown = true;
             FlushEntities();
             _entitySystemManager.Clear();
             _eventBus.Dispose();
             _eventBus = null!;
+            ShutdownArch();
             ClearComponents();
 
             ShuttingDown = false;
@@ -307,35 +312,33 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public EntityUid CreateEntityUninitialized(string? prototypeName, EntityUid euid, ComponentRegistry? overrides = null)
         {
-            return CreateEntity(prototypeName, out _, overrides);
+            return CreateEntity(prototypeName, out _, out _, overrides);
         }
 
         /// <inheritdoc />
         public EntityUid CreateEntityUninitialized(string? prototypeName, ComponentRegistry? overrides = null)
         {
-            return CreateEntity(prototypeName, out _, overrides);
+            return CreateEntity(prototypeName, out _, out _, overrides);
         }
 
         public EntityUid CreateEntityUninitialized(string? prototypeName, out MetaDataComponent meta, ComponentRegistry? overrides = null)
         {
-            return CreateEntity(prototypeName, out meta, overrides);
+            return CreateEntity(prototypeName, out meta, out _, overrides);
         }
 
         /// <inheritdoc />
         public virtual EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default)
         {
-            var newEntity = CreateEntity(prototypeName, out _, overrides);
+            var newEntity = CreateEntity(prototypeName, out _, out var xform, overrides);
 
-            var xformComp = TransformQuery.GetComponent(newEntity);
-            _xforms.SetCoordinates(newEntity, xformComp, coordinates, rotation: rotation, unanchor: false);
+            _xforms.SetCoordinates(newEntity, xform, coordinates, rotation: rotation, unanchor: false);
             return newEntity;
         }
 
         /// <inheritdoc />
         public virtual EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default!)
         {
-            var newEntity = CreateEntity(prototypeName, out _, overrides);
-            var transform = TransformQuery.GetComponent(newEntity);
+            var newEntity = CreateEntity(prototypeName, out _, out var transform, overrides);
 
             if (coordinates.MapId == MapId.Nullspace)
             {
@@ -364,10 +367,19 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public int EntityCount => Entities.Count;
+        public int EntityCount => _world.Size;
 
         /// <inheritdoc />
-        public IEnumerable<EntityUid> GetEntities() => Entities;
+        public IEnumerable<EntityUid> GetEntities()
+        {
+            using var ents = new PooledList<Entity>(_world.Size);
+            _world.GetEntities(_archMetaQuery, ents);
+
+            foreach (var entity in ents)
+            {
+                yield return entity;
+            }
+        }
 
         /// <inheritdoc />
         public virtual void DirtyEntity(EntityUid uid, MetaDataComponent? metadata = null)
@@ -510,7 +522,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public virtual void DeleteEntity(EntityUid? uid)
         {
-            if (uid == null)
+            if (uid == null || uid == EntityUid.Invalid)
                 return;
 
             // Some UIs get disposed after entity-manager has shut down and already deleted all entities.
@@ -645,8 +657,12 @@ namespace Robust.Shared.GameObjects
                 _sawmill.Error($"Failed to delete all children of entity: {ToPrettyString(uid)}");
 
             // Shut down all components.
-            foreach (var component in InSafeOrder(_entCompIndex[uid]))
+            var objComps = _world.GetAllComponents(uid);
+
+            foreach (var comp in objComps)
             {
+                var component = (IComponent)comp!;
+
                 if (component.Running)
                 {
                     try
@@ -674,14 +690,14 @@ namespace Robust.Shared.GameObjects
             }
 
             _eventBus.OnEntityDeleted(uid);
-            Entities.Remove(uid);
+            DestroyArch(uid);
             // Need to get the ID above before MetadataComponent shutdown but only remove it after everything else is done.
             NetEntityLookup.Remove(metadata.NetEntity);
         }
 
         public virtual void QueueDeleteEntity(EntityUid? uid)
         {
-            if (uid == null)
+            if (uid == null || uid.Value == EntityUid.Invalid)
                 return;
 
             if (!QueuedDeletionsSet.Add(uid.Value))
@@ -725,7 +741,7 @@ namespace Robust.Shared.GameObjects
 
         public bool EntityExists(EntityUid uid)
         {
-            return MetaQuery.HasComponentInternal(uid);
+            return IsAlive(uid);
         }
 
         public bool EntityExists(EntityUid? uid)
@@ -744,12 +760,27 @@ namespace Robust.Shared.GameObjects
 
         public bool Deleted(EntityUid uid)
         {
-            return !MetaQuery.TryGetComponentInternal(uid, out var comp) || comp.EntityDeleted;
+            return !uid.Valid || !_world.TryGet(uid, out MetaDataComponent? comp) || comp!.EntityLifeStage > EntityLifeStage.Terminating;
+        }
+
+        /// <summary>
+        /// Returns whether the entity is alive inside of the ECS world.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal bool IsAlive(EntityUid uid)
+        {
+            return _world.IsAlive(uid);
+        }
+
+        internal bool TryAlive(EntityUid uid, out Entity entity)
+        {
+            entity = uid;
+            return _world.IsAlive(entity);
         }
 
         public bool Deleted([NotNullWhen(false)] EntityUid? uid)
         {
-            return !uid.HasValue || !MetaQuery.TryGetComponentInternal(uid.Value, out var comp) || comp.EntityDeleted;
+            return !uid.HasValue || Deleted(uid.Value);
         }
 
         /// <summary>
@@ -757,18 +788,21 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public virtual void FlushEntities()
         {
-            _sawmill.Info($"Flushing entities. Entity count: {Entities.Count}");
+            _sawmill.Info($"Flushing entities. Entity count: {EntityCount}");
             BeforeEntityFlush?.Invoke();
             FlushEntitiesInternal();
 
-            if (Entities.Count != 0)
+            if (EntityCount != 0)
             {
-                _sawmill.Error($"Failed to flush all entities. Entity count: {Entities.Count}");
+                _sawmill.Error($"Failed to flush all entities. Entity count: {EntityCount}");
                 // Dump entity info, but avoid dumping ~50k errors if for whatever reason we failed to delete almost all entities.
                 // Using 512 as the limit, in case the problem entities are related to player counts on high-pop servers.
-                if (Entities.Count < 512)
+                if (EntityCount < 512)
                 {
-                    foreach (var uid in Entities)
+                    var entList = new PooledList<Entity>();
+                    _world.GetEntities(_archMetaQuery, entList.Span);
+
+                    foreach (var uid in entList)
                     {
                         _sawmill.Error($"Entity exists after flush: {ToPrettyString(uid)}");
                     }
@@ -781,8 +815,8 @@ namespace Robust.Shared.GameObjects
             FlushEntitiesInternal();
 #endif
 
-            if (Entities.Count != 0)
-                throw new Exception($"Failed to flush all entities. Entity count: {Entities.Count}");
+            if (EntityCount != 0)
+                throw new Exception($"Failed to flush all entities. Entity count: {EntityCount}");
 
             AfterEntityFlush?.Invoke();
         }
@@ -795,17 +829,18 @@ namespace Robust.Shared.GameObjects
             // First, we directly delete all maps. This will delete most entities while reducing the number of component
             // lookups
 
-            var maps = _entTraitDict[typeof(MapComponent)].Keys.ToArray();
+            var maps = EntityQuery<MapComponent>(includePaused: true).ToList();
+
             foreach (var map in maps)
             {
                 try
                 {
-                    DeleteEntity(map);
+                    DeleteEntity(map.Owner);
                 }
                 catch (Exception e)
                 {
                     _sawmill.Log(LogLevel.Error, e,
-                        $"Caught exception while trying to delete map entity {ToPrettyString(map)}, this might corrupt the game state...");
+                        $"Caught exception while trying to delete map entity {ToPrettyString(map.Owner)}, this might corrupt the game state...");
 #if !EXCEPTION_TOLERANCE
                     throw;
 #endif
@@ -813,11 +848,12 @@ namespace Robust.Shared.GameObjects
             }
 
             // Then delete all other entities.
-            var ents = _entTraitDict[typeof(MetaDataComponent)].ToArray();
-            DebugTools.Assert(ents.Length == Entities.Count);
-            foreach (var (uid, comp) in ents)
+            var ents = EntityQuery<MetaDataComponent>(includePaused: true).ToList();
+            DebugTools.Assert(ents.Count == EntityCount);
+            foreach (var meta in ents)
             {
-                var meta = (MetaDataComponent) comp;
+                var uid = meta.Owner;
+
                 if (meta.EntityLifeStage >= EntityLifeStage.Terminating)
                     continue;
 
@@ -834,6 +870,11 @@ namespace Robust.Shared.GameObjects
 #endif
                 }
             }
+
+            CleanupArch();
+
+            if (_world.Size > 0)
+                _sawmill.Error("Entities were spawned while flushing entities.");
         }
 
         /// <summary>
@@ -841,32 +882,26 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         protected internal EntityUid AllocEntity(
             EntityPrototype? prototype,
-            out MetaDataComponent metadata)
+            out MetaDataComponent metadata,
+            out TransformComponent xform)
         {
-            var entity = AllocEntity(out metadata);
+            var entity = AllocEntity(out metadata, out xform);
             metadata._entityPrototype = prototype;
             Dirty(entity, metadata, metadata);
             return entity;
         }
 
         /// <inheritdoc cref="AllocEntity(Robust.Shared.Prototypes.EntityPrototype?,out Robust.Shared.GameObjects.MetaDataComponent)"/>
-        internal EntityUid AllocEntity(EntityPrototype? prototype) => AllocEntity(prototype, out _);
+        internal EntityUid AllocEntity(EntityPrototype? prototype) => AllocEntity(prototype, out _, out _);
 
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
-        private EntityUid AllocEntity(out MetaDataComponent metadata)
+        private EntityUid AllocEntity(out MetaDataComponent metadata, out TransformComponent xform)
         {
             ThreadCheck();
 
-            var uid = GenerateEntityUid();
-
-#if DEBUG
-            if (EntityExists(uid))
-            {
-                throw new InvalidOperationException($"UID already taken: {uid}");
-            }
-#endif
+            SpawnEntityArch(out var uid);
 
             metadata = new MetaDataComponent
             {
@@ -883,16 +918,15 @@ namespace Robust.Shared.GameObjects
             EntityAdded?.Invoke((uid, metadata));
             _eventBus.OnEntityAdded(uid);
 
-            Entities.Add(uid);
             // add the required MetaDataComponent directly.
-            AddComponentInternal(uid, metadata, _metaReg, false, true, metadata);
+            AddComponentInternal(uid, metadata, _metaReg, skipInit: true, overwrite: false, metadata);
 
             // allocate the required TransformComponent
-            var xformComp = Unsafe.As<TransformComponent>(_componentFactory.GetComponent(_xformReg));
+            xform = Unsafe.As<TransformComponent>(_componentFactory.GetComponent(_xformReg));
 #pragma warning disable CS0618 // Type or member is obsolete
-            xformComp.Owner = uid;
+            xform.Owner = uid;
 #pragma warning restore CS0618 // Type or member is obsolete
-            AddComponentInternal(uid, xformComp, false, true, metadata);
+            AddComponentInternal(uid, xform, _xformReg, skipInit: true, overwrite: false, metadata);
 
             return uid;
         }
@@ -900,23 +934,23 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and loads components but does not do initialization.
         /// </summary>
-        internal virtual EntityUid CreateEntity(string? prototypeName, out MetaDataComponent metadata, IEntityLoadContext? context = null)
+        internal virtual EntityUid CreateEntity(string? prototypeName, out MetaDataComponent metadata, out TransformComponent xform, IEntityLoadContext? context = null)
         {
             if (prototypeName == null)
-                return AllocEntity(out metadata);
+                return AllocEntity(out metadata, out xform);
 
             if (!PrototypeManager.TryIndex<EntityPrototype>(prototypeName, out var prototype))
                 throw new EntityCreationException($"Attempted to spawn an entity with an invalid prototype: {prototypeName}");
 
-            return CreateEntity(prototype, out metadata, context);
+            return CreateEntity(prototype, out metadata, out xform, context);
         }
 
         /// <summary>
         ///     Allocates an entity and loads components but does not do initialization.
         /// </summary>
-        private protected EntityUid CreateEntity(EntityPrototype prototype, out MetaDataComponent metadata, IEntityLoadContext? context = null)
+        private protected EntityUid CreateEntity(EntityPrototype prototype, out MetaDataComponent metadata, out TransformComponent xform, IEntityLoadContext? context = null)
         {
-            var entity = AllocEntity(prototype, out metadata);
+            var entity = AllocEntity(prototype, out metadata, out xform);
             try
             {
                 EntityPrototype.LoadEntity((entity, metadata), ComponentFactory, this, _serManager, context);
@@ -1055,14 +1089,6 @@ namespace Robust.Shared.GameObjects
         /// Raises an event locally on client or networked on server.
         /// </summary>
         public abstract void RaiseSharedEvent<T>(T message, ICommonSession? user = null) where T : EntityEventArgs;
-
-        /// <summary>
-        ///     Factory for generating a new EntityUid for an entity currently being created.
-        /// </summary>
-        internal EntityUid GenerateEntityUid()
-        {
-            return new EntityUid(NextEntityUid++);
-        }
 
         /// <summary>
         /// Generates a unique network id and increments <see cref="NextNetworkId"/>

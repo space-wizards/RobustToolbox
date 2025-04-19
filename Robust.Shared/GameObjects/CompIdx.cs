@@ -1,7 +1,11 @@
 ﻿using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
+using Arch.Core;
+using Arch.Core.Utils;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -10,6 +14,7 @@ namespace Robust.Shared.GameObjects;
 public readonly struct CompIdx : IEquatable<CompIdx>
 {
     internal readonly int Value;
+    internal readonly ComponentType Type;
 
     internal static CompIdx Index<T>() => Store<T>.Index;
 
@@ -45,12 +50,13 @@ public readonly struct CompIdx : IEquatable<CompIdx>
     private static class Store<T>
     {
         // ReSharper disable once StaticMemberInGenericType
-        public static readonly CompIdx Index = new(Interlocked.Increment(ref _CompIdxMaster));
+        public static readonly CompIdx Index = new(Interlocked.Increment(ref _CompIdxMaster), typeof(T));
     }
 
-    internal CompIdx(int value)
+    internal CompIdx(int value, in ComponentType type)
     {
         Value = value;
+        Type = type;
     }
 
     public bool Equals(CompIdx other)

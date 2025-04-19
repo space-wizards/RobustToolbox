@@ -1,4 +1,7 @@
 using System;
+using System.Runtime.CompilerServices;
+using Arch.Core;
+using Arch.Core.Extensions.Dangerous;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
@@ -9,7 +12,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.GameObjects
 {
     /// <summary>
-    ///     This type contains a network identification number of an entity.
+    ///     This type contains a local identification number of an entity.
     ///     This can be used by the EntityManager to access an entity
     /// </summary>
     [CopyByRef]
@@ -17,22 +20,40 @@ namespace Robust.Shared.GameObjects
     {
         public readonly int Id;
 
+        public readonly int Version;
+
         /// <summary>
         ///     An Invalid entity UID you can compare against.
         /// </summary>
-        public static readonly EntityUid Invalid = new(0);
+        public static readonly EntityUid Invalid = new(0, 0);
 
         /// <summary>
         ///     The first entity UID the entityManager should use when the manager is initialized.
         /// </summary>
-        public static readonly EntityUid FirstUid = new(1);
+        public static readonly EntityUid FirstUid = new(0 + ArchUidOffset, 1 + ArchVersionOffset);
+
+        internal const int ArchUidOffset = 1;
+        internal const int ArchVersionOffset = 0;
+
+        public EntityUid()
+        {
+            Id = Invalid.Id;
+            Version = Invalid.Version;
+        }
+
+        internal EntityUid(Entity arch)
+        {
+            Id = arch.Id + ArchUidOffset;
+            Version = arch.Version + ArchVersionOffset;
+        }
 
         /// <summary>
         ///     Creates an instance of this structure, with the given network ID.
         /// </summary>
-        public EntityUid(int id)
+        public EntityUid(int id, int version)
         {
             Id = id;
+            Version = version;
         }
 
         public bool Valid => IsValid();
@@ -40,22 +61,33 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Creates an entity UID by parsing a string number.
         /// </summary>
-        public static EntityUid Parse(ReadOnlySpan<char> uid)
+        public static EntityUid Parse(ReadOnlySpan<char> uid, ReadOnlySpan<char> version)
         {
-            return new EntityUid(int.Parse(uid));
+            return new EntityUid(int.Parse(uid), int.Parse(version));
         }
 
-        public static bool TryParse(ReadOnlySpan<char> uid, out EntityUid entityUid)
+        public static bool TryParse(ReadOnlySpan<char> uid, ReadOnlySpan<char> version, out EntityUid entityUid)
         {
-            if (!int.TryParse(uid, out var id))
+            try
             {
-                entityUid = default;
+                entityUid = Parse(uid, version);
+                return true;
+            }
+            catch (FormatException)
+            {
+                entityUid = Invalid;
                 return false;
             }
-
-            entityUid = new(id);
-            return true;
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static EntityUid FromArch(in World world, in Entity entity)
+        {
+            return new EntityUid(entity.Id + ArchUidOffset, entity.Version + ArchVersionOffset);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int GetArchId() => Id - ArchUidOffset;
 
         /// <summary>
         ///     Checks if the ID value is valid. Does not check if it identifies
@@ -64,13 +96,13 @@ namespace Robust.Shared.GameObjects
         [Pure]
         public bool IsValid()
         {
-            return Id > 0;
+            return Id > Invalid.Id;
         }
 
         /// <inheritdoc />
         public bool Equals(EntityUid other)
         {
-            return Id == other.Id;
+            return Id == other.Id && Version == other.Version;
         }
 
         /// <inheritdoc />
@@ -85,9 +117,7 @@ namespace Robust.Shared.GameObjects
         {
             unchecked
             {
-                // * 397 for whenever we get versioning back
-                // and avoid hashcode bugs in the interim.
-                return Id.GetHashCode() * 397;
+                return Id.GetHashCode() * 397 ^ Version.GetHashCode();
             }
         }
 
@@ -96,7 +126,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public static bool operator ==(EntityUid a, EntityUid b)
         {
-            return a.Id == b.Id;
+            return a.Id == b.Id && a.Version == b.Version;
         }
 
         /// <summary>
@@ -114,6 +144,16 @@ namespace Robust.Shared.GameObjects
         public static explicit operator int(EntityUid self)
         {
             return self.Id;
+        }
+
+        public static implicit operator Entity(EntityUid self)
+        {
+            return DangerousEntityExtensions.CreateEntityStruct(self.Id - ArchUidOffset, 0, self.Version - ArchVersionOffset);
+        }
+
+        public static implicit operator EntityUid(Entity other)
+        {
+            return new EntityUid(other.Id + ArchUidOffset, other.Version + ArchVersionOffset);
         }
 
         /// <inheritdoc />

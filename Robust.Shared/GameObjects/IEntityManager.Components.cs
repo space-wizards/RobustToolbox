@@ -81,7 +81,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="uid">Entity being modified.</param>
         /// <param name="component">Component to add.</param>
         /// <param name="overwrite">Should it overwrite existing components?</param>
-        void AddComponent<T>(EntityUid uid, T component, bool overwrite = false, MetaDataComponent? metadata = null) where T : IComponent;
+        void AddComponent<T>(EntityUid uid, T component, MetaDataComponent? metadata = null) where T : IComponent;
 
         /// <summary>
         ///     Removes the component with the specified reference type,
@@ -336,6 +336,15 @@ namespace Robust.Shared.GameObjects
         /// <param name="type">A trait or component type to check for.</param>
         /// <param name="component">Component of the specified type (if exists).</param>
         /// <returns>If the component existed in the entity.</returns>
+        bool TryGetComponent<T>(EntityUid uid, CompIdx type, [NotNullWhen(true)] out T? component) where T : IComponent?;
+
+        /// <summary>
+        ///     Returns the component of a specific type.
+        /// </summary>
+        /// <param name="uid">Entity UID to check.</param>
+        /// <param name="type">A trait or component type to check for.</param>
+        /// <param name="component">Component of the specified type (if exists).</param>
+        /// <returns>If the component existed in the entity.</returns>
         bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, Type type, [NotNullWhen(true)] out IComponent? component);
 
         /// <summary>
@@ -507,11 +516,6 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public ComponentQueryEnumerator ComponentQueryEnumerator(ComponentRegistry registry);
 
-        /// <summary>
-        /// <see cref="CompRegistryQueryEnumerator"/>
-        /// </summary>
-        public CompRegistryEntityEnumerator CompRegistryQueryEnumerator(ComponentRegistry registry);
-
         AllEntityQueryEnumerator<IComponent> AllEntityQueryEnumerator(Type comp);
 
         AllEntityQueryEnumerator<TComp1> AllEntityQueryEnumerator<TComp1>()
@@ -605,5 +609,7 @@ namespace Robust.Shared.GameObjects
         ///     Culls all components from the collection that are marked as deleted. This needs to be called often.
         /// </summary>
         void CullRemovedComponents();
+
+        void CleanupArch();
     }
 }

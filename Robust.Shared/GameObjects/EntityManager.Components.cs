@@ -7,6 +7,11 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Arch.Core;
+using Arch.Core.Extensions.Dangerous;
+using Arch.Core.Utils;
+using Collections.Pooled;
+using CommunityToolkit.HighPerformance.Helpers;
 using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.Log;
@@ -15,6 +20,7 @@ using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using ComponentRegistry = Robust.Shared.Prototypes.ComponentRegistry;
 #if EXCEPTION_TOLERANCE
 using Robust.Shared.Exceptions;
 #endif
@@ -33,20 +39,9 @@ namespace Robust.Shared.GameObjects
         public IComponentFactory ComponentFactory => _componentFactory;
 
         private const int TypeCapacity = 32;
-        private const int ComponentCollectionCapacity = 1024;
         private const int EntityCapacity = 1024;
-        private const int NetComponentCapacity = 8;
-
-        private FrozenDictionary<Type, Dictionary<EntityUid, IComponent>> _entTraitDict
-            = FrozenDictionary<Type, Dictionary<EntityUid, IComponent>>.Empty;
-
-        private Dictionary<EntityUid, IComponent>[] _entTraitArray
-            = Array.Empty<Dictionary<EntityUid, IComponent>>();
 
         private readonly HashSet<IComponent> _deleteSet = new(TypeCapacity);
-
-        private UniqueIndexHkm<EntityUid, IComponent> _entCompIndex =
-            new(ComponentCollectionCapacity);
 
         /// <inheritdoc />
         public event Action<AddedComponentEventArgs>? ComponentAdded;
@@ -63,35 +58,23 @@ namespace Robust.Shared.GameObjects
             _componentFactory.ComponentsAdded += OnComponentsAdded;
         }
 
+        private void OnComponentsAdded(ComponentRegistration[] components)
+        {
+            RegisterComponents(components);
+        }
+
         /// <summary>
         ///     Instantly clears all components from the manager. This will NOT shut them down gracefully.
         ///     Any entities relying on existing components will be broken.
         /// </summary>
         public void ClearComponents()
         {
-            _entCompIndex.Clear();
             _deleteSet.Clear();
-            foreach (var dict in _entTraitDict.Values)
-            {
-                dict.Clear();
-            }
         }
 
         private void RegisterComponents(IEnumerable<ComponentRegistration> components)
         {
-            var traitDict = _entTraitDict.ToDictionary();
-            foreach (var reg in components)
-            {
-                var dict = new Dictionary<EntityUid, IComponent>();
-                traitDict.Add(reg.Type, dict);
-                CompIdx.AssignArray(ref _entTraitArray, reg.Idx, dict);
-            }
-            _entTraitDict = traitDict.ToFrozenDictionary();
-        }
-
-        private void OnComponentsAdded(ComponentRegistration[] components)
-        {
-            RegisterComponents(components);
+            // NOOP
         }
 
         #region Component Management
@@ -99,16 +82,14 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public int Count<T>() where T : IComponent
         {
-            var dict = _entTraitDict[typeof(T)];
-            return dict.Count;
+            return _world.CountEntities(new QueryDescription().WithAll<T>());
         }
 
         /// <inheritdoc />
-        public int Count(Type component)
+        public int Count(Type type)
         {
-            DebugTools.Assert(component.IsAssignableTo(typeof(IComponent)));
-            var dict = _entTraitDict[component];
-            return dict.Count;
+            DebugTools.Assert(type.IsAssignableTo(typeof(IComponent)));
+            return _world.CountEntities(new QueryDescription(all: [type]));
         }
 
         [Obsolete("Use InitializeEntity")]
@@ -131,18 +112,6 @@ namespace Robust.Shared.GameObjects
                     LifeInitialize(uid, comp, _componentFactory.GetIndex(comp.GetType()));
             }
 
-#if DEBUG
-            // Second integrity check in case of.
-            foreach (var t in _entCompIndex[uid])
-            {
-                if (!t.Deleted && !t.Initialized)
-                {
-                    DebugTools.Assert(
-                        $"Component {t.GetType()} was not initialized at the end of {nameof(InitializeComponents)}.");
-                }
-            }
-
-#endif
             DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.Initializing);
             SetLifeStage(metadata, EntityLifeStage.Initialized);
         }
@@ -201,7 +170,8 @@ namespace Robust.Shared.GameObjects
                 {
                     var comp = _componentFactory.GetComponent(reg);
                     _serManager.CopyTo(entry.Component, ref comp, notNullableOverride: true);
-                    AddComponentInternal(target, comp, reg, overwrite: true, metadata: metadata);
+                    comp.Owner = target;
+                    AddComponentInternal(target, comp, reg, skipInit: false, overwrite: true, metadata: metadata);
                 }
                 else
                 {
@@ -212,7 +182,8 @@ namespace Robust.Shared.GameObjects
 
                     var comp = _componentFactory.GetComponent(reg);
                     _serManager.CopyTo(entry.Component, ref comp, notNullableOverride: true);
-                    AddComponentInternal(target, comp, reg, overwrite: false, metadata: metadata);
+                    comp.Owner = target;
+                    AddComponentInternal(target, comp, reg, skipInit: false, overwrite: false, metadata: metadata);
                 }
             }
         }
@@ -291,15 +262,15 @@ namespace Robust.Shared.GameObjects
         public void AddComponent(
             EntityUid uid,
             EntityPrototype.ComponentRegistryEntry entry,
-            bool overwrite = false,
             MetaDataComponent? metadata = null)
         {
-            var copy = _componentFactory.GetComponent(entry);
-            AddComponent(uid, copy, overwrite, metadata);
+            var compReg = _componentFactory.GetRegistration(entry.Component.GetType());
+            var copy = _componentFactory.GetComponent(compReg);
+            AddComponentInternal(uid, copy, compReg, skipInit: false, overwrite: true, metadata);
         }
 
         /// <inheritdoc />
-        public void AddComponent<T>(EntityUid uid, T component, bool overwrite = false, MetaDataComponent? metadata = null) where T : IComponent
+        public void AddComponent<T>(EntityUid uid, T component, MetaDataComponent? metadata = null) where T : IComponent
         {
             if (!MetaQuery.Resolve(uid, ref metadata, false))
                 throw new ArgumentException($"Entity {uid} is not valid.", nameof(uid));
@@ -317,37 +288,16 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException("Component is not owned by entity.");
             }
 #pragma warning restore CS0618 // Type or member is obsolete
+            var compReg = _componentFactory.GetRegistration(component);
 
-            AddComponentInternal(uid, component, overwrite, false, metadata);
+            AddComponentInternal(uid, component, compReg, false, overwrite: false, metadata);
         }
 
-        private void AddComponentInternal<T>(
-            EntityUid uid,
-            T component,
-            ComponentRegistration compReg,
+        private void AddComponentInternalOnly<T>(
+            EntityUid uid, T component,
+            ComponentRegistration reg,
             bool overwrite = false,
             MetaDataComponent? metadata = null) where T : IComponent
-        {
-            if (!MetaQuery.Resolve(uid, ref metadata, false))
-                throw new ArgumentException($"Entity {uid} is not valid.", nameof(uid));
-
-            DebugTools.Assert(component.Owner == default);
-            component.Owner = uid;
-
-            AddComponentInternal(uid, component, compReg, overwrite, skipInit: false, metadata);
-        }
-
-        private void AddComponentInternal<T>(EntityUid uid, T component, bool overwrite, bool skipInit, MetaDataComponent? metadata) where T : IComponent
-        {
-            if (!MetaQuery.ResolveInternal(uid, ref metadata, false))
-                throw new ArgumentException($"Entity {uid} is not valid.", nameof(uid));
-
-            // get interface aliases for mapping
-            var reg = _componentFactory.GetRegistration(component);
-            AddComponentInternal(uid, component, reg, overwrite, skipInit, metadata);
-        }
-
-        private void AddComponentInternal<T>(EntityUid uid, T component, ComponentRegistration reg, bool overwrite, bool skipInit, MetaDataComponent metadata) where T : IComponent
         {
             ThreadCheck();
 
@@ -356,35 +306,30 @@ namespace Robust.Shared.GameObjects
                               (metadata ?? MetaQuery.GetComponent(uid)).EntityLifeStage < EntityLifeStage.Terminating,
                 $"Attempted to add a {component.GetType().Name} component to an entity ({ToPrettyString(uid)}) while it is terminating");
 
-            // Check that there is no existing component.
-            var type = reg.Idx;
-            var dict = _entTraitArray[type.Value];
-            DebugTools.Assert(dict != null);
+            // We can't use typeof(T) here in case T is just Component
+            DebugTools.Assert(component is MetaDataComponent ||
+                              (metadata ?? MetaQuery.GetComponent(uid)).EntityLifeStage < EntityLifeStage.Terminating,
+                $"Attempted to add a {reg.Name} component to an entity ({ToPrettyString(uid)}) while it is terminating");
 
-            // Code block to restrict access to ref comp.
+            if (overwrite)
             {
-                ref var comp = ref CollectionsMarshal.GetValueRefOrAddDefault(dict, uid, out var exists);
-                if (exists)
+                if (_world.TryGet(uid, reg.ArchType, out var existing) && existing is IComponent existingComp)
                 {
-                    if (!overwrite && !comp!.Deleted)
-                    {
-                        throw new InvalidOperationException(
-                            $"Component reference type {reg.Name} already occupied by {comp}");
-                    }
-
-                    // This will invalidate the comp ref as it removes the key from the dictionary.
-                    // This is inefficient, but component overriding rarely ever happens.
-                    RemoveComponentImmediate(uid, comp!, type, false, metadata);
-                    dict.Add(uid, component);
-                }
-                else
-                {
-                    comp = component;
+                    DebugTools.AssertOwner(uid, existingComp);
+                    RemoveComponentImmediate(uid, existingComp, reg.Idx, false, false, meta: metadata);
                 }
             }
 
-            // actually ADD the component
-            _entCompIndex.Add(uid, component);
+            // TODO optimize this
+            // Need multi-comp adds so we can remove this call probably.
+            if (!_world.Has(uid, reg.ArchType))
+                _world.Add(uid, (object)component);
+            else
+            {
+                // Overwrite doesn't trigger archetype change so the ref is stale, but we'll bulldoze it anyway here so doesn't matter if it's not-null.
+                DebugTools.Assert(overwrite || (!_world.TryGet(uid, reg.ArchType, out var existing) || existing == null));
+                _world.Set(uid, (object)component);
+            }
 
             // add the component to the netId grid
             if (reg.NetID != null && component.NetSyncEnabled)
@@ -403,7 +348,11 @@ namespace Robust.Shared.GameObjects
             }
 
             component.Networked = reg.NetID != null;
+        }
 
+        internal void AddComponentEvents<T>(EntityUid uid, T component, ComponentRegistration reg, bool skipInit,
+            MetaDataComponent? metadata = null) where T : IComponent
+        {
             var eventArgs = new AddedComponentEventArgs(new ComponentEventArgs(component, uid), reg);
             ComponentAdded?.Invoke(eventArgs);
             _eventBus.OnComponentAdded(eventArgs);
@@ -415,7 +364,8 @@ namespace Robust.Shared.GameObjects
 
             metadata ??= MetaQuery.GetComponentInternal(uid);
 
-            if (!metadata.EntityInitialized && !metadata.EntityInitializing)
+            // Bur this overhead sucks.
+            if (metadata.EntityLifeStage < EntityLifeStage.Initializing)
                 return;
 
             if (component.Networked)
@@ -430,6 +380,13 @@ namespace Robust.Shared.GameObjects
                 EventBus.RaiseComponentEvent(uid, component, reg.Idx, MapInitEventInstance);
         }
 
+        internal void AddComponentInternal<T>(EntityUid uid, T component, ComponentRegistration reg, bool skipInit, bool overwrite = false, MetaDataComponent? metadata = null) where T : IComponent
+        {
+            DebugTools.AssertOwner(uid, component);
+            AddComponentInternalOnly(uid, component, reg, overwrite: overwrite, metadata);
+            AddComponentEvents(uid, component, reg, skipInit, metadata);
+        }
+
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool RemoveComponent<T>(EntityUid uid, MetaDataComponent? meta = null) where T : IComponent
@@ -437,7 +394,7 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, out T? comp))
                 return false;
 
-            RemoveComponentImmediate(uid, comp, CompIdx.Index<T>(), false, meta);
+            RemoveComponentImmediate(uid, comp, CompIdx.Index<T>(), terminating: false, archetypeChange: true, meta: meta);
             return true;
         }
 
@@ -448,7 +405,7 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, type, out var comp))
                 return false;
 
-            RemoveComponentImmediate(uid, comp, _componentFactory.GetIndex(type), false, meta);
+            RemoveComponentImmediate(uid, comp, _componentFactory.GetIndex(type), false, true, meta);
             return true;
         }
 
@@ -462,8 +419,7 @@ namespace Robust.Shared.GameObjects
             if (!TryGetComponent(uid, netId, out var comp, meta))
                 return false;
 
-            var idx = _componentFactory.GetIndex(comp.GetType());
-            RemoveComponentImmediate(uid, comp, idx, false, meta);
+            RemoveComponentImmediate(uid, comp, _componentFactory.GetIndex(comp.GetType()), false, true, meta);
             return true;
         }
 
@@ -471,8 +427,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
         {
-            var idx = _componentFactory.GetIndex(component.GetType());
-            RemoveComponentImmediate(uid, component, idx, false, meta);
+            RemoveComponentImmediate(uid, component, _componentFactory.GetIndex(component.GetType()), false, true, meta);
         }
 
         /// <inheritdoc />
@@ -513,60 +468,36 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void RemoveComponentDeferred(EntityUid owner, Component component)
-        {
-            RemoveComponentDeferred(component, owner, false);
-        }
-
-        private static IEnumerable<IComponent> InSafeOrder(IEnumerable<IComponent> comps, bool forCreation = false)
-        {
-            static int Sequence(IComponent x)
-                => x switch
-                {
-                    MetaDataComponent _ => 0,
-                    TransformComponent _ => 1,
-                    PhysicsComponent _ => 2,
-                    _ => int.MaxValue
-                };
-
-            return forCreation
-                ? comps.OrderBy(Sequence)
-                : comps.OrderByDescending(Sequence);
-        }
-
-        /// <inheritdoc />
         public void RemoveComponents(EntityUid uid, MetaDataComponent? meta = null)
         {
-            if (!MetaQuery.Resolve(uid, ref meta))
-                return;
-
-            foreach (var comp in InSafeOrder(_entCompIndex[uid]))
+            var objComps = _world.GetAllComponents(uid);
+            // Reverse order
+            for (var i = objComps.Length - 1; i >= 0; i--)
             {
-                var idx = _componentFactory.GetIndex(comp.GetType());
-                RemoveComponentImmediate(uid, comp, idx, false, meta);
+                var comp = (IComponent) objComps[i]!;
+                RemoveComponentImmediate(uid, comp, _componentFactory.GetIndex(comp.GetType()), terminating: false, archetypeChange: false, meta);
             }
         }
 
         /// <inheritdoc />
         public void DisposeComponents(EntityUid uid, MetaDataComponent? meta = null)
         {
-            if (!MetaQuery.Resolve(uid, ref meta))
-                return;
+            var objComps = _world.GetAllComponents(uid);
 
-            foreach (var comp in InSafeOrder(_entCompIndex[uid]))
+            // Reverse order
+            for (var i = objComps.Length - 1; i >= 0; i--)
             {
+                var comp = (IComponent) objComps[i]!;
+
                 try
                 {
-                    var idx = _componentFactory.GetIndex(comp.GetType());
-                    RemoveComponentImmediate(uid, comp, idx, true, meta);
+                    RemoveComponentImmediate(uid, comp, _componentFactory.GetIndex(comp.GetType()), terminating: true, archetypeChange: false, meta);
                 }
-                catch (Exception)
+                catch (Exception exc)
                 {
-                    _sawmill.Error($"Caught exception while trying to remove component {_componentFactory.GetComponentName(comp.GetType())} from entity '{ToPrettyString(uid)}'");
+                    _sawmill.Error($"Caught exception while trying to remove component {_componentFactory.GetComponentName(comp.GetType())} from entity '{ToPrettyString(uid)}'\n{exc.StackTrace}");
                 }
             }
-
-            _entCompIndex.Remove(uid);
         }
 
         private void RemoveComponentDeferred(IComponent component, EntityUid uid, bool terminating)
@@ -622,14 +553,35 @@ namespace Robust.Shared.GameObjects
 #endif
         }
 
+        /// <summary>
+        /// WARNING: Do not call this unless you're sure of what you're doing!
+        /// </summary>
+        internal void RemoveComponentInternal(EntityUid uid, IComponent component, bool terminating, bool archetypeChange, MetaDataComponent? metadata = null)
+        {
+            // I hate this but also didn't want the MetaQuery.GetComponent overhead.
+            // and with archetypes we want to avoid moves at all costs.
+            RemoveComponentImmediate(uid, component, _componentFactory.GetIndex(component.GetType()), terminating: terminating, archetypeChange: archetypeChange, metadata);
+        }
+
+        /// <summary>
+        /// Removes a component.
+        /// </summary>
+        /// <param name="uid"></param>
+        /// <param name="component"></param>
+        /// <param name="idx"></param>
+        /// <param name="terminating">Is the entity terminating.</param>
+        /// <param name="archetypeChange">Should we handle the archetype change or is it being handled externally.</param>
+        /// <param name="meta"></param>
         private void RemoveComponentImmediate(
             EntityUid uid,
             IComponent component,
             CompIdx idx,
             bool terminating,
-            MetaDataComponent? meta)
+            bool archetypeChange,
+            MetaDataComponent? meta = null)
         {
             ThreadCheck();
+            DebugTools.AssertOwner(uid, component);
 
             if (component.Deleted)
             {
@@ -662,13 +614,13 @@ namespace Robust.Shared.GameObjects
                 _runtimeLog.LogException(e, nameof(RemoveComponentImmediate));
             }
 #endif
-            DeleteComponent(uid, component, idx, terminating, meta);
+            DeleteComponent(uid, component, idx, terminating: terminating, archetypeChange: archetypeChange, meta);
         }
 
         /// <inheritdoc />
         public void CullRemovedComponents()
         {
-            foreach (var component in InSafeOrder(_deleteSet))
+            foreach (var component in _deleteSet)
             {
                 if (component.Deleted)
                     continue;
@@ -698,19 +650,13 @@ namespace Robust.Shared.GameObjects
                 _runtimeLog.LogException(e, nameof(CullRemovedComponents));
             }
 #endif
-                var meta = MetaQuery.GetComponent(uid);
-                DeleteComponent(uid, component, idx, false, meta);
+                DeleteComponent(uid, component, _componentFactory.GetIndex(component.GetType()), terminating: false, archetypeChange: true);
             }
 
             _deleteSet.Clear();
         }
 
-        private void DeleteComponent(
-            EntityUid entityUid,
-            IComponent component,
-            CompIdx idx,
-            bool terminating,
-            MetaDataComponent? metadata)
+        private void DeleteComponent(EntityUid entityUid, IComponent component, CompIdx idx, bool terminating, bool archetypeChange, MetaDataComponent? metadata = null)
         {
             if (!MetaQuery.ResolveInternal(entityUid, ref metadata))
                 return;
@@ -736,11 +682,12 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            _entTraitArray[idx.Value].Remove(entityUid);
-
-            // TODO if terminating the entity, maybe defer this?
-            // _entCompIndex.Remove(uid) gets called later on anyways.
-            _entCompIndex.Remove(entityUid, component);
+            if (archetypeChange)
+            {
+                DebugTools.Assert(_world.Has(entityUid, idx.Type));
+                if (_world.Has(entityUid, idx.Type))
+                    _world.Remove(entityUid, idx.Type);
+            }
 
             DebugTools.Assert(_netMan.IsClient // Client side prediction can set LastComponentRemoved to some future tick,
                               || metadata.EntityLastModifiedTick >= metadata.LastComponentRemoved);
@@ -751,9 +698,7 @@ namespace Robust.Shared.GameObjects
         [Pure]
         public bool HasComponent<T>(EntityUid uid) where T : IComponent
         {
-            var dict = _entTraitArray[CompIdx.ArrayIndex<T>()];
-            DebugTools.Assert(dict != null, $"Unknown component: {typeof(T).Name}");
-            return dict.TryGetValue(uid, out var comp) && !comp.Deleted;
+            return uid.Valid && _world.TryGet(uid, out T? comp) && comp != null && !comp.Deleted;
         }
 
         /// <inheritdoc />
@@ -768,8 +713,7 @@ namespace Robust.Shared.GameObjects
         [Pure]
         public bool HasComponent(EntityUid uid, ComponentRegistration reg)
         {
-            var dict = _entTraitArray[reg.Idx.Value];
-            return dict.TryGetValue(uid, out var comp) && !comp.Deleted;
+            return uid.Valid && _world.TryGet(uid, reg.ArchType, out var comp) && comp != null && !((IComponent) comp).Deleted;
         }
 
         /// <inheritdoc />
@@ -777,8 +721,7 @@ namespace Robust.Shared.GameObjects
         [Pure]
         public bool HasComponent(EntityUid uid, Type type)
         {
-            var dict = _entTraitDict[type];
-            return dict.TryGetValue(uid, out var comp) && !comp.Deleted;
+            return uid.Valid && _world.TryGet(uid, type, out var comp) && comp != null && !((IComponent) comp).Deleted;
         }
 
         /// <inheritdoc />
@@ -791,8 +734,7 @@ namespace Robust.Shared.GameObjects
                 return false;
             }
 
-            var dict = _entTraitDict[type];
-            return dict.TryGetValue(uid.Value, out var comp) && !comp.Deleted;
+            return HasComponent(uid.Value, type);
         }
 
         /// <inheritdoc />
@@ -880,47 +822,35 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetComponent<T>(EntityUid uid) where T : IComponent
         {
-            var dict = _entTraitArray[CompIdx.ArrayIndex<T>()];
-            DebugTools.Assert(dict != null, $"Unknown component: {typeof(T).Name}");
-            if (dict.TryGetValue(uid, out var comp))
+            if (!uid.Valid || !_world.TryGet(uid, out T? comp) || comp == null)
             {
-                if (!comp.Deleted)
-                {
-                    return (T)comp;
-                }
+                throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(T)}");
             }
 
-            throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(T)}");
+            return comp;
         }
 
         [Pure]
         public IComponent GetComponent(EntityUid uid, CompIdx type)
         {
-            var dict = _entTraitArray[type.Value];
-            if (dict.TryGetValue(uid, out var comp))
+            if (!uid.Valid || !_world.TryGet(uid, type.Type, out var comp) || comp == null)
             {
-                if (!comp.Deleted)
-                    return comp;
+                throw new KeyNotFoundException($"Entity {uid} does not have a component of type {type.Type}");
             }
 
-            throw new KeyNotFoundException($"Entity {uid} does not have a component of type {_componentFactory.IdxToType(type)}");
+            return (IComponent) comp;
         }
 
         /// <inheritdoc />
         [Pure]
         public IComponent GetComponent(EntityUid uid, Type type)
         {
-            // ReSharper disable once InvertIf
-            var dict = _entTraitDict[type];
-            if (dict.TryGetValue(uid, out var comp))
+            if (!uid.Valid || !_world.TryGet(uid, type, out var comp) || comp == null)
             {
-                if (!comp.Deleted)
-                {
-                    return comp;
-                }
+                throw new KeyNotFoundException($"Entity {uid} does not have a component of type {type}");
             }
 
-            throw new KeyNotFoundException($"Entity {uid} does not have a component of type {type}");
+            return (IComponent) comp;
         }
 
         /// <inheritdoc />
@@ -930,15 +860,11 @@ namespace Robust.Shared.GameObjects
             return (meta ?? MetaQuery.GetComponentInternal(uid)).NetComponents[netId];
         }
 
-        /// <inheritdoc />
         [Pure]
         public IComponent GetComponentInternal(EntityUid uid, CompIdx type)
         {
-            var dict = _entTraitArray[type.Value];
-            if (dict.TryGetValue(uid, out var comp))
-            {
-                return comp;
-            }
+            if (TryGetComponent(uid, type, out var component))
+                return component;
 
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {type}");
         }
@@ -947,13 +873,16 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T? component) where T : IComponent?
         {
-            var dict = _entTraitArray[CompIdx.ArrayIndex<T>()];
-            DebugTools.Assert(dict != null, $"Unknown component: {typeof(T).Name}");
-            if (dict.TryGetValue(uid, out var comp))
+            if (!uid.Valid)
             {
-                if (!comp.Deleted)
+                component = default;
+                return false;
+            }
+
+            if (_world.TryGet(uid, out component) && component != null)
+            {
+                if (!component.Deleted)
                 {
-                    component = (T)comp;
                     return true;
                 }
             }
@@ -987,51 +916,55 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public bool TryGetComponent(EntityUid uid, ComponentRegistration reg, [NotNullWhen(true)] out IComponent? component)
         {
-            var dict = _entTraitArray[reg.Idx.Value];
-            if (dict.TryGetValue(uid, out var comp))
+            return TryGetComponent(uid, reg.ArchType, out component);
+        }
+
+        internal bool TryGetComponent<T>(EntityUid uid, ComponentType type, [NotNullWhen(true)] out IComponent? component)
+        {
+            if (uid.Valid && _world.TryGet(uid, type, out var comp) && comp != null)
             {
-                if (!comp.Deleted)
+                component = (IComponent) comp;
+
+                if (!component.Deleted)
                 {
-                    component = comp;
                     return true;
                 }
             }
 
             component = null;
+            return false;
+        }
+
+        internal bool TryGetComponent<T>(EntityUid uid, ComponentType type, [NotNullWhen(true)] out T? component) where T : IComponent?
+        {
+            if (uid.Valid && _world.TryGet(uid, type, out var comp) && comp != null)
+            {
+                component = (T) comp;
+
+                if (!component.Deleted)
+                {
+                    return true;
+                }
+            }
+
+            component = default;
             return false;
         }
 
         /// <inheritdoc />
         public bool TryGetComponent(EntityUid uid, Type type, [NotNullWhen(true)] out IComponent? component)
         {
-            var dict = _entTraitDict[type];
-            if (dict.TryGetValue(uid, out var comp))
-            {
-                if (!comp.Deleted)
-                {
-                    component = comp;
-                    return true;
-                }
-            }
+            return TryGetComponent(uid, (ComponentType) type, out component);
+        }
 
-            component = null;
-            return false;
+        public bool TryGetComponent<T>(EntityUid uid, CompIdx type, [NotNullWhen(true)] out T? component) where T : IComponent?
+        {
+            return TryGetComponent(uid, type.Type, out component);
         }
 
         public bool TryGetComponent(EntityUid uid, CompIdx type, [NotNullWhen(true)] out IComponent? component)
         {
-            var dict = _entTraitArray[type.Value];
-            if (dict.TryGetValue(uid, out var comp))
-            {
-                if (!comp.Deleted)
-                {
-                    component = comp;
-                    return true;
-                }
-            }
-
-            component = null;
-            return false;
+            return TryGetComponent(uid, type.Type, out component);
         }
 
         /// <inheritdoc />
@@ -1044,18 +977,7 @@ namespace Robust.Shared.GameObjects
                 return false;
             }
 
-            var dict = _entTraitDict[type];
-            if (dict.TryGetValue(uid.Value, out var comp))
-            {
-                if (!comp.Deleted)
-                {
-                    component = comp;
-                    return true;
-                }
-            }
-
-            component = null;
-            return false;
+            return TryGetComponent(uid.Value, type, out component);
         }
 
         /// <inheritdoc />
@@ -1159,6 +1081,7 @@ namespace Robust.Shared.GameObjects
             if (!MetaQuery.Resolve(target, ref meta))
                 return;
 
+            // TODO: DO bulk changes for arch.
             foreach (var comp in sourceComponents)
             {
                 CopyComponentInternal(source, target, comp, meta);
@@ -1173,46 +1096,37 @@ namespace Robust.Shared.GameObjects
             _serManager.CopyTo(sourceComponent, ref component, notNullableOverride: true);
             component.Owner = target;
 
-            AddComponentInternal(target, component, compReg, true, false, meta);
+            AddComponentInternal(target, component, compReg, skipInit: false, overwrite: true, meta);
             return component;
         }
 
         public EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : IComponent
         {
-            var comps = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
-            DebugTools.Assert(comps != null, $"Unknown component: {typeof(TComp1).Name}");
-            return new EntityQuery<TComp1>(comps, _resolveSawmill);
+            return new EntityQuery<TComp1>(this, _resolveSawmill);
         }
 
         public EntityQuery<IComponent> GetEntityQuery(Type type)
         {
-            var comps = _entTraitDict[type];
-            DebugTools.Assert(comps != null, $"Unknown component: {type.Name}");
-            return new EntityQuery<IComponent>(comps, _resolveSawmill);
+            return new EntityQuery<IComponent>(this, _resolveSawmill);
         }
 
         /// <inheritdoc />
         public IEnumerable<IComponent> GetComponents(EntityUid uid)
         {
-            // ReSharper disable once LoopCanBeConvertedToQuery
-            foreach (var comp in _entCompIndex[uid].ToArray())
+            foreach (var obj in _world.GetAllComponents(uid))
             {
+                var comp = (IComponent)obj!;
+
                 if (comp.Deleted) continue;
 
                 yield return comp;
             }
         }
 
-        /// <summary>
-        /// Internal variant of <see cref="GetComponents"/> that directly returns the actual component set.
-        /// </summary>
-        internal IReadOnlyCollection<IComponent> GetComponentsInternal(EntityUid uid) => _entCompIndex[uid];
-
         /// <inheritdoc />
         public int ComponentCount(EntityUid uid)
         {
-            var comps = _entCompIndex[uid];
-            return comps.Count;
+            return _world.GetArchetype(uid).Signature.Count;
         }
 
         /// <summary>
@@ -1221,26 +1135,29 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         private void CopyComponentsInto(ref Span<IComponent?> comps, EntityUid uid)
         {
-            var set = _entCompIndex[uid];
-            if (set.Count > comps.Length)
+            var set = _world.GetAllComponents(uid);
+
+            if (set.Length > comps.Length)
             {
-                comps = new IComponent[set.Count];
+                comps = new IComponent[set.Length];
             }
 
             var i = 0;
             foreach (var c in set)
             {
-                comps[i++] = c;
+                comps[i++] = (IComponent)c!;
             }
         }
 
         /// <inheritdoc />
         public IEnumerable<T> GetComponents<T>(EntityUid uid)
         {
-            var comps = _entCompIndex[uid].ToArray();
+            var comps = _world.GetAllComponents(uid);
+
             foreach (var comp in comps)
             {
-                if (comp.Deleted || comp is not T tComp) continue;
+                var component = (IComponent)comp!;
+                if (component.Deleted || component is not T tComp) continue;
 
                 yield return tComp;
             }
@@ -1368,50 +1285,30 @@ namespace Robust.Shared.GameObjects
         {
             if (registry.Count == 0)
             {
-                return new ComponentQueryEnumerator(new Dictionary<EntityUid, IComponent>());
+                return new ComponentQueryEnumerator(_world, QueryDescription.Null);
             }
 
-            var comp1 = registry.First().Value;
-            var trait1 = _entTraitArray[_componentFactory.GetArrayIndex(comp1.Component.GetType())];
-
-            return new ComponentQueryEnumerator(trait1);
-        }
-
-        /// <inheritdoc />
-        public CompRegistryEntityEnumerator CompRegistryQueryEnumerator(ComponentRegistry registry)
-        {
-            if (registry.Count == 0)
-            {
-                return new CompRegistryEntityEnumerator(this, new Dictionary<EntityUid, IComponent>(), registry);
-            }
-
-            var comp1 = registry.First().Value;
-            var trait1 = _entTraitArray[_componentFactory.GetArrayIndex(comp1.Component.GetType())];
-
-            return new CompRegistryEntityEnumerator(this, trait1, registry);
+            var query = new QueryDescription(registry.GetTypes());
+            return new ComponentQueryEnumerator(_world, query);
         }
 
         public AllEntityQueryEnumerator<IComponent> AllEntityQueryEnumerator(Type comp)
         {
             DebugTools.Assert(comp.IsAssignableTo(typeof(IComponent)));
-            var trait = _entTraitArray[_componentFactory.GetIndex(comp).Value];
-            return new AllEntityQueryEnumerator<IComponent>(trait);
+            return new AllEntityQueryEnumerator<IComponent>(_world);
         }
 
         public AllEntityQueryEnumerator<TComp1> AllEntityQueryEnumerator<TComp1>()
         where TComp1 : IComponent
         {
-            var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
-            return new AllEntityQueryEnumerator<TComp1>(trait1);
+            return new AllEntityQueryEnumerator<TComp1>(_world);
         }
 
         public AllEntityQueryEnumerator<TComp1, TComp2> AllEntityQueryEnumerator<TComp1, TComp2>()
             where TComp1 : IComponent
             where TComp2 : IComponent
         {
-            var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
-            var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
-            return new AllEntityQueryEnumerator<TComp1, TComp2>(trait1, trait2);
+            return new AllEntityQueryEnumerator<TComp1, TComp2>(_world);
         }
 
         public AllEntityQueryEnumerator<TComp1, TComp2, TComp3> AllEntityQueryEnumerator<TComp1, TComp2, TComp3>()
@@ -1419,10 +1316,7 @@ namespace Robust.Shared.GameObjects
             where TComp2 : IComponent
             where TComp3 : IComponent
         {
-            var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
-            var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
-            var trait3 = _entTraitArray[CompIdx.ArrayIndex<TComp3>()];
-            return new AllEntityQueryEnumerator<TComp1, TComp2, TComp3>(trait1, trait2, trait3);
+            return new AllEntityQueryEnumerator<TComp1, TComp2, TComp3>(_world);
         }
 
         public AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>()
@@ -1431,27 +1325,20 @@ namespace Robust.Shared.GameObjects
             where TComp3 : IComponent
             where TComp4 : IComponent
         {
-            var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
-            var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
-            var trait3 = _entTraitArray[CompIdx.ArrayIndex<TComp3>()];
-            var trait4 = _entTraitArray[CompIdx.ArrayIndex<TComp4>()];
-            return new AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>(trait1, trait2, trait3, trait4);
+            return new AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>(_world);
         }
 
         public EntityQueryEnumerator<TComp1> EntityQueryEnumerator<TComp1>()
             where TComp1 : IComponent
         {
-            var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
-            return new EntityQueryEnumerator<TComp1>(trait1, MetaQuery);
+            return new EntityQueryEnumerator<TComp1>(_world);
         }
 
         public EntityQueryEnumerator<TComp1, TComp2> EntityQueryEnumerator<TComp1, TComp2>()
             where TComp1 : IComponent
             where TComp2 : IComponent
         {
-            var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
-            var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
-            return new EntityQueryEnumerator<TComp1, TComp2>(trait1, trait2, MetaQuery);
+            return new EntityQueryEnumerator<TComp1, TComp2>(_world);
         }
 
         public EntityQueryEnumerator<TComp1, TComp2, TComp3> EntityQueryEnumerator<TComp1, TComp2, TComp3>()
@@ -1459,10 +1346,7 @@ namespace Robust.Shared.GameObjects
             where TComp2 : IComponent
             where TComp3 : IComponent
         {
-            var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
-            var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
-            var trait3 = _entTraitArray[CompIdx.ArrayIndex<TComp3>()];
-            return new EntityQueryEnumerator<TComp1, TComp2, TComp3>(trait1, trait2, trait3, MetaQuery);
+            return new EntityQueryEnumerator<TComp1, TComp2, TComp3>(_world);
         }
 
         public EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>()
@@ -1471,38 +1355,26 @@ namespace Robust.Shared.GameObjects
             where TComp3 : IComponent
             where TComp4 : IComponent
         {
-            var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
-            var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
-            var trait3 = _entTraitArray[CompIdx.ArrayIndex<TComp3>()];
-            var trait4 = _entTraitArray[CompIdx.ArrayIndex<TComp4>()];
-
-            return new EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>(trait1, trait2, trait3, trait4, MetaQuery);
+            return new EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>(_world);
         }
 
         /// <inheritdoc />
         public IEnumerable<T> EntityQuery<T>(bool includePaused = false) where T : IComponent
         {
-            var comps = _entTraitArray[CompIdx.ArrayIndex<T>()];
-            DebugTools.Assert(comps != null, $"Unknown component: {typeof(T).Name}");
-
             if (includePaused)
             {
-                foreach (var t1Comp in comps.Values)
+                var query = new AllEntityQueryEnumerator<T>(_world);
+                while (query.MoveNext(out var comp))
                 {
-                    if (t1Comp.Deleted) continue;
-
-                    yield return (T)t1Comp;
+                    yield return comp;
                 }
             }
             else
             {
-                foreach (var (uid, t1Comp) in comps)
+                var query = new EntityQueryEnumerator<T>(_world);
+                while (query.MoveNext(out var comp))
                 {
-                    if (t1Comp.Deleted || !MetaQuery.TryGetComponentInternal(uid, out var metaComp)) continue;
-
-                    if (metaComp.EntityPaused) continue;
-
-                    yield return (T)t1Comp;
+                    yield return comp;
                 }
             }
         }
@@ -1512,42 +1384,20 @@ namespace Robust.Shared.GameObjects
             where TComp1 : IComponent
             where TComp2 : IComponent
         {
-            // this would prob be faster if trait1 was a list (or an array of structs hue).
-            var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
-            var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
-
-            // you really want trait1 to be the smaller set of components
             if (includePaused)
             {
-                foreach (var (uid, t1Comp) in trait1)
+                var query = new AllEntityQueryEnumerator<TComp1, TComp2>(_world);
+                while (query.MoveNext(out var comp1, out var comp2))
                 {
-                    if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted)
-                        continue;
-
-                    yield return (
-                        (TComp1) t1Comp,
-                        (TComp2) t2Comp);
+                    yield return (comp1, comp2);
                 }
             }
             else
             {
-                var metaComps = _entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()];
-
-                foreach (var (uid, t1Comp) in trait1)
+                var query = new EntityQueryEnumerator<TComp1, TComp2>(_world);
+                while (query.MoveNext(out var comp1, out var comp2))
                 {
-                    // Check paused last because 90% of the time the component's likely not gonna be paused.
-                    if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted)
-                        continue;
-
-                    if (t1Comp.Deleted || !metaComps.TryGetValue(uid, out var metaComp)) continue;
-
-                    var meta = (MetaDataComponent)metaComp;
-
-                    if (meta.EntityPaused) continue;
-
-                    yield return (
-                        (TComp1) t1Comp,
-                        (TComp2) t2Comp);
+                    yield return (comp1, comp2);
                 }
             }
         }
@@ -1558,49 +1408,20 @@ namespace Robust.Shared.GameObjects
             where TComp2 : IComponent
             where TComp3 : IComponent
         {
-            var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
-            var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
-            var trait3 = _entTraitArray[CompIdx.ArrayIndex<TComp3>()];
-
             if (includePaused)
             {
-                foreach (var (uid, t1Comp) in trait1)
+                var query = new AllEntityQueryEnumerator<TComp1, TComp2, TComp3>(_world);
+                while (query.MoveNext(out var comp1, out var comp2, out var comp3))
                 {
-                    if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted)
-                        continue;
-
-                    if (!trait3.TryGetValue(uid, out var t3Comp) || t3Comp.Deleted)
-                        continue;
-
-                    yield return (
-                        (TComp1) t1Comp,
-                        (TComp2) t2Comp,
-                        (TComp3) t3Comp);
+                    yield return (comp1, comp2, comp3);
                 }
             }
             else
             {
-                var metaComps = _entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()];
-
-                foreach (var (uid, t1Comp) in trait1)
+                var query = new EntityQueryEnumerator<TComp1, TComp2, TComp3>(_world);
+                while (query.MoveNext(out var comp1, out var comp2, out var comp3))
                 {
-                    // Check paused last because 90% of the time the component's likely not gonna be paused.
-                    if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted)
-                        continue;
-
-                    if (!trait3.TryGetValue(uid, out var t3Comp) || t3Comp.Deleted)
-                        continue;
-
-                    if (t1Comp.Deleted || !metaComps.TryGetValue(uid, out var metaComp)) continue;
-
-                    var meta = (MetaDataComponent)metaComp;
-
-                    if (meta.EntityPaused) continue;
-
-                    yield return (
-                        (TComp1) t1Comp,
-                        (TComp2) t2Comp,
-                        (TComp3) t3Comp);
+                    yield return (comp1, comp2, comp3);
                 }
             }
         }
@@ -1613,58 +1434,20 @@ namespace Robust.Shared.GameObjects
             where TComp3 : IComponent
             where TComp4 : IComponent
         {
-            var trait1 = _entTraitArray[CompIdx.ArrayIndex<TComp1>()];
-            var trait2 = _entTraitArray[CompIdx.ArrayIndex<TComp2>()];
-            var trait3 = _entTraitArray[CompIdx.ArrayIndex<TComp3>()];
-            var trait4 = _entTraitArray[CompIdx.ArrayIndex<TComp4>()];
-
             if (includePaused)
             {
-                foreach (var (uid, t1Comp) in trait1)
+                var query = new AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>(_world);
+                while (query.MoveNext(out var comp1, out var comp2, out var comp3, out var comp4))
                 {
-                    if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted)
-                        continue;
-
-                    if (!trait3.TryGetValue(uid, out var t3Comp) || t3Comp.Deleted)
-                        continue;
-
-                    if (!trait4.TryGetValue(uid, out var t4Comp) || t4Comp.Deleted)
-                        continue;
-
-                    yield return (
-                        (TComp1) t1Comp,
-                        (TComp2) t2Comp,
-                        (TComp3) t3Comp,
-                        (TComp4) t4Comp);
+                    yield return (comp1, comp2, comp3, comp4);
                 }
             }
             else
             {
-                var metaComps = _entTraitArray[CompIdx.ArrayIndex<MetaDataComponent>()];
-
-                foreach (var (uid, t1Comp) in trait1)
+                var query = new EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>(_world);
+                while (query.MoveNext(out var comp1, out var comp2, out var comp3, out var comp4))
                 {
-                    // Check paused last because 90% of the time the component's likely not gonna be paused.
-                    if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted)
-                        continue;
-
-                    if (!trait3.TryGetValue(uid, out var t3Comp) || t3Comp.Deleted)
-                        continue;
-
-                    if (!trait4.TryGetValue(uid, out var t4Comp) || t4Comp.Deleted)
-                        continue;
-
-                    if (t1Comp.Deleted || !metaComps.TryGetValue(uid, out var metaComp)) continue;
-
-                    var meta = (MetaDataComponent)metaComp;
-
-                    if (meta.EntityPaused) continue;
-
-                    yield return (
-                        (TComp1) t1Comp,
-                        (TComp2) t2Comp,
-                        (TComp3) t3Comp,
-                        (TComp4) t4Comp);
+                    yield return (comp1, comp2, comp3, comp4);
                 }
             }
         }
@@ -1674,24 +1457,34 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<(EntityUid Uid, IComponent Component)> GetAllComponents(Type type, bool includePaused = false)
         {
-            var comps = _entTraitDict[type];
+            QueryDescription query;
 
+            // TODO arch paused component
             if (includePaused)
             {
-                foreach (var (uid, comp) in comps)
-                {
-                    if (comp.Deleted) continue;
-
-                    yield return (uid, comp);
-                }
+                // TODO arch pool
+                query = new (new ComponentType[] { type });
             }
             else
             {
-                foreach (var (uid, comp) in comps)
-                {
-                    if (comp.Deleted || !MetaQuery.TryGetComponent(uid, out var meta) || meta.EntityPaused) continue;
+                query = new(new ComponentType[] { type, typeof(MetaDataComponent) });
+            }
 
-                    yield return (uid, comp);
+            foreach (var chunk in _world.Query(query).ChunkIterator(_world))
+            {
+                var components = chunk.GetArray(type);
+                var metas = includePaused ? default : chunk.GetArray<MetaDataComponent>();
+
+                for (var i = 0; i < chunk.Count; i++)
+                {
+                    var comp = (IComponent)components.GetValue(i)!;
+                    if (comp.Deleted)
+                        continue;
+
+                    if (!includePaused && metas![i].EntityPaused)
+                        continue;
+
+                    yield return (chunk.Entity(i), comp);
                 }
             }
         }
@@ -1719,8 +1512,6 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void FillComponentDict()
         {
-            _entTraitDict = FrozenDictionary<Type, Dictionary<EntityUid, IComponent>>.Empty;
-            Array.Fill(_entTraitArray, null);
             RegisterComponents(_componentFactory.GetAllRegistrations());
         }
     }
@@ -1755,12 +1546,14 @@ namespace Robust.Shared.GameObjects
 
     public readonly struct EntityQuery<TComp1> where TComp1 : IComponent
     {
-        private readonly Dictionary<EntityUid, IComponent> _traitDict;
+        private readonly EntityManager _entManager;
+        private readonly ComponentType _type;
         private readonly ISawmill _sawmill;
 
-        public EntityQuery(Dictionary<EntityUid, IComponent> traitDict, ISawmill sawmill)
+        internal EntityQuery(EntityManager entManager, ISawmill sawmill)
         {
-            _traitDict = traitDict;
+            _entManager = entManager;
+            _type = Component<TComp1>.ComponentType;
             _sawmill = sawmill;
         }
 
@@ -1768,7 +1561,7 @@ namespace Robust.Shared.GameObjects
         [Pure]
         public TComp1 GetComponent(EntityUid uid)
         {
-            if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
+            if (_entManager.TryGetComponent(uid, _type, out var comp) && !comp.Deleted)
                 return (TComp1) comp;
 
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(TComp1)}");
@@ -1777,7 +1570,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining), Pure]
         public Entity<TComp1> Get(EntityUid uid)
         {
-            if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
+            if (_entManager.TryGetComponent(uid, _type, out var comp) && !comp.Deleted)
                 return new Entity<TComp1>(uid, (TComp1) comp);
 
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(TComp1)}");
@@ -1800,7 +1593,7 @@ namespace Robust.Shared.GameObjects
         [Pure]
         public bool TryGetComponent(EntityUid uid, [NotNullWhen(true)] out TComp1? component)
         {
-            if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
+            if (_entManager.TryGetComponent(uid, _type, out var comp) && !comp.Deleted)
             {
                 component = (TComp1) comp;
                 return true;
@@ -1832,7 +1625,7 @@ namespace Robust.Shared.GameObjects
         [Pure]
         public bool HasComponent(EntityUid uid)
         {
-            return _traitDict.TryGetValue(uid, out var comp) && !comp.Deleted;
+            return _entManager.TryGetComponent(uid, _type, out var comp) && !comp.Deleted;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1851,7 +1644,7 @@ namespace Robust.Shared.GameObjects
                 return true;
             }
 
-            if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
+            if (_entManager.TryGetComponent(uid, _type, out var comp) && !comp.Deleted)
             {
                 component = (TComp1)comp;
                 return true;
@@ -1897,7 +1690,7 @@ namespace Robust.Shared.GameObjects
         [Pure]
         internal TComp1 GetComponentInternal(EntityUid uid)
         {
-            if (_traitDict.TryGetValue(uid, out var comp))
+            if (_entManager.TryGetComponent(uid, _type, out var comp))
                 return (TComp1) comp;
 
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(TComp1)}");
@@ -1926,7 +1719,7 @@ namespace Robust.Shared.GameObjects
         [Pure]
         internal bool TryGetComponentInternal(EntityUid uid, [NotNullWhen(true)] out TComp1? component)
         {
-            if (_traitDict.TryGetValue(uid, out var comp))
+            if (_entManager.TryGetComponent(uid, _type, out var comp))
             {
                 component = (TComp1) comp;
                 return true;
@@ -1943,7 +1736,7 @@ namespace Robust.Shared.GameObjects
         [Pure]
         internal bool HasComponentInternal(EntityUid uid)
         {
-            return _traitDict.TryGetValue(uid, out var comp) && !comp.Deleted;
+            return uid.Valid && _entManager.HasComponent(uid, _type);
         }
 
         /// <summary>
@@ -1959,7 +1752,7 @@ namespace Robust.Shared.GameObjects
                 return true;
             }
 
-            if (_traitDict.TryGetValue(uid, out var comp))
+            if (_entManager.TryGetComponent(uid, _type, out var comp))
             {
                 component = (TComp1)comp;
                 return true;
@@ -1989,120 +1782,52 @@ namespace Robust.Shared.GameObjects
     #region ComponentRegistry Query
 
     /// <summary>
-    /// Returns entities that match the ComponentRegistry.
+    /// Non-generic version of <see cref="AllEntityQueryEnumerator{TComp1}"/>
     /// </summary>
-    public struct CompRegistryEntityEnumerator : IDisposable
+    public struct ComponentQueryEnumerator
     {
-        private IEntityManager _entManager;
+        private QueryDescription _desc;
+        private ArchChunkEnumerator _chunkEnumerator;
+        private int _index;
 
-        private Dictionary<EntityUid, IComponent>.Enumerator _traitDict;
-        private ComponentRegistry _registry;
-
-        public CompRegistryEntityEnumerator(
-            IEntityManager entManager,
-            Dictionary<EntityUid, IComponent> traitDict, ComponentRegistry registry)
+        public ComponentQueryEnumerator(
+            World world,
+            QueryDescription desc)
         {
-            _entManager = entManager;
-            _traitDict = traitDict.GetEnumerator();
-            _registry = registry;
+            _desc = desc;
+            var query = world.Query(desc);
+            _chunkEnumerator = query.ChunkIterator(world).GetEnumerator();
+            if (_chunkEnumerator.MoveNext())
+            {
+                _index = _chunkEnumerator.Current.Count;
+            }
         }
 
         public bool MoveNext(out EntityUid uid)
         {
             while (true)
             {
-                if (!_traitDict.MoveNext())
+                if (--_index < 0)
                 {
-                    uid = default;
-                    return false;
-                }
-
-                var current = _traitDict.Current;
-
-                if (current.Value.Deleted)
-                {
-                    continue;
-                }
-
-                var idx = -1;
-                var found = true;
-
-                foreach (var comp in _registry)
-                {
-                    idx++;
-
-                    // First one is us
-                    if (idx == 0)
-                        continue;
-
-                    if (!_entManager.TryGetComponent(current.Key, comp.Value.Component.GetType(), out var nextComp) ||
-                        nextComp.Deleted)
+                    if (!_chunkEnumerator.MoveNext())
                     {
-                        found = false;
-                        break;
+                        uid = EntityUid.Invalid;
+                        return false;
                     }
+
+                    _index = _chunkEnumerator.Current.Count - 1;
                 }
 
-                if (!found)
-                    continue;
+                // Deletion check moment
+                foreach (var comp in _desc.All)
+                {
+                    if (((IComponent)_chunkEnumerator.Current.Get(_index, comp)!).Deleted)
+                        return MoveNext(out uid);
+                }
 
-                uid = current.Key;
+                uid = _chunkEnumerator.Current.Entity(_index);
                 return true;
             }
-        }
-
-        public void Dispose()
-        {
-            _traitDict.Dispose();
-        }
-    }
-
-    /// <summary>
-    /// Non-generic version of <see cref="AllEntityQueryEnumerator{TComp1}"/>
-    /// </summary>
-    public struct ComponentQueryEnumerator : IDisposable
-    {
-        private Dictionary<EntityUid, IComponent>.Enumerator _traitDict;
-
-        public ComponentQueryEnumerator(
-            Dictionary<EntityUid, IComponent> traitDict)
-        {
-            _traitDict = traitDict.GetEnumerator();
-        }
-
-        public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out IComponent? comp1)
-        {
-            while (true)
-            {
-                if (!_traitDict.MoveNext())
-                {
-                    uid = default;
-                    comp1 = default;
-                    return false;
-                }
-
-                var current = _traitDict.Current;
-
-                if (current.Value.Deleted)
-                {
-                    continue;
-                }
-
-                uid = current.Key;
-                comp1 = current.Value;
-                return true;
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool MoveNext([NotNullWhen(true)] out IComponent? comp1)
-        {
-            return MoveNext(out _, out comp1);
-        }
-
-        public void Dispose()
-        {
-            _traitDict.Dispose();
         }
     }
     #endregion
@@ -2112,196 +1837,184 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     /// Returns all matching unpaused components.
     /// </summary>
-    public struct EntityQueryEnumerator<TComp1> : IDisposable
+    public struct EntityQueryEnumerator<TComp1>
         where TComp1 : IComponent
     {
-        private Dictionary<EntityUid, IComponent>.Enumerator _traitDict;
-        private readonly EntityQuery<MetaDataComponent> _metaQuery;
+        private readonly World _world;
+        private readonly Query _query;
 
-        public EntityQueryEnumerator(
-            Dictionary<EntityUid, IComponent> traitDict,
-            EntityQuery<MetaDataComponent> metaQuery)
+        private ArchChunkEnumerator _chunkEnumerator;
+        private int _index;
+        private TComp1[] _comp1Array = default!;
+        private MetaDataComponent[] _metaArray = default!;
+
+        public EntityQueryEnumerator(World world)
         {
-            _traitDict = traitDict.GetEnumerator();
-            _metaQuery = metaQuery;
+            _world = world;
+            _query = world.Query(new QueryDescription().WithAll<TComp1, MetaDataComponent>());
+            Reset();
+        }
+
+        public void Reset()
+        {
+            _chunkEnumerator = _query.ChunkIterator(_world).GetEnumerator();
+            if (_chunkEnumerator.MoveNext())
+            {
+                _index = _chunkEnumerator.Current.Count;
+                _chunkEnumerator.Current.GetArray(out _comp1Array, out _metaArray);
+            }
         }
 
         public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1)
         {
-            while (true)
+            if (MoveNext(out comp1))
             {
-                if (!_traitDict.MoveNext())
-                {
-                    uid = default;
-                    comp1 = default;
-                    return false;
-                }
-
-                var current = _traitDict.Current;
-
-                if (current.Value.Deleted)
-                {
-                    continue;
-                }
-
-                if (!_metaQuery.TryGetComponentInternal(current.Key, out var metaComp) || metaComp.EntityPaused)
-                {
-                    continue;
-                }
-
-                uid = current.Key;
-                comp1 = (TComp1)current.Value;
+                uid = _chunkEnumerator.Current.Entity(_index);
+                DebugTools.AssertOwner(uid, comp1);
                 return true;
             }
+
+            uid = EntityUid.Invalid;
+            return false;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext([NotNullWhen(true)] out TComp1? comp1)
         {
-            return MoveNext(out _, out comp1);
-        }
+            while (true)
+            {
+                comp1 = default;
 
-        public void Dispose()
-        {
-            _traitDict.Dispose();
+                if (--_index < 0)
+                {
+                    if (!_chunkEnumerator.MoveNext())
+                    {
+                        return false;
+                    }
+
+                    _index = _chunkEnumerator.Current.Count - 1;
+                    _chunkEnumerator.Current.GetArray(out _comp1Array, out _metaArray);
+                }
+
+                comp1 = _comp1Array[_index];
+                var meta = _metaArray[_index];
+
+                if (comp1.Deleted || meta.EntityPaused) continue;
+
+                return true;
+            }
         }
     }
 
     /// <summary>
     /// Returns all matching unpaused components.
     /// </summary>
-    public struct EntityQueryEnumerator<TComp1, TComp2> : IDisposable
+    public struct EntityQueryEnumerator<TComp1, TComp2>
         where TComp1 : IComponent
         where TComp2 : IComponent
     {
-        private Dictionary<EntityUid, IComponent>.Enumerator _traitDict;
-        private readonly Dictionary<EntityUid, IComponent> _traitDict2;
-        private readonly EntityQuery<MetaDataComponent> _metaQuery;
+        private ArchChunkEnumerator _chunkEnumerator;
+        private int _index;
+        private TComp1[] _comp1Array = default!;
+        private TComp2[] _comp2Array = default!;
+        private MetaDataComponent[] _metaArray = default!;
 
-        public EntityQueryEnumerator(
-            Dictionary<EntityUid, IComponent> traitDict,
-            Dictionary<EntityUid, IComponent> traitDict2,
-            EntityQuery<MetaDataComponent> metaQuery)
+        public EntityQueryEnumerator(World world)
         {
-            _traitDict = traitDict.GetEnumerator();
-            _traitDict2 = traitDict2;
-            _metaQuery = metaQuery;
+            Unsafe.SkipInit(out this);
+            _chunkEnumerator = world.Query(new QueryDescription().WithAll<TComp1, TComp2, MetaDataComponent>()).ChunkIterator(world).GetEnumerator();
+            if (_chunkEnumerator.MoveNext())
+            {
+                _index = _chunkEnumerator.Current.Count;
+                _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array, out _metaArray);
+            }
         }
 
         public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2)
         {
-            while (true)
+            if (MoveNext(out comp1, out comp2))
             {
-                if (!_traitDict.MoveNext())
-                {
-                    uid = default;
-                    comp1 = default;
-                    comp2 = default;
-                    return false;
-                }
-
-                var current = _traitDict.Current;
-
-                if (current.Value.Deleted)
-                {
-                    continue;
-                }
-
-                if (!_metaQuery.TryGetComponentInternal(current.Key, out var metaComp) || metaComp.EntityPaused)
-                {
-                    continue;
-                }
-
-                if (!_traitDict2.TryGetValue(current.Key, out var comp2Obj) || comp2Obj.Deleted)
-                {
-                    continue;
-                }
-
-                uid = current.Key;
-                comp1 = (TComp1)current.Value;
-                comp2 = (TComp2)comp2Obj;
+                uid = _chunkEnumerator.Current.Entity(_index);
+                DebugTools.AssertOwner(uid, comp1);
+                DebugTools.AssertOwner(uid, comp2);
                 return true;
             }
+
+            uid = EntityUid.Invalid;
+            return false;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext([NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2)
         {
-            return MoveNext(out _, out comp1, out comp2);
-        }
+            while (true)
+            {
+                comp1 = default;
+                comp2 = default;
 
-        public void Dispose()
-        {
-            _traitDict.Dispose();
+                if (--_index < 0)
+                {
+                    if (!_chunkEnumerator.MoveNext())
+                    {
+                        return false;
+                    }
+
+                    _index = _chunkEnumerator.Current.Count - 1;
+                    _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array, out _metaArray);
+                }
+
+                comp1 = _comp1Array[_index];
+                comp2 = _comp2Array[_index];
+                var meta = _metaArray[_index];
+
+                if (comp1.Deleted || comp2.Deleted || meta.EntityPaused) continue;
+
+                return true;
+            }
         }
     }
 
     /// <summary>
     /// Returns all matching unpaused components.
     /// </summary>
-    public struct EntityQueryEnumerator<TComp1, TComp2, TComp3> : IDisposable
+    public struct EntityQueryEnumerator<TComp1, TComp2, TComp3>
         where TComp1 : IComponent
         where TComp2 : IComponent
         where TComp3 : IComponent
     {
-        private Dictionary<EntityUid, IComponent>.Enumerator _traitDict;
-        private readonly Dictionary<EntityUid, IComponent> _traitDict2;
-        private readonly Dictionary<EntityUid, IComponent> _traitDict3;
-        private readonly EntityQuery<MetaDataComponent> _metaQuery;
+        private ArchChunkEnumerator _chunkEnumerator;
+        private int _index;
+        private TComp1[] _comp1Array = default!;
+        private TComp2[] _comp2Array = default!;
+        private TComp3[] _comp3Array = default!;
+        private MetaDataComponent[] _metaArray = default!;
 
-        public EntityQueryEnumerator(
-            Dictionary<EntityUid, IComponent> traitDict,
-            Dictionary<EntityUid, IComponent> traitDict2,
-            Dictionary<EntityUid, IComponent> traitDict3,
-            EntityQuery<MetaDataComponent> metaQuery)
+        public EntityQueryEnumerator(World world)
         {
-            _traitDict = traitDict.GetEnumerator();
-            _traitDict2 = traitDict2;
-            _traitDict3 = traitDict3;
-            _metaQuery = metaQuery;
+            _chunkEnumerator = world.Query(new QueryDescription().WithAll<TComp1, TComp2, TComp3, MetaDataComponent>()).ChunkIterator(world).GetEnumerator();
+            if (_chunkEnumerator.MoveNext())
+            {
+                _index = _chunkEnumerator.Current.Count;
+                _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array, out _comp3Array, out _metaArray);
+            }
         }
 
-        public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2, [NotNullWhen(true)] out TComp3? comp3)
+        public bool MoveNext(out EntityUid uid, [NotNullWhen(true)]
+            out TComp1? comp1,
+            [NotNullWhen(true)] out TComp2? comp2,
+            [NotNullWhen(true)] out TComp3? comp3)
         {
-            while (true)
+            if (MoveNext(out comp1, out comp2, out comp3))
             {
-                if (!_traitDict.MoveNext())
-                {
-                    uid = default;
-                    comp1 = default;
-                    comp2 = default;
-                    comp3 = default;
-                    return false;
-                }
-
-                var current = _traitDict.Current;
-
-                if (current.Value.Deleted)
-                {
-                    continue;
-                }
-
-                if (!_metaQuery.TryGetComponentInternal(current.Key, out var metaComp) || metaComp.EntityPaused)
-                {
-                    continue;
-                }
-
-                if (!_traitDict2.TryGetValue(current.Key, out var comp2Obj) || comp2Obj.Deleted)
-                {
-                    continue;
-                }
-
-                if (!_traitDict3.TryGetValue(current.Key, out var comp3Obj) || comp3Obj.Deleted)
-                {
-                    continue;
-                }
-
-                uid = current.Key;
-                comp1 = (TComp1)current.Value;
-                comp2 = (TComp2)comp2Obj;
-                comp3 = (TComp3)comp3Obj;
+                uid = _chunkEnumerator.Current.Entity(_index);
+                DebugTools.AssertOwner(uid, comp1);
+                DebugTools.AssertOwner(uid, comp2);
+                DebugTools.AssertOwner(uid, comp3);
                 return true;
             }
+
+            uid = EntityUid.Invalid;
+            return false;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2310,92 +2023,80 @@ namespace Robust.Shared.GameObjects
             [NotNullWhen(true)] out TComp2? comp2,
             [NotNullWhen(true)] out TComp3? comp3)
         {
-            return MoveNext(out _, out comp1, out comp2, out comp3);
-        }
+            while (true)
+            {
+                comp1 = default;
+                comp2 = default;
+                comp3 = default;
 
-        public void Dispose()
-        {
-            _traitDict.Dispose();
+                if (--_index < 0)
+                {
+                    if (!_chunkEnumerator.MoveNext())
+                    {
+                        return false;
+                    }
+
+                    _index = _chunkEnumerator.Current.Count - 1;
+                    _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array, out _comp3Array, out _metaArray);
+                }
+
+                comp1 = _comp1Array[_index];
+                comp2 = _comp2Array[_index];
+                comp3 = _comp3Array[_index];
+                var meta = _metaArray[_index];
+
+                if (comp1.Deleted || comp2.Deleted || comp3.Deleted || meta.EntityPaused) continue;
+
+                return true;
+            }
         }
     }
 
     /// <summary>
     /// Returns all matching unpaused components.
     /// </summary>
-    public struct EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> : IDisposable
+    public struct EntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>
         where TComp1 : IComponent
         where TComp2 : IComponent
         where TComp3 : IComponent
         where TComp4 : IComponent
     {
-        private Dictionary<EntityUid, IComponent>.Enumerator _traitDict;
-        private readonly Dictionary<EntityUid, IComponent> _traitDict2;
-        private readonly Dictionary<EntityUid, IComponent> _traitDict3;
-        private readonly Dictionary<EntityUid, IComponent> _traitDict4;
-        private readonly EntityQuery<MetaDataComponent> _metaQuery;
+        private ArchChunkEnumerator _chunkEnumerator;
+        private int _index;
+        private TComp1[] _comp1Array = default!;
+        private TComp2[] _comp2Array = default!;
+        private TComp3[] _comp3Array = default!;
+        private TComp4[] _comp4Array = default!;
+        private MetaDataComponent[] _metaArray = default!;
 
-        public EntityQueryEnumerator(
-            Dictionary<EntityUid, IComponent> traitDict,
-            Dictionary<EntityUid, IComponent> traitDict2,
-            Dictionary<EntityUid, IComponent> traitDict3,
-            Dictionary<EntityUid, IComponent> traitDict4,
-            EntityQuery<MetaDataComponent> metaQuery)
+        public EntityQueryEnumerator(World world)
         {
-            _traitDict = traitDict.GetEnumerator();
-            _traitDict2 = traitDict2;
-            _traitDict3 = traitDict3;
-            _traitDict4 = traitDict4;
-            _metaQuery = metaQuery;
+            _chunkEnumerator = world.Query(new QueryDescription().WithAll<TComp1, TComp2, TComp3, TComp4, MetaDataComponent>()).ChunkIterator(world).GetEnumerator();
+            if (_chunkEnumerator.MoveNext())
+            {
+                _index = _chunkEnumerator.Current.Count;
+                _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array, out _comp3Array, out _comp4Array, out _metaArray);
+            }
         }
 
-        public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2, [NotNullWhen(true)] out TComp3? comp3, [NotNullWhen(true)] out TComp4? comp4)
+        public bool MoveNext(out EntityUid uid, [NotNullWhen(true)]
+            out TComp1? comp1,
+            [NotNullWhen(true)] out TComp2? comp2,
+            [NotNullWhen(true)] out TComp3? comp3,
+            [NotNullWhen(true)] out TComp4? comp4)
         {
-            while (true)
+            if (MoveNext(out comp1, out comp2, out comp3, out comp4))
             {
-                if (!_traitDict.MoveNext())
-                {
-                    uid = default;
-                    comp1 = default;
-                    comp2 = default;
-                    comp3 = default;
-                    comp4 = default;
-                    return false;
-                }
-
-                var current = _traitDict.Current;
-
-                if (current.Value.Deleted)
-                {
-                    continue;
-                }
-
-                if (!_metaQuery.TryGetComponentInternal(current.Key, out var metaComp) || metaComp.EntityPaused)
-                {
-                    continue;
-                }
-
-                if (!_traitDict2.TryGetValue(current.Key, out var comp2Obj) || comp2Obj.Deleted)
-                {
-                    continue;
-                }
-
-                if (!_traitDict3.TryGetValue(current.Key, out var comp3Obj) || comp3Obj.Deleted)
-                {
-                    continue;
-                }
-
-                if (!_traitDict4.TryGetValue(current.Key, out var comp4Obj) || comp4Obj.Deleted)
-                {
-                    continue;
-                }
-
-                uid = current.Key;
-                comp1 = (TComp1)current.Value;
-                comp2 = (TComp2)comp2Obj;
-                comp3 = (TComp3)comp3Obj;
-                comp4 = (TComp4)comp4Obj;
+                uid = _chunkEnumerator.Current.Entity(_index);
+                DebugTools.AssertOwner(uid, comp1);
+                DebugTools.AssertOwner(uid, comp2);
+                DebugTools.AssertOwner(uid, comp3);
+                DebugTools.AssertOwner(uid, comp4);
                 return true;
             }
+
+            uid = EntityUid.Invalid;
+            return false;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2405,12 +2106,34 @@ namespace Robust.Shared.GameObjects
             [NotNullWhen(true)] out TComp3? comp3,
             [NotNullWhen(true)] out TComp4? comp4)
         {
-            return MoveNext(out _, out comp1, out comp2, out comp3, out comp4);
-        }
+            while (true)
+            {
+                comp1 = default;
+                comp2 = default;
+                comp3 = default;
+                comp4 = default;
 
-        public void Dispose()
-        {
-            _traitDict.Dispose();
+                if (--_index < 0)
+                {
+                    if (!_chunkEnumerator.MoveNext())
+                    {
+                        return false;
+                    }
+
+                    _index = _chunkEnumerator.Current.Count - 1;
+                    _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array, out _comp3Array, out _comp4Array, out _metaArray);
+                }
+
+                comp1 = _comp1Array[_index];
+                comp2 = _comp2Array[_index];
+                comp3 = _comp3Array[_index];
+                comp4 = _comp4Array[_index];
+                var meta = _metaArray[_index];
+
+                if (comp1.Deleted || comp2.Deleted || comp3.Deleted || comp4.Deleted || meta.EntityPaused) continue;
+
+                return true;
+            }
         }
     }
 
@@ -2421,172 +2144,184 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     /// Returns all matching components, paused or not.
     /// </summary>
-    public struct AllEntityQueryEnumerator<TComp1> : IDisposable
+    public struct AllEntityQueryEnumerator<TComp1>
         where TComp1 : IComponent
     {
-        private Dictionary<EntityUid, IComponent>.Enumerator _traitDict;
+        private ArchChunkEnumerator _chunkEnumerator;
+        private int _index;
+        private TComp1[] _comp1Array;
 
-        public AllEntityQueryEnumerator(
-            Dictionary<EntityUid, IComponent> traitDict)
+        internal AllEntityQueryEnumerator(World world)
         {
-            _traitDict = traitDict.GetEnumerator();
+            Unsafe.SkipInit(out this);
+            _chunkEnumerator = world.Query(new QueryDescription().WithAll<TComp1>()).ChunkIterator(world).GetEnumerator();
+            if (_chunkEnumerator.MoveNext())
+            {
+                _index = _chunkEnumerator.Current.Count;
+                _comp1Array = _chunkEnumerator.Current.GetArray<TComp1>();
+            }
+            else
+            {
+                _index = 0;
+            }
         }
 
-        public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext(out EntityUid uid, [NotNullWhen(true)]
+            out TComp1? comp1)
         {
-            while (true)
+            if (MoveNext(out comp1))
             {
-                if (!_traitDict.MoveNext())
-                {
-                    uid = default;
-                    comp1 = default;
-                    return false;
-                }
-
-                var current = _traitDict.Current;
-
-                if (current.Value.Deleted)
-                {
-                    continue;
-                }
-
-                uid = current.Key;
-                comp1 = (TComp1)current.Value;
+                uid = _chunkEnumerator.Current.Entity(_index);
+                DebugTools.AssertOwner(uid, comp1);
                 return true;
             }
+
+            uid = EntityUid.Invalid;
+            return false;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext([NotNullWhen(true)] out TComp1? comp1)
         {
-            return MoveNext(out _, out comp1);
-        }
+            while (true)
+            {
+                if (--_index < 0)
+                {
+                    if (!_chunkEnumerator.MoveNext())
+                    {
+                        comp1 = default;
+                        return false;
+                    }
 
-        public void Dispose()
-        {
-            _traitDict.Dispose();
+                    _index = _chunkEnumerator.Current.Count - 1;
+                    _comp1Array = _chunkEnumerator.Current.GetArray<TComp1>();
+                }
+
+                comp1 = _comp1Array[_index];
+
+                if (comp1.Deleted) continue;
+
+                return true;
+            }
         }
     }
 
     /// <summary>
     /// Returns all matching components, paused or not.
     /// </summary>
-    public struct AllEntityQueryEnumerator<TComp1, TComp2> : IDisposable
+    public struct AllEntityQueryEnumerator<TComp1, TComp2>
         where TComp1 : IComponent
         where TComp2 : IComponent
     {
-        private Dictionary<EntityUid, IComponent>.Enumerator _traitDict;
-        private readonly Dictionary<EntityUid, IComponent> _traitDict2;
+        private ArchChunkEnumerator _chunkEnumerator;
+        private int _index;
+        private TComp1[] _comp1Array = default!;
+        private TComp2[] _comp2Array = default!;
 
-        public AllEntityQueryEnumerator(
-            Dictionary<EntityUid, IComponent> traitDict,
-            Dictionary<EntityUid, IComponent> traitDict2)
+        public AllEntityQueryEnumerator(World world)
         {
-            _traitDict = traitDict.GetEnumerator();
-            _traitDict2 = traitDict2;
+            Unsafe.SkipInit(out this);
+            _chunkEnumerator = world.Query(new QueryDescription().WithAll<TComp1, TComp2>()).ChunkIterator(world).GetEnumerator();
+            if (_chunkEnumerator.MoveNext())
+            {
+                _index = _chunkEnumerator.Current.Count;
+                _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array);
+            }
+            else
+            {
+                _index = 0;
+            }
         }
 
-        public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2)
+        public bool MoveNext(out EntityUid uid, [NotNullWhen(true)]
+            out TComp1? comp1,
+            [NotNullWhen(true)] out TComp2? comp2)
         {
-            while (true)
+            if (MoveNext(out comp1, out comp2))
             {
-                if (!_traitDict.MoveNext())
-                {
-                    uid = default;
-                    comp1 = default;
-                    comp2 = default;
-                    return false;
-                }
-
-                var current = _traitDict.Current;
-
-                if (current.Value.Deleted)
-                {
-                    continue;
-                }
-
-                if (!_traitDict2.TryGetValue(current.Key, out var comp2Obj) || comp2Obj.Deleted)
-                {
-                    continue;
-                }
-
-                uid = current.Key;
-                comp1 = (TComp1)current.Value;
-                comp2 = (TComp2)comp2Obj;
+                uid = _chunkEnumerator.Current.Entity(_index);
+                DebugTools.AssertOwner(uid, comp1);
+                DebugTools.AssertOwner(uid, comp2);
                 return true;
             }
+
+            uid = EntityUid.Invalid;
+            return false;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext([NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2)
         {
-            return MoveNext(out _, out comp1, out comp2);
-        }
+            while (true)
+            {
+                comp1 = default;
+                comp2 = default;
 
-        public void Dispose()
-        {
-            _traitDict.Dispose();
+                if (--_index < 0)
+                {
+                    if (!_chunkEnumerator.MoveNext())
+                    {
+                        return false;
+                    }
+
+                    _index = _chunkEnumerator.Current.Count - 1;
+                    _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array);
+                }
+
+                comp1 = _comp1Array[_index];
+
+                if (comp1.Deleted) continue;
+
+                comp2 = _comp2Array[_index];
+
+                if (comp2.Deleted) continue;
+
+                return true;
+            }
         }
     }
 
     /// <summary>
     /// Returns all matching components, paused or not.
     /// </summary>
-    public struct AllEntityQueryEnumerator<TComp1, TComp2, TComp3> : IDisposable
+    public struct AllEntityQueryEnumerator<TComp1, TComp2, TComp3>
         where TComp1 : IComponent
         where TComp2 : IComponent
         where TComp3 : IComponent
     {
-        private Dictionary<EntityUid, IComponent>.Enumerator _traitDict;
-        private readonly Dictionary<EntityUid, IComponent> _traitDict2;
-        private readonly Dictionary<EntityUid, IComponent> _traitDict3;
+        private ArchChunkEnumerator _chunkEnumerator;
+        private int _index;
+        private TComp1[] _comp1Array = default!;
+        private TComp2[] _comp2Array = default!;
+        private TComp3[] _comp3Array = default!;
 
-        public AllEntityQueryEnumerator(
-            Dictionary<EntityUid, IComponent> traitDict,
-            Dictionary<EntityUid, IComponent> traitDict2,
-            Dictionary<EntityUid, IComponent> traitDict3)
+        public AllEntityQueryEnumerator(World world)
         {
-            _traitDict = traitDict.GetEnumerator();
-            _traitDict2 = traitDict2;
-            _traitDict3 = traitDict3;
+            _chunkEnumerator = world.Query(new QueryDescription().WithAll<TComp1, TComp2, TComp3>()).ChunkIterator(world).GetEnumerator();
+            if (_chunkEnumerator.MoveNext())
+            {
+                _index = _chunkEnumerator.Current.Count;
+                _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array, out _comp3Array);
+            }
         }
 
-        public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2, [NotNullWhen(true)] out TComp3? comp3)
+        public bool MoveNext(out EntityUid uid, [NotNullWhen(true)]
+            out TComp1? comp1,
+            [NotNullWhen(true)] out TComp2? comp2,
+            [NotNullWhen(true)] out TComp3? comp3)
         {
-            while (true)
+            if (MoveNext(out comp1, out comp2, out comp3))
             {
-                if (!_traitDict.MoveNext())
-                {
-                    uid = default;
-                    comp1 = default;
-                    comp2 = default;
-                    comp3 = default;
-                    return false;
-                }
-
-                var current = _traitDict.Current;
-
-                if (current.Value.Deleted)
-                {
-                    continue;
-                }
-
-                if (!_traitDict2.TryGetValue(current.Key, out var comp2Obj) || comp2Obj.Deleted)
-                {
-                    continue;
-                }
-
-                if (!_traitDict3.TryGetValue(current.Key, out var comp3Obj) || comp3Obj.Deleted)
-                {
-                    continue;
-                }
-
-                uid = current.Key;
-                comp1 = (TComp1)current.Value;
-                comp2 = (TComp2)comp2Obj;
-                comp3 = (TComp3)comp3Obj;
+                uid = _chunkEnumerator.Current.Entity(_index);
+                DebugTools.AssertOwner(uid, comp1);
+                DebugTools.AssertOwner(uid, comp2);
+                DebugTools.AssertOwner(uid, comp3);
                 return true;
             }
+
+            uid = EntityUid.Invalid;
+            return false;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2595,84 +2330,78 @@ namespace Robust.Shared.GameObjects
             [NotNullWhen(true)] out TComp2? comp2,
             [NotNullWhen(true)] out TComp3? comp3)
         {
-            return MoveNext(out _, out comp1, out comp2, out comp3);
-        }
+            while (true)
+            {
+                comp1 = default;
+                comp2 = default;
+                comp3 = default;
 
-        public void Dispose()
-        {
-            _traitDict.Dispose();
+                if (--_index < 0)
+                {
+                    if (!_chunkEnumerator.MoveNext())
+                    {
+                        return false;
+                    }
+
+                    _index = _chunkEnumerator.Current.Count - 1;
+                    _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array, out _comp3Array);
+                }
+
+                comp1 = _comp1Array[_index];
+                comp2 = _comp2Array[_index];
+                comp3 = _comp3Array[_index];
+
+                if (comp1.Deleted || comp2.Deleted || comp3.Deleted) continue;
+
+                return true;
+            }
         }
     }
 
     /// <summary>
     /// Returns all matching components, paused or not.
     /// </summary>
-    public struct AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4> : IDisposable
+    public struct AllEntityQueryEnumerator<TComp1, TComp2, TComp3, TComp4>
         where TComp1 : IComponent
         where TComp2 : IComponent
         where TComp3 : IComponent
         where TComp4 : IComponent
     {
-        private Dictionary<EntityUid, IComponent>.Enumerator _traitDict;
-        private readonly Dictionary<EntityUid, IComponent> _traitDict2;
-        private readonly Dictionary<EntityUid, IComponent> _traitDict3;
-        private readonly Dictionary<EntityUid, IComponent> _traitDict4;
+        private ArchChunkEnumerator _chunkEnumerator;
+        private int _index;
+        private TComp1[] _comp1Array = default!;
+        private TComp2[] _comp2Array = default!;
+        private TComp3[] _comp3Array = default!;
+        private TComp4[] _comp4Array = default!;
 
-        public AllEntityQueryEnumerator(
-            Dictionary<EntityUid, IComponent> traitDict,
-            Dictionary<EntityUid, IComponent> traitDict2,
-            Dictionary<EntityUid, IComponent> traitDict3,
-            Dictionary<EntityUid, IComponent> traitDict4)
+        public AllEntityQueryEnumerator(World world)
         {
-            _traitDict = traitDict.GetEnumerator();
-            _traitDict2 = traitDict2;
-            _traitDict3 = traitDict3;
-            _traitDict4 = traitDict4;
+            _chunkEnumerator = world.Query(new QueryDescription().WithAll<TComp1, TComp2, TComp3, TComp4>()).ChunkIterator(world).GetEnumerator();
+            if (_chunkEnumerator.MoveNext())
+            {
+                _index = _chunkEnumerator.Current.Count;
+                _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array, out _comp3Array, out _comp4Array);
+            }
         }
 
-        public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2, [NotNullWhen(true)] out TComp3? comp3, [NotNullWhen(true)] out TComp4? comp4)
+        public bool MoveNext(out EntityUid uid, [NotNullWhen(true)]
+            out TComp1? comp1,
+            [NotNullWhen(true)] out TComp2? comp2,
+            [NotNullWhen(true)] out TComp3? comp3,
+            [NotNullWhen(true)] out TComp4? comp4)
         {
-            while (true)
+            if (MoveNext(out comp1, out comp2, out comp3, out comp4))
             {
-                if (!_traitDict.MoveNext())
-                {
-                    uid = default;
-                    comp1 = default;
-                    comp2 = default;
-                    comp3 = default;
-                    comp4 = default;
-                    return false;
-                }
-
-                var current = _traitDict.Current;
-
-                if (current.Value.Deleted)
-                {
-                    continue;
-                }
-
-                if (!_traitDict2.TryGetValue(current.Key, out var comp2Obj) || comp2Obj.Deleted)
-                {
-                    continue;
-                }
-
-                if (!_traitDict3.TryGetValue(current.Key, out var comp3Obj) || comp3Obj.Deleted)
-                {
-                    continue;
-                }
-
-                if (!_traitDict4.TryGetValue(current.Key, out var comp4Obj) || comp4Obj.Deleted)
-                {
-                    continue;
-                }
-
-                uid = current.Key;
-                comp1 = (TComp1)current.Value;
-                comp2 = (TComp2)comp2Obj;
-                comp3 = (TComp3)comp3Obj;
-                comp4 = (TComp4)comp4Obj;
+                uid = _chunkEnumerator.Current.Entity(_index);
+                DebugTools.AssertOwner(uid, comp1);
+                DebugTools.AssertOwner(uid, comp2);
+                DebugTools.AssertOwner(uid, comp3);
+                DebugTools.AssertOwner(uid, comp4);
                 return true;
             }
+
+            uid = EntityUid.Invalid;
+            return false;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2682,12 +2411,33 @@ namespace Robust.Shared.GameObjects
             [NotNullWhen(true)] out TComp3? comp3,
             [NotNullWhen(true)] out TComp4? comp4)
         {
-            return MoveNext(out _, out comp1, out comp2, out comp3, out comp4);
-        }
+            while (true)
+            {
+                comp1 = default;
+                comp2 = default;
+                comp3 = default;
+                comp4 = default;
 
-        public void Dispose()
-        {
-            _traitDict.Dispose();
+                if (--_index < 0)
+                {
+                    if (!_chunkEnumerator.MoveNext())
+                    {
+                        return false;
+                    }
+
+                    _index = _chunkEnumerator.Current.Count - 1;
+                    _chunkEnumerator.Current.GetArray(out _comp1Array, out _comp2Array, out _comp3Array, out _comp4Array);
+                }
+
+                comp1 = _comp1Array[_index];
+                comp2 = _comp2Array[_index];
+                comp3 = _comp3Array[_index];
+                comp4 = _comp4Array[_index];
+
+                if (comp1.Deleted || comp2.Deleted || comp3.Deleted || comp4.Deleted) continue;
+
+                return true;
+            }
         }
     }
 

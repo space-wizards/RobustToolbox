@@ -23,7 +23,9 @@ internal sealed class EntityTypeParser : TypeParser<EntityUid>
         if (ctx.EatMatch('e'))
         {
             word = ctx.GetWord(ParserContext.IsToken);
-            if (EntityUid.TryParse(word, out result))
+            var version = ctx.GetWord(ParserContext.IsToken);
+
+            if (EntityUid.TryParse(word, version, out result))
                 return true;
 
             ctx.Error = word is not null ? new InvalidEntity($"e{word}") : new OutOfInputError();
@@ -74,7 +76,9 @@ internal sealed class NetEntityTypeParser : TypeParser<NetEntity>
         if (ctx.EatMatch('e'))
         {
             word = ctx.GetWord(ParserContext.IsToken);
-            if (EntityUid.TryParse(word, out var euid))
+            var version = ctx.GetWord(ParserContext.IsToken);
+
+            if (EntityUid.TryParse(word, version, out var euid))
             {
                 result = _entMan.GetNetEntity(euid);
                 return true;

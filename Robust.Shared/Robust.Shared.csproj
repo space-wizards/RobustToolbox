@@ -7,6 +7,7 @@
     <NoWarn>CA1416</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+  	<PackageReference Include="Collections.Pooled" PrivateAssets="compile" />
     <PackageReference Include="JetBrains.Annotations" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Extensions.ObjectPool" />
     <PackageReference Include="Microsoft.ILVerification" PrivateAssets="compile" />
@@ -30,6 +31,7 @@
 
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Arch\Arch\src\Arch\Arch.csproj" />
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />
     <ProjectReference Include="..\NetSerializer\NetSerializer\NetSerializer.csproj" />
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />

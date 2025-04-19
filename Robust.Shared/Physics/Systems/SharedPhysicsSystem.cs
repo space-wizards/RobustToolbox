@@ -66,6 +66,7 @@ namespace Robust.Shared.Physics.Systems
 
         public bool MetricsEnabled { get; protected set; }
 
+        private EntityQuery<CollideOnAnchorComponent> _collideAnchorQuery;
         private EntityQuery<FixturesComponent> _fixturesQuery;
         protected EntityQuery<PhysicsComponent> PhysicsQuery;
         private EntityQuery<TransformComponent> _xformQuery;

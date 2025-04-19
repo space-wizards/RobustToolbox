@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using Arch.Core.Extensions.Dangerous;
 using Robust.Shared.Containers;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;

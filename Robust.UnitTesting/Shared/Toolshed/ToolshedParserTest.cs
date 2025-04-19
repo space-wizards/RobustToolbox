@@ -43,7 +43,7 @@ public sealed partial class ToolshedParserTest : ToolshedTest
     {
         await Server.WaitAssertion(() =>
         {
-            ParseCommand("ent 1");
+            ParseCommand("ent 1 2");
             // Clientside entities are a myth.
 
             ParseError<InvalidEntity>("ent foodigity");

@@ -134,6 +134,7 @@ public sealed partial class MapLoaderSystem
 
         result = deserializer.Result;
         Log.Debug($"Loaded map in {_stopwatch.Elapsed}");
+        EntityManager.CleanupArch();
         return true;
     }
 

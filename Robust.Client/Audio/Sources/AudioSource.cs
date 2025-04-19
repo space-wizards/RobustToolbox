@@ -1,4 +1,3 @@
-using System;
 using System.Numerics;
 using OpenTK.Audio.OpenAL;
 using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;

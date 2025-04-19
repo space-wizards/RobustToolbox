@@ -52,7 +52,7 @@ internal sealed class YamlValidationContext :
         if (node.Value == "invalid")
             return EntityUid.Invalid;
 
-        return EntityUid.Parse(node.Value);
+        return EntityUid.Parse(node.Value, EntityUid.FirstUid.Version.ToString());
     }
 
     public ValidationNode Validate(

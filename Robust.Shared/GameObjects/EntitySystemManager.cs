@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using Prometheus;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Log;
+using Robust.Shared.Observability;
 using Robust.Shared.Profiling;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
@@ -49,12 +49,14 @@ namespace Robust.Shared.GameObjects
 
         private readonly List<Type> _systemTypes = new();
 
-        private static readonly Histogram _tickUsageHistogram = Metrics.CreateHistogram("robust_entity_systems_update_usage",
-            "Amount of time spent processing each entity system", new HistogramConfiguration
-            {
-                LabelNames = new[] {"system"},
-                Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
-            });
+        private static readonly Histogram _tickUsageHistogram = Metrics.Histogram(
+            "robust_entity_systems_update_usage",
+            "Amount of time spent processing each entity system",
+            "system",
+            0.000_001,
+            1.5,
+            25
+        );
 
         [ViewVariables]
         private readonly List<Type> _extraLoadedTypes = new();
@@ -209,7 +211,7 @@ namespace Robust.Shared.GameObjects
                 .Select(s => new UpdateReg
                 {
                     System = s,
-                    Monitor = _tickUsageHistogram.WithLabels(s.GetType().Name)
+                    Monitor = _tickUsageHistogram.Child(s.GetType().Name)
                 })
                 .ToArray();
 
@@ -414,7 +416,7 @@ namespace Robust.Shared.GameObjects
         private struct UpdateReg
         {
             [ViewVariables] public IEntitySystem System;
-            [ViewVariables] public Histogram.Child Monitor;
+            [ViewVariables] public Histogram Monitor;
 
             public override string? ToString()
             {

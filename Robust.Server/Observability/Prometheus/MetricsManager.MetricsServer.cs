@@ -4,10 +4,10 @@ using System.IO.Compression;
 using System.Threading;
 using System.Threading.Tasks;
 using SpaceWizards.HttpListener;
-using Prometheus;
 using Robust.Shared.Log;
+using Prom = Prometheus;
 
-namespace Robust.Server.DataMetrics;
+namespace Robust.Server.Observability.Prometheus;
 
 internal sealed partial class MetricsManager
 {
@@ -15,26 +15,26 @@ internal sealed partial class MetricsManager
     // Use our ManagedHttpListener instead because it's less problematic.
     // Also allows us to implement gzip support.
 
-    private sealed class ManagedHttpListenerMetricsServer : MetricHandler
+    private sealed class ManagedHttpListenerMetricsServer : Prom.MetricHandler
     {
         private readonly ISawmill _sawmill;
         private readonly Func<CancellationToken, Task>? _beforeCollect;
         private readonly HttpListener _listener;
-        private readonly CollectorRegistry _registry;
+        private readonly Prom.CollectorRegistry _registry;
 
         public ManagedHttpListenerMetricsServer(
             ISawmill sawmill,
             string host,
             int port,
             string url = "metrics/",
-            CollectorRegistry? registry = null,
+            Prom.CollectorRegistry? registry = null,
             Func<CancellationToken, Task>? beforeCollect = null)
         {
             _sawmill = sawmill;
             _beforeCollect = beforeCollect;
             _listener = new HttpListener();
             _listener.Prefixes.Add($"http://{host}:{port}/{url}");
-            _registry = registry ?? Metrics.DefaultRegistry;
+            _registry = registry ?? Prom.Metrics.DefaultRegistry;
         }
 
         protected override Task StartServer(CancellationToken cancel)
@@ -95,7 +95,7 @@ internal sealed partial class MetricsManager
 
                             MetricsEvents.Log.ScrapeStop();
                         }
-                        catch (ScrapeFailedException e)
+                        catch (Prom.ScrapeFailedException e)
                         {
                             resp.StatusCode = 503;
                             if (!string.IsNullOrWhiteSpace(e.Message))

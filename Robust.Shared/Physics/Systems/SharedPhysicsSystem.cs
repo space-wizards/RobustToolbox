@@ -1,5 +1,4 @@
 using System;
-using Prometheus;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
@@ -7,6 +6,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Observability;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Controllers;
@@ -28,19 +28,23 @@ namespace Robust.Shared.Physics.Systems
          * Poly cutting
          */
 
-        public static readonly Histogram TickUsageControllerBeforeSolveHistogram = Metrics.CreateHistogram("robust_entity_physics_controller_before_solve",
-            "Amount of time spent running a controller's UpdateBeforeSolve", new HistogramConfiguration
-            {
-                LabelNames = new[] {"controller"},
-                Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
-            });
+        public static readonly Histogram TickUsageControllerBeforeSolveHistogram = Metrics.Histogram(
+            "robust_entity_physics_controller_before_solve",
+            "Amount of time spent running a controller's UpdateBeforeSolve",
+            "controller",
+            0.000_001,
+            1.5,
+            25
+        );
 
-        public static readonly Histogram TickUsageControllerAfterSolveHistogram = Metrics.CreateHistogram("robust_entity_physics_controller_after_solve",
-            "Amount of time spent running a controller's UpdateAfterSolve", new HistogramConfiguration
-            {
-                LabelNames = new[] {"controller"},
-                Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
-            });
+        public static readonly Histogram TickUsageControllerAfterSolveHistogram = Metrics.Histogram(
+            "robust_entity_physics_controller_after_solve",
+            "Amount of time spent running a controller's UpdateAfterSolve",
+            "controller",
+            0.000_001,
+            1.5,
+            25
+        );
 
         [Dependency] private readonly IManifoldManager _manifoldManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;

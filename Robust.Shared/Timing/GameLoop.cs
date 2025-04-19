@@ -3,7 +3,7 @@ using System.Diagnostics.Tracing;
 using System.Threading;
 using Robust.Shared.Log;
 using Robust.Shared.Exceptions;
-using Prometheus;
+using Robust.Shared.Observability;
 using Robust.Shared.Configuration;
 using Robust.Shared.Profiling;
 
@@ -53,13 +53,14 @@ namespace Robust.Shared.Timing
 
         public const string ProfTextStartFrame = "Start Frame";
 
-        private static readonly Histogram _frameTimeHistogram = Metrics.CreateHistogram(
+        private static readonly Histogram _frameTimeHistogram = Metrics.Histogram(
             "robust_game_loop_frametime",
             "Histogram of frametimes in ms",
-            new HistogramConfiguration
-            {
-                Buckets = Histogram.ExponentialBuckets(.001, 1.5, 10)
-            });
+            null,
+            .001,
+            1.5,
+            10
+        );
 
         private readonly IGameTiming _timing;
         private TimeSpan _lastKeepUp; // last wall time keep up announcement
@@ -230,7 +231,7 @@ namespace Robust.Shared.Timing
 
                         if (EnableMetrics)
                         {
-                            using (_frameTimeHistogram.NewTimer())
+                            using (_frameTimeHistogram.Timer())
                             {
                                 Tick?.Invoke(this, simFrameEvent);
                             }

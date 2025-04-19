@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Prometheus;
 using Robust.Client.GameStates;
 using Robust.Client.Player;
 using Robust.Client.Timing;
@@ -8,6 +7,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Observability;
 using Robust.Shared.Player;
 using Robust.Shared.Replays;
 using Robust.Shared.Utility;
@@ -203,7 +203,7 @@ namespace Robust.Client.GameObjects
 
         public override void TickUpdate(float frameTime, bool noPredictions, Histogram? histogram)
         {
-            using (histogram?.WithLabels("EntityNet").NewTimer())
+            using (histogram?.Timer("EntityNet"))
             {
                 while (_queue.Count != 0 && _queue.Peek().msg.SourceTick <= _gameTiming.LastRealTick)
                 {

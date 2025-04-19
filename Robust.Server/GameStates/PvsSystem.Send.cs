@@ -1,8 +1,8 @@
 using System;
 using System.Threading.Tasks;
-using Prometheus;
 using Robust.Shared.Log;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Observability;
 using Robust.Shared.Player;
 using Robust.Shared.Utility;
 
@@ -22,7 +22,7 @@ internal sealed partial class PvsSystem
         // If this does get run async, then ProcessDisconnections() has to ensure that the job has finished before modifying
         // the sessions array
 
-        using var _ = Histogram.WithLabels("Send States").NewTimer();
+        using var _ = Histogram.Timer("Send States");
         var opts = new ParallelOptions {MaxDegreeOfParallelism = _parallelMgr.ParallelProcessCount};
         Parallel.ForEach(_sessions, opts, _threadResourcesPool.Get, SendSessionState, _threadResourcesPool.Return);
     }

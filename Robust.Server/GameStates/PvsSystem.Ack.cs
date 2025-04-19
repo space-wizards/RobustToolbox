@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
-using Prometheus;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
+using Robust.Shared.Observability;
 using Robust.Shared.Player;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
@@ -54,7 +54,7 @@ internal sealed partial class PvsSystem
 
         if (!_async)
         {
-            using var _= Histogram.WithLabels("Process Acks").NewTimer();
+            using var _ = Histogram.Timer("Process Acks");
             _parallelManager.ProcessNow(_ackJob, _ackJob.Count);
             return null;
         }

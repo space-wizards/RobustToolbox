@@ -6,7 +6,6 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Extensions.ObjectPool;
-using Prometheus;
 using Robust.Server.Configuration;
 using Robust.Server.GameObjects;
 using Robust.Server.Player;
@@ -16,6 +15,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Observability;
 using Robust.Shared.Player;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
@@ -106,12 +106,14 @@ internal sealed partial class PvsSystem : EntitySystem
 
     private DefaultObjectPool<PvsThreadResources> _threadResourcesPool = default!;
 
-    private static readonly Histogram Histogram = Metrics.CreateHistogram("robust_game_state_update_usage",
-        "Amount of time spent processing different parts of the game state update", new HistogramConfiguration
-        {
-            LabelNames = new[] {"area"},
-            Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
-        });
+    private static readonly Histogram Histogram = Metrics.Histogram(
+        "robust_game_state_update_usage",
+        "Amount of time spent processing different parts of the game state update",
+        "area",
+        0.000_001,
+        1.5,
+        25
+    );
 
     public override void Initialize()
     {
@@ -281,7 +283,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
     private void CullDeletionHistory(GameTick oldestAck)
     {
-        using var _ = Histogram.WithLabels("Cull History").NewTimer();
+        using var _ = Histogram.Timer("Cull History");
         CullDeletionHistoryUntil(oldestAck);
         _mapManager.CullDeletionHistory(oldestAck);
     }

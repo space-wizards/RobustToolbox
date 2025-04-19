@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
-using Prometheus;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Observability;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 

@@ -1,10 +1,9 @@
 using System;
-using System.Diagnostics.Metrics;
 using System.Diagnostics.Tracing;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-using Prometheus;
+using Prom = Prometheus;
 using Prometheus.DotNetRuntime;
 using Prometheus.DotNetRuntime.Metrics.Producers;
 using Robust.Shared;
@@ -13,35 +12,10 @@ using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Observability;
 using EventSource = System.Diagnostics.Tracing.EventSource;
 
-namespace Robust.Server.DataMetrics;
-
-/// <summary>
-/// Manages OpenTelemetry metrics exposure.
-/// </summary>
-/// <remarks>
-/// <para>
-/// If enabled via <see cref="CVars.MetricsEnabled"/>, metrics about the game server are exposed via a HTTP server
-/// in an OpenTelemetry-compatible format (Prometheus).
-/// </para>
-/// <para>
-/// Metrics can be added through the types in <c>System.Diagnostics.Metrics</c> or <c>Prometheus</c>.
-/// IoC contains an implementation of <see cref="IMeterFactory"/> that can be used to instantiate meters.
-/// </para>
-/// </remarks>
-public interface IMetricsManager
-{
-    /// <summary>
-    /// An event that gets raised on the main thread when complex metrics should be updated.
-    /// </summary>
-    /// <remarks>
-    /// This event is raised on the main thread before a Prometheus collection happens,
-    /// and also with a fixed interval if <see cref="CVars.MetricsUpdateInterval"/> is set.
-    /// You can use it to update complex metrics that can't "just" be stuffed into a counter.
-    /// </remarks>
-    event Action UpdateMetrics;
-}
+namespace Robust.Server.Observability.Prometheus;
 
 internal sealed partial class MetricsManager : IMetricsManagerInternal, IDisposable
 {
@@ -136,7 +110,7 @@ internal sealed partial class MetricsManager : IMetricsManagerInternal, IDisposa
             sawmill,
             host,
             port,
-            registry: Metrics.DefaultRegistry,
+            registry: Prom.Metrics.DefaultRegistry,
             beforeCollect: BeforeCollectCallback);
         _metricServer.Start();
 
@@ -225,10 +199,4 @@ internal sealed partial class MetricsManager : IMetricsManagerInternal, IDisposa
         [Event(4)]
         public void RequestStop() => WriteEvent(4);
     }
-}
-
-internal interface IMetricsManagerInternal : IMetricsManager
-{
-    void Initialize();
-    void FrameUpdate();
 }

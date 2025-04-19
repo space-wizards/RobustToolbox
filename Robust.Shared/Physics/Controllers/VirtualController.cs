@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using Prometheus;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Observability;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
@@ -18,8 +18,8 @@ namespace Robust.Shared.Physics.Controllers
 
         private static readonly Stopwatch Stopwatch = new();
 
-        public Histogram.Child BeforeMonitor = default!;
-        public Histogram.Child AfterMonitor = default!;
+        public Histogram BeforeMonitor = default!;
+        public Histogram AfterMonitor = default!;
 
         #region Boilerplate
 
@@ -27,8 +27,8 @@ namespace Robust.Shared.Physics.Controllers
         {
             base.Initialize();
 
-            BeforeMonitor = SharedPhysicsSystem.TickUsageControllerBeforeSolveHistogram.WithLabels(GetType().Name);
-            AfterMonitor = SharedPhysicsSystem.TickUsageControllerAfterSolveHistogram.WithLabels(GetType().Name);
+            BeforeMonitor = SharedPhysicsSystem.TickUsageControllerBeforeSolveHistogram.Child(GetType().Name);
+            AfterMonitor = SharedPhysicsSystem.TickUsageControllerAfterSolveHistogram.Child(GetType().Name);
 
             var updatesBefore = UpdatesBefore.ToArray();
             var updatesAfter = UpdatesAfter.ToArray();

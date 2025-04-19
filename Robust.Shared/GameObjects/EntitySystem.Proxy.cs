@@ -782,9 +782,16 @@ public partial class EntitySystem
         EntityManager.QueueDeleteEntity(uid);
     }
 
-    /// <inheritdoc cref="IEntityManager.DeleteEntity(EntityUid)" />
+    /// <inheritdoc cref="IEntityManager.DeleteEntity(EntityUid?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void PredictedDel(Entity<MetaDataComponent?, TransformComponent?> ent)
+    {
+        EntityManager.PredictedDeleteEntity(ent);
+    }
+
+    /// <inheritdoc cref="IEntityManager.DeleteEntity(EntityUid?)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void PredictedDel(Entity<MetaDataComponent?, TransformComponent?>? ent)
     {
         EntityManager.PredictedDeleteEntity(ent);
     }
@@ -792,6 +799,13 @@ public partial class EntitySystem
     /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void PredictedQueueDel(Entity<MetaDataComponent?, TransformComponent?> ent)
+    {
+        EntityManager.PredictedQueueDeleteEntity(ent);
+    }
+
+    /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid?)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void PredictedQueueDel(Entity<MetaDataComponent?, TransformComponent?>? ent)
     {
         EntityManager.PredictedQueueDeleteEntity(ent);
     }

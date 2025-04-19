@@ -55,10 +55,12 @@ internal sealed class EntityConsoleHost
 
     public void Shutdown()
     {
+        _consoleHost.BeginRegistrationRegion();
         foreach (var command in _entityCommands)
         {
             _consoleHost.UnregisterCommand(command);
         }
+        _consoleHost.EndRegistrationRegion();
 
         _entityCommands.Clear();
     }

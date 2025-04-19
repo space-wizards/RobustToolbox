@@ -35,7 +35,15 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Toolshed related changes:
+  * Toolshed Commands can now be executed from the client-side shell and will be automatically registered, which may cause command name conflicts.
+  * ToolshedManager must now be started before the default environment can be used.
+  * ToolshedCommands may now depend on entity system, and ToolshedManager will now only start & load the default environment after EntityManager (like `IEntityConsoleHost` and `IEntityConsoleCommands`).
+* `ConsoleHost`s and related classes/interfaces have been significantly modified, including:
+  * `IConGroupController`, `IConGroupControllerImplementation`, and `ConGroupController`, have been moved from server to `Robust.Shared.Console`.
+  * The client now also needs to set `IConGroupController.Implementation`, otherwise ConsoleHost permission checks will fail when using the default `IConGroupController`.
+  * `IConsoleHost.AvailableCommands` will now contain proxy commands for some ToolshedCommands via the new `ToolshedProxyCommand` class.
+  * `IConsoleHost` now has several new methods & properties that must be implemented, and several methods in the server/client `ConsoleHost` have been renamed or moved to the shared class.
 
 ### New features
 
@@ -79,7 +87,7 @@ END TEMPLATE-->
   * The MappingDataNode class has various helper methods that still accept a ValueDataNode, but these methods are marked as obsolete and may be removed in the future.
   * yaml validators should use `MappingDataNode.GetKeyNode()` when validating mapping keys, so that errors can print node start & end information
 * ValueTuple yaml serialization has changed
-  * Previously they would get serialized into a single mapping with one entry (i.e., `{foo : bar }` 
+  * Previously they would get serialized into a single mapping with one entry (i.e., `{foo : bar }`
   * Now they serialize into a sequence (i.e., `[foo, bar]`
   * The ValueTuple serializer will still try to read mappings, but due to the MappingDataNode this may fail if the previously serialized "key" can't be read as a simple string
 

@@ -18,6 +18,9 @@ cmd-parse-failure-session = There is no session with username: {$username}
 cmd-error-file-not-found = Could not find file: {$file}.
 cmd-error-dir-not-found = Could not find directory: {$dir}.
 
+cmd-insufficient-permissions = Insufficient permissions for command: '{$cmd}'
+cmd-unknown-command = Unknown command: '{$cmd}'
+
 cmd-failure-no-attached-entity = There is no entity attached to this shell.
 
 ## 'help' command

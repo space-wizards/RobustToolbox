@@ -47,6 +47,7 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
+using Robust.Shared.Toolshed;
 
 namespace Robust.UnitTesting.Server
 {
@@ -261,6 +262,7 @@ namespace Robust.UnitTesting.Server
             // Needed for grid fixture debugging.
             container.Register<IConGroupController, ConGroupController>();
             container.Register<EntityConsoleHost>();
+            container.Register<ToolshedManager>();
 
             // I just wanted to load pvs system
             container.Register<IServerEntityManager, ServerEntityManager>();
@@ -317,6 +319,9 @@ namespace Robust.UnitTesting.Server
 
             var entityMan = container.Resolve<IEntityManager>();
             entityMan.Initialize();
+
+            var shed = Resolve<ToolshedManager>();
+            shed.Initialize();
 
             var entitySystemMan = container.Resolve<IEntitySystemManager>();
 

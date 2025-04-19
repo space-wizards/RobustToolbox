@@ -784,16 +784,16 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.DeleteEntity(EntityUid)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void PredictedDel(EntityUid? uid)
+    protected void PredictedDel(Entity<MetaDataComponent?, TransformComponent?> ent)
     {
-        EntityManager.PredictedDeleteEntity(uid);
+        EntityManager.PredictedDeleteEntity(ent);
     }
 
     /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void PredictedQueueDel(EntityUid? uid)
+    protected void PredictedQueueDel(Entity<MetaDataComponent?, TransformComponent?> ent)
     {
-        EntityManager.PredictedQueueDeleteEntity(uid);
+        EntityManager.PredictedQueueDeleteEntity(ent);
     }
 
     /// <inheritdoc cref="IEntityManager.TryQueueDeleteEntity(EntityUid?)" />

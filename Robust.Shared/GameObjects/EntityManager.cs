@@ -694,15 +694,15 @@ namespace Robust.Shared.GameObjects
         public bool IsQueuedForDeletion(EntityUid uid) => QueuedDeletionsSet.Contains(uid);
 
         /// <inheritdoc />
-        public virtual void PredictedDeleteEntity(EntityUid? uid)
+        public virtual void PredictedDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
         {
-            DeleteEntity(uid);
+            DeleteEntity(ent.Owner);
         }
 
         /// <inheritdoc />
-        public virtual void PredictedQueueDeleteEntity(EntityUid? uid)
+        public virtual void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
         {
-            QueueDeleteEntity(uid);
+            QueueDeleteEntity(ent.Owner);
         }
 
         public bool EntityExists(EntityUid uid)

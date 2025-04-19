@@ -190,7 +190,8 @@ public partial class SerializationManager
             {
                 // tag is set on data definition creation
                 if(!processedTags.Add(dfa.Tag!)) continue; //tag was already processed, probably because we are using the same tag in an include
-                var key = new ValueDataNode(dfa.Tag);
+
+                var key = dfa.Tag!;
                 if (parent.TryGetValue(key, out var parentValue))
                 {
                     if (newMapping.TryGetValue(key, out var childValue))

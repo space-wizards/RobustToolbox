@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using JetBrains.Annotations;
@@ -37,8 +36,8 @@ public sealed class TimespanSerializer : ITypeSerializer<TimeSpan, ValueDataNode
         IDependencyCollection dependencies,
         ISerializationContext? context = null)
     {
-        return double.TryParse(node.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out _)
-               || TryTimeSpan(node, out _)
+        return TryTimeSpan(node, out _)
+            || double.TryParse(node.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out _)
             ? new ValidatedValueNode(node)
             : new ErrorNode(node, "Failed parsing TimeSpan");
     }
@@ -65,40 +64,44 @@ public sealed class TimespanSerializer : ITypeSerializer<TimeSpan, ValueDataNode
     }
 
     /// <summary>
-    /// Convert strings from the compatible format into TimeSpan and output it. Returns true if successful.
+    /// Convert strings from the compatible format (or just numbers) into TimeSpan and output it. Returns true if successful.
     /// The string must start with a number and end with a single letter referring to the time unit used.
     /// It can NOT combine multiple types (like "1h30m"), but it CAN use decimals ("1.5h")
     /// </summary>
     private bool TryTimeSpan(ValueDataNode node, [NotNullWhen(true)] out TimeSpan? timeSpan)
     {
         timeSpan = null;
-        var units = new List<string>{"h", "m", "s"};
 
-        var input = node.Value.Replace(" ","");
-        var unit = input[^1].ToString();
-        var number = input.Substring(0, input.Length - 1);
-        var valid = false;
-
-        if (units.Contains(unit)
-            && double.TryParse(number, out var d))
+        // A lot of the checks will be for plain numbers, so might as well rule them out right away, instead of
+        // running all the other checks on them. They will need to get parsed later anyway, if they weren't now.
+        if (double.TryParse(node.Value, out var v))
         {
-            switch (unit)
-            {
-                case "s":
-                    timeSpan = TimeSpan.FromSeconds(d);
-                    valid = true;
-                    break;
-                case "m":
-                    timeSpan = TimeSpan.FromMinutes(d);
-                    valid = true;
-                    break;
-                case "h":
-                    timeSpan = TimeSpan.FromHours(d);
-                    valid = true;
-                    break;
-            }
+            timeSpan = TimeSpan.FromSeconds(v);
+            return true;
         }
 
-        return valid;
+        // If there aren't even enough characters for a number and a time unit, exit
+        if (node.Value.Length <= 1)
+            return false;
+
+        // If the input without the last character is still not a valid number, exit
+        if (!double.TryParse(node.Value.AsSpan()[..^1], out var number))
+            return false;
+
+        // Check the last character of the input for time unit indicators
+        switch (node.Value.AsSpan()[^1])
+        {
+            case 's':
+                timeSpan = TimeSpan.FromSeconds(number);
+                return true;
+            case 'm':
+                timeSpan = TimeSpan.FromMinutes(number);
+                return true;
+            case 'h':
+                timeSpan = TimeSpan.FromHours(number);
+                return true;
+            default:
+                return false;
+        }
     }
 }

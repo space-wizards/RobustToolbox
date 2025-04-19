@@ -115,6 +115,7 @@ public interface ISharedPlayerManager
 
     IEnumerable<SessionData> GetAllPlayerData();
     void GetPlayerStates(GameTick fromTick, List<SessionState> states);
+    void GetPlayerState(GameTick fromTick, ICommonSession session, List<SessionState> states);
     void UpdateState(ICommonSession commonSession);
 
     void RemoveSession(ICommonSession session, bool removeData = false);
@@ -162,6 +163,21 @@ public interface ISharedPlayerManager
     /// Updates a session's <see cref="ICommonSession.Name"/>
     /// </summary>
     public void SetName(ICommonSession session, string name);
+
+    /// <summary>
+    /// Updates a session's <see cref="ICommonSession.DisplayName"/>
+    /// </summary>
+    public void SetDisplayName(ICommonSession session, string? name);
+
+    /// <summary>
+    /// Returns a session's DisplayName if set, otherwise returns the Name.
+    /// </summary>
+    public string GetDisplayName(ICommonSession session);
+
+    /// <summary>
+    /// Returns a string that contains the internal name of the session in parenthesis if there's a name override active.
+    /// </summary>
+    public string GetTruthfulNameString(ICommonSession session);
 
     /// <summary>
     /// Set the session's status to <see cref="SessionStatus.InGame"/>.

@@ -375,12 +375,38 @@ namespace Robust.Shared.CompNetworkGenerator
                         stateFields.Append($@"
         public {networkedType} {name} = default!;");
 
+                        // get first ctor arg of the field attribute, which determines whether the field should be cloned
+                        // (like if its a dict or list)
                         if (IsCloneType(type))
                         {
-                            getField = $"component.{name}";
                             cast = $"({castString})";
 
                             var nullCast = nullable ? castString.Substring(0, castString.Length - 1) : castString;
+
+                            // Only need new ctor if we definitely need to clone states
+                            if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue($"build_property.CloneStates",
+                                    out _))
+                            {
+                                if (nullable)
+                                {
+                                    getField = $"component.{name} == null ? null : new(component.{name})";
+                                }
+                                else
+                                {
+                                    getField = $"new(component.{name})";
+                                }
+                            }
+                            else
+                            {
+                                if (nullable)
+                                {
+                                    getField = $"component.{name} == null ? null : component.{name}";
+                                }
+                                else
+                                {
+                                    getField = $"component.{name}";
+                                }
+                            }
 
                             handleStateSetters.Append($@"
             component.{name} = state.{name} == null ? null! : new(state.{name});");

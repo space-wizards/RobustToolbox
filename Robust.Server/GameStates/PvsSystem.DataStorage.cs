@@ -369,7 +369,7 @@ internal sealed partial class PvsSystem
 
     private sealed class PvsDeletionsJob : ParallelRobustJob
     {
-        private static readonly ObjectPool<PvsDeletionsJob> _jobPool =
+        private static readonly ObjectPool<PvsDeletionsJob> JobPool =
             new DefaultObjectPool<PvsDeletionsJob>(new DefaultPooledObjectPolicy<PvsDeletionsJob>());
 
         public override int BatchSize => 8;
@@ -380,7 +380,7 @@ internal sealed partial class PvsSystem
 
         public override ParallelRobustJob Clone()
         {
-            var job = _jobPool.Get();
+            var job = JobPool.Get();
             job._pvs = _pvs;
             job.ToClear = ToClear;
             return job;
@@ -388,7 +388,7 @@ internal sealed partial class PvsSystem
 
         public override void Shutdown()
         {
-            _jobPool.Return(this);
+            JobPool.Return(this);
         }
 
         public override void Execute(int index)

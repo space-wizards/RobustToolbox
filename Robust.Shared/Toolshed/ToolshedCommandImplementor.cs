@@ -520,9 +520,15 @@ internal sealed class ToolshedCommandImplementor
 
     internal Func<CommandInvocationArguments, object?> GetImplementationInternal(Type? pipedType, ConcreteCommandMethod method)
     {
+        // args is a class that bundles up the parsed or piped command arguments that are used to invoke the command's method.
         var args = Expression.Parameter(typeof(CommandInvocationArguments));
-        var paramList = new List<Expression>();
 
+        // For each of the method argument, get the data from the "args" bundle that is needed to invoke the method.
+        // I.e., a method like Foo(int bar, float baz) should become something equivalent to:
+        // foo((int)args.Arguments["bar"], (float)args.Arguments["baz"])
+        // Though to be more precise, it uses the ValueRef<T>.EvaluateParameter() helper function to cast the type or
+        // deal with toolshed variables & blocks.
+        var paramList = new List<Expression>();
         foreach (var param in method.Info.GetParameters())
         {
             paramList.Add(GetParamExpr(param, pipedType, args));

@@ -166,7 +166,7 @@ public partial class EntitySystem
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void DirtyField<T>(Entity<T> entity, string fieldName, MetaDataComponent? meta = null)
-        where T : IComponentDelta
+        where T : IComponentDelta, notnull
     {
         DirtyField((entity, entity), fieldName, meta);
     }
@@ -197,7 +197,7 @@ public partial class EntitySystem
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void DirtyFields<T>(Entity<T> ent, MetaDataComponent? meta, params string[] fields)
-        where T : IComponentDelta
+        where T : IComponentDelta, notnull
     {
         DirtyFields((ent, ent), meta, fields);
     }

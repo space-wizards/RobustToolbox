@@ -293,9 +293,9 @@ namespace Robust.Client.GameObjects
         #endregion
 
         /// <inheritdoc />
-        public override void PredictedDeleteEntity(EntityUid? uid)
+        public override void PredictedDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
         {
-            if (Deleted(uid) || !TransformQuery.TryComp(uid.Value, out var xform))
+            if (Deleted(ent.Owner) || !TransformQuery.Resolve(ent.Owner, ref ent.Comp2))
                 return;
 
             // So there's 3 scenarios:
@@ -303,29 +303,29 @@ namespace Robust.Client.GameObjects
             // 2. Clientside predicted entity we delete and rely on state handling.
             // 3. Clientside only entity that actually needs deleting here.
 
-            if (HasComponent<PredictedSpawnComponent>(uid))
+            if (HasComponent<PredictedSpawnComponent>(ent.Owner))
             {
-                DeleteEntity(uid.Value);
+                DeleteEntity(ent);
             }
             else
             {
-                _xforms.DetachEntity(uid.Value, xform);
+                _xforms.DetachEntity(ent, ent.Comp2);
             }
         }
 
         /// <inheritdoc />
-        public override void PredictedQueueDeleteEntity(EntityUid? uid)
+        public override void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
         {
-            if (uid == null || IsQueuedForDeletion(uid.Value) || !TransformQuery.TryComp(uid.Value, out var xform))
+            if (IsQueuedForDeletion(ent.Owner) || !TransformQuery.Resolve(ent.Owner, ref ent.Comp2))
                 return;
 
-            if (HasComponent<PredictedSpawnComponent>(uid.Value))
+            if (HasComponent<PredictedSpawnComponent>(ent.Owner))
             {
-                QueueDeleteEntity(uid.Value);
+                QueueDeleteEntity(ent);
             }
             else
             {
-                _xforms.DetachEntity(uid.Value, xform);
+                _xforms.DetachEntity(ent.Owner, ent.Comp2);
             }
         }
     }

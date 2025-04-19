@@ -661,8 +661,8 @@ public abstract partial class SharedPhysicsSystem
             var aUid = contact.EntityA;
             var bUid = contact.EntityB;
 
-            SetAwake(aUid, bodyA, true);
-            SetAwake(bUid, bodyB, true);
+            SetAwake((aUid, bodyA), true);
+            SetAwake((bUid, bodyB), true);
         }
 
         ArrayPool<bool>.Shared.Return(wake);
@@ -788,7 +788,7 @@ public abstract partial class SharedPhysicsSystem
         if (!PhysicsQuery.Resolve(entity.Owner, ref entity.Comp))
             return;
 
-        _broadphase.RegenerateContacts(entity.Owner, entity.Comp);
+        _broadphase.RegenerateContacts(entity);
     }
 
     /// <summary>

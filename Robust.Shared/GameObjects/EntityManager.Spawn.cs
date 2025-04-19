@@ -80,7 +80,7 @@ public partial class EntityManager
             throw new InvalidOperationException($"Tried to spawn entity {protoName} on invalid coordinates {coordinates}.");
 
         var entity = CreateEntityUninitialized(protoName, coordinates, overrides, rotation);
-        InitializeAndStartEntity(entity, coordinates.GetMapId(this));
+        InitializeAndStartEntity(entity, _xforms.GetMapId(coordinates));
         return entity;
     }
 
@@ -101,7 +101,7 @@ public partial class EntityManager
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public EntityUid SpawnAtPosition(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
-        => Spawn(protoName, coordinates.ToMap(this, _xforms), overrides);
+        => Spawn(protoName, _xforms.ToMapCoordinates(coordinates), overrides);
 
     public bool TrySpawnNextTo(
         string? protoName,

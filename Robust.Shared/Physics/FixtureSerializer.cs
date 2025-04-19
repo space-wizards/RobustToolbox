@@ -29,11 +29,9 @@ public sealed class FixtureSerializer : ITypeSerializer<Dictionary<string, Fixtu
 
         foreach (var subNode in node)
         {
-            var key = (ValueDataNode)subNode.Key;
-
-            if (!keys.Add(key.Value))
+            if (!keys.Add(subNode.Key))
             {
-                seq.Add(new ErrorNode(subNode.Key, $"Found duplicate fixture ID {key.Value}"));
+                seq.Add(new ErrorNode(new ValueDataNode(subNode.Key), $"Found duplicate fixture ID {subNode.Key}"));
                 continue;
             }
 
@@ -50,10 +48,8 @@ public sealed class FixtureSerializer : ITypeSerializer<Dictionary<string, Fixtu
 
         foreach (var subNode in node)
         {
-            var key = (ValueDataNode)subNode.Key;
-
             var fixture = serializationManager.Read<Fixture>(subNode.Value, hookCtx, context, notNullableOverride: true);
-            value.Add(key.Value, fixture);
+            value.Add(subNode.Key, fixture);
         }
 
         return value;

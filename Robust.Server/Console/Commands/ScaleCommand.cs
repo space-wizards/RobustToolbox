@@ -16,6 +16,15 @@ public sealed class ScaleCommand : LocalizedCommands
     [Dependency] private readonly IEntityManager _entityManager = default!;
 
     public override string Command => "scale";
+
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    {
+        if (args.Length != 1)
+            return CompletionResult.Empty;
+
+        return CompletionResult.FromOptions(CompletionHelper.NetEntities(args[0], entManager: _entityManager));
+    }
+
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         if (args.Length != 2)

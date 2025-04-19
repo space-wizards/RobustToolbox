@@ -54,6 +54,110 @@ END TEMPLATE-->
 *None yet*
 
 
+## 254.1.0
+
+### New features
+
+* Add CC ND licences to the RGA validator.
+* Add entity spawn prediction and entity deletion prediction. This is currently limited as you are unable to predict interactions with these entities. These are done via the new methods prefixed with "Predicted". You can also manually flag an entity as a predicted spawn with the `FlagPredicted` method which will clean it up when prediction is reset.
+
+### Bugfixes
+
+* Fix tile edge rendering for neighbor tiles being the same priority.
+
+### Other
+
+* Fix SpawnAttachedTo's system proxy method not the rotation arg like EntityManager.
+
+
+## 254.0.0
+
+### Breaking changes
+
+* Yaml mappings/dictionaries now only support string keys instead of generic nodes
+  * Several MappingDataNode method arguments or return values now use strings instead of a DataNode object
+  * The MappingDataNode class has various helper methods that still accept a ValueDataNode, but these methods are marked as obsolete and may be removed in the future.
+  * yaml validators should use `MappingDataNode.GetKeyNode()` when validating mapping keys, so that errors can print node start & end information
+* ValueTuple yaml serialization has changed
+  * Previously they would get serialized into a single mapping with one entry (i.e., `{foo : bar }` 
+  * Now they serialize into a sequence (i.e., `[foo, bar]`
+  * The ValueTuple serializer will still try to read mappings, but due to the MappingDataNode this may fail if the previously serialized "key" can't be read as a simple string
+
+### New features
+
+* Add cvar to disable tile edges.
+* Add GetContainingContainers method to ContainerSystem to recursively get containers upwards on an entity.
+
+### Internal
+
+* Make component lifecycle methods use generics.
+
+
+## 253.0.0
+
+### New features
+
+* Add a new `SerializationManager.PushComposition()` overload that takes in a single parent instead of an array of parents.
+* `BoundUserInterfaceMessageAttempt` once again gets raised as a broadcast event, in addition to being directed.
+  * This effectively reverts the breaking part of the changes made in v252.0.0
+* Fix CreateDistanceJoint using an int instead of a float for minimum distance.
+
+### Bugfixes
+
+* Fix deferred component removal not setting the component's life stage to `ComponentLifeStage.Stopped` if the component has not yet been initialised.
+* Fix some `EntitySystem.Resolve()` overloads not respecting the optional `logMissing` argument.
+* Fix screen-space overlays not being useable without first initializing/starting entity manager & systems
+* ItemList is now significantly optimized. VV's `AddComponent` window in particular should be much faster.
+* Fix some more MapValidator fields.
+* Fix popup text overflowing the sides of the screen.
+* Improve location reporting for non-writeable datafields via analyzer.
+
+### Other
+
+* TestPoint now uses generics rather than IPhysShape directly.
+
+
+## 252.0.0
+
+### Breaking changes
+
+* BoundUserInterfaceMessageAttempt is raised directed against entities and no longer broadcast.
+
+
+## 251.0.0
+
+### Breaking changes
+
+* Localization is now separate between client and server and is handled via cvar.
+* Contacting entities no longer can be disabled for CollisionWake to avoid destroying the contacts unnecessarily.
+
+### New features
+
+* Added `DirectionExtensions.AllDirections`, which contains a list of all `Direction`s for easy enumeration.
+* Add ForbidLiteralAttribute.
+* Log late MsgEntity again.
+* Show entity name in `physics shapeinfo` output.
+* Make SubscribeLocalEvent not require EntityEventArgs.
+* Add autocomplete to `tp` command.
+* Add button to jump to live chat when scrolled up.
+* Add autocomplete to `savemap` and `savegrid`.
+
+### Bugfixes
+
+* Fix velocity not re-applying correctly on re-parenting.
+* Fix Equatable on FormattedMessage.
+* Fix SharedTransformSystem methods logging errors on resolves.
+
+### Other
+
+* Significantly optimized tile edge rendering.
+
+### Internal
+
+* Remove duplicate GetMassData method.
+* Inline manifold points for physics.
+
+
 ## 250.0.0
 
 ### Breaking changes

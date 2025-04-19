@@ -268,7 +268,6 @@ namespace Robust.Server.Physics
                     newGrids[i] = newGridUid;
 
                     // Keep same origin / velocity etc; this makes updating a lot faster and easier.
-                    _xformSystem.SetWorldPosition(newGridXform, gridPos);
                     _xformSystem.SetWorldPositionRotation(newGridUid, gridPos, gridRot, newGridXform);
                     var splitBody = _bodyQuery.GetComponent(newGridUid);
                     _physics.SetLinearVelocity(newGridUid, mapBody.LinearVelocity, body: splitBody);

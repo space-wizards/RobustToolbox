@@ -340,8 +340,11 @@ namespace Robust.Client.UserInterface.Controls
         {
             for (var i = 0; i < _itemList.Count; i++)
             {
+                if (i == except)
+                    continue;
+
                 var item = _itemList[i];
-                if (i == except || !item.Selected)
+                if (!item.Selected)
                     continue;
 
                 item.Selected = false;

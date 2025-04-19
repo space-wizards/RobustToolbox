@@ -4,12 +4,12 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Prometheus;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Map.Enumerators;
 using Robust.Shared.Maths;
+using Robust.Shared.Observability;
 using Robust.Shared.Player;
 using Robust.Shared.Utility;
 
@@ -82,7 +82,7 @@ internal sealed partial class PvsSystem
     /// </summary>
     internal void GetVisibleChunks()
     {
-        using var _= Histogram.WithLabels("Get Chunks").NewTimer();
+        using var _= Histogram.Timer("Get Chunks");
 
         DebugTools.Assert(!_chunks.Values.Any(x=> x.UpdateQueued));
         _dirtyChunks.Clear();
@@ -204,7 +204,7 @@ internal sealed partial class PvsSystem
 
     private void ProcessVisibleChunks()
     {
-        using var _= Histogram.WithLabels("Update Chunks & Overrides").NewTimer();
+        using var _= Histogram.Timer("Update Chunks & Overrides");
         var task = _parallelMgr.Process(_chunkJob, _chunkJob.Count);
 
         UpdateCleanChunks();

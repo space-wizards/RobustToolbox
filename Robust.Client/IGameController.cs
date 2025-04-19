@@ -22,7 +22,7 @@ public interface IGameController
 
     /// <summary>
     ///     This event gets invoked prior to performing entity tick update logic. If this is null the game
-    ///     controller will simply call <see cref="IEntityManager.TickUpdate(float, bool, Prometheus.Histogram?)"/>.
+    ///     controller will simply call <see cref="IEntityManager.TickUpdate(float, bool, Robust.Shared.Observability.Histogram?)"/>.
     ///     This exists to give content module more control over tick updating.
     /// </summary>
     event Action<FrameEventArgs>? TickUpdateOverride;

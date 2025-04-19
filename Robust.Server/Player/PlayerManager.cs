@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
-using Prometheus;
 using Robust.Server.Configuration;
 using Robust.Server.GameObjects;
 using Robust.Shared.Enums;
@@ -13,6 +12,7 @@ using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Observability;
 using Robust.Shared.Player;
 using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
@@ -26,7 +26,7 @@ namespace Robust.Server.Player
     internal sealed class PlayerManager : SharedPlayerManager, IPlayerManager
     {
         private static readonly Gauge PlayerCountMetric = Metrics
-            .CreateGauge("robust_player_count", "Number of players on the server.");
+            .Gauge("robust_player_count", "Number of players on the server.");
 
         [Dependency] private readonly IBaseServer _baseServer = default!;
         [Dependency] private readonly IGameTiming _timing = default!;

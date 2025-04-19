@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using Prometheus;
 using Robust.Shared.Console;
 using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
@@ -13,6 +12,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
+using Robust.Shared.Observability;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Player;
 using Robust.Shared.Profiling;
@@ -267,19 +267,19 @@ namespace Robust.Shared.GameObjects
 
         public virtual void TickUpdate(float frameTime, bool noPredictions, Histogram? histogram)
         {
-            using (histogram?.WithLabels("EntitySystems").NewTimer())
+            using (histogram?.Timer("EntitySystems"))
             using (_prof.Group("Systems"))
             {
                 _entitySystemManager.TickUpdate(frameTime, noPredictions);
             }
 
-            using (histogram?.WithLabels("EntityEventBus").NewTimer())
+            using (histogram?.Timer("EntityEventBus"))
             using (_prof.Group("Events"))
             {
                 _eventBus.ProcessEventQueue();
             }
 
-            using (histogram?.WithLabels("QueuedDeletion").NewTimer())
+            using (histogram?.Timer("QueuedDeletion"))
             using (_prof.Group("QueueDel"))
             {
                 while (QueuedDeletions.TryDequeue(out var uid))
@@ -290,7 +290,7 @@ namespace Robust.Shared.GameObjects
                 QueuedDeletionsSet.Clear();
             }
 
-            using (histogram?.WithLabels("ComponentCull").NewTimer())
+            using (histogram?.Timer("ComponentCull"))
             using (_prof.Group("ComponentCull"))
             {
                 CullRemovedComponents();

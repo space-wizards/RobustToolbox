@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.ComponentModel;
 using Robust.Shared.IoC;
 
 namespace Robust.Shared.Log
@@ -19,8 +20,18 @@ namespace Robust.Shared.Log
         ///     The instance we're using.
         ///     As it's a direct proxy to IoC this will not work if IoC is not functional.
         /// </summary>
-        // TODO: Maybe cache this to improve performance.
-        private static ILogManager LogManagerSingleton => IoCManager.Resolve<ILogManager>();
+        private static ILogManager LogManagerSingleton
+        {
+            get
+            {
+                _logManagerSingleton ??= IoCManager.Resolve<ILogManager>();
+                return _logManagerSingleton;
+            }
+        }
+        /// <summary>
+        /// Used to hold onto the cached log manager singleton instance. Prevents re-calling it each time.
+        /// </summary>
+        private static ILogManager? _logManagerSingleton;
 
         /// <summary>
         ///     Gets a sawmill by name. Equivalent to <see cref="ILogManager.GetSawmill(string)"/>.

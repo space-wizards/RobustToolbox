@@ -300,7 +300,7 @@ namespace Robust.Client.GameObjects
 
             // So there's 3 scenarios:
             // 1. Networked entity we just move to nullspace and rely on state handling.
-            // 2. Clientside predicted entity we move to nullspace and also rely on state handling.
+            // 2. Clientside predicted entity we delete and rely on state handling.
             // 3. Clientside only entity that actually needs deleting here.
 
             if (HasComponent<PredictedSpawnComponent>(uid))

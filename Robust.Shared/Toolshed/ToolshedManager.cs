@@ -86,7 +86,7 @@ public sealed partial class ToolshedManager
     public void Shutdown()
     {
         if (!Started)
-            throw new Exception("Not started");
+            return;
 
         Started = false;
         _defaultEnvironment = null;

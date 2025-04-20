@@ -631,50 +631,14 @@ namespace Robust.Client.GameObjects
             // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
             if (Owner != EntityUid.Invalid)
                 TreeSys?.QueueTreeUpdate((Owner, this));
-
-        public void LayerSetShader(int layer, ShaderInstance? shader, string? prototype = null)
-        {
-            if (!TryGetLayer(layer, out var theLayer, true))
-                return;
-
-            if (shader == null)
-            {
-                theLayer.UnShaded = false;
-                theLayer.Shader = null;
-                theLayer.ShaderPrototype = null;
-                return;
-            }
-
-            if (prototype == SpriteSystem.UnshadedId.Id)
-            {
-                theLayer.UnShaded = true;
-                theLayer.ShaderPrototype = SpriteSystem.UnshadedId;
-                theLayer.Shader = null;
-                return;
-            }
-
-            theLayer.UnShaded = false;
-            theLayer.Shader = shader;
-            theLayer.ShaderPrototype = prototype;
         }
 
-        public void LayerSetShader(object layerKey, ShaderInstance? shader, string? prototype = null)
+        private object ParseKey(string keyString)
         {
-            if (!LayerMapTryGet(layerKey, out var layer, true))
-                return;
+            if (reflection.TryParseEnumReference(keyString, out var @enum))
+                return @enum;
 
-            LayerSetShader(layer, shader, prototype);
-        }
-
-        public void LayerSetShader(int layer, string shaderName)
-        {
-            if (!prototypes.TryIndex<ShaderPrototype>(shaderName, out var prototype))
-            {
-                if (reflection.TryParseEnumReference(keyString, out var @enum))
-                    return @enum;
-
-                return keyString;
-            }
+            return keyString;
         }
 
         [Obsolete("Use SpriteSystem.LayerSetData() instead.")]
@@ -969,6 +933,23 @@ namespace Robust.Client.GameObjects
             if (!TryGetLayer(layer, out var theLayer, true))
                 return;
 
+            if (shader == null)
+            {
+                theLayer.UnShaded = false;
+                theLayer.Shader = null;
+                theLayer.ShaderPrototype = null;
+                return;
+            }
+
+            if (prototype == SpriteSystem.UnshadedId.Id)
+            {
+                theLayer.UnShaded = true;
+                theLayer.ShaderPrototype = SpriteSystem.UnshadedId;
+                theLayer.Shader = null;
+                return;
+            }
+
+            theLayer.UnShaded = false;
             theLayer.Shader = shader;
             theLayer.ShaderPrototype = prototype;
         }
@@ -1123,7 +1104,7 @@ namespace Robust.Client.GameObjects
             [ViewVariables] public Texture? Texture;
 
             internal RSI? _rsi;
-            
+
             /// <summary>
             /// If true, then this layer is drawn without lighting applied.
             /// Unshaded layers are given special treatment and don't just use the unshaded-shader to avoid having to

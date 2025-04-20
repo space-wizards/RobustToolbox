@@ -306,6 +306,7 @@ namespace Robust.Client.GameObjects
             // 1. Networked entity we just move to nullspace and rely on state handling.
             // 2. Clientside predicted entity we delete and rely on state handling.
             // 3. Clientside only entity that actually needs deleting here.
+
             if (ent.Comp1.NetEntity.IsClientSide())
             {
                 DeleteEntity(ent, ent.Comp1, ent.Comp2);
@@ -331,6 +332,7 @@ namespace Robust.Client.GameObjects
             {
                 // client-side QueueDeleteEntity re-fetches MetadataComp and checks IsClientSide().
                 // base call to skip that.
+                // TODO create override that takes in metadata comp
                 base.QueueDeleteEntity(ent);
             }
             else

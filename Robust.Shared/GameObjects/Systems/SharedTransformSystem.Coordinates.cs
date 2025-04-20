@@ -4,6 +4,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
@@ -15,7 +16,7 @@ public abstract partial class SharedTransformSystem
      */
 
     /// <summary>
-    /// Tries to snap these grids to coordinate if possible.
+    /// If the coordinates are on a grid then snaps it to the center of the tile, otherwise snaps it to the nearest 0.5,0.5.
     /// </summary>
     [Pure]
     public EntityCoordinates SnapToGrid(EntityCoordinates input)
@@ -40,11 +41,13 @@ public abstract partial class SharedTransformSystem
         return WithEntityId(gridPos, input.EntityId);
     }
 
+    /// <summary>
+    /// Snaps the coordinates to the center of the tile. Assumes the EntityCoordinates are already relative to the grid!
+    /// </summary>
     [Pure]
     public EntityCoordinates SnapToGrid(EntityCoordinates input, MapGridComponent grid)
     {
         var tileSize = grid.TileSize;
-
         var localPos = input.Position;
 
         var x = (int)Math.Floor(localPos.X / tileSize) + tileSize / 2f;

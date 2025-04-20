@@ -582,13 +582,13 @@ public partial class SharedPhysicsSystem
                 if (_containerSystem.IsEntityOrParentInContainer(uid))
                     return false;
 
-                if (!_fixturesQuery.Resolve(uid, ref manager) || manager.FixtureCount == 0 && !HasComp<MapGridComponent>(uid))
+                if (!_fixturesQuery.Resolve(uid, ref manager) || manager.FixtureCount == 0 && !_gridQuery.HasComp(uid))
                     return false;
             }
             else
             {
                 DebugTools.Assert(!_containerSystem.IsEntityOrParentInContainer(uid));
-                DebugTools.Assert((Resolve(uid, ref manager) && manager.FixtureCount > 0) || HasComp<MapGridComponent>(uid));
+                DebugTools.Assert((Resolve(uid, ref manager) && manager.FixtureCount > 0) || _gridQuery.HasComp(uid));
             }
         }
 

@@ -5,7 +5,6 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Utility;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Map.Components;
@@ -1361,7 +1360,7 @@ public abstract partial class SharedTransformSystem
         }
         else
         {
-            if (!HasComp<MapComponent>(uid))
+            if (!_mapQuery.HasComp(uid))
                 Log.Warning($"Failed to attach entity to map or grid. Entity: ({ToPrettyString(uid)}). Trace: {Environment.StackTrace}");
 
             DetachEntity(uid, xform);

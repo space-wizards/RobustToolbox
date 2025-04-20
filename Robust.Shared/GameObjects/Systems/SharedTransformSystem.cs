@@ -133,7 +133,7 @@ namespace Robust.Shared.GameObjects
             if (xform.GridUid == xform.ParentUid)
                 return xform.Coordinates;
 
-            DebugTools.Assert(!HasComp<MapGridComponent>(uid) && !HasComp<MapComponent>(uid));
+            DebugTools.Assert(!_gridQuery.HasComp(uid) && !_mapQuery.HasComp(uid));
 
             // Not parented to grid so convert their pos back to the grid.
             var worldPos = GetWorldPosition(xform, XformQuery);

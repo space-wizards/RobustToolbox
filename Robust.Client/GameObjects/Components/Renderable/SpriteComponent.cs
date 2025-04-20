@@ -1046,7 +1046,7 @@ namespace Robust.Client.GameObjects
             return builder.ToString();
         }
 
-        [Obsolete("Use SpriteSystem.GetBoundingBox() instead.")]
+        [Obsolete("Use SpriteSystem.CalculateBounds() instead.")]
         public Box2Rotated CalculateRotatedBoundingBox(Vector2 worldPosition, Angle worldRotation, Angle eyeRot)
         {
             return Sys.CalculateBounds((Owner, this), worldPosition, worldRotation, eyeRot);
@@ -1211,6 +1211,9 @@ namespace Robust.Client.GameObjects
             }
             internal Angle _rotation = Angle.Zero;
 
+            // Is the layer actually drawn / does it contribute to the sprites bounding box?
+            internal bool Drawn => _visible && !Blank && CopyToShaderParameters == null;
+
             internal bool _visible = true;
             [ViewVariables(VVAccess.ReadWrite)]
             public bool Visible
@@ -1291,7 +1294,7 @@ namespace Robust.Client.GameObjects
             public LayerRenderingStrategy RenderingStrategy = LayerRenderingStrategy.UseSpriteStrategy;
 
             // TODO SPRITE ACCESS
-            // If someone sets this, it stops the actual layer from being drawn, which should chage the sprites bounds.
+            // If someone sets this, it stops the actual layer from being drawn, which should change the sprites bounds.
             [ViewVariables(VVAccess.ReadWrite)]
             public CopyToShaderParameters? CopyToShaderParameters;
 

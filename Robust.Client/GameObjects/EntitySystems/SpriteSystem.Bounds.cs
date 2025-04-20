@@ -21,14 +21,14 @@ public sealed partial class SpriteSystem
     {
         if (!sprite.Comp.BoundsDirty)
         {
-            DebugTools.Assert(sprite.Comp.Layers.All(x => !x.BoundsDirty || x.Blank || !x.Visible));
+            DebugTools.Assert(sprite.Comp.Layers.All(x => !x.BoundsDirty || !x.Drawn));
             return sprite.Comp._bounds;
         }
 
         var bounds = new Box2();
         foreach (var layer in sprite.Comp.Layers)
         {
-            if (layer is {Visible: true, Blank: false, CopyToShaderParameters: null})
+            if (layer.Drawn)
                 bounds = bounds.Union(GetLocalBounds(layer));
         }
 

@@ -584,6 +584,37 @@ namespace Robust.Client.Graphics.Clyde
 
                 _currentViewport = oldVp;
             }, viewport.ClearColor);
+
+            if (Sharpness > 0)
+            {
+                using (_prof.Group("PostProcessing"))
+                {
+                    RenderInRenderTarget(viewport.PostProcessRenderTarget, () =>
+                    {
+                        _renderHandle.Clear(default, 0, ClearBufferMask.ColorBufferBit);
+
+                        _renderHandle.UseShader(_sharpeningShaderInstance);
+                        _sharpeningShaderInstance.SetParameter("viewportSize", viewport.Size);
+                        _sharpeningShaderInstance.SetParameter("Sharpness", Sharpness);
+                        _sharpeningShaderInstance.SetParameter("SCREEN_TEXTURE", viewport.RenderTarget.Texture);
+                        
+                        _renderHandle.DrawingHandleScreen.DrawTextureRect(
+                            viewport.RenderTarget.Texture,
+                            UIBox2.FromDimensions(Vector2.Zero, viewport.Size),
+                            Color.White
+                        );
+                    });
+
+                    RenderInRenderTarget(viewport.RenderTarget, () =>
+                    {
+                        _renderHandle.DrawingHandleScreen.DrawTextureRect(
+                            viewport.PostProcessRenderTarget.Texture,
+                            UIBox2.FromDimensions(Vector2.Zero, viewport.Size),
+                            Color.White
+                        );
+                    });
+                }
+            }
         }
 
         private static Box2 GetAABB(IEye eye, Viewport viewport)

@@ -19,6 +19,7 @@ namespace Robust.Client.Graphics.Clyde
     {
         [ViewVariables]
         private ClydeShaderInstance _defaultShader = default!;
+        private ClydeShaderInstance _sharpeningShaderInstance = default!;
 
         private string _shaderLibrary = default!;
 
@@ -163,6 +164,11 @@ namespace Robust.Client.Graphics.Clyde
             _defaultShader = (ClydeShaderInstance) InstanceShader(defaultLoadedShader);
 
             _queuedShaderInstance = _defaultShader;
+
+            var sharpeningLoadedShader = _resourceCache
+                .GetResource<ShaderSourceResource>("/Shaders/sharpening.swsl");
+
+            _sharpeningShaderInstance = (ClydeShaderInstance) InstanceShader(sharpeningLoadedShader);
         }
 
         private string ReadEmbeddedShader(string fileName)

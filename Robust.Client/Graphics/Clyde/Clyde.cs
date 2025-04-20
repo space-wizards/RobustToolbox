@@ -90,6 +90,8 @@ namespace Robust.Client.Graphics.Clyde
         private bool _earlyGLInit;
         private bool _threadWindowApi;
 
+        private float Sharpness;
+
         public Clyde()
         {
             _currentBoundRenderTarget = default!;
@@ -122,6 +124,7 @@ namespace Robust.Client.Graphics.Clyde
             _cfg.OnValueChanged(CVars.MaxLightCount, MaxLightsChanged, true);
             _cfg.OnValueChanged(CVars.MaxOccluderCount, MaxOccludersChanged, true);
             _cfg.OnValueChanged(CVars.RenderTileEdges, RenderTileEdgesChanges, true);
+            _cfg.OnValueChanged(CVars.DisplaySharpening, OnSharpnessChanged, true);
             // I can't be bothered to tear down and set these threads up in a cvar change handler.
 
             // Windows and Linux can be trusted to not explode with threaded windowing,
@@ -131,6 +134,7 @@ namespace Robust.Client.Graphics.Clyde
 
             _threadWindowBlit = _cfg.GetCVar(CVars.DisplayThreadWindowBlit);
             _threadWindowApi = _cfg.GetCVar(CVars.DisplayThreadWindowApi);
+            Sharpness = _cfg.GetCVar(CVars.DisplaySharpening) / 10f;
 
             InitKeys();
 
@@ -601,6 +605,11 @@ namespace Robust.Client.Graphics.Clyde
         private bool IsMainThread()
         {
             return Thread.CurrentThread == _gameThread;
+        }
+
+        private void OnSharpnessChanged(int value)
+        {
+            Sharpness = value / 10f;
         }
     }
 }

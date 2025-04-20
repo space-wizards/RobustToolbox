@@ -1008,6 +1008,12 @@ namespace Robust.Shared
             CVarDef.Create("display.windowmode", 0, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
+        /// Sharpening render effect.
+        /// </summary>
+        public static readonly CVarDef<int> DisplaySharpening = 
+            CVarDef.Create("display.sharpening", 0, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
         /// Initial width of the game window when running on windowed mode.
         /// </summary>
         public static readonly CVarDef<int> DisplayWidth =

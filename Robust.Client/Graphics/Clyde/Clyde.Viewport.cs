@@ -31,6 +31,12 @@ namespace Robust.Client.Graphics.Clyde
 
             _viewports.Add(handle, new WeakReference<Viewport>(viewport));
 
+            viewport.PostProcessRenderTarget = CreateRenderTarget(size,
+                new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
+                sampleParameters: new TextureSampleParameters {Filter = false},
+                name: $"{name}-PostProcess"
+            );
+
             return viewport;
         }
 
@@ -103,6 +109,8 @@ namespace Robust.Client.Graphics.Clyde
             // We need two of them because efficient blur works in two stages and also we're doing multiple iterations.
             public RenderTexture WallBleedIntermediateRenderTarget1 = default!;
             public RenderTexture WallBleedIntermediateRenderTarget2 = default!;
+
+            public RenderTexture PostProcessRenderTarget = default!;
 
             public string? Name { get; }
 

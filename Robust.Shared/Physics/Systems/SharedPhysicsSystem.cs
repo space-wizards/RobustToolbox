@@ -43,7 +43,6 @@ namespace Robust.Shared.Physics.Systems
             });
 
         [Dependency] private readonly IManifoldManager _manifoldManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IParallelManager _parallel = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly IDependencyCollection _deps = default!;
@@ -66,11 +65,12 @@ namespace Robust.Shared.Physics.Systems
 
         public bool MetricsEnabled { get; protected set; }
 
-        private EntityQuery<FixturesComponent> _fixturesQuery;
+        private   EntityQuery<FixturesComponent> _fixturesQuery;
         protected EntityQuery<PhysicsComponent> PhysicsQuery;
-        private EntityQuery<TransformComponent> _xformQuery;
-        private EntityQuery<CollideOnAnchorComponent> _anchorQuery;
+        private   EntityQuery<TransformComponent> _xformQuery;
+        private   EntityQuery<CollideOnAnchorComponent> _anchorQuery;
         protected EntityQuery<PhysicsMapComponent> PhysMapQuery;
+        private   EntityQuery<MapGridComponent> _gridQuery;
         protected EntityQuery<MapComponent> MapQuery;
 
         private ComponentRegistration _physicsReg = default!;
@@ -111,6 +111,7 @@ namespace Robust.Shared.Physics.Systems
             _xformQuery = GetEntityQuery<TransformComponent>();
             _anchorQuery = GetEntityQuery<CollideOnAnchorComponent>();
             PhysMapQuery = GetEntityQuery<PhysicsMapComponent>();
+            _gridQuery = GetEntityQuery<MapGridComponent>();
             MapQuery = GetEntityQuery<MapComponent>();
 
             SubscribeLocalEvent<GridAddEvent>(OnGridAdd);

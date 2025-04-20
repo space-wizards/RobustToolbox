@@ -85,11 +85,11 @@ public sealed partial class EntityLookupSystem : EntitySystem
     private EntityQuery<BroadphaseComponent> _broadQuery;
     private EntityQuery<ContainerManagerComponent> _containerQuery;
     private EntityQuery<FixturesComponent> _fixturesQuery;
-
+    private EntityQuery<MapComponent> _mapQuery;
     private EntityQuery<MapGridComponent> _gridQuery;
     private EntityQuery<MetaDataComponent> _metaQuery;
     private EntityQuery<PhysicsComponent> _physicsQuery;
-    private EntityQuery<PhysicsMapComponent> _mapQuery;
+    private EntityQuery<PhysicsMapComponent> _physMapQuery;
     private EntityQuery<TransformComponent> _xformQuery;
 
     /// <summary>
@@ -115,10 +115,11 @@ public sealed partial class EntityLookupSystem : EntitySystem
         _broadQuery = GetEntityQuery<BroadphaseComponent>();
         _containerQuery = GetEntityQuery<ContainerManagerComponent>();
         _fixturesQuery = GetEntityQuery<FixturesComponent>();
+        _mapQuery = GetEntityQuery<MapComponent>();
         _gridQuery = GetEntityQuery<MapGridComponent>();
         _metaQuery = GetEntityQuery<MetaDataComponent>();
         _physicsQuery = GetEntityQuery<PhysicsComponent>();
-        _mapQuery = GetEntityQuery<PhysicsMapComponent>();
+        _physMapQuery = GetEntityQuery<PhysicsMapComponent>();
         _xformQuery = GetEntityQuery<TransformComponent>();
 
         SubscribeLocalEvent<BroadphaseComponent, EntityTerminatingEvent>(OnBroadphaseTerminating);
@@ -153,7 +154,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
     {
         var xform = _xformQuery.GetComponent(uid);
         var map = xform.MapUid;
-        _mapQuery.TryGetComponent(map, out var physMap);
+        _physMapQuery.TryGetComponent(map, out var physMap);
         RemoveChildrenFromTerminatingBroadphase(xform, component, physMap);
         RemComp(uid, component);
     }
@@ -174,12 +175,12 @@ public sealed partial class EntityLookupSystem : EntitySystem
                 continue;
 
             DebugTools.Assert(childXform.Broadphase.Value.Uid == component.Owner);
-            DebugTools.Assert(!HasComp<MapGridComponent>(child));
+            DebugTools.Assert(!_gridQuery.HasComp(child));
 
             if (childXform.Broadphase.Value.CanCollide && _fixturesQuery.TryGetComponent(child, out var fixtures))
             {
                 if (map == null)
-                    _mapQuery.TryGetComponent(childXform.Broadphase.Value.PhysicsMap, out map);
+                    _physMapQuery.TryGetComponent(childXform.Broadphase.Value.PhysicsMap, out map);
 
                 DebugTools.Assert(map == null || childXform.Broadphase.Value.PhysicsMap == map.Owner);
                 var tree = childXform.Broadphase.Value.Static ? component.StaticTree : component.DynamicTree;
@@ -226,7 +227,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         if (xform.MapUid == null)
             return;
 
-        if (!_mapQuery.TryGetComponent(xform.MapUid, out var physMap))
+        if (!_physMapQuery.TryGetComponent(xform.MapUid, out var physMap))
         {
             throw new InvalidOperationException(
                 $"Broadphase's map is missing a physics map comp. Broadphase: {ToPrettyString(broadphase.Owner)}");
@@ -257,7 +258,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
             if (!xform.Broadphase.Value.IsValid())
                 return; // Entity is intentionally not on a broadphase (deferred updating?).
 
-            _mapQuery.TryGetComponent(xform.Broadphase.Value.PhysicsMap, out var oldPhysMap);
+            _physMapQuery.TryGetComponent(xform.Broadphase.Value.PhysicsMap, out var oldPhysMap);
             if (!_broadQuery.TryGetComponent(xform.Broadphase.Value.Uid, out var oldBroadphase))
             {
                 DebugTools.Assert("Encountered deleted broadphase.");
@@ -314,7 +315,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         if (!TryGetCurrentBroadphase(xform, out var broadphase))
             return;
 
-        if (!_mapQuery.TryGetComponent(xform.MapUid, out var physMap))
+        if (!_physMapQuery.TryGetComponent(xform.MapUid, out var physMap))
             throw new InvalidOperationException();
 
         var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform);
@@ -394,7 +395,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         var fixtures = Comp<FixturesComponent>(uid);
         if (old.CanCollide)
         {
-            _mapQuery.TryGetComponent(old.PhysicsMap, out var physicsMap);
+            _physMapQuery.TryGetComponent(old.PhysicsMap, out var physicsMap);
             RemoveBroadTree(broadphase, fixtures, old.Static, physicsMap);
         }
         else
@@ -437,7 +438,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         if (broadphaseXform.MapID == MapId.Nullspace)
             return;
 
-        if (!_mapQuery.TryGetComponent(broadphaseXform.MapUid, out var physMap))
+        if (!_physMapQuery.TryGetComponent(broadphaseXform.MapUid, out var physMap))
             throw new InvalidOperationException($"Physics Broadphase is missing physics map. {ToPrettyString(broadUid)}");
 
         AddOrUpdatePhysicsTree(uid, broadUid, broadphase, broadphaseXform, physMap, xform, body, fixtures);
@@ -525,7 +526,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
     private void OnEntityInit(Entity<MetaDataComponent> uid)
     {
-        if (_container.IsEntityOrParentInContainer(uid, uid) || HasComp<MapComponent>(uid) || HasComp<MapGridComponent>(uid))
+        if (_container.IsEntityOrParentInContainer(uid, uid) || _mapQuery.HasComp(uid) || _gridQuery.HasComp(uid))
             return;
 
         // TODO can this just be done implicitly via transform startup?
@@ -541,11 +542,11 @@ public sealed partial class EntityLookupSystem : EntitySystem
                 OnGridChangedMap(args);
             return;
         }
-        DebugTools.Assert(!HasComp<MapGridComponent>(args.Sender));
+        DebugTools.Assert(!_gridQuery.HasComp(args.Sender));
 
         if (args.Component.MapUid == args.Sender)
             return;
-        DebugTools.Assert(!HasComp<MapComponent>(args.Sender));
+        DebugTools.Assert(!_mapQuery.HasComp(args.Sender));
 
         if (args.ParentChanged)
             UpdateParent(args.Sender, args.Component);
@@ -562,12 +563,12 @@ public sealed partial class EntityLookupSystem : EntitySystem
             return;
 
         // We need to recursively update the cached data and remove children from the move buffer
-        DebugTools.Assert(HasComp<MapGridComponent>(args.Sender));
-        DebugTools.Assert(!newMap.IsValid() || HasComp<MapComponent>(newMap));
-        DebugTools.Assert(!oldMap.IsValid() || HasComp<MapComponent>(oldMap));
+        DebugTools.Assert(_gridQuery.HasComp(args.Sender));
+        DebugTools.Assert(!newMap.IsValid() || _mapQuery.HasComp(newMap));
+        DebugTools.Assert(!oldMap.IsValid() || _mapQuery.HasComp(oldMap));
 
-        var oldBuffer = _mapQuery.CompOrNull(oldMap)?.MoveBuffer;
-        var newBuffer = _mapQuery.CompOrNull(newMap)?.MoveBuffer;
+        var oldBuffer = _physMapQuery.CompOrNull(oldMap)?.MoveBuffer;
+        var newBuffer = _physMapQuery.CompOrNull(newMap)?.MoveBuffer;
 
         foreach (var child in args.Component._children)
         {
@@ -635,7 +636,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
             if (!xform.Broadphase.Value.IsValid())
                 return; // Entity is intentionally not on a broadphase (deferred updating?).
 
-            _mapQuery.TryGetComponent(xform.Broadphase.Value.PhysicsMap, out oldPhysMap);
+            _physMapQuery.TryGetComponent(xform.Broadphase.Value.PhysicsMap, out oldPhysMap);
 
             if (!_broadQuery.TryGetComponent(xform.Broadphase.Value.Uid, out oldBroadphase))
             {
@@ -667,7 +668,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
             return;
 
         var newBroadphaseXform = _xformQuery.GetComponent(newBroadphase.Owner);
-        if (!_mapQuery.TryGetComponent(newBroadphaseXform.MapUid, out var physMap))
+        if (!_physMapQuery.TryGetComponent(newBroadphaseXform.MapUid, out var physMap))
         {
             throw new InvalidOperationException(
                 $"Broadphase's map is missing a physics map comp. Broadphase: {ToPrettyString(newBroadphase.Owner)}");
@@ -712,7 +713,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         bool recursive = true)
     {
         var broadphaseXform = _xformQuery.GetComponent(broadphase.Owner);
-        if (!_mapQuery.TryGetComponent(broadphaseXform.MapUid, out var physMap))
+        if (!_physMapQuery.TryGetComponent(broadphaseXform.MapUid, out var physMap))
         {
             throw new InvalidOperationException(
                 $"Broadphase's map is missing a physics map comp. Broadphase: {ToPrettyString(broadphase.Owner)}");
@@ -793,10 +794,10 @@ public sealed partial class EntityLookupSystem : EntitySystem
         if (!TryGetCurrentBroadphase(xform, out var broadphase))
             return;
 
-        DebugTools.Assert(!HasComp<MapGridComponent>(uid));
-        DebugTools.Assert(!HasComp<MapComponent>(uid));
+        DebugTools.Assert(!_gridQuery.HasComp(uid));
+        DebugTools.Assert(!_mapQuery.HasComp(uid));
         PhysicsMapComponent? physMap = null;
-        if (xform.Broadphase!.Value.PhysicsMap is { Valid: true } map && !_mapQuery.TryGetComponent(map, out physMap))
+        if (xform.Broadphase!.Value.PhysicsMap is { Valid: true } map && !_physMapQuery.TryGetComponent(map, out physMap))
         {
             throw new InvalidOperationException(
                 $"Broadphase's map is missing a physics map comp. Broadphase: {ToPrettyString(broadphase.Owner)}");
@@ -834,7 +835,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
         if (old.PhysicsMap.IsValid() && physicsMap?.Owner != old.PhysicsMap)
         {
-            if (!_mapQuery.TryGetComponent(old.PhysicsMap, out physicsMap))
+            if (!_physMapQuery.TryGetComponent(old.PhysicsMap, out physicsMap))
                 Log.Error($"Entity {ToPrettyString(uid)} has missing physics map?");
         }
 

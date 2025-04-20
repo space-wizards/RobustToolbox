@@ -289,7 +289,7 @@ namespace Robust.Server.Physics
                     }
 
                     _maps.SetTiles(newGrid.Owner, newGrid.Comp, tileData);
-                    DebugTools.Assert(HasComp<MapGridComponent>(newGridUid), "A split grid had no tiles?");
+                    DebugTools.Assert(_gridQuery.HasComp(newGridUid), "A split grid had no tiles?");
 
                     // Set tiles on new grid + update anchored entities
                     foreach (var node in group)

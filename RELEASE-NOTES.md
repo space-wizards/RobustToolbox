@@ -35,7 +35,9 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `RobustIntegrationTest` now pools server/client instances by default. If a custom settings class is provided, it will still disable pooling unless explicitly enabled.
+  * Server/Client instances that are returned to the pool should be disconnected. This might require you to update some tests.
+  * Pooled instances also require you to use `RobustIntegrationTest` methods like `WaitPost()` to ensure the correct thread is used.
 
 ### New features
 
@@ -43,7 +45,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix `EntityDeserializer` improperly setting entity lifestages when loading a post-mapinit map.
 
 ### Other
 

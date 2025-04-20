@@ -43,6 +43,5 @@ public sealed class TrySpawnInContainerTest : EntitySpawnHelpersTest
         });
 
         await Server.WaitPost(() => MapSys.DeleteMap(MapId));
-        Server.Dispose();
     }
 }

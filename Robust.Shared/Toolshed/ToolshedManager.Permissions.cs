@@ -1,14 +1,12 @@
-﻿using Robust.Shared.Player;
+﻿using System;
+using Robust.Shared.Player;
 using Robust.Shared.Toolshed.Errors;
-#if !CLIENT_SCRIPTING
-using System;
-#endif
 
 namespace Robust.Shared.Toolshed;
 
 public sealed partial class ToolshedManager
 {
-    private ToolshedEnvironment? _defaultEnvironment = default!;
+    private ToolshedEnvironment? _defaultEnvironment;
 
     /// <summary>
     ///     The active permission controller, if any.
@@ -35,11 +33,9 @@ public sealed partial class ToolshedManager
     {
         get
         {
-#if !CLIENT_SCRIPTING
-            if (_net.IsClient)
-                throw new NotImplementedException("Toolshed is not yet ready for client-side use.");
-#endif
-           _defaultEnvironment ??= new();
+            if (!Started)
+                throw new Exception("Toolshed Manager has not yet been started.");
+
             return _defaultEnvironment;
         }
     }

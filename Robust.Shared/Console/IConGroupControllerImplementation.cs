@@ -1,7 +1,7 @@
 ﻿using Robust.Shared.Player;
 using Robust.Shared.Toolshed;
 
-namespace Robust.Server.Console
+namespace Robust.Shared.Console
 {
     public interface IConGroupControllerImplementation : IPermissionController
     {

@@ -1,6 +1,7 @@
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ComponentTrees;
@@ -52,8 +53,8 @@ internal sealed class RecursiveMoveSystem : EntitySystem
         if (args.Component.MapUid == args.Sender || args.Component.GridUid == args.Sender)
             return;
 
-        DebugTools.Assert(!_mapManager.IsMap(args.Sender));
-        DebugTools.Assert(!_mapManager.IsGrid(args.Sender));
+        DebugTools.Assert(!HasComp<MapComponent>(args.Sender));
+        DebugTools.Assert(!HasComp<MapGridComponent>(args.Sender));
 
         AnythingMovedSubHandler(args.Sender, args.Component);
     }

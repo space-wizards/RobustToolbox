@@ -24,7 +24,6 @@ public abstract partial class SharedJointSystem : EntitySystem
     private EntityQuery<JointComponent> _jointsQuery;
     private EntityQuery<PhysicsComponent> _physicsQuery;
     private EntityQuery<JointRelayTargetComponent> _relayQuery;
-    private EntityQuery<TransformComponent> _xformQuery;
 
     // To avoid issues with component states we'll queue up all dirty joints and check it every tick to see if
     // we can delete the component.
@@ -38,7 +37,6 @@ public abstract partial class SharedJointSystem : EntitySystem
 
         _jointsQuery = GetEntityQuery<JointComponent>();
         _relayQuery = GetEntityQuery<JointRelayTargetComponent>();
-        _xformQuery = GetEntityQuery<TransformComponent>();
         _physicsQuery = GetEntityQuery<PhysicsComponent>();
         UpdatesOutsidePrediction = true;
 
@@ -348,7 +346,7 @@ public abstract partial class SharedJointSystem : EntitySystem
         if (!Resolve(uid, ref xform))
             return Vector2.Zero;
 
-        return Physics.Transform.MulT(new Quaternion2D((float) xform.WorldRotation.Theta), worldVector);
+        return Physics.Transform.MulT(new Quaternion2D((float) _transform.GetWorldRotation(xform).Theta), worldVector);
     }
 
     #endregion

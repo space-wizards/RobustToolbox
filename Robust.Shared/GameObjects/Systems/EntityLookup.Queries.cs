@@ -429,7 +429,7 @@ public sealed partial class EntityLookupSystem
         float arcWidth,
         LookupFlags flags = DefaultFlags)
     {
-        var position = coordinates.ToMap(EntityManager, _transform);
+        var position = _transform.ToMapCoordinates(coordinates);
 
         return GetEntitiesInArc(position, range, direction, arcWidth, flags);
     }
@@ -628,7 +628,7 @@ public sealed partial class EntityLookupSystem
         if (!coordinates.IsValid(EntityManager))
             return false;
 
-        var mapPos = coordinates.ToMap(EntityManager, _transform);
+        var mapPos = _transform.ToMapCoordinates(coordinates);
         return AnyEntitiesIntersecting(mapPos, flags);
     }
 
@@ -637,13 +637,13 @@ public sealed partial class EntityLookupSystem
         if (!coordinates.IsValid(EntityManager))
             return false;
 
-        var mapPos = coordinates.ToMap(EntityManager, _transform);
+        var mapPos = _transform.ToMapCoordinates(coordinates);
         return AnyEntitiesInRange(mapPos, range, flags);
     }
 
     public HashSet<EntityUid> GetEntitiesIntersecting(EntityCoordinates coordinates, LookupFlags flags = DefaultFlags)
     {
-        var mapPos = coordinates.ToMap(EntityManager, _transform);
+        var mapPos = _transform.ToMapCoordinates(coordinates);
         return GetEntitiesIntersecting(mapPos, flags);
     }
 
@@ -656,7 +656,7 @@ public sealed partial class EntityLookupSystem
 
     public void GetEntitiesInRange(EntityCoordinates coordinates, float range, HashSet<EntityUid> entities, LookupFlags flags = DefaultFlags)
     {
-        var mapPos = coordinates.ToMap(EntityManager, _transform);
+        var mapPos = _transform.ToMapCoordinates(coordinates);
 
         if (mapPos.MapId == MapId.Nullspace)
             return;

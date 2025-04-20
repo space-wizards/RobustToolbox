@@ -30,6 +30,23 @@ namespace Robust.Client.Graphics.Clyde
         private int _indicesPerChunk(MapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * GetQuadBatchIndexCount();
 
         private List<Entity<MapGridComponent>> _grids = new();
+        private bool _drawTileEdges;
+
+        private void RenderTileEdgesChanges(bool value)
+        {
+            _drawTileEdges = value;
+            if (!value)
+                return;
+
+            // Dirty all Edges
+            foreach (var gridData in _mapChunkData.Values)
+            {
+                foreach (var chunk in gridData.Values)
+                {
+                    chunk.EdgeDirty = true;
+                }
+            }
+        }
 
         private void _drawGrids(Viewport viewport, Box2 worldAABB, Box2Rotated worldBounds, IEye eye)
         {
@@ -81,6 +98,9 @@ namespace Robust.Client.Graphics.Clyde
 
                     _updateChunkMesh(mapGrid, chunk, datum);
 
+                    if (!_drawTileEdges)
+                        continue;
+
                     // Dirty edge tiles for next step.
                     datum.EdgeDirty = true;
 
@@ -99,17 +119,16 @@ namespace Robust.Client.Graphics.Clyde
                     }
                 }
 
-                enumerator = mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, worldBounds);
-
                 // Handle edge sprites.
-                while (enumerator.MoveNext(out var chunk))
+                if (_drawTileEdges)
                 {
-                    var datum = data[chunk.Indices];
-
-                    if (!datum.EdgeDirty)
-                        continue;
-
-                    _updateChunkEdges(mapGrid, chunk, datum);
+                    enumerator = mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, worldBounds);
+                    while (enumerator.MoveNext(out var chunk))
+                    {
+                        var datum = data[chunk.Indices];
+                        if (datum.EdgeDirty)
+                            _updateChunkEdges(mapGrid, chunk, datum);
+                    }
                 }
 
                 enumerator = mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, worldBounds);
@@ -129,7 +148,7 @@ namespace Robust.Client.Graphics.Clyde
                         CheckGlError();
                     }
 
-                    if (datum.EdgeCount > 0)
+                    if (_drawTileEdges && datum.EdgeCount > 0)
                     {
                         BindVertexArray(datum.EdgeVAO);
                         CheckGlError();
@@ -138,7 +157,6 @@ namespace Robust.Client.Graphics.Clyde
                         GL.DrawElements(GetQuadGLPrimitiveType(), datum.EdgeCount * GetQuadBatchIndexCount(), DrawElementsType.UnsignedShort, 0);
                         CheckGlError();
                     }
-
                 }
 
                 requiresFlush = false;
@@ -274,7 +292,8 @@ namespace Robust.Client.Graphics.Clyde
                     var gridX = x + chunkOriginScaled.X;
                     var gridY = y + chunkOriginScaled.Y;
                     var tile = chunk.GetTile(x, y);
-                    var tileDef = _tileDefinitionManager[tile.TypeId];
+                    if (!_tileDefinitionManager.TryGetDefinition(tile.TypeId, out var tileDef))
+                        continue;
 
                     // Edge render
                     for (var nx = -1; nx <= 1; nx++)
@@ -288,14 +307,15 @@ namespace Robust.Client.Graphics.Clyde
                             if (!maps.TryGetTile(grid.Comp, neighborIndices, out var neighborTile))
                                 continue;
 
-                            var neighborDef = _tileDefinitionManager[neighborTile.TypeId];
+                            if (!_tileDefinitionManager.TryGetDefinition(neighborTile.TypeId, out var neighborDef))
+                                continue;
 
                             // If it's the same tile then no edge to be drawn.
                             if (tile.TypeId == neighborTile.TypeId || neighborDef.EdgeSprites.Count == 0)
                                 continue;
 
-                            // If neighbor is a lower priority then us then don't draw on our tile.
-                            if (neighborDef.EdgeSpritePriority < tileDef.EdgeSpritePriority)
+                            // If neighbor is a lower or same priority then us then don't draw on our tile.
+                            if (neighborDef.EdgeSpritePriority <= tileDef.EdgeSpritePriority)
                                 continue;
 
                             var direction = new Vector2i(nx, ny).AsDirection().GetOpposite();

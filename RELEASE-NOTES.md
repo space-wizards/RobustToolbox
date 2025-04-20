@@ -46,6 +46,7 @@ END TEMPLATE-->
 ### Bugfixes
 
 * Fix `EntityDeserializer` improperly setting entity lifestages when loading a post-mapinit map.
+* Fix `EntityManager.PredictedDeleteEntity()` not deleting pure client-side entities.
 
 ### Other
 
@@ -81,8 +82,8 @@ END TEMPLATE-->
   * The MappingDataNode class has various helper methods that still accept a ValueDataNode, but these methods are marked as obsolete and may be removed in the future.
   * yaml validators should use `MappingDataNode.GetKeyNode()` when validating mapping keys, so that errors can print node start & end information
 * ValueTuple yaml serialization has changed
-  * Previously they would get serialized into a single mapping with one entry (i.e., `{foo : bar }` 
-  * Now they serialize into a sequence (i.e., `[foo, bar]`
+  * Previously they would get serialized into a single mapping with one entry (i.e., `{foo : bar }`)
+  * Now they serialize into a sequence (i.e., `[foo, bar]`)
   * The ValueTuple serializer will still try to read mappings, but due to the MappingDataNode this may fail if the previously serialized "key" can't be read as a simple string
 
 ### New features

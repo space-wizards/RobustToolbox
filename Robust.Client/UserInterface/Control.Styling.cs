@@ -1,6 +1,9 @@
 ﻿using System.Collections;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
+using Robust.Shared.Collections;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface
@@ -41,7 +44,7 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private readonly Dictionary<string, object> _styleProperties = new();
+        private FrozenDictionary<string, object> _styleProperties = FrozenDictionary<string, object>.Empty;
         private readonly HashSet<string> _styleClasses = new();
         private readonly HashSet<string> _stylePseudoClass = new();
 
@@ -151,8 +154,6 @@ namespace Robust.Client.UserInterface
 
         public void DoStyleUpdate()
         {
-            _styleProperties.Clear();
-
             if (_stylesheetUpdateNeeded)
             {
                 _actualStylesheetCached = UserInterfaceManager.Stylesheet;
@@ -172,11 +173,13 @@ namespace Robust.Client.UserInterface
             var stylesheet = _actualStylesheetCached;
             if (stylesheet == null)
             {
+                _styleProperties = FrozenDictionary<string, object>.Empty;
                 return;
             }
 
             // Get all rules that apply to us, sort them and apply they params again.
-            var ruleList = new List<(int index, StyleRule rule)>();
+            var ruleList = new ValueList<(int index, StyleRule rule)>();
+            var styleProps = new Dictionary<string, object>();
 
             // Unsorted rules
             foreach (var (index, rule) in stylesheet.UnsortedRules)
@@ -218,7 +221,10 @@ namespace Robust.Client.UserInterface
             {
                 foreach (var property in rule.Properties)
                 {
-                    if (_styleProperties.ContainsKey(property.Name))
+                    ref var existing =
+                        ref CollectionsMarshal.GetValueRefOrAddDefault(styleProps, property.Name, out var exists);
+
+                    if (exists)
                     {
                         // Since we've sorted by priority in reverse,
                         // the first ones to get applied have highest priority.
@@ -226,10 +232,11 @@ namespace Robust.Client.UserInterface
                         continue;
                     }
 
-                    _styleProperties[property.Name] = property.Value;
+                    existing = property.Value;
                 }
             }
 
+            _styleProperties = styleProps.ToFrozenDictionary();
             StylePropertiesChanged();
 
             // Setting this at the end of the function to prevent style updates from ever re-queueing a style update,

@@ -133,7 +133,7 @@ namespace Robust.Shared.GameObjects
             if (xform.GridUid == xform.ParentUid)
                 return xform.Coordinates;
 
-            DebugTools.Assert(!_mapManager.IsGrid(uid) && !_mapManager.IsMap(uid));
+            DebugTools.Assert(!HasComp<MapGridComponent>(uid) && !HasComp<MapComponent>(uid));
 
             // Not parented to grid so convert their pos back to the grid.
             var worldPos = GetWorldPosition(xform, XformQuery);
@@ -174,7 +174,7 @@ namespace Robust.Shared.GameObjects
             if (mapId == parentUid)
                 return coordinates;
 
-            DebugTools.Assert(!_mapManager.IsGrid(parentUid) && !_mapManager.IsMap(parentUid));
+            DebugTools.Assert(!HasComp<MapGridComponent>(parentUid) && !HasComp<MapComponent>(parentUid));
 
             // Not parented to grid so convert their pos back to the grid.
             var worldPos = Vector2.Transform(coordinates.Position, GetWorldMatrix(parentXform, XformQuery));
@@ -201,7 +201,7 @@ namespace Robust.Shared.GameObjects
             if (xform.GridUid == xform.ParentUid)
                 return (xform.Coordinates, GetWorldRotation(xform, XformQuery));
 
-            DebugTools.Assert(!_mapManager.IsGrid(uid) && !_mapManager.IsMap(uid));
+            DebugTools.Assert(!HasComp<MapComponent>(uid) && !HasComp<MapComponent>(uid));
 
             var (pos, worldRot) = GetWorldPositionRotation(xform, XformQuery);
 
@@ -316,6 +316,10 @@ namespace Robust.Shared.GameObjects
         ///     Current parent entity of this entity.
         /// </summary>
         public readonly NetEntity ParentID;
+        // TODO Delta-states
+        // If the transform component ever gets delta states, then the client state manager needs to be updated.
+        // Currently it explicitly looks for a "TransformComponentState" when determining an entity's parent for the
+        // sake of sorting the states that need to be applied base on the transform hierarchy.
 
         /// <summary>
         ///     Current position offset of the entity.

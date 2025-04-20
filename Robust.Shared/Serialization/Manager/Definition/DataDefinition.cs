@@ -95,7 +95,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             for (var i = 0; i < BaseFieldDefinitions.Length; i++)
             {
                 var fieldDefinition = BaseFieldDefinitions[i];
-                fieldAssigners[i] = InternalReflectionUtils.EmitFieldAssigner<T>(fieldDefinition.BackingField);
+                fieldAssigners[i] = InternalReflectionUtils.EmitFieldAssigner(typeof(T), fieldDefinition.BackingField);
                 fieldAccessors[i] = InternalReflectionUtils.EmitFieldAccessor(typeof(T), fieldDefinition);
 
                 if (fieldDefinition.Attribute.CustomTypeSerializer != null)
@@ -266,27 +266,21 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
             foreach (var (key, val) in mapping.Children)
             {
-                if (key is not ValueDataNode valueDataNode)
+                if (!TryGetIndex(key, out var idx))
                 {
-                    validatedMapping.Add(new ErrorNode(key, "Key not ValueDataNode."), new InconclusiveNode(val));
-                    continue;
-                }
-
-                if (!TryGetIndex(valueDataNode.Value, out var idx))
-                {
-                    if (TryGetIncludeMappingPair(includeValidations, valueDataNode.Value, out var validatedNotFoundPair))
+                    if (TryGetIncludeMappingPair(includeValidations, key, out var validatedNotFoundPair))
                     {
                         validatedMapping.Add(validatedNotFoundPair.Key, validatedNotFoundPair.Value);
                         continue;
                     }
 
-                    var error = new FieldNotFoundErrorNode(valueDataNode, typeof(T));
+                    var error = new FieldNotFoundErrorNode(mapping.GetKeyNode(key), typeof(T));
 
                     validatedMapping.Add(error, new InconclusiveNode(val));
                     continue;
                 }
 
-                var keyValidated = serialization.ValidateNode<string>(key, context);
+                var keyValidated = serialization.ValidateNode<string>(mapping.GetKeyNode(key), context);
 
                 ValidationNode valNode;
                 if (IsNull(val))
@@ -295,7 +289,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     {
                         var error = new ErrorNode(
                             val,
-                            $"Field \"{valueDataNode.Value}\" had null value despite not being annotated as nullable.");
+                            $"Field \"{key}\" had null value despite not being annotated as nullable.");
 
                         validatedMapping.Add(keyValidated, error);
                         continue;
@@ -309,7 +303,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 }
 
                 //include node errors override successful nodes on the main datadef
-                if (valNode is not ErrorNode && TryGetIncludeMappingPair(includeValidations, valueDataNode.Value, out var validatedPair))
+                if (valNode is not ErrorNode && TryGetIncludeMappingPair(includeValidations, key, out var validatedPair))
                 {
                     if (validatedPair.Value is ErrorNode)
                     {

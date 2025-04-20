@@ -125,7 +125,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         SubscribeLocalEvent<BroadphaseComponent, ComponentAdd>(OnBroadphaseAdd);
         SubscribeLocalEvent<BroadphaseComponent, ComponentInit>(OnBroadphaseInit);
         SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
-        SubscribeLocalEvent<MapChangedEvent>(OnMapChange);
+        SubscribeLocalEvent<MapCreatedEvent>(OnMapChange);
 
         _transform.OnBeforeMoveEvent += OnMove;
         EntityManager.EntityInitialized += OnEntityInit;
@@ -174,7 +174,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
                 continue;
 
             DebugTools.Assert(childXform.Broadphase.Value.Uid == component.Owner);
-            DebugTools.Assert(!_mapManager.IsGrid(child));
+            DebugTools.Assert(!HasComp<MapGridComponent>(child));
 
             if (childXform.Broadphase.Value.CanCollide && _fixturesQuery.TryGetComponent(child, out var fixtures))
             {
@@ -194,9 +194,9 @@ public sealed partial class EntityLookupSystem : EntitySystem
         }
     }
 
-    private void OnMapChange(MapChangedEvent ev)
+    private void OnMapChange(MapCreatedEvent ev)
     {
-        if (ev.Created && ev.Map != MapId.Nullspace)
+        if (ev.MapId != MapId.Nullspace)
         {
             EnsureComp<BroadphaseComponent>(ev.Uid);
         }
@@ -380,7 +380,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
         if (xform.GridUid == uid)
             return;
-        DebugTools.Assert(!_mapManager.IsGrid(uid));
+        DebugTools.Assert(!HasComp<MapGridComponent>(uid));
 
         if (xform.Broadphase is not { Valid: true } old)
             return; // entity is not on any broadphase
@@ -490,7 +490,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
             {
                 var bounds = fixture.Shape.ComputeAABB(broadphaseTransform, i);
                 var proxy = fixture.Proxies[i];
-                tree.MoveProxy(proxy.ProxyId, bounds, Vector2.Zero);
+                tree.MoveProxy(proxy.ProxyId, bounds);
                 proxy.AABB = bounds;
                 moveBuffer[proxy] = fixture.Shape.ComputeAABB(mapTransform, i);
             }
@@ -525,7 +525,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
     private void OnEntityInit(Entity<MetaDataComponent> uid)
     {
-        if (_container.IsEntityOrParentInContainer(uid, uid) || _mapManager.IsMap(uid) || _mapManager.IsGrid(uid))
+        if (_container.IsEntityOrParentInContainer(uid, uid) || HasComp<MapComponent>(uid) || HasComp<MapGridComponent>(uid))
             return;
 
         // TODO can this just be done implicitly via transform startup?
@@ -541,11 +541,11 @@ public sealed partial class EntityLookupSystem : EntitySystem
                 OnGridChangedMap(args);
             return;
         }
-        DebugTools.Assert(!_mapManager.IsGrid(args.Sender));
+        DebugTools.Assert(!HasComp<MapGridComponent>(args.Sender));
 
         if (args.Component.MapUid == args.Sender)
             return;
-        DebugTools.Assert(!_mapManager.IsMap(args.Sender));
+        DebugTools.Assert(!HasComp<MapComponent>(args.Sender));
 
         if (args.ParentChanged)
             UpdateParent(args.Sender, args.Component);

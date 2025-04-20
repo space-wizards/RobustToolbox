@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Robust.Shared.Asynchronous;
+using Robust.Shared.Collections;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -335,98 +336,127 @@ namespace Robust.Shared.Prototypes
         }
 
         /// <inheritdoc />
-        public void ReloadPrototypes(Dictionary<Type, HashSet<string>> modified,
+        public void ReloadPrototypes(
+            Dictionary<Type, HashSet<string>> modified,
             Dictionary<Type, HashSet<string>>? removed = null)
         {
-#if TOOLS
             var prototypeTypeOrder = modified.Keys.ToList();
             prototypeTypeOrder.Sort(SortPrototypesByPriority);
 
-            var pushed = new Dictionary<Type, HashSet<string>>();
+            var byType = new Dictionary<Type, PrototypesReloadedEventArgs.PrototypeChangeSet>();
             var modifiedKinds = new HashSet<KindData>();
+            var toProcess = new HashSet<string>();
+            var processQueue = new Queue<string>();
 
             foreach (var kind in prototypeTypeOrder)
             {
+                var modifiedInstances = new Dictionary<string, IPrototype>();
                 var kindData = _kinds[kind];
-                if (!kind.IsAssignableTo(typeof(IInheritingPrototype)))
-                {
-                    foreach (var id in modified[kind])
-                    {
-                        var prototype = (IPrototype)_serializationManager.Read(kind, kindData.Results[id])!;
-                        kindData.UnfrozenInstances ??= kindData.Instances.ToDictionary();
-                        kindData.UnfrozenInstances[id] = prototype;
-                        modifiedKinds.Add(kindData);
-                    }
 
-                    continue;
-                }
+                var tree = kindData.Inheritance;
+                toProcess.Clear();
+                processQueue.Clear();
 
-                var tree = kindData.Inheritance!;
-                var processQueue = new Queue<string>();
+                DebugTools.AssertEqual(kind.IsAssignableTo(typeof(IInheritingPrototype)), tree != null);
+                DebugTools.Assert(tree != null || kindData.RawResults == kindData.Results);
+
                 foreach (var id in modified[kind])
                 {
+                    AddToQueue(id);
+                }
+
+                void AddToQueue(string id)
+                {
+                    if (!toProcess.Add(id))
+                        return;
                     processQueue.Enqueue(id);
+
+                    if (tree == null)
+                        return;
+
+                    if (!tree.TryGetChildren(id, out var children))
+                        return;
+
+                    foreach (var child in children!)
+                    {
+                        AddToQueue(child);
+                    }
                 }
 
                 while (processQueue.TryDequeue(out var id))
                 {
-                    var pushedSet = pushed.GetOrNew(kind);
-
-                    if (tree.TryGetParents(id, out var parents))
+                    DebugTools.Assert(toProcess.Contains(id));
+                    if (tree != null)
                     {
-                        var nonPushedParent = false;
-                        foreach (var parent in parents)
+                        if (tree.TryGetParents(id, out var parents))
                         {
-                            //our parent has been reloaded and has not been added to the pushedSet yet
-                            if (modified[kind].Contains(parent) && !pushedSet.Contains(parent))
+                            DebugTools.Assert(parents.Length > 0);
+                            var nonPushedParent = false;
+                            foreach (var parent in parents)
                             {
-                                //we re-queue ourselves at the end of the queue
+                                if (!toProcess.Contains(parent))
+                                    continue;
+
+                                // our parent has been modified, but has not yet been processed.
+                                // we re-queue ourselves at the end of the queue.
+                                DebugTools.Assert(processQueue.Contains(parent));
                                 processQueue.Enqueue(id);
                                 nonPushedParent = true;
                                 break;
                             }
+
+                            if (nonPushedParent)
+                                continue;
+
+                            if (parents.Length == 1)
+                            {
+                                kindData.Results[id] = _serializationManager.PushCompositionWithGenericNode(
+                                    kind,
+                                    kindData.Results[parents[0]],
+                                    kindData.RawResults[id]);
+                            }
+                            else
+                            {
+                                var parentMaps = new MappingDataNode[parents.Length];
+                                for (var i = 0; i < parentMaps.Length; i++)
+                                {
+                                    parentMaps[i] = kindData.Results[parents[i]];
+                                }
+
+                                kindData.Results[id] = _serializationManager.PushCompositionWithGenericNode(
+                                    kind,
+                                    parentMaps,
+                                    kindData.RawResults[id]);
+                            }
                         }
-
-                        if (nonPushedParent)
-                            continue;
-
-                        var parentMaps = new MappingDataNode[parents.Length];
-                        for (var i = 0; i < parentMaps.Length; i++)
+                        else
                         {
-                            parentMaps[i] = kindData.Results[parents[i]];
+                            kindData.Results[id] = kindData.RawResults[id];
                         }
-
-                        kindData.Results[id] = _serializationManager.PushCompositionWithGenericNode(
-                            kind,
-                            parentMaps,
-                            kindData.Results[id]);
                     }
 
+                    toProcess.Remove(id);
 
                     var prototype = TryReadPrototype(kind, id, kindData.Results[id], SerializationHookContext.DontSkipHooks);
-                    if (prototype != null)
-                    {
-                        kindData.UnfrozenInstances ??= kindData.Instances.ToDictionary();
-                        kindData.UnfrozenInstances[id] = prototype;
-                        modifiedKinds.Add(kindData);
-                    }
+                    if (prototype == null)
+                        continue;
 
-                    pushedSet.Add(id);
+                    kindData.UnfrozenInstances ??= kindData.Instances.ToDictionary();
+                    kindData.UnfrozenInstances[id] = prototype;
+                    modifiedInstances.Add(id, prototype);
                 }
+
+                if (modifiedInstances.Count == 0)
+                    continue;
+
+                byType.Add(kindData.Type, new(modifiedInstances));
+                modifiedKinds.Add(kindData);
             }
 
             Freeze(modifiedKinds);
+
             if (modifiedKinds.Any(x => x.Type == typeof(EntityPrototype) || x.Type == typeof(EntityCategoryPrototype)))
                 UpdateCategories();
-#endif
-
-            //todo paul i hate it but i am not opening that can of worms in this refactor
-            var byType = modified
-                .ToDictionary(
-                    g => g.Key,
-                    g => new PrototypesReloadedEventArgs.PrototypeChangeSet(
-                        g.Value.Where(x => _kinds[g.Key].Instances.ContainsKey(x))
-                            .ToDictionary(a => a, a => _kinds[g.Key].Instances[a])));
 
             var modifiedTypes = new HashSet<Type>(byType.Keys);
             if (removed != null)
@@ -592,11 +622,9 @@ namespace Robust.Shared.Prototypes
 
             // var sw = RStopwatch.StartNew();
 
-            var results = new Dictionary<string, InheritancePushDatum>(
-                data.Results.Select(k => new KeyValuePair<string, InheritancePushDatum>(
-                    k.Key,
-                    new InheritancePushDatum(k.Value, tree.GetParentsCount(k.Key))))
-            );
+            var results = data.RawResults.ToDictionary(
+                k => k.Key,
+                k => new InheritancePushDatum(k.Value, tree.GetParentsCount(k.Key)));
 
             using var countDown = new CountdownEvent(results.Count);
 
@@ -611,16 +639,26 @@ namespace Robust.Shared.Prototypes
                 {
                     if (tree.TryGetParents(id, out var parents))
                     {
-                        var parentNodes = new MappingDataNode[parents.Length];
-                        for (var i = 0; i < parents.Length; i++)
+                        if (parents.Length == 1)
                         {
-                            parentNodes[i] = results[parents[i]].Result;
+                            datum.Result = _serializationManager.PushCompositionWithGenericNode(
+                                kind,
+                                results[parents[0]].Result,
+                                datum.Result);
                         }
+                        else
+                        {
+                            var parentNodes = new MappingDataNode[parents.Length];
+                            for (var i = 0; i < parents.Length; i++)
+                            {
+                                parentNodes[i] = results[parents[i]].Result;
+                            }
 
-                        datum.Result = _serializationManager.PushCompositionWithGenericNode(
-                            kind,
-                            parentNodes,
-                            datum.Result);
+                            datum.Result = _serializationManager.PushCompositionWithGenericNode(
+                                kind,
+                                parentNodes,
+                                datum.Result);
+                        }
                     }
 
                     if (tree.TryGetChildren(id, out var children))
@@ -1015,6 +1053,8 @@ namespace Robust.Shared.Prototypes
 
             if (kind.IsAssignableTo(typeof(IInheritingPrototype)))
                 kindData.Inheritance = new MultiRootInheritanceGraph<string>();
+            else
+                kindData.Results = kindData.RawResults;
         }
 
         /// <inheritdoc />
@@ -1026,7 +1066,13 @@ namespace Robust.Shared.Prototypes
 
             public FrozenDictionary<string, IPrototype> Instances = FrozenDictionary<string, IPrototype>.Empty;
 
-            public readonly Dictionary<string, MappingDataNode> Results = new();
+            public Dictionary<string, MappingDataNode> Results = new();
+
+            /// <summary>
+            /// Variant of <see cref="Results"/> prior to inheritance pushing. If the kind does not have inheritance,
+            /// then this is just the same dictionary.
+            /// </summary>
+            public readonly Dictionary<string, MappingDataNode> RawResults = new();
 
             public readonly Type Type = kind;
             public readonly string Name = name;

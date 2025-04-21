@@ -1,4 +1,4 @@
-﻿# Release notes for RobustToolbox.
+# Release notes for RobustToolbox.
 
 <!--
 NOTE: automatically updated sometimes by version.py.
@@ -50,7 +50,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Add logic to block cycles in master MIDI renderers, which could otherwise cause client freezes.
 
 ### Internal
 

@@ -66,7 +66,7 @@ public readonly struct ResPath : IEquatable<ResPath>
     public ResPath(string canonPath)
     {
         // Paths should never have non-standardised directory separators passed in, the caller should have already sanitised it.
-        DebugTools.Assert(!canonPath.Contains('\\'));
+        DebugTools.Assert(IsValidPath(canonPath));
         CanonPath = canonPath;
     }
 
@@ -76,6 +76,16 @@ public readonly struct ResPath : IEquatable<ResPath>
     public ResPath() : this("")
     {
     }
+
+    /// <summary>
+    /// Check whether the given string paths contains any non-standard directory separators.
+    /// </summary>
+    public static bool IsValidPath(string path) => !path.Contains('\\');
+
+    /// <summary>
+    /// Check whether a string is a valid path (<see cref="IsValidPath"/>) and contains no separators.
+    /// </summary>
+    public static bool IsValidFilename(string filename) => IsValidPath(filename) && !filename.Contains('/');
 
     /// <summary>
     ///     Returns true if the path is equal to "."

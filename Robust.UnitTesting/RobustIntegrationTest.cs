@@ -354,13 +354,7 @@ namespace Robust.UnitTesting
                 await WaitPost(() => ConsoleHost.ExecuteCommand(cmd));
             }
 
-            /// <summary>
-            ///     Whether the instance is still alive.
-            ///     "Alive" indicates that it is able to receive and process commands.
-            /// </summary>
-            /// <exception cref="InvalidOperationException">
-            ///     Thrown if you did not ensure that the instance is idle via <see cref="WaitIdleAsync"/> first.
-            /// </exception>
+            /// <inheritdoc/>
             public bool IsAlive
             {
                 get
@@ -440,16 +434,7 @@ namespace Robust.UnitTesting
                 return DependencyCollection.Resolve<T>();
             }
 
-            /// <summary>
-            ///     Wait for the instance to go idle, either through finishing all commands or shutting down/crashing.
-            /// </summary>
-            /// <param name="throwOnUnhandled">
-            ///     If true, throw an exception if the server dies on an unhandled exception.
-            /// </param>
-            /// <param name="cancellationToken"></param>
-            /// <exception cref="Exception">
-            ///     Thrown if <paramref name="throwOnUnhandled"/> is true and the instance shuts down on an unhandled exception.
-            /// </exception>
+            /// <inheritdoc/>
             public Task WaitIdleAsync(bool throwOnUnhandled = true, CancellationToken cancellationToken = default)
             {
                 if (Options?.Asynchronous != false)
@@ -560,10 +545,7 @@ namespace Robust.UnitTesting
                 }
             }
 
-            /// <summary>
-            ///     Queue for the server to run n ticks.
-            /// </summary>
-            /// <param name="ticks">The amount of ticks to run.</param>
+            /// <inheritdoc/>
             public void RunTicks(int ticks)
             {
                 _isSurelyIdle = false;
@@ -571,9 +553,7 @@ namespace Robust.UnitTesting
                 _toInstanceWriter.TryWrite(new RunTicksMessage(ticks, _currentTicksId));
             }
 
-            /// <summary>
-            ///     <see cref="RunTicks"/> followed by <see cref="WaitIdleAsync"/>
-            /// </summary>
+            /// <inheritdoc/>
             public async Task WaitRunTicks(int ticks)
             {
                 RunTicks(ticks);
@@ -592,12 +572,7 @@ namespace Robust.UnitTesting
                 _toInstanceWriter.TryComplete();
             }
 
-            /// <summary>
-            ///     Queue for a delegate to be ran inside the main loop of the instance.
-            /// </summary>
-            /// <remarks>
-            ///     Do not run NUnit assertions inside <see cref="Post"/>. Use <see cref="Assert"/> instead.
-            /// </remarks>
+            /// <inheritdoc/>
             public void Post(Action post)
             {
                 _isSurelyIdle = false;
@@ -611,15 +586,7 @@ namespace Robust.UnitTesting
                 await WaitIdleAsync();
             }
 
-            /// <summary>
-            ///     Queue for a delegate to be ran inside the main loop of the instance,
-            ///     rethrowing any exceptions in <see cref="WaitIdleAsync"/>.
-            /// </summary>
-            /// <remarks>
-            ///     Exceptions raised inside this callback will be rethrown by <see cref="WaitIdleAsync"/>.
-            ///     This makes it ideal for NUnit assertions,
-            ///     since rethrowing the NUnit assertion directly provides less noise.
-            /// </remarks>
+            /// <inheritdoc/>
             public void Assert(Action assertion)
             {
                 _isSurelyIdle = false;

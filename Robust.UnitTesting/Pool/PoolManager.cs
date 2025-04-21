@@ -51,7 +51,6 @@ public class PoolManager<TPair> : PoolManager where TPair : class, ITestPair, ne
     public override Assembly[] ClientAssemblies => _clientAssemblies;
     public override Assembly[] ServerAssemblies => _serverAssemblies;
 
-
     /// <summary>
     /// Initialize the pool manager. Override this to configure what assemblies should get loaded.
     /// </summary>

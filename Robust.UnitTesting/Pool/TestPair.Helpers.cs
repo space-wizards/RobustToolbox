@@ -20,10 +20,7 @@ public partial class TestPair<TServer, TClient>
     /// </summary>
     public EntityUid ToClientUid(EntityUid uid) => ConvertUid(uid, Server, Client);
 
-    private static EntityUid ConvertUid(
-        EntityUid uid,
-        ITestInstance source,
-        ITestInstance destination)
+    private static EntityUid ConvertUid(EntityUid uid, ITestInstance source, ITestInstance destination)
     {
         if (!uid.IsValid())
             return EntityUid.Invalid;

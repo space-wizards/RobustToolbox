@@ -118,9 +118,6 @@ public sealed partial class ClientEntityManager
         DebugTools.Assert(IsClientSide(ent.Owner, ent.Comp));
         EnsureComponent<PredictedSpawnComponent>(ent.Owner);
 
-        // Server has no knowledge of the entity we are so we generate a clientside nentity and send it to server.
-        DebugTools.Assert(ent.Comp.NetEntity.IsClientSide());
-
         // TODO: Need to map call site or something, needs to be consistent between client and server.
     }
 }

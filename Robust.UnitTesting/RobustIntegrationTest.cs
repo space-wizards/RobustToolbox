@@ -13,8 +13,6 @@ using Moq;
 using NUnit.Framework;
 using Robust.Client;
 using Robust.Client.Console;
-using Robust.Client.GameStates;
-using Robust.Client.Player;
 using Robust.Client.Timing;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.XAML.Proxy;
@@ -33,13 +31,13 @@ using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
-using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
+using Robust.UnitTesting.Pool;
 using ServerProgram = Robust.Server.Program;
 
 namespace Robust.UnitTesting
@@ -281,7 +279,7 @@ namespace Robust.UnitTesting
         ///     This method must be used before trying to access any state like <see cref="ResolveDependency{T}"/>,
         ///     to prevent race conditions.
         /// </remarks>
-        public abstract class IntegrationInstance : IDisposable
+        public abstract class IntegrationInstance : ITestInstance
         {
             private protected Thread? InstanceThread;
             private protected IDependencyCollection DependencyCollection = default!;
@@ -305,10 +303,11 @@ namespace Robust.UnitTesting
 
             public virtual IntegrationOptions? Options { get; internal set; }
 
-            public IEntityManager EntMan { get; private set; } = default!;
+            public EntityManager EntMan { get; private set; } = default!;
             public IPrototypeManager ProtoMan { get; private set; } = default!;
             public IConfigurationManager CfgMan { get; private set; } = default!;
             public ISharedPlayerManager PlayerMan { get; private set; } = default!;
+            public INetManager NetMan { get; private set; } = default!;
             public IGameTiming Timing { get; private set; } = default!;
             public IMapManager MapMan { get; private set; } = default!;
             public IConsoleHost ConsoleHost { get; private set; } = default!;
@@ -316,11 +315,12 @@ namespace Robust.UnitTesting
 
             protected virtual void ResolveIoC(IDependencyCollection deps)
             {
-                EntMan = deps.Resolve<IEntityManager>();
+                EntMan = deps.Resolve<EntityManager>();
                 ProtoMan = deps.Resolve<IPrototypeManager>();
                 CfgMan = deps.Resolve<IConfigurationManager>();
                 PlayerMan = deps.Resolve<ISharedPlayerManager>();
                 Timing = deps.Resolve<IGameTiming>();
+                NetMan = deps.Resolve<INetManager>();
                 MapMan = deps.Resolve<IMapManager>();
                 ConsoleHost = deps.Resolve<IConsoleHost>();
                 Log = deps.Resolve<ILogManager>().GetSawmill("test");
@@ -330,6 +330,8 @@ namespace Robust.UnitTesting
             {
                 return EntMan.System<T>();
             }
+
+            public T Resolve<T>() => ResolveDependency<T>();
 
             public TransformComponent Transform(EntityUid uid)
             {
@@ -631,6 +633,8 @@ namespace Robust.UnitTesting
                 await WaitIdleAsync();
             }
 
+            public virtual Task Cleanup() => Task.CompletedTask;
+
             public void Dispose()
             {
                 Stop();
@@ -654,7 +658,7 @@ namespace Robust.UnitTesting
             }
         }
 
-        public sealed class ServerIntegrationInstance : IntegrationInstance
+        public sealed class ServerIntegrationInstance : IntegrationInstance, IServerTestInstance
         {
             public ServerIntegrationInstance(ServerIntegrationOptions? options) : base(options)
             {
@@ -858,15 +862,17 @@ namespace Robust.UnitTesting
                 }
             }
 
+            public override Task Cleanup() => RemoveAllDummySessions();
+
             private Dictionary<string, NetUserId> _dummyUsers = new();
             private Dictionary<NetUserId, ICommonSession> _dummySessions = new();
             public IReadOnlyDictionary<string, NetUserId> DummyUsers => _dummyUsers;
             public IReadOnlyDictionary<NetUserId, ICommonSession> DummySessions => _dummySessions;
         }
 
-        public sealed class ClientIntegrationInstance : IntegrationInstance
+        public sealed class ClientIntegrationInstance : IntegrationInstance, IClientTestInstance
         {
-            public ICommonSession? Session => ((IPlayerManager) PlayerMan).LocalSession;
+            public ICommonSession? Session => PlayerMan.LocalSession;
             public NetUserId? User => Session?.UserId;
             public EntityUid? AttachedEntity => Session?.AttachedEntity;
 
@@ -903,10 +909,10 @@ namespace Robust.UnitTesting
             /// <summary>
             ///     Wire up the server to connect to when <see cref="IClientNetManager.ClientConnect"/> gets called.
             /// </summary>
-            public void SetConnectTarget(ServerIntegrationInstance server)
+            public void SetConnectTarget(IServerTestInstance server)
             {
                 var clientNetManager = ResolveDependency<IntegrationNetManager>();
-                var serverNetManager = server.ResolveDependency<IntegrationNetManager>();
+                var serverNetManager = server.Resolve<IntegrationNetManager>();
 
                 if (!serverNetManager.IsRunning)
                 {
@@ -914,6 +920,14 @@ namespace Robust.UnitTesting
                 }
 
                 clientNetManager.NextConnectChannel = serverNetManager.MessageChannelWriter;
+            }
+
+            public async Task Connect(IServerTestInstance target)
+            {
+                await WaitIdleAsync();
+                await target.WaitIdleAsync();
+                SetConnectTarget(target);
+                await WaitPost(() => ((IClientNetManager) NetMan).ClientConnect(null!, 0, null!));
             }
 
             public async Task CheckSandboxed(Assembly assembly)

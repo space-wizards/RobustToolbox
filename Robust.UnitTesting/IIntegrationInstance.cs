@@ -10,9 +10,9 @@ using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
-namespace Robust.UnitTesting.Pool;
+namespace Robust.UnitTesting;
 
-public interface ITestInstance : IDisposable
+public interface IIntegrationInstance : IDisposable
 {
     /// <summary>
     ///     Whether the instance is still alive.
@@ -103,13 +103,13 @@ public interface ITestInstance : IDisposable
     Task Cleanup();
 }
 
-public interface IClientTestInstance : ITestInstance
+public interface IClientIntegrationInstance : IIntegrationInstance
 {
     IClientNetManager CNetMan => (IClientNetManager) NetMan;
     ICommonSession? Session { get; }
     NetUserId? User { get; }
     EntityUid? AttachedEntity { get; }
-    Task Connect(IServerTestInstance target);
+    Task Connect(IServerIntegrationInstance target);
 }
 
-public interface IServerTestInstance : ITestInstance;
+public interface IServerIntegrationInstance : IIntegrationInstance;

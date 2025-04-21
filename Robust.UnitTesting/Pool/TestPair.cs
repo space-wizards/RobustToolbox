@@ -15,8 +15,8 @@ namespace Robust.UnitTesting.Pool;
 /// This object wraps a pooled server+client pair.
 /// </summary>
 public abstract partial class TestPair<TServer, TClient> : ITestPair, IAsyncDisposable
-    where TServer : IServerTestInstance
-    where TClient : IClientTestInstance
+    where TServer : IServerIntegrationInstance
+    where TClient : IClientIntegrationInstance
 {
     public int Id { get; internal set; }
     protected PoolManager Manager = default!;
@@ -163,7 +163,7 @@ public abstract partial class TestPair<TServer, TClient> : ITestPair, IAsyncDisp
         }
     }
 
-    private async Task LoadPrototypes(ITestInstance instance, List<string> prototypes)
+    private async Task LoadPrototypes(IIntegrationInstance instance, List<string> prototypes)
     {
         var changed = new Dictionary<Type, HashSet<string>>();
         foreach (var file in prototypes)

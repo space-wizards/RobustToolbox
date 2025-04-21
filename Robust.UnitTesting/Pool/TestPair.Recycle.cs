@@ -171,7 +171,7 @@ public partial class TestPair<TServer, TClient>
 
     /// <inheritdoc cref="ApplySettings(PairSettings)"/>
     [MustCallBase]
-    protected internal virtual async Task ApplySettings(ITestInstance instance, PairSettings next)
+    protected internal virtual async Task ApplySettings(IIntegrationInstance instance, PairSettings next)
     {
         if (instance.CfgMan.IsCVarRegistered(CVars.NetInterp.Name))
             await instance.WaitPost(() => instance.CfgMan.SetCVar(CVars.NetInterp, !next.DisableInterpolate));

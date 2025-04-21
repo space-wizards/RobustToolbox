@@ -279,7 +279,7 @@ namespace Robust.UnitTesting
         ///     This method must be used before trying to access any state like <see cref="ResolveDependency{T}"/>,
         ///     to prevent race conditions.
         /// </remarks>
-        public abstract class IntegrationInstance : ITestInstance
+        public abstract class IntegrationInstance : IIntegrationInstance
         {
             private protected Thread? InstanceThread;
             private protected IDependencyCollection DependencyCollection = default!;
@@ -625,7 +625,7 @@ namespace Robust.UnitTesting
             }
         }
 
-        public sealed class ServerIntegrationInstance : IntegrationInstance, IServerTestInstance
+        public sealed class ServerIntegrationInstance : IntegrationInstance, IServerIntegrationInstance
         {
             public ServerIntegrationInstance(ServerIntegrationOptions? options) : base(options)
             {
@@ -837,7 +837,7 @@ namespace Robust.UnitTesting
             public IReadOnlyDictionary<NetUserId, ICommonSession> DummySessions => _dummySessions;
         }
 
-        public sealed class ClientIntegrationInstance : IntegrationInstance, IClientTestInstance
+        public sealed class ClientIntegrationInstance : IntegrationInstance, IClientIntegrationInstance
         {
             public ICommonSession? Session => PlayerMan.LocalSession;
             public NetUserId? User => Session?.UserId;
@@ -876,7 +876,7 @@ namespace Robust.UnitTesting
             /// <summary>
             ///     Wire up the server to connect to when <see cref="IClientNetManager.ClientConnect"/> gets called.
             /// </summary>
-            public void SetConnectTarget(IServerTestInstance server)
+            public void SetConnectTarget(IServerIntegrationInstance server)
             {
                 var clientNetManager = ResolveDependency<IntegrationNetManager>();
                 var serverNetManager = server.Resolve<IntegrationNetManager>();
@@ -889,7 +889,7 @@ namespace Robust.UnitTesting
                 clientNetManager.NextConnectChannel = serverNetManager.MessageChannelWriter;
             }
 
-            public async Task Connect(IServerTestInstance target)
+            public async Task Connect(IServerIntegrationInstance target)
             {
                 await WaitIdleAsync();
                 await target.WaitIdleAsync();

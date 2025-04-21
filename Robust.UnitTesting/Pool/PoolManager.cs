@@ -13,7 +13,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting.Pool;
 
-public abstract class PoolManager
+public abstract class BasePoolManager
 {
     internal abstract void Return(ITestPair pair);
     public abstract Assembly[] ClientAssemblies { get; }
@@ -32,7 +32,7 @@ public abstract class PoolManager
 }
 
 [Virtual]
-public class PoolManager<TPair> : PoolManager where TPair : class, ITestPair, new()
+public class PoolManager<TPair> : BasePoolManager where TPair : class, ITestPair, new()
 {
     private int _nextPairId;
     private readonly Lock _pairLock = new();

@@ -23,7 +23,7 @@ public interface ITestPair
     void SetupSeed();
     void ClearModifiedCvars();
     void Use();
-    Task Init(int id, PoolManager manager, PairSettings settings, TextWriter testOut);
+    Task Init(int id, BasePoolManager manager, PairSettings settings, TextWriter testOut);
     Task RecycleInternal(PairSettings next, TextWriter testOut);
     Task ApplySettings(PairSettings settings);
     Task RunTicksSync(int ticks);

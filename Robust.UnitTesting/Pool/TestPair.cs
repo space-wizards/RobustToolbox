@@ -19,7 +19,7 @@ public abstract partial class TestPair<TServer, TClient> : ITestPair, IAsyncDisp
     where TClient : IClientIntegrationInstance
 {
     public int Id { get; internal set; }
-    protected PoolManager Manager = default!;
+    protected BasePoolManager Manager = default!;
     public PairState State { get; private set; } = PairState.Ready;
     public bool Initialized { get; private set; }
     protected TextWriter TestOut = default!;
@@ -55,7 +55,7 @@ public abstract partial class TestPair<TServer, TClient> : ITestPair, IAsyncDisp
 
     public async Task Init(
         int id,
-        PoolManager manager,
+        BasePoolManager manager,
         PairSettings settings,
         TextWriter testOut)
     {

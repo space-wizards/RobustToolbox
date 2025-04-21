@@ -697,7 +697,9 @@ namespace Robust.UnitTesting
                 deps.BuildGraph();
                 //ServerProgram.SetupLogging();
                 ServerProgram.InitReflectionManager(deps);
-                deps.Resolve<IReflectionManager>().LoadAssemblies(typeof(RobustIntegrationTest).Assembly);
+
+                if (Options?.LoadTestAssembly != false)
+                    deps.Resolve<IReflectionManager>().LoadAssemblies(typeof(RobustIntegrationTest).Assembly);
 
                 var server = DependencyCollection.Resolve<BaseServer>();
 
@@ -953,7 +955,9 @@ namespace Robust.UnitTesting
                 deps.BuildGraph();
 
                 GameController.RegisterReflection(deps);
-                deps.Resolve<IReflectionManager>().LoadAssemblies(typeof(RobustIntegrationTest).Assembly);
+
+                if (Options?.LoadTestAssembly != false)
+                    deps.Resolve<IReflectionManager>().LoadAssemblies(typeof(RobustIntegrationTest).Assembly);
 
                 var client = DependencyCollection.Resolve<GameController>();
 
@@ -1184,6 +1188,8 @@ namespace Robust.UnitTesting
             public Action? BeforeRegisterComponents { get; set; }
             public Action? BeforeStart { get; set; }
             public Assembly[]? ContentAssemblies { get; set; }
+
+            public bool LoadTestAssembly { get; set; } = true;
 
             /// <summary>
             /// String containing extra prototypes to load. Contents of the string are treated like a yaml file in the

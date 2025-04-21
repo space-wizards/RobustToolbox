@@ -405,16 +405,18 @@ namespace Robust.Shared.GameObjects
         internal void UpdateChildMapIdsRecursive(
             MapId newMapId,
             EntityUid? newUid,
-            bool mapPaused,
+            bool? mapPaused,
             EntityQuery<TransformComponent> xformQuery,
             EntityQuery<MetaDataComponent> metaQuery,
             MetaDataSystem system)
         {
             foreach (var child in _children)
             {
-                //Set Paused state
-                var metaData = metaQuery.GetComponent(child);
-                system.SetEntityPaused(child, mapPaused, metaData);
+                if (mapPaused is { } p)
+                {
+                    var metaData = metaQuery.GetComponent(child);
+                    system.SetEntityPaused(child, p, metaData);
+                }
 
                 var concrete = xformQuery.GetComponent(child);
 

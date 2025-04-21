@@ -629,10 +629,15 @@ public abstract partial class SharedTransformSystem
             return;
 
         EntityUid? newUid = newMapId == MapId.Nullspace ? null : _map.GetMap(newMapId);
+        bool? mapPaused = null;
 
-        //Set Paused state
-        var mapPaused = _map.IsPaused(newMapId);
-        _metaData.SetEntityPaused(uid, mapPaused, meta);
+        // Client may be moving entities across maps due to things leaving or entering PVS range.
+        // In that case, we don't want to pause or unpause entities.
+        if (!_gameTiming.ApplyingState)
+        {
+            mapPaused = _map.IsPaused(newMapId);
+            _metaData.SetEntityPaused(uid, mapPaused.Value, meta);
+        }
 
         xform.MapUid = newUid;
         xform.MapID = newMapId;

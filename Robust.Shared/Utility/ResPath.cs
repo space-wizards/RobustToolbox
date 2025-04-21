@@ -83,9 +83,14 @@ public readonly struct ResPath : IEquatable<ResPath>
     public static bool IsValidPath(string path) => !path.Contains('\\');
 
     /// <summary>
-    /// Check whether a string is a valid path (<see cref="IsValidPath"/>) and contains no separators.
+    /// Check whether a string is a valid path (<see cref="IsValidPath"/>) and corresponds to a simple file name.
     /// </summary>
-    public static bool IsValidFilename(string filename) => IsValidPath(filename) && !filename.Contains('/');
+    public static bool IsValidFilename([NotNullWhen(true)] string? filename)
+        => !string.IsNullOrEmpty(filename)
+           && IsValidPath(filename)
+           && !filename.Contains('/')
+           && filename != "."
+           && filename != "..";
 
     /// <summary>
     ///     Returns true if the path is equal to "."

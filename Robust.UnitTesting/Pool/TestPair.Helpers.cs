@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 
 namespace Robust.UnitTesting.Pool;
@@ -237,5 +240,46 @@ public partial class TestPair<TServer, TClient>
         cTick = (int)Client.Timing.CurTick.Value;
         delta = cTick - sTick;
         Assert.That(delta, Is.EqualTo(targetDelta));
+    }
+
+    /// <summary>
+    /// Creates a map with a single grid consisting of one tile.
+    /// </summary>
+    [MemberNotNull(nameof(TestMap))]
+    public async Task<TestMapData> CreateTestMap(bool initialized, ushort tileTypeId)
+    {
+        TestMap = new TestMapData();
+        await Server.WaitIdleAsync();
+        var sys = Server.System<SharedMapSystem>();
+
+        await Server.WaitPost(() =>
+        {
+            TestMap.MapUid = sys.CreateMap(out TestMap.MapId, runMapInit: initialized);
+            TestMap.Grid = Server.MapMan.CreateGridEntity(TestMap.MapId);
+            TestMap.GridCoords = new EntityCoordinates(TestMap.Grid, 0, 0);
+            TestMap.MapCoords = new MapCoordinates(0, 0, TestMap.MapId);
+            sys.SetTile(TestMap.Grid.Owner, TestMap.Grid.Comp, TestMap.GridCoords, new Tile(tileTypeId));
+            TestMap.Tile = sys.GetAllTiles(TestMap.Grid.Owner, TestMap.Grid.Comp).First();
+        });
+
+        if (!Settings.Connected)
+            return TestMap;
+
+        await RunTicksSync(10);
+        TestMap.CMapUid = ToClientUid(TestMap.MapUid);
+        TestMap.CGridUid = ToClientUid(TestMap.Grid);
+        TestMap.CGridCoords = new EntityCoordinates(TestMap.CGridUid, 0, 0);
+
+        return TestMap;
+    }
+
+    /// <inheritdoc cref="CreateTestMap(bool, ushort)"/>
+    [MemberNotNull(nameof(TestMap))]
+    public async Task<TestMapData> CreateTestMap(bool initialized, string tileName)
+    {
+        var defMan = Server.Resolve<ITileDefinitionManager>();
+        if (!defMan.TryGetDefinition(tileName, out var def))
+            Assert.Fail($"Unknown tile: {tileName}");
+        return await CreateTestMap(initialized, def?.TileId ?? 1);
     }
 }

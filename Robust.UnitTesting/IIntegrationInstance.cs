@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
@@ -30,17 +31,19 @@ public interface IIntegrationInstance : IDisposable
     IConfigurationManager CfgMan { get; }
     ISharedPlayerManager PlayerMan { get; }
     INetManager NetMan { get; }
+    IMapManager MapMan { get; }
     IGameTiming Timing { get; }
     ISawmill Log { get; }
 
     /// <summary>
     ///     Resolve a dependency inside the instance.
-    ///     This works identical to <see cref="IoCManager.Resolve{T}()"/>.
     /// </summary>
     /// <exception cref="InvalidOperationException">
     ///     Thrown if you did not ensure that the instance is idle via <see cref="WaitIdleAsync"/> first.
     /// </exception>
     [Pure] T Resolve<T>();
+
+    [Pure] T System<T>() where T : IEntitySystem;
 
     TransformComponent Transform(EntityUid uid);
     MetaDataComponent MetaData(EntityUid uid);

@@ -29,6 +29,7 @@ public abstract partial class TestPair<TServer, TClient> : ITestPair, IAsyncDisp
 
     public readonly PoolTestLogHandler ServerLogHandler = new("SERVER");
     public readonly PoolTestLogHandler ClientLogHandler = new("CLIENT");
+    public TestMapData? TestMap;
 
     private int _nextServerSeed;
     private int _nextClientSeed;

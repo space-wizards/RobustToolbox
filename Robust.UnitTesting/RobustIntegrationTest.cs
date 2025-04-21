@@ -326,11 +326,13 @@ namespace Robust.UnitTesting
                 Log = deps.Resolve<ILogManager>().GetSawmill("test");
             }
 
+            [Pure]
             public T System<T>() where T : IEntitySystem
             {
                 return EntMan.System<T>();
             }
 
+            [Pure]
             public T Resolve<T>() => ResolveDependency<T>();
 
             public TransformComponent Transform(EntityUid uid)

@@ -30,7 +30,14 @@ public partial class TestPair<TServer, TClient>
     /// <summary>
     /// This method gets called before any test pair gets returned to the pool.
     /// </summary>
-    protected virtual Task Cleanup() => Task.CompletedTask;
+    protected virtual async Task Cleanup()
+    {
+        if (TestMap != null)
+        {
+            await Server.WaitPost(() => Server.EntMan.DeleteEntity(TestMap.MapUid));
+            TestMap = null;
+        }
+    }
 
     private async Task OnCleanDispose()
     {

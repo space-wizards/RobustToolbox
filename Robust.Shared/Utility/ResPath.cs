@@ -106,7 +106,7 @@ public readonly struct ResPath : IEquatable<ResPath>
             }
 
             var ind = CanonPath.Length > 1 && CanonPath[^1] == '/'
-                ? CanonPath[..^1].LastIndexOf('/')
+                ? CanonPath.LastIndexOf('/', CanonPath.Length - 2)
                 : CanonPath.LastIndexOf('/');
             return ind switch
             {
@@ -206,7 +206,7 @@ public readonly struct ResPath : IEquatable<ResPath>
             // it's a filename
             // Uses +1 to skip `/` found in or starts from beginning of string
             // if we found nothing (ind == -1)
-            var ind = CanonPath[..^1].LastIndexOf('/') + 1;
+            var ind = CanonPath.LastIndexOf('/', CanonPath.Length - 2) + 1;
             return CanonPath[^1] == '/'
                 ? CanonPath[ind .. ^1] // Omit last `/`
                 : CanonPath[ind..];
@@ -241,7 +241,6 @@ public readonly struct ResPath : IEquatable<ResPath>
     {
         return CanonPath.GetHashCode();
     }
-
 
     public static bool operator ==(ResPath left, ResPath right)
     {
@@ -283,7 +282,7 @@ public readonly struct ResPath : IEquatable<ResPath>
         }
 
         // Avoid double separators
-        if (left.CanonPath.EndsWith("/"))
+        if (left.CanonPath.EndsWith('/'))
         {
             return new ResPath(left.CanonPath + right.CanonPath);
         }
@@ -475,7 +474,7 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// </summary>
     public string ToRelativeSystemPath()
     {
-        return ToRelativePath().ChangeSeparator(SystemSeparatorStr);
+        return ToRelativePath().ChangeSeparator(SystemSeparator);
     }
 
     /// <summary>
@@ -503,6 +502,16 @@ public readonly struct ResPath : IEquatable<ResPath>
         return newSeparator == "/"
             ? CanonPath
             : CanonPath.Replace("/", newSeparator);
+    }
+
+    /// <inheritdoc cref="ChangeSeparator(string)"/>
+    public string ChangeSeparator(char newSeparator)
+    {
+        if (newSeparator is '.' or '\0')
+            throw new ArgumentException("New separator can't be `.` or `NULL`");
+
+        // Replace() checks if newSeparator == '/'
+        return CanonPath.Replace('/', newSeparator);
     }
 }
 

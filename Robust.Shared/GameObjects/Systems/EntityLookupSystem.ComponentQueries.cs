@@ -621,7 +621,7 @@ public sealed partial class EntityLookupSystem
 
     public void GetEntitiesInRange<T>(EntityCoordinates coordinates, float range, HashSet<Entity<T>> entities, LookupFlags flags = DefaultFlags) where T : IComponent
     {
-        var mapPos = coordinates.ToMap(EntityManager, _transform);
+        var mapPos = _transform.ToMapCoordinates(coordinates);
         GetEntitiesInRange(mapPos, range, entities, flags);
     }
 

@@ -20,7 +20,7 @@ public sealed partial class CategorizationTest : RobustIntegrationTest
     [TestOf(typeof(FileCategory))]
     public async Task TestCategorization()
     {
-        var server = StartServer();
+        var server = StartServer(new() {Pool = false}); // Pool=false due to TileDef registration
         await server.WaitIdleAsync();
         var entMan = server.EntMan;
         var meta = server.System<MetaDataSystem>();
@@ -76,7 +76,7 @@ public sealed partial class CategorizationTest : RobustIntegrationTest
                 DeserializationOptions = DeserializationOptions.Default with { LogOrphanedGrids = false}
             };
             LoadResult? result = null;
-            await server.WaitPost(() => Assert.That(loader.TryLoadGeneric(path, out result, opts)));
+            await server.WaitAssertion(() => Assert.That(loader.TryLoadGeneric(path, out result, opts)));
             Assert.That(result!.Category, Is.EqualTo(expected));
             Assert.That(result.Entities, Has.Count.EqualTo(count));
             return result;

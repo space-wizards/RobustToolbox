@@ -155,9 +155,9 @@ public sealed class EntitySerializer : ISerializationContext,
     public event IsSerializableDelegate? OnIsSerializeable;
     public delegate void IsSerializableDelegate(Entity<MetaDataComponent> ent, ref bool serializable);
 
-    public EntitySerializer(IDependencyCollection _dependency, SerializationOptions options)
+    public EntitySerializer(IDependencyCollection dependency, SerializationOptions options)
     {
-        _dependency.InjectDependencies(this);
+        dependency.InjectDependencies(this);
 
         _log = _logMan.GetSawmill("entity_serializer");
         SerializerProvider.RegisterSerializer(this);

@@ -30,8 +30,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
         {
             var mapping = new Dictionary<ValidationNode, ValidationNode>();
 
-            foreach (var (key, val) in node.Children)
+            foreach (var (k, val) in node.Children)
             {
+                var key = node.GetKeyNode(k);
                 if (val is not ValueDataNode value)
                 {
                     mapping.Add(new ErrorNode(val, $"Cannot cast node {val} to ValueDataNode."), serializationManager.ValidateNode<TValue>(key, context));

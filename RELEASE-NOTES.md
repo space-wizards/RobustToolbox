@@ -35,18 +35,18 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `RobustIntegrationTest` now pools server/client instances by default. If a custom settings class is provided, it will still disable pooling unless explicitly enabled.
+  * Server/Client instances that are returned to the pool should be disconnected. This might require you to update some tests.
+  * Pooled instances also require you to use `RobustIntegrationTest` methods like `WaitPost()` to ensure the correct thread is used.
 
 ### New features
 
-* Add a new `SerializationManager.PushComposition()` overload that takes in a single parent instead of an array of parents.
-* `BoundUserInterfaceMessageAttempt` once again gets raised as a broadcast event, in addition to being directed.
-  * This effectively reverts the breaking part of the changes made in v252.0.0
+*None yet*
 
 ### Bugfixes
 
-* Fix deferred component removal not setting the component's life stage to `ComponentLifeStage.Stopped` if the component has not yet been initialised.
-* Fix some `EntitySystem.Resolve()` overloads not respecting the optional `logMissing` argument.
+* Fix `EntityDeserializer` improperly setting entity lifestages when loading a post-mapinit map.
+* Fix `EntityManager.PredictedDeleteEntity()` not deleting pure client-side entities.
 
 ### Other
 
@@ -55,6 +55,69 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 254.1.0
+
+### New features
+
+* Add CC ND licences to the RGA validator.
+* Add entity spawn prediction and entity deletion prediction. This is currently limited as you are unable to predict interactions with these entities. These are done via the new methods prefixed with "Predicted". You can also manually flag an entity as a predicted spawn with the `FlagPredicted` method which will clean it up when prediction is reset.
+
+### Bugfixes
+
+* Fix tile edge rendering for neighbor tiles being the same priority.
+
+### Other
+
+* Fix SpawnAttachedTo's system proxy method not the rotation arg like EntityManager.
+
+
+## 254.0.0
+
+### Breaking changes
+
+* Yaml mappings/dictionaries now only support string keys instead of generic nodes
+  * Several MappingDataNode method arguments or return values now use strings instead of a DataNode object
+  * The MappingDataNode class has various helper methods that still accept a ValueDataNode, but these methods are marked as obsolete and may be removed in the future.
+  * yaml validators should use `MappingDataNode.GetKeyNode()` when validating mapping keys, so that errors can print node start & end information
+* ValueTuple yaml serialization has changed
+  * Previously they would get serialized into a single mapping with one entry (i.e., `{foo : bar }`)
+  * Now they serialize into a sequence (i.e., `[foo, bar]`)
+  * The ValueTuple serializer will still try to read mappings, but due to the MappingDataNode this may fail if the previously serialized "key" can't be read as a simple string
+
+### New features
+
+* Add cvar to disable tile edges.
+* Add GetContainingContainers method to ContainerSystem to recursively get containers upwards on an entity.
+
+### Internal
+
+* Make component lifecycle methods use generics.
+
+
+## 253.0.0
+
+### New features
+
+* Add a new `SerializationManager.PushComposition()` overload that takes in a single parent instead of an array of parents.
+* `BoundUserInterfaceMessageAttempt` once again gets raised as a broadcast event, in addition to being directed.
+  * This effectively reverts the breaking part of the changes made in v252.0.0
+* Fix CreateDistanceJoint using an int instead of a float for minimum distance.
+
+### Bugfixes
+
+* Fix deferred component removal not setting the component's life stage to `ComponentLifeStage.Stopped` if the component has not yet been initialised.
+* Fix some `EntitySystem.Resolve()` overloads not respecting the optional `logMissing` argument.
+* Fix screen-space overlays not being useable without first initializing/starting entity manager & systems
+* ItemList is now significantly optimized. VV's `AddComponent` window in particular should be much faster.
+* Fix some more MapValidator fields.
+* Fix popup text overflowing the sides of the screen.
+* Improve location reporting for non-writeable datafields via analyzer.
+
+### Other
+
+* TestPoint now uses generics rather than IPhysShape directly.
 
 
 ## 252.0.0

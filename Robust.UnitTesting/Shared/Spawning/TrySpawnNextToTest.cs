@@ -51,6 +51,5 @@ public sealed class TrySpawnNextToTest : EntitySpawnHelpersTest
         });
 
         await Server.WaitPost(() => MapSys.DeleteMap(MapId));
-        Server.Dispose();
     }
 }

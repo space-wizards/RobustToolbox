@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Robust.Client.Timing;
-using Robust.Client.Utility;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Prototypes;
@@ -56,7 +54,7 @@ namespace Robust.Client.Prototypes
             using var _ = _timing.StartStateApplicationArea();
             ReloadPrototypes([file]);
 
-            Logger.Info($"Reloaded prototypes in {sw.ElapsedMilliseconds} ms");
+            Sawmill.Info($"Reloaded prototypes in {sw.ElapsedMilliseconds} ms");
 #endif
         }
     }

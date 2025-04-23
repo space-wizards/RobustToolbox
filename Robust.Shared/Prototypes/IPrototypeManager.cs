@@ -231,6 +231,11 @@ public interface IPrototypeManager
     Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path,
         out Dictionary<Type, HashSet<string>> prototypes);
 
+    Dictionary<string, HashSet<ErrorNode>> ValidateSingleFile(
+        TextReader reader,
+        out Dictionary<Type, HashSet<string>> protos,
+        string representedPath);
+
     /// <summary>
     /// This method uses reflection to validate that all static prototype id fields correspond to valid prototypes.
     /// This will validate all known to <see cref="IReflectionManager"/>

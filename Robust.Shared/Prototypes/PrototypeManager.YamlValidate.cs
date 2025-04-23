@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
@@ -62,6 +63,88 @@ public partial class PrototypeManager
                     var error = new ErrorNode(mapping, $"Found dupe prototype ID of {id} for {type}");
                     dict.GetOrNew(data.File).Add(error);
                 }
+            }
+        }
+
+        var ctx = new YamlValidationContext();
+        var errors = new List<ErrorNode>();
+        foreach (var (type, instances) in prototypes)
+        {
+            foreach (var (id, data) in instances)
+            {
+                errors.Clear();
+                EnsurePushed(data, instances, type);
+                if (data.Mapping.TryGet("abstract", out ValueDataNode? abstractNode)
+                    && bool.Parse(abstractNode.Value))
+                {
+                    continue;
+                }
+
+                // Validate yaml directly
+                errors.AddRange(_serializationManager.ValidateNode(type, data.Mapping).GetErrors());
+                if (errors.Count > 0)
+                    dict.GetOrNew(data.File).UnionWith(errors);
+
+                // Create instance & re-serialize it, to validate the default values of data-fields. We still validate
+                // the yaml directly just in case reading & writing the fields somehow modifies their values.
+                try
+                {
+                    var instance = _serializationManager.Read(type, data.Mapping, ctx);
+                    var mapping = _serializationManager.WriteValue(type, instance, alwaysWrite: true, ctx);
+                    errors.AddRange(_serializationManager.ValidateNode(type, mapping, ctx).GetErrors());
+                    if (errors.Count > 0)
+                        dict.GetOrNew(data.File).UnionWith(errors);
+                }
+                catch (Exception ex)
+                {
+                    errors.Add(new ErrorNode(new ValueDataNode(), $"Caught Exception while validating {type} prototype {id}. Exception: {ex}"));
+                }
+            }
+        }
+
+        protos = new(prototypes.Count);
+        foreach (var (type, typeDict) in prototypes)
+        {
+            protos[type] = typeDict.Keys.ToHashSet();
+        }
+
+        return dict;
+    }
+
+    public Dictionary<string, HashSet<ErrorNode>> ValidateSingleFile(TextReader reader,
+        out Dictionary<Type, HashSet<string>> protos, string representedPath)
+    {
+        var yamlStream = new YamlStream();
+        yamlStream.Load(reader);
+
+        var dict = new Dictionary<string, HashSet<ErrorNode>>();
+        var prototypes = new Dictionary<Type, Dictionary<string, PrototypeValidationData>>();
+
+        foreach (var doc in yamlStream.Documents)
+        {
+            var rootNode = (YamlSequenceNode)doc.RootNode;
+            foreach (YamlMappingNode node in rootNode.Cast<YamlMappingNode>())
+            {
+                var typeId = node.GetNode("type").AsString();
+                if (_ignoredPrototypeTypes.Contains(typeId))
+                    continue;
+
+                if (!_kindNames.TryGetValue(typeId, out var type))
+                {
+                    throw new PrototypeLoadException($"Unknown prototype type: '{typeId}'");
+                }
+
+                var mapping = node.ToDataNodeCast<MappingDataNode>();
+                var id = mapping.Get<ValueDataNode>("id").Value;
+
+                var data = new PrototypeValidationData(id, mapping, representedPath);
+                mapping.Remove("type");
+
+                if (prototypes.GetOrNew(type).TryAdd(id, data))
+                    continue;
+
+                var error = new ErrorNode(mapping, $"Found dupe prototype ID of {id} for {type}");
+                dict.GetOrNew(data.File).Add(error);
             }
         }
 

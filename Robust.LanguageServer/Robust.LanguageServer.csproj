@@ -9,4 +9,8 @@
         <OutputPath>../bin/LanguageServer</OutputPath>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="EmmyLua.LanguageServer.Framework" Version="0.8.1" />
+    </ItemGroup>
+
 </Project>

@@ -273,8 +273,6 @@ namespace Robust.Shared.ContentPack
 
         public IEnumerable<string> ContentGetDirectoryEntries(ResPath path)
         {
-            ArgumentNullException.ThrowIfNull(path, nameof(path));
-
             if (!path.IsRooted)
                 throw new ArgumentException("Path is not rooted", nameof(path));
 
@@ -379,7 +377,9 @@ namespace Robust.Shared.ContentPack
             {
                 if (root is DirLoader loader)
                 {
-                    yield return new ResPath(loader.GetPath(new ResPath(@"/")));
+                    var rootDir = loader.GetPath(new ResPath(@"/"));
+
+                    yield return new ResPath(rootDir);
                 }
             }
         }

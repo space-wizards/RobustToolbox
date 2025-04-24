@@ -467,6 +467,8 @@ Types:
     IComponent: { All: True }
     IContainer: { All: True }
     ITypeDescriptorContext: { All: True }
+    EditorBrowsableAttribute: { All: True }
+    EditorBrowsableState: { All: True }
   System.Diagnostics.CodeAnalysis:
     AllowNullAttribute: { All: True }
     DisallowNullAttribute: { All: True }
@@ -480,6 +482,7 @@ Types:
     NotNullAttribute: { All: True }
     NotNullIfNotNullAttribute: { All: True }
     NotNullWhenAttribute: { All: True }
+    SetsRequiredMembersAttribute: { All : True}
     SuppressMessageAttribute: { All: True }
   System.Diagnostics:
     DebuggableAttribute: { All: True }
@@ -494,6 +497,23 @@ Types:
     DebuggerVisualizerAttribute: { All: True }
     Stopwatch: { All: True }
   System.Globalization:
+  # all the calendars are here, screw making our own.
+    Calendar: { All: True }
+    ChineseLunisolarCalendar: { All: True }
+    GregorianCalendar: { All: True }
+    HebrewCalendar: { All: True }
+    HijriCalendar: { All: True }
+    JapaneseCalendar: { All: True }
+    JapaneseLunisolarCalendar:  { All: True }
+    JulianCalendar: { All: True }
+    KoreanCalendar: { All: True }
+    KoreanLunisolarCalendar: { All: True }
+    PersianCalendar: { All: True }
+    TaiwanCalendar: { All: True }
+    TaiwanLunisolarCalendar: { All: True }
+    ThaiBuddhistCalendar: { All: True }
+    UmAlQuraCalendar: { All: True }
+ #end calendars
     CompareOptions: { }
     CultureInfo: { All: True }
     DateTimeStyles: { All: True } # Enum
@@ -588,7 +608,6 @@ Types:
     Vector2: { All: True }
     Vector3: { All: True }
     Vector4: { All: True }
-    Matrix3x2: { All: True }
   System.Reflection:
     Assembly:
       Methods:
@@ -653,8 +672,11 @@ Types:
     NullableContextAttribute: { All: True }
     PreserveBaseOverridesAttribute: { All: True }
     RefSafetyRulesAttribute: { All: True }
+    RequiredMemberAttribute: { All: True }
+    RequiresLocationAttribute: { All: True }
     RuntimeCompatibilityAttribute: { All: True }
     RuntimeHelpers: { All: True }
+    SwitchExpressionException: { All: True }
     TaskAwaiter: { All: True }
     TaskAwaiter`1: { All: True }
     TupleElementNamesAttribute: { All: True }
@@ -691,7 +713,7 @@ Types:
       - "bool IsMatch(string, string, System.Text.RegularExpressions.RegexOptions, System.TimeSpan)"
       - "int GroupNumberFromName(string)"
       - "int[] GetGroupNumbers()"
-      - "string Escape()"
+      - "string Escape(string)"
       - "string GroupNameFromNumber(int)"
       - "string Replace(string, string)"
       - "string Replace(string, string, int)"
@@ -720,17 +742,26 @@ Types:
       - "System.Text.RegularExpressions.Match Match(string, string)"
       - "System.Text.RegularExpressions.Match Match(string, string, System.Text.RegularExpressions.RegexOptions)"
       - "System.Text.RegularExpressions.Match Match(string, string, System.Text.RegularExpressions.RegexOptions, System.TimeSpan)"
-      - "System.Text.RegularExpressions.Match[] Matches(string)"
-      - "System.Text.RegularExpressions.Match[] Matches(string, int)"
-      - "System.Text.RegularExpressions.Match[] Matches(string, string)"
-      - "System.Text.RegularExpressions.Match[] Matches(string, string, System.Text.RegularExpressions.RegexOptions)"
-      - "System.Text.RegularExpressions.Match[] Matches(string, string, System.Text.RegularExpressions.RegexOptions, System.TimeSpan)"
+      - "System.Text.RegularExpressions.MatchCollection Matches(string)"
+      - "System.Text.RegularExpressions.MatchCollection Matches(string, int)"
+      - "System.Text.RegularExpressions.MatchCollection Matches(string, string)"
+      - "System.Text.RegularExpressions.MatchCollection Matches(string, string, System.Text.RegularExpressions.RegexOptions)"
+      - "System.Text.RegularExpressions.MatchCollection Matches(string, string, System.Text.RegularExpressions.RegexOptions, System.TimeSpan)"
       - "System.Text.RegularExpressions.RegexOptions get_Options()"
       - "System.TimeSpan get_MatchTimeout()"
       - "void .ctor()"
       - "void .ctor(string)"
       - "void .ctor(string, System.Text.RegularExpressions.RegexOptions)"
       - "void .ctor(string, System.Text.RegularExpressions.RegexOptions, System.TimeSpan)"
+      - "int Count(string)"
+      - "int Count(System.ReadOnlySpan`1<char>)"
+      - "int Count(System.ReadOnlySpan`1<char>, int)"
+      - "int Count(string, string)"
+      - "int Count(string, string, System.Text.RegularExpressions.RegexOptions)"
+      - "int Count(string, string, System.Text.RegularExpressions.RegexOptions, System.TimeSpan)"
+      - "int Count(System.ReadOnlySpan`1<char>, string)"
+      - "int Count(System.ReadOnlySpan`1<char>, string, System.Text.RegularExpressions.RegexOptions)"
+      - "int Count(System.ReadOnlySpan`1<char>, string, System.Text.RegularExpressions.RegexOptions, System.TimeSpan)"
     RegexMatchTimeoutException: { All: True }
     RegexOptions: { } # Enum
     RegexParseError: { }
@@ -784,6 +815,7 @@ Types:
       - "bool Equals(System.ReadOnlySpan`1<char>)"
       - "bool Equals(System.Text.StringBuilder)"
       - "char get_Chars(int)"
+      - "void set_Chars(int, char)"
       - "int EnsureCapacity(int)"
       - "int get_Capacity()"
       - "int get_Length()"
@@ -1056,6 +1088,7 @@ Types:
     DateTime: { All: True }
     DateTimeKind: { } # Enum
     DateTimeOffset: { All: True }
+    DayOfWeek: { } # Enum
     Decimal: { All: True }
     Delegate:
       Methods:
@@ -1194,6 +1227,7 @@ Types:
     RuntimeFieldHandle: { }
     RuntimeMethodHandle: { }
     RuntimeTypeHandle: { }
+    STAThreadAttribute: { All: True }
     SByte: { All: True }
     Single: { All: True }
     Span`1:
@@ -1364,6 +1398,7 @@ Types:
       - "string[] Split(char, int, System.StringSplitOptions)"
       - "string[] Split(char, System.StringSplitOptions)"
       - "string[] Split(char[])"
+      - "string[] Split(System.ReadOnlySpan`1<char>)"
       - "string[] Split(char[], int)"
       - "string[] Split(char[], int, System.StringSplitOptions)"
       - "string[] Split(char[], System.StringSplitOptions)"

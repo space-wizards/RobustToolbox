@@ -82,6 +82,8 @@ namespace Robust.Client.GameStates
         /// </summary>
         IEnumerable<NetEntity> ApplyGameState(GameState curState, GameState? nextState);
 
+        void MergeImplicitData();
+
         /// <summary>
         ///     Resets any entities that have changed while predicting future ticks.
         /// </summary>

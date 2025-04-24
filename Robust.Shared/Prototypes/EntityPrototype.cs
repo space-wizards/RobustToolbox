@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.EntitySerialization;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
@@ -20,7 +21,7 @@ namespace Robust.Shared.Prototypes
     /// <summary>
     /// Prototype that represents game entities.
     /// </summary>
-    [Prototype("entity", -1)]
+    [Prototype(-1)]
     public sealed partial class EntityPrototype : IPrototype, IInheritingPrototype, ISerializationHooks
     {
         private ILocalizationManager _loc = default!;
@@ -268,7 +269,7 @@ namespace Robust.Shared.Prototypes
                 component = newComponent;
             }
 
-            if (context is not MapSerializationContext map)
+            if (context is not EntityDeserializer map)
             {
                 serManager.CopyTo(data, ref component, context, notNullableOverride: true);
                 return;
@@ -402,7 +403,7 @@ namespace Robust.Shared.Prototypes
         }*/
     }
 
-    public sealed class ComponentRegistry : Dictionary<string, EntityPrototype.ComponentRegistryEntry>, IEntityLoadContext, ISerializationContext
+    public sealed class ComponentRegistry : Dictionary<string, EntityPrototype.ComponentRegistryEntry>, IEntityLoadContext
     {
         public ComponentRegistry()
         {
@@ -429,8 +430,5 @@ namespace Robust.Shared.Prototypes
         {
             return false; //Registries cannot represent the "remove this component" state.
         }
-
-        public SerializationManager.SerializerProvider SerializerProvider { get; } = new();
-        public bool WritingReadingPrototypes { get; } = true;
     }
 }

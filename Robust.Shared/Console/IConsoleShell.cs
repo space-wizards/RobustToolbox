@@ -30,8 +30,13 @@ namespace Robust.Shared.Console
         bool IsServer { get; }
 
         /// <summary>
-        /// The remote peer that owns this shell, or the local player if this is a client-side local shell (<see cref="IsLocal" /> is true and <see cref="IsClient"/> is true).
+        /// The remote peer that owns this shell, or the local player if this is a local shell.
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This parameter is null for commands executed directly from the server console, as that has no player.
+        /// </para>
+        /// </remarks>
         ICommonSession? Player { get; }
 
         /// <summary>

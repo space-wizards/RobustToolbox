@@ -35,6 +35,10 @@ public static class Diagnostics
     public const string IdDataFieldNoVVReadWrite = "RA0029";
     public const string IdUseNonGenericVariant = "RA0030";
     public const string IdPreferOtherType = "RA0031";
+    public const string IdDuplicateDependency = "RA0032";
+    public const string IdForbidLiteral = "RA0033";
+    public const string IdObsoleteInheritance = "RA0034";
+    public const string IdObsoleteInheritanceWithMessage = "RA0035";
 
     public static SuppressionDescriptor MeansImplicitAssignment =>
         new SuppressionDescriptor("RADC1000", "CS0649", "Marked as implicitly assigned.");

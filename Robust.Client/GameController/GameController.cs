@@ -93,6 +93,7 @@ namespace Robust.Client
         [Dependency] private readonly IReplayPlaybackManager _replayPlayback = default!;
         [Dependency] private readonly IReplayRecordingManagerInternal _replayRecording = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IReloadManager _reload = default!;
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -112,14 +113,28 @@ namespace Robust.Client
             _commandLineArgs = args;
         }
 
+        public string GameTitle()
+        {
+            return Options.DefaultWindowTitle ?? _resourceManifest!.DefaultWindowTitle ?? "RobustToolbox";
+        }
+
+        public string WindowIconSet()
+        {
+            return Options.WindowIconSet?.ToString() ?? _resourceManifest!.WindowIconSet ?? "";
+        }
+
+        public string SplashLogo()
+        {
+            return Options.SplashLogo?.ToString() ?? _resourceManifest!.SplashLogo ?? "";
+        }
+
         internal bool StartupContinue(DisplayMode displayMode)
         {
             DebugTools.AssertNotNull(_resourceManifest);
 
             _clyde.InitializePostWindowing();
             _audio.InitializePostWindowing();
-            _clyde.SetWindowTitle(
-                Options.DefaultWindowTitle ?? _resourceManifest!.DefaultWindowTitle ?? "RobustToolbox");
+            _clyde.SetWindowTitle(GameTitle());
 
             _taskManager.Initialize();
             _parallelMgr.Initialize();
@@ -171,6 +186,7 @@ namespace Robust.Client
             // before prototype load.
             ProgramShared.FinishCheckBadFileExtensions(checkBadExtensions);
 
+            _reload.Initialize();
             _reflectionManager.Initialize();
             _prototypeManager.Initialize();
             _prototypeManager.LoadDefaultPrototypes();
@@ -399,10 +415,8 @@ namespace Robust.Client
                 // Handle GameControllerOptions implicit CVar overrides.
                 _configurationManager.OverrideConVars(new[]
                 {
-                    (CVars.DisplayWindowIconSet.Name,
-                        options.WindowIconSet?.ToString() ?? _resourceManifest.WindowIconSet ?? ""),
-                    (CVars.DisplaySplashLogo.Name,
-                        options.SplashLogo?.ToString() ?? _resourceManifest.SplashLogo ?? "")
+                    (CVars.DisplayWindowIconSet.Name, WindowIconSet()),
+                    (CVars.DisplaySplashLogo.Name, SplashLogo())
                 });
             }
 

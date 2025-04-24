@@ -33,6 +33,7 @@ using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
@@ -171,7 +172,19 @@ namespace Robust.UnitTesting
 
         private bool ShouldPool(IntegrationOptions? options)
         {
-            return options?.Pool ?? false;
+            // If no options are provided, we assume we should pool
+            if (options == null)
+                return true;
+
+            // If custom options are provided without explicitly setting pool=true, we assume we shouldn't pool.
+            if (options is not {Pool: true})
+                return false;
+
+            if (!options.Asynchronous)
+                throw new Exception("Invalid options. Pooled instances must be asynchronous");
+
+            return true;
+
         }
 
         protected virtual async Task OnInstanceReturn(IntegrationInstance instance)
@@ -203,28 +216,14 @@ namespace Robust.UnitTesting
         {
             foreach (var client in _clientsRunning.Keys)
             {
-                await client.WaitIdleAsync();
-
-                if (client.UnhandledException != null || !client.IsAlive)
-                {
-                    continue;
-                }
-
-                ClientsReady.Enqueue(client);
+                await ReturnToPool(client);
             }
 
             _clientsRunning.Clear();
 
             foreach (var server in _serversRunning.Keys)
             {
-                await server.WaitIdleAsync();
-
-                if (server.UnhandledException != null || !server.IsAlive)
-                {
-                    continue;
-                }
-
-                ServersReady.Enqueue(server);
+                await ReturnToPool(server);
             }
 
             _serversRunning.Clear();
@@ -232,6 +231,43 @@ namespace Robust.UnitTesting
             _notPooledInstances.ForEach(p => p.Stop());
             await Task.WhenAll(_notPooledInstances.Select(p => p.WaitIdleAsync()));
             _notPooledInstances.Clear();
+        }
+
+        public async Task ReturnToPool(ClientIntegrationInstance client)
+        {
+            if (!_clientsRunning.Remove(client, out _))
+                return;
+
+            var res = await ReturnToPoolInternal(client);
+            if (res)
+                ClientsReady.Enqueue(client);
+        }
+
+        public async Task ReturnToPool(ServerIntegrationInstance server)
+        {
+            if (!_serversRunning.Remove(server, out _))
+                return;
+
+            var res = await ReturnToPoolInternal(server);
+            if (res)
+                ServersReady.Enqueue(server);
+        }
+
+        public async Task<bool> ReturnToPoolInternal(IntegrationInstance instance)
+        {
+            await instance.WaitIdleAsync();
+            if (instance.UnhandledException != null || !instance.IsAlive)
+                return false;
+
+            var netMan = instance.ResolveDependency<INetManager>();
+            Assert.That(netMan.IsConnected, Is.False);
+
+            // TODO Validate cvars and whatnot
+            // Or just move content's PoolManager & TestPair over to engine.
+
+            await instance.WaitPost(() => instance.EntMan.FlushEntities());
+            await instance.WaitIdleAsync();
+            return instance.UnhandledException == null && instance.IsAlive;
         }
 
         /// <summary>
@@ -414,7 +450,7 @@ namespace Robust.UnitTesting
             /// </exception>
             public Task WaitIdleAsync(bool throwOnUnhandled = true, CancellationToken cancellationToken = default)
             {
-                if (Options?.Asynchronous == true)
+                if (Options?.Asynchronous != false)
                 {
                     return WaitIdleImplAsync(throwOnUnhandled, cancellationToken);
                 }
@@ -624,7 +660,7 @@ namespace Robust.UnitTesting
             {
                 ServerOptions = options;
                 DependencyCollection = new DependencyCollection();
-                if (options?.Asynchronous == true)
+                if (options?.Asynchronous != false)
                 {
                     InstanceThread = new Thread(_serverMain)
                     {
@@ -839,7 +875,7 @@ namespace Robust.UnitTesting
                 ClientOptions = options;
                 DependencyCollection = new DependencyCollection();
 
-                if (options?.Asynchronous == true)
+                if (options?.Asynchronous != false)
                 {
                     InstanceThread = new Thread(ThreadMain)
                     {

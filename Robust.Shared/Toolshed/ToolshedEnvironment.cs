@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Robust.Shared.Console;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Network;
 using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed;
 
@@ -15,10 +16,19 @@ public sealed class ToolshedEnvironment
     [Dependency] private readonly IReflectionManager _reflection = default!;
     [Dependency] private readonly ILogManager _logManager = default!;
     [Dependency] private readonly ToolshedManager _toolshedManager = default!;
+    [Dependency] private readonly IDependencyCollection _dependency = default!;
+
+    // Dictionary of commands, not including sub-commands
     private readonly Dictionary<string, ToolshedCommand> _commands = new();
+
+    // All commands, including subcommands.
+    private List<CommandSpec> _allCommands = new();
+
+    private readonly Dictionary<Type, List<CommandSpec>> _commandTypeMap = new();
     private readonly Dictionary<Type, List<CommandSpec>> _commandPipeValueMap = new();
     private readonly Dictionary<CommandSpec, HashSet<Type>> _commandReturnValueMap = new();
-
+    private readonly Dictionary<Type, CommandSpec[]> _commandTypeCache = new();
+    private readonly Dictionary<Type, CompletionOption[]> _commandCompletionCache = new();
 
     private ISawmill _log = default!;
 
@@ -26,22 +36,9 @@ public sealed class ToolshedEnvironment
     ///     Provides every registered command, including subcommands.
     /// </summary>
     /// <returns>Enumerable of every command.</returns>
-    public IEnumerable<CommandSpec> AllCommands()
+    public IReadOnlyList<CommandSpec> AllCommands()
     {
-        foreach (var (_, cmd) in _commands)
-        {
-            if (cmd.HasSubCommands)
-            {
-                foreach (var subcommand in cmd.Subcommands)
-                {
-                    yield return new(cmd, subcommand);
-                }
-            }
-            else
-            {
-                yield return new(cmd, null);
-            }
-        }
+        return _allCommands;
     }
 
     /// <summary>
@@ -63,40 +60,31 @@ public sealed class ToolshedEnvironment
         return _commands.TryGetValue(commandName, out command);
     }
 
-    public ToolshedEnvironment(IEnumerable<Type> commands)
-    {
-        IoCManager.InjectDependencies(this);
-
-        foreach (var ty in commands)
-        {
-            if (!ty.IsAssignableTo(typeof(ToolshedCommand)))
-            {
-                _log.Error($"The type {ty.AssemblyQualifiedName} was provided in a ToolshedEnvironment's constructor without being a child of {nameof(ToolshedCommand)}");
-                continue;
-            }
-
-            var command = (ToolshedCommand)Activator.CreateInstance(ty)!;
-            IoCManager.Resolve<IDependencyCollection>().InjectDependencies(command, oneOff: true);
-
-            _commands.Add(command.Name, command);
-        }
-
-        InitializeQueries();
-    }
-
     /// <summary>
     ///     Initializes a default toolshed context.
     /// </summary>
     public ToolshedEnvironment()
     {
         IoCManager.InjectDependencies(this);
+        Init(_reflection.FindTypesWithAttribute<ToolshedCommandAttribute>());
+    }
 
+    /// <summary>
+    /// Initialized a toolshed context with only the specified toolshed commands.
+    /// </summary>
+    public ToolshedEnvironment(IEnumerable<Type> commands)
+    {
+        IoCManager.InjectDependencies(this);
+        Init(commands);
+    }
+
+    private void Init(IEnumerable<Type> commands)
+    {
         _log = _logManager.GetSawmill("toolshed");
         var watch = new Stopwatch();
         watch.Start();
 
-        var tys = _reflection.FindTypesWithAttribute<ToolshedCommandAttribute>();
-        foreach (var ty in tys)
+        foreach (var ty in commands)
         {
             if (!ty.IsAssignableTo(typeof(ToolshedCommand)))
             {
@@ -104,62 +92,45 @@ public sealed class ToolshedEnvironment
                 continue;
             }
 
-            var command = (ToolshedCommand)Activator.CreateInstance(ty)!;
-            IoCManager.Resolve<IDependencyCollection>().InjectDependencies(command, oneOff: true);
+            var cmd = (ToolshedCommand)Activator.CreateInstance(ty)!;
+            _dependency.InjectDependencies(cmd, oneOff: true);
+            cmd.Init();
+            _commands.Add(cmd.Name, cmd);
 
-            _commands.Add(command.Name, command);
-        }
+            var list = new List<CommandSpec>();
+            _commandTypeMap.Add(ty, list);
 
-        InitializeQueries();
-
-        _log.Info($"Initialized new toolshed context in {watch.Elapsed}");
-    }
-
-    private void InitializeQueries()
-    {
-        foreach (var (_, cmd) in _commands)
-        {
-            foreach (var (subcommand, methods) in cmd.GetGenericImplementations().BySubCommand())
+            foreach (var impl in cmd.CommandImplementors.Values)
             {
-                foreach (var method in methods)
+                list.Add(impl.Spec);
+                _allCommands.Add(impl.Spec);
+
+                foreach (var method in impl.Methods)
                 {
-                    var piped = method.ConsoleGetPipedArgument()?.ParameterType;
+                    var piped = method.PipeArg?.ParameterType ?? typeof(void);
 
-                    if (piped is null)
-                        piped = typeof(void);
-
-                    var list = GetTypeImplList(piped);
-                    var invList = GetCommandRetValuesInternal(new CommandSpec(cmd, subcommand));
-                    list.Add(new CommandSpec(cmd, subcommand == "" ? null : subcommand));
-                    if (cmd.TryGetReturnType(subcommand, piped, Array.Empty<Type>(), out var retType) || method.ReturnType.Constructable())
+                    GetTypeImplList(piped).Add(impl.Spec);
+                    var invList = GetCommandRetValuesInternal(impl.Spec);
+                    if (cmd.TryGetReturnType(impl.SubCommand, piped, null, out var retType) || method.Info.ReturnType.Constructable())
                     {
-                        invList.Add((retType ?? method.ReturnType));
+                        invList.Add((retType ?? method.Info.ReturnType));
                     }
                 }
             }
         }
 
+        _log.Info($"Initialized new toolshed context in {watch.Elapsed}");
     }
 
-    /// <summary>
-    ///     Returns all commands that fit the given type constraints.
-    /// </summary>
-    /// <returns>Enumerable of matching command specs.</returns>
-    public IEnumerable<CommandSpec> CommandsFittingConstraint(Type input, Type output)
+    public bool TryGetCommands<T>([NotNullWhen(true)] out IReadOnlyList<CommandSpec>? commands)
+        where T : ToolshedCommand
     {
-        foreach (var (command, subcommand) in CommandsTakingType(input))
-        {
-            if (command.HasTypeParameters)
-                continue; // We don't consider these right now.
+        commands = null;
+        if (!_commandTypeMap.TryGetValue(typeof(T), out var list))
+            return false;
 
-            var impls = command.GetConcreteImplementations(input, Array.Empty<Type>(), subcommand);
-
-            foreach (var impl in impls)
-            {
-                if (impl.ReturnType.IsAssignableTo(output))
-                    yield return new CommandSpec(command, subcommand);
-            }
-        }
+        commands = list;
+        return true;
     }
 
     /// <summary>
@@ -168,23 +139,55 @@ public sealed class ToolshedEnvironment
     /// <param name="t">Type to use in the query.</param>
     /// <returns>Enumerable of matching command specs.</returns>
     /// <remarks>Not currently type constraint aware.</remarks>
-    public IEnumerable<CommandSpec> CommandsTakingType(Type t)
+    internal CommandSpec[] CommandsTakingType(Type? t)
     {
+        t ??= typeof(void);
+        if (_commandTypeCache.TryGetValue(t, out var arr))
+            return arr;
+
         var output = new Dictionary<(string, string?), CommandSpec>();
         foreach (var type in _toolshedManager.AllSteppedTypes(t))
         {
             var list = GetTypeImplList(type);
-            if (type.IsGenericType)
-            {
-                list = Enumerable.Concat<CommandSpec>(list, GetTypeImplList(type.GetGenericTypeDefinition())).ToList();
-            }
             foreach (var entry in list)
+            {
+                output.TryAdd((entry.Cmd.Name, entry.SubCommand), entry);
+            }
+
+            if (!type.IsGenericType)
+                continue;
+
+            foreach (var entry in GetTypeImplList(type.GetGenericTypeDefinition()))
             {
                 output.TryAdd((entry.Cmd.Name, entry.SubCommand), entry);
             }
         }
 
-        return output.Values;
+        return _commandTypeCache[t] = output.Values.ToArray();
+    }
+
+    // TODO TOOLSHED Fix CommandCompletionsForType
+    // This fails to generate some completions. E.g., "i 1 iota iterate". It never generates the completions for
+    // iterate, even though it takes in an unconstrained generic type. Note that this is just for completions, the
+    // actual command executes fine. E.g.: "i 1 iota iterate { take 1 } 3" works as spected
+    public CompletionResult CommandCompletionsForType(Type? t)
+    {
+        t ??= typeof(void);
+        if (!_commandCompletionCache.TryGetValue(t, out var arr))
+            arr = _commandCompletionCache[t] = CommandsTakingType(t).Select(x => x.AsCompletion()).ToArray();
+
+        return CompletionResult.FromHintOptions(arr, "<command>");
+    }
+
+    public CompletionResult SubCommandCompletionsForType(Type? t, ToolshedCommand command)
+    {
+        // TODO TOOLSHED Cache this?
+        // Maybe cache this or figure out some way to avoid having to iterate over unrelated commands.
+        // I.e., restrict the iteration to only happen over subcommands.
+        var cmds = CommandsTakingType(t)
+            .Where(x => x.Cmd == command)
+            .Select(x => x.AsCompletion());
+        return CompletionResult.FromHintOptions(cmds, "<command>");
     }
 
     /// <summary>
@@ -198,13 +201,7 @@ public sealed class ToolshedEnvironment
 
     private HashSet<Type> GetCommandRetValuesInternal(CommandSpec command)
     {
-        if (!_commandReturnValueMap.TryGetValue(command, out var l))
-        {
-            l = new();
-            _commandReturnValueMap[command] = l;
-        }
-
-        return l;
+        return _commandReturnValueMap.GetOrNew(command);
     }
 
     private List<CommandSpec> GetTypeImplList(Type t)
@@ -224,17 +221,9 @@ public sealed class ToolshedEnvironment
             t = t.GetGenericTypeDefinition();
         }
 
-        if (t.IsGenericType && !t.IsConstructedGenericType)
-        {
+        if (t is {IsGenericType: true, IsConstructedGenericType: false})
             t = t.GetGenericTypeDefinition();
-        }
 
-        if (!_commandPipeValueMap.TryGetValue(t, out var l))
-        {
-            l = new();
-            _commandPipeValueMap[t] = l;
-        }
-
-        return l;
+        return _commandPipeValueMap.GetOrNew(t);
     }
 }

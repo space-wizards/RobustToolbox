@@ -367,7 +367,7 @@ namespace Robust.Shared.Containers
             if (!xform.ParentUid.Valid)
                 return false;
 
-            if (entityQuery.Resolve(xform.ParentUid, ref foundComponent, false))
+            if (entityQuery.TryComp(xform.ParentUid, out foundComponent))
                 return true;
 
             return TryFindComponentOnEntityContainerOrParent(xform.ParentUid, entityQuery, ref foundComponent);
@@ -528,6 +528,39 @@ namespace Robust.Shared.Containers
                 return IsInSameOrTransparentContainer(user, (otherContainer.Owner, null, null), userContainer: userContainer, userSeeInsideSelf: userSeeInsideSelf);
 
             return false;
+        }
+
+        /// <summary>
+        /// Returns the full chain of containers containing the entity passed in, from innermost to outermost.
+        /// </summary>
+        /// <remarks>
+        /// The resulting collection includes the container directly containing the entity (if any),
+        /// the container containing that container, and so on until reaching the outermost container.
+        /// </remarks>
+        public IEnumerable<BaseContainer> GetContainingContainers(Entity<TransformComponent?> ent)
+        {
+            if (!ent.Owner.IsValid())
+                yield break;
+
+            if (!Resolve(ent, ref ent.Comp))
+                yield break;
+
+            var child = ent.Owner;
+            var parent = ent.Comp.ParentUid;
+
+            while (parent.IsValid())
+            {
+                if (((MetaQuery.GetComponent(child).Flags & MetaDataFlags.InContainer) == MetaDataFlags.InContainer) &&
+                    _managerQuery.TryGetComponent(parent, out var conManager) &&
+                    TryGetContainingContainer(parent, child, out var parentContainer, conManager))
+                {
+                    yield return parentContainer;
+                }
+
+                var parentXform = TransformQuery.GetComponent(parent);
+                child = parent;
+                parent = parentXform.ParentUid;
+            }
         }
 
         /// <summary>

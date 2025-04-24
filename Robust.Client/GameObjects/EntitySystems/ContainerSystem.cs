@@ -5,7 +5,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Network;
 using Robust.Shared.Utility;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -241,7 +240,7 @@ namespace Robust.Client.GameObjects
 #if DEBUG
             var uid = GetEntity(netEntity);
 
-            if (TryComp<MetaDataComponent>(uid, out var meta))
+            if (TryComp(uid, out MetaDataComponent? meta))
             {
                 DebugTools.Assert((meta.Flags & ( MetaDataFlags.Detached | MetaDataFlags.InContainer) ) == MetaDataFlags.Detached,
                     $"Adding entity {ToPrettyString(uid)} to list of expected entities for container {container.ID} in {ToPrettyString(container.Owner)}, despite it already being in a container.");
@@ -304,7 +303,7 @@ namespace Robust.Client.GameObjects
             while (parent.IsValid() && (!spriteOccluded || !lightOccluded))
             {
                 var parentXform = TransformQuery.GetComponent(parent);
-                if (TryComp<ContainerManagerComponent>(parent, out var manager) && manager.TryGetContainer(child, out var container))
+                if (TryComp<ContainerManagerComponent>(parent, out var manager) && TryGetContainingContainer(parent, child, out var container, manager))
                 {
                     spriteOccluded = spriteOccluded || !container.ShowContents;
                     lightOccluded = lightOccluded || container.OccludesLight;
@@ -345,7 +344,7 @@ namespace Robust.Client.GameObjects
                     var childLightOccluded = lightOccluded;
 
                     // We already know either sprite or light is not occluding so need to check container.
-                    if (manager.TryGetContainer(child, out var container))
+                    if (TryGetContainingContainer(entity, child, out var container, manager))
                     {
                         childSpriteOccluded = childSpriteOccluded || !container.ShowContents;
                         childLightOccluded = childLightOccluded || container.OccludesLight;

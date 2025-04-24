@@ -147,7 +147,7 @@ namespace Robust.Shared.GameObjects
         ///     The current lifetime stage of this entity. You can use this to check
         ///     if the entity is initialized or being deleted.
         /// </summary>
-        [ViewVariables]
+        [ViewVariables, Access(typeof(EntityManager), Other = AccessPermissions.ReadExecute)]
         public EntityLifeStage EntityLifeStage { get; internal set; }
 
         public MetaDataFlags Flags

@@ -268,7 +268,6 @@ namespace Robust.Server.Physics
                     newGrids[i] = newGridUid;
 
                     // Keep same origin / velocity etc; this makes updating a lot faster and easier.
-                    _xformSystem.SetWorldPosition(newGridXform, gridPos);
                     _xformSystem.SetWorldPositionRotation(newGridUid, gridPos, gridRot, newGridXform);
                     var splitBody = _bodyQuery.GetComponent(newGridUid);
                     _physics.SetLinearVelocity(newGridUid, mapBody.LinearVelocity, body: splitBody);
@@ -285,12 +284,12 @@ namespace Robust.Server.Physics
                         foreach (var index in node.Indices)
                         {
                             var tilePos = offset + index;
-                            tileData.Add((tilePos, oldGrid.GetTileRef(tilePos).Tile));
+                            tileData.Add((tilePos, _maps.GetTileRef(oldGridUid, oldGrid, tilePos).Tile));
                         }
                     }
 
                     _maps.SetTiles(newGrid.Owner, newGrid.Comp, tileData);
-                    DebugTools.Assert(_mapManager.IsGrid(newGridUid), "A split grid had no tiles?");
+                    DebugTools.Assert(_gridQuery.HasComp(newGridUid), "A split grid had no tiles?");
 
                     // Set tiles on new grid + update anchored entities
                     foreach (var node in group)
@@ -355,7 +354,7 @@ namespace Robust.Server.Physics
                     }
 
                     // Set tiles on old grid
-                    oldGrid.SetTiles(tileData);
+                    _maps.SetTiles(oldGridUid, oldGrid, tileData);
                     GenerateSplitNodes(newGridUid, newGrid);
                     SendNodeDebug(newGridUid);
                 }
@@ -388,7 +387,7 @@ namespace Robust.Server.Physics
 
         private void GenerateSplitNodes(EntityUid gridUid, MapGridComponent grid)
         {
-            foreach (var chunk in grid.GetMapChunks().Values)
+            foreach (var chunk in _maps.GetMapChunks(gridUid, grid).Values)
             {
                 var group = CreateNodes(gridUid, grid, chunk);
                 _nodes[gridUid].Add(chunk.Indices, group);
@@ -479,7 +478,7 @@ namespace Robust.Server.Physics
                     if (index.X == 0)
                     {
                         // Check West
-                        if (grid.TryGetChunk(new Vector2i(chunk.Indices.X - 1, chunk.Indices.Y), out neighborChunk) &&
+                        if (_maps.TryGetChunk(gridEuid, grid, new Vector2i(chunk.Indices.X - 1, chunk.Indices.Y), out neighborChunk) &&
                             TryGetNode(gridEuid, neighborChunk, new Vector2i(chunk.ChunkSize - 1, index.Y), out neighborNode))
                         {
                             chunkNode.Neighbors.Add(neighborNode);
@@ -490,7 +489,7 @@ namespace Robust.Server.Physics
                     if (index.Y == 0)
                     {
                         // Check South
-                        if (grid.TryGetChunk(new Vector2i(chunk.Indices.X, chunk.Indices.Y - 1), out neighborChunk) &&
+                        if (_maps.TryGetChunk(gridEuid, grid, new Vector2i(chunk.Indices.X, chunk.Indices.Y - 1), out neighborChunk) &&
                             TryGetNode(gridEuid, neighborChunk, new Vector2i(index.X, chunk.ChunkSize - 1), out neighborNode))
                         {
                             chunkNode.Neighbors.Add(neighborNode);
@@ -501,7 +500,7 @@ namespace Robust.Server.Physics
                     if (index.X == chunk.ChunkSize - 1)
                     {
                         // Check East
-                        if (grid.TryGetChunk(new Vector2i(chunk.Indices.X + 1, chunk.Indices.Y), out neighborChunk) &&
+                        if (_maps.TryGetChunk(gridEuid, grid, new Vector2i(chunk.Indices.X + 1, chunk.Indices.Y), out neighborChunk) &&
                             TryGetNode(gridEuid, neighborChunk, new Vector2i(0, index.Y), out neighborNode))
                         {
                             chunkNode.Neighbors.Add(neighborNode);
@@ -512,7 +511,7 @@ namespace Robust.Server.Physics
                     if (index.Y == chunk.ChunkSize - 1)
                     {
                         // Check North
-                        if (grid.TryGetChunk(new Vector2i(chunk.Indices.X, chunk.Indices.Y + 1), out neighborChunk) &&
+                        if (_maps.TryGetChunk(gridEuid, grid, new Vector2i(chunk.Indices.X, chunk.Indices.Y + 1), out neighborChunk) &&
                             TryGetNode(gridEuid, neighborChunk, new Vector2i(index.X, 0), out neighborNode))
                         {
                             chunkNode.Neighbors.Add(neighborNode);

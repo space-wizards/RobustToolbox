@@ -1,9 +1,12 @@
 ﻿using Robust.Shared.Localization;
+using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Toolshed.TypeParsers;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
-public record struct Entity<T> : IFluentEntityUid
+[NotYamlSerializable]
+public record struct Entity<T> : IFluentEntityUid, IAsType<EntityUid>
     where T : IComponent?
 {
     public EntityUid Owner;
@@ -44,10 +47,13 @@ public record struct Entity<T> : IFluentEntityUid
         comp = Comp;
     }
 
+    public EntityUid AsType() => Owner;
+
     public override int GetHashCode() => Owner.GetHashCode();
 }
 
-public record struct Entity<T1, T2> : IFluentEntityUid
+[NotYamlSerializable]
+public record struct Entity<T1, T2> : IFluentEntityUid, IAsType<EntityUid>
     where T1 : IComponent? where T2 : IComponent?
 {
     public EntityUid Owner;
@@ -111,9 +117,12 @@ public record struct Entity<T1, T2> : IFluentEntityUid
     {
         return new Entity<T1>(ent.Owner, ent.Comp1);
     }
+
+    public EntityUid AsType() => Owner;
 }
 
-public record struct Entity<T1, T2, T3> : IFluentEntityUid
+[NotYamlSerializable]
+public record struct Entity<T1, T2, T3> : IFluentEntityUid, IAsType<EntityUid>
     where T1 : IComponent? where T2 : IComponent? where T3 : IComponent?
 {
     public EntityUid Owner;
@@ -213,9 +222,12 @@ public record struct Entity<T1, T2, T3> : IFluentEntityUid
     }
 
 #endregion
+
+    public EntityUid AsType() => Owner;
 }
 
-public record struct Entity<T1, T2, T3, T4> : IFluentEntityUid
+[NotYamlSerializable]
+public record struct Entity<T1, T2, T3, T4> : IFluentEntityUid, IAsType<EntityUid>
     where T1 : IComponent? where T2 : IComponent? where T3 : IComponent? where T4 : IComponent?
 {
     public EntityUid Owner;
@@ -339,9 +351,12 @@ public record struct Entity<T1, T2, T3, T4> : IFluentEntityUid
     }
 
 #endregion
+
+    public EntityUid AsType() => Owner;
 }
 
-public record struct Entity<T1, T2, T3, T4, T5> : IFluentEntityUid
+[NotYamlSerializable]
+public record struct Entity<T1, T2, T3, T4, T5> : IFluentEntityUid, IAsType<EntityUid>
     where T1 : IComponent? where T2 : IComponent? where T3 : IComponent? where T4 : IComponent? where T5 : IComponent?
 {
     public EntityUid Owner;
@@ -489,9 +504,12 @@ public record struct Entity<T1, T2, T3, T4, T5> : IFluentEntityUid
     }
 
 #endregion
+
+    public EntityUid AsType() => Owner;
 }
 
-public record struct Entity<T1, T2, T3, T4, T5, T6> : IFluentEntityUid
+[NotYamlSerializable]
+public record struct Entity<T1, T2, T3, T4, T5, T6> : IFluentEntityUid, IAsType<EntityUid>
     where T1 : IComponent? where T2 : IComponent? where T3 : IComponent? where T4 : IComponent? where T5 : IComponent? where T6 : IComponent?
 {
     public EntityUid Owner;
@@ -663,9 +681,12 @@ public record struct Entity<T1, T2, T3, T4, T5, T6> : IFluentEntityUid
     }
 
 #endregion
+
+    public EntityUid AsType() => Owner;
 }
 
-public record struct Entity<T1, T2, T3, T4, T5, T6, T7> : IFluentEntityUid
+[NotYamlSerializable]
+public record struct Entity<T1, T2, T3, T4, T5, T6, T7> : IFluentEntityUid, IAsType<EntityUid>
     where T1 : IComponent? where T2 : IComponent? where T3 : IComponent? where T4 : IComponent? where T5 : IComponent? where T6 : IComponent? where T7 : IComponent?
 {
     public EntityUid Owner;
@@ -861,9 +882,13 @@ public record struct Entity<T1, T2, T3, T4, T5, T6, T7> : IFluentEntityUid
     }
 
 #endregion
+
+    public EntityUid AsType() => Owner;
+
 }
 
-public record struct Entity<T1, T2, T3, T4, T5, T6, T7, T8> : IFluentEntityUid
+[NotYamlSerializable]
+public record struct Entity<T1, T2, T3, T4, T5, T6, T7, T8> : IFluentEntityUid, IAsType<EntityUid>
     where T1 : IComponent? where T2 : IComponent? where T3 : IComponent? where T4 : IComponent? where T5 : IComponent? where T6 : IComponent? where T7 : IComponent? where T8 : IComponent?
 {
     public EntityUid Owner;
@@ -1083,4 +1108,6 @@ public record struct Entity<T1, T2, T3, T4, T5, T6, T7, T8> : IFluentEntityUid
     }
 
 #endregion
+
+    public EntityUid AsType() => Owner;
 }

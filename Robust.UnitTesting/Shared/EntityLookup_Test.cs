@@ -102,7 +102,7 @@ namespace Robust.UnitTesting.Shared
             var outcome = lookup.AnyLocalEntitiesIntersecting(grid.Owner, queryBounds, LookupFlags.All);
 
             Assert.That(outcome, Is.EqualTo(result));
-            mapManager.DeleteMap(spawnPos.MapId);
+            mapSystem.DeleteMap(spawnPos.MapId);
         }
 
         [Test, TestCaseSource(nameof(Box2Cases))]
@@ -127,7 +127,7 @@ namespace Robust.UnitTesting.Shared
             var outcome = lookup.AnyLocalEntitiesIntersecting(grid.Owner, queryBounds, LookupFlags.All);
 
             Assert.That(outcome, Is.EqualTo(result));
-            mapManager.DeleteMap(spawnPos.MapId);
+            mapSystem.DeleteMap(spawnPos.MapId);
         }
 
         /// <summary>
@@ -156,7 +156,7 @@ namespace Robust.UnitTesting.Shared
             lookup.GetLocalEntitiesIntersecting(grid.Owner, queryBounds, entities);
 
             Assert.That(entities.Count > 0, Is.EqualTo(result));
-            mapManager.DeleteMap(spawnPos.MapId);
+            mapSystem.DeleteMap(spawnPos.MapId);
         }
 
         /// <summary>
@@ -185,7 +185,7 @@ namespace Robust.UnitTesting.Shared
             lookup.GetLocalEntitiesIntersecting(grid.Owner, queryTile, entities);
 
             Assert.That(entities.Count > 0, Is.EqualTo(result));
-            mapManager.DeleteMap(spawnPos.MapId);
+            mapSystem.DeleteMap(spawnPos.MapId);
         }
 
         #endregion
@@ -200,7 +200,7 @@ namespace Robust.UnitTesting.Shared
 
             var lookup = server.Resolve<IEntitySystemManager>().GetEntitySystem<EntityLookupSystem>();
             var entManager = server.Resolve<IEntityManager>();
-            var mapManager = server.Resolve<IMapManager>();
+            var mapSystem = entManager.System<SharedMapSystem>();
 
             entManager.System<SharedMapSystem>().CreateMap(spawnPos.MapId);
 
@@ -210,7 +210,7 @@ namespace Robust.UnitTesting.Shared
                 entManager.Spawn(null, spawnPos);
 
             Assert.That(lookup.GetEntitiesInRange(queryPos.MapId, queryPos.Position, range).Count > 0, Is.EqualTo(result));
-            mapManager.DeleteMap(spawnPos.MapId);
+            mapSystem.DeleteMap(spawnPos.MapId);
         }
 
         [Test, TestCaseSource(nameof(IntersectingCases))]
@@ -236,7 +236,7 @@ namespace Robust.UnitTesting.Shared
             var bounds = new Box2Rotated(Box2.CenteredAround(queryPos.Position, new Vector2(range, range)));
 
             Assert.That(lookup.GetEntitiesIntersecting(queryPos.MapId, bounds).Count > 0, Is.EqualTo(result));
-            mapManager.DeleteMap(spawnPos.MapId);
+            mapSystem.DeleteMap(spawnPos.MapId);
         }
 
         [Test, TestCaseSource(nameof(InRangeCases))]
@@ -260,7 +260,7 @@ namespace Robust.UnitTesting.Shared
 
             _ = entManager.SpawnEntity(null, spawnPos);
             Assert.That(lookup.GetEntitiesInRange(queryPos.MapId, queryPos.Position, range).Count > 0, Is.EqualTo(result));
-            mapManager.DeleteMap(spawnPos.MapId);
+            mapSystem.DeleteMap(spawnPos.MapId);
         }
 
         [Test, TestCaseSource(nameof(InRangeCases))]
@@ -271,7 +271,7 @@ namespace Robust.UnitTesting.Shared
 
             var lookup = server.Resolve<IEntitySystemManager>().GetEntitySystem<EntityLookupSystem>();
             var entManager = server.Resolve<IEntityManager>();
-            var mapManager = server.Resolve<IMapManager>();
+            var mapSystem = entManager.System<SharedMapSystem>();
 
             entManager.System<SharedMapSystem>().CreateMap(spawnPos.MapId);
 
@@ -281,7 +281,7 @@ namespace Robust.UnitTesting.Shared
                 entManager.Spawn(null, spawnPos);
 
             Assert.That(lookup.GetEntitiesInRange(queryPos.MapId, queryPos.Position, range).Count > 0, Is.EqualTo(result));
-            mapManager.DeleteMap(spawnPos.MapId);
+            mapSystem.DeleteMap(spawnPos.MapId);
         }
 
         /// <summary>
@@ -309,7 +309,7 @@ namespace Robust.UnitTesting.Shared
             var outcome = lookup.AnyLocalEntitiesIntersecting(grid.Owner, queryBounds, LookupFlags.All);
 
             Assert.That(outcome, Is.EqualTo(result));
-            mapManager.DeleteMap(spawnPos.MapId);
+            mapSystem.DeleteMap(spawnPos.MapId);
         }
 
         /// <summary>
@@ -338,7 +338,7 @@ namespace Robust.UnitTesting.Shared
             lookup.GetLocalEntitiesIntersecting(grid.Owner, queryBounds, entities);
 
             Assert.That(entities.Count > 0, Is.EqualTo(result));
-            mapManager.DeleteMap(spawnPos.MapId);
+            mapSystem.DeleteMap(spawnPos.MapId);
         }
 
         #endregion
@@ -355,12 +355,14 @@ namespace Robust.UnitTesting.Shared
             var lookup = server.Resolve<IEntitySystemManager>().GetEntitySystem<EntityLookupSystem>();
             var entManager = server.Resolve<IEntityManager>();
             var mapManager = server.Resolve<IMapManager>();
+            var mapSystem = entManager.System<SharedMapSystem>();
+            var transformSystem = entManager.System<SharedTransformSystem>();
 
             var mapId = server.CreateMap().MapId;
             var grid = mapManager.CreateGridEntity(mapId);
 
             var theMapSpotBeingUsed = new Box2(Vector2.Zero, Vector2.One);
-            grid.Comp.SetTile(new Vector2i(), new Tile(1));
+            mapSystem.SetTile(grid, new Vector2i(), new Tile(1));
 
             Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList(), Is.Empty);
 
@@ -371,16 +373,17 @@ namespace Robust.UnitTesting.Shared
             var xform = entManager.GetComponent<TransformComponent>(dummy);
 
             // When anchoring it should still get returned.
-            xform.Anchored = true;
-            Assert.That(xform.Anchored);
+            transformSystem.AnchorEntity(dummy, xform);
+            Assert.That(xform.Anchored, Is.True);
             Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList(), Has.Count.EqualTo(1));
 
-            xform.Anchored = false;
+            transformSystem.Unanchor(dummy, xform);
+            Assert.That(xform.Anchored, Is.False);
             Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList().Count, Is.EqualTo(1));
 
             entManager.DeleteEntity(dummy);
-            mapManager.DeleteGrid(grid);
-            mapManager.DeleteMap(mapId);
+            entManager.DeleteEntity(grid);
+            mapSystem.DeleteMap(mapId);
         }
     }
 }

@@ -76,7 +76,7 @@ namespace Robust.Client.GameObjects
             foreach (var key in remie)
             {
                 component.PlayingAnimations.Remove(key);
-                var completedEvent = new AnimationCompletedEvent {Uid = uid, Key = key, Finished = true};
+                var completedEvent = new AnimationCompletedEvent(uid, component, key, true);
                 EntityManager.EventBus.RaiseLocalEvent(uid, completedEvent, true);
             }
 
@@ -143,6 +143,14 @@ namespace Robust.Client.GameObjects
             }
 #endif
 
+            foreach (var track in animation.AnimationTracks)
+            {
+                if (track is not AnimationTrackSpriteFlick)
+                    continue;
+
+                track.AdvancePlayback(ent.Owner, 0, 0, 0f);
+            }
+
             ent.Comp.PlayingAnimations.Add(key, playback);
         }
 
@@ -179,7 +187,7 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            var completedEvent = new AnimationCompletedEvent {Uid = entity.Owner, Key = key, Finished = false};
+            var completedEvent = new AnimationCompletedEvent(entity.Owner, entity.Comp, key, false);
             EntityManager.EventBus.RaiseLocalEvent(entity.Owner, completedEvent, true);
         }
 
@@ -194,13 +202,33 @@ namespace Robust.Client.GameObjects
     /// </summary>
     public sealed class AnimationCompletedEvent : EntityEventArgs
     {
+        /// <summary>
+        /// The entity associated with the event.
+        /// </summary>
         public EntityUid Uid { get; init; }
+
+        /// <summary>
+        /// The animation player component associated with the entity this event was raised on.
+        /// </summary>
+        public AnimationPlayerComponent AnimationPlayer { get; init; }
+
+        /// <summary>
+        /// The key associated with the animation that was completed.
+        /// </summary>
         public string Key { get; init; } = string.Empty;
 
         /// <summary>
         /// If true, the animation finished by getting to its natural end.
-        /// If false, it was removed prematurely via <see cref="AnimationPlayerSystem.Stop(Robust.Client.GameObjects.AnimationPlayerComponent,string)"/> or similar overloads.
+        /// If false, it was removed prematurely via <see cref="AnimationPlayerSystem.Stop(EntityUid,AnimationPlayerComponent,string)"/> or similar overloads.
         /// </summary>
         public bool Finished { get; init; }
+
+        public AnimationCompletedEvent(EntityUid uid, AnimationPlayerComponent animationPlayer, string key, bool finished = true)
+        {
+            Uid = uid;
+            AnimationPlayer = animationPlayer;
+            Key = key;
+            Finished = finished;
+        }
     }
 }

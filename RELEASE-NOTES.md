@@ -47,6 +47,7 @@ END TEMPLATE-->
 
 * Fix `EntityDeserializer` improperly setting entity lifestages when loading a post-mapinit map.
 * Fix `EntityManager.PredictedDeleteEntity()` not deleting pure client-side entities.
+* Fix grid fixtures using a locale dependent id. This could case some clients to crash/freeze when connected to a server with a different locale.
 
 ### Other
 

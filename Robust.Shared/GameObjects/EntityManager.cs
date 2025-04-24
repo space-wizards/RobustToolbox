@@ -700,9 +700,27 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        public void PredictedDeleteEntity(Entity<MetaDataComponent?, TransformComponent?>? ent)
+        {
+            if (ent == null)
+                return;
+
+            PredictedDeleteEntity(ent.Value);
+        }
+
+        /// <inheritdoc />
         public virtual void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
         {
             QueueDeleteEntity(ent.Owner);
+        }
+
+        /// <inheritdoc />
+        public virtual void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?>? ent)
+        {
+            if (ent == null)
+                return;
+
+            PredictedQueueDeleteEntity(ent.Value);
         }
 
         public bool EntityExists(EntityUid uid)

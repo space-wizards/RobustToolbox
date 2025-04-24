@@ -20,7 +20,7 @@ public sealed partial class AutoIncludeSerializationTest : RobustIntegrationTest
     [Test]
     public async Task TestAutoIncludeSerialization()
     {
-        var server = StartServer();
+        var server = StartServer(new() {Pool = false}); // Pool=false due to TileDef registration
         await server.WaitIdleAsync();
         var entMan = server.EntMan;
         var mapSys = server.System<SharedMapSystem>();
@@ -274,6 +274,7 @@ public sealed partial class AutoIncludeSerializationTest : RobustIntegrationTest
         await server.WaitPost(() => entMan.DeleteEntity(otherMap));
         await server.WaitPost(() => entMan.DeleteEntity(grid.Comp1.ParentUid));
         await server.WaitPost(() => entMan.DeleteEntity(nullSpace));
+        await server.WaitPost(() => mapSys.DeleteMap(mapId));
         AssertCount(0);
 
         // Check the map file
@@ -302,5 +303,8 @@ public sealed partial class AutoIncludeSerializationTest : RobustIntegrationTest
         await server.WaitPost(() => entMan.DeleteEntity(otherMap));
         await server.WaitPost(() => entMan.DeleteEntity(nullSpace));
         AssertCount(0);
+
+        Assert.That(entMan.Count<LoadedMapComponent>(), Is.EqualTo(0));
+        Assert.That(entMan.Count<MapComponent>(), Is.EqualTo(0));
     }
 }

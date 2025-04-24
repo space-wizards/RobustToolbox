@@ -1,5 +1,7 @@
 ﻿### Localization for engine console commands
 
+cmd-hint-float = [float]
+
 ## generic command errors
 
 cmd-invalid-arg-number-error = Invalid number of arguments.

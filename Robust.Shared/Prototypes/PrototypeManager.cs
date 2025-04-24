@@ -920,6 +920,8 @@ namespace Robust.Shared.Prototypes
             return TryGetKindFrom(typeof(T), out kind);
         }
 
+        public bool IsIgnored(string name) => _ignoredPrototypeTypes.Contains(name);
+
         /// <inheritdoc />
         public void RegisterIgnore(string name)
         {
@@ -972,6 +974,13 @@ namespace Robust.Shared.Prototypes
             }
 
             var name = attribute.Type ?? CalculatePrototypeName(kind);
+
+            // Maybe this should check if the prototype's name has been added to _ignoredPrototypeTypes ?
+            // But maybe there some weird instance where you want the client to know that a prototype kind exists,
+            // without having the client load information about the individual prototypes?
+            // So for now lets just log a warning instead of introducing breaking changes.
+            if (_ignoredPrototypeTypes.Contains(name))
+                Sawmill.Warning($"Registering an ignored prototype {kind}");
 
             if (_kindNames.TryGetValue(name, out var existing))
             {

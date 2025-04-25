@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Text;
 using Robust.Server;
+using Robust.Server.GameObjects;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
@@ -23,7 +24,7 @@ class Program
         ServerIoC.RegisterIoC(deps);
         deps.BuildGraph();
         SetupLogging(deps);
-        InitReflectionManager(deps);
+        // InitReflectionManager(deps);
 
         // Console.WriteLine(PathHelpers.ExecutableRelativeFile("data"));
         Console.WriteLine($"c: {CVars.AuthMode}");
@@ -94,9 +95,19 @@ class Program
         // var entMan = deps.Resolve<IEntityManager>();
         // entMan.Initialize();
 
+
+        InitReflectionManager(deps);
+        deps.Resolve<IReflectionManager>().LoadAssemblies(typeof(PointLightComponent).Assembly);
+        // deps.Resolve<IReflectionManager>().Initialize();
+
+        foreach (var asm in deps.Resolve<IReflectionManager>().Assemblies)
+        {
+            Console.WriteLine("Loaded: " + asm.FullName);
+        }
+
         var componentFactory = deps.Resolve<IComponentFactory>();
         componentFactory.DoAutoRegistrations();
-        componentFactory.RegisterTypes([typeof(Robust.Server.GameObjects.PointLightComponent)]);
+        // componentFactory.RegisterTypes([typeof(Robust.Server.GameObjects.PointLightComponent)]);
 
         componentFactory.IgnoreMissingComponents("Visuals");
         // componentFactory.IgnoreMissingComponents();
@@ -121,6 +132,7 @@ class Program
         var culture = new CultureInfo("en-US", false);
         loc.LoadCulture(culture);
 
+
         _serialization.Initialize();
 
         // protoMan.ClearIgnored();
@@ -138,8 +150,12 @@ class Program
 
         Dictionary<Type, HashSet<string>> changed = new();
         protoMan.LoadDirectory(new(@"/EnginePrototypes"), false, changed);
+        Console.WriteLine($"protoMan: engine {protoMan} - changed = {changed.Count}");
         protoMan.LoadDirectory(new(@"/Prototypes"), false, changed);
         protoMan.ResolveResults();
+
+        // return;
+        // deps.Resolve<IReflectionManager>().LoadAssemblies(typeof(RobustIntegrationTest).Assembly);
 
         Console.WriteLine($"protoMan: {protoMan} - changed = {changed.Count}");
 
@@ -161,7 +177,7 @@ class Program
         //     Console.WriteLine($"A reagent: {p}");
         // }
 
-        return;
+        // return;
 
         // var allErrors = protoMan.ValidateDirectory(new(@"/Prototypes"));
         string filePath = "/Users/ciaran/code/ss14/space-station-14/Resources/Prototypes/Reagents/medicine.yml";

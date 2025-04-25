@@ -35,9 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* `RobustIntegrationTest` now pools server/client instances by default. If a custom settings class is provided, it will still disable pooling unless explicitly enabled.
-  * Server/Client instances that are returned to the pool should be disconnected. This might require you to update some tests.
-  * Pooled instances also require you to use `RobustIntegrationTest` methods like `WaitPost()` to ensure the correct thread is used.
+*None yet*
 
 ### New features
 
@@ -45,17 +43,34 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fix `EntityDeserializer` improperly setting entity lifestages when loading a post-mapinit map.
-* Fix `EntityManager.PredictedDeleteEntity()` not deleting pure client-side entities.
-* Fix grid fixtures using a locale dependent id. This could case some clients to crash/freeze when connected to a server with a different locale.
+*None yet*
 
 ### Other
 
-* Add logic to block cycles in master MIDI renderers, which could otherwise cause client freezes.
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 255.0.0
+
+### Breaking changes
+
+* `RobustIntegrationTest` now pools server/client instances by default. If a custom settings class is provided, it will still disable pooling unless explicitly enabled.
+  * Server/Client instances that are returned to the pool should be disconnected. This might require you to update some tests.
+  * Pooled instances also require you to use `RobustIntegrationTest` methods like `WaitPost()` to ensure the correct thread is used.
+
+### Bugfixes
+
+* Fix `EntityDeserializer` improperly setting entity lifestages when loading a post-mapinit map.
+* Fix `EntityManager.PredictedDeleteEntity()` not deleting pure client-side entities.
+* Fix grid fixtures using a locale dependent id. This could cause some clients to crash/freeze when connected to a server with a different locale.
+
+### Other
+
+* Add logic to block cycles in master MIDI renderers, which could otherwise cause client freezes.
 
 
 ## 254.1.0

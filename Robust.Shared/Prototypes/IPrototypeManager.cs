@@ -311,6 +311,8 @@ public interface IPrototypeManager
     /// </summary>
     void RegisterIgnore(string name);
 
+    void ClearIgnored();
+
     /// <summary>
     /// Loads several prototype kinds into the manager. Note that this will re-build a frozen dictionary and should be avoided if possible.
     /// </summary>

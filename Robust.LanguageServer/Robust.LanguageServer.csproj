@@ -13,4 +13,15 @@
       <PackageReference Include="EmmyLua.LanguageServer.Framework" Version="0.8.1" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Robust.Server\Robust.Server.csproj" />
+      <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="Robust.Server">
+        <HintPath>..\..\bin\Content.LanguageServer\Robust.Server.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
 </Project>

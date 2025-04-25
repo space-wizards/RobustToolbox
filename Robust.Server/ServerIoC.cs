@@ -1,9 +1,9 @@
 using System.Diagnostics.Metrics;
 using Robust.Server.Configuration;
 using Robust.Server.Console;
-using Robust.Server.DataMetrics;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
+using Robust.Server.Observability.Prometheus;
 using Robust.Server.Placement;
 using Robust.Server.Player;
 using Robust.Server.Prototypes;
@@ -23,6 +23,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Observability;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;

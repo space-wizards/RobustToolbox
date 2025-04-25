@@ -1,10 +1,10 @@
 using System;
 using System.Threading.Tasks;
-using Prometheus;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Observability;
 using Robust.Shared.Player;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
@@ -21,7 +21,7 @@ internal sealed partial class PvsSystem
     /// </summary>
     private void SerializeStates()
     {
-        using var _ = Histogram.WithLabels("Serialize States").NewTimer();
+        using var _ = Histogram.Timer("Serialize States");
         var opts = new ParallelOptions {MaxDegreeOfParallelism = _parallelMgr.ParallelProcessCount};
         _oldestAck = GameTick.MaxValue.Value;
         Parallel.For(-1, _sessions.Length, opts, SerializeState);

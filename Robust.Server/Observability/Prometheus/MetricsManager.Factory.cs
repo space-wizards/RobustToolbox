@@ -4,7 +4,7 @@ using System.Diagnostics.Metrics;
 using System.Linq;
 using Robust.Shared.Utility;
 
-namespace Robust.Server.DataMetrics;
+namespace Robust.Server.Observability.Prometheus;
 
 internal sealed partial class MetricsManager : IMeterFactory
 {

@@ -3,9 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
-using Prometheus;
 using Robust.Server.Console;
-using Robust.Server.DataMetrics;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
 using Robust.Server.Log;
@@ -29,6 +27,7 @@ using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Observability;
 using Robust.Shared.Player;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
@@ -51,26 +50,26 @@ namespace Robust.Server
     /// </summary>
     internal sealed class BaseServer : IBaseServerInternal, IPostInjectInit
     {
-        private static readonly Gauge ServerUpTime = Metrics.CreateGauge(
+        private static readonly Gauge ServerUpTime = Metrics.Gauge(
             "robust_server_uptime",
             "The real time the server main loop has been running.");
 
-        private static readonly Gauge ServerCurTime = Metrics.CreateGauge(
+        private static readonly Gauge ServerCurTime = Metrics.Gauge(
             "robust_server_curtime",
             "The IGameTiming.CurTime of the server.");
 
-        private static readonly Gauge ServerCurTick = Metrics.CreateGauge(
+        private static readonly Gauge ServerCurTick = Metrics.Gauge(
             "robust_server_curtick",
             "The IGameTiming.CurTick of the server.");
 
-        private static readonly Histogram TickUsage = Metrics.CreateHistogram(
+        private static readonly Histogram TickUsage = Metrics.Histogram(
             "robust_server_update_usage",
             "Time usage of the main loop Update()s",
-            new HistogramConfiguration
-            {
-                LabelNames = new[] {"area"},
-                Buckets = Histogram.ExponentialBuckets(0.000_01, 2, 13)
-            });
+            "area",
+            0.000_01,
+            2,
+            13
+        );
 
         [Dependency] private readonly INetConfigurationManagerInternal _config = default!;
         [Dependency] private readonly IServerEntityManager _entityManager = default!;
@@ -690,7 +689,7 @@ namespace Robust.Server
 
         private void Input(FrameEventArgs args)
         {
-            using var _ = TickUsage.WithLabels("Inputs").NewTimer();
+            using var _ = TickUsage.Timer("Inputs");
             _systemConsole.UpdateInput();
 
             _network.ProcessPackets();
@@ -706,23 +705,23 @@ namespace Robust.Server
 
             _systemConsole.UpdateTick();
 
-            using (TickUsage.WithLabels("PreEngine").NewTimer())
+            using (TickUsage.Timer("PreEngine"))
             {
                 _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, frameEventArgs);
             }
 
-            using (TickUsage.WithLabels("NetworkedCVar").NewTimer())
+            using (TickUsage.Timer("NetworkedCVar"))
             {
                 _config.TickProcessMessages();
             }
 
-            using (TickUsage.WithLabels("Timers").NewTimer())
+            using (TickUsage.Timer("Timers"))
             {
                 _consoleHost.CommandBufferExecute();
                 _timerManager.UpdateTimers(frameEventArgs);
             }
 
-            using (TickUsage.WithLabels("AsyncTasks").NewTimer())
+            using (TickUsage.Timer("AsyncTasks"))
             {
                 _taskManager.ProcessPendingTasks();
             }
@@ -730,12 +729,12 @@ namespace Robust.Server
             // Pass Histogram into the IEntityManager.Update so it can do more granular measuring.
             _entityManager.TickUpdate(frameEventArgs.DeltaSeconds, noPredictions: false, TickUsage);
 
-            using (TickUsage.WithLabels("PostEngine").NewTimer())
+            using (TickUsage.Timer("PostEngine"))
             {
                 _modLoader.BroadcastUpdate(ModUpdateLevel.PostEngine, frameEventArgs);
             }
 
-            using (TickUsage.WithLabels("GameState").NewTimer())
+            using (TickUsage.Timer("GameState"))
             {
                 _stateManager.SendGameStateUpdate();
             }

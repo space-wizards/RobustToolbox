@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using Prometheus;
 using Robust.Server.GameStates;
 using Robust.Server.Player;
 using Robust.Shared;
@@ -15,6 +14,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Observability;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Replays;
@@ -29,7 +29,7 @@ namespace Robust.Server.GameObjects
     [UsedImplicitly] // DI Container
     public sealed class ServerEntityManager : EntityManager, IServerEntityManager
     {
-        private static readonly Gauge EntitiesCount = Metrics.CreateGauge(
+        private static readonly Gauge EntitiesCount = Metrics.Gauge(
             "robust_entities_count",
             "Amount of alive entities.");
 
@@ -159,7 +159,7 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public override void TickUpdate(float frameTime, bool noPredictions, Histogram? histogram)
         {
-            using (histogram?.WithLabels("EntityNet").NewTimer())
+            using (histogram?.Timer("EntityNet"))
             {
                 while (_queue.Count != 0 && _queue.Peek().SourceTick <= _gameTiming.CurTick)
                 {

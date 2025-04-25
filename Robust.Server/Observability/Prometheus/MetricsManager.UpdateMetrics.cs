@@ -6,7 +6,7 @@ using Robust.Shared.Asynchronous;
 using Robust.Shared.IoC;
 using Robust.Shared.Timing;
 
-namespace Robust.Server.DataMetrics;
+namespace Robust.Server.Observability.Prometheus;
 
 internal sealed partial class MetricsManager
 {

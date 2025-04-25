@@ -8,10 +8,10 @@ using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Lidgren.Network;
-using Prometheus;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Observability;
 using Robust.Shared.Player;
 using Robust.Shared.Profiling;
 using Robust.Shared.Serialization;
@@ -41,39 +41,39 @@ namespace Robust.Shared.Network
     {
         internal const int SharedKeyLength = CryptoAeadXChaCha20Poly1305Ietf.KeyBytes; // 32 bytes
 
-        private static readonly Counter SentPacketsMetrics = Metrics.CreateCounter(
+        private static readonly Counter SentPacketsMetrics = Metrics.Counter(
             "robust_net_sent_packets",
             "Number of packets sent since server startup.");
 
-        private static readonly Counter RecvPacketsMetrics = Metrics.CreateCounter(
+        private static readonly Counter RecvPacketsMetrics = Metrics.Counter(
             "robust_net_recv_packets",
             "Number of packets received since server startup.");
 
-        private static readonly Counter SentMessagesMetrics = Metrics.CreateCounter(
+        private static readonly Counter SentMessagesMetrics = Metrics.Counter(
             "robust_net_sent_messages",
             "Number of messages sent since server startup.");
 
-        private static readonly Counter RecvMessagesMetrics = Metrics.CreateCounter(
+        private static readonly Counter RecvMessagesMetrics = Metrics.Counter(
             "robust_net_recv_messages",
             "Number of messages received since server startup.");
 
-        private static readonly Counter SentBytesMetrics = Metrics.CreateCounter(
+        private static readonly Counter SentBytesMetrics = Metrics.Counter(
             "robust_net_sent_bytes",
             "Number of bytes sent since server startup.");
 
-        private static readonly Counter RecvBytesMetrics = Metrics.CreateCounter(
+        private static readonly Counter RecvBytesMetrics = Metrics.Counter(
             "robust_net_recv_bytes",
             "Number of bytes received since server startup.");
 
-        private static readonly Counter MessagesResentDelayMetrics = Metrics.CreateCounter(
+        private static readonly Counter MessagesResentDelayMetrics = Metrics.Counter(
             "robust_net_resent_delay",
             "Number of messages that had to be re-sent due to delay.");
 
-        private static readonly Counter MessagesResentHoleMetrics = Metrics.CreateCounter(
+        private static readonly Counter MessagesResentHoleMetrics = Metrics.Counter(
             "robust_net_resent_hole",
             "Number of messages that had to be re-sent due to holes.");
 
-        private static readonly Counter MessagesDroppedMetrics = Metrics.CreateCounter(
+        private static readonly Counter MessagesDroppedMetrics = Metrics.Counter(
             "robust_net_dropped",
             "Number of incoming messages that have been dropped.");
 

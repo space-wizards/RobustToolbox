@@ -2,10 +2,10 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
-using Prometheus;
 using Robust.Shared.Enums;
 using Robust.Shared.Log;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Observability;
 using Robust.Shared.Player;
 using Robust.Shared.Threading;
 using Robust.Shared.Utility;
@@ -30,7 +30,7 @@ internal sealed partial class PvsSystem
             return;
         }
 
-        using var _ = Histogram.WithLabels("Process Leave").NewTimer();
+        using var _ = Histogram.Timer("Process Leave");
         _parallelMgr.ProcessNow(_leaveJob, _leaveJob.Count);
     }
 

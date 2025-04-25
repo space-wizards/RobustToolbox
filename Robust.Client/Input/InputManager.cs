@@ -48,6 +48,7 @@ namespace Robust.Client.Input
         [Dependency] private readonly IUserInterfaceManagerInternal _uiMgr = default!;
         [Dependency] private readonly IConsoleHost _console = default!;
         [Dependency] private readonly ISerializationManager _serialization = default!;
+        private ISawmill _logger = default!;
 
         private bool _currentlyFindingViewport;
 
@@ -114,6 +115,8 @@ namespace Robust.Client.Input
         /// <inheritdoc />
         public void Initialize()
         {
+            _logger = Logger.GetSawmill("input");
+
             NetworkBindMap = new BoundKeyMap(_reflectionManager);
             NetworkBindMap.PopulateKeyFunctionsMap();
 
@@ -130,7 +133,7 @@ namespace Robust.Client.Input
                 }
                 catch (Exception e)
                 {
-                    Logger.ErrorS("input", "Failed to load user keybindings: " + e);
+                    _logger.Error("Failed to load user keybindings: " + e);
                 }
             }
 
@@ -531,8 +534,7 @@ namespace Robust.Client.Input
 
                     if (reg.Type != KeyBindingType.Command && !NetworkBindMap.FunctionExists(reg.Function.FunctionName))
                     {
-                        Logger.DebugS("input", "Key function in {0} does not exist: '{1}'.", file,
-                            reg.Function);
+                        _logger.Debug("Key function in {0} does not exist: '{1}'.", file, reg.Function);
                         invalid = true;
                     }
 

@@ -12,7 +12,9 @@ internal sealed partial class CollisionManager
     /// <param name="xfA">The transform for the first shape.</param>
     /// <param name="xfB">The transform for the seconds shape.</param>
     /// <returns></returns>
-    public bool TestOverlap<T, U>(T shapeA, int indexA, U shapeB, int indexB, in Transform xfA, in Transform xfB) where T : IPhysShape where U : IPhysShape
+    public bool TestOverlap<T, U>(T shapeA, int indexA, U shapeB, int indexB, in Transform xfA, in Transform xfB)
+        where T : IPhysShape
+        where U : IPhysShape
     {
         var input = new DistanceInput();
 

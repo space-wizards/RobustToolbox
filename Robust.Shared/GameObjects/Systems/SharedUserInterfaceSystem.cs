@@ -121,7 +121,12 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         if (msg.Message is not CloseBoundInterfaceMessage && ui.RequireInputValidation)
         {
             var attempt = new BoundUserInterfaceMessageAttempt(sender, uid, msg.UiKey, msg.Message);
+
             RaiseLocalEvent(attempt);
+            if (attempt.Cancelled)
+                return;
+
+            RaiseLocalEvent(uid, attempt);
             if (attempt.Cancelled)
                 return;
         }

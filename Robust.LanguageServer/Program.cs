@@ -22,6 +22,7 @@ class Program
     {
         var deps = IoCManager.InitThread();
         ServerIoC.RegisterIoC(deps);
+        Robust.Client.ClientIoC.RegisterIoC(deps);
         deps.BuildGraph();
         SetupLogging(deps);
         // InitReflectionManager(deps);
@@ -49,18 +50,21 @@ class Program
         // Set up the VFS
         _resources.Initialize(dataDir);
 
-        ServerOptions Options = new();
+        ServerOptions options = new()
+        {
+            LoadConfigAndUserData = false,
+        };
 
-        var mountOptions = Options.MountOptions;
+        var mountOptions = options.MountOptions;
         // var mountOptions = _commandLineArgs != null
         //     ? MountOptions.Merge(_commandLineArgs.MountOptions, Options.MountOptions) : Options.MountOptions;
 
         ProgramShared.DoMounts(_resources,
             mountOptions,
-            Options.ContentBuildDirectory,
-            Options.AssemblyDirectory,
-            Options.LoadContentResources,
-            Options.ResourceMountDisabled,
+            options.ContentBuildDirectory,
+            options.AssemblyDirectory,
+            options.LoadContentResources,
+            options.ResourceMountDisabled,
             false);
 
 
@@ -75,10 +79,10 @@ class Program
         var resourceManifest = ResourceManifestData.LoadResourceManifest(_resources);
 
         Console.WriteLine(
-            $"Options.AssemblyDirectory: {Options.AssemblyDirectory} - {resourceManifest.AssemblyPrefix} - {Options.ContentModulePrefix}");
+            $"Options.AssemblyDirectory: {options.AssemblyDirectory} - {resourceManifest.AssemblyPrefix} - {options.ContentModulePrefix}");
 
-        if (!_modLoader.TryLoadModulesFrom(Options.AssemblyDirectory,
-                resourceManifest.AssemblyPrefix ?? Options.ContentModulePrefix))
+        if (!_modLoader.TryLoadModulesFrom(options.AssemblyDirectory,
+                resourceManifest.AssemblyPrefix ?? options.ContentModulePrefix))
         {
             Console.Error.WriteLine("Errors while loading content assemblies.");
             return;
@@ -183,12 +187,13 @@ class Program
         string filePath = "/Users/ciaran/code/ss14/space-station-14/Resources/Prototypes/Reagents/medicine.yml";
         // string filePath = "/Users/ciaran/code/ss14/space-station-14/Resources/Prototypes/Flavors/flavors.yml";
         using TextReader reader = new StreamReader(filePath);
-        var allErrors = protoMan.ValidateSingleFile(reader, out _, filePath);
-        // var allErrors = protoMan.ValidateDirectory(new(@"/Prototypes/Reagents"), out _);
+        // var allErrors = protoMan.ValidateSingleFile(reader, out _, filePath);
+        var allErrors = protoMan.ValidateDirectory(new(@"/Prototypes"), out _);
         // foreach (var (file, errors) in allErrors)
         // {
         //     Console.WriteLine($"File: {file} - {errors.Count} errors");
         // }
+        Console.WriteLine($"allErrors: {allErrors.Count}");
 
         foreach (var (path, nodeList) in allErrors)
         {

@@ -18,11 +18,12 @@ namespace Robust.LanguageServer;
 
 public sealed class Loader
 {
-    public static void Init(IDependencyCollection deps)
+    [Dependency] IResourceManagerInternal _resources = default!;
+    [Dependency] INetConfigurationManagerInternal _config = default!;
+    [Dependency] ISerializationManager _serialization = default!;
+
+    public void Init(IDependencyCollection deps)
     {
-        ServerIoC.RegisterIoC(deps);
-        // ClientIoC.RegisterIoC(GameController.DisplayMode.Headless, deps);
-        deps.BuildGraph();
         SetupLogging(deps);
         // InitReflectionManager(deps);
 
@@ -31,9 +32,9 @@ public sealed class Loader
 
         var protoMan = IoCManager.Resolve<IPrototypeManager>();
 
-        var _resources = deps.Resolve<IResourceManagerInternal>();
-        var _config = deps.Resolve<INetConfigurationManagerInternal>();
-        var _serialization = deps.Resolve<ISerializationManager>();
+        // var _resources = deps.Resolve<IResourceManagerInternal>();
+        // var _config = deps.Resolve<INetConfigurationManagerInternal>();
+        // var _serialization = deps.Resolve<ISerializationManager>();
 
         // _config.LoadCVarsFromAssembly(typeof(AudioSystem).Assembly); // Robust.Server
         _config.LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Robust.Shared
@@ -195,7 +196,7 @@ public sealed class Loader
             });
     }
 
-    private  static void SetupLogging(IDependencyCollection deps)
+    private static void SetupLogging(IDependencyCollection deps)
     {
         if (OperatingSystem.IsWindows())
         {

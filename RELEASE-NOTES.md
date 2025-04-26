@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * The client localisation manager now supports hot-reloading ftl files. 
+* TransformSystem can now raise `GridUidChangedEvent` and `MapUidChangedEvent` when a entity's grid or map changes. This event is only raised if the `ExtraTransformEvents` metadata flag is enabled.
 
 ### Bugfixes
 

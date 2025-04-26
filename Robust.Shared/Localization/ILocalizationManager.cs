@@ -150,7 +150,9 @@ namespace Robust.Shared.Localization
         /// <summary>
         /// Initializes the <see cref="LocalizationManager"/>.
         /// </summary>
-        void Initialize();
+        void Initialize()
+        {
+        }
     }
 
     internal interface ILocalizationManagerInternal : ILocalizationManager

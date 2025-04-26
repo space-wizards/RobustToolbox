@@ -40,6 +40,8 @@ namespace Robust.Shared.Localization
         private (CultureInfo, FluentBundle)? _defaultCulture;
         private (CultureInfo, FluentBundle)[] _fallbackCultures = Array.Empty<(CultureInfo, FluentBundle)>();
 
+        void ILocalizationManager.Initialize() => Initialize();
+
         public virtual void Initialize()
         {
             _logSawmill = _log.GetSawmill("loc");

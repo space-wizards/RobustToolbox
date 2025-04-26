@@ -12,6 +12,8 @@ public sealed class LanguageServerContext
 {
     private ELLanguageServer _languageServer;
 
+    private bool _initialized = false;
+
     public LanguageServerContext(ELLanguageServer languageServer)
     {
         var deps = IoCManager.Instance;
@@ -71,11 +73,18 @@ public sealed class LanguageServerContext
 
     public void Initialize()
     {
+        if (_initialized)
+            return;
+
+        _initialized = true;
+
         AddHandler(new TextDocumentHandler());
     }
 
     public Task Run()
     {
+        Initialize();
+
         return _languageServer.Run();
     }
 

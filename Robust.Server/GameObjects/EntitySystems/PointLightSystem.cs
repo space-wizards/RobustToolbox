@@ -15,7 +15,7 @@ public sealed class PointLightSystem : SharedPointLightSystem
         SubscribeLocalEvent<PointLightComponent, ComponentGetState>(OnLightGetState);
         SubscribeLocalEvent<PointLightComponent, ComponentStartup>(OnLightStartup);
         SubscribeLocalEvent<PointLightComponent, ComponentShutdown>(OnLightShutdown);
-        SubscribeLocalEvent<PointLightComponent, MetaFlagRemoveAttemptEvent>(OnFlagRemove);
+        SubscribeLocalEvent<PointLightComponent, MetaFlagRemoveAttemptEvent>(OnFlagRemoveAttempt);
     }
 
     private void OnLightShutdown(Entity<PointLightComponent> ent, ref ComponentShutdown args)
@@ -23,7 +23,7 @@ public sealed class PointLightSystem : SharedPointLightSystem
         UpdatePriority(ent.Owner, ent.Comp, MetaData(ent.Owner));
     }
 
-    private void OnFlagRemove(Entity<PointLightComponent> ent, ref MetaFlagRemoveAttemptEvent args)
+    private void OnFlagRemoveAttempt(Entity<PointLightComponent> ent, ref MetaFlagRemoveAttemptEvent args)
     {
         if (IsHighPriority(ent.Comp))
             args.ToRemove &= ~MetaDataFlags.PvsPriority;

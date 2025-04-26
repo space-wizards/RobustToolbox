@@ -16,15 +16,8 @@ using ELLanguageServer = EmmyLua.LanguageServer.Framework.Server.LanguageServer;
 
 public class TextDocumentHandler : TextDocumentHandlerBase
 {
-    private readonly ELLanguageServer _server;
-
-    [Dependency] public readonly IPrototypeManager _protoMan = null!;
-
-    public TextDocumentHandler(ELLanguageServer server)
-    {
-        _server = server;
-        // _protoMan = IoCManager.Resolve<IPrototypeManager>();
-    }
+    [Dependency] private readonly ELLanguageServer _server = null!;
+    [Dependency] private readonly IPrototypeManager _protoMan = null!;
 
     protected override Task Handle(DidOpenTextDocumentParams request, CancellationToken token)
     {

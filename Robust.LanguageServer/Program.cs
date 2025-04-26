@@ -15,10 +15,15 @@ internal static class Program
         // IoCManager.Register<LanguageServerContext>();
         ServerIoC.RegisterIoC(deps);
         // ClientIoC.RegisterIoC(GameController.DisplayMode.Headless, deps);
-        deps.BuildGraph();
 
         var ls = CreateTcpLanguageServer();
         var ctx = new LanguageServerContext(ls);
+
+        IoCManager.RegisterInstance<ELLanguageServer>(ls);
+        IoCManager.RegisterInstance<LanguageServerContext>(ctx);
+
+        deps.BuildGraph();
+
         ctx.Initialize();
 
         await ctx.Run();

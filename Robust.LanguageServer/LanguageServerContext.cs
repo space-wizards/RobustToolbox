@@ -71,7 +71,7 @@ public sealed class LanguageServerContext
 
     public void Initialize()
     {
-        AddHandler(new TextDocumentHandler(_languageServer));
+        AddHandler(new TextDocumentHandler());
     }
 
     public Task Run()

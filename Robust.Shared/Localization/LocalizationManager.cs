@@ -45,8 +45,6 @@ namespace Robust.Shared.Localization
         public virtual void Initialize()
         {
             _logSawmill = _log.GetSawmill("loc");
-
-
             _prototype.PrototypesReloaded += OnPrototypesReloaded;
         }
 

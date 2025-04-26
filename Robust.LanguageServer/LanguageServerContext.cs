@@ -12,8 +12,12 @@ public sealed class LanguageServerContext
 {
     private ELLanguageServer _languageServer;
 
-    public LanguageServerContext(IDependencyCollection deps, ELLanguageServer languageServer)
+    public LanguageServerContext(ELLanguageServer languageServer)
     {
+        var deps = IoCManager.Instance;
+        if (deps == null)
+            throw new NullReferenceException(nameof(deps));
+
         _languageServer = languageServer;
 
         _languageServer.OnInitialize((c, s) =>

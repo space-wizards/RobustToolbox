@@ -18,7 +18,7 @@ internal static class Program
         deps.BuildGraph();
 
         var ls = CreateTcpLanguageServer();
-        var ctx = new LanguageServerContext(deps, ls);
+        var ctx = new LanguageServerContext(ls);
         ctx.Initialize();
 
         await ctx.Run();

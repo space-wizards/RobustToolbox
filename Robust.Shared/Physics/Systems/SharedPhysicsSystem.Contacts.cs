@@ -625,6 +625,11 @@ public abstract partial class SharedPhysicsSystem
     {
         public IEntityManager EntManager;
 
+        public UpdateTreesJob()
+        {
+            EntManager = default!;
+        }
+
         public void Execute()
         {
             var query = EntManager.AllEntityQueryEnumerator<BroadphaseComponent>();

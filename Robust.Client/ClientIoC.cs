@@ -107,6 +107,7 @@ namespace Robust.Client
             deps.Register<NetworkResourceManager>();
             deps.Register<IReloadManager, ReloadManager>();
             deps.Register<ILocalizationManager, ClientLocalizationManager>();
+            deps.Register<ILocalizationManagerInternal, ClientLocalizationManager>();
 
             switch (mode)
             {

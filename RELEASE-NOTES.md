@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* The client localisation manager now supports hot-reloading ftl files. 
 
 ### Bugfixes
 

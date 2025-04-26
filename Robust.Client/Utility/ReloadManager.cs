@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using Robust.Client.Graphics;
 using Robust.Shared;
@@ -26,7 +25,6 @@ internal sealed class ReloadManager : IReloadManager
     private readonly TimeSpan _reloadDelay = TimeSpan.FromMilliseconds(10);
     private CancellationTokenSource _reloadToken = new();
     private readonly HashSet<ResPath> _reloadQueue = new();
-    private List<FileSystemWatcher> _watchers = new();
 
     public event Action<ResPath>? OnChanged;
 
@@ -69,6 +67,11 @@ internal sealed class ReloadManager : IReloadManager
         _reloadQueue.Clear();
     }
 
+    public void Register(ResPath directory, string filter)
+    {
+        Register(directory.ToString(), filter);
+    }
+
     public void Register(string directory, string filter)
     {
         if (!_cfg.GetCVar(CVars.ResPrototypeReloadWatch))
@@ -90,7 +93,6 @@ internal sealed class ReloadManager : IReloadManager
                 NotifyFilter = NotifyFilters.LastWrite
             };
 
-            _watchers.Add(watcher);
 
             watcher.Changed += OnWatch;
 
@@ -100,7 +102,7 @@ internal sealed class ReloadManager : IReloadManager
             }
             catch (IOException ex)
             {
-                Logger.Error($"Watching resources in path {path} threw an exception:\n{ex}");
+                _sawmill.Error($"Watching resources in path {path} threw an exception:\n{ex}");
             }
         }
 

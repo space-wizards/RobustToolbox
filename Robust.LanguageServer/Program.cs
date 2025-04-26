@@ -2,7 +2,8 @@
 using System.Reflection;
 using System.Text;
 using Robust.Server;
-using Robust.Server.GameObjects;
+using Robust.Client;
+using Robust.Client.GameObjects;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
@@ -13,6 +14,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager;
+using PointLightComponent = Robust.Server.GameObjects.PointLightComponent;
 
 namespace Robust.LanguageServer;
 
@@ -22,7 +24,7 @@ class Program
     {
         var deps = IoCManager.InitThread();
         ServerIoC.RegisterIoC(deps);
-        Robust.Client.ClientIoC.RegisterIoC(deps);
+        // ClientIoC.RegisterIoC(GameController.DisplayMode.Headless, deps);
         deps.BuildGraph();
         SetupLogging(deps);
         // InitReflectionManager(deps);
@@ -102,6 +104,7 @@ class Program
 
         InitReflectionManager(deps);
         deps.Resolve<IReflectionManager>().LoadAssemblies(typeof(PointLightComponent).Assembly);
+        deps.Resolve<IReflectionManager>().LoadAssemblies(typeof(SpriteComponent).Assembly);
         // deps.Resolve<IReflectionManager>().Initialize();
 
         foreach (var asm in deps.Resolve<IReflectionManager>().Assemblies)

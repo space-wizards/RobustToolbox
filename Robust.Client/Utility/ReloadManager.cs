@@ -21,7 +21,9 @@ internal sealed class ReloadManager : IReloadManager
     [Dependency] private readonly IConfigurationManager _cfg = default!;
     [Dependency] private readonly ILogManager _logMan = default!;
     [Dependency] private readonly IResourceManager _res = default!;
+#if TOOLS
     [Dependency] private readonly ITaskManager _tasks = default!;
+#endif
 
     private readonly TimeSpan _reloadDelay = TimeSpan.FromMilliseconds(10);
     private CancellationTokenSource _reloadToken = new();
@@ -136,6 +138,6 @@ internal sealed class ReloadManager : IReloadManager
                 }
             });
         }
-        #endif
+#endif
     }
 }

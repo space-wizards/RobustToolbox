@@ -23,7 +23,9 @@ namespace Robust.Client.Graphics.Clyde
             private readonly ISawmill _sawmillGlfw;
 
             private bool _glfwInitialized;
-            private bool _win32Experience = false;
+#pragma warning disable CS0649
+            private bool _win32Experience;
+#pragma warning restore CS0649
 
             public GlfwWindowingImpl(Clyde clyde, IDependencyCollection deps)
             {

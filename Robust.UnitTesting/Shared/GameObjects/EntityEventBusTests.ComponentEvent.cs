@@ -311,7 +311,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 handlerACount++;
 
                 // add and then remove component B
-                bus.OnComponentRemoved(new RemovedComponentEventArgs(new ComponentEventArgs(instB, entUid), false, default!, CompIdx.Index<OrderBComponent>()));
+                bus.OnComponentRemoved(new RemovedComponentEventArgs(new ComponentEventArgs(instB, entUid), false, default!, regB));
                 bus.OnComponentAdded(new AddedComponentEventArgs(new ComponentEventArgs(instB, entUid), regB));
             }
 
@@ -322,7 +322,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 handlerBCount++;
 
                 // add and then remove component A
-                bus.OnComponentRemoved(new RemovedComponentEventArgs(new ComponentEventArgs(instA, entUid), false, default!, CompIdx.Index<OrderAComponent>()));
+                bus.OnComponentRemoved(new RemovedComponentEventArgs(new ComponentEventArgs(instA, entUid), false, default!, regA));
                 bus.OnComponentAdded(new AddedComponentEventArgs(new ComponentEventArgs(instA, entUid), regA));
             }
 

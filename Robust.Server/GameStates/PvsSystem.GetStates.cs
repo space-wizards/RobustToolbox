@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.Player;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -23,10 +24,10 @@ internal sealed partial class PvsSystem
         var bus = EntityManager.EventBus;
         var changed = new List<ComponentChange>();
 
-        bool sendCompList = meta.LastComponentRemoved > fromTick;
+        var sendCompList = meta.LastComponentRemoved > fromTick;
         HashSet<ushort>? netComps = sendCompList ? new() : null;
 
-        foreach (var (netId, component) in meta.NetComponents)
+        foreach (var (netId, (component, restriction)) in meta.NetComponents)
         {
             DebugTools.Assert(component.NetSyncEnabled);
 
@@ -36,18 +37,27 @@ internal sealed partial class PvsSystem
                 continue;
             }
 
-            if (component.SendOnlyToOwner && player != null && player.AttachedEntity != entityUid)
+            // Skip if not modified and we aren't sending a full comp list.
+            if (component.LastModifiedTick <= fromTick && !sendCompList)
+                continue;
+
+            var canReceiveState = restriction switch
+            {
+                StateRestriction.OwnerOnly => player == null || player.AttachedEntity == entityUid,
+                StateRestriction.SessionSpecific => player == null || EntityManager.CanGetComponentState(bus, component, player),
+                StateRestriction.ReplayOnly => player == null,
+                _ => true
+            };
+
+            if (!canReceiveState)
                 continue;
 
             if (component.LastModifiedTick <= fromTick)
             {
-                if (sendCompList && (!component.SessionSpecific || player == null || EntityManager.CanGetComponentState(bus, component, player)))
-                    netComps!.Add(netId);
+                DebugTools.Assert(sendCompList);
+                netComps!.Add(netId);
                 continue;
             }
-
-            if (component.SessionSpecific && player != null && !EntityManager.CanGetComponentState(bus, component, player))
-                continue;
 
             var state = EntityManager.GetComponentState(bus, component, player, fromTick);
             changed.Add(new ComponentChange(netId, state, component.LastModifiedTick));
@@ -76,14 +86,19 @@ internal sealed partial class PvsSystem
 
         HashSet<ushort> netComps = new();
 
-        foreach (var (netId, component) in meta.NetComponents)
+        foreach (var (netId, (component, restriction)) in meta.NetComponents)
         {
             DebugTools.Assert(component.NetSyncEnabled);
 
-            if (component.SendOnlyToOwner && player.AttachedEntity != entityUid)
-                continue;
+            var canReceiveState = restriction switch
+            {
+                StateRestriction.OwnerOnly => player == null || player.AttachedEntity == entityUid,
+                StateRestriction.ReplayOnly => player == null,
+                StateRestriction.SessionSpecific => player == null || EntityManager.CanGetComponentState(bus, component, player),
+                _ => true
+            };
 
-            if (component.SessionSpecific && !EntityManager.CanGetComponentState(bus, component, player))
+            if (!canReceiveState)
                 continue;
 
             var state = EntityManager.GetComponentState(bus, component, player, GameTick.Zero);

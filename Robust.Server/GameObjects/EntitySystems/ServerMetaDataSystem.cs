@@ -1,4 +1,5 @@
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.Player;
 
 namespace Robust.Server.GameObjects;
@@ -29,7 +30,8 @@ public sealed class ServerMetaDataSystem : MetaDataSystem
     private void OnComponentAdded(AddedComponentEventArgs obj)
     {
         var comp = obj.BaseArgs.Component;
-        if (comp.NetSyncEnabled && (comp.SessionSpecific || comp.SendOnlyToOwner))
+        var sessionSpecific = obj.ComponentType.Restriction is StateRestriction.OwnerOnly or StateRestriction.SessionSpecific;
+        if (sessionSpecific && comp.NetSyncEnabled)
             MetaData(obj.BaseArgs.Owner).Flags |= MetaDataFlags.SessionSpecific;
     }
 
@@ -39,15 +41,16 @@ public sealed class ServerMetaDataSystem : MetaDataSystem
     private void OnComponentRemoved(RemovedComponentEventArgs obj)
     {
         var removed = obj.BaseArgs.Component;
-        if (obj.Terminating || !removed.NetSyncEnabled || (!removed.SessionSpecific && !removed.SendOnlyToOwner))
+        var sessionSpecific = obj.Registration.Restriction is StateRestriction.OwnerOnly or StateRestriction.SessionSpecific;
+        if (obj.Terminating || !removed.NetSyncEnabled || !sessionSpecific)
             return;
 
-        foreach (var comp in obj.Meta.NetComponents.Values)
+        foreach (var (comp, restriction) in obj.Meta.NetComponents.Values)
         {
             if (comp.LifeStage >= ComponentLifeStage.Removing)
                 continue;
 
-            if (comp.NetSyncEnabled && (comp.SessionSpecific || comp.SendOnlyToOwner))
+            if (comp.NetSyncEnabled && (restriction is StateRestriction.SessionSpecific or StateRestriction.OwnerOnly))
                 return; // keep the flag
         }
 
@@ -64,9 +67,9 @@ public sealed class ServerMetaDataSystem : MetaDataSystem
         if ((meta.Flags & MetaDataFlags.SessionSpecific) == 0)
             return;
 
-        foreach (var (_, comp) in meta.NetComponents)
+        foreach (var (_, (comp, restriction)) in meta.NetComponents)
         {
-            if (comp.SessionSpecific || comp.SendOnlyToOwner)
+            if (restriction is StateRestriction.OwnerOnly or StateRestriction.SessionSpecific)
                 Dirty(uid, comp);
         }
     }

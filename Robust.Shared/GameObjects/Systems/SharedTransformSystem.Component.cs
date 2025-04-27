@@ -678,7 +678,7 @@ public abstract partial class SharedTransformSystem
 
 #if DEBUG
             // Lets check content didn't do anything silly with the event.
-            DebugTools.AssertEqual(ent.Comp1.GridUid, newMap);
+            DebugTools.AssertEqual(ent.Comp1.MapUid, newMap);
             DebugTools.AssertEqual(ent.Comp1.MapID, newMapId);
             DebugTools.AssertEqual(ent.Comp1.ChildCount, childCount);
             DebugTools.AssertEqual(ent.Comp1.ParentUid, oldParent);

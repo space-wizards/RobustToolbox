@@ -7,7 +7,7 @@ namespace Robust.Shared.GameObjects;
 /// <remarks>
 /// Event handlers should not modify positions or delete the entity, because the move event that triggered this event
 /// is still being processed. This may also mean that the entity's current position/parent has not yet been updated,
-/// positional entity queries are not reliable.
+/// and that positional entity queries are not reliable.
 /// </remarks>
 [ByRefEvent]
 public readonly struct GridUidChangedEvent(Entity<TransformComponent, MetaDataComponent> ent, EntityUid? old)

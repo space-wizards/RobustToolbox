@@ -48,7 +48,7 @@ public abstract partial class SharedTransformSystem
         xform._localRotation += rotation;
 
         var meta = MetaData(uid);
-        SetGridId(new(uid, xform, meta), newGridUid);
+        SetGridId((uid, xform, meta), newGridUid);
         RaiseMoveEvent((uid, xform, meta), oldGridUid, oldPos, oldRot, oldMap);
 
         DebugTools.Assert(XformQuery.GetComponent(oldGridUid).MapID == XformQuery.GetComponent(newGridUid).MapID);
@@ -396,7 +396,7 @@ public abstract partial class SharedTransformSystem
 
         foreach (var child in ent.Comp1._children)
         {
-            SetGridId(new(child, XformQuery.GetComponent(child), null), gridId);
+            SetGridId((child, XformQuery.GetComponent(child), null), gridId);
         }
     }
 
@@ -1561,7 +1561,7 @@ public abstract partial class SharedTransformSystem
         var meta = MetaData(uid);
         if (meta.EntityLifeStage > EntityLifeStage.Initialized)
         {
-            SetGridId(new(uid, component, meta), uid);
+            SetGridId((uid, component, meta), uid);
             return;
         }
 

@@ -13,9 +13,9 @@ namespace Robust.Client.Prototypes
     public sealed class ClientPrototypeManager : PrototypeManager
     {
         [Dependency] private readonly INetManager _netManager = default!;
-#if TOOLS
+#pragma warning disable CS0414
         [Dependency] private readonly IClientGameTiming _timing = default!;
-#endif
+#pragma warning restore CS0414
         [Dependency] private readonly IGameControllerInternal _controller = default!;
         [Dependency] private readonly IReloadManager _reload = default!;
 

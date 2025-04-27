@@ -13,10 +13,10 @@ namespace Robust.Server.Prototypes
 {
     public sealed class ServerPrototypeManager : PrototypeManager
     {
-#if TOOLS
+#pragma warning disable CS0414
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IConGroupController _conGroups = default!;
-#endif
+#pragma warning restore CS0414
         [Dependency] private readonly INetManager _netManager = default!;
         [Dependency] private readonly IBaseServerInternal _server = default!;
 

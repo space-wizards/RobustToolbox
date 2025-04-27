@@ -12,11 +12,11 @@ namespace Robust.Shared.GameObjects;
 /// and that positional entity queries are not reliable.
 /// </remarks>
 [ByRefEvent]
-public readonly struct MapUidChangedEvent(Entity<TransformComponent, MetaDataComponent> entity, EntityUid? newUid, MapId newMapId)
+public readonly struct MapUidChangedEvent(Entity<TransformComponent, MetaDataComponent> entity, EntityUid? oldUid, MapId oldMapId)
 {
     public readonly Entity<TransformComponent, MetaDataComponent> Entity = entity;
-    public readonly EntityUid? OldMap;
-    public readonly MapId? OldMapId;
+    public readonly EntityUid? OldMap = oldUid;
+    public readonly MapId? OldMapId = oldMapId;
 
     public EntityUid? NewMap => Entity.Comp1.MapUid;
     public MapId? NewMapId => Entity.Comp1.MapID;

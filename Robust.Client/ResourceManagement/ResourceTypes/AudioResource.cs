@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Robust.Client.Audio;
-using Robust.Shared.Audio;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Utility;
@@ -36,22 +35,19 @@ public sealed class AudioResource : BaseResource
         }
 
         using var fileStream = cache.ContentFileRead(path);
-        var signature = new byte[MaxSignatureLength];
-        if (fileStream.Read(signature) != signature.Length)
-        {
-            throw new IOException("Unable to read signature from Audio file.");
-        }
-        fileStream.Seek(0, SeekOrigin.Begin);
+        var seekableStream = fileStream.CanSeek ? fileStream : fileStream.CopyToMemoryStream();
+        byte[] signature = seekableStream.ReadExact(MaxSignatureLength);
+        seekableStream.Seek(0, SeekOrigin.Begin);
 
         var audioManager = dependencies.Resolve<IAudioInternal>();
         if (signature.Take(OggSignature.Length).SequenceEqual(OggSignature))
         {
-            AudioStream = audioManager.LoadAudioOggVorbis(fileStream, path.ToString());
+            AudioStream = audioManager.LoadAudioOggVorbis(seekableStream, path.ToString());
         }
         else if (signature.Take(RiffSignature.Length).SequenceEqual(RiffSignature)
                  && signature.Skip(WavSignatureSkip).SequenceEqual(WavSignature))
         {
-            AudioStream = audioManager.LoadAudioWav(fileStream, path.ToString());
+            AudioStream = audioManager.LoadAudioWav(seekableStream, path.ToString());
         }
         else
         {

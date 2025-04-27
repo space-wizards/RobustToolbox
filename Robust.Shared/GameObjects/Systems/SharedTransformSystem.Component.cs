@@ -354,15 +354,16 @@ public abstract partial class SharedTransformSystem
 
     #region GridId
 
+    /// <inheritdoc cref="SetGridId(Entity{TransformComponent,MetaDataComponent},EntityUid?)"/>
+    public void SetGridId(EntityUid uid, TransformComponent xform, EntityUid? gridId, EntityQuery<TransformComponent>? xformQuery = null)
+    {
+        SetGridId((uid, xform, MetaData(uid)), gridId);
+    }
+
     /// <summary>
     /// Sets <see cref="TransformComponent.GridUid"/> for the entity and any children. Note that this does not dirty
     /// the component, as this is implicitly networked via the transform hierarchy.
     /// </summary>
-    public void SetGridId(EntityUid uid, TransformComponent xform, EntityUid? gridId, EntityQuery<TransformComponent>? xformQuery = null)
-    {
-        SetGridId((uid,  xform, MetaData(uid)), gridId);
-    }
-
     public void SetGridId(Entity<TransformComponent, MetaDataComponent?> ent, EntityUid? gridId)
     {
         if (!ent.Comp1._gridInitialized || ent.Comp1._gridUid == gridId || ent.Comp1.GridUid == ent.Owner)

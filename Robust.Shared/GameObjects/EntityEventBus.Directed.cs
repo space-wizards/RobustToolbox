@@ -440,7 +440,8 @@ namespace Robust.Shared.GameObjects
 
             compSubs.Add(eventType, registration);
 
-            // This probably shouldn't belong here, but I'm not sure where else to put it.
+            // This probably doesn't belong here, but I'm not sure where else to put it.
+            // Putting it in comp-state code would require hooking the check to run whenever subscriptions get locked.
             DebugTools.Assert(eventType != typeof(ComponentGetStateAttemptEvent)
                               || _comFac.GetRegistration(compType).Restriction == StateRestriction.SessionSpecific,
                 $"ComponentGetStateAttemptEvent subscription for {compTypeObj.Name} does nothing as the component is not marked as session specific.");

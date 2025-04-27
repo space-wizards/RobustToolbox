@@ -10,11 +10,10 @@ namespace Robust.Shared.GameObjects;
 /// and that positional entity queries are not reliable.
 /// </remarks>
 [ByRefEvent]
-public readonly struct GridUidChangedEvent(Entity<TransformComponent, MetaDataComponent> ent, EntityUid? old)
+public readonly record struct GridUidChangedEvent(
+    Entity<TransformComponent, MetaDataComponent> Entity,
+    EntityUid? OldGrid)
 {
-    public readonly Entity<TransformComponent, MetaDataComponent> Entity = ent;
-    public readonly EntityUid? OldGrid = old;
-
     public EntityUid? NewGrid => Entity.Comp1.GridUid;
     public EntityUid Uid => Entity.Owner;
     public TransformComponent Transform => Entity.Comp1;

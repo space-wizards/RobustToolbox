@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Sockets;
+using Robust.LanguageServer.Provider;
 using Robust.Shared.IoC;
 using Robust.Server;
 using ELLanguageServer = EmmyLua.LanguageServer.Framework.Server.LanguageServer;
@@ -10,8 +11,12 @@ internal static class Program
     static async Task Main(string[] args)
     {
         var deps = IoCManager.InitThread();
+        IoCManager.Register<DocumentCache>();
         IoCManager.Register<Loader>();
         IoCManager.Register<Validator>();
+
+        IoCManager.Register<DiagnosticProvider>();
+
         // IoCManager.Register<LanguageServerContext>();
         ServerIoC.RegisterIoC(deps);
         // ClientIoC.RegisterIoC(GameController.DisplayMode.Headless, deps);

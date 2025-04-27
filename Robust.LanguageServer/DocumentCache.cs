@@ -1,0 +1,25 @@
+using EmmyLua.LanguageServer.Framework.Protocol.Model;
+
+namespace Robust.LanguageServer;
+
+public sealed class DocumentCache
+{
+    // This should really store the parsed document
+    // but for now we’ll just hold the string contents
+    private Dictionary<Uri, string> _documents = new();
+
+    public delegate void DocumentChangedHandler(Uri uri);
+
+    public event DocumentChangedHandler? DocumentChanged;
+
+    public string GetDocumentContents(DocumentUri uri)
+    {
+        return _documents[uri.Uri];
+    }
+
+    public void UpdateDocument(DocumentUri uri, string content)
+    {
+        _documents[uri.Uri] = content;
+        DocumentChanged?.Invoke(uri.Uri);
+    }
+}

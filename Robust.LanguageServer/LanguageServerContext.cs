@@ -3,6 +3,7 @@ using EmmyLua.LanguageServer.Framework.Protocol.Message.Client.ShowMessage;
 using EmmyLua.LanguageServer.Framework.Protocol.Message.Configuration;
 using EmmyLua.LanguageServer.Framework.Server.Handler;
 using Robust.LanguageServer.Handler;
+using Robust.LanguageServer.Provider;
 using Robust.Shared.IoC;
 
 namespace Robust.LanguageServer;
@@ -10,7 +11,9 @@ using ELLanguageServer = EmmyLua.LanguageServer.Framework.Server.LanguageServer;
 
 public sealed class LanguageServerContext
 {
-    private ELLanguageServer _languageServer;
+    [Dependency] private readonly DocumentCache _cache = null!;
+
+    private readonly ELLanguageServer _languageServer;
 
     private bool _initialized = false;
 
@@ -79,6 +82,12 @@ public sealed class LanguageServerContext
         _initialized = true;
 
         AddHandler(new TextDocumentHandler());
+        AddHandler(new SemanticTokensHandler());
+
+        _cache.DocumentChanged += (uri) =>
+        {
+            Console.Error.WriteLine($"Document changed! Uri: {uri}");
+        };
     }
 
     public Task Run()

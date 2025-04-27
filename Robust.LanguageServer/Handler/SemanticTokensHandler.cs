@@ -8,6 +8,7 @@ using EmmyLua.LanguageServer.Framework.Protocol.Model;
 using EmmyLua.LanguageServer.Framework.Server.Handler;
 using Robust.Shared.Collections;
 using Robust.Shared.IoC;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
@@ -87,13 +88,11 @@ public sealed class SemanticTokensHandler : SemanticTokensHandlerBase
             }
         }
 
-
         return Task.FromResult(new SemanticTokens()
         {
             Data = semanticTokenBuilder.Build()
         })!;
     }
-
 
     public override void RegisterCapability(
         ServerCapabilities serverCapabilities,
@@ -123,16 +122,7 @@ public sealed class SemanticTokensHandler : SemanticTokensHandlerBase
         SemanticTokensRangeParams semanticTokensRangeParams,
         CancellationToken cancellationToken)
     {
-        var semanticTokenBuilder = new SemanticTokensBuilder(TokenTypes, TokenModifiers);
-        semanticTokenBuilder.Push(new Position(0, 2),
-            2,
-            SemanticTokenTypes.Comment,
-            SemanticTokenModifiers.Documentation);
-
-        return Task.FromResult(new SemanticTokens()
-        {
-            Data = semanticTokenBuilder.Build()
-        })!;
+        throw new NotImplementedException();
     }
 
     // public SemanticTokensRegistrationOptions GetRegistrationOptions(

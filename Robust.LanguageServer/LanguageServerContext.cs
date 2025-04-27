@@ -83,6 +83,7 @@ public sealed class LanguageServerContext
 
         AddHandler(new TextDocumentHandler());
         AddHandler(new SemanticTokensHandler());
+        AddHandler(new DocumentColorHandler());
 
         _cache.DocumentChanged += (uri) =>
         {

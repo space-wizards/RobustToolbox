@@ -238,6 +238,11 @@ namespace Robust.Shared.GameObjects
         /// a grid or map.
         /// </summary>
         PvsPriority = 1 << 4,
+
+        /// <summary>
+        /// Whether we should raise the <see cref="EntGridChangedEvent"/> whenever this entity changes grids.
+        /// </summary>
+        GridTracking = 1 << 5,
     }
 
     /// <summary>

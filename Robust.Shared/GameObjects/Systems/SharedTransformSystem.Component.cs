@@ -47,7 +47,7 @@ public abstract partial class SharedTransformSystem
         xform._localPosition = tilePos + newGrid.TileSizeHalfVector;
         xform._localRotation += rotation;
 
-        SetGridId(uid, xform, newGridUid, XformQuery);
+        SetGridId(uid, xform, MetaData(uid), newGridUid);
         var meta = MetaData(uid);
         RaiseMoveEvent((uid, xform, meta), oldGridUid, oldPos, oldRot, oldMap);
 
@@ -370,16 +370,24 @@ public abstract partial class SharedTransformSystem
     /// <summary>
     /// Sets the <see cref="GridId"/> for the transformcomponent. Does not Dirty it.
     /// </summary>
-    public void SetGridId(EntityUid uid, TransformComponent xform, EntityUid? gridId, EntityQuery<TransformComponent>? xformQuery = null)
+    public void SetGridId(EntityUid uid, TransformComponent xform, MetaDataComponent meta, EntityUid? gridId)
     {
         if (!xform._gridInitialized || xform._gridUid == gridId || xform.GridUid == uid)
             return;
 
         DebugTools.Assert(!HasComp<MapGridComponent>(uid) || gridId == uid);
         xform._gridUid = gridId;
+
+        if ((meta.Flags & MetaDataFlags.GridTracking) != 0)
+        {
+            var oldGridId = xform._gridUid;
+            var ev = new EntGridChangedEvent(uid, oldGridId, gridId, xform);
+            RaiseLocalEvent(uid, ref ev);
+        }
+
         foreach (var child in xform._children)
         {
-            SetGridId(child, XformQuery.GetComponent(child), gridId);
+            SetGridId(child, XformQuery.GetComponent(child), MetaData(child), gridId);
         }
     }
 
@@ -578,7 +586,7 @@ public abstract partial class SharedTransformSystem
                 {
                     if (!newParent._gridInitialized)
                         InitializeGridUid(value.EntityId, newParent);
-                    SetGridId(uid, xform, newParent.GridUid);
+                    SetGridId(uid, xform, meta, newParent.GridUid);
                 }
             }
             else
@@ -587,7 +595,7 @@ public abstract partial class SharedTransformSystem
                 if (!xform._gridInitialized)
                     InitializeGridUid(uid, xform);
                 else
-                    SetGridId(uid, xform, null, XformQuery);
+                    SetGridId(uid, xform, meta, null);
             }
 
             if (xform.Initialized)
@@ -1503,7 +1511,7 @@ public abstract partial class SharedTransformSystem
         // Added to existing map so need to update all children too.
         if (LifeStage(uid) > EntityLifeStage.Initialized)
         {
-            SetGridId(uid, component, uid, XformQuery);
+            SetGridId(uid, component, MetaData(uid), uid);
             return;
         }
 

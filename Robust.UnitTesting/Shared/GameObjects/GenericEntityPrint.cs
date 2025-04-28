@@ -45,6 +45,7 @@ public sealed class GenericEntityPrint
         var tupleParameters = new StringBuilder();
         var tupleAccess = new StringBuilder();
         var entityAccess = new StringBuilder();
+        var selfAccess = new StringBuilder();
         var entityNumberedAccess = new StringBuilder();
         var defaults = new StringBuilder();
         var compOperators = new StringBuilder();
@@ -65,6 +66,7 @@ public sealed class GenericEntityPrint
             tupleParameters.Clear();
             tupleAccess.Clear();
             entityAccess.Clear();
+            selfAccess.Clear();
             entityNumberedAccess.Clear();
             defaults.Clear();
             compOperators.Clear();
@@ -91,6 +93,7 @@ public sealed class GenericEntityPrint
                 var suffix = (j >= 2 && k == 1) ? string.Empty : kStr;
                 var prefix = (j >= 2 && k == 2) ? "1" : string.Empty;
                 entityAccess.Append($"{prefix}, ent.Comp{suffix}");
+                selfAccess.Append($"{prefix}, Comp{suffix}");
                 entityNumberedAccess.Append($", ent.Comp{kStr}");
                 defaults.Append(", default");
                 compOperators.AppendLine($$"""
@@ -210,7 +213,7 @@ public sealed class GenericEntityPrint
                     {{castRegion}}
 
                     public override int GetHashCode() => Owner.GetHashCode();
-                    public Entity<{{nullableGenerics}}> AsNullable() => this!;
+                    public Entity<{{nullableGenerics}}> AsNullable() => new(Owner{{selfAccess}});;
                     public EntityUid AsType() => Owner;
                 }
 

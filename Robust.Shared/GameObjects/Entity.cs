@@ -49,7 +49,7 @@ public record struct Entity<T> : IFluentEntityUid, IAsType<EntityUid>
 
 
     public override int GetHashCode() => Owner.GetHashCode();
-    public Entity<T?> AsNullable() => this!;
+    public Entity<T?> AsNullable() => new(Owner, Comp);;
     public EntityUid AsType() => Owner;
 }
 
@@ -120,7 +120,7 @@ public record struct Entity<T1, T2> : IFluentEntityUid, IAsType<EntityUid>
     }
 
     public override int GetHashCode() => Owner.GetHashCode();
-    public Entity<T1?, T2?> AsNullable() => this!;
+    public Entity<T1?, T2?> AsNullable() => new(Owner, Comp1, Comp2);;
     public EntityUid AsType() => Owner;
 }
 
@@ -227,7 +227,7 @@ public record struct Entity<T1, T2, T3> : IFluentEntityUid, IAsType<EntityUid>
 #endregion
 
     public override int GetHashCode() => Owner.GetHashCode();
-    public Entity<T1?, T2?, T3?> AsNullable() => this!;
+    public Entity<T1?, T2?, T3?> AsNullable() => new(Owner, Comp1, Comp2, Comp3);;
     public EntityUid AsType() => Owner;
 }
 
@@ -358,7 +358,7 @@ public record struct Entity<T1, T2, T3, T4> : IFluentEntityUid, IAsType<EntityUi
 #endregion
 
     public override int GetHashCode() => Owner.GetHashCode();
-    public Entity<T1?, T2?, T3?, T4?> AsNullable() => this!;
+    public Entity<T1?, T2?, T3?, T4?> AsNullable() => new(Owner, Comp1, Comp2, Comp3, Comp4);;
     public EntityUid AsType() => Owner;
 }
 
@@ -513,7 +513,7 @@ public record struct Entity<T1, T2, T3, T4, T5> : IFluentEntityUid, IAsType<Enti
 #endregion
 
     public override int GetHashCode() => Owner.GetHashCode();
-    public Entity<T1?, T2?, T3?, T4?, T5?> AsNullable() => this!;
+    public Entity<T1?, T2?, T3?, T4?, T5?> AsNullable() => new(Owner, Comp1, Comp2, Comp3, Comp4, Comp5);;
     public EntityUid AsType() => Owner;
 }
 
@@ -692,7 +692,7 @@ public record struct Entity<T1, T2, T3, T4, T5, T6> : IFluentEntityUid, IAsType<
 #endregion
 
     public override int GetHashCode() => Owner.GetHashCode();
-    public Entity<T1?, T2?, T3?, T4?, T5?, T6?> AsNullable() => this!;
+    public Entity<T1?, T2?, T3?, T4?, T5?, T6?> AsNullable() => new(Owner, Comp1, Comp2, Comp3, Comp4, Comp5, Comp6);;
     public EntityUid AsType() => Owner;
 }
 
@@ -895,7 +895,7 @@ public record struct Entity<T1, T2, T3, T4, T5, T6, T7> : IFluentEntityUid, IAsT
 #endregion
 
     public override int GetHashCode() => Owner.GetHashCode();
-    public Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?> AsNullable() => this!;
+    public Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?> AsNullable() => new(Owner, Comp1, Comp2, Comp3, Comp4, Comp5, Comp6, Comp7);;
     public EntityUid AsType() => Owner;
 }
 
@@ -1122,6 +1122,6 @@ public record struct Entity<T1, T2, T3, T4, T5, T6, T7, T8> : IFluentEntityUid, 
 #endregion
 
     public override int GetHashCode() => Owner.GetHashCode();
-    public Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?, T8?> AsNullable() => this!;
+    public Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?, T8?> AsNullable() => new(Owner, Comp1, Comp2, Comp3, Comp4, Comp5, Comp6, Comp7, Comp8);;
     public EntityUid AsType() => Owner;
 }

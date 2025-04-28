@@ -47,9 +47,10 @@ public record struct Entity<T> : IFluentEntityUid, IAsType<EntityUid>
         comp = Comp;
     }
 
-    public EntityUid AsType() => Owner;
 
     public override int GetHashCode() => Owner.GetHashCode();
+    public Entity<T?> AsNullable() => this!;
+    public EntityUid AsType() => Owner;
 }
 
 [NotYamlSerializable]
@@ -118,6 +119,8 @@ public record struct Entity<T1, T2> : IFluentEntityUid, IAsType<EntityUid>
         return new Entity<T1>(ent.Owner, ent.Comp1);
     }
 
+    public override int GetHashCode() => Owner.GetHashCode();
+    public Entity<T1?, T2?> AsNullable() => this!;
     public EntityUid AsType() => Owner;
 }
 
@@ -223,6 +226,8 @@ public record struct Entity<T1, T2, T3> : IFluentEntityUid, IAsType<EntityUid>
 
 #endregion
 
+    public override int GetHashCode() => Owner.GetHashCode();
+    public Entity<T1?, T2?, T3?> AsNullable() => this!;
     public EntityUid AsType() => Owner;
 }
 
@@ -352,6 +357,8 @@ public record struct Entity<T1, T2, T3, T4> : IFluentEntityUid, IAsType<EntityUi
 
 #endregion
 
+    public override int GetHashCode() => Owner.GetHashCode();
+    public Entity<T1?, T2?, T3?, T4?> AsNullable() => this!;
     public EntityUid AsType() => Owner;
 }
 
@@ -505,6 +512,8 @@ public record struct Entity<T1, T2, T3, T4, T5> : IFluentEntityUid, IAsType<Enti
 
 #endregion
 
+    public override int GetHashCode() => Owner.GetHashCode();
+    public Entity<T1?, T2?, T3?, T4?, T5?> AsNullable() => this!;
     public EntityUid AsType() => Owner;
 }
 
@@ -682,6 +691,8 @@ public record struct Entity<T1, T2, T3, T4, T5, T6> : IFluentEntityUid, IAsType<
 
 #endregion
 
+    public override int GetHashCode() => Owner.GetHashCode();
+    public Entity<T1?, T2?, T3?, T4?, T5?, T6?> AsNullable() => this!;
     public EntityUid AsType() => Owner;
 }
 
@@ -883,8 +894,9 @@ public record struct Entity<T1, T2, T3, T4, T5, T6, T7> : IFluentEntityUid, IAsT
 
 #endregion
 
+    public override int GetHashCode() => Owner.GetHashCode();
+    public Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?> AsNullable() => this!;
     public EntityUid AsType() => Owner;
-
 }
 
 [NotYamlSerializable]
@@ -1109,5 +1121,7 @@ public record struct Entity<T1, T2, T3, T4, T5, T6, T7, T8> : IFluentEntityUid, 
 
 #endregion
 
+    public override int GetHashCode() => Owner.GetHashCode();
+    public Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?, T8?> AsNullable() => this!;
     public EntityUid AsType() => Owner;
 }

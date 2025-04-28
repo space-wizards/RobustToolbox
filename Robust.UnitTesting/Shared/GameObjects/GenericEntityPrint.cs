@@ -11,6 +11,9 @@ public sealed class GenericEntityPrint
     public void Print()
     {
         // Using the test framework for things it was not meant for is my passion
+        //
+        // Its pretty fucked that just occasionally running this manually is so much easier than setting up a porper
+        // source generator.
         var i = 8;
 
         IEnumerable<string> Generics(int n, bool nullable, bool forceIncludeNumber = false)
@@ -173,6 +176,7 @@ public sealed class GenericEntityPrint
                 {
                     public EntityUid Owner;
                 {{fields.ToString().TrimEnd()}}
+                    EntityUid IFluentEntityUid.FluentOwner => Owner;
 
                     public Entity(EntityUid owner{{parameters}})
                     {
@@ -205,7 +209,8 @@ public sealed class GenericEntityPrint
                     }
                     {{castRegion}}
 
-                    EntityUid IFluentEntityUid.FluentOwner => Owner;
+                    public override int GetHashCode() => Owner.GetHashCode();
+                    public Entity<{{nullableGenerics}}> AsNullable() => this!;
                     public EntityUid AsType() => Owner;
                 }
 

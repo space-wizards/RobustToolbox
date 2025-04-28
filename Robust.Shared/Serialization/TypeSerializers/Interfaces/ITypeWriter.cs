@@ -6,6 +6,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Interfaces
 {
     public interface ITypeWriter<TType> : BaseSerializerInterfaces.ITypeInterface<TType>
     {
+        /// <summary>
+        /// Converts value into it's DataNode representation.
+        /// </summary>
         DataNode Write(ISerializationManager serializationManager, TType value, IDependencyCollection dependencies,
             bool alwaysWrite = false,
             ISerializationContext? context = null);

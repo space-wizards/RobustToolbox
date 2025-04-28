@@ -1,13 +1,17 @@
+using System;
+using System.Collections.Generic;
 using System.Globalization;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Manager.Definition;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Prototypes;
 
@@ -92,5 +96,12 @@ internal sealed class YamlValidationContext :
             return new ValueDataNode("invalid");
 
         return new ValueDataNode(value.Id.ToString(CultureInfo.InvariantCulture));
+    }
+
+    public List<(ValueDataNode, object)> FieldDefinitions = new();
+
+    public void AddFieldType(ValueDataNode node, FieldDefinition type)
+    {
+        FieldDefinitions.Add((node, type));
     }
 }

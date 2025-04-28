@@ -7,6 +7,7 @@ using EmmyLua.LanguageServer.Framework.Protocol.Model.WorkDoneProgress;
 using EmmyLua.LanguageServer.Framework.Server.Handler;
 using Robust.LanguageServer.Handler;
 using Robust.LanguageServer.Notifications;
+using Robust.LanguageServer.Parsing;
 using Robust.Shared.IoC;
 
 namespace Robust.LanguageServer;
@@ -72,6 +73,7 @@ public sealed class LanguageServerContext
         AddHandler(new TextDocumentHandler());
         AddHandler(new SemanticTokensHandler());
         AddHandler(new DocumentColorHandler());
+        AddHandler(new HoverHandler());
 
         _cache.DocumentChanged += (uri) => { Console.Error.WriteLine($"Document changed! Uri: {uri}"); };
     }

@@ -7,9 +7,11 @@ using Robust.Shared.Random;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Manager.Definition;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
+using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
 using Robust.Shared.Utility;
 
@@ -234,6 +236,7 @@ public interface IPrototypeManager
     Dictionary<string, HashSet<ErrorNode>> ValidateSingleFile(
         TextReader reader,
         out Dictionary<Type, HashSet<string>> protos,
+        out List<(ValueDataNode, object)> fields,
         string representedPath);
 
     /// <summary>

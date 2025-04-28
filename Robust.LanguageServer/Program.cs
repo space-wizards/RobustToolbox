@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Sockets;
+using Robust.LanguageServer.Parsing;
 using Robust.LanguageServer.Provider;
 using Robust.Shared.IoC;
 using Robust.Server;
@@ -14,6 +15,7 @@ internal static class Program
         IoCManager.Register<DocumentCache>();
         IoCManager.Register<Loader>();
         IoCManager.Register<Validator>();
+        IoCManager.Register<Parser>();
 
         IoCManager.Register<DiagnosticProvider>();
 

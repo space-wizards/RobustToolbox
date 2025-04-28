@@ -3,6 +3,7 @@ using EmmyLua.LanguageServer.Framework.Protocol.Model;
 using EmmyLua.LanguageServer.Framework.Protocol.Model.Diagnostic;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.Manager.Definition;
 
 namespace Robust.LanguageServer.Provider;
 
@@ -32,9 +33,48 @@ public sealed class DiagnosticProvider : IPostInjectInit
 
         try
         {
-            var errors = _protoMan.ValidateSingleFile(reader, out var protos, uri.ToString());
+            var errors = _protoMan.ValidateSingleFile(reader, out var protos
+                , out var fields
+                , uri.ToString());
 
             Console.Error.WriteLine($"Errors: {errors.Count} Protos: {protos.Count}");
+
+            Console.Error.WriteLine($"Fields: {fields.Count}");
+            foreach (var (node, fieldObj) in fields)
+            {
+                // continue;
+
+                if (fieldObj is not FieldDefinition field)
+                    continue;
+
+                // if (field.FieldInfo.Name != "color")
+                //     continue;
+
+                Console.Error.WriteLine($"{node} = {field} - {node.Start} -> {node.End}");
+
+                diagnosticList.Add(new Diagnostic()
+                    {
+                        Message = field.FieldType.Name,
+                        Range = new DocumentRange()
+                        {
+                            Start = new Position()
+                            {
+                                Line = node.Start.Line - 1,
+                                Character = node.Start.Column - 1
+                            },
+                            End = new Position()
+                            {
+                                Line = node.End.Line - 1,
+                                Character = node.End.Column - 1
+                            }
+                        },
+                        Severity = DiagnosticSeverity.Information,
+                        Source = "SS14 LSP",
+                        Code = "12313",
+                    }
+                );
+
+            }
 
             foreach (var (path, nodeList) in errors)
             {

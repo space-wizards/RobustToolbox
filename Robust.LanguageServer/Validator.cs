@@ -13,7 +13,7 @@ public sealed class Validator
         // string filePath = "/Users/ciaran/code/ss14/space-station-14/Resources/Prototypes/Reagents/medicine.yml";
         // string filePath = "/Users/ciaran/code/ss14/space-station-14/Resources/Prototypes/Flavors/flavors.yml";
         using TextReader reader = new StreamReader(filePath);
-        var allErrors = _protoMan.ValidateSingleFile(reader, out _, filePath);
+        var allErrors = _protoMan.ValidateSingleFile(reader, out _, out _, filePath);
 
         // var allErrors = _protoMan.ValidateDirectory(new(@"/Prototypes"), out _);
         // foreach (var (file, errors) in allErrors)

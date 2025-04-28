@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Manager.Definition;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -112,7 +113,9 @@ public partial class PrototypeManager
     }
 
     public Dictionary<string, HashSet<ErrorNode>> ValidateSingleFile(TextReader reader,
-        out Dictionary<Type, HashSet<string>> protos, string representedPath)
+        out Dictionary<Type, HashSet<string>> protos,
+        out List<(ValueDataNode, object)> fields,
+        string representedPath)
     {
         var yamlStream = new YamlStream();
         yamlStream.Load(reader);
@@ -163,7 +166,7 @@ public partial class PrototypeManager
                 }
 
                 // Validate yaml directly
-                errors.AddRange(_serializationManager.ValidateNode(type, data.Mapping).GetErrors());
+                errors.AddRange(_serializationManager.ValidateNode(type, data.Mapping, ctx).GetErrors());
                 if (errors.Count > 0)
                     dict.GetOrNew(data.File).UnionWith(errors);
 
@@ -183,6 +186,8 @@ public partial class PrototypeManager
                 }
             }
         }
+
+        fields = ctx.FieldDefinitions;
 
         protos = new(prototypes.Count);
         foreach (var (type, typeDict) in prototypes)

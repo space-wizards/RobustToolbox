@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.Log;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Exceptions;
 using Robust.Shared.Serialization.Markdown.Mapping;
@@ -281,6 +282,21 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 }
 
                 var keyValidated = serialization.ValidateNode<string>(mapping.GetKeyNode(key), context);
+
+                // System.Console.Error.WriteLine($"BaseFieldDefinitions[idx] for {key} = {BaseFieldDefinitions[idx]}");
+                if (context is YamlValidationContext yamlContext)
+                {
+                    if (key != "color")
+                        continue;
+
+                    var keyNode = mapping.GetKeyNode(key);
+
+                    // Why is this happening?
+                    if (keyNode.Start.Line < 0)
+                        continue;
+
+                    yamlContext.AddFieldType(keyNode, BaseFieldDefinitions[idx]);
+                }
 
                 ValidationNode valNode;
                 if (IsNull(val))

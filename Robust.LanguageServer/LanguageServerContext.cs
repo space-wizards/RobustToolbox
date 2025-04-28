@@ -15,6 +15,8 @@ public sealed class LanguageServerContext
 
     private readonly ELLanguageServer _languageServer;
 
+    public Uri? RootDirectory { get; private set; }
+
     private bool _initialized = false;
 
     public LanguageServerContext(ELLanguageServer languageServer)
@@ -29,6 +31,9 @@ public sealed class LanguageServerContext
         {
             IoCManager.InitThread(deps);
 
+            if (c.RootUri is {} rootUri)
+                RootDirectory = rootUri.Uri;
+
             // Here we should be trying to load data based on the client.rootUri
             Console.Error.WriteLine("Starting loader…");
             _languageServer.Client.ShowMessage(new() { Message = "Loading prototypes…", Type = MessageType.Info });
@@ -36,10 +41,6 @@ public sealed class LanguageServerContext
 
             _languageServer.Client.ShowMessage(new() { Message = "Prototypes loaded.", Type = MessageType.Info });
             Console.Error.WriteLine("Loaded");
-
-            var validator = IoCManager.Resolve<Validator>();
-            validator.ValidateSingleFile(
-                "/Users/ciaran/code/ss14/space-station-14/Resources/Prototypes/Reagents/medicine.yml");
 
             s.Name = "SS14 LSP";
             s.Version = "0.0.1";

@@ -14,6 +14,7 @@ public sealed class HoverHandler : HoverHandlerBase
 {
     [Dependency] private readonly DocumentCache _cache = null!;
     [Dependency] private readonly IPrototypeManager _protoMan = null!;
+    [Dependency] private readonly DocsManager _docs = null!;
 
     protected override Task<HoverResponse?> Handle(HoverParams request, CancellationToken token)
     {
@@ -32,6 +33,10 @@ public sealed class HoverHandler : HoverHandlerBase
                 {
                     if (fieldObj is FieldDefinition field)
                     {
+                        var commentsObj = _docs.GetComments(field.FieldInfo.MemberInfo);
+                        string comments = commentsObj.Summary?.Trim() ?? string.Empty;
+                        Console.Error.WriteLine($"comments: {commentsObj} [{comments}]");
+
                         response = new HoverResponse()
                         {
                             Contents = new MarkupContent()
@@ -42,8 +47,8 @@ public sealed class HoverHandler : HoverHandlerBase
                                     public {FormatType(field.FieldType)} {field.FieldInfo.Name};
                                     ```
                                     ___
-                                    {field.FieldInfo.DeclaringType?.Name}
-                                    {field.FieldInfo.MemberInfo}
+
+                                    {comments}
                                     """
                             }
                         };

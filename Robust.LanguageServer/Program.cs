@@ -15,6 +15,7 @@ internal static class Program
         IoCManager.Register<DocumentCache>();
         IoCManager.Register<Loader>();
         IoCManager.Register<Validator>();
+        IoCManager.Register<DocsManager>();
         IoCManager.Register<Parser>();
 
         IoCManager.Register<DiagnosticProvider>();

@@ -11,6 +11,7 @@
 
     <ItemGroup>
       <PackageReference Include="EmmyLua.LanguageServer.Framework" Version="0.8.1" />
+      <PackageReference Include="LoxSmoke.DocXml" Version="3.8.0" />
     </ItemGroup>
 
     <ItemGroup>

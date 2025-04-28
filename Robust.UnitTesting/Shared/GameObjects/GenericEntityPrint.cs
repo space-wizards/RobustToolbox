@@ -213,7 +213,7 @@ public sealed class GenericEntityPrint
                     {{castRegion}}
 
                     public override int GetHashCode() => Owner.GetHashCode();
-                    public Entity<{{nullableGenerics}}> AsNullable() => new(Owner{{selfAccess}});;
+                    public Entity<{{nullableGenerics}}> AsNullable() => new(Owner{{selfAccess}});
                     public EntityUid AsType() => Owner;
                 }
 

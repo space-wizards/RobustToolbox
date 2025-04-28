@@ -24,58 +24,12 @@ public sealed class DiagnosticProvider : IPostInjectInit
     {
         Console.Error.WriteLine($"Diagnostics - Document changed! Uri: {uri}");
 
-        var text = _cache.GetDocumentContents(uri);
-
-                // var stream = new MemoryStream(Encoding.UTF8.GetBytes(text));
-        // var reader = new StreamReader(stream);
-        var reader = new StringReader(text);
         List<Diagnostic> diagnosticList = new();
 
-        try
+        var errors = _cache.GetErrors(uri);
+
+        if (errors != null)
         {
-            var errors = _protoMan.ValidateSingleFile(reader, out var protos
-                , out var fields
-                , uri.ToString());
-
-            Console.Error.WriteLine($"Errors: {errors.Count} Protos: {protos.Count}");
-
-            Console.Error.WriteLine($"Fields: {fields.Count}");
-            foreach (var (node, fieldObj) in fields)
-            {
-                // continue;
-
-                if (fieldObj is not FieldDefinition field)
-                    continue;
-
-                // if (field.FieldInfo.Name != "color")
-                //     continue;
-
-                Console.Error.WriteLine($"{node} = {field} - {node.Start} -> {node.End}");
-
-                diagnosticList.Add(new Diagnostic()
-                    {
-                        Message = field.FieldType.Name,
-                        Range = new DocumentRange()
-                        {
-                            Start = new Position()
-                            {
-                                Line = node.Start.Line - 1,
-                                Character = node.Start.Column - 1
-                            },
-                            End = new Position()
-                            {
-                                Line = node.End.Line - 1,
-                                Character = node.End.Column - 1
-                            }
-                        },
-                        Severity = DiagnosticSeverity.Information,
-                        Source = "SS14 LSP",
-                        Code = "12313",
-                    }
-                );
-
-            }
-
             foreach (var (path, nodeList) in errors)
             {
                 Console.Error.WriteLine($"Error in file: {path}");
@@ -109,34 +63,6 @@ public sealed class DiagnosticProvider : IPostInjectInit
                 }
             }
         }
-        catch (Exception e)
-        {
-            Console.Error.WriteLine($"Error: {e}");
-
-            diagnosticList.Add(new Diagnostic()
-                {
-                    Message = e.Message,
-                    Range = new DocumentRange()
-                    {
-                        Start = new Position()
-                        {
-                            Line = 0,
-                            Character = 0
-                        },
-                        End = new Position()
-                        {
-                            Line = 99,
-                            Character = 0
-                        }
-                    },
-                    Severity = DiagnosticSeverity.Error,
-                    Source = "test",
-                    Code = "12313",
-                }
-            );
-        }
-
-        // _protoMan.ValidateSingleFile()
 
         _server.Client.PublishDiagnostics(new PublishDiagnosticsParams()
         {

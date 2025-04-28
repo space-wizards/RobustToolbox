@@ -286,12 +286,9 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 // System.Console.Error.WriteLine($"BaseFieldDefinitions[idx] for {key} = {BaseFieldDefinitions[idx]}");
                 if (context is YamlValidationContext yamlContext)
                 {
-                    if (key != "color")
-                        continue;
-
                     var keyNode = mapping.GetKeyNode(key);
 
-                    // Why is this happening?
+                    // Why is this happening? Every key is seemingly repeated at -1,-1
                     if (keyNode.Start.Line < 0)
                         continue;
 

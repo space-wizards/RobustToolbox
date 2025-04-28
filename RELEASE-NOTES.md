@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `ITypeReaderWriter<TType, TNode>` has been removed due to being unused. Implement `ITypeSerializer<TType, TNode>` instead
 
 ### New features
 
@@ -58,12 +58,12 @@ END TEMPLATE-->
 
 ### New features
 
-* The client localisation manager now supports hot-reloading ftl files. 
+* The client localisation manager now supports hot-reloading ftl files.
 * TransformSystem can now raise `GridUidChangedEvent` and `MapUidChangedEvent` when a entity's grid or map changes. This event is only raised if the `ExtraTransformEvents` metadata flag is enabled.
 
 ### Bugfixes
 
-* Fixed a server crash due to a `NullReferenceException` in PVS system when a player's local entity is also one of their view subscriptions.  
+* Fixed a server crash due to a `NullReferenceException` in PVS system when a player's local entity is also one of their view subscriptions.
 * Fix CompileRobustXamlTask for benchmarks.
 * .ftl files will now hot reload.
 * Fix placementmanager sometimes not clearing.

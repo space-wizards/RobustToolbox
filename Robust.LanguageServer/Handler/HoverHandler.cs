@@ -25,34 +25,30 @@ public sealed class HoverHandler : HoverHandlerBase
         var fields = _cache.GetFields(request.TextDocument.Uri);
         if (fields != null)
         {
-            foreach (var (node, fieldObj) in fields)
+            foreach (var (node, field) in fields)
             {
                 if (node.Start.Line - 1 == request.Position.Line &&
                     request.Position.Character - 1 >= node.Start.Column
                     && request.Position.Character - 1 <= node.End.Column)
                 {
-                    if (fieldObj is FieldDefinition field)
+                    var commentsObj = _docs.GetComments(field.FieldInfo.MemberInfo);
+                    string comments = commentsObj.Summary?.Trim() ?? string.Empty;
+                    Console.Error.WriteLine($"comments: {commentsObj} [{comments}]");
+
+                    response = new HoverResponse()
                     {
-                        var commentsObj = _docs.GetComments(field.FieldInfo.MemberInfo);
-                        string comments = commentsObj.Summary?.Trim() ?? string.Empty;
-                        Console.Error.WriteLine($"comments: {commentsObj} [{comments}]");
-
-                        response = new HoverResponse()
+                        Contents = new MarkupContent()
                         {
-                            Contents = new MarkupContent()
-                            {
-                                Kind = MarkupKind.Markdown,
-                                Value = $"""
-                                    ```c#
-                                    public {FormatType(field.FieldType)} {field.FieldInfo.Name};
-                                    ```
-                                    ___
-
-                                    {comments}
-                                    """
-                            }
-                        };
-                    }
+                            Kind = MarkupKind.Markdown,
+                            Value = $"""
+                                ```c#
+                                {field.FieldInfo.DeclaringType?.Name}.{field.FieldInfo.Name} ({FormatType(field.FieldType)})
+                                ```
+                                ___
+                                {comments}
+                                """
+                        }
+                    };
 
                     break;
                 }
@@ -123,7 +119,8 @@ public sealed class HoverHandler : HoverHandlerBase
             var arguments = type.GetGenericArguments();
 
             // "List`2" => "List" (Surely there’s a proper way to do this?)
-            var genericTypeName = genTypeDef.Name.Substring(0, genTypeDef.Name.LastIndexOf("`", StringComparison.InvariantCulture));
+            var genericTypeName =
+                genTypeDef.Name.Substring(0, genTypeDef.Name.LastIndexOf("`", StringComparison.InvariantCulture));
 
             StringBuilder builder = new StringBuilder();
             foreach (var arg in arguments)

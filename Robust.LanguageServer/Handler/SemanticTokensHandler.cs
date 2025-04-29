@@ -29,7 +29,6 @@ public sealed class SemanticTokensHandler : SemanticTokensHandlerBase
         // SemanticTokenModifiers.Documentation
     ];
 
-    // public Task<SemanticTokens?> Handle(SemanticTokensParams request, CancellationToken cancellationToken)
     protected override Task<SemanticTokens?> Handle(
         SemanticTokensParams semanticTokensParams,
         CancellationToken cancellationToken)
@@ -58,15 +57,7 @@ public sealed class SemanticTokensHandler : SemanticTokensHandlerBase
                     var start = Helpers.ToLsp(idScalar.Start);
                     var end = Helpers.ToLsp(idScalar.End);
 
-                    // ref var token = ref tokens.AddRef();
-                    // token.TokenType = 0;
-                    // token.Length = end.Character - start.Character;
-                    // token.Line = start.Line;
-                    // token.StartChar = start.Character;
-
-                    semanticTokenBuilder.Push(start,
-                        end.Character - start.Character,
-                        SemanticTokenTypes.Class);
+                    semanticTokenBuilder.Push(start, end.Character - start.Character, SemanticTokenTypes.Class);
                 }
 
                 if (map.TryGetNode("type", out var typeNode) && typeNode is YamlScalarNode typeScalar &&
@@ -74,16 +65,8 @@ public sealed class SemanticTokensHandler : SemanticTokensHandlerBase
                 {
                     var start = Helpers.ToLsp(typeScalar.Start);
                     var end = Helpers.ToLsp(typeScalar.End);
-                    //
-                    // ref var token = ref tokens.AddRef();
-                    // token.TokenType = 1;
-                    // token.Length = end.Character - start.Character;
-                    // token.Line = start.Line;
-                    // token.StartChar = start.Character;
 
-                    semanticTokenBuilder.Push(start,
-                        end.Character - start.Character,
-                        SemanticTokenTypes.Enum);
+                    semanticTokenBuilder.Push(start, end.Character - start.Character, SemanticTokenTypes.Enum);
                 }
             }
         }

@@ -14,6 +14,7 @@ using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
 using Robust.Shared.Utility;
+using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Prototypes;
 
@@ -233,12 +234,6 @@ public interface IPrototypeManager
     Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path,
         out Dictionary<Type, HashSet<string>> prototypes);
 
-    Dictionary<string, HashSet<ErrorNode>> ValidateSingleFile(
-        TextReader reader,
-        out Dictionary<Type, HashSet<string>> protos,
-        out List<(ValueDataNode, object)> fields,
-        string representedPath);
-
     /// <summary>
     /// This method uses reflection to validate that all static prototype id fields correspond to valid prototypes.
     /// This will validate all known to <see cref="IReflectionManager"/>
@@ -376,6 +371,12 @@ public interface IPrototypeManager
 internal interface IPrototypeManagerInternal : IPrototypeManager
 {
     event Action<DataNodeDocument>? LoadedData;
+
+    Dictionary<string, HashSet<ErrorNode>> AnalyzeSingleFile(
+        TextReader reader,
+        out List<(string, Type, YamlMappingNode)> protos,
+        out List<(ValueDataNode, FieldDefinition)> fields,
+        string representedPath);
 }
 
 /// <summary>

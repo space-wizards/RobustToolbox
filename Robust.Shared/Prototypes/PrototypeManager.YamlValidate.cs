@@ -112,9 +112,10 @@ public partial class PrototypeManager
         return dict;
     }
 
-    public Dictionary<string, HashSet<ErrorNode>> ValidateSingleFile(TextReader reader,
-        out Dictionary<Type, HashSet<string>> protos,
-        out List<(ValueDataNode, object)> fields,
+    Dictionary<string, HashSet<ErrorNode>> IPrototypeManagerInternal.AnalyzeSingleFile(
+        TextReader reader,
+        out List<(string, Type, YamlMappingNode)> protos,
+        out List<(ValueDataNode, FieldDefinition)> fields,
         string representedPath)
     {
         var yamlStream = new YamlStream();
@@ -122,6 +123,7 @@ public partial class PrototypeManager
 
         var dict = new Dictionary<string, HashSet<ErrorNode>>();
         var prototypes = new Dictionary<Type, Dictionary<string, PrototypeValidationData>>();
+        protos = new();
 
         foreach (var doc in yamlStream.Documents)
         {
@@ -142,6 +144,8 @@ public partial class PrototypeManager
 
                 var data = new PrototypeValidationData(id, mapping, representedPath);
                 mapping.Remove("type");
+
+                protos.Add((id, type, node));
 
                 if (prototypes.GetOrNew(type).TryAdd(id, data))
                     continue;
@@ -189,11 +193,12 @@ public partial class PrototypeManager
 
         fields = ctx.FieldDefinitions;
 
-        protos = new(prototypes.Count);
-        foreach (var (type, typeDict) in prototypes)
-        {
-            protos[type] = typeDict.Keys.ToHashSet();
-        }
+        // protos = new(prototypes.Count);
+        // foreach (var (type, typeDict) in prototypes)
+        // {
+        //     protos.Add(());
+        //     protos[type] = typeDict.Keys.ToHashSet();
+        // }
 
         return dict;
     }

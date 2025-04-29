@@ -74,6 +74,7 @@ public sealed class LanguageServerContext
         AddHandler(new SemanticTokensHandler());
         AddHandler(new DocumentColorHandler());
         AddHandler(new HoverHandler());
+        AddHandler(new DocumentSymbolHandler());
 
         _cache.DocumentChanged += (uri) => { Console.Error.WriteLine($"Document changed! Uri: {uri}"); };
     }

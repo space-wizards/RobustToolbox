@@ -98,7 +98,7 @@ internal sealed class YamlValidationContext :
         return new ValueDataNode(value.Id.ToString(CultureInfo.InvariantCulture));
     }
 
-    public List<(ValueDataNode, object)> FieldDefinitions = new();
+    public List<(ValueDataNode, FieldDefinition)> FieldDefinitions = new();
 
     public void AddFieldType(ValueDataNode node, FieldDefinition type)
     {

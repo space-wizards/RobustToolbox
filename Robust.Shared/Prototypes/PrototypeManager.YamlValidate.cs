@@ -114,7 +114,7 @@ public partial class PrototypeManager
 
     Dictionary<string, HashSet<ErrorNode>> IPrototypeManagerInternal.AnalyzeSingleFile(
         TextReader reader,
-        out List<(string, Type, YamlMappingNode)> protos,
+        out List<DocumentSymbol> symbols,
         out List<(ValueDataNode, FieldDefinition)> fields,
         string representedPath)
     {
@@ -123,13 +123,19 @@ public partial class PrototypeManager
 
         var dict = new Dictionary<string, HashSet<ErrorNode>>();
         var prototypes = new Dictionary<Type, Dictionary<string, PrototypeValidationData>>();
-        protos = new();
+        symbols = new();
 
         foreach (var doc in yamlStream.Documents)
         {
             var rootNode = (YamlSequenceNode)doc.RootNode;
             foreach (YamlMappingNode node in rootNode.Cast<YamlMappingNode>())
             {
+                // if (previousPrototypeSymbol != null)
+                // {
+                //     previousPrototypeSymbol.NodeEnd = node.Start;
+                //     previousPrototypeSymbol = null;
+                // }
+
                 var typeId = node.GetNode("type").AsString();
                 if (_ignoredPrototypeTypes.Contains(typeId))
                     continue;
@@ -145,7 +151,10 @@ public partial class PrototypeManager
                 var data = new PrototypeValidationData(id, mapping, representedPath);
                 mapping.Remove("type");
 
-                protos.Add((id, type, node));
+                // The mapping and sequence nodes unfortunately do not report a useful End position
+                // so we have to check the last child node of each prototype to get the range.
+                if (node.AllNodes.LastOrDefault() is { } lastChild)
+                    symbols.Add(new DocumentSymbol(id, SymbolType.Prototype, node.Start, lastChild.End));
 
                 if (prototypes.GetOrNew(type).TryAdd(id, data))
                     continue;

@@ -20,7 +20,7 @@ internal sealed class DocumentCache
 
     private Dictionary<Uri, Dictionary<string, HashSet<ErrorNode>>> _errors = new();
     private Dictionary<Uri, List<(ValueDataNode, FieldDefinition)>> _fields = new();
-    private Dictionary<Uri, List<(string, Type, YamlMappingNode)>> _protos = new();
+    private Dictionary<Uri, List<DocumentSymbol>> _symbols = new();
 
     public delegate void DocumentChangedHandler(Uri uri);
 
@@ -41,11 +41,11 @@ internal sealed class DocumentCache
 
         using var reader = new StringReader(content);
         var errors = _protoMan.AnalyzeSingleFile(reader,
-            out var protos,
+            out var symbols,
             out var fields,
             uri.Uri.ToString());
 
-        _protos[uri.Uri] = protos;
+        _symbols[uri.Uri] = symbols;
         _fields[uri.Uri] = fields;
         _errors[uri.Uri] = errors;
     }
@@ -60,8 +60,8 @@ internal sealed class DocumentCache
         return _fields.GetValueOrDefault(uri.Uri);
     }
 
-    public List<(string, Type, YamlMappingNode)>? GetSymbols(DocumentUri uri)
+    public List<DocumentSymbol>? GetSymbols(DocumentUri uri)
     {
-        return _protos.GetValueOrDefault(uri.Uri);
+        return _symbols.GetValueOrDefault(uri.Uri);
     }
 }

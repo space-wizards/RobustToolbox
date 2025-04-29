@@ -21,45 +21,27 @@ public sealed class DocumentSymbolHandler : DocumentSymbolHandlerBase
         {
             List<DocumentSymbol> documentSymbols = new();
 
-            foreach (var (name, type, node) in symbols)
+            foreach (var symbol in symbols)
             {
                 documentSymbols.Add(new()
                 {
-                    Name = name,
+                    Name = symbol.Name,
                     Kind = SymbolKind.Class,
                     Range = new()
                     {
-                        Start = Helpers.ToLsp(node.Start),
-                        End = Helpers.ToLsp(node.End)
+                        Start = Helpers.ToLsp(symbol.NodeStart),
+                        End = Helpers.ToLsp(symbol.NodeEnd)
                     },
                     SelectionRange = new()
                     {
-                        Start = Helpers.ToLsp(node.Start),
-                        End = Helpers.ToLsp(node.End)
+                        Start = Helpers.ToLsp(symbol.NodeStart),
+                        End = Helpers.ToLsp(symbol.NodeEnd)
                     }
                 });
             }
 
             result = new DocumentSymbolResponse(documentSymbols);
         }
-        //
-        // new DocumentSymbolResponse([
-        //     new DocumentSymbol()
-        //     {
-        //         Name = "DocumentSymbol",
-        //         Kind = SymbolKind.Class,
-        //         Range = new()
-        //         {
-        //             Start = new Position(0, 0),
-        //             End = new Position(0, 1)
-        //         },
-        //         SelectionRange = new()
-        //         {
-        //             Start = new Position(0, 0),
-        //             End = new Position(0, 1)
-        //         }
-        //     }
-        // ]);
 
         Console.Error.WriteLine("DocumentSymbol");
         return Task.FromResult(result);

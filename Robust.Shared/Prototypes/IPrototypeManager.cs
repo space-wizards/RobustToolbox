@@ -374,7 +374,7 @@ internal interface IPrototypeManagerInternal : IPrototypeManager
 
     Dictionary<string, HashSet<ErrorNode>> AnalyzeSingleFile(
         TextReader reader,
-        out List<(string, Type, YamlMappingNode)> protos,
+        out List<DocumentSymbol> symbols,
         out List<(ValueDataNode, FieldDefinition)> fields,
         string representedPath);
 }

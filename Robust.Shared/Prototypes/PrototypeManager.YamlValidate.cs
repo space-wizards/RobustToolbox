@@ -173,32 +173,10 @@ public partial class PrototypeManager
                 errors.AddRange(_serializationManager.ValidateNode(type, data.Mapping, ctx).GetErrors());
                 if (errors.Count > 0)
                     dict.GetOrNew(data.File).UnionWith(errors);
-
-                // Create instance & re-serialize it, to validate the default values of data-fields. We still validate
-                // the yaml directly just in case reading & writing the fields somehow modifies their values.
-                try
-                {
-                    var instance = _serializationManager.Read(type, data.Mapping, ctx);
-                    var mapping = _serializationManager.WriteValue(type, instance, alwaysWrite: true, ctx);
-                    errors.AddRange(_serializationManager.ValidateNode(type, mapping, ctx).GetErrors());
-                    if (errors.Count > 0)
-                        dict.GetOrNew(data.File).UnionWith(errors);
-                }
-                catch (Exception ex)
-                {
-                    errors.Add(new ErrorNode(new ValueDataNode(), $"Caught Exception while validating {type} prototype {id}. Exception: {ex}"));
-                }
             }
         }
 
         fields = ctx.FieldDefinitions;
-
-        // protos = new(prototypes.Count);
-        // foreach (var (type, typeDict) in prototypes)
-        // {
-        //     protos.Add(());
-        //     protos[type] = typeDict.Keys.ToHashSet();
-        // }
 
         return dict;
     }

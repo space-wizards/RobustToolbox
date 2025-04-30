@@ -380,7 +380,7 @@ public abstract partial class SharedTransformSystem
             var oldParent = ent.Comp1.ParentUid;
 #endif
 
-            var ev = new GridUidChangedEvent(ent!, ent.Comp1._gridUid);
+            var ev = new GridUidChangedEvent((ent.Owner, ent.Comp1, ent.Comp2), ent.Comp1._gridUid);
             ent.Comp1._gridUid = gridId;
             RaiseLocalEvent(ent, ref ev);
 

@@ -2,18 +2,19 @@ using System.Text;
 using EmmyLua.LanguageServer.Framework.Protocol.Capabilities.Client.ClientCapabilities;
 using EmmyLua.LanguageServer.Framework.Protocol.Capabilities.Server;
 using EmmyLua.LanguageServer.Framework.Protocol.Message.Hover;
+using EmmyLua.LanguageServer.Framework.Protocol.Model;
 using EmmyLua.LanguageServer.Framework.Protocol.Model.Markup;
 using EmmyLua.LanguageServer.Framework.Server.Handler;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager.Definition;
+using Robust.Shared.Serialization.Markdown.Value;
 
 namespace Robust.LanguageServer.Handler;
 
 public sealed class HoverHandler : HoverHandlerBase
 {
     [Dependency] private readonly DocumentCache _cache = null!;
-    [Dependency] private readonly IPrototypeManager _protoMan = null!;
     [Dependency] private readonly DocsManager _docs = null!;
 
     protected override Task<HoverResponse?> Handle(HoverParams request, CancellationToken token)
@@ -25,78 +26,30 @@ public sealed class HoverHandler : HoverHandlerBase
         var fields = _cache.GetFields(request.TextDocument.Uri);
         if (fields != null)
         {
-            foreach (var (node, field) in fields)
+            if (GetFieldAtPosition(fields, request.Position) is { } field)
             {
-                if (node.Start.Line - 1 == request.Position.Line &&
-                    request.Position.Character - 1 >= node.Start.Column
-                    && request.Position.Character - 1 <= node.End.Column)
+                var commentsObj = _docs.GetComments(field.FieldInfo.MemberInfo);
+                string comments = commentsObj.Summary?.Trim() ?? string.Empty;
+                string remarks = commentsObj.Remarks?.Trim() ?? string.Empty;
+                Console.Error.WriteLine($"comments: {commentsObj} [{comments}] - {remarks}");
+
+                response = new HoverResponse()
                 {
-                    var commentsObj = _docs.GetComments(field.FieldInfo.MemberInfo);
-                    string comments = commentsObj.Summary?.Trim() ?? string.Empty;
-                    Console.Error.WriteLine($"comments: {commentsObj} [{comments}]");
-
-                    response = new HoverResponse()
+                    Contents = new MarkupContent()
                     {
-                        Contents = new MarkupContent()
-                        {
-                            Kind = MarkupKind.Markdown,
-                            Value = $"""
-                                ```c#
-                                {field.FieldInfo.DeclaringType?.Name}.{field.FieldInfo.Name} ({FormatType(field.FieldType)})
-                                ```
-                                ___
-                                {comments}
-                                """
-                        }
-                    };
-
-                    break;
-                }
-            }
-        }
-
-/*
-        try
-        {
-            var errors = _protoMan.ValidateSingleFile(reader,
-                out var protos,
-                out var fields,
-                request.TextDocument.Uri.ToString());
-
-            foreach (var (node, fieldObj) in fields)
-            {
-                if (node.Start.Line-1 == request.Position.Line &&
-                    request.Position.Character-1 >= node.Start.Column
-                    && request.Position.Character-1 <= node.End.Column)
-                {
-                    if (fieldObj is FieldDefinition field)
-                    {
-                        response = new HoverResponse()
-                        {
-                            Contents = new MarkupContent()
-                            {
-                                Kind = MarkupKind.Markdown,
-                                Value = $"""
-                                ```c#
-                                public {FormatType(field.FieldType)} {field.FieldInfo.Name};
-                                ```
-                                ___
-                                {field.FieldInfo.DeclaringType?.Name}
-                                {field.FieldInfo.MemberInfo}
-                                """
-                            }
-                        };
+                        Kind = MarkupKind.Markdown,
+                        Value = $"""
+                            ```c#
+                            {field.FieldInfo.DeclaringType?.Name}.{field.FieldInfo.Name} ({FormatType(field.FieldType)})
+                            ```
+                            ___
+                            {comments}
+                            {remarks}
+                            """
                     }
-
-                    break;
-                }
+                };
             }
         }
-        catch (Exception e)
-        {
-            // ignored
-        }
-*/
 
         return Task.FromResult(response);
     }
@@ -146,5 +99,22 @@ public sealed class HoverHandler : HoverHandlerBase
         //     return "int";
 
         return type.Name;
+    }
+
+    private static FieldDefinition? GetFieldAtPosition(
+        List<(ValueDataNode, FieldDefinition)> fields,
+        Position position)
+    {
+        foreach (var (node, field) in fields)
+        {
+            if (node.Start.Line - 1 == position.Line &&
+                position.Character >= node.Start.Column - 1
+                && position.Character <= node.End.Column - 1)
+            {
+                return field;
+            }
+        }
+
+        return null;
     }
 }

@@ -130,74 +130,74 @@ public sealed class SemanticTokensHandler : SemanticTokensHandlerBase
     //     return options;
     // }
 
-/*
-    private List<string> TokenTypes { get; init; } =
-    [
-        SemanticTokenTypes.Comment
-    ];
+    /*
+        private List<string> TokenTypes { get; init; } =
+        [
+            SemanticTokenTypes.Comment
+        ];
 
-    private List<string> TokenModifiers { get; init; } =
-    [
-        SemanticTokenModifiers.Documentation
-    ];
+        private List<string> TokenModifiers { get; init; } =
+        [
+            SemanticTokenModifiers.Documentation
+        ];
 
-    protected override Task<SemanticTokens?> Handle(
-        SemanticTokensParams semanticTokensParams,
-        CancellationToken cancellationToken)
-    {
-        var semanticTokenBuilder = new SemanticTokensBuilder(TokenTypes, TokenModifiers);
-        semanticTokenBuilder.Push(new Position(0, 2),
-            2,
-            SemanticTokenTypes.Comment,
-            SemanticTokenModifiers.Documentation);
-        semanticTokenBuilder.Push(new Position(1, 0),
-            3,
-            SemanticTokenTypes.Comment,
-            SemanticTokenModifiers.Documentation);
-
-        return Task.FromResult(new SemanticTokens()
+        protected override Task<SemanticTokens?> Handle(
+            SemanticTokensParams semanticTokensParams,
+            CancellationToken cancellationToken)
         {
-            Data = semanticTokenBuilder.Build()
-        })!;
-    }
+            var semanticTokenBuilder = new SemanticTokensBuilder(TokenTypes, TokenModifiers);
+            semanticTokenBuilder.Push(new Position(0, 2),
+                2,
+                SemanticTokenTypes.Comment,
+                SemanticTokenModifiers.Documentation);
+            semanticTokenBuilder.Push(new Position(1, 0),
+                3,
+                SemanticTokenTypes.Comment,
+                SemanticTokenModifiers.Documentation);
 
-    protected override Task<SemanticTokensDeltaResponse?> Handle(
-        SemanticTokensDeltaParams semanticTokensDeltaParams,
-        CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
-
-    protected override Task<SemanticTokens?> Handle(
-        SemanticTokensRangeParams semanticTokensRangeParams,
-        CancellationToken cancellationToken)
-    {
-        var semanticTokenBuilder = new SemanticTokensBuilder(TokenTypes, TokenModifiers);
-        semanticTokenBuilder.Push(new Position(0, 2),
-            2,
-            SemanticTokenTypes.Comment,
-            SemanticTokenModifiers.Documentation);
-
-        return Task.FromResult(new SemanticTokens()
-        {
-            Data = semanticTokenBuilder.Build()
-        })!;
-    }
-
-    public override void RegisterCapability(
-        ServerCapabilities serverCapabilities,
-        ClientCapabilities clientCapabilities)
-    {
-        serverCapabilities.SemanticTokensProvider = new SemanticTokensOptions()
-        {
-            Legend = new SemanticTokensLegend()
+            return Task.FromResult(new SemanticTokens()
             {
-                TokenTypes = TokenTypes,
-                TokenModifiers = TokenModifiers,
-            },
-            Full = true,
-            Range = true,
-        };
-    }
-*/
+                Data = semanticTokenBuilder.Build()
+            })!;
+        }
+
+        protected override Task<SemanticTokensDeltaResponse?> Handle(
+            SemanticTokensDeltaParams semanticTokensDeltaParams,
+            CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override Task<SemanticTokens?> Handle(
+            SemanticTokensRangeParams semanticTokensRangeParams,
+            CancellationToken cancellationToken)
+        {
+            var semanticTokenBuilder = new SemanticTokensBuilder(TokenTypes, TokenModifiers);
+            semanticTokenBuilder.Push(new Position(0, 2),
+                2,
+                SemanticTokenTypes.Comment,
+                SemanticTokenModifiers.Documentation);
+
+            return Task.FromResult(new SemanticTokens()
+            {
+                Data = semanticTokenBuilder.Build()
+            })!;
+        }
+
+        public override void RegisterCapability(
+            ServerCapabilities serverCapabilities,
+            ClientCapabilities clientCapabilities)
+        {
+            serverCapabilities.SemanticTokensProvider = new SemanticTokensOptions()
+            {
+                Legend = new SemanticTokensLegend()
+                {
+                    TokenTypes = TokenTypes,
+                    TokenModifiers = TokenModifiers,
+                },
+                Full = true,
+                Range = true,
+            };
+        }
+    */
 }

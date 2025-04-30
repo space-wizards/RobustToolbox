@@ -13,7 +13,6 @@ public sealed class DiagnosticProvider : IPostInjectInit
 {
     [Dependency] private readonly DocumentCache _cache = null!;
     [Dependency] private readonly ELLanguageServer _server = null!;
-    [Dependency] private readonly IPrototypeManager _protoMan = null!;
 
     public void PostInject()
     {
@@ -40,26 +39,25 @@ public sealed class DiagnosticProvider : IPostInjectInit
                         $"* {node.Node} - {node.ErrorReason} - {node.AlwaysRelevant} - {node.Node.Start} -> {node.Node.End}");
 
                     diagnosticList.Add(new Diagnostic()
+                    {
+                        Message = node.ErrorReason,
+                        Range = new DocumentRange()
                         {
-                            Message = node.ErrorReason,
-                            Range = new DocumentRange()
+                            Start = new Position()
                             {
-                                Start = new Position()
-                                {
-                                    Line = node.Node.Start.Line - 1,
-                                    Character = node.Node.Start.Column - 1
-                                },
-                                End = new Position()
-                                {
-                                    Line = node.Node.End.Line - 1,
-                                    Character = node.Node.End.Column - 1
-                                }
+                                Line = node.Node.Start.Line - 1,
+                                Character = node.Node.Start.Column - 1
                             },
-                            Severity = DiagnosticSeverity.Error,
-                            Source = "SS14 LSP",
-                            Code = "12313",
-                        }
-                    );
+                            End = new Position()
+                            {
+                                Line = node.Node.End.Line - 1,
+                                Character = node.Node.End.Column - 1
+                            }
+                        },
+                        Severity = DiagnosticSeverity.Error,
+                        Source = "SS14 LSP",
+                        Code = "12313",
+                    });
                 }
             }
         }

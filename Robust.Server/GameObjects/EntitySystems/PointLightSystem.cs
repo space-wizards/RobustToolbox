@@ -14,6 +14,19 @@ public sealed class PointLightSystem : SharedPointLightSystem
         base.Initialize();
         SubscribeLocalEvent<PointLightComponent, ComponentGetState>(OnLightGetState);
         SubscribeLocalEvent<PointLightComponent, ComponentStartup>(OnLightStartup);
+        SubscribeLocalEvent<PointLightComponent, ComponentShutdown>(OnLightShutdown);
+        SubscribeLocalEvent<PointLightComponent, MetaFlagRemoveAttemptEvent>(OnFlagRemoveAttempt);
+    }
+
+    private void OnLightShutdown(Entity<PointLightComponent> ent, ref ComponentShutdown args)
+    {
+        UpdatePriority(ent.Owner, ent.Comp, MetaData(ent.Owner));
+    }
+
+    private void OnFlagRemoveAttempt(Entity<PointLightComponent> ent, ref MetaFlagRemoveAttemptEvent args)
+    {
+        if (IsHighPriority(ent.Comp))
+            args.ToRemove &= ~MetaDataFlags.PvsPriority;
     }
 
     private void OnLightStartup(EntityUid uid, PointLightComponent component, ComponentStartup args)
@@ -21,10 +34,14 @@ public sealed class PointLightSystem : SharedPointLightSystem
         UpdatePriority(uid, component, MetaData(uid));
     }
 
+    private bool IsHighPriority(SharedPointLightComponent comp)
+    {
+        return comp is {Enabled: true, CastShadows: true, Radius: > 7, LifeStage: <= ComponentLifeStage.Running};
+    }
+
     protected override void UpdatePriority(EntityUid uid, SharedPointLightComponent comp, MetaDataComponent meta)
     {
-        var isHighPriority = comp.Enabled && comp.CastShadows && (comp.Radius > 7);
-        _metadata.SetFlag((uid, meta), MetaDataFlags.PvsPriority, isHighPriority);
+        _metadata.SetFlag((uid, meta), MetaDataFlags.PvsPriority, IsHighPriority(comp));
     }
 
     private void OnLightGetState(EntityUid uid, PointLightComponent component, ref ComponentGetState args)

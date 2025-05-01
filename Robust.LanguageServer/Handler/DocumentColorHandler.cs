@@ -5,6 +5,7 @@ using EmmyLua.LanguageServer.Framework.Protocol.Message.SemanticToken;
 using EmmyLua.LanguageServer.Framework.Protocol.Model;
 using EmmyLua.LanguageServer.Framework.Server.Handler;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
@@ -15,11 +16,13 @@ public sealed class DocumentColorHandler : DocumentColorHandlerBase
 {
     [Dependency] private readonly DocumentCache _cache = null!;
 
+    private readonly ISawmill _logger = Logger.GetSawmill("DocumentColorHandler");
+
     // private DocumentColorBuilder Builder { get; } = new();
 
     protected override Task<DocumentColorResponse> Handle(DocumentColorParams request, CancellationToken token)
     {
-        Console.Error.WriteLine("DocumentColorHandler");
+        _logger.Error("DocumentColorHandler");
         // var uri = request.TextDocument.Uri.UnescapeUri;
         var text = _cache.GetDocumentContents(request.TextDocument.Uri);
 
@@ -90,7 +93,7 @@ public sealed class DocumentColorHandler : DocumentColorHandlerBase
 
     protected override Task<ColorPresentationResponse> Resolve(ColorPresentationParams request, CancellationToken token)
     {
-        Console.Error.WriteLine($"DocumentColorHandler Resolve {request.TextDocument.Uri} - {request.Color}");
+        _logger.Error($"DocumentColorHandler Resolve {request.TextDocument.Uri} - {request.Color}");
         var uri = request.TextDocument.Uri.UnescapeUri;
 
         ColorPresentationResponse container = null!;

@@ -4,12 +4,15 @@ using EmmyLua.LanguageServer.Framework.Protocol.Message.DocumentSymbol;
 using EmmyLua.LanguageServer.Framework.Protocol.Model;
 using EmmyLua.LanguageServer.Framework.Server.Handler;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 
 namespace Robust.LanguageServer.Handler;
 
 public sealed class DocumentSymbolHandler : DocumentSymbolHandlerBase
 {
     [Dependency] private readonly DocumentCache _cache = null!;
+
+    private readonly ISawmill _logger = Logger.GetSawmill("DocumentSymbolHandler");
 
     protected override Task<DocumentSymbolResponse> Handle(DocumentSymbolParams request, CancellationToken token)
     {
@@ -43,7 +46,8 @@ public sealed class DocumentSymbolHandler : DocumentSymbolHandlerBase
             result = new DocumentSymbolResponse(documentSymbols);
         }
 
-        Console.Error.WriteLine("DocumentSymbol");
+        _logger.Error("DocumentSymbol");
+
         return Task.FromResult(result);
     }
 

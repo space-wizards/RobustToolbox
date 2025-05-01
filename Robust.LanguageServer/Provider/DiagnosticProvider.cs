@@ -19,7 +19,7 @@ public sealed class DiagnosticProvider : IPostInjectInit
         _cache.DocumentChanged += OnDocumentChanged;
     }
 
-    private void OnDocumentChanged(Uri uri)
+    private void OnDocumentChanged(Uri uri, int documentVersion)
     {
         Console.Error.WriteLine($"Diagnostics - Document changed! Uri: {uri}");
 
@@ -65,7 +65,8 @@ public sealed class DiagnosticProvider : IPostInjectInit
         _server.Client.PublishDiagnostics(new PublishDiagnosticsParams()
         {
             Uri = uri,
-            Diagnostics = diagnosticList
+            Diagnostics = diagnosticList,
+            Version = documentVersion,
         });
     }
 }

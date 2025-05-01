@@ -25,7 +25,7 @@ internal sealed class DocumentCache : IPostInjectInit
     private Dictionary<Uri, List<(ValueDataNode, FieldDefinition)>> _fields = new();
     private Dictionary<Uri, List<DocumentSymbol>> _symbols = new();
 
-    public delegate void DocumentChangedHandler(Uri uri);
+    public delegate void DocumentChangedHandler(Uri uri, int documentVersion);
 
     public event DocumentChangedHandler? DocumentChanged;
 
@@ -37,7 +37,7 @@ internal sealed class DocumentCache : IPostInjectInit
         return _documents[uri.Uri];
     }
 
-    public void UpdateDocument(DocumentUri uri, string content)
+    public void UpdateDocument(DocumentUri uri, int version, string content)
     {
         _documents[uri.Uri] = content;
 
@@ -63,7 +63,7 @@ internal sealed class DocumentCache : IPostInjectInit
             _errors.Remove(uri.Uri);
         }
 
-        DocumentChanged?.Invoke(uri.Uri);
+        DocumentChanged?.Invoke(uri.Uri, version);
     }
 
     public Dictionary<string, HashSet<ErrorNode>>? GetErrors(DocumentUri uri)

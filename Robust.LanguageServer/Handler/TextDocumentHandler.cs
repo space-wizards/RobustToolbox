@@ -23,7 +23,7 @@ public class TextDocumentHandler : TextDocumentHandlerBase
     protected override Task Handle(DidOpenTextDocumentParams request, CancellationToken token)
     {
         Console.Error.WriteLine($"TextDocumentHandler: DidOpenTextDocument {request.TextDocument.Uri}");
-        _cache.UpdateDocument(request.TextDocument.Uri, request.TextDocument.Text);
+        _cache.UpdateDocument(request.TextDocument.Uri, request.TextDocument.Version, request.TextDocument.Text);
         return Task.CompletedTask;
     }
 
@@ -38,7 +38,7 @@ public class TextDocumentHandler : TextDocumentHandlerBase
         if (change.Range is not null || change.RangeLength is not null)
             throw new NotImplementedException();
 
-        _cache.UpdateDocument(request.TextDocument.Uri, change.Text);
+        _cache.UpdateDocument(request.TextDocument.Uri, request.TextDocument.Version, change.Text);
 
         // var text = change.Text;
         return Task.CompletedTask;

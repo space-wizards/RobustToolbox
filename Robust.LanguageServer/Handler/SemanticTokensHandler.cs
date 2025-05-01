@@ -8,6 +8,7 @@ using EmmyLua.LanguageServer.Framework.Protocol.Model;
 using EmmyLua.LanguageServer.Framework.Server.Handler;
 using Robust.Shared.Collections;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
@@ -17,6 +18,8 @@ namespace Robust.LanguageServer.Handler;
 public sealed class SemanticTokensHandler : SemanticTokensHandlerBase
 {
     [Dependency] private readonly DocumentCache _cache = null!;
+
+    private readonly ISawmill _logger = Logger.GetSawmill("HoverHandler");
 
     private List<string> TokenTypes { get; init; } =
     [
@@ -33,6 +36,8 @@ public sealed class SemanticTokensHandler : SemanticTokensHandlerBase
         SemanticTokensParams semanticTokensParams,
         CancellationToken cancellationToken)
     {
+        _logger.Info($"Handling semantic tokens for {semanticTokensParams}");
+
         using var sr = new StringReader(_cache.GetDocumentContents(semanticTokensParams.TextDocument.Uri));
 
         var yaml = new YamlStream();

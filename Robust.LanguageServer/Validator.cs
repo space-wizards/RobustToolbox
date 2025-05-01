@@ -22,15 +22,12 @@ public sealed class Validator
         // }
         Console.WriteLine($"allErrors: {allErrors.Count}");
 
-        foreach (var (path, nodeList) in allErrors)
+        foreach (var errorNode in allErrors)
         {
-            Console.Error.WriteLine($"Error in file: {path}");
+            Console.Error.WriteLine($"Error in file: {filePath}");
 
-            foreach (var node in nodeList)
-            {
-                Console.Error.WriteLine(
-                    $"* {node.Node} - {node.ErrorReason} - {node.AlwaysRelevant} - {node.Node.Start} -> {node.Node.End}");
-            }
+            Console.Error.WriteLine(
+                    $"* {errorNode.Node} - {errorNode.ErrorReason} - {errorNode.AlwaysRelevant} - {errorNode.Node.Start} -> {errorNode.Node.End}");
         }
     }
 }

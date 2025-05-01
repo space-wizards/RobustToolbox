@@ -372,7 +372,7 @@ internal interface IPrototypeManagerInternal : IPrototypeManager
 {
     event Action<DataNodeDocument>? LoadedData;
 
-    Dictionary<string, HashSet<ErrorNode>> AnalyzeSingleFile(
+    HashSet<ErrorNode> AnalyzeSingleFile(
         TextReader reader,
         out List<DocumentSymbol> symbols,
         out List<(ValueDataNode, FieldDefinition)> fields,

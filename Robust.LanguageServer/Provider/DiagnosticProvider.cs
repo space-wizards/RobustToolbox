@@ -26,29 +26,24 @@ public sealed class DiagnosticProvider : IPostInjectInit
 
         List<Diagnostic> diagnosticList = new();
 
-        var errors = _cache.GetErrors(uri);
-
-        if (errors != null)
+        if (_cache.GetErrors(uri) is {} errors)
         {
-            foreach (var (path, nodeList) in errors)
+            foreach (var errorNode in errors)
             {
-                Console.Error.WriteLine($"Error in file: {path}");
+                Console.Error.WriteLine($"Error in file: {uri}");
 
-                foreach (var node in nodeList)
+                Console.Error.WriteLine(
+                    $"* {errorNode.Node} - {errorNode.ErrorReason} - {errorNode.AlwaysRelevant} - {errorNode.Node.Start} -> {errorNode.Node.End}");
+
+
+                diagnosticList.Add(new Diagnostic()
                 {
-                    Console.Error.WriteLine(
-                        $"* {node.Node} - {node.ErrorReason} - {node.AlwaysRelevant} - {node.Node.Start} -> {node.Node.End}");
-
-
-                    diagnosticList.Add(new Diagnostic()
-                    {
-                        Message = node.ErrorReason,
-                        Range = Helpers.LspRangeForNode(node.Node),
-                        Severity = DiagnosticSeverity.Error,
-                        Source = "SS14 LSP",
-                        Code = "12313",
-                    });
-                }
+                    Message = errorNode.ErrorReason,
+                    Range = Helpers.LspRangeForNode(errorNode.Node),
+                    Severity = DiagnosticSeverity.Error,
+                    Source = "SS14 LSP",
+                    Code = "12313",
+                });
             }
         }
 

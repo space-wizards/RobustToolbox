@@ -22,7 +22,7 @@ internal sealed class DocumentCache : IPostInjectInit
     private Dictionary<Uri, string> _documents = new();
 
     // FIXME The string key is redundant, we have lookup by document URI
-    private Dictionary<Uri, Dictionary<string, HashSet<ErrorNode>>> _errors = new();
+    private Dictionary<Uri, HashSet<ErrorNode>> _errors = new();
     private Dictionary<Uri, List<(ValueDataNode, FieldDefinition)>> _fields = new();
     private Dictionary<Uri, List<DocumentSymbol>> _symbols = new();
 
@@ -64,19 +64,13 @@ internal sealed class DocumentCache : IPostInjectInit
             // These error nodes might need to be converted to an internal type
             // but ideally any exceptions will be migrated to actual errors that we can report
             // line:col info for, so it may not be necessary.
-            _errors[uri.Uri] = new Dictionary<string, HashSet<ErrorNode>>
-            {
-                {
-                    uri.Uri.ToString(),
-                    [new ErrorNode(new ValueDataNode(), $"Parsing failed: {e.Message}")]
-                }
-            };
+            _errors[uri.Uri] = [new ErrorNode(new ValueDataNode(), $"Parsing failed: {e.Message}")];
         }
 
         DocumentChanged?.Invoke(uri.Uri, version);
     }
 
-    public Dictionary<string, HashSet<ErrorNode>>? GetErrors(DocumentUri uri)
+    public HashSet<ErrorNode>? GetErrors(DocumentUri uri)
     {
         return _errors.GetValueOrDefault(uri.Uri);
     }

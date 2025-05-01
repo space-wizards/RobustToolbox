@@ -112,7 +112,7 @@ public partial class PrototypeManager
         return dict;
     }
 
-    Dictionary<string, HashSet<ErrorNode>> IPrototypeManagerInternal.AnalyzeSingleFile(
+    HashSet<ErrorNode> IPrototypeManagerInternal.AnalyzeSingleFile(
         TextReader reader,
         out List<DocumentSymbol> symbols,
         out List<(ValueDataNode, FieldDefinition)> fields,
@@ -121,7 +121,7 @@ public partial class PrototypeManager
         var yamlStream = new YamlStream();
         yamlStream.Load(reader);
 
-        var dict = new Dictionary<string, HashSet<ErrorNode>>();
+        var result = new HashSet<ErrorNode>();
         var prototypes = new Dictionary<Type, Dictionary<string, PrototypeValidationData>>();
         symbols = new();
 
@@ -130,12 +130,6 @@ public partial class PrototypeManager
             var rootNode = (YamlSequenceNode)doc.RootNode;
             foreach (YamlMappingNode node in rootNode.Cast<YamlMappingNode>())
             {
-                // if (previousPrototypeSymbol != null)
-                // {
-                //     previousPrototypeSymbol.NodeEnd = node.Start;
-                //     previousPrototypeSymbol = null;
-                // }
-
                 var typeId = node.GetNode("type").AsString();
                 if (_ignoredPrototypeTypes.Contains(typeId))
                     continue;
@@ -160,7 +154,7 @@ public partial class PrototypeManager
                     continue;
 
                 var error = new ErrorNode(mapping, $"Found dupe prototype ID of {id} for {type}");
-                dict.GetOrNew(data.File).Add(error);
+                result.Add(error);
             }
         }
 
@@ -181,13 +175,13 @@ public partial class PrototypeManager
                 // Validate yaml directly
                 errors.AddRange(_serializationManager.ValidateNode(type, data.Mapping, ctx).GetErrors());
                 if (errors.Count > 0)
-                    dict.GetOrNew(data.File).UnionWith(errors);
+                    result.UnionWith(errors);
             }
         }
 
         fields = ctx.FieldDefinitions;
 
-        return dict;
+        return result;
     }
 
     public Dictionary<Type, Dictionary<string, HashSet<ErrorNode>>> ValidateAllPrototypesSerializable(ISerializationContext? ctx)

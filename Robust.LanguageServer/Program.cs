@@ -14,7 +14,6 @@ internal static class Program
         var deps = IoCManager.InitThread();
         IoCManager.Register<DocumentCache>();
         IoCManager.Register<Loader>();
-        IoCManager.Register<Validator>();
         IoCManager.Register<DocsManager>();
         IoCManager.Register<Parser>();
 

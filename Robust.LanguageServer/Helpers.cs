@@ -20,4 +20,26 @@ public static class Helpers
     {
         return new Position((int)(mark.Line - 1), (int)(mark.Column - 1));
     }
+
+    public static DocumentRange LspRangeForNode(DataNode node)
+    {
+        return ToLsp(node.Start, node.End);
+    }
+
+    private static DocumentRange ToLsp(NodeMark nodeStart, NodeMark nodeEnd)
+    {
+        var start = ToLsp(nodeStart);
+        var end = ToLsp(nodeEnd);
+
+        if (nodeStart == NodeMark.Invalid)
+            start = new Position(0, 0);
+        if (nodeEnd == NodeMark.Invalid)
+            end = new Position(9999, 9999);
+
+        return new DocumentRange()
+        {
+            Start = start,
+            End = end,
+        };
+    }
 }

@@ -4,6 +4,7 @@ using EmmyLua.LanguageServer.Framework.Protocol.Model.Diagnostic;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager.Definition;
+using Robust.Shared.Serialization.Markdown;
 
 namespace Robust.LanguageServer.Provider;
 
@@ -38,22 +39,11 @@ public sealed class DiagnosticProvider : IPostInjectInit
                     Console.Error.WriteLine(
                         $"* {node.Node} - {node.ErrorReason} - {node.AlwaysRelevant} - {node.Node.Start} -> {node.Node.End}");
 
+
                     diagnosticList.Add(new Diagnostic()
                     {
                         Message = node.ErrorReason,
-                        Range = new DocumentRange()
-                        {
-                            Start = new Position()
-                            {
-                                Line = node.Node.Start.Line - 1,
-                                Character = node.Node.Start.Column - 1
-                            },
-                            End = new Position()
-                            {
-                                Line = node.Node.End.Line - 1,
-                                Character = node.Node.End.Column - 1
-                            }
-                        },
+                        Range = Helpers.LspRangeForNode(node.Node),
                         Severity = DiagnosticSeverity.Error,
                         Source = "SS14 LSP",
                         Code = "12313",

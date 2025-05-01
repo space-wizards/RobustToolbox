@@ -21,6 +21,7 @@ internal sealed class DocumentCache : IPostInjectInit
     // but for now we’ll just hold the string contents
     private Dictionary<Uri, string> _documents = new();
 
+    // FIXME The string key is redundant, we have lookup by document URI
     private Dictionary<Uri, Dictionary<string, HashSet<ErrorNode>>> _errors = new();
     private Dictionary<Uri, List<(ValueDataNode, FieldDefinition)>> _fields = new();
     private Dictionary<Uri, List<DocumentSymbol>> _symbols = new();
@@ -28,9 +29,6 @@ internal sealed class DocumentCache : IPostInjectInit
     public delegate void DocumentChangedHandler(Uri uri, int documentVersion);
 
     public event DocumentChangedHandler? DocumentChanged;
-
-    // event DocumentParsed
-    // event DocumentParseFailed
 
     public string GetDocumentContents(DocumentUri uri)
     {
@@ -61,6 +59,18 @@ internal sealed class DocumentCache : IPostInjectInit
             _symbols.Remove(uri.Uri);
             _fields.Remove(uri.Uri);
             _errors.Remove(uri.Uri);
+
+            // Add a mock error node which wraps the exception message.
+            // These error nodes might need to be converted to an internal type
+            // but ideally any exceptions will be migrated to actual errors that we can report
+            // line:col info for, so it may not be necessary.
+            _errors[uri.Uri] = new Dictionary<string, HashSet<ErrorNode>>
+            {
+                {
+                    uri.Uri.ToString(),
+                    [new ErrorNode(new ValueDataNode(), $"Parsing failed: {e.Message}")]
+                }
+            };
         }
 
         DocumentChanged?.Invoke(uri.Uri, version);

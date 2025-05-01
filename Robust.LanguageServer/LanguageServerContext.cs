@@ -19,7 +19,7 @@ public sealed class LanguageServerContext
 {
     [Dependency] private readonly DocumentCache _cache = null!;
 
-    private ISawmill _logger;
+    private ISawmill _logger = default!;
     private readonly ELLanguageServer _languageServer;
 
     public Uri? RootDirectory { get; private set; }
@@ -28,14 +28,35 @@ public sealed class LanguageServerContext
 
     public LanguageServerContext(ELLanguageServer languageServer)
     {
-        var deps = IoCManager.Instance;
-        if (deps == null)
-            throw new NullReferenceException(nameof(deps));
+        _languageServer = languageServer;
+        _languageServer.AddJsonSerializeContext(JsonGenerateContext.Default);
+    }
+
+    public void Initialize()
+    {
+        if (_initialized)
+            return;
+
+        _initialized = true;
 
         _logger = Logger.GetSawmill("LanguageServerContext");
 
-        _languageServer = languageServer;
-        _languageServer.AddJsonSerializeContext(JsonGenerateContext.Default);
+        InitializeLanguageServer();
+
+        AddHandler(new TextDocumentHandler());
+        AddHandler(new SemanticTokensHandler());
+        AddHandler(new DocumentColorHandler());
+        AddHandler(new HoverHandler());
+        AddHandler(new DocumentSymbolHandler());
+
+        _cache.DocumentChanged += (uri, version) => { _logger.Error($"Document changed! Uri: {uri} ({version})"); };
+    }
+
+    private void InitializeLanguageServer()
+    {
+        var deps = IoCManager.Instance;
+        if (deps == null)
+            throw new NullReferenceException(nameof(deps));
 
         _languageServer.OnInitialize((c, s) =>
         {
@@ -65,22 +86,6 @@ public sealed class LanguageServerContext
 
             _logger.Error("Loaded");
         });
-    }
-
-    public void Initialize()
-    {
-        if (_initialized)
-            return;
-
-        _initialized = true;
-
-        AddHandler(new TextDocumentHandler());
-        AddHandler(new SemanticTokensHandler());
-        AddHandler(new DocumentColorHandler());
-        AddHandler(new HoverHandler());
-        AddHandler(new DocumentSymbolHandler());
-
-        _cache.DocumentChanged += (uri, version) => { _logger.Error($"Document changed! Uri: {uri} ({version})"); };
     }
 
     public Task Run()

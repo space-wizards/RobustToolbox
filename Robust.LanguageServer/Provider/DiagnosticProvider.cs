@@ -16,11 +16,11 @@ public sealed class DiagnosticProvider : IPostInjectInit
     [Dependency] private readonly DocumentCache _cache = null!;
     [Dependency] private readonly ELLanguageServer _server = null!;
 
-    private readonly ISawmill _logger = Logger.GetSawmill("DiagnosticProvider");
-
+    private ISawmill _logger = null!;
     public void PostInject()
     {
         _cache.DocumentChanged += OnDocumentChanged;
+        _logger = Logger.GetSawmill("DiagnosticProvider");
     }
 
     private void OnDocumentChanged(Uri uri, int documentVersion)

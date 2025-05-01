@@ -12,22 +12,22 @@ internal static class Program
     static async Task Main(string[] args)
     {
         var deps = IoCManager.InitThread();
-        IoCManager.Register<DocumentCache>();
-        IoCManager.Register<Loader>();
-        IoCManager.Register<DocsManager>();
-        IoCManager.Register<Parser>();
+        deps.Register<DocumentCache>();
+        deps.Register<Loader>();
+        deps.Register<DocsManager>();
+        deps.Register<Parser>();
 
-        IoCManager.Register<DiagnosticProvider>();
+        deps.Register<DiagnosticProvider>();
 
-        // IoCManager.Register<LanguageServerContext>();
+        // deps.Register<LanguageServerContext>();
         ServerIoC.RegisterIoC(deps);
         // ClientIoC.RegisterIoC(GameController.DisplayMode.Headless, deps);
 
         var ls = CreateTcpLanguageServer();
         var ctx = new LanguageServerContext(ls);
 
-        IoCManager.RegisterInstance<ELLanguageServer>(ls);
-        IoCManager.RegisterInstance<LanguageServerContext>(ctx);
+        deps.RegisterInstance<ELLanguageServer>(ls);
+        deps.RegisterInstance<LanguageServerContext>(ctx);
 
         deps.BuildGraph();
 

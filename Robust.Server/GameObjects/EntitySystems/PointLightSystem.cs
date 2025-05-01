@@ -44,20 +44,6 @@ public sealed class PointLightSystem : SharedPointLightSystem
         _metadata.SetFlag((uid, meta), MetaDataFlags.PvsPriority, IsHighPriority(comp));
     }
 
-    private void OnLightGetState(EntityUid uid, PointLightComponent component, ref ComponentGetState args)
-    {
-        args.State = new PointLightComponentState()
-        {
-            Color = component.Color,
-            Enabled = component.Enabled,
-            Energy = component.Energy,
-            Offset = component.Offset,
-            Radius = component.Radius,
-            Softness = component.Softness,
-            CastShadows = component.CastShadows,
-        };
-    }
-
     public override SharedPointLightComponent EnsureLight(EntityUid uid)
     {
         return EnsureComp<PointLightComponent>(uid);

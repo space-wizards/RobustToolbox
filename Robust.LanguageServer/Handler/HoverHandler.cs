@@ -6,6 +6,7 @@ using EmmyLua.LanguageServer.Framework.Protocol.Model;
 using EmmyLua.LanguageServer.Framework.Protocol.Model.Markup;
 using EmmyLua.LanguageServer.Framework.Server.Handler;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager.Definition;
 using Robust.Shared.Serialization.Markdown.Value;
@@ -17,9 +18,11 @@ public sealed class HoverHandler : HoverHandlerBase
     [Dependency] private readonly DocumentCache _cache = null!;
     [Dependency] private readonly DocsManager _docs = null!;
 
+    private readonly ISawmill _logger = Logger.GetSawmill("HoverHandler");
+
     protected override Task<HoverResponse?> Handle(HoverParams request, CancellationToken token)
     {
-        Console.Error.WriteLine($"HoverHandler.Handle: - {request.Position}");
+        _logger.Error($"HoverHandler.Handle: - {request.Position}");
 
         HoverResponse? response = null;
 
@@ -31,7 +34,7 @@ public sealed class HoverHandler : HoverHandlerBase
                 var commentsObj = _docs.GetComments(field.FieldInfo.MemberInfo);
                 string comments = commentsObj.Summary?.Trim() ?? string.Empty;
                 string remarks = commentsObj.Remarks?.Trim() ?? string.Empty;
-                Console.Error.WriteLine($"comments: {commentsObj} [{comments}] - {remarks}");
+                _logger.Error($"comments: {commentsObj} [{comments}] - {remarks}");
 
                 response = new HoverResponse()
                 {

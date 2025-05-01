@@ -8,19 +8,7 @@ public sealed class DocsManager
 {
     internal static HashSet<Assembly> _loadedAssemblies = new HashSet<Assembly>();
 
-    private DocXmlReader _reader;
-
-    public DocsManager()
-    {
-        _reader = new DocXmlReader(GetAssemblyXmlPath);
-    }
-
-    public static string GetAssemblyXmlPath(Assembly assembly)
-    {
-        var result = Path.ChangeExtension(assembly.Location, ".xml");
-        Console.WriteLine($"Getting ext for {assembly} -> {result}");
-        return result;
-    }
+    private DocXmlReader _reader = new();
 
     public TypeComments GetComments(Type type)
     {

@@ -9,6 +9,7 @@ using Robust.LanguageServer.Handler;
 using Robust.LanguageServer.Notifications;
 using Robust.LanguageServer.Parsing;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 
 namespace Robust.LanguageServer;
 
@@ -18,6 +19,7 @@ public sealed class LanguageServerContext
 {
     [Dependency] private readonly DocumentCache _cache = null!;
 
+    private ISawmill _logger;
     private readonly ELLanguageServer _languageServer;
 
     public Uri? RootDirectory { get; private set; }
@@ -29,6 +31,8 @@ public sealed class LanguageServerContext
         var deps = IoCManager.Instance;
         if (deps == null)
             throw new NullReferenceException(nameof(deps));
+
+        _logger = Logger.GetSawmill("LanguageServerContext");
 
         _languageServer = languageServer;
         _languageServer.AddJsonSerializeContext(JsonGenerateContext.Default);
@@ -42,16 +46,16 @@ public sealed class LanguageServerContext
 
             s.Name = "SS14 LSP";
             s.Version = "0.0.1";
-            Console.Error.WriteLine("initialize");
+            _logger.Error("initialize");
             return Task.CompletedTask;
         });
 
         _languageServer.OnInitialized(async (c) =>
         {
-            Console.Error.WriteLine("initialized");
+            _logger.Error("initialized");
 
             // Here we should be trying to load data based on the client.rootUri
-            Console.Error.WriteLine("Starting loader…");
+            _logger.Error("Starting loader…");
 
             ShowProgress("Loading Prototypes…");
 
@@ -59,7 +63,7 @@ public sealed class LanguageServerContext
 
             HideProgress();
 
-            Console.Error.WriteLine("Loaded");
+            _logger.Error("Loaded");
         });
     }
 
@@ -76,7 +80,7 @@ public sealed class LanguageServerContext
         AddHandler(new HoverHandler());
         AddHandler(new DocumentSymbolHandler());
 
-        _cache.DocumentChanged += (uri, version) => { Console.Error.WriteLine($"Document changed! Uri: {uri} ({version})"); };
+        _cache.DocumentChanged += (uri, version) => { _logger.Error($"Document changed! Uri: {uri} ({version})"); };
     }
 
     public Task Run()

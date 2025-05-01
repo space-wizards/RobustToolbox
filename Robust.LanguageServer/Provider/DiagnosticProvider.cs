@@ -2,6 +2,7 @@ using EmmyLua.LanguageServer.Framework.Protocol.Message.Client.PublishDiagnostic
 using EmmyLua.LanguageServer.Framework.Protocol.Model;
 using EmmyLua.LanguageServer.Framework.Protocol.Model.Diagnostic;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager.Definition;
 using Robust.Shared.Serialization.Markdown;
@@ -15,6 +16,8 @@ public sealed class DiagnosticProvider : IPostInjectInit
     [Dependency] private readonly DocumentCache _cache = null!;
     [Dependency] private readonly ELLanguageServer _server = null!;
 
+    private readonly ISawmill _logger = Logger.GetSawmill("DiagnosticProvider");
+
     public void PostInject()
     {
         _cache.DocumentChanged += OnDocumentChanged;
@@ -22,7 +25,7 @@ public sealed class DiagnosticProvider : IPostInjectInit
 
     private void OnDocumentChanged(Uri uri, int documentVersion)
     {
-        Console.Error.WriteLine($"Diagnostics - Document changed! Uri: {uri}");
+        _logger.Error($"Document changed! Uri: {uri}");
 
         List<Diagnostic> diagnosticList = new();
 
@@ -30,9 +33,9 @@ public sealed class DiagnosticProvider : IPostInjectInit
         {
             foreach (var errorNode in errors)
             {
-                Console.Error.WriteLine($"Error in file: {uri}");
+                _logger.Error($"Error in file: {uri}");
 
-                Console.Error.WriteLine(
+                _logger.Error(
                     $"* {errorNode.Node} - {errorNode.ErrorReason} - {errorNode.AlwaysRelevant} - {errorNode.Node.Start} -> {errorNode.Node.End}");
 
 

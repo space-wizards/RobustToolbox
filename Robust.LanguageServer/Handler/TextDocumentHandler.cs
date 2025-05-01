@@ -1,3 +1,5 @@
+using Robust.Shared.Log;
+
 namespace Robust.LanguageServer.Handler;
 
 using EmmyLua.LanguageServer.Framework.Protocol.Capabilities.Client.ClientCapabilities;
@@ -20,16 +22,23 @@ public class TextDocumentHandler : TextDocumentHandlerBase
     [Dependency] private readonly IPrototypeManager _protoMan = null!;
     [Dependency] private readonly DocumentCache _cache = null!;
 
+    private ISawmill _logger;
+
+    public TextDocumentHandler()
+    {
+        _logger = Logger.GetSawmill("TextDocumentHandler");
+    }
+
     protected override Task Handle(DidOpenTextDocumentParams request, CancellationToken token)
     {
-        Console.Error.WriteLine($"TextDocumentHandler: DidOpenTextDocument {request.TextDocument.Uri}");
+        _logger.Info($"DidOpenTextDocument {request.TextDocument.Uri}");
         _cache.UpdateDocument(request.TextDocument.Uri, request.TextDocument.Version, request.TextDocument.Text);
         return Task.CompletedTask;
     }
 
     protected override Task Handle(DidChangeTextDocumentParams request, CancellationToken token)
     {
-        Console.Error.WriteLine($"TextDocumentHandler: DidChangeTextDocument {request.TextDocument.Uri}");
+        _logger.Info($"DidChangeTextDocument {request.TextDocument.Uri}");
 
         if (request.ContentChanges.Count != 1)
             throw new NotImplementedException();
@@ -46,19 +55,19 @@ public class TextDocumentHandler : TextDocumentHandlerBase
 
     protected override Task Handle(DidCloseTextDocumentParams request, CancellationToken token)
     {
-        Console.Error.WriteLine($"TextDocumentHandler: DidCloseTextDocument {request.TextDocument.Uri}");
+        _logger.Info($"DidCloseTextDocument {request.TextDocument.Uri}");
         return Task.CompletedTask;
     }
 
     protected override Task Handle(WillSaveTextDocumentParams request, CancellationToken token)
     {
-        Console.Error.WriteLine($"TextDocumentHandler: WillSaveTextDocument {request.TextDocument.Uri}");
+        _logger.Info($"WillSaveTextDocument {request.TextDocument.Uri}");
         return Task.CompletedTask;
     }
 
     protected override Task<List<TextEdit>?> HandleRequest(WillSaveTextDocumentParams request, CancellationToken token)
     {
-        Console.Error.WriteLine($"TextDocumentHandler: WillSaveTextDocumentRequest {request.TextDocument.Uri}");
+        _logger.Info($"WillSaveTextDocumentRequest {request.TextDocument.Uri}");
         return Task.FromResult<List<TextEdit>?>(null);
     }
 

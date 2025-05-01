@@ -40,7 +40,6 @@ internal sealed class DocumentCache : IPostInjectInit
     public void UpdateDocument(DocumentUri uri, string content)
     {
         _documents[uri.Uri] = content;
-        DocumentChanged?.Invoke(uri.Uri);
 
         try
         {
@@ -63,6 +62,8 @@ internal sealed class DocumentCache : IPostInjectInit
             _fields.Remove(uri.Uri);
             _errors.Remove(uri.Uri);
         }
+
+        DocumentChanged?.Invoke(uri.Uri);
     }
 
     public Dictionary<string, HashSet<ErrorNode>>? GetErrors(DocumentUri uri)

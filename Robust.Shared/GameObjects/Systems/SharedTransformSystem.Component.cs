@@ -1329,6 +1329,9 @@ public abstract partial class SharedTransformSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetWorldPosition(Entity<TransformComponent> entity, Vector2 worldPos)
     {
+        if (entity.Comp._anchored)
+            return; // Same as localrotation.
+
         SetWorldPositionRotationInternal(entity.Owner, worldPos, null, entity.Comp);
     }
 
@@ -1434,9 +1437,6 @@ public abstract partial class SharedTransformSystem
             DebugTools.Assert("Parent is invalid while attempting to set WorldPosition - did you try to move root node?");
             return;
         }
-
-        if (component._anchored)
-            return; // Same as localrotation.
 
         if (component.GridUid != uid && _mapManager.TryFindGridAt(component.MapUid.Value, worldPos, out var targetGrid, out _))
         {

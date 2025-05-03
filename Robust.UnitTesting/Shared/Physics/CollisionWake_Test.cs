@@ -47,10 +47,8 @@ namespace Robust.UnitTesting.Shared.Physics
 
             Entity<MapGridComponent> grid = default!;
             MapId mapId = default!;
-            EntityUid entityOne = default!;
             PhysicsComponent entityOnePhysics = default!;
             TransformComponent xform = default!;
-            EntityUid entityTwo = default!;
             PhysicsComponent entityTwoPhysics = default!;
 
             EntityUid? entityOne = null;

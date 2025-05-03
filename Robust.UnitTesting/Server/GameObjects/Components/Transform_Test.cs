@@ -342,9 +342,9 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             for (var i = 0; i < 100; i++)
             {
-                XformSystem.SetLocalRotationNoLerp(node1, new Angle(MathHelper.Pi), node1Trans);
-                XformSystem.SetLocalRotationNoLerp(node2, new Angle(MathHelper.Pi), node2Trans);
-                XformSystem.SetLocalRotationNoLerp(node3, new Angle(MathHelper.Pi), node3Trans);
+                XformSystem.SetLocalRotationNoLerp(node1, node1Trans.LocalRotation + MathHelper.Pi, node1Trans);
+                XformSystem.SetLocalRotationNoLerp(node2, node2Trans.LocalRotation + MathHelper.Pi, node2Trans);
+                XformSystem.SetLocalRotationNoLerp(node3, node3Trans.LocalRotation + MathHelper.Pi, node3Trans);
             }
 
             var newWpos = XformSystem.GetWorldPosition(node3Trans);
@@ -355,8 +355,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             Assert.Multiple(() =>
             {
-                Assert.That(MathHelper.CloseToPercent(oldWpos.X, newWpos.Y, 0.0001f));
-                Assert.That(MathHelper.CloseToPercent(oldWpos.Y, newWpos.Y, 0.0001f));
+                Assert.That(MathHelper.CloseToPercent(oldWpos.X, newWpos.X, 0.0001f), $"Rotations cause significant world position drift: {newWpos.X} is not approx {oldWpos.X}.");
+                Assert.That(MathHelper.CloseToPercent(oldWpos.Y, newWpos.Y, 0.0001f), $"Rotations cause significant world position drift: {newWpos.Y} is not approx {oldWpos.Y}.");
             });
         }
 

@@ -596,7 +596,7 @@ public abstract partial class SharedTransformSystem
         if (!XformQuery.Resolve(uid, ref xform))
             return;
 
-        if(xform.Anchored)
+        if (xform.Anchored)
             return;
 
         var oldPos = xform._localPosition;
@@ -1434,6 +1434,9 @@ public abstract partial class SharedTransformSystem
             DebugTools.Assert("Parent is invalid while attempting to set WorldPosition - did you try to move root node?");
             return;
         }
+
+        if (component._anchored)
+            return; // Same as localrotation.
 
         if (component.GridUid != uid && _mapManager.TryFindGridAt(component.MapUid.Value, worldPos, out var targetGrid, out _))
         {

@@ -357,6 +357,12 @@ namespace Robust.Client.Placement
 
         public void Clear()
         {
+            ClearWithoutDeactivation();
+            IsActive = false;
+        }
+
+        private void ClearWithoutDeactivation()
+        {
             PlacementChanged?.Invoke(this, EventArgs.Empty);
             Hijack = null;
             EnsureNoPlacementOverlayEntity();
@@ -365,7 +371,6 @@ namespace Robust.Client.Placement
             CurrentMode = null;
             DeactivateSpecialPlacement();
             _placenextframe = false;
-            IsActive = false;
             Eraser = false;
             EraserRect = null;
             PlacementOffset = Vector2i.Zero;
@@ -480,7 +485,7 @@ namespace Robust.Client.Placement
 
         public void BeginHijackedPlacing(PlacementInformation info, PlacementHijack? hijack = null)
         {
-            Clear();
+            ClearWithoutDeactivation();
 
             CurrentPermission = info;
 

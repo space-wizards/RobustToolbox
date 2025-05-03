@@ -31,11 +31,12 @@ namespace Robust.Client.Placement.Modes
             }
 
             var transformSys = pManager.EntityManager.System<SharedTransformSystem>();
-            var mapId = MouseCoords.GetMapId(pManager.EntityManager);
+            var mapId = transformSys.GetMapId(MouseCoords);
 
-            var snapToEntities = EntitySystem.Get<EntityLookupSystem>().GetEntitiesInRange(MouseCoords, SnapToRange)
+            var snapToEntities = pManager.EntityManager.System<EntityLookupSystem>()
+                .GetEntitiesInRange(MouseCoords, SnapToRange)
                 .Where(entity => pManager.EntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype == pManager.CurrentPrototype && pManager.EntityManager.GetComponent<TransformComponent>(entity).MapID == mapId)
-                .OrderBy(entity => (transformSys.GetWorldPosition(entity) - MouseCoords.ToMapPos(pManager.EntityManager, pManager.EntityManager.System<SharedTransformSystem>())).LengthSquared())
+                .OrderBy(entity => (transformSys.GetWorldPosition(entity) - transformSys.ToMapCoordinates(MouseCoords).Position).LengthSquared())
                 .ToList();
 
             if (snapToEntities.Count == 0)

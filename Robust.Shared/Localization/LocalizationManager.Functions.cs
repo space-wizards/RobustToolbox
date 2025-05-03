@@ -12,7 +12,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Shared.Localization
 {
-    internal sealed partial class LocalizationManager
+    internal abstract partial class LocalizationManager
     {
         private static readonly Regex RegexWordMatch = new Regex(@"\w+");
 

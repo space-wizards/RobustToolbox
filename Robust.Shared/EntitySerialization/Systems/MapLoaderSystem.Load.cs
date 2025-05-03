@@ -95,7 +95,7 @@ public sealed partial class MapLoaderSystem
         }
         catch (Exception e)
         {
-            Log.Error($"Caught exception while creating entities: {e}");
+            Log.Error($"Caught exception while creating entities for map {file}: {e}");
             Delete(deserializer.Result);
             throw;
         }
@@ -103,7 +103,7 @@ public sealed partial class MapLoaderSystem
         if (opts.ExpectedCategory is { } exp && exp != deserializer.Result.Category)
         {
             // Did someone try to load a map file as a grid or vice versa?
-            Log.Error($"File does not contain the expected data. Expected {exp} but got {deserializer.Result.Category}");
+            Log.Error($"Map {file} does not contain the expected data. Expected {exp} but got {deserializer.Result.Category}");
             Delete(deserializer.Result);
             return false;
         }
@@ -201,6 +201,35 @@ public sealed partial class MapLoaderSystem
 
         Delete(result);
         return false;
+    }
+
+    /// <summary>
+    /// Tries to load a grid entity from a file and parent it to a newly created map.
+    /// If the file does not contain exactly one grid, this will return false and delete loaded entities.
+    /// </summary>
+    public bool TryLoadGrid(
+        ResPath path,
+        [NotNullWhen(true)] out Entity<MapComponent>? map,
+        [NotNullWhen(true)] out Entity<MapGridComponent>? grid,
+        DeserializationOptions? options = null,
+        Vector2 offset = default,
+        Angle rot = default)
+    {
+        var opts = options ?? DeserializationOptions.Default;
+
+        var mapUid = _mapSystem.CreateMap(out var mapId, runMapInit: opts.InitializeMaps);
+        if (opts.PauseMaps)
+            _mapSystem.SetPaused(mapUid, true);
+
+        if (!TryLoadGrid(mapId, path, out grid, options, offset, rot))
+        {
+            Del(mapUid);
+            map = null;
+            return false;
+        }
+
+        map = new(mapUid, Comp<MapComponent>(mapUid));
+        return true;
     }
 
     private void ApplyTransform(EntityDeserializer deserializer, MapLoadOptions opts)

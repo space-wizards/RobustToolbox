@@ -10,6 +10,7 @@ using Robust.Client.Input;
 using Robust.Client.Map;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
+using Robust.Client.Utility;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
@@ -23,6 +24,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 using TextureWrapMode = Robust.Shared.Graphics.TextureWrapMode;
 
 namespace Robust.Client.Graphics.Clyde
@@ -48,6 +50,8 @@ namespace Robust.Client.Graphics.Clyde
         [Dependency] private readonly ILocalizationManager _loc = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly ClientEntityManager _entityManager = default!;
+        [Dependency] private readonly IPrototypeManager _proto = default!;
+        [Dependency] private readonly IReloadManager _reloads = default!;
 
         private GLUniformBuffer<ProjViewMatrices> ProjViewUBO = default!;
         private GLUniformBuffer<UniformConstants> UniformConstantsUBO = default!;
@@ -99,6 +103,16 @@ namespace Robust.Client.Graphics.Clyde
             _sawmillOgl = _logManager.GetSawmill("clyde.ogl");
             _sawmillWin = _logManager.GetSawmill("clyde.win");
 
+            _reloads.Register("/Shaders", "*.swsl");
+            _reloads.Register("/Textures/Shaders", "*.swsl");
+            _reloads.Register("/Textures", "*.jpg");
+            _reloads.Register("/Textures", "*.jpeg");
+            _reloads.Register("/Textures", "*.png");
+            _reloads.Register("/Textures", "*.webp");
+
+            _reloads.OnChanged += OnChange;
+            _proto.PrototypesReloaded += OnProtoReload;
+
             _cfg.OnValueChanged(CVars.DisplayOGLCheckErrors, b => _checkGLErrors = b, true);
             _cfg.OnValueChanged(CVars.DisplayVSync, VSyncChanged, true);
             _cfg.OnValueChanged(CVars.DisplayWindowMode, WindowModeChanged, true);
@@ -107,6 +121,7 @@ namespace Robust.Client.Graphics.Clyde
             _cfg.OnValueChanged(CVars.LightSoftShadows, SoftShadowsChanged, true);
             _cfg.OnValueChanged(CVars.MaxLightCount, MaxLightsChanged, true);
             _cfg.OnValueChanged(CVars.MaxOccluderCount, MaxOccludersChanged, true);
+            _cfg.OnValueChanged(CVars.RenderTileEdges, RenderTileEdgesChanges, true);
             // I can't be bothered to tear down and set these threads up in a cvar change handler.
 
             // Windows and Linux can be trusted to not explode with threaded windowing,
@@ -120,6 +135,38 @@ namespace Robust.Client.Graphics.Clyde
             InitKeys();
 
             return InitWindowing();
+        }
+
+        private void OnProtoReload(PrototypesReloadedEventArgs obj)
+        {
+            if (!obj.WasModified<ShaderPrototype>())
+                return;
+
+            foreach (var shader in obj.ByType[typeof(ShaderPrototype)].Modified.Keys)
+            {
+                _resourceCache.ReloadResource<ShaderSourceResource>(shader);
+            }
+        }
+
+        private void OnChange(ResPath obj)
+        {
+            if ((obj.TryRelativeTo(new ResPath("/Shaders"), out _) || obj.TryRelativeTo(new ResPath("/Textures/Shaders"), out _)) && obj.Extension == "swsl")
+            {
+                _resourceCache.ReloadResource<ShaderSourceResource>(obj);
+            }
+
+            if (obj.TryRelativeTo(new ResPath("/Textures"), out _) && !obj.TryRelativeTo(new ResPath("/Textures/Tiles"), out _))
+            {
+                if (obj.Extension == "jpg" || obj.Extension == "jpeg" || obj.Extension == "webp")
+                {
+                    _resourceCache.ReloadResource<TextureResource>(obj);
+                }
+
+                if (obj.Extension == "png")
+                {
+                    _resourceCache.ReloadResource<TextureResource>(obj);
+                }
+            }
         }
 
         public bool InitializePostWindowing()

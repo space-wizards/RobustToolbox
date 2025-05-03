@@ -10,21 +10,23 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
-    public sealed class ShowSpriteBBCommand : LocalizedCommands
+    public sealed class ShowSpriteBBCommand : LocalizedEntityCommands
     {
+        [Dependency] private readonly SpriteBoundsSystem _system = default!;
+
         public override string Command => "showspritebb";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            EntitySystem.Get<SpriteBoundsSystem>().Enabled ^= true;
+            _system.Enabled ^= true;
         }
     }
 
     public sealed class SpriteBoundsSystem : EntitySystem
     {
+        [Dependency] private readonly SharedTransformSystem _xformSystem = default!;
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
         [Dependency] private readonly SpriteTreeSystem _spriteTree = default!;
-        [Dependency] private readonly SharedTransformSystem _transform = default!;
 
         private SpriteBoundsOverlay? _overlay;
 
@@ -40,7 +42,7 @@ namespace Robust.Client.GameObjects
                 if (_enabled)
                 {
                     DebugTools.AssertNull(_overlay);
-                    _overlay = new SpriteBoundsOverlay(_spriteTree, _transform);
+                    _overlay = new SpriteBoundsOverlay(_spriteTree, _xformSystem);
                     _overlayManager.AddOverlay(_overlay);
                 }
                 else
@@ -59,13 +61,13 @@ namespace Robust.Client.GameObjects
     {
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-        private readonly SpriteTreeSystem _renderTree;
-        private readonly SharedTransformSystem _transform;
+        private readonly SharedTransformSystem _xformSystem;
+        private SpriteTreeSystem _renderTree;
 
-        public SpriteBoundsOverlay(SpriteTreeSystem renderTree, SharedTransformSystem transform)
+        public SpriteBoundsOverlay(SpriteTreeSystem renderTree, SharedTransformSystem xformSystem)
         {
             _renderTree = renderTree;
-            _transform = transform;
+            _xformSystem = xformSystem;
         }
 
         protected internal override void Draw(in OverlayDrawArgs args)
@@ -76,7 +78,7 @@ namespace Robust.Client.GameObjects
 
             foreach (var (sprite, xform) in _renderTree.QueryAabb(currentMap, viewport))
             {
-                var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform);
+                var (worldPos, worldRot) = _xformSystem.GetWorldPositionRotation(xform);
                 var bounds = sprite.CalculateRotatedBoundingBox(worldPos, worldRot, args.Viewport.Eye?.Rotation ?? default);
 
                 // Get scaled down bounds used to indicate the "south" of a sprite.

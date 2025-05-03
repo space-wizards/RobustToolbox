@@ -121,7 +121,12 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         if (msg.Message is not CloseBoundInterfaceMessage && ui.RequireInputValidation)
         {
             var attempt = new BoundUserInterfaceMessageAttempt(sender, uid, msg.UiKey, msg.Message);
+
             RaiseLocalEvent(attempt);
+            if (attempt.Cancelled)
+                return;
+
+            RaiseLocalEvent(uid, attempt);
             if (attempt.Cancelled)
                 return;
         }
@@ -279,7 +284,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         }
     }
 
-    protected virtual void OnUserInterfaceShutdown(Entity<UserInterfaceComponent> ent, ref ComponentShutdown args)
+    protected void OnUserInterfaceShutdown(Entity<UserInterfaceComponent> ent, ref ComponentShutdown args)
     {
         var ents = new ValueList<EntityUid>();
         foreach (var (key, acts) in ent.Comp.Actors)
@@ -1064,11 +1069,11 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             {
                 if (open)
                 {
-                    bui.Open();
 #if EXCEPTION_TOLERANCE
                     try
                     {
 #endif
+                    bui.Open();
 
                     if (UIQuery.TryComp(bui.Owner, out var uiComp))
                     {
@@ -1096,8 +1101,24 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
                         uiComp.ClientOpenInterfaces.Remove(bui.UiKey);
                     }
 
-                    SavePosition(bui);
+#if EXCEPTION_TOLERANCE
+                    try
+                    {
+#endif
+                    if (!TerminatingOrDeleted(bui.Owner))
+                    {
+                        SavePosition(bui);
+                    }
+
                     bui.Dispose();
+#if EXCEPTION_TOLERANCE
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(
+                            $"Caught exception while attempting to dispose of a BUI {bui.UiKey} with type {bui.GetType()} on entity {ToPrettyString(bui.Owner)}. Exception: {e}");
+                    }
+#endif
                 }
             }
 

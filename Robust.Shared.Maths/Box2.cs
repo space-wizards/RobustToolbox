@@ -212,6 +212,48 @@ namespace Robust.Shared.Maths
             return surfaceIntersect / (Area(this) + Area(other) - surfaceIntersect);
         }
 
+        public readonly bool IsValid()
+        {
+            var d = Vector2.Subtract(TopRight, BottomLeft);
+            bool valid = d.X >= 0.0f && d.Y >= 0.0f;
+            valid = valid && BottomLeft.IsValid() && TopRight.IsValid();
+            return valid;
+        }
+
+        /// <summary>
+        /// Enlarges this box to contain another box.
+        /// </summary>
+        public bool EnlargeAabb(Box2 other)
+        {
+            var changed = false;
+
+            if (other.Left < Left)
+            {
+                Left = other.Left;
+                changed = true;
+            }
+
+            if (other.Bottom < Bottom)
+            {
+                Bottom = other.Bottom;
+                changed = true;
+            }
+
+            if (Right < other.Right)
+            {
+                Right = other.Right;
+                changed = true;
+            }
+
+            if (other.Top < Top)
+            {
+                Top = other.Top;
+                changed = true;
+            }
+
+            return changed;
+        }
+
         /// <summary>
         ///     Returns the smallest rectangle that contains both of the rectangles.
         /// </summary>
@@ -400,6 +442,15 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Perimeter(in Box2 box)
             => (box.Width + box.Height) * 2;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
+        public static Box2 Union(Box2 a, Box2 b)
+        {
+            return new Box2(
+                Vector2.Min(a.BottomLeft, b.BottomLeft),
+                Vector2.Max(a.TopRight, b.TopRight));
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]

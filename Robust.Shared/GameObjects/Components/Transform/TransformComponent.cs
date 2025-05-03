@@ -243,15 +243,6 @@ namespace Robust.Shared.GameObjects
             _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AttachToGridOrMap(Owner, this);
         }
 
-        [Obsolete("TransformComponent.UpdateChildMapIdsRecursive is obsolete, please use SharedTransformSystem.UpdateChildMapIdsRecursive")]
-        internal void UpdateChildMapIdsRecursive(
-            MapId newMapId,
-            EntityUid? newUid,
-            bool mapPaused,
-            EntityQuery<TransformComponent> xformQuery,
-            EntityQuery<MetaDataComponent> metaQuery,
-            MetaDataSystem system) => _entMan.System<SharedTransformSystem>().UpdateChildMapIdsRecursive(this, newMapId, newUid, mapPaused);
-
         [Obsolete("Use TransformSystem.SetParent() instead")]
         public void AttachParent(EntityUid parent)
         {

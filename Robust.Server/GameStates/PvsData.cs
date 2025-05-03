@@ -204,7 +204,7 @@ internal struct PvsMetadata
     {
         DebugTools.AssertEqual(NetEntity, comp.NetEntity);
         DebugTools.AssertEqual(VisMask, comp.VisibilityMask);
-        DebugTools.Assert(LifeStage == comp.EntityLifeStage);
+        DebugTools.AssertEqual(LifeStage, comp.EntityLifeStage);
         DebugTools.Assert(LastModifiedTick == comp.EntityLastModifiedTick || LastModifiedTick.Value == 0);
     }
 }

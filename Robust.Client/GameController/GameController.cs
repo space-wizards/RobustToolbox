@@ -31,6 +31,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
@@ -93,6 +94,8 @@ namespace Robust.Client
         [Dependency] private readonly IReplayPlaybackManager _replayPlayback = default!;
         [Dependency] private readonly IReplayRecordingManagerInternal _replayRecording = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IReloadManager _reload = default!;
+        [Dependency] private readonly ILocalizationManager _loc = default!;
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -179,12 +182,14 @@ namespace Robust.Client
             _serializer.Initialize();
             _inputManager.Initialize();
             _console.Initialize();
+            _loc.Initialize();
 
             // Make sure this is done before we try to load prototypes,
             // avoid any possibility of race conditions causing the check to not finish
             // before prototype load.
             ProgramShared.FinishCheckBadFileExtensions(checkBadExtensions);
 
+            _reload.Initialize();
             _reflectionManager.Initialize();
             _prototypeManager.Initialize();
             _prototypeManager.LoadDefaultPrototypes();

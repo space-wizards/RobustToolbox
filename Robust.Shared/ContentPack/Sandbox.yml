@@ -913,6 +913,7 @@ Types:
   System.Threading:
     CancellationToken: { All: True }
     CancellationTokenSource: { All: True }
+    CancellationTokenRegistration: { All: True }
     Interlocked: { All: True }
     Monitor: { All: True }
   System.Web:

@@ -5,10 +5,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Interfaces;
 /// <summary>
 /// A serializer for a given type that supports reading and writing. Can be used as a default serializer or a custom serializer on a datafield.
 /// </summary>
-/// <p>
+/// <remarks>
 /// Types that implement this may be annotated with <see cref="Robust.Shared.Serialization.Manager.Attributes.TypeSerializerAttribute"/>
 /// to register it as the default serializer for a type
-/// </p>
+/// </remarks>
 /// <typeparam name="TType">The type that we want to serialize to/from</typeparam>
 /// <typeparam name="TNode">The YAML node that can represent the type</typeparam>
 public interface ITypeSerializer<TType, TNode> :

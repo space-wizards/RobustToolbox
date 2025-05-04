@@ -89,7 +89,7 @@ public sealed class TimespanSerializer : ITypeSerializer<TimeSpan, ValueDataNode
             return false;
 
         // Check the last character of the input for time unit indicators
-        switch (node.Value.AsSpan()[^1])
+        switch (node.Value[^1])
         {
             case 's':
                 timeSpan = TimeSpan.FromSeconds(number);

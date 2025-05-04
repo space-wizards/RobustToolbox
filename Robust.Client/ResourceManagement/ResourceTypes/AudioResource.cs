@@ -14,7 +14,7 @@ public sealed class AudioResource : BaseResource
     // from: https://en.wikipedia.org/wiki/List_of_file_signatures
     private static readonly byte[] OggSignature = "OggS"u8.ToArray();
     private static readonly byte[] RiffSignature = "RIFF"u8.ToArray();
-    private const int WavSignatureSkip = 8; // RIFF????
+    private const int WavSignatureStart = 8; // RIFF????
     private static readonly byte[] WavSignature = "WAVE"u8.ToArray();
     private const int MaxSignatureLength = 12; // RIFF????WAVE
 
@@ -40,12 +40,12 @@ public sealed class AudioResource : BaseResource
         seekableStream.Seek(0, SeekOrigin.Begin);
 
         var audioManager = dependencies.Resolve<IAudioInternal>();
-        if (signature.Take(OggSignature.Length).SequenceEqual(OggSignature))
+        if (signature[..OggSignature.Length].SequenceEqual(OggSignature))
         {
             AudioStream = audioManager.LoadAudioOggVorbis(seekableStream, path.ToString());
         }
-        else if (signature.Take(RiffSignature.Length).SequenceEqual(RiffSignature)
-                 && signature.Skip(WavSignatureSkip).SequenceEqual(WavSignature))
+        else if (signature[..RiffSignature.Length].SequenceEqual(RiffSignature)
+                 && signature[WavSignatureStart..MaxSignatureLength].SequenceEqual(WavSignature))
         {
             AudioStream = audioManager.LoadAudioWav(seekableStream, path.ToString());
         }

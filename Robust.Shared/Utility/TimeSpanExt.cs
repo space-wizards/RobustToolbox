@@ -72,12 +72,15 @@ public static class TimeSpanExt
         switch (str[^1])
         {
             case 's':
+            case 'S':
                 timeSpan = TimeSpan.FromSeconds(number);
                 return true;
             case 'm':
+            case 'M':
                 timeSpan = TimeSpan.FromMinutes(number);
                 return true;
             case 'h':
+            case 'H':
                 timeSpan = TimeSpan.FromHours(number);
                 return true;
             default:

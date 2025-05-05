@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using Robust.Shared.Serialization.Markdown.Value;
 
 namespace Robust.Shared.Utility;
@@ -47,9 +48,15 @@ public static class TimeSpanExt
     {
         timeSpan = null;
 
+        double.TryParse("10:0", CultureInfo.InvariantCulture, out var v11);
+
+        // If someone tried to use comma as a decimal separator, they would get orders of magnitude higher numbers than intended
+        if (str.Contains(',') || str.Contains(' ') || str.Contains(':'))
+            return false;
+
         // A lot of the checks will be for plain numbers, so might as well rule them out right away, instead of
         // running all the other checks on them. They will need to get parsed later anyway, if they weren't now.
-        if (double.TryParse(str, out var v))
+        if (double.TryParse(str, CultureInfo.InvariantCulture, out var v))
         {
             timeSpan = TimeSpan.FromSeconds(v);
             return true;
@@ -60,7 +67,7 @@ public static class TimeSpanExt
             return false;
 
         // If the input without the last character is still not a valid number, exit
-        if (!double.TryParse(str.AsSpan()[..^1], out var number))
+        if (!double.TryParse(str.AsSpan()[..^1], CultureInfo.InvariantCulture, out var number))
             return false;
 
         // Check the last character of the input for time unit indicators

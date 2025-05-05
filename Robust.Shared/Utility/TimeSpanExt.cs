@@ -48,8 +48,6 @@ public static class TimeSpanExt
     {
         timeSpan = null;
 
-        double.TryParse("10:0", CultureInfo.InvariantCulture, out var v11);
-
         // If someone tried to use comma as a decimal separator, they would get orders of magnitude higher numbers than intended
         if (str.Contains(',') || str.Contains(' ') || str.Contains(':'))
             return false;

@@ -344,9 +344,6 @@ namespace Robust.Client.UserInterface.Controls
                     continue;
 
                 var item = _itemList[i];
-                if (!item.Selected)
-                    continue;
-
                 item.Selected = false;
             }
         }
@@ -744,7 +741,7 @@ namespace Robust.Client.UserInterface.Controls
                 get => _selected;
                 set
                 {
-                    if (!Selectable) return;
+                    if (!Selectable || _selected == value) return;
                     _selected = value;
                     if(_selected) OnSelected?.Invoke(this);
                     else OnDeselected?.Invoke(this);

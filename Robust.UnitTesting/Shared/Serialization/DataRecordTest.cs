@@ -11,25 +11,25 @@ namespace Robust.UnitTesting.Shared.Serialization;
 public sealed partial class DataRecordTest : SerializationTest
 {
     [DataRecord]
-    public record TwoIntRecord(int aTest, int AnotherTest);
+    public partial record TwoIntRecord(int aTest, int AnotherTest);
 
     [DataRecord]
-    public record OneByteOneDefaultIntRecord(byte A, int B = 5);
+    public partial record OneByteOneDefaultIntRecord(byte A, int B = 5);
 
     [DataRecord]
-    public record OneLongRecord(long A);
+    public partial record OneLongRecord(long A);
 
     [DataRecord]
-    public record OneLongDefaultRecord(long A = 5);
+    public partial record OneLongDefaultRecord(long A = 5);
 
     [DataRecord]
-    public record OneULongRecord(ulong A);
+    public partial record OneULongRecord(ulong A);
 
     [PrototypeRecord("emptyTestPrototypeRecord")]
-    public record PrototypeRecord([field: IdDataField] string ID) : IPrototype;
+    public partial record PrototypeRecord([field: IdDataField] string ID) : IPrototype;
 
     [DataRecord]
-    public record IntStructHolder(IntStruct Struct);
+    public partial record IntStructHolder(IntStruct Struct);
 
     [DataDefinition]
     public partial struct IntStruct
@@ -43,10 +43,10 @@ public sealed partial class DataRecordTest : SerializationTest
     }
 
     [DataRecord]
-    public record TwoIntStructHolder(IntStruct Struct1, IntStruct Struct2);
+    public partial record TwoIntStructHolder(IntStruct Struct1, IntStruct Struct2);
 
     [DataRecord]
-    public record struct DataRecordStruct(IntStruct Struct, string String, int Integer);
+    public partial record struct DataRecordStruct(IntStruct Struct, string String, int Integer);
 
     [Test]
     public void TwoIntRecordTest()

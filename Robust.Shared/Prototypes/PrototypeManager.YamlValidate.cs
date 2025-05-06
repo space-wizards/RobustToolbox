@@ -132,7 +132,10 @@ public partial class PrototypeManager
             {
                 var typeId = node.GetNode("type").AsString();
                 if (_ignoredPrototypeTypes.Contains(typeId))
+                {
+                    Sawmill.Warning($"Skipping ignored prototype {typeId}");
                     continue;
+                }
 
                 if (!_kindNames.TryGetValue(typeId, out var type))
                 {

@@ -166,11 +166,6 @@ public partial class PrototypeManager
             {
                 errors.Clear();
                 EnsurePushed(data, instances, type);
-                if (data.Mapping.TryGet("abstract", out ValueDataNode? abstractNode)
-                    && bool.Parse(abstractNode.Value))
-                {
-                    continue;
-                }
 
                 // Validate yaml directly
                 errors.AddRange(_serializationManager.ValidateNode(type, data.Mapping, ctx).GetErrors());

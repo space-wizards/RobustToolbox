@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Reflection;
 using System.Text;
+using Robust.Client;
 using Robust.Server.GameObjects;
 using Robust.Server;
 using Robust.Shared;
@@ -50,23 +51,30 @@ public sealed class Loader
         // Set up the VFS
         _resources.Initialize(dataDir);
 
-        ServerOptions options = new()
+        var loadServer = true;
+
+        // Why aren't these a shared interface :(
+        ServerOptions serverOptions = new();
+        GameControllerOptions clientOptions = new();
+
+        if (loadServer)
         {
-            LoadConfigAndUserData = false,
-        };
-
-        var mountOptions = options.MountOptions;
-        // var mountOptions = _commandLineArgs != null
-        //     ? MountOptions.Merge(_commandLineArgs.MountOptions, Options.MountOptions) : Options.MountOptions;
-
-        ProgramShared.DoMounts(_resources,
-            mountOptions,
-            options.ContentBuildDirectory,
-            options.AssemblyDirectory,
-            options.LoadContentResources,
-            options.ResourceMountDisabled,
-            false);
-
+            ProgramShared.DoMounts(_resources,
+                serverOptions.MountOptions,
+                serverOptions.ContentBuildDirectory,
+                serverOptions.AssemblyDirectory,
+                serverOptions.LoadContentResources,
+                serverOptions.ResourceMountDisabled);
+        }
+        else
+        {
+            ProgramShared.DoMounts(_resources,
+                clientOptions.MountOptions,
+                clientOptions.ContentBuildDirectory,
+                clientOptions.AssemblyDirectory,
+                clientOptions.LoadContentResources,
+                clientOptions.ResourceMountDisabled);
+        }
 
         // resourceMan.MountContentDirectory(@"/Users/ciaran/code/ss14/space-station-14/Resources");
 
@@ -79,10 +87,10 @@ public sealed class Loader
         var resourceManifest = ResourceManifestData.LoadResourceManifest(_resources);
 
         Console.WriteLine(
-            $"Options.AssemblyDirectory: {options.AssemblyDirectory} - {resourceManifest.AssemblyPrefix} - {options.ContentModulePrefix}");
+            $"Options.AssemblyDirectory: {serverOptions.AssemblyDirectory} - {resourceManifest.AssemblyPrefix} - {serverOptions.ContentModulePrefix}");
 
-        if (!_modLoader.TryLoadModulesFrom(options.AssemblyDirectory,
-                resourceManifest.AssemblyPrefix ?? options.ContentModulePrefix))
+        if (!_modLoader.TryLoadModulesFrom(serverOptions.AssemblyDirectory,
+                resourceManifest.AssemblyPrefix ?? serverOptions.ContentModulePrefix))
         {
             Console.Error.WriteLine("Errors while loading content assemblies.");
             return;
@@ -114,14 +122,18 @@ public sealed class Loader
         componentFactory.DoAutoRegistrations();
         // componentFactory.RegisterTypes([typeof(Robust.Server.GameObjects.PointLightComponent)]);
 
-        componentFactory.IgnoreMissingComponents("Visuals");
+        if (loadServer)
+            componentFactory.IgnoreMissingComponents("Visuals");
+        else
+            componentFactory.IgnoreMissingComponents();
         // componentFactory.IgnoreMissingComponents();
 
-        AddComponentIgnores(componentFactory);
+        if (loadServer)
+            AddServerComponentIgnores(componentFactory);
 
         componentFactory.GenerateNetIds();
 
-        var comp = componentFactory.GetComponent("PointLight");
+        // var comp = componentFactory.GetComponent("PointLight");
         // Console.WriteLine($"Comp: {comp}");
         // return;
 
@@ -145,6 +157,9 @@ public sealed class Loader
         // Dictionary<Type, HashSet<string>> modified = new();
         protoMan.Initialize();
         // protoMan.ReloadPrototypeKinds();
+
+        if (!loadServer)
+            AddClientPrototypeIgnores(protoMan);
 
         protoMan.RegisterIgnore("parallax");
 
@@ -263,7 +278,7 @@ public sealed class Loader
 
     // This list is copied from Content.Server.Entry.IgnoredComponents
     // Would be preferable to move this to a data file if needed
-    private static void AddComponentIgnores(IComponentFactory factory)
+    private static void AddServerComponentIgnores(IComponentFactory factory)
     {
         var list = new[] {
             "ConstructionGhost",
@@ -284,5 +299,37 @@ public sealed class Loader
             "OptionsVisualizer"
         };
         factory.RegisterIgnore(list);
+    }
+
+    // Below list copied from client EntryPoint.Init
+    private static void AddClientPrototypeIgnores(IPrototypeManager protoMan)
+    {
+        protoMan.RegisterIgnore("utilityQuery");
+        protoMan.RegisterIgnore("utilityCurvePreset");
+        protoMan.RegisterIgnore("accent");
+        protoMan.RegisterIgnore("gasReaction");
+        protoMan.RegisterIgnore("seed"); // Seeds prototypes are server-only.
+        protoMan.RegisterIgnore("objective");
+        protoMan.RegisterIgnore("holiday");
+        protoMan.RegisterIgnore("htnCompound");
+        protoMan.RegisterIgnore("htnPrimitive");
+        protoMan.RegisterIgnore("gameMap");
+        protoMan.RegisterIgnore("gameMapPool");
+        protoMan.RegisterIgnore("lobbyBackground");
+        protoMan.RegisterIgnore("gamePreset");
+        protoMan.RegisterIgnore("noiseChannel");
+        protoMan.RegisterIgnore("playerConnectionWhitelist");
+        protoMan.RegisterIgnore("spaceBiome");
+        protoMan.RegisterIgnore("worldgenConfig");
+        protoMan.RegisterIgnore("gameRule");
+        protoMan.RegisterIgnore("worldSpell");
+        protoMan.RegisterIgnore("entitySpell");
+        protoMan.RegisterIgnore("instantSpell");
+        protoMan.RegisterIgnore("roundAnnouncement");
+        protoMan.RegisterIgnore("wireLayout");
+        protoMan.RegisterIgnore("alertLevels");
+        protoMan.RegisterIgnore("nukeopsRole");
+        protoMan.RegisterIgnore("ghostRoleRaffleDecider");
+
     }
 }

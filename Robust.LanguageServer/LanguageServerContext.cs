@@ -74,18 +74,32 @@ public sealed class LanguageServerContext
 
         _languageServer.OnInitialized(async (c) =>
         {
-            _logger.Error("initialized");
+            try
+            {
+                _logger.Error("initialized");
 
-            // Here we should be trying to load data based on the client.rootUri
-            _logger.Error("Starting loader…");
+                // Here we should be trying to load data based on the client.rootUri
+                _logger.Error("Starting loader…");
 
-            ShowProgress("Loading Prototypes…");
+                ShowProgress("Loading Prototypes…");
 
-            deps.Resolve<Loader>().Init(deps);
+                deps.Resolve<Loader>().Init(deps);
 
-            HideProgress();
+                HideProgress();
 
-            _logger.Error("Loaded");
+                _logger.Error("Loaded");
+            }
+            catch (Exception e)
+            {
+                _logger.Error($"Error while starting: {e}");
+                _languageServer.Client.ShowMessage(new()
+                    {
+                        Message = $"Error during startup: {e.Message}",
+                        Type = MessageType.Error,
+                    })
+                    .Wait();
+                Environment.Exit(1);
+            }
         });
     }
 

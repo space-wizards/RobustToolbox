@@ -168,7 +168,9 @@ public partial class PrototypeManager
             foreach (var (id, data) in instances)
             {
                 errors.Clear();
-                EnsurePushed(data, instances, type);
+
+                // Currently edited data is not persisted, but this will need to be added
+                // EnsurePushed(data, instances, type);
 
                 // Validate yaml directly
                 errors.AddRange(_serializationManager.ValidateNode(type, data.Mapping, ctx).GetErrors());

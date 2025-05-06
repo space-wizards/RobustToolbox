@@ -70,11 +70,14 @@ namespace Robust.Shared.GameObjects
 
         private void MapManagerOnTileChanged(ref TileChangedEvent e)
         {
-            if(e.NewTile.Tile != Tile.Empty)
-                return;
+            foreach (var change in e.Changes)
+            {
+                if(change.NewTile.Tile != Tile.Empty)
+                    return;
 
-            // TODO optimize this for when multiple tiles get empties simultaneously (e.g., explosions).
-            DeparentAllEntsOnTile(e.NewTile.GridUid, e.NewTile.GridIndices);
+                // TODO optimize this for when multiple tiles get empties simultaneously (e.g., explosions).
+                DeparentAllEntsOnTile(change.NewTile.GridUid, change.NewTile.GridIndices);
+            }
         }
 
         /// <summary>

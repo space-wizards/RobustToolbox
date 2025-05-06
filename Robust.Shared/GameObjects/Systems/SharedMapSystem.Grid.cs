@@ -878,14 +878,14 @@ public abstract partial class SharedMapSystem
             chunk.SuppressCollisionRegeneration = false;
         }
 
+        RegenerateCollision(uid, grid, modified);
+
         // Notify of all tile changes in one event
         var ev = new TileChangedEvent((uid, grid), tileChanges.ToArray());
         RaiseLocalEvent(uid, ref ev, true);
 
         // Back to normal
         MapManager.SuppressOnTileChanged = false;
-
-        RegenerateCollision(uid, grid, modified);
     }
 
     public TilesEnumerator GetLocalTilesEnumerator(EntityUid uid, MapGridComponent grid, Box2 aabb,

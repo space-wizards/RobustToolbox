@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using Robust.Client.Graphics;
 using Robust.Client.Placement;
+using Robust.Client.Placement.Modes;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
@@ -45,7 +46,7 @@ public sealed class TileSpawningUIController : UIController
     {
         var newObjInfo = new PlacementInformation
         {
-            PlacementOption = "AlignTileAny",
+            PlacementOption = nameof(AlignTileAny),
             TileType = tileType,
             Range = 400,
             IsTile = true

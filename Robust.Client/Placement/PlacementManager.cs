@@ -502,16 +502,15 @@ namespace Robust.Client.Placement
         {
             ClearWithoutDeactivation();
 
-            CurrentPermission = info;
-
-            if (!_modeDictionary.TryFirstOrNull(pair => pair.Key.Equals(CurrentPermission.PlacementOption), out KeyValuePair<string, Type>? placeMode))
+            if (info.PlacementOption is not { } option || !_modeDictionary.TryGetValue(option, out var placeMode))
             {
-                _sawmill.Log(LogLevel.Warning, $"Invalid placement mode `{CurrentPermission.PlacementOption}`");
+                _sawmill.Log(LogLevel.Warning, $"Invalid placement mode `{info.PlacementOption}`");
                 Clear();
                 return;
             }
 
-            CurrentMode = (PlacementMode) Activator.CreateInstance(placeMode.Value.Value, this)!;
+            CurrentPermission = info;
+            CurrentMode = (PlacementMode) Activator.CreateInstance(placeMode, this)!;
 
             if (hijack != null)
             {

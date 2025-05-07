@@ -1,9 +1,11 @@
 using System.Net;
 using System.Net.Sockets;
+using Robust.Client.Utility;
 using Robust.LanguageServer.Parsing;
 using Robust.LanguageServer.Provider;
 using Robust.Shared.IoC;
 using Robust.Server;
+using Robust.Shared.Utility;
 using ELLanguageServer = EmmyLua.LanguageServer.Framework.Server.LanguageServer;
 namespace Robust.LanguageServer;
 
@@ -44,7 +46,7 @@ internal static class Program
         EndPoint endPoint = new IPEndPoint(ipAddress, port);
 
         tcpServer.Bind(endPoint);
-        Console.WriteLine($"Listening on port {port}.");
+        Console.Error.WriteLine($"Listening on port {port}.");
         tcpServer.Listen(1);
 
         var languageClientSocket = tcpServer.Accept();

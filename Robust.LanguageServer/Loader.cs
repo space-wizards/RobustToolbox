@@ -14,6 +14,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Utility;
 
 namespace Robust.LanguageServer;
 
@@ -28,8 +29,8 @@ public sealed class Loader
         SetupLogging(deps);
         // InitReflectionManager(deps);
 
-        // Console.WriteLine(PathHelpers.ExecutableRelativeFile("data"));
-        Console.WriteLine($"c: {CVars.AuthMode}");
+        // Console.Error.WriteLine(PathHelpers.ExecutableRelativeFile("data"));
+        Console.Error.WriteLine($"c: {CVars.AuthMode}");
 
         var protoMan = IoCManager.Resolve<IPrototypeManager>();
 
@@ -86,7 +87,7 @@ public sealed class Loader
 
         var resourceManifest = ResourceManifestData.LoadResourceManifest(_resources);
 
-        Console.WriteLine(
+        Console.Error.WriteLine(
             $"Options.AssemblyDirectory: {serverOptions.AssemblyDirectory} - {resourceManifest.AssemblyPrefix} - {serverOptions.ContentModulePrefix}");
 
         if (!_modLoader.TryLoadModulesFrom(serverOptions.AssemblyDirectory,
@@ -98,11 +99,11 @@ public sealed class Loader
 
         foreach (var loadedModule in _modLoader.LoadedModules)
         {
-            // Console.WriteLine($"Loaded: {loadedModule}");
+            // Console.Error.WriteLine($"Loaded: {loadedModule}");
             _config.LoadCVarsFromAssembly(loadedModule);
         }
 
-        Console.WriteLine(typeof(Robust.Server.GameObjects.PointLightComponent));
+        Console.Error.WriteLine(typeof(Robust.Server.GameObjects.PointLightComponent));
         //
         // var entMan = deps.Resolve<IEntityManager>();
         // entMan.Initialize();
@@ -115,7 +116,7 @@ public sealed class Loader
 
         foreach (var asm in deps.Resolve<IReflectionManager>().Assemblies)
         {
-            Console.WriteLine("Loaded: " + asm.FullName);
+            Console.Error.WriteLine("Loaded: " + asm.FullName);
         }
 
         var componentFactory = deps.Resolve<IComponentFactory>();
@@ -134,14 +135,14 @@ public sealed class Loader
         componentFactory.GenerateNetIds();
 
         // var comp = componentFactory.GetComponent("PointLight");
-        // Console.WriteLine($"Comp: {comp}");
+        // Console.Error.WriteLine($"Comp: {comp}");
         // return;
 
         // componentFactory.RegisterIgnore(IgnoredComponents.List);
 
         // foreach (var c in componentFactory.AllRegisteredTypes)
         // {
-        //     Console.WriteLine($"Registered component: {c.FullName}");
+        //     Console.Error.WriteLine($"Registered component: {c.FullName}");
         // }
 
 
@@ -170,31 +171,31 @@ public sealed class Loader
 
         Dictionary<Type, HashSet<string>> changed = new();
         protoMan.LoadDirectory(new(@"/EnginePrototypes"), false, changed);
-        Console.WriteLine($"protoMan: engine {protoMan} - changed = {changed.Count}");
+        Console.Error.WriteLine($"protoMan: engine {protoMan} - changed = {changed.Count}");
         protoMan.LoadDirectory(new(@"/Prototypes"), false, changed);
         protoMan.ResolveResults();
 
         // return;
         // deps.Resolve<IReflectionManager>().LoadAssemblies(typeof(RobustIntegrationTest).Assembly);
 
-        Console.WriteLine($"protoMan: {protoMan} - changed = {changed.Count}");
+        Console.Error.WriteLine($"protoMan: {protoMan} - changed = {changed.Count}");
 
         // foreach (var (type, list) in changed)
         // {
-        //     Console.WriteLine($"New {type}");
+        //     Console.Error.WriteLine($"New {type}");
         //     foreach (var x in list)
-        //         Console.WriteLine($"* {x} - {protoMan.Index(type, x)}");
+        //         Console.Error.WriteLine($"* {x} - {protoMan.Index(type, x)}");
         // }
 
         // var server = deps.Resolve<IBaseServerInternal>();
 
         var reagentProto = protoMan.GetKindType("flavor");
-        Console.WriteLine($"reagentProto: {reagentProto}");
-        Console.WriteLine($"reagentProto: {protoMan.Index(reagentProto, "savory")}");
+        Console.Error.WriteLine($"reagentProto: {reagentProto}");
+        Console.Error.WriteLine($"reagentProto: {protoMan.Index(reagentProto, "savory")}");
         //
         // foreach (var p in protoMan.EnumeratePrototypes(reagentProto))
         // {
-        //     Console.WriteLine($"A reagent: {p}");
+        //     Console.Error.WriteLine($"A reagent: {p}");
         // }
 
         // return;
@@ -254,7 +255,7 @@ public sealed class Loader
             catch (ObjectDisposedException)
             {
                 // Avoid eating the exception if it's during shutdown and the sawmill is already gone.
-                System.Console.WriteLine($"UnhandledException but sawmill is disposed! {message}");
+                System.Console.Error.WriteLine($"UnhandledException but sawmill is disposed! {message}");
             }
         };
 
@@ -268,7 +269,7 @@ public sealed class Loader
             catch (ObjectDisposedException)
             {
                 // Avoid eating the exception if it's during shutdown and the sawmill is already gone.
-                System.Console.WriteLine($"UnobservedTaskException but sawmill is disposed! {args.Exception}");
+                System.Console.Error.WriteLine($"UnobservedTaskException but sawmill is disposed! {args.Exception}");
             }
 #if EXCEPTION_TOLERANCE
                 args.SetObserved(); // don't crash
@@ -280,7 +281,8 @@ public sealed class Loader
     // Would be preferable to move this to a data file if needed
     private static void AddServerComponentIgnores(IComponentFactory factory)
     {
-        var list = new[] {
+        var list = new[]
+        {
             "ConstructionGhost",
             "IconSmooth",
             "InteractionOutline",
@@ -330,6 +332,5 @@ public sealed class Loader
         protoMan.RegisterIgnore("alertLevels");
         protoMan.RegisterIgnore("nukeopsRole");
         protoMan.RegisterIgnore("ghostRoleRaffleDecider");
-
     }
 }

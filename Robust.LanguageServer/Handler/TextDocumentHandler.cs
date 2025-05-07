@@ -1,7 +1,4 @@
 using Robust.Shared.Log;
-
-namespace Robust.LanguageServer.Handler;
-
 using EmmyLua.LanguageServer.Framework.Protocol.Capabilities.Client.ClientCapabilities;
 using EmmyLua.LanguageServer.Framework.Protocol.Capabilities.Server;
 using EmmyLua.LanguageServer.Framework.Protocol.Capabilities.Server.Options;
@@ -15,6 +12,8 @@ using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using ELLanguageServer = EmmyLua.LanguageServer.Framework.Server.LanguageServer;
+
+namespace Robust.LanguageServer.Handler;
 
 public class TextDocumentHandler : TextDocumentHandlerBase
 {

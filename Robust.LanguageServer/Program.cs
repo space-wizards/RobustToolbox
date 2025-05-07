@@ -1,3 +1,4 @@
+using System.IO.Pipes;
 using System.Net;
 using System.Net.Sockets;
 using Robust.Client.Utility;
@@ -7,12 +8,16 @@ using Robust.Shared.IoC;
 using Robust.Server;
 using Robust.Shared.Utility;
 using ELLanguageServer = EmmyLua.LanguageServer.Framework.Server.LanguageServer;
+
 namespace Robust.LanguageServer;
 
 internal static class Program
 {
     static async Task Main(string[] args)
     {
+        if (!CommandLineArgs.TryParse(args, out var cliArgs))
+            return;
+
         var deps = IoCManager.InitThread();
         deps.Register<DocumentCache>();
         deps.Register<Loader>();
@@ -25,7 +30,9 @@ internal static class Program
         ServerIoC.RegisterIoC(deps);
         // ClientIoC.RegisterIoC(GameController.DisplayMode.Headless, deps);
 
-        var ls = CreateTcpLanguageServer();
+        // var ls = CreateTcpLanguageServer();
+        // var ls = CreateStdOutLanguageServer();
+        var ls = CreateNamedPipeLanguageServer(cliArgs);
         var ctx = new LanguageServerContext(ls);
 
         deps.RegisterInstance<ELLanguageServer>(ls);
@@ -36,6 +43,29 @@ internal static class Program
         ctx.Initialize();
 
         await ctx.Run();
+    }
+
+    private static ELLanguageServer CreateNamedPipeLanguageServer(CommandLineArgs cliArgs)
+    {
+        if (cliArgs.CommunicationPipe is not { } pipe)
+            throw new Exception();
+
+        Console.Error.WriteLine("Communicating using pipe: {0}", pipe);
+
+        var stream = new NamedPipeClientStream(pipe);
+        stream.Connect();
+
+        Console.Error.WriteLine("Pipe connected");
+
+        return ELLanguageServer.From(stream, stream);
+    }
+
+    private static ELLanguageServer CreateStdOutLanguageServer()
+    {
+        Stream inputStream = Console.OpenStandardInput();
+        Stream outputStream = Console.OpenStandardOutput();
+
+        return ELLanguageServer.From(inputStream, outputStream);
     }
 
     private static ELLanguageServer CreateTcpLanguageServer()

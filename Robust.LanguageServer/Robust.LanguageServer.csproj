@@ -26,4 +26,5 @@
       </Reference>
     </ItemGroup>
 
+    <Import Project="..\MSBuild\Robust.Properties.targets" />
 </Project>

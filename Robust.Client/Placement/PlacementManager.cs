@@ -363,7 +363,7 @@ namespace Robust.Client.Placement
             {
                 var coords = Maps.GridTileToLocal(
                 change.NewTile.GridUid,
-                EntityManager.GetComponent<MapGridComponent>(change.NewTile.GridUid),
+                args.Entity.Comp,
                 change.NewTile.GridIndices);
 
                 _pendingTileChanges.RemoveAll(c => c.Item1 == coords);

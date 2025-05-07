@@ -30,9 +30,10 @@ internal static class Program
         ServerIoC.RegisterIoC(deps);
         // ClientIoC.RegisterIoC(GameController.DisplayMode.Headless, deps);
 
+        var ls = CreateLanguageServer(cliArgs);
         // var ls = CreateTcpLanguageServer();
         // var ls = CreateStdOutLanguageServer();
-        var ls = CreateNamedPipeLanguageServer(cliArgs);
+        // var ls = CreateNamedPipeLanguageServer(cliArgs);
         var ctx = new LanguageServerContext(ls);
 
         deps.RegisterInstance<ELLanguageServer>(ls);
@@ -45,11 +46,24 @@ internal static class Program
         await ctx.Run();
     }
 
-    private static ELLanguageServer CreateNamedPipeLanguageServer(CommandLineArgs cliArgs)
+    private static ELLanguageServer CreateLanguageServer(CommandLineArgs args)
     {
-        if (cliArgs.CommunicationPipe is not { } pipe)
-            throw new Exception();
+        if (args.Mode == CommandLineArgs.Transport.Tcp)
+            return CreateTcpLanguageServer(args.Port);
 
+        if (args.Mode == CommandLineArgs.Transport.Pipe)
+        {
+            if (args.CommunicationPipe is not {} pipe)
+                throw new Exception("Missing pipe");
+
+            return CreateNamedPipeLanguageServer(pipe);
+        }
+
+        return CreateStdOutLanguageServer();
+    }
+
+    private static ELLanguageServer CreateNamedPipeLanguageServer(string pipe)
+    {
         Console.Error.WriteLine("Communicating using pipe: {0}", pipe);
 
         var stream = new NamedPipeClientStream(pipe);
@@ -62,15 +76,16 @@ internal static class Program
 
     private static ELLanguageServer CreateStdOutLanguageServer()
     {
+        Console.Error.WriteLine("Communicating using standard in/out");
+
         Stream inputStream = Console.OpenStandardInput();
         Stream outputStream = Console.OpenStandardOutput();
 
         return ELLanguageServer.From(inputStream, outputStream);
     }
 
-    private static ELLanguageServer CreateTcpLanguageServer()
+    private static ELLanguageServer CreateTcpLanguageServer(int port)
     {
-        var port = 8182;
         var tcpServer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         var ipAddress = new IPAddress(new byte[] { 127, 0, 0, 1 });
         EndPoint endPoint = new IPEndPoint(ipAddress, port);

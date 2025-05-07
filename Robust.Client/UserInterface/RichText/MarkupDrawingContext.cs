@@ -7,12 +7,14 @@ namespace Robust.Client.UserInterface.RichText;
 public sealed class MarkupDrawingContext
 {
     public readonly Stack<Color> Color;
+    public readonly Stack<Color?> BackgroundColor;
     public readonly Stack<Font> Font;
     public readonly List<IMarkupTag> Tags;
 
     public MarkupDrawingContext()
     {
         Color = new Stack<Color>();
+        BackgroundColor = new Stack<Color?>();
         Font = new Stack<Font>();
         Tags = new List<IMarkupTag>();
     }
@@ -20,6 +22,7 @@ public sealed class MarkupDrawingContext
     public MarkupDrawingContext(int capacity)
     {
         Color = new Stack<Color>(capacity);
+        BackgroundColor = new Stack<Color?>(capacity);
         Font = new Stack<Font>(capacity);
         Tags = new List<IMarkupTag>();
     }
@@ -27,6 +30,7 @@ public sealed class MarkupDrawingContext
     public void Clear()
     {
         Color.Clear();
+        BackgroundColor.Clear();
         Font.Clear();
         Tags.Clear();
     }

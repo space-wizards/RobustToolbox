@@ -90,12 +90,11 @@ namespace Robust.Shared.Physics.Systems
             int collisionMask,
             bool approximate = true,
             PhysicsComponent? body = null,
-            FixturesComponent? fixtureComp = null,
             TransformComponent? xform = null)
         {
             var entities = new HashSet<EntityUid>();
 
-            if (!Resolve(uid, ref body, ref fixtureComp, ref xform, false))
+            if (!Resolve(uid, ref body, ref xform, false))
                 return entities;
 
             if (!_lookup.TryGetCurrentBroadphase(xform, out var broadphase))
@@ -103,7 +102,7 @@ namespace Robust.Shared.Physics.Systems
 
             var state = (body, entities);
 
-            foreach (var fixture in fixtureComp.Fixtures.Values)
+            foreach (var fixture in body.Fixtures.Values)
             {
                 foreach (var proxy in fixture.Proxies)
                 {
@@ -499,10 +498,9 @@ namespace Robust.Shared.Physics.Systems
         public bool TryGetDistance(EntityUid uidA, EntityUid uidB,
             out float distance,
             TransformComponent? xformA = null, TransformComponent? xformB = null,
-            FixturesComponent? managerA = null, FixturesComponent? managerB = null,
             PhysicsComponent? bodyA = null, PhysicsComponent? bodyB = null)
         {
-            return TryGetNearest(uidA, uidB, out _, out _, out distance, xformA, xformB, managerA, managerB, bodyA, bodyB);
+            return TryGetNearest(uidA, uidB, out _, out _, out distance, xformA, xformB, bodyA, bodyB);
         }
 
         /// <summary>
@@ -511,10 +509,9 @@ namespace Robust.Shared.Physics.Systems
         public bool TryGetNearestPoints(EntityUid uidA, EntityUid uidB,
             out Vector2 pointA, out Vector2 pointB,
             TransformComponent? xformA = null, TransformComponent? xformB = null,
-            FixturesComponent? managerA = null, FixturesComponent? managerB = null,
             PhysicsComponent? bodyA = null, PhysicsComponent? bodyB = null)
         {
-            return TryGetNearest(uidA, uidB, out pointA, out pointB, out _, xformA, xformB, managerA, managerB, bodyA, bodyB);
+            return TryGetNearest(uidA, uidB, out pointA, out pointB, out _, xformA, xformB, bodyA, bodyB);
         }
 
         public bool TryGetNearest(EntityUid uidA, EntityUid uidB,
@@ -522,16 +519,15 @@ namespace Robust.Shared.Physics.Systems
             out Vector2 pointB,
             out float distance,
             Transform xfA, Transform xfB,
-            FixturesComponent? managerA = null, FixturesComponent? managerB = null,
             PhysicsComponent? bodyA = null, PhysicsComponent? bodyB = null)
         {
             pointA = Vector2.Zero;
             pointB = Vector2.Zero;
 
-            if (!Resolve(uidA, ref managerA, ref bodyA) ||
-                !Resolve(uidB, ref managerB,  ref bodyB) ||
-                managerA.FixtureCount == 0 ||
-                managerB.FixtureCount == 0)
+            if (!Resolve(uidA, ref bodyA) ||
+                !Resolve(uidB, ref bodyB) ||
+                bodyA.Fixtures.Count == 0 ||
+                bodyB.Fixtures.Count == 0)
             {
                 distance = 0f;
                 return false;
@@ -546,7 +542,7 @@ namespace Robust.Shared.Physics.Systems
             };
 
             // No requirement on collision being enabled so chainshapes will fail
-            foreach (var fixtureA in managerA.Fixtures.Values)
+            foreach (var fixtureA in bodyA.Fixtures.Values)
             {
                 if (bodyA.Hard && !fixtureA.Hard)
                     continue;
@@ -555,7 +551,7 @@ namespace Robust.Shared.Physics.Systems
                 {
                     input.ProxyA.Set(fixtureA.Shape, i);
 
-                    foreach (var fixtureB in managerB.Fixtures.Values)
+                    foreach (var fixtureB in bodyB.Fixtures.Values)
                     {
                         if (bodyB.Hard && !fixtureB.Hard)
                             continue;
@@ -585,7 +581,7 @@ namespace Robust.Shared.Physics.Systems
         /// </summary>
         public bool TryGetNearest(EntityUid uid, MapCoordinates coordinates,
             out Vector2 point, out float distance,
-            TransformComponent? xformA = null, FixturesComponent? manager = null, PhysicsComponent? body = null)
+            TransformComponent? xformA = null, PhysicsComponent? body = null)
         {
             if (!Resolve(uid, ref xformA) ||
                 xformA.MapID != coordinates.MapId)
@@ -597,8 +593,8 @@ namespace Robust.Shared.Physics.Systems
 
             point = Vector2.Zero;
 
-            if (!Resolve(uid, ref manager, ref body) ||
-                manager.FixtureCount == 0)
+            if (!Resolve(uid, ref body) ||
+                body.Fixtures.Count == 0)
             {
                 distance = 0f;
                 return false;
@@ -616,7 +612,7 @@ namespace Robust.Shared.Physics.Systems
             var pointShape = new PhysShapeCircle(10 * float.Epsilon, Vector2.Zero);
 
             // No requirement on collision being enabled so chainshapes will fail
-            foreach (var fixtureA in manager.Fixtures.Values)
+            foreach (var fixtureA in body.Fixtures.Values)
             {
                 // We ignore non-hard fixtures if there is at least one hard fixture (i.e., if the body is hard)
                 if (body.Hard && !fixtureA.Hard)
@@ -647,7 +643,6 @@ namespace Robust.Shared.Physics.Systems
             out Vector2 pointB,
             out float distance,
             TransformComponent? xformA = null, TransformComponent? xformB = null,
-            FixturesComponent? managerA = null, FixturesComponent? managerB = null,
             PhysicsComponent? bodyA = null, PhysicsComponent? bodyB = null)
         {
             if (!Resolve(uidA, ref xformA) || !Resolve(uidB, ref xformB) ||
@@ -662,7 +657,7 @@ namespace Robust.Shared.Physics.Systems
             var xfA = GetPhysicsTransform(uidA, xformA);
             var xfB = GetPhysicsTransform(uidB, xformB);
 
-            return TryGetNearest(uidA, uidB, out point, out pointB, out distance, xfA, xfB, managerA, managerB, bodyA, bodyB);
+            return TryGetNearest(uidA, uidB, out point, out pointB, out distance, xfA, xfB, bodyA, bodyB);
         }
 
         #endregion

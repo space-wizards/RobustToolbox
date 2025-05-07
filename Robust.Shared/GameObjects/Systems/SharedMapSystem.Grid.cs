@@ -643,7 +643,6 @@ public abstract partial class SharedMapSystem
             {
                 // Gone. Reduced to atoms
                 // Need to do this before RemoveChunk because it clears fixtures.
-                FixturesComponent? manager = null;
                 PhysicsComponent? body = null;
                 TransformComponent? xform = null;
 

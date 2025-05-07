@@ -802,9 +802,9 @@ public abstract partial class SharedPhysicsSystem
     /// </summary>
     /// <param name="ignoredFixtureId">Fixture we should ignore if applicable</param>
     [Pure]
-    public int GetTouchingContacts(Entity<FixturesComponent?> entity, string? ignoredFixtureId = null)
+    public int GetTouchingContacts(Entity<PhysicsComponent?> entity, string? ignoredFixtureId = null)
     {
-        if (!_fixturesQuery.Resolve(entity.Owner, ref entity.Comp))
+        if (!PhysicsQuery.Resolve(entity.Owner, ref entity.Comp))
             return 0;
 
         var count = 0;

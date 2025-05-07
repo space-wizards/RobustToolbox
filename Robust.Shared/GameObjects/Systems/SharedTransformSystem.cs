@@ -73,7 +73,7 @@ namespace Robust.Shared.GameObjects
             foreach (var change in e.Changes)
             {
                 if(change.NewTile.Tile != Tile.Empty)
-                    return;
+                    continue;
 
                 // TODO optimize this for when multiple tiles get empties simultaneously (e.g., explosions).
                 DeparentAllEntsOnTile(change.NewTile.GridUid, change.NewTile.GridIndices);

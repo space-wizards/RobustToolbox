@@ -162,7 +162,7 @@ public abstract partial class SharedMapSystem
 
         if (TryComp<GridTreeComponent>(xform.MapUid, out var gridTree))
         {
-            gridTree.Tree.MoveProxy(component.MapProxy, in aabb, Vector2.Zero);
+            gridTree.Tree.MoveProxy(component.MapProxy, in aabb);
         }
 
         if (TryComp<MovedGridsComponent>(xform.MapUid, out var movedGrids))
@@ -187,7 +187,7 @@ public abstract partial class SharedMapSystem
 
         if (TryComp<GridTreeComponent>(xform.MapUid, out var gridTree))
         {
-            gridTree.Tree.MoveProxy(component.MapProxy, in aabb, Vector2.Zero);
+            gridTree.Tree.MoveProxy(component.MapProxy, in aabb);
         }
 
         if (TryComp<MovedGridsComponent>(xform.MapUid, out var movedGrids))
@@ -309,6 +309,7 @@ public abstract partial class SharedMapSystem
         ChunkDatum data)
     {
         var counter = 0;
+        var gridEnt = new Entity<MapGridComponent>(uid, component);
 
         if (data.IsDeleted())
         {
@@ -326,10 +327,12 @@ public abstract partial class SharedMapSystem
 
                     var gridIndices = deletedChunk.ChunkTileToGridTile((x, y));
                     var newTileRef = new TileRef(uid, gridIndices, Tile.Empty);
-                    _mapInternal.RaiseOnTileChanged(newTileRef, oldTile, index);
+                    _mapInternal.RaiseOnTileChanged(gridEnt, newTileRef, oldTile, index);
                 }
             }
 
+            deletedChunk.CachedBounds = Box2i.Empty;
+            deletedChunk.SuppressCollisionRegeneration = false;
             return;
         }
 
@@ -350,9 +353,11 @@ public abstract partial class SharedMapSystem
 
                 var gridIndices = chunk.ChunkTileToGridTile((x, y));
                 var newTileRef = new TileRef(uid, gridIndices, tile);
-                _mapInternal.RaiseOnTileChanged(newTileRef, oldTile, index);
+                _mapInternal.RaiseOnTileChanged(gridEnt, newTileRef, oldTile, index);
             }
         }
+
+        DebugTools.Assert(chunk.Fixtures.SetEquals(data.Fixtures));
 
         // These should never refer to the same object
         DebugTools.AssertNotEqual(chunk.Fixtures, data.Fixtures);
@@ -508,7 +513,7 @@ public abstract partial class SharedMapSystem
 
             if (TryComp<GridTreeComponent>(xform.MapUid, out var gridTree))
             {
-                var proxy = gridTree.Tree.CreateProxy(in aabb, (uid, _fixturesQuery.Comp(uid), component));
+                var proxy = gridTree.Tree.CreateProxy(in aabb, uint.MaxValue, (uid, _fixturesQuery.Comp(uid), component));
                 DebugTools.Assert(component.MapProxy == DynamicTree.Proxy.Free);
                 component.MapProxy = proxy;
             }
@@ -562,7 +567,7 @@ public abstract partial class SharedMapSystem
 
         if (TryComp<GridTreeComponent>(xform.MapUid, out var gridTree))
         {
-            var proxy = gridTree.Tree.CreateProxy(in aabb, (uid, _fixturesQuery.Comp(uid), grid));
+            var proxy = gridTree.Tree.CreateProxy(in aabb, uint.MaxValue, (uid, _fixturesQuery.Comp(uid), grid));
             DebugTools.Assert(grid.MapProxy == DynamicTree.Proxy.Free);
             grid.MapProxy = proxy;
         }
@@ -1217,7 +1222,7 @@ public abstract partial class SharedMapSystem
     {
 #if DEBUG
         var mapId = _xformQuery.GetComponent(uid).MapID;
-        DebugTools.Assert(mapId == coords.GetMapId(EntityManager));
+        DebugTools.Assert(mapId == _transform.GetMapId(coords));
 #endif
 
         return SnapGridLocalCellFor(uid, grid, LocalToGrid(uid, grid, coords));
@@ -1427,7 +1432,7 @@ public abstract partial class SharedMapSystem
     {
 #if DEBUG
         var mapId = _xformQuery.GetComponent(uid).MapID;
-        DebugTools.Assert(mapId == coords.GetMapId(EntityManager));
+        DebugTools.Assert(mapId == _transform.GetMapId(coords));
 #endif
         var local = LocalToGrid(uid, grid, coords);
 
@@ -1449,7 +1454,7 @@ public abstract partial class SharedMapSystem
     {
         return position.EntityId == uid
             ? position.Position
-            : WorldToLocal(uid, grid, position.ToMapPos(EntityManager, _transform));
+            : WorldToLocal(uid, grid, _transform.ToMapCoordinates(position).Position);
     }
 
     public bool CollidesWithGrid(EntityUid uid, MapGridComponent grid, Vector2i indices)
@@ -1614,7 +1619,7 @@ public abstract partial class SharedMapSystem
         if (!MapManager.SuppressOnTileChanged)
         {
             var newTileRef = new TileRef(uid, gridTile, newTile);
-            _mapInternal.RaiseOnTileChanged(newTileRef, oldTile, mapChunk.Indices);
+            _mapInternal.RaiseOnTileChanged((uid, grid), newTileRef, oldTile, mapChunk.Indices);
         }
 
         if (shapeChanged && !mapChunk.SuppressCollisionRegeneration)

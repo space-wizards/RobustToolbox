@@ -159,6 +159,8 @@ public abstract class MetaDataSystem : EntitySystem
         if (toRemove == 0x0)
             return;
 
+        // TODO PERF
+        // does this need to be a broadcast event?
         var ev = new MetaFlagRemoveAttemptEvent(toRemove);
         RaiseLocalEvent(uid, ref ev, true);
 

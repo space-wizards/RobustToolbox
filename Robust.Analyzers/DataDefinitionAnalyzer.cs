@@ -42,7 +42,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         "Make sure to mark any type containing a nested data definition as partial."
     );
 
-    private static readonly DiagnosticDescriptor DataFieldWritableRule = new(
+    public static readonly DiagnosticDescriptor DataFieldWritableRule = new(
         Diagnostics.IdDataFieldWritable,
         "Data field must not be readonly",
         "Data field {0} in data definition {1} is readonly",
@@ -52,7 +52,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         "Make sure to remove the readonly modifier."
     );
 
-    private static readonly DiagnosticDescriptor DataFieldPropertyWritableRule = new(
+    public static readonly DiagnosticDescriptor DataFieldPropertyWritableRule = new(
         Diagnostics.IdDataFieldPropertyWritable,
         "Data field property must have a setter",
         "Data field property {0} in data definition {1} does not have a setter",
@@ -160,7 +160,8 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
 
             if (IsReadOnlyDataField(type, fieldSymbol))
             {
-                context.ReportDiagnostic(Diagnostic.Create(DataFieldWritableRule, context.Node.GetLocation(), fieldSymbol.Name, type.Name));
+                TryGetModifierLocation(field, SyntaxKind.ReadOnlyKeyword, out var location);
+                context.ReportDiagnostic(Diagnostic.Create(DataFieldWritableRule, location, fieldSymbol.Name, type.Name));
             }
 
             if (HasRedundantTag(fieldSymbol))
@@ -209,7 +210,8 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
 
         if (IsReadOnlyDataField(type, propertySymbol))
         {
-            context.ReportDiagnostic(Diagnostic.Create(DataFieldPropertyWritableRule, context.Node.GetLocation(), propertySymbol.Name, type.Name));
+            var location = property.AccessorList != null ? property.AccessorList.GetLocation() : property.GetLocation();
+            context.ReportDiagnostic(Diagnostic.Create(DataFieldPropertyWritableRule, location, propertySymbol.Name, type.Name));
         }
 
         if (HasRedundantTag(propertySymbol))
@@ -318,6 +320,20 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
             }
         }
         // Default to the declaration syntax's location
+        location = syntax.GetLocation();
+        return false;
+    }
+
+    private static bool TryGetModifierLocation(MemberDeclarationSyntax syntax, SyntaxKind modifierKind, out Location location)
+    {
+        foreach (var modifier in syntax.Modifiers)
+        {
+            if (modifier.IsKind(modifierKind))
+            {
+                location = modifier.GetLocation();
+                return true;
+            }
+        }
         location = syntax.GetLocation();
         return false;
     }

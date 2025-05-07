@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Robust.Shared.Asynchronous;
+using Robust.Shared.Collections;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -407,16 +408,26 @@ namespace Robust.Shared.Prototypes
                             if (nonPushedParent)
                                 continue;
 
-                            var parentMaps = new MappingDataNode[parents.Length];
-                            for (var i = 0; i < parentMaps.Length; i++)
+                            if (parents.Length == 1)
                             {
-                                parentMaps[i] = kindData.Results[parents[i]];
+                                kindData.Results[id] = _serializationManager.PushCompositionWithGenericNode(
+                                    kind,
+                                    kindData.Results[parents[0]],
+                                    kindData.RawResults[id]);
                             }
+                            else
+                            {
+                                var parentMaps = new MappingDataNode[parents.Length];
+                                for (var i = 0; i < parentMaps.Length; i++)
+                                {
+                                    parentMaps[i] = kindData.Results[parents[i]];
+                                }
 
-                            kindData.Results[id] = _serializationManager.PushCompositionWithGenericNode(
-                                kind,
-                                parentMaps,
-                                kindData.RawResults[id]);
+                                kindData.Results[id] = _serializationManager.PushCompositionWithGenericNode(
+                                    kind,
+                                    parentMaps,
+                                    kindData.RawResults[id]);
+                            }
                         }
                         else
                         {
@@ -628,16 +639,26 @@ namespace Robust.Shared.Prototypes
                 {
                     if (tree.TryGetParents(id, out var parents))
                     {
-                        var parentNodes = new MappingDataNode[parents.Length];
-                        for (var i = 0; i < parents.Length; i++)
+                        if (parents.Length == 1)
                         {
-                            parentNodes[i] = results[parents[i]].Result;
+                            datum.Result = _serializationManager.PushCompositionWithGenericNode(
+                                kind,
+                                results[parents[0]].Result,
+                                datum.Result);
                         }
+                        else
+                        {
+                            var parentNodes = new MappingDataNode[parents.Length];
+                            for (var i = 0; i < parents.Length; i++)
+                            {
+                                parentNodes[i] = results[parents[i]].Result;
+                            }
 
-                        datum.Result = _serializationManager.PushCompositionWithGenericNode(
-                            kind,
-                            parentNodes,
-                            datum.Result);
+                            datum.Result = _serializationManager.PushCompositionWithGenericNode(
+                                kind,
+                                parentNodes,
+                                datum.Result);
+                        }
                     }
 
                     if (tree.TryGetChildren(id, out var children))

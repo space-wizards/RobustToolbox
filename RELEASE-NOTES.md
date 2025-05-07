@@ -1,4 +1,4 @@
-﻿# Release notes for RobustToolbox.
+# Release notes for RobustToolbox.
 
 <!--
 NOTE: automatically updated sometimes by version.py.
@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `ITypeReaderWriter<TType, TNode>` has been removed due to being unused. Implement `ITypeSerializer<TType, TNode>` instead
 
 ### New features
 
@@ -52,6 +52,260 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 255.1.0
+
+### New features
+
+* The client localisation manager now supports hot-reloading ftl files.
+* TransformSystem can now raise `GridUidChangedEvent` and `MapUidChangedEvent` when a entity's grid or map changes. This event is only raised if the `ExtraTransformEvents` metadata flag is enabled.
+
+### Bugfixes
+
+* Fixed a server crash due to a `NullReferenceException` in PVS system when a player's local entity is also one of their view subscriptions.
+* Fix CompileRobustXamlTask for benchmarks.
+* .ftl files will now hot reload.
+* Fix placementmanager sometimes not clearing.
+
+### Other
+
+* Container events are now documented.
+
+
+## 255.0.0
+
+### Breaking changes
+
+* `RobustIntegrationTest` now pools server/client instances by default. If a custom settings class is provided, it will still disable pooling unless explicitly enabled.
+  * Server/Client instances that are returned to the pool should be disconnected. This might require you to update some tests.
+  * Pooled instances also require you to use `RobustIntegrationTest` methods like `WaitPost()` to ensure the correct thread is used.
+
+### Bugfixes
+
+* Fix `EntityDeserializer` improperly setting entity lifestages when loading a post-mapinit map.
+* Fix `EntityManager.PredictedDeleteEntity()` not deleting pure client-side entities.
+* Fix grid fixtures using a locale dependent id. This could cause some clients to crash/freeze when connected to a server with a different locale.
+
+### Other
+
+* Add logic to block cycles in master MIDI renderers, which could otherwise cause client freezes.
+
+
+## 254.1.0
+
+### New features
+
+* Add CC ND licences to the RGA validator.
+* Add entity spawn prediction and entity deletion prediction. This is currently limited as you are unable to predict interactions with these entities. These are done via the new methods prefixed with "Predicted". You can also manually flag an entity as a predicted spawn with the `FlagPredicted` method which will clean it up when prediction is reset.
+
+### Bugfixes
+
+* Fix tile edge rendering for neighbor tiles being the same priority.
+
+### Other
+
+* Fix SpawnAttachedTo's system proxy method not the rotation arg like EntityManager.
+
+
+## 254.0.0
+
+### Breaking changes
+
+* Yaml mappings/dictionaries now only support string keys instead of generic nodes
+  * Several MappingDataNode method arguments or return values now use strings instead of a DataNode object
+  * The MappingDataNode class has various helper methods that still accept a ValueDataNode, but these methods are marked as obsolete and may be removed in the future.
+  * yaml validators should use `MappingDataNode.GetKeyNode()` when validating mapping keys, so that errors can print node start & end information
+* ValueTuple yaml serialization has changed
+  * Previously they would get serialized into a single mapping with one entry (i.e., `{foo : bar }`)
+  * Now they serialize into a sequence (i.e., `[foo, bar]`)
+  * The ValueTuple serializer will still try to read mappings, but due to the MappingDataNode this may fail if the previously serialized "key" can't be read as a simple string
+
+### New features
+
+* Add cvar to disable tile edges.
+* Add GetContainingContainers method to ContainerSystem to recursively get containers upwards on an entity.
+
+### Internal
+
+* Make component lifecycle methods use generics.
+
+
+## 253.0.0
+
+### New features
+
+* Add a new `SerializationManager.PushComposition()` overload that takes in a single parent instead of an array of parents.
+* `BoundUserInterfaceMessageAttempt` once again gets raised as a broadcast event, in addition to being directed.
+  * This effectively reverts the breaking part of the changes made in v252.0.0
+* Fix CreateDistanceJoint using an int instead of a float for minimum distance.
+
+### Bugfixes
+
+* Fix deferred component removal not setting the component's life stage to `ComponentLifeStage.Stopped` if the component has not yet been initialised.
+* Fix some `EntitySystem.Resolve()` overloads not respecting the optional `logMissing` argument.
+* Fix screen-space overlays not being useable without first initializing/starting entity manager & systems
+* ItemList is now significantly optimized. VV's `AddComponent` window in particular should be much faster.
+* Fix some more MapValidator fields.
+* Fix popup text overflowing the sides of the screen.
+* Improve location reporting for non-writeable datafields via analyzer.
+
+### Other
+
+* TestPoint now uses generics rather than IPhysShape directly.
+
+
+## 252.0.0
+
+### Breaking changes
+
+* BoundUserInterfaceMessageAttempt is raised directed against entities and no longer broadcast.
+
+
+## 251.0.0
+
+### Breaking changes
+
+* Localization is now separate between client and server and is handled via cvar.
+* Contacting entities no longer can be disabled for CollisionWake to avoid destroying the contacts unnecessarily.
+
+### New features
+
+* Added `DirectionExtensions.AllDirections`, which contains a list of all `Direction`s for easy enumeration.
+* Add ForbidLiteralAttribute.
+* Log late MsgEntity again.
+* Show entity name in `physics shapeinfo` output.
+* Make SubscribeLocalEvent not require EntityEventArgs.
+* Add autocomplete to `tp` command.
+* Add button to jump to live chat when scrolled up.
+* Add autocomplete to `savemap` and `savegrid`.
+
+### Bugfixes
+
+* Fix velocity not re-applying correctly on re-parenting.
+* Fix Equatable on FormattedMessage.
+* Fix SharedTransformSystem methods logging errors on resolves.
+
+### Other
+
+* Significantly optimized tile edge rendering.
+
+### Internal
+
+* Remove duplicate GetMassData method.
+* Inline manifold points for physics.
+
+
+## 250.0.0
+
+### Breaking changes
+
+* The default shader now interprets negative color modulation as a flag that indicates that the light map should be ignored.
+  * This can be used to avoid having to change the light map texture, thus reducing draw batches.
+  * Sprite layers that are set to use the "unshaded" shader prototype now use this.
+  * Any fragment shaders that previously the `VtxModulate` colour modulation variable should instead use the new `MODULATE` variable, as the former may now contain negative values.
+
+### New features
+
+* Add OtherBody API to contacts.
+* Make FormattedMessages Equatable.
+* AnimationCompletionEvent now has the AnimationPlayerComponent.
+* Add entity description as a tooltip on the entity spawn panel.
+
+### Bugfixes
+
+* Fix serialization source generator breaking if a class has two partial locations.
+* Fix map saving throwing a `DirectoryNotFoundException` when given a path with a non-existent directory. Now it once again creates any missing directories.
+* Fix map loading taking a significant time due to MappingDataNode.Equals calls being slow.
+
+### Other
+
+* Add Pure to some Angle methods.
+
+### Internal
+
+* Cleanup some warnings in classes.
+
+
+## 249.0.0
+
+### Breaking changes
+
+* Layer is now read-only on VisibilityComponent and isn't serialized.
+
+### New features
+
+* Added a debug overlay for the linear and angular velocity of all entities on the screen. Use the `showvel` and `showangvel` commands to toggle it.
+* Add a GetWorldManifold overload that doesn't require a span of points.
+* Added a GetVisMaskEvent. Calling `RefreshVisibilityMask` will raise it and subscribers can update the vismask via the event rather than subscribers having to each manually try and handle the vismask directly.
+
+### Bugfixes
+
+* `BoxContainer` no longer causes stretching children to go below their minimum size.
+* Fix lights on other grids getting clipped due to ignoring the light range cvar.
+* Fix the `showvelocities` command.
+* Fix the DirtyFields overload not being sandbox safe for content.
+
+### Internal
+
+* Polygon vertices are now inlined with FixedArray8 and a separate SlimPolygon using FixedArray4 for hot paths rather than using pooled arrays.
+
+
+## 248.0.2
+
+### Bugfixes
+
+* Don't throw in overlay rendering if MapUid not found.
+
+### Internal
+
+* Reduce EntityManager.IsDefault allocations.
+
+
+## 248.0.1
+
+### Bugfixes
+
+* Bump ImageSharp version.
+* Fix instances of NaN gain for audio where a negative-infinity value is being used for volume.
+
+
+## 248.0.0
+
+### Breaking changes
+
+* Use `Entity<MapGridComponent>` for TileChangedEvent instead of EntityUid.
+* Audio files are no longer tempo perfect when being played if the offset is small. At some point in the future an AudioParams bool is likely to be added to enforce this.
+* MoveProxy method args got changed in the B2DynamicTree update.
+* ResPath will now assert in debug if you pass in an invalid path containing the non-standardized directory separator.
+
+### New features
+
+* Added a new `MapLoaderSystem.TryLoadGrid()` override that loads a grid onto a newly created map.
+* Added a CVar for the endbuffer for audio. If an audio file will play below this length (for PVS reasons) it will be ignored.
+* Added Regex.Count + StringBuilder.Chars setter to the sandbox.
+* Added a public API for PhysicsHull.
+* Made MapLoader log more helpful.
+* Add TryLoadGrid override that also creates a map at the same time.
+* Updated B2Dynamictree to the latest Box2D V3 version.
+* Added SetItems to ItemList control to set items without removing the existing ones.
+* Shaders, textures, and audio will now hot reload automatically to varying degrees. Also added IReloadManager to handle watching for file-system changes and relaying events.
+* Wrap BUI disposes in a try-catch in case of exceptions.
+
+
+### Bugfixes
+
+* Fix some instances of invalid PlaybackPositions being set.
+* Play audio from the start of a file if it's only just come into PVS range / had its state handled.
+* Fix TryCopyComponents.
+* Use shell.WriteError if TryLoad fails for mapping commands.
+* Fix UI control position saving causing exceptions where the entity is cleaned-up alongside a state change.
+* Fix Map NetId completions.
+* Fix some ResPath calls using the wrong paths.
+
+### Internal
+
+* Remove some unused local variables and the associated warnings.
 
 
 ## 247.2.0

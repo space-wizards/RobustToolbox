@@ -6,7 +6,7 @@ namespace Robust.Shared.Prototypes;
 /// <summary>
 /// Prototype that represents an alias from one tile ID to another. These are used when deserializing entities from yaml.
 /// </summary>
-[Prototype("tileAlias")]
+[Prototype]
 public sealed partial class TileAliasPrototype : IPrototype
 {
     /// <summary>

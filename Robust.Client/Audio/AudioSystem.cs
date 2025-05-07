@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using OpenTK.Audio.OpenAL;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.Player;
@@ -56,6 +57,8 @@ public sealed partial class AudioSystem : SharedAudioSystem
     private EntityQuery<PhysicsComponent> _physicsQuery;
 
     private float _maxRayLength;
+    private float _zOffset;
+    private float _audioEndBuffer;
 
     public override float ZOffset
     {
@@ -78,8 +81,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
             }
         }
     }
-
-    private float _zOffset;
 
     /// <inheritdoc />
     public override void Initialize()
@@ -108,10 +109,16 @@ public sealed partial class AudioSystem : SharedAudioSystem
         SubscribeNetworkEvent<PlayAudioEntityMessage>(OnEntityAudio);
         SubscribeNetworkEvent<PlayAudioPositionalMessage>(OnEntityCoordinates);
 
+        Subs.CVar(CfgManager, CVars.AudioEndBuffer, OnAudioBuffer, true);
         Subs.CVar(CfgManager, CVars.AudioAttenuation, OnAudioAttenuation, true);
         Subs.CVar(CfgManager, CVars.AudioRaycastLength, OnRaycastLengthChanged, true);
         Subs.CVar(CfgManager, CVars.AudioTickRate, OnAudioTickRate, true);
         InitializeLimit();
+    }
+
+    private void OnAudioBuffer(float value)
+    {
+        _audioEndBuffer = value;
     }
 
     private void OnAudioTickRate(int obj)
@@ -120,8 +127,13 @@ public sealed partial class AudioSystem : SharedAudioSystem
         _audioFrameTimeRemaining = MathF.Min(_audioFrameTimeRemaining, _audioFrameTime);
     }
 
-    private void OnAudioState(EntityUid uid, AudioComponent component, ref AfterAutoHandleStateEvent args)
+    private void OnAudioState(Entity<AudioComponent> entity, ref AfterAutoHandleStateEvent args)
     {
+        var component = entity.Comp;
+
+        if (component.LifeStage < ComponentLifeStage.Initialized)
+            return;
+
         ApplyAudioParams(component.Params, component);
         component.Source.Global = component.Global;
 
@@ -145,20 +157,28 @@ public sealed partial class AudioSystem : SharedAudioSystem
             case AudioState.Stopped:
                 component.StopPlaying();
                 component.PlaybackPosition = 0f;
-                break;
+                return;
         }
 
         // If playback position changed then update it.
-        if (!string.IsNullOrEmpty(component.FileName))
-        {
-            var position = (float) ((component.PauseTime ?? Timing.CurTime) - component.AudioStart).TotalSeconds;
-            var currentPosition = component.Source.PlaybackPosition;
-            var diff = Math.Abs(position - currentPosition);
+        var position = (float) ((entity.Comp.PauseTime ?? Timing.CurTime) - entity.Comp.AudioStart).TotalSeconds;
+        var currentPosition = entity.Comp.Source.PlaybackPosition;
+        var diff = Math.Abs(position - currentPosition);
 
-            if (diff > 0.1f)
+        // Don't try to set the audio too far ahead.
+        if (!string.IsNullOrEmpty(entity.Comp.FileName))
+        {
+            if (position > GetAudioLengthImpl(entity.Comp.FileName).TotalSeconds - _audioEndBuffer)
             {
-                component.PlaybackPosition = position;
+                entity.Comp.StopPlaying();
+                return;
             }
+        }
+
+        // If the difference is minor then we'll just keep playing it.
+        if (diff > 0.1f)
+        {
+            entity.Comp.PlaybackPosition = position;
         }
     }
 
@@ -207,6 +227,10 @@ public sealed partial class AudioSystem : SharedAudioSystem
     private void SetupSource(Entity<AudioComponent> entity, AudioResource audioResource, TimeSpan? length = null)
     {
         var component = entity.Comp;
+        length ??= GetAudioLength(component.FileName);
+
+        // If audio came into range then start playback at the correct position.
+        var offset = ((entity.Comp.PauseTime ?? Timing.CurTime) - component.AudioStart).TotalSeconds;
 
         if (TryAudioLimit(component.FileName))
         {
@@ -230,10 +254,17 @@ public sealed partial class AudioSystem : SharedAudioSystem
         // Don't play until first frame so occlusion etc. are correct.
         component.Gain = 0f;
 
-        length ??= GetAudioLength(component.FileName);
-
-        // If audio came into range then start playback at the correct position.
-        var offset = (Timing.CurTime - component.AudioStart).TotalSeconds % length.Value.TotalSeconds;
+        // If the offset < buffer than just play it from the start.
+        if (offset < AudioDespawnBuffer)
+        {
+            offset = 0;
+        }
+        // Not enough audio to play
+        else if (offset > length.Value.TotalSeconds - _audioEndBuffer)
+        {
+            component.StopPlaying();
+            return;
+        }
 
         if (offset > 0)
         {

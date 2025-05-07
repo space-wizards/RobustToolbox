@@ -59,7 +59,14 @@ namespace Robust.Client.ResourceManagement
             {
                 try
                 {
-                    TextureResource.LoadPreTexture(_manager, data);
+                    TextureResource.LoadTextureParameters(_manager, data);
+                    if (!data.LoadParameters.Preload)
+                    {
+                        data.Skip = true;
+                        return;
+                    }
+
+                    TextureResource.LoadPreTextureData(_manager, data);
                 }
                 catch (Exception e)
                 {
@@ -72,7 +79,7 @@ namespace Robust.Client.ResourceManagement
 
             foreach (var data in texList)
             {
-                if (data.Bad)
+                if (data.Bad || data.Skip)
                     continue;
 
                 try
@@ -87,11 +94,18 @@ namespace Robust.Client.ResourceManagement
             }
 
             var errors = 0;
+            var skipped = 0;
             foreach (var data in texList)
             {
                 if (data.Bad)
                 {
                     errors += 1;
+                    continue;
+                }
+
+                if (data.Skip)
+                {
+                    skipped += 1;
                     continue;
                 }
 
@@ -110,9 +124,10 @@ namespace Robust.Client.ResourceManagement
             }
 
             sawmill.Debug(
-                "Preloaded {CountLoaded} textures ({CountErrored} errored) in {LoadTime}",
-                texList.Length,
+                "Preloaded {CountLoaded} textures ({CountErrored} errored, {CountSkipped} skipped) in {LoadTime}",
+                texList.Length - skipped - errors,
                 errors,
+                skipped,
                 sw.Elapsed);
         }
 

@@ -197,6 +197,10 @@ public abstract partial class SharedContainerSystem
     {
         if (entity.Comp2 is { } physics)
         {
+            // TODO CONTAINER
+            // Is this actually needed?
+            // I.e., shouldn't this just do a if (_timing.ApplyingState) return
+
             // Here we intentionally don't dirty the physics comp. Client-side state handling will apply these same
             // changes. This also ensures that the server doesn't have to send the physics comp state to every
             // player for any entity inside of a container during init.

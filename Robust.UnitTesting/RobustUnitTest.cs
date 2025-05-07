@@ -13,6 +13,8 @@ using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.Containers;
 using Robust.Shared.ContentPack;
+using Robust.Shared.EntitySerialization.Components;
+using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -155,7 +157,6 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<DebugRayDrawingSystem>();
                 systems.LoadExtraSystemType<PrototypeReloadSystem>();
                 systems.LoadExtraSystemType<DebugPhysicsSystem>();
-                systems.LoadExtraSystemType<MapLoaderSystem>();
                 systems.LoadExtraSystemType<InputSystem>();
                 systems.LoadExtraSystemType<PvsOverrideSystem>();
                 systems.LoadExtraSystemType<MapSystem>();
@@ -177,12 +178,10 @@ namespace Robust.UnitTesting
             if (ExtraComponents != null)
                 compFactory.RegisterTypes(ExtraComponents);
 
-            if (Project == UnitTestProject.Server)
-            {
-                compFactory.RegisterClass<MapSaveTileMapComponent>();
-                compFactory.RegisterClass<MapSaveIdComponent>();
-            }
-            else
+            compFactory.RegisterClass<MapSaveTileMapComponent>();
+            compFactory.RegisterClass<YamlUidComponent>();
+
+            if (Project != UnitTestProject.Server)
             {
                 compFactory.RegisterClass<PointLightComponent>();
                 compFactory.RegisterClass<SpriteComponent>();

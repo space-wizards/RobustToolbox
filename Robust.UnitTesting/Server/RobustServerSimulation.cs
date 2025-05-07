@@ -11,6 +11,7 @@ using Robust.Server.Containers;
 using Robust.Server.Debugging;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
+using Robust.Server.Localization;
 using Robust.Server.Physics;
 using Robust.Server.Player;
 using Robust.Server.Prototypes;
@@ -192,7 +193,7 @@ namespace Robust.UnitTesting.Server
             container.Register<INetConfigurationManagerInternal, ServerNetConfigurationManager>();
             container.Register<IDynamicTypeFactory, DynamicTypeFactory>();
             container.Register<IDynamicTypeFactoryInternal, DynamicTypeFactory>();
-            container.Register<ILocalizationManager, LocalizationManager>();
+            container.Register<ILocalizationManager, ServerLocalizationManager>();
             container.Register<IModLoader, TestingModLoader>();
             container.Register<IModLoaderInternal, TestingModLoader>();
             container.Register<ProfManager, ProfManager>();

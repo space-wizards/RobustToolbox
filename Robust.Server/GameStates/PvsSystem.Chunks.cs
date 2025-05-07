@@ -166,11 +166,11 @@ internal sealed partial class PvsSystem
         var session = pvsSession.Session;
         if (session.Status != SessionStatus.InGame)
         {
-            pvsSession.Viewers  = Array.Empty<Entity<TransformComponent, EyeComponent?>>();
+            pvsSession.Viewers = Array.Empty<Entity<TransformComponent, EyeComponent?>>();
             return;
         }
 
-        // Fast path
+        // The majority of players will have no view subscriptions
         if (session.ViewSubscriptions.Count == 0)
         {
             if (session.AttachedEntity is not {} attached)
@@ -184,15 +184,21 @@ internal sealed partial class PvsSystem
             return;
         }
 
+        var count = session.ViewSubscriptions.Count;
         var i = 0;
         if (session.AttachedEntity is { } local)
         {
-            Array.Resize(ref pvsSession.Viewers, session.ViewSubscriptions.Count + 1);
+            if (!session.ViewSubscriptions.Contains(local))
+                count += 1;
+
+            Array.Resize(ref pvsSession.Viewers, count);
+
+            // Attached entity is always the first viewer, to prioritize it and help reduce pop-in for the "main" eye.
             pvsSession.Viewers[i++] = (local, Transform(local), _eyeQuery.CompOrNull(local));
         }
         else
         {
-            Array.Resize(ref pvsSession.Viewers, session.ViewSubscriptions.Count);
+            Array.Resize(ref pvsSession.Viewers, count);
         }
 
         foreach (var ent in session.ViewSubscriptions)
@@ -200,6 +206,8 @@ internal sealed partial class PvsSystem
             if (ent != session.AttachedEntity)
                 pvsSession.Viewers[i++] =  (ent, Transform(ent), _eyeQuery.CompOrNull(ent));
         }
+
+        DebugTools.AssertEqual(i, pvsSession.Viewers.Length);
     }
 
     private void ProcessVisibleChunks()
@@ -303,11 +311,8 @@ internal sealed partial class PvsSystem
         RemoveRoot(ev.EntityUid);
     }
 
-    private void OnMapChanged(MapChangedEvent ev)
+    private void OnMapChanged(MapRemovedEvent ev)
     {
-        if (!ev.Destroyed)
-            return;
-
         RemoveRoot(ev.Uid);
     }
 

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Robust.Shared.Maths;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map
@@ -7,7 +8,7 @@ namespace Robust.Shared.Map
     /// <summary>
     ///     The definition (template) for a grid tile.
     /// </summary>
-    public interface ITileDefinition
+    public interface ITileDefinition : IPrototype
     {
         /// <summary>
         ///     The numeric tile ID used to refer to this tile inside the map datastructure.
@@ -49,6 +50,11 @@ namespace Robust.Shared.Map
         ///     Number of variants this tile has. ALSO DETERMINES THE EXPECTED INPUT TEXTURE SIZE.
         /// </summary>
         byte Variants { get; }
+
+        /// <summary>
+        ///     Allows the tile to be rotated/mirrored when placed on a grid.
+        /// </summary>
+        bool AllowRotationMirror => false;
 
         /// <summary>
         ///     Assign a new value to <see cref="TileId"/>, used when registering the tile definition.

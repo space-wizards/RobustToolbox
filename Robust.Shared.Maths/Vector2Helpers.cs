@@ -15,6 +15,7 @@ public static class Vector2Helpers
     /// </summary>
     public static readonly Vector2 Half = new(0.5f, 0.5f);
 
+	[Pure]
     public static bool IsValid(this Vector2 v)
     {
         if (float.IsNaN(v.X) || float.IsNaN(v.Y))
@@ -30,6 +31,13 @@ public static class Vector2Helpers
         return true;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [Pure]
+    public static Vector2 MulAdd(Vector2 a, float s, Vector2 b)
+    {
+        return new Vector2(a.X + s * b.X, a.Y + s * b.Y);
+    }
+    
     public static Vector2 GetLengthAndNormalize(this Vector2 v, ref float length)
     {
         length = v.Length();

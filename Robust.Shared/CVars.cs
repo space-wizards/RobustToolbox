@@ -968,6 +968,13 @@ namespace Robust.Shared
         public static readonly CVarDef<string> RenderFOVColor =
             CVarDef.Create("render.fov_color", Color.Black.ToHex(), CVar.REPLICATED | CVar.SERVER);
 
+        /// <summary>
+        /// Whether to render tile edges, which is where some tiles can partially overlap other adjacent tiles on a grid.
+        /// E.g., snow tiles partly extending beyond their own tile to blend together with different adjacent tiles types.
+        /// </summary>
+        public static readonly CVarDef<bool> RenderTileEdges =
+            CVarDef.Create("render.tile_edges", true, CVar.CLIENTONLY);
+
         /*
          *  CONTROLS
          */
@@ -1234,6 +1241,12 @@ namespace Robust.Shared
             CVarDef.Create("audio.raycast_length", SharedAudioSystem.DefaultSoundRange, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
+        /// Maximum offset for audio to be played at from its full duration. If it's past this then the audio won't be played.
+        /// </summary>
+        public static readonly CVarDef<float> AudioEndBuffer =
+            CVarDef.Create("audio.end_buffer", 0.01f, CVar.REPLICATED);
+
+        /// <summary>
         /// Tickrate for audio calculations.
         /// OpenAL recommends 30TPS. This is to avoid running raycasts every frame especially for high-refresh rate monitors.
         /// </summary>
@@ -1349,10 +1362,10 @@ namespace Robust.Shared
         /// MaxLinVelocity is compared to the dot product of linearVelocity * frameTime.
         /// </summary>
         /// <remarks>
-        /// Default is 35 m/s. Around half a tile per tick at 60 ticks per second.
+        /// Default is 400 m/s in-line with Box2c. Box2d used 120m/s.
         /// </remarks>
         public static readonly CVarDef<float> MaxLinVelocity =
-            CVarDef.Create("physics.maxlinvelocity", 35f, CVar.SERVER | CVar.REPLICATED);
+            CVarDef.Create("physics.maxlinvelocity", 400f, CVar.SERVER | CVar.REPLICATED);
 
         /// <summary>
         /// Maximum angular velocity in full rotations per second.
@@ -1363,7 +1376,6 @@ namespace Robust.Shared
         /// </remarks>
         public static readonly CVarDef<float> MaxAngVelocity =
             CVarDef.Create("physics.maxangvelocity", 15f);
-
 
         /*
          * User interface
@@ -1869,5 +1881,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> ToolshedNearbyEntitiesLimit =
             CVarDef.Create("toolshed.nearby_entities_limit", 5, CVar.SERVER | CVar.REPLICATED);
+
+        /*
+         * Localization
+         */
+
+        public static readonly CVarDef<string> LocCultureName =
+            CVarDef.Create("loc.culture_name", "en-US", CVar.ARCHIVE);
     }
 }

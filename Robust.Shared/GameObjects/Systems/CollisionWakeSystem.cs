@@ -26,7 +26,7 @@ namespace Robust.Shared.GameObjects
 
         public void SetEnabled(EntityUid uid, bool enabled, CollisionWakeComponent? component = null)
         {
-            if (!_query.Resolve(uid, ref component) || component.Enabled == enabled)
+            if (!_query.Resolve(uid, ref component, false) || component.Enabled == enabled)
                 return;
 
             component.Enabled = enabled;
@@ -95,6 +95,7 @@ namespace Robust.Shared.GameObjects
 
             // If we're attached to the map we'll also just never disable collision due to how grid movement works.
             var canCollide = body.Awake ||
+                             body.ContactCount > 0 ||
                               (TryComp(uid, out JointComponent? jointComponent) && jointComponent.JointCount > 0) ||
                               xform.GridUid == null;
 

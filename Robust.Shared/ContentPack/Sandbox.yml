@@ -467,6 +467,8 @@ Types:
     IComponent: { All: True }
     IContainer: { All: True }
     ITypeDescriptorContext: { All: True }
+    EditorBrowsableAttribute: { All: True }
+    EditorBrowsableState: { All: True }
   System.Diagnostics.CodeAnalysis:
     AllowNullAttribute: { All: True }
     DisallowNullAttribute: { All: True }
@@ -495,6 +497,23 @@ Types:
     DebuggerVisualizerAttribute: { All: True }
     Stopwatch: { All: True }
   System.Globalization:
+  # all the calendars are here, screw making our own.
+    Calendar: { All: True }
+    ChineseLunisolarCalendar: { All: True }
+    GregorianCalendar: { All: True }
+    HebrewCalendar: { All: True }
+    HijriCalendar: { All: True }
+    JapaneseCalendar: { All: True }
+    JapaneseLunisolarCalendar:  { All: True }
+    JulianCalendar: { All: True }
+    KoreanCalendar: { All: True }
+    KoreanLunisolarCalendar: { All: True }
+    PersianCalendar: { All: True }
+    TaiwanCalendar: { All: True }
+    TaiwanLunisolarCalendar: { All: True }
+    ThaiBuddhistCalendar: { All: True }
+    UmAlQuraCalendar: { All: True }
+ #end calendars
     CompareOptions: { }
     CultureInfo: { All: True }
     DateTimeStyles: { All: True } # Enum
@@ -694,7 +713,7 @@ Types:
       - "bool IsMatch(string, string, System.Text.RegularExpressions.RegexOptions, System.TimeSpan)"
       - "int GroupNumberFromName(string)"
       - "int[] GetGroupNumbers()"
-      - "string Escape()"
+      - "string Escape(string)"
       - "string GroupNameFromNumber(int)"
       - "string Replace(string, string)"
       - "string Replace(string, string, int)"
@@ -734,6 +753,15 @@ Types:
       - "void .ctor(string)"
       - "void .ctor(string, System.Text.RegularExpressions.RegexOptions)"
       - "void .ctor(string, System.Text.RegularExpressions.RegexOptions, System.TimeSpan)"
+      - "int Count(string)"
+      - "int Count(System.ReadOnlySpan`1<char>)"
+      - "int Count(System.ReadOnlySpan`1<char>, int)"
+      - "int Count(string, string)"
+      - "int Count(string, string, System.Text.RegularExpressions.RegexOptions)"
+      - "int Count(string, string, System.Text.RegularExpressions.RegexOptions, System.TimeSpan)"
+      - "int Count(System.ReadOnlySpan`1<char>, string)"
+      - "int Count(System.ReadOnlySpan`1<char>, string, System.Text.RegularExpressions.RegexOptions)"
+      - "int Count(System.ReadOnlySpan`1<char>, string, System.Text.RegularExpressions.RegexOptions, System.TimeSpan)"
     RegexMatchTimeoutException: { All: True }
     RegexOptions: { } # Enum
     RegexParseError: { }
@@ -787,6 +815,7 @@ Types:
       - "bool Equals(System.ReadOnlySpan`1<char>)"
       - "bool Equals(System.Text.StringBuilder)"
       - "char get_Chars(int)"
+      - "void set_Chars(int, char)"
       - "int EnsureCapacity(int)"
       - "int get_Capacity()"
       - "int get_Length()"
@@ -884,6 +913,7 @@ Types:
   System.Threading:
     CancellationToken: { All: True }
     CancellationTokenSource: { All: True }
+    CancellationTokenRegistration: { All: True }
     Interlocked: { All: True }
     Monitor: { All: True }
   System.Web:
@@ -1059,6 +1089,7 @@ Types:
     DateTime: { All: True }
     DateTimeKind: { } # Enum
     DateTimeOffset: { All: True }
+    DayOfWeek: { } # Enum
     Decimal: { All: True }
     Delegate:
       Methods:
@@ -1197,6 +1228,7 @@ Types:
     RuntimeFieldHandle: { }
     RuntimeMethodHandle: { }
     RuntimeTypeHandle: { }
+    STAThreadAttribute: { All: True }
     SByte: { All: True }
     Single: { All: True }
     Span`1:
@@ -1367,6 +1399,7 @@ Types:
       - "string[] Split(char, int, System.StringSplitOptions)"
       - "string[] Split(char, System.StringSplitOptions)"
       - "string[] Split(char[])"
+      - "string[] Split(System.ReadOnlySpan`1<char>)"
       - "string[] Split(char[], int)"
       - "string[] Split(char[], int, System.StringSplitOptions)"
       - "string[] Split(char[], System.StringSplitOptions)"

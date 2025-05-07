@@ -103,7 +103,6 @@ internal partial class UserInterfaceManager
             return;
         }
 
-
         var guiArgs = new GUIBoundKeyEventArgs(args.Function, args.State, args.PointerLocation, args.CanFocus,
             args.PointerLocation.Position / control.UIScale - control.GlobalPosition,
             args.PointerLocation.Position - control.GlobalPixelPosition);
@@ -115,10 +114,6 @@ internal partial class UserInterfaceManager
             args.Handle();
         }
 
-        // Attempt to ensure that keybind-up events get raised after a keybind-down.
-        DebugTools.Assert(!_focusedControls.TryGetValue(args.Function, out var existing)
-                          || !existing.VisibleInTree
-                          || args.IsRepeat && existing == control);
         _focusedControls[args.Function] = control;
 
         OnKeyBindDown?.Invoke(control);
@@ -313,7 +308,10 @@ internal partial class UserInterfaceManager
 
     private void _clearTooltip()
     {
-        if (!_showingTooltip) return;
+        _resetTooltipTimer();
+
+        if (!_showingTooltip)
+            return;
 
         if (_suppliedTooltip != null)
         {
@@ -322,7 +320,6 @@ internal partial class UserInterfaceManager
         }
 
         CurrentlyHovered?.PerformHideTooltip();
-        _resetTooltipTimer();
         _showingTooltip = false;
     }
 

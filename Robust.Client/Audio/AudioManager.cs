@@ -5,6 +5,7 @@ using System.Threading;
 using OpenTK.Audio.OpenAL;
 using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
 using Robust.Client.Audio.Sources;
+using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
@@ -17,13 +18,15 @@ internal sealed partial class AudioManager : IAudioInternal
 {
     [Shared.IoC.Dependency] private readonly IConfigurationManager _cfg = default!;
     [Shared.IoC.Dependency] private readonly ILogManager _logMan = default!;
+    [Shared.IoC.Dependency] private readonly IReloadManager _reload = default!;
+    [Shared.IoC.Dependency] private readonly IResourceCache _cache = default!;
 
     private Thread? _gameThread;
 
     private ALDevice _openALDevice;
     private ALContext _openALContext;
 
-    private readonly List<LoadedAudioSample> _audioSampleBuffers = new();
+    private readonly Dictionary<int, LoadedAudioSample> _audioSampleBuffers = new();
 
     private readonly Dictionary<int, WeakReference<BaseAudioSource>> _audioSources =
         new();
@@ -116,6 +119,22 @@ internal sealed partial class AudioManager : IAudioInternal
         IsEfxSupported = HasAlDeviceExtension("ALC_EXT_EFX");
 
         _cfg.OnValueChanged(CVars.AudioMasterVolume, SetMasterGain, true);
+
+        _reload.Register("/Audio", "*.ogg");
+        _reload.Register("/Audio", "*.wav");
+
+        _reload.OnChanged += OnReload;
+    }
+
+    private void OnReload(ResPath args)
+    {
+        if (args.Extension != "ogg" &&
+            args.Extension != "wav")
+        {
+            return;
+        }
+
+        _cache.ReloadResource<AudioResource>(args);
     }
 
     internal bool IsMainThread()
@@ -138,6 +157,11 @@ internal sealed partial class AudioManager : IAudioInternal
         {
             OpenALSawmill.Error("[{0}:{1}] ALC error: {2}", callerMember, callerLineNumber, error);
         }
+    }
+
+    internal void LogError(string message)
+    {
+        OpenALSawmill.Error(message);
     }
 
     /// <summary>

@@ -21,46 +21,52 @@ public sealed class DataDefinitionAnalyzerTest
             },
         };
 
+        test.TestState.Sources.Add(("TestTypeDefs.cs", TestTypeDefs));
+
         // ExpectedDiagnostics cannot be set, so we need to AddRange here...
         test.TestState.ExpectedDiagnostics.AddRange(expected);
 
         return test.RunAsync();
     }
 
+    private const string TestTypeDefs = """
+        using System;
+
+        namespace Robust.Shared.ViewVariables
+        {
+            public sealed class ViewVariablesAttribute : Attribute
+            {
+                public readonly VVAccess Access = VVAccess.ReadOnly;
+
+                public ViewVariablesAttribute() { }
+
+                public ViewVariablesAttribute(VVAccess access)
+                {
+                    Access = access;
+                }
+            }
+            public enum VVAccess : byte
+            {
+                ReadOnly = 0,
+                ReadWrite = 1,
+            }
+        }
+
+        namespace Robust.Shared.Serialization.Manager.Attributes
+        {
+            public class DataFieldBaseAttribute : Attribute;
+            public class DataFieldAttribute : DataFieldBaseAttribute;
+            public sealed class DataDefinitionAttribute : Attribute;
+            public sealed class NotYamlSerializableAttribute : Attribute;
+        }
+    """;
+
     [Test]
     public async Task NoVVReadOnlyTest()
     {
         const string code = """
-            using System;
             using Robust.Shared.ViewVariables;
             using Robust.Shared.Serialization.Manager.Attributes;
-
-            namespace Robust.Shared.ViewVariables
-            {
-                public sealed class ViewVariablesAttribute : Attribute
-                {
-                    public readonly VVAccess Access = VVAccess.ReadOnly;
-
-                    public ViewVariablesAttribute() { }
-
-                    public ViewVariablesAttribute(VVAccess access)
-                    {
-                        Access = access;
-                    }
-                }
-                public enum VVAccess : byte
-                {
-                    ReadOnly = 0,
-                    ReadWrite = 1,
-                }
-            }
-
-            namespace Robust.Shared.Serialization.Manager.Attributes
-            {
-                public class DataFieldBaseAttribute : Attribute;
-                public class DataFieldAttribute : DataFieldBaseAttribute;
-                public sealed class DataDefinitionAttribute : Attribute;
-            }
 
             [DataDefinition]
             public sealed partial class Foo
@@ -83,8 +89,8 @@ public sealed class DataDefinitionAnalyzerTest
             """;
 
         await Verifier(code,
-            // /0/Test0.cs(35,17): info RA0028: Data field Bad in data definition Foo has ViewVariables attribute with ReadWrite access, which is redundant
-            VerifyCS.Diagnostic(DataDefinitionAnalyzer.DataFieldNoVVReadWriteRule).WithSpan(35, 17, 35, 50).WithArguments("Bad", "Foo")
+            // /0/Test0.cs(7,17): info RA0028: Data field Bad in data definition Foo has ViewVariables attribute with ReadWrite access, which is redundant
+            VerifyCS.Diagnostic(DataDefinitionAnalyzer.DataFieldNoVVReadWriteRule).WithSpan(7, 17, 7, 50).WithArguments("Bad", "Foo")
         );
     }
 
@@ -92,15 +98,7 @@ public sealed class DataDefinitionAnalyzerTest
     public async Task ReadOnlyFieldTest()
     {
         const string code = """
-            using System;
             using Robust.Shared.Serialization.Manager.Attributes;
-
-            namespace Robust.Shared.Serialization.Manager.Attributes
-            {
-                public class DataFieldBaseAttribute : Attribute;
-                public class DataFieldAttribute : DataFieldBaseAttribute;
-                public sealed class DataDefinitionAttribute : Attribute;
-            }
 
             [DataDefinition]
             public sealed partial class Foo
@@ -114,8 +112,8 @@ public sealed class DataDefinitionAnalyzerTest
             """;
 
         await Verifier(code,
-            // /0/Test0.cs(15,12): error RA0019: Data field Bad in data definition Foo is readonly
-            VerifyCS.Diagnostic(DataDefinitionAnalyzer.DataFieldWritableRule).WithSpan(15, 12, 15, 20).WithArguments("Bad", "Foo")
+            // /0/Test0.cs(7,12): error RA0019: Data field Bad in data definition Foo is readonly
+            VerifyCS.Diagnostic(DataDefinitionAnalyzer.DataFieldWritableRule).WithSpan(7, 12, 7, 20).WithArguments("Bad", "Foo")
         );
     }
 
@@ -123,15 +121,7 @@ public sealed class DataDefinitionAnalyzerTest
     public async Task ReadOnlyPropertyTest()
     {
         const string code = """
-            using System;
             using Robust.Shared.Serialization.Manager.Attributes;
-
-            namespace Robust.Shared.Serialization.Manager.Attributes
-            {
-                public class DataFieldBaseAttribute : Attribute;
-                public class DataFieldAttribute : DataFieldBaseAttribute;
-                public sealed class DataDefinitionAttribute : Attribute;
-            }
 
             [DataDefinition]
             public sealed partial class Foo
@@ -145,8 +135,8 @@ public sealed class DataDefinitionAnalyzerTest
             """;
 
         await Verifier(code,
-            // /0/Test0.cs(15,20): error RA0020: Data field property Bad in data definition Foo does not have a setter
-            VerifyCS.Diagnostic(DataDefinitionAnalyzer.DataFieldPropertyWritableRule).WithSpan(15, 20, 15, 28).WithArguments("Bad", "Foo")
+            // /0/Test0.cs(7,20): error RA0020: Data field property Bad in data definition Foo does not have a setter
+            VerifyCS.Diagnostic(DataDefinitionAnalyzer.DataFieldPropertyWritableRule).WithSpan(7, 20, 7, 28).WithArguments("Bad", "Foo")
         );
     }
 
@@ -154,16 +144,7 @@ public sealed class DataDefinitionAnalyzerTest
     public async Task NotYamlSerializableTest()
     {
         const string code = """
-            using System;
             using Robust.Shared.Serialization.Manager.Attributes;
-
-            namespace Robust.Shared.Serialization.Manager.Attributes
-            {
-                public class DataFieldBaseAttribute : Attribute;
-                public class DataFieldAttribute : DataFieldBaseAttribute;
-                public sealed class DataDefinitionAttribute : Attribute;
-                public sealed class NotYamlSerializableAttribute : Attribute;
-            }
 
             [NotYamlSerializable]
             public sealed class NotSerializableClass { }
@@ -184,10 +165,10 @@ public sealed class DataDefinitionAnalyzerTest
             """;
 
         await Verifier(code,
-            // /0/Test0.cs(19,12): error RA0033: Data field BadField in data definition Foo is type NotSerializableClass, which is not YAML serializable
-            VerifyCS.Diagnostic(DataDefinitionAnalyzer.DataFieldYamlSerializableRule).WithSpan(19, 12, 19, 32).WithArguments("BadField", "Foo", "NotSerializableClass"),
-            // /0/Test0.cs(22,12): error RA0033: Data field BadProperty in data definition Foo is type NotSerializableClass, which is not YAML serializable
-            VerifyCS.Diagnostic(DataDefinitionAnalyzer.DataFieldYamlSerializableRule).WithSpan(22, 12, 22, 32).WithArguments("BadProperty", "Foo", "NotSerializableClass")
+            // /0/Test0.cs(10,12): error RA0033: Data field BadField in data definition Foo is type NotSerializableClass, which is not YAML serializable
+            VerifyCS.Diagnostic(DataDefinitionAnalyzer.DataFieldYamlSerializableRule).WithSpan(10, 12, 10, 32).WithArguments("BadField", "Foo", "NotSerializableClass"),
+            // /0/Test0.cs(13,12): error RA0033: Data field BadProperty in data definition Foo is type NotSerializableClass, which is not YAML serializable
+            VerifyCS.Diagnostic(DataDefinitionAnalyzer.DataFieldYamlSerializableRule).WithSpan(13, 12, 13, 32).WithArguments("BadProperty", "Foo", "NotSerializableClass")
         );
     }
 }

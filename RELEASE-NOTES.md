@@ -1,4 +1,4 @@
-﻿# Release notes for RobustToolbox.
+# Release notes for RobustToolbox.
 
 <!--
 NOTE: automatically updated sometimes by version.py.
@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `ITypeReaderWriter<TType, TNode>` has been removed due to being unused. Implement `ITypeSerializer<TType, TNode>` instead
 
 ### New features
 
@@ -52,6 +52,44 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 255.1.0
+
+### New features
+
+* The client localisation manager now supports hot-reloading ftl files.
+* TransformSystem can now raise `GridUidChangedEvent` and `MapUidChangedEvent` when a entity's grid or map changes. This event is only raised if the `ExtraTransformEvents` metadata flag is enabled.
+
+### Bugfixes
+
+* Fixed a server crash due to a `NullReferenceException` in PVS system when a player's local entity is also one of their view subscriptions.
+* Fix CompileRobustXamlTask for benchmarks.
+* .ftl files will now hot reload.
+* Fix placementmanager sometimes not clearing.
+
+### Other
+
+* Container events are now documented.
+
+
+## 255.0.0
+
+### Breaking changes
+
+* `RobustIntegrationTest` now pools server/client instances by default. If a custom settings class is provided, it will still disable pooling unless explicitly enabled.
+  * Server/Client instances that are returned to the pool should be disconnected. This might require you to update some tests.
+  * Pooled instances also require you to use `RobustIntegrationTest` methods like `WaitPost()` to ensure the correct thread is used.
+
+### Bugfixes
+
+* Fix `EntityDeserializer` improperly setting entity lifestages when loading a post-mapinit map.
+* Fix `EntityManager.PredictedDeleteEntity()` not deleting pure client-side entities.
+* Fix grid fixtures using a locale dependent id. This could cause some clients to crash/freeze when connected to a server with a different locale.
+
+### Other
+
+* Add logic to block cycles in master MIDI renderers, which could otherwise cause client freezes.
 
 
 ## 254.1.0
@@ -79,8 +117,8 @@ END TEMPLATE-->
   * The MappingDataNode class has various helper methods that still accept a ValueDataNode, but these methods are marked as obsolete and may be removed in the future.
   * yaml validators should use `MappingDataNode.GetKeyNode()` when validating mapping keys, so that errors can print node start & end information
 * ValueTuple yaml serialization has changed
-  * Previously they would get serialized into a single mapping with one entry (i.e., `{foo : bar }` 
-  * Now they serialize into a sequence (i.e., `[foo, bar]`
+  * Previously they would get serialized into a single mapping with one entry (i.e., `{foo : bar }`)
+  * Now they serialize into a sequence (i.e., `[foo, bar]`)
   * The ValueTuple serializer will still try to read mappings, but due to the MappingDataNode this may fail if the previously serialized "key" can't be read as a simple string
 
 ### New features

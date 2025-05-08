@@ -168,9 +168,19 @@ namespace Robust.Shared.GameObjects
         void PredictedDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent);
 
         /// <summary>
+        /// <see cref="PredictedDeleteEntity(Robust.Shared.GameObjects.Entity{Robust.Shared.GameObjects.MetaDataComponent?,Robust.Shared.GameObjects.TransformComponent?})"/>
+        /// </summary>
+        void PredictedDeleteEntity(Entity<MetaDataComponent?, TransformComponent?>? ent);
+
+        /// <summary>
         /// Tries to predict entity deletion. On the server it runs the normal code path and on the client the entity is detached.
         /// </summary>
         void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent);
+
+        /// <summary>
+        /// <see cref="PredictedQueueDeleteEntity(Robust.Shared.GameObjects.Entity{Robust.Shared.GameObjects.MetaDataComponent?,Robust.Shared.GameObjects.TransformComponent?})"/>
+        /// </summary>
+        void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?>? ent);
 
         /// <summary>
         /// Shuts-down and removes the entity with the given <see cref="Robust.Shared.GameObjects.EntityUid"/>. This is also broadcast to all clients.

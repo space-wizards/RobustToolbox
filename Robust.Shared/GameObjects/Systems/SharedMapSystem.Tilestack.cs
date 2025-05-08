@@ -39,9 +39,10 @@ public abstract partial class SharedMapSystem
     /// </summary>
     public void AddLayer(Vector2i gridIndices, EntityUid gridUid, MapGridComponent grid, Tile newTile)
     {
-        var chunkIndices = GridTileToChunkIndices(gridUid, grid, gridIndices);
-        TryGetChunk(gridUid, grid, gridIndices, out var chunk);
-        chunk?.AddToTilestack((ushort)chunkIndices.X, (ushort)chunkIndices.Y, newTile);
+        if (!TryGetChunk(gridUid, grid, gridIndices, out var chunk))
+            return;
+        var tileIndices = chunk.GridTileToChunkTile(gridIndices);
+        chunk.AddToTilestack((ushort)tileIndices.X, (ushort)tileIndices.Y, newTile);
     }
 
     /// <summary>
@@ -49,12 +50,13 @@ public abstract partial class SharedMapSystem
     /// </summary>
     public void RemoveLayer(Vector2i gridIndices, EntityUid gridUid, MapGridComponent grid)
     {
-        var chunkIndices = GridTileToChunkIndices(gridUid, grid, gridIndices);
-        TryGetChunk(gridUid, grid, gridIndices, out var chunk);
-        var tilestack = chunk?.GetTilestack((ushort)chunkIndices.X, (ushort)chunkIndices.Y);
-        if (tilestack?.Count == 0 || tilestack == null)
+        if (!TryGetChunk(gridUid, grid, gridIndices, out var chunk))
             return;
-        chunk?.RemoveFromTilestack((ushort)chunkIndices.X, (ushort)chunkIndices.Y, tilestack.Last());
+        var tileIndices = chunk.GridTileToChunkTile(gridIndices);
+        var tilestack = chunk.GetTilestack((ushort)tileIndices.X, (ushort)tileIndices.Y);
+        if (tilestack.Count == 0)
+            return;
+        chunk.RemoveFromTilestack((ushort)tileIndices.X, (ushort)tileIndices.Y, tilestack.Last());
     }
 
     /// <summary>
@@ -62,8 +64,9 @@ public abstract partial class SharedMapSystem
     /// </summary>
     public void DeleteTilestack(Vector2i gridIndices, EntityUid gridUid, MapGridComponent grid)
     {
-        var chunkIndices = GridTileToChunkIndices(gridUid, grid, gridIndices);
-        TryGetChunk(gridUid, grid, gridIndices, out var chunk);
-        chunk?.DeleteTilestack((ushort)chunkIndices.X, (ushort)chunkIndices.Y);
+        if (!TryGetChunk(gridUid, grid, gridIndices, out var chunk))
+            return;
+        var tileIndices = chunk.GridTileToChunkTile(gridIndices);
+        chunk.DeleteTilestack((ushort)tileIndices.X, (ushort)tileIndices.Y);
     }
 }

@@ -92,7 +92,7 @@ public static class ConstraintExtensions
         return constraint;
     }
 
-    /// <inheritdoc cref="Has.ComponentCount{T}(int)"/>
+    /// <inheritdoc cref="Has.ComponentCount{T}()"/>
     public static ResolvableConstraintExpression ComponentCount<T>(this ConstraintExpression expression)
         where T : IComponent
     {

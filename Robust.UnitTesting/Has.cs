@@ -31,6 +31,9 @@ public sealed class Has : NUnit.Framework.Has
     public static EntityComponentConstraint<T> Component<T>(IEntityManager entityManager)
         where T : IComponent, new() => new(entityManager);
 
+    /// <summary>
+    /// Returns an new expression that will apply any following constraint to the number of entities with a <typeparamref name="T"/>.
+    /// </summary>
     public static ResolvableConstraintExpression ComponentCount<T>()
         where T : IComponent => new ConstraintExpression().Append(new ComponentCountOperator<T>());
 }

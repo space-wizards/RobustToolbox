@@ -27,26 +27,13 @@ public sealed class Loader
     public void Init(IDependencyCollection deps)
     {
         SetupLogging(deps);
-        // InitReflectionManager(deps);
 
-        // Console.Error.WriteLine(PathHelpers.ExecutableRelativeFile("data"));
         Console.Error.WriteLine($"c: {CVars.AuthMode}");
 
         var protoMan = IoCManager.Resolve<IPrototypeManager>();
 
-        // var _resources = deps.Resolve<IResourceManagerInternal>();
-        // var _config = deps.Resolve<INetConfigurationManagerInternal>();
-        // var _serialization = deps.Resolve<ISerializationManager>();
-
-        // _config.LoadCVarsFromAssembly(typeof(AudioSystem).Assembly); // Robust.Server
         _config.LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Robust.Shared
 
-        // CommandLineArgs? _commandLineArgs = null;
-
-
-        // var dataDir = Options.LoadConfigAndUserData
-        //     ? _commandLineArgs?.DataDir ?? PathHelpers.ExecutableRelativeFile("data")
-        //     : null;
         string? dataDir = null;
 
         // Set up the VFS
@@ -77,13 +64,8 @@ public sealed class Loader
                 clientOptions.ResourceMountDisabled);
         }
 
-        // resourceMan.MountContentDirectory(@"/Users/ciaran/code/ss14/space-station-14/Resources");
-
-
         var _modLoader = IoCManager.Resolve<IModLoaderInternal>();
         // _modLoader.SetUseLoadContext(!ContentStart);
-
-        // _logger =
 
         var resourceManifest = ResourceManifestData.LoadResourceManifest(_resources);
 
@@ -99,14 +81,8 @@ public sealed class Loader
 
         foreach (var loadedModule in _modLoader.LoadedModules)
         {
-            // Console.Error.WriteLine($"Loaded: {loadedModule}");
             _config.LoadCVarsFromAssembly(loadedModule);
         }
-
-        Console.Error.WriteLine(typeof(Robust.Server.GameObjects.PointLightComponent));
-        //
-        // var entMan = deps.Resolve<IEntityManager>();
-        // entMan.Initialize();
 
 
         InitReflectionManager(deps);
@@ -121,53 +97,29 @@ public sealed class Loader
 
         var componentFactory = deps.Resolve<IComponentFactory>();
         componentFactory.DoAutoRegistrations();
-        // componentFactory.RegisterTypes([typeof(Robust.Server.GameObjects.PointLightComponent)]);
 
         if (loadServer)
             componentFactory.IgnoreMissingComponents("Visuals");
         else
             componentFactory.IgnoreMissingComponents();
-        // componentFactory.IgnoreMissingComponents();
 
         if (loadServer)
             AddServerComponentIgnores(componentFactory);
 
         componentFactory.GenerateNetIds();
 
-        // var comp = componentFactory.GetComponent("PointLight");
-        // Console.Error.WriteLine($"Comp: {comp}");
-        // return;
-
-        // componentFactory.RegisterIgnore(IgnoredComponents.List);
-
-        // foreach (var c in componentFactory.AllRegisteredTypes)
-        // {
-        //     Console.Error.WriteLine($"Registered component: {c.FullName}");
-        // }
-
-
         var loc = IoCManager.Resolve<ILocalizationManager>();
         var culture = new CultureInfo("en-US", false);
         loc.LoadCulture(culture);
 
-
         _serialization.Initialize();
 
-        // protoMan.ClearIgnored();
-
-        // Dictionary<Type, HashSet<string>> modified = new();
         protoMan.Initialize();
-        // protoMan.ReloadPrototypeKinds();
 
         if (!loadServer)
             AddClientPrototypeIgnores(protoMan);
 
         protoMan.RegisterIgnore("parallax");
-
-        // foreach (var kind in protoMan.GetPrototypeKinds())
-        // {
-        //     Console.Error.WriteLine($"Kind: {kind}");
-        // }
 
         Dictionary<Type, HashSet<string>> changed = new();
         protoMan.LoadDirectory(new(@"/EnginePrototypes"), false, changed);
@@ -175,30 +127,11 @@ public sealed class Loader
         protoMan.LoadDirectory(new(@"/Prototypes"), false, changed);
         protoMan.ResolveResults();
 
-        // return;
-        // deps.Resolve<IReflectionManager>().LoadAssemblies(typeof(RobustIntegrationTest).Assembly);
-
         Console.Error.WriteLine($"protoMan: {protoMan} - changed = {changed.Count}");
-
-        // foreach (var (type, list) in changed)
-        // {
-        //     Console.Error.WriteLine($"New {type}");
-        //     foreach (var x in list)
-        //         Console.Error.WriteLine($"* {x} - {protoMan.Index(type, x)}");
-        // }
-
-        // var server = deps.Resolve<IBaseServerInternal>();
 
         var reagentProto = protoMan.GetKindType("flavor");
         Console.Error.WriteLine($"reagentProto: {reagentProto}");
         Console.Error.WriteLine($"reagentProto: {protoMan.Index(reagentProto, "savory")}");
-        //
-        // foreach (var p in protoMan.EnumeratePrototypes(reagentProto))
-        // {
-        //     Console.Error.WriteLine($"A reagent: {p}");
-        // }
-
-        // return;
     }
 
     private static void InitReflectionManager(IDependencyCollection deps)

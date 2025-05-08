@@ -18,17 +18,11 @@ public sealed class DocumentColorHandler : DocumentColorHandlerBase
 
     private readonly ISawmill _logger = Logger.GetSawmill("DocumentColorHandler");
 
-    // private DocumentColorBuilder Builder { get; } = new();
-
     protected override Task<DocumentColorResponse> Handle(DocumentColorParams request, CancellationToken token)
     {
         _logger.Error("DocumentColorHandler");
-        // var uri = request.TextDocument.Uri.UnescapeUri;
-        var text = _cache.GetDocumentContents(request.TextDocument.Uri);
-
 
         List<ColorInformation> colors = new();
-
 
         using var sr = new StringReader(_cache.GetDocumentContents(request.TextDocument.Uri));
 
@@ -60,31 +54,9 @@ public sealed class DocumentColorHandler : DocumentColorHandlerBase
                             Range = new(start, end)
                         });
                     }
-
-                    // ref var token = ref tokens.AddRef();
-                    // token.TokenType = 0;
-                    // token.Length = end.Character - start.Character;
-                    // token.Line = start.Line;
-                    // token.StartChar = start.Character;
-
-                    // semanticTokenBuilder.Push(start,
-                    //     end.Character - start.Character,
-                    //     SemanticTokenTypes.Class);
                 }
             }
         }
-
-        //
-        // context.ReadyRead(() =>
-        // {
-        //     var semanticModel = context.GetSemanticModel(uri);
-        //     if (semanticModel is not null)
-        //     {
-        //         container = new DocumentColorResponse(Builder.Build(semanticModel));
-        //     }
-        // });
-
-        // DocumentColorResponse container = new();
 
         var container = new DocumentColorResponse(colors);
 
@@ -97,8 +69,6 @@ public sealed class DocumentColorHandler : DocumentColorHandlerBase
         var uri = request.TextDocument.Uri.UnescapeUri;
 
         ColorPresentationResponse container = null!;
-
-        // var color = new Color((float)request.Color.Red, (float)request.Color.Green, (float)request.Color.Blue);
 
         if (request.Range.HasValue)
         {
@@ -120,15 +90,6 @@ public sealed class DocumentColorHandler : DocumentColorHandlerBase
                 }
             ]);
         }
-
-        // context.ReadyRead(() =>
-        // {
-        //     var semanticModel = context.GetSemanticModel(uri);
-        //     if (semanticModel is not null)
-        //     {
-        //         container = new ColorPresentationResponse(Builder.ModifyColor(request, semanticModel));
-        //     }
-        // });
 
         return Task.FromResult(container);
     }

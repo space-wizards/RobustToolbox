@@ -4,7 +4,7 @@ using Robust.Shared.GameObjects;
 
 namespace Robust.UnitTesting.Constraints;
 
-public sealed class EntityManagerComponentCountConstraint<T>(IConstraint baseConstraint) : PrefixConstraint(baseConstraint, "entity count")
+public sealed class EntityManagerComponentCountConstraint<T>(IConstraint baseConstraint) : PrefixConstraint(baseConstraint, "component count")
     where T : IComponent
 {
     public override ConstraintResult ApplyTo<TActual>(TActual actual)
@@ -18,7 +18,7 @@ public sealed class EntityManagerComponentCountConstraint<T>(IConstraint baseCon
 
     protected override string GetStringRepresentation()
     {
-        return $"<entities with {nameof(T)} count {BaseConstraint}>";
+        return $"<component count {BaseConstraint}>";
     }
 }
 

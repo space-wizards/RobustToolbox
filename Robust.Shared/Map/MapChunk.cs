@@ -21,11 +21,16 @@ namespace Robust.Shared.Map
         /// New SnapGrid cells are allocated with this capacity.
         /// </summary>
         private const int SnapCellStartingCapacity = 1;
+        /// <summary>
+        /// New tilestacks are allocated with this capacity.
+        /// </summary>
+        private const int TilestackStartingCapacity = 4;
 
         private readonly Vector2i _gridIndices;
 
         [ViewVariables] internal readonly Tile[,] Tiles;
         private readonly SnapGridCell[,] _snapGrid;
+        private readonly Tilestack[,] _tilestacks;
 
         /// <summary>
         /// Keeps a running count of the number of filled tiles in this chunk.
@@ -70,6 +75,7 @@ namespace Robust.Shared.Map
 
             Tiles = new Tile[ChunkSize, ChunkSize];
             _snapGrid = new SnapGridCell[ChunkSize, ChunkSize];
+            _tilestacks = new Tilestack[ChunkSize, ChunkSize];
         }
 
         /// <summary>
@@ -138,6 +144,75 @@ namespace Robust.Shared.Map
             return chunkTile + _gridIndices * ChunkSize;
         }
 
+        /// <summary>
+        /// Returns tilestack(tiles under the current tile) at given tile indices.
+        /// </summary>
+        public HashSet<Tile> GetTilestack(ushort xCell, ushort yCell)
+        {
+            if (xCell >= ChunkSize)
+                throw new ArgumentOutOfRangeException(nameof(xCell), "Tile indices out of bounds.");
+
+            if (yCell >= ChunkSize)
+                throw new ArgumentOutOfRangeException(nameof(yCell), "Tile indices out of bounds.");
+
+            var tilestack = _tilestacks[xCell, yCell].Tiles;
+
+            if (tilestack == null)
+            {
+                return new HashSet<Tile>();
+            }
+
+            return tilestack;
+        }
+
+
+        /// <summary>
+        /// Adds a tile to the tilestack.
+        /// NOTE: this does not set the tile, meaning that this adds the tile right under the current tile.
+        /// </summary>
+        public void AddToTilestack(ushort xCell, ushort yCell, Tile tile)
+        {
+            if (xCell >= ChunkSize)
+                throw new ArgumentOutOfRangeException(nameof(xCell), "Tile indices out of bounds.");
+
+            if (yCell >= ChunkSize)
+                throw new ArgumentOutOfRangeException(nameof(yCell), "Tile indices out of bounds.");
+
+            ref var stack = ref _tilestacks[xCell, yCell];
+            stack.Tiles ??= new HashSet<Tile>(TilestackStartingCapacity);
+
+            stack.Tiles.Add(tile);
+        }
+
+        /// <summary>
+        /// Removes the tile from the tilestack.
+        /// </summary>
+        public void RemoveFromTilestack(ushort xCell, ushort yCell, Tile tile)
+        {
+            if (xCell >= ChunkSize)
+                throw new ArgumentOutOfRangeException(nameof(xCell), "Tile indices out of bounds.");
+
+            if (yCell >= ChunkSize)
+                throw new ArgumentOutOfRangeException(nameof(yCell), "Tile indices out of bounds.");
+
+            ref var stack = ref _tilestacks[xCell, yCell];
+            stack.Tiles?.Remove(tile);
+        }
+
+        /// <summary>
+        /// Completely deletes the tilestack.
+        /// </summary>
+        public void DeleteTilestack(ushort xCell, ushort yCell)
+        {
+            if (xCell >= ChunkSize)
+                throw new ArgumentOutOfRangeException(nameof(xCell), "Tile indices out of bounds.");
+
+            if (yCell >= ChunkSize)
+                throw new ArgumentOutOfRangeException(nameof(yCell), "Tile indices out of bounds.");
+
+            ref var stack = ref _tilestacks[xCell, yCell];
+            stack.Tiles = new HashSet<Tile>(TilestackStartingCapacity);
+        }
         /// <summary>
         /// Returns the anchored cell at the given tile indices.
         /// </summary>
@@ -214,6 +289,11 @@ namespace Robust.Shared.Map
         private struct SnapGridCell
         {
             public List<EntityUid>? Center;
+        }
+
+        private struct Tilestack
+        {
+            public HashSet<Tile>? Tiles;
         }
 
         /// <summary>

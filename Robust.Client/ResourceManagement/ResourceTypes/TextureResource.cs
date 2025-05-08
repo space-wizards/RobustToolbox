@@ -32,18 +32,22 @@ namespace Robust.Client.ResourceManagement
 
             var data = new LoadStepData {Path = path};
 
-            LoadPreTexture(dependencies.Resolve<IResourceManager>(), data);
+            LoadTextureParameters(dependencies.Resolve<IResourceManager>(), data);
+            LoadPreTextureData(dependencies.Resolve<IResourceManager>(), data);
             LoadTexture(dependencies.Resolve<IClyde>(), data);
             LoadFinish(dependencies.Resolve<IResourceCache>(), data);
         }
 
-        internal static void LoadPreTexture(IResourceManager cache, LoadStepData data)
+        internal static void LoadPreTextureData(IResourceManager cache, LoadStepData data)
         {
             using (var stream = cache.ContentFileRead(data.Path))
             {
                 data.Image = Image.Load<Rgba32>(stream);
             }
+        }
 
+        internal static void LoadTextureParameters(IResourceManager cache, LoadStepData data)
+        {
             data.LoadParameters = TryLoadTextureParameters(cache, data.Path) ?? TextureLoadParameters.Default;
         }
 
@@ -95,7 +99,8 @@ namespace Robust.Client.ResourceManagement
         {
             var data = new LoadStepData {Path = path};
 
-            LoadPreTexture(dependencies.Resolve<IResourceManager>(), data);
+            LoadTextureParameters(dependencies.Resolve<IResourceManager>(), data);
+            LoadPreTextureData(dependencies.Resolve<IResourceManager>(), data);
 
             if (data.Image.Width == Texture.Width && data.Image.Height == Texture.Height)
             {
@@ -119,6 +124,7 @@ namespace Robust.Client.ResourceManagement
             public Image<Rgba32> Image = default!;
             public TextureLoadParameters LoadParameters;
             public OwnedTexture Texture = default!;
+            public bool Skip;
             public bool Bad;
         }
 

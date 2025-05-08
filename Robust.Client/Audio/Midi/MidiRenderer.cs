@@ -226,6 +226,9 @@ internal sealed class MidiRenderer : IMidiRenderer
             if (value == _master)
                 return;
 
+            if (CheckMasterCycle(value))
+                throw new InvalidOperationException("Tried to set master to a child of this renderer!");
+
             if (_master is { Disposed: false })
             {
                 try
@@ -728,5 +731,23 @@ internal sealed class MidiRenderer : IMidiRenderer
 
         _synth?.Dispose();
         _player?.Dispose();
+    }
+
+    /// <summary>
+    /// Check that a given renderer is not already a child of this renderer, i.e. it would introduce a cycle if set as master of this renderer.
+    /// </summary>
+    private bool CheckMasterCycle(IMidiRenderer? otherRenderer)
+    {
+        // Doesn't inside drift, cringe.
+
+        while (otherRenderer != null)
+        {
+            if (otherRenderer == this)
+                return true;
+
+            otherRenderer = otherRenderer.Master;
+        }
+
+        return false;
     }
 }

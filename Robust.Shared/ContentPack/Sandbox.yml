@@ -497,6 +497,23 @@ Types:
     DebuggerVisualizerAttribute: { All: True }
     Stopwatch: { All: True }
   System.Globalization:
+  # all the calendars are here, screw making our own.
+    Calendar: { All: True }
+    ChineseLunisolarCalendar: { All: True }
+    GregorianCalendar: { All: True }
+    HebrewCalendar: { All: True }
+    HijriCalendar: { All: True }
+    JapaneseCalendar: { All: True }
+    JapaneseLunisolarCalendar:  { All: True }
+    JulianCalendar: { All: True }
+    KoreanCalendar: { All: True }
+    KoreanLunisolarCalendar: { All: True }
+    PersianCalendar: { All: True }
+    TaiwanCalendar: { All: True }
+    TaiwanLunisolarCalendar: { All: True }
+    ThaiBuddhistCalendar: { All: True }
+    UmAlQuraCalendar: { All: True }
+ #end calendars
     CompareOptions: { }
     CultureInfo: { All: True }
     DateTimeStyles: { All: True } # Enum
@@ -896,6 +913,7 @@ Types:
   System.Threading:
     CancellationToken: { All: True }
     CancellationTokenSource: { All: True }
+    CancellationTokenRegistration: { All: True }
     Interlocked: { All: True }
     Monitor: { All: True }
   System.Web:
@@ -1071,6 +1089,7 @@ Types:
     DateTime: { All: True }
     DateTimeKind: { } # Enum
     DateTimeOffset: { All: True }
+    DayOfWeek: { } # Enum
     Decimal: { All: True }
     Delegate:
       Methods:

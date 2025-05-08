@@ -30,12 +30,12 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using JetBrains.Annotations;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
@@ -113,10 +113,7 @@ public abstract partial class SharedPhysicsSystem
 #if DEBUG
             contact._debugPhysics = _debugPhysicsSystem;
 #endif
-            contact.Manifold = new Manifold
-            {
-                Points = new ManifoldPoint[2]
-            };
+            contact.Manifold = new Manifold();
 
             return contact;
         }
@@ -427,6 +424,12 @@ public abstract partial class SharedPhysicsSystem
             var xformA = _xformQuery.GetComponent(uidA);
             var xformB = _xformQuery.GetComponent(uidB);
 
+            if (xformA.MapID == MapId.Nullspace || xformB.MapID == MapId.Nullspace)
+            {
+                DestroyContact(contact);
+                continue;
+            }
+
             // Is this contact flagged for filtering?
             if ((contact.Flags & ContactFlags.Filter) != 0x0)
             {
@@ -664,8 +667,8 @@ public abstract partial class SharedPhysicsSystem
             var aUid = contact.EntityA;
             var bUid = contact.EntityB;
 
-            SetAwake(aUid, bodyA, true);
-            SetAwake(bUid, bodyB, true);
+            SetAwake((aUid, bodyA), true);
+            SetAwake((bUid, bodyB), true);
         }
 
         ArrayPool<bool>.Shared.Return(wake);
@@ -791,7 +794,7 @@ public abstract partial class SharedPhysicsSystem
         if (!PhysicsQuery.Resolve(entity.Owner, ref entity.Comp))
             return;
 
-        _broadphase.RegenerateContacts(entity.Owner, entity.Comp);
+        _broadphase.RegenerateContacts(entity);
     }
 
     /// <summary>

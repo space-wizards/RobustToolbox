@@ -147,7 +147,7 @@ namespace Robust.Shared.GameObjects
         ///     The current lifetime stage of this entity. You can use this to check
         ///     if the entity is initialized or being deleted.
         /// </summary>
-        [ViewVariables]
+        [ViewVariables, Access(typeof(EntityManager), Other = AccessPermissions.ReadExecute)]
         public EntityLifeStage EntityLifeStage { get; internal set; }
 
         public MetaDataFlags Flags
@@ -238,6 +238,11 @@ namespace Robust.Shared.GameObjects
         /// a grid or map.
         /// </summary>
         PvsPriority = 1 << 4,
+
+        /// <summary>
+        /// If set, transform system will raise events directed at this entity whenever the GridUid or MapUid are modified.
+        /// </summary>
+        ExtraTransformEvents = 1 << 5,
     }
 
     /// <summary>

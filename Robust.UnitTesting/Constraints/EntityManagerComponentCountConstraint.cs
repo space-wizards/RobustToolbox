@@ -1,22 +1,34 @@
-using System;
 using System.Linq;
 using NUnit.Framework.Constraints;
 using Robust.Shared.GameObjects;
 
 namespace Robust.UnitTesting.Constraints;
 
-public sealed class EntityManagerComponentCountConstraint<T>(int count) : Constraint
+public sealed class EntityManagerComponentCountConstraint<T>(IConstraint baseConstraint) : PrefixConstraint(baseConstraint, "entity count")
     where T : IComponent
 {
-    private readonly int _count = count;
-
-    public override string Description => $"{_count} entities";
-
     public override ConstraintResult ApplyTo<TActual>(TActual actual)
     {
         var entMan = ConstraintUtils.RequireActual<IEntityManager>(actual);
         var allComps = entMan.AllComponents<T>();
         var entsWithComp = allComps.Select(e => entMan.ToPrettyString(e.Uid));
-        return new ConstraintResult(this, $"{allComps.Length} entities: {string.Join(", ", entsWithComp)}");
+        var baseResult = BaseConstraint.ApplyTo(allComps.Length);
+        return new EntityManagerComponentCountConstraintResult(this, baseResult);
+    }
+
+    protected override string GetStringRepresentation()
+    {
+        return $"<entities with {nameof(T)} count {BaseConstraint}>";
+    }
+}
+
+internal sealed class EntityManagerComponentCountConstraintResult(IConstraint constraint, ConstraintResult baseResult)
+    : ConstraintResult(constraint, baseResult.ActualValue, baseResult.Status)
+{
+    private readonly ConstraintResult _baseResult = baseResult;
+
+    public override void WriteAdditionalLinesTo(MessageWriter writer)
+    {
+        _baseResult.WriteAdditionalLinesTo(writer);
     }
 }

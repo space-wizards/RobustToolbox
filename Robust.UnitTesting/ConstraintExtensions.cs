@@ -3,6 +3,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.UnitTesting.Constraints;
+using Robust.UnitTesting.Operators;
 
 namespace Robust.UnitTesting;
 
@@ -92,11 +93,9 @@ public static class ConstraintExtensions
     }
 
     /// <inheritdoc cref="Has.ComponentCount{T}(int)"/>
-    public static EntityManagerComponentCountConstraint<T> ComponentCount<T>(this ConstraintExpression expression, int count)
+    public static ResolvableConstraintExpression ComponentCount<T>(this ConstraintExpression expression)
         where T : IComponent
     {
-        var constraint = new EntityManagerComponentCountConstraint<T>(count);
-        expression.Append(constraint);
-        return constraint;
+        return expression.Append(new ComponentCountOperator<T>());
     }
 }

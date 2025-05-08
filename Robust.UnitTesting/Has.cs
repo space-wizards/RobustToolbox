@@ -1,6 +1,8 @@
+using NUnit.Framework.Constraints;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Prototypes;
 using Robust.UnitTesting.Constraints;
+using Robust.UnitTesting.Operators;
 
 namespace Robust.UnitTesting;
 
@@ -29,9 +31,6 @@ public sealed class Has : NUnit.Framework.Has
     public static EntityComponentConstraint<T> Component<T>(IEntityManager entityManager)
         where T : IComponent, new() => new(entityManager);
 
-    /// <summary>
-    /// Returns a constraint that tests if the number of entities with a <typeparamref name="T"/> is the expected count.
-    /// </summary>
-    public static EntityManagerComponentCountConstraint<T> ComponentCount<T>(int count)
-        where T : IComponent => new(count);
+    public static ResolvableConstraintExpression ComponentCount<T>()
+        where T : IComponent => new ConstraintExpression().Append(new ComponentCountOperator<T>());
 }

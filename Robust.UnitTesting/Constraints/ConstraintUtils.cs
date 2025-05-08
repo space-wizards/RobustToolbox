@@ -13,6 +13,7 @@ internal static class ConstraintUtils
             return cast;
         throw new ArgumentException($"Expected {typeof(T)} but was {actual?.GetType()}");
     }
+
     public static EntityUid GetEntityUid(object? actual)
     {
         EntityUid? uid = null;

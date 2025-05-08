@@ -1,3 +1,4 @@
+using System.Text;
 using Robust.Shared.Log;
 using EmmyLua.LanguageServer.Framework.Protocol.Capabilities.Client.ClientCapabilities;
 using EmmyLua.LanguageServer.Framework.Protocol.Capabilities.Server;
@@ -39,16 +40,38 @@ public class TextDocumentHandler : TextDocumentHandlerBase
     {
         _logger.Info($"DidChangeTextDocument {request.TextDocument.Uri}");
 
-        if (request.ContentChanges.Count != 1)
-            throw new NotImplementedException();
+        var content = _cache.GetDocumentContents(request.TextDocument.Uri);
 
-        var change = request.ContentChanges[0];
-        if (change.Range is not null || change.RangeLength is not null)
-            throw new NotImplementedException();
+        foreach (var change in request.ContentChanges)
+        {
+            if (change.Range is null && change.RangeLength is null)
+            {
+                // This is a full content update
+                content = change.Text;
+                continue;
+            }
 
-        _cache.UpdateDocument(request.TextDocument.Uri, request.TextDocument.Version, change.Text);
+            if (change.Range is not {} range)
+            {
+                _logger.Error("Missing range for incremental change");
+                continue;
+            }
 
-        // var text = change.Text;
+            // Incremental update
+            _logger.Error($"Got incremental update: {range} => {change.Text}");
+
+            var start = PosToIndex(range.Start, content);
+            var end = PosToIndex(range.End, content);
+
+            var writer = new StringBuilder();
+            writer.Append(content.Substring(0, start));
+            writer.Append(change.Text);
+            writer.Append(content.Substring(end));
+            content = writer.ToString();
+        }
+
+        _cache.UpdateDocument(request.TextDocument.Uri, request.TextDocument.Version, content);
+
         return Task.CompletedTask;
     }
 
@@ -75,11 +98,25 @@ public class TextDocumentHandler : TextDocumentHandlerBase
     {
         serverCapabilities.TextDocumentSync = new TextDocumentSyncOptions
         {
-            Change = TextDocumentSyncKind.Full,
+            Change = TextDocumentSyncKind.Incremental,
             OpenClose = true,
             WillSave = true,
             WillSaveWaitUntil = true,
             Save = true
         };
+    }
+
+    private static int PosToIndex(Position pos, string content)
+    {
+        var index = 0;
+
+        for (var i = 0; i < pos.Line; ++i)
+        {
+            index += content.Substring(index).IndexOf('\n') + 1;
+        }
+
+        index += pos.Character;
+
+        return index;
     }
 }

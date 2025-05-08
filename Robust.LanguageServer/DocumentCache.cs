@@ -12,19 +12,17 @@ namespace Robust.LanguageServer;
 
 internal sealed class DocumentCache : IPostInjectInit
 {
-    [Dependency] private readonly Parser _parser = null!;
     [Dependency] private readonly IPrototypeManagerInternal _protoMan = null!;
 
     private ISawmill _logger = default!;
 
     // This should really store the parsed document
     // but for now we’ll just hold the string contents
-    private Dictionary<Uri, string> _documents = new();
+    private readonly Dictionary<Uri, string> _documents = new();
 
-    // FIXME The string key is redundant, we have lookup by document URI
-    private Dictionary<Uri, HashSet<ErrorNode>> _errors = new();
-    private Dictionary<Uri, List<(ValueDataNode, FieldDefinition)>> _fields = new();
-    private Dictionary<Uri, List<DocumentSymbol>> _symbols = new();
+    private readonly Dictionary<Uri, HashSet<ErrorNode>> _errors = new();
+    private readonly Dictionary<Uri, List<(ValueDataNode, FieldDefinition)>> _fields = new();
+    private readonly Dictionary<Uri, List<DocumentSymbol>> _symbols = new();
 
     public delegate void DocumentChangedHandler(Uri uri, int documentVersion);
 

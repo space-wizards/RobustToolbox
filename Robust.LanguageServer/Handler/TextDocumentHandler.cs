@@ -100,8 +100,8 @@ public class TextDocumentHandler : TextDocumentHandlerBase
         {
             Change = TextDocumentSyncKind.Incremental,
             OpenClose = true,
-            WillSave = true,
-            WillSaveWaitUntil = true,
+            WillSave = false,
+            WillSaveWaitUntil = false,
             Save = true
         };
     }

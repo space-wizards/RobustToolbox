@@ -843,7 +843,7 @@ public abstract partial class SharedMapSystem
             return;
 
         var modified = new HashSet<MapChunk>(Math.Max(1, tiles.Count / grid.ChunkSize));
-        var tileChanges = new ValueList<TileChangedEntry>();
+        var tileChanges = new ValueList<TileChangedEntry>(tiles.Count);
 
         // Suppress sending out events for each tile changed
         // We're going to send them all out together at the end

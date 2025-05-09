@@ -362,9 +362,9 @@ namespace Robust.Client.Placement
             foreach (var change in args.Changes)
             {
                 var coords = Maps.GridTileToLocal(
-                change.NewTile.GridUid,
+                args.Entity,
                 args.Entity.Comp,
-                change.NewTile.GridIndices);
+                change.GridIndices);
 
                 _pendingTileChanges.RemoveAll(c => c.Item1 == coords);
             }

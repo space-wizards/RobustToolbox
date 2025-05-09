@@ -178,13 +178,22 @@ namespace Robust.Shared.GameObjects
     [ByRefEvent]
     public readonly record struct TileChangedEvent
     {
+        /// <inheritdoc cref="TileChangedEvent(Entity{MapGridComponent}, Tile, Tile, Vector2i, Vector2i)"/>
+        public TileChangedEvent(Entity<MapGridComponent> entity, TileRef newTile, Tile oldTile, Vector2i chunkIndex)
+            : this(entity, newTile.Tile, oldTile, chunkIndex, newTile.GridIndices) { }
+
         /// <summary>
         /// Creates a new instance of this event for a single changed tile.
         /// </summary>
-        public TileChangedEvent(Entity<MapGridComponent> entity, TileRef newTile, Tile oldTile, Vector2i chunkIndex)
+        /// <param name="entity">The grid entity containing the changed tile(s)</param>
+        /// <param name="newTile">New tile that replaced the old one.</param>
+        /// <param name="oldTile">Old tile that was replaced.</param>
+        /// <param name="chunkIndex">The index of the grid-chunk that this tile belongs to.</param>
+        /// <param name="gridIndices">The positional indices of this tile on the grid.</param>
+        public TileChangedEvent(Entity<MapGridComponent> entity, Tile newTile, Tile oldTile, Vector2i chunkIndex, Vector2i gridIndices)
         {
             Entity = entity;
-            Changes = [new TileChangedEntry(newTile, oldTile, chunkIndex)];
+            Changes = [new TileChangedEntry(newTile, oldTile, chunkIndex, gridIndices)];
         }
 
         /// <summary>
@@ -213,11 +222,12 @@ namespace Robust.Shared.GameObjects
     /// <param name="NewTile">New tile that replaced the old one.</param>
     /// <param name="OldTile">Old tile that was replaced.</param>
     /// <param name="ChunkIndex">The index of the grid-chunk that this tile belongs to.</param>
-    public readonly record struct TileChangedEntry(TileRef NewTile, Tile OldTile, Vector2i ChunkIndex)
+    /// <param name="GridIndices">The positional indices of this tile on the grid.</param>
+    public readonly record struct TileChangedEntry(Tile NewTile, Tile OldTile, Vector2i ChunkIndex, Vector2i GridIndices)
     {
         /// <summary>
         /// Was the tile previously empty or is it now empty.
         /// </summary>
-        public bool EmptyChanged => OldTile.IsEmpty != NewTile.Tile.IsEmpty;
+        public bool EmptyChanged => OldTile.IsEmpty != NewTile.IsEmpty;
     }
 }

@@ -868,8 +868,7 @@ public abstract partial class SharedMapSystem
             if (SetChunkTile(uid, grid, chunk, (ushort)offset.X, (ushort)offset.Y, tile, out var oldTile))
             {
                 modified.Add(chunk);
-                var newTile = new TileRef(uid, gridIndices, tile);
-                tileChanges.Add(new TileChangedEntry(newTile, oldTile, offset));
+                tileChanges.Add(new TileChangedEntry(tile, oldTile, offset, gridIndices));
             }
         }
 

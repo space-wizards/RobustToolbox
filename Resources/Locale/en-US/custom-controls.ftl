@@ -9,6 +9,7 @@ entity-spawn-window-override-menu-tooltip = Override placement
 ## TileSpawnWindow
 
 tile-spawn-window-title = Place Tiles
+tile-spawn-window-mirror-button-text = Mirror Tiles
 
 ## Console
 

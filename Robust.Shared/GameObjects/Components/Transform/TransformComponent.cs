@@ -56,29 +56,15 @@ namespace Robust.Shared.GameObjects
         internal BroadphaseData? Broadphase;
 
         internal bool MatricesDirty = true;
-        private Matrix3x2 _localMatrix = Matrix3x2.Identity;
-        private Matrix3x2 _invLocalMatrix = Matrix3x2.Identity;
+        internal Matrix3x2 _localMatrix = Matrix3x2.Identity;
+        internal Matrix3x2 _invLocalMatrix = Matrix3x2.Identity;
 
         // these should just be system methods, but existing component functions like InvWorldMatrix still rely on
         // getting these so those have to be fully ECS-ed first.
-        public Matrix3x2 LocalMatrix
-        {
-            get
-            {
-                if (MatricesDirty)
-                    RebuildMatrices();
-                return _localMatrix;
-            }
-        }
-        public Matrix3x2 InvLocalMatrix
-        {
-            get
-            {
-                if (MatricesDirty)
-                    RebuildMatrices();
-                return _invLocalMatrix;
-            }
-        }
+        [Obsolete("TransformComponent.LocalMatrix is obsolete, please use SharedTransformSystem.GetLocalMatrix")]
+        public Matrix3x2 LocalMatrix => _entMan.System<SharedTransformSystem>().GetLocalMatrix(this);
+        [Obsolete("TransformComponent.InvLocalMatrix is obsolete, please use SharedTransformSystem.GetInvLocalMatrix")]
+        public Matrix3x2 InvLocalMatrix => _entMan.System<SharedTransformSystem>().GetInvLocalMatrix(this);
 
         // used for lerping
 
@@ -129,17 +115,12 @@ namespace Robust.Shared.GameObjects
         ///     Disables or enables to ability to locally rotate the entity. When set it removes any local rotation.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
+
         public bool NoLocalRotation
         {
             get => _noLocalRotation;
-            set
-            {
-                if (value)
-                    LocalRotation = Angle.Zero;
-
-                _noLocalRotation = value;
-                _entMan.Dirty(Owner, this);
-            }
+            [Obsolete("TransformComponent.NoLocalRotation setter is obsolete, please use SharedTransformSystem.SetNoLocalRotation")]
+            set { _entMan.System<SharedTransformSystem>().SetNoLocalRotation((Owner, this), value); }
         }
 
         /// <summary>
@@ -150,25 +131,8 @@ namespace Robust.Shared.GameObjects
         public Angle LocalRotation
         {
             get => _localRotation;
-            set
-            {
-                if(_noLocalRotation)
-                    return;
-
-                if (_localRotation.EqualsApprox(value))
-                    return;
-
-                var oldRotation = _localRotation;
-                _localRotation = value;
-                var meta = _entMan.GetComponent<MetaDataComponent>(Owner);
-                _entMan.Dirty(Owner, this, meta);
-                MatricesDirty = true;
-
-                if (!Initialized)
-                    return;
-
-                _entMan.System<SharedTransformSystem>().RaiseMoveEvent((Owner, this, meta), _parent, _localPosition, oldRotation, MapUid);
-            }
+            [Obsolete("TransformComponent.LocalRotation setter is obsolete, please use SharedTransformSystem.SetLocalRotation")]
+            set { _entMan.System<SharedTransformSystem>().SetLocalRotationNoLerp(Owner, value, this); }
         }
 
         /// <summary>
@@ -178,30 +142,8 @@ namespace Robust.Shared.GameObjects
         [Obsolete("Use the system method instead")]
         public Angle WorldRotation
         {
-            get
-            {
-                var parent = _parent;
-                var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
-                var rotation = _localRotation;
-
-                while (parent.IsValid())
-                {
-                    var parentXform = xformQuery.GetComponent(parent);
-                    rotation += parentXform._localRotation;
-                    parent = parentXform.ParentUid;
-                }
-
-                return rotation;
-            }
-            set
-            {
-                if (NoLocalRotation)
-                    return;
-
-                var current = WorldRotation;
-                var diff = value - current;
-                LocalRotation += diff;
-            }
+            get => _entMan.System<SharedTransformSystem>().GetWorldRotation(this);
+            set { _entMan.System<SharedTransformSystem>().SetWorldRotationNoLerp((Owner, this), value); }
         }
 
         // lazy VV convenience variable.
@@ -217,53 +159,13 @@ namespace Robust.Shared.GameObjects
         ///     Matrix for transforming points from local to world space.
         /// </summary>
         [Obsolete("Use the system method instead")]
-        public Matrix3x2 WorldMatrix
-        {
-            get
-            {
-                var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
-                var parent = _parent;
-                var myMatrix = LocalMatrix;
-
-                while (parent.IsValid())
-                {
-                    var parentXform = xformQuery.GetComponent(parent);
-                    var parentMatrix = parentXform.LocalMatrix;
-                    parent = parentXform.ParentUid;
-
-                    var result = Matrix3x2.Multiply(myMatrix, parentMatrix);
-                    myMatrix = result;
-                }
-
-                return myMatrix;
-            }
-        }
+        public Matrix3x2 WorldMatrix => _entMan.System<SharedTransformSystem>().GetWorldMatrix(this);
 
         /// <summary>
         ///     Matrix for transforming points from world to local space.
         /// </summary>
         [Obsolete("Use the system method instead")]
-        public Matrix3x2 InvWorldMatrix
-        {
-            get
-            {
-                var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
-                var parent = _parent;
-                var myMatrix = InvLocalMatrix;
-
-                while (parent.IsValid())
-                {
-                    var parentXform = xformQuery.GetComponent(parent);
-                    var parentMatrix = parentXform.InvLocalMatrix;
-                    parent = parentXform.ParentUid;
-
-                    var result = Matrix3x2.Multiply(parentMatrix, myMatrix);
-                    myMatrix = result;
-                }
-
-                return myMatrix;
-            }
-        }
+        public Matrix3x2 InvWorldMatrix => _entMan.System<SharedTransformSystem>().GetInvWorldMatrix(this);
 
         /// <summary>
         ///     Current position offset of the entity relative to the world.
@@ -274,31 +176,8 @@ namespace Robust.Shared.GameObjects
         [Obsolete("Use the system method instead")]
         public Vector2 WorldPosition
         {
-            get
-            {
-                if (_parent.IsValid())
-                {
-                    // parent coords to world coords
-                    return Vector2.Transform(_localPosition, _entMan.GetComponent<TransformComponent>(ParentUid).WorldMatrix);
-                }
-                else
-                {
-                    return Vector2.Zero;
-                }
-            }
-            set
-            {
-                if (!_parent.IsValid())
-                {
-                    DebugTools.Assert("Parent is invalid while attempting to set WorldPosition - did you try to move root node?");
-                    return;
-                }
-
-                // world coords to parent coords
-                var newPos = Vector2.Transform(value, _entMan.GetComponent<TransformComponent>(ParentUid).InvWorldMatrix);
-
-                LocalPosition = newPos;
-            }
+            get => _entMan.System<SharedTransformSystem>().GetWorldPosition(this);
+            set { _entMan.System<SharedTransformSystem>().SetWorldPosition((Owner, this), value); }
         }
 
         /// <summary>
@@ -322,7 +201,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         [Obsolete("Use TransformSystem.GetMapCoordinates")]
-        public MapCoordinates MapPosition => new(WorldPosition, MapID);
+        public MapCoordinates MapPosition => _entMan.System<SharedTransformSystem>().GetMapCoordinates(this);
 
         /// <summary>
         ///     Local offset of this entity relative to its parent
@@ -333,28 +212,8 @@ namespace Robust.Shared.GameObjects
         public Vector2 LocalPosition
         {
             get => _localPosition;
-            [Obsolete("Use the system method instead")]
-            set
-            {
-                if(Anchored)
-                    return;
-
-                if (_localPosition.EqualsApprox(value))
-                    return;
-
-                var oldParent = _parent;
-                var oldPos = _localPosition;
-
-                _localPosition = value;
-                var meta = _entMan.GetComponent<MetaDataComponent>(Owner);
-                _entMan.Dirty(Owner, this, meta);
-                MatricesDirty = true;
-
-                if (!Initialized)
-                    return;
-
-                _entMan.System<SharedTransformSystem>().RaiseMoveEvent((Owner, this, meta), oldParent, oldPos, _localRotation, MapUid);
-            }
+            [Obsolete("TransformComponent.LocalPosition setter is obsolete, please use SharedTransformSystem.SetLocalPositionNoLerp")]
+            set { _entMan.System<SharedTransformSystem>().SetLocalPositionNoLerp(Owner, value, this); }
         }
 
         /// <summary>
@@ -365,25 +224,7 @@ namespace Robust.Shared.GameObjects
         {
             get => _anchored;
             [Obsolete("Use the SharedTransformSystem.AnchorEntity/Unanchor methods instead.")]
-            set
-            {
-                // This will be set again when the transform initializes, actually anchoring it.
-                if (!Initialized)
-                {
-                    _anchored = value;
-                }
-                else if (value && !_anchored && _mapManager.TryFindGridAt(MapPosition, out _, out var grid))
-                {
-                    _anchored = _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AnchorEntity(Owner, this, grid);
-                }
-                else if (!value && _anchored)
-                {
-                    // An anchored entity is always parented to the grid.
-                    // If Transform.Anchored is true in the prototype but the entity was not spawned with a grid as the parent,
-                    // then this will be false.
-                    _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().Unanchor(Owner, this);
-                }
-            }
+            set { _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetAnchor((Owner, this), value); }
         }
 
         public TransformChildrenEnumerator ChildEnumerator => new(_children.GetEnumerator());
@@ -413,118 +254,54 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         [Obsolete("Use the system method instead")]
         public (Vector2 WorldPosition, Angle WorldRotation) GetWorldPositionRotation()
-        {
-            // Worldmatrix needs calculating anyway for worldpos so we'll just drop it.
-            var (worldPos, worldRot, _) = GetWorldPositionRotationMatrix();
-            return (worldPos, worldRot);
-        }
+            => _entMan.System<SharedTransformSystem>().GetWorldPositionRotation(this);
 
         /// <summary>
         /// Get the WorldPosition, WorldRotation, and WorldMatrix of this entity faster than each individually.
         /// </summary>
         [Obsolete("Use the system method instead")]
-        public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 WorldMatrix) GetWorldPositionRotationMatrix(EntityQuery<TransformComponent> xforms)
-        {
-            var parent = _parent;
-            var worldRot = _localRotation;
-            var worldMatrix = LocalMatrix;
-
-            // By doing these all at once we can elide multiple IsValid + GetComponent calls
-            while (parent.IsValid())
-            {
-                var xform = xforms.GetComponent(parent);
-                worldRot += xform.LocalRotation;
-                var parentMatrix = xform.LocalMatrix;
-                var result = Matrix3x2.Multiply(worldMatrix, parentMatrix);
-                worldMatrix = result;
-                parent = xform.ParentUid;
-            }
-
-            var worldPosition = worldMatrix.Translation;
-
-            return (worldPosition, worldRot, worldMatrix);
-        }
+        public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 WorldMatrix) GetWorldPositionRotationMatrix(EntityQuery<TransformComponent> _)
+            => _entMan.System<SharedTransformSystem>().GetWorldPositionRotationMatrix(this);
 
         /// <summary>
         /// Get the WorldPosition, WorldRotation, and WorldMatrix of this entity faster than each individually.
         /// </summary>
         [Obsolete("Use the system method instead")]
         public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 WorldMatrix) GetWorldPositionRotationMatrix()
-        {
-            var xforms = _entMan.GetEntityQuery<TransformComponent>();
-            return GetWorldPositionRotationMatrix(xforms);
-        }
+            => _entMan.System<SharedTransformSystem>().GetWorldPositionRotationMatrix(this);
 
         /// <summary>
         /// Get the WorldPosition, WorldRotation, and InvWorldMatrix of this entity faster than each individually.
         /// </summary>
         [Obsolete("Use the system method instead")]
-        public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 InvWorldMatrix) GetWorldPositionRotationInvMatrix(EntityQuery<TransformComponent> xformQuery)
-        {
-            var (worldPos, worldRot, _, invWorldMatrix) = GetWorldPositionRotationMatrixWithInv(xformQuery);
-            return (worldPos, worldRot, invWorldMatrix);
-        }
+        public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 InvWorldMatrix) GetWorldPositionRotationInvMatrix(EntityQuery<TransformComponent> _)
+            => _entMan.System<SharedTransformSystem>().GetWorldPositionRotationInvMatrix(this);
 
         /// <summary>
         /// Get the WorldPosition, WorldRotation, WorldMatrix, and InvWorldMatrix of this entity faster than each individually.
         /// </summary>
         [Obsolete("Use the system method instead")]
         public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 WorldMatrix, Matrix3x2 InvWorldMatrix) GetWorldPositionRotationMatrixWithInv()
-        {
-            var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
-            return GetWorldPositionRotationMatrixWithInv(xformQuery);
-        }
+            => _entMan.System<SharedTransformSystem>().GetWorldPositionRotationMatrixWithInv(this);
 
         /// <summary>
         /// Get the WorldPosition, WorldRotation, WorldMatrix, and InvWorldMatrix of this entity faster than each individually.
         /// </summary>
         [Obsolete("Use the system method instead")]
-        public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 WorldMatrix, Matrix3x2 InvWorldMatrix) GetWorldPositionRotationMatrixWithInv(EntityQuery<TransformComponent> xformQuery)
-        {
-            var parent = _parent;
-            var worldRot = _localRotation;
-            var invMatrix = InvLocalMatrix;
-            var worldMatrix = LocalMatrix;
+        public (Vector2 WorldPosition, Angle WorldRotation, Matrix3x2 WorldMatrix, Matrix3x2 InvWorldMatrix) GetWorldPositionRotationMatrixWithInv(EntityQuery<TransformComponent> _)
+            => _entMan.System<SharedTransformSystem>().GetWorldPositionRotationMatrixWithInv(this);
 
-            // By doing these all at once we can avoid multiple IsValid + GetComponent calls
-            while (parent.IsValid())
-            {
-                var xform = xformQuery.GetComponent(parent);
-                worldRot += xform.LocalRotation;
-
-                var parentMatrix = xform.LocalMatrix;
-                var result = Matrix3x2.Multiply(worldMatrix, parentMatrix);
-                worldMatrix = result;
-
-                var parentInvMatrix = xform.InvLocalMatrix;
-                var invResult = Matrix3x2.Multiply(parentInvMatrix, invMatrix);
-                invMatrix = invResult;
-
-                parent = xform.ParentUid;
-            }
-
-            var worldPosition = worldMatrix.Translation;
-
-            return (worldPosition, worldRot, worldMatrix, invMatrix);
-        }
-
+        [Obsolete("use the system method instead")]
         public void RebuildMatrices()
         {
-            MatricesDirty = false;
-
-            if (!_parent.IsValid()) // Root Node
-            {
-                _localMatrix = Matrix3x2.Identity;
-                _invLocalMatrix = Matrix3x2.Identity;
-            }
-
-            _localMatrix = Matrix3Helpers.CreateTransform(_localPosition, _localRotation);
-            _invLocalMatrix = Matrix3Helpers.CreateInverseTransform(_localPosition, _localRotation);
+            _entMan.System<SharedTransformSystem>().RebuildMatrices(this);
         }
 
         public string GetDebugString()
         {
-            return $"pos/rot/wpos/wrot: {Coordinates}/{LocalRotation}/{WorldPosition}/{WorldRotation}";
+            var xformSys = _entMan.System<SharedTransformSystem>();
+            var (wpos, wrot) = xformSys.GetWorldPositionRotation(this);
+            return $"pos/rot/wpos/wrot: {Coordinates}/{LocalRotation}/{wpos}/{wrot}";
         }
     }
 

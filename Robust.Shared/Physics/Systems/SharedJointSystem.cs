@@ -346,7 +346,7 @@ public abstract partial class SharedJointSystem : EntitySystem
         if (!Resolve(uid, ref xform))
             return Vector2.Zero;
 
-        return Physics.Transform.MulT(new Quaternion2D((float) _transform.GetWorldRotation(xform).Theta), worldVector);
+        return Physics.Transform.MulT(new Quaternion2D((float)_transform.GetWorldRotation(xform).Theta), worldVector);
     }
 
     #endregion

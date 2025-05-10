@@ -140,7 +140,7 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
                 for (var i = 0; i < bodies.Length; i++)
                 {
                     var body = bodies[j * columnCount + i];
-                    var worldPos = transformSystem.GetWorldPosition(body);
+                    var worldPos = transformSystem.GetWorldPosition(body.Owner);
 
                     // TODO: Multi-column support but I cbf right now
                     // Can't be more exact as some level of sinking is allowed.
@@ -241,7 +241,7 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
                 for (var i = 0; i < bodies.Length; i++)
                 {
                     var body = bodies[j * columnCount + i];
-                    var worldPos = transformSystem.GetWorldPosition(body);
+                    var worldPos = transformSystem.GetWorldPosition(body.Owner);
 
                     var expectedY = 0.5f + i;
 

@@ -101,7 +101,7 @@ namespace Robust.UnitTesting.Shared.Map
             var uid = entMan.SpawnEntity(null, MapCoordinates.Nullspace);
             var xform = entMan.GetComponent<TransformComponent>(uid);
             Assert.That(xform.Coordinates.Position, Is.EqualTo(Vector2.Zero));
-            xformSys.SetLocalPosition(uid, Vector2.One);
+            xformSys.SetLocalPositionNoLerp(uid, Vector2.One);
             Assert.That(xform.Coordinates.Position, Is.EqualTo(Vector2.Zero));
         }
 
@@ -251,7 +251,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             Assert.That(xformSys.ToMapCoordinates(entityManager.GetComponent<TransformComponent>(newEnt).Coordinates), Is.EqualTo(new MapCoordinates(entPos, mapId)));
 
-            xformSys.SetLocalPosition(gridEnt, entityManager.GetComponent<TransformComponent>(gridEnt).LocalPosition + gridPos);
+            xformSys.SetLocalPositionNoLerp(gridEnt, entityManager.GetComponent<TransformComponent>(gridEnt).LocalPosition + gridPos);
 
             Assert.That(xformSys.ToMapCoordinates(entityManager.GetComponent<TransformComponent>(newEnt).Coordinates), Is.EqualTo(new MapCoordinates(entPos + gridPos, mapId)));
         }
@@ -271,12 +271,12 @@ namespace Robust.UnitTesting.Shared.Map
 
             Assert.That(xformSys.WithEntityId(newEntXform.Coordinates, mapEnt).Position, Is.EqualTo(Vector2.Zero));
 
-            xformSys.SetLocalPosition(newEnt, Vector2.One);
+            xformSys.SetLocalPositionNoLerp(newEnt, Vector2.One);
 
             Assert.That(newEntXform.Coordinates.Position, Is.EqualTo(Vector2.One));
             Assert.That(xformSys.WithEntityId(newEntXform.Coordinates, mapEnt).Position, Is.EqualTo(Vector2.One));
 
-            xformSys.SetLocalPosition(gridEnt, Vector2.One);
+            xformSys.SetLocalPositionNoLerp(gridEnt, Vector2.One);
 
             Assert.That(newEntXform.Coordinates.Position, Is.EqualTo(Vector2.One));
             Assert.That(xformSys.WithEntityId(newEntXform.Coordinates, mapEnt).Position, Is.EqualTo(new Vector2(2, 2)));
@@ -288,7 +288,7 @@ namespace Robust.UnitTesting.Shared.Map
             Assert.That(xformSys.WithEntityId(newEntTwoXform.Coordinates, mapEnt).Position, Is.EqualTo(xformSys.WithEntityId(newEntXform.Coordinates, mapEnt).Position));
             Assert.That(xformSys.WithEntityId(newEntTwoXform.Coordinates, gridEnt).Position, Is.EqualTo(newEntXform.Coordinates.Position));
 
-            xformSys.SetLocalPosition(newEntTwo, -Vector2.One);
+            xformSys.SetLocalPositionNoLerp(newEntTwo, -Vector2.One);
 
             Assert.That(newEntTwoXform.Coordinates.Position, Is.EqualTo(-Vector2.One));
             Assert.That(xformSys.WithEntityId(newEntTwoXform.Coordinates, mapEnt).Position, Is.EqualTo(Vector2.One));

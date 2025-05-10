@@ -260,7 +260,7 @@ namespace Robust.Shared.GameObjects
             return true;
         }
 
-        public void RaiseMoveEvent(
+        internal void RaiseMoveEvent(
             Entity<TransformComponent, MetaDataComponent> ent,
             EntityUid oldParent,
             Vector2 oldPosition,

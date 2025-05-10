@@ -35,11 +35,38 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 257.0.0
+
+### Breaking changes
+
 * The client will now automatically pause any entities that leave their PVS range.
+* Contacts for terminating entities no longer raise wake events.
 
 ### New features
 
 * Added `IPrototypeManager.IsIgnored()` for checking whether a given prototype kind has been marked as ignored via `RegisterIgnore()`.
+* Added `PoolManager` & `TestPair` classes to `Robust.UnitTesting`. These classes make it easier to create & use pooled server/client instance pairs in integration tests.
+* Catch NotYamlSerializable DataFields with an analyzer.
+* Optimized RSI preloading and texture atlas creation.
 
 ### Bugfixes
 
@@ -49,10 +76,7 @@ END TEMPLATE-->
 
 * The yaml prototype id serialiser now provides better feedback when trying to validate an id for a prototype kind that has been ignored via `IPrototypeManager.RegisterIgnore()`
 * Several SpriteComponent methods have been marked as obsolete, and should be replaced with new methods in SpriteSystem.
-
-### Internal
-
-*None yet*
+* Rotation events no longer check for grid traversal.
 
 
 ## 256.0.0
@@ -131,7 +155,6 @@ END TEMPLATE-->
 
 * Add CC ND licences to the RGA validator.
 * Add entity spawn prediction and entity deletion prediction. This is currently limited as you are unable to predict interactions with these entities. These are done via the new methods prefixed with "Predicted". You can also manually flag an entity as a predicted spawn with the `FlagPredicted` method which will clean it up when prediction is reset.
-* Added `PoolManager` & `TestPair` classes to `Robust.UnitTesting`. These classes make it easier to create & use pooled server/client instance pairs in integration tests.
 
 ### Bugfixes
 

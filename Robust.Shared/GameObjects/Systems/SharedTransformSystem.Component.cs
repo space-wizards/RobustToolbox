@@ -1269,7 +1269,13 @@ public abstract partial class SharedTransformSystem
         if (!xform.Initialized)
             return;
 
-        RaiseMoveEvent((uid, xform, meta), oldParent, oldPosition, oldRotation, xform.MapUid);
+        RaiseMoveEvent(
+            (uid, xform, meta),
+            oldParent,
+            oldPosition,
+            oldRotation,
+            xform.MapUid,
+            checkTraversal: !oldPosition.Equals(pos));
     }
 
     #endregion

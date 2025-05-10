@@ -22,7 +22,11 @@ public sealed class ParticlesManager
     private Dictionary<EntityUid,ParticleSystem> _particleSystems = new();
     public void FrameUpdate(FrameEventArgs args)
     {
-        Parallel.ForEach(_particleSystems.Values, (ParticleSystem particleSys) => particleSys.FrameUpdate(args));
+        // can't use parallel foreach here because IoC doesn't have context in parallel tasks
+        foreach (var particleSys in _particleSystems.Values)
+        {
+            particleSys.FrameUpdate(args);
+        }
     }
 
     public ParticleSystem CreateParticleSystem(EntityUid entity, ParticleSystemArgs args)

@@ -63,6 +63,22 @@ namespace Robust.Client.GameObjects
         [ViewVariables]
         private Dictionary<object, Layer> _mappedLayers => LayerMap.ToDictionary(x => x.Key, x => Layers[x.Value]);
 
+        // VV convenience variable to examine cached layer order
+        [ViewVariables]
+        private Dictionary<RsiDirection, List<string?>>  _cachedDirectionOrderStatesVV => CachedDirectionLayerOrder.ToDictionary(x => x.Key,
+        x => {
+            List<string?> result = new();
+            foreach (var index in x.Value)
+            {
+                result.Add(Layers[index].ActualState?.StateId.Name);
+            }
+            return result;
+        });
+
+        // VV convenience variable to examine state ids
+        [ViewVariables]
+        private Dictionary<object, string?> _mappedLayersStateVV => LayerMap.ToDictionary(x => x.Key, x => Layers[x.Value].ActualState?.StateId.Name);
+
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Visible
         {
@@ -213,6 +229,34 @@ namespace Robust.Client.GameObjects
         [DataField("sprite", readOnly: true)] private string? rsi;
         [DataField("layers", readOnly: true)] private List<PrototypeLayerData> layerDatums = new();
 
+        /// <summary>
+        /// Dictionary which defines sprite's layers render order relative to direction.
+        /// map key is used to define which layer order specified
+        /// </summary>
+        [DataField("dirOrder", readOnly: true)]
+        private Dictionary<RsiDirection, List<string>> _directionOrderUnparsed = new();
+
+        private Dictionary<RsiDirection, List<object>> _directionOrder = new();
+
+        /// <summary>
+        /// Defines ordering strategy of non-ordered layers.
+        ///     True [default] - they will be first (render under the ordered ones)
+        ///     False - they will be last (rendered onto ordered ones)
+        /// </summary>
+        [DataField("unorderedFirst", readOnly: true)]
+        private bool _unorderedFirst = false;
+
+        /// <summary>
+        /// Kinda optimization bool for not handling unused directions
+        /// </summary>
+        private byte _rsiDirectionTypes = 0;
+
+        /// <summary>
+        /// This flags goes for dividing Dir4 and Dir8 sprites.
+        /// Makes it people friendly to deal with.
+        /// </summary>
+        private RsiDirectionType _maxRsiDirectionType;
+
         [DataField("state", readOnly: true)] private string? state;
         [DataField("texture", readOnly: true)] private string? texture;
 
@@ -279,7 +323,12 @@ namespace Robust.Client.GameObjects
 
         [ViewVariables] private Dictionary<object, int> LayerMap = new();
         [ViewVariables] private bool _layerMapShared;
+
+        // TODO: this is kinda obsolete
         [ViewVariables] internal List<Layer> Layers = new();
+
+        // TODO: check performance
+        [ViewVariables] internal Dictionary<RsiDirection, List<int>> CachedDirectionLayerOrder = new ();
 
         [ViewVariables(VVAccess.ReadWrite)] public uint RenderOrder { get; set; }
 
@@ -338,6 +387,7 @@ namespace Robust.Client.GameObjects
 
                 _layerMapShared = true;
 
+                UpdateOrientationCache();
                 QueueUpdateRenderTree();
                 QueueUpdateIsInert();
             }
@@ -408,6 +458,7 @@ namespace Robust.Client.GameObjects
 
             _layerMapEnsurePrivate();
             LayerMap.Add(key, layer);
+            UpdateOrientationCache();
         }
 
         /// <inheritdoc />
@@ -634,6 +685,7 @@ namespace Robust.Client.GameObjects
                 index = Layers.Count - 1;
             }
 
+            UpdateOrientationCache();
             RebuildBounds();
             QueueUpdateIsInert();
             return index;
@@ -660,6 +712,7 @@ namespace Robust.Client.GameObjects
 
             RebuildBounds();
             QueueUpdateIsInert();
+            UpdateOrientationCache();
         }
 
         public void RemoveLayer(object layerKey)
@@ -682,6 +735,129 @@ namespace Robust.Client.GameObjects
             _bounds = _bounds.Scale(Scale);
             QueueUpdateRenderTree();
         }
+
+        public void UpdateOrientationCache()
+        {
+            // this happened cause of building all in one method
+            if (Layers.Count == 0 || (_directionOrderUnparsed.Count == 0 && _directionOrder.Count == 0))
+                return;
+            // this should be in init/after deserialization
+
+            _directionOrder.Clear();
+            CachedDirectionLayerOrder.Clear();
+            foreach (var (directionKey, unparsedOrder) in _directionOrderUnparsed)
+            {
+                List<object> parsedOrder = new(unparsedOrder.Count);
+                foreach(var unparsed in unparsedOrder)
+                {
+                    parsedOrder.Add(ParseKey(unparsed));
+                }
+                parsedOrder.TrimExcess();
+                _directionOrder.Add(directionKey, parsedOrder);
+            }
+
+            foreach (var layer in Layers)
+            {
+                _rsiDirectionTypes |= ((byte?)layer.ActualState?.RsiDirections) ?? (byte)RsiDirectionType.Dir1;
+            }
+
+            // parameters pre-process
+            // It should not be here. Only if its updated then to sort
+            // foreach (var (_, value) in _directionOrder)
+            // {
+            //     value.Sort();
+            // }
+
+            Dictionary<RsiDirection, List<int>> tempUnorderedLayers = new();
+            Dictionary<RsiDirection, SortedList<int, int>> tempOrderedLayers = new ();
+
+            foreach (var (mappedDirection,_) in _directionOrder)
+            {
+                List<int> unorderedLayers = new(Layers.Count);
+                SortedList<int, int> orderedLayers = new(Layers.Count);
+
+                tempUnorderedLayers.Add(mappedDirection, unorderedLayers);
+                tempOrderedLayers.Add(mappedDirection, orderedLayers);
+            }
+
+            // Make cache section
+            // original order was by Layers, but they were overridden exactly by LayerMap, so...
+            // I need to double check how it worked
+            foreach (var (map, layerIndex) in LayerMap)
+            {
+                var layer = Layers[layerIndex];
+                // that could be removed but I need to think about it
+                _maxRsiDirectionType = layer.ActualState?.RsiDirections > _maxRsiDirectionType ?
+                                        layer.ActualState.RsiDirections : _maxRsiDirectionType;
+
+                DebugTools.Assert(layer is not null);
+
+                foreach (var iterDirection in Enum.GetValues<RsiDirection>())
+                {
+                    // thats THE disaster
+                    if ((_rsiDirectionTypes & (byte)RsiDirectionType.Dir8) == 0 && iterDirection > RsiDirection.West)
+                        continue;
+
+                    var direction = iterDirection.OffsetRsiDir(layer.DirOffset);
+
+                    // it work bad at strings... needs cheking
+
+                    int orderedIndex = _directionOrder.TryGetValue(direction, out var objectOrder) ?
+                                        objectOrder.FindIndex(map.Equals) : -1;
+                                        // objectOrder.BinarySearch(map) : -1;
+
+
+                    if (orderedIndex < 0)
+                    {
+                        tempUnorderedLayers[direction].Add(layerIndex);
+                    }
+                    else
+                    {
+                        // Logger.Debug($"Found match in {orderedIndex} layer map is {map} order map is {objectOrder?[orderedIndex]}.");
+                        tempOrderedLayers[direction].Add(orderedIndex ,layerIndex);
+                    }
+                }
+            }
+
+            // SaveCache section
+            foreach (var (mappedDirection, orderedLayers) in tempOrderedLayers)
+            {
+
+#if DEBUG
+            // I need to double check that it is correct, just to make myself calm
+                int valIndex = 0;
+                int prevKey = -1;
+                foreach (var (key, value) in orderedLayers)
+                {
+                    DebugTools.AssertEqual(value, orderedLayers.Values.ElementAt(valIndex));
+                    DebugTools.Assert(prevKey < key);
+                    valIndex++;
+                    prevKey = key;
+                }
+#endif
+            DebugTools.Assert(tempUnorderedLayers[mappedDirection] is not null);
+            List<int> resultList = new(Layers.Count);
+
+            if (_unorderedFirst)
+            {
+                resultList.AddRange(tempUnorderedLayers[mappedDirection]);
+                resultList.AddRange(orderedLayers.Values);
+            }
+            else
+            {
+                resultList.AddRange(orderedLayers.Values);
+                resultList.AddRange(tempUnorderedLayers[mappedDirection]);
+            }
+
+            resultList.TrimExcess();
+            CachedDirectionLayerOrder.Add(mappedDirection, resultList);
+            }
+
+            // will it clear lists inside? Do I even need to think of it?
+            tempOrderedLayers.Clear();
+            tempUnorderedLayers.Clear();
+        }
+
 
         /// <summary>
         ///     Fills in a layer's values using some <see cref="PrototypeLayerData"/>.
@@ -1333,6 +1509,25 @@ namespace Robust.Client.GameObjects
             var entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, NoRotation ? -eyeRotation : worldRotation - cardinal);
 
             var transformSprite = Matrix3x2.Multiply(LocalMatrix, entityMatrix);
+            // More debugTool assert
+            var directionForCache = Layer.GetDirection(_maxRsiDirectionType, angle);
+            // Think of memory saving if we dont want DirectionOrdering
+            // Also override direction is kinda needed
+            List<int>? layerOrder = _directionOrder.Count == 0 ? null : CachedDirectionLayerOrder[directionForCache];
+
+
+            var listEnumerator = EnumerateLayers(Layers, layerOrder);
+
+            // DebugTools.Assert(layerOrder is null || Layers.Count == layerOrder.Count);
+
+            if (_directionOrder.Count != 0)
+            {
+                // Logger.Debug("Started enumerating layers");
+                foreach (var layerMap in _directionOrder[directionForCache])
+                {
+                    // Logger.Debug($"-- {layerMap}");
+                }
+            }
 
             if (GranularLayersRendering)
             {
@@ -1346,7 +1541,11 @@ namespace Robust.Client.GameObjects
                 entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, -eyeRotation);
                 var transformNoRot = Matrix3x2.Multiply(LocalMatrix, entityMatrix);
 
-                foreach (var layer in Layers) {
+
+                foreach (var layer in listEnumerator)
+                {
+                    DebugTools.Assert(layer is not null);
+
                     switch (layer.RenderingStrategy)
                     {
                         case LayerRenderingStrategy.NoRotation:
@@ -1370,11 +1569,34 @@ namespace Robust.Client.GameObjects
 
             else
             {
-                foreach (var layer in Layers)
+                foreach (var layer in listEnumerator)
                 {
+                    DebugTools.Assert(layer is not null);
+
+                    // if (_directionOrder.Count != 0)
+                    //     Logger.Debug($"---- Layer state is {layer.State}, rsi is {layer.ActualRsi?.Path}, visible status is {layer.Visible}");
+
                     layer.Render(drawingHandle, ref transformSprite, angle, overrideDirection);
                 }
             }
+        }
+
+        // Oh...
+        private static IEnumerable<Layer> EnumerateLayers(List<Layer> layers, List<int>? enumerator)
+        {
+            if (enumerator is null)
+            {
+                foreach (var layer in layers)
+                {
+                    yield return layer;
+                }
+                yield break;
+            }
+
+            foreach (var enumeratorItem in enumerator)
+                yield return layers[enumeratorItem];
+
+            yield break;
         }
 
         public int GetLayerDirectionCount(ISpriteLayer layer)

@@ -17,6 +17,8 @@ namespace Robust.Shared.Player
     {
         private HashSet<ICommonSession> _recipients = new();
 
+        internal FilterExpression? FilterExpression;
+
         private Filter() { }
 
         public bool CheckPrediction { get; private set; } = true;
@@ -104,6 +106,10 @@ namespace Robust.Shared.Player
             IoCManager.Resolve(ref playerMan);
 
             _recipients = new HashSet<ICommonSession>(playerMan.NetworkedSessions);
+            FilterExpression = new FilterExpression
+            {
+                DefaultAllPlayers = true,
+            };
 
             return this;
         }

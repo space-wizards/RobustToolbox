@@ -1,4 +1,4 @@
-﻿# Release notes for RobustToolbox.
+# Release notes for RobustToolbox.
 
 <!--
 NOTE: automatically updated sometimes by version.py.
@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added `IPrototypeManager.IsIgnored()` for checking whether a given prototype kind has been marked as ignored via `RegisterIgnore()`.
 
 ### Bugfixes
 
@@ -47,11 +47,82 @@ END TEMPLATE-->
 
 ### Other
 
+* The yaml prototype id serialiser now provides better feedback when trying to validate an id for a prototype kind that has been ignored via `IPrototypeManager.RegisterIgnore()`
 * Several SpriteComponent methods have been marked as obsolete, and should be replaced with new methods in SpriteSystem.
 
 ### Internal
 
 *None yet*
+
+
+## 256.0.0
+
+### Breaking changes
+
+* `ITypeReaderWriter<TType, TNode>` has been removed due to being unused. Implement `ITypeSerializer<TType, TNode>` instead
+* Moved AsNullable extension methods to the Entity struct.
+
+### New features
+
+* Add DevWindow tab to show all loaded textures.
+* Add Vector2i / bitmask converfsion helpers.
+* Allow texture preload to be skipped for some textures.
+* Check audio file signatures instead of extensions.
+* Add CancellationTokenRegistration to sandbox.
+* Add the ability to serialize TimeSpan from text.
+* Add support for rotated / mirrored tiles.
+
+### Bugfixes
+
+* Fix yaml hot reloading.
+* Fix a linear dictionary lookup in PlacementManager.
+
+### Other
+
+* Make ItemList not run deselection callback on all items if they aren't selected.
+* Cleanup warnings for CS0649 & CS0414.
+
+### Internal
+
+* Move PointLight component states to shared.
+
+
+## 255.1.0
+
+### New features
+
+* The client localisation manager now supports hot-reloading ftl files.
+* TransformSystem can now raise `GridUidChangedEvent` and `MapUidChangedEvent` when a entity's grid or map changes. This event is only raised if the `ExtraTransformEvents` metadata flag is enabled.
+
+### Bugfixes
+
+* Fixed a server crash due to a `NullReferenceException` in PVS system when a player's local entity is also one of their view subscriptions.
+* Fix CompileRobustXamlTask for benchmarks.
+* .ftl files will now hot reload.
+* Fix placementmanager sometimes not clearing.
+
+### Other
+
+* Container events are now documented.
+
+
+## 255.0.0
+
+### Breaking changes
+
+* `RobustIntegrationTest` now pools server/client instances by default. If a custom settings class is provided, it will still disable pooling unless explicitly enabled.
+  * Server/Client instances that are returned to the pool should be disconnected. This might require you to update some tests.
+  * Pooled instances also require you to use `RobustIntegrationTest` methods like `WaitPost()` to ensure the correct thread is used.
+
+### Bugfixes
+
+* Fix `EntityDeserializer` improperly setting entity lifestages when loading a post-mapinit map.
+* Fix `EntityManager.PredictedDeleteEntity()` not deleting pure client-side entities.
+* Fix grid fixtures using a locale dependent id. This could cause some clients to crash/freeze when connected to a server with a different locale.
+
+### Other
+
+* Add logic to block cycles in master MIDI renderers, which could otherwise cause client freezes.
 
 
 ## 254.1.0
@@ -60,6 +131,7 @@ END TEMPLATE-->
 
 * Add CC ND licences to the RGA validator.
 * Add entity spawn prediction and entity deletion prediction. This is currently limited as you are unable to predict interactions with these entities. These are done via the new methods prefixed with "Predicted". You can also manually flag an entity as a predicted spawn with the `FlagPredicted` method which will clean it up when prediction is reset.
+* Added `PoolManager` & `TestPair` classes to `Robust.UnitTesting`. These classes make it easier to create & use pooled server/client instance pairs in integration tests.
 
 ### Bugfixes
 
@@ -79,8 +151,8 @@ END TEMPLATE-->
   * The MappingDataNode class has various helper methods that still accept a ValueDataNode, but these methods are marked as obsolete and may be removed in the future.
   * yaml validators should use `MappingDataNode.GetKeyNode()` when validating mapping keys, so that errors can print node start & end information
 * ValueTuple yaml serialization has changed
-  * Previously they would get serialized into a single mapping with one entry (i.e., `{foo : bar }` 
-  * Now they serialize into a sequence (i.e., `[foo, bar]`
+  * Previously they would get serialized into a single mapping with one entry (i.e., `{foo : bar }`)
+  * Now they serialize into a sequence (i.e., `[foo, bar]`)
   * The ValueTuple serializer will still try to read mappings, but due to the MappingDataNode this may fail if the previously serialized "key" can't be read as a simple string
 
 ### New features

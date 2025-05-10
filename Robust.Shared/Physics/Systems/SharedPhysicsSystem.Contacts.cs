@@ -30,12 +30,12 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using JetBrains.Annotations;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
@@ -424,6 +424,12 @@ public abstract partial class SharedPhysicsSystem
             var xformA = _xformQuery.GetComponent(uidA);
             var xformB = _xformQuery.GetComponent(uidB);
 
+            if (xformA.MapID == MapId.Nullspace || xformB.MapID == MapId.Nullspace)
+            {
+                DestroyContact(contact);
+                continue;
+            }
+
             // Is this contact flagged for filtering?
             if ((contact.Flags & ContactFlags.Filter) != 0x0)
             {
@@ -613,24 +619,6 @@ public abstract partial class SharedPhysicsSystem
         ArrayPool<Contact>.Shared.Return(contacts);
         ArrayPool<ContactStatus>.Shared.Return(status);
         ArrayPool<Vector2>.Shared.Return(worldPoints);
-    }
-
-    private record struct UpdateTreesJob : IRobustJob
-    {
-        public IEntityManager EntManager;
-
-        public void Execute()
-        {
-            var query = EntManager.AllEntityQueryEnumerator<BroadphaseComponent>();
-
-            while (query.MoveNext(out var broadphase))
-            {
-                broadphase.DynamicTree.Rebuild(false);
-                broadphase.StaticTree.Rebuild(false);
-                broadphase.SundriesTree._b2Tree.Rebuild(false);
-                broadphase.StaticSundriesTree._b2Tree.Rebuild(false);
-            }
-        }
     }
 
     private void BuildManifolds(Contact[] contacts, int count, ContactStatus[] status, Vector2[] worldPoints)

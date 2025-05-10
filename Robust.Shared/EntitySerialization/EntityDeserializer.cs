@@ -1000,7 +1000,7 @@ public sealed class EntityDeserializer :
                 continue;
 
             DebugTools.Assert(meta.EntityLifeStage == EntityLifeStage.Initialized);
-            meta.EntityLifeStage = EntityLifeStage.MapInitialized;
+            EntMan.SetLifeStage(meta, EntityLifeStage.MapInitialized);
         }
 
         _log.Debug($"Finished flagging mapinit in {_stopwatch.Elapsed}");

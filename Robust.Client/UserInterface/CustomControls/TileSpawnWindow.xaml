@@ -10,7 +10,9 @@
         </BoxContainer>
         <ItemList Name="TileList" Access="Public" VerticalExpand="True"/>
         <BoxContainer Orientation="Horizontal">
+            <Button Name="MirroredButton" Access="Public" ToggleMode="True" Text="{Loc tile-spawn-window-mirror-button-text}"/>
             <Button Name="EraseButton" Access="Public" ToggleMode="True" Text="{Loc window-erase-button-text}"/>
         </BoxContainer>
+        <Label Name="RotationLabel" Access="Public"/>
     </BoxContainer>
 </TileSpawnWindow>

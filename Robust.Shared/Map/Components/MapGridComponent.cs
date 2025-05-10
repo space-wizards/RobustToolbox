@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
@@ -29,7 +30,7 @@ namespace Robust.Shared.Map.Components
         // the grid section now writes the grid's EntityUID. as long as existing maps get updated (just a load+save),
         // this can be removed
 
-        [DataField("chunkSize")] internal ushort ChunkSize = 16;
+        [DataField] internal ushort ChunkSize = 16;
 
         [ViewVariables]
         public int ChunkCount => Chunks.Count;
@@ -260,6 +261,13 @@ namespace Robust.Shared.Map.Components
         public bool TryGetTileRef(EntityCoordinates coords, out TileRef tile)
         {
             return MapSystem.TryGetTileRef(Owner, this, coords, out tile);
+        }
+
+        /// <returns>True if the specified chunk exists on this grid.</returns>
+        [Pure]
+        public bool HasChunk(Vector2i indices)
+        {
+            return Chunks.ContainsKey(indices);
         }
     }
 

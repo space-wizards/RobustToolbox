@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* `ITypeReaderWriter<TType, TNode>` has been removed due to being unused. Implement `ITypeSerializer<TType, TNode>` instead
+*None yet*
 
 ### New features
 
@@ -52,6 +52,38 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 256.0.0
+
+### Breaking changes
+
+* `ITypeReaderWriter<TType, TNode>` has been removed due to being unused. Implement `ITypeSerializer<TType, TNode>` instead
+* Moved AsNullable extension methods to the Entity struct.
+
+### New features
+
+* Add DevWindow tab to show all loaded textures.
+* Add Vector2i / bitmask converfsion helpers.
+* Allow texture preload to be skipped for some textures.
+* Check audio file signatures instead of extensions.
+* Add CancellationTokenRegistration to sandbox.
+* Add the ability to serialize TimeSpan from text.
+* Add support for rotated / mirrored tiles.
+
+### Bugfixes
+
+* Fix yaml hot reloading.
+* Fix a linear dictionary lookup in PlacementManager.
+
+### Other
+
+* Make ItemList not run deselection callback on all items if they aren't selected.
+* Cleanup warnings for CS0649 & CS0414.
+
+### Internal
+
+* Move PointLight component states to shared.
 
 
 ## 255.1.0

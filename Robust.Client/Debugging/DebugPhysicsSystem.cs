@@ -413,8 +413,9 @@ namespace Robust.Client.Debugging
                     }
 
                     var body = bodyEnt.Comp;
+                    var meta = _entityManager.GetComponent<MetaDataComponent>(bodyEnt);
 
-                    screenHandle.DrawString(_font, drawPos + new Vector2(0, row * lineHeight), $"Ent: {bodyEnt.Owner}");
+                    screenHandle.DrawString(_font, drawPos + new Vector2(0, row * lineHeight), $"Ent: {bodyEnt.Owner} ({meta.EntityName})");
                     row++;
                     screenHandle.DrawString(_font, drawPos + new Vector2(0, row * lineHeight), $"Layer: {Convert.ToString(body.CollisionLayer, 2)}");
                     row++;

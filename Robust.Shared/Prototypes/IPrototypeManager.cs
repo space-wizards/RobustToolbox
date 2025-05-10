@@ -307,6 +307,11 @@ public interface IPrototypeManager
     void RegisterIgnore(string name);
 
     /// <summary>
+    /// Checks whether the given gind name has been marked as ignored via <see cref="RegisterIgnore"/>
+    /// </summary>
+    bool IsIgnored(string name);
+
+    /// <summary>
     /// Loads several prototype kinds into the manager. Note that this will re-build a frozen dictionary and should be avoided if possible.
     /// </summary>
     /// <param name="kind">

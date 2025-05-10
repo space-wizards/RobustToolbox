@@ -111,6 +111,11 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         component.TreeUpdateQueued = true;
         _updateQueue.Enqueue((component, xform));
     }
+
+    public void QueueTreeUpdate(Entity<TComp> entity, TransformComponent? xform = null)
+    {
+        QueueTreeUpdate(entity.Owner, entity.Comp, xform);
+    }
     #endregion
 
     #region Component Management

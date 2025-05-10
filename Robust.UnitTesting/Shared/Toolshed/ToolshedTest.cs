@@ -19,7 +19,9 @@ public abstract class ToolshedTest : RobustIntegrationTest, IInvocationContext
 {
     protected virtual bool AssertOnUnexpectedError => true;
 
+#pragma warning disable NUnit1032
     protected ServerIntegrationInstance Server = default!;
+#pragma warning restore NUnit1032
 
     public ToolshedManager Toolshed { get; private set; } = default!;
     public ToolshedEnvironment Environment => Toolshed.DefaultEnvironment;
@@ -30,7 +32,8 @@ public abstract class ToolshedTest : RobustIntegrationTest, IInvocationContext
     public async Task TearDownInternal()
     {
         await TearDown();
-        Server.Dispose();
+        await ReturnToPool(Server);
+        Server = default!;
     }
 
     protected virtual Task TearDown()

@@ -30,6 +30,7 @@ using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
@@ -535,7 +536,7 @@ public partial class SharedPhysicsSystem
             DirtyFields(uid, body, null, nameof(PhysicsComponent.Force), nameof(PhysicsComponent.Torque));
         }
 
-        _broadphase.RegenerateContacts(uid, body, manager, xform);
+        _broadphase.RegenerateContacts((uid, body, manager, xform));
 
         if (body.Initialized)
         {
@@ -581,13 +582,13 @@ public partial class SharedPhysicsSystem
                 if (_containerSystem.IsEntityOrParentInContainer(uid))
                     return false;
 
-                if (!_fixturesQuery.Resolve(uid, ref manager) || manager.FixtureCount == 0 && !_mapManager.IsGrid(uid))
+                if (!_fixturesQuery.Resolve(uid, ref manager) || manager.FixtureCount == 0 && !_gridQuery.HasComp(uid))
                     return false;
             }
             else
             {
                 DebugTools.Assert(!_containerSystem.IsEntityOrParentInContainer(uid));
-                DebugTools.Assert((Resolve(uid, ref manager) && manager.FixtureCount > 0) || _mapManager.IsGrid(uid));
+                DebugTools.Assert((Resolve(uid, ref manager) && manager.FixtureCount > 0) || _gridQuery.HasComp(uid));
             }
         }
 

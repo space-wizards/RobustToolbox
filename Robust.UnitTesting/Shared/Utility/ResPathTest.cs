@@ -36,12 +36,16 @@ public sealed class ResPathTest
     [TestCase("x/y/z", ExpectedResult = "z")]
     [TestCase("/bar", ExpectedResult = "bar")]
     [TestCase("bar/", ExpectedResult = "bar")] // Trailing / gets trimmed.
+    [TestCase("/foo/bar/", ExpectedResult = "bar")]
+    // These next two are the current behaviour.
+    // I don't know if this is how it should behave, these tests just check that it doesn't change unintentionally
+    [TestCase("/foo/bar///", ExpectedResult = "")]
+    [TestCase("/foo/bar////", ExpectedResult = "")]
     public string FilenameTest(string input)
     {
         var resPathFilename = new ResPath(input).Filename;
         return resPathFilename;
     }
-
 
     [Test]
     [TestCase(@"", ExpectedResult = @".")]
@@ -66,6 +70,11 @@ public sealed class ResPathTest
     [TestCase(@"/foo/bar/x", ExpectedResult = @"/foo/bar")]
     [TestCase(@"/foo/bar.txt", ExpectedResult = @"/foo")]
     [TestCase(@"/bar.txt", ExpectedResult = @"/")]
+    // These next two are the current behaviour.
+    // I don't know if this is how it should behave, these tests just check that it doesn't change unintentionally
+    [TestCase(@"/foo/bar//", ExpectedResult = "/foo/bar")]
+    [TestCase(@"/foo/bar///", ExpectedResult = "/foo/bar/")]
+    [TestCase(@"/foo/bar////", ExpectedResult = "/foo/bar//")]
     public string DirectoryTest(string path)
     {
         var resPathDirectory = new ResPath(path).Directory.ToString();

@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* The client will now automatically pause any entities that leave their PVS range.
 
 ### New features
 
@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix clients unintentionally un-pausing paused entities that re-enter pvs range
 
 ### Other
 

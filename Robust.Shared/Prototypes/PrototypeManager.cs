@@ -928,6 +928,11 @@ namespace Robust.Shared.Prototypes
             _ignoredPrototypeTypes.Add(name);
         }
 
+        public void ClearIgnored()
+        {
+            _ignoredPrototypeTypes.Clear();
+        }
+
         static string CalculatePrototypeName(Type type)
         {
             const string prototype = "Prototype";

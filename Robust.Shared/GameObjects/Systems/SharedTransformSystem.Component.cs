@@ -659,19 +659,22 @@ public abstract partial class SharedTransformSystem
         if (!_gameTiming.ApplyingState)
         {
             mapPaused = _map.IsPaused(newMapId);
-            _metaData.SetEntityPaused(uid, mapPaused.Value, meta);
+            _metaData.SetEntityPaused(ent.Owner, mapPaused.Value, ent.Comp2);
         }
 
-        ChangeMapIdRecursive(ent, newMap, newMapId, mapPaused);
+        ChangeMapIdRecursive(ent, newUid, newMapId, mapPaused);
     }
 
     private void ChangeMapIdRecursive(
         Entity<TransformComponent, MetaDataComponent> ent,
         EntityUid? newMap,
         MapId newMapId,
-        bool paused)
+        bool? paused)
     {
-        _metaData.SetEntityPaused(ent.Owner, paused, ent.Comp2);
+        if (paused is { } p)
+        {
+            _metaData.SetEntityPaused(ent.Owner, p, ent.Comp2);
+        }
 
         if ((ent.Comp2.Flags & MetaDataFlags.ExtraTransformEvents) != 0)
         {

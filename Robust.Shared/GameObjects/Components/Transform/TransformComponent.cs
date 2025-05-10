@@ -402,34 +402,6 @@ namespace Robust.Shared.GameObjects
             _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AttachToGridOrMap(Owner, this);
         }
 
-        internal void UpdateChildMapIdsRecursive(
-            MapId newMapId,
-            EntityUid? newUid,
-            bool? mapPaused,
-            EntityQuery<TransformComponent> xformQuery,
-            EntityQuery<MetaDataComponent> metaQuery,
-            MetaDataSystem system)
-        {
-            foreach (var child in _children)
-            {
-                if (mapPaused is { } p)
-                {
-                    var metaData = metaQuery.GetComponent(child);
-                    system.SetEntityPaused(child, p, metaData);
-                }
-
-                var concrete = xformQuery.GetComponent(child);
-
-                concrete.MapUid = newUid;
-                concrete.MapID = newMapId;
-
-                if (concrete.ChildCount != 0)
-                {
-                    concrete.UpdateChildMapIdsRecursive(newMapId, newUid, mapPaused, xformQuery, metaQuery, system);
-                }
-            }
-        }
-
         [Obsolete("Use TransformSystem.SetParent() instead")]
         public void AttachParent(EntityUid parent)
         {

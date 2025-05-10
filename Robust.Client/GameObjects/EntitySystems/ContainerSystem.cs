@@ -1,15 +1,14 @@
-using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Robust.Shared.Collections;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Utility;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Robust.Shared.Serialization;
+using Robust.Shared.Utility;
 using static Robust.Shared.Containers.ContainerManagerComponent;
 
 namespace Robust.Client.GameObjects
@@ -58,7 +57,7 @@ namespace Robust.Client.GameObjects
             if (!RemoveExpectedEntity(meta.NetEntity, out var container))
                 return;
 
-            Insert((uid, TransformQuery.GetComponent(uid), MetaQuery.GetComponent(uid), null), container);
+            Insert((uid, TransformQuery.GetComponent(uid), MetaQuery.GetComponent(uid), null), container, force: true);
         }
 
         public override void ShutdownContainer(BaseContainer container)
@@ -232,7 +231,7 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            Insert(message.Entity, container);
+            Insert(message.Entity, container, force: true);
         }
 
         public void AddExpectedEntity(NetEntity netEntity, BaseContainer container)

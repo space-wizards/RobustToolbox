@@ -19,6 +19,9 @@ internal sealed class CommonSession : ICommonSessionInternal
     [ViewVariables]
     public string Name { get; set; } = "<Unknown>";
 
+    [ViewVariables(VVAccess.ReadWrite)]
+    public string DisplayName { get; set; } = string.Empty;
+
     [ViewVariables]
     public short Ping
     {
@@ -77,6 +80,11 @@ internal sealed class CommonSession : ICommonSessionInternal
     public void SetName(string name)
     {
         Name = name;
+    }
+
+    public void SetDisplayName(string? name)
+    {
+        DisplayName = name ?? string.Empty;
     }
 
     public void SetChannel(INetChannel channel)

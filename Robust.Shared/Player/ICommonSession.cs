@@ -33,6 +33,11 @@ public interface ICommonSession
     string Name { get; }
 
     /// <summary>
+    /// Name overwrite for the session.
+    /// </summary>
+    string DisplayName { get; }
+
+    /// <summary>
     /// Current connection latency of this session. If <see cref="Channel"/> is not null this simply returns
     /// <see cref="INetChannel.Ping"/>. This is not currently usable by client-side code that wants to try access ping
     /// information of other players.
@@ -81,5 +86,6 @@ internal interface ICommonSessionInternal : ICommonSession
     public void SetAttachedEntity(EntityUid? uid);
     public void SetPing(short ping);
     public void SetName(string name);
+    public void SetDisplayName(string? name);
     void SetChannel(INetChannel channel);
 }

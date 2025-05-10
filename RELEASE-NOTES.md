@@ -48,6 +48,7 @@ END TEMPLATE-->
 ### Other
 
 * The yaml prototype id serialiser now provides better feedback when trying to validate an id for a prototype kind that has been ignored via `IPrototypeManager.RegisterIgnore()`
+* Several SpriteComponent methods have been marked as obsolete, and should be replaced with new methods in SpriteSystem.
 
 ### Internal
 

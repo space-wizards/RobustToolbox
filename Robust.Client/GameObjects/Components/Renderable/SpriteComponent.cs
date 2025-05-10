@@ -65,6 +65,25 @@ namespace Robust.Client.GameObjects
         // VV convenience variable to examine layer objects using layer keys
         [ViewVariables]
         private Dictionary<object, Layer> _mappedLayers => LayerMap.ToDictionary(x => x.Key, x => Layers[x.Value]);
+        /// <summary>
+        /// VV convenience variable to examine cached layer order
+        /// </summary>
+        [ViewVariables]
+        private Dictionary<RsiDirection, List<string?>>  _cachedDirectionOrderStatesVV => CachedDirectionLayerOrder.ToDictionary(x => x.Key,
+        x => {
+            List<string?> result = new();
+            foreach (var index in x.Value)
+            {
+                result.Add(Layers[index].ActualState?.StateId.Name);
+            }
+            return result;
+        });
+
+        /// <summary>
+        /// VV convenience variable to examine state ids
+        /// </summary>
+        [ViewVariables]
+        private Dictionary<object, string?> _mappedLayersStateVV => LayerMap.ToDictionary(x => x.Key, x => Layers[x.Value].ActualState?.StateId.Name);
 
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Visible
@@ -171,6 +190,34 @@ namespace Robust.Client.GameObjects
         [DataField("sprite", readOnly: true)] private string? rsi;
         [DataField("layers", readOnly: true)] private List<PrototypeLayerData> layerDatums = new();
 
+        /// <summary>
+        /// Dictionary which defines sprite's layers render order relative to direction.
+        /// map key is used to define which layer order specified
+        /// </summary>
+        [DataField("dirOrder", readOnly: true)]
+        internal Dictionary<RsiDirection, List<string>> _directionOrderUnparsed = new();
+
+        internal Dictionary<RsiDirection, List<object>> _directionOrder = new();
+
+        /// <summary>
+        /// Defines ordering strategy of non-ordered layers.
+        ///     True [default] - they will be first (render under the ordered ones)
+        ///     False - they will be last (rendered onto ordered ones)
+        /// </summary>
+        [DataField("unorderedFirst", readOnly: true)]
+        internal bool _unorderedFirst = false;
+
+        /// <summary>
+        /// Kinda optimization bool for not handling unused directions
+        /// </summary>
+        internal byte RsiDirectionTypes = 0;
+
+        /// <summary>
+        /// This flags goes for dividing Dir4 and Dir8 sprites.
+        /// Makes it people friendly to deal with.
+        /// </summary>
+        internal RsiDirectionType MaxRsiDirectionType;
+
         [DataField(readOnly: true)] private string? state;
         [DataField(readOnly: true)] private string? texture;
 
@@ -235,7 +282,7 @@ namespace Robust.Client.GameObjects
 
         [ViewVariables] internal Dictionary<object, int> LayerMap { get; set; } = new();
         [ViewVariables] internal List<Layer> Layers = new();
-
+        [ViewVariables] internal Dictionary<RsiDirection, List<int>> CachedDirectionLayerOrder = new ();
         [ViewVariables(VVAccess.ReadWrite)] public uint RenderOrder { get; set; }
 
         [ViewVariables(VVAccess.ReadWrite)] public bool IsInert { get; internal set; }

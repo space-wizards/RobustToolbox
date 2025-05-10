@@ -295,6 +295,7 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<MapGridComponent>();
             compFactory.RegisterClass<MapComponent>();
             compFactory.RegisterClass<MapLightComponent>();
+            compFactory.RegisterClass<TilestackMapGridComponent>();
             compFactory.RegisterClass<PhysicsComponent>();
             compFactory.RegisterClass<JointComponent>();
             compFactory.RegisterClass<EyeComponent>();

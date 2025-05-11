@@ -154,7 +154,7 @@ public sealed partial class SpriteSystem
             DebugTools.AssertNull(layer.Shader);
             DebugTools.Assert(layerColor is {R: >= 0, G: >= 0, B: >= 0, A: >= 0}, "Default shader should not be used with negative color modulation.");
 
-            // Negative modulation values are used to disable light shading in the default shader.
+            // Negative color modulation values are by the default shader to disable light shading.
             // Specifically we set colour = - 1 - colour
             // This is good enough to ensure that non-negative values become negative & is trivially invertible.
             layerColor = new(new SysVec4(-1) - layerColor.RGBA);

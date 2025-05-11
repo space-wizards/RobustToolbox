@@ -406,7 +406,7 @@ namespace Robust.Shared.GameObjects
 
             var eventArgs = new AddedComponentEventArgs(new ComponentEventArgs(component, uid), reg);
             ComponentAdded?.Invoke(eventArgs);
-            _eventBus.OnComponentAdded(eventArgs);
+            EventBusInternal.OnComponentAdded(eventArgs);
 
             LifeAddToEntity(uid, component, reg.Idx);
 
@@ -427,7 +427,7 @@ namespace Robust.Shared.GameObjects
                 LifeStartup(uid, component, reg.Idx);
 
             if (metadata.EntityLifeStage >= EntityLifeStage.MapInitialized)
-                EventBus.RaiseComponentEvent(uid, component, reg.Idx, MapInitEventInstance);
+                EventBusInternal.RaiseComponentEvent(uid, component, reg.Idx, MapInitEventInstance);
         }
 
         /// <inheritdoc />
@@ -717,7 +717,7 @@ namespace Robust.Shared.GameObjects
 
             var eventArgs = new RemovedComponentEventArgs(new ComponentEventArgs(component, entityUid), false, metadata, idx);
             ComponentRemoved?.Invoke(eventArgs);
-            _eventBus.OnComponentRemoved(eventArgs);
+            EventBusInternal.OnComponentRemoved(eventArgs);
 
             if (!terminating)
             {

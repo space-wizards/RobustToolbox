@@ -82,7 +82,7 @@ namespace Robust.Shared.GameObjects
             Type[]? before, Type[]? after)
             where T : notnull
         {
-            EntityManager.EventBus.SubscribeEvent(src, this, handler, GetType(), before, after);
+            EntityManager.EventBusInternal.SubscribeEvent(src, this, handler, GetType(), before, after);
 
             _subscriptions.Add(new SubBroadcast<T>(src));
         }
@@ -93,7 +93,7 @@ namespace Robust.Shared.GameObjects
             Type[]? before, Type[]? after)
             where T : notnull
         {
-            EntityManager.EventBus.SubscribeEvent(src, this, handler, GetType(), before, after);
+            EntityManager.EventBusInternal.SubscribeEvent(src, this, handler, GetType(), before, after);
 
             _subscriptions.Add(new SubBroadcast<T>(src));
         }
@@ -104,7 +104,7 @@ namespace Robust.Shared.GameObjects
             Type[]? before, Type[]? after)
             where T : notnull
         {
-            EntityManager.EventBus.SubscribeSessionEvent(src, this, handler, GetType(), before, after);
+            EntityManager.EventBusInternal.SubscribeSessionEvent(src, this, handler, GetType(), before, after);
 
             _subscriptions.Add(new SubBroadcast<EntitySessionMessage<T>>(src));
         }
@@ -115,7 +115,7 @@ namespace Robust.Shared.GameObjects
             where TComp : IComponent
             where TEvent : notnull
         {
-            EntityManager.EventBus.SubscribeLocalEvent(handler, GetType(), before, after);
+            EntityManager.EventBusInternal.SubscribeLocalEvent(handler, GetType(), before, after);
 
             _subscriptions.Add(new SubLocal<TComp, TEvent>());
         }
@@ -128,7 +128,7 @@ namespace Robust.Shared.GameObjects
             where TComp : IComponent
             where TEvent : notnull
         {
-            EntityManager.EventBus.SubscribeLocalEvent(handler, GetType(), before, after);
+            EntityManager.EventBusInternal.SubscribeLocalEvent(handler, GetType(), before, after);
 
             _subscriptions.Add(new SubLocal<TComp, TEvent>());
         }
@@ -139,7 +139,7 @@ namespace Robust.Shared.GameObjects
             where TComp : IComponent
             where TEvent : notnull
         {
-            EntityManager.EventBus.SubscribeLocalEvent(handler, GetType(), before, after);
+            EntityManager.EventBusInternal.SubscribeLocalEvent(handler, GetType(), before, after);
 
             _subscriptions.Add(new SubLocal<TComp, TEvent>());
         }
@@ -148,7 +148,7 @@ namespace Robust.Shared.GameObjects
         {
             foreach (var sub in _subscriptions)
             {
-                sub.Unsubscribe(this, EntityManager.EventBus);
+                sub.Unsubscribe(this, EntityManager.EventBusInternal);
             }
 
             _subscriptions = default;

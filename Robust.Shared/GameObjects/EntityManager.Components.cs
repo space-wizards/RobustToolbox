@@ -1708,9 +1708,12 @@ namespace Robust.Shared.GameObjects
         }
 
         public bool CanGetComponentState(IEventBus eventBus, IComponent component, ICommonSession player)
+            => CanGetComponentState(component, player);
+
+        public bool CanGetComponentState(IComponent component, ICommonSession player)
         {
             var attempt = new ComponentGetStateAttemptEvent(player);
-            eventBus.RaiseComponentEvent(component.Owner, component, ref attempt);
+            EventBusInternal.RaiseComponentEvent(component.Owner, component, ref attempt);
             return !attempt.Cancelled;
         }
 

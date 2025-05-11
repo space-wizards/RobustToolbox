@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fix unshaded sprite layers not rendering correctly.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,13 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 257.0.2
+
+### Bugfixes
+
+* Fix unshaded sprite layers not rendering correctly.
 
 
 ## 257.0.1

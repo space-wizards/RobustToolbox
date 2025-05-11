@@ -165,6 +165,9 @@ public sealed class PvsPauseTest : RobustIntegrationTest
              await RunTicks();
              AssertEnt(paused: true, detached: false, clientPaused: true);
          }
+
+         client.Post(() => netMan.ClientDisconnect(""));
+         await RunTicks();
     }
 }
 

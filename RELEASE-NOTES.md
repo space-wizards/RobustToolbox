@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fix sprite layer bounding box calculations. This was causing various sprite rendering & render-tree lookup issues.
+*None yet*
 
 ### Other
 
@@ -52,6 +52,13 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 257.0.1
+
+### Bugfixes
+
+* Fix sprite layer bounding box calculations. This was causing various sprite rendering & render-tree lookup issues.
 
 
 ## 257.0.0

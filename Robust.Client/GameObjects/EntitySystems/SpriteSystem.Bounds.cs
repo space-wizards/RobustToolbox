@@ -44,7 +44,10 @@ public sealed partial class SpriteSystem
     public Box2 GetLocalBounds(Layer layer)
     {
         if (!layer.BoundsDirty)
+        {
+            DebugTools.Assert(layer.Bounds.EqualsApprox(CalculateLocalBounds(layer)));
             return layer.Bounds;
+        }
 
         layer.Bounds = CalculateLocalBounds(layer);
         layer.BoundsDirty = false;
@@ -53,9 +56,6 @@ public sealed partial class SpriteSystem
 
     internal Box2 CalculateLocalBounds(Layer layer)
     {
-        if (layer.Blank || layer.CopyToShaderParameters == null)
-            return Box2.Empty;
-
         var textureSize = (Vector2) layer.PixelSize / EyeManager.PixelsPerMeter;
         var longestSide = MathF.Max(textureSize.X, textureSize.Y);
         var longestRotatedSide = Math.Max(longestSide, (textureSize.X + textureSize.Y) / MathF.Sqrt(2));

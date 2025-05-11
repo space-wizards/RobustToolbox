@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix sprite layer bounding box calculations. This was causing various sprite rendering & render-tree lookup issues.
 
 ### Other
 

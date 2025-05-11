@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix unshaded sprite layers not rendering correctly.
 
 ### Other
 

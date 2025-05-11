@@ -5,8 +5,10 @@ using Robust.Client.Utility;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics.RSI;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 using static Robust.Client.GameObjects.SpriteComponent;
 using Vector4 = Robust.Shared.Maths.Vector4;
+using SysVec4 = System.Numerics.Vector4;
 
 namespace Robust.Client.GameObjects;
 
@@ -146,6 +148,17 @@ public sealed partial class SpriteSystem
         var layerColor = layer.Owner.Comp.color * layer.Color;
         var textureSize = texture.Size / (float) EyeManager.PixelsPerMeter;
         var quad = Box2.FromDimensions(textureSize / -2, textureSize);
+
+        if (layer.UnShaded)
+        {
+            DebugTools.AssertNull(layer.Shader);
+            DebugTools.Assert(layerColor is {R: >= 0, G: >= 0, B: >= 0, A: >= 0}, "Default shader should not be used with negative color modulation.");
+
+            // Negative modulation values are used to disable light shading in the default shader.
+            // Specifically we set colour = - 1 - colour
+            // This is good enough to ensure that non-negative values become negative & is trivially invertible.
+            layerColor = new(new SysVec4(-1) - layerColor.RGBA);
+        }
 
         drawingHandle.DrawTextureRectRegion(texture, quad, layerColor);
 

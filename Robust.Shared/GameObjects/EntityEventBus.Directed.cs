@@ -698,8 +698,7 @@ namespace Robust.Shared.GameObjects
         /// <remarks>
         /// For most events, this will generally be a pretty sparse array, with most entries being null.  However, for
         /// the get and handle state events, this array will be relatively dense and helps save PVS a lot of save a
-        /// FrozenDictionary lookups. Note that the size of the array may be smaller than the largest net id, as it
-        /// trims any null-values.
+        /// FrozenDictionary lookups.
         /// </remarks>
         internal DirectedEventHandler?[] GetNetCompEventHandlers<TEvent>()
         {
@@ -715,7 +714,7 @@ namespace Robust.Shared.GameObjects
                 result[i] = _compEventSubs[reg.Idx.Value].GetValueOrDefault(typeof(TEvent));
             }
 
-            return TrimNull(result);
+            return result;
         }
     }
 

@@ -212,7 +212,7 @@ public sealed class GenericEntityPrint
                     }
                     {{castRegion}}
 
-                    public readonly override int GetHashCode() => Owner.GetHashCode();
+                    public override readonly int GetHashCode() => Owner.GetHashCode();
                     public readonly Entity<{{nullableGenerics}}> AsNullable() => new(Owner{{selfAccess}});
                     public readonly EntityUid AsType() => Owner;
                 }

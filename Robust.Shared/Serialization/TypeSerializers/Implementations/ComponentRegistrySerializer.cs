@@ -29,11 +29,39 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         {
             var factory = dependencies.Resolve<IComponentFactory>();
             var components = instanceProvider != null ? instanceProvider() : new ComponentRegistry();
+            var comps = new Dictionary<string, MappingDataNode?>(node.Sequence.Count);
 
             foreach (var sequenceEntry in node.Sequence)
             {
-                var componentMapping = (MappingDataNode)sequenceEntry;
-                string compType = ((ValueDataNode) componentMapping.Get("type")).Value;
+                var componentMapping = (MappingDataNode) sequenceEntry;
+                var compType = ((ValueDataNode) componentMapping.Get("type")).Value;
+
+                if (factory.IsAlias(compType, out var aliasType))
+                    comps.TryAdd(aliasType, null);
+
+                if (comps.TryAdd(compType, componentMapping))
+                    continue;
+
+                // Might already exist in the dictionary if a previous entry was an alias for this entry
+                if (comps[compType] == null)
+                {
+                    comps[compType] = componentMapping;
+                    continue;
+                }
+
+                // duplicate entry.
+                dependencies
+                    .Resolve<ILogManager>()
+                    .GetSawmill(SerializationManager.LogCategory)
+                    .Error($"Component of type '{compType}' defined twice in prototype!");
+            }
+
+            MergeAliases(comps, factory);
+
+            foreach (var (compType, componentMapping) in comps)
+            {
+                DebugTools.Assert(!factory.IsAlias(compType, out _));
+
                 // See if type exists to detect errors.
                 switch (factory.GetComponentAvailability(compType))
                 {
@@ -51,17 +79,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                         continue;
                 }
 
-                // Has this type already been added?
-                if (components.ContainsKey(compType))
-                {
-                    dependencies
-                        .Resolve<ILogManager>()
-                        .GetSawmill(SerializationManager.LogCategory)
-                        .Error($"Component of type '{compType}' defined twice in prototype!");
-                    continue;
-                }
-
-                var copy = componentMapping.Copy()!;
+                // TODO allocations
+                // just ignore the "type" key when deserializing comps
+                // I.e., remove this Copy()
+                var copy = componentMapping!.Copy();
                 copy.Remove("type");
 
                 var type = factory.GetRegistration(compType).Type;
@@ -89,13 +110,52 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             return components;
         }
 
+        internal static void MergeAliases(Dictionary<string, MappingDataNode?> data, IComponentFactory factory)
+        {
+            foreach (var name in data.Keys)
+            {
+                if (!factory.TryGetAliases(name, out var aliases))
+                {
+                    DebugTools.AssertNotNull(data[name]);
+                    continue;
+                }
+
+                var existing = data[name];
+                var copy = false;
+
+                foreach (var alias in aliases)
+                {
+                    if (!data.Remove(alias, out var removed))
+                        continue;
+
+                    if (existing == null)
+                    {
+                        existing = removed;
+                        continue;
+                    }
+
+                    if (!copy)
+                    {
+                        existing = existing.Copy();
+                        copy = true;
+                    }
+
+                    // Need to skip duplicate, as the "type" key will always be duplicated.
+                    existing.Insert(removed!, skipDuplicates: true);
+                }
+
+                DebugTools.AssertNotNull(existing);
+                data[name] = existing;
+            }
+        }
+
         public ValidationNode Validate(ISerializationManager serializationManager,
             SequenceDataNode node,
             IDependencyCollection dependencies,
             ISerializationContext? context = null)
         {
             var factory = dependencies.Resolve<IComponentFactory>();
-            var components = new ComponentRegistry();
+            var components = new Dictionary<string, MappingDataNode?>(node.Sequence.Count);
             var list = new List<ValidationNode>();
 
             foreach (var sequenceEntry in node.Sequence)
@@ -105,7 +165,33 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                     list.Add(new ErrorNode(sequenceEntry, $"Expected {nameof(MappingDataNode)}"));
                     continue;
                 }
-                string compType = ((ValueDataNode) componentMapping.Get("type")).Value;
+
+                var name = ((ValueDataNode) componentMapping.Get("type")).Value;
+
+                if (factory.IsAlias(name, out var aliasType))
+                    components.TryAdd(aliasType, null);
+
+                if (components.TryAdd(name, componentMapping))
+                    continue;
+
+                // Might already exist in the dictionary if a previous entry was an alias for this entry
+                if (components[name] == null)
+                {
+                    components[name] = componentMapping;
+                    continue;
+                }
+
+                // duplicate entry.
+                list.Add(new ErrorNode(componentMapping, $"Duplicate Component {name}."));
+            }
+
+            MergeAliases(components, factory);
+
+            foreach (var (compType, componentMappingNullable) in components)
+            {
+                var componentMapping = componentMappingNullable!;
+                DebugTools.Assert(!factory.IsAlias(compType, out _));
+
                 // See if type exists to detect errors.
                 switch (factory.GetComponentAvailability(compType))
                 {
@@ -119,13 +205,6 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                     case ComponentAvailability.Unknown:
                         list.Add(new ErrorNode(componentMapping, $"Unknown component type {compType}."));
                         continue;
-                }
-
-                // Has this type already been added?
-                if (components.ContainsKey(compType))
-                {
-                    list.Add(new ErrorNode(componentMapping, "Duplicate Component."));
-                    continue;
                 }
 
                 var copy = componentMapping.Copy()!;

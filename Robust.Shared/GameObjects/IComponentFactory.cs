@@ -306,5 +306,21 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="networkedOnly">Whether to include all components or only networked ones.</param>
         byte[] GetHash(bool networkedOnly);
+
+        /// <summary>
+        /// Check whether the given string is an alias for some registered component.
+        /// </summary>
+        /// <remarks>
+        /// Component aliases can be used to "merge" two components without having to update all prototypes and map files.
+        /// </remarks>
+        bool IsAlias(string alias, [NotNullWhen(true)] out string? name);
+
+        /// <summary>
+        /// Get an array of aliases for the given registered components.
+        /// </summary>
+        /// <remarks>
+        /// Component aliases can be used to "merge" two components without having to update all prototypes and map files.
+        /// </remarks>
+        bool TryGetAliases(string name, [NotNullWhen(true)] out string[]? aliases);
     }
 }

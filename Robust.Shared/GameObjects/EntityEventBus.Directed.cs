@@ -118,7 +118,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="entMan">The entity manager to watch for entity/component events.</param>
         /// <param name="reflection">The reflection manager to use when finding derived types.</param>
-        public EntityEventBus(IEntityManager entMan, IReflectionManager reflection)
+        public EntityEventBus(EntityManager entMan, IReflectionManager reflection)
         {
             _entMan = entMan;
             _comFac = entMan.ComponentFactory;

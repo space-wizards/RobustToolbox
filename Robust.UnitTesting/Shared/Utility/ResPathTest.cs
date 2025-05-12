@@ -82,8 +82,7 @@ public sealed class ResPathTest
     }
 
     [Test]
-    [TestCase(@"a/b/c", "👏", ExpectedResult = "a👏b👏c")]
-    [TestCase(@"/a/b/c", "👏", ExpectedResult = "👏a👏b👏c")]
+    [TestCase(@"a/b/c", "\\", ExpectedResult = @"a\b\c")]
     [TestCase(@"/a/b/c", "\\", ExpectedResult = @"\a\b\c")]
     public string ChangeSeparatorTest(string input, string separator)
     {

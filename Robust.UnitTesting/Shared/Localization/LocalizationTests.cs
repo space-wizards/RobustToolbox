@@ -34,6 +34,7 @@ namespace Robust.UnitTesting.Shared.Localization
 
             var loc = IoCManager.Resolve<ILocalizationManager>();
             var culture = new CultureInfo("en-US", false);
+            loc.Initialize();
             loc.LoadCulture(culture);
         }
 

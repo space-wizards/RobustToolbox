@@ -238,6 +238,11 @@ namespace Robust.Shared.GameObjects
         /// a grid or map.
         /// </summary>
         PvsPriority = 1 << 4,
+
+        /// <summary>
+        /// If set, transform system will raise events directed at this entity whenever the GridUid or MapUid are modified.
+        /// </summary>
+        ExtraTransformEvents = 1 << 5,
     }
 
     /// <summary>

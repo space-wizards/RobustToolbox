@@ -1,4 +1,4 @@
 <Project>
     <!-- This file automatically reset by Tools/version.py -->
-    <PropertyGroup><Version>251.0.0-fixtures-fix</Version></PropertyGroup>
+    <PropertyGroup><Version>251.0.1-fixtures-fix</Version></PropertyGroup>
 </Project>

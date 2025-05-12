@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `IMarkupTag` and related methods in `MarkupTagManager` have been obsoleted and should be replaced with the new `IMarkupTagHandler` interface. Various engine tags (e.g., `BoldTag`, `ColorTag`, etc) no longer implement the old interface.
 
 ### New features
 
@@ -45,10 +45,9 @@ END TEMPLATE-->
 
 * OutputPanel and RichTextLabel now remove controls associated with rich text tags when the text is updated.
 
-
 ### Other
 
-* `IMarkupTag` and related methods in `MarkupTagManager` have been obsoleted and should be replaced with the new `IMarkupTagHandler` interface
+*None yet*
 
 ### Internal
 

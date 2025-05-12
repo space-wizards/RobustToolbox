@@ -76,7 +76,6 @@ namespace Robust.Client.UserInterface
 
         // TODO RICH TEXT
         // Somehow ensure that this **has** to be called when removing rich text from some control.
-        // Otherwise
         /// <summary>
         /// Remove all owned controls from their parents.
         /// </summary>
@@ -152,7 +151,7 @@ namespace Robust.Client.UserInterface
                     desiredSize.Y);
 
                 if (ProcessMetric(ref this, controlMetrics, out breakLine))
-                    return  this;
+                    return this;
             }
 
             Width = wordWrap.FinalizeText(out breakLine);

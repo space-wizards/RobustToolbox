@@ -509,14 +509,9 @@ public readonly struct ResPath : IEquatable<ResPath>
     /// </summary>
     public string ChangeSeparator(string newSeparator)
     {
-        if (newSeparator is "." or "\0")
-        {
-            throw new ArgumentException("New separator can't be `.` or `NULL`");
-        }
-
-        return newSeparator == "/"
-            ? CanonPath
-            : CanonPath.Replace("/", newSeparator);
+        if (newSeparator.Length != 1)
+            throw new InvalidOperationException("new separator must be a single character.");
+        return ChangeSeparator(newSeparator[0]);
     }
 
     /// <inheritdoc cref="ChangeSeparator(string)"/>
@@ -525,7 +520,7 @@ public readonly struct ResPath : IEquatable<ResPath>
         if (newSeparator is '.' or '\0')
             throw new ArgumentException("New separator can't be `.` or `NULL`");
 
-        // Replace() checks if newSeparator == '/'
+        // String.Replace() already checks if newSeparator == '/'
         return CanonPath.Replace('/', newSeparator);
     }
 }

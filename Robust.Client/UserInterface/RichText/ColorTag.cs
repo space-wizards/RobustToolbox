@@ -6,9 +6,7 @@ namespace Robust.Client.UserInterface.RichText;
 /// <summary>
 /// Colors the text inside its opening and closing nodes
 /// </summary>
-#pragma warning disable CS0618 // Type or member is obsolete
-public sealed class ColorTag : IMarkupTag
-#pragma warning restore CS0618 // Type or member is obsolete
+public sealed class ColorTag : IMarkupTagHandler
 {
     public static readonly Color DefaultColor = new(200, 200, 200);
 

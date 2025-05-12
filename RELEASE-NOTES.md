@@ -48,7 +48,7 @@ END TEMPLATE-->
 
 ### Other
 
-* `IMarkupTag` and related methods in `MarkupTagManager` have been obsoleted and should be replaced with the new `IMarkupTagHandler`
+* `IMarkupTag` and related methods in `MarkupTagManager` have been obsoleted and should be replaced with the new `IMarkupTagHandler` interface
 
 ### Internal
 

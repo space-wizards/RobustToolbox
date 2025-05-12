@@ -11,9 +11,7 @@ namespace Robust.Client.UserInterface.RichText;
 /// Applies the font provided as the tags parameter to the markup drawing context.
 /// Definitely not save for user supplied markup
 /// </summary>
-#pragma warning disable CS0618 // Type or member is obsolete
-public sealed class FontTag : IMarkupTag
-#pragma warning restore CS0618 // Type or member is obsolete
+public sealed class FontTag : IMarkupTagHandler
 {
     public const string DefaultFont = "Default";
     public const int DefaultSize = 12;

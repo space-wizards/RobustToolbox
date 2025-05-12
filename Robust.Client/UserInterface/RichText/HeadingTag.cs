@@ -6,9 +6,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.RichText;
 
-#pragma warning disable CS0618 // Type or member is obsolete
-public sealed class HeadingTag : IMarkupTag
-#pragma warning restore CS0618 // Type or member is obsolete
+public sealed class HeadingTag : IMarkupTagHandler
 {
     [Dependency] private readonly IResourceCache _resourceCache = default!;
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;

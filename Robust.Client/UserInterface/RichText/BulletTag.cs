@@ -2,9 +2,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.RichText;
 
-#pragma warning disable CS0618 // Type or member is obsolete
-public sealed class BulletTag : IMarkupTag
-#pragma warning restore CS0618 // Type or member is obsolete
+public sealed class BulletTag : IMarkupTagHandler
 {
     public string Name => "bullet";
 

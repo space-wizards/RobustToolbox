@@ -111,6 +111,7 @@ namespace Robust.Shared.Network
         [Dependency] private readonly ILogManager _logMan = default!;
         [Dependency] private readonly ProfManager _prof = default!;
         [Dependency] private readonly HttpClientHolder _http = default!;
+        [Dependency] private readonly IHWId _hwId = default!;
 
         /// <summary>
         ///     Holds lookup table for NetMessage.Id -> NetMessage.Type
@@ -136,6 +137,7 @@ namespace Robust.Shared.Network
         private readonly HashSet<NetUserId> _awaitingDisconnectToConnect = new HashSet<NetUserId>();
 
         private ISawmill _logger = default!;
+        private ISawmill _loggerPacket = default!;
         private ISawmill _authLogger = default!;
 
         /// <inheritdoc />
@@ -585,6 +587,14 @@ namespace Robust.Shared.Network
         public void ClientDisconnect(string reason)
         {
             DebugTools.Assert(IsClient, "Should never be called on the server.");
+
+            // First handle any in-progress connection attempt
+            if (ClientConnectState != ClientConnectionState.NotConnecting)
+            {
+                _cancelConnectTokenSource?.Cancel();
+            }
+
+            // Then handle existing connection if any
             if (ServerChannel != null)
             {
                 Disconnect?.Invoke(this, new NetDisconnectedArgs(ServerChannel, reason));
@@ -954,7 +964,9 @@ namespace Robust.Shared.Network
                 return true;
             }
 
-            // _logger.DebugS("net", $"RECV: {instance.GetType().Name}");
+            if (_loggerPacket.IsLogLevelEnabled(LogLevel.Verbose))
+                _loggerPacket.Verbose($"RECV: {instance.GetType().Name} {msg.LengthBytes}");
+
             try
             {
                 entry.Callback!.Invoke(instance);
@@ -1067,9 +1079,10 @@ namespace Robust.Shared.Network
             CoreSendMessage(channel, message);
         }
 
-        private static void LogSend(NetMessage message, NetDeliveryMethod method, NetOutgoingMessage packet)
+        private void LogSend(NetMessage message, NetDeliveryMethod method, NetOutgoingMessage packet)
         {
-            // _logger.Debug($"SEND: {message.GetType().Name} {method} {packet.LengthBytes}");
+            if (_loggerPacket.IsLogLevelEnabled(LogLevel.Verbose))
+                _loggerPacket.Verbose($"SEND: {message.GetType().Name} {method} {packet.LengthBytes}");
         }
 
         /// <inheritdoc />
@@ -1215,6 +1228,7 @@ namespace Robust.Shared.Network
         void IPostInjectInit.PostInject()
         {
             _logger = _logMan.GetSawmill("net");
+            _loggerPacket = _logMan.GetSawmill("net.packet");
             _authLogger = _logMan.GetSawmill("auth");
         }
     }

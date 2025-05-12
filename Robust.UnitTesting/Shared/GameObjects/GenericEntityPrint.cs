@@ -11,6 +11,9 @@ public sealed class GenericEntityPrint
     public void Print()
     {
         // Using the test framework for things it was not meant for is my passion
+        //
+        // Its pretty fucked that just occasionally running this manually is so much easier than setting up a porper
+        // source generator.
         var i = 8;
 
         IEnumerable<string> Generics(int n, bool nullable, bool forceIncludeNumber = false)
@@ -42,6 +45,7 @@ public sealed class GenericEntityPrint
         var tupleParameters = new StringBuilder();
         var tupleAccess = new StringBuilder();
         var entityAccess = new StringBuilder();
+        var selfAccess = new StringBuilder();
         var entityNumberedAccess = new StringBuilder();
         var defaults = new StringBuilder();
         var compOperators = new StringBuilder();
@@ -62,6 +66,7 @@ public sealed class GenericEntityPrint
             tupleParameters.Clear();
             tupleAccess.Clear();
             entityAccess.Clear();
+            selfAccess.Clear();
             entityNumberedAccess.Clear();
             defaults.Clear();
             compOperators.Clear();
@@ -88,6 +93,7 @@ public sealed class GenericEntityPrint
                 var suffix = (j >= 2 && k == 1) ? string.Empty : kStr;
                 var prefix = (j >= 2 && k == 2) ? "1" : string.Empty;
                 entityAccess.Append($"{prefix}, ent.Comp{suffix}");
+                selfAccess.Append($"{prefix}, Comp{suffix}");
                 entityNumberedAccess.Append($", ent.Comp{kStr}");
                 defaults.Append(", default");
                 compOperators.AppendLine($$"""
@@ -167,11 +173,13 @@ public sealed class GenericEntityPrint
             }
 
             structs.Append($$"""
-                public record struct Entity<{{generics}}>
+                [NotYamlSerializable]
+                public record struct Entity<{{generics}}> : IFluentEntityUid, IAsType<EntityUid>
                     {{constraints.ToString().TrimEnd()}}
                 {
                     public EntityUid Owner;
                 {{fields.ToString().TrimEnd()}}
+                    EntityUid IFluentEntityUid.FluentOwner => Owner;
 
                     public Entity(EntityUid owner{{parameters}})
                     {
@@ -203,6 +211,10 @@ public sealed class GenericEntityPrint
                 {{deConstructorAccess.ToString().TrimEnd()}}
                     }
                     {{castRegion}}
+
+                    public override int GetHashCode() => Owner.GetHashCode();
+                    public Entity<{{nullableGenerics}}> AsNullable() => new(Owner{{selfAccess}});
+                    public EntityUid AsType() => Owner;
                 }
 
 

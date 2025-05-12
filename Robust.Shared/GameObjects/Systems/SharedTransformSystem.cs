@@ -133,7 +133,7 @@ namespace Robust.Shared.GameObjects
             if (xform.GridUid == xform.ParentUid)
                 return xform.Coordinates;
 
-            DebugTools.Assert(!_mapManager.IsGrid(uid) && !_mapManager.IsMap(uid));
+            DebugTools.Assert(!_gridQuery.HasComp(uid) && !_mapQuery.HasComp(uid));
 
             // Not parented to grid so convert their pos back to the grid.
             var worldPos = GetWorldPosition(xform, XformQuery);
@@ -174,7 +174,7 @@ namespace Robust.Shared.GameObjects
             if (mapId == parentUid)
                 return coordinates;
 
-            DebugTools.Assert(!_mapManager.IsGrid(parentUid) && !_mapManager.IsMap(parentUid));
+            DebugTools.Assert(!HasComp<MapGridComponent>(parentUid) && !HasComp<MapComponent>(parentUid));
 
             // Not parented to grid so convert their pos back to the grid.
             var worldPos = Vector2.Transform(coordinates.Position, GetWorldMatrix(parentXform, XformQuery));
@@ -201,7 +201,7 @@ namespace Robust.Shared.GameObjects
             if (xform.GridUid == xform.ParentUid)
                 return (xform.Coordinates, GetWorldRotation(xform, XformQuery));
 
-            DebugTools.Assert(!_mapManager.IsGrid(uid) && !_mapManager.IsMap(uid));
+            DebugTools.Assert(!HasComp<MapComponent>(uid) && !HasComp<MapComponent>(uid));
 
             var (pos, worldRot) = GetWorldPositionRotation(xform, XformQuery);
 
@@ -265,7 +265,8 @@ namespace Robust.Shared.GameObjects
             EntityUid oldParent,
             Vector2 oldPosition,
             Angle oldRotation,
-            EntityUid? oldMap)
+            EntityUid? oldMap,
+            bool checkTraversal = true)
         {
             var pos = ent.Comp1._parent == EntityUid.Invalid
                 ? default
@@ -295,7 +296,10 @@ namespace Robust.Shared.GameObjects
             // Finally, handle grid traversal. This is handled separately to avoid out-of-order move events.
             // I.e., if the traversal raises its own move event, this ensures that all the old move event handlers
             // have finished running first. Ideally this shouldn't be required, but this is here just in case
-            _traversal.CheckTraverse(ent);
+            if (checkTraversal)
+            {
+                _traversal.CheckTraverse(ent);
+            }
         }
     }
 
@@ -316,6 +320,10 @@ namespace Robust.Shared.GameObjects
         ///     Current parent entity of this entity.
         /// </summary>
         public readonly NetEntity ParentID;
+        // TODO Delta-states
+        // If the transform component ever gets delta states, then the client state manager needs to be updated.
+        // Currently it explicitly looks for a "TransformComponentState" when determining an entity's parent for the
+        // sake of sorting the states that need to be applied base on the transform hierarchy.
 
         /// <summary>
         ///     Current position offset of the entity.
@@ -337,8 +345,6 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public readonly bool Anchored;
 
-        public readonly bool GridTraversal;
-
         /// <summary>
         ///     Constructs a new state snapshot of a TransformComponent.
         /// </summary>
@@ -346,14 +352,13 @@ namespace Robust.Shared.GameObjects
         /// <param name="rotation">Current direction offset of this entity.</param>
         /// <param name="parentId">Current parent transform of this entity.</param>
         /// <param name="noLocalRotation"></param>
-        public TransformComponentState(Vector2 localPosition, Angle rotation, NetEntity parentId, bool noLocalRotation, bool anchored, bool gridTraversal)
+        public TransformComponentState(Vector2 localPosition, Angle rotation, NetEntity parentId, bool noLocalRotation, bool anchored)
         {
             LocalPosition = localPosition;
             Rotation = rotation;
             ParentID = parentId;
             NoLocalRotation = noLocalRotation;
             Anchored = anchored;
-            GridTraversal = gridTraversal;
         }
     }
 }

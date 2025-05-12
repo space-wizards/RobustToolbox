@@ -44,6 +44,8 @@ internal interface IAudioInternal : IAudioManager
 
     void SetAttenuation(Attenuation attenuation);
 
+    void Remove(AudioStream stream);
+
     /// <summary>
     /// Stops all audio from playing.
     /// </summary>

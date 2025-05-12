@@ -284,21 +284,32 @@ public interface IPrototypeManager
     void LoadDefaultPrototypes(Dictionary<Type, HashSet<string>>? loaded = null);
 
     /// <summary>
-    /// Syncs all inter-prototype data. Call this when operations adding new prototypes are done.
+    /// Call this when operations adding new prototypes are done.
+    /// This will handle prototype inheritance, instance creation, and update entity categories.
+    /// When loading extra prototypes, or reloading a subset of existing prototypes, you should probably use
+    /// <see cref="ReloadPrototypes"/> instead.
     /// </summary>
     void ResolveResults();
 
     /// <summary>
-    /// Invokes <see cref="PrototypesReloaded"/> with information about the modified prototypes.
-    /// When built with development tools, this will also push inheritance for reloaded prototypes/
+    /// This should be called after new or updated prototypes ahve been loaded.
+    /// This will handle prototype inheritance, instance creation, and update entity categories.
+    /// It will also invoke <see cref="PrototypesReloaded"/> and raise a <see cref="PrototypesReloadedEventArgs"/>
+    /// event with information about the modified prototypes.
     /// </summary>
-    void ReloadPrototypes(Dictionary<Type, HashSet<string>> modified,
+    void ReloadPrototypes(
+        Dictionary<Type, HashSet<string>> modified,
         Dictionary<Type, HashSet<string>>? removed = null);
 
     /// <summary>
     ///     Registers a specific prototype name to be ignored.
     /// </summary>
     void RegisterIgnore(string name);
+
+    /// <summary>
+    /// Checks whether the given gind name has been marked as ignored via <see cref="RegisterIgnore"/>
+    /// </summary>
+    bool IsIgnored(string name);
 
     /// <summary>
     /// Loads several prototype kinds into the manager. Note that this will re-build a frozen dictionary and should be avoided if possible.

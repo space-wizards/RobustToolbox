@@ -113,6 +113,13 @@ namespace Robust.Client.Graphics
             SetParameterImpl(name, value);
         }
 
+        public void SetParameter(string name, Color[] value)
+        {
+            EnsureAlive();
+            EnsureMutable();
+            SetParameterImpl(name, value);
+        }
+
         public void SetParameter(string name, Vector4 value)
         {
             EnsureAlive();
@@ -223,6 +230,7 @@ namespace Robust.Client.Graphics
         private protected abstract void SetParameterImpl(string name, Vector3 value);
         private protected abstract void SetParameterImpl(string name, Vector4 value);
         private protected abstract void SetParameterImpl(string name, Color value);
+        private protected abstract void SetParameterImpl(string name, Color[] value);
         private protected abstract void SetParameterImpl(string name, int value);
         private protected abstract void SetParameterImpl(string name, Vector2i value);
         private protected abstract void SetParameterImpl(string name, bool value);

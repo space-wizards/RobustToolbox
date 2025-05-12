@@ -413,8 +413,9 @@ namespace Robust.Client.Debugging
                     }
 
                     var body = bodyEnt.Comp;
+                    var meta = _entityManager.GetComponent<MetaDataComponent>(bodyEnt);
 
-                    screenHandle.DrawString(_font, drawPos + new Vector2(0, row * lineHeight), $"Ent: {bodyEnt.Owner}");
+                    screenHandle.DrawString(_font, drawPos + new Vector2(0, row * lineHeight), $"Ent: {bodyEnt.Owner} ({meta.EntityName})");
                     row++;
                     screenHandle.DrawString(_font, drawPos + new Vector2(0, row * lineHeight), $"Layer: {Convert.ToString(body.CollisionLayer, 2)}");
                     row++;
@@ -544,7 +545,7 @@ namespace Robust.Client.Debugging
             switch (joint)
             {
                 case DistanceJoint:
-                    worldHandle.DrawLine(xf1, xf2, JointColor);
+                    worldHandle.DrawLine(p1, p2, JointColor);
                     break;
                 case PrismaticJoint prisma:
                     var pA = Transform.Mul(xfa, joint.LocalAnchorA);

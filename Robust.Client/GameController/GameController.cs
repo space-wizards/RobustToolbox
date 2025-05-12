@@ -31,6 +31,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
@@ -93,6 +94,8 @@ namespace Robust.Client
         [Dependency] private readonly IReplayPlaybackManager _replayPlayback = default!;
         [Dependency] private readonly IReplayRecordingManagerInternal _replayRecording = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IReloadManager _reload = default!;
+        [Dependency] private readonly ILocalizationManager _loc = default!;
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -112,14 +115,28 @@ namespace Robust.Client
             _commandLineArgs = args;
         }
 
+        public string GameTitle()
+        {
+            return Options.DefaultWindowTitle ?? _resourceManifest!.DefaultWindowTitle ?? "RobustToolbox";
+        }
+
+        public string WindowIconSet()
+        {
+            return Options.WindowIconSet?.ToString() ?? _resourceManifest!.WindowIconSet ?? "";
+        }
+
+        public string SplashLogo()
+        {
+            return Options.SplashLogo?.ToString() ?? _resourceManifest!.SplashLogo ?? "";
+        }
+
         internal bool StartupContinue(DisplayMode displayMode)
         {
             DebugTools.AssertNotNull(_resourceManifest);
 
             _clyde.InitializePostWindowing();
             _audio.InitializePostWindowing();
-            _clyde.SetWindowTitle(
-                Options.DefaultWindowTitle ?? _resourceManifest!.DefaultWindowTitle ?? "RobustToolbox");
+            _clyde.SetWindowTitle(GameTitle());
 
             _taskManager.Initialize();
             _parallelMgr.Initialize();
@@ -165,12 +182,14 @@ namespace Robust.Client
             _serializer.Initialize();
             _inputManager.Initialize();
             _console.Initialize();
+            _loc.Initialize();
 
             // Make sure this is done before we try to load prototypes,
             // avoid any possibility of race conditions causing the check to not finish
             // before prototype load.
             ProgramShared.FinishCheckBadFileExtensions(checkBadExtensions);
 
+            _reload.Initialize();
             _reflectionManager.Initialize();
             _prototypeManager.Initialize();
             _prototypeManager.LoadDefaultPrototypes();
@@ -399,10 +418,8 @@ namespace Robust.Client
                 // Handle GameControllerOptions implicit CVar overrides.
                 _configurationManager.OverrideConVars(new[]
                 {
-                    (CVars.DisplayWindowIconSet.Name,
-                        options.WindowIconSet?.ToString() ?? _resourceManifest.WindowIconSet ?? ""),
-                    (CVars.DisplaySplashLogo.Name,
-                        options.SplashLogo?.ToString() ?? _resourceManifest.SplashLogo ?? "")
+                    (CVars.DisplayWindowIconSet.Name, WindowIconSet()),
+                    (CVars.DisplaySplashLogo.Name, SplashLogo())
                 });
             }
 

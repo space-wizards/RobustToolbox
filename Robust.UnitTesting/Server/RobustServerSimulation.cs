@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using JetBrains.Annotations;
 using Moq;
+using Robust.Client.HWId;
 using Robust.Server;
 using Robust.Server.Configuration;
 using Robust.Server.Console;
@@ -10,6 +11,7 @@ using Robust.Server.Containers;
 using Robust.Server.Debugging;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
+using Robust.Server.Localization;
 using Robust.Server.Physics;
 using Robust.Server.Player;
 using Robust.Server.Prototypes;
@@ -191,13 +193,14 @@ namespace Robust.UnitTesting.Server
             container.Register<INetConfigurationManagerInternal, ServerNetConfigurationManager>();
             container.Register<IDynamicTypeFactory, DynamicTypeFactory>();
             container.Register<IDynamicTypeFactoryInternal, DynamicTypeFactory>();
-            container.Register<ILocalizationManager, LocalizationManager>();
+            container.Register<ILocalizationManager, ServerLocalizationManager>();
             container.Register<IModLoader, TestingModLoader>();
             container.Register<IModLoaderInternal, TestingModLoader>();
             container.Register<ProfManager, ProfManager>();
             container.RegisterInstance<ITaskManager>(new Mock<ITaskManager>().Object);
             container.Register<HttpClientHolder>();
             container.Register<IHttpClientHolder, HttpClientHolder>();
+            container.Register<IHWId, DummyHWId>();
 
             var realReflection = new ServerReflectionManager();
             realReflection.LoadAssemblies(new List<Assembly>(2)

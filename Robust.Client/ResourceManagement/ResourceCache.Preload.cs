@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,6 +9,7 @@ using Robust.Client.Graphics;
 using Robust.Client.Utility;
 using Robust.Shared;
 using Robust.Shared.Audio;
+using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Graphics;
@@ -59,7 +61,14 @@ namespace Robust.Client.ResourceManagement
             {
                 try
                 {
-                    TextureResource.LoadPreTexture(_manager, data);
+                    TextureResource.LoadTextureParameters(_manager, data);
+                    if (!data.LoadParameters.Preload)
+                    {
+                        data.Skip = true;
+                        return;
+                    }
+
+                    TextureResource.LoadPreTextureData(_manager, data);
                 }
                 catch (Exception e)
                 {
@@ -72,7 +81,7 @@ namespace Robust.Client.ResourceManagement
 
             foreach (var data in texList)
             {
-                if (data.Bad)
+                if (data.Bad || data.Skip)
                     continue;
 
                 try
@@ -87,11 +96,18 @@ namespace Robust.Client.ResourceManagement
             }
 
             var errors = 0;
+            var skipped = 0;
             foreach (var data in texList)
             {
                 if (data.Bad)
                 {
                     errors += 1;
+                    continue;
+                }
+
+                if (data.Skip)
+                {
+                    skipped += 1;
                     continue;
                 }
 
@@ -110,9 +126,10 @@ namespace Robust.Client.ResourceManagement
             }
 
             sawmill.Debug(
-                "Preloaded {CountLoaded} textures ({CountErrored} errored) in {LoadTime}",
-                texList.Length,
+                "Preloaded {CountLoaded} textures ({CountErrored} errored, {CountSkipped} skipped) in {LoadTime}",
+                texList.Length - skipped - errors,
                 errors,
+                skipped,
                 sw.Elapsed);
         }
 
@@ -143,9 +160,9 @@ namespace Robust.Client.ResourceManagement
                 }
             });
 
-            // Do not meta-atlas RSIs with custom load parameters.
-            var atlasList = rsiList.Where(x => x.LoadParameters == TextureLoadParameters.Default).ToArray();
-            var nonAtlasList = rsiList.Where(x => x.LoadParameters != TextureLoadParameters.Default).ToArray();
+            var atlasLookup = rsiList.ToLookup(ShouldMetaAtlas);
+            var atlasList = atlasLookup[true].ToArray();
+            var nonAtlasList = atlasLookup[false].ToArray();
 
             foreach (var data in nonAtlasList)
             {
@@ -176,64 +193,143 @@ namespace Robust.Client.ResourceManagement
             // TODO allow RSIs to opt out (useful for very big & rare RSIs)
             // TODO combine with (non-rsi) texture atlas?
 
-            Array.Sort(atlasList, (b, a) => (b.AtlasSheet?.Height ?? 0).CompareTo(a.AtlasSheet?.Height ?? 0));
+            // We now need to insert the RSIs into the atlas. This specific problem is 2BP|O|F - the items are oriented
+            // and cutting is free. The sorting is done by a slightly modified FFDH algorithm. The algorithm is exactly
+            // the same as the standard FFDH algorithm with one main difference: We create new "levels" above placed
+            // blocks. For example if the first block was 10x20, then the second was 10x10 units, we would create a
+            // 10x10 level above the second block that would be treated as a normal level. This increases the packing
+            // efficiency from ~85% to ~95% with very little extra computational effort. The algorithm appears to be
+            // ~97% effective for storing SS14s RSIs.
+            //
+            // Here are some more resources about the strip packing problem!
+            //   -  https://en.wikipedia.org/w/index.php?title=Strip_packing_problem&oldid=1263496949#First-fit_decreasing-height_(FFDH)
+            //   -  https://www.csc.liv.ac.uk/~epa/surveyhtml.html
+            //   -  https://www.dei.unipd.it/~fisch/ricop/tesi/tesi_dottorato_Lodi_1999.pdf
 
-            // Each RSI sub atlas has a different size.
-            // Even if we iterate through them once to estimate total area, I have NFI how to sanely estimate an optimal square-texture size.
-            // So fuck it, just default to letting it be as large as it needs to and crop it as needed?
+            // The array must be sorted from biggest to smallest first.
+            Array.Sort(atlasList, (b, a) => a.AtlasSheet.Height.CompareTo(b.AtlasSheet.Height));
+
             var maxSize = Math.Min(GL.GetInteger(GetPName.MaxTextureSize), _configurationManager.GetCVar(CVars.ResRSIAtlasSize));
-            var sheet = new Image<Rgba32>(maxSize, maxSize);
 
-            var deltaY = 0;
-            Vector2i offset = default;
-            int finalized = -1;
-            int atlasCount = 0;
-            for (int i = 0; i < atlasList.Length; i++)
+            // THIS IS NOT GUARANTEED TO HAVE ANY PARTICULARLY LOGICAL ORDERING.
+            // E.G you could have atlas 1 RSIs appear *before* you're done seeing atlas 2 RSIs.
+            var levels = new ValueList<Level>();
+
+            // List of all the image atlases.
+            var imageAtlases = new ValueList<Image<Rgba32>>();
+
+            // List of all the actual atlases.
+            var finalAtlases = new ValueList<OwnedTexture>();
+
+            // Number of total pixels in each atlas.
+            var finalPixels = new ValueList<int>();
+
+            // First we just find the location of all the RSIs in the atlas before actually placing them.
+            // This allows us to effectively determine how much space we need to allocate for the images.
+            var currentHeight = 0;
+            var currentAtlasIndex = 0;
+            foreach (var rsi in atlasList)
             {
-                var rsi = atlasList[i];
-                if (rsi.Bad)
+                var insertHeight = rsi.AtlasSheet.Height;
+                var insertWidth = rsi.AtlasSheet.Width;
+
+                var found = false;
+                for (var i = 0; i < levels.Count && !found; i++)
+                {
+                    var levelPosition = levels[i].Position;
+                    var levelWidth = levels[i].Width;
+                    var levelHeight = levels[i].Height;
+
+                    // Check if it can fit in this level.
+                    if (levelHeight < insertHeight || levelWidth + insertWidth > levels[i].MaxWidth)
+                        continue;
+
+                    found = true;
+
+                    levels[i].Width += insertWidth;
+                    rsi.AtlasOffset = levelPosition + new Vector2i(levelWidth, 0);
+                    levels[i].RSIList.Add(rsi);
+
+                    // Creating the extra "free" space above blocks that can be used for inserting more items.
+                    // This differs from the FFDH spec which just ignores this space.
+                    Debug.Assert(levelHeight >= insertHeight); // Must be true because the array needs to be sorted
+                    if (levelHeight - insertHeight == 0)
+                        continue;
+
+                    var freeLevel = new Level
+                    {
+                        AtlasId = levels[i].AtlasId,
+                        Position = levelPosition + new Vector2i(levelWidth, insertHeight),
+                        Height = levelHeight - insertHeight,
+                        Width = 0,
+                        MaxWidth = insertWidth,
+                        RSIList = [ ]
+                    };
+
+                    levels.Add(freeLevel);
+                }
+
+                if (found)
                     continue;
 
-                DebugTools.Assert(rsi.AtlasSheet.Width < sheet.Width);
-                DebugTools.Assert(rsi.AtlasSheet.Height < sheet.Height);
-
-                if (offset.X + rsi.AtlasSheet.Width > sheet.Width)
+                // Ran out of space, we need to move on to the next atlas.
+                // This also isn't in the normal FFDH algorithm (obviously) but its close enough.
+                if (currentHeight + insertHeight > maxSize)
                 {
-                    offset.X = 0;
-                    offset.Y += deltaY;
+                    imageAtlases.Add(new Image<Rgba32>(maxSize, currentHeight));
+                    finalPixels.Add(0);
+                    currentHeight = 0;
+                    currentAtlasIndex++;
                 }
 
-                if (offset.Y + rsi.AtlasSheet.Height > sheet.Height)
-                {
-                    FinalizeMetaAtlas(i-1, sheet);
-                    sheet = new Image<Rgba32>(maxSize, maxSize);
-                    deltaY = 0;
-                    offset = default;
-                }
+                rsi.AtlasOffset = new Vector2i(0, currentHeight);
 
-                deltaY = Math.Max(deltaY, rsi.AtlasSheet.Height);
-                var box = new UIBox2i(0, 0, rsi.AtlasSheet.Width, rsi.AtlasSheet.Height);
-                rsi.AtlasSheet.Blit(box, sheet, offset);
-                rsi.AtlasOffset = offset;
-                offset.X += rsi.AtlasSheet.Width;
+                var newLevel = new Level
+                {
+                    AtlasId = currentAtlasIndex,
+                    Position = new Vector2i(0, currentHeight),
+                    Height = insertHeight,
+                    Width = insertWidth,
+                    MaxWidth = maxSize,
+                    RSIList = [ rsi ]
+                };
+                levels.Add(newLevel);
+
+                currentHeight += insertHeight;
             }
 
-            var height = offset.Y + deltaY;
-            var croppedSheet = new Image<Rgba32>(maxSize, height);
-            sheet.Blit(new UIBox2i(0, 0, maxSize, height), croppedSheet, default);
-            FinalizeMetaAtlas(atlasList.Length - 1, croppedSheet);
+            // This allocation takes a long time.
+            imageAtlases.Add(new Image<Rgba32>(maxSize, currentHeight));
+            finalPixels.Add(0);
 
-            void FinalizeMetaAtlas(int toIndex, Image<Rgba32> sheet)
+            // Put all textures on the atlases
+            foreach (var level in levels)
             {
-                var atlas = Clyde.LoadTextureFromImage(sheet);
-                for (int i = finalized + 1; i <= toIndex; i++)
+                foreach (var rsi in level.RSIList)
                 {
-                    var rsi = atlasList[i];
-                    rsi.AtlasTexture = atlas;
-                }
+                    var box = new UIBox2i(0, 0, rsi.AtlasSheet.Width, rsi.AtlasSheet.Height);
 
-                finalized = toIndex;
-                atlasCount++;
+                    rsi.AtlasSheet.Blit(box, imageAtlases[level.AtlasId], rsi.AtlasOffset);
+                    finalPixels[level.AtlasId] += rsi.AtlasSheet.Width * rsi.AtlasSheet.Height;
+                }
+            }
+
+            // Finalize the atlases.
+            for (var i = 0; i < imageAtlases.Count; i++)
+            {
+                var atlasTexture = Clyde.LoadTextureFromImage(imageAtlases[i], $"Meta atlas {i}");
+                finalAtlases.Add(atlasTexture);
+
+                sawmill.Debug($"(Meta atlas {i}) - cropped utilization: {(float)finalPixels[i] / (maxSize * imageAtlases[i].Height):P2}, fill percentage: {(float)imageAtlases[i].Height / maxSize:P2}");
+            }
+
+            // Finally, reference the actual atlas from the RSIs.
+            foreach (var level in levels)
+            {
+                foreach (var rsi in level.RSIList)
+                {
+                    rsi.AtlasTexture = finalAtlases[level.AtlasId];
+                }
             }
 
             Parallel.ForEach(rsiList, data =>
@@ -278,11 +374,49 @@ namespace Robust.Client.ResourceManagement
             sawmill.Debug(
                 "Preloaded {CountLoaded} RSIs into {CountAtlas} Atlas(es?) ({CountNotAtlas} not atlassed, {CountErrored} errored) in {LoadTime}",
                 rsiList.Length,
-                atlasCount,
+                finalAtlases.Count,
                 nonAtlasList.Length,
                 errors,
                 sw.Elapsed);
-
         }
+
+        private static bool ShouldMetaAtlas(RSIResource.LoadStepData rsi)
+        {
+            return rsi.MetaAtlas && rsi.LoadParameters == TextureLoadParameters.Default;
+        }
+    }
+
+    /// <summary>
+    ///     A "Level" to place boxes. Similar to FFDH levels, but with more parameters so we can fit in "free" levels
+    ///     above placed boxes.
+    /// </summary>
+    internal sealed class Level
+    {
+        /// <summary>
+        ///     Index of the atlas this is located.
+        /// </summary>
+        public required int AtlasId;
+        /// <summary>
+        ///     Bottom left of the location for the RSIs.
+        /// </summary>
+        public required Vector2i Position;
+        /// <summary>
+        ///     The current width of the level.
+        /// </summary>
+        /// <remarks>This can (and will) be 0. Will change.</remarks>
+        public required int Width;
+        /// <summary>
+        ///     The current height of the level.
+        /// </summary>
+        /// <remarks>This value should never change.</remarks>
+        public required int Height;
+        /// <summary>
+        ///     Maximum width of the level.
+        /// </summary>
+        public required int MaxWidth;
+        /// <summary>
+        ///     List of all the RSIs stored in this level. RSIs are ordered from tallest to smallest per level.
+        /// </summary>
+        public required List<RSIResource.LoadStepData> RSIList;
     }
 }

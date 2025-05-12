@@ -198,20 +198,20 @@ public abstract partial class SharedPhysicsSystem
 
     private void InitializeIsland()
     {
-        Subs.CVar(_configManager, CVars.NetTickrate, SetTickRate, true);
-        Subs.CVar(_configManager, CVars.WarmStarting, SetWarmStarting, true);
-        Subs.CVar(_configManager, CVars.MaxLinearCorrection, SetMaxLinearCorrection, true);
-        Subs.CVar(_configManager, CVars.MaxAngularCorrection, SetMaxAngularCorrection, true);
-        Subs.CVar(_configManager, CVars.VelocityIterations, SetVelocityIterations, true);
-        Subs.CVar(_configManager, CVars.PositionIterations, SetPositionIterations, true);
-        Subs.CVar(_configManager, CVars.MaxLinVelocity, SetMaxLinearVelocity, true);
-        Subs.CVar(_configManager, CVars.MaxAngVelocity, SetMaxAngularVelocity, true);
-        Subs.CVar(_configManager, CVars.SleepAllowed, SetSleepAllowed, true);
-        Subs.CVar(_configManager, CVars.AngularSleepTolerance, SetAngularToleranceSqr, true);
-        Subs.CVar(_configManager, CVars.LinearSleepTolerance, SetLinearToleranceSqr, true);
-        Subs.CVar(_configManager, CVars.TimeToSleep, SetTimeToSleep, true);
-        Subs.CVar(_configManager, CVars.VelocityThreshold, SetVelocityThreshold, true);
-        Subs.CVar(_configManager, CVars.Baumgarte, SetBaumgarte, true);
+        Subs.CVar(_cfg, CVars.NetTickrate, SetTickRate, true);
+        Subs.CVar(_cfg, CVars.WarmStarting, SetWarmStarting, true);
+        Subs.CVar(_cfg, CVars.MaxLinearCorrection, SetMaxLinearCorrection, true);
+        Subs.CVar(_cfg, CVars.MaxAngularCorrection, SetMaxAngularCorrection, true);
+        Subs.CVar(_cfg, CVars.VelocityIterations, SetVelocityIterations, true);
+        Subs.CVar(_cfg, CVars.PositionIterations, SetPositionIterations, true);
+        Subs.CVar(_cfg, CVars.MaxLinVelocity, SetMaxLinearVelocity, true);
+        Subs.CVar(_cfg, CVars.MaxAngVelocity, SetMaxAngularVelocity, true);
+        Subs.CVar(_cfg, CVars.SleepAllowed, SetSleepAllowed, true);
+        Subs.CVar(_cfg, CVars.AngularSleepTolerance, SetAngularToleranceSqr, true);
+        Subs.CVar(_cfg, CVars.LinearSleepTolerance, SetLinearToleranceSqr, true);
+        Subs.CVar(_cfg, CVars.TimeToSleep, SetTimeToSleep, true);
+        Subs.CVar(_cfg, CVars.VelocityThreshold, SetVelocityThreshold, true);
+        Subs.CVar(_cfg, CVars.Baumgarte, SetBaumgarte, true);
     }
 
     private void SetWarmStarting(bool value) => _warmStarting = value;
@@ -1026,12 +1026,6 @@ public abstract partial class SharedPhysicsSystem
             var angle = angles[offset + i];
             var xform = xformQuery.GetComponent(uid);
 
-            // Temporary NaN guards until PVS is fixed.
-            if (!float.IsNaN(position.X) && !float.IsNaN(position.Y))
-            {
-                _transform.SetLocalPositionRotation(xform, xform.LocalPosition + position, xform.LocalRotation + angle);
-            }
-
             var linVelocity = linearVelocities[offset + i];
             var physicsDirtied = false;
 
@@ -1045,6 +1039,16 @@ public abstract partial class SharedPhysicsSystem
             if (!float.IsNaN(angVelocity))
             {
                 physicsDirtied |= SetAngularVelocity(uid, angVelocity, false, body: body);
+            }
+
+            // Temporary NaN guards until PVS is fixed.
+            // May reparent object and change body's velocity.
+            if (!float.IsNaN(position.X) && !float.IsNaN(position.Y))
+            {
+                _transform.SetLocalPositionRotation(uid,
+                    xform.LocalPosition + position,
+                    xform.LocalRotation + angle,
+                    xform);
             }
 
             if (physicsDirtied)

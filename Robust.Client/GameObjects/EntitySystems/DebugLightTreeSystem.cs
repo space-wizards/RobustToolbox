@@ -26,10 +26,10 @@ namespace Robust.Client.GameObjects
                 if (_enabled)
                 {
                     _lightOverlay = new DebugLightOverlay(
-                        EntitySystem.Get<EntityLookupSystem>(),
+                        EntityManager.System<EntityLookupSystem>(),
                         IoCManager.Resolve<IEyeManager>(),
                         IoCManager.Resolve<IMapManager>(),
-                        Get<LightTreeSystem>());
+                        EntityManager.System<LightTreeSystem>());
 
                     overlayManager.AddOverlay(_lightOverlay);
                 }

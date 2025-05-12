@@ -4,6 +4,7 @@ using Robust.Client.Graphics;
 using Robust.Client.UserInterface.RichText;
 using Robust.Shared.Collections;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -15,9 +16,22 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class OutputPanel : Control
     {
+        public const string StyleClassOutputPanelScrollDownButton = "outputPanelScrollDownButton";
+
         [Dependency] private readonly MarkupTagManager _tagManager = default!;
 
         public const string StylePropertyStyleBox = "stylebox";
+
+        public bool ShowScrollDownButton
+        {
+            get => _showScrollDownButton;
+            set
+            {
+                _showScrollDownButton = value;
+                _updateScrollButtonVisibility();
+            }
+        }
+        private bool _showScrollDownButton;
 
         private readonly RingBufferList<RichTextEntry> _entries = new();
         private bool _isAtBottom = true;
@@ -26,6 +40,7 @@ namespace Robust.Client.UserInterface.Controls
         private bool _firstLine = true;
         private StyleBox? _styleBoxOverride;
         private VScrollBar _scrollBar;
+        private Button _scrollDownButton;
 
         public bool ScrollFollowing { get; set; } = true;
 
@@ -43,7 +58,25 @@ namespace Robust.Client.UserInterface.Controls
                 HorizontalAlignment = HAlignment.Right
             };
             AddChild(_scrollBar);
-            _scrollBar.OnValueChanged += _ => _isAtBottom = _scrollBar.IsAtEnd;
+
+            AddChild(_scrollDownButton = new Button()
+            {
+                Name = "scrollLiveBtn",
+                StyleClasses = { StyleClassOutputPanelScrollDownButton },
+                VerticalAlignment = VAlignment.Bottom,
+                HorizontalAlignment = HAlignment.Center,
+                Text = String.Format("⬇    {0}    ⬇", Loc.GetString("output-panel-scroll-down-button-text")),
+                MaxWidth = 300,
+                Visible = false,
+            });
+
+            _scrollDownButton.OnPressed += _ => ScrollToBottom();
+
+            _scrollBar.OnValueChanged += _ =>
+            {
+                _isAtBottom = _scrollBar.IsAtEnd;
+                _updateScrollButtonVisibility();
+            };
         }
 
         public int EntryCount => _entries.Count;
@@ -194,6 +227,7 @@ namespace Robust.Client.UserInterface.Controls
             var styleBoxSize = _getStyleBox()?.MinimumSize.Y ?? 0;
 
             _scrollBar.Page = UIScale * (Height - styleBoxSize);
+            _updateScrollButtonVisibility();
             _invalidateEntries();
         }
 
@@ -293,6 +327,11 @@ namespace Robust.Client.UserInterface.Controls
                 _invalidateEntries();
                 _invalidOnVisible = false;
             }
+        }
+
+        private void _updateScrollButtonVisibility()
+        {
+            _scrollDownButton.Visible = ShowScrollDownButton && !_isAtBottom;
         }
     }
 }

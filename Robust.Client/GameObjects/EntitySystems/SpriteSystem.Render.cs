@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Clyde;
 using Robust.Client.Utility;
@@ -62,10 +63,23 @@ public sealed partial class SpriteSystem
         var entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, sprite.Comp.NoRotation ? -eyeRotation : worldRotation - cardinal);
         var spriteMatrix = Matrix3x2.Multiply(sprite.Comp.LocalMatrix, entityMatrix);
 
+        // TODO: begin
+        // More debugTool assert
+        var directionForCache = Layer.GetDirection(sprite.Comp.MaxRsiDirectionType, angle);
+        // Think of memory saving if we dont want DirectionOrdering
+        // Also override direction is kinda needed
+        List<int>? layerOrder = sprite.Comp._directionOrder.Count == 0 ? null : sprite.Comp.CachedDirectionLayerOrder[directionForCache];
+
+
+        var layersEnumerator = EnumerateLayers(sprite.Comp.Layers, layerOrder);
+
+        // DebugTools.Assert(layerOrder is null || Layers.Count == layerOrder.Count);
+        // TODO: end
+
         // Fast path for when all sprites use the same transform matrix
         if (!sprite.Comp.GranularLayersRendering)
         {
-            foreach (var layer in sprite.Comp.Layers)
+            foreach (var layer in layersEnumerator)
             {
                 RenderLayer(layer, drawingHandle, ref spriteMatrix, angle, overrideDirection);
             }
@@ -84,7 +98,7 @@ public sealed partial class SpriteSystem
         entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, -eyeRotation);
         var transformNoRot = Matrix3x2.Multiply(sprite.Comp.LocalMatrix, entityMatrix);
 
-        foreach (var layer in sprite.Comp.Layers)
+        foreach (var layer in layersEnumerator)
         {
             switch (layer.RenderingStrategy)
             {
@@ -105,6 +119,26 @@ public sealed partial class SpriteSystem
                     break;
             }
         }
+    }
+
+    /// <summary>
+    /// Return layers list enumerated in specified order
+    /// </summary>
+    private static IEnumerable<Layer> EnumerateLayers(List<Layer> layers, List<int>? enumerator)
+    {
+        if (enumerator is null)
+        {
+            foreach (var layer in layers)
+            {
+                yield return layer;
+            }
+            yield break;
+        }
+
+        foreach (var enumeratorItem in enumerator)
+            yield return layers[enumeratorItem];
+
+        yield break;
     }
 
     /// <summary>

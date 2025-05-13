@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
@@ -94,6 +95,8 @@ public sealed partial class SpriteSystem
         sprite.Comp.BoundsDirty = true;
         _tree.QueueTreeUpdate(sprite!);
         QueueUpdateIsInert(sprite!);
+        // TODO:
+        // UpdateOrientationCache();
         return true;
     }
 
@@ -228,6 +231,8 @@ public sealed partial class SpriteSystem
             SpriteSpecifier.Rsi rsi => AddRsiLayer(sprite, rsi.RsiState, rsi.RsiPath, newIndex),
             _ => throw new NotImplementedException()
         };
+        // TODO
+        //UpdateOrientationCache();
     }
 
     /// <summary>

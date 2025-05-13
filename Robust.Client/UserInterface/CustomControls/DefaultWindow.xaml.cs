@@ -145,6 +145,8 @@ namespace Robust.Client.UserInterface.CustomControls
 
         protected override void FrameUpdate(FrameEventArgs args)
         {
+            // This is to avoid unnecessarily setting a position where our size isn't yet fully updated.
+            // This most commonly happens with saved window positions if your window position is <= 0.
             if (!IsMeasureValid)
                 return;
 

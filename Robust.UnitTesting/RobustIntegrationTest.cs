@@ -13,8 +13,6 @@ using Moq;
 using NUnit.Framework;
 using Robust.Client;
 using Robust.Client.Console;
-using Robust.Client.GameStates;
-using Robust.Client.Player;
 using Robust.Client.Timing;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.XAML.Proxy;
@@ -33,13 +31,13 @@ using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
-using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
+using Robust.UnitTesting.Pool;
 using ServerProgram = Robust.Server.Program;
 
 namespace Robust.UnitTesting
@@ -281,7 +279,7 @@ namespace Robust.UnitTesting
         ///     This method must be used before trying to access any state like <see cref="ResolveDependency{T}"/>,
         ///     to prevent race conditions.
         /// </remarks>
-        public abstract class IntegrationInstance : IDisposable
+        public abstract class IntegrationInstance : IIntegrationInstance
         {
             private protected Thread? InstanceThread;
             private protected IDependencyCollection DependencyCollection = default!;
@@ -305,10 +303,11 @@ namespace Robust.UnitTesting
 
             public virtual IntegrationOptions? Options { get; internal set; }
 
-            public IEntityManager EntMan { get; private set; } = default!;
+            public EntityManager EntMan { get; private set; } = default!;
             public IPrototypeManager ProtoMan { get; private set; } = default!;
             public IConfigurationManager CfgMan { get; private set; } = default!;
             public ISharedPlayerManager PlayerMan { get; private set; } = default!;
+            public INetManager NetMan { get; private set; } = default!;
             public IGameTiming Timing { get; private set; } = default!;
             public IMapManager MapMan { get; private set; } = default!;
             public IConsoleHost ConsoleHost { get; private set; } = default!;
@@ -316,20 +315,25 @@ namespace Robust.UnitTesting
 
             protected virtual void ResolveIoC(IDependencyCollection deps)
             {
-                EntMan = deps.Resolve<IEntityManager>();
+                EntMan = deps.Resolve<EntityManager>();
                 ProtoMan = deps.Resolve<IPrototypeManager>();
                 CfgMan = deps.Resolve<IConfigurationManager>();
                 PlayerMan = deps.Resolve<ISharedPlayerManager>();
                 Timing = deps.Resolve<IGameTiming>();
+                NetMan = deps.Resolve<INetManager>();
                 MapMan = deps.Resolve<IMapManager>();
                 ConsoleHost = deps.Resolve<IConsoleHost>();
                 Log = deps.Resolve<ILogManager>().GetSawmill("test");
             }
 
+            [Pure]
             public T System<T>() where T : IEntitySystem
             {
                 return EntMan.System<T>();
             }
+
+            [Pure]
+            public T Resolve<T>() => ResolveDependency<T>();
 
             public TransformComponent Transform(EntityUid uid)
             {
@@ -352,13 +356,7 @@ namespace Robust.UnitTesting
                 await WaitPost(() => ConsoleHost.ExecuteCommand(cmd));
             }
 
-            /// <summary>
-            ///     Whether the instance is still alive.
-            ///     "Alive" indicates that it is able to receive and process commands.
-            /// </summary>
-            /// <exception cref="InvalidOperationException">
-            ///     Thrown if you did not ensure that the instance is idle via <see cref="WaitIdleAsync"/> first.
-            /// </exception>
+            /// <inheritdoc/>
             public bool IsAlive
             {
                 get
@@ -438,16 +436,7 @@ namespace Robust.UnitTesting
                 return DependencyCollection.Resolve<T>();
             }
 
-            /// <summary>
-            ///     Wait for the instance to go idle, either through finishing all commands or shutting down/crashing.
-            /// </summary>
-            /// <param name="throwOnUnhandled">
-            ///     If true, throw an exception if the server dies on an unhandled exception.
-            /// </param>
-            /// <param name="cancellationToken"></param>
-            /// <exception cref="Exception">
-            ///     Thrown if <paramref name="throwOnUnhandled"/> is true and the instance shuts down on an unhandled exception.
-            /// </exception>
+            /// <inheritdoc/>
             public Task WaitIdleAsync(bool throwOnUnhandled = true, CancellationToken cancellationToken = default)
             {
                 if (Options?.Asynchronous != false)
@@ -558,10 +547,7 @@ namespace Robust.UnitTesting
                 }
             }
 
-            /// <summary>
-            ///     Queue for the server to run n ticks.
-            /// </summary>
-            /// <param name="ticks">The amount of ticks to run.</param>
+            /// <inheritdoc/>
             public void RunTicks(int ticks)
             {
                 _isSurelyIdle = false;
@@ -569,9 +555,7 @@ namespace Robust.UnitTesting
                 _toInstanceWriter.TryWrite(new RunTicksMessage(ticks, _currentTicksId));
             }
 
-            /// <summary>
-            ///     <see cref="RunTicks"/> followed by <see cref="WaitIdleAsync"/>
-            /// </summary>
+            /// <inheritdoc/>
             public async Task WaitRunTicks(int ticks)
             {
                 RunTicks(ticks);
@@ -590,12 +574,7 @@ namespace Robust.UnitTesting
                 _toInstanceWriter.TryComplete();
             }
 
-            /// <summary>
-            ///     Queue for a delegate to be ran inside the main loop of the instance.
-            /// </summary>
-            /// <remarks>
-            ///     Do not run NUnit assertions inside <see cref="Post"/>. Use <see cref="Assert"/> instead.
-            /// </remarks>
+            /// <inheritdoc/>
             public void Post(Action post)
             {
                 _isSurelyIdle = false;
@@ -609,15 +588,7 @@ namespace Robust.UnitTesting
                 await WaitIdleAsync();
             }
 
-            /// <summary>
-            ///     Queue for a delegate to be ran inside the main loop of the instance,
-            ///     rethrowing any exceptions in <see cref="WaitIdleAsync"/>.
-            /// </summary>
-            /// <remarks>
-            ///     Exceptions raised inside this callback will be rethrown by <see cref="WaitIdleAsync"/>.
-            ///     This makes it ideal for NUnit assertions,
-            ///     since rethrowing the NUnit assertion directly provides less noise.
-            /// </remarks>
+            /// <inheritdoc/>
             public void Assert(Action assertion)
             {
                 _isSurelyIdle = false;
@@ -630,6 +601,8 @@ namespace Robust.UnitTesting
                 Assert(assertion);
                 await WaitIdleAsync();
             }
+
+            public virtual Task Cleanup() => Task.CompletedTask;
 
             public void Dispose()
             {
@@ -654,7 +627,7 @@ namespace Robust.UnitTesting
             }
         }
 
-        public sealed class ServerIntegrationInstance : IntegrationInstance
+        public sealed class ServerIntegrationInstance : IntegrationInstance, IServerIntegrationInstance
         {
             public ServerIntegrationInstance(ServerIntegrationOptions? options) : base(options)
             {
@@ -724,7 +697,9 @@ namespace Robust.UnitTesting
                 deps.BuildGraph();
                 //ServerProgram.SetupLogging();
                 ServerProgram.InitReflectionManager(deps);
-                deps.Resolve<IReflectionManager>().LoadAssemblies(typeof(RobustIntegrationTest).Assembly);
+
+                if (Options?.LoadTestAssembly != false)
+                    deps.Resolve<IReflectionManager>().LoadAssemblies(typeof(RobustIntegrationTest).Assembly);
 
                 var server = DependencyCollection.Resolve<BaseServer>();
 
@@ -858,15 +833,17 @@ namespace Robust.UnitTesting
                 }
             }
 
+            public override Task Cleanup() => RemoveAllDummySessions();
+
             private Dictionary<string, NetUserId> _dummyUsers = new();
             private Dictionary<NetUserId, ICommonSession> _dummySessions = new();
             public IReadOnlyDictionary<string, NetUserId> DummyUsers => _dummyUsers;
             public IReadOnlyDictionary<NetUserId, ICommonSession> DummySessions => _dummySessions;
         }
 
-        public sealed class ClientIntegrationInstance : IntegrationInstance
+        public sealed class ClientIntegrationInstance : IntegrationInstance, IClientIntegrationInstance
         {
-            public ICommonSession? Session => ((IPlayerManager) PlayerMan).LocalSession;
+            public ICommonSession? Session => PlayerMan.LocalSession;
             public NetUserId? User => Session?.UserId;
             public EntityUid? AttachedEntity => Session?.AttachedEntity;
 
@@ -903,10 +880,10 @@ namespace Robust.UnitTesting
             /// <summary>
             ///     Wire up the server to connect to when <see cref="IClientNetManager.ClientConnect"/> gets called.
             /// </summary>
-            public void SetConnectTarget(ServerIntegrationInstance server)
+            public void SetConnectTarget(IServerIntegrationInstance server)
             {
                 var clientNetManager = ResolveDependency<IntegrationNetManager>();
-                var serverNetManager = server.ResolveDependency<IntegrationNetManager>();
+                var serverNetManager = server.Resolve<IntegrationNetManager>();
 
                 if (!serverNetManager.IsRunning)
                 {
@@ -914,6 +891,14 @@ namespace Robust.UnitTesting
                 }
 
                 clientNetManager.NextConnectChannel = serverNetManager.MessageChannelWriter;
+            }
+
+            public async Task Connect(IServerIntegrationInstance target)
+            {
+                await WaitIdleAsync();
+                await target.WaitIdleAsync();
+                SetConnectTarget(target);
+                await WaitPost(() => ((IClientNetManager) NetMan).ClientConnect(null!, 0, null!));
             }
 
             public async Task CheckSandboxed(Assembly assembly)
@@ -970,7 +955,9 @@ namespace Robust.UnitTesting
                 deps.BuildGraph();
 
                 GameController.RegisterReflection(deps);
-                deps.Resolve<IReflectionManager>().LoadAssemblies(typeof(RobustIntegrationTest).Assembly);
+
+                if (Options?.LoadTestAssembly != false)
+                    deps.Resolve<IReflectionManager>().LoadAssemblies(typeof(RobustIntegrationTest).Assembly);
 
                 var client = DependencyCollection.Resolve<GameController>();
 
@@ -1201,6 +1188,8 @@ namespace Robust.UnitTesting
             public Action? BeforeRegisterComponents { get; set; }
             public Action? BeforeStart { get; set; }
             public Assembly[]? ContentAssemblies { get; set; }
+
+            public bool LoadTestAssembly { get; set; } = true;
 
             /// <summary>
             /// String containing extra prototypes to load. Contents of the string are treated like a yaml file in the

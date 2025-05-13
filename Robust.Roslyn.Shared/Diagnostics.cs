@@ -39,8 +39,9 @@ public static class Diagnostics
     public const string IdForbidLiteral = "RA0033";
     public const string IdObsoleteInheritance = "RA0034";
     public const string IdObsoleteInheritanceWithMessage = "RA0035";
-    public const string IdPrototypeRedundantType = "RA0036";
-    public const string IdPrototypeEndsWithPrototype = "RA0037";
+    public const string IdDataFieldYamlSerializable = "RA0036";
+    public const string IdPrototypeRedundantType = "RA0037";
+    public const string IdPrototypeEndsWithPrototype = "RA0038";
 
     public static SuppressionDescriptor MeansImplicitAssignment =>
         new SuppressionDescriptor("RADC1000", "CS0649", "Marked as implicitly assigned.");

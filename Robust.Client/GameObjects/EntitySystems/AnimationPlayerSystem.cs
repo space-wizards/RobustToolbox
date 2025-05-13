@@ -14,7 +14,9 @@ namespace Robust.Client.GameObjects
         private EntityQuery<AnimationPlayerComponent> _playerQuery;
         private EntityQuery<MetaDataComponent> _metaQuery;
 
+#pragma warning disable CS0414
         [Dependency] private readonly IComponentFactory _compFact = default!;
+#pragma warning restore CS0414
 
         public override void Initialize()
         {

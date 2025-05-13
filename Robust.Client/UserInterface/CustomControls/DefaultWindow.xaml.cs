@@ -145,6 +145,9 @@ namespace Robust.Client.UserInterface.CustomControls
 
         protected override void FrameUpdate(FrameEventArgs args)
         {
+            if (!IsMeasureValid)
+                return;
+
             var (spaceX, spaceY) = Parent!.Size;
 
             var maxX = spaceX - ((AllowOffScreen & DirectionFlag.West) == 0 ? Size.X : WindowEdgeSeparation);

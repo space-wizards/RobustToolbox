@@ -63,7 +63,7 @@ public partial class PrototypeManager
         Dictionary<Type, HashSet<string>> prototypes)
     {
         DebugTools.Assert(field.IsStatic);
-        DebugTools.Assert(!field.HasCustomAttribute<DataFieldAttribute>(), $"Datafields should not be static. Field: {field.Name} in Type: {field.DeclaringType?.FullName}");
+        DebugTools.Assert(!field.HasCustomAttribute<DataFieldAttribute>(), $"Datafields should not be static. Field: {field.Name} in Type: {field.DeclaringType}");
 
         // Is this even a prototype id related field?
         if (!TryGetFieldPrototype(field, out var proto))

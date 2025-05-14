@@ -39,7 +39,6 @@ namespace Robust.Client.GameObjects
     [RegisterComponent]
     public sealed partial class SpriteComponent : Component, IComponentDebug, ISerializationHooks, IComponentTreeEntry<SpriteComponent>, IAnimationProperties
     {
-        #region ECSd
         public const string LogCategory = "go.comp.sprite";
 
         [Dependency] private readonly IResourceCache resourceCache = default!;
@@ -1052,8 +1051,6 @@ namespace Robust.Client.GameObjects
         {
             return Sys.CalculateBounds((Owner, this), worldPosition, worldRotation, eyeRot);
         }
-
-        #endregion
 
         /// <summary>
         ///     Enum to "offset" a cardinal direction.

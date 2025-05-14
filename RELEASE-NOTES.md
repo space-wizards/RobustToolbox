@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* `SpriteSystem.LayerMapReserve()` no longer throws an exception if the specified layer already exists. This makes it behave like the obsoleted `SpriteComponent.LayerMapReserveBlank()`.
 
 ### Internal
 

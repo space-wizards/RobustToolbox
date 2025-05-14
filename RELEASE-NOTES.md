@@ -44,10 +44,11 @@ END TEMPLATE-->
 ### Bugfixes
 
 * OutputPanel and RichTextLabel now remove controls associated with rich text tags when the text is updated.
+* Fix `SpriteComponent.Visible` datafield not being read from yaml.
 
 ### Other
 
-*None yet*
+* `SpriteSystem.LayerMapReserve()` no longer throws an exception if the specified layer already exists. This makes it behave like the obsoleted `SpriteComponent.LayerMapReserveBlank()`.
 
 ### Internal
 

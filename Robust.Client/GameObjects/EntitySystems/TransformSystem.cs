@@ -168,9 +168,9 @@ namespace Robust.Client.GameObjects
                         if (transform.LerpParent != transform.ParentUid)
                         {
                             var oldParentMatrix = GetWorldMatrix(transform.LerpParent);
-                            var parentMatrix = GetInvWorldMatrix(transform.ParentUid);
+                            var parentInvMatrix = GetInvWorldMatrix(transform.ParentUid);
 
-                            var finalMatrix = Matrix3x2.Multiply(parentMatrix, oldParentMatrix);
+                            var finalMatrix = Matrix3x2.Multiply(oldParentMatrix, parentInvMatrix);
                             lerpSource = Vector2.Transform(lerpSource, finalMatrix);
                         }
 

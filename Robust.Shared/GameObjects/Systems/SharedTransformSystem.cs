@@ -20,13 +20,13 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly EntityLookupSystem _lookup = default!;
-        [Dependency] private readonly SharedMapSystem _map = default!;
-        [Dependency] private readonly MetaDataSystem _metaData = default!;
-        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
         [Dependency] private readonly INetManager _netMan = default!;
+        [Dependency] private readonly EntityLookupSystem _lookup = default!;
+        [Dependency] private readonly MetaDataSystem _metaData = default!;
         [Dependency] private readonly SharedContainerSystem _container = default!;
-        [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
+        [Dependency] private readonly SharedMapSystem _map = default!;
+        [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+        [Dependency] protected readonly SharedGridTraversalSystem Traversal = default!;
 
         private EntityQuery<MapComponent> _mapQuery;
         private EntityQuery<MapGridComponent> _gridQuery;
@@ -298,7 +298,7 @@ namespace Robust.Shared.GameObjects
             // have finished running first. Ideally this shouldn't be required, but this is here just in case
             if (checkTraversal)
             {
-                _traversal.CheckTraverse(ent);
+                Traversal.CheckTraverse(ent);
             }
         }
     }

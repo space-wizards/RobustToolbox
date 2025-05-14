@@ -414,31 +414,70 @@ public abstract partial class SharedTransformSystem
     public virtual void SetLocalPosition(EntityUid uid, Vector2 value, TransformComponent? xform = null)
         => SetLocalPositionNoLerp(uid, value, xform);
 
+    internal void SetLocalPositionInternal(Entity<TransformComponent> ent, Vector2 value, bool checkTraversal = true)
+    {
+        if (ent.Comp.Anchored)
+            return;
+
+        if (ent.Comp._localPosition.EqualsApprox(value))
+            return;
+
+        var oldParent = ent.Comp._parent;
+        var oldPos = ent.Comp._localPosition;
+
+        ent.Comp._localPosition = value;
+        var meta = MetaData(ent.Owner);
+        Dirty(ent, meta);
+        ent.Comp.MatricesDirty = true;
+
+        if (!ent.Comp.Initialized)
+            return;
+
+        RaiseMoveEvent((ent.Owner, ent.Comp, meta), oldParent, oldPos, ent.Comp._localRotation, ent.Comp.MapUid, checkTraversal: checkTraversal);
+    }
 
     [Obsolete("use override with EntityUid")]
     public void SetLocalPositionNoLerp(TransformComponent xform, Vector2 value)
         => SetLocalPositionNoLerp(xform.Owner, value, xform);
 
-    public void SetLocalPositionNoLerp(EntityUid uid, Vector2 value, TransformComponent? xform = null)
+    public void SetLocalPositionNoLerp(EntityUid uid, Vector2 value, TransformComponent? xform = null, bool checkTraversal = true)
     {
         if (!XformQuery.Resolve(uid, ref xform))
             return;
 
-#pragma warning disable CS0618
-        xform.LocalPosition = value;
-#pragma warning restore CS0618
+        SetLocalPositionInternal((uid, xform), value, checkTraversal);
     }
 
     #endregion
 
     #region Local Rotation
 
+    internal void SetLocalRotationInternal(Entity<TransformComponent> ent, Angle value)
+    {
+        if (ent.Comp._noLocalRotation)
+            return;
+
+        if (ent.Comp._localRotation.EqualsApprox(value))
+            return;
+
+        var oldRotation = ent.Comp._localRotation;
+        ent.Comp._localRotation = value;
+        var meta = MetaData(ent.Owner);
+        Dirty(ent, meta);
+        ent.Comp.MatricesDirty = true;
+
+        if (!ent.Comp.Initialized)
+            return;
+
+        RaiseMoveEvent((ent.Owner, ent.Comp, meta), ent.Comp._parent, ent.Comp._localPosition, oldRotation, ent.Comp.MapUid, checkTraversal: false);
+    }
+
     public void SetLocalRotationNoLerp(EntityUid uid, Angle value, TransformComponent? xform = null)
     {
         if (!XformQuery.Resolve(uid, ref xform))
             return;
 
-        xform.LocalRotation = value;
+        SetLocalRotationInternal((uid, xform), value);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -871,8 +910,7 @@ public abstract partial class SharedTransformSystem
             DebugTools.Assert(xform.Anchored == newState.Anchored, "Transform state failed to set anchored");
         }
 
-        if (args.Next is TransformComponentState nextTransform
-            && nextTransform.ParentID == GetNetEntity(xform.ParentUid))
+        if (args.Next is TransformComponentState nextTransform)
         {
             xform.NextPosition = nextTransform.LocalPosition;
             xform.NextRotation = nextTransform.Rotation;

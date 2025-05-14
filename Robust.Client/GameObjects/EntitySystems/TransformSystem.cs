@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Numerics;
 using JetBrains.Annotations;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -16,6 +18,8 @@ namespace Robust.Client.GameObjects
     [UsedImplicitly]
     public sealed partial class TransformSystem : SharedTransformSystem
     {
+        [Dependency] private readonly IConfigurationManager _cfgManager = default!;
+
         // Max distance per tick how far an entity can move before it is considered teleporting.
         // TODO: Make these values somehow dependent on server TPS.
         private const float MaxInterpolationDistance = 2.0f;
@@ -29,6 +33,19 @@ namespace Robust.Client.GameObjects
         // Only keep track of transforms actively lerping.
         // Much faster than iterating 3000+ transforms every frame.
         [ViewVariables] private readonly List<Entity<TransformComponent>> _lerpingTransforms = new();
+
+        private bool _lerpEnabled = true;
+
+        public override void Initialize()
+        {
+            base.Initialize();
+            _cfgManager.OnValueChanged(CVars.TransformLerping, SetLerp, true);
+        }
+
+        private void SetLerp(bool val)
+        {
+            _lerpEnabled = val;
+        }
 
         public void Reset()
         {
@@ -106,7 +123,7 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            if (!xform.PredictedLerp || xform.LerpParent != xform.ParentUid)
+            if (!xform.PredictedLerp)
             {
                 // Existing lerp was not due to prediction, but due to state application. That lerp should already
                 // have been rendered, so we will start a new lerp from the current position.
@@ -122,27 +139,46 @@ namespace Robust.Client.GameObjects
 
             var step = (float) (_gameTiming.TickRemainder.TotalSeconds / _gameTiming.TickPeriod.TotalSeconds);
 
+            // We don't actually care about traversal when lerping. The only reason it's even possible is we have
+            // no frame / lerp position like a normal game and do everything live and
+            // we really just want intermediate transform values.
+            var traversal = Traversal.Enabled;
+            Traversal.Enabled = false;
+
             for (var i = 0; i < _lerpingTransforms.Count; i++)
             {
                 var (uid, transform) = _lerpingTransforms[i];
                 var found = false;
 
-                // Only lerp if parent didn't change.
-                // E.g. entering lockers would do it.
-                if (transform.ActivelyLerping
-                    && transform.LerpParent == transform.ParentUid
+                // If lerp not enabled then just clear it. We still keep all the logic in place just in case
+                // any subtle bugs get introduced by aborting it earlier up.
+                if (_lerpEnabled
+                    && transform.ActivelyLerping
                     && transform.ParentUid.IsValid()
                     && !transform.Deleted)
                 {
+                    var oldParent = transform.ParentUid;
+
                     if (transform.NextPosition != null)
                     {
                         var lerpDest = transform.NextPosition.Value;
                         var lerpSource = transform.PrevPosition;
+
+                        // Get old pos in terms of new pos.
+                        if (transform.LerpParent != transform.ParentUid)
+                        {
+                            var oldParentMatrix = GetWorldMatrix(transform.LerpParent);
+                            var parentMatrix = GetInvWorldMatrix(transform.ParentUid);
+
+                            var finalMatrix = Matrix3x2.Multiply(parentMatrix, oldParentMatrix);
+                            lerpSource = Vector2.Transform(lerpSource, finalMatrix);
+                        }
+
                         var distance = (lerpDest - lerpSource).LengthSquared();
 
                         if (distance is > MinInterpolationDistanceSquared and < MaxInterpolationDistanceSquared)
                         {
-                            SetLocalPositionNoLerp(uid, Vector2.Lerp(lerpSource, lerpDest, step), transform);
+                            SetLocalPositionNoLerp(uid, Vector2.Lerp(lerpSource, lerpDest, step), transform, checkTraversal: false);
                             transform.NextPosition = lerpDest;
                             found = true;
                         }
@@ -156,6 +192,9 @@ namespace Robust.Client.GameObjects
                         transform.NextRotation = lerpDest;
                         found = true;
                     }
+
+                    // Lerping shouldn't be re-parenting
+                    DebugTools.Assert(oldParent == transform.ParentUid);
                 }
 
                 // Transforms only get removed from the lerp list if they no longer are in here.
@@ -168,6 +207,8 @@ namespace Robust.Client.GameObjects
                     i -= 1;
                 }
             }
+
+            Traversal.Enabled = traversal;
         }
     }
 }

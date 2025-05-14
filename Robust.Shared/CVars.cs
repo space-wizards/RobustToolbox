@@ -405,6 +405,8 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> NetHWId =
             CVarDef.Create("net.hwid", true, CVar.SERVERONLY);
 
+        public static readonly CVarDef<bool> TransformLerping =
+            CVarDef.Create("transform.lerping", true, CVar.CLIENTONLY);
 
         /**
          * SUS

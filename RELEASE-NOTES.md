@@ -44,6 +44,7 @@ END TEMPLATE-->
 ### Bugfixes
 
 * OutputPanel and RichTextLabel now remove controls associated with rich text tags when the text is updated.
+* Fix `SpriteComponent.Visible` datafield not being read from yaml.
 
 ### Other
 

@@ -59,12 +59,13 @@ namespace Robust.Client.GameObjects
         [DataField] // TODO Sprite access restrict.
         public bool GranularLayersRendering = false;
 
-        [DataField]
+        [DataField("visible")]
         internal bool _visible = true;
 
         // VV convenience variable to examine layer objects using layer keys
+        // ReSharper disable once UnusedMember.Local
         [ViewVariables]
-        private Dictionary<object, Layer> _mappedLayers => LayerMap.ToDictionary(x => x.Key, x => Layers[x.Value]);
+        private Dictionary<object, Layer> MappedLayers => LayerMap.ToDictionary(x => x.Key, x => Layers[x.Value]);
 
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Visible
@@ -93,7 +94,7 @@ namespace Robust.Client.GameObjects
             set => Sys.SetDrawDepth((Owner, this), value);
         }
 
-        [DataField]
+        [DataField("scale")] // Explicit name, in case this field ever gets renamed
         internal Vector2 scale = Vector2.One;
 
         /// <summary>
@@ -108,7 +109,7 @@ namespace Robust.Client.GameObjects
             set => Sys.SetScale((Owner, this), value);
         }
 
-        [DataField]
+        [DataField("rotation")] // Explicit name, in case this field ever gets renamed
         internal Angle rotation = Angle.Zero;
 
         [Animatable]
@@ -120,7 +121,7 @@ namespace Robust.Client.GameObjects
             set => Sys.SetRotation((Owner, this), value);
         }
 
-        [DataField]
+        [DataField("offset")] // Explicit name, in case this field ever gets renamed
         internal Vector2 offset = Vector2.Zero;
 
         /// <summary>
@@ -135,7 +136,7 @@ namespace Robust.Client.GameObjects
             set => Sys.SetOffset((Owner, this), value);
         }
 
-        [DataField]
+        [DataField("color")] // Explicit name, in case this field ever gets renamed
         internal Color color = Color.White;
 
         [Animatable]

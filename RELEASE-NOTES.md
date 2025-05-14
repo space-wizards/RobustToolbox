@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* `IMarkupTag` and related methods in `MarkupTagManager` have been obsoleted and should be replaced with the new `IMarkupTagHandler` interface. Various engine tags (e.g., `BoldTag`, `ColorTag`, etc) no longer implement the old interface.
+*None yet*
 
 ### New features
 
@@ -43,16 +43,36 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* OutputPanel and RichTextLabel now remove controls associated with rich text tags when the text is updated.
-* Fix `SpriteComponent.Visible` datafield not being read from yaml.
+*None yet*
 
 ### Other
 
-* `SpriteSystem.LayerMapReserve()` no longer throws an exception if the specified layer already exists. This makes it behave like the obsoleted `SpriteComponent.LayerMapReserveBlank()`.
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## 258.0.0
+
+### Breaking changes
+
+* `IMarkupTag` and related methods in `MarkupTagManager` have been obsoleted and should be replaced with the new `IMarkupTagHandler` interface. Various engine tags (e.g., `BoldTag`, `ColorTag`, etc) no longer implement the old interface.
+
+### New features
+
+* Add IsValidPath to ResPath and make some minor performance improvements.
+
+### Bugfixes
+
+* OutputPanel and RichTextLabel now remove controls associated with rich text tags when the text is updated.
+* Fix `SpriteComponent.Visible` datafield not being read from yaml.
+* Fix container state handling not forcing inserts.
+
+### Other
+
+* `SpriteSystem.LayerMapReserve()` no longer throws an exception if the specified layer already exists. This makes it behave like the obsoleted `SpriteComponent.LayerMapReserveBlank()`.
 
 
 ## 257.0.2

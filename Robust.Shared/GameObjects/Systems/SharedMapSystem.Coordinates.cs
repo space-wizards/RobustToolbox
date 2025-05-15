@@ -23,7 +23,7 @@ public abstract partial class SharedMapSystem
         }
 
         // Check if mappos intersects a grid.
-        var mapPos = coordinates.ToMap(EntityManager, _transform);
+        var mapPos = _transform.ToMapCoordinates(coordinates);
 
         if (_mapInternal.TryFindGridAt(mapPos, out var gridUid, out gridComponent))
         {

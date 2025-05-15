@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -9,6 +10,7 @@ using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
@@ -22,7 +24,6 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly FixtureSystem _fixtures = default!;
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
-        [Dependency] private readonly IComponentFactory _factory = default!;
         [Dependency] private readonly MetaDataSystem _meta = default!;
 
         private EntityQuery<FixturesComponent> _fixturesQuery;
@@ -55,6 +56,27 @@ namespace Robust.Shared.GameObjects
 
             SubscribeLocalEvent<MapLightComponent, ComponentGetState>(OnMapLightGetState);
             SubscribeLocalEvent<MapLightComponent, ComponentHandleState>(OnMapLightHandleState);
+        }
+
+        /// <summary>
+        /// Converts the specified index to a bitmask with the specified chunksize.
+        /// </summary>
+        [Pure]
+        public static ulong ToBitmask(Vector2i index, byte chunkSize = 8)
+        {
+            DebugTools.Assert(chunkSize <= 8);
+            DebugTools.Assert((index.X + index.Y * chunkSize) < 64);
+
+            return (ulong) 1 << (index.X + index.Y * chunkSize);
+        }
+
+        /// <returns>True if the specified bitflag is set for this index.</returns>
+        [Pure]
+        public static bool FromBitmask(Vector2i index, ulong bitmask, byte chunkSize = 8)
+        {
+            var flag = ToBitmask(index, chunkSize);
+
+            return (flag & bitmask) == flag;
         }
     }
 
@@ -159,9 +181,9 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Creates a new instance of this class.
         /// </summary>
-        public TileChangedEvent(EntityUid uid, TileRef newTile, Tile oldTile, Vector2i chunkIndex)
+        public TileChangedEvent(Entity<MapGridComponent> entity, TileRef newTile, Tile oldTile, Vector2i chunkIndex)
         {
-            Entity = uid;
+            Entity = entity;
             NewTile = newTile;
             OldTile = oldTile;
             ChunkIndex = chunkIndex;
@@ -173,9 +195,9 @@ namespace Robust.Shared.GameObjects
         public bool EmptyChanged => OldTile.IsEmpty != NewTile.Tile.IsEmpty;
 
         /// <summary>
-        ///     EntityUid of the grid with the tile-change. TileRef stores the GridId.
+        ///     Entity of the grid with the tile-change. TileRef stores the GridId.
         /// </summary>
-        public readonly EntityUid Entity;
+        public readonly Entity<MapGridComponent> Entity;
 
         /// <summary>
         ///     New tile that replaced the old one.

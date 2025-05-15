@@ -21,7 +21,7 @@ namespace Robust.Shared.Prototypes
     /// <summary>
     /// Prototype that represents game entities.
     /// </summary>
-    [Prototype("entity", -1)]
+    [Prototype(-1)]
     public sealed partial class EntityPrototype : IPrototype, IInheritingPrototype, ISerializationHooks
     {
         private ILocalizationManager _loc = default!;

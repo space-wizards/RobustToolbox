@@ -25,12 +25,6 @@ public sealed class UserInterfaceSystem : SharedUserInterfaceSystem
         ProtoManager.PrototypesReloaded -= OnProtoReload;
     }
 
-    protected override void OnUserInterfaceShutdown(Entity<UserInterfaceComponent> ent, ref ComponentShutdown args)
-    {
-        base.OnUserInterfaceShutdown(ent, ref args);
-        _savedPositions.Remove(ent.Owner);
-    }
-
     /// <inheritdoc />
     public override void OpenUi(Entity<UserInterfaceComponent?> entity, Enum key, bool predicted = false)
     {

@@ -13,6 +13,7 @@ using Robust.Client.Physics;
 using Robust.Client.Player;
 using Robust.Client.Timing;
 using Robust.Shared;
+using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.Containers;
@@ -384,7 +385,6 @@ namespace Robust.Client.GameStates
                     _processor.UpdateFullRep(curState);
                 }
 
-                IEnumerable<NetEntity> createdEntities;
                 using (_prof.Group("ApplyGameState"))
                 {
                     if (_timing.LastProcessedTick < targetProcessedTick && nextState != null)
@@ -564,6 +564,21 @@ namespace Robust.Client.GameStates
             var metaQuery = _entities.GetEntityQuery<MetaDataComponent>();
             RemQueue<IComponent> toRemove = new();
 
+            // Handle predicted entity spawns.
+            var predicted = new ValueList<EntityUid>();
+            var predictedQuery = _entities.AllEntityQueryEnumerator<PredictedSpawnComponent>();
+
+            while (predictedQuery.MoveNext(out var uid, out var _))
+            {
+                predicted.Add(uid);
+            }
+
+            // Entity will get re-created as part of the tick.
+            foreach (var ent in predicted)
+            {
+                _entities.DeleteEntity(ent);
+            }
+
             foreach (var entity in system.DirtyEntities)
             {
                 DebugTools.Assert(toRemove.Count == 0);
@@ -699,8 +714,9 @@ namespace Robust.Client.GameStates
 
 #if !EXCEPTION_TOLERANCE
                     throw new KeyNotFoundException();
-#endif
+#else
                     continue;
+#endif
                 }
 
                 var compData = _compDataPool.Get();
@@ -961,8 +977,9 @@ namespace Robust.Client.GameStates
                 RequestFullState();
 #if !EXCEPTION_TOLERANCE
                 throw;
-#endif
+#else
                 return;
+#endif
             }
 
             if (data.Created)
@@ -980,8 +997,9 @@ namespace Robust.Client.GameStates
                     RequestFullState();
 #if !EXCEPTION_TOLERANCE
                     throw;
-#endif
+#else
                     return;
+#endif
                 }
             }
 
@@ -1288,6 +1306,11 @@ namespace Robust.Client.GameStates
                     meta.LastStateApplied = lastStateApplied.Value;
 
                 var xform = xforms.GetComponent(ent.Value);
+
+                // TODO PVS DETACH
+                // Why is this if block here again? If a null-space entity gets sent to a player via some PVS override,
+                // and then later on it gets removed, you would assume that the client marks it as detached?
+                // I.e., modifying the metadata flag & pausing the entity should probably happen outside of this block.
                 if (xform.ParentUid.IsValid())
                 {
                     lookupSys.RemoveFromEntityTree(ent.Value, xform);
@@ -1307,6 +1330,13 @@ namespace Robust.Client.GameStates
                     meta._flags |= MetaDataFlags.Detached;
                     xformSys.DetachEntity(ent.Value, xform);
                     DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) == 0);
+
+                    // We mark the entity as paused, without raising a pause-event.
+                    // The entity gets un-paused when the metadata's comp-state is reapplied (which also does not raise
+                    // an un-pause event). The assumption is that game logic that has to handle the pausing should be
+                    // getting networked anyway. And if its some client-side timer on a networked entity, the timer
+                    // shouldn't actually be getting paused just because the entity has left the players view.
+                    meta.PauseTime = TimeSpan.Zero;
 
                     if (container != null)
                         containerSys.AddExpectedEntity(netEntity, container);

@@ -397,6 +397,10 @@ public sealed class CollisionPredictionTest : RobustIntegrationTest
             Assert.That(sSys.CollisionEnded, Is.False);
             Assert.That(cSys.CollisionEnded, Is.False);
         }
+
+        await client.WaitPost(() => netMan.ClientDisconnect(""));
+        await server.WaitRunTicks(5);
+        await client.WaitRunTicks(5);
     }
 }
 

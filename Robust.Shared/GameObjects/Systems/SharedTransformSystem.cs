@@ -133,7 +133,7 @@ namespace Robust.Shared.GameObjects
             if (xform.GridUid == xform.ParentUid)
                 return xform.Coordinates;
 
-            DebugTools.Assert(!_mapManager.IsGrid(uid) && !_mapManager.IsMap(uid));
+            DebugTools.Assert(!_gridQuery.HasComp(uid) && !_mapQuery.HasComp(uid));
 
             // Not parented to grid so convert their pos back to the grid.
             var worldPos = GetWorldPosition(xform, XformQuery);
@@ -174,7 +174,7 @@ namespace Robust.Shared.GameObjects
             if (mapId == parentUid)
                 return coordinates;
 
-            DebugTools.Assert(!_mapManager.IsGrid(parentUid) && !_mapManager.IsMap(parentUid));
+            DebugTools.Assert(!HasComp<MapGridComponent>(parentUid) && !HasComp<MapComponent>(parentUid));
 
             // Not parented to grid so convert their pos back to the grid.
             var worldPos = Vector2.Transform(coordinates.Position, GetWorldMatrix(parentXform, XformQuery));
@@ -265,7 +265,8 @@ namespace Robust.Shared.GameObjects
             EntityUid oldParent,
             Vector2 oldPosition,
             Angle oldRotation,
-            EntityUid? oldMap)
+            EntityUid? oldMap,
+            bool checkTraversal = true)
         {
             var pos = ent.Comp1._parent == EntityUid.Invalid
                 ? default
@@ -295,7 +296,10 @@ namespace Robust.Shared.GameObjects
             // Finally, handle grid traversal. This is handled separately to avoid out-of-order move events.
             // I.e., if the traversal raises its own move event, this ensures that all the old move event handlers
             // have finished running first. Ideally this shouldn't be required, but this is here just in case
-            _traversal.CheckTraverse(ent);
+            if (checkTraversal)
+            {
+                _traversal.CheckTraverse(ent);
+            }
         }
     }
 

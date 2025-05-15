@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using Robust.Shared.IoC;
-using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 
 namespace Robust.Shared.Map
@@ -10,7 +8,6 @@ namespace Robust.Shared.Map
     [Virtual]
     internal class TileDefinitionManager : ITileDefinitionManager
     {
-        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         protected readonly List<ITileDefinition> TileDefs;
         private readonly Dictionary<string, ITileDefinition> _tileNames;
         private readonly Dictionary<string, List<string>> _awaitingAliases;

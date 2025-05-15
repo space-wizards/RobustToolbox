@@ -1,0 +1,2 @@
+map = map
+grid = map

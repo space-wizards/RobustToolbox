@@ -66,6 +66,11 @@ public sealed class Broadphase_Test
             entManager.GetComponent<MapComponent>(mapEnt).MapId);
 
         Assert.That(staticBody.ContactCount, Is.EqualTo(1));
+
+        physicsSystem.CollideContacts();
+
+        // Make sure it's actually marked as touching and not just "well it's in range right".
+        Assert.That(staticBody.Contacts.First!.Value.IsTouching, Is.EqualTo(true));
     }
 
     /// <summary>

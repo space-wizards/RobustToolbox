@@ -10,6 +10,7 @@ using Robust.Client.Graphics;
 using Robust.Client.Graphics.Clyde;
 using Robust.Client.HWId;
 using Robust.Client.Input;
+using Robust.Client.Localization;
 using Robust.Client.Map;
 using Robust.Client.Placement;
 using Robust.Client.Player;
@@ -36,6 +37,7 @@ using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
@@ -104,6 +106,8 @@ namespace Robust.Client
             deps.Register<IGamePrototypeLoadManager, GamePrototypeLoadManager>();
             deps.Register<NetworkResourceManager>();
             deps.Register<IReloadManager, ReloadManager>();
+            deps.Register<ILocalizationManager, ClientLocalizationManager>();
+            deps.Register<ILocalizationManagerInternal, ClientLocalizationManager>();
 
             switch (mode)
             {

@@ -475,7 +475,7 @@ public sealed class EntityDeserializer :
 
         foreach (var (key, value) in tileMap.Children)
         {
-            var yamlTileId = ((ValueDataNode) key).AsInt();
+            var yamlTileId = int.Parse(key, CultureInfo.InvariantCulture);
             var tileName = ((ValueDataNode) value).Value;
             if (migrations.TryGetValue(tileName, out var @new))
                 tileName = @new;
@@ -1000,7 +1000,7 @@ public sealed class EntityDeserializer :
                 continue;
 
             DebugTools.Assert(meta.EntityLifeStage == EntityLifeStage.Initialized);
-            meta.EntityLifeStage = EntityLifeStage.MapInitialized;
+            EntMan.SetLifeStage(meta, EntityLifeStage.MapInitialized);
         }
 
         _log.Debug($"Finished flagging mapinit in {_stopwatch.Elapsed}");

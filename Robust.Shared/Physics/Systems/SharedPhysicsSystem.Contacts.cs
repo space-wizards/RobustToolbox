@@ -30,12 +30,12 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using JetBrains.Annotations;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
@@ -113,10 +113,7 @@ public abstract partial class SharedPhysicsSystem
 #if DEBUG
             contact._debugPhysics = _debugPhysicsSystem;
 #endif
-            contact.Manifold = new Manifold
-            {
-                Points = new ManifoldPoint[2]
-            };
+            contact.Manifold = new Manifold();
 
             return contact;
         }
@@ -297,6 +294,14 @@ public abstract partial class SharedPhysicsSystem
         DebugTools.Assert(!fixB.Contacts.ContainsKey(fixA));
         fixB.Contacts.Add(fixA, contact);
         bodB.Contacts.AddLast(contact.BodyBNode);
+
+        // If it's a spawned static ent then need to wake any contacting entities.
+        // The issue is that static ents can never be awake and if it spawns on an asleep entity never gets a contact.
+        // Checking only bodyA should be okay because if bodyA is the other ent (i.e. dynamic / kinematic) then it should already be awake.
+        if (bodyA.BodyType == BodyType.Static && !bodyB.Awake)
+        {
+            WakeBody(uidB, body: bodyB);
+        }
     }
 
     /// <summary>
@@ -353,10 +358,10 @@ public abstract partial class SharedPhysicsSystem
 
         if (contact.Manifold.PointCount > 0 && contact.FixtureA?.Hard == true && contact.FixtureB?.Hard == true)
         {
-            if (bodyA.CanCollide)
+            if (bodyA.CanCollide && !TerminatingOrDeleted(aUid))
                 SetAwake((aUid, bodyA), true);
 
-            if (bodyB.CanCollide)
+            if (bodyB.CanCollide && !TerminatingOrDeleted(bUid))
                 SetAwake((bUid, bodyB), true);
         }
 
@@ -426,6 +431,12 @@ public abstract partial class SharedPhysicsSystem
 
             var xformA = _xformQuery.GetComponent(uidA);
             var xformB = _xformQuery.GetComponent(uidB);
+
+            if (xformA.MapID == MapId.Nullspace || xformB.MapID == MapId.Nullspace)
+            {
+                DestroyContact(contact);
+                continue;
+            }
 
             // Is this contact flagged for filtering?
             if ((contact.Flags & ContactFlags.Filter) != 0x0)
@@ -618,24 +629,6 @@ public abstract partial class SharedPhysicsSystem
         ArrayPool<Vector2>.Shared.Return(worldPoints);
     }
 
-    private record struct UpdateTreesJob : IRobustJob
-    {
-        public IEntityManager EntManager;
-
-        public void Execute()
-        {
-            var query = EntManager.AllEntityQueryEnumerator<BroadphaseComponent>();
-
-            while (query.MoveNext(out var broadphase))
-            {
-                broadphase.DynamicTree.Rebuild(false);
-                broadphase.StaticTree.Rebuild(false);
-                broadphase.SundriesTree._b2Tree.Rebuild(false);
-                broadphase.StaticSundriesTree._b2Tree.Rebuild(false);
-            }
-        }
-    }
-
     private void BuildManifolds(Contact[] contacts, int count, ContactStatus[] status, Vector2[] worldPoints)
     {
         if (count == 0)
@@ -664,8 +657,8 @@ public abstract partial class SharedPhysicsSystem
             var aUid = contact.EntityA;
             var bUid = contact.EntityB;
 
-            SetAwake(aUid, bodyA, true);
-            SetAwake(bUid, bodyB, true);
+            SetAwake((aUid, bodyA), true);
+            SetAwake((bUid, bodyB), true);
         }
 
         ArrayPool<bool>.Shared.Return(wake);
@@ -791,7 +784,7 @@ public abstract partial class SharedPhysicsSystem
         if (!PhysicsQuery.Resolve(entity.Owner, ref entity.Comp))
             return;
 
-        _broadphase.RegenerateContacts(entity.Owner, entity.Comp);
+        _broadphase.RegenerateContacts(entity);
     }
 
     /// <summary>

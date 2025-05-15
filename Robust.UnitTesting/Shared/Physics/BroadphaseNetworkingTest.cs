@@ -162,6 +162,10 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
         Assert.That(cPlayerXform.Broadphase?.Static, Is.EqualTo(broadphase.Static));
         Assert.That(cPlayerXform.Broadphase?.CanCollide, Is.EqualTo(broadphase.CanCollide));
         Assert.That(sPlayerXform.Broadphase, Is.EqualTo(broadphase));
+
+        await client.WaitPost(() => netMan.ClientDisconnect(""));
+        await server.WaitRunTicks(5);
+        await client.WaitRunTicks(5);
     }
 }
 

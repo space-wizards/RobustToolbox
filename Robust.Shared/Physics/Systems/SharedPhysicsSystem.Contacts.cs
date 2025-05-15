@@ -294,6 +294,14 @@ public abstract partial class SharedPhysicsSystem
         DebugTools.Assert(!fixB.Contacts.ContainsKey(fixA));
         fixB.Contacts.Add(fixA, contact);
         bodB.Contacts.AddLast(contact.BodyBNode);
+
+        // If it's a spawned static ent then need to wake any contacting entities.
+        // The issue is that static ents can never be awake and if it spawns on an asleep entity never gets a contact.
+        // Checking only bodyA should be okay because if bodyA is the other ent (i.e. dynamic / kinematic) then it should already be awake.
+        if (bodyA.BodyType == BodyType.Static && !bodyB.Awake)
+        {
+            WakeBody(uidB, body: bodyB);
+        }
     }
 
     /// <summary>

@@ -46,13 +46,20 @@ public sealed partial class EntitySaveTestComponent : Component
 /// Dummy tile definition for serializing grids.
 /// </summary>
 [Prototype("testTileDef")]
-public sealed class TileDef(string id) : ITileDefinition
+public sealed partial class TileDef(string id) : ITileDefinition
 {
     public ushort TileId { get; set; }
     public string Name => id;
 
     [IdDataField]
-    public string ID => id;
+    public string ID
+    {
+        get => id;
+        private set
+        {
+            id = value;
+        }
+    }
     public ResPath? Sprite => null;
     public Dictionary<Direction, ResPath> EdgeSprites => new();
     public int EdgeSpritePriority => 0;

@@ -179,6 +179,8 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
             if (context.SemanticModel.GetSymbolInfo(field.Declaration.Type).Symbol is not ITypeSymbol fieldTypeSymbol)
                 continue;
 
+            fieldTypeSymbol = TypeSymbolHelper.GetNullableUnderlyingTypeOrSelf(fieldTypeSymbol);
+
             if (IsNotYamlSerializable(fieldSymbol, fieldTypeSymbol))
             {
                 context.ReportDiagnostic(Diagnostic.Create(DataFieldYamlSerializableRule,
@@ -228,6 +230,8 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
 
         if (context.SemanticModel.GetSymbolInfo(property.Type).Symbol is not ITypeSymbol propertyTypeSymbol)
             return;
+
+        propertyTypeSymbol = TypeSymbolHelper.GetNullableUnderlyingTypeOrSelf(propertyTypeSymbol);
 
         if (IsNotYamlSerializable(propertySymbol, propertyTypeSymbol))
         {

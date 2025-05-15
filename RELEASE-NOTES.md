@@ -54,6 +54,17 @@ END TEMPLATE-->
 *None yet*
 
 
+## 259.0.0
+
+### Breaking changes
+
+* TileChangedEvent now has an array of tile changed entries rather than raising an individual event for every single tile changed.
+
+### Other
+
+* `Entity<T>` methods were marked as `readonly` as appropriate.
+
+
 ## 258.0.1
 
 ### Bugfixes

@@ -4,6 +4,7 @@ using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
@@ -17,6 +18,56 @@ namespace Robust.UnitTesting.Shared.Physics;
 [TestFixture]
 public sealed class Broadphase_Test
 {
+    /// <summary>
+    /// Tests that spawned static ents properly collide with entities in range.
+    /// </summary>
+    [Test]
+    public void TestStaticSpawn()
+    {
+        var sim = RobustServerSimulation
+            .NewSimulation()
+            .InitializeInstance();
+
+        var entManager = sim.Resolve<IEntityManager>();
+        var fixtureSystem = entManager.System<FixtureSystem>();
+        var physicsSystem = entManager.System<SharedPhysicsSystem>();
+
+        var (mapEnt, mapId) = sim.CreateMap();
+
+        var dynamicEnt = entManager.SpawnAtPosition(null, new EntityCoordinates(mapEnt, Vector2.Zero));
+        var dynamicBody = entManager.AddComponent<PhysicsComponent>(dynamicEnt);
+        physicsSystem.SetBodyType(dynamicEnt, BodyType.Dynamic, body: dynamicBody);
+
+        fixtureSystem.TryCreateFixture(dynamicEnt, new PhysShapeCircle(1f), "fix1", collisionMask: 10);
+        physicsSystem.WakeBody(dynamicEnt, body: dynamicBody);
+
+        Assert.That(dynamicBody.Awake);
+
+        physicsSystem.SetAwake((dynamicEnt, dynamicBody), false);
+        Assert.That(!dynamicBody.Awake);
+
+        // Clear move buffer
+        entManager.System<SharedBroadphaseSystem>().FindNewContacts(
+            entManager.GetComponent<PhysicsMapComponent>(mapEnt),
+            entManager.GetComponent<MapComponent>(mapEnt).MapId);
+
+        var staticEnt = entManager.SpawnAtPosition(null, new EntityCoordinates(mapEnt, Vector2.Zero));
+        var staticBody = entManager.AddComponent<PhysicsComponent>(staticEnt);
+        physicsSystem.SetBodyType(staticEnt, BodyType.Static, body: staticBody);
+
+        fixtureSystem.TryCreateFixture(staticEnt, new PhysShapeCircle(1f), "fix1", collisionLayer: 10);
+        physicsSystem.SetCanCollide(staticEnt, true);
+
+        Assert.That(!staticBody.Awake);
+        Assert.That(staticBody.ContactCount, Is.EqualTo(0));
+
+        entManager.System<SharedBroadphaseSystem>().FindNewContacts(
+            entManager.GetComponent<PhysicsMapComponent>(mapEnt),
+            entManager.GetComponent<MapComponent>(mapEnt).MapId);
+
+        Assert.That(staticBody.ContactCount, Is.EqualTo(1));
+    }
+
     /// <summary>
     /// If we reparent a sundries entity to another broadphase does it correctly update.
     /// </summary>

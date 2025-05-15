@@ -45,10 +45,6 @@ namespace Robust.Shared.GameObjects
             set => LifeStage = value;
         }
 
-        public virtual bool SendOnlyToOwner => false;
-
-        public virtual bool SessionSpecific => false;
-
         /// <inheritdoc />
         [ViewVariables]
         public bool Initialized => LifeStage >= ComponentLifeStage.Initializing;

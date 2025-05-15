@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 258.0.1
+
+### Bugfixes
+
+* Fix static physics bodies not generating contacts if they spawn onto sleeping bodies.
+
+
 ## 258.0.0
 
 ### Breaking changes

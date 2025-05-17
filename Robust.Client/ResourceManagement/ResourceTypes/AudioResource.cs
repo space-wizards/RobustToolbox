@@ -1,8 +1,8 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using Robust.Client.Audio;
-using Robust.Shared.Audio;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Utility;
@@ -11,6 +11,13 @@ namespace Robust.Client.ResourceManagement;
 
 public sealed class AudioResource : BaseResource
 {
+    // from: https://en.wikipedia.org/wiki/List_of_file_signatures
+    private static readonly byte[] OggSignature = "OggS"u8.ToArray();
+    private static readonly byte[] RiffSignature = "RIFF"u8.ToArray();
+    private const int WavSignatureStart = 8; // RIFF????
+    private static readonly byte[] WavSignature = "WAVE"u8.ToArray();
+    private const int MaxSignatureLength = 12; // RIFF????WAVE
+
     public AudioStream AudioStream { get; private set; } = default!;
 
     public void Load(AudioStream stream)
@@ -28,14 +35,19 @@ public sealed class AudioResource : BaseResource
         }
 
         using var fileStream = cache.ContentFileRead(path);
+        var seekableStream = fileStream.CanSeek ? fileStream : fileStream.CopyToMemoryStream();
+        byte[] signature = seekableStream.ReadExact(MaxSignatureLength);
+        seekableStream.Seek(0, SeekOrigin.Begin);
+
         var audioManager = dependencies.Resolve<IAudioInternal>();
-        if (path.Extension == "ogg")
+        if (signature[..OggSignature.Length].SequenceEqual(OggSignature))
         {
-            AudioStream = audioManager.LoadAudioOggVorbis(fileStream, path.ToString());
+            AudioStream = audioManager.LoadAudioOggVorbis(seekableStream, path.ToString());
         }
-        else if (path.Extension == "wav")
+        else if (signature[..RiffSignature.Length].SequenceEqual(RiffSignature)
+                 && signature[WavSignatureStart..MaxSignatureLength].SequenceEqual(WavSignature))
         {
-            AudioStream = audioManager.LoadAudioWav(fileStream, path.ToString());
+            AudioStream = audioManager.LoadAudioWav(seekableStream, path.ToString());
         }
         else
         {

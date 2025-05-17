@@ -164,6 +164,10 @@ public sealed class MissingParentTest : RobustIntegrationTest
         Assert.That(client.Transform(entity).ParentUid.IsValid(), Is.True);
         Assert.That(client.Transform(entity).ParentUid, Is.EqualTo(newParent));
         Assert.That(client.MetaData(entity).Flags & MetaDataFlags.Detached, Is.EqualTo(MetaDataFlags.None));
+
+        await client.WaitPost(() => netMan.ClientDisconnect(""));
+        await server.WaitRunTicks(5);
+        await client.WaitRunTicks(5);
     }
 }
 

@@ -15,7 +15,7 @@ public interface IParallelRobustJob
     /// <summary>
     /// Size of each batch per job.
     /// </summary>
-    public virtual int BatchSize => 1;
+    public virtual int BatchSize => 8;
 
     public void Execute(int index);
 }

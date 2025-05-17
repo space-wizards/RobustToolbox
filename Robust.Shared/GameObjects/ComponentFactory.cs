@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
@@ -51,6 +52,9 @@ namespace Robust.Shared.GameObjects
 
         private ComponentRegistration[] _array = Array.Empty<ComponentRegistration>();
 
+        private FrozenDictionary<string, string[]> _aliases = FrozenDictionary<string, string[]>.Empty;
+        private FrozenDictionary<string, string> _aliasLookup = FrozenDictionary<string, string>.Empty;
+
         /// <summary>
         /// Any component name requested that ends with this postfix, and is missing
         /// will be treated as ignored, instead of throwing an error
@@ -84,14 +88,17 @@ namespace Robust.Shared.GameObjects
 
         private IEnumerable<ComponentRegistration> AllRegistrations => _types.Values;
 
-        private ComponentRegistration Register(Type type,
+        private ComponentRegistration Register(
+            Type type,
             CompIdx idx,
             Dictionary<string, ComponentRegistration> names,
             Dictionary<string, string> lowerCaseNames,
             Dictionary<Type, ComponentRegistration> types,
             Dictionary<CompIdx, Type> idxToType,
             HashSet<string> ignored,
-            bool overwrite = false)
+            bool overwrite,
+            Dictionary<string, string> aliasLookup,
+            Dictionary<string, string[]> aliases)
         {
             if (_networkedComponents is not null)
                 throw new ComponentRegistrationLockException();
@@ -130,6 +137,15 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException($"{lowerCaseName} is already registered, previous: {prevName}");
 
             var unsaved = type.HasCustomAttribute<UnsavedComponentAttribute>();
+            var autoReg = type.GetCustomAttribute<RegisterComponentAttribute>();
+            if (autoReg?.Aliases is {Length: > 0} aliasArr)
+            {
+                aliases[name] = aliasArr;
+                foreach (var alias in aliasArr)
+                {
+                    aliasLookup[alias] = name;
+                }
+            }
 
             var registration = new ComponentRegistration(name, type, idx, unsaved);
 
@@ -468,6 +484,8 @@ namespace Robust.Shared.GameObjects
             var typesDict = _types.ToDictionary();
             var idxToType = _idxToType.ToDictionary();
             var ignored = _ignored.ToHashSet();
+            var aliasLookup = _aliasLookup.ToDictionary();
+            var aliases = _aliases.ToDictionary();
 
             var added = new ComponentRegistration[types.Length];
             var typeToidx = _typeToIdx.ToDictionary();
@@ -478,7 +496,7 @@ namespace Robust.Shared.GameObjects
                 var idx = CompIdx.GetIndex(type);
                 typeToidx[type] = idx;
 
-                added[i] = Register(type, idx, names, lowerCaseNames, typesDict, idxToType, ignored, overwrite);
+                added[i] = Register(type, idx, names, lowerCaseNames, typesDict, idxToType, ignored, overwrite, aliasLookup, aliases);
             }
 
             var st = RStopwatch.StartNew();
@@ -488,6 +506,8 @@ namespace Robust.Shared.GameObjects
             _types = typesDict.ToFrozenDictionary();
             _idxToType = idxToType.ToFrozenDictionary();
             _ignored = ignored.ToFrozenSet();
+            _aliases = aliases.ToFrozenDictionary();
+            _aliasLookup = aliasLookup.ToFrozenDictionary();
             _sawmill.Verbose($"Freezing component factory took {st.Elapsed.TotalMilliseconds:f2}ms");
             ComponentsAdded?.Invoke(added);
         }
@@ -561,6 +581,16 @@ namespace Robust.Shared.GameObjects
                 throw new ComponentRegistrationLockException();
 
             return GetHash(networkedOnly ? _networkedComponents : _array);
+        }
+
+        public bool IsAlias(string alias, [NotNullWhen(true)] out string? name)
+        {
+            return _aliasLookup.TryGetValue(alias, out name);
+        }
+
+        public bool TryGetAliases(string name, [NotNullWhen(true)] out string[]? aliases)
+        {
+            return _aliases.TryGetValue(name, out aliases);
         }
 
         public byte[] GetHash(IEnumerable<ComponentRegistration> comps)

@@ -514,7 +514,7 @@ public abstract partial class SharedMapSystem
 
             if (TryComp<GridTreeComponent>(xform.MapUid, out var gridTree))
             {
-                var proxy = gridTree.Tree.CreateProxy(in aabb, uint.MaxValue, (uid, _fixturesQuery.Comp(uid), component));
+                var proxy = gridTree.Tree.CreateProxy(in aabb, uint.MaxValue, (uid, _physicsQuery.Comp(uid), component));
                 DebugTools.Assert(component.MapProxy == DynamicTree.Proxy.Free);
                 component.MapProxy = proxy;
             }
@@ -568,7 +568,7 @@ public abstract partial class SharedMapSystem
 
         if (TryComp<GridTreeComponent>(xform.MapUid, out var gridTree))
         {
-            var proxy = gridTree.Tree.CreateProxy(in aabb, uint.MaxValue, (uid, _fixturesQuery.Comp(uid), grid));
+            var proxy = gridTree.Tree.CreateProxy(in aabb, uint.MaxValue, (uid, _physicsQuery.Comp(uid), grid));
             DebugTools.Assert(grid.MapProxy == DynamicTree.Proxy.Free);
             grid.MapProxy = proxy;
         }
@@ -650,7 +650,7 @@ public abstract partial class SharedMapSystem
                 foreach (var id in mapChunk.Fixtures)
                 {
                     mapChunk.Fixtures.Remove(id);
-                    _fixtures.DestroyFixture(uid, id, false, manager: manager, body: body, xform: xform);
+                    _physics.DestroyFixture(uid, id, false, body: body, xform: xform);
                 }
 
                 RemoveChunk(uid, grid, mapChunk.Indices);

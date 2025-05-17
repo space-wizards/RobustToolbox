@@ -65,7 +65,6 @@ public sealed class Joints_Test
         var factory = RobustServerSimulation.NewSimulation();
         var server = factory.InitializeInstance();
         var entManager = server.Resolve<IEntityManager>();
-        var fixtureSystem = entManager.EntitySysManager.GetEntitySystem<FixtureSystem>();
         var jointSystem = entManager.EntitySysManager.GetEntitySystem<JointSystem>();
         var broadphaseSystem = entManager.EntitySysManager.GetEntitySystem<SharedBroadphaseSystem>();
         var physicsSystem = server.Resolve<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>();

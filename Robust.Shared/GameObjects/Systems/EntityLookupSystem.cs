@@ -83,7 +83,6 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
     private EntityQuery<BroadphaseComponent> _broadQuery;
     private EntityQuery<ContainerManagerComponent> _containerQuery;
-    private EntityQuery<FixturesComponent> _fixturesQuery;
     private EntityQuery<MapComponent> _mapQuery;
     private EntityQuery<MapGridComponent> _gridQuery;
     private EntityQuery<MetaDataComponent> _metaQuery;
@@ -113,7 +112,6 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
         _broadQuery = GetEntityQuery<BroadphaseComponent>();
         _containerQuery = GetEntityQuery<ContainerManagerComponent>();
-        _fixturesQuery = GetEntityQuery<FixturesComponent>();
         _mapQuery = GetEntityQuery<MapComponent>();
         _gridQuery = GetEntityQuery<MapGridComponent>();
         _metaQuery = GetEntityQuery<MetaDataComponent>();
@@ -394,7 +392,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         if (old.CanCollide)
         {
             _physMapQuery.TryGetComponent(old.PhysicsMap, out var physicsMap);
-            RemoveBroadTree(broadphase, fixtures, old.Static, physicsMap);
+            RemoveBroadTree(broadphase, body, old.Static, physicsMap);
         }
         else
             (old.Static ? broadphase.StaticSundriesTree : broadphase.SundriesTree).Remove(uid);

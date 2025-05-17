@@ -312,9 +312,15 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             {
                 var mapping = (MappingDataNode)node[i];
                 var type = mapping.Get<ValueDataNode>("type").Value;
+
                 var availability = componentFactory.GetComponentAvailability(type);
                 if(availability == ComponentAvailability.Ignore) continue;
-                dict.Add(componentFactory.GetRegistration(type), i);
+
+                if (!dict.TryAdd(componentFactory.GetRegistration(type), i))
+                {
+                    throw new ArgumentException(
+                        $"Tried to add {type} to sequence nodes but already exists. Check for duplicate components!");
+                }
             }
 
             return dict;

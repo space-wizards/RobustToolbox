@@ -25,7 +25,6 @@ public class PhysicsTumblerBenchmark
 
         var entManager = _sim.Resolve<IEntityManager>();
         var physics = entManager.System<SharedPhysicsSystem>();
-        var fixtures = entManager.System<FixtureSystem>();
         var mapUid = entManager.System<SharedMapSystem>().CreateMap(out var mapId);
         SetupTumbler(entManager, mapId);
 

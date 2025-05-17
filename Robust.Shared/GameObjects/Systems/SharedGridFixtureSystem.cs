@@ -173,7 +173,7 @@ namespace Robust.Shared.GameObjects
 
                 // Doesn't align with any new fixtures so delete
                 chunk.Fixtures.Remove(oldId);
-                _fixtures.DestroyFixture(uid, oldId, oldFixture, false, body: body, manager: manager, xform: xform);
+                _physics.DestroyFixture(uid, oldId, oldFixture, false, body: body, xform: xform);
                 updated = true;
             }
 

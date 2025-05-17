@@ -423,33 +423,33 @@ namespace Robust.Shared.Physics.Systems
         }
 
         [Obsolete("Use Entity<T> variant")]
-        public void RegenerateContacts(EntityUid uid, PhysicsComponent body, FixturesComponent? fixtures = null, TransformComponent? xform = null)
+        public void RegenerateContacts(EntityUid uid, PhysicsComponent body, TransformComponent? xform = null)
         {
-            RegenerateContacts((uid, body, fixtures, xform));
+            RegenerateContacts((uid, body, xform));
         }
 
-        public void RegenerateContacts(Entity<PhysicsComponent?, FixturesComponent?, TransformComponent?> entity)
+        public void RegenerateContacts(Entity<PhysicsComponent?, TransformComponent?> entity)
         {
             if (!Resolve(entity.Owner, ref entity.Comp1))
                 return;
 
             _physicsSystem.DestroyContacts(entity.Comp1);
 
-            if (!Resolve(entity.Owner, ref entity.Comp2 , ref entity.Comp3))
+            if (!Resolve(entity.Owner, ref entity.Comp1, ref entity.Comp2))
                 return;
 
-            if (entity.Comp3.MapUid == null)
+            if (entity.Comp2.MapUid == null)
                 return;
 
-            if (!_xformQuery.TryGetComponent(entity.Comp3.Broadphase?.Uid, out var broadphase))
+            if (!_xformQuery.TryGetComponent(entity.Comp2.Broadphase?.Uid, out var broadphase))
                 return;
 
             _physicsSystem.SetAwake(entity!, true);
 
             var matrix = _transform.GetWorldMatrix(broadphase);
-            foreach (var fixture in entity.Comp2.Fixtures.Values)
+            foreach (var fixture in entity.Comp1.Fixtures.Values)
             {
-                TouchProxies(entity.Comp3.MapUid.Value, matrix, fixture);
+                TouchProxies(entity.Comp2.MapUid.Value, matrix, fixture);
             }
         }
 

@@ -697,13 +697,13 @@ public partial class SharedPhysicsSystem
                 if (_containerSystem.IsEntityOrParentInContainer(uid))
                     return false;
 
-                if (!_fixturesQuery.Resolve(uid, ref manager) || manager.FixtureCount == 0 && !_gridQuery.HasComp(uid))
+                if (body.Fixtures.Count == 0 && !_gridQuery.HasComp(uid))
                     return false;
             }
             else
             {
                 DebugTools.Assert(!_containerSystem.IsEntityOrParentInContainer(uid));
-                DebugTools.Assert((Resolve(uid, ref manager) && manager.FixtureCount > 0) || _gridQuery.HasComp(uid));
+                DebugTools.Assert(body.Fixtures.Count > 0 || _gridQuery.HasComp(uid));
             }
         }
 
@@ -721,8 +721,7 @@ public partial class SharedPhysicsSystem
             RaiseLocalEvent(ref ev);
         }
 
-        if (dirty)
-            DirtyField(uid, body, nameof(PhysicsComponent.CanCollide));
+        DirtyField(uid, body, nameof(PhysicsComponent.CanCollide));
 
         return value;
     }

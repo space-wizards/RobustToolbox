@@ -29,7 +29,6 @@ public sealed class Broadphase_Test
             .InitializeInstance();
 
         var entManager = sim.Resolve<IEntityManager>();
-        var fixtureSystem = entManager.System<FixtureSystem>();
         var physicsSystem = entManager.System<SharedPhysicsSystem>();
 
         var (mapEnt, mapId) = sim.CreateMap();
@@ -38,7 +37,7 @@ public sealed class Broadphase_Test
         var dynamicBody = entManager.AddComponent<PhysicsComponent>(dynamicEnt);
         physicsSystem.SetBodyType(dynamicEnt, BodyType.Dynamic, body: dynamicBody);
 
-        fixtureSystem.TryCreateFixture(dynamicEnt, new PhysShapeCircle(1f), "fix1", collisionMask: 10);
+        physicsSystem.TryCreateFixture(dynamicEnt, new PhysShapeCircle(1f), "fix1", collisionMask: 10);
         physicsSystem.WakeBody(dynamicEnt, body: dynamicBody);
 
         Assert.That(dynamicBody.Awake);
@@ -55,7 +54,7 @@ public sealed class Broadphase_Test
         var staticBody = entManager.AddComponent<PhysicsComponent>(staticEnt);
         physicsSystem.SetBodyType(staticEnt, BodyType.Static, body: staticBody);
 
-        fixtureSystem.TryCreateFixture(staticEnt, new PhysShapeCircle(1f), "fix1", collisionLayer: 10);
+        physicsSystem.TryCreateFixture(staticEnt, new PhysShapeCircle(1f), "fix1", collisionLayer: 10);
         physicsSystem.SetCanCollide(staticEnt, true);
 
         Assert.That(!staticBody.Awake);

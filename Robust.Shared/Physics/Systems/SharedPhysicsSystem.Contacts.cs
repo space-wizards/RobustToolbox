@@ -294,6 +294,14 @@ public abstract partial class SharedPhysicsSystem
         DebugTools.Assert(!fixB.Contacts.ContainsKey(fixA));
         fixB.Contacts.Add(fixA, contact);
         bodB.Contacts.AddLast(contact.BodyBNode);
+
+        // If it's a spawned static ent then need to wake any contacting entities.
+        // The issue is that static ents can never be awake and if it spawns on an asleep entity never gets a contact.
+        // Checking only bodyA should be okay because if bodyA is the other ent (i.e. dynamic / kinematic) then it should already be awake.
+        if (bodyA.BodyType == BodyType.Static && !bodyB.Awake)
+        {
+            WakeBody(uidB, body: bodyB);
+        }
     }
 
     /// <summary>
@@ -350,10 +358,10 @@ public abstract partial class SharedPhysicsSystem
 
         if (contact.Manifold.PointCount > 0 && contact.FixtureA?.Hard == true && contact.FixtureB?.Hard == true)
         {
-            if (bodyA.CanCollide)
+            if (bodyA.CanCollide && !TerminatingOrDeleted(aUid))
                 SetAwake((aUid, bodyA), true);
 
-            if (bodyB.CanCollide)
+            if (bodyB.CanCollide && !TerminatingOrDeleted(bUid))
                 SetAwake((bUid, bodyB), true);
         }
 
@@ -619,24 +627,6 @@ public abstract partial class SharedPhysicsSystem
         ArrayPool<Contact>.Shared.Return(contacts);
         ArrayPool<ContactStatus>.Shared.Return(status);
         ArrayPool<Vector2>.Shared.Return(worldPoints);
-    }
-
-    private record struct UpdateTreesJob : IRobustJob
-    {
-        public IEntityManager EntManager;
-
-        public void Execute()
-        {
-            var query = EntManager.AllEntityQueryEnumerator<BroadphaseComponent>();
-
-            while (query.MoveNext(out var broadphase))
-            {
-                broadphase.DynamicTree.Rebuild(false);
-                broadphase.StaticTree.Rebuild(false);
-                broadphase.SundriesTree._b2Tree.Rebuild(false);
-                broadphase.StaticSundriesTree._b2Tree.Rebuild(false);
-            }
-        }
     }
 
     private void BuildManifolds(Contact[] contacts, int count, ContactStatus[] status, Vector2[] worldPoints)

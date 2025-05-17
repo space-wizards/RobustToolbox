@@ -52,6 +52,16 @@ public partial class EntityManager
         return ents;
     }
 
+    public EntityUid[] SpawnEntitiesAttachedTo(EntityCoordinates coordinates, params EntProtoId[] protoNames)
+    {
+        var ents = new EntityUid[protoNames.Length];
+        for (var i = 0; i < protoNames.Length; i++)
+        {
+            ents[i] = SpawnAttachedTo(protoNames[i], coordinates);
+        }
+        return ents;
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public EntityUid[] SpawnEntitiesAttachedTo(EntityCoordinates coordinates, List<string?> protoNames)
     {
@@ -72,6 +82,14 @@ public partial class EntityManager
             ents[i] = Spawn(protoNames[i], coordinates);
         }
         return ents;
+    }
+
+    public void SpawnEntitiesAttachedTo(EntityCoordinates coordinates, IEnumerable<EntProtoId> protoNames)
+    {
+        foreach (var protoName in protoNames)
+        {
+            SpawnAttachedTo(protoName, coordinates);
+        }
     }
 
     public virtual EntityUid SpawnAttachedTo(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default)

@@ -359,12 +359,15 @@ namespace Robust.Client.Placement
 
         private void HandleTileChanged(ref TileChangedEvent args)
         {
-            var coords = Maps.GridTileToLocal(
-                args.NewTile.GridUid,
-                EntityManager.GetComponent<MapGridComponent>(args.NewTile.GridUid),
-                args.NewTile.GridIndices);
+            foreach (var change in args.Changes)
+            {
+                var coords = Maps.GridTileToLocal(
+                args.Entity,
+                args.Entity.Comp,
+                change.GridIndices);
 
-            _pendingTileChanges.RemoveAll(c => c.Item1 == coords);
+                _pendingTileChanges.RemoveAll(c => c.Item1 == coords);
+            }
         }
 
         /// <inheritdoc />

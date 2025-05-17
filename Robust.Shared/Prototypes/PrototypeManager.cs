@@ -920,6 +920,8 @@ namespace Robust.Shared.Prototypes
             return TryGetKindFrom(typeof(T), out kind);
         }
 
+        public bool IsIgnored(string name) => _ignoredPrototypeTypes.Contains(name);
+
         /// <inheritdoc />
         public void RegisterIgnore(string name)
         {
@@ -972,6 +974,17 @@ namespace Robust.Shared.Prototypes
             }
 
             var name = attribute.Type ?? CalculatePrototypeName(kind);
+
+            if (_ignoredPrototypeTypes.Contains(name))
+            {
+                // For whatever reason, we are registering a prototype despite it having been marked as ignored.
+                // This often happens when someone is moving a server or client prototype to shared. Maybe this should
+                // log an error, but I want to avoid breaking changes and maaaaybe there some weird instance where you
+                // want the client to know that a prototype kind exists, without having the client load information
+                // about the individual prototypes? So for now lets just log a warning instead of introducing breaking
+                // changes.
+                Sawmill.Warning($"Registering an ignored prototype {kind}");
+            }
 
             if (_kindNames.TryGetValue(name, out var existing))
             {

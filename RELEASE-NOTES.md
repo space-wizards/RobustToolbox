@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* `ITypeReaderWriter<TType, TNode>` has been removed due to being unused. Implement `ITypeSerializer<TType, TNode>` instead
+*None yet*
 
 ### New features
 
@@ -52,6 +52,116 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 259.0.0
+
+### Breaking changes
+
+* TileChangedEvent now has an array of tile changed entries rather than raising an individual event for every single tile changed.
+
+### Other
+
+* `Entity<T>` methods were marked as `readonly` as appropriate.
+
+
+## 258.0.1
+
+### Bugfixes
+
+* Fix static physics bodies not generating contacts if they spawn onto sleeping bodies.
+
+
+## 258.0.0
+
+### Breaking changes
+
+* `IMarkupTag` and related methods in `MarkupTagManager` have been obsoleted and should be replaced with the new `IMarkupTagHandler` interface. Various engine tags (e.g., `BoldTag`, `ColorTag`, etc) no longer implement the old interface.
+
+### New features
+
+* Add IsValidPath to ResPath and make some minor performance improvements.
+
+### Bugfixes
+
+* OutputPanel and RichTextLabel now remove controls associated with rich text tags when the text is updated.
+* Fix `SpriteComponent.Visible` datafield not being read from yaml.
+* Fix container state handling not forcing inserts.
+
+### Other
+
+* `SpriteSystem.LayerMapReserve()` no longer throws an exception if the specified layer already exists. This makes it behave like the obsoleted `SpriteComponent.LayerMapReserveBlank()`.
+
+
+## 257.0.2
+
+### Bugfixes
+
+* Fix unshaded sprite layers not rendering correctly.
+
+
+## 257.0.1
+
+### Bugfixes
+
+* Fix sprite layer bounding box calculations. This was causing various sprite rendering & render-tree lookup issues.
+
+
+## 257.0.0
+
+### Breaking changes
+
+* The client will now automatically pause any entities that leave their PVS range.
+* Contacts for terminating entities no longer raise wake events.
+
+### New features
+
+* Added `IPrototypeManager.IsIgnored()` for checking whether a given prototype kind has been marked as ignored via `RegisterIgnore()`.
+* Added `PoolManager` & `TestPair` classes to `Robust.UnitTesting`. These classes make it easier to create & use pooled server/client instance pairs in integration tests.
+* Catch NotYamlSerializable DataFields with an analyzer.
+* Optimized RSI preloading and texture atlas creation.
+
+### Bugfixes
+
+* Fix clients unintentionally un-pausing paused entities that re-enter pvs range
+
+### Other
+
+* The yaml prototype id serialiser now provides better feedback when trying to validate an id for a prototype kind that has been ignored via `IPrototypeManager.RegisterIgnore()`
+* Several SpriteComponent methods have been marked as obsolete, and should be replaced with new methods in SpriteSystem.
+* Rotation events no longer check for grid traversal.
+
+
+## 256.0.0
+
+### Breaking changes
+
+* `ITypeReaderWriter<TType, TNode>` has been removed due to being unused. Implement `ITypeSerializer<TType, TNode>` instead
+* Moved AsNullable extension methods to the Entity struct.
+
+### New features
+
+* Add DevWindow tab to show all loaded textures.
+* Add Vector2i / bitmask converfsion helpers.
+* Allow texture preload to be skipped for some textures.
+* Check audio file signatures instead of extensions.
+* Add CancellationTokenRegistration to sandbox.
+* Add the ability to serialize TimeSpan from text.
+* Add support for rotated / mirrored tiles.
+
+### Bugfixes
+
+* Fix yaml hot reloading.
+* Fix a linear dictionary lookup in PlacementManager.
+
+### Other
+
+* Make ItemList not run deselection callback on all items if they aren't selected.
+* Cleanup warnings for CS0649 & CS0414.
+
+### Internal
+
+* Move PointLight component states to shared.
 
 
 ## 255.1.0

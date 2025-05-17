@@ -72,10 +72,10 @@ internal sealed partial class PvsSystem : EntitySystem
     private readonly List<PvsSession> _toAck = new();
     internal readonly HashSet<ICommonSession> PendingAcks = new();
 
-    private PvsAckJob _ackJob;
-    private PvsChunkJob _chunkJob;
-    private PvsLeaveJob _leaveJob;
-    private PvsDeletionsJob _deletionJob;
+    private PvsAckJob _ackJob = default!;
+    private PvsChunkJob _chunkJob = default!;
+    private PvsLeaveJob _leaveJob = default!;
+    private PvsDeletionsJob _deletionJob = default!;
 
     private EntityQuery<EyeComponent> _eyeQuery;
     private EntityQuery<MetaDataComponent> _metaQuery;

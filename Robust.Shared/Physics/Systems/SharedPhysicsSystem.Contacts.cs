@@ -616,17 +616,16 @@ public abstract partial class SharedPhysicsSystem
         ArrayPool<Vector2>.Shared.Return(worldPoints);
     }
 
-    private sealed class UpdateTreesJob : RobustJob
+    private sealed class UpdateTreesJob : IRobustJob
     {
         public IEntityManager EntManager;
-
 
         public UpdateTreesJob(IEntityManager entManager)
         {
             EntManager = entManager;
         }
 
-        public override void Execute()
+        public void Execute()
         {
             var query = EntManager.AllEntityQueryEnumerator<BroadphaseComponent>();
 
@@ -675,12 +674,9 @@ public abstract partial class SharedPhysicsSystem
         ArrayPool<bool>.Shared.Return(wake);
     }
 
-    private sealed class ManifoldsJob : ParallelRobustJob
+    private sealed class ManifoldsJob : IParallelRobustJob
     {
-        private static readonly ObjectPool<ManifoldsJob> _jobPool =
-            new DefaultObjectPool<ManifoldsJob>(new DefaultPooledObjectPolicy<ManifoldsJob>());
-
-        public override int BatchSize => ContactsPerThread;
+        public int BatchSize => ContactsPerThread;
 
         public SharedPhysicsSystem Physics = default!;
 
@@ -689,24 +685,7 @@ public abstract partial class SharedPhysicsSystem
         public Vector2[] WorldPoints = default!;
         public bool[] Wake = default!;
 
-        public override ParallelRobustJob Clone()
-        {
-            var job = _jobPool.Get();
-            job.Physics = Physics;
-            job.Contacts = Contacts;
-            job.Status = Status;
-            job.WorldPoints = WorldPoints;
-            job.Wake = Wake;
-
-            return job;
-        }
-
-        public override void Shutdown()
-        {
-            _jobPool.Return(this);
-        }
-
-        public override void Execute(int index)
+        public void Execute(int index)
         {
             Physics.UpdateContact(Contacts, index, Status, Wake, WorldPoints);
         }

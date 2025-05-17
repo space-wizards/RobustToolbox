@@ -64,27 +64,18 @@ internal sealed partial class PvsSystem
         return _parallelManager.Process(_ackJob, _ackJob.Count);
     }
 
-    private sealed class PvsAckJob : ParallelRobustJob
+    private sealed class PvsAckJob : IParallelRobustJob
     {
-        private static readonly ObjectPool<PvsAckJob> _jobPool = new DefaultObjectPool<PvsAckJob>(new DefaultPooledObjectPolicy<PvsAckJob>());
-
-        public override int BatchSize => 2;
-        private PvsSystem _pvs = default!;
+        public int BatchSize => 2;
+        private PvsSystem _pvs;
         public int Count => _pvs._toAck.Count;
 
-        public override ParallelRobustJob Clone()
+        internal PvsAckJob(PvsSystem system)
         {
-            var job = _jobPool.Get();
-            job._pvs = _pvs;
-            return job;
+            _pvs = system;
         }
 
-        public override void Shutdown()
-        {
-            _jobPool.Return(this);
-        }
-
-        public override void Execute(int index)
+        public void Execute(int index)
         {
             try
             {
@@ -97,28 +88,18 @@ internal sealed partial class PvsSystem
         }
     }
 
-    private sealed class PvsChunkJob : ParallelRobustJob
+    private sealed class PvsChunkJob : IParallelRobustJob
     {
-        private static readonly DefaultObjectPool<PvsChunkJob> JobPool =
-            new(new DefaultPooledObjectPolicy<PvsChunkJob>());
-
-        public override int BatchSize => 2;
-        private PvsSystem _pvs = default!;
+        public int BatchSize => 2;
+        private PvsSystem _pvs;
         public int Count => _pvs._dirtyChunks.Count;
 
-        public override ParallelRobustJob Clone()
+        internal PvsChunkJob(PvsSystem system)
         {
-            var job = JobPool.Get();
-            job._pvs = _pvs;
-            return job;
+            _pvs = system;
         }
 
-        public override void Shutdown()
-        {
-            JobPool.Return(this);
-        }
-
-        public override void Execute(int index)
+        public void Execute(int index)
         {
             try
             {

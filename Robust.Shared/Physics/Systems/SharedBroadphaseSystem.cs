@@ -557,11 +557,8 @@ namespace Robust.Shared.Physics.Systems
 
         internal delegate void BroadphaseCallback<TState>(Entity<BroadphaseComponent> entity, ref TState state);
 
-        private sealed class BroadphaseContactJob : ParallelRobustJob
+        private sealed class BroadphaseContactJob : IParallelRobustJob
         {
-            private static ObjectPool<BroadphaseContactJob> _contactJobPool =
-                new DefaultObjectPool<BroadphaseContactJob>(new DefaultPooledObjectPolicy<BroadphaseContactJob>());
-
             public SharedBroadphaseSystem System = default!;
             public IMapManager _mapManager = default!;
 
@@ -572,28 +569,9 @@ namespace Robust.Shared.Physics.Systems
             public List<List<FixtureProxy>> ContactBuffer = new();
             public List<(FixtureProxy Proxy, Box2 WorldAABB)> MoveBuffer = new();
 
-            public override int BatchSize => 8;
+            public int BatchSize => 8;
 
-            public override ParallelRobustJob Clone()
-            {
-                var job = _contactJobPool.Get();
-                job.System = System;
-                job._mapManager = _mapManager;
-                job.BroadphaseExpand = BroadphaseExpand;
-                job.MapUid = MapUid;
-                job.ContactBuffer = ContactBuffer;
-                job.MoveBuffer = MoveBuffer;
-
-                return job;
-            }
-
-            public override void Shutdown()
-            {
-                base.Shutdown();
-                _contactJobPool.Return(this);
-            }
-
-            public override void Execute(int index)
+            public void Execute(int index)
             {
                 var (proxy, worldAABB) = MoveBuffer[index];
                 var buffer = ContactBuffer[index];

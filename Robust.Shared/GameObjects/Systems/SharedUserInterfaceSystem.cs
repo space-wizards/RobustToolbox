@@ -1229,33 +1229,13 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     /// <summary>
     /// Used for running UI raycast checks in parallel.
     /// </summary>
-    private sealed class ActorRangeCheckJob : ParallelRobustJob
+    private sealed class ActorRangeCheckJob : IParallelRobustJob
     {
-        private static readonly ObjectPool<ActorRangeCheckJob> _jobPool =
-            new DefaultObjectPool<ActorRangeCheckJob>(new DefaultPooledObjectPolicy<ActorRangeCheckJob>());
-
         public EntityQuery<TransformComponent> XformQuery;
         public SharedUserInterfaceSystem System = default!;
         public List<(EntityUid Ui, Enum Key, InterfaceData Data, EntityUid Actor, bool Result)> ActorRanges = new();
 
-        public override ParallelRobustJob Clone()
-        {
-            var job = _jobPool.Get();
-
-            job.XformQuery = XformQuery;
-            job.System = System;
-            job.ActorRanges = ActorRanges;
-
-            return job;
-        }
-
-        public override void Shutdown()
-        {
-            _jobPool.Return(this);
-        }
-
-
-        public override void Execute(int index)
+        public void Execute(int index)
         {
             var data = ActorRanges[index];
 

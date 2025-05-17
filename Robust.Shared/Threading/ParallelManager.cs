@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -22,24 +23,24 @@ public interface IParallelManager
     /// Takes in a job that gets flushed.
     /// </summary>
     /// <param name="job"></param>
-    WaitHandle Process<T>(T job) where T : RobustJob;
+    WaitHandle Process<T>(T job) where T : IRobustJob;
 
-    public void ProcessNow<T>(T job) where T : RobustJob;
+    public void ProcessNow<T>(T job) where T : IRobustJob;
 
     /// <summary>
     /// Takes in a parallel job and runs it the specified amount.
     /// </summary>
-    void ProcessNow<T>(T jobs, int amount) where T : ParallelRobustJob;
+    void ProcessNow<T>(T jobs, int amount) where T : IParallelRobustJob;
 
     /// <summary>
     /// Processes a robust job sequentially if desired.
     /// </summary>
-    void ProcessSerialNow<T>(T job, int amount) where T : ParallelRobustJob;
+    void ProcessSerialNow<T>(T job, int amount) where T : IParallelRobustJob;
 
     /// <summary>
     /// Takes in a parallel job and runs it without blocking.
     /// </summary>
-    WaitHandle Process<T>(T jobs, int amount) where T : ParallelRobustJob;
+    WaitHandle Process<T>(T jobs, int amount) where T : IParallelRobustJob;
 }
 
 internal interface IParallelManagerInternal : IParallelManager
@@ -56,6 +57,27 @@ internal sealed class ParallelManager : IParallelManagerInternal
     public int ParallelProcessCount { get; private set; }
 
     private ISawmill _sawmill = default!;
+
+    private ObjectPool<ParallelTracker> _trackerPool =
+        new DefaultObjectPool<ParallelTracker>(new TrackerPooledPolicy());
+
+    private ObjectPool<RobustParallelState> _robustParallelPool =
+        new DefaultObjectPool<RobustParallelState>(new DefaultPooledObjectPolicy<RobustParallelState>());
+
+    private sealed class TrackerPooledPolicy : IPooledObjectPolicy<ParallelTracker>
+    {
+        public ParallelTracker Create()
+        {
+            return new ParallelTracker();
+        }
+
+        public bool Return(ParallelTracker obj)
+        {
+            obj.PendingTasks = 0;
+            obj.Event.Reset();
+            return true;
+        }
+    }
 
     public void Initialize()
     {
@@ -83,39 +105,42 @@ internal sealed class ParallelManager : IParallelManagerInternal
     }
 
     /// <inheritdoc/>
-    public WaitHandle Process<T>(T job) where T : RobustJob
+    public WaitHandle Process<T>(T job) where T : IRobustJob
     {
-        job.Tracker.Event.Reset();
+        var tracker = _trackerPool.Get();
+        var state = new RobustState<T>(job, tracker, this);
 
         // From what I can tell preferLocal is more of a !forceGlobal flag.
         // Also UnsafeQueue should be fine as long as we don't use async locals.
-        ThreadPool.UnsafeQueueUserWorkItem(Execute, job, true);
-        return job.Tracker.Event.WaitHandle;
+        ThreadPool.UnsafeQueueUserWorkItem(Execute, state, true);
+        return tracker.Event.WaitHandle;
     }
 
-    private static void Execute(RobustJob job)
+    private record struct RobustState<T>(T Job, ParallelTracker Tracker, ParallelManager Mgr) where T : IRobustJob;
+
+    private static void Execute<T>(RobustState<T> state) where T : IRobustJob
     {
         try
         {
-            job.Execute();
+            state.Job.Execute();
         }
         catch (Exception exc)
         {
-            job.Sawmill.Error($"Exception in ParallelManager: {exc.StackTrace}");
+            state.Mgr._sawmill.Error($"Exception in ParallelManager: {exc.StackTrace}");
         }
         finally
         {
-            job.Tracker.Event.Set();
+            state.Tracker.Event.Set();
         }
     }
 
-    public void ProcessNow<T>(T job) where T : RobustJob
+    public void ProcessNow<T>(T job) where T : IRobustJob
     {
         job.Execute();
     }
 
     /// <inheritdoc/>
-    public void ProcessNow<T>(T job, int amount) where T : ParallelRobustJob
+    public void ProcessNow<T>(T job, int amount) where T : IParallelRobustJob
     {
         var batches = amount / (float) job.BatchSize;
 
@@ -129,10 +154,11 @@ internal sealed class ParallelManager : IParallelManagerInternal
         var tracker = InternalProcess(job, amount);
         tracker.Event.WaitHandle.WaitOne();
         DebugTools.Assert(tracker.PendingTasks == 0);
+        _trackerPool.Return(tracker);
     }
 
     /// <inheritdoc/>
-    public void ProcessSerialNow<T>(T job, int amount) where T : ParallelRobustJob
+    public void ProcessSerialNow<T>(T job, int amount) where T : IParallelRobustJob
     {
         // No point having threading overhead just slam it.
         for (var i = 0; i < amount; i++)
@@ -142,7 +168,7 @@ internal sealed class ParallelManager : IParallelManagerInternal
     }
 
     /// <inheritdoc/>
-    public WaitHandle Process<T>(T job, int amount) where T : ParallelRobustJob
+    public WaitHandle Process<T>(T job, int amount) where T : IParallelRobustJob
     {
         var tracker = InternalProcess(job, amount);
         return tracker.Event.WaitHandle;
@@ -152,57 +178,72 @@ internal sealed class ParallelManager : IParallelManagerInternal
     /// Runs a parallel job internally. Used so we can pool the tracker task for ProcessParallelNow
     /// and not rely on external callers to return it where they don't want to wait.
     /// </summary>
-    private ParallelTracker InternalProcess<T>(T job, int amount) where T : ParallelRobustJob
+    private ParallelTracker InternalProcess<T>(T job, int amount) where T : IParallelRobustJob
     {
         var batches = (int) MathF.Ceiling(amount / (float) job.BatchSize);
         var batchSize = job.BatchSize;
 
         // Need to set this up front to avoid firing too early.
-        job.Tracker.Event.Reset();
+        var tracker = _trackerPool.Get();
 
         if (amount <= 0)
         {
-            job.Tracker.Event.Set();
-            return job.Tracker;
+            tracker.Event.Set();
+            return tracker;
         }
 
-        job.Tracker.PendingTasks = batches;
+        tracker.PendingTasks = batches;
 
         for (var i = 0; i < batches; i++)
         {
             var start = i * batchSize;
             var end = Math.Min(start + batchSize, amount);
-            var subJob = job.Clone();
-            subJob.Start = start;
-            subJob.End = end;
+            var state = _robustParallelPool.Get();
+            state.Job = job;
+            state.Mgr = this;
+            state.Tracker = tracker;
+            state.Start = start;
+            state.End = end;
 
             // From what I can tell preferLocal is more of a !forceGlobal flag.
             // Also UnsafeQueue should be fine as long as we don't use async locals.
-            ThreadPool.UnsafeQueueUserWorkItem(Execute, subJob, true);
+            ThreadPool.UnsafeQueueUserWorkItem(Execute, state, true);
         }
 
-        return job.Tracker;
+        return tracker;
     }
 
-    private static void Execute(ParallelRobustJob job)
+    private sealed record RobustParallelState()
+    {
+        public IParallelRobustJob Job = default!;
+        public ParallelTracker Tracker = default!;
+        public ParallelManager Mgr = default!;
+        public int Start;
+        public int End;
+    }
+
+    private static void Execute(RobustParallelState state)
     {
         var index = 0;
+        var job = state.Job;
+        var start = state.Start;
+        var end = state.End;
 
         try
         {
-            for (index = job.Start; index < job.End; index++)
+            for (index = start; index < end; index++)
             {
                 job.Execute(index);
             }
         }
         catch (Exception exc)
         {
-            job.Sawmill.Error($"Exception in ParallelManager on job {index}: {exc.StackTrace}");
+            state.Mgr._sawmill.Error($"Exception in ParallelManager on job {index}: {exc.StackTrace}");
         }
         finally
         {
-            job.Tracker.Set();
-            job.Shutdown();
+            state.Tracker.Set();
+            state.Mgr._robustParallelPool.Return(state);
         }
     }
 }

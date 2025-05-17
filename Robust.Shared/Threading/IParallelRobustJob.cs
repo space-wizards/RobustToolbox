@@ -1,3 +1,5 @@
+using Robust.Shared.Log;
+
 namespace Robust.Shared.Threading;
 
 /// <summary>
@@ -8,9 +10,12 @@ public interface IParallelRobustJob
     /// <summary>
     /// Minimum amount of batches required to engage in parallelism.
     /// </summary>
-    int MinimumBatchParallel => 2;
+    public int MinimumBatchParallel => 2;
 
-    int BatchSize => 1;
+    /// <summary>
+    /// Size of each batch per job.
+    /// </summary>
+    public virtual int BatchSize => 8;
 
-    void Execute(int index);
+    public void Execute(int index);
 }

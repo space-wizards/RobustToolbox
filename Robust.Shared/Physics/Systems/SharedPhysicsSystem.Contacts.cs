@@ -629,6 +629,29 @@ public abstract partial class SharedPhysicsSystem
         ArrayPool<Vector2>.Shared.Return(worldPoints);
     }
 
+    private sealed class UpdateTreesJob : IRobustJob
+    {
+        public IEntityManager EntManager;
+
+        public UpdateTreesJob(IEntityManager entManager)
+        {
+            EntManager = entManager;
+        }
+
+        public void Execute()
+        {
+            var query = EntManager.AllEntityQueryEnumerator<BroadphaseComponent>();
+
+            while (query.MoveNext(out var broadphase))
+            {
+                broadphase.DynamicTree.Rebuild(false);
+                broadphase.StaticTree.Rebuild(false);
+                broadphase.SundriesTree._b2Tree.Rebuild(false);
+                broadphase.StaticSundriesTree._b2Tree.Rebuild(false);
+            }
+        }
+    }
+
     private void BuildManifolds(Contact[] contacts, int count, ContactStatus[] status, Vector2[] worldPoints)
     {
         if (count == 0)
@@ -664,16 +687,16 @@ public abstract partial class SharedPhysicsSystem
         ArrayPool<bool>.Shared.Return(wake);
     }
 
-    private record struct ManifoldsJob : IParallelRobustJob
+    private sealed class ManifoldsJob : IParallelRobustJob
     {
         public int BatchSize => ContactsPerThread;
 
-        public SharedPhysicsSystem Physics;
+        public SharedPhysicsSystem Physics = default!;
 
-        public Contact[] Contacts;
-        public ContactStatus[] Status;
-        public Vector2[] WorldPoints;
-        public bool[] Wake;
+        public Contact[] Contacts = default!;
+        public ContactStatus[] Status = default!;
+        public Vector2[] WorldPoints = default!;
+        public bool[] Wake = default!;
 
         public void Execute(int index)
         {

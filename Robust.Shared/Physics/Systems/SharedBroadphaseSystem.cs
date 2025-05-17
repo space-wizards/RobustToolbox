@@ -45,7 +45,7 @@ namespace Robust.Shared.Physics.Systems
          * Hence we need to check which broadphases it does intersect and checkar for colliding bodies.
          */
 
-        private BroadphaseContactJob _contactJob;
+        private BroadphaseContactJob _contactJob = default!;
 
         public override void Initialize()
         {
@@ -557,7 +557,7 @@ namespace Robust.Shared.Physics.Systems
 
         internal delegate void BroadphaseCallback<TState>(Entity<BroadphaseComponent> entity, ref TState state);
 
-        private record struct BroadphaseContactJob() : IParallelRobustJob
+        private sealed class BroadphaseContactJob : IParallelRobustJob
         {
             public SharedBroadphaseSystem System = default!;
             public IMapManager _mapManager = default!;

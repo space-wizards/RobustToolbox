@@ -1,5 +1,3 @@
-using System.Threading;
-
 namespace Robust.Shared.Threading;
 
 /// <summary>
@@ -7,5 +5,5 @@ namespace Robust.Shared.Threading;
 /// </summary>
 public interface IRobustJob
 {
-    void Execute();
+    public abstract void Execute();
 }

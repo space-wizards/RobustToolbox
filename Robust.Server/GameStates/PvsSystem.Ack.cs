@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Microsoft.Extensions.ObjectPool;
 using Prometheus;
+using Robust.Shared.CPUJob.JobQueues;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
@@ -62,11 +64,16 @@ internal sealed partial class PvsSystem
         return _parallelManager.Process(_ackJob, _ackJob.Count);
     }
 
-    private record struct PvsAckJob(PvsSystem _pvs) : IParallelRobustJob
+    private sealed class PvsAckJob : IParallelRobustJob
     {
         public int BatchSize => 2;
-        private PvsSystem _pvs = _pvs;
+        private PvsSystem _pvs;
         public int Count => _pvs._toAck.Count;
+
+        internal PvsAckJob(PvsSystem system)
+        {
+            _pvs = system;
+        }
 
         public void Execute(int index)
         {
@@ -81,11 +88,16 @@ internal sealed partial class PvsSystem
         }
     }
 
-    private record struct PvsChunkJob(PvsSystem _pvs) : IParallelRobustJob
+    private sealed class PvsChunkJob : IParallelRobustJob
     {
         public int BatchSize => 2;
-        private PvsSystem _pvs = _pvs;
+        private PvsSystem _pvs;
         public int Count => _pvs._dirtyChunks.Count;
+
+        internal PvsChunkJob(PvsSystem system)
+        {
+            _pvs = system;
+        }
 
         public void Execute(int index)
         {

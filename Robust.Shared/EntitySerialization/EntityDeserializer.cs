@@ -20,6 +20,7 @@ using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
+using Robust.Shared.Serialization.TypeSerializers.Implementations;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -442,10 +443,21 @@ public sealed class EntityDeserializer :
             dict = new(componentList.Count);
             foreach (var compData in componentList.Cast<MappingDataNode>())
             {
-                var value = ((ValueDataNode) compData["type"]).Value;
+                var name = ((ValueDataNode) compData["type"]).Value;
                 compData.Remove("type");
-                dict.Add(value, compData);
+
+                if (_factory.IsAlias(name, out var aliasType))
+                    dict.TryAdd(aliasType, default!);
+
+                if (!dict.TryAdd(name, compData))
+                {
+                    if (dict[name] != null)
+                        throw new Exception($"Duplicate component {name}");
+                    dict[name] = compData;
+                }
             }
+
+            ComponentRegistrySerializer.MergeAliases(dict!, _factory);
         }
 
         if (node.TryGet("missingComponents", out SequenceDataNode? missingComponentList))

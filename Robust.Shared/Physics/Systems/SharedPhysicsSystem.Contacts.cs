@@ -792,9 +792,9 @@ public abstract partial class SharedPhysicsSystem
     /// </summary>
     /// <param name="ignoredFixtureId">Fixture we should ignore if applicable</param>
     [Pure]
-    public int GetTouchingContacts(Entity<FixturesComponent?> entity, string? ignoredFixtureId = null)
+    public int GetTouchingContacts(Entity<PhysicsComponent?> entity, string? ignoredFixtureId = null)
     {
-        if (!_fixturesQuery.Resolve(entity.Owner, ref entity.Comp))
+        if (!PhysicsQuery.Resolve(entity.Owner, ref entity.Comp))
             return 0;
 
         var count = 0;
@@ -820,9 +820,9 @@ public abstract partial class SharedPhysicsSystem
     /// Returns all of this entity's contacts.
     /// </summary>
     [Pure]
-    public ContactEnumerator GetContacts(Entity<FixturesComponent?> entity, bool includeDeleting = false)
+    public ContactEnumerator GetContacts(Entity<PhysicsComponent?> entity, bool includeDeleting = false)
     {
-        _fixturesQuery.Resolve(entity.Owner, ref entity.Comp);
+        PhysicsQuery.Resolve(entity.Owner, ref entity.Comp);
         return new ContactEnumerator(entity.Comp, includeDeleting);
     }
 }
@@ -840,7 +840,7 @@ public record struct ContactEnumerator
     /// </summary>
     public bool IncludeDeleting;
 
-    public ContactEnumerator(FixturesComponent? fixtures, bool includeDeleting = false)
+    public ContactEnumerator(PhysicsComponent? fixtures, bool includeDeleting = false)
     {
         IncludeDeleting = includeDeleting;
 

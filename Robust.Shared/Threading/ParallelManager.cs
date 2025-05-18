@@ -23,24 +23,24 @@ public interface IParallelManager
     /// Takes in a job that gets flushed.
     /// </summary>
     /// <param name="job"></param>
-    WaitHandle Process<T>(T job) where T : IRobustJob;
+    WaitHandle Process(IRobustJob job);
 
-    public void ProcessNow<T>(T job) where T : IRobustJob;
+    public void ProcessNow(IRobustJob job);
 
     /// <summary>
     /// Takes in a parallel job and runs it the specified amount.
     /// </summary>
-    void ProcessNow<T>(T jobs, int amount) where T : IParallelRobustJob;
+    void ProcessNow(IParallelRobustJob jobs, int amount);
 
     /// <summary>
     /// Processes a robust job sequentially if desired.
     /// </summary>
-    void ProcessSerialNow<T>(T job, int amount) where T : IParallelRobustJob;
+    void ProcessSerialNow(IParallelRobustJob job, int amount);
 
     /// <summary>
     /// Takes in a parallel job and runs it without blocking.
     /// </summary>
-    WaitHandle Process<T>(T jobs, int amount) where T : IParallelRobustJob;
+    WaitHandle Process(IParallelRobustJob jobs, int amount);
 }
 
 internal interface IParallelManagerInternal : IParallelManager

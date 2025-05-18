@@ -40,7 +40,9 @@ namespace Robust.Client.Animations
             DebugTools.AssertNotNull(LayerKey);
 
             var entity = (EntityUid) context;
-            var sprite = IoCManager.Resolve<IEntityManager>().GetComponent<SpriteComponent>(entity);
+            var entMan = IoCManager.Resolve<IEntityManager>();
+            var sprite = entMan.GetComponent<SpriteComponent>(entity);
+            var spriteSys = entMan.System<SpriteSystem>();
 
             var playingTime = prevPlayingTime + frameTime;
             var keyFrameIndex = prevKeyFrameIndex;
@@ -55,15 +57,15 @@ namespace Robust.Client.Animations
             {
                 var keyFrame = KeyFrames[keyFrameIndex];
                 // Advance animation on current key frame.
-                var rsi = sprite.LayerGetActualRSI(LayerKey!);
+                var rsi = spriteSys.LayerGetEffectiveRsi((entity, sprite), (int)LayerKey!);
                 if (rsi != null && rsi.TryGetState(keyFrame.State, out var state))
                 {
                     var animationTime = Math.Min(state.AnimationLength - 0.01f, playingTime);
-                    sprite.LayerSetAutoAnimated(LayerKey!, false);
+                    spriteSys.LayerSetAutoAnimated((entity, sprite), (int)LayerKey!, false);
                     // TODO: Doesn't setting the state explicitly reset the animation
                     // so it's slightly more inefficient?
-                    sprite.LayerSetState(LayerKey!, keyFrame.State);
-                    sprite.LayerSetAnimationTime(LayerKey!, animationTime);
+                    spriteSys.LayerSetRsiState((entity, sprite), (int)LayerKey!, keyFrame.State);
+                    spriteSys.LayerSetAnimationTime((entity, sprite), (int)LayerKey!, animationTime);
                 }
             }
 

@@ -255,7 +255,7 @@ namespace Robust.Client.UserInterface.Controls
             var oldModulate = world.Modulate;
             world.Modulate *= Modulate * ActualModulateSelf;
 
-            renderHandle.DrawEntity(uid, position, scale, _worldRotation, _eyeRotation, OverrideDirection, sprite, xform, _transform);
+            renderHandle.DrawEntity(uid, position, scale, _worldRotation, _eyeRotation, OverrideDirection, sprite, SpriteSystem, xform, _transform);
             world.Modulate = oldModulate;
         }
 

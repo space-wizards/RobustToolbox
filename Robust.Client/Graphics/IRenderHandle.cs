@@ -47,6 +47,7 @@ namespace Robust.Client.Graphics
             SharedTransformSystem? xformSystem = null);
 
         /// <inheritdoc cref="DrawEntity(EntityUid, Vector2, Vector2, Angle?, Angle, Direction?, SpriteComponent?, SpriteSystem?, TransformComponent?, SharedTransformSystem?)"/>
+        [Obsolete("Use the overload that passes in SpriteSystem")]
         void DrawEntity(EntityUid entity,
                 Vector2 position,
                 Vector2 scale,

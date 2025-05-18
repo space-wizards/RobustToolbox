@@ -33,7 +33,11 @@ public sealed class GenericVisualizerSystem : VisualizerSystem<GenericVisualizer
                 if (!layerDataDict.TryGetValue(appearanceValue, out var layerData))
                     continue;
 
-                _sprite.LayerSetData((uid, args.Sprite), layerKeyRaw, layerData);
+                var layerIndex = _refMan.TryParseEnumReference(layerKeyRaw, out var @enum)
+                    ? _sprite.LayerMapReserve((uid, args.Sprite), @enum)
+                    : _sprite.LayerMapReserve((uid, args.Sprite), layerKeyRaw);
+
+                _sprite.LayerSetData((uid, args.Sprite), layerIndex, layerData);
             }
         }
     }

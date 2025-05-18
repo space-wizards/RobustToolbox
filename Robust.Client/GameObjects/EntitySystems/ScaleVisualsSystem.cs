@@ -1,11 +1,13 @@
 using System.Numerics;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Maths;
+using Robust.Shared.IoC;
 
 namespace Robust.Client.GameObjects;
 
 public sealed class ScaleVisualsSystem : EntitySystem
 {
+    [Dependency] private readonly SpriteSystem _sprite = default!;
+
     public override void Initialize()
     {
         base.Initialize();
@@ -20,6 +22,6 @@ public sealed class ScaleVisualsSystem : EntitySystem
         var vecScale = (Vector2)scale;
 
         // Set it directly because prediction may call this multiple times.
-        ev.Sprite.Scale = vecScale;
+        _sprite.SetScale((uid, ev.Sprite), vecScale);
     }
 }

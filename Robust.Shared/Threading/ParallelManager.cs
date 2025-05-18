@@ -58,10 +58,10 @@ internal sealed class ParallelManager : IParallelManagerInternal
 
     private ISawmill _sawmill = default!;
 
-    private ObjectPool<ParallelTracker> _trackerPool =
+    private readonly ObjectPool<ParallelTracker> _trackerPool =
         new DefaultObjectPool<ParallelTracker>(new TrackerPooledPolicy());
 
-    private ObjectPool<RobustParallelState> _robustParallelPool =
+    private readonly ObjectPool<RobustParallelState> _robustParallelPool =
         new DefaultObjectPool<RobustParallelState>(new DefaultPooledObjectPolicy<RobustParallelState>());
 
     private sealed class TrackerPooledPolicy : IPooledObjectPolicy<ParallelTracker>
@@ -105,10 +105,10 @@ internal sealed class ParallelManager : IParallelManagerInternal
     }
 
     /// <inheritdoc/>
-    public WaitHandle Process<T>(T job) where T : IRobustJob
+    public WaitHandle Process(IRobustJob job)
     {
         var tracker = _trackerPool.Get();
-        var state = new RobustState<T>(job, tracker, this);
+        var state = new RobustState(job, tracker, this);
 
         // From what I can tell preferLocal is more of a !forceGlobal flag.
         // Also UnsafeQueue should be fine as long as we don't use async locals.
@@ -116,9 +116,9 @@ internal sealed class ParallelManager : IParallelManagerInternal
         return tracker.Event.WaitHandle;
     }
 
-    private record struct RobustState<T>(T Job, ParallelTracker Tracker, ParallelManager Mgr) where T : IRobustJob;
+    private record struct RobustState(IRobustJob Job, ParallelTracker Tracker, ParallelManager Mgr);
 
-    private static void Execute<T>(RobustState<T> state) where T : IRobustJob
+    private static void Execute(RobustState state)
     {
         try
         {
@@ -134,13 +134,13 @@ internal sealed class ParallelManager : IParallelManagerInternal
         }
     }
 
-    public void ProcessNow<T>(T job) where T : IRobustJob
+    public void ProcessNow(IRobustJob job)
     {
         job.Execute();
     }
 
     /// <inheritdoc/>
-    public void ProcessNow<T>(T job, int amount) where T : IParallelRobustJob
+    public void ProcessNow(IParallelRobustJob job, int amount)
     {
         var batches = amount / (float) job.BatchSize;
 
@@ -158,7 +158,7 @@ internal sealed class ParallelManager : IParallelManagerInternal
     }
 
     /// <inheritdoc/>
-    public void ProcessSerialNow<T>(T job, int amount) where T : IParallelRobustJob
+    public void ProcessSerialNow(IParallelRobustJob job, int amount)
     {
         // No point having threading overhead just slam it.
         for (var i = 0; i < amount; i++)
@@ -168,7 +168,7 @@ internal sealed class ParallelManager : IParallelManagerInternal
     }
 
     /// <inheritdoc/>
-    public WaitHandle Process<T>(T job, int amount) where T : IParallelRobustJob
+    public WaitHandle Process(IParallelRobustJob job, int amount)
     {
         var tracker = InternalProcess(job, amount);
         return tracker.Event.WaitHandle;
@@ -178,7 +178,7 @@ internal sealed class ParallelManager : IParallelManagerInternal
     /// Runs a parallel job internally. Used so we can pool the tracker task for ProcessParallelNow
     /// and not rely on external callers to return it where they don't want to wait.
     /// </summary>
-    private ParallelTracker InternalProcess<T>(T job, int amount) where T : IParallelRobustJob
+    private ParallelTracker InternalProcess(IParallelRobustJob job, int amount)
     {
         var batches = (int) MathF.Ceiling(amount / (float) job.BatchSize);
         var batchSize = job.BatchSize;

@@ -18,7 +18,7 @@ public sealed class TestingParallelManager : IParallelManagerInternal
         return;
     }
 
-    public WaitHandle Process<T>(T job) where T : IRobustJob
+    public WaitHandle Process(IRobustJob job)
     {
         job.Execute();
         var ev = new ManualResetEventSlim();
@@ -26,13 +26,13 @@ public sealed class TestingParallelManager : IParallelManagerInternal
         return ev.WaitHandle;
     }
 
-    public void ProcessNow<T>(T job) where T: IRobustJob
+    public void ProcessNow(IRobustJob job)
     {
         job.Execute();
     }
 
     /// <inheritdoc/>
-    public void ProcessNow<T>(T jobs, int amount) where T : IParallelRobustJob
+    public void ProcessNow(IParallelRobustJob jobs, int amount)
     {
         for (var i = 0; i < amount; i++)
         {
@@ -41,7 +41,7 @@ public sealed class TestingParallelManager : IParallelManagerInternal
     }
 
     /// <inheritdoc/>
-    public void ProcessSerialNow<T>(T job, int amount) where T : IParallelRobustJob
+    public void ProcessSerialNow(IParallelRobustJob job, int amount)
     {
         for (var i = 0; i < amount; i++)
         {
@@ -50,7 +50,7 @@ public sealed class TestingParallelManager : IParallelManagerInternal
     }
 
     /// <inheritdoc/>
-    public WaitHandle Process<T>(T jobs, int amount) where T : IParallelRobustJob
+    public WaitHandle Process(IParallelRobustJob jobs, int amount)
     {
         ProcessSerialNow(jobs, amount);
         var ev = new ManualResetEventSlim();

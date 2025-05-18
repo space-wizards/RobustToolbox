@@ -54,6 +54,19 @@ END TEMPLATE-->
 *None yet*
 
 
+## 260.0.0
+
+### Breaking changes
+
+* Fix / change `StartCollideEvent.WorldPoint` to return all points for the collision which may be up to 2 instead of 1.
+
+### New features
+
+* Add SpriteSystem dependency to VisualizerSystem.
+* Add Vertical property to progress bars
+* Add some `EntProtoId` overloads for group entity spawn methods.
+
+
 ## 259.0.0
 
 ### Breaking changes

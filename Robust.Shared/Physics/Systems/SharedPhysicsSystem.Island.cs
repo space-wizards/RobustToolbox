@@ -978,7 +978,7 @@ public abstract partial class SharedPhysicsSystem
 
             var xform = xformQuery.GetComponent(bodyUid);
             var parentXform = xformQuery.GetComponent(xform.ParentUid);
-            var (_, parentRot, parentInvMatrix) = parentXform.GetWorldPositionRotationInvMatrix(xformQuery);
+            var (_, parentRot, parentInvMatrix) = _transform.GetWorldPositionRotationInvMatrix(parentXform);
             var worldRot = (float) (parentRot + xform._localRotation);
 
             var angle = angles[i];

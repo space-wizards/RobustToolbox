@@ -125,8 +125,8 @@ public abstract partial class SharedPhysicsSystem
      */
     private const int MaxIslands = 256;
 
-    private readonly ObjectPool<List<PhysicsComponent>> _islandBodyPool =
-        new DefaultObjectPool<List<PhysicsComponent>>(new ListPolicy<PhysicsComponent>(), MaxIslands);
+    private readonly ObjectPool<List<Entity<PhysicsComponent>>> _islandBodyPool =
+        new DefaultObjectPool<List<Entity<PhysicsComponent>>>(new ListPolicy<Entity<PhysicsComponent>>(), MaxIslands);
 
     private readonly ObjectPool<List<Contact>> _islandContactPool =
         new DefaultObjectPool<List<Contact>>(new ListPolicy<Contact>(), MaxIslands);
@@ -140,7 +140,7 @@ public abstract partial class SharedPhysicsSystem
     internal record struct IslandData(
         int Index,
         bool LoneIsland,
-        List<PhysicsComponent> Bodies,
+        List<Entity<PhysicsComponent>> Bodies,
         List<Contact> Contacts,
         List<(Joint Original, Joint Joint)> Joints,
         List<(Joint Joint, float Error)> BrokenJoints)
@@ -161,7 +161,7 @@ public abstract partial class SharedPhysicsSystem
         /// </summary>
         public int Offset = 0;
 
-        public readonly List<PhysicsComponent> Bodies = Bodies;
+        public readonly List<Entity<PhysicsComponent>> Bodies = Bodies;
         public readonly List<Contact> Contacts = Contacts;
         public readonly List<(Joint Original, Joint Joint)> Joints = Joints;
         public bool PositionSolved = false;
@@ -487,7 +487,7 @@ public abstract partial class SharedPhysicsSystem
             // Bodies not touching anything, hence we can just add it to the lone island.
             if (contacts.Count == 0 && joints.Count == 0)
             {
-                DebugTools.Assert(bodies.Count == 1 && bodies[0].BodyType != BodyType.Static);
+                DebugTools.Assert(bodies.Count == 1 && bodies[0].Comp.BodyType != BodyType.Static);
                 loneIsland.Bodies.Add(bodies[0]);
                 idx = loneIsland.Index;
             }
@@ -501,7 +501,7 @@ public abstract partial class SharedPhysicsSystem
             // Allow static bodies to be re-used in other islands
             for (var i = 0; i < bodies.Count; i++)
             {
-                var body = bodies[i];
+                var body = bodies[i].Comp;
 
                 // Static bodies can participate in other islands
                 if (body.BodyType == BodyType.Static)
@@ -535,7 +535,7 @@ public abstract partial class SharedPhysicsSystem
 
     private void ReturnIsland(IslandData island)
     {
-        foreach (var body in island.Bodies)
+        foreach (var (_, body) in island.Bodies)
         {
             DebugTools.Assert(body.IslandIndex.ContainsKey(island.Index));
             body.IslandIndex.Remove(island.Index);
@@ -679,7 +679,7 @@ public abstract partial class SharedPhysicsSystem
     /// If this is the first time a body has been updated this tick update its position for lerping.
     /// Due to substepping we have to check it every time.
     /// </summary>
-    protected virtual void UpdateLerpData(PhysicsMapComponent component, List<PhysicsComponent> bodies, EntityQuery<TransformComponent> xformQuery)
+    protected virtual void UpdateLerpData(PhysicsMapComponent component, List<Entity<PhysicsComponent>> bodies, EntityQuery<TransformComponent> xformQuery)
     {
 
     }
@@ -718,9 +718,10 @@ public abstract partial class SharedPhysicsSystem
 
         for (var i = 0; i < island.Bodies.Count; i++)
         {
-            var body = island.Bodies[i];
+            var bodyUid = island.Bodies[i].Owner;
+            var body = island.Bodies[i].Comp;
             var (worldPos, worldRot) =
-                _transform.GetWorldPositionRotation(xformQuery.GetComponent(body.Owner), xformQuery);
+                _transform.GetWorldPositionRotation(xformQuery.GetComponent(bodyUid), xformQuery);
 
             var transform = new Transform(worldPos, worldRot);
             var position = Physics.Transform.Mul(transform, body.LocalCenter);
@@ -899,7 +900,7 @@ public abstract partial class SharedPhysicsSystem
             {
                 for (var i = 0; i < bodyCount; i++)
                 {
-                    var body = island.Bodies[i];
+                    var body = island.Bodies[i].Comp;
 
                     if (body.BodyType == BodyType.Static) continue;
 
@@ -930,7 +931,7 @@ public abstract partial class SharedPhysicsSystem
 
                 for (var i = 0; i < bodyCount; i++)
                 {
-                    var body = island.Bodies[i];
+                    var body = island.Bodies[i].Comp;
 
                     if (body.BodyType == BodyType.Static) continue;
 
@@ -965,16 +966,17 @@ public abstract partial class SharedPhysicsSystem
         ArrayPool<ContactPositionConstraint>.Shared.Return(positionConstraints);
     }
 
-    private void FinalisePositions(int start, int end, int offset, List<PhysicsComponent> bodies, EntityQuery<TransformComponent> xformQuery, Vector2[] positions, float[] angles, Vector2[] solvedPositions, float[] solvedAngles)
+    private void FinalisePositions(int start, int end, int offset, List<Entity<PhysicsComponent>> bodies, EntityQuery<TransformComponent> xformQuery, Vector2[] positions, float[] angles, Vector2[] solvedPositions, float[] solvedAngles)
     {
         for (var i = start; i < end; i++)
         {
-            var body = bodies[i];
+            var body = bodies[i].Comp;
+            var bodyUid = bodies[i].Owner;
 
             if (body.BodyType == BodyType.Static)
                 continue;
 
-            var xform = xformQuery.GetComponent(body.Owner);
+            var xform = xformQuery.GetComponent(bodyUid);
             var parentXform = xformQuery.GetComponent(xform.ParentUid);
             var (_, parentRot, parentInvMatrix) = parentXform.GetWorldPositionRotationInvMatrix(xformQuery);
             var worldRot = (float) (parentRot + xform._localRotation);
@@ -1015,13 +1017,13 @@ public abstract partial class SharedPhysicsSystem
 
         for (var i = 0; i < island.Bodies.Count; i++)
         {
-            var body = island.Bodies[i];
+            var body = island.Bodies[i].Comp;
+            var uid = island.Bodies[i].Owner;
 
             // So technically we don't /need/ to skip static bodies here but it saves us having to check for deferred updates so we'll do it anyway.
             // Plus calcing worldpos can be costly so we skip that too which is nice.
             if (body.BodyType == BodyType.Static) continue;
 
-            var uid = body.Owner;
             var position = positions[offset + i];
             var angle = angles[offset + i];
             var xform = xformQuery.GetComponent(uid);
@@ -1069,7 +1071,7 @@ public abstract partial class SharedPhysicsSystem
 
             var body = island.Bodies[i];
 
-            SetAwake(body.Owner, body, false);
+            SetAwake(body, false);
         }
     }
 }

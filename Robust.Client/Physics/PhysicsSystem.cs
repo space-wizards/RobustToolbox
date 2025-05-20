@@ -49,19 +49,19 @@ namespace Robust.Client.Physics
             base.Cleanup(component, frameTime);
         }
 
-        protected override void UpdateLerpData(PhysicsMapComponent component, List<PhysicsComponent> bodies, EntityQuery<TransformComponent> xformQuery)
+        protected override void UpdateLerpData(PhysicsMapComponent component, List<Entity<PhysicsComponent>> bodies, EntityQuery<TransformComponent> xformQuery)
         {
-            foreach (var body in bodies)
+            foreach (var (uid, body) in bodies)
             {
                 if (body.BodyType == BodyType.Static ||
-                    component.LerpData.TryGetValue(body.Owner, out var lerpData) ||
-                    !xformQuery.TryGetComponent(body.Owner, out var xform) ||
+                    component.LerpData.TryGetValue(uid, out var lerpData) ||
+                    !xformQuery.TryGetComponent(uid, out var xform) ||
                     lerpData.ParentUid == xform.ParentUid)
                 {
                     continue;
                 }
 
-                component.LerpData[xform.Owner] = (xform.ParentUid, xform.LocalPosition, xform.LocalRotation);
+                component.LerpData[uid] = (xform.ParentUid, xform.LocalPosition, xform.LocalRotation);
             }
         }
 

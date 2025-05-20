@@ -4,13 +4,8 @@ using Robust.Shared.Physics.Components;
 
 namespace Robust.Shared.Physics
 {
-    internal sealed class IslandSolveMessage : EntityEventArgs
+    internal sealed class IslandSolveMessage(List<Entity<PhysicsComponent>> bodies) : EntityEventArgs
     {
-        public List<PhysicsComponent> Bodies { get; }
-
-        public IslandSolveMessage(List<PhysicsComponent> bodies)
-        {
-            Bodies = bodies;
-        }
+        public List<Entity<PhysicsComponent>> Bodies { get; } = bodies;
     }
 }

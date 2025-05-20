@@ -179,7 +179,7 @@ public sealed class GenericEntityPrint
                 {
                     public EntityUid Owner;
                 {{fields.ToString().TrimEnd()}}
-                    EntityUid IFluentEntityUid.FluentOwner => Owner;
+                    readonly EntityUid IFluentEntityUid.FluentOwner => Owner;
 
                     public Entity(EntityUid owner{{parameters}})
                     {
@@ -212,9 +212,9 @@ public sealed class GenericEntityPrint
                     }
                     {{castRegion}}
 
-                    public override int GetHashCode() => Owner.GetHashCode();
-                    public Entity<{{nullableGenerics}}> AsNullable() => new(Owner{{selfAccess}});
-                    public EntityUid AsType() => Owner;
+                    public override readonly int GetHashCode() => Owner.GetHashCode();
+                    public readonly Entity<{{nullableGenerics}}> AsNullable() => new(Owner{{selfAccess}});
+                    public readonly EntityUid AsType() => Owner;
                 }
 
 

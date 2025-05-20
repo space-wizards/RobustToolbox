@@ -47,6 +47,7 @@ namespace Robust.Client.Placement
 
         private SharedMapSystem Maps => EntityManager.System<SharedMapSystem>();
         private SharedTransformSystem XformSystem => EntityManager.System<SharedTransformSystem>();
+        private SpriteSystem Sprite => EntityManager.System<SpriteSystem>();
 
         /// <summary>
         ///     How long before a pending tile change is dropped.
@@ -359,12 +360,15 @@ namespace Robust.Client.Placement
 
         private void HandleTileChanged(ref TileChangedEvent args)
         {
-            var coords = Maps.GridTileToLocal(
-                args.NewTile.GridUid,
-                EntityManager.GetComponent<MapGridComponent>(args.NewTile.GridUid),
-                args.NewTile.GridIndices);
+            foreach (var change in args.Changes)
+            {
+                var coords = Maps.GridTileToLocal(
+                args.Entity,
+                args.Entity.Comp,
+                change.GridIndices);
 
-            _pendingTileChanges.RemoveAll(c => c.Item1 == coords);
+                _pendingTileChanges.RemoveAll(c => c.Item1 == coords);
+            }
         }
 
         /// <inheritdoc />
@@ -708,11 +712,11 @@ namespace Robust.Client.Placement
             CurrentPlacementOverlayEntity = null;
         }
 
-        private SpriteComponent SetupPlacementOverlayEntity()
+        private Entity<SpriteComponent> SetupPlacementOverlayEntity()
         {
             EnsureNoPlacementOverlayEntity();
             CurrentPlacementOverlayEntity = EntityManager.SpawnEntity(null, MapCoordinates.Nullspace);
-            return EntityManager.EnsureComponent<SpriteComponent>(CurrentPlacementOverlayEntity.Value);
+            return (CurrentPlacementOverlayEntity.Value, EntityManager.EnsureComponent<SpriteComponent>(CurrentPlacementOverlayEntity.Value));
         }
 
         private void PreparePlacement(string templateName)
@@ -729,10 +733,16 @@ namespace Robust.Client.Placement
                 EntityManager.GetComponent<MetaDataComponent>(CurrentPlacementOverlayEntity.Value));
         }
 
-        public void PreparePlacementSprite(SpriteComponent sprite)
+        public void PreparePlacementSprite(Entity<SpriteComponent> sprite)
         {
             var sc = SetupPlacementOverlayEntity();
-            sc.CopyFrom(sprite);
+            Sprite.CopySprite(sprite.AsNullable(), sc.AsNullable());
+        }
+
+        [Obsolete("Use the Entity<SpriteComponent> overload.")]
+        public void PreparePlacementSprite(SpriteComponent sprite)
+        {
+            PreparePlacementSprite((sprite.Owner, sprite));
         }
 
         public void PreparePlacementTexList(List<IDirectionalTextureProvider>? texs, bool noRot, EntityPrototype? prototype)
@@ -743,27 +753,27 @@ namespace Robust.Client.Placement
                 // This one covers most cases (including Construction)
                 foreach (var v in texs)
                 {
-                    if (v is RSI.State)
+                    if (v is RSI.State st)
                     {
-                        var st = (RSI.State) v;
-                        sc.AddLayer(st.StateId, st.RSI);
+                        Sprite.AddRsiLayer(sc.AsNullable(), st.StateId, st.RSI);
                     }
                     else
                     {
                         // Fallback
-                        sc.AddLayer(v.Default);
+                        Sprite.AddTextureLayer(sc.AsNullable(), v.Default);
                     }
                 }
             }
             else
             {
-                sc.AddLayer(new ResPath("/Textures/Interface/tilebuildoverlay.png"));
+                Sprite.AddTextureLayer(sc.AsNullable(), new ResPath("/Textures/Interface/tilebuildoverlay.png"));
             }
-            sc.NoRotation = noRot;
+
+            sc.Comp.NoRotation = noRot;
 
             if (prototype != null && prototype.TryGetComponent<SpriteComponent>("Sprite", out var spriteComp))
             {
-                sc.Scale = spriteComp.Scale;
+                Sprite.SetScale(sc.AsNullable(), spriteComp.Scale);
             }
 
         }
@@ -771,7 +781,7 @@ namespace Robust.Client.Placement
         private void PreparePlacementTile()
         {
             var sc = SetupPlacementOverlayEntity();
-            sc.AddLayer(new ResPath("/Textures/Interface/tilebuildoverlay.png"));
+            Sprite.AddTextureLayer(sc.AsNullable(), new ResPath("/Textures/Interface/tilebuildoverlay.png"));
 
             IsActive = true;
         }

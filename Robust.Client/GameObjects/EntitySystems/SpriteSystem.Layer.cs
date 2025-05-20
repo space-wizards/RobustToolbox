@@ -144,9 +144,9 @@ public sealed partial class SpriteSystem
         }
 #endif
 
+        layer.BoundsDirty = true;
         if (!layer.Blank)
         {
-            layer.BoundsDirty = true;
             sprite.Comp.BoundsDirty = true;
             _tree.QueueTreeUpdate(sprite!);
             QueueUpdateIsInert(sprite!);

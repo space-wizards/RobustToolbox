@@ -89,7 +89,7 @@ public abstract partial class SharedPhysicsSystem
         if (!_xformQuery.Resolve(uid, ref xform))
             return Vector2.Zero;
 
-        PhysicsQuery.Resolve(uid, ref component);
+        PhysicsQuery.Resolve(uid, ref component, false);
 
         var parent = xform.ParentUid;
         var localPos = xform.LocalPosition;
@@ -133,13 +133,12 @@ public abstract partial class SharedPhysicsSystem
         PhysicsComponent? component = null,
         TransformComponent? xform = null)
     {
-        if (!PhysicsQuery.Resolve(uid, ref component))
-            return 0;
-
         if (!_xformQuery.Resolve(uid, ref xform))
             return 0f;
 
-        var angularVelocity = component.AngularVelocity;
+        PhysicsQuery.Resolve(uid, ref component, false);
+
+        var angularVelocity = component?.AngularVelocity ?? 0;
 
         while (xform.ParentUid != xform.MapUid && xform.ParentUid.IsValid())
         {
@@ -162,18 +161,17 @@ public abstract partial class SharedPhysicsSystem
         PhysicsComponent? component = null,
         TransformComponent? xform = null)
     {
-        if (!PhysicsQuery.Resolve(uid, ref component))
-            return (Vector2.Zero, 0);
-
         if (!_xformQuery.Resolve(uid, ref xform))
             return (Vector2.Zero, 0);
+
+        PhysicsQuery.Resolve(uid, ref component, false);
 
         var parent = xform.ParentUid;
 
         var localPos = xform.LocalPosition;
 
-        var linearVelocity = component.LinearVelocity;
-        var angularVelocity = component.AngularVelocity;
+        var linearVelocity = component?.LinearVelocity ?? Vector2.Zero;
+        var angularVelocity = component?.AngularVelocity ?? 0;
         Vector2 linearVelocityAngularContribution = Vector2.Zero;
 
         while (parent != xform.MapUid && parent.IsValid())

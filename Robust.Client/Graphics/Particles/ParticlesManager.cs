@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
-using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 using Vector3 = Robust.Shared.Maths.Vector3;
 
 
@@ -22,6 +21,11 @@ public sealed class ParticlesManager
 {
     private Dictionary<EntityUid,ParticleSystem> _particleSystems = new();
     public List<EntityUid> GetEntitiesWithParticles => _particleSystems.Keys.ToList();
+    [Dependency] private IOverlayManager _overlayManager = default!;
+
+    public void Initialize() {
+        _overlayManager.AddOverlay(new ParticlesOverlay());
+    }
     public void FrameUpdate(FrameEventArgs args)
     {
         // can't use parallel foreach here because IoC doesn't have context in parallel tasks

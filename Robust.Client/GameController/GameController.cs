@@ -214,6 +214,7 @@ namespace Robust.Client
             _replayPlayback.Initialize();
             _replayRecording.Initialize();
             _userInterfaceManager.PostInitialize();
+            _particleManager.Initialize();
             _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
 
             if (_commandLineArgs?.Username != null)

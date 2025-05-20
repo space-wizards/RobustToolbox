@@ -5,5 +5,5 @@ namespace Robust.Shared.GameObjects;
 
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState(true)]
 public sealed partial class YamlParticlesComponent : Component {
-    [ViewVariables(VVAccess.ReadWrite), AutoNetworkedField] public string ParticleType;
+    [ViewVariables(VVAccess.ReadWrite), AutoNetworkedField] public string ParticleType = "example";
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -20,6 +21,7 @@ namespace Robust.Client.Graphics;
 public sealed class ParticlesManager
 {
     private Dictionary<EntityUid,ParticleSystem> _particleSystems = new();
+    public List<EntityUid> GetEntitiesWithParticles => _particleSystems.Keys.ToList();
     public void FrameUpdate(FrameEventArgs args)
     {
         // can't use parallel foreach here because IoC doesn't have context in parallel tasks

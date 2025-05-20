@@ -691,8 +691,9 @@ namespace Robust.Shared.Containers
             if (Insert((transform.Owner, transform.Comp, null, null), container))
                 return true;
 
-            if (Transform(container.Owner).ParentUid.IsValid()
-                && TryGetContainingContainer((container.Owner, Transform(container.Owner)), out var newContainer))
+            var ownerXform = Transform(container.Owner);
+            if (ownerXform.ParentUid.IsValid()
+                && TryGetContainingContainer((container.Owner, ownerXform), out var newContainer))
                 return TryInsertIntoContainer(transform, newContainer);
 
             return false;

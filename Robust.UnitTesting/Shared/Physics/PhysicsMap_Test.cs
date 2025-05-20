@@ -46,7 +46,7 @@ public sealed class PhysicsMap_Test
         physSystem.SetSleepingAllowed(parent, parentBody, false);
         fixtureSystem.CreateFixture(parent, "fix1", new Fixture(new PhysShapeCircle(0.5f), 0, 0, false), body: parentBody);
         physSystem.WakeBody(parent);
-        Assert.That(physicsMap.AwakeBodies, Does.Contain(parentBody));
+        Assert.That(physicsMap.AwakeBodies, Does.Contain(new Entity<PhysicsComponent>(parent, parentBody)));
 
         var child = entManager.SpawnEntity(null, new EntityCoordinates(parent, Vector2.Zero));
         var childBody = entManager.AddComponent<PhysicsComponent>(child);
@@ -56,7 +56,7 @@ public sealed class PhysicsMap_Test
         fixtureSystem.CreateFixture(child, "fix1", new Fixture(new PhysShapeCircle(0.5f), 0, 0, false), body: childBody);
         physSystem.WakeBody(child, body: childBody);
 
-        Assert.That(physicsMap.AwakeBodies, Does.Contain(childBody));
+        Assert.That(physicsMap.AwakeBodies, Does.Contain(new Entity<PhysicsComponent>(child, childBody)));
 
         xformSystem.SetParent(parent, parentXform, mapUid2);
 

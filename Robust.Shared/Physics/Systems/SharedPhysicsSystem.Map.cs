@@ -29,7 +29,7 @@ public partial class SharedPhysicsSystem
         }
 
         DebugTools.Assert(body.Awake);
-        map.AwakeBodies.Add(body);
+        map.AwakeBodies.Add((uid, body));
     }
 
     internal void AddAwakeBody(EntityUid uid, PhysicsComponent body, EntityUid mapUid, PhysicsMapComponent? map = null)
@@ -40,7 +40,7 @@ public partial class SharedPhysicsSystem
 
     internal void RemoveSleepBody(EntityUid uid, PhysicsComponent body, PhysicsMapComponent? map = null)
     {
-        map?.AwakeBodies.Remove(body);
+        map?.AwakeBodies.Remove((uid, body));
     }
 
     internal void RemoveSleepBody(EntityUid uid, PhysicsComponent body, EntityUid mapUid, PhysicsMapComponent? map = null)

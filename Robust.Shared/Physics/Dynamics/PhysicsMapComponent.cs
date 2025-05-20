@@ -20,7 +20,9 @@
 * 3. This notice may not be removed or altered from any source distribution.
 */
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
@@ -51,7 +53,7 @@ public sealed partial class PhysicsMapComponent : Component
     ///     All awake bodies on this map.
     /// </summary>
     [ViewVariables]
-    public readonly HashSet<PhysicsComponent> AwakeBodies = new();
+    public readonly HashSet<Entity<PhysicsComponent>> AwakeBodies = new();
 
     /// <summary>
     ///     Store last tick's invDT

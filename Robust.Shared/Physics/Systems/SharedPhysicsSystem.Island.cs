@@ -170,8 +170,8 @@ public abstract partial class SharedPhysicsSystem
 
     // Caching for island generation.
     private readonly HashSet<PhysicsComponent> _islandSet = new(64);
-    private readonly Stack<PhysicsComponent> _bodyStack = new(64);
-    private readonly List<PhysicsComponent> _awakeBodyList = new(256);
+    private readonly Stack<Entity<PhysicsComponent>> _bodyStack = new(64);
+    private readonly List<Entity<PhysicsComponent>> _awakeBodyList = new(256);
 
     // Config
     private bool _warmStarting;
@@ -285,8 +285,8 @@ public abstract partial class SharedPhysicsSystem
         foreach (var body in component.AwakeBodies)
         {
             // TODO: Netsync
-            body.Force = Vector2.Zero;
-            body.Torque = 0.0f;
+            body.Comp.Force = Vector2.Zero;
+            body.Comp.Torque = 0.0f;
         }
     }
 
@@ -319,7 +319,7 @@ public abstract partial class SharedPhysicsSystem
         {
             // I tried not running prediction for non-contacted entities but unfortunately it looked like shit
             // when contact broke so if you want to try that then GOOD LUCK.
-            if (seed.Island) continue;
+            if (seed.Comp.Island) continue;
 
             var seedUid = seed.Owner;
 
@@ -330,10 +330,10 @@ public abstract partial class SharedPhysicsSystem
                 continue;
             }
 
-            if ((metadata.EntityPaused && !seed.IgnorePaused) ||
-                (prediction && !seed.Predict) ||
-                !seed.CanCollide ||
-                seed.BodyType == BodyType.Static)
+            if ((metadata.EntityPaused && !seed.Comp.IgnorePaused) ||
+                (prediction && !seed.Comp.Predict) ||
+                !seed.Comp.CanCollide ||
+                seed.Comp.BodyType == BodyType.Static)
             {
                 continue;
             }
@@ -344,7 +344,7 @@ public abstract partial class SharedPhysicsSystem
             var joints = _islandJointPool.Get();
             _bodyStack.Push(seed);
 
-            seed.Island = true;
+            seed.Comp.Island = true;
 
             while (_bodyStack.TryPop(out var body))
             {
@@ -354,12 +354,12 @@ public abstract partial class SharedPhysicsSystem
                 _islandSet.Add(body);
 
                 // Static bodies don't propagate islands
-                if (body.BodyType == BodyType.Static) continue;
+                if (body.Comp.BodyType == BodyType.Static) continue;
 
                 // As static bodies can never be awake (unlike Farseer) we'll set this after the check.
-                SetAwake(bodyUid, body, true, updateSleepTime: false);
+                SetAwake(body, true, updateSleepTime: false);
 
-                var node = body.Contacts.First;
+                var node = body.Comp.Contacts.First;
 
                 while (node != null)
                 {
@@ -380,13 +380,13 @@ public abstract partial class SharedPhysicsSystem
                     var bodyA = contact.BodyA!;
                     var bodyB = contact.BodyB!;
 
-                    var other = bodyA == body ? bodyB : bodyA;
+                    Entity<PhysicsComponent> other = bodyA == body.Comp ? (contact.EntityB, bodyB) : (contact.EntityA, bodyA);
 
                     // Was the other body already added to this island?
-                    if (other.Island) continue;
+                    if (other.Comp.Island) continue;
 
                     _bodyStack.Push(other);
-                    other.Island = true;
+                    other.Comp.Island = true;
                 }
 
                 // Handle joints
@@ -468,13 +468,13 @@ public abstract partial class SharedPhysicsSystem
 
                     if (!bodyA.Island)
                     {
-                        _bodyStack.Push(bodyA);
+                        _bodyStack.Push((joint.BodyAUid, bodyA));
                         bodyA.Island = true;
                     }
 
                     if (!bodyB.Island)
                     {
-                        _bodyStack.Push(bodyB);
+                        _bodyStack.Push((joint.BodyBUid, bodyB));
                         bodyB.Island = true;
                     }
                 }

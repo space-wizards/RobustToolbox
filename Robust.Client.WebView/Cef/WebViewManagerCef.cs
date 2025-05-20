@@ -4,7 +4,6 @@ using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Text;
-using System.Threading;
 using Robust.Client.Console;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
@@ -103,7 +102,7 @@ namespace Robust.Client.WebView.Cef
             // So these arguments look like nonsense, but it turns out CEF is just *like that*.
             // The first argument is literally nonsense, but it needs to be there as otherwise the second argument doesn't apply
             // The second argument turns off CEF's bullshit error handling, which breaks dotnet's error handling.
-            CefRuntime.Initialize(new CefMainArgs(["binary","--disable-in-process-stack-traces"]), settings, _app, IntPtr.Zero);
+            CefRuntime.Initialize(new CefMainArgs(["binary", "--disable-in-process-stack-traces"]), settings, _app, IntPtr.Zero);
 
             if (!_cfg.GetCVar(WCVars.WebResProtocol)) return;
 
@@ -165,6 +164,7 @@ namespace Robust.Client.WebView.Cef
 
             return searchDirectories;
         }
+
         public void Update()
         {
             // Calling this makes CEF do its work, without using its own update loop.

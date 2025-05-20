@@ -4,6 +4,7 @@ using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Threading;
 
@@ -34,7 +35,7 @@ public interface IParallelManager
     /// <summary>
     /// Processes a robust job sequentially if desired.
     /// </summary>
-    void ProcessSerialNow(IParallelRobustJob jobs, int amount);
+    void ProcessSerialNow(IParallelRobustJob job, int amount);
 
     /// <summary>
     /// Takes in a parallel job and runs it without blocking.
@@ -55,25 +56,28 @@ internal sealed class ParallelManager : IParallelManagerInternal
     public event Action? ParallelCountChanged;
     public int ParallelProcessCount { get; private set; }
 
-    public static readonly ManualResetEventSlim DummyResetEvent = new(true);
-
     private ISawmill _sawmill = default!;
 
-    // Without pooling it's hard to keep task allocations down for classes
-    // This lets us avoid re-allocating the ManualResetEventSlims constantly when we just need a way to signal job completion
-    // and Parallel.For is really not built for running parallel tasks every tick.
-
-    private readonly ObjectPool<InternalJob> _jobPool =
-        new DefaultObjectPool<InternalJob>(new DefaultPooledObjectPolicy<InternalJob>(), 1024);
-
-    private readonly ObjectPool<InternalParallelJob> _parallelPool =
-        new DefaultObjectPool<InternalParallelJob>(new DefaultPooledObjectPolicy<InternalParallelJob>(), 1024);
-
-    /// <summary>
-    /// Used internally for Parallel jobs, for external callers it gets garbage collected.
-    /// </summary>
     private readonly ObjectPool<ParallelTracker> _trackerPool =
-        new DefaultObjectPool<ParallelTracker>(new DefaultPooledObjectPolicy<ParallelTracker>(), 1024);
+        new DefaultObjectPool<ParallelTracker>(new TrackerPooledPolicy());
+
+    private readonly ObjectPool<RobustParallelState> _robustParallelPool =
+        new DefaultObjectPool<RobustParallelState>(new DefaultPooledObjectPolicy<RobustParallelState>());
+
+    private sealed class TrackerPooledPolicy : IPooledObjectPolicy<ParallelTracker>
+    {
+        public ParallelTracker Create()
+        {
+            return new ParallelTracker();
+        }
+
+        public bool Return(ParallelTracker obj)
+        {
+            obj.PendingTasks = 0;
+            obj.Event.Reset();
+            return true;
+        }
+    }
 
     public void Initialize()
     {
@@ -85,21 +89,6 @@ internal sealed class ParallelManager : IParallelManagerInternal
     {
         ParallelCountChanged += changed;
         changed();
-    }
-
-    private InternalJob GetJob(IRobustJob job)
-    {
-        var robustJob = _jobPool.Get();
-        robustJob.Event.Reset();
-        robustJob.Set(_sawmill, job, _jobPool);
-        return robustJob;
-    }
-
-    private InternalParallelJob GetParallelJob(IParallelRobustJob job, int start, int end, ParallelTracker tracker)
-    {
-        var internalJob = _parallelPool.Get();
-        internalJob.Set(_sawmill, job, start, end, tracker, _parallelPool);
-        return internalJob;
     }
 
     private void UpdateCVar(int value)
@@ -118,11 +107,31 @@ internal sealed class ParallelManager : IParallelManagerInternal
     /// <inheritdoc/>
     public WaitHandle Process(IRobustJob job)
     {
-        var subJob = GetJob(job);
+        var tracker = _trackerPool.Get();
+        var state = new RobustState(job, tracker, this);
+
         // From what I can tell preferLocal is more of a !forceGlobal flag.
         // Also UnsafeQueue should be fine as long as we don't use async locals.
-        ThreadPool.UnsafeQueueUserWorkItem(subJob, true);
-        return subJob.Event.WaitHandle;
+        ThreadPool.UnsafeQueueUserWorkItem(Execute, state, true);
+        return tracker.Event.WaitHandle;
+    }
+
+    private record struct RobustState(IRobustJob Job, ParallelTracker Tracker, ParallelManager Mgr);
+
+    private static void Execute(RobustState state)
+    {
+        try
+        {
+            state.Job.Execute();
+        }
+        catch (Exception exc)
+        {
+            state.Mgr._sawmill.Error($"Exception in ParallelManager: {exc.StackTrace}");
+        }
+        finally
+        {
+            state.Tracker.Event.Set();
+        }
     }
 
     public void ProcessNow(IRobustJob job)
@@ -144,15 +153,17 @@ internal sealed class ParallelManager : IParallelManagerInternal
 
         var tracker = InternalProcess(job, amount);
         tracker.Event.WaitHandle.WaitOne();
+        DebugTools.Assert(tracker.PendingTasks == 0);
         _trackerPool.Return(tracker);
     }
 
     /// <inheritdoc/>
-    public void ProcessSerialNow(IParallelRobustJob jobs, int amount)
+    public void ProcessSerialNow(IParallelRobustJob job, int amount)
     {
+        // No point having threading overhead just slam it.
         for (var i = 0; i < amount; i++)
         {
-            jobs.Execute(i);
+            job.Execute(i);
         }
     }
 
@@ -171,10 +182,10 @@ internal sealed class ParallelManager : IParallelManagerInternal
     {
         var batches = (int) MathF.Ceiling(amount / (float) job.BatchSize);
         var batchSize = job.BatchSize;
-        var tracker = _trackerPool.Get();
 
         // Need to set this up front to avoid firing too early.
-        tracker.Event.Reset();
+        var tracker = _trackerPool.Get();
+
         if (amount <= 0)
         {
             tracker.Event.Set();
@@ -187,123 +198,73 @@ internal sealed class ParallelManager : IParallelManagerInternal
         {
             var start = i * batchSize;
             var end = Math.Min(start + batchSize, amount);
-            var subJob = GetParallelJob(job, start, end, tracker);
+            var state = _robustParallelPool.Get();
+            state.Job = job;
+            state.Mgr = this;
+            state.Tracker = tracker;
+            state.Start = start;
+            state.End = end;
 
             // From what I can tell preferLocal is more of a !forceGlobal flag.
             // Also UnsafeQueue should be fine as long as we don't use async locals.
-            ThreadPool.UnsafeQueueUserWorkItem(subJob, true);
+            ThreadPool.UnsafeQueueUserWorkItem(Execute, state, true);
         }
 
         return tracker;
     }
 
-    #region Jobs
-
-    /// <summary>
-    /// Runs an <see cref="IRobustJob"/> and handles cleanup.
-    /// </summary>
-    private sealed class InternalJob : IRobustJob, IThreadPoolWorkItem
+    private sealed record RobustParallelState()
     {
-        private ISawmill _sawmill = default!;
-        private IRobustJob _robust = default!;
-
-        public readonly ManualResetEventSlim Event = new();
-        private ObjectPool<InternalJob> _parentPool = default!;
-
-        public void Set(ISawmill sawmill, IRobustJob job, ObjectPool<InternalJob> parentPool)
-        {
-            _sawmill = sawmill;
-            _robust = job;
-            _parentPool = parentPool;
-        }
-
-        public void Execute()
-        {
-            try
-            {
-                _robust.Execute();
-            }
-            catch (Exception exc)
-            {
-                _sawmill.Error($"Exception in ParallelManager: {exc.StackTrace}");
-            }
-            finally
-            {
-                Event.Set();
-                _parentPool.Return(this);
-            }
-        }
+        public IParallelRobustJob Job = default!;
+        public ParallelTracker Tracker = default!;
+        public ParallelManager Mgr = default!;
+        public int Start;
+        public int End;
     }
 
-    /// <summary>
-    /// Runs an <see cref="IParallelRobustJob"/> and handles cleanup.
-    /// </summary>
-    private sealed class InternalParallelJob : IRobustJob, IThreadPoolWorkItem
+    private static void Execute(RobustParallelState state)
     {
-        private IParallelRobustJob _robust = default!;
-        private int _start;
-        private int _end;
+        var index = 0;
+        var job = state.Job;
+        var start = state.Start;
+        var end = state.End;
 
-        private ISawmill _sawmill = default!;
-
-        private ParallelTracker _tracker = default!;
-        private ObjectPool<InternalParallelJob> _parentPool = default!;
-
-        public void Set(ISawmill sawmill, IParallelRobustJob robust, int start, int end, ParallelTracker tracker, ObjectPool<InternalParallelJob> parentPool)
+        try
         {
-            _sawmill = sawmill;
-
-            _robust = robust;
-            _start = start;
-            _end = end;
-
-            _tracker = tracker;
-            _parentPool = parentPool;
+            for (index = start; index < end; index++)
+            {
+                job.Execute(index);
+            }
         }
-
-        public void Execute()
+        catch (Exception exc)
         {
-            try
-            {
-                for (var i = _start; i < _end; i++)
-                {
-                    _robust.Execute(i);
-                }
-            }
-            catch (Exception exc)
-            {
-                _sawmill.Error($"Exception in ParallelManager: {exc.StackTrace}");
-            }
-            finally
-            {
-                // Set the event and return it to the pool for re-use.
-                _tracker.Set();
-                _parentPool.Return(this);
-            }
+            state.Mgr._sawmill.Error($"Exception in ParallelManager on job {index}: {exc.StackTrace}");
+        }
+        finally
+        {
+            state.Tracker.Set();
+            state.Mgr._robustParallelPool.Return(state);
         }
     }
-
-    /// <summary>
-    /// Tracks jobs internally. This is because WaitHandle has a max limit of 64 tasks.
-    /// So we'll just decrement PendingTasks in lieu.
-    /// </summary>
-    private sealed class ParallelTracker
-    {
-        public readonly ManualResetEventSlim Event = new();
-        public int PendingTasks;
-
-        /// <summary>
-        /// Marks the tracker as having 1 less pending task.
-        /// </summary>
-        public void Set()
-        {
-            // We should atomically get new value of PendingTasks
-            // as the result of Decrement call and use it to prevent data race.
-            if (Interlocked.Decrement(ref PendingTasks) <= 0)
-                Event.Set();
-        }
-    }
-
-    #endregion
 }
 
+/// <summary>
+/// Tracks jobs internally. This is because WaitHandle has a max limit of 64 tasks.
+/// So we'll just decrement PendingTasks in lieu.
+/// </summary>
+internal sealed class ParallelTracker
+{
+    public readonly ManualResetEventSlim Event = new();
+    public int PendingTasks;
+
+    /// <summary>
+    /// Marks the tracker as having 1 less pending task.
+    /// </summary>
+    public void Set()
+    {
+        // We should atomically get new value of PendingTasks
+        // as the result of Decrement call and use it to prevent data race.
+        if (Interlocked.Decrement(ref PendingTasks) <= 0)
+            Event.Set();
+    }
+}

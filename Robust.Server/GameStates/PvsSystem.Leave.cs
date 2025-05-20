@@ -71,12 +71,11 @@ internal sealed partial class PvsSystem
         session.LeftView.Clear();
     }
 
-    private record struct PvsLeaveJob(PvsSystem _pvs) : IParallelRobustJob
+    private sealed class PvsLeaveJob(PvsSystem pvs) : IParallelRobustJob
     {
         public int BatchSize => 2;
-        private PvsSystem _pvs = _pvs;
+        private PvsSystem _pvs = pvs;
         public int Count => _pvs._sessions.Length;
-
 
         public void Execute(int index)
         {

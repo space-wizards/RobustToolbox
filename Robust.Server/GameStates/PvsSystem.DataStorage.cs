@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Microsoft.Extensions.ObjectPool;
 using Robust.Shared;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Threading;
@@ -366,11 +367,16 @@ internal sealed partial class PvsSystem
         _dataFreeListHead = index;
     }
 
-    private record struct PvsDeletionsJob(PvsSystem _pvs) : IParallelRobustJob
+    private sealed class PvsDeletionsJob : IParallelRobustJob
     {
         public int BatchSize => 8;
-        private PvsSystem _pvs = _pvs;
+        private PvsSystem _pvs = default!;
         public List<PvsIndex> ToClear = new();
+
+        internal PvsDeletionsJob(PvsSystem system)
+        {
+            _pvs = system;
+        }
 
         public int Count => ToClear.Count;
 

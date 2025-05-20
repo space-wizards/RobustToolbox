@@ -89,6 +89,8 @@ public abstract partial class SharedPhysicsSystem
         if (!_xformQuery.Resolve(uid, ref xform))
             return Vector2.Zero;
 
+        PhysicsQuery.Resolve(uid, ref component);
+
         var parent = xform.ParentUid;
         var localPos = xform.LocalPosition;
 

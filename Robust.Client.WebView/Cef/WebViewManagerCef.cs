@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using Robust.Client.Console;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
@@ -30,7 +31,9 @@ namespace Robust.Client.WebView.Cef
         [Dependency] private readonly ILogManager _logManager = default!;
         [Dependency] private readonly ILocalizationManager _localization = default!;
 
+        private const int BasePort = 9222;
         private ISawmill _sawmill = default!;
+        private static readonly string ProcessName = OperatingSystem.IsWindows() ? "Robust.Client.WebView.exe" : "Robust.Client.WebView";
 
         public void Initialize()
         {
@@ -59,9 +62,16 @@ namespace Robust.Client.WebView.Cef
             if (cefResourcesPath == null)
                 throw new InvalidOperationException("Unable to locate cef_resources directory!");
 
+            // Increment port based on instances of CEF
+            // WebView has 3 instances so it increments +3
+            var remoteDebugPort = BasePort + LocateRunningWebView();
+
+            // Assign cache based on port
+            // This is needed to allow multiple instances of a client to run at once.
+            // Two separate instances of CEF can't be using the same ports/ cache folder.
             var cachePath = "";
             if (_resourceManager.UserData is WritableDirProvider userData)
-                cachePath = userData.GetFullPath(new ResPath("/cef_cache"));
+                cachePath = userData.GetFullPath(new ResPath($"/cef_cache{remoteDebugPort}"));
 
             var settings = new CefSettings()
             {
@@ -71,7 +81,7 @@ namespace Robust.Client.WebView.Cef
                 BrowserSubprocessPath = subProcessPath,
                 LocalesDirPath = Path.Combine(cefResourcesPath, "locales"),
                 ResourcesDirPath = cefResourcesPath,
-                RemoteDebuggingPort = 9222,
+                RemoteDebuggingPort = remoteDebugPort,
                 CookieableSchemesList = "usr,res",
                 CachePath = cachePath,
             };
@@ -93,17 +103,36 @@ namespace Robust.Client.WebView.Cef
             // So these arguments look like nonsense, but it turns out CEF is just *like that*.
             // The first argument is literally nonsense, but it needs to be there as otherwise the second argument doesn't apply
             // The second argument turns off CEF's bullshit error handling, which breaks dotnet's error handling.
-            CefRuntime.Initialize(new CefMainArgs(new string[]{"binary","--disable-in-process-stack-traces"}), settings, _app, IntPtr.Zero);
+            CefRuntime.Initialize(new CefMainArgs(["binary","--disable-in-process-stack-traces"]), settings, _app, IntPtr.Zero);
 
-            if (_cfg.GetCVar(WCVars.WebResProtocol))
+            if (!_cfg.GetCVar(WCVars.WebResProtocol)) return;
+
+            var handler = new ResourceSchemeFactoryHandler(
+                this,
+                _resourceManager,
+                _logManager.GetSawmill("web.res"));
+
+            CefRuntime.RegisterSchemeHandlerFactory("res", "", handler);
+        }
+
+        private static int LocateRunningWebView()
+        {
+            var count = 0;
+            var targetProcessName = Path.GetFileNameWithoutExtension(ProcessName);
+
+            try
             {
-                var handler = new ResourceSchemeFactoryHandler(
-                    this,
-                    _resourceManager,
-                    _logManager.GetSawmill("web.res"));
-
-                CefRuntime.RegisterSchemeHandlerFactory("res", "", handler);
+                var processes = Process.GetProcesses();
+                foreach (var t in processes)
+                    if (!string.Equals(t.ProcessName, targetProcessName, StringComparison.OrdinalIgnoreCase))
+                        count++;
             }
+            catch
+            {
+                return 0; // Fallback if process check fails
+            }
+
+            return count;
         }
 
         private static string? LocateCefResources()
@@ -136,7 +165,6 @@ namespace Robust.Client.WebView.Cef
 
             return searchDirectories;
         }
-
         public void Update()
         {
             // Calling this makes CEF do its work, without using its own update loop.

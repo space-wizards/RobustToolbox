@@ -1,7 +1,7 @@
 using System.Linq;
 using System.Numerics;
+using Robust.Server.GameObjects;
 using Robust.Shared.Console;
-using Robust.Shared.ContentPack;
 using Robust.Shared.EntitySerialization;
 using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.GameObjects;
@@ -11,6 +11,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using Robust.Shared.ContentPack;
 
 namespace Robust.Server.Console.Commands
 {
@@ -18,40 +19,73 @@ namespace Robust.Server.Console.Commands
     {
         [Dependency] private readonly IEntityManager _ent = default!;
         [Dependency] private readonly IResourceManager _resource = default!;
+        [Dependency] private readonly IEntitySystemManager _system = default!;
 
         public override string Command => "savegrid";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            if (args.Length < 2)
+            if (args.Length is < 1 or > 2)
             {
-                shell.WriteError("Not enough arguments.");
+                shell.WriteLine(Help);
                 return;
             }
 
-            if (!NetEntity.TryParse(args[0], out var uidNet))
-            {
-                shell.WriteError("Not a valid entity ID.");
-                return;
-            }
+            var path = new ResPath(args[0]);
+            EntityUid uid;
 
-            var uid = _ent.GetEntity(uidNet);
+            switch (args.Length)
+            {
+
+                case 1:
+                    var ent = shell.Player?.AttachedEntity;
+
+                    // If there is no associated player or they don't have an attached entity, then we can't continue with just one parameter provided
+                    if (ent is null)
+                    {
+                        shell.WriteError(Loc.GetString("cmd-savegrid-no-player-ent"));
+                        return;
+                    }
+
+                    var gridEnt = _system.GetEntitySystem<TransformSystem>().GetGrid(ent.Value);
+
+                    if (gridEnt is null)
+                    {
+                        shell.WriteError(Loc.GetString("cmd-savegrid-no-player-grid"));
+                        return;
+                    }
+
+                    uid = gridEnt.Value;
+                    break;
+                // Manually specified grid
+                case 2:
+                    if (!NetEntity.TryParse(args[1], out var gridNet))
+                    {
+                        shell.WriteError(Loc.GetString("cmd-savegrid-invalid-grid",("arg",args[1])));
+                        return;
+                    }
+
+                    uid = _ent.GetEntity(gridNet);
+                    break;
+                default:
+                    return;
+            }
 
             // no saving default grid
             if (!_ent.EntityExists(uid))
             {
-                shell.WriteError("That grid does not exist.");
+                shell.WriteError(Loc.GetString("cmd-savegrid-existnt"));
                 return;
             }
 
-            bool saveSuccess = _ent.System<MapLoaderSystem>().TrySaveGrid(uid, new ResPath(args[1]));
+            bool saveSuccess = _ent.System<MapLoaderSystem>().TrySaveGrid(uid, path);
             if(saveSuccess)
             {
-                shell.WriteLine("Save successful. Look in the user data directory.");
+                shell.WriteLine(Loc.GetString("cmd-savegrid-success"));
             }
             else
             {
-                shell.WriteError("Save unsuccessful!");
+                shell.WriteError(Loc.GetString("cmd-savegrid-fail"));
             }
         }
 
@@ -60,10 +94,10 @@ namespace Robust.Server.Console.Commands
             switch (args.Length)
             {
                 case 1:
-                    return CompletionResult.FromHintOptions(CompletionHelper.Components<MapGridComponent>(args[0], _ent), Loc.GetString("cmd-hint-savebp-id"));
-                case 2:
-                    var opts = CompletionHelper.UserFilePath(args[1], _resource.UserData);
+                    var opts = CompletionHelper.UserFilePath(args[0], _resource.UserData);
                     return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-hint-savemap-path"));
+                case 2:
+                    return CompletionResult.FromHintOptions(CompletionHelper.Components<MapGridComponent>(args[1], _ent), Loc.GetString("cmd-hint-savebp-id"));
             }
             return CompletionResult.Empty;
         }
@@ -78,77 +112,90 @@ namespace Robust.Server.Console.Commands
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            if (args.Length < 2 || args.Length == 3 || args.Length > 6)
+            if (args.Length is < 1 or 3 or > 6)
             {
-                shell.WriteError("Must have either 2, 4, 5, or 6 arguments.");
+                shell.WriteLine(Help);
                 return;
             }
 
-            if (!int.TryParse(args[0], out var intMapId))
+            var path = new ResPath(args[0]);
+            MapId mapId;
+            Vector2 offset = default;
+            Angle rot = default;
+            var opts = DeserializationOptions.Default;
+
+            if (args.Length == 1
+                && shell.Player?.AttachedEntity is not null)
             {
-                shell.WriteError($"{args[0]} is not a valid integer.");
+                var ent = shell.Player.AttachedEntity;
+                offset = _system.GetEntitySystem<TransformSystem>().GetWorldPosition(ent.Value);
+                mapId = _system.GetEntitySystem<TransformSystem>().GetMapId(ent.Value);
+                rot = _system.GetEntitySystem<TransformSystem>().GetWorldRotation(ent.Value);
+                _system.GetEntitySystem<MapLoaderSystem>().TryLoadGrid(mapId, path, out _, opts, offset, rot);
                 return;
             }
 
-            var mapId = new MapId(intMapId);
+            if (!int.TryParse(args[1], out var intMapId))
+            {
+                shell.WriteError(Loc.GetString("cmd-loadgrid-invalid-map-id",("arg",args[1])));
+                return;
+            }
 
+            mapId = new MapId(intMapId);
             // no loading into null space
             if (mapId == MapId.Nullspace)
             {
-                shell.WriteError("Cannot load into nullspace.");
+                // shell.WriteError("Cannot load into nullspace.");
+                shell.WriteError(Loc.GetString("cmd-loadgrid-nullspace-map"));
                 return;
             }
 
             var sys = _system.GetEntitySystem<SharedMapSystem>();
             if (!sys.MapExists(mapId))
             {
-                shell.WriteError("Target map does not exist.");
+                shell.WriteError(Loc.GetString("cmd-loadgrid-missing-map"));
                 return;
             }
 
-            Vector2 offset = default;
             if (args.Length >= 4)
             {
                 if (!float.TryParse(args[2], out var x))
                 {
-                    shell.WriteError($"{args[2]} is not a valid float.");
+                    shell.WriteError(Loc.GetString("cmd-loadgrid-not-coordinate",("arg",args[2])));
                     return;
                 }
 
                 if (!float.TryParse(args[3], out var y))
                 {
-                    shell.WriteError($"{args[3]} is not a valid float.");
+                    shell.WriteError(Loc.GetString("cmd-loadgrid-not-coordinate",("arg",args[3])));
                     return;
                 }
 
                 offset = new Vector2(x, y);
             }
 
-            Angle rot = default;
             if (args.Length >= 5)
             {
                 if (!float.TryParse(args[4], out var rotation))
                 {
-                    shell.WriteError($"{args[4]} is not a valid float.");
+                    shell.WriteError(Loc.GetString("cmd-loadgrid-not-rotation",("arg",args[4])));
                     return;
                 }
 
                 rot = Angle.FromDegrees(rotation);
             }
 
-            var opts = DeserializationOptions.Default;
             if (args.Length >= 6)
             {
                 if (!bool.TryParse(args[5], out var storeUids))
                 {
-                    shell.WriteError($"{args[5]} is not a valid boolean.");
+                    shell.WriteError(Loc.GetString("cmd-loadgrid-not-boolean",("arg",args[4])));
                     return;
                 }
 
                 opts.StoreYamlUids = storeUids;
             }
 
-            var path = new ResPath(args[1]);
             _system.GetEntitySystem<MapLoaderSystem>().TryLoadGrid(mapId, path, out _, opts, offset, rot);
         }
 
@@ -171,10 +218,10 @@ namespace Robust.Server.Console.Commands
             switch (args.Length)
             {
                 case 1:
-                    return CompletionResult.FromHintOptions(CompletionHelper.MapIds(_entManager), Loc.GetString("cmd-hint-savemap-id"));
-                case 2:
-                    var opts = CompletionHelper.UserFilePath(args[1], _resource.UserData);
+                    var opts = CompletionHelper.UserFilePath(args[0], _resource.UserData);
                     return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-hint-savemap-path"));
+                case 2:
+                    return CompletionResult.FromHintOptions(CompletionHelper.MapIds(_entManager), Loc.GetString("cmd-hint-savemap-id"));
                 case 3:
                     return CompletionResult.FromHint(Loc.GetString("cmd-hint-savemap-force"));
             }
@@ -183,23 +230,49 @@ namespace Robust.Server.Console.Commands
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            if (args.Length < 2)
+            if (args.Length is < 1 or > 3 )
             {
                 shell.WriteLine(Help);
                 return;
             }
 
-            if (!int.TryParse(args[0], out var intMapId))
-            {
-                shell.WriteLine(Help);
-                return;
-            }
+            MapId mapId;
 
-            var mapId = new MapId(intMapId);
+            switch (args.Length)
+            {
+                case 1:
+                    var ent = shell.Player?.AttachedEntity;
+
+                    // If there is no associated player or they don't have an attached entity, then we can't continue with just one parameter provided
+                    if (ent is null)
+                    {
+                        shell.WriteError(Loc.GetString("cmd-savemap-no-player-ent"));
+                        return;
+                    }
+
+                    mapId = _system.GetEntitySystem<TransformSystem>().GetMapId(ent.Value);
+                    break;
+                // Manually specified grid
+                case 2:
+                case 3:
+                    if (!int.TryParse(args[1], out var intMapId))
+                    {
+                        shell.WriteError(Loc.GetString("cmd-savemap-invalid-map-id", ("arg", args[1])));
+                        return;
+                    }
+
+                    mapId = new MapId(intMapId);
+                    break;
+                default:
+                    return;
+            }
 
             // no saving null space
             if (mapId == MapId.Nullspace)
+            {
+                shell.WriteError(Loc.GetString("cmd-savemap-nullspace"));
                 return;
+            }
 
             var sys = _system.GetEntitySystem<SharedMapSystem>();
             if (!sys.MapExists(mapId))
@@ -216,7 +289,7 @@ namespace Robust.Server.Console.Commands
             }
 
             shell.WriteLine(Loc.GetString("cmd-savemap-attempt", ("mapId", mapId), ("path", args[1])));
-            bool saveSuccess = _system.GetEntitySystem<MapLoaderSystem>().TrySaveMap(mapId, new ResPath(args[1]));
+            bool saveSuccess = _system.GetEntitySystem<MapLoaderSystem>().TrySaveMap(mapId, new ResPath(args[0]));
             if(saveSuccess)
             {
                     shell.WriteLine(Loc.GetString("cmd-savemap-success"));
@@ -240,11 +313,11 @@ namespace Robust.Server.Console.Commands
             switch (args.Length)
             {
                 case 1:
-                    return CompletionResult.FromHint(Loc.GetString("cmd-hint-savemap-id"));
-                case 2:
-                    var opts = CompletionHelper.UserFilePath(args[1], resource.UserData)
-                        .Concat(CompletionHelper.ContentFilePath(args[1], resource));
+                    var opts = CompletionHelper.UserFilePath(args[0], resource.UserData)
+                        .Concat(CompletionHelper.ContentFilePath(args[0], resource));
                     return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-hint-savemap-path"));
+                case 2:
+                    return CompletionResult.FromHint(Loc.GetString("cmd-hint-savemap-id"));
                 case 3:
                     return CompletionResult.FromHint(Loc.GetString("cmd-hint-loadmap-x-position"));
                 case 4:
@@ -265,13 +338,17 @@ namespace Robust.Server.Console.Commands
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            if (args.Length < 2 || args.Length > 6)
+            if (args.Length is < 2 or > 6)
             {
                 shell.WriteLine(Help);
                 return;
             }
 
-            if (!int.TryParse(args[0], out var intMapId))
+            var path = new ResPath(args[0]);
+
+            //TODO make mapID optional and pick an unused number if unspecified
+
+            if (!int.TryParse(args[1], out var intMapId))
             {
                 shell.WriteError(Loc.GetString("cmd-parse-failure-integer", ("arg", args[0])));
                 return;
@@ -325,7 +402,6 @@ namespace Robust.Server.Console.Commands
 
             var opts = new DeserializationOptions {StoreYamlUids = storeUids};
 
-            var path = new ResPath(args[1]);
             _system.GetEntitySystem<MapLoaderSystem>().TryLoadMapWithId(mapId, path, out _, out _, opts, offset, rot);
 
             if (sys.MapExists(mapId))

@@ -154,18 +154,21 @@ cmd-set-ambient-light-parse = Unable to parse args as a byte values for a color.
 ## Mapping commands
 
 cmd-savemap-desc = Serializes a map to disk. Will not save a post-init map unless forced.
-cmd-savemap-help = savemap <MapID> <Path> [force]
+cmd-savemap-help = savemap <Path> [MapID] [force]
+cmd-savemap-no-player-ent = No player entity detected, [MapID] is mandatory.
 cmd-savemap-not-exist = Target map does not exist.
+cmd-savempa-nullspace = You cannot save Nullspace.
+cmd-savemap-invalid-map-id = '{$arg}' is not a valid [MapId]. Value must be integer.
 cmd-savemap-init-warning = Attempted to save a post-init map without forcing the save.
 cmd-savemap-attempt = Attempting to save map {$mapId} to {$path}.
 cmd-savemap-success = Map successfully saved.
 cmd-savemap-error = Could not save map! See server log for details.
-cmd-hint-savemap-id = <MapID>
+cmd-hint-savemap-id = [MapID]
 cmd-hint-savemap-path = <Path>
 cmd-hint-savemap-force = [bool]
 
 cmd-loadmap-desc = Loads a map from disk into the game.
-cmd-loadmap-help = loadmap <MapID> <Path> [x] [y] [rotation] [consistentUids]
+cmd-loadmap-help = loadmap <Path> <MapID> [x] [y] [rotation] [consistentUids]
 cmd-loadmap-nullspace = You cannot load into map 0.
 cmd-loadmap-exists = Map {$mapId} already exists.
 cmd-loadmap-success = Map {$mapId} has been loaded from {$path}.
@@ -276,7 +279,13 @@ cmd-sendgarbage-desc = Sends garbage to the server.
 cmd-sendgarbage-help = The server will reply with 'no u'
 
 cmd-loadgrid-desc = Loads a grid from a file into an existing map.
-cmd-loadgrid-help = loadgrid <MapID> <Path> [x y] [rotation] [storeUids]
+cmd-loadgrid-help = loadgrid <Path> [MapID] [x] [y] [rotation] [storeUids]
+cmd-loadgrid-invalid-map-id = '{$arg}' Is not a valid mapId. Value must be integer.
+cmd-loadgrid-nullspace-map = Cannot load into nullspace.
+cmd-loadgrid-missing-map = Target map does not exist.
+cmd-loadgrid-not-coordinate= '{$arg}' is not a valid coordinate. Value must be float.
+cmd-loadgrid-not-rotation= '{$arg}' is not a valid rotation. Value must be float.
+cmd-loadgrid-not-boolean= '{$arg}' is not a valid boolean.
 
 cmd-loc-desc = Prints the absolute location of the player's entity to console.
 cmd-loc-help = loc
@@ -303,7 +312,13 @@ cmd-rmmap-desc = Removes a map from the world. You cannot remove nullspace.
 cmd-rmmap-help = rmmap <mapId>
 
 cmd-savegrid-desc = Serializes a grid to disk.
-cmd-savegrid-help = savegrid <gridID> <Path>
+cmd-savegrid-help = savegrid <Path> [gridID]
+cmd-savegrid-existnt = That grid doesn't look like anything to me.
+cmd-savegrid-success = Save successful. Look in the user data directory.
+cmd-savegrid-invalid-grid = '{$arg}' is not a grid.
+cmd-savegrid-fail = Save unsuccessful!
+cmd-savegrid-no-player-ent = No player entity detected, gridID argument is mandatory.
+cmd-savegrid-no-player-grid = Player is not over a grid, gridID argument mandatory.
 
 cmd-testbed-desc = Loads a physics testbed on the specified map.
 cmd-testbed-help = testbed <mapid> <test>

@@ -54,6 +54,14 @@ END TEMPLATE-->
 *None yet*
 
 
+## 260.2.0
+
+### New features
+
+* Add `StringBuilder.Insert(int, string)` to sandbox.
+* Add the WorldNormal to the StartCollideEvent.
+
+
 ## 260.1.0
 
 ### New features

@@ -422,13 +422,6 @@ namespace Robust.Shared.Containers
             stack ??= new Stack<EntityUid>();
             stack.Clear();
 
-            var allTargetComps = EntityQueryEnumerator<T>();
-            var targetEnts = new HashSet<EntityUid>();
-            while (allTargetComps.MoveNext(out var targetEnt, out _))
-            {
-                targetEnts.Add(targetEnt);
-            }
-
             stack.Push(root);
 
             while (stack.Count > 0)
@@ -442,10 +435,7 @@ namespace Robust.Shared.Containers
                 {
                     foreach (var entity in container.ContainedEntities)
                     {
-                        if (targetEnts.Contains(entity))
-                        {
-                            stack.Push(entity);
-                        }
+                        stack.Push(entity);
                     }
                 }
             }

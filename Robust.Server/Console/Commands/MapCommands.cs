@@ -2,6 +2,7 @@ using System.Linq;
 using System.Numerics;
 using Robust.Server.GameObjects;
 using Robust.Shared.Console;
+using Robust.Shared.ContentPack;
 using Robust.Shared.EntitySerialization;
 using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.GameObjects;
@@ -11,7 +12,6 @@ using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
-using Robust.Shared.ContentPack;
 
 namespace Robust.Server.Console.Commands
 {
@@ -51,6 +51,7 @@ namespace Robust.Server.Console.Commands
 
                     if (gridEnt is null)
                     {
+                        shell.WriteLine(Help);
                         shell.WriteError(Loc.GetString("cmd-savegrid-no-player-grid"));
                         return;
                     }
@@ -74,9 +75,11 @@ namespace Robust.Server.Console.Commands
             // no saving default grid
             if (!_ent.EntityExists(uid))
             {
-                shell.WriteError(Loc.GetString("cmd-savegrid-existnt"));
+                shell.WriteError(Loc.GetString("cmd-savegrid-existnt",("uid",args[1])));
                 return;
             }
+
+            //TODO test if uid is actually a GRID
 
             bool saveSuccess = _ent.System<MapLoaderSystem>().TrySaveGrid(uid, path);
             if(saveSuccess)
@@ -135,6 +138,10 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
+            //TODO make it autosuggest mapId-d
+
+            //TODO make it autosuggest current coordinates?
+
             if (!int.TryParse(args[1], out var intMapId))
             {
                 shell.WriteError(Loc.GetString("cmd-loadgrid-invalid-map-id",("arg",args[1])));
@@ -153,7 +160,7 @@ namespace Robust.Server.Console.Commands
             var sys = _system.GetEntitySystem<SharedMapSystem>();
             if (!sys.MapExists(mapId))
             {
-                shell.WriteError(Loc.GetString("cmd-loadgrid-missing-map"));
+                shell.WriteError(Loc.GetString("cmd-loadgrid-missing-map",("mapId",mapId)));
                 return;
             }
 
@@ -189,7 +196,7 @@ namespace Robust.Server.Console.Commands
             {
                 if (!bool.TryParse(args[5], out var storeUids))
                 {
-                    shell.WriteError(Loc.GetString("cmd-loadgrid-not-boolean",("arg",args[4])));
+                    shell.WriteError(Loc.GetString("cmd-loadgrid-not-boolean",("arg",args[5])));
                     return;
                 }
 
@@ -288,7 +295,7 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            shell.WriteLine(Loc.GetString("cmd-savemap-attempt", ("mapId", mapId), ("path", args[1])));
+            shell.WriteLine(Loc.GetString("cmd-savemap-attempt", ("mapId", mapId), ("path", args[0])));
             bool saveSuccess = _system.GetEntitySystem<MapLoaderSystem>().TrySaveMap(mapId, new ResPath(args[0]));
             if(saveSuccess)
             {
@@ -405,9 +412,9 @@ namespace Robust.Server.Console.Commands
             _system.GetEntitySystem<MapLoaderSystem>().TryLoadMapWithId(mapId, path, out _, out _, opts, offset, rot);
 
             if (sys.MapExists(mapId))
-                shell.WriteLine(Loc.GetString("cmd-loadmap-success", ("mapId", mapId), ("path", args[1])));
+                shell.WriteLine(Loc.GetString("cmd-loadmap-success", ("mapId", mapId), ("path", path)));
             else
-                shell.WriteLine(Loc.GetString("cmd-loadmap-error", ("path", args[1])));
+                shell.WriteLine(Loc.GetString("cmd-loadmap-error", ("path", path)));
         }
     }
 }

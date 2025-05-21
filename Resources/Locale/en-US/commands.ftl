@@ -280,9 +280,9 @@ cmd-sendgarbage-help = The server will reply with 'no u'
 
 cmd-loadgrid-desc = Loads a grid from a file into an existing map.
 cmd-loadgrid-help = loadgrid <Path> [MapID] [x] [y] [rotation] [storeUids]
-cmd-loadgrid-invalid-map-id = '{$arg}' Is not a valid mapId. Value must be integer.
+cmd-loadgrid-invalid-map-id = '{$arg}' Is not a valid [mapID]. Value must be integer.
 cmd-loadgrid-nullspace-map = Cannot load into nullspace.
-cmd-loadgrid-missing-map = Target map does not exist.
+cmd-loadgrid-missing-map = Map {$mapId} does not exist.
 cmd-loadgrid-not-coordinate= '{$arg}' is not a valid coordinate. Value must be float.
 cmd-loadgrid-not-rotation= '{$arg}' is not a valid rotation. Value must be float.
 cmd-loadgrid-not-boolean= '{$arg}' is not a valid boolean.
@@ -313,12 +313,12 @@ cmd-rmmap-help = rmmap <mapId>
 
 cmd-savegrid-desc = Serializes a grid to disk.
 cmd-savegrid-help = savegrid <Path> [gridID]
-cmd-savegrid-existnt = That grid doesn't look like anything to me.
+cmd-savegrid-existnt = Entity {$uid} does not exist, therefore you cannot save it.
 cmd-savegrid-success = Save successful. Look in the user data directory.
-cmd-savegrid-invalid-grid = '{$arg}' is not a grid.
+cmd-savegrid-invalid-grid = '{$arg}' is not a valid [gridID]. Value must be integer.
 cmd-savegrid-fail = Save unsuccessful!
-cmd-savegrid-no-player-ent = No player entity detected, gridID argument is mandatory.
-cmd-savegrid-no-player-grid = Player is not over a grid, gridID argument mandatory.
+cmd-savegrid-no-player-ent = [gridID] is only optional if there is a player entity.
+cmd-savegrid-no-player-grid = [gridID] is only optional if the player is over a grid.
 
 cmd-testbed-desc = Loads a physics testbed on the specified map.
 cmd-testbed-help = testbed <mapid> <test>

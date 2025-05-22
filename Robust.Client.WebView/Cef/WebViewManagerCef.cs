@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
@@ -33,9 +32,6 @@ namespace Robust.Client.WebView.Cef
 
         private const int BasePort = 9222;
         private ISawmill _sawmill = default!;
-        private const string BaseCacheName = "cef_cache";
-        private const string LockFileName = "robust.lock";
-        private FileStream? _lockFileStream = null;
 
         public void Initialize()
         {
@@ -114,81 +110,6 @@ namespace Robust.Client.WebView.Cef
 
             CefRuntime.RegisterSchemeHandlerFactory("res", "", handler);
         }
-
-        private string FindAndLockCacheDirectory(WritableDirProvider userData)
-        {
-            var finalAbsoluteCachePath = "";
-
-            // try to find existing, unlocked cache directory
-            List<string> existingCacheDirs = [];
-            foreach (var entryName in userData.DirectoryEntries(new ResPath("/"))) // i love python
-                if (entryName.StartsWith(BaseCacheName) && userData.IsDir(new ResPath($"/{entryName}")))
-                    existingCacheDirs.Add(entryName);
-
-            existingCacheDirs.Sort();
-
-            foreach (var relativeDirName in existingCacheDirs)
-            {
-                var absoluteDirPath = userData.GetFullPath(new ResPath($"/{relativeDirName}"));
-                var lockFilePath = Path.Combine(absoluteDirPath, LockFileName);
-
-                if (!Directory.Exists(absoluteDirPath) || File.Exists(lockFilePath)) continue;
-                finalAbsoluteCachePath = absoluteDirPath;
-                _sawmill.Debug($"Found existing unlocked cache directory: {finalAbsoluteCachePath}");
-                break;
-            }
-
-            // no suitable existing directory found? create one, we have to make it here to place the lockfile.
-            if (string.IsNullOrEmpty(finalAbsoluteCachePath))
-            {
-                var i = 0;
-                string newRelativeCacheDir;
-                do
-                {
-                    newRelativeCacheDir = $"{BaseCacheName}{i}";
-                    finalAbsoluteCachePath = userData.GetFullPath(new ResPath($"/{newRelativeCacheDir}"));
-                    i++;
-                } while (userData.Exists(new ResPath($"/{newRelativeCacheDir}")));
-
-                _sawmill.Debug($"No suitable existing cache directory. Creating new one: {finalAbsoluteCachePath}");
-                try
-                {
-                    Directory.CreateDirectory(finalAbsoluteCachePath);
-                }
-                catch (IOException ex)
-                {
-                    _sawmill.Error($"Failed to create cache directory '{finalAbsoluteCachePath}'. Exception: {ex.Message}");
-                    throw new InvalidOperationException($"Failed to create CEF cache directory: {finalAbsoluteCachePath}", ex);
-                }
-            }
-
-            // lock the chosen/created directory
-            var finalLockFilePath = Path.Combine(finalAbsoluteCachePath, LockFileName);
-            try
-            {
-                if (!Directory.Exists(finalAbsoluteCachePath))
-                {
-                    _sawmill.Warning($"Cache directory {finalAbsoluteCachePath} was expected to exist but doesn't. Attempting to create.");
-                    Directory.CreateDirectory(finalAbsoluteCachePath);
-                }
-
-                _lockFileStream = new FileStream(finalLockFilePath,
-                    FileMode.Create,
-                    FileAccess.ReadWrite,
-                    FileShare.None,
-                    4096,
-                    FileOptions.DeleteOnClose);
-                _sawmill.Debug($"Successfully locked cache directory: {finalAbsoluteCachePath} with lock file: {finalLockFilePath}");
-            }
-            catch (IOException ex)
-            {
-                _sawmill.Error($"Failed to create lock file '{finalLockFilePath}' for CEF instance. Is another instance running or is there a permissions issue? Exception: {ex.Message}");
-                throw new InvalidOperationException($"Failed to create lock file '{finalLockFilePath}' for CEF instance. Another instance might be using this cache path, or there could be a permissions issue.", ex);
-            }
-
-            return finalAbsoluteCachePath;
-        }
-
         private static string? LocateCefResources()
         {
             if (ProbeDir(BasePath, out var path))

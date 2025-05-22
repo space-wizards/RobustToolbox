@@ -163,20 +163,20 @@ cmd-savemap-init-warning = Attempted to save a post-init map without forcing the
 cmd-savemap-attempt = Attempting to save map {$mapId} to {$path}.
 cmd-savemap-success = Map successfully saved.
 cmd-savemap-error = Could not save map! See server log for details.
-cmd-hint-savemap-id = [MapID]
-cmd-hint-savemap-path = <Path>
-cmd-hint-savemap-force = [bool]
+cmd-hint-savemap-id = MapID
+cmd-hint-savemap-path = Path
+cmd-hint-savemap-force = Force save?
 
 cmd-loadmap-desc = Loads a map from disk into the game.
-cmd-loadmap-help = loadmap <Path> <MapID> [x] [y] [rotation] [consistentUids]
+cmd-loadmap-help = loadmap <Path> <MapID> [x] [y] [rotation] [Store Yaml UIDs]
 cmd-loadmap-nullspace = You cannot load into map 0.
 cmd-loadmap-exists = Map {$mapId} already exists.
 cmd-loadmap-success = Map {$mapId} has been loaded from {$path}.
 cmd-loadmap-error = An error occurred while loading map from {$path}.
-cmd-hint-loadmap-x-position = [x-position]
-cmd-hint-loadmap-y-position = [y-position]
-cmd-hint-loadmap-rotation = [rotation]
-cmd-hint-loadmap-uids = [float]
+cmd-hint-loadmap-x-position = x-position (integer)
+cmd-hint-loadmap-y-position = y-position (integer)
+cmd-hint-loadmap-rotation = rotation (integer)
+cmd-hint-loadmap-uids = Store the exact original UIDs on the loaded entities?
 
 cmd-hint-savebp-id = <Grid EntityID>
 
@@ -279,7 +279,9 @@ cmd-sendgarbage-desc = Sends garbage to the server.
 cmd-sendgarbage-help = The server will reply with 'no u'
 
 cmd-loadgrid-desc = Loads a grid from a file into an existing map.
-cmd-loadgrid-help = loadgrid <Path> [MapID] [x] [y] [rotation] [storeUids]
+cmd-loadgrid-help = loadgrid <Path> [MapID] [x] [y] [rotation] [Store Yaml UIDs]
+cmd-loadgrid-success = Load successful.
+cmd-loadgrid-fail = Load failed!
 cmd-loadgrid-invalid-map-id = '{$arg}' Is not a valid [mapID]. Value must be integer.
 cmd-loadgrid-nullspace-map = Cannot load into nullspace.
 cmd-loadgrid-missing-map = Map {$mapId} does not exist.
@@ -312,13 +314,14 @@ cmd-rmmap-desc = Removes a map from the world. You cannot remove nullspace.
 cmd-rmmap-help = rmmap <mapId>
 
 cmd-savegrid-desc = Serializes a grid to disk.
-cmd-savegrid-help = savegrid <Path> [gridID]
+cmd-savegrid-help = savegrid <Path> [GridID]
 cmd-savegrid-existnt = Entity {$uid} does not exist, therefore you cannot save it.
 cmd-savegrid-success = Save successful. Look in the user data directory.
 cmd-savegrid-invalid-grid = '{$arg}' is not a valid [gridID]. Value must be integer.
-cmd-savegrid-fail = Save unsuccessful!
+cmd-savegrid-fail = Save failed!
 cmd-savegrid-no-player-ent = [gridID] is only optional if there is a player entity.
 cmd-savegrid-no-player-grid = [gridID] is only optional if the player is over a grid.
+cmd-hint-savegrid-id = GridID
 
 cmd-testbed-desc = Loads a physics testbed on the specified map.
 cmd-testbed-help = testbed <mapid> <test>

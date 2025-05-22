@@ -25,6 +25,7 @@ namespace Robust.Server.Console.Commands
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
+            // Validate the number of parameters
             if (args.Length is < 1 or > 2)
             {
                 shell.WriteLine(Help);
@@ -33,6 +34,7 @@ namespace Robust.Server.Console.Commands
 
             var path = new ResPath(args[0]);
 
+            // Grid target can be omitted to automatically target the grid currently under the player
             if (args.Length == 1)
                 SaveGridCurrent(shell, path);
             else
@@ -44,17 +46,18 @@ namespace Robust.Server.Console.Commands
         /// </summary>
         private void SaveGridCurrent(IConsoleShell shell, ResPath path)
         {
+            // Get the player's controlled entity
             var ent = shell.Player?.AttachedEntity;
-
-            // If there is no associated player or they don't have an attached entity, then we can't continue with just one parameter provided
             if (ent is null)
             {
+                // We can't continue with just the first parameter without a player entity. For example, if a server system ran this command.
                 shell.WriteError(Loc.GetString("cmd-savegrid-no-player-ent"));
                 return;
             }
 
             var gridEnt = _system.GetEntitySystem<TransformSystem>().GetGrid(ent.Value);
 
+            // Validate if the player is over a grid
             if (gridEnt is null)
             {
                 shell.WriteLine(Help);
@@ -70,6 +73,7 @@ namespace Robust.Server.Console.Commands
         /// </summary>
         private void SaveGridSpecified(string targetGrid, IConsoleShell shell, ResPath path )
         {
+            // Validate the mapId parameter's type
             if (!NetEntity.TryParse(targetGrid, out var gridNet))
             {
                 shell.WriteError(Loc.GetString("cmd-savegrid-invalid-grid",("arg",targetGrid)));
@@ -82,7 +86,7 @@ namespace Robust.Server.Console.Commands
 
         private void SaveGrid(EntityUid uid, string targetGrid, IConsoleShell shell, ResPath path)
         {
-            // no saving default grid
+            // Validate if the grid being saved actually exists
             if (!_ent.EntityExists(uid))
             {
                 shell.WriteError(Loc.GetString("cmd-savegrid-existnt",("uid",targetGrid)));
@@ -98,6 +102,7 @@ namespace Robust.Server.Console.Commands
                 : Loc.GetString("cmd-savegrid-fail"));
         }
 
+        // Parameter autocomplete and hints
         public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
             switch (args.Length)
@@ -122,6 +127,8 @@ namespace Robust.Server.Console.Commands
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
+
+            // Validate the number of parameters
             if (args.Length is < 1 or 3 or > 6)
             {
                 shell.WriteLine(Help);
@@ -130,6 +137,7 @@ namespace Robust.Server.Console.Commands
 
             var path = new ResPath(args[0]);
 
+            // Map target and location parameters can be omitted to automatically load the grid at the player's current position
             if (args.Length == 1)
                 LoadGridCurrent(shell, path);
             else
@@ -146,6 +154,7 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
+            // Read all the necessary information from the player's attached entity
             var ent = shell.Player.AttachedEntity.Value;
             var offset = _system.GetEntitySystem<TransformSystem>().GetWorldPosition(ent);
             var mapId = _system.GetEntitySystem<TransformSystem>().GetMapId(ent);
@@ -164,6 +173,7 @@ namespace Robust.Server.Console.Commands
             Angle rot = default;
             var opts = DeserializationOptions.Default;
 
+            // Validate the mapId parameter's type
             if (!int.TryParse(args[1], out var intMapId))
             {
                 shell.WriteError(Loc.GetString("cmd-loadgrid-invalid-map-id", ("arg", args[1])));
@@ -178,6 +188,7 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
+            // Validate if the target map exists
             var sys = _system.GetEntitySystem<SharedMapSystem>();
             if (!sys.MapExists(mapId))
             {
@@ -185,6 +196,7 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
+            // Validate the coordinate parameters' types
             if (args.Length >= 4)
             {
                 if (!float.TryParse(args[2], out var x))
@@ -202,6 +214,7 @@ namespace Robust.Server.Console.Commands
                 offset = new Vector2(x, y);
             }
 
+            // Validate the rotation parameter's type
             if (args.Length >= 5)
             {
                 if (!float.TryParse(args[4], out var rotation))
@@ -209,9 +222,11 @@ namespace Robust.Server.Console.Commands
                     shell.WriteError(Loc.GetString("cmd-loadgrid-not-rotation", ("arg", args[4])));
                     return;
                 }
+
                 rot = Angle.FromDegrees(rotation);
             }
 
+            // Validate the storeUid parameter's type
             if (args.Length >= 6)
             {
                 if (!bool.TryParse(args[5], out var storeUids))
@@ -238,6 +253,7 @@ namespace Robust.Server.Console.Commands
                 : Loc.GetString("cmd-loadgrid-fail"));
         }
 
+        // Parameter autocomplete and hints
         public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
             switch (args.Length)
@@ -258,6 +274,7 @@ namespace Robust.Server.Console.Commands
 
         public override string Command => "savemap";
 
+        // Parameter autocomplete and hints
         public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
             switch (args.Length)
@@ -275,6 +292,7 @@ namespace Robust.Server.Console.Commands
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
+            // Validate the number of parameters
             if (args.Length is < 1 or > 3 )
             {
                 shell.WriteLine(Help);
@@ -283,14 +301,16 @@ namespace Robust.Server.Console.Commands
 
             MapId mapId;
 
+            //todo atomize this
             switch (args.Length)
             {
                 case 1:
+                    // Get the player's controlled entity
                     var ent = shell.Player?.AttachedEntity;
 
-                    // If there is no associated player or they don't have an attached entity, then we can't continue with just one parameter provided
                     if (ent is null)
                     {
+                        // We can't continue with just the first parameter without a player entity. For example, if a server system ran this command.
                         shell.WriteError(Loc.GetString("cmd-savemap-no-player-ent"));
                         return;
                     }
@@ -319,6 +339,7 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
+            // Validate if the map to be saved exists
             var sys = _system.GetEntitySystem<SharedMapSystem>();
             if (!sys.MapExists(mapId))
             {
@@ -326,6 +347,7 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
+            // If the map to be saved is initialized, only allow saving it if the Force parameter was given
             if (sys.IsInitialized(mapId) &&
                 ( args.Length < 3  || !bool.TryParse(args[2], out var force) || !force))
             {
@@ -350,6 +372,7 @@ namespace Robust.Server.Console.Commands
 
         public override string Command => "loadmap";
 
+        // Parameter autocomplete and hints
         public static CompletionResult GetCompletionResult(IConsoleShell shell, string[] args, IResourceManager resource)
         {
             switch (args.Length)
@@ -381,17 +404,19 @@ namespace Robust.Server.Console.Commands
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
+            //Validate the number of parameters
             if (args.Length is < 2 or > 6)
             {
                 shell.WriteLine(Help);
                 return;
             }
 
-            var path = new ResPath(args[0]);
-
             //TODO make mapID optional and pick an unused number if unspecified
             // cmd-loadmap-attempt-current
 
+            var path = new ResPath(args[0]);
+
+            // Validate the mapId parameter's type
             if (!int.TryParse(args[1], out var intMapId))
             {
                 shell.WriteError(Loc.GetString("cmd-parse-failure-integer", ("arg", args[0])));
@@ -407,6 +432,7 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
+            // Do not allow loading the map onto an already taken Id
             var sys = _system.GetEntitySystem<SharedMapSystem>();
             if (sys.MapExists(mapId))
             {
@@ -414,14 +440,15 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            float x = 0;
+            // Validate the coordinate parameters' type
+            float x = 0; // todo
             if (args.Length >= 3 && !float.TryParse(args[2], out x))
             {
                 shell.WriteError(Loc.GetString("cmd-parse-failure-float", ("arg", args[2])));
                 return;
             }
 
-            float y = 0;
+            float y = 0; // todo
             if (args.Length >= 4 && !float.TryParse(args[3], out y))
             {
                 shell.WriteError(Loc.GetString("cmd-parse-failure-float", ("arg", args[3])));
@@ -429,7 +456,8 @@ namespace Robust.Server.Console.Commands
             }
             var offset = new Vector2(x, y);
 
-            float rotation = 0;
+            // Validate the rotation parameter's type
+            float rotation = 0; // todo
             if (args.Length >= 5 && !float.TryParse(args[4], out rotation))
             {
                 shell.WriteError(Loc.GetString("cmd-parse-failure-float", ("arg", args[4])));
@@ -437,7 +465,8 @@ namespace Robust.Server.Console.Commands
             }
             var rot = new Angle(rotation);
 
-            var storeUids = false;
+            // Validate the storeUid parameter's type
+            var storeUids = false; // todo
             if (args.Length >= 6 && !bool.TryParse(args[5], out storeUids))
             {
                 shell.WriteError(Loc.GetString("cmd-parse-failure-bool", ("arg", args[5])));

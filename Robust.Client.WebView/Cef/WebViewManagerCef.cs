@@ -138,7 +138,7 @@ namespace Robust.Client.WebView.Cef
                 break;
             }
 
-            // no suitable existing directory found? create a new one ?? IS THIS NEEDED SHOULDNT CEF make it?
+            // no suitable existing directory found? create one, we have to make it here to place the lockfile.
             if (string.IsNullOrEmpty(finalAbsoluteCachePath))
             {
                 var i = 0;

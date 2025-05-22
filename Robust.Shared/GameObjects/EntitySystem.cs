@@ -11,6 +11,7 @@ using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Reflection;
 using Robust.Shared.Replays;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
@@ -43,19 +44,7 @@ namespace Robust.Shared.GameObjects
                 if (name.EndsWith("System"))
                     name = name.Substring(0, name.Length - "System".Length);
 
-                // Convert CamelCase to snake_case
-                // Ignore if all uppercase, assume acronym (e.g. NPC or HTN)
-                if (name.All(char.IsUpper))
-                {
-                    name = name.ToLower(CultureInfo.InvariantCulture);
-                }
-                else
-                {
-                    name = string.Concat(name.Select(x => char.IsUpper(x) ? $"_{char.ToLower(x)}" : x.ToString()));
-                    name = name.Trim('_');
-                }
-
-                return $"system.{name}";
+                return $"system.{name.ToSnakeCase()}";
             }
         }
 

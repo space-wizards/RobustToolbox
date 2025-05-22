@@ -32,50 +32,60 @@ namespace Robust.Server.Console.Commands
             }
 
             var path = new ResPath(args[0]);
-            EntityUid uid;
 
-            switch (args.Length) //TODO: The Cursed Switch. Move the end of Execute to a separate function?
+            if (args.Length == 1)
+                SaveGridCurrent(shell, path);
+            else
+                SaveGridSpecified(args[1], shell, path);
+        }
+
+        /// <summary>
+        /// Save the grid currently under the player's attachedEntity
+        /// </summary>
+        private void SaveGridCurrent(IConsoleShell shell, ResPath path)
+        {
+            var ent = shell.Player?.AttachedEntity;
+
+            // If there is no associated player or they don't have an attached entity, then we can't continue with just one parameter provided
+            if (ent is null)
             {
-
-                case 1:
-                    var ent = shell.Player?.AttachedEntity;
-
-                    // If there is no associated player or they don't have an attached entity, then we can't continue with just one parameter provided
-                    if (ent is null)
-                    {
-                        shell.WriteError(Loc.GetString("cmd-savegrid-no-player-ent"));
-                        return;
-                    }
-
-                    var gridEnt = _system.GetEntitySystem<TransformSystem>().GetGrid(ent.Value);
-
-                    if (gridEnt is null)
-                    {
-                        shell.WriteLine(Help);
-                        shell.WriteError(Loc.GetString("cmd-savegrid-no-player-grid"));
-                        return;
-                    }
-
-                    uid = gridEnt.Value;
-                    break;
-                // Manually specified grid
-                case 2:
-                    if (!NetEntity.TryParse(args[1], out var gridNet))
-                    {
-                        shell.WriteError(Loc.GetString("cmd-savegrid-invalid-grid",("arg",args[1])));
-                        return;
-                    }
-
-                    uid = _ent.GetEntity(gridNet);
-                    break;
-                default:
-                    return;
+                shell.WriteError(Loc.GetString("cmd-savegrid-no-player-ent"));
+                return;
             }
 
+            var gridEnt = _system.GetEntitySystem<TransformSystem>().GetGrid(ent.Value);
+
+            if (gridEnt is null)
+            {
+                shell.WriteLine(Help);
+                shell.WriteError(Loc.GetString("cmd-savegrid-no-player-grid"));
+                return;
+            }
+
+            SaveGrid(gridEnt.Value, gridEnt.Value.ToString(), shell, path);
+        }
+
+        /// <summary>
+        /// Save a specific grid
+        /// </summary>
+        private void SaveGridSpecified(string targetGrid, IConsoleShell shell, ResPath path )
+        {
+            if (!NetEntity.TryParse(targetGrid, out var gridNet))
+            {
+                shell.WriteError(Loc.GetString("cmd-savegrid-invalid-grid",("arg",targetGrid)));
+                return;
+            }
+
+            var uid = _ent.GetEntity(gridNet);
+            SaveGrid(uid, targetGrid, shell, path);
+        }
+
+        private void SaveGrid(EntityUid uid, string targetGrid, IConsoleShell shell, ResPath path)
+        {
             // no saving default grid
             if (!_ent.EntityExists(uid))
             {
-                shell.WriteError(Loc.GetString("cmd-savegrid-existnt",("uid",args[1])));
+                shell.WriteError(Loc.GetString("cmd-savegrid-existnt",("uid",targetGrid)));
                 return;
             }
 
@@ -84,8 +94,8 @@ namespace Robust.Server.Console.Commands
             shell.WriteLine(Loc.GetString("cmd-savegrid-attempt",("uid", uid.ToString())));
             var saveSuccess = _ent.System<MapLoaderSystem>().TrySaveGrid(uid, path);
             shell.WriteLine(saveSuccess
-                    ? Loc.GetString("cmd-savegrid-success")
-                    : Loc.GetString("cmd-savegrid-fail"));
+                ? Loc.GetString("cmd-savegrid-success")
+                : Loc.GetString("cmd-savegrid-fail"));
         }
 
         public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)

@@ -279,16 +279,6 @@ namespace Robust.Shared.Containers
 
         #region Container Helpers
 
-        [Obsolete("Use Entity<T> variant")]
-        public bool TryGetContainingContainer(
-            EntityUid uid,
-            [NotNullWhen(true)] out BaseContainer? container,
-            MetaDataComponent? meta = null,
-            TransformComponent? transform = null)
-        {
-            return TryGetContainingContainer((uid, transform, meta), out container);
-        }
-
         public bool TryGetContainingContainer(
             Entity<TransformComponent?, MetaDataComponent?> ent,
             [NotNullWhen(true)] out BaseContainer? container)
@@ -401,13 +391,6 @@ namespace Robust.Shared.Containers
             return TryFindComponentsOnEntityContainerOrParent(xform.ParentUid, entityQuery, foundComponents);
         }
 
-
-        [Obsolete("Use Entity<T> variant")]
-        public bool IsInSameOrNoContainer(EntityUid user, EntityUid other)
-        {
-            return IsInSameOrNoContainer((user, null, null), (other, null, null));
-        }
-
         /// <summary>
         ///     Returns true if the two entities are not contained, or are contained in the same container.
         /// </summary>
@@ -426,13 +409,6 @@ namespace Robust.Shared.Containers
 
             // Both entities are in the same container
             return userContainer == otherContainer;
-        }
-
-
-        [Obsolete("Use Entity<T> variant")]
-        public bool IsInSameOrParentContainer(EntityUid user, EntityUid other)
-        {
-            return IsInSameOrParentContainer((user, null), other);
         }
 
         /// <summary>
@@ -467,21 +443,6 @@ namespace Robust.Shared.Containers
 
             // Both entities are in the same container
             return userContainer == otherContainer;
-        }
-
-        [Obsolete("Use Entity<T> variant")]
-        public bool IsInSameOrTransparentContainer(
-            EntityUid user,
-            EntityUid other,
-            BaseContainer? userContainer = null,
-            BaseContainer? otherContainer = null,
-            bool userSeeInsideSelf = false)
-        {
-            return IsInSameOrTransparentContainer((user, null),
-                other,
-                userContainer,
-                otherContainer,
-                userSeeInsideSelf);
         }
 
         /// <summary>

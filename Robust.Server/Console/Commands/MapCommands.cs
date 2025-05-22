@@ -34,7 +34,7 @@ namespace Robust.Server.Console.Commands
             var path = new ResPath(args[0]);
             EntityUid uid;
 
-            switch (args.Length)
+            switch (args.Length) //TODO: The Cursed Switch. Move the end of Execute to a separate function?
             {
 
                 case 1:
@@ -79,9 +79,9 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            //TODO test if uid is actually a GRID, and give specific error if it's not
+            //TODO test if uid is actually a grid, and give specific error if it's not
 
-            //TODO shell.WriteLine "attempting to save" etc
+            shell.WriteLine(Loc.GetString("cmd-savegrid-attempt",("uid", uid.ToString())));
             var saveSuccess = _ent.System<MapLoaderSystem>().TrySaveGrid(uid, path);
             shell.WriteLine(saveSuccess
                     ? Loc.GetString("cmd-savegrid-success")
@@ -124,6 +124,7 @@ namespace Robust.Server.Console.Commands
             Angle rot = default;
             var opts = DeserializationOptions.Default;
 
+            //TODO get rid of unexpected early exitpoint, this is unintuitive. End of Execute to a separate function?
             if (args.Length == 1
                 && shell.Player?.AttachedEntity is not null)
             {
@@ -196,7 +197,10 @@ namespace Robust.Server.Console.Commands
                 opts.StoreYamlUids = storeUids;
             }
 
-            //TODO attempting to etc ?
+            shell.WriteLine( args.Length == 1 //TODO attempt-current exits before this... see the whole cursed switch issue
+                ? Loc.GetString("cmd-loadgrid-attempt-current")
+                : Loc.GetString("cmd-loadgrid-attempt",("mapId", mapId)));
+
             var loadSuccess =  _system.GetEntitySystem<MapLoaderSystem>()
                 .TryLoadGrid(mapId, path, out _, opts, offset, rot);
             shell.WriteLine(loadSuccess
@@ -356,6 +360,7 @@ namespace Robust.Server.Console.Commands
             var path = new ResPath(args[0]);
 
             //TODO make mapID optional and pick an unused number if unspecified
+            // cmd-loadmap-attempt-current
 
             if (!int.TryParse(args[1], out var intMapId))
             {
@@ -411,7 +416,7 @@ namespace Robust.Server.Console.Commands
 
             var opts = new DeserializationOptions {StoreYamlUids = storeUids};
 
-            // TODO attempting to loadmap messages
+            shell.WriteLine(Loc.GetString("cmd-loadmap-attempt",("mapId", mapId)));
             var loadSuccess = _system.GetEntitySystem<MapLoaderSystem>()
                 .TryLoadMapWithId(mapId, path, out _, out _, opts, offset, rot);
 

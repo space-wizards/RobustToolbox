@@ -23,19 +23,6 @@ namespace Robust.Server.Console.Commands
 
         public override string Command => "savegrid";
 
-        public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
-        {
-            switch (args.Length)
-            {
-                case 1:
-                    var opts = CompletionHelper.UserFilePath(args[0], _resource.UserData);
-                    return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-hint-savemap-path"));
-                case 2:
-                    return CompletionResult.FromHintOptions(CompletionHelper.Components<MapGridComponent>(args[1], _ent), Loc.GetString("cmd-hint-savegrid-id"));
-            }
-            return CompletionResult.Empty;
-        }
-
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length is < 1 or > 2)
@@ -100,6 +87,19 @@ namespace Robust.Server.Console.Commands
                     ? Loc.GetString("cmd-savegrid-success")
                     : Loc.GetString("cmd-savegrid-fail"));
         }
+
+        public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        {
+            switch (args.Length)
+            {
+                case 1:
+                    var opts = CompletionHelper.UserFilePath(args[0], _resource.UserData);
+                    return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-hint-savemap-path"));
+                case 2:
+                    return CompletionResult.FromHintOptions(CompletionHelper.Components<MapGridComponent>(args[1], _ent), Loc.GetString("cmd-hint-savegrid-id"));
+            }
+            return CompletionResult.Empty;
+        }
     }
 
     public sealed class LoadGridCommand : LocalizedCommands
@@ -109,17 +109,6 @@ namespace Robust.Server.Console.Commands
         [Dependency] private readonly IResourceManager _resource = null!;
 
         public override string Command => "loadgrid";
-
-        public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
-        {
-            switch (args.Length)
-            {
-                case 2:
-                    return CompletionResult.FromHintOptions(CompletionHelper.MapIds(_entManager), Loc.GetString("cmd-hint-savemap-id"));
-                default:
-                    return LoadMap.GetCompletionResult(shell, args, _resource);
-            }
-        }
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
@@ -213,6 +202,17 @@ namespace Robust.Server.Console.Commands
             shell.WriteLine(loadSuccess
                 ? Loc.GetString("cmd-loadgrid-success")
                 : Loc.GetString("cmd-loadgrid-fail"));
+        }
+
+        public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        {
+            switch (args.Length)
+            {
+                case 2:
+                    return CompletionResult.FromHintOptions(CompletionHelper.MapIds(_entManager), Loc.GetString("cmd-hint-savemap-id"));
+                default:
+                    return LoadMap.GetCompletionResult(shell, args, _resource);
+            }
         }
     }
 

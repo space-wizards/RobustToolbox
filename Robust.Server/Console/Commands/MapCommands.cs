@@ -93,7 +93,8 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            //TODO test if uid is actually a grid, and give specific error if it's not
+            //  TODO test if uid is actually a grid, and give specific error if it's not
+            //  MapGridComponent
 
             shell.WriteLine(Loc.GetString("cmd-savegrid-attempt",("uid", uid.ToString())));
             var saveSuccess = _ent.System<MapLoaderSystem>().TrySaveGrid(uid, path);
@@ -420,8 +421,8 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            //TODO make mapID optional and pick an unused number if unspecified
-            // cmd-loadmap-attempt-current
+            //  TODO make mapID optional and pick an unused number if unspecified
+            //  cmd-loadmap-attempt-current
 
             var path = new ResPath(args[0]);
 

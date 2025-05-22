@@ -129,34 +129,51 @@ namespace Robust.Server.Console.Commands
             }
 
             var path = new ResPath(args[0]);
-            MapId mapId;
+
+            if (args.Length == 1)
+                LoadGridCurrent(shell, path);
+            else
+                LoadGriSpecific(args, shell, path);
+        }
+
+        /// <summary>
+        /// Loads a saved grid from a path. It will appear under the player's current position
+        /// </summary>
+        private void LoadGridCurrent(IConsoleShell shell, ResPath path)
+        {
+            if (shell.Player?.AttachedEntity is null)
+            {
+                return;
+            }
+
+            var ent = shell.Player.AttachedEntity.Value;
+            var offset = _system.GetEntitySystem<TransformSystem>().GetWorldPosition(ent);
+            var mapId = _system.GetEntitySystem<TransformSystem>().GetMapId(ent);
+            var rot = _system.GetEntitySystem<TransformSystem>().GetWorldRotation(ent);
+            var opts = DeserializationOptions.Default;
+
+            LoadGrid(mapId, shell, path, opts, offset, rot, true);
+        }
+
+        /// <summary>
+        /// Loads a saved grid from a path, to a specific map and position
+        /// </summary>
+        private void LoadGriSpecific(string[] args, IConsoleShell shell, ResPath path)
+        {
             Vector2 offset = default;
             Angle rot = default;
             var opts = DeserializationOptions.Default;
 
-            //TODO get rid of unexpected early exitpoint, this is unintuitive. End of Execute to a separate function?
-            if (args.Length == 1
-                && shell.Player?.AttachedEntity is not null)
-            {
-                var ent = shell.Player.AttachedEntity;
-                offset = _system.GetEntitySystem<TransformSystem>().GetWorldPosition(ent.Value);
-                mapId = _system.GetEntitySystem<TransformSystem>().GetMapId(ent.Value);
-                rot = _system.GetEntitySystem<TransformSystem>().GetWorldRotation(ent.Value);
-                _system.GetEntitySystem<MapLoaderSystem>().TryLoadGrid(mapId, path, out _, opts, offset, rot);
-                return;
-            }
-
             if (!int.TryParse(args[1], out var intMapId))
             {
-                shell.WriteError(Loc.GetString("cmd-loadgrid-invalid-map-id",("arg",args[1])));
+                shell.WriteError(Loc.GetString("cmd-loadgrid-invalid-map-id", ("arg", args[1])));
                 return;
             }
 
-            mapId = new MapId(intMapId);
+            var mapId = new MapId(intMapId);
             // no loading into null space
             if (mapId == MapId.Nullspace)
             {
-                // shell.WriteError("Cannot load into nullspace.");
                 shell.WriteError(Loc.GetString("cmd-loadgrid-nullspace-map"));
                 return;
             }
@@ -164,7 +181,7 @@ namespace Robust.Server.Console.Commands
             var sys = _system.GetEntitySystem<SharedMapSystem>();
             if (!sys.MapExists(mapId))
             {
-                shell.WriteError(Loc.GetString("cmd-loadgrid-missing-map",("mapId",mapId)));
+                shell.WriteError(Loc.GetString("cmd-loadgrid-missing-map", ("mapId", mapId)));
                 return;
             }
 
@@ -172,13 +189,13 @@ namespace Robust.Server.Console.Commands
             {
                 if (!float.TryParse(args[2], out var x))
                 {
-                    shell.WriteError(Loc.GetString("cmd-loadgrid-not-coordinate",("arg",args[2])));
+                    shell.WriteError(Loc.GetString("cmd-loadgrid-not-coordinate", ("arg", args[2])));
                     return;
                 }
 
                 if (!float.TryParse(args[3], out var y))
                 {
-                    shell.WriteError(Loc.GetString("cmd-loadgrid-not-coordinate",("arg",args[3])));
+                    shell.WriteError(Loc.GetString("cmd-loadgrid-not-coordinate", ("arg", args[3])));
                     return;
                 }
 
@@ -189,10 +206,9 @@ namespace Robust.Server.Console.Commands
             {
                 if (!float.TryParse(args[4], out var rotation))
                 {
-                    shell.WriteError(Loc.GetString("cmd-loadgrid-not-rotation",("arg",args[4])));
+                    shell.WriteError(Loc.GetString("cmd-loadgrid-not-rotation", ("arg", args[4])));
                     return;
                 }
-
                 rot = Angle.FromDegrees(rotation);
             }
 
@@ -200,18 +216,22 @@ namespace Robust.Server.Console.Commands
             {
                 if (!bool.TryParse(args[5], out var storeUids))
                 {
-                    shell.WriteError(Loc.GetString("cmd-loadgrid-not-boolean",("arg",args[5])));
+                    shell.WriteError(Loc.GetString("cmd-loadgrid-not-boolean", ("arg", args[5])));
                     return;
                 }
 
                 opts.StoreYamlUids = storeUids;
             }
 
-            shell.WriteLine( args.Length == 1 //TODO attempt-current exits before this... see the whole cursed switch issue
-                ? Loc.GetString("cmd-loadgrid-attempt-current")
-                : Loc.GetString("cmd-loadgrid-attempt",("mapId", mapId)));
+            LoadGrid(mapId, shell, path, opts, offset, rot, false);
+        }
+        private void LoadGrid(MapId mapId, IConsoleShell shell, ResPath path, DeserializationOptions opts, Vector2 offset, Angle rot, bool currentPos)
+        {
+            shell.WriteLine(currentPos
+                    ? Loc.GetString("cmd-loadgrid-attempt-current")
+                    : Loc.GetString("cmd-loadgrid-attempt", ("mapId", mapId)));
 
-            var loadSuccess =  _system.GetEntitySystem<MapLoaderSystem>()
+            var loadSuccess = _system.GetEntitySystem<MapLoaderSystem>()
                 .TryLoadGrid(mapId, path, out _, opts, offset, rot);
             shell.WriteLine(loadSuccess
                 ? Loc.GetString("cmd-loadgrid-success")

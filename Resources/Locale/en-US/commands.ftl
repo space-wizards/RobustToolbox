@@ -281,7 +281,7 @@ cmd-sendgarbage-help = The server will reply with 'no u'
 
 cmd-loadgrid-desc = Loads a grid from a file into an existing map.
 cmd-loadgrid-help = loadgrid <Path> [MapID] [x] [y] [rotation] [Store Yaml UIDs]
-cmd-loadgrid-attempt-current = Attempting to load grid to your current position.
+cmd-loadgrid-attempt-current = Attempting to load grid at your current position.
 cmd-loadgrid-attempt = Attempting to load grid to map {$mapId}.
 cmd-loadgrid-success = Load successful.
 cmd-loadgrid-fail = Load failed!

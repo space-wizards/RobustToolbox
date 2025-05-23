@@ -86,15 +86,19 @@ namespace Robust.Server.Console.Commands
 
         private void SaveGrid(EntityUid uid, string targetGrid, IConsoleShell shell, ResPath path)
         {
-            // Validate if the grid being saved actually exists
+            // Validate if the entity being saved actually exists
             if (!_ent.EntityExists(uid))
             {
                 shell.WriteError(Loc.GetString("cmd-savegrid-existnt",("uid",targetGrid)));
                 return;
             }
 
-            //  TODO test if uid is actually a grid, and give specific error if it's not
-            //  MapGridComponent
+            //  Validate if the targeted entity is a grid
+            if (!_ent.HasComponent<MapGridComponent>(uid))
+            {
+                shell.WriteError(Loc.GetString("cmd-savegrid-not-grid",("uid", uid.ToString()),("ent", uid)));
+                return;
+            }
 
             shell.WriteLine(Loc.GetString("cmd-savegrid-attempt",("uid", uid.ToString())));
             var saveSuccess = _ent.System<MapLoaderSystem>().TrySaveGrid(uid, path);
@@ -422,7 +426,6 @@ namespace Robust.Server.Console.Commands
             }
 
             //  TODO make mapID optional and pick an unused number if unspecified
-            //  cmd-loadmap-attempt-current
 
             var path = new ResPath(args[0]);
 

@@ -321,6 +321,7 @@ cmd-savegrid-help = savegrid <Path> [GridID]
 cmd-savegrid-existnt = Entity {$uid} does not exist, therefore you cannot save it.
 cmd-savegrid-success = Save successful. Look in the user data directory.
 cmd-savegrid-invalid-grid = '{$arg}' is not a valid [gridID]. Value must be integer.
+cmd-savegrid-not-grid = Entity {$uid} '{$ent}' is not a grid.
 cmd-savegrid-attempt = Attempting to save grid {$uid}.
 cmd-savegrid-fail = Save failed!
 cmd-savegrid-no-player-ent = [gridID] is only optional if there is a player entity.

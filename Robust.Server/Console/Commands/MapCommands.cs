@@ -50,7 +50,8 @@ namespace Robust.Server.Console.Commands
             var ent = shell.Player?.AttachedEntity;
             if (ent is null)
             {
-                // We can't continue with just the first parameter without a player entity. For example, if a server system ran this command.
+                // We can't continue with just the first parameter without a player entity.
+                // For example, if a server system ran this command.
                 shell.WriteError(Loc.GetString("cmd-savegrid-no-player-ent"));
                 return;
             }
@@ -116,7 +117,9 @@ namespace Robust.Server.Console.Commands
                     var opts = CompletionHelper.UserFilePath(args[0], _resource.UserData);
                     return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-hint-savemap-path"));
                 case 2:
-                    return CompletionResult.FromHintOptions(CompletionHelper.Components<MapGridComponent>(args[1], _ent), Loc.GetString("cmd-hint-savegrid-id"));
+                    return CompletionResult.FromHintOptions(
+                        CompletionHelper.Components<MapGridComponent>(args[1], _ent),
+                        Loc.GetString("cmd-hint-savegrid-id"));
             }
             return CompletionResult.Empty;
         }
@@ -142,7 +145,7 @@ namespace Robust.Server.Console.Commands
 
             var path = new ResPath(args[0]);
 
-            // Grid target can be omitted to automatically target the grid currently under the player
+            // Target location parameters can be omitted to place the grid directly under the player
             if (args.Length == 1)
                 LoadGridCurrent(shell, path);
             else
@@ -156,6 +159,9 @@ namespace Robust.Server.Console.Commands
         {
             if (shell.Player?.AttachedEntity is null)
             {
+                // We can't continue with just the first parameter without a player entity.
+                // For example, if a server system ran this command.
+                shell.WriteError(Loc.GetString("cmd-loadgrid-no-player-ent"));
                 return;
             }
 
@@ -245,7 +251,14 @@ namespace Robust.Server.Console.Commands
 
             LoadGrid(mapId, shell, path, opts, offset, rot, false);
         }
-        private void LoadGrid(MapId mapId, IConsoleShell shell, ResPath path, DeserializationOptions opts, Vector2 offset, Angle rot, bool currentPos)
+        private void LoadGrid(
+            MapId mapId,
+            IConsoleShell shell,
+            ResPath path,
+            DeserializationOptions opts,
+            Vector2 offset,
+            Angle rot,
+            bool currentPos)
         {
             shell.WriteLine(currentPos
                     ? Loc.GetString("cmd-loadgrid-attempt-current")
@@ -264,7 +277,9 @@ namespace Robust.Server.Console.Commands
             switch (args.Length)
             {
                 case 2:
-                    return CompletionResult.FromHintOptions(CompletionHelper.MapIds(_entManager), Loc.GetString("cmd-hint-savemap-id"));
+                    return CompletionResult.FromHintOptions(
+                        CompletionHelper.MapIds(_entManager),
+                        Loc.GetString("cmd-hint-savemap-id"));
                 default:
                     return LoadMap.GetCompletionResult(shell, args, _resource);
             }
@@ -288,9 +303,13 @@ namespace Robust.Server.Console.Commands
                     var opts = CompletionHelper.UserFilePath(args[0], _resource.UserData);
                     return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-hint-savemap-path"));
                 case 2:
-                    return CompletionResult.FromHintOptions(CompletionHelper.MapIds(_entManager), Loc.GetString("cmd-hint-savemap-id"));
+                    return CompletionResult.FromHintOptions(
+                        CompletionHelper.MapIds(_entManager),
+                        Loc.GetString("cmd-hint-savemap-id"));
                 case 3:
-                    return CompletionResult.FromHintOptions(CompletionHelper.Booleans, Loc.GetString("cmd-hint-savemap-force"));
+                    return CompletionResult.FromHintOptions(
+                        CompletionHelper.Booleans,
+                        Loc.GetString("cmd-hint-savemap-force"));
             }
             return CompletionResult.Empty;
         }
@@ -336,7 +355,8 @@ namespace Robust.Server.Console.Commands
 
             if (ent is null)
             {
-                // We can't continue with just the first parameter without a player entity. For example, if a server system ran this command.
+                // We can't continue with just the first parameter without a player entity.
+                // For example, if a server system ran this command.
                 shell.WriteError(Loc.GetString("cmd-savemap-no-player-ent"));
                 return;
             }
@@ -397,7 +417,6 @@ namespace Robust.Server.Console.Commands
                     return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-hint-savemap-path"));
                 case 2:
                     return CompletionResult.FromHint(Loc.GetString("cmd-hint-savemap-id"));
-                    // TODO suggest the next empty mapID?
                 case 3:
                     return CompletionResult.FromHint(Loc.GetString("cmd-hint-loadmap-x-position"));
                 case 4:
@@ -405,7 +424,9 @@ namespace Robust.Server.Console.Commands
                 case 5:
                     return CompletionResult.FromHint(Loc.GetString("cmd-hint-loadmap-rotation"));
                 case 6:
-                    return CompletionResult.FromHintOptions(CompletionHelper.Booleans,Loc.GetString("cmd-hint-loadmap-uids"));
+                    return CompletionResult.FromHintOptions(
+                        CompletionHelper.Booleans,
+                        Loc.GetString("cmd-hint-loadmap-uids"));
             }
 
             return CompletionResult.Empty;
@@ -419,16 +440,39 @@ namespace Robust.Server.Console.Commands
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             //Validate the number of parameters
-            if (args.Length is < 2 or > 6)
+            if (args.Length is < 1 or > 6)
             {
                 shell.WriteLine(Help);
                 return;
             }
 
-            //  TODO make mapID optional and pick an unused number if unspecified
-
             var path = new ResPath(args[0]);
 
+            //  Make mapID optional and pick the next available number if unspecified
+            if (args.Length is 1)
+                LoadMapNext(shell, path);
+            else
+                LoadMapSpecified(args, shell, path);
+        }
+
+        private void LoadMapNext(IConsoleShell shell, ResPath path)
+        {
+            Vector2 offset = default;
+            Angle rot = default;
+            var opts = new DeserializationOptions {StoreYamlUids = false}; //TODO should this default to true or false
+
+            shell.WriteLine(Loc.GetString("cmd-loadmap-attempt-next"));
+
+            var loadSuccess = _system.GetEntitySystem<MapLoaderSystem>()
+                .TryLoadMap(path, out var map, out _, opts, offset, rot);
+
+            shell.WriteLine( loadSuccess && map is not null
+                ? Loc.GetString("cmd-loadmap-success", ("mapId", map.Value.Comp.MapId), ("path", path))
+                : Loc.GetString("cmd-loadmap-error", ("path", path)));
+        }
+
+        private void LoadMapSpecified(string[] args, IConsoleShell shell, ResPath path)
+        {
             // Validate the mapId parameter's type
             if (!int.TryParse(args[1], out var intMapId))
             {
@@ -489,6 +533,7 @@ namespace Robust.Server.Console.Commands
             var opts = new DeserializationOptions {StoreYamlUids = storeUids};
 
             shell.WriteLine(Loc.GetString("cmd-loadmap-attempt",("mapId", mapId)));
+
             var loadSuccess = _system.GetEntitySystem<MapLoaderSystem>()
                 .TryLoadMapWithId(mapId, path, out _, out _, opts, offset, rot);
 

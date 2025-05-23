@@ -170,12 +170,12 @@ cmd-loadmap-help = loadmap <Path> <MapID> [x] [y] [rotation] [Store Yaml UIDs]
 cmd-loadmap-nullspace = You cannot load into map 0.
 cmd-loadmap-exists = Map {$mapId} already exists.
 cmd-loadmap-attempt = Attempting to load as map {$mapId}.
-cmd-loadmap-attempt-next = Attempting to load map.
+cmd-loadmap-attempt-next = Attempting to load new map.
 cmd-loadmap-success = Map {$mapId} has been loaded from {$path}.
 cmd-loadmap-error = An error occurred while loading map from {$path}.
-cmd-hint-loadmap-x-position = x-position (integer)
-cmd-hint-loadmap-y-position = y-position (integer)
-cmd-hint-loadmap-rotation = rotation (integer)
+cmd-hint-loadmap-x-position = x position
+cmd-hint-loadmap-y-position = y position
+cmd-hint-loadmap-rotation = rotation
 cmd-hint-loadmap-uids = Store the exact original UIDs on the loaded entities?
 
 cmd-hint-savebp-id = <Grid EntityID>

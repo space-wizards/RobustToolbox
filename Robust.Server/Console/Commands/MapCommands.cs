@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Robust.Server.GameObjects;
@@ -275,7 +277,7 @@ namespace Robust.Server.Console.Commands
                         CompletionHelper.MapIds(_entManager),
                         Loc.GetString("cmd-hint-savemap-id"));
                 default:
-                    return LoadMap.GetCompletionResult(shell, args, _resource);
+                    return LoadMap.GetCompletionResult(shell, args, _resource, _system);
             }
         }
     }
@@ -401,8 +403,9 @@ namespace Robust.Server.Console.Commands
         public override string Command => "loadmap";
 
         // Parameter autocomplete and hints
-        public static CompletionResult GetCompletionResult(IConsoleShell shell, string[] args, IResourceManager resource)
+        public static CompletionResult GetCompletionResult(IConsoleShell shell, string[] args, IResourceManager resource, IEntitySystemManager system)
         {
+            List<CompletionOption> autocomplete;
             switch (args.Length)
             {
                 case 1:
@@ -412,15 +415,38 @@ namespace Robust.Server.Console.Commands
                 case 2:
                     return CompletionResult.FromHint(Loc.GetString("cmd-hint-savemap-id"));
                 case 3:
-                    return CompletionResult.FromHint(Loc.GetString("cmd-hint-loadmap-x-position"));
+                    GetPos(out var x, out _, out _);
+                    autocomplete = new List<CompletionOption>() {new (x.ToString())};
+                    return CompletionResult.FromHintOptions(autocomplete , Loc.GetString("cmd-hint-loadmap-x-position"));
                 case 4:
-                    return CompletionResult.FromHint(Loc.GetString("cmd-hint-loadmap-y-position"));
+                    GetPos(out var _, out var y, out _);
+                    autocomplete = new List<CompletionOption>() {new (y.ToString())};
+                    return CompletionResult.FromHintOptions(autocomplete, Loc.GetString("cmd-hint-loadmap-y-position"));
                 case 5:
-                    return CompletionResult.FromHint(Loc.GetString("cmd-hint-loadmap-rotation"));
+                    GetPos(out _, out _, out var rot);
+                    autocomplete = new List<CompletionOption>() {new (rot.ToString())};
+                    return CompletionResult.FromHintOptions(autocomplete, Loc.GetString("cmd-hint-loadmap-rotation"));
                 case 6:
                     return CompletionResult.FromHintOptions(
                         CompletionHelper.Booleans,
                         Loc.GetString("cmd-hint-loadmap-uids"));
+            }
+
+            void GetPos(out int x, out int y, out Angle rot)
+            {
+                x = 0;
+                y = 0;
+                rot = 0f;
+
+                var ent = shell.Player?.AttachedEntity;
+                if (ent is not null)
+                {
+                    var offset = system.GetEntitySystem<TransformSystem>().GetWorldPosition(ent.Value);
+                    var rotRaw = system.GetEntitySystem<TransformSystem>().GetWorldRotation(ent.Value);
+                    x = (int)Math.Round(offset.X);
+                    y = (int)Math.Round(offset.Y);
+                    rot = (float)Math.Round(rotRaw);
+                }
             }
 
             return CompletionResult.Empty;
@@ -428,7 +454,7 @@ namespace Robust.Server.Console.Commands
 
         public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
-            return GetCompletionResult(shell, args, _resource);
+            return GetCompletionResult(shell, args, _resource, _system);
         }
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -453,7 +479,7 @@ namespace Robust.Server.Console.Commands
         {
             Vector2 offset = default;
             Angle rot = default;
-            var opts = new DeserializationOptions {StoreYamlUids = false}; //TODO should this default to true or false
+            var opts = new DeserializationOptions {StoreYamlUids = false};
 
             shell.WriteLine(Loc.GetString("cmd-loadmap-attempt-next"));
 

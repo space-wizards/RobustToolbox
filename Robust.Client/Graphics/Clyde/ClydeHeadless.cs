@@ -9,6 +9,7 @@ using Robust.Client.Input;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -69,6 +70,11 @@ namespace Robust.Client.Graphics.Clyde
         public Texture GetStockTexture(ClydeStockTexture stockTexture)
         {
             return new DummyTexture((1, 1));
+        }
+
+        public IEnumerable<(Clyde.ClydeTexture, Clyde.LoadedTexture)> GetLoadedTextures()
+        {
+            return [];
         }
 
         public ClydeDebugLayers DebugLayers { get; set; }
@@ -187,6 +193,22 @@ namespace Robust.Client.Graphics.Clyde
             where T : unmanaged, IPixel<T>
         {
             return new DummyTexture(size);
+        }
+
+        /// <inheritdoc />
+        public Color GetClearColor(EntityUid mapUid)
+        {
+            return Color.Transparent;
+        }
+
+        public void BlurRenderTarget(IClydeViewport viewport, IRenderTarget target, IRenderTarget blurBuffer, IEye eye, float multiplier)
+        {
+            // NOOP
+        }
+
+        public IRenderTexture CreateLightRenderTarget(Vector2i size, string? name = null, bool depthStencil = true)
+        {
+            return CreateRenderTarget(size, new RenderTargetFormatParameters(RenderTargetColorFormat.R8, hasDepthStencil: depthStencil), null, name: name);
         }
 
         public IRenderTexture CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
@@ -349,6 +371,10 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             private protected override void SetParameterImpl(string name, Color value)
+            {
+            }
+
+            private protected override void SetParameterImpl(string name, Color[] value)
             {
             }
 

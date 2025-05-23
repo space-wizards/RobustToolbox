@@ -412,6 +412,9 @@ public sealed partial class ParserContext
         if (c == new Rune(';'))
             return true;
 
+        if (c == new Rune('|'))
+            return true;
+
         if (NoMultilineExprs && c == new Rune('\n'))
             return true;
 
@@ -422,36 +425,50 @@ public sealed partial class ParserContext
     }
 
     /// <summary>
-    /// Attempts to consume a single command terminator, which is either a ';' or a newline (if <see cref="NoMultilineExprs"/> is
-    /// enabled).
+    /// Attempts to consume a single command terminator
     /// </summary>
-    public bool EatCommandTerminator()
+    /// <param name="pipedType"></param>
+    public bool EatCommandTerminator(ref Type? pipedType, out bool commandExpected)
     {
+        commandExpected = false;
+
+        // Command terminator drops piped values.
         if (EatMatch(new Rune(';')))
+        {
+            pipedType = null;
             return true;
+        }
+
+        // Explicit pipe operator keeps piped value, but is only valid if there is a piped value.
+        if (pipedType != null && pipedType != typeof(void) && EatMatch(new Rune('|')))
+        {
+            commandExpected = true;
+            return true;
+        }
 
         // If multi-line commands are not enabled, we treat a newline like a ';'
-        // I.e., it terminates the command currently being parsed in
-        return NoMultilineExprs && EatMatch(new Rune('\n'));
+        if (NoMultilineExprs && EatMatch(new Rune('\n')))
+        {
+            pipedType = null;
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>
     /// Attempts to repeatedly consume command terminators, and return true if any were consumed.
     /// </summary>
-    public bool EatCommandTerminators()
+    public void EatCommandTerminators(ref Type? pipedType, out bool commandExpected)
     {
-        if (!EatCommandTerminator())
-            return false;
+        if (!EatCommandTerminator(ref pipedType, out commandExpected))
+            return;
 
-        // Maybe one day we want to allow ';;' to have special meaning?
-        // But for now, just eat em all.
         ConsumeWhitespace();
-        while (EatCommandTerminator())
+        while (!commandExpected && EatCommandTerminator(ref pipedType, out commandExpected))
         {
             ConsumeWhitespace();
         }
-
-        return true;
     }
 }
 

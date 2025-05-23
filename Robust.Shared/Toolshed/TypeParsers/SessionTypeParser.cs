@@ -41,10 +41,10 @@ internal sealed class SessionTypeParser : TypeParser<ICommonSession>
         return false;
     }
 
-    public override CompletionResult? TryAutocomplete(ParserContext parserContext, string? argName)
+    public override CompletionResult TryAutocomplete(ParserContext parserContext, CommandArgument? arg)
     {
         var opts = CompletionHelper.SessionNames(true, _player);
-        return CompletionResult.FromHintOptions(opts, "<player session>");
+        return CompletionResult.FromHintOptions(opts, GetArgHint(arg));
     }
 
     public record InvalidUsername(ILocalizationManager Loc, string Username) : IConError

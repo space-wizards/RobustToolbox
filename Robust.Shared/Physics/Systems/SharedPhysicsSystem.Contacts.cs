@@ -30,12 +30,12 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using JetBrains.Annotations;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
@@ -113,10 +113,7 @@ public abstract partial class SharedPhysicsSystem
 #if DEBUG
             contact._debugPhysics = _debugPhysicsSystem;
 #endif
-            contact.Manifold = new Manifold
-            {
-                Points = new ManifoldPoint[2]
-            };
+            contact.Manifold = new Manifold();
 
             return contact;
         }
@@ -297,6 +294,14 @@ public abstract partial class SharedPhysicsSystem
         DebugTools.Assert(!fixB.Contacts.ContainsKey(fixA));
         fixB.Contacts.Add(fixA, contact);
         bodB.Contacts.AddLast(contact.BodyBNode);
+
+        // If it's a spawned static ent then need to wake any contacting entities.
+        // The issue is that static ents can never be awake and if it spawns on an asleep entity never gets a contact.
+        // Checking only bodyA should be okay because if bodyA is the other ent (i.e. dynamic / kinematic) then it should already be awake.
+        if (bodyA.BodyType == BodyType.Static && !bodyB.Awake)
+        {
+            WakeBody(uidB, body: bodyB);
+        }
     }
 
     /// <summary>
@@ -353,10 +358,10 @@ public abstract partial class SharedPhysicsSystem
 
         if (contact.Manifold.PointCount > 0 && contact.FixtureA?.Hard == true && contact.FixtureB?.Hard == true)
         {
-            if (bodyA.CanCollide)
+            if (bodyA.CanCollide && !TerminatingOrDeleted(aUid))
                 SetAwake((aUid, bodyA), true);
 
-            if (bodyB.CanCollide)
+            if (bodyB.CanCollide && !TerminatingOrDeleted(bUid))
                 SetAwake((bUid, bodyB), true);
         }
 
@@ -426,6 +431,12 @@ public abstract partial class SharedPhysicsSystem
 
             var xformA = _xformQuery.GetComponent(uidA);
             var xformB = _xformQuery.GetComponent(uidB);
+
+            if (xformA.MapID == MapId.Nullspace || xformB.MapID == MapId.Nullspace)
+            {
+                DestroyContact(contact);
+                continue;
+            }
 
             // Is this contact flagged for filtering?
             if ((contact.Flags & ContactFlags.Filter) != 0x0)
@@ -540,7 +551,7 @@ public abstract partial class SharedPhysicsSystem
         }
 
         var status = ArrayPool<ContactStatus>.Shared.Rent(index);
-        var worldPoints = ArrayPool<Vector2>.Shared.Rent(index);
+        var worldPoints = ArrayPool<FixedArray4<Vector2>>.Shared.Rent(index);
 
         // Update contacts all at once.
         BuildManifolds(contacts, index, status, worldPoints);
@@ -575,9 +586,11 @@ public abstract partial class SharedPhysicsSystem
                     var uidA = contact.EntityA;
                     var uidB = contact.EntityB;
                     var worldPoint = worldPoints[i];
+                    var points = new FixedArray2<Vector2>(worldPoint._00, worldPoint._01);
+                    var worldNormal = worldPoint._02;
 
-                    var ev1 = new StartCollideEvent(uidA, uidB, contact.FixtureAId, contact.FixtureBId, fixtureA, fixtureB, bodyA, bodyB, worldPoint);
-                    var ev2 = new StartCollideEvent(uidB, uidA, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA, worldPoint);
+                    var ev1 = new StartCollideEvent(uidA, uidB, contact.FixtureAId, contact.FixtureBId, fixtureA, fixtureB, bodyA, bodyB, points, contact.Manifold.PointCount, worldNormal);
+                    var ev2 = new StartCollideEvent(uidB, uidA, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA, points, contact.Manifold.PointCount, worldNormal);
 
                     RaiseLocalEvent(uidA, ref ev1, true);
                     RaiseLocalEvent(uidB, ref ev2, true);
@@ -615,10 +628,10 @@ public abstract partial class SharedPhysicsSystem
 
         ArrayPool<Contact>.Shared.Return(contacts);
         ArrayPool<ContactStatus>.Shared.Return(status);
-        ArrayPool<Vector2>.Shared.Return(worldPoints);
+        ArrayPool<FixedArray4<Vector2>>.Shared.Return(worldPoints);
     }
 
-    private void BuildManifolds(Contact[] contacts, int count, ContactStatus[] status, Vector2[] worldPoints)
+    private void BuildManifolds(Contact[] contacts, int count, ContactStatus[] status, FixedArray4<Vector2>[] worldPoints)
     {
         if (count == 0)
             return;
@@ -646,8 +659,8 @@ public abstract partial class SharedPhysicsSystem
             var aUid = contact.EntityA;
             var bUid = contact.EntityB;
 
-            SetAwake(aUid, bodyA, true);
-            SetAwake(bUid, bodyB, true);
+            SetAwake((aUid, bodyA), true);
+            SetAwake((bUid, bodyB), true);
         }
 
         ArrayPool<bool>.Shared.Return(wake);
@@ -661,7 +674,7 @@ public abstract partial class SharedPhysicsSystem
 
         public Contact[] Contacts;
         public ContactStatus[] Status;
-        public Vector2[] WorldPoints;
+        public FixedArray4<Vector2>[] WorldPoints;
         public bool[] Wake;
 
         public void Execute(int index)
@@ -670,7 +683,7 @@ public abstract partial class SharedPhysicsSystem
         }
     }
 
-    private void UpdateContact(Contact[] contacts, int index, ContactStatus[] status, bool[] wake, Vector2[] worldPoints)
+    private void UpdateContact(Contact[] contacts, int index, ContactStatus[] status, bool[] wake, FixedArray4<Vector2>[] worldPoints)
     {
         var contact = contacts[index];
 
@@ -695,7 +708,11 @@ public abstract partial class SharedPhysicsSystem
 
         if (contactStatus == ContactStatus.StartTouching)
         {
-            worldPoints[index] = Physics.Transform.Mul(bodyATransform, contacts[index].Manifold.LocalPoint);
+            var points = new FixedArray4<Vector2>();
+            contact.GetWorldManifold(bodyATransform, bodyBTransform, out var worldNormal, points.AsSpan);
+            // Use the 3rd Vector2 as the world normal, 4th is blank.
+            points._02 = worldNormal;
+            worldPoints[index] = points;
         }
     }
 
@@ -773,7 +790,7 @@ public abstract partial class SharedPhysicsSystem
         if (!PhysicsQuery.Resolve(entity.Owner, ref entity.Comp))
             return;
 
-        _broadphase.RegenerateContacts(entity.Owner, entity.Comp);
+        _broadphase.RegenerateContacts(entity);
     }
 
     /// <summary>

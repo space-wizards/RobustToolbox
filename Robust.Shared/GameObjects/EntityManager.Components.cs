@@ -197,17 +197,23 @@ namespace Robust.Shared.GameObjects
             {
                 var reg = _componentFactory.GetRegistration(name);
 
-                if (HasComponent(target, reg.Type))
+                if (removeExisting)
                 {
-                    if (!removeExisting)
-                        continue;
-
-                    RemoveComponent(target, reg.Type, metadata);
+                    var comp = _componentFactory.GetComponent(reg);
+                    _serManager.CopyTo(entry.Component, ref comp, notNullableOverride: true);
+                    AddComponentInternal(target, comp, reg, overwrite: true, metadata: metadata);
                 }
+                else
+                {
+                    if (HasComponent(target, reg))
+                    {
+                        continue;
+                    }
 
-                var comp = _componentFactory.GetComponent(reg);
-                _serManager.CopyTo(entry.Component, ref comp, notNullableOverride: true);
-                AddComponent(target, comp, metadata: metadata);
+                    var comp = _componentFactory.GetComponent(reg);
+                    _serManager.CopyTo(entry.Component, ref comp, notNullableOverride: true);
+                    AddComponentInternal(target, comp, reg, overwrite: false, metadata: metadata);
+                }
             }
         }
 
@@ -313,6 +319,22 @@ namespace Robust.Shared.GameObjects
 #pragma warning restore CS0618 // Type or member is obsolete
 
             AddComponentInternal(uid, component, overwrite, false, metadata);
+        }
+
+        private void AddComponentInternal<T>(
+            EntityUid uid,
+            T component,
+            ComponentRegistration compReg,
+            bool overwrite = false,
+            MetaDataComponent? metadata = null) where T : IComponent
+        {
+            if (!MetaQuery.Resolve(uid, ref metadata, false))
+                throw new ArgumentException($"Entity {uid} is not valid.", nameof(uid));
+
+            DebugTools.Assert(component.Owner == default);
+            component.Owner = uid;
+
+            AddComponentInternal(uid, component, compReg, overwrite, skipInit: false, metadata);
         }
 
         private void AddComponentInternal<T>(EntityUid uid, T component, bool overwrite, bool skipInit, MetaDataComponent? metadata) where T : IComponent
@@ -573,12 +595,23 @@ namespace Robust.Shared.GameObjects
 
             if (!_deleteSet.Add(component))
             {
-                // already deferred deletion
+                // Already deferring deletion
+                DebugTools.Assert(component.LifeStage >= ComponentLifeStage.Stopped);
                 return;
             }
 
-            if (component.LifeStage >= ComponentLifeStage.Initialized && component.LifeStage <= ComponentLifeStage.Running)
+            DebugTools.Assert(component.LifeStage >= ComponentLifeStage.Added);
+
+            if (component.LifeStage is >= ComponentLifeStage.Initialized and < ComponentLifeStage.Stopping)
                 LifeShutdown(uid, component, _componentFactory.GetIndex(component.GetType()));
+            else if (component.LifeStage == ComponentLifeStage.Added)
+            {
+                // The component was added, but never initialized or started. It's kinda weird to add and then
+                // immediately defer-remove a component, but oh well. Let's just set the life stage directly and not
+                // raise shutdown events? The removal events will still get called later.
+                // This is also what LifeShutdown() would also do, albeit behind a DebugAssert.
+                component.LifeStage = ComponentLifeStage.Stopped;
+            }
 #if EXCEPTION_TOLERANCE
             }
             catch (Exception e)
@@ -729,6 +762,14 @@ namespace Robust.Shared.GameObjects
         public bool HasComponent<T>([NotNullWhen(true)] EntityUid? uid) where T : IComponent
         {
             return uid.HasValue && HasComponent<T>(uid.Value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
+        public bool HasComponent(EntityUid uid, ComponentRegistration reg)
+        {
+            var dict = _entTraitArray[reg.Idx.Value];
+            return dict.TryGetValue(uid, out var comp) && !comp.Deleted;
         }
 
         /// <inheritdoc />
@@ -944,6 +985,23 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        public bool TryGetComponent(EntityUid uid, ComponentRegistration reg, [NotNullWhen(true)] out IComponent? component)
+        {
+            var dict = _entTraitArray[reg.Idx.Value];
+            if (dict.TryGetValue(uid, out var comp))
+            {
+                if (!comp.Deleted)
+                {
+                    component = comp;
+                    return true;
+                }
+            }
+
+            component = null;
+            return false;
+        }
+
+        /// <inheritdoc />
         public bool TryGetComponent(EntityUid uid, Type type, [NotNullWhen(true)] out IComponent? component)
         {
             var dict = _entTraitDict[type];
@@ -1026,6 +1084,97 @@ namespace Robust.Shared.GameObjects
             }
 
             return TryGetComponent(uid.Value, netId, out component, meta);
+        }
+
+        /// <inheritdoc/>
+        public bool TryCopyComponent<T>(EntityUid source, EntityUid target, ref T? sourceComponent, [NotNullWhen(true)] out T? targetComp, MetaDataComponent? meta = null) where T : IComponent
+        {
+            if (!MetaQuery.Resolve(target, ref meta))
+            {
+                targetComp = default;
+                return false;
+            }
+
+            if (sourceComponent == null && !TryGetComponent(source, out sourceComponent))
+            {
+                targetComp = default;
+                return false;
+            }
+
+            targetComp = CopyComponentInternal(source, target, sourceComponent, meta);
+            return true;
+        }
+
+        /// <inheritdoc/>
+        public bool TryCopyComponents(
+            EntityUid source,
+            EntityUid target,
+            MetaDataComponent? meta = null,
+            params Type[] sourceComponents)
+        {
+            if (!MetaQuery.TryGetComponent(target, out meta))
+                return false;
+
+            var allCopied = true;
+
+            foreach (var type in sourceComponents)
+            {
+                if (!TryGetComponent(source, type, out var srcComp))
+                {
+                    allCopied = false;
+                    continue;
+                }
+
+                CopyComponent(source, target, srcComp, meta: meta);
+            }
+
+            return allCopied;
+        }
+
+        /// <inheritdoc/>
+        public IComponent CopyComponent(EntityUid source, EntityUid target, IComponent sourceComponent, MetaDataComponent? meta = null)
+        {
+            if (!MetaQuery.Resolve(target, ref meta))
+            {
+                throw new InvalidOperationException();
+            }
+
+            return CopyComponentInternal(source, target, sourceComponent, meta);
+        }
+
+        /// <inheritdoc/>
+        public T CopyComponent<T>(EntityUid source, EntityUid target, T sourceComponent,MetaDataComponent? meta = null) where T : IComponent
+        {
+            if (!MetaQuery.Resolve(target, ref meta))
+            {
+                throw new InvalidOperationException();
+            }
+
+            return CopyComponentInternal(source, target, sourceComponent, meta);
+        }
+
+        /// <inheritdoc/>
+        public void CopyComponents(EntityUid source, EntityUid target, MetaDataComponent? meta = null, params IComponent[] sourceComponents)
+        {
+            if (!MetaQuery.Resolve(target, ref meta))
+                return;
+
+            foreach (var comp in sourceComponents)
+            {
+                CopyComponentInternal(source, target, comp, meta);
+            }
+        }
+
+        private T CopyComponentInternal<T>(EntityUid source, EntityUid target, T sourceComponent, MetaDataComponent meta) where T : IComponent
+        {
+            var compReg = ComponentFactory.GetRegistration(sourceComponent.GetType());
+            var component = (T)ComponentFactory.GetComponent(compReg);
+
+            _serManager.CopyTo(sourceComponent, ref component, notNullableOverride: true);
+            component.Owner = target;
+
+            AddComponentInternal(target, component, compReg, true, false, meta);
+            return component;
         }
 
         public EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : IComponent

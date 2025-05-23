@@ -4,6 +4,7 @@ using Robust.Server.Console;
 using Robust.Server.DataMetrics;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
+using Robust.Server.Localization;
 using Robust.Server.Placement;
 using Robust.Server.Player;
 using Robust.Server.Prototypes;
@@ -21,6 +22,7 @@ using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
@@ -67,7 +69,6 @@ namespace Robust.Server
             deps.Register<IResourceManagerInternal, ResourceManager>();
             deps.Register<EntityManager, ServerEntityManager>();
             deps.Register<IServerEntityManager, ServerEntityManager>();
-            deps.Register<IServerEntityManagerInternal, ServerEntityManager>();
             deps.Register<IServerGameStateManager, ServerGameStateManager>();
             deps.Register<IReplayRecordingManager, ReplayRecordingManager>();
             deps.Register<IReplayRecordingManagerInternal, ReplayRecordingManager>();
@@ -98,7 +99,9 @@ namespace Robust.Server
             deps.Register<NetworkResourceManager>();
             deps.Register<IHttpClientHolder, HttpClientHolder>();
             deps.Register<UploadedContentManager>();
-             deps.Register<IHWId, DummyHWId>();
+            deps.Register<IHWId, DummyHWId>();
+            deps.Register<ILocalizationManager, ServerLocalizationManager>();
+            deps.Register<ILocalizationManagerInternal, ServerLocalizationManager>();
         }
     }
 }

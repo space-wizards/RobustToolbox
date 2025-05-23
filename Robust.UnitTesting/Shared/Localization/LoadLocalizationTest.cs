@@ -31,6 +31,7 @@ term1 = 2
         res.MountString("/Locale/en-US/a.ftl", DuplicateTerm);
 
         var loc = IoCManager.Resolve<ILocalizationManager>();
+        loc.Initialize();
 
         var spyLog = (SpyLogManager) IoCManager.Resolve<ILogManager>();
         var culture = new CultureInfo("en-US", false);

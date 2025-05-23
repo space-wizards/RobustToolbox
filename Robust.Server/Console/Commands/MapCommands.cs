@@ -52,7 +52,7 @@ namespace Robust.Server.Console.Commands
             {
                 // We can't continue with just the first parameter without a player entity.
                 // For example, if a server system ran this command.
-                shell.WriteError(Loc.GetString("cmd-savegrid-no-player-ent"));
+                shell.WriteError(Loc.GetString("cmd-failure-no-attached-entity"));
                 return;
             }
 
@@ -77,7 +77,7 @@ namespace Robust.Server.Console.Commands
             // Validate the mapId parameter's type
             if (!NetEntity.TryParse(targetGrid, out var gridNet))
             {
-                shell.WriteError(Loc.GetString("cmd-savegrid-invalid-grid",("arg",targetGrid)));
+                shell.WriteError(Loc.GetString("cmd-parse-failure-grid",("arg",targetGrid)));
                 return;
             }
 
@@ -137,7 +137,7 @@ namespace Robust.Server.Console.Commands
         {
 
             // Validate the number of parameters
-            if (args.Length is < 1 or 3 or > 6)
+            if (args.Length is < 1 or > 6)
             {
                 shell.WriteLine(Help);
                 return;
@@ -161,7 +161,7 @@ namespace Robust.Server.Console.Commands
             {
                 // We can't continue with just the first parameter without a player entity.
                 // For example, if a server system ran this command.
-                shell.WriteError(Loc.GetString("cmd-loadgrid-no-player-ent"));
+                shell.WriteError(Loc.GetString("cmd-failure-no-attached-entity"));
                 return;
             }
 
@@ -180,14 +180,12 @@ namespace Robust.Server.Console.Commands
         /// </summary>
         private void LoadGriSpecific(string[] args, IConsoleShell shell, ResPath path)
         {
-            Vector2 offset = default;
-            Angle rot = default;
             var opts = DeserializationOptions.Default;
 
             // Validate the mapId parameter's type
             if (!int.TryParse(args[1], out var intMapId))
             {
-                shell.WriteError(Loc.GetString("cmd-loadgrid-invalid-map-id", ("arg", args[1])));
+                shell.WriteError(Loc.GetString("cmd-parse-failure-mapid", ("arg", args[1])));
                 return;
             }
 
@@ -207,42 +205,38 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            // Validate the coordinate parameters' types
-            if (args.Length >= 4)
+            // Validate the x coordinate's type
+            var x = 0f;
+            if (args.Length >= 3 && !float.TryParse(args[2], out x))
             {
-                if (!float.TryParse(args[2], out var x))
-                {
-                    shell.WriteError(Loc.GetString("cmd-loadgrid-not-coordinate", ("arg", args[2])));
-                    return;
-                }
-
-                if (!float.TryParse(args[3], out var y))
-                {
-                    shell.WriteError(Loc.GetString("cmd-loadgrid-not-coordinate", ("arg", args[3])));
-                    return;
-                }
-
-                offset = new Vector2(x, y);
+                shell.WriteError(Loc.GetString("cmd-parse-failure-float", ("arg", args[2])));
+                return;
             }
+
+            // Validate the y coordinate's type
+            var y = 0f;
+            if (args.Length >= 4 && !float.TryParse(args[3], out y))
+            {
+                shell.WriteError(Loc.GetString("cmd-parse-failure-float", ("arg", args[3])));
+                return;
+            }
+            var offset = new Vector2(x, y);
 
             // Validate the rotation parameter's type
-            if (args.Length >= 5)
+            var rotation = 0f;
+            if (args.Length >= 5 && !float.TryParse(args[4], out rotation))
             {
-                if (!float.TryParse(args[4], out var rotation))
-                {
-                    shell.WriteError(Loc.GetString("cmd-loadgrid-not-rotation", ("arg", args[4])));
-                    return;
-                }
-
-                rot = Angle.FromDegrees(rotation);
+                shell.WriteError(Loc.GetString("cmd-parse-failure-float", ("arg", args[4])));
+                return;
             }
+            var rot = Angle.FromDegrees(rotation);
 
             // Validate the storeUid parameter's type
             if (args.Length >= 6)
             {
                 if (!bool.TryParse(args[5], out var storeUids))
                 {
-                    shell.WriteError(Loc.GetString("cmd-loadgrid-not-boolean", ("arg", args[5])));
+                    shell.WriteError(Loc.GetString("cmd-parse-failure-bool", ("arg", args[5])));
                     return;
                 }
 
@@ -337,7 +331,7 @@ namespace Robust.Server.Console.Commands
             // Validate the mapId parameter
             if (!int.TryParse(args[1], out var intMapId))
             {
-                shell.WriteError(Loc.GetString("cmd-savemap-invalid-map-id", ("arg", args[1])));
+                shell.WriteError(Loc.GetString("cmd-parse-failure-mapid", ("arg", args[1])));
                 return;
             }
             var mapId = new MapId(intMapId);
@@ -476,7 +470,7 @@ namespace Robust.Server.Console.Commands
             // Validate the mapId parameter's type
             if (!int.TryParse(args[1], out var intMapId))
             {
-                shell.WriteError(Loc.GetString("cmd-parse-failure-integer", ("arg", args[0])));
+                shell.WriteError(Loc.GetString("cmd-parse-failure-integer", ("arg", args[1])));
                 return;
             }
 
@@ -498,14 +492,14 @@ namespace Robust.Server.Console.Commands
             }
 
             // Validate the coordinate parameters' type
-            float x = 0;
+            var x = 0f;
             if (args.Length >= 3 && !float.TryParse(args[2], out x))
             {
                 shell.WriteError(Loc.GetString("cmd-parse-failure-float", ("arg", args[2])));
                 return;
             }
 
-            float y = 0;
+            var y = 0f;
             if (args.Length >= 4 && !float.TryParse(args[3], out y))
             {
                 shell.WriteError(Loc.GetString("cmd-parse-failure-float", ("arg", args[3])));
@@ -514,7 +508,7 @@ namespace Robust.Server.Console.Commands
             var offset = new Vector2(x, y);
 
             // Validate the rotation parameter's type
-            float rotation = 0;
+            var rotation = 0f;
             if (args.Length >= 5 && !float.TryParse(args[4], out rotation))
             {
                 shell.WriteError(Loc.GetString("cmd-parse-failure-float", ("arg", args[4])));

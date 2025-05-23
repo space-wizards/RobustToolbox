@@ -155,10 +155,8 @@ cmd-set-ambient-light-parse = Unable to parse args as a byte values for a color.
 
 cmd-savemap-desc = Serializes a map to disk. Will not save a post-init map unless forced.
 cmd-savemap-help = savemap <Path> [MapID] [force]
-cmd-savemap-no-player-ent = No player entity detected, [MapID] is mandatory.
 cmd-savemap-not-exist = Target map does not exist.
 cmd-savemap-nullspace = You cannot save Nullspace.
-cmd-savemap-invalid-map-id = '{$arg}' is not a valid [MapId]. Value must be integer.
 cmd-savemap-init-warning = Attempted to save a post-init map without forcing the save.
 cmd-savemap-attempt = Attempting to save map {$mapId} to {$path}.
 cmd-savemap-success = Map successfully saved.
@@ -286,13 +284,8 @@ cmd-loadgrid-attempt-current = Attempting to load grid at your current position.
 cmd-loadgrid-attempt = Attempting to load grid to map {$mapId}.
 cmd-loadgrid-success = Load successful.
 cmd-loadgrid-fail = Load failed!
-cmd-loadgrid-no-player-ent = No player entity detected, [MapID] is mandatory.
-cmd-loadgrid-invalid-map-id = '{$arg}' Is not a valid [mapID]. Value must be integer.
 cmd-loadgrid-nullspace-map = Cannot load into nullspace.
 cmd-loadgrid-missing-map = Map {$mapId} does not exist.
-cmd-loadgrid-not-coordinate= '{$arg}' is not a valid coordinate. Value must be float.
-cmd-loadgrid-not-rotation= '{$arg}' is not a valid rotation. Value must be float.
-cmd-loadgrid-not-boolean= '{$arg}' is not a valid boolean.
 
 cmd-loc-desc = Prints the absolute location of the player's entity to console.
 cmd-loc-help = loc
@@ -322,11 +315,9 @@ cmd-savegrid-desc = Serializes a grid to disk.
 cmd-savegrid-help = savegrid <Path> [GridID]
 cmd-savegrid-existnt = Entity {$uid} does not exist, therefore you cannot save it.
 cmd-savegrid-success = Save successful. Look in the user data directory.
-cmd-savegrid-invalid-grid = '{$arg}' is not a valid [gridID]. Value must be integer.
 cmd-savegrid-not-grid = Entity {$uid} '{$ent}' is not a grid.
 cmd-savegrid-attempt = Attempting to save grid {$uid}.
 cmd-savegrid-fail = Save failed!
-cmd-savegrid-no-player-ent = [gridID] is only optional if there is a player entity.
 cmd-savegrid-no-player-grid = Player must be over a grid to omit [gridID] parameter.
 cmd-hint-savegrid-id = GridID
 

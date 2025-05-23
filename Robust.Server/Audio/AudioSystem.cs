@@ -285,6 +285,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
     private void LogAudioError(ResolvedSoundSpecifier? specifier, EntityUid entityId)
     {
         var soundInfo = specifier?.GetDebugString() ?? "unknown sound";
-        Log.Error($"Tried to play coordinates audio on a terminating / deleted entity {ToPrettyString(coordinates.EntityId)}. Sound: {soundInfo}. Trace: {Environment.StackTrace}");
+        Log.Error($"Tried to play coordinates audio on a terminating / deleted entity {ToPrettyString(entityId)}. Sound: {soundInfo}. Trace: {Environment.StackTrace}");
     }
 }

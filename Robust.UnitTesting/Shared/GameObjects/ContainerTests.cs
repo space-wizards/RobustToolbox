@@ -255,7 +255,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  // the entity deleted event is not played on the client if the entity does not exist on the client.
                  if (sEntManager.EntityExists(sItemUid)
                      // && itemUid.TryGetContainer(out var container))
-                     && sContainerSys.TryGetContainingContainer((sItemUid, null), out var container))
+                     && sContainerSys.TryGetContainingContainer(sItemUid, out var container))
                  {
                      sContainerSys.Remove(sItemUid, container, force: true);
                  }

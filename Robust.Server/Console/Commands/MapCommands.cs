@@ -415,41 +415,37 @@ namespace Robust.Server.Console.Commands
                 case 2:
                     return CompletionResult.FromHint(Loc.GetString("cmd-hint-savemap-id"));
                 case 3:
-                    GetPos(out var x, out _, out _);
+                    GetPos(out var x, out _);
                     autocomplete = new List<CompletionOption>() {new (x.ToString())};
                     return CompletionResult.FromHintOptions(autocomplete , Loc.GetString("cmd-hint-loadmap-x-position"));
                 case 4:
-                    GetPos(out var _, out var y, out _);
+                    GetPos(out var _, out var y);
                     autocomplete = new List<CompletionOption>() {new (y.ToString())};
                     return CompletionResult.FromHintOptions(autocomplete, Loc.GetString("cmd-hint-loadmap-y-position"));
                 case 5:
-                    GetPos(out _, out _, out var rot);
-                    autocomplete = new List<CompletionOption>() {new (rot.ToString())};
-                    return CompletionResult.FromHintOptions(autocomplete, Loc.GetString("cmd-hint-loadmap-rotation"));
+                    return CompletionResult.FromHint(Loc.GetString("cmd-hint-loadmap-rotation"));
                 case 6:
                     return CompletionResult.FromHintOptions(
                         CompletionHelper.Booleans,
                         Loc.GetString("cmd-hint-loadmap-uids"));
             }
 
-            void GetPos(out int x, out int y, out Angle rot)
+            return CompletionResult.Empty;
+
+            // Get the player's location data for autocomplete suggestions
+            void GetPos(out int x, out int y)
             {
                 x = 0;
                 y = 0;
-                rot = 0f;
 
                 var ent = shell.Player?.AttachedEntity;
-                if (ent is not null)
-                {
-                    var offset = system.GetEntitySystem<TransformSystem>().GetWorldPosition(ent.Value);
-                    var rotRaw = system.GetEntitySystem<TransformSystem>().GetWorldRotation(ent.Value);
-                    x = (int)Math.Round(offset.X);
-                    y = (int)Math.Round(offset.Y);
-                    rot = (float)Math.Round(rotRaw);
-                }
-            }
+                if (ent is null)
+                    return;
 
-            return CompletionResult.Empty;
+                var offset = system.GetEntitySystem<TransformSystem>().GetWorldPosition(ent.Value);
+                x = (int)Math.Round(offset.X);
+                y = (int)Math.Round(offset.Y);
+            }
         }
 
         public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)

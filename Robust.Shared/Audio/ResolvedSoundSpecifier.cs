@@ -19,6 +19,8 @@ public abstract partial class ResolvedSoundSpecifier {
     [Obsolete("String literals for sounds are deprecated, use a SoundSpecifier or ResolvedSoundSpecifier as appropriate instead")]
     public static implicit operator ResolvedSoundSpecifier(ResPath s) => new ResolvedPathSpecifier(s);
 
+    public abstract string GetDebugString();
+
     /// <summary>
     /// Returns whether <c>s</c> is null, or if it contains an empty path/collection ID.
     /// </summary>
@@ -45,6 +47,11 @@ public sealed partial class ResolvedPathSpecifier : ResolvedSoundSpecifier {
 
     override public string ToString() =>
         $"ResolvedPathSpecifier({Path})";
+
+    public override string GetDebugString()
+    {
+        return $"path: {Path}";
+    }
 
     [UsedImplicitly]
     private ResolvedPathSpecifier()
@@ -76,6 +83,11 @@ public sealed partial class ResolvedCollectionSpecifier : ResolvedSoundSpecifier
 
     override public string ToString() =>
         $"ResolvedCollectionSpecifier({Collection}, {Index})";
+
+    public override string GetDebugString()
+    {
+        return $"collection: {Collection}, index: {Index}";
+    }
 
     [UsedImplicitly]
     private ResolvedCollectionSpecifier()

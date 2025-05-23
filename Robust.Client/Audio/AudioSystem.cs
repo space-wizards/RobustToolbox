@@ -582,17 +582,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     {
         if (TerminatingOrDeleted(entity))
         {
-            string soundInfo = "unknown sound";
-
-            if (specifier != null)
-            {
-                if (specifier is ResolvedPathSpecifier pathSpec)
-                    soundInfo = $"path: {pathSpec.Path}";
-                else if (specifier is ResolvedCollectionSpecifier collSpec)
-                    soundInfo = $"collection: {collSpec.Collection}, index: {collSpec.Index}";
-            }
-
-            Log.Error($"Tried to play coordinates audio on a terminating / deleted entity {ToPrettyString(entity)}. Sound: {soundInfo}. Trace: {Environment.StackTrace}");
+            LogAudioError(specifier, entity);
             return null;
         }
 
@@ -636,17 +626,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     {
         if (TerminatingOrDeleted(coordinates.EntityId))
         {
-            string soundInfo = "unknown sound";
-
-            if (specifier != null)
-            {
-                if (specifier is ResolvedPathSpecifier pathSpec)
-                    soundInfo = $"path: {pathSpec.Path}";
-                else if (specifier is ResolvedCollectionSpecifier collSpec)
-                    soundInfo = $"collection: {collSpec.Collection}, index: {collSpec.Index}";
-            }
-
-            Log.Error($"Tried to play coordinates audio on a terminating / deleted entity {ToPrettyString(coordinates.EntityId)}. Sound: {soundInfo}. Trace: {Environment.StackTrace}");
+            LogAudioError(specifier, coordinates.EntityId);
             return null;
         }
 
@@ -771,6 +751,12 @@ public sealed partial class AudioSystem : SharedAudioSystem
     protected override TimeSpan GetAudioLengthImpl(string filename)
     {
         return _resourceCache.GetResource<AudioResource>(filename).AudioStream.Length;
+    }
+
+    private void LogAudioError(ResolvedSoundSpecifier? specifier, EntityUid entityId)
+    {
+        var soundInfo = specifier?.GetDebugString() ?? "unknown sound";
+        Log.Error($"Tried to play coordinates audio on a terminating / deleted entity {ToPrettyString(entityId)}. Sound: {soundInfo}. Trace: {Environment.StackTrace}");
     }
 
     #region Jobs

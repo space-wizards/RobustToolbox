@@ -556,9 +556,10 @@ public sealed class EntityDeserializer :
             {
 #if !EXCEPTION_TOLERANCE
                 throw;
-#endif
+#else
                 ToDelete.Add(entity);
                 _log.Error($"Encountered error while loading entity. Yaml uid: {data.YamlId}. Loaded loaded entity: {EntMan.ToPrettyString(entity)}. Error:\n{e}.");
+#endif
             }
         }
 

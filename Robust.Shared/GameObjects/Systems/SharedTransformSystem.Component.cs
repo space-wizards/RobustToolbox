@@ -217,9 +217,10 @@ public abstract partial class SharedTransformSystem
             {
 #if !EXCEPTION_TOLERANCE
                 throw new Exception("Transform is initialising before map ids have been assigned?");
-#endif
+#else
                 Log.Error($"Transform is initialising before map ids have been assigned?");
                 _map.AssignMapId((uid, mapComp));
+#endif
             }
 
             xform.MapUid = uid;

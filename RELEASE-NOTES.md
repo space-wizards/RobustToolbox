@@ -54,6 +54,25 @@ END TEMPLATE-->
 *None yet*
 
 
+## 260.2.0
+
+### New features
+
+* Add `StringBuilder.Insert(int, string)` to sandbox.
+* Add the WorldNormal to the StartCollideEvent.
+
+
+## 260.1.0
+
+### New features
+
+* `ComponentFactory` is now exposed to `EntitySystem` as `Factory`
+
+### Other
+
+* Cleanup warnings in PLacementManager
+* Cleanup warnings in Clide.Sprite
+
 ## 260.0.0
 
 ### Breaking changes

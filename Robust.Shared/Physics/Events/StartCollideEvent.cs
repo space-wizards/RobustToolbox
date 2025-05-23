@@ -24,7 +24,10 @@ public readonly struct StartCollideEvent
     internal readonly FixedArray2<Vector2> _worldPoints;
 
     public readonly int PointCount;
+    public readonly Vector2 WorldNormal;
+
     public Vector2[] WorldPoints => _worldPoints.AsSpan[..PointCount].ToArray();
+
 
     internal StartCollideEvent(
         EntityUid ourEntity,
@@ -36,7 +39,8 @@ public readonly struct StartCollideEvent
         PhysicsComponent ourBody,
         PhysicsComponent otherBody,
         FixedArray2<Vector2> worldPoints,
-        int pointCount)
+        int pointCount,
+        Vector2 worldNormal)
     {
         OurEntity = ourEntity;
         OtherEntity = otherEntity;
@@ -48,5 +52,6 @@ public readonly struct StartCollideEvent
         OurBody = ourBody;
         _worldPoints = worldPoints;
         PointCount = pointCount;
+        WorldNormal = worldNormal;
     }
 }

@@ -551,7 +551,7 @@ public abstract partial class SharedPhysicsSystem
         }
 
         var status = ArrayPool<ContactStatus>.Shared.Rent(index);
-        var worldPoints = ArrayPool<FixedArray2<Vector2>>.Shared.Rent(index);
+        var worldPoints = ArrayPool<FixedArray4<Vector2>>.Shared.Rent(index);
 
         // Update contacts all at once.
         BuildManifolds(contacts, index, status, worldPoints);
@@ -586,9 +586,11 @@ public abstract partial class SharedPhysicsSystem
                     var uidA = contact.EntityA;
                     var uidB = contact.EntityB;
                     var worldPoint = worldPoints[i];
+                    var points = new FixedArray2<Vector2>(worldPoint._00, worldPoint._01);
+                    var worldNormal = worldPoint._02;
 
-                    var ev1 = new StartCollideEvent(uidA, uidB, contact.FixtureAId, contact.FixtureBId, fixtureA, fixtureB, bodyA, bodyB, worldPoint, contact.Manifold.PointCount);
-                    var ev2 = new StartCollideEvent(uidB, uidA, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA, worldPoint, contact.Manifold.PointCount);
+                    var ev1 = new StartCollideEvent(uidA, uidB, contact.FixtureAId, contact.FixtureBId, fixtureA, fixtureB, bodyA, bodyB, points, contact.Manifold.PointCount, worldNormal);
+                    var ev2 = new StartCollideEvent(uidB, uidA, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA, points, contact.Manifold.PointCount, worldNormal);
 
                     RaiseLocalEvent(uidA, ref ev1, true);
                     RaiseLocalEvent(uidB, ref ev2, true);
@@ -626,10 +628,10 @@ public abstract partial class SharedPhysicsSystem
 
         ArrayPool<Contact>.Shared.Return(contacts);
         ArrayPool<ContactStatus>.Shared.Return(status);
-        ArrayPool<FixedArray2<Vector2>>.Shared.Return(worldPoints);
+        ArrayPool<FixedArray4<Vector2>>.Shared.Return(worldPoints);
     }
 
-    private void BuildManifolds(Contact[] contacts, int count, ContactStatus[] status, FixedArray2<Vector2>[] worldPoints)
+    private void BuildManifolds(Contact[] contacts, int count, ContactStatus[] status, FixedArray4<Vector2>[] worldPoints)
     {
         if (count == 0)
             return;
@@ -672,7 +674,7 @@ public abstract partial class SharedPhysicsSystem
 
         public Contact[] Contacts;
         public ContactStatus[] Status;
-        public FixedArray2<Vector2>[] WorldPoints;
+        public FixedArray4<Vector2>[] WorldPoints;
         public bool[] Wake;
 
         public void Execute(int index)
@@ -681,7 +683,7 @@ public abstract partial class SharedPhysicsSystem
         }
     }
 
-    private void UpdateContact(Contact[] contacts, int index, ContactStatus[] status, bool[] wake, FixedArray2<Vector2>[] worldPoints)
+    private void UpdateContact(Contact[] contacts, int index, ContactStatus[] status, bool[] wake, FixedArray4<Vector2>[] worldPoints)
     {
         var contact = contacts[index];
 
@@ -706,8 +708,10 @@ public abstract partial class SharedPhysicsSystem
 
         if (contactStatus == ContactStatus.StartTouching)
         {
-            var points = new FixedArray2<Vector2>();
-            contact.GetWorldManifold(bodyATransform, bodyBTransform, out _, points.AsSpan);
+            var points = new FixedArray4<Vector2>();
+            contact.GetWorldManifold(bodyATransform, bodyBTransform, out var worldNormal, points.AsSpan);
+            // Use the 3rd Vector2 as the world normal, 4th is blank.
+            points._02 = worldNormal;
             worldPoints[index] = points;
         }
     }

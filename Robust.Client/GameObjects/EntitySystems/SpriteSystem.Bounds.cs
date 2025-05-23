@@ -10,7 +10,7 @@ using static Robust.Client.GameObjects.SpriteComponent;
 
 namespace Robust.Client.GameObjects;
 
-// This partial class contains code related to updating a sprites bounding boxes and its position in the sprite tree.
+// This partial class contains code related to updating a sprite's bounding box and its position in the sprite tree.
 public sealed partial class SpriteSystem
 {
     /// <summary>
@@ -19,11 +19,8 @@ public sealed partial class SpriteSystem
     /// </summary>
     public Box2 GetLocalBounds(Entity<SpriteComponent> sprite)
     {
-        if (!sprite.Comp.BoundsDirty)
-        {
-            DebugTools.Assert(sprite.Comp.Layers.All(x => !x.BoundsDirty || !x.Drawn));
+        if (!sprite.Comp.BoundsDirty && sprite.Comp.Layers.All(x => !x.BoundsDirty || !x.Drawn))
             return sprite.Comp._bounds;
-        }
 
         var bounds = new Box2();
         foreach (var layer in sprite.Comp.Layers)

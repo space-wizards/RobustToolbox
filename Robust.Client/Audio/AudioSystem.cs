@@ -582,7 +582,17 @@ public sealed partial class AudioSystem : SharedAudioSystem
     {
         if (TerminatingOrDeleted(entity))
         {
-            Log.Error($"Tried to play coordinates audio on a terminating / deleted entity {ToPrettyString(entity)}");
+            string soundInfo = "unknown sound";
+
+            if (specifier != null)
+            {
+                if (specifier is ResolvedPathSpecifier pathSpec)
+                    soundInfo = $"path: {pathSpec.Path}";
+                else if (specifier is ResolvedCollectionSpecifier collSpec)
+                    soundInfo = $"collection: {collSpec.Collection}, index: {collSpec.Index}";
+            }
+
+            Log.Error($"Tried to play coordinates audio on a terminating / deleted entity {ToPrettyString(entity)}. Sound: {soundInfo}. Trace: {Environment.StackTrace}");
             return null;
         }
 
@@ -626,7 +636,17 @@ public sealed partial class AudioSystem : SharedAudioSystem
     {
         if (TerminatingOrDeleted(coordinates.EntityId))
         {
-            Log.Error($"Tried to play coordinates audio on a terminating / deleted entity {ToPrettyString(coordinates.EntityId)}");
+            string soundInfo = "unknown sound";
+
+            if (specifier != null)
+            {
+                if (specifier is ResolvedPathSpecifier pathSpec)
+                    soundInfo = $"path: {pathSpec.Path}";
+                else if (specifier is ResolvedCollectionSpecifier collSpec)
+                    soundInfo = $"collection: {collSpec.Collection}, index: {collSpec.Index}";
+            }
+
+            Log.Error($"Tried to play coordinates audio on a terminating / deleted entity {ToPrettyString(coordinates.EntityId)}. Sound: {soundInfo}. Trace: {Environment.StackTrace}");
             return null;
         }
 

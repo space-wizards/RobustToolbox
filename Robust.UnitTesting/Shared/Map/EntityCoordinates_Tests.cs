@@ -248,12 +248,15 @@ namespace Robust.UnitTesting.Shared.Map
             var grid = mapManager.CreateGridEntity(mapId);
             var gridEnt = grid.Owner;
             var newEnt = entityManager.CreateEntityUninitialized(null, new EntityCoordinates(grid, entPos));
+            var newXform = entityManager.GetComponent<TransformComponent>(newEnt);
 
-            Assert.That(xformSys.ToMapCoordinates(entityManager.GetComponent<TransformComponent>(newEnt).Coordinates), Is.EqualTo(new MapCoordinates(entPos, mapId)));
+            Assert.That(xformSys.ToMapCoordinates(newXform.Coordinates), Is.EqualTo(new MapCoordinates(entPos, mapId)));
+            Assert.That(xformSys.ToMapCoordinates(newXform.Coordinates).Position, Is.EqualTo(xformSys.ToWorldPosition(newXform.Coordinates)));
 
             xformSys.SetLocalPosition(gridEnt, entityManager.GetComponent<TransformComponent>(gridEnt).LocalPosition + gridPos);
 
-            Assert.That(xformSys.ToMapCoordinates(entityManager.GetComponent<TransformComponent>(newEnt).Coordinates), Is.EqualTo(new MapCoordinates(entPos + gridPos, mapId)));
+            Assert.That(xformSys.ToMapCoordinates(newXform.Coordinates), Is.EqualTo(new MapCoordinates(entPos + gridPos, mapId)));
+            Assert.That(xformSys.ToMapCoordinates(newXform.Coordinates).Position, Is.EqualTo(xformSys.ToWorldPosition(newXform.Coordinates)));
         }
 
         [Test]

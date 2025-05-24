@@ -29,6 +29,8 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IReplayRecordingManager _replayMan = default!;
         [Dependency] protected readonly ILocalizationManager Loc = default!;
 
+        protected IComponentFactory Factory => EntityManager.ComponentFactory;
+
         public ISawmill Log { get; private set; } = default!;
 
         protected virtual string SawmillName

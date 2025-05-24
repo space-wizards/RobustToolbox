@@ -875,6 +875,7 @@ Types:
       - "System.Text.StringBuilder Insert(int, object)"
       - "System.Text.StringBuilder Insert(int, sbyte)"
       - "System.Text.StringBuilder Insert(int, short)"
+      - "System.Text.StringBuilder Insert(int, string)"
       - "System.Text.StringBuilder Insert(int, string, int)"
       - "System.Text.StringBuilder Insert(int, System.Decimal)"
       - "System.Text.StringBuilder Insert(int, System.ReadOnlySpan`1<char>)"

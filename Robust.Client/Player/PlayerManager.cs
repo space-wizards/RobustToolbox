@@ -166,7 +166,7 @@ namespace Robust.Client.Player
             {
                 if (_client.RunLevel != ClientRunLevel.SinglePlayerGame)
                     Sawmill.Warning($"Attaching local player to an entity {EntManager.ToPrettyString(uid)} without an eye. This eye will not be netsynced and may cause issues.");
-                var eye = (EyeComponent) Factory.GetComponent(typeof(EyeComponent));
+                var eye = Factory.GetComponent<EyeComponent>();
                 eye.NetSyncEnabled = false;
                 EntManager.AddComponent(uid.Value, eye);
             }

@@ -140,7 +140,7 @@ namespace Robust.Server.Placement
             {
                 // Replace existing entities if relevant.
                 if (msg.Replacement && _prototype.Index<EntityPrototype>(entityTemplateName).Components.TryGetValue(
-                        _factory.GetComponentName(typeof(PlacementReplacementComponent)), out var compRegistry))
+                        _factory.GetComponentName<PlacementReplacementComponent>(), out var compRegistry))
                 {
                     var key = ((PlacementReplacementComponent)compRegistry.Component).Key;
                     var gridUid = _xformSystem.GetGrid(coordinates);

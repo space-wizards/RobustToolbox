@@ -7,12 +7,12 @@ namespace Robust.Shared.Spawners;
 /// <summary>
 /// Put this component on something you would like to despawn after a certain amount of time
 /// </summary>
-[RegisterComponent, NetworkedComponent]
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
 public sealed partial class TimedDespawnComponent : Component
 {
     /// <summary>
     /// How long the entity will exist before despawning
     /// </summary>
-    [DataField]
+    [DataField, AutoNetworkedField]
     public float Lifetime = 5f;
 }

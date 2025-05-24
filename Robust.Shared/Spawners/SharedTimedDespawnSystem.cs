@@ -24,6 +24,7 @@ public sealed class SharedTimedDespawnSystem : EntitySystem
         while (query.MoveNext(out var uid, out var comp))
         {
             comp.Lifetime -= frameTime;
+            Dirty(uid, comp);
 
             if (comp.Lifetime <= 0)
                 _queuedDespawnEntities.Add(uid);

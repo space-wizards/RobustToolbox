@@ -39,19 +39,19 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `IFileDialogManager` now allows specifying `FileAccess` and `FileShare` modes.
 
 ### Bugfixes
 
-*None yet*
+* Fixed SDL3 file dialog implementation having a memory leak and not opening files read-write.
 
 ### Other
 
-*None yet*
+* `uploadfile` and `loadprototype` commands now only open files with read access.
 
 ### Internal
 
-*None yet*
+* Cleanup on internals of `IFileDialogManager`, removing duplicate code.
 
 
 ## 260.2.0

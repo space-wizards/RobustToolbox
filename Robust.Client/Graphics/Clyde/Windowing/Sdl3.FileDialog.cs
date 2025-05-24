@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -12,31 +11,16 @@ namespace Robust.Client.Graphics.Clyde;
 
 internal partial class Clyde
 {
-    private sealed partial class Sdl3WindowingImpl : IFileDialogManager
+    private sealed partial class Sdl3WindowingImpl : IFileDialogManagerImplementation
     {
-        public async Task<Stream?> OpenFile(FileDialogFilters? filters = null)
+        public async Task<string?> OpenFile(FileDialogFilters? filters)
         {
-            var fileName = await ShowFileDialogOfType(SDL.SDL_FILEDIALOG_OPENFILE, filters);
-            if (fileName == null)
-                return null;
-
-            return File.OpenRead(fileName);
+            return await ShowFileDialogOfType(SDL.SDL_FILEDIALOG_OPENFILE, filters);
         }
 
-        public async Task<(Stream fileStream, bool alreadyExisted)?> SaveFile(FileDialogFilters? filters = null, bool truncate = true)
+        public async Task<string?> SaveFile(FileDialogFilters? filters)
         {
-            var fileName = await ShowFileDialogOfType(SDL.SDL_FILEDIALOG_SAVEFILE, filters);
-            if (fileName == null)
-                return null;
-
-            try
-            {
-                return (File.Open(fileName, truncate ? FileMode.Truncate : FileMode.Open), true);
-            }
-            catch (FileNotFoundException)
-            {
-                return (File.Open(fileName, FileMode.Create), false);
-            }
+            return await ShowFileDialogOfType(SDL.SDL_FILEDIALOG_SAVEFILE, filters);
         }
 
         private unsafe Task<string?> ShowFileDialogOfType(int type, FileDialogFilters? filters)
@@ -74,6 +58,8 @@ internal partial class Clyde
                     NativeMemory.Free(filter.name);
                     NativeMemory.Free(filter.pattern);
                 }
+
+                NativeMemory.Free(filtersAlloc);
             }
 
             return task;

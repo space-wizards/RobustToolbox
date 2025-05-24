@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -111,7 +112,15 @@ public abstract partial class SharedMapSystem
         args.State = new MapComponentState(component.MapId, component.LightingEnabled, component.MapPaused, component.MapInitialized);
     }
 
-    protected abstract MapId GetNextMapId();
+    protected MapId TakeNextMapId()
+    {
+        var id = GetNextMapId();
+        UsedIds.Add(id);
+        return id;
+    }
+
+    [Pure]
+    internal abstract MapId GetNextMapId();
 
     private void OnComponentAdd(EntityUid uid, MapComponent component, ComponentAdd args)
     {
@@ -141,7 +150,7 @@ public abstract partial class SharedMapSystem
             return;
         }
 
-        map.Comp.MapId = id ?? GetNextMapId();
+        map.Comp.MapId = id ?? TakeNextMapId();
 
         if (IsClientSide(map) != map.Comp.MapId.IsClientSide)
             throw new Exception($"Attempting to assign a client-side map id to a networked entity or vice-versa");
@@ -211,7 +220,7 @@ public abstract partial class SharedMapSystem
     /// </summary>
     public EntityUid CreateMap(out MapId mapId, bool runMapInit = true)
     {
-        mapId = GetNextMapId();
+        mapId = TakeNextMapId();
         var uid = CreateMap(mapId, runMapInit);
         return uid;
     }

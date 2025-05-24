@@ -412,8 +412,11 @@ namespace Robust.Client.Graphics.Clyde
         private void _updateTileMapOnUpdate(ref TileChangedEvent args)
         {
             var gridData = _mapChunkData.GetOrNew(args.Entity);
-            if (gridData.TryGetValue(args.ChunkIndex, out var data))
-                data.Dirty = true;
+            foreach (var change in args.Changes)
+            {
+                if (gridData.TryGetValue(change.ChunkIndex, out var data))
+                    data.Dirty = true;
+            }
         }
 
         private void _updateOnGridCreated(GridStartupEvent ev)

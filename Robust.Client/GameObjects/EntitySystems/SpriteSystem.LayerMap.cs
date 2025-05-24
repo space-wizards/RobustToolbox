@@ -213,32 +213,30 @@ public sealed partial class SpriteSystem
     }
 
     /// <summary>
-    /// Create a new blank layer and map the given key to it.
+    /// Ensures that a layer with the given key exists and return the layer's index.
+    /// If the layer does not yet exist, this will create and add a blank layer.
     /// </summary>
     public int LayerMapReserve(Entity<SpriteComponent?> sprite, Enum key)
     {
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
             return -1;
 
-        if (LayerExists(sprite, key))
-            throw new Exception("Layer already exists");
+        if (LayerMapTryGet(sprite, key, out var layerIndex, false))
+            return layerIndex;
 
         var layer = AddBlankLayer(sprite!);
         LayerMapSet(sprite, key, layer.Index);
         return layer.Index;
     }
 
-    /// <summary>
-    /// A create a new blank layer and map the given key to it. If possible, it is preferred to use an enum key.
-    /// string keys mainly exist to make it easier to define custom layer keys in yaml.
-    /// </summary>
+    /// <inheritdoc cref="LayerMapReserve(Entity{SpriteComponent?},System.Enum)"/>
     public int LayerMapReserve(Entity<SpriteComponent?> sprite, string key)
     {
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
             return -1;
 
-        if (LayerExists(sprite, key))
-            throw new Exception("Layer already exists");
+        if (LayerMapTryGet(sprite, key, out var layerIndex, false))
+            return layerIndex;
 
         var layer = AddBlankLayer(sprite!);
         LayerMapSet(sprite, key, layer.Index);

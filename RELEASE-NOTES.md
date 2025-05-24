@@ -54,6 +54,91 @@ END TEMPLATE-->
 *None yet*
 
 
+## 260.2.0
+
+### New features
+
+* Add `StringBuilder.Insert(int, string)` to sandbox.
+* Add the WorldNormal to the StartCollideEvent.
+
+
+## 260.1.0
+
+### New features
+
+* `ComponentFactory` is now exposed to `EntitySystem` as `Factory`
+
+### Other
+
+* Cleanup warnings in PLacementManager
+* Cleanup warnings in Clide.Sprite
+
+## 260.0.0
+
+### Breaking changes
+
+* Fix / change `StartCollideEvent.WorldPoint` to return all points for the collision which may be up to 2 instead of 1.
+
+### New features
+
+* Add SpriteSystem dependency to VisualizerSystem.
+* Add Vertical property to progress bars
+* Add some `EntProtoId` overloads for group entity spawn methods.
+
+
+## 259.0.0
+
+### Breaking changes
+
+* TileChangedEvent now has an array of tile changed entries rather than raising an individual event for every single tile changed.
+
+### Other
+
+* `Entity<T>` methods were marked as `readonly` as appropriate.
+
+
+## 258.0.1
+
+### Bugfixes
+
+* Fix static physics bodies not generating contacts if they spawn onto sleeping bodies.
+
+
+## 258.0.0
+
+### Breaking changes
+
+* `IMarkupTag` and related methods in `MarkupTagManager` have been obsoleted and should be replaced with the new `IMarkupTagHandler` interface. Various engine tags (e.g., `BoldTag`, `ColorTag`, etc) no longer implement the old interface.
+
+### New features
+
+* Add IsValidPath to ResPath and make some minor performance improvements.
+
+### Bugfixes
+
+* OutputPanel and RichTextLabel now remove controls associated with rich text tags when the text is updated.
+* Fix `SpriteComponent.Visible` datafield not being read from yaml.
+* Fix container state handling not forcing inserts.
+
+### Other
+
+* `SpriteSystem.LayerMapReserve()` no longer throws an exception if the specified layer already exists. This makes it behave like the obsoleted `SpriteComponent.LayerMapReserveBlank()`.
+
+
+## 257.0.2
+
+### Bugfixes
+
+* Fix unshaded sprite layers not rendering correctly.
+
+
+## 257.0.1
+
+### Bugfixes
+
+* Fix sprite layer bounding box calculations. This was causing various sprite rendering & render-tree lookup issues.
+
+
 ## 257.0.0
 
 ### Breaking changes

@@ -13,6 +13,6 @@ public sealed partial class TimedDespawnComponent : Component
     /// <summary>
     /// How long the entity will exist before despawning
     /// </summary>
-    [DataField("lifetime")]
+    [DataField]
     public float Lifetime = 5f;
 }

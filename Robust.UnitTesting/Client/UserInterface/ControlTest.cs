@@ -5,6 +5,7 @@ using Robust.Client.UserInterface;
 using Robust.Shared.Animations;
 using Robust.Shared.IoC;
 using Robust.Shared.Timing;
+using Robust.UnitTesting.Constraints;
 
 namespace Robust.UnitTesting.Client.UserInterface
 {

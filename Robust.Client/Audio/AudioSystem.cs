@@ -582,7 +582,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     {
         if (TerminatingOrDeleted(entity))
         {
-            LogAudioError(specifier, entity);
+            LogAudioPlaybackOnInvalidEntity(specifier, entity);
             return null;
         }
 
@@ -626,7 +626,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     {
         if (TerminatingOrDeleted(coordinates.EntityId))
         {
-            LogAudioError(specifier, coordinates.EntityId);
+            LogAudioPlaybackOnInvalidEntity(specifier, coordinates.EntityId);
             return null;
         }
 
@@ -753,9 +753,9 @@ public sealed partial class AudioSystem : SharedAudioSystem
         return _resourceCache.GetResource<AudioResource>(filename).AudioStream.Length;
     }
 
-    private void LogAudioError(ResolvedSoundSpecifier? specifier, EntityUid entityId)
+    private void LogAudioPlaybackOnInvalidEntity(ResolvedSoundSpecifier? specifier, EntityUid entityId)
     {
-        var soundInfo = specifier?.GetDebugString() ?? "unknown sound";
+        var soundInfo = specifier?.ToString() ?? "unknown sound";
         Log.Error($"Tried to play coordinates audio on a terminating / deleted entity {ToPrettyString(entityId)}. Sound: {soundInfo}. Trace: {Environment.StackTrace}");
     }
 

@@ -160,7 +160,7 @@ public abstract partial class SharedJointSystem : EntitySystem
         {
             if (existing.BodyBUid != bUid)
             {
-                Log.Error($"While adding joint {joint.ID} to entity {ToPrettyString(bUid)}, the connected entity {ToPrettyString(aUid)} already had a joint with the same ID connected to another entity {ToPrettyString(existing.BodyBUid)}.");
+                Log.Warning($"While adding joint {joint.ID} to entity {bUid}, the connected entity {aUid} already had a joint with the same ID connected to another entity {existing.BodyBUid}.");
                 return;
             }
 
@@ -174,17 +174,17 @@ public abstract partial class SharedJointSystem : EntitySystem
                 return;
             }
 
-            Log.Error($"While adding joint {joint.ID} to entity {ToPrettyString(bUid)}, the joint already existed for the connected entity {ToPrettyString(aUid)}.");
+            Log.Warning($"While adding joint {joint.ID} to entity {bUid}, the joint already existed for the connected entity {aUid}.");
         }
         else if (!ignoreExisting && jointsB.TryGetValue(joint.ID, out existing))
         {
             if (existing.BodyAUid != aUid)
             {
-                Log.Error($"While adding joint {joint.ID} to entity {ToPrettyString(aUid)}, the connected entity {ToPrettyString(bUid)} already had a joint with the same ID connected to another entity {ToPrettyString(existing.BodyAUid)}.");
+                Log.Warning($"While adding joint {joint.ID} to entity {aUid}, the connected entity {bUid} already had a joint with the same ID connected to another entity {existing.BodyAUid}.");
                 return;
             }
 
-            Log.Error($"While adding joint {joint.ID} to entity {ToPrettyString(aUid)}, the joint already existed for the connected entity {ToPrettyString(bUid)}.");
+            Log.Warning($"While adding joint {joint.ID} to entity {aUid}, the joint already existed for the connected entity {bUid}.");
         }
 
         jointsA.TryAdd(joint.ID, joint);

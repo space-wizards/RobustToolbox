@@ -596,7 +596,7 @@ namespace Robust.Shared.Containers
         /// <param name="force">Whether to forcibly remove the entity from the container.</param>
         /// <param name="wasInContainer">Whether the entity was actually inside a container or not.</param>
         /// <returns>If the entity could be removed. Also returns false if it wasn't inside a container.</returns>
-        public bool TryRemoveFromContainer(EntityUid entity, bool force, out bool wasInContainer)
+        public bool TryRemoveFromContainer(Entity<TransformComponent?, MetaDataComponent?> entity, bool force, out bool wasInContainer)
         {
             DebugTools.Assert(Exists(entity));
 
@@ -621,7 +621,7 @@ namespace Robust.Shared.Containers
         /// <param name="entity">Entity that might be inside a container.</param>
         /// <param name="force">Whether to forcibly remove the entity from the container.</param>
         /// <returns>If the entity could be removed. Also returns false if it wasn't inside a container.</returns>
-        public bool TryRemoveFromContainer(EntityUid entity, bool force = false)
+        public bool TryRemoveFromContainer(Entity<TransformComponent?, MetaDataComponent?> entity, bool force = false)
         {
             return TryRemoveFromContainer(entity, force, out _);
         }
@@ -668,9 +668,8 @@ namespace Robust.Shared.Containers
         {
             // TODO make this check upwards for any container, and parent to that.
             // Currently this just checks the direct parent, so entities will still teleport through containers.
-
             if (!transform.Comp.ParentUid.IsValid()
-                || !TryGetContainingContainer(transform.Comp.ParentUid, out var container)
+                || !TryGetContainingContainer((transform.Comp.ParentUid, Transform(transform.Comp.ParentUid)), out var container)
                 || !TryInsertIntoContainer(transform, container))
             {
                 _transform.AttachToGridOrMap(transform, transform.Comp);
@@ -682,8 +681,9 @@ namespace Robust.Shared.Containers
             if (Insert((transform.Owner, transform.Comp, null, null), container))
                 return true;
 
-            if (Transform(container.Owner).ParentUid.IsValid()
-                && TryGetContainingContainer(container.Owner, out var newContainer))
+            var ownerXform = Transform(container.Owner);
+            if (ownerXform.ParentUid.IsValid()
+                && TryGetContainingContainer((container.Owner, ownerXform), out var newContainer))
                 return TryInsertIntoContainer(transform, newContainer);
 
             return false;

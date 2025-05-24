@@ -91,8 +91,9 @@ namespace Robust.Shared.GameObjects
             where TComponent : IComponent;
 
         /// <inheritdoc cref="RaiseComponentEvent{TEvent,TComponent}(Robust.Shared.GameObjects.EntityUid,TComponent,TEvent)"/>
-        public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, CompIdx idx, ref TEvent args)
-            where TEvent : notnull;
+        public void RaiseComponentEvent<TEvent, TComponent>(EntityUid uid, TComponent component, CompIdx idx, ref TEvent args)
+            where TEvent : notnull
+            where TComponent : IComponent;
 
         public void OnlyCallOnRobustUnitTestISwearToGodPleaseSomebodyKillThisNightmare();
     }
@@ -173,12 +174,13 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, CompIdx type, ref TEvent args)
+        public void RaiseComponentEvent<TEvent, TComponent>(EntityUid uid, TComponent component, CompIdx type, ref TEvent args)
             where TEvent : notnull
+            where TComponent : IComponent
         {
             ref var unitRef = ref Unsafe.As<TEvent, Unit>(ref args);
 
-            DispatchComponent<TEvent>(
+            DispatchComponent<TEvent, TComponent>(
                 uid,
                 component,
                 type,
@@ -667,12 +669,13 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private void DispatchComponent<TEvent>(
+        private void DispatchComponent<TEvent, TComponent>(
             EntityUid euid,
-            IComponent component,
+            TComponent component,
             CompIdx baseType,
             ref Unit args)
             where TEvent : notnull
+            where TComponent : IComponent
         {
             if (_compEventSubs[baseType.Value].TryGetValue(typeof(TEvent), out var reg))
                 reg.Handler(euid, component, ref args);

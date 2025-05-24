@@ -61,6 +61,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Roslyn", "Roslyn", "{50CEB8
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.Shared.CompNetworkGenerator", "Robust.Shared.CompNetworkGenerator\Robust.Shared.CompNetworkGenerator.csproj", "{6AD8DA1A-C807-47B7-A251-97BE0AB381DB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.LanguageServer", "Robust.LanguageServer\Robust.LanguageServer.csproj", "{F74C8C2F-27E1-4926-826E-F22F3698E299}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -261,6 +263,14 @@ Global
 		{6AD8DA1A-C807-47B7-A251-97BE0AB381DB}.Release|Any CPU.Build.0 = Release|Any CPU
 		{6AD8DA1A-C807-47B7-A251-97BE0AB381DB}.Release|x64.ActiveCfg = Release|Any CPU
 		{6AD8DA1A-C807-47B7-A251-97BE0AB381DB}.Release|x64.Build.0 = Release|Any CPU
+		{F74C8C2F-27E1-4926-826E-F22F3698E299}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F74C8C2F-27E1-4926-826E-F22F3698E299}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F74C8C2F-27E1-4926-826E-F22F3698E299}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F74C8C2F-27E1-4926-826E-F22F3698E299}.Debug|x64.Build.0 = Debug|Any CPU
+		{F74C8C2F-27E1-4926-826E-F22F3698E299}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F74C8C2F-27E1-4926-826E-F22F3698E299}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F74C8C2F-27E1-4926-826E-F22F3698E299}.Release|x64.ActiveCfg = Release|Any CPU
+		{F74C8C2F-27E1-4926-826E-F22F3698E299}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

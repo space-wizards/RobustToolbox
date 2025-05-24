@@ -238,7 +238,9 @@ internal sealed partial class MidiManager : IMidiManager
             NFluidsynth.Logger.LogLevel.Debug => LogLevel.Debug,
             _ => LogLevel.Debug
         };
-        _fluidsynthSawmill.Log(rLevel, message);
+
+        if (!message.Contains("Not a SoundFont file"))
+            _fluidsynthSawmill.Log(rLevel, message);
     }
 
     public IMidiRenderer? GetNewRenderer(bool mono = true)

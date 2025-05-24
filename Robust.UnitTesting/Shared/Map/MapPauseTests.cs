@@ -150,19 +150,17 @@ internal sealed class MapPauseTests
     {
         var sim = SimulationFactory();
         var entMan = sim.Resolve<IEntityManager>();
-        var mapMan = sim.Resolve<IMapManager>();
 
         // arrange
         var map1 = sim.CreateMap().Uid;
         entMan.System<SharedMapSystem>().SetPaused(map1, true);
         var newEnt = entMan.SpawnEntity(null, new EntityCoordinates(map1, default));
-        var xform = entMan.GetComponent<TransformComponent>(newEnt);
 
         var map2 = sim.CreateMap().Uid;
         entMan.System<SharedMapSystem>().SetPaused(map2, false);
 
         // Act
-        entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(xform.Owner, map2);
+        entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(newEnt, map2);
 
         var metaData = entMan.GetComponent<MetaDataComponent>(newEnt);
         Assert.That(metaData.EntityPaused, Is.False);
@@ -177,19 +175,17 @@ internal sealed class MapPauseTests
     {
         var sim = SimulationFactory();
         var entMan = sim.Resolve<IEntityManager>();
-        var mapMan = sim.Resolve<IMapManager>();
 
         // arrange
         var map1 = sim.CreateMap().Uid;
         entMan.System<SharedMapSystem>().SetPaused(map1, false);
         var newEnt = entMan.SpawnEntity(null, new EntityCoordinates(map1, default));
-        var xform = entMan.GetComponent<TransformComponent>(newEnt);
 
         var map2 = sim.CreateMap().Uid;
         entMan.System<SharedMapSystem>().SetPaused(map2, true);
 
         // Act
-        entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(xform.Owner, map2);
+        entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().SetParent(newEnt, map2);
 
         var metaData = entMan.GetComponent<MetaDataComponent>(newEnt);
         Assert.That(metaData.EntityPaused, Is.True);

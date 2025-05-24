@@ -122,10 +122,10 @@ public sealed class Collision_Test
     {
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
-        var mapManager = sim.Resolve<IMapManager>();
         var fixtures = entManager.System<FixtureSystem>();
         var physics = entManager.System<SharedPhysicsSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
+        var mapSystem = entManager.System<SharedMapSystem>();
         var mapId = sim.CreateMap().MapId;
         var mapId2 = sim.CreateMap().MapId;
 
@@ -151,7 +151,7 @@ public sealed class Collision_Test
         Assert.That(body1.ContactCount == 1 && body2.ContactCount == 1);
 
         // Reparent body2 and assert the contact is destroyed
-        xformSystem.SetParent(ent2, mapManager.GetMapEntityId(mapId2));
+        xformSystem.SetParent(ent2, mapSystem.GetMapOrInvalid(mapId2));
         physics.Update(0.01f);
 
         Assert.That(body1.ContactCount == 0 && body2.ContactCount == 0);

@@ -41,7 +41,7 @@ internal sealed class NetDisconnectMessageTest
         };
 
         var encoded = value.Encode();
-        TestContext.Write($"Encoded: {encoded}\n");
+        TestContext.Out.Write($"Encoded: {encoded}\n");
         var decodedAgain = NetDisconnectMessage.Decode(encoded);
 
         Assert.Multiple(() =>

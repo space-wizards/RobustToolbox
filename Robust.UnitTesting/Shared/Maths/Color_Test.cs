@@ -396,17 +396,6 @@ namespace Robust.UnitTesting.Shared.Maths
             Assert.That(MathHelper.CloseToPercent(color, controlColor));
         }
 
-        [Test]
-        public void ToFromHcy([ValueSource(nameof(FourFloatsSource))] (float, float, float, float) floats)
-        {
-            var (rf, gf, bf, af) = floats;
-
-            var controlColor = new Color(rf, gf, bf, af);
-            var color = Color.FromHcy(Color.ToHcy(controlColor));
-
-            Assert.That(MathHelper.CloseToPercent(color, controlColor));
-        }
-
         static IEnumerable<float> InterpolationValues => new float[]
         {
             0f,

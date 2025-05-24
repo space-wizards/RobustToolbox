@@ -27,12 +27,14 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var sim = SimulationFactory();
             var mapMan = sim.Resolve<IMapManager>();
+            var entMan = sim.Resolve<IEntityManager>();
+            var mapSys = entMan.System<SharedMapSystem>();
 
             var mapID = sim.CreateMap().MapId;
 
             mapMan.Restart();
 
-            Assert.That(mapMan.MapExists(mapID), Is.False);
+            Assert.That(mapSys.MapExists(mapID), Is.False);
         }
 
         /// <summary>
@@ -62,7 +64,7 @@ namespace Robust.UnitTesting.Shared.Map
             var sim = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var oldEntity = entMan.CreateEntityUninitialized(null, MapCoordinates.Nullspace);
-            entMan.InitializeComponents(oldEntity);
+            entMan.InitializeEntity(oldEntity);
             entMan.FlushEntities();
             Assert.That(entMan.Deleted(oldEntity), Is.True);
         }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
@@ -21,12 +22,16 @@ public sealed class MapGridMap_Tests
 
         var entManager = sim.Resolve<IEntityManager>();
         var mapManager = sim.Resolve<IMapManager>();
+        var mapSystem = entManager.System<SharedMapSystem>();
 
         var mapId = sim.CreateMap().MapId;
-        Assert.That(!mapManager.FindGridsIntersecting(mapId, Box2.UnitCentered).Any());
+        List<Entity<MapGridComponent>> grids = [];
+        mapManager.FindGridsIntersecting(mapId, Box2.UnitCentered, ref grids);
+        Assert.That(grids, Is.Empty);
 
-        entManager.AddComponent<MapGridComponent>(mapManager.GetMapEntityId(mapId));
-        Assert.That(mapManager.FindGridsIntersecting(mapId, Box2.UnitCentered).Count() == 1);
+        entManager.AddComponent<MapGridComponent>(mapSystem.GetMapOrInvalid(mapId));
+        mapManager.FindGridsIntersecting(mapId, Box2.UnitCentered, ref grids);
+        Assert.That(grids, Has.Count.EqualTo(1));
     }
 
     /// <summary>
@@ -46,7 +51,7 @@ public sealed class MapGridMap_Tests
 
         Assert.DoesNotThrow(() =>
         {
-            entManager.AddComponent<MapGridComponent>(mapManager.GetMapEntityId(mapId));
+            entManager.AddComponent<MapGridComponent>(mapSystem.GetMapOrInvalid(mapId));
             entManager.TickUpdate(0.016f, false);
         });
 

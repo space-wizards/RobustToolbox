@@ -35,11 +35,12 @@ public sealed class JointDeletion_Test : RobustIntegrationTest
         EntityUid ent2 = default!;
         PhysicsComponent body1;
         PhysicsComponent body2 = default!;
+        EntityUid mapEnt = default!;
         MapId mapId = default!;
 
         await server.WaitPost(() =>
         {
-            entManager.System<SharedMapSystem>().CreateMap(out mapId);
+            mapEnt = entManager.System<SharedMapSystem>().CreateMap(out mapId);
             ent1 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
             ent2 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.One, mapId));
 
@@ -67,11 +68,12 @@ public sealed class JointDeletion_Test : RobustIntegrationTest
         await server.WaitAssertion(() =>
         {
             Assert.That(joint.Enabled);
-            physicsSystem.SetAwake(ent2, body2, false);
+            physicsSystem.SetAwake((ent2, body2), false);
             Assert.That(!body2.Awake);
 
             entManager.DeleteEntity(ent2);
-            broadphase.FindNewContacts(mapId);
+            var physicsMap = entManager.GetComponent<PhysicsMapComponent>(mapEnt);
+            broadphase.FindNewContacts(physicsMap, mapId);
         });
     }
 }

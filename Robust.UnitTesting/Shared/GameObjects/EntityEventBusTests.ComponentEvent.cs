@@ -133,7 +133,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             var entManMock = new Mock<IEntityManager>();
 
+#pragma warning disable CS0618 // Type or member is obsolete
             compInstance.Owner = entUid;
+#pragma warning restore CS0618 // Type or member is obsolete
 
             var compRegistration = new ComponentRegistration(
                 "MetaData",

@@ -21,7 +21,6 @@ public sealed class Fixtures_Test
 
         var entManager = sim.Resolve<IEntityManager>();
         var sysManager = sim.Resolve<IEntitySystemManager>();
-        var fixturesSystem = sysManager.GetEntitySystem<FixtureSystem>();
         var physicsSystem = sysManager.GetEntitySystem<SharedPhysicsSystem>();
         var mapSystem = sysManager.GetEntitySystem<SharedMapSystem>();
         var map = sim.CreateMap().MapId;
@@ -30,7 +29,7 @@ public sealed class Fixtures_Test
         var body = entManager.AddComponent<PhysicsComponent>(ent);
         physicsSystem.SetBodyType(ent, BodyType.Dynamic, body: body);
         var fixture = new Fixture();
-        fixturesSystem.CreateFixture(ent, "fix1", fixture);
+        physicsSystem.CreateFixture(ent, "fix1", fixture);
 
         physicsSystem.SetDensity(ent, "fix1", fixture, 10f);
         Assert.That(fixture.Density, Is.EqualTo(10f));

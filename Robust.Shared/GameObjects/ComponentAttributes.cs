@@ -9,7 +9,14 @@ namespace Robust.Shared.GameObjects;
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
 [BaseTypeRequired(typeof(IComponent))]
 [MeansImplicitUse]
-public sealed class RegisterComponentAttribute : Attribute;
+public sealed class RegisterComponentAttribute(string[]? aliases = null) : Attribute
+{
+    /// <summary>
+    /// Aliases for this component. Aliases can be used to "merge" two components without having to update all entity
+    /// prototypes & map files.
+    /// </summary>
+    public string[]? Aliases = aliases;
+}
 
 /// <summary>
 /// Defines Name that this component is represented with in prototypes.

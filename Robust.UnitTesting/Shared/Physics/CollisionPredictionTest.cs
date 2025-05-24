@@ -64,7 +64,6 @@ public sealed class CollisionPredictionTest : RobustIntegrationTest
         await server.WaitPost(() => server.CfgMan.SetCVar(CVars.NetPVS, false));
         await client.WaitPost(() => netMan.ClientConnect(null!, 0, null!));
 
-        var sFix = server.System<FixtureSystem>();
         var sPhys = server.System<SharedPhysicsSystem>();
         var sSys = server.System<CollisionPredictionTestSystem>();
 
@@ -82,8 +81,8 @@ public sealed class CollisionPredictionTest : RobustIntegrationTest
             coords2 = new(Vector2.One, mapId);
             sEntity1 = server.EntMan.Spawn("CollisionTest1", coords1);
             sEntity2 = server.EntMan.Spawn("CollisionTest2", new MapCoordinates(coords2.Position + new Vector2(0, radius), mapId));
-            sFix.CreateFixture(sEntity1, "a", new Fixture(new PhysShapeCircle(radius), 1, 1, hard1));
-            sFix.CreateFixture(sEntity2, "a", new Fixture(new PhysShapeCircle(radius), 1, 1, hard2));
+            sPhys.CreateFixture(sEntity1, "a", new Fixture(new PhysShapeCircle(radius), 1, 1, hard1));
+            sPhys.CreateFixture(sEntity2, "a", new Fixture(new PhysShapeCircle(radius), 1, 1, hard2));
             sPhys.SetCanCollide(sEntity1, true);
             sPhys.SetCanCollide(sEntity2, true);
             sPhys.SetAwake((sEntity1, server.EntMan.GetComponent<PhysicsComponent>(sEntity1)), true);

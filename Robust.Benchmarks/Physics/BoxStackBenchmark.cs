@@ -49,16 +49,15 @@ public class PhysicsBoxStackBenchmark
     private void SetupTumbler(IEntityManager entManager, MapId mapId)
     {
         var physics = entManager.System<SharedPhysicsSystem>();
-        var fixtures = entManager.System<FixtureSystem>();
 
         var groundUid = entManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
         var ground = entManager.AddComponent<PhysicsComponent>(groundUid);
 
         var horizontal = new EdgeShape(new Vector2(-40, 0), new Vector2(40, 0));
-        fixtures.CreateFixture(groundUid, "fix1", new Fixture(horizontal, 2, 2, true), body: ground);
+        physics.CreateFixture(groundUid, "fix1", new Fixture(horizontal, 2, 2, true), body: ground);
 
         var vertical = new EdgeShape(new Vector2(10, 0), new Vector2(10, 10));
-        fixtures.CreateFixture(groundUid, "fix2", new Fixture(vertical, 2, 2, true), body: ground);
+        physics.CreateFixture(groundUid, "fix2", new Fixture(vertical, 2, 2, true), body: ground);
 
         var xs = new[]
         {
@@ -84,7 +83,7 @@ public class PhysicsBoxStackBenchmark
                 shape = new PolygonShape();
                 shape.SetAsBox(0.5f, 0.5f);
                 physics.SetFixedRotation(boxUid, false, body: box);
-                fixtures.CreateFixture(boxUid, "fix1", new Fixture(shape, 2, 2, true), body: box);
+                physics.CreateFixture(boxUid, "fix1", new Fixture(shape, 2, 2, true), body: box);
 
                 physics.WakeBody(boxUid, body: box);
                 physics.SetSleepingAllowed(boxUid, box, false);

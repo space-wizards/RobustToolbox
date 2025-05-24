@@ -52,9 +52,7 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
         await server.WaitIdleAsync();
 
         var entityManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var entitySystemManager = server.ResolveDependency<IEntitySystemManager>();
-        var fixtureSystem = entitySystemManager.GetEntitySystem<FixtureSystem>();
         var physSystem = entitySystemManager.GetEntitySystem<SharedPhysicsSystem>();
         var gravSystem = entitySystemManager.GetEntitySystem<Gravity2DController>();
         var transformSystem = entitySystemManager.GetEntitySystem<SharedTransformSystem>();
@@ -72,15 +70,14 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
 
             var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
             var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);
-            var groundManager = entityManager.EnsureComponent<FixturesComponent>(groundUid);
 
             var horizontal = new EdgeShape(new Vector2(-40, 0), new Vector2(40, 0));
-            fixtureSystem.CreateFixture(groundUid, "fix1", new Fixture(horizontal, 1, 1, true), manager: groundManager, body: ground);
+            physSystem.CreateFixture(groundUid, "fix1", new Fixture(horizontal, 1, 1, true), body: ground);
 
             var vertical = new EdgeShape(new Vector2(10, 0), new Vector2(10, 10));
-            fixtureSystem.CreateFixture(groundUid, "fix2", new Fixture(vertical, 1, 1, true), manager: groundManager, body: ground);
+            physSystem.CreateFixture(groundUid, "fix2", new Fixture(vertical, 1, 1, true), body: ground);
 
-            physSystem.WakeBody(groundUid, manager: groundManager, body: ground);
+            physSystem.WakeBody(groundUid, body: ground);
 
             var xs = new[]
             {
@@ -96,9 +93,8 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
                     var boxUid = entityManager.SpawnEntity(null,
                         new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 2.1f * i), mapId));
                     var box = entityManager.AddComponent<PhysicsComponent>(boxUid);
-                    var manager = entityManager.EnsureComponent<FixturesComponent>(boxUid);
 
-                    physSystem.SetBodyType(boxUid, BodyType.Dynamic, manager: manager, body: box);
+                    physSystem.SetBodyType(boxUid, BodyType.Dynamic, body: box);
                     var poly = new PolygonShape(0.001f);
                     poly.Set(new List<Vector2>()
                     {
@@ -108,8 +104,8 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
                         new(-0.5f, -0.5f),
                     });
 
-                    fixtureSystem.CreateFixture(boxUid, "fix1", new Fixture(poly, 1, 1, true), manager: manager, body: box);
-                    physSystem.WakeBody(boxUid, manager: manager, body: box);
+                    physSystem.CreateFixture(boxUid, "fix1", new Fixture(poly, 1, 1, true), body: box);
+                    physSystem.WakeBody(boxUid, body: box);
 
                     bodies[j * rowCount + i] = (boxUid, box);
                 }
@@ -158,9 +154,7 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
         await server.WaitIdleAsync();
 
         var entityManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var entitySystemManager = server.ResolveDependency<IEntitySystemManager>();
-        var fixtureSystem = entitySystemManager.GetEntitySystem<FixtureSystem>();
         var physSystem = entitySystemManager.GetEntitySystem<SharedPhysicsSystem>();
         var gravSystem = entitySystemManager.GetEntitySystem<Gravity2DController>();
         var transformSystem = entitySystemManager.GetEntitySystem<SharedTransformSystem>();
@@ -178,15 +172,14 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
 
             var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
             var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);
-            var groundManager = entityManager.EnsureComponent<FixturesComponent>(groundUid);
 
             var horizontal = new EdgeShape(new Vector2(-40, 0), new Vector2(40, 0));
-            fixtureSystem.CreateFixture(groundUid, "fix1", new Fixture(horizontal, 1, 1, true), manager: groundManager, body: ground);
+            physSystem.CreateFixture(groundUid, "fix1", new Fixture(horizontal, 1, 1, true), body: ground);
 
             var vertical = new EdgeShape(new Vector2(10, 0), new Vector2(10, 10));
-            fixtureSystem.CreateFixture(groundUid, "fix2", new Fixture(vertical, 1, 1, true), manager: groundManager, body: ground);
+            physSystem.CreateFixture(groundUid, "fix2", new Fixture(vertical, 1, 1, true), body: ground);
 
-            physSystem.WakeBody(groundUid, manager: groundManager, body: ground);
+            physSystem.WakeBody(groundUid, body: ground);
 
             var xs = new[]
             {
@@ -204,13 +197,12 @@ public sealed class PhysicsTestBedTest : RobustIntegrationTest
                     var circleUid = entityManager.SpawnEntity(null,
                         new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 1.1f * i), mapId));
                     var circle = entityManager.AddComponent<PhysicsComponent>(circleUid);
-                    var manager = entityManager.EnsureComponent<FixturesComponent>(circleUid);
 
                     physSystem.SetLinearDamping(circleUid, circle, 0.05f);
-                    physSystem.SetBodyType(circleUid, BodyType.Dynamic, manager: manager, body: circle);
+                    physSystem.SetBodyType(circleUid, BodyType.Dynamic, body: circle);
                     shape = new PhysShapeCircle(0.5f);
-                    fixtureSystem.CreateFixture(circleUid, "fix1",  new Fixture(shape, 1, 1, true), manager: manager, body: circle);
-                    physSystem.WakeBody(circleUid, manager: manager, body: circle);
+                    physSystem.CreateFixture(circleUid, "fix1",  new Fixture(shape, 1, 1, true), body: circle);
+                    physSystem.WakeBody(circleUid, body: circle);
 
                     bodies[j * rowCount + i] = (circleUid, circle);
                 }

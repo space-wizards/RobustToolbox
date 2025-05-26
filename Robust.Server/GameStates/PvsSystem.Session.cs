@@ -47,10 +47,7 @@ internal sealed partial class PvsSystem
 
         // Replay recordings get all playerstates to assist with admin investigations.
         // Note that this may also reveal underlying session UIDs and names upon viewing the replay.
-        if (session.Session == null)
-            _playerManager.GetPlayerStates(session.FromTick, session.PlayerStates);
-        else
-            _playerManager.GetPlayerState(session.FromTick, session.Session, session.PlayerStates);
+        _playerManager.GetPlayerState(session.FromTick, session.Session, session.PlayerStates);
 
         // lastAck varies with each client based on lag and such, we can't just make 1 global state and send it to everyone
 

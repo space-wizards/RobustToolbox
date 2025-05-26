@@ -12,7 +12,7 @@ internal abstract partial class SharedPlayerManager
         LastStateUpdate = Timing.CurTick;
     }
 
-    public void GetPlayerStates(GameTick fromTick, List<SessionState> states)
+    public void GetPlayerState(GameTick fromTick, ICommonSession? session, List<SessionState> states)
     {
         states.Clear();
         if (LastStateUpdate < fromTick)
@@ -20,30 +20,16 @@ internal abstract partial class SharedPlayerManager
 
         // TODO PlayerManager delta states
         // Track last update tick/time per session, and only send sessions that actually changed.
-
-        states.EnsureCapacity(InternalSessions.Count);
+        states.EnsureCapacity(session == null || ConfigManager.GetCVar(CVars.NetShareAllClientSessions) ? InternalSessions.Count : 1);
         foreach (var player in InternalSessions.Values)
         {
-            states.Add(player.State);
-        }
-    }
-
-    public void GetPlayerState(GameTick fromTick, ICommonSession session, List<SessionState> states)
-    {
-        states.Clear();
-        if (LastStateUpdate < fromTick)
-            return;
-
-        if (session == null)
-            return;
-
-        // TODO PlayerManager delta states
-        // Track last update tick/time per session, and only send sessions that actually changed.
-
-        states.EnsureCapacity(1);
-        foreach (var player in InternalSessions.Values)
-        {
-            if (session.UserId == player.UserId)
+            // Either we got the cvar on, or we're a replay, and therefore want all states...
+            if (ConfigManager.GetCVar(CVars.NetShareAllClientSessions) || session == null)
+            {
+                states.Add(player.State);
+            }
+            // ... Or we only concern ourselves with the single session's state
+            else if (session.UserId == player.UserId)
             {
                 states.Add(player.State);
                 return;

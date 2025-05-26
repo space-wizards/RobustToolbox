@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Manager.Definition;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -108,6 +110,78 @@ public partial class PrototypeManager
         }
 
         return dict;
+    }
+
+    HashSet<ErrorNode> IPrototypeManagerInternal.AnalyzeSingleFile(
+        TextReader reader,
+        out List<DocumentSymbol> symbols,
+        out List<(ValueDataNode, FieldDefinition)> fields,
+        string representedPath)
+    {
+        var yamlStream = new YamlStream();
+        yamlStream.Load(reader);
+
+        var result = new HashSet<ErrorNode>();
+        var prototypes = new Dictionary<Type, Dictionary<string, PrototypeValidationData>>();
+        symbols = new();
+
+        foreach (var doc in yamlStream.Documents)
+        {
+            var rootNode = (YamlSequenceNode)doc.RootNode;
+            foreach (YamlMappingNode node in rootNode.Cast<YamlMappingNode>())
+            {
+                var typeId = node.GetNode("type").AsString();
+                if (_ignoredPrototypeTypes.Contains(typeId))
+                {
+                    Sawmill.Warning($"Skipping ignored prototype {typeId}");
+                    continue;
+                }
+
+                if (!_kindNames.TryGetValue(typeId, out var type))
+                {
+                    throw new PrototypeLoadException($"Unknown prototype type: '{typeId}'");
+                }
+
+                var mapping = node.ToDataNodeCast<MappingDataNode>();
+                var id = mapping.Get<ValueDataNode>("id").Value;
+
+                var data = new PrototypeValidationData(id, mapping, representedPath);
+                mapping.Remove("type");
+
+                // The mapping and sequence nodes unfortunately do not report a useful End position
+                // so we have to check the last child node of each prototype to get the range.
+                if (node.AllNodes.LastOrDefault() is { } lastChild)
+                    symbols.Add(new DocumentSymbol(id, SymbolType.Prototype, node.Start, lastChild.End));
+
+                if (prototypes.GetOrNew(type).TryAdd(id, data))
+                    continue;
+
+                var error = new ErrorNode(mapping, $"Found dupe prototype ID of {id} for {type}");
+                result.Add(error);
+            }
+        }
+
+        var ctx = new YamlValidationContext();
+        var errors = new List<ErrorNode>();
+        foreach (var (type, instances) in prototypes)
+        {
+            foreach (var (id, data) in instances)
+            {
+                errors.Clear();
+
+                // Currently edited data is not persisted, but this will need to be added
+                // EnsurePushed(data, instances, type);
+
+                // Validate yaml directly
+                errors.AddRange(_serializationManager.ValidateNode(type, data.Mapping, ctx).GetErrors());
+                if (errors.Count > 0)
+                    result.UnionWith(errors);
+            }
+        }
+
+        fields = ctx.FieldDefinitions;
+
+        return result;
     }
 
     public Dictionary<Type, Dictionary<string, HashSet<ErrorNode>>> ValidateAllPrototypesSerializable(ISerializationContext? ctx)

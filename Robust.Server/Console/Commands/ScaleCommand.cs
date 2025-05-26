@@ -4,6 +4,7 @@ using Robust.Server.GameObjects;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
@@ -16,6 +17,20 @@ public sealed class ScaleCommand : LocalizedCommands
     [Dependency] private readonly IEntityManager _entityManager = default!;
 
     public override string Command => "scale";
+
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    {
+        switch (args.Length)
+        {
+            case 1:
+                return CompletionResult.FromOptions(CompletionHelper.NetEntities(args[0], entManager: _entityManager));
+            case 2:
+                return CompletionResult.FromHint(Loc.GetString("cmd-hint-float"));
+            default:
+                return CompletionResult.Empty;
+        }
+    }
+
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         if (args.Length != 2)

@@ -93,6 +93,10 @@ public sealed class DisconnectTest : RobustIntegrationTest
                 await client.WaitRunTicks(1);
             }
         }
+
+        await client.WaitPost(() => cNetMan.ClientDisconnect(""));
+        await server.WaitRunTicks(5);
+        await client.WaitRunTicks(5);
     }
 }
 

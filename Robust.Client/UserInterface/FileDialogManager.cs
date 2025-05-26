@@ -7,9 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using Robust.Client.Graphics;
-using Robust.Shared;
 using Robust.Shared.Console;
-using Robust.Shared.Asynchronous;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
@@ -30,18 +28,28 @@ namespace Robust.Client.UserInterface
         private bool _kDialogAvailable;
         private bool _checkedKDialogAvailable;
 
-        public async Task<Stream?> OpenFile(FileDialogFilters? filters = null)
+        public async Task<Stream?> OpenFile(
+            FileDialogFilters? filters = null,
+            FileAccess access = FileAccess.ReadWrite,
+            FileShare? share = null)
         {
+            if ((access & FileAccess.ReadWrite) != access)
+                throw new ArgumentException("Invalid file access specified");
+
+            var realShare = share ?? (access == FileAccess.Read ? FileShare.Read : FileShare.None);
+            if ((realShare & (FileShare.ReadWrite | FileShare.Delete)) != realShare)
+                throw new ArgumentException("Invalid file share specified");
+
+            string? name;
             if (_clyde.FileDialogImpl is { } clydeImpl)
-                return await clydeImpl.OpenFile(filters);
+                name = await clydeImpl.OpenFile(filters);
+            else
+                name = await GetOpenFileName(filters);
 
-            var name = await GetOpenFileName(filters);
             if (name == null)
-            {
                 return null;
-            }
 
-            return File.Open(name, FileMode.Open);
+            return File.Open(name, FileMode.Open, access, realShare);
         }
 
         private async Task<string?> GetOpenFileName(FileDialogFilters? filters)
@@ -54,24 +62,34 @@ namespace Robust.Client.UserInterface
             return await OpenFileNfd(filters);
         }
 
-        public async Task<(Stream, bool)?> SaveFile(FileDialogFilters? filters, bool truncate = true)
+        public async Task<(Stream, bool)?> SaveFile(
+            FileDialogFilters? filters,
+            bool truncate = true,
+            FileAccess access = FileAccess.ReadWrite,
+            FileShare share = FileShare.None)
         {
-            if (_clyde.FileDialogImpl is { } clydeImpl)
-                return await clydeImpl.SaveFile(filters);
+            if ((access & FileAccess.ReadWrite) != access)
+                throw new ArgumentException("Invalid file access specified");
 
-            var name = await GetSaveFileName(filters);
+            if ((share & (FileShare.ReadWrite | FileShare.Delete)) != share)
+                throw new ArgumentException("Invalid file share specified");
+
+            string? name;
+            if (_clyde.FileDialogImpl is { } clydeImpl)
+                name = await clydeImpl.SaveFile(filters);
+            else
+                name = await GetSaveFileName(filters);
+
             if (name == null)
-            {
                 return null;
-            }
 
             try
             {
-                return (File.Open(name, truncate ? FileMode.Truncate : FileMode.Open), true);
+                return (File.Open(name, truncate ? FileMode.Truncate : FileMode.Open, access, share), true);
             }
             catch (FileNotFoundException)
             {
-                return (File.Open(name, FileMode.Create), false);
+                return (File.Open(name, FileMode.Create, access, share), false);
             }
         }
 

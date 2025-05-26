@@ -268,7 +268,6 @@ namespace Robust.Server.Physics
                     newGrids[i] = newGridUid;
 
                     // Keep same origin / velocity etc; this makes updating a lot faster and easier.
-                    _xformSystem.SetWorldPosition(newGridXform, gridPos);
                     _xformSystem.SetWorldPositionRotation(newGridUid, gridPos, gridRot, newGridXform);
                     var splitBody = _bodyQuery.GetComponent(newGridUid);
                     _physics.SetLinearVelocity(newGridUid, mapBody.LinearVelocity, body: splitBody);
@@ -290,7 +289,7 @@ namespace Robust.Server.Physics
                     }
 
                     _maps.SetTiles(newGrid.Owner, newGrid.Comp, tileData);
-                    DebugTools.Assert(_mapManager.IsGrid(newGridUid), "A split grid had no tiles?");
+                    DebugTools.Assert(_gridQuery.HasComp(newGridUid), "A split grid had no tiles?");
 
                     // Set tiles on new grid + update anchored entities
                     foreach (var node in group)

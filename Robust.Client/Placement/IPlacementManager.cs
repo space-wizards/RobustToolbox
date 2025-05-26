@@ -24,9 +24,19 @@ namespace Robust.Client.Placement
         Direction Direction { get; set; }
 
         /// <summary>
-        /// Gets called when Direction changed (presently for EntitySpawnWindow UI)
+        /// Whether a tile placement should be mirrored or not.
+        /// </summary>
+        bool Mirrored { get; set; }
+
+        /// <summary>
+        /// Gets called when Direction changed (presently for EntitySpawnWindow/TileSpawnWindow UI)
         /// </summary>
         event EventHandler DirectionChanged;
+
+        /// <summary>
+        /// Gets called when Mirrored changed (presently for TileSpawnWindow UI)
+        /// </summary>
+        event EventHandler MirroredChanged;
 
         /// <summary>
         /// Gets called when the PlacementManager changed its build/erase mode or when the hijacks changed

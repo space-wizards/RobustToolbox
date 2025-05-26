@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.Collections;
 using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -22,7 +23,7 @@ public partial interface IEntityManager
     EntityUid[] SpawnEntities(MapCoordinates coordinates, params string?[] protoNames);
     EntityUid[] SpawnEntities(MapCoordinates coordinates, string? prototype, int count);
     EntityUid[] SpawnEntities(MapCoordinates coordinates, List<string?> protoNames);
-    void SpawnEntitiesAttachedTo(EntityCoordinates coordinates, IEnumerable<EntProtoId> protoNames);
+    ValueList<EntityUid> SpawnEntitiesAttachedTo(EntityCoordinates coordinates, IEnumerable<EntProtoId> protoNames);
     EntityUid[] SpawnEntitiesAttachedTo(EntityCoordinates coordinates, params EntProtoId[] protoNames);
     EntityUid[] SpawnEntitiesAttachedTo(EntityCoordinates coordinates, List<string?> protoNames);
     EntityUid[] SpawnEntitiesAttachedTo(EntityCoordinates coordinates, params string?[] protoNames);

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using Robust.Shared.Collections;
 using Robust.Shared.Containers;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
@@ -84,12 +85,17 @@ public partial class EntityManager
         return ents;
     }
 
-    public void SpawnEntitiesAttachedTo(EntityCoordinates coordinates, IEnumerable<EntProtoId> protoNames)
+    public ValueList<EntityUid> SpawnEntitiesAttachedTo(EntityCoordinates coordinates, IEnumerable<EntProtoId> protoNames)
     {
+        var ents = new ValueList<EntityUid>();
+
         foreach (var protoName in protoNames)
         {
-            SpawnAttachedTo(protoName, coordinates);
+            var uid = SpawnAttachedTo(protoName, coordinates);
+            ents.Add(uid);
         }
+
+        return ents;
     }
 
     public virtual EntityUid SpawnAttachedTo(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default)

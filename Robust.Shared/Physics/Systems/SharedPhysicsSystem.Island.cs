@@ -1058,12 +1058,6 @@ public abstract partial class SharedPhysicsSystem
             var angle = angles[offset + i];
             var xform = bodyEnt.Comp2;
 
-            // Temporary NaN guards until PVS is fixed.
-            if (!float.IsNaN(position.X) && !float.IsNaN(position.Y))
-            {
-                _transform.SetLocalPositionRotation(uid, xform.LocalPosition + position, xform.LocalRotation + angle, xform: xform);
-            }
-
             var linVelocity = linearVelocities[offset + i];
             var physicsDirtied = false;
 
@@ -1077,6 +1071,16 @@ public abstract partial class SharedPhysicsSystem
             if (!float.IsNaN(angVelocity))
             {
                 physicsDirtied |= SetAngularVelocity(uid, angVelocity, false, body: body);
+            }
+
+            // Temporary NaN guards until PVS is fixed.
+            // May reparent object and change body's velocity.
+            if (!float.IsNaN(position.X) && !float.IsNaN(position.Y))
+            {
+                _transform.SetLocalPositionRotation(uid,
+                    xform.LocalPosition + position,
+                    xform.LocalRotation + angle,
+                    xform);
             }
 
             if (physicsDirtied)

@@ -21,7 +21,7 @@ public sealed partial class MapMergeTest : RobustIntegrationTest
     [Test]
     public async Task TestMapMerge()
     {
-        var server = StartServer();
+        var server = StartServer(new() {Pool = false}); // Pool=false due to TileDef registration
         await server.WaitIdleAsync();
         var entMan = server.EntMan;
         var mapSys = server.System<SharedMapSystem>();
@@ -77,8 +77,8 @@ public sealed partial class MapMergeTest : RobustIntegrationTest
         AssertPreInit(grid);
 
         // Save then delete everything
-        Assert.That(loader.TrySaveMap(map, mapPath));
-        Assert.That(loader.TrySaveGrid(grid, gridPath));
+        await server.WaitAssertion(() => Assert.That(loader.TrySaveMap(map, mapPath)));
+        await server.WaitAssertion(() => Assert.That(loader.TrySaveGrid(grid, gridPath)));
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(3));
         await server.WaitPost(() => mapSys.DeleteMap(mapId));
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(0));
@@ -87,7 +87,7 @@ public sealed partial class MapMergeTest : RobustIntegrationTest
         await server.WaitPost(() => mapSys.CreateMap(out mapId, runMapInit: false));
         Assert.That(mapSys.IsInitialized(mapId), Is.False);
         Assert.That(mapSys.IsPaused(mapId), Is.True);
-        Assert.That(loader.TryLoadGrid(mapId, gridPath, out _));
+        await server.WaitAssertion(() => Assert.That(loader.TryLoadGrid(mapId, gridPath, out _)));
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(1));
         grid = Find(nameof(grid), entMan);
         AssertPaused(grid);
@@ -99,7 +99,7 @@ public sealed partial class MapMergeTest : RobustIntegrationTest
         await server.WaitPost(() => mapSys.CreateMap(out mapId, runMapInit: false));
         Assert.That(mapSys.IsInitialized(mapId), Is.False);
         Assert.That(mapSys.IsPaused(mapId), Is.True);
-        Assert.That(loader.TryMergeMap(mapId, mapPath, out _));
+        await server.WaitAssertion(() => Assert.That(loader.TryMergeMap(mapId, mapPath, out _)));
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(2)); // The loaded map entity gets deleted after merging
         ent = Find(nameof(ent), entMan);
         grid = Find(nameof(grid), entMan);
@@ -114,7 +114,7 @@ public sealed partial class MapMergeTest : RobustIntegrationTest
         await server.WaitPost(() => mapSys.CreateMap(out mapId, runMapInit: true));
         Assert.That(mapSys.IsInitialized(mapId), Is.True);
         Assert.That(mapSys.IsPaused(mapId), Is.False);
-        Assert.That(loader.TryLoadGrid(mapId, gridPath, out _));
+        await server.WaitAssertion(() => Assert.That(loader.TryLoadGrid(mapId, gridPath, out _)));
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(1));
         grid = Find(nameof(grid), entMan);
         AssertPaused(grid, false);
@@ -126,7 +126,7 @@ public sealed partial class MapMergeTest : RobustIntegrationTest
         await server.WaitPost(() => mapSys.CreateMap(out mapId, runMapInit: true));
         Assert.That(mapSys.IsInitialized(mapId), Is.True);
         Assert.That(mapSys.IsPaused(mapId), Is.False);
-        Assert.That(loader.TryMergeMap(mapId, mapPath, out _));
+        await server.WaitAssertion(() => Assert.That(loader.TryMergeMap(mapId, mapPath, out _)));
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(2));
         ent = Find(nameof(ent), entMan);
         grid = Find(nameof(grid), entMan);
@@ -142,7 +142,7 @@ public sealed partial class MapMergeTest : RobustIntegrationTest
         await server.WaitPost(() => mapSys.SetPaused(mapId, true));
         Assert.That(mapSys.IsInitialized(mapId), Is.True);
         Assert.That(mapSys.IsPaused(mapId), Is.True);
-        Assert.That(loader.TryLoadGrid(mapId, gridPath, out _));
+        await server.WaitAssertion(() => Assert.That(loader.TryLoadGrid(mapId, gridPath, out _)));
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(1));
         grid = Find(nameof(grid), entMan);
         AssertPaused(grid);
@@ -155,7 +155,7 @@ public sealed partial class MapMergeTest : RobustIntegrationTest
         await server.WaitPost(() => mapSys.SetPaused(mapId, true));
         Assert.That(mapSys.IsInitialized(mapId), Is.True);
         Assert.That(mapSys.IsPaused(mapId), Is.True);
-        Assert.That(loader.TryMergeMap(mapId, mapPath, out _));
+        await server.WaitAssertion(() => Assert.That(loader.TryMergeMap(mapId, mapPath, out _)));
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(2));
         ent = Find(nameof(ent), entMan);
         grid = Find(nameof(grid), entMan);
@@ -175,7 +175,7 @@ public sealed partial class MapMergeTest : RobustIntegrationTest
         Assert.That(mapSys.IsInitialized(mapId), Is.False);
         Assert.That(mapSys.IsPaused(mapId), Is.True);
         var opts = DeserializationOptions.Default with {InitializeMaps = true};
-        Assert.That(loader.TryLoadGrid(mapId, gridPath, out _, opts));
+        await server.WaitAssertion(() => Assert.That(loader.TryLoadGrid(mapId, gridPath, out _, opts)));
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(1));
         grid = Find(nameof(grid), entMan);
         AssertPaused(grid);
@@ -188,7 +188,7 @@ public sealed partial class MapMergeTest : RobustIntegrationTest
         Assert.That(mapSys.IsInitialized(mapId), Is.False);
         Assert.That(mapSys.IsPaused(mapId), Is.True);
         opts = DeserializationOptions.Default with {InitializeMaps = true};
-        Assert.That(loader.TryMergeMap(mapId, mapPath, out _));
+        await server.WaitAssertion(() => Assert.That(loader.TryMergeMap(mapId, mapPath, out _, opts)));
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(2)); // The loaded map entity gets deleted after merging
         ent = Find(nameof(ent), entMan);
         grid = Find(nameof(grid), entMan);
@@ -204,7 +204,7 @@ public sealed partial class MapMergeTest : RobustIntegrationTest
         Assert.That(mapSys.IsInitialized(mapId), Is.True);
         Assert.That(mapSys.IsPaused(mapId), Is.False);
         opts = DeserializationOptions.Default with {PauseMaps = true};
-        Assert.That(loader.TryLoadGrid(mapId, gridPath, out _));
+        await server.WaitAssertion(() => Assert.That(loader.TryLoadGrid(mapId, gridPath, out _, opts)));
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(1));
         grid = Find(nameof(grid), entMan);
         AssertPaused(grid, false);
@@ -217,7 +217,7 @@ public sealed partial class MapMergeTest : RobustIntegrationTest
         Assert.That(mapSys.IsInitialized(mapId), Is.True);
         Assert.That(mapSys.IsPaused(mapId), Is.False);
         opts = DeserializationOptions.Default with {PauseMaps = true};
-        Assert.That(loader.TryMergeMap(mapId, mapPath, out _));
+        await server.WaitAssertion(() => Assert.That(loader.TryMergeMap(mapId, mapPath, out _, opts)));
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(2));
         ent = Find(nameof(ent), entMan);
         grid = Find(nameof(grid), entMan);

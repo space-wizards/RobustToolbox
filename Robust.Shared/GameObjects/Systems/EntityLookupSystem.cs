@@ -85,7 +85,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
     private EntityQuery<BroadphaseComponent> _broadQuery;
     private EntityQuery<ContainerManagerComponent> _containerQuery;
     private EntityQuery<FixturesComponent> _fixturesQuery;
-
+    private EntityQuery<MapComponent> _mapQuery;
     private EntityQuery<MapGridComponent> _gridQuery;
     private EntityQuery<MetaDataComponent> _metaQuery;
     private EntityQuery<PhysicsComponent> _physicsQuery;
@@ -114,6 +114,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
         _broadQuery = GetEntityQuery<BroadphaseComponent>();
         _containerQuery = GetEntityQuery<ContainerManagerComponent>();
         _fixturesQuery = GetEntityQuery<FixturesComponent>();
+        _mapQuery = GetEntityQuery<MapComponent>();
         _gridQuery = GetEntityQuery<MapGridComponent>();
         _metaQuery = GetEntityQuery<MetaDataComponent>();
         _physicsQuery = GetEntityQuery<PhysicsComponent>();
@@ -169,7 +170,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
                 continue;
 
             DebugTools.Assert(childXform.Broadphase.Value.Uid == component.Owner);
-            DebugTools.Assert(!_mapManager.IsGrid(child));
+            DebugTools.Assert(!_gridQuery.HasComp(child));
 
             if (childXform.Broadphase.Value.CanCollide && _fixturesQuery.TryGetComponent(child, out var fixtures))
             {
@@ -358,7 +359,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
         if (xform.GridUid == uid)
             return;
-        DebugTools.Assert(!_mapManager.IsGrid(uid));
+        DebugTools.Assert(!HasComp<MapGridComponent>(uid));
 
         if (xform.Broadphase is not { Valid: true } old)
             return; // entity is not on any broadphase
@@ -498,7 +499,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
     private void OnEntityInit(Entity<MetaDataComponent> uid)
     {
-        if (_container.IsEntityOrParentInContainer(uid, uid) || _mapManager.IsMap(uid) || _mapManager.IsGrid(uid))
+        if (_container.IsEntityOrParentInContainer(uid, uid) || _mapQuery.HasComp(uid) || _gridQuery.HasComp(uid))
             return;
 
         // TODO can this just be done implicitly via transform startup?
@@ -518,11 +519,11 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
             return;
         }
-        DebugTools.Assert(!_mapManager.IsGrid(args.Sender));
+        DebugTools.Assert(!_gridQuery.HasComp(args.Sender));
 
         if (args.Component.MapUid == args.Sender)
             return;
-        DebugTools.Assert(!_mapManager.IsMap(args.Sender));
+        DebugTools.Assert(!_mapQuery.HasComp(args.Sender));
 
         if (args.ParentChanged)
             UpdateParent(args.Sender, args.Component);

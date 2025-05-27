@@ -36,7 +36,7 @@ public sealed partial class EntityManagerCopyTests
 
         var targetComp = entManager.CopyComponent(original, target, comp);
 
-        Assert.That(targetComp!.Owner == target);
+        Assert.That(entManager.GetComponent<AComponent>(target), Is.EqualTo(targetComp));
         Assert.That(targetComp.Value, Is.EqualTo(comp.Value));
         Assert.That(!ReferenceEquals(comp, targetComp));
     }
@@ -67,7 +67,7 @@ public sealed partial class EntityManagerCopyTests
 
         var targetComp = entManager.CopyComponent(original, target, (IComponent) comp);
 
-        Assert.That(targetComp!.Owner == target);
+        Assert.That(entManager.GetComponent<AComponent>(target), Is.EqualTo(targetComp));
         Assert.That(((AComponent) targetComp).Value, Is.EqualTo(comp.Value));
         Assert.That(!ReferenceEquals(comp, targetComp));
     }
@@ -102,10 +102,10 @@ public sealed partial class EntityManagerCopyTests
         var targetComp = entManager.GetComponent<AComponent>(target);
         var targetComp2 = entManager.GetComponent<BComponent>(target);
 
-        Assert.That(targetComp!.Owner == target);
+        Assert.That(entManager.GetComponent<AComponent>(target), Is.EqualTo(targetComp));
         Assert.That(targetComp.Value, Is.EqualTo(comp.Value));
 
-        Assert.That(targetComp2!.Owner == target);
+        Assert.That(entManager.GetComponent<BComponent>(target), Is.EqualTo(targetComp2));
         Assert.That(targetComp2.Value, Is.EqualTo(comp2.Value));
 
         Assert.That(!ReferenceEquals(comp, targetComp));
@@ -142,16 +142,16 @@ public sealed partial class EntityManagerCopyTests
         var targetComp = entManager.GetComponent<AComponent>(target);
         var targetComp2 = entManager.GetComponent<BComponent>(target);
 
-        Assert.That(targetComp!.Owner == target);
+        Assert.That(entManager.GetComponent<AComponent>(target), Is.EqualTo(targetComp));
         Assert.That(targetComp.Value, Is.EqualTo(comp.Value));
 
-        Assert.That(targetComp2!.Owner == target);
+        Assert.That(entManager.GetComponent<BComponent>(target), Is.EqualTo(targetComp2));
         Assert.That(targetComp2.Value, Is.EqualTo(comp2.Value));
 
         Assert.That(!ReferenceEquals(comp, targetComp));
         Assert.That(!ReferenceEquals(comp2, targetComp2));
     }
-    
+
     [DataDefinition]
     private sealed partial class AComponent : Component
     {

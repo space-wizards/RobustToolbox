@@ -87,7 +87,7 @@ public sealed partial class LifestageSerializationTest : RobustIntegrationTest
         async Task Load(ResPath f, DeserializationOptions? o)
         {
             Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(0));
-            await server.WaitPost(() => Assert.That(loader.TryLoadMap(f, out _, out _, o)));
+            await server.WaitAssertion(() => Assert.That(loader.TryLoadMap(f, out _, out _, o)));
             Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(5));
         }
 
@@ -275,7 +275,7 @@ public sealed partial class LifestageSerializationTest : RobustIntegrationTest
             {
                 DeserializationOptions = o ?? DeserializationOptions.Default
             };
-            await server.WaitPost(() => Assert.That(loader.TryLoadGeneric(f, out _, oo)));
+            await server.WaitAssertion(() => Assert.That(loader.TryLoadGeneric(f, out _, oo)));
             Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(8));
         }
 

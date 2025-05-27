@@ -273,8 +273,6 @@ namespace Robust.Shared.ContentPack
 
         public IEnumerable<string> ContentGetDirectoryEntries(ResPath path)
         {
-            ArgumentNullException.ThrowIfNull(path, nameof(path));
-
             if (!path.IsRooted)
                 throw new ArgumentException("Path is not rooted", nameof(path));
 

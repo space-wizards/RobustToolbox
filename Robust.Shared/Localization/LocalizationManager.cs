@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
@@ -12,6 +13,7 @@ using Linguini.Shared.Types.Bundle;
 using Linguini.Syntax.Ast;
 using Linguini.Syntax.Parser;
 using Linguini.Syntax.Parser.Error;
+using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -22,8 +24,11 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Localization
 {
-    internal sealed partial class LocalizationManager : ILocalizationManagerInternal, IPostInjectInit
+    internal abstract partial class LocalizationManager : ILocalizationManagerInternal
     {
+        protected static readonly ResPath LocaleDirPath = new("/Locale");
+
+        [Dependency] private readonly IConfigurationManager _configuration = default!;
         [Dependency] private readonly IResourceManager _res = default!;
         [Dependency] private readonly ILogManager _log = default!;
         [Dependency] private readonly IPrototypeManager _prototype = default!;
@@ -35,10 +40,24 @@ namespace Robust.Shared.Localization
         private (CultureInfo, FluentBundle)? _defaultCulture;
         private (CultureInfo, FluentBundle)[] _fallbackCultures = Array.Empty<(CultureInfo, FluentBundle)>();
 
-        void IPostInjectInit.PostInject()
+        void ILocalizationManager.Initialize() => Initialize();
+
+        public virtual void Initialize()
         {
             _logSawmill = _log.GetSawmill("loc");
             _prototype.PrototypesReloaded += OnPrototypesReloaded;
+        }
+
+        public CultureInfo SetDefaultCulture()
+        {
+            var code = _configuration.GetCVar(CVars.LocCultureName);
+
+            var culture = CultureInfo.GetCultureInfo(code, predefinedOnly: false);
+            SetCulture(culture);
+
+            // Return the culture for further work with it,
+            // like of adding functions
+            return culture;
         }
 
         public string GetString(string messageId)
@@ -337,6 +356,17 @@ namespace Robust.Shared.Localization
             }
         }
 
+        public void SetCulture(CultureInfo culture)
+        {
+            if (!HasCulture(culture))
+                LoadCulture(culture);
+
+            if (DefaultCulture?.NameEquals(culture) ?? false)
+                return;
+
+            DefaultCulture = culture;
+        }
+
         public bool HasCulture(CultureInfo culture)
         {
             return _contexts.ContainsKey(culture);
@@ -344,6 +374,10 @@ namespace Robust.Shared.Localization
 
         public void LoadCulture(CultureInfo culture)
         {
+            // Attempting to load an already loaded culture
+            if (HasCulture(culture))
+                throw new InvalidOperationException("Culture is already loaded");
+
             var bundle = LinguiniBuilder.Builder()
                 .CultureInfo(culture)
                 .SkipResources()
@@ -356,6 +390,20 @@ namespace Robust.Shared.Localization
 
             _initData(_res, culture, bundle);
             DefaultCulture ??= culture;
+        }
+
+        public List<CultureInfo> GetFoundCultures()
+        {
+            var result = new List<CultureInfo>();
+            foreach (var name in _res.ContentGetDirectoryEntries(LocaleDirPath))
+            {
+                // Remove last "/" symbol
+                // Example "en-US/" -> "en-US"
+                var cultureName = name.TrimEnd('/');
+                result.Add(CultureInfo.GetCultureInfo(cultureName, predefinedOnly: false));
+            }
+
+            return result;
         }
 
         public void SetFallbackCluture(params CultureInfo[] cultures)
@@ -438,7 +486,7 @@ namespace Robust.Shared.Localization
             // Load data from .ftl files.
             // Data is loaded from /Locale/<language-code>/*
 
-            var root = new ResPath($"/Locale/{culture.Name}/");
+            var root = LocaleDirPath / culture.Name;
 
             var files = resourceManager.ContentFindFiles(root)
                 .Where(c => c.Filename.EndsWith(".ftl", StringComparison.InvariantCultureIgnoreCase))

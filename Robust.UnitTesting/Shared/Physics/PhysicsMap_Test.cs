@@ -23,16 +23,17 @@ public sealed class PhysicsMap_Test
     {
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
-        var mapManager = sim.Resolve<IMapManager>();
         var system = entManager.EntitySysManager;
         var physSystem = system.GetEntitySystem<SharedPhysicsSystem>();
         var fixtureSystem = system.GetEntitySystem<FixtureSystem>();
         var xformSystem = system.GetEntitySystem<SharedTransformSystem>();
 
-        var mapId = sim.CreateMap().MapId;
-        var mapId2 = sim.CreateMap().MapId;
-        var mapUid = mapManager.GetMapEntityId(mapId);
-        var mapUid2 = mapManager.GetMapEntityId(mapId2);
+        var map = sim.CreateMap();
+        var map2 = sim.CreateMap();
+        var mapId = map.MapId;
+        var mapId2 = map2.MapId;
+        var mapUid = map.Uid;
+        var mapUid2 = map2.Uid;
 
         var parent = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
         var parentXform = entManager.GetComponent<TransformComponent>(parent);

@@ -456,7 +456,6 @@ public sealed partial class EntityLookupSystem : EntitySystem
     {
         var moveBuffer = _physics.MoveBuffer;
 
-
         // Moving
         if (fixture.ProxyCount > 0)
         {

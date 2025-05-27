@@ -33,7 +33,6 @@ public partial class SharedPhysicsSystem
         LerpData = new();
 
     // TODO:
-    // - Need to triplecheck that one test
     // - Add test that movebuffer removes entities moved to nullspace.
 
     // Previously we stored the WorldAABB of the proxy being moved and tracked state.

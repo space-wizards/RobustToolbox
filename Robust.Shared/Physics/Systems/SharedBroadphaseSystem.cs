@@ -458,11 +458,11 @@ namespace Robust.Shared.Physics.Systems
 
             foreach (var fixture in entity.Comp2.Fixtures.Values)
             {
-                TouchProxies(entity.Comp3.MapUid.Value,  fixture);
+                TouchProxies(fixture);
             }
         }
 
-        internal void TouchProxies(EntityUid mapId, Fixture fixture)
+        internal void TouchProxies(Fixture fixture)
         {
             foreach (var proxy in fixture.Proxies)
             {
@@ -492,7 +492,7 @@ namespace Robust.Shared.Physics.Systems
             if (!_xformQuery.TryGetComponent(xform.Broadphase?.Uid, out var broadphase))
                 return;
 
-            TouchProxies(xform.MapUid.Value, fixture);
+            TouchProxies(fixture);
         }
 
         internal void GetBroadphases(MapId mapId, Box2 aabb, BroadphaseCallback callback)

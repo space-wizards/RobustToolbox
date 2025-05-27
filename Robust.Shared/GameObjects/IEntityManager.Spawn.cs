@@ -23,7 +23,7 @@ public partial interface IEntityManager
     EntityUid[] SpawnEntities(MapCoordinates coordinates, params string?[] protoNames);
     EntityUid[] SpawnEntities(MapCoordinates coordinates, string? prototype, int count);
     EntityUid[] SpawnEntities(MapCoordinates coordinates, List<string?> protoNames);
-    ValueList<EntityUid> SpawnEntitiesAttachedTo(EntityCoordinates coordinates, IEnumerable<EntProtoId> protoNames);
+    EntityUid[] SpawnEntitiesAttachedTo(EntityCoordinates coordinates, IEnumerable<EntProtoId> protoNames);
     EntityUid[] SpawnEntitiesAttachedTo(EntityCoordinates coordinates, params EntProtoId[] protoNames);
     EntityUid[] SpawnEntitiesAttachedTo(EntityCoordinates coordinates, List<string?> protoNames);
     EntityUid[] SpawnEntitiesAttachedTo(EntityCoordinates coordinates, params string?[] protoNames);

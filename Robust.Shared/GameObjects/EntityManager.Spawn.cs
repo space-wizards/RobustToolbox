@@ -85,7 +85,7 @@ public partial class EntityManager
         return ents;
     }
 
-    public ValueList<EntityUid> SpawnEntitiesAttachedTo(EntityCoordinates coordinates, IEnumerable<EntProtoId> protoNames)
+    public EntityUid[] SpawnEntitiesAttachedTo(EntityCoordinates coordinates, IEnumerable<EntProtoId> protoNames)
     {
         var ents = new ValueList<EntityUid>();
 
@@ -95,7 +95,7 @@ public partial class EntityManager
             ents.Add(uid);
         }
 
-        return ents;
+        return ents.ToArray();
     }
 
     public virtual EntityUid SpawnAttachedTo(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default)

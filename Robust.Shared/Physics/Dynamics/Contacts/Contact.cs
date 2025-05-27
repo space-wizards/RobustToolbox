@@ -256,6 +256,11 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 {
                     status = ContactStatus.EndTouching;
                 }
+                // Still touching
+                else
+                {
+                    status = ContactStatus.Touching;
+                }
             }
 
 #if DEBUG

@@ -47,9 +47,7 @@ public sealed class Broadphase_Test
         Assert.That(!dynamicBody.Awake);
 
         // Clear move buffer
-        entManager.System<SharedBroadphaseSystem>().FindNewContacts(
-            entManager.GetComponent<PhysicsMapComponent>(mapEnt),
-            entManager.GetComponent<MapComponent>(mapEnt).MapId);
+        entManager.System<SharedBroadphaseSystem>().FindNewContacts();
 
         var staticEnt = entManager.SpawnAtPosition(null, new EntityCoordinates(mapEnt, Vector2.Zero));
         var staticBody = entManager.AddComponent<PhysicsComponent>(staticEnt);
@@ -61,9 +59,7 @@ public sealed class Broadphase_Test
         Assert.That(!staticBody.Awake);
         Assert.That(staticBody.ContactCount, Is.EqualTo(0));
 
-        entManager.System<SharedBroadphaseSystem>().FindNewContacts(
-            entManager.GetComponent<PhysicsMapComponent>(mapEnt),
-            entManager.GetComponent<MapComponent>(mapEnt).MapId);
+        entManager.System<SharedBroadphaseSystem>().FindNewContacts();
 
         Assert.That(staticBody.ContactCount, Is.EqualTo(1));
 

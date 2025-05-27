@@ -133,7 +133,7 @@ public abstract partial class SharedPhysicsSystem
         PhysicsComponent? component = null,
         TransformComponent? xform = null)
     {
-        if (!_xformQuery.Resolve(uid, ref xform))
+        if (!XformQuery.Resolve(uid, ref xform))
             return 0f;
 
         PhysicsQuery.Resolve(uid, ref component, false);
@@ -161,7 +161,7 @@ public abstract partial class SharedPhysicsSystem
         PhysicsComponent? component = null,
         TransformComponent? xform = null)
     {
-        if (!_xformQuery.Resolve(uid, ref xform))
+        if (!XformQuery.Resolve(uid, ref xform))
             return (Vector2.Zero, 0);
 
         PhysicsQuery.Resolve(uid, ref component, false);

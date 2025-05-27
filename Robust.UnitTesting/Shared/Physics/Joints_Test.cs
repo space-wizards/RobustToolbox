@@ -39,7 +39,7 @@ public sealed class Joints_Test
 
         var containerSys = entManager.System<SharedContainerSystem>();
         var container = containerSys.EnsureContainer<Container>(uidC, "weh");
-        var joint = jointSystem.CreateDistanceJoint(uidA, uidB);
+        jointSystem.CreateDistanceJoint(uidA, uidB);
         jointSystem.Update(0.016f);
 
         containerSys.Insert(uidA, container);
@@ -73,7 +73,6 @@ public sealed class Joints_Test
 
         var map = server.CreateMap();
         var mapId = map.MapId;
-        var physicsMapComp = entManager.GetComponent<PhysicsMapComponent>(map.Uid);
 
         var ent1 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
         var ent2 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));

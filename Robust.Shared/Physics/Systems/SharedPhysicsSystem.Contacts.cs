@@ -303,7 +303,7 @@ public abstract partial class SharedPhysicsSystem
         // Checking only bodyA should be okay because if bodyA is the other ent (i.e. dynamic / kinematic) then it should already be awake.
         if (bodyA.BodyType == BodyType.Static && !bodyB.Awake)
         {
-            WakeBody(uidB, body: bodyB);
+            WakeBody(entB.Owner, body: bodyB);
         }
     }
 

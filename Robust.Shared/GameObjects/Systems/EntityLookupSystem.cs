@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 using System.Numerics;
 using Robust.Shared.Containers;
 using Robust.Shared.IoC;
@@ -297,6 +298,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
             return default;
         }
 
+        // Fast-path if it's directly parented.
         if (xform.ParentUid == tree)
             return GetAABBNoContainer(entity, xform.LocalPosition, xform.LocalRotation);
 
@@ -306,7 +308,12 @@ public sealed partial class EntityLookupSystem : EntitySystem
             return default;
         }
 
-        return _transform.GetInvWorldMatrix(treeXform).TransformBox(GetWorldAABB(entity, xform));
+        var invMatrix = _transform.GetInvWorldMatrix(treeXform);
+        var ourMatrix = _transform.GetWorldMatrix(xform);
+        var localMatrix = Matrix3x2.Multiply(invMatrix, ourMatrix);
+        var aabb = GetAABB(entity, localMatrix.Translation, localMatrix.Rotation(), xform);
+
+        return aabb;
     }
 
     internal void CreateProxies(EntityUid uid, string fixtureId, Fixture fixture, TransformComponent xform,
@@ -937,12 +944,70 @@ public sealed partial class EntityLookupSystem : EntitySystem
     #region Bounds
 
     /// <summary>
+    /// Gets the AABB of an entity assuming default position and ignoring containers, for hard fixtures only.
+    /// </summary>
+    [Pure]
+    public Box2 GetLocalHardAABB(Entity<FixturesComponent?> ent)
+    {
+        if (_fixturesQuery.Resolve(ent.Owner, ref ent.Comp, false))
+        {
+            var transform = new Transform(Vector2.Zero, Angle.Zero);
+
+            var bounds = new Box2(transform.Position, transform.Position);
+            foreach (var fixture in ent.Comp.Fixtures.Values)
+            {
+                if (!fixture.Hard)
+                    continue;
+
+                for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                {
+                    var boundy = fixture.Shape.ComputeAABB(transform, i);
+                    bounds = bounds.Union(boundy);
+                }
+            }
+
+            return bounds;
+        }
+
+        // Arbitrarily small box for the entity.
+        return new Box2(-0.00001f, -0.00001f, 0.00001f, 0.00001f);
+    }
+
+    /// <summary>
+    /// Gets the AABB of an entity assuming default position and ignoring containers.
+    /// </summary>
+    [Pure]
+    public Box2 GetLocalAABB(Entity<FixturesComponent?> ent)
+    {
+        if (_fixturesQuery.Resolve(ent.Owner, ref ent.Comp, false))
+        {
+            var transform = new Transform(Vector2.Zero, Angle.Zero);
+
+            var bounds = new Box2(transform.Position, transform.Position);
+            foreach (var fixture in ent.Comp.Fixtures.Values)
+            {
+                for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                {
+                    var boundy = fixture.Shape.ComputeAABB(transform, i);
+                    bounds = bounds.Union(boundy);
+                }
+            }
+
+            return bounds;
+        }
+
+        // Arbitrarily small box for the entity.
+        return new Box2(-0.00001f, -0.00001f, 0.00001f, 0.00001f);
+    }
+
+    /// <summary>
     /// Get the AABB of an entity with the supplied position and angle. Tries to consider if the entity is in a container.
     /// </summary>
-    public Box2 GetAABB(EntityUid uid, Vector2 position, Angle angle, TransformComponent xform, EntityQuery<TransformComponent> xformQuery)
+    [Pure]
+    public Box2 GetAABB(EntityUid uid, Vector2 position, Angle angle, TransformComponent xform)
     {
         // If we're in a container then we just use the container's bounds.
-        if (_container.TryGetOuterContainer(uid, xform, out var container, xformQuery))
+        if (_container.TryGetOuterContainer(uid, xform, out var container, _xformQuery))
         {
             return GetAABBNoContainer(container.Owner, position, angle);
         }
@@ -953,25 +1018,12 @@ public sealed partial class EntityLookupSystem : EntitySystem
     /// <summary>
     /// Get the AABB of an entity with the supplied position and angle without considering containers.
     /// </summary>
+    [Pure]
     public Box2 GetAABBNoContainer(EntityUid uid, Vector2 position, Angle angle)
     {
         if (_fixturesQuery.TryGetComponent(uid, out var fixtures))
         {
-            var transform = new Transform(position, angle);
-
-            var bounds = new Box2(transform.Position, transform.Position);
-            // TODO cache this to speed up entity lookups & tree updating
-            foreach (var fixture in fixtures.Fixtures.Values)
-            {
-                for (var i = 0; i < fixture.Shape.ChildCount; i++)
-                {
-                    // TODO don't transform each fixture, just transform the final AABB
-                    var boundy = fixture.Shape.ComputeAABB(transform, i);
-                    bounds = bounds.Union(boundy);
-                }
-            }
-
-            return bounds;
+            return GetLocalAABB((uid, fixtures));
         }
 
         var ev = new WorldAABBEvent()
@@ -983,13 +1035,13 @@ public sealed partial class EntityLookupSystem : EntitySystem
         return ev.AABB;
     }
 
+    [Pure]
     public Box2 GetWorldAABB(EntityUid uid, TransformComponent? xform = null)
     {
-        var xformQuery = GetEntityQuery<TransformComponent>();
-        xform ??= xformQuery.GetComponent(uid);
-        var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform, xformQuery);
+        xform ??= _xformQuery.GetComponent(uid);
+        var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform);
 
-        return GetAABB(uid, worldPos, worldRot, xform, xformQuery);
+        return GetAABB(uid, worldPos, worldRot, xform);
     }
 
     #endregion

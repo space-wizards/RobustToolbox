@@ -530,9 +530,12 @@ public sealed partial class EntityLookupSystem
         return intersecting;
     }
 
-    public void GetEntitiesInRange(EntityUid uid, float range, HashSet<EntityUid> entities, LookupFlags flags = DefaultFlags)
+    public void GetEntitiesInRange(Entity<TransformComponent?> uid, float range, HashSet<EntityUid> entities, LookupFlags flags = DefaultFlags)
     {
-        var mapPos = _transform.GetMapCoordinates(uid);
+        if (!EntityManager.TransformQuery.Resolve(uid.Owner, ref uid.Comp, false))
+            return;
+
+        var mapPos = _transform.GetMapCoordinates(uid.Owner, uid.Comp);
 
         if (mapPos.MapId == MapId.Nullspace)
             return;

@@ -59,10 +59,9 @@ namespace Robust.Client.GameObjects
     {
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-        private readonly IEntityManager _entMan = entMan;
-        private SharedTransformSystem XformSystem => _entMan.System<SharedTransformSystem>();
-        private SpriteSystem SpriteSystem => _entMan.System<SpriteSystem>();
-        private SpriteTreeSystem RenderTree => _entMan.System<SpriteTreeSystem>();
+        private readonly SharedTransformSystem _xformSystem = entMan.System<SharedTransformSystem>();
+        private readonly SpriteSystem _spriteSystem = entMan.System<SpriteSystem>();
+        private readonly SpriteTreeSystem _renderTree = entMan.System<SpriteTreeSystem>();
 
         protected internal override void Draw(in OverlayDrawArgs args)
         {
@@ -70,11 +69,11 @@ namespace Robust.Client.GameObjects
             var currentMap = args.MapId;
             var viewport = args.WorldBounds;
 
-            foreach (var entry in RenderTree.QueryAabb(currentMap, viewport))
+            foreach (var entry in _renderTree.QueryAabb(currentMap, viewport))
             {
                 var (sprite, xform) = entry;
-                var (worldPos, worldRot) = XformSystem.GetWorldPositionRotation(xform);
-                var bounds = SpriteSystem.CalculateBounds((entry.Uid, sprite), worldPos, worldRot, args.Viewport.Eye?.Rotation ?? default);
+                var (worldPos, worldRot) = _xformSystem.GetWorldPositionRotation(xform);
+                var bounds = _spriteSystem.CalculateBounds((entry.Uid, sprite), worldPos, worldRot, args.Viewport.Eye?.Rotation ?? default);
 
                 // Get scaled down bounds used to indicate the "south" of a sprite.
                 var localBound = bounds.Box;

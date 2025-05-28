@@ -39,19 +39,55 @@ END TEMPLATE-->
 
 ### New features
 
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 261.0.0
+
+### Breaking changes
+
+* Remove unused TryGetContainingContainer override.
+* Stop recursive FrameUpdates for controls that are not visible.
+* Initialize LocMgr earlier in the callstack for GameController.
+* Fix FastNoiseLise fractal bounding and remove its DataField property as it should be derived on other properties updating.
+* Make RaiseMoveEvent internal.
+* MovedGridsComponent and PhysicsMapComponent are now purged and properties on `SharedPhysicsSystem`. Additionally the TransformComponent for Awake entities is stored alongside the PhysicsComponent for them.
+* TransformComponent is now stored on physics contacts.
+* Gravity2DComponent and Gravity2DController were moved to SharedPhysicsSystem.
+
+### New features
+
 * `IFileDialogManager` now allows specifying `FileAccess` and `FileShare` modes.
+* Add Intersects and Enlarged to Box2i in line with Box2.
+* Make `KeyFrame`s on `AnimationTrackProperty` public settable.
+* Add the spawned entities to a returned array from `SpawnEntitiesAttachedTo`.
 
 ### Bugfixes
 
 * Fixed SDL3 file dialog implementation having a memory leak and not opening files read-write.
+* Fix GetMapLinearVelocity.
 
 ### Other
 
 * `uploadfile` and `loadprototype` commands now only open files with read access.
+* Optimize `ToMapCoordinates`.
 
 ### Internal
 
 * Cleanup on internals of `IFileDialogManager`, removing duplicate code.
+* Fix Contacts not correctly being marked as `Touching` while contact is ongoing.
 
 
 ## 260.2.0

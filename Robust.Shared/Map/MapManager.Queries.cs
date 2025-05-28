@@ -8,6 +8,7 @@ using Robust.Shared.Map.Enumerators;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Shapes;
 
 namespace Robust.Shared.Map;
@@ -18,7 +19,7 @@ internal partial class MapManager
         ChunkEnumerator enumerator,
         T shape,
         Transform shapeTransform,
-        Entity<FixturesComponent> grid) where T : IPhysShape
+        Entity<PhysicsComponent> grid) where T : IPhysShape
     {
         var gridTransform = _physics.GetPhysicsTransform(grid);
 
@@ -357,7 +358,7 @@ internal partial class MapManager
         Box2 WorldAABB,
         T Shape,
         Transform Transform,
-        B2DynamicTree<(EntityUid Uid, FixturesComponent Fixtures, MapGridComponent Grid)> Tree,
+        B2DynamicTree<(EntityUid Uid, PhysicsComponent Fixtures, MapGridComponent Grid)> Tree,
         SharedMapSystem MapSystem,
         MapManager MapManager,
         SharedTransformSystem TransformSystem,

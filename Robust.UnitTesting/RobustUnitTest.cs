@@ -55,7 +55,6 @@ namespace Robust.UnitTesting
                 typeof(PhysicsComponent),
                 typeof(PhysicsMapComponent),
                 typeof(BroadphaseComponent),
-                typeof(FixturesComponent),
                 typeof(JointComponent),
                 typeof(GridTreeComponent),
                 typeof(MovedGridsComponent),
@@ -124,7 +123,6 @@ namespace Robust.UnitTesting
             // and it was like this when I found it.
 
             systems.LoadExtraSystemType<SharedGridTraversalSystem>();
-            systems.LoadExtraSystemType<FixtureSystem>();
             systems.LoadExtraSystemType<Gravity2DController>();
             systems.LoadExtraSystemType<CollisionWakeSystem>();
 

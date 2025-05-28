@@ -29,7 +29,6 @@ public sealed class Broadphase_Test
             .InitializeInstance();
 
         var entManager = sim.Resolve<IEntityManager>();
-        var fixtureSystem = entManager.System<FixtureSystem>();
         var physicsSystem = entManager.System<SharedPhysicsSystem>();
 
         var (mapEnt, mapId) = sim.CreateMap();
@@ -38,7 +37,7 @@ public sealed class Broadphase_Test
         var dynamicBody = entManager.AddComponent<PhysicsComponent>(dynamicEnt);
         physicsSystem.SetBodyType(dynamicEnt, BodyType.Dynamic, body: dynamicBody);
 
-        fixtureSystem.TryCreateFixture(dynamicEnt, new PhysShapeCircle(1f), "fix1", collisionMask: 10);
+        physicsSystem.TryCreateFixture(dynamicEnt, new PhysShapeCircle(1f), "fix1", collisionMask: 10);
         physicsSystem.WakeBody(dynamicEnt, body: dynamicBody);
 
         Assert.That(dynamicBody.Awake);
@@ -55,7 +54,7 @@ public sealed class Broadphase_Test
         var staticBody = entManager.AddComponent<PhysicsComponent>(staticEnt);
         physicsSystem.SetBodyType(staticEnt, BodyType.Static, body: staticBody);
 
-        fixtureSystem.TryCreateFixture(staticEnt, new PhysShapeCircle(1f), "fix1", collisionLayer: 10);
+        physicsSystem.TryCreateFixture(staticEnt, new PhysShapeCircle(1f), "fix1", collisionLayer: 10);
         physicsSystem.SetCanCollide(staticEnt, true);
 
         Assert.That(!staticBody.Awake);
@@ -116,7 +115,6 @@ public sealed class Broadphase_Test
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
         var mapManager = sim.Resolve<IMapManager>();
-        var fixturesSystem = entManager.EntitySysManager.GetEntitySystem<FixtureSystem>();
         var physicsSystem = entManager.EntitySysManager.GetEntitySystem<SharedPhysicsSystem>();
         var mapSys = entManager.System<SharedMapSystem>();
         var xformSys = entManager.System<SharedTransformSystem>();
@@ -140,7 +138,7 @@ public sealed class Broadphase_Test
         var shape = new PolygonShape();
         shape.SetAsBox(0.5f, 0.5f);
         var fixture = new Fixture(shape, 0, 0, true);
-        fixturesSystem.CreateFixture(ent, "fix1", fixture, body: physics, xform: xform);
+        physicsSystem.CreateFixture(ent, "fix1", fixture, body: physics, xform: xform);
         physicsSystem.SetCanCollide(ent, true, body: physics);
         Assert.That(physics.CanCollide);
 
@@ -253,7 +251,6 @@ public sealed class Broadphase_Test
         var lookup = system.GetEntitySystem<EntityLookupSystem>();
         var xforms = system.GetEntitySystem<SharedTransformSystem>();
         var physSystem = system.GetEntitySystem<SharedPhysicsSystem>();
-        var fixtures = system.GetEntitySystem<FixtureSystem>();
         var mapSys = entManager.System<SharedMapSystem>();
 
         // setup maps
@@ -278,12 +275,11 @@ public sealed class Broadphase_Test
         var child = entManager.SpawnEntity(null, new EntityCoordinates(parent, Vector2.Zero));
         var childXform = entManager.GetComponent<TransformComponent>(child);
         var childBody = entManager.AddComponent<PhysicsComponent>(child);
-        var childFixtures = entManager.GetComponent<FixturesComponent>(child);
 
         // enable collision for the child
         var shape = new PolygonShape();
         shape.SetAsBox(0.5f, 0.5f);
-        fixtures.CreateFixture(child, "fix1", new Fixture(shape, 0, 0, false), body: childBody, xform: childXform);
+        physSystem.CreateFixture(child, "fix1", new Fixture(shape, 0, 0, false), body: childBody, xform: childXform);
         physSystem.SetCanCollide(child, true, body: childBody);
         Assert.That(childBody.CanCollide);
 
@@ -299,7 +295,7 @@ public sealed class Broadphase_Test
             Assert.That(lookup.FindBroadphase(child), Is.EqualTo(broadphase));
             Assert.That(parentXform.Broadphase == new BroadphaseData(map, default, false, false));
             Assert.That(childXform.Broadphase == new BroadphaseData(map, map, true, true));
-            Assert.That(physMap.MoveBuffer.ContainsKey(childFixtures.Fixtures.First().Value.Proxies.First()));
+            Assert.That(physMap.MoveBuffer.ContainsKey(childBody.Fixtures.First().Value.Proxies.First()));
             var otherPhysMap = entManager.GetComponent<PhysicsMapComponent>(otherMap);
             Assert.That(otherPhysMap.MoveBuffer.Count == 0);
         };
@@ -334,7 +330,7 @@ public sealed class Broadphase_Test
             Assert.That(lookup.FindBroadphase(child), Is.EqualTo(broadphase));
             Assert.That(parentXform.Broadphase == new BroadphaseData(grid, default, false, false));
             Assert.That(childXform.Broadphase == new BroadphaseData(grid, map, true, true));
-            Assert.That(physMap.MoveBuffer.ContainsKey(childFixtures.Fixtures.First().Value.Proxies.First()));
+            Assert.That(physMap.MoveBuffer.ContainsKey(childBody.Fixtures.First().Value.Proxies.First()));
             var otherPhysMap = entManager.GetComponent<PhysicsMapComponent>(otherMap);
             Assert.That(otherPhysMap.MoveBuffer.Count == 0);
         };
@@ -382,7 +378,6 @@ public sealed class Broadphase_Test
         var xformSystem = system.GetEntitySystem<SharedTransformSystem>();
         var physSystem = system.GetEntitySystem<SharedPhysicsSystem>();
         var lookup = system.GetEntitySystem<EntityLookupSystem>();
-        var fixtures = system.GetEntitySystem<FixtureSystem>();
         var (mapUid, mapId) = sim.CreateMap();
 
         var mapBroadphase = entManager.GetComponent<BroadphaseComponent>(mapUid);
@@ -399,7 +394,7 @@ public sealed class Broadphase_Test
 
         var shape = new PolygonShape();
         shape.SetAsBox(0.5f, 0.5f);
-        fixtures.CreateFixture(child1, "fix1", new Fixture(shape, 0, 0, false), body: child1Body, xform: child1Xform);
+        physSystem.CreateFixture(child1, "fix1", new Fixture(shape, 0, 0, false), body: child1Body, xform: child1Xform);
         physSystem.SetCanCollide(child1, true, body: child1Body);
         Assert.That(child1Body.CanCollide);
 

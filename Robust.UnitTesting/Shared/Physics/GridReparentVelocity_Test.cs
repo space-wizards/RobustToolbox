@@ -20,7 +20,6 @@ public sealed class GridReparentVelocity_Test
     private IEntitySystemManager _systems = default!;
     private IEntityManager _entManager = default!;
     private IMapManager _mapManager = default!;
-    private FixtureSystem _fixtureSystem = default!;
     private SharedMapSystem _mapSystem = default!;
     private SharedPhysicsSystem _physSystem = default!;
 
@@ -39,7 +38,6 @@ public sealed class GridReparentVelocity_Test
         _systems = _sim.Resolve<IEntitySystemManager>();
         _entManager = _sim.Resolve<IEntityManager>();
         _mapManager = _sim.Resolve<IMapManager>();
-        _fixtureSystem = _systems.GetEntitySystem<FixtureSystem>();
         _mapSystem = _systems.GetEntitySystem<SharedMapSystem>();
         _physSystem = _systems.GetEntitySystem<SharedPhysicsSystem>();
     }
@@ -69,7 +67,6 @@ public sealed class GridReparentVelocity_Test
         var obj = _entManager.SpawnEntity(null, coords);
 
         var objPhys = _entManager.EnsureComponent<PhysicsComponent>(obj);
-        var objFix = _entManager.EnsureComponent<FixturesComponent>(obj);
 
         // Set up physics (no velocity damping, dynamic body, physics enabled)
         _entManager.GetComponent<PhysicsComponent>(obj);
@@ -81,7 +78,7 @@ public sealed class GridReparentVelocity_Test
         // Set up fixture.
         var poly = new PolygonShape();
         poly.SetAsBox(0.1f, 0.1f);
-        _fixtureSystem.CreateFixture(obj, "fix1", new Fixture(poly, 0, 0, false), manager: objFix, body: objPhys);
+        _physSystem.CreateFixture(obj, "fix1", new Fixture(poly, 0, 0, false), body: objPhys);
         _physSystem.WakeBody(obj, body: objPhys);
 
         return obj;

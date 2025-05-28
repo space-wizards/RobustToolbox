@@ -23,6 +23,24 @@ public abstract partial class EntityManager
         return fields;
     }
 
+    public int GetNetworkedFieldIndex(IComponentDelta delta, string fieldName)
+    {
+        var compReg = ComponentFactory.GetRegistration(delta);
+
+        return GetNetworkedFieldIndex(compReg, fieldName);
+    }
+
+    public int GetNetworkedFieldIndex(ComponentRegistration compReg, string fieldName)
+    {
+        if (!compReg.NetworkedFieldLookup.TryGetValue(fieldName, out var idx))
+        {
+            throw new InvalidOperationException(
+                $"Tried to get networked field index for component {compReg.Type} that doesn't implement it");
+        }
+
+        return idx;
+    }
+
     public void DirtyField(EntityUid uid, IComponentDelta comp, string fieldName, MetaDataComponent? metadata = null)
     {
         var compReg = ComponentFactory.GetRegistration(comp);

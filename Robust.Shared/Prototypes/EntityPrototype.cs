@@ -211,7 +211,6 @@ namespace Robust.Shared.Prototypes
         {
             var (entity, meta) = ent;
             var prototype = meta.EntityPrototype;
-            var ctx = context as ISerializationContext;
 
             if (prototype != null)
             {
@@ -222,7 +221,7 @@ namespace Robust.Shared.Prototypes
 
                     var fullData = context != null && context.TryGetComponent(name, out var data) ? data : entry.Component;
                     var compReg = factory.GetRegistration(name);
-                    EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, name, fullData, ctx);
+                    EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, name, fullData, null);
 
                     if (!entry.Component.NetSyncEnabled && compReg.NetID is {} netId)
                         meta.NetComponents.Remove(netId);
@@ -248,7 +247,7 @@ namespace Robust.Shared.Prototypes
                     }
 
                     var compReg = factory.GetRegistration(name);
-                    EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, name, data, ctx);
+                    EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, name, data, null);
                 }
             }
         }

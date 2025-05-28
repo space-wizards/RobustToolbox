@@ -72,8 +72,7 @@ public sealed class JointDeletion_Test : RobustIntegrationTest
             Assert.That(!body2.Awake);
 
             entManager.DeleteEntity(ent2);
-            var physicsMap = entManager.GetComponent<PhysicsMapComponent>(mapEnt);
-            broadphase.FindNewContacts(physicsMap, mapId);
+            broadphase.FindNewContacts();
         });
     }
 }

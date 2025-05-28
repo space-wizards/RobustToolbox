@@ -123,24 +123,26 @@ public abstract partial class SharedPhysicsSystem
             DebugTools.Assert(obj.Flags is ContactFlags.None or ContactFlags.Deleted);
             SetContact(obj,
                 false,
-                EntityUid.Invalid, EntityUid.Invalid,
+                new Entity<PhysicsComponent?, TransformComponent?>(EntityUid.Invalid, null, null),
+                new Entity<PhysicsComponent?, TransformComponent?>(EntityUid.Invalid, null, null),
                 string.Empty, string.Empty,
                 null, 0,
-                null, 0,
-                null, null);
+                null, 0);
             return true;
         }
     }
 
     private static void SetContact(Contact contact,
         bool enabled,
-        EntityUid uidA, EntityUid uidB,
+        Entity<PhysicsComponent?, TransformComponent?> entA,
+        Entity<PhysicsComponent?, TransformComponent?> entB,
         string fixtureAId, string fixtureBId,
         Fixture? fixtureA, int indexA,
-        Fixture? fixtureB, int indexB,
-        PhysicsComponent? bodyA,
-        PhysicsComponent? bodyB)
+        Fixture? fixtureB, int indexB)
     {
+        var uidA = entA.Owner;
+        var uidB = entB.Owner;
+
         contact.Enabled = enabled;
         contact.IsTouching = false;
         DebugTools.Assert(contact.Flags is ContactFlags.None or ContactFlags.PreInit or ContactFlags.Deleted);
@@ -155,8 +157,11 @@ public abstract partial class SharedPhysicsSystem
         contact.FixtureA = fixtureA;
         contact.FixtureB = fixtureB;
 
-        contact.BodyA = bodyA;
-        contact.BodyB = bodyB;
+        contact.BodyA = entA.Comp1;
+        contact.BodyB = entB.Comp1;
+
+        contact.XformA = entA.Comp2;
+        contact.XformB = entB.Comp2;
 
         contact.ChildIndexA = indexA;
         contact.ChildIndexB = indexB;
@@ -213,11 +218,10 @@ public abstract partial class SharedPhysicsSystem
     }
 
     private Contact CreateContact(
-        EntityUid uidA, EntityUid uidB,
+        Entity<PhysicsComponent?, TransformComponent?> entA, Entity<PhysicsComponent?, TransformComponent?> entB,
         string fixtureAId, string fixtureBId,
         Fixture fixtureA, int indexA,
-        Fixture fixtureB, int indexB,
-        PhysicsComponent bodyA, PhysicsComponent bodyB)
+        Fixture fixtureB, int indexB)
     {
         var type1 = fixtureA.Shape.ShapeType;
         var type2 = fixtureB.Shape.ShapeType;
@@ -233,11 +237,11 @@ public abstract partial class SharedPhysicsSystem
         // Edge+Polygon is non-symmetrical due to the way Erin handles collision type registration.
         if ((type1 >= type2 || (type1 == ShapeType.Edge && type2 == ShapeType.Polygon)) && !(type2 == ShapeType.Edge && type1 == ShapeType.Polygon))
         {
-            SetContact(contact, true, uidA, uidB, fixtureAId, fixtureBId, fixtureA, indexA, fixtureB, indexB, bodyA, bodyB);
+            SetContact(contact, true, entA, entB, fixtureAId, fixtureBId, fixtureA, indexA, fixtureB, indexB);
         }
         else
         {
-            SetContact(contact, true, uidB, uidA, fixtureBId, fixtureAId, fixtureB, indexB, fixtureA, indexA, bodyB, bodyA);
+            SetContact(contact, true, entB, entA, fixtureBId, fixtureAId, fixtureB, indexB, fixtureA, indexA);
         }
 
         contact.Type = _registers[(int)type1, (int)type2];
@@ -249,7 +253,7 @@ public abstract partial class SharedPhysicsSystem
     /// Try to create a contact between these 2 fixtures.
     /// </summary>
     internal void AddPair(
-        EntityUid uidA, EntityUid uidB,
+        Entity<PhysicsComponent, TransformComponent> entA, Entity<PhysicsComponent, TransformComponent> entB,
         string fixtureAId, string fixtureBId,
         Fixture fixtureA, int indexA,
         Fixture fixtureB, int indexB,
@@ -264,16 +268,15 @@ public abstract partial class SharedPhysicsSystem
             return;
 
         DebugTools.Assert(!fixtureB.Contacts.ContainsKey(fixtureA));
-
-        var xformA = _xformQuery.GetComponent(uidA);
-        var xformB = _xformQuery.GetComponent(uidB);
+        var xformA = entA.Comp2;
+        var xformB = entB.Comp2;
 
         // Does a joint override collision? Is at least one body dynamic?
-        if (!ShouldCollide(uidA, uidB, bodyA, bodyB, fixtureA, fixtureB, xformA, xformB))
+        if (!ShouldCollide(entA.Owner, entB.Owner, bodyA, bodyB, fixtureA, fixtureB, xformA, xformB))
             return;
 
         // Call the factory.
-        var contact = CreateContact(uidA, uidB, fixtureAId, fixtureBId, fixtureA, indexA, fixtureB, indexB, bodyA, bodyB);
+        var contact = CreateContact((entA.Owner, entA.Comp1, entA.Comp2), (entB.Owner, entB.Comp1, entB.Comp2), fixtureAId, fixtureBId, fixtureA, indexA, fixtureB, indexB);
         contact.Flags = flags;
 
         // Contact creation may swap fixtures.
@@ -300,7 +303,7 @@ public abstract partial class SharedPhysicsSystem
         // Checking only bodyA should be okay because if bodyA is the other ent (i.e. dynamic / kinematic) then it should already be awake.
         if (bodyA.BodyType == BodyType.Static && !bodyB.Awake)
         {
-            WakeBody(uidB, body: bodyB);
+            WakeBody(entB.Owner, body: bodyB);
         }
     }
 
@@ -309,7 +312,8 @@ public abstract partial class SharedPhysicsSystem
     /// </summary>
     internal void AddPair(string fixtureAId, string fixtureBId, in FixtureProxy proxyA, in FixtureProxy proxyB)
     {
-        AddPair(proxyA.Entity, proxyB.Entity,
+        AddPair((proxyA.Entity, proxyA.Body, proxyA.Xform),
+            (proxyB.Entity, proxyB.Body, proxyB.Xform),
             fixtureAId, fixtureBId,
             proxyA.Fixture, proxyA.ChildIndex,
             proxyB.Fixture, proxyB.ChildIndex,
@@ -429,8 +433,8 @@ public abstract partial class SharedPhysicsSystem
                 continue;
             }
 
-            var xformA = _xformQuery.GetComponent(uidA);
-            var xformB = _xformQuery.GetComponent(uidB);
+            var xformA = contact.XformA!;
+            var xformB = contact.XformB!;
 
             if (xformA.MapID == MapId.Nullspace || xformB.MapID == MapId.Nullspace)
             {
@@ -526,8 +530,8 @@ public abstract partial class SharedPhysicsSystem
                     // Instead of transforming both boxes (which enlarges both aabbs), maybe just transform one box.
                     // I.e. use (matrixA * invMatrixB).TransformBox(). Or (invMatrixB * matrixA), whichever is correct.
                     // Alternatively, maybe just directly construct the relative transform matrix?
-                    var proxyAWorldAABB = _transform.GetWorldMatrix(_xformQuery.GetComponent(broadphaseA.Value), _xformQuery).TransformBox(proxyA.AABB);
-                    var proxyBWorldAABB = _transform.GetWorldMatrix(_xformQuery.GetComponent(broadphaseB.Value), _xformQuery).TransformBox(proxyB.AABB);
+                    var proxyAWorldAABB = _transform.GetWorldMatrix(XformQuery.GetComponent(broadphaseA.Value)).TransformBox(proxyA.AABB);
+                    var proxyBWorldAABB = _transform.GetWorldMatrix(XformQuery.GetComponent(broadphaseB.Value)).TransformBox(proxyB.AABB);
                     overlap = proxyAWorldAABB.Intersects(proxyBWorldAABB);
                 }
             }

@@ -121,7 +121,7 @@ namespace Robust.Shared.Physics.Systems
             InitializeIsland();
             InitializeContacts();
 
-            Subs.CVar(_cfg, CVars.AutoClearForces, OnAutoClearChange);
+            Subs.CVar(_cfg, CVars.AutoClearForces, OnAutoClearChange, true);
             Subs.CVar(_cfg, CVars.NetTickrate, UpdateSubsteps, true);
             Subs.CVar(_cfg, CVars.TargetMinimumTickrate, UpdateSubsteps, true);
         }

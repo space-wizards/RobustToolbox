@@ -277,7 +277,7 @@ public abstract partial class SharedPhysicsSystem
         // TODO: SolveTOI
 
         // Box2d recommends clearing (if you are) during fixed updates rather than variable if you are using it
-        if (!prediction && _autoClearForces)
+        if (_autoClearForces)
             ClearForces();
 
         _invDt0 = invDt;

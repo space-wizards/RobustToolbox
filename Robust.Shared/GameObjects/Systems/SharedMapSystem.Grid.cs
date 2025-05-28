@@ -338,6 +338,8 @@ public abstract partial class SharedMapSystem
         chunk.SuppressCollisionRegeneration = true;
         DebugTools.Assert(data.TileData.Any(x => !x.IsEmpty));
         DebugTools.Assert(data.TileData.Length == component.ChunkSize * component.ChunkSize);
+        var changedEntry = new ValueList<TileChangedEntry>();
+
         for (ushort x = 0; x < component.ChunkSize; x++)
         {
             for (ushort y = 0; y < component.ChunkSize; y++)
@@ -346,12 +348,15 @@ public abstract partial class SharedMapSystem
                 if (!chunk.TrySetTile(x, y, tile, out var oldTile, out _))
                     continue;
 
-                var gridIndices = chunk.ChunkTileToGridTile((x, y));
-                var newTileRef = new TileRef(uid, gridIndices, tile);
-                _mapInternal.RaiseOnTileChanged(gridEnt, newTileRef, oldTile, index);
+
+                var chunkIndex = new Vector2i(x, y);
+                var gridIndices = chunk.ChunkTileToGridTile(chunkIndex);
+                changedEntry.Add(new TileChangedEntry(tile, oldTile, chunk.Indices, gridIndices));
             }
         }
 
+        var ev = new TileChangedEvent(gridEnt, changedEntry.ToArray());
+        EntityManager.EventBus.RaiseLocalEvent(gridEnt.Owner, ref ev, true);
         DebugTools.Assert(chunk.Fixtures.SetEquals(data.Fixtures));
 
         // These should never refer to the same object

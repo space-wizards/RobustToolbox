@@ -27,7 +27,7 @@ public abstract partial class SharedPhysicsSystem
         if (!PhysicsQuery.Resolve(uid, ref component))
             return Vector2.Zero;
 
-        if (!_xformQuery.Resolve(uid, ref xform))
+        if (!XformQuery.Resolve(uid, ref xform))
             return Vector2.Zero;
 
         var velocity = component.LinearVelocity;
@@ -56,7 +56,7 @@ public abstract partial class SharedPhysicsSystem
         {
             // Could make this a method with the below one but ehh
             // then you get a method bigger than this block with a billion out args and who wants that.
-            var xform = _xformQuery.GetComponent(parent);
+            var xform = XformQuery.GetComponent(parent);
 
             if (PhysicsQuery.TryGetComponent(parent, out var body))
             {
@@ -86,7 +86,7 @@ public abstract partial class SharedPhysicsSystem
         PhysicsComponent? component = null,
         TransformComponent? xform = null)
     {
-        if (!_xformQuery.Resolve(uid, ref xform))
+        if (!XformQuery.Resolve(uid, ref xform))
             return Vector2.Zero;
 
         PhysicsQuery.Resolve(uid, ref component, false);
@@ -99,7 +99,7 @@ public abstract partial class SharedPhysicsSystem
 
         while (parent != xform.MapUid && parent.IsValid())
         {
-            xform = _xformQuery.GetComponent(parent);
+            xform = XformQuery.GetComponent(parent);
 
             if (PhysicsQuery.TryGetComponent(parent, out var body))
             {
@@ -133,7 +133,7 @@ public abstract partial class SharedPhysicsSystem
         PhysicsComponent? component = null,
         TransformComponent? xform = null)
     {
-        if (!_xformQuery.Resolve(uid, ref xform))
+        if (!XformQuery.Resolve(uid, ref xform))
             return 0f;
 
         PhysicsQuery.Resolve(uid, ref component, false);
@@ -145,7 +145,7 @@ public abstract partial class SharedPhysicsSystem
             if (PhysicsQuery.TryGetComponent(xform.ParentUid, out var body))
                 angularVelocity += body.AngularVelocity;
 
-            xform = _xformQuery.GetComponent(xform.ParentUid);
+            xform = XformQuery.GetComponent(xform.ParentUid);
         }
 
         return angularVelocity;
@@ -161,7 +161,7 @@ public abstract partial class SharedPhysicsSystem
         PhysicsComponent? component = null,
         TransformComponent? xform = null)
     {
-        if (!_xformQuery.Resolve(uid, ref xform))
+        if (!XformQuery.Resolve(uid, ref xform))
             return (Vector2.Zero, 0);
 
         PhysicsQuery.Resolve(uid, ref component, false);
@@ -176,7 +176,7 @@ public abstract partial class SharedPhysicsSystem
 
         while (parent != xform.MapUid && parent.IsValid())
         {
-            xform = _xformQuery.GetComponent(parent);
+            xform = XformQuery.GetComponent(parent);
 
             if (PhysicsQuery.TryGetComponent(parent, out var body))
             {
@@ -233,7 +233,7 @@ public abstract partial class SharedPhysicsSystem
         }
 
         var parent = oldParent;
-        TransformComponent? parentXform = _xformQuery.GetComponent(parent);
+        TransformComponent? parentXform = XformQuery.GetComponent(parent);
         var localPos = Vector2.Transform(_transform.GetWorldPosition(xform), _transform.GetInvWorldMatrix(parentXform));
 
         var oldLinear = physics.LinearVelocity;
@@ -258,7 +258,7 @@ public abstract partial class SharedPhysicsSystem
             localPos = parentXform.LocalPosition + parentXform.LocalRotation.RotateVec(localPos);
             parent = parentXform.ParentUid;
 
-        } while (parent.IsValid() && _xformQuery.TryGetComponent(parent, out parentXform));
+        } while (parent.IsValid() && XformQuery.TryGetComponent(parent, out parentXform));
 
         oldLinear += linearAngularContribution;
 

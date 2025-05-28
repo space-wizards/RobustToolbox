@@ -39,7 +39,7 @@ public sealed class Joints_Test
 
         var containerSys = entManager.System<SharedContainerSystem>();
         var container = containerSys.EnsureContainer<Container>(uidC, "weh");
-        var joint = jointSystem.CreateDistanceJoint(uidA, uidB);
+        jointSystem.CreateDistanceJoint(uidA, uidB);
         jointSystem.Update(0.016f);
 
         containerSys.Insert(uidA, container);
@@ -73,7 +73,6 @@ public sealed class Joints_Test
 
         var map = server.CreateMap();
         var mapId = map.MapId;
-        var physicsMapComp = entManager.GetComponent<PhysicsMapComponent>(map.Uid);
 
         var ent1 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
         var ent2 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
@@ -95,7 +94,7 @@ public sealed class Joints_Test
         Assert.That(entManager.HasComponent<JointComponent>(ent1), Is.EqualTo(true));
 
         // We should have a contact in both situations.
-        broadphaseSystem.FindNewContacts(physicsMapComp, mapId);
+        broadphaseSystem.FindNewContacts();
         Assert.That(body1.Contacts, Has.Count.EqualTo(1));
 
         // Alright now try the other way
@@ -105,7 +104,7 @@ public sealed class Joints_Test
         jointSystem.Update(0.016f);
         Assert.That(entManager.HasComponent<JointComponent>(ent1));
 
-        broadphaseSystem.FindNewContacts(physicsMapComp, mapId);
+        broadphaseSystem.FindNewContacts();
         Assert.That(body1.Contacts, Has.Count.EqualTo(1));
 
         mapSystem.DeleteMap(mapId);

@@ -48,10 +48,10 @@ public partial class SharedPhysicsSystem
     /// Track moved grids to know if we need to run checks for them driving over entities.
     /// </summary>
     [ViewVariables]
-    internal HashSet<EntityUid> MovedGrids = new();
+    internal readonly HashSet<EntityUid> MovedGrids = new();
 
     /// <summary>
-    ///     All awake bodies on this map.
+    ///     All awake bodies in the game.
     /// </summary>
     [ViewVariables]
     public readonly HashSet<Entity<PhysicsComponent, TransformComponent>> AwakeBodies = new();

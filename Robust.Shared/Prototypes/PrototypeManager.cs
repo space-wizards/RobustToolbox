@@ -408,16 +408,26 @@ namespace Robust.Shared.Prototypes
                             if (nonPushedParent)
                                 continue;
 
-                            var parentMaps = new MappingDataNode[parents.Length];
-                            for (var i = 0; i < parentMaps.Length; i++)
+                            if (parents.Length == 1)
                             {
-                                parentMaps[i] = kindData.Results[parents[i]];
+                                kindData.Results[id] = _serializationManager.PushCompositionWithGenericNode(
+                                    kind,
+                                    kindData.Results[parents[0]],
+                                    kindData.RawResults[id]);
                             }
+                            else
+                            {
+                                var parentMaps = new MappingDataNode[parents.Length];
+                                for (var i = 0; i < parentMaps.Length; i++)
+                                {
+                                    parentMaps[i] = kindData.Results[parents[i]];
+                                }
 
-                            kindData.Results[id] = _serializationManager.PushCompositionWithGenericNode(
-                                kind,
-                                parentMaps,
-                                kindData.RawResults[id]);
+                                kindData.Results[id] = _serializationManager.PushCompositionWithGenericNode(
+                                    kind,
+                                    parentMaps,
+                                    kindData.RawResults[id]);
+                            }
                         }
                         else
                         {
@@ -629,16 +639,26 @@ namespace Robust.Shared.Prototypes
                 {
                     if (tree.TryGetParents(id, out var parents))
                     {
-                        var parentNodes = new MappingDataNode[parents.Length];
-                        for (var i = 0; i < parents.Length; i++)
+                        if (parents.Length == 1)
                         {
-                            parentNodes[i] = results[parents[i]].Result;
+                            datum.Result = _serializationManager.PushCompositionWithGenericNode(
+                                kind,
+                                results[parents[0]].Result,
+                                datum.Result);
                         }
+                        else
+                        {
+                            var parentNodes = new MappingDataNode[parents.Length];
+                            for (var i = 0; i < parents.Length; i++)
+                            {
+                                parentNodes[i] = results[parents[i]].Result;
+                            }
 
-                        datum.Result = _serializationManager.PushCompositionWithGenericNode(
-                            kind,
-                            parentNodes,
-                            datum.Result);
+                            datum.Result = _serializationManager.PushCompositionWithGenericNode(
+                                kind,
+                                parentNodes,
+                                datum.Result);
+                        }
                     }
 
                     if (tree.TryGetChildren(id, out var children))
@@ -900,6 +920,8 @@ namespace Robust.Shared.Prototypes
             return TryGetKindFrom(typeof(T), out kind);
         }
 
+        public bool IsIgnored(string name) => _ignoredPrototypeTypes.Contains(name);
+
         /// <inheritdoc />
         public void RegisterIgnore(string name)
         {
@@ -952,6 +974,17 @@ namespace Robust.Shared.Prototypes
             }
 
             var name = attribute.Type ?? CalculatePrototypeName(kind);
+
+            if (_ignoredPrototypeTypes.Contains(name))
+            {
+                // For whatever reason, we are registering a prototype despite it having been marked as ignored.
+                // This often happens when someone is moving a server or client prototype to shared. Maybe this should
+                // log an error, but I want to avoid breaking changes and maaaaybe there some weird instance where you
+                // want the client to know that a prototype kind exists, without having the client load information
+                // about the individual prototypes? So for now lets just log a warning instead of introducing breaking
+                // changes.
+                Sawmill.Warning($"Registering an ignored prototype {kind}");
+            }
 
             if (_kindNames.TryGetValue(name, out var existing))
             {

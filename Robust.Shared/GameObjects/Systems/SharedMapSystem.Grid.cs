@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using Robust.Shared.Collections;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -165,10 +166,7 @@ public abstract partial class SharedMapSystem
             gridTree.Tree.MoveProxy(component.MapProxy, in aabb);
         }
 
-        if (TryComp<MovedGridsComponent>(xform.MapUid, out var movedGrids))
-        {
-            movedGrids.MovedGrids.Add(uid);
-        }
+        _physics.MovedGrids.Add(uid);
     }
 
     private void OnGridMove(EntityUid uid, MapGridComponent component, ref MoveEvent args)
@@ -190,10 +188,7 @@ public abstract partial class SharedMapSystem
             gridTree.Tree.MoveProxy(component.MapProxy, in aabb);
         }
 
-        if (TryComp<MovedGridsComponent>(xform.MapUid, out var movedGrids))
-        {
-            movedGrids.MovedGrids.Add(uid);
-        }
+        _physics.MovedGrids.Add(uid);
     }
 
     private void OnParentChange(EntityUid uid, MapGridComponent component, ref MoveEvent args)
@@ -225,16 +220,16 @@ public abstract partial class SharedMapSystem
         // Make sure we cleanup old map for moved grid stuff.
         var oldMap = _transform.ToMapCoordinates(args.OldPosition);
         var oldMapUid = GetMapOrInvalid(oldMap.MapId);
-        if (component.MapProxy != DynamicTree.Proxy.Free && TryComp<MovedGridsComponent>(oldMapUid, out var oldMovedGrids))
+        if (component.MapProxy != DynamicTree.Proxy.Free)
         {
-            oldMovedGrids.MovedGrids.Remove(uid);
+            _physics.MovedGrids.Remove(uid);
             RemoveGrid(uid, component, oldMapUid);
         }
 
         DebugTools.Assert(component.MapProxy == DynamicTree.Proxy.Free);
-        if (TryComp<MovedGridsComponent>(xform.MapUid, out var newMovedGrids))
+        if (xform.MapUid != null)
         {
-            newMovedGrids.MovedGrids.Add(uid);
+            _physics.MovedGrids.Add(uid);
             AddGrid(uid, component);
         }
     }
@@ -518,9 +513,9 @@ public abstract partial class SharedMapSystem
                 component.MapProxy = proxy;
             }
 
-            if (TryComp<MovedGridsComponent>(xform.MapUid, out var movedGrids))
+            if (xform.MapUid != null)
             {
-                movedGrids.MovedGrids.Add(uid);
+                _physics.MovedGrids.Add(uid);
             }
         }
 
@@ -572,9 +567,9 @@ public abstract partial class SharedMapSystem
             grid.MapProxy = proxy;
         }
 
-        if (TryComp<MovedGridsComponent>(xform.MapUid, out var movedGrids))
+        if (xform.MapUid != null)
         {
-            movedGrids.MovedGrids.Add(uid);
+            _physics.MovedGrids.Add(uid);
         }
     }
 
@@ -587,9 +582,9 @@ public abstract partial class SharedMapSystem
 
         grid.MapProxy = DynamicTree.Proxy.Free;
 
-        if (TryComp<MovedGridsComponent>(mapUid, out var movedGrids))
+        if (mapUid.IsValid())
         {
-            movedGrids.MovedGrids.Remove(uid);
+            _physics.MovedGrids.Remove(uid);
         }
     }
 
@@ -833,7 +828,7 @@ public abstract partial class SharedMapSystem
         }
 
         var offset = chunk.GridTileToChunkTile(gridIndices);
-        SetChunkTile(uid, grid, chunk, (ushort)offset.X, (ushort)offset.Y, tile);
+        SetChunkTile(uid, grid, chunk, (ushort)offset.X, (ushort)offset.Y, tile, out _);
     }
 
     public void SetTiles(EntityUid uid, MapGridComponent grid, List<(Vector2i GridIndices, Tile Tile)> tiles)
@@ -842,6 +837,11 @@ public abstract partial class SharedMapSystem
             return;
 
         var modified = new HashSet<MapChunk>(Math.Max(1, tiles.Count / grid.ChunkSize));
+        var tileChanges = new ValueList<TileChangedEntry>(tiles.Count);
+
+        // Suppress sending out events for each tile changed
+        // We're going to send them all out together at the end
+        MapManager.SuppressOnTileChanged = true;
 
         foreach (var (gridIndices, tile) in tiles)
         {
@@ -859,8 +859,11 @@ public abstract partial class SharedMapSystem
 
             var offset = chunk.GridTileToChunkTile(gridIndices);
             chunk.SuppressCollisionRegeneration = true;
-            if (SetChunkTile(uid, grid, chunk, (ushort)offset.X, (ushort)offset.Y, tile))
+            if (SetChunkTile(uid, grid, chunk, (ushort)offset.X, (ushort)offset.Y, tile, out var oldTile))
+            {
                 modified.Add(chunk);
+                tileChanges.Add(new TileChangedEntry(tile, oldTile, offset, gridIndices));
+            }
         }
 
         foreach (var chunk in modified)
@@ -869,6 +872,13 @@ public abstract partial class SharedMapSystem
         }
 
         RegenerateCollision(uid, grid, modified);
+
+        // Notify of all tile changes in one event
+        var ev = new TileChangedEvent((uid, grid), tileChanges.ToArray());
+        RaiseLocalEvent(uid, ref ev, true);
+
+        // Back to normal
+        MapManager.SuppressOnTileChanged = false;
     }
 
     public TilesEnumerator GetLocalTilesEnumerator(EntityUid uid, MapGridComponent grid, Box2 aabb,
@@ -1222,7 +1232,7 @@ public abstract partial class SharedMapSystem
     {
 #if DEBUG
         var mapId = _xformQuery.GetComponent(uid).MapID;
-        DebugTools.Assert(mapId == coords.GetMapId(EntityManager));
+        DebugTools.Assert(mapId == _transform.GetMapId(coords));
 #endif
 
         return SnapGridLocalCellFor(uid, grid, LocalToGrid(uid, grid, coords));
@@ -1432,7 +1442,7 @@ public abstract partial class SharedMapSystem
     {
 #if DEBUG
         var mapId = _xformQuery.GetComponent(uid).MapID;
-        DebugTools.Assert(mapId == coords.GetMapId(EntityManager));
+        DebugTools.Assert(mapId == _transform.GetMapId(coords));
 #endif
         var local = LocalToGrid(uid, grid, coords);
 
@@ -1454,7 +1464,7 @@ public abstract partial class SharedMapSystem
     {
         return position.EntityId == uid
             ? position.Position
-            : WorldToLocal(uid, grid, position.ToMapPos(EntityManager, _transform));
+            : WorldToLocal(uid, grid, _transform.ToMapCoordinates(position).Position);
     }
 
     public bool CollidesWithGrid(EntityUid uid, MapGridComponent grid, Vector2i indices)

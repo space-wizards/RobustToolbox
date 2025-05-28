@@ -72,6 +72,11 @@ namespace Robust.Client.Graphics.Clyde
             return new DummyTexture((1, 1));
         }
 
+        public IEnumerable<(Clyde.ClydeTexture, Clyde.LoadedTexture)> GetLoadedTextures()
+        {
+            return [];
+        }
+
         public ClydeDebugLayers DebugLayers { get; set; }
 
         public string GetKeyName(Keyboard.Key key) => string.Empty;
@@ -302,7 +307,7 @@ namespace Robust.Client.Graphics.Clyde
             action();
         }
 
-        public IFileDialogManager? FileDialogImpl => null;
+        public IFileDialogManagerImplementation? FileDialogImpl => null;
 
         private sealed class DummyCursor : ICursor
         {

@@ -99,6 +99,10 @@ public sealed partial class NoSharedReferencesTest : RobustIntegrationTest
                 await client.WaitRunTicks(1);
             }
         }
+
+        await client.WaitPost(() => netMan.ClientDisconnect(""));
+        await server.WaitRunTicks(5);
+        await client.WaitRunTicks(5);
     }
 }
 

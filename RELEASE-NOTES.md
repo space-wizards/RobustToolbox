@@ -54,6 +54,21 @@ END TEMPLATE-->
 *None yet*
 
 
+## 261.1.0
+
+### New features
+
+* Automatically create logger sawmills for `UIController`s similar to `EntitySystem`s.
+
+### Bugfixes
+
+* Fix physics forces not auto-clearing / respecting the cvar.
+
+### Internal
+
+* Cleanup more compiler warnings in unit tests.
+
+
 ## 261.0.0
 
 ### Breaking changes

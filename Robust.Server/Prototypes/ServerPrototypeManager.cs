@@ -25,6 +25,7 @@ namespace Robust.Server.Prototypes
             RegisterIgnore("shader");
             RegisterIgnore("uiTheme");
             RegisterIgnore("font");
+            RegisterIgnore("particles");
         }
 
         public override void Initialize()

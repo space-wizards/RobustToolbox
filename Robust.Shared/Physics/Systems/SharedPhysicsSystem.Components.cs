@@ -312,13 +312,6 @@ public partial class SharedPhysicsSystem
             body._inertia += data.I;
         }
 
-        // Update this after re-calculating mass as content may want to use the sum of fixture masses instead.
-        if (((int) body.BodyType & (int) (BodyType.Kinematic | BodyType.Static)) != 0)
-        {
-            body._localCenter = Vector2.Zero;
-            return;
-        }
-
         if (body._mass > 0.0f)
         {
             body._invMass = 1.0f / body._mass;
@@ -348,18 +341,23 @@ public partial class SharedPhysicsSystem
         var oldCenter = body._localCenter;
         body._localCenter = localCenter;
 
-        // Update center of mass velocity.
-        var comVelocityDiff = Vector2Helpers.Cross(body.AngularVelocity, localCenter - oldCenter);
+        if (((int) body.BodyType & (int) (BodyType.Kinematic | BodyType.Static)) == 0)
+        {
+            // Update center of mass velocity.
+            var comVelocityDiff = Vector2Helpers.Cross(body.AngularVelocity, localCenter - oldCenter);
 
-        if (comVelocityDiff != Vector2.Zero)
-       	{
-       		body.LinearVelocity += comVelocityDiff;
-        	DirtyField(uid, body, nameof(PhysicsComponent.LinearVelocity));
-       	}
+            if (comVelocityDiff != Vector2.Zero)
+            {
+                body.LinearVelocity += comVelocityDiff;
+                DirtyField(uid, body, nameof(PhysicsComponent.LinearVelocity));
+            }
+        }
 
         if (body._mass == oldMass && body._inertia == oldInertia && oldCenter == localCenter)
             return;
 
+        // we always do the full mass and COM calculation and raise this, even for static bodies as content may need the info
+        // examples are stations anchored with the station anchor, shuttles landed on planets, or grids getting an atmosphere above a certain mass threshold
         var ev = new MassDataChangedEvent((uid, body, manager), oldMass, oldInertia, oldCenter);
         RaiseLocalEvent(uid, ref ev);
     }
@@ -512,7 +510,6 @@ public partial class SharedPhysicsSystem
 
         var oldType = body.BodyType;
         body.BodyType = value;
-        ResetMassData(uid, manager, body);
 
         body.Force = Vector2.Zero;
         body.Torque = 0f;

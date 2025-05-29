@@ -126,14 +126,11 @@ namespace Robust.Client.UserInterface.CustomControls
 
         // Drag resizing and moving code is mostly taken from Godot's WindowDialog.
 
-        protected override void Dispose(bool disposing)
+        protected override void ExitedTree()
         {
-            base.Dispose(disposing);
+            base.ExitedTree();
 
-            if (disposing)
-            {
-                CloseButton.OnPressed -= CloseButtonPressed;
-            }
+            CloseButton.OnPressed -= CloseButtonPressed;
         }
 
         private void CloseButtonPressed(BaseButton.ButtonEventArgs args)

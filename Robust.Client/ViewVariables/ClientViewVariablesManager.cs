@@ -314,7 +314,7 @@ namespace Robust.Client.ViewVariables
                 instance = new ViewVariablesInstanceObject(this, _robustSerializer);
             }
 
-            loadingLabel.Dispose();
+            loadingLabel.Orphan();
             instance.Initialize(window, blob, session);
             window.OnClose += () => _closeInstance(instance, false);
             _windows.Add(instance, window);
@@ -396,7 +396,7 @@ namespace Robust.Client.ViewVariables
 
             if (closeWindow)
             {
-                window.Dispose();
+                window.Close();
             }
 
             _windows.Remove(instance);

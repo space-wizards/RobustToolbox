@@ -177,11 +177,18 @@ public static class CompletionHelper
         return sorted ? playerOptions.OrderBy(o => o.Value) : playerOptions;
     }
 
+    public static IEnumerable<CompletionOption> MapIds(string text, IEntityManager? entManager = null)
+    {
+        IoCManager.Resolve(ref entManager);
+
+        return GetComponents<MapComponent>(text, entManager: entManager).Select(o => new CompletionOption(o.Component.MapId.ToString(), o.EntityName));
+    }
+
     public static IEnumerable<CompletionOption> MapIds(IEntityManager? entManager = null)
     {
         IoCManager.Resolve(ref entManager);
 
-        return entManager.EntityQuery<MapComponent>(true).Select(o => new CompletionOption(o.MapId.ToString()));
+        return entManager.EntityQuery<MapComponent, MetaDataComponent>(true).Select(o => new CompletionOption(o.Item1.MapId.ToString(), o.Item2.EntityName));
     }
 
     public static IEnumerable<CompletionOption> MapUids(IEntityManager? entManager = null)
@@ -214,7 +221,8 @@ public static class CompletionHelper
         }
     }
 
-    public static IEnumerable<CompletionOption> Components<T>(string text, IEntityManager? entManager = null, int limit = 20) where T : IComponent
+    private static IEnumerable<(T Component, string NetString, string EntityName)> GetComponents<T>(string text, IEntityManager? entManager = null, int limit = 20)
+        where T : IComponent
     {
         if (text != string.Empty && !NetEntity.TryParse(text, out _))
             yield break;
@@ -223,14 +231,19 @@ public static class CompletionHelper
         var query = entManager.AllEntityQueryEnumerator<T, MetaDataComponent>();
 
         var i = 0;
-        while (i < limit && query.MoveNext(out _, out var metadata))
+        while (i < limit && query.MoveNext(out var comp, out var metadata))
         {
             var netString = metadata.NetEntity.ToString();
             if (!netString.StartsWith(text))
                 continue;
 
             i++;
-            yield return new CompletionOption(netString, metadata.EntityName);
+            yield return (comp, netString, metadata.EntityName);
         }
+    }
+
+    public static IEnumerable<CompletionOption> Components<T>(string text, IEntityManager? entManager = null, int limit = 20) where T : IComponent
+    {
+        return GetComponents<T>(text, entManager, limit).Select(o => new CompletionOption(o.NetString, o.EntityName));
     }
 }

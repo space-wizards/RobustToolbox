@@ -1,3 +1,4 @@
+using System.Diagnostics.Contracts;
 using System.Linq;
 using Robust.Server.GameStates;
 using Robust.Shared;
@@ -18,13 +19,15 @@ namespace Robust.Server.GameObjects
 
         private bool _deleteEmptyGrids;
 
-        protected override MapId GetNextMapId()
+        [Pure]
+        internal override MapId GetNextMapId()
         {
-            var id = new MapId(++LastMapId);
+            var id = new MapId(LastMapId + 1);
             while (MapExists(id) || UsedIds.Contains(id))
             {
-                id = new MapId(++LastMapId);
+                id = new MapId(id.Value + 1);
             }
+
             return id;
         }
 

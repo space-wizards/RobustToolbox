@@ -37,10 +37,13 @@ namespace Robust.Client.Animations
         public override (int KeyFrameIndex, float FramePlayingTime)
             AdvancePlayback(object context, int prevKeyFrameIndex, float prevPlayingTime, float frameTime)
         {
-            DebugTools.AssertNotNull(LayerKey);
+            var layerKey = LayerKey as Enum;
+            DebugTools.AssertNotNull(layerKey);
 
             var entity = (EntityUid) context;
-            var sprite = IoCManager.Resolve<IEntityManager>().GetComponent<SpriteComponent>(entity);
+            var entMan = IoCManager.Resolve<IEntityManager>();
+            var sprite = entMan.GetComponent<SpriteComponent>(entity);
+            var spriteSys = entMan.System<SpriteSystem>();
 
             var playingTime = prevPlayingTime + frameTime;
             var keyFrameIndex = prevKeyFrameIndex;
@@ -55,15 +58,16 @@ namespace Robust.Client.Animations
             {
                 var keyFrame = KeyFrames[keyFrameIndex];
                 // Advance animation on current key frame.
-                var rsi = sprite.LayerGetActualRSI(LayerKey!);
+                var index = spriteSys.LayerMapGet((entity, sprite), layerKey!);
+                var rsi = spriteSys.LayerGetEffectiveRsi((entity, sprite), index);
                 if (rsi != null && rsi.TryGetState(keyFrame.State, out var state))
                 {
                     var animationTime = Math.Min(state.AnimationLength - 0.01f, playingTime);
-                    sprite.LayerSetAutoAnimated(LayerKey!, false);
+                    spriteSys.LayerSetAutoAnimated((entity, sprite), index, false);
                     // TODO: Doesn't setting the state explicitly reset the animation
                     // so it's slightly more inefficient?
-                    sprite.LayerSetState(LayerKey!, keyFrame.State);
-                    sprite.LayerSetAnimationTime(LayerKey!, animationTime);
+                    spriteSys.LayerSetRsiState((entity, sprite), index, keyFrame.State);
+                    spriteSys.LayerSetAnimationTime((entity, sprite), index, animationTime);
                 }
             }
 

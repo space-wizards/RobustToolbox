@@ -512,6 +512,26 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public CompRegistryEntityEnumerator CompRegistryQueryEnumerator(ComponentRegistry registry);
 
+        /// <summary>
+        /// Attempts to resolve the given <see cref="WeakEntityReference"/> into an <see cref="EntityUid"/> that
+        /// corresponds to an existing entity. If this fails, the entity has either been deleted, or for clients, the
+        /// entity may not yet have been sent to them.
+        /// </summary>
+        public EntityUid? Resolve(WeakEntityReference weakRef);
+
+        /// <inheritdoc cref="Resolve(WeakEntityReference)"/>
+        public EntityUid? Resolve(WeakEntityReference? weakRef);
+
+        /// <summary>
+        /// Attempts to resolve the given <see cref="WeakEntityReference"/> into an existing entity with the specified
+        /// component and return the <see cref="Entity{T}"/>. If this fails, the entity has either been deleted, doesn't
+        /// have the component, or for clients the entity may not yet have been sent to them.
+        /// </summary>
+        public Entity<T>? Resolve<T>(WeakEntityReference<T> weakRef) where T : IComponent;
+
+        /// <inheritdoc cref="Resolve{T}(WeakEntityReference{T})"/>
+        public Entity<T>? Resolve<T>(WeakEntityReference<T>? weakRef) where T : IComponent;
+
         AllEntityQueryEnumerator<IComponent> AllEntityQueryEnumerator(Type comp);
 
         AllEntityQueryEnumerator<TComp1> AllEntityQueryEnumerator<TComp1>()

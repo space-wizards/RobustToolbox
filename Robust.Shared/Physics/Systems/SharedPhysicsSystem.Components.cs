@@ -618,8 +618,6 @@ public partial class SharedPhysicsSystem
 
         if (dirty)
             DirtyFields(uid, body, null, nameof(PhysicsComponent.FixedRotation), nameof(PhysicsComponent.AngularVelocity));
-
-        ResetMassData(uid, manager: manager, body: body);
     }
 
     public void SetFriction(EntityUid uid, PhysicsComponent body, float value, bool dirty = true)

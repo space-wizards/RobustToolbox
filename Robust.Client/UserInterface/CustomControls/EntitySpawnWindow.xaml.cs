@@ -26,6 +26,7 @@ namespace Robust.Client.UserInterface.CustomControls
             "AlignTileDense",
             "AlignWall",
             "AlignWallProper",
+            "AlignWallSigns",
         };
 
         public EntitySpawnButton? SelectedButton;

@@ -27,11 +27,13 @@ namespace Robust.Client.Placement.Modes
 
             var offsets = new Vector2[]
             {
+                new(0.5f, 0.0625f),
+                new(0.5f, 0.28125f),
                 new(0.5f, 0.5f),
-                new(0.5f, 0.25f),
-                new(0.5f, 0.75f),
+                new(0.5f, 0.71875f),
+                new(0.5f, 0.9375f),
             };
-
+            
             var closestNode = offsets
                 .Select(o => tileCoordinates.Offset(o))
                 .MinBy(node => node.TryDistance(pManager.EntityManager, MouseCoords, out var distance) ?

@@ -21,11 +21,6 @@ namespace Robust.Shared.Map
         string Name { get; }
 
         /// <summary>
-        ///     Internal name of the definition.
-        /// </summary>
-        string ID { get; }
-
-        /// <summary>
         ///     The path of the sprite to draw.
         /// </summary>
         ResPath? Sprite { get; }

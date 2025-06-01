@@ -1,8 +1,8 @@
 - type: particles
   id: example
   #The width and height of the drawing surface for the particles - this is the size of the texture that the particles are drawn on.
-  width: 640
-  height: 480
+  width: 64
+  height: 64
   #Maximum number of particles in this system
   count: 1000
   #Maximum number of particles spawned per second
@@ -13,7 +13,7 @@
   lifespan:
     #these values are set by a generator specified here. Constant is a constant value, uniform is a random value between two values, and normal is a random value from a normal distribution.
     type: constant
-    value: 20
+    value: 50
   fadein:
     type: uniform
     low: 0
@@ -26,21 +26,21 @@
   #Starting position of the particles. X,Y,Z. The Z co-ordinate determines layering order.
   spawn_position:
     type: uniform
-    low: [0, 0, 0]
-    high: [640, 0, 0]
+    low: [-64, 0, 0]
+    high: [64, 0, 0]
   #Starting velocity of the particles
   spawn_velocity:
     type: uniform
-    low: [-10, 50, 0]
-    high: [10, 100, 0]
+    low: [0, 5, 0]
+    high: [0, 10, 0]
   #Acceleration applied to the particles per second
   acceleration:
     type: constant
-    value: [0, -1, 0]
+    value: [0, 0, 0]
   #Scaling applied to the particles in (x,y)
   scale:
     type: constant
-    value: [1,1]
+    value: [2,2]
   #Rotation applied to the particles in degrees
   rotation:
     type: constant

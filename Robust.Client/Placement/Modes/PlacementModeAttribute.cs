@@ -3,6 +3,11 @@ using JetBrains.Annotations;
 
 namespace Robust.Client.Placement.Modes;
 
+/// <summary>
+/// Registers this <see cref="PlacementMode"/> for use by the entity spawn panel.
+/// </summary>
+/// <param name="name">Override the display name of the mode. If null, the class name will be used.</param>
+/// <param name="priority">Order of the mode in the list. Higher values are placed higher in the list.</param>
 [AttributeUsage(AttributeTargets.Class)]
 [BaseTypeRequired(typeof(PlacementMode))]
 [MeansImplicitUse]

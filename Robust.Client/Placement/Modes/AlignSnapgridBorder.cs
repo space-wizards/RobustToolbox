@@ -7,7 +7,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.Placement.Modes
 {
-    [PlacementMode]
+    [PlacementMode(priority: (int)EnginePlacementMode.SnapgridBorder)]
     public sealed class SnapgridBorder : SnapgridCenter
     {
         public override bool HasLineMode => true;

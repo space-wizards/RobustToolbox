@@ -499,19 +499,9 @@ namespace Robust.Client.Placement
             else Clear();
         }
 
-        public string[] GetAllPlacementModes()
+        public IEnumerable<Type> GetAllPlacementModes()
         {
-            List<string> names = [];
-            var modes = _reflectionManager.FindTypesWithAttribute<PlacementModeAttribute>();
-            foreach (var type in modes)
-            {
-                if (Attribute.GetCustomAttribute(type, typeof(PlacementModeAttribute)) is not PlacementModeAttribute attribute)
-                    throw new InvalidImplementationException(type, typeof(PlacementMode), $"No {nameof(PlacementModeAttribute)}!");
-
-                // Use the override if specified, falling back to the Type name
-                names.Add(attribute.Name ?? type.Name);
-            }
-            return names.ToArray();
+            return _reflectionManager.FindTypesWithAttribute<PlacementModeAttribute>();
         }
 
         public void BeginPlacing(PlacementInformation info, PlacementHijack? hijack = null)

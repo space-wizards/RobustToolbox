@@ -7,7 +7,7 @@ namespace Robust.Client.Placement.Modes
     /// <summary>
     ///     Snaps in edge on one axis, center in the other.
     /// </summary>
-    [PlacementMode]
+    [PlacementMode(priority: (int)EnginePlacementMode.AlignWallProper)]
     public sealed class AlignWallProper : PlacementMode
     {
         public AlignWallProper(PlacementManager pMan) : base(pMan)

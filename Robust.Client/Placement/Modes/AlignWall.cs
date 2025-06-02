@@ -5,6 +5,7 @@ using Vector2 = System.Numerics.Vector2;
 
 namespace Robust.Client.Placement.Modes
 {
+    [PlacementMode]
     public sealed class AlignWall : PlacementMode
     {
         public AlignWall(PlacementManager pMan) : base(pMan) { }
@@ -35,8 +36,8 @@ namespace Robust.Client.Placement.Modes
             }
 
             var closestNode = (from Vector2 node in nodes
-                                   orderby (node - MouseCoords.Position).LengthSquared() ascending
-                                   select node).First();
+                               orderby (node - MouseCoords.Position).LengthSquared() ascending
+                               select node).First();
 
             MouseCoords = new EntityCoordinates(MouseCoords.EntityId,
                 closestNode + new Vector2(pManager.PlacementOffset.X, pManager.PlacementOffset.Y));

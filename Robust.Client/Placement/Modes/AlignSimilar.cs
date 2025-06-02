@@ -9,6 +9,7 @@ using Robust.Shared.Prototypes;
 
 namespace Robust.Client.Placement.Modes
 {
+    [PlacementMode]
     public sealed class AlignSimilar : PlacementMode
     {
         private const uint SnapToRange = 50;

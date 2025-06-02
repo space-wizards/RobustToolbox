@@ -48,6 +48,11 @@ namespace Robust.Client.Placement
         void ToggleEraser();
         void ToggleEraserHijacked(PlacementHijack hijack);
 
+        /// <summary>
+        /// Returns an array containing the names of all placement modes that can be used.
+        /// </summary>
+        string[] GetAllPlacementModes();
+
         void FrameUpdate(FrameEventArgs e);
     }
 }

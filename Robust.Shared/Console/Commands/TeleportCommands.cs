@@ -139,7 +139,7 @@ public sealed class TeleportToCommand : LocalizedEntityCommands
 
         foreach (var victim in victims)
         {
-            _transform.SetCoordinates(victim.Entity, targetCoords);
+            _transform.SetMapCoordinates(victim.Entity, _transform.ToMapCoordinates(targetCoords));
             _transform.AttachToGridOrMap(victim.Entity, victim.Transform);
         }
     }

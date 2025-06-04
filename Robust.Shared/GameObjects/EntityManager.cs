@@ -498,7 +498,7 @@ namespace Robust.Shared.GameObjects
             if (Deleted(uid.Value))
                 return false;
 
-            if (!QueuedDeletionsSet.Add(uid.Value))
+            if (QueuedDeletionsSet.Contains(uid.Value))
                 return false;
 
             QueueDeleteEntity(uid);

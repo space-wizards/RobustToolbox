@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -81,6 +81,22 @@ namespace Robust.Client.Graphics
             /// </summary>
             public static readonly StateId Invalid = default;
             public bool IsValid => Name != null;
+
+            /// <summary>
+            ///     Treat <c>this</c> as prefix to actual <c>StateId</c>. All subsequent <paramref name="argument"/>s
+            ///     will be separated.
+            /// </summary>
+            /// <param name="argument">first argument</param>
+            public StateId Argument<T>(T argument) {
+                return new($"{Name}-{argument}");
+            }
+
+            /// <inheritdoc cref="Argument{T}(T)"/>
+            /// <param name="argument">first argument</param>
+            /// <param name="argument2">second argument</param>
+            public StateId Argument<T, TT>(T argument, TT argument2) {
+                return new($"{Name}-{argument}-{argument2}");
+            }
 
             public override string? ToString()
             {

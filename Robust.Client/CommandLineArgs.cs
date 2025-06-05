@@ -10,6 +10,7 @@ internal sealed class CommandLineArgs
 {
     public MountOptions MountOptions { get; }
     public bool Headless { get; }
+    public bool NoAudio { get; }
     public bool SelfContained { get; }
     public bool Connect { get; }
     public string ConnectAddress { get; }
@@ -26,6 +27,7 @@ internal sealed class CommandLineArgs
     {
         parsed = null;
         var headless = false;
+        var noAudio = false;
         var selfContained = false;
         var connect = false;
         var connectAddress = "localhost";
@@ -77,6 +79,10 @@ internal sealed class CommandLineArgs
             else if (arg == "--headless")
             {
                 headless = true;
+            }
+            else if (arg == "--no-audio")
+            {
+                noAudio = true;
             }
             else if (arg == "--username")
             {
@@ -165,6 +171,7 @@ internal sealed class CommandLineArgs
 
         parsed = new CommandLineArgs(
             headless,
+            noAudio,
             selfContained,
             connect,
             launcher,
@@ -186,6 +193,7 @@ Usage: Robust.Client [options] [+command [+command]]
 
 Options:
   --headless          Run without graphics/audio/input.
+  --no-audio          Run without audio.
   --self-contained    Store data relative to executable instead of user-global locations.
   --connect           Automatically connect to connect-address.
   --connect-address   Address to automatically connect to.
@@ -206,6 +214,7 @@ Options:
 
     private CommandLineArgs(
         bool headless,
+        bool noAudio,
         bool selfContained,
         bool connect,
         bool launcher,
@@ -217,6 +226,7 @@ Options:
         IReadOnlyList<string> execCommands)
     {
         Headless = headless;
+        NoAudio = noAudio;
         SelfContained = selfContained;
         Connect = connect;
         Launcher = launcher;

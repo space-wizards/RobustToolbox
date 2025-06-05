@@ -127,6 +127,16 @@ namespace Robust.Client
                     deps.Register<IFileDialogManager, FileDialogManager>();
                     deps.Register<IUriOpener, UriOpener>();
                     break;
+                case GameController.DisplayMode.ClydeNoAudio:
+                    deps.Register<IClyde, Clyde>();
+                    deps.Register<IClipboardManager, Clyde>();
+                    deps.Register<IClydeInternal, Clyde>();
+                    deps.Register<IAudioManager, HeadlessAudioManager>();
+                    deps.Register<IAudioInternal, HeadlessAudioManager>();
+                    deps.Register<IInputManager, ClydeInputManager>();
+                    deps.Register<IFileDialogManager, FileDialogManager>();
+                    deps.Register<IUriOpener, UriOpener>();
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }

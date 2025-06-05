@@ -710,6 +710,7 @@ namespace Robust.Client
         {
             Headless,
             Clyde,
+            ClydeNoAudio,
         }
 
         internal void CleanupGameThread()

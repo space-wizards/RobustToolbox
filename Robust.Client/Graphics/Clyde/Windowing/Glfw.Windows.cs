@@ -662,6 +662,10 @@ namespace Robust.Client.Graphics.Clyde
             {
                 var icons = _clyde.LoadWindowIcons().ToArray();
 
+                // Done if no icon (e.g., macOS)
+                if (icons.Length == 0)
+                    return;
+
                 // Turn each image into a byte[] so we can actually pin their contents.
                 // Wish I knew a clean way to do this without allocations.
                 var images = icons

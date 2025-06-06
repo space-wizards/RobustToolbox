@@ -1187,6 +1187,21 @@ namespace Robust.Shared
         public static readonly CVarDef<string> DisplaySplashLogo =
             CVarDef.Create("display.splash_logo", "", CVar.CLIENTONLY);
 
+        public static readonly CVarDef<float> DisplayLoadingXLocation =
+            CVarDef.Create("display.loading_x_location", 0.5f, CVar.CLIENTONLY);
+
+        public static readonly CVarDef<float> DisplayLoadingYLocation =
+            CVarDef.Create("display.loading_y_location", 0.675f, CVar.CLIENTONLY);
+
+        public static readonly CVarDef<bool> DisplayShowLoadingBar =
+            CVarDef.Create("display.show_loading_bar", true, CVar.CLIENTONLY);
+
+        public static readonly CVarDef<bool> DisplayShowCurrentLoadingSection =
+            CVarDef.Create("display.show_current_loading_section", true, CVar.CLIENTONLY);
+
+        public static readonly CVarDef<bool> DisplayShowLoadTimes =
+            CVarDef.Create("display.show_load_times", true, CVar.CLIENTONLY);
+
         /// <summary>
         /// Use US QWERTY hotkeys for reported key names.
         /// </summary>

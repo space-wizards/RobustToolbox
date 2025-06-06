@@ -1224,6 +1224,8 @@ namespace Robust.Client.GameObjects
                         return;
                     _visible = value;
 
+                    Owner.Comp.BoundsDirty = true;
+
                     // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
                     if (_parent.Owner != EntityUid.Invalid)
                         Owner.Comp.Sys?.QueueUpdateIsInert(Owner);

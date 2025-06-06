@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix `SpriteComponent.Layer.Visible` setter not marking a sprite's bounding box as dirty.
 
 ### Other
 

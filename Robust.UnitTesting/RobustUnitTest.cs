@@ -28,6 +28,7 @@ using Robust.Shared.Player;
 using Robust.Shared.Reflection;
 using Robust.Shared.Threading;
 using Robust.Shared.Utility;
+using AppearanceSystem = Robust.Client.GameObjects.AppearanceSystem;
 using InputSystem = Robust.Server.GameObjects.InputSystem;
 using MapSystem = Robust.Server.GameObjects.MapSystem;
 using PointLightComponent = Robust.Client.GameObjects.PointLightComponent;
@@ -141,6 +142,7 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<RecursiveMoveSystem>();
                 systems.LoadExtraSystemType<SpriteSystem>();
                 systems.LoadExtraSystemType<SpriteTreeSystem>();
+                systems.LoadExtraSystemType<AppearanceSystem>();
                 systems.LoadExtraSystemType<GridChunkBoundsDebugSystem>();
             }
             else

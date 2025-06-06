@@ -34,8 +34,10 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IPrototypeManager _proto = default!;
         [Dependency] private readonly IResourceCache _resourceCache = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private readonly IComponentFactory _factory = default!;
         [Dependency] private readonly SharedTransformSystem _xforms = default!;
         [Dependency] private readonly SpriteTreeSystem _tree = default!;
+        [Dependency] private readonly AppearanceSystem _appearance = default!;
 
         public static readonly ProtoId<ShaderPrototype> UnshadedId = "unshaded";
         private readonly Queue<SpriteComponent> _inertUpdateQueue = new();

@@ -105,9 +105,9 @@ public sealed partial class LoadingScreenManager
     }
 
     /// <summary>
-    /// Start a specific
+    /// Will run the giving function and add a custom "section" for it on the loading screen.
     /// </summary>
-    public void DisplayLoadingStep(Action action, object method)
+    public void LoadingStep(Action action, object method)
     {
         BeginLoadingSection(method.GetType().Name);
         action();

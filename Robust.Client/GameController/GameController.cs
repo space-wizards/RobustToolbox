@@ -140,10 +140,10 @@ namespace Robust.Client
             _clyde.InitializePostWindowing();
             _clyde.SetWindowTitle(GameTitle());
 
-            _loadscr.DisplayLoadingStep(_audio.InitializePostWindowing, _audio);
+            _loadscr.LoadingStep(_audio.InitializePostWindowing, _audio);
 
-            _loadscr.DisplayLoadingStep(_taskManager.Initialize, _taskManager);
-            _loadscr.DisplayLoadingStep(_parallelMgr.Initialize, _parallelMgr);
+            _loadscr.LoadingStep(_taskManager.Initialize, _taskManager);
+            _loadscr.LoadingStep(_parallelMgr.Initialize, _parallelMgr);
             _fontManager.SetFontDpi((uint)_configurationManager.GetCVar(CVars.DisplayFontDpi));
 
             // Load optional Robust modules.
@@ -165,8 +165,8 @@ namespace Robust.Client
 
             _loadscr.EndLoadingSection();
 
-            _loadscr.DisplayLoadingStep(_serializationManager.Initialize, _serializationManager);
-            _loadscr.DisplayLoadingStep(_loc.Initialize, _loc);
+            _loadscr.LoadingStep(_serializationManager.Initialize, _serializationManager);
+            _loadscr.LoadingStep(_loc.Initialize, _loc);
 
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
@@ -183,12 +183,12 @@ namespace Robust.Client
                 _configurationManager,
                 _logManager.GetSawmill("res"));
 
-            _loadscr.DisplayLoadingStep(_resourceCache.PreloadTextures, _resourceCache);
+            _loadscr.LoadingStep(_resourceCache.PreloadTextures, _resourceCache);
             _networkManager.Initialize(false);
-            _loadscr.DisplayLoadingStep(_configurationManager.SetupNetworking, _configurationManager);
-            _loadscr.DisplayLoadingStep(_serializer.Initialize, _serializer);
-            _loadscr.DisplayLoadingStep(_inputManager.Initialize, _inputManager);
-            _loadscr.DisplayLoadingStep(_console.Initialize, _console);
+            _loadscr.LoadingStep(_configurationManager.SetupNetworking, _configurationManager);
+            _loadscr.LoadingStep(_serializer.Initialize, _serializer);
+            _loadscr.LoadingStep(_inputManager.Initialize, _inputManager);
+            _loadscr.LoadingStep(_console.Initialize, _console);
 
             // Make sure this is done before we try to load prototypes,
             // avoid any possibility of race conditions causing the check to not finish
@@ -196,30 +196,30 @@ namespace Robust.Client
             ProgramShared.FinishCheckBadFileExtensions(checkBadExtensions);
 
             _reload.Initialize();
-            _loadscr.DisplayLoadingStep(_reflectionManager.Initialize, _reflectionManager);
+            _loadscr.LoadingStep(_reflectionManager.Initialize, _reflectionManager);
             _loadscr.BeginLoadingSection(_prototypeManager);
             _prototypeManager.Initialize();
             _prototypeManager.LoadDefaultPrototypes();
             _loadscr.EndLoadingSection();
-            _loadscr.DisplayLoadingStep(_xamlProxyManager.Initialize, _xamlProxyManager);
-            _loadscr.DisplayLoadingStep(_xamlHotReloadManager.Initialize, _xamlHotReloadManager);
-            _loadscr.DisplayLoadingStep(_userInterfaceManager.Initialize, _userInterfaceManager);
-            _loadscr.DisplayLoadingStep(_eyeManager.Initialize, _eyeManager);
-            _loadscr.DisplayLoadingStep(_entityManager.Initialize, _entityManager);
-            _loadscr.DisplayLoadingStep(_mapManager.Initialize, _mapManager);
-            _loadscr.DisplayLoadingStep(_gameStateManager.Initialize, _gameStateManager);
-            _loadscr.DisplayLoadingStep(_placementManager.Initialize, _placementManager);
-            _loadscr.DisplayLoadingStep(_viewVariablesManager.Initialize, _viewVariablesManager);
-            _loadscr.DisplayLoadingStep(_scriptClient.Initialize, _scriptClient);
-            _loadscr.DisplayLoadingStep(_client.Initialize, _client);
-            _loadscr.DisplayLoadingStep(_discord.Initialize, _discord);
-            _loadscr.DisplayLoadingStep(_tagManager.Initialize, _tagManager);
-            _loadscr.DisplayLoadingStep(_protoLoadMan.Initialize, _protoLoadMan);
-            _loadscr.DisplayLoadingStep(_netResMan.Initialize, _netResMan);
-            _loadscr.DisplayLoadingStep(_replayLoader.Initialize, _replayLoader);
-            _loadscr.DisplayLoadingStep(_replayPlayback.Initialize, _replayPlayback);
-            _loadscr.DisplayLoadingStep(_replayRecording.Initialize, _replayRecording);
-            _loadscr.DisplayLoadingStep(_userInterfaceManager.PostInitialize, _userInterfaceManager);
+            _loadscr.LoadingStep(_xamlProxyManager.Initialize, _xamlProxyManager);
+            _loadscr.LoadingStep(_xamlHotReloadManager.Initialize, _xamlHotReloadManager);
+            _loadscr.LoadingStep(_userInterfaceManager.Initialize, _userInterfaceManager);
+            _loadscr.LoadingStep(_eyeManager.Initialize, _eyeManager);
+            _loadscr.LoadingStep(_entityManager.Initialize, _entityManager);
+            _loadscr.LoadingStep(_mapManager.Initialize, _mapManager);
+            _loadscr.LoadingStep(_gameStateManager.Initialize, _gameStateManager);
+            _loadscr.LoadingStep(_placementManager.Initialize, _placementManager);
+            _loadscr.LoadingStep(_viewVariablesManager.Initialize, _viewVariablesManager);
+            _loadscr.LoadingStep(_scriptClient.Initialize, _scriptClient);
+            _loadscr.LoadingStep(_client.Initialize, _client);
+            _loadscr.LoadingStep(_discord.Initialize, _discord);
+            _loadscr.LoadingStep(_tagManager.Initialize, _tagManager);
+            _loadscr.LoadingStep(_protoLoadMan.Initialize, _protoLoadMan);
+            _loadscr.LoadingStep(_netResMan.Initialize, _netResMan);
+            _loadscr.LoadingStep(_replayLoader.Initialize, _replayLoader);
+            _loadscr.LoadingStep(_replayPlayback.Initialize, _replayPlayback);
+            _loadscr.LoadingStep(_replayRecording.Initialize, _replayRecording);
+            _loadscr.LoadingStep(_userInterfaceManager.PostInitialize, _userInterfaceManager);
 
             // Init stuff before this if at all possible.
             _loadscr.Finish();

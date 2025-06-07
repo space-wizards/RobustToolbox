@@ -149,6 +149,11 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
+        public void ProcessInput()
+        {
+            // Nothing!
+        }
+
         public bool SeparateWindowThread => false;
 
         public bool InitializePreWindowing()

@@ -220,6 +220,10 @@ namespace Robust.Client
             _loadscr.DisplayLoadingStep(_replayPlayback.Initialize, _replayPlayback);
             _loadscr.DisplayLoadingStep(_replayRecording.Initialize, _replayRecording);
             _loadscr.DisplayLoadingStep(_userInterfaceManager.PostInitialize, _userInterfaceManager);
+
+            // Init stuff before this if at all possible.
+            _loadscr.Finish();
+
             _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
 
             if (_commandLineArgs?.Username != null)

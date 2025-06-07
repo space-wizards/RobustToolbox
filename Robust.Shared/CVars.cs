@@ -1203,6 +1203,13 @@ namespace Robust.Shared
             CVarDef.Create("display.show_load_times", true, CVar.CLIENTONLY);
 
         /// <summary>
+        /// The client will automatically update this to the number of sections it saw. Ths is for the loading bar on
+        /// the splash screen.
+        /// </summary>
+        public static readonly CVarDef<int> SeenNumberOfLoadingSections =
+            CVarDef.Create("display.seen_number_of_loading_sections", 0, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        /// <summary>
         /// Use US QWERTY hotkeys for reported key names.
         /// </summary>
         public static readonly CVarDef<bool> DisplayUSQWERTYHotkeys =

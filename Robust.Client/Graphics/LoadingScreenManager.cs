@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Random;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.Graphics;
@@ -20,12 +22,18 @@ public sealed partial class LoadingScreenManager
 
     private readonly Stopwatch _sw = new();
 
-    private int _currentSection = 1;
-
     private const int LoadingBarWidth = 250;
     private const int LoadingBarHeight = 20;
-    private const int LoadingBarMaxSections = 10;
+    private int LoadingBarMaxSections = 10;
     private const int NumLongestLoadTimes = 5;
+
+    private List<Color> Colors =
+    [
+        Color.White,
+        Color.LightCoral,
+        Color.LightGreen,
+        Color.LightSkyBlue
+    ];
 
     #region Cvars
 
@@ -35,21 +43,19 @@ public sealed partial class LoadingScreenManager
     private bool ShowLoadingBar;
     private bool ShowCurrentLoadingSection;
     private bool ShowLoadTimes;
+    private int SeenNumberOfLoadingSections;
 
     #endregion
 
-    private FontResource? Font;
+    private FontResource? _font;
 
-    private List<Color> Colors =
-    [
-        Color.LightCoral,
-        Color.LightGreen,
-        Color.LightSkyBlue,
-    ];
+    private Color _loadingBarColor;
 
-    private List<(string Name, TimeSpan LoadTime)> Times = [];
+    private readonly List<(string Name, TimeSpan LoadTime)> _times = [];
 
-    private string CurrentSectionName = "";
+    private int _currentSection = 1;
+
+    private string _currentSectionName = "";
 
     public void Initialize()
     {
@@ -59,14 +65,19 @@ public sealed partial class LoadingScreenManager
         ShowLoadingBar = _cfg.GetCVar(CVars.DisplayShowLoadingBar);
         ShowCurrentLoadingSection = _cfg.GetCVar(CVars.DisplayShowCurrentLoadingSection);
         ShowLoadTimes = _cfg.GetCVar(CVars.DisplayShowLoadTimes);
+        SeenNumberOfLoadingSections = _cfg.GetCVar(CVars.SeenNumberOfLoadingSections);
 
-        _resourceCache.TryGetResource("/EngineFonts/NotoSans/NotoSans-Regular.ttf", out Font);
+        LoadingBarMaxSections = SeenNumberOfLoadingSections == 0 ? LoadingBarMaxSections : SeenNumberOfLoadingSections;
+
+        _resourceCache.TryGetResource("/EngineFonts/NotoSans/NotoSans-Regular.ttf", out _font);
+
+        _loadingBarColor = Random.Shared.Pick(Colors);
     }
 
     public void BeginLoadingSection(string sectionName)
     {
         _sw.Restart();
-        CurrentSectionName = sectionName;
+        _currentSectionName = sectionName;
         _clyde.ProcessInput();
         _clyde.Render();
     }
@@ -83,8 +94,14 @@ public sealed partial class LoadingScreenManager
     public void EndLoadingSection()
     {
         var time = _sw.Elapsed;
-        Times.Add((CurrentSectionName, time));
+        _times.Add((_currentSectionName, time));
         _currentSection++;
+    }
+
+    public void Finish()
+    {
+        _cfg.SetCVar(CVars.SeenNumberOfLoadingSections, _currentSection);
+        _cfg.SaveToFile();
     }
 
     /// <summary>
@@ -128,47 +145,61 @@ public sealed partial class LoadingScreenManager
 
         startLocation -= new Vector2i(LoadingBarWidth/2, 0);
         var sectionWidth = LoadingBarWidth / LoadingBarMaxSections;
+
+        var barTopLeft = startLocation;
+        var barBottomRight = startLocation + new Vector2i(_currentSection * sectionWidth % LoadingBarWidth, -LoadingBarHeight);
+        var outlineOffset = 5;
+
+        // Outline
         handle.DrawingHandleScreen.DrawRect(new UIBox2
             {
-                BottomRight = startLocation + new Vector2i(_currentSection%LoadingBarMaxSections * sectionWidth, -LoadingBarHeight),
-                TopLeft = startLocation,
+                TopLeft = barTopLeft - new Vector2i(outlineOffset, -outlineOffset),
+                BottomRight = startLocation + new Vector2i(LoadingBarWidth, -LoadingBarHeight) + new Vector2i(outlineOffset, -outlineOffset),
             },
-            Colors[_currentSection / LoadingBarMaxSections % Colors.Count]);
+            Color.White,
+            false);
+
+        // Progress bar
+        handle.DrawingHandleScreen.DrawRect(new UIBox2
+            {
+                TopLeft = barTopLeft,
+                BottomRight = barBottomRight,
+            },
+            _loadingBarColor);
 
         startLocation += new Vector2i(0, 10);
     }
 
     private void DrawCurrentLoading(IRenderHandle handle, ref Vector2i startLocation)
     {
-        if (Font == null || !ShowCurrentLoadingSection)
+        if (_font == null || !ShowCurrentLoadingSection)
             return;
 
-        handle.DrawingHandleScreen.DrawString(new VectorFont(Font, 11), startLocation, CurrentSectionName);
+        handle.DrawingHandleScreen.DrawString(new VectorFont(_font, 11), startLocation, _currentSectionName);
         startLocation += new Vector2i(0, 10);
     }
 
     private void DrawTopTimes(IRenderHandle handle, ref Vector2i startLocation)
     {
-        if (Font == null || !ShowLoadTimes)
+        if (_font == null || !ShowLoadTimes)
             return;
 
         startLocation += new Vector2i(20, 10);
 
         var offset = 0;
         var x = 0;
-        Times.Sort((a, b) => b.LoadTime.CompareTo(a.LoadTime));
-        foreach (var val in Times)
+        _times.Sort((a, b) => b.LoadTime.CompareTo(a.LoadTime));
+        foreach (var val in _times)
         {
             if (x >= NumLongestLoadTimes)
                 break;
 
             var time = val.LoadTime.ToString(@"ss\.ff");
             var entry = $"{time} - {val.Name}";
-            handle.DrawingHandleScreen.DrawString(new VectorFont(Font, 10), startLocation + new Vector2i(0, offset), entry);
+            handle.DrawingHandleScreen.DrawString(new VectorFont(_font, 10), startLocation + new Vector2i(0, offset), entry);
             offset += 13;
             x++;
         }
     }
 }
-
 

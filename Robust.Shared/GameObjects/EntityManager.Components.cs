@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -2174,25 +2175,37 @@ namespace Robust.Shared.GameObjects
         where TComp1 : IComponent
         where TComp2 : IComponent
     {
-        private Dictionary<EntityUid, IComponent>.Enumerator _traitDict;
-        private readonly Dictionary<EntityUid, IComponent> _traitDict2;
+        private Dictionary<EntityUid, IComponent>.Enumerator _enumerator;
+        private readonly Dictionary<EntityUid, IComponent> _traitDict;
         private readonly EntityQuery<MetaDataComponent> _metaQuery;
+        private readonly bool _enumeratorIndex;
 
         public EntityQueryEnumerator(
             Dictionary<EntityUid, IComponent> traitDict,
             Dictionary<EntityUid, IComponent> traitDict2,
             EntityQuery<MetaDataComponent> metaQuery)
         {
-            _traitDict = traitDict.GetEnumerator();
-            _traitDict2 = traitDict2;
             _metaQuery = metaQuery;
+
+            if (traitDict.Count < traitDict2.Count)
+            {
+                _enumerator = traitDict.GetEnumerator();
+                _traitDict = traitDict2;
+                _enumeratorIndex = false;
+            }
+            else
+            {
+                _enumerator = traitDict2.GetEnumerator();
+                _traitDict = traitDict;
+                _enumeratorIndex = true;
+            }
         }
 
         public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2)
         {
             while (true)
             {
-                if (!_traitDict.MoveNext())
+                if (!_enumerator.MoveNext())
                 {
                     uid = default;
                     comp1 = default;
@@ -2200,7 +2213,7 @@ namespace Robust.Shared.GameObjects
                     return false;
                 }
 
-                var current = _traitDict.Current;
+                var current = _enumerator.Current;
 
                 if (current.Value.Deleted)
                 {
@@ -2212,14 +2225,22 @@ namespace Robust.Shared.GameObjects
                     continue;
                 }
 
-                if (!_traitDict2.TryGetValue(current.Key, out var comp2Obj) || comp2Obj.Deleted)
+                if (!_traitDict.TryGetValue(current.Key, out var compObj) || compObj.Deleted)
                 {
                     continue;
                 }
 
                 uid = current.Key;
-                comp1 = (TComp1)current.Value;
-                comp2 = (TComp2)comp2Obj;
+                if(!_enumeratorIndex)
+                {
+                    comp1 = (TComp1)current.Value;
+                    comp2 = (TComp2)compObj;
+                }
+                else
+                {
+                    comp1 = (TComp1)compObj;
+                    comp2 = (TComp2)current.Value;
+                }
                 return true;
             }
         }
@@ -2232,7 +2253,7 @@ namespace Robust.Shared.GameObjects
 
         public void Dispose()
         {
-            _traitDict.Dispose();
+            _enumerator.Dispose();
         }
     }
 
@@ -2244,10 +2265,11 @@ namespace Robust.Shared.GameObjects
         where TComp2 : IComponent
         where TComp3 : IComponent
     {
-        private Dictionary<EntityUid, IComponent>.Enumerator _traitDict;
+        private Dictionary<EntityUid, IComponent>.Enumerator _enumerator;
+        private readonly Dictionary<EntityUid, IComponent> _traitDict;
         private readonly Dictionary<EntityUid, IComponent> _traitDict2;
-        private readonly Dictionary<EntityUid, IComponent> _traitDict3;
         private readonly EntityQuery<MetaDataComponent> _metaQuery;
+        private readonly byte _enumeratorIndex;
 
         public EntityQueryEnumerator(
             Dictionary<EntityUid, IComponent> traitDict,
@@ -2255,17 +2277,41 @@ namespace Robust.Shared.GameObjects
             Dictionary<EntityUid, IComponent> traitDict3,
             EntityQuery<MetaDataComponent> metaQuery)
         {
-            _traitDict = traitDict.GetEnumerator();
-            _traitDict2 = traitDict2;
-            _traitDict3 = traitDict3;
+
             _metaQuery = metaQuery;
+
+            var count1 = traitDict.Count;
+            var count2 = traitDict2.Count;
+            var count3 = traitDict3.Count;
+
+            if (count1 <= count2 && count1 <= count3)
+            {
+                _traitDict = traitDict3;
+                _traitDict2 = traitDict2;
+                _enumerator = traitDict.GetEnumerator();
+                _enumeratorIndex = 0;
+            }
+            else if (count2 <= count1 && count2 <= count3)
+            {
+                _traitDict = traitDict;
+                _traitDict2 = traitDict3;
+                _enumerator = traitDict2.GetEnumerator();
+                _enumeratorIndex = 1;
+            }
+            else
+            {
+                _traitDict = traitDict;
+                _traitDict2 = traitDict2;
+                _enumerator = traitDict3.GetEnumerator();
+                _enumeratorIndex = 2;
+            }
         }
 
         public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2, [NotNullWhen(true)] out TComp3? comp3)
         {
             while (true)
             {
-                if (!_traitDict.MoveNext())
+                if (!_enumerator.MoveNext())
                 {
                     uid = default;
                     comp1 = default;
@@ -2274,7 +2320,7 @@ namespace Robust.Shared.GameObjects
                     return false;
                 }
 
-                var current = _traitDict.Current;
+                var current = _enumerator.Current;
 
                 if (current.Value.Deleted)
                 {
@@ -2286,20 +2332,36 @@ namespace Robust.Shared.GameObjects
                     continue;
                 }
 
+                if (!_traitDict.TryGetValue(current.Key, out var compObj) || compObj.Deleted)
+                {
+                    continue;
+                }
+
                 if (!_traitDict2.TryGetValue(current.Key, out var comp2Obj) || comp2Obj.Deleted)
                 {
                     continue;
                 }
 
-                if (!_traitDict3.TryGetValue(current.Key, out var comp3Obj) || comp3Obj.Deleted)
-                {
-                    continue;
-                }
 
                 uid = current.Key;
-                comp1 = (TComp1)current.Value;
-                comp2 = (TComp2)comp2Obj;
-                comp3 = (TComp3)comp3Obj;
+                switch (_enumeratorIndex)
+                {
+                    case 0:
+                        comp1 = (TComp1)current.Value;
+                        comp2 = (TComp2)comp2Obj;
+                        comp3 = (TComp3)compObj;
+                        break;
+                    case 1:
+                        comp1 = (TComp1)compObj;
+                        comp2 = (TComp2)current.Value;
+                        comp3 = (TComp3)comp2Obj;
+                        break;
+                    default:
+                        comp1 = (TComp1)compObj;
+                        comp2 = (TComp2)comp2Obj;
+                        comp3 = (TComp3)current.Value;
+                        break;
+                }
                 return true;
             }
         }
@@ -2315,7 +2377,7 @@ namespace Robust.Shared.GameObjects
 
         public void Dispose()
         {
-            _traitDict.Dispose();
+            _enumerator.Dispose();
         }
     }
 
@@ -2328,12 +2390,12 @@ namespace Robust.Shared.GameObjects
         where TComp3 : IComponent
         where TComp4 : IComponent
     {
-        private Dictionary<EntityUid, IComponent>.Enumerator _traitDict;
+        private Dictionary<EntityUid, IComponent>.Enumerator _enumerator;
+        private readonly Dictionary<EntityUid, IComponent> _traitDict;
         private readonly Dictionary<EntityUid, IComponent> _traitDict2;
         private readonly Dictionary<EntityUid, IComponent> _traitDict3;
-        private readonly Dictionary<EntityUid, IComponent> _traitDict4;
         private readonly EntityQuery<MetaDataComponent> _metaQuery;
-
+        private readonly byte _enumeratorIndex;
         public EntityQueryEnumerator(
             Dictionary<EntityUid, IComponent> traitDict,
             Dictionary<EntityUid, IComponent> traitDict2,
@@ -2341,18 +2403,52 @@ namespace Robust.Shared.GameObjects
             Dictionary<EntityUid, IComponent> traitDict4,
             EntityQuery<MetaDataComponent> metaQuery)
         {
-            _traitDict = traitDict.GetEnumerator();
-            _traitDict2 = traitDict2;
-            _traitDict3 = traitDict3;
-            _traitDict4 = traitDict4;
             _metaQuery = metaQuery;
+
+            var count1 = traitDict.Count;
+            var count2 = traitDict2.Count;
+            var count3 = traitDict3.Count;
+            var count4 = traitDict4.Count;
+
+            if (count1 <= count2 && count1 <= count3 && count1 <= count4)
+            {
+                _traitDict = traitDict4;
+                _traitDict2 = traitDict2;
+                _traitDict3 = traitDict3;
+                _enumerator = traitDict.GetEnumerator();
+                _enumeratorIndex = 0;
+            }
+            else if (count2 <= count1 && count2 <= count3 && count2 <= count4)
+            {
+                _traitDict = traitDict;
+                _traitDict2 = traitDict4;
+                _traitDict3 = traitDict3;
+                _enumerator = traitDict2.GetEnumerator();
+                _enumeratorIndex = 1;
+            }
+            else if (count3 <= count1 && count3 <= count2 && count3 <= count4)
+            {
+                _traitDict = traitDict;
+                _traitDict2 = traitDict2;
+                _traitDict3 = traitDict4;
+                _enumerator = traitDict3.GetEnumerator();
+                _enumeratorIndex = 2;
+            }
+            else
+            {
+                _traitDict = traitDict;
+                _traitDict2 = traitDict2;
+                _traitDict3 = traitDict3;
+                _enumerator = traitDict4.GetEnumerator();
+                _enumeratorIndex = 3;
+            }   
         }
 
         public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2, [NotNullWhen(true)] out TComp3? comp3, [NotNullWhen(true)] out TComp4? comp4)
         {
             while (true)
             {
-                if (!_traitDict.MoveNext())
+                if (!_enumerator.MoveNext())
                 {
                     uid = default;
                     comp1 = default;
@@ -2362,7 +2458,7 @@ namespace Robust.Shared.GameObjects
                     return false;
                 }
 
-                var current = _traitDict.Current;
+                var current = _enumerator.Current;
 
                 if (current.Value.Deleted)
                 {
@@ -2370,6 +2466,11 @@ namespace Robust.Shared.GameObjects
                 }
 
                 if (!_metaQuery.TryGetComponentInternal(current.Key, out var metaComp) || metaComp.EntityPaused)
+                {
+                    continue;
+                }
+
+                if (!_traitDict.TryGetValue(current.Key, out var compObj) || compObj.Deleted)
                 {
                     continue;
                 }
@@ -2384,16 +2485,34 @@ namespace Robust.Shared.GameObjects
                     continue;
                 }
 
-                if (!_traitDict4.TryGetValue(current.Key, out var comp4Obj) || comp4Obj.Deleted)
-                {
-                    continue;
-                }
-
                 uid = current.Key;
-                comp1 = (TComp1)current.Value;
-                comp2 = (TComp2)comp2Obj;
-                comp3 = (TComp3)comp3Obj;
-                comp4 = (TComp4)comp4Obj;
+                switch (_enumeratorIndex)
+                {
+                    case 0:
+                        comp1 = (TComp1)current.Value;
+                        comp2 = (TComp2)comp2Obj;
+                        comp3 = (TComp3)comp3Obj;
+                        comp4 = (TComp4)compObj;
+                        break;
+                    case 1:
+                        comp1 = (TComp1)compObj;
+                        comp2 = (TComp2)current.Value;
+                        comp3 = (TComp3)comp3Obj;
+                        comp4 = (TComp4)comp2Obj;
+                        break;
+                    case 2:
+                        comp1 = (TComp1)compObj;
+                        comp2 = (TComp2)comp2Obj;
+                        comp3 = (TComp3)current.Value;
+                        comp4 = (TComp4)comp3Obj;
+                        break;
+                    default:
+                        comp1 = (TComp1)compObj;
+                        comp2 = (TComp2)comp2Obj;
+                        comp3 = (TComp3)comp3Obj;
+                        comp4 = (TComp4)current.Value;
+                        break;
+                }
                 return true;
             }
         }
@@ -2410,7 +2529,7 @@ namespace Robust.Shared.GameObjects
 
         public void Dispose()
         {
-            _traitDict.Dispose();
+            _enumerator.Dispose();
         }
     }
 
@@ -2475,22 +2594,33 @@ namespace Robust.Shared.GameObjects
         where TComp1 : IComponent
         where TComp2 : IComponent
     {
-        private Dictionary<EntityUid, IComponent>.Enumerator _traitDict;
-        private readonly Dictionary<EntityUid, IComponent> _traitDict2;
-
+        private Dictionary<EntityUid, IComponent>.Enumerator _enumerator;
+        private readonly Dictionary<EntityUid, IComponent> _traitDict;
+        private readonly EntityQuery<MetaDataComponent> _metaQuery;
+        private readonly bool _enumeratorIndex;
         public AllEntityQueryEnumerator(
             Dictionary<EntityUid, IComponent> traitDict,
             Dictionary<EntityUid, IComponent> traitDict2)
         {
-            _traitDict = traitDict.GetEnumerator();
-            _traitDict2 = traitDict2;
+            if (traitDict.Count < traitDict2.Count)
+            {
+                _enumerator = traitDict.GetEnumerator();
+                _traitDict = traitDict2;
+                _enumeratorIndex = false;
+            }
+            else
+            {
+                _enumerator = traitDict2.GetEnumerator();
+                _traitDict = traitDict;
+                _enumeratorIndex = true;
+            }
         }
 
         public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2)
         {
             while (true)
             {
-                if (!_traitDict.MoveNext())
+                if (!_enumerator.MoveNext())
                 {
                     uid = default;
                     comp1 = default;
@@ -2498,21 +2628,29 @@ namespace Robust.Shared.GameObjects
                     return false;
                 }
 
-                var current = _traitDict.Current;
+                var current = _enumerator.Current;
 
                 if (current.Value.Deleted)
                 {
                     continue;
                 }
 
-                if (!_traitDict2.TryGetValue(current.Key, out var comp2Obj) || comp2Obj.Deleted)
+                if (!_traitDict.TryGetValue(current.Key, out var compObj) || compObj.Deleted)
                 {
                     continue;
                 }
 
                 uid = current.Key;
-                comp1 = (TComp1)current.Value;
-                comp2 = (TComp2)comp2Obj;
+                if (!_enumeratorIndex)
+                {
+                    comp1 = (TComp1)current.Value;
+                    comp2 = (TComp2)compObj;
+                }
+                else
+                {
+                    comp1 = (TComp1)compObj;
+                    comp2 = (TComp2)current.Value;
+                }
                 return true;
             }
         }
@@ -2525,7 +2663,7 @@ namespace Robust.Shared.GameObjects
 
         public void Dispose()
         {
-            _traitDict.Dispose();
+            _enumerator.Dispose();
         }
     }
 
@@ -2537,25 +2675,48 @@ namespace Robust.Shared.GameObjects
         where TComp2 : IComponent
         where TComp3 : IComponent
     {
-        private Dictionary<EntityUid, IComponent>.Enumerator _traitDict;
+        private Dictionary<EntityUid, IComponent>.Enumerator _enumerator;
+        private readonly Dictionary<EntityUid, IComponent> _traitDict;
         private readonly Dictionary<EntityUid, IComponent> _traitDict2;
-        private readonly Dictionary<EntityUid, IComponent> _traitDict3;
+        private readonly byte _enumeratorIndex;
 
         public AllEntityQueryEnumerator(
             Dictionary<EntityUid, IComponent> traitDict,
             Dictionary<EntityUid, IComponent> traitDict2,
             Dictionary<EntityUid, IComponent> traitDict3)
         {
-            _traitDict = traitDict.GetEnumerator();
-            _traitDict2 = traitDict2;
-            _traitDict3 = traitDict3;
+            var count1 = traitDict.Count;
+            var count2 = traitDict2.Count;
+            var count3 = traitDict3.Count;
+
+            if (count1 <= count2 && count1 <= count3)
+            {
+                _traitDict = traitDict3;
+                _traitDict2 = traitDict2;
+                _enumerator = traitDict.GetEnumerator();
+                _enumeratorIndex = 0;
+            }
+            else if (count2 <= count1 && count2 <= count3)
+            {
+                _traitDict = traitDict;
+                _traitDict2 = traitDict3;
+                _enumerator = traitDict2.GetEnumerator();
+                _enumeratorIndex = 1;
+            }
+            else
+            {
+                _traitDict = traitDict;
+                _traitDict2 = traitDict2;
+                _enumerator = traitDict3.GetEnumerator();
+                _enumeratorIndex = 2;
+            }
         }
 
         public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2, [NotNullWhen(true)] out TComp3? comp3)
         {
             while (true)
             {
-                if (!_traitDict.MoveNext())
+                if (!_enumerator.MoveNext())
                 {
                     uid = default;
                     comp1 = default;
@@ -2564,9 +2725,14 @@ namespace Robust.Shared.GameObjects
                     return false;
                 }
 
-                var current = _traitDict.Current;
+                var current = _enumerator.Current;
 
                 if (current.Value.Deleted)
+                {
+                    continue;
+                }
+
+                if (!_traitDict.TryGetValue(current.Key, out var compObj) || compObj.Deleted)
                 {
                     continue;
                 }
@@ -2576,15 +2742,26 @@ namespace Robust.Shared.GameObjects
                     continue;
                 }
 
-                if (!_traitDict3.TryGetValue(current.Key, out var comp3Obj) || comp3Obj.Deleted)
-                {
-                    continue;
-                }
 
                 uid = current.Key;
-                comp1 = (TComp1)current.Value;
-                comp2 = (TComp2)comp2Obj;
-                comp3 = (TComp3)comp3Obj;
+                switch (_enumeratorIndex)
+                {
+                    case 0:
+                        comp1 = (TComp1)current.Value;
+                        comp2 = (TComp2)comp2Obj;
+                        comp3 = (TComp3)compObj;
+                        break;
+                    case 1:
+                        comp1 = (TComp1)compObj;
+                        comp2 = (TComp2)current.Value;
+                        comp3 = (TComp3)comp2Obj;
+                        break;
+                    default:
+                        comp1 = (TComp1)compObj;
+                        comp2 = (TComp2)comp2Obj;
+                        comp3 = (TComp3)current.Value;
+                        break;
+                }
                 return true;
             }
         }
@@ -2600,7 +2777,7 @@ namespace Robust.Shared.GameObjects
 
         public void Dispose()
         {
-            _traitDict.Dispose();
+            _enumerator.Dispose();
         }
     }
 
@@ -2613,28 +2790,61 @@ namespace Robust.Shared.GameObjects
         where TComp3 : IComponent
         where TComp4 : IComponent
     {
-        private Dictionary<EntityUid, IComponent>.Enumerator _traitDict;
+        private Dictionary<EntityUid, IComponent>.Enumerator _enumerator;
+        private readonly Dictionary<EntityUid, IComponent> _traitDict;
         private readonly Dictionary<EntityUid, IComponent> _traitDict2;
         private readonly Dictionary<EntityUid, IComponent> _traitDict3;
-        private readonly Dictionary<EntityUid, IComponent> _traitDict4;
-
+        private readonly byte _enumeratorIndex;
         public AllEntityQueryEnumerator(
             Dictionary<EntityUid, IComponent> traitDict,
             Dictionary<EntityUid, IComponent> traitDict2,
             Dictionary<EntityUid, IComponent> traitDict3,
             Dictionary<EntityUid, IComponent> traitDict4)
         {
-            _traitDict = traitDict.GetEnumerator();
-            _traitDict2 = traitDict2;
-            _traitDict3 = traitDict3;
-            _traitDict4 = traitDict4;
+            var count1 = traitDict.Count;
+            var count2 = traitDict2.Count;
+            var count3 = traitDict3.Count;
+            var count4 = traitDict4.Count;
+
+            if (count1 <= count2 && count1 <= count3 && count1 <= count4)
+            {
+                _traitDict = traitDict4;
+                _traitDict2 = traitDict2;
+                _traitDict3 = traitDict3;
+                _enumerator = traitDict.GetEnumerator();
+                _enumeratorIndex = 0;
+            }
+            else if (count2 <= count1 && count2 <= count3 && count2 <= count4)
+            {
+                _traitDict = traitDict;
+                _traitDict2 = traitDict4;
+                _traitDict3 = traitDict3;
+                _enumerator = traitDict2.GetEnumerator();
+                _enumeratorIndex = 1;
+            }
+            else if (count3 <= count1 && count3 <= count2 && count3 <= count4)
+            {
+                _traitDict = traitDict;
+                _traitDict2 = traitDict2;
+                _traitDict3 = traitDict4;
+                _enumerator = traitDict3.GetEnumerator();
+                _enumeratorIndex = 2;
+            }
+            else
+            {
+                _traitDict = traitDict;
+                _traitDict2 = traitDict2;
+                _traitDict3 = traitDict3;
+                _enumerator = traitDict4.GetEnumerator();
+                _enumeratorIndex = 3;
+            }
         }
 
         public bool MoveNext(out EntityUid uid, [NotNullWhen(true)] out TComp1? comp1, [NotNullWhen(true)] out TComp2? comp2, [NotNullWhen(true)] out TComp3? comp3, [NotNullWhen(true)] out TComp4? comp4)
         {
             while (true)
             {
-                if (!_traitDict.MoveNext())
+                if (!_enumerator.MoveNext())
                 {
                     uid = default;
                     comp1 = default;
@@ -2644,9 +2854,14 @@ namespace Robust.Shared.GameObjects
                     return false;
                 }
 
-                var current = _traitDict.Current;
+                var current = _enumerator.Current;
 
                 if (current.Value.Deleted)
+                {
+                    continue;
+                }
+
+                if (!_traitDict.TryGetValue(current.Key, out var compObj) || compObj.Deleted)
                 {
                     continue;
                 }
@@ -2661,16 +2876,34 @@ namespace Robust.Shared.GameObjects
                     continue;
                 }
 
-                if (!_traitDict4.TryGetValue(current.Key, out var comp4Obj) || comp4Obj.Deleted)
-                {
-                    continue;
-                }
-
                 uid = current.Key;
-                comp1 = (TComp1)current.Value;
-                comp2 = (TComp2)comp2Obj;
-                comp3 = (TComp3)comp3Obj;
-                comp4 = (TComp4)comp4Obj;
+                switch (_enumeratorIndex)
+                {
+                    case 0:
+                        comp1 = (TComp1)current.Value;
+                        comp2 = (TComp2)comp2Obj;
+                        comp3 = (TComp3)comp3Obj;
+                        comp4 = (TComp4)compObj;
+                        break;
+                    case 1:
+                        comp1 = (TComp1)compObj;
+                        comp2 = (TComp2)current.Value;
+                        comp3 = (TComp3)comp3Obj;
+                        comp4 = (TComp4)comp2Obj;
+                        break;
+                    case 2:
+                        comp1 = (TComp1)compObj;
+                        comp2 = (TComp2)comp2Obj;
+                        comp3 = (TComp3)current.Value;
+                        comp4 = (TComp4)comp3Obj;
+                        break;
+                    default:
+                        comp1 = (TComp1)compObj;
+                        comp2 = (TComp2)comp2Obj;
+                        comp3 = (TComp3)comp3Obj;
+                        comp4 = (TComp4)current.Value;
+                        break;
+                }
                 return true;
             }
         }
@@ -2687,7 +2920,7 @@ namespace Robust.Shared.GameObjects
 
         public void Dispose()
         {
-            _traitDict.Dispose();
+            _enumerator.Dispose();
         }
     }
 

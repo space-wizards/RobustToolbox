@@ -835,9 +835,7 @@ public abstract partial class SharedTransformSystem
                 xform._anchored |= newState.Anchored;
 
                 // Update the action position, rotation, and parent (and hence also map, grid, etc).
-                var metaData = _metaQuery.GetComponent(uid);
-                if ((metaData.Flags & MetaDataFlags.Detached) == 0)
-                    SetCoordinates((uid, xform, metaData), new EntityCoordinates(parent, newState.LocalPosition), newState.Rotation, unanchor: false);
+                SetCoordinates(uid, xform, new EntityCoordinates(parent, newState.LocalPosition), newState.Rotation, unanchor: false);
 
                 xform._anchored = newState.Anchored;
 

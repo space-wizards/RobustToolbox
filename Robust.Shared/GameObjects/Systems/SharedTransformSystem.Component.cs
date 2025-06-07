@@ -1,16 +1,16 @@
+using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Numerics;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
+using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Utility;
-using System;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using Robust.Shared.Map.Components;
-using System.Diagnostics.CodeAnalysis;
-using System.Numerics;
-using Robust.Shared.Containers;
 
 namespace Robust.Shared.GameObjects;
 
@@ -835,7 +835,9 @@ public abstract partial class SharedTransformSystem
                 xform._anchored |= newState.Anchored;
 
                 // Update the action position, rotation, and parent (and hence also map, grid, etc).
-                SetCoordinates(uid, xform, new EntityCoordinates(parent, newState.LocalPosition), newState.Rotation, unanchor: false);
+                var metaData = _metaQuery.GetComponent(uid);
+                if ((metaData.Flags & MetaDataFlags.Detached) == 0)
+                    SetCoordinates((uid, xform, metaData), new EntityCoordinates(parent, newState.LocalPosition), newState.Rotation, unanchor: false);
 
                 xform._anchored = newState.Anchored;
 

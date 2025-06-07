@@ -59,17 +59,6 @@ public abstract partial class SharedTransformSystem
         RaiseLocalEvent(uid, ref ev);
     }
 
-    [Obsolete("Use Entity<T> variant")]
-    public bool AnchorEntity(
-        EntityUid uid,
-        TransformComponent xform,
-        EntityUid gridUid,
-        MapGridComponent grid,
-        Vector2i tileIndices)
-    {
-        return AnchorEntity((uid, xform), (gridUid, grid), tileIndices);
-    }
-
     public bool AnchorEntity(
         Entity<TransformComponent> entity,
         Entity<MapGridComponent> grid,
@@ -97,13 +86,6 @@ public abstract partial class SharedTransformSystem
         var pos = new EntityCoordinates(grid, _map.GridTileToLocal(grid, grid, tileIndices).Position);
         SetCoordinates((uid, xform, meta), pos, unanchor: false);
         return true;
-    }
-
-    [Obsolete("Use Entity<T> variants")]
-    public bool AnchorEntity(EntityUid uid, TransformComponent xform, MapGridComponent grid)
-    {
-        var tileIndices = _map.TileIndicesFor(grid.Owner, grid, xform.Coordinates);
-        return AnchorEntity(uid, xform, grid.Owner, grid, tileIndices);
     }
 
     public bool AnchorEntity(EntityUid uid)

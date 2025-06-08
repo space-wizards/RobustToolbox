@@ -547,17 +547,14 @@ public sealed class EntityDeserializer :
         _stopwatch.Restart();
         foreach (var (entity, data) in Entities)
         {
+#if EXCEPTION_TOLERANCE
             try
             {
+#endif
                 CurrentReadingEntity = data;
                 LoadEntity(entity, _metaQuery.Comp(entity), data.Components, data.MissingComponents);
+#if EXCEPTION_TOLERANCE
             }
-#if !EXCEPTION_TOLERANCE
-            catch (Exception)
-            {
-                throw;
-            }
-#else
             catch (Exception e)
             {
                 ToDelete.Add(entity);

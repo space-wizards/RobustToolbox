@@ -552,15 +552,18 @@ public sealed class EntityDeserializer :
                 CurrentReadingEntity = data;
                 LoadEntity(entity, _metaQuery.Comp(entity), data.Components, data.MissingComponents);
             }
+#if !EXCEPTION_TOLERANCE
+            catch (Exception)
+            {
+                throw;
+            }
+#else
             catch (Exception e)
             {
-#if !EXCEPTION_TOLERANCE
-                throw;
-#else
                 ToDelete.Add(entity);
                 _log.Error($"Encountered error while loading entity. Yaml uid: {data.YamlId}. Loaded loaded entity: {EntMan.ToPrettyString(entity)}. Error:\n{e}.");
-#endif
             }
+#endif
         }
 
         CurrentReadingEntity = null;

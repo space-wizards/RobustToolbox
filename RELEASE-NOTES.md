@@ -35,11 +35,11 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Toolshed commands will now validate that each non-generic command argument is parseable (i.e., has a corresponding type parser). This check can be disabled by explicitly marking the argument as unparseable via `CommandArgumentAttribute.Unparseable`.
 
 ### New features
 
-*None yet*
+* `ToolshedManager.TryParse` now also supports nullable value types.
 
 ### Bugfixes
 

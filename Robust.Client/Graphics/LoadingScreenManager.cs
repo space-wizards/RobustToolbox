@@ -26,9 +26,15 @@ public sealed partial class LoadingScreenManager
     private int LoadingBarMaxSections = 10;
     private const int NumLongestLoadTimes = 5;
 
-    private List<Color> Colors =
+    private const float RareColorChance = 0.025f;
+
+    private List<Color> ColorsStandard =
     [
-        Color.White,
+        Color.White
+    ];
+
+    private List<Color> ColorsRare =
+    [
         Color.LightCoral,
         Color.LightGreen,
         Color.LightSkyBlue
@@ -70,7 +76,7 @@ public sealed partial class LoadingScreenManager
 
         _resourceCache.TryGetResource("/EngineFonts/NotoSans/NotoSans-Regular.ttf", out _font);
 
-        _loadingBarColor = Random.Shared.Pick(Colors);
+        _loadingBarColor = Random.Shared.Pick(Random.Shared.NextFloat() < RareColorChance ? ColorsRare : ColorsStandard);
     }
 
     public void BeginLoadingSection(string sectionName)

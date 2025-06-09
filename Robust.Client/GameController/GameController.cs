@@ -439,17 +439,18 @@ namespace Robust.Client
             _resourceManifest = ResourceManifestData.LoadResourceManifest(_resManager);
 
             {
+                var loadingScreenSettings = LoadingScreenSettings();
                 // Handle GameControllerOptions implicit CVar overrides.
                 _configurationManager.OverrideConVars(new[]
                 {
                     (CVars.DisplayWindowIconSet.Name, WindowIconSet()),
                     (CVars.DisplaySplashLogo.Name, SplashLogo()),
                     // These get turned to strings then back to their original types again.
-                    (CVars.DisplayLoadingXLocation.Name, LoadingScreenSettings().xLocation.ToString()),
-                    (CVars.DisplayLoadingYLocation.Name, LoadingScreenSettings().yLocation.ToString()),
-                    (CVars.DisplayShowLoadingBar.Name, LoadingScreenSettings().loadingBar.ToString()),
-                    (CVars.DisplayShowCurrentLoadingSection.Name, LoadingScreenSettings().currentSection.ToString()),
-                    (CVars.DisplayShowLoadTimes.Name, LoadingScreenSettings().loadTimes.ToString()),
+                    (CVars.DisplayLoadingXLocation.Name, loadingScreenSettings.xLocation.ToString()),
+                    (CVars.DisplayLoadingYLocation.Name, loadingScreenSettings.yLocation.ToString()),
+                    (CVars.DisplayShowLoadingBar.Name, loadingScreenSettings.loadingBar.ToString()),
+                    (CVars.DisplayShowCurrentLoadingSection.Name, loadingScreenSettings.currentSection.ToString()),
+                    (CVars.DisplayShowLoadTimes.Name, loadingScreenSettings.loadTimes.ToString()),
                 });
             }
 

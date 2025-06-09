@@ -78,6 +78,7 @@ public sealed partial class LoadingScreenManager
     {
         _sw.Restart();
         _currentSectionName = sectionName;
+        // This ensures that if the screen was resized or something the new size is properly updated to clyde.
         _clyde.ProcessInput();
         _clyde.Render();
     }

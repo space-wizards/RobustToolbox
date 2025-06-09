@@ -35,16 +35,15 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Toolshed commands will now validate that each non-generic command argument is parseable (i.e., has a corresponding type parser). This check can be disabled by explicitly marking the argument as unparseable via `CommandArgumentAttribute.Unparseable`.
+*None yet*
 
 ### New features
 
-* `ToolshedManager.TryParse` now also supports nullable value types.
+*None yet*
 
 ### Bugfixes
 
-* Fix `SpriteComponent.Layer.Visible` setter not marking a sprite's bounding box as dirty.
-* The audio params in the passed SoundSpecifier for PlayStatic(SoundSpecifier, Filter, ...) will now be used as a default like other PlayStatic overrides.
+*None yet*
 
 ### Other
 
@@ -53,6 +52,25 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 262.0.0
+
+### Breaking changes
+
+* Toolshed commands will now validate that each non-generic command argument is parseable (i.e., has a corresponding type parser). This check can be disabled by explicitly marking the argument as unparseable via `CommandArgumentAttribute.Unparseable`.
+
+### New features
+
+* `ToolshedManager.TryParse` now also supports nullable value types.
+* Add an ignoredComponents arg to IsDefault.
+
+### Bugfixes
+
+* Fix `SpriteComponent.Layer.Visible` setter not marking a sprite's bounding box as dirty.
+* The audio params in the passed SoundSpecifier for PlayStatic(SoundSpecifier, Filter, ...) will now be used as a default like other PlayStatic overrides.
+* Fix windows not saving their positions correctly when their x position is <= 0.
+* Fix transform state handling overriding PVS detachment.
 
 
 ## 261.2.0

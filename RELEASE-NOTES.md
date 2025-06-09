@@ -44,6 +44,7 @@ END TEMPLATE-->
 ### Bugfixes
 
 * Fix `SpriteComponent.Layer.Visible` setter not marking a sprite's bounding box as dirty.
+* The audio params in the passed SoundSpecifier for PlayStatic(SoundSpecifier, Filter, ...) will now be used as a default like other PlayStatic overrides.
 
 ### Other
 

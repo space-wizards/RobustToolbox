@@ -239,7 +239,7 @@ public abstract partial class ToolshedCommand
             // This checks that each argument has a corresponding type parser, as people have sometimes created a command
             // without realising that the type is unparseable.
             var t = Nullable.GetUnderlyingType(arg.ParameterType) ?? arg.ParameterType;
-            var ignore = t.IsGenericType || t.ContainsGenericParameters; // Must have explicit ty
+            var ignore = t.IsGenericType || t.ContainsGenericParameters;
             if (!ignore && Toolshed.GetParserForType(t) == null)
                 throw new InvalidCommandImplementation($"{Name} command argument of type {t.PrettyName()} has no type parser. You either need to add a type parser or explicitly mark the argument as unparseable.");
         }

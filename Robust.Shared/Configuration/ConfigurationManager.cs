@@ -290,6 +290,11 @@ namespace Robust.Shared.Configuration
             Toml.WriteStream(tblRoot, stream);
         }
 
+        public bool HasLoadedConfiguration()
+        {
+            return _configFile != null;
+        }
+
         /// <inheritdoc />
         public void SaveToFile()
         {

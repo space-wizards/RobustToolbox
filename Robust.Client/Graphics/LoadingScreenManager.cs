@@ -100,6 +100,9 @@ public sealed partial class LoadingScreenManager
 
     public void Finish()
     {
+        if (!_cfg.HasLoadedConfiguration())
+            return;
+
         _cfg.SetCVar(CVars.SeenNumberOfLoadingSections, _currentSection);
         _cfg.SaveToFile();
     }

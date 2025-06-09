@@ -373,11 +373,11 @@ namespace Robust.UnitTesting.Shared
             var xform = entManager.GetComponent<TransformComponent>(dummy);
 
             // When anchoring it should still get returned.
-            transformSystem.AnchorEntity(dummy, xform);
+            transformSystem.AnchorEntity((dummy, xform));
             Assert.That(xform.Anchored, Is.True);
             Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList(), Has.Count.EqualTo(1));
 
-            transformSystem.Unanchor(dummy, xform);
+            transformSystem.Unanchor((dummy, xform));
             Assert.That(xform.Anchored, Is.False);
             Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList().Count, Is.EqualTo(1));
 

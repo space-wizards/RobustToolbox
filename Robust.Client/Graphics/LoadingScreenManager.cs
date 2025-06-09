@@ -98,15 +98,6 @@ public sealed partial class LoadingScreenManager
         _currentSection++;
     }
 
-    public void Finish()
-    {
-        if (!_cfg.HasLoadedConfiguration() || SeenNumberOfLoadingSections == _currentSection)
-            return;
-
-        _cfg.SetCVar(CVars.SeenNumberOfLoadingSections, _currentSection);
-        _cfg.SaveToFile();
-    }
-
     /// <summary>
     /// Will run the giving function and add a custom "section" for it on the loading screen.
     /// </summary>
@@ -115,6 +106,15 @@ public sealed partial class LoadingScreenManager
         BeginLoadingSection(method.GetType().Name);
         action();
         EndLoadingSection();
+    }
+
+    public void Finish()
+    {
+        if (!_cfg.HasLoadedConfiguration() || SeenNumberOfLoadingSections == _currentSection)
+            return;
+
+        _cfg.SetCVar(CVars.SeenNumberOfLoadingSections, _currentSection);
+        _cfg.SaveToFile();
     }
 
     /// <summary>

@@ -131,6 +131,18 @@ namespace Robust.Client
             return Options.SplashLogo?.ToString() ?? _resourceManifest!.SplashLogo ?? "";
         }
 
+        public (float xLocation, float yLocation, bool loadingBar, bool currentSection, bool loadTimes) LoadingScreenSettings()
+        {
+            return (
+                _resourceManifest!.LoadingXLocation ?? _configurationManager.GetCVar(CVars.DisplayLoadingXLocation),
+                _resourceManifest!.LoadingYLocation ?? _configurationManager.GetCVar(CVars.DisplayLoadingYLocation),
+                _resourceManifest!.ShowLoadingBar ?? _configurationManager.GetCVar(CVars.DisplayShowLoadingBar),
+                _resourceManifest!.ShowCurrentSection ?? _configurationManager.GetCVar(CVars.DisplayShowCurrentLoadingSection),
+                _resourceManifest!.ShowLoadTimes ?? _configurationManager.GetCVar(CVars.DisplayShowLoadTimes)
+            );
+
+        }
+
         internal bool StartupContinue(DisplayMode displayMode)
         {
             DebugTools.AssertNotNull(_resourceManifest);
@@ -431,7 +443,13 @@ namespace Robust.Client
                 _configurationManager.OverrideConVars(new[]
                 {
                     (CVars.DisplayWindowIconSet.Name, WindowIconSet()),
-                    (CVars.DisplaySplashLogo.Name, SplashLogo())
+                    (CVars.DisplaySplashLogo.Name, SplashLogo()),
+                    // These get turned to strings then back to their original types again.
+                    (CVars.DisplayLoadingXLocation.Name, LoadingScreenSettings().xLocation.ToString()),
+                    (CVars.DisplayLoadingYLocation.Name, LoadingScreenSettings().yLocation.ToString()),
+                    (CVars.DisplayShowLoadingBar.Name, LoadingScreenSettings().loadingBar.ToString()),
+                    (CVars.DisplayShowCurrentLoadingSection.Name, LoadingScreenSettings().currentSection.ToString()),
+                    (CVars.DisplayShowLoadTimes.Name, LoadingScreenSettings().loadTimes.ToString()),
                 });
             }
 

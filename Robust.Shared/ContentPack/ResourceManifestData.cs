@@ -11,12 +11,17 @@ internal sealed record ResourceManifestData(
     string? DefaultWindowTitle,
     string? WindowIconSet,
     string? SplashLogo,
+    float? LoadingXLocation,
+    float? LoadingYLocation,
+    bool? ShowLoadingBar,
+    bool? ShowCurrentSection,
+    bool? ShowLoadTimes,
     bool AutoConnect,
     string[]? ClientAssemblies
 )
 {
     public static readonly ResourceManifestData Default =
-        new ResourceManifestData(Array.Empty<string>(), null, null, null, null, true, null);
+        new ResourceManifestData(Array.Empty<string>(), null, null, null, null, null, null, null, null, null, true, null);
 
     public static ResourceManifestData LoadResourceManifest(IResourceManager res)
     {
@@ -58,6 +63,26 @@ internal sealed record ResourceManifestData(
         if (mapping.TryGetNode("splashLogo", out var splashNode))
             splashLogo = splashNode.AsString();
 
+        float? loadingX = null;
+        if (mapping.TryGetNode("loading_x_location", out var loadingXNode))
+            loadingX = loadingXNode.AsFloat();
+
+        float? loadingY = null;
+        if (mapping.TryGetNode("loading_y_location", out var loadingYNode))
+            loadingY = loadingYNode.AsFloat();
+
+        bool? showBar = null;
+        if (mapping.TryGetNode("show_loading_bar", out var showBarNode))
+            showBar = showBarNode.AsBool();
+
+        bool? showSection = null;
+        if (mapping.TryGetNode("show_current_loading_section", out var showSectionNode))
+            showSection = showSectionNode.AsBool();
+
+        bool? showTimes = null;
+        if (mapping.TryGetNode("show_load_times", out var showTimesNode))
+            showTimes = showTimesNode.AsBool();
+
         bool autoConnect = true;
         if (mapping.TryGetNode("autoConnect", out var autoConnectNode))
             autoConnect = autoConnectNode.AsBool();
@@ -70,6 +95,11 @@ internal sealed record ResourceManifestData(
             defaultWindowTitle,
             windowIconSet,
             splashLogo,
+            loadingX,
+            loadingY,
+            showBar,
+            showSection,
+            showTimes,
             autoConnect,
             clientAssemblies
         );

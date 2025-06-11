@@ -26,28 +26,18 @@ public sealed partial class LoadingScreenManager
     private int LoadingBarMaxSections = 10;
     private const int NumLongestLoadTimes = 5;
 
-    private const float RareColorChance = 0.025f;
-
-    private List<Color> ColorsStandard =
+    private List<Color> Colors =
     [
-        Color.White
-    ];
-
-    private List<Color> ColorsRare =
-    [
+        Color.White,
         Color.LightCoral,
         Color.LightGreen,
-        Color.LightSkyBlue
+        Color.LightSkyBlue,
     ];
 
     #region Cvars
 
     private string SplashLogo = "";
-    private float LoadingXLocation;
-    private float LoadingYLocation;
     private bool ShowLoadingBar;
-    private bool ShowCurrentLoadingSection;
-    private bool ShowLoadTimes;
     private int SeenNumberOfLoadingSections;
 
     #endregion
@@ -65,18 +55,14 @@ public sealed partial class LoadingScreenManager
     public void Initialize()
     {
         SplashLogo = _cfg.GetCVar(CVars.DisplaySplashLogo);
-        LoadingXLocation = _cfg.GetCVar(CVars.DisplayLoadingXLocation);
-        LoadingYLocation = _cfg.GetCVar(CVars.DisplayLoadingYLocation);
         ShowLoadingBar = _cfg.GetCVar(CVars.DisplayShowLoadingBar);
-        ShowCurrentLoadingSection = _cfg.GetCVar(CVars.DisplayShowCurrentLoadingSection);
-        ShowLoadTimes = _cfg.GetCVar(CVars.DisplayShowLoadTimes);
         SeenNumberOfLoadingSections = _cfg.GetCVar(CVars.SeenNumberOfLoadingSections);
 
         LoadingBarMaxSections = SeenNumberOfLoadingSections == 0 ? LoadingBarMaxSections : SeenNumberOfLoadingSections;
 
         _resourceCache.TryGetResource("/EngineFonts/NotoSans/NotoSans-Regular.ttf", out _font);
 
-        _loadingBarColor = Random.Shared.Pick(Random.Shared.NextFloat() < RareColorChance ? ColorsRare : ColorsStandard);
+        _loadingBarColor = Random.Shared.Pick(Colors);
     }
 
     public void BeginLoadingSection(string sectionName)
@@ -130,7 +116,7 @@ public sealed partial class LoadingScreenManager
     {
         DrawSplash(handle, screenSize);
 
-        var startLocation = new Vector2i((int) Math.Round(screenSize.X * LoadingXLocation), (int) Math.Round(screenSize.Y * LoadingYLocation));
+        var startLocation = new Vector2i((int) Math.Round(screenSize.X * 0.5f), (int) Math.Round(screenSize.Y * 0.675f));
 
         DrawLoadingBar(handle, ref startLocation);
         DrawCurrentLoading(handle, ref startLocation);
@@ -181,7 +167,7 @@ public sealed partial class LoadingScreenManager
 
     private void DrawCurrentLoading(IRenderHandle handle, ref Vector2i startLocation)
     {
-        if (_font == null || !ShowCurrentLoadingSection)
+        if (_font == null)
             return;
 
         handle.DrawingHandleScreen.DrawString(new VectorFont(_font, 11), startLocation, _currentSectionName);
@@ -190,7 +176,7 @@ public sealed partial class LoadingScreenManager
 
     private void DrawTopTimes(IRenderHandle handle, ref Vector2i startLocation)
     {
-        if (_font == null || !ShowLoadTimes)
+        if (_font == null)
             return;
 
         startLocation += new Vector2i(20, 10);

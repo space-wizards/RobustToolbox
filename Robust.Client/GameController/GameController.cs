@@ -131,16 +131,9 @@ namespace Robust.Client
             return Options.SplashLogo?.ToString() ?? _resourceManifest!.SplashLogo ?? "";
         }
 
-        public (float xLocation, float yLocation, bool loadingBar, bool currentSection, bool loadTimes) LoadingScreenSettings()
+        public bool ShowLoadingBar()
         {
-            return (
-                _resourceManifest!.LoadingXLocation ?? _configurationManager.GetCVar(CVars.DisplayLoadingXLocation),
-                _resourceManifest!.LoadingYLocation ?? _configurationManager.GetCVar(CVars.DisplayLoadingYLocation),
-                _resourceManifest!.ShowLoadingBar ?? _configurationManager.GetCVar(CVars.DisplayShowLoadingBar),
-                _resourceManifest!.ShowCurrentSection ?? _configurationManager.GetCVar(CVars.DisplayShowCurrentLoadingSection),
-                _resourceManifest!.ShowLoadTimes ?? _configurationManager.GetCVar(CVars.DisplayShowLoadTimes)
-            );
-
+            return _resourceManifest!.ShowLoadingBar ?? _configurationManager.GetCVar(CVars.DisplayShowLoadingBar);
         }
 
         internal bool StartupContinue(DisplayMode displayMode)
@@ -439,18 +432,13 @@ namespace Robust.Client
             _resourceManifest = ResourceManifestData.LoadResourceManifest(_resManager);
 
             {
-                var loadingScreenSettings = LoadingScreenSettings();
                 // Handle GameControllerOptions implicit CVar overrides.
                 _configurationManager.OverrideConVars(new[]
                 {
                     (CVars.DisplayWindowIconSet.Name, WindowIconSet()),
                     (CVars.DisplaySplashLogo.Name, SplashLogo()),
                     // These get turned to strings then back to their original types again.
-                    (CVars.DisplayLoadingXLocation.Name, loadingScreenSettings.xLocation.ToString()),
-                    (CVars.DisplayLoadingYLocation.Name, loadingScreenSettings.yLocation.ToString()),
-                    (CVars.DisplayShowLoadingBar.Name, loadingScreenSettings.loadingBar.ToString()),
-                    (CVars.DisplayShowCurrentLoadingSection.Name, loadingScreenSettings.currentSection.ToString()),
-                    (CVars.DisplayShowLoadTimes.Name, loadingScreenSettings.loadTimes.ToString()),
+                    (CVars.DisplayShowLoadingBar.Name, ShowLoadingBar().ToString()),
                 });
             }
 

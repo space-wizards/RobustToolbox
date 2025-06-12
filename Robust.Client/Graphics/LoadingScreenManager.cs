@@ -67,10 +67,10 @@ public sealed partial class LoadingScreenManager
 
     public void BeginLoadingSection(string sectionName)
     {
-        _sw.Restart();
         _currentSectionName = sectionName;
         // This ensures that if the screen was resized or something the new size is properly updated to clyde.
-        _clyde.ProcessInput();
+        _clyde.ProcessInput(new FrameEventArgs((float) _sw.Elapsed.TotalSeconds));
+        _sw.Restart();
         _clyde.Render();
     }
 
@@ -119,8 +119,11 @@ public sealed partial class LoadingScreenManager
         var startLocation = new Vector2i((int) Math.Round(screenSize.X * 0.5f), (int) Math.Round(screenSize.Y * 0.675f));
 
         DrawLoadingBar(handle, ref startLocation);
+
+#if DEBUG
         DrawCurrentLoading(handle, ref startLocation);
         DrawTopTimes(handle, ref startLocation);
+#endif
     }
 
     private void DrawSplash(IRenderHandle handle, Vector2i screenSize)

@@ -16,7 +16,6 @@ namespace Robust.Client.Graphics
         void Render();
         void FrameProcess(FrameEventArgs eventArgs);
         void ProcessInput(FrameEventArgs frameEventArgs);
-        void ProcessInput();
 
         // Init.
         bool SeparateWindowThread { get; }

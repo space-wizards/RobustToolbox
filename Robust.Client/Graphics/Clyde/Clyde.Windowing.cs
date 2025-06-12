@@ -247,6 +247,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // Quickly do a render with _drawingSplash = true so the screen isn't blank.
             Render();
+
             return true;
         }
 
@@ -387,11 +388,6 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         public void ProcessInput(FrameEventArgs frameEventArgs)
-        {
-            ProcessInput();
-        }
-
-        public void ProcessInput()
         {
             _windowing?.ProcessEvents();
             DispatchEvents();

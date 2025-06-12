@@ -4,6 +4,7 @@ using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Random;
 using Robust.Shared.Timing;
@@ -18,6 +19,9 @@ public sealed partial class LoadingScreenManager
     [Dependency] private readonly IResourceCache _resourceCache = default!;
     [Dependency] private readonly IClydeInternal _clyde = default!;
     [Dependency] private readonly IConfigurationManager _cfg = default!;
+    [Dependency] private readonly ILogManager _logManager = default!;
+
+    private ISawmill _sawmill = default!;
 
     private readonly Stopwatch _sw = new();
 
@@ -42,6 +46,7 @@ public sealed partial class LoadingScreenManager
 
     #endregion
 
+    private const string FontLocation = "/EngineFonts/NotoSans/NotoSans-Regular.ttf";
     private const int FontSize = 11;
     private VectorFont? _font;
 
@@ -53,22 +58,33 @@ public sealed partial class LoadingScreenManager
 
     private string _currentSectionName = "";
 
+    private bool _currentlyInSection = false;
+
     public void Initialize()
     {
+        _sawmill = _logManager.GetSawmill("loading");
+
         SplashLogo = _cfg.GetCVar(CVars.DisplaySplashLogo);
         ShowLoadingBar = _cfg.GetCVar(CVars.DisplayShowLoadingBar);
         SeenNumberOfLoadingSections = _cfg.GetCVar(CVars.SeenNumberOfLoadingSections);
 
         LoadingBarMaxSections = SeenNumberOfLoadingSections == 0 ? LoadingBarMaxSections : SeenNumberOfLoadingSections;
 
-        if (_resourceCache.TryGetResource<FontResource>("/EngineFonts/NotoSans/NotoSans-Regular.ttf", out var fontResource))
+        if (_resourceCache.TryGetResource<FontResource>(FontLocation, out var fontResource))
             _font = new VectorFont(fontResource, FontSize);
+        else
+            _sawmill.Error($"Could not load font: {FontLocation}");
 
         _loadingBarColor = Random.Shared.Pick(Colors);
     }
 
     public void BeginLoadingSection(string sectionName)
     {
+        if (_currentlyInSection)
+            throw new Exception("You cannot begin more than one section at a time!");
+
+        _currentlyInSection = true;
+
         _currentSectionName = sectionName;
         // This ensures that if the screen was resized or something the new size is properly updated to clyde.
         _clyde.ProcessInput(new FrameEventArgs((float) _sw.Elapsed.TotalSeconds));
@@ -90,6 +106,7 @@ public sealed partial class LoadingScreenManager
         var time = _sw.Elapsed;
         _times.Add((_currentSectionName, time));
         _currentSection++;
+        _currentlyInSection = false;
     }
 
     /// <summary>

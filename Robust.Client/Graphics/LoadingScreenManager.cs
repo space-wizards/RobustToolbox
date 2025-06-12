@@ -56,7 +56,7 @@ public sealed partial class LoadingScreenManager
 
     private int _currentSection = 1;
 
-    private string _currentSectionName = "";
+    private string? _currentSectionName;
 
     private bool _currentlyInSection = false;
 
@@ -104,7 +104,8 @@ public sealed partial class LoadingScreenManager
     public void EndLoadingSection()
     {
         var time = _sw.Elapsed;
-        _times.Add((_currentSectionName, time));
+        if (_currentSectionName != null)
+            _times.Add((_currentSectionName, time));
         _currentSection++;
         _currentlyInSection = false;
     }

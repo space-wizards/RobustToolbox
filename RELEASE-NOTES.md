@@ -54,6 +54,49 @@ END TEMPLATE-->
 *None yet*
 
 
+## 262.0.0
+
+### Breaking changes
+
+* Toolshed commands will now validate that each non-generic command argument is parseable (i.e., has a corresponding type parser). This check can be disabled by explicitly marking the argument as unparseable via `CommandArgumentAttribute.Unparseable`.
+
+### New features
+
+* `ToolshedManager.TryParse` now also supports nullable value types.
+* Add an ignoredComponents arg to IsDefault.
+
+### Bugfixes
+
+* Fix `SpriteComponent.Layer.Visible` setter not marking a sprite's bounding box as dirty.
+* The audio params in the passed SoundSpecifier for PlayStatic(SoundSpecifier, Filter, ...) will now be used as a default like other PlayStatic overrides.
+* Fix windows not saving their positions correctly when their x position is <= 0.
+* Fix transform state handling overriding PVS detachment.
+
+
+## 261.2.0
+
+### New features
+
+* Implement IEquatable for ResolvedPathSpecifier & ResolvedCollectionSpecifier.
+* Add NearestChunkEnumerator.
+
+### Bugfixes
+
+* Fix static entities not having the center of mass updated.
+* Fix TryQueueDelete.
+* Fix tpto potentially parenting grids to non-map entities.
+
+### Other
+
+* TileChangedEvent is now raised once in clientside grid state handling rather than per tile.
+* Removed ITileDefinition.ID as it was redundant.
+* Change the lifestage checks on predicted entity deletion to check for terminating.
+
+### Internal
+
+* Update some `GetComponentName<T>` uses to generic.
+
+
 ## 261.1.0
 
 ### New features

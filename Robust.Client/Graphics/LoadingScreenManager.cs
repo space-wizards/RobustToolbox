@@ -42,7 +42,8 @@ public sealed partial class LoadingScreenManager
 
     #endregion
 
-    private FontResource? _font;
+    private const int FontSize = 11;
+    private VectorFont? _font;
 
     private Color _loadingBarColor;
 
@@ -60,7 +61,8 @@ public sealed partial class LoadingScreenManager
 
         LoadingBarMaxSections = SeenNumberOfLoadingSections == 0 ? LoadingBarMaxSections : SeenNumberOfLoadingSections;
 
-        _resourceCache.TryGetResource("/EngineFonts/NotoSans/NotoSans-Regular.ttf", out _font);
+        if (_resourceCache.TryGetResource<FontResource>("/EngineFonts/NotoSans/NotoSans-Regular.ttf", out var fontResource))
+            _font = new VectorFont(fontResource, FontSize);
 
         _loadingBarColor = Random.Shared.Pick(Colors);
     }
@@ -173,7 +175,7 @@ public sealed partial class LoadingScreenManager
         if (_font == null)
             return;
 
-        handle.DrawingHandleScreen.DrawString(new VectorFont(_font, 11), startLocation, _currentSectionName);
+        handle.DrawingHandleScreen.DrawString(_font, startLocation, _currentSectionName);
         startLocation += new Vector2i(0, 10);
     }
 
@@ -192,10 +194,9 @@ public sealed partial class LoadingScreenManager
             if (x >= NumLongestLoadTimes)
                 break;
 
-            var time = val.LoadTime.ToString(@"ss\.ff");
-            var entry = $"{time} - {val.Name}";
-            handle.DrawingHandleScreen.DrawString(new VectorFont(_font, 10), startLocation + new Vector2i(0, offset), entry);
-            offset += 13;
+            var entry = $"{val.LoadTime:ss\\.ff} - {val.Name}";
+            handle.DrawingHandleScreen.DrawString(_font, startLocation + new Vector2i(0, offset), entry);
+            offset += 15;
             x++;
         }
     }

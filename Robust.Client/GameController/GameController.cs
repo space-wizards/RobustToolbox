@@ -177,7 +177,8 @@ namespace Robust.Client
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
 
             // Finish initialization of WebView if loaded.
-            _webViewHook?.Initialize();
+            if (_webViewHook != null)
+                _loadscr.LoadingStep(_webViewHook.Initialize, _webViewHook);
 
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
 
@@ -189,7 +190,7 @@ namespace Robust.Client
                 _logManager.GetSawmill("res"));
 
             _loadscr.LoadingStep(_resourceCache.PreloadTextures, _resourceCache);
-            _networkManager.Initialize(false);
+            _loadscr.LoadingStep(() => { _networkManager.Initialize(false); }, _networkManager);
             _loadscr.LoadingStep(_configurationManager.SetupNetworking, _configurationManager);
             _loadscr.LoadingStep(_serializer.Initialize, _serializer);
             _loadscr.LoadingStep(_inputManager.Initialize, _inputManager);
@@ -200,7 +201,7 @@ namespace Robust.Client
             // before prototype load.
             ProgramShared.FinishCheckBadFileExtensions(checkBadExtensions);
 
-            _reload.Initialize();
+            _loadscr.LoadingStep(_reload.Initialize, _reload);
             _loadscr.LoadingStep(_reflectionManager.Initialize, _reflectionManager);
             _loadscr.BeginLoadingSection(_prototypeManager);
             _prototypeManager.Initialize();

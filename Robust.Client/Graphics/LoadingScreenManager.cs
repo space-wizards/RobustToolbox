@@ -27,7 +27,6 @@ public sealed partial class LoadingScreenManager
 
     private const int LoadingBarWidth = 250;
     private const int LoadingBarHeight = 20;
-    private int LoadingBarMaxSections = 10;
     private const int NumLongestLoadTimes = 5;
 
     private List<Color> Colors =
@@ -42,9 +41,11 @@ public sealed partial class LoadingScreenManager
 
     private string SplashLogo = "";
     private bool ShowLoadingBar;
-    private int SeenNumberOfLoadingSections;
 
     #endregion
+
+    private const int NumberOfLoadingSections = 34;
+    private int SeenNumberOfLoadingSections = 0;
 
     private const string FontLocation = "/EngineFonts/NotoSans/NotoSans-Regular.ttf";
     private const int FontSize = 11;
@@ -70,9 +71,9 @@ public sealed partial class LoadingScreenManager
 
         SplashLogo = _cfg.GetCVar(CVars.DisplaySplashLogo);
         ShowLoadingBar = _cfg.GetCVar(CVars.DisplayShowLoadingBar);
-        SeenNumberOfLoadingSections = _cfg.GetCVar(CVars.SeenNumberOfLoadingSections);
+        // SeenNumberOfLoadingSections = _cfg.GetCVar(CVars.SeenNumberOfLoadingSections);
 
-        LoadingBarMaxSections = SeenNumberOfLoadingSections == 0 ? LoadingBarMaxSections : SeenNumberOfLoadingSections;
+        // LoadingBarMaxSections = SeenNumberOfLoadingSections == 0 ? LoadingBarMaxSections : SeenNumberOfLoadingSections;
 
         if (_resourceCache.TryGetResource<FontResource>(FontLocation, out var fontResource))
             _font = new VectorFont(fontResource, FontSize);
@@ -89,6 +90,8 @@ public sealed partial class LoadingScreenManager
 
         if (_currentlyInSection)
             throw new Exception("You cannot begin more than one section at a time!");
+
+        SeenNumberOfLoadingSections++;
 
         _currentlyInSection = true;
 
@@ -141,12 +144,10 @@ public sealed partial class LoadingScreenManager
         if (_finished)
             return;
 
-        if (!_cfg.HasLoadedConfiguration() || SeenNumberOfLoadingSections == _currentSection)
-            return;
+        if (SeenNumberOfLoadingSections != NumberOfLoadingSections)
+            _sawmill.Error($"The number of seen loading sections isn't equal to the total number of loading sections! Seen: {SeenNumberOfLoadingSections}, Total: {NumberOfLoadingSections}");
 
-        _cfg.SetCVar(CVars.SeenNumberOfLoadingSections, _currentSection);
-        _cfg.SaveToFile();
-        _finished = false;
+        _finished = true;
     }
 
     /// <summary>
@@ -185,7 +186,7 @@ public sealed partial class LoadingScreenManager
             return;
 
         startLocation -= new Vector2i(LoadingBarWidth/2, 0);
-        var sectionWidth = LoadingBarWidth / LoadingBarMaxSections;
+        var sectionWidth = LoadingBarWidth / NumberOfLoadingSections;
 
         var barTopLeft = startLocation;
         var barBottomRight = startLocation + new Vector2i(_currentSection * sectionWidth % LoadingBarWidth, -LoadingBarHeight);

@@ -59,11 +59,6 @@ namespace Robust.Shared.Configuration
     public interface IConfigurationManager
     {
         /// <summary>
-        /// Checks if a configuration file has been loaded.
-        /// </summary>
-        bool HasLoadedConfiguration();
-
-        /// <summary>
         /// Saves the configuration file to disk.
         /// </summary>
         void SaveToFile();

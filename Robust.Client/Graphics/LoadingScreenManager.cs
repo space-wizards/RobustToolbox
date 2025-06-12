@@ -59,9 +59,13 @@ public sealed partial class LoadingScreenManager
     private string? _currentSectionName;
 
     private bool _currentlyInSection = false;
+    private bool _finished = false;
 
     public void Initialize()
     {
+        if (_finished)
+            return;
+
         _sawmill = _logManager.GetSawmill("loading");
 
         SplashLogo = _cfg.GetCVar(CVars.DisplaySplashLogo);
@@ -80,6 +84,9 @@ public sealed partial class LoadingScreenManager
 
     public void BeginLoadingSection(string sectionName)
     {
+        if (_finished)
+            return;
+
         if (_currentlyInSection)
             throw new Exception("You cannot begin more than one section at a time!");
 
@@ -98,11 +105,17 @@ public sealed partial class LoadingScreenManager
     /// </summary>
     public void BeginLoadingSection(object method)
     {
+        if (_finished)
+            return;
+
         BeginLoadingSection(method.GetType().Name);
     }
 
     public void EndLoadingSection()
     {
+        if (_finished)
+            return;
+
         var time = _sw.Elapsed;
         if (_currentSectionName != null)
             _times.Add((_currentSectionName, time));
@@ -115,6 +128,9 @@ public sealed partial class LoadingScreenManager
     /// </summary>
     public void LoadingStep(Action action, object method)
     {
+        if (_finished)
+            return;
+
         BeginLoadingSection(method.GetType().Name);
         action();
         EndLoadingSection();
@@ -122,11 +138,15 @@ public sealed partial class LoadingScreenManager
 
     public void Finish()
     {
+        if (_finished)
+            return;
+
         if (!_cfg.HasLoadedConfiguration() || SeenNumberOfLoadingSections == _currentSection)
             return;
 
         _cfg.SetCVar(CVars.SeenNumberOfLoadingSections, _currentSection);
         _cfg.SaveToFile();
+        _finished = false;
     }
 
     /// <summary>
@@ -134,6 +154,9 @@ public sealed partial class LoadingScreenManager
     /// </summary>
     public void DrawLoadingScreen(IRenderHandle handle, Vector2i screenSize)
     {
+        if (_finished)
+            return;
+
         DrawSplash(handle, screenSize);
 
         var startLocation = new Vector2i((int) Math.Round(screenSize.X * 0.5f), (int) Math.Round(screenSize.Y * 0.675f));
@@ -190,7 +213,7 @@ public sealed partial class LoadingScreenManager
 
     private void DrawCurrentLoading(IRenderHandle handle, ref Vector2i startLocation)
     {
-        if (_font == null)
+        if (_font == null || _currentSectionName == null)
             return;
 
         handle.DrawingHandleScreen.DrawString(_font, startLocation, _currentSectionName);

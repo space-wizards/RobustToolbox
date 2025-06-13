@@ -79,6 +79,8 @@ public sealed partial class LoadingScreenManager
         if (_finished)
             return;
 
+        _clyde.SetVSync(false);
+
         _numberOfLoadingSections = sections;
 
         _sawmill = _logManager.GetSawmill("loading");
@@ -153,6 +155,8 @@ public sealed partial class LoadingScreenManager
     {
         if (_finished)
             return;
+
+        _clyde.SetVSync(_cfg.GetCVar(CVars.DisplayVSync));
 
         if (_currentSection != _numberOfLoadingSections)
             _sawmill.Error($"The number of seen loading sections isn't equal to the total number of loading sections! Seen: {_currentSection}, Total: {_numberOfLoadingSections}");

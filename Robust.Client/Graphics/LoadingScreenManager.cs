@@ -25,17 +25,17 @@ public sealed partial class LoadingScreenManager
 
     private readonly Stopwatch _sw = new();
 
+    #region UI constants
+
     private const int LoadingBarWidth = 250;
     private const int LoadingBarHeight = 20;
+    private const int LoadingBarOutlineOffset = 5;
+    private static readonly Vector2i DefaultOffset = (0, 10);
+    private static readonly Vector2i TopTimesExtraOffset = (20, 10);
+
     private const int NumLongestLoadTimes = 5;
 
-    private List<Color> Colors =
-    [
-        Color.White,
-        Color.LightCoral,
-        Color.LightGreen,
-        Color.LightSkyBlue,
-    ];
+    #endregion
 
     #region Cvars
 
@@ -44,43 +44,50 @@ public sealed partial class LoadingScreenManager
 
     #endregion
 
-    private const int NumberOfLoadingSections = 34;
-    private int SeenNumberOfLoadingSections = 0;
+    private Color _loadingBarColor;
+
+    private readonly List<Color> _colors =
+    [
+        Color.White,
+        Color.LightCoral,
+        Color.LightGreen,
+        Color.LightSkyBlue,
+    ];
 
     private const string FontLocation = "/EngineFonts/NotoSans/NotoSans-Regular.ttf";
     private const int FontSize = 11;
     private VectorFont? _font;
 
-    private Color _loadingBarColor;
+    // Number of loading sections for the loading bar. This is manually set
+    private int _numberOfLoadingSections;
 
+    // The name of the section and how much time it took to load
     private readonly List<(string Name, TimeSpan LoadTime)> _times = [];
 
-    private int _currentSection = 1;
-
+    private int _currentSection;
     private string? _currentSectionName;
 
-    private bool _currentlyInSection = false;
-    private bool _finished = false;
+    private bool _currentlyInSection;
+    private bool _finished;
 
-    public void Initialize()
+    public void Initialize(int sections)
     {
         if (_finished)
             return;
+
+        _numberOfLoadingSections = sections;
 
         _sawmill = _logManager.GetSawmill("loading");
 
         SplashLogo = _cfg.GetCVar(CVars.DisplaySplashLogo);
         ShowLoadingBar = _cfg.GetCVar(CVars.DisplayShowLoadingBar);
-        // SeenNumberOfLoadingSections = _cfg.GetCVar(CVars.SeenNumberOfLoadingSections);
-
-        // LoadingBarMaxSections = SeenNumberOfLoadingSections == 0 ? LoadingBarMaxSections : SeenNumberOfLoadingSections;
 
         if (_resourceCache.TryGetResource<FontResource>(FontLocation, out var fontResource))
             _font = new VectorFont(fontResource, FontSize);
         else
             _sawmill.Error($"Could not load font: {FontLocation}");
 
-        _loadingBarColor = Random.Shared.Pick(Colors);
+        _loadingBarColor = Random.Shared.Pick(_colors);
     }
 
     public void BeginLoadingSection(string sectionName)
@@ -90,8 +97,6 @@ public sealed partial class LoadingScreenManager
 
         if (_currentlyInSection)
             throw new Exception("You cannot begin more than one section at a time!");
-
-        SeenNumberOfLoadingSections++;
 
         _currentlyInSection = true;
 
@@ -122,6 +127,7 @@ public sealed partial class LoadingScreenManager
         var time = _sw.Elapsed;
         if (_currentSectionName != null)
             _times.Add((_currentSectionName, time));
+
         _currentSection++;
         _currentlyInSection = false;
     }
@@ -144,8 +150,8 @@ public sealed partial class LoadingScreenManager
         if (_finished)
             return;
 
-        if (SeenNumberOfLoadingSections != NumberOfLoadingSections)
-            _sawmill.Error($"The number of seen loading sections isn't equal to the total number of loading sections! Seen: {SeenNumberOfLoadingSections}, Total: {NumberOfLoadingSections}");
+        if (_currentSection != _numberOfLoadingSections)
+            _sawmill.Error($"The number of seen loading sections isn't equal to the total number of loading sections! Seen: {_currentSection}, Total: {_numberOfLoadingSections}");
 
         _finished = true;
     }
@@ -186,17 +192,16 @@ public sealed partial class LoadingScreenManager
             return;
 
         startLocation -= new Vector2i(LoadingBarWidth/2, 0);
-        var sectionWidth = LoadingBarWidth / NumberOfLoadingSections;
+        var sectionWidth = LoadingBarWidth / _numberOfLoadingSections;
 
         var barTopLeft = startLocation;
         var barBottomRight = startLocation + new Vector2i(_currentSection * sectionWidth % LoadingBarWidth, -LoadingBarHeight);
-        var outlineOffset = 5;
 
         // Outline
         handle.DrawingHandleScreen.DrawRect(new UIBox2
             {
-                TopLeft = barTopLeft - new Vector2i(outlineOffset, -outlineOffset),
-                BottomRight = startLocation + new Vector2i(LoadingBarWidth, -LoadingBarHeight) + new Vector2i(outlineOffset, -outlineOffset),
+                TopLeft = barTopLeft + Vector2i.UpLeft * LoadingBarOutlineOffset,
+                BottomRight = startLocation + new Vector2i(LoadingBarWidth, -LoadingBarHeight) + Vector2i.DownRight * LoadingBarOutlineOffset,
             },
             Color.White,
             false);
@@ -209,7 +214,7 @@ public sealed partial class LoadingScreenManager
             },
             _loadingBarColor);
 
-        startLocation += new Vector2i(0, 10);
+        startLocation += DefaultOffset;
     }
 
     private void DrawCurrentLoading(IRenderHandle handle, ref Vector2i startLocation)
@@ -218,7 +223,7 @@ public sealed partial class LoadingScreenManager
             return;
 
         handle.DrawingHandleScreen.DrawString(_font, startLocation, _currentSectionName);
-        startLocation += new Vector2i(0, 10);
+        startLocation += DefaultOffset;
     }
 
     private void DrawTopTimes(IRenderHandle handle, ref Vector2i startLocation)
@@ -226,11 +231,12 @@ public sealed partial class LoadingScreenManager
         if (_font == null)
             return;
 
-        startLocation += new Vector2i(20, 10);
+        startLocation += TopTimesExtraOffset;
 
         var offset = 0;
         var x = 0;
         _times.Sort((a, b) => b.LoadTime.CompareTo(a.LoadTime));
+
         foreach (var val in _times)
         {
             if (x >= NumLongestLoadTimes)

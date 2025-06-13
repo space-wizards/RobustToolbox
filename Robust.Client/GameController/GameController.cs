@@ -140,7 +140,7 @@ namespace Robust.Client
         {
             DebugTools.AssertNotNull(_resourceManifest);
 
-            _loadscr.Initialize();
+            _loadscr.Initialize(34);
 
             _clyde.InitializePostWindowing();
             _clyde.SetWindowTitle(GameTitle());

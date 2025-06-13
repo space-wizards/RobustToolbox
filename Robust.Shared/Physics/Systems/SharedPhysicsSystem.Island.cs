@@ -633,7 +633,7 @@ public abstract partial class SharedPhysicsSystem
         );
 
         // We'll sort islands from internally parallel (due to lots of contacts) to running all the islands in parallel
-        islands.Sort((x, y) => InternalParallel(y).CompareTo(InternalParallel(x)));
+        islands.Sort(static (x, y) => InternalParallel(y).CompareTo(InternalParallel(x)));
 
         var totalBodies = 0;
         var actualIslands = islands.ToArray();
@@ -904,16 +904,48 @@ public abstract partial class SharedPhysicsSystem
 
         if (options != null)
         {
-            const int FinaliseBodies = 32;
-            var batches = (int)MathF.Ceiling((float) bodyCount / FinaliseBodies);
-
-            Parallel.For(0, batches, options, i =>
+            // Isolate to avoid delegate capture allocation unless we're actually processing parallel here.
+            static void ProcessParallelInternal(
+                SharedPhysicsSystem system,
+                ParallelOptions options,
+                int bodyCount,
+                int offset,
+                List<Entity<PhysicsComponent, TransformComponent>> bodies,
+                Vector2[] positions,
+                float[] angles,
+                Vector2[] solvedPositions,
+                float[] solvedAngles)
             {
-                var start = i * FinaliseBodies;
-                var end = Math.Min(bodyCount, start + FinaliseBodies);
+                const int FinaliseBodies = 32;
+                var batches = (int)MathF.Ceiling((float) bodyCount / FinaliseBodies);
 
-                FinalisePositions(start, end, offset, bodies,  positions, angles, solvedPositions, solvedAngles);
-            });
+                Parallel.For(0, batches, options, i =>
+                {
+                    var start = i * FinaliseBodies;
+                    var end = Math.Min(bodyCount, start + FinaliseBodies);
+
+                    system.FinalisePositions(
+                        start,
+                        end,
+                        offset,
+                        bodies,
+                        positions,
+                        angles,
+                        solvedPositions,
+                        solvedAngles);
+                });
+            }
+
+            ProcessParallelInternal(
+                this,
+                options,
+                bodyCount,
+                offset,
+                bodies,
+                positions,
+                angles,
+                solvedPositions,
+                solvedAngles);
         }
         else
         {

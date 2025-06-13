@@ -27,6 +27,9 @@ public sealed partial class LoadingScreenManager
 
     #region UI constants
 
+    private const float LoadingBarLocationX = 0.5f;
+    private const float LoadingBarLocationY = 0.675f;
+
     private const int LoadingBarWidth = 250;
     private const int LoadingBarHeight = 20;
     private const int LoadingBarOutlineOffset = 5;
@@ -167,7 +170,8 @@ public sealed partial class LoadingScreenManager
 
         DrawSplash(handle, screenSize);
 
-        var startLocation = new Vector2i((int) Math.Round(screenSize.X * 0.5f), (int) Math.Round(screenSize.Y * 0.675f));
+        var center = new Vector2i((int) Math.Round(screenSize.X * LoadingBarLocationX), (int) Math.Round(screenSize.Y * LoadingBarLocationY));
+        var startLocation = center - new Vector2i(LoadingBarWidth/2, 0);
 
         DrawLoadingBar(handle, ref startLocation);
 
@@ -192,7 +196,6 @@ public sealed partial class LoadingScreenManager
         if (!ShowLoadingBar)
             return;
 
-        startLocation -= new Vector2i(LoadingBarWidth/2, 0);
         var sectionWidth = LoadingBarWidth / _numberOfLoadingSections;
 
         var barTopLeft = startLocation;

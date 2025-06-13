@@ -18,12 +18,15 @@ namespace Robust.Client.UserInterface
     [SuppressMessage("ReSharper", "IdentifierTypo")]
     [SuppressMessage("ReSharper", "CommentTypo")]
     [SuppressMessage("ReSharper", "StringLiteralTypo")]
-    internal sealed class FileDialogManager : IFileDialogManager
+    internal sealed class FileDialogManager : IFileDialogManager, IPostInjectInit
     {
         // Uses nativefiledialog to open the file dialogs cross platform.
         // On Linux, if the kdialog command is found, it will be used instead.
         // TODO: Should we maybe try to avoid running kdialog if the DE isn't KDE?
         [Dependency] private readonly IClydeInternal _clyde = default!;
+        [Dependency] private readonly ILogManager _log = default!;
+
+        private ISawmill _sawmill = default!;
 
         private bool _kDialogAvailable;
         private bool _checkedKDialogAvailable;
@@ -267,7 +270,7 @@ namespace Robust.Client.UserInterface
 
                 if (_kDialogAvailable)
                 {
-                    Logger.DebugS("filedialog", "kdialog available.");
+                    _sawmill.Debug("kdialog available.");
                 }
             }
             catch
@@ -403,6 +406,11 @@ namespace Robust.Client.UserInterface
 
         [DllImport("swnfd.dll")]
         private static extern unsafe void sw_NFD_Free(void* ptr);
+
+        public void PostInject()
+        {
+            _sawmill = _log.GetSawmill("filedialog");
+        }
 
         private enum sw_nfdresult
         {

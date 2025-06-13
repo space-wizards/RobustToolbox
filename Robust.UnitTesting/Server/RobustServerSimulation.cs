@@ -11,6 +11,7 @@ using Robust.Server.Containers;
 using Robust.Server.Debugging;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
+using Robust.Server.Localization;
 using Robust.Server.Physics;
 using Robust.Server.Player;
 using Robust.Server.Prototypes;
@@ -192,7 +193,7 @@ namespace Robust.UnitTesting.Server
             container.Register<INetConfigurationManagerInternal, ServerNetConfigurationManager>();
             container.Register<IDynamicTypeFactory, DynamicTypeFactory>();
             container.Register<IDynamicTypeFactoryInternal, DynamicTypeFactory>();
-            container.Register<ILocalizationManager, LocalizationManager>();
+            container.Register<ILocalizationManager, ServerLocalizationManager>();
             container.Register<IModLoader, TestingModLoader>();
             container.Register<IModLoaderInternal, TestingModLoader>();
             container.Register<ProfManager, ProfManager>();
@@ -298,16 +299,13 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<JointComponent>();
             compFactory.RegisterClass<EyeComponent>();
             compFactory.RegisterClass<GridTreeComponent>();
-            compFactory.RegisterClass<MovedGridsComponent>();
             compFactory.RegisterClass<JointRelayTargetComponent>();
             compFactory.RegisterClass<BroadphaseComponent>();
             compFactory.RegisterClass<ContainerManagerComponent>();
-            compFactory.RegisterClass<PhysicsMapComponent>();
             compFactory.RegisterClass<FixturesComponent>();
             compFactory.RegisterClass<CollisionWakeComponent>();
             compFactory.RegisterClass<OccluderComponent>();
             compFactory.RegisterClass<OccluderTreeComponent>();
-            compFactory.RegisterClass<Gravity2DComponent>();
             compFactory.RegisterClass<CollideOnAnchorComponent>();
             compFactory.RegisterClass<ActorComponent>();
 
@@ -321,7 +319,6 @@ namespace Robust.UnitTesting.Server
             var entitySystemMan = container.Resolve<IEntitySystemManager>();
 
             entitySystemMan.LoadExtraSystemType<PhysicsSystem>();
-            entitySystemMan.LoadExtraSystemType<Gravity2DController>();
             entitySystemMan.LoadExtraSystemType<SharedGridTraversalSystem>();
             entitySystemMan.LoadExtraSystemType<ContainerSystem>();
             entitySystemMan.LoadExtraSystemType<JointSystem>();

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using Robust.Shared.Collections;
 using Robust.Shared.Containers;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
@@ -52,6 +53,16 @@ public partial class EntityManager
         return ents;
     }
 
+    public EntityUid[] SpawnEntitiesAttachedTo(EntityCoordinates coordinates, params EntProtoId[] protoNames)
+    {
+        var ents = new EntityUid[protoNames.Length];
+        for (var i = 0; i < protoNames.Length; i++)
+        {
+            ents[i] = SpawnAttachedTo(protoNames[i], coordinates);
+        }
+        return ents;
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public EntityUid[] SpawnEntitiesAttachedTo(EntityCoordinates coordinates, List<string?> protoNames)
     {
@@ -72,6 +83,19 @@ public partial class EntityManager
             ents[i] = Spawn(protoNames[i], coordinates);
         }
         return ents;
+    }
+
+    public EntityUid[] SpawnEntitiesAttachedTo(EntityCoordinates coordinates, IEnumerable<EntProtoId> protoNames)
+    {
+        var ents = new ValueList<EntityUid>();
+
+        foreach (var protoName in protoNames)
+        {
+            var uid = SpawnAttachedTo(protoName, coordinates);
+            ents.Add(uid);
+        }
+
+        return ents.ToArray();
     }
 
     public virtual EntityUid SpawnAttachedTo(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default)

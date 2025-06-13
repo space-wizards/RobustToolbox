@@ -146,6 +146,13 @@ namespace Robust.Shared.Localization
         ///     Gets localization data for an entity prototype.
         /// </summary>
         EntityLocData GetEntityData(string prototypeId);
+
+        /// <summary>
+        /// Initializes the <see cref="LocalizationManager"/>.
+        /// </summary>
+        void Initialize()
+        {
+        }
     }
 
     internal interface ILocalizationManagerInternal : ILocalizationManager

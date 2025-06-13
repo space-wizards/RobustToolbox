@@ -6,7 +6,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.RichText;
 
-public sealed class BoldTag : IMarkupTag
+public sealed class BoldTag : IMarkupTagHandler
 {
     public const string BoldFont = "DefaultBold";
 

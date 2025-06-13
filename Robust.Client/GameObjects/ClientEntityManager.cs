@@ -295,17 +295,21 @@ namespace Robust.Client.GameObjects
         /// <inheritdoc />
         public override void PredictedDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
         {
-            if (Deleted(ent.Owner) || !TransformQuery.Resolve(ent.Owner, ref ent.Comp2))
+            if (!MetaQuery.Resolve(ent.Owner, ref ent.Comp1)
+                || ent.Comp1.EntityLifeStage >= EntityLifeStage.Terminating
+                || !TransformQuery.Resolve(ent.Owner, ref ent.Comp2))
+            {
                 return;
+            }
 
             // So there's 3 scenarios:
             // 1. Networked entity we just move to nullspace and rely on state handling.
             // 2. Clientside predicted entity we delete and rely on state handling.
             // 3. Clientside only entity that actually needs deleting here.
 
-            if (HasComponent<PredictedSpawnComponent>(ent.Owner))
+            if (ent.Comp1.NetEntity.IsClientSide())
             {
-                DeleteEntity(ent);
+                DeleteEntity(ent, ent.Comp1, ent.Comp2);
             }
             else
             {
@@ -316,12 +320,20 @@ namespace Robust.Client.GameObjects
         /// <inheritdoc />
         public override void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
         {
-            if (IsQueuedForDeletion(ent.Owner) || !TransformQuery.Resolve(ent.Owner, ref ent.Comp2))
-                return;
-
-            if (HasComponent<PredictedSpawnComponent>(ent.Owner))
+            if (IsQueuedForDeletion(ent.Owner)
+                || !MetaQuery.Resolve(ent.Owner, ref ent.Comp1)
+                || ent.Comp1.EntityLifeStage >= EntityLifeStage.Terminating
+                || !TransformQuery.Resolve(ent.Owner, ref ent.Comp2))
             {
-                QueueDeleteEntity(ent);
+                return;
+            }
+
+            if (ent.Comp1.NetEntity.IsClientSide())
+            {
+                // client-side QueueDeleteEntity re-fetches MetadataComp and checks IsClientSide().
+                // base call to skip that.
+                // TODO create override that takes in metadata comp
+                base.QueueDeleteEntity(ent);
             }
             else
             {

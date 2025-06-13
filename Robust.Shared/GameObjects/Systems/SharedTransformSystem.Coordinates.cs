@@ -121,8 +121,14 @@ public abstract partial class SharedTransformSystem
             return MapCoordinates.Nullspace;
         }
 
-        var worldPos = Vector2.Transform(coordinates.Position, GetWorldMatrix(xform));
-        return new MapCoordinates(worldPos, xform.MapID);
+        Vector2 pos = xform._localRotation.RotateVec(coordinates.Position) + xform._localPosition;
+
+        while (xform.ParentUid != xform.MapUid && xform.ParentUid.IsValid())
+        {
+            xform = XformQuery.GetComponent(xform.ParentUid);
+            pos = xform._localRotation.RotateVec(pos) + xform._localPosition;
+        }
+        return new MapCoordinates(pos, xform.MapID);
     }
 
     /// <summary>
@@ -133,6 +139,41 @@ public abstract partial class SharedTransformSystem
     {
         var eCoords = GetCoordinates(coordinates);
         return ToMapCoordinates(eCoords);
+    }
+
+    /// <summary>
+    /// Converts entity-local coordinates into map terms.
+    /// The same as ToMapCoordinates(coordinates, logError).Position, but doesn't have to construct the MapCoordinates first.
+    /// </summary>
+    public Vector2 ToWorldPosition(EntityCoordinates coordinates, bool logError = true)
+    {
+        if (!TryComp(coordinates.EntityId, out TransformComponent? xform))
+        {
+            if (logError)
+                Log.Error($"Attempted to convert coordinates with invalid entity: {coordinates}. Trace: {Environment.StackTrace}");
+            return Vector2.Zero;
+        }
+
+        Vector2 pos = xform._localRotation.RotateVec(coordinates.Position) + xform._localPosition;
+
+        while (xform.ParentUid != xform.MapUid && xform.ParentUid.IsValid())
+        {
+            xform = XformQuery.GetComponent(xform.ParentUid);
+            pos = xform._localRotation.RotateVec(pos) + xform._localPosition;
+        }
+
+        return pos;
+    }
+
+    /// <summary>
+    /// Converts entity-local coordinates into map terms.
+    /// The same as ToMapCoordinates(coordinates).Position, but doesn't have to construct the MapCoordinates first.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Vector2 ToWorldPosition(NetCoordinates coordinates)
+    {
+        var eCoords = GetCoordinates(coordinates);
+        return ToWorldPosition(eCoords);
     }
 
     /// <summary>

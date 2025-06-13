@@ -23,7 +23,9 @@ namespace Robust.Client.Graphics.Clyde
             private readonly ISawmill _sawmillGlfw;
 
             private bool _glfwInitialized;
+#if DEBUG
             private bool _win32Experience;
+#endif
 
             public GlfwWindowingImpl(Clyde clyde, IDependencyCollection deps)
             {

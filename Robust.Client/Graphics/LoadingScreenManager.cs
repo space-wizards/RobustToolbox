@@ -32,6 +32,7 @@ public sealed partial class LoadingScreenManager
     private const int LoadingBarOutlineOffset = 5;
     private static readonly Vector2i DefaultOffset = (0, 10);
     private static readonly Vector2i TopTimesExtraOffset = (20, 10);
+    private const int TopTimesSpacing = 15;
 
     private const int NumLongestLoadTimes = 5;
 
@@ -244,7 +245,7 @@ public sealed partial class LoadingScreenManager
 
             var entry = $"{val.LoadTime:ss\\.ff} - {val.Name}";
             handle.DrawingHandleScreen.DrawString(_font, startLocation + new Vector2i(0, offset), entry);
-            offset += 15;
+            offset += TopTimesSpacing;
             x++;
         }
     }

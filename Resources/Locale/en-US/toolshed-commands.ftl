@@ -195,6 +195,8 @@ command-description-spawn-at =
     Spawns an entity at the given coordinates.
 command-description-spawn-on =
     Spawns an entity on the given entity, at it's coordinates.
+command-description-spawn-in =
+    Spawns an entity in the given container on the given entity, dropping it at it's coordinates if it doesn't fit
 command-description-spawn-attached =
     Spawns an entity attached to the given entity, at (0 0) relative to it.
 command-description-mappos =

@@ -57,8 +57,8 @@ internal sealed partial class AudioManager : IAudioInternal
         _checkAlError();
 
         // Load up AL context extensions.
-        var s = ALC.GetString(ALDevice.Null, AlcGetString.Extensions) ?? "";
-        foreach (var extension in s.Split(' '))
+        var s = ALC.GetString(_openALDevice, AlcGetString.Extensions) ?? "";
+        foreach (var extension in s.Split(' ', StringSplitOptions.RemoveEmptyEntries))
         {
             _alContextExtensions.Add(extension);
         }

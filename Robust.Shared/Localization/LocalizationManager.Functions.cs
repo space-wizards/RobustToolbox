@@ -170,10 +170,8 @@ namespace Robust.Shared.Localization
             if (args.Args.Count < 1) return new LocValueString(nameof(Gender.Neuter));
 
             ILocValue entity0 = args.Args[0];
-            if (entity0.Value != null)
+            if (entity0.Value is EntityUid entity)
             {
-                EntityUid entity = (EntityUid)entity0.Value;
-
                 if (_entMan.TryGetComponent(entity, out GrammarComponent? grammar) && grammar.Gender.HasValue)
                 {
                     return new LocValueString(grammar.Gender.Value.ToString().ToLowerInvariant());
@@ -246,10 +244,8 @@ namespace Robust.Shared.Localization
             if (args.Args.Count < 1) return new LocValueString(GetString("zzzz-counter-default"));
 
             ILocValue entity0 = args.Args[0];
-            if (entity0.Value != null)
+            if (entity0.Value is EntityUid entity)
             {
-                EntityUid entity = (EntityUid)entity0.Value;
-
                 if (TryGetEntityLocAttrib(entity, "counter", out var counter))
                 {
                     return new LocValueString(counter);
@@ -292,9 +288,8 @@ namespace Robust.Shared.Localization
             if (args.Args.Count < 2) return new LocValueString("other");
 
             ILocValue entity0 = args.Args[0];
-            if (entity0.Value != null)
+            if (entity0.Value is EntityUid entity)
             {
-                EntityUid entity = (EntityUid)entity0.Value;
                 ILocValue attrib0 = args.Args[1];
                 if (TryGetEntityLocAttrib(entity, attrib0.Format(new LocContext(bundle)), out var attrib))
                 {
@@ -313,10 +308,8 @@ namespace Robust.Shared.Localization
             if (args.Args.Count < 1) return new LocValueString("false");
 
             ILocValue entity0 = args.Args[0];
-            if (entity0.Value != null)
+            if (entity0.Value is EntityUid entity)
             {
-                EntityUid entity = (EntityUid)entity0.Value;
-
                 if (_entMan.TryGetComponent(entity, out GrammarComponent? grammar) && grammar.ProperNoun.HasValue)
                 {
                     return new LocValueString(grammar.ProperNoun.Value.ToString().ToLowerInvariant());

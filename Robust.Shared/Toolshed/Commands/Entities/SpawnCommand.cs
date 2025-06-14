@@ -1,9 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography.X509Certificates;
-using JetBrains.Annotations;
+using Robust.Shared.IoC;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -15,8 +13,7 @@ namespace Robust.Shared.Toolshed.Commands.Entities;
 [ToolshedCommand]
 internal sealed class SpawnCommand : ToolshedCommand
 {
-    [PublicAPI, IoC.Dependency]
-    protected readonly SharedContainerSystem sharedContainerSystem = default!;
+    [Dependency] protected readonly SharedContainerSystem sharedContainerSystem = default!;
 
     #region spawn:at implementations
 

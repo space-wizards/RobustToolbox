@@ -13,8 +13,6 @@ namespace Robust.Shared.Toolshed.Commands.Entities;
 [ToolshedCommand]
 internal sealed class SpawnCommand : ToolshedCommand
 {
-    [Dependency] protected readonly SharedContainerSystem sharedContainerSystem = default!;
-
     #region spawn:at implementations
 
     [CommandImplementation("at")]
@@ -53,6 +51,7 @@ internal sealed class SpawnCommand : ToolshedCommand
             !TryComp<MetaDataComponent>(spawned, out var metaDataComp) ||
             !TryComp<PhysicsComponent>(spawned, out var physicsComponent))
             return spawned;
+        var sharedContainerSystem = EntityManager.System<SharedContainerSystem>();
         var container = sharedContainerSystem.GetContainer(target, containerId);
         sharedContainerSystem.InsertOrDrop((spawned, transformComponent, metaDataComp, physicsComponent),
             container

@@ -46,7 +46,8 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
         "Make sure a method exists with the target name."
     );
 
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
+    [
         PreferProxyDescriptor,
         RedundantMethodNameDescriptor,
         TargetMethodNotFoundDescriptor,

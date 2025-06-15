@@ -20,6 +20,10 @@ namespace Robust.Client.ViewVariables.Editors
             {
                 box.OnToggled += args => ValueChanged(args.Pressed);
             }
+            else
+            {
+                box.Modulate = new Color(1f, 1f, 1f, 0.3f);
+            }
             return box;
         }
     }

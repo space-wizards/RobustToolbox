@@ -22,7 +22,7 @@ namespace Robust.Client.ViewVariables.Editors
             }
             else
             {
-                box.Modulate = new Color(1f, 1f, 1f, 0.3f);
+                box.Modulate = box.Modulate.WithAlpha(0.3f);
             }
             return box;
         }

@@ -148,6 +148,8 @@ public sealed class DataDefinitionAnalyzerTest
 
             [NotYamlSerializable]
             public sealed class NotSerializableClass { }
+            [NotYamlSerializable]
+            public readonly struct NotSerializableStruct { }
 
             [DataDefinition]
             public sealed partial class Foo
@@ -158,6 +160,21 @@ public sealed class DataDefinitionAnalyzerTest
                 [DataField]
                 public NotSerializableClass BadProperty { get; set; }
 
+                [DataField]
+                public NotSerializableClass? BadNullableField;
+
+                [DataField]
+                public NotSerializableStruct BadStructField;
+
+                [DataField]
+                public NotSerializableStruct BadStructProperty { get; set; }
+
+                [DataField]
+                public NotSerializableStruct? BadNullableStructField;
+
+                [DataField]
+                public NotSerializableStruct? BadNullableStructProperty { get; set; }
+
                 public NotSerializableClass GoodField; // Not a DataField, not a problem
 
                 public NotSerializableClass GoodProperty { get; set; } // Not a DataField, not a problem
@@ -165,10 +182,20 @@ public sealed class DataDefinitionAnalyzerTest
             """;
 
         await Verifier(code,
-            // /0/Test0.cs(10,12): error RA0033: Data field BadField in data definition Foo is type NotSerializableClass, which is not YAML serializable
-            VerifyCS.Diagnostic(DataDefinitionAnalyzer.DataFieldYamlSerializableRule).WithSpan(10, 12, 10, 32).WithArguments("BadField", "Foo", "NotSerializableClass"),
-            // /0/Test0.cs(13,12): error RA0033: Data field BadProperty in data definition Foo is type NotSerializableClass, which is not YAML serializable
-            VerifyCS.Diagnostic(DataDefinitionAnalyzer.DataFieldYamlSerializableRule).WithSpan(13, 12, 13, 32).WithArguments("BadProperty", "Foo", "NotSerializableClass")
+            // /0/Test0.cs(12,12): error RA0033: Data field BadField in data definition Foo is type NotSerializableClass, which is not YAML serializable
+            VerifyCS.Diagnostic(DataDefinitionAnalyzer.DataFieldYamlSerializableRule).WithSpan(12, 12, 12, 32).WithArguments("BadField", "Foo", "NotSerializableClass"),
+            // /0/Test0.cs(15,12): error RA0033: Data field BadProperty in data definition Foo is type NotSerializableClass, which is not YAML serializable
+            VerifyCS.Diagnostic(DataDefinitionAnalyzer.DataFieldYamlSerializableRule).WithSpan(15, 12, 15, 32).WithArguments("BadProperty", "Foo", "NotSerializableClass"),
+            // /0/Test0.cs(18,12): error RA0036: Data field BadNullableField in data definition Foo is type NotSerializableClass, which is not YAML serializable
+            VerifyCS.Diagnostic(DataDefinitionAnalyzer.DataFieldYamlSerializableRule).WithSpan(18, 12, 18, 33).WithArguments("BadNullableField", "Foo", "NotSerializableClass"),
+            // /0/Test0.cs(21,12): error RA0036: Data field BadStructField in data definition Foo is type NotSerializableStruct, which is not YAML serializable
+            VerifyCS.Diagnostic(DataDefinitionAnalyzer.DataFieldYamlSerializableRule).WithSpan(21, 12, 21, 33).WithArguments("BadStructField", "Foo", "NotSerializableStruct"),
+            // /0/Test0.cs(24,12): error RA0036: Data field BadStructProperty in data definition Foo is type NotSerializableStruct, which is not YAML serializable
+            VerifyCS.Diagnostic(DataDefinitionAnalyzer.DataFieldYamlSerializableRule).WithSpan(24, 12, 24, 33).WithArguments("BadStructProperty", "Foo", "NotSerializableStruct"),
+            // /0/Test0.cs(27,12): error RA0036: Data field BadNullableStructField in data definition Foo is type NotSerializableStruct, which is not YAML serializable
+            VerifyCS.Diagnostic(DataDefinitionAnalyzer.DataFieldYamlSerializableRule).WithSpan(27, 12, 27, 34).WithArguments("BadNullableStructField", "Foo", "NotSerializableStruct"),
+            // /0/Test0.cs(30,12): error RA0036: Data field BadNullableStructProperty in data definition Foo is type NotSerializableStruct, which is not YAML serializable
+            VerifyCS.Diagnostic(DataDefinitionAnalyzer.DataFieldYamlSerializableRule).WithSpan(30, 12, 30, 34).WithArguments("BadNullableStructProperty", "Foo", "NotSerializableStruct")
         );
     }
 }

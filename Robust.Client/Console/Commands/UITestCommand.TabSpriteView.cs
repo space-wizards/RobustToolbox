@@ -22,6 +22,7 @@ internal sealed partial class UITestControl
         private readonly IEntityManager _entMan;
         private readonly IGameTiming _timing;
         private readonly BoxContainer _box;
+        private SpriteSystem SpriteSystem => _entMan.System<SpriteSystem>();
 
         private record Entry(EntityUid Uid, SpriteComponent Sprite, TransformComponent Transform,
             SpriteView View, Action<Entry, float>? Update);
@@ -193,7 +194,7 @@ internal sealed partial class UITestControl
 
             entry = AddEntry("Offset", (e, time) =>
             {
-                e.Sprite.Offset = new Vector2(MathF.Sin((float) Angle.FromDegrees(time * _degreesPerSecond)), 0);
+                SpriteSystem.SetOffset((e.Uid, e.Sprite), new Vector2(MathF.Sin((float) Angle.FromDegrees(time * _degreesPerSecond)), 0));
                 e.View.InvalidateMeasure();
             });
             added.Add(entry);
@@ -201,23 +202,23 @@ internal sealed partial class UITestControl
             entry = AddEntry("Scaled", (e, time) =>
             {
                 var theta = (float) Angle.FromDegrees(_degreesPerSecond * time).Theta;
-                e.Sprite.Scale = Vector2.One + new Vector2(0.5f * MathF.Sin(theta), 0.5f * MathF.Cos(theta));
+                SpriteSystem.SetScale((e.Uid, e.Sprite), Vector2.One + new Vector2(0.5f * MathF.Sin(theta), 0.5f * MathF.Cos(theta)));
                 e.View.InvalidateMeasure();
             });
             added.Add(entry);
 
             entry = AddEntry("Sprite Rotation", (e, time) =>
             {
-                e.Sprite.Rotation = Angle.FromDegrees(time * _degreesPerSecond);
+                SpriteSystem.SetRotation((e.Uid, e.Sprite), Angle.FromDegrees(time * _degreesPerSecond));
             });
             added.Add(entry);
 
             entry = AddEntry("Combination", (e, time) =>
             {
                 var theta = (float) Angle.FromDegrees(_degreesPerSecond * time * 2).Theta;
-                e.Sprite.Scale = Vector2.One + new Vector2(0.5f * MathF.Sin(theta), 0.5f * MathF.Cos(theta));
-                e.Sprite.Offset = new(MathF.Sin((float) Angle.FromDegrees(time * _degreesPerSecond)), 0);
-                e.Sprite.Rotation = Angle.FromDegrees(0.5 * time * _degreesPerSecond);
+                SpriteSystem.SetScale((e.Uid, e.Sprite), Vector2.One + new Vector2(0.5f * MathF.Sin(theta), 0.5f * MathF.Cos(theta)));
+                SpriteSystem.SetOffset((e.Uid, e.Sprite), new(MathF.Sin((float) Angle.FromDegrees(time * _degreesPerSecond)), 0));
+                SpriteSystem.SetRotation((e.Uid, e.Sprite), Angle.FromDegrees(0.5 * time * _degreesPerSecond));
                 e.Transform.LocalRotation = Angle.FromDegrees(0.25 * time * _degreesPerSecond);
                 e.View.InvalidateMeasure();
             });

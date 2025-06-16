@@ -635,7 +635,6 @@ namespace Robust.Client.GameObjects
 
         private object ParseKey(string keyString)
         {
-
             if (reflection.TryParseEnumReference(keyString, out var @enum))
                 return @enum;
 

@@ -699,7 +699,7 @@ public partial class EntitySystem
     /// <inheritdoc cref="IEntityManager.AddComponent&lt;T&gt;(EntityUid)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ProxyFor(typeof(EntityManager), nameof(EntityManager.AddComponent))]
-    protected T AddComp<T>(EntityUid uid) where T : Component, new()
+    protected T AddComp<T>(EntityUid uid) where T : IComponent, new()
     {
         return EntityManager.AddComponent<T>(uid);
     }

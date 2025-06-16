@@ -9,6 +9,8 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class CheckBox : ContainerButton
     {
+        private const float DisabledAlphaModifier = 0.3f;
+
         public const string StyleClassCheckBox = "checkBox";
         public const string StyleClassCheckBoxChecked = "checkBoxChecked";
 
@@ -44,7 +46,7 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         private bool _leftAlign = true;
-        
+
         public CheckBox()
         {
             ToggleMode = true;
@@ -89,6 +91,8 @@ namespace Robust.Client.UserInterface.Controls
                 else
                     TextureRect.RemoveStyleClass(StyleClassCheckBoxChecked);
             }
+
+            Modulate = Modulate with { A = DrawMode == DrawModeEnum.Disabled ? DisabledAlphaModifier : 1f };
         }
 
         /// <summary>

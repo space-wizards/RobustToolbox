@@ -39,6 +39,71 @@ public sealed class ProxyForFixerTest
     }
 
     [Test]
+    public async Task TestSubstituteProxy()
+    {
+        const string code = """
+            using Robust.Shared.Analyzers;
+
+            public sealed class TargetClass
+            {
+                public void DoSomething<T>(T? foo, string bar) { }
+            }
+
+            public abstract class ProxyClass
+            {
+                protected TargetClass TargetClass = new();
+
+                [ProxyFor(typeof(TargetClass))]
+                public void DoSomething<T>(T? foo, string bar)
+                {
+                    TargetClass.DoSomething(foo, bar);
+                }
+            }
+
+            public sealed class Tester : ProxyClass
+            {
+                public void Test()
+                {
+                    TargetClass.DoSomething<int>(5, "bar");
+                }
+            }
+            """;
+
+        const string fixedCode = """
+            using Robust.Shared.Analyzers;
+
+            public sealed class TargetClass
+            {
+                public void DoSomething<T>(T? foo, string bar) { }
+            }
+
+            public abstract class ProxyClass
+            {
+                protected TargetClass TargetClass = new();
+
+                [ProxyFor(typeof(TargetClass))]
+                public void DoSomething<T>(T? foo, string bar)
+                {
+                    TargetClass.DoSomething(foo, bar);
+                }
+            }
+
+            public sealed class Tester : ProxyClass
+            {
+                public void Test()
+                {
+                    DoSomething<int>(5, "bar");
+                }
+            }
+            """;
+
+        await Verifier(code, fixedCode,
+            // /0/Test0.cs(23,9): warning RA0037: Use the proxy method DoSomething instead of calling TargetClass.DoSomething directly
+            VerifyCS.Diagnostic(ProxyForAnalyzer.PreferProxyDescriptor).WithSpan(23, 9, 23, 47).WithArguments("DoSomething", "TargetClass.DoSomething")
+        );
+    }
+
+    [Test]
     public async Task TestRemoveRedundantMethodName()
     {
         const string code = """
@@ -82,8 +147,8 @@ public sealed class ProxyForFixerTest
             """;
 
         await Verifier(code, fixedCode,
-        // /0/Test0.cs(12,36): warning RA0038: Set method name matches the proxy method name and can be omitted
-        VerifyCS.Diagnostic(ProxyForAnalyzer.RedundantMethodNameDescriptor).WithSpan(12, 36, 12, 67)
+            // /0/Test0.cs(12,36): warning RA0038: Set method name matches the proxy method name and can be omitted
+            VerifyCS.Diagnostic(ProxyForAnalyzer.RedundantMethodNameDescriptor).WithSpan(12, 36, 12, 67)
         );
     }
 }

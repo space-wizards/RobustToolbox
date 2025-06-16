@@ -16,6 +16,8 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
     private const string ProxyForAttributeType = "Robust.Shared.Analyzers.ProxyForAttribute";
     private const string ProxyForName = "ProxyFor";
 
+    public static readonly string ProxyMethodName = "proxy";
+
     public static readonly DiagnosticDescriptor PreferProxyDescriptor = new(
         Diagnostics.IdPreferProxy,
         "Use the proxy method",
@@ -39,7 +41,7 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
     public static readonly DiagnosticDescriptor TargetMethodNotFoundDescriptor = new(
         Diagnostics.IdProxyForTargetMethodNotFound,
         "Target method not found",
-        "Unable to find a method named {0} with a matching signature ({2}) on target {1}",
+        "Unable to find a method named {0} with a matching signature on target {1}",
         "Usage",
         DiagnosticSeverity.Error,
         true,
@@ -107,9 +109,15 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
             if (!DoSignaturesMatch(invokedMethod, method))
                 continue;
 
+            var props = new Dictionary<string, string?>
+            {
+                { ProxyMethodName, method.Name }
+            };
+
             context.ReportDiagnostic(Diagnostic.Create(
                 PreferProxyDescriptor,
                 operation.Syntax.GetLocation(),
+                props.ToImmutableDictionary(),
                 method.MetadataName,
                 $"{invokedMethod.ContainingType.Name}.{invokedMethod.Name}"
             ));

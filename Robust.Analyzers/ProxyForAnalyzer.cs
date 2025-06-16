@@ -194,6 +194,18 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
         if (first.TypeArguments.Length != second.TypeArguments.Length)
             return false;
 
+        // Make sure any type constraints on the methods are the same
+        for (var i = 0; i < first.TypeParameters.Length; i++)
+        {
+            var firstConstraints = first.TypeParameters[i].ConstraintTypes;
+            var secondConstraints = second.TypeParameters[i].ConstraintTypes;
+            for (var j = 0; j < firstConstraints.Length; j++)
+            {
+                if (!SymbolEqualityComparer.Default.Equals(firstConstraints[j], secondConstraints[j]))
+                    return false;
+            }
+        }
+
         // Convert any type arguments in second to use the types of first
         if (second.IsGenericMethod)
             second = second.Construct(first.TypeArguments, first.TypeArgumentNullableAnnotations);

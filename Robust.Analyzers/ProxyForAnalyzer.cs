@@ -41,11 +41,11 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
     public static readonly DiagnosticDescriptor TargetMethodNotFoundDescriptor = new(
         Diagnostics.IdProxyForTargetMethodNotFound,
         "Target method not found",
-        "Unable to find a method named {0} with a matching signature on target {1}",
+        "Unable to find target method {0}",
         "Usage",
         DiagnosticSeverity.Error,
         true,
-        "Make sure a method exists with the target name."
+        "Make sure a method exists with the target name and matching signature."
     );
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
@@ -178,12 +178,12 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
         }
         if (!found)
         {
+            var methodParams = methodSymbol.Parameters.Length > 0 ? methodSymbol.Parameters.Select(p => p.ToDisplayString()) : [];
+            var methodSignature = $"{targetType.Name}.{targetMethodName}({string.Join(", ", methodParams)})";
             context.ReportDiagnostic(Diagnostic.Create(
                 TargetMethodNotFoundDescriptor,
                 targetArgumentLocation,
-                targetMethodName,
-                targetType.Name//,
-                //string.Join(", ", methodSymbol.Parameters.Select(p => p.ToDisplayString()))
+                methodSignature
             ));
         }
     }

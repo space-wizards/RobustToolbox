@@ -195,8 +195,8 @@ public sealed class ProxyForAnalyzerTest
             """;
 
         await Verifier(code,
-            // /0/Test0.cs(5,15): error RA0039: Unable to find a method named SomeOtherName with a matching signature on target TargetClass
-            VerifyCS.Diagnostic(ProxyForAnalyzer.TargetMethodNotFoundDescriptor).WithSpan(5, 15, 5, 34).WithArguments("SomeOtherName", "TargetClass")
+            // /0/Test0.cs(5,15): error RA0039: Unable to find target method TargetClass.SomeOtherName()
+            VerifyCS.Diagnostic(ProxyForAnalyzer.TargetMethodNotFoundDescriptor).WithSpan(5, 15, 5, 34).WithArguments("TargetClass.SomeOtherName()")
         );
     }
 
@@ -217,8 +217,8 @@ public sealed class ProxyForAnalyzerTest
             """;
 
         await Verifier(code,
-            // /0/Test0.cs(5,15): error RA0039: Unable to find a method named DoSomething with a matching signature on target TargetClass
-            VerifyCS.Diagnostic(ProxyForAnalyzer.TargetMethodNotFoundDescriptor).WithSpan(5, 15, 5, 34).WithArguments("DoSomething", "TargetClass")
+            // /0/Test0.cs(5,15): error RA0039: Unable to find target method TargetClass.DoSomething(int foo)
+            VerifyCS.Diagnostic(ProxyForAnalyzer.TargetMethodNotFoundDescriptor).WithSpan(5, 15, 5, 34).WithArguments("TargetClass.DoSomething(int foo)")
         );
     }
 
@@ -239,8 +239,8 @@ public sealed class ProxyForAnalyzerTest
             """;
 
         await Verifier(code,
-            // /0/Test0.cs(5,15): error RA0039: Unable to find a method named SomeOtherName with a matching signature on target TargetClass
-            VerifyCS.Diagnostic(ProxyForAnalyzer.TargetMethodNotFoundDescriptor).WithSpan(5, 15, 5, 34).WithArguments("SomeOtherName", "TargetClass")
+            // /0/Test0.cs(5,15): error RA0039: Unable to find target method TargetClass.SomeOtherName()
+            VerifyCS.Diagnostic(ProxyForAnalyzer.TargetMethodNotFoundDescriptor).WithSpan(5, 15, 5, 34).WithArguments("TargetClass.SomeOtherName()")
         );
     }
 }

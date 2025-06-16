@@ -615,7 +615,7 @@ namespace Robust.Client.GameObjects
 
             if (layerDatum.CopyToShaderParameters is { } copyParameters)
             {
-                layer.CopyToShaderParameters = new CopyToShaderParameters(ParseKey(copyParameters.LayerKey))
+                layer.CopyToShaderParameters = new CopyToShaderParameters(copyParameters.LayerKey?? "this is impossible")
                 {
                     ParameterTexture = copyParameters.ParameterTexture,
                     ParameterUV = copyParameters.ParameterUV
@@ -635,6 +635,7 @@ namespace Robust.Client.GameObjects
 
         private object ParseKey(string keyString)
         {
+
             if (reflection.TryParseEnumReference(keyString, out var @enum))
                 return @enum;
 

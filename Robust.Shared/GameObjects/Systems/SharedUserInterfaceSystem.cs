@@ -635,8 +635,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 
         if (!_timing.IsFirstTimePredicted)
             return;
-
-        EntityManager.RaisePredictiveEvent(new BoundUIWrapMessage(GetNetEntity(entity.Owner), new CloseBoundInterfaceMessage(), key));
+        RaisePredictiveEvent(new BoundUIWrapMessage(GetNetEntity(entity.Owner), new CloseBoundInterfaceMessage(), key));
     }
 
     /// <summary>
@@ -683,9 +682,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         {
             if (_timing.IsFirstTimePredicted)
             {
-                // Not guaranteed to open so rely upon the event handling it.
-                // Also lets client request it to be opened remotely too.
-                EntityManager.RaisePredictiveEvent(new BoundUIWrapMessage(GetNetEntity(entity.Owner), new OpenBoundInterfaceMessage(), key));
+                RaisePredictiveEvent(new BoundUIWrapMessage(GetNetEntity(entity.Owner), new OpenBoundInterfaceMessage(), key));
             }
         }
         else

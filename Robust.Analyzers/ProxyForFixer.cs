@@ -69,15 +69,21 @@ public sealed class ProxyForFixer : CodeFixProvider
         if (token.Expression is not MemberAccessExpressionSyntax expression)
             return document;
 
+        // Create a token with the proxy method name
         var identifierToken = SyntaxFactory.Identifier(methodName);
-        ExpressionSyntax methodIdentifier = expression.Name switch
+        // Create a replacement expression using the proxy method
+        ExpressionSyntax newExpression = expression.Name switch
         {
+            // Copy over any type arguments from the old invocation
             GenericNameSyntax old => SyntaxFactory.GenericName(identifierToken, old.TypeArgumentList),
+            // Handle methods with no type arguments
             SimpleNameSyntax => SyntaxFactory.IdentifierName(identifierToken),
             _ => throw new InvalidOperationException()
         };
-        var newExpression = token.WithExpression(methodIdentifier);
-        root = root!.ReplaceNode(token, newExpression);
+        // Create a replacement invocation expression
+        var replacement = token.WithExpression(newExpression);
+        // Replace the original expression with the new one
+        root = root!.ReplaceNode(token, replacement);
 
         return document.WithSyntaxRoot(root);
     }
@@ -106,10 +112,14 @@ public sealed class ProxyForFixer : CodeFixProvider
         if (model == null)
             return document;
 
+        // Get the argument list containing the offending argument
         if (token.Parent is not AttributeArgumentListSyntax listSyntax)
             return document;
 
+        // Create a new list with the argument removed
         var newListSyntax = listSyntax.WithArguments(listSyntax.Arguments.Remove(token));
+
+        // Replace the original argument list with the new one
         root = root!.ReplaceNode(listSyntax, newListSyntax);
         return document.WithSyntaxRoot(root);
     }

@@ -36,7 +36,7 @@ public sealed class PrototypeFixer : CodeFixProvider
     {
         var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken);
         var span = diagnostic.Location.SourceSpan;
-        var token = root?.FindToken(span.Start).Parent?.AncestorsAndSelf().OfType<AttributeSyntax>().First();
+        var token = root?.FindToken(span.Start).Parent?.AncestorsAndSelf().OfType<AttributeArgumentSyntax>().First();
 
         if (token == null)
             return;
@@ -48,29 +48,29 @@ public sealed class PrototypeFixer : CodeFixProvider
         ), diagnostic);
     }
 
-    private static async Task<Document> RemoveType(Document document, AttributeSyntax syntax, CancellationToken cancellation)
+    private static async Task<Document> RemoveType(Document document, AttributeArgumentSyntax syntax, CancellationToken cancellation)
     {
         var root = (CompilationUnitSyntax?) await document.GetSyntaxRootAsync(cancellation);
 
-        if (syntax.ArgumentList == null)
+        if (syntax.Parent is not AttributeArgumentListSyntax argListSyntax)
             return document;
 
-        AttributeSyntax? newSyntax;
-        if (syntax.ArgumentList.Arguments.Count == 1)
+        if (argListSyntax.Arguments.Count == 1)
         {
-            // If this is the only argument, delete the ArgumentList so we don't leave empty parentheses
-            newSyntax = syntax.RemoveNode(syntax.ArgumentList, SyntaxRemoveOptions.KeepNoTrivia);
+            // If this is the only argument, remove the whole argument list so we don't leave empty parentheses
+            if (argListSyntax.Parent is not AttributeSyntax attributeSyntax)
+                return document;
+
+            var newAttributeSyntax = attributeSyntax.RemoveNode(argListSyntax, SyntaxRemoveOptions.KeepNoTrivia);
+            root = root!.ReplaceNode(attributeSyntax, newAttributeSyntax!);
         }
         else
         {
-            // Remove the first argument, which is the type
-            var newArgs = syntax.ArgumentList.Arguments.RemoveAt(0);
-            var newArgList = syntax.ArgumentList.WithArguments(newArgs);
-            // Construct a new attribute with the type removed
-            newSyntax = syntax.WithArgumentList(newArgList);
+            // Otherwise just remove the argument
+            var newArgListSyntax = argListSyntax.WithArguments(argListSyntax.Arguments.Remove(syntax));
+            root = root!.ReplaceNode(argListSyntax, newArgListSyntax);
         }
 
-        root = root!.ReplaceNode(syntax, newSyntax!);
 
         return document.WithSyntaxRoot(root);
     }

@@ -75,7 +75,6 @@ public sealed class PreferOtherTypeFixerTest
 
         await Verifier(code, fixedCode,
         // /0/Test0.cs(12,12): error RA0031: Use the specific type EntProtoId instead of ProtoId when the type argument is EntityPrototype
-        VerifyCS.Diagnostic().WithSpan(12, 12, 12, 48).WithArguments("EntProtoId", "ProtoId", "EntityPrototype")
-        );
+        VerifyCS.Diagnostic().WithSpan(12, 12, 12, 48).WithArguments("EntProtoId", "ProtoId", "EntityPrototype"));
     }
 }

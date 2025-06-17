@@ -84,7 +84,7 @@ public sealed class PrototypeAnalyzer : DiagnosticAnalyzer
             if (!className.EndsWith(PrototypeUtility.PrototypeNameEnding))
                 return;
 
-            var location = prototypeAttribute.GetLocation();
+            var location = argumentSyntax.GetLocation();
             context.ReportDiagnostic(Diagnostic.Create(PrototypeRedundantTypeRule,
                 location,
                 className,

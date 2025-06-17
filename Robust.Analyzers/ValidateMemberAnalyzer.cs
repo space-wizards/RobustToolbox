@@ -83,7 +83,7 @@ public sealed class ValidateMemberAnalyzer : DiagnosticAnalyzer
                 if (member.Name == fieldName)
                 {
                     found = true;
-                    continue;
+                    break;
                 }
             }
             // If we didn't find it, report the violation

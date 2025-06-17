@@ -59,71 +59,107 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.ReportDiagnostics | GeneratedCodeAnalysisFlags.Analyze);
         context.EnableConcurrentExecution();
-        context.RegisterOperationAction(AnalyzeInvocation, OperationKind.Invocation);
+        context.RegisterSymbolStartAction(symbolContext =>
+        {
+            // We only care about classes
+            if (symbolContext.Symbol is not INamedTypeSymbol typeSymbol || typeSymbol.TypeKind != TypeKind.Class)
+                return;
+
+            // Find information about all marked proxy methods available to this class
+            var proxyMethods = GetProxyMethods(typeSymbol);
+
+            // No proxy methods are available to this class, so we're done
+            if (proxyMethods.Length == 0)
+                return;
+
+            // Pass proxy method information to the analyzer state
+            var state = new AnalyzerState(proxyMethods);
+            // Analyze each method invocation within the class
+            symbolContext.RegisterOperationAction(state.AnalyzeInvocation, OperationKind.Invocation);
+        }, SymbolKind.NamedType);
+
         context.RegisterSyntaxNodeAction(AnalyzeDeclaration, SyntaxKind.MethodDeclaration);
     }
 
     /// <summary>
-    /// Check for failures to use proxy methods when available.
+    /// Data about a proxy method and its target.
     /// </summary>
-    private void AnalyzeInvocation(OperationAnalysisContext context)
+    private readonly record struct ProxyMethod(
+        IMethodSymbol Method,
+        INamedTypeSymbol TargetType,
+        string TargetMethod
+    );
+
+    /// <summary>
+    /// Returns information about all proxy methods available to the specified class.
+    /// </summary>
+    private ProxyMethod[] GetProxyMethods(INamedTypeSymbol typeSymbol)
     {
-        if (context.Operation is not IInvocationOperation operation)
-            return;
-
-        // Get the method being invoked
-        var invokedMethod = operation.TargetMethod;
-        // Get the class this code is in
-        var containingType = context.ContainingSymbol.ContainingType;
-
-        // Find all methods in this class and its parents
-        HashSet<IMethodSymbol> methods = [];
-        // Start search from the parent of this class, so we don't have violations on the proxy methods themselves
-        var baseType = containingType.BaseType;
+        HashSet<ProxyMethod> proxyMethods = [];
+        var baseType = typeSymbol.BaseType;
         while (baseType != null && baseType.SpecialType == SpecialType.None)
         {
-            methods.UnionWith(baseType.GetMembers().Where(m => m is IMethodSymbol method).Cast<IMethodSymbol>());
+            HashSet<ProxyMethod> classMethods = [];
+            foreach (var member in baseType.GetMembers())
+            {
+                if (member is not IMethodSymbol method)
+                    continue;
+
+                if (!AttributeHelper.HasAttribute(method, ProxyForAttributeType, out var attributeData))
+                    continue;
+
+                var targetType = attributeData.ConstructorArguments[0].Value as INamedTypeSymbol;
+                var targetMethod = attributeData.ConstructorArguments[1].Value as string ?? member.Name;
+
+                classMethods.Add(new ProxyMethod(method, targetType!, targetMethod));
+            }
+            proxyMethods.UnionWith(classMethods);
             baseType = baseType.BaseType;
         }
+        return proxyMethods.ToArray();
+    }
 
-        // Check each method we found
-        foreach (var method in methods)
+    private sealed class AnalyzerState(ProxyMethod[] ProxyMethods)
+    {
+        public void AnalyzeInvocation(OperationAnalysisContext context)
         {
-            // We only care about methods with the ProxyFor attribute
-            if (!AttributeHelper.HasAttribute(method, ProxyForAttributeType, out var attributeData))
-                continue;
+            if (context.Operation is not IInvocationOperation operation)
+                return;
 
-            // Make sure the Type specified by the attribute is the one containing the method being invoked
-            var targetType = attributeData.ConstructorArguments[0].Value as INamedTypeSymbol;
-            if (!SymbolEqualityComparer.Default.Equals(targetType, invokedMethod.ContainingType))
-                continue;
+            // Get the method being invoked
+            var invokedMethod = operation.TargetMethod;
 
-            // Make sure the method name specified by the attribute is same as the one being invoked
-            var targetMethod = attributeData.ConstructorArguments[1].Value as string;
-            // If no name was specified, use the name of the proxy method
-            targetMethod ??= method.Name;
-            if (targetMethod != invokedMethod.Name)
-                continue;
-
-            // Make sure this method has the same signature as the one being invoked
-            if (!DoSignaturesMatch(invokedMethod, method))
-                continue;
-
-            var props = new Dictionary<string, string?>
+            // Check each method we found
+            foreach (var (method, targetType, targetMethod) in ProxyMethods)
             {
-                { ProxyMethodName, method.Name }
-            };
+                // Make sure the Type specified by the attribute is the one containing the method being invoked
+                if (!SymbolEqualityComparer.Default.Equals(targetType, invokedMethod.ContainingType))
+                    continue;
 
-            context.ReportDiagnostic(Diagnostic.Create(
-                PreferProxyDescriptor,
-                operation.Syntax.GetLocation(),
-                props.ToImmutableDictionary(),
-                method.MetadataName,
-                $"{invokedMethod.ContainingType.Name}.{invokedMethod.Name}"
-            ));
+                // Make sure the method name specified by the attribute is same as the one being invoked
+                if (targetMethod != invokedMethod.Name)
+                    continue;
 
-            // We should only need to report one violation
-            break;
+                // Make sure this method has the same signature as the one being invoked
+                if (!DoSignaturesMatch(invokedMethod, method))
+                    continue;
+
+                var props = new Dictionary<string, string?>
+                {
+                    { ProxyMethodName, method.Name }
+                };
+
+                context.ReportDiagnostic(Diagnostic.Create(
+                    PreferProxyDescriptor,
+                    operation.Syntax.GetLocation(),
+                    props.ToImmutableDictionary(),
+                    method.MetadataName,
+                    $"{invokedMethod.ContainingType.Name}.{invokedMethod.Name}"
+                ));
+
+                // We should only need to report one violation
+                break;
+            }
         }
     }
 
@@ -188,7 +224,7 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
         }
     }
 
-    private bool DoSignaturesMatch(IMethodSymbol first, IMethodSymbol second)
+    private static bool DoSignaturesMatch(IMethodSymbol first, IMethodSymbol second)
     {
         // Make sure the number of type arguments is the same
         if (first.TypeArguments.Length != second.TypeArguments.Length)

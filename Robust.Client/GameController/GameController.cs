@@ -162,6 +162,7 @@ namespace Robust.Client
             }
 
             _serializationManager.Initialize();
+            _loc.Initialize();
 
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
@@ -184,7 +185,6 @@ namespace Robust.Client
             _serializer.Initialize();
             _inputManager.Initialize();
             _console.Initialize();
-            _loc.Initialize();
 
             // Make sure this is done before we try to load prototypes,
             // avoid any possibility of race conditions causing the check to not finish

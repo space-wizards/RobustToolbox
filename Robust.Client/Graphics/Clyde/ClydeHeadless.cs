@@ -307,7 +307,7 @@ namespace Robust.Client.Graphics.Clyde
             action();
         }
 
-        public IFileDialogManager? FileDialogImpl => null;
+        public IFileDialogManagerImplementation? FileDialogImpl => null;
 
         private sealed class DummyCursor : ICursor
         {

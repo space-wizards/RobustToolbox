@@ -56,10 +56,6 @@ public sealed partial class SpriteSystem
     /// </summary>
     public IRsiStateLike GetPrototypeIcon(string prototype)
     {
-        // Check if this prototype has been cached before, and if so return the result.
-        if (_cachedPrototypeIcons.TryGetValue(prototype, out var cachedResult))
-            return cachedResult;
-
         if (!_proto.TryIndex<EntityPrototype>(prototype, out var entityPrototype))
         {
             // The specified prototype doesn't exist, return the fallback "error" sprite.
@@ -67,11 +63,7 @@ public sealed partial class SpriteSystem
             return GetFallbackState();
         }
 
-        // Generate the icon and cache it in case it's ever needed again.
-        var result = GetPrototypeIcon(entityPrototype);
-        _cachedPrototypeIcons[prototype] = result;
-
-        return result;
+        return GetPrototypeIcon(entityPrototype);
     }
 
     /// <summary>
@@ -80,12 +72,18 @@ public sealed partial class SpriteSystem
     /// </summary>
     public IRsiStateLike GetPrototypeIcon(EntityPrototype prototype)
     {
+        // This method may spawn & delete an entity to get an accruate RSI state, hence we cache the results
+        if (_cachedPrototypeIcons.TryGetValue(prototype.ID, out var cachedResult))
+            return cachedResult;
+
+        return _cachedPrototypeIcons[prototype.ID] = GetPrototypeIconInternal(prototype);
+    }
+
+    private IRsiStateLike GetPrototypeIconInternal(EntityPrototype prototype)
+    {
         // IconComponent takes precedence. If it has a valid icon, return that. Otherwise, continue as normal.
-        if (prototype.Components.TryGetValue("Icon", out var compData)
-            && compData.Component is IconComponent icon)
-        {
+        if (prototype.TryGetComponent(out IconComponent? icon, _factory))
             return GetIcon(icon);
-        }
 
         // If the prototype doesn't have a SpriteComponent, then there's nothing we can do but return the fallback.
         if (!prototype.Components.ContainsKey("Sprite"))
@@ -100,6 +98,63 @@ public sealed partial class SpriteSystem
         Del(dummy);
 
         return result;
+    }
+
+    public IEnumerable<IDirectionalTextureProvider> GetPrototypeTextures(EntityPrototype proto) =>
+        GetPrototypeTextures(proto, out _);
+
+    public IEnumerable<IDirectionalTextureProvider> GetPrototypeTextures(EntityPrototype proto, out bool noRot)
+    {
+        var results = new List<IDirectionalTextureProvider>();
+        noRot = false;
+
+        if (proto.TryGetComponent(out IconComponent? icon, _factory))
+        {
+            results.Add(GetIcon(icon));
+            return results;
+        }
+
+        if (!proto.Components.ContainsKey("Sprite"))
+        {
+            results.Add(_resourceCache.GetFallback<TextureResource>().Texture);
+            return results;
+        }
+
+        var dummy = Spawn(proto.ID, MapCoordinates.Nullspace);
+        var spriteComponent = EnsureComp<SpriteComponent>(dummy);
+
+        // TODO SPRITE is this needed?
+        // And if it is, shouldn't GetPrototypeIconInternal also use this?
+        _appearance.OnChangeData(dummy, spriteComponent);
+
+        foreach (var layer in spriteComponent.AllLayers)
+        {
+            if (!layer.Visible)
+                continue;
+
+            if (layer.Texture != null)
+            {
+                results.Add(layer.Texture);
+                continue;
+            }
+
+            if (!layer.RsiState.IsValid)
+                continue;
+
+            var rsi = layer.Rsi ?? spriteComponent.BaseRSI;
+            if (rsi == null || !rsi.TryGetState(layer.RsiState, out var state))
+                continue;
+
+            results.Add(state);
+        }
+
+        noRot = spriteComponent.NoRotation;
+        Del(dummy);
+
+        if (results.Count == 0)
+            results.Add(_resourceCache.GetFallback<TextureResource>().Texture);
+
+        return results;
     }
 
     [Pure]

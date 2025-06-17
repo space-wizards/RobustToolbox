@@ -296,7 +296,7 @@ namespace Robust.Client.GameObjects
         public override void PredictedDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
         {
             if (!MetaQuery.Resolve(ent.Owner, ref ent.Comp1)
-                || ent.Comp1.EntityDeleted
+                || ent.Comp1.EntityLifeStage >= EntityLifeStage.Terminating
                 || !TransformQuery.Resolve(ent.Owner, ref ent.Comp2))
             {
                 return;
@@ -322,7 +322,7 @@ namespace Robust.Client.GameObjects
         {
             if (IsQueuedForDeletion(ent.Owner)
                 || !MetaQuery.Resolve(ent.Owner, ref ent.Comp1)
-                || ent.Comp1.EntityDeleted
+                || ent.Comp1.EntityLifeStage >= EntityLifeStage.Terminating
                 || !TransformQuery.Resolve(ent.Owner, ref ent.Comp2))
             {
                 return;

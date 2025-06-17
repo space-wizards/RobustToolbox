@@ -1,16 +1,16 @@
+using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Numerics;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
+using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Utility;
-using System;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using Robust.Shared.Map.Components;
-using System.Diagnostics.CodeAnalysis;
-using System.Numerics;
-using Robust.Shared.Containers;
 
 namespace Robust.Shared.GameObjects;
 
@@ -217,9 +217,10 @@ public abstract partial class SharedTransformSystem
             {
 #if !EXCEPTION_TOLERANCE
                 throw new Exception("Transform is initialising before map ids have been assigned?");
-#endif
+#else
                 Log.Error($"Transform is initialising before map ids have been assigned?");
                 _map.AssignMapId((uid, mapComp));
+#endif
             }
 
             xform.MapUid = uid;

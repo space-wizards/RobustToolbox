@@ -48,10 +48,6 @@ public sealed class ValidateMemberAnalyzer : DiagnosticAnalyzer
         if (methodSymbol.TypeArguments[0] is not INamedTypeSymbol targetType)
             return;
 
-        // Lookup the ValidateMemberAttribute symbol
-        if (context.Compilation.GetTypeByMetadataName(ValidateMemberType) is not { } validateMemberAttribute)
-            return;
-
         // We defer building this set until we need it later, so we don't have to build it for every single method invocation!
         ImmutableHashSet<ISymbol>? members = null;
 
@@ -65,7 +61,7 @@ public sealed class ValidateMemberAnalyzer : DiagnosticAnalyzer
             var parameterSymbol = op.Parameter.OriginalDefinition;
 
             // Make sure the parameter has the ValidateMember attribute
-            if (!HasAttribute(parameterSymbol, validateMemberAttribute))
+            if (!AttributeHelper.HasAttribute(parameterSymbol, ValidateMemberType, out _))
                 continue;
 
             // Find the value passed for this parameter.

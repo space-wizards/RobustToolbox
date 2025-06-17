@@ -80,6 +80,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         public PhysicsComponent? BodyA;
         public PhysicsComponent? BodyB;
 
+        public TransformComponent? XformA;
+        public TransformComponent? XformB;
+
         public Manifold Manifold;
 
         internal ContactType Type;
@@ -150,6 +153,15 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             Friction = MathF.Sqrt((FixtureA?.Friction ?? 0.0f) * (FixtureB?.Friction ?? 0.0f));
         }
 
+        public void GetWorldManifold(Transform transformA, Transform transformB, out Vector2 normal)
+        {
+            var shapeA = FixtureA?.Shape!;
+            var shapeB = FixtureB?.Shape!;
+            Span<Vector2> points = stackalloc Vector2[PhysicsConstants.MaxPolygonVertices];
+
+            SharedPhysicsSystem.InitializeManifold(ref Manifold, transformA, transformB, shapeA.Radius, shapeB.Radius, out normal, points);
+        }
+
         /// <summary>
         /// Gets the world manifold.
         /// </summary>
@@ -197,16 +209,19 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
                 // Match old contact ids to new contact ids and copy the
                 // stored impulses to warm start the solver.
+                var points = Manifold.Points.AsSpan;
+                var oldPoints = oldManifold.Points.AsSpan;
+
                 for (var i = 0; i < Manifold.PointCount; ++i)
                 {
-                    var mp2 = Manifold.Points[i];
+                    var mp2 = points[i];
                     mp2.NormalImpulse = 0.0f;
                     mp2.TangentImpulse = 0.0f;
                     var id2 = mp2.Id;
 
                     for (var j = 0; j < oldManifold.PointCount; ++j)
                     {
-                        var mp1 = oldManifold.Points[j];
+                        var mp1 = oldPoints[j];
 
                         if (mp1.Id.Key == id2.Key)
                         {
@@ -216,7 +231,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                         }
                     }
 
-                    Manifold.Points[i] = mp2;
+                    points[i] = mp2;
                 }
 
                 if (touching != wasTouching)
@@ -240,6 +255,11 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 if (!touching)
                 {
                     status = ContactStatus.EndTouching;
+                }
+                // Still touching
+                else
+                {
+                    status = ContactStatus.Touching;
                 }
             }
 
@@ -405,6 +425,39 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 return (FixtureBId, FixtureB!);
             else if (uid == EntityB)
                 return (FixtureAId, FixtureA!);
+
+            throw new InvalidOperationException();
+        }
+
+        [Pure, PublicAPI]
+        public PhysicsComponent OurBody(EntityUid uid)
+        {
+            if (uid == EntityA)
+                return BodyA!;
+            else if (uid == EntityB)
+                return BodyB!;
+
+            throw new InvalidOperationException();
+        }
+
+        [Pure, PublicAPI]
+        public PhysicsComponent OtherBody(EntityUid uid)
+        {
+            if (uid == EntityA)
+                return BodyB!;
+            else if (uid == EntityB)
+                return BodyA!;
+
+            throw new InvalidOperationException();
+        }
+
+		[Pure]
+        public TransformComponent OtherTransform(EntityUid uid)
+        {
+            if (uid == EntityA)
+                return XformB!;
+            else if (uid == EntityB)
+                return XformA!;
 
             throw new InvalidOperationException();
         }

@@ -994,6 +994,9 @@ namespace Robust.Client.UserInterface
 
         internal int DoFrameUpdateRecursive(FrameEventArgs args)
         {
+            if (!Visible)
+                return 0;
+
             var total = 1;
             FrameUpdate(args);
 

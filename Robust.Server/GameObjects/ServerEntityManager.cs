@@ -204,6 +204,23 @@ namespace Robust.Server.GameObjects
 
         private void HandleEntityNetworkMessage(MsgEntity message)
         {
+            if (_logLateMsgs)
+            {
+                var msgT = message.SourceTick;
+                var cT = _gameTiming.CurTick;
+
+                if (msgT < cT)
+                {
+                    _netEntSawmill.Warning(
+                        "Got late MsgEntity! Diff: {0}, msgT: {2}, cT: {3}, player: {1}, msg: {4}",
+                        (int) msgT.Value - (int) cT.Value,
+                        message.MsgChannel.UserName,
+                        msgT,
+                        cT,
+                        message.SystemMessage);
+                }
+            }
+
             _queue.Add(message);
         }
 

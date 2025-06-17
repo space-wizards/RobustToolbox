@@ -35,7 +35,7 @@ internal sealed class PhysicsHull_Test
     [Test, TestCaseSource(nameof(CollinearHulls))]
     public void CollinearTest(Vector2[] vertices, int count)
     {
-        var hull = PhysicsHull.ComputeHull(vertices.AsSpan(), vertices.Length);
+        var hull = InternalPhysicsHull.ComputeHull(vertices.AsSpan(), vertices.Length);
         Assert.That(hull.Count, Is.EqualTo(count));
     }
 
@@ -89,7 +89,7 @@ internal sealed class PhysicsHull_Test
     [Test, TestCaseSource(nameof(ValidateHulls))]
     public void ValidationTest(Vector2[] vertices, bool result)
     {
-        var hull = new PhysicsHull(vertices.AsSpan(), vertices.Length);
-        Assert.That(PhysicsHull.ValidateHull(hull), Is.EqualTo(result));
+        var hull = new InternalPhysicsHull(vertices.AsSpan(), vertices.Length);
+        Assert.That(InternalPhysicsHull.ValidateHull(hull), Is.EqualTo(result));
     }
 }

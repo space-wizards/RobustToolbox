@@ -4,8 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using Robust.Shared.Collections;
 using Robust.Shared.Containers;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 
 namespace Robust.Shared.GameObjects;
 
@@ -51,6 +53,16 @@ public partial class EntityManager
         return ents;
     }
 
+    public EntityUid[] SpawnEntitiesAttachedTo(EntityCoordinates coordinates, params EntProtoId[] protoNames)
+    {
+        var ents = new EntityUid[protoNames.Length];
+        for (var i = 0; i < protoNames.Length; i++)
+        {
+            ents[i] = SpawnAttachedTo(protoNames[i], coordinates);
+        }
+        return ents;
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public EntityUid[] SpawnEntitiesAttachedTo(EntityCoordinates coordinates, List<string?> protoNames)
     {
@@ -73,13 +85,26 @@ public partial class EntityManager
         return ents;
     }
 
+    public EntityUid[] SpawnEntitiesAttachedTo(EntityCoordinates coordinates, IEnumerable<EntProtoId> protoNames)
+    {
+        var ents = new ValueList<EntityUid>();
+
+        foreach (var protoName in protoNames)
+        {
+            var uid = SpawnAttachedTo(protoName, coordinates);
+            ents.Add(uid);
+        }
+
+        return ents.ToArray();
+    }
+
     public virtual EntityUid SpawnAttachedTo(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default)
     {
         if (!coordinates.IsValid(this))
             throw new InvalidOperationException($"Tried to spawn entity {protoName} on invalid coordinates {coordinates}.");
 
         var entity = CreateEntityUninitialized(protoName, coordinates, overrides, rotation);
-        InitializeAndStartEntity(entity, coordinates.GetMapId(this));
+        InitializeAndStartEntity(entity, _xforms.GetMapId(coordinates));
         return entity;
     }
 
@@ -100,7 +125,7 @@ public partial class EntityManager
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public EntityUid SpawnAtPosition(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
-        => Spawn(protoName, coordinates.ToMap(this, _xforms), overrides);
+        => Spawn(protoName, _xforms.ToMapCoordinates(coordinates), overrides);
 
     public bool TrySpawnNextTo(
         string? protoName,
@@ -206,4 +231,91 @@ public partial class EntityManager
 
         return uid;
     }
+
+    #region Prediction
+
+    public virtual EntityUid PredictedSpawnAttachedTo(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default)
+    {
+        return SpawnAttachedTo(protoName, coordinates, overrides, rotation);
+    }
+
+    public virtual EntityUid PredictedSpawn(string? protoName = null, ComponentRegistry? overrides = null, bool doMapInit = true)
+    {
+        return Spawn(protoName, overrides, doMapInit);
+    }
+
+    public virtual EntityUid PredictedSpawn(string? protoName, MapCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default!)
+    {
+        return Spawn(protoName, coordinates, overrides, rotation);
+    }
+
+    public virtual EntityUid PredictedSpawnAtPosition(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
+    {
+        return SpawnAtPosition(protoName, coordinates, overrides);
+    }
+
+    public virtual bool PredictedTrySpawnNextTo(
+        string? protoName,
+        EntityUid target,
+        [NotNullWhen(true)] out EntityUid? uid,
+        TransformComponent? xform = null,
+        ComponentRegistry? overrides = null)
+    {
+        return TrySpawnNextTo(protoName, target, out uid, xform, overrides);
+    }
+
+    public virtual bool PredictedTrySpawnInContainer(
+        string? protoName,
+        EntityUid containerUid,
+        string containerId,
+        [NotNullWhen(true)] out EntityUid? uid,
+        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null)
+    {
+        return TrySpawnInContainer(protoName, containerUid, containerId, out uid, containerComp, overrides);
+    }
+
+    public virtual EntityUid PredictedSpawnNextToOrDrop(string? protoName, EntityUid target, TransformComponent? xform = null, ComponentRegistry? overrides = null)
+    {
+        return SpawnNextToOrDrop(protoName, target, xform, overrides);
+    }
+
+    public virtual EntityUid PredictedSpawnInContainerOrDrop(
+        string? protoName,
+        EntityUid containerUid,
+        string containerId,
+        TransformComponent? xform = null,
+        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null)
+    {
+        return SpawnInContainerOrDrop(protoName, containerUid, containerId, xform, containerComp, overrides);
+    }
+
+    public virtual EntityUid PredictedSpawnInContainerOrDrop(
+        string? protoName,
+        EntityUid containerUid,
+        string containerId,
+        out bool inserted,
+        TransformComponent? xform = null,
+        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null)
+    {
+        return SpawnInContainerOrDrop(protoName,
+            containerUid,
+            containerId,
+            out inserted,
+            xform,
+            containerComp,
+            overrides);
+    }
+
+    /// <summary>
+    /// Flags an entity as being a predicted spawn and should be deleted when its corresponding tick comes in.
+    /// </summary>
+    public virtual void FlagPredicted(Entity<MetaDataComponent?> ent)
+    {
+
+    }
+
+    #endregion
 }

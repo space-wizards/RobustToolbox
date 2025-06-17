@@ -18,6 +18,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
     private const string ImplicitDataDefinitionNamespace = "Robust.Shared.Serialization.Manager.Attributes.ImplicitDataDefinitionForInheritorsAttribute";
     private const string DataFieldBaseNamespace = "Robust.Shared.Serialization.Manager.Attributes.DataFieldBaseAttribute";
     private const string ViewVariablesNamespace = "Robust.Shared.ViewVariables.ViewVariablesAttribute";
+    private const string NotYamlSerializableName = "Robust.Shared.Serialization.Manager.Attributes.NotYamlSerializableAttribute";
     private const string DataFieldAttributeName = "DataField";
     private const string ViewVariablesAttributeName = "ViewVariables";
 
@@ -41,7 +42,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         "Make sure to mark any type containing a nested data definition as partial."
     );
 
-    private static readonly DiagnosticDescriptor DataFieldWritableRule = new(
+    public static readonly DiagnosticDescriptor DataFieldWritableRule = new(
         Diagnostics.IdDataFieldWritable,
         "Data field must not be readonly",
         "Data field {0} in data definition {1} is readonly",
@@ -51,7 +52,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         "Make sure to remove the readonly modifier."
     );
 
-    private static readonly DiagnosticDescriptor DataFieldPropertyWritableRule = new(
+    public static readonly DiagnosticDescriptor DataFieldPropertyWritableRule = new(
         Diagnostics.IdDataFieldPropertyWritable,
         "Data field property must have a setter",
         "Data field property {0} in data definition {1} does not have a setter",
@@ -81,9 +82,19 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         "Make sure to remove the ViewVariables attribute."
     );
 
+    public static readonly DiagnosticDescriptor DataFieldYamlSerializableRule = new(
+        Diagnostics.IdDataFieldYamlSerializable,
+        "Data field type is not YAML serializable",
+        "Data field {0} in data definition {1} is type {2}, which is not YAML serializable",
+        "Usage",
+        DiagnosticSeverity.Error,
+        true,
+        "Make sure to use a type that is YAML serializable."
+    );
+
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
         DataDefinitionPartialRule, NestedDataDefinitionPartialRule, DataFieldWritableRule, DataFieldPropertyWritableRule,
-        DataFieldRedundantTagRule, DataFieldNoVVReadWriteRule
+        DataFieldRedundantTagRule, DataFieldNoVVReadWriteRule, DataFieldYamlSerializableRule
     );
 
     public override void Initialize(AnalysisContext context)
@@ -149,7 +160,8 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
 
             if (IsReadOnlyDataField(type, fieldSymbol))
             {
-                context.ReportDiagnostic(Diagnostic.Create(DataFieldWritableRule, context.Node.GetLocation(), fieldSymbol.Name, type.Name));
+                TryGetModifierLocation(field, SyntaxKind.ReadOnlyKeyword, out var location);
+                context.ReportDiagnostic(Diagnostic.Create(DataFieldWritableRule, location, fieldSymbol.Name, type.Name));
             }
 
             if (HasRedundantTag(fieldSymbol))
@@ -162,6 +174,19 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
             {
                 TryGetAttributeLocation(field, ViewVariablesAttributeName, out var location);
                 context.ReportDiagnostic(Diagnostic.Create(DataFieldNoVVReadWriteRule, location, fieldSymbol.Name, type.Name));
+            }
+
+            if (context.SemanticModel.GetSymbolInfo(field.Declaration.Type).Symbol is not ITypeSymbol fieldTypeSymbol)
+                continue;
+
+            if (IsNotYamlSerializable(fieldSymbol, fieldTypeSymbol))
+            {
+                context.ReportDiagnostic(Diagnostic.Create(DataFieldYamlSerializableRule,
+                    (context.Node as FieldDeclarationSyntax)?.Declaration.Type.GetLocation(),
+                    fieldSymbol.Name,
+                    type.Name,
+                    fieldTypeSymbol.MetadataName
+                ));
             }
         }
     }
@@ -185,7 +210,8 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
 
         if (IsReadOnlyDataField(type, propertySymbol))
         {
-            context.ReportDiagnostic(Diagnostic.Create(DataFieldPropertyWritableRule, context.Node.GetLocation(), propertySymbol.Name, type.Name));
+            var location = property.AccessorList != null ? property.AccessorList.GetLocation() : property.GetLocation();
+            context.ReportDiagnostic(Diagnostic.Create(DataFieldPropertyWritableRule, location, propertySymbol.Name, type.Name));
         }
 
         if (HasRedundantTag(propertySymbol))
@@ -198,6 +224,19 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         {
             TryGetAttributeLocation(property, ViewVariablesAttributeName, out var location);
             context.ReportDiagnostic(Diagnostic.Create(DataFieldNoVVReadWriteRule, location, propertySymbol.Name, type.Name));
+        }
+
+        if (context.SemanticModel.GetSymbolInfo(property.Type).Symbol is not ITypeSymbol propertyTypeSymbol)
+            return;
+
+        if (IsNotYamlSerializable(propertySymbol, propertyTypeSymbol))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(DataFieldYamlSerializableRule,
+                (context.Node as PropertyDeclarationSyntax)?.Type.GetLocation(),
+                propertySymbol.Name,
+                type.Name,
+                propertyTypeSymbol.Name
+            ));
         }
     }
 
@@ -285,6 +324,20 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         return false;
     }
 
+    private static bool TryGetModifierLocation(MemberDeclarationSyntax syntax, SyntaxKind modifierKind, out Location location)
+    {
+        foreach (var modifier in syntax.Modifiers)
+        {
+            if (modifier.IsKind(modifierKind))
+            {
+                location = modifier.GetLocation();
+                return true;
+            }
+        }
+        location = syntax.GetLocation();
+        return false;
+    }
+
     private static bool IsReadOnlyMember(ITypeSymbol type, ISymbol member)
     {
         if (member is IFieldSymbol field)
@@ -365,6 +418,14 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
             return false;
 
         return (VVAccess)accessByte == VVAccess.ReadWrite;
+    }
+
+    private static bool IsNotYamlSerializable(ISymbol field, ITypeSymbol type)
+    {
+        if (!IsDataField(field, out _, out _))
+            return false;
+
+        return HasAttribute(type, NotYamlSerializableName);
     }
 
     private static bool IsImplicitDataDefinition(ITypeSymbol type)

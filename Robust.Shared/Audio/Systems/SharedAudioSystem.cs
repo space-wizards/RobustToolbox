@@ -37,7 +37,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
     [Dependency] protected readonly MetaDataSystem MetadataSys = default!;
     [Dependency] protected readonly SharedTransformSystem XformSystem = default!;
 
-    private const float AudioDespawnBuffer = 1f;
+    public const float AudioDespawnBuffer = 1f;
 
     /// <summary>
     /// Default max range at which the sound can be heard.
@@ -412,6 +412,13 @@ public abstract partial class SharedAudioSystem : EntitySystem
         if (component.Params.Volume.Equals(value))
             return;
 
+        // Not a log error for now because if something has a negative infinity volume (i.e. 0 gain) then subtracting from it can
+        // easily cause this and making callers deal with it everywhere is quite annoying.
+        if (float.IsNaN(value))
+        {
+            value = float.NegativeInfinity;
+        }
+
         component.Params.Volume = value;
         component.Volume = value;
         DirtyField(entity.Value, component, nameof(AudioComponent.Params));
@@ -658,7 +665,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
     /// <param name="coordinates">The coordinates at which to play the audio.</param>
     public (EntityUid Entity, Components.AudioComponent Component)? PlayStatic(SoundSpecifier? sound, Filter playerFilter, EntityCoordinates coordinates, bool recordReplay, AudioParams? audioParams = null)
     {
-        return sound == null ? null : PlayStatic(ResolveSound(sound), playerFilter, coordinates, recordReplay, audioParams);
+        return sound == null ? null : PlayStatic(ResolveSound(sound), playerFilter, coordinates, recordReplay, audioParams ?? sound.Params);
     }
 
     /// <summary>

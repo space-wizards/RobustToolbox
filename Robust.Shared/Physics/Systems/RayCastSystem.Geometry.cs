@@ -191,6 +191,12 @@ public sealed partial class RayCastSystem
 
     private CastOutput RayCastPolygon(RayCastInput input, Polygon shape)
     {
+        var verts = shape._vertices.AsSpan;
+        var output = new CastOutput()
+        {
+            Fraction = 0f,
+        };
+
 	    if (shape.Radius == 0.0f)
 	    {
 		    // Put the ray into the polygon's frame of reference.
@@ -201,18 +207,15 @@ public sealed partial class RayCastSystem
 
 		    var index = -1;
 
-		    var output = new CastOutput()
-            {
-                Fraction = 0f,
-            };
+            var norms = shape._normals.AsSpan;
 
 		    for ( var i = 0; i < shape.VertexCount; ++i )
 		    {
 			    // p = p1 + a * d
 			    // dot(normal, p - v) = 0
 			    // dot(normal, p1 - v) + a * dot(normal, d) = 0
-			    float numerator = Vector2.Dot(shape.Normals[i], Vector2.Subtract( shape.Vertices[i], p1 ) );
-			    float denominator = Vector2.Dot(shape.Normals[i], d );
+			    float numerator = Vector2.Dot(norms[i], Vector2.Subtract( verts[i], p1 ) );
+			    float denominator = Vector2.Dot(norms[i], d );
 
 			    if ( denominator == 0.0f )
 			    {
@@ -257,7 +260,7 @@ public sealed partial class RayCastSystem
 		    if (index >= 0)
 		    {
 			    output.Fraction = lower;
-			    output.Normal = shape.Normals[index];
+			    output.Normal = norms[index];
 			    output.Point = Vector2.Add(p1, lower * d);
 			    output.Hit = true;
 		    }
@@ -265,17 +268,24 @@ public sealed partial class RayCastSystem
 		    return output;
 	    }
 
-	    // TODO_ERIN this is not working for ray vs box (zero radii)
+        Span<Vector2> proxyBVerts = new Vector2[]
+        {
+            input.Origin,
+        };
+
+        // TODO_ERIN this is not working for ray vs box (zero radii)
 	    var castInput = new ShapeCastPairInput
         {
-            ProxyA = DistanceProxy.MakeProxy(shape.Vertices, shape.VertexCount, shape.Radius),
-            ProxyB = DistanceProxy.MakeProxy([input.Origin], 1, 0.0f),
+            ProxyA = DistanceProxy.MakeProxy(verts, shape.VertexCount, shape.Radius),
+            ProxyB = DistanceProxy.MakeProxy(proxyBVerts, 1, 0.0f),
             TransformA = Physics.Transform.Empty,
             TransformB = Physics.Transform.Empty,
             TranslationB = input.Translation,
             MaxFraction = input.MaxFraction
         };
-        return ShapeCast(castInput);
+
+        ShapeCast(ref output, castInput);
+        return output;
     }
 
     // Ray vs line segment
@@ -436,12 +446,9 @@ public sealed partial class RayCastSystem
     // "Smooth Mesh Contacts with GJK" in Game Physics Pearls. 2010
     // todo this is failing when used to raycast a box
     // todo this converges slowly with a radius
-    private CastOutput ShapeCast(ShapeCastPairInput input)
+    private void ShapeCast(ref CastOutput output, in ShapeCastPairInput input)
     {
-	    var output = new CastOutput()
-        {
-            Fraction = input.MaxFraction,
-	    };
+        output.Fraction = input.MaxFraction;
 
 	    var proxyA = input.ProxyA;
         var count = input.ProxyB.Vertices.Length;
@@ -513,15 +520,15 @@ public sealed partial class RayCastSystem
 			    if ( vr <= 0.0f )
 			    {
 				    // miss
-				    return output;
-			    }
+                    return;
+                }
 
 			    lambda = ( vp - sigma ) / vr;
 			    if ( lambda > maxFraction )
 			    {
 				    // too far
-				    return output;
-			    }
+                    return;
+                }
 
 			    // reset the simplex
 			    simplex.Count = 0;
@@ -562,7 +569,7 @@ public sealed partial class RayCastSystem
 		    {
 			    // Overlap
                 // Yes this means you need to manually query for overlaps.
-			    return output;
+			    return;
 		    }
 
 		    // Get search direction.
@@ -576,7 +583,7 @@ public sealed partial class RayCastSystem
 	    if ( iter == 0 || lambda == 0.0f )
 	    {
 		    // Initial overlap
-		    return output;
+		    return;
 	    }
 
 	    // Prepare output.
@@ -591,7 +598,6 @@ public sealed partial class RayCastSystem
 	    output.Fraction = lambda;
 	    output.Iterations = iter;
 	    output.Hit = true;
-	    return output;
     }
 
     private int FindSupport(DistanceProxy proxy, Vector2 direction)
@@ -613,9 +619,14 @@ public sealed partial class RayCastSystem
 
     private CastOutput ShapeCastCircle(ShapeCastInput input, PhysShapeCircle shape)
     {
+        Span<Vector2> proxyAVerts = new[]
+        {
+            shape.Position,
+        };
+
         var pairInput = new ShapeCastPairInput
         {
-            ProxyA = DistanceProxy.MakeProxy([shape.Position], 1, shape.Radius ),
+            ProxyA = DistanceProxy.MakeProxy(proxyAVerts, 1, shape.Radius ),
             ProxyB = DistanceProxy.MakeProxy(input.Points, input.Count, input.Radius ),
             TransformA = Physics.Transform.Empty,
             TransformB = Physics.Transform.Empty,
@@ -623,7 +634,8 @@ public sealed partial class RayCastSystem
             MaxFraction = input.MaxFraction
         };
 
-        var output = ShapeCast(pairInput);
+        var output = new CastOutput();
+        ShapeCast(ref output, pairInput);
         return output;
     }
 
@@ -631,7 +643,7 @@ public sealed partial class RayCastSystem
     {
         var pairInput = new ShapeCastPairInput
         {
-            ProxyA = DistanceProxy.MakeProxy(shape.Vertices, shape.VertexCount, shape.Radius),
+            ProxyA = DistanceProxy.MakeProxy(shape._vertices.AsSpan, shape.VertexCount, shape.Radius),
             ProxyB = DistanceProxy.MakeProxy(input.Points, input.Count, input.Radius),
             TransformA = Physics.Transform.Empty,
             TransformB = Physics.Transform.Empty,
@@ -639,21 +651,30 @@ public sealed partial class RayCastSystem
             MaxFraction = input.MaxFraction
         };
 
-        var output = ShapeCast(pairInput);
+        var output = new CastOutput();
+        ShapeCast(ref output, pairInput);
         return output;
     }
 
     private CastOutput ShapeCastSegment(ShapeCastInput input, EdgeShape shape)
     {
-        var pairInput = new ShapeCastPairInput();
-        pairInput.ProxyA = DistanceProxy.MakeProxy([shape.Vertex0], 2, 0.0f);
-        pairInput.ProxyB = DistanceProxy.MakeProxy(input.Points, input.Count, input.Radius);
-        pairInput.TransformA = Physics.Transform.Empty;
-        pairInput.TransformB = Physics.Transform.Empty;
-        pairInput.TranslationB = input.Translation;
-        pairInput.MaxFraction = input.MaxFraction;
+        Span<Vector2> proxyAVerts = new[]
+        {
+            shape.Vertex0,
+        };
 
-        var output = ShapeCast(pairInput);
+        var pairInput = new ShapeCastPairInput
+        {
+            ProxyA = DistanceProxy.MakeProxy(proxyAVerts, 2, 0.0f),
+            ProxyB = DistanceProxy.MakeProxy(input.Points, input.Count, input.Radius),
+            TransformA = Physics.Transform.Empty,
+            TransformB = Physics.Transform.Empty,
+            TranslationB = input.Translation,
+            MaxFraction = input.MaxFraction
+        };
+
+        var output = new CastOutput();
+        ShapeCast(ref output, pairInput);
         return output;
     }
 

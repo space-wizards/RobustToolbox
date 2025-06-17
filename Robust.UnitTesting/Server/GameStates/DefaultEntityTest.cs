@@ -29,7 +29,6 @@ public sealed class DefaultEntityTest : RobustIntegrationTest
         var netMan = client.ResolveDependency<IClientNetManager>();
         var playerMan = server.ResolveDependency<IPlayerManager>();
         var confMan = server.ResolveDependency<IConfigurationManager>();
-        var mapMan = server.ResolveDependency<IMapManager>();
 
         client.SetConnectTarget(server);
         client.Post(() => netMan.ClientConnect(null!, 0, null!));
@@ -104,6 +103,10 @@ public sealed class DefaultEntityTest : RobustIntegrationTest
 
         Assert.That(sEntMan.EntityExists(sEntMan.GetEntity(ent)));
         Assert.That(cEntMan.EntityExists(cEntMan.GetEntity(ent)));
+
+        await client.WaitPost(() => netMan.ClientDisconnect(""));
+        await server.WaitRunTicks(5);
+        await client.WaitRunTicks(5);
     }
 }
 

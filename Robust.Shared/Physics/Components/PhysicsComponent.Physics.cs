@@ -155,11 +155,6 @@ public sealed partial class PhysicsComponent : Component, IComponentDelta
     internal float _inertia;
 
     /// <summary>
-    ///     Indicates whether this body ignores gravity
-    /// </summary>
-    [ViewVariables(VVAccess.ReadWrite)] public bool IgnoreGravity;
-
-    /// <summary>
     /// Inverse moment of inertia (1 / I).
     /// </summary>
     [ViewVariables(VVAccess.ReadWrite),
@@ -263,6 +258,9 @@ public sealed partial class PhysicsComponent : Component, IComponentDelta
     /// </summary>
     [DataField, Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
     public BodyStatus BodyStatus { get; set; }
+
+    [DataField, Access(typeof(SharedPhysicsSystem))]
+    public bool IgnoreGravity;
 
     [ViewVariables, Access(typeof(SharedPhysicsSystem))]
     public bool Predict;

@@ -163,13 +163,16 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
             if (fieldSymbol == null)
                 continue;
 
+            if (!IsDataField(fieldSymbol, out _, out var datafieldAttribute))
+                continue;
+
             if (IsReadOnlyDataField(type, fieldSymbol))
             {
                 TryGetModifierLocation(field, SyntaxKind.ReadOnlyKeyword, out var location);
                 context.ReportDiagnostic(Diagnostic.Create(DataFieldWritableRule, location, fieldSymbol.Name, type.Name));
             }
 
-            if (HasRedundantTag(fieldSymbol))
+            if (HasRedundantTag(fieldSymbol, datafieldAttribute))
             {
                 TryGetAttributeLocation(field, DataFieldAttributeName, out var location);
                 context.ReportDiagnostic(Diagnostic.Create(DataFieldRedundantTagRule, location, fieldSymbol.Name, type.Name));
@@ -213,13 +216,16 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         if (propertySymbol == null)
             return;
 
+        if (!IsDataField(propertySymbol, out _, out var datafieldAttribute))
+            return;
+
         if (IsReadOnlyDataField(type, propertySymbol))
         {
             var location = property.AccessorList != null ? property.AccessorList.GetLocation() : property.GetLocation();
             context.ReportDiagnostic(Diagnostic.Create(DataFieldPropertyWritableRule, location, propertySymbol.Name, type.Name));
         }
 
-        if (HasRedundantTag(propertySymbol))
+        if (HasRedundantTag(propertySymbol, datafieldAttribute))
         {
             TryGetAttributeLocation(property, DataFieldAttributeName, out var location);
             context.ReportDiagnostic(Diagnostic.Create(DataFieldRedundantTagRule, location, propertySymbol.Name, type.Name));
@@ -247,9 +253,6 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
 
     private static bool IsReadOnlyDataField(ITypeSymbol type, ISymbol field)
     {
-        if (!IsDataField(field, out _, out _))
-            return false;
-
         return IsReadOnlyMember(type, field);
     }
 
@@ -374,17 +377,14 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         return false;
     }
 
-    private static bool HasRedundantTag(ISymbol symbol)
+    private static bool HasRedundantTag(ISymbol symbol, AttributeData datafieldAttribute)
     {
-        if (!IsDataField(symbol, out var _, out var attribute))
-            return false;
-
         // No args, no problem
-        if (attribute.ConstructorArguments.Length == 0)
+        if (datafieldAttribute.ConstructorArguments.Length == 0)
             return false;
 
         // If a tag is explicitly specified, it will be the first argument...
-        var tagArgument = attribute.ConstructorArguments[0];
+        var tagArgument = datafieldAttribute.ConstructorArguments[0];
         // ...but the first arg could also something else, since tag is optional
         // so we make sure that it's a string
         if (tagArgument.Value is not string explicitName)
@@ -399,9 +399,6 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
 
     private static bool HasVVReadWrite(ISymbol symbol)
     {
-        if (!IsDataField(symbol, out _, out _))
-            return false;
-
         // Make sure it has ViewVariablesAttribute
         AttributeData? viewVariablesAttribute = null;
         foreach (var attr in symbol.GetAttributes())
@@ -427,9 +424,6 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
 
     private static bool IsNotYamlSerializable(ISymbol field, ITypeSymbol type)
     {
-        if (!IsDataField(field, out _, out _))
-            return false;
-
         return HasAttribute(type, NotYamlSerializableName);
     }
 

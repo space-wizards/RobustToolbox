@@ -153,7 +153,7 @@ internal partial class Clyde
 
             // special casing angle = n*pi/2 to avoid box rotation & bounding calculations doesn't seem to give significant speedups.
             data.SpriteScreenBB = TransformCenteredBox(
-                data.Sprite.Bounds,
+                _spriteSystem.GetLocalBounds((data.Uid, data.Sprite)),
                 finalRotation,
                 pos + batch.PreScaleViewOffset,
                 batch.ViewScale);

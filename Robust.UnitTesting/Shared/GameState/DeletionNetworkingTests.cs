@@ -57,10 +57,10 @@ public sealed class DeletionNetworkingTests : RobustIntegrationTest
         EntityUid grid2 = default;
         NetEntity grid1Net = default;
         NetEntity grid2Net = default;
-        mapSys.CreateMap(out var mapId);
 
         await server.WaitPost(() =>
         {
+            mapSys.CreateMap(out var mapId);
             var gridComp = mapMan.CreateGridEntity(mapId);
             mapSys.SetTile(gridComp, Vector2i.Zero, new Tile(1));
             grid1 = gridComp.Owner;
@@ -216,6 +216,10 @@ public sealed class DeletionNetworkingTests : RobustIntegrationTest
             // Was never explicitly deleted by the client.
             Assert.That(cEntMan.EntityExists(clientChildA));
         });
+
+        await client.WaitPost(() => netMan.ClientDisconnect(""));
+        await server.WaitRunTicks(5);
+        await client.WaitRunTicks(5);
     }
 }
 

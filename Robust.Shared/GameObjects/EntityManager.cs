@@ -48,7 +48,7 @@ namespace Robust.Shared.GameObjects
 
         // I feel like PJB might shed me for putting a system dependency here, but its required for setting entity
         // positions on spawn....
-        private SharedTransformSystem _xforms = default!;
+        protected SharedTransformSystem _xforms = default!;
         private SharedContainerSystem _containers = default!;
 
         public EntityQuery<MetaDataComponent> MetaQuery;
@@ -161,7 +161,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Returns true if the entity's data (apart from transform) is default.
         /// </summary>
-        public bool IsDefault(EntityUid uid)
+        public bool IsDefault(EntityUid uid, ICollection<string>? ignoredComps = null)
         {
             if (!MetaQuery.TryGetComponent(uid, out var metadata) || metadata.EntityPrototype == null)
                 return false;
@@ -194,6 +194,9 @@ namespace Robust.Shared.GameObjects
                     continue;
 
                 var compName = _componentFactory.GetComponentName(compType);
+
+                if (ignoredComps?.Contains(compName) == true)
+                    continue;
 
                 // If the component isn't on the prototype then it's custom.
                 if (!protoData.TryGetValue(compName, out var protoMapping))
@@ -507,7 +510,7 @@ namespace Robust.Shared.GameObjects
             if (Deleted(uid.Value))
                 return false;
 
-            if (!QueuedDeletionsSet.Add(uid.Value))
+            if (QueuedDeletionsSet.Contains(uid.Value))
                 return false;
 
             QueueDeleteEntity(uid);
@@ -701,6 +704,36 @@ namespace Robust.Shared.GameObjects
         }
 
         public bool IsQueuedForDeletion(EntityUid uid) => QueuedDeletionsSet.Contains(uid);
+
+        /// <inheritdoc />
+        public virtual void PredictedDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
+        {
+            DeleteEntity(ent.Owner);
+        }
+
+        /// <inheritdoc />
+        public void PredictedDeleteEntity(Entity<MetaDataComponent?, TransformComponent?>? ent)
+        {
+            if (ent == null)
+                return;
+
+            PredictedDeleteEntity(ent.Value);
+        }
+
+        /// <inheritdoc />
+        public virtual void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
+        {
+            QueueDeleteEntity(ent.Owner);
+        }
+
+        /// <inheritdoc />
+        public virtual void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?>? ent)
+        {
+            if (ent == null)
+                return;
+
+            PredictedQueueDeleteEntity(ent.Value);
+        }
 
         public bool EntityExists(EntityUid uid)
         {

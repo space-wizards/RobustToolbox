@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Client.GameObjects;
 using Robust.Client.Timing;
-using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared.Containers;
 using Robust.Shared.EntitySerialization.Systems;
@@ -34,7 +33,6 @@ namespace Robust.UnitTesting.Shared.GameObjects
              var cEntManager = client.ResolveDependency<IEntityManager>();
              var clientNetManager = client.ResolveDependency<IClientNetManager>();
 
-             var sMapManager = server.ResolveDependency<IMapManager>();
              var sEntManager = server.ResolveDependency<IEntityManager>();
              var sPlayerManager = server.ResolveDependency<IPlayerManager>();
 
@@ -140,6 +138,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  Assert.That(!cContainerSys.ExpectedEntities.ContainsKey(sEntManager.GetNetEntity(itemUid)));
                  Assert.That(cContainerSys.ExpectedEntities, Is.Empty);
              });
+
+             await client.WaitPost(() => clientNetManager.ClientDisconnect(""));
+             await server.WaitRunTicks(5);
+             await client.WaitRunTicks(5);
          }
 
          /// <summary>
@@ -279,6 +281,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  Assert.That(!cContainerSys.ExpectedEntities.ContainsKey(netEnt));
                  Assert.That(cContainerSys.ExpectedEntities.Count, Is.EqualTo(0));
              });
+
+             await client.WaitPost(() => clientNetManager.ClientDisconnect(""));
+             await server.WaitRunTicks(5);
+             await client.WaitRunTicks(5);
         }
 
         /// <summary>

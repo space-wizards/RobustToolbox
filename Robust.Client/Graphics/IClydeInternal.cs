@@ -54,6 +54,7 @@ namespace Robust.Client.Graphics
         IClydeDebugStats DebugStats { get; }
 
         Texture GetStockTexture(ClydeStockTexture stockTexture);
+        IEnumerable<(Clyde.Clyde.ClydeTexture, Clyde.Clyde.LoadedTexture)> GetLoadedTextures();
 
         ClydeDebugLayers DebugLayers { get; set; }
 
@@ -70,6 +71,6 @@ namespace Robust.Client.Graphics
 
         void RunOnWindowThread(Action action);
 
-        IFileDialogManager? FileDialogImpl { get; }
+        IFileDialogManagerImplementation? FileDialogImpl { get; }
     }
 }

@@ -21,7 +21,7 @@ namespace Robust.Shared.Prototypes
     /// <summary>
     /// Prototype that represents game entities.
     /// </summary>
-    [Prototype("entity", -1)]
+    [Prototype(-1)]
     public sealed partial class EntityPrototype : IPrototype, IInheritingPrototype, ISerializationHooks
     {
         private ILocalizationManager _loc = default!;
@@ -170,9 +170,9 @@ namespace Robust.Shared.Prototypes
 
         [Obsolete("Pass in IComponentFactory")]
         public bool TryGetComponent<T>([NotNullWhen(true)] out T? component)
-            where T : IComponent
+            where T : IComponent, new()
         {
-            var compName = IoCManager.Resolve<IComponentFactory>().GetComponentName(typeof(T));
+            var compName = IoCManager.Resolve<IComponentFactory>().GetComponentName<T>();
             return TryGetComponent(compName, out component);
         }
 
@@ -182,9 +182,9 @@ namespace Robust.Shared.Prototypes
             return TryGetComponent(compName, out component);
         }
 
-        public bool TryGetComponent<T>(string name, [NotNullWhen(true)] out T? component) where T : IComponent
+        public bool TryGetComponent<T>(string name, [NotNullWhen(true)] out T? component) where T : IComponent, new()
         {
-            DebugTools.AssertEqual(IoCManager.Resolve<IComponentFactory>().GetComponentName(typeof(T)), name);
+            DebugTools.AssertEqual(IoCManager.Resolve<IComponentFactory>().GetComponentName<T>(), name);
 
             if (!Components.TryGetValue(name, out var componentUnCast))
             {

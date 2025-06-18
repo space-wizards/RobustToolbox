@@ -123,5 +123,71 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
             Assert.That(control2.Position, Is.EqualTo(new Vector2(0, 65)));
             Assert.That(control2.Size, Is.EqualTo(new Vector2(30, 15)));
         }
+
+        [Test]
+        public void TestTwoExpandRatio()
+        {
+            var boxContainer = new BoxContainer
+            {
+                Orientation = LayoutOrientation.Horizontal,
+                SetSize = new Vector2(100, 10),
+                Children =
+                {
+                    new Control
+                    {
+                        MinWidth = 10,
+                        HorizontalExpand = true,
+                        SizeFlagsStretchRatio = 20,
+                    },
+                    new Control
+                    {
+                        MinWidth = 10,
+                        HorizontalExpand = true,
+                        SizeFlagsStretchRatio = 80
+                    }
+                }
+            };
+
+            boxContainer.Arrange(UIBox2.FromDimensions(Vector2.Zero, boxContainer.SetSize));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(boxContainer.GetChild(0).Width, Is.EqualTo(20));
+                Assert.That(boxContainer.GetChild(1).Width, Is.EqualTo(80));
+            });
+        }
+
+        [Test]
+        public void TestTwoExpandOneSmall()
+        {
+            var boxContainer = new BoxContainer
+            {
+                Orientation = LayoutOrientation.Horizontal,
+                SetSize = new Vector2(100, 10),
+                Children =
+                {
+                    new Control
+                    {
+                        MinWidth = 30,
+                        HorizontalExpand = true,
+                        SizeFlagsStretchRatio = 20,
+                    },
+                    new Control
+                    {
+                        MinWidth = 30,
+                        HorizontalExpand = true,
+                        SizeFlagsStretchRatio = 80
+                    }
+                }
+            };
+
+            boxContainer.Arrange(UIBox2.FromDimensions(Vector2.Zero, boxContainer.SetSize));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(boxContainer.GetChild(0).Width, Is.EqualTo(30));
+                Assert.That(boxContainer.GetChild(1).Width, Is.EqualTo(70));
+            });
+        }
     }
 }

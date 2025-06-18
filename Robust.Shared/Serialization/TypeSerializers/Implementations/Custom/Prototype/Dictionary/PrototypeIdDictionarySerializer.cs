@@ -32,13 +32,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
 
             foreach (var (key, val) in node.Children)
             {
-                if (key is not ValueDataNode value)
-                {
-                    mapping.Add(new ErrorNode(key, $"Cannot cast node {key} to ValueDataNode."), serializationManager.ValidateNode<TValue>(val, context));
-                    continue;
-                }
-
-                mapping.Add(PrototypeSerializer.Validate(serializationManager, value, dependencies, context), serializationManager.ValidateNode<TValue>(val, context));
+                var keyNode = new ValueDataNode(key);
+                mapping.Add(PrototypeSerializer.Validate(serializationManager, keyNode, dependencies, context), serializationManager.ValidateNode<TValue>(val, context));
             }
 
             return new ValidatedMappingNode(mapping);

@@ -11,7 +11,7 @@ public record struct Entity<T> : IFluentEntityUid, IAsType<EntityUid>
 {
     public EntityUid Owner;
     public T Comp;
-    EntityUid IFluentEntityUid.FluentOwner => Owner;
+    readonly EntityUid IFluentEntityUid.FluentOwner => Owner;
 
     public Entity(EntityUid owner, T comp)
     {
@@ -47,9 +47,10 @@ public record struct Entity<T> : IFluentEntityUid, IAsType<EntityUid>
         comp = Comp;
     }
 
-    public EntityUid AsType() => Owner;
 
-    public override int GetHashCode() => Owner.GetHashCode();
+    public override readonly int GetHashCode() => Owner.GetHashCode();
+    public readonly Entity<T?> AsNullable() => new(Owner, Comp);
+    public readonly EntityUid AsType() => Owner;
 }
 
 [NotYamlSerializable]
@@ -59,7 +60,7 @@ public record struct Entity<T1, T2> : IFluentEntityUid, IAsType<EntityUid>
     public EntityUid Owner;
     public T1 Comp1;
     public T2 Comp2;
-    EntityUid IFluentEntityUid.FluentOwner => Owner;
+    readonly EntityUid IFluentEntityUid.FluentOwner => Owner;
 
     public Entity(EntityUid owner, T1 comp1, T2 comp2)
     {
@@ -118,7 +119,9 @@ public record struct Entity<T1, T2> : IFluentEntityUid, IAsType<EntityUid>
         return new Entity<T1>(ent.Owner, ent.Comp1);
     }
 
-    public EntityUid AsType() => Owner;
+    public override readonly int GetHashCode() => Owner.GetHashCode();
+    public readonly Entity<T1?, T2?> AsNullable() => new(Owner, Comp1, Comp2);
+    public readonly EntityUid AsType() => Owner;
 }
 
 [NotYamlSerializable]
@@ -129,7 +132,7 @@ public record struct Entity<T1, T2, T3> : IFluentEntityUid, IAsType<EntityUid>
     public T1 Comp1;
     public T2 Comp2;
     public T3 Comp3;
-    EntityUid IFluentEntityUid.FluentOwner => Owner;
+    readonly EntityUid IFluentEntityUid.FluentOwner => Owner;
 
     public Entity(EntityUid owner, T1 comp1, T2 comp2, T3 comp3)
     {
@@ -223,7 +226,9 @@ public record struct Entity<T1, T2, T3> : IFluentEntityUid, IAsType<EntityUid>
 
 #endregion
 
-    public EntityUid AsType() => Owner;
+    public override readonly int GetHashCode() => Owner.GetHashCode();
+    public readonly Entity<T1?, T2?, T3?> AsNullable() => new(Owner, Comp1, Comp2, Comp3);
+    public readonly EntityUid AsType() => Owner;
 }
 
 [NotYamlSerializable]
@@ -235,7 +240,7 @@ public record struct Entity<T1, T2, T3, T4> : IFluentEntityUid, IAsType<EntityUi
     public T2 Comp2;
     public T3 Comp3;
     public T4 Comp4;
-    EntityUid IFluentEntityUid.FluentOwner => Owner;
+    readonly EntityUid IFluentEntityUid.FluentOwner => Owner;
 
     public Entity(EntityUid owner, T1 comp1, T2 comp2, T3 comp3, T4 comp4)
     {
@@ -352,7 +357,9 @@ public record struct Entity<T1, T2, T3, T4> : IFluentEntityUid, IAsType<EntityUi
 
 #endregion
 
-    public EntityUid AsType() => Owner;
+    public override readonly int GetHashCode() => Owner.GetHashCode();
+    public readonly Entity<T1?, T2?, T3?, T4?> AsNullable() => new(Owner, Comp1, Comp2, Comp3, Comp4);
+    public readonly EntityUid AsType() => Owner;
 }
 
 [NotYamlSerializable]
@@ -365,7 +372,7 @@ public record struct Entity<T1, T2, T3, T4, T5> : IFluentEntityUid, IAsType<Enti
     public T3 Comp3;
     public T4 Comp4;
     public T5 Comp5;
-    EntityUid IFluentEntityUid.FluentOwner => Owner;
+    readonly EntityUid IFluentEntityUid.FluentOwner => Owner;
 
     public Entity(EntityUid owner, T1 comp1, T2 comp2, T3 comp3, T4 comp4, T5 comp5)
     {
@@ -505,7 +512,9 @@ public record struct Entity<T1, T2, T3, T4, T5> : IFluentEntityUid, IAsType<Enti
 
 #endregion
 
-    public EntityUid AsType() => Owner;
+    public override readonly int GetHashCode() => Owner.GetHashCode();
+    public readonly Entity<T1?, T2?, T3?, T4?, T5?> AsNullable() => new(Owner, Comp1, Comp2, Comp3, Comp4, Comp5);
+    public readonly EntityUid AsType() => Owner;
 }
 
 [NotYamlSerializable]
@@ -519,7 +528,7 @@ public record struct Entity<T1, T2, T3, T4, T5, T6> : IFluentEntityUid, IAsType<
     public T4 Comp4;
     public T5 Comp5;
     public T6 Comp6;
-    EntityUid IFluentEntityUid.FluentOwner => Owner;
+    readonly EntityUid IFluentEntityUid.FluentOwner => Owner;
 
     public Entity(EntityUid owner, T1 comp1, T2 comp2, T3 comp3, T4 comp4, T5 comp5, T6 comp6)
     {
@@ -682,7 +691,9 @@ public record struct Entity<T1, T2, T3, T4, T5, T6> : IFluentEntityUid, IAsType<
 
 #endregion
 
-    public EntityUid AsType() => Owner;
+    public override readonly int GetHashCode() => Owner.GetHashCode();
+    public readonly Entity<T1?, T2?, T3?, T4?, T5?, T6?> AsNullable() => new(Owner, Comp1, Comp2, Comp3, Comp4, Comp5, Comp6);
+    public readonly EntityUid AsType() => Owner;
 }
 
 [NotYamlSerializable]
@@ -697,7 +708,7 @@ public record struct Entity<T1, T2, T3, T4, T5, T6, T7> : IFluentEntityUid, IAsT
     public T5 Comp5;
     public T6 Comp6;
     public T7 Comp7;
-    EntityUid IFluentEntityUid.FluentOwner => Owner;
+    readonly EntityUid IFluentEntityUid.FluentOwner => Owner;
 
     public Entity(EntityUid owner, T1 comp1, T2 comp2, T3 comp3, T4 comp4, T5 comp5, T6 comp6, T7 comp7)
     {
@@ -883,8 +894,9 @@ public record struct Entity<T1, T2, T3, T4, T5, T6, T7> : IFluentEntityUid, IAsT
 
 #endregion
 
-    public EntityUid AsType() => Owner;
-
+    public override readonly int GetHashCode() => Owner.GetHashCode();
+    public readonly Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?> AsNullable() => new(Owner, Comp1, Comp2, Comp3, Comp4, Comp5, Comp6, Comp7);
+    public readonly EntityUid AsType() => Owner;
 }
 
 [NotYamlSerializable]
@@ -900,7 +912,7 @@ public record struct Entity<T1, T2, T3, T4, T5, T6, T7, T8> : IFluentEntityUid, 
     public T6 Comp6;
     public T7 Comp7;
     public T8 Comp8;
-    EntityUid IFluentEntityUid.FluentOwner => Owner;
+    readonly EntityUid IFluentEntityUid.FluentOwner => Owner;
 
     public Entity(EntityUid owner, T1 comp1, T2 comp2, T3 comp3, T4 comp4, T5 comp5, T6 comp6, T7 comp7, T8 comp8)
     {
@@ -1109,5 +1121,7 @@ public record struct Entity<T1, T2, T3, T4, T5, T6, T7, T8> : IFluentEntityUid, 
 
 #endregion
 
-    public EntityUid AsType() => Owner;
+    public override readonly int GetHashCode() => Owner.GetHashCode();
+    public readonly Entity<T1?, T2?, T3?, T4?, T5?, T6?, T7?, T8?> AsNullable() => new(Owner, Comp1, Comp2, Comp3, Comp4, Comp5, Comp6, Comp7, Comp8);
+    public readonly EntityUid AsType() => Owner;
 }

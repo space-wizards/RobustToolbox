@@ -391,6 +391,46 @@ namespace Robust.Shared.Containers
             return TryFindComponentsOnEntityContainerOrParent(xform.ParentUid, entityQuery, foundComponents);
         }
 
+        /// <summary>
+        /// Recursively collects all entities with Component T in all containers on the entity.
+        /// </summary>
+        /// <typeparam name="T">The component to search for.</typeparam>
+        /// <param name="root">The root entity to begin the search from.</param>
+        /// <param name="matchingEntities">Optional pre-allocated collection to store results.</param>
+        /// <param name="stack">Optional pre-allocated stack for traversal.</param>
+        /// <returns>
+        /// A <see cref="HashSet{T}"/> containing all found entities with component <typeparamref name="T"/>.
+        /// If <paramref name="matchingEntities"/> was provided, returns the same instance with the added entities.
+        /// </returns>
+        public HashSet<Entity<T>> RecursiveGetAllEntitiesWithComp<T>(
+            Entity<ContainerManagerComponent> root,
+            HashSet<Entity<T>>? matchingEntities = null,
+            Stack<EntityUid>? stack = null)
+            where T : IComponent
+        {
+            matchingEntities ??= new HashSet<Entity<T>>();
+            stack ??= new Stack<EntityUid>();
+            stack.Clear();
+
+            stack.Push(root);
+
+            while (stack.Count > 0)
+            {
+                var currentUid = stack.Pop();
+
+                if (HasComp<T>(currentUid))
+                    matchingEntities.Add(currentUid!);
+
+                foreach (var container in GetAllContainers(currentUid))
+                {
+                    foreach (var entity in container.ContainedEntities)
+                    {
+                        stack.Push(entity);
+                    }
+                }
+            }
+            return matchingEntities;
+        }
 
         [Obsolete("Use Entity<T> variant")]
         public bool IsInSameOrNoContainer(EntityUid user, EntityUid other)

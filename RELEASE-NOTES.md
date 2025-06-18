@@ -39,11 +39,11 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `IMidiRenderer.LoadSoundfont` has been split into `LoadSoundfontResource` and `LoadSoundfontUser`, the original now being deprecated.
 
 ### Bugfixes
 
-*None yet*
+* Fixed debug asserts when using MIDI on Windows.
 
 ### Other
 

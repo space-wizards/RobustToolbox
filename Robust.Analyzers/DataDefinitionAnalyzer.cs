@@ -207,7 +207,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         if (propertySymbol.ContainingType is not INamedTypeSymbol type)
             return;
 
-        if (!IsDataDefinition(type) || type.IsRecord || type.IsValueType)
+        if (type.IsRecord || type.IsValueType)
             return;
 
         if (propertySymbol == null)

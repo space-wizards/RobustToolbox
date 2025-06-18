@@ -22,7 +22,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
     private const string DataFieldAttributeName = "DataField";
     private const string ViewVariablesAttributeName = "ViewVariables";
 
-    private static readonly DiagnosticDescriptor DataDefinitionPartialRule = new(
+    public static readonly DiagnosticDescriptor DataDefinitionPartialRule = new(
         Diagnostics.IdDataDefinitionPartial,
         "Type must be partial",
         "Type {0} is a DataDefinition but is not partial",
@@ -32,7 +32,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         "Make sure to mark any type that is a data definition as partial."
     );
 
-    private static readonly DiagnosticDescriptor NestedDataDefinitionPartialRule = new(
+    public static readonly DiagnosticDescriptor NestedDataDefinitionPartialRule = new(
         Diagnostics.IdNestedDataDefinitionPartial,
         "Type must be partial",
         "Type {0} contains nested data definition {1} but is not partial",
@@ -102,14 +102,23 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
 
-        context.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.ClassDeclaration);
-        context.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.StructDeclaration);
-        context.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.RecordDeclaration);
-        context.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.RecordStructDeclaration);
-        context.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.InterfaceDeclaration);
+        context.RegisterSymbolStartAction(symbolContext =>
+        {
+            if (symbolContext.Symbol is not INamedTypeSymbol typeSymbol)
+                return;
 
-        context.RegisterSyntaxNodeAction(AnalyzeDataField, SyntaxKind.FieldDeclaration);
-        context.RegisterSyntaxNodeAction(AnalyzeDataFieldProperty, SyntaxKind.PropertyDeclaration);
+            if (!IsDataDefinition(typeSymbol))
+                return;
+
+            symbolContext.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.ClassDeclaration);
+            symbolContext.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.StructDeclaration);
+            symbolContext.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.RecordDeclaration);
+            symbolContext.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.RecordStructDeclaration);
+            symbolContext.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.InterfaceDeclaration);
+
+            symbolContext.RegisterSyntaxNodeAction(AnalyzeDataField, SyntaxKind.FieldDeclaration);
+            symbolContext.RegisterSyntaxNodeAction(AnalyzeDataFieldProperty, SyntaxKind.PropertyDeclaration);
+        }, SymbolKind.NamedType);
     }
 
     private void AnalyzeDataDefinition(SyntaxNodeAnalysisContext context)
@@ -117,8 +126,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         if (context.Node is not TypeDeclarationSyntax declaration)
             return;
 
-        var type = context.SemanticModel.GetDeclaredSymbol(declaration)!;
-        if (!IsDataDefinition(type))
+        if (context.ContainingSymbol is not INamedTypeSymbol type)
             return;
 
         if (!IsPartial(declaration))
@@ -129,7 +137,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         var containingType = type.ContainingType;
         while (containingType != null)
         {
-            var containingTypeDeclaration = (TypeDeclarationSyntax) containingType.DeclaringSyntaxReferences[0].GetSyntax();
+            var containingTypeDeclaration = (TypeDeclarationSyntax)containingType.DeclaringSyntaxReferences[0].GetSyntax();
             if (!IsPartial(containingTypeDeclaration))
             {
                 context.ReportDiagnostic(Diagnostic.Create(NestedDataDefinitionPartialRule, containingTypeDeclaration.Keyword.GetLocation(), containingType.Name, type.Name));
@@ -144,17 +152,14 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         if (context.Node is not FieldDeclarationSyntax field)
             return;
 
-        var typeDeclaration = field.FirstAncestorOrSelf<TypeDeclarationSyntax>();
-        if (typeDeclaration == null)
+        if (context.ContainingSymbol is not IFieldSymbol fieldSymbol)
             return;
 
-        var type = context.SemanticModel.GetDeclaredSymbol(typeDeclaration)!;
-        if (!IsDataDefinition(type))
+        if (fieldSymbol.ContainingType is not INamedTypeSymbol type)
             return;
 
         foreach (var variable in field.Declaration.Variables)
         {
-            var fieldSymbol = context.SemanticModel.GetDeclaredSymbol(variable);
             if (fieldSymbol == null)
                 continue;
 
@@ -196,15 +201,15 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         if (context.Node is not PropertyDeclarationSyntax property)
             return;
 
-        var typeDeclaration = property.FirstAncestorOrSelf<TypeDeclarationSyntax>();
-        if (typeDeclaration == null)
+        if (context.ContainingSymbol is not IPropertySymbol propertySymbol)
             return;
 
-        var type = context.SemanticModel.GetDeclaredSymbol(typeDeclaration)!;
+        if (propertySymbol.ContainingType is not INamedTypeSymbol type)
+            return;
+
         if (!IsDataDefinition(type) || type.IsRecord || type.IsValueType)
             return;
 
-        var propertySymbol = context.SemanticModel.GetDeclaredSymbol(property);
         if (propertySymbol == null)
             return;
 

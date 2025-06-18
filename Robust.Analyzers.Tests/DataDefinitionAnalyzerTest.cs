@@ -118,6 +118,44 @@ public sealed class DataDefinitionAnalyzerTest
     }
 
     [Test]
+    public async Task PartialDataDefinitionTest()
+    {
+        const string code = """
+            using Robust.Shared.Serialization.Manager.Attributes;
+
+            [DataDefinition]
+            public sealed class Foo
+            {
+
+            }
+            """;
+
+        await Verifier(code,
+            // /0/Test0.cs(4,15): error RA0017: Type Foo is a DataDefinition but is not partial
+            VerifyCS.Diagnostic(DataDefinitionAnalyzer.DataDefinitionPartialRule).WithSpan(4, 15, 4, 20).WithArguments("Foo")
+        );
+    }
+
+    [Test]
+    public async Task NestedPartialDataDefinitionTest()
+    {
+        const string code = """
+            using Robust.Shared.Serialization.Manager.Attributes;
+
+            public sealed class Foo
+            {
+                [DataDefinition]
+                public sealed partial class Nested { }
+            }
+            """;
+
+        await Verifier(code,
+            // /0/Test0.cs(3,15): error RA0018: Type Foo contains nested data definition Nested but is not partial
+            VerifyCS.Diagnostic(DataDefinitionAnalyzer.NestedDataDefinitionPartialRule).WithSpan(3, 15, 3, 20).WithArguments("Foo", "Nested")
+        );
+    }
+
+    [Test]
     public async Task ReadOnlyPropertyTest()
     {
         const string code = """

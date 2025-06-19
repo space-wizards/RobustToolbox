@@ -22,7 +22,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
     private const string DataFieldAttributeName = "DataField";
     private const string ViewVariablesAttributeName = "ViewVariables";
 
-    public static readonly DiagnosticDescriptor DataDefinitionPartialRule = new(
+    private static readonly DiagnosticDescriptor DataDefinitionPartialRule = new(
         Diagnostics.IdDataDefinitionPartial,
         "Type must be partial",
         "Type {0} is a DataDefinition but is not partial",
@@ -32,7 +32,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         "Make sure to mark any type that is a data definition as partial."
     );
 
-    public static readonly DiagnosticDescriptor NestedDataDefinitionPartialRule = new(
+    private static readonly DiagnosticDescriptor NestedDataDefinitionPartialRule = new(
         Diagnostics.IdNestedDataDefinitionPartial,
         "Type must be partial",
         "Type {0} contains nested data definition {1} but is not partial",

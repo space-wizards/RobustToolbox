@@ -124,10 +124,7 @@ public sealed class DataDefinitionAnalyzerTest
             using Robust.Shared.Serialization.Manager.Attributes;
 
             [DataDefinition]
-            public sealed class Foo
-            {
-
-            }
+            public sealed class Foo { }
             """;
 
         await Verifier(code,

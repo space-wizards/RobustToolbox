@@ -152,14 +152,13 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         if (context.Node is not FieldDeclarationSyntax field)
             return;
 
-        if (context.ContainingSymbol is not IFieldSymbol fieldSymbol)
-            return;
-
-        if (fieldSymbol.ContainingType is not INamedTypeSymbol type)
+        if (context.ContainingSymbol?.ContainingType is not INamedTypeSymbol type)
             return;
 
         foreach (var variable in field.Declaration.Variables)
         {
+            var fieldSymbol = context.SemanticModel.GetDeclaredSymbol(variable);
+
             if (fieldSymbol == null)
                 continue;
 

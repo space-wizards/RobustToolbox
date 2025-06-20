@@ -126,6 +126,10 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
             if (context.Operation is not IInvocationOperation operation)
                 return;
 
+            // Make sure the invocation is happening on a member of this class
+            if (operation.Instance is not IMemberReferenceOperation)
+                return;
+
             // Get the method being invoked
             var invokedMethod = operation.TargetMethod;
 

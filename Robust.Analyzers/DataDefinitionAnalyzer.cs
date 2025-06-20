@@ -158,41 +158,44 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         if (fieldSymbol.ContainingType is not INamedTypeSymbol type)
             return;
 
-        if (fieldSymbol == null)
-            return;
-
-        if (!IsDataField(fieldSymbol, out _, out var datafieldAttribute))
-            return;
-
-        if (IsReadOnlyDataField(type, fieldSymbol))
+        foreach (var variable in field.Declaration.Variables)
         {
-            TryGetModifierLocation(field, SyntaxKind.ReadOnlyKeyword, out var location);
-            context.ReportDiagnostic(Diagnostic.Create(DataFieldWritableRule, location, fieldSymbol.Name, type.Name));
-        }
+            if (fieldSymbol == null)
+                continue;
 
-        if (HasRedundantTag(fieldSymbol, datafieldAttribute))
-        {
-            TryGetAttributeLocation(field, DataFieldAttributeName, out var location);
-            context.ReportDiagnostic(Diagnostic.Create(DataFieldRedundantTagRule, location, fieldSymbol.Name, type.Name));
-        }
+            if (!IsDataField(fieldSymbol, out _, out var datafieldAttribute))
+                continue;
 
-        if (HasVVReadWrite(fieldSymbol))
-        {
-            TryGetAttributeLocation(field, ViewVariablesAttributeName, out var location);
-            context.ReportDiagnostic(Diagnostic.Create(DataFieldNoVVReadWriteRule, location, fieldSymbol.Name, type.Name));
-        }
+            if (IsReadOnlyDataField(type, fieldSymbol))
+            {
+                TryGetModifierLocation(field, SyntaxKind.ReadOnlyKeyword, out var location);
+                context.ReportDiagnostic(Diagnostic.Create(DataFieldWritableRule, location, fieldSymbol.Name, type.Name));
+            }
 
-        if (context.SemanticModel.GetSymbolInfo(field.Declaration.Type).Symbol is not ITypeSymbol fieldTypeSymbol)
-            return;
+            if (HasRedundantTag(fieldSymbol, datafieldAttribute))
+            {
+                TryGetAttributeLocation(field, DataFieldAttributeName, out var location);
+                context.ReportDiagnostic(Diagnostic.Create(DataFieldRedundantTagRule, location, fieldSymbol.Name, type.Name));
+            }
 
-        if (IsNotYamlSerializable(fieldSymbol, fieldTypeSymbol))
-        {
-            context.ReportDiagnostic(Diagnostic.Create(DataFieldYamlSerializableRule,
-                (context.Node as FieldDeclarationSyntax)?.Declaration.Type.GetLocation(),
-                fieldSymbol.Name,
-                type.Name,
-                fieldTypeSymbol.MetadataName
-            ));
+            if (HasVVReadWrite(fieldSymbol))
+            {
+                TryGetAttributeLocation(field, ViewVariablesAttributeName, out var location);
+                context.ReportDiagnostic(Diagnostic.Create(DataFieldNoVVReadWriteRule, location, fieldSymbol.Name, type.Name));
+            }
+
+            if (context.SemanticModel.GetSymbolInfo(field.Declaration.Type).Symbol is not ITypeSymbol fieldTypeSymbol)
+                continue;
+
+            if (IsNotYamlSerializable(fieldSymbol, fieldTypeSymbol))
+            {
+                context.ReportDiagnostic(Diagnostic.Create(DataFieldYamlSerializableRule,
+                    (context.Node as FieldDeclarationSyntax)?.Declaration.Type.GetLocation(),
+                    fieldSymbol.Name,
+                    type.Name,
+                    fieldTypeSymbol.MetadataName
+                ));
+            }
         }
     }
 

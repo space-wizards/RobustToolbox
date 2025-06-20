@@ -119,7 +119,7 @@ internal sealed partial class MidiManager : IMidiManager
     private const string OsxSoundfont =
         "/System/Library/Components/CoreAudio.component/Contents/Resources/gs_instruments.dls";
 
-    private const string FallbackSoundfont = "/Midi/fallback.sf2";
+    private static readonly ResPath FallbackSoundfont = new ResPath("/Midi/fallback.sf2");
 
     private const string ContentCustomSoundfontDirectory = "/Audio/MidiCustom/";
 
@@ -265,81 +265,7 @@ internal sealed partial class MidiManager : IMidiManager
 
             var renderer = new MidiRenderer(_settings!, soundfontLoader, mono, this, _audio, _taskManager, _midiSawmill);
 
-            _midiSawmill.Debug($"Loading fallback soundfont {FallbackSoundfont}");
-            // Since the last loaded soundfont takes priority, we load the fallback soundfont before the soundfont.
-            renderer.LoadSoundfont(FallbackSoundfont);
-
-            // Load system-specific soundfonts.
-            if (OperatingSystem.IsLinux())
-            {
-                foreach (var filepath in LinuxSoundfonts)
-                {
-                    if (!File.Exists(filepath) || !SoundFont.IsSoundFont(filepath))
-                        continue;
-
-                    try
-                    {
-                        _midiSawmill.Debug($"Loading OS soundfont {filepath}");
-                        renderer.LoadSoundfont(filepath);
-                    }
-                    catch (Exception)
-                    {
-                        continue;
-                    }
-
-                    break;
-                }
-            }
-            else if (OperatingSystem.IsMacOS())
-            {
-                if (File.Exists(OsxSoundfont) && SoundFont.IsSoundFont(OsxSoundfont))
-                {
-                    _midiSawmill.Debug($"Loading OS soundfont {OsxSoundfont}");
-                    renderer.LoadSoundfont(OsxSoundfont);
-                }
-            }
-            else if (OperatingSystem.IsWindows())
-            {
-                if (File.Exists(WindowsSoundfont) && SoundFont.IsSoundFont(WindowsSoundfont))
-                {
-                    _midiSawmill.Debug($"Loading OS soundfont {WindowsSoundfont}");
-                    renderer.LoadSoundfont(WindowsSoundfont);
-                }
-            }
-
-            // Maybe load soundfont specified in environment variable.
-            // Load it here so it can override system soundfonts but not content or user data soundfonts.
-            if (Environment.GetEnvironmentVariable(SoundfontEnvironmentVariable) is {} soundfontOverride)
-            {
-                if (File.Exists(soundfontOverride) && SoundFont.IsSoundFont(soundfontOverride))
-                {
-                    _midiSawmill.Debug($"Loading environment variable soundfont {soundfontOverride}");
-                    renderer.LoadSoundfont(soundfontOverride);
-                }
-            }
-
-            // Load content-specific custom soundfonts, which should override the system/fallback soundfont.
-            _midiSawmill.Debug($"Loading soundfonts from content directory {ContentCustomSoundfontDirectory}");
-            foreach (var file in _resourceManager.ContentFindFiles(ContentCustomSoundfontDirectory))
-            {
-                if (file.Extension != "sf2" && file.Extension != "dls" && file.Extension != "sf3") continue;
-                _midiSawmill.Debug($"Loading content soundfont {file}");
-                renderer.LoadSoundfont(file.ToString());
-            }
-
-            var userDataPath = _resourceManager.UserData.RootDir == null
-                ? CustomSoundfontDirectory
-                : new ResPath(_resourceManager.UserData.RootDir) / CustomSoundfontDirectory.ToRelativePath();
-
-            // Load every soundfont from the user data directory last, since those may override any other soundfont.
-            _midiSawmill.Debug($"Loading soundfonts from user data directory {userDataPath}");
-            var enumerator = _resourceManager.UserData.Find($"{CustomSoundfontDirectory.ToRelativePath()}*").Item1;
-            foreach (var file in enumerator)
-            {
-                if (file.Extension != "sf2" && file.Extension != "dls" && file.Extension != "sf3") continue;
-                _midiSawmill.Debug($"Loading user soundfont {file}");
-                renderer.LoadSoundfont(file.ToString());
-            }
+            LoadSoundFontSetup(renderer);
 
             renderer.Source.Gain = _gain;
 
@@ -570,130 +496,6 @@ internal sealed partial class MidiManager : IMidiManager
             midiEvent.Program,
             midiEvent.Value,
             midiEvent.Velocity);
-    }
-
-    /// <summary>
-    ///     This class is used to load soundfonts.
-    /// </summary>
-    private sealed class ResourceLoaderCallbacks : SoundFontLoaderCallbacks
-    {
-        private readonly MidiManager _parent;
-        private readonly Dictionary<int, Stream> _openStreams = new();
-        private int _nextStreamId = 1;
-
-        public ResourceLoaderCallbacks(MidiManager parent)
-        {
-            _parent = parent;
-        }
-
-        public override IntPtr Open(string filename)
-        {
-            if (string.IsNullOrEmpty(filename))
-            {
-                return IntPtr.Zero;
-            }
-
-            Stream? stream;
-            var resourceCache = _parent._resourceManager;
-            var resourcePath = new ResPath(filename);
-
-            if (resourcePath.IsRooted)
-            {
-                // is it in content?
-                if (resourceCache.ContentFileExists(filename))
-                {
-                    if (!resourceCache.TryContentFileRead(filename, out stream))
-                        return IntPtr.Zero;
-                }
-                // is it in userdata?
-                else if (resourceCache.UserData.Exists(resourcePath))
-                {
-                    stream = resourceCache.UserData.OpenRead(resourcePath);
-                }
-                else if (File.Exists(filename))
-                {
-                    stream = File.OpenRead(filename);
-                }
-                else
-                {
-                    return IntPtr.Zero;
-                }
-            }
-            else if (File.Exists(filename))
-            {
-                stream = File.OpenRead(filename);
-            }
-            else
-            {
-                return IntPtr.Zero;
-            }
-
-            var id = _nextStreamId++;
-
-            _openStreams.Add(id, stream);
-
-            return (IntPtr) id;
-        }
-
-        public override unsafe int Read(IntPtr buf, long count, IntPtr sfHandle)
-        {
-            var length = (int) count;
-            var span = new Span<byte>(buf.ToPointer(), length);
-            var stream = _openStreams[(int) sfHandle];
-
-            // Fluidsynth's docs state that this method should leave the buffer unmodified if it fails. (returns -1)
-            try
-            {
-                // Fluidsynth does a LOT of tiny allocations (frankly, way too much).
-                if (count < 1024)
-                {
-                    // ReSharper disable once SuggestVarOrType_Elsewhere
-                    Span<byte> buffer = stackalloc byte[(int)count];
-
-                    stream.ReadExact(buffer);
-
-                    buffer.CopyTo(span);
-                }
-                else
-                {
-                    var buffer = stream.ReadExact(length);
-
-                    buffer.CopyTo(span);
-                }
-            }
-            catch (EndOfStreamException)
-            {
-                return -1;
-            }
-
-            return 0;
-        }
-
-        public override int Seek(IntPtr sfHandle, long offset, SeekOrigin origin)
-        {
-            var stream = _openStreams[(int) sfHandle];
-
-            stream.Seek(offset, origin);
-
-            return 0;
-        }
-
-        public override long Tell(IntPtr sfHandle)
-        {
-            var stream = _openStreams[(int) sfHandle];
-
-            return (long) stream.Position;
-        }
-
-        public override int Close(IntPtr sfHandle)
-        {
-            if (!_openStreams.Remove((int) sfHandle, out var stream))
-                return -1;
-
-            stream.Dispose();
-            return 0;
-
-        }
     }
 
     #region Jobs

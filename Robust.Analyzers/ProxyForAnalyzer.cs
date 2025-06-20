@@ -126,8 +126,23 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
             if (context.Operation is not IInvocationOperation operation)
                 return;
 
-            // Make sure the invocation is happening on a member of this class
-            if (operation.Instance is not IMemberReferenceOperation)
+            // Make sure the invocation is happening on a member, not a parameter or something else
+            if (operation.Instance is not IMemberReferenceOperation reference)
+                return;
+
+            // Make sure the member is a member belongs to the proxy class
+            var baseType = context.ContainingSymbol.ContainingType;
+            var found = false;
+            while (baseType?.SpecialType == SpecialType.None)
+            {
+                if (SymbolEqualityComparer.Default.Equals(reference.Member.ContainingSymbol, baseType))
+                {
+                    found = true;
+                    break;
+                }
+                baseType = baseType.BaseType;
+            }
+            if (!found)
                 return;
 
             // Get the method being invoked

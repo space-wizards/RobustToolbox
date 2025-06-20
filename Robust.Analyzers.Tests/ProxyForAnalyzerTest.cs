@@ -257,6 +257,39 @@ public sealed class ProxyForAnalyzerTest
     }
 
     [Test]
+    public async Task TestIgnoreOtherClassMember()
+    {
+        const string code = """
+            using Robust.Shared.Analyzers;
+
+            public abstract partial class ProxyClass
+            {
+                [ProxyFor(typeof(TargetClass))]
+                public void DoSomething()
+                {
+                    TargetClass.DoSomething();
+                }
+            }
+
+            public sealed class OtherClass
+            {
+                public TargetClass Target;
+            }
+
+            public sealed class Tester : ProxyClass
+            {
+                public void Test()
+                {
+                    var other = new OtherClass();
+                    other.Target.DoSomething();
+                }
+            }
+            """;
+
+        await Verifier(code, []);
+    }
+
+    [Test]
     public async Task TestNoMatchingAutoMethodName()
     {
         const string code = """

@@ -283,7 +283,7 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
             (EntityUid uid, MapGridComponent grid,
                 ref (EntityManager EntityManager, ValueList<(EntityUid, TTreeComp)> trees) tuple) =>
             {
-                if (TryComp<TTreeComp>(uid, out var treeComp))
+                if (EntityManager.TryGetComponent<TTreeComp>(uid, out var treeComp))
                 {
                     tuple.trees.Add((uid, treeComp));
                 }

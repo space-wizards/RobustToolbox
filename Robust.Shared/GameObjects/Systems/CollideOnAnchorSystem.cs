@@ -18,7 +18,7 @@ namespace Robust.Shared.GameObjects
 
         private void OnStartup(EntityUid uid, CollideOnAnchorComponent component, ComponentStartup args)
         {
-            if (!TryComp(uid, out TransformComponent? transformComponent)) return;
+            if (!EntityManager.TryGetComponent(uid, out TransformComponent? transformComponent)) return;
 
             SetCollide(uid, component, transformComponent.Anchored);
         }
@@ -31,7 +31,7 @@ namespace Robust.Shared.GameObjects
 
         private void SetCollide(EntityUid uid, CollideOnAnchorComponent component, bool anchored)
         {
-            if (!TryComp(uid, out PhysicsComponent? body)) return;
+            if (!EntityManager.TryGetComponent(uid, out PhysicsComponent? body)) return;
 
             var enabled = component.Enable;
 

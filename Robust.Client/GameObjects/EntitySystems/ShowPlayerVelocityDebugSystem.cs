@@ -51,7 +51,7 @@ public sealed class ShowPlayerVelocityDebugSystem : EntitySystem
 
         var player = _playerManager.LocalEntity;
 
-        if (player == null || !TryComp(player.Value, out PhysicsComponent? body))
+        if (player == null || !EntityManager.TryGetComponent(player.Value, out PhysicsComponent? body))
         {
             _label.Visible = false;
             return;

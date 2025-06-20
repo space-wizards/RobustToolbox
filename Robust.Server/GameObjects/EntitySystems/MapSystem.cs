@@ -60,7 +60,7 @@ namespace Robust.Server.GameObjects
 
                 foreach (var uid in toDelete)
                 {
-                    Del(uid);
+                    EntityManager.DeleteEntity(uid);
                 }
             }
         }
@@ -74,7 +74,8 @@ namespace Robust.Server.GameObjects
         {
             if (!_deleteEmptyGrids || TerminatingOrDeleted(uid) || HasComp<MapComponent>(uid))
                 return;
-            Del(args.GridId);
+
+            EntityManager.DeleteEntity(args.GridId);
         }
     }
 }

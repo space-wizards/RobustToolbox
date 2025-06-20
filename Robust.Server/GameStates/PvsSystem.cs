@@ -199,7 +199,7 @@ internal sealed partial class PvsSystem : EntitySystem
 
         foreach (var uid in _toDelete)
         {
-            QueueDel(uid);
+            EntityManager.QueueDeleteEntity(uid);
         }
         _toDelete.Clear();
 

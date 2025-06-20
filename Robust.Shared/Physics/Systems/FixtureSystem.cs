@@ -257,7 +257,7 @@ namespace Robust.Shared.Physics.Systems
             if (args.Current is not FixtureManagerComponentState state)
                 return;
 
-            if (!TryComp(uid, out PhysicsComponent? physics))
+            if (!EntityManager.TryGetComponent(uid, out PhysicsComponent? physics))
             {
                 Log.Error($"Tried to apply fixture state for an entity without physics: {ToPrettyString(uid)}");
                 return;

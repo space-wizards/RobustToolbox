@@ -97,7 +97,7 @@ namespace Robust.Client.GameObjects
         [Obsolete("Use Play(EntityUid<AnimationPlayerComponent> ent, Animation animation, string key) instead")]
         public void Play(EntityUid uid, AnimationPlayerComponent? component, Animation animation, string key)
         {
-            component ??= EnsureComp<AnimationPlayerComponent>(uid);
+            component ??= EntityManager.EnsureComponent<AnimationPlayerComponent>(uid);
             Play(new Entity<AnimationPlayerComponent>(uid, component), animation, key);
         }
 
@@ -158,7 +158,7 @@ namespace Robust.Client.GameObjects
 
         public bool HasRunningAnimation(EntityUid uid, string key)
         {
-            return TryComp(uid, out AnimationPlayerComponent? component) &&
+            return EntityManager.TryGetComponent(uid, out AnimationPlayerComponent? component) &&
                    component.PlayingAnimations.ContainsKey(key);
         }
 

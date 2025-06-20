@@ -82,7 +82,7 @@ namespace Robust.Client.Debugging
 
             foreach (var ent in _mapSystem.GetAnchoredEntities(gridUid, grid, spot))
             {
-                if (TryComp(ent, out MetaDataComponent? meta))
+                if (EntityManager.TryGetComponent<MetaDataComponent>(ent, out var meta))
                 {
                     text.AppendLine($"uid: {ent}, {meta.EntityName}");
                 }

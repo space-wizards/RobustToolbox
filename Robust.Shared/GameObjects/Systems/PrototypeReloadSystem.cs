@@ -73,8 +73,8 @@ internal sealed class PrototypeReloadSystem : EntitySystem
             var data = newPrototype.Components[name];
             var component = _componentFactory.GetComponent(name);
 
-            if (!HasComp(entity, component.GetType()))
-                AddComp(entity, component);
+            if (!EntityManager.HasComponent(entity, component.GetType()))
+                EntityManager.AddComponent(entity, component);
         }
 
         // Update entity metadata

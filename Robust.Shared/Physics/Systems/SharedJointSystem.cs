@@ -121,7 +121,7 @@ public abstract partial class SharedJointSystem : EntitySystem
         foreach (var joint in _dirtyJoints)
         {
             if (joint.Comp.Deleted || joint.Comp.JointCount != 0) continue;
-            RemComp<JointComponent>(joint);
+            EntityManager.RemoveComponent<JointComponent>(joint);
         }
 
         _dirtyJoints.Clear();
@@ -551,7 +551,7 @@ public abstract partial class SharedJointSystem : EntitySystem
             _physics.WakeBody(uidA);
         }
 
-        if (TryComp<PhysicsComponent>(bodyBUid, out var bodyB) &&
+        if (EntityManager.TryGetComponent<PhysicsComponent>(bodyBUid, out var bodyB) &&
             MetaData(bodyBUid).EntityLifeStage < EntityLifeStage.Terminating)
         {
             var uidB = jointComponentB.Relay ?? bodyBUid;

@@ -69,19 +69,19 @@ namespace Robust.Shared.GameObjects
             if (!_enabled)
                 return;
 
-            if (!TryComp(uid, out PhysicsComponent? body))
+            if (!EntityManager.TryGetComponent(uid, out PhysicsComponent? body))
             {
                 Log.Error($"Trying to regenerate collision for {uid} that doesn't have {nameof(body)}");
                 return;
             }
 
-            if (!TryComp(uid, out FixturesComponent? manager))
+            if (!EntityManager.TryGetComponent(uid, out FixturesComponent? manager))
             {
                 Log.Error($"Trying to regenerate collision for {uid} that doesn't have {nameof(manager)}");
                 return;
             }
 
-            if (!TryComp(uid, out TransformComponent? xform))
+            if (!EntityManager.TryGetComponent(uid, out TransformComponent? xform))
             {
                 Log.Error($"Trying to regenerate collision for {uid} that doesn't have {nameof(TransformComponent)}");
                 return;

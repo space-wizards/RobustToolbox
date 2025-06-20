@@ -64,7 +64,10 @@ public sealed class ProxyForFixerTest
             {
                 public void Test()
                 {
+                    // Comment
+
                     TargetClass.DoSomething<int>(5, "bar");
+
                 }
             }
             """;
@@ -92,14 +95,17 @@ public sealed class ProxyForFixerTest
             {
                 public void Test()
                 {
+                    // Comment
+
                     DoSomething<int>(5, "bar");
+
                 }
             }
             """;
 
         await Verifier(code, fixedCode,
             // /0/Test0.cs(23,9): warning RA0037: Use the proxy method DoSomething instead of calling TargetClass.DoSomething directly
-            VerifyCS.Diagnostic(ProxyForAnalyzer.PreferProxyDescriptor).WithSpan(23, 9, 23, 47).WithArguments("DoSomething", "TargetClass.DoSomething")
+            VerifyCS.Diagnostic(ProxyForAnalyzer.PreferProxyDescriptor).WithSpan(25, 9, 25, 47).WithArguments("DoSomething", "TargetClass.DoSomething")
         );
     }
 

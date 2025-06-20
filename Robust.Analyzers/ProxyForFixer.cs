@@ -81,7 +81,7 @@ public sealed class ProxyForFixer : CodeFixProvider
             _ => throw new InvalidOperationException()
         };
         // Create a replacement invocation expression
-        var replacement = token.WithExpression(newExpression);
+        var replacement = token.WithExpression(newExpression).WithTriviaFrom(token);
         // Replace the original expression with the new one
         root = root!.ReplaceNode(token, replacement);
 

@@ -682,8 +682,6 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         {
             if (_timing.IsFirstTimePredicted)
             {
-                // Not guaranteed to open so rely upon the event handling it.
-                // Also lets client request it to be opened remotely too.
                 RaisePredictiveEvent(new BoundUIWrapMessage(GetNetEntity(entity.Owner), new OpenBoundInterfaceMessage(), key));
             }
         }

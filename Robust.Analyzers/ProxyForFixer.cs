@@ -53,12 +53,12 @@ public sealed class ProxyForFixer : CodeFixProvider
 
         context.RegisterCodeFix(CodeAction.Create(
             "Substitute proxy method",
-            c => RegisterSubstituteProxy(context.Document, token, methodName, c),
+            c => SubstituteProxy(context.Document, token, methodName, c),
             "Substitute proxy method"
         ), diagnostic);
     }
 
-    private async Task<Document> RegisterSubstituteProxy(Document document, InvocationExpressionSyntax token, string methodName, CancellationToken cancellation)
+    private async Task<Document> SubstituteProxy(Document document, InvocationExpressionSyntax token, string methodName, CancellationToken cancellation)
     {
         var root = (CompilationUnitSyntax?)await document.GetSyntaxRootAsync(cancellation);
         var model = await document.GetSemanticModelAsync(cancellation);

@@ -1,4 +1,6 @@
-﻿using Robust.Shared.ViewVariables;
+﻿using Robust.Client.Graphics;
+using Robust.Shared.Maths;
+using Robust.Shared.ViewVariables;
 using static Robust.Client.UserInterface.Controls.Label;
 
 namespace Robust.Client.UserInterface.Controls
@@ -9,8 +11,6 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class CheckBox : ContainerButton
     {
-        private const float DisabledAlphaModifier = 0.3f;
-
         public const string StyleClassCheckBox = "checkBox";
         public const string StyleClassCheckBoxChecked = "checkBoxChecked";
 
@@ -91,8 +91,16 @@ namespace Robust.Client.UserInterface.Controls
                 else
                     TextureRect.RemoveStyleClass(StyleClassCheckBoxChecked);
             }
+        }
 
-            Modulate = Modulate with { A = DrawMode == DrawModeEnum.Disabled ? DisabledAlphaModifier : 1f };
+        protected internal override void Draw(DrawingHandleScreen handle)
+        {
+            base.Draw(handle);
+
+            if (HasStylePseudoClass(StylePseudoClassDisabled))
+                Modulate = StylePropertyDefault(StylePropertyModulateSelf, Color.White.WithAlpha(0.3f));
+            else
+                Modulate = StylePropertyDefault(StylePropertyModulateSelf, Color.White);
         }
 
         /// <summary>

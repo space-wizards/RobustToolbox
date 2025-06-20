@@ -29,6 +29,10 @@
     buttonBackgroundDisabled: "#333333"
     buttonBorderDisabled: "#222222"
 
+    # CheckBox
+    checkBox: "#ffffff"
+    checkBoxDisabled: "#ffffff4d"
+
     # LineEdit
     lineEditUneditableText: "#444444"
     lineEditPlaceholderText: "#7d7d7d"

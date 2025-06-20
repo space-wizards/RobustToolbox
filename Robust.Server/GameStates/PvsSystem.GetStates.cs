@@ -132,7 +132,7 @@ internal sealed partial class PvsSystem
 
         if (enumerateAll)
         {
-            var query = EntityManager.AllEntityQueryEnumerator<MetaDataComponent>();
+            var query = AllEntityQuery<MetaDataComponent>();
             while (query.MoveNext(out var uid, out var md))
             {
                 DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized, $"Entity {ToPrettyString(uid)} has not been initialized");

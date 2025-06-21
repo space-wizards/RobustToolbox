@@ -49,7 +49,7 @@ namespace Robust.Client
             ClientWarmup.RunWarmup();
 
             var deps = IoCManager.InitThread();
-            var mode = args.Headless ? DisplayMode.Headless : DisplayMode.Clyde;
+            var mode = args.Headless ? DisplayMode.Headless : (args.NoAudio ? DisplayMode.ClydeNoAudio : DisplayMode.Clyde);
 
             InitIoC(mode, deps);
 

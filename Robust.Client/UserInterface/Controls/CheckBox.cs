@@ -91,11 +91,6 @@ namespace Robust.Client.UserInterface.Controls
                 else
                     TextureRect.RemoveStyleClass(StyleClassCheckBoxChecked);
             }
-        }
-
-        protected internal override void Draw(DrawingHandleScreen handle)
-        {
-            base.Draw(handle);
 
             if (HasStylePseudoClass(StylePseudoClassDisabled))
                 Modulate = StylePropertyDefault(StylePropertyModulateSelf, Color.White.WithAlpha(0.3f));

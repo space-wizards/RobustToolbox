@@ -10,6 +10,8 @@ public abstract class LocalizedCommands : IConsoleCommand
 {
     [Dependency] protected readonly ILocalizationManager LocalizationManager = default!;
 
+    public ILocalizationManager Loc => LocalizationManager;
+
     /// <inheritdoc />
     public abstract string Command { get; }
 

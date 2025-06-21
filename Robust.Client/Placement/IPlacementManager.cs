@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Robust.Shared.Enums;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -47,6 +48,11 @@ namespace Robust.Client.Placement
         void Clear();
         void ToggleEraser();
         void ToggleEraserHijacked(PlacementHijack hijack);
+
+        /// <summary>
+        /// Returns a collection containing all placement mode Types that can be used.
+        /// </summary>
+        IEnumerable<Type> GetAllPlacementModes();
 
         void FrameUpdate(FrameEventArgs e);
     }

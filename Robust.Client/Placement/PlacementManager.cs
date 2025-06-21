@@ -22,6 +22,8 @@ using Robust.Shared.Utility;
 using Robust.Shared.Log;
 using Direction = Robust.Shared.Maths.Direction;
 using Robust.Shared.Map.Components;
+using Robust.Client.Placement.Modes;
+using Robust.Shared.IoC.Exceptions;
 
 namespace Robust.Client.Placement
 {
@@ -32,12 +34,12 @@ namespace Robust.Client.Placement
         [Dependency] internal readonly IPlayerManager PlayerManager = default!;
         [Dependency] internal readonly IResourceCache ResourceCache = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] internal readonly IMapManager MapManager = default!;
+        [Dependency] public readonly IMapManager MapManager = default!;
         [Dependency] private readonly IGameTiming _time = default!;
-        [Dependency] internal readonly IEyeManager EyeManager = default!;
+        [Dependency] public readonly IEyeManager EyeManager = default!;
         [Dependency] internal readonly IInputManager InputManager = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
-        [Dependency] internal readonly IEntityManager EntityManager = default!;
+        [Dependency] public readonly IEntityManager EntityManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         [Dependency] private readonly IBaseClient _baseClient = default!;
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
@@ -495,6 +497,11 @@ namespace Robust.Client.Placement
                 Hijack = hijack;
             }
             else Clear();
+        }
+
+        public IEnumerable<Type> GetAllPlacementModes()
+        {
+            return _reflectionManager.FindTypesWithAttribute<PlacementModeAttribute>();
         }
 
         public void BeginPlacing(PlacementInformation info, PlacementHijack? hijack = null)

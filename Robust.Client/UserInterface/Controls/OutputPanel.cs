@@ -107,6 +107,11 @@ namespace Robust.Client.UserInterface.Controls
             _scrollBar.Value = 0;
         }
 
+        public FormattedMessage GetMessage(Index index)
+        {
+            return new FormattedMessage(_entries[index].Message);
+        }
+
         public void RemoveEntry(Index index)
         {
             var entry = _entries[index];
@@ -152,6 +157,28 @@ namespace Robust.Client.UserInterface.Controls
             if (_isAtBottom && ScrollFollowing)
             {
                 _scrollBar.MoveToEnd();
+            }
+        }
+
+        public void SetMessage(Index index, FormattedMessage message, Type[]? tagsAllowed = null, Color? defaultColor = null)
+        {
+            var oldEntry = _entries[index];
+            var font = _getFont();
+            _totalContentHeight -= oldEntry.Height + font.GetLineSeparation(UIScale);
+            _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
+
+            var entry = new RichTextEntry(message, this, _tagManager, tagsAllowed, defaultColor);
+            entry.Update(_tagManager, _getFont(), _getContentBox().Width, UIScale);
+            _entries[index] = entry;
+
+            _totalContentHeight += entry.Height;
+            if (_firstLine)
+            {
+                _firstLine = false;
+            }
+            else
+            {
+                _totalContentHeight += font.GetLineSeparation(UIScale);
             }
         }
 

@@ -25,6 +25,7 @@ namespace Robust.Shared.Localization
             AddCtxFunction(bundle, "DAT-OBJ", FuncDatObj);
             AddCtxFunction(bundle, "POSS-ADJ", FuncPossAdj);
             AddCtxFunction(bundle, "POSS-PRONOUN", FuncPossPronoun);
+            AddCtxFunction(bundle, "POSS-NOUN", FuncPossNoun);
             AddCtxFunction(bundle, "REFLEXIVE", FuncReflexive);
             AddCtxFunction(bundle, "COUNTER", FuncCounter);
 
@@ -226,6 +227,22 @@ namespace Robust.Shared.Localization
         private ILocValue FuncPossPronoun(LocArgs args)
         {
             return new LocValueString(GetString("zzzz-possessive-pronoun", ("ent", args.Args[0])));
+        }
+
+        /// <summary>
+        /// Returns the possessive form of the noun passed in, by appending 's or ' as appropriate.
+        /// </summary>
+        /// <remarks>
+        /// Intended to get the possessive form of an arbitrary string
+        /// ("a slugcat's hand") while avoiding clumsy formatting for words that
+        /// end with S ("fifty slugcats' hands" as opposed to "fifty slugcats's hands").
+        /// </remarks>
+        private ILocValue FuncPossNoun(LocArgs args)
+        {
+            var input = args.Args[0].Format(new LocContext());
+            if (string.IsNullOrEmpty(input))
+                return new LocValueString("");
+            return new LocValueString(input.ToLower().EndsWith('s') ? $"{input}'" : $"{input}'s");
         }
 
         /// <summary>

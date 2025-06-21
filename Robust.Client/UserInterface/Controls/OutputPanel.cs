@@ -143,15 +143,7 @@ namespace Robust.Client.UserInterface.Controls
 
             _entries.Add(entry);
             var font = _getFont();
-            _totalContentHeight += entry.Height;
-            if (_firstLine)
-            {
-                _firstLine = false;
-            }
-            else
-            {
-                _totalContentHeight += font.GetLineSeparation(UIScale);
-            }
+            AddNewItemHeight(font, entry);
 
             _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
             if (_isAtBottom && ScrollFollowing)
@@ -171,6 +163,11 @@ namespace Robust.Client.UserInterface.Controls
             entry.Update(_tagManager, _getFont(), _getContentBox().Width, UIScale);
             _entries[index] = entry;
 
+            AddNewItemHeight(font, in entry);
+        }
+
+        private void AddNewItemHeight(Font font, in RichTextEntry entry)
+        {
             _totalContentHeight += entry.Height;
             if (_firstLine)
             {

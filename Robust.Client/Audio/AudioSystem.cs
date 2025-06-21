@@ -582,7 +582,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     {
         if (TerminatingOrDeleted(entity))
         {
-            Log.Error($"Tried to play coordinates audio on a terminating / deleted entity {ToPrettyString(entity)}");
+            LogAudioPlaybackOnInvalidEntity(specifier, entity);
             return null;
         }
 
@@ -626,7 +626,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     {
         if (TerminatingOrDeleted(coordinates.EntityId))
         {
-            Log.Error($"Tried to play coordinates audio on a terminating / deleted entity {ToPrettyString(coordinates.EntityId)}");
+            LogAudioPlaybackOnInvalidEntity(specifier, coordinates.EntityId);
             return null;
         }
 
@@ -751,6 +751,12 @@ public sealed partial class AudioSystem : SharedAudioSystem
     protected override TimeSpan GetAudioLengthImpl(string filename)
     {
         return _resourceCache.GetResource<AudioResource>(filename).AudioStream.Length;
+    }
+
+    private void LogAudioPlaybackOnInvalidEntity(ResolvedSoundSpecifier? specifier, EntityUid entityId)
+    {
+        var soundInfo = specifier?.ToString() ?? "unknown sound";
+        Log.Error($"Tried to play coordinates audio on a terminating / deleted entity {ToPrettyString(entityId)}. Sound: {soundInfo}. Trace: {Environment.StackTrace}");
     }
 
     #region Jobs

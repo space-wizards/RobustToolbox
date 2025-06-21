@@ -80,6 +80,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         public PhysicsComponent? BodyA;
         public PhysicsComponent? BodyB;
 
+        public TransformComponent? XformA;
+        public TransformComponent? XformB;
+
         public Manifold Manifold;
 
         internal ContactType Type;
@@ -252,6 +255,11 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 if (!touching)
                 {
                     status = ContactStatus.EndTouching;
+                }
+                // Still touching
+                else
+                {
+                    status = ContactStatus.Touching;
                 }
             }
 
@@ -439,6 +447,17 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 return BodyB!;
             else if (uid == EntityB)
                 return BodyA!;
+
+            throw new InvalidOperationException();
+        }
+
+		[Pure]
+        public TransformComponent OtherTransform(EntityUid uid)
+        {
+            if (uid == EntityA)
+                return XformB!;
+            else if (uid == EntityB)
+                return XformA!;
 
             throw new InvalidOperationException();
         }

@@ -136,35 +136,39 @@ public sealed class PvsPauseTest : RobustIntegrationTest
         await RunTicks();
         AssertEnt(paused: true, detached: false, clientPaused: true);
 
-         // Unpause the entity while out of range
-         {
-             await server.WaitPost(() => xforms.SetCoordinates(sEntMan.GetEntity(player), farAway));
-             await RunTicks();
-             AssertEnt(paused: true, detached: true, clientPaused: true);
+        // Unpause the entity while out of range
+        {
+            await server.WaitPost(() => xforms.SetCoordinates(sEntMan.GetEntity(player), farAway));
+            await RunTicks();
+            AssertEnt(paused: true, detached: true, clientPaused: true);
 
-             await server.WaitPost(() => metaSys.SetEntityPaused(sEnt, false));
-             await RunTicks();
-             AssertEnt(paused: false, detached: true, clientPaused: true);
+            await server.WaitPost(() => metaSys.SetEntityPaused(sEnt, false));
+            await RunTicks();
+            AssertEnt(paused: false, detached: true, clientPaused: true);
 
-             await server.WaitPost(() => xforms.SetCoordinates(sEntMan.GetEntity(player), coords));
-             await RunTicks();
-             AssertEnt(paused: false, detached: false, clientPaused: false);
-         }
+            await server.WaitPost(() => xforms.SetCoordinates(sEntMan.GetEntity(player), coords));
+            await RunTicks();
+            AssertEnt(paused: false, detached: false, clientPaused: false);
+        }
 
-         // Pause the entity while out of range
-         {
-             await server.WaitPost(() => xforms.SetCoordinates(sEntMan.GetEntity(player), farAway));
-             await RunTicks();
-             AssertEnt(paused: false, detached: true, clientPaused: true);
+        // Pause the entity while out of range
+        {
+            await server.WaitPost(() => xforms.SetCoordinates(sEntMan.GetEntity(player), farAway));
+            await RunTicks();
+            AssertEnt(paused: false, detached: true, clientPaused: true);
 
-             await server.WaitPost(() => metaSys.SetEntityPaused(sEnt, true));
-             await RunTicks();
-             AssertEnt(paused: true, detached: true, clientPaused: true);
+            await server.WaitPost(() => metaSys.SetEntityPaused(sEnt, true));
+            await RunTicks();
+            AssertEnt(paused: true, detached: true, clientPaused: true);
 
-             await server.WaitPost(() => xforms.SetCoordinates(sEntMan.GetEntity(player), coords));
-             await RunTicks();
-             AssertEnt(paused: true, detached: false, clientPaused: true);
-         }
+            await server.WaitPost(() => xforms.SetCoordinates(sEntMan.GetEntity(player), coords));
+            await RunTicks();
+            AssertEnt(paused: true, detached: false, clientPaused: true);
+        }
+
+        await client.WaitPost(() => netMan.ClientDisconnect(""));
+        await server.WaitRunTicks(5);
+        await client.WaitRunTicks(5);
     }
 }
 

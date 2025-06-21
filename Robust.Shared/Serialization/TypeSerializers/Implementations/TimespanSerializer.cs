@@ -9,6 +9,7 @@ using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations;
 
@@ -74,7 +75,7 @@ public sealed class TimespanSerializer : ITypeSerializer<TimeSpan, ValueDataNode
 
         // A lot of the checks will be for plain numbers, so might as well rule them out right away, instead of
         // running all the other checks on them. They will need to get parsed later anyway, if they weren't now.
-        if (double.TryParse(node.Value, out var v))
+        if (Parse.TryDouble(node.Value, out var v))
         {
             timeSpan = TimeSpan.FromSeconds(v);
             return true;
@@ -85,7 +86,7 @@ public sealed class TimespanSerializer : ITypeSerializer<TimeSpan, ValueDataNode
             return false;
 
         // If the input without the last character is still not a valid number, exit
-        if (!double.TryParse(node.Value.AsSpan()[..^1], out var number))
+        if (!Parse.TryDouble(node.Value.AsSpan()[..^1], out var number))
             return false;
 
         // Check the last character of the input for time unit indicators

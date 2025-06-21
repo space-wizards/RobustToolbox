@@ -39,11 +39,11 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `IMidiRenderer.LoadSoundfont` has been split into `LoadSoundfontResource` and `LoadSoundfontUser`, the original now being deprecated.
 
 ### Bugfixes
 
-*None yet*
+* Fixed debug asserts when using MIDI on Windows.
 
 ### Other
 
@@ -53,6 +53,119 @@ END TEMPLATE-->
 
 *None yet*
 
+
+## 262.0.0
+
+### Breaking changes
+
+* Toolshed commands will now validate that each non-generic command argument is parseable (i.e., has a corresponding type parser). This check can be disabled by explicitly marking the argument as unparseable via `CommandArgumentAttribute.Unparseable`.
+
+### New features
+
+* `ToolshedManager.TryParse` now also supports nullable value types.
+* Add an ignoredComponents arg to IsDefault.
+
+### Bugfixes
+
+* Fix `SpriteComponent.Layer.Visible` setter not marking a sprite's bounding box as dirty.
+* The audio params in the passed SoundSpecifier for PlayStatic(SoundSpecifier, Filter, ...) will now be used as a default like other PlayStatic overrides.
+* Fix windows not saving their positions correctly when their x position is <= 0.
+* Fix transform state handling overriding PVS detachment.
+
+
+## 261.2.0
+
+### New features
+
+* Implement IEquatable for ResolvedPathSpecifier & ResolvedCollectionSpecifier.
+* Add NearestChunkEnumerator.
+
+### Bugfixes
+
+* Fix static entities not having the center of mass updated.
+* Fix TryQueueDelete.
+* Fix tpto potentially parenting grids to non-map entities.
+
+### Other
+
+* TileChangedEvent is now raised once in clientside grid state handling rather than per tile.
+* Removed ITileDefinition.ID as it was redundant.
+* Change the lifestage checks on predicted entity deletion to check for terminating.
+
+### Internal
+
+* Update some `GetComponentName<T>` uses to generic.
+
+
+## 261.1.0
+
+### New features
+
+* Automatically create logger sawmills for `UIController`s similar to `EntitySystem`s.
+
+### Bugfixes
+
+* Fix physics forces not auto-clearing / respecting the cvar.
+
+### Internal
+
+* Cleanup more compiler warnings in unit tests.
+
+
+## 261.0.0
+
+### Breaking changes
+
+* Remove unused TryGetContainingContainer override.
+* Stop recursive FrameUpdates for controls that are not visible.
+* Initialize LocMgr earlier in the callstack for GameController.
+* Fix FastNoiseLise fractal bounding and remove its DataField property as it should be derived on other properties updating.
+* Make RaiseMoveEvent internal.
+* MovedGridsComponent and PhysicsMapComponent are now purged and properties on `SharedPhysicsSystem`. Additionally the TransformComponent for Awake entities is stored alongside the PhysicsComponent for them.
+* TransformComponent is now stored on physics contacts.
+* Gravity2DComponent and Gravity2DController were moved to SharedPhysicsSystem.
+
+### New features
+
+* `IFileDialogManager` now allows specifying `FileAccess` and `FileShare` modes.
+* Add Intersects and Enlarged to Box2i in line with Box2.
+* Make `KeyFrame`s on `AnimationTrackProperty` public settable.
+* Add the spawned entities to a returned array from `SpawnEntitiesAttachedTo`.
+
+### Bugfixes
+
+* Fixed SDL3 file dialog implementation having a memory leak and not opening files read-write.
+* Fix GetMapLinearVelocity.
+
+### Other
+
+* `uploadfile` and `loadprototype` commands now only open files with read access.
+* Optimize `ToMapCoordinates`.
+
+### Internal
+
+* Cleanup on internals of `IFileDialogManager`, removing duplicate code.
+* Fix Contacts not correctly being marked as `Touching` while contact is ongoing.
+
+
+## 260.2.0
+
+### New features
+
+* Add `StringBuilder.Insert(int, string)` to sandbox.
+* Add the WorldNormal to the StartCollideEvent.
+
+
+## 260.1.0
+
+### New features
+
+* `ComponentFactory` is now exposed to `EntitySystem` as `Factory`
+
+### Other
+
+* Cleanup warnings in PLacementManager
+* Cleanup warnings in Clide.Sprite
 
 ## 260.0.0
 

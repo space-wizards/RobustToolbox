@@ -21,15 +21,15 @@ public sealed class PlacementModeAttribute(string? name = null, int priority = 0
 
 public enum EnginePlacementMode
 {
-    PlaceFree = 1100,
-    PlaceNearby = 1090,
-    SnapgridCenter = 1080,
-    SnapgridBorder = 1070,
-    AlignSimilar = 1060,
-    AlignTileAny = 1050,
-    AlignTileEmpty = 1040,
-    AlignTileNonDense = 1030,
-    AlignTileDense = 1020,
-    AlignWall = 1010,
-    AlignWallProper = 1000,
+    PlaceFree = 1000,
+    PlaceNearby = 999,
+    SnapgridCenter = 998,
+    SnapgridBorder = 997,
+    AlignSimilar = 996,
+    AlignTileAny = 995,
+    AlignTileEmpty = 994,
+    AlignTileNonDense = 993,
+    AlignTileDense = 992,
+    AlignWall = 991,
+    AlignWallProper = 990,
 }

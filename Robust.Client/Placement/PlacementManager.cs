@@ -22,8 +22,6 @@ using Robust.Shared.Utility;
 using Robust.Shared.Log;
 using Direction = Robust.Shared.Maths.Direction;
 using Robust.Shared.Map.Components;
-using Robust.Client.Placement.Modes;
-using Robust.Shared.IoC.Exceptions;
 
 namespace Robust.Client.Placement
 {
@@ -497,21 +495,6 @@ namespace Robust.Client.Placement
                 Hijack = hijack;
             }
             else Clear();
-        }
-
-        public string[] GetAllPlacementModes()
-        {
-            List<string> names = [];
-            var modes = _reflectionManager.FindTypesWithAttribute<PlacementModeAttribute>();
-            foreach (var type in modes)
-            {
-                if (Attribute.GetCustomAttribute(type, typeof(PlacementModeAttribute)) is not PlacementModeAttribute attribute)
-                    throw new InvalidImplementationException(type, typeof(PlacementMode), $"No {nameof(PlacementModeAttribute)}!");
-
-                // Use the override if specified, falling back to the Type name
-                names.Add(attribute.Name ?? type.Name);
-            }
-            return names.ToArray();
         }
 
         public void BeginPlacing(PlacementInformation info, PlacementHijack? hijack = null)

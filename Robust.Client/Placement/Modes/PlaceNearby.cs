@@ -2,7 +2,6 @@
 
 namespace Robust.Client.Placement.Modes
 {
-    [PlacementMode]
     public sealed class PlaceNearby : PlacementMode
     {
         public PlaceNearby(PlacementManager pMan) : base(pMan) { }

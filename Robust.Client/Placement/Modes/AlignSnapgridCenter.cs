@@ -9,7 +9,6 @@ using Robust.Shared.Maths;
 namespace Robust.Client.Placement.Modes
 {
     [Virtual]
-    [PlacementMode]
     public class SnapgridCenter : PlacementMode
     {
         protected MapGridComponent? Grid;

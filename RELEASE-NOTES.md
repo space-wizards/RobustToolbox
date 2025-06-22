@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* More tiny optimizations to `DataDefinitionAnalyzer`.
 
 ### Internal
 

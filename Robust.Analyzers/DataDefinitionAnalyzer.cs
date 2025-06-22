@@ -121,7 +121,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         }, SymbolKind.NamedType);
     }
 
-    private void AnalyzeDataDefinition(SyntaxNodeAnalysisContext context)
+    private static void AnalyzeDataDefinition(SyntaxNodeAnalysisContext context)
     {
         if (context.Node is not TypeDeclarationSyntax declaration)
             return;
@@ -147,7 +147,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         }
     }
 
-    private void AnalyzeDataField(SyntaxNodeAnalysisContext context)
+    private static void AnalyzeDataField(SyntaxNodeAnalysisContext context)
     {
         if (context.Node is not FieldDeclarationSyntax field)
             return;
@@ -198,7 +198,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         }
     }
 
-    private void AnalyzeDataFieldProperty(SyntaxNodeAnalysisContext context)
+    private static void AnalyzeDataFieldProperty(SyntaxNodeAnalysisContext context)
     {
         if (context.Node is not PropertyDeclarationSyntax property)
             return;

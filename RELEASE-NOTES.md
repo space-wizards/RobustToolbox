@@ -47,11 +47,100 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* More tiny optimizations to `DataDefinitionAnalyzer`.
 
 ### Internal
 
 *None yet*
+
+
+## 263.0.0
+
+### Breaking changes
+
+* Fully removed some non-`Entity<T>` container methods.
+
+### New features
+
+* `IMidiRenderer.LoadSoundfont` has been split into `LoadSoundfontResource` and `LoadSoundfontUser`, the original now being deprecated.
+* Client command execution now properly catches errors instead of letting them bubble up through the input stack.
+* Added `CompletionHelper.PrototypeIdsLimited` API to allow commands to autocomplete entity prototype IDs.
+* Added `spawn:in` Toolshed command.
+* Added `MapLoaderSystem.TryLoadGeneric` overload to load from a `Stream`.
+* Added `OutputPanel.GetMessage()` and `OutputPanel.SetMessage()` to allow replacing individual messages.
+
+### Bugfixes
+
+* Fixed debug asserts when using MIDI on Windows.
+* Fixed an error getting logged on startup on macOS related to window icons.
+* `CC-BY-NC-ND-4.0` is now a valid license for the RGA validator.
+* Fixed `TabContainer.CurrentTab` clamping against the wrong value.
+* Fix culture-based parsing in `TimespanSerializer`.
+* Fixed grid rendering blowing up on tile IDs that aren't registered.
+* Fixed debug assert when loading MIDI soundfonts on Windows.
+* Make `ColorSelectorSliders` properly update the dropdown when changing `SelectorType`.
+* Fixed `tpto` allowing teleports to oneself, thereby causing them to be deleted.
+* Fix OpenAL extensions being requested incorrectly, causing an error on macOS.
+* Fixed horizontal measuring of markup controls in rich text.
+
+### Other
+
+* Improved logging for some audio entity errors.
+* Avoided more server stutters when using `csci`.
+* Improved physics performance.
+* Made various localization functions like `GENDER()` not throw if passed a string instead of an `EntityUid`.
+* The generic clause on `EntitySystem.AddComp<T>` has been changed to `IComponent` (from `Component`) for consistency with `IEntityManager.AddComponent<T>`.
+* `DataDefinitionAnalyzer` has been optimized somewhat.
+* Improved assert logging error message when static data fields are encountered.
+
+### Internal
+
+* Warning cleanup.
+* Added more tests for `DataDefinitionAnalyzer`.
+* Consistently use `EntitySystem` proxy methods in engine.
+
+
+## 262.0.0
+
+### Breaking changes
+
+* Toolshed commands will now validate that each non-generic command argument is parseable (i.e., has a corresponding type parser). This check can be disabled by explicitly marking the argument as unparseable via `CommandArgumentAttribute.Unparseable`.
+
+### New features
+
+* `ToolshedManager.TryParse` now also supports nullable value types.
+* Add an ignoredComponents arg to IsDefault.
+
+### Bugfixes
+
+* Fix `SpriteComponent.Layer.Visible` setter not marking a sprite's bounding box as dirty.
+* The audio params in the passed SoundSpecifier for PlayStatic(SoundSpecifier, Filter, ...) will now be used as a default like other PlayStatic overrides.
+* Fix windows not saving their positions correctly when their x position is <= 0.
+* Fix transform state handling overriding PVS detachment.
+
+
+## 261.2.0
+
+### New features
+
+* Implement IEquatable for ResolvedPathSpecifier & ResolvedCollectionSpecifier.
+* Add NearestChunkEnumerator.
+
+### Bugfixes
+
+* Fix static entities not having the center of mass updated.
+* Fix TryQueueDelete.
+* Fix tpto potentially parenting grids to non-map entities.
+
+### Other
+
+* TileChangedEvent is now raised once in clientside grid state handling rather than per tile.
+* Removed ITileDefinition.ID as it was redundant.
+* Change the lifestage checks on predicted entity deletion to check for terminating.
+
+### Internal
+
+* Update some `GetComponentName<T>` uses to generic.
 
 
 ## 261.1.0

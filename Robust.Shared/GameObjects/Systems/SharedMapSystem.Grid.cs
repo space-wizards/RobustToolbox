@@ -158,7 +158,7 @@ public abstract partial class SharedMapSystem
         // Just MapLoader things.
         if (component.MapProxy == DynamicTree.Proxy.Free) return;
 
-        var xform = EntityManager.GetComponent<TransformComponent>(uid);
+        var xform = Comp<TransformComponent>(uid);
         var aabb = GetWorldAABB(uid, component, xform);
 
         if (TryComp<GridTreeComponent>(xform.MapUid, out var gridTree))
@@ -213,7 +213,7 @@ public abstract partial class SharedMapSystem
 
         if (xform.ParentUid != xform.MapUid && meta.EntityLifeStage < EntityLifeStage.Terminating  && _netManager.IsServer)
         {
-            Log.Error($"Grid {ToPrettyString(uid, meta)} is not parented to {ToPrettyString(xform._parent)} which is not a map.  y'all need jesus. {Environment.StackTrace}");
+            Log.Error($"Grid {ToPrettyString(uid, meta)} is parented to {ToPrettyString(xform._parent)} which is not a map.  y'all need jesus. {Environment.StackTrace}");
             return;
         }
 

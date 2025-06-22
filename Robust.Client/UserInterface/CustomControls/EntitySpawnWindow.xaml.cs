@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -20,6 +21,8 @@ namespace Robust.Client.UserInterface.CustomControls
         public EntitySpawnButton? SelectedButton;
         public EntityPrototype? SelectedPrototype;
 
+        [Obsolete("Use IPlacementManager.AllModeNames")]
+        public static string[] InitOpts =>IoCManager.Resolve<IPlacementManager>().AllModeNames;
         public EntitySpawnWindow()
         {
             RobustXamlLoader.Load(this);

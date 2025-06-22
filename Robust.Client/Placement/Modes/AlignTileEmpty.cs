@@ -6,7 +6,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.Placement.Modes
 {
-    [PlacementMode(priority: (int)EnginePlacementMode.AlignTileEmpty)]
+    [PlacementMode]
     public sealed class AlignTileEmpty : PlacementMode
     {
         public override bool HasLineMode => true;

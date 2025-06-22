@@ -5,7 +5,7 @@ using Vector2 = System.Numerics.Vector2;
 
 namespace Robust.Client.Placement.Modes
 {
-    [PlacementMode(priority: (int)EnginePlacementMode.AlignWall)]
+    [PlacementMode]
     public sealed class AlignWall : PlacementMode
     {
         public AlignWall(PlacementManager pMan) : base(pMan) { }

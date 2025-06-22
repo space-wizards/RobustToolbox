@@ -2,7 +2,7 @@
 
 namespace Robust.Client.Placement.Modes
 {
-    [PlacementMode(priority: (int)EnginePlacementMode.PlaceNearby)]
+    [PlacementMode]
     public sealed class PlaceNearby : PlacementMode
     {
         public PlaceNearby(PlacementManager pMan) : base(pMan) { }

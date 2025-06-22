@@ -5,7 +5,7 @@ using Robust.Shared.Map.Components;
 
 namespace Robust.Client.Placement.Modes
 {
-    [PlacementMode(priority: (int)EnginePlacementMode.AlignTileDense)]
+    [PlacementMode]
     public sealed class AlignTileDense : PlacementMode
     {
         public override bool HasLineMode => true;

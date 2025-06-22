@@ -22,6 +22,7 @@ using Robust.Shared.Utility;
 using Robust.Shared.Log;
 using Direction = Robust.Shared.Maths.Direction;
 using Robust.Shared.Map.Components;
+using System.Linq;
 
 namespace Robust.Client.Placement
 {
@@ -197,6 +198,8 @@ namespace Robust.Client.Placement
                 DirectionChanged?.Invoke(this, EventArgs.Empty);
             }
         }
+
+        public string[] AllModeNames => [IPlacementManager.DefaultModeName, .. _modeDictionary.Keys.Order()];
 
         /// <inheritdoc />
         public event EventHandler? DirectionChanged;

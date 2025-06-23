@@ -9,6 +9,7 @@ namespace Robust.Shared.GameObjects;
 public abstract class SharedEyeSystem : EntitySystem
 {
     [Dependency] private readonly SharedViewSubscriberSystem _views = default!;
+    [Dependency] protected readonly SharedTransformSystem TransformSystem = default!;
 
     public override void Initialize()
     {
@@ -63,7 +64,7 @@ public abstract class SharedEyeSystem : EntitySystem
 
         eyeComponent.Offset = value;
         eyeComponent.Eye.Offset = value;
-        Dirty(uid, eyeComponent);
+        DirtyField(uid, eyeComponent, nameof(EyeComponent.Offset));
     }
 
     public void SetDrawFov(EntityUid uid, bool value, EyeComponent? eyeComponent = null)
@@ -76,7 +77,7 @@ public abstract class SharedEyeSystem : EntitySystem
 
         eyeComponent.DrawFov = value;
         eyeComponent.Eye.DrawFov = value;
-        Dirty(uid, eyeComponent);
+        DirtyField(uid, eyeComponent, nameof(EyeComponent.DrawFov));
     }
 
     public void SetDrawLight(Entity<EyeComponent?> entity, bool value)
@@ -89,7 +90,7 @@ public abstract class SharedEyeSystem : EntitySystem
 
         entity.Comp.DrawLight = value;
         entity.Comp.Eye.DrawLight = value;
-        Dirty(entity);
+        DirtyField(entity, nameof(EyeComponent.DrawLight));
     }
 
     public void SetRotation(EntityUid uid, Angle rotation, EyeComponent? eyeComponent = null)
@@ -120,18 +121,14 @@ public abstract class SharedEyeSystem : EntitySystem
         if (TryComp(uid, out ActorComponent? actorComp))
         {
             if (value != null)
-            {
                 _views.AddViewSubscriber(value.Value, actorComp.PlayerSession);
-            }
-            else
-            {
-                // Should never be null here
-                _views.RemoveViewSubscriber(eyeComponent.Target!.Value, actorComp.PlayerSession);
-            }
+
+            if (eyeComponent.Target is { } old)
+                _views.RemoveViewSubscriber(old, actorComp.PlayerSession);
         }
 
         eyeComponent.Target = value;
-        Dirty(uid, eyeComponent);
+        DirtyField(uid, eyeComponent, nameof(EyeComponent.Target));
     }
 
     public void SetZoom(EntityUid uid, Vector2 value, EyeComponent? eyeComponent = null)
@@ -163,6 +160,10 @@ public abstract class SharedEyeSystem : EntitySystem
         eye.Comp.PvsScale = Math.Clamp(scale, 0.1f, 100f);
     }
 
+    /// <summary>
+    /// Overwrites visibility mask of an entity's eye.
+    /// If you wish for other systems to potentially change it consider raising <see cref="RefreshVisibilityMask"/>.
+    /// </summary>
     public void SetVisibilityMask(EntityUid uid, int value, EyeComponent? eyeComponent = null)
     {
         if (!Resolve(uid, ref eyeComponent))
@@ -172,6 +173,34 @@ public abstract class SharedEyeSystem : EntitySystem
             return;
 
         eyeComponent.VisibilityMask = value;
-        Dirty(uid, eyeComponent);
+        DirtyField(uid, eyeComponent, nameof(EyeComponent.VisibilityMask));
     }
+
+    /// <summary>
+    /// Updates the visibility mask for an entity by raising a <see cref="GetVisMaskEvent"/>
+    /// </summary>
+    public void RefreshVisibilityMask(Entity<EyeComponent?> entity)
+    {
+        if (!Resolve(entity.Owner, ref entity.Comp, false))
+            return;
+
+        var ev = new GetVisMaskEvent()
+        {
+            Entity = entity.Owner,
+        };
+        RaiseLocalEvent(entity.Owner, ref ev, true);
+
+        SetVisibilityMask(entity.Owner, ev.VisibilityMask, entity.Comp);
+    }
+}
+
+/// <summary>
+/// Event raised to update the vismask of an entity's eye.
+/// </summary>
+[ByRefEvent]
+public record struct GetVisMaskEvent()
+{
+    public EntityUid Entity;
+
+    public int VisibilityMask = EyeComponent.DefaultVisibilityMask;
 }

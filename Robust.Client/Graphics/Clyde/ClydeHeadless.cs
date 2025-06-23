@@ -7,7 +7,9 @@ using JetBrains.Annotations;
 using Robust.Client.Audio;
 using Robust.Client.Input;
 using Robust.Client.ResourceManagement;
+using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -68,6 +70,11 @@ namespace Robust.Client.Graphics.Clyde
         public Texture GetStockTexture(ClydeStockTexture stockTexture)
         {
             return new DummyTexture((1, 1));
+        }
+
+        public IEnumerable<(Clyde.ClydeTexture, Clyde.LoadedTexture)> GetLoadedTextures()
+        {
+            return [];
         }
 
         public ClydeDebugLayers DebugLayers { get; set; }
@@ -188,6 +195,22 @@ namespace Robust.Client.Graphics.Clyde
             return new DummyTexture(size);
         }
 
+        /// <inheritdoc />
+        public Color GetClearColor(EntityUid mapUid)
+        {
+            return Color.Transparent;
+        }
+
+        public void BlurRenderTarget(IClydeViewport viewport, IRenderTarget target, IRenderTarget blurBuffer, IEye eye, float multiplier)
+        {
+            // NOOP
+        }
+
+        public IRenderTexture CreateLightRenderTarget(Vector2i size, string? name = null, bool depthStencil = true)
+        {
+            return CreateRenderTarget(size, new RenderTargetFormatParameters(RenderTargetColorFormat.R8, hasDepthStencil: depthStencil), null, name: name);
+        }
+
         public IRenderTexture CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
             TextureSampleParameters? sampleParameters = null, string? name = null)
         {
@@ -284,6 +307,8 @@ namespace Robust.Client.Graphics.Clyde
             action();
         }
 
+        public IFileDialogManagerImplementation? FileDialogImpl => null;
+
         private sealed class DummyCursor : ICursor
         {
             public void Dispose()
@@ -346,6 +371,10 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             private protected override void SetParameterImpl(string name, Color value)
+            {
+            }
+
+            private protected override void SetParameterImpl(string name, Color[] value)
             {
             }
 
@@ -494,7 +523,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public void RenderScreenOverlaysBelow(
-                DrawingHandleScreen handle,
+                IRenderHandle handle,
                 IViewportControl control,
                 in UIBox2i viewportBounds)
             {
@@ -502,7 +531,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public void RenderScreenOverlaysAbove(
-                DrawingHandleScreen handle,
+                IRenderHandle handle,
                 IViewportControl control,
                 in UIBox2i viewportBounds)
             {
@@ -530,6 +559,21 @@ namespace Robust.Client.Graphics.Clyde
             public event Action<WindowRequestClosedEventArgs>? RequestClosed { add { } remove { } }
             public event Action<WindowDestroyedEventArgs>? Destroyed;
             public event Action<WindowResizedEventArgs>? Resized { add { } remove { } }
+
+            public void TextInputSetRect(UIBox2i rect, int cursor)
+            {
+                // Nop.
+            }
+
+            public void TextInputStart()
+            {
+                // Nop.
+            }
+
+            public void TextInputStop()
+            {
+                // Nop.
+            }
 
             public void MaximizeOnMonitor(IClydeMonitor monitor)
             {

@@ -37,7 +37,7 @@ sealed class AddMapCommand : LocalizedEntityCommands
 
 sealed class RemoveMapCommand : LocalizedCommands
 {
-    [Dependency] private readonly IMapManager _map = default!;
+    [Dependency] private readonly IEntitySystemManager _systems = default!;
 
     public override string Command => "rmmap";
     public override bool RequireServerOrSingleplayer => true;
@@ -51,14 +51,15 @@ sealed class RemoveMapCommand : LocalizedCommands
         }
 
         var mapId = new MapId(int.Parse(args[0]));
+        var mapSystem = _systems.GetEntitySystem<SharedMapSystem>();
 
-        if (!_map.MapExists(mapId))
+        if (!mapSystem.MapExists(mapId))
         {
             shell.WriteError($"Map {mapId.Value} does not exist.");
             return;
         }
 
-        _map.DeleteMap(mapId);
+        mapSystem.DeleteMap(mapId);
         shell.WriteLine($"Map {mapId.Value} was removed.");
     }
 }
@@ -138,7 +139,7 @@ internal sealed class ListMapsCommand : LocalizedEntityCommands
     {
         var msg = new StringBuilder();
 
-        foreach (var mapId in _map.GetAllMapIds().OrderBy(id => id.Value))
+        foreach (var mapId in _mapSystem.GetAllMapIds().OrderBy(id => id.Value))
         {
             if (!_mapSystem.TryGetMap(mapId, out var mapUid))
                 continue;

@@ -549,7 +549,7 @@ namespace Robust.Client.UserInterface
         {
         }
 
-        internal virtual void DrawInternal(IRenderHandle renderHandle)
+        protected internal virtual void Draw(IRenderHandle renderHandle)
         {
             Draw(renderHandle.DrawingHandleScreen);
         }
@@ -994,6 +994,9 @@ namespace Robust.Client.UserInterface
 
         internal int DoFrameUpdateRecursive(FrameEventArgs args)
         {
+            if (!Visible)
+                return 0;
+
             var total = 1;
             FrameUpdate(args);
 

@@ -53,7 +53,7 @@ public sealed class GridSplit_Tests
         mapSystem.SetTile(gridEnt, new Vector2i(2, 0), Tile.Empty);
         Assert.That(mapManager.GetAllGrids(mapId).Count(), Is.EqualTo(2));
 
-        mapManager.DeleteMap(mapId);
+        mapSystem.DeleteMap(mapId);
     }
 
     [Test]
@@ -75,7 +75,7 @@ public sealed class GridSplit_Tests
         mapSystem.SetTile(gridEnt, new Vector2i(1, 0), Tile.Empty);
         Assert.That(mapManager.GetAllGrids(mapId).Count(), Is.EqualTo(2));
 
-        mapManager.DeleteMap(mapId);
+        mapSystem.DeleteMap(mapId);
     }
 
     [Test]
@@ -106,7 +106,7 @@ public sealed class GridSplit_Tests
         mapSystem.SetTile(gridEnt, new Vector2i(1, 0), Tile.Empty);
         Assert.That(mapManager.GetAllGrids(mapId).Count(), Is.EqualTo(2));
 
-        mapManager.DeleteMap(mapId);
+        mapSystem.DeleteMap(mapId);
     }
 
     [Test]
@@ -130,7 +130,7 @@ public sealed class GridSplit_Tests
         mapSystem.SetTile(gridEnt, new Vector2i(1, 0), Tile.Empty);
         Assert.That(mapManager.GetAllGrids(mapId).Count(), Is.EqualTo(3));
 
-        mapManager.DeleteMap(mapId);
+        mapSystem.DeleteMap(mapId);
     }
 
     /// <summary>
@@ -181,6 +181,6 @@ public sealed class GridSplit_Tests
             Assert.That(dummyXform.GridUid, Is.EqualTo(newGrid.Owner));
             Assert.That(newGridXform._children, Does.Contain(dummy));
         });
-        mapManager.DeleteMap(mapId);
+        mapSystem.DeleteMap(mapId);
     }
 }

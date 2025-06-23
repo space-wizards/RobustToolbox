@@ -204,6 +204,9 @@ public sealed class PvsReEntryTest : RobustIntegrationTest
         // If the test moves the entity instead of the player, then the test doesn't actually work.
         Assert.That(meta.LastModifiedTick, Is.EqualTo(lastDirty));
 
+        await client.WaitPost(() => netMan.ClientDisconnect(""));
+        await server.WaitRunTicks(5);
+        await client.WaitRunTicks(5);
     }
 #endif
 }

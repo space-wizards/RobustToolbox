@@ -47,21 +47,25 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="mapId">The map ID to check existence of.</param>
         /// <returns>True if the map exists, false otherwise.</returns>
+        [Obsolete("Use MapSystem")]
         bool MapExists([NotNullWhen(true)] MapId? mapId);
 
         /// <summary>
         /// Returns the map entity ID for a given map, or an invalid entity Id if the map does not exist.
         /// </summary>
-        [Obsolete("Use TryGetMap")]
+        [Obsolete("Use MapSystem")]
         EntityUid GetMapEntityId(MapId mapId);
 
         /// <summary>
         /// Replaces GetMapEntity()'s throw-on-failure semantics.
         /// </summary>
+        [Obsolete("Use MapSystem")]
         EntityUid GetMapEntityIdOrThrow(MapId mapId);
 
+        [Obsolete("Use MapSystem")]
         IEnumerable<MapId> GetAllMapIds();
 
+        [Obsolete("Use MapSystem")]
         void DeleteMap(MapId mapId);
 
         // ReSharper disable once MethodOverloadWithOptionalParameter
@@ -77,11 +81,11 @@ namespace Robust.Shared.Map
 
         #region MapId
 
-        public void FindGridsIntersecting(MapId mapId, IPhysShape shape, Transform transform,
-            ref List<Entity<MapGridComponent>> grids, bool approx = Approximate, bool includeMap = IncludeMap);
+        public void FindGridsIntersecting<T>(MapId mapId, T shape, Transform transform,
+            ref List<Entity<MapGridComponent>> grids, bool approx = Approximate, bool includeMap = IncludeMap) where T : IPhysShape;
 
-        public void FindGridsIntersecting(MapId mapId, IPhysShape shape, Transform transform, GridCallback callback,
-            bool approx = Approximate, bool includeMap = IncludeMap);
+        public void FindGridsIntersecting<T>(MapId mapId, T shape, Transform transform, GridCallback callback,
+            bool approx = Approximate, bool includeMap = IncludeMap) where T : IPhysShape;
 
         public void FindGridsIntersecting(MapId mapId, Box2 worldAABB, GridCallback callback, bool approx = Approximate,
             bool includeMap = IncludeMap);
@@ -107,11 +111,11 @@ namespace Robust.Shared.Map
 
         #region MapEnt
 
-        public void FindGridsIntersecting(EntityUid mapEnt, IPhysShape shape, Transform transform, GridCallback callback,
-            bool approx = Approximate, bool includeMap = IncludeMap);
+        public void FindGridsIntersecting<T>(EntityUid mapEnt, T shape, Transform transform, GridCallback callback,
+            bool approx = Approximate, bool includeMap = IncludeMap) where T : IPhysShape;
 
-        public void FindGridsIntersecting<TState>(EntityUid mapEnt, IPhysShape shape, Transform transform,
-            ref TState state, GridCallback<TState> callback, bool approx = Approximate, bool includeMap = IncludeMap);
+        public void FindGridsIntersecting<T, TState>(EntityUid mapEnt, T shape, Transform transform,
+            ref TState state, GridCallback<TState> callback, bool approx = Approximate, bool includeMap = IncludeMap) where T : IPhysShape;
 
         /// <summary>
         /// Returns true if any grids overlap the specified shapes.
@@ -119,8 +123,8 @@ namespace Robust.Shared.Map
         public void FindGridsIntersecting(EntityUid mapEnt, List<IPhysShape> shapes, Transform transform,
             ref List<Entity<MapGridComponent>> entities, bool approx = Approximate, bool includeMap = IncludeMap);
 
-        public void FindGridsIntersecting(EntityUid mapEnt, IPhysShape shape, Transform transform,
-            ref List<Entity<MapGridComponent>> grids, bool approx = Approximate, bool includeMap = IncludeMap);
+        public void FindGridsIntersecting<T>(EntityUid mapEnt, T shape, Transform transform,
+            ref List<Entity<MapGridComponent>> grids, bool approx = Approximate, bool includeMap = IncludeMap) where T : IPhysShape;
 
         public void FindGridsIntersecting(EntityUid mapEnt, Box2 worldAABB, GridCallback callback,
             bool approx = Approximate, bool includeMap = IncludeMap);
@@ -205,19 +209,21 @@ namespace Robust.Shared.Map
         [Obsolete("Just delete the grid entity")]
         void DeleteGrid(EntityUid euid);
 
+        [Obsolete("Use HasComp")]
         bool IsGrid(EntityUid uid);
+
+        [Obsolete("Use HasComp")]
         bool IsMap(EntityUid uid);
 
         //
         // Pausing functions
         //
 
+        [Obsolete("Use MapSystem")]
         void SetMapPaused(MapId mapId, bool paused);
 
+        [Obsolete("Use MapSystem")]
         void DoMapInitialize(MapId mapId);
-
-        [Obsolete("Use CreateMap's runMapInit argument")]
-        void AddUninitializedMap(MapId mapId);
 
         [Obsolete("Use MapSystem")]
         bool IsMapPaused(MapId mapId);

@@ -32,6 +32,7 @@ PLATFORM_WINDOWS = "windows"
 PLATFORM_LINUX = "linux"
 PLATFORM_LINUX_ARM64 = "linux-arm64"
 PLATFORM_MACOS = "mac"
+PLATFORM_FREEBSD = "freebsd"
 
 IGNORED_RESOURCES = {
     ".gitignore",
@@ -85,7 +86,7 @@ def main() -> None:
     parser.add_argument("--platform",
                         "-p",
                         action="store",
-                        choices=[PLATFORM_WINDOWS, PLATFORM_MACOS, PLATFORM_LINUX],
+                        choices=[PLATFORM_WINDOWS, PLATFORM_MACOS, PLATFORM_LINUX, PLATFORM_FREEBSD],
                         nargs="*",
                         help="Which platform to build for. If not provided, all platforms will be built")
 
@@ -98,7 +99,7 @@ def main() -> None:
     skip_build = args.skip_build
 
     if not platforms:
-        platforms = [PLATFORM_WINDOWS, PLATFORM_MACOS, PLATFORM_LINUX]
+        platforms = [PLATFORM_WINDOWS, PLATFORM_MACOS, PLATFORM_LINUX, PLATFORM_FREEBSD]
 
     if os.path.exists("release"):
         print(Fore.BLUE + Style.DIM +
@@ -117,7 +118,7 @@ def main() -> None:
     if PLATFORM_LINUX in platforms:
         if not skip_build:
             wipe_bin()
-        build_linux(skip_build)
+        build_linux(skip_build, "linux", "Linux")
 
     if PLATFORM_LINUX_ARM64 in platforms:
         if not skip_build:
@@ -128,6 +129,11 @@ def main() -> None:
         if not skip_build:
             wipe_bin()
         build_macos(skip_build)
+
+    if PLATFORM_FREEBSD in platforms:
+        if not skip_build:
+            wipe_bin()
+        build_linux(skip_build, "freebsd", "FreeBSD")
 
 
 def wipe_bin():
@@ -177,20 +183,22 @@ def build_macos(skip_build: bool) -> None:
     client_zip.close()
 
 
-def build_linux(skip_build: bool) -> None:
+def build_linux(skip_build: bool, platform, name) -> None:
+    """Build on Unix-like platforms including Linux and FreeBSD."""
     # Run a full build.
-    print(Fore.GREEN + "Building project for Linux x64..." + Style.RESET_ALL)
+    rid = "%s-x64" % platform
+    print(Fore.GREEN + "Building project for %s..." % rid + Style.RESET_ALL)
 
     if not skip_build:
-        publish_client("linux-x64", "Linux")
+        publish_client(rid, name)
 
-    print(Fore.GREEN + "Packaging Linux x64 client..." + Style.RESET_ALL)
+    print(Fore.GREEN + "Packaging %s client..." % rid + Style.RESET_ALL)
 
     client_zip = zipfile.ZipFile(
-        p("release", "Robust.Client_linux-x64.zip"), "w",
+        p("release", "Robust.Client_%s.zip" % rid), "w",
         compression=zipfile.ZIP_DEFLATED)
 
-    copy_dir_into_zip(p("bin", "Client", "linux-x64", "publish"), "", client_zip, IGNORED_FILES_LINUX)
+    copy_dir_into_zip(p("bin", "Client", rid, "publish"), "", client_zip, IGNORED_FILES_LINUX)
     copy_resources("Resources", client_zip)
     # Cool we're done.
     client_zip.close()

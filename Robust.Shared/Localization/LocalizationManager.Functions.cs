@@ -23,6 +23,7 @@ namespace Robust.Shared.Localization
             AddCtxFunction(bundle, "SUBJECT", FuncSubject);
             AddCtxFunction(bundle, "OBJECT", FuncObject);
             AddCtxFunction(bundle, "DAT-OBJ", FuncDatObj);
+            AddCtxFunction(bundle, "GENITIVE", FuncGenitive);
             AddCtxFunction(bundle, "POSS-ADJ", FuncPossAdj);
             AddCtxFunction(bundle, "POSS-PRONOUN", FuncPossPronoun);
             AddCtxFunction(bundle, "REFLEXIVE", FuncReflexive);
@@ -212,6 +213,15 @@ namespace Robust.Shared.Localization
         private ILocValue FuncDatObj(LocArgs args)
         {
             return new LocValueString(GetString("zzzz-dat-object", ("ent", args.Args[0])));
+        }
+
+        /// <summary>
+        /// Returns the respective genitive form (pronoun or possessive adjective) for the entity's gender.
+        /// This is used in languages with a genitive case to indicate possession or related relationships,
+        /// e.g., "у него" (Russian), "seines Vaters" (German).
+        private ILocValue FuncGenitive(LocArgs args)
+        {
+            return new LocValueString(GetString("zzzz-genitive", ("ent", args.Args[0])));
         }
 
         /// <summary>

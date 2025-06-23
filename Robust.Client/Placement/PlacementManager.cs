@@ -199,7 +199,14 @@ namespace Robust.Client.Placement
             }
         }
 
-        public string[] AllModeNames => [IPlacementManager.DefaultModeName, .. _modeDictionary.Keys.Order()];
+        private string[]? _allModeNames;
+        public string[] AllModeNames
+        {
+            get
+            {
+                return _allModeNames ??= [IPlacementManager.DefaultModeName, .. _modeDictionary.Keys.Order()];
+            }
+        }
 
         /// <inheritdoc />
         public event EventHandler? DirectionChanged;

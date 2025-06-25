@@ -2,10 +2,12 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Player;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 
@@ -68,13 +70,19 @@ public sealed class RobustCloneableTest() : RobustIntegrationTest
         await Task.WhenAll(server.WaitIdleAsync(), client.WaitIdleAsync());
 
         var sEntMan = server.EntMan;
+        var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
+        var confMan = server.ResolveDependency<IConfigurationManager>();
+        var mapMan = server.ResolveDependency<IMapManager>();
+        var cEntMan = client.EntMan;
         var cNetMan = client.ResolveDependency<IClientNetManager>();
+        var mapSys = sEntMan.EntitySysManager.GetEntitySystem<SharedMapSystem>();
 
+        MapId mapId = default;
         await server.WaitPost(() =>
         {
-            server.System<SharedMapSystem>().CreateMap(out var mapId);
+            server.System<SharedMapSystem>().CreateMap(out mapId);
             var coords = new MapCoordinates(0, 0, mapId);
-            var uid = sEntMan.Spawn(null, coords);
+            var uid = sEntMan.SpawnEntity(null, coords);
             var comp = sEntMan.EnsureComponent<RobustCloneableTestComponent>(uid);
             comp.TestClass.IntValue = 50;
             comp.TestStruct.IntValue = 60;
@@ -85,11 +93,32 @@ public sealed class RobustCloneableTest() : RobustIntegrationTest
         Assert.DoesNotThrow(() => client.SetConnectTarget(server));
         await client.WaitPost(() => cNetMan.ClientConnect(null!, 0, null!));
 
-        await Task.WhenAll(server.WaitRunTicks(1), client.WaitRunTicks(1));
+        async Task RunTicks()
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                await server.WaitRunTicks(1);
+                await client.WaitRunTicks(1);
+            }
+        }
+        await RunTicks();
+
+        EntityUid player = default;
+        await server.WaitPost(() =>
+        {
+            var coords = new MapCoordinates(0, 0, mapId);
+            player = sEntMan.SpawnEntity(null, coords);
+            var session = sPlayerMan.Sessions.First();
+            server.PlayerMan.SetAttachedEntity(session, player);
+            sPlayerMan.JoinGame(session);
+        });
+
+        await RunTicks();
 
         await server.WaitAssertion(() =>
         {
-            var ents = sEntMan.AllEntities<RobustCloneableTestComponent>().ToList();
+            Assert.That(cNetMan.IsConnected, Is.True);
+            var ents = cEntMan.AllEntities<RobustCloneableTestComponent>().ToList();
             Assert.That(ents, Has.Count.EqualTo(1));
             var testEnt = ents[0];
 

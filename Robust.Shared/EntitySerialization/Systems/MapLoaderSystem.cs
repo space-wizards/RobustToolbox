@@ -47,6 +47,7 @@ public sealed partial class MapLoaderSystem : EntitySystem
         Log.Info($"Saving serialized results to {path}");
         path = path.ToRootedPath();
         var document = new YamlDocument(data.ToYaml());
+        _resourceManager.UserData.CreateDir(path.Directory);
         using var writer = _resourceManager.UserData.OpenWriteText(path);
         {
             var stream = new YamlStream {document};
@@ -63,6 +64,13 @@ public sealed partial class MapLoaderSystem : EntitySystem
             return false;
 
         Log.Info($"Loading file: {resPath}");
+        return TryReadFile(reader, out data);
+    }
+
+    private bool TryReadFile(TextReader reader, [NotNullWhen(true)] out MappingDataNode? data)
+    {
+        data = null;
+
         _stopwatch.Restart();
 
         using var textReader = reader;

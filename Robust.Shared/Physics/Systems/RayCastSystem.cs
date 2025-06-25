@@ -275,6 +275,9 @@ public sealed partial class RayCastSystem : EntitySystem
             case PhysShapeCircle circle:
                 CastCircle(entity, ref result, circle, originTransform, translation, filter, callback);
                 break;
+            case SlimPolygon slim:
+                CastPolygon(entity, ref result, new PolygonShape(slim), originTransform, translation, filter, callback);
+                break;
             case Polygon poly:
                 CastPolygon(entity, ref result, new PolygonShape(poly), originTransform, translation, filter, callback);
                 break;

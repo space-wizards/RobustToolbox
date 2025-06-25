@@ -42,6 +42,31 @@ public sealed partial class MapLoaderSystem
     }
 
     /// <summary>
+    /// Tries to load entities from a YAML file, taking in a raw byte stream.
+    /// </summary>
+    /// <param name="file">The file contents to load from.</param>
+    /// <param name="fileName">
+    /// The name of the file being loaded. This is used purely for logging/informational purposes.
+    /// </param>
+    /// <param name="result">The result of the load operation.</param>
+    /// <param name="options">Options for the load operation.</param>
+    /// <returns>True if the load succeeded, false otherwise.</returns>
+    /// <seealso cref="M:Robust.Shared.EntitySerialization.Systems.MapLoaderSystem.TryLoadGeneric(Robust.Shared.Utility.ResPath,Robust.Shared.EntitySerialization.LoadResult@,System.Nullable{Robust.Shared.EntitySerialization.MapLoadOptions})"/>
+    public bool TryLoadGeneric(
+        Stream file,
+        string fileName,
+        [NotNullWhen(true)] out LoadResult? result,
+        MapLoadOptions? options = null)
+    {
+        result = null;
+
+        if (!TryReadFile(new StreamReader(file), out var data))
+            return false;
+
+        return TryLoadGeneric(data, fileName, out result, options);
+    }
+
+    /// <summary>
     /// Tries to load entities from a yaml file. Whenever possible, you should try to use <see cref="TryLoadMap"/>,
     /// <see cref="TryLoadGrid"/>, or <see cref="TryLoadEntity"/> instead.
     /// </summary>
@@ -54,6 +79,17 @@ public sealed partial class MapLoaderSystem
 
         if (!TryReadFile(file, out var data))
             return false;
+
+        return TryLoadGeneric(data, file.ToString(), out result, options);
+    }
+
+    private bool TryLoadGeneric(
+        MappingDataNode data,
+        string fileName,
+        [NotNullWhen(true)] out LoadResult? result,
+        MapLoadOptions? options = null)
+    {
+        result = null;
 
         _stopwatch.Restart();
         var ev = new BeforeEntityReadEvent();
@@ -85,7 +121,7 @@ public sealed partial class MapLoaderSystem
 
         if (!deserializer.TryProcessData())
         {
-            Log.Debug($"Failed to process entity data in {file}");
+            Log.Debug($"Failed to process entity data in {fileName}");
             return false;
         }
 
@@ -95,7 +131,7 @@ public sealed partial class MapLoaderSystem
         }
         catch (Exception e)
         {
-            Log.Error($"Caught exception while creating entities: {e}");
+            Log.Error($"Caught exception while creating entities for map {fileName}: {e}");
             Delete(deserializer.Result);
             throw;
         }
@@ -103,7 +139,7 @@ public sealed partial class MapLoaderSystem
         if (opts.ExpectedCategory is { } exp && exp != deserializer.Result.Category)
         {
             // Did someone try to load a map file as a grid or vice versa?
-            Log.Error($"File does not contain the expected data. Expected {exp} but got {deserializer.Result.Category}");
+            Log.Error($"Map {fileName} does not contain the expected data. Expected {exp} but got {deserializer.Result.Category}");
             Delete(deserializer.Result);
             return false;
         }
@@ -201,6 +237,35 @@ public sealed partial class MapLoaderSystem
 
         Delete(result);
         return false;
+    }
+
+    /// <summary>
+    /// Tries to load a grid entity from a file and parent it to a newly created map.
+    /// If the file does not contain exactly one grid, this will return false and delete loaded entities.
+    /// </summary>
+    public bool TryLoadGrid(
+        ResPath path,
+        [NotNullWhen(true)] out Entity<MapComponent>? map,
+        [NotNullWhen(true)] out Entity<MapGridComponent>? grid,
+        DeserializationOptions? options = null,
+        Vector2 offset = default,
+        Angle rot = default)
+    {
+        var opts = options ?? DeserializationOptions.Default;
+
+        var mapUid = _mapSystem.CreateMap(out var mapId, runMapInit: opts.InitializeMaps);
+        if (opts.PauseMaps)
+            _mapSystem.SetPaused(mapUid, true);
+
+        if (!TryLoadGrid(mapId, path, out grid, options, offset, rot))
+        {
+            Del(mapUid);
+            map = null;
+            return false;
+        }
+
+        map = new(mapUid, Comp<MapComponent>(mapUid));
+        return true;
     }
 
     private void ApplyTransform(EntityDeserializer deserializer, MapLoadOptions opts)

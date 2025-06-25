@@ -9,6 +9,7 @@ using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Shapes;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Utility;
 
@@ -406,7 +407,7 @@ public sealed partial class EntityLookupSystem
         var broadphaseInv = _transform.GetInvWorldMatrix(lookupUid);
 
         var localBounds = broadphaseInv.TransformBounds(worldBounds);
-        var polygon = _physics.GetPooled(localBounds);
+        var polygon = new SlimPolygon(localBounds);
         var result = AnyEntitiesIntersecting(lookupUid,
             polygon,
             localBounds.CalcBoundingBox(),
@@ -414,7 +415,6 @@ public sealed partial class EntityLookupSystem
             flags,
             ignored);
 
-        _physics.ReturnPooled(polygon);
         return result;
     }
 
@@ -429,7 +429,7 @@ public sealed partial class EntityLookupSystem
         float arcWidth,
         LookupFlags flags = DefaultFlags)
     {
-        var position = coordinates.ToMap(EntityManager, _transform);
+        var position = _transform.ToMapCoordinates(coordinates);
 
         return GetEntitiesInArc(position, range, direction, arcWidth, flags);
     }
@@ -458,9 +458,8 @@ public sealed partial class EntityLookupSystem
     {
         if (mapId == MapId.Nullspace) return false;
 
-        var polygon = _physics.GetPooled(worldAABB);
+        var polygon = new SlimPolygon(worldAABB);
         var result = AnyEntitiesIntersecting(mapId, polygon, Physics.Transform.Empty, flags);
-        _physics.ReturnPooled(polygon);
         return result;
     }
 
@@ -475,9 +474,8 @@ public sealed partial class EntityLookupSystem
     {
         if (mapId == MapId.Nullspace) return;
 
-        var polygon = _physics.GetPooled(worldAABB);
+        var polygon = new SlimPolygon(worldAABB);
         AddEntitiesIntersecting(mapId, intersecting, polygon, Physics.Transform.Empty, flags);
-        _physics.ReturnPooled(polygon);
     }
 
     #endregion
@@ -487,18 +485,16 @@ public sealed partial class EntityLookupSystem
     public bool AnyEntitiesIntersecting(MapId mapId, Box2Rotated worldBounds, LookupFlags flags = DefaultFlags)
     {
         // Don't need to check contained entities as they have the same bounds as the parent.
-        var polygon = _physics.GetPooled(worldBounds);
+        var polygon = new SlimPolygon(worldBounds);
         var result = AnyEntitiesIntersecting(mapId, polygon, Physics.Transform.Empty, flags);
-        _physics.ReturnPooled(polygon);
         return result;
     }
 
     public HashSet<EntityUid> GetEntitiesIntersecting(MapId mapId, Box2Rotated worldBounds, LookupFlags flags = DefaultFlags)
     {
         var intersecting = new HashSet<EntityUid>();
-        var polygon = _physics.GetPooled(worldBounds);
+        var polygon = new SlimPolygon(worldBounds);
         AddEntitiesIntersecting(mapId, intersecting, polygon, Physics.Transform.Empty, flags);
-        _physics.ReturnPooled(polygon);
         return intersecting;
     }
 
@@ -632,7 +628,7 @@ public sealed partial class EntityLookupSystem
         if (!coordinates.IsValid(EntityManager))
             return false;
 
-        var mapPos = coordinates.ToMap(EntityManager, _transform);
+        var mapPos = _transform.ToMapCoordinates(coordinates);
         return AnyEntitiesIntersecting(mapPos, flags);
     }
 
@@ -641,13 +637,13 @@ public sealed partial class EntityLookupSystem
         if (!coordinates.IsValid(EntityManager))
             return false;
 
-        var mapPos = coordinates.ToMap(EntityManager, _transform);
+        var mapPos = _transform.ToMapCoordinates(coordinates);
         return AnyEntitiesInRange(mapPos, range, flags);
     }
 
     public HashSet<EntityUid> GetEntitiesIntersecting(EntityCoordinates coordinates, LookupFlags flags = DefaultFlags)
     {
-        var mapPos = coordinates.ToMap(EntityManager, _transform);
+        var mapPos = _transform.ToMapCoordinates(coordinates);
         return GetEntitiesIntersecting(mapPos, flags);
     }
 
@@ -660,7 +656,7 @@ public sealed partial class EntityLookupSystem
 
     public void GetEntitiesInRange(EntityCoordinates coordinates, float range, HashSet<EntityUid> entities, LookupFlags flags = DefaultFlags)
     {
-        var mapPos = coordinates.ToMap(EntityManager, _transform);
+        var mapPos = _transform.ToMapCoordinates(coordinates);
 
         if (mapPos.MapId == MapId.Nullspace)
             return;
@@ -761,11 +757,10 @@ public sealed partial class EntityLookupSystem
             return;
 
         var localAABB = _transform.GetInvWorldMatrix(gridId).TransformBox(worldAABB);
-        var polygon = _physics.GetPooled(localAABB);
+        var polygon = new SlimPolygon(localAABB);
 
         AddEntitiesIntersecting(gridId, intersecting, polygon, localAABB, Physics.Transform.Empty, flags, lookup);
         AddContained(intersecting, flags);
-        _physics.ReturnPooled(polygon);
     }
 
     public void GetEntitiesIntersecting(EntityUid gridId, Box2Rotated worldBounds, HashSet<EntityUid> intersecting, LookupFlags flags = DefaultFlags)
@@ -774,11 +769,10 @@ public sealed partial class EntityLookupSystem
             return;
 
         var localBounds = _transform.GetInvWorldMatrix(gridId).TransformBounds(worldBounds);
-        var polygon = _physics.GetPooled(localBounds);
+        var polygon = new SlimPolygon(localBounds);
 
         AddEntitiesIntersecting(gridId, intersecting, polygon, localBounds.CalcBoundingBox(), Physics.Transform.Empty, flags, lookup);
         AddContained(intersecting, flags);
-        _physics.ReturnPooled(polygon);
     }
 
     #endregion

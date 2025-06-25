@@ -155,15 +155,15 @@ public sealed class EntitySerializer : ISerializationContext,
     public event IsSerializableDelegate? OnIsSerializeable;
     public delegate void IsSerializableDelegate(Entity<MetaDataComponent> ent, ref bool serializable);
 
-    public EntitySerializer(IDependencyCollection _dependency, SerializationOptions options)
+    public EntitySerializer(IDependencyCollection dependency, SerializationOptions options)
     {
-        _dependency.InjectDependencies(this);
+        dependency.InjectDependencies(this);
 
         _log = _logMan.GetSawmill("entity_serializer");
         SerializerProvider.RegisterSerializer(this);
 
-        _metaName = _factory.GetComponentName(typeof(MetaDataComponent));
-        _xformName = _factory.GetComponentName(typeof(TransformComponent));
+        _metaName = _factory.GetComponentName<MetaDataComponent>();
+        _xformName = _factory.GetComponentName<TransformComponent>();
         _emptyMetaNode = _serialization.WriteValueAs<MappingDataNode>(typeof(MetaDataComponent), new MetaDataComponent(), alwaysWrite: true, context: this);
 
         CurrentComponent = _xformName;
@@ -271,7 +271,10 @@ public sealed class EntitySerializer : ISerializationContext,
         foreach (var (origId, prototypeId) in savedMap)
         {
             if (_tileDef.TryGetDefinition(prototypeId, out var definition))
+            {
                 _tileMap.TryAdd(definition.TileId, origId);
+                _yamlTileIds.Add(origId); // Make sure we record the IDs we're using so when we need to reserve new ones we can
+            }
         }
     }
 
@@ -593,7 +596,7 @@ public sealed class EntitySerializer : ISerializationContext,
     public MappingDataNode Write()
     {
         DebugTools.AssertEqual(Maps.ToHashSet().Count, Maps.Count, "Duplicate maps?");
-        DebugTools.AssertEqual(Grids.ToHashSet().Count, Grids.Count, "Duplicate frids?");
+        DebugTools.AssertEqual(Grids.ToHashSet().Count, Grids.Count, "Duplicate grids?");
         DebugTools.AssertEqual(Orphans.ToHashSet().Count, Orphans.Count, "Duplicate orphans?");
         DebugTools.AssertEqual(Nullspace.ToHashSet().Count, Nullspace.Count, "Duplicate nullspace?");
 

@@ -8,6 +8,7 @@ using Robust.Client.UserInterface.Stylesheets;
 using Robust.Client.UserInterface.XAML;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 
 namespace Robust.Client.UserInterface
 {
@@ -26,6 +27,7 @@ namespace Robust.Client.UserInterface
             TabContainer.SetTabTitle(DebugConsole, "Debug Console");
             TabContainer.SetTabTitle(UI, "User Interface");
             TabContainer.SetTabTitle(Perf, "Profiling");
+            TabContainer.SetTabTitle(Textures, Loc.GetString("dev-window-tab-textures-title"));
 
             Stylesheet =
                 new DefaultStylesheet(IoCManager.Resolve<IResourceCache>(), IoCManager.Resolve<IUserInterfaceManager>()).Stylesheet;

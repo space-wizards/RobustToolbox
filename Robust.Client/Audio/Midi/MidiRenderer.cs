@@ -16,7 +16,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.Audio.Midi;
 
-internal sealed class MidiRenderer : IMidiRenderer
+internal sealed partial class MidiRenderer : IMidiRenderer
 {
     private readonly IMidiManager _midiManager;
     private readonly ITaskManager _taskManager;
@@ -226,6 +226,9 @@ internal sealed class MidiRenderer : IMidiRenderer
             if (value == _master)
                 return;
 
+            if (CheckMasterCycle(value))
+                throw new InvalidOperationException("Tried to set master to a child of this renderer!");
+
             if (_master is { Disposed: false })
             {
                 try
@@ -430,15 +433,6 @@ internal sealed class MidiRenderer : IMidiRenderer
     public void ClearAllEvents()
     {
         _sequencer.RemoveEvents(SequencerClientId.Wildcard, SequencerClientId.Wildcard, -1);
-    }
-
-    public void LoadSoundfont(string filename, bool resetPresets = true)
-    {
-        lock (_playerStateLock)
-        {
-            _synth.LoadSoundFont(filename, resetPresets);
-            MidiSoundfont = 1;
-        }
     }
 
     void IMidiRenderer.Render()
@@ -728,5 +722,23 @@ internal sealed class MidiRenderer : IMidiRenderer
 
         _synth?.Dispose();
         _player?.Dispose();
+    }
+
+    /// <summary>
+    /// Check that a given renderer is not already a child of this renderer, i.e. it would introduce a cycle if set as master of this renderer.
+    /// </summary>
+    private bool CheckMasterCycle(IMidiRenderer? otherRenderer)
+    {
+        // Doesn't inside drift, cringe.
+
+        while (otherRenderer != null)
+        {
+            if (otherRenderer == this)
+                return true;
+
+            otherRenderer = otherRenderer.Master;
+        }
+
+        return false;
     }
 }

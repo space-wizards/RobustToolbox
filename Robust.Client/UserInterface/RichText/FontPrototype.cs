@@ -4,7 +4,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.RichText;
 
-[Prototype("font")]
+[Prototype]
 public sealed partial class FontPrototype : IPrototype
 {
     [IdDataField]

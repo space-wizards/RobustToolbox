@@ -31,6 +31,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
@@ -93,6 +94,8 @@ namespace Robust.Client
         [Dependency] private readonly IReplayPlaybackManager _replayPlayback = default!;
         [Dependency] private readonly IReplayRecordingManagerInternal _replayRecording = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IReloadManager _reload = default!;
+        [Dependency] private readonly ILocalizationManager _loc = default!;
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -157,6 +160,7 @@ namespace Robust.Client
             }
 
             _serializationManager.Initialize();
+            _loc.Initialize();
 
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
@@ -185,6 +189,7 @@ namespace Robust.Client
             // before prototype load.
             ProgramShared.FinishCheckBadFileExtensions(checkBadExtensions);
 
+            _reload.Initialize();
             _reflectionManager.Initialize();
             _prototypeManager.Initialize();
             _prototypeManager.LoadDefaultPrototypes();

@@ -238,15 +238,15 @@ internal sealed partial class CollisionManager
 	    }
 
 	    var pointCount = 0;
+        var points = manifold.Points.AsSpan;
+
 	    for (var i = 0; i < 2; ++i)
 	    {
-		    float separation;
-
-		    separation = Vector2.Dot(refFace.normal, clipPoints2[i].V - refFace.v1);
+            var separation = Vector2.Dot(refFace.normal, clipPoints2[i].V - refFace.v1);
 
 		    if (separation <= radius)
 		    {
-			    ref var cp = ref manifold.Points[pointCount];
+			    ref var cp = ref points[pointCount];
 
 			    if (primaryAxis.Type == EPAxisType.EdgeA)
 			    {

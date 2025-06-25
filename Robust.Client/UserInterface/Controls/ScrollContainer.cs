@@ -28,6 +28,30 @@ namespace Robust.Client.UserInterface.Controls
         public int ScrollSpeedX { get; set; } = 50;
         public int ScrollSpeedY { get; set; } = 50;
 
+        public float VScroll
+        {
+            get => _vScrollBar.Value;
+            set => _vScrollBar.Value = value;
+        }
+
+        public float VScrollTarget
+        {
+            get => _vScrollBar.ValueTarget;
+            set => _vScrollBar.ValueTarget = value;
+        }
+
+        public float HScroll
+        {
+            get => _hScrollBar.Value;
+            set => _hScrollBar.Value = value;
+        }
+
+        public float HScrollTarget
+        {
+            get => _hScrollBar.ValueTarget;
+            set => _hScrollBar.ValueTarget = value;
+        }
+
         private bool _reserveScrollbarSpace;
         public bool ReserveScrollbarSpace
         {

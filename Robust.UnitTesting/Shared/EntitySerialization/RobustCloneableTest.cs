@@ -98,5 +98,10 @@ public sealed class RobustCloneableTest() : RobustIntegrationTest
             Assert.That(testEnt.Comp.NullableTestStruct, Is.Not.Null);
             Assert.That(testEnt.Comp.NullableTestStruct!.Value.IntValue, Is.EqualTo(70));
         });
+
+        // Disconnect client
+        await client.WaitPost(() => cNetMan.ClientDisconnect(""));
+        await server.WaitRunTicks(5);
+        await client.WaitRunTicks(5);
     }
 }

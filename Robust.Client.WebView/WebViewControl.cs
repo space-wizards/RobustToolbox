@@ -14,12 +14,28 @@ namespace Robust.Client.WebView
         [Dependency] private readonly IWebViewManagerInternal _webViewManager = default!;
 
         private readonly IWebViewControlImpl _controlImpl;
+        private bool _alwaysActive;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public string Url
         {
             get => _controlImpl.Url;
             set => _controlImpl.Url = value;
+        }
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool AlwaysActive
+        {
+            get => _alwaysActive;
+            set
+            {
+                _alwaysActive = value;
+
+                if (_alwaysActive && !_controlImpl.IsOpen)
+                    _controlImpl.StartBrowser();
+                else if (!_alwaysActive && _controlImpl.IsOpen && !IsInsideTree)
+                    _controlImpl.CloseBrowser();
+            }
         }
 
         [ViewVariables] public bool IsLoading => _controlImpl.IsLoading;
@@ -39,14 +55,16 @@ namespace Robust.Client.WebView
         {
             base.EnteredTree();
 
-            _controlImpl.EnteredTree();
+            if (!_controlImpl.IsOpen)
+                _controlImpl.StartBrowser();
         }
 
         protected override void ExitedTree()
         {
             base.ExitedTree();
 
-            _controlImpl.ExitedTree();
+            if (!_alwaysActive)
+                _controlImpl.CloseBrowser();
         }
 
         protected internal override void MouseMove(GUIMouseMoveEventArgs args)

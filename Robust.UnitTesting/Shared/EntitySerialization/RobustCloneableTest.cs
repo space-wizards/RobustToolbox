@@ -71,11 +71,8 @@ public sealed class RobustCloneableTest() : RobustIntegrationTest
 
         var sEntMan = server.EntMan;
         var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
-        var confMan = server.ResolveDependency<IConfigurationManager>();
-        var mapMan = server.ResolveDependency<IMapManager>();
         var cEntMan = client.EntMan;
         var cNetMan = client.ResolveDependency<IClientNetManager>();
-        var mapSys = sEntMan.EntitySysManager.GetEntitySystem<SharedMapSystem>();
 
         MapId mapId = default;
         await server.WaitPost(() =>

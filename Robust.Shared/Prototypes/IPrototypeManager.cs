@@ -91,7 +91,7 @@ public interface IPrototypeManager
     /// <summary>
     /// Index for a <see cref="IPrototype"/> by ID.
     /// </summary>
-    /// <exception cref="KeyNotFoundException">
+    /// <exception cref="UnknownPrototypeException">
     /// Thrown if the type of prototype is not registered.
     /// </exception>
     T Index<T>(string id) where T : class, IPrototype;
@@ -105,7 +105,7 @@ public interface IPrototypeManager
     /// <summary>
     /// Index for a <see cref="IPrototype"/> by ID.
     /// </summary>
-    /// <exception cref="KeyNotFoundException">
+    /// <exception cref="UnknownPrototypeException">
     /// Thrown if the ID does not exist or the kind of prototype is not registered.
     /// </exception>
     IPrototype Index(Type kind, string id);

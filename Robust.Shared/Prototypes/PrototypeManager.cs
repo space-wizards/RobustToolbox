@@ -279,7 +279,14 @@ namespace Robust.Shared.Prototypes
                 throw new InvalidOperationException("No prototypes have been loaded yet.");
             }
 
-            return _kinds[kind].Instances[id];
+            try
+            {
+                return _kinds[kind].Instances[id];
+            }
+            catch (KeyNotFoundException)
+            {
+                throw new UnknownPrototypeException(id, kind);
+            }
         }
 
         /// <inheritdoc />

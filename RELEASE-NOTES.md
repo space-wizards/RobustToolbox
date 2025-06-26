@@ -43,6 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
+* Sprite scale is now correctly applied to sprite boundaries in `SpriteSystem.GetLocalBounds`.
 * Fixed documentation for `IPrototypeManager.Index<T>` stating that `KeyNotFoundException` gets thrown, when in actuality `UnknownPrototypeException` gets thrown.
 
 ### Other

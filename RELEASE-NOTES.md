@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* `IPrototypeManager.Index(Type kind, string id)` now throws `UnknownPrototypeException` instead of `KeyNotFoundException`, for consistency with `IPrototypeManager.Index<T>`.
 
 ### New features
 
@@ -44,6 +44,7 @@ END TEMPLATE-->
 ### Bugfixes
 
 * Sprite scale is now correctly applied to sprite boundaries in `SpriteSystem.GetLocalBounds`.
+* Fixed documentation for `IPrototypeManager.Index<T>` stating that `KeyNotFoundException` gets thrown, when in actuality `UnknownPrototypeException` gets thrown.
 
 ### Other
 

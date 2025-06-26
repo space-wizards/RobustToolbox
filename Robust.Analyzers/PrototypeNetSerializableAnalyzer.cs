@@ -61,7 +61,7 @@ public sealed class PrototypeNetSerializableAnalyzer : DiagnosticAnalyzer
         if (!TypeSymbolHelper.ImplementsInterface(symbol, prototypeInterface))
             return;
 
-        if (AttributeHelper.HasAttribute(symbol, netSerializableAttribute, out var attribute))
+        if (AttributeHelper.HasAttribute(symbol, netSerializableAttribute, out _))
         {
             symbolContext.ReportDiagnostic(
                 Diagnostic.Create(RuleNetSerializable, symbol.Locations[0], symbol.ToDisplayString()));

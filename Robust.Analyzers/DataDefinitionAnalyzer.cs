@@ -102,23 +102,31 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
 
-        context.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.ClassDeclaration);
-        context.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.StructDeclaration);
-        context.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.RecordDeclaration);
-        context.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.RecordStructDeclaration);
-        context.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.InterfaceDeclaration);
+        context.RegisterSymbolStartAction(symbolContext =>
+        {
+            if (symbolContext.Symbol is not INamedTypeSymbol typeSymbol)
+                return;
 
-        context.RegisterSyntaxNodeAction(AnalyzeDataField, SyntaxKind.FieldDeclaration);
-        context.RegisterSyntaxNodeAction(AnalyzeDataFieldProperty, SyntaxKind.PropertyDeclaration);
+            if (!IsDataDefinition(typeSymbol))
+                return;
+
+            symbolContext.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.ClassDeclaration);
+            symbolContext.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.StructDeclaration);
+            symbolContext.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.RecordDeclaration);
+            symbolContext.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.RecordStructDeclaration);
+            symbolContext.RegisterSyntaxNodeAction(AnalyzeDataDefinition, SyntaxKind.InterfaceDeclaration);
+
+            symbolContext.RegisterSyntaxNodeAction(AnalyzeDataField, SyntaxKind.FieldDeclaration);
+            symbolContext.RegisterSyntaxNodeAction(AnalyzeDataFieldProperty, SyntaxKind.PropertyDeclaration);
+        }, SymbolKind.NamedType);
     }
 
-    private void AnalyzeDataDefinition(SyntaxNodeAnalysisContext context)
+    private static void AnalyzeDataDefinition(SyntaxNodeAnalysisContext context)
     {
         if (context.Node is not TypeDeclarationSyntax declaration)
             return;
 
-        var type = context.SemanticModel.GetDeclaredSymbol(declaration)!;
-        if (!IsDataDefinition(type))
+        if (context.ContainingSymbol is not INamedTypeSymbol type)
             return;
 
         if (!IsPartial(declaration))
@@ -129,7 +137,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         var containingType = type.ContainingType;
         while (containingType != null)
         {
-            var containingTypeDeclaration = (TypeDeclarationSyntax) containingType.DeclaringSyntaxReferences[0].GetSyntax();
+            var containingTypeDeclaration = (TypeDeclarationSyntax)containingType.DeclaringSyntaxReferences[0].GetSyntax();
             if (!IsPartial(containingTypeDeclaration))
             {
                 context.ReportDiagnostic(Diagnostic.Create(NestedDataDefinitionPartialRule, containingTypeDeclaration.Keyword.GetLocation(), containingType.Name, type.Name));
@@ -139,23 +147,22 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         }
     }
 
-    private void AnalyzeDataField(SyntaxNodeAnalysisContext context)
+    private static void AnalyzeDataField(SyntaxNodeAnalysisContext context)
     {
         if (context.Node is not FieldDeclarationSyntax field)
             return;
 
-        var typeDeclaration = field.FirstAncestorOrSelf<TypeDeclarationSyntax>();
-        if (typeDeclaration == null)
-            return;
-
-        var type = context.SemanticModel.GetDeclaredSymbol(typeDeclaration)!;
-        if (!IsDataDefinition(type))
+        if (context.ContainingSymbol?.ContainingType is not INamedTypeSymbol type)
             return;
 
         foreach (var variable in field.Declaration.Variables)
         {
             var fieldSymbol = context.SemanticModel.GetDeclaredSymbol(variable);
+
             if (fieldSymbol == null)
+                continue;
+
+            if (!IsDataField(fieldSymbol, out _, out var datafieldAttribute))
                 continue;
 
             if (IsReadOnlyDataField(type, fieldSymbol))
@@ -164,7 +171,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
                 context.ReportDiagnostic(Diagnostic.Create(DataFieldWritableRule, location, fieldSymbol.Name, type.Name));
             }
 
-            if (HasRedundantTag(fieldSymbol))
+            if (HasRedundantTag(fieldSymbol, datafieldAttribute))
             {
                 TryGetAttributeLocation(field, DataFieldAttributeName, out var location);
                 context.ReportDiagnostic(Diagnostic.Create(DataFieldRedundantTagRule, location, fieldSymbol.Name, type.Name));
@@ -191,21 +198,24 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         }
     }
 
-    private void AnalyzeDataFieldProperty(SyntaxNodeAnalysisContext context)
+    private static void AnalyzeDataFieldProperty(SyntaxNodeAnalysisContext context)
     {
         if (context.Node is not PropertyDeclarationSyntax property)
             return;
 
-        var typeDeclaration = property.FirstAncestorOrSelf<TypeDeclarationSyntax>();
-        if (typeDeclaration == null)
+        if (context.ContainingSymbol is not IPropertySymbol propertySymbol)
             return;
 
-        var type = context.SemanticModel.GetDeclaredSymbol(typeDeclaration)!;
-        if (!IsDataDefinition(type) || type.IsRecord || type.IsValueType)
+        if (propertySymbol.ContainingType is not INamedTypeSymbol type)
             return;
 
-        var propertySymbol = context.SemanticModel.GetDeclaredSymbol(property);
+        if (type.IsRecord || type.IsValueType)
+            return;
+
         if (propertySymbol == null)
+            return;
+
+        if (!IsDataField(propertySymbol, out _, out var datafieldAttribute))
             return;
 
         if (IsReadOnlyDataField(type, propertySymbol))
@@ -214,7 +224,7 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
             context.ReportDiagnostic(Diagnostic.Create(DataFieldPropertyWritableRule, location, propertySymbol.Name, type.Name));
         }
 
-        if (HasRedundantTag(propertySymbol))
+        if (HasRedundantTag(propertySymbol, datafieldAttribute))
         {
             TryGetAttributeLocation(property, DataFieldAttributeName, out var location);
             context.ReportDiagnostic(Diagnostic.Create(DataFieldRedundantTagRule, location, propertySymbol.Name, type.Name));
@@ -242,9 +252,6 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
 
     private static bool IsReadOnlyDataField(ITypeSymbol type, ISymbol field)
     {
-        if (!IsDataField(field, out _, out _))
-            return false;
-
         return IsReadOnlyMember(type, field);
     }
 
@@ -369,17 +376,14 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
         return false;
     }
 
-    private static bool HasRedundantTag(ISymbol symbol)
+    private static bool HasRedundantTag(ISymbol symbol, AttributeData datafieldAttribute)
     {
-        if (!IsDataField(symbol, out var _, out var attribute))
-            return false;
-
         // No args, no problem
-        if (attribute.ConstructorArguments.Length == 0)
+        if (datafieldAttribute.ConstructorArguments.Length == 0)
             return false;
 
         // If a tag is explicitly specified, it will be the first argument...
-        var tagArgument = attribute.ConstructorArguments[0];
+        var tagArgument = datafieldAttribute.ConstructorArguments[0];
         // ...but the first arg could also something else, since tag is optional
         // so we make sure that it's a string
         if (tagArgument.Value is not string explicitName)
@@ -394,9 +398,6 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
 
     private static bool HasVVReadWrite(ISymbol symbol)
     {
-        if (!IsDataField(symbol, out _, out _))
-            return false;
-
         // Make sure it has ViewVariablesAttribute
         AttributeData? viewVariablesAttribute = null;
         foreach (var attr in symbol.GetAttributes())
@@ -422,9 +423,6 @@ public sealed class DataDefinitionAnalyzer : DiagnosticAnalyzer
 
     private static bool IsNotYamlSerializable(ISymbol field, ITypeSymbol type)
     {
-        if (!IsDataField(field, out _, out _))
-            return false;
-
         return HasAttribute(type, NotYamlSerializableName);
     }
 

@@ -18,6 +18,10 @@
     <EmbeddedResource Include="..\Robust.Shared\Analyzers\ObsoleteInheritanceAttribute.cs" LogicalName="Robust.Shared.Analyzers.ObsoleteInheritanceAttribute.cs" LinkBase="Implementations" />
     <EmbeddedResource Include="..\Robust.Shared\IoC\DependencyAttribute.cs" LogicalName="Robust.Shared.IoC.DependencyAttribute.cs" LinkBase="Implementations" />
     <EmbeddedResource Include="..\Robust.Shared\GameObjects\EventBusAttributes.cs" LogicalName="Robust.Shared.GameObjects.EventBusAttributes.cs" LinkBase="Implementations" />
+    <EmbeddedResource Include="..\Robust.Shared\Serialization\NetSerializableAttribute.cs" LogicalName="Robust.Shared.Serialization.NetSerializableAttribute.cs" LinkBase="Implementations" />
+    <EmbeddedResource Include="..\Robust.Shared\Prototypes\Attributes.cs" LogicalName="Robust.Shared.Prototypes.Attributes.cs" LinkBase="Implementations" />
+    <EmbeddedResource Include="..\Robust.Shared\Prototypes\IPrototype.cs" LogicalName="Robust.Shared.Prototypes.IPrototype.cs" LinkBase="Implementations" />
+    <EmbeddedResource Include="..\Robust.Shared\Serialization\Manager\Attributes\DataFieldAttribute.cs" LogicalName="Robust.Shared.Serialization.Manager.Attributes.DataFieldAttribute.cs" LinkBase="Implementations" />
   </ItemGroup>
 
   <PropertyGroup>

@@ -16,7 +16,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.Audio.Midi;
 
-internal sealed class MidiRenderer : IMidiRenderer
+internal sealed partial class MidiRenderer : IMidiRenderer
 {
     private readonly IMidiManager _midiManager;
     private readonly ITaskManager _taskManager;
@@ -433,15 +433,6 @@ internal sealed class MidiRenderer : IMidiRenderer
     public void ClearAllEvents()
     {
         _sequencer.RemoveEvents(SequencerClientId.Wildcard, SequencerClientId.Wildcard, -1);
-    }
-
-    public void LoadSoundfont(string filename, bool resetPresets = true)
-    {
-        lock (_playerStateLock)
-        {
-            _synth.LoadSoundFont(filename, resetPresets);
-            MidiSoundfont = 1;
-        }
     }
 
     void IMidiRenderer.Render()

@@ -141,7 +141,7 @@ namespace Robust.Client.UserInterface
                 if (Controls == null || !Controls.TryGetValue(nodeIndex, out var control))
                     continue;
 
-                control.Measure(new Vector2(Width, Height));
+                control.Measure(new Vector2(maxSizeX, Height));
 
                 var desiredSize = control.DesiredPixelSize;
                 var controlMetrics = new CharMetrics(

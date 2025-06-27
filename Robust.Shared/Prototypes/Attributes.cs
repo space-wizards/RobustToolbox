@@ -1,6 +1,8 @@
 ﻿using System;
+#if !ROBUST_ANALYZERS_TEST
 using JetBrains.Annotations;
 using Robust.Shared.Serialization.Manager.Attributes;
+#endif
 
 namespace Robust.Shared.Prototypes;
 
@@ -9,10 +11,12 @@ namespace Robust.Shared.Prototypes;
 /// To prevent needing to instantiate it because interfaces can't declare statics.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
+#if !ROBUST_ANALYZERS_TEST
 [BaseTypeRequired(typeof(IPrototype))]
 [MeansImplicitUse]
 [MeansDataDefinition]
 [Virtual]
+#endif
 public class PrototypeAttribute : Attribute
 {
     /// <summary>
@@ -35,10 +39,12 @@ public class PrototypeAttribute : Attribute
 }
 
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
+#if !ROBUST_ANALYZERS_TEST
 [BaseTypeRequired(typeof(IPrototype))]
 [MeansImplicitUse]
 [MeansDataDefinition]
 [MeansDataRecord]
+#endif
 public sealed class PrototypeRecordAttribute : PrototypeAttribute
 {
     public PrototypeRecordAttribute(string type, int loadPriority = 1) : base(type, loadPriority)

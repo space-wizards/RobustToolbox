@@ -665,7 +665,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
     /// <param name="coordinates">The coordinates at which to play the audio.</param>
     public (EntityUid Entity, Components.AudioComponent Component)? PlayStatic(SoundSpecifier? sound, Filter playerFilter, EntityCoordinates coordinates, bool recordReplay, AudioParams? audioParams = null)
     {
-        return sound == null ? null : PlayStatic(ResolveSound(sound), playerFilter, coordinates, recordReplay, audioParams);
+        return sound == null ? null : PlayStatic(ResolveSound(sound), playerFilter, coordinates, recordReplay, audioParams ?? sound.Params);
     }
 
     /// <summary>

@@ -191,8 +191,16 @@ namespace Robust.Client.Console
             var shell = new ConsoleShell(this, session ?? _player.LocalSession, session == null);
             var cmdArgs = args.ToArray();
 
-            AnyCommandExecuted?.Invoke(shell, commandName, command, cmdArgs);
-            cmd.Execute(shell, command, cmdArgs);
+            try
+            {
+                AnyCommandExecuted?.Invoke(shell, commandName, command, cmdArgs);
+                cmd.Execute(shell, command, cmdArgs);
+            }
+            catch (Exception e)
+            {
+                _conLogger.Error($"ExecuteError - {command}:\n{e}");
+                shell.WriteError($"There was an error while executing the command: {e}");
+            }
         }
 
         private bool CanExecute(string cmdName)

@@ -138,18 +138,7 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
                 return;
 
             // Make sure the member belongs to the proxy class
-            var baseType = context.ContainingSymbol.ContainingType;
-            var found = false;
-            while (baseType?.SpecialType == SpecialType.None)
-            {
-                if (SymbolEqualityComparer.Default.Equals(reference.Member.ContainingSymbol, baseType))
-                {
-                    found = true;
-                    break;
-                }
-                baseType = baseType.BaseType;
-            }
-            if (!found)
+            if (!TypeSymbolHelper.Inherits(context.ContainingSymbol.ContainingType, reference.Member.ContainingType))
                 return;
 
             // Get the method being invoked

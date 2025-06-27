@@ -14,7 +14,6 @@ namespace Robust.Analyzers;
 public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
 {
     private const string ProxyForAttributeType = "Robust.Shared.Analyzers.ProxyForAttribute";
-    private const string ProxyForName = "ProxyFor";
 
     public static readonly string ProxyMethodName = "proxy";
 
@@ -206,14 +205,15 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
             return;
 
         // Get the syntax node for the attribute
-        TryGetAttributeSyntax(declarationSyntax, ProxyForName, out var attributeSyntax);
+        if (attribute.ApplicationSyntaxReference?.GetSyntax() is not AttributeSyntax attributeSyntax)
+            return;
 
         // Try to get the set method name from the attribute constructor
         var targetMethodName = attribute.ConstructorArguments[1].Value as string;
         // Check for a redundant set method name
         if (targetMethodName == methodSymbol.Name)
         {
-            var location = attributeSyntax?.ArgumentList?.Arguments[1].GetLocation() ?? declarationSyntax.GetLocation();
+            var location = attributeSyntax.ArgumentList?.Arguments[1].GetLocation() ?? declarationSyntax.GetLocation();
             context.ReportDiagnostic(Diagnostic.Create(
                 RedundantMethodNameDescriptor,
                 location
@@ -300,22 +300,5 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
         }
 
         return true;
-    }
-
-    private static bool TryGetAttributeSyntax(MethodDeclarationSyntax declarationSyntax, string attributeName, [NotNullWhen(true)] out AttributeSyntax? syntax)
-    {
-        foreach (var list in declarationSyntax.AttributeLists)
-        {
-            foreach (var attribute in list.Attributes)
-            {
-                if (attribute.Name.ToString() == attributeName)
-                {
-                    syntax = attribute;
-                    return true;
-                }
-            }
-        }
-        syntax = null;
-        return false;
     }
 }

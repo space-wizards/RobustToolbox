@@ -71,7 +71,8 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
                     return;
 
                 // Find information about all marked proxy methods available to this class
-                var proxyMethods = GetProxyMethods(typeSymbol, proxyForAttributeType);
+                if (!TryGetProxyMethods(typeSymbol, proxyForAttributeType, out var proxyMethods))
+                    return;
 
                 // No proxy methods are available to this class, so we're done
                 if (proxyMethods.Length == 0)
@@ -100,18 +101,27 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
     /// <summary>
     /// Returns information about all proxy methods available to the specified class.
     /// </summary>
-    private static ProxyMethod[] GetProxyMethods(INamedTypeSymbol typeSymbol, INamedTypeSymbol proxyForAttribute)
+    private static bool TryGetProxyMethods(INamedTypeSymbol typeSymbol, INamedTypeSymbol proxyForAttribute, [NotNullWhen(true)] out ProxyMethod[]? proxyMethods)
     {
-        HashSet<ProxyMethod> proxyMethods = [];
-        var baseType = typeSymbol.BaseType;
-        while (baseType != null && baseType.SpecialType == SpecialType.None)
+        proxyMethods = null;
+
+        // Don't fault the proxy type for not using its own proxy methods
+        if (typeSymbol.BaseType is null)
+            return false;
+
+        HashSet<ProxyMethod> proxySet = [];
+        // Search for methods in each type this inherits from
+        foreach (var baseType in TypeSymbolHelper.GetBaseTypes(typeSymbol))
         {
             HashSet<ProxyMethod> classMethods = [];
+            // Check each member
             foreach (var member in baseType.GetMembers())
             {
+                // We only care about methods
                 if (member is not IMethodSymbol method)
                     continue;
 
+                // Make sure the method is marked as a proxy
                 if (!AttributeHelper.HasAttribute(method, proxyForAttribute, out var attributeData))
                     continue;
 
@@ -120,10 +130,14 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
 
                 classMethods.Add(new ProxyMethod(method, targetType!, targetMethod));
             }
-            proxyMethods.UnionWith(classMethods);
-            baseType = baseType.BaseType;
+            proxySet.UnionWith(classMethods);
         }
-        return proxyMethods.ToArray();
+
+        if (proxySet.Count == 0)
+            return false;
+
+        proxyMethods = proxySet.ToArray();
+        return true;
     }
 
     private sealed class AnalyzerState(ProxyMethod[] ProxyMethods)

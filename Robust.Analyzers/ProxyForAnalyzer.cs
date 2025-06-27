@@ -59,26 +59,34 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.ReportDiagnostics | GeneratedCodeAnalysisFlags.Analyze);
         context.EnableConcurrentExecution();
-        context.RegisterSymbolStartAction(symbolContext =>
+        context.RegisterCompilationStartAction(static ctx =>
         {
-            // We only care about classes
-            if (symbolContext.Symbol is not INamedTypeSymbol typeSymbol || typeSymbol.TypeKind != TypeKind.Class)
+            var proxyForAttributeType = ctx.Compilation.GetTypeByMetadataName(ProxyForAttributeType);
+            if (proxyForAttributeType == null)
                 return;
 
-            // Find information about all marked proxy methods available to this class
-            var proxyMethods = GetProxyMethods(typeSymbol);
+            ctx.RegisterSymbolStartAction(symbolContext =>
+            {
+                // We only care about classes
+                if (symbolContext.Symbol is not INamedTypeSymbol typeSymbol || typeSymbol.TypeKind != TypeKind.Class)
+                    return;
 
-            // No proxy methods are available to this class, so we're done
-            if (proxyMethods.Length == 0)
-                return;
+                // Find information about all marked proxy methods available to this class
+                var proxyMethods = GetProxyMethods(typeSymbol, proxyForAttributeType);
 
-            // Pass proxy method information to the analyzer state
-            var state = new AnalyzerState(proxyMethods);
-            // Analyze each method invocation within the class
-            symbolContext.RegisterOperationAction(state.AnalyzeInvocation, OperationKind.Invocation);
-        }, SymbolKind.NamedType);
+                // No proxy methods are available to this class, so we're done
+                if (proxyMethods.Length == 0)
+                    return;
 
-        context.RegisterSyntaxNodeAction(AnalyzeDeclaration, SyntaxKind.MethodDeclaration);
+                // Pass proxy method information to the analyzer state
+                var state = new AnalyzerState(proxyMethods);
+                // Analyze each method invocation within the class
+                symbolContext.RegisterOperationAction(state.AnalyzeInvocation, OperationKind.Invocation);
+            }, SymbolKind.NamedType);
+
+            ctx.RegisterSyntaxNodeAction(nodeContext => AnalyzeDeclaration(nodeContext, proxyForAttributeType), SyntaxKind.MethodDeclaration);
+        });
+
     }
 
     /// <summary>
@@ -93,7 +101,7 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
     /// <summary>
     /// Returns information about all proxy methods available to the specified class.
     /// </summary>
-    private ProxyMethod[] GetProxyMethods(INamedTypeSymbol typeSymbol)
+    private static ProxyMethod[] GetProxyMethods(INamedTypeSymbol typeSymbol, INamedTypeSymbol proxyForAttribute)
     {
         HashSet<ProxyMethod> proxyMethods = [];
         var baseType = typeSymbol.BaseType;
@@ -105,7 +113,7 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
                 if (member is not IMethodSymbol method)
                     continue;
 
-                if (!AttributeHelper.HasAttribute(method, ProxyForAttributeType, out var attributeData))
+                if (!AttributeHelper.HasAttribute(method, proxyForAttribute, out var attributeData))
                     continue;
 
                 var targetType = attributeData.ConstructorArguments[0].Value as INamedTypeSymbol;
@@ -185,7 +193,7 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
     /// <summary>
     /// Check for incorrect use of the attribute.
     /// </summary>
-    private void AnalyzeDeclaration(SyntaxNodeAnalysisContext context)
+    private static void AnalyzeDeclaration(SyntaxNodeAnalysisContext context, INamedTypeSymbol proxyForAttribute)
     {
         if (context.Node is not MethodDeclarationSyntax declarationSyntax)
             return;
@@ -194,7 +202,7 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
             return;
 
         // We only care about methods that have our attribute
-        if (!AttributeHelper.HasAttribute(methodSymbol, ProxyForAttributeType, out var attribute))
+        if (!AttributeHelper.HasAttribute(methodSymbol, proxyForAttribute, out var attribute))
             return;
 
         // Get the syntax node for the attribute
@@ -294,7 +302,7 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
         return true;
     }
 
-    private bool TryGetAttributeSyntax(MethodDeclarationSyntax declarationSyntax, string attributeName, [NotNullWhen(true)] out AttributeSyntax? syntax)
+    private static bool TryGetAttributeSyntax(MethodDeclarationSyntax declarationSyntax, string attributeName, [NotNullWhen(true)] out AttributeSyntax? syntax)
     {
         foreach (var list in declarationSyntax.AttributeLists)
         {

@@ -138,7 +138,7 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
             if (operation.Instance is not IMemberReferenceOperation reference)
                 return;
 
-            // Make sure the member is a member belongs to the proxy class
+            // Make sure the member belongs to the proxy class
             var baseType = context.ContainingSymbol.ContainingType;
             var found = false;
             while (baseType?.SpecialType == SpecialType.None)

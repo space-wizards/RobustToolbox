@@ -35,11 +35,41 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* `IPrototypeManager.Index(Type kind, string id)` now throws `UnknownPrototypeException` instead of `KeyNotFoundException`, for consistency with `IPrototypeManager.Index<T>`.
+*None yet*
 
 ### New features
 
 *None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 264.0.0
+
+### Breaking changes
+
+* `IPrototypeManager.Index(Type kind, string id)` now throws `UnknownPrototypeException` instead of `KeyNotFoundException`, for consistency with `IPrototypeManager.Index<T>`.
+
+### New features
+
+* Types can now implement the new interface `IRobustCloneable<T>` to be cloned by the component state source generator.
+* Added extra Roslyn Analyzers to detect some misuse of prototypes:
+  * Network serializing prototypes (tagging them with `[Serializable, NetSerializable]`).
+  * Constructing new instances of prototypes directly.
+* Add `PrototypeManagerExt.Index` helper function that takes a nullable `ProtoId<T>`, returning null if the ID is null.
+* Added an `AlwaysActive` field to `WebViewControl` to make a browser window active even when not in the UI tree.
+* Made some common dependencies accessible through `IPlacementManager`.
+* Added a new `GENITIVE()` localization helper function, which is useful for certain languages.
 
 ### Bugfixes
 
@@ -49,10 +79,11 @@ END TEMPLATE-->
 ### Other
 
 * More tiny optimizations to `DataDefinitionAnalyzer`.
+* NetSerializer has been updated. On debug, it will now report *where* a type that can't be serialized is referenced from.
 
 ### Internal
 
-*None yet*
+* Minor internal code cleanup.
 
 
 ## 263.0.0

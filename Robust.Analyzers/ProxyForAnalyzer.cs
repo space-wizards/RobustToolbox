@@ -92,7 +92,7 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
     /// <summary>
     /// Data about a proxy method and its target.
     /// </summary>
-    private readonly record struct ProxyMethod(
+    private record class ProxyMethod(
         IMethodSymbol Method,
         INamedTypeSymbol TargetType,
         string TargetMethod

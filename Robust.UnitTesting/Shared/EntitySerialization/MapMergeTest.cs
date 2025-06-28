@@ -18,10 +18,19 @@ namespace Robust.UnitTesting.Shared.EntitySerialization;
 [TestFixture]
 public sealed partial class MapMergeTest : RobustIntegrationTest
 {
+    private const string TestTileDefId = "a";
+    private const string TestPrototypes = $@"
+- type: testTileDef
+  id: space
+
+- type: testTileDef
+  id: {TestTileDefId}
+    ";
+
     [Test]
     public async Task TestMapMerge()
     {
-        var server = StartServer(new() {Pool = false}); // Pool=false due to TileDef registration
+        var server = StartServer(new() { Pool = false, ExtraPrototypes = TestPrototypes }); // Pool=false due to TileDef registration
         await server.WaitIdleAsync();
         var entMan = server.EntMan;
         var mapSys = server.System<SharedMapSystem>();
@@ -32,9 +41,8 @@ public sealed partial class MapMergeTest : RobustIntegrationTest
         var mapPath = new ResPath($"{nameof(TestMapMerge)}_map.yml");
         var gridPath = new ResPath($"{nameof(TestMapMerge)}_grid.yml");
 
-        tileMan.Register(new TileDef("space"));
-        var tDef = new TileDef("a");
-        tileMan.Register(tDef);
+        SerializationTestHelper.LoadTileDefs(server.ProtoMan, tileMan, "space");
+        var tDef = server.ProtoMan.Index<TileDef>(TestTileDefId);
 
         MapId mapId = default;
         Entity<TransformComponent, EntitySaveTestComponent> map = default;

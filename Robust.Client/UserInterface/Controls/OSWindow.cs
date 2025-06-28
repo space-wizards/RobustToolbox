@@ -88,7 +88,7 @@ namespace Robust.Client.UserInterface.Controls
         /// <summary>
         /// Raised when the user clicks the close button on the window. Can be canceled!
         /// </summary>
-        public event Action<WindowRequestClosedEventArgs, CancelEventArgs>? RequestClosed;
+        public event Action<CancelEventArgs>? RequestClosed;
 
         /// <summary>
         /// Raised when the window has been closed.
@@ -185,7 +185,7 @@ namespace Robust.Client.UserInterface.Controls
         private void OnWindowRequestClosed(WindowRequestClosedEventArgs eventArgs)
         {
             var cancelEventArgs = new CancelEventArgs();
-            RequestClosed?.Invoke(eventArgs, cancelEventArgs);
+            RequestClosed?.Invoke(cancelEventArgs);
             if (cancelEventArgs.Cancel)
                 return;
 

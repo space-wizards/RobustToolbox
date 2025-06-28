@@ -51,8 +51,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
-
+* `ResolvedSoundSpecifier` warning cleanup.
 
 ## 264.0.0
 

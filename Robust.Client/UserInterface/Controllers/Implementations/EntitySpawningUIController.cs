@@ -151,7 +151,7 @@ public sealed class EntitySpawningUIController : UIController
         {
             var newObjInfo = new PlacementInformation
             {
-                PlacementOption = EntitySpawnWindow.InitOpts[args.Id],
+                PlacementOption = _placement.AllModeNames[args.Id],
                 EntityType = _placement.CurrentPermission!.EntityType,
                 Range = 2,
                 IsTile = _placement.CurrentPermission.IsTile
@@ -364,10 +364,11 @@ public sealed class EntitySpawningUIController : UIController
         _window.SelectedButton = null;
         _window.SelectedPrototype = null;
 
-        var overrideMode = EntitySpawnWindow.InitOpts[_window.OverrideMenu.SelectedId];
+
+        var overrideMode = _placement.AllModeNames[_window.OverrideMenu.SelectedId];
         var newObjInfo = new PlacementInformation
         {
-            PlacementOption = overrideMode != "Default" ? overrideMode : item.Prototype.PlacementMode,
+            PlacementOption = overrideMode != IPlacementManager.DefaultModeName ? overrideMode : item.Prototype.PlacementMode,
             EntityType = item.PrototypeID,
             Range = 2,
             IsTile = false

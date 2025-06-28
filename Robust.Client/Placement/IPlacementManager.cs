@@ -56,5 +56,15 @@ namespace Robust.Client.Placement
         void ToggleEraserHijacked(PlacementHijack hijack);
 
         void FrameUpdate(FrameEventArgs e);
+
+        /// <summary>
+        /// The name of the placement mode option to just use the default for the selected entity.
+        /// </summary>
+        const string DefaultModeName = "Default";
+
+        /// <summary>
+        /// An array of the names of all available placement modes.
+        /// </summary>
+        string[] AllModeNames { get; }
     }
 }

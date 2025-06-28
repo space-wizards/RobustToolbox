@@ -135,7 +135,7 @@ namespace Robust.Shared.Configuration
             return CompletionResult.FromHint($"<{type.Name}>");
         }
 
-        private static string GetCVarValueHint(IConfigurationManager cfg, string cVar)
+        private string GetCVarValueHint(IConfigurationManager cfg, string cVar)
         {
             var flags = cfg.GetCVarFlags(cVar);
             if ((flags & CVar.CONFIDENTIAL) != 0)

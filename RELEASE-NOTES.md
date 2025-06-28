@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Adds `AttachedAudioDespawnedEvent`, which is raised against the parent of a despawning `AudioComponent`.
 
 ### Bugfixes
 

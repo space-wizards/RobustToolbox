@@ -203,6 +203,14 @@ public sealed class DefaultStylesheet
             Element<TextureRect>().Class(CheckBox.StyleClassCheckBox, CheckBox.StyleClassCheckBoxChecked)
                 .Prop(TextureRect.StylePropertyTexture, Texture.White), // TODO: Add actual texture instead of this.
 
+            // CheckBox not disabled
+            Element<CheckBox>().Pseudo(ContainerButton.StylePseudoClassNormal)
+                .Prop(Control.StylePropertyModulateSelf, theme.ResolveColorOrSpecified("checkBox", Color.White)),
+
+            // CheckBox disabled
+            Element<CheckBox>().Pseudo(ContainerButton.StylePseudoClassDisabled)
+                .Prop(Control.StylePropertyModulateSelf, theme.ResolveColorOrSpecified("checkBoxDisabled", Color.White.WithAlpha(0.3f))),
+
             /*
              * LineEdit
              */

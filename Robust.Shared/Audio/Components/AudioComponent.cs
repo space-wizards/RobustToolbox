@@ -255,6 +255,12 @@ public sealed partial class AudioComponent : Component, IAudioSource
     }
 }
 
+/// <summary>
+/// An event raised against an AudioComponent's parent when it is despawned.
+/// </summary>
+[ByRefEvent]
+public readonly record struct AttachedAudioDespawnedEvent;
+
 [Serializable, NetSerializable]
 public enum AudioState : byte
 {

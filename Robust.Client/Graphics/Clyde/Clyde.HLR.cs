@@ -123,9 +123,13 @@ namespace Robust.Client.Graphics.Clyde
 
         private void RenderSingleWorldOverlay(Overlay overlay, Viewport vp, OverlaySpace space, in Box2 worldBox, in Box2Rotated worldBounds)
         {
+            // Check that entity manager has started.
+            // This is required for us to be able to use MapSystem.
+            DebugTools.Assert(_entityManager.Started, "Entity manager should be started/initialized before rendering world-space overlays");
+
             DebugTools.Assert(space != OverlaySpace.ScreenSpaceBelowWorld && space != OverlaySpace.ScreenSpace);
 
-            var mapId = vp.Eye!.Position.MapId;
+            var mapId = vp.Eye?.Position.MapId ?? MapId.Nullspace;
             var args = new OverlayDrawArgs(space, null, vp, _renderHandle, new UIBox2i((0, 0), vp.Size), _mapSystem.GetMapOrInvalid(mapId), mapId, worldBox, worldBounds);
 
             if (!overlay.BeforeDraw(args))
@@ -152,6 +156,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void RenderOverlays(Viewport vp, OverlaySpace space, in Box2 worldBox, in Box2Rotated worldBounds)
         {
+            DebugTools.Assert(space != OverlaySpace.ScreenSpaceBelowWorld && space != OverlaySpace.ScreenSpace);
             using (DebugGroup($"Overlays: {space}"))
             {
                 foreach (var overlay in GetOverlaysForSpace(space))
@@ -176,9 +181,18 @@ namespace Robust.Client.Graphics.Clyde
 
             var worldBounds = CalcWorldBounds(vp);
             var worldAABB = worldBounds.CalcBoundingBox();
-            var mapId = vp.Eye!.Position.MapId;
+            var mapId = vp.Eye?.Position.MapId ?? MapId.Nullspace;
+            var mapUid = EntityUid.Invalid;
 
-            var args = new OverlayDrawArgs(space, vpControl, vp, handle, bounds, _mapSystem.GetMapOrInvalid(mapId), mapId, worldAABB, worldBounds);
+            // Screen space overlays may be getting used before entity manager & entity systems have been initialized.
+            // This might mean that _mapSystem is currently null.
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+            if (_entityManager.Started && _mapSystem != null)
+                mapUid = _mapSystem.GetMapOrInvalid(mapId);
+
+            DebugTools.Assert(_mapSystem != null || !_entityManager.Started);
+
+            var args = new OverlayDrawArgs(space, vpControl, vp, handle, bounds, mapUid, mapId, worldAABB, worldBounds);
 
             foreach (var overlay in list)
             {
@@ -304,7 +318,7 @@ namespace Robust.Client.Graphics.Clyde
                         screenSpriteSize.Y++;
 
                     bool exit = false;
-                    if (entry.Sprite.GetScreenTexture)
+                    if (entry.Sprite.GetScreenTexture && entry.Sprite.PostShader != null)
                     {
                         FlushRenderQueue();
                         var tex = CopyScreenTexture(viewport.RenderTarget);
@@ -355,7 +369,7 @@ namespace Robust.Client.Graphics.Clyde
                     }
                 }
 
-                spriteSystem.Render(entry.Uid, entry.Sprite, _renderHandle.DrawingHandleWorld, eye.Rotation, in entry.WorldRot, in entry.WorldPos);
+                spriteSystem.RenderSprite(new(entry.Uid, entry.Sprite), _renderHandle.DrawingHandleWorld, eye.Rotation, entry.WorldRot, entry.WorldPos);
 
                 if (entry.Sprite.PostShader != null && entityPostRenderTarget != null)
                 {

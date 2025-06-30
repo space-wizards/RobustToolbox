@@ -19,6 +19,7 @@ namespace Robust.Client.GameObjects
         public override void Initialize()
         {
             base.Initialize();
+            SubscribeLocalEvent<PointLightComponent, ComponentGetState>(OnLightGetState);
             SubscribeLocalEvent<PointLightComponent, ComponentInit>(HandleInit);
             SubscribeLocalEvent<PointLightComponent, ComponentHandleState>(OnLightHandleState);
         }

@@ -1,5 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
-
+using Robust.Shared.GameStates;
 using Robust.Shared.Maths;
 
 namespace Robust.Shared.GameObjects;
@@ -96,5 +96,22 @@ public abstract class SharedPointLightSystem : EntitySystem
 
         comp.Softness = value;
         Dirty(uid, comp);
+    }
+
+    protected static void OnLightGetState(
+        EntityUid uid,
+        SharedPointLightComponent component,
+        ref ComponentGetState args)
+    {
+        args.State = new PointLightComponentState()
+        {
+            Color = component.Color,
+            Enabled = component.Enabled,
+            Energy = component.Energy,
+            Offset = component.Offset,
+            Radius = component.Radius,
+            Softness = component.Softness,
+            CastShadows = component.CastShadows,
+        };
     }
 }

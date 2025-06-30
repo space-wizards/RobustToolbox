@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +9,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
+using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic;
@@ -59,7 +61,7 @@ public sealed class DictionarySerializer<TKey, TValue> :
         var mapping = new Dictionary<ValidationNode, ValidationNode>();
         foreach (var (key, val) in node.Children)
         {
-            mapping.Add(serializationManager.ValidateNode<TKey>(key, context),
+            mapping.Add(serializationManager.ValidateNode<TKey>(node.GetKeyNode(key), context),
                 serializationManager.ValidateNode<TValue>(val, context));
         }
 
@@ -79,8 +81,14 @@ public sealed class DictionarySerializer<TKey, TValue> :
         var mappingNode = new MappingDataNode();
         foreach (var (key, val) in value)
         {
+            // TODO SERIALIZATION
+            // Add some way to directly return a string w/o allocating a ValueDataNode
+            var keyNode = serializationManager.WriteValue(key, alwaysWrite, context);
+            if (keyNode is not ValueDataNode valueNode)
+                throw new NotSupportedException("Yaml mapping keys must serialize to a ValueDataNode (i.e. a string)");
+
             mappingNode.Add(
-                serializationManager.WriteValue(key, alwaysWrite, context),
+                valueNode.Value,
                 serializationManager.WriteValue(val, alwaysWrite, context));
         }
 
@@ -128,9 +136,11 @@ public sealed class DictionarySerializer<TKey, TValue> :
     {
         var dict = instanceProvider != null ? instanceProvider() : new Dictionary<TKey, TValue>();
 
+        var keyNode = new ValueDataNode();
         foreach (var (key, value) in node.Children)
         {
-            dict.Add(serializationManager.Read<TKey>(key, hookCtx, context),
+            keyNode.Value = key;
+            dict.Add(serializationManager.Read<TKey>(keyNode, hookCtx, context),
                 serializationManager.Read<TValue>(value, hookCtx, context));
         }
 
@@ -143,15 +153,18 @@ public sealed class DictionarySerializer<TKey, TValue> :
     {
         if (instanceProvider != null)
         {
-            Logger.Warning(
+            var sawmill = dependencies.Resolve<ILogManager>().GetSawmill("szr");
+            sawmill.Warning(
                 $"Provided value to a Read-call for a {nameof(FrozenDictionary<TKey, TValue>)}. Ignoring...");
         }
 
         var array = new KeyValuePair<TKey, TValue>[node.Children.Count];
         int i = 0;
+        var keyNode = new ValueDataNode();
         foreach (var (key, value) in node.Children)
         {
-            var k = serializationManager.Read<TKey>(key, hookCtx, context);
+            keyNode.Value = key;
+            var k = serializationManager.Read<TKey>(keyNode, hookCtx, context);
             var v = serializationManager.Read<TValue>(value, hookCtx, context);
             array[i++] = new(k,v);
         }
@@ -168,15 +181,18 @@ public sealed class DictionarySerializer<TKey, TValue> :
     {
         if (instanceProvider != null)
         {
-            Logger.Warning(
+            var sawmill = dependencies.Resolve<ILogManager>().GetSawmill("szr");
+            sawmill.Warning(
                 $"Provided value to a Read-call for a {nameof(IReadOnlyDictionary<TKey, TValue>)}. Ignoring...");
         }
 
         var dict = new Dictionary<TKey, TValue>();
 
+        var keyNode = new ValueDataNode();
         foreach (var (key, value) in node.Children)
         {
-            dict.Add(serializationManager.Read<TKey>(key, hookCtx, context),
+            keyNode.Value = key;
+            dict.Add(serializationManager.Read<TKey>(keyNode, hookCtx, context),
                 serializationManager.Read<TValue>(value, hookCtx, context));
         }
 
@@ -190,10 +206,12 @@ public sealed class DictionarySerializer<TKey, TValue> :
         ISerializationManager.InstantiationDelegate<SortedDictionary<TKey, TValue>>? instanceProvider)
     {
         var dict = instanceProvider != null ? instanceProvider() : new SortedDictionary<TKey, TValue>();
+        var keyNode = new ValueDataNode();
 
         foreach (var (key, value) in node.Children)
         {
-            dict.Add(serializationManager.Read<TKey>(key, hookCtx, context),
+            keyNode.Value = key;
+            dict.Add(serializationManager.Read<TKey>(keyNode, hookCtx, context),
                 serializationManager.Read<TValue>(value, hookCtx, context));
         }
 

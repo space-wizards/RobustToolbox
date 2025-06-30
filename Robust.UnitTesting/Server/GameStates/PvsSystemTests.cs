@@ -121,6 +121,10 @@ public sealed class PvsSystemTests : RobustIntegrationTest
             await server.WaitRunTicks(1);
             await client.WaitRunTicks(1);
         }
+
+        await client.WaitPost(() => netMan.ClientDisconnect(""));
+        await server.WaitRunTicks(5);
+        await client.WaitRunTicks(5);
     }
 }
 

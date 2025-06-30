@@ -91,7 +91,7 @@ public interface IPrototypeManager
     /// <summary>
     /// Index for a <see cref="IPrototype"/> by ID.
     /// </summary>
-    /// <exception cref="KeyNotFoundException">
+    /// <exception cref="UnknownPrototypeException">
     /// Thrown if the type of prototype is not registered.
     /// </exception>
     T Index<T>(string id) where T : class, IPrototype;
@@ -105,7 +105,7 @@ public interface IPrototypeManager
     /// <summary>
     /// Index for a <see cref="IPrototype"/> by ID.
     /// </summary>
-    /// <exception cref="KeyNotFoundException">
+    /// <exception cref="UnknownPrototypeException">
     /// Thrown if the ID does not exist or the kind of prototype is not registered.
     /// </exception>
     IPrototype Index(Type kind, string id);
@@ -305,6 +305,11 @@ public interface IPrototypeManager
     ///     Registers a specific prototype name to be ignored.
     /// </summary>
     void RegisterIgnore(string name);
+
+    /// <summary>
+    /// Checks whether the given gind name has been marked as ignored via <see cref="RegisterIgnore"/>
+    /// </summary>
+    bool IsIgnored(string name);
 
     /// <summary>
     /// Loads several prototype kinds into the manager. Note that this will re-build a frozen dictionary and should be avoided if possible.

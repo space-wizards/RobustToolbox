@@ -9,6 +9,7 @@ namespace Robust.Shared.Analyzers;
 /// Robust uses analyzers to prevent accidental usage of non-sealed classes:
 /// a class must be either marked [Virtual], abstract, or sealed.
 /// </remarks>
+/// <seealso cref="ObsoleteInheritanceAttribute"/>
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
 public sealed class VirtualAttribute : Attribute
 {

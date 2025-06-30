@@ -42,6 +42,7 @@ public sealed class ColorSelectorSliders : Control
                     break;
             }
             _currentType = value;
+            _typeSelector.Select(_types.IndexOf(value));
             UpdateType();
             Update();
         }

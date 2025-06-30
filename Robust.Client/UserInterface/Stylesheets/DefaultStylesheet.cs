@@ -205,7 +205,7 @@ public sealed class DefaultStylesheet
 
             // Checkbox not disabled.
             Element<Label>().Class(CheckBox.StyleClassCheckBox).Pseudo(ContainerButton.StylePseudoClassNormal)
-                .Prop(Label.StylePropertyFontColor, theme.ResolveColorOrSpecified("checkBoxDisabled", Color.White)),
+                .Prop(Label.StylePropertyFontColor, theme.ResolveColorOrSpecified("checkBox", Color.White)),
 
             // Checkbox disabled.
             Element<Label>().Class(CheckBox.StyleClassCheckBox).Pseudo(ContainerButton.StylePseudoClassDisabled)

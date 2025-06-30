@@ -1,5 +1,4 @@
-﻿using Robust.Client.Graphics;
-using Robust.Shared.Maths;
+﻿using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;
 using static Robust.Client.UserInterface.Controls.Label;
 
@@ -92,10 +91,13 @@ namespace Robust.Client.UserInterface.Controls
                     TextureRect.RemoveStyleClass(StyleClassCheckBoxChecked);
             }
 
+            if (Label is null)
+                return;
+
             if (HasStylePseudoClass(StylePseudoClassDisabled))
-                Modulate = StylePropertyDefault(StylePropertyModulateSelf, Color.White.WithAlpha(0.3f));
+                Label.FontColorOverride = StylePropertyDefault(StylePropertyFontColor, Color.Gray);
             else
-                Modulate = StylePropertyDefault(StylePropertyModulateSelf, Color.White);
+                Label.FontColorOverride = StylePropertyDefault(StylePropertyFontColor, Color.White);
         }
 
         /// <summary>

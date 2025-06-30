@@ -31,7 +31,7 @@
 
     # CheckBox
     checkBox: "#ffffff"
-    checkBoxDisabled: "#ffffff4d"
+    checkBoxDisabled: "#444444"
 
     # LineEdit
     lineEditUneditableText: "#444444"

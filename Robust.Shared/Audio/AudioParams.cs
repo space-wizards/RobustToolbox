@@ -165,6 +165,18 @@ namespace Robust.Shared.Audio
         }
 
         /// <summary>
+        ///     Returns a copy of this instance with a modified variation set, for easy chaining.
+        /// </summary>
+        [Pure]
+        public readonly AudioParams AddVariation(float? variation)
+        {
+            var me = this;
+            me.Variation ??= 0.1f;
+            me.Variation *= variation;
+            return me;
+        }
+
+        /// <summary>
         ///     Returns a copy of this instance with a new pitch scale set, for easy chaining.
         /// </summary>
         /// <param name="pitch">The new pitch scale.</param>

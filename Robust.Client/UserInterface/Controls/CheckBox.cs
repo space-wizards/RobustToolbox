@@ -63,7 +63,10 @@ namespace Robust.Client.UserInterface.Controls
                 VerticalAlignment = VAlignment.Center,
             };
 
-            Label = new Label();
+            Label = new Label
+            {
+                StyleClasses = { StyleClassCheckBox }
+            };
 
             if (LeftAlign)
             {

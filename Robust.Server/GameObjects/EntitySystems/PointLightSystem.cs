@@ -72,6 +72,7 @@ namespace Robust.Server.GameObjects;
         };
 
         _lightTree.QueueTreeUpdate(uid, component);
+    }
     protected override void UpdatePriority(EntityUid uid, SharedPointLightComponent comp, MetaDataComponent meta)
     {
         _metadata.SetFlag((uid, meta), MetaDataFlags.PvsPriority, IsHighPriority(comp));

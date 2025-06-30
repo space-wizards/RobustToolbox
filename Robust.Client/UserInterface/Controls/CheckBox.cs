@@ -95,7 +95,8 @@ namespace Robust.Client.UserInterface.Controls
                 return;
 
             if (HasStylePseudoClass(StylePseudoClassDisabled))
-                Label.FontColorOverride = StylePropertyDefault(StylePropertyFontColor, Color.FromHex("#444444"));
+                Label.FontColorOverride =
+                    StylePropertyDefault(StylePropertyFontColor, Color.FromHex("#a5a5a5"));
             else
                 Label.FontColorOverride = StylePropertyDefault(StylePropertyFontColor, Color.White);
         }

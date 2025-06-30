@@ -204,12 +204,12 @@ public sealed class DefaultStylesheet
                 .Prop(TextureRect.StylePropertyTexture, Texture.White), // TODO: Add actual texture instead of this.
 
             // Checkbox not disabled.
-            Element<Label>().Class(CheckBox.StyleClassCheckBox).Pseudo(ContainerButton.StylePseudoClassNormal)
-                .Prop(Label.StylePropertyFontColor, theme.ResolveColorOrSpecified("checkBox", Color.White)),
+            Element<CheckBox>()
+                .Prop(CheckBox.StylePropertyLabelFontColor, theme.ResolveColorOrSpecified("checkBox", Color.White)),
 
             // Checkbox disabled.
-            Element<Label>().Class(CheckBox.StyleClassCheckBox).Pseudo(ContainerButton.StylePseudoClassDisabled)
-                .Prop(Label.StylePropertyFontColor, theme.ResolveColorOrSpecified("checkBoxDisabled", Color.FromHex("#a5a5a5"))),
+            Element<CheckBox>().Pseudo(ContainerButton.StylePseudoClassDisabled)
+                .Prop(CheckBox.StylePropertyLabelFontColor, theme.ResolveColorOrSpecified("checkBoxDisabled", Color.FromHex("#a5a5a5"))),
 
             /*
              * LineEdit

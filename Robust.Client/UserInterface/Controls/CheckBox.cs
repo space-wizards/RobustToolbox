@@ -10,6 +10,7 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class CheckBox : ContainerButton
     {
+        public const string StylePropertyLabelFontColor = "checkBoxLabelFontColor";
         public const string StyleClassCheckBox = "checkBox";
         public const string StyleClassCheckBoxChecked = "checkBoxChecked";
 
@@ -63,10 +64,7 @@ namespace Robust.Client.UserInterface.Controls
                 VerticalAlignment = VAlignment.Center,
             };
 
-            Label = new Label
-            {
-                StyleClasses = { StyleClassCheckBox }
-            };
+            Label = new Label();
 
             if (LeftAlign)
             {
@@ -98,10 +96,9 @@ namespace Robust.Client.UserInterface.Controls
                 return;
 
             if (HasStylePseudoClass(StylePseudoClassDisabled))
-                Label.FontColorOverride =
-                    StylePropertyDefault(StylePropertyFontColor, Color.FromHex("#a5a5a5"));
+                Label.FontColorOverride = StylePropertyDefault(StylePropertyLabelFontColor, Color.FromHex("#a5a5a5"));
             else
-                Label.FontColorOverride = StylePropertyDefault(StylePropertyFontColor, Color.White);
+                Label.FontColorOverride = StylePropertyDefault(StylePropertyLabelFontColor, Color.White);
         }
 
         /// <summary>

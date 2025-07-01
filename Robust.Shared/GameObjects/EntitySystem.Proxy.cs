@@ -423,6 +423,7 @@ public partial class EntitySystem
         return EntityManager.ToPrettyString(netEntity);
     }
 
+    /// <inheritdoc cref="IEntityManager.ToPrettyString(WeakEntityReference?)/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [return: NotNullIfNotNull(nameof(weakRef))]
     protected EntityStringRepresentation? ToPrettyString(WeakEntityReference? weakRef)

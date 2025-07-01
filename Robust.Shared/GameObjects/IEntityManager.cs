@@ -227,6 +227,12 @@ namespace Robust.Shared.GameObjects
         [return: NotNullIfNotNull("netEntity")]
         EntityStringRepresentation? ToPrettyString(NetEntity? netEntity);
 
+        /// <summary>
+        /// Returns a string representation of an entity with various information regarding it.
+        /// </summary>
+        [return: NotNullIfNotNull(nameof(weakRef))]
+        EntityStringRepresentation? ToPrettyString(WeakEntityReference? weakRef);
+
         #endregion Entity Management
 
         /// <summary>

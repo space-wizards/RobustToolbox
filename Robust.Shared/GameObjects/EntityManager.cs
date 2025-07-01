@@ -1007,6 +1007,12 @@ namespace Robust.Shared.GameObjects
             return ToPrettyString(uid.Value, meta);
         }
 
+        [return: NotNullIfNotNull(nameof(weakRef))]
+        public EntityStringRepresentation? ToPrettyString(WeakEntityReference? weakRef)
+        {
+            return weakRef == null ? null : ToPrettyString(weakRef.Value);
+        }
+
         #endregion Entity Management
 
         public virtual void RaisePredictiveEvent<T>(T msg) where T : EntityEventArgs

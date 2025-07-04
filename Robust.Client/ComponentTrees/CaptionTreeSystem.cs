@@ -9,10 +9,11 @@ using Robust.Shared.IoC;
 
 namespace Robust.Client.ComponentTrees;
 
+/// <summary>
+/// ComponentTreeSystem tracking the audible ranges of captioned audio entities
+/// </summary>
 public sealed class CaptionTreeSystem : ComponentTreeSystem<CaptionTreeComponent, CaptionComponent>
 {
-    [Dependency] private readonly IEntityManager _entityManager = default!;
-
     #region Component Tree Overrides
     protected override bool DoFrameUpdate => false;
     protected override bool DoTickUpdate => true;
@@ -21,7 +22,7 @@ public sealed class CaptionTreeSystem : ComponentTreeSystem<CaptionTreeComponent
 
     protected override Box2 ExtractAabb(in ComponentTreeEntry<CaptionComponent> entry, Vector2 pos, Angle rot)
     {
-        if (_entityManager.TryGetComponent(entry.Uid, out AudioComponent? audio))
+        if (TryComp<AudioComponent>(entry.Uid, out var audio))
         {
             var radius = audio.MaxDistance;
             var radiusVec = new Vector2(radius, radius);

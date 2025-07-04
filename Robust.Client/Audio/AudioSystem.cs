@@ -44,7 +44,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
     [Dependency] private readonly SharedMapSystem _maps = default!;
     [Dependency] private readonly SharedTransformSystem _xformSys = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
-    [Dependency] private readonly IEntityManager _entityManager = default!;
 
     public event Action<Entity<CaptionComponent, TransformComponent>>? OnSubtitledAudioStart;
     public event Action<Entity<CaptionComponent, TransformComponent>>? OnSubtitledAudioEnd;
@@ -59,6 +58,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     private float _audioFrameTimeRemaining;
 
     private EntityQuery<PhysicsComponent> _physicsQuery;
+    private EntityQuery<CaptionComponent> _captionQuery;
 
     private float _maxRayLength;
     private float _zOffset;
@@ -102,6 +102,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         UpdatesAfter.Add(typeof(EyeSystem));
 
         _physicsQuery = GetEntityQuery<PhysicsComponent>();
+        _captionQuery = GetEntityQuery<CaptionComponent>();
 
         SubscribeLocalEvent<AudioComponent, ComponentStartup>(OnAudioStartup);
         SubscribeLocalEvent<AudioComponent, ComponentShutdown>(OnAudioShutdown);
@@ -196,14 +197,14 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
     private void OnAudioPaused(EntityUid uid, AudioComponent component, ref EntityPausedEvent args)
     {
-        if (_entityManager.TryGetComponent(uid, out CaptionComponent? caption) && _entityManager.TryGetComponent<TransformComponent>(uid, out var xform))
+        if (_captionQuery.TryGetComponent(uid, out var caption) && EntityManager.TryGetComponent(uid, out TransformComponent? xform))
             OnSubtitledAudioEnd?.Invoke((uid, caption, xform));
         component.Pause();
     }
 
     protected override void OnAudioUnpaused(EntityUid uid, AudioComponent component, ref EntityUnpausedEvent args)
     {
-        if (_entityManager.TryGetComponent<CaptionComponent>(uid, out var caption) && _entityManager.TryGetComponent<TransformComponent>(uid, out var xform))
+        if (_captionQuery.TryGetComponent(uid, out var caption) && EntityManager.TryGetComponent(uid, out TransformComponent? xform))
             OnSubtitledAudioStart?.Invoke((uid, caption, xform));
         base.OnAudioUnpaused(uid, component, ref args);
         component.StartPlaying();
@@ -211,7 +212,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
     private void OnAudioStartup(EntityUid uid, AudioComponent component, ComponentStartup args)
     {
-        if (_entityManager.TryGetComponent<CaptionComponent>(uid, out var caption) && _entityManager.TryGetComponent<TransformComponent>(uid, out var xform))
+        if (_captionQuery.TryGetComponent(uid, out var caption) && EntityManager.TryGetComponent(uid, out TransformComponent? xform))
             OnSubtitledAudioStart?.Invoke((uid, caption, xform));
         if (!Timing.ApplyingState && !Timing.IsFirstTimePredicted)
         {
@@ -288,7 +289,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         component.Source.Dispose();
 
         RemoveAudioLimit(component.FileName);
-        if (_entityManager.TryGetComponent(uid, out CaptionComponent? caption) && _entityManager.TryGetComponent<TransformComponent>(uid, out var xform))
+        if (_captionQuery.TryGetComponent(uid, out var caption) && EntityManager.TryGetComponent(uid, out TransformComponent? xform))
             OnSubtitledAudioEnd?.Invoke((uid, caption, xform));
     }
 

@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* The debug assert for `RobustRandom.Next(TimeSpan, TimeSpan)` now allows for the two arguments to be equal.
 
 ### Internal
 

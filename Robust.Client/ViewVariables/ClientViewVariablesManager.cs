@@ -175,6 +175,12 @@ namespace Robust.Client.ViewVariables
                 return new VVPropEditorVector2(intVec: true);
             }
 
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ValueTuple<,>))
+            {
+                return (VVPropEditor)Activator.CreateInstance(
+                    typeof(VVPropEditorTuple<,>).MakeGenericType(type.GenericTypeArguments))!;
+            }
+
             if (type == typeof(bool))
             {
                 return new VVPropEditorBoolean();

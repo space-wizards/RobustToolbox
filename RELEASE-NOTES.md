@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-* ConfigurationManager will now report an error instead of warning if it fails to load the config file.
+* The configuration system will now report an error instead of warning if it fails to load the config file.
 
 ### Internal
 

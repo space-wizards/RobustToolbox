@@ -65,7 +65,7 @@ public static class ColorNaming
             var prevData = HueNames[i];
             var nextData = i+1 < HueNames.Length ? HueNames[i+1] : HueFallback;
 
-            if (prevData.Hue >= hue || hue >= nextData.Hue)
+            if (prevData.Hue >= hue || hue > nextData.Hue)
                 continue;
 
             var loc = prevData.Loc;
@@ -121,6 +121,13 @@ public static class ColorNaming
         };
     }
 
+    /// <summary>
+    /// Textually describes a color
+    /// </summary>
+    /// <returns>
+    /// Returns a localized textual description of the provided color
+    /// </returns>
+    /// <param name="srgb">A Color that is assumed to be in SRGB (the default for most cases)</param>
     public static string Describe(Color srgb)
     {
         var oklch = Color.ToLch(Color.ToLab(Color.FromSrgb(srgb)));

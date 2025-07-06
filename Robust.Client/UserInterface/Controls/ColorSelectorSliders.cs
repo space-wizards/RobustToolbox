@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Robust.Shared.ColorNaming;
 using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 
@@ -83,6 +84,7 @@ public sealed class ColorSelectorSliders : Control
     private Label _middleSliderLabel = new();
     private Label _bottomSliderLabel = new();
     private Label _alphaSliderLabel = new();
+    private Label _colorDescriptionLabel = new();
 
     private OptionButton _typeSelector;
     private List<ColorSelectorType> _types = new();
@@ -188,6 +190,8 @@ public sealed class ColorSelectorSliders : Control
             _typeSelector.Select(args.Id);
         };
 
+        _colorDescriptionLabel.Text = ColorNaming.Describe(_currentColor);
+
         // TODO: Maybe some engine widgets could be laid out in XAML?
 
         var rootBox = new BoxContainer
@@ -200,6 +204,7 @@ public sealed class ColorSelectorSliders : Control
         rootBox.AddChild(headerBox);
 
         headerBox.AddChild(_typeSelector);
+        headerBox.AddChild(_colorDescriptionLabel);
 
         var bodyBox = new BoxContainer()
         {
@@ -305,6 +310,7 @@ public sealed class ColorSelectorSliders : Control
 
         _alphaSlider.Value = Color.A;
         _alphaInputBox.Value = (int)(Color.A * 100.0f);
+        _colorDescriptionLabel.Text = ColorNaming.Describe(Color);
         _updating = false;
     }
 

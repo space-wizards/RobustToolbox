@@ -591,6 +591,125 @@ namespace Robust.Shared.Maths
             return new Vector4(hue, saturation, max, rgb.A);
         }
 
+        #region Oklab/Oklch
+        /*
+
+            The code in this region is based off of https://bottosson.github.io/posts/oklab/, available under public domain or the MIT license.
+
+            Copyright (c) 2020 Björn Ottosson
+            Permission is hereby granted, free of charge, to any person obtaining a copy of
+            this software and associated documentation files (the "Software"), to deal in
+            the Software without restriction, including without limitation the rights to
+            use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+            of the Software, and to permit persons to whom the Software is furnished to do
+            so, subject to the following conditions:
+            The above copyright notice and this permission notice shall be included in all
+            copies or substantial portions of the Software.
+            THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+            IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+            FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+            AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+            LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+            OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+            SOFTWARE.
+
+         */
+
+        /// <summary>
+        ///     Converts linear sRGB color values to Oklab color values.
+        /// </summary>
+        /// <returns>
+        ///     Returns the converted color value.
+        ///     The X element is L (lightness), the Y element is a (green-red), the Z element is b (blue-yellow), and the W element is Alpha
+        ///     (a copy of the input's Alpha value).
+        ///     L and Alpha have a range of 0 to 1, while a and b are unbounded, but roughly -0.5 to 0.5
+        /// </returns>
+        /// <param name="srgb">Linear sRGB color value to convert. <see cref="FromSrgb"/> to convert an sRGB color into linear sRGB.</param>
+        public static Vector4 ToLab(Color srgb)
+        {
+            // convert from srgb to linear lms
+
+            var l = 0.4122214708f * srgb.R + 0.5363325363f * srgb.G + 0.0514459929f * srgb.B;
+            var m = 0.2119034982f * srgb.R + 0.6806995451f * srgb.G + 0.1073969566f * srgb.B;
+            var s = 0.0883024619f * srgb.R + 0.2817188376f * srgb.G + 0.6299787005f * srgb.B;
+
+            // convert from linear lms to non-linear lms
+
+            var l_ = MathF.Cbrt(l);
+            var m_ = MathF.Cbrt(m);
+            var s_ = MathF.Cbrt(s);
+
+            // convert from non-linear lms to lab
+
+            return new Vector4(
+                0.2104542553f * l_ + 0.7936177850f * m_ - 0.0040720468f * s_,
+                1.9779984951f * l_ - 2.4285922050f * m_ + 0.4505937099f * s_,
+                0.0259040371f * l_ + 0.7827717662f * m_ - 0.8086757660f * s_,
+                srgb.A
+            );
+        }
+
+        /// <summary>
+        ///     Converts Oklab color values to linear sRGB color values.
+        /// </summary>
+        /// <returns>
+        ///     Returns the converted color value. <see cref="ToSrgb"/> to convert an sRGB color into linear sRGB.
+        /// </returns>
+        /// <param name="oklab">Oklab color value to convert.</param>
+        public static Color FromLab(Vector4 oklab)
+        {
+            var l_ = oklab.X + 0.3963377774f * oklab.Y + 0.2158037573f * oklab.Z;
+            var m_ = oklab.X - 0.1055613458f * oklab.Y - 0.0638541728f * oklab.Z;
+            var s_ = oklab.X - 0.0894841775f * oklab.Y - 1.2914855480f * oklab.Z;
+
+            // convert from non-linear lms to linear lms
+
+            var l = l_ * l_ * l_;
+            var m = m_ * m_ * m_;
+            var s = s_ * s_ * s_;
+
+            // convert from linear lms to linear srgb
+
+            var r = +4.0767416621f * l - 3.3077115913f * m + 0.2309699292f * s;
+            var g = -1.2684380046f * l + 2.6097574011f * m - 0.3413193965f * s;
+            var b = -0.0041960863f * l - 0.7034186147f * m + 1.7076147010f * s;
+
+            return new Color(r, g, b, oklab.W);
+        }
+
+        /// <summary>
+        ///     Converts cartesian Oklab color values to polar Oklch color values.
+        /// </summary>
+        /// <returns>
+        ///     Returns the converted color value.
+        /// </returns>
+        /// <param name="oklab">Oklab color value to convert.</param>
+        public static Vector4 ToLch(Vector4 oklab)
+        {
+            var c = MathF.Sqrt(oklab.Y * oklab.Y + oklab.Z * oklab.Z);
+            var h = MathF.Atan2(oklab.Z, oklab.Y);
+            if (h < 0)
+                h += 2 * MathF.PI;
+
+            return new Vector4(oklab.X, c, h, oklab.W);
+        }
+
+        /// <summary>
+        ///     Converts polar Oklch color values to cartesian Oklab color values.
+        /// </summary>
+        /// <returns>
+        ///     Returns the converted color value.
+        /// </returns>
+        /// <param name="oklch">Oklch color value to convert.</param>
+        public static Vector4 FromLch(Vector4 oklch)
+        {
+            var a = oklch.Y * MathF.Cos(oklch.Z);
+            var b = oklch.Y * MathF.Sin(oklch.Z);
+
+            return new Vector4(oklch.X, a, b, oklch.W);
+        }
+        #endregion
+
         /// <summary>
         ///     Converts XYZ color values to RGB color values.
         /// </summary>

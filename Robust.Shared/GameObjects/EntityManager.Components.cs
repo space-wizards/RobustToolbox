@@ -1380,6 +1380,19 @@ namespace Robust.Shared.GameObjects
             return new CompRegistryEntityEnumerator(this, trait1, registry);
         }
 
+        public WeakEntityReference GetWeakReference(EntityUid uid, MetaDataComponent? meta = null)
+        {
+            return new WeakEntityReference(GetNetEntity(uid, meta));
+        }
+
+        public WeakEntityReference? GetWeakReference(EntityUid? uid, MetaDataComponent? meta = null)
+        {
+            if (uid == null)
+                return null;
+
+            return new WeakEntityReference(GetNetEntity(uid.Value, meta));
+        }
+
         /// <inheritdoc />
         public EntityUid? Resolve(WeakEntityReference weakRef)
         {

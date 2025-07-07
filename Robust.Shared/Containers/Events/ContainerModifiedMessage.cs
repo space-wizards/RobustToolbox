@@ -20,7 +20,7 @@ namespace Robust.Shared.Containers
         public EntityUid Entity { get; }
 
         /// <summary>
-        /// The entity that inserted or removed the entity from/into the container.
+        /// The entity that inserted or removed the entity into/from the container.
         /// </summary>
         public EntityUid? Mover { get; }
 

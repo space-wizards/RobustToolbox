@@ -10,7 +10,7 @@ public abstract class ContainerAttemptEventBase : CancellableEntityEventArgs
     public readonly EntityUid EntityUid;
 
     /// <summary>
-    /// The entity that tries to insert or remove the entity from/into the container.
+    /// The entity that tries to insert or remove the entity into/from the container.
     /// </summary>
     public readonly EntityUid? Mover;
 

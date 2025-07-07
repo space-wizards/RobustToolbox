@@ -19,10 +19,16 @@ namespace Robust.Shared.Containers
         /// </summary>
         public EntityUid Entity { get; }
 
-        protected ContainerModifiedMessage(EntityUid entity, BaseContainer container)
+        /// <summary>
+        /// The entity that inserted or removed the entity from/into the container.
+        /// </summary>
+        public EntityUid? Mover { get; }
+
+        protected ContainerModifiedMessage(EntityUid entity, BaseContainer container, EntityUid? mover)
         {
             Entity = entity;
             Container = container;
+            Mover = mover;
         }
     }
 }

@@ -9,10 +9,16 @@ public abstract class ContainerAttemptEventBase : CancellableEntityEventArgs
     public readonly BaseContainer Container;
     public readonly EntityUid EntityUid;
 
-    public ContainerAttemptEventBase(BaseContainer container, EntityUid entityUid)
+    /// <summary>
+    /// The entity that tries to insert or remove the entity from/into the container.
+    /// </summary>
+    public readonly EntityUid? Mover;
+
+    public ContainerAttemptEventBase(BaseContainer container, EntityUid entityUid, EntityUid? mover)
     {
         Container = container;
         EntityUid = entityUid;
+        Mover = mover;
     }
 }
 
@@ -27,8 +33,8 @@ public sealed class ContainerIsInsertingAttemptEvent : ContainerAttemptEventBase
     /// </summary>
     public bool AssumeEmpty { get; set; }
 
-    public ContainerIsInsertingAttemptEvent(BaseContainer container, EntityUid entityUid, bool assumeEmpty)
-        : base(container, entityUid)
+    public ContainerIsInsertingAttemptEvent(BaseContainer container, EntityUid entityUid, bool assumeEmpty, EntityUid? mover)
+        : base(container, entityUid, mover)
     {
         AssumeEmpty = assumeEmpty;
     }
@@ -45,8 +51,8 @@ public sealed class ContainerGettingInsertedAttemptEvent : ContainerAttemptEvent
     /// </summary>
     public bool AssumeEmpty { get; set; }
 
-    public ContainerGettingInsertedAttemptEvent(BaseContainer container, EntityUid entityUid, bool assumeEmpty)
-        : base(container, entityUid)
+    public ContainerGettingInsertedAttemptEvent(BaseContainer container, EntityUid entityUid, bool assumeEmpty, EntityUid? mover)
+        : base(container, entityUid, mover)
     {
         AssumeEmpty = assumeEmpty;
     }
@@ -57,7 +63,7 @@ public sealed class ContainerGettingInsertedAttemptEvent : ContainerAttemptEvent
 /// </summary>
 public sealed class ContainerIsRemovingAttemptEvent : ContainerAttemptEventBase
 {
-    public ContainerIsRemovingAttemptEvent(BaseContainer container, EntityUid entityUid) : base(container, entityUid)
+    public ContainerIsRemovingAttemptEvent(BaseContainer container, EntityUid entityUid, EntityUid? mover) : base(container, entityUid, mover)
     {
     }
 }
@@ -67,7 +73,7 @@ public sealed class ContainerIsRemovingAttemptEvent : ContainerAttemptEventBase
 /// </summary>
 public sealed class ContainerGettingRemovedAttemptEvent : ContainerAttemptEventBase
 {
-    public ContainerGettingRemovedAttemptEvent(BaseContainer container, EntityUid entityUid) : base(container, entityUid)
+    public ContainerGettingRemovedAttemptEvent(BaseContainer container, EntityUid entityUid, EntityUid? mover) : base(container, entityUid, mover)
     {
     }
 }

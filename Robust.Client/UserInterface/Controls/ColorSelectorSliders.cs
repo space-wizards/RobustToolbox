@@ -52,7 +52,6 @@ public sealed class ColorSelectorSliders : Control
 
     private const float AlphaDivisor = 100.0f;
 
-    private bool _updating = false;
     private Color _currentColor = Color.White;
     private Vector4 _colorData;
     private ColorSelectorType _currentType = ColorSelectorType.Rgb;
@@ -277,25 +276,16 @@ public sealed class ColorSelectorSliders : Control
             _ => throw new NotImplementedException(nameof(order))
         };
 
-        slider.Value = dataValue;
+        slider.SetValueWithoutEvent(dataValue);
         inputBox.Value = (int)(dataValue * divisor);
     }
 
     private void Update()
     {
-        // This code is a mess of UI events causing stack overflows. Also, updating one slider triggers all sliders to
-        // update, which due to rounding errors causes them to actually change values, specifically for HSV sliders.
-        if (_updating)
-            return;
-
-        _updating = true;
-
         UpdateSlider(ColorSliderOrder.Top);
         UpdateSlider(ColorSliderOrder.Middle);
         UpdateSlider(ColorSliderOrder.Bottom);
         UpdateSlider(ColorSliderOrder.Alpha);
-
-        _updating = false;
     }
 
     private bool IsSpinBoxValid(int value, ColorSliderOrder ordering)
@@ -311,15 +301,13 @@ public sealed class ColorSelectorSliders : Control
         var (slider, _) = GetSliderByOrder(order);
         var value = args.Value / GetColorValueDivisor(order);
 
+        // We are intentionally triggering the slider OnValueChanged event here.
+        // This is so that the color data values of the sliders are updated accordingly.
         slider.Value = value;
     }
 
     private void OnSliderValueChanged(ColorSliderOrder order)
     {
-        if (_updating)
-            return;
-        _updating = true;
-
         _colorData = new Vector4(
             _topColorSlider.Value,
             _middleColorSlider.Value,
@@ -328,9 +316,7 @@ public sealed class ColorSelectorSliders : Control
 
         _currentColor = _strategy.FromColorData(_colorData);
         OnColorChanged?.Invoke(_currentColor);
-
         UpdateSlider(order);
-        _updating = false;
     }
 
     private enum ColorSliderOrder

@@ -8,6 +8,7 @@ namespace Robust.Client.UserInterface.Controls;
 // condensed version of the original ColorSlider set
 public sealed class ColorSelectorSliders : Control
 {
+    // TODO: This might be desyncing from _currentColor when sliders change.
     public Color Color
     {
         get => _currentColor;
@@ -116,10 +117,10 @@ public sealed class ColorSelectorSliders : Control
             MaxValue = 1.0f,
         };
 
-        _topColorSlider.OnValueChanged += _ => { OnSliderValueChanged(); };
-        _middleColorSlider.OnValueChanged += _ => { OnSliderValueChanged(); };
-        _bottomColorSlider.OnValueChanged += _ => { OnSliderValueChanged(); };
-        _alphaSlider.OnValueChanged += _ => { OnSliderValueChanged(); };
+        _topColorSlider.OnValueChanged += r => { OnSliderValueChanged(ColorSliderOrder.Top); };
+        _middleColorSlider.OnValueChanged += r => { OnSliderValueChanged(ColorSliderOrder.Middle); };
+        _bottomColorSlider.OnValueChanged += r => { OnSliderValueChanged(ColorSliderOrder.Bottom); };
+        _alphaSlider.OnValueChanged += r => { OnSliderValueChanged(ColorSliderOrder.Alpha); };
 
         _topInputBox = new SpinBox
         {
@@ -230,14 +231,14 @@ public sealed class ColorSelectorSliders : Control
         };
     }
 
-    private Slider GetSliderByOrder(ColorSliderOrder order)
+    private (Slider slider, SpinBox inputBox) GetSliderByOrder(ColorSliderOrder order)
     {
         return order switch
         {
-            ColorSliderOrder.Top => _topColorSlider,
-            ColorSliderOrder.Middle => _middleColorSlider,
-            ColorSliderOrder.Bottom => _bottomColorSlider,
-            ColorSliderOrder.Alpha => _alphaSlider,
+            ColorSliderOrder.Top => (_topColorSlider, _topInputBox),
+            ColorSliderOrder.Middle => (_middleColorSlider, _middleInputBox),
+            ColorSliderOrder.Bottom => (_bottomColorSlider, _bottomInputBox),
+            ColorSliderOrder.Alpha => (_alphaSlider, _alphaInputBox),
             _ => throw new NotImplementedException(),
         };
     }
@@ -254,6 +255,39 @@ public sealed class ColorSelectorSliders : Control
         _bottomStyle.ConfigureSlider(_strategy.BottomSliderStyle);
     }
 
+    private void UpdateSlider(ColorSliderOrder order)
+    {
+        var (slider, inputBox) = GetSliderByOrder(order);
+        var sliderValues = _strategy.GetSliderValues(_colorData);
+        var inputBoxes = _strategy.GetInputBoxValues(_colorData);
+
+        var value = 0.0f;
+        var inputBoxValue = 0;
+
+        switch (order)
+        {
+            case ColorSliderOrder.Top:
+                value = sliderValues.top;
+                inputBoxValue = (int)inputBoxes.top;
+                break;
+            case ColorSliderOrder.Middle:
+                value = sliderValues.middle;
+                inputBoxValue = (int)inputBoxes.middle;
+                break;
+            case ColorSliderOrder.Bottom:
+                value = sliderValues.bottom;
+                inputBoxValue = (int)inputBoxes.bottom;
+                break;
+            case ColorSliderOrder.Alpha:
+                value = _currentColor.A;
+                inputBoxValue = (int)(_currentColor.A * AlphaDivisor);
+                break;
+        }
+
+        slider.Value = value;
+        inputBox.Value = inputBoxValue;
+    }
+
     private void Update()
     {
         // This code is a mess of UI events causing stack overflows. Also, updating one slider triggers all sliders to
@@ -263,37 +297,11 @@ public sealed class ColorSelectorSliders : Control
 
         _updating = true;
 
-        var sliderValues = _strategy.GetSliderValues(_colorData);
-        var inputBoxes = _strategy.GetInputBoxValues(_colorData);
+        UpdateSlider(ColorSliderOrder.Top);
+        UpdateSlider(ColorSliderOrder.Middle);
+        UpdateSlider(ColorSliderOrder.Bottom);
+        UpdateSlider(ColorSliderOrder.Alpha);
 
-        _topStyle.SetBaseColor(_colorData);
-        _topColorSlider.Value = sliderValues.top;
-        _topInputBox.Value = (int)inputBoxes.top;
-
-        _middleStyle.SetBaseColor(_colorData);
-        _middleColorSlider.Value = sliderValues.middle;
-        _middleInputBox.Value = (int)inputBoxes.middle;
-
-        _bottomStyle.SetBaseColor(_colorData);
-        _bottomColorSlider.Value = sliderValues.bottom;
-        _bottomInputBox.Value = (int)inputBoxes.bottom;
-
-        // TODO: Apparently HSV calculations are wonky? Here is a previous comment. Investigate this.
-        // dumb workaround because the formula for
-        // HSV calculation results in a negative
-        // number in any value past 300 degrees
-        // if (_colorData.X > 0)
-        // {
-        //     _topColorSlider.Value = _colorData.X;
-        //     _topInputBox.Value = (int)(_colorData.X * 360.0f);
-        // }
-        // else
-        // {
-        //     _topInputBox.Value = (int)(_topColorSlider.Value * 360.0f);
-        // }
-
-        _alphaSlider.Value = _currentColor.A;
-        _alphaInputBox.Value = (int)(_currentColor.A * 100.0f);
         _updating = false;
     }
 
@@ -324,25 +332,29 @@ public sealed class ColorSelectorSliders : Control
 
     private void OnInputBoxValueChanged(ValueChangedEventArgs args, ColorSliderOrder order)
     {
-        var slider = GetSliderByOrder(order);
+        var (slider, _) = GetSliderByOrder(order);
         var value = args.Value / GetColorValueDivisor(order);
 
         slider.Value = value;
     }
 
-    private void OnSliderValueChanged()
+    private void OnSliderValueChanged(ColorSliderOrder order)
     {
-        // stack overflow otherwise due to value sets
         if (_updating)
-        {
             return;
-        }
+        _updating = true;
 
-        _colorData = new Vector4(_topColorSlider.Value, _middleColorSlider.Value, _bottomColorSlider.Value, _alphaSlider.Value);
-        Color = _strategy.FromColorData(_colorData);
+        _colorData = new Vector4(
+            _topColorSlider.Value,
+            _middleColorSlider.Value,
+            _bottomColorSlider.Value,
+            _alphaSlider.Value);
 
-        Update();
+        _currentColor = _strategy.FromColorData(_colorData);
         OnColorChanged?.Invoke(_currentColor);
+
+        UpdateSlider(order);
+        _updating = false;
     }
 
     private enum ColorSliderOrder

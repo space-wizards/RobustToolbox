@@ -81,6 +81,8 @@ public sealed class ColorSelectorSliders : Control
     private ColorSelectorStyleBox _middleStyle;
     private ColorSelectorStyleBox _bottomStyle;
 
+    private const float AlphaDivisor = 100.0f;
+
     public ColorSelectorSliders()
     {
         _topColorSlider = new ColorableSlider
@@ -304,7 +306,7 @@ public sealed class ColorSelectorSliders : Control
 
         if (ordering == ColorSliderOrder.Alpha)
         {
-            return value <= 100;
+            return value <= AlphaDivisor;
         }
 
         return _strategy.IsSliderInputValid(value, ordering);
@@ -314,7 +316,7 @@ public sealed class ColorSelectorSliders : Control
     {
         if (order == ColorSliderOrder.Alpha)
         {
-            return 100.0f;
+            return AlphaDivisor;
         }
 
         return _strategy.GetColorValueDivisor(order);

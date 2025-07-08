@@ -14,15 +14,8 @@ public sealed class ColorSelectorSliders : Control
         set
         {
             _currentColor = value;
-            switch (SelectorType)
-            {
-                case ColorSelectorType.Rgb:
-                    _colorData = new Vector4(_currentColor.R, _currentColor.G, _currentColor.B, _currentColor.A);
-                    break;
-                case ColorSelectorType.Hsv:
-                    _colorData = Color.ToHsv(value);
-                    break;
-            }
+            _colorData = _strategy.ToColorData(value);
+
             Update();
         }
     }
@@ -32,18 +25,12 @@ public sealed class ColorSelectorSliders : Control
         get => _currentType;
         set
         {
-            switch ((_currentType, value))
-            {
-                case (ColorSelectorType.Rgb, ColorSelectorType.Hsv):
-                    _colorData = Color.ToHsv(Color);
-                    break;
-                case (ColorSelectorType.Hsv, ColorSelectorType.Rgb):
-                    _colorData = new Vector4(_currentColor.R, _currentColor.G, _currentColor.B, _currentColor.A);
-                    break;
-            }
             _currentType = value;
             _typeSelector.Select(_types.IndexOf(value));
+
             _strategy = GetStrategy(value);
+            _colorData = _strategy.ToColorData(_currentColor);
+
             UpdateType();
             Update();
         }
@@ -264,10 +251,9 @@ public sealed class ColorSelectorSliders : Control
         _middleSliderLabel.Text = labels.middleLabel;
         _bottomSliderLabel.Text = labels.bottomLabel;
 
-        bool hsv = SelectorType == ColorSelectorType.Hsv;
-        _topStyle.ConfigureSlider( hsv ? ColorSelectorStyleBox.ColorSliderPreset.Hue : ColorSelectorStyleBox.ColorSliderPreset.Red);
-        _middleStyle.ConfigureSlider( hsv ? ColorSelectorStyleBox.ColorSliderPreset.Saturation : ColorSelectorStyleBox.ColorSliderPreset.Green);
-        _bottomStyle.ConfigureSlider( hsv ? ColorSelectorStyleBox.ColorSliderPreset.Value : ColorSelectorStyleBox.ColorSliderPreset.Blue);
+        _topStyle.ConfigureSlider(_strategy.TopSliderStyle);
+        _middleStyle.ConfigureSlider(_strategy.MiddleSliderStyle);
+        _bottomStyle.ConfigureSlider(_strategy.BottomSliderStyle);
     }
 
     private void Update()
@@ -278,48 +264,38 @@ public sealed class ColorSelectorSliders : Control
             return;
 
         _updating = true;
+
+        var sliderValues = _strategy.GetSliderValues(_colorData);
+        var inputBoxes = _strategy.GetInputBoxValues(_colorData);
+
         _topStyle.SetBaseColor(_colorData);
+        _topColorSlider.Value = sliderValues.top;
+        _topInputBox.Value = (int)inputBoxes.top;
+
         _middleStyle.SetBaseColor(_colorData);
+        _middleColorSlider.Value = sliderValues.middle;
+        _middleInputBox.Value = (int)inputBoxes.middle;
+
         _bottomStyle.SetBaseColor(_colorData);
+        _bottomColorSlider.Value = sliderValues.bottom;
+        _bottomInputBox.Value = (int)inputBoxes.bottom;
 
-        switch (SelectorType)
-        {
-            case ColorSelectorType.Rgb:
-                _topColorSlider.Value = _colorData.X;
-                _middleColorSlider.Value = _colorData.Y;
-                _bottomColorSlider.Value = _colorData.Z;
+        // TODO: Apparently HSV calculations are wonky? Here is a previous comment. Investigate this.
+        // dumb workaround because the formula for
+        // HSV calculation results in a negative
+        // number in any value past 300 degrees
+        // if (_colorData.X > 0)
+        // {
+        //     _topColorSlider.Value = _colorData.X;
+        //     _topInputBox.Value = (int)(_colorData.X * 360.0f);
+        // }
+        // else
+        // {
+        //     _topInputBox.Value = (int)(_topColorSlider.Value * 360.0f);
+        // }
 
-                _topInputBox.Value = (int)(_colorData.X * 255.0f);
-                _middleInputBox.Value = (int)(_colorData.Y * 255.0f);
-                _bottomInputBox.Value = (int)(_colorData.Z * 255.0f);
-
-                break;
-            case ColorSelectorType.Hsv:
-                // dumb workaround because the formula for
-                // HSV calculation results in a negative
-                // number in any value past 300 degrees
-                if (_colorData.X > 0)
-                {
-                    _topColorSlider.Value = _colorData.X;
-                    _topInputBox.Value = (int)(_colorData.X * 360.0f);
-                }
-                else
-                {
-                    _topInputBox.Value = (int)(_topColorSlider.Value * 360.0f);
-                }
-
-                _middleColorSlider.Value = _colorData.Y;
-                _bottomColorSlider.Value = _colorData.Z;
-
-                _middleInputBox.Value = (int)(_colorData.Y * 100.0f);
-                _bottomInputBox.Value = (int)(_colorData.Z * 100.0f);
-
-
-                break;
-        }
-
-        _alphaSlider.Value = Color.A;
-        _alphaInputBox.Value = (int)(Color.A * 100.0f);
+        _alphaSlider.Value = _currentColor.A;
+        _alphaInputBox.Value = (int)(_currentColor.A * 100.0f);
         _updating = false;
     }
 
@@ -335,42 +311,13 @@ public sealed class ColorSelectorSliders : Control
             return value <= 100;
         }
 
-        switch (SelectorType)
-        {
-            case ColorSelectorType.Rgb:
-                return value <= byte.MaxValue;
-            case ColorSelectorType.Hsv:
-                switch (ordering)
-                {
-                    case ColorSliderOrder.Top:
-                        return value <= 360;
-                    default:
-                        return value <= 100;
-                }
-        }
-
-        return false;
+        return _strategy.IsSliderInputValid(value, ordering);
     }
 
+    // TODO: Nuke this function.
     private (string, string, string) GetSliderLabels()
     {
-        switch (SelectorType)
-        {
-            case ColorSelectorType.Rgb:
-                return (
-                    Loc.GetString("color-selector-sliders-red"),
-                    Loc.GetString("color-selector-sliders-green"),
-                    Loc.GetString("color-selector-sliders-blue")
-                );
-            case ColorSelectorType.Hsv:
-                return (
-                    Loc.GetString("color-selector-sliders-hue"),
-                    Loc.GetString("color-selector-sliders-saturation"),
-                    Loc.GetString("color-selector-sliders-value")
-                );
-        }
-
-        return ("ERR", "ERR", "ERR");
+        return _strategy.GetSliderLabelTexts();
     }
 
     private float GetColorValueDivisor(ColorSliderOrder order)
@@ -380,21 +327,7 @@ public sealed class ColorSelectorSliders : Control
             return 100.0f;
         }
 
-        switch (SelectorType)
-        {
-            case ColorSelectorType.Rgb:
-                return 255.0f;
-            case ColorSelectorType.Hsv:
-                switch (order)
-                {
-                    case ColorSliderOrder.Top:
-                        return 360.0f;
-                    default:
-                        return 100.0f;
-                }
-        }
-
-        return 0.0f;
+        return _strategy.GetColorValueDivisor(order);
     }
 
     private void OnColorSet()
@@ -406,12 +339,7 @@ public sealed class ColorSelectorSliders : Control
         }
 
         _colorData = new Vector4(_topColorSlider.Value, _middleColorSlider.Value, _bottomColorSlider.Value, _alphaSlider.Value);
-
-        _currentColor = SelectorType switch
-        {
-            ColorSelectorType.Hsv => Color.FromHsv(_colorData),
-            _ => new Color(_colorData.X, _colorData.Y, _colorData.Z, _colorData.W)
-        };
+        Color = _strategy.FromColorData(_colorData);
 
         Update();
         OnColorChanged?.Invoke(_currentColor);

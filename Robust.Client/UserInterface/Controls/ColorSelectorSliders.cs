@@ -275,7 +275,7 @@ public sealed class ColorSelectorSliders : Control
         };
 
         slider.SetValueWithoutEvent(dataValue);
-        inputBox.Value = (int)(dataValue * divisor);
+        inputBox.OverrideValue((int)(dataValue * divisor));
     }
 
     private void UpdateSliderVisuals()

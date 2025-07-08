@@ -8,7 +8,6 @@ namespace Robust.Client.UserInterface.Controls;
 // condensed version of the original ColorSlider set
 public sealed class ColorSelectorSliders : Control
 {
-    // TODO: This might be desyncing from _currentColor when sliders change.
     public Color Color
     {
         get => _currentColor;

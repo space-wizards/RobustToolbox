@@ -146,10 +146,10 @@ public sealed class ColorSelectorSliders : Control
         };
         _alphaInputBox.InitDefaultButtons();
 
-        _topInputBox.ValueChanged += value => OnInputBoxValueChanged(value, ColorSliderOrder.Top);
-        _middleInputBox.ValueChanged += value => OnInputBoxValueChanged(value, ColorSliderOrder.Middle);
-        _bottomInputBox.ValueChanged += value => OnInputBoxValueChanged(value, ColorSliderOrder.Bottom);
-        _alphaInputBox.ValueChanged += value => OnInputBoxValueChanged(value, ColorSliderOrder.Alpha);
+        _topInputBox.ValueChanged += value => { OnInputBoxValueChanged(value, ColorSliderOrder.Top); };
+        _middleInputBox.ValueChanged += value => { OnInputBoxValueChanged(value, ColorSliderOrder.Middle); };
+        _bottomInputBox.ValueChanged += value => { OnInputBoxValueChanged(value, ColorSliderOrder.Bottom); };
+        _alphaInputBox.ValueChanged += value => { OnInputBoxValueChanged(value, ColorSliderOrder.Alpha); };
 
         _alphaSliderLabel.Text = Loc.GetString("color-selector-sliders-alpha");
 

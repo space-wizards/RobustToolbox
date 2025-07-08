@@ -43,10 +43,13 @@ public sealed class ColorSelectorSliders : Control
             }
             _currentType = value;
             _typeSelector.Select(_types.IndexOf(value));
+            _strategy = GetStrategy(value);
             UpdateType();
             Update();
         }
     }
+
+    private IColorSelectorStrategy _strategy { get; set; }
 
     public bool IsAlphaVisible
     {
@@ -238,7 +241,19 @@ public sealed class ColorSelectorSliders : Control
         rootBox.AddChild(bodyBox);
 
         UpdateType();
+
+        _strategy = GetStrategy(SelectorType);
         Color = _currentColor;
+    }
+
+    private IColorSelectorStrategy GetStrategy(ColorSelectorType selectorType)
+    {
+        return selectorType switch
+        {
+            ColorSelectorType.Rgb => new RgbSliderStategy(),
+            ColorSelectorType.Hsv => new HsvSliderStategy(),
+            _ => throw new NotImplementedException(),
+        };
     }
 
     private void UpdateType()

@@ -37,8 +37,6 @@ public sealed class ColorSelectorSliders : Control
         }
     }
 
-    private IColorSliderStrategy _strategy { get; set; }
-
     public bool IsAlphaVisible
     {
         get => _isAlphaVisible;
@@ -52,11 +50,15 @@ public sealed class ColorSelectorSliders : Control
 
     public Action<Color>? OnColorChanged;
 
+    private const float AlphaDivisor = 100.0f;
+
     private bool _updating = false;
     private Color _currentColor = Color.White;
     private Vector4 _colorData;
     private ColorSelectorType _currentType = ColorSelectorType.Rgb;
     private bool _isAlphaVisible = false;
+
+    private IColorSliderStrategy _strategy { get; set; }
 
     private ColorableSlider _topColorSlider;
     private ColorableSlider _middleColorSlider;
@@ -81,8 +83,6 @@ public sealed class ColorSelectorSliders : Control
     private ColorSelectorStyleBox _topStyle;
     private ColorSelectorStyleBox _middleStyle;
     private ColorSelectorStyleBox _bottomStyle;
-
-    private const float AlphaDivisor = 100.0f;
 
     public ColorSelectorSliders()
     {

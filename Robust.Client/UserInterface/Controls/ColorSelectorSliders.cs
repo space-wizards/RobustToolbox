@@ -245,11 +245,10 @@ public sealed class ColorSelectorSliders : Control
 
     private void UpdateType()
     {
-        (string topLabel, string middleLabel, string bottomLabel) labels = GetSliderLabels();
-
-        _topSliderLabel.Text = labels.topLabel;
-        _middleSliderLabel.Text = labels.middleLabel;
-        _bottomSliderLabel.Text = labels.bottomLabel;
+        var labels = _strategy.GetSliderLabelTexts();
+        _topSliderLabel.Text = labels.top;
+        _middleSliderLabel.Text = labels.middle;
+        _bottomSliderLabel.Text = labels.bottom;
 
         _topStyle.ConfigureSlider(_strategy.TopSliderStyle);
         _middleStyle.ConfigureSlider(_strategy.MiddleSliderStyle);
@@ -312,12 +311,6 @@ public sealed class ColorSelectorSliders : Control
         }
 
         return _strategy.IsSliderInputValid(value, ordering);
-    }
-
-    // TODO: Nuke this function.
-    private (string, string, string) GetSliderLabels()
-    {
-        return _strategy.GetSliderLabelTexts();
     }
 
     private float GetColorValueDivisor(ColorSliderOrder order)

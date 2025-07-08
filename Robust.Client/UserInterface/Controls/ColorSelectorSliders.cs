@@ -415,4 +415,20 @@ public sealed class ColorSelectorSliders : Control
         Rgb,
         Hsv,
     }
+
+    private interface IColorSelectorStrategy
+    {
+        public ColorSelectorStyleBox.ColorSliderPreset TopSliderStyle { get; }
+        public ColorSelectorStyleBox.ColorSliderPreset MiddleSliderStyle { get; }
+        public ColorSelectorStyleBox.ColorSliderPreset BottomSliderStyle { get; }
+
+        public Vector4 ToColorData(Color color);
+
+        public bool IsSliderInputValid(int value, ColorSliderOrder order);
+        public float GetColorValueDivisor(ColorSliderOrder order);
+
+        public (string top, string middle, string bottom) GetSliderLabelTexts();
+        public (float top, float middle, float bottom) GetSliderValues(Vector4 colorData);
+        public (float top, float middle, float bottom) GetInputBoxValues(Vector4 colorData);
+    }
 }

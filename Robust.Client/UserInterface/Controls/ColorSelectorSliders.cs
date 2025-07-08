@@ -49,7 +49,7 @@ public sealed class ColorSelectorSliders : Control
         }
     }
 
-    private IColorSelectorStrategy _strategy { get; set; }
+    private IColorSliderStrategy _strategy { get; set; }
 
     public bool IsAlphaVisible
     {
@@ -246,7 +246,7 @@ public sealed class ColorSelectorSliders : Control
         Color = _currentColor;
     }
 
-    private IColorSelectorStrategy GetStrategy(ColorSelectorType selectorType)
+    private IColorSliderStrategy GetStrategy(ColorSelectorType selectorType)
     {
         return selectorType switch
         {
@@ -431,7 +431,7 @@ public sealed class ColorSelectorSliders : Control
         Hsv,
     }
 
-    private interface IColorSelectorStrategy
+    private interface IColorSliderStrategy
     {
         public ColorSelectorStyleBox.ColorSliderPreset TopSliderStyle { get; }
         public ColorSelectorStyleBox.ColorSliderPreset MiddleSliderStyle { get; }
@@ -448,7 +448,7 @@ public sealed class ColorSelectorSliders : Control
         public (float top, float middle, float bottom) GetInputBoxValues(Vector4 colorData);
     }
 
-    private sealed class RgbSliderStategy : IColorSelectorStrategy
+    private sealed class RgbSliderStategy : IColorSliderStrategy
     {
         private const float ChannelMaxValue = byte.MaxValue;
 
@@ -492,7 +492,7 @@ public sealed class ColorSelectorSliders : Control
         }
     }
 
-    private sealed class HsvSliderStategy : IColorSelectorStrategy
+    private sealed class HsvSliderStategy : IColorSliderStrategy
     {
         private const float HueMaxValue = 360.0f;
         private const float SliderMaxValue = 100.0f;

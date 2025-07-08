@@ -374,18 +374,71 @@ public sealed class ColorSelectorSliders : Control
 
     private interface IColorSliderStrategy
     {
+        /// <summary>
+        ///     The style preset used by the top slider.
+        /// </summary>
         public ColorSelectorStyleBox.ColorSliderPreset TopSliderStyle { get; }
+
+        /// <summary>
+        ///     The style preset used by the middle slider.
+        /// </summary>
         public ColorSelectorStyleBox.ColorSliderPreset MiddleSliderStyle { get; }
+
+        /// <summary>
+        ///     The style preset used by the bottom slider.
+        /// </summary>
         public ColorSelectorStyleBox.ColorSliderPreset BottomSliderStyle { get; }
 
+        /// <summary>
+        ///     Converts a Color to a Vector4 representation of its components.
+        /// </summary>
+        /// <remarks>
+        ///     Each value in the Vector4 must be between 0.0f and 1.0f; this is used in the
+        ///     context of slider values, which are between these ranges.
+        /// </remarks>
+        /// <param name="color">A Color to convert into Vector4 slider values.</param>
+        /// <returns>A Vector4 representation of a Color's slider values.</returns>
         public Vector4 ToColorData(Color color);
+
+        /// <summary>
+        ///     Converts a Vector4 representation of color slider values into a Color.
+        /// </summary>
+        /// <param name="colorData">A Vector4 representation of color slider values.</param>
+        /// <returns>A color generated from slider values.</returns>
         public Color FromColorData(Vector4 colorData);
 
+        // TODO: Nuke this
+        /// <summary>
+        ///     Checks if a given number value is valid for the given slider.
+        /// </summary>
+        /// <param name="value">A (premultiplied) color component value.</param>
+        /// <param name="order">Which slider the value is for.</param>
+        /// <returns>If the given value is valid for the slider.</returns>
         public bool IsSliderInputValid(int value, ColorSliderOrder order);
+
+        /// <summary>
+        ///     Gets a color component divisor for the given slider.
+        /// </summary>
+        /// <remarks>
+        ///     This is used for converting slider values to/from color component values.
+        ///     For example, in RGB coloration, each channel ranges from 0 to 255,
+        ///     so if you had a slider value of 0.2, you would multiply 0.2 * 255 = 51
+        ///     for the "channel" value.
+        /// </remarks>
+        /// <param name="order"></param>
+        /// <returns></returns>
         public float GetColorValueDivisor(ColorSliderOrder order);
 
+        /// <summary>
+        ///     Gets a label text string for the first three color sliders.
+        /// </summary>
+        /// <returns>Label text strings for the top, middle, and bottom sliders.</returns>
         public (string top, string middle, string bottom) GetSliderLabelTexts();
+
+        // TODO: Nuke this
         public (float top, float middle, float bottom) GetSliderValues(Vector4 colorData);
+
+        // TODO: Nuke this
         public (float top, float middle, float bottom) GetInputBoxValues(Vector4 colorData);
     }
 

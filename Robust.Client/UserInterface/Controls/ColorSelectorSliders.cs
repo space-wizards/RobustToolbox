@@ -423,6 +423,7 @@ public sealed class ColorSelectorSliders : Control
         public ColorSelectorStyleBox.ColorSliderPreset BottomSliderStyle { get; }
 
         public Vector4 ToColorData(Color color);
+        public Color FromColorData(Vector4 colorData);
 
         public bool IsSliderInputValid(int value, ColorSliderOrder order);
         public float GetColorValueDivisor(ColorSliderOrder order);

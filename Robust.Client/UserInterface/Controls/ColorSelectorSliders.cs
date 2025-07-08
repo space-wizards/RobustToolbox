@@ -114,10 +114,10 @@ public sealed class ColorSelectorSliders : Control
             MaxValue = 1.0f,
         };
 
-        _topColorSlider.OnValueChanged += _ => { OnColorSet(); };
-        _middleColorSlider.OnValueChanged += _ => { OnColorSet(); };
-        _bottomColorSlider.OnValueChanged += _ => { OnColorSet(); };
-        _alphaSlider.OnValueChanged += _ => { OnColorSet(); };
+        _topColorSlider.OnValueChanged += _ => { OnSliderValueChanged(); };
+        _middleColorSlider.OnValueChanged += _ => { OnSliderValueChanged(); };
+        _bottomColorSlider.OnValueChanged += _ => { OnSliderValueChanged(); };
+        _alphaSlider.OnValueChanged += _ => { OnSliderValueChanged(); };
 
         _topInputBox = new SpinBox
         {
@@ -328,7 +328,7 @@ public sealed class ColorSelectorSliders : Control
         slider.Value = value;
     }
 
-    private void OnColorSet()
+    private void OnSliderValueChanged()
     {
         // stack overflow otherwise due to value sets
         if (_updating)

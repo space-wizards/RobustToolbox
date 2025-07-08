@@ -243,6 +243,13 @@ public sealed class ColorSelectorSliders : Control
         };
     }
 
+    private float GetColorValueDivisor(ColorSliderOrder order)
+    {
+        return order == ColorSliderOrder.Alpha
+            ? AlphaDivisor
+            : _strategy.GetColorValueDivisor(order);
+    }
+
     private void UpdateType()
     {
         var labels = _strategy.GetSliderLabelTexts();
@@ -259,9 +266,7 @@ public sealed class ColorSelectorSliders : Control
     {
         var (slider, inputBox) = GetSliderByOrder(order);
 
-        var divisor = order == ColorSliderOrder.Alpha
-            ? AlphaDivisor
-            : _strategy.GetColorValueDivisor(order);
+        var divisor = GetColorValueDivisor(order);
 
         var dataValue = order switch
         {
@@ -295,27 +300,10 @@ public sealed class ColorSelectorSliders : Control
 
     private bool IsSpinBoxValid(int value, ColorSliderOrder ordering)
     {
-        if (value < 0)
-        {
-            return false;
-        }
+        var divisor = GetColorValueDivisor(ordering);
+        var channelValue = value / divisor;
 
-        if (ordering == ColorSliderOrder.Alpha)
-        {
-            return value <= AlphaDivisor;
-        }
-
-        return _strategy.IsSliderInputValid(value, ordering);
-    }
-
-    private float GetColorValueDivisor(ColorSliderOrder order)
-    {
-        if (order == ColorSliderOrder.Alpha)
-        {
-            return AlphaDivisor;
-        }
-
-        return _strategy.GetColorValueDivisor(order);
+        return channelValue >= 0.0f && channelValue <= 1.0f;
     }
 
     private void OnInputBoxValueChanged(ValueChangedEventArgs args, ColorSliderOrder order)
@@ -394,15 +382,6 @@ public sealed class ColorSelectorSliders : Control
         /// <returns>A color generated from slider values.</returns>
         public Color FromColorData(Vector4 colorData);
 
-        // TODO: Nuke this
-        /// <summary>
-        ///     Checks if a given number value is valid for the given slider.
-        /// </summary>
-        /// <param name="value">A (premultiplied) color component value.</param>
-        /// <param name="order">Which slider the value is for.</param>
-        /// <returns>If the given value is valid for the slider.</returns>
-        public bool IsSliderInputValid(int value, ColorSliderOrder order);
-
         /// <summary>
         ///     Gets a color component divisor for the given slider.
         /// </summary>
@@ -411,9 +390,12 @@ public sealed class ColorSelectorSliders : Control
         ///     For example, in RGB coloration, each channel ranges from 0 to 255,
         ///     so if you had a slider value of 0.2, you would multiply 0.2 * 255 = 51
         ///     for the "channel" value.
+        ///
+        ///     This does not apply to the Alpha channel, as the Alpha channel
+        ///     always uses the same divisor; this is defined in ColorSelectorSliders.
         /// </remarks>
-        /// <param name="order"></param>
-        /// <returns></returns>
+        /// <param name="order">The slider to retrieve a divisor for.</param>
+        /// <returns>The divisor for the given slider.</returns>
         public float GetColorValueDivisor(ColorSliderOrder order);
 
         /// <summary>
@@ -437,7 +419,6 @@ public sealed class ColorSelectorSliders : Control
         public Vector4 ToColorData(Color color) => new(color.R, color.G, color.B, color.A);
         public Color FromColorData(Vector4 colorData) => new(colorData.X, colorData.Y, colorData.Z, colorData.W);
 
-        public bool IsSliderInputValid(int value, ColorSliderOrder order) => value <= ChannelMaxValue;
         public float GetColorValueDivisor(ColorSliderOrder order) => ChannelMaxValue;
 
         public (string top, string middle, string bottom) GetSliderLabelTexts()
@@ -463,15 +444,6 @@ public sealed class ColorSelectorSliders : Control
 
         public Vector4 ToColorData(Color color) => Color.ToHsv(color);
         public Color FromColorData(Vector4 colorData) => Color.FromHsv(colorData);
-
-        public bool IsSliderInputValid(int value, ColorSliderOrder order)
-        {
-            return order switch
-            {
-                ColorSliderOrder.Top => value <= HueMaxValue,
-                _ => value <= SliderMaxValue,
-            };
-        }
 
         public float GetColorValueDivisor(ColorSliderOrder order)
         {

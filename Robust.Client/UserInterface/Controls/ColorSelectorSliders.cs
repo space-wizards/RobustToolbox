@@ -85,6 +85,8 @@ public sealed class ColorSelectorSliders : Control
 
     public ColorSelectorSliders()
     {
+        _strategy = GetStrategy(SelectorType);
+
         _topColorSlider = new ColorableSlider
         {
             HorizontalExpand = true,
@@ -215,8 +217,6 @@ public sealed class ColorSelectorSliders : Control
         rootBox.AddChild(bodyBox);
 
         UpdateType();
-
-        _strategy = GetStrategy(SelectorType);
         Color = _currentColor;
     }
 

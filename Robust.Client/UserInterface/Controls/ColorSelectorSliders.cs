@@ -432,4 +432,108 @@ public sealed class ColorSelectorSliders : Control
         public (float top, float middle, float bottom) GetSliderValues(Vector4 colorData);
         public (float top, float middle, float bottom) GetInputBoxValues(Vector4 colorData);
     }
+
+    private sealed class RgbSliderStategy : IColorSelectorStrategy
+    {
+        private const float ChannelMaxValue = byte.MaxValue;
+
+        public ColorSelectorStyleBox.ColorSliderPreset TopSliderStyle
+            => ColorSelectorStyleBox.ColorSliderPreset.Red;
+        public ColorSelectorStyleBox.ColorSliderPreset MiddleSliderStyle
+            => ColorSelectorStyleBox.ColorSliderPreset.Green;
+        public ColorSelectorStyleBox.ColorSliderPreset BottomSliderStyle
+            => ColorSelectorStyleBox.ColorSliderPreset.Blue;
+
+        public Vector4 ToColorData(Color color) => new(color.R, color.G, color.B, color.A);
+        public Color FromColorData(Vector4 colorData) => new(colorData.X, colorData.Y, colorData.Z, colorData.W);
+
+        public bool IsSliderInputValid(int value, ColorSliderOrder order) => value <= ChannelMaxValue;
+        public float GetColorValueDivisor(ColorSliderOrder order) => ChannelMaxValue;
+
+        public (string top, string middle, string bottom) GetSliderLabelTexts()
+        {
+            return (
+                Loc.GetString("color-selector-sliders-red"),
+                Loc.GetString("color-selector-sliders-green"),
+                Loc.GetString("color-selector-sliders-blue"));
+        }
+
+        public (float top, float middle, float bottom) GetSliderValues(Vector4 colorData)
+        {
+            return (colorData.X, colorData.Y, colorData.Z);
+        }
+
+        public (float top, float middle, float bottom) GetInputBoxValues(Vector4 colorData)
+        {
+            var topDivisor = GetColorValueDivisor(ColorSliderOrder.Top);
+            var middleDivisor = GetColorValueDivisor(ColorSliderOrder.Middle);
+            var bottomDivisor = GetColorValueDivisor(ColorSliderOrder.Bottom);
+            var sliderValues = GetSliderValues(colorData);
+
+            return (
+                sliderValues.top * topDivisor,
+                sliderValues.middle * middleDivisor,
+                sliderValues.bottom * bottomDivisor);
+        }
+    }
+
+    private sealed class HsvSliderStategy : IColorSelectorStrategy
+    {
+        private const float HueMaxValue = 360.0f;
+        private const float SliderMaxValue = 100.0f;
+
+        public ColorSelectorStyleBox.ColorSliderPreset TopSliderStyle
+            => ColorSelectorStyleBox.ColorSliderPreset.Hue;
+        public ColorSelectorStyleBox.ColorSliderPreset MiddleSliderStyle
+            => ColorSelectorStyleBox.ColorSliderPreset.Saturation;
+        public ColorSelectorStyleBox.ColorSliderPreset BottomSliderStyle
+            => ColorSelectorStyleBox.ColorSliderPreset.Value;
+
+        public Vector4 ToColorData(Color color) => Color.ToHsv(color);
+        public Color FromColorData(Vector4 colorData) => Color.FromHsv(colorData);
+
+        public bool IsSliderInputValid(int value, ColorSliderOrder order)
+        {
+            return order switch
+            {
+                ColorSliderOrder.Top => value <= HueMaxValue,
+                _ => value <= SliderMaxValue,
+            };
+        }
+
+        public float GetColorValueDivisor(ColorSliderOrder order)
+        {
+            return order switch
+            {
+                ColorSliderOrder.Top => HueMaxValue,
+                _ => SliderMaxValue,
+            };
+        }
+
+        public (string top, string middle, string bottom) GetSliderLabelTexts()
+        {
+            return (
+                Loc.GetString("color-selector-sliders-hue"),
+                Loc.GetString("color-selector-sliders-saturation"),
+                Loc.GetString("color-selector-sliders-value"));
+        }
+
+        public (float top, float middle, float bottom) GetSliderValues(Vector4 colorData)
+        {
+            return (colorData.X, colorData.Y, colorData.Z);
+        }
+
+        public (float top, float middle, float bottom) GetInputBoxValues(Vector4 colorData)
+        {
+            var topDivisor = GetColorValueDivisor(ColorSliderOrder.Top);
+            var middleDivisor = GetColorValueDivisor(ColorSliderOrder.Middle);
+            var bottomDivisor = GetColorValueDivisor(ColorSliderOrder.Bottom);
+            var sliderValues = GetSliderValues(colorData);
+
+            return (
+                sliderValues.top * topDivisor,
+                sliderValues.middle * middleDivisor,
+                sliderValues.bottom * bottomDivisor);
+        }
+    }
 }

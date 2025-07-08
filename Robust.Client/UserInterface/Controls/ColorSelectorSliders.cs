@@ -264,15 +264,14 @@ public sealed class ColorSelectorSliders : Control
     private void UpdateSlider(ColorSliderOrder order)
     {
         var (slider, inputBox) = GetSliderByOrder(order);
-
         var divisor = GetColorValueDivisor(order);
 
         var dataValue = order switch
         {
-            ColorSliderOrder.Top    => _colorData.X,
+            ColorSliderOrder.Top => _colorData.X,
             ColorSliderOrder.Middle => _colorData.Y,
             ColorSliderOrder.Bottom => _colorData.Z,
-            ColorSliderOrder.Alpha  => _colorData.W,
+            ColorSliderOrder.Alpha => _colorData.W,
             _ => throw new NotImplementedException(nameof(order))
         };
 
@@ -280,8 +279,16 @@ public sealed class ColorSelectorSliders : Control
         inputBox.Value = (int)(dataValue * divisor);
     }
 
+    private void UpdateSliderVisuals()
+    {
+        _topStyle.SetBaseColor(_colorData);
+        _middleStyle.SetBaseColor(_colorData);
+        _bottomStyle.SetBaseColor(_colorData);
+    }
+
     private void UpdateAllSliders()
     {
+        UpdateSliderVisuals();
         UpdateSlider(ColorSliderOrder.Top);
         UpdateSlider(ColorSliderOrder.Middle);
         UpdateSlider(ColorSliderOrder.Bottom);
@@ -316,6 +323,8 @@ public sealed class ColorSelectorSliders : Control
 
         _currentColor = _strategy.FromColorData(_colorData);
         OnColorChanged?.Invoke(_currentColor);
+
+        UpdateSliderVisuals();
         UpdateSlider(order);
     }
 

@@ -258,35 +258,22 @@ public sealed class ColorSelectorSliders : Control
     private void UpdateSlider(ColorSliderOrder order)
     {
         var (slider, inputBox) = GetSliderByOrder(order);
-        var sliderValues = _strategy.GetSliderValues(_colorData);
-        var inputBoxes = _strategy.GetInputBoxValues(_colorData);
 
-        float value;
-        int inputBoxValue;
-        switch (order)
+        var divisor = order == ColorSliderOrder.Alpha
+            ? AlphaDivisor
+            : _strategy.GetColorValueDivisor(order);
+
+        var dataValue = order switch
         {
-            case ColorSliderOrder.Top:
-                value = sliderValues.top;
-                inputBoxValue = (int)inputBoxes.top;
-                break;
-            case ColorSliderOrder.Middle:
-                value = sliderValues.middle;
-                inputBoxValue = (int)inputBoxes.middle;
-                break;
-            case ColorSliderOrder.Bottom:
-                value = sliderValues.bottom;
-                inputBoxValue = (int)inputBoxes.bottom;
-                break;
-            case ColorSliderOrder.Alpha:
-                value = _currentColor.A;
-                inputBoxValue = (int)(_currentColor.A * AlphaDivisor);
-                break;
-            default:
-                throw new NotImplementedException();
-        }
+            ColorSliderOrder.Top    => _colorData.X,
+            ColorSliderOrder.Middle => _colorData.Y,
+            ColorSliderOrder.Bottom => _colorData.Z,
+            ColorSliderOrder.Alpha  => _colorData.W,
+            _ => throw new NotImplementedException(nameof(order))
+        };
 
-        slider.Value = value;
-        inputBox.Value = inputBoxValue;
+        slider.Value = dataValue;
+        inputBox.Value = (int)(dataValue * divisor);
     }
 
     private void Update()
@@ -434,12 +421,6 @@ public sealed class ColorSelectorSliders : Control
         /// </summary>
         /// <returns>Label text strings for the top, middle, and bottom sliders.</returns>
         public (string top, string middle, string bottom) GetSliderLabelTexts();
-
-        // TODO: Nuke this
-        public (float top, float middle, float bottom) GetSliderValues(Vector4 colorData);
-
-        // TODO: Nuke this
-        public (float top, float middle, float bottom) GetInputBoxValues(Vector4 colorData);
     }
 
     private sealed class RgbSliderStategy : IColorSliderStrategy
@@ -465,24 +446,6 @@ public sealed class ColorSelectorSliders : Control
                 Loc.GetString("color-selector-sliders-red"),
                 Loc.GetString("color-selector-sliders-green"),
                 Loc.GetString("color-selector-sliders-blue"));
-        }
-
-        public (float top, float middle, float bottom) GetSliderValues(Vector4 colorData)
-        {
-            return (colorData.X, colorData.Y, colorData.Z);
-        }
-
-        public (float top, float middle, float bottom) GetInputBoxValues(Vector4 colorData)
-        {
-            var topDivisor = GetColorValueDivisor(ColorSliderOrder.Top);
-            var middleDivisor = GetColorValueDivisor(ColorSliderOrder.Middle);
-            var bottomDivisor = GetColorValueDivisor(ColorSliderOrder.Bottom);
-            var sliderValues = GetSliderValues(colorData);
-
-            return (
-                sliderValues.top * topDivisor,
-                sliderValues.middle * middleDivisor,
-                sliderValues.bottom * bottomDivisor);
         }
     }
 
@@ -525,24 +488,6 @@ public sealed class ColorSelectorSliders : Control
                 Loc.GetString("color-selector-sliders-hue"),
                 Loc.GetString("color-selector-sliders-saturation"),
                 Loc.GetString("color-selector-sliders-value"));
-        }
-
-        public (float top, float middle, float bottom) GetSliderValues(Vector4 colorData)
-        {
-            return (colorData.X, colorData.Y, colorData.Z);
-        }
-
-        public (float top, float middle, float bottom) GetInputBoxValues(Vector4 colorData)
-        {
-            var topDivisor = GetColorValueDivisor(ColorSliderOrder.Top);
-            var middleDivisor = GetColorValueDivisor(ColorSliderOrder.Middle);
-            var bottomDivisor = GetColorValueDivisor(ColorSliderOrder.Bottom);
-            var sliderValues = GetSliderValues(colorData);
-
-            return (
-                sliderValues.top * topDivisor,
-                sliderValues.middle * middleDivisor,
-                sliderValues.bottom * bottomDivisor);
         }
     }
 }

@@ -17,7 +17,7 @@ public sealed class ColorSelectorSliders : Control
             _currentColor = value;
             _colorData = _strategy.ToColorData(value);
 
-            Update();
+            UpdateAllSliders();
         }
     }
 
@@ -33,7 +33,7 @@ public sealed class ColorSelectorSliders : Control
             _colorData = _strategy.ToColorData(_currentColor);
 
             UpdateType();
-            Update();
+            UpdateAllSliders();
         }
     }
 
@@ -280,7 +280,7 @@ public sealed class ColorSelectorSliders : Control
         inputBox.Value = (int)(dataValue * divisor);
     }
 
-    private void Update()
+    private void UpdateAllSliders()
     {
         UpdateSlider(ColorSliderOrder.Top);
         UpdateSlider(ColorSliderOrder.Middle);

@@ -143,25 +143,10 @@ public sealed class ColorSelectorSliders : Control
         };
         _alphaInputBox.InitDefaultButtons();
 
-        _topInputBox.ValueChanged += value =>
-        {
-            _topColorSlider.Value = value.Value / GetColorValueDivisor(ColorSliderOrder.Top);
-        };
-
-        _middleInputBox.ValueChanged += value =>
-        {
-            _middleColorSlider.Value = value.Value / GetColorValueDivisor(ColorSliderOrder.Middle);
-        };
-
-        _bottomInputBox.ValueChanged += value =>
-        {
-            _bottomColorSlider.Value = value.Value / GetColorValueDivisor(ColorSliderOrder.Bottom);
-        };
-
-        _alphaInputBox.ValueChanged += value =>
-        {
-            _alphaSlider.Value = value.Value / GetColorValueDivisor(ColorSliderOrder.Alpha);
-        };
+        _topInputBox.ValueChanged += value => OnInputBoxValueChanged(value, ColorSliderOrder.Top);
+        _middleInputBox.ValueChanged += value => OnInputBoxValueChanged(value, ColorSliderOrder.Middle);
+        _bottomInputBox.ValueChanged += value => OnInputBoxValueChanged(value, ColorSliderOrder.Bottom);
+        _alphaInputBox.ValueChanged += value => OnInputBoxValueChanged(value, ColorSliderOrder.Alpha);
 
         _alphaSliderLabel.Text = Loc.GetString("color-selector-sliders-alpha");
 
@@ -239,6 +224,18 @@ public sealed class ColorSelectorSliders : Control
         {
             ColorSelectorType.Rgb => new RgbSliderStategy(),
             ColorSelectorType.Hsv => new HsvSliderStategy(),
+            _ => throw new NotImplementedException(),
+        };
+    }
+
+    private Slider GetSliderByOrder(ColorSliderOrder order)
+    {
+        return order switch
+        {
+            ColorSliderOrder.Top => _topColorSlider,
+            ColorSliderOrder.Middle => _middleColorSlider,
+            ColorSliderOrder.Bottom => _bottomColorSlider,
+            ColorSliderOrder.Alpha => _alphaSlider,
             _ => throw new NotImplementedException(),
         };
     }
@@ -321,6 +318,14 @@ public sealed class ColorSelectorSliders : Control
         }
 
         return _strategy.GetColorValueDivisor(order);
+    }
+
+    private void OnInputBoxValueChanged(ValueChangedEventArgs args, ColorSliderOrder order)
+    {
+        var slider = GetSliderByOrder(order);
+        var value = args.Value / GetColorValueDivisor(order);
+
+        slider.Value = value;
     }
 
     private void OnColorSet()

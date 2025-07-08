@@ -261,9 +261,8 @@ public sealed class ColorSelectorSliders : Control
         var sliderValues = _strategy.GetSliderValues(_colorData);
         var inputBoxes = _strategy.GetInputBoxValues(_colorData);
 
-        var value = 0.0f;
-        var inputBoxValue = 0;
-
+        float value;
+        int inputBoxValue;
         switch (order)
         {
             case ColorSliderOrder.Top:
@@ -282,6 +281,8 @@ public sealed class ColorSelectorSliders : Control
                 value = _currentColor.A;
                 inputBoxValue = (int)(_currentColor.A * AlphaDivisor);
                 break;
+            default:
+                throw new NotImplementedException();
         }
 
         slider.Value = value;

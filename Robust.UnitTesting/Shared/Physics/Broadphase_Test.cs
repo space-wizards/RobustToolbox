@@ -4,6 +4,7 @@ using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
@@ -17,6 +18,57 @@ namespace Robust.UnitTesting.Shared.Physics;
 [TestFixture]
 public sealed class Broadphase_Test
 {
+    /// <summary>
+    /// Tests that spawned static ents properly collide with entities in range.
+    /// </summary>
+    [Test]
+    public void TestStaticSpawn()
+    {
+        var sim = RobustServerSimulation
+            .NewSimulation()
+            .InitializeInstance();
+
+        var entManager = sim.Resolve<IEntityManager>();
+        var fixtureSystem = entManager.System<FixtureSystem>();
+        var physicsSystem = entManager.System<SharedPhysicsSystem>();
+
+        var (mapEnt, mapId) = sim.CreateMap();
+
+        var dynamicEnt = entManager.SpawnAtPosition(null, new EntityCoordinates(mapEnt, Vector2.Zero));
+        var dynamicBody = entManager.AddComponent<PhysicsComponent>(dynamicEnt);
+        physicsSystem.SetBodyType(dynamicEnt, BodyType.Dynamic, body: dynamicBody);
+
+        fixtureSystem.TryCreateFixture(dynamicEnt, new PhysShapeCircle(1f), "fix1", collisionMask: 10);
+        physicsSystem.WakeBody(dynamicEnt, body: dynamicBody);
+
+        Assert.That(dynamicBody.Awake);
+
+        physicsSystem.SetAwake((dynamicEnt, dynamicBody), false);
+        Assert.That(!dynamicBody.Awake);
+
+        // Clear move buffer
+        entManager.System<SharedBroadphaseSystem>().FindNewContacts();
+
+        var staticEnt = entManager.SpawnAtPosition(null, new EntityCoordinates(mapEnt, Vector2.Zero));
+        var staticBody = entManager.AddComponent<PhysicsComponent>(staticEnt);
+        physicsSystem.SetBodyType(staticEnt, BodyType.Static, body: staticBody);
+
+        fixtureSystem.TryCreateFixture(staticEnt, new PhysShapeCircle(1f), "fix1", collisionLayer: 10);
+        physicsSystem.SetCanCollide(staticEnt, true);
+
+        Assert.That(!staticBody.Awake);
+        Assert.That(staticBody.ContactCount, Is.EqualTo(0));
+
+        entManager.System<SharedBroadphaseSystem>().FindNewContacts();
+
+        Assert.That(staticBody.ContactCount, Is.EqualTo(1));
+
+        physicsSystem.CollideContacts();
+
+        // Make sure it's actually marked as touching and not just "well it's in range right".
+        Assert.That(staticBody.Contacts.First!.Value.IsTouching, Is.EqualTo(true));
+    }
+
     /// <summary>
     /// If we reparent a sundries entity to another broadphase does it correctly update.
     /// </summary>
@@ -232,22 +284,18 @@ public sealed class Broadphase_Test
         Assert.That(childBody.CanCollide);
 
         // Initially on mapA
-        var AssertMap = (EntityUid map, EntityUid otherMap) =>
+        var AssertMap = (EntityUid map, EntityUid otherMap, Vector2 pos) =>
         {
             var broadphase = entManager.GetComponent<BroadphaseComponent>(map);
-            var physMap = entManager.GetComponent<PhysicsMapComponent>(map);
             Assert.That(parentXform.ParentUid == map);
             Assert.That(parentXform.MapUid == map);
             Assert.That(childXform.MapUid == map);
             Assert.That(lookup.FindBroadphase(parent), Is.EqualTo(broadphase));
             Assert.That(lookup.FindBroadphase(child), Is.EqualTo(broadphase));
-            Assert.That(parentXform.Broadphase == new BroadphaseData(map, default, false, false));
-            Assert.That(childXform.Broadphase == new BroadphaseData(map, map, true, true));
-            Assert.That(physMap.MoveBuffer.ContainsKey(childFixtures.Fixtures.First().Value.Proxies.First()));
-            var otherPhysMap = entManager.GetComponent<PhysicsMapComponent>(otherMap);
-            Assert.That(otherPhysMap.MoveBuffer.Count == 0);
+            Assert.That(parentXform.Broadphase == new BroadphaseData(map, false, false));
+            Assert.That(childXform.Broadphase == new BroadphaseData(map, true, true));
         };
-        AssertMap(mapA, mapB);
+        AssertMap(mapA, mapB, new Vector2(200, 200));
 
         // we are now going to test several broadphase updates where we relocate the parent entity such that it moves:
         // - map to map with a map change
@@ -259,15 +307,14 @@ public sealed class Broadphase_Test
         // - grid to map without a map change
 
         // Move to map B (map to map with a map change)
-        xforms.SetCoordinates(parent, new EntityCoordinates(mapB, new Vector2(200, 200)));
-        AssertMap(mapB, mapA);
+        xforms.SetCoordinates(parent, new EntityCoordinates(mapB, new Vector2(100, 100)));
+        AssertMap(mapB, mapA, new Vector2(100, 100));
 
         // Move to gridA on mapA (map to grid with a map change)
         xforms.SetCoordinates(parent, new EntityCoordinates(gridA, default));
-        var AssertGrid = (EntityUid grid, EntityUid map, EntityUid otherMap) =>
+        var AssertGrid = (EntityUid grid, EntityUid map, EntityUid otherMap, Vector2 pos) =>
         {
             var broadphase = entManager.GetComponent<BroadphaseComponent>(grid);
-            var physMap = entManager.GetComponent<PhysicsMapComponent>(map);
             var gridXform = entManager.GetComponent<TransformComponent>(grid);
             Assert.That(gridXform.ParentUid == map);
             Assert.That(gridXform.MapUid == map);
@@ -276,42 +323,40 @@ public sealed class Broadphase_Test
             Assert.That(childXform.MapUid == map);
             Assert.That(lookup.FindBroadphase(parent), Is.EqualTo(broadphase));
             Assert.That(lookup.FindBroadphase(child), Is.EqualTo(broadphase));
-            Assert.That(parentXform.Broadphase == new BroadphaseData(grid, default, false, false));
-            Assert.That(childXform.Broadphase == new BroadphaseData(grid, map, true, true));
-            Assert.That(physMap.MoveBuffer.ContainsKey(childFixtures.Fixtures.First().Value.Proxies.First()));
-            var otherPhysMap = entManager.GetComponent<PhysicsMapComponent>(otherMap);
-            Assert.That(otherPhysMap.MoveBuffer.Count == 0);
+            Assert.That(parentXform.Broadphase == new BroadphaseData(grid, false, false));
+            Assert.That(childXform.Broadphase == new BroadphaseData(grid, true, true));
         };
-        AssertGrid(gridA, mapA, mapB);
+        AssertGrid(gridA, mapA, mapB, Vector2.Zero);
 
         // Move to gridB on mapB (grid to grid with a map change)
         xforms.SetCoordinates(parent, new EntityCoordinates(gridB, default));
-        AssertGrid(gridB, mapB, mapA);
+        AssertGrid(gridB, mapB, mapA, Vector2.Zero);
 
         // move to mapA (grid to map with a map change)
         xforms.SetCoordinates(parent, new EntityCoordinates(mapA, new Vector2(200, 200)));
-        AssertMap(mapA, mapB);
+        AssertMap(mapA, mapB, new Vector2(200, 200));
 
         // move to gridA on mapA (map to grid without a map change)
         xforms.SetCoordinates(parent, new EntityCoordinates(gridA, default));
-        AssertGrid(gridA, mapA, mapB);
+        AssertGrid(gridA, mapA, mapB, Vector2.Zero);
 
         // move to gridC on mapA (grid to grid without a map change)
         xforms.SetCoordinates(parent, new EntityCoordinates(gridC, default));
-        AssertGrid(gridC, mapA, mapB);
+        AssertGrid(gridC, mapA, mapB, new Vector2(10, 10));
 
         // move to gridC on mapA (grid to map without a map change)
-        xforms.SetCoordinates(parent, new EntityCoordinates(mapA, new Vector2(200, 200)));
-        AssertMap(mapA, mapB);
+        xforms.SetCoordinates(parent, new EntityCoordinates(mapA, new Vector2(50, 50)));
+        AssertMap(mapA, mapB, new Vector2(50, 50));
 
         // Finally, we check if the broadphase updates if the whole grid moves, instead of just the entity
         // first, move it to a grid:
         xforms.SetCoordinates(parent, new EntityCoordinates(gridC, default));
-        AssertGrid(gridC, mapA, mapB);
+        AssertGrid(gridC, mapA, mapB, new Vector2(10, 10));
 
         // then move the grid to a new map:
         xforms.SetCoordinates(gridC, new EntityCoordinates(mapB, new Vector2(200,200)));
-        AssertGrid(gridC, mapB, mapA);
+        // Asserting child pos NOT gridC pos.
+        AssertGrid(gridC, mapB, mapA, new Vector2(10, 10));
     }
 
     /// <summary>

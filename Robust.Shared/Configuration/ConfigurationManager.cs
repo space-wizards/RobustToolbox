@@ -82,7 +82,7 @@ namespace Robust.Shared.Configuration
             catch (Exception e)
             {
                 loaded.Clear();
-                _sawmill.Warning("Unable to load configuration from stream:\n{0}", e);
+                _sawmill.Error("Unable to load configuration from stream:\n{0}", e);
             }
 
             return loaded;
@@ -188,7 +188,7 @@ namespace Robust.Shared.Configuration
             }
             catch (Exception e)
             {
-                _sawmill.Warning("Unable to load configuration file:\n{0}", e);
+                _sawmill.Error("Unable to load configuration file:\n{0}", e);
                 return new HashSet<string>(0);
             }
         }

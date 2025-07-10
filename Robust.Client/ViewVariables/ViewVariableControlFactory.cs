@@ -54,7 +54,6 @@ public sealed class ViewVariableControlFactory : IViewVariableControlFactory
         RegisterForType<TimeSpan>(_ =>  new VVPropEditorTimeSpan());
 
         RegisterWithCondition(type => type.IsEnum, _ => new VVPropEditorEnum());
-
         RegisterWithCondition(
             type => type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ProtoId<>),
             type =>
@@ -66,37 +65,36 @@ public sealed class ViewVariableControlFactory : IViewVariableControlFactory
                 return editor;
             }
         );
-
         RegisterWithCondition(
             type => typeof(IPrototype).IsAssignableFrom(type) || typeof(ViewVariablesBlobMembers.PrototypeReferenceToken).IsAssignableFrom(type),
             type => (VVPropEditor)Activator.CreateInstance(typeof(VVPropEditorIPrototype<>).MakeGenericType(type))!
         );
-
         RegisterWithCondition(
             type => typeof(ISelfSerialize).IsAssignableFrom(type),
             type => (VVPropEditor)Activator.CreateInstance(typeof(VVPropEditorISelfSerializable<>).MakeGenericType(type))!
         );
-
         RegisterWithCondition(type => typeof(SoundSpecifier).IsAssignableFrom(type), _ => new VVPropEditorSoundSpecifier(_protoManager, _resManager));
         RegisterWithCondition(type => type == typeof(ViewVariablesBlobMembers.ServerKeyValuePairToken) ||
                                       type.IsGenericType && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>), _ => new VVPropEditorKeyValuePair());
-
         RegisterWithCondition(
             type => type != typeof(ViewVariablesBlobMembers.ServerValueTypeToken) && !type.IsValueType,
             _ => new VVPropEditorReference()
         );
     }
 
+    /// <inheritdoc />
     public void RegisterForType<T>(Func<Type, VVPropEditor> factoryMethod)
     {
         _factoriesByType[typeof(T)] = factoryMethod;
     }
 
+    /// <inheritdoc />
     public void RegisterWithCondition(Func<Type, bool> condition, Func<Type, VVPropEditor> factory)
     {
         _factoriesWithCondition.Add(new ConditionalViewVariableFactoryMethodContainer(condition, factory));
     }
 
+    /// <inheritdoc />
     public VVPropEditor CreateFor(Type? type)
     {
         if (type == null)

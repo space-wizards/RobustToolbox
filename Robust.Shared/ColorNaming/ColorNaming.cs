@@ -1,5 +1,4 @@
 using System;
-using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 
@@ -9,9 +8,7 @@ namespace Robust.Shared.ColorNaming;
 
 public static class ColorNaming
 {
-    private static ILocalizationManager LocalizationManager => IoCManager.Resolve<ILocalizationManager>();
-
-    private static (float Hue, string Loc)[] HueNames =
+    private static readonly (float Hue, string Loc)[] HueNames =
     {
         (float.DegreesToRadians(0f), "color-pink"),
         (float.DegreesToRadians(15f), "color-red"),
@@ -23,30 +20,30 @@ public static class ColorNaming
         (float.DegreesToRadians(285f), "color-purple"),
         (float.DegreesToRadians(330f), "color-pink"),
     };
-    private static (float Hue, string Loc) HueFallback = (float.DegreesToRadians(360f), "color-pink");
+    private static readonly (float Hue, string Loc) HueFallback = (float.DegreesToRadians(360f), "color-pink");
 
     private const float BrownLightnessThreshold = 0.675f;
-    private static LocId OrangeString = "color-orange";
-    private static LocId BrownString = "color-brown";
+    private static readonly LocId OrangeString = "color-orange";
+    private static readonly LocId BrownString = "color-brown";
 
     private const float VeryDarkLightnessThreshold = 0.25f;
     private const float DarkLightnessThreshold = 0.5f;
     private const float NeutralLightnessThreshold = 0.7f;
     private const float LightLightnessThreshold = 0.85f;
 
-    private static LocId VeryDarkString = "color-very-dark";
-    private static LocId DarkString = "color-dark";
-    private static LocId LightString = "color-light";
-    private static LocId VeryLightString = "color-very-light";
+    private static readonly LocId VeryDarkString = "color-very-dark";
+    private static readonly LocId DarkString = "color-dark";
+    private static readonly LocId LightString = "color-light";
+    private static readonly LocId VeryLightString = "color-very-light";
 
-    private static LocId MixedHueString = "color-mixed-hue";
-    private static LocId LightLowChromaString = "color-pale";
-    private static LocId DarkLowChromaString = "color-gray-adjective";
-    private static LocId HighChromaString = "color-strong";
+    private static readonly LocId MixedHueString = "color-mixed-hue";
+    private static readonly LocId LightLowChromaString = "color-pale";
+    private static readonly LocId DarkLowChromaString = "color-gray-adjective";
+    private static readonly LocId HighChromaString = "color-strong";
 
-    private static LocId WhiteString = "color-white";
-    private static LocId GrayString = "color-gray";
-    private static LocId BlackString = "color-black";
+    private static readonly LocId WhiteString = "color-white";
+    private static readonly LocId GrayString = "color-gray";
+    private static readonly LocId BlackString = "color-black";
 
     private const float LowChromaThreshold = 0.07f;
     private const float HighChromaThreshold = 0.16f;
@@ -56,7 +53,7 @@ public static class ColorNaming
     private const float BlackLightnessThreshold = 0.01f;
     private const float GrayChromaThreshold = 0.01f;
 
-    private static (string Loc, float AdjustedLightness) DescribeHue(Vector4 oklch)
+    private static (string Loc, float AdjustedLightness) DescribeHue(Vector4 oklch, ILocalizationManager localization)
     {
         var (lightness, _, hue, _) = oklch;
 
@@ -78,46 +75,46 @@ public static class ColorNaming
 
             if (hue >= (prevData.Hue + nextData.Hue)/2f && prevData.Loc != nextData.Loc)
             {
-                if (LocalizationManager.TryGetString($"{loc}-{nextData.Loc}", out var hueName))
+                if (localization.TryGetString($"{loc}-{nextData.Loc}", out var hueName))
                     return (hueName!, adjustedLightness);
                 else
-                    return (Loc.GetString(MixedHueString, ("a", Loc.GetString(loc)), ("b", Loc.GetString(nextData.Loc))), adjustedLightness);
+                    return (localization.GetString(MixedHueString, ("a", localization.GetString(loc)), ("b", localization.GetString(nextData.Loc))), adjustedLightness);
             }
 
-            return (Loc.GetString(loc), adjustedLightness);
+            return (localization.GetString(loc), adjustedLightness);
         }
 
         throw new ArgumentOutOfRangeException("oklch", $"colour ({oklch}) hue {hue} is outside of expected bounds");
     }
 
-    private static string? DescribeChroma(Vector4 oklch)
+    private static string? DescribeChroma(Vector4 oklch, ILocalizationManager localization)
     {
         var (lightness, chroma, _, _) = oklch;
 
         if (chroma <= LowChromaThreshold)
         {
             if (lightness >= LightLowChromaThreshold)
-                return Loc.GetString(LightLowChromaString);
+                return localization.GetString(LightLowChromaString);
             else
-                return Loc.GetString(DarkLowChromaString);
+                return localization.GetString(DarkLowChromaString);
         }
         else if (chroma >= HighChromaThreshold)
         {
-            return Loc.GetString(HighChromaString);
+            return localization.GetString(HighChromaString);
         }
 
         return null;
     }
 
-    private static string? DescribeLightness(Vector4 oklch)
+    private static string? DescribeLightness(Vector4 oklch, ILocalizationManager localization)
     {
         return oklch.X switch
         {
-            < VeryDarkLightnessThreshold => Loc.GetString(VeryDarkString),
-            < DarkLightnessThreshold => Loc.GetString(DarkString),
+            < VeryDarkLightnessThreshold => localization.GetString(VeryDarkString),
+            < DarkLightnessThreshold => localization.GetString(DarkString),
             < NeutralLightnessThreshold => null,
-            < LightLightnessThreshold => Loc.GetString(LightString),
-            _ => Loc.GetString(VeryLightString)
+            < LightLightnessThreshold => localization.GetString(LightString),
+            _ => localization.GetString(VeryLightString)
         };
     }
 
@@ -128,32 +125,32 @@ public static class ColorNaming
     /// Returns a localized textual description of the provided color
     /// </returns>
     /// <param name="srgb">A Color that is assumed to be in SRGB (the default for most cases)</param>
-    public static string Describe(Color srgb)
+    public static string Describe(Color srgb, ILocalizationManager localization)
     {
         var oklch = Color.ToLch(Color.ToLab(Color.FromSrgb(srgb)));
 
         if (oklch.X >= WhiteLightnessThreshold)
-            return Loc.GetString(WhiteString);
+            return localization.GetString(WhiteString);
 
         if (oklch.X <= BlackLightnessThreshold)
-            return Loc.GetString(BlackString);
+            return localization.GetString(BlackString);
 
-        var (hueDescription, adjustedLightness) = DescribeHue(oklch);
+        var (hueDescription, adjustedLightness) = DescribeHue(oklch, localization);
         oklch.X = adjustedLightness;
-        var chromaDescription = DescribeChroma(oklch);
-        var lightnessDescription = DescribeLightness(oklch);
+        var chromaDescription = DescribeChroma(oklch, localization);
+        var lightnessDescription = DescribeLightness(oklch, localization);
 
         if (oklch.Y <= GrayChromaThreshold)
         {
-            hueDescription = Loc.GetString(GrayString);
+            hueDescription = localization.GetString(GrayString);
             chromaDescription = null;
         }
 
         return (hueDescription, chromaDescription, lightnessDescription) switch
         {
-            ({ } hue, { } chroma, { } lightness) => Loc.GetString("color-hue-chroma-lightness", ("hue", hue), ("chroma", chroma), ("lightness", lightness)),
-            ({ } hue, { } chroma, null) => Loc.GetString("color-hue-chroma", ("hue", hue), ("chroma", chroma)),
-            ({ } hue, null, { } lightness) => Loc.GetString("color-hue-lightness", ("hue", hue), ("lightness", lightness)),
+            ({ } hue, { } chroma, { } lightness) => localization.GetString("color-hue-chroma-lightness", ("hue", hue), ("chroma", chroma), ("lightness", lightness)),
+            ({ } hue, { } chroma, null) => localization.GetString("color-hue-chroma", ("hue", hue), ("chroma", chroma)),
+            ({ } hue, null, { } lightness) => localization.GetString("color-hue-lightness", ("hue", hue), ("lightness", lightness)),
             ({ } hue, null, null) => hue,
         };
     }

@@ -29,7 +29,7 @@ public readonly struct StartCollideEvent
     public Vector2[] WorldPoints => _worldPoints.AsSpan[..PointCount].ToArray();
 
 
-    internal StartCollideEvent(
+    public StartCollideEvent(
         EntityUid ourEntity,
         EntityUid otherEntity,
         string ourFixtureId,

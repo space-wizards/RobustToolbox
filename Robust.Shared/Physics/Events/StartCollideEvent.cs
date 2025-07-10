@@ -21,7 +21,7 @@ public readonly struct StartCollideEvent
     public readonly Fixture OurFixture;
     public readonly Fixture OtherFixture;
 
-    internal readonly FixedArray2<Vector2> _worldPoints;
+    public readonly FixedArray2<Vector2> _worldPoints;
 
     public readonly int PointCount;
     public readonly Vector2 WorldNormal;

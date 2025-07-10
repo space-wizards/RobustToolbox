@@ -94,6 +94,10 @@ namespace Robust.UnitTesting
 
                     OnServerReturn(server).Wait();
 
+                    // Ensure the instance is properly idle to avoid inconsistencies in behavior
+                    // between pooled and non-pooled returns.
+                    server.MarkNonIdle();
+
                     _serversRunning[server] = 0;
                     instance = server;
                 }
@@ -138,6 +142,10 @@ namespace Robust.UnitTesting
                     client.ClientOptions = options;
 
                     OnClientReturn(client).Wait();
+
+                    // Ensure the instance is properly idle to avoid inconsistencies in behavior
+                    // between pooled and non-pooled returns.
+                    client.MarkNonIdle();
 
                     _clientsRunning[client] = 0;
                     instance = client;
@@ -600,6 +608,11 @@ namespace Robust.UnitTesting
             {
                 Assert(assertion);
                 await WaitIdleAsync();
+            }
+
+            internal void MarkNonIdle()
+            {
+                Post(() => {});
             }
 
             public virtual Task Cleanup() => Task.CompletedTask;

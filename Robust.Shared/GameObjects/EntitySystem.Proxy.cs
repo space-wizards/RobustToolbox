@@ -1641,21 +1641,21 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.Resolve(WeakEntityReference)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected EntityUid? Resolve(ref WeakEntityReference weakRef)
+    protected EntityUid? Resolve(WeakEntityReference weakRef)
     {
         return EntityManager.Resolve(weakRef);
     }
 
     /// <inheritdoc cref="IEntityManager.Resolve(WeakEntityReference)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected EntityUid? Resolve(ref WeakEntityReference? weakRef)
+    protected EntityUid? Resolve(WeakEntityReference? weakRef)
     {
         return EntityManager.Resolve(weakRef);
     }
 
     /// <inheritdoc cref="IEntityManager.Resolve{T}(ref WeakEntityReference{T})"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected Entity<T>? Resolve<T>(ref WeakEntityReference<T> weakRef) where T : IComponent
+    protected Entity<T>? Resolve<T>(WeakEntityReference<T> weakRef) where T : IComponent
     {
         return EntityManager.Resolve(weakRef);
     }

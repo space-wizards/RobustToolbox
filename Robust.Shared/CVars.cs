@@ -968,6 +968,13 @@ namespace Robust.Shared
         public static readonly CVarDef<string> RenderFOVColor =
             CVarDef.Create("render.fov_color", Color.Black.ToHex(), CVar.REPLICATED | CVar.SERVER);
 
+        /// <summary>
+        /// Whether to render tile edges, which is where some tiles can partially overlap other adjacent tiles on a grid.
+        /// E.g., snow tiles partly extending beyond their own tile to blend together with different adjacent tiles types.
+        /// </summary>
+        public static readonly CVarDef<bool> RenderTileEdges =
+            CVarDef.Create("render.tile_edges", true, CVar.CLIENTONLY);
+
         /*
          *  CONTROLS
          */

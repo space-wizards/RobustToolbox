@@ -13,7 +13,8 @@ namespace Robust.Shared.Audio;
 /// <seealso cref="ResolvedPathSpecifier"/>
 /// <seealso cref="ResolvedCollectionSpecifier"/>
 [Serializable, NetSerializable]
-public abstract partial class ResolvedSoundSpecifier {
+public abstract partial class ResolvedSoundSpecifier
+{
     [Obsolete("String literals for sounds are deprecated, use a SoundSpecifier or ResolvedSoundSpecifier as appropriate instead")]
     public static implicit operator ResolvedSoundSpecifier(string s) => new ResolvedPathSpecifier(s);
     [Obsolete("String literals for sounds are deprecated, use a SoundSpecifier or ResolvedSoundSpecifier as appropriate instead")]
@@ -22,8 +23,10 @@ public abstract partial class ResolvedSoundSpecifier {
     /// <summary>
     /// Returns whether <c>s</c> is null, or if it contains an empty path/collection ID.
     /// </summary>
-    public static bool IsNullOrEmpty(ResolvedSoundSpecifier? s) {
-        return s switch {
+    public static bool IsNullOrEmpty(ResolvedSoundSpecifier? s)
+    {
+        return s switch
+        {
             null => true,
             ResolvedPathSpecifier path => path.Path.ToString() == "",
             ResolvedCollectionSpecifier collection => string.IsNullOrEmpty(collection.Collection),
@@ -37,7 +40,8 @@ public abstract partial class ResolvedSoundSpecifier {
 /// </summary>
 /// <seealso cref="ResolvedCollectionSpecifier"/>
 [Serializable, NetSerializable]
-public sealed partial class ResolvedPathSpecifier : ResolvedSoundSpecifier {
+public sealed partial class ResolvedPathSpecifier : ResolvedSoundSpecifier, IEquatable<ResolvedPathSpecifier>
+{
     /// <summary>
     /// The resource path of the sound.
     /// </summary>
@@ -57,6 +61,21 @@ public sealed partial class ResolvedPathSpecifier : ResolvedSoundSpecifier {
     public ResolvedPathSpecifier(string path) : this(new ResPath(path))
     {
     }
+
+    public bool Equals(ResolvedPathSpecifier? other)
+    {
+        return Path.Equals(other?.Path);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return Equals(obj as ResolvedPathSpecifier);
+    }
+
+    public override int GetHashCode()
+    {
+        return Path.GetHashCode();
+    }
 }
 
 /// <summary>
@@ -64,7 +83,9 @@ public sealed partial class ResolvedPathSpecifier : ResolvedSoundSpecifier {
 /// </summary>
 /// <seealso cref="ResolvedPathSpecifier"/>
 [Serializable, NetSerializable]
-public sealed partial class ResolvedCollectionSpecifier : ResolvedSoundSpecifier {
+public sealed partial class ResolvedCollectionSpecifier : ResolvedSoundSpecifier, IEquatable<ResolvedCollectionSpecifier>
+{
+
     /// <summary>
     /// The ID of the <see cref="SoundCollectionPrototype">sound collection</see> to look up.
     /// </summary>
@@ -86,5 +107,20 @@ public sealed partial class ResolvedCollectionSpecifier : ResolvedSoundSpecifier
     {
         Collection = collection;
         Index = index;
+    }
+
+    public bool Equals(ResolvedCollectionSpecifier? other)
+    {
+        return Collection.Equals(other?.Collection) && Index.Equals(other?.Index);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return Equals(obj as ResolvedCollectionSpecifier);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Collection, Index);
     }
 }

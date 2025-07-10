@@ -121,6 +121,11 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         if (msg.Message is not CloseBoundInterfaceMessage && ui.RequireInputValidation)
         {
             var attempt = new BoundUserInterfaceMessageAttempt(sender, uid, msg.UiKey, msg.Message);
+
+            RaiseLocalEvent(attempt);
+            if (attempt.Cancelled)
+                return;
+
             RaiseLocalEvent(uid, attempt);
             if (attempt.Cancelled)
                 return;
@@ -631,7 +636,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         if (!_timing.IsFirstTimePredicted)
             return;
 
-        EntityManager.RaisePredictiveEvent(new BoundUIWrapMessage(GetNetEntity(entity.Owner), new CloseBoundInterfaceMessage(), key));
+        RaisePredictiveEvent(new BoundUIWrapMessage(GetNetEntity(entity.Owner), new CloseBoundInterfaceMessage(), key));
     }
 
     /// <summary>
@@ -680,7 +685,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
             {
                 // Not guaranteed to open so rely upon the event handling it.
                 // Also lets client request it to be opened remotely too.
-                EntityManager.RaisePredictiveEvent(new BoundUIWrapMessage(GetNetEntity(entity.Owner), new OpenBoundInterfaceMessage(), key));
+                RaisePredictiveEvent(new BoundUIWrapMessage(GetNetEntity(entity.Owner), new OpenBoundInterfaceMessage(), key));
             }
         }
         else

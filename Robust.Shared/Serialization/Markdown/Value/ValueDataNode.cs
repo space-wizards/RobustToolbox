@@ -58,7 +58,7 @@ namespace Robust.Shared.Serialization.Markdown.Value
 
         public override bool IsEmpty => string.IsNullOrWhiteSpace(Value);
 
-        private static bool IsNullLiteral(string? value) => value != null && value.Trim().ToLower() is "null" ;
+        public static bool IsNullLiteral(string? value) => value != null && value.Trim().ToLower() is "null" ;
 
         public override ValueDataNode Copy()
         {
@@ -76,6 +76,7 @@ namespace Robust.Shared.Serialization.Markdown.Value
             return node.Value == Value ? null : Copy();
         }
 
+        [Obsolete("Use SerializationManager.PushComposition()")]
         public override ValueDataNode PushInheritance(ValueDataNode node)
         {
             return Copy();

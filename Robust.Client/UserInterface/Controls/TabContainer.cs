@@ -30,12 +30,12 @@ namespace Robust.Client.UserInterface.Controls
             get => _currentTab;
             set
             {
-                if (_currentTab < 0)
+                if (value < 0)
                 {
                     throw new ArgumentOutOfRangeException(nameof(value), value, "Current tab must be positive.");
                 }
 
-                if (_currentTab >= ChildCount)
+                if (value >= ChildCount)
                 {
                     throw new ArgumentOutOfRangeException(nameof(value), value,
                         "Current tab must less than the amount of tabs.");

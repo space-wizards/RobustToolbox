@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Map.Events;
@@ -16,7 +16,6 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
@@ -70,19 +69,19 @@ namespace Robust.Shared.GameObjects
             if (!_enabled)
                 return;
 
-            if (!EntityManager.TryGetComponent(uid, out PhysicsComponent? body))
+            if (!TryComp(uid, out PhysicsComponent? body))
             {
                 Log.Error($"Trying to regenerate collision for {uid} that doesn't have {nameof(body)}");
                 return;
             }
 
-            if (!EntityManager.TryGetComponent(uid, out FixturesComponent? manager))
+            if (!TryComp(uid, out FixturesComponent? manager))
             {
                 Log.Error($"Trying to regenerate collision for {uid} that doesn't have {nameof(manager)}");
                 return;
             }
 
-            if (!EntityManager.TryGetComponent(uid, out TransformComponent? xform))
+            if (!TryComp(uid, out TransformComponent? xform))
             {
                 Log.Error($"Trying to regenerate collision for {uid} that doesn't have {nameof(TransformComponent)}");
                 return;
@@ -150,7 +149,8 @@ namespace Robust.Shared.GameObjects
                 };
 #pragma warning restore CS0618
 
-                newFixtures.Add(($"grid_chunk-{bounds.Left}-{bounds.Bottom}", newFixture));
+                var key = string.Create(CultureInfo.InvariantCulture, $"grid_chunk-{bounds.Left}-{bounds.Bottom}");
+                newFixtures.Add((key, newFixture));
             }
 
             // Check if we even need to issue an eventbus event

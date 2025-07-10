@@ -156,15 +156,15 @@ public sealed class EntitySerializer : ISerializationContext,
     public event IsSerializableDelegate? OnIsSerializeable;
     public delegate void IsSerializableDelegate(Entity<MetaDataComponent> ent, ref bool serializable);
 
-    public EntitySerializer(IDependencyCollection _dependency, SerializationOptions options)
+    public EntitySerializer(IDependencyCollection dependency, SerializationOptions options)
     {
-        _dependency.InjectDependencies(this);
+        dependency.InjectDependencies(this);
 
         _log = _logMan.GetSawmill("entity_serializer");
         SerializerProvider.RegisterSerializer(this);
 
-        _metaName = _factory.GetComponentName(typeof(MetaDataComponent));
-        _xformName = _factory.GetComponentName(typeof(TransformComponent));
+        _metaName = _factory.GetComponentName<MetaDataComponent>();
+        _xformName = _factory.GetComponentName<TransformComponent>();
         _emptyMetaNode = _serialization.WriteValueAs<MappingDataNode>(typeof(MetaDataComponent), new MetaDataComponent(), alwaysWrite: true, context: this);
 
         CurrentComponent = _xformName;

@@ -123,7 +123,8 @@ namespace Robust.Client.Graphics
         /// <inheritdoc />
         public ScreenCoordinates CoordinatesToScreen(EntityCoordinates point)
         {
-            return MapToScreen(point.ToMap(_entityManager, _entityManager.System<SharedTransformSystem>()));
+            var transformSystem = _entityManager.System<SharedTransformSystem>();
+            return MapToScreen(transformSystem.ToMapCoordinates(point));
         }
 
         public ScreenCoordinates MapToScreen(MapCoordinates point)

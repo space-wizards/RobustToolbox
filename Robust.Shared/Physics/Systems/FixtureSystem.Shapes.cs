@@ -13,7 +13,7 @@ namespace Robust.Shared.Physics.Systems
         /// <summary>
         /// Tests whether a particular point is contained in the shape.
         /// </summary>
-        public bool TestPoint(IPhysShape shape, Transform xform, Vector2 worldPoint)
+        public bool TestPoint<T>(T shape, Transform xform, Vector2 worldPoint) where T : IPhysShape
         {
             switch (shape)
             {

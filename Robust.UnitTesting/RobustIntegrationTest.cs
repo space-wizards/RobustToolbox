@@ -337,6 +337,8 @@ namespace Robust.UnitTesting
             [Pure]
             public T System<T>() where T : IEntitySystem
             {
+                CheckThreadOrIdle();
+
                 return EntMan.System<T>();
             }
 
@@ -345,11 +347,15 @@ namespace Robust.UnitTesting
 
             public TransformComponent Transform(EntityUid uid)
             {
+                CheckThreadOrIdle();
+
                 return EntMan.GetComponent<TransformComponent>(uid);
             }
 
             public MetaDataComponent MetaData(EntityUid uid)
             {
+                CheckThreadOrIdle();
+
                 return EntMan.GetComponent<MetaDataComponent>(uid);
             }
 
@@ -369,11 +375,7 @@ namespace Robust.UnitTesting
             {
                 get
                 {
-                    if (!_isSurelyIdle)
-                    {
-                        throw new InvalidOperationException(
-                            "Cannot read this without ensuring that the instance is idle.");
-                    }
+                    CheckThreadOrIdle();
 
                     return _isAlive;
                 }
@@ -389,11 +391,7 @@ namespace Robust.UnitTesting
             {
                 get
                 {
-                    if (!_isSurelyIdle)
-                    {
-                        throw new InvalidOperationException(
-                            "Cannot read this without ensuring that the instance is idle.");
-                    }
+                    CheckThreadOrIdle();
 
                     return _unhandledException;
                 }
@@ -435,11 +433,7 @@ namespace Robust.UnitTesting
             [Pure]
             public T ResolveDependency<T>()
             {
-                if (!_isSurelyIdle)
-                {
-                    throw new InvalidOperationException(
-                        "Cannot resolve services without ensuring that the instance is idle.");
-                }
+                CheckThreadOrIdle();
 
                 return DependencyCollection.Resolve<T>();
             }
@@ -637,6 +631,18 @@ namespace Robust.UnitTesting
                         resMan.MountString($"/Prototypes/__integration_extra_{i}.yml", list[i]);
                     }
                 }
+            }
+
+            private void CheckThreadOrIdle()
+            {
+                if (_isSurelyIdle)
+                    return;
+
+                if (Thread.CurrentThread == InstanceThread)
+                    return;
+
+                throw new InvalidOperationException(
+                    "Cannot perform this operation without ensuring the instance is idle.");
             }
         }
 

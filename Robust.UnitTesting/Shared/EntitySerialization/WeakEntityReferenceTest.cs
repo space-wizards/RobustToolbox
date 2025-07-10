@@ -29,8 +29,8 @@ public sealed partial class WeakEntityReferenceTest : RobustIntegrationTest
         // Set up entities
         await server.WaitPost(() =>
         {
-            var entA = sEntMan.Spawn(null, null);
-            var entB = sEntMan.Spawn(null, null);
+            var entA = sEntMan.Spawn();
+            var entB = sEntMan.Spawn();
             netEntA = sEntMan.GetNetEntity(entA);
             netEntB = sEntMan.GetNetEntity(entB);
 
@@ -98,5 +98,9 @@ public sealed partial class WeakEntityReferenceTest : RobustIntegrationTest
         await client.WaitPost(() => cNetMan.ClientDisconnect(""));
         await server.WaitRunTicks(5);
         await client.WaitRunTicks(5);
+
+        // Reset cvar
+        // I love engine tests
+        server.Post(() => server.CfgMan.SetCVar(CVars.NetPVS, true));
     }
 }

@@ -423,6 +423,22 @@ public partial class EntitySystem
         return EntityManager.ToPrettyString(netEntity);
     }
 
+    /// <inheritdoc cref="IEntityManager.ToPrettyString(WeakEntityReference?)/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [return: NotNullIfNotNull(nameof(weakRef))]
+    protected EntityStringRepresentation? ToPrettyString(WeakEntityReference? weakRef)
+    {
+        return EntityManager.ToPrettyString(weakRef);
+    }
+
+    /// <inheritdoc cref="IEntityManager.ToPrettyString(WeakEntityReference?)/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [return: NotNullIfNotNull(nameof(weakRef))]
+    protected EntityStringRepresentation ToPrettyString(WeakEntityReference weakRef)
+    {
+        return EntityManager.ToPrettyString(weakRef);
+    }
+
     /// <inheritdoc cref="IEntityManager.ToPrettyString(EntityUid, MetaDataComponent?)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent? metadata)

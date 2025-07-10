@@ -1513,6 +1513,20 @@ public partial class EntitySystem
 
     #region WeakEntityReference
 
+    /// <inheritdoc cref="IEntityManager.GetWeakReference(EntityUid, MetaDataComponent?)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected WeakEntityReference GetWeakReference(ref EntityUid uid, MetaDataComponent? meta = null)
+    {
+        return EntityManager.GetWeakReference(uid, meta);
+    }
+
+    /// <inheritdoc cref="IEntityManager.GetWeakReference(EntityUid?, MetaDataComponent?)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected WeakEntityReference? GetWeakReference(ref EntityUid? uid, MetaDataComponent? meta = null)
+    {
+        return EntityManager.GetWeakReference(uid, meta);
+    }
+
     /// <inheritdoc cref="IEntityManager.Resolve(WeakEntityReference)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityUid? Resolve(ref WeakEntityReference weakRef)

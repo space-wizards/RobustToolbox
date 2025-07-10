@@ -513,6 +513,16 @@ namespace Robust.Shared.GameObjects
         public CompRegistryEntityEnumerator CompRegistryQueryEnumerator(ComponentRegistry registry);
 
         /// <summary>
+        /// Returns a <see cref="WeakEntityReference"/> pointing to the local entity.
+        /// </summary>
+        public WeakEntityReference GetWeakReference(EntityUid uid, MetaDataComponent? meta = null);
+
+        /// <summary>
+        /// Returns a <see cref="WeakEntityReference"/> pointing to the local entity.
+        /// </summary>
+        public WeakEntityReference? GetWeakReference(EntityUid? uid, MetaDataComponent? meta = null);
+
+        /// <summary>
         /// Attempts to resolve the given <see cref="WeakEntityReference"/> into an <see cref="EntityUid"/> that
         /// corresponds to an existing entity. If this fails, the entity has either been deleted, or for clients, the
         /// entity may not yet have been sent to them.

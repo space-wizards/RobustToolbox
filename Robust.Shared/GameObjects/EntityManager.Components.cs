@@ -1391,6 +1391,8 @@ namespace Robust.Shared.GameObjects
             return new CompRegistryEntityEnumerator(this, trait1, registry);
         }
 
+        #region WeakEntityReference
+
         public WeakEntityReference GetWeakReference(EntityUid uid, MetaDataComponent? meta = null)
         {
             return new WeakEntityReference(GetNetEntity(uid, meta));
@@ -1440,6 +1442,42 @@ namespace Robust.Shared.GameObjects
         {
             return weakRef == null ? null : Resolve(weakRef.Value);
         }
+
+        public bool TryGetEntity(WeakEntityReference weakRef, [NotNullWhen(true)] out EntityUid? entity)
+        {
+            return TryGetEntity(weakRef.Entity, out entity);
+        }
+
+        public bool TryGetEntity([NotNullWhen(true)] WeakEntityReference? weakRef, [NotNullWhen(true)] out EntityUid? entity)
+        {
+            return TryGetEntity(weakRef?.Entity, out entity);
+        }
+
+        public bool TryGetEntity<T>(WeakEntityReference<T> weakRef, [NotNullWhen(true)] out Entity<T>? entity)
+            where T : IComponent
+        {
+            if (!TryGetEntity(weakRef.Entity, out var uid)
+                || !TryGetComponent(uid.Value, out T? component))
+            {
+                entity = null;
+                return false;
+            }
+
+            entity = new(uid.Value, component);
+            return true;
+        }
+
+        public bool TryGetEntity<T>([NotNullWhen(true)] WeakEntityReference<T>? weakRef, [NotNullWhen(true)] out Entity<T>? entity)
+            where T : IComponent
+        {
+            if (weakRef != null)
+                return TryGetEntity(weakRef.Value, out entity);
+
+            entity = null;
+            return false;
+        }
+
+        #endregion
 
         public AllEntityQueryEnumerator<IComponent> AllEntityQueryEnumerator(Type comp)
         {

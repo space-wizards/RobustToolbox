@@ -1666,6 +1666,32 @@ public partial class EntitySystem
     {
         return EntityManager.Resolve(weakRef);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TryGetEntity(WeakEntityReference weakRef, [NotNullWhen(true)] out EntityUid? entity)
+    {
+        return EntityManager.TryGetEntity(weakRef, out entity);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TryGetEntity(WeakEntityReference? weakRef, [NotNullWhen(true)] out EntityUid? entity)
+    {
+        return EntityManager.TryGetEntity(weakRef, out entity);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TryGetEntity<T>(WeakEntityReference<T> weakRef, [NotNullWhen(true)] out Entity<T>? entity)
+        where T : IComponent
+    {
+        return EntityManager.TryGetEntity(weakRef, out entity);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TryGetEntity<T>(WeakEntityReference<T>? weakRef, [NotNullWhen(true)] out Entity<T>? entity)
+        where T : IComponent
+    {
+        return EntityManager.TryGetEntity(weakRef, out entity);
+    }
     #endregion
 
 }

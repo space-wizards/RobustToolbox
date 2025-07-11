@@ -234,7 +234,7 @@ public sealed class ColorSelectorSliders : Control
         {
             ColorSelectorType.Rgb => new RgbSliderStategy(),
             ColorSelectorType.Hsv => new HsvSliderStategy(),
-            _ => throw new NotImplementedException(),
+            _ => throw new ArgumentOutOfRangeException(),
         };
     }
 
@@ -246,7 +246,7 @@ public sealed class ColorSelectorSliders : Control
             ColorSliderOrder.Middle => (_middleColorSlider, _middleInputBox),
             ColorSliderOrder.Bottom => (_bottomColorSlider, _bottomInputBox),
             ColorSliderOrder.Alpha => (_alphaSlider, _alphaInputBox),
-            _ => throw new NotImplementedException(),
+            _ => throw new ArgumentOutOfRangeException(),
         };
     }
 
@@ -280,7 +280,7 @@ public sealed class ColorSelectorSliders : Control
             ColorSliderOrder.Middle => _colorData.Y,
             ColorSliderOrder.Bottom => _colorData.Z,
             ColorSliderOrder.Alpha => _colorData.W,
-            _ => throw new NotImplementedException(nameof(order))
+            _ => throw new ArgumentOutOfRangeException(nameof(order))
         };
 
         slider.SetValueWithoutEvent(dataValue);
@@ -351,22 +351,22 @@ public sealed class ColorSelectorSliders : Control
         Hsv,
     }
 
-    private interface IColorSliderStrategy
+    private abstract class ColorSliderStrategy
     {
         /// <summary>
         ///     The style preset used by the top slider.
         /// </summary>
-        public ColorSelectorStyleBox.ColorSliderPreset TopSliderStyle { get; }
+        public abstract ColorSelectorStyleBox.ColorSliderPreset TopSliderStyle { get; }
 
         /// <summary>
         ///     The style preset used by the middle slider.
         /// </summary>
-        public ColorSelectorStyleBox.ColorSliderPreset MiddleSliderStyle { get; }
+        public abstract ColorSelectorStyleBox.ColorSliderPreset MiddleSliderStyle { get; }
 
         /// <summary>
         ///     The style preset used by the bottom slider.
         /// </summary>
-        public ColorSelectorStyleBox.ColorSliderPreset BottomSliderStyle { get; }
+        public abstract ColorSelectorStyleBox.ColorSliderPreset BottomSliderStyle { get; }
 
         /// <summary>
         ///     Converts a Color to a Vector4 representation of its components.
@@ -377,14 +377,14 @@ public sealed class ColorSelectorSliders : Control
         /// </remarks>
         /// <param name="color">A Color to convert into Vector4 slider values.</param>
         /// <returns>A Vector4 representation of a Color's slider values.</returns>
-        public Vector4 ToColorData(Color color);
+        public abstract Vector4 ToColorData(Color color);
 
         /// <summary>
         ///     Converts a Vector4 representation of color slider values into a Color.
         /// </summary>
         /// <param name="colorData">A Vector4 representation of color slider values.</param>
         /// <returns>A color generated from slider values.</returns>
-        public Color FromColorData(Vector4 colorData);
+        public abstract Color FromColorData(Vector4 colorData);
 
         /// <summary>
         ///     Gets a color component divisor for the given slider.
@@ -400,32 +400,33 @@ public sealed class ColorSelectorSliders : Control
         /// </remarks>
         /// <param name="order">The slider to retrieve a divisor for.</param>
         /// <returns>The divisor for the given slider.</returns>
-        public float GetColorValueDivisor(ColorSliderOrder order);
+        public abstract float GetColorValueDivisor(ColorSliderOrder order);
 
         /// <summary>
         ///     Gets a label text string for the first three color sliders.
         /// </summary>
         /// <returns>Label text strings for the top, middle, and bottom sliders.</returns>
-        public (string top, string middle, string bottom) GetSliderLabelTexts();
+        public abstract (string top, string middle, string bottom) GetSliderLabelTexts();
     }
 
-    private sealed class RgbSliderStategy : IColorSliderStrategy
+    private sealed class RgbSliderStrategy : ColorSliderStrategy
     {
         private const float ChannelMaxValue = byte.MaxValue;
 
-        public ColorSelectorStyleBox.ColorSliderPreset TopSliderStyle
+        public override ColorSelectorStyleBox.ColorSliderPreset TopSliderStyle
             => ColorSelectorStyleBox.ColorSliderPreset.Red;
-        public ColorSelectorStyleBox.ColorSliderPreset MiddleSliderStyle
+        public override ColorSelectorStyleBox.ColorSliderPreset MiddleSliderStyle
             => ColorSelectorStyleBox.ColorSliderPreset.Green;
-        public ColorSelectorStyleBox.ColorSliderPreset BottomSliderStyle
+        public override ColorSelectorStyleBox.ColorSliderPreset BottomSliderStyle
             => ColorSelectorStyleBox.ColorSliderPreset.Blue;
 
-        public Vector4 ToColorData(Color color) => new(color.R, color.G, color.B, color.A);
-        public Color FromColorData(Vector4 colorData) => new(colorData.X, colorData.Y, colorData.Z, colorData.W);
+        public override Vector4 ToColorData(Color color) => new(color.R, color.G, color.B, color.A);
+        public override Color FromColorData(Vector4 colorData)
+            => new(colorData.X, colorData.Y, colorData.Z, colorData.W);
 
-        public float GetColorValueDivisor(ColorSliderOrder order) => ChannelMaxValue;
+        public override float GetColorValueDivisor(ColorSliderOrder order) => ChannelMaxValue;
 
-        public (string top, string middle, string bottom) GetSliderLabelTexts()
+        public override (string top, string middle, string bottom) GetSliderLabelTexts()
         {
             return (
                 Loc.GetString("color-selector-sliders-red"),
@@ -434,22 +435,22 @@ public sealed class ColorSelectorSliders : Control
         }
     }
 
-    private sealed class HsvSliderStategy : IColorSliderStrategy
+    private sealed class HsvSliderStrategy : ColorSliderStrategy
     {
         private const float HueMaxValue = 360.0f;
         private const float SliderMaxValue = 100.0f;
 
-        public ColorSelectorStyleBox.ColorSliderPreset TopSliderStyle
+        public override ColorSelectorStyleBox.ColorSliderPreset TopSliderStyle
             => ColorSelectorStyleBox.ColorSliderPreset.Hue;
-        public ColorSelectorStyleBox.ColorSliderPreset MiddleSliderStyle
+        public override ColorSelectorStyleBox.ColorSliderPreset MiddleSliderStyle
             => ColorSelectorStyleBox.ColorSliderPreset.Saturation;
-        public ColorSelectorStyleBox.ColorSliderPreset BottomSliderStyle
+        public override ColorSelectorStyleBox.ColorSliderPreset BottomSliderStyle
             => ColorSelectorStyleBox.ColorSliderPreset.Value;
 
-        public Vector4 ToColorData(Color color) => Color.ToHsv(color);
-        public Color FromColorData(Vector4 colorData) => Color.FromHsv(colorData);
+        public override Vector4 ToColorData(Color color) => Color.ToHsv(color);
+        public override Color FromColorData(Vector4 colorData) => Color.FromHsv(colorData);
 
-        public float GetColorValueDivisor(ColorSliderOrder order)
+        public override float GetColorValueDivisor(ColorSliderOrder order)
         {
             return order switch
             {
@@ -458,7 +459,7 @@ public sealed class ColorSelectorSliders : Control
             };
         }
 
-        public (string top, string middle, string bottom) GetSliderLabelTexts()
+        public override (string top, string middle, string bottom) GetSliderLabelTexts()
         {
             return (
                 Loc.GetString("color-selector-sliders-hue"),

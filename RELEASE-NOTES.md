@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `RobustClientPackaging.WriteClientResources()` and `RobustServerPackaging.WriteServerResources()` now have an overload taking in a set of things to ignore in the content resources directory.
 
 ### Bugfixes
 

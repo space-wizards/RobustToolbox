@@ -53,30 +53,28 @@ public sealed class ViewVariableControlFactory : IViewVariableControlFactory
         RegisterForType<Color>(_ =>  new VVPropEditorColor());
         RegisterForType<TimeSpan>(_ =>  new VVPropEditorTimeSpan());
 
-        RegisterWithCondition(type => type.IsEnum, _ => new VVPropEditorEnum());
-        RegisterWithCondition(
+        RegisterWithConditionAtStart(type => type.IsEnum, _ => new VVPropEditorEnum());
+        RegisterWithConditionAtStart(
             type => type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ProtoId<>),
             type =>
             {
-                var editor = (VVPropEditor)Activator.CreateInstance(typeof(VVPropEditorProtoId<>)
-                    .MakeGenericType(type.GenericTypeArguments[0]))!;
+                var typeArgumentType = type.GenericTypeArguments[0];
+                var editor = CreateGenericEditor(typeArgumentType, typeof(VVPropEditorProtoId<>));
 
                 IoCManager.InjectDependencies(editor);
                 return editor;
             }
         );
-        RegisterWithCondition(
-            type => typeof(IPrototype).IsAssignableFrom(type) || typeof(ViewVariablesBlobMembers.PrototypeReferenceToken).IsAssignableFrom(type),
-            type => (VVPropEditor)Activator.CreateInstance(typeof(VVPropEditorIPrototype<>).MakeGenericType(type))!
+        RegisterForAssignableFromAtStart<IPrototype>(type => CreateGenericEditor(type, typeof(VVPropEditorIPrototype<>)));
+        RegisterForAssignableFromAtStart<ViewVariablesBlobMembers.PrototypeReferenceToken>(type => CreateGenericEditor(type, typeof(VVPropEditorIPrototype<>)));
+        RegisterForAssignableFromAtStart<ISelfSerialize>(type => CreateGenericEditor(type, typeof(VVPropEditorISelfSerializable<>)));
+        RegisterForAssignableFromAtStart<SoundSpecifier>(_ => new VVPropEditorSoundSpecifier(_protoManager, _resManager));
+        RegisterWithConditionAtStart(
+            type => type == typeof(ViewVariablesBlobMembers.ServerKeyValuePairToken)
+                    || type.IsGenericType && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>),
+            _ => new VVPropEditorKeyValuePair()
         );
-        RegisterWithCondition(
-            type => typeof(ISelfSerialize).IsAssignableFrom(type),
-            type => (VVPropEditor)Activator.CreateInstance(typeof(VVPropEditorISelfSerializable<>).MakeGenericType(type))!
-        );
-        RegisterWithCondition(type => typeof(SoundSpecifier).IsAssignableFrom(type), _ => new VVPropEditorSoundSpecifier(_protoManager, _resManager));
-        RegisterWithCondition(type => type == typeof(ViewVariablesBlobMembers.ServerKeyValuePairToken) ||
-                                      type.IsGenericType && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>), _ => new VVPropEditorKeyValuePair());
-        RegisterWithCondition(
+        RegisterWithConditionAtStart(
             type => type != typeof(ViewVariablesBlobMembers.ServerValueTypeToken) && !type.IsValueType,
             _ => new VVPropEditorReference()
         );
@@ -89,9 +87,27 @@ public sealed class ViewVariableControlFactory : IViewVariableControlFactory
     }
 
     /// <inheritdoc />
-    public void RegisterWithCondition(Func<Type, bool> condition, Func<Type, VVPropEditor> factory)
+    public void RegisterForAssignableFromAtStart<T>(Func<Type, VVPropEditor> factoryMethod)
     {
-        _factoriesWithCondition.Add(new ConditionalViewVariableFactoryMethodContainer(condition, factory));
+        _factoriesWithCondition.Insert(0, new(type => typeof(T).IsAssignableFrom(type), factoryMethod));
+    }
+
+    /// <inheritdoc />
+    public void RegisterForAssignableFromAtEnd<T>(Func<Type, VVPropEditor> factoryMethod)
+    {
+        _factoriesWithCondition.Insert(_factoriesWithCondition.Count - 1, new(type => typeof(T).IsAssignableFrom(type), factoryMethod));
+    }
+
+    /// <inheritdoc />
+    public void RegisterWithConditionAtStart(Func<Type, bool> condition, Func<Type, VVPropEditor> factory)
+    {
+        _factoriesWithCondition.Insert(0, new(condition, factory));
+    }
+
+    /// <inheritdoc />
+    public void RegisterWithConditionAtEnd(Func<Type, bool> condition, Func<Type, VVPropEditor> factory)
+    {
+        _factoriesWithCondition.Insert(_factoriesWithCondition.Count - 1, new(condition, factory));
     }
 
     /// <inheritdoc />
@@ -116,6 +132,12 @@ public sealed class ViewVariableControlFactory : IViewVariableControlFactory
         }
 
         return new VVPropEditorDummy();
+    }
+
+    private static VVPropEditor CreateGenericEditor(Type typeArgumentType, Type genericConrolType)
+    {
+        var typeToCreate = genericConrolType.MakeGenericType(typeArgumentType);
+        return (VVPropEditor)Activator.CreateInstance(typeToCreate)!;
     }
 
     private sealed record ConditionalViewVariableFactoryMethodContainer(

@@ -30,10 +30,9 @@ public static class TimeSpanExt
     /// It can NOT combine multiple types (like "1h30m"), but it CAN use decimals ("1.5h")</param>
     /// <param name="timeSpan">The TimeSpan result.</param>
     /// <returns>Returns true if the input could be resolved as a TimeSpan.</returns>>
-    public static bool TryTimeSpan(ValueDataNode node, [NotNullWhen(true)] out TimeSpan? timeSpan)
+    public static bool TryTimeSpan(ValueDataNode node, out TimeSpan timeSpan)
     {
-        timeSpan = null;
-        return (TryTimeSpan(node.Value, out timeSpan));
+        return TryTimeSpan(node.Value, out timeSpan);
     }
 
     /// <summary>
@@ -44,9 +43,9 @@ public static class TimeSpanExt
     /// It can NOT combine multiple types (like "1h30m"), but it CAN use decimals ("1.5h")</param>
     /// <param name="timeSpan">The TimeSpan result.</param>
     /// <returns>Returns true if the input could be resolved as a TimeSpan.</returns>>
-    public static bool TryTimeSpan(string str, [NotNullWhen(true)] out TimeSpan? timeSpan)
+    public static bool TryTimeSpan(string str, out TimeSpan timeSpan)
     {
-        timeSpan = null;
+        timeSpan = TimeSpan.Zero;
 
         // If someone tried to use comma as a decimal separator, they would get orders of magnitude higher numbers than intended
         if (str.Contains(',') || str.Contains(' ') || str.Contains(':'))

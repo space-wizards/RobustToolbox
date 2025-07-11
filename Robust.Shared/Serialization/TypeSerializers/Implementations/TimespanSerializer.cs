@@ -24,7 +24,7 @@ public sealed class TimespanSerializer : ITypeSerializer<TimeSpan, ValueDataNode
         ISerializationManager.InstantiationDelegate<TimeSpan>? instanceProvider = null)
     {
         if (TimeSpanExt.TryTimeSpan(node, out var time))
-            return time.Value;
+            return time;
 
         throw new FormatException($"The input string '{node.Value }' can't be converted to TimeSpan");
     }

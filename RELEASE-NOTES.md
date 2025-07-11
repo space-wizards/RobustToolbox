@@ -35,19 +35,20 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* More members in `IntegrationInstance` now enforce that the instance is idle before accessing it.
 
 ### New features
 
-*None yet*
+* `RobustClientPackaging.WriteClientResources()` and `RobustServerPackaging.WriteServerResources()` now have an overload taking in a set of things to ignore in the content resources directory.
 
 ### Bugfixes
 
-*None yet*
+* Pooled integration instances returned by `RobustIntegrationTest` are now treated as non-idle, for consistency with non-pooled startups.
 
 ### Other
 
 * The configuration system will now report an error instead of warning if it fails to load the config file.
+* Members in `IntegrationInstance` that enforce the instance is idle now always allow access from the instance's thread (e.g. from a callback).
 
 ### Internal
 

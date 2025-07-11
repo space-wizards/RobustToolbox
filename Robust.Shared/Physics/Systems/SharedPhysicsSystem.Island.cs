@@ -559,7 +559,7 @@ public abstract partial class SharedPhysicsSystem
         Cleanup(frameTime);
     }
 
-    private void ReturnIsland(IslandData island)
+    private void ReturnIsland(in IslandData island)
     {
         foreach (var bodyEnt in island.Bodies)
         {
@@ -688,7 +688,7 @@ public abstract partial class SharedPhysicsSystem
         // Update data sequentially
         for (var i = 0; i < actualIslands.Length; i++)
         {
-            var island = actualIslands[i];
+            ref readonly var island = ref actualIslands[i];
 
             UpdateBodies(in island, solvedPositions, solvedAngles, linearVelocities, angularVelocities);
             SleepBodies(in island, sleepStatus);
@@ -791,13 +791,13 @@ public abstract partial class SharedPhysicsSystem
         var positionConstraints = ArrayPool<ContactPositionConstraint>.Shared.Rent(contactCount);
 
         // Pass the data into the solver
-        ResetSolver(data, island, velocityConstraints, positionConstraints);
+        ResetSolver(in data, in island, velocityConstraints, positionConstraints);
 
         InitializeVelocityConstraints(in data, in island, velocityConstraints, positionConstraints, positions, angles, linearVelocities, angularVelocities);
 
         if (data.WarmStarting)
         {
-            WarmStart(data, island, velocityConstraints, linearVelocities, angularVelocities);
+            WarmStart(in data, in island, velocityConstraints, linearVelocities, angularVelocities);
         }
 
         var jointCount = island.Joints.Count;
@@ -833,7 +833,7 @@ public abstract partial class SharedPhysicsSystem
                     island.BrokenJoints.Add((island.Joints[j].Original, error));
             }
 
-            SolveVelocityConstraints(island, options, velocityConstraints, linearVelocities, angularVelocities);
+            SolveVelocityConstraints(in island, options, velocityConstraints, linearVelocities, angularVelocities);
         }
 
         // Store for warm starting.
@@ -872,7 +872,7 @@ public abstract partial class SharedPhysicsSystem
 
         for (var i = 0; i < data.PositionIterations; i++)
         {
-            var contactsOkay = SolvePositionConstraints(data, in island, options, positionConstraints, positions, angles);
+            var contactsOkay = SolvePositionConstraints(in data, in island, options, positionConstraints, positions, angles);
             var jointsOkay = true;
 
             for (var j = 0; j < island.Joints.Count; ++j)

@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Robust.Shared.ColorNaming;
+using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 
@@ -8,6 +10,8 @@ namespace Robust.Client.UserInterface.Controls;
 // condensed version of the original ColorSlider set
 public sealed class ColorSelectorSliders : Control
 {
+    [Dependency] private readonly ILocalizationManager _localization = default!;
+
     public Color Color
     {
         get => _currentColor;
@@ -74,6 +78,7 @@ public sealed class ColorSelectorSliders : Control
     private Label _middleSliderLabel = new();
     private Label _bottomSliderLabel = new();
     private Label _alphaSliderLabel = new();
+    private Label _colorDescriptionLabel = new();
 
     private OptionButton _typeSelector;
     private List<ColorSelectorType> _types = new();
@@ -84,6 +89,7 @@ public sealed class ColorSelectorSliders : Control
 
     public ColorSelectorSliders()
     {
+        IoCManager.InjectDependencies(this);
         _strategy = GetStrategy(SelectorType);
 
         _topColorSlider = new ColorableSlider
@@ -166,6 +172,8 @@ public sealed class ColorSelectorSliders : Control
             _typeSelector.Select(args.Id);
         };
 
+        _colorDescriptionLabel.Text = ColorNaming.Describe(_currentColor, _localization);
+
         // TODO: Maybe some engine widgets could be laid out in XAML?
 
         var rootBox = new BoxContainer
@@ -178,6 +186,7 @@ public sealed class ColorSelectorSliders : Control
         rootBox.AddChild(headerBox);
 
         headerBox.AddChild(_typeSelector);
+        headerBox.AddChild(_colorDescriptionLabel);
 
         var bodyBox = new BoxContainer()
         {
@@ -283,6 +292,7 @@ public sealed class ColorSelectorSliders : Control
         _topStyle.SetBaseColor(_colorData);
         _middleStyle.SetBaseColor(_colorData);
         _bottomStyle.SetBaseColor(_colorData);
+        _colorDescriptionLabel.Text = ColorNaming.Describe(Color, _localization);
     }
 
     private void UpdateAllSliders()

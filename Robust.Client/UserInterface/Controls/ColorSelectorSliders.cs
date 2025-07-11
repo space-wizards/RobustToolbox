@@ -18,7 +18,7 @@ public sealed class ColorSelectorSliders : Control
         set
         {
             _currentColor = value;
-            _colorData = _strategy.ToColorData(value);
+            _colorData = GetStrategy().ToColorData(value);
 
             UpdateAllSliders();
         }
@@ -31,9 +31,7 @@ public sealed class ColorSelectorSliders : Control
         {
             _currentType = value;
             _typeSelector.Select(_types.IndexOf(value));
-
-            _strategy = GetStrategy(value);
-            _colorData = _strategy.ToColorData(_currentColor);
+            _colorData = GetStrategy().ToColorData(_currentColor);
 
             UpdateType();
             UpdateAllSliders();
@@ -53,14 +51,15 @@ public sealed class ColorSelectorSliders : Control
 
     public Action<Color>? OnColorChanged;
 
+    private readonly static HsvSliderStrategy _hsvStrategy = new();
+    private readonly static RgbSliderStrategy _rgbStrategy = new();
+
     private const float AlphaDivisor = 100.0f;
 
     private Color _currentColor = Color.White;
     private Vector4 _colorData;
     private ColorSelectorType _currentType = ColorSelectorType.Rgb;
     private bool _isAlphaVisible = false;
-
-    private IColorSliderStrategy _strategy { get; set; }
 
     private ColorableSlider _topColorSlider;
     private ColorableSlider _middleColorSlider;
@@ -90,7 +89,6 @@ public sealed class ColorSelectorSliders : Control
     public ColorSelectorSliders()
     {
         IoCManager.InjectDependencies(this);
-        _strategy = GetStrategy(SelectorType);
 
         _topColorSlider = new ColorableSlider
         {
@@ -228,12 +226,12 @@ public sealed class ColorSelectorSliders : Control
         Color = _currentColor;
     }
 
-    private IColorSliderStrategy GetStrategy(ColorSelectorType selectorType)
+    private ColorSliderStrategy GetStrategy()
     {
-        return selectorType switch
+        return SelectorType switch
         {
-            ColorSelectorType.Rgb => new RgbSliderStategy(),
-            ColorSelectorType.Hsv => new HsvSliderStategy(),
+            ColorSelectorType.Rgb => _rgbStrategy,
+            ColorSelectorType.Hsv => _hsvStrategy,
             _ => throw new ArgumentOutOfRangeException(),
         };
     }
@@ -254,19 +252,20 @@ public sealed class ColorSelectorSliders : Control
     {
         return order == ColorSliderOrder.Alpha
             ? AlphaDivisor
-            : _strategy.GetColorValueDivisor(order);
+            : GetStrategy().GetColorValueDivisor(order);
     }
 
     private void UpdateType()
     {
-        var labels = _strategy.GetSliderLabelTexts();
+        var strategy = GetStrategy();
+        var labels = strategy.GetSliderLabelTexts();
         _topSliderLabel.Text = labels.top;
         _middleSliderLabel.Text = labels.middle;
         _bottomSliderLabel.Text = labels.bottom;
 
-        _topStyle.ConfigureSlider(_strategy.TopSliderStyle);
-        _middleStyle.ConfigureSlider(_strategy.MiddleSliderStyle);
-        _bottomStyle.ConfigureSlider(_strategy.BottomSliderStyle);
+        _topStyle.ConfigureSlider(strategy.TopSliderStyle);
+        _middleStyle.ConfigureSlider(strategy.MiddleSliderStyle);
+        _bottomStyle.ConfigureSlider(strategy.BottomSliderStyle);
     }
 
     private void UpdateSlider(ColorSliderOrder order)
@@ -330,7 +329,7 @@ public sealed class ColorSelectorSliders : Control
             _bottomColorSlider.Value,
             _alphaSlider.Value);
 
-        _currentColor = _strategy.FromColorData(_colorData);
+        _currentColor = GetStrategy().FromColorData(_colorData);
         OnColorChanged?.Invoke(_currentColor);
 
         UpdateSliderVisuals();

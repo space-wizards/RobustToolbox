@@ -47,6 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
+* The debug assert for `RobustRandom.Next(TimeSpan, TimeSpan)` now allows for the two arguments to be equal.
 * The configuration system will now report an error instead of warning if it fails to load the config file.
 * Members in `IntegrationInstance` that enforce the instance is idle now always allow access from the instance's thread (e.g. from a callback).
 

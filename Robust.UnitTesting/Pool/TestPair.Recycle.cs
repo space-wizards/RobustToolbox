@@ -8,6 +8,7 @@ using Robust.Shared;
 using Robust.Shared.Exceptions;
 using Robust.Shared.Network;
 using Robust.Shared.Player;
+using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting.Pool;
 
@@ -79,6 +80,7 @@ public partial class TestPair<TServer, TClient>
 
         var returnTime = Watch.Elapsed;
         await TestOut.WriteLineAsync($"{nameof(CleanReturnAsync)}: PoolManager took {returnTime.TotalMilliseconds} ms to put pair {Id} back into the pool");
+        State = PairState.Ready;
     }
 
     public async ValueTask CleanReturnAsync()
@@ -89,7 +91,7 @@ public partial class TestPair<TServer, TClient>
         await TestOut.WriteLineAsync($"{nameof(CleanReturnAsync)}: Return of pair {Id} started");
         State = PairState.CleanDisposed;
         await OnCleanDispose();
-        State = PairState.Ready;
+        DebugTools.Assert(State is PairState.Dead or PairState.Ready);
         Manager.Return(this);
         ClearContext();
     }

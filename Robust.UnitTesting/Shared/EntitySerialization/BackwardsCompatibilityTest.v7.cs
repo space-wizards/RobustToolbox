@@ -214,9 +214,7 @@ entities:
     - type: Transform
     - type: Map
       mapInitialized: True
-    - type: PhysicsMap
     - type: GridTree
-    - type: MovedGrids
     - type: Broadphase
     - type: OccluderTree
     - type: EntitySaveTest
@@ -271,9 +269,7 @@ entities:
     - type: Transform
     - type: Map
       mapPaused: True
-    - type: PhysicsMap
     - type: GridTree
-    - type: MovedGrids
     - type: Broadphase
     - type: OccluderTree
     - type: EntitySaveTest
@@ -296,9 +292,7 @@ entities:
     - type: Transform
     - type: Map
       mapInitialized: True
-    - type: PhysicsMap
     - type: GridTree
-    - type: MovedGrids
     - type: Broadphase
     - type: OccluderTree
     - type: EntitySaveTest

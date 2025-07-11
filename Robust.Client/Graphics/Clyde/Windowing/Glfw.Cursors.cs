@@ -87,11 +87,13 @@ namespace Robust.Client.Graphics.Clyde
                 if (cmd.Cursor != default)
                     ptr = _winThreadCursors[cmd.Cursor].Ptr;
 
+#if DEBUG
                 if (_win32Experience)
                 {
                     // Based on a true story.
                     Thread.Sleep(15);
                 }
+#endif
 
                 GLFW.SetCursor(window, ptr);
             }

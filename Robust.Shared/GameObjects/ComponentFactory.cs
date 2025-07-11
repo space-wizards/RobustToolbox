@@ -273,11 +273,11 @@ namespace Robust.Shared.GameObjects
 
         public IComponent GetComponent(Type componentType)
         {
-            if (!_types.ContainsKey(componentType))
+            if (!_types.TryGetValue(componentType, out var value))
             {
                 throw new InvalidOperationException($"{componentType} is not a registered component.");
             }
-            return _typeFactory.CreateInstanceUnchecked<IComponent>(_types[componentType].Type);
+            return _typeFactory.CreateInstanceUnchecked<IComponent>(value.Type);
         }
 
         public IComponent GetComponent(CompIdx componentType)
@@ -287,11 +287,11 @@ namespace Robust.Shared.GameObjects
 
         public T GetComponent<T>() where T : IComponent, new()
         {
-            if (!_types.ContainsKey(typeof(T)))
+            if (!_types.TryGetValue(typeof(T), out var reg))
             {
                 throw new InvalidOperationException($"{typeof(T)} is not a registered component.");
             }
-            return _typeFactory.CreateInstanceUnchecked<T>(_types[typeof(T)].Type);
+            return _typeFactory.CreateInstanceUnchecked<T>(reg.Type);
         }
 
         public IComponent GetComponent(ComponentRegistration reg)

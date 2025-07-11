@@ -24,7 +24,6 @@ namespace Robust.UnitTesting.Shared.Physics
             var server = StartServer();
             await server.WaitIdleAsync();
             var entManager = server.ResolveDependency<IEntityManager>();
-            var mapManager = server.ResolveDependency<IMapManager>();
             var fixtureSystem = server.ResolveDependency<IEntitySystemManager>()
                 .GetEntitySystem<FixtureSystem>();
             var physicsSystem = server.ResolveDependency<IEntitySystemManager>()

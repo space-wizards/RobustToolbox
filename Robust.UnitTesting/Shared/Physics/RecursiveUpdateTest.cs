@@ -34,7 +34,7 @@ public sealed class RecursiveUpdateTest
 
         var broadphase = entManager.GetComponent<BroadphaseComponent>(guid);
         var coords = new EntityCoordinates(guid, new Vector2(0.5f, 0.5f));
-        var broadData = new BroadphaseData(guid, EntityUid.Invalid, false, false);
+        var broadData = new BroadphaseData(guid, false, false);
 
         var container = entManager.SpawnEntity(null, coords);
         var containerXform = entManager.GetComponent<TransformComponent>(container);
@@ -171,7 +171,7 @@ public sealed class RecursiveUpdateTest
         var mapBroadphase = entManager.GetComponent<BroadphaseComponent>(map);
 
         var coords = new EntityCoordinates(map, new Vector2(0.5f, 0.5f));
-        var mapBroadData = new BroadphaseData(map, EntityUid.Invalid, false, false);
+        var mapBroadData = new BroadphaseData(map, false, false);
 
         // Set up parent & child
         var parent = entManager.SpawnEntity(null, coords);
@@ -220,7 +220,7 @@ public sealed class RecursiveUpdateTest
         var guid = grid.Owner;
         mapSystem.SetTile(grid, Vector2i.Zero, new Tile(1));
         var gridBroadphase = entManager.GetComponent<BroadphaseComponent>(guid);
-        var gridBroadData = new BroadphaseData(guid, EntityUid.Invalid, false, false);
+        var gridBroadData = new BroadphaseData(guid, false, false);
 
         var gridCoords = new EntityCoordinates(map, new Vector2(-100f, -100f));
         transforms.SetCoordinates(guid, gridCoords);

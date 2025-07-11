@@ -1,16 +1,16 @@
+using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Numerics;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
+using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Utility;
-using System;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using Robust.Shared.Map.Components;
-using System.Diagnostics.CodeAnalysis;
-using System.Numerics;
-using Robust.Shared.Containers;
 
 namespace Robust.Shared.GameObjects;
 
@@ -217,9 +217,10 @@ public abstract partial class SharedTransformSystem
             {
 #if !EXCEPTION_TOLERANCE
                 throw new Exception("Transform is initialising before map ids have been assigned?");
-#endif
+#else
                 Log.Error($"Transform is initialising before map ids have been assigned?");
                 _map.AssignMapId((uid, mapComp));
+#endif
             }
 
             xform.MapUid = uid;
@@ -651,19 +652,30 @@ public abstract partial class SharedTransformSystem
         if (newMapId == ent.Comp1.MapID)
             return;
 
-        EntityUid? newMap = newMapId == MapId.Nullspace ? null : _map.GetMap(newMapId);
-        var mapPaused = _map.IsPaused(newMapId);
+        EntityUid? newUid = newMapId == MapId.Nullspace ? null : _map.GetMap(newMapId);
+        bool? mapPaused = null;
 
-        ChangeMapIdRecursive(ent, newMap, newMapId, mapPaused);
+        // Client may be moving entities across maps due to things leaving or entering PVS range.
+        // In that case, we don't want to pause or unpause entities.
+        if (!_gameTiming.ApplyingState)
+        {
+            mapPaused = _map.IsPaused(newMapId);
+            _metaData.SetEntityPaused(ent.Owner, mapPaused.Value, ent.Comp2);
+        }
+
+        ChangeMapIdRecursive(ent, newUid, newMapId, mapPaused);
     }
 
     private void ChangeMapIdRecursive(
         Entity<TransformComponent, MetaDataComponent> ent,
         EntityUid? newMap,
         MapId newMapId,
-        bool paused)
+        bool? paused)
     {
-        _metaData.SetEntityPaused(ent.Owner, paused, ent.Comp2);
+        if (paused is { } p)
+        {
+            _metaData.SetEntityPaused(ent.Owner, p, ent.Comp2);
+        }
 
         if ((ent.Comp2.Flags & MetaDataFlags.ExtraTransformEvents) != 0)
         {
@@ -1258,7 +1270,13 @@ public abstract partial class SharedTransformSystem
         if (!xform.Initialized)
             return;
 
-        RaiseMoveEvent((uid, xform, meta), oldParent, oldPosition, oldRotation, xform.MapUid);
+        RaiseMoveEvent(
+            (uid, xform, meta),
+            oldParent,
+            oldPosition,
+            oldRotation,
+            xform.MapUid,
+            checkTraversal: !oldPosition.Equals(pos));
     }
 
     #endregion

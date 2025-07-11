@@ -22,10 +22,10 @@ namespace Robust.Client.ResourceManagement
 
         public override void Load(IDependencyCollection dependencies, ResPath path)
         {
-            if (path.Directory.Filename.EndsWith(".rsi"))
+            if (IsInRsi(path))
             {
-                Logger.WarningS(
-                    "res",
+                var sawmill = dependencies.Resolve<ILogManager>().GetSawmill("res");
+                sawmill.Warning(
                     "Loading raw texture inside RSI: {Path}. Refer to the RSI state instead of the raw PNG.",
                     path);
             }
@@ -36,6 +36,15 @@ namespace Robust.Client.ResourceManagement
             LoadPreTextureData(dependencies.Resolve<IResourceManager>(), data);
             LoadTexture(dependencies.Resolve<IClyde>(), data);
             LoadFinish(dependencies.Resolve<IResourceCache>(), data);
+        }
+
+        private static bool IsInRsi(ResPath path)
+        {
+            var dir = path.Directory;
+            if (dir == ResPath.Root)
+                return false;
+
+            return dir.Filename.EndsWith(".rsi");
         }
 
         internal static void LoadPreTextureData(IResourceManager cache, LoadStepData data)

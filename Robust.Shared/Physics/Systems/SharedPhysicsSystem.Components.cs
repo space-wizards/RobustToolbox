@@ -23,10 +23,8 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
@@ -314,13 +312,6 @@ public partial class SharedPhysicsSystem
             body._inertia += data.I;
         }
 
-        // Update this after re-calculating mass as content may want to use the sum of fixture masses instead.
-        if (((int) body.BodyType & (int) (BodyType.Kinematic | BodyType.Static)) != 0)
-        {
-            body._localCenter = Vector2.Zero;
-            return;
-        }
-
         if (body._mass > 0.0f)
         {
             body._invMass = 1.0f / body._mass;
@@ -350,18 +341,23 @@ public partial class SharedPhysicsSystem
         var oldCenter = body._localCenter;
         body._localCenter = localCenter;
 
-        // Update center of mass velocity.
-        var comVelocityDiff = Vector2Helpers.Cross(body.AngularVelocity, localCenter - oldCenter);
+        if (((int) body.BodyType & (int) (BodyType.Kinematic | BodyType.Static)) == 0)
+        {
+            // Update center of mass velocity.
+            var comVelocityDiff = Vector2Helpers.Cross(body.AngularVelocity, localCenter - oldCenter);
 
-        if (comVelocityDiff != Vector2.Zero)
-       	{
-       		body.LinearVelocity += comVelocityDiff;
-        	DirtyField(uid, body, nameof(PhysicsComponent.LinearVelocity));
-       	}
+            if (comVelocityDiff != Vector2.Zero)
+            {
+                body.LinearVelocity += comVelocityDiff;
+                DirtyField(uid, body, nameof(PhysicsComponent.LinearVelocity));
+            }
+        }
 
         if (body._mass == oldMass && body._inertia == oldInertia && oldCenter == localCenter)
             return;
 
+        // we always do the full mass and COM calculation and raise this, even for static bodies as content may need the info
+        // examples are stations anchored with the station anchor, shuttles landed on planets, or grids getting an atmosphere above a certain mass threshold
         var ev = new MassDataChangedEvent((uid, body, manager), oldMass, oldInertia, oldCenter);
         RaiseLocalEvent(uid, ref ev);
     }
@@ -488,14 +484,17 @@ public partial class SharedPhysicsSystem
             body.Awake = true;
         }
 
-        UpdateMapAwakeState(uid, body);
+        if (body.Awake)
+            AddAwakeBody((uid, body, Transform(uid)));
+        else
+            RemoveSleepBody((uid, body, Transform(uid)));
     }
 
     public void TrySetBodyType(EntityUid uid, BodyType value, FixturesComponent? manager = null, PhysicsComponent? body = null, TransformComponent? xform = null)
     {
         if (_fixturesQuery.Resolve(uid, ref manager, false) &&
            PhysicsQuery.Resolve(uid, ref body, false) &&
-           _xformQuery.Resolve(uid, ref xform, false))
+           XformQuery.Resolve(uid, ref xform, false))
         {
             SetBodyType(uid, value, manager, body, xform);
         }
@@ -511,7 +510,6 @@ public partial class SharedPhysicsSystem
 
         var oldType = body.BodyType;
         body.BodyType = value;
-        ResetMassData(uid, manager, body);
 
         body.Force = Vector2.Zero;
         body.Torque = 0f;
@@ -705,7 +703,7 @@ public partial class SharedPhysicsSystem
 
     public Transform GetRelativePhysicsTransform(Transform worldTransform, Entity<TransformComponent?> relative)
     {
-        if (!_xformQuery.Resolve(relative.Owner, ref relative.Comp))
+        if (!XformQuery.Resolve(relative.Owner, ref relative.Comp))
             return Physics.Transform.Empty;
 
         var (_, broadphaseRot, _, broadphaseInv) = _transform.GetWorldPositionRotationMatrixWithInv(relative.Comp);
@@ -721,8 +719,8 @@ public partial class SharedPhysicsSystem
         Entity<TransformComponent?> entity,
         Entity<TransformComponent?> relative)
     {
-        if (!_xformQuery.Resolve(entity.Owner, ref entity.Comp) ||
-            !_xformQuery.Resolve(relative.Owner, ref relative.Comp))
+        if (!XformQuery.Resolve(entity.Owner, ref entity.Comp) ||
+            !XformQuery.Resolve(relative.Owner, ref relative.Comp))
         {
             return Physics.Transform.Empty;
         }
@@ -738,7 +736,7 @@ public partial class SharedPhysicsSystem
     /// </summary>
     public Transform GetLocalPhysicsTransform(EntityUid uid, TransformComponent? xform = null)
     {
-        if (!_xformQuery.Resolve(uid, ref xform) || xform.Broadphase == null)
+        if (!XformQuery.Resolve(uid, ref xform) || xform.Broadphase == null)
             return Physics.Transform.Empty;
 
         var broadphase = xform.Broadphase.Value.Uid;
@@ -753,7 +751,7 @@ public partial class SharedPhysicsSystem
 
     public Transform GetPhysicsTransform(EntityUid uid, TransformComponent? xform = null)
     {
-        if (!_xformQuery.Resolve(uid, ref xform))
+        if (!XformQuery.Resolve(uid, ref xform))
             return Physics.Transform.Empty;
 
         var (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform);

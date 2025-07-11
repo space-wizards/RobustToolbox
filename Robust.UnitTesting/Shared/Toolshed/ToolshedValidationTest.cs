@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
 using Robust.Shared.Toolshed;
 using Robust.Shared.Toolshed.TypeParsers;
@@ -43,6 +44,7 @@ public sealed class ToolshedValidationTest : ToolshedTest
             foreach (var type in types)
             {
                 var instance = (ToolshedCommand)Activator.CreateInstance(type)!;
+                Server.Resolve<IDependencyCollection>().InjectDependencies(instance, oneOff: true);
                 Assert.Throws<InvalidCommandImplementation>(instance.Init, $"{type.PrettyName()} did not throw a {nameof(InvalidCommandImplementation)} exception");
             }
         });

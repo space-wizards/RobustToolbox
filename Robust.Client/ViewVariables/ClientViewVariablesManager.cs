@@ -175,6 +175,11 @@ namespace Robust.Client.ViewVariables
                 return new VVPropEditorVector2(intVec: true);
             }
 
+            if (type == typeof(ViewVariablesBlobMembers.ServerTupleToken))
+            {
+                return new VVPropEditorTuple<object, object>();
+            }
+
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ValueTuple<,>))
             {
                 return (VVPropEditor)Activator.CreateInstance(

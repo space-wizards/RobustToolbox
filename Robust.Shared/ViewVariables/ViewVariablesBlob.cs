@@ -133,6 +133,16 @@ namespace Robust.Shared.ViewVariables
         }
 
         /// <summary>
+        ///     Wrapper for a non-serializable value-type tuple.
+        /// </summary>
+        [Serializable, NetSerializable]
+        public sealed class ServerTupleToken
+        {
+            public object Item1 { get; set; }
+            public object Item2 { get; set; }
+        }
+
+        /// <summary>
         ///     Data for a specific property.
         /// </summary>
         [Serializable, NetSerializable]

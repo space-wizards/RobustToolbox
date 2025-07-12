@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using Robust.Server.ViewVariables.Traits;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
@@ -124,17 +126,34 @@ namespace Robust.Server.ViewVariables
             for (var i = 1; i < propertyIndex.Length; i++)
             {
                 var selector = propertyIndex[i];
+
+                if (value == null || !value.GetType().IsGenericType)
+                    return false;
+
                 switch (selector)
                 {
                     case ViewVariablesSelectorKeyValuePair kvPair:
-                        if (value == null ||
-                            !value.GetType().IsGenericType ||
-                            value.GetType().GetGenericTypeDefinition() != typeof(KeyValuePair<,>))
+                        if (value.GetType().GetGenericTypeDefinition() != typeof(KeyValuePair<,>))
                             return false;
 
                         dynamic kv = value;
                         value = kvPair.Key ? kv.Key : kv.Value;
                         break;
+
+                    // Using this selector on an IEnumerable is not actually used for anything right now.
+                    // I was adding this for the tuple case below and it made sense to add for future use.
+                    case ViewVariablesEnumerableIndexSelector indexSelector
+                        when value is IEnumerable<object> list:
+                        value = list.ElementAtOrDefault(indexSelector.Index);
+                        break;
+
+                    case ViewVariablesEnumerableIndexSelector indexSelector
+                        when value is ITuple tuple:
+                        value = indexSelector.Index <= tuple.Length - 1 ? tuple[indexSelector.Index] : null;
+                        break;
+
+                    case ViewVariablesEnumerableIndexSelector:
+                        return false;
                 }
             }
 

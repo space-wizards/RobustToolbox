@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * `RobustClientPackaging.WriteClientResources()` and `RobustServerPackaging.WriteServerResources()` now have an overload taking in a set of things to ignore in the content resources directory.
+* Adds `AttachedAudioDespawnedEvent`, which is raised against the parent of a despawning `AudioComponent`.
 
 ### Bugfixes
 

@@ -29,7 +29,7 @@ internal partial class UserInterfaceManager
             _popupsByType.Remove(typeof(T));
         }
         oldPopup.Close();
-        oldPopup.Dispose();
+        oldPopup.Orphan();
         return true;
     }
 
@@ -62,7 +62,7 @@ internal partial class UserInterfaceManager
             _windowsByType.Remove(typeof(T));
         }
         _uiManager.StateRoot.RemoveChild(oldWindow);
-        oldWindow.Dispose();
+        oldWindow.Close();
         return true;
     }
 
@@ -111,7 +111,7 @@ internal partial class UserInterfaceManager
     {
         foreach (var data in _windowsByType)
         {
-            data.Value.Dequeue().Dispose();
+            data.Value.Dequeue().Close();
         }
         _windowsByType.Clear();
     }

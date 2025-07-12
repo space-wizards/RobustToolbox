@@ -36,4 +36,24 @@ public static class TypeSymbolHelper
 
         return false;
     }
+
+    public static IEnumerable<ITypeSymbol> GetBaseTypes(ITypeSymbol type)
+    {
+        var baseType = type.BaseType;
+        while (baseType != null)
+        {
+            yield return baseType;
+            baseType = baseType.BaseType;
+        }
+    }
+
+    public static bool Inherits(ITypeSymbol type, ITypeSymbol other)
+    {
+        foreach (var baseType in GetBaseTypes(type))
+        {
+            if (SymbolEqualityComparer.Default.Equals(baseType, other))
+                return true;
+        }
+        return false;
+    }
 }

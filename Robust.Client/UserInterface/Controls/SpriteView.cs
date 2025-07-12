@@ -181,11 +181,11 @@ namespace Robust.Client.UserInterface.Controls
 
         private void UpdateSize()
         {
-            if (!ResolveEntity(out _, out var sprite, out _))
+            if (!ResolveEntity(out var uid, out var sprite, out _))
                 return;
 
-            var spriteBox = sprite.CalculateRotatedBoundingBox(default,  _worldRotation ?? Angle.Zero, _eyeRotation)
-                .CalcBoundingBox();
+            SpriteSystem ??= EntMan.System<SpriteSystem>();
+            var spriteBox = SpriteSystem.CalculateBounds((uid, sprite), default, _worldRotation ?? Angle.Zero, _eyeRotation).CalcBoundingBox();
 
             if (!SpriteOffset)
             {
@@ -255,7 +255,7 @@ namespace Robust.Client.UserInterface.Controls
             var oldModulate = world.Modulate;
             world.Modulate *= Modulate * ActualModulateSelf;
 
-            renderHandle.DrawEntity(uid, position, scale, _worldRotation, _eyeRotation, OverrideDirection, sprite, xform, _transform);
+            renderHandle.DrawEntity(uid, position, scale, _worldRotation, _eyeRotation, OverrideDirection, sprite, SpriteSystem, xform, _transform);
             world.Modulate = oldModulate;
         }
 

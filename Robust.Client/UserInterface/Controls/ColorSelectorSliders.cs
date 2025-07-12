@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Robust.Shared.ColorNaming;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;

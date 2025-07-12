@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.Maths;
-using Vector3 = Robust.Shared.Maths.Vector3;
 
 namespace Robust.UnitTesting.Shared.Maths
 {

@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Numerics;
 using Robust.Shared.Animations;
 using Robust.Shared.Maths;
-using Vector3 = Robust.Shared.Maths.Vector3;
-using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.Client.Animations
 {
@@ -122,9 +120,9 @@ namespace Robust.Client.Animations
                 case Vector2 vector2:
                     return Vector2Helpers.InterpolateCubic((Vector2) preA, vector2, (Vector2) b, (Vector2) postB, t);
                 case Vector3 vector3:
-                    return Vector3.InterpolateCubic((Vector3) preA, vector3, (Vector3) b, (Vector3) postB, t);
+                    return VectorHelpers.InterpolateCubic((Vector3) preA, vector3, (Vector3) b, (Vector3) postB, t);
                 case Vector4 vector4:
-                    return Vector4.InterpolateCubic((Vector4) preA, vector4, (Vector4) b, (Vector4) postB, t);
+                    return VectorHelpers.InterpolateCubic((Vector4) preA, vector4, (Vector4) b, (Vector4) postB, t);
                 case float f:
                     return MathHelper.InterpolateCubic((float) preA, f, (float) b, (float) postB, t);
                 case double d:

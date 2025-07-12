@@ -111,7 +111,7 @@ namespace Robust.UnitTesting.Shared.Serialization
             {
                 CustomTypeSerializers = new ITypeSerializer[]
                 {
-                    new Vector2Serializer(),
+                    new NetMathSerializer(),
                 }
             });
             var stream = new MemoryStream();

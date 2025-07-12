@@ -13,7 +13,6 @@ using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Utility;
-using Vector2 = System.Numerics.Vector2;
 
 namespace Robust.Shared.EntitySerialization.Systems;
 

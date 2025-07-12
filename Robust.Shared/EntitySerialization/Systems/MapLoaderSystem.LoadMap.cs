@@ -8,7 +8,6 @@ using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
-using Vector2 = System.Numerics.Vector2;
 
 namespace Robust.Shared.EntitySerialization.Systems;
 

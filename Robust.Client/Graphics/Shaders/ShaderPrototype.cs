@@ -11,8 +11,6 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using YamlDotNet.RepresentationModel;
-using Vector3 = Robust.Shared.Maths.Vector3;
-using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.Client.Graphics
 {
@@ -222,7 +220,7 @@ namespace Robust.Client.Graphics
                     case Matrix3x2 i:
                         instance.SetParameter(key, i);
                         break;
-                    case Matrix4 i:
+                    case Matrix4x4 i:
                         instance.SetParameter(key, i);
                         break;
                 }

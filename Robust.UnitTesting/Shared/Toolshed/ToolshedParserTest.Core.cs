@@ -44,8 +44,8 @@ public sealed partial class ToolshedParserTest
                 // maff
                 AssertParseable<Vector2>();
                 AssertParseable<Vector2i>();
-                AssertParseable<Robust.Shared.Maths.Vector3>();
-                AssertParseable<Robust.Shared.Maths.Vector4>();
+                AssertParseable<Vector3>();
+                AssertParseable<Vector4>();
                 AssertParseable<Box2>();
                 AssertParseable<Box2i>();
                 AssertParseable<Angle>();

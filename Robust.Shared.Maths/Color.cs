@@ -29,12 +29,11 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 using Robust.Shared.Utility;
-using SysVector3 = System.Numerics.Vector3;
-using SysVector4 = System.Numerics.Vector4;
 
 namespace Robust.Shared.Maths
 {
@@ -69,7 +68,7 @@ namespace Robust.Shared.Maths
         /// Vector representation, for easy SIMD operations.
         /// </summary>
         // ReSharper disable once InconsistentNaming
-        public readonly SysVector4 RGBA => Unsafe.BitCast<Color, SysVector4>(this);
+        public readonly Vector4 RGBA => Unsafe.BitCast<Color, Vector4>(this);
 
         public readonly byte RByte => (byte) (R * byte.MaxValue);
         public readonly byte GByte => (byte) (G * byte.MaxValue);
@@ -94,9 +93,9 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Constructs a new Color structure from the components in a <see cref="SysVector4"/>.
         /// </summary>
-        public Color(in SysVector4 vec)
+        public Color(in Vector4 vec)
         {
-            this = Unsafe.BitCast<SysVector4, Color>(vec);
+            this = Unsafe.BitCast<Vector4, Color>(vec);
         }
 
         /// <summary>
@@ -905,7 +904,7 @@ namespace Robust.Shared.Maths
             var m = (1 - g - k) / (1 - k);
             var y = (1 - b - k) / (1 - k);
 
-            return (c, m, y, k);
+            return new Vector4(c, m, y, k);
         }
 
         public static Color FromCmyk(Vector4 cmyk)
@@ -932,7 +931,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Color InterpolateBetween(Color α, Color β, float λ)
         {
-            return new(SysVector4.Lerp(α.RGBA, β.RGBA, λ));
+            return new(Vector4.Lerp(α.RGBA, β.RGBA, λ));
         }
 
         public static Color? TryFromHex(ReadOnlySpan<char> hexColor)
@@ -1007,10 +1006,10 @@ namespace Robust.Shared.Maths
 
         public static Color Blend(Color dstColor, Color srcColor, BlendFactor dstFactor, BlendFactor srcFactor)
         {
-            var dst = new SysVector3(dstColor.R, dstColor.G, dstColor.B);
-            var src = new SysVector3(srcColor.R, srcColor.G, srcColor.B);
+            var dst = new Vector3(dstColor.R, dstColor.G, dstColor.B);
+            var src = new Vector3(srcColor.R, srcColor.G, srcColor.B);
 
-            var ret = new SysVector3();
+            var ret = new Vector3();
 
             switch (dstFactor)
             {
@@ -1023,13 +1022,13 @@ namespace Robust.Shared.Maths
                     ret = dst * src;
                     break;
                 case BlendFactor.OneMinusSrcColor:
-                    ret = dst * (SysVector3.One - src);
+                    ret = dst * (Vector3.One - src);
                     break;
                 case BlendFactor.DstColor:
                     ret = dst * dst;
                     break;
                 case BlendFactor.OneMinusDstColor:
-                    ret = dst * (SysVector3.One - dst);
+                    ret = dst * (Vector3.One - dst);
                     break;
                 case BlendFactor.SrcAlpha:
                     ret = dst * srcColor.A;
@@ -1058,13 +1057,13 @@ namespace Robust.Shared.Maths
                     ret += src * src;
                     break;
                 case BlendFactor.OneMinusSrcColor:
-                    ret += src * (SysVector3.One - src);
+                    ret += src * (Vector3.One - src);
                     break;
                 case BlendFactor.DstColor:
                     ret += src * dst;
                     break;
                 case BlendFactor.OneMinusDstColor:
-                    ret += src * (SysVector3.One - dst);
+                    ret += src * (Vector3.One - dst);
                     break;
                 case BlendFactor.SrcAlpha:
                     ret += src * srcColor.A;

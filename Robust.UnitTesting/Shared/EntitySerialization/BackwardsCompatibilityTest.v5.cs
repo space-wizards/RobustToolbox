@@ -33,9 +33,7 @@ public sealed partial class BackwardsCompatibilityTest
         var tileMan = server.ResolveDependency<ITileDefinitionManager>();
         var resourceManager = server.ResolveDependency<IResourceManagerInternal>();
 
-        tileMan.Register(new TileDef("Space"));
-        tileMan.Register(new TileDef("A"));
-        tileMan.Register(new TileDef("B"));
+        SerializationTestHelper.LoadTileDefs(server.ProtoMan, tileMan, "Space");
         var gridPath = new ResPath($"{nameof(MapDataV5Grid)}.yml");
         resourceManager.MountString(gridPath.ToString(), MapDataV5Grid);
 
@@ -255,5 +253,14 @@ entities:
   components:
   - type: EntitySaveTest
     list: [ 1, 2 ]
+
+- type: testTileDef
+  id: Space
+
+- type: testTileDef
+  id: A
+
+- type: testTileDef
+  id: B
 ";
 }

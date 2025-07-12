@@ -88,18 +88,18 @@ internal sealed class ViewVariableControlFactory : IViewVariableControlFactory
     }
 
     /// <inheritdoc />
-    public void RegisterForAssignableFrom<T>(Func<Type, VVPropEditor> factoryMethod, bool insertLast = false)
+    public void RegisterForAssignableFrom<T>(Func<Type, VVPropEditor> factoryMethod, InsertPosition insertPosition = InsertPosition.First)
     {
-        var insertIndex = insertLast
+        int insertIndex = insertPosition == InsertPosition.Last
             ? _factoriesWithCondition.Count - 1
             : 0;
         _factoriesWithCondition.Insert(insertIndex, new(type => typeof(T).IsAssignableFrom(type), factoryMethod));
     }
 
     /// <inheritdoc />
-    public void RegisterWithCondition(Func<Type, bool> condition, Func<Type, VVPropEditor> factory, bool insertLast = false)
+    public void RegisterWithCondition(Func<Type, bool> condition, Func<Type, VVPropEditor> factory, InsertPosition insertPosition = InsertPosition.First)
     {
-        var insertIndex = insertLast
+        int insertIndex = insertPosition == InsertPosition.Last
             ? _factoriesWithCondition.Count - 1
             : 0;
         _factoriesWithCondition.Insert(insertIndex, new(condition, factory));

@@ -141,6 +141,17 @@ namespace Robust.Server.ViewVariables
                     };
                 }
 
+                // Handle ValueTuple<,>
+                if (valType.IsGenericType && valType.GetGenericTypeDefinition() == typeof(ValueTuple<,>))
+                {
+                    dynamic tuple = value;
+                    return new ViewVariablesBlobMembers.ServerTupleToken
+                    {
+                        Item1 = MakeValueNetSafe(tuple.Item1),
+                        Item2 = MakeValueNetSafe(tuple.Item2)
+                    };
+                }
+
                 // Can't send this value type over the wire.
                 return new ViewVariablesBlobMembers.ServerValueTypeToken
                 {

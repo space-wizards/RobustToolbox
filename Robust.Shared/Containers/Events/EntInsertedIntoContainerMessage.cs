@@ -11,7 +11,7 @@ namespace Robust.Shared.Containers
     {
         public readonly EntityUid OldParent;
 
-        public EntInsertedIntoContainerMessage(EntityUid entity, EntityUid oldParent, BaseContainer container) : base(entity, container)
+        public EntInsertedIntoContainerMessage(EntityUid entity, EntityUid oldParent, BaseContainer container, EntityUid? mover) : base(entity, container, mover)
         {
             OldParent = oldParent;
         }

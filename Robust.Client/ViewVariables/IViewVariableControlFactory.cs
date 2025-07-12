@@ -13,7 +13,7 @@ public interface IViewVariableControlFactory
     /// Returns <see cref="VVPropEditorDummy"/> if fails to find proper control.
     /// First will look for control factory by type match (<see cref="RegisterForType{T}"/>),
     /// then will try to check each registered conditional factory
-    /// (<see cref="RegisterWithConditionAtStart"/>, <see cref="RegisterForAssignableFromAtStart{T}"/> and similar methods).
+    /// (<see cref="RegisterWithCondition"/>, <see cref="RegisterForAssignableFrom{T}"/> and similar methods).
     /// </summary>
     VVPropEditor CreateFor(Type? type);
 
@@ -26,31 +26,22 @@ public interface IViewVariableControlFactory
 
     /// <summary>
     /// Registers factory method for vv control. This factory method will be used if provided type will be assignable to <typeparamref name="T"/>.
-    /// Condition will be inserted into first position in list of conditions to check (after ones registered <see cref="RegisterForType{T}"/>).
+    /// Conditions will be checked if none of <see cref="RegisterForType{T}"/> registrations were fitting.
     /// </summary>
     /// <param name="factoryMethod">Factory method that creates VV control.</param>
-    void RegisterForAssignableFromAtStart<T>(Func<Type, VVPropEditor> factoryMethod);
-
-    /// <summary>
-    /// Registers factory method for vv control. This factory method will be used if provided type will be assignable to <typeparamref name="T"/>.
-    /// Condition will be inserted into last position in list of conditions to check (after ones registered <see cref="RegisterForType{T}"/>).
-    /// </summary>
-    /// <param name="factoryMethod">Factory method that creates VV control.</param>
-    void RegisterForAssignableFromAtEnd<T>(Func<Type, VVPropEditor> factoryMethod);
+    /// <param name="insertLast">
+    /// If true - condition will be inserted at the end of conditions list, otherwise it will be inserted at start.
+    /// </param>
+    void RegisterForAssignableFrom<T>(Func<Type, VVPropEditor> factoryMethod, bool insertLast = false);
 
     /// <summary>
     /// Registers factory method for vv control. This factory method will be used if <paramref name="condition"/> will return true for provided type.
-    /// Condition will be inserted into first position in list of conditions to check (after ones registered <see cref="RegisterForType{T}"/>).
+    /// Conditions will be checked if none of <see cref="RegisterForType{T}"/> registrations were fitting.
     /// </summary>
     /// <param name="condition">Condition, that will decide, if factory should be used for provided type.</param>
     /// <param name="factory">Factory method that creates VV control.</param>
-    void RegisterWithConditionAtStart(Func<Type, bool> condition, Func<Type, VVPropEditor> factory);
-
-    /// <summary>
-    /// Registers factory method for vv control. This factory method will be used if <paramref name="condition"/> will return true for provided type.
-    /// Condition will be inserted into last position in list of conditions to check (after ones registered <see cref="RegisterForType{T}"/>).
-    /// </summary>
-    /// <param name="condition">Condition, that will decide, if factory should be used for provided type.</param>
-    /// <param name="factory">Factory method that creates VV control.</param>
-    void RegisterWithConditionAtEnd(Func<Type, bool> condition, Func<Type, VVPropEditor> factory);
+    /// <param name="insertLast">
+    /// If true - condition will be inserted at the end of conditions list, otherwise it will be inserted at start.
+    /// </param>
+    void RegisterWithCondition(Func<Type, bool> condition, Func<Type, VVPropEditor> factory, bool insertLast = false);
 }

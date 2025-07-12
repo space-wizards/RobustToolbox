@@ -14,7 +14,7 @@ Don't change the format without looking at the script!
 
 ### New features
 
-* VV control factory was extracted from  ClientViewVariablesManager to enable adding VV controls from assemblies that use RT
+* Custom VV controls can now be registered using IViewVariableControlFactory.
 
 ### Bugfixes
 

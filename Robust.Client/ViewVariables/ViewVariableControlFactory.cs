@@ -14,10 +14,11 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.ViewVariables;
 
-public sealed class ViewVariableControlFactory : IViewVariableControlFactory
+internal sealed class ViewVariableControlFactory : IViewVariableControlFactory
 {
     [Dependency] private readonly IPrototypeManager _protoManager = default!;
     [Dependency] private readonly IResourceManager _resManager = default!;
+    [Dependency] private readonly IDependencyCollection _dependencyManager = default!;
 
     private readonly Dictionary<Type, Func<Type, VVPropEditor>> _factoriesByType = new();
     private readonly List<ConditionalViewVariableFactoryMethodContainer> _factoriesWithCondition = new();
@@ -53,28 +54,28 @@ public sealed class ViewVariableControlFactory : IViewVariableControlFactory
         RegisterForType<Color>(_ =>  new VVPropEditorColor());
         RegisterForType<TimeSpan>(_ =>  new VVPropEditorTimeSpan());
 
-        RegisterWithConditionAtStart(type => type.IsEnum, _ => new VVPropEditorEnum());
-        RegisterWithConditionAtStart(
+        RegisterWithCondition(type => type.IsEnum, _ => new VVPropEditorEnum());
+        RegisterWithCondition(
             type => type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ProtoId<>),
             type =>
             {
                 var typeArgumentType = type.GenericTypeArguments[0];
                 var editor = CreateGenericEditor(typeArgumentType, typeof(VVPropEditorProtoId<>));
 
-                IoCManager.InjectDependencies(editor);
+                _dependencyManager.InjectDependencies(editor);
                 return editor;
             }
         );
-        RegisterForAssignableFromAtStart<IPrototype>(type => CreateGenericEditor(type, typeof(VVPropEditorIPrototype<>)));
-        RegisterForAssignableFromAtStart<ViewVariablesBlobMembers.PrototypeReferenceToken>(type => CreateGenericEditor(type, typeof(VVPropEditorIPrototype<>)));
-        RegisterForAssignableFromAtStart<ISelfSerialize>(type => CreateGenericEditor(type, typeof(VVPropEditorISelfSerializable<>)));
-        RegisterForAssignableFromAtStart<SoundSpecifier>(_ => new VVPropEditorSoundSpecifier(_protoManager, _resManager));
-        RegisterWithConditionAtStart(
+        RegisterForAssignableFrom<IPrototype>(type => CreateGenericEditor(type, typeof(VVPropEditorIPrototype<>)));
+        RegisterForAssignableFrom<ViewVariablesBlobMembers.PrototypeReferenceToken>(type => CreateGenericEditor(type, typeof(VVPropEditorIPrototype<>)));
+        RegisterForAssignableFrom<ISelfSerialize>(type => CreateGenericEditor(type, typeof(VVPropEditorISelfSerializable<>)));
+        RegisterForAssignableFrom<SoundSpecifier>(_ => new VVPropEditorSoundSpecifier(_protoManager, _resManager));
+        RegisterWithCondition(
             type => type == typeof(ViewVariablesBlobMembers.ServerKeyValuePairToken)
                     || type.IsGenericType && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>),
             _ => new VVPropEditorKeyValuePair()
         );
-        RegisterWithConditionAtStart(
+        RegisterWithCondition(
             type => type != typeof(ViewVariablesBlobMembers.ServerValueTypeToken) && !type.IsValueType,
             _ => new VVPropEditorReference()
         );
@@ -87,27 +88,21 @@ public sealed class ViewVariableControlFactory : IViewVariableControlFactory
     }
 
     /// <inheritdoc />
-    public void RegisterForAssignableFromAtStart<T>(Func<Type, VVPropEditor> factoryMethod)
+    public void RegisterForAssignableFrom<T>(Func<Type, VVPropEditor> factoryMethod, bool insertLast = false)
     {
-        _factoriesWithCondition.Insert(0, new(type => typeof(T).IsAssignableFrom(type), factoryMethod));
+        var insertIndex = insertLast
+            ? _factoriesWithCondition.Count - 1
+            : 0;
+        _factoriesWithCondition.Insert(insertIndex, new(type => typeof(T).IsAssignableFrom(type), factoryMethod));
     }
 
     /// <inheritdoc />
-    public void RegisterForAssignableFromAtEnd<T>(Func<Type, VVPropEditor> factoryMethod)
+    public void RegisterWithCondition(Func<Type, bool> condition, Func<Type, VVPropEditor> factory, bool insertLast = false)
     {
-        _factoriesWithCondition.Insert(_factoriesWithCondition.Count - 1, new(type => typeof(T).IsAssignableFrom(type), factoryMethod));
-    }
-
-    /// <inheritdoc />
-    public void RegisterWithConditionAtStart(Func<Type, bool> condition, Func<Type, VVPropEditor> factory)
-    {
-        _factoriesWithCondition.Insert(0, new(condition, factory));
-    }
-
-    /// <inheritdoc />
-    public void RegisterWithConditionAtEnd(Func<Type, bool> condition, Func<Type, VVPropEditor> factory)
-    {
-        _factoriesWithCondition.Insert(_factoriesWithCondition.Count - 1, new(condition, factory));
+        var insertIndex = insertLast
+            ? _factoriesWithCondition.Count - 1
+            : 0;
+        _factoriesWithCondition.Insert(insertIndex, new(condition, factory));
     }
 
     /// <inheritdoc />

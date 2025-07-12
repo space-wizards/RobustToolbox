@@ -14,7 +14,7 @@ Don't change the format without looking at the script!
 
 ### New features
 
-*None yet*
+* Custom VV controls can now be registered using IViewVariableControlFactory.
 
 ### Bugfixes
 

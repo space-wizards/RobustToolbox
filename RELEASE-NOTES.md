@@ -14,7 +14,7 @@ Don't change the format without looking at the script!
 
 ### New features
 
-*None yet*
+* IComponentFactory can now get component from ComponentRegistry using type parameter
 
 ### Bugfixes
 

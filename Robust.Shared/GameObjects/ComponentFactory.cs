@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -224,6 +224,20 @@ namespace Robust.Shared.GameObjects
             var copy = GetComponent(entry.Component.GetType());
             _serManager.CopyTo(entry.Component, ref copy, notNullableOverride: true);
             return copy;
+        }
+
+        /// <inheritdoc />
+        public bool TryGetComponent<T>(ComponentRegistry registry, [NotNullWhen(true)] out T? component) where T : class, IComponent, new()
+        {
+            component = null;
+            var componentName = GetComponentName<T>();
+            if (registry.TryGetComponent(componentName, out var foundComponent) && foundComponent is T castedComponent)
+            {
+                component = castedComponent;
+                return true;
+            }
+
+            return false;
         }
 
         public void RegisterIgnore(params string[] names)

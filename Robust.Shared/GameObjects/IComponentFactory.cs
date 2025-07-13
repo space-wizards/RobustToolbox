@@ -118,10 +118,10 @@ namespace Robust.Shared.GameObjects
 
         IComponent GetComponent(EntityPrototype.ComponentRegistryEntry entry);
 
-        /// <summary> Attempts to get component on component-registry./// </summary>
+        /// <summary> Attempts to get component of type <typeparamref name="T"/> from provided <paramref name="registry"/>. </summary>
         /// <typeparam name="T">Type of component to be found</typeparam>
         /// <param name="registry">Registry, which should be searched for component.</param>
-        /// <param name="component">Component from registry. Can be null if registry have no component of requested type.</param>
+        /// <param name="component">Component from registry. Will be null if registry have no component of type <typeparamref name="T"/>.</param>
         /// <returns>Returns true if component was found on registry, false otherwise.</returns>
         bool TryGetComponent<T>(ComponentRegistry registry, [NotNullWhen(true)] out T? component) where T : class, IComponent, new();
 

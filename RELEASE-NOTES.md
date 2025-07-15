@@ -35,23 +35,58 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* More members in `IntegrationInstance` now enforce that the instance is idle before accessing it.
 
 ### New features
 
-*None yet*
+* `RobustClientPackaging.WriteClientResources()` and `RobustServerPackaging.WriteServerResources()` now have an overload taking in a set of things to ignore in the content resources directory.
 
 ### Bugfixes
 
-*None yet*
+* Pooled integration instances returned by `RobustIntegrationTest` are now treated as non-idle, for consistency with non-pooled startups.
+* `SharedAudioSystem.SetState` no longer calls `DirtyField` on `PlaybackPosition`, an unnetworked field.
 
 ### Other
 
-* More tiny optimizations to `DataDefinitionAnalyzer`.
+* The debug assert for `RobustRandom.Next(TimeSpan, TimeSpan)` now allows for the two arguments to be equal.
+* The configuration system will now report an error instead of warning if it fails to load the config file.
+* Members in `IntegrationInstance` that enforce the instance is idle now always allow access from the instance's thread (e.g. from a callback).
 
 ### Internal
 
 *None yet*
+
+
+## 264.0.0
+
+### Breaking changes
+
+* `IPrototypeManager.Index(Type kind, string id)` now throws `UnknownPrototypeException` instead of `KeyNotFoundException`, for consistency with `IPrototypeManager.Index<T>`.
+
+### New features
+
+* Types can now implement the new interface `IRobustCloneable<T>` to be cloned by the component state source generator.
+* Added extra Roslyn Analyzers to detect some misuse of prototypes:
+  * Network serializing prototypes (tagging them with `[Serializable, NetSerializable]`).
+  * Constructing new instances of prototypes directly.
+* Add `PrototypeManagerExt.Index` helper function that takes a nullable `ProtoId<T>`, returning null if the ID is null.
+* Added an `AlwaysActive` field to `WebViewControl` to make a browser window active even when not in the UI tree.
+* Made some common dependencies accessible through `IPlacementManager`.
+* Added a new `GENITIVE()` localization helper function, which is useful for certain languages.
+
+### Bugfixes
+
+* Sprite scale is now correctly applied to sprite boundaries in `SpriteSystem.GetLocalBounds`.
+* Fixed documentation for `IPrototypeManager.Index<T>` stating that `KeyNotFoundException` gets thrown, when in actuality `UnknownPrototypeException` gets thrown.
+
+### Other
+
+* More tiny optimizations to `DataDefinitionAnalyzer`.
+* NetSerializer has been updated. On debug, it will now report *where* a type that can't be serialized is referenced from.
+
+### Internal
+
+* Minor internal code cleanup.
 
 
 ## 263.0.0

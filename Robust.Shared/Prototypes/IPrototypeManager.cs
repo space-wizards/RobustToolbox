@@ -91,44 +91,44 @@ public interface IPrototypeManager
     /// <summary>
     /// Index for a <see cref="IPrototype"/> by ID.
     /// </summary>
-    /// <exception cref="KeyNotFoundException">
+    /// <exception cref="UnknownPrototypeException">
     /// Thrown if the type of prototype is not registered.
     /// </exception>
-    T Index<T>(string id) where T : class, IPrototype;
+    T Index<T>([ForbidLiteral] string id) where T : class, IPrototype;
 
     /// <inheritdoc cref="Index{T}(string)"/>
-    EntityPrototype Index(EntProtoId id);
+    EntityPrototype Index([ForbidLiteral] EntProtoId id);
 
     /// <inheritdoc cref="Index{T}(string)"/>
-    T Index<T>(ProtoId<T> id) where T : class, IPrototype;
+    T Index<T>([ForbidLiteral] ProtoId<T> id) where T : class, IPrototype;
 
     /// <summary>
     /// Index for a <see cref="IPrototype"/> by ID.
     /// </summary>
-    /// <exception cref="KeyNotFoundException">
+    /// <exception cref="UnknownPrototypeException">
     /// Thrown if the ID does not exist or the kind of prototype is not registered.
     /// </exception>
-    IPrototype Index(Type kind, string id);
+    IPrototype Index(Type kind, [ForbidLiteral] string id);
 
     /// <summary>
     ///     Returns whether a prototype of type <typeparamref name="T"/> with the specified <param name="id"/> exists.
     /// </summary>
-    bool HasIndex<T>(string id) where T : class, IPrototype;
+    bool HasIndex<T>([ForbidLiteral] string id) where T : class, IPrototype;
 
     /// <inheritdoc cref="HasIndex{T}(string)"/>
-    bool HasIndex(EntProtoId id);
+    bool HasIndex([ForbidLiteral] EntProtoId id);
 
     /// <inheritdoc cref="HasIndex{T}(string)"/>
-    bool HasIndex<T>(ProtoId<T> id) where T : class, IPrototype;
+    bool HasIndex<T>([ForbidLiteral] ProtoId<T> id) where T : class, IPrototype;
 
     /// <inheritdoc cref="HasIndex{T}(string)"/>
-    bool HasIndex(EntProtoId? id);
+    bool HasIndex([ForbidLiteral] EntProtoId? id);
 
     /// <inheritdoc cref="HasIndex{T}(string)"/>
-    bool HasIndex<T>(ProtoId<T>? id) where T : class, IPrototype;
+    bool HasIndex<T>([ForbidLiteral] ProtoId<T>? id) where T : class, IPrototype;
 
-    bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
-    bool TryIndex(Type kind, string id, [NotNullWhen(true)] out IPrototype? prototype);
+    bool TryIndex<T>([ForbidLiteral] string id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
+    bool TryIndex(Type kind, [ForbidLiteral] string id, [NotNullWhen(true)] out IPrototype? prototype);
 
     /// <summary>
     /// Attempts to get a dictionary containing all current instances of a given prototype kind.
@@ -144,19 +144,19 @@ public interface IPrototypeManager
     FrozenDictionary<string, T> GetInstances<T>() where T : IPrototype;
 
     /// <inheritdoc cref="TryIndex{T}(ProtoId{T}, out T, bool)"/>
-    bool TryIndex(EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype,  bool logError = true);
+    bool TryIndex([ForbidLiteral] EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype,  bool logError = true);
 
     /// <summary>
     /// Attempt to retrieve the prototype corresponding to the given prototype id.
     /// Unless otherwise specified, this will log an error if the id does not match any known prototype.
     /// </summary>
-    bool TryIndex<T>(ProtoId<T> id, [NotNullWhen(true)] out T? prototype,  bool logError = true) where T : class, IPrototype;
+    bool TryIndex<T>([ForbidLiteral] ProtoId<T> id, [NotNullWhen(true)] out T? prototype,  bool logError = true) where T : class, IPrototype;
 
     /// <inheritdoc cref="TryIndex{T}(ProtoId{T}, out T, bool)"/>
-    bool TryIndex(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype,  bool logError = true);
+    bool TryIndex([ForbidLiteral] EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype,  bool logError = true);
 
     /// <inheritdoc cref="TryIndex{T}(ProtoId{T}, out T, bool)"/>
-    bool TryIndex<T>(ProtoId<T>? id, [NotNullWhen(true)] out T? prototype, bool logError = true) where T : class, IPrototype;
+    bool TryIndex<T>([ForbidLiteral] ProtoId<T>? id, [NotNullWhen(true)] out T? prototype, bool logError = true) where T : class, IPrototype;
 
     bool HasMapping<T>(string id);
     bool TryGetMapping(Type kind, string id, [NotNullWhen(true)] out MappingDataNode? mappings);

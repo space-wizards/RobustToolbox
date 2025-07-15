@@ -195,7 +195,6 @@ public abstract partial class SharedAudioSystem : EntitySystem
             component.PlaybackPosition = (float) (Timing.CurTime - component.AudioStart).TotalSeconds;
 
             DirtyField(entity.Value, component, nameof(AudioComponent.AudioStart));
-            DirtyField(entity.Value, component, nameof(AudioComponent.PlaybackPosition));
         }
 
         // If we were stopped then played then restart audiostart to now.

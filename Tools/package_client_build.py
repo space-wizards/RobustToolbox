@@ -9,7 +9,7 @@ import sys
 import zipfile
 import argparse
 import glob
-from enum import Enum, auto
+from enum import StrEnum
 
 from typing import List, Optional
 
@@ -39,11 +39,11 @@ TARGET_OS_MACOS = "MacOS"
 TARGET_OS_LINUX = "Linux"
 TARGET_OS_FREEBSD = "FreeBSD"
 
-class TargetOS(Enum):
-    Windows = auto()
-    MacOS = auto()
-    Linux = auto()
-    FreeBSD = auto()
+class TargetOS(StrEnum):
+    Windows = "Windows"
+    MacOS = "MacOS"
+    Linux = "Linux"
+    FreeBSD = "FreeBSD"
 
 RID_WIN_X64 = f"{PLATFORM_WIN}-x64"
 RID_WIN_ARM64 = f"{PLATFORM_WIN}-arm64"

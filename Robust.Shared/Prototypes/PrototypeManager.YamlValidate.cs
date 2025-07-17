@@ -56,6 +56,13 @@ public partial class PrototypeManager
                     var data = new PrototypeValidationData(id, mapping, resourcePath.ToString());
                     mapping.Remove("type");
 
+                    if (id.Contains(' '))
+                    {
+                        dict.GetOrNew(data.File)
+                            .Add(new ErrorNode(mapping,
+                                $"Found prototype ID containing a space with ID '{id}' for type {type}."));
+                    }
+
                     if (prototypes.GetOrNew(type).TryAdd(id, data))
                         continue;
 

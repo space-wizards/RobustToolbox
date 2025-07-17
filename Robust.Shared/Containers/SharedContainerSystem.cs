@@ -702,8 +702,6 @@ namespace Robust.Shared.Containers
         /// </summary>
         public IEnumerator<EntityUid> GetDescendantEntitiesInContainer(BaseContainer container)
         {
-            List<EntityUid> allEntities = new();
-
             foreach (var contained in container.ContainedEntities)
             {
                 yield return contained;

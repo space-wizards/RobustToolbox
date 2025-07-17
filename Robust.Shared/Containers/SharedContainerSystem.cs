@@ -676,7 +676,7 @@ namespace Robust.Shared.Containers
         }
 
         /// <summary>
-        /// Obtains a list of every entity in another, searching all child containers.
+        /// Enumerates every entity in an entity with a container, searching all child containers.
         /// </summary>
         public IEnumerator<EntityUid> GetDescendantEntitiesInEntity(
             EntityUid entity,
@@ -696,7 +696,7 @@ namespace Robust.Shared.Containers
         }
 
         /// <summary>
-        /// Obtains a list of every entity in a specific container, searching all child containers.
+        /// Enumerates every entity in a specific container, searching all child containers.
         /// </summary>
         public IEnumerator<EntityUid> GetDescendantEntitiesInContainer(BaseContainer container)
         {

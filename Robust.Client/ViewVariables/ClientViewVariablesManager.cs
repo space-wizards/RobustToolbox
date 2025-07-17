@@ -22,6 +22,7 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 using static Robust.Client.ViewVariables.Editors.VVPropEditorNumeric;
+using CS = System.Runtime.CompilerServices;
 
 namespace Robust.Client.ViewVariables
 {
@@ -175,15 +176,9 @@ namespace Robust.Client.ViewVariables
                 return new VVPropEditorVector2(intVec: true);
             }
 
-            if (type == typeof(ViewVariablesBlobMembers.ServerTupleToken))
+            if (typeof(CS.ITuple).IsAssignableFrom(type))
             {
-                return new VVPropEditorTuple<object, object>();
-            }
-
-            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ValueTuple<,>))
-            {
-                return (VVPropEditor)Activator.CreateInstance(
-                    typeof(VVPropEditorTuple<,>).MakeGenericType(type.GenericTypeArguments))!;
+                return new VVPropEditorTuple();
             }
 
             if (type == typeof(bool))

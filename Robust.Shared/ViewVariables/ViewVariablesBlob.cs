@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization;
@@ -136,10 +137,13 @@ namespace Robust.Shared.ViewVariables
         ///     Wrapper for a non-serializable value-type tuple.
         /// </summary>
         [Serializable, NetSerializable]
-        public sealed class ServerTupleToken
+        public sealed class ServerTupleToken : ITuple
         {
-            public object Item1 { get; set; }
-            public object Item2 { get; set; }
+            public object[] Items { get; set; }
+
+            public object this[int index] => Items[index];
+
+            public int Length => Items.Length;
         }
 
         /// <summary>

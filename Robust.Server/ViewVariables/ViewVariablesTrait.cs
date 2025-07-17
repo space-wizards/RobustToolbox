@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Robust.Server.ViewVariables.Traits;
 using Robust.Shared.Audio;
 using Robust.Shared.GameObjects;
@@ -141,15 +142,17 @@ namespace Robust.Server.ViewVariables
                     };
                 }
 
-                // Handle ValueTuple<,>
-                if (valType.IsGenericType && valType.GetGenericTypeDefinition() == typeof(ValueTuple<,>))
+                // Handle ValueTuples
+                if (typeof(ITuple).IsAssignableFrom(valType))
                 {
-                    dynamic tuple = value;
-                    return new ViewVariablesBlobMembers.ServerTupleToken
+                    var tuple = (ITuple)value;
+                    var items = new object?[tuple.Length];
+                    for (var i = 0; i < tuple.Length; i++)
                     {
-                        Item1 = MakeValueNetSafe(tuple.Item1),
-                        Item2 = MakeValueNetSafe(tuple.Item2)
-                    };
+                        items[i] = MakeValueNetSafe(tuple[i]);
+                    }
+
+                    return new ViewVariablesBlobMembers.ServerTupleToken { Items = items };
                 }
 
                 // Can't send this value type over the wire.

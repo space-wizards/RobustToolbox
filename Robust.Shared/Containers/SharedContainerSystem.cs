@@ -15,6 +15,7 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using TerraFX.Interop.Windows;
 using TerraFX.Interop.WinRT;
 
 namespace Robust.Shared.Containers
@@ -679,49 +680,39 @@ namespace Robust.Shared.Containers
         /// <summary>
         /// Obtains a list of every entity in another, searching all child containers.
         /// </summary>
-        public bool GetDescendantEntitiesInEntity(
+        public IEnumerator<EntityUid> GetDescendantEntitiesInEntity(
             EntityUid entity,
-            ContainerManagerComponent? containerManager,
-            [NotNullWhen(true)] out List<EntityUid>? entityList)
+            ContainerManagerComponent? containerManager = null)
         {
-            entityList = null;
-
             if (!Resolve(entity, ref containerManager))
-                return false;
-
-            entityList = new();
+                yield break;
 
             foreach (var (_, container) in containerManager.Containers)
             {
-                foreach (var contained in GetDescendantEntitiesInContainer(container))
-                {
-                    entityList.Add(contained);
-                }
+                var descendants = GetDescendantEntitiesInContainer(container);
+                do
+                    yield return descendants.Current;
+                while (descendants.MoveNext());
+                descendants.Dispose();
             }
-
-            return true;
         }
 
         /// <summary>
         /// Obtains a list of every entity in a specific container, searching all child containers.
         /// </summary>
-        public List<EntityUid> GetDescendantEntitiesInContainer(BaseContainer container)
+        public IEnumerator<EntityUid> GetDescendantEntitiesInContainer(BaseContainer container)
         {
             List<EntityUid> allEntities = new();
 
             foreach (var contained in container.ContainedEntities)
             {
-                allEntities.Add(contained);
-                if (GetDescendantEntitiesInEntity(contained, null, out var list))
-                {
-                    foreach (var contained2 in list)
-                    {
-                        allEntities.Add(contained2);
-                    }
-                }
+                yield return contained;
+                var query = GetDescendantEntitiesInEntity(contained);
+                do
+                    yield return query.Current;
+                while (query.MoveNext());
+                query.Dispose();
             }
-
-            return allEntities;
         }
 
         #endregion

@@ -15,8 +15,6 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
-using TerraFX.Interop.Windows;
-using TerraFX.Interop.WinRT;
 
 namespace Robust.Shared.Containers
 {

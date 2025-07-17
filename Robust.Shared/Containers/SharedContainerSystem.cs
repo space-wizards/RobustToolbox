@@ -15,6 +15,7 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using TerraFX.Interop.WinRT;
 
 namespace Robust.Shared.Containers
 {
@@ -673,6 +674,54 @@ namespace Robust.Shared.Containers
                 return TryGetManagerComp(transform.ParentUid, out manager);
 
             return false;
+        }
+
+        /// <summary>
+        /// Obtains a list of every entity in another, searching all child containers.
+        /// </summary>
+        public bool GetDescendantEntitiesInEntity(
+            EntityUid entity,
+            ContainerManagerComponent? containerManager,
+            [NotNullWhen(true)] out List<EntityUid>? entityList)
+        {
+            entityList = null;
+
+            if (!Resolve(entity, ref containerManager))
+                return false;
+
+            entityList = new();
+
+            foreach (var (_, container) in containerManager.Containers)
+            {
+                foreach (var contained in GetDescendantEntitiesInContainer(container))
+                {
+                    entityList.Add(contained);
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Obtains a list of every entity in a specific container, searching all child containers.
+        /// </summary>
+        public List<EntityUid> GetDescendantEntitiesInContainer(BaseContainer container)
+        {
+            List<EntityUid> allEntities = new();
+
+            foreach (var contained in container.ContainedEntities)
+            {
+                allEntities.Add(contained);
+                if (GetDescendantEntitiesInEntity(contained, null, out var list))
+                {
+                    foreach (var contained2 in list)
+                    {
+                        allEntities.Add(contained2);
+                    }
+                }
+            }
+
+            return allEntities;
         }
 
         #endregion

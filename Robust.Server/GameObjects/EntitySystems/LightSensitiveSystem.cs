@@ -1,13 +1,17 @@
-using System;
-using System.Diagnostics.CodeAnalysis;
-
 using Robust.Server.ComponentTrees;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
+using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
+using TerraFX.Interop.Windows;
 
 namespace Robust.Server.GameObjects;
 
@@ -19,7 +23,17 @@ public sealed class LightSensitiveSystem : SharedLightSensitiveSystem
     [Dependency] private readonly IPrototypeManager _proto = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
-    private const float DefaultCooldown = 0.5f;
+    private const float DefaultCooldown = 1f;
+
+    public override void Update(float frameTime)
+    {
+        base.Update(frameTime);
+        var query = EntityQueryEnumerator<LightSensitiveComponent>();
+        while (query.MoveNext(out var uid, out var component))
+        {
+            TryGetLightLevel(uid, out var light_level);
+        }
+    }
 
     /// <summary>
     ///     Returns the illumination level of an entity. If the entity doesn't have a LightSensitiveComponent, one will be added to store the light level.
@@ -48,8 +62,11 @@ public sealed class LightSensitiveSystem : SharedLightSensitiveSystem
         // that a component/system operate on precise or frequent updates.
         // For example: If a non player entity like a plant takes damage from being in the dark, that doesn't
         // really need updates every single tick.
-        if (forceUpdate || comp.LastUpdate + TimeSpan.FromSeconds(cooldown) < _gameTiming.CurTime)
+        if (forceUpdate || comp.NextUpdate < _gameTiming.CurTime)
+        {
             ProcessNearbyLights(uid, comp, Transform(uid));
+            comp.NextUpdate = _gameTiming.CurTime + TimeSpan.FromSeconds(cooldown);
+        }
 
         lightLevel = clamped ? Math.Clamp(comp.LightLevel, 0f, 1f) : comp.LightLevel;
         return true;
@@ -73,27 +90,28 @@ public sealed class LightSensitiveSystem : SharedLightSensitiveSystem
     {
         var illumination = 0f;
 
-        var ourPosition = _transform.GetMapCoordinates(uid);
-        var bounds = _physics.GetWorldAABB(uid);
-        var queryResult = _lightTreeSystem.QueryAabb(ourPosition.MapId, bounds);
+        //var ourPosition = _transform.GetMapCoordinates(uid);
+        var ourBounds = GetWorldAABB(uid, out var ourPos, out var ourRot);
+        var ourMapPos = new MapCoordinates(ourPos, entityXform.MapID);
+        var queryResult = _lightTreeSystem.QueryAabb(ourMapPos.MapId, ourBounds);
 
         foreach (var val in queryResult)
         {
             var (lightComp, lightXform) = val;
-            if (!lightComp.Enabled)
-                continue;
 
             var (lightPos, lightRot) = _transform.GetWorldPositionRotation(lightXform);
             lightPos += lightRot.RotateVec(lightComp.Offset);
 
             var lightPosition = new MapCoordinates(lightPos, lightXform.MapID);
 
-            if (!InRangeUnOccluded(lightPosition, ourPosition, lightComp.Radius, null))
+            if (!InRangeUnOccluded(lightPosition, ourMapPos, lightComp.Radius, null))
                 continue;
 
-            entityXform.Coordinates.TryDistance(EntityManager, lightXform.Coordinates, out var dist);
+            // entityXform.Coordinates.TryDistance(EntityManager, lightXform.Coordinates, out var dist);
+            var dist = ourMapPos.Position - lightPosition.Position;
+            //var deltaLength = delta.Length();
 
-            var denom = dist / lightComp.Radius;
+            var denom = dist.Length() / lightComp.Radius;
             /// A slight modification of standard inverse square falloff that incorperates the radius of the light to make it more forgiving
             var attenuation = 1 - (denom * denom);
 
@@ -106,16 +124,17 @@ public sealed class LightSensitiveSystem : SharedLightSensitiveSystem
                 {
                     var coneLight = 0f;
                     var angleAttenuation = (float)Math.Min((float)Math.Max(cone.OuterWidth - angleToTarget, 0f), cone.InnerWidth) / cone.OuterWidth;
+                    var absAngle = Math.Abs(angleToTarget.Degrees);
 
                     // Target is outside the cone's outer width angle, so ignore
-                    if (Math.Abs(angleToTarget.Degrees) - Math.Abs(cone.Direction) > cone.OuterWidth)
+                    if (absAngle - Math.Abs(cone.Direction) > cone.OuterWidth)
                     {
                         continue;
                     }
                     // Target is outside the inner cone, but inside the outer cone, so reduce the light level
                     else if (
-                        Math.Abs(angleToTarget.Degrees) - cone.Direction > cone.InnerWidth &&
-                        Math.Abs(angleToTarget.Degrees) - cone.Direction < cone.OuterWidth
+                        absAngle - cone.Direction > cone.InnerWidth &&
+                        absAngle - cone.Direction < cone.OuterWidth
                         )
                     {
                         coneLight = lightComp.Energy * attenuation * attenuation * angleAttenuation;
@@ -140,7 +159,32 @@ public sealed class LightSensitiveSystem : SharedLightSensitiveSystem
         }
 
         SetIllumination(uid, illumination, component);
-        component.LastUpdate = _gameTiming.CurTime;
+        
     }
 
+    public Box2 GetWorldAABB(EntityUid uid, out Vector2 worldPos, out Angle worldRot, FixturesComponent? manager = null, PhysicsComponent? body = null, TransformComponent? xform = null)
+    {
+        worldPos = default;
+        worldRot = default;
+
+        if (!Resolve(uid, ref manager, ref body, ref xform))
+            return new Box2();
+
+        (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform);
+
+        var transform = new Transform(worldPos, (float)worldRot.Theta);
+
+        var bounds = new Box2(transform.Position, transform.Position);
+
+        foreach (var fixture in manager.Fixtures.Values)
+        {
+            for (var i = 0; i < fixture.Shape.ChildCount; i++)
+            {
+                var boundy = fixture.Shape.ComputeAABB(transform, i);
+                bounds = bounds.Union(boundy);
+            }
+        }
+
+        return bounds;
+    }
 }

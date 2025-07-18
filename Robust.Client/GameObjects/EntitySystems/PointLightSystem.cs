@@ -6,7 +6,6 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
-using TerraFX.Interop.WinRT;
 
 namespace Robust.Client.GameObjects
 {
@@ -85,9 +84,8 @@ namespace Robust.Client.GameObjects
         public void SetMask(ProtoId<LightMaskPrototype>? lightMask, PointLightComponent component)
         {
             if (_proto.TryIndex(lightMask, out var mask))
-            {
                 component.Mask = _resourceCache.GetResource<TextureResource>(mask.MaskPath);
-            }
+
             else
                 component.Mask = null;
         }
@@ -99,7 +97,11 @@ namespace Robust.Client.GameObjects
             if (!ResolveLight(uid, ref comp) || occluded == comp.ContainerOccluded || comp is not PointLightComponent clientComp)
                 return;
 
-            base.SetContainerOccluded(uid, occluded, comp);
+            //base.SetContainerOccluded(uid, occluded, comp);
+
+            comp.ContainerOccluded = occluded;
+            Dirty(uid, comp);
+
             if (comp.Enabled)
                 _lightTree.QueueTreeUpdate(uid, clientComp);
         }

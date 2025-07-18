@@ -20,7 +20,7 @@ namespace Robust.Server.GameObjects;
         SubscribeLocalEvent<PointLightComponent, ComponentGetState>(OnLightGetState);
         SubscribeLocalEvent<PointLightComponent, EntGotInsertedIntoContainerMessage>(OnInserted);
         SubscribeLocalEvent<PointLightComponent, EntGotRemovedFromContainerMessage>(OnRemoved);
-        SubscribeLocalEvent<PointLightComponent, ComponentStartup>(OnLightStartup);
+        // SubscribeLocalEvent<PointLightComponent, ComponentStartup>(OnLightStartup);
         SubscribeLocalEvent<PointLightComponent, ComponentShutdown>(OnLightShutdown);
         SubscribeLocalEvent<PointLightComponent, MetaFlagRemoveAttemptEvent>(OnFlagRemoveAttempt);
     }

@@ -4,11 +4,12 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Physics;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Server.ComponentTrees;
-
-[RegisterComponent]
-public sealed partial class LightTreeComponent: SharedLightTreeComponent, IComponentTreeComponent<PointLightComponent>
+namespace Robust.Server.ComponentTrees
 {
-    [ViewVariables]
-    public DynamicTree<ComponentTreeEntry<PointLightComponent>> Tree { get; set; } = default!;
+    [RegisterComponent]
+    public sealed partial class LightTreeComponent : SharedLightTreeComponent, IComponentTreeComponent<PointLightComponent>
+    {
+        [ViewVariables]
+        public DynamicTree<ComponentTreeEntry<PointLightComponent>> Tree { get; set; } = default!;
+    }
 }

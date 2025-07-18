@@ -58,8 +58,7 @@ namespace Robust.Shared.GameObjects
             var ray = new Ray(origin.Position, dir.Normalized());
             bool Ignored(EntityUid entity, TState ts) => TryComp<OccluderComponent>(entity, out var o) && !o.Enabled;
 
-            var rayResults = _occluder
-                .IntersectRayWithPredicate(origin.MapId, ray, length, state, predicate: Ignored, false);
+            var rayResults = _occluder.IntersectRayWithPredicate(origin.MapId, ray, length, state, predicate: Ignored, false);
 
             if (rayResults.Count == 0) return true;
 

@@ -144,9 +144,12 @@ internal partial class Clyde
             });
         }
 
-        private static void WinThreadWinDestroy(CmdWinDestroy cmd)
+        private void WinThreadWinDestroy(CmdWinDestroy cmd)
         {
             SDL.SDL_DestroyWindow(cmd.Window);
+#if MACOS
+            SendEvent(new EventWindowDestroyed());
+#endif
         }
 
         private (nint window, nint context) CreateSdl3WindowForRenderer(

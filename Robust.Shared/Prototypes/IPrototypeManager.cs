@@ -7,11 +7,14 @@ using Robust.Shared.Random;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Manager.Definition;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
+using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
 using Robust.Shared.Utility;
+using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Prototypes;
 
@@ -306,6 +309,8 @@ public interface IPrototypeManager
     /// </summary>
     void RegisterIgnore(string name);
 
+    void ClearIgnored();
+
     /// <summary>
     /// Checks whether the given gind name has been marked as ignored via <see cref="RegisterIgnore"/>
     /// </summary>
@@ -371,6 +376,12 @@ public interface IPrototypeManager
 internal interface IPrototypeManagerInternal : IPrototypeManager
 {
     event Action<DataNodeDocument>? LoadedData;
+
+    HashSet<ErrorNode> AnalyzeSingleFile(
+        TextReader reader,
+        out List<DocumentSymbol> symbols,
+        out List<(ValueDataNode, FieldDefinition)> fields,
+        string representedPath);
 }
 
 /// <summary>

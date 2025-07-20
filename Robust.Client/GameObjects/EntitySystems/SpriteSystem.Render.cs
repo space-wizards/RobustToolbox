@@ -128,7 +128,7 @@ public sealed partial class SpriteSystem
             dir = overrideDirection.Value.Convert(state.RsiDirections);
 
         if (sprite.RotationDirection)
-            dir = (-layer.Owner.Comp.Rotation).RotateDir(dir.OffsetRsiDir(layer.DirOffset).Convert())
+            dir = (-sprite.Rotation).RotateDir(dir.OffsetRsiDir(layer.DirOffset).Convert())
                 .Convert(state?.RsiDirections ?? RsiDirectionType.Dir1);
         else
             dir = dir.OffsetRsiDir(layer.DirOffset);
@@ -151,7 +151,7 @@ public sealed partial class SpriteSystem
         if (layer.Shader != null)
             drawingHandle.UseShader(layer.Shader);
 
-        var layerColor = layer.Owner.Comp.color * layer.Color;
+        var layerColor = sprite.color * layer.Color;
         var textureSize = texture.Size / (float) EyeManager.PixelsPerMeter;
         var quad = Box2.FromDimensions(textureSize / -2, textureSize);
 

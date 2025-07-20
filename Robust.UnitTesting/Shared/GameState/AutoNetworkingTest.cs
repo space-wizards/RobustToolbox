@@ -79,12 +79,9 @@ public sealed partial class AutoNetworkingTests : RobustIntegrationTest
         // check client
         await client.WaitPost(() =>
         {
-            Assert.Multiple(() =>
-            {
-                // Check player got properly attached
-                Assert.That(client.AttachedEntity, Is.EqualTo(cPlayer));
-                Assert.That(client.EntMan.EntityExists(cPlayer));
-            });
+            // Check player got properly attached
+            Assert.That(client.AttachedEntity, Is.EqualTo(cPlayer));
+            Assert.That(client.EntMan.EntityExists(cPlayer));
 
             // Get the client-side entities
             cPlayer = client.EntMan.GetEntity(server.EntMan.GetNetEntity(player));
@@ -98,7 +95,7 @@ public sealed partial class AutoNetworkingTests : RobustIntegrationTest
             Assert.That(client.EntMan.TryGetComponent(clientEnt3, out AutoNetworkingTestEmptyChildComponent? cmpClient3));
 
             // All datafields should be the default value
-            Assert.That(cmpClient1?.NetworkedField, Is.EqualTo(1));
+            Assert.That(cmpClient1?.IsNetworked, Is.EqualTo(1));
             Assert.That(cmpClient1?.NotNetworked, Is.EqualTo(2));
 
             Assert.That(cmpClient2?.ChildNetworked, Is.EqualTo(1));
@@ -119,7 +116,7 @@ public sealed partial class AutoNetworkingTests : RobustIntegrationTest
             var cmpServer3 = server.EntMan.GetComponent<AutoNetworkingTestEmptyChildComponent>(serverEnt3);
 
             // All datafields should be the default value
-            Assert.That(cmpServer1.NetworkedField, Is.EqualTo(1));
+            Assert.That(cmpServer1.IsNetworked, Is.EqualTo(1));
             Assert.That(cmpServer1.NotNetworked, Is.EqualTo(2));
 
             Assert.That(cmpServer2.ChildNetworked, Is.EqualTo(1));
@@ -131,7 +128,7 @@ public sealed partial class AutoNetworkingTests : RobustIntegrationTest
             Assert.That(cmpServer3.Parent, Is.EqualTo(4));
 
             // change the datafields and dirty them
-            cmpServer1.NetworkedField = 101;
+            cmpServer1.IsNetworked = 101;
             cmpServer1.NotNetworked = 102;
             cmpServer2.ChildNetworked = 101;
             cmpServer2.Child = 102;
@@ -162,7 +159,7 @@ public sealed partial class AutoNetworkingTests : RobustIntegrationTest
             Assert.That(client.EntMan.TryGetComponent(clientEnt3, out AutoNetworkingTestEmptyChildComponent? cmpClient3));
 
             // All datafields should be the default value
-            Assert.That(cmpClient1?.NetworkedField, Is.EqualTo(101));
+            Assert.That(cmpClient1?.IsNetworked, Is.EqualTo(101));
             Assert.That(cmpClient1?.NotNetworked, Is.EqualTo(2)); // unchanged
 
             Assert.That(cmpClient2?.ChildNetworked, Is.EqualTo(101));
@@ -187,38 +184,38 @@ public sealed partial class AutoNetworkingTests : RobustIntegrationTest
         await server.WaitRunTicks(5);
         await client.WaitRunTicks(5);
     }
+}
 
-    [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
-    public sealed partial class AutoNetworkingTestComponent : Component
-    {
-        [DataField, AutoNetworkedField]
-        public int NetworkedField = 1;
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
+public sealed partial class AutoNetworkingTestComponent : Component
+{
+    [DataField, AutoNetworkedField]
+    public int IsNetworked = 1;
 
-        [DataField]
-        public int NotNetworked = 2;
-    }
+    [DataField]
+    public int NotNetworked = 2;
+}
 
-    [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
-    public sealed partial class AutoNetworkingTestChildComponent : AutoNetworkingTestParentComponent
-    {
-        [DataField, AutoNetworkedField]
-        public int ChildNetworked = 1;
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
+public sealed partial class AutoNetworkingTestChildComponent : AutoNetworkingTestParentComponent
+{
+    [DataField, AutoNetworkedField]
+    public int ChildNetworked = 1;
 
-        [DataField]
-        public int Child = 2;
-    }
+    [DataField]
+    public int Child = 2;
+}
 
-    [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
-    public sealed partial class AutoNetworkingTestEmptyChildComponent : AutoNetworkingTestParentComponent
-    {
-    }
+[RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
+public sealed partial class AutoNetworkingTestEmptyChildComponent : AutoNetworkingTestParentComponent
+{
+}
 
-    public abstract partial class AutoNetworkingTestParentComponent : Component
-    {
-        [DataField, AutoNetworkedField]
-        public int ParentNetworked = 3;
+public abstract partial class AutoNetworkingTestParentComponent : Component
+{
+    [DataField, AutoNetworkedField]
+    public int ParentNetworked = 3;
 
-        [DataField]
-        public int Parent = 4;
-    }
+    [DataField]
+    public int Parent = 4;
 }

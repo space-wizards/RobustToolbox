@@ -116,16 +116,22 @@ public sealed partial class SpriteSystem
             return;
 
         var state = layer._actualState;
+        var sprite = layer.Owner.Comp;
         var dir = state == null ? RsiDirection.South : Layer.GetDirection(state.RsiDirections, angle);
 
         // Set the drawing transform for this layer
-        layer.GetLayerDrawMatrix(dir, out var layerMatrix, layer.Owner.Comp.NoRotation);
+        layer.GetLayerDrawMatrix(dir, out var layerMatrix, sprite.NoRotation);
 
         // The direction used to draw the sprite can differ from the one that the angle would naively suggest,
         // due to direction overrides or offsets.
         if (overrideDirection != null && state != null)
             dir = overrideDirection.Value.Convert(state.RsiDirections);
-        dir = dir.OffsetRsiDir(layer.DirOffset);
+
+        if (sprite.RotationDirection)
+            dir = (-layer.Owner.Comp.Rotation).RotateDir(dir.OffsetRsiDir(layer.DirOffset).Convert())
+                .Convert(state?.RsiDirections ?? RsiDirectionType.Dir1);
+        else
+            dir = dir.OffsetRsiDir(layer.DirOffset);
 
         var texture = state?.GetFrame(dir, layer.AnimationFrame) ?? layer.Texture ?? GetFallbackTexture();
 

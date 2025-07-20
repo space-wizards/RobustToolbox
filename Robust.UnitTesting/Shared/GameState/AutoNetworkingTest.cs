@@ -55,7 +55,7 @@ public sealed partial class AutoNetworkingTests : RobustIntegrationTest
         await server.WaitPost(() =>
         {
             // Attach player.
-            player = server.EntMan.Spawn();
+            player = server.EntMan.SpawnAttachedTo(null, coords);
             var session = server.PlayerMan.Sessions.First();
             server.PlayerMan.SetAttachedEntity(session, player);
             server.PlayerMan.JoinGame(session);
@@ -79,15 +79,15 @@ public sealed partial class AutoNetworkingTests : RobustIntegrationTest
         // check client
         await client.WaitPost(() =>
         {
-            // Check player got properly attached
-            Assert.That(client.AttachedEntity, Is.EqualTo(cPlayer));
-            Assert.That(client.EntMan.EntityExists(cPlayer));
-
             // Get the client-side entities
             cPlayer = client.EntMan.GetEntity(server.EntMan.GetNetEntity(player));
             var clientEnt1 = client.EntMan.GetEntity(serverNet1);
             var clientEnt2 = client.EntMan.GetEntity(serverNet2);
             var clientEnt3 = client.EntMan.GetEntity(serverNet3);
+
+            // Check player got properly attached
+            Assert.That(client.AttachedEntity, Is.EqualTo(cPlayer));
+            Assert.That(client.EntMan.EntityExists(cPlayer));
 
             // Get the client-side components
             Assert.That(client.EntMan.TryGetComponent(clientEnt1, out AutoNetworkingTestComponent? cmpClient1));

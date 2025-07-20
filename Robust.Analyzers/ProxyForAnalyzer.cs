@@ -60,8 +60,7 @@ public sealed class ProxyForAnalyzer : DiagnosticAnalyzer
         context.EnableConcurrentExecution();
         context.RegisterCompilationStartAction(static ctx =>
         {
-            var proxyForAttributeType = ctx.Compilation.GetTypeByMetadataName(ProxyForAttributeType);
-            if (proxyForAttributeType == null)
+            if (ctx.Compilation.GetTypeByMetadataName(ProxyForAttributeType) is not { } proxyForAttributeType)
                 return;
 
             ctx.RegisterSymbolStartAction(symbolContext =>

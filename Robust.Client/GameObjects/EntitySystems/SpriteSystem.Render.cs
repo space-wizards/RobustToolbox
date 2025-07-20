@@ -127,7 +127,7 @@ public sealed partial class SpriteSystem
         if (overrideDirection != null && state != null)
             dir = overrideDirection.Value.Convert(state.RsiDirections);
 
-        if (sprite.RotationDirection)
+        if (sprite.RotationDirection && !sprite.Rotation.EqualsApprox(Angle.Zero))
             dir = (-sprite.Rotation).RotateDir(dir.OffsetRsiDir(layer.DirOffset).Convert())
                 .Convert(state?.RsiDirections ?? RsiDirectionType.Dir1);
         else

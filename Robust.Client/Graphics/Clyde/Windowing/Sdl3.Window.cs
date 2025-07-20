@@ -557,17 +557,18 @@ internal partial class Clyde
 
         public void TextInputSetRect(WindowReg reg, UIBox2i rect, int cursor)
         {
+            var ratio = ((Sdl3WindowReg)reg).PixelRatio;
             SendCmd(new CmdTextInputSetRect
             {
                 Window = WinPtr(reg),
                 Rect = new SDL.SDL_Rect
                 {
-                    x = rect.Left,
-                    y = rect.Top,
-                    w = rect.Width,
-                    h = rect.Height
+                    x = (int)(rect.Left / ratio.X),
+                    y = (int)(rect.Top / ratio.Y),
+                    w = (int)(rect.Width / ratio.X),
+                    h = (int)(rect.Height / ratio.Y)
                 },
-                Cursor = cursor
+                Cursor = (int)(cursor / ratio.X)
             });
         }
 

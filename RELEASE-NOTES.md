@@ -36,10 +36,12 @@ END TEMPLATE-->
 ### Breaking changes
 
 * More members in `IntegrationInstance` now enforce that the instance is idle before accessing it.
+* `IPrototypeManager.TryIndex` no longer logs errors unless using the overload with an optional parameter. Use `Resolve()` instead if error logging is desired.
 
 ### New features
 
 * `RobustClientPackaging.WriteClientResources()` and `RobustServerPackaging.WriteServerResources()` now have an overload taking in a set of things to ignore in the content resources directory.
+* Added `IPrototypeManager.Resolve()`, which logs an error if the resolved prototype does not exist. This is effectively the previous (but not original) default behavior of `IPrototypeManager.TryIndex`.
 
 ### Bugfixes
 

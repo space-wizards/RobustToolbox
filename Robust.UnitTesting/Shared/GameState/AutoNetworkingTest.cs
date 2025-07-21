@@ -13,7 +13,7 @@ namespace Robust.UnitTesting.Shared.GameState;
 public sealed partial class AutoNetworkingTests : RobustIntegrationTest
 {
     /// <summary>
-    /// Does basic testing for AutoNetworkedFieldAttribute and AutoGenerateComponentAttribute
+    /// Does basic testing for AutoNetworkedFieldAttribute and AutoGenerateComponentStateAttribute
     /// to make sure the datafields are correctly networked to the client when dirtied.
     /// TODO: Add test for field deltas.
     /// </summary>

@@ -90,7 +90,7 @@ internal sealed class VVPropEditorTuple : VVPropEditor
     {
         for (var i = 0; i < _editors.Count; i++)
         {
-            var chain = selectorChain.Append(new ViewVariablesEnumerableIndexSelector(i)).ToArray();
+            object[] chain = [..selectorChain, new ViewVariablesTupleIndexSelector(i)];
             _editors[i].WireNetworkSelector(sessionId, chain);
         }
     }

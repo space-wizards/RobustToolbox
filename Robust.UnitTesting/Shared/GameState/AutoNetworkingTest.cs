@@ -22,8 +22,8 @@ public sealed partial class AutoNetworkingTests : RobustIntegrationTest
     {
         var serverOpts = new ServerIntegrationOptions { Pool = false };
         var clientOpts = new ClientIntegrationOptions { Pool = false };
-        var server = StartServer(serverOpts);
-        var client = StartClient(clientOpts);
+        using var server = StartServer(serverOpts);
+        using var client = StartClient(clientOpts);
 
         await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
         var netMan = client.ResolveDependency<IClientNetManager>();

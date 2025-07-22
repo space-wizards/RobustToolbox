@@ -36,7 +36,7 @@ END TEMPLATE-->
 ### Breaking changes
 
 * More members in `IntegrationInstance` now enforce that the instance is idle before accessing it.
-* `Prototype.ValidateDirectory` now requires that prototype IDs have no spaces in them.
+* `Prototype.ValidateDirectory` now requires that prototype IDs have no spaces or periods in them.
 
 ### New features
 

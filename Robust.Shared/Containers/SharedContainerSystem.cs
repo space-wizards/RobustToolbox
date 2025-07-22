@@ -678,14 +678,9 @@ namespace Robust.Shared.Containers
         /// <summary>
         /// Enumerates every entity in an entity with a container, searching all child containers.
         /// </summary>
-        public IEnumerable<EntityUid> GetDescendantEntitiesInEntity(
-            EntityUid entity,
-            ContainerManagerComponent? containerManager = null)
+        public IEnumerable<EntityUid> GetDescendantEntitiesInEntity(Entity<ContainerManagerComponent> entity)
         {
-            if (!Resolve(entity, ref containerManager))
-                yield break;
-
-            foreach (var (_, container) in containerManager.Containers)
+            foreach (var (_, container) in entity.Comp.Containers)
             {
                 foreach (var uid in GetDescendantEntitiesInContainer(container))
                 {
@@ -702,9 +697,12 @@ namespace Robust.Shared.Containers
             foreach (var contained in container.ContainedEntities)
             {
                 yield return contained;
-                foreach (var uid in GetDescendantEntitiesInEntity(contained))
+                if (TryGetManagerComp(contained, out var manager))
                 {
-                    yield return uid;
+                    foreach (var uid in GetDescendantEntitiesInEntity((contained, manager)))
+                    {
+                        yield return uid;
+                    }
                 }
             }
         }

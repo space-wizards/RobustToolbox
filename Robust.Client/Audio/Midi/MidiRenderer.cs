@@ -575,18 +575,28 @@ internal sealed partial class MidiRenderer : IMidiRenderer
                     case RobustMidiCommand.NoteOff:
                         _rendererState.NoteVelocities.AsSpan[midiEvent.Channel].AsSpan[midiEvent.Key] = 0;
                         _synth.NoteOff(midiEvent.Channel, midiEvent.Key);
-                        break;
 
+                        break;
                     case RobustMidiCommand.NoteOn:
+                        // Velocity 0 *can* represent a NoteOff event.
+                        var velocity = midiEvent.Velocity;
+                        if (velocity == 0)
+                        {
+                            _rendererState.NoteVelocities.AsSpan[midiEvent.Channel].AsSpan[midiEvent.Key] = 0;
+                            _synth.NoteOn(midiEvent.Channel, midiEvent.Key, velocity);
+
+                            break;
+                        }
+
                         if (FilteredChannels[midiEvent.Channel])
                             break;
 
-                        var velocity = VelocityOverride ?? midiEvent.Velocity;
+                        velocity = VelocityOverride ?? midiEvent.Velocity;
 
                         _rendererState.NoteVelocities.AsSpan[midiEvent.Channel].AsSpan[midiEvent.Key] = velocity;
                         _synth.NoteOn(midiEvent.Channel, midiEvent.Key, velocity);
-                        break;
 
+                        break;
                     case RobustMidiCommand.AfterTouch:
                         _rendererState.NoteVelocities.AsSpan[midiEvent.Channel].AsSpan[midiEvent.Key] = midiEvent.Value;
                         _synth.KeyPressure(midiEvent.Channel, midiEvent.Key, midiEvent.Value);

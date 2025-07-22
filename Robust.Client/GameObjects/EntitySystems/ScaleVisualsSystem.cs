@@ -1,25 +1,38 @@
 using System.Numerics;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Maths;
+using Robust.Shared.IoC;
 
 namespace Robust.Client.GameObjects;
 
-public sealed class ScaleVisualsSystem : EntitySystem
+public sealed class ScaleVisualsSystem : SharedScaleVisualsSystem
 {
+    [Dependency] private readonly SpriteSystem _sprite = default!;
+
     public override void Initialize()
     {
         base.Initialize();
+
         SubscribeLocalEvent<ScaleVisualsComponent, AppearanceChangeEvent>(OnChangeData);
     }
 
-    private void OnChangeData(EntityUid uid, ScaleVisualsComponent component, ref AppearanceChangeEvent ev)
+    private void OnChangeData(Entity<ScaleVisualsComponent> ent, ref AppearanceChangeEvent args)
     {
-        if (!ev.AppearanceData.TryGetValue(ScaleVisuals.Scale, out var scale) ||
-            ev.Sprite == null) return;
+        if (!args.AppearanceData.TryGetValue(ScaleVisuals.Scale, out var scale) ||
+            args.Sprite == null) return;
+
+        // save the original scale
+        ent.Comp.OriginalScale ??= args.Sprite.Scale;
 
         var vecScale = (Vector2)scale;
+        _sprite.SetScale((ent.Owner, args.Sprite), vecScale);
+    }
 
-        // Set it directly because prediction may call this multiple times.
-        ev.Sprite.Scale = vecScale;
+    // revert to the original scale
+    protected override void ResetScale(Entity<ScaleVisualsComponent> ent)
+    {
+        base.ResetScale(ent);
+
+        if (ent.Comp.OriginalScale != null)
+            _sprite.SetScale(ent.Owner, ent.Comp.OriginalScale.Value);
     }
 }

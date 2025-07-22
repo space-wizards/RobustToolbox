@@ -131,7 +131,7 @@ public sealed partial class SpriteSystem
 
         if (sprite.RotationInfluencesDirection != 0f && !sprite.Rotation.EqualsApprox(Angle.Zero))
         {
-            Angle totalRotation = sprite.Rotation * sprite.RotationInfluencesDirection;
+            Angle totalRotation = -sprite.Rotation * sprite.RotationInfluencesDirection;
 
             dir = totalRotation.RotateDir(dir.Convert())
                 .Convert(state?.RsiDirections ?? RsiDirectionType.Dir1);

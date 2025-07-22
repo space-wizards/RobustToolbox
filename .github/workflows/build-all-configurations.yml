@@ -27,8 +27,8 @@ jobs:
       - name: Install dependencies
         run: dotnet restore
       - name: Build Debug
-        run: dotnet build --no-restore --configuration Debug /p:WarningsAsErrors=nullable /p:TargetOS:${{ matrix.targetOS }}
+        run: dotnet build --no-restore --configuration Debug /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }}
       - name: Build Tools
-        run: dotnet build --no-restore --configuration Tools /p:WarningsAsErrors=nullable /p:TargetOS:${{ matrix.targetOS }}
+        run: dotnet build --no-restore --configuration Tools /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }}
       - name: Build Release
-        run: dotnet build --no-restore --configuration Release /p:WarningsAsErrors=nullable /p:TargetOS:${{ matrix.targetOS }}
+        run: dotnet build --no-restore --configuration Release /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }}

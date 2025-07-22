@@ -72,7 +72,7 @@ namespace Robust.Client.ViewVariables
                 instance = new ViewVariablesInstanceObject(this, _robustSerializer);
             }
 
-            var window = new DefaultWindow {Title = Loc.GetString("view-variables")};
+            var window = new DefaultWindow { Title = Loc.GetString("view-variables") };
             instance.Initialize(window, obj);
             window.OnClose += () => _closeInstance(instance, false);
             _windows.Add(instance, window);
@@ -82,7 +82,7 @@ namespace Robust.Client.ViewVariables
 
         public void OpenVV(string path)
         {
-            if (ReadPath(path) is {} obj)
+            if (ReadPath(path) is { } obj)
                 OpenVV(obj);
         }
 
@@ -93,7 +93,7 @@ namespace Robust.Client.ViewVariables
                 Title = Loc.GetString("view-variables"),
                 SetSize = _defaultWindowSize
             };
-            var loadingLabel = new Label {Text = "Retrieving remote object data from server..."};
+            var loadingLabel = new Label { Text = "Retrieving remote object data from server..." };
             window.Contents.AddChild(loadingLabel);
 
             // We need to request the data, THEN create an instance.
@@ -161,7 +161,7 @@ namespace Robust.Client.ViewVariables
 
         public async Task<T> RequestData<T>(ViewVariablesRemoteSession session, ViewVariablesRequest meta) where T : ViewVariablesBlob
         {
-            return (T) await RequestData(session, meta);
+            return (T)await RequestData(session, meta);
         }
 
         public void CloseSession(ViewVariablesRemoteSession session)

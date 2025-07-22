@@ -54,7 +54,19 @@ internal sealed class ViewVariableControlFactory : IViewVariableControlFactory
         RegisterForType<Color>(_ =>  new VVPropEditorColor());
         RegisterForType<TimeSpan>(_ =>  new VVPropEditorTimeSpan());
 
-        RegisterWithCondition(type => type.IsEnum, _ => new VVPropEditorEnum());
+        RegisterWithCondition(
+            type => type != typeof(ViewVariablesBlobMembers.ServerValueTypeToken) && !type.IsValueType,
+            _ => new VVPropEditorReference()
+        );
+        RegisterWithCondition(
+            type => type == typeof(ViewVariablesBlobMembers.ServerKeyValuePairToken)
+                    || type.IsGenericType && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>),
+            _ => new VVPropEditorKeyValuePair()
+        );
+        RegisterForAssignableFrom<SoundSpecifier>(_ => new VVPropEditorSoundSpecifier(_protoManager, _resManager));
+        RegisterForAssignableFrom<ISelfSerialize>(type => CreateGenericEditor(type, typeof(VVPropEditorISelfSerializable<>)));
+        RegisterForAssignableFrom<ViewVariablesBlobMembers.PrototypeReferenceToken>(type => CreateGenericEditor(type, typeof(VVPropEditorIPrototype<>)));
+        RegisterForAssignableFrom<IPrototype>(type => CreateGenericEditor(type, typeof(VVPropEditorIPrototype<>)));
         RegisterWithCondition(
             type => type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ProtoId<>),
             type =>
@@ -66,19 +78,7 @@ internal sealed class ViewVariableControlFactory : IViewVariableControlFactory
                 return editor;
             }
         );
-        RegisterForAssignableFrom<IPrototype>(type => CreateGenericEditor(type, typeof(VVPropEditorIPrototype<>)));
-        RegisterForAssignableFrom<ViewVariablesBlobMembers.PrototypeReferenceToken>(type => CreateGenericEditor(type, typeof(VVPropEditorIPrototype<>)));
-        RegisterForAssignableFrom<ISelfSerialize>(type => CreateGenericEditor(type, typeof(VVPropEditorISelfSerializable<>)));
-        RegisterForAssignableFrom<SoundSpecifier>(_ => new VVPropEditorSoundSpecifier(_protoManager, _resManager));
-        RegisterWithCondition(
-            type => type == typeof(ViewVariablesBlobMembers.ServerKeyValuePairToken)
-                    || type.IsGenericType && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>),
-            _ => new VVPropEditorKeyValuePair()
-        );
-        RegisterWithCondition(
-            type => type != typeof(ViewVariablesBlobMembers.ServerValueTypeToken) && !type.IsValueType,
-            _ => new VVPropEditorReference()
-        );
+        RegisterWithCondition(type => type.IsEnum, _ => new VVPropEditorEnum());
     }
 
     /// <inheritdoc />
@@ -90,7 +90,7 @@ internal sealed class ViewVariableControlFactory : IViewVariableControlFactory
     /// <inheritdoc />
     public void RegisterForAssignableFrom<T>(Func<Type, VVPropEditor> factoryMethod, InsertPosition insertPosition = InsertPosition.First)
     {
-        int insertIndex = insertPosition == InsertPosition.Last
+        int insertIndex = insertPosition == InsertPosition.Last && _factoriesWithCondition.Count > 0
             ? _factoriesWithCondition.Count - 1
             : 0;
         _factoriesWithCondition.Insert(insertIndex, new(type => typeof(T).IsAssignableFrom(type), factoryMethod));
@@ -99,7 +99,7 @@ internal sealed class ViewVariableControlFactory : IViewVariableControlFactory
     /// <inheritdoc />
     public void RegisterWithCondition(Func<Type, bool> condition, Func<Type, VVPropEditor> factory, InsertPosition insertPosition = InsertPosition.First)
     {
-        int insertIndex = insertPosition == InsertPosition.Last
+        int insertIndex = insertPosition == InsertPosition.Last && _factoriesWithCondition.Count > 0
             ? _factoriesWithCondition.Count - 1
             : 0;
         _factoriesWithCondition.Insert(insertIndex, new(condition, factory));

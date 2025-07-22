@@ -223,12 +223,12 @@ namespace Robust.Client.GameObjects
 
         private void SetEntityContextActive(IInputManager inputMan, EntityUid entity)
         {
-            if(entity == default || !EntityManager.EntityExists(entity))
+            if(entity == default || !Exists(entity))
                 throw new ArgumentNullException(nameof(entity));
 
-            if (!EntityManager.TryGetComponent(entity, out InputComponent? inputComp))
+            if (!TryComp(entity, out InputComponent? inputComp))
             {
-                _sawmillInputContext.Debug($"AttachedEnt has no InputComponent: entId={entity}, entProto={EntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype}. Setting default \"{InputContextContainer.DefaultContextName}\" context...");
+                _sawmillInputContext.Debug($"AttachedEnt has no InputComponent: entId={entity}, entProto={Comp<MetaDataComponent>(entity).EntityPrototype}. Setting default \"{InputContextContainer.DefaultContextName}\" context...");
                 inputMan.Contexts.SetActiveContext(InputContextContainer.DefaultContextName);
                 return;
             }
@@ -239,7 +239,7 @@ namespace Robust.Client.GameObjects
             }
             else
             {
-                _sawmillInputContext.Error($"Unknown context: entId={entity}, entProto={EntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype}, context={inputComp.ContextName}. . Setting default \"{InputContextContainer.DefaultContextName}\" context...");
+                _sawmillInputContext.Error($"Unknown context: entId={entity}, entProto={Comp<MetaDataComponent>(entity).EntityPrototype}, context={inputComp.ContextName}. . Setting default \"{InputContextContainer.DefaultContextName}\" context...");
                 inputMan.Contexts.SetActiveContext(InputContextContainer.DefaultContextName);
             }
         }

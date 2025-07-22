@@ -195,7 +195,6 @@ public abstract partial class SharedAudioSystem : EntitySystem
             component.PlaybackPosition = (float) (Timing.CurTime - component.AudioStart).TotalSeconds;
 
             DirtyField(entity.Value, component, nameof(AudioComponent.AudioStart));
-            DirtyField(entity.Value, component, nameof(AudioComponent.PlaybackPosition));
         }
 
         // If we were stopped then played then restart audiostart to now.
@@ -665,7 +664,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
     /// <param name="coordinates">The coordinates at which to play the audio.</param>
     public (EntityUid Entity, Components.AudioComponent Component)? PlayStatic(SoundSpecifier? sound, Filter playerFilter, EntityCoordinates coordinates, bool recordReplay, AudioParams? audioParams = null)
     {
-        return sound == null ? null : PlayStatic(ResolveSound(sound), playerFilter, coordinates, recordReplay, audioParams);
+        return sound == null ? null : PlayStatic(ResolveSound(sound), playerFilter, coordinates, recordReplay, audioParams ?? sound.Params);
     }
 
     /// <summary>

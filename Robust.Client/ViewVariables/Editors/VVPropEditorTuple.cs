@@ -47,7 +47,7 @@ internal sealed class VVPropEditorTuple : VVPropEditor
         // that large. (8 is bad because last element becomes a ValueTuple<>)
         _readOnly = ReadOnly
                     || tuple.Length >= 8
-                    || value is ViewVariablesBlobMembers.ServerTupleToken;
+                    || !IsValueTuple(_actualType); // ToTuple only supports ValueTuples
 
         for (var i = 0; i < tuple.Length; i++)
         {
@@ -59,6 +59,12 @@ internal sealed class VVPropEditorTuple : VVPropEditor
             _editors.Add(editor);
         }
         return vBoxContainer;
+    }
+
+    private bool IsValueTuple(Type actualType)
+    {
+        // As far as I can tell, it's this or spelling out every possible arity.
+        return actualType.Name.Split('`').FirstOrDefault() == nameof(ValueTuple);
     }
 
     private CS.ITuple ToTuple(object? changed, int index)

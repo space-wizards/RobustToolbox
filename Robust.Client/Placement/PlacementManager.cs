@@ -43,6 +43,8 @@ namespace Robust.Client.Placement
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
         [Dependency] internal readonly IClyde Clyde = default!;
 
+        private static readonly ProtoId<ShaderPrototype> UnshadedShader = "unshaded";
+
         public IEntityManager EntityManager => _entityManager;
         public IEyeManager EyeManager => _eyeManager;
         public IMapManager MapManager => _mapManager;
@@ -213,7 +215,7 @@ namespace Robust.Client.Placement
 
         public void Initialize()
         {
-            _drawingShader = _prototypeManager.Index<ShaderPrototype>("unshaded").Instance();
+            _drawingShader = _prototypeManager.Index(UnshadedShader).Instance();
             _sawmill = _logManager.GetSawmill("placement");
 
             _networkManager.RegisterNetMessage<MsgPlacement>(HandlePlacementMessage);

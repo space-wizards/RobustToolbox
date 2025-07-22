@@ -204,6 +204,18 @@ public sealed class DefaultStylesheet
                 .Prop(TextureRect.StylePropertyTexture, Texture.White), // TODO: Add actual texture instead of this.
 
             /*
+             * Toggle switch
+             */
+
+            // Toggle switch off
+            Element<TextureRect>().Class(ToggleSwitch.StyleClassToggleSwitch)
+                .Prop(TextureRect.StylePropertyTexture, Texture.Black), // TODO: Add actual texture instead of this.
+
+            // Toggle switch on
+            Element<TextureRect>().Class(ToggleSwitch.StyleClassToggleSwitch, ToggleSwitch.StyleClassToggleSwitchOn)
+                .Prop(TextureRect.StylePropertyTexture, Texture.White), // TODO: Add actual texture instead of this.
+
+            /*
              * LineEdit
              */
 

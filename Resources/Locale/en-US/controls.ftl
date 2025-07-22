@@ -8,3 +8,6 @@ color-selector-sliders-alpha = A
 
 color-selector-sliders-rgb = RGB
 color-selector-sliders-hsv = HSV
+
+toggle-switch-default-off-state-label = Off
+toggle-switch-default-on-state-label = On

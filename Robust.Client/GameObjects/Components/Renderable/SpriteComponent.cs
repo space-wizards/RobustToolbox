@@ -129,8 +129,6 @@ namespace Robust.Client.GameObjects
         public bool RotationDirection
         {
             get => rotationDirection;
-            [Obsolete("Use SpriteSystem.SetRotationDirection() instead.")]
-            set => Sys.SetRotationDirection((Owner, this), value);
         }
 
         [DataField("offset")] // Explicit name, in case this field ever gets renamed

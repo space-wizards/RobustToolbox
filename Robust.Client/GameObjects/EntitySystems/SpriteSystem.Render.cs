@@ -127,11 +127,12 @@ public sealed partial class SpriteSystem
         if (overrideDirection != null && state != null)
             dir = overrideDirection.Value.Convert(state.RsiDirections);
 
+        dir = dir.OffsetRsiDir(layer.DirOffset);
+
         if (sprite.RotationDirection && !sprite.Rotation.EqualsApprox(Angle.Zero))
-            dir = (-sprite.Rotation).RotateDir(dir.OffsetRsiDir(layer.DirOffset).Convert())
+            dir = (-sprite.Rotation).RotateDir(dir.Convert())
                 .Convert(state?.RsiDirections ?? RsiDirectionType.Dir1);
-        else
-            dir = dir.OffsetRsiDir(layer.DirOffset);
+
 
         var texture = state?.GetFrame(dir, layer.AnimationFrame) ?? layer.Texture ?? GetFallbackTexture();
 

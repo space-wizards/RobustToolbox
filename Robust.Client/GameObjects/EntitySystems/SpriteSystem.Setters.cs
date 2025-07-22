@@ -59,7 +59,6 @@ public sealed partial class SpriteSystem
             return;
 
         sprite.Comp.rotationDirection = value;
-        _tree.QueueTreeUpdate(sprite!);
     }
 
     public void SetOffset(Entity<SpriteComponent?> sprite, Vector2 value)

@@ -121,14 +121,14 @@ namespace Robust.Client.GameObjects
         }
 
         [DataField]
-        internal bool rotationDirection = false;
+        internal float rotationInfluencesDirection = 0;
 
         /// <summary>
         ///     If <see cref="Rotation"/> will change the rendered RSI direction of the sprite
         /// </summary>
-        public bool RotationDirection
+        public float RotationInfluencesDirection
         {
-            get => rotationDirection;
+            get => rotationInfluencesDirection;
         }
 
         [DataField("offset")] // Explicit name, in case this field ever gets renamed

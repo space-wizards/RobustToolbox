@@ -226,20 +226,6 @@ namespace Robust.Shared.GameObjects
             return copy;
         }
 
-        /// <inheritdoc />
-        public bool TryGetComponent<T>(ComponentRegistry registry, [NotNullWhen(true)] out T? component) where T : class, IComponent, new()
-        {
-            component = null;
-            var componentName = GetComponentName<T>();
-            if (registry.TryGetComponent(componentName, out var foundComponent) && foundComponent is T castedComponent)
-            {
-                component = castedComponent;
-                return true;
-            }
-
-            return false;
-        }
-
         public void RegisterIgnore(params string[] names)
         {
             foreach (var name in names)

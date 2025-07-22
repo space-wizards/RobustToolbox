@@ -154,26 +154,29 @@ cmd-set-ambient-light-parse = Unable to parse args as a byte values for a color.
 ## Mapping commands
 
 cmd-savemap-desc = Serializes a map to disk. Will not save a post-init map unless forced.
-cmd-savemap-help = savemap <MapID> <Path> [force]
+cmd-savemap-help = savemap <Path> [MapID] [force]
 cmd-savemap-not-exist = Target map does not exist.
+cmd-savemap-nullspace = You cannot save Nullspace.
 cmd-savemap-init-warning = Attempted to save a post-init map without forcing the save.
 cmd-savemap-attempt = Attempting to save map {$mapId} to {$path}.
 cmd-savemap-success = Map successfully saved.
 cmd-savemap-error = Could not save map! See server log for details.
-cmd-hint-savemap-id = <MapID>
+cmd-hint-savemap-id = [MapID]
 cmd-hint-savemap-path = <Path>
-cmd-hint-savemap-force = [bool]
+cmd-hint-savemap-force = [Force save?]
 
 cmd-loadmap-desc = Loads a map from disk into the game.
-cmd-loadmap-help = loadmap <MapID> <Path> [x] [y] [rotation] [consistentUids]
+cmd-loadmap-help = loadmap <Path> [MapID] [x] [y] [rotation] [Store Yaml UIDs]
 cmd-loadmap-nullspace = You cannot load into map 0.
 cmd-loadmap-exists = Map {$mapId} already exists.
+cmd-loadmap-attempt = Attempting to load as map {$mapId}.
+cmd-loadmap-attempt-next = Attempting to load new map.
 cmd-loadmap-success = Map {$mapId} has been loaded from {$path}.
 cmd-loadmap-error = An error occurred while loading map from {$path}.
-cmd-hint-loadmap-x-position = [x-position]
-cmd-hint-loadmap-y-position = [y-position]
+cmd-hint-loadmap-x-position = [x position]
+cmd-hint-loadmap-y-position = [y position]
 cmd-hint-loadmap-rotation = [rotation]
-cmd-hint-loadmap-uids = [float]
+cmd-hint-loadmap-uids = [Store original UIDs?]
 
 cmd-hint-savebp-id = <Grid EntityID>
 
@@ -276,7 +279,13 @@ cmd-sendgarbage-desc = Sends garbage to the server.
 cmd-sendgarbage-help = The server will reply with 'no u'
 
 cmd-loadgrid-desc = Loads a grid from a file into an existing map.
-cmd-loadgrid-help = loadgrid <MapID> <Path> [x y] [rotation] [storeUids]
+cmd-loadgrid-help = loadgrid <Path> [MapID] [x] [y] [rotation] [Store Yaml UIDs]
+cmd-loadgrid-attempt-current = Attempting to load grid at your current position.
+cmd-loadgrid-attempt = Attempting to load grid to map {$mapId}.
+cmd-loadgrid-success = Load successful.
+cmd-loadgrid-fail = Load failed!
+cmd-loadgrid-nullspace-map = Cannot load into nullspace.
+cmd-loadgrid-missing-map = Map {$mapId} does not exist.
 
 cmd-loc-desc = Prints the absolute location of the player's entity to console.
 cmd-loc-help = loc
@@ -303,7 +312,14 @@ cmd-rmmap-desc = Removes a map from the world. You cannot remove nullspace.
 cmd-rmmap-help = rmmap <mapId>
 
 cmd-savegrid-desc = Serializes a grid to disk.
-cmd-savegrid-help = savegrid <gridID> <Path>
+cmd-savegrid-help = savegrid <Path> [Grid ID]
+cmd-savegrid-existnt = Entity {$uid} does not exist, therefore you cannot save it.
+cmd-savegrid-success = Save successful. Look in the user data directory.
+cmd-savegrid-not-grid = Entity {$uid} '{$ent}' is not a grid.
+cmd-savegrid-attempt = Attempting to save grid {$uid}.
+cmd-savegrid-fail = Save failed!
+cmd-savegrid-no-player-grid = Player must be over a grid to omit [grid ID] parameter.
+cmd-hint-savegrid-id = [Grid ID]
 
 cmd-testbed-desc = Loads a physics testbed on the specified map.
 cmd-testbed-help = testbed <mapid> <test>

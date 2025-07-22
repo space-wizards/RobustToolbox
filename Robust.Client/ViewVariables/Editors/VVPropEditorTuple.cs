@@ -63,8 +63,15 @@ internal sealed class VVPropEditorTuple : VVPropEditor
 
     private bool IsValueTuple(Type actualType)
     {
-        // As far as I can tell, it's this or spelling out every possible arity.
-        return actualType.Name.Split('`').FirstOrDefault() == nameof(ValueTuple);
+        if (!actualType.IsGenericType)
+            return false;
+
+        Type[] valueTupleTypes =
+        [
+            typeof(ValueTuple<>), typeof(ValueTuple<,>), typeof(ValueTuple<,,>), typeof(ValueTuple<,,,>),
+            typeof(ValueTuple<,,,,>), typeof(ValueTuple<,,,,,>), typeof(ValueTuple<,,,,,,>), typeof(ValueTuple<,,,,,,,>)
+        ];
+        return valueTupleTypes.Contains(actualType.GetGenericTypeDefinition());
     }
 
     private CS.ITuple ToTuple(object? changed, int index)

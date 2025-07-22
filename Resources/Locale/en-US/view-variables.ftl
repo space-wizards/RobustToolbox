@@ -25,3 +25,9 @@ vv-sound-reference-distance = Reference Distance
 vv-sound-loop = Loop
 vv-sound-play-offset = Play Offset (s)
 vv-sound-variation = Pitch variation
+
+
+## ProtoId
+vv-protoid-id-placeholder = Prototype ID
+vv-protoid-select-button-label = Select
+vv-protoid-addwindow-button-label = Set Prototype

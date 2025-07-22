@@ -63,7 +63,7 @@ internal sealed class VVPropEditorProtoId<T> : VVPropEditor where T : class, IPr
 
         var list = _protoManager.EnumeratePrototypes<T>().Select(p => p.ID);
 
-        _addWindow = new ViewVariablesAddWindow(list, _loc.GetString("vv-protoid-addwindow-button-label"));
+        _addWindow = new ViewVariablesAddWindow(list, _loc.GetString("vv-protoid-addwindow-title"));
         _addWindow.AddButtonPressed += OnAddButtonPressed;
         _addWindow.OpenCentered();
     }

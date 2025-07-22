@@ -30,4 +30,4 @@ vv-sound-variation = Pitch variation
 ## ProtoId
 vv-protoid-id-placeholder = Prototype ID
 vv-protoid-select-button-label = Select
-vv-protoid-addwindow-button-label = Set Prototype
+vv-protoid-addwindow-title = Set Prototype

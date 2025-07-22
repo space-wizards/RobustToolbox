@@ -50,15 +50,15 @@ public sealed partial class SpriteSystem
             in sprite.Comp.scale);
     }
 
-    public void SetRotationDirection(Entity<SpriteComponent?> sprite, float value)
+    public void SetRotationDirection(Entity<SpriteComponent?> sprite, bool value)
     {
         if (!_query.Resolve(sprite.Owner, ref sprite.Comp))
             return;
 
-        if (sprite.Comp.RotationInfluencesDirection == value)
+        if (sprite.Comp.RotationDirection == value)
             return;
 
-        sprite.Comp.rotationInfluencesDirection = value;
+        sprite.Comp.rotationDirection = value;
     }
 
     public void SetOffset(Entity<SpriteComponent?> sprite, Vector2 value)

@@ -1627,14 +1627,14 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.GetWeakReference(EntityUid, MetaDataComponent?)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected WeakEntityReference GetWeakReference(ref EntityUid uid, MetaDataComponent? meta = null)
+    protected WeakEntityReference GetWeakReference(EntityUid uid, MetaDataComponent? meta = null)
     {
         return EntityManager.GetWeakReference(uid, meta);
     }
 
     /// <inheritdoc cref="IEntityManager.GetWeakReference(EntityUid?, MetaDataComponent?)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected WeakEntityReference? GetWeakReference(ref EntityUid? uid, MetaDataComponent? meta = null)
+    protected WeakEntityReference? GetWeakReference(EntityUid? uid, MetaDataComponent? meta = null)
     {
         return EntityManager.GetWeakReference(uid, meta);
     }

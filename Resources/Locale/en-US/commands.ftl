@@ -411,11 +411,8 @@ cmd-spawn-help = spawn <prototype> OR spawn <prototype> <relative entity ID> OR 
 cmd-cspawn-desc = Spawns a client-side entity with specific type at your feet.
 cmd-cspawn-help = cspawn <entity type>
 
-cmd-scale-desc = Increases or decreases an entity's size, including its fixture.
+cmd-scale-desc = Increases or decreases an entity's size by a certain factor, including its fixture.
 cmd-scale-help = scale <entityUid> <scale>
-
-cmd-setscale-desc = Sets an entity's size to a certain scale, excluding its fixture.
-cmd-setscale-help = scale <entityUid> <X scale> <Y scale>
 
 cmd-dumpentities-desc = Dump entity list.
 cmd-dumpentities-help = Dumps entity list of UIDs and prototype.

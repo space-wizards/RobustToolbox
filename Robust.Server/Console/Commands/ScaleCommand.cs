@@ -1,5 +1,4 @@
 using System;
-using System.Numerics;
 using Robust.Server.GameObjects;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
@@ -87,56 +86,5 @@ public sealed class ScaleCommand : LocalizedEntityCommands
                 }
             }
         }
-    }
-}
-
-public sealed class SetScaleCommand : LocalizedEntityCommands
-{
-    [Dependency] private readonly IEntityManager _entityManager = default!;
-    [Dependency] private readonly ScaleVisualsSystem _scaleVisuals = default!;
-
-    public override string Command => "setscale";
-
-    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
-    {
-        return args.Length switch
-        {
-            1 => CompletionResult.FromOptions(CompletionHelper.NetEntities(args[0], entManager: _entityManager)),
-            2 => CompletionResult.FromHint(Loc.GetString("cmd-hint-float")),
-            3 => CompletionResult.FromHint(Loc.GetString("cmd-hint-float")),
-            _ => CompletionResult.Empty,
-        };
-    }
-
-    public override void Execute(IConsoleShell shell, string argStr, string[] args)
-    {
-        if (args.Length != 3)
-        {
-            shell.WriteError(Loc.GetString("cmd-invalid-arg-number-error"));
-            return;
-        }
-
-        if (!NetEntity.TryParse(args[0], out var netEntity))
-        {
-            shell.WriteError(Loc.GetString("cmd-parse-failure-entity-exist", ("arg", args[0])));
-            return;
-        }
-
-        if (!float.TryParse(args[1], out var scaleX))
-        {
-            shell.WriteError(Loc.GetString("cmd-parse-failure-float", ("arg", args[1])));
-            return;
-        }
-
-        if (!float.TryParse(args[2], out var scaleY))
-        {
-            shell.WriteError(Loc.GetString("cmd-parse-failure-float", ("arg", args[2])));
-            return;
-        }
-
-        var uid = _entityManager.GetEntity(netEntity);
-
-        var newScale = new Vector2(scaleX, scaleY);
-        _scaleVisuals.SetSpriteScale(uid, newScale);
     }
 }

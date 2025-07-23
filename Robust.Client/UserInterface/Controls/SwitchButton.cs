@@ -1,4 +1,4 @@
-﻿using Robust.Shared.ViewVariables;
+using Robust.Shared.ViewVariables;
 using static Robust.Client.UserInterface.Controls.Label;
 using Robust.Shared.Localization;
 
@@ -8,10 +8,10 @@ namespace Robust.Client.UserInterface.Controls
     ///     A type of toggleable button that a switch icon and a secondary text label both showing the current state
     /// </summary>
     [Virtual]
-    public class ToggleSwitch : ContainerButton
+    public class SwitchButton : ContainerButton
     {
-        public const string StyleClassToggleSwitch = "toggleSwitch";
-        public const string StyleClassToggleSwitchOn = "toggleSwitchOn";
+        public const string StyleClassSwitchButton = "switchButton";
+        public const string StyleClassSwitchButtonChecked = "switchButtonChecked";
 
 
         public Label Label { get; }
@@ -25,20 +25,20 @@ namespace Robust.Client.UserInterface.Controls
         public PanelContainer StateLabelsContainer { get; }
         public TextureRect TextureRect { get; }
 
-        public ToggleSwitch()
+        public SwitchButton()
         {
             ToggleMode = true;
 
             var hBox = new BoxContainer
             {
                 Orientation = BoxContainer.LayoutOrientation.Horizontal,
-                StyleClasses = { StyleClassToggleSwitch }
+                StyleClasses = { StyleClassSwitchButton }
             };
             AddChild(hBox);
 
             TextureRect = new TextureRect
             {
-                StyleClasses = { StyleClassToggleSwitch },
+                StyleClasses = { StyleClassSwitchButton },
                 VerticalAlignment = VAlignment.Center,
             };
 
@@ -71,7 +71,7 @@ namespace Robust.Client.UserInterface.Controls
 
             if (Pressed)
             {
-                TextureRect?.AddStyleClass(StyleClassToggleSwitchOn);
+                TextureRect?.AddStyleClass(StyleClassSwitchButtonChecked);
                 if (OffStateLabel is not null)
                     OffStateLabel.Visible = false;
                 if (OnStateLabel is not null)
@@ -79,7 +79,7 @@ namespace Robust.Client.UserInterface.Controls
             }
             else
             {
-                TextureRect?.RemoveStyleClass(StyleClassToggleSwitchOn);
+                TextureRect?.RemoveStyleClass(StyleClassSwitchButtonChecked);
                 if (OffStateLabel is not null)
                     OffStateLabel.Visible = true;
                 if (OnStateLabel is not null)
@@ -99,7 +99,7 @@ namespace Robust.Client.UserInterface.Controls
         ///     The text displayed by the button's main label.
         /// </summary>
         [ViewVariables]
-        public string? LabelText
+        public string? Text
         {
             get => Label.Text;
             set

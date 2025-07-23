@@ -17,6 +17,12 @@ namespace Robust.Client.UserInterface.Controls
         public Label Label { get; }
         public Label OffStateLabel { get; }
         public Label OnStateLabel { get; }
+
+        // I think PanelContainer is the simplest container; it is only used here
+        // so the labels can reserve overlapping spaces, so that switching which one is
+        // visible when the button is clicked doesn't affect the texture position or the
+        // surrounding layout
+        public PanelContainer StateLabelsContainer { get; }
         public TextureRect TextureRect { get; }
 
         public ToggleSwitch()
@@ -26,7 +32,7 @@ namespace Robust.Client.UserInterface.Controls
             var hBox = new BoxContainer
             {
                 Orientation = BoxContainer.LayoutOrientation.Horizontal,
-                StyleClasses = { StyleClassToggleSwitch },
+                StyleClasses = { StyleClassToggleSwitch }
             };
             AddChild(hBox);
 
@@ -37,6 +43,7 @@ namespace Robust.Client.UserInterface.Controls
             };
 
             Label = new Label();
+            Label.Visible = false;
 
             OffStateLabel = new Label();
             OffStateLabel.Text = Loc.GetString("toggle-switch-default-off-state-label");
@@ -47,18 +54,15 @@ namespace Robust.Client.UserInterface.Controls
             OnStateLabel.ReservesSpace = true;
             OnStateLabel.Visible = false;
 
-            // I think PanelContainer is the simplest container; it is only used here
-            // so the labels can reserve overlapping spaces, so that switching which one is
-            // visible when the button is clicked doesn't affect the texture position or the
-            // surrounding layout
-            var stateLabelContainer = new PanelContainer();
-            stateLabelContainer.AddChild(OffStateLabel);
-            stateLabelContainer.AddChild(OnStateLabel);
+            StateLabelsContainer = new PanelContainer();
+            StateLabelsContainer.HorizontalExpand = false;  // will change if text added for Label
+            StateLabelsContainer.AddChild(OffStateLabel);
+            StateLabelsContainer.AddChild(OnStateLabel);
 
             Label.HorizontalExpand = true;
             hBox.AddChild(Label);
             hBox.AddChild(TextureRect);
-            hBox.AddChild(stateLabelContainer);
+            hBox.AddChild(StateLabelsContainer);
         }
 
         protected override void DrawModeChanged()
@@ -101,7 +105,16 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 Label.Text = value;
-                Label.Visible = !string.IsNullOrEmpty(Label.Text);
+                if (string.IsNullOrEmpty(value))
+                {
+                    Label.Visible = false;
+                    StateLabelsContainer.HorizontalExpand = true;
+                }
+                else
+                {
+                    Label.Visible = true;
+                    StateLabelsContainer.HorizontalExpand = false;
+                }
             }
         }
 

@@ -14,7 +14,7 @@ Don't change the format without looking at the script!
 
 ### New features
 
-* Custom VV controls can now be registered using IViewVariableControlFactory.
+*None yet*
 
 ### Bugfixes
 
@@ -35,30 +35,80 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+* ViewVariables editors for `ProtoId` fields now have a Select button which opens a window listing all available prototypes of the appropriate type.
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 265.0.0
+
+### Breaking changes
+
 * More members in `IntegrationInstance` now enforce that the instance is idle before accessing it.
 * `Prototype.ValidateDirectory` now requires that prototype IDs have no spaces or periods in them.
 * `IPrototypeManager.TryIndex` no longer logs errors unless using the overload with an optional parameter. Use `Resolve()` instead if error logging is desired.
+* `LocalizedCommands` now has a `Loc` property that refers to `LocalizationManager`. This can cause compile failures if you have static methods in child types that referenced static `Loc`.
+* `[AutoGenerateComponentState]` now works on parent members for inherited classes. This can cause compile failures in certain formerly silently broken cases with overriden properties.
+* `Vector3`, `Vector4`, `Quaternion`, and `Matrix4` have been removed from `Robust.Shared.Maths`. Use the `System.Numerics` types instead.
 
 ### New features
 
 * `RobustClientPackaging.WriteClientResources()` and `RobustServerPackaging.WriteServerResources()` now have an overload taking in a set of things to ignore in the content resources directory.
 * Added `IPrototypeManager.Resolve()`, which logs an error if the resolved prototype does not exist. This is effectively the previous (but not original) default behavior of `IPrototypeManager.TryIndex`.
-* ViewVariables editors for `ProtoId` fields now have a Select button which opens a window listing all available prototypes of the appropriate type.
+* There's now a ViewVariables property editor for tuples.
+* Added `ColorNaming` helper functions for getting textual descriptions of color values.
+* Added Oklab/Oklch conversion functions for `Color`.
+* `ColorSelectorSliders` now displays textual descriptions of color values.
+* Added `TimeSpanExt.TryTimeSpan` to parse `TimeSpan`s with the `1.5h` format available in YAML.
+* Added `ITestContextLike` and related classes to allow controlling pooled integration instances better.
+* `EntProtoId` VV prop editors now don't allow setting invalid prototype IDs, inline with `ProtoId<T>`.
+* Custom VV controls can now be registered using `IViewVariableControlFactory`.
+* The entity spawn window now shows all placement modes registered with `IPlacementManager`.
+* Added `VectorHelpers.InterpolateCubic` for `System.Numerics` `Vector3` and `Vector4`.
+* Added deconstruct helpers for `System.Numerics` `Vector3` and `Vector4`.
 
 ### Bugfixes
 
 * Pooled integration instances returned by `RobustIntegrationTest` are now treated as non-idle, for consistency with non-pooled startups.
 * `SharedAudioSystem.SetState` no longer calls `DirtyField` on `PlaybackPosition`, an unnetworked field.
+* Fix loading texture files from the root directory.
+* Fix integration test pooling leaking non-reusable instances.
+* Fix multiple bugs where VV displayed the wrong property editor for remote values.
+* VV displays group headings again in member list.
+* Fix a stack overflow that could occur with `ColorSelectorSliders`.
+* `MidiRenderer` now properly handles `NoteOn` events with 0 velocity (which should actually be treated as `NoteOff` events).
 
 ### Other
 
 * The debug assert for `RobustRandom.Next(TimeSpan, TimeSpan)` now allows for the two arguments to be equal.
 * The configuration system will now report an error instead of warning if it fails to load the config file.
 * Members in `IntegrationInstance` that enforce the instance is idle now always allow access from the instance's thread (e.g. from a callback).
+* `IPrototypeManager` methods now have `[ForbidLiteral]` where appropriate.
+* Performance improvements to physics system.
+* `[ValidatePrototypeIdAttribute]` has been marked as obsolete.
+* `ParallelManager` no longer cuts out exception information for caught job exceptions.
+* Improved logging for PVS uninitialized/deleted entity errors.
 
 ### Internal
 
-* `ResolvedSoundSpecifier` warning cleanup.
+* General code & warning cleanup.
+* Fix `VisibilityTest` being unreliable.
+* `ColorSelectorSliders` has been internally refactored.
+* Added CI workflows that test all RT build configurations.
 
 ## 264.0.0
 

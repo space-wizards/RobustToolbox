@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Robust.Server.ViewVariables.Traits;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
@@ -134,6 +135,10 @@ namespace Robust.Server.ViewVariables
 
                         dynamic kv = value;
                         value = kvPair.Key ? kv.Key : kv.Value;
+                        break;
+                    case ViewVariablesTupleIndexSelector indexSelector
+                        when value is ITuple tuple:
+                        value = indexSelector.Index <= tuple.Length - 1 ? tuple[indexSelector.Index] : null;
                         break;
                 }
             }

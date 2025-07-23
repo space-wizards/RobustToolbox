@@ -11,6 +11,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
+using CS = System.Runtime.CompilerServices;
 
 namespace Robust.Client.ViewVariables;
 
@@ -63,6 +64,8 @@ internal sealed class ViewVariableControlFactory : IViewVariableControlFactory
                     || type.IsGenericType && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>),
             _ => new VVPropEditorKeyValuePair()
         );
+
+        RegisterForAssignableFrom<CS.ITuple>(_ => new VVPropEditorTuple());
         RegisterForAssignableFrom<SoundSpecifier>(_ => new VVPropEditorSoundSpecifier(_protoManager, _resManager));
         RegisterForAssignableFrom<ISelfSerialize>(type => CreateGenericEditor(type, typeof(VVPropEditorISelfSerializable<>)));
         RegisterForAssignableFrom<ViewVariablesBlobMembers.PrototypeReferenceToken>(type => CreateGenericEditor(type, typeof(VVPropEditorIPrototype<>)));

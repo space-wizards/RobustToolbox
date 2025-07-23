@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Prometheus;
 using Robust.Server.Configuration;
 using Robust.Server.GameObjects;
+using Robust.Shared;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
@@ -120,7 +121,6 @@ namespace Robust.Server.Player
         private void HandlePlayerListReq(MsgPlayerListReq message)
         {
             var channel = message.MsgChannel;
-            var players = Sessions;
             var netMsg = new MsgPlayerList();
 
             // client session is complete, set their status accordingly.
@@ -130,17 +130,26 @@ namespace Robust.Server.Player
             session.ConnectedTime = DateTime.UtcNow;
             SetStatus(session, SessionStatus.Connected);
 
-            var list = new List<SessionState>();
-            foreach (var client in players)
+            var list = new List<SessionState>() { new() { UserId = session.UserId, Name = session.Name, DisplayName = session.DisplayName, Status = session.Status } };
+            if (_cfg.GetCVar(CVars.NetShareAllClientSessions))
             {
-                var info = new SessionState
+                var players = Sessions;
+                foreach (var client in players)
                 {
-                    UserId = client.UserId,
-                    Name = client.Name,
-                    Status = client.Status
-                };
-                list.Add(info);
+                    if (client != session)
+                    {
+                        var info = new SessionState
+                        {
+                            UserId = client.UserId,
+                            Name = client.Name,
+                            DisplayName = client.DisplayName,
+                            Status = client.Status
+                        };
+                        list.Add(info);
+                    }
+                }
             }
+
             netMsg.Plyrs = list;
 
             channel.SendMessage(netMsg);

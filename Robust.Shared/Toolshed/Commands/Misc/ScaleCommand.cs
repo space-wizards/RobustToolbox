@@ -8,7 +8,7 @@ namespace Robust.Shared.Toolshed.Commands.Misc;
 /// Used to change an entity's sprite scale.
 /// </summary>
 [ToolshedCommand]
-public sealed class PolymorphCommand : ToolshedCommand
+public sealed class ScaleCommand : ToolshedCommand
 {
     private SharedScaleVisualsSystem? _system;
 

@@ -20,7 +20,7 @@ internal sealed class AudioDebugCommands : LocalizedCommands
         }
 
         var audioSystem = _entitySystem.GetEntitySystem<SharedAudioSystem>();
-        var length = audioSystem.GetAudioLength(args[0]);
+        var length = audioSystem.GetAudioLength(new ResolvedPathSpecifier(args[0]));
         shell.WriteLine(length.ToString());
     }
 

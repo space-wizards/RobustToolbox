@@ -54,6 +54,140 @@ END TEMPLATE-->
 *None yet*
 
 
+## 265.0.0
+
+### Breaking changes
+
+* More members in `IntegrationInstance` now enforce that the instance is idle before accessing it.
+* `Prototype.ValidateDirectory` now requires that prototype IDs have no spaces or periods in them.
+* `IPrototypeManager.TryIndex` no longer logs errors unless using the overload with an optional parameter. Use `Resolve()` instead if error logging is desired.
+* `LocalizedCommands` now has a `Loc` property that refers to `LocalizationManager`. This can cause compile failures if you have static methods in child types that referenced static `Loc`.
+* `[AutoGenerateComponentState]` now works on parent members for inherited classes. This can cause compile failures in certain formerly silently broken cases with overriden properties.
+* `Vector3`, `Vector4`, `Quaternion`, and `Matrix4` have been removed from `Robust.Shared.Maths`. Use the `System.Numerics` types instead.
+
+### New features
+
+* `RobustClientPackaging.WriteClientResources()` and `RobustServerPackaging.WriteServerResources()` now have an overload taking in a set of things to ignore in the content resources directory.
+* Added `IPrototypeManager.Resolve()`, which logs an error if the resolved prototype does not exist. This is effectively the previous (but not original) default behavior of `IPrototypeManager.TryIndex`.
+* There's now a ViewVariables property editor for tuples.
+* Added `ColorNaming` helper functions for getting textual descriptions of color values.
+* Added Oklab/Oklch conversion functions for `Color`.
+* `ColorSelectorSliders` now displays textual descriptions of color values.
+* Added `TimeSpanExt.TryTimeSpan` to parse `TimeSpan`s with the `1.5h` format available in YAML.
+* Added `ITestContextLike` and related classes to allow controlling pooled integration instances better.
+* `EntProtoId` VV prop editors now don't allow setting invalid prototype IDs, inline with `ProtoId<T>`.
+* Custom VV controls can now be registered using `IViewVariableControlFactory`.
+* The entity spawn window now shows all placement modes registered with `IPlacementManager`.
+* Added `VectorHelpers.InterpolateCubic` for `System.Numerics` `Vector3` and `Vector4`.
+* Added deconstruct helpers for `System.Numerics` `Vector3` and `Vector4`.
+
+### Bugfixes
+
+* Pooled integration instances returned by `RobustIntegrationTest` are now treated as non-idle, for consistency with non-pooled startups.
+* `SharedAudioSystem.SetState` no longer calls `DirtyField` on `PlaybackPosition`, an unnetworked field.
+* Fix loading texture files from the root directory.
+* Fix integration test pooling leaking non-reusable instances.
+* Fix multiple bugs where VV displayed the wrong property editor for remote values.
+* VV displays group headings again in member list.
+* Fix a stack overflow that could occur with `ColorSelectorSliders`.
+* `MidiRenderer` now properly handles `NoteOn` events with 0 velocity (which should actually be treated as `NoteOff` events).
+
+### Other
+
+* The debug assert for `RobustRandom.Next(TimeSpan, TimeSpan)` now allows for the two arguments to be equal.
+* The configuration system will now report an error instead of warning if it fails to load the config file.
+* Members in `IntegrationInstance` that enforce the instance is idle now always allow access from the instance's thread (e.g. from a callback).
+* `IPrototypeManager` methods now have `[ForbidLiteral]` where appropriate.
+* Performance improvements to physics system.
+* `[ValidatePrototypeIdAttribute]` has been marked as obsolete.
+* `ParallelManager` no longer cuts out exception information for caught job exceptions.
+* Improved logging for PVS uninitialized/deleted entity errors.
+
+### Internal
+
+* General code & warning cleanup.
+* Fix `VisibilityTest` being unreliable.
+* `ColorSelectorSliders` has been internally refactored.
+* Added CI workflows that test all RT build configurations.
+
+## 264.0.0
+
+### Breaking changes
+
+* `IPrototypeManager.Index(Type kind, string id)` now throws `UnknownPrototypeException` instead of `KeyNotFoundException`, for consistency with `IPrototypeManager.Index<T>`.
+
+### New features
+
+* Types can now implement the new interface `IRobustCloneable<T>` to be cloned by the component state source generator.
+* Added extra Roslyn Analyzers to detect some misuse of prototypes:
+  * Network serializing prototypes (tagging them with `[Serializable, NetSerializable]`).
+  * Constructing new instances of prototypes directly.
+* Add `PrototypeManagerExt.Index` helper function that takes a nullable `ProtoId<T>`, returning null if the ID is null.
+* Added an `AlwaysActive` field to `WebViewControl` to make a browser window active even when not in the UI tree.
+* Made some common dependencies accessible through `IPlacementManager`.
+* Added a new `GENITIVE()` localization helper function, which is useful for certain languages.
+
+### Bugfixes
+
+* Sprite scale is now correctly applied to sprite boundaries in `SpriteSystem.GetLocalBounds`.
+* Fixed documentation for `IPrototypeManager.Index<T>` stating that `KeyNotFoundException` gets thrown, when in actuality `UnknownPrototypeException` gets thrown.
+
+### Other
+
+* More tiny optimizations to `DataDefinitionAnalyzer`.
+* NetSerializer has been updated. On debug, it will now report *where* a type that can't be serialized is referenced from.
+
+### Internal
+
+* Minor internal code cleanup.
+
+
+## 263.0.0
+
+### Breaking changes
+
+* Fully removed some non-`Entity<T>` container methods.
+
+### New features
+
+* `IMidiRenderer.LoadSoundfont` has been split into `LoadSoundfontResource` and `LoadSoundfontUser`, the original now being deprecated.
+* Client command execution now properly catches errors instead of letting them bubble up through the input stack.
+* Added `CompletionHelper.PrototypeIdsLimited` API to allow commands to autocomplete entity prototype IDs.
+* Added `spawn:in` Toolshed command.
+* Added `MapLoaderSystem.TryLoadGeneric` overload to load from a `Stream`.
+* Added `OutputPanel.GetMessage()` and `OutputPanel.SetMessage()` to allow replacing individual messages.
+
+### Bugfixes
+
+* Fixed debug asserts when using MIDI on Windows.
+* Fixed an error getting logged on startup on macOS related to window icons.
+* `CC-BY-NC-ND-4.0` is now a valid license for the RGA validator.
+* Fixed `TabContainer.CurrentTab` clamping against the wrong value.
+* Fix culture-based parsing in `TimespanSerializer`.
+* Fixed grid rendering blowing up on tile IDs that aren't registered.
+* Fixed debug assert when loading MIDI soundfonts on Windows.
+* Make `ColorSelectorSliders` properly update the dropdown when changing `SelectorType`.
+* Fixed `tpto` allowing teleports to oneself, thereby causing them to be deleted.
+* Fix OpenAL extensions being requested incorrectly, causing an error on macOS.
+* Fixed horizontal measuring of markup controls in rich text.
+
+### Other
+
+* Improved logging for some audio entity errors.
+* Avoided more server stutters when using `csci`.
+* Improved physics performance.
+* Made various localization functions like `GENDER()` not throw if passed a string instead of an `EntityUid`.
+* The generic clause on `EntitySystem.AddComp<T>` has been changed to `IComponent` (from `Component`) for consistency with `IEntityManager.AddComponent<T>`.
+* `DataDefinitionAnalyzer` has been optimized somewhat.
+* Improved assert logging error message when static data fields are encountered.
+
+### Internal
+
+* Warning cleanup.
+* Added more tests for `DataDefinitionAnalyzer`.
+* Consistently use `EntitySystem` proxy methods in engine.
+
+
 ## 262.0.0
 
 ### Breaking changes

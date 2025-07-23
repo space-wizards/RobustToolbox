@@ -1551,7 +1551,7 @@ public abstract partial class SharedMapSystem
     {
         var grid = _transform.GetGrid(coordinates);
 
-        if (!TryComp(grid, out MapGridComponent? mapGrid))
+        if (!_gridQuery.TryComp(grid, out var mapGrid))
         {
             tileRef = TileRef.Zero;
             return false;

@@ -1,3 +1,4 @@
+using Robust.Client.Graphics;
 using Robust.Shared.ViewVariables;
 using static Robust.Client.UserInterface.Controls.Label;
 using Robust.Shared.Localization;
@@ -11,8 +12,9 @@ namespace Robust.Client.UserInterface.Controls
     public class SwitchButton : ContainerButton
     {
         public const string StyleClassSwitchButton = "switchButton";
-        public const string StyleClassSwitchButtonChecked = "switchButtonChecked";
 
+        public const string StylePropertyTextureUnchecked = "textureUnchecked";
+        public const string StylePropertyTextureChecked = "textureChecked";
 
         public Label Label { get; }
         public Label OffStateLabel { get; }
@@ -68,23 +70,7 @@ namespace Robust.Client.UserInterface.Controls
         protected override void DrawModeChanged()
         {
             base.DrawModeChanged();
-
-            if (Pressed)
-            {
-                TextureRect?.AddStyleClass(StyleClassSwitchButtonChecked);
-                if (OffStateLabel is not null)
-                    OffStateLabel.Visible = false;
-                if (OnStateLabel is not null)
-                    OnStateLabel.Visible = true;
-            }
-            else
-            {
-                TextureRect?.RemoveStyleClass(StyleClassSwitchButtonChecked);
-                if (OffStateLabel is not null)
-                    OffStateLabel.Visible = true;
-                if (OnStateLabel is not null)
-                    OnStateLabel.Visible = false;
-            }
+            UpdateAppearance();
         }
 
         /// <summary>
@@ -136,6 +122,42 @@ namespace Robust.Client.UserInterface.Controls
         {
             get => OnStateLabel.Text;
             set => OnStateLabel.Text = value;
+        }
+
+        private void UpdateAppearance()
+        {
+            if ( Pressed )
+            {
+                TryGetStyleProperty(StylePropertyTextureChecked, out Texture? texture);
+                if (texture is not null && TextureRect is not null)
+                {
+                    TextureRect.Texture = texture;
+                }
+
+                if (OffStateLabel is not null)
+                    OffStateLabel.Visible = false;
+                if (OnStateLabel is not null)
+                    OnStateLabel.Visible = true;
+            }
+            else
+            {
+                TryGetStyleProperty(StylePropertyTextureUnchecked, out Texture? texture);
+                if (texture is not null && TextureRect is not null)
+                {
+                    TextureRect.Texture = texture;
+                }
+
+                if (OffStateLabel is not null)
+                    OffStateLabel.Visible = true;
+                if (OnStateLabel is not null)
+                    OnStateLabel.Visible = false;
+            }
+        }
+
+        protected override void StylePropertiesChanged()
+        {
+            UpdateAppearance();
+            base.StylePropertiesChanged();
         }
     }
 }

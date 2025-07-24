@@ -203,12 +203,12 @@ command-description-mappos =
     Returns an entity's coordinates relative to it's current map.
 command-description-pos =
     Returns an entity's coordinates.
+command-description-gridget-grid =
+    Returns the grid an entity is on.
 command-description-gridget-tile =
     Returns the tile an entity is on.
 command-description-gridget-tilename =
     Returns the name of the tile an entity is on.
-command-description-gridget-grid =
-    Returns the grid an entity is on.
 command-description-tp-coords =
     Teleports the given entities to the target coordinates.
 command-description-tp-to =

@@ -24,15 +24,6 @@ public sealed class ScaleCommand : ToolshedCommand
         }
     }
 
-    [CommandImplementation("set")]
-    public EntityUid Set([PipedArgument] EntityUid input, Vector2 scale)
-    {
-        _system ??= GetSys<SharedScaleVisualsSystem>();
-
-        _system.SetSpriteScale(input, scale);
-        return input;
-    }
-
     [CommandImplementation("multiply")]
     public IEnumerable<EntityUid> Multiply([PipedArgument] IEnumerable<EntityUid> input, float factor)
     {
@@ -46,16 +37,6 @@ public sealed class ScaleCommand : ToolshedCommand
         }
     }
 
-    [CommandImplementation("multiply")]
-    public EntityUid Multiply([PipedArgument] EntityUid input, float factor)
-    {
-        _system ??= GetSys<SharedScaleVisualsSystem>();
-
-        var scale = _system.GetSpriteScale(input) * factor;
-        _system.SetSpriteScale(input, scale);
-        return input;
-    }
-
     [CommandImplementation("get")]
     public IEnumerable<Vector2> Get([PipedArgument] IEnumerable<EntityUid> input)
     {
@@ -65,13 +46,5 @@ public sealed class ScaleCommand : ToolshedCommand
         {
             yield return _system.GetSpriteScale(ent);
         }
-    }
-
-    [CommandImplementation("get")]
-    public Vector2 Get([PipedArgument] EntityUid input)
-    {
-        _system ??= GetSys<SharedScaleVisualsSystem>();
-
-        return _system.GetSpriteScale(input);
     }
 }

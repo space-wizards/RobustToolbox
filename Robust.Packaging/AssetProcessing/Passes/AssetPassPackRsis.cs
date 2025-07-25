@@ -22,6 +22,12 @@ internal sealed class AssetPassPackRsis : AssetPass
     private static readonly Regex RegexMetaJson = new(@"^(.+)\.rsi/meta\.json$");
     private static readonly Regex RegexPng = new(@"^(.+)\.rsi/(.+)\.png$");
 
+    static AssetPassPackRsis()
+    {
+        // TODO: Nuke this
+        Configuration.Default.PreferContiguousImageBuffers = true;
+    }
+
     protected override AssetFileAcceptResult AcceptFile(AssetFile file)
     {
         if (!file.Path.Contains(".rsi/"))

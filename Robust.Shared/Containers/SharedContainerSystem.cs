@@ -675,6 +675,38 @@ namespace Robust.Shared.Containers
             return false;
         }
 
+        /// <summary>
+        /// Enumerates every entity in an entity with a container, searching all child containers.
+        /// </summary>
+        public IEnumerable<EntityUid> GetDescendantEntitiesInEntity(Entity<ContainerManagerComponent> entity)
+        {
+            foreach (var (_, container) in entity.Comp.Containers)
+            {
+                foreach (var uid in GetDescendantEntitiesInContainer(container))
+                {
+                    yield return uid;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Enumerates every entity in a specific container, searching all child containers.
+        /// </summary>
+        public IEnumerable<EntityUid> GetDescendantEntitiesInContainer(BaseContainer container)
+        {
+            foreach (var contained in container.ContainedEntities)
+            {
+                yield return contained;
+                if (TryGetManagerComp(contained, out var manager))
+                {
+                    foreach (var uid in GetDescendantEntitiesInEntity((contained, manager)))
+                    {
+                        yield return uid;
+                    }
+                }
+            }
+        }
+
         #endregion
 
         protected virtual void OnParentChanged(ref EntParentChangedMessage message)

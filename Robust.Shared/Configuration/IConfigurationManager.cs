@@ -64,6 +64,16 @@ namespace Robust.Shared.Configuration
         void SaveToFile();
 
         /// <summary>
+        /// Attempts to gracefully safe the configuration file to disk, failing
+        /// and returning false if no configuration file is loaded. Effectively
+        /// a wrapper around <see cref="SaveToFile" />.
+        /// </summary>
+        /// <remarks>
+        /// Will still throw if exceptions occur during saving.
+        /// </remarks>
+        bool TrySaveToFile();
+
+        /// <summary>
         /// Serializes a list of cvars to a toml.
         /// </summary>
         void SaveToTomlStream(Stream stream, IEnumerable<string> cvars);

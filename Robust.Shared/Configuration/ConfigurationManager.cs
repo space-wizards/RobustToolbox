@@ -322,6 +322,15 @@ namespace Robust.Shared.Configuration
             }
         }
 
+        public bool TrySaveToFile()
+        {
+            if (_configFile is null)
+                return false;
+
+            SaveToFile();
+            return true;
+        }
+
         public void RegisterCVar<T>(string name, T defaultValue, CVar flags = CVar.NONE,
             Action<T>? onValueChanged = null)
             where T : notnull

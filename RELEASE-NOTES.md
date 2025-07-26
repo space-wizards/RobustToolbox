@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added `IConfigurationManager.TrySaveToFile` which returns `false` instead of throwing if no save file has been loaded.
 
 ### Bugfixes
 

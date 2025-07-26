@@ -17,7 +17,7 @@ public sealed class RobustClientAssetGraph
     public AssetPassNormalizeText NormalizeText { get; }
     public AssetPassMergeTextDirectories MergePrototypeDirectories { get; }
     public AssetPassMergeTextDirectories MergeLocaleDirectories { get; }
-    // internal AssetPassPackRsis PackRsis { get; }
+    public AssetPassPackRsis PackRsis { get; }
 
     /// <summary>
     /// Collection of all passes in this preset graph.
@@ -50,21 +50,24 @@ public sealed class RobustClientAssetGraph
         {
             Name = "RobustClientAssetGraphMergeLocaleDirectories"
         };
-        // PackRsis = new AssetPassPackRsis
-        // {
-        //     Name = "RobustClientAssetGraphPackRsis",
-        // };
+        PackRsis = new AssetPassPackRsis
+        {
+            Name = "RobustClientAssetGraphPackRsis",
+        };
 
         PresetPasses.AddDependency(Input);
-        //PackRsis.AddDependency(PresetPasses).AddBefore(NormalizeText);
+        PackRsis.AddDependency(PresetPasses).AddBefore(NormalizeText);
         MergePrototypeDirectories.AddDependency(PresetPasses).AddBefore(NormalizeText);
         MergeLocaleDirectories.AddDependency(PresetPasses).AddBefore(NormalizeText);
         NormalizeText.AddDependency(PresetPasses).AddBefore(Output);
+        // RSI packing goes through text normalization,
+        // to catch meta.jsons that have been skipped by the RSI packing pass.
+        NormalizeText.AddDependency(PackRsis).AddBefore(Output);
         Output.AddDependency(PresetPasses);
         Output.AddDependency(NormalizeText);
         Output.AddDependency(MergePrototypeDirectories);
         Output.AddDependency(MergeLocaleDirectories);
-        //Output.AddDependency(PackRsis);
+        Output.AddDependency(PackRsis);
 
         AllPasses = new AssetPass[]
         {
@@ -74,7 +77,7 @@ public sealed class RobustClientAssetGraph
             NormalizeText,
             MergePrototypeDirectories,
             MergeLocaleDirectories,
-            // texPackRsis
+            PackRsis
         };
     }
 }

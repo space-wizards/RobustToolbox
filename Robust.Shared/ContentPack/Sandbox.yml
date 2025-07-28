@@ -591,6 +591,7 @@ Types:
     Enumerable: { All: True }
     IGrouping`2: { All: True }
     IOrderedEnumerable`1: { All: True }
+    ImmutableArrayExtensions: { All: True }
   System.Net:
     DnsEndPoint: { }
     IPAddress: { All: True }

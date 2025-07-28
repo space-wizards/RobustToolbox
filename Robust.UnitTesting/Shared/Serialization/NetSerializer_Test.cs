@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Numerics;
 using NetSerializer;
@@ -211,6 +212,38 @@ namespace Robust.UnitTesting.Shared.Serialization
 
             stream.Position = 0;
             Assert.That(() => Primitives.ReadPrimitive(stream, out string _), Throws.TypeOf<InvalidDataException>());
+        }
+
+        [Test]
+        public void TestImmutableDictionary()
+        {
+            var x = new Dictionary<string, int>
+            {
+                { "A", 1 },
+                { "B", 2 }
+            }.ToImmutableDictionary();
+
+            var serializer = new Serializer([typeof(ImmutableDictionary<string, int>)], new Settings());
+            var stream = new MemoryStream();
+            serializer.SerializeDirect(stream, x);
+            stream.Position = 0;
+            serializer.DeserializeDirect(stream, out ImmutableDictionary<string, int> read);
+
+            Assert.That(read, NUnit.Framework.Is.EquivalentTo(x));
+        }
+
+        [Test]
+        public void TestImmutableHashSet()
+        {
+            var x = new HashSet<string> {"A", "B"}.ToImmutableHashSet();
+
+            var serializer = new Serializer([typeof(ImmutableHashSet<string>)], new Settings());
+            var stream = new MemoryStream();
+            serializer.SerializeDirect(stream, x);
+            stream.Position = 0;
+            serializer.DeserializeDirect(stream, out ImmutableHashSet<string> read);
+
+            Assert.That(read, NUnit.Framework.Is.EquivalentTo(x));
         }
     }
 }

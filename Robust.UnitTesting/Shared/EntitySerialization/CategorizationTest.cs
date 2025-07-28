@@ -13,6 +13,15 @@ namespace Robust.UnitTesting.Shared.EntitySerialization;
 [TestFixture]
 public sealed partial class CategorizationTest : RobustIntegrationTest
 {
+    private const string TestTileDefId = "a";
+    private const string TestPrototypes = $@"
+- type: testTileDef
+  id: space
+
+- type: testTileDef
+  id: {TestTileDefId}
+    ";
+
     /// <summary>
     /// Check that file categories are correctly assigned when saving & loading different combinations of entites.
     /// </summary>
@@ -20,7 +29,7 @@ public sealed partial class CategorizationTest : RobustIntegrationTest
     [TestOf(typeof(FileCategory))]
     public async Task TestCategorization()
     {
-        var server = StartServer(new() {Pool = false}); // Pool=false due to TileDef registration
+        var server = StartServer(new() { Pool = false, ExtraPrototypes = TestPrototypes }); // Pool=false due to TileDef registration
         await server.WaitIdleAsync();
         var entMan = server.EntMan;
         var meta = server.System<MetaDataSystem>();
@@ -30,9 +39,8 @@ public sealed partial class CategorizationTest : RobustIntegrationTest
         var tileMan = server.ResolveDependency<ITileDefinitionManager>();
         var path = new ResPath($"{nameof(TestCategorization)}.yml");
 
-        tileMan.Register(new TileDef("space"));
-        var tDef = new TileDef("a");
-        tileMan.Register(tDef);
+        SerializationTestHelper.LoadTileDefs(server.ProtoMan, tileMan, "space");
+        var tDef = server.ProtoMan.Index<TileDef>(TestTileDefId);
 
         EntityUid mapA = default;
         EntityUid mapB = default;

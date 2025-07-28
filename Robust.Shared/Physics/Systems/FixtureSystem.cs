@@ -21,7 +21,9 @@ namespace Robust.Shared.Physics.Systems
     /// </summary>
     public sealed partial class FixtureSystem : EntitySystem
     {
+#if DEBUG
         [Dependency] private readonly IGameTiming _timing = default!;
+#endif
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
         [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;

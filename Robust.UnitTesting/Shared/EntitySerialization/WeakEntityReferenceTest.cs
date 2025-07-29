@@ -36,7 +36,7 @@ public sealed partial class WeakEntityReferenceTest : RobustIntegrationTest
 
             // Give A a weak reference to B
             var comp = sEntMan.AddComponent<WeakEntityReferenceTestComponent>(entA);
-            comp.Entity = new WeakEntityReference(sEntMan.GetNetEntity(entB));
+            comp.Entity = sEntMan.GetWeakReference(entB);
         });
 
         // Connect client.

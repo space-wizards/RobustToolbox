@@ -505,56 +505,12 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// <see cref="ComponentQueryEnumerator"/>
         /// </summary>
-        ComponentQueryEnumerator ComponentQueryEnumerator(ComponentRegistry registry);
+        public ComponentQueryEnumerator ComponentQueryEnumerator(ComponentRegistry registry);
 
         /// <summary>
         /// <see cref="CompRegistryQueryEnumerator"/>
         /// </summary>
-        CompRegistryEntityEnumerator CompRegistryQueryEnumerator(ComponentRegistry registry);
-
-        /// <summary>
-        /// Returns a <see cref="WeakEntityReference"/> pointing to the local entity.
-        /// </summary>
-        WeakEntityReference GetWeakReference(EntityUid uid, MetaDataComponent? meta = null);
-
-        /// <summary>
-        /// Returns a <see cref="WeakEntityReference"/> pointing to the local entity.
-        /// </summary>
-        WeakEntityReference? GetWeakReference(EntityUid? uid, MetaDataComponent? meta = null);
-
-        /// <summary>
-        /// Attempts to resolve the given <see cref="WeakEntityReference"/> into an <see cref="EntityUid"/> that
-        /// corresponds to an existing entity. If this fails, the entity has either been deleted, or for clients, the
-        /// entity may not yet have been sent to them.
-        /// </summary>
-        EntityUid? Resolve(WeakEntityReference weakRef);
-
-        /// <inheritdoc cref="Resolve(WeakEntityReference)"/>
-        EntityUid? Resolve(WeakEntityReference? weakRef);
-
-        bool TryGetEntity(WeakEntityReference weakRef, [NotNullWhen(true)] out EntityUid? entity);
-
-        bool TryGetEntity(
-            [NotNullWhen(true)] WeakEntityReference? weakRef,
-            [NotNullWhen(true)] out EntityUid? entity);
-
-        bool TryGetEntity<T>(WeakEntityReference<T> weakRef, [NotNullWhen(true)] out Entity<T>? entity)
-            where T : IComponent;
-
-        bool TryGetEntity<T>(
-            [NotNullWhen(true)] WeakEntityReference<T>? weakRef,
-            [NotNullWhen(true)] out Entity<T>? entity)
-            where T : IComponent;
-
-        /// <summary>
-        /// Attempts to resolve the given <see cref="WeakEntityReference"/> into an existing entity with the specified
-        /// component and return the <see cref="Entity{T}"/>. If this fails, the entity has either been deleted, doesn't
-        /// have the component, or for clients the entity may not yet have been sent to them.
-        /// </summary>
-        public Entity<T>? Resolve<T>(WeakEntityReference<T> weakRef) where T : IComponent;
-
-        /// <inheritdoc cref="Resolve{T}(WeakEntityReference{T})"/>
-        public Entity<T>? Resolve<T>(WeakEntityReference<T>? weakRef) where T : IComponent;
+        public CompRegistryEntityEnumerator CompRegistryQueryEnumerator(ComponentRegistry registry);
 
         AllEntityQueryEnumerator<IComponent> AllEntityQueryEnumerator(Type comp);
 

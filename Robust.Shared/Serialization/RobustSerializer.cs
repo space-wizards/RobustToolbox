@@ -89,8 +89,7 @@ namespace Robust.Shared.Serialization
                 CustomTypeSerializers = new[]
                 {
                     MappedStringSerializer.TypeSerializer,
-                    new Vector2Serializer(),
-                    new Matrix3x2Serializer(),
+                    new NetMathSerializer()
                 }
             };
             _serializer = new Serializer(types, settings);

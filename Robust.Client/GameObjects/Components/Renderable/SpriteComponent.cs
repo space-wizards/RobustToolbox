@@ -30,8 +30,6 @@ using Robust.Shared.ViewVariables;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 using static Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer;
 using Direction = Robust.Shared.Maths.Direction;
-using Vector4 = Robust.Shared.Maths.Vector4;
-using SysVec4 = System.Numerics.Vector4;
 #pragma warning disable CS0618 // Type or member is obsolete
 
 namespace Robust.Client.GameObjects

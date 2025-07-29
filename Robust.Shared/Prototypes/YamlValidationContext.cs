@@ -1,5 +1,4 @@
 using System.Globalization;
-using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
@@ -14,7 +13,8 @@ namespace Robust.Shared.Prototypes;
 internal sealed class YamlValidationContext :
     ISerializationContext,
     ITypeSerializer<EntityUid, ValueDataNode>,
-    ITypeSerializer<NetEntity, ValueDataNode>
+    ITypeSerializer<NetEntity, ValueDataNode>,
+    ITypeSerializer<WeakEntityReference, ValueDataNode>
 {
     public SerializationManager.SerializerProvider SerializerProvider { get; } = new();
     public bool WritingReadingPrototypes => true;
@@ -55,42 +55,71 @@ internal sealed class YamlValidationContext :
         return EntityUid.Parse(node.Value);
     }
 
-    public ValidationNode Validate(
+    ValidationNode ITypeValidator<NetEntity, ValueDataNode>.Validate(
         ISerializationManager serializationManager,
         ValueDataNode node,
         IDependencyCollection dependencies,
-        ISerializationContext? context = null)
+        ISerializationContext? context)
     {
-        if (node.Value == "invalid")
-            return new ValidatedValueNode(node);
-
-        return new ErrorNode(node, "Prototypes should not contain NetEntities");
+        return node.Value == "invalid"
+            ? new ValidatedValueNode(node)
+            : new ErrorNode(node, "Prototypes should not contain NetEntities");
     }
 
-    public NetEntity Read(
+    NetEntity ITypeReader<NetEntity, ValueDataNode>.Read(
         ISerializationManager serializationManager,
         ValueDataNode node,
         IDependencyCollection dependencies,
         SerializationHookContext hookCtx,
-        ISerializationContext? context = null,
-        ISerializationManager.InstantiationDelegate<NetEntity>? instanceProvider = null)
+        ISerializationContext? context,
+        ISerializationManager.InstantiationDelegate<NetEntity>? instanceProvider)
     {
-        if (node.Value == "invalid")
-            return NetEntity.Invalid;
-
-        return NetEntity.Parse(node.Value);
+        return node.Value == "invalid" ? NetEntity.Invalid : NetEntity.Parse(node.Value);
     }
 
-    public DataNode Write(
+    DataNode ITypeWriter<NetEntity>.Write(
         ISerializationManager serializationManager,
         NetEntity value,
         IDependencyCollection dependencies,
-        bool alwaysWrite = false,
-        ISerializationContext? context = null)
+        bool alwaysWrite,
+        ISerializationContext? context)
     {
-        if (!value.Valid)
-            return new ValueDataNode("invalid");
+        return value.Valid
+            ? new ValueDataNode(value.Id.ToString(CultureInfo.InvariantCulture))
+            : new ValueDataNode("invalid");
+    }
 
-        return new ValueDataNode(value.Id.ToString(CultureInfo.InvariantCulture));
+    ValidationNode ITypeValidator<WeakEntityReference, ValueDataNode>.Validate(
+        ISerializationManager serializationManager,
+        ValueDataNode node,
+        IDependencyCollection dependencies,
+        ISerializationContext? context)
+    {
+        return node.Value == "invalid"
+            ? new ValidatedValueNode(node)
+            : new ErrorNode(node, "Prototypes should not contain WeakEntityReferences");
+    }
+
+    WeakEntityReference ITypeReader<WeakEntityReference, ValueDataNode>.Read(
+        ISerializationManager serializationManager,
+        ValueDataNode node,
+        IDependencyCollection dependencies,
+        SerializationHookContext hookCtx,
+        ISerializationContext? context,
+        ISerializationManager.InstantiationDelegate<WeakEntityReference>? instanceProvider)
+    {
+        return node.Value == "invalid" ? WeakEntityReference.Invalid : new(NetEntity.Parse(node.Value));
+    }
+
+    DataNode ITypeWriter<WeakEntityReference>.Write(
+        ISerializationManager serializationManager,
+        WeakEntityReference value,
+        IDependencyCollection dependencies,
+        bool alwaysWrite,
+        ISerializationContext? context)
+    {
+        return !value.Entity.Valid
+            ? new ValueDataNode("invalid")
+            : new ValueDataNode(value.Entity.Id.ToString(CultureInfo.InvariantCulture));
     }
 }

@@ -33,7 +33,8 @@ namespace Robust.Shared.EntitySerialization;
 public sealed class EntityDeserializer :
     ISerializationContext,
     ITypeSerializer<EntityUid, ValueDataNode>,
-    ITypeSerializer<NetEntity, ValueDataNode>
+    ITypeSerializer<NetEntity, ValueDataNode>,
+    ITypeSerializer<WeakEntityReference, ValueDataNode>
 {
     // See the comments around EntitySerializer's version const for information about the different versions.
     // TBH version three isn't even really fully supported anymore, simply due to changes in engine component serialization.
@@ -1216,6 +1217,47 @@ public sealed class EntityDeserializer :
         return value.IsValid()
             ? new ValueDataNode(value.Id.ToString(CultureInfo.InvariantCulture))
             : new ValueDataNode("invalid");
+    }
+
+    WeakEntityReference ITypeReader<WeakEntityReference, ValueDataNode>.Read(
+        ISerializationManager serializationManager,
+        ValueDataNode node,
+        IDependencyCollection dependencies,
+        SerializationHookContext hookCtx,
+        ISerializationContext? context,
+        ISerializationManager.InstantiationDelegate<WeakEntityReference>? instanceProvider)
+    {
+        var uid = serializationManager.Read<EntityUid>(node, context);
+        return EntMan.TryGetNetEntity(uid, out var nent)
+            ? new(nent.Value)
+            : WeakEntityReference.Invalid;
+    }
+
+    DataNode ITypeWriter<WeakEntityReference>.Write(
+        ISerializationManager serializationManager,
+        WeakEntityReference value,
+        IDependencyCollection dependencies,
+        bool alwaysWrite,
+        ISerializationContext? context)
+    {
+        return value != WeakEntityReference.Invalid
+            ? new ValueDataNode(value.Entity.Id.ToString(CultureInfo.InvariantCulture))
+            : new ValueDataNode("invalid");
+    }
+
+    ValidationNode ITypeValidator<WeakEntityReference, ValueDataNode>.Validate(
+        ISerializationManager serializationManager,
+        ValueDataNode node,
+        IDependencyCollection dependencies,
+        ISerializationContext? context)
+    {
+        if (node.Value is "invalid")
+            return new ValidatedValueNode(node);
+
+        if (!int.TryParse(node.Value, out _))
+            return new ErrorNode(node, "Invalid NetEntity");
+
+        return new ValidatedValueNode(node);
     }
 
     #endregion

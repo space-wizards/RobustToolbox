@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * ViewVariables editors for `ProtoId` fields now have a Select button which opens a window listing all available prototypes of the appropriate type.
+* Added a new `WeakEntityReference` struct that is intended to be used by component data-fields to refer to entities that may or may not still exist.
 
 ### Bugfixes
 

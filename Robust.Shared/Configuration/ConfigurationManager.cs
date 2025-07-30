@@ -426,6 +426,103 @@ namespace Robust.Shared.Configuration
             OnValueChanged(cVar.Name, onValueChanged, invokeImmediately);
         }
 
+        /// <inheritdoc />
+        public IConfigurationChangeMultiSubscriptionBuilder SubscribeMultiple()
+        {
+            return new ConfigurationMultiSubscriptionBuilder(this);
+        }
+
+        /// <summary> Default implementation of multi-sub container. </summary>
+        internal sealed class ConfigurationMultiSubscriptionBuilder(ConfigurationManager manager) : IConfigurationChangeMultiSubscriptionBuilder
+        {
+            private readonly List<(string, ValueChangedDelegate, bool)> _delegates = new List<(string, ValueChangedDelegate, bool)>();
+
+            /// <inheritdoc />
+            public IConfigurationChangeMultiSubscriptionBuilder OnValueChanged<T>(CVarDef<T> cVar, CVarChanged<T> onValueChanged, bool invokeImmediately = false)
+                where T : notnull
+            {
+                _delegates.Add((cVar.Name, (object value, in CVarChangeInfo info) => onValueChanged((T)value, info), invokeImmediately));
+                return this;
+            }
+
+            /// <inheritdoc />
+            public IConfigurationChangeMultiSubscriptionBuilder OnValueChanged<T>(string name, CVarChanged<T> onValueChanged, bool invokeImmediately = false)
+                where T : notnull
+            {
+                _delegates.Add((name, (object value, in CVarChangeInfo info) => onValueChanged((T)value, info), invokeImmediately));
+                return this;
+            }
+
+            /// <inheritdoc />
+            public IConfigurationChangeMultiSubscriptionBuilder OnValueChanged<T>(CVarDef<T> cVar, Action<T> onValueChanged, bool invokeImmediately = false)
+                where T : notnull
+            {
+                _delegates.Add((cVar.Name, (object value, in CVarChangeInfo info) => onValueChanged((T)value), invokeImmediately));
+                return this;
+            }
+
+            /// <inheritdoc />
+            public IConfigurationChangeMultiSubscriptionBuilder OnValueChanged<T>(string name, Action<T> onValueChanged, bool invokeImmediately = false)
+                where T : notnull
+            {
+                _delegates.Add((name, (object value, in CVarChangeInfo info) => onValueChanged((T)value), invokeImmediately));
+                return this;
+            }
+
+            /// <inheritdoc />
+            public IDisposable Subscribe()
+            {
+                foreach (var (name, changedDelegate, invokeImmediately) in _delegates)
+                {
+                    manager.OnValueChanged(name, changedDelegate, invokeImmediately);
+                }
+
+                return new ConfigurationMultiSubscriptionBuilderUnsubscriber(manager, _delegates);
+            }
+
+            /// <summary>
+            /// Container for batch-unsubscription of config changed events.
+            /// </summary>
+            private sealed class ConfigurationMultiSubscriptionBuilderUnsubscriber(
+                ConfigurationManager manager,
+                List<(string, ValueChangedDelegate, bool)> delegates
+            ) : IDisposable
+            {
+                /// <inheritdoc />
+                public void Dispose()
+                {
+                    foreach (var (name,changedDelegate,_) in delegates)
+                    {
+                        manager.UnsubValueChanged(name, changedDelegate);
+                    }
+                }
+            }
+        }
+
+        private void UnsubValueChanged(string name, ValueChangedDelegate onValueChanged)
+        {
+            using var _ = Lock.WriteGuard();
+
+            var reg = _configVars[name];
+            reg.ValueChanged.RemoveInPlace(onValueChanged);
+        }
+
+        private void OnValueChanged(string name, ValueChangedDelegate onValueChanged, bool invokeImmediately = false)
+        {
+            object value;
+            using (Lock.WriteGuard())
+            {
+                var reg = _configVars[name];
+                value = GetConfigVarValue(reg);
+                reg.ValueChanged.AddInPlace(onValueChanged, onValueChanged);
+            }
+
+            if (invokeImmediately)
+            {
+                onValueChanged(GetCVar(name), new CVarChangeInfo(name, _gameTiming.CurTick, value, value));
+            }
+        }
+
         public void OnValueChanged<T>(string name, CVarChanged<T> onValueChanged, bool invokeImmediately = false)
             where T : notnull
         {

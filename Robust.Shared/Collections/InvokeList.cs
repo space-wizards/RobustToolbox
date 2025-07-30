@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Robust.Shared.Collections;
 
@@ -77,7 +77,7 @@ internal struct InvokeList<T>
         for (var i = 0; i < _entries.Length; i++)
         {
             var entry = _entries[i];
-            if (equality.Equals(entry))
+            if (equality.Equals(entry.Equality))
             {
                 entryIdx = i;
                 break;

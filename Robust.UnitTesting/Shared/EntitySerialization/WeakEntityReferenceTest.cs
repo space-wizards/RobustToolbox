@@ -106,8 +106,7 @@ public sealed partial class WeakEntityReferenceTest : RobustIntegrationTest
 
         // Disconnect client
         await client.WaitPost(() => cNetMan.ClientDisconnect(""));
-        await server.WaitRunTicks(5);
-        await client.WaitRunTicks(5);
+        await RunTicks();
 
         // Reset cvar
         // I love engine tests

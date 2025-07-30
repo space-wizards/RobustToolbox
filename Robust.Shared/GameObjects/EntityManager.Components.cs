@@ -1395,7 +1395,7 @@ namespace Robust.Shared.GameObjects
 
         public WeakEntityReference GetWeakReference(EntityUid uid, MetaDataComponent? meta = null)
         {
-            return new WeakEntityReference(GetNetEntity(uid, meta));
+            return new WeakEntityReference(uid);
         }
 
         public WeakEntityReference? GetWeakReference(EntityUid? uid, MetaDataComponent? meta = null)
@@ -1403,16 +1403,16 @@ namespace Robust.Shared.GameObjects
             if (uid == null)
                 return null;
 
-            return new WeakEntityReference(GetNetEntity(uid.Value, meta));
+            return new WeakEntityReference(uid.Value);
         }
 
         /// <inheritdoc />
         public EntityUid? Resolve(WeakEntityReference weakRef)
         {
-            if (weakRef.Entity != NetEntity.Invalid
-                && TryGetEntity(weakRef.Entity, out var ent))
+            if (weakRef.Entity != EntityUid.Invalid
+                && EntityExists(weakRef.Entity))
             {
-                return ent.Value;
+                return weakRef.Entity;
             }
 
             return null;
@@ -1427,11 +1427,10 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public Entity<T>? Resolve<T>(WeakEntityReference<T> weakRef) where T : IComponent
         {
-            if (weakRef.Entity != NetEntity.Invalid
-                && TryGetEntity(weakRef.Entity, out var ent)
-                && TryGetComponent(ent.Value, out T? comp))
+            if (weakRef.Entity != EntityUid.Invalid
+                && TryGetComponent(weakRef.Entity, out T? comp))
             {
-                return new(ent.Value, comp);
+                return new(weakRef.Entity, comp);
             }
 
             return null;
@@ -1445,18 +1444,20 @@ namespace Robust.Shared.GameObjects
 
         public bool TryGetEntity(WeakEntityReference weakRef, [NotNullWhen(true)] out EntityUid? entity)
         {
-            return TryGetEntity(weakRef.Entity, out entity);
+            entity = Resolve(weakRef);
+            return entity != null;
         }
 
         public bool TryGetEntity([NotNullWhen(true)] WeakEntityReference? weakRef, [NotNullWhen(true)] out EntityUid? entity)
         {
-            return TryGetEntity(weakRef?.Entity, out entity);
+            entity = Resolve(weakRef);
+            return entity != null;
         }
 
         public bool TryGetEntity<T>(WeakEntityReference<T> weakRef, [NotNullWhen(true)] out Entity<T>? entity)
             where T : IComponent
         {
-            if (!TryGetEntity(weakRef.Entity, out var uid)
+            if (!TryGetEntity(weakRef, out var uid)
                 || !TryGetComponent(uid.Value, out T? component))
             {
                 entity = null;

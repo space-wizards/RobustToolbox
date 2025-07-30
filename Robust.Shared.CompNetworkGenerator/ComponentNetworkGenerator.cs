@@ -24,6 +24,9 @@ namespace Robust.Shared.CompNetworkGenerator
         private const string GlobalNetEntityName = "global::Robust.Shared.GameObjects.NetEntity";
         private const string GlobalNetEntityNullableName = "global::Robust.Shared.GameObjects.NetEntity?";
 
+        private const string GlobalWeakEntityReferenceName = "global::Robust.Shared.GameObjects.WeakEntityReference";
+        private const string GlobalWeakEntityReferenceNullableName = "global::Robust.Shared.GameObjects.WeakEntityReference?";
+
         private const string GlobalEntityCoordinatesName = "global::Robust.Shared.Map.EntityCoordinates";
         private const string GlobalNullableEntityCoordinatesName = "global::Robust.Shared.Map.EntityCoordinates?";
 
@@ -218,6 +221,28 @@ namespace Robust.Shared.CompNetworkGenerator
 
                         deltaHandleFields.Append($@"
                     component.{name} = EnsureEntity<{componentName}>({cast} {fieldHandleValue}, uid);");
+
+                        shallowClone.Append($@"
+                {name} = this.{name},");
+
+                        deltaApply.Add($"fullState.{name} = {name};");
+
+                        break;
+                    case GlobalWeakEntityReferenceName:
+                    case GlobalWeakEntityReferenceNullableName:
+                        networkedType = $"NetEntity?";
+
+                        stateFields.Append($@"
+        public {networkedType} {name} = default!;");
+
+                        getField = $"GetNetEntity(Resolve(component.{name}))";
+                        cast = $"(NetEntity?)";
+
+                        handleStateSetters.Append($@"
+            component.{name} = TryGetEntity(state.{name}, out var {name}) ? GetWeakReference({name}.Value) : WeakEntityReference.Invalid;");
+
+                        deltaHandleFields.Append($@"
+                    component.{name} = TryGetEntity({cast} {fieldHandleValue}, out var {name}) ? GetWeakReference({name}.Value) : WeakEntityReference.Invalid;");
 
                         shallowClone.Append($@"
                 {name} = this.{name},");

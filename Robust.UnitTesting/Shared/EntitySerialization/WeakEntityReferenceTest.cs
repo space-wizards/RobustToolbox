@@ -34,9 +34,10 @@ public sealed partial class WeakEntityReferenceTest : RobustIntegrationTest
             netEntA = sEntMan.GetNetEntity(entA);
             netEntB = sEntMan.GetNetEntity(entB);
 
-            // Give A a weak reference to B
+            // Give A weak references to B
             var comp = sEntMan.AddComponent<WeakEntityReferenceTestComponent>(entA);
             comp.Entity = sEntMan.GetWeakReference(entB);
+            comp.NullableEntity = sEntMan.GetWeakReference(entB);
         });
 
         // Connect client.
@@ -73,7 +74,9 @@ public sealed partial class WeakEntityReferenceTest : RobustIntegrationTest
 
             Assert.That(cEntMan.TryGetComponent<WeakEntityReferenceTestComponent>(entA, out var comp));
             var referencedEnt = cEntMan.Resolve(comp!.Entity);
+            var referencedNullableEnt = cEntMan.Resolve(comp.NullableEntity);
             Assert.That(referencedEnt, Is.EqualTo(entB));
+            Assert.That(referencedNullableEnt, Is.EqualTo(entB));
         });
 
         // Delete the referenced entity on the server
@@ -91,7 +94,9 @@ public sealed partial class WeakEntityReferenceTest : RobustIntegrationTest
             Assert.That(cEntMan.TryGetEntity(netEntA, out var entA));
             Assert.That(cEntMan.TryGetComponent<WeakEntityReferenceTestComponent>(entA, out var comp));
             var referencedEnt = cEntMan.Resolve(comp!.Entity);
+            var referencedNullableEnt = cEntMan.Resolve(comp.NullableEntity);
             Assert.That(referencedEnt, Is.Null);
+            Assert.That(referencedNullableEnt, Is.Null);
         });
 
         // Disconnect client

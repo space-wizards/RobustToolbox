@@ -38,12 +38,12 @@ public sealed class WeakEntityReferenceSerializer<T> :
         bool alwaysWrite = false,
         ISerializationContext? context = null)
     {
-        NetEntity val = value.Entity;
+        EntityUid val = value.Entity;
 
         if (context is EntitySerializer seri)
         {
-            if (!seri.EntMan.TryGetEntity(val, out var uid) || !seri.EntMan.HasComponent<T>(uid))
-                val = NetEntity.Invalid;
+            if (!seri.EntMan.EntityExists(val) || !seri.EntMan.HasComponent<T>(val))
+                val = EntityUid.Invalid;
         }
 
         return serializationManager.WriteValue(new WeakEntityReference(val), alwaysWrite, context);

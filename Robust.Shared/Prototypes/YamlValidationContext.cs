@@ -108,7 +108,7 @@ internal sealed class YamlValidationContext :
         ISerializationContext? context,
         ISerializationManager.InstantiationDelegate<WeakEntityReference>? instanceProvider)
     {
-        return node.Value == "invalid" ? WeakEntityReference.Invalid : new(NetEntity.Parse(node.Value));
+        return node.Value == "invalid" ? WeakEntityReference.Invalid : new(EntityUid.Parse(node.Value));
     }
 
     DataNode ITypeWriter<WeakEntityReference>.Write(

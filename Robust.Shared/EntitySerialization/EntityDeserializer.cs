@@ -1228,8 +1228,8 @@ public sealed class EntityDeserializer :
         ISerializationManager.InstantiationDelegate<WeakEntityReference>? instanceProvider)
     {
         var uid = serializationManager.Read<EntityUid>(node, context);
-        return EntMan.TryGetNetEntity(uid, out var nent)
-            ? new(nent.Value)
+        return EntMan.EntityExists(uid)
+            ? new(uid)
             : WeakEntityReference.Invalid;
     }
 

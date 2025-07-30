@@ -995,7 +995,7 @@ public sealed class EntitySerializer : ISerializationContext,
             return new ValidatedValueNode(node);
 
         if (!int.TryParse(node.Value, out _))
-            return new ErrorNode(node, "Invalid NetEntity");
+            return new ErrorNode(node, "Invalid EntityUid");
 
         return new ValidatedValueNode(node);
     }
@@ -1010,7 +1010,7 @@ public sealed class EntitySerializer : ISerializationContext,
     {
         return node.Value == "invalid"
             ? WeakEntityReference.Invalid
-            : new(NetEntity.Parse(node.Value));
+            : new(EntityUid.Parse(node.Value));
     }
 
     DataNode ITypeWriter<WeakEntityReference>.Write(
@@ -1020,7 +1020,7 @@ public sealed class EntitySerializer : ISerializationContext,
         bool alwaysWrite,
         ISerializationContext? context)
     {
-        if (EntMan.TryGetEntity(value.Entity, out var uid) && YamlUidMap.TryGetValue(uid.Value, out var yamlId))
+        if (EntMan.EntityExists(value.Entity) && YamlUidMap.TryGetValue(value.Entity, out var yamlId))
             return new ValueDataNode(yamlId.ToString(CultureInfo.InvariantCulture));
 
         return new ValueDataNode("invalid");

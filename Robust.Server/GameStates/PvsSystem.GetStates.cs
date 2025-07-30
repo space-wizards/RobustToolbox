@@ -32,7 +32,7 @@ internal sealed partial class PvsSystem
 
             if (component.Deleted || !component.Initialized)
             {
-                Log.Error("Entity manager returned deleted or uninitialized components while sending entity data");
+                Log.Error($"Entity manager returned deleted or uninitialized component of type {component.GetType()} on entity {ToPrettyString(entityUid)} while generating entity state data for {player?.Name ?? "replay"}");
                 continue;
             }
 

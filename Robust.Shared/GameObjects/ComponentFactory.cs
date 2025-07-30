@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
@@ -534,8 +535,9 @@ namespace Robust.Shared.GameObjects
             foreach (var kvRegistration in _names)
             {
                 var registration = kvRegistration.Value;
-                if (Attribute.GetCustomAttribute(registration.Type, typeof(NetworkedComponentAttribute)) is NetworkedComponentAttribute)
+                if (registration.Type.GetCustomAttribute<NetworkedComponentAttribute>() is {} attr)
                 {
+                    registration.Restriction = attr.Restriction;
                     networkedRegs.Add(registration);
                 }
             }

@@ -52,6 +52,9 @@ public sealed partial class WeakEntityReferenceTestComponent : Component
 
     [DataField, AutoNetworkedField]
     public WeakEntityReference? NullableEntity;
+
+    [DataField, AutoNetworkedField]
+    public List<WeakEntityReference> EntityList;
 }
 
 /// <summary>

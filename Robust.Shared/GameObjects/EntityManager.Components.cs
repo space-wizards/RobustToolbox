@@ -1425,6 +1425,16 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        public IEnumerable<EntityUid> Resolve(IEnumerable<WeakEntityReference> collection)
+        {
+            foreach (var element in collection)
+            {
+                if (TryGetEntity(element, out var ent))
+                    yield return ent.Value;
+            }
+        }
+
+        /// <inheritdoc />
         public Entity<T>? Resolve<T>(WeakEntityReference<T> weakRef) where T : IComponent
         {
             if (weakRef.Entity != EntityUid.Invalid

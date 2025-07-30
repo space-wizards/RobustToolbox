@@ -532,6 +532,12 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc cref="Resolve(WeakEntityReference)"/>
         EntityUid? Resolve(WeakEntityReference? weakRef);
 
+        /// <summary>
+        /// Attempts to resolve a collection of <see cref="WeakEntityReference"/>s into a collection of
+        /// <see cref="EntityUid"/>s. Any references to deleted or non-existent entities are skipped.
+        /// </summary>
+        public IEnumerable<EntityUid> Resolve(IEnumerable<WeakEntityReference> collection);
+
         bool TryGetEntity(WeakEntityReference weakRef, [NotNullWhen(true)] out EntityUid? entity);
 
         bool TryGetEntity(

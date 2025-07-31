@@ -262,10 +262,22 @@ public abstract partial class SharedMapSystem
         return (uid, AddComp<MapComponent>(uid), meta);
     }
 
+    /// <summary>
+    /// Deletes a map with the specified map id.
+    /// </summary>
     public void DeleteMap(MapId mapId)
     {
         if (TryGetMap(mapId, out var uid))
             Del(uid);
+    }
+
+    /// <summary>
+    /// Deletes a map with the specified map id in the next tick.
+    /// </summary>
+    public void QueueDeleteMap(MapId mapId)
+    {
+        if (TryGetMap(mapId, out var uid))
+            QueueDel(uid);
     }
 
     public IEnumerable<MapId> GetAllMapIds()

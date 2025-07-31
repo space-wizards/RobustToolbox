@@ -1418,6 +1418,17 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        public HashSet<WeakEntityReference> GetWeakReferenceSet(HashSet<EntityUid> set)
+        {
+            var outSet = new HashSet<WeakEntityReference>(set.Count);
+            foreach (var element in set)
+            {
+                outSet.Add(GetWeakReference(element));
+            }
+            return outSet;
+        }
+
+        /// <inheritdoc />
         public EntityUid? Resolve(WeakEntityReference weakRef)
         {
             if (weakRef.Entity != EntityUid.Invalid
@@ -1445,6 +1456,18 @@ namespace Robust.Shared.GameObjects
                     outList.Add(ent.Value);
             }
             return outList;
+        }
+
+        /// <inheritdoc />
+        public HashSet<EntityUid> Resolve(HashSet<WeakEntityReference> set)
+        {
+            var outSet = new HashSet<EntityUid>(set.Count);
+            foreach (var element in set)
+            {
+                if (TryGetEntity(element, out var ent))
+                    outSet.Add(ent.Value);
+            }
+            return outSet;
         }
 
         /// <inheritdoc />

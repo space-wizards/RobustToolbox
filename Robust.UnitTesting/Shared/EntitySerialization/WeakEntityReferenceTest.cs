@@ -39,6 +39,7 @@ public sealed partial class WeakEntityReferenceTest : RobustIntegrationTest
             comp.Entity = sEntMan.GetWeakReference(entB);
             comp.NullableEntity = sEntMan.GetWeakReference(entB);
             comp.EntityList = [sEntMan.GetWeakReference(entB)];
+            comp.EntitySet = [sEntMan.GetWeakReference(entB)];
         });
 
         // Connect client.
@@ -77,9 +78,11 @@ public sealed partial class WeakEntityReferenceTest : RobustIntegrationTest
             var referencedEnt = cEntMan.Resolve(comp!.Entity);
             var referencedNullableEnt = cEntMan.Resolve(comp.NullableEntity);
             var referencedEntList = cEntMan.Resolve(comp.EntityList);
+            var referencedEntSet = cEntMan.Resolve(comp.EntitySet);
             Assert.That(referencedEnt, Is.EqualTo(entB));
             Assert.That(referencedNullableEnt, Is.EqualTo(entB));
             Assert.That(referencedEntList, Contains.Item(entB));
+            Assert.That(referencedEntSet, Contains.Item(entB));
         });
 
         // Delete the referenced entity on the server
@@ -99,9 +102,11 @@ public sealed partial class WeakEntityReferenceTest : RobustIntegrationTest
             var referencedEnt = cEntMan.Resolve(comp!.Entity);
             var referencedNullableEnt = cEntMan.Resolve(comp.NullableEntity);
             var referencedEntList = cEntMan.Resolve(comp.EntityList);
+            var referencedEntSet = cEntMan.Resolve(comp.EntitySet);
             Assert.That(referencedEnt, Is.Null);
             Assert.That(referencedNullableEnt, Is.Null);
             Assert.That(referencedEntList, Is.Empty);
+            Assert.That(referencedEntSet, Is.Empty);
         });
 
         // Disconnect client

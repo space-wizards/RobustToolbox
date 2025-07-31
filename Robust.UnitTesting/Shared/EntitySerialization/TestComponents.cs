@@ -55,6 +55,9 @@ public sealed partial class WeakEntityReferenceTestComponent : Component
 
     [DataField, AutoNetworkedField]
     public List<WeakEntityReference> EntityList;
+
+    [DataField, AutoNetworkedField]
+    public HashSet<WeakEntityReference> EntitySet;
 }
 
 /// <summary>

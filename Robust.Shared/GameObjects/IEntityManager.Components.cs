@@ -525,7 +525,12 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Converts a list of <see cref="EntityUid"/>s into a list of <see cref="WeakEntityReference"/>s.
         /// </summary>
-        public List<WeakEntityReference> GetWeakReferenceList(List<EntityUid> collection);
+        public List<WeakEntityReference> GetWeakReferenceList(List<EntityUid> list);
+
+        /// <summary>
+        /// Converts a set of <see cref="EntityUid"/>s into a set of <see cref="WeakEntityReference"/>s.
+        /// </summary>
+        public HashSet<WeakEntityReference> GetWeakReferenceSet(HashSet<EntityUid> set);
 
         /// <summary>
         /// Attempts to resolve the given <see cref="WeakEntityReference"/> into an <see cref="EntityUid"/> that
@@ -541,7 +546,13 @@ namespace Robust.Shared.GameObjects
         /// Attempts to resolve a list of <see cref="WeakEntityReference"/>s into a list of
         /// <see cref="EntityUid"/>s. Any references to deleted or non-existent entities are skipped.
         /// </summary>
-        public List<EntityUid> Resolve(List<WeakEntityReference> collection);
+        public List<EntityUid> Resolve(List<WeakEntityReference> list);
+
+        /// <summary>
+        /// Attempts to resolve a set of <see cref="WeakEntityReference"/>s into a set of
+        /// <see cref="EntityUid"/>s. Any references to deleted or non-existent entities are skipped.
+        /// </summary>
+        public HashSet<EntityUid> Resolve(HashSet<WeakEntityReference> set);
 
         bool TryGetEntity(WeakEntityReference weakRef, [NotNullWhen(true)] out EntityUid? entity);
 

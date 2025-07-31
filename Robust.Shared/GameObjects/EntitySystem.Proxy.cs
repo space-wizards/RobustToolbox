@@ -1646,6 +1646,13 @@ public partial class EntitySystem
         return EntityManager.GetWeakReferenceList(list);
     }
 
+    /// <inheritdoc cref="IEntityManager.GetWeakReferenceSet(HashSet{EntityUid})"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected HashSet<WeakEntityReference> GetWeakReferenceSet(HashSet<EntityUid> set)
+    {
+        return EntityManager.GetWeakReferenceSet(set);
+    }
+
     /// <inheritdoc cref="IEntityManager.Resolve(WeakEntityReference)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityUid? Resolve(WeakEntityReference weakRef)
@@ -1660,11 +1667,18 @@ public partial class EntitySystem
         return EntityManager.Resolve(weakRef);
     }
 
-    /// <inheritdoc cref="IEntityManager.Resolve(IEnumerable{WeakEntityReference})"/>
+    /// <inheritdoc cref="IEntityManager.Resolve(List{WeakEntityReference})"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public List<EntityUid> Resolve(List<WeakEntityReference> collection)
+    public List<EntityUid> Resolve(List<WeakEntityReference> list)
     {
-        return EntityManager.Resolve(collection);
+        return EntityManager.Resolve(list);
+    }
+
+    /// <inheritdoc cref="IEntityManager.Resolve(HashSet{WeakEntityReference})"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public HashSet<EntityUid> Resolve(HashSet<WeakEntityReference> set)
+    {
+        return EntityManager.Resolve(set);
     }
 
     /// <inheritdoc cref="IEntityManager.Resolve{T}(ref WeakEntityReference{T})"/>

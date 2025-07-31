@@ -27,12 +27,12 @@ namespace Robust.Shared.CompNetworkGenerator
         private const string GlobalWeakEntityReferenceName = "global::Robust.Shared.GameObjects.WeakEntityReference";
         private const string GlobalWeakEntityReferenceNullableName = "global::Robust.Shared.GameObjects.WeakEntityReference?";
 
-
         private const string GlobalEntityCoordinatesName = "global::Robust.Shared.Map.EntityCoordinates";
         private const string GlobalNullableEntityCoordinatesName = "global::Robust.Shared.Map.EntityCoordinates?";
 
         private const string GlobalEntityUidSetName = "global::System.Collections.Generic.HashSet<global::Robust.Shared.GameObjects.EntityUid>";
         private const string GlobalNetEntityUidSetName = $"global::System.Collections.Generic.HashSet<{GlobalNetEntityName}>";
+        private const string GlobalWeakEntityReferenceSetName = $"global::System.Collections.Generic.HashSet<{GlobalWeakEntityReferenceName}>";
 
         private const string GlobalEntityUidListName = "global::System.Collections.Generic.List<global::Robust.Shared.GameObjects.EntityUid>";
         private const string GlobalNetEntityUidListName = $"global::System.Collections.Generic.List<{GlobalNetEntityName}>";
@@ -288,6 +288,27 @@ namespace Robust.Shared.CompNetworkGenerator
 
                         deltaHandleFields.Append($@"
                     EnsureEntitySet<{componentName}>({cast} {fieldHandleValue}, uid, component.{name});");
+
+                        shallowClone.Append($@"
+                {name} = this.{name},");
+
+                        deltaApply.Add($@"fullState.{name} = {name};");
+
+                        break;
+                    case GlobalWeakEntityReferenceSetName:
+                        networkedType = GlobalNetEntityUidSetName;
+
+                        stateFields.Append($@"
+                        public {networkedType} {name} = default!;");
+
+                        getField = $"GetNetEntitySet(Resolve(component.{name}))";
+                        cast = $"({GlobalNetEntityUidSetName})";
+
+                        handleStateSetters.Append($@"
+            component.{name} = GetWeakReferenceSet(GetEntitySet(state.{name}));");
+
+                        deltaHandleFields.Append($@"
+                    component.{name} = GetWeakReferenceSet(GetEntitySet({cast} {fieldHandleValue}))");
 
                         shallowClone.Append($@"
                 {name} = this.{name},");

@@ -27,7 +27,6 @@ namespace Robust.Shared.CompNetworkGenerator
         private const string GlobalWeakEntityReferenceName = "global::Robust.Shared.GameObjects.WeakEntityReference";
         private const string GlobalWeakEntityReferenceNullableName = "global::Robust.Shared.GameObjects.WeakEntityReference?";
 
-        private const string GlobalWeakEntityReferenceListName = "global::System.Collections.Generic.List<global::Robust.Shared.GameObjects.WeakEntityReference>";
 
         private const string GlobalEntityCoordinatesName = "global::Robust.Shared.Map.EntityCoordinates";
         private const string GlobalNullableEntityCoordinatesName = "global::Robust.Shared.Map.EntityCoordinates?";
@@ -37,6 +36,7 @@ namespace Robust.Shared.CompNetworkGenerator
 
         private const string GlobalEntityUidListName = "global::System.Collections.Generic.List<global::Robust.Shared.GameObjects.EntityUid>";
         private const string GlobalNetEntityUidListName = $"global::System.Collections.Generic.List<{GlobalNetEntityName}>";
+        private const string GlobalWeakEntityReferenceListName = $"global::System.Collections.Generic.List<{GlobalWeakEntityReferenceName}>";
 
         private const string GlobalDictionaryName = "global::System.Collections.Generic.Dictionary<TKey, TValue>";
         private const string GlobalHashSetName = "global::System.Collections.Generic.HashSet<T>";
@@ -252,27 +252,6 @@ namespace Robust.Shared.CompNetworkGenerator
                         deltaApply.Add($"fullState.{name} = {name};");
 
                         break;
-                    case GlobalWeakEntityReferenceListName:
-                        networkedType = $"{GlobalNetEntityUidListName}";
-
-                        stateFields.Append($@"
-                        public {networkedType} {name} = default!;");
-
-                        getField = $"GetNetEntityList(Resolve(component.{name}))";
-                        cast = $"({GlobalNetEntityUidListName})";
-
-                        handleStateSetters.Append($@"
-            component.{name} = GetWeakReferenceList(GetEntityList(state.{name}));");
-
-                        deltaHandleFields.Append($@"
-                    component.{name} = GetWeakReferenceList(GetEntityList({cast} {fieldHandleValue}))");
-
-                        shallowClone.Append($@"
-                {name} = this.{name},");
-
-                        deltaApply.Add($@"fullState.{name} = {name};");
-
-                        break;
                     case GlobalEntityCoordinatesName:
                     case GlobalNullableEntityCoordinatesName:
                         networkedType = $"NetCoordinates{nullableAnnotation}";
@@ -330,6 +309,27 @@ namespace Robust.Shared.CompNetworkGenerator
 
                         deltaHandleFields.Append($@"
                     EnsureEntityList<{componentName}>({cast} {fieldHandleValue}, uid, component.{name});");
+
+                        shallowClone.Append($@"
+                {name} = this.{name},");
+
+                        deltaApply.Add($@"fullState.{name} = {name};");
+
+                        break;
+                    case GlobalWeakEntityReferenceListName:
+                        networkedType = $"{GlobalNetEntityUidListName}";
+
+                        stateFields.Append($@"
+                        public {networkedType} {name} = default!;");
+
+                        getField = $"GetNetEntityList(Resolve(component.{name}))";
+                        cast = $"({GlobalNetEntityUidListName})";
+
+                        handleStateSetters.Append($@"
+            component.{name} = GetWeakReferenceList(GetEntityList(state.{name}));");
+
+                        deltaHandleFields.Append($@"
+                    component.{name} = GetWeakReferenceList(GetEntityList({cast} {fieldHandleValue}))");
 
                         shallowClone.Append($@"
                 {name} = this.{name},");

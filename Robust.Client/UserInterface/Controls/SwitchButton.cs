@@ -1,7 +1,9 @@
 using Robust.Client.Graphics;
-using Robust.Shared.ViewVariables;
-using static Robust.Client.UserInterface.Controls.Label;
 using Robust.Shared.Localization;
+using Robust.Shared.Maths;
+using Robust.Shared.ViewVariables;
+
+using static Robust.Client.UserInterface.Controls.Label;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -12,9 +14,11 @@ namespace Robust.Client.UserInterface.Controls
     public class SwitchButton : ContainerButton
     {
         public const string StyleClassSwitchButton = "switchButton";
+        public new const string StylePseudoClassPressed = "pressed";
+        public new const string StylePseudoClassDisabled = "disabled";
 
-        public const string StylePropertyTextureUnchecked = "textureUnchecked";
-        public const string StylePropertyTextureChecked = "textureChecked";
+        public const string StylePropertyIconTexture = "icon-texture";
+        public const string StylePropertyFontColor = "font-color";
 
         public Label Label { get; }
         public Label OffStateLabel { get; }
@@ -69,7 +73,26 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override void DrawModeChanged()
         {
-            base.DrawModeChanged();
+            if (Disabled)
+            {
+                AddStylePseudoClass(StylePseudoClassDisabled);
+            }
+            else
+            {
+                RemoveStylePseudoClass(StylePseudoClassDisabled);
+            }
+
+            if (Pressed)
+            {
+                AddStylePseudoClass(StylePseudoClassPressed);
+            }
+            else
+            {
+                RemoveStylePseudoClass(StylePseudoClassPressed);
+            }
+
+            // no base.DrawModeChanged() call - ContainerButton's pseudoclass handling
+            // doesn't support a button being both pressed and disabled
             UpdateAppearance();
         }
 
@@ -126,31 +149,37 @@ namespace Robust.Client.UserInterface.Controls
 
         private void UpdateAppearance()
         {
-            if ( Pressed )
+            TryGetStyleProperty(StylePropertyIconTexture, out Texture? texture);
+            if (texture is not null && TextureRect is not null)
             {
-                TryGetStyleProperty(StylePropertyTextureChecked, out Texture? texture);
-                if (texture is not null && TextureRect is not null)
-                {
-                    TextureRect.Texture = texture;
-                }
-
-                if (OffStateLabel is not null)
-                    OffStateLabel.Visible = false;
-                if (OnStateLabel is not null)
-                    OnStateLabel.Visible = true;
+                TextureRect.Texture = texture;
             }
-            else
-            {
-                TryGetStyleProperty(StylePropertyTextureUnchecked, out Texture? texture);
-                if (texture is not null && TextureRect is not null)
-                {
-                    TextureRect.Texture = texture;
-                }
 
+            TryGetStyleProperty(StylePropertyFontColor, out Color? fontColor);
+            if (fontColor is not null)
+            {
+                if (Label is not null)
+                {
+                    Label.FontColorOverride = fontColor;
+                }
                 if (OffStateLabel is not null)
-                    OffStateLabel.Visible = true;
+                {
+                    OffStateLabel.FontColorOverride = fontColor;
+                }
                 if (OnStateLabel is not null)
-                    OnStateLabel.Visible = false;
+                {
+                    OnStateLabel.FontColorOverride = fontColor;
+                }
+            }
+
+            if (OffStateLabel is not null)
+            {
+                OffStateLabel.Visible = !Pressed;
+            }
+
+            if (OnStateLabel is not null)
+            {
+                OnStateLabel.Visible = Pressed;
             }
         }
 

@@ -208,8 +208,10 @@ public sealed class DefaultStylesheet
              */
 
             Element<SwitchButton>()
-                .Prop(SwitchButton.StylePropertyTextureUnchecked, Texture.Black)
-                .Prop(SwitchButton.StylePropertyTextureChecked, Texture.White), // TODO: Add actual textures instead of this.
+                .Prop(SwitchButton.StylePropertyIconTexture, Texture.Black), // TODO: Add actual texture instead of this.
+
+            Element<SwitchButton>().Pseudo(SwitchButton.StylePseudoClassPressed)
+                .Prop(SwitchButton.StylePropertyIconTexture, Texture.White),  // TODO: Add actual texture instead of this.
 
             /*
              * LineEdit

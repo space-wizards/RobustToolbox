@@ -262,10 +262,10 @@ namespace Robust.Shared.CompNetworkGenerator
                         cast = $"({GlobalNetEntityUidListName})";
 
                         handleStateSetters.Append($@"
-            component.{name} = GetWeakReferenceList(state.{name});");
+            component.{name} = GetWeakReferenceList(GetEntityList(state.{name}));");
 
                         deltaHandleFields.Append($@"
-                    component.{name} = GetWeakReferenceList({cast} {fieldHandleValue})");
+                    component.{name} = GetWeakReferenceList(GetEntityList({cast} {fieldHandleValue}))");
 
                         shallowClone.Append($@"
                 {name} = this.{name},");

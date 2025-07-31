@@ -1646,13 +1646,6 @@ public partial class EntitySystem
         return EntityManager.GetWeakReferenceList(list);
     }
 
-    /// <inheritdoc cref="IEntityManager.GetWeakReferenceList(List{NetEntity})"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public List<WeakEntityReference> GetWeakReferenceList(List<NetEntity> list)
-    {
-        return EntityManager.GetWeakReferenceList(list);
-    }
-
     /// <inheritdoc cref="IEntityManager.Resolve(WeakEntityReference)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityUid? Resolve(WeakEntityReference weakRef)

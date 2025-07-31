@@ -528,11 +528,6 @@ namespace Robust.Shared.GameObjects
         public List<WeakEntityReference> GetWeakReferenceList(List<EntityUid> collection);
 
         /// <summary>
-        /// Converts a list of <see cref="NetEntity"/>s into a list of <see cref="WeakEntityReference"/>s.
-        /// </summary>
-        public List<WeakEntityReference> GetWeakReferenceList(List<NetEntity> list);
-
-        /// <summary>
         /// Attempts to resolve the given <see cref="WeakEntityReference"/> into an <see cref="EntityUid"/> that
         /// corresponds to an existing entity. If this fails, the entity has either been deleted, or for clients, the
         /// entity may not yet have been sent to them.

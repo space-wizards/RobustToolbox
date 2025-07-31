@@ -1418,18 +1418,6 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public List<WeakEntityReference> GetWeakReferenceList(List<NetEntity> list)
-        {
-            var outList = new List<WeakEntityReference>(list.Count);
-            foreach (var element in list)
-            {
-                if (TryGetEntity(element, out var ent))
-                    outList.Add(GetWeakReference(ent.Value));
-            }
-            return outList;
-        }
-
-        /// <inheritdoc />
         public EntityUid? Resolve(WeakEntityReference weakRef)
         {
             if (weakRef.Entity != EntityUid.Invalid

@@ -1639,6 +1639,20 @@ public partial class EntitySystem
         return EntityManager.GetWeakReference(uid, meta);
     }
 
+    /// <inheritdoc cref="IEntityManager.GetWeakReferenceList(List{EntityUid})"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected List<WeakEntityReference> GetWeakReferenceList(List<EntityUid> list)
+    {
+        return EntityManager.GetWeakReferenceList(list);
+    }
+
+    /// <inheritdoc cref="IEntityManager.GetWeakReferenceList(List{NetEntity})"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public List<WeakEntityReference> GetWeakReferenceList(List<NetEntity> list)
+    {
+        return EntityManager.GetWeakReferenceList(list);
+    }
+
     /// <inheritdoc cref="IEntityManager.Resolve(WeakEntityReference)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityUid? Resolve(WeakEntityReference weakRef)
@@ -1651,6 +1665,13 @@ public partial class EntitySystem
     protected EntityUid? Resolve(WeakEntityReference? weakRef)
     {
         return EntityManager.Resolve(weakRef);
+    }
+
+    /// <inheritdoc cref="IEntityManager.Resolve(IEnumerable{WeakEntityReference})"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public List<EntityUid> Resolve(List<WeakEntityReference> collection)
+    {
+        return EntityManager.Resolve(collection);
     }
 
     /// <inheritdoc cref="IEntityManager.Resolve{T}(ref WeakEntityReference{T})"/>

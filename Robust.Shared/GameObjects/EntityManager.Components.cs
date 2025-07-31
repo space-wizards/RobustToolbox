@@ -1407,6 +1407,29 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        public List<WeakEntityReference> GetWeakReferenceList(List<EntityUid> list)
+        {
+            var outList = new List<WeakEntityReference>(list.Count);
+            foreach (var element in list)
+            {
+                outList.Add(GetWeakReference(element));
+            }
+            return outList;
+        }
+
+        /// <inheritdoc />
+        public List<WeakEntityReference> GetWeakReferenceList(List<NetEntity> list)
+        {
+            var outList = new List<WeakEntityReference>(list.Count);
+            foreach (var element in list)
+            {
+                if (TryGetEntity(element, out var ent))
+                    outList.Add(GetWeakReference(ent.Value));
+            }
+            return outList;
+        }
+
+        /// <inheritdoc />
         public EntityUid? Resolve(WeakEntityReference weakRef)
         {
             if (weakRef.Entity != EntityUid.Invalid
@@ -1425,13 +1448,15 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<EntityUid> Resolve(IEnumerable<WeakEntityReference> collection)
+        public List<EntityUid> Resolve(List<WeakEntityReference> list)
         {
-            foreach (var element in collection)
+            var outList = new List<EntityUid>(list.Count);
+            foreach (var element in list)
             {
                 if (TryGetEntity(element, out var ent))
-                    yield return ent.Value;
+                    outList.Add(ent.Value);
             }
+            return outList;
         }
 
         /// <inheritdoc />

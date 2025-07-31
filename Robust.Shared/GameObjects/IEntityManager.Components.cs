@@ -523,6 +523,16 @@ namespace Robust.Shared.GameObjects
         WeakEntityReference? GetWeakReference(EntityUid? uid, MetaDataComponent? meta = null);
 
         /// <summary>
+        /// Converts a list of <see cref="EntityUid"/>s into a list of <see cref="WeakEntityReference"/>s.
+        /// </summary>
+        public List<WeakEntityReference> GetWeakReferenceList(List<EntityUid> collection);
+
+        /// <summary>
+        /// Converts a list of <see cref="NetEntity"/>s into a list of <see cref="WeakEntityReference"/>s.
+        /// </summary>
+        public List<WeakEntityReference> GetWeakReferenceList(List<NetEntity> list);
+
+        /// <summary>
         /// Attempts to resolve the given <see cref="WeakEntityReference"/> into an <see cref="EntityUid"/> that
         /// corresponds to an existing entity. If this fails, the entity has either been deleted, or for clients, the
         /// entity may not yet have been sent to them.
@@ -533,10 +543,10 @@ namespace Robust.Shared.GameObjects
         EntityUid? Resolve(WeakEntityReference? weakRef);
 
         /// <summary>
-        /// Attempts to resolve a collection of <see cref="WeakEntityReference"/>s into a collection of
+        /// Attempts to resolve a list of <see cref="WeakEntityReference"/>s into a list of
         /// <see cref="EntityUid"/>s. Any references to deleted or non-existent entities are skipped.
         /// </summary>
-        public IEnumerable<EntityUid> Resolve(IEnumerable<WeakEntityReference> collection);
+        public List<EntityUid> Resolve(List<WeakEntityReference> collection);
 
         bool TryGetEntity(WeakEntityReference weakRef, [NotNullWhen(true)] out EntityUid? entity);
 

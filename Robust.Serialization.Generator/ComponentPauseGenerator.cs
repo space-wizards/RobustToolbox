@@ -1,8 +1,9 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Robust.Roslyn.Shared;
+using Robust.Roslyn.Shared.Helpers;
 using Robust.Roslyn.Shared.Helpers;
 
 namespace Robust.Serialization.Generator;
@@ -85,11 +86,16 @@ public sealed class ComponentPauseGenerator : IIncrementalGenerator
 
                     var invalid = false;
                     var nullable = false;
+                    var dictionary = false;
                     if (namedType.Name != "TimeSpan")
                     {
                         if (namedType is { Name: "Nullable", TypeArguments: [{Name: "TimeSpan"}] })
                         {
                             nullable = true;
+                        }
+                        else if (namedType is { Name: "Dictionary", TypeArguments: [{}, {Name: "TimeSpan"}]})
+                        {
+                            dictionary = true;
                         }
                         else
                         {
@@ -101,7 +107,7 @@ public sealed class ComponentPauseGenerator : IIncrementalGenerator
                     if (AttributeHelper.HasAttribute(member, AutoNetworkFieldAttributeName, out var _))
                         dirty = true;
 
-                    fieldBuilder.Add(new FieldInfo(member.Name, nullable, invalid, member.Locations[0]));
+                    fieldBuilder.Add(new FieldInfo(member.Name, nullable, invalid, dictionary, member.Locations[0]));
                 }
 
                 return new ComponentInfo(
@@ -181,6 +187,13 @@ public sealed class ComponentPauseGenerator : IIncrementalGenerator
                                     component.{field.Name} = component.{field.Name}.Value + args.PausedTime;
                         """);
                 }
+                if (field.Dictionary)
+                {
+                    builder.AppendLine($"""
+                                foreach (var key in component.{field.Name}.Keys)
+                                    component.{field.Name}[key] = component.{field.Name}[key] + args.PausedTime;
+                        """);
+                }
                 else
                 {
                     builder.AppendLine($"        component.{field.Name} += args.PausedTime;");
@@ -247,7 +260,7 @@ public sealed class ComponentPauseGenerator : IIncrementalGenerator
         bool NotComponent,
         Location Location);
 
-    public sealed record FieldInfo(string Name, bool Nullable, bool Invalid, Location Location);
+    public sealed record FieldInfo(string Name, bool Nullable, bool Invalid, bool Dictionary, Location Location);
 
     public sealed record AllFieldInfo(string Name, string ParentDisplayName, Location Location);
 }

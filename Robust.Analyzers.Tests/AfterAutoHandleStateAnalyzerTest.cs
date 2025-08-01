@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
@@ -10,8 +9,7 @@ using VerifyCS =
 namespace Robust.Analyzers.Tests;
 
 [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
-[TestFixture, TestOf(typeof(ByRefEventAnalyzer))]
-
+[TestFixture, TestOf(typeof(AfterAutoHandleStateAnalyzer))]
 public sealed class AfterAutoHandleStateAnalyzerTest
 {
     private const string SubscribeEventDef = """

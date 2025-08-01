@@ -191,7 +191,7 @@ public sealed class ComponentPauseGenerator : IIncrementalGenerator
                 {
                     builder.AppendLine($"""
                                 foreach (var key in component.{field.Name}.Keys)
-                                    component.{field.Name}[key] = component.{field.Name}[key] + args.PausedTime;
+                                    component.{field.Name}[key] += args.PausedTime;
                         """);
                 }
                 else

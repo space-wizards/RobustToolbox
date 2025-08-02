@@ -8,17 +8,19 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     internal interface IEntityLoadContext
     {
-        /// <summary> Tries getting the data of the provided component. </summary>
-        /// <param name="componentName"> Name of component to find. </param>
-        /// <param name="component"> Found component or null. </param>
-        /// <returns> True if component was found, false otherwise. </returns>
+        /// <summary>Tries getting the data of the given component.</summary>
+        /// <param name="componentName">Name of component to find.</param>
+        /// <param name="component">Found component or null.</param>
+        /// <returns>True if the component was found, false otherwise.</returns>
+        /// <seealso cref="TryGetComponent{T}"/>
         bool TryGetComponent(string componentName, [NotNullWhen(true)] out IComponent? component);
 
-        /// <summary> Attempts to get component of type <typeparamref name="TComponent"/>. </summary>
-        /// <typeparam name="TComponent">Type of component to be found</typeparam>
-        /// <param name="componentFactory">Component factory that will help getting name for provided <see cref="TComponent"/>.</param>
-        /// <param name="component">Component from registry. Will be null if registry have no component of type <typeparamref name="TComponent"/>.</param>
-        /// <returns>Returns true if component was found on registry, false otherwise.</returns>
+        /// <summary>Tries getting the data of the given component.</summary>
+        /// <typeparam name="TComponent">Type of component to be found.</typeparam>
+        /// <param name="componentFactory">Component factory required for the lookup.</param>
+        /// <param name="component">Found component or null.</param>
+        /// <returns>True if the component was found, false otherwise.</returns>
+        /// <seealso cref="TryGetComponent"/>
         bool TryGetComponent<TComponent>(
             IComponentFactory componentFactory,
             [NotNullWhen(true)] out TComponent? component

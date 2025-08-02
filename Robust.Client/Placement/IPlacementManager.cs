@@ -1,5 +1,8 @@
 ﻿using System;
+using Robust.Client.Graphics;
 using Robust.Shared.Enums;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
@@ -17,6 +20,10 @@ namespace Robust.Client.Placement
         bool Replacement { get; set; }
         PlacementMode? CurrentMode { get; set; }
         PlacementInformation? CurrentPermission { get; set; }
+
+        IEntityManager EntityManager { get; }
+        IEyeManager EyeManager { get; }
+        IMapManager MapManager { get; }
 
         /// <summary>
         /// The direction to spawn the entity in (presently exposed for EntitySpawnWindow UI)
@@ -49,5 +56,15 @@ namespace Robust.Client.Placement
         void ToggleEraserHijacked(PlacementHijack hijack);
 
         void FrameUpdate(FrameEventArgs e);
+
+        /// <summary>
+        /// The name of the placement mode option to just use the default for the selected entity.
+        /// </summary>
+        const string DefaultModeName = "Default";
+
+        /// <summary>
+        /// An array of the names of all available placement modes.
+        /// </summary>
+        string[] AllModeNames { get; }
     }
 }

@@ -43,4 +43,22 @@ public static class AttributeHelper
 
         return defaultValue;
     }
+
+    public static bool HasAttribute(
+        INamedTypeSymbol symbol,
+        INamedTypeSymbol attribute,
+        [NotNullWhen(true)] out AttributeData? matchedAttribute)
+    {
+        matchedAttribute = null;
+        foreach (var typeAttribute in symbol.GetAttributes())
+        {
+            if (SymbolEqualityComparer.Default.Equals(typeAttribute.AttributeClass, attribute))
+            {
+                matchedAttribute = typeAttribute;
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

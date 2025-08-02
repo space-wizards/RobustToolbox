@@ -113,9 +113,9 @@ public class PoolManager<TPair> : BasePoolManager where TPair : class, ITestPair
         TestPrototypes.Clear();
     }
 
-    protected virtual string GetDefaultTestName(TestContext testContext)
+    protected virtual string GetDefaultTestName(ITestContextLike testContext)
     {
-        return testContext.Test.FullName.Replace("Robust.UnitTesting.", "");
+        return testContext.FullName.Replace("Robust.UnitTesting.", "");
     }
 
     public string DeathReport()
@@ -140,16 +140,17 @@ public class PoolManager<TPair> : BasePoolManager where TPair : class, ITestPair
 
     public virtual PairSettings DefaultSettings => new();
 
-    public async Task<TPair> GetPair(PairSettings? settings = null)
+    public async Task<TPair> GetPair(
+        PairSettings? settings = null,
+        ITestContextLike? testContext = null)
     {
         if (!_initialized)
             throw new InvalidOperationException($"Pool manager has not been initialized");
 
         settings ??= DefaultSettings;
 
-        // Trust issues with the AsyncLocal that backs this.
-        var testContext = TestContext.CurrentContext;
-        var testOut = TestContext.Out;
+        testContext ??= new NUnitTestContextWrap(TestContext.CurrentContext, TestContext.Out);
+        var testOut = testContext.Out;
 
         DieIfPoolFailure();
         var currentTestName = settings.TestName ?? GetDefaultTestName(testContext);

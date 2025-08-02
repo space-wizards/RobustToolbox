@@ -70,11 +70,14 @@ namespace Robust.Shared.GameObjects
 
         private void MapManagerOnTileChanged(ref TileChangedEvent e)
         {
-            if(e.NewTile.Tile != Tile.Empty)
-                return;
+            foreach (var change in e.Changes)
+            {
+                if(change.NewTile != Tile.Empty)
+                    continue;
 
-            // TODO optimize this for when multiple tiles get empties simultaneously (e.g., explosions).
-            DeparentAllEntsOnTile(e.NewTile.GridUid, e.NewTile.GridIndices);
+                // TODO optimize this for when multiple tiles get empties simultaneously (e.g., explosions).
+                DeparentAllEntsOnTile(e.Entity, change.GridIndices);
+            }
         }
 
         /// <summary>
@@ -260,7 +263,7 @@ namespace Robust.Shared.GameObjects
             return true;
         }
 
-        public void RaiseMoveEvent(
+        internal void RaiseMoveEvent(
             Entity<TransformComponent, MetaDataComponent> ent,
             EntityUid oldParent,
             Vector2 oldPosition,

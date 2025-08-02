@@ -161,7 +161,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Returns true if the entity's data (apart from transform) is default.
         /// </summary>
-        public bool IsDefault(EntityUid uid)
+        public bool IsDefault(EntityUid uid, ICollection<string>? ignoredComps = null)
         {
             if (!MetaQuery.TryGetComponent(uid, out var metadata) || metadata.EntityPrototype == null)
                 return false;
@@ -194,6 +194,9 @@ namespace Robust.Shared.GameObjects
                     continue;
 
                 var compName = _componentFactory.GetComponentName(compType);
+
+                if (ignoredComps?.Contains(compName) == true)
+                    continue;
 
                 // If the component isn't on the prototype then it's custom.
                 if (!protoData.TryGetValue(compName, out var protoMapping))
@@ -498,7 +501,7 @@ namespace Robust.Shared.GameObjects
             if (Deleted(uid.Value))
                 return false;
 
-            if (!QueuedDeletionsSet.Add(uid.Value))
+            if (QueuedDeletionsSet.Contains(uid.Value))
                 return false;
 
             QueueDeleteEntity(uid);

@@ -1,0 +1,34 @@
+﻿name: Build All Configurations
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        targetOS: [Windows, Linux, MacOS]
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          submodules: true
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4.1.0
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Install dependencies
+        run: dotnet restore
+      - name: Build Debug
+        run: dotnet build --no-restore --configuration Debug /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }}
+      - name: Build Tools
+        run: dotnet build --no-restore --configuration Tools /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }}
+      - name: Build Release
+        run: dotnet build --no-restore --configuration Release /p:WarningsAsErrors=nullable /p:TargetOS=${{ matrix.targetOS }}

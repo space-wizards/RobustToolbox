@@ -94,6 +94,10 @@ namespace Robust.UnitTesting
 
                     OnServerReturn(server).Wait();
 
+                    // Ensure the instance is properly idle to avoid inconsistencies in behavior
+                    // between pooled and non-pooled returns.
+                    server.MarkNonIdle();
+
                     _serversRunning[server] = 0;
                     instance = server;
                 }
@@ -138,6 +142,10 @@ namespace Robust.UnitTesting
                     client.ClientOptions = options;
 
                     OnClientReturn(client).Wait();
+
+                    // Ensure the instance is properly idle to avoid inconsistencies in behavior
+                    // between pooled and non-pooled returns.
+                    client.MarkNonIdle();
 
                     _clientsRunning[client] = 0;
                     instance = client;
@@ -329,6 +337,8 @@ namespace Robust.UnitTesting
             [Pure]
             public T System<T>() where T : IEntitySystem
             {
+                CheckThreadOrIdle();
+
                 return EntMan.System<T>();
             }
 
@@ -337,11 +347,15 @@ namespace Robust.UnitTesting
 
             public TransformComponent Transform(EntityUid uid)
             {
+                CheckThreadOrIdle();
+
                 return EntMan.GetComponent<TransformComponent>(uid);
             }
 
             public MetaDataComponent MetaData(EntityUid uid)
             {
+                CheckThreadOrIdle();
+
                 return EntMan.GetComponent<MetaDataComponent>(uid);
             }
 
@@ -361,11 +375,7 @@ namespace Robust.UnitTesting
             {
                 get
                 {
-                    if (!_isSurelyIdle)
-                    {
-                        throw new InvalidOperationException(
-                            "Cannot read this without ensuring that the instance is idle.");
-                    }
+                    CheckThreadOrIdle();
 
                     return _isAlive;
                 }
@@ -381,11 +391,7 @@ namespace Robust.UnitTesting
             {
                 get
                 {
-                    if (!_isSurelyIdle)
-                    {
-                        throw new InvalidOperationException(
-                            "Cannot read this without ensuring that the instance is idle.");
-                    }
+                    CheckThreadOrIdle();
 
                     return _unhandledException;
                 }
@@ -427,11 +433,7 @@ namespace Robust.UnitTesting
             [Pure]
             public T ResolveDependency<T>()
             {
-                if (!_isSurelyIdle)
-                {
-                    throw new InvalidOperationException(
-                        "Cannot resolve services without ensuring that the instance is idle.");
-                }
+                CheckThreadOrIdle();
 
                 return DependencyCollection.Resolve<T>();
             }
@@ -602,6 +604,11 @@ namespace Robust.UnitTesting
                 await WaitIdleAsync();
             }
 
+            internal void MarkNonIdle()
+            {
+                Post(() => {});
+            }
+
             public virtual Task Cleanup() => Task.CompletedTask;
 
             public void Dispose()
@@ -624,6 +631,18 @@ namespace Robust.UnitTesting
                         resMan.MountString($"/Prototypes/__integration_extra_{i}.yml", list[i]);
                     }
                 }
+            }
+
+            private void CheckThreadOrIdle()
+            {
+                if (_isSurelyIdle)
+                    return;
+
+                if (Thread.CurrentThread == InstanceThread)
+                    return;
+
+                throw new InvalidOperationException(
+                    "Cannot perform this operation without ensuring the instance is idle.");
             }
         }
 
@@ -745,6 +764,8 @@ namespace Robust.UnitTesting
 
                     (CVars.ResCheckBadFileExtensions.Name, "false")
                 });
+
+                cfg.SetVirtualConfig();
 
                 server.ContentStart = Options?.ContentStart ?? false;
                 var logHandler = Options?.OverrideLogHandler ?? (() => new TestLogHandler(cfg, "SERVER", _testOut));
@@ -1013,6 +1034,8 @@ namespace Robust.UnitTesting
 
                     (CVars.ResCheckBadFileExtensions.Name, "false")
                 });
+
+                cfg.SetVirtualConfig();
 
                 GameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>(),
                     _fromInstanceWriter, _toInstanceReader);

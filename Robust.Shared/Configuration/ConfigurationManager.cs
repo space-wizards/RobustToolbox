@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -25,7 +26,7 @@ namespace Robust.Shared.Configuration
 
         private const char TABLE_DELIMITER = '.';
         protected readonly Dictionary<string, ConfigVar> _configVars = new();
-        private string? _configFile;
+        private ConfigFileStorage? _configFile;
         protected bool _isServer;
 
         protected readonly ReaderWriterLockSlim Lock = new();
@@ -182,7 +183,7 @@ namespace Robust.Shared.Configuration
             {
                 using var file = File.OpenRead(configFile);
                 var result = LoadFromTomlStream(file);
-                _configFile = configFile;
+                SetSaveFile(configFile);
                 _sawmill.Info($"Configuration loaded from file");
                 return result;
             }
@@ -195,7 +196,12 @@ namespace Robust.Shared.Configuration
 
         public void SetSaveFile(string configFile)
         {
-            _configFile = configFile;
+            _configFile = new ConfigFileStorageDisk { Path = configFile };
+        }
+
+        public void SetVirtualConfig()
+        {
+            _configFile = new ConfigFileStorageVirtual();
         }
 
         public void CheckUnusedCVars()
@@ -312,8 +318,27 @@ namespace Robust.Shared.Configuration
                 var memoryStream = new MemoryStream();
                 SaveToTomlStream(memoryStream, cvars);
                 memoryStream.Position = 0;
-                using var file = File.Create(_configFile);
-                memoryStream.CopyTo(file);
+
+                switch (_configFile)
+                {
+                    case ConfigFileStorageDisk disk:
+                    {
+                        using var file = File.Create(disk.Path);
+                        memoryStream.CopyTo(file);
+                        break;
+                    }
+                    case ConfigFileStorageVirtual @virtual:
+                    {
+                        @virtual.Stream.SetLength(0);
+                        memoryStream.CopyTo(@virtual.Stream);
+                        break;
+                    }
+                    default:
+                    {
+                        throw new UnreachableException();
+                    }
+                }
+
                 _sawmill.Info($"config saved to '{_configFile}'.");
             }
             catch (Exception e)
@@ -954,6 +979,30 @@ namespace Robust.Shared.Configuration
         }
 
         protected delegate void ValueChangedDelegate(object value, in CVarChangeInfo info);
+
+        private abstract class ConfigFileStorage;
+
+        private sealed class ConfigFileStorageDisk : ConfigFileStorage
+        {
+            public required string Path;
+
+            public override string ToString()
+            {
+                return Path;
+            }
+        }
+
+        private sealed class ConfigFileStorageVirtual : ConfigFileStorage
+        {
+            // I did not realize when adding this class that there is currently no way to *load* this data again.
+            // Oh well, might be useful for a future unit test.
+            public readonly MemoryStream Stream = new();
+
+            public override string ToString()
+            {
+                return "<VIRTUAL>";
+            }
+        }
     }
 
     [Serializable]

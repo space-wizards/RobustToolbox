@@ -21,7 +21,6 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class LineEdit : Control
     {
-        [Dependency] private readonly IClyde _clyde = default!;
         [Dependency] private readonly IConfigurationManager _cfgManager = default!;
         [Dependency] private readonly IGameTiming _timing = default!;
 

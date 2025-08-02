@@ -16,7 +16,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.Audio.Midi;
 
-internal sealed class MidiRenderer : IMidiRenderer
+internal sealed partial class MidiRenderer : IMidiRenderer
 {
     private readonly IMidiManager _midiManager;
     private readonly ITaskManager _taskManager;
@@ -226,6 +226,9 @@ internal sealed class MidiRenderer : IMidiRenderer
             if (value == _master)
                 return;
 
+            if (CheckMasterCycle(value))
+                throw new InvalidOperationException("Tried to set master to a child of this renderer!");
+
             if (_master is { Disposed: false })
             {
                 try
@@ -432,15 +435,6 @@ internal sealed class MidiRenderer : IMidiRenderer
         _sequencer.RemoveEvents(SequencerClientId.Wildcard, SequencerClientId.Wildcard, -1);
     }
 
-    public void LoadSoundfont(string filename, bool resetPresets = true)
-    {
-        lock (_playerStateLock)
-        {
-            _synth.LoadSoundFont(filename, resetPresets);
-            MidiSoundfont = 1;
-        }
-    }
-
     void IMidiRenderer.Render()
     {
         Render();
@@ -581,18 +575,28 @@ internal sealed class MidiRenderer : IMidiRenderer
                     case RobustMidiCommand.NoteOff:
                         _rendererState.NoteVelocities.AsSpan[midiEvent.Channel].AsSpan[midiEvent.Key] = 0;
                         _synth.NoteOff(midiEvent.Channel, midiEvent.Key);
-                        break;
 
+                        break;
                     case RobustMidiCommand.NoteOn:
+                        // Velocity 0 *can* represent a NoteOff event.
+                        var velocity = midiEvent.Velocity;
+                        if (velocity == 0)
+                        {
+                            _rendererState.NoteVelocities.AsSpan[midiEvent.Channel].AsSpan[midiEvent.Key] = 0;
+                            _synth.NoteOn(midiEvent.Channel, midiEvent.Key, velocity);
+
+                            break;
+                        }
+
                         if (FilteredChannels[midiEvent.Channel])
                             break;
 
-                        var velocity = VelocityOverride ?? midiEvent.Velocity;
+                        velocity = VelocityOverride ?? midiEvent.Velocity;
 
                         _rendererState.NoteVelocities.AsSpan[midiEvent.Channel].AsSpan[midiEvent.Key] = velocity;
                         _synth.NoteOn(midiEvent.Channel, midiEvent.Key, velocity);
-                        break;
 
+                        break;
                     case RobustMidiCommand.AfterTouch:
                         _rendererState.NoteVelocities.AsSpan[midiEvent.Channel].AsSpan[midiEvent.Key] = midiEvent.Value;
                         _synth.KeyPressure(midiEvent.Channel, midiEvent.Key, midiEvent.Value);
@@ -728,5 +732,23 @@ internal sealed class MidiRenderer : IMidiRenderer
 
         _synth?.Dispose();
         _player?.Dispose();
+    }
+
+    /// <summary>
+    /// Check that a given renderer is not already a child of this renderer, i.e. it would introduce a cycle if set as master of this renderer.
+    /// </summary>
+    private bool CheckMasterCycle(IMidiRenderer? otherRenderer)
+    {
+        // Doesn't inside drift, cringe.
+
+        while (otherRenderer != null)
+        {
+            if (otherRenderer == this)
+                return true;
+
+            otherRenderer = otherRenderer.Master;
+        }
+
+        return false;
     }
 }

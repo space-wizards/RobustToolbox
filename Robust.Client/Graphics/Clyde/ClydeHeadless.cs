@@ -17,8 +17,6 @@ using Robust.Shared.Timing;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Color = Robust.Shared.Maths.Color;
-using Vector3 = Robust.Shared.Maths.Vector3;
-using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -70,6 +68,11 @@ namespace Robust.Client.Graphics.Clyde
         public Texture GetStockTexture(ClydeStockTexture stockTexture)
         {
             return new DummyTexture((1, 1));
+        }
+
+        public IEnumerable<(Clyde.ClydeTexture, Clyde.LoadedTexture)> GetLoadedTextures()
+        {
+            return [];
         }
 
         public ClydeDebugLayers DebugLayers { get; set; }
@@ -302,7 +305,7 @@ namespace Robust.Client.Graphics.Clyde
             action();
         }
 
-        public IFileDialogManager? FileDialogImpl => null;
+        public IFileDialogManagerImplementation? FileDialogImpl => null;
 
         private sealed class DummyCursor : ICursor
         {
@@ -393,7 +396,7 @@ namespace Robust.Client.Graphics.Clyde
             {
             }
 
-            private protected override void SetParameterImpl(string name, in Matrix4 value)
+            private protected override void SetParameterImpl(string name, in Matrix4x4 value)
             {
             }
 

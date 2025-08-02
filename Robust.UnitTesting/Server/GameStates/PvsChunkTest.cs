@@ -141,6 +141,10 @@ public sealed class PvsChunkTest : RobustIntegrationTest
         Assert.That(cEntMan.TryGetEntity(nMap1, out _));
         Assert.That(!cEntMan.TryGetEntity(nMap2, out _));
         Assert.That(cEntMan.TryGetEntity(nGrid, out _));
+
+        await client.WaitPost(() => netMan.ClientDisconnect(""));
+        await server.WaitRunTicks(5);
+        await client.WaitRunTicks(5);
     }
 }
 

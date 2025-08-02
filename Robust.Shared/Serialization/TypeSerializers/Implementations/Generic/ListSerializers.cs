@@ -127,8 +127,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             SerializationHookContext hookCtx, ISerializationContext? context,
             ISerializationManager.InstantiationDelegate<IReadOnlyList<T>>? instanceProvider)
         {
-            if(instanceProvider != null)
-                Logger.Warning($"Provided value to a Read-call for a {nameof(IReadOnlySet<T>)}. Ignoring...");
+            if (instanceProvider != null)
+            {
+                var sawmill = dependencies.Resolve<ILogManager>().GetSawmill("szr");
+                sawmill.Warning($"Provided value to a Read-call for a {nameof(IReadOnlySet<T>)}. Ignoring...");
+            }
 
             var list = new List<T>();
 
@@ -146,8 +149,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             SerializationHookContext hookCtx, ISerializationContext? context,
             ISerializationManager.InstantiationDelegate<IReadOnlyCollection<T>>? instanceProvider)
         {
-            if(instanceProvider != null)
-                Logger.Warning($"Provided value to a Read-call for a {nameof(IReadOnlyCollection<T>)}. Ignoring...");
+            if (instanceProvider != null)
+            {
+                var sawmill = dependencies.Resolve<ILogManager>().GetSawmill("szr");
+                sawmill.Warning($"Provided value to a Read-call for a {nameof(IReadOnlyCollection<T>)}. Ignoring...");
+            }
 
             var list = new List<T>();
 
@@ -165,8 +171,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             SerializationHookContext hookCtx, ISerializationContext? context,
             ISerializationManager.InstantiationDelegate<ImmutableList<T>>? instanceProvider)
         {
-            if(instanceProvider != null)
-                Logger.Warning($"Provided value to a Read-call for a {nameof(ImmutableList<T>)}. Ignoring...");
+            if (instanceProvider != null)
+            {
+                var sawmill = dependencies.Resolve<ILogManager>().GetSawmill("szr");
+                sawmill.Warning($"Provided value to a Read-call for a {nameof(ImmutableList<T>)}. Ignoring...");
+            }
 
             var list = ImmutableList.CreateBuilder<T>();
 

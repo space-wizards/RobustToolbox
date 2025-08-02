@@ -172,10 +172,20 @@ public partial class EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void DirtyFields<T>(EntityUid uid, T comp, MetaDataComponent? meta, params ReadOnlySpan<string> fields)
+    protected void DirtyFields<T>(EntityUid uid, T comp, MetaDataComponent? meta, params string[] fields)
         where T : IComponentDelta
     {
         EntityManager.DirtyFields(uid, comp, meta, fields);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void DirtyFields<T>(Entity<T?> ent, MetaDataComponent? meta, params string[] fields)
+        where T : IComponentDelta
+    {
+        if (!Resolve(ent, ref ent.Comp))
+            return;
+
+        EntityManager.DirtyFields(ent, ent.Comp, meta, fields);
     }
 
     /// <summary>
@@ -655,7 +665,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.AddComponent&lt;T&gt;(EntityUid)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected T AddComp<T>(EntityUid uid) where T :  Component, new()
+    protected T AddComp<T>(EntityUid uid) where T :  IComponent, new()
     {
         return EntityManager.AddComponent<T>(uid);
     }
@@ -772,6 +782,34 @@ public partial class EntitySystem
         EntityManager.QueueDeleteEntity(uid);
     }
 
+    /// <inheritdoc cref="IEntityManager.DeleteEntity(EntityUid?)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void PredictedDel(Entity<MetaDataComponent?, TransformComponent?> ent)
+    {
+        EntityManager.PredictedDeleteEntity(ent);
+    }
+
+    /// <inheritdoc cref="IEntityManager.DeleteEntity(EntityUid?)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void PredictedDel(Entity<MetaDataComponent?, TransformComponent?>? ent)
+    {
+        EntityManager.PredictedDeleteEntity(ent);
+    }
+
+    /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void PredictedQueueDel(Entity<MetaDataComponent?, TransformComponent?> ent)
+    {
+        EntityManager.PredictedQueueDeleteEntity(ent);
+    }
+
+    /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid?)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void PredictedQueueDel(Entity<MetaDataComponent?, TransformComponent?>? ent)
+    {
+        EntityManager.PredictedQueueDeleteEntity(ent);
+    }
+
     /// <inheritdoc cref="IEntityManager.TryQueueDeleteEntity(EntityUid?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool TryQueueDel(EntityUid? uid)
@@ -802,8 +840,8 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.SpawnAttachedTo" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected EntityUid SpawnAttachedTo(string? prototype, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
-        => EntityManager.SpawnAttachedTo(prototype, coordinates, overrides);
+    protected EntityUid SpawnAttachedTo(string? prototype, EntityCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default)
+        => EntityManager.SpawnAttachedTo(prototype, coordinates, overrides, rotation);
 
     /// <inheritdoc cref="IEntityManager.SpawnAtPosition" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -857,6 +895,74 @@ public partial class EntitySystem
         ComponentRegistry? overrides = null)
     {
         return EntityManager.SpawnInContainerOrDrop(protoName, containerUid, containerId, xform, container, overrides);
+    }
+
+    #endregion
+
+    #region PredictedSpawning
+
+    protected void FlagPredicted(Entity<MetaDataComponent?> ent)
+    {
+        EntityManager.FlagPredicted(ent);
+    }
+
+    /// <inheritdoc cref="IEntityManager.SpawnAttachedTo" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid PredictedSpawnAttachedTo(string? prototype, EntityCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default)
+        => EntityManager.PredictedSpawnAttachedTo(prototype, coordinates, overrides, rotation);
+
+    /// <inheritdoc cref="IEntityManager.SpawnAtPosition" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid PredictedSpawnAtPosition(string? prototype, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
+        => EntityManager.PredictedSpawnAtPosition(prototype, coordinates, overrides);
+
+    /// <inheritdoc cref="IEntityManager.TrySpawnInContainer" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool PredictedTrySpawnInContainer(
+        string? protoName,
+        EntityUid containerUid,
+        string containerId,
+        [NotNullWhen(true)] out EntityUid? uid,
+        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null)
+    {
+        return EntityManager.PredictedTrySpawnInContainer(protoName, containerUid, containerId, out uid, containerComp, overrides);
+    }
+
+    /// <inheritdoc cref="IEntityManager.TrySpawnNextTo" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool PredictedTrySpawnNextTo(
+        string? protoName,
+        EntityUid target,
+        [NotNullWhen(true)] out EntityUid? uid,
+        TransformComponent? xform = null,
+        ComponentRegistry? overrides = null)
+    {
+        return EntityManager.PredictedTrySpawnNextTo(protoName, target, out uid, xform, overrides);
+    }
+
+    /// <inheritdoc cref="IEntityManager.SpawnNextToOrDrop" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid PredictedSpawnNextToOrDrop(
+        string? protoName,
+        EntityUid target,
+        TransformComponent? xform = null,
+        ComponentRegistry? overrides = null)
+    {
+        return EntityManager.PredictedSpawnNextToOrDrop(protoName, target, xform, overrides);
+    }
+
+    /// <inheritdoc cref="IEntityManager.SpawnInContainerOrDrop" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid PredictedSpawnInContainerOrDrop(
+        string? protoName,
+        EntityUid containerUid,
+        string containerId,
+        TransformComponent? xform = null,
+        ContainerManagerComponent? container = null,
+        ComponentRegistry? overrides = null)
+    {
+        return EntityManager.PredictedSpawnInContainerOrDrop(protoName, containerUid, containerId, xform, container, overrides);
     }
 
     #endregion

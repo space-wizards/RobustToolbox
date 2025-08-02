@@ -5,12 +5,14 @@
     MinSize="300 200">
     <BoxContainer Orientation="Vertical">
         <BoxContainer Orientation="Horizontal">
-            <LineEdit Name="SearchBar" Access="Public" HorizontalExpand="True" PlaceHolder="Search"/>
-            <Button Name="ClearButton" Access="Public" Text="Clear"/>
+            <LineEdit Name="SearchBar" Access="Public" HorizontalExpand="True" PlaceHolder="{Loc window-search-bar-placeholder}"/>
+            <Button Name="ClearButton" Access="Public" Text="{Loc window-clear-button}"/>
         </BoxContainer>
         <ItemList Name="TileList" Access="Public" VerticalExpand="True"/>
         <BoxContainer Orientation="Horizontal">
+            <Button Name="MirroredButton" Access="Public" ToggleMode="True" Text="{Loc tile-spawn-window-mirror-button-text}"/>
             <Button Name="EraseButton" Access="Public" ToggleMode="True" Text="{Loc window-erase-button-text}"/>
         </BoxContainer>
+        <Label Name="RotationLabel" Access="Public"/>
     </BoxContainer>
 </TileSpawnWindow>

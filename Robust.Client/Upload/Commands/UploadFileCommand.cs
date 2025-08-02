@@ -1,3 +1,4 @@
+using System.IO;
 using Robust.Client.UserInterface;
 using Robust.Shared;
 using Robust.Shared.Configuration;
@@ -36,7 +37,7 @@ public sealed class UploadFileCommand : IConsoleCommand
         var path = new ResPath(args[0]).ToRelativePath();
 
         var filters = new FileDialogFilters(new FileDialogFilters.Group(path.Extension));
-        await using var file = await _dialog.OpenFile(filters);
+        await using var file = await _dialog.OpenFile(filters, FileAccess.Read);
 
         if (file == null)
         {

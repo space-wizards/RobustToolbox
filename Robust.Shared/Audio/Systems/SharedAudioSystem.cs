@@ -195,7 +195,6 @@ public abstract partial class SharedAudioSystem : EntitySystem
             component.PlaybackPosition = (float) (Timing.CurTime - component.AudioStart).TotalSeconds;
 
             DirtyField(entity.Value, component, nameof(AudioComponent.AudioStart));
-            DirtyField(entity.Value, component, nameof(AudioComponent.PlaybackPosition));
         }
 
         // If we were stopped then played then restart audiostart to now.
@@ -412,6 +411,13 @@ public abstract partial class SharedAudioSystem : EntitySystem
         if (component.Params.Volume.Equals(value))
             return;
 
+        // Not a log error for now because if something has a negative infinity volume (i.e. 0 gain) then subtracting from it can
+        // easily cause this and making callers deal with it everywhere is quite annoying.
+        if (float.IsNaN(value))
+        {
+            value = float.NegativeInfinity;
+        }
+
         component.Params.Volume = value;
         component.Volume = value;
         DirtyField(entity.Value, component, nameof(AudioComponent.Params));
@@ -423,11 +429,15 @@ public abstract partial class SharedAudioSystem : EntitySystem
     /// Gets the timespan of the specified audio.
     /// </summary>
     public TimeSpan GetAudioLength(ResolvedSoundSpecifier specifier)
-    {
-        var filename = GetAudioPath(specifier) ?? string.Empty;
-        if (!filename.StartsWith("/"))
-            throw new ArgumentException("Path must be rooted");
+        => GetAudioLength(GetAudioPath(specifier));
 
+    /// <summary>
+    /// Gets the timespan of the specified filename.
+    /// </summary>
+    protected TimeSpan GetAudioLength(string filename)
+    {
+        if (!filename.StartsWith('/'))
+            throw new ArgumentException("Path must be rooted");
         return GetAudioLengthImpl(filename);
     }
 
@@ -658,7 +668,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
     /// <param name="coordinates">The coordinates at which to play the audio.</param>
     public (EntityUid Entity, Components.AudioComponent Component)? PlayStatic(SoundSpecifier? sound, Filter playerFilter, EntityCoordinates coordinates, bool recordReplay, AudioParams? audioParams = null)
     {
-        return sound == null ? null : PlayStatic(ResolveSound(sound), playerFilter, coordinates, recordReplay, audioParams);
+        return sound == null ? null : PlayStatic(ResolveSound(sound), playerFilter, coordinates, recordReplay, audioParams ?? sound.Params);
     }
 
     /// <summary>

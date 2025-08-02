@@ -4,6 +4,7 @@ using Robust.Client.Graphics;
 using Robust.Client.UserInterface.RichText;
 using Robust.Shared.Collections;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -15,9 +16,22 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class OutputPanel : Control
     {
+        public const string StyleClassOutputPanelScrollDownButton = "outputPanelScrollDownButton";
+
         [Dependency] private readonly MarkupTagManager _tagManager = default!;
 
         public const string StylePropertyStyleBox = "stylebox";
+
+        public bool ShowScrollDownButton
+        {
+            get => _showScrollDownButton;
+            set
+            {
+                _showScrollDownButton = value;
+                _updateScrollButtonVisibility();
+            }
+        }
+        private bool _showScrollDownButton;
 
         private readonly RingBufferList<RichTextEntry> _entries = new();
         private bool _isAtBottom = true;
@@ -26,6 +40,7 @@ namespace Robust.Client.UserInterface.Controls
         private bool _firstLine = true;
         private StyleBox? _styleBoxOverride;
         private VScrollBar _scrollBar;
+        private Button _scrollDownButton;
 
         public bool ScrollFollowing { get; set; } = true;
 
@@ -43,7 +58,25 @@ namespace Robust.Client.UserInterface.Controls
                 HorizontalAlignment = HAlignment.Right
             };
             AddChild(_scrollBar);
-            _scrollBar.OnValueChanged += _ => _isAtBottom = _scrollBar.IsAtEnd;
+
+            AddChild(_scrollDownButton = new Button()
+            {
+                Name = "scrollLiveBtn",
+                StyleClasses = { StyleClassOutputPanelScrollDownButton },
+                VerticalAlignment = VAlignment.Bottom,
+                HorizontalAlignment = HAlignment.Center,
+                Text = String.Format("⬇    {0}    ⬇", Loc.GetString("output-panel-scroll-down-button-text")),
+                MaxWidth = 300,
+                Visible = false,
+            });
+
+            _scrollDownButton.OnPressed += _ => ScrollToBottom();
+
+            _scrollBar.OnValueChanged += _ =>
+            {
+                _isAtBottom = _scrollBar.IsAtEnd;
+                _updateScrollButtonVisibility();
+            };
         }
 
         public int EntryCount => _entries.Count;
@@ -62,15 +95,27 @@ namespace Robust.Client.UserInterface.Controls
         public void Clear()
         {
             _firstLine = true;
+
+            foreach (var entry in _entries)
+            {
+                entry.RemoveControls();
+            }
+
             _entries.Clear();
             _totalContentHeight = 0;
             _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
             _scrollBar.Value = 0;
         }
 
+        public FormattedMessage GetMessage(Index index)
+        {
+            return new FormattedMessage(_entries[index].Message);
+        }
+
         public void RemoveEntry(Index index)
         {
             var entry = _entries[index];
+            entry.RemoveControls();
             _entries.RemoveAt(index.GetOffset(_entries.Count));
 
             var font = _getFont();
@@ -98,6 +143,31 @@ namespace Robust.Client.UserInterface.Controls
 
             _entries.Add(entry);
             var font = _getFont();
+            AddNewItemHeight(font, entry);
+
+            _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
+            if (_isAtBottom && ScrollFollowing)
+            {
+                _scrollBar.MoveToEnd();
+            }
+        }
+
+        public void SetMessage(Index index, FormattedMessage message, Type[]? tagsAllowed = null, Color? defaultColor = null)
+        {
+            var oldEntry = _entries[index];
+            var font = _getFont();
+            _totalContentHeight -= oldEntry.Height + font.GetLineSeparation(UIScale);
+            _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
+
+            var entry = new RichTextEntry(message, this, _tagManager, tagsAllowed, defaultColor);
+            entry.Update(_tagManager, _getFont(), _getContentBox().Width, UIScale);
+            _entries[index] = entry;
+
+            AddNewItemHeight(font, in entry);
+        }
+
+        private void AddNewItemHeight(Font font, in RichTextEntry entry)
+        {
             _totalContentHeight += entry.Height;
             if (_firstLine)
             {
@@ -106,12 +176,6 @@ namespace Robust.Client.UserInterface.Controls
             else
             {
                 _totalContentHeight += font.GetLineSeparation(UIScale);
-            }
-
-            _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
-            if (_isAtBottom && ScrollFollowing)
-            {
-                _scrollBar.MoveToEnd();
             }
         }
 
@@ -156,6 +220,9 @@ namespace Robust.Client.UserInterface.Controls
                 if (entryOffset > contentBox.Height)
                 {
                     entry.HideControls();
+
+                    // We know that every subsequent entry will also fail the test, but we also need to
+                    // hide all the controls, so we cannot simply break out of the loop
                     continue;
                 }
 
@@ -184,6 +251,7 @@ namespace Robust.Client.UserInterface.Controls
             var styleBoxSize = _getStyleBox()?.MinimumSize.Y ?? 0;
 
             _scrollBar.Page = UIScale * (Height - styleBoxSize);
+            _updateScrollButtonVisibility();
             _invalidateEntries();
         }
 
@@ -283,6 +351,11 @@ namespace Robust.Client.UserInterface.Controls
                 _invalidateEntries();
                 _invalidOnVisible = false;
             }
+        }
+
+        private void _updateScrollButtonVisibility()
+        {
+            _scrollDownButton.Visible = ShowScrollDownButton && !_isAtBottom;
         }
     }
 }

@@ -13,7 +13,6 @@ using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
-using Vector2 = System.Numerics.Vector2;
 
 namespace Robust.Client.UserInterface.Controls;
 
@@ -38,7 +37,6 @@ namespace Robust.Client.UserInterface.Controls;
 public sealed class TextEdit : Control
 {
     [Dependency] private readonly IClipboardManager _clipboard = null!;
-    [Dependency] private readonly IClyde _clyde = null!;
 
     // @formatter:off
     public const string StylePropertyCursorColor    = "cursor-color";

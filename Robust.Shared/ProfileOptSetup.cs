@@ -9,15 +9,13 @@ namespace Robust.Shared
         public static void Setup(IConfigurationManager cfg)
         {
             // Disabled on non-release since I don't want this to start creating files in Steam's bin directory.
-#if RELEASE
-            return;
-#endif
-
+#if !RELEASE
             if (!cfg.GetCVar(CVars.SysProfileOpt))
                 return;
 
             ProfileOptimization.SetProfileRoot(PathHelpers.GetExecutableDirectory());
             ProfileOptimization.StartProfile("profile_opt");
+#endif
         }
     }
 }

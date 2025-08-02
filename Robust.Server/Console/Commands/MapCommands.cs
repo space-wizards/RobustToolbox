@@ -8,6 +8,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -43,8 +44,15 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            _ent.System<MapLoaderSystem>().TrySaveGrid(uid, new ResPath(args[1]));
-            shell.WriteLine("Save successful. Look in the user data directory.");
+            bool saveSuccess = _ent.System<MapLoaderSystem>().TrySaveGrid(uid, new ResPath(args[1]));
+            if(saveSuccess)
+            {
+                shell.WriteLine("Save successful. Look in the user data directory.");
+            }
+            else
+            {
+                shell.WriteError("Save unsuccessful!");
+            }
         }
 
         public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
@@ -52,7 +60,7 @@ namespace Robust.Server.Console.Commands
             switch (args.Length)
             {
                 case 1:
-                    return CompletionResult.FromHint(Loc.GetString("cmd-hint-savebp-id"));
+                    return CompletionResult.FromHintOptions(CompletionHelper.Components<MapGridComponent>(args[0], _ent), Loc.GetString("cmd-hint-savebp-id"));
                 case 2:
                     var opts = CompletionHelper.UserFilePath(args[1], _resource.UserData);
                     return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-hint-savemap-path"));
@@ -146,12 +154,13 @@ namespace Robust.Server.Console.Commands
 
         public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
-            return LoadMap.GetCompletionResult(shell, args, _resource);
+            return LoadMap.GetCompletionResult(shell, args, _resource, Loc);
         }
     }
 
     public sealed class SaveMap : LocalizedCommands
     {
+        [Dependency] private readonly IEntityManager _entManager = default!;
         [Dependency] private readonly IEntitySystemManager _system = default!;
         [Dependency] private readonly IResourceManager _resource = default!;
 
@@ -162,7 +171,7 @@ namespace Robust.Server.Console.Commands
             switch (args.Length)
             {
                 case 1:
-                    return CompletionResult.FromHint(Loc.GetString("cmd-hint-savemap-id"));
+                    return CompletionResult.FromHintOptions(CompletionHelper.MapIds(_entManager), Loc.GetString("cmd-hint-savemap-id"));
                 case 2:
                     var opts = CompletionHelper.UserFilePath(args[1], _resource.UserData);
                     return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-hint-savemap-path"));
@@ -207,8 +216,15 @@ namespace Robust.Server.Console.Commands
             }
 
             shell.WriteLine(Loc.GetString("cmd-savemap-attempt", ("mapId", mapId), ("path", args[1])));
-            _system.GetEntitySystem<MapLoaderSystem>().TrySaveMap(mapId, new ResPath(args[1]));
-            shell.WriteLine(Loc.GetString("cmd-savemap-success"));
+            bool saveSuccess = _system.GetEntitySystem<MapLoaderSystem>().TrySaveMap(mapId, new ResPath(args[1]));
+            if(saveSuccess)
+            {
+                    shell.WriteLine(Loc.GetString("cmd-savemap-success"));
+            }
+            else
+            {
+                    shell.WriteError(Loc.GetString("cmd-savemap-error"));
+            }
         }
     }
 
@@ -219,24 +235,24 @@ namespace Robust.Server.Console.Commands
 
         public override string Command => "loadmap";
 
-        public static CompletionResult GetCompletionResult(IConsoleShell shell, string[] args, IResourceManager resource)
+        public static CompletionResult GetCompletionResult(IConsoleShell shell, string[] args, IResourceManager resource, ILocalizationManager loc)
         {
             switch (args.Length)
             {
                 case 1:
-                    return CompletionResult.FromHint(Loc.GetString("cmd-hint-savemap-id"));
+                    return CompletionResult.FromHint(loc.GetString("cmd-hint-savemap-id"));
                 case 2:
                     var opts = CompletionHelper.UserFilePath(args[1], resource.UserData)
                         .Concat(CompletionHelper.ContentFilePath(args[1], resource));
-                    return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-hint-savemap-path"));
+                    return CompletionResult.FromHintOptions(opts, loc.GetString("cmd-hint-savemap-path"));
                 case 3:
-                    return CompletionResult.FromHint(Loc.GetString("cmd-hint-loadmap-x-position"));
+                    return CompletionResult.FromHint(loc.GetString("cmd-hint-loadmap-x-position"));
                 case 4:
-                    return CompletionResult.FromHint(Loc.GetString("cmd-hint-loadmap-y-position"));
+                    return CompletionResult.FromHint(loc.GetString("cmd-hint-loadmap-y-position"));
                 case 5:
-                    return CompletionResult.FromHint(Loc.GetString("cmd-hint-loadmap-rotation"));
+                    return CompletionResult.FromHint(loc.GetString("cmd-hint-loadmap-rotation"));
                 case 6:
-                    return CompletionResult.FromHint(Loc.GetString("cmd-hint-loadmap-uids"));
+                    return CompletionResult.FromHint(loc.GetString("cmd-hint-loadmap-uids"));
             }
 
             return CompletionResult.Empty;
@@ -244,7 +260,7 @@ namespace Robust.Server.Console.Commands
 
         public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
         {
-            return GetCompletionResult(shell, args, _resource);
+            return GetCompletionResult(shell, args, _resource, Loc);
         }
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)

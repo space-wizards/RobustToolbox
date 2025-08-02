@@ -20,7 +20,7 @@ public static class ConfigurationManagerExtensions
 /// </summary>
 public sealed class ConfigurationMultiSubscriptionBuilder(IConfigurationManager manager) : IDisposable
 {
-    private readonly List<Action> _unSubscribeActions = [];
+    private readonly List<Action> _unsubscribeActions = [];
 
     /// <inheritdoc cref="IConfigurationManager.OnValueChanged{T}(CVarDef{T},Action{T},bool)"/>>
     public ConfigurationMultiSubscriptionBuilder OnValueChanged<T>(
@@ -32,7 +32,7 @@ public sealed class ConfigurationMultiSubscriptionBuilder(IConfigurationManager 
     {
         manager.OnValueChanged(cVar, onValueChanged, invokeImmediately);
 
-        _unSubscribeActions.Add(() => manager.UnsubValueChanged(cVar, onValueChanged));
+        _unsubscribeActions.Add(() => manager.UnsubValueChanged(cVar, onValueChanged));
         return this;
     }
 
@@ -46,7 +46,7 @@ public sealed class ConfigurationMultiSubscriptionBuilder(IConfigurationManager 
     {
         manager.OnValueChanged(name, onValueChanged, invokeImmediately);
 
-        _unSubscribeActions.Add(() => manager.UnsubValueChanged(name, onValueChanged));
+        _unsubscribeActions.Add(() => manager.UnsubValueChanged(name, onValueChanged));
         return this;
     }
 
@@ -60,7 +60,7 @@ public sealed class ConfigurationMultiSubscriptionBuilder(IConfigurationManager 
     {
         manager.OnValueChanged(cVar, onValueChanged, invokeImmediately);
 
-        _unSubscribeActions.Add(() => manager.UnsubValueChanged(cVar, onValueChanged));
+        _unsubscribeActions.Add(() => manager.UnsubValueChanged(cVar, onValueChanged));
         return this;
     }
 
@@ -74,7 +74,7 @@ public sealed class ConfigurationMultiSubscriptionBuilder(IConfigurationManager 
     {
         manager.OnValueChanged(name, onValueChanged, invokeImmediately);
 
-        _unSubscribeActions.Add(() => manager.UnsubValueChanged(name, onValueChanged));
+        _unsubscribeActions.Add(() => manager.UnsubValueChanged(name, onValueChanged));
 
         return this;
     }
@@ -82,9 +82,10 @@ public sealed class ConfigurationMultiSubscriptionBuilder(IConfigurationManager 
     /// <inheritdoc />
     public void Dispose()
     {
-        foreach (var action in _unSubscribeActions)
+        foreach (var action in _unsubscribeActions)
         {
             action();
         }
+        _unsubscribeActions.Clear();
     }
 }

@@ -56,10 +56,10 @@ namespace Robust.UnitTesting.Shared.Configuration
             var lastValueBar4 = 0;
 
             var subscription = mgr.SubscribeMultiple()
-                                  .OnValueChanged<int>("foo.bar", value => lastValueBar1 = value)
-                                  .OnValueChanged<int>("foo.bar", value => lastValueBar2 = value)
-                                  .OnValueChanged<int>("foo.bar", value => lastValueBar3 = value)
-                                  .OnValueChanged<int>("foo.bar", value => lastValueBar4 = value);
+                .OnValueChanged<int>("foo.bar", value => lastValueBar1 = value)
+                .OnValueChanged<int>("foo.bar", value => lastValueBar2 = value)
+                .OnValueChanged<int>("foo.bar", value => lastValueBar3 = value)
+                .OnValueChanged<int>("foo.bar", value => lastValueBar4 = value);
 
             mgr.SetCVar("foo.bar", 1);
 
@@ -90,8 +90,8 @@ namespace Robust.UnitTesting.Shared.Configuration
             var lastValueFoo = 0;
 
             var subscription = mgr.SubscribeMultiple()
-                                  .OnValueChanged<int>("foo.bar", value => lastValueBar = value)
-                                  .OnValueChanged<int>("foo.foo", value => lastValueFoo = value);
+                .OnValueChanged<int>("foo.bar", value => lastValueBar = value)
+                .OnValueChanged<int>("foo.foo", value => lastValueFoo = value);
 
             mgr.SetCVar("foo.bar", 1);
             mgr.SetCVar("foo.foo", 3);

@@ -39,6 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
+* ViewVariables editors for `ProtoId` fields now have a Select button which opens a window listing all available prototypes of the appropriate type.
 * added **IConfigurationManager**.*SubscribeMultiple* ext. method to provide simpler way to unsubscribe from multiple cvar at once
 * Added `SharedMapSystem.QueueDeleteMap`, which deletes a map with the specified MapId in the next tick.
 * Added generic version of `ComponentRegistry.TryGetComponent`.

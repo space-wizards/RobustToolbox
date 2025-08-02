@@ -14,7 +14,7 @@ Don't change the format without looking at the script!
 
 ### New features
 
-* added **IConfigurationManager**.*SubscribeMultiple* ext. method to provide simpler way to unsubscribe from multiple cvar at once
+*None yet*
 
 ### Bugfixes
 
@@ -39,6 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
+* added **IConfigurationManager**.*SubscribeMultiple* ext. method to provide simpler way to unsubscribe from multiple cvar at once
 * Added `SharedMapSystem.QueueDeleteMap`, which deletes a map with the specified MapId in the next tick.
 
 ### Bugfixes

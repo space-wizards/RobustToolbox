@@ -51,7 +51,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Updated ImageSharp to 3.1.11 to stop the warning about a DoS vulnerability.
 
 ### Internal
 

@@ -6,7 +6,7 @@ namespace Robust.Shared.Configuration;
 public static class ConfigurationManagerExtensions
 {
     /// <summary>
-    /// Subscribe to multiple cvar in succession and create single object to unsubscribe from all of them when needed.
+    /// Subscribe to multiple cvar in succession and dispose object to unsubscribe from all of them when needed.
     /// </summary>
     public static ConfigurationMultiSubscriptionBuilder SubscribeMultiple(this IConfigurationManager manager)
     {
@@ -14,10 +14,13 @@ public static class ConfigurationManagerExtensions
     }
 }
 
-/// <summary> Container for batch-unsubscription of config changed events. </summary>
-public sealed class ConfigurationMultiSubscriptionBuilder(IConfigurationManager manager)
+/// <summary>
+/// Container for batch-unsubscription of config changed events.
+/// Call Dispose() when subscriptions are not needed anymore.
+/// </summary>
+public sealed class ConfigurationMultiSubscriptionBuilder(IConfigurationManager manager) : IDisposable
 {
-    private readonly List<Action> _unSubscribeActions = new List<Action>();
+    private readonly List<Action> _unSubscribeActions = [];
 
     /// <inheritdoc cref="IConfigurationManager.OnValueChanged{T}(CVarDef{T},Action{T},bool)"/>>
     public ConfigurationMultiSubscriptionBuilder OnValueChanged<T>(
@@ -76,26 +79,12 @@ public sealed class ConfigurationMultiSubscriptionBuilder(IConfigurationManager 
         return this;
     }
 
-    /// <summary>
-    /// Return disposable object that will execute unsubscription for each when disposed.
-    /// </summary>
-    public IDisposable Subscribe()
+    /// <inheritdoc />
+    public void Dispose()
     {
-        return new UnSubscribeActionsDelegates(_unSubscribeActions);
-    }
-
-    /// <summary>
-    /// Container for batch-unsubscription of config changed events.
-    /// </summary>
-    private sealed class UnSubscribeActionsDelegates(List<Action> unSubscribeActions) : IDisposable
-    {
-        /// <inheritdoc />
-        public void Dispose()
+        foreach (var action in _unSubscribeActions)
         {
-            foreach (var action in unSubscribeActions)
-            {
-                action();
-            }
+            action();
         }
     }
 }

@@ -15,6 +15,15 @@ namespace Robust.UnitTesting.Shared.EntitySerialization;
 [TestFixture]
 public sealed partial class OrphanSerializationTest : RobustIntegrationTest
 {
+    private const string TestTileDefId = "a";
+    private const string TestPrototypes = $@"
+- type: testTileDef
+  id: space
+
+- type: testTileDef
+  id: {TestTileDefId}
+    ";
+
     /// <summary>
     /// Check that we can save & load a file containing multiple orphaned (non-grid) entities.
     /// </summary>
@@ -114,7 +123,7 @@ public sealed partial class OrphanSerializationTest : RobustIntegrationTest
     [Test]
     public async Task TestOrphanedGridSerialization()
     {
-        var server = StartServer(new() {Pool = false}); // Pool=false due to TileDef registration
+        var server = StartServer(new() { Pool = false, ExtraPrototypes = TestPrototypes }); // Pool=false due to TileDef registration
         await server.WaitIdleAsync();
         var entMan = server.EntMan;
         var mapSys = server.System<SharedMapSystem>();
@@ -126,9 +135,8 @@ public sealed partial class OrphanSerializationTest : RobustIntegrationTest
         var pathB = new ResPath($"{nameof(TestOrphanedGridSerialization)}_B.yml");
         var pathCombined = new ResPath($"{nameof(TestOrphanedGridSerialization)}_C.yml");
 
-        tileMan.Register(new TileDef("space"));
-        var tDef = new TileDef("a");
-        tileMan.Register(tDef);
+        SerializationTestHelper.LoadTileDefs(server.ProtoMan, tileMan, "space");
+        var tDef = server.ProtoMan.Index<TileDef>(TestTileDefId);
 
         // Spawn multiple entities on a map
         MapId mapId = default;

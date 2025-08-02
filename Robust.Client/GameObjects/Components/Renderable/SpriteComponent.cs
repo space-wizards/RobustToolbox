@@ -30,8 +30,6 @@ using Robust.Shared.ViewVariables;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 using static Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer;
 using Direction = Robust.Shared.Maths.Direction;
-using Vector4 = Robust.Shared.Maths.Vector4;
-using SysVec4 = System.Numerics.Vector4;
 #pragma warning disable CS0618 // Type or member is obsolete
 
 namespace Robust.Client.GameObjects
@@ -1224,6 +1222,8 @@ namespace Robust.Client.GameObjects
                         return;
                     _visible = value;
 
+                    Owner.Comp.BoundsDirty = true;
+
                     // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
                     if (_parent.Owner != EntityUid.Invalid)
                         Owner.Comp.Sys?.QueueUpdateIsInert(Owner);
@@ -1791,76 +1791,15 @@ namespace Robust.Client.GameObjects
         [Obsolete("Use SpriteSystem.GetPrototypeTextures() instead")]
         public static IEnumerable<IDirectionalTextureProvider> GetPrototypeTextures(EntityPrototype prototype, IResourceCache resourceCache, out bool noRot)
         {
-            var results = new List<IDirectionalTextureProvider>();
-            noRot = false;
-
-            // TODO when moving to a non-static method in a system, pass in IComponentFactory
-            if (prototype.TryGetComponent(out IconComponent? icon))
-            {
-                var sys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
-                results.Add(sys.GetIcon(icon));
-                return results;
-            }
-
-            if (!prototype.Components.TryGetValue("Sprite", out _))
-            {
-                results.Add(resourceCache.GetFallback<TextureResource>().Texture);
-                return results;
-            }
-
-            var entityManager = IoCManager.Resolve<IEntityManager>();
-            var dummy = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace);
-            var spriteComponent = entityManager.EnsureComponent<SpriteComponent>(dummy);
-            EntitySystem.Get<AppearanceSystem>().OnChangeData(dummy, spriteComponent);
-
-            foreach (var layer in spriteComponent.AllLayers)
-            {
-                if (!layer.Visible) continue;
-
-                if (layer.Texture != null)
-                {
-                    results.Add(layer.Texture);
-                    continue;
-                }
-
-                if (!layer.RsiState.IsValid) continue;
-
-                var rsi = layer.Rsi ?? spriteComponent.BaseRSI;
-                if (rsi == null ||
-                    !rsi.TryGetState(layer.RsiState, out var state))
-                    continue;
-
-                results.Add(state);
-            }
-
-            noRot = spriteComponent.NoRotation;
-
-            entityManager.DeleteEntity(dummy);
-
-            if (results.Count == 0)
-                results.Add(resourceCache.GetFallback<TextureResource>().Texture);
-
-            return results;
+            var sys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
+            return sys.GetPrototypeTextures(prototype, out noRot);
         }
 
         [Obsolete("Use SpriteSystem.GetPrototypeIcon() instead")]
         public static IRsiStateLike GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
         {
             var sys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
-            // TODO when moving to a non-static method in a system, pass in IComponentFactory
-            if (prototype.TryGetComponent(out IconComponent? icon))
-                return sys.GetIcon(icon);
-
-            if (!prototype.Components.ContainsKey("Sprite"))
-                return sys.GetFallbackState();
-
-            var entityManager = IoCManager.Resolve<IEntityManager>();
-            var dummy = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace);
-            var spriteComponent = entityManager.EnsureComponent<SpriteComponent>(dummy);
-            var result = spriteComponent.Icon ?? sys.GetFallbackState();
-            entityManager.DeleteEntity(dummy);
-
-            return result;
+            return sys.GetPrototypeIcon(prototype);
         }
     }
 }

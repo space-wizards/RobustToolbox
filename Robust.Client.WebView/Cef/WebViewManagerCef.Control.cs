@@ -162,9 +162,10 @@ namespace Robust.Client.WebView.Cef
                 }
             }
 
+            public bool IsOpen => _data != null;
             public bool IsLoading => _data?.Browser.IsLoading ?? false;
 
-            public void EnteredTree()
+            public void StartBrowser()
             {
                 DebugTools.AssertNull(_data);
 
@@ -195,7 +196,7 @@ namespace Robust.Client.WebView.Cef
                 _data = new LiveData(texture, client, browser, renderer);
             }
 
-            public void ExitedTree()
+            public void CloseBrowser()
             {
                 DebugTools.AssertNotNull(_data);
 

@@ -47,33 +47,6 @@ namespace Robust.Shared.Configuration
     public delegate void CVarChanged<in T>(T newValue, in CVarChangeInfo info);
 
     /// <summary>
-    /// Container for multiple subscriptions on configuration change, that enabled unsusbbing using single <see cref="IDisposable.Dispose"/>.
-    /// </summary>
-    public interface IConfigurationChangeMultiSubscriptionBuilder
-    {
-        /// <inheritdoc cref="IConfigurationManager.OnValueChanged{T}(CVarDef{T},Action{T},bool)"/>>
-        IConfigurationChangeMultiSubscriptionBuilder OnValueChanged<T>(CVarDef<T> cVar, Action<T> onValueChanged, bool invokeImmediately = false)
-            where T : notnull;
-
-        /// <inheritdoc cref="IConfigurationManager.OnValueChanged{T}(string,Action{T},bool)"/>>
-        IConfigurationChangeMultiSubscriptionBuilder OnValueChanged<T>(string name, Action<T> onValueChanged, bool invokeImmediately = false)
-            where T : notnull;
-
-        /// <inheritdoc cref="IConfigurationManager.OnValueChanged{T}(CVarDef{T},CVarChanged{T},bool)"/>>
-        IConfigurationChangeMultiSubscriptionBuilder OnValueChanged<T>(CVarDef<T> cVar, CVarChanged<T> onValueChanged, bool invokeImmediately = false)
-            where T : notnull;
-
-        /// <inheritdoc cref="IConfigurationManager.OnValueChanged{T}(string,CVarChanged{T},bool)"/>>
-        IConfigurationChangeMultiSubscriptionBuilder OnValueChanged<T>(string name, CVarChanged<T> onValueChanged, bool invokeImmediately = false)
-            where T : notnull;
-
-        /// <summary>
-        /// Execute collected subscriptions and return disposable object that will execute unsubscription for each when disposed.
-        /// </summary>
-        IDisposable Subscribe();
-    }
-
-    /// <summary>
     /// Stores and manages global configuration variables.
     /// </summary>
     /// <remarks>
@@ -297,12 +270,6 @@ namespace Robust.Shared.Configuration
         /// <typeparam name="T">The type of value contained in this CVar.</typeparam>
         void UnsubValueChanged<T>(string name, CVarChanged<T> onValueChanged)
             where T : notnull;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        IConfigurationChangeMultiSubscriptionBuilder SubscribeMultiple();
 
         public event Action<CVarChangeInfo>? OnCVarValueChanged;
     }

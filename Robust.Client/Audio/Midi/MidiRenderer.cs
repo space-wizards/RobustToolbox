@@ -539,14 +539,7 @@ internal sealed partial class MidiRenderer : IMidiRenderer
                     if (velocity <= 0)
                         continue;
 
-                    try
-                    {
-                        _synth.NoteOn(channel, key, velocity);
-                    }
-                    catch (FluidSynthInteropException e)
-                    {
-                        _midiSawmill.Error($"CH:{channel} KEY:{key} VEL:{velocity} {e.ToStringBetter()}");
-                    }
+                    _synth.TryNoteOn(channel, key, velocity);
                 }
             }
 
@@ -574,7 +567,7 @@ internal sealed partial class MidiRenderer : IMidiRenderer
                 {
                     case RobustMidiCommand.NoteOff:
                         _rendererState.NoteVelocities.AsSpan[midiEvent.Channel].AsSpan[midiEvent.Key] = 0;
-                        _synth.NoteOff(midiEvent.Channel, midiEvent.Key);
+                        _synth.TryNoteOff(midiEvent.Channel, midiEvent.Key);
 
                         break;
                     case RobustMidiCommand.NoteOn:
@@ -583,7 +576,7 @@ internal sealed partial class MidiRenderer : IMidiRenderer
                         if (velocity == 0)
                         {
                             _rendererState.NoteVelocities.AsSpan[midiEvent.Channel].AsSpan[midiEvent.Key] = 0;
-                            _synth.NoteOn(midiEvent.Channel, midiEvent.Key, velocity);
+                            _synth.TryNoteOn(midiEvent.Channel, midiEvent.Key, velocity);
 
                             break;
                         }
@@ -594,7 +587,7 @@ internal sealed partial class MidiRenderer : IMidiRenderer
                         velocity = VelocityOverride ?? midiEvent.Velocity;
 
                         _rendererState.NoteVelocities.AsSpan[midiEvent.Channel].AsSpan[midiEvent.Key] = velocity;
-                        _synth.NoteOn(midiEvent.Channel, midiEvent.Key, velocity);
+                        _synth.TryNoteOn(midiEvent.Channel, midiEvent.Key, velocity);
 
                         break;
                     case RobustMidiCommand.AfterTouch:

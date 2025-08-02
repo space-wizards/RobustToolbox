@@ -1391,6 +1391,141 @@ namespace Robust.Shared.GameObjects
             return new CompRegistryEntityEnumerator(this, trait1, registry);
         }
 
+        #region WeakEntityReference
+
+        public WeakEntityReference GetWeakReference(EntityUid uid, MetaDataComponent? meta = null)
+        {
+            return new WeakEntityReference(uid);
+        }
+
+        public WeakEntityReference? GetWeakReference(EntityUid? uid, MetaDataComponent? meta = null)
+        {
+            if (uid == null)
+                return null;
+
+            return new WeakEntityReference(uid.Value);
+        }
+
+        /// <inheritdoc />
+        public List<WeakEntityReference> GetWeakReferenceList(List<EntityUid> list)
+        {
+            var outList = new List<WeakEntityReference>(list.Count);
+            foreach (var element in list)
+            {
+                outList.Add(GetWeakReference(element));
+            }
+            return outList;
+        }
+
+        /// <inheritdoc />
+        public HashSet<WeakEntityReference> GetWeakReferenceSet(HashSet<EntityUid> set)
+        {
+            var outSet = new HashSet<WeakEntityReference>(set.Count);
+            foreach (var element in set)
+            {
+                outSet.Add(GetWeakReference(element));
+            }
+            return outSet;
+        }
+
+        /// <inheritdoc />
+        public EntityUid? Resolve(WeakEntityReference weakRef)
+        {
+            if (weakRef.Entity != EntityUid.Invalid
+                && EntityExists(weakRef.Entity))
+            {
+                return weakRef.Entity;
+            }
+
+            return null;
+        }
+
+        /// <inheritdoc />
+        public EntityUid? Resolve(WeakEntityReference? weakRef)
+        {
+            return weakRef == null ? null : Resolve(weakRef.Value);
+        }
+
+        /// <inheritdoc />
+        public List<EntityUid> Resolve(List<WeakEntityReference> list)
+        {
+            var outList = new List<EntityUid>(list.Count);
+            foreach (var element in list)
+            {
+                if (TryGetEntity(element, out var ent))
+                    outList.Add(ent.Value);
+            }
+            return outList;
+        }
+
+        /// <inheritdoc />
+        public HashSet<EntityUid> Resolve(HashSet<WeakEntityReference> set)
+        {
+            var outSet = new HashSet<EntityUid>(set.Count);
+            foreach (var element in set)
+            {
+                if (TryGetEntity(element, out var ent))
+                    outSet.Add(ent.Value);
+            }
+            return outSet;
+        }
+
+        /// <inheritdoc />
+        public Entity<T>? Resolve<T>(WeakEntityReference<T> weakRef) where T : IComponent
+        {
+            if (weakRef.Entity != EntityUid.Invalid
+                && TryGetComponent(weakRef.Entity, out T? comp))
+            {
+                return new(weakRef.Entity, comp);
+            }
+
+            return null;
+        }
+
+        /// <inheritdoc />
+        public Entity<T>? Resolve<T>(WeakEntityReference<T>? weakRef) where T : IComponent
+        {
+            return weakRef == null ? null : Resolve(weakRef.Value);
+        }
+
+        public bool TryGetEntity(WeakEntityReference weakRef, [NotNullWhen(true)] out EntityUid? entity)
+        {
+            entity = Resolve(weakRef);
+            return entity != null;
+        }
+
+        public bool TryGetEntity([NotNullWhen(true)] WeakEntityReference? weakRef, [NotNullWhen(true)] out EntityUid? entity)
+        {
+            entity = Resolve(weakRef);
+            return entity != null;
+        }
+
+        public bool TryGetEntity<T>(WeakEntityReference<T> weakRef, [NotNullWhen(true)] out Entity<T>? entity)
+            where T : IComponent
+        {
+            if (!TryGetEntity(weakRef, out var uid)
+                || !TryGetComponent(uid.Value, out T? component))
+            {
+                entity = null;
+                return false;
+            }
+
+            entity = new(uid.Value, component);
+            return true;
+        }
+
+        public bool TryGetEntity<T>([NotNullWhen(true)] WeakEntityReference<T>? weakRef, [NotNullWhen(true)] out Entity<T>? entity)
+            where T : IComponent
+        {
+            if (weakRef != null)
+                return TryGetEntity(weakRef.Value, out entity);
+
+            entity = null;
+            return false;
+        }
+
+        #endregion
+
         public AllEntityQueryEnumerator<IComponent> AllEntityQueryEnumerator(Type comp)
         {
             DebugTools.Assert(comp.IsAssignableTo(typeof(IComponent)));

@@ -505,12 +505,78 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// <see cref="ComponentQueryEnumerator"/>
         /// </summary>
-        public ComponentQueryEnumerator ComponentQueryEnumerator(ComponentRegistry registry);
+        ComponentQueryEnumerator ComponentQueryEnumerator(ComponentRegistry registry);
 
         /// <summary>
         /// <see cref="CompRegistryQueryEnumerator"/>
         /// </summary>
-        public CompRegistryEntityEnumerator CompRegistryQueryEnumerator(ComponentRegistry registry);
+        CompRegistryEntityEnumerator CompRegistryQueryEnumerator(ComponentRegistry registry);
+
+        /// <summary>
+        /// Returns a <see cref="WeakEntityReference"/> pointing to the local entity.
+        /// </summary>
+        WeakEntityReference GetWeakReference(EntityUid uid, MetaDataComponent? meta = null);
+
+        /// <summary>
+        /// Returns a <see cref="WeakEntityReference"/> pointing to the local entity.
+        /// </summary>
+        WeakEntityReference? GetWeakReference(EntityUid? uid, MetaDataComponent? meta = null);
+
+        /// <summary>
+        /// Converts a list of <see cref="EntityUid"/>s into a list of <see cref="WeakEntityReference"/>s.
+        /// </summary>
+        public List<WeakEntityReference> GetWeakReferenceList(List<EntityUid> list);
+
+        /// <summary>
+        /// Converts a set of <see cref="EntityUid"/>s into a set of <see cref="WeakEntityReference"/>s.
+        /// </summary>
+        public HashSet<WeakEntityReference> GetWeakReferenceSet(HashSet<EntityUid> set);
+
+        /// <summary>
+        /// Attempts to resolve the given <see cref="WeakEntityReference"/> into an <see cref="EntityUid"/> that
+        /// corresponds to an existing entity. If this fails, the entity has either been deleted, or for clients, the
+        /// entity may not yet have been sent to them.
+        /// </summary>
+        EntityUid? Resolve(WeakEntityReference weakRef);
+
+        /// <inheritdoc cref="Resolve(WeakEntityReference)"/>
+        EntityUid? Resolve(WeakEntityReference? weakRef);
+
+        /// <summary>
+        /// Attempts to resolve a list of <see cref="WeakEntityReference"/>s into a list of
+        /// <see cref="EntityUid"/>s. Any references to deleted or non-existent entities are skipped.
+        /// </summary>
+        public List<EntityUid> Resolve(List<WeakEntityReference> list);
+
+        /// <summary>
+        /// Attempts to resolve a set of <see cref="WeakEntityReference"/>s into a set of
+        /// <see cref="EntityUid"/>s. Any references to deleted or non-existent entities are skipped.
+        /// </summary>
+        public HashSet<EntityUid> Resolve(HashSet<WeakEntityReference> set);
+
+        bool TryGetEntity(WeakEntityReference weakRef, [NotNullWhen(true)] out EntityUid? entity);
+
+        bool TryGetEntity(
+            [NotNullWhen(true)] WeakEntityReference? weakRef,
+            [NotNullWhen(true)] out EntityUid? entity);
+
+        bool TryGetEntity<T>(WeakEntityReference<T> weakRef, [NotNullWhen(true)] out Entity<T>? entity)
+            where T : IComponent;
+
+        bool TryGetEntity<T>(
+            [NotNullWhen(true)] WeakEntityReference<T>? weakRef,
+            [NotNullWhen(true)] out Entity<T>? entity)
+            where T : IComponent;
+
+        /// <summary>
+        /// Attempts to resolve the given <see cref="WeakEntityReference"/> into an existing entity with the specified
+        /// component and return the <see cref="Entity{T}"/>. If this fails, the entity has either been deleted, doesn't
+        /// have the component, or for clients the entity may not yet have been sent to them.
+        /// </summary>
+        public Entity<T>? Resolve<T>(WeakEntityReference<T> weakRef) where T : IComponent;
+
+        /// <inheritdoc cref="Resolve{T}(WeakEntityReference{T})"/>
+        public Entity<T>? Resolve<T>(WeakEntityReference<T>? weakRef) where T : IComponent;
 
         AllEntityQueryEnumerator<IComponent> AllEntityQueryEnumerator(Type comp);
 

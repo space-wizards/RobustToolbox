@@ -39,6 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
+* Added a new `WeakEntityReference` struct that is intended to be used by component data-fields to refer to entities that may or may not still exist.
 * Added `SharedMapSystem.QueueDeleteMap`, which deletes a map with the specified MapId in the next tick.
 
 ### Bugfixes

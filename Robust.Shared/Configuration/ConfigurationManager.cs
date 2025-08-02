@@ -426,30 +426,6 @@ namespace Robust.Shared.Configuration
             OnValueChanged(cVar.Name, onValueChanged, invokeImmediately);
         }
 
-        private void UnsubValueChanged(string name, ValueChangedDelegate onValueChanged)
-        {
-            using var _ = Lock.WriteGuard();
-
-            var reg = _configVars[name];
-            reg.ValueChanged.RemoveInPlace(onValueChanged);
-        }
-
-        private void OnValueChanged(string name, ValueChangedDelegate onValueChanged, bool invokeImmediately = false)
-        {
-            object value;
-            using (Lock.WriteGuard())
-            {
-                var reg = _configVars[name];
-                value = GetConfigVarValue(reg);
-                reg.ValueChanged.AddInPlace(onValueChanged, onValueChanged);
-            }
-
-            if (invokeImmediately)
-            {
-                onValueChanged(GetCVar(name), new CVarChangeInfo(name, _gameTiming.CurTick, value, value));
-            }
-        }
-
         public void OnValueChanged<T>(string name, CVarChanged<T> onValueChanged, bool invokeImmediately = false)
             where T : notnull
         {
@@ -960,7 +936,7 @@ namespace Robust.Shared.Configuration
                 }
             }
         }
-        
+
         /// <summary>
         /// All data we need to invoke a deferred ValueChanged handler outside of a write lock.
         /// </summary>

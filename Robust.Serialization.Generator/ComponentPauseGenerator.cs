@@ -4,7 +4,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Robust.Roslyn.Shared;
 using Robust.Roslyn.Shared.Helpers;
-using Robust.Roslyn.Shared.Helpers;
 
 namespace Robust.Serialization.Generator;
 

@@ -44,9 +44,75 @@ namespace Robust.UnitTesting.Shared.Configuration
         }
 
         [Test]
+        public void TestSubscribe_SubscribeMultipleThenUnsubscribe()
+        {
+            var mgr = MakeCfg();
+
+            mgr.RegisterCVar("foo.bar", 5);
+
+            var lastValueBar1 = 0;
+            var lastValueBar2 = 0;
+            var lastValueBar3 = 0;
+            var lastValueBar4 = 0;
+
+            var subscription = mgr.SubscribeMultiple()
+                .OnValueChanged<int>("foo.bar", value => lastValueBar1 = value)
+                .OnValueChanged<int>("foo.bar", value => lastValueBar2 = value)
+                .OnValueChanged<int>("foo.bar", value => lastValueBar3 = value)
+                .OnValueChanged<int>("foo.bar", value => lastValueBar4 = value);
+
+            mgr.SetCVar("foo.bar", 1);
+
+            Assert.That(lastValueBar1, Is.EqualTo(1), "OnValueChanged value was wrong!");
+            Assert.That(lastValueBar2, Is.EqualTo(1), "OnValueChanged value was wrong!");
+            Assert.That(lastValueBar3, Is.EqualTo(1), "OnValueChanged value was wrong!");
+            Assert.That(lastValueBar4, Is.EqualTo(1), "OnValueChanged value was wrong!");
+
+            subscription.Dispose();
+
+            mgr.SetCVar("foo.bar", 10);
+
+            Assert.That(lastValueBar1, Is.EqualTo(1), "OnValueChanged value was wrong!");
+            Assert.That(lastValueBar2, Is.EqualTo(1), "OnValueChanged value was wrong!");
+            Assert.That(lastValueBar3, Is.EqualTo(1), "OnValueChanged value was wrong!");
+            Assert.That(lastValueBar4, Is.EqualTo(1), "OnValueChanged value was wrong!");
+        }
+
+        [Test]
+        public void TestSubscribe_Unsubscribe()
+        {
+            var mgr = MakeCfg();
+
+            mgr.RegisterCVar("foo.bar", 5);
+            mgr.RegisterCVar("foo.foo", 2);
+
+            var lastValueBar = 0;
+            var lastValueFoo = 0;
+
+            var subscription = mgr.SubscribeMultiple()
+                .OnValueChanged<int>("foo.bar", value => lastValueBar = value)
+                .OnValueChanged<int>("foo.foo", value => lastValueFoo = value);
+
+            mgr.SetCVar("foo.bar", 1);
+            mgr.SetCVar("foo.foo", 3);
+
+            Assert.That(lastValueBar, Is.EqualTo(1), "OnValueChanged value was wrong!");
+            Assert.That(lastValueFoo, Is.EqualTo(3), "OnValueChanged value was wrong!");
+
+            subscription.Dispose();
+
+            mgr.SetCVar("foo.bar", 10);
+            mgr.SetCVar("foo.foo", 30);
+
+            Assert.That(lastValueBar, Is.EqualTo(1), "OnValueChanged value was wrong!");
+            Assert.That(lastValueFoo, Is.EqualTo(3), "OnValueChanged value was wrong!");
+        }
+
+        [Test]
         public void TestOverrideDefaultValue()
         {
             var mgr = MakeCfg();
+
             mgr.RegisterCVar("foo.bar", 5);
 
             var value = 0;
@@ -71,7 +137,7 @@ namespace Robust.UnitTesting.Shared.Configuration
             Assert.That(mgr.GetCVar<int>("foo.bar"), Is.EqualTo(7));
         }
 
-        private ConfigurationManager MakeCfg()
+        private IConfigurationManager MakeCfg()
         {
             var collection = new DependencyCollection();
             collection.RegisterInstance<IReplayRecordingManager>(new Mock<IReplayRecordingManager>().Object);

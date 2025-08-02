@@ -429,11 +429,15 @@ public abstract partial class SharedAudioSystem : EntitySystem
     /// Gets the timespan of the specified audio.
     /// </summary>
     public TimeSpan GetAudioLength(ResolvedSoundSpecifier specifier)
-    {
-        var filename = GetAudioPath(specifier) ?? string.Empty;
-        if (!filename.StartsWith("/"))
-            throw new ArgumentException("Path must be rooted");
+        => GetAudioLength(GetAudioPath(specifier));
 
+    /// <summary>
+    /// Gets the timespan of the specified filename.
+    /// </summary>
+    protected TimeSpan GetAudioLength(string filename)
+    {
+        if (!filename.StartsWith('/'))
+            throw new ArgumentException("Path must be rooted");
         return GetAudioLengthImpl(filename);
     }
 

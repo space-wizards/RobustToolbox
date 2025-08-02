@@ -30,7 +30,7 @@ public sealed partial class BackwardsCompatibilityTest : RobustIntegrationTest
     [Test]
     public async Task TestLoadV7()
     {
-        var server = StartServer();
+        var server = StartServer(new ServerIntegrationOptions { ExtraPrototypes = PrototypeV7 });
         await server.WaitIdleAsync();
         var entMan = server.EntMan;
         var mapSys = server.System<SharedMapSystem>();
@@ -38,8 +38,7 @@ public sealed partial class BackwardsCompatibilityTest : RobustIntegrationTest
         var tileMan = server.ResolveDependency<ITileDefinitionManager>();
         var resourceManager = server.ResolveDependency<IResourceManagerInternal>();
 
-        tileMan.Register(new TileDef("space"));
-        tileMan.Register(new TileDef("a"));
+        SerializationTestHelper.LoadTileDefs(server.ProtoMan, tileMan, "space");
 
         void AssertCount(int expected) => Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(expected));
         Assert.That(entMan.Count<LoadedMapComponent>(), Is.EqualTo(0));
@@ -342,5 +341,12 @@ entities:
     - type: EntitySaveTest
       list: []
       id: nullC
+";
+    private const string PrototypeV7 = @"
+- type: testTileDef
+  id: space
+
+- type: testTileDef
+  id: a
 ";
 }

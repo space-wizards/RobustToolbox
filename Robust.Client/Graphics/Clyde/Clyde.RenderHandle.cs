@@ -162,6 +162,7 @@ namespace Robust.Client.Graphics.Clyde
                 Angle eyeRot = default,
                 Direction? overrideDirection = null,
                 SpriteComponent? sprite = null,
+                SpriteSystem? spriteSystem = null,
                 TransformComponent? xform = null,
                 SharedTransformSystem? xformSystem = null)
             {
@@ -206,16 +207,42 @@ namespace Robust.Client.Graphics.Clyde
                     worldRot = xformSystem.GetWorldRotation(xform, query);
                 }
 
+                spriteSystem ??= _entities.System<SpriteSystem>();
                 // Draw the entity.
-                sprite.Render(
+                spriteSystem.RenderSprite(
+                    (entity, sprite),
                     DrawingHandleWorld,
                     eyeRot,
                     worldRot.Value,
+                    default,
                     overrideDirection);
 
                 // Reset to screen space
                 SetProjView(oldProj, oldView);
                 SetModelTransform(oldModel);
+            }
+
+            /// <inheritdoc cref="DrawEntity(EntityUid, Vector2, Vector2, Angle?, Angle, Direction?, SpriteComponent?, SpriteSystem?, TransformComponent?, SharedTransformSystem?)"/>
+            public void DrawEntity(EntityUid entity,
+                Vector2 position,
+                Vector2 scale,
+                Angle? worldRot,
+                Angle eyeRot = default,
+                Direction? overrideDirection = null,
+                SpriteComponent? sprite = null,
+                TransformComponent? xform = null,
+                SharedTransformSystem? xformSystem = null)
+            {
+                DrawEntity(entity,
+                    position,
+                    scale,
+                    worldRot,
+                    eyeRot,
+                    overrideDirection,
+                    sprite,
+                    null,
+                    xform,
+                    xformSystem);
             }
 
             public void DrawLine(Vector2 a, Vector2 b, Color color)

@@ -88,7 +88,7 @@ public partial class EntityManager
     }
 
     /// <inheritdoc />
-    public bool TryGetEntity([NotNullWhen(true)] NetEntity? nEntity, [NotNullWhen(true)] out EntityUid? entity)
+    public bool TryGetEntity(NetEntity? nEntity, [NotNullWhen(true)] out EntityUid? entity)
     {
         if (nEntity == null)
         {
@@ -121,7 +121,7 @@ public partial class EntityManager
     }
 
     /// <inheritdoc />
-    public bool TryGetNetEntity([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out NetEntity? netEntity, MetaDataComponent? metadata = null)
+    public bool TryGetNetEntity(EntityUid? uid, [NotNullWhen(true)] out NetEntity? netEntity, MetaDataComponent? metadata = null)
     {
         if (uid == null)
         {

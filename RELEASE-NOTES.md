@@ -40,11 +40,13 @@ END TEMPLATE-->
 ### New features
 
 * ViewVariables editors for `ProtoId` fields now have a Select button which opens a window listing all available prototypes of the appropriate type.
-* Added a new `WeakEntityReference` struct that is intended to be used by component data-fields to refer to entities that may or may not still exist.
+* added **IConfigurationManager**.*SubscribeMultiple* ext. method to provide simpler way to unsubscribe from multiple cvar at once
+* Added `SharedMapSystem.QueueDeleteMap`, which deletes a map with the specified MapId in the next tick.
 
 ### Bugfixes
 
-*None yet*
+* `LayoutContainer.SetMarginsPreset` and `SetAnchorAndMarginPreset` now correctly use the provided control's top anchor when calculating the margins for its presets; it previously used the bottom anchor instead. This may result in a few UI differences, by a few pixels at most.
+* `IConfigurationManager` no longer logs a warning when saving configuration in an integration test.
 
 ### Other
 

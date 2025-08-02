@@ -423,22 +423,6 @@ public partial class EntitySystem
         return EntityManager.ToPrettyString(netEntity);
     }
 
-    /// <inheritdoc cref="IEntityManager.ToPrettyString(WeakEntityReference?)/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [return: NotNullIfNotNull(nameof(weakRef))]
-    protected EntityStringRepresentation? ToPrettyString(WeakEntityReference? weakRef)
-    {
-        return EntityManager.ToPrettyString(weakRef);
-    }
-
-    /// <inheritdoc cref="IEntityManager.ToPrettyString(WeakEntityReference?)/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [return: NotNullIfNotNull(nameof(weakRef))]
-    protected EntityStringRepresentation ToPrettyString(WeakEntityReference weakRef)
-    {
-        return EntityManager.ToPrettyString(weakRef);
-    }
-
     /// <inheritdoc cref="IEntityManager.ToPrettyString(EntityUid, MetaDataComponent?)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent? metadata)
@@ -1622,76 +1606,4 @@ public partial class EntitySystem
     }
 
     #endregion
-
-    #region WeakEntityReference
-
-    /// <inheritdoc cref="IEntityManager.GetWeakReference(EntityUid, MetaDataComponent?)"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected WeakEntityReference GetWeakReference(EntityUid uid, MetaDataComponent? meta = null)
-    {
-        return EntityManager.GetWeakReference(uid, meta);
-    }
-
-    /// <inheritdoc cref="IEntityManager.GetWeakReference(EntityUid?, MetaDataComponent?)"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected WeakEntityReference? GetWeakReference(EntityUid? uid, MetaDataComponent? meta = null)
-    {
-        return EntityManager.GetWeakReference(uid, meta);
-    }
-
-    /// <inheritdoc cref="IEntityManager.Resolve(WeakEntityReference)"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected EntityUid? Resolve(WeakEntityReference weakRef)
-    {
-        return EntityManager.Resolve(weakRef);
-    }
-
-    /// <inheritdoc cref="IEntityManager.Resolve(WeakEntityReference)"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected EntityUid? Resolve(WeakEntityReference? weakRef)
-    {
-        return EntityManager.Resolve(weakRef);
-    }
-
-    /// <inheritdoc cref="IEntityManager.Resolve{T}(ref WeakEntityReference{T})"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected Entity<T>? Resolve<T>(WeakEntityReference<T> weakRef) where T : IComponent
-    {
-        return EntityManager.Resolve(weakRef);
-    }
-
-    /// <inheritdoc cref="IEntityManager.Resolve{T}(WeakEntityReference{T})"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected Entity<T>? Resolve<T>(WeakEntityReference<T>? weakRef) where T : IComponent
-    {
-        return EntityManager.Resolve(weakRef);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool TryGetEntity(WeakEntityReference weakRef, [NotNullWhen(true)] out EntityUid? entity)
-    {
-        return EntityManager.TryGetEntity(weakRef, out entity);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool TryGetEntity(WeakEntityReference? weakRef, [NotNullWhen(true)] out EntityUid? entity)
-    {
-        return EntityManager.TryGetEntity(weakRef, out entity);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool TryGetEntity<T>(WeakEntityReference<T> weakRef, [NotNullWhen(true)] out Entity<T>? entity)
-        where T : IComponent
-    {
-        return EntityManager.TryGetEntity(weakRef, out entity);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool TryGetEntity<T>(WeakEntityReference<T>? weakRef, [NotNullWhen(true)] out Entity<T>? entity)
-        where T : IComponent
-    {
-        return EntityManager.TryGetEntity(weakRef, out entity);
-    }
-    #endregion
-
 }

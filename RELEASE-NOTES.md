@@ -15,7 +15,6 @@ Don't change the format without looking at the script!
 ### New features
 
 * added **IConfigurationManager**.*SubscribeMultiple* ext. method to provide simpler way to unsubscribe from multiple cvar at once
-* ComponentRegistry can now get component type parameter
 
 ### Bugfixes
 
@@ -41,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * Added `SharedMapSystem.QueueDeleteMap`, which deletes a map with the specified MapId in the next tick.
+* Added generic version of `ComponentRegistry.TryGetComponent`.
 
 ### Bugfixes
 

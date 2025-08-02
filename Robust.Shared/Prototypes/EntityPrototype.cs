@@ -430,9 +430,9 @@ namespace Robust.Shared.Prototypes
         {
             component = null;
             var componentName = componentFactory.GetComponentName<TComponent>();
-            if (TryGetComponent(componentName, out var foundComponent) && foundComponent is TComponent castedComponent)
+            if (TryGetComponent(componentName, out var foundComponent))
             {
-                component = castedComponent;
+                component = (TComponent)foundComponent;
                 return true;
             }
 

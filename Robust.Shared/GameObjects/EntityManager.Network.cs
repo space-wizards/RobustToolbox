@@ -195,6 +195,9 @@ public partial class EntityManager
         if (uid == null)
             return null;
 
+        if (!MetaQuery.Resolve(uid.Value, ref metadata, logMissing: false))
+            return null;
+
         return GetNetEntity(uid.Value, metadata);
     }
 

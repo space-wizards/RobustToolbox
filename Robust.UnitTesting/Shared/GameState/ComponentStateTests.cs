@@ -264,7 +264,7 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
             Assert.That(clientEntB, Is.EqualTo(EntityUid.Invalid));
             Assert.That(client.EntMan.EntityExists(clientEntA), Is.True);
             Assert.That(client.EntMan.TryGetComponent(clientEntA, out UnknownEntityTestComponent? cmp));
-            Assert.That(cmp?.Other, Is.EqualTo(EntityUid.Invalid));
+            Assert.That(cmp?.Other, Is.Null);
         });
 
         server.Post(() => server.CfgMan.SetCVar(CVars.NetPVS, false));

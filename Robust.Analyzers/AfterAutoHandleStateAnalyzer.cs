@@ -58,12 +58,12 @@ public sealed class AfterAutoHandleStateAnalyzer : DiagnosticAnalyzer
         if (context.Operation is not IInvocationOperation operation)
             return;
 
-        if (!operation.TargetMethod.Name.Contains(SubscribeLocalEventName))
+        if (operation.TargetMethod.Name != SubscribeLocalEventName)
             return;
 
         var subscriptionTypes = operation.TargetMethod.TypeArguments;
         // Check second arg of SubscribeLocalEvent is AfterAutoHandleStateEvent
-        if (subscriptionTypes.ElementAtOrDefault(1)?.Name.Contains(AfterAutoHandleStateEventName) != true)
+        if (subscriptionTypes.ElementAtOrDefault(1)?.Name != AfterAutoHandleStateEventName)
             return;
 
         var autoGenStateAttribute = context.Compilation.GetTypeByMetadataName(AutoGenStateAttribute);

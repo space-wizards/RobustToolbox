@@ -65,17 +65,12 @@ public sealed class AfterAutoHandleStateAnalyzer : DiagnosticAnalyzer
         if (context.Operation is not IInvocationOperation operation)
             return;
 
-        if (operation.TargetMethod.Name != SubscribeLocalEventName)
+        // Check the method has the right name and has the right type args
+        if (operation.TargetMethod is not
+            { Name: SubscribeLocalEventName, TypeArguments: [var component, { Name: AfterAutoHandleStateEventName }] })
             return;
 
-        var subscriptionTypes = operation.TargetMethod.TypeArguments;
-        // Check second arg of SubscribeLocalEvent is AfterAutoHandleStateEvent
-        if (subscriptionTypes.ElementAtOrDefault(1)?.Name != AfterAutoHandleStateEventName)
-            return;
-
-        // If we have a second type arg, we definitely have a first.
-        // Then get the attribute with a type matching autoGenStateAttribute
-        var component = subscriptionTypes[0];
+        // Search the component's attributes for something matching autoGenStateAttribute
         AttributeHelper.HasAttribute(component, autoGenStateAttribute, out var autoGenAttribute);
 
         // First argument is raiseAfterAutoHandleState—note it shouldn't ever

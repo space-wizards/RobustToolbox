@@ -4,7 +4,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 using Robust.Roslyn.Shared;
-using static Microsoft.CodeAnalysis.SymbolEqualityComparer;
 
 namespace Robust.Analyzers;
 
@@ -71,11 +70,9 @@ public sealed class AfterAutoHandleStateAnalyzer : DiagnosticAnalyzer
             return;
 
         // If we have a second type arg, we definitely have a first.
-        // Get the attributes for whatever that is, and then get its attributes.
+        // Then get the attribute with a type matching autoGenStateAttribute
         var component = subscriptionTypes[0];
-        var autoGenAttribute = component
-            .GetAttributes()
-            .FirstOrDefault(attribute => attribute.AttributeClass?.Equals(autoGenStateAttribute, Default) ?? false);
+        AttributeHelper.HasAttribute(component, autoGenStateAttribute, out var autoGenAttribute);
 
         // First argument is raiseAfterAutoHandleState—note it shouldn't ever
         // be null, since it has a default, but eh.

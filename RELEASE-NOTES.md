@@ -35,7 +35,9 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* A new analyzer has been added that will error if you attempt to subscribe to `AfterAutoHandleStateEvent` on a
+  component that doesn't have the `AutoGenerateComponentState` attribute, or doesn't have the first argument of that
+  attribute set to `true`. In most cases you will want to set said argument to `true`.
 
 ### New features
 
@@ -43,6 +45,7 @@ END TEMPLATE-->
 * added **IConfigurationManager**.*SubscribeMultiple* ext. method to provide simpler way to unsubscribe from multiple cvar at once
 * Added `SharedMapSystem.QueueDeleteMap`, which deletes a map with the specified MapId in the next tick.
 * Added generic version of `ComponentRegistry.TryGetComponent`.
+* `AttributeHelper.HasAttribute` has had an overload's type signature loosened from `INamedTypeSymbol` to `ITypeSymbol`.
 
 ### Bugfixes
 

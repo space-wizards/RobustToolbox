@@ -55,7 +55,7 @@
     <PackageVersion Include="Serilog" Version="4.2.0" />
     <PackageVersion Include="Serilog.Sinks.Loki" Version="4.0.0-beta3" />
     <PackageVersion Include="SharpZstd.Interop" Version="1.5.2-beta2" />
-    <PackageVersion Include="SixLabors.ImageSharp" Version="3.1.7" />
+    <PackageVersion Include="SixLabors.ImageSharp" Version="3.1.11" />
     <PackageVersion Include="SpaceWizards.HttpListener" Version="0.1.1" />
     <PackageVersion Include="SpaceWizards.NFluidsynth" Version="0.1.1" />
     <PackageVersion Include="SpaceWizards.SharpFont" Version="1.0.2" />

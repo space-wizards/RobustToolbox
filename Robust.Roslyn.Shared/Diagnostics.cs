@@ -43,7 +43,9 @@ public static class Diagnostics
     public const string IdPrototypeNetSerializable = "RA0037";
     public const string IdPrototypeSerializable = "RA0038";
     public const string IdPrototypeInstantiation = "RA0039";
-    public const string IdSharedOnlyEventNotShared = "RA0040";
+    public const string IdAutoGenStateAttributeMissing = "RA0040";
+    public const string IdAutoGenStateParamMissing = "RA0041";
+    public const string IdSharedOnlyEventNotShared = "RA0042";
 
     public static SuppressionDescriptor MeansImplicitAssignment =>
         new SuppressionDescriptor("RADC1000", "CS0649", "Marked as implicitly assigned.");

@@ -154,6 +154,7 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
 
         _sprite = new TabSpriteView();
         _tabContainer.AddChild(_sprite);
+        _tabContainer.AddChild(TabCursorShapes());
     }
 
     public void OnClosed()
@@ -210,6 +211,53 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
         return label;
     }
 
+    private Control TabCursorShapes()
+    {
+        var box = new BoxContainer
+        {
+            Orientation = BoxContainer.LayoutOrientation.Vertical,
+        };
+        var styleBox = new StyleBoxFlat
+        {
+            BackgroundColor = Color.Black
+        };
+        foreach (var cursorName in Enum.GetNames<CursorShape>())
+        {
+            // Go over names due to duplicate definitions in the enum.
+            var cursor = Enum.Parse<CursorShape>(cursorName);
+            // Wow was I bad at API design.
+            if (cursor == CursorShape.Custom)
+                continue;
+
+            var panel = new PanelContainer
+            {
+                PanelOverride = styleBox,
+                DefaultCursorShape = cursor,
+                MouseFilter = MouseFilterMode.Stop,
+                MinHeight = 30,
+                Children =
+                {
+                    new Label
+                    {
+                        Text = cursorName,
+                        VerticalAlignment = VAlignment.Center,
+                        Margin = new Thickness(4)
+                    }
+                }
+            };
+
+            box.AddChild(panel);
+        }
+
+        return new ScrollContainer
+        {
+            Children = { box },
+            VScrollEnabled = true,
+            HScrollEnabled = false,
+            Name = nameof(Tab.TabCursorShapes),
+        };
+    }
+
     public void SelectTab(Tab tab)
     {
         _tabContainer.CurrentTab = (int)tab;
@@ -226,6 +274,7 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
         TextEdit = 6,
         RichText = 7,
         SpriteView = 8,
+        TabCursorShapes = 9,
     }
 }
 

@@ -214,6 +214,11 @@ internal sealed partial class MidiRenderer : IMidiRenderer
     [ViewVariables]
     public BitArray FilteredChannels { get; } = new(RobustMidiEvent.MaxChannels);
 
+    [ViewVariables]
+    public byte MinVolume { get => _minVolume; set => _minVolume = value; }
+
+    private byte _minVolume;
+
     [ViewVariables(VVAccess.ReadWrite)]
     public byte? VelocityOverride { get; set; } = null;
 
@@ -591,7 +596,10 @@ internal sealed partial class MidiRenderer : IMidiRenderer
                         if (FilteredChannels[midiEvent.Channel])
                             break;
 
-                        velocity = VelocityOverride ?? midiEvent.Velocity;
+                        if (MinVolume > 0)
+                            velocity = (byte)Math.Floor(MathHelper.Lerp(MinVolume, 127, (float)velocity / 127));
+
+                        velocity = VelocityOverride ?? velocity;
 
                         _rendererState.NoteVelocities.AsSpan[midiEvent.Channel].AsSpan[midiEvent.Key] = velocity;
                         _synth.NoteOn(midiEvent.Channel, midiEvent.Key, velocity);

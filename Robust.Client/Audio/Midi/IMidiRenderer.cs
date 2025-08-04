@@ -213,4 +213,6 @@ public interface IMidiRenderer : IDisposable
     ///     Actually disposes of this renderer. Do NOT use outside the MIDI thread.
     /// </summary>
     internal void InternalDispose();
+
+    byte MinVolume { get; set; }
 }

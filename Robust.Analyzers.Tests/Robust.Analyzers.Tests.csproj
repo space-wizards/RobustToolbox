@@ -10,6 +10,7 @@
   <ItemGroup>
     <EmbeddedResource Include="..\Robust.Shared\Analyzers\AccessAttribute.cs" LogicalName="Robust.Shared.Analyzers.AccessAttribute.cs" LinkBase="Implementations" />
     <EmbeddedResource Include="..\Robust.Shared\Analyzers\AccessPermissions.cs" LogicalName="Robust.Shared.Analyzers.AccessPermissions.cs" LinkBase="Implementations" />
+    <EmbeddedResource Include="..\Robust.Shared\Analyzers\ComponentNetworkGeneratorAuxiliary.cs" LogicalName="Robust.Shared.Analyzers.ComponentNetworkGeneratorAuxiliary.cs" LinkBase="Implementations" />
     <EmbeddedResource Include="..\Robust.Shared\Analyzers\MustCallBaseAttribute.cs" LogicalName="Robust.Shared.IoC.MustCallBaseAttribute.cs" LinkBase="Implementations" />
     <EmbeddedResource Include="..\Robust.Shared\Analyzers\PreferNonGenericVariantForAttribute.cs" LogicalName="Robust.Shared.Analyzers.PreferNonGenericVariantForAttribute.cs" LinkBase="Implementations" />
     <EmbeddedResource Include="..\Robust.Shared\Analyzers\PreferOtherTypeAttribute.cs" LogicalName="Robust.Shared.Analyzers.PreferOtherTypeAttribute.cs" LinkBase="Implementations" />

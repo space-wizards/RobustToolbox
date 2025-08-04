@@ -48,11 +48,19 @@ public sealed class AfterAutoHandleStateAnalyzer : DiagnosticAnalyzer
         context.EnableConcurrentExecution();
 
         context.RegisterCompilationStartAction(compilationContext =>
-            compilationContext.RegisterOperationAction(CheckEventSubscription, OperationKind.Invocation));
+        {
+            var autoGenStateAttribute = compilationContext.Compilation.GetTypeByMetadataName(AutoGenStateAttribute);
+            // No attribute, no analyzer.
+            if (autoGenStateAttribute is null)
+                return;
+
+            compilationContext.RegisterOperationAction(
+                analysisContext => CheckEventSubscription(analysisContext, autoGenStateAttribute),
+                OperationKind.Invocation);
+        });
     }
 
-    private static void CheckEventSubscription(
-        OperationAnalysisContext context)
+    private static void CheckEventSubscription(OperationAnalysisContext context, ITypeSymbol autoGenStateAttribute)
     {
         if (context.Operation is not IInvocationOperation operation)
             return;
@@ -63,10 +71,6 @@ public sealed class AfterAutoHandleStateAnalyzer : DiagnosticAnalyzer
         var subscriptionTypes = operation.TargetMethod.TypeArguments;
         // Check second arg of SubscribeLocalEvent is AfterAutoHandleStateEvent
         if (subscriptionTypes.ElementAtOrDefault(1)?.Name != AfterAutoHandleStateEventName)
-            return;
-
-        var autoGenStateAttribute = context.Compilation.GetTypeByMetadataName(AutoGenStateAttribute);
-        if (autoGenStateAttribute == null)
             return;
 
         // If we have a second type arg, we definitely have a first.

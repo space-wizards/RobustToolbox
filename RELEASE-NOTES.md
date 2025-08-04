@@ -41,7 +41,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* `AttributeHelper.HasAttribute` has had an overload's type signature loosened from `INamedTypeSymbol` to `ITypeSymbol`.
 
 ### Bugfixes
 

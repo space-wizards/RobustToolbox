@@ -74,8 +74,6 @@ public sealed class AfterAutoHandleStateAnalyzerTest
             public sealed class AutoGenNoArgs;
             [AutoGenerateComponentState(false)]
             public sealed class AutoGenFalse;
-            [AutoGenerateComponentState(RaiseAfterAutoHandleState = true)]
-            public sealed class AutoGenIncorrectConstructorArg;
 
             public sealed class Foo : EntitySystem
             {
@@ -96,22 +94,17 @@ public sealed class AfterAutoHandleStateAnalyzerTest
                     // Can't subscribe if first arg is not specified/false
                     SubscribeLocalEvent<AutoGenNoArgs, AfterAutoHandleStateEvent>();
                     SubscribeLocalEvent<AutoGenFalse, AfterAutoHandleStateEvent>();
-
-                    // Can't subscribe with RaiseAfterAutoHandleState = true because that's
-                    // secretly a no-op.
-                    SubscribeLocalEvent<AutoGenIncorrectConstructorArg, AfterAutoHandleStateEvent>();
                 }
             }
             """;
 
         await Verifier(code,
-            // /0/Test0.cs(31,9): error RA0040: Tried to subscribe to AfterAutoHandleStateEvent for 'NotAutoGen' which doesn't have an AutoGenerateComponentState attribute
-            VerifyCS.Diagnostic(AfterAutoHandleStateAnalyzer.MissingAttribute).WithSpan(31, 9, 31, 69).WithArguments("NotAutoGen"),
-            // /0/Test0.cs(34,9): error RA0041: Tried to subscribe to AfterAutoHandleStateEvent for 'AutoGenNoArgs' which doesn't have RaiseAfterAutoHandleState set
-            VerifyCS.Diagnostic(AfterAutoHandleStateAnalyzer.MissingAttributeParam).WithSpan(34, 9, 34, 72).WithArguments("AutoGenNoArgs"),
-            // /0/Test0.cs(35,9): error RA0041: Tried to subscribe to AfterAutoHandleStateEvent for 'AutoGenFalse' which doesn't have RaiseAfterAutoHandleState set
-            VerifyCS.Diagnostic(AfterAutoHandleStateAnalyzer.MissingAttributeParam).WithSpan(35, 9, 35, 71).WithArguments("AutoGenFalse"),
-            // /0/Test0.cs(39,9): error RA0041: Tried to subscribe to AfterAutoHandleStateEvent for 'AutoGenIncorrectConstructorArg' which doesn't have RaiseAfterAutoHandleState set
-            VerifyCS.Diagnostic(AfterAutoHandleStateAnalyzer.MissingAttributeParam).WithSpan(39, 9, 39, 89).WithArguments("AutoGenIncorrectConstructorArg")        );
+            // /0/Test0.cs(29,9): error RA0040: Tried to subscribe to AfterAutoHandleStateEvent for 'NotAutoGen' which doesn't have an AutoGenerateComponentState attribute
+            VerifyCS.Diagnostic(AfterAutoHandleStateAnalyzer.MissingAttribute).WithSpan(29, 9, 29, 69).WithArguments("NotAutoGen"),
+            // /0/Test0.cs(32,9): error RA0041: Tried to subscribe to AfterAutoHandleStateEvent for 'AutoGenNoArgs' which doesn't have raiseAfterAutoHandleState set
+            VerifyCS.Diagnostic(AfterAutoHandleStateAnalyzer.MissingAttributeParam).WithSpan(32, 9, 32, 72).WithArguments("AutoGenNoArgs"),
+            // /0/Test0.cs(33,9): error RA0041: Tried to subscribe to AfterAutoHandleStateEvent for 'AutoGenFalse' which doesn't have raiseAfterAutoHandleState set
+            VerifyCS.Diagnostic(AfterAutoHandleStateAnalyzer.MissingAttributeParam).WithSpan(33, 9, 33, 71).WithArguments("AutoGenFalse")
+        );
     }
 }

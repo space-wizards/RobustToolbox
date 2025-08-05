@@ -82,7 +82,7 @@ namespace Robust.Shared.Network.Messages
             if(NetworkedVars == null)
                 throw new InvalidOperationException($"{nameof(NetworkedVars)} collection is null.");
 
-            if(NetworkedVars.Count > byte.MaxValue)
+            if(NetworkedVars.Count > short.MaxValue)
                 throw new InvalidOperationException($"{nameof(NetworkedVars)} collection count is greater than {short.MaxValue}.");
 
             buffer.WriteVariableUInt32(Tick.Value);

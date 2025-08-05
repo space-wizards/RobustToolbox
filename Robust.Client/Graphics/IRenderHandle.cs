@@ -42,7 +42,20 @@ namespace Robust.Client.Graphics
             Angle eyeRotation = default,
             Direction? overrideDirection = null,
             SpriteComponent? sprite = null,
+            SpriteSystem? spriteSystem = null,
             TransformComponent? xform = null,
             SharedTransformSystem? xformSystem = null);
+
+        /// <inheritdoc cref="DrawEntity(EntityUid, Vector2, Vector2, Angle?, Angle, Direction?, SpriteComponent?, SpriteSystem?, TransformComponent?, SharedTransformSystem?)"/>
+        [Obsolete("Use the overload that passes in SpriteSystem")]
+        void DrawEntity(EntityUid entity,
+                Vector2 position,
+                Vector2 scale,
+                Angle? worldRot,
+                Angle eyeRot = default,
+                Direction? overrideDirection = null,
+                SpriteComponent? sprite = null,
+                TransformComponent? xform = null,
+                SharedTransformSystem? xformSystem = null);
     }
 }

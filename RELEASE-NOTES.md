@@ -38,6 +38,7 @@ END TEMPLATE-->
 * A new analyzer has been added that will error if you attempt to subscribe to `AfterAutoHandleStateEvent` on a
   component that doesn't have the `AutoGenerateComponentState` attribute, or doesn't have the first argument of that
   attribute set to `true`. In most cases you will want to set said argument to `true`.
+* When a player disconnects, `ISharedPlayerManager.PlayerStatusChanged` is now fired *after* removing the session from the `Sessions` list.
 
 ### New features
 

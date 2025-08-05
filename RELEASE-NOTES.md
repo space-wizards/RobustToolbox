@@ -46,11 +46,14 @@ END TEMPLATE-->
 * Added `SharedMapSystem.QueueDeleteMap`, which deletes a map with the specified MapId in the next tick.
 * Added generic version of `ComponentRegistry.TryGetComponent`.
 * `AttributeHelper.HasAttribute` has had an overload's type signature loosened from `INamedTypeSymbol` to `ITypeSymbol`.
+* Errors are now logged when sending messages to disconnected `INetChannel`s.
+* Warnings are now logged if sending a message via Lidgren failed for some reason.
 
 ### Bugfixes
 
 * `LayoutContainer.SetMarginsPreset` and `SetAnchorAndMarginPreset` now correctly use the provided control's top anchor when calculating the margins for its presets; it previously used the bottom anchor instead. This may result in a few UI differences, by a few pixels at most.
 * `IConfigurationManager` no longer logs a warning when saving configuration in an integration test.
+* Fixed impossible-to-source `ChannelClosedException`s when sending some net messages to disconnected `INetChannel`s.
 
 ### Other
 

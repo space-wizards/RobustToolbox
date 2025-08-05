@@ -138,9 +138,16 @@ namespace Robust.Client.ResourceManagement
             var sw = Stopwatch.StartNew();
             var resList = GetTypeData<RSIResource>().Resources;
 
-            var rsiList = _manager.ContentFindFiles("/Textures/")
+            var foundRsiList = _manager.ContentFindFiles("/Textures/")
                 .Where(p => p.ToString().EndsWith(".rsi/meta.json"))
-                .Select(c => c.Directory)
+                .Select(c => c.Directory);
+
+            var foundRsicList = _manager.ContentFindFiles("/Textures/")
+                .Where(p => p.Extension == "rsic")
+                .Select(c => c.WithExtension("rsi"));
+
+            var rsiList = foundRsiList
+                .Concat(foundRsicList)
                 .Where(p => !resList.ContainsKey(p))
                 .Select(p => new RSIResource.LoadStepData {Path = p})
                 .ToArray();

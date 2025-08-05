@@ -54,4 +54,19 @@ public static class TypeSymbolHelper
             current = current.BaseType;
         }
     }
+
+    /// <summary>
+    /// If <paramref name="type"/> is a Nullable{T}, returns the <see cref="ITypeSymbol"/> of the underlying type.
+    /// Otherwise, returns <paramref name="type"/>.
+    /// </summary>
+    // Modified from https://www.meziantou.net/working-with-types-in-a-roslyn-analyzer.htm
+    public static ITypeSymbol GetNullableUnderlyingTypeOrSelf(ITypeSymbol type)
+    {
+        if (type is INamedTypeSymbol namedType && namedType.ConstructedFrom.SpecialType == SpecialType.System_Nullable_T)
+        {
+            return namedType.TypeArguments[0];
+        }
+
+        return type;
+    }
 }

@@ -27,7 +27,7 @@ namespace Robust.Shared.Network.Messages
                 Logger.WarningS("net", $"{MsgChannel}: received a large {nameof(MsgConVars)}, {buffer.LengthBytes}B > {MaxMessageSize}B");
 
             Tick = new GameTick(buffer.ReadVariableUInt32());
-            var nVars = buffer.ReadByte();
+            var nVars = buffer.ReadInt16();
 
             NetworkedVars = new List<(string name, object value)>(nVars);
 
@@ -86,7 +86,7 @@ namespace Robust.Shared.Network.Messages
                 throw new InvalidOperationException($"{nameof(NetworkedVars)} collection count is greater than {short.MaxValue}.");
 
             buffer.WriteVariableUInt32(Tick.Value);
-            buffer.Write((byte)NetworkedVars.Count);
+            buffer.Write((short)NetworkedVars.Count);
 
             foreach (var (name, value) in NetworkedVars)
             {

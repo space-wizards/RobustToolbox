@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* When a player disconnects, the relevant callbacks are now fired *after* removing the channel from `INetManager`.
 
 ### New features
 

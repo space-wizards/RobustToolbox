@@ -366,6 +366,12 @@ namespace Robust.Client.Graphics.Clyde
                 BindRenderTargetFull(viewport.RenderTarget);
                 GL.Viewport(0, 0, viewport.Size.X, viewport.Size.Y);
                 CheckGlError();
+                
+                // If we don't draw lighting, we still need to apply the FOV to the buffer.
+                IsStencilling = true;
+                ApplyFovToBuffer(viewport, eye);
+                IsStencilling = false;
+
                 return;
             }
 

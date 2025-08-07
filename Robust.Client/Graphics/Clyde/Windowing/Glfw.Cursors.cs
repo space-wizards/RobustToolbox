@@ -128,6 +128,19 @@ namespace Robust.Client.Graphics.Clyde
                 AddStandardCursor(StandardCursorShape.Hand, CursorShape.Hand);
                 AddStandardCursor(StandardCursorShape.HResize, CursorShape.HResize);
                 AddStandardCursor(StandardCursorShape.VResize, CursorShape.VResize);
+                AddStandardCursor(StandardCursorShape.Progress, CursorShape.Arrow);
+                AddStandardCursor(StandardCursorShape.NWSEResize, CursorShape.Crosshair);
+                AddStandardCursor(StandardCursorShape.NESWResize, CursorShape.Crosshair);
+                AddStandardCursor(StandardCursorShape.Move, CursorShape.Crosshair);
+                AddStandardCursor(StandardCursorShape.NotAllowed, CursorShape.Arrow);
+                AddStandardCursor(StandardCursorShape.NWResize, CursorShape.Crosshair);
+                AddStandardCursor(StandardCursorShape.NResize, CursorShape.VResize);
+                AddStandardCursor(StandardCursorShape.NEResize, CursorShape.Crosshair);
+                AddStandardCursor(StandardCursorShape.EResize, CursorShape.HResize);
+                AddStandardCursor(StandardCursorShape.SEResize, CursorShape.Crosshair);
+                AddStandardCursor(StandardCursorShape.SResize, CursorShape.VResize);
+                AddStandardCursor(StandardCursorShape.SWResize, CursorShape.Crosshair);
+                AddStandardCursor(StandardCursorShape.WResize, CursorShape.HResize);
             }
 
             private sealed class CursorImpl : ICursor

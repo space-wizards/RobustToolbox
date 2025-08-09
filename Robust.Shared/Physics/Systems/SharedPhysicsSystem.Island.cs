@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
 using Microsoft.Extensions.ObjectPool;
-using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
@@ -1040,7 +1039,10 @@ public abstract partial class SharedPhysicsSystem
                 continue;
 
             var xform = ent.Comp2;
-            var (_, parentRot, parentInvMatrix) = _transform.GetWorldPositionRotationInvMatrix(xform.ParentUid);
+            if (!TryComp(xform.ParentUid, out TransformComponent? transform))
+                continue;
+
+            var (_, parentRot, parentInvMatrix) = _transform.GetWorldPositionRotationInvMatrix(transform);
             var worldRot = (float) (parentRot + xform._localRotation);
 
             var angle = angles[i];

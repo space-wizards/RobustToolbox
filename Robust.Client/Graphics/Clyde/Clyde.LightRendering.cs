@@ -118,7 +118,7 @@ namespace Robust.Client.Graphics.Clyde
                 // aPos
                 _occlusionVbo = new GLBuffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
                     nameof(_occlusionVbo));
-                GL.VertexAttribPointer(0, 4, VertexAttribPointerType.Float, false, sizeof(Vector4), IntPtr.Zero);
+                GL.VertexAttribPointer(0, 4, VertexAttribPointerType.Float, false, sizeof(Vector4d), IntPtr.Zero);
                 GL.EnableVertexAttribArray(0);
 
                 CheckGlError();
@@ -366,12 +366,12 @@ namespace Robust.Client.Graphics.Clyde
                 BindRenderTargetFull(viewport.RenderTarget);
                 GL.Viewport(0, 0, viewport.Size.X, viewport.Size.Y);
                 CheckGlError();
-                
+    
                 // If we don't draw lighting, we still need to apply the FOV to the buffer.
                 IsStencilling = true;
                 ApplyFovToBuffer(viewport, eye);
                 IsStencilling = false;
-
+                
                 return;
             }
 
@@ -937,216 +937,64 @@ namespace Robust.Client.Graphics.Clyde
             _drawQuad(Vector2.Zero, Vector2.One, Matrix3x2.Identity, fovShader);
         }
 
+        private readonly struct OccluderData
+        {
+            public readonly OccluderComponent Occluder;
+            public readonly Vector2 TopLeft, TopRight, BottomRight, BottomLeft;
+            
+            public OccluderData(OccluderComponent occluder, Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl)
+            {
+                Occluder = occluder;
+                TopLeft = tl;
+                TopRight = tr;
+                BottomRight = br;
+                BottomLeft = bl;
+            }
+        }
+
         private void UpdateOcclusionGeometry(MapId map, Box2 expandedBounds, Matrix3x2 eyeTransform)
         {
             using var _ = _prof.Group("UpdateOcclusionGeometry");
             using var _p = DebugGroup(nameof(UpdateOcclusionGeometry));
 
-            // This method generates two sets of occlusion geometry:
-            // 3D geometry used during depth projection.
-            // 2D mask geometry used to apply wall bleed.
-
-            // 16 = 4 vertices * 4 directions
-            var arrayBuffer = ArrayPool<Vector4>.Shared.Rent(_maxOccluders * 4 * 4);
-            // multiplied by 2 (it's a vector2 of bytes)
-            var arrayVIBuffer = ArrayPool<byte>.Shared.Rent(_maxOccluders * 2 * 4 * 4);
+            var arrayBuffer = ArrayPool<Vector4d>.Shared.Rent(_maxOccluders * 16);
+            var arrayVIBuffer = ArrayPool<byte>.Shared.Rent(_maxOccluders * 32);
             var indexBuffer = ArrayPool<ushort>.Shared.Rent(_maxOccluders * GetQuadBatchIndexCount() * 4);
-
             var arrayMaskBuffer = ArrayPool<Vector2>.Shared.Rent(_maxOccluders * 4);
             var indexMaskBuffer = ArrayPool<ushort>.Shared.Rent(_maxOccluders * GetQuadBatchIndexCount());
 
-            // I love mysterious variable names, it keeps you on your toes.
             var ai = 0;
             var avi = 0;
             var ami = 0;
             var ii = 0;
             var imi = 0;
             var amiMax = _maxOccluders * 4;
-
             var xforms = _entityManager.GetEntityQuery<TransformComponent>();
 
             try
             {
-                foreach (var (uid, comp) in _occluderSystem.GetIntersectingTrees(map, expandedBounds))
+                var occluders = CollectOccluders(map, expandedBounds, amiMax, xforms);
+                
+                for (int i = 0; i < occluders.Count; i++)
                 {
-                    if (ami >= amiMax)
-                        break;
-
-                    var treeBounds = _transformSystem.GetInvWorldMatrix(uid).TransformBox(expandedBounds);
-
-                    comp.Tree.QueryAabb((in ComponentTreeEntry<OccluderComponent> entry) =>
-                    {
-                        var (occluder, transform) = entry;
-                        if (!occluder.Enabled)
-                        {
-                            return true;
-                        }
-
-                        if (ami >= amiMax)
-                            return false;
-
-                        var worldTransform = _transformSystem.GetWorldMatrix(transform, xforms);
-                        var box = occluder.BoundingBox;
-
-                        var tl = Vector2.Transform(box.TopLeft, worldTransform);
-                        var tr = Vector2.Transform(box.TopRight, worldTransform);
-                        var br = Vector2.Transform(box.BottomRight, worldTransform);
-                        var bl = tl + br - tr;
-
-                        // Faces.
-                        var faceN = new Vector4(tl.X, tl.Y, tr.X, tr.Y);
-                        var faceE = new Vector4(tr.X, tr.Y, br.X, br.Y);
-                        var faceS = new Vector4(br.X, br.Y, bl.X, bl.Y);
-                        var faceW = new Vector4(bl.X, bl.Y, tl.X, tl.Y);
-
-                        //
-                        // Buckle up.
-                        // For the front-face culled final FOV to work, we obviously cannot have faces inside a series
-                        // of walls that are perpendicular to you.
-                        // This next code does that by only writing render indices for faces that should be rendered.
-                        //
-
-                        //
-                        // Keep in mind, a face only blocks light from *leaving* from the back.
-                        // It does not block light entering.
-                        //
-                        // So first rule: a face always exists if there's no neighboring occluder in that direction.
-                        // Can't have holes after all.
-                        // Second rule: otherwise, if either vertex of the face is "visible" from the camera,
-                        // we don't draw the face.
-                        // This visibility check is significantly more simple and resourceful than you might think.
-                        // A corner becomes "occluded" if it's not visible from either cardinal direction it's on.
-                        // So a the top right corner is occluded if there's something blocking visibility
-                        // on the top AND right.
-                        // This "occluded in direction" check has two parts: whether this is a neighboring occluder (duh)
-                        // And whether the is in that direction of the corner.
-                        // (so a corner on the back of a wall is occluded because the camera is position on the other side).
-                        //
-                        // You'll notice that in some cases like corner walls, ALL corners are marked "occluded".
-                        // This is fine! The occlusion only blocks incoming light,
-                        // and the neighboring walls DO treat those corners as visible.
-                        // Yes, you cannot share the handling of overlapping corners of two aligned neighboring occluders.
-                        // They still have different potential behavior, keeps the code simple(ish).
-                        //
-
-                        // Calculate delta positions from camera.
-                        var dTl = Vector2.Transform(tl, eyeTransform);
-                        var dTr = Vector2.Transform(tr, eyeTransform);
-                        var dBl = Vector2.Transform(bl, eyeTransform);
-                        var dBr = dBl + dTr - dTl;
-
-                        // Get which neighbors are occluding.
-                        var no = (occluder.Occluding & OccluderDir.North) != 0;
-                        var so = (occluder.Occluding & OccluderDir.South) != 0;
-                        var eo = (occluder.Occluding & OccluderDir.East) != 0;
-                        var wo = (occluder.Occluding & OccluderDir.West) != 0;
-
-                        // Do visibility tests for occluders (described above).
-                        static bool CheckFaceEyeVis(Vector2 a, Vector2 b)
-                        {
-                            // determine which side of the plane the face is on
-                            // the plane is at the origin of this coordinate system, which is also the eye
-                            // the normal of the plane is that of the face
-                            // therefore, if the dot <= 0, the face is facing the camera
-                            // I don't like this, but rotated occluders started happening
-
-                            // var normal =  (b - a).Rotated90DegreesAnticlockwiseWorld;
-                            // Vector2.Dot(normal, a) <= 0;
-                            // equivalent to:
-                            return a.X * b.Y > a.Y * b.X;
-                        }
-
-                        var nV = ((!no) && CheckFaceEyeVis(dTl, dTr));
-                        var sV = ((!so) && CheckFaceEyeVis(dBr, dBl));
-                        var eV = ((!eo) && CheckFaceEyeVis(dTr, dBr));
-                        var wV = ((!wo) && CheckFaceEyeVis(dBl, dTl));
-                        var tlV = nV || wV;
-                        var trV = nV || eV;
-                        var blV = sV || wV;
-                        var brV = sV || eV;
-
-                        // Handle faces, rules described above.
-                        // Note that "from above" it should be clockwise.
-                        // Further handling is in the shadow depth vertex shader.
-                        // (I have broken this so many times. - 20kdc)
-
-                        void WriteFaceOfBuffer(Vector4 vec)
-                        {
-                            var aiBase = ai;
-                            for (byte vi = 0; vi < 4; vi++)
-                            {
-                                arrayBuffer[ai++] = vec;
-                                // generates the sequence:
-                                // DddD
-                                // HHhh
-                                // deflection
-                                arrayVIBuffer[avi++] = (byte)((((vi + 1) & 2) != 0) ? 0 : 255);
-                                // height
-                                arrayVIBuffer[avi++] = (byte)(((vi & 2) != 0) ? 0 : 255);
-                            }
-
-                            QuadBatchIndexWrite(indexBuffer, ref ii, (ushort)aiBase);
-                        }
-
-                        // North face (TL/TR)
-                        if (!no || !tlV && !trV)
-                        {
-                            WriteFaceOfBuffer(faceN);
-                        }
-
-                        // East face (TR/BR)
-                        if (!eo || !brV && !trV)
-                        {
-                            WriteFaceOfBuffer(faceE);
-                        }
-
-                        // South face (BR/BL)
-                        if (!so || !brV && !blV)
-                        {
-                            WriteFaceOfBuffer(faceS);
-                        }
-
-                        // West face (BL/TL)
-                        if (!wo || !blV && !tlV)
-                        {
-                            WriteFaceOfBuffer(faceW);
-                        }
-
-                        // Generate mask geometry.
-                        arrayMaskBuffer[ami + 0] = new Vector2(tl.X, tl.Y);
-                        arrayMaskBuffer[ami + 1] = new Vector2(tr.X, tr.Y);
-                        arrayMaskBuffer[ami + 2] = new Vector2(br.X, br.Y);
-                        arrayMaskBuffer[ami + 3] = new Vector2(bl.X, bl.Y);
-
-                        // Generate mask indices.
-                        QuadBatchIndexWrite(indexMaskBuffer, ref imi, (ushort)ami);
-
-                        ami += 4;
-
-                        return true;
-                    }, treeBounds);
+                    var data = occluders[i];
+                    var neighbors = DetectNeighbors(data, occluders, i);
+                    
+                    GenerateOccluderGeometry(
+                        data, neighbors, eyeTransform,
+                        arrayBuffer, arrayVIBuffer, indexBuffer, arrayMaskBuffer, indexMaskBuffer,
+                        ref ai, ref avi, ref ami, ref ii, ref imi);
                 }
 
                 _occlusionDataLength = ii;
                 _occlusionMaskDataLength = imi;
 
-                // Upload geometry to OpenGL.
-                BindVertexArray(_occlusionVao.Handle);
-                CheckGlError();
-
-                _occlusionVbo.Reallocate(arrayBuffer.AsSpan(0, ai));
-                _occlusionVIVbo.Reallocate(arrayVIBuffer.AsSpan(0, avi));
-                _occlusionEbo.Reallocate(indexBuffer.AsSpan(0, ii));
-
-                BindVertexArray(_occlusionMaskVao.Handle);
-                CheckGlError();
-
-                _occlusionMaskVbo.Reallocate(arrayMaskBuffer.AsSpan(0, ami));
-                _occlusionMaskEbo.Reallocate(indexMaskBuffer.AsSpan(0, imi));
+                UploadOcclusionData(arrayBuffer, ai, arrayVIBuffer, avi, indexBuffer, ii, 
+                                   arrayMaskBuffer, ami, indexMaskBuffer, imi);
             }
             finally
             {
-                ArrayPool<Vector4>.Shared.Return(arrayBuffer);
+                ArrayPool<Vector4d>.Shared.Return(arrayBuffer);
                 ArrayPool<byte>.Shared.Return(arrayVIBuffer);
                 ArrayPool<ushort>.Shared.Return(indexBuffer);
                 ArrayPool<Vector2>.Shared.Return(arrayMaskBuffer);
@@ -1154,6 +1002,191 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             _debugStats.Occluders += ami / 4;
+        }
+
+        private List<OccluderData> CollectOccluders(MapId map, Box2 expandedBounds, int maxCount, 
+                                                    EntityQuery<TransformComponent> xforms)
+        {
+            var occluders = new List<OccluderData>();
+            var count = 0;
+
+            foreach (var (uid, comp) in _occluderSystem.GetIntersectingTrees(map, expandedBounds))
+            {
+                if (count >= maxCount) break;
+
+                var treeBounds = _transformSystem.GetInvWorldMatrix(uid).TransformBox(expandedBounds);
+                
+                comp.Tree.QueryAabb((in ComponentTreeEntry<OccluderComponent> entry) =>
+                {
+                    if (count >= maxCount) return false;
+                    
+                    var (occluder, transform) = entry;
+                    if (!occluder.Enabled) return true;
+
+                    var worldTransform = _transformSystem.GetWorldMatrix(transform, xforms);
+                    var box = occluder.BoundingBox;
+                    
+                    var tl = Vector2.Transform(box.TopLeft, worldTransform);
+                    var tr = Vector2.Transform(box.TopRight, worldTransform);
+                    var br = Vector2.Transform(box.BottomRight, worldTransform);
+                    var bl = tl + br - tr;
+                    
+                    occluders.Add(new OccluderData(occluder, tl, tr, br, bl));
+                    count += 4;
+                    
+                    return true;
+                }, treeBounds);
+            }
+            
+            return occluders;
+        }
+
+        private OccluderDir DetectNeighbors(OccluderData current, List<OccluderData> all, int currentIndex)
+        {
+            const float tolerance = 0.01f;
+            var neighbors = OccluderDir.None;
+            
+            for (int i = 0; i < all.Count; i++)
+            {
+                if (i == currentIndex) continue;
+                
+                var other = all[i];
+                
+                if (EdgesMatch(current.TopLeft, current.TopRight, other.BottomLeft, other.BottomRight, tolerance))
+                    neighbors |= OccluderDir.North;
+                    
+                if (EdgesMatch(current.BottomLeft, current.BottomRight, other.TopLeft, other.TopRight, tolerance))
+                    neighbors |= OccluderDir.South;
+                    
+                if (EdgesMatch(current.TopRight, current.BottomRight, other.TopLeft, other.BottomLeft, tolerance))
+                    neighbors |= OccluderDir.East;
+                    
+                if (EdgesMatch(current.TopLeft, current.BottomLeft, other.TopRight, other.BottomRight, tolerance))
+                    neighbors |= OccluderDir.West;
+            }
+            
+            return neighbors;
+        }
+
+        private static bool EdgesMatch(Vector2 a1, Vector2 a2, Vector2 b1, Vector2 b2, float tolerance)
+        {
+            var vertical = Math.Abs(a1.X - a2.X) < tolerance;
+            
+            if (vertical)
+            {
+                return Math.Abs(a1.X - b1.X) < tolerance && 
+                       Math.Max(a1.Y, b1.Y) < Math.Min(a2.Y, b2.Y);
+            }
+            
+            return Math.Abs(a1.Y - b1.Y) < tolerance && 
+                   Math.Max(a1.X, b1.X) < Math.Min(a2.X, b2.X);
+        }
+
+        private void GenerateOccluderGeometry(
+            OccluderData data, OccluderDir neighbors, Matrix3x2 eyeTransform,
+            Vector4d[] arrayBuffer, byte[] arrayVIBuffer, ushort[] indexBuffer,
+            Vector2[] arrayMaskBuffer, ushort[] indexMaskBuffer,
+            ref int ai, ref int avi, ref int ami, ref int ii, ref int imi)
+        {
+            var faces = new[]
+            {
+                new Vector4d(data.TopLeft.X, data.TopLeft.Y, data.TopRight.X, data.TopRight.Y),
+                new Vector4d(data.TopRight.X, data.TopRight.Y, data.BottomRight.X, data.BottomRight.Y),
+                new Vector4d(data.BottomRight.X, data.BottomRight.Y, data.BottomLeft.X, data.BottomLeft.Y),
+                new Vector4d(data.BottomLeft.X, data.BottomLeft.Y, data.TopLeft.X, data.TopLeft.Y)
+            };
+
+            var deltas = new[]
+            {
+                Vector2.Transform(data.TopLeft, eyeTransform),
+                Vector2.Transform(data.TopRight, eyeTransform),
+                Vector2.Transform(data.BottomLeft, eyeTransform),
+                Vector2.Transform(data.BottomRight, eyeTransform)
+            };
+            deltas[3] = deltas[2] + deltas[1] - deltas[0];
+
+            var hasNeighbor = new[]
+            {
+                (neighbors & OccluderDir.North) != 0,
+                (neighbors & OccluderDir.East) != 0,
+                (neighbors & OccluderDir.South) != 0,
+                (neighbors & OccluderDir.West) != 0
+            };
+
+            // FOV logic: faces are only generated if no neighbor or both corners aren't visible
+            var faceVisibility = new[]
+            {
+                !hasNeighbor[0] && CheckFaceEyeVis(deltas[0], deltas[1]),
+                !hasNeighbor[1] && CheckFaceEyeVis(deltas[1], deltas[3]),
+                !hasNeighbor[2] && CheckFaceEyeVis(deltas[3], deltas[2]),
+                !hasNeighbor[3] && CheckFaceEyeVis(deltas[2], deltas[0])
+            };
+
+            var cornerVisibility = new[]
+            {
+                faceVisibility[0] || faceVisibility[3], // TL
+                faceVisibility[0] || faceVisibility[1], // TR
+                faceVisibility[2] || faceVisibility[3], // BL
+                faceVisibility[2] || faceVisibility[1]  // BR
+            };
+
+            var shouldGenerateFace = new[]
+            {
+                !hasNeighbor[0] || (!cornerVisibility[0] && !cornerVisibility[1]),
+                !hasNeighbor[1] || (!cornerVisibility[1] && !cornerVisibility[3]),
+                !hasNeighbor[2] || (!cornerVisibility[3] && !cornerVisibility[2]),
+                !hasNeighbor[3] || (!cornerVisibility[2] && !cornerVisibility[0])
+            };
+
+            for (int dir = 0; dir < 4; dir++)
+            {
+                if (shouldGenerateFace[dir])
+                {
+                    WriteFaceBuffer(faces[dir], arrayBuffer, arrayVIBuffer, indexBuffer, ref ai, ref avi, ref ii);
+                }
+            }
+
+            // Generate mask geometry
+            arrayMaskBuffer[ami] = new Vector2(data.TopLeft.X, data.TopLeft.Y);
+            arrayMaskBuffer[ami + 1] = new Vector2(data.TopRight.X, data.TopRight.Y);
+            arrayMaskBuffer[ami + 2] = new Vector2(data.BottomRight.X, data.BottomRight.Y);
+            arrayMaskBuffer[ami + 3] = new Vector2(data.BottomLeft.X, data.BottomLeft.Y);
+            
+            QuadBatchIndexWrite(indexMaskBuffer, ref imi, (ushort)ami);
+            ami += 4;
+
+            static bool CheckFaceEyeVis(Vector2 a, Vector2 b) => a.X * b.Y > a.Y * b.X;
+        }
+
+        private void WriteFaceBuffer(Vector4d face, Vector4d[] arrayBuffer, byte[] arrayVIBuffer, 
+                                     ushort[] indexBuffer, ref int ai, ref int avi, ref int ii)
+        {
+            var aiBase = ai;
+            for (byte vi = 0; vi < 4; vi++)
+            {
+                arrayBuffer[ai++] = face;
+                arrayVIBuffer[avi++] = (byte)((((vi + 1) & 2) != 0) ? 0 : 255);
+                arrayVIBuffer[avi++] = (byte)(((vi & 2) != 0) ? 0 : 255);
+            }
+            QuadBatchIndexWrite(indexBuffer, ref ii, (ushort)aiBase);
+        }
+
+        private void UploadOcclusionData(Vector4d[] arrayBuffer, int ai, byte[] arrayVIBuffer, int avi,
+                                         ushort[] indexBuffer, int ii, Vector2[] arrayMaskBuffer, int ami,
+                                         ushort[] indexMaskBuffer, int imi)
+        {
+            BindVertexArray(_occlusionVao.Handle);
+            CheckGlError();
+
+            _occlusionVbo.Reallocate(arrayBuffer.AsSpan(0, ai));
+            _occlusionVIVbo.Reallocate(arrayVIBuffer.AsSpan(0, avi));
+            _occlusionEbo.Reallocate(indexBuffer.AsSpan(0, ii));
+
+            BindVertexArray(_occlusionMaskVao.Handle);
+            CheckGlError();
+
+            _occlusionMaskVbo.Reallocate(arrayMaskBuffer.AsSpan(0, ami));
+            _occlusionMaskEbo.Reallocate(indexMaskBuffer.AsSpan(0, imi));
         }
 
         private void RegenLightRts(Viewport viewport)

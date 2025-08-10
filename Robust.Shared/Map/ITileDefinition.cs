@@ -31,6 +31,11 @@ namespace Robust.Shared.Map
         Dictionary<Direction, ResPath> EdgeSprites { get; }
 
         /// <summary>
+        ///     If the edge sprites should be drawn on the interior of the tile rather than the exterior
+        /// </summary>
+        bool InteriorEdges => false;
+
+        /// <summary>
         ///     When drawing adjacent tiles that both specify edge sprites, the one with the higher priority
         ///     is always solely drawn.
         /// </summary>

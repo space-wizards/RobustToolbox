@@ -223,7 +223,7 @@ namespace Robust.Client.Map
                             break;
                     }
 
-                    if (angle != Angle.Zero)
+                    if (angle != Angle.Zero && !def.InteriorEdges)
                     {
                         image.Mutate(o => o.Rotate((float)-angle.Degrees));
                     }

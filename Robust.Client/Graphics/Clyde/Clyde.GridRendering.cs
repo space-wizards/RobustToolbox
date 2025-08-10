@@ -158,6 +158,16 @@ namespace Robust.Client.Graphics.Clyde
                         GL.DrawElements(GetQuadGLPrimitiveType(), datum.EdgeCount * GetQuadBatchIndexCount(), DrawElementsType.UnsignedShort, 0);
                         CheckGlError();
                     }
+
+                    if (_drawTileEdges && datum.InteriorEdgeCount > 0)
+                    {
+                        BindVertexArray(datum.InteriorEdgeVAO);
+                        CheckGlError();
+
+                        _debugStats.LastGLDrawCalls += 1;
+                        GL.DrawElements(GetQuadGLPrimitiveType(), datum.InteriorEdgeCount * GetQuadBatchIndexCount(), DrawElementsType.UnsignedShort, 0);
+                        CheckGlError();
+                    }
                 }
 
                 requiresFlush = false;
@@ -281,6 +291,14 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _updateChunkEdges(Entity<MapGridComponent> grid, MapChunk chunk, MapChunkData datum)
         {
+            _updateChunkExteriorEdges(grid, chunk, datum);
+            _updateChunkInteriorEdges(grid, chunk, datum);
+
+            datum.EdgeDirty = false;
+        }
+
+        private void _updateChunkExteriorEdges(Entity<MapGridComponent> grid, MapChunk chunk, MapChunkData datum)
+        {
             // Need a buffer that can potentially store all neighbor tiles
             Span<ushort> indexBuffer = EnsureSize(ref _chunkMeshBuilderIndexBuffer, _indicesPerChunk(chunk) * 8);
             Span<Vertex2D> vertexBuffer = EnsureSize(ref _chunkMeshBuilderVertexBuffer, _verticesPerChunk(chunk) * 8);
@@ -316,7 +334,7 @@ namespace Robust.Client.Graphics.Clyde
                                 continue;
 
                             // If it's the same tile then no edge to be drawn.
-                            if (tile.TypeId == neighborTile.TypeId || neighborDef.EdgeSprites.Count == 0)
+                            if (tile.TypeId == neighborTile.TypeId || neighborDef.EdgeSprites.Count == 0 || neighborDef.InteriorEdges)
                                 continue;
 
                             // If neighbor is a lower or same priority then us then don't draw on our tile.
@@ -349,7 +367,82 @@ namespace Robust.Client.Graphics.Clyde
             datum.EdgeVBO.Reallocate(vertSlice);
 
             datum.EdgeCount = i;
-            datum.EdgeDirty = false;
+        }
+
+        private void _updateChunkInteriorEdges(Entity<MapGridComponent> grid, MapChunk chunk, MapChunkData datum)
+        {
+            // Need a buffer that can potentially store all neighbor tiles
+            Span<ushort> indexBuffer = EnsureSize(ref _chunkMeshBuilderIndexBuffer, _indicesPerChunk(chunk) * 8);
+            Span<Vertex2D> vertexBuffer = EnsureSize(ref _chunkMeshBuilderVertexBuffer, _verticesPerChunk(chunk) * 8);
+
+            var i = 0;
+            var chunkSize = grid.Comp.ChunkSize;
+            var chunkOriginScaled = chunk.Indices * chunkSize;
+            var maps = _entityManager.System<SharedMapSystem>();
+
+            for (ushort x = 0; x < chunkSize; x++)
+            {
+                for (ushort y = 0; y < chunkSize; y++)
+                {
+                    var gridX = x + chunkOriginScaled.X;
+                    var gridY = y + chunkOriginScaled.Y;
+                    var tile = chunk.GetTile(x, y);
+                    if (!_tileDefinitionManager.TryGetDefinition(tile.TypeId, out var tileDef))
+                        continue;
+
+                    if (!tileDef.InteriorEdges)
+                        continue;
+
+                    // Edge render
+                    for (var nx = -1; nx <= 1; nx++)
+                    {
+                        for (var ny = -1; ny <= 1; ny++)
+                        {
+                            if (nx == 0 && ny == 0)
+                                continue;
+
+                            var isCorner = nx != 0 && ny != 0;
+
+                            var neighborIndices = new Vector2i(gridX + nx, gridY + ny);
+                            var xNeighborIndices = new Vector2i(gridX + nx, gridY);
+                            var yNeighborIndices = new Vector2i(gridX, gridY + ny);
+
+                            var neighborIsSame = maps.TryGetTile(grid.Comp, neighborIndices, out var neighborTile) && neighborTile.TypeId == tile.TypeId;
+                            var xNeighborIsSame = maps.TryGetTile(grid.Comp, xNeighborIndices, out var xNeighborTile) && xNeighborTile.TypeId == tile.TypeId;
+                            var yNeighborIsSame = maps.TryGetTile(grid.Comp, yNeighborIndices, out var yNeighborTile) && yNeighborTile.TypeId == tile.TypeId;
+
+                            if (!isCorner && neighborIsSame)
+                                continue;
+
+                            if (isCorner && xNeighborIsSame && yNeighborIsSame && neighborIsSame)
+                                continue;
+
+                            var direction = new Vector2i(nx, ny).AsDirection();
+                            var regionMaybe = _tileDefinitionManager.TileAtlasRegion(tile.TypeId, direction);
+
+                            if (regionMaybe == null)
+                                continue;
+
+                            var region = regionMaybe[0];
+                            WriteTileToBuffers(i, gridX, gridY, vertexBuffer, indexBuffer, region, 0);
+                            i += 1;
+                        }
+                    }
+                }
+            }
+
+            // We don't save the edge buffers back because we might need to re-use it if a neighbor chunk updates.
+            var indexSlice = indexBuffer[..(i * GetQuadBatchIndexCount())];
+            var vertSlice = vertexBuffer[..(i * 4)];
+
+            GL.BindVertexArray(datum.InteriorEdgeVAO);
+            CheckGlError();
+            datum.InteriorEdgeEBO.Use();
+            datum.InteriorEdgeVBO.Use();
+            datum.InteriorEdgeEBO.Reallocate(indexSlice);
+            datum.InteriorEdgeVBO.Reallocate(vertSlice);
+
+            datum.InteriorEdgeCount = i;
         }
 
         private unsafe void _initChunkBuffers(Entity<MapGridComponent> grid, MapChunk chunk, MapChunkData datum)
@@ -390,7 +483,7 @@ namespace Robust.Client.Graphics.Clyde
             var edgeEbo = new GLBuffer(this, BufferTarget.ElementArrayBuffer, BufferUsageHint.DynamicDraw,
                 eboSize * 8, $"Grid {grid.Owner} chunk {chunk.Indices} EdgeEBO");
 
-            ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, vao, $"Grid {grid.Owner} chunk {chunk.Indices} EdgeVAO");
+            ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, edgeVao, $"Grid {grid.Owner} chunk {chunk.Indices} EdgeVAO");
             SetupVAOLayout();
             CheckGlError();
 
@@ -400,6 +493,27 @@ namespace Robust.Client.Graphics.Clyde
             datum.EdgeEBO = edgeEbo;
             datum.EdgeVBO = edgeVbo;
             datum.EdgeVAO = edgeVao;
+
+            // InteriorEdgeVAO
+            var interiorEdgeVao = GenVertexArray();
+            BindVertexArray(interiorEdgeVao);
+            CheckGlError();
+
+            var interiorEdgeVbo = new GLBuffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
+                vboSize * 8, $"Grid {grid.Owner} chunk {chunk.Indices} InteriorEdgeVBO");
+            var interiorEdgeEbo = new GLBuffer(this, BufferTarget.ElementArrayBuffer, BufferUsageHint.DynamicDraw,
+                eboSize * 8, $"Grid {grid.Owner} chunk {chunk.Indices} InteriorEdgeEBO");
+
+            ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, interiorEdgeVao, $"Grid {grid.Owner} chunk {chunk.Indices} InteriorEdgeVAO");
+            SetupVAOLayout();
+            CheckGlError();
+
+            interiorEdgeVbo.Use();
+            interiorEdgeEbo.Use();
+
+            datum.InteriorEdgeEBO = interiorEdgeEbo;
+            datum.InteriorEdgeVBO = interiorEdgeVbo;
+            datum.InteriorEdgeVAO = interiorEdgeVao;
         }
 
         private void DeleteChunk(MapChunkData data)
@@ -518,6 +632,11 @@ namespace Robust.Client.Graphics.Clyde
             public GLBuffer VBO = default!;
             public GLBuffer EBO = default!;
             public int TileCount;
+
+            public uint InteriorEdgeVAO;
+            public GLBuffer InteriorEdgeVBO = default!;
+            public GLBuffer InteriorEdgeEBO = default!;
+            public int InteriorEdgeCount;
 
             public uint EdgeVAO;
             public GLBuffer EdgeVBO = default!;

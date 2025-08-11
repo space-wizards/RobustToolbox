@@ -39,7 +39,7 @@ public sealed class RobustRandom : IRobustRandom
 
     public TimeSpan Next(TimeSpan minTime, TimeSpan maxTime)
     {
-        DebugTools.Assert(minTime < maxTime);
+        DebugTools.Assert(minTime <= maxTime);
         return minTime + (maxTime - minTime) * _random.NextDouble();
     }
 

@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Effects;

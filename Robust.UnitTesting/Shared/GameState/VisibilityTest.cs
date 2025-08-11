@@ -22,6 +22,7 @@ public sealed partial class VisibilityTest : RobustIntegrationTest
     public async Task UnknownEntityTest()
     {
         var server = StartServer();
+        await server.WaitIdleAsync();
 
         var xforms = server.System<SharedTransformSystem>();
         var vis = server.System<VisibilitySystem>();

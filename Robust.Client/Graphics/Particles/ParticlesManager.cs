@@ -186,35 +186,34 @@ public sealed class ParticleSystem {
     {
         int particlesSpawned = 0;
         for(int i=0; i<_particleCount; i++){
-            Particle p = _particles[i];
-            if(p.active){
-                p.lifetime += args.DeltaSeconds;
-                p.transform = _baseTransform * _transform(p.lifetime);
-                p.color = _color(p.lifetime);
-                p.velocity += _acceleration(p.lifetime, p.velocity) * args.DeltaSeconds;
-                p.position += p.velocity*args.DeltaSeconds;
-                if(p.fadein > p.lifetime)
-                    p.color.A = Math.Clamp(p.lifetime/p.fadein, 0, 1);
-                if(p.fadeout > p.lifespan-p.lifetime)
-                    p.color.A = Math.Clamp((p.lifespan-p.lifetime)/p.fadeout, 0, 1);
+            if(_particles[i].active){
+                _particles[i].lifetime += args.DeltaSeconds;
+                _particles[i].transform = _baseTransform * _transform(_particles[i].lifetime);
+                _particles[i].color = _color(_particles[i].lifetime);
+                _particles[i].velocity += _acceleration(_particles[i].lifetime, _particles[i].velocity) * args.DeltaSeconds;
+                _particles[i].position += _particles[i].velocity*args.DeltaSeconds;
+                if(_particles[i].fadein > _particles[i].lifetime)
+                    _particles[i].color.A = Math.Clamp(_particles[i].lifetime/_particles[i].fadein, 0, 1);
+                if(_particles[i].fadeout > _particles[i].lifespan-_particles[i].lifetime)
+                    _particles[i].color.A = Math.Clamp((_particles[i].lifespan-_particles[i].lifetime)/_particles[i].fadeout, 0, 1);
 
-                if(p.lifetime > p.lifespan || p.position.X > _upperBound.X || p.position.Y > _upperBound.Y || p.position.Z > _upperBound.Z || p.position.X < _lowerBound.X || p.position.Y < _lowerBound.Y || p.position.Z < _lowerBound.Z)
-                    p.active = false;
+                if(_particles[i].lifetime > _particles[i].lifespan || _particles[i].position.X > _upperBound.X || _particles[i].position.Y > _upperBound.Y || _particles[i].position.Z > _upperBound.Z || _particles[i].position.X < _lowerBound.X || _particles[i].position.Y < _lowerBound.Y || _particles[i].position.Z < _lowerBound.Z)
+                    _particles[i].active = false;
 
-                if(p.texture is null)
-                    p.texture = _icon();
+                if(_particles[i].texture is null)
+                    _particles[i].texture = _icon();
             }
-            if (!p.active && particlesSpawned < _particlesPerSecond*args.DeltaSeconds) {
-                p.lifetime = 0;
-                p.texture = _icon();
-                p.position = _spawnPosition();
-                p.velocity = _spawnVelocity();
-                p.transform = _baseTransform * _transform(p.lifetime);
-                p.color = _color(p.lifetime);
-                p.lifespan = _lifespan();
-                p.fadein = _fadein();
-                p.fadeout = _fadeout();
-                p.active = true;
+            if (!_particles[i].active && particlesSpawned < _particlesPerSecond*args.DeltaSeconds) {
+                _particles[i].lifetime = 0;
+                _particles[i].texture = _icon();
+                _particles[i].position = _spawnPosition();
+                _particles[i].velocity = _spawnVelocity();
+                _particles[i].transform = _baseTransform * _transform(_particles[i].lifetime);
+                _particles[i].color = _color(_particles[i].lifetime);
+                _particles[i].lifespan = _lifespan();
+                _particles[i].fadein = _fadein();
+                _particles[i].fadeout = _fadeout();
+                _particles[i].active = true;
                 particlesSpawned++;
             }
         }
@@ -232,7 +231,7 @@ public sealed class ParticleSystem {
     }
 }
 
-internal sealed class Particle {
+internal struct Particle {
     public Texture? texture;
     public Vector3 position;
     public Vector3 velocity;

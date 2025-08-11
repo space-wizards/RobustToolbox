@@ -8,7 +8,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
-using Vector3 = Robust.Shared.Maths.Vector3;
 
 
 namespace Robust.Client.Graphics;
@@ -225,7 +224,7 @@ public sealed class ParticleSystem {
         {
             if(particle.active && particle.texture is not null){
                 handle.SetTransform(particle.transform * transform);
-                handle.DrawTextureRect(particle.texture!, new Box2(particle.position.Xy, (particle.position.Xy+particle.texture!.Size)), particle.color);
+                handle.DrawTextureRect(particle.texture!, new Box2(new Vector2(particle.position.X, particle.position.Y), new Vector2(particle.position.X, particle.position.Y)+particle.texture!.Size), particle.color);
             }
         }
     }

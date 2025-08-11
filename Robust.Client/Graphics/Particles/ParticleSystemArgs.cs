@@ -3,7 +3,6 @@ using System.Drawing;
 using System.Numerics;
 using Robust.Shared.Maths;
 using Color = Robust.Shared.Maths.Color;
-using Vector3 = Robust.Shared.Maths.Vector3;
 
 namespace Robust.Client.Graphics;
 

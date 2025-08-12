@@ -1,3 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Localization;
 using Robust.Shared.Maths;
@@ -17,30 +22,32 @@ namespace Robust.Client.UserInterface.Controls
         public new const string StylePseudoClassPressed = "pressed";
         public new const string StylePseudoClassDisabled = "disabled";
 
-        public const string StylePropertyIconTexture = "icon-texture";
-        public const string StylePropertyFontColor = "font-color";
+        public const string StylePropertySeparation = "separation";
 
+        private const int DefaultSeparation = 0;
+
+        private int ActualSeparation
+        {
+            get
+            {
+                if (TryGetStyleProperty(StylePropertySeparation, out int separation))
+                {
+                    return separation;
+                }
+
+                return SeparationOverride ?? DefaultSeparation;
+            }
+        }
+
+        public int? SeparationOverride { get; set; }
         public Label Label { get; }
         public Label OffStateLabel { get; }
         public Label OnStateLabel { get; }
-
-        // I think PanelContainer is the simplest container; it is only used here
-        // so the labels can reserve overlapping spaces, so that switching which one is
-        // visible when the button is clicked doesn't affect the texture position or the
-        // surrounding layout
-        public PanelContainer StateLabelsContainer { get; }
         public TextureRect TextureRect { get; }
 
         public SwitchButton()
         {
             ToggleMode = true;
-
-            var hBox = new BoxContainer
-            {
-                Orientation = BoxContainer.LayoutOrientation.Horizontal,
-                StyleClasses = { StyleClassSwitchButton }
-            };
-            AddChild(hBox);
 
             TextureRect = new TextureRect
             {
@@ -60,36 +67,51 @@ namespace Robust.Client.UserInterface.Controls
             OnStateLabel.ReservesSpace = true;
             OnStateLabel.Visible = false;
 
-            StateLabelsContainer = new PanelContainer();
-            StateLabelsContainer.HorizontalExpand = false;  // will change if text added for Label
-            StateLabelsContainer.AddChild(OffStateLabel);
-            StateLabelsContainer.AddChild(OnStateLabel);
-
             Label.HorizontalExpand = true;
-            hBox.AddChild(Label);
-            hBox.AddChild(TextureRect);
-            hBox.AddChild(StateLabelsContainer);
+
+            AddChild(Label);
+            AddChild(TextureRect);
+            AddChild(OffStateLabel);
+            AddChild(OnStateLabel);
         }
 
         protected override void DrawModeChanged()
         {
             if (Disabled)
             {
-                AddStylePseudoClass(StylePseudoClassDisabled);
+                if (!HasStylePseudoClass(StylePseudoClassDisabled))
+                {
+                    AddStylePseudoClass(StylePseudoClassDisabled);
+                }
             }
             else
             {
-                RemoveStylePseudoClass(StylePseudoClassDisabled);
+                if (HasStylePseudoClass(StylePseudoClassDisabled))
+                {
+                    RemoveStylePseudoClass(StylePseudoClassDisabled);
+                }
             }
 
             if (Pressed)
             {
-                AddStylePseudoClass(StylePseudoClassPressed);
+                if (!HasStylePseudoClass(StylePseudoClassPressed))
+                {
+                    AddStylePseudoClass(StylePseudoClassPressed);
+                }
             }
             else
             {
-                RemoveStylePseudoClass(StylePseudoClassPressed);
+                if (HasStylePseudoClass(StylePseudoClassPressed))
+                {
+                    RemoveStylePseudoClass(StylePseudoClassPressed);
+                }
             }
+
+            // child selectors don't update correctly currently, force update all the children
+            Label?.Restyle();
+            TextureRect?.Restyle();
+            OffStateLabel?.Restyle();
+            OnStateLabel?.Restyle();
 
             // no base.DrawModeChanged() call - ContainerButton's pseudoclass handling
             // doesn't support a button being both pressed and disabled
@@ -114,16 +136,7 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 Label.Text = value;
-                if (string.IsNullOrEmpty(value))
-                {
-                    Label.Visible = false;
-                    StateLabelsContainer.HorizontalExpand = true;
-                }
-                else
-                {
-                    Label.Visible = true;
-                    StateLabelsContainer.HorizontalExpand = false;
-                }
+                Label.Visible = !string.IsNullOrEmpty(value);
             }
         }
 
@@ -149,29 +162,6 @@ namespace Robust.Client.UserInterface.Controls
 
         private void UpdateAppearance()
         {
-            TryGetStyleProperty(StylePropertyIconTexture, out Texture? texture);
-            if (texture is not null && TextureRect is not null)
-            {
-                TextureRect.Texture = texture;
-            }
-
-            TryGetStyleProperty(StylePropertyFontColor, out Color? fontColor);
-            if (fontColor is not null)
-            {
-                if (Label is not null)
-                {
-                    Label.FontColorOverride = fontColor;
-                }
-                if (OffStateLabel is not null)
-                {
-                    OffStateLabel.FontColorOverride = fontColor;
-                }
-                if (OnStateLabel is not null)
-                {
-                    OnStateLabel.FontColorOverride = fontColor;
-                }
-            }
-
             if (OffStateLabel is not null)
             {
                 OffStateLabel.Visible = !Pressed;
@@ -185,8 +175,89 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override void StylePropertiesChanged()
         {
-            UpdateAppearance();
             base.StylePropertiesChanged();
+            UpdateAppearance();
+        }
+
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
+        {
+            var desiredSize = Vector2.Zero;
+            var separation = ActualSeparation;
+
+            // Start with the icon, since it always appears
+            if (TextureRect is not null)
+            {
+                TextureRect.Measure(availableSize);
+                desiredSize = TextureRect.DesiredSize;
+            }
+
+            // Add space for the label if it has text
+            if (! string.IsNullOrEmpty(Label?.Text))
+            {
+                Label.Measure(availableSize);
+                desiredSize.X += separation + Label.DesiredSize.X;
+                desiredSize.Y = float.Max(desiredSize.Y, Label.DesiredSize.Y);
+            }
+
+            // Add space for the state labels if at least one of them has text
+            var stateLabelSpace = Vector2.Zero;
+            if (! string.IsNullOrEmpty(OffStateLabel?.Text))
+            {
+                OffStateLabel.Measure(availableSize);
+                stateLabelSpace = OffStateLabel.DesiredSize;
+            }
+
+            if (! string.IsNullOrEmpty(OnStateLabel?.Text))
+            {
+                OnStateLabel.Measure(availableSize);
+                stateLabelSpace.Y = float.Max(stateLabelSpace.Y, OnStateLabel.DesiredSize.Y);
+                stateLabelSpace.X = float.Max(stateLabelSpace.X, OnStateLabel.DesiredSize.X);
+            }
+
+            if (stateLabelSpace != Vector2.Zero)
+            {
+                desiredSize.X += separation + stateLabelSpace.X;
+                desiredSize.Y = float.Max(desiredSize.Y, stateLabelSpace.Y);
+            }
+
+            return desiredSize;
+        }
+
+        protected override Vector2 ArrangeOverride(Vector2 finalSize)
+        {
+            var separation = ActualSeparation;
+
+            var actualMainLabelWidth = finalSize.X - separation - TextureRect.DesiredSize.X;
+            float iconPosition = 0;
+            float stateLabelPosition = 0;
+
+            if (string.IsNullOrEmpty(Label?.Text))
+            {
+                stateLabelPosition = TextureRect.DesiredSize.X + separation;
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(OffStateLabel?.Text) || !string.IsNullOrEmpty(OnStateLabel?.Text))
+                {
+                    var stateLabelsWidth = float.Max(OffStateLabel!.DesiredSize.X, OnStateLabel.DesiredSize.X);
+                    actualMainLabelWidth -= (separation + stateLabelsWidth);
+                }
+                actualMainLabelWidth = float.Max(actualMainLabelWidth, 0);
+                iconPosition = actualMainLabelWidth + separation;
+                stateLabelPosition = iconPosition + TextureRect.DesiredSize.X + separation;
+            }
+
+            var mainLabelTargetBox = new UIBox2(0, 0, actualMainLabelWidth, finalSize.Y);
+            Label?.Arrange(mainLabelTargetBox);
+
+            var iconTargetBox = new UIBox2(iconPosition, 0, iconPosition + TextureRect.DesiredSize.X, finalSize.Y);
+            TextureRect.Arrange(iconTargetBox);
+
+            var stateLabelsTargetBox = new UIBox2(stateLabelPosition, 0, finalSize.X, finalSize.Y);
+            OffStateLabel?.Arrange(stateLabelsTargetBox);
+            OnStateLabel?.Arrange(stateLabelsTargetBox);
+
+            return finalSize;
         }
     }
 }

@@ -107,7 +107,8 @@ namespace Robust.Client.UserInterface.Controls
                 }
             }
 
-            // child selectors don't update correctly currently, force update all the children
+            // Child selectors don't update correctly currently, force update all the children.
+            // A comment in Button::DrawModeChanged() suggests this is only needed temporarily.
             Label?.Restyle();
             TextureRect?.Restyle();
             OffStateLabel?.Restyle();

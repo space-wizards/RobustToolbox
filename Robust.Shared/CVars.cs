@@ -405,6 +405,12 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> NetHWId =
             CVarDef.Create("net.hwid", true, CVar.SERVERONLY);
 
+        /// <summary>
+        /// If true, the sessions of all players connected to the server will be shared with connected clients.
+        /// If false, a client will only receive session information about itself.
+        /// </summary>
+        public static readonly CVarDef<bool> NetShareAllClientSessions =
+            CVarDef.Create("net.share_all_client_sessions", false, CVar.REPLICATED | CVar.SERVER);
 
         /**
          * SUS

@@ -467,6 +467,13 @@ namespace Robust.Shared.Localization
             {
                 var errors = resource.Errors;
                 WriteWarningForErrs(path, errors, data);
+
+                if (path.CanonPath.StartsWith($"{LocaleDirPath}/{culture.Name}/_"))
+                {
+                    context.AddResourceOverriding(resource);
+                    continue;
+                }
+
                 if (!context.InsertResourcesAndReport(resource, path, out var errs))
                 {
                     resErrors.AddRange(errs);

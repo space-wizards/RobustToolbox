@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Input
@@ -86,6 +86,9 @@ namespace Robust.Shared.Input
         public static readonly BoundKeyFunction TextTabComplete = "TextTabComplete";
         public static readonly BoundKeyFunction TextCompleteNext = "TextCompleteNext";
         public static readonly BoundKeyFunction TextCompletePrev = "TextCompletePrev";
+
+        public static readonly string CustomCommandPrefix = "CustomCommand-";
+        public static readonly int MaxCustomCommandCount = 1024;
     }
 
     [Serializable, NetSerializable]

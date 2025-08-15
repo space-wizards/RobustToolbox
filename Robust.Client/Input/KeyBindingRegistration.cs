@@ -1,4 +1,4 @@
-﻿using Robust.Shared.Input;
+using Robust.Shared.Input;
 using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Client.Input
@@ -26,5 +26,7 @@ namespace Robust.Client.Input
         public bool CanRepeat;
         [DataField("allowSubCombs")]
         public bool AllowSubCombs;
+        [DataField("functionCommand")]
+        public string? FunctionCommand;
     }
 }

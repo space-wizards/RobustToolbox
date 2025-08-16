@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.ResourceManagement;
+using Robust.Shared.Collections;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
@@ -334,7 +335,7 @@ namespace Robust.Client.Graphics.Clyde
                                 continue;
 
                             // If it's the same tile then no edge to be drawn.
-                            if (tile.TypeId == neighborTile.TypeId || neighborDef.EdgeSprites.Count == 0 || neighborDef.InteriorEdges)
+                            if (tile.TypeId == neighborTile.TypeId || neighborDef.EdgeSprites.Count == 0 || neighborDef.BordersMode != TileBordersMode.Exterior8Patch)
                                 continue;
 
                             // If neighbor is a lower or same priority then us then don't draw on our tile.
@@ -369,6 +370,168 @@ namespace Robust.Client.Graphics.Clyde
             datum.EdgeCount = i;
         }
 
+        private void _updateTileInterior8Patch(Entity<MapGridComponent> grid, int gridX, int gridY, Tile tile, Span<ushort> indexBuffer, Span<Vertex2D> vertexBuffer, ref int i)
+        {
+            var maps = _entityManager.System<SharedMapSystem>();
+
+            // Edge render
+            for (var nx = -1; nx <= 1; nx++)
+            {
+                for (var ny = -1; ny <= 1; ny++)
+                {
+                    if (nx == 0 && ny == 0)
+                        continue;
+
+                    var isCorner = nx != 0 && ny != 0;
+
+                    var neighborIndices = new Vector2i(gridX + nx, gridY + ny);
+                    var xNeighborIndices = new Vector2i(gridX + nx, gridY);
+                    var yNeighborIndices = new Vector2i(gridX, gridY + ny);
+
+                    var neighborIsSame = maps.TryGetTile(grid.Comp, neighborIndices, out var neighborTile) && neighborTile.TypeId == tile.TypeId;
+                    var xNeighborIsSame = maps.TryGetTile(grid.Comp, xNeighborIndices, out var xNeighborTile) && xNeighborTile.TypeId == tile.TypeId;
+                    var yNeighborIsSame = maps.TryGetTile(grid.Comp, yNeighborIndices, out var yNeighborTile) && yNeighborTile.TypeId == tile.TypeId;
+
+                    if (!isCorner && neighborIsSame)
+                        continue;
+
+                    if (isCorner && xNeighborIsSame && yNeighborIsSame && neighborIsSame)
+                        continue;
+
+                    var direction = new Vector2i(nx, ny).AsDirection();
+                    var regionMaybe = _tileDefinitionManager.TileAtlasRegion(tile.TypeId, direction);
+
+                    if (regionMaybe == null)
+                        continue;
+
+                    var region = regionMaybe[0];
+                    WriteTileToBuffers(i, gridX, gridY, vertexBuffer, indexBuffer, region, 0);
+                    i += 1;
+                }
+            }
+        }
+
+        private void _updateTileInterior4Of16Patch(Entity<MapGridComponent> grid, int gridX, int gridY, Tile tile, Span<ushort> indexBuffer, Span<Vertex2D> vertexBuffer, ref int i)
+        {
+            var maps = _entityManager.System<SharedMapSystem>();
+
+            var index = new Vector2i(gridX, gridY);
+
+            var north = !maps.TryGetTile(grid.Comp, index + new Vector2i(0, 1), out var northTile) || northTile.TypeId != tile.TypeId;
+            var northEast = !maps.TryGetTile(grid.Comp, index + new Vector2i(1, 1), out var northEastTile) || northEastTile.TypeId != tile.TypeId;
+            var east = !maps.TryGetTile(grid.Comp, index + new Vector2i(1, 0), out var eastTile) || eastTile.TypeId != tile.TypeId;
+            var southEast = !maps.TryGetTile(grid.Comp, index + new Vector2i(1, -1), out var southEastTile) || southEastTile.TypeId != tile.TypeId;
+            var south = !maps.TryGetTile(grid.Comp, index + new Vector2i(0, -1), out var southTile) || southTile.TypeId != tile.TypeId;
+            var southWest = !maps.TryGetTile(grid.Comp, index + new Vector2i(-1, -1), out var southWestTile) || southWestTile.TypeId != tile.TypeId;
+            var west = !maps.TryGetTile(grid.Comp, index + new Vector2i(-1, 0), out var westTile) || westTile.TypeId != tile.TypeId;
+            var northWest = !maps.TryGetTile(grid.Comp, index + new Vector2i(-1, 1), out var northWestTile) || northWestTile.TypeId != tile.TypeId;
+
+            var edges = new ValueList<Interior4Of16Edge>();
+
+            // the full tile gets highest priority
+            if (north && east && west && south)
+            {
+                north = northEast = east = southEast = south = southWest = west = northWest = false;
+                edges.Add(Interior4Of16Edge.Full);
+            }
+            // followed by the three-sideds
+            if (north && east && south)
+            {
+                north = northEast = east = southEast = south = southWest = northWest = false;
+                edges.Add(Interior4Of16Edge.SideNorthEastSouth);
+            }
+            if (north && east && west)
+            {
+                north = northEast = east = southEast = southWest = west = northWest = false;
+                edges.Add(Interior4Of16Edge.SideNorthEastWest);
+            }
+            if (east && south && west)
+            {
+                northEast = east = southEast = south = southWest = west = northWest = false;
+                edges.Add(Interior4Of16Edge.SideEastSouthWest);
+            }
+            if (north && south && west)
+            {
+                north = northEast = southEast = south = southWest = west = northWest = false;
+                edges.Add(Interior4Of16Edge.SideNorthSouthWest);
+            }
+            // and then the two-sideds
+            if (north && east)
+            {
+                north = northEast = east = southEast = northWest = false;
+                edges.Add(Interior4Of16Edge.SideNorthEast);
+            }
+            if (south && east)
+            {
+                northEast = east = southEast = south = southWest = false;
+                edges.Add(Interior4Of16Edge.SideSouthEast);
+            }
+            if (north && west)
+            {
+                north = northEast = southWest = west = northWest = false;
+                edges.Add(Interior4Of16Edge.SideNorthWest);
+            }
+            if (south && west)
+            {
+                southEast = south = southWest = west = northWest = false;
+                edges.Add(Interior4Of16Edge.SideSouthWest);
+            }
+            // then we do the one-sideds
+            if (north)
+            {
+                north = northEast = northWest = false;
+                edges.Add(Interior4Of16Edge.SideNorth);
+            }
+            if (east)
+            {
+                northEast = east = southEast = false;
+                edges.Add(Interior4Of16Edge.SideEast);
+            }
+            if (south)
+            {
+                southEast = south = southWest = false;
+                edges.Add(Interior4Of16Edge.SideSouth);
+            }
+            if (west)
+            {
+                southWest = west = northWest = false;
+                edges.Add(Interior4Of16Edge.SideWest);
+            }
+            // finally we have the corner pieces
+            if (northEast)
+            {
+                northEast = false;
+                edges.Add(Interior4Of16Edge.CornerNorthEast);
+            }
+            if (southEast)
+            {
+                southEast = false;
+                edges.Add(Interior4Of16Edge.CornerSouthEast);
+            }
+            if (northWest)
+            {
+                northWest = false;
+                edges.Add(Interior4Of16Edge.CornerNorthWest);
+            }
+            if (southWest)
+            {
+                southWest = false;
+                edges.Add(Interior4Of16Edge.CornerSouthWest);
+            }
+
+            foreach (var edge in edges)
+            {
+                var regionMaybe = _tileDefinitionManager.TileAtlasRegion(tile.TypeId, edge);
+
+                if (regionMaybe == null)
+                    continue;
+
+                var region = regionMaybe[0];
+                WriteTileToBuffers(i, gridX, gridY, vertexBuffer, indexBuffer, region, 0);
+                i += 1;
+            }
+        }
+
         private void _updateChunkInteriorEdges(Entity<MapGridComponent> grid, MapChunk chunk, MapChunkData datum)
         {
             // Need a buffer that can potentially store all neighbor tiles
@@ -390,43 +553,16 @@ namespace Robust.Client.Graphics.Clyde
                     if (!_tileDefinitionManager.TryGetDefinition(tile.TypeId, out var tileDef))
                         continue;
 
-                    if (!tileDef.InteriorEdges)
-                        continue;
-
-                    // Edge render
-                    for (var nx = -1; nx <= 1; nx++)
+                    switch (tileDef.BordersMode)
                     {
-                        for (var ny = -1; ny <= 1; ny++)
-                        {
-                            if (nx == 0 && ny == 0)
-                                continue;
-
-                            var isCorner = nx != 0 && ny != 0;
-
-                            var neighborIndices = new Vector2i(gridX + nx, gridY + ny);
-                            var xNeighborIndices = new Vector2i(gridX + nx, gridY);
-                            var yNeighborIndices = new Vector2i(gridX, gridY + ny);
-
-                            var neighborIsSame = maps.TryGetTile(grid.Comp, neighborIndices, out var neighborTile) && neighborTile.TypeId == tile.TypeId;
-                            var xNeighborIsSame = maps.TryGetTile(grid.Comp, xNeighborIndices, out var xNeighborTile) && xNeighborTile.TypeId == tile.TypeId;
-                            var yNeighborIsSame = maps.TryGetTile(grid.Comp, yNeighborIndices, out var yNeighborTile) && yNeighborTile.TypeId == tile.TypeId;
-
-                            if (!isCorner && neighborIsSame)
-                                continue;
-
-                            if (isCorner && xNeighborIsSame && yNeighborIsSame && neighborIsSame)
-                                continue;
-
-                            var direction = new Vector2i(nx, ny).AsDirection();
-                            var regionMaybe = _tileDefinitionManager.TileAtlasRegion(tile.TypeId, direction);
-
-                            if (regionMaybe == null)
-                                continue;
-
-                            var region = regionMaybe[0];
-                            WriteTileToBuffers(i, gridX, gridY, vertexBuffer, indexBuffer, region, 0);
-                            i += 1;
-                        }
+                        case TileBordersMode.Interior8Patch:
+                            _updateTileInterior8Patch(grid, gridX, gridY, tile, indexBuffer, vertexBuffer, ref i);
+                            break;
+                        case TileBordersMode.Interior4Of16:
+                            _updateTileInterior4Of16Patch(grid, gridX, gridY, tile, indexBuffer, vertexBuffer, ref i);
+                            break;
+                        default:
+                            continue;
                     }
                 }
             }

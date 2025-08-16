@@ -33,6 +33,7 @@ namespace Robust.Client.Map
         public Texture TileTextureAtlas => _tileTextureAtlas ?? Texture.Transparent;
 
         private FrozenDictionary<(int Id, Direction Direction), Box2[]> _tileRegions = FrozenDictionary<(int Id, Direction Direction), Box2[]>.Empty;
+        private FrozenDictionary<(int Id, Interior4Of16Edge Edge), Box2[]> _edgeRegions = FrozenDictionary<(int Id, Interior4Of16Edge Edge), Box2[]>.Empty;
 
         public Box2 ErrorTileRegion { get; private set; }
 
@@ -53,6 +54,18 @@ namespace Robust.Client.Map
         {
             // ReSharper disable once CanSimplifyDictionaryTryGetValueWithGetValueOrDefault
             if (_tileRegions.TryGetValue((tileType, direction), out var region))
+            {
+                return region;
+            }
+
+            return null;
+        }
+
+        /// <inheritdoc />
+        public Box2[]? TileAtlasRegion(int tileType, Interior4Of16Edge edge)
+        {
+            // ReSharper disable once CanSimplifyDictionaryTryGetValueWithGetValueOrDefault
+            if (_edgeRegions.TryGetValue((tileType, edge), out var region))
             {
                 return region;
             }
@@ -95,6 +108,7 @@ namespace Robust.Client.Map
         {
             var sw = RStopwatch.StartNew();
             var tileRegs = new Dictionary<(int Id, Direction Direction), Box2[]>();
+            var edgeRegs = new Dictionary<(int Id, Interior4Of16Edge Edge), Box2[]>();
             _tileTextureAtlas = null;
 
             var defList = TileDefs.Where(t => t.Sprite != null).ToList();
@@ -105,7 +119,7 @@ namespace Robust.Client.Map
 
             const int tileSize = EyeManager.PixelsPerMeter;
 
-            var tileCount = defList.Select(x => x.Variants + x.EdgeSprites.Count).Sum() + 1;
+            var tileCount = defList.Select(x => x.Variants + x.EdgeSprites.Count + x.Interior4Of16EdgeSprites.Count).Sum() + 1;
 
             var dimensionX = (int) Math.Ceiling(Math.Sqrt(tileCount));
             var dimensionY = (int) Math.Ceiling((float) tileCount / dimensionX);
@@ -174,9 +188,6 @@ namespace Robust.Client.Map
                 tileRegs.Add((def.TileId, Direction.Invalid), regionList);
 
                 // Edges
-                if (def.EdgeSprites.Count <= 0)
-                    continue;
-
                 foreach (var direction in DirectionExtensions.AllDirections)
                 {
                     if (!def.EdgeSprites.TryGetValue(direction, out var edge))
@@ -223,7 +234,7 @@ namespace Robust.Client.Map
                             break;
                     }
 
-                    if (angle != Angle.Zero && !def.InteriorEdges)
+                    if (angle != Angle.Zero && def.BordersMode == TileBordersMode.Exterior8Patch)
                     {
                         image.Mutate(o => o.Rotate((float)-angle.Degrees));
                     }
@@ -241,9 +252,37 @@ namespace Robust.Client.Map
                     tileRegs.Add((def.TileId, direction), edgeList);
                     BumpColumn(ref row, ref column, dimensionX);
                 }
+
+                foreach (var (edge, res) in def.Interior4Of16EdgeSprites)
+                {
+                    using (var stream = _manager.ContentFileRead(res))
+                    {
+                        image = Image.Load<Rgba32>(stream);
+                    }
+
+                    if (image.Width != tileSize || image.Height != tileSize)
+                    {
+                        throw new NotSupportedException(
+                            $"Unable to load {path}, due to being unable to use tile textures with a dimension other than {tileSize}x{tileSize}.");
+                    }
+
+                    var point = new Vector2i(column * tileSize, row * tileSize);
+                    var box = new UIBox2i(0, 0, tileSize, tileSize);
+                    image.Blit(box, sheet, point);
+
+                    // If you ever need edge variants then you could just bump this.
+                    var edgeList = new Box2[1];
+                    edgeList[0] = Box2.FromDimensions(
+                        point.X / w, (h - point.Y - EyeManager.PixelsPerMeter) / h,
+                        tileSize / w, tileSize / h);
+
+                    edgeRegs.Add((def.TileId, edge), edgeList);
+                    BumpColumn(ref row, ref column, dimensionX);
+                }
             }
 
             _tileRegions = tileRegs.ToFrozenDictionary();
+            _edgeRegions = edgeRegs.ToFrozenDictionary();
             _tileTextureAtlas = Texture.LoadFromImage(sheet, "Tile Atlas");
             _sawmill.Debug($"Tile atlas took {sw.Elapsed} to build");
         }

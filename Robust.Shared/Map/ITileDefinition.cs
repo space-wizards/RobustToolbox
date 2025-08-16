@@ -6,6 +6,52 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Map
 {
     /// <summary>
+    /// Determines the placement and selection of edge sprites for tiles
+    /// </summary>
+    public enum TileBordersMode : byte
+    {
+        /// <summary>
+        /// Display any number of 8 border image files at boundaries with other tile types
+        /// outside the bounds of this tile
+        /// </summary>
+        Exterior8Patch,
+        /// <summary>
+        /// Display any number of 8 border image files at boundaries with other tile types
+        /// inside the bounds of this tile
+        /// </summary>
+        Interior8Patch,
+        /// <summary>
+        /// Tiles display up to 4 of 16 border image files at boundaries with other tile types
+        /// inside the bounds of this tile
+        /// </summary>
+        Interior4Of16,
+    }
+
+    /// <summary>
+    /// Key for edge sprites to be used in the <cref see="TileBordersMode.Interior4Of16" /> interior 4-of-16 mode
+    /// </summary>
+    public enum Interior4Of16Edge : byte
+    {
+        Full,
+        SideNorthEast,
+        SideNorthWest,
+        SideSouthEast,
+        SideSouthWest,
+        SideNorthEastSouth,
+        SideNorthEastWest,
+        SideEastSouthWest,
+        SideNorthSouthWest,
+        SideNorth,
+        SideEast,
+        SideSouth,
+        SideWest,
+        CornerNorthEast,
+        CornerSouthEast,
+        CornerNorthWest,
+        CornerSouthWest,
+    }
+
+    /// <summary>
     ///     The definition (template) for a grid tile.
     /// </summary>
     public interface ITileDefinition : IPrototype
@@ -31,9 +77,14 @@ namespace Robust.Shared.Map
         Dictionary<Direction, ResPath> EdgeSprites { get; }
 
         /// <summary>
+        /// Possible sprites to use if we're neighbouring another tile in the 4-of-16 mode
+        /// </summary>
+        Dictionary<Interior4Of16Edge, ResPath> Interior4Of16EdgeSprites { get; }
+
+        /// <summary>
         ///     If the edge sprites should be drawn on the interior of the tile rather than the exterior
         /// </summary>
-        bool InteriorEdges => false;
+        TileBordersMode BordersMode => TileBordersMode.Exterior8Patch;
 
         /// <summary>
         ///     When drawing adjacent tiles that both specify edge sprites, the one with the higher priority

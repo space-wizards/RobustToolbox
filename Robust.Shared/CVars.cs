@@ -1888,5 +1888,16 @@ namespace Robust.Shared
 
         public static readonly CVarDef<string> LocCultureName =
             CVarDef.Create("loc.culture_name", "en-US", CVar.ARCHIVE);
+
+        /*
+         * UI
+         */
+
+        /// <summary>
+        ///     The file XamlHotReloadManager looks for when locating the root of the project.
+        ///     By default, this is Space Station 14's sln, but it can be any file at the same root level.
+        /// </summary>
+        public static readonly CVarDef<string> XamlHotReloadMarkerName =
+            CVarDef.Create("ui.xaml_hot_reload_marker_name", "SpaceStation14.sln", CVar.CLIENTONLY);
     }
 }

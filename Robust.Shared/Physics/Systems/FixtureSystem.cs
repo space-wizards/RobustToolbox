@@ -340,6 +340,54 @@ namespace Robust.Shared.Physics.Systems
             }
         }
 
+        /// <summary>
+        /// Gets the sum of the biggests fixture radii from multiply entities
+        /// </summary>
+        public float SumFixtureRadii(params EntityUid[] uids)
+        {
+            float sum = 0f;
+            foreach (var uid in uids)
+            {
+                var fixRad = GetMaxFixtureRadius(uid);
+                sum += fixRad;
+            }
+
+            return sum;
+        }
+
+        /// <summary>
+        /// Gets the biggest radius of the fixture from multiply entities.
+        /// </summary>
+        public float GetMaxFixtureRadius(params EntityUid[] uids)
+        {
+            List<float> radii = [];
+            foreach (var uid in uids)
+            {
+                var fixRad = GetMaxFixtureRadius(uid);
+                radii.Add(fixRad);
+            }
+
+            return radii.Max();
+        }
+
+        /// <summary>
+        /// Gets the biggest radius of the fixture from one entity.
+        /// </summary>
+        public float GetMaxFixtureRadius(EntityUid uid, FixturesComponent? manager = null)
+        {
+            if (!Resolve(uid, ref manager) || manager.FixtureCount == 0)
+                return 0f;
+
+            List<float> radii = [];
+            foreach (var fixture in manager.Fixtures.Values)
+            {
+                var fixRad = fixture.Shape.Radius;
+                radii.Add(fixRad);
+            }
+
+            return radii.Max();
+        }
+
         #region Restitution
 
         public void SetRestitution(EntityUid uid, string fixtureId, Fixture fixture, float value, bool update = true, FixturesComponent? manager = null)

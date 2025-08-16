@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Management;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.Arm;
 using System.Runtime.Intrinsics.Wasm;
@@ -31,8 +32,14 @@ internal static class SystemInformation
             if (name != null)
                 return name;
         }
+        else if (OperatingSystem.IsWindows())
+        {
+            var name = GetProcessorModelWindows();
+            if (name != null)
+                return name;
+        }
 
-        // TODO: ask OS as fallback for when x86 CPUID isn't available on Windows and Linux.
+        // TODO: ask OS as fallback for when x86 CPUID isn't available on Linux.
 
         return "Unknown processor model";
     }
@@ -92,6 +99,18 @@ internal static class SystemInformation
         nint* oldlenp,
         void* newp,
         nint newlen);
+
+    private static string? GetProcessorModelWindows()
+    {
+        var mgs = new ManagementObjectSearcher("select Name from Win32_Processor");
+        foreach (var o in mgs.Get())
+        {
+            var obj = (ManagementObject)o;
+            return (string)obj["Name"];
+        }
+
+        return null;
+    }
 
     public static List<string> GetIntrinsics()
     {

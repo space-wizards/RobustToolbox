@@ -53,18 +53,26 @@ public static class ZStd
 
     private static IntPtr ResolveZstd(string name, Assembly assembly, DllImportSearchPath? path)
     {
-        if (name == "zstd" && OperatingSystem.IsLinux())
+        if (name == "zstd")
         {
-            // Try zstd.so we ship ourselves.
-            if (NativeLibrary.TryLoad("zstd.so", typeof(Zstd).Assembly, null, out var handle))
-                return handle;
+            if (OperatingSystem.IsLinux())
+            {
+                // Try zstd.so we ship ourselves.
+                if (NativeLibrary.TryLoad("zstd.so", typeof(Zstd).Assembly, null, out var handle))
+                    return handle;
 
-            // Try some extra paths from the system too worst case.
-            if (NativeLibrary.TryLoad("libzstd.so.1", out handle))
-                return handle;
+                // Try some extra paths from the system too worst case.
+                if (NativeLibrary.TryLoad("libzstd.so.1", out handle))
+                    return handle;
 
-            if (NativeLibrary.TryLoad("libzstd.so", out handle))
-                return handle;
+                if (NativeLibrary.TryLoad("libzstd.so", out handle))
+                    return handle;
+            }
+            else if (OperatingSystem.IsMacOS())
+            {
+                if (NativeLibrary.TryLoad("libzstd.1.dylib", assembly, path, out var handle))
+                    return handle;
+            }
         }
 
         return IntPtr.Zero;

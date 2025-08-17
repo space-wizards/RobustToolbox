@@ -509,6 +509,9 @@ public sealed class EntitySerializer : ISerializationContext,
                 // implicitly be saved as anchored.
                 compMapping = _serialization.WriteValueAs<MappingDataNode>(compType, component, alwaysWrite: true, context: this);
 
+                // Prune invalid entity references so we don't cause a zillion unforeseen problems after deserializing
+                RemoveInvalidEntityReferences(compMapping);
+
                 // This will not recursively call Except() on the values of the mapping. It will only remove
                 // key-value pairs if both the keys and values are equal.
                 compMapping = compMapping.Except(protoMapping);
@@ -589,6 +592,52 @@ public sealed class EntitySerializer : ISerializationContext,
         cache.TryAdd(_metaName, _emptyMetaNode);
         cache.TryAdd(_xformName, _emptyXformNode);
         return cache;
+    }
+
+    /// <summary>
+    /// Recursively searches for node's children and removes ValueDataNodes of value "invalid".
+    /// </summary>
+    /// <param name="node">The node to search</param>
+    private void RemoveInvalidEntityReferences(DataNode node)
+    {
+        var invalidEntityNodes = new List<DataNode>();
+        var searchQueue = new Queue<DataNode>([node]);
+        while (searchQueue.TryDequeue(out var branch))
+        {
+            var searchNode = branch;
+
+            if (searchNode is MappingDataNode mappingDataNode)
+            {
+                foreach (var (key, child) in mappingDataNode.Children)
+                {
+                    if (child is ValueDataNode { Value: "invalid" })
+                    {
+                        mappingDataNode.Remove(key);
+                        continue;
+                    }
+
+                    searchQueue.Enqueue(child);
+                }
+            }
+            else if (searchNode is SequenceDataNode sequenceDataNode)
+            {
+                foreach (var element in sequenceDataNode.Sequence)
+                {
+                    if (element is ValueDataNode { Value: "invalid" })
+                        invalidEntityNodes.Add(element);
+                    else
+                        searchQueue.Enqueue(element);
+                }
+
+                foreach (var invalidEntityNode in invalidEntityNodes)
+                {
+                    sequenceDataNode.Remove(invalidEntityNode);
+                }
+
+                invalidEntityNodes.Clear();
+                break;
+            }
+        }
     }
 
     #region Write

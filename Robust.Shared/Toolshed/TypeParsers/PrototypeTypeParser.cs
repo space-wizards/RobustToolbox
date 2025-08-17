@@ -51,6 +51,9 @@ public sealed class ProtoIdTypeParser<T> : TypeParser<ProtoId<T>>
 
     public override CompletionResult TryAutocomplete(ParserContext ctx, CommandArgument? arg)
     {
+        if (typeof(T) == typeof(EntityPrototype))
+            return CompletionResult.FromHint(GetArgHint(arg));
+
         var hint = ToolshedCommand.GetArgHint(arg, typeof(ProtoId<T>));
         var maxCount = _config.GetCVar(CVars.ToolshedPrototypesAutocompleteLimit);
         var options = CompletionHelper.PrototypeIdsLimited<T>(ctx.Input[ctx.Index..], proto: _proto, maxCount: maxCount);

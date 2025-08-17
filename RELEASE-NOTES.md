@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Compat mode on the client now defaults to on for Windows Snapdragon devices, to work around driver bugs.
 
 ### Internal
 

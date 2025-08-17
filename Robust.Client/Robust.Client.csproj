@@ -63,6 +63,7 @@
     <RobustLinkAssemblies Include="TerraFX.Interop.Windows" />
     <RobustLinkAssemblies Include="TerraFX.Interop.Xlib" />
     <RobustLinkAssemblies Include="OpenToolkit.Graphics" />
+    <RobustLinkAssemblies Include="SpaceWizards.SharpFont" />
   </ItemGroup>
 
   <Import Project="..\MSBuild\Robust.Properties.targets" />

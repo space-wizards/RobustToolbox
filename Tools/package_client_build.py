@@ -57,7 +57,9 @@ IGNORED_FILES_WINDOWS = {
     "libEGL.dll",
     "swnfd.dll",
     "zstd.dll",
-    "libsodium.dll"
+    "zstd.pdb",
+    "libsodium.dll",
+    "zlib1.dll"
 }
 
 IGNORED_FILES_MACOS = {

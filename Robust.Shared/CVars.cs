@@ -4,6 +4,7 @@ using Lidgren.Network;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Configuration;
+using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
@@ -1486,7 +1487,7 @@ namespace Robust.Shared
         /// Non-default seek modes WILL result in worse performance.
         /// </remarks>
         public static readonly CVarDef<int> ResStreamSeekMode =
-            CVarDef.Create("res.stream_seek_mode", (int)ContentPack.StreamSeekMode.None);
+            CVarDef.Create("res.stream_seek_mode", (int)StreamSeekMode.None);
 
         /// <summary>
         /// Whether to watch prototype files for prototype reload on the client. Only applies to development builds.
@@ -1881,6 +1882,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> ToolshedNearbyEntitiesLimit =
             CVarDef.Create("toolshed.nearby_entities_limit", 5, CVar.SERVER | CVar.REPLICATED);
+
+        /// <summary>
+        ///     The max amount of prototype ids that can be sent to the client when autocompleting prototype ids.
+        /// </summary>
+        public static readonly CVarDef<int> ToolshedPrototypesAutocompleteLimit =
+            CVarDef.Create("toolshed.prototype_autocomplete_limit", 256, CVar.SERVER | CVar.REPLICATED);
 
         /*
          * Localization

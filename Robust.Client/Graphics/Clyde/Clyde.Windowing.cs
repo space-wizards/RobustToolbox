@@ -374,6 +374,8 @@ namespace Robust.Client.Graphics.Clyde
             if (reg.IsDisposed)
                 return;
 
+            _sawmillWin.Debug($"Destroying window {reg.Id}");
+
             reg.IsDisposed = true;
 
             _glContext!.WindowDestroyed(reg);

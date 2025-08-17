@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using SDL3;
 
 namespace Robust.Client.Utility
 {
@@ -31,6 +32,15 @@ namespace Robust.Client.Utility
                         return NativeLibrary.Load("libEGL.so", assembly, path);
 
                     return IntPtr.Zero;
+                }
+
+                if (name == SDL.nativeLibName)
+                {
+#if LINUX || FREEBSD
+                    return NativeLibrary.Load("libSDL3.so.0");
+#elif MACOS
+                    return NativeLibrary.Load("libSDL3.0.dylib");
+#endif
                 }
 
                 return IntPtr.Zero;

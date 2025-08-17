@@ -76,7 +76,7 @@ public static unsafe partial class SDL
 		}
 	}
 
-	private const string nativeLibName = "SDL3";
+	internal const string nativeLibName = "SDL3";
 
 	// /usr/local/include/SDL3/SDL_stdinc.h
 

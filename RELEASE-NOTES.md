@@ -35,6 +35,29 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 267.0.0
+
+### Breaking changes
+
 * When a player disconnects, the relevant callbacks are now fired *after* removing the channel from `INetManager`.
 
 ### New features
@@ -62,10 +85,6 @@ END TEMPLATE-->
 * Key name displays now use proper Unicode symbols for macOS ⌥ and ⌘.
 * Automated CI for RobustToolbox runs on macOS again.
 * Autocompletions for `ProtoId<T>` in Toolshed now use `PrototypeIdsLimited` instead of arbitrarily cutting out if more than 256 of a prototype exists.
-
-### Internal
-
-*None yet*
 
 
 ## 266.0.0

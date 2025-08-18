@@ -224,7 +224,8 @@ def publish_client(runtime: str, target_os: TargetOS) -> None:
         "--no-self-contained",
         "-c", "Release",
         f"/p:TargetOS={target_os}",
-        "/p:FullRelease=True"
+        "/p:FullRelease=True",
+        "/p:UseAppHost=False"
     ]
 
     subprocess.run(base + ["Robust.Client/Robust.Client.csproj"], check=True)

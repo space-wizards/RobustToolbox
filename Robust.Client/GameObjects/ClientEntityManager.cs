@@ -29,6 +29,9 @@ namespace Robust.Client.GameObjects
         internal event Action? AfterStartup;
         internal event Action? AfterShutdown;
 
+        protected readonly Queue<EntityUid> QueuedPredictedDeletions = new();
+        protected readonly HashSet<EntityUid> QueuedPredictedDeletionsSet = new();
+
         public override void Initialize()
         {
             SetupNetworking();
@@ -213,6 +216,16 @@ namespace Robust.Client.GameObjects
                 }
             }
 
+            using (histogram?.WithLabels("PredictedQueueDel").NewTimer())
+            {
+                while (QueuedPredictedDeletions.TryDequeue(out var uid))
+                {
+                    PredictedDeleteEntity(uid);
+                }
+
+                QueuedPredictedDeletionsSet.Clear();
+            }
+
             base.TickUpdate(frameTime, noPredictions, histogram);
         }
 
@@ -323,7 +336,8 @@ namespace Robust.Client.GameObjects
             if (IsQueuedForDeletion(ent.Owner)
                 || !MetaQuery.Resolve(ent.Owner, ref ent.Comp1)
                 || ent.Comp1.EntityLifeStage >= EntityLifeStage.Terminating
-                || !TransformQuery.Resolve(ent.Owner, ref ent.Comp2))
+                || !TransformQuery.Resolve(ent.Owner, ref ent.Comp2)
+                || QueuedPredictedDeletionsSet.Contains(ent.Owner))
             {
                 return;
             }
@@ -337,7 +351,10 @@ namespace Robust.Client.GameObjects
             }
             else
             {
-                _xforms.DetachEntity(ent.Owner, ent.Comp2);
+                if (!QueuedPredictedDeletionsSet.Add(ent.Owner))
+                    return;
+
+                QueuedPredictedDeletions.Enqueue(ent.Owner);
             }
         }
     }

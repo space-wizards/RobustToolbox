@@ -341,11 +341,11 @@ namespace Robust.Shared.Physics.Systems
         }
 
         /// <summary>
-        /// Gets the sum of the biggests fixture radii from multiply entities
+        /// Gets the sum of the biggest fixture radii from multiple entities.
         /// </summary>
-        public float SumFixtureRadii(params EntityUid[] uids)
+        public float SumMaxFixtureRadii(params EntityUid[] uids)
         {
-            float sum = 0f;
+            var sum = 0f;
             foreach (var uid in uids)
             {
                 var fixRad = GetMaxFixtureRadius(uid);
@@ -356,36 +356,38 @@ namespace Robust.Shared.Physics.Systems
         }
 
         /// <summary>
-        /// Gets the biggest radius of the fixture from multiply entities.
+        /// Gets the biggest fixture radius of multiple entities.
         /// </summary>
         public float GetMaxFixtureRadius(params EntityUid[] uids)
         {
-            List<float> radii = [];
+            var maxRad = 0f;
             foreach (var uid in uids)
             {
                 var fixRad = GetMaxFixtureRadius(uid);
-                radii.Add(fixRad);
+                if (maxRad < fixRad)
+                    maxRad = fixRad;
             }
 
-            return radii.Max();
+            return maxRad;
         }
 
         /// <summary>
-        /// Gets the biggest radius of the fixture from one entity.
+        /// Gets the biggest fixture radius from one entity.
         /// </summary>
         public float GetMaxFixtureRadius(EntityUid uid, FixturesComponent? manager = null)
         {
             if (!Resolve(uid, ref manager) || manager.FixtureCount == 0)
                 return 0f;
 
-            List<float> radii = [];
+            var maxRad = 0f;
             foreach (var fixture in manager.Fixtures.Values)
             {
                 var fixRad = fixture.Shape.Radius;
-                radii.Add(fixRad);
+                if (maxRad < fixRad)
+                    maxRad = fixRad;
             }
 
-            return radii.Max();
+            return maxRad;
         }
 
         #region Restitution

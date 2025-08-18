@@ -2,6 +2,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using OpenTK.Audio.OpenAL;
 using SDL3;
 
 namespace Robust.Client.Utility
@@ -40,6 +41,10 @@ namespace Robust.Client.Utility
 
                 return IntPtr.Zero;
             });
+
+#if MACOS
+            OpenALLibraryNameContainer.OverridePath = "libopenal.1.dylib";
+#endif
         }
     }
 }

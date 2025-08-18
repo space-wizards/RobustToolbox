@@ -39,15 +39,29 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Engine builds are now published for ARM64 & FreeBSD.
+* CPU model names are now detected on Windows & Linux ARM64.
+* Toolshed's `spawn:in` command now works on entities without `Physics` component.
 
 ### Bugfixes
 
-*None yet*
+* SDL3 windowing backend fixes:
+  * Avoid macOS freezes with multiple windows.
+  * Fix macOS rendering breaking when closing secondary windows.
+  * File dialogs properly associate parent windows.
+  * Fix IME positions not working with UI scaling properly.
+  * Properly specify library names for loading native library.
+
+* WinBit threads don't permanently stay stuck when their window closes.
+* Checking for the "`null`" literal in serialization is now culture invariant.
 
 ### Other
 
 * Compat mode on the client now defaults to on for Windows Snapdragon devices, to work around driver bugs.
+* Update various libraries & natives. This enables out-of-the-box ARM64 support on all platforms and is a long-overdue modernization.
+* Key name displays now use proper Unicode symbols for macOS ⌥ and ⌘.
+* Automated CI for RobustToolbox runs on macOS again.
+* Autocompletions for `ProtoId<T>` in Toolshed now use `PrototypeIdsLimited` instead of arbitrarily cutting out if more than 256 of a prototype exists.
 
 ### Internal
 

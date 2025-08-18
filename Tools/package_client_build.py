@@ -82,7 +82,10 @@ IGNORED_FILES_WINDOWS = {
     "zstd.dll",
     "zstd.pdb",
     "libsodium.dll",
-    "zlib1.dll"
+    "zlib1.dll",
+    "SDL3.dll",
+    "OpenAL32.dll",
+    "libfluidsynth-3.dll"
 }
 
 IGNORED_FILES_MACOS = {
@@ -93,6 +96,10 @@ IGNORED_FILES_MACOS = {
     "libswnfd.dylib",
     "zstd.dylib",
     "libsodium.dylib",
+    "libopenal.1.dylib",
+    "libSDL3.0.dylib",
+    "libfluidsynth.3.dylib"
+    "libzstd.1.dylib"
 }
 
 IGNORED_FILES_LINUX = {
@@ -102,7 +109,11 @@ IGNORED_FILES_LINUX = {
     "Robust.Client",
     "libswnfd.so",
     "zstd.so",
-    "libsodium.so"
+    "libsodium.so",
+    "libopenal.so.1",
+    "libSDL3.so.0",
+    "libfluidsynth.so.3"
+    "libzstd.so.1"
 }
 
 def main() -> None:

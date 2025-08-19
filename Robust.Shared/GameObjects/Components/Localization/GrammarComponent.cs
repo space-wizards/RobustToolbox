@@ -26,11 +26,109 @@ public sealed partial class GrammarComponent : Component
         set => IoCManager.Resolve<IEntityManager>().System<GrammarSystem>().SetGender((Owner, this), value);
     }
 
+    [DataField]
+    public Pronoun? Pronoun { get; set; }
+
     [ViewVariables]
     public bool? ProperNoun
     {
         get => Attributes.TryGetValue("proper", out var g) ? bool.Parse(g) : null;
         [Obsolete("Use GrammarSystem.SetProperNoun instead")]
         set => IoCManager.Resolve<IEntityManager>().System<GrammarSystem>().SetProperNoun((Owner, this), value);
+    }
+}
+
+/// <summary>
+///     Used to define custom pronouns for an entity.
+///     If this doesn't exist, just use pronouns defined by the entity's gender.
+/// </summary>
+[DataDefinition]
+public sealed partial class Pronoun
+{
+    /// <summary>
+    ///     Subject form of pronoun.
+    ///     eg. "I think SHE is very nice".
+    /// </summary>
+    [DataField]
+    public string? Subject;
+
+    /// <summary>
+    ///     Object form of pronoun.
+    ///     eg. "I met HER recently".
+    /// </summary>
+    [DataField]
+    public string? Object;
+
+    /// <summary>
+    ///     Dative form of pronoun.
+    ///     Not used in en-US.
+    ///     eg. "to him", "for her"".
+    /// </summary>
+    [DataField]
+    public string? DatObj;
+
+    /// <summary>
+    ///     Genitive form of pronoun.
+    ///     Not used in en-US.
+    ///     eg. "у него", "seines Vaters".
+    /// </summary>
+    [DataField]
+    public string? Genitive;
+
+    /// <summary>
+    ///     Possesive adjective / determiner form of pronoun.
+    ///     eg. "Is this HER dog?".
+    /// </summary>
+    [DataField]
+    public string? PossAdj;
+
+    /// <summary>
+    ///     Possessive pronoun form of pronoun.
+    ///     eg. "She told me that the house is HERS".
+    /// </summary>
+    [DataField]
+    public string? PossPronoun;
+
+    /// <summary>
+    ///     Reflexive form of pronoun.
+    ///     eg. "She said she would rather do it HERSELF".
+    /// </summary>
+    [DataField]
+    public string? Reflexive;
+
+    /// <summary>
+    ///     Counter word or measure word.
+    ///     Not used in en-US.
+    ///     eg. "两个人", "一本书".
+    /// </summary>
+    [DataField]
+    public string? Counter;
+
+    /// <summary>
+    ///     When conjugating verbs, should we conjugate plurally?
+    ///     eg. it IS / they ARE, it HAS / they HAVE, it RUNS / they RUN.
+    /// </summary>
+    [DataField]
+    public bool? Plural;
+
+    public Pronoun(string? subject,
+    string? @object,
+    string? datObj,
+    string? genitive,
+    string? possAdj,
+    string? possPronoun,
+    string? reflexive,
+    string? counter,
+    bool? plural)
+    {
+        Subject = subject;
+        Object = @object;
+        DatObj = datObj;
+        Genitive = genitive;
+        PossAdj = possAdj;
+        PossPronoun = possPronoun;
+        Reflexive = reflexive;
+        Counter = counter;
+        Plural = plural;
     }
 }

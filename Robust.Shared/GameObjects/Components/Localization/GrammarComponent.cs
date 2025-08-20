@@ -42,7 +42,7 @@ public sealed partial class GrammarComponent : Component
 ///     Used to define custom pronouns for an entity.
 ///     If this doesn't exist, just use pronouns defined by the entity's gender.
 /// </summary>
-[DataDefinition]
+[DataDefinition, Serializable]
 public sealed partial class Pronoun
 {
     /// <summary>
@@ -130,5 +130,65 @@ public sealed partial class Pronoun
         Reflexive = reflexive;
         Counter = counter;
         Plural = plural;
+    }
+
+    /// <summary>
+    ///     Copy constructor
+    /// </summary>
+    public Pronoun(Pronoun other)
+    : this(other.Subject,
+        other.Object,
+        other.DatObj,
+        other.Genitive,
+        other.PossAdj,
+        other.PossPronoun,
+        other.Reflexive,
+        other.Counter,
+        other.Plural)
+    { }
+
+    public Pronoun WithSubject(string? pronoun)
+    {
+        return new(this) { Subject = pronoun };
+    }
+
+    public Pronoun WithObject(string? pronoun)
+    {
+        return new(this) { Object = pronoun };
+    }
+
+    public Pronoun WithDatObj(string? pronoun)
+    {
+        return new(this) { DatObj = pronoun };
+    }
+
+    public Pronoun WithGenitive(string? pronoun)
+    {
+        return new(this) { Genitive = pronoun };
+    }
+
+    public Pronoun WithPossAdj(string? pronoun)
+    {
+        return new(this) { PossAdj = pronoun };
+    }
+
+    public Pronoun WithPossPronoun(string? pronoun)
+    {
+        return new(this) { PossPronoun = pronoun };
+    }
+
+    public Pronoun WithReflexive(string? pronoun)
+    {
+        return new(this) { Reflexive = pronoun };
+    }
+
+    public Pronoun WithCounter(string? pronoun)
+    {
+        return new(this) { Counter = pronoun };
+    }
+
+    public Pronoun WithPlural(bool? pronoun)
+    {
+        return new(this) { Plural = pronoun };
     }
 }

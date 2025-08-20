@@ -139,7 +139,7 @@ def check_rsi(rsi: str, schema: Draft7Validator):
     for state in meta_json["states"]:
         state_name: str = state["name"]
         if state_name == "":
-            add_error(rsi, f"state name is missing.")
+            add_error(rsi, f"state name cannot be an empty string.")
             return
 
     # We're good!

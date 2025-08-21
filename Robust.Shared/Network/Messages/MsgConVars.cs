@@ -26,7 +26,7 @@ namespace Robust.Shared.Network.Messages
                 Logger.WarningS("net", $"{MsgChannel}: received a large {nameof(MsgConVars)}, {buffer.LengthBytes}B > {MaxMessageSize}B");
 
             Tick = new GameTick(buffer.ReadVariableUInt32());
-            var nVars = buffer.ReadByte();
+            var nVars = buffer.ReadInt16();
 
             NetworkedVars = new List<(string name, object value)>(nVars);
 

@@ -14,6 +14,8 @@ public sealed class PointLightComponentState : ComponentState
 
     public float Softness;
 
+    public float Falloff;
+
     public bool CastShadows;
 
     public bool Enabled;

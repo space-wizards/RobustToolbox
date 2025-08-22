@@ -451,6 +451,7 @@ namespace Robust.Client.Graphics.Clyde
             var lastPower = float.NaN;
             var lastColor = new Color(float.NaN, float.NaN, float.NaN, float.NaN);
             var lastSoftness = float.NaN;
+            var lastFalloff = float.NaN;
             Texture? lastMask = null;
 
             using (_prof.Group("Draw Lights"))
@@ -502,6 +503,12 @@ namespace Robust.Client.Graphics.Clyde
                     {
                         lastSoftness = component.Softness;
                         lightShader.SetUniformMaybe("lightSoftness", lastSoftness);
+                    }
+
+                    if (!MathHelper.CloseToPercent(lastFalloff, component.Falloff))
+                    {
+                        lastFalloff = component.Falloff;
+                        lightShader.SetUniformMaybe("lightFalloff", lastFalloff);
                     }
 
                     lightShader.SetUniformMaybe("lightCenter", lightPos);

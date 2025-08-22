@@ -33,6 +33,9 @@ namespace Robust.Shared.GameObjects
         [DataField("softness"), Animatable]
         public float Softness { get; set; } = 1f;
 
+        [DataField("falloff"), Animatable]
+        public float Falloff { get; set; } = 4f;
+
         /// <summary>
         ///     Whether this pointlight should cast shadows
         /// </summary>

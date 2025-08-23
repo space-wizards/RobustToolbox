@@ -918,6 +918,8 @@ public sealed class EntitySerializer : ISerializationContext,
             case MissingEntityBehaviour.IncludeNullspace:
                 if (!EntMan.TryGetComponent(value, out TransformComponent? xform)
                     || xform.ParentUid != EntityUid.Invalid
+                    && CurrentEntity != null
+                    && xform.ParentUid != CurrentEntity.Value.Owner // Also serialize children of nullspace entities
                     || _gridQuery.HasComp(value)
                     || _mapQuery.HasComp(value))
                 {

@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* The `Component.SendOnlyToOwner` and `Component.SessionSpecific` properties have been removed. This behaviour is now configured via an argument passed to the `NetworkedComponentAttribute`.
 
 ### New features
 

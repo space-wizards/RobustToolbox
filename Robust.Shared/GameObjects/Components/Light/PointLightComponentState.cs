@@ -16,6 +16,8 @@ public sealed class PointLightComponentState : ComponentState
 
     public float Falloff;
 
+    public PointLightAttenuationCurveType CurveType;
+
     public bool CastShadows;
 
     public bool Enabled;

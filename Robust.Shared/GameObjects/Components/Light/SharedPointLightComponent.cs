@@ -6,6 +6,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 using System.Numerics;
 using Robust.Shared.IoC;
+using Robust.Shared.Serialization;
 
 namespace Robust.Shared.GameObjects
 {
@@ -33,8 +34,22 @@ namespace Robust.Shared.GameObjects
         [DataField("softness"), Animatable]
         public float Softness { get; set; } = 1f;
 
+        /// <summary>
+        ///     Controls how quickly the light falls off in power in its radius.
+        ///     A higher value means a stronger falloff.
+        /// </summary>
+        /// <remarks>
+        /// The default value of 6.8 might seem suspect, but that's because this is a value which was introduced
+        /// years after SS14 already standardized its light values using an older attenuation curve, and this was the value
+        /// which, qualitatively, seemed about equivalent in brightness for the large majority of lights on the station
+        /// compared to the old function.
+        /// </remarks>
         [DataField("falloff"), Animatable]
-        public float Falloff { get; set; } = 4f;
+        public float Falloff { get; set; } = 6.8f;
+
+        /// <see cref="PointLightAttenuationCurveType"/>
+        [DataField("curveType")]
+        public PointLightAttenuationCurveType CurveType { get; set; } = PointLightAttenuationCurveType.Inverse;
 
         /// <summary>
         ///     Whether this pointlight should cast shadows
@@ -115,5 +130,32 @@ namespace Robust.Shared.GameObjects
         {
             Enabled = enabled;
         }
+    }
+
+    /// <summary>
+    ///     Controls the curve used for point light attenuation.
+    /// </summary>
+    /// <remarks>
+    ///     See https://www.desmos.com/calculator/a3mskal3yu for a comparison of the curves for different
+    ///     light radii and falloff values, alongside a comparison with the old pointlight attenuation.
+    /// </remarks>
+    [Serializable, NetSerializable]
+    public enum PointLightAttenuationCurveType : byte
+    {
+        /// <summary>
+        ///     A curve roughly equivalent in shape to (1/(1+distance).
+        ///     This is the default behavior, and is relatively physically accurate.
+        ///     Has a consistent level of falloff across the radius of the light.
+        /// </summary>
+        Inverse = 1,
+        /// <summary>
+        ///     A curve roughly equivalent in shape to (1/(1+distance^2).
+        ///     This curve is not particularly physically accurate, but is better for representing
+        ///     "spherical point lights", e.g. a glowing orb, which want some degree of consistent light in
+        ///     close to their object's center before falling off as normal.
+        ///     This curve type is also generally brighter, and requires a higher <see cref="SharedPointLightComponent.Falloff"/> value
+        ///     to be equivalent in brightness to <see cref="Inverse"/>.
+        /// </summary>
+        QuadraticInverse = 2,
     }
 }

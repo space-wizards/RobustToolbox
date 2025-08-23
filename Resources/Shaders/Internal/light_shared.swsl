@@ -15,6 +15,7 @@ uniform highp float lightRange;
 uniform highp float lightPower;
 uniform highp float lightSoftness;
 uniform highp float lightFalloff;
+uniform lowp int lightCurveType;
 uniform highp float lightIndex;
 uniform sampler2D shadowMap;
 
@@ -48,11 +49,15 @@ void fragment()
         discard;
     }
 
-    highp float dist = dot(diff, diff) + LIGHTING_HEIGHT;
+    // this implementation of light attenuation primarily adapted from
+    // https://lisyarus.github.io/blog/posts/point-light-attenuation.html
+    highp float sqr_dist = dot(diff, diff) + LIGHTING_HEIGHT;
 
-    highp float s = clamp(sqrt(distance) / radius, 0.0, 1.0);
+    highp float s = clamp(sqrt(sqr_dist) / lightRange, 0.0, 1.0);
     highp float s2 = s * s;
-    highp float val = clamp(((1 - s2) * (1 - s2)) / (1 + lightFalloff * s), 0.0, 1.0);
+    // curveType nonzero = quadraticinverse, 0 = inverse
+    highp float curveFactor = lightCurveType > 0 ? s2 : s;
+    highp float val = clamp(((1 - s2) * (1 - s2)) / (1 + lightFalloff * curveFactor), 0.0, 1.0);
 
     val *= lightPower;
     val *= mask;

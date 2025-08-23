@@ -156,6 +156,6 @@ namespace Robust.Shared.GameObjects
         ///     This curve type is also generally brighter, and requires a higher <see cref="SharedPointLightComponent.Falloff"/> value
         ///     to be equivalent in brightness to <see cref="Inverse"/>.
         /// </summary>
-        QuadraticInverse = 2,
+        InverseQuadratic = 2,
     }
 }

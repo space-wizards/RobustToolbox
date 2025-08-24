@@ -3,6 +3,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using JetBrains.Annotations;
 using Robust.Shared.Utility;
+using SpaceWizards.Sodium;
+
 
 namespace Robust.Shared.ContentPack
 {
@@ -103,7 +105,7 @@ namespace Robust.Shared.ContentPack
                 text = ReadAllText(provider, path);
                 return true;
             }
-            catch(FileNotFoundException)
+            catch (FileNotFoundException)
             {
                 text = null;
                 return false;
@@ -119,7 +121,7 @@ namespace Robust.Shared.ContentPack
         public static byte[] ReadAllBytes(this IWritableDirProvider provider, ResPath path)
         {
             using var stream = provider.OpenRead(path);
-            using var memoryStream = new MemoryStream((int) stream.Length);
+            using var memoryStream = new MemoryStream((int)stream.Length);
             stream.CopyTo(memoryStream);
             return memoryStream.ToArray();
         }
@@ -150,6 +152,14 @@ namespace Robust.Shared.ContentPack
             using var stream = provider.OpenWrite(path);
 
             stream.Write(content);
+        }
+
+        public static byte[] Hash(this IWritableDirProvider provider, ResPath path)
+        {
+            var stream = provider.OpenRead(path);
+            Span<byte> bytes = new();
+            stream.ReadToEnd(bytes);
+            return CryptoGenericHashBlake2B.Hash(32, bytes, ReadOnlySpan<byte>.Empty);
         }
     }
 }

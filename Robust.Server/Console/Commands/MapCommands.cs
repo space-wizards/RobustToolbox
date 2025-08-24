@@ -334,4 +334,86 @@ namespace Robust.Server.Console.Commands
                 shell.WriteLine(Loc.GetString("cmd-loadmap-error", ("path", args[1])));
         }
     }
+
+    public sealed class SaveGame : LocalizedCommands
+    {
+        [Dependency] private readonly IEntitySystemManager _system = default!;
+        [Dependency] private readonly IResourceManager _resource = default!;
+
+        public override string Command => "savegame";
+
+        public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        {
+            switch (args.Length)
+            {
+                case 1:
+                    var opts = CompletionHelper.UserFilePath(args[0], _resource.UserData);
+                    return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-hint-savemap-path"));
+            }
+            return CompletionResult.Empty;
+        }
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
+        {
+            if (args.Length < 1)
+            {
+                shell.WriteLine(Help);
+                return;
+            }
+
+            shell.WriteLine(Loc.GetString("cmd-savegame-attempt", ("path", args[0])));
+            bool saveSuccess = _system.GetEntitySystem<MapLoaderSystem>().TrySaveGame(new ResPath(args[0]), out _);
+            if(saveSuccess)
+            {
+                shell.WriteLine(Loc.GetString("cmd-savegame-success"));
+            }
+            else
+            {
+                shell.WriteError(Loc.GetString("cmd-savegame-error"));
+            }
+        }
+    }
+
+    public sealed class LoadGame : LocalizedCommands
+    {
+        [Dependency] private readonly IEntityManager _entMan = default!;
+        [Dependency] private readonly IEntitySystemManager _system = default!;
+        [Dependency] private readonly IResourceManager _resource = default!;
+
+        public override string Command => "loadgame";
+
+        public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        {
+            switch (args.Length)
+            {
+                case 1:
+                    var opts = CompletionHelper.UserFilePath(args[0], _resource.UserData);
+                    return CompletionResult.FromHintOptions(opts, Loc.GetString("cmd-hint-savemap-path"));
+            }
+            return CompletionResult.Empty;
+        }
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
+        {
+            if (args.Length < 1)
+            {
+                shell.WriteLine(Help);
+                return;
+            }
+
+            shell.WriteLine(Loc.GetString("cmd-loadgame-attempt", ("path", args[0])));
+
+            // TODO SAVE make a new manager for this
+            _entMan.FlushEntities();
+            bool loadSuccess = _system.GetEntitySystem<MapLoaderSystem>().TryLoadGame(new ResPath(args[0]));
+            if(loadSuccess)
+            {
+                shell.WriteLine(Loc.GetString("cmd-loadgame-success"));
+            }
+            else
+            {
+                shell.WriteError(Loc.GetString("cmd-loadgame-error"));
+            }
+        }
+    }
 }

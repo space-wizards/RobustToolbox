@@ -157,9 +157,9 @@ namespace Robust.Shared.ContentPack
         public static byte[] Hash(this IWritableDirProvider provider, ResPath path)
         {
             var stream = provider.OpenRead(path);
-            Span<byte> bytes = new();
-            stream.ReadToEnd(bytes);
-            return CryptoGenericHashBlake2B.Hash(32, bytes, ReadOnlySpan<byte>.Empty);
+            Span<byte> filebytes = new(new byte[stream.Length]);
+            stream.ReadToEnd(filebytes);
+            return CryptoGenericHashBlake2B.Hash(32, filebytes, ReadOnlySpan<byte>.Empty);
         }
     }
 }

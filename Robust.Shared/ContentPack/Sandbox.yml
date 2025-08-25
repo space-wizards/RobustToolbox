@@ -1609,4 +1609,6 @@ Types:
   Pidgin.Configuration:
     IConfiguration`1: { All: True }
   SpaceWizards.Sodium:
-    CryptoGenericHashBlake2B: { All: True }
+    CryptoGenericHashBlake2B:
+      Methods:
+      - "byte[] Hash(int, System.ReadOnlySpan`1<byte>, System.ReadOnlySpan`1<byte>)"

@@ -1,6 +1,8 @@
 ﻿namespace Robust.Shared.Toolshed.Commands.Generic;
 
-[ToolshedCommand]
+// TODO TOOLSHED
+// Combine with other "is...." commands into is:empty
+[ToolshedCommand(Name = "isnull")]
 public sealed class IsNullCommand : ToolshedCommand
 {
     [CommandImplementation]

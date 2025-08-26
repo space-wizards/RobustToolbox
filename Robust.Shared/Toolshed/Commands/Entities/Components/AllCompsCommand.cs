@@ -3,7 +3,7 @@ using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Toolshed.Commands.Entities.Components;
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "allcomps")]
 internal sealed class AllCompsCommand : ToolshedCommand
 {
     [CommandImplementation]

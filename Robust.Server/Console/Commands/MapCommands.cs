@@ -99,13 +99,6 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            var sys = _system.GetEntitySystem<SharedMapSystem>();
-            if (!sys.MapExists(mapId))
-            {
-                shell.WriteError("Target map does not exist.");
-                return;
-            }
-
             Vector2 offset = default;
             if (args.Length >= 4)
             {

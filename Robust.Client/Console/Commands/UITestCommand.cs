@@ -278,29 +278,9 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
     }
 }
 
-internal sealed class UITestCommand : LocalizedCommands
+internal abstract class BaseUITestCommand : LocalizedCommands
 {
-    public override string Command => "uitest";
-
-    public override void Execute(IConsoleShell shell, string argStr, string[] args)
-    {
-        var window = new DefaultWindow { MinSize = new(800, 600) };
-        var control = new UITestControl();
-        window.OnClose += control.OnClosed;
-        window.Contents.AddChild(control);
-
-        window.OpenCentered();
-    }
-}
-
-internal sealed class UITest2Command : LocalizedCommands
-{
-    [Dependency] private readonly IClyde _clyde = default!;
-    [Dependency] private readonly IUserInterfaceManager _uiMgr = default!;
-
-    public override string Command => "uitest2";
-
-    public override void Execute(IConsoleShell shell, string argStr, string[] args)
+    public sealed override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         if (args.Length > 1)
         {
@@ -321,18 +301,10 @@ internal sealed class UITest2Command : LocalizedCommands
             control.SelectTab(tab);
         }
 
-        var window = _clyde.CreateWindow(new WindowCreateParameters
-        {
-            Title = Loc.GetString("cmd-uitest2-title"),
-        });
-
-        var root = _uiMgr.CreateWindowRoot(window);
-        window.DisposeOnClose = true;
-        window.RequestClosed += _ => control.OnClosed();
-        root.AddChild(control);
+        CreateWindow(control);
     }
 
-    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    public sealed override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
     {
         if (args.Length == 1)
         {
@@ -342,5 +314,41 @@ internal sealed class UITest2Command : LocalizedCommands
         }
 
         return CompletionResult.Empty;
+    }
+
+    protected abstract void CreateWindow(UITestControl control);
+}
+
+internal sealed class UITestCommand : BaseUITestCommand
+{
+    public override string Command => "uitest";
+
+    protected override void CreateWindow(UITestControl control)
+    {
+        var window = new DefaultWindow { MinSize = new(800, 600) };
+        window.OnClose += control.OnClosed;
+        window.Contents.AddChild(control);
+        window.OpenCentered();
+    }
+}
+
+internal sealed class UITest2Command : BaseUITestCommand
+{
+    [Dependency] private readonly IClyde _clyde = default!;
+    [Dependency] private readonly IUserInterfaceManager _uiMgr = default!;
+
+    public override string Command => "uitest2";
+
+    protected override void CreateWindow(UITestControl control)
+    {
+        var window = _clyde.CreateWindow(new WindowCreateParameters
+        {
+            Title = Loc.GetString("cmd-uitest2-title"),
+        });
+
+        var root = _uiMgr.CreateWindowRoot(window);
+        window.DisposeOnClose = true;
+        window.RequestClosed += _ => control.OnClosed();
+        root.AddChild(control);
     }
 }

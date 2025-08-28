@@ -4,8 +4,6 @@ using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Console;
-using Robust.Shared.IoC;
-using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -336,21 +334,16 @@ internal sealed class UITestCommand : BaseUITestCommand
 
 internal sealed class UITest2Command : BaseUITestCommand
 {
-    [Dependency] private readonly IClyde _clyde = default!;
-    [Dependency] private readonly IUserInterfaceManager _uiMgr = default!;
-
     public override string Command => "uitest2";
 
     protected override void CreateWindow(UITestControl control)
     {
-        var window = _clyde.CreateWindow(new WindowCreateParameters
+        var window = new OSWindow
         {
             Title = Loc.GetString("cmd-uitest2-title"),
-        });
-
-        var root = _uiMgr.CreateWindowRoot(window);
-        window.DisposeOnClose = true;
-        window.RequestClosed += _ => control.OnClosed();
-        root.AddChild(control);
+        };
+        window.AddChild(control);
+        window.Closed += control.OnClosed;
+        window.Show();
     }
 }

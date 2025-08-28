@@ -99,6 +99,12 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
+            var sys = _system.GetEntitySystem<SharedMapSystem>();
+            if (!sys.MapExists(mapId))
+            {
+                sys.CreateMap(mapId, false); // doesnt runmapinit to be conservative.
+            }
+
             Vector2 offset = default;
             if (args.Length >= 4)
             {

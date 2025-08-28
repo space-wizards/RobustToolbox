@@ -7,7 +7,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Client.ComponentTrees;
 
 [RegisterComponent]
-public sealed partial class LightTreeComponent: Component, IComponentTreeComponent<PointLightComponent>
+public sealed partial class LightTreeComponent: SharedLightTreeComponent, IComponentTreeComponent<PointLightComponent>
 {
     [ViewVariables]
     public DynamicTree<ComponentTreeEntry<PointLightComponent>> Tree { get; set; } = default!;

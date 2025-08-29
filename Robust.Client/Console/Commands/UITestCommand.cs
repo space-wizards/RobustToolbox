@@ -42,7 +42,10 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
         var progressBar = new ProgressBar { MaxValue = 10, Value = 5 };
         vBox.AddChild(progressBar);
 
-        var optionButton = new OptionButton();
+        var optionButton = new OptionButton
+        {
+            ToolTip = "This button has a tooltip. Spooky!"
+        };
         optionButton.AddItem("Honk");
         optionButton.AddItem("Foo");
         optionButton.AddItem("Bar");

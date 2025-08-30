@@ -204,6 +204,20 @@ public sealed class DefaultStylesheet
                 .Prop(TextureRect.StylePropertyTexture, Texture.White), // TODO: Add actual texture instead of this.
 
             /*
+             * SwitchButton
+             */
+
+            // SwitchButton unchecked/off
+            Child().Parent(Element<SwitchButton>())
+                .Child(Element<TextureRect>())
+                .Prop(TextureRect.StylePropertyTexture, Texture.Black), // TODO: Add actual texture instead of this.
+
+            // SwitchButton checked/on
+            Child().Parent(Element<SwitchButton>().Pseudo(SwitchButton.StylePseudoClassPressed))
+                .Child(Element<TextureRect>())
+                .Prop(TextureRect.StylePropertyTexture, Texture.White),  // TODO: Add actual texture instead of this.
+
+            /*
              * LineEdit
              */
 

@@ -631,7 +631,7 @@ namespace Robust.Shared.Containers
                     continue;
 
                 Remove(ent, container, force: true);
-                Del(ent);
+                PredictedDel(ent);
             }
         }
 

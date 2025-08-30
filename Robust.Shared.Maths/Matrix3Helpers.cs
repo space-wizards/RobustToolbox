@@ -28,8 +28,7 @@ public static class Matrix3Helpers
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Box2Rotated TransformBounds(this Matrix3x2 refFromBox, Box2Rotated box)
     {
-        var matty = Matrix3x2.Multiply(refFromBox, box.Transform);
-        return new Box2Rotated(Vector2.Transform(box.BottomLeft, matty), Vector2.Transform(box.TopRight, matty));
+        return new Box2Rotated(Vector2.Transform(box.BottomLeft, refFromBox), Vector2.Transform(box.TopRight, refFromBox));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

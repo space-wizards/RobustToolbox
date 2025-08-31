@@ -372,13 +372,13 @@ public sealed partial class AudioSystem : SharedAudioSystem
             return;
         }
 
+        var parentUid = xform.ParentUid;
         Vector2 worldPos;
         component.Volume = component.Params.Volume;
 
         // Handle grid audio differently by using grid position.
         if ((component.Flags & AudioFlags.GridAudio) != 0x0)
         {
-            var parentUid = xform.ParentUid;
             worldPos = _maps.GetGridPosition(parentUid);
         }
         else
@@ -412,7 +412,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         }
         else
         {
-            var occlusion = GetOcclusion(listener, delta, distance, entity);
+            var occlusion = GetOcclusion(listener, delta, distance, parentUid);
             component.Occlusion = occlusion;
         }
 
@@ -420,11 +420,11 @@ public sealed partial class AudioSystem : SharedAudioSystem
         component.Position = worldPos;
 
         // Make race cars go NYYEEOOOOOMMMMM
-        if (_physicsQuery.TryGetComponent(entity, out var physicsComp))
+        if (_physicsQuery.TryGetComponent(parentUid, out var physicsComp))
         {
             // This actually gets the tracked entity's xform & iterates up though the parents for the second time. Bit
             // inefficient.
-            var velocity = _physics.GetMapLinearVelocity(entity, physicsComp, xform);
+            var velocity = _physics.GetMapLinearVelocity(parentUid, physicsComp);
             component.Velocity = velocity;
         }
     }

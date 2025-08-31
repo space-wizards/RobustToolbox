@@ -1188,6 +1188,9 @@ namespace Robust.Shared
         public static readonly CVarDef<string> DisplaySplashLogo =
             CVarDef.Create("display.splash_logo", "", CVar.CLIENTONLY);
 
+        public static readonly CVarDef<bool> DisplayShowLoadingBar =
+            CVarDef.Create("display.show_loading_bar", true, CVar.CLIENTONLY);
+
         /// <summary>
         /// Use US QWERTY hotkeys for reported key names.
         /// </summary>

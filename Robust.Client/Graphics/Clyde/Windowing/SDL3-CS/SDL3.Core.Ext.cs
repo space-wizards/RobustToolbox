@@ -49,6 +49,7 @@ public static partial class SDL
 
     public const string SDL_PROP_FILE_DIALOG_NFILTERS_NUMBER = "SDL.filedialog.nfilters";
     public const string SDL_PROP_FILE_DIALOG_FILTERS_POINTER = "SDL.filedialog.filters";
+    public const string SDL_PROP_FILE_DIALOG_WINDOW_POINTER = "SDL.filedialog.window";
 
     public static int SDL_VERSIONNUM_MAJOR(int version) => version / 1000000;
     public static int SDL_VERSIONNUM_MINOR(int version) => version / 1000 % 1000;

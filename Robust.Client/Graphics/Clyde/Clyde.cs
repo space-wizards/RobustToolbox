@@ -128,7 +128,11 @@ namespace Robust.Client.Graphics.Clyde
             // macOS cannot.
             if (OperatingSystem.IsWindows() || OperatingSystem.IsLinux())
                 _cfg.OverrideDefault(CVars.DisplayThreadWindowApi, true);
-
+#if MACOS
+            // Trust macOS to not need threaded window blitting.
+            // (threaded window blitting is a workaround to avoid having to frequently MakeCurrent() on Windows, as it is broken).
+            _cfg.OverrideDefault(CVars.DisplayThreadWindowBlit, false);
+#endif
             _threadWindowBlit = _cfg.GetCVar(CVars.DisplayThreadWindowBlit);
             _threadWindowApi = _cfg.GetCVar(CVars.DisplayThreadWindowApi);
 

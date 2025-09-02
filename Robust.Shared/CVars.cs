@@ -1003,6 +1003,15 @@ namespace Robust.Shared
             CVarDef.Create("display.vsync", true, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
+        /// Maximum framerate the client should run at. Set to 0 to have no limit.
+        /// </summary>
+        /// <remarks>
+        /// This is ignored if <see cref="DisplayVSync"/> is enabled.
+        /// </remarks>
+        public static readonly CVarDef<int> DisplayMaxFPS =
+            CVarDef.Create("display.max_fps", 0, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
         /// Window mode for the main game window. 0 = windowed, 1 = fullscreen.
         /// </summary>
         public static readonly CVarDef<int> DisplayWindowMode =

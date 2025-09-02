@@ -1103,6 +1103,7 @@ namespace Robust.UnitTesting
             public bool SingleStep { get; set; }
             public bool Running { get; set; }
             public int MaxQueuedTicks { get; set; }
+            public TimeSpan LimitMinFrameTime { get; set; }
             public SleepMode SleepMode { get; set; }
 
             public IntegrationGameLoop(IGameTiming gameTiming, ChannelWriter<object> channelWriter,

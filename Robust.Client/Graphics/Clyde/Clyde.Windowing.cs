@@ -405,10 +405,17 @@ namespace Robust.Client.Graphics.Clyde
             _glContext?.SwapAllBuffers();
         }
 
-        private void VSyncChanged(bool newValue)
+        public bool VsyncEnabled
         {
-            _vSync = newValue;
-            _glContext?.UpdateVSync();
+            get => _vSync;
+            set
+            {
+                if (_vSync == value)
+                    return;
+
+                _vSync = value;
+                _glContext?.UpdateVSync();
+            }
         }
 
         private void WindowModeChanged(int mode)

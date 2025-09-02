@@ -6,7 +6,7 @@ using Robust.Shared.Toolshed.TypeParsers;
 
 namespace Robust.Shared.Toolshed.Commands.Generic.Ordering;
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "sortmapby")]
 public sealed class SortMapByCommand : ToolshedCommand
 {
     private static Type[] _parsers = [typeof(MapBlockOutputParser)];

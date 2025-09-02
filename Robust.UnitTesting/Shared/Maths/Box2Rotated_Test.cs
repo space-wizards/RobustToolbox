@@ -67,6 +67,9 @@ namespace Robust.UnitTesting.Shared.Maths
             new TestCaseData(Matrix3x2.CreateTranslation(Vector2.One),
                 Box2Rotated.UnitCentered,
                 new Box2Rotated(new Vector2(0.5f, 0.5f), new Vector2(1.5f, 1.5f))),
+            new TestCaseData(Matrix3x2.Identity,
+                new Box2Rotated(Box2.UnitCentered, Angle.FromDegrees(180)),
+                new Box2Rotated(new Vector2(0.5f, 0.5f), new Vector2(-0.5f, -0.5f))),
         };
 
         [Test, TestCaseSource(nameof(MatrixCases))]

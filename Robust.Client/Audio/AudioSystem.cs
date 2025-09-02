@@ -589,6 +589,11 @@ public sealed partial class AudioSystem : SharedAudioSystem
         var playing = CreateAndStartPlayingStream(audioParams, specifier, stream);
         _xformSys.SetCoordinates(playing.Entity, new EntityCoordinates(entity, Vector2.Zero));
 
+        // Since we're playing the sound immediately in the middle of a tick, we need to force ProcessStream -now-
+        // to set occlusion/position/velocity etc
+        // otherwise predicted positional sounds will sound very incorrect in several possible ways (e#5802, e#6175) until the next tick
+        ProcessStream(playing.Entity, playing.Component, Transform(playing.Entity), GetListenerCoordinates());
+
         return playing;
     }
 
@@ -632,6 +637,10 @@ public sealed partial class AudioSystem : SharedAudioSystem
 
         var playing = CreateAndStartPlayingStream(audioParams, specifier, stream);
         _xformSys.SetCoordinates(playing.Entity, coordinates);
+
+        // see PlayEntity for why this is necessary
+        ProcessStream(playing.Entity, playing.Component, Transform(playing.Entity), GetListenerCoordinates());
+
         return playing;
     }
 
@@ -714,8 +723,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
         offset = Math.Clamp(offset, 0f, maxOffset);
         source.PlaybackPosition = offset;
 
-        // For server we will rely on the adjusted one but locally we will have to adjust it ourselves.
-        ApplyAudioParams(comp.Params, comp);
         source.StartPlaying();
         return (entity, comp);
     }

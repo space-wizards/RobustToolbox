@@ -1,11 +1,13 @@
 <EntitySpawnWindow
     xmlns="https://spacestation14.io"
+    xmlns:gfx="clr-namespace:Robust.Client.Graphics"
     Title="{Loc entity-spawn-window-title}"
     SetSize="350 400"
     MinSize="350 200">
     <BoxContainer Orientation="Vertical">
         <BoxContainer Orientation="Horizontal">
             <LineEdit Name="SearchBar" Access="Public" HorizontalExpand="True" PlaceHolder="{Loc window-search-bar-placeholder}"/>
+            <Button Name="PasteButton" Access="Public" Text="{Loc window-paste-button}" />
             <Button Name="ClearButton" Access="Public" Disabled="True" Text="{Loc window-clear-button}" />
         </BoxContainer>
         <ScrollContainer Name="PrototypeScrollContainer" Access="Public" MinSize="200 0" VerticalExpand="True">
@@ -16,9 +18,25 @@
             <Button Name="EraseButton" Access="Public" ToggleMode="True" Text="{Loc window-erase-button-text}"/>
             <OptionButton Name="OverrideMenu" Access="Public" HorizontalExpand="True" ToolTip="{Loc entity-spawn-window-override-menu-tooltip}" />
         </BoxContainer>
-        <Label Name="RotationLabel" Access="Public"/>
-        <DoNotMeasure Visible="False">
-            <EntitySpawnButton Name="MeasureButton" Access="Public" />
-        </DoNotMeasure>
+        <BoxContainer>
+            <Label Name="RotationLabel" Access="Public"/>
+        </BoxContainer>
+        <BoxContainer Orientation="Vertical">
+            <Button Name="AdvancedButton" Access="Public" ToggleMode="True" Text="{Loc entity-spawn-window-advanced-button}" ToolTip="{Loc entity-spawn-window-advanced-button-tooltip}" />
+            <PanelContainer Name="AdvancedOptions" Access="Public" Visible="False" HorizontalExpand="True">
+                <PanelContainer.PanelOverride>
+                    <gfx:StyleBoxFlat BackgroundColor="#222226dd"/>
+                </PanelContainer.PanelOverride>
+                <BoxContainer Orientation="Vertical" Margin="5">
+                    <Button Name="CopyProtoId" Access="Public" Text="{Loc entity-spawn-window-copy-proto-id-button }" ToolTip="{Loc entity-spawn-window-copy-proto-id-button-tooltip}"/>
+                    <Label Text="{Loc entity-spawn-window-additional-spawn-title}" />
+                    <BoxContainer Orientation="Horizontal">
+                    <LineEdit Name="AdditionalSpawn" Access="Public" HorizontalExpand="True" PlaceHolder="{Loc entity-spawn-window-additional-spawn-placeholder}" ToolTip="{Loc entity-spawn-window-additional-spawn-tooltip}"/>
+                    <Button Name="PasteAdditionalSpawnButton" Access="Public" Text="{Loc window-paste-button}" />
+                    <Button Name="ClearAdditionalSpawnButton" Access="Public" Text="{Loc window-clear-button}" />
+                    </BoxContainer>
+                </BoxContainer>
+            </PanelContainer>
+        </BoxContainer>
     </BoxContainer>
 </EntitySpawnWindow>

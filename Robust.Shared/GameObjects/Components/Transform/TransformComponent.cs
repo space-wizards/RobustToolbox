@@ -150,25 +150,8 @@ namespace Robust.Shared.GameObjects
         public Angle LocalRotation
         {
             get => _localRotation;
-            set
-            {
-                if(_noLocalRotation)
-                    return;
-
-                if (_localRotation.EqualsApprox(value))
-                    return;
-
-                var oldRotation = _localRotation;
-                _localRotation = value;
-                var meta = _entMan.GetComponent<MetaDataComponent>(Owner);
-                _entMan.Dirty(Owner, this, meta);
-                MatricesDirty = true;
-
-                if (!Initialized)
-                    return;
-
-                _entMan.System<SharedTransformSystem>().RaiseMoveEvent((Owner, this, meta), _parent, _localPosition, oldRotation, MapUid, checkTraversal: false);
-            }
+            [Obsolete("Use the system method instead")]
+            set => _entMan.System<SharedTransformSystem>().SetLocalRotationInternal((Owner, this), value);
         }
 
         /// <summary>
@@ -334,27 +317,7 @@ namespace Robust.Shared.GameObjects
         {
             get => _localPosition;
             [Obsolete("Use the system method instead")]
-            set
-            {
-                if(Anchored)
-                    return;
-
-                if (_localPosition.EqualsApprox(value))
-                    return;
-
-                var oldParent = _parent;
-                var oldPos = _localPosition;
-
-                _localPosition = value;
-                var meta = _entMan.GetComponent<MetaDataComponent>(Owner);
-                _entMan.Dirty(Owner, this, meta);
-                MatricesDirty = true;
-
-                if (!Initialized)
-                    return;
-
-                _entMan.System<SharedTransformSystem>().RaiseMoveEvent((Owner, this, meta), oldParent, oldPos, _localRotation, MapUid);
-            }
+            set => _entMan.System<SharedTransformSystem>().SetLocalPositionInternal((Owner, this), value);
         }
 
         /// <summary>

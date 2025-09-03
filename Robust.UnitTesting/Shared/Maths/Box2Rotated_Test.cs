@@ -58,18 +58,38 @@ namespace Robust.UnitTesting.Shared.Maths
 
         private static TestCaseData[] MatrixCases = new[]
         {
+            // Default matrix and default input
             new TestCaseData(Matrix3x2.Identity,
                 Box2Rotated.UnitCentered,
                 Box2Rotated.UnitCentered),
+            // Rotation matrix and default input
             new TestCaseData(Matrix3x2.CreateRotation(MathF.PI),
                 Box2Rotated.UnitCentered,
                 new Box2Rotated(new Vector2(0.5f, 0.5f), new Vector2(-0.5f, -0.5f))),
+            // Translation matrix and default input
             new TestCaseData(Matrix3x2.CreateTranslation(Vector2.One),
                 Box2Rotated.UnitCentered,
                 new Box2Rotated(new Vector2(0.5f, 0.5f), new Vector2(1.5f, 1.5f))),
+            // Translation + rotation matrix and default input
+            new TestCaseData(Matrix3x2.Multiply(Matrix3x2.CreateTranslation(Vector2.One), Matrix3x2.CreateRotation(MathF.PI)),
+                Box2Rotated.UnitCentered,
+                new Box2Rotated(new Vector2(-0.5f, -0.5f), new Vector2(-1.5f, -1.5f))),
+            // Default matrix and rotated input
             new TestCaseData(Matrix3x2.Identity,
                 new Box2Rotated(Box2.UnitCentered, Angle.FromDegrees(180)),
                 new Box2Rotated(new Vector2(0.5f, 0.5f), new Vector2(-0.5f, -0.5f))),
+            // Rotation matrix and rotated input
+            new TestCaseData(Matrix3x2.CreateRotation(MathF.PI),
+                new Box2Rotated(Box2.UnitCentered, Angle.FromDegrees(180)),
+                new Box2Rotated(Box2.UnitCentered)),
+            // Translation matrix and rotated input
+            new TestCaseData(Matrix3x2.CreateTranslation(Vector2.One),
+                new Box2Rotated(Box2.UnitCentered, Angle.FromDegrees(180)),
+                new Box2Rotated(new Vector2(1.5f, 1.5f), new Vector2(0.5f, 0.5f))),
+            // Translation + rotation matrix and rotated input
+            new TestCaseData(Matrix3x2.Multiply(Matrix3x2.CreateTranslation(Vector2.One), Matrix3x2.CreateRotation(MathF.PI)),
+                new Box2Rotated(Box2.UnitCentered, Angle.FromDegrees(180)),
+                new Box2Rotated(new Vector2(-1.5f, -1.5f), new Vector2(-0.5f, -0.5f))),
         };
 
         [Test, TestCaseSource(nameof(MatrixCases))]

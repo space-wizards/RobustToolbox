@@ -18,6 +18,12 @@ namespace Robust.Client.Animations
         /// </summary>
         public AnimationInterpolationMode InterpolationMode { get; set; } = AnimationInterpolationMode.Linear;
 
+        /// <summary>
+        ///     A function applied to the time parameter of the animation (0 to 1) to modify the animation's behaviour.
+        ///     See <see cref="Easings"/> for example functions, or provide your own.
+        /// </summary>
+        public Func<float, float>? Easing { get; set; } = null;
+
         public override (int KeyFrameIndex, float FramePlayingTime) InitPlayback()
         {
             return (-1, 0);
@@ -56,6 +62,10 @@ namespace Robust.Client.Animations
             {
                 // Get us a scale 0 -> 1 here.
                 var t = playingTime / KeyFrames[nextKeyFrame].KeyTime;
+
+                // Apply easing to time parameter, if one was specified
+                if (Easing != null)
+                    t = Easing(t);
 
                 switch (InterpolationMode)
                 {

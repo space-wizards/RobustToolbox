@@ -150,41 +150,57 @@ public sealed partial class Pronoun
 
     public Pronoun WithSubject(string? pronoun)
     {
+        if (string.IsNullOrEmpty(pronoun))
+            pronoun = null;
         return new(this) { Subject = pronoun };
     }
 
     public Pronoun WithObject(string? pronoun)
     {
+        if (string.IsNullOrEmpty(pronoun))
+            pronoun = null;
         return new(this) { Object = pronoun };
     }
 
     public Pronoun WithDatObj(string? pronoun)
     {
+        if (string.IsNullOrEmpty(pronoun))
+            pronoun = null;
         return new(this) { DatObj = pronoun };
     }
 
     public Pronoun WithGenitive(string? pronoun)
     {
+        if (string.IsNullOrEmpty(pronoun))
+            pronoun = null;
         return new(this) { Genitive = pronoun };
     }
 
     public Pronoun WithPossAdj(string? pronoun)
     {
+        if (string.IsNullOrEmpty(pronoun))
+            pronoun = null;
         return new(this) { PossAdj = pronoun };
     }
 
     public Pronoun WithPossPronoun(string? pronoun)
     {
+        if (string.IsNullOrEmpty(pronoun))
+            pronoun = null;
         return new(this) { PossPronoun = pronoun };
     }
 
     public Pronoun WithReflexive(string? pronoun)
     {
+        if (string.IsNullOrEmpty(pronoun))
+            pronoun = null;
         return new(this) { Reflexive = pronoun };
     }
 
     public Pronoun WithCounter(string? pronoun)
     {
+        if (string.IsNullOrEmpty(pronoun))
+            pronoun = null;
         return new(this) { Counter = pronoun };
     }
 

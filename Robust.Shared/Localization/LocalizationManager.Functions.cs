@@ -163,31 +163,36 @@ namespace Robust.Shared.Localization
         }
 
         /// <summary>
-        /// Returns the gender of the entity passed in, or the relevant pronoun if it exists.
+        /// Returns the string gender of the entity passed in, or the relevant pronoun if it exists.
         /// </summary>
-        private LocValueString GetGender(LocArgs args, out Pronoun? pronoun)
+        private string GetGender(LocArgs args, out Pronoun? pronoun)
         {
             pronoun = null;
 
             if (args.Args.Count < 1)
-                return new LocValueString(nameof(Gender.Neuter));
+                return Gender.Neuter.ToString().ToLowerInvariant();
 
             if (args.Args[0].Value is EntityUid entity)
             {
                 if (_entMan.TryGetComponent(entity, out GrammarComponent? grammar))
                 {
                     pronoun = grammar.Pronoun;
-                    if (grammar.Gender != null)
-                        return new LocValueString(nameof(Gender.Neuter));
+                    if (grammar.Gender is { } gender)
+                        return gender.ToString().ToLowerInvariant();
                 }
 
-                if (TryGetEntityLocAttrib(entity, "gender", out var gender))
-                {
-                    return new LocValueString(gender);
-                }
+                if (TryGetEntityLocAttrib(entity, "gender", out var locGender))
+                    return locGender;
             }
 
-            return new LocValueString(nameof(Gender.Neuter));
+            var outGender = args.Args[0].Value switch
+            {
+                "male" => Gender.Male,
+                "female" => Gender.Female,
+                "epicene" => Gender.Epicene,
+                _ => Gender.Neuter
+            };
+            return outGender.ToString().ToLowerInvariant();
         }
 
         /// <summary>
@@ -312,8 +317,8 @@ namespace Robust.Shared.Localization
 
             if (pronoun != null && pronoun.Plural != null)
                 gender = pronoun.Plural.Value ?
-                    new LocValueString("epicene") :
-                    new LocValueString("other");
+                    "epicene" :
+                    "other";
 
             return new LocValueString(GetString("zzzz-conjugate-be", ("ent", gender)));
         }
@@ -327,8 +332,8 @@ namespace Robust.Shared.Localization
 
             if (pronoun != null && pronoun.Plural != null)
                 gender = pronoun.Plural.Value ?
-                    new LocValueString("epicene") :
-                    new LocValueString("other");
+                    "epicene" :
+                    "other";
 
             return new LocValueString(GetString("zzzz-conjugate-have", ("ent", gender)));
         }
@@ -346,8 +351,8 @@ namespace Robust.Shared.Localization
 
             if (pronoun != null && pronoun.Plural != null)
                 gender = pronoun.Plural.Value ?
-                    new LocValueString("epicene") :
-                    new LocValueString("other");
+                    "epicene" :
+                    "other";
 
             return new LocValueString(GetString("zzzz-conjugate-basic", ("ent", gender), ("first", first), ("second", second)));
         }

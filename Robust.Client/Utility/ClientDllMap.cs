@@ -30,15 +30,6 @@ namespace Robust.Client.Utility
 #endif
                 }
 
-                if (name == SDL.nativeLibName)
-                {
-#if LINUX || FREEBSD
-                    return NativeLibrary.Load("libSDL3.so.0", assembly, path);
-#elif MACOS
-                    return NativeLibrary.Load("libSDL3.0.dylib", assembly, path);
-#endif
-                }
-
                 return IntPtr.Zero;
             });
 

@@ -858,6 +858,18 @@ namespace Robust.Client.Placement
             message.DirRcv = Direction;
 
             _networkManager.ClientSendMessage(message);
+
+            // Send additionalSpawn as well
+            if (string.IsNullOrEmpty(CurrentPermission.AdditionalSpawn))
+                return;
+
+            var additionalMessage = new MsgPlacement
+            {
+                PlaceType = PlacementManagerMessage.RequestPlacement,
+                EntityTemplateName = CurrentPermission.AdditionalSpawn,
+                NetCoordinates = message.NetCoordinates
+            };
+            _networkManager.ClientSendMessage(additionalMessage);
         }
 
         public enum PlacementTypes : byte

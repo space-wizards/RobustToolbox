@@ -307,6 +307,8 @@ namespace Robust.Client.Graphics.Clyde
 
         public IFileDialogManagerImplementation? FileDialogImpl => null;
 
+        public bool VsyncEnabled { get; set; }
+
         private sealed class DummyCursor : ICursor
         {
             public void Dispose()

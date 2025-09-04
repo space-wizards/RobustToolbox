@@ -41,26 +41,14 @@ namespace Robust.Client.UserInterface
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var clyde = IoCManager.Resolve<IClyde>();
-            var monitor = clyde.EnumerateMonitors().First();
-            if (args.Length > 0)
+            var window = new OSWindow
             {
-                var id = int.Parse(args[0]);
-                monitor = clyde.EnumerateMonitors().Single(m => m.Id == id);
-            }
-
-            var window = clyde.CreateWindow(new WindowCreateParameters
-            {
-                //Maximized = true,
                 Title = "Robust Debug Window",
-                //Monitor = monitor,
-            });
-            var root = IoCManager.Resolve<IUserInterfaceManager>().CreateWindowRoot(window);
-            window.DisposeOnClose = true;
-
+            };
             var control = new DevWindow();
+            window.AddChild(control);
 
-            root.AddChild(control);
+            window.Show();
         }
     }
 }

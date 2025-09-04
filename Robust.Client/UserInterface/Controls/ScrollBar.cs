@@ -74,7 +74,7 @@ namespace Robust.Client.UserInterface.Controls
             else
             {
                 _updating = true;
-                Value = MathHelper.Lerp(Value, ValueTarget, Math.Min(args.DeltaSeconds * 15, 1));
+                Value = UIAnimations.LerpAnimate(Value, ValueTarget, args.DeltaSeconds, 15);
                 _updating = false;
             }
         }

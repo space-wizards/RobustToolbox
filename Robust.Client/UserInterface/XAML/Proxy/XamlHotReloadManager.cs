@@ -3,7 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Robust.Shared;
 using Robust.Shared.Asynchronous;
+using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -18,24 +20,25 @@ namespace Robust.Client.UserInterface.XAML.Proxy;
 /// </remarks>
 internal sealed class XamlHotReloadManager : IXamlHotReloadManager
 {
-    private const string MarkerFileName = "SpaceStation14.sln";
-
-    [Dependency] ILogManager _logManager = null!;
+    [Dependency] private readonly IConfigurationManager _cfg = null!;
+    [Dependency] private readonly ILogManager _logManager = null!;
     [Dependency] private readonly IResourceManager _resources = null!;
     [Dependency] private readonly ITaskManager _taskManager = null!;
     [Dependency] private readonly IXamlProxyManager _xamlProxyManager = null!;
 
     private ISawmill _sawmill = null!;
     private FileSystemWatcher? _watcher;
+    private string _markerFileName = null!;
 
     public void Initialize()
     {
+        _markerFileName = _cfg.GetCVar(CVars.XamlHotReloadMarkerName);
         _sawmill = _logManager.GetSawmill("xamlhotreload");
         var codeLocation = InferCodeLocation();
 
         if (codeLocation == null)
         {
-            _sawmill.Warning($"could not find code -- where is {MarkerFileName}?");
+            _sawmill.Warning($"could not find code -- where is {_markerFileName}?");
             return;
         }
 
@@ -129,7 +132,7 @@ internal sealed class XamlHotReloadManager : IXamlHotReloadManager
                 }
                 catch (IOException) { }  // this is allowed to fail, and if so we just keep going up
 
-                if (files.Any(f => Path.GetFileName(f).Equals(MarkerFileName, StringComparison.InvariantCultureIgnoreCase)))
+                if (files.Any(f => Path.GetFileName(f).Equals(_markerFileName, StringComparison.InvariantCultureIgnoreCase)))
                 {
                     return systemPath;
                 }

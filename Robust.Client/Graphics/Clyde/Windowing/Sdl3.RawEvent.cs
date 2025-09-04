@@ -278,5 +278,9 @@ internal partial class Clyde
         private sealed class EventKeyMapChanged : EventBase;
 
         private sealed class EventQuit : EventBase;
+
+#if MACOS
+        private sealed class EventWindowDestroyed : EventBase;
+#endif
     }
 }

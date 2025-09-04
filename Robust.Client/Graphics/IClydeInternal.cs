@@ -72,5 +72,7 @@ namespace Robust.Client.Graphics
         void RunOnWindowThread(Action action);
 
         IFileDialogManagerImplementation? FileDialogImpl { get; }
+
+        bool VsyncEnabled { get; set; }
     }
 }

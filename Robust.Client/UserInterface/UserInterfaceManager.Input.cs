@@ -333,7 +333,7 @@ internal partial class UserInterfaceManager
 
         if (_suppliedTooltip != null)
         {
-            PopupRoot.RemoveChild(_suppliedTooltip);
+            _suppliedTooltip.Orphan();
             _suppliedTooltip = null;
         }
 
@@ -538,7 +538,7 @@ internal partial class UserInterfaceManager
         if (_showingTooltip) return;
         _showingTooltip = true;
         var hovered = CurrentlyHovered;
-        if (hovered == null)
+        if (hovered == null || hovered.Root == null)
         {
             return;
         }
@@ -563,7 +563,7 @@ internal partial class UserInterfaceManager
         if (_suppliedTooltip == null)
             return;
 
-        PopupRoot.AddChild(_suppliedTooltip);
+        hovered.Root.PopupRoot.AddChild(_suppliedTooltip);
         Tooltips.PositionTooltip(_suppliedTooltip);
         hovered.PerformShowTooltip();
     }

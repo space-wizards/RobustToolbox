@@ -5,7 +5,7 @@ zzzz-the = { PROPER($ent) ->
     }
 
 # Used internally by the SUBJECT() function.
-zzzz-subject-pronoun = { GENDER($ent) ->
+zzzz-subject-pronoun = { $ent ->
     [male] ele
     [female] ela
     [epicene] eles
@@ -13,7 +13,7 @@ zzzz-subject-pronoun = { GENDER($ent) ->
    }
 
 # Used internally by the OBJECT() function.
-zzzz-object-pronoun = { GENDER($ent) ->
+zzzz-object-pronoun = { $ent ->
     [male] ele
     [female] ela
     [epicene] eles
@@ -21,7 +21,7 @@ zzzz-object-pronoun = { GENDER($ent) ->
    }
 
 # Used internally by the POSS-PRONOUN() function.
-zzzz-possessive-pronoun = { GENDER($ent) ->
+zzzz-possessive-pronoun = { $ent ->
     [male] dele
     [female] dela
     [epicene] deles
@@ -29,7 +29,7 @@ zzzz-possessive-pronoun = { GENDER($ent) ->
    }
 
 # Used internally by the POSS-ADJ() function.
-zzzz-possessive-adjective = { GENDER($ent) ->
+zzzz-possessive-adjective = { $ent ->
     [male] dele
     [female] dela
     [epicene] deles
@@ -37,7 +37,7 @@ zzzz-possessive-adjective = { GENDER($ent) ->
    }
 
 # Used internally by the REFLEXIVE() function.
-zzzz-reflexive-pronoun = { GENDER($ent) ->
+zzzz-reflexive-pronoun = { $ent ->
     [male] ele mesmo
     [female] ela mesmo
     [epicene] eles mesmos
@@ -45,19 +45,19 @@ zzzz-reflexive-pronoun = { GENDER($ent) ->
    }
 
 # Used internally by the CONJUGATE-BE() function.
-zzzz-conjugate-be = { GENDER($ent) ->
+zzzz-conjugate-be = { $ent ->
     [epicene] é
    *[other] é
    }
 
 # Used internally by the CONJUGATE-HAVE() function.
-zzzz-conjugate-have = { GENDER($ent) ->
+zzzz-conjugate-have = { $ent ->
     [epicene] tenho
    *[other] tem
    }
 
 # Used internally by the CONJUGATE-BASIC() function.
-zzzz-conjugate-basic = { GENDER($ent) ->
+zzzz-conjugate-basic = { $ent ->
     [epicene] { $first }
    *[other] { $second }
    }

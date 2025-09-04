@@ -529,6 +529,7 @@ Types:
       - "string ToTitleCase(string)"
       - "string ToTitleCase(string)"
       - "string ToUpper(string)"
+    UnicodeCategory: { } # Enum
   System.IO.Compression:
     CompressionMode: { } # Enum
     CompressionLevel: { } # Enum

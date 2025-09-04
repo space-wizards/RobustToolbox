@@ -19,6 +19,7 @@ namespace Robust.Shared.Localization
         private void AddBuiltInFunctions(FluentBundle bundle)
         {
             // Grammatical gender / pronouns
+            AddCtxFunction(bundle, "GENDER", FuncGender);
             AddCtxFunction(bundle, "SUBJECT", FuncSubject);
             AddCtxFunction(bundle, "OBJECT", FuncObject);
             AddCtxFunction(bundle, "DAT-OBJ", FuncDatObj);
@@ -193,6 +194,31 @@ namespace Robust.Shared.Localization
                 _ => Gender.Neuter
             };
             return outGender.ToString().ToLowerInvariant();
+        }
+
+        /// <summary>
+        /// Returns the gender of the entity passed in; either Male, Female, Neuter or Epicene.
+        /// Not used in English, common in languages where words needed to be conjugated based on gender.
+        /// </summary>
+        private ILocValue FuncGender(LocArgs args)
+        {
+            if (args.Args.Count < 1) return new LocValueString(nameof(Gender.Neuter));
+
+            ILocValue entity0 = args.Args[0];
+            if (entity0.Value is EntityUid entity)
+            {
+                if (_entMan.TryGetComponent(entity, out GrammarComponent? grammar) && grammar.Gender.HasValue)
+                {
+                    return new LocValueString(grammar.Gender.Value.ToString().ToLowerInvariant());
+                }
+
+                if (TryGetEntityLocAttrib(entity, "gender", out var gender))
+                {
+                    return new LocValueString(gender);
+                }
+            }
+
+            return new LocValueString(nameof(Gender.Neuter));
         }
 
         /// <summary>

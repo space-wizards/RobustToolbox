@@ -141,6 +141,13 @@ ent-TestInheritOverridingParent = XA
   .gender = female
   .proper = false
 
+
+test-message-gender = { GENDER($entity) ->
+  [male] male
+  [female] female
+  *[neuter] BAD
+}
+
 test-message-proper = { PROPER($entity) ->
   [true] true
   *[false] false
@@ -157,6 +164,26 @@ test-message-custom-attrib = { ATTRIB($entity, ""otherAttrib"") }
             Assert.That(loc.GetString("enum-match", ("enum", TestEnum.Foo)), Is.EqualTo("A"));
             Assert.That(loc.GetString("enum-match", ("enum", TestEnum.Bar)), Is.EqualTo("B"));
             Assert.That(loc.GetString("enum-match", ("enum", TestEnum.Baz)), Is.EqualTo("B"));
+        }
+
+        [Test]
+        public void TestCustomFunctions()
+        {
+            var entMan          = IoCManager.Resolve<IEntityManager>();
+            var testEntNoComp   = entMan.CreateEntityUninitialized("GenderTestEntityNoComp");
+            var testEntWithComp = entMan.CreateEntityUninitialized("GenderTestEntityWithComp");
+
+            var loc               = IoCManager.Resolve<ILocalizationManager>();
+            var genderFromAttrib  = loc.GetString("test-message-gender", ("entity", testEntNoComp));
+            var genderFromGrammar = loc.GetString("test-message-gender", ("entity", testEntWithComp));
+            var customAttrib      = loc.GetString("test-message-custom-attrib", ("entity", testEntNoComp));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(genderFromAttrib, Is.EqualTo("male"));
+                Assert.That(genderFromGrammar, Is.EqualTo("female"));
+                Assert.That(customAttrib, Is.EqualTo("sausages"));
+            });
         }
 
         static IEnumerable<object[]> NumericTestSource()

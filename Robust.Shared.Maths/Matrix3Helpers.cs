@@ -28,7 +28,11 @@ public static class Matrix3Helpers
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Box2Rotated TransformBounds(this Matrix3x2 refFromBox, Box2Rotated box)
     {
-        return new Box2Rotated(Vector2.Transform(box.BottomLeft, refFromBox), Vector2.Transform(box.TopRight, refFromBox));
+        // Box2Rotated.BottomLeft is created using the rotation.
+        // We want the base Vector2 so we don't additionally apply the original rotation before the new rotation.
+        return new Box2Rotated(new Box2(Vector2.Transform(box.Box.BottomLeft, refFromBox), Vector2.Transform(box.Box.TopRight, refFromBox)),
+                    Matrix3x2.Multiply(refFromBox, box.Transform).Rotation(), // New rotation is the combined rotation
+                    Vector2.Transform(box.Origin, refFromBox)); // New origin is transformed the same was as the corners
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

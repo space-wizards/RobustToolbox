@@ -4,6 +4,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects.Components.Localization;
@@ -26,7 +27,7 @@ public sealed partial class GrammarComponent : Component
         set => IoCManager.Resolve<IEntityManager>().System<GrammarSystem>().SetGender((Owner, this), value);
     }
 
-    [DataField]
+    [DataField, AutoNetworkedField]
     public Pronoun? Pronoun { get; set; }
 
     [ViewVariables]
@@ -42,7 +43,7 @@ public sealed partial class GrammarComponent : Component
 ///     Used to define custom pronouns for an entity.
 ///     If this doesn't exist, just use pronouns defined by the entity's gender.
 /// </summary>
-[DataDefinition, Serializable]
+[DataDefinition, Serializable, NetSerializable]
 public sealed partial class Pronoun
 {
     /// <summary>

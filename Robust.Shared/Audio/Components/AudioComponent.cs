@@ -53,6 +53,9 @@ public sealed partial class AudioComponent : Component, IAudioSource
     // As such we'll wait for FrameUpdate before we start playing to avoid the position being cooked.
     public bool Started = false;
 
+    // Used for audio playback to avoid playing this audio if it's intended for specific entities.
+    public bool? IsLocalExcluded;
+
     [AutoNetworkedField]
     [DataField(required: true)]
     public string FileName = string.Empty;

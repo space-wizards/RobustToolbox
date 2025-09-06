@@ -41,6 +41,7 @@ END TEMPLATE-->
 
 * `Control.OrderedChildCollection` (gotten from `.Children`) now implements `IReadOnlyList<Control>`, allowing it to be indexed directly.
 * `System.WeakReference<T>` is now available in the sandbox.
+* `IClydeViewport` now has an `Id` and `ClearCachedResources` event. Together, these allow you to properly cache rendering resources per viewport.
 
 ### Bugfixes
 
@@ -52,7 +53,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* Added some debug commands for debugging viewport resource management: `vp_clear_all_cached` & `vp_test_finalize`
 
 
 ## 267.0.0

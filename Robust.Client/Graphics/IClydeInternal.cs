@@ -74,5 +74,16 @@ namespace Robust.Client.Graphics
         IFileDialogManagerImplementation? FileDialogImpl { get; }
 
         bool VsyncEnabled { get; set; }
+
+        // Viewports
+
+#if TOOLS
+
+        /// <summary>
+        /// Fires <see cref="IClydeViewport.ClearCachedResources"/> on all viewports. For debugging.
+        /// </summary>
+        void ViewportsClearAllCached();
+
+#endif // TOOLS
     }
 }

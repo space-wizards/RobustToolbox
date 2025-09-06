@@ -40,6 +40,7 @@ END TEMPLATE-->
 ### New features
 
 * `Control.OrderedChildCollection` (gotten from `.Children`) now implements `IReadOnlyList<Control>`, allowing it to be indexed directly.
+* `System.WeakReference<T>` is now available in the sandbox.
 
 ### Bugfixes
 

@@ -1560,6 +1560,11 @@ Types:
     ValueType: { All: True }
     Version: { All: True }
     Void: { All: True }
+    WeakReference`1:
+      Methods:
+      - "void .ctor(!0)"
+      - "bool TryGetTarget(ref !0)"
+      - "void SetTarget(!0)"
   YamlDotNet.Core.Events:
     MappingStyle: { } # Enum
     SequenceStyle: { } # Enum

@@ -32,11 +32,29 @@ namespace Robust.Shared.Localization
         string GetString(string messageId);
 
         /// <summary>
+        ///     Gets a language appropriate string represented by the supplied messageId.
+        /// </summary>
+        /// <param name="messageId">Unique Identifier for a translated message.</param>
+        /// <param name="culture">The culture to use when retrieving the translation.</param>
+        /// <returns>
+        ///     The language appropriate message according to the specified culture if available, otherwise the messageId is returned.
+        /// </returns>
+        string GetString(string messageId, CultureInfo culture);
+
+        /// <summary>
         ///     Checks if the specified id has been registered, without checking its arguments.
         /// </summary>
         /// <param name="messageId">Unique Identifier for a translated message.</param>
         /// <returns>true if it exists, even if it requires any parameters to be passed.</returns>
         bool HasString(string messageId);
+
+        /// <summary>
+        ///     Checks if the specified id has been registered for the given culture, without checking its arguments.
+        /// </summary>
+        /// <param name="messageId">Unique Identifier for a translated message.</param>
+        /// <param name="culture">The culture to check for the translation.</param>
+        /// <returns>true if it exists for the specified culture, even if it requires any parameters to be passed.</returns>
+        bool HasString(string messageId, CultureInfo culture);
 
         /// <summary>
         ///     Try- version of <see cref="GetString(string)"/>
@@ -48,9 +66,23 @@ namespace Robust.Shared.Localization
         bool TryGetString(string messageId, [NotNullWhen(true)] out string? value);
 
         /// <summary>
+        ///     Try- version of <see cref="GetString(string, CultureInfo)"/>
+        /// </summary>
+        /// <remarks>
+        ///     Does not log a warning if the message does not exist.
+        ///     Does however log errors if any occur while formatting.
+        /// </remarks>
+        bool TryGetString(string messageId, CultureInfo culture, [NotNullWhen(true)] out string? value);
+
+        /// <summary>
         ///     Version of <see cref="GetString(string)"/> that supports arguments.
         /// </summary>
         string GetString(string messageId, params (string, object)[] args);
+
+        /// <summary>
+        ///     Version of <see cref="GetString(string, CultureInfo)"/> that supports arguments.
+        /// </summary>
+        string GetString(string messageId, CultureInfo culture, params (string, object)[] args);
 
         /// <summary>
         ///     Version of <see cref="GetString(string)"/> that supports arguments.
@@ -58,9 +90,19 @@ namespace Robust.Shared.Localization
         string GetString(string messageId, (string, object) arg);
 
         /// <summary>
+        ///     Version of <see cref="GetString(string, CultureInfo)"/> that supports arguments.
+        /// </summary>
+        string GetString(string messageId, CultureInfo culture, (string, object) arg);
+
+        /// <summary>
         ///     Version of <see cref="GetString(string)"/> that supports arguments.
         /// </summary>
         string GetString(string messageId, (string, object) arg, (string, object) arg2);
+
+        /// <summary>
+        ///     Version of <see cref="GetString(string, CultureInfo)"/> that supports arguments.
+        /// </summary>
+        string GetString(string messageId, CultureInfo culture, (string, object) arg, (string, object) arg2);
 
         /// <summary>
         ///     Try- version of <see cref="GetString(string, (string, object)[])"/>
@@ -81,6 +123,15 @@ namespace Robust.Shared.Localization
         bool TryGetString(string messageId, [NotNullWhen(true)] out string? value, (string, object) arg1, (string, object) arg2);
 
         /// <summary>
+        ///     Try- version of <see cref="GetString(string, CultureInfo, (string, object)[])"/>
+        /// </summary>
+        /// <remarks>
+        ///     Does not log a warning if the message does not exist.
+        ///     Does however log errors if any occur while formatting.
+        /// </remarks>
+        bool TryGetString(string messageId, CultureInfo culture, [NotNullWhen(true)] out string? value, (string, object) arg1, (string, object) arg2);
+
+        /// <summary>
         ///     Try- version of <see cref="GetString(string, (string, object)[])"/>
         /// </summary>
         /// <remarks>
@@ -88,6 +139,15 @@ namespace Robust.Shared.Localization
         ///     Does however log errors if any occur while formatting.
         /// </remarks>
         bool TryGetString(string messageId, [NotNullWhen(true)] out string? value, params (string, object)[] keyArgs);
+
+        /// <summary>
+        ///     Try- version of <see cref="GetString(string, CultureInfo, (string, object)[])"/>
+        /// </summary>
+        /// <remarks>
+        ///     Does not log a warning if the message does not exist.
+        ///     Does however log errors if any occur while formatting.
+        /// </remarks>
+        bool TryGetString(string messageId, CultureInfo culture, [NotNullWhen(true)] out string? value, params (string, object)[] keyArgs);
 
         /// <summary>
         ///     Default culture used by other methods when no culture is explicitly specified.

@@ -75,6 +75,20 @@ namespace Robust.Shared.Localization
             return msg;
         }
 
+        public string GetString(string messageId, CultureInfo culture)
+        {
+            if (!_contexts.ContainsKey(culture))
+                return messageId;
+
+            if (!TryGetString(messageId, culture, out var msg))
+            {
+                _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", culture.Name, messageId);
+                msg = messageId;
+            }
+
+            return msg;
+        }
+
         #region get string
 
         public string GetString(string messageId, (string, object) arg)
@@ -90,6 +104,18 @@ namespace Robust.Shared.Localization
             return messageId;
         }
 
+        public string GetString(string messageId, CultureInfo culture, (string, object) arg)
+        {
+            if (!_contexts.ContainsKey(culture))
+                return messageId;
+
+            if (TryGetString(messageId, culture, out var argMsg, arg))
+                return argMsg;
+
+            _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", culture.Name, messageId);
+            return messageId;
+        }
+
         public string GetString(string messageId, (string, object) arg1, (string, object) arg2)
         {
             if (_defaultCulture == null)
@@ -99,6 +125,19 @@ namespace Robust.Shared.Localization
                 return argMsg;
 
             _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", _defaultCulture.Value.Item1.Name,
+                messageId);
+            return messageId;
+        }
+
+        public string GetString(string messageId, CultureInfo culture, (string, object) arg1, (string, object) arg2)
+        {
+            if (!_contexts.ContainsKey(culture))
+                return messageId;
+
+            if (TryGetString(messageId, culture, out var argMsg, arg1, arg2))
+                return argMsg;
+
+            _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", culture.Name,
                 messageId);
             return messageId;
         }
@@ -116,11 +155,36 @@ namespace Robust.Shared.Localization
             return messageId;
         }
 
+        public string GetString(string messageId, CultureInfo culture, params (string, object)[] args)
+        {
+            if (!_contexts.ContainsKey(culture))
+                return messageId;
+
+            if (TryGetString(messageId, culture, out var argMsg, args))
+                return argMsg;
+
+            _logSawmill.Debug("Unknown messageId ({culture}): {messageId}", culture.Name,
+                messageId);
+            return messageId;
+        }
+
         #endregion
 
         public bool HasString(string messageId)
         {
             return HasMessage(messageId, out _);
+        }
+
+        public bool HasString(string messageId, CultureInfo culture)
+        {
+            if (!_contexts.TryGetValue(culture, out var bundle))
+                return false;
+
+            var idx = messageId.IndexOf('.');
+            if (idx != -1)
+                messageId = messageId.Remove(idx);
+
+            return bundle.HasMessage(messageId);
         }
 
         #region TryGetString
@@ -145,6 +209,22 @@ namespace Robust.Shared.Localization
             value = null;
             return false;
         }
+
+        public bool TryGetString(string messageId, CultureInfo culture, [NotNullWhen(true)] out string? value)
+        {
+            if (!_contexts.TryGetValue(culture, out var bundle))
+            {
+                value = null;
+                return false;
+            }
+
+            if (TryGetString(messageId, (culture, bundle), out value))
+                return true;
+
+            value = null;
+            return false;
+        }
+
 
         public bool TryGetString(string messageId,
             (CultureInfo, FluentBundle) bundle,
@@ -197,6 +277,29 @@ namespace Robust.Shared.Localization
         }
 
         public bool TryGetString(string messageId,
+            CultureInfo culture,
+            [NotNullWhen(true)] out string? value,
+            (string, object) arg)
+        {
+            // TODO LINGUINI add try-get-message variant that takes in a (string, object)[]
+            // I.e., have it automatically call FluentFromObject(context) with the right context if the message exists
+            // This allows us to get rid of this message check.
+            if (!_contexts.TryGetValue(culture, out var bundle))
+            {
+                value = null;
+                return false;
+            }
+
+            var context = new LocContext(bundle);
+            var args = new Dictionary<string, IFluentType>
+            {
+                { arg.Item1, arg.Item2.FluentFromObject(context) }
+            };
+
+            return TryGetString(messageId, out value, args, bundle, culture);
+        }
+
+        public bool TryGetString(string messageId,
             [NotNullWhen(true)] out string? value,
             (string, object) arg1,
             (string, object) arg2)
@@ -222,6 +325,31 @@ namespace Robust.Shared.Localization
         }
 
         public bool TryGetString(string messageId,
+            CultureInfo culture,
+            [NotNullWhen(true)] out string? value,
+            (string, object) arg1,
+            (string, object) arg2)
+        {
+            // TODO LINGUINI add try-get-message variant that takes in a (string, object)[]
+            // I.e., have it automatically call FluentFromObject(context) with the right context if the message exists
+            // This allows us to get rid of this message check.
+            if (!_contexts.TryGetValue(culture, out var bundle))
+            {
+                value = null;
+                return false;
+            }
+
+            var context = new LocContext(bundle);
+            var args = new Dictionary<string, IFluentType>
+            {
+                { arg1.Item1, arg1.Item2.FluentFromObject(context) },
+                { arg2.Item1, arg2.Item2.FluentFromObject(context) }
+            };
+
+            return TryGetString(messageId, out value, args, bundle, culture);
+        }
+
+        public bool TryGetString(string messageId,
             [NotNullWhen(true)] out string? value,
             params (string, object)[] keyArgs)
         {
@@ -243,6 +371,30 @@ namespace Robust.Shared.Localization
             }
 
             return TryGetString(messageId, out value, args, bundle, info);
+        }
+
+        public bool TryGetString(string messageId,
+            CultureInfo culture,
+            [NotNullWhen(true)] out string? value,
+            params (string, object)[] keyArgs)
+        {
+            // TODO LINGUINI add try-get-message variant that takes in a (string, object)[]
+            // I.e., have it automatically call FluentFromObject(context) with the right context if the message exists
+            // This allows us to get rid of this message check.
+            if (!_contexts.TryGetValue(culture, out var bundle))
+            {
+                value = null;
+                return false;
+            }
+
+            var context = new LocContext(bundle);
+            var args = new Dictionary<string, IFluentType>(keyArgs.Length);
+            foreach (var (k, v) in keyArgs)
+            {
+                args.Add(k, v.FluentFromObject(context));
+            }
+
+            return TryGetString(messageId, out value, args, bundle, culture);
         }
 
         public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value,

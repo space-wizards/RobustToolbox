@@ -231,7 +231,7 @@ namespace Robust.Shared.Localization
             if (pronoun != null && pronoun.Subject != null)
                 return new LocValueString(pronoun.Subject);
 
-            return new LocValueString(GetString("zzzz-subject-pronoun", ("ent", gender)));
+            return new LocValueString(GetString("zzzz-subject-pronoun", ("gender", gender)));
         }
 
         /// <summary>
@@ -244,7 +244,7 @@ namespace Robust.Shared.Localization
             if (pronoun != null && pronoun.Object != null)
                 return new LocValueString(pronoun.Object);
 
-            return new LocValueString(GetString("zzzz-object-pronoun", ("ent", gender)));
+            return new LocValueString(GetString("zzzz-object-pronoun", ("gender", gender)));
         }
 
         /// <summary>
@@ -259,7 +259,7 @@ namespace Robust.Shared.Localization
             if (pronoun != null && pronoun.DatObj != null)
                 return new LocValueString(pronoun.DatObj);
 
-            return new LocValueString(GetString("zzzz-dat-object", ("ent", gender)));
+            return new LocValueString(GetString("zzzz-dat-object", ("gender", gender)));
         }
 
         /// <summary>
@@ -273,7 +273,7 @@ namespace Robust.Shared.Localization
             if (pronoun != null && pronoun.Genitive != null)
                 return new LocValueString(pronoun.Genitive);
 
-            return new LocValueString(GetString("zzzz-genitive", ("ent", gender)));
+            return new LocValueString(GetString("zzzz-genitive", ("gender", gender)));
         }
 
         /// <summary>
@@ -286,7 +286,7 @@ namespace Robust.Shared.Localization
             if (pronoun != null && pronoun.PossAdj != null)
                 return new LocValueString(pronoun.PossAdj);
 
-            return new LocValueString(GetString("zzzz-possessive-adjective", ("ent", gender)));
+            return new LocValueString(GetString("zzzz-possessive-adjective", ("gender", gender)));
         }
 
         /// <summary>
@@ -299,7 +299,7 @@ namespace Robust.Shared.Localization
             if (pronoun != null && pronoun.PossPronoun != null)
                 return new LocValueString(pronoun.PossPronoun);
 
-            return new LocValueString(GetString("zzzz-possessive-pronoun", ("ent", gender)));
+            return new LocValueString(GetString("zzzz-possessive-pronoun", ("gender", gender)));
         }
 
         /// <summary>
@@ -312,7 +312,7 @@ namespace Robust.Shared.Localization
             if (pronoun != null && pronoun.Reflexive != null)
                 return new LocValueString(pronoun.Reflexive);
 
-            return new LocValueString(GetString("zzzz-reflexive-pronoun", ("ent", gender)));
+            return new LocValueString(GetString("zzzz-reflexive-pronoun", ("gender", gender)));
         }
 
         /// <summary>
@@ -346,7 +346,7 @@ namespace Robust.Shared.Localization
                     "epicene" :
                     "other";
 
-            return new LocValueString(GetString("zzzz-conjugate-be", ("ent", gender)));
+            return new LocValueString(GetString("zzzz-conjugate-be", ("gender", gender)));
         }
 
         /// <summary>
@@ -361,7 +361,7 @@ namespace Robust.Shared.Localization
                     "epicene" :
                     "other";
 
-            return new LocValueString(GetString("zzzz-conjugate-have", ("ent", gender)));
+            return new LocValueString(GetString("zzzz-conjugate-have", ("gender", gender)));
         }
 
         /// <summary>
@@ -380,7 +380,7 @@ namespace Robust.Shared.Localization
                     "epicene" :
                     "other";
 
-            return new LocValueString(GetString("zzzz-conjugate-basic", ("ent", gender), ("first", first), ("second", second)));
+            return new LocValueString(GetString("zzzz-conjugate-basic", ("gender", gender), ("first", first), ("second", second)));
         }
 
         private ILocValue FuncAttrib(FluentBundle bundle, LocArgs args)

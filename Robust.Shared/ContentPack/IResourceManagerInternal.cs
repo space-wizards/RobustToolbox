@@ -13,5 +13,5 @@ internal interface IResourceManagerInternal : IResourceManager
     /// The directory to use for user data.
     /// If null, a virtual temporary file system is used instead.
     /// </param>
-    internal void Initialize(string? userData);
+    void Initialize(string? userData);
 }

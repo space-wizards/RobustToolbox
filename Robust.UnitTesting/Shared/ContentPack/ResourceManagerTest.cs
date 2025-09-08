@@ -66,14 +66,14 @@ namespace Robust.UnitTesting.Shared.ContentPack
             componentFactory.GenerateNetIds();
 
             var stream = new MemoryStream(Data);
-            var resourceManager = IoCManager.Resolve<IResourceManager>();
-            resourceManager.MountStreamAt(stream, new("/a/b/c.dat"));
+            var resourceManager = IoCManager.Resolve<IResourceManagerInternal>();
+            resourceManager.MountStreamAt(stream, new ("/a/b/c.dat"));
         }
 
         [Test]
         public void TestMountedStreamRead()
         {
-            var resourceManager = IoCManager.Resolve<IResourceManager>();
+            var resourceManager = IoCManager.Resolve<IResourceManagerInternal>();
             using (var stream = resourceManager.ContentFileRead("/a/b/c.dat"))
             {
                 Assert.That(stream.CopyToArray(), Is.EqualTo(Data));
@@ -83,19 +83,19 @@ namespace Robust.UnitTesting.Shared.ContentPack
         [Test]
         public void TestInvalidPaths([ValueSource(nameof(InvalidPaths))] string path)
         {
-            Assert.That(ResourceManager.IsPathValid(new(path)), Is.False);
+            Assert.That(ResourceManager.IsPathValid(new (path)), Is.False);
         }
 
         [Test]
         public void TestInvalidPathsLowerCase([ValueSource(nameof(InvalidPaths))] string path)
         {
-            Assert.That(ResourceManager.IsPathValid(new(path.ToLowerInvariant())), Is.False);
+            Assert.That(ResourceManager.IsPathValid(new (path.ToLowerInvariant())), Is.False);
         }
 
         [Test]
         public void TestZipRead()
         {
-            var resourceManager = IoCManager.Resolve<IResourceManager>();
+            var resourceManager = IoCManager.Resolve<IResourceManagerInternal>();
             resourceManager.MountContentPack(ZipStream);
 
             var stream = resourceManager.ContentFileRead("/foo.txt");
@@ -105,7 +105,7 @@ namespace Robust.UnitTesting.Shared.ContentPack
         [Test]
         public void TestZipFind()
         {
-            var resourceManager = IoCManager.Resolve<IResourceManager>();
+            var resourceManager = IoCManager.Resolve<IResourceManagerInternal>();
             resourceManager.MountContentPack(ZipStream);
 
             var found = resourceManager.ContentFindFiles("/bar/");

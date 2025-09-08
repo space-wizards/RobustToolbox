@@ -47,7 +47,7 @@ internal static class ProgramShared
         }
     }
 
-    internal static void DoMounts(IResourceManager res, MountOptions? options, string contentBuildDir, ResPath assembliesPath, bool loadContentResources = true,
+    internal static void DoMounts(IResourceManagerInternal res, MountOptions? options, string contentBuildDir, ResPath assembliesPath, bool loadContentResources = true,
         bool loader = false, bool contentStart = false)
     {
 #if FULL_RELEASE

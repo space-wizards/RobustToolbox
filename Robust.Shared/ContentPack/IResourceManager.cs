@@ -14,15 +14,6 @@ namespace Robust.Shared.ContentPack
     public interface IResourceManager
     {
         /// <summary>
-        ///     Sets the manager up so that the base game can run.
-        /// </summary>
-        /// <param name="userData">
-        /// The directory to use for user data.
-        /// If null, a virtual temporary file system is used instead.
-        /// </param>
-        void Initialize(string? userData);
-
-        /// <summary>
         ///     Provides access to the writable user data folder.
         /// </summary>
         IWritableDirProvider UserData { get; }

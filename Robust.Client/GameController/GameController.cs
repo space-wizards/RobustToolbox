@@ -53,7 +53,7 @@ namespace Robust.Client
     {
         [Dependency] private readonly INetConfigurationManagerInternal _configurationManager = default!;
         [Dependency] private readonly IResourceCacheInternal _resourceCache = default!;
-        [Dependency] private readonly IResourceManagerInternal _resManager = default!;
+        [Dependency] private readonly IResourceManager _resManager = default!;
         [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IXamlProxyManager _xamlProxyManager = default!;
         [Dependency] private readonly IXamlHotReloadManager _xamlHotReloadManager = default!;

@@ -13,32 +13,32 @@ using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting.Shared.Localization
 {
-    [TestFixture]
-    internal sealed class LocalizationTests : RobustUnitTest
+  [TestFixture]
+  internal sealed class LocalizationTests : RobustUnitTest
+  {
+    protected override Type[] ExtraComponents => new[] { typeof(GrammarComponent) };
+
+    [OneTimeSetUp]
+    public void Setup()
     {
-        protected override Type[] ExtraComponents => new[] {typeof(GrammarComponent)};
+      IoCManager.Resolve<ISerializationManager>().Initialize();
+      var res = IoCManager.Resolve<IResourceManager>();
+      res.MountString("/Locale/en-US/a.ftl", FluentCode);
+      res.MountString("/EnginePrototypes/a.yml", YAMLCode);
 
-        [OneTimeSetUp]
-        public void Setup()
-        {
-            IoCManager.Resolve<ISerializationManager>().Initialize();
-            var res = IoCManager.Resolve<IResourceManagerInternal>();
-            res.MountString("/Locale/en-US/a.ftl", FluentCode);
-            res.MountString("/EnginePrototypes/a.yml", YAMLCode);
+      var protoMan = IoCManager.Resolve<IPrototypeManager>();
 
-            var protoMan = IoCManager.Resolve<IPrototypeManager>();
+      protoMan.RegisterKind(typeof(EntityPrototype), typeof(EntityCategoryPrototype));
+      protoMan.LoadDirectory(new ResPath("/EnginePrototypes"));
+      protoMan.ResolveResults();
 
-            protoMan.RegisterKind(typeof(EntityPrototype), typeof(EntityCategoryPrototype));
-            protoMan.LoadDirectory(new ResPath("/EnginePrototypes"));
-            protoMan.ResolveResults();
+      var loc = IoCManager.Resolve<ILocalizationManager>();
+      var culture = new CultureInfo("en-US", false);
+      loc.Initialize();
+      loc.LoadCulture(culture);
+    }
 
-            var loc = IoCManager.Resolve<ILocalizationManager>();
-            var culture = new CultureInfo("en-US", false);
-            loc.Initialize();
-            loc.LoadCulture(culture);
-        }
-
-        private const string YAMLCode = @"
+    private const string YAMLCode = @"
 # Values specified in prototype
 - type: entity
   id: PropsInPrototype
@@ -105,7 +105,7 @@ namespace Robust.UnitTesting.Shared.Localization
       gender: Female
 ";
 
-        private const string FluentCode = @"
+    private const string FluentCode = @"
 enum-match = { $enum ->
     [foo] A
     *[bar] B
@@ -156,103 +156,103 @@ test-message-proper = { PROPER($entity) ->
 test-message-custom-attrib = { ATTRIB($entity, ""otherAttrib"") }
 ";
 
-        [Test]
-        public void TestEnumSelect()
-        {
-            var loc = IoCManager.Resolve<ILocalizationManager>();
+    [Test]
+    public void TestEnumSelect()
+    {
+      var loc = IoCManager.Resolve<ILocalizationManager>();
 
-            Assert.That(loc.GetString("enum-match", ("enum", TestEnum.Foo)), Is.EqualTo("A"));
-            Assert.That(loc.GetString("enum-match", ("enum", TestEnum.Bar)), Is.EqualTo("B"));
-            Assert.That(loc.GetString("enum-match", ("enum", TestEnum.Baz)), Is.EqualTo("B"));
-        }
-
-        [Test]
-        public void TestCustomFunctions()
-        {
-            var entMan          = IoCManager.Resolve<IEntityManager>();
-            var testEntNoComp   = entMan.CreateEntityUninitialized("GenderTestEntityNoComp");
-            var testEntWithComp = entMan.CreateEntityUninitialized("GenderTestEntityWithComp");
-
-            var loc               = IoCManager.Resolve<ILocalizationManager>();
-            var genderFromAttrib  = loc.GetString("test-message-gender", ("entity", testEntNoComp));
-            var genderFromGrammar = loc.GetString("test-message-gender", ("entity", testEntWithComp));
-            var customAttrib      = loc.GetString("test-message-custom-attrib", ("entity", testEntNoComp));
-
-            Assert.Multiple(() =>
-            {
-                Assert.That(genderFromAttrib, Is.EqualTo("male"));
-                Assert.That(genderFromGrammar, Is.EqualTo("female"));
-                Assert.That(customAttrib, Is.EqualTo("sausages"));
-            });
-        }
-
-        static IEnumerable<object[]> NumericTestSource()
-        {
-            const byte b1 = 0, b2 = 1, b3 = 5;
-            const sbyte sb1 = 0, sb2 = 1, sb3 = 5;
-            const short sh1 = 0, sh2 = 1, sh3 = 5;
-            const ushort ush1 = 0, ush2 = 1, ush3 = 5;
-            const int i1 = 0, i2 = 1, i3 = 5;
-            const uint ui1 = 0, ui2 = 1, ui3 = 5;
-            const long lng1 = 0, lng2 = 1, lng3 = 5;
-            const ulong ulng1 = 0, ulng2 = 1, ulng3 = 5;
-            const float f1 = 0, f2 = 1, f3 = 5;
-            const double d1 = 0, d2 = 1, d3 = 5;
-
-            yield return new object[] { b1, b2, b3 };
-            yield return new object[] { sb1, sb2, sb3 };
-            yield return new object[] { sh1, sh2, sh3 };
-            yield return new object[] { ush1, ush2, ush3 };
-            yield return new object[] { i1, i2, i3 };
-            yield return new object[] { ui1, ui2, ui3 };
-            yield return new object[] { lng1, lng2, lng3 };
-            yield return new object[] { ulng1, ulng2, ulng3 };
-            yield return new object[] { f1, f2, f3 };
-            yield return new object[] { d1, d2, d3 };
-        }
-
-
-        [Test]
-        [TestCaseSource(nameof(NumericTestSource))]
-        public void TestNumbers(object o1, object o2, object o3)
-        {
-            // Small test to check numbers are being properly converted
-            var loc   = IoCManager.Resolve<ILocalizationManager>();
-            var func  = new Func<object, string>(x1 => loc.GetString("num-selector", ("num", x1)));
-            Assert.Multiple(() =>
-            {
-                Assert.That(func(o1), Is.EqualTo("A"));
-                Assert.That(func(o2), Is.EqualTo("B"));
-                Assert.That(func(o3), Is.EqualTo("C"));
-            });
-        }
-
-
-        [Test]
-        [TestCase("PropsInPrototype")]
-        [TestCase("PropsInLoc")]
-        [TestCase("PropsInLocOverriding")]
-        [TestCase("PropsInGrammar")]
-        [TestCase("TestInheritOverridingChild")]
-        public void TestLocData(string prototype)
-        {
-            var loc = IoCManager.Resolve<ILocalizationManager>();
-            var entMan = IoCManager.Resolve<IEntityManager>();
-            var ent = entMan.CreateEntityUninitialized(prototype);
-
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(ent).EntityName, Is.EqualTo("A"));
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(ent).EntityDescription, Is.EqualTo("B"));
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(ent).EntityPrototype!.EditorSuffix, Is.EqualTo("C"));
-
-            Assert.That(loc.GetString("test-message-gender", ("entity", ent)), Is.EqualTo("male"));
-            Assert.That(loc.GetString("test-message-proper", ("entity", ent)), Is.EqualTo("true"));
-        }
-
-        private enum TestEnum
-        {
-            Foo,
-            Bar,
-            Baz
-        }
+      Assert.That(loc.GetString("enum-match", ("enum", TestEnum.Foo)), Is.EqualTo("A"));
+      Assert.That(loc.GetString("enum-match", ("enum", TestEnum.Bar)), Is.EqualTo("B"));
+      Assert.That(loc.GetString("enum-match", ("enum", TestEnum.Baz)), Is.EqualTo("B"));
     }
+
+    [Test]
+    public void TestCustomFunctions()
+    {
+      var entMan = IoCManager.Resolve<IEntityManager>();
+      var testEntNoComp = entMan.CreateEntityUninitialized("GenderTestEntityNoComp");
+      var testEntWithComp = entMan.CreateEntityUninitialized("GenderTestEntityWithComp");
+
+      var loc = IoCManager.Resolve<ILocalizationManager>();
+      var genderFromAttrib = loc.GetString("test-message-gender", ("entity", testEntNoComp));
+      var genderFromGrammar = loc.GetString("test-message-gender", ("entity", testEntWithComp));
+      var customAttrib = loc.GetString("test-message-custom-attrib", ("entity", testEntNoComp));
+
+      Assert.Multiple(() =>
+      {
+        Assert.That(genderFromAttrib, Is.EqualTo("male"));
+        Assert.That(genderFromGrammar, Is.EqualTo("female"));
+        Assert.That(customAttrib, Is.EqualTo("sausages"));
+      });
+    }
+
+    static IEnumerable<object[]> NumericTestSource()
+    {
+      const byte b1 = 0, b2 = 1, b3 = 5;
+      const sbyte sb1 = 0, sb2 = 1, sb3 = 5;
+      const short sh1 = 0, sh2 = 1, sh3 = 5;
+      const ushort ush1 = 0, ush2 = 1, ush3 = 5;
+      const int i1 = 0, i2 = 1, i3 = 5;
+      const uint ui1 = 0, ui2 = 1, ui3 = 5;
+      const long lng1 = 0, lng2 = 1, lng3 = 5;
+      const ulong ulng1 = 0, ulng2 = 1, ulng3 = 5;
+      const float f1 = 0, f2 = 1, f3 = 5;
+      const double d1 = 0, d2 = 1, d3 = 5;
+
+      yield return new object[] { b1, b2, b3 };
+      yield return new object[] { sb1, sb2, sb3 };
+      yield return new object[] { sh1, sh2, sh3 };
+      yield return new object[] { ush1, ush2, ush3 };
+      yield return new object[] { i1, i2, i3 };
+      yield return new object[] { ui1, ui2, ui3 };
+      yield return new object[] { lng1, lng2, lng3 };
+      yield return new object[] { ulng1, ulng2, ulng3 };
+      yield return new object[] { f1, f2, f3 };
+      yield return new object[] { d1, d2, d3 };
+    }
+
+
+    [Test]
+    [TestCaseSource(nameof(NumericTestSource))]
+    public void TestNumbers(object o1, object o2, object o3)
+    {
+      // Small test to check numbers are being properly converted
+      var loc = IoCManager.Resolve<ILocalizationManager>();
+      var func = new Func<object, string>(x1 => loc.GetString("num-selector", ("num", x1)));
+      Assert.Multiple(() =>
+      {
+        Assert.That(func(o1), Is.EqualTo("A"));
+        Assert.That(func(o2), Is.EqualTo("B"));
+        Assert.That(func(o3), Is.EqualTo("C"));
+      });
+    }
+
+
+    [Test]
+    [TestCase("PropsInPrototype")]
+    [TestCase("PropsInLoc")]
+    [TestCase("PropsInLocOverriding")]
+    [TestCase("PropsInGrammar")]
+    [TestCase("TestInheritOverridingChild")]
+    public void TestLocData(string prototype)
+    {
+      var loc = IoCManager.Resolve<ILocalizationManager>();
+      var entMan = IoCManager.Resolve<IEntityManager>();
+      var ent = entMan.CreateEntityUninitialized(prototype);
+
+      Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(ent).EntityName, Is.EqualTo("A"));
+      Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(ent).EntityDescription, Is.EqualTo("B"));
+      Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(ent).EntityPrototype!.EditorSuffix, Is.EqualTo("C"));
+
+      Assert.That(loc.GetString("test-message-gender", ("entity", ent)), Is.EqualTo("male"));
+      Assert.That(loc.GetString("test-message-proper", ("entity", ent)), Is.EqualTo("true"));
+    }
+
+    private enum TestEnum
+    {
+      Foo,
+      Bar,
+      Baz
+    }
+  }
 }

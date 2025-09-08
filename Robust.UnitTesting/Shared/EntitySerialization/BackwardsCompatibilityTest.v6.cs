@@ -15,128 +15,128 @@ namespace Robust.UnitTesting.Shared.EntitySerialization;
 [TestFixture]
 public sealed partial class BackwardsCompatibilityTest
 {
-    /// <summary>
-    /// Check that v6 maps can be loaded. This simply tries to load a file and doesn't do a lot of extra validation.
-    /// </summary>
-    /// <remarks>
-    /// The file was pilfered from content integration tests ("floor3x3.yml") and modified slightly.
-    /// </remarks>
-    [Test]
-    public async Task TestLoadV6()
-    {
-        var server = StartServer(new ServerIntegrationOptions {ExtraPrototypes = PrototypeV6});
-        await server.WaitIdleAsync();
-        var entMan = server.EntMan;
-        var mapSys = server.System<SharedMapSystem>();
-        var loader = server.System<MapLoaderSystem>();
-        var meta = server.System<MetaDataSystem>();
-        var tileMan = server.ResolveDependency<ITileDefinitionManager>();
-        var resourceManager = server.ResolveDependency<IResourceManagerInternal>();
+  /// <summary>
+  /// Check that v6 maps can be loaded. This simply tries to load a file and doesn't do a lot of extra validation.
+  /// </summary>
+  /// <remarks>
+  /// The file was pilfered from content integration tests ("floor3x3.yml") and modified slightly.
+  /// </remarks>
+  [Test]
+  public async Task TestLoadV6()
+  {
+    var server = StartServer(new ServerIntegrationOptions { ExtraPrototypes = PrototypeV6 });
+    await server.WaitIdleAsync();
+    var entMan = server.EntMan;
+    var mapSys = server.System<SharedMapSystem>();
+    var loader = server.System<MapLoaderSystem>();
+    var meta = server.System<MetaDataSystem>();
+    var tileMan = server.ResolveDependency<ITileDefinitionManager>();
+    var resourceManager = server.ResolveDependency<IResourceManager>();
 
-        SerializationTestHelper.LoadTileDefs(server.ProtoMan, tileMan, "Space");
-        var gridPath = new ResPath($"{nameof(MapDataV6Grid)}.yml");
-        resourceManager.MountString(gridPath.ToString(), MapDataV6Grid);
+    SerializationTestHelper.LoadTileDefs(server.ProtoMan, tileMan, "Space");
+    var gridPath = new ResPath($"{nameof(MapDataV6Grid)}.yml");
+    resourceManager.MountString(gridPath.ToString(), MapDataV6Grid);
 
-        MapId mapId = default;
-        EntityUid mapUid = default;
+    MapId mapId = default;
+    EntityUid mapUid = default;
 
-        Entity<TransformComponent, EntitySaveTestComponent> map;
-        Entity<TransformComponent, EntitySaveTestComponent> ent;
-        Entity<TransformComponent, EntitySaveTestComponent> grid;
+    Entity<TransformComponent, EntitySaveTestComponent> map;
+    Entity<TransformComponent, EntitySaveTestComponent> ent;
+    Entity<TransformComponent, EntitySaveTestComponent> grid;
 
-        Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(0));
-        await server.WaitPost(() => mapUid = mapSys.CreateMap(out mapId));
-        await server.WaitAssertion(() => Assert.That(loader.TryLoadGrid(mapId, gridPath, out _)));
+    Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(0));
+    await server.WaitPost(() => mapUid = mapSys.CreateMap(out mapId));
+    await server.WaitAssertion(() => Assert.That(loader.TryLoadGrid(mapId, gridPath, out _)));
 
-        Assert.That(entMan.Count<LoadedMapComponent>(), Is.EqualTo(0));
-        Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(2));
-        ent = Find(nameof(ent), entMan);
-        grid = Find(nameof(grid), entMan);
+    Assert.That(entMan.Count<LoadedMapComponent>(), Is.EqualTo(0));
+    Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(2));
+    ent = Find(nameof(ent), entMan);
+    grid = Find(nameof(grid), entMan);
 
-        Assert.That(ent.Comp1.ParentUid, Is.EqualTo(grid.Owner));
-        Assert.That(grid.Comp1.ParentUid, Is.EqualTo(mapUid));
+    Assert.That(ent.Comp1.ParentUid, Is.EqualTo(grid.Owner));
+    Assert.That(grid.Comp1.ParentUid, Is.EqualTo(mapUid));
 
-        Assert.That(meta.EntityPaused(ent), Is.False);
-        Assert.That(meta.EntityPaused(grid), Is.False);
-        Assert.That(meta.EntityPaused(mapUid), Is.False);
+    Assert.That(meta.EntityPaused(ent), Is.False);
+    Assert.That(meta.EntityPaused(grid), Is.False);
+    Assert.That(meta.EntityPaused(mapUid), Is.False);
 
-        Assert.That(entMan.GetComponent<MetaDataComponent>(ent).EntityLifeStage,
-            Is.EqualTo(EntityLifeStage.MapInitialized));
-        Assert.That(entMan.GetComponent<MetaDataComponent>(grid).EntityLifeStage,
-            Is.EqualTo(EntityLifeStage.MapInitialized));
-        Assert.That(entMan.GetComponent<MetaDataComponent>(mapUid).EntityLifeStage,
-            Is.EqualTo(EntityLifeStage.MapInitialized));
+    Assert.That(entMan.GetComponent<MetaDataComponent>(ent).EntityLifeStage,
+        Is.EqualTo(EntityLifeStage.MapInitialized));
+    Assert.That(entMan.GetComponent<MetaDataComponent>(grid).EntityLifeStage,
+        Is.EqualTo(EntityLifeStage.MapInitialized));
+    Assert.That(entMan.GetComponent<MetaDataComponent>(mapUid).EntityLifeStage,
+        Is.EqualTo(EntityLifeStage.MapInitialized));
 
-        await server.WaitPost(() => entMan.DeleteEntity(mapUid));
-        Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(0));
+    await server.WaitPost(() => entMan.DeleteEntity(mapUid));
+    Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(0));
 
-        var mapPath = new ResPath($"{nameof(MapDataV6Map)}.yml");
-        resourceManager.MountString(mapPath.ToString(), MapDataV6Map);
-        await server.WaitAssertion(() => Assert.That(loader.TryLoadMap(mapPath, out _, out _)));
+    var mapPath = new ResPath($"{nameof(MapDataV6Map)}.yml");
+    resourceManager.MountString(mapPath.ToString(), MapDataV6Map);
+    await server.WaitAssertion(() => Assert.That(loader.TryLoadMap(mapPath, out _, out _)));
 
-        Assert.That(entMan.Count<LoadedMapComponent>(), Is.EqualTo(1));
-        Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(3));
+    Assert.That(entMan.Count<LoadedMapComponent>(), Is.EqualTo(1));
+    Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(3));
 
-        ent = Find(nameof(ent), entMan);
-        grid = Find(nameof(grid), entMan);
-        map = Find(nameof(map), entMan);
+    ent = Find(nameof(ent), entMan);
+    grid = Find(nameof(grid), entMan);
+    map = Find(nameof(map), entMan);
 
-        Assert.That(ent.Comp1.ParentUid, Is.EqualTo(grid.Owner));
-        Assert.That(grid.Comp1.ParentUid, Is.EqualTo(map.Owner));
-        Assert.That(map.Comp1.ParentUid, Is.EqualTo(EntityUid.Invalid));
+    Assert.That(ent.Comp1.ParentUid, Is.EqualTo(grid.Owner));
+    Assert.That(grid.Comp1.ParentUid, Is.EqualTo(map.Owner));
+    Assert.That(map.Comp1.ParentUid, Is.EqualTo(EntityUid.Invalid));
 
-        Assert.That(meta.EntityPaused(ent), Is.True);
-        Assert.That(meta.EntityPaused(grid), Is.True);
-        Assert.That(meta.EntityPaused(map), Is.True);
+    Assert.That(meta.EntityPaused(ent), Is.True);
+    Assert.That(meta.EntityPaused(grid), Is.True);
+    Assert.That(meta.EntityPaused(map), Is.True);
 
-        Assert.That(entMan.GetComponent<MetaDataComponent>(ent).EntityLifeStage,
-            Is.EqualTo(EntityLifeStage.Initialized));
-        Assert.That(entMan.GetComponent<MetaDataComponent>(grid).EntityLifeStage,
-            Is.EqualTo(EntityLifeStage.Initialized));
-        Assert.That(entMan.GetComponent<MetaDataComponent>(map).EntityLifeStage,
-            Is.EqualTo(EntityLifeStage.Initialized));
+    Assert.That(entMan.GetComponent<MetaDataComponent>(ent).EntityLifeStage,
+        Is.EqualTo(EntityLifeStage.Initialized));
+    Assert.That(entMan.GetComponent<MetaDataComponent>(grid).EntityLifeStage,
+        Is.EqualTo(EntityLifeStage.Initialized));
+    Assert.That(entMan.GetComponent<MetaDataComponent>(map).EntityLifeStage,
+        Is.EqualTo(EntityLifeStage.Initialized));
 
-        await server.WaitPost(() => entMan.DeleteEntity(map));
-        Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(0));
+    await server.WaitPost(() => entMan.DeleteEntity(map));
+    Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(0));
 
-        // Repeat test, but with the initialize maps option enabled.
-        // Apparently mounted strings can only be read a single time.
-        // So have to re-mount them.
-        var mapPath2 = new ResPath($"{nameof(MapDataV6Map)}2.yml");
-        resourceManager.MountString(mapPath2.ToString(), MapDataV6Map);
+    // Repeat test, but with the initialize maps option enabled.
+    // Apparently mounted strings can only be read a single time.
+    // So have to re-mount them.
+    var mapPath2 = new ResPath($"{nameof(MapDataV6Map)}2.yml");
+    resourceManager.MountString(mapPath2.ToString(), MapDataV6Map);
 
-        var opts = DeserializationOptions.Default with {InitializeMaps = true};
-        await server.WaitAssertion(() => Assert.That(loader.TryLoadMap(mapPath2, out _, out _, opts)));
+    var opts = DeserializationOptions.Default with { InitializeMaps = true };
+    await server.WaitAssertion(() => Assert.That(loader.TryLoadMap(mapPath2, out _, out _, opts)));
 
-        Assert.That(entMan.Count<LoadedMapComponent>(), Is.EqualTo(1));
-        Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(3));
+    Assert.That(entMan.Count<LoadedMapComponent>(), Is.EqualTo(1));
+    Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(3));
 
-        ent = Find(nameof(ent), entMan);
-        grid = Find(nameof(grid), entMan);
-        map = Find(nameof(map), entMan);
+    ent = Find(nameof(ent), entMan);
+    grid = Find(nameof(grid), entMan);
+    map = Find(nameof(map), entMan);
 
-        Assert.That(ent.Comp1.ParentUid, Is.EqualTo(grid.Owner));
-        Assert.That(grid.Comp1.ParentUid, Is.EqualTo(map.Owner));
-        Assert.That(map.Comp1.ParentUid, Is.EqualTo(EntityUid.Invalid));
+    Assert.That(ent.Comp1.ParentUid, Is.EqualTo(grid.Owner));
+    Assert.That(grid.Comp1.ParentUid, Is.EqualTo(map.Owner));
+    Assert.That(map.Comp1.ParentUid, Is.EqualTo(EntityUid.Invalid));
 
-        Assert.That(meta.EntityPaused(ent), Is.False);
-        Assert.That(meta.EntityPaused(grid), Is.False);
-        Assert.That(meta.EntityPaused(map), Is.False);
+    Assert.That(meta.EntityPaused(ent), Is.False);
+    Assert.That(meta.EntityPaused(grid), Is.False);
+    Assert.That(meta.EntityPaused(map), Is.False);
 
-        Assert.That(entMan.GetComponent<MetaDataComponent>(ent).EntityLifeStage,
-            Is.EqualTo(EntityLifeStage.MapInitialized));
-        Assert.That(entMan.GetComponent<MetaDataComponent>(grid).EntityLifeStage,
-            Is.EqualTo(EntityLifeStage.MapInitialized));
-        Assert.That(entMan.GetComponent<MetaDataComponent>(map).EntityLifeStage,
-            Is.EqualTo(EntityLifeStage.MapInitialized));
+    Assert.That(entMan.GetComponent<MetaDataComponent>(ent).EntityLifeStage,
+        Is.EqualTo(EntityLifeStage.MapInitialized));
+    Assert.That(entMan.GetComponent<MetaDataComponent>(grid).EntityLifeStage,
+        Is.EqualTo(EntityLifeStage.MapInitialized));
+    Assert.That(entMan.GetComponent<MetaDataComponent>(map).EntityLifeStage,
+        Is.EqualTo(EntityLifeStage.MapInitialized));
 
-        await server.WaitPost(() => entMan.DeleteEntity(map));
-        Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(0));
-        Assert.That(entMan.Count<LoadedMapComponent>(), Is.EqualTo(0));
-        Assert.That(entMan.Count<MapComponent>(), Is.EqualTo(0));
-    }
+    await server.WaitPost(() => entMan.DeleteEntity(map));
+    Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(0));
+    Assert.That(entMan.Count<LoadedMapComponent>(), Is.EqualTo(0));
+    Assert.That(entMan.Count<MapComponent>(), Is.EqualTo(0));
+  }
 
-    private const string MapDataV6Grid = @"
+  private const string MapDataV6Grid = @"
 meta:
   format: 6
   postmapinit: false
@@ -191,7 +191,7 @@ entities:
       id: ent
 ";
 
-    private const string MapDataV6Map = @"
+  private const string MapDataV6Map = @"
 meta:
   format: 6
   postmapinit: false
@@ -254,7 +254,7 @@ entities:
       id: ent
 ";
 
-    private const string PrototypeV6 = @"
+  private const string PrototypeV6 = @"
 - type: entity
   id: V6TestProto
   components:

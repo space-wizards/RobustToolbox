@@ -27,13 +27,13 @@ term1 = 2
     [Test]
     public void TestLoadLocalization()
     {
-        var res = IoCManager.Resolve<IResourceManagerInternal>();
+        var res = IoCManager.Resolve<IResourceManager>();
         res.MountString("/Locale/en-US/a.ftl", DuplicateTerm);
 
         var loc = IoCManager.Resolve<ILocalizationManager>();
         loc.Initialize();
 
-        var spyLog = (SpyLogManager) IoCManager.Resolve<ILogManager>();
+        var spyLog = (SpyLogManager)IoCManager.Resolve<ILogManager>();
         var culture = new CultureInfo("en-US", false);
 
         var x = spyLog.CountError;

@@ -88,7 +88,7 @@ public sealed class ResourceManagerTest2
         res.AddRoot(new ResPath("/second"), testRoot);
         res.AddRoot(new ResPath("/third/fourth"), testRoot);
 
-        Assert.That(res.ContentGetDirectoryEntries(new ResPath("/")), Is.EquivalentTo(new []
+        Assert.That(res.ContentGetDirectoryEntries(new ResPath("/")), Is.EquivalentTo(new[]
         {
             "foo.txt",
             "bar/",
@@ -97,16 +97,16 @@ public sealed class ResourceManagerTest2
         }));
     }
 
-    private static (IDependencyCollection, IResourceManagerInternal) CreateRes()
+    private static (IDependencyCollection, IResourceManager) CreateRes()
     {
         var deps = new DependencyCollection();
         deps.Register<IResourceManager, ResourceManager>();
-        deps.Register<IResourceManagerInternal, ResourceManager>();
+        deps.Register<IResourceManager, ResourceManager>();
         deps.Register<IConfigurationManager, ConfigurationManager>();
         deps.Register<ILogManager, LogManager>();
         deps.Register<IGameTiming, GameTiming>();
 
         deps.BuildGraph();
-        return (deps, deps.Resolve<IResourceManagerInternal>());
+        return (deps, deps.Resolve<IResourceManager>());
     }
 }

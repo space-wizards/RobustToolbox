@@ -20,7 +20,7 @@ namespace Robust.Shared.ContentPack
     /// </summary>
     internal sealed class ModLoader : BaseModLoader, IModLoaderInternal, IDisposable
     {
-        [Dependency] private readonly IResourceManagerInternal _res = default!;
+        [Dependency] private readonly IResourceManager _res = default!;
 
         // List of extra assemblies side-loaded from the /Assemblies/ mounted path.
         private readonly List<Assembly> _sideModules = new();
@@ -204,7 +204,7 @@ namespace Robust.Shared.ContentPack
                 if (ctor.Kind != HandleKind.MemberReference)
                     continue;
 
-                var memberRef = reader.GetMemberReference((MemberReferenceHandle) ctor);
+                var memberRef = reader.GetMemberReference((MemberReferenceHandle)ctor);
                 var typeRef = AssemblyTypeChecker.ParseTypeReference(reader, (TypeReferenceHandle)memberRef.Parent);
 
                 if (typeRef.Namespace == "Robust.Shared.ContentPack" && typeRef.Name == "SkipIfSandboxedAttribute")
@@ -262,7 +262,7 @@ namespace Robust.Shared.ContentPack
             // To prevent breaking debugging on Rider, try to load from disk if possible.
             if (_res.TryGetDiskFilePath(dllPath, out var path))
             {
-                Sawmill.Debug( $"Loading {assemblyName} DLL");
+                Sawmill.Debug($"Loading {assemblyName} DLL");
                 try
                 {
                     LoadGameAssembly(path, skipVerify: false);
@@ -374,7 +374,7 @@ namespace Robust.Shared.ContentPack
                         }
                         catch
                         {
-                             // Assume assembly not loadable from Robust's directory, proceed with loading from content.
+                            // Assume assembly not loadable from Robust's directory, proceed with loading from content.
                         }
 
                         if (_res.TryContentFileRead($"/Assemblies/{name.Name}.dll", out var dll))
@@ -455,7 +455,7 @@ namespace Robust.Shared.ContentPack
             };
         }
 
-        internal static PEReader MakePEReader(Stream stream, bool leaveOpen=false, PEStreamOptions options=PEStreamOptions.Default)
+        internal static PEReader MakePEReader(Stream stream, bool leaveOpen = false, PEStreamOptions options = PEStreamOptions.Default)
         {
             if (!stream.CanSeek)
                 stream = leaveOpen ? stream.CopyToMemoryStream() : stream.ConsumeToMemoryStream();

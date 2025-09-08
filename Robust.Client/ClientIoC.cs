@@ -78,7 +78,6 @@ namespace Robust.Client
             deps.Register<IGameController, GameController>();
             deps.Register<IGameControllerInternal, GameController>();
             deps.Register<IResourceManager, ResourceCache>();
-            deps.Register<IResourceManagerInternal, ResourceCache>();
             deps.Register<IResourceCache, ResourceCache>();
             deps.Register<IResourceCacheInternal, ResourceCache>();
             deps.Register<IClientNetManager, NetManager>();

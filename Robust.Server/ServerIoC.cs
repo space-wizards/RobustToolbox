@@ -66,7 +66,7 @@ namespace Robust.Server
             deps.Register<IPrototypeManager, ServerPrototypeManager>();
             deps.Register<IPrototypeManagerInternal, ServerPrototypeManager>();
             deps.Register<IResourceManager, ResourceManager>();
-            deps.Register<IResourceManagerInternal, ResourceManager>();
+            deps.Register<IResourceManager, ResourceManager>();
             deps.Register<EntityManager, ServerEntityManager>();
             deps.Register<IServerEntityManager, ServerEntityManager>();
             deps.Register<IServerGameStateManager, ServerGameStateManager>();

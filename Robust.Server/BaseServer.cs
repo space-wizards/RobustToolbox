@@ -68,7 +68,7 @@ namespace Robust.Server
             "Time usage of the main loop Update()s",
             new HistogramConfiguration
             {
-                LabelNames = new[] {"area"},
+                LabelNames = new[] { "area" },
                 Buckets = Histogram.ExponentialBuckets(0.000_01, 2, 13)
             });
 
@@ -77,7 +77,7 @@ namespace Robust.Server
         [Dependency] private readonly ILogManager _log = default!;
         [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IGameTiming _time = default!;
-        [Dependency] private readonly IResourceManagerInternal _resources = default!;
+        [Dependency] private readonly IResourceManager _resources = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly ITimerManager _timerManager = default!;
         [Dependency] private readonly IServerGameStateManager _stateManager = default!;
@@ -413,7 +413,7 @@ namespace Robust.Server
 
             if (OperatingSystem.IsWindows() && _config.GetCVar(CVars.SysWinTickPeriod) >= 0)
             {
-                WindowsTickPeriod.TimeBeginPeriod((uint) _config.GetCVar(CVars.SysWinTickPeriod));
+                WindowsTickPeriod.TimeBeginPeriod((uint)_config.GetCVar(CVars.SysWinTickPeriod));
             }
 
             _config.CheckUnusedCVars();
@@ -587,7 +587,7 @@ namespace Robust.Server
         {
             _config.OnValueChanged(CVars.NetTickrate, i =>
             {
-                var b = (ushort) i;
+                var b = (ushort)i;
                 _time.TickRate = b;
 
                 _logger.Info($"Tickrate changed to: {b} on tick {_time.CurTick}");
@@ -595,7 +595,7 @@ namespace Robust.Server
 
             var startOffset = TimeSpan.FromSeconds(_config.GetCVar(CVars.NetTimeStartOffset));
             _time.TimeBase = (startOffset, GameTick.First);
-            _time.TickRate = (ushort) _config.GetCVar(CVars.NetTickrate);
+            _time.TickRate = (ushort)_config.GetCVar(CVars.NetTickrate);
 
             _logger.Info($"Name: {ServerName}");
             _logger.Info($"TickRate: {_time.TickRate}({_time.TickPeriod.TotalMilliseconds:0.00}ms)");
@@ -683,7 +683,7 @@ namespace Robust.Server
 
             if (OperatingSystem.IsWindows() && _config.GetCVar(CVars.SysWinTickPeriod) >= 0)
             {
-                WindowsTickPeriod.TimeEndPeriod((uint) _config.GetCVar(CVars.SysWinTickPeriod));
+                WindowsTickPeriod.TimeEndPeriod((uint)_config.GetCVar(CVars.SysWinTickPeriod));
             }
 
             _config.Shutdown();

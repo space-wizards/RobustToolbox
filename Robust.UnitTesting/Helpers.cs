@@ -8,7 +8,7 @@ namespace Robust.UnitTesting
 {
     internal static class Helpers
     {
-        public static void MountString(this IResourceManagerInternal resourceManager, string path, string content)
+        public static void MountString(this IResourceManager resourceManager, string path, string content)
         {
             if (path.Contains("\n"))
             {
@@ -18,7 +18,7 @@ namespace Robust.UnitTesting
             var stream = new MemoryStream();
             stream.Write(Encoding.UTF8.GetBytes(content));
             stream.Position = 0;
-            resourceManager.MountStreamAt(stream, new (path));
+            resourceManager.MountStreamAt(stream, new(path));
         }
     }
 }

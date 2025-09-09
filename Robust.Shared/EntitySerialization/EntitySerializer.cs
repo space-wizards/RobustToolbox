@@ -556,24 +556,28 @@ public sealed class EntitySerializer : ISerializationContext,
     /// </summary>
     private void RemoveErroringEntity(EntityUid uid)
     {
-        ErroringEntities.Add(uid);
-        if (YamlUidMap.TryGetValue(uid, out var yamlId))
+        if (Options.EntityExceptionBehaviour == EntityExceptionBehaviour.IgnoreEntityAndChildren)
         {
-            EntityData.Remove(yamlId);
-            if (_metaQuery.TryGetComponent(uid, out var meta)
-                && meta.EntityPrototype != null
-                && Prototypes.TryGetValue(meta.EntityPrototype.ID, out var proto))
+            foreach (var child in _xformQuery.GetComponent(uid)._children)
             {
-                proto.Remove(yamlId);
+                RemoveErroringEntity(child);
             }
         }
 
-        if (Options.EntityExceptionBehaviour != EntityExceptionBehaviour.IgnoreEntityAndChildren)
+        ErroringEntities.Add(uid);
+        if (!YamlUidMap.TryGetValue(uid, out var yamlId))
             return;
 
-        foreach (var child in _xformQuery.GetComponent(uid)._children)
+        Nullspace.Remove(yamlId);
+        Orphans.Remove(yamlId);
+        Maps.Remove(yamlId);
+        Grids.Remove(yamlId);
+        EntityData.Remove(yamlId);
+        if (_metaQuery.TryGetComponent(uid, out var meta)
+            && meta.EntityPrototype != null
+            && Prototypes.TryGetValue(meta.EntityPrototype.ID, out var proto))
         {
-            RemoveErroringEntity(child);
+            proto.Remove(yamlId);
         }
     }
 

@@ -215,22 +215,6 @@ public interface IReplayFileWriter
         ResPath path,
         YamlDocument yaml,
         CompressionLevel compressionLevel = CompressionLevel.Optimal);
-
-    /// <summary>
-    /// Serializes an object using <see cref="IRobustSerializer"/> and write it into a file in the replay.
-    /// </summary>
-    /// <remarks>
-    /// As these objects can't really be deserialized without launching a server/client with a matching game version,
-    /// you should consider using some other means of serializing data if you want it to be parseable outside of a
-    /// replay client.
-    /// </remarks>
-    /// <param name="path">The file path to write to.</param>
-    /// <param name="obj">The object to serialize and write to the file.</param>
-    /// <param name="compressionLevel">How much to compress the file.</param>
-    void WriteObject<T>(
-        ResPath path,
-        T obj,
-        CompressionLevel compressionLevel = CompressionLevel.Optimal);
 }
 
 /// <summary>

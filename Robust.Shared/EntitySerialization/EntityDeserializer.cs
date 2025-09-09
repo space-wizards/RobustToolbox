@@ -1152,6 +1152,7 @@ public sealed class EntityDeserializer :
         ISerializationContext? context,
         ISerializationManager.InstantiationDelegate<EntityUid>? _)
     {
+        string msg;
         if (node.Value == "invalid")
         {
             if (CurrentComponent == "Transform")
@@ -1160,7 +1161,7 @@ public sealed class EntityDeserializer :
             if (!Options.LogInvalidEntities)
                 return EntityUid.Invalid;
 
-            var msg = CurrentReadingEntity is not { } curr
+            msg = CurrentReadingEntity is not { } curr
                 ? $"Encountered invalid EntityUid reference"
                 : $"Encountered invalid EntityUid reference wile reading entity {curr.YamlId}, component: {CurrentComponent}";
             _log.Error(msg);
@@ -1170,7 +1171,10 @@ public sealed class EntityDeserializer :
         if (int.TryParse(node.Value, out var val) && UidMap.TryGetValue(val, out var entity))
             return entity;
 
-        _log.Error($"Invalid yaml entity id: '{val}'");
+        msg = CurrentReadingEntity is not { } ent
+            ? "Encountered unknown EntityUid reference"
+            : $"Encountered unknown EntityUid reference wile reading entity {ent.YamlId}, component: {CurrentComponent}";
+        _log.Error(msg);
         return EntityUid.Invalid;
     }
 

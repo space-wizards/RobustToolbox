@@ -86,3 +86,27 @@ public enum MissingEntityBehaviour
     /// </summary>
     AutoInclude,
 }
+
+
+public enum EntityExceptionBehaviour
+{
+    /// <summary>
+    /// Re-throw the exception, interrupting the serialization.
+    /// </summary>
+    Rethrow,
+
+    /// <summary>
+    /// Continue serializing and simply skip/ignore this entity. May result in broken maps that log errors or simply
+    /// fail to load.
+    /// </summary>
+    IgnoreEntity,
+
+    // TODO SERIALIZATION
+    /*
+    /// <summary>
+    /// Continue the serialization while skipping over the component that caused the exception to be thrown. May result
+    /// in broken maps that log errors or simply fail to load.
+    /// </summary>
+    IgnoreComponent,
+    */
+}

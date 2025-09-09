@@ -412,7 +412,7 @@ public sealed class EntitySerializer : ISerializationContext,
 
         // It might be possible that something could cause an entity to be included twice.
         // E.g., if someone serializes a grid w/o its map, and then tries to separately include the map and all its children.
-        // In that case, the grid would already have been serialized as a orphan.
+        // In that case, the grid would already have been serialized as an orphan.
         // uhhh.... I guess its fine?
         if (EntityData.ContainsKey(saveId))
             return;
@@ -489,45 +489,22 @@ public sealed class EntitySerializer : ISerializationContext,
             xform._localRotation = 0;
         }
 
-        foreach (var component in EntMan.GetComponentsInternal(uid))
+        try
         {
-            var compType = component.GetType();
+            SerializeComponents(uid, cache, components);
+        }
+        catch
+        {
+            _log.Error($"Caught exception while serializing component {CurrentComponent} of entity {EntMan.ToPrettyString(uid)}");
+            if (Options.EntityExceptionBehaviour == EntityExceptionBehaviour.Rethrow)
+                throw;
 
-            var reg = _factory.GetRegistration(compType);
-            if (reg.Unsaved)
-                continue;
-
-            CurrentComponent = reg.Name;
-            MappingDataNode? compMapping;
-            MappingDataNode? protoMapping = null;
-            if (cache != null && cache.TryGetValue(reg.Name, out protoMapping))
-            {
-                // If this has a prototype, we need to use alwaysWrite: true.
-                // E.g., an anchored prototype might have anchored: true. If we we are saving an un-anchored
-                // instance of this entity, and if we have alwaysWrite: false, then compMapping would not include
-                // the anchored data-field (as false is the default for this bool data field), so the entity would
-                // implicitly be saved as anchored.
-                compMapping = _serialization.WriteValueAs<MappingDataNode>(compType, component, alwaysWrite: true, context: this);
-
-                // This will not recursively call Except() on the values of the mapping. It will only remove
-                // key-value pairs if both the keys and values are equal.
-                compMapping = compMapping.Except(protoMapping);
-                if(compMapping == null)
-                    continue;
-            }
-            else
-            {
-                compMapping = _serialization.WriteValueAs<MappingDataNode>(compType, component, alwaysWrite: false, context: this);
-            }
-
-            // Don't need to write it if nothing was written! Note that if this entity has no associated
-            // prototype, we ALWAYS want to write the component, because merely the fact that it exists is
-            // information that needs to be written.
-            if (compMapping.Children.Count != 0 || protoMapping == null)
-            {
-                compMapping.InsertAt(0, "type", new ValueDataNode(reg.Name));
-                components.Add(compMapping);
-            }
+            Prototypes[protoId].Remove(saveId);
+            EntityData.Remove(saveId);
+            CurrentEntityYamlUid = 0;
+            CurrentEntity = null;
+            CurrentComponent = null;
+            return;
         }
 
         CurrentComponent = null;
@@ -565,6 +542,50 @@ public sealed class EntitySerializer : ISerializationContext,
 
         CurrentEntityYamlUid = 0;
         CurrentEntity = null;
+    }
+
+    private void SerializeComponents(EntityUid uid, Dictionary<string, MappingDataNode>? cache, SequenceDataNode components)
+    {
+        foreach (var component in EntMan.GetComponentsInternal(uid))
+        {
+            var compType = component.GetType();
+
+            var reg = _factory.GetRegistration(compType);
+            if (reg.Unsaved)
+                continue;
+
+            CurrentComponent = reg.Name;
+            MappingDataNode? compMapping;
+            MappingDataNode? protoMapping = null;
+            if (cache != null && cache.TryGetValue(reg.Name, out protoMapping))
+            {
+                // If this has a prototype, we need to use alwaysWrite: true.
+                // E.g., an anchored prototype might have anchored: true. If we we are saving an un-anchored
+                // instance of this entity, and if we have alwaysWrite: false, then compMapping would not include
+                // the anchored data-field (as false is the default for this bool data field), so the entity would
+                // implicitly be saved as anchored.
+                compMapping = _serialization.WriteValueAs<MappingDataNode>(compType, component, alwaysWrite: true, context: this);
+
+                // This will not recursively call Except() on the values of the mapping. It will only remove
+                // key-value pairs if both the keys and values are equal.
+                compMapping = compMapping.Except(protoMapping);
+                if(compMapping == null)
+                    continue;
+            }
+            else
+            {
+                compMapping = _serialization.WriteValueAs<MappingDataNode>(compType, component, alwaysWrite: false, context: this);
+            }
+
+            // Don't need to write it if nothing was written! Note that if this entity has no associated
+            // prototype, we ALWAYS want to write the component, because merely the fact that it exists is
+            // information that needs to be written.
+            if (compMapping.Children.Count == 0 && protoMapping != null)
+                continue;
+
+            compMapping.InsertAt(0, "type", new ValueDataNode(reg.Name));
+            components.Add(compMapping);
+        }
     }
 
     private Dictionary<string, MappingDataNode>? GetProtoCache(EntityPrototype? proto)

@@ -498,12 +498,15 @@ public sealed class EntitySerializer : ISerializationContext,
         {
             SerializeComponents(uid, cache, components);
         }
-        catch
+        catch(Exception e)
         {
-            _log.Error($"Caught exception while serializing component {CurrentComponent} of entity {EntMan.ToPrettyString(uid)}");
             if (Options.EntityExceptionBehaviour == EntityExceptionBehaviour.Rethrow)
+            {
+                _log.Error($"Caught exception while serializing component {CurrentComponent} of entity {EntMan.ToPrettyString(uid)}");
                 throw;
+            }
 
+            _log.Error($"Caught exception while serializing component {CurrentComponent} of entity {EntMan.ToPrettyString(uid)}:\n{e}");
             CurrentEntityYamlUid = 0;
             CurrentEntity = null;
             CurrentComponent = null;

@@ -704,7 +704,7 @@ public sealed class EntityDeserializer :
 
         foreach (var yamlId in OrphanYamlIds)
         {
-            if (UidMap.TryGetValue(yamlId, out var uid))
+            if (!UidMap.TryGetValue(yamlId, out var uid))
                 _log.Error($"Missing orphan entity with YamlId: {yamlId}");
             else if (_mapQuery.HasComponent(uid) || _xformQuery.Comp(uid).ParentUid.IsValid())
                 _log.Error($"Entity {EntMan.ToPrettyString(uid)} was incorrectly labelled as an orphan? YamlId: {yamlId}");
@@ -714,7 +714,7 @@ public sealed class EntityDeserializer :
 
         foreach (var yamlId in NullspaceYamlIds)
         {
-            if (UidMap.TryGetValue(yamlId, out var uid))
+            if (!UidMap.TryGetValue(yamlId, out var uid))
                 _log.Error($"Missing nullspace entity with YamlId: {yamlId}");
             else if (_mapQuery.HasComponent(uid) || _xformQuery.Comp(uid).ParentUid.IsValid())
                 _log.Error($"Entity {EntMan.ToPrettyString(uid)} was incorrectly labelled as a null-space entity?");

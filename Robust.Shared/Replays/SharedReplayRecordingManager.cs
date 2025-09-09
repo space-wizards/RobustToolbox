@@ -375,6 +375,11 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
     private void WriteFinalMetadata(RecordingState recState)
     {
         var yamlMetadata = new MappingDataNode();
+
+        // TODO REPLAYS
+        // Why are these separate events?
+        // I assume it was for backwards compatibility / avoiding breaking changes?
+        // But eventually RecordingStopped2 will probably be renamed and there'll just be more breaking changes.
         RecordingStopped?.Invoke(yamlMetadata);
         RecordingStopped2?.Invoke(new ReplayRecordingStopped
         {
@@ -550,6 +555,24 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
             CheckDisposed();
 
             manager.WriteBytes(state, path, bytes, compressionLevel);
+        }
+
+        /// <summary>
+        /// Write a yaml document to a file.
+        /// </summary>
+        public void WriteYaml(ResPath path, YamlDocument document, CompressionLevel compressionLevel)
+        {
+            CheckDisposed();
+            manager.WriteYaml(state, path, document, compressionLevel);
+        }
+
+        /// <summary>
+        /// Write a binary object to a file using <see cref="IRobustSerializer"/>
+        /// </summary>
+        public void WriteObject<T>(ResPath path, T obj, CompressionLevel compressionLevel)
+        {
+            CheckDisposed();
+            manager.WriteSerializer(state, path, obj, compressionLevel);
         }
 
         private void CheckDisposed()

@@ -6,7 +6,9 @@ using System.IO.Compression;
 using System.Threading.Tasks;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameStates;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
+using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Replays;
 
@@ -201,6 +203,33 @@ public interface IReplayFileWriter
     void WriteBytes(
         ResPath path,
         ReadOnlyMemory<byte> bytes,
+        CompressionLevel compressionLevel = CompressionLevel.Optimal);
+
+    /// <summary>
+    /// Writes a yaml document into a file in the replay.
+    /// </summary>
+    /// <param name="path">The file path to write to.</param>
+    /// <param name="yaml">The yaml document to write to the file.</param>
+    /// <param name="compressionLevel">How much to compress the file.</param>
+    void WriteYaml(
+        ResPath path,
+        YamlDocument yaml,
+        CompressionLevel compressionLevel = CompressionLevel.Optimal);
+
+    /// <summary>
+    /// Serializes an object using <see cref="IRobustSerializer"/> and write it into a file in the replay.
+    /// </summary>
+    /// <remarks>
+    /// As these objects can't really be deserialized without launching a server/client with a matching game version,
+    /// you should consider using some other means of serializing data if you want it to be parseable outside of a
+    /// replay client.
+    /// </remarks>
+    /// <param name="path">The file path to write to.</param>
+    /// <param name="obj">The object to serialize and write to the file.</param>
+    /// <param name="compressionLevel">How much to compress the file.</param>
+    void WriteObject<T>(
+        ResPath path,
+        T obj,
         CompressionLevel compressionLevel = CompressionLevel.Optimal);
 }
 

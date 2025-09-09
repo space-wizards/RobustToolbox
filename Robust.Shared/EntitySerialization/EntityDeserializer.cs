@@ -685,38 +685,38 @@ public sealed class EntityDeserializer :
 
         foreach (var yamlId in MapYamlIds)
         {
-            var uid = UidMap[yamlId];
-            if (_mapQuery.TryComp(uid, out var map))
+            if (UidMap.TryGetValue(yamlId, out var uid) && _mapQuery.TryComp(uid, out var map))
             {
                 Result.Maps.Add((uid, map));
                 EntMan.EnsureComponent<LoadedMapComponent>(uid);
             }
             else
-                _log.Error($"Missing map entity: {EntMan.ToPrettyString(uid)}");
+                _log.Error($"Missing map entity: {EntMan.ToPrettyString(uid)}. YamlId: {yamlId}");
         }
 
         foreach (var yamlId in GridYamlIds)
         {
-            var uid = UidMap[yamlId];
-            if (_gridQuery.TryComp(uid, out var grid))
+            if (UidMap.TryGetValue(yamlId, out var uid) && _gridQuery.TryComp(uid, out var grid))
                 Result.Grids.Add((uid, grid));
             else
-                _log.Error($"Missing grid entity: {EntMan.ToPrettyString(uid)}");
+                _log.Error($"Missing grid entity: {EntMan.ToPrettyString(uid)}. YamlId: {yamlId}");
         }
 
         foreach (var yamlId in OrphanYamlIds)
         {
-            var uid = UidMap[yamlId];
-            if (_mapQuery.HasComponent(uid) || _xformQuery.Comp(uid).ParentUid.IsValid())
-                _log.Error($"Entity {EntMan.ToPrettyString(uid)} was incorrectly labelled as an orphan?");
+            if (UidMap.TryGetValue(yamlId, out var uid))
+                _log.Error($"Missing orphan entity with YamlId: {yamlId}");
+            else if (_mapQuery.HasComponent(uid) || _xformQuery.Comp(uid).ParentUid.IsValid())
+                _log.Error($"Entity {EntMan.ToPrettyString(uid)} was incorrectly labelled as an orphan? YamlId: {yamlId}");
             else
                 Result.Orphans.Add(uid);
         }
 
         foreach (var yamlId in NullspaceYamlIds)
         {
-            var uid = UidMap[yamlId];
-            if (_mapQuery.HasComponent(uid) || _xformQuery.Comp(uid).ParentUid.IsValid())
+            if (UidMap.TryGetValue(yamlId, out var uid))
+                _log.Error($"Missing nullspace entity with YamlId: {yamlId}");
+            else if (_mapQuery.HasComponent(uid) || _xformQuery.Comp(uid).ParentUid.IsValid())
                 _log.Error($"Entity {EntMan.ToPrettyString(uid)} was incorrectly labelled as a null-space entity?");
             else
                 Result.NullspaceEntities.Add(uid);
@@ -1172,8 +1172,8 @@ public sealed class EntityDeserializer :
             return entity;
 
         msg = CurrentReadingEntity is not { } ent
-            ? "Encountered unknown EntityUid reference"
-            : $"Encountered unknown EntityUid reference wile reading entity {ent.YamlId}, component: {CurrentComponent}";
+            ? "Encountered unknown entity yaml uid"
+            : $"Encountered unknown entity yaml uid wile reading entity {ent.YamlId}, component: {CurrentComponent}";
         _log.Error(msg);
         return EntityUid.Invalid;
     }

@@ -101,6 +101,12 @@ public enum EntityExceptionBehaviour
     /// </summary>
     IgnoreEntity,
 
+    /// <summary>
+    /// Continue serializing and simply skip/ignore this entity and all ofits children.
+    /// May result in broken maps that log errors or simply fail to load.
+    /// </summary>
+    IgnoreEntityAndChildren,
+
     // TODO SERIALIZATION
     /*
     /// <summary>

@@ -111,6 +111,11 @@ public sealed class EntitySerializer : ISerializationContext,
     public readonly Dictionary<string, List<int>> Prototypes = new();
 
     /// <summary>
+    /// Set of entities that have encountered issues during serialization and are now being ignored.
+    /// </summary>
+    public HashSet<EntityUid> ErroringEntities = new();
+
+    /// <summary>
     /// Yaml ids of all serialized map entities.
     /// </summary>
     public readonly List<int> Maps = new();
@@ -499,11 +504,10 @@ public sealed class EntitySerializer : ISerializationContext,
             if (Options.EntityExceptionBehaviour == EntityExceptionBehaviour.Rethrow)
                 throw;
 
-            Prototypes[protoId].Remove(saveId);
-            EntityData.Remove(saveId);
             CurrentEntityYamlUid = 0;
             CurrentEntity = null;
             CurrentComponent = null;
+            RemoveErroringEntity(uid);
             return;
         }
 
@@ -524,7 +528,7 @@ public sealed class EntitySerializer : ISerializationContext,
             return;
         }
 
-        // an entity may have less components than the original prototype, so we need to check if any are missing.
+        // an entity may have fewer components than the original prototype, so we need to check if any are missing.
         SequenceDataNode? missingComponents = null;
         foreach (var (name, comp) in meta.EntityPrototype.Components)
         {
@@ -542,6 +546,32 @@ public sealed class EntitySerializer : ISerializationContext,
 
         CurrentEntityYamlUid = 0;
         CurrentEntity = null;
+    }
+
+    /// <summary>
+    /// Remove an exception throwing entity (and possibly its children) from the serialized data.
+    /// </summary>
+    private void RemoveErroringEntity(EntityUid uid)
+    {
+        ErroringEntities.Add(uid);
+        if (YamlUidMap.TryGetValue(uid, out var yamlId))
+        {
+            EntityData.Remove(yamlId);
+            if (_metaQuery.TryGetComponent(uid, out var meta)
+                && meta.EntityPrototype != null
+                && Prototypes.TryGetValue(meta.EntityPrototype.ID, out var proto))
+            {
+                proto.Remove(yamlId);
+            }
+        }
+
+        if (Options.EntityExceptionBehaviour != EntityExceptionBehaviour.IgnoreEntityAndChildren)
+            return;
+
+        foreach (var child in _xformQuery.GetComponent(uid)._children)
+        {
+            RemoveErroringEntity(child);
+        }
     }
 
     private void SerializeComponents(EntityUid uid, Dictionary<string, MappingDataNode>? cache, SequenceDataNode components)
@@ -677,7 +707,10 @@ public sealed class EntitySerializer : ISerializationContext,
 
     public SequenceDataNode WriteEntitySection()
     {
-        if (YamlIds.Count != YamlUidMap.Count || YamlIds.Count != EntityData.Count)
+        // Check that EntityData contains the expected number of entities.
+        if (Options.EntityExceptionBehaviour != EntityExceptionBehaviour.IgnoreEntity
+            && Options.EntityExceptionBehaviour != EntityExceptionBehaviour.IgnoreEntityAndChildren
+            && (YamlIds.Count != YamlUidMap.Count || YamlIds.Count != EntityData.Count))
         {
             // Maybe someone reserved a yaml id with ReserveYamlId() or implicitly with GetId() without actually
             // ever serializing the entity, This can lead to references to non-existent entities.
@@ -899,6 +932,7 @@ public sealed class EntitySerializer : ISerializationContext,
         if (YamlUidMap.TryGetValue(value, out var yamlId))
             return new ValueDataNode(yamlId.ToString(CultureInfo.InvariantCulture));
 
+
         if (CurrentComponent == _xformName)
         {
             if (value == EntityUid.Invalid)
@@ -907,9 +941,15 @@ public sealed class EntitySerializer : ISerializationContext,
             DebugTools.Assert(!Orphans.Contains(CurrentEntityYamlUid));
             Orphans.Add(CurrentEntityYamlUid);
 
-            if (Options.ErrorOnOrphan && CurrentEntity != null && value != Truncate)
+            if (Options.ErrorOnOrphan && CurrentEntity != null && value != Truncate && !ErroringEntities.Contains(value))
                 _log.Error($"Serializing entity {EntMan.ToPrettyString(CurrentEntity)} without including its parent {EntMan.ToPrettyString(value)}");
 
+            return new ValueDataNode("invalid");
+        }
+
+        if (ErroringEntities.Contains(value))
+        {
+            // Referenced entity already logged an error, so we just silently fail.
             return new ValueDataNode("invalid");
         }
 

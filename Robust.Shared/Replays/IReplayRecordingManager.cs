@@ -6,7 +6,6 @@ using System.IO.Compression;
 using System.Threading.Tasks;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameStates;
-using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 

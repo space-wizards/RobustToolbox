@@ -24,9 +24,9 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Localization
 {
-    internal sealed partial class LocalizationManager : ILocalizationManagerInternal, IPostInjectInit
+    internal abstract partial class LocalizationManager : ILocalizationManagerInternal
     {
-        private static readonly ResPath LocaleDirPath = new("/Locale");
+        protected static readonly ResPath LocaleDirPath = new("/Locale");
 
         [Dependency] private readonly IConfigurationManager _configuration = default!;
         [Dependency] private readonly IResourceManager _res = default!;
@@ -40,7 +40,9 @@ namespace Robust.Shared.Localization
         private (CultureInfo, FluentBundle)? _defaultCulture;
         private (CultureInfo, FluentBundle)[] _fallbackCultures = Array.Empty<(CultureInfo, FluentBundle)>();
 
-        void IPostInjectInit.PostInject()
+        void ILocalizationManager.Initialize() => Initialize();
+
+        public virtual void Initialize()
         {
             _logSawmill = _log.GetSawmill("loc");
             _prototype.PrototypesReloaded += OnPrototypesReloaded;

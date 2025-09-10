@@ -117,6 +117,5 @@ public sealed class SpawnInContainerOrDropTest : EntitySpawnHelpersTest
         });
 
         await Server.WaitPost(() => MapSys.DeleteMap(MapId));
-        Server.Dispose();
     }
 }

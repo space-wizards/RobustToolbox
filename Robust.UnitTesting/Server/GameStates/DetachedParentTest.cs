@@ -22,8 +22,8 @@ public sealed class DetachedParentTest : RobustIntegrationTest
     [Test]
     public async Task TestDetachedParent()
     {
-        var server = StartServer();
-        var client = StartClient();
+        var server = StartServer(new() {Pool = false});
+        var client = StartClient(new() {Pool = false});
 
         await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
 
@@ -441,6 +441,10 @@ public sealed class DetachedParentTest : RobustIntegrationTest
         Assert.That(cParent3X.MapUid, Is.EqualTo(cMap3));
         Assert.That(cParent4X.MapUid, Is.EqualTo(cMap3));
         Assert.That(cGrid3X.MapUid, Is.EqualTo(cMap3));
+
+        await client.WaitPost(() => netMan.ClientDisconnect(""));
+        await server.WaitRunTicks(5);
+        await client.WaitRunTicks(5);
     }
 }
 

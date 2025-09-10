@@ -64,6 +64,13 @@ public sealed partial class MapLoaderSystem : EntitySystem
             return false;
 
         Log.Info($"Loading file: {resPath}");
+        return TryReadFile(reader, out data);
+    }
+
+    private bool TryReadFile(TextReader reader, [NotNullWhen(true)] out MappingDataNode? data)
+    {
+        data = null;
+
         _stopwatch.Restart();
 
         using var textReader = reader;

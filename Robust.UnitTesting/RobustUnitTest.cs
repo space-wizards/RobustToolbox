@@ -29,6 +29,7 @@ using Robust.Shared.Reflection;
 using Robust.Shared.Threading;
 using Robust.Shared.Toolshed;
 using Robust.Shared.Utility;
+using AppearanceSystem = Robust.Client.GameObjects.AppearanceSystem;
 using InputSystem = Robust.Server.GameObjects.InputSystem;
 using MapSystem = Robust.Server.GameObjects.MapSystem;
 using PointLightComponent = Robust.Client.GameObjects.PointLightComponent;
@@ -54,12 +55,10 @@ namespace Robust.UnitTesting
                 typeof(MetaDataComponent),
                 typeof(TransformComponent),
                 typeof(PhysicsComponent),
-                typeof(PhysicsMapComponent),
                 typeof(BroadphaseComponent),
                 typeof(FixturesComponent),
                 typeof(JointComponent),
                 typeof(GridTreeComponent),
-                typeof(MovedGridsComponent),
                 typeof(JointRelayTargetComponent),
                 typeof(OccluderComponent),
                 typeof(OccluderTreeComponent),
@@ -67,7 +66,6 @@ namespace Robust.UnitTesting
                 typeof(LightTreeComponent),
                 typeof(CollisionWakeComponent),
                 typeof(CollideOnAnchorComponent),
-                typeof(Gravity2DComponent),
                 typeof(ActorComponent)
             };
 
@@ -126,7 +124,6 @@ namespace Robust.UnitTesting
 
             systems.LoadExtraSystemType<SharedGridTraversalSystem>();
             systems.LoadExtraSystemType<FixtureSystem>();
-            systems.LoadExtraSystemType<Gravity2DController>();
             systems.LoadExtraSystemType<CollisionWakeSystem>();
 
             if (Project == UnitTestProject.Client)
@@ -146,6 +143,7 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<RecursiveMoveSystem>();
                 systems.LoadExtraSystemType<SpriteSystem>();
                 systems.LoadExtraSystemType<SpriteTreeSystem>();
+                systems.LoadExtraSystemType<AppearanceSystem>();
                 systems.LoadExtraSystemType<GridChunkBoundsDebugSystem>();
             }
             else

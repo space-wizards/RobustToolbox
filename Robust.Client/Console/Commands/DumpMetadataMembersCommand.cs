@@ -4,7 +4,7 @@ using Robust.Shared.ContentPack;
 
 namespace Robust.Client.Console.Commands
 {
-#if DEBUG
+#if TOOLS
     internal sealed class DumpMetadataMembersCommand : LocalizedCommands
     {
         public override string Command => "dmetamem";

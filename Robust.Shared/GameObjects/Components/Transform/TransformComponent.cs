@@ -167,7 +167,7 @@ namespace Robust.Shared.GameObjects
                 if (!Initialized)
                     return;
 
-                _entMan.System<SharedTransformSystem>().RaiseMoveEvent((Owner, this, meta), _parent, _localPosition, oldRotation, MapUid);
+                _entMan.System<SharedTransformSystem>().RaiseMoveEvent((Owner, this, meta), _parent, _localPosition, oldRotation, MapUid, checkTraversal: false);
             }
         }
 
@@ -402,32 +402,6 @@ namespace Robust.Shared.GameObjects
             _entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>().AttachToGridOrMap(Owner, this);
         }
 
-        internal void UpdateChildMapIdsRecursive(
-            MapId newMapId,
-            EntityUid? newUid,
-            bool mapPaused,
-            EntityQuery<TransformComponent> xformQuery,
-            EntityQuery<MetaDataComponent> metaQuery,
-            MetaDataSystem system)
-        {
-            foreach (var child in _children)
-            {
-                //Set Paused state
-                var metaData = metaQuery.GetComponent(child);
-                system.SetEntityPaused(child, mapPaused, metaData);
-
-                var concrete = xformQuery.GetComponent(child);
-
-                concrete.MapUid = newUid;
-                concrete.MapID = newMapId;
-
-                if (concrete.ChildCount != 0)
-                {
-                    concrete.UpdateChildMapIdsRecursive(newMapId, newUid, mapPaused, xformQuery, metaQuery, system);
-                }
-            }
-        }
-
         [Obsolete("Use TransformSystem.SetParent() instead")]
         public void AttachParent(EntityUid parent)
         {
@@ -659,7 +633,7 @@ namespace Robust.Shared.GameObjects
     ///     An invalid entity UID indicates that this entity has intentionally been removed from broadphases and should
     ///     not automatically be re-added by movement events.
     /// </remarks>
-    internal record struct BroadphaseData(EntityUid Uid, EntityUid PhysicsMap, bool CanCollide, bool Static)
+    internal record struct BroadphaseData(EntityUid Uid, bool CanCollide, bool Static)
     {
         public bool IsValid() => Uid.IsValid();
         public bool Valid => IsValid();

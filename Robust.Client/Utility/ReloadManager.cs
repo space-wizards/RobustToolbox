@@ -20,11 +20,14 @@ internal sealed class ReloadManager : IReloadManager
     [Dependency] private readonly IConfigurationManager _cfg = default!;
     [Dependency] private readonly ILogManager _logMan = default!;
     [Dependency] private readonly IResourceManager _res = default!;
+#pragma warning disable CS0414
     [Dependency] private readonly ITaskManager _tasks = default!;
+#pragma warning restore CS0414
 
     private readonly TimeSpan _reloadDelay = TimeSpan.FromMilliseconds(10);
     private CancellationTokenSource _reloadToken = new();
     private readonly HashSet<ResPath> _reloadQueue = new();
+    private List<FileSystemWatcher> _watchers = new(); // this list is never used but needed to prevent them from being garbage collected
 
     public event Action<ResPath>? OnChanged;
 
@@ -93,6 +96,7 @@ internal sealed class ReloadManager : IReloadManager
                 NotifyFilter = NotifyFilters.LastWrite
             };
 
+            _watchers.Add(watcher); // prevent garbage collection
 
             watcher.Changed += OnWatch;
 
@@ -138,6 +142,6 @@ internal sealed class ReloadManager : IReloadManager
                 }
             });
         }
-        #endif
+#endif
     }
 }

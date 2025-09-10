@@ -631,7 +631,7 @@ namespace Robust.Client.GameStates
                         if (_sawmill.Level <= LogLevel.Debug)
                             _sawmill.Debug($"  A component was dirtied: {comp.GetType()}");
 
-                        if (compState != null)
+                        if ((meta.Flags & MetaDataFlags.Detached) == 0 && compState != null)
                         {
                             var handleState = new ComponentHandleState(compState, null);
                             _entities.EventBus.RaiseComponentEvent(entity, comp, ref handleState);
@@ -1306,6 +1306,11 @@ namespace Robust.Client.GameStates
                     meta.LastStateApplied = lastStateApplied.Value;
 
                 var xform = xforms.GetComponent(ent.Value);
+
+                // TODO PVS DETACH
+                // Why is this if block here again? If a null-space entity gets sent to a player via some PVS override,
+                // and then later on it gets removed, you would assume that the client marks it as detached?
+                // I.e., modifying the metadata flag & pausing the entity should probably happen outside of this block.
                 if (xform.ParentUid.IsValid())
                 {
                     lookupSys.RemoveFromEntityTree(ent.Value, xform);
@@ -1325,6 +1330,13 @@ namespace Robust.Client.GameStates
                     meta._flags |= MetaDataFlags.Detached;
                     xformSys.DetachEntity(ent.Value, xform);
                     DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) == 0);
+
+                    // We mark the entity as paused, without raising a pause-event.
+                    // The entity gets un-paused when the metadata's comp-state is reapplied (which also does not raise
+                    // an un-pause event). The assumption is that game logic that has to handle the pausing should be
+                    // getting networked anyway. And if its some client-side timer on a networked entity, the timer
+                    // shouldn't actually be getting paused just because the entity has left the players view.
+                    meta.PauseTime = TimeSpan.Zero;
 
                     if (container != null)
                         containerSys.AddExpectedEntity(netEntity, container);

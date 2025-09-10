@@ -33,7 +33,7 @@ internal sealed partial class PvsSystem
 
             if (component.Deleted || !component.Initialized)
             {
-                Log.Error("Entity manager returned deleted or uninitialized components while sending entity data");
+                Log.Error($"Entity manager returned deleted or uninitialized component of type {component.GetType()} on entity {ToPrettyString(entityUid)} while generating entity state data for {player?.Name ?? "replay"}");
                 continue;
             }
 
@@ -147,7 +147,7 @@ internal sealed partial class PvsSystem
 
         if (enumerateAll)
         {
-            var query = EntityManager.AllEntityQueryEnumerator<MetaDataComponent>();
+            var query = AllEntityQuery<MetaDataComponent>();
             while (query.MoveNext(out var uid, out var md))
             {
                 DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized, $"Entity {ToPrettyString(uid)} has not been initialized");

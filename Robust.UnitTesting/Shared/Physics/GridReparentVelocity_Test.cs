@@ -87,18 +87,6 @@ public sealed class GridReparentVelocity_Test
         return obj;
     }
 
-    [TearDown]
-    public void Teardown()
-    {
-        _entManager.DeleteEntity(_gridUid);
-        _gridUid = default!;
-        _entManager.DeleteEntity(_objUid);
-        _objUid = default!;
-        _mapSystem.DeleteMap(_mapId);
-        _mapId = default!;
-        _entManager.DeleteEntity(_mapUid);
-    }
-
     // Moves an object off of a moving grid, checks for conservation of linear velocity.
     [Test]
     public void TestLinearVelocityOnlyMoveOffGrid()

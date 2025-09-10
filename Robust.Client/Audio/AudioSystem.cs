@@ -372,13 +372,13 @@ public sealed partial class AudioSystem : SharedAudioSystem
             return;
         }
 
+        var parentUid = xform.ParentUid;
         Vector2 worldPos;
         component.Volume = component.Params.Volume;
 
         // Handle grid audio differently by using grid position.
         if ((component.Flags & AudioFlags.GridAudio) != 0x0)
         {
-            var parentUid = xform.ParentUid;
             worldPos = _maps.GetGridPosition(parentUid);
         }
         else
@@ -412,7 +412,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
         }
         else
         {
-            var occlusion = GetOcclusion(listener, delta, distance, entity);
+            var occlusion = GetOcclusion(listener, delta, distance, parentUid);
             component.Occlusion = occlusion;
         }
 
@@ -420,11 +420,11 @@ public sealed partial class AudioSystem : SharedAudioSystem
         component.Position = worldPos;
 
         // Make race cars go NYYEEOOOOOMMMMM
-        if (_physicsQuery.TryGetComponent(entity, out var physicsComp))
+        if (_physicsQuery.TryGetComponent(parentUid, out var physicsComp))
         {
             // This actually gets the tracked entity's xform & iterates up though the parents for the second time. Bit
             // inefficient.
-            var velocity = _physics.GetMapLinearVelocity(entity, physicsComp, xform);
+            var velocity = _physics.GetMapLinearVelocity(parentUid, physicsComp);
             component.Velocity = velocity;
         }
     }
@@ -582,12 +582,17 @@ public sealed partial class AudioSystem : SharedAudioSystem
     {
         if (TerminatingOrDeleted(entity))
         {
-            Log.Error($"Tried to play coordinates audio on a terminating / deleted entity {ToPrettyString(entity)}");
+            LogAudioPlaybackOnInvalidEntity(specifier, entity);
             return null;
         }
 
         var playing = CreateAndStartPlayingStream(audioParams, specifier, stream);
         _xformSys.SetCoordinates(playing.Entity, new EntityCoordinates(entity, Vector2.Zero));
+
+        // Since we're playing the sound immediately in the middle of a tick, we need to force ProcessStream -now-
+        // to set occlusion/position/velocity etc
+        // otherwise predicted positional sounds will sound very incorrect in several possible ways (e#5802, e#6175) until the next tick
+        ProcessStream(playing.Entity, playing.Component, Transform(playing.Entity), GetListenerCoordinates());
 
         return playing;
     }
@@ -626,12 +631,16 @@ public sealed partial class AudioSystem : SharedAudioSystem
     {
         if (TerminatingOrDeleted(coordinates.EntityId))
         {
-            Log.Error($"Tried to play coordinates audio on a terminating / deleted entity {ToPrettyString(coordinates.EntityId)}");
+            LogAudioPlaybackOnInvalidEntity(specifier, coordinates.EntityId);
             return null;
         }
 
         var playing = CreateAndStartPlayingStream(audioParams, specifier, stream);
         _xformSys.SetCoordinates(playing.Entity, coordinates);
+
+        // see PlayEntity for why this is necessary
+        ProcessStream(playing.Entity, playing.Component, Transform(playing.Entity), GetListenerCoordinates());
+
         return playing;
     }
 
@@ -714,8 +723,6 @@ public sealed partial class AudioSystem : SharedAudioSystem
         offset = Math.Clamp(offset, 0f, maxOffset);
         source.PlaybackPosition = offset;
 
-        // For server we will rely on the adjusted one but locally we will have to adjust it ourselves.
-        ApplyAudioParams(comp.Params, comp);
         source.StartPlaying();
         return (entity, comp);
     }
@@ -751,6 +758,12 @@ public sealed partial class AudioSystem : SharedAudioSystem
     protected override TimeSpan GetAudioLengthImpl(string filename)
     {
         return _resourceCache.GetResource<AudioResource>(filename).AudioStream.Length;
+    }
+
+    private void LogAudioPlaybackOnInvalidEntity(ResolvedSoundSpecifier? specifier, EntityUid entityId)
+    {
+        var soundInfo = specifier?.ToString() ?? "unknown sound";
+        Log.Error($"Tried to play coordinates audio on a terminating / deleted entity {ToPrettyString(entityId)}. Sound: {soundInfo}. Trace: {Environment.StackTrace}");
     }
 
     #region Jobs

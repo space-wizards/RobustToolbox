@@ -150,6 +150,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables, Access(typeof(EntityManager), Other = AccessPermissions.ReadExecute)]
         public EntityLifeStage EntityLifeStage { get; internal set; }
 
+        [ViewVariables(VVAccess.ReadOnly)]
         public MetaDataFlags Flags
         {
             get => _flags;
@@ -238,6 +239,11 @@ namespace Robust.Shared.GameObjects
         /// a grid or map.
         /// </summary>
         PvsPriority = 1 << 4,
+
+        /// <summary>
+        /// If set, transform system will raise events directed at this entity whenever the GridUid or MapUid are modified.
+        /// </summary>
+        ExtraTransformEvents = 1 << 5,
     }
 
     /// <summary>

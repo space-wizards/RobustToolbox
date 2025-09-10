@@ -529,6 +529,7 @@ Types:
       - "string ToTitleCase(string)"
       - "string ToTitleCase(string)"
       - "string ToUpper(string)"
+    UnicodeCategory: { } # Enum
   System.IO.Compression:
     CompressionMode: { } # Enum
     CompressionLevel: { } # Enum
@@ -591,6 +592,7 @@ Types:
     Enumerable: { All: True }
     IGrouping`2: { All: True }
     IOrderedEnumerable`1: { All: True }
+    ImmutableArrayExtensions: { All: True }
   System.Net:
     DnsEndPoint: { }
     IPAddress: { All: True }
@@ -875,6 +877,7 @@ Types:
       - "System.Text.StringBuilder Insert(int, object)"
       - "System.Text.StringBuilder Insert(int, sbyte)"
       - "System.Text.StringBuilder Insert(int, short)"
+      - "System.Text.StringBuilder Insert(int, string)"
       - "System.Text.StringBuilder Insert(int, string, int)"
       - "System.Text.StringBuilder Insert(int, System.Decimal)"
       - "System.Text.StringBuilder Insert(int, System.ReadOnlySpan`1<char>)"
@@ -913,6 +916,7 @@ Types:
   System.Threading:
     CancellationToken: { All: True }
     CancellationTokenSource: { All: True }
+    CancellationTokenRegistration: { All: True }
     Interlocked: { All: True }
     Monitor: { All: True }
   System.Web:
@@ -1556,6 +1560,11 @@ Types:
     ValueType: { All: True }
     Version: { All: True }
     Void: { All: True }
+    WeakReference`1:
+      Methods:
+      - "void .ctor(!0)"
+      - "bool TryGetTarget(ref !0)"
+      - "void SetTarget(!0)"
   YamlDotNet.Core.Events:
     MappingStyle: { } # Enum
     SequenceStyle: { } # Enum
@@ -1605,3 +1614,7 @@ Types:
     SourcePos: { }
   Pidgin.Configuration:
     IConfiguration`1: { All: True }
+  SpaceWizards.Sodium:
+    CryptoGenericHashBlake2B:
+      Methods:
+      - "byte[] Hash(int, System.ReadOnlySpan`1<byte>, System.ReadOnlySpan`1<byte>)"

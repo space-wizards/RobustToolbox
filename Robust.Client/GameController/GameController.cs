@@ -110,6 +110,8 @@ namespace Robust.Client
 
         private ResourceManifestData? _resourceManifest;
 
+        private DisplayMode _displayMode;
+
         public void SetCommandLineArgs(CommandLineArgs args)
         {
             _commandLineArgs = args;
@@ -160,6 +162,7 @@ namespace Robust.Client
             }
 
             _serializationManager.Initialize();
+            _loc.Initialize();
 
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
@@ -182,7 +185,6 @@ namespace Robust.Client
             _serializer.Initialize();
             _inputManager.Initialize();
             _console.Initialize();
-            _loc.Initialize();
 
             // Make sure this is done before we try to load prototypes,
             // avoid any possibility of race conditions causing the check to not finish
@@ -272,6 +274,9 @@ namespace Robust.Client
                     Update(args);
                 }
             };
+
+            _configurationManager.OnValueChanged(CVars.DisplayMaxFPS, _ => UpdateVsyncConfig());
+            _configurationManager.OnValueChanged(CVars.DisplayVSync, _ => UpdateVsyncConfig(), invokeImmediately: true);
 
             _clyde.Ready();
 
@@ -708,6 +713,30 @@ namespace Robust.Client
             return UserDataDir.GetUserDataDir(this);
         }
 
+
+        private void UpdateVsyncConfig()
+        {
+            if (_displayMode == DisplayMode.Headless)
+                return;
+
+            var vsync = _configurationManager.GetCVar(CVars.DisplayVSync);
+            var maxFps = Math.Clamp(_configurationManager.GetCVar(CVars.DisplayMaxFPS), 0, 10_000);
+
+            _clyde.VsyncEnabled = vsync;
+
+            if (_mainLoop == null)
+                return;
+
+            if (vsync || maxFps == 0)
+            {
+                _mainLoop.SleepMode = SleepMode.None;
+            }
+            else
+            {
+                _mainLoop.SleepMode = SleepMode.Limit;
+                _mainLoop.LimitMinFrameTime = TimeSpan.FromSeconds(1.0 / maxFps);
+            }
+        }
 
         internal enum DisplayMode : byte
         {

@@ -4,6 +4,7 @@ using Lidgren.Network;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Configuration;
+using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
@@ -1002,6 +1003,15 @@ namespace Robust.Shared
             CVarDef.Create("display.vsync", true, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
+        /// Maximum framerate the client should run at. Set to 0 to have no limit.
+        /// </summary>
+        /// <remarks>
+        /// This is ignored if <see cref="DisplayVSync"/> is enabled.
+        /// </remarks>
+        public static readonly CVarDef<int> DisplayMaxFPS =
+            CVarDef.Create("display.max_fps", 0, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
         /// Window mode for the main game window. 0 = windowed, 1 = fullscreen.
         /// </summary>
         public static readonly CVarDef<int> DisplayWindowMode =
@@ -1486,7 +1496,7 @@ namespace Robust.Shared
         /// Non-default seek modes WILL result in worse performance.
         /// </remarks>
         public static readonly CVarDef<int> ResStreamSeekMode =
-            CVarDef.Create("res.stream_seek_mode", (int)ContentPack.StreamSeekMode.None);
+            CVarDef.Create("res.stream_seek_mode", (int)StreamSeekMode.None);
 
         /// <summary>
         /// Whether to watch prototype files for prototype reload on the client. Only applies to development builds.
@@ -1882,11 +1892,28 @@ namespace Robust.Shared
         public static readonly CVarDef<int> ToolshedNearbyEntitiesLimit =
             CVarDef.Create("toolshed.nearby_entities_limit", 5, CVar.SERVER | CVar.REPLICATED);
 
+        /// <summary>
+        ///     The max amount of prototype ids that can be sent to the client when autocompleting prototype ids.
+        /// </summary>
+        public static readonly CVarDef<int> ToolshedPrototypesAutocompleteLimit =
+            CVarDef.Create("toolshed.prototype_autocomplete_limit", 256, CVar.SERVER | CVar.REPLICATED);
+
         /*
          * Localization
          */
 
         public static readonly CVarDef<string> LocCultureName =
             CVarDef.Create("loc.culture_name", "en-US", CVar.ARCHIVE);
+
+        /*
+         * UI
+         */
+
+        /// <summary>
+        ///     The file XamlHotReloadManager looks for when locating the root of the project.
+        ///     By default, this is Space Station 14's sln, but it can be any file at the same root level.
+        /// </summary>
+        public static readonly CVarDef<string> XamlHotReloadMarkerName =
+            CVarDef.Create("ui.xaml_hot_reload_marker_name", "SpaceStation14.sln", CVar.CLIENTONLY);
     }
 }

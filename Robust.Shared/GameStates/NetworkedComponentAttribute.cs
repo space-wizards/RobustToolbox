@@ -30,6 +30,7 @@ public enum StateRestriction : byte
 
     /// <summary>
     /// This component will only be networked to players that are currently attached to this component's owning entity.
+    /// Other players won't even be notified when the component is added or removed.
     /// </summary>
     /// <remarks>
     /// Replays will still always receive this component.
@@ -37,13 +38,15 @@ public enum StateRestriction : byte
     OwnerOnly = 1,
 
     /// <summary>
-    /// This component will not be networked to players, but will still be recorded in replays.
+    /// This component will not be networked to any players, but will still be recorded in replays. Players won't even
+    /// be notified when the component is added or removed.
     /// </summary>
     ReplayOnly = 2,
 
     /// <summary>
     /// This component will raise an <see cref="ComponentGetStateAttemptEvent"/> to determine whether the component
-    /// should be networked to any specific session.
+    /// should be networked to any specific session. If the get state attempt event is cancelled, players won't
+    /// receive component states and won't even be notified when the component is added or removed.
     /// </summary>
     /// <remarks>
     /// Replays will still always receive this component.

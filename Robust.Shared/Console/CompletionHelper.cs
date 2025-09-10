@@ -30,8 +30,11 @@ public static class CompletionHelper
     /// <summary>
     /// Special-cased file handler for audio that accounts for serverside completion.
     /// </summary>
-    public static IEnumerable<CompletionOption> AudioFilePath(string arg, IPrototypeManager protoManager,
-        IResourceManager res)
+    public static IEnumerable<CompletionOption> AudioFilePath(
+        string arg,
+        IPrototypeManager protoManager,
+        IResourceManager res,
+        CompletionOptionFlags flags = default)
     {
         var resPath = GetUpdatedPath(arg);
         var paths = new HashSet<string>();
@@ -51,7 +54,7 @@ public static class CompletionHelper
             paths.Add(hero.GetNextSegment(resPath).ToString());
         }
 
-        return GetPaths(resPath, paths, res);
+        return GetPaths(resPath, paths, flags);
     }
 
     private static ResPath GetUpdatedPath(string arg)
@@ -71,7 +74,10 @@ public static class CompletionHelper
         return resPath;
     }
 
-    private static IEnumerable<CompletionOption> GetPaths(ResPath resPath, IEnumerable<string> inputs, IResourceManager res)
+    private static IEnumerable<CompletionOption> GetPaths(
+        ResPath resPath,
+        IEnumerable<string> inputs,
+        CompletionOptionFlags flags = default)
     {
         var options = inputs
             .OrderBy(c => c)
@@ -80,25 +86,31 @@ public static class CompletionHelper
                 var opt = (resPath / c).ToString();
 
                 if (c.EndsWith("/"))
-                    return new CompletionOption(opt, Flags: CompletionOptionFlags.PartialCompletion);
+                    return new CompletionOption(opt, Flags: CompletionOptionFlags.PartialCompletion | flags);
 
-                return new CompletionOption(opt);
+                return new CompletionOption(opt, Flags: flags);
             });
 
         return options;
     }
 
-    public static IEnumerable<CompletionOption> ContentFilePath(string arg, IResourceManager res)
+    public static IEnumerable<CompletionOption> ContentFilePath(
+        string arg,
+        IResourceManager res,
+        CompletionOptionFlags flags = default)
     {
         var resPath = GetUpdatedPath(arg);
-        return GetPaths(resPath, res.ContentGetDirectoryEntries(resPath), res);
+        return GetPaths(resPath, res.ContentGetDirectoryEntries(resPath), flags);
     }
 
-    public static IEnumerable<CompletionOption> ContentDirPath(string arg, IResourceManager res)
+    public static IEnumerable<CompletionOption> ContentDirPath(
+        string arg,
+        IResourceManager res,
+        CompletionOptionFlags flags = default)
     {
         var curPath = arg;
         if (!curPath.StartsWith("/"))
-            return new[] { new CompletionOption("/") };
+            return new[] { new CompletionOption("/", Flags: flags) };
 
         var resPath = new ResPath(curPath);
 
@@ -115,13 +127,16 @@ public static class CompletionHelper
             {
                 var opt = (resPath / c).ToString();
 
-                return new CompletionOption(opt, Flags: CompletionOptionFlags.PartialCompletion);
+                return new CompletionOption(opt, Flags: CompletionOptionFlags.PartialCompletion | flags);
             });
 
         return options;
     }
 
-    public static IEnumerable<CompletionOption> UserFilePath(string arg, IWritableDirProvider provider)
+    public static IEnumerable<CompletionOption> UserFilePath(
+        string arg,
+        IWritableDirProvider provider,
+        CompletionOptionFlags flags = default)
     {
         var curPath = arg;
         if (curPath == "")
@@ -138,16 +153,25 @@ public static class CompletionHelper
             resPath = resPath.Clean();
         }
 
-        var entries = provider.DirectoryEntries(resPath);
+
+        IEnumerable<string> entries = [];
+        try
+        {
+            entries = provider.DirectoryEntries(resPath);
+        }
+        catch
+        {
+            // see TODO on DirectoryEntries()
+        }
 
         return entries
             .Select(c =>
             {
                 var full = resPath / c;
                 if (provider.IsDir(full))
-                    return new CompletionOption($"{full}", Flags: CompletionOptionFlags.PartialCompletion);
+                    return new CompletionOption($"{full}", Flags: CompletionOptionFlags.PartialCompletion | flags);
 
-                return new CompletionOption(full.ToString());
+                return new CompletionOption(full.ToString(), Flags: flags);
             })
             .OrderBy(c => c.Value);
     }

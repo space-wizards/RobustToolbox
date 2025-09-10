@@ -46,6 +46,11 @@ namespace Robust.Shared.ContentPack
         (IEnumerable<ResPath> files, IEnumerable<ResPath> directories) Find(string pattern,
             bool recursive = true);
 
+
+        // TODO IWritableDirProvider make consistent
+        // The virtual provider throws an exception when given a non-existent directory, while the other implementation
+        // simply returns an empty enumerable. Either both should throw, or neither. And if they throw there should be
+        // a "try" variant.
         IEnumerable<string> DirectoryEntries(ResPath path);
 
         /// <summary>

@@ -42,6 +42,7 @@ END TEMPLATE-->
 * `Control.OrderedChildCollection` (gotten from `.Children`) now implements `IReadOnlyList<Control>`, allowing it to be indexed directly.
 * `System.WeakReference<T>` is now available in the sandbox.
 * `IClydeViewport` now has an `Id` and `ClearCachedResources` event. Together, these allow you to properly cache rendering resources per viewport.
+* Added a new entity yaml deserialization option (`SerializationOptions.EntityExceptionBehaviour`) that can optionally make deserialization more exception tolerant.
 
 ### Bugfixes
 

@@ -1443,8 +1443,11 @@ public abstract partial class SharedTransformSystem
     }
 
     /// <summary>
-    /// Attempts to get the current coordinates on the parent grid or map of the provided entity.
+    /// Attempts to get the current coordinates of the provided entity, relative to either a grid currently at that location, or the map.
     /// </summary>
+    /// <remarks>
+    /// This will not return coordinates if the map or grid are currently being deleted.
+    /// </remarks>
     /// <param name="uid">The entity to get the coordinates of.</param>
     /// <param name="coordinates">The returned coordinates on the grid or map.</param>
     /// <param name="xform">The transform component of the <paramref name="uid"/>.</param>
@@ -1467,9 +1470,15 @@ public abstract partial class SharedTransformSystem
 
         var oldPos = GetWorldPosition(xform);
         if (_mapManager.TryFindGridAt(map, oldPos, out var gridUid, out _) && !TerminatingOrDeleted(gridUid))
-            coordinates = new EntityCoordinates(gridUid, GetInvWorldMatrix(gridUid).Transform(oldPos));
+        {
+            coordinates = gridUid == xform.ParentUid
+                ? new EntityCoordinates(gridUid, xform.LocalPosition)
+                : new EntityCoordinates(gridUid, Vector2.Transform(oldPos, GetInvWorldMatrix(gridUid)));
+        }
         else
+        {
             coordinates = new EntityCoordinates(map, oldPos);
+        }
 
         return true;
     }

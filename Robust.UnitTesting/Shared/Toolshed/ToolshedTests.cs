@@ -163,7 +163,7 @@ public sealed class ToolshedTests : ToolshedTest
 
             AssertCompletionSingle($"ent e{ent.Id} emplace ", "{");
             AssertCompletionContains($"ent e{ent.Id} emplace {{ ", "val", "var", "f");
-            AssertCompletionContains($"ent e{ent.Id} emplace {{ val EntityUi", "EntityUi");
+            AssertCompletionContains($"ent e{ent.Id} emplace {{ val EntityUi", "EntityUid");
             AssertCompletionContains($"ent e{ent.Id} emplace {{ val EntityUid", "EntityUid");
             AssertCompletionContains($"ent e{ent.Id} emplace {{ val EntityUid $", "$value");
             AssertCompletionContains($"ent e{ent.Id} emplace {{ val EntityUid $val", "$value");
@@ -180,7 +180,7 @@ public sealed class ToolshedTests : ToolshedTest
 
             AssertCompletionContains("i 2 emplace { var ", "$value");
             AssertCompletionInvalid("i 2 emplace { var ", "wx");
-            AssertCompletionContains("player:list emplace { var ", "$value", "$ent", "$paused");
+            AssertCompletionContains("player:list emplace { var ", "$value", "$ent", "$name", "$userid");
             AssertCompletionInvalid("player:list emplace { var ", "wx");
             AssertCompletionContains("i 1 emplace { var $value empla", "emplace");
             AssertCompletionSingle("i 1 emplace { var $value emplace ", "{");

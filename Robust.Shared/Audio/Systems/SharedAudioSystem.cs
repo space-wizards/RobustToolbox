@@ -455,7 +455,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
         if (uid == null || !Resolve(uid.Value, ref component, false))
             return null;
 
-        if (!Timing.IsFirstTimePredicted || (_netManager.IsClient && !IsClientSide(uid.Value)))
+        if (_netManager.IsClient && !IsClientSide(uid.Value))
             return null;
 
         QueueDel(uid);

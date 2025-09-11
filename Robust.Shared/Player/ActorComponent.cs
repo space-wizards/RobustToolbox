@@ -3,7 +3,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Player;
 
-[RegisterComponent]
+[RegisterComponent, UnsavedComponent]
 public sealed partial class ActorComponent : Component
 {
     [ViewVariables]

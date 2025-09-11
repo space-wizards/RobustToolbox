@@ -42,6 +42,11 @@ END TEMPLATE-->
 * `Control.OrderedChildCollection` (gotten from `.Children`) now implements `IReadOnlyList<Control>`, allowing it to be indexed directly.
 * `System.WeakReference<T>` is now available in the sandbox.
 * `IClydeViewport` now has an `Id` and `ClearCachedResources` event. Together, these allow you to properly cache rendering resources per viewport.
+* Toolshed will now generate completion suggetions when parsing ResPath arguments.
+  * By default, this will suggest paths in the UserData directory
+  * If you want  to use another directory, you can use a custom type parser for your argument (e.g., ContentPathParser)
+* Added a new "cat" toolshed command
+* Added a new bitflag for console command completion options that will force the option to be quoted (`CompletionOptionFlags.AlwaysQuote`)
 
 ### Bugfixes
 

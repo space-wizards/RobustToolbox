@@ -94,6 +94,19 @@ internal partial class Clyde
             Add(StandardCursorShape.Hand, SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_POINTER);
             Add(StandardCursorShape.HResize, SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_EW_RESIZE);
             Add(StandardCursorShape.VResize, SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_NS_RESIZE);
+            Add(StandardCursorShape.Progress, SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_PROGRESS);
+            Add(StandardCursorShape.NWSEResize, SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_NWSE_RESIZE);
+            Add(StandardCursorShape.NESWResize, SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_NESW_RESIZE);
+            Add(StandardCursorShape.Move, SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_MOVE);
+            Add(StandardCursorShape.NotAllowed, SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_NOT_ALLOWED);
+            Add(StandardCursorShape.NWResize, SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_NW_RESIZE);
+            Add(StandardCursorShape.NResize, SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_N_RESIZE);
+            Add(StandardCursorShape.NEResize, SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_NE_RESIZE);
+            Add(StandardCursorShape.EResize, SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_E_RESIZE);
+            Add(StandardCursorShape.SEResize, SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_SE_RESIZE);
+            Add(StandardCursorShape.SResize, SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_S_RESIZE);
+            Add(StandardCursorShape.SWResize, SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_SW_RESIZE);
+            Add(StandardCursorShape.WResize, SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_W_RESIZE);
 
             void Add(StandardCursorShape shape, SDL.SDL_SystemCursor sysCursor)
             {

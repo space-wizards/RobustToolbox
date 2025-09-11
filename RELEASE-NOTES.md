@@ -40,15 +40,13 @@ END TEMPLATE-->
 
 ### New features
 
-* ViewVariables editors for `ProtoId` fields now have a Select button which opens a window listing all available prototypes of the appropriate type.
-* added **IConfigurationManager**.*SubscribeMultiple* ext. method to provide simpler way to unsubscribe from multiple cvar at once
-* Added `SharedMapSystem.QueueDeleteMap`, which deletes a map with the specified MapId in the next tick.
-* Added generic version of `ComponentRegistry.TryGetComponent`.
+* `Control.OrderedChildCollection` (gotten from `.Children`) now implements `IReadOnlyList<Control>`, allowing it to be indexed directly.
+* `System.WeakReference<T>` is now available in the sandbox.
+* `IClydeViewport` now has an `Id` and `ClearCachedResources` event. Together, these allow you to properly cache rendering resources per viewport.
 
 ### Bugfixes
 
-* `LayoutContainer.SetMarginsPreset` and `SetAnchorAndMarginPreset` now correctly use the provided control's top anchor when calculating the margins for its presets; it previously used the bottom anchor instead. This may result in a few UI differences, by a few pixels at most.
-* `IConfigurationManager` no longer logs a warning when saving configuration in an integration test.
+*None yet*
 
 ### Other
 
@@ -56,7 +54,94 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* Added some debug commands for debugging viewport resource management: `vp_clear_all_cached` & `vp_test_finalize`
+
+
+## 267.0.0
+
+### Breaking changes
+
+* When a player disconnects, the relevant callbacks are now fired *after* removing the channel from `INetManager`.
+
+### New features
+
+* Engine builds are now published for ARM64 & FreeBSD.
+* CPU model names are now detected on Windows & Linux ARM64.
+* Toolshed's `spawn:in` command now works on entities without `Physics` component.
+
+### Bugfixes
+
+* SDL3 windowing backend fixes:
+  * Avoid macOS freezes with multiple windows.
+  * Fix macOS rendering breaking when closing secondary windows.
+  * File dialogs properly associate parent windows.
+  * Fix IME positions not working with UI scaling properly.
+  * Properly specify library names for loading native library.
+
+* WinBit threads don't permanently stay stuck when their window closes.
+* Checking for the "`null`" literal in serialization is now culture invariant.
+
+### Other
+
+* Compat mode on the client now defaults to on for Windows Snapdragon devices, to work around driver bugs.
+* Update various libraries & natives. This enables out-of-the-box ARM64 support on all platforms and is a long-overdue modernization.
+* Key name displays now use proper Unicode symbols for macOS ⌥ and ⌘.
+* Automated CI for RobustToolbox runs on macOS again.
+* Autocompletions for `ProtoId<T>` in Toolshed now use `PrototypeIdsLimited` instead of arbitrarily cutting out if more than 256 of a prototype exists.
+
+
+## 266.0.0
+
+### Breaking changes
+
+* A new analyzer has been added that will error if you attempt to subscribe to `AfterAutoHandleStateEvent` on a
+  component that doesn't have the `AutoGenerateComponentState` attribute, or doesn't have the first argument of that
+  attribute set to `true`. In most cases you will want to set said argument to `true`.
+* The fields on `AutoGenerateComponentStateAttribute` are now `readonly`. Setting these directly (instead of using the constructor arguments) never worked in the first place, so this change only catches existing programming errors.
+* When a player disconnects, `ISharedPlayerManager.PlayerStatusChanged` is now fired *after* removing the session from the `Sessions` list.
+* `.rsi` files are now compacted into individual `.rsic` files on packaging. This should significantly reduce file count & improve performance all over release builds, but breaks the ability to access `.png` files into RSIs directly. To avoid this, `"rsic": false` can be specified in the RSI's JSON metadata.
+* The `scale` command has been removed, with the intent of it being moved to content instead.
+
+### New features
+
+* ViewVariables editors for `ProtoId` fields now have a Select button which opens a window listing all available prototypes of the appropriate type.
+* added **IConfigurationManager**.*SubscribeMultiple* ext. method to provide simpler way to unsubscribe from multiple cvar at once
+* Added `SharedMapSystem.QueueDeleteMap`, which deletes a map with the specified MapId in the next tick.
+* Added generic version of `ComponentRegistry.TryGetComponent`.
+* `AttributeHelper.HasAttribute` has had an overload's type signature loosened from `INamedTypeSymbol` to `ITypeSymbol`.
+* Errors are now logged when sending messages to disconnected `INetChannel`s.
+* Warnings are now logged if sending a message via Lidgren failed for some reason.
+* `.yml` and `.ftl` files in the same directory are now concatenated onto each other, to reduce file count in packaged builds. This is done through the new `AssetPassMergeTextDirectories` pass.
+* Added `System.Linq.ImmutableArrayExtensions` to sandbox.
+* `ImmutableDictionary<TKey, TValue>` and `ImmutableHashSet<T>` can now be network serialized.
+* `[AutoPausedField]` now works on fields of type `Dictionary<TKey, TimeSpan>`.
+* `[NotYamlSerializable]` analyzer now detects nullable fields of the not-serializable type.
+* `ItemList` items can now have a scale applied for the icon.
+* Added new OS mouse cursor shapes for the SDL3 backend. These are not available on the GLFW backend.
+* Added `IMidiRenderer.MinVolume` to scale the volume of MIDI notes.
+* Added `SharedPhysicsSystem.ScaleFixtures`, to apply the physics-only changes of the prior `scale` command.
+
+### Bugfixes
+
+* `LayoutContainer.SetMarginsPreset` and `SetAnchorAndMarginPreset` now correctly use the provided control's top anchor when calculating the margins for its presets; it previously used the bottom anchor instead. This may result in a few UI differences, by a few pixels at most.
+* `IConfigurationManager` no longer logs a warning when saving configuration in an integration test.
+* Fixed impossible-to-source `ChannelClosedException`s when sending some net messages to disconnected `INetChannel`s.
+* Fixed an edge case causing some color values to throw an error in `ColorNaming`.
+* Fresh builds from specific projects should no longer cause errors related to `Robust.Client.Injectors` not being found.
+* Stopped errors getting logged about `NoteOff` and `NoteOn` operations failing in MIDI.
+* Fixed MIDI players not resuming properly when re-entering PVS range.
+
+### Other
+
+* Updated ImageSharp to 3.1.11 to stop the warning about a DoS vulnerability.
+* Prototype YAML documents that are completely empty are now skipped by the prototype loader. Previously they would cause a load error for the whole file.
+* `TileSpawnWindow` can now be localized.
+* `BaseWindow` uses the new mouse cursor shapes for diagonal resizing.
+* `NFluidsynth` has been updated to 0.2.0
+
+### Internal
+
+* Added `uitest` tab for standard mouse cursor shapes.
 
 
 ## 265.0.0

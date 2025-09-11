@@ -1,4 +1,5 @@
-﻿using Robust.Shared.Utility;
+﻿using Robust.Shared.Toolshed.TypeParsers;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.Commands.Vfs;
 
@@ -6,7 +7,11 @@ namespace Robust.Shared.Toolshed.Commands.Vfs;
 internal sealed class CdCommand : VfsCommand
 {
     [CommandImplementation]
-    public void Cd(IInvocationContext ctx,ResPath path)
+    public void Cd(
+        IInvocationContext ctx,
+        // TODO TOOLSHED add Vfs CurrentPath() aware path parser
+        [CommandArgument(customParser:typeof(GenericPathParser))]
+        ResPath path)
     {
         var curPath = CurrentPath(ctx);
 

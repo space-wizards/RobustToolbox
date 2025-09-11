@@ -144,3 +144,19 @@ public sealed class AudioPathParser : CustomPathParser
     protected override IEnumerable<CompletionOption> GetCompletions(ResPath path)
         => CompletionHelper.AudioFilePath(path.CanonPath, _proto, ResMan, flags: CompletionOptionFlags.AlwaysQuote);
 }
+
+/// <summary>
+/// Custom <see cref="ResPath"/> parser that does not generate any auto-completion options.
+/// </summary>
+public sealed class GenericPathParser : CustomTypeParser<ResPath>
+{
+    public override bool TryParse(ParserContext ctx, out ResPath result)
+    {
+        return Toolshed.TryParse(ctx, out result);
+    }
+
+    public override CompletionResult TryAutocomplete(ParserContext ctx, CommandArgument? arg)
+    {
+        return CompletionResult.FromHint(GetArgHint(arg));
+    }
+}

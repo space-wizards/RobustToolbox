@@ -15,6 +15,15 @@ namespace Robust.UnitTesting.Shared.EntitySerialization;
 [TestFixture]
 public sealed partial class OrphanSerializationTest : RobustIntegrationTest
 {
+    private const string TestTileDefId = "a";
+    private const string TestPrototypes = $@"
+- type: testTileDef
+  id: space
+
+- type: testTileDef
+  id: {TestTileDefId}
+    ";
+
     /// <summary>
     /// Check that we can save & load a file containing multiple orphaned (non-grid) entities.
     /// </summary>
@@ -69,7 +78,7 @@ public sealed partial class OrphanSerializationTest : RobustIntegrationTest
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(0));
 
         // Load in the file containing only entA.
-        await server.WaitPost(() => Assert.That(loader.TryLoadEntity(pathA, out _)));
+        await server.WaitAssertion(() => Assert.That(loader.TryLoadEntity(pathA, out _)));
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(1));
         entA = Find(nameof(entA), entMan);
         Assert.That(entA.Comp1!.ParentUid, Is.EqualTo(EntityUid.Invalid));
@@ -77,7 +86,7 @@ public sealed partial class OrphanSerializationTest : RobustIntegrationTest
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(0));
 
         // Load in the file containing entB and its child
-        await server.WaitPost(() => Assert.That(loader.TryLoadEntity(pathB, out _)));
+        await server.WaitAssertion(() => Assert.That(loader.TryLoadEntity(pathB, out _)));
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(2));
         entB = Find(nameof(entB), entMan);
         child = Find(nameof(child), entMan);
@@ -92,7 +101,7 @@ public sealed partial class OrphanSerializationTest : RobustIntegrationTest
 
         // Load the file that contains both of them
         LoadResult? result = null;
-        await server.WaitPost(() => Assert.That(loader.TryLoadGeneric(pathCombined, out result)));
+        await server.WaitAssertion(() => Assert.That(loader.TryLoadGeneric(pathCombined, out result)));
         Assert.That(result!.Category, Is.EqualTo(FileCategory.Unknown));
         Assert.That(result.Orphans, Has.Count.EqualTo(2));
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(3));
@@ -114,7 +123,7 @@ public sealed partial class OrphanSerializationTest : RobustIntegrationTest
     [Test]
     public async Task TestOrphanedGridSerialization()
     {
-        var server = StartServer();
+        var server = StartServer(new() { Pool = false, ExtraPrototypes = TestPrototypes }); // Pool=false due to TileDef registration
         await server.WaitIdleAsync();
         var entMan = server.EntMan;
         var mapSys = server.System<SharedMapSystem>();
@@ -126,9 +135,8 @@ public sealed partial class OrphanSerializationTest : RobustIntegrationTest
         var pathB = new ResPath($"{nameof(TestOrphanedGridSerialization)}_B.yml");
         var pathCombined = new ResPath($"{nameof(TestOrphanedGridSerialization)}_C.yml");
 
-        tileMan.Register(new TileDef("space"));
-        var tDef = new TileDef("a");
-        tileMan.Register(tDef);
+        SerializationTestHelper.LoadTileDefs(server.ProtoMan, tileMan, "space");
+        var tDef = server.ProtoMan.Index<TileDef>(TestTileDefId);
 
         // Spawn multiple entities on a map
         MapId mapId = default;
@@ -169,9 +177,10 @@ public sealed partial class OrphanSerializationTest : RobustIntegrationTest
         Assert.That(map.Comp1!.ParentUid, Is.EqualTo(EntityUid.Invalid));
 
         // Save the grids without their map
-        Assert.That(loader.TrySaveGrid(gridA, pathA));
-        Assert.That(loader.TrySaveGrid(gridB, pathB));
-        Assert.That(loader.TrySaveGeneric([gridA.Owner, gridB.Owner], pathCombined, out var cat));
+        await server.WaitAssertion(() => Assert.That(loader.TrySaveGrid(gridA, pathA)));
+        await server.WaitAssertion(() => Assert.That(loader.TrySaveGrid(gridB, pathB)));
+        FileCategory cat = default;
+        await server.WaitAssertion(() => Assert.That(loader.TrySaveGeneric([gridA.Owner, gridB.Owner], pathCombined, out cat)));
         Assert.That(cat, Is.EqualTo(FileCategory.Unknown));
 
         // Delete all the entities.
@@ -182,7 +191,7 @@ public sealed partial class OrphanSerializationTest : RobustIntegrationTest
         // Load in the file containing only gridA.
         EntityUid newMap = default;
         await server.WaitPost(() => newMap = mapSys.CreateMap(out mapId));
-        await server.WaitPost(() => Assert.That(loader.TryLoadGrid(mapId, pathA, out _)));
+        await server.WaitAssertion(() => Assert.That(loader.TryLoadGrid(mapId, pathA, out _)));
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(1));
         gridA = Find(nameof(gridA), entMan);
         Assert.That(gridA.Comp1.LocalPosition, Is.Approximately(new Vector2(100, 100)));
@@ -192,7 +201,7 @@ public sealed partial class OrphanSerializationTest : RobustIntegrationTest
 
         // Load in the file containing gridB and its child
         await server.WaitPost(() => newMap = mapSys.CreateMap(out mapId));
-        await server.WaitPost(() => Assert.That(loader.TryLoadGrid(mapId, pathB, out _)));
+        await server.WaitAssertion(() => Assert.That(loader.TryLoadGrid(mapId, pathB, out _)));
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(2));
         gridB = Find(nameof(gridB), entMan);
         child = Find(nameof(child), entMan);
@@ -208,7 +217,7 @@ public sealed partial class OrphanSerializationTest : RobustIntegrationTest
         {
             DeserializationOptions = DeserializationOptions.Default with {LogOrphanedGrids = false}
         };
-        await server.WaitPost(() => Assert.That(loader.TryLoadGeneric(pathCombined, out result, opts)));
+        await server.WaitAssertion(() => Assert.That(loader.TryLoadGeneric(pathCombined, out result, opts)));
         Assert.That(result!.Category, Is.EqualTo(FileCategory.Unknown));
         Assert.That(result.Grids, Has.Count.EqualTo(2));
         Assert.That(result.Maps, Has.Count.EqualTo(2));

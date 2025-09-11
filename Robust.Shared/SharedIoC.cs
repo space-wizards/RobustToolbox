@@ -30,8 +30,6 @@ namespace Robust.Shared
             deps.Register<IDynamicTypeFactory, DynamicTypeFactory>();
             deps.Register<IDynamicTypeFactoryInternal, DynamicTypeFactory>();
             deps.Register<IEntitySystemManager, EntitySystemManager>();
-            deps.Register<ILocalizationManager, LocalizationManager>();
-            deps.Register<ILocalizationManagerInternal, LocalizationManager>();
             deps.Register<ILogManager, LogManager>();
             deps.Register<IModLoader, ModLoader>();
             deps.Register<IModLoaderInternal, ModLoader>();

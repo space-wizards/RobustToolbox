@@ -102,6 +102,8 @@ namespace Robust.Client.Graphics.Clyde
             {
                 var data = _windowData[reg.Id];
                 data.BlitDoneEvent?.Set();
+                // Set events so blit thread properly wakes up and notices it needs to shut down.
+                data.BlitStartEvent?.Set();
 
                 _windowData.Remove(reg.Id);
             }

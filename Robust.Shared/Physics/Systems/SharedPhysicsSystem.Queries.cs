@@ -21,8 +21,10 @@ namespace Robust.Shared.Physics.Systems
      */
     public partial class SharedPhysicsSystem
     {
+#pragma warning disable CS0414
         [Dependency] private readonly SharedDebugRayDrawingSystem _sharedDebugRaySystem = default!;
         [Dependency] private readonly INetManager _netMan = default!;
+#pragma warning restore CS0414
 
         /// <summary>
         /// Checks to see if the specified collision rectangle collides with any of the physBodies under management.
@@ -137,6 +139,7 @@ namespace Robust.Shared.Physics.Systems
         /// <summary>
         /// Get all entities colliding with a certain body.
         /// </summary>
+        [Obsolete("Use EntityLookupSystem")]
         public IEnumerable<PhysicsComponent> GetCollidingEntities(MapId mapId, in Box2 worldAABB)
         {
             if (mapId == MapId.Nullspace) return Array.Empty<PhysicsComponent>();
@@ -169,6 +172,7 @@ namespace Robust.Shared.Physics.Systems
         /// <summary>
         /// Get all entities colliding with a certain body.
         /// </summary>
+        [Obsolete("Use EntityLookupSystem")]
         public IEnumerable<Entity<PhysicsComponent>> GetCollidingEntities(MapId mapId, in Box2Rotated worldBounds)
         {
             if (mapId == MapId.Nullspace)

@@ -6,6 +6,7 @@ using Robust.Shared.EntitySerialization.Components;
 using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Utility;
 using static Robust.UnitTesting.Shared.EntitySerialization.EntitySaveTestComponent;
 
@@ -29,7 +30,7 @@ public sealed partial class BackwardsCompatibilityTest : RobustIntegrationTest
     [Test]
     public async Task TestLoadV7()
     {
-        var server = StartServer();
+        var server = StartServer(new ServerIntegrationOptions { ExtraPrototypes = PrototypeV7 });
         await server.WaitIdleAsync();
         var entMan = server.EntMan;
         var mapSys = server.System<SharedMapSystem>();
@@ -37,12 +38,11 @@ public sealed partial class BackwardsCompatibilityTest : RobustIntegrationTest
         var tileMan = server.ResolveDependency<ITileDefinitionManager>();
         var resourceManager = server.ResolveDependency<IResourceManagerInternal>();
 
-        tileMan.Register(new TileDef("space"));
-        tileMan.Register(new TileDef("a"));
+        SerializationTestHelper.LoadTileDefs(server.ProtoMan, tileMan, "space");
 
         void AssertCount(int expected) => Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(expected));
+        Assert.That(entMan.Count<LoadedMapComponent>(), Is.EqualTo(0));
 
-        await server.WaitPost(() => mapSys.CreateMap(out _));
         var mapLoadOpts = MapLoadOptions.Default with
         {
             DeserializationOptions = DeserializationOptions.Default with {LogOrphanedGrids = false}
@@ -85,6 +85,7 @@ public sealed partial class BackwardsCompatibilityTest : RobustIntegrationTest
             await server.WaitPost(() => entMan.DeleteEntity(grid.Comp1.ParentUid));
             await server.WaitPost(() => entMan.DeleteEntity(nullSpace));
             AssertCount(0);
+            await server.WaitPost(() => loader.Delete(result));
         }
 
 
@@ -104,7 +105,7 @@ public sealed partial class BackwardsCompatibilityTest : RobustIntegrationTest
 
             Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(0));
             LoadResult? result = default;
-            await server.WaitPost(() => Assert.That(loader.TryLoadGeneric(pathLifestage, out result)));
+            await server.WaitAssertion(() => Assert.That(loader.TryLoadGeneric(pathLifestage, out result)));
             Assert.That(result!.Version, Is.EqualTo(7));
             Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(8));
 
@@ -140,7 +141,13 @@ public sealed partial class BackwardsCompatibilityTest : RobustIntegrationTest
                             : Is.EqualTo(EntityLifeStage.MapInitialized));
                 }
             }
+
+            await server.WaitPost(() => loader.Delete(result));
         }
+
+        Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(0));
+        Assert.That(entMan.Count<LoadedMapComponent>(), Is.EqualTo(0));
+        Assert.That(entMan.Count<MapComponent>(), Is.EqualTo(0));
     }
 
     private const string MapDataV7 = @"
@@ -206,9 +213,7 @@ entities:
     - type: Transform
     - type: Map
       mapInitialized: True
-    - type: PhysicsMap
     - type: GridTree
-    - type: MovedGrids
     - type: Broadphase
     - type: OccluderTree
     - type: EntitySaveTest
@@ -263,9 +268,7 @@ entities:
     - type: Transform
     - type: Map
       mapPaused: True
-    - type: PhysicsMap
     - type: GridTree
-    - type: MovedGrids
     - type: Broadphase
     - type: OccluderTree
     - type: EntitySaveTest
@@ -288,9 +291,7 @@ entities:
     - type: Transform
     - type: Map
       mapInitialized: True
-    - type: PhysicsMap
     - type: GridTree
-    - type: MovedGrids
     - type: Broadphase
     - type: OccluderTree
     - type: EntitySaveTest
@@ -340,5 +341,12 @@ entities:
     - type: EntitySaveTest
       list: []
       id: nullC
+";
+    private const string PrototypeV7 = @"
+- type: testTileDef
+  id: space
+
+- type: testTileDef
+  id: a
 ";
 }

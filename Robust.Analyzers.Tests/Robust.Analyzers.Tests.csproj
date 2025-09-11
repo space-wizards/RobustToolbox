@@ -10,11 +10,18 @@
   <ItemGroup>
     <EmbeddedResource Include="..\Robust.Shared\Analyzers\AccessAttribute.cs" LogicalName="Robust.Shared.Analyzers.AccessAttribute.cs" LinkBase="Implementations" />
     <EmbeddedResource Include="..\Robust.Shared\Analyzers\AccessPermissions.cs" LogicalName="Robust.Shared.Analyzers.AccessPermissions.cs" LinkBase="Implementations" />
+    <EmbeddedResource Include="..\Robust.Shared\Analyzers\ComponentNetworkGeneratorAuxiliary.cs" LogicalName="Robust.Shared.Analyzers.ComponentNetworkGeneratorAuxiliary.cs" LinkBase="Implementations" />
     <EmbeddedResource Include="..\Robust.Shared\Analyzers\MustCallBaseAttribute.cs" LogicalName="Robust.Shared.IoC.MustCallBaseAttribute.cs" LinkBase="Implementations" />
     <EmbeddedResource Include="..\Robust.Shared\Analyzers\PreferNonGenericVariantForAttribute.cs" LogicalName="Robust.Shared.Analyzers.PreferNonGenericVariantForAttribute.cs" LinkBase="Implementations" />
     <EmbeddedResource Include="..\Robust.Shared\Analyzers\PreferOtherTypeAttribute.cs" LogicalName="Robust.Shared.Analyzers.PreferOtherTypeAttribute.cs" LinkBase="Implementations" />
+    <EmbeddedResource Include="..\Robust.Shared\Analyzers\ForbidLiteralAttribute.cs" LogicalName="Robust.Shared.Analyzers.ForbidLiteralAttribute.cs" LinkBase="Implementations" />
+    <EmbeddedResource Include="..\Robust.Shared\Analyzers\ObsoleteInheritanceAttribute.cs" LogicalName="Robust.Shared.Analyzers.ObsoleteInheritanceAttribute.cs" LinkBase="Implementations" />
     <EmbeddedResource Include="..\Robust.Shared\IoC\DependencyAttribute.cs" LogicalName="Robust.Shared.IoC.DependencyAttribute.cs" LinkBase="Implementations" />
     <EmbeddedResource Include="..\Robust.Shared\GameObjects\EventBusAttributes.cs" LogicalName="Robust.Shared.GameObjects.EventBusAttributes.cs" LinkBase="Implementations" />
+    <EmbeddedResource Include="..\Robust.Shared\Serialization\NetSerializableAttribute.cs" LogicalName="Robust.Shared.Serialization.NetSerializableAttribute.cs" LinkBase="Implementations" />
+    <EmbeddedResource Include="..\Robust.Shared\Prototypes\Attributes.cs" LogicalName="Robust.Shared.Prototypes.Attributes.cs" LinkBase="Implementations" />
+    <EmbeddedResource Include="..\Robust.Shared\Prototypes\IPrototype.cs" LogicalName="Robust.Shared.Prototypes.IPrototype.cs" LinkBase="Implementations" />
+    <EmbeddedResource Include="..\Robust.Shared\Serialization\Manager\Attributes\DataFieldAttribute.cs" LogicalName="Robust.Shared.Serialization.Manager.Attributes.DataFieldAttribute.cs" LinkBase="Implementations" />
   </ItemGroup>
 
   <PropertyGroup>

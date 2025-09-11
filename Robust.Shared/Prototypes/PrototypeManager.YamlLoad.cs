@@ -52,21 +52,36 @@ public partial class PrototypeManager
                         return (file, Array.Empty<ExtractedMappingData>());
 
                     var extractedList = new List<ExtractedMappingData>();
+                    var i = 0;
                     foreach (var document in DataNodeParser.ParseYamlStream(reader))
                     {
+                        i += 1;
                         LoadedData?.Invoke(document);
 
-                        var seq = (SequenceDataNode)document.Root;
-                        foreach (var mapping in seq.Sequence)
+                        switch (document.Root)
                         {
-                            var data = ExtractMapping((MappingDataNode)mapping);
-                            if (data != null)
-                            {
-                                if (ignored)
-                                    AbstractPrototype(data.Data);
+                            case SequenceDataNode seq:
+                                foreach (var mapping in seq.Sequence)
+                                {
+                                    var data = ExtractMapping((MappingDataNode)mapping);
+                                    if (data != null)
+                                    {
+                                        if (ignored)
+                                            AbstractPrototype(data.Data);
 
-                                extractedList.Add(data);
-                            }
+                                        extractedList.Add(data);
+                                    }
+                                }
+
+                                break;
+                            case ValueDataNode { Value: "" }:
+                                // Documents with absolutely nothing in them get deserialized as this.
+                                // How does this happen? Text file merger generates separate documents for each file.
+                                // Just skip it.
+                                break;
+                            default:
+                                sawmill.Error($"{file} document #{i} is not a sequence! Did you forget to indent your prototype with a '-'?");
+                                break;
                         }
                     }
 
@@ -342,8 +357,7 @@ public partial class PrototypeManager
         {
             if (abstractNode is not ValueDataNode abstractValueNode)
             {
-                mapping.Remove(abstractNode);
-                mapping.Add("abstract", "true");
+                mapping["abstract"] = new ValueDataNode("true");
                 return;
             }
 

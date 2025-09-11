@@ -126,14 +126,14 @@ public abstract class ToolshedTest : RobustIntegrationTest, IInvocationContext
         Assert.That(result.Options, Is.EquivalentTo(expected.Options));
     }
 
-    protected void AssertCompletionEmpty(string command)
+    protected void AssertCompletionEmpty(string command, bool expectHint = false)
     {
         var result = GetCompletions(command);
         if (result == null)
             return;
 
         Assert.That(result.Options.Length, Is.EqualTo(0));
-        Assert.That(result.Hint, Is.Null);
+        Assert.That(result.Hint != null, Is.EqualTo(expectHint));
     }
 
     protected void AssertCompletionHint(string command, string hint)
@@ -169,12 +169,26 @@ public abstract class ToolshedTest : RobustIntegrationTest, IInvocationContext
             return;
 
         Assert.That(result.Options.Length, Is.GreaterThanOrEqualTo(expected.Length));
-        if (result.Options.Length != 1)
-            return;
 
         foreach (var ex in expected)
         {
-            Assert.That(result.Options.Any(x => x.Value == ex));
+            Assert.That(result.Options.Any(x => x.Value == ex), $"Missing expected option: {ex}");
+        }
+    }
+
+    protected void AssertCompletions(string command, params string[] expected)
+    {
+        var result = GetCompletions(command);
+
+        Assert.That(result, Is.Not.Null);
+        if (result == null)
+            return;
+
+        Assert.That(result.Options.Length, Is.EqualTo(expected.Length));
+
+        foreach (var ex in expected)
+        {
+            Assert.That(result.Options.Any(x => x.Value == ex), $"Missing expected option: {ex}");
         }
     }
 

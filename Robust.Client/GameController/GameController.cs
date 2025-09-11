@@ -68,6 +68,8 @@ namespace Robust.Client
         [Dependency] private readonly ITimerManager _timerManager = default!;
         [Dependency] private readonly IClientEntityManager _entityManager = default!;
         [Dependency] private readonly IPlacementManager _placementManager = default!;
+        [Dependency] private readonly ParticlesManager _particleManager = default!;
+
         [Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
         [Dependency] private readonly IOverlayManagerInternal _overlayManager = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
@@ -214,6 +216,7 @@ namespace Robust.Client
             _replayPlayback.Initialize();
             _replayRecording.Initialize();
             _userInterfaceManager.PostInitialize();
+            _particleManager.Initialize();
             _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
 
             if (_commandLineArgs?.Username != null)
@@ -617,6 +620,11 @@ namespace Robust.Client
                 using (_prof.Group("Placement"))
                 {
                     _placementManager.FrameUpdate(frameEventArgs);
+                }
+
+                using (_prof.Group("Particles"))
+                {
+                    _particleManager.FrameUpdate(frameEventArgs);
                 }
 
                 using (_prof.Group("Entity"))

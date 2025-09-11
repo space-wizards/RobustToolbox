@@ -26,14 +26,6 @@ public static class Matrix3Helpers
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Box2Rotated TransformBounds(this Matrix3x2 refFromBox, Box2Rotated box)
-    {
-        return new Box2Rotated(refFromBox.TransformBox(box.Box),
-                    (box.Transform * refFromBox).Rotation(),
-                    Vector2.Transform(box.Origin, refFromBox));
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Box2 TransformBox(this Matrix3x2 refFromBox, Box2Rotated box)
     {
         return (box.Transform * refFromBox).TransformBox(box.Box);

@@ -231,6 +231,8 @@ Had full state: {LastFullState != null}"
                         // Either the server needs to ensure that the initial state it sends to a client is a full
                         // state, or the client needs to be able to construct an implicit full state (i.e., get-state
                         // code needs to be in shared code).
+                        //
+                        // Without this, the client won't be able to reset predicted changes made to this component.
                         DebugTools.Assert("Received delta state without having received or constructed an implicit full state");
                         continue;
                     }

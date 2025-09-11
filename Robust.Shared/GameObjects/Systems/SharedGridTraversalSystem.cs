@@ -100,7 +100,7 @@ public sealed class SharedGridTraversalSystem : EntitySystem
         if (_mapManager.TryFindGridAt(map, mapPos, out var gridUid, out _))
         {
             // Some minor duplication here with AttachParent but only happens when going on/off grid so not a big deal ATM.
-            if (gridUid != xform.GridUid)
+            if (gridUid != xform.GridUid && !TerminatingOrDeleted(gridUid))
                 _transform.SetParent(entity, xform, gridUid);
             return;
         }
@@ -110,4 +110,3 @@ public sealed class SharedGridTraversalSystem : EntitySystem
             _transform.SetParent(entity, xform, map);
     }
 }
-

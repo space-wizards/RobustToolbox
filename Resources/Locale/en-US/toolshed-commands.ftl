@@ -428,3 +428,5 @@ command-description-cmd-info =
     On its own, this means it'll print the command's help message.
 command-description-comp-rm =
     Removes the given component from the entity.
+command-description-cat =
+    Concatenate the given files in the user directory

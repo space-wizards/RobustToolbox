@@ -557,7 +557,7 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
             manager.WriteBytes(state, path, bytes, compressionLevel);
         }
 
-        public void WriteYaml(ResPath path, YamlDocument document, CompressionLevel compressionLevel)
+        void IReplayFileWriter.WriteYaml(ResPath path, YamlDocument document, CompressionLevel compressionLevel)
         {
             CheckDisposed();
             manager.WriteYaml(state, path, document, compressionLevel);

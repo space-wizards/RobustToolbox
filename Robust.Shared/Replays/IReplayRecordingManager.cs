@@ -2,11 +2,14 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.IO.Compression;
 using System.Threading.Tasks;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameStates;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
+using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Replays;
@@ -213,7 +216,15 @@ public interface IReplayFileWriter
     void WriteYaml(
         ResPath path,
         YamlDocument yaml,
-        CompressionLevel compressionLevel = CompressionLevel.Optimal);
+        CompressionLevel compressionLevel = CompressionLevel.Optimal)
+    {
+        var memStream = new MemoryStream();
+        using var writer = new StreamWriter(memStream);
+        var yamlStream = new YamlStream {yaml};
+        yamlStream.Save(new YamlMappingFix(new Emitter(writer)), false);
+        writer.Flush();
+        WriteBytes(path, memStream.AsMemory(), compressionLevel);
+    }
 }
 
 /// <summary>

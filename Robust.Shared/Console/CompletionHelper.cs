@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.Audio;
-using Robust.Shared.Collections;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -169,7 +167,7 @@ public static class CompletionHelper
             {
                 var full = resPath / c;
                 if (provider.IsDir(full))
-                    return new CompletionOption($"{full}", Flags: CompletionOptionFlags.PartialCompletion | flags);
+                    return new CompletionOption($"{full}/", Flags: CompletionOptionFlags.PartialCompletion | flags);
 
                 return new CompletionOption(full.ToString(), Flags: flags);
             })

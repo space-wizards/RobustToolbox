@@ -479,16 +479,16 @@ public sealed class ToolshedTests : ToolshedTest
         {
             string[] folders =
             [
-                "/TestPaths/folder",
-                "/TestPaths/folder 2 - electric bogaloo"
+                "/TestPaths/folder/",
+                "/TestPaths/folder 2 - electric bogaloo/"
             ];
 
             string[] files =
             [
-                $"{folders[0]}/test.yml",
-                $"{folders[0]}/test_-_2.yml",
-                $"{folders[0]}/test - 3.yml",
-                $"{folders[0]}/A!;.,-_'"
+                $"{folders[0]}test.yml",
+                $"{folders[0]}test_-_2.yml",
+                $"{folders[0]}test - 3.yml",
+                $"{folders[0]}A!;.,-_'"
             ];
 
             // Setup files for testing
@@ -528,15 +528,15 @@ public sealed class ToolshedTests : ToolshedTest
             AssertCompletions($"testcat \"/TestPaths/folder ", folders);
             AssertCompletions($"testcat \"/TestPaths/folder \"", folders);
 
-            AssertCompletions($"testcat {folders[0]}/", files);
-            AssertCompletions($"testcat {folders[0]}/test.", files);
-            AssertCompletions($"testcat \"{folders[0]}/test.", files);
-            AssertCompletions($"testcat \"{folders[0]}/test.\"", files);
-            AssertCompletions($"testcat \"{folders[0]}/test ", files);
-            AssertCompletions($"testcat \"{folders[0]}/test \"", files);
-            AssertCompletions($"testcat \"{folders[0]}/A", files);
-            AssertCompletions($"testcat \"{folders[0]}/A!;.,", files);
-            AssertCompletions($"testcat \"{folders[0]}/A!;.,\"", files);
+            AssertCompletions($"testcat {folders[0]}", files);
+            AssertCompletions($"testcat {folders[0]}test.", files);
+            AssertCompletions($"testcat \"{folders[0]}test.", files);
+            AssertCompletions($"testcat \"{folders[0]}test.\"", files);
+            AssertCompletions($"testcat \"{folders[0]}test ", files);
+            AssertCompletions($"testcat \"{folders[0]}test \"", files);
+            AssertCompletions($"testcat \"{folders[0]}A", files);
+            AssertCompletions($"testcat \"{folders[0]}A!;.,", files);
+            AssertCompletions($"testcat \"{folders[0]}A!;.,\"", files);
         });
     }
 

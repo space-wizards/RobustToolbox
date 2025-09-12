@@ -183,6 +183,25 @@ public partial class EntityManager
         return false;
     }
 
+    public bool TrySpawnInContainer(
+        string? protoName,
+        BaseContainer container,
+        [NotNullWhen(true)] out EntityUid? uid,
+        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null)
+    {
+        uid = null;
+        var doMapInit = _mapSystem.IsInitialized(TransformQuery.GetComponent(container.Owner).MapUid);
+        uid = Spawn(protoName, overrides, doMapInit);
+
+        if (_containers.Insert(uid.Value, container))
+            return true;
+
+        DeleteEntity(uid.Value);
+        uid = null;
+        return false;
+    }
+
     public EntityUid SpawnNextToOrDrop(string? protoName, EntityUid target, TransformComponent? xform = null, ComponentRegistry? overrides = null)
     {
         xform ??= TransformQuery.GetComponent(target);
@@ -232,6 +251,39 @@ public partial class EntityManager
         return uid;
     }
 
+    public EntityUid SpawnInContainerOrDrop(
+        string? protoName,
+        BaseContainer container,
+        TransformComponent? xform = null,
+        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null)
+    {
+        return SpawnInContainerOrDrop(protoName, container, out _, xform, containerComp, overrides);
+    }
+
+    public EntityUid SpawnInContainerOrDrop(
+        string? protoName,
+        BaseContainer container,
+        out bool inserted,
+        TransformComponent? xform = null,
+        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null)
+    {
+        inserted = true;
+        xform ??= TransformQuery.GetComponent(container.Owner);
+        var doMapInit = _mapSystem.IsInitialized(xform.MapUid);
+        var uid = Spawn(protoName, overrides, doMapInit);
+
+        if (!_containers.Insert(uid, container))
+        {
+            inserted = false;
+            if (xform.ParentUid.IsValid())
+                _xforms.DropNextTo(uid, (container.Owner, xform));
+        }
+
+        return uid;
+    }
+
     #region Prediction
 
     public virtual EntityUid PredictedSpawnAttachedTo(string? protoName, EntityCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default)
@@ -275,6 +327,16 @@ public partial class EntityManager
         return TrySpawnInContainer(protoName, containerUid, containerId, out uid, containerComp, overrides);
     }
 
+    public virtual bool PredictedTrySpawnInContainer(
+        string? protoName,
+        BaseContainer container,
+        [NotNullWhen(true)] out EntityUid? uid,
+        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null)
+    {
+        return TrySpawnInContainer(protoName, container, out uid, containerComp, overrides);
+    }
+
     public virtual EntityUid PredictedSpawnNextToOrDrop(string? protoName, EntityUid target, TransformComponent? xform = null, ComponentRegistry? overrides = null)
     {
         return SpawnNextToOrDrop(protoName, target, xform, overrides);
@@ -303,6 +365,32 @@ public partial class EntityManager
         return SpawnInContainerOrDrop(protoName,
             containerUid,
             containerId,
+            out inserted,
+            xform,
+            containerComp,
+            overrides);
+    }
+
+    public virtual EntityUid PredictedSpawnInContainerOrDrop(
+        string? protoName,
+        BaseContainer container,
+        TransformComponent? xform = null,
+        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null)
+    {
+        return SpawnInContainerOrDrop(protoName, container, xform, containerComp, overrides);
+    }
+
+    public virtual EntityUid PredictedSpawnInContainerOrDrop(
+        string? protoName,
+        BaseContainer container,
+        out bool inserted,
+        TransformComponent? xform = null,
+        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null)
+    {
+        return SpawnInContainerOrDrop(protoName,
+            container,
             out inserted,
             xform,
             containerComp,

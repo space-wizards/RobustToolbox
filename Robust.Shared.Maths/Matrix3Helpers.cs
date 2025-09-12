@@ -38,7 +38,7 @@ public static class Matrix3Helpers
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void TransformBox(
+    internal static void TransformBox(
         this Matrix3x2 refFromBox,
         in Box2Rotated box,
         out Vector128<float> x,
@@ -61,8 +61,9 @@ public static class Matrix3Helpers
     /// <summary>
     /// Applies a transformation matrix to all of a box's corners and returns their coordinates in two simd vectors.
     /// </summary>
+    /// <remarks>The corners are ordered clockwise, starting from what was the bottom left corner prior to the transformation.</remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void TransformBox(
+    internal static void TransformBox(
         this Matrix3x2 refFromBox,
         in Box2 box,
         out Vector128<float> x,
@@ -71,8 +72,8 @@ public static class Matrix3Helpers
         var boxVec = Unsafe.As<Box2, Vector128<float>>(ref Unsafe.AsRef(in box));
 
         // Convert box into list of X and Y values for each of the 4 corners
-        var allX = Vector128.Shuffle(boxVec, Vector128.Create(0, 0, 2, 2));
-        var allY = Vector128.Shuffle(boxVec, Vector128.Create(1, 3, 3, 1));
+        var allX = Vector128.Shuffle(boxVec, Vector128.Create(0, 2, 2, 0));
+        var allY = Vector128.Shuffle(boxVec, Vector128.Create(1, 1, 3, 3));
 
         // Transform coordinates
         x = Vector128.Create(refFromBox.M31)

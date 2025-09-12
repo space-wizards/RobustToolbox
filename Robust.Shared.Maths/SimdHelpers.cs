@@ -79,6 +79,8 @@ namespace Robust.Shared.Maths
             return n + d;
         }
 
+        #region GetAABB
+
         /// <summary>
         /// This computes the bounding box given a set of 4 coordinates specified via 2 simd vectors.
         /// This effectively computes the horizontal min & max of both of the given vectors.
@@ -87,8 +89,18 @@ namespace Robust.Shared.Maths
         public static Vector128<float> GetAABB(Vector128<float> x, Vector128<float> y)
         {
             if (!Avx.IsSupported)
-                return GetAABBSlower(x, y);
+                return GetAABBSlow(x, y);
 
+            return GetAABB128(x, y);
+        }
+
+        /// <summary>
+        /// This computes the bounding box given a set of 4 coordinates specified via 2 simd vectors.
+        /// This effectively computes the horizontal min & max of both of the given vectors.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector128<float> GetAABB128(Vector128<float> x, Vector128<float> y)
+        {
             // x = [x0, x1, x2, x3]
             // y = [y0, y1, y2, y3]
 
@@ -130,8 +142,46 @@ namespace Robust.Shared.Maths
             return Sse41.Blend(min, max, 0b_1_1_0_0);
         }
 
+        /// <summary>
+        /// This computes the bounding box given a set of 4 coordinates specified via 2 simd vectors.
+        /// This effectively computes the horizontal min & max of both of the given vectors.
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector128<float> GetAABBSlower(Vector128<float> x, Vector128<float> y)
+        public static Vector128<float> GetAABB256(Vector128<float> x, Vector128<float> y)
+        {
+            var xy = Vector256.Create(x, y);
+            // xy = [x0, x1, x2, x3, y0, y1, y2, y3]
+
+            var xyPermuted = Avx.Permute(xy, 0b_10_11_00_01);
+            // xy_permuted = [x1, x0, x3, x2, y1, y0, y3, y2]
+
+            var min = Avx.Min(xy, xyPermuted);
+            var max = Avx.Max(xy, xyPermuted);
+            // min = [min(x0,x1), min(x0,x1), min(x2,x3), min(x2,x3), min(y0,y1), min(y0,x1), min(y2,y3), min(y2,y3)]
+
+            var minPermuted = Avx.Permute(min, 0b_00_00_10_10);
+            var maxPermuted = Avx.Permute(max, 0b_00_00_10_10);
+            // min_permuted = [min(x2,x3), min(x2,x3), min(x0,x1), min(x0,x1), min(y2,y3), min(y2,y3), min(y0,y1), min(y0,x1)]
+
+            min = Avx.Min(min, minPermuted);
+            max = Avx.Max(max, maxPermuted);
+            // min = [min(x0,x1,x2,x3), min(x0,x1,x2,x3), min(x0,x1,x2,x3), min(x0,x1,x2,x3), min(y0,y1,y2,y3), min(y0,y1,y2,y3), min(y0,y1,y2,y3), min(y0,y1,y2,y3)]
+
+            var minFlipped = Avx.Permute2x128(min, min, 0b_00_01);
+            var maxFlipped = Avx.Permute2x128(max, max, 0b_00_01);
+            // flip upper & lower 128 bits
+            // min_flipped = [min(y0,y1,y2,y3), min(y0,y1,y2,y3), min(y0,y1,y2,y3), min(y0,y1,y2,y3), min(x0,x1,x2,x3), min(x0,x1,x2,x3), min(x0,x1,x2,x3), min(x0,x1,x2,x3)]
+
+            min = Avx.Blend(min, minFlipped, 0b_00_00_10_10);
+            max = Avx.Blend(max, maxFlipped, 0b_00_00_10_10);
+            // min_flipped = [min(x0,x1,x2,x3), min(y0,y1,y2,y3), min(x0,x1,x2,x3), min(y0,y1,y2,y3), ...]
+
+            return Avx.Blend(min, max, 0b_00_00_11_00).GetLower();
+            // [min(x0,x1,x2,x3), min(y0,y1,y2,y3), max(x0,x1,x2,x3), max(y0,y1,y2,y3)]
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector128<float> GetAABBSlow(Vector128<float> x, Vector128<float> y)
         {
             var l = MinHorizontal128(x);
             var b = MinHorizontal128(y);
@@ -139,6 +189,8 @@ namespace Robust.Shared.Maths
             var t = MaxHorizontal128(y);
             return MergeRows128(l, b, r, t);
         }
+
+        #endregion
 
         // Given the following vectors:
         // x:       X X X X

@@ -33,8 +33,6 @@ namespace Robust.Shared.Maths
         public readonly Vector2 BottomLeft => Origin + Rotation.RotateVec(Box.BottomLeft - Origin);
         public readonly Vector2 Center => Origin + Rotation.RotateVec((Box.BottomLeft + Box.TopRight)/2 - Origin);
 
-        public readonly Matrix3x2 TransformOld => Matrix3Helpers.CreateTransform(Origin - Rotation.RotateVec(Origin), Rotation);
-
         public readonly Matrix3x2 Transform
         {
             get

@@ -10,11 +10,6 @@ public class Box2RotatedBenchmark
 {
     public Box2Rotated Box = new();
 
-    [Benchmark(Baseline = true)]
-    public Matrix3x2 GetTransformOld()
-    {
-        return Box.TransformOld;
-    }
 
     [Benchmark]
     public Matrix3x2 GetTransform()

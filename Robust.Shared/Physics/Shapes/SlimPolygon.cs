@@ -79,18 +79,16 @@ internal record struct SlimPolygon : IPhysShape
 
         Polygon.CalculateNormals(_vertices.AsSpan, _normals.AsSpan, 4);
 
-        // Midpoint between opposite corners
+        // Get midpoint between opposite corners
         Centroid = (_vertices._00 + _vertices._02)/2;
     }
 
-    public SlimPolygon(Box2Rotated box, Matrix3x2 transform) : this(box.Box,  box.Transform * transform)
+    public SlimPolygon(in Box2Rotated box, in Matrix3x2 transform) : this(in box.Box,  box.Transform * transform)
     {
-        Unsafe.SkipInit(out this);
     }
 
-    public SlimPolygon(Box2Rotated bounds) :  this(bounds.Box, bounds.Transform)
+    public SlimPolygon(in Box2Rotated bounds) :  this(in bounds.Box, bounds.Transform)
     {
-        Unsafe.SkipInit(out this);
     }
 
     public Box2 ComputeAABB(Transform transform, int childIndex)

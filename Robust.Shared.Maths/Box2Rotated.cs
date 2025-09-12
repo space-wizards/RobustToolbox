@@ -35,6 +35,7 @@ namespace Robust.Shared.Maths
 
         public readonly Matrix3x2 Transform
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
                 // Equivalent to
@@ -50,10 +51,10 @@ namespace Robust.Shared.Maths
                 return new Matrix3x2
                 {
                     M11 = cos,
-                    M21 = -sin,
-                    M31 = dx,
                     M12 = sin,
+                    M21 = -sin,
                     M22 = cos,
+                    M31 = dx,
                     M32 = dy,
                 };
             }

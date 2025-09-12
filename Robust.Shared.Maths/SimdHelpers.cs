@@ -9,34 +9,6 @@ namespace Robust.Shared.Maths
     /// </summary>
     internal static class SimdHelpers
     {
-        /// <returns>A vector with the horizontal minimum and maximum values arranged as { min max min max} .</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector128<float> MinMaxHorizontalSse(Vector128<float> input)
-        {
-            var tmp = Sse.Shuffle(input, input, 0b00_01_10_11);
-            var min = Sse.Min(tmp, input);
-            var max = Sse.Max(tmp, input);
-            tmp = Sse.Shuffle(min, max, 0b01_00_00_01);
-            min = Sse.Min(tmp, min);
-            max = Sse.Max(tmp, max);
-            tmp = Sse.MoveScalar(max, min); // no generic Vector128 equivalent :(
-            return Sse.Shuffle(tmp, tmp, 0b11_00_11_00);
-        }
-
-        /// <returns>A vector with the horizontal minimum and maximum values arranged as { max min max min} .</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector128<float> MaxMinHorizontalSse(Vector128<float> input)
-        {
-            var tmp = Sse.Shuffle(input, input, 0b00_01_10_11);
-            var min = Sse.Min(tmp, input);
-            var max = Sse.Max(tmp, input);
-            tmp = Sse.Shuffle(min, max, 0b01_00_00_01);
-            min = Sse.Min(tmp, min);
-            max = Sse.Max(tmp, max);
-            tmp = Sse.MoveScalar(max, min); // no generic Vector128 equivalent :(
-            return Sse.Shuffle(tmp, tmp, 0b00_11_00_11);
-        }
-
         /// <returns>The min value is broadcast to the whole vector.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector128<float> MinHorizontal128(Vector128<float> v)
@@ -86,7 +58,7 @@ namespace Robust.Shared.Maths
         /// This effectively computes the horizontal min & max of both of the given vectors.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static Vector128<float> GetAABB(Vector128<float> x, Vector128<float> y)
+        public static Vector128<float> GetAABB(Vector128<float> x, Vector128<float> y)
         {
             return Avx.IsSupported ? GetAABBAvx(x, y) : GetAABBSlow(x, y);
         }
@@ -96,7 +68,7 @@ namespace Robust.Shared.Maths
         /// This effectively computes the horizontal min & max of both of the given vectors.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static Vector128<float> GetAABBAvx(Vector128<float> x, Vector128<float> y)
+        public static Vector128<float> GetAABBAvx(Vector128<float> x, Vector128<float> y)
         {
             // This can be turned into a 256 bit version that only needs 4 min/max instead of 6
             // But the performance difference seems negligible.
@@ -143,7 +115,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static Vector128<float> GetAABBSlow(Vector128<float> x, Vector128<float> y)
+        public static Vector128<float> GetAABBSlow(Vector128<float> x, Vector128<float> y)
         {
             var l = MinHorizontal128(x);
             var b = MinHorizontal128(y);

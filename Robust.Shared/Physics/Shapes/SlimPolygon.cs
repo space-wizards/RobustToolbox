@@ -56,7 +56,7 @@ internal record struct SlimPolygon : IPhysShape
     /// <summary>
     /// Construct polygon by applying a transformation to a box.
     /// </summary>
-    internal SlimPolygon(in Box2 box, in Matrix3x2 transform)
+    public SlimPolygon(in Box2 box, in Matrix3x2 transform)
     {
         Unsafe.SkipInit(out this);
         Radius = 0f;
@@ -87,8 +87,31 @@ internal record struct SlimPolygon : IPhysShape
     {
     }
 
-    public SlimPolygon(in Box2Rotated bounds) :  this(in bounds.Box, bounds.Transform)
+    public SlimPolygon(in Box2Rotated box)
     {
+        Unsafe.SkipInit(out this);
+        Radius = 0f;
+
+        box.GetVertices(out var x, out var y);
+
+        if (Sse.IsSupported)
+        {
+            var span = MemoryMarshal.Cast<Vector2, Vector128<float>>(_vertices.AsSpan);
+            span[0] = Sse.UnpackLow(x, y);
+            span[1] = Sse.UnpackHigh(x, y);
+        }
+        else
+        {
+            _vertices._00 = new Vector2(x[0], y[0]);
+            _vertices._01 = new Vector2(x[1], y[1]);
+            _vertices._02 = new Vector2(x[2], y[2]);
+            _vertices._03 = new Vector2(x[3], y[3]);
+        }
+
+        Polygon.CalculateNormals(_vertices.AsSpan, _normals.AsSpan, 4);
+
+        // Get midpoint between opposite corners
+        Centroid = (_vertices._00 + _vertices._02) / 2;
     }
 
     public Box2 ComputeAABB(Transform transform, int childIndex)

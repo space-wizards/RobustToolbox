@@ -5,27 +5,21 @@ using Robust.Shared.Maths;
 
 namespace Robust.Benchmarks.NumericsHelpers;
 
-[Virtual]
+[Virtual, DisassemblyDiagnoser]
 public class GetAABBBenchmark
 {
     public Vector128<float> X;
     public Vector128<float> Y;
 
     [Benchmark(Baseline = true)]
-    public Vector128<float> GetAABB()
+    public Vector128<float> GetAABB_NoAvx()
     {
         return SimdHelpers.GetAABBSlow(X, Y);
     }
 
     [Benchmark]
-    public Vector128<float> GetAABB128()
+    public Vector128<float> GetAABB_Avx()
     {
-        return SimdHelpers.GetAABB128(X, Y);
-    }
-
-    [Benchmark]
-    public Vector128<float> GetAABB256()
-    {
-        return SimdHelpers.GetAABB256(X, Y);
+        return SimdHelpers.GetAABBAvx(X, Y);
     }
 }

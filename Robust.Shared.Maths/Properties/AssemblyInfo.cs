@@ -4,6 +4,8 @@
 [module: SkipLocalsInit]
 #endif
 
+[assembly: InternalsVisibleTo("Robust.Shared")]
+[assembly: InternalsVisibleTo("Robust.Server")]
 [assembly: InternalsVisibleTo("Robust.Client")]
 [assembly: InternalsVisibleTo("Robust.UnitTesting")]
 [assembly: InternalsVisibleTo("Robust.Benchmarks")]

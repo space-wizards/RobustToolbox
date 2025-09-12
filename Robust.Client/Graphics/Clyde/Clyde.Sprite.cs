@@ -169,12 +169,11 @@ internal partial class Clyde
         var boxVec = Unsafe.As<Box2, Vector128<float>>(ref Unsafe.AsRef(in box));
         var sin = Vector128.Create(MathF.Sin(angle));
         var cos = Vector128.Create(MathF.Cos(angle));
-        var x = Vector128.Shuffle(boxVec, Vector128.Create(0, 0, 2, 2));
-        var y = Vector128.Shuffle(boxVec, Vector128.Create(1, 3, 3, 1));
+        var boxX = Vector128.Shuffle(boxVec, Vector128.Create(0, 0, 2, 2));
+        var boxY = Vector128.Shuffle(boxVec, Vector128.Create(1, 3, 3, 1));
 
-        x = x * cos - y * sin;
-        y = x * sin + y * cos;
-
+        var x = boxX * cos - boxY * sin;
+        var y = boxX * sin + boxY * cos;
         var lbrt = SimdHelpers.GetAABB(x, y);
 
         // This function is for sprites, which flip the y axis, so here we flip the definition of t and b.

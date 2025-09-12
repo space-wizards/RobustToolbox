@@ -118,11 +118,11 @@ namespace Robust.Shared.Maths
             var cos = Vector128.Create((float) Math.Cos(Rotation));
             var sin = Vector128.Create((float) Math.Sin(Rotation));
 
-            x = Vector128.Shuffle(boxVec, Vector128.Create(0, 2, 2, 0)) - originX;
-            y = Vector128.Shuffle(boxVec, Vector128.Create(1, 1, 3, 3)) - originY;
+            var boxX = Vector128.Shuffle(boxVec, Vector128.Create(0, 2, 2, 0)) - originX;
+            var boxY = Vector128.Shuffle(boxVec, Vector128.Create(1, 1, 3, 3)) - originY;
 
-            x = x * cos - y * sin + originX;
-            y = x * sin + y * cos + originY;
+            x = boxX * cos - boxY * sin + originX;
+            y = boxX * sin + boxY * cos + originY;
         }
 
         public readonly bool Contains(Vector2 worldPoint)

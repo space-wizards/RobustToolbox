@@ -28,6 +28,7 @@ namespace Robust.Client.UserInterface
             TabContainer.SetTabTitle(UI, "User Interface");
             TabContainer.SetTabTitle(Perf, "Profiling");
             TabContainer.SetTabTitle(Textures, Loc.GetString("dev-window-tab-textures-title"));
+            TabContainer.SetTabTitle(RenderTargets, Loc.GetString("dev-window-tab-render-targets-title"));
 
             Stylesheet =
                 new DefaultStylesheet(IoCManager.Resolve<IResourceCache>(), IoCManager.Resolve<IUserInterfaceManager>()).Stylesheet;

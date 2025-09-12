@@ -354,15 +354,17 @@ namespace Robust.Client.Graphics.Clyde
                 _windowHandles.Add(reg.Handle);
 
                 var rtId = AllocRid();
+                var renderTarget = new RenderWindow(this, rtId);
                 _renderTargets.Add(rtId, new LoadedRenderTarget
                 {
                     Size = reg.FramebufferSize,
                     IsWindow = true,
                     WindowId = reg.Id,
-                    IsSrgb = true
+                    IsSrgb = true,
+                    Instance = new WeakReference<RenderTargetBase>(renderTarget),
                 });
 
-                reg.RenderTarget = new RenderWindow(this, rtId);
+                reg.RenderTarget = renderTarget;
 
                 _glContext!.WindowCreated(glSpec, reg);
             }

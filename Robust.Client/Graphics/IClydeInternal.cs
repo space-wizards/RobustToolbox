@@ -55,6 +55,7 @@ namespace Robust.Client.Graphics
 
         Texture GetStockTexture(ClydeStockTexture stockTexture);
         IEnumerable<(Clyde.Clyde.ClydeTexture, Clyde.Clyde.LoadedTexture)> GetLoadedTextures();
+        IEnumerable<(Clyde.Clyde.RenderTargetBase, Clyde.Clyde.LoadedRenderTarget)> GetLoadedRenderTextures();
 
         ClydeDebugLayers DebugLayers { get; set; }
 
@@ -85,5 +86,7 @@ namespace Robust.Client.Graphics
         void ViewportsClearAllCached();
 
 #endif // TOOLS
+
+        void RenderNow(IRenderTarget renderTarget, Action<IRenderHandle> callback);
     }
 }

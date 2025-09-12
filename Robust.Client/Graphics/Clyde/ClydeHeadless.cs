@@ -76,6 +76,11 @@ namespace Robust.Client.Graphics.Clyde
             return [];
         }
 
+        public IEnumerable<(Clyde.RenderTargetBase, Clyde.LoadedRenderTarget)> GetLoadedRenderTextures()
+        {
+            return [];
+        }
+
         public ClydeDebugLayers DebugLayers { get; set; }
 
         public string GetKeyName(Keyboard.Key key) => string.Empty;
@@ -316,6 +321,10 @@ namespace Robust.Client.Graphics.Clyde
             throw new NotImplementedException();
         }
 #endif // TOOLS
+
+        public void RenderNow(IRenderTarget renderTarget, Action<IRenderHandle> callback)
+        {
+        }
 
         private sealed class DummyCursor : ICursor
         {

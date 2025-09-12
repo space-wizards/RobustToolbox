@@ -33,7 +33,31 @@ namespace Robust.Shared.Maths
         public readonly Vector2 BottomLeft => Origin + Rotation.RotateVec(Box.BottomLeft - Origin);
         public readonly Vector2 Center => Origin + Rotation.RotateVec((Box.BottomLeft + Box.TopRight)/2 - Origin);
 
-        public Matrix3x2 Transform => Matrix3Helpers.CreateTransform(Origin - Rotation.RotateVec(Origin), Rotation);
+        public Matrix3x2 Transform
+        {
+            get
+            {
+                // Equivalent to
+                // Matrix3Helpers.CreateTransform(Origin - Rotation.RotateVec(Origin), Rotation)
+
+                var angle = (float) Rotation;
+                var sin = MathF.Sin(angle);
+                var cos = MathF.Cos(angle);
+                var cos1 = 1 - cos;
+                var dx = cos1 * Origin.X + sin * Origin.Y;
+                var dy = - sin * Origin.X + cos1 * Origin.Y;
+
+                return new Matrix3x2
+                {
+                    M11 = cos,
+                    M21 = -sin,
+                    M31 = dx,
+                    M12 = sin,
+                    M22 = cos,
+                    M32 = dy,
+                };
+            }
+        }
 
         public Box2Rotated(Vector2 bottomLeft, Vector2 topRight)
             : this(new Box2(bottomLeft, topRight))
@@ -133,7 +157,21 @@ namespace Robust.Shared.Maths
         /// <inheritdoc />
         public readonly bool Equals(Box2Rotated other)
         {
-            return Box.Equals(other.Box) && Rotation.Equals(other.Rotation);
+            return Box.Equals(other.Box) && Rotation.Equals(other.Rotation) && Origin.Equals(other.Origin);
+        }
+
+        public readonly bool EqualsApprox(Box2Rotated other)
+        {
+            return Box.EqualsApprox(other.Box)
+                   && Rotation.EqualsApprox(other.Rotation)
+                   && Origin.EqualsApprox(other.Origin);
+        }
+
+        public readonly bool EqualsApprox(Box2Rotated other, double tolerance)
+        {
+            return Box.EqualsApprox(other.Box, tolerance)
+                   && Rotation.EqualsApprox(other.Rotation, tolerance)
+                   && Origin.EqualsApprox(other.Origin, tolerance);
         }
 
         /// <inheritdoc />

@@ -79,6 +79,67 @@ namespace Robust.Shared.Maths
             return n + d;
         }
 
+        /// <summary>
+        /// This computes the bounding box given a set of 4 coordinates specified via 2 simd vectors.
+        /// This effectively computes the horizontal min & max of both of the given vectors.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector128<float> GetAABB(Vector128<float> x, Vector128<float> y)
+        {
+            if (!Avx.IsSupported)
+                return GetAABBSlower(x, y);
+
+            // x = [x0, x1, x2, x3]
+            // y = [y0, y1, y2, y3]
+
+            var xmin = Vector128.Shuffle(x, Vector128.Create(1, 0, 3, 2));
+            xmin = Sse.Min(xmin, x);
+            // xmin = [min(x0,x1), min(x0,x1), min(x2,x3), min(x2,x3)]
+
+            var ymin = Vector128.Shuffle(y, Vector128.Create(1, 0, 3, 2));
+            ymin = Sse.Min(ymin, y);
+            // ymin = [min(y0,y1), min(y0,x1), min(y2,y3), min(y2,y3)]
+
+            var xymin = Sse41.Blend(xmin, ymin, 0b_1_0_1_0);
+            // xymin = [min(x0,x1), min(y0,y1), min(x2,x3), min(y2,y3)]
+
+            var xyminPermuted = Avx.Permute(xymin, 0b_00_00_11_10);
+            // xymin_permuted = [min(x2,x3), min(y2,y3), ..., ... ]
+
+            var min = Sse.Min(xymin, xyminPermuted);
+            // min = [min(x0,x1,x2,x3), min(y0,y1,y2,y3), ..., ... ]
+
+            var xmax = Vector128.Shuffle(x, Vector128.Create(1, 0, 3, 2));
+            xmax = Sse.Max(xmax, x);
+            // xmax = [max(x0,x1), max(x0,x1), max(x2,x3), max(x2,x3)]
+
+            var ymax = Vector128.Shuffle(y, Vector128.Create(1, 0, 3, 2));
+            ymax = Sse.Max(ymax, y);
+            // ymax = [max(y0,y1), max(y0,y1), max(y2,y3), max(y2,y3)]
+
+            var xymax = Sse41.Blend(xmax, ymax, 0b_1_0_1_0);
+            // xymax = [max(x0,x1), max(y0,y1), max(x2,x3), max(y2,y3)]
+
+            var xymaxPermuted = Avx.Permute(xymax, 0b_01_00_00_00);
+            // xymax_permuted = [.., .., max(x0,x1), max(y0,y1) ]
+
+            var max = Sse.Max(xymax, xymaxPermuted);
+            // max = [.., .., max(x0,x1,x2,x3), max(y0,y1,y2,y3) ]
+
+            // result = [min(x0,x1,x2,x3), min(y0,y1,y2,y3), max(x0,x1,x2,x3), max(y0,y1,y2,y3) ]
+            return Sse41.Blend(min, max, 0b_1_1_0_0);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector128<float> GetAABBSlower(Vector128<float> x, Vector128<float> y)
+        {
+            var l = MinHorizontal128(x);
+            var b = MinHorizontal128(y);
+            var r = MaxHorizontal128(x);
+            var t = MaxHorizontal128(y);
+            return MergeRows128(l, b, r, t);
+        }
+
         // Given the following vectors:
         // x:       X X X X
         // y:       Y Y Y Y

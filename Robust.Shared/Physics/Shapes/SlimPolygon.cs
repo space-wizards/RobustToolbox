@@ -1,6 +1,9 @@
 using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -45,25 +48,57 @@ internal record struct SlimPolygon : IPhysShape
         _normals._01 = new Vector2(1.0f, 0.0f);
         _normals._02 = new Vector2(0.0f, 1.0f);
         _normals._03 = new Vector2(-1.0f, 0.0f);
+
+        // TODO why was Centroid not set?
+        Centroid = box.Center;
     }
 
-    public SlimPolygon(Box2Rotated bounds)
+    /// <summary>
+    /// Construct polygon by applying a transformation to a box.
+    /// </summary>
+    internal SlimPolygon(in Box2 box, in Matrix3x2 transform)
     {
         Unsafe.SkipInit(out this);
         Radius = 0f;
 
-        _vertices._00 = bounds.BottomLeft;
-        _vertices._01 = bounds.BottomRight;
-        _vertices._02 = bounds.TopRight;
-        _vertices._03 = bounds.TopLeft;
+        transform.TransformBox(box, out var x, out var y);
+
+        if (Sse.IsSupported)
+        {
+            var span = MemoryMarshal.Cast<Vector2, Vector128<float>>(_vertices.AsSpan);
+            span[0]  = Sse.UnpackLow(x, y);
+            span[1] = Sse.UnpackHigh(x, y);
+        }
+        else
+        {
+            _vertices._00 = new Vector2(x[0], y[0]);
+            _vertices._01 = new Vector2(x[1], y[1]);
+            _vertices._02 = new Vector2(x[2], y[2]);
+            _vertices._03 = new Vector2(x[3], y[3]);
+        }
 
         Polygon.CalculateNormals(_vertices.AsSpan, _normals.AsSpan, 4);
 
-        Centroid = bounds.Center;
+        // Midpoint between opposite corners
+        Centroid = (_vertices._00 + _vertices._02)/2;
+    }
+
+    public SlimPolygon(Box2Rotated box, Matrix3x2 transform) : this(box.Box,  box.Transform * transform)
+    {
+        Unsafe.SkipInit(out this);
+    }
+
+    public SlimPolygon(Box2Rotated bounds) :  this(bounds.Box, bounds.Transform)
+    {
+        Unsafe.SkipInit(out this);
     }
 
     public Box2 ComputeAABB(Transform transform, int childIndex)
     {
+        // TODO PHYSICS PERF
+        // This should probably be simdified if its used a lot.
+        // i.e., something like Box2's matrix transformation code.
+
         DebugTools.Assert(VertexCount > 0);
         DebugTools.Assert(childIndex == 0);
         var verts = _vertices.AsSpan;

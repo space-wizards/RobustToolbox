@@ -57,6 +57,9 @@ namespace Robust.Shared.Maths
         /// This computes the bounding box given a set of 4 coordinates specified via 2 simd vectors.
         /// This effectively computes the horizontal min & max of both of the given vectors.
         /// </summary>
+        /// <remarks>
+        /// Returns a simd vector that can be directly cast to a <see cref="Box2"/>.
+        /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector128<float> GetAABB(Vector128<float> x, Vector128<float> y)
         {

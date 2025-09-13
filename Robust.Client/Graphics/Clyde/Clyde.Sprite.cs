@@ -176,7 +176,7 @@ internal partial class Clyde
         var y = boxX * sin + boxY * cos;
         var lbrt = SimdHelpers.GetAABB(x, y);
 
-        // This function is for sprites, which flip the y axis, so here we flip the definition of t and b.
+        // This function is for sprites, which flip the y-axis via the scale, so we need to flip t & b.
         DebugTools.Assert(scale.Y < 0);
         lbrt = Vector128.Shuffle(lbrt, Vector128.Create(0,3,2,1));
 

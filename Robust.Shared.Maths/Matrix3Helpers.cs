@@ -32,7 +32,7 @@ public static class Matrix3Helpers
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Box2 TransformBox(this Matrix3x2 refFromBox, in Box2Rotated box )
+    public static Box2 TransformBox(this Matrix3x2 refFromBox, in Box2Rotated box)
     {
         return (box.Transform * refFromBox).TransformBox(box.Box);
     }
@@ -49,12 +49,8 @@ public static class Matrix3Helpers
 
     public static Box2 TransformBox(this Matrix3x2 refFromBox, in Box2 box)
     {
-        // Do transformation on all 4 corners of the box at once.
         TransformBox(refFromBox, box, out var x, out var y);
-
-        // Then min/max the results to get the new AABB.
         var aabb = SimdHelpers.GetAABB(x, y);
-
         return Unsafe.As<Vector128<float>, Box2>(ref aabb);
     }
 
@@ -97,10 +93,8 @@ public static class Matrix3Helpers
     public static Matrix3x2 CreateTransform(float posX, float posY, double angle)
     {
         // returns a matrix that is equivalent to returning CreateRotation(angle) * CreateTranslation(posX, posY)
-
         var sin = (float) Math.Sin(angle);
         var cos = (float) Math.Cos(angle);
-
         return new Matrix3x2
         {
             M11 = cos,

@@ -38,9 +38,8 @@ namespace Robust.Shared.Maths
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                // Equivalent to
-                // Matrix3Helpers.CreateTransform(Origin - Rotation.RotateVec(Origin), Rotation)
-
+                // Equivalent to  Matrix3Helpers.CreateTransform(Origin - Rotation.RotateVec(Origin), Rotation)
+                // but ~20% faster
                 var angle = (float) Rotation;
                 var sin = MathF.Sin(angle);
                 var cos = MathF.Cos(angle);

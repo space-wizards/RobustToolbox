@@ -4,13 +4,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Map.Events;
 using Robust.Shared.Maths;
-using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Utility;
 
@@ -265,6 +263,30 @@ public sealed partial class MapLoaderSystem
 
         map = new(mapUid, Comp<MapComponent>(mapUid));
         return true;
+    }
+
+    /// <summary>
+    /// Tries to load the full game save state from a file.
+    /// Handles only loading, doesn't actually flush any entities.
+    /// </summary>
+    public bool TryLoadGame(
+        ResPath path,
+        DeserializationOptions? options = null)
+    {
+        var opts = new MapLoadOptions
+        {
+            DeserializationOptions = options ?? DeserializationOptions.Default,
+            ExpectedCategory = FileCategory.Save
+        };
+
+        if (!TryLoadGeneric(path, out var result, opts))
+            return false;
+
+        if (result.Entities.Count + result.NullspaceEntities.Count != 0) // Make sure we loaded at least some entities
+            return true;
+
+        Delete(result);
+        return false;
     }
 
     private void ApplyTransform(EntityDeserializer deserializer, MapLoadOptions opts)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Robust.Shared.Player;
 using Robust.Shared.Reflection;
+using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Console
@@ -33,6 +34,8 @@ namespace Robust.Shared.Console
     /// </summary>
     public interface IConsoleHost
     {
+        void Initialize();
+
         /// <summary>
         /// Is the shell running on the client?
         /// </summary>
@@ -49,9 +52,22 @@ namespace Robust.Shared.Console
         IConsoleShell LocalShell { get; }
 
         /// <summary>
-        /// A map of (commandName -> ICommand) of every registered command in the shell.
+        /// All currently available commands in the shell indexed by the command name.
         /// </summary>
+        /// <remarks>
+        /// This will generally contain a combination of currently available locally defined commands, and if this is
+        /// a client, proxies for remotely executing server-side commands.
+        /// </remarks>
         IReadOnlyDictionary<string, IConsoleCommand> AvailableCommands { get; }
+
+        /// <summary>
+        /// All locally registered commands in the shell indexed by the command name.
+        /// </summary>
+        /// <remarks>
+        /// Unlike <see cref="AvailableCommands"/>, this only ever contains locally defined commands. This does not
+        /// contain locally defined toolshed commands, nor does it contain proxies for remotely executed commands.
+        /// </remarks>
+        IReadOnlyDictionary<string, IConsoleCommand> RegisteredCommands { get; }
 
         /// <summary>
         /// Invoked before any console command is executed.

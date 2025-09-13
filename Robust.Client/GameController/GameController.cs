@@ -43,6 +43,7 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
+using Robust.Shared.Toolshed;
 using Robust.Shared.Upload;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
@@ -95,6 +96,7 @@ namespace Robust.Client
         [Dependency] private readonly IReplayRecordingManagerInternal _replayRecording = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IReloadManager _reload = default!;
+        [Dependency] private readonly ToolshedManager _toolshed = default!;
         [Dependency] private readonly ILocalizationManager _loc = default!;
 
         private IWebViewManagerHook? _webViewHook;
@@ -195,6 +197,7 @@ namespace Robust.Client
             _reflectionManager.Initialize();
             _prototypeManager.Initialize();
             _prototypeManager.LoadDefaultPrototypes();
+            _toolshed.Initialize();
             _xamlProxyManager.Initialize();
             _xamlHotReloadManager.Initialize();
             _userInterfaceManager.Initialize();

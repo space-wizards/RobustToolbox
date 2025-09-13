@@ -110,7 +110,7 @@ public sealed partial class MapLoaderSystem
 
         // Using a local deserializer instead of a cached value, both to ensure that we don't accidentally carry over
         // data from a previous serializations, and because some entities cause other maps/grids to be loaded during
-        // during mapinit.
+        // mapinit.
         var deserializer = new EntityDeserializer(
             _dependency,
             data,
@@ -121,6 +121,17 @@ public sealed partial class MapLoaderSystem
         if (!deserializer.TryProcessData())
         {
             Log.Debug($"Failed to process entity data in {fileName}");
+            return false;
+        }
+
+        // If the file isn't of the expected category, stop before we ever create any entities.
+        if (opts.ExpectedCategory is { } expected
+            && expected != deserializer.Result.Category
+            && deserializer.Result.Category != FileCategory.Unknown)
+        {
+            // Did someone try to load a map file as a grid or vice versa?
+            Log.Error($"Map {fileName} does not contain the expected data. Expected {expected} but got {deserializer.Result.Category}");
+            Delete(deserializer.Result);
             return false;
         }
 
@@ -135,6 +146,8 @@ public sealed partial class MapLoaderSystem
             throw;
         }
 
+        // If the map file was an older version, the category has to be inferred from the file's contents in CreateEntities()
+        // Hence the category is checked again here.
         if (opts.ExpectedCategory is { } exp && exp != deserializer.Result.Category)
         {
             // Did someone try to load a map file as a grid or vice versa?

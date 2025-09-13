@@ -111,6 +111,11 @@ public sealed class EntitySerializer : ISerializationContext,
     public readonly Dictionary<string, List<int>> Prototypes = new();
 
     /// <summary>
+    /// Set of entities that have encountered issues during serialization and are now being ignored.
+    /// </summary>
+    public HashSet<EntityUid> ErroringEntities = new();
+
+    /// <summary>
     /// Yaml ids of all serialized map entities.
     /// </summary>
     public readonly List<int> Maps = new();
@@ -412,7 +417,7 @@ public sealed class EntitySerializer : ISerializationContext,
 
         // It might be possible that something could cause an entity to be included twice.
         // E.g., if someone serializes a grid w/o its map, and then tries to separately include the map and all its children.
-        // In that case, the grid would already have been serialized as a orphan.
+        // In that case, the grid would already have been serialized as an orphan.
         // uhhh.... I guess its fine?
         if (EntityData.ContainsKey(saveId))
             return;
@@ -489,6 +494,95 @@ public sealed class EntitySerializer : ISerializationContext,
             xform._localRotation = 0;
         }
 
+        try
+        {
+            SerializeComponents(uid, cache, components);
+        }
+        catch(Exception e)
+        {
+            if (Options.EntityExceptionBehaviour == EntityExceptionBehaviour.Rethrow)
+            {
+                _log.Error($"Caught exception while serializing component {CurrentComponent} of entity {EntMan.ToPrettyString(uid)}");
+                throw;
+            }
+
+            _log.Error($"Caught exception while serializing component {CurrentComponent} of entity {EntMan.ToPrettyString(uid)}:\n{e}");
+            CurrentEntityYamlUid = 0;
+            CurrentEntity = null;
+            CurrentComponent = null;
+            RemoveErroringEntity(uid);
+            return;
+        }
+
+        CurrentComponent = null;
+        if (components.Count != 0)
+            entData.Add("components", components);
+
+        // TODO ENTITY SERIALIZATION
+        // Consider adding a Action<EntityUid, MappingDataNode>? OnEntitySerialized
+        // I.e., allow content to modify the per-entity data? I don't know if that would actually be useful, as content
+        // could just as easily append a separate entity dictionary to the output that has the extra per-entity data they
+        // want to serialize.
+
+        if (meta.EntityPrototype == null)
+        {
+            CurrentEntityYamlUid = 0;
+            CurrentEntity = null;
+            return;
+        }
+
+        // an entity may have fewer components than the original prototype, so we need to check if any are missing.
+        SequenceDataNode? missingComponents = null;
+        foreach (var (name, comp) in meta.EntityPrototype.Components)
+        {
+            // try comp instead of has-comp as it checks whether the component is supposed to have been
+            // deleted.
+            if (EntMan.TryGetComponent(uid, comp.Component.GetType(), out _))
+                continue;
+
+            missingComponents ??= new();
+            missingComponents.Add(new ValueDataNode(name));
+        }
+
+        if (missingComponents != null)
+            entData.Add("missingComponents", missingComponents);
+
+        CurrentEntityYamlUid = 0;
+        CurrentEntity = null;
+    }
+
+    /// <summary>
+    /// Remove an exception throwing entity (and possibly its children) from the serialized data.
+    /// </summary>
+    private void RemoveErroringEntity(EntityUid uid)
+    {
+        if (Options.EntityExceptionBehaviour == EntityExceptionBehaviour.IgnoreEntityAndChildren)
+        {
+            foreach (var child in _xformQuery.GetComponent(uid)._children)
+            {
+                RemoveErroringEntity(child);
+            }
+        }
+
+        ErroringEntities.Add(uid);
+        if (!YamlUidMap.TryGetValue(uid, out var yamlId))
+            return;
+
+        Nullspace.Remove(yamlId);
+        Orphans.Remove(yamlId);
+        Maps.Remove(yamlId);
+        Grids.Remove(yamlId);
+        EntityData.Remove(yamlId);
+        if (_metaQuery.TryGetComponent(uid, out var meta)
+            && meta.EntityPrototype != null
+            && Prototypes.TryGetValue(meta.EntityPrototype.ID, out var proto))
+        {
+            proto.Remove(yamlId);
+        }
+    }
+
+    private void SerializeComponents(EntityUid uid, Dictionary<string, MappingDataNode>? cache, SequenceDataNode components)
+    {
         foreach (var component in EntMan.GetComponentsInternal(uid))
         {
             var compType = component.GetType();
@@ -523,48 +617,12 @@ public sealed class EntitySerializer : ISerializationContext,
             // Don't need to write it if nothing was written! Note that if this entity has no associated
             // prototype, we ALWAYS want to write the component, because merely the fact that it exists is
             // information that needs to be written.
-            if (compMapping.Children.Count != 0 || protoMapping == null)
-            {
-                compMapping.InsertAt(0, "type", new ValueDataNode(reg.Name));
-                components.Add(compMapping);
-            }
-        }
-
-        CurrentComponent = null;
-        if (components.Count != 0)
-            entData.Add("components", components);
-
-        // TODO ENTITY SERIALIZATION
-        // Consider adding a Action<EntityUid, MappingDataNode>? OnEntitySerialized
-        // I.e., allow content to modify the per-entity data? I don't know if that would actually be useful, as content
-        // could just as easily append a separate entity dictionary to the output that has the extra per-entity data they
-        // want to serialize.
-
-        if (meta.EntityPrototype == null)
-        {
-            CurrentEntityYamlUid = 0;
-            CurrentEntity = null;
-            return;
-        }
-
-        // an entity may have less components than the original prototype, so we need to check if any are missing.
-        SequenceDataNode? missingComponents = null;
-        foreach (var (name, comp) in meta.EntityPrototype.Components)
-        {
-            // try comp instead of has-comp as it checks whether the component is supposed to have been
-            // deleted.
-            if (EntMan.TryGetComponent(uid, comp.Component.GetType(), out _))
+            if (compMapping.Children.Count == 0 && protoMapping != null)
                 continue;
 
-            missingComponents ??= new();
-            missingComponents.Add(new ValueDataNode(name));
+            compMapping.InsertAt(0, "type", new ValueDataNode(reg.Name));
+            components.Add(compMapping);
         }
-
-        if (missingComponents != null)
-            entData.Add("missingComponents", missingComponents);
-
-        CurrentEntityYamlUid = 0;
-        CurrentEntity = null;
     }
 
     private Dictionary<string, MappingDataNode>? GetProtoCache(EntityPrototype? proto)
@@ -656,7 +714,10 @@ public sealed class EntitySerializer : ISerializationContext,
 
     public SequenceDataNode WriteEntitySection()
     {
-        if (YamlIds.Count != YamlUidMap.Count || YamlIds.Count != EntityData.Count)
+        // Check that EntityData contains the expected number of entities.
+        if (Options.EntityExceptionBehaviour != EntityExceptionBehaviour.IgnoreEntity
+            && Options.EntityExceptionBehaviour != EntityExceptionBehaviour.IgnoreEntityAndChildren
+            && (YamlIds.Count != YamlUidMap.Count || YamlIds.Count != EntityData.Count))
         {
             // Maybe someone reserved a yaml id with ReserveYamlId() or implicitly with GetId() without actually
             // ever serializing the entity, This can lead to references to non-existent entities.
@@ -878,6 +939,7 @@ public sealed class EntitySerializer : ISerializationContext,
         if (YamlUidMap.TryGetValue(value, out var yamlId))
             return new ValueDataNode(yamlId.ToString(CultureInfo.InvariantCulture));
 
+
         if (CurrentComponent == _xformName)
         {
             if (value == EntityUid.Invalid)
@@ -886,9 +948,15 @@ public sealed class EntitySerializer : ISerializationContext,
             DebugTools.Assert(!Orphans.Contains(CurrentEntityYamlUid));
             Orphans.Add(CurrentEntityYamlUid);
 
-            if (Options.ErrorOnOrphan && CurrentEntity != null && value != Truncate)
+            if (Options.ErrorOnOrphan && CurrentEntity != null && value != Truncate && !ErroringEntities.Contains(value))
                 _log.Error($"Serializing entity {EntMan.ToPrettyString(CurrentEntity)} without including its parent {EntMan.ToPrettyString(value)}");
 
+            return new ValueDataNode("invalid");
+        }
+
+        if (ErroringEntities.Contains(value))
+        {
+            // Referenced entity already logged an error, so we just silently fail.
             return new ValueDataNode("invalid");
         }
 

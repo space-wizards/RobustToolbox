@@ -25,6 +25,13 @@ public static class Matrix3Helpers
         return a.EqualsApprox(b, (float) tolerance);
     }
 
+    [Obsolete("Use TransformBox")]
+    // This method was previously broken, and now just returns an bounding box pretending to be a Box2Rotated
+    public static Box2Rotated TransformBounds(this Matrix3x2 refFromBox, Box2Rotated box)
+    {
+        return new Box2Rotated(TransformBox(refFromBox, box));
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Box2 TransformBox(this Matrix3x2 refFromBox, Box2Rotated box)
     {

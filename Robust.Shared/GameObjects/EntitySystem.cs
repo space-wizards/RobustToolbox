@@ -99,22 +99,22 @@ namespace Robust.Shared.GameObjects
 
         protected void RaiseLocalEvent<T>(T message) where T : notnull
         {
-            EntityManager.EventBus.RaiseEvent(EventSource.Local, message);
+            EntityManager.EventBusInternal.RaiseEvent(EventSource.Local, message);
         }
 
         protected void RaiseLocalEvent<T>(ref T message) where T : notnull
         {
-            EntityManager.EventBus.RaiseEvent(EventSource.Local, ref message);
+            EntityManager.EventBusInternal.RaiseEvent(EventSource.Local, ref message);
         }
 
         protected void RaiseLocalEvent(object message)
         {
-            EntityManager.EventBus.RaiseEvent(EventSource.Local, message);
+            EntityManager.EventBusInternal.RaiseEvent(EventSource.Local, message);
         }
 
         protected void QueueLocalEvent(EntityEventArgs message)
         {
-            EntityManager.EventBus.QueueEvent(EventSource.Local, message);
+            EntityManager.EventBusInternal.QueueEvent(EventSource.Local, message);
         }
 
         protected void RaiseNetworkEvent(EntityEventArgs message)
@@ -158,23 +158,36 @@ namespace Robust.Shared.GameObjects
         protected void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = false)
             where TEvent : notnull
         {
-            EntityManager.EventBus.RaiseLocalEvent(uid, args, broadcast);
+            EntityManager.EventBusInternal.RaiseLocalEvent(uid, args, broadcast);
         }
 
         protected void RaiseLocalEvent(EntityUid uid, object args, bool broadcast = false)
         {
-            EntityManager.EventBus.RaiseLocalEvent(uid, args, broadcast);
+            EntityManager.EventBusInternal.RaiseLocalEvent(uid, args, broadcast);
         }
 
         protected void RaiseLocalEvent<TEvent>(EntityUid uid, ref TEvent args, bool broadcast = false)
             where TEvent : notnull
         {
-            EntityManager.EventBus.RaiseLocalEvent(uid, ref args, broadcast);
+            EntityManager.EventBusInternal.RaiseLocalEvent(uid, ref args, broadcast);
         }
 
         protected void RaiseLocalEvent(EntityUid uid, ref object args, bool broadcast = false)
         {
-            EntityManager.EventBus.RaiseLocalEvent(uid, ref args, broadcast);
+            EntityManager.EventBusInternal.RaiseLocalEvent(uid, ref args, broadcast);
+        }
+
+        protected void RaiseComponentEvent<TEvent, TComp>(EntityUid uid, TComp comp, ref TEvent args)
+            where TEvent : notnull
+            where TComp : IComponent
+        {
+            EntityManager.EventBusInternal.RaiseComponentEvent(uid, comp, ref args);
+        }
+
+        public void RaiseComponentEvent<TEvent>(EntityUid uid, IComponent component, ref TEvent args)
+            where TEvent : notnull
+        {
+            EntityManager.EventBusInternal.RaiseComponentEvent(uid, component, ref args);
         }
 
         #endregion

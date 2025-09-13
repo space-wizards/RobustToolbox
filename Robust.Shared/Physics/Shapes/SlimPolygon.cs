@@ -48,20 +48,21 @@ internal record struct SlimPolygon : IPhysShape
         _normals._01 = new Vector2(1.0f, 0.0f);
         _normals._02 = new Vector2(0.0f, 1.0f);
         _normals._03 = new Vector2(-1.0f, 0.0f);
-
-        // TODO why was Centroid not set?
         Centroid = box.Center;
     }
 
     /// <summary>
-    /// Construct polygon by applying a transformation to a box.
+    /// Construct polygon by applying a transformation to a rotated box while simultaneously computing the bounding box.
     /// </summary>
-    public SlimPolygon(in Box2 box, in Matrix3x2 transform)
+    public SlimPolygon(in Box2 box, in Matrix3x2 transform, out Box2 aabb)
     {
         Unsafe.SkipInit(out this);
         Radius = 0f;
 
         transform.TransformBox(box, out var x, out var y);
+
+        var tmp = SimdHelpers.GetAABB(x, y);
+        aabb = Unsafe.As<Vector128<float>, Box2>(ref tmp);
 
         if (Sse.IsSupported)
         {
@@ -77,13 +78,18 @@ internal record struct SlimPolygon : IPhysShape
             _vertices._03 = new Vector2(x[3], y[3]);
         }
 
-        Polygon.CalculateNormals(_vertices.AsSpan, _normals.AsSpan, 4);
+        Centroid = (_vertices._00 + _vertices._02) / 2;
 
-        // Get midpoint between opposite corners
-        Centroid = (_vertices._00 + _vertices._02)/2;
+        // TODO SIMD
+        // Probably use a special case for SlimPolygon
+        Polygon.CalculateNormals(_vertices.AsSpan, _normals.AsSpan, 4);
     }
 
-    public SlimPolygon(in Box2Rotated box, in Matrix3x2 transform) : this(in box.Box,  box.Transform * transform)
+    /// <summary>
+    /// Construct polygon by applying a transformation to a rotated box while simultaneously computing the bounding box.
+    /// </summary>
+    public SlimPolygon(in Box2Rotated box, in Matrix3x2 transform, out Box2 aabb)
+        : this(in box.Box, box.Transform * transform, out aabb)
     {
     }
 
@@ -108,10 +114,11 @@ internal record struct SlimPolygon : IPhysShape
             _vertices._03 = new Vector2(x[3], y[3]);
         }
 
-        Polygon.CalculateNormals(_vertices.AsSpan, _normals.AsSpan, 4);
-
-        // Get midpoint between opposite corners
         Centroid = (_vertices._00 + _vertices._02) / 2;
+
+        // TODO SIMD
+        // Probably use a special case for SlimPolygon
+        Polygon.CalculateNormals(_vertices.AsSpan, _normals.AsSpan, 4);
     }
 
     public Box2 ComputeAABB(Transform transform, int childIndex)

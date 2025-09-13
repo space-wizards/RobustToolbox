@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Robust.Client.Input;
@@ -100,6 +101,10 @@ namespace Robust.Client.Graphics.Clyde
                 _windowIconPath = new ResPath(iconPath);
 
             _windowingThread = Thread.CurrentThread;
+
+            // Default to SDL3 on ARM64. GLFW is not feature complete there (lacking file dialog implementation)
+            if (RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
+                _cfg.SetCVar(CVars.DisplayWindowingApi, "sdl3");
 
             var windowingApi = _cfg.GetCVar(CVars.DisplayWindowingApi);
             IWindowingImpl winImpl;
@@ -349,15 +354,17 @@ namespace Robust.Client.Graphics.Clyde
                 _windowHandles.Add(reg.Handle);
 
                 var rtId = AllocRid();
+                var renderTarget = new RenderWindow(this, rtId);
                 _renderTargets.Add(rtId, new LoadedRenderTarget
                 {
                     Size = reg.FramebufferSize,
                     IsWindow = true,
                     WindowId = reg.Id,
-                    IsSrgb = true
+                    IsSrgb = true,
+                    Instance = new WeakReference<RenderTargetBase>(renderTarget),
                 });
 
-                reg.RenderTarget = new RenderWindow(this, rtId);
+                reg.RenderTarget = renderTarget;
 
                 _glContext!.WindowCreated(glSpec, reg);
             }
@@ -373,6 +380,8 @@ namespace Robust.Client.Graphics.Clyde
 
             if (reg.IsDisposed)
                 return;
+
+            _sawmillWin.Debug($"Destroying window {reg.Id}");
 
             reg.IsDisposed = true;
 
@@ -398,10 +407,17 @@ namespace Robust.Client.Graphics.Clyde
             _glContext?.SwapAllBuffers();
         }
 
-        private void VSyncChanged(bool newValue)
+        public bool VsyncEnabled
         {
-            _vSync = newValue;
-            _glContext?.UpdateVSync();
+            get => _vSync;
+            set
+            {
+                if (_vSync == value)
+                    return;
+
+                _vSync = value;
+                _glContext?.UpdateVSync();
+            }
         }
 
         private void WindowModeChanged(int mode)

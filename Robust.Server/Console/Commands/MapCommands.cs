@@ -102,8 +102,8 @@ namespace Robust.Server.Console.Commands
             var sys = _system.GetEntitySystem<SharedMapSystem>();
             if (!sys.MapExists(mapId))
             {
-                shell.WriteError("Target map does not exist.");
-                return;
+                shell.WriteError($"MapID {intMapId} did not exist, creating without map init");
+                sys.CreateMap(mapId, false); // doesnt runmapinit to be conservative.
             }
 
             Vector2 offset = default;

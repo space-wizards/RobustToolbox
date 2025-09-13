@@ -45,7 +45,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* `Matrix3Helpers.TransformBounds()`  returning an incorrect result. Now it effectively behaves like `Matrix3Helpers.TransformBox()` and has been marked as obsolete.
 
 ### Other
 

@@ -8,6 +8,11 @@
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" PrivateAssets="All" />
   </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Robust.Shared">
+      <HintPath>..\..\bin\Content.Replay\Robust.Shared.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 
   <Import Project="..\MSBuild\Robust.Properties.targets" />
 </Project>

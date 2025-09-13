@@ -121,14 +121,10 @@ internal record struct SlimPolygon : IPhysShape
         Polygon.CalculateNormals(_vertices.AsSpan, _normals.AsSpan, 4);
     }
 
-    public Box2 ComputeAABB(Transform transform, int childIndex)
+    public Box2 ComputeAABBSlow(Transform transform)
     {
-        // TODO PHYSICS PERF
-        // This should probably be simdified if its used a lot.
-        // i.e., something like Box2's matrix transformation code.
-
+        // This is just Polygon.ComputeAABB
         DebugTools.Assert(VertexCount > 0);
-        DebugTools.Assert(childIndex == 0);
         var verts = _vertices.AsSpan;
         var lower = Transform.Mul(transform, verts[0]);
         var upper = lower;
@@ -142,6 +138,36 @@ internal record struct SlimPolygon : IPhysShape
 
         var r = new Vector2(Radius, Radius);
         return new Box2(lower - r, upper + r);
+    }
+
+    public Box2 ComputeAABBSse(Transform transform)
+    {
+        var span = MemoryMarshal.Cast<Vector2, Vector128<float>>(_vertices.AsSpan);
+        // Span = [x0, y0, x1, y1], [x2, y2, x3, y3]
+
+        var polyX = Sse.Shuffle(span[0], span[1], 0b_10_00_10_00);
+        var polyY = Sse.Shuffle(span[0], span[1], 0b_11_01_11_01);
+        // polyX = [x0, x1, x2, x3], polyY = [y0, y1, y2, y3]
+
+        SimdHelpers.Transform(transform, polyX, polyY, out var x, out var y);
+        var lbrt = SimdHelpers.GetAABB(x, y);
+
+        // Next we enlarge the bounds by th radius. i.e, box.Enlarged(R);
+        // TODO is this even needed for SlimPoly? Is the radius ever set to non-zero?
+        var zero = Vector128<float>.Zero;
+        var r = Vector128.Create(Radius);
+        lbrt = lbrt - Sse.MoveLowToHigh(r, zero) + Sse.MoveHighToLow(r, zero);
+        // lbrt = lbrt - [R, R, 0, 0] + [0, 0, R, R]
+
+        return Unsafe.As<Vector128<float>, Box2>(ref lbrt);
+    }
+
+    public Box2 ComputeAABB(Transform transform, int childIndex)
+    {
+        DebugTools.Assert(childIndex == 0);
+        return Sse.IsSupported
+            ? ComputeAABBSse(transform)
+            : ComputeAABBSlow(transform);
     }
 
     public bool Equals(SlimPolygon other)

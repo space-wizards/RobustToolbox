@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
@@ -10,6 +11,7 @@ using Robust.Shared.Toolshed.Commands.Generic;
 using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Toolshed.TypeParsers;
 using Robust.Shared.Toolshed.TypeParsers.Math;
+using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting.Shared.Toolshed;
 
@@ -161,7 +163,7 @@ public sealed class ToolshedTests : ToolshedTest
 
             AssertCompletionSingle($"ent e{ent.Id} emplace ", "{");
             AssertCompletionContains($"ent e{ent.Id} emplace {{ ", "val", "var", "f");
-            AssertCompletionContains($"ent e{ent.Id} emplace {{ val EntityUi", "EntityUi");
+            AssertCompletionContains($"ent e{ent.Id} emplace {{ val EntityUi", "EntityUid");
             AssertCompletionContains($"ent e{ent.Id} emplace {{ val EntityUid", "EntityUid");
             AssertCompletionContains($"ent e{ent.Id} emplace {{ val EntityUid $", "$value");
             AssertCompletionContains($"ent e{ent.Id} emplace {{ val EntityUid $val", "$value");
@@ -178,7 +180,7 @@ public sealed class ToolshedTests : ToolshedTest
 
             AssertCompletionContains("i 2 emplace { var ", "$value");
             AssertCompletionInvalid("i 2 emplace { var ", "wx");
-            AssertCompletionContains("player:list emplace { var ", "$value", "$ent", "$paused");
+            AssertCompletionContains("player:list emplace { var ", "$value", "$ent", "$name", "$userid");
             AssertCompletionInvalid("player:list emplace { var ", "wx");
             AssertCompletionContains("i 1 emplace { var $value empla", "emplace");
             AssertCompletionSingle("i 1 emplace { var $value emplace ", "{");
@@ -464,6 +466,77 @@ public sealed class ToolshedTests : ToolshedTest
 
             AssertCompletionEmpty("notarealcommand ");
             AssertCompletionEmpty("i 2 + { notarealcommand ");
+        });
+    }
+
+    /// <summary>
+    /// Test parsing and completion options for resource paths
+    /// </summary>
+    [Test]
+    public async Task TestPaths()
+    {
+        await Server.WaitAssertion(() =>
+        {
+            string[] folders =
+            [
+                "/TestPaths/folder/",
+                "/TestPaths/folder 2 - electric bogaloo/"
+            ];
+
+            string[] files =
+            [
+                $"{folders[0]}test.yml",
+                $"{folders[0]}test_-_2.yml",
+                $"{folders[0]}test - 3.yml",
+                $"{folders[0]}A!;.,-_'"
+            ];
+
+            // Setup files for testing
+            var resMan = Server.ResolveDependency<IResourceManager>();
+            resMan.UserData.CreateDir(new(folders[0]));
+            resMan.UserData.CreateDir(new(folders[1]));
+            resMan.UserData.WriteAllText(new(files[0]), "test1");
+            resMan.UserData.WriteAllText(new(files[1]), "test2");
+            resMan.UserData.WriteAllText(new(files[2]), "test3");
+            resMan.UserData.WriteAllText(new(files[3]), "test4");
+
+            // Currently, CompletionHelper.UserFilePath will always return the whole directory's contents as options
+
+            // Some paths can parse with or without quotes
+            AssertResult($"testcat {files[0]}", "test1");
+            AssertResult($"testcat {files[1]}", "test2");
+            AssertResult($"testcat \"{files[0]}\"", "test1");
+            AssertResult($"testcat \"{files[1]}\"", "test2");
+
+            // Other paths require quotes
+            AssertResult($"testcat \"{files[2]}\"", "test3");
+            AssertResult($"testcat \"/{files[3]}\"", "test4");
+            ParseError<NoImplementationError>($"testcat {files[2]}"); // no "-" command that takes in a string pipe
+            ParseError<UnknownCommandError>($"testcat {files[3]}");
+
+            // Paths must be rooted
+            AssertCompletionEmpty($"testcat fold", expectHint: true);
+
+            // non-existent dirs return no options
+            AssertCompletionEmpty($"testcat /folder/foo/", expectHint: true);
+
+            // CompletionHelper methods return all files/folders in the base directory. I.e., they don't do precise
+            // matching on the input
+            AssertCompletions($"testcat /TestPaths/fold", folders);
+            AssertCompletions($"testcat \"/TestPaths/fold", folders);
+            AssertCompletions($"testcat \"/TestPaths/fold\"", folders);
+            AssertCompletions($"testcat \"/TestPaths/folder ", folders);
+            AssertCompletions($"testcat \"/TestPaths/folder \"", folders);
+
+            AssertCompletions($"testcat {folders[0]}", files);
+            AssertCompletions($"testcat {folders[0]}test.", files);
+            AssertCompletions($"testcat \"{folders[0]}test.", files);
+            AssertCompletions($"testcat \"{folders[0]}test.\"", files);
+            AssertCompletions($"testcat \"{folders[0]}test ", files);
+            AssertCompletions($"testcat \"{folders[0]}test \"", files);
+            AssertCompletions($"testcat \"{folders[0]}A", files);
+            AssertCompletions($"testcat \"{folders[0]}A!;.,", files);
+            AssertCompletions($"testcat \"{folders[0]}A!;.,\"", files);
         });
     }
 

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.Toolshed.TypeParsers;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Toolshed.Commands.Vfs;
@@ -15,7 +16,11 @@ internal sealed class LsCommand : VfsCommand
     }
 
     [CommandImplementation("in")]
-    public IEnumerable<ResPath> LsIn(IInvocationContext ctx, ResPath @in)
+    public IEnumerable<ResPath> LsIn(
+        IInvocationContext ctx,
+        // TODO TOOLSHED add Vfs CurrentPath() aware path parser
+        [CommandArgument(customParser: typeof(GenericPathParser))]
+        ResPath @in)
     {
         var curPath = CurrentPath(ctx);
         if (@in.IsRooted)

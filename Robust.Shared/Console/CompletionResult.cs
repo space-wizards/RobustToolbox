@@ -74,6 +74,10 @@ public enum CompletionOptionFlags
     /// Therefore, tab completing it should keep the cursor on the current argument
     /// (instead of adding a space to go to the next one).
     /// </summary>
+    /// <remarks>
+    /// If the option should get quoted (e.g., it contains whitespaces), this flag means that only the opening quote
+    /// will be inserted.
+    /// </remarks>
     PartialCompletion = 1 << 0,
 
     /// <summary>
@@ -85,4 +89,14 @@ public enum CompletionOptionFlags
     /// Prevents suggestions from being escaped using <see cref="CommandParsing.Escape"/>.
     /// </summary>
     NoEscape = 1 << 2,
+
+    /// <summary>
+    /// Forces suggestions to always be wrapped in quotes, even if they don't contain characters that would usually
+    /// result in quotes being inserted. This takes precedence over <see cref="NoQuote"/>.
+    /// </summary>
+    /// <remarks>
+    /// Useful for commands with non-standard argument parsing, where we expect the options to potentially contain
+    /// characters with special meaning (e.g., file path parsing for toolshed commands).
+    /// </remarks>
+    AlwaysQuote = 1 << 3,
 }

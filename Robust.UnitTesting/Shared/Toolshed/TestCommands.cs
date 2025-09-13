@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Console;
+using Robust.Shared.ContentPack;
+using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Toolshed;
 using Robust.Shared.Toolshed.Syntax;
 using Robust.Shared.Toolshed.TypeParsers;
+using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting.Shared.Toolshed;
 
@@ -214,4 +217,16 @@ public sealed class TestNestedEnumerableCommand : ToolshedCommand
 
     [CommandImplementation]
     public IEnumerable<ProtoId<EntityCategoryPrototype>> Impl() => _arr.OrderByDescending(x => x.Id);
+}
+
+[ToolshedCommand]
+public sealed class TestCatCommand : ToolshedCommand
+{
+    [Dependency] private readonly IResourceManager _resMan = default!;
+
+    [CommandImplementation]
+    public string Impl(ResPath path)
+    {
+        return _resMan.UserData.TryReadAllText(path, out var result) ? result : string.Empty;
+    }
 }

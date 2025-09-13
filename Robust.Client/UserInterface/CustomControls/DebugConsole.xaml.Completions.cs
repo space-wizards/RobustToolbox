@@ -287,6 +287,7 @@ public sealed partial class DebugConsole
 
                 // If the replacement contains a space, we must quote it to treat it as a single argument.
                 var mustQuote = (completionFlags & CompletionOptionFlags.NoQuote) == 0 && insertValue.Contains(' ');
+                mustQuote |= (completionFlags & CompletionOptionFlags.AlwaysQuote) == CompletionOptionFlags.AlwaysQuote;
 
                 if ((completionFlags & CompletionOptionFlags.PartialCompletion) == 0)
                 {

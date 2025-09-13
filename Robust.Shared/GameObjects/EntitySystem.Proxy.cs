@@ -848,7 +848,7 @@ public partial class EntitySystem
     protected EntityUid SpawnAtPosition(string? prototype, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
         => EntityManager.SpawnAtPosition(prototype, coordinates, overrides);
 
-    /// <inheritdoc cref="IEntityManager.TrySpawnInContainer" />
+    /// <inheritdoc cref="IEntityManager.TrySpawnInContainer(string?,EntityUid,string,out EntityUid?,ContainerManagerComponent?,ComponentRegistry?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool TrySpawnInContainer(
         string? protoName,
@@ -861,7 +861,7 @@ public partial class EntitySystem
         return EntityManager.TrySpawnInContainer(protoName, containerUid, containerId, out uid, containerComp, overrides);
     }
 
-    /// <inheritdoc cref="IEntityManager.TrySpawnInContainer" />
+    /// <inheritdoc cref="IEntityManager.TrySpawnInContainer(string?,BaseContainer,out EntityUid?,ContainerManagerComponent?,ComponentRegistry?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool TrySpawnInContainer(
         string? protoName,
@@ -896,7 +896,7 @@ public partial class EntitySystem
         return EntityManager.SpawnNextToOrDrop(protoName, target, xform, overrides);
     }
 
-    /// <inheritdoc cref="IEntityManager.SpawnInContainerOrDrop" />
+    /// <inheritdoc cref="IEntityManager.SpawnInContainerOrDrop(string?,EntityUid,string,TransformComponent?,ContainerManagerComponent?,ComponentRegistry?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityUid SpawnInContainerOrDrop(
         string? protoName,
@@ -909,7 +909,7 @@ public partial class EntitySystem
         return EntityManager.SpawnInContainerOrDrop(protoName, containerUid, containerId, xform, container, overrides);
     }
 
-    /// <inheritdoc cref="IEntityManager.SpawnInContainerOrDrop" />
+    /// <inheritdoc cref="IEntityManager.SpawnInContainerOrDrop(string?,BaseContainer,TransformComponent?,ContainerManagerComponent?,ComponentRegistry?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityUid SpawnInContainerOrDrop(
         string? protoName,

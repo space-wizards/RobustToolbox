@@ -10,7 +10,6 @@ public class Box2RotatedBenchmark
 {
     public Box2Rotated Box = new();
 
-
     [Benchmark]
     public Matrix3x2 GetTransform()
     {

@@ -149,7 +149,7 @@ internal record struct SlimPolygon : IPhysShape
         var polyY = Sse.Shuffle(span[0], span[1], 0b_11_01_11_01);
         // polyX = [x0, x1, x2, x3], polyY = [y0, y1, y2, y3]
 
-        SimdHelpers.Transform(transform, polyX, polyY, out var x, out var y);
+        Transform.MulSimd(transform, polyX, polyY, out var x, out var y);
         var lbrt = SimdHelpers.GetAABB(x, y);
 
         // Next we enlarge the bounds by th radius. i.e, box.Enlarged(R);

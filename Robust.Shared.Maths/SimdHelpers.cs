@@ -1,7 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
-using Robust.Shared.Physics;
 
 namespace Robust.Shared.Maths
 {
@@ -152,15 +151,6 @@ namespace Robust.Shared.Maths
                 y.GetElement(0),
                 z.GetElement(0),
                 w.GetElement(0));
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Transform(in Transform transform, Vector128<float> x, Vector128<float> y, out Vector128<float> xOut, out Vector128<float> yOut)
-        {
-            var cos = Vector128.Create(transform.Quaternion2D.C);
-            var sin = Vector128.Create(transform.Quaternion2D.S);
-            xOut = cos * x - sin * y + Vector128.Create(transform.Position.X);
-            yOut = sin * x + cos * y + Vector128.Create(transform.Position.Y);
         }
     }
 }

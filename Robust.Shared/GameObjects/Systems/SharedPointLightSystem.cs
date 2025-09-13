@@ -98,12 +98,12 @@ public abstract class SharedPointLightSystem : EntitySystem
         Dirty(uid, comp);
     }
 
-    public void SetCurveType(EntityUid uid, PointLightAttenuationCurveType value, SharedPointLightComponent? comp = null)
+    public void SetCurveFactor(EntityUid uid, float value, SharedPointLightComponent? comp = null)
     {
-        if (!ResolveLight(uid, ref comp) || comp.CurveType == value)
+        if (!ResolveLight(uid, ref comp) || MathHelper.CloseToPercent(comp.CurveFactor, value))
             return;
 
-        comp.CurveType = value;
+        comp.CurveFactor = value;
         Dirty(uid, comp);
     }
 
@@ -121,7 +121,7 @@ public abstract class SharedPointLightSystem : EntitySystem
             Radius = component.Radius,
             Softness = component.Softness,
             Falloff = component.Falloff,
-            CurveType = component.CurveType,
+            CurveFactor = component.CurveFactor,
             CastShadows = component.CastShadows,
         };
     }

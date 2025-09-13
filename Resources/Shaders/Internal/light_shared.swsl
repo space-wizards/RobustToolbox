@@ -15,6 +15,7 @@ uniform highp float lightRange;
 uniform highp float lightPower;
 uniform highp float lightSoftness;
 uniform highp float lightFalloff;
+uniform highp float lightCurveFactor;
 uniform lowp int lightCurveType;
 uniform highp float lightIndex;
 uniform sampler2D shadowMap;
@@ -55,8 +56,8 @@ void fragment()
 
     highp float s = clamp(sqrt(sqr_dist) / lightRange, 0.0, 1.0);
     highp float s2 = s * s;
-    // curveType nonzero = quadraticinverse, 0 = inverse
-    highp float curveFactor = lightCurveType > 0 ? s2 : s;
+    // controls curve by lerping between two variants (inverse-shape and inversequadratic-shape)
+    highp float curveFactor = mix(s, s2, clamp(lightCurveFactor, 0.0, 1.0));
     highp float val = clamp(((1 - s2) * (1 - s2)) / (1 + lightFalloff * curveFactor), 0.0, 1.0);
 
     val *= lightPower;

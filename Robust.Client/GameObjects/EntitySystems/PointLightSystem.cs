@@ -30,7 +30,7 @@ namespace Robust.Client.GameObjects
             component.Offset = state.Offset;
             component.Softness = state.Softness;
             component.Falloff = state.Falloff;
-            component.CurveType = state.CurveType;
+            component.CurveFactor = state.CurveFactor;
             component.CastShadows = state.CastShadows;
             component.Energy = state.Energy;
             component.Radius = state.Radius;

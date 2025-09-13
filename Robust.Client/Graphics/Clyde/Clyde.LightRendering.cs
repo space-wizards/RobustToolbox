@@ -452,7 +452,7 @@ namespace Robust.Client.Graphics.Clyde
             var lastColor = new Color(float.NaN, float.NaN, float.NaN, float.NaN);
             var lastSoftness = float.NaN;
             var lastFalloff = float.NaN;
-            var lastCurveType = (PointLightAttenuationCurveType)0;
+            var lastCurveFactor = float.NaN;
             Texture? lastMask = null;
 
             using (_prof.Group("Draw Lights"))
@@ -512,10 +512,10 @@ namespace Robust.Client.Graphics.Clyde
                         lightShader.SetUniformMaybe("lightFalloff", lastFalloff);
                     }
 
-                    if (lastCurveType != component.CurveType)
+                    if (!MathHelper.CloseToPercent(lastCurveFactor, component.CurveFactor))
                     {
-                        lastCurveType = component.CurveType;
-                        lightShader.SetUniformMaybe("lightCurveType", lastCurveType == PointLightAttenuationCurveType.Inverse ? 0 : 1);
+                        lastCurveFactor = component.CurveFactor;
+                        lightShader.SetUniformMaybe("lightCurveFactor", lastCurveFactor);
                     }
 
                     lightShader.SetUniformMaybe("lightCenter", lightPos);

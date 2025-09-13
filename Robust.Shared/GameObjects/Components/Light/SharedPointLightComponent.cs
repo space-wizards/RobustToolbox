@@ -44,7 +44,7 @@ namespace Robust.Shared.GameObjects
         ///     which, qualitatively, seemed about equivalent in brightness for the large majority of lights on the station
         ///     compared to the old function.
         ///
-        ///     See https://www.desmos.com/calculator/ck2df8quea for a demonstration of how this value affects the shape of the curve
+        ///     See https://www.desmos.com/calculator/yjudaha0s6 for a demonstration of how this value affects the shape of the curve
         ///     for different light radii and curve factors.
         /// </remarks>
         [DataField("falloff"), Animatable]
@@ -65,7 +65,7 @@ namespace Robust.Shared.GameObjects
         ///     Rather, it just lerps between an inverse-shaped curve and an inverse-quadratic-shaped curve.
         ///     Values below 0 or above 1 are nonsensical.
         ///
-        ///     See https://www.desmos.com/calculator/ck2df8quea for a demonstration of how this value affects the shape of the curve
+        ///     See https://www.desmos.com/calculator/yjudaha0s6 for a demonstration of how this value affects the shape of the curve
         ///     for different light radii and falloff values.
         /// </remarks>
         [DataField("curveFactor"), Animatable]

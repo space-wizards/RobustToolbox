@@ -1,4 +1,4 @@
 <Project>
     <!-- This file automatically reset by Tools/version.py -->
-    <PropertyGroup><Version>264.0.2-fix-physics</Version></PropertyGroup>
+    <PropertyGroup><Version>264.0.3-fix-physics</Version></PropertyGroup>
 </Project>

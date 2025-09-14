@@ -37,11 +37,11 @@ namespace Robust.Shared.ContentPack
         public IWritableDirProvider UserData { get; private set; } = default!;
 
         /// <inheritdoc />
-        public void Initialize(string? userData)
+        public void Initialize(string? userData, bool hideRootDir)
         {
             if (userData != null)
             {
-                UserData = new WritableDirProvider(Directory.CreateDirectory(userData));
+                UserData = new WritableDirProvider(Directory.CreateDirectory(userData), hideRootDir);
             }
             else
             {
@@ -375,7 +375,13 @@ namespace Robust.Shared.ContentPack
             {
                 if (root is DirLoader loader)
                 {
-                    yield return new ResourcePath(loader.GetPath(new ResourcePath(@"/")));
+                    var rootDir = loader.GetPath(new ResourcePath(@"/"));
+
+                    // TODO: GET RID OF THIS.
+                    // This code shouldn't be passing OS disk paths through ResPath.
+                    rootDir = rootDir.Replace(Path.DirectorySeparatorChar, '/');
+
+                    yield return new ResourcePath(rootDir);
                 }
             }
         }

@@ -24,7 +24,7 @@ namespace Robust.UnitTesting.Shared.Resources
             _testDir = Directory.CreateDirectory(_testDirPath);
             var subDir = Path.Combine(_testDirPath, "writable");
 
-            _dirProvider = new WritableDirProvider(Directory.CreateDirectory(subDir));
+            _dirProvider = new WritableDirProvider(Directory.CreateDirectory(subDir), hideRootDir: false);
         }
 
         [OneTimeTearDown]

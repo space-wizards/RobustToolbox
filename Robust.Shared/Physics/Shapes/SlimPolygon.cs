@@ -36,7 +36,6 @@ internal record struct SlimPolygon : IPhysShape
 
     public SlimPolygon(Box2 box)
     {
-        Unsafe.SkipInit(out this);
         Radius = 0f;
 
         _vertices._00 = box.BottomLeft;

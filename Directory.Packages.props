@@ -57,7 +57,7 @@
     <PackageVersion Include="SharpZstd.Interop" Version="1.5.2-beta2" />
     <PackageVersion Include="SixLabors.ImageSharp" Version="3.1.5" />
     <PackageVersion Include="SpaceWizards.HttpListener" Version="0.1.0" />
-    <PackageVersion Include="SpaceWizards.NFluidsynth" Version="0.1.1" />
+    <PackageVersion Include="SpaceWizards.NFluidsynth" Version="0.2.2" />
     <PackageVersion Include="SpaceWizards.SharpFont" Version="1.0.2" />
     <PackageVersion Include="SpaceWizards.Sodium" Version="0.2.1" />
     <PackageVersion Include="System.Numerics.Vectors" Version="4.5.0" />

@@ -72,7 +72,7 @@ entities:
             syssy.Initialize();
 
             var resourceManager = IoCManager.Resolve<IResourceManagerInternal>();
-            resourceManager.Initialize(null);
+            resourceManager.Initialize(null, hideUserDataDir: false);
             resourceManager.MountString("/TestMap.yml", MapData);
             resourceManager.MountString("/EnginePrototypes/TestMapEntity.yml", Prototype);
 

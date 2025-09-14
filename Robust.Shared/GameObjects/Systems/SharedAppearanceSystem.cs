@@ -5,7 +5,6 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
@@ -34,7 +33,7 @@ public abstract class SharedAppearanceSystem : EntitySystem
         return _timing.ApplyingState && component.NetSyncEnabled; // TODO consider removing this and avoiding the component resolve altogether.
     }
 
-    public void SetData(EntityUid uid, Enum key, object value, AppearanceComponent? component = null)
+    public void SetData(EntityUid uid, Enum key, object value, AppearanceComponent? component = null, bool dirty = true)
     {
         if (!Resolve(uid, ref component, false))
             return;
@@ -51,11 +50,14 @@ public abstract class SharedAppearanceSystem : EntitySystem
         //DebugTools.Assert(value.GetType().IsValueType || value is ICloneable, "Appearance data values must be cloneable.");
 
         component.AppearanceData[key] = value;
-        Dirty(uid, component);
+
+        if(dirty)
+            Dirty(uid, component);
+
         QueueUpdate(uid, component);
     }
 
-    public void RemoveData(EntityUid uid, Enum key, AppearanceComponent? component = null)
+    public void RemoveData(EntityUid uid, Enum key, AppearanceComponent? component = null, bool dirty = true)
     {
         if (!Resolve(uid, ref component, false))
             return;
@@ -64,8 +66,10 @@ public abstract class SharedAppearanceSystem : EntitySystem
             return;
 
         component.AppearanceData.Remove(key);
-        
-        Dirty(uid, component);
+
+        if(dirty)
+            Dirty(uid, component);
+
         QueueUpdate(uid, component);
     }
 
@@ -99,7 +103,7 @@ public abstract class SharedAppearanceSystem : EntitySystem
     /// If <c>src</c> has no <see cref="AppearanceComponent"/> nothing is done.
     /// If <c>dest</c> has no <c>AppearanceComponent</c> then it is created.
     /// </summary>
-    public void CopyData(Entity<AppearanceComponent?> src, Entity<AppearanceComponent?> dest)
+    public void CopyData(Entity<AppearanceComponent?> src, Entity<AppearanceComponent?> dest, bool dirty = true)
     {
         if (!Resolve(src, ref src.Comp, false))
             return;
@@ -112,7 +116,9 @@ public abstract class SharedAppearanceSystem : EntitySystem
             dest.Comp.AppearanceData[key] = value;
         }
 
-        Dirty(dest, dest.Comp);
+        if(dirty)
+            Dirty(dest, dest.Comp);
+
         QueueUpdate(dest, dest.Comp);
     }
 
@@ -121,15 +127,15 @@ public abstract class SharedAppearanceSystem : EntitySystem
     /// If <c>src</c> has no <see cref="AppearanceComponent"/> nothing is done.
     /// If <c>dest</c> has no <c>AppearanceComponent</c> then it is created.
     /// </summary>
-    public void AppendData(Entity<AppearanceComponent?> src, Entity<AppearanceComponent?> dest)
+    public void AppendData(Entity<AppearanceComponent?> src, Entity<AppearanceComponent?> dest, bool dirty = true)
     {
         if (!Resolve(src, ref src.Comp, false))
             return;
 
-        AppendData(src.Comp, dest);
+        AppendData(src.Comp, dest, dirty);
     }
 
-    public void AppendData(AppearanceComponent srcComp, Entity<AppearanceComponent?> dest)
+    public void AppendData(AppearanceComponent srcComp, Entity<AppearanceComponent?> dest, bool dirty = true)
     {
         dest.Comp ??= EnsureComp<AppearanceComponent>(dest);
 
@@ -138,7 +144,9 @@ public abstract class SharedAppearanceSystem : EntitySystem
             dest.Comp.AppearanceData[key] = value;
         }
 
-        Dirty(dest, dest.Comp);
+        if(dirty)
+            Dirty(dest, dest.Comp);
+
         QueueUpdate(dest, dest.Comp);
     }
 }

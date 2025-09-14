@@ -379,6 +379,10 @@ namespace Robust.Shared.ContentPack
                 {
                     var rootDir = loader.GetPath(new ResPath(@"/"));
 
+                    // TODO: GET RID OF THIS.
+                    // This code shouldn't be passing OS disk paths through ResPath.
+                    rootDir = rootDir.Replace(Path.DirectorySeparatorChar, '/');
+
                     yield return new ResPath(rootDir);
                 }
             }

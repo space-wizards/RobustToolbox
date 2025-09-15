@@ -16,6 +16,15 @@ public struct OklchColor : IEquatable<OklchColor>, ISpanFormattable
     public float H;
     public float Alpha;
 
+    public float Lr
+    {
+        get => (1.170873786407767f * L - 0.206f + MathF.Sqrt(MathF.Pow(1.170873786407767f * L - 0.206f, 2) + 0.14050485436893204f * L)) / 2f;
+        set
+        {
+            L = (value * (value + 0.206f)) / (1.170873786407767f * (value + 0.03f));
+        }
+    }
+
     public OklchColor(float l, float a, float b, float alpha)
     {
         L = l;

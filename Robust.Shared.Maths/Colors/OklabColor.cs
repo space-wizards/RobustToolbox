@@ -9,7 +9,7 @@ namespace Robust.Shared.Maths.Colors;
 /// </summary>
 [Serializable]
 [StructLayout(LayoutKind.Sequential)]
-public struct OklabColor : IEquatable<OklabColor>, ISpanFormattable
+public partial struct OklabColor : IEquatable<OklabColor>, ISpanFormattable
 {
     public float L;
     public float A;

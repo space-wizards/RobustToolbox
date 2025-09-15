@@ -119,9 +119,12 @@ namespace Robust.Client.UserInterface.CustomControls
 
                     case DragMode.Bottom | DragMode.Left:
                     case DragMode.Top | DragMode.Right:
+                        cursor = CursorShape.NESWResize;
+                        break;
+
                     case DragMode.Bottom | DragMode.Right:
                     case DragMode.Top | DragMode.Left:
-                        cursor = CursorShape.Crosshair;
+                        cursor = CursorShape.NWSEResize;
                         break;
                 }
 

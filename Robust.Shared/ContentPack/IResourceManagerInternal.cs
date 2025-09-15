@@ -14,7 +14,11 @@ namespace Robust.Shared.ContentPack
         /// The directory to use for user data.
         /// If null, a virtual temporary file system is used instead.
         /// </param>
-        void Initialize(string? userData);
+        /// <param name="hideUserDataDir">
+        /// If true, <see cref="IWritableDirProvider.RootDir"/> will be hidden on
+        /// <see cref="IResourceManager.UserData"/>.
+        /// </param>
+        void Initialize(string? userData, bool hideUserDataDir);
 
         /// <summary>
         ///     Mounts a single stream as a content file. Useful for unit testing.

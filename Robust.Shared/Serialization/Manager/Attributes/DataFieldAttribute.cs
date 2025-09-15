@@ -1,12 +1,16 @@
 using System;
+#if !ROBUST_ANALYZERS_TEST
 using JetBrains.Annotations;
+#endif
 
 namespace Robust.Shared.Serialization.Manager.Attributes
 {
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
+#if !ROBUST_ANALYZERS_TEST
     [MeansImplicitAssignment]
     [MeansImplicitUse(ImplicitUseKindFlags.Assign)]
     [Virtual]
+#endif
     public class DataFieldAttribute : DataFieldBaseAttribute
     {
         /// <summary>

@@ -1,5 +1,7 @@
 ﻿### Localization for engine console commands
 
+cmd-hint-float = [float]
+
 ## generic command errors
 
 cmd-invalid-arg-number-error = Invalid number of arguments.
@@ -408,9 +410,6 @@ cmd-spawn-desc = Spawns an entity with specific type.
 cmd-spawn-help = spawn <prototype> OR spawn <prototype> <relative entity ID> OR spawn <prototype> <x> <y>
 cmd-cspawn-desc = Spawns a client-side entity with specific type at your feet.
 cmd-cspawn-help = cspawn <entity type>
-
-cmd-scale-desc = Increases or decreases an entity's size naively.
-cmd-scale-help = scale <entityUid> <float>
 
 cmd-dumpentities-desc = Dump entity list.
 cmd-dumpentities-help = Dumps entity list of UIDs and prototype.

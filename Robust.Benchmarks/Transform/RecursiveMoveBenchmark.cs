@@ -42,8 +42,8 @@ public class RecursiveMoveBenchmark : RobustIntegrationTest
     public void GlobalSetup()
     {
         ProgramShared.PathOffset = "../../../../";
-        var server = StartServer();
-        var client = StartClient();
+        var server = StartServer(new() {Pool = false});
+        var client = StartClient(new() {Pool = false});
 
         Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync()).Wait();
 

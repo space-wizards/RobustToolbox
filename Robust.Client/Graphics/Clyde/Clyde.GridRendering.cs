@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Enums;
@@ -30,6 +31,23 @@ namespace Robust.Client.Graphics.Clyde
         private int _indicesPerChunk(MapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * GetQuadBatchIndexCount();
 
         private List<Entity<MapGridComponent>> _grids = new();
+        private bool _drawTileEdges;
+
+        private void RenderTileEdgesChanges(bool value)
+        {
+            _drawTileEdges = value;
+            if (!value)
+                return;
+
+            // Dirty all Edges
+            foreach (var gridData in _mapChunkData.Values)
+            {
+                foreach (var chunk in gridData.Values)
+                {
+                    chunk.EdgeDirty = true;
+                }
+            }
+        }
 
         private void _drawGrids(Viewport viewport, Box2 worldAABB, Box2Rotated worldBounds, IEye eye)
         {
@@ -81,6 +99,9 @@ namespace Robust.Client.Graphics.Clyde
 
                     _updateChunkMesh(mapGrid, chunk, datum);
 
+                    if (!_drawTileEdges)
+                        continue;
+
                     // Dirty edge tiles for next step.
                     datum.EdgeDirty = true;
 
@@ -99,17 +120,16 @@ namespace Robust.Client.Graphics.Clyde
                     }
                 }
 
-                enumerator = mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, worldBounds);
-
                 // Handle edge sprites.
-                while (enumerator.MoveNext(out var chunk))
+                if (_drawTileEdges)
                 {
-                    var datum = data[chunk.Indices];
-
-                    if (!datum.EdgeDirty)
-                        continue;
-
-                    _updateChunkEdges(mapGrid, chunk, datum);
+                    enumerator = mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, worldBounds);
+                    while (enumerator.MoveNext(out var chunk))
+                    {
+                        var datum = data[chunk.Indices];
+                        if (datum.EdgeDirty)
+                            _updateChunkEdges(mapGrid, chunk, datum);
+                    }
                 }
 
                 enumerator = mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, worldBounds);
@@ -129,7 +149,7 @@ namespace Robust.Client.Graphics.Clyde
                         CheckGlError();
                     }
 
-                    if (datum.EdgeCount > 0)
+                    if (_drawTileEdges && datum.EdgeCount > 0)
                     {
                         BindVertexArray(datum.EdgeVAO);
                         CheckGlError();
@@ -138,7 +158,6 @@ namespace Robust.Client.Graphics.Clyde
                         GL.DrawElements(GetQuadGLPrimitiveType(), datum.EdgeCount * GetQuadBatchIndexCount(), DrawElementsType.UnsignedShort, 0);
                         CheckGlError();
                     }
-
                 }
 
                 requiresFlush = false;
@@ -236,7 +255,11 @@ namespace Robust.Client.Graphics.Clyde
                             region = regionMaybe[tile.Variant];
                         }
 
-                        WriteTileToBuffers(i, gridX, gridY, vertexBuffer, indexBuffer, region);
+                        var rotationMirroring = (_tileDefinitionManager.TryGetDefinition(tile.TypeId, out var tileDef) && tileDef.AllowRotationMirror) ?
+                                                    tile.RotationMirroring
+                                                    : 0;
+
+                        WriteTileToBuffers(i, gridX, gridY, vertexBuffer, indexBuffer, region, rotationMirroring);
                         i += 1;
                     }
                 }
@@ -274,7 +297,8 @@ namespace Robust.Client.Graphics.Clyde
                     var gridX = x + chunkOriginScaled.X;
                     var gridY = y + chunkOriginScaled.Y;
                     var tile = chunk.GetTile(x, y);
-                    var tileDef = _tileDefinitionManager[tile.TypeId];
+                    if (!_tileDefinitionManager.TryGetDefinition(tile.TypeId, out var tileDef))
+                        continue;
 
                     // Edge render
                     for (var nx = -1; nx <= 1; nx++)
@@ -288,14 +312,15 @@ namespace Robust.Client.Graphics.Clyde
                             if (!maps.TryGetTile(grid.Comp, neighborIndices, out var neighborTile))
                                 continue;
 
-                            var neighborDef = _tileDefinitionManager[neighborTile.TypeId];
+                            if (!_tileDefinitionManager.TryGetDefinition(neighborTile.TypeId, out var neighborDef))
+                                continue;
 
                             // If it's the same tile then no edge to be drawn.
                             if (tile.TypeId == neighborTile.TypeId || neighborDef.EdgeSprites.Count == 0)
                                 continue;
 
-                            // If neighbor is a lower priority then us then don't draw on our tile.
-                            if (neighborDef.EdgeSpritePriority < tileDef.EdgeSpritePriority)
+                            // If neighbor is a lower or same priority then us then don't draw on our tile.
+                            if (neighborDef.EdgeSpritePriority <= tileDef.EdgeSpritePriority)
                                 continue;
 
                             var direction = new Vector2i(nx, ny).AsDirection().GetOpposite();
@@ -305,7 +330,7 @@ namespace Robust.Client.Graphics.Clyde
                                 continue;
 
                             var region = regionMaybe[0];
-                            WriteTileToBuffers(i, gridX, gridY, vertexBuffer, indexBuffer, region);
+                            WriteTileToBuffers(i, gridX, gridY, vertexBuffer, indexBuffer, region, 0);
                             i += 1;
                         }
                     }
@@ -388,8 +413,11 @@ namespace Robust.Client.Graphics.Clyde
         private void _updateTileMapOnUpdate(ref TileChangedEvent args)
         {
             var gridData = _mapChunkData.GetOrNew(args.Entity);
-            if (gridData.TryGetValue(args.ChunkIndex, out var data))
-                data.Dirty = true;
+            foreach (var change in args.Changes)
+            {
+                if (gridData.TryGetValue(change.ChunkIndex, out var data))
+                    data.Dirty = true;
+            }
         }
 
         private void _updateOnGridCreated(GridStartupEvent ev)
@@ -425,13 +453,57 @@ namespace Robust.Client.Graphics.Clyde
             int gridY,
             Span<Vertex2D> vertexBuffer,
             Span<ushort> indexBuffer,
-            Box2 region)
+            Box2 region,
+            int rotationMirroring)
         {
+            var rLeftBottom = (region.Left, region.Bottom);
+            var rRightBottom = (region.Right, region.Bottom);
+            var rRightTop = (region.Right, region.Top);
+            var rLeftTop = (region.Left, region.Top);
+
+            // The vertices must be changed if there's any rotation or mirroring to the tile
+            if (rotationMirroring != 0)
+            {
+                // Rotate the tile
+                for (int r = 0; r < rotationMirroring % 4; r++)
+                {
+                    (rLeftBottom, rRightBottom, rRightTop, rLeftTop) =
+                        (rLeftTop, rLeftBottom, rRightBottom, rRightTop);
+                }
+
+                // Mirror on the x-axis
+                if (rotationMirroring >= 4)
+                {
+                    if (rotationMirroring % 2 == 0)
+                    {
+                        rLeftBottom = (rLeftBottom.Item1.Equals(region.Left) ? region.Right : region.Left,
+                            rLeftBottom.Item2);
+                        rRightBottom = (rRightBottom.Item1.Equals(region.Left) ? region.Right : region.Left,
+                            rRightBottom.Item2);
+                        rRightTop = (rRightTop.Item1.Equals(region.Left) ? region.Right : region.Left,
+                            rRightTop.Item2);
+                        rLeftTop = (rLeftTop.Item1.Equals(region.Left) ? region.Right : region.Left,
+                            rLeftTop.Item2);
+                    }
+                    else
+                    {
+                        rLeftBottom = (rLeftBottom.Item1,
+                            rLeftBottom.Item2.Equals(region.Bottom) ? region.Top : region.Bottom);
+                        rRightBottom = (rRightBottom.Item1,
+                            rRightBottom.Item2.Equals(region.Bottom) ? region.Top : region.Bottom);
+                        rRightTop = (rRightTop.Item1,
+                            rRightTop.Item2.Equals(region.Bottom) ? region.Top : region.Bottom);
+                        rLeftTop = (rLeftTop.Item1,
+                            rLeftTop.Item2.Equals(region.Bottom) ? region.Top : region.Bottom);
+                    }
+                }
+            }
+
             var vIdx = i * 4;
-            vertexBuffer[vIdx + 0] = new Vertex2D(gridX, gridY, region.Left, region.Bottom, Color.White);
-            vertexBuffer[vIdx + 1] = new Vertex2D(gridX + 1, gridY, region.Right, region.Bottom, Color.White);
-            vertexBuffer[vIdx + 2] = new Vertex2D(gridX + 1, gridY + 1, region.Right, region.Top, Color.White);
-            vertexBuffer[vIdx + 3] = new Vertex2D(gridX, gridY + 1, region.Left, region.Top, Color.White);
+            vertexBuffer[vIdx + 0] = new Vertex2D(gridX, gridY, rLeftBottom.Left, rLeftBottom.Bottom, Color.White);
+            vertexBuffer[vIdx + 1] = new Vertex2D(gridX + 1, gridY, rRightBottom.Right, rRightBottom.Bottom, Color.White);
+            vertexBuffer[vIdx + 2] = new Vertex2D(gridX + 1, gridY + 1, rRightTop.Right, rRightTop.Top, Color.White);
+            vertexBuffer[vIdx + 3] = new Vertex2D(gridX, gridY + 1, rLeftTop.Left, rLeftTop.Top, Color.White);
             var nIdx = i * GetQuadBatchIndexCount();
             var tIdx = (ushort)(i * 4);
             QuadBatchIndexWrite(indexBuffer, ref nIdx, tIdx);

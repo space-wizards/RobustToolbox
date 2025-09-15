@@ -86,10 +86,10 @@ namespace Robust.Client.UserInterface
 
         [ViewVariables] public ViewportContainer MainViewport { get; private set; } = default!;
         [ViewVariables] public LayoutContainer StateRoot { get; private set; } = default!;
-        [ViewVariables] public PopupContainer ModalRoot { get; private set; } = default!;
+        [ViewVariables] public PopupContainer ModalRoot => RootControl.ModalRoot;
         [ViewVariables] public WindowRoot RootControl { get; private set; } = default!;
         [ViewVariables] public LayoutContainer WindowRoot { get; private set; } = default!;
-        [ViewVariables] public LayoutContainer PopupRoot { get; private set; } = default!;
+        [ViewVariables] public LayoutContainer PopupRoot => RootControl.PopupRoot;
         [ViewVariables] public DropDownDebugConsole DebugConsole { get; private set; } = default!;
         [ViewVariables] public IDebugMonitors DebugMonitors => _debugMonitors;
         private DebugMonitors _debugMonitors = default!;
@@ -117,7 +117,7 @@ namespace Robust.Client.UserInterface
 
             DebugConsole = new DropDownDebugConsole();
             RootControl.AddChild(DebugConsole);
-            DebugConsole.SetPositionInParent(ModalRoot.GetPositionInParent());
+            DebugConsole.SetPositionInParent(RootControl.ModalRoot.GetPositionInParent());
 
             _debugMonitors = new DebugMonitors(_gameTiming, _playerManager, _eyeManager, _inputManager, _stateManager,
                 _clyde, _netManager, _mapManager);
@@ -177,19 +177,7 @@ namespace Robust.Client.UserInterface
             };
             RootControl.AddChild(WindowRoot);
 
-            ModalRoot = new PopupContainer
-            {
-                Name = "ModalRoot",
-                MouseFilter = Control.MouseFilterMode.Ignore,
-            };
-            RootControl.AddChild(ModalRoot);
-
-            PopupRoot = new LayoutContainer
-            {
-                Name = "PopupRoot",
-                MouseFilter = Control.MouseFilterMode.Ignore
-            };
-            RootControl.AddChild(PopupRoot);
+            RootControl.CreateRootControls();
         }
 
         public void InitializeTesting()

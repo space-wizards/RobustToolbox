@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Robust.Server.ViewVariables.Traits;
 using Robust.Shared.Audio;
 using Robust.Shared.GameObjects;
@@ -139,6 +140,19 @@ namespace Robust.Server.ViewVariables
                         Key = MakeValueNetSafe(key),
                         Value = MakeValueNetSafe(val)
                     };
+                }
+
+                // Handle ValueTuples
+                if (typeof(ITuple).IsAssignableFrom(valType))
+                {
+                    var tuple = (ITuple)value;
+                    var items = new object?[tuple.Length];
+                    for (var i = 0; i < tuple.Length; i++)
+                    {
+                        items[i] = MakeValueNetSafe(tuple[i]);
+                    }
+
+                    return new ViewVariablesBlobMembers.ServerTupleToken { Items = items };
                 }
 
                 // Can't send this value type over the wire.

@@ -5,6 +5,7 @@ using System.Net;
 using System.Reflection;
 using System.Text;
 using Robust.Client.Console;
+using Robust.Client.Utility;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
@@ -24,6 +25,7 @@ namespace Robust.Client.WebView.Cef
 
         [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+        [Dependency] private readonly IGameControllerInternal _gameController = default!;
         [Dependency] private readonly IResourceManagerInternal _resourceManager = default!;
         [Dependency] private readonly IClientConsoleHost _consoleHost = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
@@ -62,9 +64,7 @@ namespace Robust.Client.WebView.Cef
 
             var remoteDebugPort = _cfg.GetCVar(WCVars.WebRandomDebugPort) ? new Random().Next(9221, 65535) : BasePort;
 
-            var cachePath = "";
-            if (_resourceManager.UserData is WritableDirProvider dataDir)
-                cachePath = FindAndLockCacheDirectory(dataDir);
+            var cachePath = FindAndLockCacheDirectory();
 
             var settings = new CefSettings()
             {

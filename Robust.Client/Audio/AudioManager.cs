@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using OpenTK.Audio.OpenAL;
-using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
 using Robust.Client.Audio.Sources;
 using Robust.Client.ResourceManagement;
 using Robust.Shared;
@@ -57,8 +56,8 @@ internal sealed partial class AudioManager : IAudioInternal
         _checkAlError();
 
         // Load up AL context extensions.
-        var s = ALC.GetString(ALDevice.Null, AlcGetString.Extensions) ?? "";
-        foreach (var extension in s.Split(' '))
+        var s = ALC.GetString(_openALDevice, AlcGetString.Extensions) ?? "";
+        foreach (var extension in s.Split(' ', StringSplitOptions.RemoveEmptyEntries))
         {
             _alContextExtensions.Add(extension);
         }
@@ -145,7 +144,7 @@ internal sealed partial class AudioManager : IAudioInternal
     private static void RemoveEfx((int sourceHandle, int filterHandle) handles)
     {
         if (handles.filterHandle != 0)
-            EFX.DeleteFilter(handles.filterHandle);
+            ALC.EFX.DeleteFilter(handles.filterHandle);
     }
 
     private void _checkAlcError(ALDevice device,

@@ -475,7 +475,7 @@ public sealed class EntityDeserializer :
 
         foreach (var (key, value) in tileMap.Children)
         {
-            var yamlTileId = ((ValueDataNode) key).AsInt();
+            var yamlTileId = int.Parse(key, CultureInfo.InvariantCulture);
             var tileName = ((ValueDataNode) value).Value;
             if (migrations.TryGetValue(tileName, out var @new))
                 tileName = @new;
@@ -547,19 +547,20 @@ public sealed class EntityDeserializer :
         _stopwatch.Restart();
         foreach (var (entity, data) in Entities)
         {
+#if EXCEPTION_TOLERANCE
             try
             {
+#endif
                 CurrentReadingEntity = data;
                 LoadEntity(entity, _metaQuery.Comp(entity), data.Components, data.MissingComponents);
+#if EXCEPTION_TOLERANCE
             }
             catch (Exception e)
             {
-#if !EXCEPTION_TOLERANCE
-                throw;
-#endif
                 ToDelete.Add(entity);
                 _log.Error($"Encountered error while loading entity. Yaml uid: {data.YamlId}. Loaded loaded entity: {EntMan.ToPrettyString(entity)}. Error:\n{e}.");
             }
+#endif
         }
 
         CurrentReadingEntity = null;
@@ -1000,7 +1001,7 @@ public sealed class EntityDeserializer :
                 continue;
 
             DebugTools.Assert(meta.EntityLifeStage == EntityLifeStage.Initialized);
-            meta.EntityLifeStage = EntityLifeStage.MapInitialized;
+            EntMan.SetLifeStage(meta, EntityLifeStage.MapInitialized);
         }
 
         _log.Debug($"Finished flagging mapinit in {_stopwatch.Elapsed}");

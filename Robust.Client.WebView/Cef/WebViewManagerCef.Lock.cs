@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using Robust.Shared.ContentPack;
-using Robust.Shared.Utility;
+using Robust.Client.Utility;
 
 namespace Robust.Client.WebView.Cef;
 
@@ -15,19 +14,21 @@ internal sealed partial class WebViewManagerCef
     private FileStream? _lockFileStream;
     private const int MaxAttempts = 100; // This probably shouldn't be a cvar because the only reason you'd need it change for legit just botting the game.
 
-    private string FindAndLockCacheDirectory(WritableDirProvider userData)
+    private string FindAndLockCacheDirectory()
     {
         var finalAbsoluteCachePath = "";
 
+        var rootDir = Path.Combine(UserDataDir.GetRootUserDataDir(_gameController), BaseCacheName);
+
         try
         {
-            var existingCacheDirs = GetExistingCacheDirectories(userData);
+            var existingCacheDirs = GetExistingCacheDirectories(rootDir);
             existingCacheDirs.Sort();
 
             // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
             foreach (var relativeDirName in existingCacheDirs)
             {
-                var absoluteDirPath = userData.GetFullPath(new ResPath($"/{relativeDirName}"));
+                var absoluteDirPath = Path.Combine(rootDir, relativeDirName);
 
                 if (!Directory.Exists(absoluteDirPath)
                     || !TryAcquireDirectoryLock(absoluteDirPath, out FileStream? lockStream)) continue;
@@ -39,7 +40,7 @@ internal sealed partial class WebViewManagerCef
             }
 
             if (string.IsNullOrEmpty(finalAbsoluteCachePath))
-                finalAbsoluteCachePath = CreateLockNewCacheDir(userData);
+                finalAbsoluteCachePath = CreateLockNewCacheDir(rootDir);
 
             return finalAbsoluteCachePath;
         }
@@ -49,16 +50,15 @@ internal sealed partial class WebViewManagerCef
         }
     }
 
-    private List<string> GetExistingCacheDirectories(WritableDirProvider userData)
+    private List<string> GetExistingCacheDirectories(string rootDir)
     {
         List<string> existingCacheDirs = new();
 
         try
         {
             // ReSharper disable once LoopCanBeConvertedToQuery
-            foreach (var entryName in userData.DirectoryEntries(new ResPath("/")))
-                if (entryName.StartsWith(BaseCacheName)
-                    && userData.IsDir(new ResPath($"/{entryName}")))
+            foreach (var entryName in Directory.EnumerateDirectories(rootDir))
+                if (Directory.Exists(Path.Combine(rootDir, entryName)))
                     existingCacheDirs.Add(entryName);
         }
         catch (IOException ex)
@@ -123,12 +123,12 @@ internal sealed partial class WebViewManagerCef
         }
     }
 
-    private string CreateLockNewCacheDir(WritableDirProvider userData)
+    private string CreateLockNewCacheDir(string rootDir)
     {
         for (var attempts = 0; attempts < MaxAttempts; attempts++)
         {
-            var newRelativeCacheDir = $"{BaseCacheName}{attempts}";
-            var absolutePath = userData.GetFullPath(new ResPath($"/{newRelativeCacheDir}"));
+            var newRelativeCacheDir = attempts.ToString();
+            var absolutePath = Path.Combine(rootDir, newRelativeCacheDir);
 
             try
             {

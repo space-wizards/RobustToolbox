@@ -6,6 +6,7 @@ using Robust.Shared.EntitySerialization.Components;
 using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Utility;
 using static Robust.UnitTesting.Shared.EntitySerialization.EntitySaveTestComponent;
 
@@ -32,9 +33,7 @@ public sealed partial class BackwardsCompatibilityTest
         var tileMan = server.ResolveDependency<ITileDefinitionManager>();
         var resourceManager = server.ResolveDependency<IResourceManagerInternal>();
 
-        tileMan.Register(new TileDef("Space"));
-        tileMan.Register(new TileDef("A"));
-        tileMan.Register(new TileDef("B"));
+        SerializationTestHelper.LoadTileDefs(server.ProtoMan, tileMan, "Space");
         var gridPath = new ResPath($"{nameof(MapDataV6Grid)}.yml");
         resourceManager.MountString(gridPath.ToString(), MapDataV6Grid);
 
@@ -47,7 +46,7 @@ public sealed partial class BackwardsCompatibilityTest
 
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(0));
         await server.WaitPost(() => mapUid = mapSys.CreateMap(out mapId));
-        await server.WaitPost(() => Assert.That(loader.TryLoadGrid(mapId, gridPath, out _)));
+        await server.WaitAssertion(() => Assert.That(loader.TryLoadGrid(mapId, gridPath, out _)));
 
         Assert.That(entMan.Count<LoadedMapComponent>(), Is.EqualTo(0));
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(2));
@@ -73,7 +72,7 @@ public sealed partial class BackwardsCompatibilityTest
 
         var mapPath = new ResPath($"{nameof(MapDataV6Map)}.yml");
         resourceManager.MountString(mapPath.ToString(), MapDataV6Map);
-        await server.WaitPost(() => Assert.That(loader.TryLoadMap(mapPath, out _, out _)));
+        await server.WaitAssertion(() => Assert.That(loader.TryLoadMap(mapPath, out _, out _)));
 
         Assert.That(entMan.Count<LoadedMapComponent>(), Is.EqualTo(1));
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(3));
@@ -107,7 +106,7 @@ public sealed partial class BackwardsCompatibilityTest
         resourceManager.MountString(mapPath2.ToString(), MapDataV6Map);
 
         var opts = DeserializationOptions.Default with {InitializeMaps = true};
-        await server.WaitPost(() => Assert.That(loader.TryLoadMap(mapPath2, out _, out _, opts)));
+        await server.WaitAssertion(() => Assert.That(loader.TryLoadMap(mapPath2, out _, out _, opts)));
 
         Assert.That(entMan.Count<LoadedMapComponent>(), Is.EqualTo(1));
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(3));
@@ -133,6 +132,8 @@ public sealed partial class BackwardsCompatibilityTest
 
         await server.WaitPost(() => entMan.DeleteEntity(map));
         Assert.That(entMan.Count<EntitySaveTestComponent>(), Is.EqualTo(0));
+        Assert.That(entMan.Count<LoadedMapComponent>(), Is.EqualTo(0));
+        Assert.That(entMan.Count<MapComponent>(), Is.EqualTo(0));
     }
 
     private const string MapDataV6Grid = @"
@@ -259,5 +260,14 @@ entities:
   components:
   - type: EntitySaveTest
     list: [ 1, 2 ]
+
+- type: testTileDef
+  id: Space
+
+- type: testTileDef
+  id: A
+
+- type: testTileDef
+  id: B
 ";
 }

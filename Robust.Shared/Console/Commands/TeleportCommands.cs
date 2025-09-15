@@ -20,6 +20,7 @@ internal sealed class TeleportCommand : LocalizedEntityCommands
     [Dependency] private readonly IMapManager _map = default!;
     [Dependency] private readonly IEntityManager _entityManager = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
+    [Dependency] private readonly SharedMapSystem _mapSystem = default!;
 
     public override string Command => "tp";
     public override bool RequireServerOrSingleplayer => true;
@@ -46,7 +47,7 @@ internal sealed class TeleportCommand : LocalizedEntityCommands
         else
             mapId = transform.MapID;
 
-        if (!_map.MapExists(mapId))
+        if (!_mapSystem.MapExists(mapId))
         {
             shell.WriteError($"Map {mapId} doesn't exist!");
             return;
@@ -60,9 +61,11 @@ internal sealed class TeleportCommand : LocalizedEntityCommands
         }
         else
         {
-            var mapEnt = _map.GetMapEntityIdOrThrow(mapId);
-            _transform.SetWorldPosition((entity, transform), position);
-            _transform.SetParent(entity, transform, mapEnt);
+            if (_mapSystem.TryGetMap(mapId, out var mapEnt))
+            {
+                _transform.SetWorldPosition((entity, transform), position);
+                _transform.SetParent(entity, transform, mapEnt.Value);
+            }
         }
 
         shell.WriteLine($"Teleported {shell.Player} to {mapId}:{posX},{posY}.");
@@ -124,19 +127,20 @@ public sealed class TeleportToCommand : LocalizedEntityCommands
         {
             foreach (var victim in args)
             {
-                if (victim == target)
+                if (!TryGetTransformFromUidOrUsername(victim, shell, out var uid, out var victimTransform))
                     continue;
 
-                if (!TryGetTransformFromUidOrUsername(victim, shell, out var uid, out var victimTransform))
+                if (uid == targetUid)
                     continue;
 
                 victims.Add((uid.Value, victimTransform));
             }
         }
 
+        var targetMapCoords = _transform.ToMapCoordinates(targetCoords);
         foreach (var victim in victims)
         {
-            _transform.SetCoordinates(victim.Entity, targetCoords);
+            _transform.SetMapCoordinates(victim.Entity, targetMapCoords);
             _transform.AttachToGridOrMap(victim.Entity, victim.Transform);
         }
     }

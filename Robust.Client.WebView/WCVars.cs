@@ -30,7 +30,7 @@ public static class WCVars
 #if TOOLS
     private const int DefaultRemoteDebugPort = 9222;
 #else
-    private const int DefaultRemoteDebugPort = 9222;
+    private const int DefaultRemoteDebugPort = 0;
 #endif
 
     /// <summary>

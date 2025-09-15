@@ -33,6 +33,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
+using Robust.Shared.Maths.Colors;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Maths
@@ -305,6 +306,11 @@ namespace Robust.Shared.Maths
         public readonly Color WithAlpha(byte newA)
         {
             return new(R, G, B, (float) newA / byte.MaxValue);
+        }
+
+        public readonly SrgbColor ToColors()
+        {
+            return new SrgbColor(R, G, B, A);
         }
 
         /// <summary>

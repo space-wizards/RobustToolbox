@@ -32,7 +32,6 @@ namespace Robust.Client.WebView.Cef
         [Dependency] private readonly ILogManager _logManager = default!;
         [Dependency] private readonly ILocalizationManager _localization = default!;
 
-        private const int BasePort = 9222;
         private ISawmill _sawmill = default!;
 
         public void Initialize()
@@ -62,7 +61,7 @@ namespace Robust.Client.WebView.Cef
             if (cefResourcesPath == null)
                 throw new InvalidOperationException("Unable to locate cef_resources directory!");
 
-            var remoteDebugPort = _cfg.GetCVar(WCVars.WebRandomDebugPort) ? new Random().Next(9221, 65535) : BasePort;
+            var remoteDebugPort = _cfg.GetCVar(WCVars.WebRemoteDebugPort);
 
             var cachePath = FindAndLockCacheDirectory();
 

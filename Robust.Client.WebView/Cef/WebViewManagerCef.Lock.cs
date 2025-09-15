@@ -12,7 +12,7 @@ internal sealed partial class WebViewManagerCef
     private const string BaseCacheName = "cef_cache";
     private const string LockFileName = "robust.lock";
     private FileStream? _lockFileStream;
-    private const int MaxAttempts = 100; // This probably shouldn't be a cvar because the only reason you'd need it change for legit just botting the game.
+    private const int MaxAttempts = 15; // This probably shouldn't be a cvar because the only reason you'd need it change for legit just botting the game.
 
     private string FindAndLockCacheDirectory()
     {

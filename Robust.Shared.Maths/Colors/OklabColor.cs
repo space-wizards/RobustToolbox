@@ -17,6 +17,7 @@ public partial struct OklabColor : IEquatable<OklabColor>, ISpanFormattable
     public float A;
     public float B;
     public float Alpha;
+    public readonly Vector4 AsVector => Unsafe.BitCast<OklabColor, Vector4>(this);
 
     public float Lr
     {
@@ -25,6 +26,11 @@ public partial struct OklabColor : IEquatable<OklabColor>, ISpanFormattable
         {
             L = (value * (value + 0.206f)) / (1.170873786407767f * (value + 0.03f));
         }
+    }
+
+    public OklabColor(in Vector4 vec)
+    {
+        this = Unsafe.BitCast<Vector4, OklabColor>(vec);
     }
 
     public OklabColor(float l, float a, float b, float alpha)
@@ -71,8 +77,6 @@ public partial struct OklabColor : IEquatable<OklabColor>, ISpanFormattable
 
         return new OklchColor(L, c, h, Alpha);
     }
-
-    private readonly Vector4 AsVector => Unsafe.BitCast<OklabColor, Vector4>(this);
 
     /// <summary>
     ///     Interpolate two colors with a lambda, AKA returning the two colors combined with a ratio of

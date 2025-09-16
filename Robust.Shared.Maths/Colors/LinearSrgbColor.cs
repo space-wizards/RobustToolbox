@@ -17,10 +17,16 @@ public struct LinearSrgbColor : IEquatable<LinearSrgbColor>, ISpanFormattable
     public float Green;
     public float Blue;
     public float Alpha;
+    public readonly Vector4 AsVector => Unsafe.BitCast<LinearSrgbColor, Vector4>(this);
 
     public readonly bool IsInGamut
     {
         get => Red <= 1 && Green <= 1 && Blue <= 1 && Red >= 0 && Green >= 0 && Blue >= 0;
+    }
+
+    public LinearSrgbColor(in Vector4 vec)
+    {
+        this = Unsafe.BitCast<Vector4, LinearSrgbColor>(vec);
     }
 
     public LinearSrgbColor(float r, float g, float b, float a)
@@ -94,8 +100,6 @@ public struct LinearSrgbColor : IEquatable<LinearSrgbColor>, ISpanFormattable
 
         return new CiexyzColor(x, y, z, Alpha);
     }
-
-    private readonly Vector4 AsVector => Unsafe.BitCast<LinearSrgbColor, Vector4>(this);
 
     /// <summary>
     ///     Interpolate two colors with a lambda, AKA returning the two colors combined with a ratio of

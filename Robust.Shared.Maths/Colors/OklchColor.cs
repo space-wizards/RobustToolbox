@@ -1,4 +1,6 @@
 using System;
+using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Robust.Shared.Utility;
 
@@ -15,6 +17,7 @@ public struct OklchColor : IEquatable<OklchColor>, ISpanFormattable
     public float C;
     public float H;
     public float Alpha;
+    public readonly Vector4 AsVector => Unsafe.BitCast<OklchColor, Vector4>(this);
 
     public float Lr
     {
@@ -23,6 +26,11 @@ public struct OklchColor : IEquatable<OklchColor>, ISpanFormattable
         {
             L = (value * (value + 0.206f)) / (1.170873786407767f * (value + 0.03f));
         }
+    }
+
+    public OklchColor(in Vector4 vec)
+    {
+        this = Unsafe.BitCast<Vector4, OklchColor>(vec);
     }
 
     public OklchColor(float l, float c, float h, float alpha)

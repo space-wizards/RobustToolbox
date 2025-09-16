@@ -17,6 +17,12 @@ public struct CiexyzColor : IEquatable<CiexyzColor>, ISpanFormattable
     public float Y;
     public float Z;
     public float Alpha;
+    public readonly Vector4 AsVector => Unsafe.BitCast<CiexyzColor, Vector4>(this);
+
+    public CiexyzColor(in Vector4 vec)
+    {
+        this = Unsafe.BitCast<Vector4, CiexyzColor>(vec);
+    }
 
     public CiexyzColor(float x, float y, float z, float alpha)
     {
@@ -38,7 +44,6 @@ public struct CiexyzColor : IEquatable<CiexyzColor>, ISpanFormattable
         return new LinearSrgbColor(r, g, b, Alpha);
     }
 
-    private readonly Vector4 AsVector => Unsafe.BitCast<CiexyzColor, Vector4>(this);
 
     /// <summary>
     ///     Interpolate two colors with a lambda, AKA returning the two colors combined with a ratio of

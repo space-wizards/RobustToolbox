@@ -1,4 +1,6 @@
 using System;
+using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Robust.Shared.Utility;
 
@@ -15,7 +17,12 @@ public struct HslColor : IEquatable<HslColor>, ISpanFormattable
     public float Saturation;
     public float Lightness;
     public float Alpha;
+    public readonly Vector4 AsVector => Unsafe.BitCast<HslColor, Vector4>(this);
 
+    public HslColor(in Vector4 vec)
+    {
+        this = Unsafe.BitCast<Vector4, HslColor>(vec);
+    }
     public HslColor(float h, float s, float l, float a)
     {
         Hue = h;

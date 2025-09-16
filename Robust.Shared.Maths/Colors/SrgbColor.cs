@@ -1,4 +1,6 @@
 using System;
+using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Robust.Shared.Utility;
 
@@ -15,10 +17,16 @@ public struct SrgbColor : IEquatable<SrgbColor>, ISpanFormattable
     public float Green;
     public float Blue;
     public float Alpha;
+    public readonly Vector4 AsVector => Unsafe.BitCast<SrgbColor, Vector4>(this);
 
     public readonly bool IsInGamut
     {
         get => Red <= 1 && Green <= 1 && Blue <= 1 && Red >= 0 && Green >= 0 && Blue >= 0;
+    }
+
+    public SrgbColor(in Vector4 vec)
+    {
+        this = Unsafe.BitCast<Vector4, SrgbColor>(vec);
     }
 
     public SrgbColor(float r, float g, float b, float a)

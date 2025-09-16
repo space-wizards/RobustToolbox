@@ -1,4 +1,6 @@
 using System;
+using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Robust.Shared.Utility;
 
@@ -18,6 +20,12 @@ public struct SyccColor : IEquatable<SyccColor>, ISpanFormattable
     public float Cb;
     public float Cr;
     public float Alpha;
+    public readonly Vector4 AsVector => Unsafe.BitCast<SyccColor, Vector4>(this);
+
+    public SyccColor(in Vector4 vec)
+    {
+        this = Unsafe.BitCast<Vector4, SyccColor>(vec);
+    }
 
     public SyccColor(float y, float cb, float cr, float alpha)
     {

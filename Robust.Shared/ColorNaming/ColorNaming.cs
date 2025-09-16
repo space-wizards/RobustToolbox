@@ -2,6 +2,7 @@ using System;
 using System.Numerics;
 using Robust.Shared.Localization;
 using Robust.Shared.Maths;
+using Robust.Shared.Maths.Colors;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ColorNaming;
@@ -56,14 +57,15 @@ public static class ColorNaming
     private const float BlackLightnessThreshold = 0.01f;
     private const float GrayChromaThreshold = 0.01f;
 
-    private static (string Loc, float AdjustedLightness) DescribeHue(Vector4 oklch, ILocalizationManager localization)
+    private static (string Loc, float AdjustedLightness) DescribeHue(OklchColor oklch, ILocalizationManager localization)
     {
-        var (lightness, _, hue, _) = oklch;
+        var lightness = oklch.L;
+        var hue = oklch.H;
 
         for (var i = 0; i < HueNames.Length; i++)
         {
             var prevData = HueNames[i];
-            var nextData = i+1 < HueNames.Length ? HueNames[i+1] : HueFallback;
+            var nextData = i + 1 < HueNames.Length ? HueNames[i + 1] : HueFallback;
 
             if (prevData.Hue > hue || hue >= nextData.Hue)
                 continue;
@@ -76,7 +78,7 @@ public static class ColorNaming
             else if (prevData.Loc == OrangeString)
                 adjustedLightness = lightness - BrownLightnessThreshold + DarkLightnessThreshold;
 
-            if (hue >= (prevData.Hue + nextData.Hue)/2f && prevData.Loc != nextData.Loc)
+            if (hue >= (prevData.Hue + nextData.Hue) / 2f && prevData.Loc != nextData.Loc)
             {
                 if (localization.TryGetString($"{loc}-{nextData.Loc}", out var hueName))
                     return (hueName!, adjustedLightness);
@@ -91,9 +93,10 @@ public static class ColorNaming
         return (localization.GetString("color-unknown"), lightness);
     }
 
-    private static string? DescribeChroma(Vector4 oklch, ILocalizationManager localization)
+    private static string? DescribeChroma(OklchColor oklch, ILocalizationManager localization)
     {
-        var (lightness, chroma, _, _) = oklch;
+        var lightness = oklch.L;
+        var chroma = oklch.C;
 
         if (chroma <= LowChromaThreshold)
         {
@@ -110,9 +113,9 @@ public static class ColorNaming
         return null;
     }
 
-    private static string? DescribeLightness(Vector4 oklch, ILocalizationManager localization)
+    private static string? DescribeLightness(OklchColor oklch, ILocalizationManager localization)
     {
-        return oklch.X switch
+        return oklch.L switch
         {
             < VeryDarkLightnessThreshold => localization.GetString(VeryDarkString),
             < DarkLightnessThreshold => localization.GetString(DarkString),
@@ -131,20 +134,20 @@ public static class ColorNaming
     /// <param name="srgb">A Color that is assumed to be in SRGB (the default for most cases)</param>
     public static string Describe(Color srgb, ILocalizationManager localization)
     {
-        var oklch = Color.ToLch(Color.ToLab(Color.FromSrgb(srgb)));
+        var oklch = srgb.ToColors().ToLinear().ToOklab().ToOklch();
 
-        if (oklch.X >= WhiteLightnessThreshold)
+        if (oklch.L >= WhiteLightnessThreshold)
             return localization.GetString(WhiteString);
 
-        if (oklch.X <= BlackLightnessThreshold)
+        if (oklch.L <= BlackLightnessThreshold)
             return localization.GetString(BlackString);
 
         var (hueDescription, adjustedLightness) = DescribeHue(oklch, localization);
-        oklch.X = adjustedLightness;
+        oklch.L = adjustedLightness;
         var chromaDescription = DescribeChroma(oklch, localization);
         var lightnessDescription = DescribeLightness(oklch, localization);
 
-        if (oklch.Y <= GrayChromaThreshold)
+        if (oklch.C <= GrayChromaThreshold)
         {
             hueDescription = localization.GetString(GrayString);
             chromaDescription = null;

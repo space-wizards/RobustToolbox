@@ -181,7 +181,7 @@ namespace Robust.Server.GameObjects
             return session == null ? default : _lastProcessedMessage.GetValueOrDefault(session).Sequence;
         }
 
-        public GameTick GetLastLastAppliedTick(ICommonSession? session)
+        public GameTick GetLastAppliedTick(ICommonSession? session)
         {
             return session == null ? default : _lastProcessedMessage.GetValueOrDefault(session).Applied;
         }

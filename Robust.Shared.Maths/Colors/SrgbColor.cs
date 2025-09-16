@@ -126,6 +126,12 @@ public struct SrgbColor : IEquatable<SrgbColor>, ISpanFormattable
         return new SyccColor(y, u, v, Alpha);
     }
 
+    /// <summary>
+    ///     Casts a SrgbColor value to a sRGB Color value.
+    /// </summary>
+    /// <remarks>
+    ///     This is NOT Linear sRGB. Don't put this somewhere that expects Linear sRGB.
+    /// </remarks>
     public readonly Color ToColor()
     {
         return new Color(Red, Green, Blue, Alpha);

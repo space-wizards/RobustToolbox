@@ -308,6 +308,12 @@ namespace Robust.Shared.Maths
             return new(R, G, B, (float) newA / byte.MaxValue);
         }
 
+        /// <summary>
+        ///     Casts a sRGB Color value to a SrgbColor value.
+        /// </summary>
+        /// <remarks>
+        ///     This expects sRGB, not Linear sRGB which is also represented via Color.
+        /// </remarks>
         public readonly SrgbColor ToColors()
         {
             return new SrgbColor(R, G, B, A);

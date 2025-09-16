@@ -827,6 +827,10 @@ namespace Robust.Shared.Network
             _assignedUsernames.Remove(channel.UserName);
             _assignedUserIds.Remove(channel.UserId);
 
+            _channels.Remove(connection);
+            peer.RemoveChannel(channel);
+            channel.EncryptionChannel?.Complete();
+
 #if EXCEPTION_TOLERANCE
             try
             {
@@ -842,9 +846,6 @@ namespace Robust.Shared.Network
                 _logger.Error("Caught exception in OnDisconnected handler:\n{0}", e);
             }
 #endif
-            _channels.Remove(connection);
-            peer.RemoveChannel(channel);
-            channel.EncryptionChannel?.Complete();
 
             if (IsClient)
             {

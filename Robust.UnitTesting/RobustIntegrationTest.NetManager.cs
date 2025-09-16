@@ -264,6 +264,10 @@ namespace Robust.UnitTesting
                     return;
 
                 var channel = (IntegrationNetChannel) recipient;
+
+                if (!channel.IsConnected)
+                    throw new InvalidOperationException("Channel is not connected!");
+
                 channel.OtherChannel.TryWrite(SerializeNetMessage(message, channel.RemoteUid));
             }
 

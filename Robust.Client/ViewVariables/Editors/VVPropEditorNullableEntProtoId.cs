@@ -1,16 +1,24 @@
 ﻿using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 
 namespace Robust.Client.ViewVariables.Editors;
 
 internal sealed class VVPropEditorNullableEntProtoId : VVPropEditor
 {
+    [Dependency] private readonly IPrototypeManager _protoMan = default!;
+
+    public VVPropEditorNullableEntProtoId()
+    {
+        IoCManager.InjectDependencies(this);
+    }
+
     protected override Control MakeUI(object? value)
     {
         var lineEdit = new LineEdit
         {
-            Text = value is EntProtoId protoId ?  protoId.Id : "",
+            Text = value is EntProtoId protoId ? protoId.Id : "",
             Editable = !ReadOnly,
             HorizontalExpand = true,
         };
@@ -25,7 +33,9 @@ internal sealed class VVPropEditorNullableEntProtoId : VVPropEditor
                 }
                 else
                 {
-                    ValueChanged((EntProtoId) e.Text);
+                    var id = (EntProtoId)e.Text;
+                    if (_protoMan.HasIndex(id))
+                        ValueChanged(id);
                 }
             };
         }

@@ -135,7 +135,13 @@ namespace Robust.Client.UserInterface.Controls
             ClydeWindow.Resized += OnWindowResized;
 
             _root = UserInterfaceManager.CreateWindowRoot(ClydeWindow);
+            _root.CreateRootControls();
+
+            // Add ourselves *after* creating the root.
+            // This way root controls are valid in EnteredTree().
+            // We have to re-organize the controls after, of course.
             _root.AddChild(this);
+            SetPositionFirst();
 
             // Resize the window by our UIScale
             ClydeWindow.Size = new((int)(ClydeWindow.Size.X * UIScale), (int)(ClydeWindow.Size.Y * UIScale));

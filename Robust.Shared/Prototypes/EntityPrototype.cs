@@ -413,6 +413,7 @@ namespace Robust.Shared.Prototypes
         {
         }
 
+        /// <inheritdoc />
         public bool TryGetComponent(string componentName, [NotNullWhen(true)] out IComponent? component)
         {
             var success = TryGetValue(componentName, out var comp);
@@ -421,11 +422,30 @@ namespace Robust.Shared.Prototypes
             return success;
         }
 
+        /// <inheritdoc />
+        public bool TryGetComponent<TComponent>(
+            IComponentFactory componentFactory,
+            [NotNullWhen(true)] out TComponent? component
+        ) where TComponent : class, IComponent, new()
+        {
+            component = null;
+            var componentName = componentFactory.GetComponentName<TComponent>();
+            if (TryGetComponent(componentName, out var foundComponent))
+            {
+                component = (TComponent)foundComponent;
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <inheritdoc />
         public IEnumerable<string> GetExtraComponentTypes()
         {
             return Keys;
         }
 
+        /// <inheritdoc />
         public bool ShouldSkipComponent(string compName)
         {
             return false; //Registries cannot represent the "remove this component" state.

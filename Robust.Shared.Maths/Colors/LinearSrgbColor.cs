@@ -1,4 +1,6 @@
 using System;
+using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Robust.Shared.Utility;
 
@@ -15,6 +17,11 @@ public struct LinearSrgbColor : IEquatable<LinearSrgbColor>, ISpanFormattable
     public float Green;
     public float Blue;
     public float Alpha;
+
+    public readonly bool IsInGamut
+    {
+        get => Red <= 1 && Green <= 1 && Blue <= 1 && Red >= 0 && Green >= 0 && Blue >= 0;
+    }
 
     public LinearSrgbColor(float r, float g, float b, float a)
     {
@@ -86,6 +93,26 @@ public struct LinearSrgbColor : IEquatable<LinearSrgbColor>, ISpanFormattable
         float z = +0.0193f * Red + 0.1192f * Green + 0.9505f * Blue;
 
         return new CiexyzColor(x, y, z, Alpha);
+    }
+
+    private readonly Vector4 AsVector => Unsafe.BitCast<LinearSrgbColor, Vector4>(this);
+
+    /// <summary>
+    ///     Interpolate two colors with a lambda, AKA returning the two colors combined with a ratio of
+    ///     <paramref name="λ" />.
+    /// </summary>
+    /// <param name="α"></param>
+    /// <param name="β"></param>
+    /// <param name="λ">
+    ///     A value ranging from 0-1. The higher the value the more is taken from <paramref name="β" />,
+    ///     with 0.5 being 50% of both colors, 0.25 being 25% of <paramref name="β" /> and 75%
+    ///     <paramref name="α" />.
+    /// </param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LinearSrgbColor InterpolateBetween(LinearSrgbColor α, LinearSrgbColor β, float λ)
+    {
+        var result = Vector4.Lerp(α.AsVector, β.AsVector, λ);
+        return new(result.X, result.Y, result.Z, result.W);
     }
 
     public static bool operator ==(LinearSrgbColor left, LinearSrgbColor right)

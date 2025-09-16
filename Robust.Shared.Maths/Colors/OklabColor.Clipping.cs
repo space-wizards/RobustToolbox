@@ -201,6 +201,9 @@ public partial struct OklabColor
 
     public readonly OklabColor GamutClipPreserveChroma()
     {
+        if (ToLinear().IsInGamut)
+            return this;
+
         float eps = 0.00001f;
         float C = Math.Max(eps, (float)Math.Sqrt(A * A + B * B));
         float a_ = A / C;

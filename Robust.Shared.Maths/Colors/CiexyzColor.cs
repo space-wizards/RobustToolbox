@@ -1,4 +1,6 @@
 using System;
+using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Robust.Shared.Utility;
 
@@ -34,6 +36,26 @@ public struct CiexyzColor : IEquatable<CiexyzColor>, ISpanFormattable
         float b = +0.0557101f * X - 0.2040211f * Y + 1.0569959f * Z;
 
         return new LinearSrgbColor(r, g, b, Alpha);
+    }
+
+    private readonly Vector4 AsVector => Unsafe.BitCast<CiexyzColor, Vector4>(this);
+
+    /// <summary>
+    ///     Interpolate two colors with a lambda, AKA returning the two colors combined with a ratio of
+    ///     <paramref name="λ" />.
+    /// </summary>
+    /// <param name="α"></param>
+    /// <param name="β"></param>
+    /// <param name="λ">
+    ///     A value ranging from 0-1. The higher the value the more is taken from <paramref name="β" />,
+    ///     with 0.5 being 50% of both colors, 0.25 being 25% of <paramref name="β" /> and 75%
+    ///     <paramref name="α" />.
+    /// </param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static CiexyzColor InterpolateBetween(CiexyzColor α, CiexyzColor β, float λ)
+    {
+        var result = Vector4.Lerp(α.AsVector, β.AsVector, λ);
+        return new(result.X, result.Y, result.Z, result.W);
     }
 
     public static bool operator ==(CiexyzColor left, CiexyzColor right)

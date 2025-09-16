@@ -16,6 +16,11 @@ public struct SrgbColor : IEquatable<SrgbColor>, ISpanFormattable
     public float Blue;
     public float Alpha;
 
+    public readonly bool IsInGamut
+    {
+        get => Red <= 1 && Green <= 1 && Blue <= 1 && Red >= 0 && Green >= 0 && Blue >= 0;
+    }
+
     public SrgbColor(float r, float g, float b, float a)
     {
         Red = r;

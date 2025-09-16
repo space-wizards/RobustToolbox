@@ -255,7 +255,7 @@ namespace Robust.Client.GameStates
 
             DebugTools.Assert(_players.LocalSession != null);
 
-            var evArgs = new EntitySessionEventArgs(_players.LocalSession);
+            var evArgs = new EntitySessionEventArgs(_players.LocalSession, _timing.LastRealTick);
             _pendingSystemMessages.Enqueue((_nextInputCmdSeq, _timing.CurTick, message,
                 new EntitySessionMessage<T>(evArgs, message)));
 

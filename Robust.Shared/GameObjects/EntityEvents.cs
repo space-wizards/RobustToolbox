@@ -1,6 +1,7 @@
 using System;
 using Robust.Shared.Player;
 using Robust.Shared.Serialization;
+using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
 {
@@ -43,12 +44,22 @@ namespace Robust.Shared.GameObjects
 
     public readonly struct EntitySessionEventArgs
     {
-        public EntitySessionEventArgs(ICommonSession senderSession)
+        public EntitySessionEventArgs(ICommonSession senderSession, GameTick lastApplied = default)
         {
             SenderSession = senderSession;
+            LastAppliedTick = lastApplied;
         }
 
         public ICommonSession SenderSession { get; }
+
+        /// <summary>
+        /// If this event was sent from a client, this is the tick of the last sever state that the client had applied
+        /// at the time that the event was initially raised.
+        /// </summary>
+        /// <remarks>
+        /// This can be used to perform some basic lag compensation.
+        /// </remarks>
+        public readonly GameTick LastAppliedTick;
     }
 
     internal readonly struct EntitySessionMessage<T>

@@ -22,11 +22,13 @@ namespace Robust.Shared.Network.Messages
         public uint NetId { get; set; }
         public uint Sequence { get; set; }
         public GameTick SourceTick { get; set; }
+        public GameTick LastAppliedTick { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             Type = (EntityMessageType)buffer.ReadByte();
             SourceTick = buffer.ReadGameTick();
+            LastAppliedTick = buffer.ReadGameTick();
             Sequence = buffer.ReadUInt32();
 
             switch (Type)
@@ -46,6 +48,7 @@ namespace Robust.Shared.Network.Messages
         {
             buffer.Write((byte)Type);
             buffer.Write(SourceTick);
+            buffer.Write(LastAppliedTick);
             buffer.Write(Sequence);
 
             switch (Type)

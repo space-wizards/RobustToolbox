@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using JetBrains.Annotations;
 using Prometheus;
 using Robust.Server.GameStates;
@@ -141,7 +142,10 @@ namespace Robust.Server.GameObjects
 
         private readonly PriorityQueue<MsgEntity> _queue = new(new MessageSequenceComparer());
 
-        private readonly Dictionary<ICommonSession, uint> _lastProcessedSequencesCmd =
+        /// <summary>
+        /// Tracks oldest <see cref="MsgEntity.Sequence"/> and <see cref="MsgEntity.LastAppliedTick"/> for each player.
+        /// </summary>
+        private readonly Dictionary<ICommonSession, (uint Sequence, GameTick Applied)> _lastProcessedMessage =
             new();
 
         private bool _logLateMsgs;
@@ -174,7 +178,12 @@ namespace Robust.Server.GameObjects
 
         public uint GetLastMessageSequence(ICommonSession? session)
         {
-            return session == null ? default : _lastProcessedSequencesCmd.GetValueOrDefault(session);
+            return session == null ? default : _lastProcessedMessage.GetValueOrDefault(session).Sequence;
+        }
+
+        public GameTick GetLastLastAppliedTick(ICommonSession? session)
+        {
+            return session == null ? default : _lastProcessedMessage.GetValueOrDefault(session).Applied;
         }
 
         /// <inheritdoc />
@@ -228,35 +237,29 @@ namespace Robust.Server.GameObjects
         {
             // Don't try to retrieve the session if the client disconnected
             if (!message.MsgChannel.IsConnected)
-            {
                 return;
-            }
 
             var player = _playerManager.GetSessionByChannel(message.MsgChannel);
 
-            if (message.Sequence != 0)
-            {
-                if (_lastProcessedSequencesCmd[player] < message.Sequence)
-                {
-                    _lastProcessedSequencesCmd[player] = message.Sequence;
-                }
-            }
+            ref var last = ref CollectionsMarshal.GetValueRefOrAddDefault(_lastProcessedMessage, player, out _);
+            if (last.Sequence < message.Sequence)
+                last.Sequence = message.Sequence;
+            if (last.Applied < message.LastAppliedTick)
+                last.Applied = message.LastAppliedTick;
+
+            if (message.Type != EntityMessageType.SystemMessage)
+                return;
 
 #if EXCEPTION_TOLERANCE
             try
 #endif
             {
-                switch (message.Type)
-                {
-                    case EntityMessageType.SystemMessage:
-                        var msg = message.SystemMessage;
-                        var sessionType = typeof(EntitySessionMessage<>).MakeGenericType(msg.GetType());
-                        var sessionMsg =
-                            Activator.CreateInstance(sessionType, new EntitySessionEventArgs(player), msg)!;
-                        ReceivedSystemMessage?.Invoke(this, msg);
-                        ReceivedSystemMessage?.Invoke(this, sessionMsg);
-                        return;
-                }
+                var msg = message.SystemMessage;
+                var sessionType = typeof(EntitySessionMessage<>).MakeGenericType(msg.GetType());
+                var sessionArgs = new EntitySessionEventArgs(player, last.Applied);
+                var sessionMsg = Activator.CreateInstance(sessionType, sessionArgs, msg)!;
+                ReceivedSystemMessage?.Invoke(this, msg);
+                ReceivedSystemMessage?.Invoke(this, sessionMsg);
             }
 #if EXCEPTION_TOLERANCE
             catch (Exception e)
@@ -271,11 +274,11 @@ namespace Robust.Server.GameObjects
             switch (args.NewStatus)
             {
                 case SessionStatus.Connected:
-                    _lastProcessedSequencesCmd.Add(args.Session, 0);
+                    _lastProcessedMessage.Add(args.Session, default);
                     break;
 
                 case SessionStatus.Disconnected:
-                    _lastProcessedSequencesCmd.Remove(args.Session);
+                    _lastProcessedMessage.Remove(args.Session);
                     break;
             }
         }

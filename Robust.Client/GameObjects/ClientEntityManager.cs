@@ -162,7 +162,7 @@ namespace Robust.Client.GameObjects
 
             DebugTools.Assert(_gameTiming.InPrediction && _gameTiming.IsFirstTimePredicted || _client.RunLevel == ClientRunLevel.SinglePlayerGame);
 
-            var eventArgs = new EntitySessionEventArgs(session!);
+            var eventArgs = new EntitySessionEventArgs(session!, _gameTiming.LastRealTick);
             EventBus.RaiseEvent(EventSource.Local, msg);
             EventBus.RaiseEvent(EventSource.Local, new EntitySessionMessage<T>(eventArgs, msg));
         }
@@ -228,6 +228,7 @@ namespace Robust.Client.GameObjects
             msg.Type = EntityMessageType.SystemMessage;
             msg.SystemMessage = message;
             msg.SourceTick = _gameTiming.CurTick;
+            msg.LastAppliedTick = _gameTiming.LastRealTick;
             msg.Sequence = sequence;
 
             _networkManager.ClientSendMessage(msg);

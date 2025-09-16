@@ -95,20 +95,19 @@ namespace Robust.Client.WebView.Cef
             // So these arguments look like nonsense, but it turns out CEF is just *like that*.
             // The first argument is literally nonsense, but it needs to be there as otherwise the second argument doesn't apply
             // The second argument turns off CEF's bullshit error handling, which breaks dotnet's error handling.
-            CefRuntime.Initialize(new CefMainArgs(["binary", "--disable-in-process-stack-traces"]),
-                settings,
-                _app,
-                IntPtr.Zero);
+            CefRuntime.Initialize(new CefMainArgs(new string[]{"binary","--disable-in-process-stack-traces"}), settings, _app, IntPtr.Zero);
 
-            if (!_cfg.GetCVar(WCVars.WebResProtocol)) return;
+            if (_cfg.GetCVar(WCVars.WebResProtocol))
+            {
+                var handler = new ResourceSchemeFactoryHandler(
+                    this,
+                    _resourceManager,
+                    _logManager.GetSawmill("web.res"));
 
-            var handler = new ResourceSchemeFactoryHandler(
-                this,
-                _resourceManager,
-                _logManager.GetSawmill("web.res"));
-
-            CefRuntime.RegisterSchemeHandlerFactory("res", "", handler);
+                CefRuntime.RegisterSchemeHandlerFactory("res", "", handler);
+            }
         }
+
         private static string? LocateCefResources()
         {
             if (ProbeDir(BasePath, out var path))
@@ -149,15 +148,24 @@ namespace Robust.Client.WebView.Cef
         public void Shutdown()
         {
             CefRuntime.Shutdown();
-            _lockFileStream?.Dispose();
         }
 
-        private sealed class ResourceSchemeFactoryHandler(
-            WebViewManagerCef parent,
-            IResourceManager resourceManager,
-            ISawmill sawmill)
-            : CefSchemeHandlerFactory
+        private sealed class ResourceSchemeFactoryHandler : CefSchemeHandlerFactory
         {
+            private readonly WebViewManagerCef _parent;
+            private readonly IResourceManager _resourceManager;
+            private readonly ISawmill _sawmill;
+
+            public ResourceSchemeFactoryHandler(
+                WebViewManagerCef parent,
+                IResourceManager resourceManager,
+                ISawmill sawmill)
+            {
+                _parent = parent;
+                _resourceManager = resourceManager;
+                _sawmill = sawmill;
+            }
+
             protected override CefResourceHandler Create(
                 CefBrowser browser,
                 CefFrame frame,
@@ -166,12 +174,12 @@ namespace Robust.Client.WebView.Cef
             {
                 var uri = new Uri(request.Url);
 
-                sawmill.Debug($"HANDLING: {request.Url}");
+                _sawmill.Debug($"HANDLING: {request.Url}");
 
                 var resPath = new ResPath(uri.AbsolutePath);
-                if (resourceManager.TryContentFileRead(resPath, out var stream))
+                if (_resourceManager.TryContentFileRead(resPath, out var stream))
                 {
-                    if (!parent.TryGetResourceMimeType(resPath.Extension, out var mime))
+                    if (!_parent.TryGetResourceMimeType(resPath.Extension, out var mime))
                         mime = "application/octet-stream";
 
                     return new RequestResultStream(stream, mime, HttpStatusCode.OK).MakeHandler();

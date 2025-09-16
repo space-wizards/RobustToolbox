@@ -61,12 +61,9 @@ namespace Robust.Client.WebView.Cef
             if (cefResourcesPath == null)
                 throw new InvalidOperationException("Unable to locate cef_resources directory!");
 
-            var cachePath = "";
-            if (_resourceManager.UserData is WritableDirProvider userData)
-            {
-                var rootDir = UserDataDir.GetRootUserDataDir(_gameController);
-                cachePath = Path.Combine(rootDir, "cef_cache", "0");
-            }
+            var remoteDebugPort = _cfg.GetCVar(WCVars.WebRemoteDebugPort);
+
+            var cachePath = FindAndLockCacheDirectory();
 
             var settings = new CefSettings()
             {
@@ -76,7 +73,7 @@ namespace Robust.Client.WebView.Cef
                 BrowserSubprocessPath = subProcessPath,
                 LocalesDirPath = Path.Combine(cefResourcesPath, "locales"),
                 ResourcesDirPath = cefResourcesPath,
-                RemoteDebuggingPort = 9222,
+                RemoteDebuggingPort = remoteDebugPort,
                 CookieableSchemesList = "usr,res",
                 CachePath = cachePath,
             };

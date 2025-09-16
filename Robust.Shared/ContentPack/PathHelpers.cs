@@ -80,7 +80,7 @@ namespace Robust.Shared.ContentPack
             if (!retPath.StartsWith(baseDir))
             {
                 // Allow path to match if it's just missing the directory separator at the end.
-                if (retPath != baseDir.TrimEnd('\\'))
+                if (retPath != baseDir.TrimEnd(Path.DirectorySeparatorChar))
                     throw new InvalidOperationException($"This branch should never be reached. Path: {path}");
             }
 

@@ -45,11 +45,12 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed `Matrix3Helpers.TransformBounds()` returning an incorrect result. Now it effectively behaves like `Matrix3Helpers.TransformBox()` and has been marked as obsolete.
+* The client no longer tries to send `CLIENT | REPLICATED` CVars when not connected to a server. This could cause test failures.
 
 ### Other
 
-*None yet*
+* The client now logs an error when attempting to send a network message without server connection. Previously, it would be silently dropped.
 
 ### Internal
 

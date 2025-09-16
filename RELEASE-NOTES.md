@@ -50,7 +50,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* The client now logs an error when attempting to send a network message without server connection. Previously, it would be silently dropped.
 
 ### Internal
 

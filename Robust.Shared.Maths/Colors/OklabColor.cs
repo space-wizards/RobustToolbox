@@ -60,7 +60,7 @@ public partial struct OklabColor : IEquatable<OklabColor>, ISpanFormattable
     /// <summary>
     ///     Converts cartesian Oklab color values to polar Oklch color values.
     /// </summary>
-    public readonly OklchColor ToLch()
+    public readonly OklchColor ToOklch()
     {
         var c = MathF.Sqrt(A * A + B * B);
         var h = MathF.Atan2(B, A);

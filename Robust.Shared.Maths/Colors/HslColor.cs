@@ -16,11 +16,11 @@ public struct HslColor : IEquatable<HslColor>, ISpanFormattable
     public float Lightness;
     public float Alpha;
 
-    public HslColor(float r, float g, float b, float a)
+    public HslColor(float h, float s, float l, float a)
     {
-        Hue = r;
-        Saturation = g;
-        Lightness = b;
+        Hue = h;
+        Saturation = s;
+        Lightness = l;
         Alpha = a;
     }
 

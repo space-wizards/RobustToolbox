@@ -76,6 +76,18 @@ public struct LinearSrgbColor : IEquatable<LinearSrgbColor>, ISpanFormattable
         );
     }
 
+    /// <summary>
+    ///     Converts Linear sRGB color values to CIEXYZ color values.
+    /// </summary>
+    public readonly CiexyzColor ToCiexyz()
+    {
+        float x = +0.4124f * Red + 0.3576f * Green + 0.1805f * Blue;
+        float y = +0.2126f * Red + 0.7152f * Green + 0.0722f * Blue;
+        float z = +0.0193f * Red + 0.1192f * Green + 0.9505f * Blue;
+
+        return new CiexyzColor(x, y, z, Alpha);
+    }
+
     public static bool operator ==(LinearSrgbColor left, LinearSrgbColor right)
     {
         return left.Equals(right);

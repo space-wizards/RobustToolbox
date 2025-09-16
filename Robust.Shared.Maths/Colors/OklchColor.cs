@@ -25,11 +25,11 @@ public struct OklchColor : IEquatable<OklchColor>, ISpanFormattable
         }
     }
 
-    public OklchColor(float l, float a, float b, float alpha)
+    public OklchColor(float l, float c, float h, float alpha)
     {
         L = l;
-        C = a;
-        H = b;
+        C = c;
+        H = h;
         Alpha = alpha;
     }
 

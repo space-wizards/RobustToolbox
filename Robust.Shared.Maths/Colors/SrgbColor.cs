@@ -25,7 +25,7 @@ public struct SrgbColor : IEquatable<SrgbColor>, ISpanFormattable
     }
 
     /// <summary>
-    ///     Converts RGB color values to HSL color values.
+    ///     Converts sRGB color values to HSL color values.
     /// </summary>
     public readonly HslColor ToHsl()
     {
@@ -58,7 +58,7 @@ public struct SrgbColor : IEquatable<SrgbColor>, ISpanFormattable
     }
 
     /// <summary>
-    ///     Converts RGB color values to HSL color values.
+    ///     Converts sRGB color values to HSL color values.
     /// </summary>
     public readonly HsvColor ToHsv()
     {
@@ -112,6 +112,18 @@ public struct SrgbColor : IEquatable<SrgbColor>, ISpanFormattable
             b = MathF.Pow((Blue + 0.055f) / (1.0f + 0.055f), 2.4f);
 
         return new LinearSrgbColor(r, g, b, Alpha);
+    }
+
+    /// <summary>
+    ///     Converts sRGB color values to sYCC color values.
+    /// </summary>
+    public readonly SyccColor ToSycc()
+    {
+        var y = 0.299f * Red + 0.587f * Green + 0.114f * Blue;
+        var u = -0.168736f * Red + -0.331264f * Green + 0.5f * Blue;
+        var v = 0.5f * Red + -0.418688f * Green + -0.081312f * Blue;
+
+        return new SyccColor(y, u, v, Alpha);
     }
 
     public readonly Color ToColor()

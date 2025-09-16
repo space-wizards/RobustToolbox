@@ -16,11 +16,11 @@ public struct HsvColor : IEquatable<HsvColor>, ISpanFormattable
     public float Value;
     public float Alpha;
 
-    public HsvColor(float r, float g, float b, float a)
+    public HsvColor(float h, float s, float v, float a)
     {
-        Hue = r;
-        Saturation = g;
-        Value = b;
+        Hue = h;
+        Saturation = s;
+        Value = v;
         Alpha = a;
     }
 

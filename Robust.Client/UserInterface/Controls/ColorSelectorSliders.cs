@@ -5,6 +5,7 @@ using Robust.Shared.ColorNaming;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Maths;
+using Robust.Shared.Maths.Colors;
 
 namespace Robust.Client.UserInterface.Controls;
 
@@ -447,8 +448,8 @@ public sealed class ColorSelectorSliders : Control
         public override ColorSelectorStyleBox.ColorSliderPreset BottomSliderStyle
             => ColorSelectorStyleBox.ColorSliderPreset.Value;
 
-        public override Vector4 ToColorData(Color color) => Color.ToHsv(color);
-        public override Color FromColorData(Vector4 colorData) => Color.FromHsv(colorData);
+        public override Vector4 ToColorData(Color color) => color.ToColors().ToHsv().AsVector;
+        public override Color FromColorData(Vector4 colorData) => new HsvColor(colorData).ToSrgb().ToColor();
 
         public override float GetColorValueDivisor(ColorSliderOrder order)
         {

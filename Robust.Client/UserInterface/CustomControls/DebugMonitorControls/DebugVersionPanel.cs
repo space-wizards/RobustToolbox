@@ -32,7 +32,8 @@ namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
             HorizontalAlignment = HAlignment.Left;
             VerticalAlignment = VAlignment.Top;
 
-            contents.Text = string.Join('\n', VersionInformationPrinter.GetInformationDump(cfg));
+            var buildInfo = GameBuildInformation.GetBuildInfoFromConfig(cfg);
+            contents.Text = $"Fork ID: {buildInfo.ForkId}\nFork Version: {buildInfo.Version}";
         }
     }
 }

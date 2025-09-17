@@ -350,7 +350,7 @@ public abstract partial class SharedPhysicsSystem
             }
 
             if ((metadata.EntityPaused && !seed.IgnorePaused) ||
-                (prediction && !seed.Predict) ||
+                (prediction && !(MetaData(ent.Owner).NetEntity.IsClientSide() && _gameTiming.IsFirstTimePredicted) && !seed.Predict) ||
                 !seed.CanCollide ||
                 seed.BodyType == BodyType.Static)
             {

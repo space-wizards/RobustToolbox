@@ -1,2 +1,2 @@
 map = map
-grid = map
+grid = grid

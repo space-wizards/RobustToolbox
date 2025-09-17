@@ -332,13 +332,9 @@ namespace Robust.Shared.Serialization.Manager.Definition
             inheritanceBehavior ??= InheritanceBehavior.Default;
 
             if (fieldInfo.HasAttribute<AlwaysPushInheritanceAttribute>(true))
-            {
                 inheritanceBehavior = InheritanceBehavior.Always;
-            }
             else if (fieldInfo.HasAttribute<NeverPushInheritanceAttribute>(true))
-            {
                 inheritanceBehavior = InheritanceBehavior.Never;
-            }
 
             if (fieldInfo is SpecificPropertyInfo propertyInfo)
             {
@@ -353,29 +349,38 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 }
             }
 
-            if (!fieldInfo.TryGetAttribute<DataFieldAttribute>(out var dataFieldAttribute, true))
+            // Most data fields have an explicit data field attribute
+            if (fieldInfo.TryGetAttribute<DataFieldAttribute>(out var dataFieldAttribute, true))
+                return GatherDataFieldData(fieldInfo, out dataFieldBaseAttribute, ref backingField, dataFieldAttribute);
+
+            if (fieldInfo.TryGetAttribute<IncludeDataFieldAttribute>(out var includeDataFieldAttribute, true))
             {
-                if (fieldInfo.TryGetAttribute<IncludeDataFieldAttribute>(out var includeDataFieldAttribute, true))
-                {
-                    dataFieldBaseAttribute = includeDataFieldAttribute;
-                    return true;
-                }
-
-                if (fieldInfo is not SpecificPropertyInfo)
-                    return true;
-
-                var potentialBackingField = fieldInfo.GetBackingField();
-                if (potentialBackingField != null)
-                {
-                    return GatherFieldData(potentialBackingField,
-                        out dataFieldBaseAttribute,
-                        out backingField,
-                        ref inheritanceBehavior);
-                }
-
-                return false;
+                dataFieldBaseAttribute = includeDataFieldAttribute;
+                return true;
             }
 
+            // This field/property has no explicit data field related annotations. However, things like
+            // DataRecordAttribute will cause all fields to be interpreted as data fields, so we still handle them
+
+            if (fieldInfo is not SpecificPropertyInfo)
+                return true;
+
+            var potentialBackingField = fieldInfo.GetBackingField();
+            if (potentialBackingField == null)
+                return false;
+
+            return GatherFieldData(potentialBackingField,
+                out dataFieldBaseAttribute,
+                out backingField,
+                ref inheritanceBehavior);
+        }
+
+        private static bool GatherDataFieldData(
+            AbstractFieldInfo fieldInfo,
+            out DataFieldBaseAttribute dataFieldBaseAttribute,
+            ref AbstractFieldInfo backingField,
+            DataFieldAttribute dataFieldAttribute)
+        {
             dataFieldBaseAttribute = dataFieldAttribute;
 
             if (fieldInfo is not SpecificPropertyInfo property

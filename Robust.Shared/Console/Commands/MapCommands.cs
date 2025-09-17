@@ -40,7 +40,7 @@ sealed class AddMapCommand : LocalizedEntityCommands
         {
             case 1:
                 var mapId = _mapSystem.GetNextMapId();
-                return CompletionResult.FromHint($"{mapId}");
+                return CompletionResult.FromHintOptions([ new CompletionOption($"{mapId}")], LocalizationManager.GetString("generic-mapid"));
             case 2:
                 return CompletionResult.FromHint(LocalizationManager.GetString("cmd-addmap-hint-2"));
             default:
@@ -82,7 +82,7 @@ sealed class RemoveMapCommand : LocalizedEntityCommands
         if (args.Length != 1)
             return CompletionResult.Empty;
 
-        return CompletionResult.FromHintOptions(CompletionHelper.MapIds(args[0], entManager: EntityManager), LocalizationManager.GetString("map"));
+        return CompletionResult.FromHintOptions(CompletionHelper.MapIds(args[0], entManager: EntityManager), LocalizationManager.GetString("generic-map"));
     }
 }
 
@@ -116,7 +116,7 @@ sealed class RemoveGridCommand : LocalizedEntityCommands
         if (args.Length != 1)
             return CompletionResult.Empty;
 
-        return CompletionResult.FromHintOptions(CompletionHelper.Components<MapGridComponent>(args[0], entManager: EntityManager), LocalizationManager.GetString("grid"));
+        return CompletionResult.FromHintOptions(CompletionHelper.Components<MapGridComponent>(args[0], entManager: EntityManager), LocalizationManager.GetString("generic-grid"));
     }
 }
 

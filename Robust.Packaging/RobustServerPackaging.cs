@@ -8,7 +8,9 @@ public sealed class RobustServerPackaging
     {
         "Textures",
         "Fonts",
+        "EngineFonts",
         "Shaders",
+        "Midi"
     };
 
     public static async Task WriteServerResources(
@@ -16,12 +18,21 @@ public sealed class RobustServerPackaging
         AssetPass pass,
         CancellationToken cancel = default)
     {
+        await WriteServerResources(contentDir, pass, new HashSet<string>(), cancel);
+    }
+
+    public static async Task WriteServerResources(
+        string contentDir,
+        AssetPass pass,
+        IReadOnlySet<string> additionalIgnoredResources,
+        CancellationToken cancel = default)
+    {
         var ignoreSet = ServerIgnoresResources.Union(RobustSharedPackaging.SharedIgnoredResources).ToHashSet();
 
         await RobustSharedPackaging.DoResourceCopy(
             Path.Combine(contentDir, "Resources"),
             pass,
-            ignoreSet,
+            ignoreSet.Union(additionalIgnoredResources).ToHashSet(),
             cancel: cancel);
 
         await RobustSharedPackaging.DoResourceCopy(

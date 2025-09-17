@@ -1,3 +1,4 @@
+using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared.ContentPack;
@@ -35,11 +36,7 @@ public sealed partial class BackwardsCompatibilityTest
         var tileMan = server.ResolveDependency<ITileDefinitionManager>();
         var resourceManager = server.ResolveDependency<IResourceManagerInternal>();
 
-        tileMan.Register(new TileDef("Space"));
-        for (var i = 1; i <= 88; i++)
-        {
-            tileMan.Register(new TileDef(i.ToString()));
-        }
+        SerializationTestHelper.LoadTileDefs(server.ProtoMan, tileMan);
         var gridPath = new ResPath($"{nameof(MapDataV3Grid)}.yml");
         resourceManager.MountString(gridPath.ToString(), MapDataV3Grid);
 
@@ -425,11 +422,29 @@ entities:
 ...
 ";
 
-    private const string PrototypeV3 = @"
+    private static string GenerateTileDefs(int count)
+    {
+        var sb = new StringBuilder();
+        for (var i = 0; i < count; i++)
+        {
+            sb.Append($@"
+- type: testTileDef
+  id: {i}"
+            );
+        }
+        return sb.ToString();
+    }
+
+    private static readonly string PrototypeV3 = $@"
 - type: entity
   id: V3TestProto
   components:
   - type: EntitySaveTest
     list: [ 1, 2 ]
+
+- type: testTileDef
+  id: Space
+
+{GenerateTileDefs(88)}
 ";
 }

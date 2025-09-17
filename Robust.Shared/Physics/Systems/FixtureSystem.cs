@@ -21,13 +21,12 @@ namespace Robust.Shared.Physics.Systems
     /// </summary>
     public sealed partial class FixtureSystem : EntitySystem
     {
+#if DEBUG
+        [Dependency] private readonly IGameTiming _timing = default!;
+#endif
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
         [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
-#pragma warning disable CS0414
-        [Dependency] private readonly IGameTiming _timing = default!;
-#pragma warning restore CS0414
-        private EntityQuery<PhysicsMapComponent> _mapQuery;
         private EntityQuery<PhysicsComponent> _physicsQuery;
         private EntityQuery<FixturesComponent> _fixtureQuery;
 
@@ -38,7 +37,6 @@ namespace Robust.Shared.Physics.Systems
             SubscribeLocalEvent<FixturesComponent, ComponentShutdown>(OnShutdown);
             SubscribeLocalEvent<FixturesComponent, ComponentGetState>(OnGetState);
             SubscribeLocalEvent<FixturesComponent, ComponentHandleState>(OnHandleState);
-            _mapQuery = GetEntityQuery<PhysicsMapComponent>();
             _physicsQuery = GetEntityQuery<PhysicsComponent>();
             _fixtureQuery = GetEntityQuery<FixturesComponent>();
         }
@@ -206,8 +204,7 @@ namespace Robust.Shared.Physics.Systems
             if (_lookup.TryGetCurrentBroadphase(xform, out var broadphase))
             {
                 DebugTools.Assert(xform.MapUid == Transform(broadphase.Owner).MapUid);
-                _mapQuery.TryGetComponent(xform.MapUid, out var physicsMap);
-                _lookup.DestroyProxies(uid, fixtureId, fixture, xform, broadphase, physicsMap);
+                _lookup.DestroyProxies(uid, fixtureId, fixture, xform, broadphase);
             }
 
             if (updates)
@@ -262,7 +259,7 @@ namespace Robust.Shared.Physics.Systems
             if (args.Current is not FixtureManagerComponentState state)
                 return;
 
-            if (!EntityManager.TryGetComponent(uid, out PhysicsComponent? physics))
+            if (!TryComp(uid, out PhysicsComponent? physics))
             {
                 Log.Error($"Tried to apply fixture state for an entity without physics: {ToPrettyString(uid)}");
                 return;

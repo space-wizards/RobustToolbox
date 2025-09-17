@@ -16,9 +16,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
     [TestFixture, Parallelizable ,TestOf(typeof(EntityManager))]
     public sealed partial class EntityManager_Components_Tests
     {
-        private const string DummyLoad = @"
+        private const string DummyLoadId = "DummyLoad";
+        private const string DummyLoad = $@"
         - type: entity
-          id: DummyLoad
+          id: {DummyLoadId}
           name: weh
           components:
           - type: Joint
@@ -40,7 +41,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var coords = new EntityCoordinates(map, default);
             var entity = entMan.SpawnEntity(null, coords);
             Assert.That(!entMan.HasComponent<PhysicsComponent>(entity));
-            var proto = protoManager.Index<EntityPrototype>("DummyLoad");
+            var proto = protoManager.Index<EntityPrototype>(DummyLoadId);
 
             entMan.AddComponents(entity, proto);
             Assert.Multiple(() =>
@@ -63,8 +64,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             var map = sim.CreateMap().Uid;
             var coords = new EntityCoordinates(map, default);
-            var entity = entMan.SpawnEntity("DummyLoad", coords);
-            var proto = protoManager.Index<EntityPrototype>("DummyLoad");
+            var entity = entMan.SpawnEntity(DummyLoadId, coords);
+            var proto = protoManager.Index<EntityPrototype>(DummyLoadId);
 
             entMan.RemoveComponents(entity, proto);
             Assert.Multiple(() =>

@@ -22,6 +22,7 @@ using Robust.Shared.Utility;
 using Robust.Shared.Log;
 using Direction = Robust.Shared.Maths.Direction;
 using Robust.Shared.Map.Components;
+using System.Linq;
 
 namespace Robust.Client.Placement
 {
@@ -32,21 +33,28 @@ namespace Robust.Client.Placement
         [Dependency] internal readonly IPlayerManager PlayerManager = default!;
         [Dependency] internal readonly IResourceCache ResourceCache = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] internal readonly IMapManager MapManager = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IGameTiming _time = default!;
-        [Dependency] internal readonly IEyeManager EyeManager = default!;
+        [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] internal readonly IInputManager InputManager = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
-        [Dependency] internal readonly IEntityManager EntityManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         [Dependency] private readonly IBaseClient _baseClient = default!;
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
         [Dependency] internal readonly IClyde Clyde = default!;
 
+        private static readonly ProtoId<ShaderPrototype> UnshadedShader = "unshaded";
+
+        public IEntityManager EntityManager => _entityManager;
+        public IEyeManager EyeManager => _eyeManager;
+        public IMapManager MapManager => _mapManager;
+
         private ISawmill _sawmill = default!;
 
         private SharedMapSystem Maps => EntityManager.System<SharedMapSystem>();
         private SharedTransformSystem XformSystem => EntityManager.System<SharedTransformSystem>();
+        private SpriteSystem Sprite => EntityManager.System<SpriteSystem>();
 
         /// <summary>
         ///     How long before a pending tile change is dropped.
@@ -197,6 +205,15 @@ namespace Robust.Client.Placement
             }
         }
 
+        private string[]? _allModeNames;
+        public string[] AllModeNames
+        {
+            get
+            {
+                return _allModeNames ??= [IPlacementManager.DefaultModeName, .. _modeDictionary.Keys.Order()];
+            }
+        }
+
         /// <inheritdoc />
         public event EventHandler? DirectionChanged;
 
@@ -208,7 +225,7 @@ namespace Robust.Client.Placement
 
         public void Initialize()
         {
-            _drawingShader = _prototypeManager.Index<ShaderPrototype>("unshaded").Instance();
+            _drawingShader = _prototypeManager.Index(UnshadedShader).Instance();
             _sawmill = _logManager.GetSawmill("placement");
 
             _networkManager.RegisterNetMessage<MsgPlacement>(HandlePlacementMessage);
@@ -711,11 +728,11 @@ namespace Robust.Client.Placement
             CurrentPlacementOverlayEntity = null;
         }
 
-        private SpriteComponent SetupPlacementOverlayEntity()
+        private Entity<SpriteComponent> SetupPlacementOverlayEntity()
         {
             EnsureNoPlacementOverlayEntity();
             CurrentPlacementOverlayEntity = EntityManager.SpawnEntity(null, MapCoordinates.Nullspace);
-            return EntityManager.EnsureComponent<SpriteComponent>(CurrentPlacementOverlayEntity.Value);
+            return (CurrentPlacementOverlayEntity.Value, EntityManager.EnsureComponent<SpriteComponent>(CurrentPlacementOverlayEntity.Value));
         }
 
         private void PreparePlacement(string templateName)
@@ -732,10 +749,16 @@ namespace Robust.Client.Placement
                 EntityManager.GetComponent<MetaDataComponent>(CurrentPlacementOverlayEntity.Value));
         }
 
-        public void PreparePlacementSprite(SpriteComponent sprite)
+        public void PreparePlacementSprite(Entity<SpriteComponent> sprite)
         {
             var sc = SetupPlacementOverlayEntity();
-            sc.CopyFrom(sprite);
+            Sprite.CopySprite(sprite.AsNullable(), sc.AsNullable());
+        }
+
+        [Obsolete("Use the Entity<SpriteComponent> overload.")]
+        public void PreparePlacementSprite(SpriteComponent sprite)
+        {
+            PreparePlacementSprite((sprite.Owner, sprite));
         }
 
         public void PreparePlacementTexList(List<IDirectionalTextureProvider>? texs, bool noRot, EntityPrototype? prototype)
@@ -746,27 +769,27 @@ namespace Robust.Client.Placement
                 // This one covers most cases (including Construction)
                 foreach (var v in texs)
                 {
-                    if (v is RSI.State)
+                    if (v is RSI.State st)
                     {
-                        var st = (RSI.State) v;
-                        sc.AddLayer(st.StateId, st.RSI);
+                        Sprite.AddRsiLayer(sc.AsNullable(), st.StateId, st.RSI);
                     }
                     else
                     {
                         // Fallback
-                        sc.AddLayer(v.Default);
+                        Sprite.AddTextureLayer(sc.AsNullable(), v.Default);
                     }
                 }
             }
             else
             {
-                sc.AddLayer(new ResPath("/Textures/Interface/tilebuildoverlay.png"));
+                Sprite.AddTextureLayer(sc.AsNullable(), new ResPath("/Textures/Interface/tilebuildoverlay.png"));
             }
-            sc.NoRotation = noRot;
+
+            sc.Comp.NoRotation = noRot;
 
             if (prototype != null && prototype.TryGetComponent<SpriteComponent>("Sprite", out var spriteComp))
             {
-                sc.Scale = spriteComp.Scale;
+                Sprite.SetScale(sc.AsNullable(), spriteComp.Scale);
             }
 
         }
@@ -774,7 +797,7 @@ namespace Robust.Client.Placement
         private void PreparePlacementTile()
         {
             var sc = SetupPlacementOverlayEntity();
-            sc.AddLayer(new ResPath("/Textures/Interface/tilebuildoverlay.png"));
+            Sprite.AddTextureLayer(sc.AsNullable(), new ResPath("/Textures/Interface/tilebuildoverlay.png"));
 
             IsActive = true;
         }

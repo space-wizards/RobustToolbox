@@ -162,7 +162,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 Assert.That(velocities.Item2, Is.Approximately(angularVelocity, 1e-6));
 
                 // but not if we update the local position:
-                xformSystem.SetWorldPosition(xform2!, Vector2.Zero);
+                xformSystem.SetWorldPosition((dummy2, xform2!), Vector2.Zero);
                 linearVelocity = physicsSys.GetMapLinearVelocity(dummy2, body2);
                 angularVelocity = physicsSys.GetMapAngularVelocity(dummy2, body2);
                 velocities = physicsSys.GetMapVelocities(dummy2, body2);

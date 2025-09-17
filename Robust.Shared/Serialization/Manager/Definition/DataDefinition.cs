@@ -436,6 +436,9 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 fieldDefinitions.Add(fieldDefinition);
             }
 
+            // There should be no duplicates
+            // I.e., we haven't accidentally included a property's backing field twice?
+            DebugTools.Assert(fieldDefinitions.Select(x=> x.FieldInfo).Distinct().Count() == fieldDefinitions.Count);
             return fieldDefinitions;
         }
     }

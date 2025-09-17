@@ -1,45 +1,41 @@
 using System;
 using Robust.Client.GameStates;
-using Robust.Client.Graphics;
-using Robust.Client.Input;
-using Robust.Client.Player;
 using Robust.Client.Profiling;
-using Robust.Client.State;
 using Robust.Client.Timing;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
-using Robust.Shared.Map;
 using Robust.Shared.Network;
 
 namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
 {
     internal sealed class DebugMonitors : BoxContainer, IDebugMonitors
     {
+        [Dependency] private readonly IClientGameTiming _timing = default!;
+        [Dependency] private readonly IClientGameStateManager _state = default!;
+        [Dependency] private readonly IConfigurationManager _cfg = default!;
+        [Dependency] private readonly IClientNetManager _net = default!;
+
         private readonly Control[] _monitors = new Control[Enum.GetNames<DebugMonitor>().Length];
 
-        //TODO: Think about a factory for this
-        public DebugMonitors(IClientGameTiming gameTiming, IPlayerManager playerManager, IEyeManager eyeManager,
-            IInputManager inputManager, IStateManager stateManager, IClyde displayManager, IClientNetManager netManager,
-            IMapManager mapManager)
+        public void Init()
         {
             Visible = false;
-
             SeparationOverride = 2;
             Orientation = LayoutOrientation.Vertical;
 
-            Add(DebugMonitor.Fps, new FpsCounter(gameTiming));
+            Add(DebugMonitor.Fps, new FpsCounter(_timing));
             Add(DebugMonitor.Coords, new DebugCoordsPanel());
-            Add(DebugMonitor.Net, new DebugNetPanel(netManager, gameTiming));
-            Add(DebugMonitor.Bandwidth, new DebugNetBandwidthPanel(netManager, gameTiming));
-            Add(DebugMonitor.Time, new DebugTimePanel(gameTiming, IoCManager.Resolve<IClientGameStateManager>()));
-            Add(DebugMonitor.Frames, new FrameGraph(gameTiming, IoCManager.Resolve<IConfigurationManager>()));
+            Add(DebugMonitor.Net, new DebugNetPanel(_net, _timing));
+            Add(DebugMonitor.Bandwidth, new DebugNetBandwidthPanel(_net, _timing));
+            Add(DebugMonitor.Time, new DebugTimePanel(_timing, _state));
+            Add(DebugMonitor.Frames, new FrameGraph(_timing, _cfg));
             Add(DebugMonitor.Memory, new DebugMemoryPanel());
             Add(DebugMonitor.Clyde, new DebugClydePanel { HorizontalAlignment = HAlignment.Left });
             Add(DebugMonitor.System, new DebugSystemPanel { HorizontalAlignment = HAlignment.Left });
             Add(DebugMonitor.Input, new DebugInputPanel { HorizontalAlignment = HAlignment.Left });
             Add(DebugMonitor.Prof, new LiveProfileViewControl());
-            Add(DebugMonitor.Version, new DebugVersionPanel(IoCManager.Resolve<IConfigurationManager>()) { HorizontalAlignment = HAlignment.Left });
+            Add(DebugMonitor.Version, new DebugVersionPanel(_cfg) { HorizontalAlignment = HAlignment.Left });
 
             void Add(DebugMonitor monitor, Control instance)
             {

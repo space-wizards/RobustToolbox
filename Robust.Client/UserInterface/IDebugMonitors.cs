@@ -37,6 +37,5 @@ public enum DebugMonitor
     Bandwidth,
     Prof,
     System,
-
     Version
 }

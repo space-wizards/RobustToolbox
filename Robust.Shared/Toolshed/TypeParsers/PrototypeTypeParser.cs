@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
@@ -14,9 +15,8 @@ namespace Robust.Shared.Toolshed.TypeParsers;
 public sealed class ProtoIdTypeParser<T> : TypeParser<ProtoId<T>>
     where T : class, IPrototype
 {
+    [Dependency] private readonly IConfigurationManager _config = default!;
     [Dependency] private readonly IPrototypeManager _proto = default!;
-
-    private CompletionResult? _completions;
 
     public override bool TryParse(ParserContext ctx, out ProtoId<T> result)
     {
@@ -49,18 +49,15 @@ public sealed class ProtoIdTypeParser<T> : TypeParser<ProtoId<T>>
         return true;
     }
 
-    public override CompletionResult TryAutocomplete(ParserContext ctx, string? argName)
+    public override CompletionResult TryAutocomplete(ParserContext ctx, CommandArgument? arg)
     {
-        if (_completions != null)
-            return _completions;
+        if (typeof(T) == typeof(EntityPrototype))
+            return CompletionResult.FromHint(GetArgHint(arg));
 
-        _proto.TryGetKindFrom<T>(out var kind);
-        var hint = $"<{kind} prototype>";
-
-        _completions = _proto.Count<T>() < 256
-            ? CompletionResult.FromHintOptions( CompletionHelper.PrototypeIDs<T>(proto: _proto), hint)
-            : CompletionResult.FromHint(hint);
-        return _completions;
+        var hint = ToolshedCommand.GetArgHint(arg, typeof(ProtoId<T>));
+        var maxCount = _config.GetCVar(CVars.ToolshedPrototypesAutocompleteLimit);
+        var options = CompletionHelper.PrototypeIdsLimited<T>(ctx.Input[ctx.Index..], proto: _proto, maxCount: maxCount);
+        return CompletionResult.FromHintOptions(options, hint);
     }
 }
 
@@ -76,12 +73,12 @@ public sealed class EntProtoIdTypeParser : TypeParser<EntProtoId>
         return true;
     }
 
-    public override CompletionResult TryAutocomplete(ParserContext parserContext, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext parserContext, CommandArgument? arg)
     {
         // TODO TOOLSHED Improve ProtoId completions
         // Completion options should be able to communicate to a client that it can populate the options by itself.
         // I.e., instead of dumping all entity prototypes on the client, tell it how to generate them locally.
-        return CompletionResult.FromHint($"<Entity prototype>");
+        return CompletionResult.FromHint(GetArgHint(arg));
     }
 }
 
@@ -106,9 +103,9 @@ public sealed class PrototypeInstanceTypeParser<T> : TypeParser<T>
         return false;
     }
 
-    public override CompletionResult? TryAutocomplete(ParserContext ctx, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
     {
-        return Toolshed.TryAutocomplete(ctx, typeof(ProtoId<T>), argName);
+        return Toolshed.TryAutocomplete(ctx, typeof(ProtoId<T>), arg);
     }
 }
 
@@ -137,7 +134,7 @@ internal sealed class PrototypeTypeParser<T> : TypeParser<Prototype<T>>
         return true;
     }
 
-    public override CompletionResult TryAutocomplete(ParserContext ctx, string? argName)
+    public override CompletionResult? TryAutocomplete(ParserContext ctx, CommandArgument? arg)
     {
         IEnumerable<CompletionOption> options;
 

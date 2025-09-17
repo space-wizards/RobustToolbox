@@ -57,8 +57,9 @@ namespace Robust.UnitTesting.Shared
             await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
 
             // Connect client to the server...
+            var netMan = client.ResolveDependency<IClientNetManager>();
             Assert.DoesNotThrow(() => client.SetConnectTarget(server));
-            client.Post(() => IoCManager.Resolve<IClientNetManager>().ClientConnect(null!, 0, null!));
+            client.Post(() => netMan.ClientConnect(null!, 0, null!));
 
             // Run 10 synced ticks...
             for (int i = 0; i < 10; i++)
@@ -89,6 +90,10 @@ namespace Robust.UnitTesting.Shared
                 Assert.That(netManager.ServerChannel, Is.Not.Null);
                 Assert.That(netManager.ServerChannel!.IsConnected, Is.True);
             });
+
+            await client.WaitPost(() => netMan.ClientDisconnect(""));
+            await server.WaitRunTicks(5);
+            await client.WaitRunTicks(5);
         }
     }
 }

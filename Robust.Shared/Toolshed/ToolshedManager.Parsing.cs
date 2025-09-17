@@ -231,7 +231,10 @@ public sealed partial class ToolshedManager
     /// <returns>Success.</returns>
     public bool TryParse<T>(ParserContext parserContext, [NotNullWhen(true)] out T? parsed)
     {
-        var res = TryParse(parserContext, typeof(T), out var p);
+        var t = typeof(T);
+        t = Nullable.GetUnderlyingType(t) ?? t;
+        var res = TryParse(parserContext, t, out var p);
+
         if (p is not null)
             parsed = (T?) p;
         else
@@ -242,12 +245,12 @@ public sealed partial class ToolshedManager
     /// <summary>
     ///     iunno man it does autocomplete what more do u want
     /// </summary>
-    public CompletionResult? TryAutocomplete(ParserContext ctx, Type t, string? argName)
+    public CompletionResult? TryAutocomplete(ParserContext ctx, Type t, CommandArgument? arg)
     {
         DebugTools.AssertNull(ctx.Error);
         DebugTools.AssertNull(ctx.Completions);
         DebugTools.AssertEqual(ctx.GenerateCompletions, true);
-        return GetParserForType(t)?.TryAutocomplete(ctx, argName);
+        return GetParserForType(t)?.TryAutocomplete(ctx, arg);
     }
 
     /// <summary>

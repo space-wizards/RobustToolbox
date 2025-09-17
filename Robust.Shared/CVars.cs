@@ -4,6 +4,7 @@ using Lidgren.Network;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
 using Robust.Shared.Configuration;
+using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
@@ -131,13 +132,13 @@ namespace Robust.Shared
         /// Whether to interpolate between server game states for render frames on the client.
         /// </summary>
         public static readonly CVarDef<bool> NetInterp =
-            CVarDef.Create("net.interp", true, CVar.ARCHIVE | CVar.CLIENTONLY);
+            CVarDef.Create("net.interp", true, CVar.ARCHIVE | CVar.CLIENT | CVar.REPLICATED);
 
         /// <summary>
         /// The target number of game states to keep buffered up to smooth out network inconsistency.
         /// </summary>
         public static readonly CVarDef<int> NetBufferSize =
-            CVarDef.Create("net.buffer_size", 2, CVar.ARCHIVE | CVar.CLIENTONLY);
+            CVarDef.Create("net.buffer_size", 2, CVar.ARCHIVE | CVar.CLIENT | CVar.REPLICATED);
 
         /// <summary>
         /// The maximum size of the game state buffer. If this is exceeded the client will request a full game state.
@@ -968,6 +969,13 @@ namespace Robust.Shared
         public static readonly CVarDef<string> RenderFOVColor =
             CVarDef.Create("render.fov_color", Color.Black.ToHex(), CVar.REPLICATED | CVar.SERVER);
 
+        /// <summary>
+        /// Whether to render tile edges, which is where some tiles can partially overlap other adjacent tiles on a grid.
+        /// E.g., snow tiles partly extending beyond their own tile to blend together with different adjacent tiles types.
+        /// </summary>
+        public static readonly CVarDef<bool> RenderTileEdges =
+            CVarDef.Create("render.tile_edges", true, CVar.CLIENTONLY);
+
         /*
          *  CONTROLS
          */
@@ -993,6 +1001,15 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> DisplayVSync =
             CVarDef.Create("display.vsync", true, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Maximum framerate the client should run at. Set to 0 to have no limit.
+        /// </summary>
+        /// <remarks>
+        /// This is ignored if <see cref="DisplayVSync"/> is enabled.
+        /// </remarks>
+        public static readonly CVarDef<int> DisplayMaxFPS =
+            CVarDef.Create("display.max_fps", 0, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
         /// Window mode for the main game window. 0 = windowed, 1 = fullscreen.
@@ -1234,6 +1251,12 @@ namespace Robust.Shared
             CVarDef.Create("audio.raycast_length", SharedAudioSystem.DefaultSoundRange, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
+        /// Maximum offset for audio to be played at from its full duration. If it's past this then the audio won't be played.
+        /// </summary>
+        public static readonly CVarDef<float> AudioEndBuffer =
+            CVarDef.Create("audio.end_buffer", 0.01f, CVar.REPLICATED);
+
+        /// <summary>
         /// Tickrate for audio calculations.
         /// OpenAL recommends 30TPS. This is to avoid running raycasts every frame especially for high-refresh rate monitors.
         /// </summary>
@@ -1349,10 +1372,10 @@ namespace Robust.Shared
         /// MaxLinVelocity is compared to the dot product of linearVelocity * frameTime.
         /// </summary>
         /// <remarks>
-        /// Default is 35 m/s. Around half a tile per tick at 60 ticks per second.
+        /// Default is 400 m/s in-line with Box2c. Box2d used 120m/s.
         /// </remarks>
         public static readonly CVarDef<float> MaxLinVelocity =
-            CVarDef.Create("physics.maxlinvelocity", 35f, CVar.SERVER | CVar.REPLICATED);
+            CVarDef.Create("physics.maxlinvelocity", 400f, CVar.SERVER | CVar.REPLICATED);
 
         /// <summary>
         /// Maximum angular velocity in full rotations per second.
@@ -1363,7 +1386,6 @@ namespace Robust.Shared
         /// </remarks>
         public static readonly CVarDef<float> MaxAngVelocity =
             CVarDef.Create("physics.maxangvelocity", 15f);
-
 
         /*
          * User interface
@@ -1474,7 +1496,7 @@ namespace Robust.Shared
         /// Non-default seek modes WILL result in worse performance.
         /// </remarks>
         public static readonly CVarDef<int> ResStreamSeekMode =
-            CVarDef.Create("res.stream_seek_mode", (int)ContentPack.StreamSeekMode.None);
+            CVarDef.Create("res.stream_seek_mode", (int)StreamSeekMode.None);
 
         /// <summary>
         /// Whether to watch prototype files for prototype reload on the client. Only applies to development builds.
@@ -1869,5 +1891,29 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> ToolshedNearbyEntitiesLimit =
             CVarDef.Create("toolshed.nearby_entities_limit", 5, CVar.SERVER | CVar.REPLICATED);
+
+        /// <summary>
+        ///     The max amount of prototype ids that can be sent to the client when autocompleting prototype ids.
+        /// </summary>
+        public static readonly CVarDef<int> ToolshedPrototypesAutocompleteLimit =
+            CVarDef.Create("toolshed.prototype_autocomplete_limit", 256, CVar.SERVER | CVar.REPLICATED);
+
+        /*
+         * Localization
+         */
+
+        public static readonly CVarDef<string> LocCultureName =
+            CVarDef.Create("loc.culture_name", "en-US", CVar.ARCHIVE);
+
+        /*
+         * UI
+         */
+
+        /// <summary>
+        ///     The file XamlHotReloadManager looks for when locating the root of the project.
+        ///     By default, this is Space Station 14's sln, but it can be any file at the same root level.
+        /// </summary>
+        public static readonly CVarDef<string> XamlHotReloadMarkerName =
+            CVarDef.Create("ui.xaml_hot_reload_marker_name", "SpaceStation14.sln", CVar.CLIENTONLY);
     }
 }

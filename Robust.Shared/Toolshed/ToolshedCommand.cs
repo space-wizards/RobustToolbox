@@ -124,11 +124,12 @@ public abstract partial class ToolshedCommand
             {
                 var hasAnyAttribute = false;
 
-                if (param.HasCustomAttribute<CommandArgumentAttribute>())
+                if (param.GetCustomAttribute<CommandArgumentAttribute>() is {} cmdAttr)
                 {
                     if (param.Name == null || !argNames.Add(param.Name))
                         throw new InvalidCommandImplementation($"Command arguments must have a unique name");
                     hasAnyAttribute = true;
+                    ValidateArg(param, cmdAttr);
                 }
 
                 if (param.HasCustomAttribute<PipedArgumentAttribute>())
@@ -180,6 +181,7 @@ public abstract partial class ToolshedCommand
                 // Implicit [CommandArgument]
                 if (param.Name == null || !argNames.Add(param.Name))
                     throw new InvalidCommandImplementation($"Command arguments must have a unique name");
+                ValidateArg(param);
             }
 
             var takesPipedGeneric = impl.HasCustomAttribute<TakesPipedTypeAsGenericAttribute>();
@@ -228,6 +230,28 @@ public abstract partial class ToolshedCommand
             if (!CommandImplementors.ContainsKey(key))
                 CommandImplementors[key] = new ToolshedCommandImplementor(subCmd, this, Toolshed, Loc);
         }
+    }
+
+    private void ValidateArg(ParameterInfo arg, CommandArgumentAttribute? cmdAttr = null)
+    {
+        if (cmdAttr == null || cmdAttr.CustomParser == null && !cmdAttr.Unparseable)
+        {
+            // This checks that each argument has a corresponding type parser, as people have sometimes created a command
+            // without realising that the type is unparseable.
+            var t = Nullable.GetUnderlyingType(arg.ParameterType) ?? arg.ParameterType;
+            var ignore = t.IsGenericType || t.IsArray || t.ContainsGenericParameters;
+            if (!ignore && Toolshed.GetParserForType(t) == null)
+                throw new InvalidCommandImplementation($"{Name} command argument of type {t.PrettyName()} has no type parser. You either need to add a type parser or explicitly mark the argument as unparseable.");
+        }
+
+        var isParams = arg.HasCustomAttribute<ParamArrayAttribute>();
+        if (!isParams)
+            return;
+
+        // I'm honestly not even sure if dotnet 9 collections use the same attribute, a quick search hasn't come
+        // up with anything.
+        if (!arg.ParameterType.IsArray)
+            throw new InvalidCommandImplementation(".net 9 params collections are not yet supported");
     }
 
     internal HashSet<Type> AcceptedTypes(string? subCommand)
@@ -289,6 +313,16 @@ public struct CommandArgumentBundle
     /// The type of input that will be piped into this command.
     /// </summary>
     public required Type? PipedType;
+
+    /// <summary>
+    /// The index where the command's name starts. Used for contextualising errors.
+    /// </summary>
+    public int NameStart;
+
+    /// <summary>
+    /// The index where the (sub)command's name ends. Used for contextualising errors.
+    /// </summary>
+    public int NameEnd;
 }
 
 internal readonly record struct CommandDiscriminator(Type? PipedType, Type[]? TypeArguments)

@@ -1,3 +1,4 @@
+using System;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects;
@@ -38,11 +39,14 @@ public abstract partial class EntityManager
         Dirty(uid, comp, metadata);
     }
 
-    public void DirtyField<T>(EntityUid uid, T comp, string fieldName, MetaDataComponent? metadata = null)
+    public virtual void DirtyField<T>(EntityUid uid, T comp, string fieldName, MetaDataComponent? metadata = null)
         where T : IComponentDelta
     {
         var compReg = ComponentFactory.GetRegistration(CompIdx.Index<T>());
 
+        // TODO
+        // consider storing this on MetaDataComponent?
+        // We alsready store other dirtying information there anyways, and avoids having to fetch the registration.
         if (!compReg.NetworkedFieldLookup.TryGetValue(fieldName, out var idx))
         {
             _sawmill.Error($"Tried to dirty delta field {fieldName} on {ToPrettyString(uid)} that isn't implemented.");
@@ -53,6 +57,24 @@ public abstract partial class EntityManager
         comp.LastFieldUpdate = curTick;
         comp.LastModifiedFields[idx] = curTick;
         Dirty(uid, comp, metadata);
+    }
+
+    public virtual void DirtyFields<T>(EntityUid uid, T comp, MetaDataComponent? meta, params string[] fields)
+        where T : IComponentDelta
+    {
+        var compReg = ComponentFactory.GetRegistration(CompIdx.Index<T>());
+
+        var curTick = _gameTiming.CurTick;
+        foreach (var field in fields)
+        {
+            if (!compReg.NetworkedFieldLookup.TryGetValue(field, out var idx))
+                _sawmill.Error($"Tried to dirty delta field {field} on {ToPrettyString(uid)} that isn't implemented.");
+            else
+                comp.LastModifiedFields[idx] = curTick;
+        }
+
+        comp.LastFieldUpdate = curTick;
+        Dirty(uid, comp, meta);
     }
 }
 

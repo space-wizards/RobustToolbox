@@ -101,9 +101,31 @@ namespace Robust.Client.GameObjects
         /// <inheritdoc />
         public override void Dirty<T>(Entity<T> ent, MetaDataComponent? meta = null)
         {
-            //  Client only dirties during prediction
+            // Client only dirties during prediction
             if (_gameTiming.InPrediction)
                 base.Dirty(ent, meta);
+        }
+
+        public override void DirtyField<T>(EntityUid uid, T comp, string fieldName, MetaDataComponent? metadata = null)
+        {
+            // TODO Prediction
+            // does the client actually need to dirty the field?
+            // I.e., can't it just dirty the whole component to trigger a reset?
+
+            // Client only dirties during prediction
+            if (_gameTiming.InPrediction)
+                base.DirtyField(uid, comp, fieldName, metadata);
+        }
+
+        public override void DirtyFields<T>(EntityUid uid, T comp, MetaDataComponent? meta, params string[] fields)
+        {
+            // TODO Prediction
+            // does the client actually need to dirty the field?
+            // I.e., can't it just dirty the whole component to trigger a reset?
+
+            // Client only dirties during prediction
+            if (_gameTiming.InPrediction)
+                base.DirtyFields(uid, comp, meta, fields);
         }
 
         /// <inheritdoc />
@@ -269,5 +291,54 @@ namespace Robust.Client.GameObjects
             }
         }
         #endregion
+
+        /// <inheritdoc />
+        public override void PredictedDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
+        {
+            if (!MetaQuery.Resolve(ent.Owner, ref ent.Comp1)
+                || ent.Comp1.EntityLifeStage >= EntityLifeStage.Terminating
+                || !TransformQuery.Resolve(ent.Owner, ref ent.Comp2))
+            {
+                return;
+            }
+
+            // So there's 3 scenarios:
+            // 1. Networked entity we just move to nullspace and rely on state handling.
+            // 2. Clientside predicted entity we delete and rely on state handling.
+            // 3. Clientside only entity that actually needs deleting here.
+
+            if (ent.Comp1.NetEntity.IsClientSide())
+            {
+                DeleteEntity(ent, ent.Comp1, ent.Comp2);
+            }
+            else
+            {
+                _xforms.DetachEntity(ent, ent.Comp2);
+            }
+        }
+
+        /// <inheritdoc />
+        public override void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
+        {
+            if (IsQueuedForDeletion(ent.Owner)
+                || !MetaQuery.Resolve(ent.Owner, ref ent.Comp1)
+                || ent.Comp1.EntityLifeStage >= EntityLifeStage.Terminating
+                || !TransformQuery.Resolve(ent.Owner, ref ent.Comp2))
+            {
+                return;
+            }
+
+            if (ent.Comp1.NetEntity.IsClientSide())
+            {
+                // client-side QueueDeleteEntity re-fetches MetadataComp and checks IsClientSide().
+                // base call to skip that.
+                // TODO create override that takes in metadata comp
+                base.QueueDeleteEntity(ent);
+            }
+            else
+            {
+                _xforms.DetachEntity(ent.Owner, ent.Comp2);
+            }
+        }
     }
 }

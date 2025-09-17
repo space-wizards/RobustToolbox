@@ -42,8 +42,7 @@ command-description-as =
 command-description-count =
     Counts the amount of entries in it's input, returning an integer.
 command-description-map =
-    Maps the input over the given block, with the provided expected return type.
-    This command may be modified to not need an explicit return type in the future.
+    Maps the input over the given block.
 command-description-select =
     Selects N objects or N% of objects from the input.
     One can additionally invert this command with not to make it select everything except N objects instead.
@@ -149,7 +148,7 @@ command-description-max =
     Returns the maximum of two values.
 command-description-BitAndCommand =
     Performs bitwise AND.
-command-description-BitOrCommand =
+command-description-bitor =
     Performs bitwise OR.
 command-description-BitXorCommand =
     Performs bitwise XOR.
@@ -196,6 +195,8 @@ command-description-spawn-at =
     Spawns an entity at the given coordinates.
 command-description-spawn-on =
     Spawns an entity on the given entity, at it's coordinates.
+command-description-spawn-in =
+    Spawns an entity in the given container on the given entity, dropping it at its coordinates if it doesn't fit
 command-description-spawn-attached =
     Spawns an entity attached to the given entity, at (0 0) relative to it.
 command-description-mappos =
@@ -203,11 +204,11 @@ command-description-mappos =
 command-description-pos =
     Returns an entity's coordinates.
 command-description-tp-coords =
-    Teleports the target to the given coordinates.
+    Teleports the given entities to the target coordinates.
 command-description-tp-to =
-    Teleports the target to the given other entity.
+    Teleports the given entities to the target entity.
 command-description-tp-into =
-    Teleports the target "into" the given other entity, attaching it at (0 0) relative to it.
+    Teleports the given entities "into" the target entity, attaching it at (0 0) relative to it.
 command-description-comp-get =
     Gets the given component from the given entity.
 command-description-comp-add =
@@ -277,7 +278,7 @@ command-description-ModVecCommand =
     Performs the modulus operation over the input with the given constant right-hand value.
 command-description-BitAndNotCommand =
     Performs bitwise AND-NOT over the input.
-command-description-BitOrNotCommand =
+command-description-bitornot =
     Performs bitwise OR-NOT over the input.
 command-description-BitXnorCommand =
     Performs bitwise XNOR over the input.

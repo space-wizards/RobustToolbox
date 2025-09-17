@@ -86,10 +86,10 @@ namespace Robust.Client.UserInterface
 
         [ViewVariables] public ViewportContainer MainViewport { get; private set; } = default!;
         [ViewVariables] public LayoutContainer StateRoot { get; private set; } = default!;
-        [ViewVariables] public PopupContainer ModalRoot { get; private set; } = default!;
+        [ViewVariables] public PopupContainer ModalRoot => RootControl.ModalRoot;
         [ViewVariables] public WindowRoot RootControl { get; private set; } = default!;
         [ViewVariables] public LayoutContainer WindowRoot { get; private set; } = default!;
-        [ViewVariables] public LayoutContainer PopupRoot { get; private set; } = default!;
+        [ViewVariables] public LayoutContainer PopupRoot => RootControl.PopupRoot;
         [ViewVariables] public DropDownDebugConsole DebugConsole { get; private set; } = default!;
         [ViewVariables] public IDebugMonitors DebugMonitors => _debugMonitors;
         private DebugMonitors _debugMonitors = default!;
@@ -117,7 +117,7 @@ namespace Robust.Client.UserInterface
 
             DebugConsole = new DropDownDebugConsole();
             RootControl.AddChild(DebugConsole);
-            DebugConsole.SetPositionInParent(ModalRoot.GetPositionInParent());
+            DebugConsole.SetPositionInParent(RootControl.ModalRoot.GetPositionInParent());
 
             _debugMonitors = new DebugMonitors(_gameTiming, _playerManager, _eyeManager, _inputManager, _stateManager,
                 _clyde, _netManager, _mapManager);
@@ -177,19 +177,7 @@ namespace Robust.Client.UserInterface
             };
             RootControl.AddChild(WindowRoot);
 
-            ModalRoot = new PopupContainer
-            {
-                Name = "ModalRoot",
-                MouseFilter = Control.MouseFilterMode.Ignore,
-            };
-            RootControl.AddChild(ModalRoot);
-
-            PopupRoot = new LayoutContainer
-            {
-                Name = "PopupRoot",
-                MouseFilter = Control.MouseFilterMode.Ignore
-            };
-            RootControl.AddChild(PopupRoot);
+            RootControl.CreateRootControls();
         }
 
         public void InitializeTesting()
@@ -335,6 +323,30 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        public void RenderControl(in Control.ControlRenderArguments args, Control control)
+        {
+            var _ = 0;
+            RenderControl(args.Handle,
+                ref _,
+                control,
+                args.Position,
+                args.Modulate,
+                args.ScissorBox,
+                args.CoordinateTransform);
+        }
+
+        public void RenderControl(IRenderHandle handle, Control control, Vector2i position)
+        {
+            var _ = 0;
+            RenderControl(handle,
+                ref _,
+                control,
+                position,
+                Color.White,
+                null,
+                Matrix3x2.Identity);
+        }
+
         public void RenderControl(IRenderHandle renderHandle, ref int total, Control control, Vector2i position, Color modulate,
             UIBox2i? scissorBox, Matrix3x2 coordinateTransform)
         {
@@ -393,7 +405,7 @@ namespace Robust.Client.UserInterface
                 // Handle modulation with care.
                 var oldMod = handle.Modulate;
                 handle.Modulate = modulate * control.ActualModulateSelf;
-                control.DrawInternal(renderHandle);
+                control.Draw(renderHandle);
                 handle.Modulate = oldMod;
                 handle.UseShader(null);
             }
@@ -409,10 +421,11 @@ namespace Robust.Client.UserInterface
 
             control.PreRenderChildren(ref args);
 
-            foreach (var child in control.Children)
+            for (var index = 0; index < control.ChildCount; index++)
             {
+                var child = control.GetChild(index);
                 var pos = position + (Vector2i)Vector2.Transform(child.PixelPosition, coordinateTransform);
-                control.RenderChildOverride(ref args, child.GetPositionInParent(), pos);
+                control.RenderChildOverride(ref args, index, pos);
             }
 
             control.PostRenderChildren(ref args);

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Numerics;
 using Robust.Client.UserInterface.CustomControls;
@@ -15,10 +16,14 @@ namespace Robust.Client.Graphics.Clyde
         private readonly Dictionary<ClydeHandle, WeakReference<Viewport>> _viewports =
             new();
 
+        private long _nextViewportId = 1;
+
+        private readonly ConcurrentQueue<ViewportDisposeData> _viewportDisposeQueue = new();
+
         private Viewport CreateViewport(Vector2i size, TextureSampleParameters? sampleParameters = default, string? name = null)
         {
             var handle = AllocRid();
-            var viewport = new Viewport(handle, name, this)
+            var viewport = new Viewport(_nextViewportId++, handle, name, this)
             {
                 Size = size,
                 RenderTarget = CreateRenderTarget(size,
@@ -59,27 +64,42 @@ namespace Robust.Client.Graphics.Clyde
 
         private void FlushViewportDispose()
         {
-            // Free of allocations unless a dead viewport is found.
-            List<ClydeHandle>? toRemove = null;
-            foreach (var (handle, viewportRef) in _viewports)
+            while (_viewportDisposeQueue.TryDequeue(out var data))
             {
-                if (!viewportRef.TryGetTarget(out _))
-                {
-                    toRemove ??= new List<ClydeHandle>();
-                    toRemove.Add(handle);
-                }
-            }
-
-            if (toRemove == null)
-            {
-                return;
-            }
-
-            foreach (var remove in toRemove)
-            {
-                _viewports.Remove(remove);
+                DisposeViewport(data);
             }
         }
+
+        private void DisposeViewport(ViewportDisposeData disposeData)
+        {
+            _clydeSawmill.Warning($"Viewport {disposeData.Id} got leaked");
+
+            _viewports.Remove(disposeData.Handle);
+            if (disposeData.ClearEvent is not { } clearEvent)
+                return;
+
+            try
+            {
+                clearEvent(disposeData.ClearEventData);
+            }
+            catch (Exception ex)
+            {
+                _clydeSawmill.Error($"Caught exception while disposing viewport: {ex}");
+            }
+        }
+
+#if TOOLS
+        public void ViewportsClearAllCached()
+        {
+            foreach (var vpRef in _viewports.Values)
+            {
+                if (!vpRef.TryGetTarget(out var vp))
+                    continue;
+
+                vp.FireClear();
+            }
+        }
+#endif // TOOLS
 
         private sealed class Viewport : IClydeViewport
         {
@@ -106,17 +126,20 @@ namespace Robust.Client.Graphics.Clyde
 
             public string? Name { get; }
 
-            public Viewport(ClydeHandle handle, string? name, Clyde clyde)
+            public Viewport(long id, ClydeHandle handle, string? name, Clyde clyde)
             {
                 Name = name;
                 _handle = handle;
                 _clyde = clyde;
+                Id = id;
             }
 
             public Vector2i Size { get; set; }
+            public event Action<ClearCachedViewportResourcesEvent>? ClearCachedResources;
             public Color? ClearColor { get; set; } = Color.Black;
             public Vector2 RenderScale { get; set; } = Vector2.One;
             public bool AutomaticRender { get; set; }
+            public long Id { get; }
 
             void IClydeViewport.Render()
             {
@@ -171,7 +194,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public void RenderScreenOverlaysBelow(
-                DrawingHandleScreen handle,
+                IRenderHandle handle,
                 IViewportControl control,
                 in UIBox2i viewportBounds)
             {
@@ -179,27 +202,63 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public void RenderScreenOverlaysAbove(
-                DrawingHandleScreen handle,
+                IRenderHandle handle,
                 IViewportControl control,
                 in UIBox2i viewportBounds)
             {
                 _clyde.RenderOverlaysDirect(this, control, handle, OverlaySpace.ScreenSpace, viewportBounds);
             }
 
+            ~Viewport()
+            {
+                _clyde._viewportDisposeQueue.Enqueue(DisposeData(referenceSelf: false));
+            }
+
             public void Dispose()
             {
+                GC.SuppressFinalize(this);
+
                 RenderTarget.Dispose();
                 LightRenderTarget.Dispose();
                 WallMaskRenderTarget.Dispose();
                 WallBleedIntermediateRenderTarget1.Dispose();
                 WallBleedIntermediateRenderTarget2.Dispose();
 
-                _clyde._viewports.Remove(_handle);
+                _clyde.DisposeViewport(DisposeData(referenceSelf: false));
+            }
+
+            private ViewportDisposeData DisposeData(bool referenceSelf)
+            {
+                return new ViewportDisposeData
+                {
+                    Handle = _handle,
+                    Id = Id,
+                    ClearEvent = ClearCachedResources,
+                    ClearEventData = MakeClearEvent(referenceSelf)
+                };
+            }
+
+            private ClearCachedViewportResourcesEvent MakeClearEvent(bool referenceSelf)
+            {
+                return new ClearCachedViewportResourcesEvent(Id, referenceSelf ? this : null);
+            }
+
+            public void FireClear()
+            {
+                ClearCachedResources?.Invoke(MakeClearEvent(referenceSelf: true));
             }
 
             IRenderTexture IClydeViewport.RenderTarget => RenderTarget;
             IRenderTexture IClydeViewport.LightRenderTarget => LightRenderTarget;
             public IEye? Eye { get; set; }
+        }
+
+        private sealed class ViewportDisposeData
+        {
+            public ClydeHandle Handle;
+            public long Id;
+            public Action<ClearCachedViewportResourcesEvent>? ClearEvent;
+            public ClearCachedViewportResourcesEvent ClearEventData;
         }
     }
 }

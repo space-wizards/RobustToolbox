@@ -48,7 +48,7 @@ namespace Robust.Shared.GameObjects
 
         // I feel like PJB might shed me for putting a system dependency here, but its required for setting entity
         // positions on spawn....
-        private SharedTransformSystem _xforms = default!;
+        protected SharedTransformSystem _xforms = default!;
         private SharedContainerSystem _containers = default!;
 
         public EntityQuery<MetaDataComponent> MetaQuery;
@@ -161,7 +161,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Returns true if the entity's data (apart from transform) is default.
         /// </summary>
-        public bool IsDefault(EntityUid uid)
+        public bool IsDefault(EntityUid uid, ICollection<string>? ignoredComps = null)
         {
             if (!MetaQuery.TryGetComponent(uid, out var metadata) || metadata.EntityPrototype == null)
                 return false;
@@ -189,8 +189,13 @@ namespace Robust.Shared.GameObjects
                     return false;
 
                 var compType = component.GetType();
+
+                if (compType == typeof(TransformComponent) || compType == typeof(MetaDataComponent))
+                    continue;
+
                 var compName = _componentFactory.GetComponentName(compType);
-                if (compName == _xformName || compName == _metaReg.Name)
+
+                if (ignoredComps?.Contains(compName) == true)
                     continue;
 
                 // If the component isn't on the prototype then it's custom.
@@ -208,9 +213,7 @@ namespace Robust.Shared.GameObjects
                     return false;
                 }
 
-                var diff = compMapping.Except(protoMapping);
-
-                if (diff != null && diff.Children.Count != 0)
+                if (compMapping.AnyExcept(protoMapping))
                     return false;
             }
 
@@ -311,9 +314,14 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, ComponentRegistry? overrides = null)
+        public EntityUid CreateEntityUninitialized(string? prototypeName, ComponentRegistry? overrides = null)
         {
             return CreateEntity(prototypeName, out _, overrides);
+        }
+
+        public EntityUid CreateEntityUninitialized(string? prototypeName, out MetaDataComponent meta, ComponentRegistry? overrides = null)
+        {
+            return CreateEntity(prototypeName, out meta, overrides);
         }
 
         /// <inheritdoc />
@@ -493,7 +501,7 @@ namespace Robust.Shared.GameObjects
             if (Deleted(uid.Value))
                 return false;
 
-            if (!QueuedDeletionsSet.Add(uid.Value))
+            if (QueuedDeletionsSet.Contains(uid.Value))
                 return false;
 
             QueueDeleteEntity(uid);
@@ -548,7 +556,28 @@ namespace Robust.Shared.GameObjects
 
             TransformComponent? parentXform = null;
             if (xform.ParentUid.IsValid())
-                TransformQuery.Resolve(xform.ParentUid, ref parentXform);
+            {
+                if (xform.LifeStage < ComponentLifeStage.Initialized)
+                {
+                    // Entity is being deleted before initialization ever finished.
+                    // The entity will not yet have been added to the parent's transform component.
+                    // This is seemingly pretty error prone ATM, and I'm not even sure if it should be supported?
+
+                    // Just in case it HAS somehow been added, make sure we remove it.
+                    if (TransformQuery.TryComp(xform.ParentUid, out parentXform) && parentXform._children.Remove(e))
+                        DebugTools.Assert($"Child entity {ToPrettyString(e)} was added to the parent's child set prior to being initialized?");
+
+                    parentXform = null;
+                    xform._parent = EntityUid.Invalid;
+                    xform._anchored = false;
+                }
+                else
+                {
+                    // Use resolve for automatic error logging.
+                    // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+                    TransformQuery.Resolve(xform.ParentUid, ref parentXform);
+                }
+            }
 
             // Then actually delete them
             RecursiveDeleteEntity(e, meta, xform, parentXform);
@@ -667,6 +696,36 @@ namespace Robust.Shared.GameObjects
 
         public bool IsQueuedForDeletion(EntityUid uid) => QueuedDeletionsSet.Contains(uid);
 
+        /// <inheritdoc />
+        public virtual void PredictedDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
+        {
+            DeleteEntity(ent.Owner);
+        }
+
+        /// <inheritdoc />
+        public void PredictedDeleteEntity(Entity<MetaDataComponent?, TransformComponent?>? ent)
+        {
+            if (ent == null)
+                return;
+
+            PredictedDeleteEntity(ent.Value);
+        }
+
+        /// <inheritdoc />
+        public virtual void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
+        {
+            QueueDeleteEntity(ent.Owner);
+        }
+
+        /// <inheritdoc />
+        public virtual void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?>? ent)
+        {
+            if (ent == null)
+                return;
+
+            PredictedQueueDeleteEntity(ent.Value);
+        }
+
         public bool EntityExists(EntityUid uid)
         {
             return MetaQuery.HasComponentInternal(uid);
@@ -783,7 +842,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
-        private protected EntityUid AllocEntity(
+        protected internal EntityUid AllocEntity(
             EntityPrototype? prototype,
             out MetaDataComponent metadata)
         {
@@ -792,6 +851,9 @@ namespace Robust.Shared.GameObjects
             Dirty(entity, metadata, metadata);
             return entity;
         }
+
+        /// <inheritdoc cref="AllocEntity(Robust.Shared.Prototypes.EntityPrototype?,out Robust.Shared.GameObjects.MetaDataComponent)"/>
+        internal EntityUid AllocEntity(EntityPrototype? prototype) => AllocEntity(prototype, out _);
 
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
@@ -872,21 +934,9 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private protected void LoadEntity(EntityUid entity, IEntityLoadContext? context)
-        {
-            EntityPrototype.LoadEntity((entity, MetaQuery.GetComponent(entity)), ComponentFactory, this, _serManager, context);
-        }
-
-        private protected void LoadEntity(EntityUid entity, IEntityLoadContext? context, EntityPrototype? prototype)
-        {
-            var meta = MetaQuery.GetComponent(entity);
-            DebugTools.Assert(meta.EntityPrototype == prototype);
-            EntityPrototype.LoadEntity((entity, meta), ComponentFactory, this, _serManager, context);
-        }
-
         public void InitializeAndStartEntity(EntityUid entity, MapId? mapId = null)
         {
-            var doMapInit = _mapManager.IsMapInitialized(mapId ?? TransformQuery.GetComponent(entity).MapID);
+            var doMapInit = _mapSystem.IsInitialized(mapId ?? TransformQuery.GetComponent(entity).MapID);
             InitializeAndStartEntity(entity, doMapInit);
         }
 

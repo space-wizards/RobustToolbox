@@ -9,6 +9,7 @@ using Robust.Client.Input;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -16,8 +17,6 @@ using Robust.Shared.Timing;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Color = Robust.Shared.Maths.Color;
-using Vector3 = Robust.Shared.Maths.Vector3;
-using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -35,6 +34,7 @@ namespace Robust.Client.Graphics.Clyde
         public bool IsFocused => true;
         private readonly List<IClydeWindow> _windows = new();
         private int _nextWindowId = 2;
+        private long _nextViewportId = 1;
 
         public ShaderInstance InstanceShader(ShaderSourceResource handle, bool? light = null, ShaderBlendMode? blend = null)
         {
@@ -69,6 +69,16 @@ namespace Robust.Client.Graphics.Clyde
         public Texture GetStockTexture(ClydeStockTexture stockTexture)
         {
             return new DummyTexture((1, 1));
+        }
+
+        public IEnumerable<(Clyde.ClydeTexture, Clyde.LoadedTexture)> GetLoadedTextures()
+        {
+            return [];
+        }
+
+        public IEnumerable<(Clyde.RenderTargetBase, Clyde.LoadedRenderTarget)> GetLoadedRenderTextures()
+        {
+            return [];
         }
 
         public ClydeDebugLayers DebugLayers { get; set; }
@@ -189,6 +199,22 @@ namespace Robust.Client.Graphics.Clyde
             return new DummyTexture(size);
         }
 
+        /// <inheritdoc />
+        public Color GetClearColor(EntityUid mapUid)
+        {
+            return Color.Transparent;
+        }
+
+        public void BlurRenderTarget(IClydeViewport viewport, IRenderTarget target, IRenderTarget blurBuffer, IEye eye, float multiplier)
+        {
+            // NOOP
+        }
+
+        public IRenderTexture CreateLightRenderTarget(Vector2i size, string? name = null, bool depthStencil = true)
+        {
+            return CreateRenderTarget(size, new RenderTargetFormatParameters(RenderTargetColorFormat.R8, hasDepthStencil: depthStencil), null, name: name);
+        }
+
         public IRenderTexture CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
             TextureSampleParameters? sampleParameters = null, string? name = null)
         {
@@ -220,7 +246,7 @@ namespace Robust.Client.Graphics.Clyde
         public IClydeViewport CreateViewport(Vector2i size, TextureSampleParameters? sampleParameters,
             string? name = null)
         {
-            return new Viewport(size);
+            return new Viewport(_nextViewportId++, size);
         }
 
         public IEnumerable<IClydeMonitor> EnumerateMonitors()
@@ -285,7 +311,20 @@ namespace Robust.Client.Graphics.Clyde
             action();
         }
 
-        public IFileDialogManager? FileDialogImpl => null;
+        public IFileDialogManagerImplementation? FileDialogImpl => null;
+
+        public bool VsyncEnabled { get; set; }
+
+#if TOOLS
+        public void ViewportsClearAllCached()
+        {
+            throw new NotImplementedException();
+        }
+#endif // TOOLS
+
+        public void RenderNow(IRenderTarget renderTarget, Action<IRenderHandle> callback)
+        {
+        }
 
         private sealed class DummyCursor : ICursor
         {
@@ -352,6 +391,10 @@ namespace Robust.Client.Graphics.Clyde
             {
             }
 
+            private protected override void SetParameterImpl(string name, Color[] value)
+            {
+            }
+
             private protected override void SetParameterImpl(string name, int value)
             {
             }
@@ -372,7 +415,7 @@ namespace Robust.Client.Graphics.Clyde
             {
             }
 
-            private protected override void SetParameterImpl(string name, in Matrix4 value)
+            private protected override void SetParameterImpl(string name, in Matrix4x4 value)
             {
             }
 
@@ -458,14 +501,18 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class Viewport : IClydeViewport
         {
-            public Viewport(Vector2i size)
+            public Viewport(long id, Vector2i size)
             {
                 Size = size;
+                Id = id;
             }
 
             public void Dispose()
             {
+                ClearCachedResources?.Invoke(new ClearCachedViewportResourcesEvent(Id, null));
             }
+
+            public long Id { get; }
 
             public IRenderTexture RenderTarget { get; } =
                 new DummyRenderTexture(Vector2i.One, new DummyTexture(Vector2i.One));
@@ -475,6 +522,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public IEye? Eye { get; set; }
             public Vector2i Size { get; }
+            public event Action<ClearCachedViewportResourcesEvent>? ClearCachedResources;
             public Color? ClearColor { get; set; } = Color.Black;
             public Vector2 RenderScale { get; set; }
             public bool AutomaticRender { get; set; }
@@ -497,7 +545,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public void RenderScreenOverlaysBelow(
-                DrawingHandleScreen handle,
+                IRenderHandle handle,
                 IViewportControl control,
                 in UIBox2i viewportBounds)
             {
@@ -505,7 +553,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public void RenderScreenOverlaysAbove(
-                DrawingHandleScreen handle,
+                IRenderHandle handle,
                 IViewportControl control,
                 in UIBox2i viewportBounds)
             {

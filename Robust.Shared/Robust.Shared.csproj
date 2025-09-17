@@ -13,6 +13,7 @@
     <PackageReference Include="Microsoft.ILVerification" PrivateAssets="compile" />
     <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" />
     <PackageReference Include="Nett" PrivateAssets="compile" />
+    <PackageReference Include="System.Management" />
     <PackageReference Include="VorbisPizza" PrivateAssets="compile" />
     <PackageReference Include="Pidgin" />
     <PackageReference Include="prometheus-net" />
@@ -21,8 +22,10 @@
     <PackageReference Include="YamlDotNet" />
     <PackageReference Include="Microsoft.Win32.Registry" PrivateAssets="compile" />
     <PackageReference Include="Linguini.Bundle" />
-    <PackageReference Include="SharpZstd.Interop" PrivateAssets="compile" />
+    <PackageReference Include="SharpZstd.Interop" PrivateAssets="compile" ExcludeAssets="native" />
     <PackageReference Include="SpaceWizards.Sodium" PrivateAssets="compile" />
+    <!-- Add libsodium to control version, SpaceWizards.Sodium's dependency is behind -->
+    <PackageReference Include="libsodium" />
     <PackageReference Include="SixLabors.ImageSharp" />
     <PackageReference Include="TerraFX.Interop.Windows" PrivateAssets="compile" />
 

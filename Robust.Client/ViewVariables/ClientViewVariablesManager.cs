@@ -1,27 +1,20 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Numerics;
 using System.Threading.Tasks;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
-using Robust.Client.ViewVariables.Editors;
 using Robust.Client.ViewVariables.Instances;
-using Robust.Shared.Audio;
-using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
-using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Player;
-using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
-using static Robust.Client.ViewVariables.Editors.VVPropEditorNumeric;
 
 namespace Robust.Client.ViewVariables
 {
@@ -31,8 +24,7 @@ namespace Robust.Client.ViewVariables
         [Dependency] private readonly IClientNetManager _netManager = default!;
         [Dependency] private readonly IRobustSerializer _robustSerializer = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] private readonly IPrototypeManager _protoManager = default!;
-        [Dependency] private readonly IResourceManager _resManager = default!;
+        [Dependency] private readonly IViewVariableControlFactory _controlFactory = default!;
 
         private uint _nextReqId = 1;
         private readonly Vector2i _defaultWindowSize = (640, 420);
@@ -66,190 +58,7 @@ namespace Robust.Client.ViewVariables
 
         public VVPropEditor PropertyFor(Type? type)
         {
-            // TODO: make this more flexible.
-            if (type == null)
-            {
-                return new VVPropEditorDummy();
-            }
-
-            if (type == typeof(sbyte))
-            {
-                return new VVPropEditorNumeric(NumberType.SByte);
-            }
-
-            if (type == typeof(byte))
-            {
-                return new VVPropEditorNumeric(NumberType.Byte);
-            }
-
-            if (type == typeof(ushort))
-            {
-                return new VVPropEditorNumeric(NumberType.UShort);
-            }
-
-            if (type == typeof(short))
-            {
-                return new VVPropEditorNumeric(NumberType.Short);
-            }
-
-            if (type == typeof(uint))
-            {
-                return new VVPropEditorNumeric(NumberType.UInt);
-            }
-
-            if (type == typeof(int))
-            {
-                return new VVPropEditorNumeric(NumberType.Int);
-            }
-
-            if (type == typeof(ulong))
-            {
-                return new VVPropEditorNumeric(NumberType.ULong);
-            }
-
-            if (type == typeof(long))
-            {
-                return new VVPropEditorNumeric(NumberType.Long);
-            }
-
-            if (type == typeof(float))
-            {
-                return new VVPropEditorNumeric(NumberType.Float);
-            }
-
-            if (type == typeof(double))
-            {
-                return new VVPropEditorNumeric(NumberType.Double);
-            }
-
-            if (type == typeof(decimal))
-            {
-                return new VVPropEditorNumeric(NumberType.Decimal);
-            }
-
-            if (type == typeof(string))
-            {
-                return new VVPropEditorString();
-            }
-
-            if (type == typeof(EntProtoId?))
-            {
-                return new VVPropEditorNullableEntProtoId();
-            }
-
-            if (type == typeof(EntProtoId))
-            {
-                return new VVPropEditorEntProtoId();
-            }
-
-            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ProtoId<>))
-            {
-                var editor =
-                    (VVPropEditor)Activator.CreateInstance(
-                        typeof(VVPropEditorProtoId<>).MakeGenericType(type.GenericTypeArguments[0]))!;
-
-                IoCManager.InjectDependencies(editor);
-                return editor;
-            }
-
-            if (typeof(IPrototype).IsAssignableFrom(type) || typeof(ViewVariablesBlobMembers.PrototypeReferenceToken).IsAssignableFrom(type))
-            {
-                return (VVPropEditor)Activator.CreateInstance(typeof(VVPropEditorIPrototype<>).MakeGenericType(type))!;
-            }
-
-            if (typeof(ISelfSerialize).IsAssignableFrom(type))
-            {
-                return (VVPropEditor)Activator.CreateInstance(typeof(VVPropEditorISelfSerializable<>).MakeGenericType(type))!;
-            }
-
-            if (type.IsEnum)
-            {
-                return new VVPropEditorEnum();
-            }
-
-            if (type == typeof(Vector2))
-            {
-                return new VVPropEditorVector2(intVec: false);
-            }
-
-            if (type == typeof(Vector2i))
-            {
-                return new VVPropEditorVector2(intVec: true);
-            }
-
-            if (type == typeof(bool))
-            {
-                return new VVPropEditorBoolean();
-            }
-
-            if (type == typeof(Angle))
-            {
-                return new VVPropEditorAngle();
-            }
-
-            if (type == typeof(Box2))
-            {
-                return new VVPropEditorUIBox2(VVPropEditorUIBox2.BoxType.Box2);
-            }
-
-            if (type == typeof(Box2i))
-            {
-                return new VVPropEditorUIBox2(VVPropEditorUIBox2.BoxType.Box2i);
-            }
-
-            if (type == typeof(UIBox2))
-            {
-                return new VVPropEditorUIBox2(VVPropEditorUIBox2.BoxType.UIBox2);
-            }
-
-            if (type == typeof(UIBox2i))
-            {
-                return new VVPropEditorUIBox2(VVPropEditorUIBox2.BoxType.UIBox2i);
-            }
-
-            if (type == typeof(EntityCoordinates))
-            {
-                return new VVPropEditorEntityCoordinates();
-            }
-
-            if (type == typeof(EntityUid))
-            {
-                return new VVPropEditorEntityUid();
-            }
-
-            if (type == typeof(NetEntity))
-            {
-                return new VVPropEditorNetEntity();
-            }
-
-            if (type == typeof(Color))
-            {
-                return new VVPropEditorColor();
-            }
-
-            if (type == typeof(TimeSpan))
-            {
-                return new VVPropEditorTimeSpan();
-            }
-
-            if (typeof(SoundSpecifier).IsAssignableFrom(type))
-            {
-                var control = new VVPropEditorSoundSpecifier(_protoManager, _resManager);
-                return control;
-            }
-
-            if (type == typeof(ViewVariablesBlobMembers.ServerKeyValuePairToken) ||
-                type.IsGenericType && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
-            {
-                return new VVPropEditorKeyValuePair();
-            }
-
-            if (type != typeof(ViewVariablesBlobMembers.ServerValueTypeToken) && !type.IsValueType)
-            {
-                return new VVPropEditorReference();
-            }
-
-            return new VVPropEditorDummy();
+            return _controlFactory.CreateFor(type);
         }
 
         public void OpenVV(object obj)
@@ -265,7 +74,7 @@ namespace Robust.Client.ViewVariables
                 instance = new ViewVariablesInstanceObject(this, _robustSerializer);
             }
 
-            var window = new DefaultWindow {Title = Loc.GetString("view-variables")};
+            var window = new DefaultWindow { Title = Loc.GetString("view-variables") };
             instance.Initialize(window, obj);
             window.OnClose += () => _closeInstance(instance, false);
             _windows.Add(instance, window);
@@ -275,7 +84,7 @@ namespace Robust.Client.ViewVariables
 
         public void OpenVV(string path)
         {
-            if (ReadPath(path) is {} obj)
+            if (ReadPath(path) is { } obj)
                 OpenVV(obj);
         }
 
@@ -286,7 +95,7 @@ namespace Robust.Client.ViewVariables
                 Title = Loc.GetString("view-variables"),
                 SetSize = _defaultWindowSize
             };
-            var loadingLabel = new Label {Text = "Retrieving remote object data from server..."};
+            var loadingLabel = new Label { Text = "Retrieving remote object data from server..." };
             window.Contents.AddChild(loadingLabel);
 
             // We need to request the data, THEN create an instance.
@@ -354,7 +163,7 @@ namespace Robust.Client.ViewVariables
 
         public async Task<T> RequestData<T>(ViewVariablesRemoteSession session, ViewVariablesRequest meta) where T : ViewVariablesBlob
         {
-            return (T) await RequestData(session, meta);
+            return (T)await RequestData(session, meta);
         }
 
         public void CloseSession(ViewVariablesRemoteSession session)

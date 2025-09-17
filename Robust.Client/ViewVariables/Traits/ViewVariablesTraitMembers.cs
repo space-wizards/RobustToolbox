@@ -48,7 +48,7 @@ namespace Robust.Client.ViewVariables.Traits
                     CreateMemberGroupHeader(
                         ref first,
                         PrettyPrint.PrintUserFacingTypeShort(group.Key, 2),
-                        _memberList);
+                        replacementControls);
 
                     foreach (var control in group)
                     {
@@ -68,7 +68,7 @@ namespace Robust.Client.ViewVariables.Traits
                 foreach (var (groupName, groupMembers) in blob.MemberGroups)
                 {
                     var prettyGroupName = TypeAbbreviation.Abbreviate(groupName);
-                    CreateMemberGroupHeader(ref first, prettyGroupName, _memberList);
+                    CreateMemberGroupHeader(ref first, prettyGroupName, replacementControls);
 
                     foreach (var propertyData in groupMembers)
                     {
@@ -96,15 +96,15 @@ namespace Robust.Client.ViewVariables.Traits
             }
         }
 
-        internal static void CreateMemberGroupHeader(ref bool first, string groupName, Control container)
+        internal static void CreateMemberGroupHeader(ref bool first, string groupName, ICollection<Control> container)
         {
             if (!first)
             {
-                container.AddChild(new Control {MinSize = new Vector2(0, 16)});
+                container.Add(new Control {MinSize = new Vector2(0, 16)});
             }
 
             first = false;
-            container.AddChild(new Label {Text = groupName, FontColorOverride = Color.DarkGray});
+            container.Add(new Label {Text = groupName, FontColorOverride = Color.DarkGray});
         }
     }
 }

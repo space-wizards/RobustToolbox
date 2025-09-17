@@ -151,7 +151,7 @@ namespace Robust.Client.ViewVariables.Instances
                 ViewVariablesTraitMembers.CreateMemberGroupHeader(
                     ref first,
                     PrettyPrint.PrintUserFacingTypeShort(group.Key, 2),
-                    clientVBox);
+                    clientVBox.Children);
 
                 foreach (var control in group)
                 {
@@ -542,7 +542,7 @@ namespace Robust.Client.ViewVariables.Instances
             foreach (var (groupName, groupMembers) in _membersBlob!.MemberGroups)
             {
                 var prettyGroupName = TypeAbbreviation.Abbreviate(groupName);
-                ViewVariablesTraitMembers.CreateMemberGroupHeader(ref first, prettyGroupName, _serverVariables);
+                ViewVariablesTraitMembers.CreateMemberGroupHeader(ref first, prettyGroupName, _serverVariables.Children);
 
                 foreach (var propertyData in groupMembers)
                 {

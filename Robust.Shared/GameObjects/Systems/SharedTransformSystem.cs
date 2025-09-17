@@ -70,11 +70,14 @@ namespace Robust.Shared.GameObjects
 
         private void MapManagerOnTileChanged(ref TileChangedEvent e)
         {
-            if(e.NewTile.Tile != Tile.Empty)
-                return;
+            foreach (var change in e.Changes)
+            {
+                if(change.NewTile != Tile.Empty)
+                    continue;
 
-            // TODO optimize this for when multiple tiles get empties simultaneously (e.g., explosions).
-            DeparentAllEntsOnTile(e.NewTile.GridUid, e.NewTile.GridIndices);
+                // TODO optimize this for when multiple tiles get empties simultaneously (e.g., explosions).
+                DeparentAllEntsOnTile(e.Entity, change.GridIndices);
+            }
         }
 
         /// <summary>
@@ -260,12 +263,13 @@ namespace Robust.Shared.GameObjects
             return true;
         }
 
-        public void RaiseMoveEvent(
+        internal void RaiseMoveEvent(
             Entity<TransformComponent, MetaDataComponent> ent,
             EntityUid oldParent,
             Vector2 oldPosition,
             Angle oldRotation,
-            EntityUid? oldMap)
+            EntityUid? oldMap,
+            bool checkTraversal = true)
         {
             var pos = ent.Comp1._parent == EntityUid.Invalid
                 ? default
@@ -295,7 +299,10 @@ namespace Robust.Shared.GameObjects
             // Finally, handle grid traversal. This is handled separately to avoid out-of-order move events.
             // I.e., if the traversal raises its own move event, this ensures that all the old move event handlers
             // have finished running first. Ideally this shouldn't be required, but this is here just in case
-            _traversal.CheckTraverse(ent);
+            if (checkTraversal)
+            {
+                _traversal.CheckTraverse(ent);
+            }
         }
     }
 

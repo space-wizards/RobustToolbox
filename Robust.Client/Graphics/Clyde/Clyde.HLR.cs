@@ -121,6 +121,19 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
+        public void RenderNow(IRenderTarget renderTarget, Action<IRenderHandle> callback)
+        {
+            ClearRenderState();
+
+            _renderHandle.RenderInRenderTarget(
+                renderTarget,
+                () =>
+                {
+                    callback(_renderHandle);
+                },
+                null);
+        }
+
         private void RenderSingleWorldOverlay(Overlay overlay, Viewport vp, OverlaySpace space, in Box2 worldBox, in Box2Rotated worldBounds)
         {
             // Check that entity manager has started.
@@ -318,7 +331,7 @@ namespace Robust.Client.Graphics.Clyde
                         screenSpriteSize.Y++;
 
                     bool exit = false;
-                    if (entry.Sprite.GetScreenTexture)
+                    if (entry.Sprite.GetScreenTexture && entry.Sprite.PostShader != null)
                     {
                         FlushRenderQueue();
                         var tex = CopyScreenTexture(viewport.RenderTarget);
@@ -369,7 +382,7 @@ namespace Robust.Client.Graphics.Clyde
                     }
                 }
 
-                spriteSystem.Render(entry.Uid, entry.Sprite, _renderHandle.DrawingHandleWorld, eye.Rotation, in entry.WorldRot, in entry.WorldPos);
+                spriteSystem.RenderSprite(new(entry.Uid, entry.Sprite), _renderHandle.DrawingHandleWorld, eye.Rotation, entry.WorldRot, entry.WorldPos);
 
                 if (entry.Sprite.PostShader != null && entityPostRenderTarget != null)
                 {

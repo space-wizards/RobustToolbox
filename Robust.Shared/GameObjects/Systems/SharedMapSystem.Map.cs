@@ -115,7 +115,7 @@ public abstract partial class SharedMapSystem
     protected MapId TakeNextMapId()
     {
         var id = GetNextMapId();
-        UsedIds.Add(id);
+        LastMapId = id.Value;
         return id;
     }
 

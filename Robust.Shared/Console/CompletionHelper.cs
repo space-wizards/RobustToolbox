@@ -208,10 +208,8 @@ public static class CompletionHelper
         return sorted ? playerOptions.OrderBy(o => o.Value) : playerOptions;
     }
 
-    public static IEnumerable<CompletionOption> MapIds(string text, IEntityManager? entManager = null)
+    public static IEnumerable<CompletionOption> MapIds(string text, IEntityManager entManager)
     {
-        IoCManager.Resolve(ref entManager);
-
         return GetComponents<MapComponent>(text, entManager: entManager).Select(o => new CompletionOption(o.Component.MapId.ToString(), o.EntityName));
     }
 
@@ -252,13 +250,12 @@ public static class CompletionHelper
         }
     }
 
-    private static IEnumerable<(T Component, string NetString, string EntityName)> GetComponents<T>(string text, IEntityManager? entManager = null, int limit = 20)
+    private static IEnumerable<(T Component, string NetString, string EntityName)> GetComponents<T>(string text, IEntityManager entManager, int limit = 20)
         where T : IComponent
     {
         if (text != string.Empty && !NetEntity.TryParse(text, out _))
             yield break;
 
-        IoCManager.Resolve(ref entManager);
         var query = entManager.AllEntityQueryEnumerator<T, MetaDataComponent>();
 
         var i = 0;
@@ -275,6 +272,7 @@ public static class CompletionHelper
 
     public static IEnumerable<CompletionOption> Components<T>(string text, IEntityManager? entManager = null, int limit = 20) where T : IComponent
     {
+        IoCManager.Resolve(ref entManager);
         return GetComponents<T>(text, entManager, limit).Select(o => new CompletionOption(o.NetString, o.EntityName));
     }
 }

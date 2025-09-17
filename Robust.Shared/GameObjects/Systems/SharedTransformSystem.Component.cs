@@ -120,7 +120,7 @@ public abstract partial class SharedTransformSystem
     {
         if (grid != null && grid.Value.Owner != entity.Comp.GridUid)
         {
-            Log.Error($"Tried to anchor entity {Name(entity)} to a grid ({grid!.Value.Owner}) different from its GridUid ({entity.Comp.GridUid})");
+            Log.Error($"Tried to anchor entity {Name(entity)} to a grid ({grid.Value.Owner}) different from its GridUid ({entity.Comp.GridUid})");
             return false;
         }
 

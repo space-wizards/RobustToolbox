@@ -1,6 +1,9 @@
-﻿using System;
+﻿#if !WINDOWS
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using OpenTK.Audio.OpenAL;
+using SDL3;
 
 namespace Robust.Client.Utility
 {
@@ -9,32 +12,31 @@ namespace Robust.Client.Utility
         [ModuleInitializer]
         internal static void Initialize()
         {
-            if (OperatingSystem.IsWindows())
-                return;
-
             NativeLibrary.SetDllImportResolver(typeof(ClientDllMap).Assembly, (name, assembly, path) =>
             {
                 if (name == "swnfd.dll")
                 {
-                    if (OperatingSystem.IsLinux())
-                        return NativeLibrary.Load("libswnfd.so", assembly, path);
-
-                    if (OperatingSystem.IsMacOS())
-                        return NativeLibrary.Load("libswnfd.dylib", assembly, path);
-
-                    return IntPtr.Zero;
+#if LINUX || FREEBSD
+                    return NativeLibrary.Load("libswnfd.so", assembly, path);
+#elif MACOS
+                    return NativeLibrary.Load("libswnfd.dylib", assembly, path);
+#endif
                 }
 
                 if (name == "libEGL.dll")
                 {
-                    if (OperatingSystem.IsLinux())
-                        return NativeLibrary.Load("libEGL.so", assembly, path);
-
-                    return IntPtr.Zero;
+#if LINUX || FREEBSD
+                    return NativeLibrary.Load("libEGL.so", assembly, path);
+#endif
                 }
 
                 return IntPtr.Zero;
             });
+
+#if MACOS
+            OpenALLibraryNameContainer.OverridePath = "libopenal.1.dylib";
+#endif
         }
     }
 }
+#endif

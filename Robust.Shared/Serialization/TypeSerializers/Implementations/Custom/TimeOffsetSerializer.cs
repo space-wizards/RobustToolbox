@@ -1,8 +1,8 @@
 using System;
 using System.Globalization;
+using Robust.Shared.EntitySerialization;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Map;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -13,8 +13,8 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 
 /// <summary>
-/// This serializer offsets a timespan by the game's current time. If the entity is currently paused, the pause time
-/// will also be accounted for,
+/// This serializer offsets a timespan by the game's current time. If the entity is currently paused, the the offset will
+/// instead be the time at which the entity was paused.
 /// </summary>
 /// <remarks>
 /// Prototypes and pre map-init entities will always serialize this as zero. This is done mainly as a brute force fix
@@ -29,16 +29,21 @@ public sealed class TimeOffsetSerializer : ITypeSerializer<TimeSpan, ValueDataNo
         ISerializationContext? context = null,
         ISerializationManager.InstantiationDelegate<TimeSpan>? instanceProvider = null)
     {
-        if (context is not MapSerializationContext mapContext
-            || mapContext.WritingReadingPrototypes
-            || !mapContext.MapInitialized)
-        {
+        if (context is {WritingReadingPrototypes: true})
             return TimeSpan.Zero;
-        }
 
-        var timing = mapContext.Timing;
+        if (context is not EntityDeserializer {CurrentReadingEntity.PostInit: true} ctx)
+            return TimeSpan.Zero;
+
+        var timing = ctx.Timing;
         var seconds = double.Parse(node.Value, CultureInfo.InvariantCulture);
-        return TimeSpan.FromSeconds(seconds) + timing.CurTime;
+        var time = TimeSpan.FromSeconds(seconds);
+        
+        // Checks if adding time and curTime will overflow.
+        if(time > TimeSpan.MaxValue - timing.CurTime)
+            return TimeSpan.MaxValue;
+        
+        return time + timing.CurTime;
     }
 
     public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
@@ -50,34 +55,29 @@ public sealed class TimeOffsetSerializer : ITypeSerializer<TimeSpan, ValueDataNo
             : new ErrorNode(node, "Failed parsing TimeSpan");
     }
 
-    public DataNode Write(ISerializationManager serializationManager, TimeSpan value, IDependencyCollection dependencies, bool alwaysWrite = false,
+    public DataNode Write(
+        ISerializationManager serializationManager,
+        TimeSpan value,
+        IDependencyCollection dependencies,
+        bool alwaysWrite = false,
         ISerializationContext? context = null)
     {
-        if (context is not MapSerializationContext mapContext
-            || mapContext.WritingReadingPrototypes
-            || !mapContext.MapInitialized)
+        if (context is not EntitySerializer serializer
+            || serializer.WritingReadingPrototypes
+            || !serializer.EntMan.TryGetComponent(serializer.CurrentEntity, out MetaDataComponent? meta)
+            || meta.EntityLifeStage < EntityLifeStage.MapInitialized)
         {
             DebugTools.Assert(value == TimeSpan.Zero || context?.WritingReadingPrototypes != true,
                 "non-zero time offsets in prototypes are not supported. If required, initialize offsets on map-init");
-
             return new ValueDataNode("0");
         }
 
-        if (!mapContext.MapInitialized)
-            return new ValueDataNode("0");
-
-        if (mapContext.EntityManager.TryGetComponent(mapContext.CurrentWritingEntity, out MetaDataComponent? meta))
-        {
-            // Here, PauseTime is a time -- not a duration.
-            if (meta.PauseTime != null)
-                value -= meta.PauseTime.Value;
-        }
+        // We subtract the current time, unless the entity is paused, in which case we subtract the time at which
+        // it was paused.
+        if (meta.PauseTime != null)
+            value -= meta.PauseTime.Value;
         else
-        {
-            // But here, PauseTime is a duration instead of a time
-            // What jolly fun.
-            value = value - mapContext.Timing.CurTime + mapContext.PauseTime;
-        }
+            value -= serializer.Timing.CurTime;
 
         return new ValueDataNode(value.TotalSeconds.ToString(CultureInfo.InvariantCulture));
     }

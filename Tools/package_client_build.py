@@ -9,6 +9,7 @@ import sys
 import zipfile
 import argparse
 import glob
+from enum import StrEnum
 
 from typing import List, Optional
 
@@ -28,10 +29,33 @@ except ImportError:
 
 p = os.path.join
 
-PLATFORM_WINDOWS = "windows"
+PLATFORM_WIN = "win"
 PLATFORM_LINUX = "linux"
-PLATFORM_LINUX_ARM64 = "linux-arm64"
-PLATFORM_MACOS = "mac"
+PLATFORM_OSX = "osx"
+PLATFORM_FREEBSD = "freebsd"
+
+TARGET_OS_WINDOWS = "Windows"
+TARGET_OS_MACOS = "MacOS"
+TARGET_OS_LINUX = "Linux"
+TARGET_OS_FREEBSD = "FreeBSD"
+
+class TargetOS(StrEnum):
+    Windows = "Windows"
+    MacOS = "MacOS"
+    Linux = "Linux"
+    FreeBSD = "FreeBSD"
+
+RID_WIN_X64 = f"{PLATFORM_WIN}-x64"
+RID_WIN_ARM64 = f"{PLATFORM_WIN}-arm64"
+RID_LINUX_X64 = f"{PLATFORM_LINUX}-x64"
+RID_LINUX_ARM64 = f"{PLATFORM_LINUX}-arm64"
+RID_OSX_X64 = f"{PLATFORM_OSX}-x64"
+RID_OSX_ARM64 = f"{PLATFORM_OSX}-arm64"
+RID_FREEBSD_X64 = f"{PLATFORM_FREEBSD}-x64"
+RID_FREEBSD_ARM64 = f"{PLATFORM_FREEBSD}-arm64"
+
+DEFAULT_RIDS = [RID_WIN_X64, RID_WIN_ARM64, RID_LINUX_X64, RID_LINUX_ARM64, RID_OSX_X64, RID_OSX_ARM64, RID_FREEBSD_X64, RID_FREEBSD_ARM64]
+ALL_RIDS = [RID_WIN_X64, RID_WIN_ARM64, RID_LINUX_X64, RID_LINUX_ARM64, RID_OSX_X64, RID_OSX_ARM64, RID_FREEBSD_X64, RID_FREEBSD_ARM64]
 
 IGNORED_RESOURCES = {
     ".gitignore",
@@ -56,7 +80,12 @@ IGNORED_FILES_WINDOWS = {
     "libEGL.dll",
     "swnfd.dll",
     "zstd.dll",
-    "libsodium.dll"
+    "zstd.pdb",
+    "libsodium.dll",
+    "zlib1.dll",
+    "SDL3.dll",
+    "OpenAL32.dll",
+    "libfluidsynth-3.dll"
 }
 
 IGNORED_FILES_MACOS = {
@@ -67,6 +96,10 @@ IGNORED_FILES_MACOS = {
     "libswnfd.dylib",
     "zstd.dylib",
     "libsodium.dylib",
+    "libopenal.1.dylib",
+    "libSDL3.0.dylib",
+    "libfluidsynth.3.dylib"
+    "libzstd.1.dylib"
 }
 
 IGNORED_FILES_LINUX = {
@@ -76,7 +109,11 @@ IGNORED_FILES_LINUX = {
     "Robust.Client",
     "libswnfd.so",
     "zstd.so",
-    "libsodium.so"
+    "libsodium.so",
+    "libopenal.so.1",
+    "libSDL3.so.0",
+    "libfluidsynth.so.3"
+    "libzstd.so.1"
 }
 
 def main() -> None:
@@ -85,7 +122,7 @@ def main() -> None:
     parser.add_argument("--platform",
                         "-p",
                         action="store",
-                        choices=[PLATFORM_WINDOWS, PLATFORM_MACOS, PLATFORM_LINUX],
+                        choices=ALL_RIDS,
                         nargs="*",
                         help="Which platform to build for. If not provided, all platforms will be built")
 
@@ -94,11 +131,17 @@ def main() -> None:
                         help=argparse.SUPPRESS)
 
     args = parser.parse_args()
-    platforms = args.platform
-    skip_build = args.skip_build
+    platforms: list[str] = args.platform
+    skip_build: bool = args.skip_build
 
     if not platforms:
-        platforms = [PLATFORM_WINDOWS, PLATFORM_MACOS, PLATFORM_LINUX]
+        platforms = DEFAULT_RIDS
+
+    # Validate that nobody put invalid platform names in.
+    for rid in platforms:
+        if rid not in ALL_RIDS:
+            print(Fore.RED + f"Invalid platform specified: '{rid}'" + Style.RESET_ALL)
+            exit(1)
 
     if os.path.exists("release"):
         print(Fore.BLUE + Style.DIM +
@@ -108,27 +151,25 @@ def main() -> None:
     else:
         os.mkdir("release")
 
+    for platform in platforms:
+        build_for_platform(platform, skip_build)
 
-    if PLATFORM_WINDOWS in platforms:
-        if not skip_build:
-            wipe_bin()
-        build_windows(skip_build)
 
-    if PLATFORM_LINUX in platforms:
-        if not skip_build:
-            wipe_bin()
-        build_linux(skip_build)
+def build_for_platform(rid: str, skip_build: bool):
+    print(Fore.GREEN + f"Building for platform '{rid}'..." + Style.RESET_ALL)
 
-    if PLATFORM_LINUX_ARM64 in platforms:
-        if not skip_build:
-            wipe_bin()
-        build_linux_arm64(skip_build)
+    if not skip_build:
+        wipe_bin()
 
-    if PLATFORM_MACOS in platforms:
-        if not skip_build:
-            wipe_bin()
-        build_macos(skip_build)
-
+    platform = rid.split('-', maxsplit=2)[0]
+    if platform == PLATFORM_WIN:
+        build_windows(rid, skip_build)
+    elif platform == PLATFORM_LINUX:
+        build_linux_like(rid, TargetOS.Linux, skip_build)
+    elif platform == PLATFORM_OSX:
+        build_macos(rid, skip_build)
+    elif platform == PLATFORM_FREEBSD:
+        build_linux_like(rid, TargetOS.FreeBSD, skip_build)
 
 def wipe_bin():
     print(Fore.BLUE + Style.DIM +
@@ -138,102 +179,64 @@ def wipe_bin():
         shutil.rmtree("bin")
 
 
-def build_windows(skip_build: bool) -> None:
-    # Run a full build.
-    print(Fore.GREEN + "Building project for Windows x64..." + Style.RESET_ALL)
-
+def build_windows(rid: str, skip_build: bool) -> None:
     if not skip_build:
-        publish_client("win-x64", "Windows")
+        publish_client(rid, TargetOS.Windows)
         if sys.platform != "win32":
-            subprocess.run(["Tools/exe_set_subsystem.py", p("bin", "Client", "win-x64", "publish", "Robust.Client"), "2"])
+            subprocess.run(["Tools/exe_set_subsystem.py", p("bin", "Client", rid, "publish", "Robust.Client"), "2"])
 
-
-    print(Fore.GREEN + "Packaging Windows x64 client..." + Style.RESET_ALL)
+    print(Fore.GREEN + f"Packaging {rid} client..." + Style.RESET_ALL)
 
     client_zip = zipfile.ZipFile(
-        p("release", "Robust.Client_win-x64.zip"), "w",
+        p("release", f"Robust.Client_{rid}.zip"), "w",
         compression=zipfile.ZIP_DEFLATED)
 
-    copy_dir_into_zip(p("bin", "Client", "win-x64", "publish"), "", client_zip, IGNORED_FILES_WINDOWS)
+    copy_dir_into_zip(p("bin", "Client", rid, "publish"), "", client_zip, IGNORED_FILES_WINDOWS)
     copy_resources("Resources", client_zip)
     # Cool we're done.
     client_zip.close()
 
-def build_macos(skip_build: bool) -> None:
-    print(Fore.GREEN + "Building project for macOS x64..." + Style.RESET_ALL)
-
+def build_macos(rid: str, skip_build: bool) -> None:
     if not skip_build:
-        publish_client("osx-x64", "MacOS")
+        publish_client(rid, TargetOS.MacOS)
 
-    print(Fore.GREEN + "Packaging macOS x64 client..." + Style.RESET_ALL)
+    print(Fore.GREEN + f"Packaging {rid} client..." + Style.RESET_ALL)
     # Client has to go in an app bundle.
-    client_zip = zipfile.ZipFile(p("release", "Robust.Client_osx-x64.zip"), "a",
+    client_zip = zipfile.ZipFile(p("release", f"Robust.Client_{rid}.zip"), "a",
                                  compression=zipfile.ZIP_DEFLATED)
 
     contents = p("Space Station 14.app", "Contents", "Resources")
     copy_dir_into_zip(p("BuildFiles", "Mac", "Space Station 14.app"), "Space Station 14.app", client_zip)
-    copy_dir_into_zip(p("bin", "Client", "osx-x64", "publish"), contents, client_zip, IGNORED_FILES_MACOS)
+    copy_dir_into_zip(p("bin", "Client", rid, "publish"), contents, client_zip, IGNORED_FILES_MACOS)
     copy_resources(p(contents, "Resources"), client_zip)
     client_zip.close()
 
 
-def build_linux(skip_build: bool) -> None:
-    # Run a full build.
-    print(Fore.GREEN + "Building project for Linux x64..." + Style.RESET_ALL)
-
+def build_linux_like(rid: str, target_os: TargetOS, skip_build: bool) -> None:
     if not skip_build:
-        publish_client("linux-x64", "Linux")
+        publish_client(rid, target_os)
 
-    print(Fore.GREEN + "Packaging Linux x64 client..." + Style.RESET_ALL)
+    print(Fore.GREEN + "Packaging %s client..." % rid + Style.RESET_ALL)
 
     client_zip = zipfile.ZipFile(
-        p("release", "Robust.Client_linux-x64.zip"), "w",
+        p("release", "Robust.Client_%s.zip" % rid), "w",
         compression=zipfile.ZIP_DEFLATED)
 
-    copy_dir_into_zip(p("bin", "Client", "linux-x64", "publish"), "", client_zip, IGNORED_FILES_LINUX)
+    copy_dir_into_zip(p("bin", "Client", rid, "publish"), "", client_zip, IGNORED_FILES_LINUX)
     copy_resources("Resources", client_zip)
     # Cool we're done.
     client_zip.close()
 
 
-
-def build_linux_arm64(skip_build: bool) -> None:
-    # Run a full build.
-    # TODO: Linux-arm64 is currently server-only.
-    pass
-""" print(Fore.GREEN + "Building project for Linux ARM64 (SERVER ONLY)..." + Style.RESET_ALL)
-
-    if not skip_build:
-        subprocess.run([
-            "dotnet",
-            "build",
-            "SpaceStation14.sln",
-            "-c", "Release",
-            "--nologo",
-            "/v:m",
-            "/p:TargetOS=Linux",
-            "/t:Rebuild",
-            "/p:FullRelease=True"
-        ], check=True)
-
-        publish_client("linux-arm64", "Linux", True)
-
-    print(Fore.GREEN + "Packaging Linux ARM64 server..." + Style.RESET_ALL)
-    server_zip = zipfile.ZipFile(p("release", "SS14.Server_Linux_ARM64.zip"), "w",
-                                 compression=zipfile.ZIP_DEFLATED)
-    copy_dir_into_zip(p("RobustToolbox", "bin", "Server", "linux-arm64", "publish"), "", server_zip)
-    copy_resources(p("Resources"), server_zip, server=True)
-    server_zip.close()"""
-
-
-def publish_client(runtime: str, target_os: str) -> None:
+def publish_client(runtime: str, target_os: TargetOS) -> None:
     base = [
         "dotnet", "publish",
         "--runtime", runtime,
         "--no-self-contained",
         "-c", "Release",
         f"/p:TargetOS={target_os}",
-        "/p:FullRelease=True"
+        "/p:FullRelease=True",
+        "/p:UseAppHost=False"
     ]
 
     subprocess.run(base + ["Robust.Client/Robust.Client.csproj"], check=True)

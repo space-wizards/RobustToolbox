@@ -225,7 +225,7 @@ internal sealed class ParallelManager : IParallelManagerInternal
             }
             catch (Exception exc)
             {
-                _sawmill.Error($"Exception in ParallelManager: {exc.StackTrace}");
+                _sawmill.Error($"Exception in ParallelManager: {exc}");
             }
             finally
             {
@@ -272,7 +272,7 @@ internal sealed class ParallelManager : IParallelManagerInternal
             }
             catch (Exception exc)
             {
-                _sawmill.Error($"Exception in ParallelManager: {exc.StackTrace}");
+                _sawmill.Error($"Exception in ParallelManager: {exc}");
             }
             finally
             {

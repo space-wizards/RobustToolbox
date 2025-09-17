@@ -28,6 +28,14 @@ namespace Robust.UnitTesting.Shared.Maths
         };
 
         [Test]
+        public void TestAngleDegrees()
+        {
+            const double degrees = 75d;
+            var angle = Angle.FromDegrees(degrees);
+            Assert.That(angle.Degrees, Is.EqualTo(degrees));
+        }
+
+        [Test]
         public void TestAngleZero()
         {
             Assert.That(Angle.Zero.Theta, Is.AtMost(Epsilon));

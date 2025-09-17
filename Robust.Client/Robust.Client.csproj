@@ -18,15 +18,19 @@
     <PackageReference Include="SpaceWizards.NFluidsynth" PrivateAssets="compile" />
     <PackageReference Include="SixLabors.ImageSharp" />
     <PackageReference Include="OpenToolkit.Graphics" PrivateAssets="compile" />
-    <PackageReference Include="OpenTK.OpenAL" PrivateAssets="compile" />
+    <PackageReference Include="OpenTK.Audio.OpenAL" PrivateAssets="compile" />
     <PackageReference Include="SpaceWizards.SharpFont" PrivateAssets="compile" />
+    <PackageReference Include="SpaceWizards.Sdl" PrivateAssets="compile" />
     <PackageReference Include="Robust.Natives" />
-    <PackageReference Include="System.Numerics.Vectors"  />
     <PackageReference Include="TerraFX.Interop.Windows" PrivateAssets="compile" />
     <PackageReference Condition="'$(RobustToolsBuild)' == 'True'" Include="JetBrains.Profiler.Api" PrivateAssets="compile" />
     <PackageReference Include="SpaceWizards.Sodium" PrivateAssets="compile" />
     <PackageReference Include="Microsoft.NET.ILLink.Tasks" />
     <PackageReference Include="TerraFX.Interop.Xlib" />
+
+    <!-- Needed to pin transitive dependency versions. -->
+    <PackageReference Include="System.Text.Json" />
+    <PackageReference Include="Newtonsoft.Json" />
   </ItemGroup>
   <ItemGroup Condition="'$(EnableClientScripting)' == 'True'">
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" PrivateAssets="compile" />
@@ -60,6 +64,8 @@
     <RobustLinkAssemblies Include="TerraFX.Interop.Windows" />
     <RobustLinkAssemblies Include="TerraFX.Interop.Xlib" />
     <RobustLinkAssemblies Include="OpenToolkit.Graphics" />
+    <RobustLinkAssemblies Include="SpaceWizards.Sdl" />
+    <RobustLinkAssemblies Include="SpaceWizards.SharpFont" />
   </ItemGroup>
 
   <Import Project="..\MSBuild\Robust.Properties.targets" />

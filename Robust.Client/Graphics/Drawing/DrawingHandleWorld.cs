@@ -74,7 +74,7 @@ namespace Robust.Client.Graphics
         /// <remarks>
         /// The sprite will have it's local dimensions calculated so that it has <see cref="EyeManager.PixelsPerMeter"/> texels per meter in the world.
         /// </remarks>
-        public void DrawTexture(Texture texture, Vector2 position, Color? modulate = null)
+        public override void DrawTexture(Texture texture, Vector2 position, Color? modulate = null)
         {
             CheckDisposed();
 

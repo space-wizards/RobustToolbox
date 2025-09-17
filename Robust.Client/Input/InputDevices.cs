@@ -197,6 +197,13 @@ namespace Robust.Client.Input
                     locId += "-linux";
             }
 
+#if MACOS
+            if (key == Key.Alt)
+            {
+                locId += "-mac";
+            }
+#endif
+
             if (loc.TryGetString(locId, out var name))
                 return name;
 

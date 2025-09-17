@@ -11,6 +11,7 @@ public abstract class VisualizerSystem<T> : EntitySystem
 {
     [Dependency] protected readonly AppearanceSystem AppearanceSystem = default!;
     [Dependency] protected readonly AnimationPlayerSystem AnimationSystem = default!;
+    [Dependency] protected readonly SpriteSystem SpriteSystem = default!;
 
     public override void Initialize()
     {

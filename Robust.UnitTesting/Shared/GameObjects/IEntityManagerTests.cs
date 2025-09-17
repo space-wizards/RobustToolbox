@@ -1,12 +1,14 @@
+using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.GameObjects
 {
     [TestFixture, Parallelizable]
-    sealed class EntityManagerTests
+    sealed partial class EntityManagerTests
     {
         private static ISimulation SimulationFactory()
         {
@@ -37,13 +39,13 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
 
             var entManager = sim.Resolve<IEntityManager>();
-            var mapManager = sim.Resolve<IMapManager>();
+            var mapSystem = entManager.System<SharedMapSystem>();
 
             Assert.That(entManager.Count<TransformComponent>(), Is.EqualTo(0));
 
             var mapId = sim.CreateMap().MapId;
             Assert.That(entManager.Count<TransformComponent>(), Is.EqualTo(1));
-            mapManager.DeleteMap(mapId);
+            mapSystem.DeleteMap(mapId);
             Assert.That(entManager.Count<TransformComponent>(), Is.EqualTo(0));
         }
     }

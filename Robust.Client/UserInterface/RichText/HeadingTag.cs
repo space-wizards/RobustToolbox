@@ -6,7 +6,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.RichText;
 
-public sealed class HeadingTag : IMarkupTag
+public sealed class HeadingTag : IMarkupTagHandler
 {
     [Dependency] private readonly IResourceCache _resourceCache = default!;
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;

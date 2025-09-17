@@ -12,7 +12,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Shared.Localization
 {
-    internal sealed partial class LocalizationManager
+    internal abstract partial class LocalizationManager
     {
         private static readonly Regex RegexWordMatch = new Regex(@"\w+");
 
@@ -22,6 +22,8 @@ namespace Robust.Shared.Localization
             AddCtxFunction(bundle, "GENDER", FuncGender);
             AddCtxFunction(bundle, "SUBJECT", FuncSubject);
             AddCtxFunction(bundle, "OBJECT", FuncObject);
+            AddCtxFunction(bundle, "DAT-OBJ", FuncDatObj);
+            AddCtxFunction(bundle, "GENITIVE", FuncGenitive);
             AddCtxFunction(bundle, "POSS-ADJ", FuncPossAdj);
             AddCtxFunction(bundle, "POSS-PRONOUN", FuncPossPronoun);
             AddCtxFunction(bundle, "REFLEXIVE", FuncReflexive);
@@ -169,10 +171,8 @@ namespace Robust.Shared.Localization
             if (args.Args.Count < 1) return new LocValueString(nameof(Gender.Neuter));
 
             ILocValue entity0 = args.Args[0];
-            if (entity0.Value != null)
+            if (entity0.Value is EntityUid entity)
             {
-                EntityUid entity = (EntityUid)entity0.Value;
-
                 if (_entMan.TryGetComponent(entity, out GrammarComponent? grammar) && grammar.Gender.HasValue)
                 {
                     return new LocValueString(grammar.Gender.Value.ToString().ToLowerInvariant());
@@ -201,6 +201,25 @@ namespace Robust.Shared.Localization
         private ILocValue FuncObject(LocArgs args)
         {
             return new LocValueString(GetString("zzzz-object-pronoun", ("ent", args.Args[0])));
+        }
+
+        /// <summary>
+        /// Returns the dative form pronoun for the entity's gender.
+        /// This method is intended for languages with a dative case, where indirect objects
+        /// (e.g., "to him," "for her") require specific forms. Not applicable for en-US locale.
+        /// </summary>
+        private ILocValue FuncDatObj(LocArgs args)
+        {
+            return new LocValueString(GetString("zzzz-dat-object", ("ent", args.Args[0])));
+        }
+
+        /// <summary>
+        /// Returns the respective genitive form (pronoun or possessive adjective) for the entity's gender.
+        /// This is used in languages with a genitive case to indicate possession or related relationships,
+        /// e.g., "у него" (Russian), "seines Vaters" (German).
+        private ILocValue FuncGenitive(LocArgs args)
+        {
+            return new LocValueString(GetString("zzzz-genitive", ("ent", args.Args[0])));
         }
 
         /// <summary>
@@ -235,10 +254,8 @@ namespace Robust.Shared.Localization
             if (args.Args.Count < 1) return new LocValueString(GetString("zzzz-counter-default"));
 
             ILocValue entity0 = args.Args[0];
-            if (entity0.Value != null)
+            if (entity0.Value is EntityUid entity)
             {
-                EntityUid entity = (EntityUid)entity0.Value;
-
                 if (TryGetEntityLocAttrib(entity, "counter", out var counter))
                 {
                     return new LocValueString(counter);
@@ -281,9 +298,8 @@ namespace Robust.Shared.Localization
             if (args.Args.Count < 2) return new LocValueString("other");
 
             ILocValue entity0 = args.Args[0];
-            if (entity0.Value != null)
+            if (entity0.Value is EntityUid entity)
             {
-                EntityUid entity = (EntityUid)entity0.Value;
                 ILocValue attrib0 = args.Args[1];
                 if (TryGetEntityLocAttrib(entity, attrib0.Format(new LocContext(bundle)), out var attrib))
                 {
@@ -302,10 +318,8 @@ namespace Robust.Shared.Localization
             if (args.Args.Count < 1) return new LocValueString("false");
 
             ILocValue entity0 = args.Args[0];
-            if (entity0.Value != null)
+            if (entity0.Value is EntityUid entity)
             {
-                EntityUid entity = (EntityUid)entity0.Value;
-
                 if (_entMan.TryGetComponent(entity, out GrammarComponent? grammar) && grammar.ProperNoun.HasValue)
                 {
                     return new LocValueString(grammar.ProperNoun.Value.ToString().ToLowerInvariant());

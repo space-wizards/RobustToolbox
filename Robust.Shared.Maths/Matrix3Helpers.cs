@@ -25,11 +25,11 @@ public static class Matrix3Helpers
         return a.EqualsApprox(b, (float) tolerance);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [Obsolete("Use TransformBox")]
+    // This method was previously broken, and now just returns an bounding box pretending to be a Box2Rotated
     public static Box2Rotated TransformBounds(this Matrix3x2 refFromBox, Box2Rotated box)
     {
-        var matty = Matrix3x2.Multiply(refFromBox, box.Transform);
-        return new Box2Rotated(Vector2.Transform(box.BottomLeft, matty), Vector2.Transform(box.TopRight, matty));
+        return new Box2Rotated(TransformBox(refFromBox, box));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -73,7 +73,7 @@ public static class Matrix3Helpers
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Angle Rotation(this Matrix3x2 t)
     {
-        return new Vector2(t.M11, t.M12).ToAngle();
+        return new Angle(Math.Atan2(t.M12, t.M11));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

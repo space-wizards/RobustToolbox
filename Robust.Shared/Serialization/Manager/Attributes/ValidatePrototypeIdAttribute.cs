@@ -8,6 +8,7 @@ namespace Robust.Shared.Serialization.Manager.Attributes;
 /// valid YAML prototype ids. This attribute is not required for static <see cref="ProtoId{T}"/> and
 /// <see cref="EntProtoId"/> fields, as they automatically get validated.
 /// </summary>
+[Obsolete("Use a static readonly ProtoId<T> instead")]
 [AttributeUsage(AttributeTargets.Field)]
 public sealed class ValidatePrototypeIdAttribute<T> : Attribute where T : IPrototype
 {

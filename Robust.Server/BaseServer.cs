@@ -223,10 +223,10 @@ namespace Robust.Server
 
                 if (!Path.IsPathRooted(fullPath))
                 {
-                    logPath = PathHelpers.ExecutableRelativeFile(fullPath);
+                    fullPath = PathHelpers.ExecutableRelativeFile(fullPath);
                 }
 
-                logHandler = new FileLogHandler(logPath);
+                logHandler = new FileLogHandler(fullPath);
             }
 
             _log.RootSawmill.Level = _config.GetCVar(CVars.LogLevel);
@@ -297,7 +297,7 @@ namespace Robust.Server
                 : null;
 
             // Set up the VFS
-            _resources.Initialize(dataDir);
+            _resources.Initialize(dataDir, hideUserDataDir: false);
 
             var mountOptions = _commandLineArgs != null
                 ? MountOptions.Merge(_commandLineArgs.MountOptions, Options.MountOptions) : Options.MountOptions;
@@ -331,6 +331,7 @@ namespace Robust.Server
             // TODO: solve this properly.
             _serializer.Initialize();
 
+            _loc.Initialize();
             _loc.AddLoadedToStringSerializer(_stringSerializer);
 
             //IoCManager.Resolve<IMapLoader>().LoadedMapData +=
@@ -586,7 +587,7 @@ namespace Robust.Server
         {
             _config.OnValueChanged(CVars.NetTickrate, i =>
             {
-                var b = (byte) i;
+                var b = (ushort) i;
                 _time.TickRate = b;
 
                 _logger.Info($"Tickrate changed to: {b} on tick {_time.CurTick}");
@@ -594,7 +595,7 @@ namespace Robust.Server
 
             var startOffset = TimeSpan.FromSeconds(_config.GetCVar(CVars.NetTimeStartOffset));
             _time.TimeBase = (startOffset, GameTick.First);
-            _time.TickRate = (byte) _config.GetCVar(CVars.NetTickrate);
+            _time.TickRate = (ushort) _config.GetCVar(CVars.NetTickrate);
 
             _logger.Info($"Name: {ServerName}");
             _logger.Info($"TickRate: {_time.TickRate}({_time.TickPeriod.TotalMilliseconds:0.00}ms)");

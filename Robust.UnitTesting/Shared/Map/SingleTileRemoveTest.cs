@@ -32,8 +32,6 @@ public sealed class GridDeleteSingleTileRemoveTestTest : RobustIntegrationTest
         var sEntMan = server.ResolveDependency<IEntityManager>();
         var confMan = server.ResolveDependency<IConfigurationManager>();
         var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
-        var xforms = sEntMan.System<SharedTransformSystem>();
-        var stateMan = (ClientGameStateManager) client.ResolveDependency<IClientGameStateManager>();
 
         var cEntMan = client.ResolveDependency<IEntityManager>();
         var netMan = client.ResolveDependency<IClientNetManager>();
@@ -78,7 +76,7 @@ public sealed class GridDeleteSingleTileRemoveTestTest : RobustIntegrationTest
             sMap = sys.CreateMap(out var mapId);
             var comp = mapMan.CreateGridEntity(mapId);
             grid = (comp.Owner, comp);
-            sys.SetTile(grid, grid, new Vector2i(0, 0), new Tile(1, (TileRenderFlag)1, 1));
+            sys.SetTile(grid, grid, new Vector2i(0, 0), new Tile(typeId: 1, flags: 1, variant: 1));
             var coords = new EntityCoordinates(grid, 0.5f, 0.5f);
 
             sPlayer = sEntMan.SpawnEntity(null, coords);
@@ -135,5 +133,9 @@ public sealed class GridDeleteSingleTileRemoveTestTest : RobustIntegrationTest
         // Entity should now be parented to the map
         Assert.That(sQuery.GetComponent(sEntity).ParentUid, Is.EqualTo(sMap));
         Assert.That(cQuery.GetComponent(cEntity.Value).ParentUid, Is.EqualTo(cMap));
+
+        await client.WaitPost(() => netMan.ClientDisconnect(""));
+        await server.WaitRunTicks(5);
+        await client.WaitRunTicks(5);
     }
 }

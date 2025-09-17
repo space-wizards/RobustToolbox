@@ -344,9 +344,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             {
                 // We only want the most overriden instance of a property for the type we are working with
                 if (!propertyInfo.IsMostOverridden(typeof(T)))
-                {
                     return false;
-                }
 
                 if (propertyInfo.PropertyInfo.GetMethod == null)
                 {
@@ -357,34 +355,43 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
             if (!fieldInfo.TryGetAttribute<DataFieldAttribute>(out var dataFieldAttribute, true))
             {
-                if (!fieldInfo.TryGetAttribute<IncludeDataFieldAttribute>(out var includeDataFieldAttribute, true))
+                if (fieldInfo.TryGetAttribute<IncludeDataFieldAttribute>(out var includeDataFieldAttribute, true))
                 {
-                    var potentialBackingField = fieldInfo.GetBackingField();
-                    if (potentialBackingField != null)
-                    {
-                        return GatherFieldData(potentialBackingField, out dataFieldBaseAttribute,
-                            out backingField, ref inheritanceBehavior);
-                    }
+                    dataFieldBaseAttribute = includeDataFieldAttribute;
                     return true;
                 }
-                dataFieldBaseAttribute = includeDataFieldAttribute;
-            }
-            else
-            {
-                dataFieldBaseAttribute = dataFieldAttribute;
 
-                if (fieldInfo is SpecificPropertyInfo property && !dataFieldAttribute.ReadOnly && property.PropertyInfo.SetMethod == null)
+                if (fieldInfo is not SpecificPropertyInfo)
+                    return true;
+
+                var potentialBackingField = fieldInfo.GetBackingField();
+                if (potentialBackingField != null)
                 {
-                    if (!property.TryGetBackingField(out var backingFieldInfo))
-                    {
-                        Logger.ErrorS(LogCategory, $"Property {property} in type {property.DeclaringType} is annotated with DataFieldAttribute as non-readonly but has no auto-setter");
-                        return false;
-                    }
-
-                    backingField = backingFieldInfo;
+                    return GatherFieldData(potentialBackingField,
+                        out dataFieldBaseAttribute,
+                        out backingField,
+                        ref inheritanceBehavior);
                 }
+
+                return false;
             }
 
+            dataFieldBaseAttribute = dataFieldAttribute;
+
+            if (fieldInfo is not SpecificPropertyInfo property
+                || dataFieldAttribute.ReadOnly
+                || property.PropertyInfo.SetMethod != null)
+            {
+                return true;
+            }
+
+            if (!property.TryGetBackingField(out var backingFieldInfo))
+            {
+                Logger.ErrorS(LogCategory, $"Property {property} in type {property.DeclaringType} is annotated with DataFieldAttribute as non-readonly but has no auto-setter");
+                return false;
+            }
+
+            backingField = backingFieldInfo;
             return true;
         }
 

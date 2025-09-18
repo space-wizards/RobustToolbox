@@ -69,6 +69,9 @@ namespace Robust.Client.GameObjects
             // server state a->b, then predicted b->c, lerp b->c
             // server state a->b, then predicted b->c, then predict d, lerp b->c
 
+            if (MetaData(uid).NetEntity.IsClientSide())
+                return;
+
             if (_gameTiming.ApplyingState)
             {
                 if (xform.ActivelyLerping)

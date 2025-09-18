@@ -57,7 +57,7 @@ void fragment()
     highp float s2 = s * s;
     // controls curve by lerping between two variants (inverse-shape and inversequadratic-shape)
     highp float curveFactor = mix(s, s2, clamp(lightCurveFactor, 0.0, 1.0));
-    highp float val = clamp(((1 - s2) * (1 - s2)) / (1 + lightFalloff * curveFactor), 0.0, 1.0);
+    highp float val = clamp(((1.0 - s2) * (1.0 - s2)) / (1.0 + lightFalloff * curveFactor), 0.0, 1.0);
 
     val *= lightPower;
     val *= mask;

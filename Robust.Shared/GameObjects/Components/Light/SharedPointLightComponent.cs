@@ -47,18 +47,14 @@ namespace Robust.Shared.GameObjects
         ///     See https://www.desmos.com/calculator/yjudaha0s6 for a demonstration of how this value affects the shape of the curve
         ///     for different light radii and curve factors.
         /// </remarks>
-        [DataField("falloff"), Animatable]
+        [DataField, Animatable]
         public float Falloff { get; set; } = 6.8f;
 
         /// <summary>
         ///     Controls the shape of the curve used for point light attenuation.
         ///     This value may vary between 0 and 1.
-        ///     A value of 0 gives a shape roughly equivalent to (1/1+distance), while
-        ///     a value of 1 gives a shape roughly equivalent to (1+distance^2).
-        ///     The former (inverse) is close to how light falls off in real life.
-        ///     The latter (inverse quadratic) is not particularly physically accurate, but is better for representing
-        ///     "spherical point lights", e.g. a glowing orb, which want some degree of consistent light in
-        ///     close to their object's center before falling off as normal.
+        ///     A value of 0 gives a shape roughly equivalent to 1/1+distance (more or less realistic),
+        ///     while a value of 1 gives a shape roughly equivalent to 1+distance^2 (closer to a sphere-shaped light)
         /// </summary>
         /// <remarks>
         ///     This does not directly control the exponent of the denominator, though it might seem that way.
@@ -68,7 +64,7 @@ namespace Robust.Shared.GameObjects
         ///     See https://www.desmos.com/calculator/yjudaha0s6 for a demonstration of how this value affects the shape of the curve
         ///     for different light radii and falloff values.
         /// </remarks>
-        [DataField("curveFactor"), Animatable]
+        [DataField, Animatable]
         public float CurveFactor { get; set; } = 1.0f;
 
         /// <summary>

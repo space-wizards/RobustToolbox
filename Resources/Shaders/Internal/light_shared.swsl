@@ -16,7 +16,6 @@ uniform highp float lightPower;
 uniform highp float lightSoftness;
 uniform highp float lightFalloff;
 uniform highp float lightCurveFactor;
-uniform lowp int lightCurveType;
 uniform highp float lightIndex;
 uniform sampler2D shadowMap;
 

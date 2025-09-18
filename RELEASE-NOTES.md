@@ -39,6 +39,25 @@ END TEMPLATE-->
 
 ### New features
 
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 267.1.0
+
+### New features
+
 * Animation:
   * `AnimationTrackProperty.KeyFrame` can now have easings functions applied.
 * Graphics:

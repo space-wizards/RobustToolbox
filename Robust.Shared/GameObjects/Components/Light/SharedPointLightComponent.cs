@@ -65,7 +65,7 @@ namespace Robust.Shared.GameObjects
         ///     for different light radii and falloff values.
         /// </remarks>
         [DataField, Animatable]
-        public float CurveFactor { get; set; } = 1.0f;
+        public float CurveFactor { get; set; } = 0.0f;
 
         /// <summary>
         ///     Whether this pointlight should cast shadows

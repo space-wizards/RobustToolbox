@@ -43,6 +43,7 @@ END TEMPLATE-->
 * `System.WeakReference<T>` is now available in the sandbox.
 * `IClydeViewport` now has an `Id` and `ClearCachedResources` event. Together, these allow you to properly cache rendering resources per viewport.
 * Added a new entity yaml deserialization option (`SerializationOptions.EntityExceptionBehaviour`) that can optionally make deserialization more exception tolerant.
+* `PointLightComponent` now has two fields, `falloff` and `curveFactor`, for controlling light falloff and the shape of the light attenuation curve.
 
 ### Bugfixes
 
@@ -52,6 +53,7 @@ END TEMPLATE-->
 ### Other
 
 * The client now logs an error when attempting to send a network message without server connection. Previously, it would be silently dropped.
+* The function used for pointlight attenuation has been modified to be c1 continuous as opposed to simply c0 continuous, resulting in smoother boundary behavior.
 
 ### Internal
 

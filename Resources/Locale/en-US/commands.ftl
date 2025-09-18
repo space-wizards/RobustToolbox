@@ -577,3 +577,5 @@ cmd-localization_set_culture-desc = Set DefaultCulture for the client Localizati
 cmd-localization_set_culture-help = Usage: localization_set_culture <cultureName>
 cmd-localization_set_culture-culture-name = <cultureName>
 cmd-localization_set_culture-changed = Localization changed to { $code } ({ $nativeName } / { $englishName })
+
+cmd-addmap-hint-2 = runMapInit [true / false]

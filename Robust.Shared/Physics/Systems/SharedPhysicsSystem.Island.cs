@@ -1039,6 +1039,8 @@ public abstract partial class SharedPhysicsSystem
                 continue;
 
             var xform = ent.Comp2;
+            // TODO: Root cause out why this TryComp is necessary.
+            // See https://github.com/space-wizards/RobustToolbox/pull/6135
             if (!TryComp(xform.ParentUid, out TransformComponent? transform))
                 continue;
 

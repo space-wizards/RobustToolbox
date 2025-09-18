@@ -30,19 +30,6 @@ namespace Robust.Shared.GameObjects
         bool NetSyncEnabled { get; set; }
 
         /// <summary>
-        ///     If true, and if this is a networked component, then component data will only be sent to players if their
-        ///     controlled entity is the owner of this component. This is less performance intensive than <see cref="SessionSpecific"/>.
-        /// </summary>
-        bool SendOnlyToOwner { get; }
-
-        /// <summary>
-        ///     If true, and if this is a networked component, then this component will cause <see
-        ///     cref="ComponentGetStateAttemptEvent"/> events to be raised to check whether a given player should
-        ///     receive this component's state.
-        /// </summary>
-        bool SessionSpecific { get; }
-
-        /// <summary>
         ///     Entity that this component is attached to.
         /// </summary>
         /// <seealso cref="EntityQueryEnumerator{TComp1}"/>

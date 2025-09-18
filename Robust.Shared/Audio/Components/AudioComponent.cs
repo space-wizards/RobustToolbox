@@ -16,15 +16,16 @@ namespace Robust.Shared.Audio.Components;
 /// <summary>
 /// Stores the audio data for an audio entity.
 /// </summary>
-[RegisterComponent, NetworkedComponent, AutoGenerateComponentState(true, fieldDeltas: true), Access(typeof(SharedAudioSystem))]
+[RegisterComponent]
+[NetworkedComponent(StateRestriction.SessionSpecific)]
+[AutoGenerateComponentState(true, fieldDeltas: true)]
+[Access(typeof(SharedAudioSystem))]
 public sealed partial class AudioComponent : Component, IAudioSource
 {
     [AutoNetworkedField, DataField, Access(Other = AccessPermissions.ReadWriteExecute)]
     public AudioFlags Flags = AudioFlags.None;
 
     #region Filter
-
-    public override bool SessionSpecific => true;
 
     /// <summary>
     /// Used for synchronising audio on client that comes into PVS range.

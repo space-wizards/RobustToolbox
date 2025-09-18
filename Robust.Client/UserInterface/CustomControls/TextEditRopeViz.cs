@@ -4,6 +4,7 @@ using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Input;
 using Robust.Shared.Maths;
+using Robust.Shared.Maths.Colors;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -143,16 +144,16 @@ internal sealed class TextEditRopeViz : OSWindow
 
         static void InterpColors(Span<Color> colors, Color α, Color β)
         {
-            α = Color.FromSrgb(α);
-            β = Color.FromSrgb(β);
+            var a = α.ToColors().ToLinear();
+            var b = β.ToColors().ToLinear();
 
             for (var i = 0; i < colors.Length; i++)
             {
                 var λ = (float)i / (colors.Length - 1);
 
-                var color = Color.InterpolateBetween(α, β, λ);
+                var color = LinearSrgbColor.InterpolateBetween(a, b, λ);
 
-                colors[i] = Color.ToSrgb(color);
+                colors[i] = color.ToSrgb().ToColor();
             }
         }
 

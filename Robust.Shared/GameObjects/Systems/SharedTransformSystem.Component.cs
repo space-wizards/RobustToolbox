@@ -1028,6 +1028,15 @@ public abstract partial class SharedTransformSystem
         return GetWorldPositionRotation(component);
     }
 
+    [Obsolete("Use variant without entity query")]
+    public (Vector2 Position, Angle Rotation) GetRelativePositionRotation(
+        TransformComponent component,
+        EntityUid relative,
+        EntityQuery<TransformComponent> query)
+    {
+        return GetRelativePositionRotation(component, relative);
+    }
+
     /// <summary>
     ///     Returns the position and rotation relative to some entity higher up in the component's transform hierarchy.
     /// </summary>
@@ -1035,15 +1044,14 @@ public abstract partial class SharedTransformSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public (Vector2 Position, Angle Rotation) GetRelativePositionRotation(
         TransformComponent component,
-        EntityUid relative,
-        EntityQuery<TransformComponent> query)
+        EntityUid relative)
     {
         var rot = component._localRotation;
         var pos = component._localPosition;
         var xform = component;
         while (xform.ParentUid != relative)
         {
-            if (xform.ParentUid.IsValid() && query.TryGetComponent(xform.ParentUid, out xform))
+            if (xform.ParentUid.IsValid() && TryComp(xform.ParentUid, out xform))
             {
                 rot += xform._localRotation;
                 pos = xform._localRotation.RotateVec(pos) + xform._localPosition;
@@ -1052,9 +1060,9 @@ public abstract partial class SharedTransformSystem
 
             // Entity was not actually in the transform hierarchy. This is probably a sign that something is wrong, or that the function is being misused.
             Log.Warning($"Target entity ({ToPrettyString(relative)}) not in transform hierarchy while calling {nameof(GetRelativePositionRotation)}.");
-            var relXform = query.GetComponent(relative);
+            var relXform = Transform(relative);
             pos = Vector2.Transform(pos, GetInvWorldMatrix(relXform));
-            rot = rot - GetWorldRotation(relXform, query);
+            rot = rot - GetWorldRotation(relXform);
             break;
         }
 

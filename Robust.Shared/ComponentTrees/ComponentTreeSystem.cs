@@ -159,6 +159,7 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         foreach (var entry in component.Tree)
         {
             entry.Component.TreeUid = null;
+            entry.Component.Tree = null;
         }
 
         component.Tree.Clear();

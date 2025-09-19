@@ -209,7 +209,6 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         if (_updateQueue.Count == 0)
             return;
 
-        var xforms = GetEntityQuery<TransformComponent>();
         var trees = GetEntityQuery<TTreeComp>();
 
         while (_updateQueue.TryDequeue(out var entry))
@@ -239,8 +238,7 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
             {
                 (pos, rot) = XformSystem.GetRelativePositionRotation(
                     entry.Transform,
-                    newTree!.Value,
-                    xforms);
+                    newTree!.Value);
 
                 newTreeComp!.Tree.Update(entry, ExtractAabb(entry, pos, rot));
                 continue;
@@ -256,8 +254,7 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
 
             (pos, rot) = XformSystem.GetRelativePositionRotation(
                 entry.Transform,
-                newTree!.Value,
-                xforms);
+                newTree!.Value);
 
             newTreeComp.Tree.Add(entry, ExtractAabb(entry, pos, rot));
         }

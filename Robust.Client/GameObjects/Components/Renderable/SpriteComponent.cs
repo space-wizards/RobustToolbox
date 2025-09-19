@@ -296,7 +296,6 @@ namespace Robust.Client.GameObjects
             LocalMatrix = Matrix3Helpers.CreateTransform(in offset, in rotation, in scale);
         }
 
-        //Goobstation
         /// <summary>
         /// Used to allow one to decide if they wish to loop the animation or not.
         /// </summary>
@@ -1670,7 +1669,7 @@ namespace Robust.Client.GameObjects
                 };
             }
 
-            internal void AdvanceFrameAnimation(RSI.State state) //Goobstation: Animation can have its loop set to false.
+            internal void AdvanceFrameAnimation(RSI.State state)
             {
                 // Can't advance frames without more than 1 delay which is already checked above.
                 var delayCount = state.DelayCount;

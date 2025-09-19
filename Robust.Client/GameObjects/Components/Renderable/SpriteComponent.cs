@@ -295,6 +295,12 @@ namespace Robust.Client.GameObjects
         }
 
         /// <summary>
+        /// Used to allow one to decide if they wish to loop the animation or not.
+        /// </summary>
+        [DataField]
+        public bool Loop { get; set; } = true;
+
+        /// <summary>
         /// Update this sprite component to visibly match the current state of other at the time
         /// this is called. Does not keep them perpetually in sync.
         /// This does some deep copying thus exerts some gc pressure, so avoid this for hot code paths.
@@ -1663,17 +1669,23 @@ namespace Robust.Client.GameObjects
 
             internal void AdvanceFrameAnimation(RSI.State state)
             {
-                // Can't advance frames without more than 1 delay which is already checked above.
                 var delayCount = state.DelayCount;
+
                 while (AnimationTimeLeft < 0)
                 {
                     if (Reversed)
                     {
                         AnimationFrame -= 1;
 
-                        // Animation finished, do we cycle back to positive or reset.
                         if (AnimationFrame < 0)
                         {
+                            if (!_parent.Loop) // stop at first frame if looping disabled
+                            {
+                                AnimationFrame = 0;
+                                AnimationTimeLeft = 0;
+                                return;
+                            }
+
                             if (Cycle)
                             {
                                 AnimationFrame = 1;
@@ -1691,9 +1703,15 @@ namespace Robust.Client.GameObjects
                     {
                         AnimationFrame += 1;
 
-                        // Animation finished, do we reverse or reset.
                         if (AnimationFrame >= delayCount)
                         {
+                            if (!_parent.Loop) // stop at last frame if looping disabled
+                            {
+                                AnimationFrame = delayCount - 1;
+                                AnimationTimeLeft = 0;
+                                return;
+                            }
+
                             if (Cycle)
                             {
                                 AnimationFrame = delayCount - 2;
@@ -1711,6 +1729,7 @@ namespace Robust.Client.GameObjects
                     AnimationTimeLeft += state.GetDelay(AnimationFrame);
                 }
             }
+
         }
 
         /// <summary>

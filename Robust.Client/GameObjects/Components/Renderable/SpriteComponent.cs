@@ -296,6 +296,13 @@ namespace Robust.Client.GameObjects
             LocalMatrix = Matrix3Helpers.CreateTransform(in offset, in rotation, in scale);
         }
 
+        //Goobstation
+        /// <summary>
+        /// Used to allow one to decide if they wish to loop the animation or not.
+        /// </summary>
+        [DataField("loop")]
+        public bool Loop { get; set; } = true; // default true
+
         /// <summary>
         /// Update this sprite component to visibly match the current state of other at the time
         /// this is called. Does not keep them perpetually in sync.
@@ -1663,7 +1670,7 @@ namespace Robust.Client.GameObjects
                 };
             }
 
-            internal void AdvanceFrameAnimation(RSI.State state)
+            internal void AdvanceFrameAnimation(RSI.State state) //Goobstation: Animation can have its loop set to false.
             {
                 // Can't advance frames without more than 1 delay which is already checked above.
                 var delayCount = state.DelayCount;
@@ -1676,14 +1683,16 @@ namespace Robust.Client.GameObjects
                         // Animation finished, do we cycle back to positive or reset.
                         if (AnimationFrame < 0)
                         {
-                            if (Cycle)
+                            if (_parent.Loop) // use SpriteComponent.Loop
                             {
                                 AnimationFrame = 1;
                                 Reversed = false;
                             }
                             else
                             {
-                                AnimationFrame = delayCount - 1;
+                                AnimationFrame = 0; // stop at the first frame
+                                AnimationTimeLeft = 0; // freeze
+                                return;
                             }
 
                             AnimationTime = -AnimationTimeLeft;
@@ -1696,14 +1705,16 @@ namespace Robust.Client.GameObjects
                         // Animation finished, do we reverse or reset.
                         if (AnimationFrame >= delayCount)
                         {
-                            if (Cycle)
+                            if (_parent.Loop) // use SpriteComponent.Loop
                             {
                                 AnimationFrame = delayCount - 2;
                                 Reversed = true;
                             }
                             else
                             {
-                                AnimationFrame = 0;
+                                AnimationFrame = delayCount - 1; // stop at last frame
+                                AnimationTimeLeft = 0; // freeze
+                                return;
                             }
 
                             AnimationTime = -AnimationTimeLeft;
@@ -1713,6 +1724,7 @@ namespace Robust.Client.GameObjects
                     AnimationTimeLeft += state.GetDelay(AnimationFrame);
                 }
             }
+
         }
 
         /// <summary>

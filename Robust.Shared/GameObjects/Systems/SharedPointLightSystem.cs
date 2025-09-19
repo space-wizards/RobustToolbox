@@ -38,6 +38,15 @@ public abstract class SharedPointLightSystem : EntitySystem
         Dirty(uid, comp);
     }
 
+    public virtual void SetContainerOccluded(EntityUid uid, bool occluded, SharedPointLightComponent? comp = null)
+    {
+        if (!ResolveLight(uid, ref comp) || occluded == comp.ContainerOccluded)
+            return;
+
+        comp.ContainerOccluded = occluded;
+        Dirty(uid, comp);
+    }
+
     public virtual void SetEnabled(EntityUid uid, bool enabled, SharedPointLightComponent? comp = null, MetaDataComponent? meta = null)
     {
         if (!ResolveLight(uid, ref comp) || enabled == comp.Enabled)

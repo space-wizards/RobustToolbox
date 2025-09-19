@@ -19,7 +19,7 @@ namespace Robust.Shared.ComponentTrees;
 [UsedImplicitly]
 public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
     where TTreeComp : Component, IComponentTreeComponent<TComp>, new()
-    where TComp : Component, IComponentTreeEntry<TComp>, new()
+    where TComp : Component, IComponentTreeEntry<TComp>
 {
     [Dependency] private readonly RecursiveMoveSystem _recursiveMoveSys = default!;
     [Dependency] protected readonly SharedTransformSystem XformSystem = default!;
@@ -29,6 +29,15 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
     private readonly Queue<ComponentTreeEntry<TComp>> _updateQueue = new();
     private readonly HashSet<EntityUid> _updated = new();
     protected EntityQuery<TComp> Query;
+
+    /// <summary>
+    /// Whether this lookup tree should even be enabled.
+    /// </summary>
+    /// <remarks>
+    /// This can be used to disable some trees if they are not required, which helps improve performance a bit.
+    /// </remarks>
+    protected virtual bool Enabled => true;
+    private bool _initialized;
 
     /// <summary>
     ///     If true, this system will update the tree positions every frame update. See also <see cref="DoTickUpdate"/>. Some systems may need to do both.
@@ -55,6 +64,10 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
     {
         base.Initialize();
 
+        if (!Enabled)
+            return;
+
+        _initialized = true;
         UpdatesOutsidePrediction = DoTickUpdate;
         UpdatesAfter.Add(typeof(SharedTransformSystem));
         UpdatesAfter.Add(typeof(SharedPhysicsSystem));
@@ -86,10 +99,21 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
 
     public override void Shutdown()
     {
+        if (!_initialized)
+            return;
+
+        _initialized = false;
         if (Recursive)
-        {
             _recursiveMoveSys.OnTreeRecursiveMove -= HandleRecursiveMove;
-        }
+    }
+
+    private bool CheckEnabled()
+    {
+        if (_initialized)
+            return true;
+
+        Log.Error($"Attempted to use disabled lookup tree");
+        return false;
     }
 
     #region Queue Update
@@ -105,6 +129,9 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
 
     public void QueueTreeUpdate(EntityUid uid, TComp component, TransformComponent? xform = null)
     {
+        if (!CheckEnabled())
+            return;
+
         if (component.TreeUpdateQueued || !Resolve(uid, ref xform))
             return;
 
@@ -162,13 +189,13 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
     #region Update Trees
     public override void Update(float frameTime)
     {
-        if (DoTickUpdate)
+        if (DoTickUpdate && _initialized)
             UpdateTreePositions();
     }
 
     public override void FrameUpdate(float frameTime)
     {
-        if (DoFrameUpdate)
+        if (DoFrameUpdate &&  _initialized)
             UpdateTreePositions();
     }
 
@@ -178,6 +205,9 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
     /// </summary>
     public void UpdateTreePositions()
     {
+        if (!CheckEnabled())
+            return;
+
         if (_updateQueue.Count == 0)
             return;
 
@@ -253,8 +283,7 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
 
         var (pos, rot) = XformSystem.GetRelativePositionRotation(
             entry.Transform,
-            entry.Component.TreeUid.Value,
-            GetEntityQuery<TransformComponent>());
+            entry.Component.TreeUid.Value);
 
         return ExtractAabb(in entry, pos, rot);
     }
@@ -268,6 +297,8 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
 
     public IEnumerable<(EntityUid Uid, TTreeComp Comp)> GetIntersectingTrees(MapId mapId, Box2 worldAABB)
     {
+        if (!CheckEnabled())
+            return [];
         // Anything that queries these trees should only do so if there are no queued updates, otherwise it can lead to
         // errors. Currently there is no easy way to enforce this, but this should work as long as nothing queries the
         // trees directly:
@@ -299,25 +330,79 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         return state.trees;
     }
 
+    #region HashSet
+
     public HashSet<ComponentTreeEntry<TComp>> QueryAabb(MapId mapId, Box2 worldBounds, bool approx = true)
         => QueryAabb(mapId, new Box2Rotated(worldBounds, default, default), approx);
+
+    public void QueryAabb(HashSet<ComponentTreeEntry<TComp>> results, MapId mapId, Box2 worldBounds, bool approx = true)
+        => QueryAabb(results, mapId, new Box2Rotated(worldBounds, default, default), approx);
 
     public HashSet<ComponentTreeEntry<TComp>> QueryAabb(MapId mapId, Box2Rotated worldBounds, bool approx = true)
     {
         var state = new HashSet<ComponentTreeEntry<TComp>>();
+        QueryAabb(state, mapId, worldBounds, approx);
+
+        return state;
+    }
+
+    public void QueryAabb(
+        HashSet<ComponentTreeEntry<TComp>> results,
+        MapId mapId,
+        Box2Rotated worldBounds,
+        bool approx = true)
+    {
+        if (!CheckEnabled())
+            return;
+
         foreach (var (tree, treeComp) in GetIntersectingTrees(mapId, worldBounds))
         {
             var bounds = XformSystem.GetInvWorldMatrix(tree).TransformBox(worldBounds);
 
-            treeComp.Tree.QueryAabb(ref state, static (ref HashSet<ComponentTreeEntry<TComp>> state, in ComponentTreeEntry<TComp> value) =>
-            {
-                state.Add(value);
-                return true;
-            },
-            bounds, approx);
+            treeComp.Tree.QueryAabb(ref results,
+                static (ref HashSet<ComponentTreeEntry<TComp>> state, in ComponentTreeEntry<TComp> value) =>
+                {
+                    state.Add(value);
+                    return true;
+                },
+                bounds,
+                approx);
         }
-        return state;
     }
+
+    #endregion
+
+
+    #region List
+
+    public void QueryAabb(List<ComponentTreeEntry<TComp>> results, MapId mapId, Box2 worldBounds, bool approx = true)
+        => QueryAabb(results, mapId, new Box2Rotated(worldBounds, default, default), approx);
+
+    public void QueryAabb(
+        List<ComponentTreeEntry<TComp>> results,
+        MapId mapId,
+        Box2Rotated worldBounds,
+        bool approx = true)
+    {
+        if (!CheckEnabled())
+            return;
+
+        foreach (var (tree, treeComp) in GetIntersectingTrees(mapId, worldBounds))
+        {
+            var bounds = XformSystem.GetInvWorldMatrix(tree).TransformBox(worldBounds);
+
+            treeComp.Tree.QueryAabb(ref results,
+                static (ref List<ComponentTreeEntry<TComp>> state, in ComponentTreeEntry<TComp> value) =>
+                {
+                    state.Add(value);
+                    return true;
+                },
+                bounds,
+                approx);
+        }
+    }
+
+    #endregion
 
     public void QueryAabb<TState>(
         ref TState state,
@@ -336,6 +421,9 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         Box2Rotated worldBounds,
         bool approx = true)
     {
+        if (!CheckEnabled())
+            return;
+
         foreach (var (tree, treeComp) in GetIntersectingTrees(mapId, worldBounds))
         {
             var bounds = XformSystem.GetInvWorldMatrix(tree).TransformBox(worldBounds);
@@ -343,13 +431,32 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         }
     }
 
-    public List<RayCastResults> IntersectRayWithPredicate<TState>(MapId mapId, in Ray ray, float maxLength,
-        TState state, Func<EntityUid, TState, bool> predicate, bool returnOnFirstHit = true)
+    public List<RayCastResults> IntersectRayWithPredicate<TState>(
+        MapId mapId,
+        in Ray ray,
+        float maxLength,
+        TState state,
+        Func<EntityUid, TState, bool> predicate,
+        bool returnOnFirstHit = true)
     {
-        if (mapId == MapId.Nullspace)
-            return new ();
+        var results = new List<RayCastResults>();
+        IntersectRayWithPredicate(results, mapId, in ray, maxLength, state, predicate, returnOnFirstHit);
+        return results;
+    }
 
-        var queryState = new QueryState<TState>(maxLength, returnOnFirstHit, state, predicate);
+    public void IntersectRayWithPredicate<TState>(
+        List<RayCastResults> results,
+        MapId mapId,
+        in Ray ray,
+        float maxLength,
+        TState state,
+        Func<EntityUid, TState, bool> predicate,
+        bool returnOnFirstHit = true)
+    {
+        if (!CheckEnabled() || mapId == MapId.Nullspace)
+            return;
+
+        var queryState = new QueryState<TState>(maxLength, returnOnFirstHit, results, state, predicate);
 
         var endPoint = ray.Position + ray.Direction * maxLength;
         var worldBox = new Box2(Vector2.Min(ray.Position, endPoint), Vector2.Max(ray.Position, endPoint));
@@ -364,7 +471,7 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
                 break;
         }
 
-        return queryState.List;
+        return;
 
         static bool QueryCallback(
             ref QueryState<TState> state,
@@ -380,21 +487,18 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         }
     }
 
-    private readonly struct QueryState<TState>
+    private readonly struct QueryState<TState>(
+        float maxLength,
+        bool returnOnFirstHit,
+        List<RayCastResults> list,
+        TState state,
+        Func<EntityUid, TState, bool> predictate)
     {
-        public readonly float MaxLength;
-        public readonly bool ReturnOnFirstHit;
-        public readonly List<RayCastResults> List = new();
-        public readonly TState State;
-        public readonly Func<EntityUid, TState, bool> Predicate;
-
-        public QueryState(float maxLength, bool returnOnFirstHit, TState state, Func<EntityUid, TState, bool>  predictate)
-        {
-            MaxLength = maxLength;
-            ReturnOnFirstHit = returnOnFirstHit;
-            State = state;
-            Predicate = predictate;
-        }
+        public readonly float MaxLength = maxLength;
+        public readonly bool ReturnOnFirstHit = returnOnFirstHit;
+        public readonly List<RayCastResults> List = list;
+        public readonly TState State = state;
+        public readonly Func<EntityUid, TState, bool> Predicate = predictate;
     }
     #endregion
 }

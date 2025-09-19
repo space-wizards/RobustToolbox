@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using Robust.Shared.Collections;
 using System.Numerics;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.ComponentTrees;
 
@@ -27,7 +28,6 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
     [Dependency] private readonly SharedMapSystem _mapSystem = default!;
 
     private readonly Queue<ComponentTreeEntry<TComp>> _updateQueue = new();
-    private readonly HashSet<EntityUid> _updated = new();
     protected EntityQuery<TComp> Query;
 
     /// <summary>
@@ -215,11 +215,11 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         {
             var (comp, xform) = entry;
 
+            // Was this entity queued multiple times?
+            DebugTools.Assert(comp.TreeUpdateQueued, "Entity was queued multiple times?");
+
             comp.TreeUpdateQueued = false;
             if (!comp.Running)
-                continue;
-
-            if (!_updated.Add(entry.Uid))
                 continue;
 
             if (!comp.AddToTree || comp.Deleted || xform.MapUid == null)
@@ -258,8 +258,6 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
 
             newTreeComp.Tree.Add(entry, ExtractAabb(entry, pos, rot));
         }
-
-        _updated.Clear();
     }
 
     private void RemoveFromTree(TComp component)

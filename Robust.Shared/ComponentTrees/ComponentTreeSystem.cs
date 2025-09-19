@@ -159,9 +159,6 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
 
     protected virtual void OnTreeRemove(EntityUid uid, TTreeComp component, ComponentRemove args)
     {
-        if (Terminating(uid))
-            return;
-
         foreach (var entry in component.Tree)
         {
             entry.Component.TreeUid = null;
@@ -172,6 +169,7 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
 
     protected virtual void OnTerminating(EntityUid uid, TTreeComp component, ref EntityTerminatingEvent args)
     {
+        // IIRC, this is to prevent a tree-update spam as each of the entity's children get detached to nullspace.
         RemComp(uid, component);
     }
 

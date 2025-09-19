@@ -1,0 +1,98 @@
+# basic
+- type: pronounTense
+  id: Subject
+  ftlFunction: SUBJECT
+  ftlReturn: zzzz-subject-pronoun
+  name: pronouns-subject
+  description: pronouns-subject-desc
+
+- type: pronounTense
+  id: Object
+  ftlFunction: OBJECT
+  ftlReturn: zzzz-object-pronoun
+  name: pronouns-object
+  description: pronouns-object-desc
+
+- type: pronounTense
+  id: Dative
+  ftlFunction: DAT-OBJ
+  ftlReturn: zzzz-dat-obj
+  name: pronouns-dative
+  description: pronouns-dative-desc
+
+- type: pronounTense
+  id: Genitive
+  ftlFunction: GENITIVE
+  ftlReturn: zzzz-genitive
+  name: pronouns-genitive
+  description: pronouns-genitive-desc
+
+- type: pronounTense
+  id: PossessiveAdjective
+  ftlFunction: POSS-ADJ
+  ftlReturn: zzzz-possessive-adjective
+  name: pronouns-possessive-adj
+  description: pronouns-possessive-adj-desc
+
+- type: pronounTense
+  id: PossessivePronoun
+  ftlFunction: POSS-PRONOUN
+  ftlReturn: zzzz-possessive-pronoun
+  name: pronouns-possessive-pronoun
+  description: pronouns-possessive-pronoun-desc
+
+- type: pronounTense
+  id: Reflexive
+  ftlFunction: REFLEXIVE
+  ftlReturn: zzzz-reflexive-pronoun
+  name: pronouns-reflexive
+  description: pronouns-reflexive-desc
+
+- type: pronounTense
+  id: Counter
+  ftlFunction: COUNTER
+  ftlReturn: zzzz-counter
+  name: pronouns-counter
+  description: pronouns-counter-desc
+
+# conjugation - unsure if these are needed?
+- type: pronounTense
+  id: ConjugateBe
+  ftlFunction: CONJUGATE-BE
+  ftlReturn: zzzz-conjugate-be
+  name: pronouns-conjugate-be
+  description: pronouns-conjugate-be-desc
+
+- type: pronounTense
+  id: ConjugateHave
+  ftlFunction: CONJUGATE-HAVE
+  ftlReturn: zzzz-conjugate-have
+  name: pronouns-conjugate-have
+  description: pronouns-conjugate-have-desc
+
+- type: pronounTense
+  id: ConjugateBasic
+  name: pronouns-conjugate-basic
+  description: pronouns-conjugate-basic-desc
+
+# noun affixes
+- type: pronounTense
+  id: NounPrefix
+  ftlFunction: NOUN-PREFIX
+  ftlReturn: zzzz-noun-prefix
+  name: pronouns-noun-prefix
+  description: pronouns-noun-prefix-desc
+
+- type: pronounTense
+  id: NounSuffix
+  ftlFunction: NOUN-SUFFIX
+  ftlReturn: zzzz-noun-suffix
+  name: pronouns-noun-suffix
+  description: pronouns-noun-suffix-desc
+
+- type: pronounTense
+  id: NounAffixes
+  ftlFunction: NOUN-AFFIXES
+  ftlReturn: zzzz-noun-affixes
+  name: pronouns-noun-affixes
+  description: pronouns-noun-affixes-desc

@@ -6,7 +6,6 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
@@ -35,6 +34,39 @@ namespace Robust.Shared.GameObjects
 
         [DataField("softness"), Animatable]
         public float Softness { get; set; } = 1f;
+
+        /// <summary>
+        ///     Controls how quickly the light falls off in power in its radius.
+        ///     A higher value means a stronger falloff.
+        /// </summary>
+        /// <remarks>
+        ///     The default value of 6.8 might seem suspect, but that's because this is a value which was introduced
+        ///     years after SS14 already standardized its light values using an older attenuation curve, and this was the value
+        ///     which, qualitatively, seemed about equivalent in brightness for the large majority of lights on the station
+        ///     compared to the old function.
+        ///
+        ///     See https://www.desmos.com/calculator/yjudaha0s6 for a demonstration of how this value affects the shape of the curve
+        ///     for different light radii and curve factors.
+        /// </remarks>
+        [DataField, Animatable]
+        public float Falloff { get; set; } = 6.8f;
+
+        /// <summary>
+        ///     Controls the shape of the curve used for point light attenuation.
+        ///     This value may vary between 0 and 1.
+        ///     A value of 0 gives a shape roughly equivalent to 1/1+distance (more or less realistic),
+        ///     while a value of 1 gives a shape roughly equivalent to 1+distance^2 (closer to a sphere-shaped light)
+        /// </summary>
+        /// <remarks>
+        ///     This does not directly control the exponent of the denominator, though it might seem that way.
+        ///     Rather, it just lerps between an inverse-shaped curve and an inverse-quadratic-shaped curve.
+        ///     Values below 0 or above 1 are nonsensical.
+        ///
+        ///     See https://www.desmos.com/calculator/yjudaha0s6 for a demonstration of how this value affects the shape of the curve
+        ///     for different light radii and falloff values.
+        /// </remarks>
+        [DataField, Animatable]
+        public float CurveFactor { get; set; } = 0.0f;
 
         /// <summary>
         ///     Whether this pointlight should cast shadows

@@ -562,7 +562,7 @@ namespace Robust.Client.Placement
             }
 
             coordinates = InputManager.MouseScreenPosition;
-            return true;
+            return coordinates.IsValid;
         }
 
         private bool CurrentEraserMouseCoordinates(out EntityCoordinates coordinates)

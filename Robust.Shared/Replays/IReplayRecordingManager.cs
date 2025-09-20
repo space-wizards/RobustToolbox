@@ -120,7 +120,7 @@ public interface IReplayRecordingManager
     /// <summary>
     /// Stops an ongoing replay recording.
     /// </summary>
-    void StopRecording();
+    ResPath? StopRecording();
 
     /// <summary>
     /// Returns information about the currently ongoing replay recording.

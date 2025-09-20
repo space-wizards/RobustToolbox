@@ -109,15 +109,16 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
     }
 
     /// <inheritdoc/>
-    public void StopRecording()
+    public ResPath? StopRecording()
     {
         if (!IsRecording)
-            return;
+            return null;
 
+        var path = _recState!.DestPath;
         try
         {
             WriteBatch(continueRecording: false);
-            _sawmill.Info("Replay recording stopped!");
+            _sawmill.Info($"Replay recording stopped! File path: {path}");
         }
         catch
         {
@@ -126,6 +127,7 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
         }
 
         UpdateWriteTasks();
+        return path;
     }
 
     public void Update(GameState? state)
@@ -248,7 +250,7 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
             throw;
         }
 
-        _sawmill.Info("Started recording replay...");
+        _sawmill.Info($"Started recording replay. File path: {filePath}");
         UpdateWriteTasks();
         return true;
     }

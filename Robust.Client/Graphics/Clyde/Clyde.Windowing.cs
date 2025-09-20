@@ -407,12 +407,6 @@ namespace Robust.Client.Graphics.Clyde
             _glContext?.SwapAllBuffers();
         }
 
-        public void SetVSync(bool newValue)
-        {
-            _vSync = newValue;
-            _glContext?.UpdateVSync();
-        }
-
         public bool VsyncEnabled
         {
             get => _vSync;

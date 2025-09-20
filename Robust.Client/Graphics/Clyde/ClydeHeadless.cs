@@ -153,11 +153,6 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
-        public void SetVSync(bool newValue)
-        {
-            // Pass
-        }
-
         public bool SeparateWindowThread => false;
 
         public bool InitializePreWindowing()

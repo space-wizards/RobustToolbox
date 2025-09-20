@@ -23,7 +23,8 @@ namespace Robust.Client.ViewVariables.Editors
         {
             var hBox = new BoxContainer
             {
-                Orientation = LayoutOrientation.Horizontal
+                Orientation = LayoutOrientation.Horizontal,
+                MinWidth = 350
             };
 
             dynamic d = value!;

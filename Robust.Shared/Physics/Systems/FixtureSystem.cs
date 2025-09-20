@@ -21,7 +21,9 @@ namespace Robust.Shared.Physics.Systems
     /// </summary>
     public sealed partial class FixtureSystem : EntitySystem
     {
+#if DEBUG
         [Dependency] private readonly IGameTiming _timing = default!;
+#endif
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
         [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
@@ -257,7 +259,7 @@ namespace Robust.Shared.Physics.Systems
             if (args.Current is not FixtureManagerComponentState state)
                 return;
 
-            if (!EntityManager.TryGetComponent(uid, out PhysicsComponent? physics))
+            if (!TryComp(uid, out PhysicsComponent? physics))
             {
                 Log.Error($"Tried to apply fixture state for an entity without physics: {ToPrettyString(uid)}");
                 return;

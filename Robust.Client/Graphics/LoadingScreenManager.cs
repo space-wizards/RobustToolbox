@@ -26,16 +26,11 @@ public sealed partial class LoadingScreenManager
 
     #region UI constants
 
-    // The x and y location of the loading bar as a percentage of the screen width.
-    private const float LoadingBarLocationX = 0.5f;
-    private const float LoadingBarLocationY = 0.675f;
-
     private const int LoadingBarWidth = 250;
     private const int LoadingBarHeight = 20;
     private const int LoadingBarOutlineOffset = 5;
-    private static readonly Vector2i DefaultOffset = (0, 10);
-    private static readonly Vector2i TopTimesExtraOffset = (20, 10);
-    private const int TopTimesSpacing = 15;
+    private static readonly Vector2i LogoLoadingBarOffset = (0, 20);
+    private static readonly Vector2i LoadTimesIndent = (20, 0);
 
     private const int NumLongestLoadTimes = 5;
 
@@ -153,6 +148,8 @@ public sealed partial class LoadingScreenManager
         _finished = true;
     }
 
+    #region Drawing functions
+
     /// <summary>
     /// Draw out the splash and loading screen.
     /// </summary>
@@ -161,76 +158,73 @@ public sealed partial class LoadingScreenManager
         if (_finished)
             return;
 
-        DrawSplash(handle, screenSize);
+        // Start at the center!
+        var location = screenSize / 2;
 
-        var center = new Vector2i((int) Math.Round(screenSize.X * LoadingBarLocationX), (int) Math.Round(screenSize.Y * LoadingBarLocationY));
-        var startLocation = center - new Vector2i(LoadingBarWidth/2, 0);
+        DrawSplash(handle, ref location);
 
-        DrawLoadingBar(handle, ref startLocation);
+        DrawLoadingBar(handle, ref location);
 
 #if DEBUG
-        DrawCurrentLoading(handle, ref startLocation);
-        DrawTopTimes(handle, ref startLocation);
+        DrawCurrentLoading(handle, ref location);
+
+        DrawTopTimes(handle, ref location);
 #endif
     }
 
-    private void DrawSplash(IRenderHandle handle, Vector2i screenSize)
+    private void DrawSplash(IRenderHandle handle, ref Vector2i startLocation)
     {
-        if (string.IsNullOrEmpty(SplashLogo))
+        if (!_resourceCache.TryGetResource<TextureResource>(SplashLogo, out var textureResource))
             return;
 
-        var texture = _resourceCache.GetResource<TextureResource>(SplashLogo).Texture;
-
-        handle.DrawingHandleScreen.DrawTexture(texture, (screenSize - texture.Size) / 2);
+        handle.DrawingHandleScreen.DrawTexture(textureResource.Texture, startLocation - textureResource.Texture.Size / 2);
+        startLocation += Vector2i.Up * textureResource.Texture.Size.Y / 2;
     }
 
-    private void DrawLoadingBar(IRenderHandle handle, ref Vector2i startLocation)
+    private void DrawLoadingBar(IRenderHandle handle, ref Vector2i location)
     {
+        // Always do the offsets, it looks a lot better!
+        location += Vector2i.Left * LoadingBarWidth / 2;
+        location += LogoLoadingBarOffset;
+
         if (!ShowLoadingBar)
             return;
 
         var sectionWidth = LoadingBarWidth / _numberOfLoadingSections;
 
-        var barTopLeft = startLocation;
-        var barBottomRight = startLocation + new Vector2i(_currentSection * sectionWidth % LoadingBarWidth, -LoadingBarHeight);
+        var barTopLeft = location;
+        var barBottomRight = new Vector2i(_currentSection * sectionWidth % LoadingBarWidth, LoadingBarHeight);
+        var barBottomRightMax = new Vector2i(LoadingBarWidth, LoadingBarHeight);
+
+        var outlinePosition = barTopLeft + Vector2i.DownLeft * LoadingBarOutlineOffset;
+        var outlineSize = barBottomRightMax + Vector2i.UpRight * 2 * LoadingBarOutlineOffset;
 
         // Outline
-        handle.DrawingHandleScreen.DrawRect(new UIBox2
-            {
-                TopLeft = barTopLeft + Vector2i.UpLeft * LoadingBarOutlineOffset,
-                BottomRight = startLocation + new Vector2i(LoadingBarWidth, -LoadingBarHeight) + Vector2i.DownRight * LoadingBarOutlineOffset,
-            },
-            Color.White,
-            false);
+        handle.DrawingHandleScreen.DrawRect(UIBox2.FromDimensions(outlinePosition, outlineSize), LoadingBarColor, false);
 
         // Progress bar
-        handle.DrawingHandleScreen.DrawRect(new UIBox2
-            {
-                TopLeft = barTopLeft,
-                BottomRight = barBottomRight,
-            },
-            LoadingBarColor);
+        handle.DrawingHandleScreen.DrawRect(UIBox2.FromDimensions(barTopLeft, barBottomRight), LoadingBarColor);
 
-        startLocation += DefaultOffset;
+        location += Vector2i.Up * outlineSize;
     }
 
     // Draw the currently loading section to the screen.
-    private void DrawCurrentLoading(IRenderHandle handle, ref Vector2i startLocation)
+    private void DrawCurrentLoading(IRenderHandle handle, ref Vector2i location)
     {
         if (_font == null || _currentSectionName == null)
             return;
 
-        handle.DrawingHandleScreen.DrawString(_font, startLocation, _currentSectionName);
-        startLocation += DefaultOffset;
+        handle.DrawingHandleScreen.DrawString(_font, location, _currentSectionName);
+        location += Vector2i.Up * _font.GetLineHeight(1.0f);
     }
 
     // Draw the slowest loading times to the screen.
-    private void DrawTopTimes(IRenderHandle handle, ref Vector2i startLocation)
+    private void DrawTopTimes(IRenderHandle handle, ref Vector2i location)
     {
         if (_font == null)
             return;
 
-        startLocation += TopTimesExtraOffset;
+        location += LoadTimesIndent;
 
         var offset = 0;
         var x = 0;
@@ -242,10 +236,14 @@ public sealed partial class LoadingScreenManager
                 break;
 
             var entry = $"{val.LoadTime.TotalSeconds:F2} - {val.Name}";
-            handle.DrawingHandleScreen.DrawString(_font, startLocation + new Vector2i(0, offset), entry);
-            offset += TopTimesSpacing;
+            handle.DrawingHandleScreen.DrawString(_font, location + new Vector2i(0, offset), entry);
+            offset += _font.GetLineHeight(1.0f);
             x++;
         }
+
+        location += Vector2i.Up * offset;
     }
+
+    #endregion // Drawing functions
 }
 

@@ -443,7 +443,6 @@ namespace Robust.Client
                 {
                     (CVars.DisplayWindowIconSet.Name, WindowIconSet()),
                     (CVars.DisplaySplashLogo.Name, SplashLogo()),
-                    // These get turned to strings then back to their original types again.
                     (CVars.DisplayShowLoadingBar.Name, ShowLoadingBar().ToString()),
                 });
             }

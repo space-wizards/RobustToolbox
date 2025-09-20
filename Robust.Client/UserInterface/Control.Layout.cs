@@ -509,7 +509,6 @@ namespace Robust.Client.UserInterface
 
             IsMeasureValid = false;
             UserInterfaceManagerInternal.QueueMeasureUpdate(this);
-            InvalidateArrange();
         }
 
         /// <summary>
@@ -602,6 +601,7 @@ namespace Robust.Client.UserInterface
             measured = _margin.Inflate(measured);
             measured = Vector2.Min(measured, availableSize);
             measured = Vector2.Max(measured, Vector2.Zero);
+            InvalidateArrange();
             return measured;
         }
 

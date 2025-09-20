@@ -18,7 +18,7 @@ using Robust.Shared.Maths;
 namespace Robust.Client.Debugging.Overlays;
 
 /// <summary>
-/// This is a base class for use by any debug overlays that need to render tile based data.
+/// This is an abstract helper class that can be used to create simple debug overlays that need to render tile based data.
 /// </summary>
 [UsedImplicitly]
 public abstract class TileDebugOverlay : Overlay, IPostInjectInit

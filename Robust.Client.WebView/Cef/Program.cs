@@ -6,7 +6,7 @@ using Xilium.CefGlue;
 
 namespace Robust.Client.WebView.Cef
 {
-    public static class Program
+    internal static class Program
     {
         // This was supposed to be the main entry for the subprocess program... It doesn't work.
         public static int Main(string[] args)

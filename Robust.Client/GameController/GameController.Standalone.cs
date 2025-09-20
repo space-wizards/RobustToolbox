@@ -8,6 +8,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using SDL3;
 
 namespace Robust.Client
 {
@@ -93,6 +94,8 @@ namespace Robust.Client
 
         public void Run(DisplayMode mode, GameControllerOptions options, Func<ILogHandler>? logHandlerFactory = null)
         {
+            _displayMode = mode;
+
             if (!StartupSystemSplash(options, logHandlerFactory))
             {
                 _logger.Fatal("Failed to start game controller!");

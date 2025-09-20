@@ -54,8 +54,14 @@ namespace Robust.Client.Animations
             }
             else
             {
+                var next = KeyFrames[nextKeyFrame];
+
                 // Get us a scale 0 -> 1 here.
-                var t = playingTime / KeyFrames[nextKeyFrame].KeyTime;
+                var t = playingTime / next.KeyTime;
+
+                // Apply easing to time parameter, if one was specified
+                if (next.Easing != null)
+                    t = next.Easing(t);
 
                 switch (InterpolationMode)
                 {
@@ -147,10 +153,20 @@ namespace Robust.Client.Animations
             /// </summary>
             public readonly float KeyTime;
 
-            public KeyFrame(object value, float keyTime)
+            /// <summary>
+            ///     An easing function to apply when interpolating to this keyframe's value.
+            ///     Modifies the time parameter (0..1) of the interpolation between the previous keyframe and this one.
+            /// </summary>
+            /// <remarks>
+            ///     See <see cref="Easings"/> for examples of easing functions, or provide your own.
+            /// </remarks>
+            public readonly Func<float, float>? Easing;
+
+            public KeyFrame(object value, float keyTime, Func<float, float>? easing = null)
             {
                 Value = value;
                 KeyTime = keyTime;
+                Easing = easing;
             }
         }
     }

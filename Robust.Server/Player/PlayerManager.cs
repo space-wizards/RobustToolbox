@@ -103,6 +103,7 @@ namespace Robust.Server.Player
             if (!TryGetSessionById(user, out var session))
                 return;
 
+            RemoveSession(session.UserId);
             SetStatus(session, SessionStatus.Disconnected);
             SetAttachedEntity(session, null, out _, true);
 
@@ -112,7 +113,6 @@ namespace Robust.Server.Player
                 viewSys.RemoveViewSubscriber(eye, session);
             }
 
-            RemoveSession(session.UserId);
             PlayerCountMetric.Set(PlayerCount);
             Dirty();
         }

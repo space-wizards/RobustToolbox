@@ -241,7 +241,7 @@ public sealed partial class LoadingScreenManager
             if (x >= NumLongestLoadTimes)
                 break;
 
-            var entry = $"{val.LoadTime:ss\\.ff} - {val.Name}";
+            var entry = $"{val.LoadTime.TotalSeconds:F2} - {val.Name}";
             handle.DrawingHandleScreen.DrawString(_font, startLocation + new Vector2i(0, offset), entry);
             offset += TopTimesSpacing;
             x++;

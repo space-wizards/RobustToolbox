@@ -573,7 +573,9 @@ namespace Robust.Client.UserInterface
         protected virtual Vector2 MeasureCore(Vector2 availableSize)
         {
             if (!(Visible || ReservesSpace))
+            {
                 return default;
+            }
 
             if (_stylingDirty)
                 ForceRunStyleUpdate();
@@ -641,10 +643,14 @@ namespace Robust.Client.UserInterface
             _arranging = true;
             try
             {
+                bool ranMeasure = false;
                 if (!IsMeasureValid)
+                {
                     Measure(PreviousMeasure ?? finalRect.Size);
+                    ranMeasure = true;
+                }
 
-                if (!IsArrangeValid || PreviousArrange != finalRect)
+                if (ranMeasure || !IsArrangeValid || PreviousArrange != finalRect)
                 {
                     IsArrangeValid = true;
                     ArrangeCore(finalRect);

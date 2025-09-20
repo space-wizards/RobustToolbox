@@ -170,7 +170,7 @@ namespace Robust.Client.Graphics.Clyde
                     {GlfwKey.Apostrophe, Key.Apostrophe},
                     {GlfwKey.Slash, Key.Slash},
                     {GlfwKey.Backslash, Key.BackSlash},
-                    {GlfwKey.GraveAccent, Key.Tilde},
+                    {GlfwKey.GraveAccent, Key.Grave},
                     {GlfwKey.Equal, Key.Equal},
                     {GlfwKey.Space, Key.Space},
                     {GlfwKey.Enter, Key.Return},

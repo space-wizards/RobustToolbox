@@ -125,6 +125,7 @@ namespace Robust.Client.Input
             Slash,
             BackSlash,
             Tilde,
+            Grave,
             Equal,
             Space,
             Return,

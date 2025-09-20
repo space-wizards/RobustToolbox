@@ -155,7 +155,7 @@ internal partial class Clyde
             MapKey(SC.SDL_SCANCODE_APOSTROPHE, Key.Apostrophe);
             MapKey(SC.SDL_SCANCODE_SLASH, Key.Slash);
             MapKey(SC.SDL_SCANCODE_BACKSLASH, Key.BackSlash);
-            MapKey(SC.SDL_SCANCODE_GRAVE, Key.Tilde);
+            MapKey(SC.SDL_SCANCODE_GRAVE, Key.Grave);
             MapKey(SC.SDL_SCANCODE_EQUALS, Key.Equal);
             MapKey(SC.SDL_SCANCODE_SPACE, Key.Space);
             MapKey(SC.SDL_SCANCODE_RETURN, Key.Return);

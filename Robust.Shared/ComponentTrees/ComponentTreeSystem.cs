@@ -7,6 +7,7 @@ using Robust.Shared.Physics;
 using Robust.Shared.Physics.Systems;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Collections;
 using System.Numerics;
 using Robust.Shared.Map.Components;
@@ -329,7 +330,7 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
     public HashSet<ComponentTreeEntry<TComp>> QueryAabb(MapId mapId, Box2 worldBounds, bool approx = true)
         => QueryAabb(mapId, new Box2Rotated(worldBounds, default, default), approx);
 
-    public void QueryAabb(HashSet<ComponentTreeEntry<TComp>> results, MapId mapId, Box2 worldBounds, bool approx = true)
+    public void QueryAabb(HashSet<Entity<TComp, TransformComponent>> results, MapId mapId, Box2 worldBounds, bool approx = true)
         => QueryAabb(results, mapId, new Box2Rotated(worldBounds, default, default), approx);
 
     public HashSet<ComponentTreeEntry<TComp>> QueryAabb(MapId mapId, Box2Rotated worldBounds, bool approx = true)
@@ -340,7 +341,8 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         return state;
     }
 
-    public void QueryAabb(
+    [Obsolete("Use Entity<T> variant")]
+    internal void QueryAabb(
         HashSet<ComponentTreeEntry<TComp>> results,
         MapId mapId,
         Box2Rotated worldBounds,
@@ -364,16 +366,8 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         }
     }
 
-    #endregion
-
-
-    #region List
-
-    public void QueryAabb(List<ComponentTreeEntry<TComp>> results, MapId mapId, Box2 worldBounds, bool approx = true)
-        => QueryAabb(results, mapId, new Box2Rotated(worldBounds, default, default), approx);
-
     public void QueryAabb(
-        List<ComponentTreeEntry<TComp>> results,
+        HashSet<Entity<TComp, TransformComponent>> results,
         MapId mapId,
         Box2Rotated worldBounds,
         bool approx = true)
@@ -386,7 +380,39 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
             var bounds = XformSystem.GetInvWorldMatrix(tree).TransformBox(worldBounds);
 
             treeComp.Tree.QueryAabb(ref results,
-                static (ref List<ComponentTreeEntry<TComp>> state, in ComponentTreeEntry<TComp> value) =>
+                static (ref HashSet<Entity<TComp, TransformComponent>> state, in ComponentTreeEntry<TComp> value) =>
+                {
+                    state.Add(value);
+                    return true;
+                },
+                bounds,
+                approx);
+        }
+    }
+
+    #endregion
+
+
+    #region List
+
+    public void QueryAabb(List<Entity<TComp, TransformComponent>> results, MapId mapId, Box2 worldBounds, bool approx = true)
+        => QueryAabb(results, mapId, new Box2Rotated(worldBounds, default, default), approx);
+
+    public void QueryAabb(
+        List<Entity<TComp, TransformComponent>> results,
+        MapId mapId,
+        Box2Rotated worldBounds,
+        bool approx = true)
+    {
+        if (!CheckEnabled())
+            return;
+
+        foreach (var (tree, treeComp) in GetIntersectingTrees(mapId, worldBounds))
+        {
+            var bounds = XformSystem.GetInvWorldMatrix(tree).TransformBox(worldBounds);
+
+            treeComp.Tree.QueryAabb(ref results,
+                static (ref List<Entity<TComp, TransformComponent>> state, in ComponentTreeEntry<TComp> value) =>
                 {
                     state.Add(value);
                     return true;
@@ -425,33 +451,92 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         }
     }
 
-    public List<RayCastResults> IntersectRayWithPredicate<TState>(
-        MapId mapId,
-        in Ray ray,
-        float maxLength,
-        TState state,
-        Func<EntityUid, TState, bool> predicate,
-        bool returnOnFirstHit = true)
+
+    #endregion
+
+    #region Rays
+
+    [Obsolete("use IntersectRay")]
+    public List<RayCastResults> IntersectRayWithPredicate<TState>(MapId mapId, in Ray ray, float maxLength,
+        TState state, Func<EntityUid, TState, bool> predicate, bool returnOnFirstHit = true)
     {
-        var results = new List<RayCastResults>();
-        IntersectRayWithPredicate(results, mapId, in ray, maxLength, state, predicate, returnOnFirstHit);
-        return results;
+        var list = new List<RayCastResults>();
+
+        if (!returnOnFirstHit)
+        {
+            IntersectRay(list, mapId, ray, maxLength, state, (e, s) => predicate(e.Owner, s));
+            return list;
+        }
+
+        var result = IntersectRay(mapId, ray, maxLength, state, (e, s) => predicate(e.Owner, s));
+        if (result != null)
+            list.Add(result.Value);
+        return list;
     }
 
-    public void IntersectRayWithPredicate<TState>(
+    /// <summary>
+    /// Perform a ray intersection and return on the first hit.
+    /// </summary>
+    public RayCastResults? IntersectRay(MapId mapId, in Ray ray, float length)
+    {
+        var state = new QueryState(length);
+        IntersectRayInternal(mapId, in ray, length, ref state, QueryCallback);
+        return state.Result;
+    }
+
+    /// <summary>
+    /// Perform a ray intersection and populate a provided list of results.
+    /// </summary>
+    public void IntersectRay(List<RayCastResults> results, MapId mapId, in Ray ray, float maxLength)
+    {
+        results.Clear();
+        var state = new QueryState(maxLength, results);
+        IntersectRayInternal(mapId, in ray, maxLength, ref state, QueryCallback);
+    }
+
+    /// <summary>
+    /// Perform a ray intersection with a predicate and return on the first hit.
+    /// </summary>
+    public RayCastResults? IntersectRay<TState>(
+        MapId mapId,
+        in Ray ray,
+        float length,
+        TState predicateState,
+        Func<Entity<TComp, TransformComponent>, TState, bool> ignore)
+    {
+        var state = new QueryState<TState>(new(length), predicateState, ignore);
+        IntersectRayInternal(mapId, in ray, length, ref state, PredicateQueryCallback);
+        return state.Inner.Result;
+    }
+
+    /// <summary>
+    /// Perform a ray intersection with a predicate and populate a provided list of results.
+    /// </summary>
+    public void IntersectRay<TState>(
         List<RayCastResults> results,
         MapId mapId,
         in Ray ray,
-        float maxLength,
-        TState state,
-        Func<EntityUid, TState, bool> predicate,
-        bool returnOnFirstHit = true)
+        float length,
+        TState predicateState,
+        Func<Entity<TComp, TransformComponent>, TState, bool> ignore)
     {
-        if (!CheckEnabled() || mapId == MapId.Nullspace)
+        var state = new QueryState<TState>(new(length, results), predicateState, ignore);
+        IntersectRayInternal(mapId, in ray, length, ref state, PredicateQueryCallback);
+    }
+
+    private void IntersectRayInternal<TState>(
+        MapId mapId,
+        in Ray ray,
+        float maxLength,
+        ref TState state,
+        DynamicTree<ComponentTreeEntry<TComp>>.RayQueryCallbackDelegate<TState> callback)
+        where TState : IDone
+    {
+        if (mapId == MapId.Nullspace)
             return;
 
-        var queryState = new QueryState<TState>(maxLength, returnOnFirstHit, results, state, predicate);
-
+        if (!CheckEnabled())
+            return;
         var endPoint = ray.Position + ray.Direction * maxLength;
         var worldBox = new Box2(Vector2.Min(ray.Position, endPoint), Vector2.Max(ray.Position, endPoint));
 
@@ -460,40 +545,79 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
             var (_, treeRot, matrix) = XformSystem.GetWorldPositionRotationInvMatrix(treeUid);
             var relativeAngle = new Angle(-treeRot.Theta).RotateVec(ray.Direction);
             var treeRay = new Ray(Vector2.Transform(ray.Position, matrix), relativeAngle);
-            comp.Tree.QueryRay(ref queryState, QueryCallback, treeRay);
-            if (returnOnFirstHit && queryState.List.Count > 0)
-                break;
-        }
-
-        return;
-
-        static bool QueryCallback(
-            ref QueryState<TState> state,
-            in ComponentTreeEntry<TComp> value,
-            in Vector2 point,
-            float distFromOrigin)
-        {
-            if (distFromOrigin > state.MaxLength || state.Predicate.Invoke(value.Uid, state.State))
-                return true;
-
-            state.List.Add(new RayCastResults(distFromOrigin, point, value.Uid));
-            return !state.ReturnOnFirstHit;
+            comp.Tree.QueryRay(ref state, callback, treeRay);
+            if (state.Done)
+                return;
         }
     }
 
-    private readonly struct QueryState<TState>(
-        float maxLength,
-        bool returnOnFirstHit,
-        List<RayCastResults> list,
-        TState state,
-        Func<EntityUid, TState, bool> predictate)
+    static bool QueryCallback(
+        ref QueryState state,
+        in ComponentTreeEntry<TComp> value,
+        in Vector2 point,
+        float dist)
+    {
+        if (dist > state.MaxLength)
+            return true;
+
+        if (state.ReturnOnFirstHit)
+        {
+            state.Result = new RayCastResults(dist, point, value.Uid);
+            return false;
+        }
+
+        state.List.Add(new RayCastResults(dist, point, value.Uid));
+        return true;
+    }
+
+    private static bool PredicateQueryCallback<TState>(
+        ref QueryState<TState> state,
+        in ComponentTreeEntry<TComp> value,
+        in Vector2 point,
+        float dist)
+    {
+        if (dist > state.Inner.MaxLength)
+            return true;
+
+        if (state.Ignore.Invoke(value, state.PredicateState))
+            return true;
+
+        if (state.Inner.ReturnOnFirstHit)
+        {
+            state.Inner.Result = new RayCastResults(dist, point, value.Uid);
+            return false;
+        }
+
+        state.Inner.List.Add(new RayCastResults(dist, point, value.Uid));
+        return true;
+    }
+
+    private struct QueryState<TPredicateState>(
+        QueryState inner,
+        TPredicateState predicateState,
+        Func<Entity<TComp, TransformComponent>, TPredicateState, bool> ignore) : IDone
+    {
+        public readonly TPredicateState PredicateState = predicateState;
+        public readonly Func<Entity<TComp, TransformComponent>, TPredicateState, bool> Ignore = ignore;
+        public QueryState Inner = inner;
+        public bool Done => Inner.Done;
+    }
+
+    private struct QueryState(float maxLength, List<RayCastResults>? list = null) : IDone
     {
         public readonly float MaxLength = maxLength;
-        public readonly bool ReturnOnFirstHit = returnOnFirstHit;
-        public readonly List<RayCastResults> List = list;
-        public readonly TState State = state;
-        public readonly Func<EntityUid, TState, bool> Predicate = predictate;
+
+        [MemberNotNullWhen(false, nameof(List))]
+        public readonly bool ReturnOnFirstHit => List == null;
+        public readonly List<RayCastResults>? List = list;
+        public RayCastResults? Result;
+        public bool Done => Result != null;
     }
+
+    private interface IDone
+    {
+        bool Done { get; }
+    }
+
     #endregion
 }
-

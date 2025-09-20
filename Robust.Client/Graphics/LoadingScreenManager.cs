@@ -58,7 +58,7 @@ public sealed partial class LoadingScreenManager
     private int _numberOfLoadingSections;
 
     // The name of the section and how much time it took to load
-    private readonly SortedList<TimeSpan, string> _times = new (Comparer<TimeSpan>.Create((x, y) => y.CompareTo(x)));
+    private readonly SortedDictionary<TimeSpan, string> _times = new (Comparer<TimeSpan>.Create((x, y) => y.CompareTo(x)));
 
     private int _currentSection;
     private string? _currentSectionName;

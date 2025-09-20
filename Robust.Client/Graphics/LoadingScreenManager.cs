@@ -58,7 +58,7 @@ public sealed partial class LoadingScreenManager
     private int _numberOfLoadingSections;
 
     // The name of the section and how much time it took to load
-    private readonly SortedDictionary<TimeSpan, string> _times = new (Comparer<TimeSpan>.Create((x, y) => y.CompareTo(x)));
+    private readonly List<(string Name, TimeSpan LoadTime)> _times = [];
 
     private int _currentSection;
     private string? _currentSectionName;
@@ -122,8 +122,7 @@ public sealed partial class LoadingScreenManager
 
         var time = _sw.Elapsed;
         if (_currentSectionName != null)
-            _times.Add(time, _currentSectionName);
-
+            _times.Add((_currentSectionName, time));
         _currentSection++;
         _currentlyInSection = false;
     }
@@ -235,13 +234,14 @@ public sealed partial class LoadingScreenManager
 
         var offset = 0;
         var x = 0;
+        _times.Sort((a, b) => b.LoadTime.CompareTo(a.LoadTime));
 
         foreach (var val in _times)
         {
             if (x >= NumLongestLoadTimes)
                 break;
 
-            var entry = $"{val.Key:ss\\.ff} - {val.Value}";
+            var entry = $"{val.LoadTime:ss\\.ff} - {val.Name}";
             handle.DrawingHandleScreen.DrawString(_font, startLocation + new Vector2i(0, offset), entry);
             offset += TopTimesSpacing;
             x++;

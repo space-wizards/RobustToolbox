@@ -120,6 +120,7 @@ public interface IReplayRecordingManager
     /// <summary>
     /// Stops an ongoing replay recording.
     /// </summary>
+    /// <returns>Returns the file path the replay was saved at.</returns>
     ResPath? StopRecording();
 
     /// <summary>

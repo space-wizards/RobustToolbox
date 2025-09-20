@@ -30,7 +30,7 @@ internal sealed class ReflectionTypeParser<TBase> : CustomTypeParser<Type> where
             .Where(x => x.HasParameterlessConstructor())
             .ToDictionary(x => x.Name, x => x);
 
-        _options = _cache.Keys.Select(x => new CompletionOption()).ToArray();
+        _options = _cache.Keys.Select(x => new CompletionOption(x)).ToArray();
     }
 
     public override bool TryParse(ParserContext ctx, [NotNullWhen(true)] out Type? result)

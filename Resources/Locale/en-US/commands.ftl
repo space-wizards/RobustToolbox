@@ -579,3 +579,7 @@ cmd-localization_set_culture-culture-name = <cultureName>
 cmd-localization_set_culture-changed = Localization changed to { $code } ({ $nativeName } / { $englishName })
 
 cmd-addmap-hint-2 = runMapInit [true / false]
+
+cmd-overlay-toggle = Toggle an overlay on or off
+cmd-overlay-add = Add an overlay (if it does not already exist)
+cmd-overlay-remove = Remove an overlay

@@ -23,40 +23,45 @@ namespace Robust.Client.Debugging.Overlays;
 [UsedImplicitly]
 public abstract class TileDebugOverlay : Overlay, IPostInjectInit
 {
-    [Dependency] private readonly IEntityManager _entity = default!;
-    [Dependency] private readonly IEyeManager _eye = default!;
-    [Dependency] private readonly IMapManager _mapMan = default!;
-    [Dependency] private readonly IInputManager _input = default!;
-    [Dependency] private readonly IUserInterfaceManager _ui = default!;
-    [Dependency] private readonly IResourceCache _cache = default!;
+    [Dependency] protected readonly IEntityManager Entity = default!;
+    [Dependency] protected readonly IEyeManager Eye = default!;
+    [Dependency] protected readonly IMapManager MapMan = default!;
+    [Dependency] protected readonly IInputManager Input = default!;
+    [Dependency] protected readonly IUserInterfaceManager Ui = default!;
+    [Dependency] protected readonly IResourceCache Cache = default!;
 
-    private SharedTransformSystem _transform = default!;
-    private MapSystem _map = default!;
-    private EntityLookupSystem _lookup = default!;
+    protected SharedTransformSystem Transform = default!;
+    protected MapSystem Map = default!;
+    protected EntityLookupSystem Lookup = default!;
 
     public override OverlaySpace Space => OverlaySpace.WorldSpace | OverlaySpace.ScreenSpace;
 
-    private Font _font = default!;
-    private List<Entity<MapGridComponent>> _grids = new();
+    protected Font Font = default!;
+    protected List<Entity<MapGridComponent>> Grids = new();
 
     public void PostInject()
     {
-        _transform = _entity.System<SharedTransformSystem>();
-        _map = _entity.System<MapSystem>();
-        _lookup = _entity.System<EntityLookupSystem>();
-        var font = _cache.GetResource<FontResource>("/Fonts/NotoSans/NotoSans-Regular.ttf");
-        _font = new VectorFont(font, 8);
+        Transform = Entity.System<SharedTransformSystem>();
+        Map = Entity.System<MapSystem>();
+        Lookup = Entity.System<EntityLookupSystem>();
+        var font = Cache.GetResource<FontResource>("/Fonts/NotoSans/NotoSans-Regular.ttf");
+        Font = new VectorFont(font, 8);
+        Init();
+    }
+
+    protected virtual void Init()
+    {
     }
 
     protected internal override void Draw(in OverlayDrawArgs args)
     {
-        _grids.Clear();
+        Grids.Clear();
         if (args.Viewport.Eye?.Position.MapId is not {} map || map == MapId.Nullspace)
             return;
 
-        _mapMan.FindGridsIntersecting(map, args.WorldBounds, ref _grids);
+        MapMan.FindGridsIntersecting(map, args.WorldBounds, ref Grids);
 
-        foreach (var grid in _grids)
+        foreach (var grid in Grids)
         {
             switch (args.Space)
             {
@@ -69,21 +74,21 @@ public abstract class TileDebugOverlay : Overlay, IPostInjectInit
             }
         }
 
-        _grids.Clear();
+        Grids.Clear();
     }
 
     protected virtual void DrawScreen(in OverlayDrawArgs args, Entity<MapGridComponent> grid)
     {
         var handle = args.ScreenHandle;
-        var (_, _, matrix, invMatrix) = _transform.GetWorldPositionRotationMatrixWithInv(grid.Owner);
+        var (_, _, matrix, invMatrix) = Transform.GetWorldPositionRotationMatrixWithInv(grid.Owner);
         var gridBounds = invMatrix.TransformBox(args.WorldBounds).Enlarged(grid.Comp.TileSize * 2);
-        var tilesEnumerator = _map.GetLocalTilesEnumerator(grid, grid, gridBounds);
+        var tilesEnumerator = Map.GetLocalTilesEnumerator(grid, grid, gridBounds);
         while (tilesEnumerator.MoveNext(out var tile))
         {
-            var tileBounds = _lookup.GetLocalBounds(tile, grid.Comp.TileSize);
+            var tileBounds = Lookup.GetLocalBounds(tile, grid.Comp.TileSize);
             if (!gridBounds.Intersects(tileBounds))
                 continue;
-            var screenTileCentre = _eye.WorldToScreen(Vector2.Transform(tileBounds.Center, matrix));
+            var screenTileCentre = Eye.WorldToScreen(Vector2.Transform(tileBounds.Center, matrix));
             DrawTileText(handle, screenTileCentre, tile.GridIndices, grid);
         }
 
@@ -94,19 +99,19 @@ public abstract class TileDebugOverlay : Overlay, IPostInjectInit
 
     protected virtual void DrawTooltip(DrawingHandleScreen handle)
     {
-        var mousePos = _input.MouseScreenPosition;
+        var mousePos = Input.MouseScreenPosition;
         if (!mousePos.IsValid)
             return;
 
-        if (_ui.MouseGetControl(mousePos) is not IViewportControl viewport)
+        if (Ui.MouseGetControl(mousePos) is not IViewportControl viewport)
             return;
 
         var coords = viewport.PixelToMap(mousePos.Position);
 
-        if (!_mapMan.TryFindGridAt(coords, out var grid, out var comp))
+        if (!MapMan.TryFindGridAt(coords, out var grid, out var comp))
             return;
 
-        var local = _map.WorldToLocal(grid, comp, coords.Position);
+        var local = Map.WorldToLocal(grid, comp, coords.Position);
         var x = (int) Math.Floor(local.X / comp.TileSize);
         var y = (int) Math.Floor(local.Y / comp.TileSize);
         var indices = new Vector2i(x, y);
@@ -123,26 +128,30 @@ public abstract class TileDebugOverlay : Overlay, IPostInjectInit
     /// <param name="grid">The grid that the mouse is hovering over</param>
     protected virtual void DrawTooltip(DrawingHandleScreen handle, Vector2 mouseScreen, Vector2 mouseLocal, Vector2i indices, Entity<MapGridComponent> grid)
     {
-        if (GetTooltip(indices, grid) is { } text)
-            handle.DrawString(_font, mouseScreen, text);
+        if (GetTooltip(mouseLocal, indices, grid) is not { } text)
+            return;
+
+        var lineHeight = Font.GetLineHeight(1f);
+        var offset = new Vector2(0, lineHeight);
+        handle.DrawString(Font, mouseScreen - offset, text);
     }
 
     protected virtual void DrawTileText(DrawingHandleScreen handle, Vector2 tileCentre, Vector2i indices, Entity<MapGridComponent> grid)
     {
         if (GetText(indices, grid) is {} text)
-            handle.DrawString(_font, tileCentre, text);
+            handle.DrawString(Font, tileCentre, text);
     }
 
     protected virtual void DrawWorld(in OverlayDrawArgs args, Entity<MapGridComponent> grid)
     {
         var handle = args.WorldHandle;
-        var (_, _, matrix, invMatrix) = _transform.GetWorldPositionRotationMatrixWithInv(grid.Owner);
+        var (_, _, matrix, invMatrix) = Transform.GetWorldPositionRotationMatrixWithInv(grid.Owner);
         var gridBounds = invMatrix.TransformBox(args.WorldBounds).Enlarged(grid.Comp.TileSize * 2);
-        var tilesEnumerator = _map.GetLocalTilesEnumerator(grid, grid, gridBounds);
+        var tilesEnumerator = Map.GetLocalTilesEnumerator(grid, grid, gridBounds);
         while (tilesEnumerator.MoveNext(out var tile))
         {
             handle.SetTransform(matrix);
-            var tileBounds = _lookup.GetLocalBounds(tile, grid.Comp.TileSize);
+            var tileBounds = Lookup.GetLocalBounds(tile, grid.Comp.TileSize);
             if (gridBounds.Intersects(tileBounds))
                 DrawTile(handle, tileBounds, tile.GridIndices, grid);
         }
@@ -159,8 +168,22 @@ public abstract class TileDebugOverlay : Overlay, IPostInjectInit
         handle.DrawRect(tile, color.Fill, filled: true);
     }
 
+    /// <summary>
+    /// Get text that will be rendered in a grid tile.
+    /// </summary>
     protected abstract string? GetText(Vector2i indices, Entity<MapGridComponent> grid);
-    protected abstract string? GetTooltip(Vector2i indices, Entity<MapGridComponent> grid);
+
+    /// <summary>
+    /// Get tooltip text that will be shown next to the mouse.
+    /// </summary>
+    /// <param name="mousePos">The mouse's position relative to the grid.</param>
+    /// <param name="gridIndices">The grid indices corresponding to the mouse's position</param>
+    /// <param name="grid">The grid that the mouse is over.</param>
+    protected abstract string? GetTooltip(Vector2 mousePos, Vector2i indices, Entity<MapGridComponent> grid);
+
+    /// <summary>
+    /// Get a border & fill color that will be used to draw a grid tile.
+    /// </summary>
     protected abstract (Color Fill, Color Border)? GetColor(Vector2i indices, Entity<MapGridComponent> grid);
 }
 
@@ -175,12 +198,12 @@ public abstract class TileFloatDebugOverlay : TileDebugOverlay
 
     protected override string? GetText(Vector2i indices, Entity<MapGridComponent> grid)
     {
-        return GetData(indices, grid)?.ToString();
+        return GetData(indices, grid)?.ToString("F2");
     }
 
-    protected override string? GetTooltip(Vector2i indices, Entity<MapGridComponent> grid)
+    protected override string? GetTooltip(Vector2 mousePos, Vector2i indices, Entity<MapGridComponent> grid)
     {
-        return GetData(indices, grid)?.ToString();
+        return GetData(indices, grid)?.ToString("F2");
     }
 
     protected override (Color Fill, Color Border)? GetColor(Vector2i indices, Entity<MapGridComponent> grid)

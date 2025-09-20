@@ -38,6 +38,9 @@ internal sealed class OverlayCommand : ToolshedCommand
             return;
 
         var instance = (Overlay) _factory.CreateInstanceUnchecked(overlay, oneOff: true);
+        if (instance is IPostInjectInit init)
+            init.PostInject();
+
         _overlay.AddOverlay(instance);
     }
 

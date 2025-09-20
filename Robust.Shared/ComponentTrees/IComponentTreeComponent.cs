@@ -24,7 +24,7 @@ public interface IComponentTreeEntry<TComp> where TComp : Component
     public DynamicTree<ComponentTreeEntry<TComp>>? Tree { get; set; }
 
     /// <summary>
-    ///     Whether or not the component should currently be added to a tree.
+    ///     Whether the component should currently be added to a tree.
     /// </summary>
     public bool AddToTree { get; }
 

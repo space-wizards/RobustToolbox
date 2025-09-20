@@ -6,7 +6,6 @@ using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
-using Robust.Shared.Random;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.Graphics;
@@ -27,6 +26,7 @@ public sealed partial class LoadingScreenManager
 
     #region UI constants
 
+    // The x and y location of the loading bar as a percentage of the screen width.
     private const float LoadingBarLocationX = 0.5f;
     private const float LoadingBarLocationY = 0.675f;
 
@@ -39,6 +39,8 @@ public sealed partial class LoadingScreenManager
 
     private const int NumLongestLoadTimes = 5;
 
+    private static readonly Color LoadingBarColor = Color.White;
+
     #endregion
 
     #region Cvars
@@ -48,25 +50,15 @@ public sealed partial class LoadingScreenManager
 
     #endregion
 
-    private Color _loadingBarColor;
-
-    private readonly List<Color> _colors =
-    [
-        Color.White,
-        Color.LightCoral,
-        Color.LightGreen,
-        Color.LightSkyBlue,
-    ];
-
     private const string FontLocation = "/EngineFonts/NotoSans/NotoSans-Regular.ttf";
     private const int FontSize = 11;
     private VectorFont? _font;
 
-    // Number of loading sections for the loading bar. This is manually set
+    // Number of loading sections for the loading bar. This has to be manually set!
     private int _numberOfLoadingSections;
 
     // The name of the section and how much time it took to load
-    private readonly List<(string Name, TimeSpan LoadTime)> _times = [];
+    private readonly SortedList<TimeSpan, string> _times = new (Comparer<TimeSpan>.Create((x, y) => y.CompareTo(x)));
 
     private int _currentSection;
     private string? _currentSectionName;
@@ -92,8 +84,6 @@ public sealed partial class LoadingScreenManager
             _font = new VectorFont(fontResource, FontSize);
         else
             _sawmill.Error($"Could not load font: {FontLocation}");
-
-        _loadingBarColor = Random.Shared.Pick(_colors);
     }
 
     public void BeginLoadingSection(string sectionName)
@@ -132,7 +122,7 @@ public sealed partial class LoadingScreenManager
 
         var time = _sw.Elapsed;
         if (_currentSectionName != null)
-            _times.Add((_currentSectionName, time));
+            _times.Add(time, _currentSectionName);
 
         _currentSection++;
         _currentlyInSection = false;
@@ -220,11 +210,12 @@ public sealed partial class LoadingScreenManager
                 TopLeft = barTopLeft,
                 BottomRight = barBottomRight,
             },
-            _loadingBarColor);
+            LoadingBarColor);
 
         startLocation += DefaultOffset;
     }
 
+    // Draw the currently loading section to the screen.
     private void DrawCurrentLoading(IRenderHandle handle, ref Vector2i startLocation)
     {
         if (_font == null || _currentSectionName == null)
@@ -234,6 +225,7 @@ public sealed partial class LoadingScreenManager
         startLocation += DefaultOffset;
     }
 
+    // Draw the slowest loading times to the screen.
     private void DrawTopTimes(IRenderHandle handle, ref Vector2i startLocation)
     {
         if (_font == null)
@@ -243,14 +235,13 @@ public sealed partial class LoadingScreenManager
 
         var offset = 0;
         var x = 0;
-        _times.Sort((a, b) => b.LoadTime.CompareTo(a.LoadTime));
 
         foreach (var val in _times)
         {
             if (x >= NumLongestLoadTimes)
                 break;
 
-            var entry = $"{val.LoadTime:ss\\.ff} - {val.Name}";
+            var entry = $"{val.Key:ss\\.ff} - {val.Value}";
             handle.DrawingHandleScreen.DrawString(_font, startLocation + new Vector2i(0, offset), entry);
             offset += TopTimesSpacing;
             x++;

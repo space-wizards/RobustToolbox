@@ -509,7 +509,7 @@ namespace Robust.Shared.Console
             // Sandboxing prevents MethodInfo, but content uses attributes for command permissions.
             public IEnumerable<T> GetCustomAttributes<T>() where T : Attribute
             {
-                return Callback.Method.GetCustomAttributes<T>();
+                return Callback.Method.GetAttributes<T>();
             }
 
             public bool HasCustomAttribute<T>() where T : Attribute

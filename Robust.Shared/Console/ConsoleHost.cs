@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Robust.Shared.Enums;
@@ -504,6 +505,17 @@ namespace Robust.Shared.Console
             public CompletionResult GetCompletion(IConsoleShell shell, string[] args)
             {
                 return CompletionCallback?.Invoke(shell, args) ?? CompletionResult.Empty;
+            }
+
+            // Sandboxing prevents MethodInfo, but content uses attributes for command permissions.
+            public IEnumerable<T> GetCustomAttributes<T>() where T : Attribute
+            {
+                return Callback.Method.GetCustomAttributes<T>();
+            }
+
+            public bool HasCustomAttribute<T>() where T : Attribute
+            {
+                return Callback.Method.HasCustomAttribute<T>();
             }
         }
 

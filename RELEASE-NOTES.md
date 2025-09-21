@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Sprites and Sprite layers have a new `Loop` data field that can be set to false to automatically pause animations once they have finished.
 
 ### Bugfixes
 

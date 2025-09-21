@@ -297,10 +297,14 @@ namespace Robust.Client.GameObjects
         }
 
         /// <summary>
-        /// Used to allow one to decide if they wish to loop the animation or not.
+        /// If false, this will prevent any of this sprite's animated layers from looping their animation.
+        /// This will set <see cref="Layer.AutoAnimated"/> whenever any layer's animation finishes.
         /// </summary>
+        /// <remarks>
+        /// If this is false, this effectively overrides each layer's own <see cref="Layer.Loop"/>.
+        /// </remarks>
         [DataField]
-        public bool Loop { get; set; } = true;
+        public bool Loop = true;
 
         /// <summary>
         /// Update this sprite component to visibly match the current state of other at the time
@@ -609,6 +613,7 @@ namespace Robust.Client.GameObjects
 
             layer.RenderingStrategy = layerDatum.RenderingStrategy ?? layer.RenderingStrategy;
             layer.Cycle = layerDatum.Cycle;
+            layer.Loop = layerDatum.Loop;
 
             layer.Color = layerDatum.Color ?? layer.Color;
             layer._rotation = layerDatum.Rotation ?? layer._rotation;
@@ -1165,6 +1170,15 @@ namespace Robust.Client.GameObjects
             /// </remarks>
             [ViewVariables] public bool Cycle;
 
+            /// <summary>
+            /// If false, this will prevent the layer's animation from looping.
+            /// This will set <see cref="AutoAnimated"/> to false once the animation finishes.
+            /// </summary>
+            /// <remarks>
+            /// This may be overriden by the parent's loop property.
+            /// </remarks>
+            [ViewVariables] public bool Loop = true;
+
             // TODO SPRITE ACCESS
             internal RSI.State? _actualState;
             [ViewVariables] public RSI.State? ActualState => _actualState;
@@ -1344,6 +1358,8 @@ namespace Robust.Client.GameObjects
                 DirOffset = toClone.DirOffset;
                 _autoAnimated = toClone._autoAnimated;
                 RenderingStrategy = toClone.RenderingStrategy;
+                Cycle = toClone.Cycle;
+                Loop = toClone.Loop;
                 if (toClone.CopyToShaderParameters is { } copyToShaderParameters)
                     CopyToShaderParameters = new CopyToShaderParameters(copyToShaderParameters);
             }
@@ -1681,10 +1697,12 @@ namespace Robust.Client.GameObjects
 
                         if (AnimationFrame < 0)
                         {
-                            if (!_parent.Loop) // stop at first frame if looping disabled
+                            if (!Loop || !_parent.Loop)
                             {
+                                // stop at first frame
                                 AnimationFrame = 0;
                                 AnimationTimeLeft = 0;
+                                AutoAnimated = false;
                                 return;
                             }
 
@@ -1707,10 +1725,12 @@ namespace Robust.Client.GameObjects
 
                         if (AnimationFrame >= delayCount)
                         {
-                            if (!_parent.Loop) // stop at last frame if looping disabled
+                            if (!Loop || !_parent.Loop)
                             {
+                                // stop at last frame
                                 AnimationFrame = delayCount - 1;
                                 AnimationTimeLeft = 0;
+                                AutoAnimated = false;
                                 return;
                             }
 

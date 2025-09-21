@@ -437,7 +437,7 @@ public abstract partial class SharedAudioSystem : EntitySystem
     protected TimeSpan GetAudioLength(string filename)
     {
         if (!filename.StartsWith('/'))
-            throw new ArgumentException("Path must be rooted");
+            throw new ArgumentException($"Path must be rooted. Path: {filename}");
         return GetAudioLengthImpl(filename);
     }
 

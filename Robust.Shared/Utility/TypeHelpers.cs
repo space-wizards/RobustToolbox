@@ -191,6 +191,18 @@ namespace Robust.Shared.Utility
             return memberInfo.GetCustomAttribute<T>() != null;
         }
 
+        public static IEnumerable<T> GetCustomAttributes<T>(this MemberInfo memberInfo) where T : Attribute
+        {
+            // I should probably just whitelist this & GetCustomAttribute
+            // But I am lazy
+            return CustomAttributeExtensions.GetCustomAttributes<T>(memberInfo);
+        }
+
+        public static IEnumerable<T> GetCustomAttributes<T>(this ParameterInfo memberInfo) where T : Attribute
+        {
+            return CustomAttributeExtensions.GetCustomAttributes<T>(memberInfo);
+        }
+
         public static bool TryGetCustomAttribute<T>(this MemberInfo memberInfo, [NotNullWhen(true)] out T? attribute)
             where T : Attribute
         {

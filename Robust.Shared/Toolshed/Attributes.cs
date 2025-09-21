@@ -9,7 +9,7 @@ namespace Robust.Shared.Toolshed;
 ///     Used to mark a class so that <see cref="ToolshedManager"/> automatically discovers and registers it.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
-[MeansImplicitUse]
+[MeansImplicitUse(ImplicitUseTargetFlags.WithMembers)]
 public sealed class ToolshedCommandAttribute : Attribute
 {
     public string? Name = null;

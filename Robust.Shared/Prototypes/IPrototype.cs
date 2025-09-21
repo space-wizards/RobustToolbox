@@ -1,11 +1,8 @@
 ﻿using System;
-using JetBrains.Annotations;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
-using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+#if !ROBUST_ANALYZERS_TEST
 using Robust.Shared.ViewVariables;
-using YamlDotNet.Core.Tokens;
-using YamlDotNet.RepresentationModel;
+#endif
 
 namespace Robust.Shared.Prototypes
 {
@@ -22,7 +19,10 @@ namespace Robust.Shared.Prototypes
         /// An ID for this prototype instance.
         /// If this is a duplicate, an error will be thrown.
         /// </summary>
-        [ViewVariables(VVAccess.ReadOnly)] string ID { get; }
+#if !ROBUST_ANALYZERS_TEST
+        [ViewVariables(VVAccess.ReadOnly)]
+#endif
+        string ID { get; }
     }
 
     public interface IInheritingPrototype

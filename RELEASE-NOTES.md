@@ -54,6 +54,328 @@ END TEMPLATE-->
 *None yet*
 
 
+## 267.1.0
+
+### New features
+
+* Animation:
+  * `AnimationTrackProperty.KeyFrame` can now have easings functions applied.
+* Graphics:
+  * `PointLightComponent` now has two fields, `falloff` and `curveFactor`, for controlling light falloff and the shape of the light attenuation curve.
+  * `IClydeViewport` now has an `Id` and `ClearCachedResources` event. Together, these allow you to properly cache rendering resources per viewport.
+* Miscellaneous:
+  * Added `display.max_fps` CVar.
+  * Added `IGameTiming.FrameStartTime`.
+* Sandbox:
+  * Added `System.WeakReference<T>`.
+  * Added `SpaceWizards.Sodium.CryptoGenericHashBlake2B.Hash()`.
+  * Added `System.Globalization.UnicodeCategory`.
+* Serialization:
+  * Added a new entity yaml deserialization option (`SerializationOptions.EntityExceptionBehaviour`) that can optionally make deserialization more exception tolerant.
+* Tooling:
+  * `devwindow` now has a tab listing active `IRenderTarget`s, allowing insight into resource consumption.
+  * `loadgrid` now creates a map if passed an invalid map ID.
+  * Added game version information to F3 overlay.
+  * Added completions to more map commands.
+* UI system:
+  * `Control.OrderedChildCollection` (gotten from `.Children`) now implements `IReadOnlyList<Control>`, allowing it to be indexed directly.
+    * Added `WrapContainer` control. This lays out multiple elements along an axis, wrapping them if there's not enough space. It comes with many options and can handle multiple axes.
+  * Popups/modals now work in secondary windows. This entails putting roots for these on each UI root.
+  * If you are not using `OSWindow` and are instead creating secondary windows manually, you need to call `WindowRoot.CreateRootControls()` manually for this to work.
+  * Added `Axis` enum, `IAxisImplementation` interface and axis implementations. These allow writing general-purpose UI layout code that can work on multiple axis at once.
+* WebView:
+  * Added `web.remote_debug_port` CVar to change Chromium's remote debug port.
+
+### Bugfixes
+
+* Audio:
+  * Fix audio occlusion & velocity being calculated with the audio entity instead of the source entity.
+* Bound UI:
+  * Try to fix an assert related to `UserInterfaceComponent` delta states.
+* Configuration:
+  * The client no longer tries to send `CLIENT | REPLICATED` CVars when not connected to a server. This could cause test failures.
+* Math:
+  * Fixed `Matrix3Helpers.TransformBounds()` returning an incorrect result. Now it effectively behaves like `Matrix3Helpers.TransformBox()` and has been marked as obsolete.
+* Physics:
+  * Work around an undiagnosed crash processing entities without parents.
+* Serialization:
+  * Fix `[DataRecord]`s with computed get-only properties.
+* Resources:
+  * Fix some edge case broken path joining in `DirLoader` and `WritableDirProvider`.
+* Tests:
+  * Fix `PlacementManager.CurrentMousePosition` in integration tests.
+* UI system:
+  * Animations for the debug console and scrolling are no longer framerate dependent.
+  * Fix `OutputPanel.SetMessage` triggering a scrolling animation when editing messages other than the last one.
+  * Fix word wrapping with two-`char` runes in `RichTextLabel` and `OutputPanel`.
+* WebView:
+  * Multiple clients with WebView can now run at the same time, thanks to better CEF cache management.
+
+### Other
+
+* Audio:
+  * Improved error logging for invalid file names in `SharedAudioSystem`.
+* Configuration:
+  * Fix crash if more than 255 `REPLICATED` CVars exist. Also increased the max size of the CVar replication message.
+* Entities:
+  * Transform:
+    * `AnchorEntity` logs instead of using an assert for invalid arguments.
+  * Containers:
+    * `SharedContainerSystem.CleanContainer` now uses `PredictedDel()` instead.
+* Networking:
+  * The client now logs an error when attempting to send a network message without server connection. Previously, it would be silently dropped.
+  * `net.interp` and `net.buffer_size` CVars are now `REPLICATED`.
+* Graphics:
+  * The function used for pointlight attenuation has been modified to be c1 continuous as opposed to simply c0 continuous, resulting in smoother boundary behavior.
+  * RSI validator no longer allows empty (`""`) state names.
+* Packaging:
+  * Server packaging now excludes all files in the `Audio/` directory.
+  * Server packaging now excludes engine resources `EngineFonts/` and `Midi/`.
+  * ACZ explicitly specifies manifest charset as UTF-8.
+* Serialization:
+  * `CurTime`-relative `TimeSpan` values that are `MaxValue` now deserialize without overflow.
+  * `SpriteSpecifier.Texture` will now fail to validate if the path is inside a `.rsi`. Use RSI sprite specifiers instead.
+* Resources:
+  * `IWritableDirProvider.RootDir` is now null on clients.
+* WebView:
+  * CEF cache is no longer in the content-accessible user data directory.
+
+### Internal
+
+* Added some debug commands for debugging viewport resource management: `vp_clear_all_cached` & `vp_test_finalize`
+* `uitest` command now supports command argument for tab selection, like `uitest2`.
+* Rewrote `BoxContainer` implementation to make use of new axis system.
+* Moved `uitest2` and `devwindow` to use the `OSWindow` control.
+* SDL3 binding has been moved to `SpaceWizards.Sdl` NuGet package.
+* `dmetamem` command has been moved from `DEBUG` to `TOOLS`.
+* Consolidate `AttachToGridOrMap` with `TryGetMapOrGridCoordinates`.
+* Secondary window render targets have clear names specified.
+* Updated `SpaceWizards.NFluidsynth` to `0.2.2`.
+* `Robust.Client.WebView.Cef.Program` is now internal.
+* `download_manifest_file.py` script in repo now always decodes as UTF-8 correctly.
+* Added a new debug assert to game state processing.
+
+## 267.0.0
+
+### Breaking changes
+
+* When a player disconnects, the relevant callbacks are now fired *after* removing the channel from `INetManager`.
+
+### New features
+
+* Engine builds are now published for ARM64 & FreeBSD.
+* CPU model names are now detected on Windows & Linux ARM64.
+* Toolshed's `spawn:in` command now works on entities without `Physics` component.
+
+### Bugfixes
+
+* SDL3 windowing backend fixes:
+  * Avoid macOS freezes with multiple windows.
+  * Fix macOS rendering breaking when closing secondary windows.
+  * File dialogs properly associate parent windows.
+  * Fix IME positions not working with UI scaling properly.
+  * Properly specify library names for loading native library.
+
+* WinBit threads don't permanently stay stuck when their window closes.
+* Checking for the "`null`" literal in serialization is now culture invariant.
+
+### Other
+
+* Compat mode on the client now defaults to on for Windows Snapdragon devices, to work around driver bugs.
+* Update various libraries & natives. This enables out-of-the-box ARM64 support on all platforms and is a long-overdue modernization.
+* Key name displays now use proper Unicode symbols for macOS ⌥ and ⌘.
+* Automated CI for RobustToolbox runs on macOS again.
+* Autocompletions for `ProtoId<T>` in Toolshed now use `PrototypeIdsLimited` instead of arbitrarily cutting out if more than 256 of a prototype exists.
+
+
+## 266.0.0
+
+### Breaking changes
+
+* A new analyzer has been added that will error if you attempt to subscribe to `AfterAutoHandleStateEvent` on a
+  component that doesn't have the `AutoGenerateComponentState` attribute, or doesn't have the first argument of that
+  attribute set to `true`. In most cases you will want to set said argument to `true`.
+* The fields on `AutoGenerateComponentStateAttribute` are now `readonly`. Setting these directly (instead of using the constructor arguments) never worked in the first place, so this change only catches existing programming errors.
+* When a player disconnects, `ISharedPlayerManager.PlayerStatusChanged` is now fired *after* removing the session from the `Sessions` list.
+* `.rsi` files are now compacted into individual `.rsic` files on packaging. This should significantly reduce file count & improve performance all over release builds, but breaks the ability to access `.png` files into RSIs directly. To avoid this, `"rsic": false` can be specified in the RSI's JSON metadata.
+* The `scale` command has been removed, with the intent of it being moved to content instead.
+
+### New features
+
+* ViewVariables editors for `ProtoId` fields now have a Select button which opens a window listing all available prototypes of the appropriate type.
+* added **IConfigurationManager**.*SubscribeMultiple* ext. method to provide simpler way to unsubscribe from multiple cvar at once
+* Added `SharedMapSystem.QueueDeleteMap`, which deletes a map with the specified MapId in the next tick.
+* Added generic version of `ComponentRegistry.TryGetComponent`.
+* `AttributeHelper.HasAttribute` has had an overload's type signature loosened from `INamedTypeSymbol` to `ITypeSymbol`.
+* Errors are now logged when sending messages to disconnected `INetChannel`s.
+* Warnings are now logged if sending a message via Lidgren failed for some reason.
+* `.yml` and `.ftl` files in the same directory are now concatenated onto each other, to reduce file count in packaged builds. This is done through the new `AssetPassMergeTextDirectories` pass.
+* Added `System.Linq.ImmutableArrayExtensions` to sandbox.
+* `ImmutableDictionary<TKey, TValue>` and `ImmutableHashSet<T>` can now be network serialized.
+* `[AutoPausedField]` now works on fields of type `Dictionary<TKey, TimeSpan>`.
+* `[NotYamlSerializable]` analyzer now detects nullable fields of the not-serializable type.
+* `ItemList` items can now have a scale applied for the icon.
+* Added new OS mouse cursor shapes for the SDL3 backend. These are not available on the GLFW backend.
+* Added `IMidiRenderer.MinVolume` to scale the volume of MIDI notes.
+* Added `SharedPhysicsSystem.ScaleFixtures`, to apply the physics-only changes of the prior `scale` command.
+
+### Bugfixes
+
+* `LayoutContainer.SetMarginsPreset` and `SetAnchorAndMarginPreset` now correctly use the provided control's top anchor when calculating the margins for its presets; it previously used the bottom anchor instead. This may result in a few UI differences, by a few pixels at most.
+* `IConfigurationManager` no longer logs a warning when saving configuration in an integration test.
+* Fixed impossible-to-source `ChannelClosedException`s when sending some net messages to disconnected `INetChannel`s.
+* Fixed an edge case causing some color values to throw an error in `ColorNaming`.
+* Fresh builds from specific projects should no longer cause errors related to `Robust.Client.Injectors` not being found.
+* Stopped errors getting logged about `NoteOff` and `NoteOn` operations failing in MIDI.
+* Fixed MIDI players not resuming properly when re-entering PVS range.
+
+### Other
+
+* Updated ImageSharp to 3.1.11 to stop the warning about a DoS vulnerability.
+* Prototype YAML documents that are completely empty are now skipped by the prototype loader. Previously they would cause a load error for the whole file.
+* `TileSpawnWindow` can now be localized.
+* `BaseWindow` uses the new mouse cursor shapes for diagonal resizing.
+* `NFluidsynth` has been updated to 0.2.0
+
+### Internal
+
+* Added `uitest` tab for standard mouse cursor shapes.
+
+
+## 265.0.0
+
+### Breaking changes
+
+* More members in `IntegrationInstance` now enforce that the instance is idle before accessing it.
+* `Prototype.ValidateDirectory` now requires that prototype IDs have no spaces or periods in them.
+* `IPrototypeManager.TryIndex` no longer logs errors unless using the overload with an optional parameter. Use `Resolve()` instead if error logging is desired.
+* `LocalizedCommands` now has a `Loc` property that refers to `LocalizationManager`. This can cause compile failures if you have static methods in child types that referenced static `Loc`.
+* `[AutoGenerateComponentState]` now works on parent members for inherited classes. This can cause compile failures in certain formerly silently broken cases with overriden properties.
+* `Vector3`, `Vector4`, `Quaternion`, and `Matrix4` have been removed from `Robust.Shared.Maths`. Use the `System.Numerics` types instead.
+
+### New features
+
+* `RobustClientPackaging.WriteClientResources()` and `RobustServerPackaging.WriteServerResources()` now have an overload taking in a set of things to ignore in the content resources directory.
+* Added `IPrototypeManager.Resolve()`, which logs an error if the resolved prototype does not exist. This is effectively the previous (but not original) default behavior of `IPrototypeManager.TryIndex`.
+* There's now a ViewVariables property editor for tuples.
+* Added `ColorNaming` helper functions for getting textual descriptions of color values.
+* Added Oklab/Oklch conversion functions for `Color`.
+* `ColorSelectorSliders` now displays textual descriptions of color values.
+* Added `TimeSpanExt.TryTimeSpan` to parse `TimeSpan`s with the `1.5h` format available in YAML.
+* Added `ITestContextLike` and related classes to allow controlling pooled integration instances better.
+* `EntProtoId` VV prop editors now don't allow setting invalid prototype IDs, inline with `ProtoId<T>`.
+* Custom VV controls can now be registered using `IViewVariableControlFactory`.
+* The entity spawn window now shows all placement modes registered with `IPlacementManager`.
+* Added `VectorHelpers.InterpolateCubic` for `System.Numerics` `Vector3` and `Vector4`.
+* Added deconstruct helpers for `System.Numerics` `Vector3` and `Vector4`.
+
+### Bugfixes
+
+* Pooled integration instances returned by `RobustIntegrationTest` are now treated as non-idle, for consistency with non-pooled startups.
+* `SharedAudioSystem.SetState` no longer calls `DirtyField` on `PlaybackPosition`, an unnetworked field.
+* Fix loading texture files from the root directory.
+* Fix integration test pooling leaking non-reusable instances.
+* Fix multiple bugs where VV displayed the wrong property editor for remote values.
+* VV displays group headings again in member list.
+* Fix a stack overflow that could occur with `ColorSelectorSliders`.
+* `MidiRenderer` now properly handles `NoteOn` events with 0 velocity (which should actually be treated as `NoteOff` events).
+
+### Other
+
+* The debug assert for `RobustRandom.Next(TimeSpan, TimeSpan)` now allows for the two arguments to be equal.
+* The configuration system will now report an error instead of warning if it fails to load the config file.
+* Members in `IntegrationInstance` that enforce the instance is idle now always allow access from the instance's thread (e.g. from a callback).
+* `IPrototypeManager` methods now have `[ForbidLiteral]` where appropriate.
+* Performance improvements to physics system.
+* `[ValidatePrototypeIdAttribute]` has been marked as obsolete.
+* `ParallelManager` no longer cuts out exception information for caught job exceptions.
+* Improved logging for PVS uninitialized/deleted entity errors.
+
+### Internal
+
+* General code & warning cleanup.
+* Fix `VisibilityTest` being unreliable.
+* `ColorSelectorSliders` has been internally refactored.
+* Added CI workflows that test all RT build configurations.
+
+## 264.0.0
+
+### Breaking changes
+
+* `IPrototypeManager.Index(Type kind, string id)` now throws `UnknownPrototypeException` instead of `KeyNotFoundException`, for consistency with `IPrototypeManager.Index<T>`.
+
+### New features
+
+* Types can now implement the new interface `IRobustCloneable<T>` to be cloned by the component state source generator.
+* Added extra Roslyn Analyzers to detect some misuse of prototypes:
+  * Network serializing prototypes (tagging them with `[Serializable, NetSerializable]`).
+  * Constructing new instances of prototypes directly.
+* Add `PrototypeManagerExt.Index` helper function that takes a nullable `ProtoId<T>`, returning null if the ID is null.
+* Added an `AlwaysActive` field to `WebViewControl` to make a browser window active even when not in the UI tree.
+* Made some common dependencies accessible through `IPlacementManager`.
+* Added a new `GENITIVE()` localization helper function, which is useful for certain languages.
+
+### Bugfixes
+
+* Sprite scale is now correctly applied to sprite boundaries in `SpriteSystem.GetLocalBounds`.
+* Fixed documentation for `IPrototypeManager.Index<T>` stating that `KeyNotFoundException` gets thrown, when in actuality `UnknownPrototypeException` gets thrown.
+
+### Other
+
+* More tiny optimizations to `DataDefinitionAnalyzer`.
+* NetSerializer has been updated. On debug, it will now report *where* a type that can't be serialized is referenced from.
+
+### Internal
+
+* Minor internal code cleanup.
+
+
+## 263.0.0
+
+### Breaking changes
+
+* Fully removed some non-`Entity<T>` container methods.
+
+### New features
+
+* `IMidiRenderer.LoadSoundfont` has been split into `LoadSoundfontResource` and `LoadSoundfontUser`, the original now being deprecated.
+* Client command execution now properly catches errors instead of letting them bubble up through the input stack.
+* Added `CompletionHelper.PrototypeIdsLimited` API to allow commands to autocomplete entity prototype IDs.
+* Added `spawn:in` Toolshed command.
+* Added `MapLoaderSystem.TryLoadGeneric` overload to load from a `Stream`.
+* Added `OutputPanel.GetMessage()` and `OutputPanel.SetMessage()` to allow replacing individual messages.
+
+### Bugfixes
+
+* Fixed debug asserts when using MIDI on Windows.
+* Fixed an error getting logged on startup on macOS related to window icons.
+* `CC-BY-NC-ND-4.0` is now a valid license for the RGA validator.
+* Fixed `TabContainer.CurrentTab` clamping against the wrong value.
+* Fix culture-based parsing in `TimespanSerializer`.
+* Fixed grid rendering blowing up on tile IDs that aren't registered.
+* Fixed debug assert when loading MIDI soundfonts on Windows.
+* Make `ColorSelectorSliders` properly update the dropdown when changing `SelectorType`.
+* Fixed `tpto` allowing teleports to oneself, thereby causing them to be deleted.
+* Fix OpenAL extensions being requested incorrectly, causing an error on macOS.
+* Fixed horizontal measuring of markup controls in rich text.
+
+### Other
+
+* Improved logging for some audio entity errors.
+* Avoided more server stutters when using `csci`.
+* Improved physics performance.
+* Made various localization functions like `GENDER()` not throw if passed a string instead of an `EntityUid`.
+* The generic clause on `EntitySystem.AddComp<T>` has been changed to `IComponent` (from `Component`) for consistency with `IEntityManager.AddComponent<T>`.
+* `DataDefinitionAnalyzer` has been optimized somewhat.
+* Improved assert logging error message when static data fields are encountered.
+
+### Internal
+
+* Warning cleanup.
+* Added more tests for `DataDefinitionAnalyzer`.
+* Consistently use `EntitySystem` proxy methods in engine.
+
+
 ## 262.0.0
 
 ### Breaking changes

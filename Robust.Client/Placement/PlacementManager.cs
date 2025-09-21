@@ -22,6 +22,7 @@ using Robust.Shared.Utility;
 using Robust.Shared.Log;
 using Direction = Robust.Shared.Maths.Direction;
 using Robust.Shared.Map.Components;
+using System.Linq;
 
 namespace Robust.Client.Placement
 {
@@ -32,16 +33,22 @@ namespace Robust.Client.Placement
         [Dependency] internal readonly IPlayerManager PlayerManager = default!;
         [Dependency] internal readonly IResourceCache ResourceCache = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] internal readonly IMapManager MapManager = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IGameTiming _time = default!;
-        [Dependency] internal readonly IEyeManager EyeManager = default!;
+        [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] internal readonly IInputManager InputManager = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
-        [Dependency] internal readonly IEntityManager EntityManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         [Dependency] private readonly IBaseClient _baseClient = default!;
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
         [Dependency] internal readonly IClyde Clyde = default!;
+
+        private static readonly ProtoId<ShaderPrototype> UnshadedShader = "unshaded";
+
+        public IEntityManager EntityManager => _entityManager;
+        public IEyeManager EyeManager => _eyeManager;
+        public IMapManager MapManager => _mapManager;
 
         private ISawmill _sawmill = default!;
 
@@ -198,6 +205,15 @@ namespace Robust.Client.Placement
             }
         }
 
+        private string[]? _allModeNames;
+        public string[] AllModeNames
+        {
+            get
+            {
+                return _allModeNames ??= [IPlacementManager.DefaultModeName, .. _modeDictionary.Keys.Order()];
+            }
+        }
+
         /// <inheritdoc />
         public event EventHandler? DirectionChanged;
 
@@ -209,7 +225,7 @@ namespace Robust.Client.Placement
 
         public void Initialize()
         {
-            _drawingShader = _prototypeManager.Index<ShaderPrototype>("unshaded").Instance();
+            _drawingShader = _prototypeManager.Index(UnshadedShader).Instance();
             _sawmill = _logManager.GetSawmill("placement");
 
             _networkManager.RegisterNetMessage<MsgPlacement>(HandlePlacementMessage);
@@ -546,7 +562,7 @@ namespace Robust.Client.Placement
             }
 
             coordinates = InputManager.MouseScreenPosition;
-            return true;
+            return coordinates.IsValid;
         }
 
         private bool CurrentEraserMouseCoordinates(out EntityCoordinates coordinates)

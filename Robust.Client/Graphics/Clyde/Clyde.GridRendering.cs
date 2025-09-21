@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Enums;
@@ -254,9 +255,9 @@ namespace Robust.Client.Graphics.Clyde
                             region = regionMaybe[tile.Variant];
                         }
 
-                        var rotationMirroring = _tileDefinitionManager[tile.TypeId].AllowRotationMirror
-                            ? tile.RotationMirroring
-                            : 0;
+                        var rotationMirroring = (_tileDefinitionManager.TryGetDefinition(tile.TypeId, out var tileDef) && tileDef.AllowRotationMirror) ?
+                                                    tile.RotationMirroring
+                                                    : 0;
 
                         WriteTileToBuffers(i, gridX, gridY, vertexBuffer, indexBuffer, region, rotationMirroring);
                         i += 1;

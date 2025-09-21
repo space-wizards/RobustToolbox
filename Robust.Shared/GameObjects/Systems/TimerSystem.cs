@@ -12,7 +12,7 @@ namespace Robust.Shared.GameObjects
             base.Update(frameTime);
 
             // Avoid a collection was modified while enumerating.
-            var timers = EntityManager.EntityQueryEnumerator<TimerComponent>();
+            var timers = EntityQueryEnumerator<TimerComponent>();
             var timersList = new ValueList<(EntityUid, TimerComponent)>();
             while (timers.MoveNext(out var uid, out var timer))
             {
@@ -28,7 +28,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (!timer.Deleted && !EntityManager.Deleted(uid) && timer.RemoveOnEmpty && timer.TimerCount == 0)
                 {
-                    EntityManager.RemoveComponent<TimerComponent>(uid);
+                    RemComp<TimerComponent>(uid);
                 }
             }
         }

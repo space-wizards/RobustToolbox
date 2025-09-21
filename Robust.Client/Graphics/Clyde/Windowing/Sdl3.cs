@@ -61,6 +61,10 @@ internal partial class Clyde
             // https://github.com/libsdl-org/SDL/issues/11813
             SDL.SDL_SetHint(SDL.SDL_HINT_WINDOWS_GAMEINPUT, "0");
 
+#if MACOS
+            SDL.SDL_SetHint(SDL.SDL_HINT_MAC_OPENGL_ASYNC_DISPATCH, "1");
+#endif
+
             var res = SDL.SDL_Init(SDL.SDL_InitFlags.SDL_INIT_VIDEO | SDL.SDL_InitFlags.SDL_INIT_EVENTS);
             if (!res)
             {

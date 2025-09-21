@@ -28,7 +28,8 @@
     <PackageReference Include="TerraFX.Interop.Windows" PrivateAssets="compile" />
     <PackageReference Include="Microsoft.Extensions.ObjectPool" PrivateAssets="compile" />
     <PackageReference Include="SpaceWizards.Sodium" PrivateAssets="compile" />
-    <PackageReference Include="SharpZstd.Interop" PrivateAssets="compile" />
+    <PackageReference Include="SharpZstd.Interop" PrivateAssets="compile" ExcludeAssets="native" />
+    <PackageReference Include="Robust.Natives.Zstd" />
     <PackageReference Condition="'$(RobustToolsBuild)' == 'True'" Include="JetBrains.Profiler.Api" />
     <PackageReference Include="Microsoft.NET.ILLink.Tasks" />
 

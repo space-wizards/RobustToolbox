@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
 using Microsoft.Extensions.ObjectPool;
-using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
@@ -559,7 +558,7 @@ public abstract partial class SharedPhysicsSystem
         Cleanup(frameTime);
     }
 
-    private void ReturnIsland(IslandData island)
+    private void ReturnIsland(in IslandData island)
     {
         foreach (var bodyEnt in island.Bodies)
         {
@@ -633,7 +632,7 @@ public abstract partial class SharedPhysicsSystem
         );
 
         // We'll sort islands from internally parallel (due to lots of contacts) to running all the islands in parallel
-        islands.Sort((x, y) => InternalParallel(y).CompareTo(InternalParallel(x)));
+        islands.Sort(static (x, y) => InternalParallel(y).CompareTo(InternalParallel(x)));
 
         var totalBodies = 0;
         var actualIslands = islands.ToArray();
@@ -688,7 +687,7 @@ public abstract partial class SharedPhysicsSystem
         // Update data sequentially
         for (var i = 0; i < actualIslands.Length; i++)
         {
-            var island = actualIslands[i];
+            ref readonly var island = ref actualIslands[i];
 
             UpdateBodies(in island, solvedPositions, solvedAngles, linearVelocities, angularVelocities);
             SleepBodies(in island, sleepStatus);
@@ -791,13 +790,13 @@ public abstract partial class SharedPhysicsSystem
         var positionConstraints = ArrayPool<ContactPositionConstraint>.Shared.Rent(contactCount);
 
         // Pass the data into the solver
-        ResetSolver(data, island, velocityConstraints, positionConstraints);
+        ResetSolver(in data, in island, velocityConstraints, positionConstraints);
 
         InitializeVelocityConstraints(in data, in island, velocityConstraints, positionConstraints, positions, angles, linearVelocities, angularVelocities);
 
         if (data.WarmStarting)
         {
-            WarmStart(data, island, velocityConstraints, linearVelocities, angularVelocities);
+            WarmStart(in data, in island, velocityConstraints, linearVelocities, angularVelocities);
         }
 
         var jointCount = island.Joints.Count;
@@ -833,7 +832,7 @@ public abstract partial class SharedPhysicsSystem
                     island.BrokenJoints.Add((island.Joints[j].Original, error));
             }
 
-            SolveVelocityConstraints(island, options, velocityConstraints, linearVelocities, angularVelocities);
+            SolveVelocityConstraints(in island, options, velocityConstraints, linearVelocities, angularVelocities);
         }
 
         // Store for warm starting.
@@ -872,7 +871,7 @@ public abstract partial class SharedPhysicsSystem
 
         for (var i = 0; i < data.PositionIterations; i++)
         {
-            var contactsOkay = SolvePositionConstraints(data, in island, options, positionConstraints, positions, angles);
+            var contactsOkay = SolvePositionConstraints(in data, in island, options, positionConstraints, positions, angles);
             var jointsOkay = true;
 
             for (var j = 0; j < island.Joints.Count; ++j)
@@ -904,16 +903,48 @@ public abstract partial class SharedPhysicsSystem
 
         if (options != null)
         {
-            const int FinaliseBodies = 32;
-            var batches = (int)MathF.Ceiling((float) bodyCount / FinaliseBodies);
-
-            Parallel.For(0, batches, options, i =>
+            // Isolate to avoid delegate capture allocation unless we're actually processing parallel here.
+            static void ProcessParallelInternal(
+                SharedPhysicsSystem system,
+                ParallelOptions options,
+                int bodyCount,
+                int offset,
+                List<Entity<PhysicsComponent, TransformComponent>> bodies,
+                Vector2[] positions,
+                float[] angles,
+                Vector2[] solvedPositions,
+                float[] solvedAngles)
             {
-                var start = i * FinaliseBodies;
-                var end = Math.Min(bodyCount, start + FinaliseBodies);
+                const int FinaliseBodies = 32;
+                var batches = (int)MathF.Ceiling((float) bodyCount / FinaliseBodies);
 
-                FinalisePositions(start, end, offset, bodies,  positions, angles, solvedPositions, solvedAngles);
-            });
+                Parallel.For(0, batches, options, i =>
+                {
+                    var start = i * FinaliseBodies;
+                    var end = Math.Min(bodyCount, start + FinaliseBodies);
+
+                    system.FinalisePositions(
+                        start,
+                        end,
+                        offset,
+                        bodies,
+                        positions,
+                        angles,
+                        solvedPositions,
+                        solvedAngles);
+                });
+            }
+
+            ProcessParallelInternal(
+                this,
+                options,
+                bodyCount,
+                offset,
+                bodies,
+                positions,
+                angles,
+                solvedPositions,
+                solvedAngles);
         }
         else
         {
@@ -1008,7 +1039,12 @@ public abstract partial class SharedPhysicsSystem
                 continue;
 
             var xform = ent.Comp2;
-            var (_, parentRot, parentInvMatrix) = _transform.GetWorldPositionRotationInvMatrix(xform.ParentUid);
+            // TODO: Root cause out why this TryComp is necessary.
+            // See https://github.com/space-wizards/RobustToolbox/pull/6135
+            if (!TryComp(xform.ParentUid, out TransformComponent? transform))
+                continue;
+
+            var (_, parentRot, parentInvMatrix) = _transform.GetWorldPositionRotationInvMatrix(transform);
             var worldRot = (float) (parentRot + xform._localRotation);
 
             var angle = angles[i];

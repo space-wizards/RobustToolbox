@@ -34,7 +34,7 @@ public sealed class TransformTest
         var x = Vector128.Create(dat.V.X);
         var y = Vector128.Create(dat.V.Y);
         Transform.MulSimd(dat.T, x, y, out var xOut, out var yOut);
-        Assert.That(xOut, Is.Approximately(Vector128.Create(dat.Exp[0]), 0.001f));
-        Assert.That(yOut, Is.Approximately(Vector128.Create(dat.Exp[1]), 0.001f));
+        Assert.That(xOut, Is.Approximately(Vector128.Create(dat.Exp[0]), 0.0001f));
+        Assert.That(yOut, Is.Approximately(Vector128.Create(dat.Exp[1]), 0.0001f));
     }
 }

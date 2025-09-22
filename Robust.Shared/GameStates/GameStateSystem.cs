@@ -23,6 +23,12 @@ public sealed class GameStateSystem : EntitySystem
         SetLastRealTick(args.SenderSession.UserId, msg.Tick);
     }
 
+    /// <summary>
+    ///     Gets a client's last real tick.
+    /// </summary>
+    /// <param name="session">The id of the client.</param>
+    /// <returns>The client's last real tick, or the current tick if it is not set.</returns>
+    /// <seealso cref="IGameTiming.LastRealTick"/>
     public GameTick GetLastRealTick(NetUserId? session)
     {
         if (_net.IsClient)

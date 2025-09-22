@@ -140,7 +140,7 @@ namespace Robust.Shared.Localization
         /// <param name="culture">The culture to add the function instance for.</param>
         /// <param name="name">The name of the function.</param>
         /// <param name="function">The function itself.</param>
-        void AddFunction(CultureInfo culture, string name, LocFunction function, PronounTense? tense = null);
+        void AddFunction(CultureInfo culture, string name, LocFunction function);
 
         /// <summary>
         ///     Gets localization data for an entity prototype.

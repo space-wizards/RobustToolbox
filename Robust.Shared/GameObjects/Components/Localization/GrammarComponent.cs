@@ -10,7 +10,6 @@ using Robust.Shared.Localization;
 
 namespace Robust.Shared.GameObjects.Components.Localization;
 
-/// <summary>
 ///     Overrides grammar attributes specified in prototypes or localization files.
 /// </summary>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
@@ -34,7 +33,7 @@ public sealed partial class GrammarComponent : Component
     ///     the gender's pronoun will be used as a fallback.
     /// </summary>
     [DataField, AutoNetworkedField]
-    public Dictionary<PronounTense, string> Pronoun = [];
+    public Dictionary<ProtoId<PronounTensePrototype>, string> Pronouns = [];
 
     [ViewVariables]
     public bool? ProperNoun
@@ -45,7 +44,8 @@ public sealed partial class GrammarComponent : Component
     }
 }
 
-public sealed partial class PronounTense : IPrototype
+[Prototype]
+public sealed partial class PronounTensePrototype : IPrototype
 {
     [IdDataField]
     public string ID { get; private set; } = default!;
@@ -75,4 +75,12 @@ public sealed partial class PronounTense : IPrototype
     /// </summary>
     [DataField]
     public LocId Description { get; private set; }
+
+    private static readonly IPrototypeManager _protoMan = default!;
+    public static ProtoId<PronounTensePrototype>? ParseFromDbString(string input)
+    {
+        if (_protoMan.TryIndex<PronounTensePrototype>(input, out var pronoun))
+            return pronoun;
+        return null;
+    }
 }

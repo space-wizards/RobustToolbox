@@ -55,6 +55,12 @@
   name: pronouns-counter
   description: pronouns-counter-desc
 
+# catchall plurality, used for shorthand conjugation (epicene for "are/have", other for "is/has")
+- type: pronounTense
+  id: Plurality
+  name: pronouns-plurality
+  description: pronouns-plurality-desc
+
 # conjugation - unsure if these are needed?
 - type: pronounTense
   id: ConjugateBe

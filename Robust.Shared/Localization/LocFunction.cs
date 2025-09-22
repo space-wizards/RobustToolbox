@@ -194,17 +194,6 @@ namespace Robust.Shared.Localization
         }
     }
 
-    public sealed record LocValueLocId(LocId Value) : LocValue<LocId>(Value)
-    {
-        public override string Format(LocContext ctx)
-        {
-            if (ctx.Manager.TryGetString(Value, (ctx.Culture, ctx.Bundle), out var value))
-                return value;
-
-            return ctx.Manager.GetString(Value);
-        }
-    }
-
     // Matching on these doesn't work so just passing these as string for now.
 
     /*public sealed record LocValueBool(bool Value) : LocValue<bool>(Value)

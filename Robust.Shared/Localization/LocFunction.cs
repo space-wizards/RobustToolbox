@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using JetBrains.Annotations;
 using Linguini.Bundle;
 using Robust.Shared.GameObjects;
@@ -30,9 +31,12 @@ namespace Robust.Shared.Localization
 
         internal readonly FluentBundle Bundle;
 
-        internal LocContext(FluentBundle bundle)
+        internal readonly LocalizationManager Manager;
+
+        internal LocContext(FluentBundle bundle, LocalizationManager manager)
         {
             Bundle = bundle;
+            Manager = manager;
         }
     }
 
@@ -176,6 +180,28 @@ namespace Robust.Shared.Localization
         public override string Format(LocContext ctx)
         {
             return IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Value).EntityName;
+        }
+    }
+
+    public sealed record LocValueList(List<ILocValue> Value) : LocValue<List<ILocValue>>(Value)
+    {
+        public override string Format(LocContext ctx)
+        {
+            if (ctx.Manager.ResolveListPatterns(ctx.Culture) is not { } patterns || !patterns.TryGetValue(new(ListType.And, ListWidth.Wide), out var parts))
+                throw new InvalidOperationException($"Culture {ctx.Culture} does not support formatting lists");
+
+            return parts.FormatList(Value.Select(item => item.Format(ctx)).ToList());
+        }
+    }
+
+    public sealed record LocValueLocId(LocId Value) : LocValue<LocId>(Value)
+    {
+        public override string Format(LocContext ctx)
+        {
+            if (ctx.Manager.TryGetString(Value, (ctx.Culture, ctx.Bundle), out var value))
+                return value;
+
+            return ctx.Manager.GetString(Value);
         }
     }
 

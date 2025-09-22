@@ -1217,14 +1217,14 @@ namespace Robust.Shared.GameObjects
 
         /// <summary>
         /// Copy the components for an entity into the given span,
-        /// or re-allocate the span as an array if there's not enough space.º
+        /// or re-allocate the span as an array if there's not enough space.
         /// </summary>
         private void CopyComponentsInto(ref Span<IComponent?> comps, EntityUid uid)
         {
             var set = _entCompIndex[uid];
             if (set.Count > comps.Length)
             {
-                comps = new IComponent[set.Count];
+                comps = new IComponent?[set.Count];
             }
 
             var i = 0;

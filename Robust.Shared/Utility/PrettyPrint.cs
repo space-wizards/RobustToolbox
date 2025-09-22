@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -265,7 +266,7 @@ namespace Robust.Shared.Utility
             return builder.ToString();
         }
 
-        private static readonly IReadOnlyDictionary<Type, string> TypeShortHand = new Dictionary<Type, string>()
+        private static readonly FrozenDictionary<Type, string> TypeShortHand = new Dictionary<Type, string>()
         {
             // ReSharper disable BuiltInTypeReferenceStyle
             {typeof(void), "void"},
@@ -285,6 +286,6 @@ namespace Robust.Shared.Utility
             {typeof(UInt64), "ulong"},
             {typeof(UInt16), "ushort"},
             // ReSharper restore BuiltInTypeReferenceStyle
-        };
+        }.ToFrozenDictionary();
     }
 }

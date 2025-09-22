@@ -90,7 +90,7 @@ namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
             contents.TextMemory = FormatHelpers.FormatIntoMem(_textBuffer,
                 $@"UP: {sentBytes / ONE_KIBIBYTE:N} KiB/s, {sentPackets} pckt/s, {LastSentBytes / ONE_KIBIBYTE:N} KiB, {LastSentPackets} pckt
 DOWN: {receivedBytes / ONE_KIBIBYTE:N} KiB/s, {receivedPackets} pckt/s, {LastReceivedBytes / ONE_KIBIBYTE:N} KiB, {LastReceivedPackets} pckt
-PING: {NetManager.ServerChannel?.Ping ?? -1} ms");
+PING: {NetManager.ServerChannel?.Ping ?? -1} ms, MTU: {NetManager.ServerChannel?.CurrentMtu} B");
         }
     }
 }

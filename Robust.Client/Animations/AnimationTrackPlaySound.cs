@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using Robust.Client.Audio;
 using Robust.Client.GameObjects;
 using Robust.Shared.Audio;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Player;
 
 namespace Robust.Client.Animations
@@ -37,7 +39,8 @@ namespace Robust.Client.Animations
 
                 var keyFrame = KeyFrames[keyFrameIndex];
 
-                SoundSystem.Play(keyFrame.Resource, Filter.Local(), entity, keyFrame.AudioParamsFunc.Invoke());
+                var audioParams = keyFrame.AudioParamsFunc.Invoke();
+                IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<AudioSystem>().PlayEntity(keyFrame.Specifier, Filter.Local(), entity, true, audioParams);
             }
 
             return (keyFrameIndex, playingTime);
@@ -48,7 +51,7 @@ namespace Robust.Client.Animations
             /// <summary>
             ///     The RSI state to play when this keyframe gets triggered.
             /// </summary>
-            public readonly string Resource;
+            public readonly ResolvedSoundSpecifier Specifier;
 
             /// <summary>
             ///     A function that returns the audio parameter to be used.
@@ -62,9 +65,9 @@ namespace Robust.Client.Animations
             /// </summary>
             public readonly float KeyTime;
 
-            public KeyFrame(string resource, float keyTime, Func<AudioParams>? audioParams = null)
+            public KeyFrame(ResolvedSoundSpecifier specifier, float keyTime, Func<AudioParams>? audioParams = null)
             {
-                Resource = resource;
+                Specifier = specifier;
                 KeyTime = keyTime;
                 AudioParamsFunc = audioParams ?? (() => AudioParams.Default);
             }

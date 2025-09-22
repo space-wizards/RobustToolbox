@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using NUnit.Framework;
 using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
@@ -24,7 +24,7 @@ namespace Robust.UnitTesting.Shared.Serialization
 
             foreach (var type in types)
             {
-                Assert.IsTrue(Attribute.IsDefined(type, typeof(NetSerializableAttribute), true),
+                Assert.That(Attribute.IsDefined(type, typeof(NetSerializableAttribute), true),
                     $"{type.FullName} has {nameof(NetSerializableAttribute)}, but not the required {nameof(SerializableAttribute)}.");
             }
 

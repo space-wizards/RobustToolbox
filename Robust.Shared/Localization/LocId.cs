@@ -12,7 +12,7 @@ namespace Robust.Shared.Localization;
 ///     This will be automatically validated by <see cref="LocIdSerializer"/> if used in data fields.</remarks>
 /// <seealso cref="Loc.GetString(string)"/>
 [Serializable, NetSerializable]
-public readonly record struct LocId(string Id)
+public readonly record struct LocId(string Id) : IEquatable<string>, IComparable<LocId>
 {
     public static implicit operator string(LocId locId)
     {
@@ -23,4 +23,21 @@ public readonly record struct LocId(string Id)
     {
         return new LocId(id);
     }
+
+    public static implicit operator LocId?(string? id)
+    {
+        return id == null ? default(LocId?) : new LocId(id);
+    }
+
+    public bool Equals(string? other)
+    {
+        return Id == other;
+    }
+
+    public int CompareTo(LocId other)
+    {
+        return string.Compare(Id, other.Id, StringComparison.Ordinal);
+    }
+
+    public override string ToString() => Id ?? String.Empty;
 }

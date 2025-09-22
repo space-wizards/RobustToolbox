@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using Robust.Shared.IoC;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
+using Robust.Shared.Prototypes;
 
 namespace Robust.Shared.GameObjects
 {
@@ -9,17 +11,24 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     public abstract class BoundUserInterface : IDisposable
     {
-        [Dependency] protected readonly IEntityManager EntMan = default!;
-        [Dependency] private readonly ISharedPlayerManager _playerManager = default!;
+        [Dependency] protected internal readonly IEntityManager EntMan = default!;
+        [Dependency] protected readonly ISharedPlayerManager PlayerManager = default!;
         protected readonly SharedUserInterfaceSystem UiSystem;
+
+        public bool IsOpened { get; protected set; }
 
         public readonly Enum UiKey;
         public EntityUid Owner { get; }
 
         /// <summary>
+        /// Additional controls to be disposed when this BUI is disposed.
+        /// </summary>
+        internal List<IDisposable>? Disposals;
+
+        /// <summary>
         ///     The last received state object sent from the server.
         /// </summary>
-        protected BoundUserInterfaceState? State { get; private set; }
+        protected internal BoundUserInterfaceState? State { get; internal set; }
 
         protected BoundUserInterface(EntityUid owner, Enum uiKey)
         {
@@ -34,21 +43,55 @@ namespace Robust.Shared.GameObjects
         ///     Invoked when the UI is opened.
         ///     Do all creation and opening of things like windows in here.
         /// </summary>
+        [MustCallBase]
         protected internal virtual void Open()
         {
+            if (IsOpened)
+                return;
+
+            IsOpened = true;
         }
 
         /// <summary>
         ///     Invoked when the server uses <c>SetState</c>.
         /// </summary>
-        protected virtual void UpdateState(BoundUserInterfaceState state)
+        protected internal virtual void UpdateState(BoundUserInterfaceState state)
         {
+        }
+
+        /// <summary>
+        /// Calls <see cref="UpdateState"/> if the supplied state exists and calls <see cref="Update"/>
+        /// </summary>
+        public void Update<T>() where T : BoundUserInterfaceState
+        {
+            if (UiSystem.TryGetUiState<T>(Owner, UiKey, out var state))
+            {
+                UpdateState(state);
+            }
+
+            Update();
+        }
+
+        /// <summary>
+        /// Generic update method called whenever the BUI should update.
+        /// </summary>
+        public virtual void Update()
+        {
+
+        }
+
+        /// <summary>
+        /// Helper method that gets called upon prototype reload.
+        /// </summary>
+        public virtual void OnProtoReload(PrototypesReloadedEventArgs args)
+        {
+
         }
 
         /// <summary>
         ///     Invoked when the server sends an arbitrary message.
         /// </summary>
-        protected virtual void ReceiveMessage(BoundUserInterfaceMessage message)
+        protected internal virtual void ReceiveMessage(BoundUserInterfaceMessage message)
         {
         }
 
@@ -57,7 +100,11 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void Close()
         {
-            UiSystem.TryCloseUi(_playerManager.LocalSession, Owner, UiKey);
+            if (!IsOpened)
+                return;
+
+            IsOpened = false;
+            UiSystem.CloseUi(Owner, UiKey, PlayerManager.LocalEntity, predicted: true);
         }
 
         /// <summary>
@@ -65,26 +112,12 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void SendMessage(BoundUserInterfaceMessage message)
         {
-            UiSystem.SendUiMessage(this, message);
+            UiSystem.ClientSendUiMessage(Owner, UiKey, message);
         }
 
         public void SendPredictedMessage(BoundUserInterfaceMessage message)
         {
             UiSystem.SendPredictedUiMessage(this, message);
-        }
-
-        internal void InternalReceiveMessage(BoundUserInterfaceMessage message)
-        {
-            switch (message)
-            {
-                case UpdateBoundStateMessage updateBoundStateMessage:
-                    State = updateBoundStateMessage.State;
-                    UpdateState(State);
-                    break;
-                default:
-                    ReceiveMessage(message);
-                    break;
-            }
         }
 
         ~BoundUserInterface()
@@ -100,6 +133,18 @@ namespace Robust.Shared.GameObjects
 
         protected virtual void Dispose(bool disposing)
         {
+            if (disposing)
+            {
+                if (Disposals != null)
+                {
+                    foreach (var control in Disposals)
+                    {
+                        control.Dispose();
+                    }
+
+                    Disposals = null;
+                }
+            }
         }
     }
 }

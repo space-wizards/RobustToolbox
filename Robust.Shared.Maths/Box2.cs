@@ -75,6 +75,15 @@ namespace Robust.Shared.Maths
             get => new(Width, Height);
         }
 
+        /// <summary>
+        /// Returns the highest of width or height.
+        /// </summary>
+        public readonly float MaxDimension
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => MathF.Max(Height, Width);
+        }
+
         public readonly Vector2 Center
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -86,6 +95,8 @@ namespace Robust.Shared.Maths
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => (TopRight - BottomLeft) * 0.5f;
         }
+
+        public static Box2 Empty = new Box2();
 
         /// <summary>
         ///     A 1x1 unit box with the origin centered.
@@ -175,13 +186,13 @@ namespace Robust.Shared.Maths
         [Pure]
         public readonly Box2 Intersect(in Box2 other)
         {
-            var ourLeftBottom = new System.Numerics.Vector2(Left, Bottom);
-            var ourRightTop = new System.Numerics.Vector2(Right, Top);
-            var otherLeftBottom = new System.Numerics.Vector2(other.Left, other.Bottom);
-            var otherRightTop = new System.Numerics.Vector2(other.Right, other.Top);
+            var ourLeftBottom = BottomLeft;
+            var ourRightTop = TopRight;
+            var otherLeftBottom = other.BottomLeft;
+            var otherRightTop = other.TopRight;
 
-            var max = System.Numerics.Vector2.Max(ourLeftBottom, otherLeftBottom);
-            var min = System.Numerics.Vector2.Min(ourRightTop, otherRightTop);
+            var max = Vector2.Max(ourLeftBottom, otherLeftBottom);
+            var min = Vector2.Min(ourRightTop, otherRightTop);
 
             if (max.X <= min.X && max.Y <= min.Y)
                 return new Box2(max.X, max.Y, min.X, min.Y);
@@ -201,6 +212,48 @@ namespace Robust.Shared.Maths
             return surfaceIntersect / (Area(this) + Area(other) - surfaceIntersect);
         }
 
+        public readonly bool IsValid()
+        {
+            var d = Vector2.Subtract(TopRight, BottomLeft);
+            bool valid = d.X >= 0.0f && d.Y >= 0.0f;
+            valid = valid && BottomLeft.IsValid() && TopRight.IsValid();
+            return valid;
+        }
+
+        /// <summary>
+        /// Enlarges this box to contain another box.
+        /// </summary>
+        public bool EnlargeAabb(Box2 other)
+        {
+            var changed = false;
+
+            if (other.Left < Left)
+            {
+                Left = other.Left;
+                changed = true;
+            }
+
+            if (other.Bottom < Bottom)
+            {
+                Bottom = other.Bottom;
+                changed = true;
+            }
+
+            if (Right < other.Right)
+            {
+                Right = other.Right;
+                changed = true;
+            }
+
+            if (other.Top < Top)
+            {
+                Top = other.Top;
+                changed = true;
+            }
+
+            return changed;
+        }
+
         /// <summary>
         ///     Returns the smallest rectangle that contains both of the rectangles.
         /// </summary>
@@ -208,13 +261,13 @@ namespace Robust.Shared.Maths
         [Pure]
         public readonly Box2 Union(in Box2 other)
         {
-            var ourLeftBottom = new System.Numerics.Vector2(Left, Bottom);
-            var otherLeftBottom = new System.Numerics.Vector2(other.Left, other.Bottom);
-            var ourRightTop = new System.Numerics.Vector2(Right, Top);
-            var otherRightTop = new System.Numerics.Vector2(other.Right, other.Top);
+            var ourLeftBottom = BottomLeft;
+            var otherLeftBottom = other.BottomLeft;
+            var ourRightTop = TopRight;
+            var otherRightTop = other.TopRight;
 
-            var leftBottom = System.Numerics.Vector2.Min(ourLeftBottom, otherLeftBottom);
-            var rightTop = System.Numerics.Vector2.Max(ourRightTop, otherRightTop);
+            var leftBottom = Vector2.Min(ourLeftBottom, otherLeftBottom);
+            var rightTop = Vector2.Max(ourRightTop, otherRightTop);
 
             if (leftBottom.X <= rightTop.X && leftBottom.Y <= rightTop.Y)
                 return new Box2(leftBottom.X, leftBottom.Y, rightTop.X, rightTop.Y);
@@ -392,13 +445,22 @@ namespace Robust.Shared.Maths
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Pure]
+        public static Box2 Union(Box2 a, Box2 b)
+        {
+            return new Box2(
+                Vector2.Min(a.BottomLeft, b.BottomLeft),
+                Vector2.Max(a.TopRight, b.TopRight));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [Pure]
         public static Box2 Union(in Vector2 a, in Vector2 b)
         {
-            var vecA = new System.Numerics.Vector2(a.X, a.Y);
-            var vecB = new System.Numerics.Vector2(b.X, b.Y);
+            var vecA = new Vector2(a.X, a.Y);
+            var vecB = new Vector2(b.X, b.Y);
 
-            var min = System.Numerics.Vector2.Min(vecA, vecB);
-            var max = System.Numerics.Vector2.Max(vecA, vecB);
+            var min = Vector2.Min(vecA, vecB);
+            var max = Vector2.Max(vecA, vecB);
 
             return new Box2(min.X, min.Y, max.X, max.Y);
         }
@@ -410,12 +472,12 @@ namespace Robust.Shared.Maths
         [Pure]
         public readonly Box2 ExtendToContain(Vector2 vec)
         {
-            var leftBottom = new System.Numerics.Vector2(Left, Bottom);
-            var rightTop = new System.Numerics.Vector2(Right, Top);
-            var vector = new System.Numerics.Vector2(vec.X, vec.Y);
+            var leftBottom = new Vector2(Left, Bottom);
+            var rightTop = new Vector2(Right, Top);
+            var vector = new Vector2(vec.X, vec.Y);
 
-            var min = System.Numerics.Vector2.Min(vector, leftBottom);
-            var max = System.Numerics.Vector2.Max(vector, rightTop);
+            var min = Vector2.Min(vector, leftBottom);
+            var max = Vector2.Max(vector, rightTop);
 
             return new Box2(min.X, min.Y, max.X, max.Y);
         }

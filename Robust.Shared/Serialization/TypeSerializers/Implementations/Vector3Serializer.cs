@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Numerics;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager;
@@ -37,7 +38,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         {
             if (!VectorSerializerUtility.TryParseArgs(node.Value, 3, out var args))
             {
-                throw new InvalidMappingException($"Could not parse {nameof(Vector3)}: '{node.Value}'");
+                return new ErrorNode(node, "Failed parsing values for Vector3.");
             }
 
             return float.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out _) &&
@@ -59,7 +60,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         public Vector3 CreateCopy(ISerializationManager serializationManager, Vector3 source,
             IDependencyCollection dependencies, SerializationHookContext hookCtx, ISerializationContext? context = null)
         {
-            return new(source);
+            return source;
         }
     }
 }

@@ -1,5 +1,6 @@
 using System.IO;
 using Lidgren.Network;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
@@ -31,7 +32,8 @@ namespace Robust.Shared.Network.Messages
         {
             RequestId = buffer.ReadUInt32();
             var length = buffer.ReadInt32();
-            using var stream = buffer.ReadAlignedMemory(length);
+            using var stream = RobustMemoryManager.GetMemoryStream(length);
+            buffer.ReadAlignedMemory(stream, length);
             Blob = serializer.Deserialize<ViewVariablesBlob>(stream);
         }
 

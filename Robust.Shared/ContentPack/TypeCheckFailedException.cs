@@ -18,11 +18,5 @@ namespace Robust.Shared.ContentPack
         public TypeCheckFailedException(string message, Exception inner) : base(message, inner)
         {
         }
-
-        protected TypeCheckFailedException(
-            SerializationInfo info,
-            StreamingContext context) : base(info, context)
-        {
-        }
     }
 }

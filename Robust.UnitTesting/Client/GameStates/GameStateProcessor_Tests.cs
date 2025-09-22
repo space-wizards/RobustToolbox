@@ -3,6 +3,7 @@ using NUnit.Framework;
 using Robust.Client.GameStates;
 using Robust.Client.Timing;
 using Robust.Shared.GameStates;
+using Robust.Shared.Log;
 using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Client.GameStates
@@ -17,7 +18,9 @@ namespace Robust.UnitTesting.Client.GameStates
             timingMock.SetupProperty(p => p.CurTick);
 
             var timing = timingMock.Object;
-            var processor = new GameStateProcessor(timing);
+            var managerMock = new Mock<IClientGameStateManager>();
+            var logMock = new Mock<ISawmill>();
+            var processor = new GameStateProcessor(managerMock.Object, timing, logMock.Object);
             processor.Interpolation = true;
 
             processor.AddNewState(GameStateFactory(0, 1));
@@ -37,7 +40,9 @@ namespace Robust.UnitTesting.Client.GameStates
             timingMock.SetupProperty(p => p.CurTick);
 
             var timing = timingMock.Object;
-            var processor = new GameStateProcessor(timing);
+            var managerMock = new Mock<IClientGameStateManager>();
+            var logMock = new Mock<ISawmill>();
+            var processor = new GameStateProcessor(managerMock.Object, timing, logMock.Object);
 
             processor.AddNewState(GameStateFactory(0, 1));
             processor.AddNewState(GameStateFactory(1, 2));
@@ -64,7 +69,9 @@ namespace Robust.UnitTesting.Client.GameStates
             timingMock.SetupProperty(p => p.CurTick);
 
             var timing = timingMock.Object;
-            var processor = new GameStateProcessor(timing);
+            var managerMock = new Mock<IClientGameStateManager>();
+            var logMock = new Mock<ISawmill>();
+            var processor = new GameStateProcessor(managerMock.Object, timing, logMock.Object);
 
             processor.AddNewState(GameStateFactory(0, 1));
             processor.AddNewState(GameStateFactory(1, 2));
@@ -74,7 +81,7 @@ namespace Robust.UnitTesting.Client.GameStates
             timing.LastProcessedTick = new GameTick(2);
             processor.TryGetServerState(out var state, out _);
 
-            Assert.NotNull(state);
+            Assert.That(state, Is.Not.Null);
             Assert.That(state!.ToSequence.Value, Is.EqualTo(1));
         }
 
@@ -177,13 +184,15 @@ namespace Robust.UnitTesting.Client.GameStates
             timingMock.SetupProperty(p => p.TickTimingAdjustment);
 
             var timing = timingMock.Object;
-            var processor = new GameStateProcessor(timing);
+            var managerMock = new Mock<IClientGameStateManager>();
+            var logMock = new Mock<ISawmill>();
+            var processor = new GameStateProcessor(managerMock.Object, timing, logMock.Object);
 
             processor.AddNewState(GameStateFactory(0, 1));
             processor.AddNewState(GameStateFactory(1, 2));
             processor.AddNewState(GameStateFactory(2, 3)); // buffer is now full, otherwise cannot calculate states.
 
-            processor.LastFullStateRequested = null;
+            processor.OnFullStateReceived();
             timing.LastProcessedTick = timing.LastRealTick = new GameTick(1);
 
             return (timing, processor);

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Is = NUnit.Framework.Is;
 
 namespace Robust.UnitTesting.Shared.Toolshed;
 
@@ -16,9 +15,9 @@ public sealed class ArithmeticTest : ToolshedTest
         await Server.WaitAssertion(() =>
         {
             // Toolshed always parses left-to-right with no precedence.
-            Assert.That(1.0f / 3.0f, Is.EqualTo(InvokeCommand<float>("f 1 / 3")));
-            Assert.That((1.0f + 1.0f) / 3.0f, Is.EqualTo(InvokeCommand<float>("f 1 + 1 / 3")));
-            Assert.That(float.Pow(2.0f + 2.0f, 3.0f), Is.EqualTo(InvokeCommand<float>("f 2 + 2 pow 3")));
+            Assert.That(InvokeCommand<float>("f 1 / 3"), Is.EqualTo(1.0f / 3.0f));
+            Assert.That(InvokeCommand<float>("f 1 + 1 / 3"), Is.EqualTo((1.0f + 1.0f) / 3.0f));
+            Assert.That(InvokeCommand<float>("f 2 + 2 pow 3"), Is.EqualTo(float.Pow(2.0f + 2.0f, 3.0f)));
         });
     }
     [Test]
@@ -64,7 +63,7 @@ public sealed class ArithmeticTest : ToolshedTest
                 list.Add(i + 1);
             }
 
-            Assert.That(list, Is.EquivalentTo(InvokeCommand<IEnumerable<float>>("f 0 iterate + 1 100")));
+            Assert.That(list, Is.EquivalentTo(InvokeCommand<IEnumerable<float>>("f 0 iterate { + 1 } 100")));
 
         });
     }

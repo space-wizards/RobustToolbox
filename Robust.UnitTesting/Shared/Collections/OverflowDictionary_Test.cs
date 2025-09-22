@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
@@ -23,8 +23,8 @@ public sealed class OverflowDictionary_Test
         var dict = new OverflowDictionary<int, int>(1, (_) => disposedCalled++);
         dict.Add(0,0);
         dict.Add(1,0);
-        Assert.False(dict.ContainsKey(0));
-        Assert.True(dict.ContainsKey(1));
+        Assert.That(dict.ContainsKey(0), Is.False);
+        Assert.That(dict.ContainsKey(1));
         Assert.That(disposedCalled, Is.EqualTo(1));
         Assert.That(dict.Count, Is.EqualTo(1));
     }
@@ -56,7 +56,7 @@ public sealed class OverflowDictionary_Test
 
         if(overlap > 0)
         {
-            Assert.False(dict.ContainsKey(0));
+            Assert.That(dict.ContainsKey(0), Is.False);
             Assert.That(dict.Count, Is.EqualTo(test.size));
         }
         else

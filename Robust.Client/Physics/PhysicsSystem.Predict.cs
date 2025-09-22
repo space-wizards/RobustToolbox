@@ -1,13 +1,14 @@
 using System.Buffers;
 using System.Collections.Generic;
-using Robust.Client.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map.Components;
+using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Systems;
+using Robust.Shared.Player;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Physics;
@@ -20,8 +21,8 @@ public sealed partial class PhysicsSystem
     public override void Initialize()
     {
         base.Initialize();
-        SubscribeLocalEvent<PlayerAttachedEvent>(OnAttach);
-        SubscribeLocalEvent<PlayerDetachedEvent>(OnDetach);
+        SubscribeLocalEvent<LocalPlayerAttachedEvent>(OnAttach);
+        SubscribeLocalEvent<LocalPlayerDetachedEvent>(OnDetach);
         SubscribeLocalEvent<PhysicsComponent, JointAddedEvent>(OnJointAdded);
         SubscribeLocalEvent<PhysicsComponent, JointRemovedEvent>(OnJointRemoved);
     }
@@ -63,12 +64,12 @@ public sealed partial class PhysicsSystem
         UpdateIsPredicted(args.Joint.BodyBUid);
     }
 
-    private void OnAttach(PlayerAttachedEvent ev)
+    private void OnAttach(LocalPlayerAttachedEvent ev)
     {
         UpdateIsPredicted(ev.Entity);
     }
 
-    private void OnDetach(PlayerDetachedEvent ev)
+    private void OnDetach(LocalPlayerDetachedEvent ev)
     {
         UpdateIsPredicted(ev.Entity);
     }
@@ -89,19 +90,16 @@ public sealed partial class PhysicsSystem
         // existing contacts for predicted entities before performing any actual prediction.
 
         var contacts = new List<Contact>();
-        var maps = new HashSet<EntityUid>();
 
         var enumerator = AllEntityQuery<PredictedPhysicsComponent, PhysicsComponent, TransformComponent>();
-        while (enumerator.MoveNext(out var _, out var physics, out var xform))
+        _broadphase.FindNewContacts();
+
+        while (enumerator.MoveNext(out _, out var physics, out var xform))
         {
             DebugTools.Assert(physics.Predict);
 
             if (xform.MapUid is not { } map)
                 continue;
-
-            if (maps.Add(map) && TryComp(map, out PhysicsMapComponent? physMap) &&
-                TryComp(map, out MapComponent? mapComp))
-                _broadphase.FindNewContacts(physMap, mapComp.MapId);
 
             contacts.AddRange(physics.Contacts);
         }
@@ -155,7 +153,6 @@ public sealed partial class PhysicsSystem
 
             if (activeA == false && activeB == false)
             {
-                contact.IsTouching = false;
                 continue;
             }
 
@@ -207,8 +204,8 @@ public sealed partial class PhysicsSystem
             var contact = contacts[i];
             var uidA = contact.EntityA;
             var uidB = contact.EntityB;
-            var bodyATransform = GetPhysicsTransform(uidA, xformQuery.GetComponent(uidA), xformQuery);
-            var bodyBTransform = GetPhysicsTransform(uidB, xformQuery.GetComponent(uidB), xformQuery);
+            var bodyATransform = GetPhysicsTransform(uidA, xformQuery.GetComponent(uidA));
+            var bodyBTransform = GetPhysicsTransform(uidB, xformQuery.GetComponent(uidB));
             contact.UpdateIsTouching(bodyATransform, bodyBTransform);
         }
 

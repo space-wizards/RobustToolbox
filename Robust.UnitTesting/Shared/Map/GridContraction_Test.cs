@@ -18,21 +18,22 @@ namespace Robust.UnitTesting.Shared.Map
 
             var entManager = server.ResolveDependency<IEntityManager>();
             var mapManager = server.ResolveDependency<IMapManager>();
+            var mapSystem = entManager.EntitySysManager.GetEntitySystem<SharedMapSystem>();
 
             await server.WaitAssertion(() =>
             {
-                var mapId = mapManager.CreateMap();
-                var grid = mapManager.CreateGrid(mapId);
+                entManager.System<SharedMapSystem>().CreateMap(out var mapId);
+                var grid = mapManager.CreateGridEntity(mapId);
                 var gridEntity = grid.Owner;
 
                 for (var i = 0; i < 10; i++)
                 {
-                    grid.SetTile(new Vector2i(i, 0), new Tile(1));
+                    mapSystem.SetTile(grid, new Vector2i(i, 0), new Tile(1));
                 }
 
                 for (var i = 10; i >= 0; i--)
                 {
-                    grid.SetTile(new Vector2i(i, 0), Tile.Empty);
+                    mapSystem.SetTile(grid, new Vector2i(i, 0), Tile.Empty);
                 }
 
                 Assert.That(entManager.Deleted(gridEntity));
@@ -56,23 +57,24 @@ namespace Robust.UnitTesting.Shared.Map
 
             var entManager = server.ResolveDependency<IEntityManager>();
             var mapManager = server.ResolveDependency<IMapManager>();
+            var mapSystem = entManager.System<SharedMapSystem>();
 
             await server.WaitAssertion(() =>
             {
-                var mapId = mapManager.CreateMap();
-                var grid = mapManager.CreateGrid(mapId);
+                entManager.System<SharedMapSystem>().CreateMap(out var mapId);
+                var grid = mapManager.CreateGridEntity(mapId);
 
                 for (var i = 0; i < 10; i++)
                 {
-                    grid.SetTile(new Vector2i(i, 0), new Tile(1));
+                    mapSystem.SetTile(grid, new Vector2i(i, 0), new Tile(1));
                 }
 
                 for (var i = 10; i >= 0; i--)
                 {
-                    grid.SetTile(new Vector2i(i, 0), Tile.Empty);
+                    mapSystem.SetTile(grid, new Vector2i(i, 0), Tile.Empty);
                 }
 
-                Assert.That(!((!entManager.EntityExists(grid.Owner) ? EntityLifeStage.Deleted : entManager.GetComponent<MetaDataComponent>(grid.Owner).EntityLifeStage) >= EntityLifeStage.Deleted));
+                Assert.That(!((!entManager.EntityExists(grid) ? EntityLifeStage.Deleted : entManager.GetComponent<MetaDataComponent>(grid).EntityLifeStage) >= EntityLifeStage.Deleted));
             });
         }
     }

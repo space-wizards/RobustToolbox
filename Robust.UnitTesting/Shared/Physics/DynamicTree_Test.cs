@@ -72,7 +72,7 @@ namespace Robust.UnitTesting.Shared.Physics
             {
                 for (var i = 0; i < aabbs1.Length; ++i)
                 {
-                    Assert.True(dt.Add(i), $"Add {i}");
+                    Assert.That(dt.Add(i), $"Add {i}");
                 }
             });
 
@@ -88,7 +88,7 @@ namespace Robust.UnitTesting.Shared.Physics
             {
                 for (var i = 0; i < aabbs1.Length; ++i)
                 {
-                    Assert.True(dt.Add(i), $"Add {i}");
+                    Assert.That(dt.Add(i), $"Add {i}");
                 }
             });
 
@@ -96,7 +96,7 @@ namespace Robust.UnitTesting.Shared.Physics
             {
                 for (var i = 0; i < aabbs1.Length; ++i)
                 {
-                    Assert.False(dt.Add(i), $"Add Dupe {i}");
+                    Assert.That(dt.Add(i), Is.False, $"Add Dupe {i}");
                 }
             });
         }
@@ -110,7 +110,7 @@ namespace Robust.UnitTesting.Shared.Physics
             {
                 for (var i = 0; i < aabbs1.Length; ++i)
                 {
-                    Assert.False(dt.Remove(i), $"Remove {i}");
+                    Assert.That(dt.Remove(i), Is.False, $"Remove {i}");
                 }
             });
         }
@@ -124,7 +124,7 @@ namespace Robust.UnitTesting.Shared.Physics
             {
                 for (var i = 0; i < aabbs1.Length; ++i)
                 {
-                    Assert.False(dt.Update(i), $"Update {i}");
+                    Assert.That(dt.Update(i), Is.False, $"Update {i}");
                 }
             });
         }
@@ -138,7 +138,7 @@ namespace Robust.UnitTesting.Shared.Physics
             {
                 for (var i = 0; i < aabbs1.Length; ++i)
                 {
-                    Assert.True(dt.Add(i), $"Add {i}");
+                    Assert.That(dt.Add(i), $"Add {i}");
                 }
             });
 
@@ -146,7 +146,7 @@ namespace Robust.UnitTesting.Shared.Physics
             {
                 for (var i = aabbs1.Length; i < aabbs1.Length + aabbs2.Length; ++i)
                 {
-                    Assert.False(dt.Remove(i), $"Remove {i}");
+                    Assert.That(dt.Remove(i), Is.False, $"Remove {i}");
                 }
             });
         }
@@ -160,14 +160,14 @@ namespace Robust.UnitTesting.Shared.Physics
             {
                 for (var i = 0; i < aabbs1.Length; ++i)
                 {
-                    Assert.True(dt.Add(i), $"Add {i}");
+                    Assert.That(dt.Add(i), $"Add {i}");
                 }
             });
 
             Assert.Multiple(() => {
                 for (var i = aabbs1.Length; i < aabbs1.Length + aabbs2.Length; ++i)
                 {
-                    Assert.False(dt.Update(i), $"Update {i}");
+                    Assert.That(dt.Update(i), Is.False, $"Update {i}");
                 }
             });
         }
@@ -182,7 +182,7 @@ namespace Robust.UnitTesting.Shared.Physics
             {
                 for (var i = 0; i < aabbs.Length; ++i)
                 {
-                    Assert.True(dt.Add(i), $"Add {i}");
+                    Assert.That(dt.Add(i), $"Add {i}");
                 }
             });
             aabbs = aabbs2;
@@ -191,7 +191,7 @@ namespace Robust.UnitTesting.Shared.Physics
             {
                 for (var i = 0; i < aabbs.Length; ++i)
                 {
-                    Assert.True(dt.Remove(i), $"Remove {i}");
+                    Assert.That(dt.Remove(i), $"Remove {i}");
                 }
             });
         }
@@ -204,7 +204,7 @@ namespace Robust.UnitTesting.Shared.Physics
             {
                 for (var i = 0; i < aabbs1.Length; ++i)
                 {
-                    Assert.True(dt.Add(i), $"Add {i}");
+                    Assert.That(dt.Add(i), $"Add {i}");
                 }
             });
 

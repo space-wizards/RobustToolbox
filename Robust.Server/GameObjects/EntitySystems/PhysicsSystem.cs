@@ -20,7 +20,8 @@ namespace Robust.Server.GameObjects
         {
             base.Initialize();
             LoadMetricCVar();
-            _configurationManager.OnValueChanged(CVars.MetricsEnabled, _ => LoadMetricCVar());
+
+            Subs.CVar(_configurationManager, CVars.MetricsEnabled, _ => LoadMetricCVar());
         }
 
         private void LoadMetricCVar()

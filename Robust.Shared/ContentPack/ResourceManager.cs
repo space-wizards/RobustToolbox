@@ -15,6 +15,7 @@ namespace Robust.Shared.ContentPack
     /// <summary>
     ///     Virtual file system for all disk resources.
     /// </summary>
+    [Virtual]
     internal partial class ResourceManager : IResourceManagerInternal
     {
         [Dependency] private readonly IConfigurationManager _config = default!;
@@ -34,19 +35,19 @@ namespace Robust.Shared.ContentPack
         private static readonly Regex BadPathCharacterRegex =
             new("[<>:\"|?*\0\\x01-\\x1f]", RegexOptions.IgnoreCase);
 
-        private ISawmill _sawmill = default!;
+        protected ISawmill Sawmill = default!;
 
         /// <inheritdoc />
         public IWritableDirProvider UserData { get; private set; } = default!;
 
         /// <inheritdoc />
-        public void Initialize(string? userData)
+        public virtual void Initialize(string? userData, bool hideRootDir)
         {
-            _sawmill = _logManager.GetSawmill("res");
+            Sawmill = _logManager.GetSawmill("res");
 
             if (userData != null)
             {
-                UserData = new WritableDirProvider(Directory.CreateDirectory(userData));
+                UserData = new WritableDirProvider(Directory.CreateDirectory(userData), hideRootDir);
             }
             else
             {
@@ -66,7 +67,7 @@ namespace Robust.Shared.ContentPack
             // no pack in config
             if (string.IsNullOrWhiteSpace(zipPath))
             {
-                _sawmill.Warning("No default ContentPack to load in configuration.");
+                Sawmill.Warning("No default ContentPack to load in configuration.");
                 return;
             }
 
@@ -90,7 +91,7 @@ namespace Robust.Shared.ContentPack
 
             //create new PackLoader
 
-            var loader = new PackLoader(packInfo, _sawmill);
+            var loader = new PackLoader(packInfo, Sawmill);
             AddRoot(prefix.Value, loader);
         }
 
@@ -98,7 +99,7 @@ namespace Robust.Shared.ContentPack
         {
             prefix = SanitizePrefix(prefix);
 
-            var loader = new PackLoader(zipStream, _sawmill);
+            var loader = new PackLoader(zipStream, Sawmill);
             AddRoot(prefix.Value, loader);
         }
 
@@ -272,8 +273,6 @@ namespace Robust.Shared.ContentPack
 
         public IEnumerable<string> ContentGetDirectoryEntries(ResPath path)
         {
-            ArgumentNullException.ThrowIfNull(path, nameof(path));
-
             if (!path.IsRooted)
                 throw new ArgumentException("Path is not rooted", nameof(path));
 
@@ -378,7 +377,13 @@ namespace Robust.Shared.ContentPack
             {
                 if (root is DirLoader loader)
                 {
-                    yield return new ResPath(loader.GetPath(new ResPath(@"/")));
+                    var rootDir = loader.GetPath(new ResPath(@"/"));
+
+                    // TODO: GET RID OF THIS.
+                    // This code shouldn't be passing OS disk paths through ResPath.
+                    rootDir = rootDir.Replace(Path.DirectorySeparatorChar, '/');
+
+                    yield return new ResPath(rootDir);
                 }
             }
         }

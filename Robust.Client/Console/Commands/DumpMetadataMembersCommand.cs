@@ -4,14 +4,14 @@ using Robust.Shared.ContentPack;
 
 namespace Robust.Client.Console.Commands
 {
-#if DEBUG
+#if TOOLS
     internal sealed class DumpMetadataMembersCommand : LocalizedCommands
     {
         public override string Command => "dmetamem";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var type = Type.GetType(args[0]);
+            var type = GetType(args[0]);
 
             if (type == null)
             {
@@ -24,6 +24,17 @@ namespace Robust.Client.Console.Commands
                 System.Console.WriteLine(@$"- ""{sig}""");
                 shell.WriteLine(sig);
             }
+        }
+
+        private Type? GetType(string name)
+        {
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                if (assembly.GetType(name) is { } type)
+                    return type;
+            }
+
+            return null;
         }
     }
 #endif

@@ -29,10 +29,9 @@ public partial class SpawnDeleteEntityBenchmark
             .InitializeInstance();
 
         _entityManager = _simulation.Resolve<IEntityManager>();
-
-        _mapCoords = new MapCoordinates(0, 0, new MapId(1));
-        var uid = _simulation.AddMap(_mapCoords.MapId);
-        _entCoords = new EntityCoordinates(uid, 0, 0);
+        var (map, mapId) = _simulation.CreateMap();
+        _mapCoords = new MapCoordinates(default, mapId);
+        _entCoords = new EntityCoordinates(map, 0, 0);
     }
 
     [Benchmark(Baseline = true)]

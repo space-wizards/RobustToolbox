@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.Loader;
 using Robust.Client.WebViewHook;
+using Robust.Shared.ContentPack;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
 

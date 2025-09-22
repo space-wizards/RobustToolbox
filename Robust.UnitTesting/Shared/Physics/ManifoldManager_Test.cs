@@ -5,6 +5,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
+using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting.Shared.Physics
 {
@@ -76,10 +77,7 @@ namespace Robust.UnitTesting.Shared.Physics
         {
             var transformB = new Transform(Vector2.One, 0f);
             var transformA = new Transform(transformB.Position + new Vector2(0.5f, 0.0f), 0f);
-            var manifold = new Manifold()
-            {
-                Points = new ManifoldPoint[2]
-            };
+            var manifold = new Manifold();
 
             var expectedManifold = new Manifold
             {
@@ -87,17 +85,24 @@ namespace Robust.UnitTesting.Shared.Physics
                 LocalNormal = new Vector2(-1, 0),
                 LocalPoint = new Vector2(-0.5f, 0),
                 PointCount = 2,
-                Points = new ManifoldPoint[]
-                {
-                    new() {LocalPoint = new Vector2(0.5f, -0.5f), Id = new ContactID {Key = 65795}},
-                    new() {LocalPoint = new Vector2(0.5f, 0.5f), Id = new ContactID {Key = 66051}}
-                }
+                Points = new FixedArray2<ManifoldPoint>(
+                    new ManifoldPoint
+                    {
+                        LocalPoint = new Vector2(0.5f, -0.5f),
+                        Id = new ContactID {Key = 65795}
+                    },
+                    new ManifoldPoint
+                    {
+                        LocalPoint = new Vector2(0.5f, 0.5f),
+                        Id = new ContactID {Key = 66051}
+                    }
+                )
             };
             _manifoldManager.CollidePolygons(ref manifold, _polyA, transformA, _polyB, transformB);
 
-            for (var i = 0; i < manifold.Points.Length; i++)
+            for (var i = 0; i < manifold.PointCount; i++)
             {
-                Assert.That(manifold.Points[i], Is.EqualTo(expectedManifold.Points[i]));
+                Assert.That(manifold.Points.AsSpan[i], Is.EqualTo(expectedManifold.Points.AsSpan[i]));
             }
 
             Assert.That(manifold, Is.EqualTo(expectedManifold));

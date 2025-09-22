@@ -68,6 +68,13 @@ namespace Robust.Shared.Network
         bool IsHandshakeComplete { get; }
 
         /// <summary>
+        /// Diagnostic indicating the maximum transmission unit being used for this connection.
+        /// </summary>
+        /// <seealso cref="CVars.NetMtu"/>
+        [ViewVariables]
+        public int CurrentMtu { get; }
+
+        /// <summary>
         ///     Creates a new NetMessage to be filled up and sent.
         /// </summary>
         /// <typeparam name="T">The derived NetMessage type to send.</typeparam>
@@ -94,6 +101,5 @@ namespace Robust.Shared.Network
         /// <param name="reason">Reason why it was disconnected.</param>
         /// <param name="sendBye">If false, we ghost the remote client and don't tell them they got disconnected properly.</param>
         void Disconnect(string reason, bool sendBye);
-
     }
 }

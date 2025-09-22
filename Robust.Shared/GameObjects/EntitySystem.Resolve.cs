@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -19,33 +20,39 @@ namespace Robust.Shared.GameObjects
         protected bool Resolve<TComp>(EntityUid uid, [NotNullWhen(true)] ref TComp? component, bool logMissing = true)
             where TComp : IComponent
         {
-            DebugTools.Assert(component == null || uid == component.Owner, "Specified Entity is not the component's Owner!");
+            DebugTools.AssertOwner(uid, component);
 
             if (component != null && !component.Deleted)
                 return true;
 
             var found = EntityManager.TryGetComponent(uid, out component);
 
-            if(logMissing && !found)
-                Log.Error($"Can't resolve \"{typeof(TComp)}\" on entity {uid}!\n{new StackTrace(1, true)}");
+            if (logMissing && !found)
+            {
+                Log.Error($"Can't resolve \"{typeof(TComp)}\" on entity {ToPrettyString(uid)}!\n{Environment.StackTrace}");
+            }
 
             return found;
         }
 
-        /// <inheritdoc cref="Resolve{TComp}"/>
+        /// <inheritdoc cref="Resolve{TComp}(Robust.Shared.GameObjects.EntityUid,ref TComp?,bool)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected bool Resolve(EntityUid uid, [NotNullWhen(true)] ref MetaDataComponent? component,
+        protected bool Resolve(
+            EntityUid uid,
+            [NotNullWhen(true)] ref MetaDataComponent? component,
             bool logMissing = true)
         {
-            return EntityManager.MetaQuery.Resolve(uid, ref component);
+            return EntityManager.MetaQuery.Resolve(uid, ref component, logMissing);
         }
 
-        /// <inheritdoc cref="Resolve{TComp}"/>
+        /// <inheritdoc cref="Resolve{TComp}(Robust.Shared.GameObjects.EntityUid,ref TComp?,bool)"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected bool Resolve(EntityUid uid, [NotNullWhen(true)] ref TransformComponent? component,
+        protected bool Resolve(
+            EntityUid uid,
+            [NotNullWhen(true)] ref TransformComponent? component,
             bool logMissing = true)
         {
-            return EntityManager.TransformQuery.Resolve(uid, ref component);
+            return EntityManager.TransformQuery.Resolve(uid, ref component, logMissing);
         }
 
         /// <summary>

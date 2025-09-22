@@ -7,9 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using Robust.Client.Graphics;
-using Robust.Shared;
 using Robust.Shared.Console;
-using Robust.Shared.Asynchronous;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
@@ -20,25 +18,41 @@ namespace Robust.Client.UserInterface
     [SuppressMessage("ReSharper", "IdentifierTypo")]
     [SuppressMessage("ReSharper", "CommentTypo")]
     [SuppressMessage("ReSharper", "StringLiteralTypo")]
-    internal sealed class FileDialogManager : IFileDialogManager
+    internal sealed class FileDialogManager : IFileDialogManager, IPostInjectInit
     {
         // Uses nativefiledialog to open the file dialogs cross platform.
         // On Linux, if the kdialog command is found, it will be used instead.
         // TODO: Should we maybe try to avoid running kdialog if the DE isn't KDE?
         [Dependency] private readonly IClydeInternal _clyde = default!;
+        [Dependency] private readonly ILogManager _log = default!;
+
+        private ISawmill _sawmill = default!;
 
         private bool _kDialogAvailable;
         private bool _checkedKDialogAvailable;
 
-        public async Task<Stream?> OpenFile(FileDialogFilters? filters = null)
+        public async Task<Stream?> OpenFile(
+            FileDialogFilters? filters = null,
+            FileAccess access = FileAccess.ReadWrite,
+            FileShare? share = null)
         {
-            var name = await GetOpenFileName(filters);
-            if (name == null)
-            {
-                return null;
-            }
+            if ((access & FileAccess.ReadWrite) != access)
+                throw new ArgumentException("Invalid file access specified");
 
-            return File.Open(name, FileMode.Open);
+            var realShare = share ?? (access == FileAccess.Read ? FileShare.Read : FileShare.None);
+            if ((realShare & (FileShare.ReadWrite | FileShare.Delete)) != realShare)
+                throw new ArgumentException("Invalid file share specified");
+
+            string? name;
+            if (_clyde.FileDialogImpl is { } clydeImpl)
+                name = await clydeImpl.OpenFile(filters);
+            else
+                name = await GetOpenFileName(filters);
+
+            if (name == null)
+                return null;
+
+            return File.Open(name, FileMode.Open, access, realShare);
         }
 
         private async Task<string?> GetOpenFileName(FileDialogFilters? filters)
@@ -51,21 +65,34 @@ namespace Robust.Client.UserInterface
             return await OpenFileNfd(filters);
         }
 
-        public async Task<(Stream, bool)?> SaveFile(FileDialogFilters? filters)
+        public async Task<(Stream, bool)?> SaveFile(
+            FileDialogFilters? filters,
+            bool truncate = true,
+            FileAccess access = FileAccess.ReadWrite,
+            FileShare share = FileShare.None)
         {
-            var name = await GetSaveFileName(filters);
+            if ((access & FileAccess.ReadWrite) != access)
+                throw new ArgumentException("Invalid file access specified");
+
+            if ((share & (FileShare.ReadWrite | FileShare.Delete)) != share)
+                throw new ArgumentException("Invalid file share specified");
+
+            string? name;
+            if (_clyde.FileDialogImpl is { } clydeImpl)
+                name = await clydeImpl.SaveFile(filters);
+            else
+                name = await GetSaveFileName(filters);
+
             if (name == null)
-            {
                 return null;
-            }
 
             try
             {
-                return (File.Open(name, FileMode.Open), true);
+                return (File.Open(name, truncate ? FileMode.Truncate : FileMode.Open, access, share), true);
             }
             catch (FileNotFoundException)
             {
-                return (File.Open(name, FileMode.Create), false);
+                return (File.Open(name, FileMode.Create, access, share), false);
             }
         }
 
@@ -243,7 +270,7 @@ namespace Robust.Client.UserInterface
 
                 if (_kDialogAvailable)
                 {
-                    Logger.DebugS("filedialog", "kdialog available.");
+                    _sawmill.Debug("kdialog available.");
                 }
             }
             catch
@@ -379,6 +406,11 @@ namespace Robust.Client.UserInterface
 
         [DllImport("swnfd.dll")]
         private static extern unsafe void sw_NFD_Free(void* ptr);
+
+        public void PostInject()
+        {
+            _sawmill = _log.GetSawmill("filedialog");
+        }
 
         private enum sw_nfdresult
         {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using Robust.Shared.Collections;
@@ -20,7 +20,7 @@ public sealed class OverflowQueue_Test
     {
         var queue = new OverflowQueue<int>(test.size);
 
-        Assert.False(queue.Contains(0));
+        Assert.That(queue.Contains(0), Is.False);
 
         for (int i = 0; i < test.iterations; i++)
         {
@@ -34,7 +34,7 @@ public sealed class OverflowQueue_Test
         }
 
         Assert.That(queue.Contains(test.iterations-1));
-        Assert.False(queue.Contains(-1));
+        Assert.That(queue.Contains(-1), Is.False);
 
         Assert.That(queue.Peek(), Is.EqualTo(overlap));
         var array = queue.ToArray();
@@ -51,6 +51,6 @@ public sealed class OverflowQueue_Test
         }
 
         Assert.Throws<InvalidOperationException>(() => queue.Dequeue());
-        Assert.False(queue.TryDequeue(out _));
+        Assert.That(queue.TryDequeue(out _), Is.False);
     }
 }

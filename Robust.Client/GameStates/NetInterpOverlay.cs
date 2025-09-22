@@ -1,21 +1,22 @@
+using System;
 using Robust.Shared.Enums;
 using Robust.Client.Graphics;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Containers;
-using Robust.Shared.Physics.Components;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.GameStates
 {
     internal sealed class NetInterpOverlay : Overlay
     {
+        private static readonly ProtoId<ShaderPrototype> UnshadedShader = "unshaded";
+
+        [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         private readonly EntityLookupSystem _lookup;
 
@@ -24,11 +25,16 @@ namespace Robust.Client.GameStates
         private readonly SharedContainerSystem _container;
         private readonly SharedTransformSystem _xform;
 
+        /// <summary>
+        /// When an entity stops lerping the overlay will continue to draw a box around the entity for this amount of time.
+        /// </summary>
+        public static readonly TimeSpan Delay = TimeSpan.FromSeconds(2f);
+
         public NetInterpOverlay(EntityLookupSystem lookup)
         {
             IoCManager.InjectDependencies(this);
             _lookup = lookup;
-            _shader = _prototypeManager.Index<ShaderPrototype>("unshaded").Instance();
+            _shader = _prototypeManager.Index(UnshadedShader).Instance();
             _container = _entityManager.System<SharedContainerSystem>();
             _xform = _entityManager.System<SharedTransformSystem>();
         }
@@ -40,18 +46,18 @@ namespace Robust.Client.GameStates
             var worldHandle = (DrawingHandleWorld) handle;
             var viewport = args.WorldAABB;
 
-            var query = _entityManager.AllEntityQueryEnumerator<PhysicsComponent, TransformComponent>();
-            while (query.MoveNext(out var uid, out var physics, out var transform))
+            var query = _entityManager.AllEntityQueryEnumerator<TransformComponent>();
+            while (query.MoveNext(out var uid, out var transform))
             {
                 // if not on the same map, continue
-                if (transform.MapID != _eyeManager.CurrentMap || _container.IsEntityInContainer(uid))
+                if (transform.MapID != args.MapId || _container.IsEntityInContainer(uid))
                     continue;
 
                 if (transform.GridUid == uid)
                     continue;
 
-                // This entity isn't lerping, no need to draw debug info for it
-                if(transform.NextPosition == null)
+                var delta = (_timing.CurTick.Value - transform.LastLerp.Value) * _timing.TickPeriod;
+                if(!transform.ActivelyLerping && delta > Delay)
                     continue;
 
                 var aabb = _lookup.GetWorldAABB(uid);
@@ -61,7 +67,9 @@ namespace Robust.Client.GameStates
                     continue;
 
                 var (pos, rot) = _xform.GetWorldPositionRotation(transform, _entityManager.GetEntityQuery<TransformComponent>());
-                var boxOffset = transform.NextPosition.Value - transform.LocalPosition;
+                var boxOffset = transform.NextPosition != null
+                    ? transform.NextPosition.Value - transform.LocalPosition
+                    : default;
                 var worldOffset = (rot - transform.LocalRotation).RotateVec(boxOffset);
 
                 var nextPos = pos + worldOffset;

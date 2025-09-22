@@ -8,6 +8,7 @@ using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Robust.Shared.Containers;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
 using Robust.Shared.Physics.Systems;
@@ -21,15 +22,32 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
         [Dependency] private readonly SharedMapSystem _map = default!;
+        [Dependency] private readonly MetaDataSystem _metaData = default!;
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
         [Dependency] private readonly INetManager _netMan = default!;
+        [Dependency] private readonly SharedContainerSystem _container = default!;
+        [Dependency] private readonly SharedGridTraversalSystem _traversal = default!;
 
+        private EntityQuery<MapComponent> _mapQuery;
         private EntityQuery<MapGridComponent> _gridQuery;
         private EntityQuery<MetaDataComponent> _metaQuery;
-        private EntityQuery<TransformComponent> _xformQuery;
+        protected EntityQuery<TransformComponent> XformQuery;
 
-        private readonly Queue<MoveEvent> _gridMoves = new();
-        private readonly Queue<MoveEvent> _otherMoves = new();
+        public delegate void MoveEventHandler(ref MoveEvent ev);
+
+        /// <summary>
+        ///     Invoked as an alternative to broadcasting move events, which can be expensive.
+        ///     Systems which want to subscribe broadcast to <see cref="MoveEvent"/> (which you probably shouldn't)
+        ///     should subscribe to this instead
+        /// </summary>
+        public event MoveEventHandler? OnGlobalMoveEvent;
+
+        /// <summary>
+        ///     Internal move event handlers. This gets invoked before the global & directed move events. This is mainly
+        ///     for exception tolerance, we want to ensure that PVS, physics & entity lookups get updated before some
+        ///     content code throws an exception.
+        /// </summary>
+        internal event MoveEventHandler? OnBeforeMoveEvent;
 
         public override void Initialize()
         {
@@ -37,9 +55,10 @@ namespace Robust.Shared.GameObjects
 
             UpdatesOutsidePrediction = true;
 
+            _mapQuery = GetEntityQuery<MapComponent>();
             _gridQuery = GetEntityQuery<MapGridComponent>();
             _metaQuery = GetEntityQuery<MetaDataComponent>();
-            _xformQuery = GetEntityQuery<TransformComponent>();
+            XformQuery = GetEntityQuery<TransformComponent>();
 
             SubscribeLocalEvent<TileChangedEvent>(MapManagerOnTileChanged);
             SubscribeLocalEvent<TransformComponent, ComponentInit>(OnCompInit);
@@ -47,30 +66,18 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<TransformComponent, ComponentGetState>(OnGetState);
             SubscribeLocalEvent<TransformComponent, ComponentHandleState>(OnHandleState);
             SubscribeLocalEvent<TransformComponent, GridAddEvent>(OnGridAdd);
-            SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
-        }
-
-        private void OnParentChange(ref EntParentChangedMessage ev)
-        {
-            // TODO: when PVS errors on live servers get fixed, wrap this whole subscription in an #if DEBUG block to speed up parent changes & entity deletion.
-            if (ev.Transform.ParentUid == EntityUid.Invalid)
-                return;
-
-            if (LifeStage(ev.Entity) >= EntityLifeStage.Terminating)
-                Log.Error($"Entity {ToPrettyString(ev.Entity)} is getting attached to a new parent while terminating. New parent: {ToPrettyString(ev.Transform.ParentUid)}. Trace: {Environment.StackTrace}");
-
-
-            if (LifeStage(ev.Transform.ParentUid) >= EntityLifeStage.Terminating)
-                Log.Error($"Entity {ToPrettyString(ev.Entity)} is attaching itself to a terminating entity {ToPrettyString(ev.Transform.ParentUid)}. Trace: {Environment.StackTrace}");
         }
 
         private void MapManagerOnTileChanged(ref TileChangedEvent e)
         {
-            if(e.NewTile.Tile != Tile.Empty)
-                return;
+            foreach (var change in e.Changes)
+            {
+                if(change.NewTile != Tile.Empty)
+                    continue;
 
-            // TODO optimize this for when multiple tiles get empties simultaneously (e.g., explosions).
-            DeparentAllEntsOnTile(e.NewTile.GridUid, e.NewTile.GridIndices);
+                // TODO optimize this for when multiple tiles get empties simultaneously (e.g., explosions).
+                DeparentAllEntsOnTile(e.Entity, change.GridIndices);
+            }
         }
 
         /// <summary>
@@ -82,20 +89,20 @@ namespace Robust.Shared.GameObjects
         /// </remarks>
         private void DeparentAllEntsOnTile(EntityUid gridId, Vector2i tileIndices)
         {
-            if (!TryComp(gridId, out BroadphaseComponent? lookup) || !_mapManager.TryGetGrid(gridId, out var grid))
+            if (!TryComp(gridId, out BroadphaseComponent? lookup) || !TryComp<MapGridComponent>(gridId, out var grid))
                 return;
 
-            if (!_xformQuery.TryGetComponent(gridId, out var gridXform))
+            if (!XformQuery.TryGetComponent(gridId, out var gridXform))
                 return;
 
-            if (!_xformQuery.TryGetComponent(gridXform.MapUid, out var mapTransform))
+            if (!XformQuery.TryGetComponent(gridXform.MapUid, out var mapTransform))
                 return;
 
             var aabb = _lookup.GetLocalBounds(tileIndices, grid.TileSize);
 
-            foreach (var entity in _lookup.GetEntitiesIntersecting(lookup, aabb, LookupFlags.Uncontained | LookupFlags.Approximate))
+            foreach (var entity in _lookup.GetLocalEntitiesIntersecting(lookup, aabb, LookupFlags.Uncontained | LookupFlags.Approximate))
             {
-                if (!_xformQuery.TryGetComponent(entity, out var xform) || xform.ParentUid != gridId)
+                if (!XformQuery.TryGetComponent(entity, out var xform) || xform.ParentUid != gridId)
                     continue;
 
                 if (!aabb.Contains(xform.LocalPosition))
@@ -104,51 +111,15 @@ namespace Robust.Shared.GameObjects
                 // If a tile is being removed due to an explosion or somesuch, some entities are likely being deleted.
                 // Avoid unnecessary entity updates.
                 if (EntityManager.IsQueuedForDeletion(entity))
-                    DetachParentToNull(entity, xform, gridXform);
+                    DetachEntity(entity, xform, MetaData(entity), gridXform);
                 else
                     SetParent(entity, xform, gridXform.MapUid.Value, mapTransform);
             }
         }
 
-        public void DeferMoveEvent(ref MoveEvent moveEvent)
-        {
-            if (EntityManager.HasComponent<MapGridComponent>(moveEvent.Sender))
-                _gridMoves.Enqueue(moveEvent);
-            else
-                _otherMoves.Enqueue(moveEvent);
-        }
-
-        public override void Update(float frameTime)
-        {
-            base.Update(frameTime);
-
-            // Process grid moves first.
-            Process(_gridMoves);
-            Process(_otherMoves);
-
-            void Process(Queue<MoveEvent> queue)
-            {
-                while (queue.TryDequeue(out var ev))
-                {
-                    if (EntityManager.Deleted(ev.Sender))
-                    {
-                        continue;
-                    }
-
-                    // Hopefully we can remove this when PVS gets updated to not use NaNs
-                    if (!ev.NewPosition.IsValid(EntityManager))
-                    {
-                        continue;
-                    }
-
-                    RaiseLocalEvent(ev.Sender, ref ev, true);
-                }
-            }
-        }
-
         public EntityCoordinates GetMoverCoordinates(EntityUid uid)
         {
-            return GetMoverCoordinates(uid, _xformQuery.GetComponent(uid));
+            return GetMoverCoordinates(uid, XformQuery.GetComponent(uid));
         }
 
         public EntityCoordinates GetMoverCoordinates(EntityUid uid, TransformComponent xform)
@@ -165,14 +136,14 @@ namespace Robust.Shared.GameObjects
             if (xform.GridUid == xform.ParentUid)
                 return xform.Coordinates;
 
-            DebugTools.Assert(!_mapManager.IsGrid(uid) && !_mapManager.IsMap(uid));
+            DebugTools.Assert(!_gridQuery.HasComp(uid) && !_mapQuery.HasComp(uid));
 
             // Not parented to grid so convert their pos back to the grid.
-            var worldPos = GetWorldPosition(xform, _xformQuery);
+            var worldPos = GetWorldPosition(xform, XformQuery);
 
             return xform.GridUid == null
                 ? new EntityCoordinates(xform.MapUid ?? xform.ParentUid, worldPos)
-                : new EntityCoordinates(xform.GridUid.Value, _xformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix.Transform(worldPos));
+                : new EntityCoordinates(xform.GridUid.Value, Vector2.Transform(worldPos, XformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix));
         }
 
         public EntityCoordinates GetMoverCoordinates(EntityCoordinates coordinates, EntityQuery<TransformComponent> xformQuery)
@@ -191,7 +162,7 @@ namespace Robust.Shared.GameObjects
             if (!parentUid.IsValid())
                 return coordinates;
 
-            var parentXform = _xformQuery.GetComponent(parentUid);
+            var parentXform = XformQuery.GetComponent(parentUid);
 
             // GriddUid is only set after init.
             if (!parentXform._gridInitialized)
@@ -206,14 +177,14 @@ namespace Robust.Shared.GameObjects
             if (mapId == parentUid)
                 return coordinates;
 
-            DebugTools.Assert(!_mapManager.IsGrid(parentUid) && !_mapManager.IsMap(parentUid));
+            DebugTools.Assert(!HasComp<MapGridComponent>(parentUid) && !HasComp<MapComponent>(parentUid));
 
             // Not parented to grid so convert their pos back to the grid.
-            var worldPos = GetWorldMatrix(parentXform, _xformQuery).Transform(coordinates.Position);
+            var worldPos = Vector2.Transform(coordinates.Position, GetWorldMatrix(parentXform, XformQuery));
 
             return parentXform.GridUid == null
                 ? new EntityCoordinates(mapId ?? parentUid, worldPos)
-                : new EntityCoordinates(parentXform.GridUid.Value, _xformQuery.GetComponent(parentXform.GridUid.Value).InvLocalMatrix.Transform(worldPos));
+                : new EntityCoordinates(parentXform.GridUid.Value, Vector2.Transform(worldPos, XformQuery.GetComponent(parentXform.GridUid.Value).InvLocalMatrix));
         }
 
         /// <summary>
@@ -231,15 +202,15 @@ namespace Robust.Shared.GameObjects
 
             // Is the entity directly parented to the grid?
             if (xform.GridUid == xform.ParentUid)
-                return (xform.Coordinates, GetWorldRotation(xform, _xformQuery));
+                return (xform.Coordinates, GetWorldRotation(xform, XformQuery));
 
-            DebugTools.Assert(!_mapManager.IsGrid(uid) && !_mapManager.IsMap(uid));
+            DebugTools.Assert(!HasComp<MapComponent>(uid) && !HasComp<MapComponent>(uid));
 
-            var (pos, worldRot) = GetWorldPositionRotation(xform, _xformQuery);
+            var (pos, worldRot) = GetWorldPositionRotation(xform, XformQuery);
 
             var coords = xform.GridUid == null
                 ? new EntityCoordinates(xform.MapUid ?? xform.ParentUid, pos)
-                : new EntityCoordinates(xform.GridUid.Value, _xformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix.Transform(pos));
+                : new EntityCoordinates(xform.GridUid.Value, Vector2.Transform(pos, XformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix));
 
             return (coords, worldRot);
         }
@@ -259,29 +230,103 @@ namespace Robust.Shared.GameObjects
             // We're on a grid, need to convert the coordinates to grid tiles.
             return _map.CoordinatesToTile(xform.GridUid.Value, Comp<MapGridComponent>(xform.GridUid.Value), xform.Coordinates);
         }
+
+        /// <summary>
+        /// Helper method that returns the grid tile an entity is on.
+        /// </summary>
+        public Vector2i GetGridTilePositionOrDefault(Entity<TransformComponent?> entity, MapGridComponent? grid = null)
+        {
+            var xform = entity.Comp;
+            if(!Resolve(entity.Owner, ref xform) || xform.GridUid == null)
+                return Vector2i.Zero;
+
+            if (!Resolve(xform.GridUid.Value, ref grid))
+                return Vector2i.Zero;
+
+            return _map.CoordinatesToTile(xform.GridUid.Value, grid, xform.Coordinates);
+        }
+
+        /// <summary>
+        /// Helper method that returns the grid tile an entity is on.
+        /// </summary>
+        public bool TryGetGridTilePosition(Entity<TransformComponent?> entity, out Vector2i indices, MapGridComponent? grid = null)
+        {
+            indices = default;
+            var xform = entity.Comp;
+            if(!Resolve(entity.Owner, ref xform) || xform.GridUid == null)
+                return false;
+
+            if (!Resolve(xform.GridUid.Value, ref grid))
+                return false;
+
+            indices = _map.CoordinatesToTile(xform.GridUid.Value, grid, xform.Coordinates);
+            return true;
+        }
+
+        internal void RaiseMoveEvent(
+            Entity<TransformComponent, MetaDataComponent> ent,
+            EntityUid oldParent,
+            Vector2 oldPosition,
+            Angle oldRotation,
+            EntityUid? oldMap,
+            bool checkTraversal = true)
+        {
+            var pos = ent.Comp1._parent == EntityUid.Invalid
+                ? default
+                : new EntityCoordinates(ent.Comp1._parent, ent.Comp1._localPosition);
+
+            var oldPos = oldParent == EntityUid.Invalid
+                ? default
+                : new EntityCoordinates(oldParent, oldPosition);
+
+            var ev = new MoveEvent(ent, oldPos, pos, oldRotation, ent.Comp1._localRotation);
+
+            if (oldParent != ent.Comp1._parent)
+            {
+                _physics.OnParentChange(ent, oldParent, oldMap);
+                OnBeforeMoveEvent?.Invoke(ref ev);
+                var entParentChangedMessage = new EntParentChangedMessage(ev.Sender, oldParent, oldMap, ev.Component);
+                RaiseLocalEvent(ev.Sender, ref entParentChangedMessage, true);
+            }
+            else
+            {
+                OnBeforeMoveEvent?.Invoke(ref ev);
+            }
+
+            RaiseLocalEvent(ev.Sender, ref ev);
+            OnGlobalMoveEvent?.Invoke(ref ev);
+
+            // Finally, handle grid traversal. This is handled separately to avoid out-of-order move events.
+            // I.e., if the traversal raises its own move event, this ensures that all the old move event handlers
+            // have finished running first. Ideally this shouldn't be required, but this is here just in case
+            if (checkTraversal)
+            {
+                _traversal.CheckTraverse(ent);
+            }
+        }
     }
 
     [ByRefEvent]
-    public readonly struct TransformStartupEvent
+    public readonly struct TransformStartupEvent(Entity<TransformComponent> entity)
     {
-        public readonly TransformComponent Component;
-
-        public TransformStartupEvent(TransformComponent component)
-        {
-            Component = component;
-        }
+        public readonly Entity<TransformComponent> Entity = entity;
+        public TransformComponent Component => Entity.Comp;
     }
 
     /// <summary>
     ///     Serialized state of a TransformComponent.
     /// </summary>
     [Serializable, NetSerializable]
-    internal sealed class TransformComponentState : ComponentState
+    internal readonly record struct TransformComponentState : IComponentState
     {
         /// <summary>
         ///     Current parent entity of this entity.
         /// </summary>
         public readonly NetEntity ParentID;
+        // TODO Delta-states
+        // If the transform component ever gets delta states, then the client state manager needs to be updated.
+        // Currently it explicitly looks for a "TransformComponentState" when determining an entity's parent for the
+        // sake of sorting the states that need to be applied base on the transform hierarchy.
 
         /// <summary>
         ///     Current position offset of the entity.

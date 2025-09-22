@@ -26,10 +26,10 @@ namespace Robust.Client.GameObjects
                 if (_enabled)
                 {
                     _lightOverlay = new DebugLightOverlay(
-                        EntitySystem.Get<EntityLookupSystem>(),
+                        EntityManager.System<EntityLookupSystem>(),
                         IoCManager.Resolve<IEyeManager>(),
                         IoCManager.Resolve<IMapManager>(),
-                        Get<LightTreeSystem>());
+                        EntityManager.System<LightTreeSystem>());
 
                     overlayManager.AddOverlay(_lightOverlay);
                 }
@@ -63,7 +63,7 @@ namespace Robust.Client.GameObjects
 
             protected internal override void Draw(in OverlayDrawArgs args)
             {
-                var map = _eyeManager.CurrentMap;
+                var map = args.MapId;
                 if (map == MapId.Nullspace) return;
 
                 foreach (var (_, treeComp) in _trees.GetIntersectingTrees(map, args.WorldBounds))

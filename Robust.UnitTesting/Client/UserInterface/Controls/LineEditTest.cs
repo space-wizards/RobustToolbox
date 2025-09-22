@@ -1,31 +1,16 @@
-﻿using Moq;
 using NUnit.Framework;
-using Robust.Client.Graphics;
-using Robust.Client.Graphics.Clyde;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Input;
-using Robust.Shared.IoC;
+using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Client.UserInterface.Controls
 {
     [TestFixture]
     [TestOf(typeof(LineEdit))]
-    public sealed class LineEditTest
+    public sealed class LineEditTest : RobustUnitTest
     {
-        [OneTimeSetUp]
-        public void Setup()
-        {
-            var uiMgr = new Mock<IUserInterfaceManagerInternal>();
-            var clyde = new ClydeHeadless();
-
-            var deps = IoCManager.InitThread();
-            deps.Clear();
-            deps.RegisterInstance<IUserInterfaceManagerInternal>(uiMgr.Object);
-            deps.RegisterInstance<IUserInterfaceManager>(uiMgr.Object);
-            deps.RegisterInstance<IClyde>(clyde);
-            deps.BuildGraph();
-        }
+        public override UnitTestProject Project => UnitTestProject.Client;
 
         [Test]
         public void TestRuneBackspace()

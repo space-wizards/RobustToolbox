@@ -1,4 +1,4 @@
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Console
@@ -30,8 +30,13 @@ namespace Robust.Shared.Console
         bool IsServer { get; }
 
         /// <summary>
-        /// The remote peer that owns this shell, or the local player if this is a client-side local shell (<see cref="IsLocal" /> is true and <see cref="IsClient"/> is true).
+        /// The remote peer that owns this shell, or the local player if this is a local shell.
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This parameter is null for commands executed directly from the server console, as that has no player.
+        /// </para>
+        /// </remarks>
         ICommonSession? Player { get; }
 
         /// <summary>
@@ -56,6 +61,11 @@ namespace Robust.Shared.Console
         void WriteLine(string text);
 
         void WriteLine(FormattedMessage message);
+
+        void WriteMarkup(string markup)
+        {
+            WriteLine(FormattedMessage.FromMarkupPermissive(markup));
+        }
 
         /// <summary>
         /// Write an error line to the console window.

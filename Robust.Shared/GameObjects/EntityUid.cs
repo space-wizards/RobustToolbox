@@ -4,7 +4,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
@@ -48,16 +47,14 @@ namespace Robust.Shared.GameObjects
 
         public static bool TryParse(ReadOnlySpan<char> uid, out EntityUid entityUid)
         {
-            try
+            if (!int.TryParse(uid, out var id))
             {
-                entityUid = Parse(uid);
-                return true;
-            }
-            catch (FormatException)
-            {
-                entityUid = Invalid;
+                entityUid = default;
                 return false;
             }
+
+            entityUid = new(id);
+            return true;
         }
 
         /// <summary>
@@ -86,7 +83,12 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return Id;
+            unchecked
+            {
+                // * 397 for whenever we get versioning back
+                // and avoid hashcode bugs in the interim.
+                return Id.GetHashCode() * 397;
+            }
         }
 
         /// <summary>
@@ -153,7 +155,7 @@ namespace Robust.Shared.GameObjects
             set
             {
                 if (MetaData is {} metaData)
-                    metaData.EntityName = value;
+                    IoCManager.Resolve<IEntityManager>().System<MetaDataSystem>().SetEntityName(this, value, metaData);
             }
         }
 
@@ -163,8 +165,11 @@ namespace Robust.Shared.GameObjects
             get => MetaData?.EntityDescription ?? string.Empty;
             set
             {
-                if (MetaData is {} metaData)
-                    metaData.EntityDescription = value;
+                if (MetaData is { } metaData)
+                {
+                    var entManager = IoCManager.Resolve<IEntityManager>();
+                    entManager.System<MetaDataSystem>().SetEntityDescription(this, value, metaData);
+                }
             }
         }
 

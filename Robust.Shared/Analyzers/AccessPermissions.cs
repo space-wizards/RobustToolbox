@@ -1,6 +1,6 @@
 using System;
 
-#if NETSTANDARD2_0
+#if ROBUST_ANALYZERS_IMPL
 namespace Robust.Shared.Analyzers.Implementation;
 #else
 namespace Robust.Shared.Analyzers;

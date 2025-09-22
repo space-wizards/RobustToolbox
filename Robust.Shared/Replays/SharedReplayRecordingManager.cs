@@ -34,6 +34,11 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
     // date format for default replay names. Like the sortable template, but without colons.
     public const string DefaultReplayNameFormat = "yyyy-MM-dd_HH-mm-ss";
 
+    // Kinda arbitrary but (after multiplying by 1024 cuz it's kB)
+    // needs to be less than (max array size) / 2.
+    // I don't think anybody's gonna write 256 MB of chunk at once yeah?
+    private const int MaxTickBatchSize = 256 * 1024;
+
     [Dependency] protected readonly IGameTiming Timing = default!;
     [Dependency] protected readonly INetConfigurationManager NetConf = default!;
     [Dependency] private readonly IComponentFactory _factory = default!;
@@ -44,14 +49,16 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
 
     public event Action<MappingDataNode, List<object>>? RecordingStarted;
     public event Action<MappingDataNode>? RecordingStopped;
+    public event Action<ReplayRecordingStopped>? RecordingStopped2;
     public event Action<ReplayRecordingFinished>? RecordingFinished;
 
     private ISawmill _sawmill = default!;
     private List<object> _queuedMessages = new();
 
     // Config variables.
-    private int _maxCompressedSize;
-    private int _maxUncompressedSize;
+    private long _maxCompressedSize;
+    private long _maxUncompressedSize;
+    private long _serverGCSizeThreshold;
     private int _tickBatchSize;
     private bool _enabled;
 
@@ -63,10 +70,11 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
     {
         _sawmill = _logManager.GetSawmill("replay");
 
-        NetConf.OnValueChanged(CVars.ReplayMaxCompressedSize, (v) => _maxCompressedSize = v * 1024, true);
-        NetConf.OnValueChanged(CVars.ReplayMaxUncompressedSize, (v) => _maxUncompressedSize = v * 1024, true);
-        NetConf.OnValueChanged(CVars.ReplayTickBatchSize, (v) => _tickBatchSize = v * 1024, true);
-        NetConf.OnValueChanged(CVars.NetPVSCompressLevel, OnCompressionChanged);
+        NetConf.OnValueChanged(CVars.ReplayMaxCompressedSize, (v) => _maxCompressedSize = SaturatingMultiplyKb(v), true);
+        NetConf.OnValueChanged(CVars.ReplayMaxUncompressedSize, (v) => _maxUncompressedSize = SaturatingMultiplyKb(v), true);
+        NetConf.OnValueChanged(CVars.ReplayServerGCSizeThreshold, (v) => _serverGCSizeThreshold = SaturatingMultiplyKb(v), true);
+        NetConf.OnValueChanged(CVars.ReplayTickBatchSize, (v) => _tickBatchSize = Math.Min(v, MaxTickBatchSize) * 1024, true);
+        NetConf.OnValueChanged(CVars.NetPvsCompressLevel, OnCompressionChanged);
     }
 
     public void Shutdown()
@@ -191,7 +199,7 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
         var zip = new ZipArchive(file, ZipArchiveMode.Create);
 
         var context = new ZStdCompressionContext();
-        context.SetParameter(ZSTD_cParameter.ZSTD_c_compressionLevel, NetConf.GetCVar(CVars.NetPVSCompressLevel));
+        context.SetParameter(ZSTD_cParameter.ZSTD_c_compressionLevel, NetConf.GetCVar(CVars.NetPvsCompressLevel));
         var buffer = new MemoryStream(_tickBatchSize * 2);
 
         TimeSpan? recordingEnd = null;
@@ -232,7 +240,6 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
 
         try
         {
-            WriteContentBundleInfo(_recState);
             WriteInitialMetadata(name, _recState);
         }
         catch
@@ -307,6 +314,7 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
 
         // File stream & compression context is always disposed from the worker task.
         _recState.WriteCommandChannel.Complete();
+        _recState.Done = true;
 
         _recState = null;
     }
@@ -368,6 +376,11 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
     {
         var yamlMetadata = new MappingDataNode();
         RecordingStopped?.Invoke(yamlMetadata);
+        RecordingStopped2?.Invoke(new ReplayRecordingStopped
+        {
+            Metadata = yamlMetadata,
+            Writer = new ReplayFileWriter(this, recState)
+        });
         var time = Timing.CurTime - recState.StartTime;
         yamlMetadata[MetaFinalKeyEndTick] = new ValueDataNode(Timing.CurTick.Value.ToString());
         yamlMetadata[MetaFinalKeyDuration] = new ValueDataNode(time.ToString());
@@ -379,6 +392,8 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
         // this just overwrites the previous yml with additional data.
         var document = new YamlDocument(yamlMetadata.ToYaml());
         WriteYaml(recState, ReplayZipFolder / FileMetaFinal, document);
+        WriteContentBundleInfo(recState);
+
         UpdateWriteTasks();
         Reset();
 
@@ -399,6 +414,7 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
 
         var document = new JsonObject
         {
+            ["server_gc"] = ShouldEnableServerGC(recState),
             ["engine_version"] = info.EngineVersion,
             ["base_build"] = new JsonObject
             {
@@ -414,6 +430,14 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
 
         var bytes = JsonSerializer.SerializeToUtf8Bytes(document);
         WriteBytes(recState, new ResPath("rt_content_bundle.json"), bytes);
+    }
+
+    private bool ShouldEnableServerGC(RecordingState recState)
+    {
+        if (_serverGCSizeThreshold < 0)
+            return false;
+
+        return recState.CompressedSize >= _serverGCSizeThreshold;
     }
 
     /// <summary>
@@ -450,6 +474,18 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
         return new ReplayRecordingStats(time, tick, size, altSize);
     }
 
+    private static long SaturatingMultiplyKb(long kb)
+    {
+        var result = kb * 1024;
+        if (result < kb)
+        {
+            // Overflow
+            return long.MaxValue;
+        }
+
+        return result;
+    }
+
     /// <summary>
     /// Contains all state related to an active recording.
     /// </summary>
@@ -475,6 +511,8 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
         public long CompressedSize;
         public long UncompressedSize;
 
+        public bool Done;
+
         public RecordingState(
             ZipArchive zip,
             MemoryStream buffer,
@@ -499,6 +537,25 @@ internal abstract partial class SharedReplayRecordingManager : IReplayRecordingM
             StartTime = startTime;
             EndTime = endTime;
             WriteCommandChannel = writeCommandChannel;
+        }
+    }
+
+    private sealed class ReplayFileWriter(SharedReplayRecordingManager manager, RecordingState state)
+        : IReplayFileWriter
+    {
+        public ResPath BaseReplayPath => ReplayZipFolder;
+
+        public void WriteBytes(ResPath path, ReadOnlyMemory<byte> bytes, CompressionLevel compressionLevel)
+        {
+            CheckDisposed();
+
+            manager.WriteBytes(state, path, bytes, compressionLevel);
+        }
+
+        private void CheckDisposed()
+        {
+            if (state.Done)
+                throw new ObjectDisposedException(nameof(ReplayFileWriter));
         }
     }
 }

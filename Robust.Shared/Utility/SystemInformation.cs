@@ -1,8 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
+using System.Management;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics.Arm;
+using System.Runtime.Intrinsics.Wasm;
 using System.Runtime.Intrinsics.X86;
 using System.Text;
+using X86Aes = System.Runtime.Intrinsics.X86.Aes;
+using ArmAes = System.Runtime.Intrinsics.Arm.Aes;
 
 namespace Robust.Shared.Utility;
 
@@ -26,8 +33,18 @@ internal static class SystemInformation
             if (name != null)
                 return name;
         }
-
-        // TODO: ask OS as fallback for when x86 CPUID isn't available on Windows and Linux.
+        else if (OperatingSystem.IsWindows())
+        {
+            var name = GetProcessorModelWindows();
+            if (name != null)
+                return name;
+        }
+        else if (OperatingSystem.IsLinux())
+        {
+            var name = GetProcessorModelLinux();
+            if (name != null)
+                return name;
+        }
 
         return "Unknown processor model";
     }
@@ -87,4 +104,153 @@ internal static class SystemInformation
         nint* oldlenp,
         void* newp,
         nint newlen);
+
+    private static string? GetProcessorModelWindows()
+    {
+        var mgs = new ManagementObjectSearcher("select Name from Win32_Processor");
+        foreach (var o in mgs.Get())
+        {
+            var obj = (ManagementObject)o;
+            return (string)obj["Name"];
+        }
+
+        return null;
+    }
+
+    private static string? GetProcessorModelLinux()
+    {
+        using var sr = new StreamReader("/proc/cpuinfo");
+        while (sr.ReadLine() is { } line)
+        {
+            var entry = line.Split(':', 2);
+            if (entry.Length != 2)
+                continue;
+
+            var key = entry[0].Trim();
+            if (key == "model name")
+                return entry[1].Trim();
+        }
+
+        return null;
+    }
+
+    public static List<string> GetIntrinsics()
+    {
+        var options = new List<string>();
+
+        // - No put the oof back, hello?
+
+        // x86
+
+        if (X86Aes.IsSupported)
+            options.Add(nameof(X86Aes));
+
+        if (Avx.IsSupported)
+            options.Add(nameof(Avx));
+
+        if (Avx2.IsSupported)
+            options.Add(nameof(Avx2));
+
+        if (Avx512BW.IsSupported)
+            options.Add(nameof(Avx512BW));
+
+        if (Avx512BW.VL.IsSupported)
+            options.Add(nameof(Avx512BW) + ".VL");
+
+        if (Avx512CD.IsSupported)
+            options.Add(nameof(Avx512CD));
+
+        if (Avx512CD.VL.IsSupported)
+            options.Add(nameof(Avx512CD) + ".VL");
+
+        if (Avx512DQ.IsSupported)
+            options.Add(nameof(Avx512DQ));
+
+        if (Avx512DQ.VL.IsSupported)
+            options.Add(nameof(Avx512DQ) + ".VL");
+
+        if (Avx512F.IsSupported)
+            options.Add(nameof(Avx512F));
+
+        if (Avx512F.VL.IsSupported)
+            options.Add(nameof(Avx512F) + ".VL");
+
+        if (Avx512Vbmi.IsSupported)
+            options.Add(nameof(Avx512Vbmi));
+
+        if (Avx512Vbmi.VL.IsSupported)
+            options.Add(nameof(Avx512Vbmi) + ".VL");
+
+        if (Bmi1.IsSupported)
+            options.Add(nameof(Bmi1));
+
+        if (Bmi2.IsSupported)
+            options.Add(nameof(Bmi2));
+
+        if (Fma.IsSupported)
+            options.Add(nameof(Fma));
+
+        if (Lzcnt.IsSupported)
+            options.Add(nameof(Lzcnt));
+
+        if (Pclmulqdq.IsSupported)
+            options.Add(nameof(Pclmulqdq));
+
+        if (Popcnt.IsSupported)
+            options.Add(nameof(Popcnt));
+
+        if (Sse.IsSupported)
+            options.Add(nameof(Sse));
+
+        if (Sse2.IsSupported)
+            options.Add(nameof(Sse2));
+
+        if (Sse3.IsSupported)
+            options.Add(nameof(Sse3));
+
+        if (Ssse3.IsSupported)
+            options.Add(nameof(Ssse3));
+
+        if (Sse41.IsSupported)
+            options.Add(nameof(Sse41));
+
+        if (Sse42.IsSupported)
+            options.Add(nameof(Sse42));
+
+        if (X86Base.IsSupported)
+            options.Add(nameof(X86Base));
+
+        // ARM
+
+        if (AdvSimd.IsSupported)
+            options.Add(nameof(AdvSimd));
+
+        if (ArmAes.IsSupported)
+            options.Add(nameof(ArmAes));
+
+        if (ArmBase.IsSupported)
+            options.Add(nameof(ArmBase));
+
+        if (Crc32.IsSupported)
+            options.Add(nameof(Crc32));
+
+        if (Dp.IsSupported)
+            options.Add(nameof(Dp));
+
+        if (Rdm.IsSupported)
+            options.Add(nameof(Rdm));
+
+        if (Sha1.IsSupported)
+            options.Add(nameof(Sha1));
+
+        if (Sha256.IsSupported)
+            options.Add(nameof(Sha256));
+
+        // WASM
+
+        if (PackedSimd.IsSupported)
+            options.Add(nameof(PackedSimd));
+
+        return options;
+    }
 }

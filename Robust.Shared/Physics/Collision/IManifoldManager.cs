@@ -4,7 +4,17 @@ namespace Robust.Shared.Physics.Collision;
 
 internal interface IManifoldManager
 {
-    bool TestOverlap(IPhysShape shapeA, int indexA, IPhysShape shapeB, int indexB, in Transform xfA, in Transform xfB);
+    // TODO: this SUCKS but it's better than an edge for every contact.
+    /// <summary>
+    /// Gets an edge from objectpool.
+    /// </summary>
+    EdgeShape GetContactEdge();
+
+    void ReturnEdge(EdgeShape edge);
+
+    bool TestOverlap<T, U>(T shapeA, int indexA, U shapeB, int indexB, in Transform xfA, in Transform xfB)
+        where T : IPhysShape
+        where U : IPhysShape;
 
     void CollideCircles(ref Manifold manifold, PhysShapeCircle circleA, in Transform xfA,
         PhysShapeCircle circleB, in Transform xfB);

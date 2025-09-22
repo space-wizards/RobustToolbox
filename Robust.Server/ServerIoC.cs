@@ -1,8 +1,10 @@
+using System.Diagnostics.Metrics;
 using Robust.Server.Configuration;
 using Robust.Server.Console;
 using Robust.Server.DataMetrics;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
+using Robust.Server.Localization;
 using Robust.Server.Placement;
 using Robust.Server.Player;
 using Robust.Server.Prototypes;
@@ -20,9 +22,10 @@ using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Replays;
@@ -66,7 +69,6 @@ namespace Robust.Server
             deps.Register<IResourceManagerInternal, ResourceManager>();
             deps.Register<EntityManager, ServerEntityManager>();
             deps.Register<IServerEntityManager, ServerEntityManager>();
-            deps.Register<IServerEntityManagerInternal, ServerEntityManager>();
             deps.Register<IServerGameStateManager, ServerGameStateManager>();
             deps.Register<IReplayRecordingManager, ReplayRecordingManager>();
             deps.Register<IReplayRecordingManagerInternal, ReplayRecordingManager>();
@@ -78,8 +80,11 @@ namespace Robust.Server
             deps.Register<IViewVariablesManager, ServerViewVariablesManager>();
             deps.Register<IServerViewVariablesInternal, ServerViewVariablesManager>();
             deps.Register<IWatchdogApi, WatchdogApi>();
+            deps.Register<IWatchdogApiInternal, WatchdogApi>();
             deps.Register<IScriptHost, ScriptHost>();
             deps.Register<IMetricsManager, MetricsManager>();
+            deps.Register<IMetricsManagerInternal, MetricsManager>();
+            deps.Register<IMeterFactory, MetricsManager>();
             deps.Register<IAuthManager, AuthManager>();
             deps.Register<HubManager, HubManager>();
             deps.Register<IRobustSerializer, ServerRobustSerializer>();
@@ -90,8 +95,13 @@ namespace Robust.Server
             deps.Register<IServerNetConfigurationManager, ServerNetConfigurationManager>();
             deps.Register<INetConfigurationManagerInternal, ServerNetConfigurationManager>();
             deps.Register<IGamePrototypeLoadManager, GamePrototypeLoadManager>();
+            deps.Register<GamePrototypeLoadManager>();
             deps.Register<NetworkResourceManager>();
             deps.Register<IHttpClientHolder, HttpClientHolder>();
+            deps.Register<UploadedContentManager>();
+            deps.Register<IHWId, DummyHWId>();
+            deps.Register<ILocalizationManager, ServerLocalizationManager>();
+            deps.Register<ILocalizationManagerInternal, ServerLocalizationManager>();
         }
     }
 }

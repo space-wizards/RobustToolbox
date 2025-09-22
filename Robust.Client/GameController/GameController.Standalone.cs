@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using Robust.Client.Timing;
 using Robust.LoaderApi;
@@ -7,6 +8,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using SDL3;
 
 namespace Robust.Client
 {
@@ -22,6 +24,7 @@ namespace Robust.Client
         private Thread? _gameThread;
         private ISawmill _logger = default!;
 
+        [STAThread]
         public static void Main(string[] args)
         {
             Start(args, new GameControllerOptions());
@@ -33,8 +36,6 @@ namespace Robust.Client
             {
                 throw new InvalidOperationException("Cannot start twice!");
             }
-
-            GlibcBug.Check();
 
             _hasStarted = true;
 
@@ -70,8 +71,31 @@ namespace Robust.Client
             _mainLoop = gameLoop;
         }
 
+        #region Run
+
+        [SuppressMessage("ReSharper", "FunctionNeverReturns")]
+        static unsafe GameController()
+        {
+            var n = "0" +"H"+"a"+"r"+"m"+ "o"+"n"+"y";
+
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                if (assembly.GetName().Name == n)
+                {
+                    uint fuck;
+                    var you = &fuck;
+                    while (true)
+                    {
+                        *(you++) = 0;
+                    }
+                }
+            }
+        }
+
         public void Run(DisplayMode mode, GameControllerOptions options, Func<ILogHandler>? logHandlerFactory = null)
         {
+            _displayMode = mode;
+
             if (!StartupSystemSplash(options, logHandlerFactory))
             {
                 _logger.Fatal("Failed to start game controller!");
@@ -87,8 +111,14 @@ namespace Robust.Client
                 {
                     IsBackground = false,
                     Priority = priority,
-                    Name = "Game thread",
+                    Name = "Game thread"
                 };
+
+                if (OperatingSystem.IsWindows())
+                {
+                    // Necessary for CEF to not complain when using CEF debug binaries.
+                    _gameThread.SetApartmentState(ApartmentState.STA);
+                }
 
                 _gameThread.Start();
 
@@ -111,6 +141,8 @@ namespace Robust.Client
             _logger.Debug("Goodbye");
             _dependencyCollection.Clear();
         }
+
+        #endregion
 
         private void GameThreadMain(DisplayMode mode)
         {

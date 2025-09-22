@@ -15,7 +15,8 @@ namespace Robust.Client.Graphics
     ///     which can be either stretched or tiled to fill up
     ///     the space the box is being drawn in.
     /// </summary>
-    public sealed class StyleBoxTexture : StyleBox
+    [Virtual]
+    public class StyleBoxTexture : StyleBox
     {
         public StyleBoxTexture()
         {

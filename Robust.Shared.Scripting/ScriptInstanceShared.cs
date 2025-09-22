@@ -5,6 +5,7 @@ using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Runtime.Loader;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Lidgren.Network;
 using Microsoft.CodeAnalysis;
@@ -14,14 +15,13 @@ using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.CSharp.Scripting.Hosting;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.CodeAnalysis.Text;
-using Robust.Shared.Maths;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Scripting
 {
-    internal static class ScriptInstanceShared
+    internal static partial class ScriptInstanceShared
     {
         public static CSharpParseOptions ParseOptions { get; } =
             new(kind: SourceCodeKind.Script, languageVersion: LanguageVersion.Latest);
@@ -186,11 +186,12 @@ namespace Robust.Shared.Scripting
             var assemblies = ScriptInstanceShared.GetAutoImportAssemblies(refl).ToArray();
             foreach (var m in missing)
             {
+                var mName = ConvertMissingTypeName(m);
                 foreach (var assembly in assemblies)
                 {
                     foreach (var type in assembly.DefinedTypes)
                     {
-                        if (type.IsPublic && type.Name == m)
+                        if (type.IsPublic && type.Name == mName)
                         {
                             found.Add(type.Namespace!);
                             goto nextMissing;
@@ -225,5 +226,22 @@ namespace Robust.Shared.Scripting
                 return "<CSharpObjectFormatter.FormatObject threw>";
             }
         }
+
+        private static string ConvertMissingTypeName(string name)
+        {
+            var match = TypeMissingParserRegex().Match(name);
+            var typeName = match.Groups[1].Value;
+            if (match.Groups[2].Success)
+            {
+                // We have generics
+                var genericCount = match.Groups[2].Length + 1;
+                return $"{typeName}`{genericCount}";
+            }
+
+            return match.Groups[1].Value;
+        }
+
+        [GeneratedRegex("^(.+?)(?:<(,*)>)?$")]
+        private static partial Regex TypeMissingParserRegex();
     }
 }

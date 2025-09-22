@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Buffers;
-using System.Runtime.InteropServices;
+using System.Buffers.Binary;
 using System.Threading;
 using Lidgren.Network;
 using SpaceWizards.Sodium;
@@ -60,11 +60,10 @@ internal sealed class NetEncryption
             ciphertext = message.Data = new byte[encryptedSize];
         }
 
-        // TODO: this is probably broken for big-endian machines.
         Span<byte> nonceData = stackalloc byte[CryptoAeadXChaCha20Poly1305Ietf.NoncePublicBytes];
         nonceData.Fill(0);
-        MemoryMarshal.Write(nonceData, ref nonce);
-        MemoryMarshal.Write(ciphertext, ref nonce);
+        BinaryPrimitives.WriteUInt64LittleEndian(nonceData, nonce);
+        BinaryPrimitives.WriteUInt64LittleEndian(ciphertext, nonce);
 
         CryptoAeadXChaCha20Poly1305Ietf.Encrypt(
             // ciphertext
@@ -93,10 +92,9 @@ internal sealed class NetEncryption
         var buffer = ArrayPool<byte>.Shared.Rent(cipherText.Length);
         cipherText.CopyTo(buffer);
 
-        // TODO: this is probably broken for big-endian machines.
         Span<byte> nonceData = stackalloc byte[CryptoAeadXChaCha20Poly1305Ietf.NoncePublicBytes];
         nonceData.Fill(0);
-        MemoryMarshal.Write(nonceData, ref nonce);
+        BinaryPrimitives.WriteUInt64LittleEndian(nonceData, nonce);
 
         var result = CryptoAeadXChaCha20Poly1305Ietf.Decrypt(
             // plaintext

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 using NUnit.Framework;
 using Robust.Shared.Maths;
 
@@ -303,6 +304,24 @@ namespace Robust.UnitTesting.Shared.Utility
             var (val, mod, result) = data;
 
             Assert.That(MathHelper.Mod(val, mod), Is.EqualTo(result).Within(0.00000000001));
+        }
+
+        [Test]
+        [TestCase(4, 4, ExpectedResult = 4)]
+        [TestCase(5, 4, ExpectedResult = 8)]
+        [TestCase(7, 4, ExpectedResult = 8)]
+        [TestCase(8, 4, ExpectedResult = 8)]
+        [TestCase(4U, 4U, ExpectedResult = 4U)]
+        [TestCase(5U, 4U, ExpectedResult = 8U)]
+        [TestCase(7U, 4U, ExpectedResult = 8U)]
+        [TestCase(8U, 4U, ExpectedResult = 8U)]
+        [TestCase(4L, 4L, ExpectedResult = 4L)]
+        [TestCase(5L, 4L, ExpectedResult = 8L)]
+        [TestCase(7L, 4L, ExpectedResult = 8L)]
+        [TestCase(8L, 4L, ExpectedResult = 8L)]
+        public T TestCeilMultipleOfPowerOfTwo<T>(T value, T powerOfTwo) where T : IBinaryInteger<T>
+        {
+            return MathHelper.CeilMultipleOfPowerOfTwo(value, powerOfTwo);
         }
     }
 }

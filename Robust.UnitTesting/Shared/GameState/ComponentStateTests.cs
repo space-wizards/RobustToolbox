@@ -2,14 +2,14 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Robust.Server.GameObjects;
-using Robust.Server.Player;
 using Robust.Shared;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Reflection;
+using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.UnitTesting.Shared.GameState;
 
@@ -24,20 +24,8 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
     public async Task UnknownEntityTest()
     {
         // Setup auto-comp-states. I hate this. Someone please fix reflection in RobustIntegrationTest
-        var compReg = () => IoCManager.Resolve<IComponentFactory>().RegisterClass<UnknownEntityTestComponent>();
-        var sysReg = () => IoCManager.Resolve<IEntitySystemManager>().LoadExtraSystemType<UnknownEntityTestComponent.UnknownEntityTestComponent_AutoNetworkSystem>();
-        var serverOpts = new ServerIntegrationOptions
-        {
-            Pool = false,
-            BeforeRegisterComponents = compReg,
-            BeforeStart = sysReg,
-        };
-        var clientOpts = new ClientIntegrationOptions
-        {
-            Pool = false,
-            BeforeRegisterComponents = compReg,
-            BeforeStart = sysReg,
-        };
+        var serverOpts = new ServerIntegrationOptions { Pool = false };
+        var clientOpts = new ClientIntegrationOptions { Pool = false };
         var server = StartServer(serverOpts);
         var client = StartClient(clientOpts);
 
@@ -51,10 +39,9 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
 
         // Set up map.
         EntityUid map = default;
-        await server.WaitPost(() =>
+        server.Post(() =>
         {
-            var mapId = server.MapMan.CreateMap();
-            map = server.MapMan.GetMapEntityId(mapId);
+            map = server.System<SharedMapSystem>().CreateMap();
         });
 
         await RunTicks();
@@ -73,9 +60,9 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
         {
             // Attach player.
             player = server.EntMan.Spawn();
-            var session = (IPlayerSession) server.PlayerMan.Sessions.First();
-            server.System<ActorSystem>().Attach(player, session);
-            session.JoinGame();
+            var session = server.PlayerMan.Sessions.First();
+            server.PlayerMan.SetAttachedEntity(session, player);
+            server.PlayerMan.JoinGame(session);
 
             // Spawn test entities.
             serverEntA = server.EntMan.SpawnAttachedTo(null, coordsA);
@@ -151,6 +138,10 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
                 await client!.WaitRunTicks(1);
             }
         }
+
+        await client.WaitPost(() => netMan.ClientDisconnect(""));
+        await server.WaitRunTicks(5);
+        await client.WaitRunTicks(5);
     }
 
     /// <summary>
@@ -160,20 +151,8 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
     public async Task UnknownEntityDeleteTest()
     {
         // The first chunk of the test just follows UnknownEntityTest
-        var compReg = () => IoCManager.Resolve<IComponentFactory>().RegisterClass<UnknownEntityTestComponent>();
-        var sysReg = () => IoCManager.Resolve<IEntitySystemManager>().LoadExtraSystemType<UnknownEntityTestComponent.UnknownEntityTestComponent_AutoNetworkSystem>();
-        var serverOpts = new ServerIntegrationOptions
-        {
-            Pool = false,
-            BeforeRegisterComponents = compReg,
-            BeforeStart = sysReg,
-        };
-        var clientOpts = new ClientIntegrationOptions
-        {
-            Pool = false,
-            BeforeRegisterComponents = compReg,
-            BeforeStart = sysReg,
-        };
+        var serverOpts = new ServerIntegrationOptions { Pool = false };
+        var clientOpts = new ClientIntegrationOptions { Pool = false };
         var server = StartServer(serverOpts);
         var client = StartClient(clientOpts);
 
@@ -187,10 +166,9 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
 
         // Set up map.
         EntityUid map = default;
-        await server.WaitPost(() =>
+        server.Post(() =>
         {
-            var mapId = server.MapMan.CreateMap();
-            map = server.MapMan.GetMapEntityId(mapId);
+            map = server.System<SharedMapSystem>().CreateMap();
         });
 
         await RunTicks();
@@ -209,9 +187,9 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
         {
             // Attach player.
             player = server.EntMan.Spawn();
-            var session = (IPlayerSession) server.PlayerMan.Sessions.First();
-            server.System<ActorSystem>().Attach(player, session);
-            session.JoinGame();
+            var session = server.PlayerMan.Sessions.First();
+            server.PlayerMan.SetAttachedEntity(session, player);
+            server.PlayerMan.JoinGame(session);
 
             // Spawn test entities.
             serverEntA = server.EntMan.SpawnAttachedTo(null, coordsA);
@@ -250,7 +228,7 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
             var clientEntA = client.EntMan.GetEntity(serverNetA);
             var clientEntB = client.EntMan.GetEntity(serverNetB);
             Assert.That(client.EntMan.EntityExists(clientEntB), Is.True);
-            Assert.That(client.EntMan.EntityExists(client.EntMan.GetEntity(serverNetA)), Is.False);
+            Assert.That(client.EntMan.EntityExists(clientEntA), Is.False);
 
             Assert.That(client.EntMan.TryGetComponent(clientEntB, out UnknownEntityTestComponent? cmp));
             Assert.That(cmp?.Other, Is.EqualTo(clientEntA));
@@ -302,12 +280,16 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
                 await client!.WaitRunTicks(1);
             }
         }
+
+        await client.WaitPost(() => netMan.ClientDisconnect(""));
+        await server.WaitRunTicks(5);
+        await client.WaitRunTicks(5);
     }
 }
 
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]
 public sealed partial class UnknownEntityTestComponent : Component
 {
-    [AutoNetworkedField]
+    [DataField, AutoNetworkedField]
     public EntityUid? Other;
 }

@@ -28,18 +28,20 @@ public sealed class GridMovement_Test : RobustIntegrationTest
         var mapManager = server.ResolveDependency<IMapManager>();
         var entManager = server.ResolveDependency<IEntityManager>();
         var physSystem = systems.GetEntitySystem<SharedPhysicsSystem>();
+        var transformSystem = entManager.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
+        var mapSystem = entManager.EntitySysManager.GetEntitySystem<SharedMapSystem>();
 
         await server.WaitAssertion(() =>
         {
-            var mapId = mapManager.CreateMap();
-            var grid = mapManager.CreateGrid(mapId);
+            entManager.System<SharedMapSystem>().CreateMap(out var mapId);
+            var grid = mapManager.CreateGridEntity(mapId);
 
             // Setup 1 body on grid, 1 body off grid, and assert that it's all gucci.
-            grid.SetTile(Vector2i.Zero, new Tile(1));
-            var fixtures = entManager.GetComponent<FixturesComponent>(grid.Owner);
+            mapSystem.SetTile(grid, Vector2i.Zero, new Tile(1));
+            var fixtures = entManager.GetComponent<FixturesComponent>(grid);
             Assert.That(fixtures.FixtureCount, Is.EqualTo(1));
 
-            var onGrid = entManager.SpawnEntity(null, new EntityCoordinates(grid.Owner, 0.5f, 0.5f ));
+            var onGrid = entManager.SpawnEntity(null, new EntityCoordinates(grid, 0.5f, 0.5f ));
             var onGridBody = entManager.AddComponent<PhysicsComponent>(onGrid);
             physSystem.SetBodyType(onGrid, BodyType.Dynamic, body: onGridBody);
             var shapeA = new PolygonShape();
@@ -67,7 +69,7 @@ public sealed class GridMovement_Test : RobustIntegrationTest
             Assert.That(onGridBody.ContactCount, Is.EqualTo(0));
 
             // Alright now move the grid on top of the off grid body, run physics for a frame and see if they contact
-            entManager.GetComponent<TransformComponent>(grid.Owner).LocalPosition = new Vector2(10f, 10f);
+            transformSystem.SetLocalPosition(grid.Owner, new Vector2(10f, 10f));
             physSystem.Update(0.001f);
 
             Assert.That(onGridBody.ContactCount, Is.EqualTo(1));

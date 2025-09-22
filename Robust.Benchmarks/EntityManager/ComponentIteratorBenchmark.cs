@@ -29,8 +29,8 @@ public partial class ComponentIteratorBenchmark
 
         Comps = new A[N+2];
 
-        var coords = new MapCoordinates(0, 0, new MapId(1));
-        _simulation.AddMap(coords.MapId);
+        var map = _simulation.CreateMap().MapId;
+        var coords = new MapCoordinates(default, map);
 
         for (var i = 0; i < N; i++)
         {

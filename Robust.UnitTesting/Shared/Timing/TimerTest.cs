@@ -71,7 +71,6 @@ namespace Robust.UnitTesting.Shared.Timing
         public void TestCancellation()
         {
             var timerManager = IoCManager.Resolve<ITimerManager>();
-            var taskManager = IoCManager.Resolve<ITaskManager>();
 
             var cts = new CancellationTokenSource();
             var ran = false;

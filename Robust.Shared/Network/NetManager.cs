@@ -12,6 +12,7 @@ using Prometheus;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Player;
 using Robust.Shared.Profiling;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
@@ -110,6 +111,7 @@ namespace Robust.Shared.Network
         [Dependency] private readonly ILogManager _logMan = default!;
         [Dependency] private readonly ProfManager _prof = default!;
         [Dependency] private readonly HttpClientHolder _http = default!;
+        [Dependency] private readonly IHWId _hwId = default!;
 
         /// <summary>
         ///     Holds lookup table for NetMessage.Id -> NetMessage.Type
@@ -135,6 +137,7 @@ namespace Robust.Shared.Network
         private readonly HashSet<NetUserId> _awaitingDisconnectToConnect = new HashSet<NetUserId>();
 
         private ISawmill _logger = default!;
+        private ISawmill _loggerPacket = default!;
         private ISawmill _authLogger = default!;
 
         /// <inheritdoc />
@@ -143,8 +146,6 @@ namespace Robust.Shared.Network
         public bool IsAuthEnabled => _config.GetCVar<bool>("auth.enabled");
 
         public IReadOnlyDictionary<Type, long> MessageBandwidthUsage => _bandwidthUsage;
-
-        private NetEncryption? _clientEncryption;
 
         /// <inheritdoc />
         public bool IsServer { get; private set; }
@@ -225,6 +226,8 @@ namespace Robust.Shared.Network
 
         private bool _initialized;
 
+        private int _mainThreadId;
+
         public NetManager()
         {
             _strings = new StringTable(this);
@@ -243,11 +246,16 @@ namespace Robust.Shared.Network
                 throw new InvalidOperationException("NetManager has already been initialized.");
             }
 
+            _mainThreadId = Environment.CurrentManagedThreadId;
+
             _strings.Sawmill = _logger;
 
             SynchronizeNetTime();
 
             IsServer = isServer;
+
+            _config.OnValueChanged(CVars.NetLidgrenLogWarning, LidgrenLogWarningChanged);
+            _config.OnValueChanged(CVars.NetLidgrenLogError, LidgrenLogErrorChanged);
 
             _config.OnValueChanged(CVars.NetVerbose, NetVerboseChanged);
             if (isServer)
@@ -269,6 +277,22 @@ namespace Robust.Shared.Network
             if (IsServer)
             {
                 SAGenerateKeys();
+            }
+        }
+
+        private void LidgrenLogWarningChanged(bool newValue)
+        {
+            foreach (var netPeer in _netPeers)
+            {
+                netPeer.Peer.Configuration.SetMessageTypeEnabled(NetIncomingMessageType.WarningMessage, newValue);
+            }
+        }
+
+        private void LidgrenLogErrorChanged(bool newValue)
+        {
+            foreach (var netPeer in _netPeers)
+            {
+                netPeer.Peer.Configuration.SetMessageTypeEnabled(NetIncomingMessageType.ErrorMessage, newValue);
             }
         }
 
@@ -422,6 +446,8 @@ namespace Robust.Shared.Network
             _config.UnsubValueChanged(CVars.NetFakeLagMin, _fakeLagMinChanged);
             _config.UnsubValueChanged(CVars.NetFakeLagRand, _fakeLagRandomChanged);
             _config.UnsubValueChanged(CVars.NetFakeDuplicates, FakeDuplicatesChanged);
+            _config.UnsubValueChanged(CVars.NetLidgrenLogWarning, LidgrenLogWarningChanged);
+            _config.UnsubValueChanged(CVars.NetLidgrenLogError, LidgrenLogErrorChanged);
 
             _serializer.ClientHandshakeComplete -= OnSerializerOnClientHandshakeComplete;
 
@@ -455,7 +481,7 @@ namespace Robust.Shared.Network
 
             foreach (var peer in _netPeers)
             {
-                NetIncomingMessage msg;
+                NetIncomingMessage? msg;
                 var recycle = true;
                 while ((msg = peer.Peer.ReadMessage()) != null)
                 {
@@ -499,7 +525,7 @@ namespace Robust.Shared.Network
                         default:
                             _logger.Warning("{0}: Unhandled incoming packet type from {1}: {2}",
                                 peer.Peer.Configuration.LocalAddress,
-                                msg.SenderConnection.RemoteEndPoint,
+                                msg.SenderConnection?.RemoteEndPoint,
                                 msg.MessageType);
                             break;
                     }
@@ -561,6 +587,14 @@ namespace Robust.Shared.Network
         public void ClientDisconnect(string reason)
         {
             DebugTools.Assert(IsClient, "Should never be called on the server.");
+
+            // First handle any in-progress connection attempt
+            if (ClientConnectState != ClientConnectionState.NotConnecting)
+            {
+                _cancelConnectTokenSource?.Cancel();
+            }
+
+            // Then handle existing connection if any
             if (ServerChannel != null)
             {
                 Disconnect?.Invoke(this, new NetDisconnectedArgs(ServerChannel, reason));
@@ -575,6 +609,25 @@ namespace Robust.Shared.Network
 
             // ping the client once per second.
             netConfig.PingInterval = 1f;
+
+            netConfig.SetMessageTypeEnabled(
+                NetIncomingMessageType.WarningMessage,
+                _config.GetCVar(CVars.NetLidgrenLogWarning));
+
+            netConfig.SetMessageTypeEnabled(
+                NetIncomingMessageType.ErrorMessage,
+                _config.GetCVar(CVars.NetLidgrenLogError));
+
+            var poolSize = _config.GetCVar(CVars.NetPoolSize);
+
+            if (poolSize <= 0)
+            {
+                netConfig.UseMessageRecycling = false;
+            }
+            else
+            {
+                netConfig.RecycledCacheMaxCount = Math.Min(poolSize, 8192);
+            }
 
             netConfig.SendBufferSize = _config.GetCVar(CVars.NetSendBufferSize);
             netConfig.ReceiveBufferSize = _config.GetCVar(CVars.NetReceiveBufferSize);
@@ -608,6 +661,7 @@ namespace Robust.Shared.Network
 
             // MTU stuff.
             netConfig.MaximumTransmissionUnit = _config.GetCVar(CVars.NetMtu);
+            netConfig.MaximumTransmissionUnitV6 = _config.GetCVar(CVars.NetMtuIpv6);
             netConfig.AutoExpandMTU = _config.GetCVar(CVars.NetMtuExpand);
             netConfig.ExpandMTUFrequency = _config.GetCVar(CVars.NetMtuExpandFrequency);
             netConfig.ExpandMTUFailAttempts = _config.GetCVar(CVars.NetMtuExpandFailAttempts);
@@ -683,6 +737,8 @@ namespace Robust.Shared.Network
         private void HandleStatusChanged(NetPeerData peer, NetIncomingMessage msg)
         {
             var sender = msg.SenderConnection;
+            DebugTools.Assert(sender != null);
+
             var newStatus = (NetConnectionStatus) msg.ReadByte();
             var reason = msg.ReadString();
             _logger.Debug("{ConnectionEndpoint}: Status changed to {ConnectionStatus}, reason: {ConnectionStatusReason}",
@@ -743,6 +799,7 @@ namespace Robust.Shared.Network
             _channels.Add(sender, channel);
             peer.AddChannel(channel);
             channel.Encryption = encryption;
+            SetupEncryptionChannel(channel);
 
             _strings.SendFullTable(channel);
 
@@ -770,6 +827,10 @@ namespace Robust.Shared.Network
             _assignedUsernames.Remove(channel.UserName);
             _assignedUserIds.Remove(channel.UserId);
 
+            _channels.Remove(connection);
+            peer.RemoveChannel(channel);
+            channel.EncryptionChannel?.Complete();
+
 #if EXCEPTION_TOLERANCE
             try
             {
@@ -785,8 +846,6 @@ namespace Robust.Shared.Network
                 _logger.Error("Caught exception in OnDisconnected handler:\n{0}", e);
             }
 #endif
-            _channels.Remove(connection);
-            peer.RemoveChannel(channel);
 
             if (IsClient)
             {
@@ -807,6 +866,8 @@ namespace Robust.Shared.Network
 
         private bool DispatchNetMessage(NetIncomingMessage msg)
         {
+            DebugTools.Assert(msg.SenderConnection != null);
+
             var peer = msg.SenderConnection.Peer;
             if (peer.Status == NetPeerStatus.ShutdownRequested)
             {
@@ -849,9 +910,7 @@ namespace Robust.Shared.Network
                 return true;
             }
 
-            var encryption = IsServer ? channel.Encryption : _clientEncryption;
-
-            encryption?.Decrypt(msg);
+            channel.Encryption?.Decrypt(msg);
 
             var id = msg.ReadByte();
 
@@ -906,7 +965,9 @@ namespace Robust.Shared.Network
                 return true;
             }
 
-            // _logger.DebugS("net", $"RECV: {instance.GetType().Name}");
+            if (_loggerPacket.IsLogLevelEnabled(LogLevel.Verbose))
+                _loggerPacket.Verbose($"RECV: {instance.GetType().Name} {msg.LengthBytes}");
+
             try
             {
                 entry.Callback!.Invoke(instance);
@@ -1016,19 +1077,13 @@ namespace Robust.Shared.Network
             if (!(recipient is NetChannel channel))
                 throw new ArgumentException($"Not of type {typeof(NetChannel).FullName}", nameof(recipient));
 
-            var peer = channel.Connection.Peer;
-            var packet = BuildMessage(message, peer);
-
-            channel.Encryption?.Encrypt(packet);
-
-            var method = message.DeliveryMethod;
-            peer.SendMessage(packet, channel.Connection, method);
-            LogSend(message, method, packet);
+            CoreSendMessage(channel, message);
         }
 
-        private static void LogSend(NetMessage message, NetDeliveryMethod method, NetOutgoingMessage packet)
+        private void LogSend(NetMessage message, NetDeliveryMethod method, NetOutgoingMessage packet)
         {
-            // _logger.Debug($"SEND: {message.GetType().Name} {method} {packet.LengthBytes}");
+            if (_loggerPacket.IsLogLevelEnabled(LogLevel.Verbose))
+                _loggerPacket.Verbose($"SEND: {message.GetType().Name} {method} {packet.LengthBytes}");
         }
 
         /// <inheritdoc />
@@ -1051,19 +1106,19 @@ namespace Robust.Shared.Network
 
             // not connected to a server, so a message cannot be sent to it.
             if (!IsConnected)
+            {
+                _logger.Error($"Tried to send message while not connected to a server: {message}\n{Environment.StackTrace}");
                 return;
+            }
 
             DebugTools.Assert(_netPeers.Count == 1);
             DebugTools.Assert(_netPeers[0].Channels.Count == 1);
 
             var peer = _netPeers[0];
-            var packet = BuildMessage(message, peer.Peer);
-            var method = message.DeliveryMethod;
 
-            _clientEncryption?.Encrypt(packet);
+            var channel = peer.Channels[0];
 
-            peer.Peer.SendMessage(packet, peer.ConnectionsWithChannels[0], method);
-            LogSend(message, method, packet);
+            CoreSendMessage(channel, message);
         }
 
         #endregion NetMessages
@@ -1138,12 +1193,6 @@ namespace Robust.Shared.Network
             public ClientDisconnectedException(string message, Exception inner) : base(message, inner)
             {
             }
-
-            protected ClientDisconnectedException(
-                SerializationInfo info,
-                StreamingContext context) : base(info, context)
-            {
-            }
         }
 
         private sealed class NetPeerData
@@ -1183,6 +1232,7 @@ namespace Robust.Shared.Network
         void IPostInjectInit.PostInject()
         {
             _logger = _logMan.GetSawmill("net");
+            _loggerPacket = _logMan.GetSawmill("net.packet");
             _authLogger = _logMan.GetSawmill("auth");
         }
     }

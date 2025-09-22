@@ -11,14 +11,10 @@ namespace Robust.Shared.GameObjects
         private static void CollectBroadcastOrdered(
             EventSource source,
             EventData sub,
-            ref ValueList<OrderedEventDispatch> found,
-            bool byRef)
+            ref ValueList<OrderedEventDispatch> found)
         {
-            foreach (var handler in sub.BroadcastRegistrations)
+            foreach (var handler in sub.BroadcastRegistrations.Span)
             {
-                if (handler.ReferenceEvent != byRef)
-                    ThrowByRefMisMatch();
-
                 if ((handler.Mask & source) != 0)
                     found.Add(new OrderedEventDispatch(handler.Handler, handler.Order));
             }
@@ -29,8 +25,7 @@ namespace Robust.Shared.GameObjects
             Type eventType,
             EventData subs,
             ref Unit unitRef,
-            bool broadcast,
-            bool byRef)
+            bool broadcast)
         {
             if (!subs.OrderingUpToDate)
                 UpdateOrderSeq(eventType, subs);
@@ -38,9 +33,12 @@ namespace Robust.Shared.GameObjects
             var found = new ValueList<OrderedEventDispatch>();
 
             if (broadcast)
-                CollectBroadcastOrdered(EventSource.Local, subs, ref found, byRef);
+                CollectBroadcastOrdered(EventSource.Local, subs, ref found);
 
-            EntCollectOrdered(uid, eventType, ref found, byRef);
+            // TODO PERF
+            // consider ordering the linked list itself?
+            // Then make broadcast events always a lower priority and replace the valuelist with stackalloc?
+            EntCollectOrdered(uid, eventType, ref found);
 
             DispatchOrderedEvents(ref unitRef, ref found);
         }
@@ -49,7 +47,7 @@ namespace Robust.Shared.GameObjects
         {
             found.Sort(OrderedEventDispatchComparer.Instance);
 
-            foreach (var (handler, _) in found)
+            foreach (var (handler, _) in found.Span)
             {
                 handler(ref eventArgs);
             }
@@ -64,10 +62,10 @@ namespace Robust.Shared.GameObjects
 
             // Collect all subscriptions, broadcast and ordered.
             IEnumerable<OrderedRegistration> regs = sub.BroadcastRegistrations;
-            if (_entSubscriptionsInv.TryGetValue(eventType, out var comps))
+            if (_eventSubsInv.TryGetValue(eventType, out var comps))
             {
                 regs = regs.Concat(comps
-                    .Select(c => _entSubscriptions[c.Value])
+                    .Select(c => _eventSubs[c.Value])
                     .Where(c => c != null)
                     .Select(c => c![eventType]));
             }
@@ -203,6 +201,34 @@ namespace Robust.Shared.GameObjects
                 {
                     UpdateOrderSeq(type, sub);
                 }
+            }
+        }
+
+        private OrderingData CreateOrderingData(Type orderType, Type[]? before, Type[]? after)
+        {
+            AddChildrenTypes(ref before);
+            AddChildrenTypes(ref after);
+            return new OrderingData(orderType, before ?? [], after ?? []);
+        }
+
+        private void AddChildrenTypes(ref Type[]? original)
+        {
+            if (original == null || original.Length == 0)
+                return;
+
+            _childrenTypesTemp.Clear();
+            foreach (var beforeType in original)
+            {
+                foreach (var child in _reflection.GetAllChildren(beforeType))
+                {
+                    _childrenTypesTemp.Add(child);
+                }
+            }
+
+            if (_childrenTypesTemp.Count > 0)
+            {
+                Array.Resize(ref original, original.Length + _childrenTypesTemp.Count);
+                _childrenTypesTemp.CopyTo(original, original.Length - _childrenTypesTemp.Count);
             }
         }
     }

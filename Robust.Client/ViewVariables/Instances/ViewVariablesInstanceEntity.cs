@@ -120,7 +120,11 @@ namespace Robust.Client.ViewVariables.Instances
                     };
                     top.HorizontalExpand = true;
                     hBox.AddChild(top);
-                    hBox.AddChild(new SpriteView {Sprite = sprite, OverrideDirection = Direction.South});
+
+                    var view = new SpriteView { OverrideDirection = Direction.South };
+                    view.SetEntity(_entity);
+                    hBox.AddChild(view);
+
                     vBoxContainer.AddChild(hBox);
                 }
                 else
@@ -147,7 +151,7 @@ namespace Robust.Client.ViewVariables.Instances
                 ViewVariablesTraitMembers.CreateMemberGroupHeader(
                     ref first,
                     PrettyPrint.PrintUserFacingTypeShort(group.Key, 2),
-                    clientVBox);
+                    clientVBox.Children);
 
                 foreach (var control in group)
                 {
@@ -270,7 +274,7 @@ namespace Robust.Client.ViewVariables.Instances
                 button.OnPressed += _ =>
                 {
                     ViewVariablesManager.OpenVV(
-                        new ViewVariablesComponentSelector(_entityManager.GetNetEntity(_entity), componentType.FullName));
+                        new ViewVariablesComponentSelector(_netEntity, componentType.FullName));
                 };
                 removeButton.OnPressed += _ =>
                 {
@@ -431,8 +435,7 @@ namespace Robust.Client.ViewVariables.Instances
 
             try
             {
-                var comp = (Component) componentFactory.GetComponent(registration.Type);
-                comp.Owner = _entity;
+                var comp = componentFactory.GetComponent(registration.Type);
                 _entityManager.AddComponent(_entity, comp);
             }
             catch (Exception e)
@@ -522,7 +525,7 @@ namespace Robust.Client.ViewVariables.Instances
             var first = true;
             foreach (var (groupName, groupMembers) in _membersBlob!.MemberGroups)
             {
-                ViewVariablesTraitMembers.CreateMemberGroupHeader(ref first, groupName, _serverVariables);
+                ViewVariablesTraitMembers.CreateMemberGroupHeader(ref first, groupName, _serverVariables.Children);
 
                 foreach (var propertyData in groupMembers)
                 {

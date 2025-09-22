@@ -6,7 +6,10 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics
 {
-    internal interface IRenderHandle
+    /// <remarks>
+    ///     Unstable API. Likely to break hard during renderer rewrite if you rely on it.
+    /// </remarks>
+    public interface IRenderHandle
     {
         DrawingHandleScreen DrawingHandleScreen { get; }
         DrawingHandleWorld DrawingHandleWorld { get; }
@@ -37,7 +40,7 @@ namespace Robust.Client.Graphics
             Vector2 scale,
             Angle? worldRot,
             Angle eyeRotation = default,
-            Shared.Maths.Direction? overrideDirection = null,
+            Direction? overrideDirection = null,
             SpriteComponent? sprite = null,
             TransformComponent? xform = null,
             SharedTransformSystem? xformSystem = null);

@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using NUnit.Framework.Constraints;
 using Robust.Shared.Maths;
 
@@ -47,6 +47,16 @@ namespace Robust.UnitTesting
                     }
 
                     return new ConstraintResult(this, actual, exp.EqualsApprox(act));
+                }
+
+                if (Expected is Matrix3x2 m3x2Expected && actual is Matrix3x2 m3x2Actual)
+                {
+                    if (Tolerance != null)
+                    {
+                        return new ConstraintResult(this, actual, m3x2Expected.EqualsApprox(m3x2Actual, Tolerance.Value));
+                    }
+
+                    return new ConstraintResult(this, actual, m3x2Expected.EqualsApprox(m3x2Actual));
                 }
 
                 return new ConstraintResult(this, actual, false);

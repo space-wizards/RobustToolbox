@@ -4,6 +4,8 @@ using System.Numerics;
 using System.Text;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -19,7 +21,8 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class LineEdit : Control
     {
-        [Dependency] private readonly IClyde _clyde = default!;
+        [Dependency] private readonly IConfigurationManager _cfgManager = default!;
+        [Dependency] private readonly IGameTiming _timing = default!;
 
         private const float MouseScrollDelay = 0.001f;
 
@@ -46,7 +49,19 @@ namespace Robust.Client.UserInterface.Controls
         private bool _mouseSelectingText;
         private float _lastMousePosition;
 
-        private bool IsPlaceHolderVisible => string.IsNullOrEmpty(_text) && _placeHolder != null;
+        private TimeSpan? _lastClickTime;
+        private Vector2? _lastClickPosition;
+
+        // Keep track of the frame on which we got focus, so we can implement SelectAllOnFocus properly.
+        // Otherwise, there's no way to keep track of whether the KeyDown is the one that focused the text box,
+        // to avoid text selection stomping on the behavior.
+        // This isn't a great way to do it.
+        // A better fix would be to annotate all input events with some unique sequence ID,
+        // and expose the input event that focused the control in KeyboardFocusEntered.
+        // But that sounds like a refactor I'm not doing today.
+        private uint _focusedOnFrame;
+
+        private bool IsPlaceHolderVisible => !(HidePlaceHolderOnFocus && HasKeyboardFocus()) && string.IsNullOrEmpty(_text) && _placeHolder != null;
 
         public event Action<LineEditEventArgs>? OnTextChanged;
         public event Action<LineEditEventArgs>? OnTextEntered;
@@ -179,7 +194,14 @@ namespace Robust.Client.UserInterface.Controls
         public int SelectionLower => Math.Min(_selectionStart, _cursorPosition);
         public int SelectionUpper => Math.Max(_selectionStart, _cursorPosition);
 
+        public bool HidePlaceHolderOnFocus { get; set; }
+
         public bool IgnoreNext { get; set; }
+
+        /// <summary>
+        /// If true, all the text in the LineEdit will be automatically selected whenever it is focused.
+        /// </summary>
+        public bool SelectAllOnFocus { get; set; }
 
         private (int start, int length)? _imeData;
 
@@ -685,8 +707,26 @@ namespace Robust.Client.UserInterface.Controls
                     args.Handle();
                 }
             }
-            else
+            // Double-clicking. Clicks delay should be <= 250ms and the distance < 10 pixels.
+            else if (args.Function == EngineKeyFunctions.UIClick && _lastClickPosition != null && _lastClickTime != null
+                     && _timing.RealTime - _lastClickTime <= TimeSpan.FromMilliseconds(_cfgManager.GetCVar(CVars.DoubleClickDelay))
+                     && (_lastClickPosition.Value - args.PointerLocation.Position).IsShorterThan(_cfgManager.GetCVar(CVars.DoubleClickRange)))
             {
+                _lastClickTime = _timing.RealTime;
+                _lastClickPosition = args.PointerLocation.Position;
+
+                _lastMousePosition = args.RelativePosition.X;
+
+                _selectionStart = TextEditShared.PrevWordPosition(_text, GetIndexAtPos(args.RelativePosition.X));
+                _cursorPosition = TextEditShared.EndWordPosition(_text, GetIndexAtPos(args.RelativePosition.X));
+
+                args.Handle();
+            }
+            else if (!(SelectAllOnFocus && _focusedOnFrame == _timing.CurFrame))
+            {
+                _lastClickTime = _timing.RealTime;
+                _lastClickPosition = args.PointerLocation.Position;
+
                 _mouseSelectingText = true;
                 _lastMousePosition = args.RelativePosition.X;
 
@@ -839,7 +879,14 @@ namespace Robust.Client.UserInterface.Controls
 
             if (Editable)
             {
-                _clyde.TextInputStart();
+                Root?.Window?.TextInputStart();
+            }
+
+            _focusedOnFrame = _timing.CurFrame;
+            if (SelectAllOnFocus)
+            {
+                CursorPosition = _text.Length;
+                SelectionStart = 0;
             }
         }
 
@@ -849,7 +896,8 @@ namespace Robust.Client.UserInterface.Controls
 
             OnFocusExit?.Invoke(new LineEditEventArgs(this, _text));
 
-            _clyde.TextInputStop();
+            Root?.Window?.TextInputStop();
+
             AbortIme(delete: false);
         }
 
@@ -1097,15 +1145,16 @@ namespace Robust.Client.UserInterface.Controls
                             contentBox.Bottom),
                         cursorColor);
 
+                    if (Root?.Window is { } window)
                     {
                         // Update IME position.
                         var imeBox = new UIBox2(
-                            actualCursorPosition,
+                            contentBox.Left,
                             contentBox.Top,
                             contentBox.Right,
                             contentBox.Bottom);
 
-                        _master._clyde.TextInputSetRect((UIBox2i) imeBox.Translated(GlobalPixelPosition));
+                        window.TextInputSetRect((UIBox2i) imeBox.Translated(GlobalPixelPosition), actualCursorPosition);
                     }
                 }
 

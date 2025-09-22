@@ -17,11 +17,9 @@ public interface IMidiManager
     bool IsAvailable { get; }
 
     /// <summary>
-    ///     Volume, in db.
+    ///     Gain of audio.
     /// </summary>
-    float Volume { get; set; }
-
-    public int OcclusionCollisionMask { get; set; }
+    float Gain { get; set; }
 
     /// <summary>
     ///     This method tries to return a midi renderer ready to be used.

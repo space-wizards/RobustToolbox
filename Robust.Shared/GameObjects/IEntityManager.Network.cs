@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Map;
@@ -7,6 +6,11 @@ namespace Robust.Shared.GameObjects;
 
 public partial interface IEntityManager
 {
+    public void DirtyField(EntityUid uid, IComponentDelta delta, string fieldName, MetaDataComponent? metadata = null);
+
+    public void DirtyField<T>(EntityUid uid, T component, string fieldName, MetaDataComponent? metadata = null)
+        where T : IComponentDelta;
+
     /// <summary>
     /// Tries to parse a string as a NetEntity and return the relevant EntityUid.
     /// </summary>
@@ -108,6 +112,16 @@ public partial interface IEntityManager
     EntityUid?[] GetEntityArray(NetEntity?[] netEntities);
 
     /// <summary>
+    /// Dictionary version of <see cref="GetEntity"/>
+    /// </summary>
+    Dictionary<EntityUid, T> GetEntityDictionary<T>(Dictionary<NetEntity, T> netEntities);
+
+    /// <summary>
+    /// Dictionary version of <see cref="GetEntity"/>
+    /// </summary>
+    Dictionary<T, EntityUid> GetEntityDictionary<T>(Dictionary<T, NetEntity> netEntities) where T : notnull;
+
+    /// <summary>
     /// HashSet version of <see cref="GetNetEntity"/>
     /// </summary>
     public HashSet<NetEntity> GetNetEntitySet(HashSet<EntityUid> entities);
@@ -120,6 +134,11 @@ public partial interface IEntityManager
     /// <summary>
     /// List version of <see cref="GetNetEntity"/>
     /// </summary>
+    List<NetEntity> GetNetEntityList(IReadOnlyList<EntityUid> entities);
+
+    /// <summary>
+    /// List version of <see cref="GetNetEntity"/>
+    /// </summary>
     public List<NetEntity> GetNetEntityList(ICollection<EntityUid> entities);
 
     /// <summary>
@@ -128,14 +147,39 @@ public partial interface IEntityManager
     public List<NetEntity?> GetNetEntityList(List<EntityUid?> entities);
 
     /// <summary>
-    /// List version of <see cref="GetNetEntity"/>
+    /// Array version of <see cref="GetNetEntity"/>
     /// </summary>
     NetEntity[] GetNetEntityArray(EntityUid[] entities);
 
     /// <summary>
-    /// List version of <see cref="GetNetEntity"/>
+    /// Array version of <see cref="GetNetEntity"/>
     /// </summary>
     NetEntity?[] GetNetEntityArray(EntityUid?[] entities);
+
+    /// <summary>
+    /// Dictionary version of <see cref="GetNetEntity"/>
+    /// </summary>
+    Dictionary<NetEntity, T> GetNetEntityDictionary<T>(Dictionary<EntityUid, T> entities);
+
+    /// <summary>
+    /// Dictionary version of <see cref="GetNetEntity"/>
+    /// </summary>
+    Dictionary<T, NetEntity> GetNetEntityDictionary<T>(Dictionary<T, EntityUid> entities) where T : notnull;
+
+    /// <summary>
+    /// Dictionary version of <see cref="GetNetEntity"/>
+    /// </summary>
+    Dictionary<T, NetEntity?> GetNetEntityDictionary<T>(Dictionary<T, EntityUid?> entities) where T : notnull;
+
+    /// <summary>
+    /// Dictionary version of <see cref="GetNetEntity"/>
+    /// </summary>
+    Dictionary<NetEntity, NetEntity> GetNetEntityDictionary(Dictionary<EntityUid, EntityUid> entities);
+
+    /// <summary>
+    /// Dictionary version of <see cref="GetNetEntity"/>
+    /// </summary>
+    Dictionary<NetEntity, NetEntity?> GetNetEntityDictionary(Dictionary<EntityUid, EntityUid?> entities);
 
     /// <summary>
     /// Returns the corresponding <see cref="NetCoordinates"/> for the specified local coordinates.
@@ -177,6 +221,27 @@ public partial interface IEntityManager
     public HashSet<EntityUid> EnsureEntitySet<T>(HashSet<NetEntity> netEntities, EntityUid callerEntity);
 
     public List<EntityUid> EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity);
+
+    void EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity, List<EntityUid> entities);
+
+    void EnsureEntityDictionary<TComp, TValue>(Dictionary<NetEntity, TValue> netEntities, EntityUid callerEntity,
+        Dictionary<EntityUid, TValue> entities);
+
+    void EnsureEntityDictionaryNullableValue<TComp, TValue>(Dictionary<NetEntity, TValue?> netEntities,
+        EntityUid callerEntity,
+        Dictionary<EntityUid, TValue?> entities);
+
+    void EnsureEntityDictionary<TComp, TKey>(Dictionary<TKey, NetEntity> netEntities, EntityUid callerEntity,
+        Dictionary<TKey, EntityUid> entities) where TKey : notnull;
+
+    void EnsureEntityDictionary<TComp, TKey>(Dictionary<TKey, NetEntity?> netEntities, EntityUid callerEntity,
+        Dictionary<TKey, EntityUid?> entities) where TKey : notnull;
+
+    void EnsureEntityDictionary<TComp>(Dictionary<NetEntity, NetEntity> netEntities, EntityUid callerEntity,
+        Dictionary<EntityUid, EntityUid> entities);
+
+    void EnsureEntityDictionary<TComp>(Dictionary<NetEntity, NetEntity?> netEntities, EntityUid callerEntity,
+        Dictionary<EntityUid, EntityUid?> entities);
 
     public List<EntityCoordinates> GetEntityList(ICollection<NetCoordinates> netEntities);
 

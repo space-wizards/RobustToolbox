@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using Robust.Shared.Localization;
+﻿using System;
 
 namespace Robust.Shared.Toolshed;
 
@@ -9,21 +8,18 @@ public abstract partial class ToolshedCommand
     ///     Returns a command's localized description.
     /// </summary>
     public string Description(string? subCommand)
-        => Loc.GetString(UnlocalizedDescription(subCommand));
+    {
+        CommandImplementors.TryGetValue(subCommand ?? string.Empty, out var impl);
+        return impl?.Description() ?? string.Empty;
+    }
 
     /// <summary>
     ///     Returns the locale string for a command's description.
     /// </summary>
-    public string UnlocalizedDescription(string? subCommand)
+    public string DescriptionLocKey(string? subCommand)
     {
-        if (Name.All(char.IsAsciiLetterOrDigit))
-        {
-            return $"command-description-{Name}" + (subCommand is not null ? $"-{subCommand}" : "");
-        }
-        else
-        {
-            return $"command-description-{GetType().PrettyName()}" + (subCommand is not null ? $"-{subCommand}" : "");
-        }
+        CommandImplementors.TryGetValue(subCommand ?? string.Empty, out var impl);
+        return impl?.DescriptionLocKey() ?? string.Empty;
     }
 
     /// <summary>
@@ -31,15 +27,41 @@ public abstract partial class ToolshedCommand
     /// </summary>
     public string GetHelp(string? subCommand)
     {
-        if (subCommand is null)
-            return $"{Name}: {Description(null)}";
-        else
-            return $"{Name}:{subCommand}: {Description(subCommand)}";
+        CommandImplementors.TryGetValue(subCommand ?? string.Empty, out var impl);
+        return impl?.GetHelp() ?? string.Empty;
     }
 
-    /// <inheritdoc/>
     public override string ToString()
     {
-        return GetHelp(null);
+        return Name;
+    }
+
+    /// <summary>
+    /// Helper method for generating auto-completion hints while parsing command arguments.
+    /// </summary>
+    public static string GetArgHint(CommandArgument? arg, Type t)
+    {
+        if (arg == null)
+            return t.PrettyName();
+
+        return GetArgHint(arg.Value.Name, arg.Value.IsOptional, arg.Value.IsParamsCollection, t);
+    }
+
+    /// <summary>
+    /// Helper method for generating auto-completion hints while parsing command arguments.
+    /// </summary>
+    public static string GetArgHint(string name, bool optional, bool isParams, Type t)
+    {
+        var type = t.PrettyName();
+
+        // optional arguments wrapped in square braces, inspired by the syntax of man pages
+        if (optional)
+            return $"[{name} ({type})]";
+
+        // ellipses for params / variable length arguments
+        if (isParams)
+            return $"[{name} ({type})]...";
+
+        return $"<{name} ({type})>";
     }
 }

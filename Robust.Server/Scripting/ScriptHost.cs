@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Completion;
@@ -20,6 +21,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Player;
 using Robust.Shared.Reflection;
 using Robust.Shared.Scripting;
 using Robust.Shared.Utility;
@@ -38,7 +40,7 @@ namespace Robust.Server.Scripting
         [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
 
-        readonly Dictionary<IPlayerSession, Dictionary<int, ScriptInstance>> _instances =
+        readonly Dictionary<ICommonSession, Dictionary<int, ScriptInstance>> _instances =
             new();
 
         private ISawmill _sawmill = default!;
@@ -187,13 +189,20 @@ namespace Robust.Server.Scripting
             }
 
             // Compile ahead of time so that we can do syntax highlighting correctly for the echo.
-            newScript.Compile();
+            await Task.Run(() =>
+            {
+                newScript.Compile();
 
-            // Echo entered script.
-            var echoMessage = new FormattedMessage();
-            ScriptInstanceShared.AddWithSyntaxHighlighting(newScript, echoMessage, code, instance.HighlightWorkspace);
+                // Echo entered script.
+                var echoMessage = new FormattedMessage();
+                ScriptInstanceShared.AddWithSyntaxHighlighting(
+                    newScript,
+                    echoMessage,
+                    code,
+                    instance.HighlightWorkspace.Value);
 
-            replyMessage.Echo = echoMessage;
+                replyMessage.Echo = echoMessage;
+            });
 
             var msg = new FormattedMessage();
 
@@ -294,27 +303,22 @@ namespace Robust.Server.Scripting
                 loader: TextLoader.From(TextAndVersion.Create(SourceText.From(message.Code), VersionStamp.Create()))
             ));
 
-            var results = await CompletionService
-                .GetService(document)
-                .GetCompletionsAsync(document, message.Cursor);
+            var results = await (CompletionService
+                .GetService(document)?
+                .GetCompletionsAsync(document, message.Cursor) ?? Task.FromResult(CompletionList.Empty));
 
-            if (results is not null)
-            {
-                var ires = ImmutableArray.CreateBuilder<LiteResult>();
-                foreach  (var r in results.Items)
-                    ires.Add(new LiteResult(
-                                displayText: r.DisplayText,
-                                displayTextPrefix: r.DisplayTextPrefix,
-                                displayTextSuffix: r.DisplayTextSuffix,
-                                inlineDescription: r.InlineDescription,
-                                tags: r.Tags,
-                                properties: r.Properties
-                    ));
+            var ires = ImmutableArray.CreateBuilder<LiteResult>();
+            foreach  (var r in results.ItemsList)
+                ires.Add(new LiteResult(
+                            displayText: r.DisplayText,
+                            displayTextPrefix: r.DisplayTextPrefix,
+                            displayTextSuffix: r.DisplayTextSuffix,
+                            inlineDescription: r.InlineDescription,
+                            tags: r.Tags,
+                            properties: r.Properties
+                ));
 
-                replyMessage.Results = ires.ToImmutable();
-            }
-            else
-                replyMessage.Results = ImmutableArray<LiteResult>.Empty;
+            replyMessage.Results = ires.ToImmutable();
 
             _netManager.ServerSendMessage(replyMessage, message.MsgChannel);
         }
@@ -336,7 +340,7 @@ namespace Robust.Server.Scripting
 
         private sealed class ScriptInstance
         {
-            public Workspace HighlightWorkspace { get; } = new AdhocWorkspace();
+            public Lazy<Workspace> HighlightWorkspace { get; } = new(() => new AdhocWorkspace());
             public StringBuilder InputBuffer { get; } = new();
             public FormattedMessage OutputBuffer { get; } = new();
             public bool RunningScript { get; set; }
@@ -377,7 +381,7 @@ namespace Robust.Server.Scripting
                     script.Compile();
 
                     var syntax = new FormattedMessage();
-                    ScriptInstanceShared.AddWithSyntaxHighlighting(script, syntax, code, _scriptInstance.HighlightWorkspace);
+                    ScriptInstanceShared.AddWithSyntaxHighlighting(script, syntax, code, _scriptInstance.HighlightWorkspace.Value);
 
                     _scriptInstance.OutputBuffer.AddMessage(syntax);
                 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Robust.Server.ViewVariables.Traits;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
@@ -97,8 +98,8 @@ namespace Robust.Server.ViewVariables
 
             // Auto-dirty component. Only works when modifying a field that is directly on a component,
             // Does not work for nested objects.
-            if (Object is Component comp)
-                EntityManager.Dirty(comp);
+            if (Object is Component { NetSyncEnabled: true } comp)
+                EntityManager.Dirty(comp.Owner, comp);
         }
 
         public bool TryGetRelativeObject(object[] propertyIndex, out object? value)
@@ -134,6 +135,10 @@ namespace Robust.Server.ViewVariables
 
                         dynamic kv = value;
                         value = kvPair.Key ? kv.Key : kv.Value;
+                        break;
+                    case ViewVariablesTupleIndexSelector indexSelector
+                        when value is ITuple tuple:
+                        value = indexSelector.Index <= tuple.Length - 1 ? tuple[indexSelector.Index] : null;
                         break;
                 }
             }

@@ -29,9 +29,11 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         public Collapsible()
-        {}
+        {
+            Orientation = LayoutOrientation.Vertical;
+        }
 
-        public Collapsible(CollapsibleHeading header, CollapsibleBody body)
+        public Collapsible(CollapsibleHeading header, CollapsibleBody body) : this()
         {
             AddChild(header);
             AddChild(body);
@@ -39,12 +41,9 @@ namespace Robust.Client.UserInterface.Controls
             Initialize();
         }
 
-        public Collapsible(string title, CollapsibleBody body)
+        public Collapsible(string title, CollapsibleBody body) : this(new CollapsibleHeading(title), body)
         {
-            AddChild(new CollapsibleHeading(title));
-            AddChild(body);
 
-            Initialize();
         }
 
         protected internal override void Draw(DrawingHandleScreen handle)
@@ -105,11 +104,15 @@ namespace Robust.Client.UserInterface.Controls
             set => _chevron.Margin = value;
         }
 
-        private Label _title = new();
+        /// <summary>
+        /// Exposes the label for this heading.
+        /// </summary>
+        public Label Label { get; }
+
         public string? Title
         {
-            get => _title.Text;
-            set => _title.Text = value;
+            get => Label.Text;
+            set => Label.Text = value;
         }
 
         public CollapsibleHeading()
@@ -118,8 +121,8 @@ namespace Robust.Client.UserInterface.Controls
             var box = new BoxContainer();
             AddChild(box);
             box.AddChild(_chevron);
-            _title = new Label();
-            box.AddChild(_title);
+            Label = new Label();
+            box.AddChild(Label);
         }
 
         public CollapsibleHeading(string title) : this()

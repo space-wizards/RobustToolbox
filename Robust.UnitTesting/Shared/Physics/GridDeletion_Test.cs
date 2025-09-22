@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -31,17 +32,17 @@ public sealed class GridDeletion_Test : RobustIntegrationTest
 
 
         PhysicsComponent physics = default!;
-        MapGridComponent grid = default!;
+        Entity<MapGridComponent> grid = default!;
         MapId mapId = default!;
 
         await server.WaitAssertion(() =>
         {
-            mapId = mapManager.CreateMap();
-            grid = mapManager.CreateGrid(mapId);
+            entManager.System<SharedMapSystem>().CreateMap(out mapId);
+            grid = mapManager.CreateGridEntity(mapId);
 
-            physics = entManager.GetComponent<PhysicsComponent>(grid.Owner);
-            physSystem.SetBodyType(grid.Owner, BodyType.Dynamic, body: physics);
-            physSystem.SetLinearVelocity(grid.Owner, new Vector2(50f, 0f), body: physics);
+            physics = entManager.GetComponent<PhysicsComponent>(grid);
+            physSystem.SetBodyType(grid, BodyType.Dynamic, body: physics);
+            physSystem.SetLinearVelocity(grid, new Vector2(50f, 0f), body: physics);
             Assert.That(physics.LinearVelocity.Length, NUnit.Framework.Is.GreaterThan(0f));
         });
 
@@ -50,14 +51,13 @@ public sealed class GridDeletion_Test : RobustIntegrationTest
         await server.WaitAssertion(() =>
         {
             Assert.That(physics.LinearVelocity.Length, NUnit.Framework.Is.GreaterThan(0f));
-            entManager.DeleteEntity(grid.Owner);
+            entManager.DeleteEntity(grid);
 
+            List<Entity<MapGridComponent>> grids = [];
             // So if gridtree is fucky then this SHOULD throw.
-            foreach (var _ in mapManager.FindGridsIntersecting(mapId,
+            mapManager.FindGridsIntersecting(mapId,
                          new Box2(new Vector2(float.MinValue, float.MinValue),
-                             new Vector2(float.MaxValue, float.MaxValue))))
-            {
-            }
+                             new Vector2(float.MaxValue, float.MaxValue)), ref grids);
         });
     }
 }

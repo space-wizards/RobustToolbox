@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
 using OpenToolkit.Graphics.OpenGL4;
+using Robust.Client.ResourceManagement;
+using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
@@ -14,15 +16,40 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
-        [Dependency] private readonly IEntityManager _entityManager = default!;
-
         private readonly Dictionary<EntityUid, Dictionary<Vector2i, MapChunkData>> _mapChunkData =
             new();
+
+        /// <summary>
+        /// To avoid spamming errors we'll just log it once and move on.
+        /// </summary>
+        private HashSet<Type> _erroredGridOverlays = new();
+
+        private Vertex2D[]? _chunkMeshBuilderVertexBuffer;
+        private ushort[]? _chunkMeshBuilderIndexBuffer;
 
         private int _verticesPerChunk(MapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * 4;
         private int _indicesPerChunk(MapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * GetQuadBatchIndexCount();
 
-        private void _drawGrids(Viewport viewport, Box2Rotated worldBounds, IEye eye)
+        private List<Entity<MapGridComponent>> _grids = new();
+        private bool _drawTileEdges;
+
+        private void RenderTileEdgesChanges(bool value)
+        {
+            _drawTileEdges = value;
+            if (!value)
+                return;
+
+            // Dirty all Edges
+            foreach (var gridData in _mapChunkData.Values)
+            {
+                foreach (var chunk in gridData.Values)
+                {
+                    chunk.EdgeDirty = true;
+                }
+            }
+        }
+
+        private void _drawGrids(Viewport viewport, Box2 worldAABB, Box2Rotated worldBounds, IEye eye)
         {
             var mapId = eye.Position.MapId;
             if (!_mapManager.MapExists(mapId))
@@ -31,113 +58,309 @@ namespace Robust.Client.Graphics.Clyde
                 mapId = MapId.Nullspace;
             }
 
-            SetTexture(TextureUnit.Texture0, _tileDefinitionManager.TileTextureAtlas);
-            SetTexture(TextureUnit.Texture1, _lightingReady ? viewport.LightRenderTarget.Texture : _stockTextureWhite);
+            _grids.Clear();
+            _mapManager.FindGridsIntersecting(mapId, worldBounds, ref _grids);
 
-            var gridProgram = ActivateShaderInstance(_defaultShader.Handle).Item1;
-            SetupGlobalUniformsImmediate(gridProgram, (ClydeTexture) _tileDefinitionManager.TileTextureAtlas);
+            var requiresFlush = true;
+            GLShaderProgram gridProgram = default!;
+            var gridOverlays = GetOverlaysForSpace(OverlaySpace.WorldSpaceGrids);
+            var mapSystem = _entityManager.System<SharedMapSystem>();
 
-            gridProgram.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
-            gridProgram.SetUniformTextureMaybe(UniILightTexture, TextureUnit.Texture1);
-            gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
-
-            foreach (var mapGrid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
+            foreach (var mapGrid in _grids)
             {
-                if (!_mapChunkData.ContainsKey(mapGrid.Owner))
+                if (!_mapChunkData.TryGetValue(mapGrid, out var data))
+                {
                     continue;
+                }
 
-                var transform = _entityManager.GetComponent<TransformComponent>(mapGrid.Owner);
-                gridProgram.SetUniform(UniIModelMatrix, transform.WorldMatrix);
-                var enumerator = mapGrid.GetMapChunks(worldBounds);
+                if (requiresFlush)
+                {
+                    SetTexture(TextureUnit.Texture0, _tileDefinitionManager.TileTextureAtlas);
+                    SetTexture(TextureUnit.Texture1, _lightingReady ? viewport.LightRenderTarget.Texture : _stockTextureWhite);
+                    gridProgram = ActivateShaderInstance(_defaultShader.Handle).Item1;
+                    SetupGlobalUniformsImmediate(gridProgram, (ClydeTexture) _tileDefinitionManager.TileTextureAtlas);
 
+                    gridProgram.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
+                    gridProgram.SetUniformTextureMaybe(UniILightTexture, TextureUnit.Texture1);
+                    gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
+                }
+
+                gridProgram.SetUniform(UniIModelMatrix, _transformSystem.GetWorldMatrix(mapGrid));
+                var enumerator = mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, worldBounds);
+
+                // Handle base texture updates.
                 while (enumerator.MoveNext(out var chunk))
                 {
-                    if (_isChunkDirty(mapGrid, chunk))
-                        _updateChunkMesh(mapGrid, chunk);
+                    DebugTools.Assert(chunk.FilledTiles > 0);
+                    var datum = EnsureChunkInitialized(data, chunk, mapGrid);
 
-                    var datum = _mapChunkData[mapGrid.Owner][chunk.Indices];
-
-                    if (datum.TileCount == 0)
+                    if (!datum.Dirty)
                         continue;
 
-                    BindVertexArray(datum.VAO);
-                    CheckGlError();
+                    _updateChunkMesh(mapGrid, chunk, datum);
 
-                    _debugStats.LastGLDrawCalls += 1;
-                    GL.DrawElements(GetQuadGLPrimitiveType(), datum.TileCount * GetQuadBatchIndexCount(), DrawElementsType.UnsignedShort, 0);
-                    CheckGlError();
+                    if (!_drawTileEdges)
+                        continue;
+
+                    // Dirty edge tiles for next step.
+                    datum.EdgeDirty = true;
+
+                    for (var x = -1; x <= 1; x++)
+                    {
+                        for (var y = -1; y <= 1; y++)
+                        {
+                            var neighbor = chunk.Indices + new Vector2i(x, y);
+
+                            if (!mapGrid.Comp.Chunks.TryGetValue(neighbor, out var neighborChunk))
+                                continue;
+
+                            var neighborDatum = EnsureChunkInitialized(data, neighborChunk, mapGrid);
+                            neighborDatum.EdgeDirty = true;
+                        }
+                    }
+                }
+
+                // Handle edge sprites.
+                if (_drawTileEdges)
+                {
+                    enumerator = mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, worldBounds);
+                    while (enumerator.MoveNext(out var chunk))
+                    {
+                        var datum = data[chunk.Indices];
+                        if (datum.EdgeDirty)
+                            _updateChunkEdges(mapGrid, chunk, datum);
+                    }
+                }
+
+                enumerator = mapSystem.GetMapChunks(mapGrid.Owner, mapGrid.Comp, worldBounds);
+
+                // Draw chunks
+                while (enumerator.MoveNext(out var chunk))
+                {
+                    var datum = data[chunk.Indices];
+                    DebugTools.Assert(datum.TileCount > 0);
+                    if (datum.TileCount > 0)
+                    {
+                        BindVertexArray(datum.VAO);
+                        CheckGlError();
+
+                        _debugStats.LastGLDrawCalls += 1;
+                        GL.DrawElements(GetQuadGLPrimitiveType(), datum.TileCount * GetQuadBatchIndexCount(), DrawElementsType.UnsignedShort, 0);
+                        CheckGlError();
+                    }
+
+                    if (_drawTileEdges && datum.EdgeCount > 0)
+                    {
+                        BindVertexArray(datum.EdgeVAO);
+                        CheckGlError();
+
+                        _debugStats.LastGLDrawCalls += 1;
+                        GL.DrawElements(GetQuadGLPrimitiveType(), datum.EdgeCount * GetQuadBatchIndexCount(), DrawElementsType.UnsignedShort, 0);
+                        CheckGlError();
+                    }
+                }
+
+                requiresFlush = false;
+
+                foreach (var overlay in gridOverlays)
+                {
+                    if (overlay is not IGridOverlay iGrid)
+                    {
+                        if (!_erroredGridOverlays.Add(overlay.GetType()))
+                        {
+                            _clydeSawmill.Error($"Tried to render grid overlay {overlay.GetType()} that doesn't implement {nameof(IGridOverlay)}");
+                        }
+
+                        continue;
+                    }
+
+                    iGrid.Grid = mapGrid;
+                    iGrid.RequiresFlush = false;
+                    RenderSingleWorldOverlay(overlay, viewport, OverlaySpace.WorldSpaceGrids, worldAABB, worldBounds);
+                    requiresFlush |= iGrid.RequiresFlush;
+                }
+
+                if (requiresFlush)
+                {
+                    FlushRenderQueue();
+                }
+            }
+
+            CullEmptyChunks();
+        }
+
+        private MapChunkData EnsureChunkInitialized(Dictionary<Vector2i, MapChunkData> data, MapChunk chunk, Entity<MapGridComponent> mapGrid)
+        {
+            if (!data.TryGetValue(chunk.Indices, out var datum))
+            {
+                data[chunk.Indices] = datum = new MapChunkData();
+                _initChunkBuffers(mapGrid, chunk, datum);
+            }
+
+            return datum;
+        }
+
+        private void CullEmptyChunks()
+        {
+            foreach (var (grid, chunks) in _mapChunkData)
+            {
+                var gridComp = _entityManager.GetComponent<MapGridComponent>(grid);
+                foreach (var (index, chunk) in chunks)
+                {
+                    if (!chunk.Dirty || gridComp.Chunks.ContainsKey(index))
+                    {
+                        DebugTools.Assert(gridComp.Chunks[index].FilledTiles > 0);
+                        continue;
+                    }
+
+                    DeleteChunk(chunk);
+                    chunks.Remove(index);
                 }
             }
         }
 
-        private void _updateChunkMesh(MapGridComponent grid, MapChunk chunk)
+        private void _updateChunkMesh(Entity<MapGridComponent> grid, MapChunk chunk, MapChunkData datum)
         {
-            var data = _mapChunkData[grid.Owner];
-
-            if (!data.TryGetValue(chunk.Indices, out var datum))
-            {
-                datum = _initChunkBuffers(grid, chunk);
-            }
-
-            Span<ushort> indexBuffer = stackalloc ushort[_indicesPerChunk(chunk)];
-            Span<Vertex2D> vertexBuffer = stackalloc Vertex2D[_verticesPerChunk(chunk)];
+            Span<ushort> indexBuffer = EnsureSize(ref _chunkMeshBuilderIndexBuffer, _indicesPerChunk(chunk));
+            Span<Vertex2D> vertexBuffer = EnsureSize(ref _chunkMeshBuilderVertexBuffer, _verticesPerChunk(chunk));
 
             var i = 0;
-            var cSz = grid.ChunkSize;
-            var cScaled = chunk.Indices * cSz;
-            for (ushort x = 0; x < cSz; x++)
+            var chunkSize = grid.Comp.ChunkSize;
+            var chunkOriginScaled = chunk.Indices * chunkSize;
+
+            for (ushort x = 0; x < chunkSize; x++)
             {
-                for (ushort y = 0; y < cSz; y++)
+                for (ushort y = 0; y < chunkSize; y++)
                 {
+                    var gridX = x + chunkOriginScaled.X;
+                    var gridY = y + chunkOriginScaled.Y;
                     var tile = chunk.GetTile(x, y);
-                    if (tile.IsEmpty)
-                        continue;
 
-                    var regionMaybe = _tileDefinitionManager.TileAtlasRegion(tile);
-
-                    Box2 region;
-                    if (regionMaybe == null || regionMaybe.Length <= tile.Variant)
+                    // Tile render
+                    if (x != chunkSize && y != chunkSize)
                     {
-                        region = _tileDefinitionManager.ErrorTileRegion;
-                    }
-                    else
-                    {
-                        region = regionMaybe[tile.Variant];
-                    }
+                        // ReSharper disable once IntVariableOverflowInUncheckedContext
+                        if (tile.IsEmpty)
+                            continue;
 
-                    var gx = x + cScaled.X;
-                    var gy = y + cScaled.Y;
+                        var regionMaybe = _tileDefinitionManager.TileAtlasRegion(tile);
 
-                    var vIdx = i * 4;
-                    vertexBuffer[vIdx + 0] = new Vertex2D(gx, gy, region.Left, region.Bottom, Color.White);
-                    vertexBuffer[vIdx + 1] = new Vertex2D(gx + 1, gy, region.Right, region.Bottom, Color.White);
-                    vertexBuffer[vIdx + 2] = new Vertex2D(gx + 1, gy + 1, region.Right, region.Top, Color.White);
-                    vertexBuffer[vIdx + 3] = new Vertex2D(gx, gy + 1, region.Left, region.Top, Color.White);
-                    var nIdx = i * GetQuadBatchIndexCount();
-                    var tIdx = (ushort)(i * 4);
-                    QuadBatchIndexWrite(indexBuffer, ref nIdx, tIdx);
-                    i += 1;
+                        Box2 region;
+                        if (regionMaybe == null || regionMaybe.Length <= tile.Variant)
+                        {
+                            region = _tileDefinitionManager.ErrorTileRegion;
+                        }
+                        else
+                        {
+                            region = regionMaybe[tile.Variant];
+                        }
+
+                        var rotationMirroring = (_tileDefinitionManager.TryGetDefinition(tile.TypeId, out var tileDef) && tileDef.AllowRotationMirror) ?
+                                                    tile.RotationMirroring
+                                                    : 0;
+
+                        WriteTileToBuffers(i, gridX, gridY, vertexBuffer, indexBuffer, region, rotationMirroring);
+                        i += 1;
+                    }
                 }
             }
+
+            var indexSlice = indexBuffer[..(i * GetQuadBatchIndexCount())];
+            var vertSlice = vertexBuffer[..(i * 4)];
 
             GL.BindVertexArray(datum.VAO);
             CheckGlError();
             datum.EBO.Use();
             datum.VBO.Use();
-            datum.EBO.Reallocate(indexBuffer[..(i * GetQuadBatchIndexCount())]);
-            datum.VBO.Reallocate(vertexBuffer[..(i * 4)]);
-            datum.Dirty = false;
+            datum.EBO.Reallocate(indexSlice);
+            datum.VBO.Reallocate(vertSlice);
+
             datum.TileCount = i;
+            datum.Dirty = false;
         }
 
-        private unsafe MapChunkData _initChunkBuffers(MapGridComponent grid, MapChunk chunk)
+        private void _updateChunkEdges(Entity<MapGridComponent> grid, MapChunk chunk, MapChunkData datum)
         {
+            // Need a buffer that can potentially store all neighbor tiles
+            Span<ushort> indexBuffer = EnsureSize(ref _chunkMeshBuilderIndexBuffer, _indicesPerChunk(chunk) * 8);
+            Span<Vertex2D> vertexBuffer = EnsureSize(ref _chunkMeshBuilderVertexBuffer, _verticesPerChunk(chunk) * 8);
+
+            var i = 0;
+            var chunkSize = grid.Comp.ChunkSize;
+            var chunkOriginScaled = chunk.Indices * chunkSize;
+            var maps = _entityManager.System<SharedMapSystem>();
+
+            for (ushort x = 0; x < chunkSize; x++)
+            {
+                for (ushort y = 0; y < chunkSize; y++)
+                {
+                    var gridX = x + chunkOriginScaled.X;
+                    var gridY = y + chunkOriginScaled.Y;
+                    var tile = chunk.GetTile(x, y);
+                    if (!_tileDefinitionManager.TryGetDefinition(tile.TypeId, out var tileDef))
+                        continue;
+
+                    // Edge render
+                    for (var nx = -1; nx <= 1; nx++)
+                    {
+                        for (var ny = -1; ny <= 1; ny++)
+                        {
+                            if (nx == 0 && ny == 0)
+                                continue;
+
+                            var neighborIndices = new Vector2i(gridX + nx, gridY + ny);
+                            if (!maps.TryGetTile(grid.Comp, neighborIndices, out var neighborTile))
+                                continue;
+
+                            if (!_tileDefinitionManager.TryGetDefinition(neighborTile.TypeId, out var neighborDef))
+                                continue;
+
+                            // If it's the same tile then no edge to be drawn.
+                            if (tile.TypeId == neighborTile.TypeId || neighborDef.EdgeSprites.Count == 0)
+                                continue;
+
+                            // If neighbor is a lower or same priority then us then don't draw on our tile.
+                            if (neighborDef.EdgeSpritePriority <= tileDef.EdgeSpritePriority)
+                                continue;
+
+                            var direction = new Vector2i(nx, ny).AsDirection().GetOpposite();
+                            var regionMaybe = _tileDefinitionManager.TileAtlasRegion(neighborTile.TypeId, direction);
+
+                            if (regionMaybe == null)
+                                continue;
+
+                            var region = regionMaybe[0];
+                            WriteTileToBuffers(i, gridX, gridY, vertexBuffer, indexBuffer, region, 0);
+                            i += 1;
+                        }
+                    }
+                }
+            }
+
+            // We don't save the edge buffers back because we might need to re-use it if a neighbor chunk updates.
+            var indexSlice = indexBuffer[..(i * GetQuadBatchIndexCount())];
+            var vertSlice = vertexBuffer[..(i * 4)];
+
+            GL.BindVertexArray(datum.EdgeVAO);
+            CheckGlError();
+            datum.EdgeEBO.Use();
+            datum.EdgeVBO.Use();
+            datum.EdgeEBO.Reallocate(indexSlice);
+            datum.EdgeVBO.Reallocate(vertSlice);
+
+            datum.EdgeCount = i;
+            datum.EdgeDirty = false;
+        }
+
+        private unsafe void _initChunkBuffers(Entity<MapGridComponent> grid, MapChunk chunk, MapChunkData datum)
+        {
+            var vboSize = _verticesPerChunk(chunk) * sizeof(Vertex2D);
+            var eboSize = _indicesPerChunk(chunk) * sizeof(ushort);
+
+            // Base VAO
             var vao = GenVertexArray();
             BindVertexArray(vao);
             CheckGlError();
-
-            var vboSize = _verticesPerChunk(chunk) * sizeof(Vertex2D);
-            var eboSize = _indicesPerChunk(chunk) * sizeof(ushort);
 
             var vbo = new GLBuffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
                 vboSize, $"Grid {grid.Owner} chunk {chunk.Indices} VBO");
@@ -153,46 +376,48 @@ namespace Robust.Client.Graphics.Clyde
             vbo.Use();
             ebo.Use();
 
-            var datum = new MapChunkData(vao, vbo, ebo)
-            {
-                Dirty = true
-            };
+            datum.EBO = ebo;
+            datum.VBO = vbo;
+            datum.VAO = vao;
 
-            _mapChunkData[grid.Owner].Add(chunk.Indices, datum);
-            return datum;
+            // EdgeVAO
+            var edgeVao = GenVertexArray();
+            BindVertexArray(edgeVao);
+            CheckGlError();
+
+            var edgeVbo = new GLBuffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
+                vboSize * 8, $"Grid {grid.Owner} chunk {chunk.Indices} EdgeVBO");
+            var edgeEbo = new GLBuffer(this, BufferTarget.ElementArrayBuffer, BufferUsageHint.DynamicDraw,
+                eboSize * 8, $"Grid {grid.Owner} chunk {chunk.Indices} EdgeEBO");
+
+            ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, vao, $"Grid {grid.Owner} chunk {chunk.Indices} EdgeVAO");
+            SetupVAOLayout();
+            CheckGlError();
+
+            edgeVbo.Use();
+            edgeEbo.Use();
+
+            datum.EdgeEBO = edgeEbo;
+            datum.EdgeVBO = edgeVbo;
+            datum.EdgeVAO = edgeVao;
         }
 
-        private bool _isChunkDirty(MapGridComponent grid, MapChunk chunk)
+        private void DeleteChunk(MapChunkData data)
         {
-            var data = _mapChunkData[grid.Owner];
-            return !data.TryGetValue(chunk.Indices, out var datum) || datum.Dirty;
-        }
-
-        public void _setChunkDirty(MapGridComponent grid, Vector2i chunk)
-        {
-            var data = _mapChunkData.GetOrNew(grid.Owner);
-            if (data.TryGetValue(chunk, out var datum))
-            {
-                datum.Dirty = true;
-            }
-            // Don't need to set it if we don't have an entry since lack of an entry is treated as dirty.
-        }
-
-        private void _updateOnGridModified(GridModifiedEvent args)
-        {
-            foreach (var (pos, _) in args.Modified)
-            {
-                var grid = args.Grid;
-                var chunk = grid.GridTileToChunkIndices(pos);
-                _setChunkDirty(grid, chunk);
-            }
+            DeleteVertexArray(data.VAO);
+            CheckGlError();
+            data.VBO.Delete();
+            data.EBO.Delete();
         }
 
         private void _updateTileMapOnUpdate(ref TileChangedEvent args)
         {
-            var grid = _mapManager.GetGrid(args.NewTile.GridUid);
-            var chunk = grid.GridTileToChunkIndices(new Vector2i(args.NewTile.X, args.NewTile.Y));
-            _setChunkDirty(grid, chunk);
+            var gridData = _mapChunkData.GetOrNew(args.Entity);
+            foreach (var change in args.Changes)
+            {
+                if (gridData.TryGetValue(change.ChunkIndex, out var data))
+                    data.Dirty = true;
+            }
         }
 
         private void _updateOnGridCreated(GridStartupEvent ev)
@@ -208,28 +433,99 @@ namespace Robust.Client.Graphics.Clyde
             var data = _mapChunkData[gridId];
             foreach (var chunkDatum in data.Values)
             {
-                DeleteVertexArray(chunkDatum.VAO);
-                CheckGlError();
-                chunkDatum.VBO.Delete();
-                chunkDatum.EBO.Delete();
+                DeleteChunk(chunkDatum);
             }
 
             _mapChunkData.Remove(gridId);
         }
 
+        private static T[] EnsureSize<T>(ref T[]? field, int size)
+        {
+            if (field == null || field.Length < size)
+                field = new T[size];
+
+            return field;
+        }
+
+        private void WriteTileToBuffers(
+            int i,
+            int gridX,
+            int gridY,
+            Span<Vertex2D> vertexBuffer,
+            Span<ushort> indexBuffer,
+            Box2 region,
+            int rotationMirroring)
+        {
+            var rLeftBottom = (region.Left, region.Bottom);
+            var rRightBottom = (region.Right, region.Bottom);
+            var rRightTop = (region.Right, region.Top);
+            var rLeftTop = (region.Left, region.Top);
+
+            // The vertices must be changed if there's any rotation or mirroring to the tile
+            if (rotationMirroring != 0)
+            {
+                // Rotate the tile
+                for (int r = 0; r < rotationMirroring % 4; r++)
+                {
+                    (rLeftBottom, rRightBottom, rRightTop, rLeftTop) =
+                        (rLeftTop, rLeftBottom, rRightBottom, rRightTop);
+                }
+
+                // Mirror on the x-axis
+                if (rotationMirroring >= 4)
+                {
+                    if (rotationMirroring % 2 == 0)
+                    {
+                        rLeftBottom = (rLeftBottom.Item1.Equals(region.Left) ? region.Right : region.Left,
+                            rLeftBottom.Item2);
+                        rRightBottom = (rRightBottom.Item1.Equals(region.Left) ? region.Right : region.Left,
+                            rRightBottom.Item2);
+                        rRightTop = (rRightTop.Item1.Equals(region.Left) ? region.Right : region.Left,
+                            rRightTop.Item2);
+                        rLeftTop = (rLeftTop.Item1.Equals(region.Left) ? region.Right : region.Left,
+                            rLeftTop.Item2);
+                    }
+                    else
+                    {
+                        rLeftBottom = (rLeftBottom.Item1,
+                            rLeftBottom.Item2.Equals(region.Bottom) ? region.Top : region.Bottom);
+                        rRightBottom = (rRightBottom.Item1,
+                            rRightBottom.Item2.Equals(region.Bottom) ? region.Top : region.Bottom);
+                        rRightTop = (rRightTop.Item1,
+                            rRightTop.Item2.Equals(region.Bottom) ? region.Top : region.Bottom);
+                        rLeftTop = (rLeftTop.Item1,
+                            rLeftTop.Item2.Equals(region.Bottom) ? region.Top : region.Bottom);
+                    }
+                }
+            }
+
+            var vIdx = i * 4;
+            vertexBuffer[vIdx + 0] = new Vertex2D(gridX, gridY, rLeftBottom.Left, rLeftBottom.Bottom, Color.White);
+            vertexBuffer[vIdx + 1] = new Vertex2D(gridX + 1, gridY, rRightBottom.Right, rRightBottom.Bottom, Color.White);
+            vertexBuffer[vIdx + 2] = new Vertex2D(gridX + 1, gridY + 1, rRightTop.Right, rRightTop.Top, Color.White);
+            vertexBuffer[vIdx + 3] = new Vertex2D(gridX, gridY + 1, rLeftTop.Left, rLeftTop.Top, Color.White);
+            var nIdx = i * GetQuadBatchIndexCount();
+            var tIdx = (ushort)(i * 4);
+            QuadBatchIndexWrite(indexBuffer, ref nIdx, tIdx);
+        }
+
         private sealed class MapChunkData
         {
-            public bool Dirty;
-            public readonly uint VAO;
-            public readonly GLBuffer VBO;
-            public readonly GLBuffer EBO;
+            public bool EdgeDirty = true;
+            public bool Dirty = true;
+
+            public uint VAO;
+            public GLBuffer VBO = default!;
+            public GLBuffer EBO = default!;
             public int TileCount;
 
-            public MapChunkData(uint vao, GLBuffer vbo, GLBuffer ebo)
+            public uint EdgeVAO;
+            public GLBuffer EdgeVBO = default!;
+            public GLBuffer EdgeEBO = default!;
+            public int EdgeCount;
+
+            public MapChunkData()
             {
-                VAO = vao;
-                VBO = vbo;
-                EBO = ebo;
             }
         }
     }

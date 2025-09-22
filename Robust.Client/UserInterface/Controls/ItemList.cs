@@ -4,11 +4,15 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Numerics;
 using Robust.Client.Graphics;
+using Robust.Shared.Collections;
 using Robust.Shared.Graphics;
 using Robust.Shared.Input;
 using Robust.Shared.Maths;
 using Timer = Robust.Shared.Timing.Timer;
 
+/// <summary>
+/// Represents a scrollable list of items in a user interface.
+/// </summary>
 namespace Robust.Client.UserInterface.Controls
 {
     [Virtual]
@@ -29,6 +33,10 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePropertySelectedItemBackground = "selected-item-background";
         public const string StylePropertyDisabledItemBackground = "disabled-item-background";
 
+        /// <summary>
+        /// Gets or sets the ItemSeparation of individual list items
+        /// </summary>
+        public int ItemSeparation { get; set; } = 0; // Default value is 0px
         public int Count => _itemList.Count;
         public bool IsReadOnly => false;
 
@@ -61,22 +69,38 @@ namespace Robust.Client.UserInterface.Controls
                 var itemHeight = 0f;
                 if (item.Icon != null)
                 {
-                    itemHeight = item.IconSize.Y;
+                    itemHeight = item.IconSize.Y * item.IconScale;
                 }
 
                 itemHeight = Math.Max(itemHeight, ActualFont.GetHeight(UIScale));
                 itemHeight += ActualItemBackground.MinimumSize.Y * UIScale;
 
                 _totalContentHeight += (int)Math.Ceiling(itemHeight);
+                _totalContentHeight += ItemSeparation;
             }
-
+            //Remove unneeded ItemSeparation on last item.
+            _totalContentHeight -= ItemSeparation;
             _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
             _updateScrollbarVisibility();
         }
 
+        public void Add(IEnumerable<Item> items)
+        {
+            foreach (var item in items)
+            {
+                if(item.Owner != this) throw new ArgumentException("Item is owned by another ItemList!");
+
+                _itemList.Add(item);
+
+                item.OnSelected += Select;
+                item.OnDeselected += Deselect;
+            }
+
+            Recalculate();
+        }
+
         public void Add(Item item)
         {
-            if (item == null) return;
             if(item.Owner != this) throw new ArgumentException("Item is owned by another ItemList!");
 
             _itemList.Add(item);
@@ -84,25 +108,39 @@ namespace Robust.Client.UserInterface.Controls
             item.OnSelected += Select;
             item.OnDeselected += Deselect;
 
-            RecalculateContentHeight();
-            if (_isAtBottom && ScrollFollowing)
-                _scrollBar.MoveToEnd();
+            Recalculate();
         }
 
-        public Item AddItem(string text, Texture? icon = null, bool selectable = true, object? metadata = null)
+        public void AddItems(IEnumerable<string> texts, Texture? icon = null, bool selectable = true, object? metadata = null, float iconScale = 1)
         {
-            var item = new Item(this) {Text = text, Icon = icon, Selectable = selectable, Metadata = metadata};
+            var items = new ValueList<Item>();
+
+            foreach (var text in texts)
+            {
+                items.Add(new Item(this) {Text = text, Icon = icon, IconScale = iconScale, Selectable = selectable, Metadata = metadata});
+            }
+
+            Add(items);
+        }
+
+        public Item AddItem(string text, Texture? icon = null, bool selectable = true, object? metadata = null, float iconScale = 1)
+        {
+            var item = new Item(this) {Text = text, Icon = icon, IconScale = iconScale, Selectable = selectable, Metadata = metadata};
             Add(item);
             return item;
         }
 
         public void Clear()
         {
-            foreach (var item in _itemList.ToArray())
+            // Handle this manually so we can just clear all at once.
+            foreach (var item in _itemList)
             {
-                Remove(item);
+                item.OnSelected -= Select;
+                item.OnDeselected -= Deselect;
             }
 
+            _itemList.Clear();
+            Recalculate();
             _totalContentHeight = 0;
         }
 
@@ -116,25 +154,35 @@ namespace Robust.Client.UserInterface.Controls
             _itemList.CopyTo(array, arrayIndex);
         }
 
+        private void InternalRemoveAt(int index)
+        {
+            if (_itemList.Count <= index)
+                return;
+
+            // If you modify this then also make sure to update Clear!
+            var item = _itemList[index];
+            _itemList.RemoveAt(index);
+
+            item.OnSelected -= Select;
+            item.OnDeselected -= Deselect;
+        }
+
         public bool Remove(Item item)
         {
-            if (item == null) return false;
-
             var value =  _itemList.Remove(item);
 
             item.OnSelected -= Select;
             item.OnDeselected -= Deselect;
 
-            RecalculateContentHeight();
-            if (_isAtBottom && ScrollFollowing)
-                _scrollBar.MoveToEnd();
+            Recalculate();
 
             return value;
         }
 
         public void RemoveAt(int index)
         {
-            Remove(this[index]);
+            InternalRemoveAt(index);
+            Recalculate();
         }
 
         public IEnumerator<Item> GetEnumerator()
@@ -152,19 +200,93 @@ namespace Robust.Client.UserInterface.Controls
             return _itemList.IndexOf(item);
         }
 
-        public void Insert(int index, Item item)
+        private void InternalInsert(int index, Item item)
         {
-            if (item == null) return;
             if(item.Owner != this) throw new ArgumentException("Item is owned by another ItemList!");
 
             _itemList.Insert(index, item);
 
             item.OnSelected += Select;
             item.OnDeselected += Deselect;
+        }
 
+        public void Insert(int index, Item item)
+        {
+            InternalInsert(index, item);
+            Recalculate();
+        }
+
+        private void Recalculate()
+        {
             RecalculateContentHeight();
             if (_isAtBottom && ScrollFollowing)
                 _scrollBar.MoveToEnd();
+        }
+
+        /// <summary>
+        /// Replace the current list of items with the items in newItems.
+        /// newItems should be in the order which they should appear in the list,
+        /// and items are considered equal if the Item text is equal in each item.
+        ///
+        /// Provided the existing items have not been re-ordered relative to each
+        /// other, any items which already exist in the list are not destroyed,
+        /// which maintains consistency of scrollbars, selected items, etc.
+        /// </summary>
+        /// <param name="newItems">The list of items to update this list to</param>
+        public void SetItems(List<Item> newItems)
+        {
+            SetItems(newItems, (a,b) => string.Compare(a.Text, b.Text));
+        }
+
+        /// <summary>
+        /// This variant allows for a custom equality operator to compare items, when
+        /// comparing the Item text is not desired.
+        /// </summary>
+        /// <param name="itemCmp">Comparison function to compare existing to new items.</param>
+        public void SetItems(List<Item> newItems, Comparison<Item> itemCmp)
+        {
+            // Walk through the existing items in this list and in newItems
+            // in parallel to synchronize our items with those in newItems.
+            int i = this.Count - 1;
+            int j = newItems.Count - 1;
+            while(i >= 0 && j >= 0)
+            {
+                var cmpResult = itemCmp(this[i], newItems[j]);
+                if (cmpResult == 0)
+                {
+                    // This item exists in both our list and `newItems`. Nothing to do.
+                    i--;
+                    j--;
+                }
+                else if (cmpResult > 0)
+                {
+                    // Item exists in our list, but not in `newItems`. Remove it.
+                    InternalRemoveAt(i);
+                    i--;
+                }
+                else if (cmpResult < 0)
+                {
+                    // A new entry which doesn't exist in our list. Insert it.
+                    InternalInsert(i + 1, newItems[j]);
+                    j--;
+                }
+            }
+
+            // Any remaining items in our list don't exist in `newItems` so remove them
+            while (i >= 0)
+            {
+                InternalRemoveAt(i);
+                i--;
+            }
+
+            // And finally, any remaining items in `newItems` don't exist in our list. Create them.
+            while (j >= 0)
+            {
+                InternalInsert(0, newItems[j]);
+                j--;
+            }
+
+            Recalculate();
         }
 
         // Without this attribute, this would compile into a property called "Item", causing problems with the Item class.
@@ -216,9 +338,12 @@ namespace Robust.Client.UserInterface.Controls
 
         public void ClearSelected(int? except = null)
         {
-            foreach (var item in GetSelected())
+            for (var i = 0; i < _itemList.Count; i++)
             {
-                if(IndexOf(item) == except) continue;
+                if (i == except)
+                    continue;
+
+                var item = _itemList[i];
                 item.Selected = false;
             }
         }
@@ -352,7 +477,7 @@ namespace Robust.Client.UserInterface.Controls
                 var itemHeight = 0f;
                 if (item.Icon != null)
                 {
-                    itemHeight = item.IconSize.Y;
+                    itemHeight = item.IconSize.Y * item.IconScale;
                 }
 
                 itemHeight = Math.Max(itemHeight, font.GetHeight(UIScale));
@@ -371,25 +496,28 @@ namespace Robust.Client.UserInterface.Controls
                     {
                         if (item.IconRegion.Size == Vector2.Zero)
                         {
-                            handle.DrawTextureRect(item.Icon, UIBox2.FromDimensions(drawOffset, item.Icon.Size),
+                            handle.DrawTextureRect(item.Icon, UIBox2.FromDimensions(drawOffset, item.Icon.Size * item.IconScale),
                                 item.IconModulate);
                         }
                         else
                         {
-                            handle.DrawTextureRectRegion(item.Icon, UIBox2.FromDimensions(drawOffset, item.Icon.Size),
+                            handle.DrawTextureRectRegion(item.Icon, UIBox2.FromDimensions(drawOffset, item.Icon.Size * item.IconScale),
                                 item.IconRegion, item.IconModulate);
                         }
                     }
 
                     if (item.Text != null)
                     {
-                        var textBox = new UIBox2(contentBox.Left + item.IconSize.X, contentBox.Top, contentBox.Right,
+                        var textBox = new UIBox2(contentBox.Left + item.IconSize.X * item.IconScale, contentBox.Top, contentBox.Right,
                             contentBox.Bottom);
                         DrawTextInternal(handle, item.Text, textBox);
                     }
                 }
 
                 offset += itemHeight;
+
+                // Add a ItemSeparation at the bottom of each item.
+                offset += ItemSeparation;
             }
         }
 
@@ -399,7 +527,7 @@ namespace Robust.Client.UserInterface.Controls
 
             var color = ActualFontColor;
             var offsetY = (int) (box.Height - font.GetHeight(UIScale)) / 2;
-            var baseLine = new Vector2i(0, offsetY + font.GetAscent(UIScale)) + box.TopLeft;
+            var baseLine = new Vector2i(5, offsetY + font.GetAscent(UIScale)) + box.TopLeft;
 
             foreach (var rune in text.EnumerateRunes())
             {
@@ -594,6 +722,7 @@ namespace Robust.Client.UserInterface.Controls
             public Texture? Icon { get; set; }
             public UIBox2 IconRegion { get; set; }
             public Color IconModulate { get; set; } = Color.White;
+            public float IconScale { get; set; } = 1;
             public bool Selectable { get; set; } = true;
             public bool TooltipEnabled { get; set; } = true;
             public UIBox2? Region { get; set; }
@@ -613,7 +742,7 @@ namespace Robust.Client.UserInterface.Controls
                 get => _selected;
                 set
                 {
-                    if (!Selectable) return;
+                    if (!Selectable || _selected == value) return;
                     _selected = value;
                     if(_selected) OnSelected?.Invoke(this);
                     else OnDeselected?.Invoke(this);

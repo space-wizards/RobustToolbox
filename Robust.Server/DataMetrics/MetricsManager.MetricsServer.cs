@@ -18,14 +18,23 @@ internal sealed partial class MetricsManager
     private sealed class ManagedHttpListenerMetricsServer : MetricHandler
     {
         private readonly ISawmill _sawmill;
+        private readonly Func<CancellationToken, Task>? _beforeCollect;
         private readonly HttpListener _listener;
+        private readonly CollectorRegistry _registry;
 
-        public ManagedHttpListenerMetricsServer(ISawmill sawmill, string host, int port, string url = "metrics/",
-            CollectorRegistry? registry = null) : base(registry)
+        public ManagedHttpListenerMetricsServer(
+            ISawmill sawmill,
+            string host,
+            int port,
+            string url = "metrics/",
+            CollectorRegistry? registry = null,
+            Func<CancellationToken, Task>? beforeCollect = null)
         {
             _sawmill = sawmill;
+            _beforeCollect = beforeCollect;
             _listener = new HttpListener();
             _listener.Prefixes.Add($"http://{host}:{port}/{url}");
+            _registry = registry ?? Metrics.DefaultRegistry;
         }
 
         protected override Task StartServer(CancellationToken cancel)
@@ -54,6 +63,12 @@ internal sealed partial class MetricsManager
                         try
                         {
                             MetricsEvents.Log.ScrapeStart();
+
+                            // prometheus-net does have a "before collect" callback of its own.
+                            // But it doesn't get ran before stuff like their System.Diagnostics.Metrics integration,
+                            // So I'm just gonna make my own here.
+                            if (_beforeCollect != null)
+                                await _beforeCollect(cancel);
 
                             var stream = resp.OutputStream;
                             // prometheus-net is a terrible library and have to do all this insanity,

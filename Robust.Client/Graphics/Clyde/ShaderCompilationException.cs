@@ -20,11 +20,5 @@ namespace Robust.Client.Graphics.Clyde
         public ShaderCompilationException(string message, Exception inner) : base(message, inner)
         {
         }
-
-        protected ShaderCompilationException(
-            SerializationInfo info,
-            StreamingContext context) : base(info, context)
-        {
-        }
     }
 }

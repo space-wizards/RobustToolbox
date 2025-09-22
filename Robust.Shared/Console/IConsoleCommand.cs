@@ -1,4 +1,3 @@
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -9,7 +8,7 @@ namespace Robust.Shared.Console
     /// Basic interface to handle console commands. Any class implementing this will be
     /// registered with the console system through reflection.
     /// </summary>
-    [UsedImplicitly(ImplicitUseTargetFlags.WithInheritors), Obsolete("New commands should utilize ToolshedCommand.")]
+    [UsedImplicitly(ImplicitUseTargetFlags.WithInheritors)]
     public interface IConsoleCommand
     {
         /// <summary>
@@ -84,4 +83,11 @@ namespace Robust.Shared.Console
             return ValueTask.FromResult(GetCompletion(shell, args));
         }
     }
+
+    /// <summary>
+    /// Special marker interface used to indicate "entity" commands.
+    /// See <see cref="LocalizedEntityCommands"/> for an overview.
+    /// </summary>
+    /// <seealso cref="EntityConsoleHost"/>
+    internal interface IEntityConsoleCommand : IConsoleCommand;
 }

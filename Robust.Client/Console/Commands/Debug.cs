@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -15,6 +16,7 @@ using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Asynchronous;
+using Robust.Shared.Audio;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -171,32 +173,55 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal sealed class ShowPositionsCommand : LocalizedCommands
+    internal sealed class ShowPositionsCommand : LocalizedEntityCommands
     {
-        [Dependency] private readonly IEntitySystemManager _entitySystems = default!;
+        [Dependency] private readonly DebugDrawingSystem _debugDrawing = default!;
 
         public override string Command => "showpos";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var mgr = _entitySystems.GetEntitySystem<DebugDrawingSystem>();
-            mgr.DebugPositions = !mgr.DebugPositions;
+            _debugDrawing.DebugPositions = !_debugDrawing.DebugPositions;
         }
     }
 
-    internal sealed class ShowRotationsCommand : LocalizedCommands
+    internal sealed class ShowRotationsCommand : LocalizedEntityCommands
     {
-        [Dependency] private readonly IEntitySystemManager _entitySystems = default!;
+        [Dependency] private readonly DebugDrawingSystem _debugDrawing = default!;
 
         public override string Command => "showrot";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var mgr = _entitySystems.GetEntitySystem<DebugDrawingSystem>();
-            mgr.DebugRotations = !mgr.DebugRotations;
+            _debugDrawing.DebugRotations = !_debugDrawing.DebugRotations;
         }
     }
 
+    internal sealed class ShowVelocitiesCommand : LocalizedEntityCommands
+    {
+        [Dependency] private readonly DebugDrawingSystem _debugDrawing = default!;
+
+        public override string Command => "showvel";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
+        {
+            _debugDrawing.DebugVelocities = !_debugDrawing.DebugVelocities;
+        }
+    }
+
+    internal sealed class ShowAngularVelocitiesCommand : LocalizedEntityCommands
+    {
+        [Dependency] private readonly DebugDrawingSystem _debugDrawing = default!;
+
+        public override string Command => "showangvel";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
+        {
+            _debugDrawing.DebugAngularVelocities = !_debugDrawing.DebugAngularVelocities;
+        }
+    }
+
+#if DEBUG
     internal sealed class ShowRayCommand : LocalizedCommands
     {
         [Dependency] private readonly IEntitySystemManager _entitySystems = default!;
@@ -223,6 +248,7 @@ namespace Robust.Client.Console.Commands
             mgr.DebugRayLifetime = TimeSpan.FromSeconds(duration);
         }
     }
+#endif
 
     internal sealed class DisconnectCommand : LocalizedCommands
     {
@@ -287,10 +313,9 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal sealed class SnapGridGetCell : LocalizedCommands
+    internal sealed class SnapGridGetCell : LocalizedEntityCommands
     {
-        [Dependency] private readonly IEntityManager _entManager = default!;
-        [Dependency] private readonly IMapManager _map = default!;
+        [Dependency] private readonly SharedMapSystem _map = default!;
 
         public override string Command => "sggcell";
 
@@ -316,9 +341,10 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            if (_map.TryGetGrid(_entManager.GetEntity(gridNet), out var grid))
+            var gridEnt = EntityManager.GetEntity(gridNet);
+            if (EntityManager.TryGetComponent<MapGridComponent>(gridEnt, out var grid))
             {
-                foreach (var entity in grid.GetAnchoredEntities(new Vector2i(
+                foreach (var entity in _map.GetAnchoredEntities(gridEnt, grid, new Vector2i(
                              int.Parse(indices.Split(',')[0], CultureInfo.InvariantCulture),
                              int.Parse(indices.Split(',')[1], CultureInfo.InvariantCulture))))
                 {
@@ -422,10 +448,9 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal sealed class GridTileCount : LocalizedCommands
+    internal sealed class GridTileCount : LocalizedEntityCommands
     {
-        [Dependency] private readonly IEntityManager _entManager = default!;
-        [Dependency] private readonly IMapManager _map = default!;
+        [Dependency] private readonly SharedMapSystem _map = default!;
 
         public override string Command => "gridtc";
 
@@ -438,15 +463,15 @@ namespace Robust.Client.Console.Commands
             }
 
             if (!NetEntity.TryParse(args[0], out var gridUidNet) ||
-                !_entManager.TryGetEntity(gridUidNet, out var gridUid))
+                !EntityManager.TryGetEntity(gridUidNet, out var gridUid))
             {
                 shell.WriteLine($"{args[0]} is not a valid entity UID.");
                 return;
             }
 
-            if (_map.TryGetGrid(gridUid, out var grid))
+            if (EntityManager.TryGetComponent<MapGridComponent>(gridUid, out var grid))
             {
-                shell.WriteLine(grid.GetAllTiles().Count().ToString());
+                shell.WriteLine(_map.GetAllTiles(gridUid.Value, grid).Count().ToString());
             }
             else
             {
@@ -458,13 +483,13 @@ namespace Robust.Client.Console.Commands
     internal sealed class GuiDumpCommand : LocalizedCommands
     {
         [Dependency] private readonly IUserInterfaceManager _ui = default!;
-        [Dependency] private readonly IResourceCache _res = default!;
+        [Dependency] private readonly IResourceManager _resManager = default!;
 
         public override string Command => "guidump";
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            using var writer = _res.UserData.OpenWriteText(new ResPath("/guidump.txt"));
+            using var writer = _resManager.UserData.OpenWriteText(new ResPath("/guidump.txt"));
 
             foreach (var root in _ui.AllRoots)
             {
@@ -491,9 +516,9 @@ namespace Robust.Client.Console.Commands
             }
         }
 
-        internal static List<(string, string)> PropertyValuesFor(Control control)
+        internal static List<MemberInfo> GetAllMembers(Control control)
         {
-            var members = new List<(string, string)>();
+            var members = new List<MemberInfo>();
             var type = control.GetType();
 
             foreach (var fieldInfo in type.GetAllFields())
@@ -503,7 +528,7 @@ namespace Robust.Client.Console.Commands
                     continue;
                 }
 
-                members.Add((fieldInfo.Name, fieldInfo.GetValue(control)?.ToString() ?? "null"));
+                members.Add(fieldInfo);
             }
 
             foreach (var propertyInfo in type.GetAllProperties())
@@ -513,7 +538,19 @@ namespace Robust.Client.Console.Commands
                     continue;
                 }
 
-                members.Add((propertyInfo.Name, propertyInfo.GetValue(control)?.ToString() ?? "null"));
+                members.Add(propertyInfo);
+            }
+
+            return members;
+        }
+
+        internal static List<(string, string)> PropertyValuesFor(Control control)
+        {
+            var members = new List<(string, string)>();
+
+            foreach (var fieldInfo in GetAllMembers(control))
+            {
+                members.Add((fieldInfo.Name, fieldInfo.GetValue(control)?.ToString() ?? "null"));
             }
 
             foreach (var (attachedProperty, value) in control.AllAttachedProperties)
@@ -524,6 +561,70 @@ namespace Robust.Client.Console.Commands
 
             members.Sort((a, b) => string.Compare(a.Item1, b.Item1, StringComparison.Ordinal));
             return members;
+        }
+
+        internal static Dictionary<string, List<(string, string)>> PropertyValuesForInheritance(Control control)
+        {
+            var returnVal = new Dictionary<string, List<(string, string)>>();
+            var engine = typeof(Control).Assembly;
+
+            foreach (var member in GetAllMembers(control))
+            {
+                var type = member.DeclaringType!;
+                var cname = type.Assembly == engine ? type.Name : type.ToString();
+
+                if (type != typeof(Control))
+                    cname = $"Control > {cname}";
+
+                returnVal.GetOrNew(cname).Add((member.Name, GetMemberValue(member, control, ", ")));
+            }
+
+            foreach (var (attachedProperty, value) in control.AllAttachedProperties)
+            {
+                var cname = $"Attached > {attachedProperty.OwningType.Name}";
+                returnVal.GetOrNew(cname).Add((attachedProperty.Name, value?.ToString() ?? "null"));
+            }
+
+            foreach (var v in returnVal.Values)
+            {
+                v.Sort((a, b) => string.Compare(a.Item1, b.Item1, StringComparison.Ordinal));
+            }
+            return returnVal;
+        }
+
+        internal static string PropertyValuesString(Control control, string key)
+        {
+            var member = GetAllMembers(control).Find(m => m.Name == key);
+            return GetMemberValue(member, control, "\n", "\"{0}\"");
+        }
+
+        private static string GetMemberValue(MemberInfo? member, Control control, string separator, string
+                wrap = "{0}")
+        {
+            object? value = null;
+            try
+            {
+                value = member?.GetValue(control);
+            }
+            catch (TargetInvocationException exception)
+            {
+                var exceptionToPrint = exception.InnerException ?? exception;
+                value = $"{exceptionToPrint.GetType()}: {exceptionToPrint.Message}";
+            }
+            catch (Exception exception)
+            {
+                value = $"{exception.GetType()}: {exception.Message}";
+            }
+            var o = value switch
+            {
+                ICollection<Control> controls => string.Join(separator,
+                    controls.Select(ctrl => $"{ctrl.Name}({ctrl.GetType()})")),
+                ICollection<string> list => string.Join(separator, list),
+                null => null,
+                _ => value.ToString()
+            };
+            // Convert to quote surrounded string or null with no quotes
+            return o is not null ? string.Format(wrap, o) : "null";
         }
     }
 
@@ -615,12 +716,12 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal sealed class ChunkInfoCommand : LocalizedCommands
+    internal sealed class ChunkInfoCommand : LocalizedEntityCommands
     {
-        [Dependency] private readonly IEntityManager _entManager = default!;
         [Dependency] private readonly IMapManager _map = default!;
         [Dependency] private readonly IEyeManager _eye = default!;
         [Dependency] private readonly IInputManager _input = default!;
+        [Dependency] private readonly SharedMapSystem _mapSystem = default!;
 
         public override string Command => "chunkinfo";
 
@@ -634,8 +735,8 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var mapSystem = _entManager.System<SharedMapSystem>();
-            var chunkIndex = mapSystem.LocalToChunkIndices(gridUid, grid, grid.MapToGrid(mousePos));
+            var mapSystem = EntityManager.System<SharedMapSystem>();
+            var chunkIndex = mapSystem.LocalToChunkIndices(gridUid, grid, _mapSystem.MapToGrid(gridUid, mousePos));
             var chunk = mapSystem.GetOrAddChunk(gridUid, grid, chunkIndex);
 
             shell.WriteLine($"worldBounds: {mapSystem.CalcWorldAABB(gridUid, grid, chunk)} localBounds: {chunk.CachedBounds}");
@@ -644,7 +745,8 @@ namespace Robust.Client.Console.Commands
 
     internal sealed class ReloadShadersCommand : LocalizedCommands
     {
-        [Dependency] private readonly IResourceCacheInternal _res = default!;
+        [Dependency] private readonly IResourceCache _cache = default!;
+        [Dependency] private readonly IResourceManagerInternal _resManager = default!;
         [Dependency] private readonly ITaskManager _taskManager = default!;
 
         public override string Command => "rldshader";
@@ -655,7 +757,7 @@ namespace Robust.Client.Console.Commands
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var resC = _res;
+            var resC = _resManager;
             if (args.Length == 1)
             {
                 if (args[0] == "+watch")
@@ -679,9 +781,9 @@ namespace Robust.Client.Console.Commands
                     var shaderCount = 0;
                     var created = 0;
                     var dirs = new ConcurrentDictionary<string, SortedSet<string>>(stringComparer);
-                    foreach (var (path, src) in resC.GetAllResources<ShaderSourceResource>())
+                    foreach (var (path, src) in _cache.GetAllResources<ShaderSourceResource>())
                     {
-                        if (!resC.TryGetDiskFilePath(path, out var fullPath))
+                        if (!_resManager.TryGetDiskFilePath(path, out var fullPath))
                         {
                             throw new NotImplementedException();
                         }
@@ -730,7 +832,7 @@ namespace Robust.Client.Console.Commands
                                     {
                                         try
                                         {
-                                            resC.ReloadResource<ShaderSourceResource>(resPath);
+                                            _cache.ReloadResource<ShaderSourceResource>(resPath);
                                             shell.WriteLine($"Reloaded shader: {resPath}");
                                         }
                                         catch (Exception)
@@ -791,11 +893,11 @@ namespace Robust.Client.Console.Commands
 
             shell.WriteLine("Reloading content shader resources...");
 
-            foreach (var (path, _) in resC.GetAllResources<ShaderSourceResource>())
+            foreach (var (path, _) in _cache.GetAllResources<ShaderSourceResource>())
             {
                 try
                 {
-                    resC.ReloadResource<ShaderSourceResource>(path);
+                    _cache.ReloadResource<ShaderSourceResource>(path);
                 }
                 catch (Exception)
                 {

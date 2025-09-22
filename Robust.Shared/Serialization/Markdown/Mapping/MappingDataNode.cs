@@ -2,130 +2,150 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 using System.Linq;
-using System.Threading;
+using System.Runtime.InteropServices;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Utility;
+using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Serialization.Markdown.Mapping
 {
-    public sealed class MappingDataNode : DataNode<MappingDataNode>, IDictionary<DataNode, DataNode>
+    public sealed class MappingDataNode : DataNode<MappingDataNode>, IDictionary<string, DataNode>
     {
-        // To fetch nodes by key name with YAML, we NEED a YamlScalarNode.
-        // We use a thread local one to avoid allocating one every fetch, since we just replace the inner value.
-        // Obviously thread local to avoid threading issues.
-        private static readonly ThreadLocal<ValueDataNode> FetchNode =
-            new(() => new ValueDataNode(""));
+        private readonly Dictionary<string, DataNode> _children;
+        private readonly List<KeyValuePair<string,DataNode>> _list;
 
-        private readonly Dictionary<DataNode, DataNode> _children;
+        /// <summary>
+        /// ValueDataNodes associated with each key. This is used for yaml validation / error reporting.
+        /// I.e., if a key is meant to be an EntityPrototype ID, we want to print an error that points to the
+        /// corresponding yaml lines.
+        /// </summary>
+        private IReadOnlyDictionary<string, ValueDataNode>? _keyNodes;
+        // TODO avoid populating this unless we are running the yaml linter?
 
-        public IReadOnlyDictionary<DataNode, DataNode> Children => _children;
+        public override bool IsEmpty => _children.Count == 0;
+        public int Count => _children.Count;
+        public bool IsReadOnly => false;
+        public IReadOnlyDictionary<string, DataNode> Children => _children;
 
         public MappingDataNode() : base(NodeMark.Invalid, NodeMark.Invalid)
         {
             _children = new();
+            _list = new();
         }
 
         public MappingDataNode(int size) : base(NodeMark.Invalid, NodeMark.Invalid)
         {
             _children = new(size);
+            _list = new(size);
         }
 
         public MappingDataNode(YamlMappingNode mapping) : base(mapping.Start, mapping.End)
         {
             _children = new(mapping.Children.Count);
-            foreach (var (key, val) in mapping.Children)
+            _list = new(mapping.Children.Count);
+            var keyNodes = new Dictionary<string, ValueDataNode>(mapping.Children.Count);
+            foreach (var (keyNode, val) in mapping.Children)
             {
-                _children.Add(key.ToDataNode(), val.ToDataNode());
+                if (keyNode is not YamlScalarNode scalarNode)
+                    throw new NotSupportedException("Mapping data nodes must have a scalar keys");
+
+                var valueNode = new ValueDataNode(scalarNode);
+                Add(valueNode.Value, val.ToDataNode());
+                keyNodes.Add(valueNode.Value, valueNode);
             }
 
+            _keyNodes = keyNodes;
             Tag = mapping.Tag.IsEmpty ? null : mapping.Tag.Value;
         }
 
-        public MappingDataNode(Dictionary<DataNode, DataNode> nodes) : base(NodeMark.Invalid, NodeMark.Invalid)
+        public MappingDataNode(Dictionary<string, DataNode> nodes) : base(NodeMark.Invalid, NodeMark.Invalid)
         {
-            _children = new(nodes.Count);
-            foreach (var (key, val) in nodes)
-            {
-                _children.Add(key, val);
-            }
+            _children = new(nodes);
+            _list = new(_children);
         }
 
-        public KeyValuePair<DataNode, DataNode> this[int key] => Children.ElementAt(key);
-
-        public DataNode this[string index]
-        {
-            get => Get(index);
-            set => Add(index, value);
-        }
+        public KeyValuePair<string, DataNode> this[int key] => _list[key];
 
         public MappingDataNode Add(string key, DataNode node)
         {
-            _children.Add(new ValueDataNode(key), node);
-            return this;
-        }
-
-        private static ValueDataNode GetFetchNode(string key)
-        {
-            var node = FetchNode.Value!;
-            node.Value = key;
-            return node;
-        }
-
-        public MappingDataNode Add(DataNode key, DataNode node)
-        {
             _children.Add(key, node);
+            _list.Add(new(key, node));
             return this;
         }
 
-        public bool ContainsKey(DataNode key) => _children.ContainsKey(key);
-
-        bool IDictionary<DataNode, DataNode>.Remove(DataNode key) => _children.Remove(key);
-
-        public bool TryGetValue(DataNode key, [NotNullWhen(true)] out DataNode? value) => TryGet(key, out value);
-
-        public DataNode this[DataNode key]
+        public DataNode this[string key]
         {
             get => _children[key];
-            set => _children[key] = value;
+            set
+            {
+                if (_children.TryAdd(key, value))
+                {
+                    _list.Add(new(key, value));
+                    return;
+                }
+
+                var index = IndexOf(key);
+                if (index == -1)
+                    throw new Exception("Key exists in Children, but not list?");
+
+                _list[index] = new(key, value);
+                _children[key] = value;
+            }
         }
 
-        public ICollection<DataNode> Keys => _children.Keys;
-        public ICollection<DataNode> Values => _children.Values;
+        public int IndexOf(string key)
+        {
+            // TODO MappingDataNode
+            // Consider having a Dictionary<string,int> for faster lookups?
+            // IndexOf() gets called in Remove(), which itself gets called frequently (e.g., per serialized component,
+            // per entity, when loading a map.
+            //
+            // Then again, if most mappings only contain 1-4 entries, this list search is comparable in speed, reduces
+            // allocations, and makes adding/inserting entries faster.
 
-        public DataNode Get(DataNode key)
+            for (var index = 0; index < _list.Count; index++)
+            {
+                if (_list[index].Key == key)
+                    return index;
+            }
+
+            return -1;
+        }
+
+        void IDictionary<string, DataNode>.Add(string key, DataNode value) => Add(key, value);
+
+        public bool ContainsKey(string key) => _children.ContainsKey(key);
+
+        bool IDictionary<string, DataNode>.Remove(string key)
+            => ((IDictionary<string, DataNode>)this).Remove(key);
+
+        public bool TryGetValue(string key, [NotNullWhen(true)] out DataNode? value)
+            => TryGet(key, out value);
+
+        // TODO consider changing these to unsorted collections
+        // I.e., just redirect to _children.Keys to avoid hidden linq & allocations.
+        public ICollection<string> Keys => _list.Select(x => x.Key).ToArray();
+        public ICollection<DataNode> Values => _list.Select(x => x.Value).ToArray();
+
+        public DataNode Get(string key)
         {
             return _children[key];
         }
 
-        public T Get<T>(DataNode key) where T : DataNode
+        public T Get<T>(string key) where T : DataNode
         {
             return (T) Get(key);
         }
 
-        public DataNode Get(string key)
+        public bool TryGet(string key, [NotNullWhen(true)] out DataNode? node)
         {
-            return Get(GetFetchNode(key));
+            return _children.TryGetValue(key, out node);
         }
 
-        public T Get<T>(string key) where T : DataNode
-        {
-            return Get<T>(GetFetchNode(key));
-        }
-
-        public bool TryGet(DataNode key, [NotNullWhen(true)] out DataNode? node)
-        {
-            if (_children.TryGetValue(key, out node))
-            {
-                return true;
-            }
-
-            node = null;
-            return false;
-        }
-
-        public bool TryGet<T>(DataNode key, [NotNullWhen(true)] out T? node) where T : DataNode
+        public bool TryGet<T>(string key, [NotNullWhen(true)] out T? node) where T : DataNode
         {
             node = null;
             if (!TryGet(key, out var rawNode) || rawNode is not T castNode)
@@ -134,55 +154,62 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             return true;
         }
 
-        public bool TryGet(string key, [NotNullWhen(true)] out DataNode? node)
-        {
-            return TryGet(GetFetchNode(key), out node);
-        }
-
-        public bool TryGet<T>(string key, [NotNullWhen(true)] out T? node) where T : DataNode
-        {
-            return TryGet(GetFetchNode(key), out node);
-        }
-
-        public bool Has(DataNode key)
+        public bool Has(string key)
         {
             return _children.ContainsKey(key);
         }
 
-        public bool Has(string key)
+        public bool Remove(string key)
         {
-            return Has(GetFetchNode(key));
+            if (!_children.Remove(key))
+                return false;
+
+            var index = IndexOf(key);
+            if (index == -1)
+                throw new Exception("Key exists in Children, but not list?");
+
+            _list.RemoveAt(index);
+            return true;
         }
 
-        void IDictionary<DataNode, DataNode>.Add(DataNode key, DataNode value) => _children.Add(key, value);
-
-        public MappingDataNode Remove(DataNode key)
+        public T Cast<T>(string key) where T : DataNode
         {
-            _children.Remove(key);
-            return this;
-        }
-
-        public MappingDataNode Remove(string key)
-        {
-            return Remove(GetFetchNode(key));
-        }
-
-        public T Cast<T>(string index) where T : DataNode
-        {
-            return (T) this[index];
+            return (T) this[key];
         }
 
         public YamlMappingNode ToYaml()
         {
             var mapping = new YamlMappingNode();
-            foreach (var (key, val) in _children)
+
+            foreach (var (key, val) in _list)
             {
-                mapping.Add(key.ToYamlNode(), val.ToYamlNode());
+                YamlScalarNode yamlKeyNode;
+                if (_keyNodes != null && _keyNodes.TryGetValue(key, out var keyNode))
+                {
+                    yamlKeyNode = (YamlScalarNode)keyNode;
+                }
+                else
+                {
+                    // This is matches the ValueDataNode -> YamlScalarNode cast operator
+                    yamlKeyNode = new(key)
+                    {
+                        Style = ValueDataNode.IsNullLiteral(key) || string.IsNullOrWhiteSpace(key)
+                            ? ScalarStyle.DoubleQuoted
+                            : ScalarStyle.Any
+                    };
+                }
+
+                mapping.Add(yamlKeyNode, val.ToYamlNode());
             }
 
             mapping.Tag = Tag;
 
             return mapping;
+        }
+
+        public ValueDataNode GetKeyNode(string key)
+        {
+            return _keyNodes?.GetValueOrDefault(key) ?? new ValueDataNode(key);
         }
 
         public MappingDataNode Merge(MappingDataNode otherMapping)
@@ -205,12 +232,21 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
                 if (!skipDuplicates || !Has(key))
                 {
                     // Intentionally raises an ArgumentException
-                    Add(key.Copy(), val.Copy());
+                    Add(key, val.Copy());
                 }
             }
         }
 
-        public override bool IsEmpty => _children.Count == 0;
+        public void InsertAt(int index, string key, DataNode value)
+        {
+            if (index > _list.Count || index < 0)
+                throw new ArgumentOutOfRangeException();
+
+            if (!_children.TryAdd(key, value))
+                throw new InvalidOperationException($"Already contains key {key}");
+
+            _list.Insert(index, new(key, value));
+        }
 
         public override MappingDataNode Copy()
         {
@@ -221,9 +257,30 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
                 End = End
             };
 
-            foreach (var (key, val) in _children)
+            foreach (var (key, val) in _list)
             {
-                newMapping.Add(key.Copy(), val.Copy());
+                newMapping.Add(key, val.Copy());
+            }
+
+            newMapping._keyNodes = _keyNodes;
+            return newMapping;
+        }
+
+        /// <summary>
+        /// Variant of <see cref="Copy"/> that doesn't clone the keys or values.
+        /// </summary>
+        public MappingDataNode ShallowClone()
+        {
+            var newMapping = new MappingDataNode(_children.Count)
+            {
+                Tag = Tag,
+                Start = Start,
+                End = End
+            };
+
+            foreach (var (key, val) in _list)
+            {
+                newMapping.Add(key, val);
             }
 
             return newMapping;
@@ -241,19 +298,15 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
                 End = End
             };
 
-            foreach (var (key, val) in _children)
+            foreach (var (key, val) in _list)
             {
-                var other = node._children.FirstOrNull(p => p.Key.Equals(key));
-                if (other == null)
+                if (!node._children.TryGetValue(key, out var otherVal))
                 {
-                    mappingNode.Add(key.Copy(), val.Copy());
+                    mappingNode.Add(key, val.Copy());
                 }
-                else
+                else if (val.Except(otherVal) is { } newValue)
                 {
-                    // We recursively call except on the values and keep only the differences.
-                    var newValue = val.Except(other.Value.Value);
-                    if (newValue == null) continue;
-                    mappingNode.Add(key.Copy(), newValue);
+                    mappingNode.Add(key, newValue);
                 }
             }
 
@@ -269,23 +322,36 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
                 End = End
             };
 
-            foreach (var (key, val) in _children)
+            foreach (var (key, val) in _list)
             {
-                var other = node._children.FirstOrNull(p => p.Key.Equals(key));
-
-                if (other == null)
-                {
-                    mappingNode.Add(key.Copy(), val.Copy());
-                }
-                else
-                {
-                    // We only keep the entry if the values are not equal
-                    if (!val.Equals(other.Value.Value))
-                        mappingNode.Add(key.Copy(), val.Copy());
-                }
+                if (!node._children.TryGetValue(key, out var otherVal) || !val.Equals(otherVal))
+                    mappingNode.Add(key, val.Copy());
             }
 
             return mappingNode._children.Count == 0 ? null : mappingNode;
+        }
+
+        /// <summary>
+        /// Returns true if there are any nodes on this node that aren't in the other node.
+        /// </summary>
+        [Pure]
+        public bool AnyExcept(MappingDataNode node)
+        {
+            foreach (var (key, val) in _list)
+            {
+                var other = node._list.FirstOrNull(p => p.Key.Equals(key));
+
+                if (other == null)
+                {
+                    return true;
+                }
+
+                // We only keep the entry if the values are not equal
+                if (!val.Equals(other.Value.Value))
+                    return true;
+            }
+
+            return false;
         }
 
         public override bool Equals(object? obj)
@@ -296,25 +362,24 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             if (_children.Count != other._children.Count)
                 return false;
 
-            // Given that keys are unique and we do not care about the ordering, we know that if removing identical
-            // key-value pairs leaves us with an empty list then the mappings are equal.
-            return Except(other) == null && Tag == other.Tag;
-        }
+            if (Tag != other.Tag)
+                return false;
 
-        public override MappingDataNode PushInheritance(MappingDataNode node)
-        {
-            var newNode = Copy();
-            foreach (var (key, val) in node)
+            foreach (var (key, otherValue) in other)
             {
-                if(newNode.Has(key)) continue;
-
-                newNode[key.Copy()] = val.Copy();
+                if (!_children.TryGetValue(key, out var ownValue)
+                    || !otherValue.Equals(ownValue))
+                {
+                    return false;
+                }
             }
 
-            return newNode;
+            return true;
         }
 
-        public IEnumerator<KeyValuePair<DataNode, DataNode>> GetEnumerator() => _children.GetEnumerator();
+        public List<KeyValuePair<string, DataNode>>.Enumerator GetEnumerator() => _list.GetEnumerator();
+        IEnumerator<KeyValuePair<string, DataNode>> IEnumerable<KeyValuePair<string, DataNode>>.GetEnumerator() =>
+            _list.GetEnumerator();
 
         public override int GetHashCode()
         {
@@ -333,20 +398,103 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             return GetEnumerator();
         }
 
-        public void Add(KeyValuePair<DataNode, DataNode> item) => _children.Add(item.Key, item.Value);
+        public void Add(KeyValuePair<string, DataNode> item) => Add(item.Key, item.Value);
 
-        public void Clear() => _children.Clear();
+        public void Clear()
+        {
+            _children.Clear();
+            _list.Clear();
+        }
 
-        public bool Contains(KeyValuePair<DataNode, DataNode> item) =>
-            ((IDictionary<DataNode, DataNode>) _children).Contains(item);
+        public bool Contains(KeyValuePair<string, DataNode> item) => _children.ContainsKey(item.Key);
 
-        public void CopyTo(KeyValuePair<DataNode, DataNode>[] array, int arrayIndex) =>
-            ((IDictionary<DataNode, DataNode>) _children).CopyTo(array, arrayIndex);
+        [Obsolete("Use SerializationManager.PushComposition()")]
+        public override MappingDataNode PushInheritance(MappingDataNode node)
+        {
+            var newNode = Copy();
+            foreach (var (key, val) in node)
+            {
+                if (_children.ContainsKey(key))
+                    continue;
 
-        public bool Remove(KeyValuePair<DataNode, DataNode> item) =>
-            ((IDictionary<DataNode, DataNode>) _children).Remove(item);
+                newNode.Remove(key);
+                newNode.Add(key, val.Copy());
+            }
 
-        public int Count => _children.Count;
-        public bool IsReadOnly => false;
+            return newNode;
+        }
+
+        public void CopyTo(KeyValuePair<string, DataNode>[] array, int arrayIndex)
+            => _list.CopyTo(array, arrayIndex);
+
+        public bool Remove(KeyValuePair<string, DataNode> item)
+            => ((IDictionary<string, DataNode>) this).Remove(item.Key);
+
+        public bool TryAdd(string key, DataNode value)
+        {
+            if (!_children.TryAdd(key, value))
+                return false;
+
+            _list.Add(new(key, value));
+            return true;
+        }
+
+        public bool TryAddCopy(string key, DataNode value)
+        {
+            ref var entry = ref CollectionsMarshal.GetValueRefOrAddDefault(_children, key, out var exists);
+            if (exists)
+                return false;
+
+            entry = value.Copy();
+            _list.Add(new(key, entry));
+            return true;
+        }
+
+        // These methods are probably fine to keep around as helper methods, but are currently marked as obsolete
+        // so that people don't uneccesarily allocate a ValueDataNode. I.e., to prevent people from using code like
+        // mapping.TryGet(new ValueDataNode("key"), ...)
+        #region ValueDataNode Helpers
+
+        [Obsolete("Use string keys instead of ValueDataNode")]
+        public bool TryGet(ValueDataNode key, [NotNullWhen(true)] out DataNode? value)
+            => TryGet(key.Value, out value);
+
+        [Obsolete("Use string keys instead of ValueDataNode")]
+        public DataNode this[ValueDataNode key]
+        {
+            get => this[key.Value];
+            set => this[key.Value] = value;
+        }
+
+        [Obsolete("Use string keys instead of ValueDataNode")]
+        public bool TryGetValue(ValueDataNode key, [NotNullWhen(true)] out DataNode? value)
+            => TryGet(key.Value, out value);
+
+        [Obsolete("Use string keys instead of ValueDataNode")]
+        public bool TryGet<T>(ValueDataNode key, [NotNullWhen(true)] out T? node) where T : DataNode
+            => TryGet(key.Value, out node);
+
+        [Obsolete("Use string keys instead of ValueDataNode")]
+        public bool Has(ValueDataNode key) => Has(key.Value);
+
+        [Obsolete("Use string keys instead of ValueDataNode")]
+        public T Cast<T>(ValueDataNode key) where T : DataNode => Cast<T>(key.Value);
+
+        [Obsolete("Use string keys instead of ValueDataNode")]
+        public void Add(KeyValuePair<ValueDataNode, DataNode> item) => Add(item.Key, item.Value);
+
+        [Obsolete("Use string keys instead of ValueDataNode")]
+        public MappingDataNode Add(ValueDataNode key, DataNode node) => Add(key.Value, node);
+
+        [Obsolete("Use string keys instead of ValueDataNode")]
+        public void InsertAt(int index, ValueDataNode key, DataNode value) => InsertAt(index, key.Value, value);
+
+        [Obsolete("Use string keys instead of ValueDataNode")]
+        public bool Contains(KeyValuePair<ValueDataNode, DataNode> item) => _children.ContainsKey(item.Key.Value);
+
+        [Obsolete("Use string keys instead of ValueDataNode")]
+        public bool Remove(ValueDataNode key) => Remove(key.Value);
+
+        #endregion
     }
 }

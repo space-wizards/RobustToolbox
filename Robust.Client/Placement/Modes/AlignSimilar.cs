@@ -30,11 +30,13 @@ namespace Robust.Client.Placement.Modes
                 return;
             }
 
-            var mapId = MouseCoords.GetMapId(pManager.EntityManager);
+            var transformSys = pManager.EntityManager.System<SharedTransformSystem>();
+            var mapId = transformSys.GetMapId(MouseCoords);
 
-            var snapToEntities = EntitySystem.Get<EntityLookupSystem>().GetEntitiesInRange(MouseCoords, SnapToRange)
+            var snapToEntities = pManager.EntityManager.System<EntityLookupSystem>()
+                .GetEntitiesInRange(MouseCoords, SnapToRange)
                 .Where(entity => pManager.EntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype == pManager.CurrentPrototype && pManager.EntityManager.GetComponent<TransformComponent>(entity).MapID == mapId)
-                .OrderBy(entity => (pManager.EntityManager.GetComponent<TransformComponent>(entity).WorldPosition - MouseCoords.ToMapPos(pManager.EntityManager)).LengthSquared())
+                .OrderBy(entity => (transformSys.GetWorldPosition(entity) - transformSys.ToMapCoordinates(MouseCoords).Position).LengthSquared())
                 .ToList();
 
             if (snapToEntities.Count == 0)
@@ -44,17 +46,18 @@ namespace Robust.Client.Placement.Modes
 
             var closestEntity = snapToEntities[0];
             var closestTransform = pManager.EntityManager.GetComponent<TransformComponent>(closestEntity);
-            if (!pManager.EntityManager.TryGetComponent<SpriteComponent?>(closestEntity, out var component) || component.BaseRSI == null)
+            if (!pManager.EntityManager.TryGetComponent(closestEntity, out SpriteComponent? component) || component.BaseRSI == null)
             {
                 return;
             }
 
             var closestBounds = component.BaseRSI.Size;
 
+            var closestPos = transformSys.GetWorldPosition(closestTransform);
             var closestRect =
                 Box2.FromDimensions(
-                    closestTransform.WorldPosition.X - closestBounds.X / 2f,
-                    closestTransform.WorldPosition.Y - closestBounds.Y / 2f,
+                    closestPos.X - closestBounds.X / 2f,
+                    closestPos.Y - closestBounds.Y / 2f,
                     closestBounds.X, closestBounds.Y);
 
             var sides = new[]

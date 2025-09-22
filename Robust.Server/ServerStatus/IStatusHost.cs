@@ -27,19 +27,31 @@ namespace Robust.Server.ServerStatus
         /// </summary>
         event Action<JsonNode> OnInfoRequest;
 
-        /// <summary>
-        /// Set information used by automatic-client-zipping to determine the layout of your dev setup,
-        /// and which assembly files to send.
-        /// </summary>
-        /// <param name="clientBinFolder">
-        /// The name of your client project in the bin/ folder on the top of your project.
-        /// </param>
-        /// <param name="clientAssemblyNames">
-        /// The list of client assemblies to send from the aforementioned folder.
-        /// </param>
-        [Obsolete("This API is deprecated as it cannot share information with standalone packaging. Use SetMagicAczProvider instead")]
-        void SetAczInfo(string clientBinFolder, string[] clientAssemblyNames);
-
         void SetMagicAczProvider(IMagicAczProvider provider);
+
+        /// <summary>
+        /// Sets a provider for extra asset files if Hybrid ACZ is available.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// If called multiple times, the previous provider is replaced. This only applies if ACZ is ran again later.
+        /// <see cref="InvalidateAcz"/> must be called manually for this to have an effect if ACZ has already been built.
+        /// </para>
+        /// <para>
+        /// It is valid to have both a Full Hybrid ACZ provider
+        /// and a Magic ACZ provider (via <see cref="SetMagicAczProvider"/>) set at the same time.
+        /// The Full Hybrid provider is used if Hybrid ACZ is available, otherwise the Magic ACZ provider is used.
+        /// </para>
+        /// </remarks>
+        /// <param name="provider">The provider to use.</param>
+        /// <seealso href="https://docs.spacestation14.com/en/robust-toolbox/acz.html"/>
+        void SetFullHybridAczProvider(IFullHybridAczProvider provider);
+
+        /// <summary>
+        /// Invalidate the cached ACZ package.
+        /// This causes it to be re-generated the next time a client attempts to download the ACZ
+        /// (or requests the information for it).
+        /// </summary>
+        void InvalidateAcz();
     }
 }

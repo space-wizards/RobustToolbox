@@ -1,17 +1,20 @@
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameStates
 {
     [ByRefEvent, ComponentEvent]
     public readonly struct ComponentHandleState
     {
-        public ComponentState? Current { get; }
-        public ComponentState? Next { get; }
+        public IComponentState? Current { get; }
+        public IComponentState? Next { get; }
 
-        public ComponentHandleState(ComponentState? current, ComponentState? next)
+        public ComponentHandleState(IComponentState? current, IComponentState? next)
         {
+            DebugTools.Assert(current != null || next != null);
             Current = current;
             Next = next;
         }
@@ -28,12 +31,13 @@ namespace Robust.Shared.GameStates
         /// <summary>
         ///     Output parameter. Set this to the component's state for the player.
         /// </summary>
-        public ComponentState? State { get; set; }
+        public IComponentState? State { get; set; }
 
         /// <summary>
         ///     If true, this state is intended for replays or some other server spectator entity, not for specific
         ///     clients.
         /// </summary>
+        [MemberNotNullWhen(false, nameof(Player))]
         public bool ReplayState => Player == null;
 
         /// <summary>

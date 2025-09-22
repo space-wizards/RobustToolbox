@@ -1,5 +1,6 @@
 using System;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.Utility;
 
@@ -38,7 +39,6 @@ namespace Robust.Shared.Maths
         /// <param name="dir"></param>
         public Angle(Vector2 dir)
         {
-            dir = dir.Normalized();
             Theta = Math.Atan2(dir.Y, dir.X);
         }
 
@@ -93,6 +93,7 @@ namespace Robust.Shared.Maths
         private const double CardinalSegment = 2 * Math.PI / 4.0; // Cut the circle into 4 pieces
         private const double CardinalOffset = CardinalSegment / 2.0; // offset the pieces by 1/2 their size
 
+        [Pure]
         public readonly Direction GetCardinalDir()
         {
             var ang = Theta % (2 * Math.PI);
@@ -101,6 +102,16 @@ namespace Robust.Shared.Maths
                 ang += 2 * Math.PI;
 
             return (Direction) (Math.Floor((ang + CardinalOffset) / CardinalSegment) * 2 % 8);
+        }
+
+        /// <summary>
+        /// Rounds the angle to the nearest cardinal direction. This behaves similarly to a combination of
+        /// <see cref="GetCardinalDir"/> and Direction.ToAngle(), however this may return an angle outside of the range
+        /// returned by those methods (-pi to pi).
+        /// </summary>
+        public Angle RoundToCardinalAngle()
+        {
+            return new Angle(CardinalSegment * Math.Floor((Theta + CardinalOffset) / CardinalSegment));
         }
 
         /// <summary>
@@ -167,6 +178,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Removes revolutions from a positive or negative angle to make it as small as possible.
         /// </summary>
+        [Pure]
         public readonly Angle Reduced()
         {
             return new(Reduce(Theta));
@@ -213,11 +225,13 @@ namespace Robust.Shared.Maths
             return !(a == b);
         }
 
+        [Pure]
         public readonly Angle Opposite()
         {
             return new Angle(FlipPositive(Theta-Math.PI));
         }
 
+        [Pure]
         public readonly Angle FlipPositive()
         {
             return new(FlipPositive(Theta));
@@ -258,7 +272,24 @@ namespace Robust.Shared.Maths
         /// <param name="degrees">The angle in degrees.</param>
         public static Angle FromDegrees(double degrees)
         {
-            return new(MathHelper.DegreesToRadians(degrees));
+            // Avoid rounding issues with common use cases.
+            switch (degrees)
+            {
+                case -270:
+                    return new Angle(Math.PI * -1.5);
+                case 90:
+                    return new Angle(Math.PI / 2);
+                case -180:
+                    return new Angle(-Math.PI);
+                case 180:
+                    return new Angle(Math.PI);
+                case 270.0:
+                    return new Angle(Math.PI * 1.5);
+                case -90:
+                    return new Angle(Math.PI / -2);
+                default:
+                    return new(MathHelper.DegreesToRadians(degrees));
+            }
         }
 
         /// <summary>

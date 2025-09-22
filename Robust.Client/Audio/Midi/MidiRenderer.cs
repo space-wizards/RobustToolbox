@@ -4,7 +4,9 @@ using JetBrains.Annotations;
 using NFluidsynth;
 using Robust.Client.Graphics;
 using Robust.Shared.Asynchronous;
+using Robust.Shared.Audio;
 using Robust.Shared.Audio.Midi;
+using Robust.Shared.Audio.Sources;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
@@ -14,7 +16,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.Audio.Midi;
 
-internal sealed class MidiRenderer : IMidiRenderer
+internal sealed partial class MidiRenderer : IMidiRenderer
 {
     private readonly IMidiManager _midiManager;
     private readonly ITaskManager _taskManager;
@@ -36,6 +38,7 @@ internal sealed class MidiRenderer : IMidiRenderer
     private readonly Synth _synth;
     private readonly Sequencer _sequencer;
     private NFluidsynth.Player? _player;
+    private int _playerTotalTicks;
     private MidiDriver? _driver;
     private byte _midiProgram = 1;
     private byte _midiBank = 1;
@@ -52,8 +55,8 @@ internal sealed class MidiRenderer : IMidiRenderer
 
     private IMidiRenderer? _master;
     public MidiRendererState RendererState => _rendererState;
-    public IClydeBufferedAudioSource Source { get; set; }
-    IClydeBufferedAudioSource IMidiRenderer.Source => Source;
+    public IBufferedAudioSource Source { get; set; }
+    IBufferedAudioSource IMidiRenderer.Source => Source;
 
     [ViewVariables]
     public bool Disposed { get; private set; } = false;
@@ -142,7 +145,21 @@ internal sealed class MidiRenderer : IMidiRenderer
     public bool DisableProgramChangeEvent { get; set; } = true;
 
     [ViewVariables(VVAccess.ReadWrite)]
-    public int PlayerTotalTick => _player?.GetTotalTicks ?? 0;
+    public int PlayerTotalTick
+    {
+        get
+        {
+            // GetTotalTicks is really expensive (has to iterate the entire file, not cached).
+            // Slight problem with caching it ourselves: the value only becomes available when the player loads the MIDI file.
+            // And that only happens after playback really starts, with the timer and synth and all that stuff.
+            // So we cache it "as soon as it's available", i.e. not 0.
+            // We don't care about playlists and such, so it shouldn't change anymore after.
+            if (_playerTotalTicks != 0)
+                return _playerTotalTicks;
+
+            return _playerTotalTicks = _player?.GetTotalTicks ?? 0;
+        }
+    }
 
     [ViewVariables(VVAccess.ReadWrite)]
     public int PlayerTick
@@ -189,14 +206,6 @@ internal sealed class MidiRenderer : IMidiRenderer
     }
 
     [ViewVariables(VVAccess.ReadWrite)]
-    [Obsolete($"Use {nameof(VelocityOverride)} instead, you can set it to 127 to achieve the same effect.")]
-    public bool VolumeBoost
-    {
-        get => VelocityOverride == 127;
-        set => VelocityOverride = value ? 127 : null;
-    }
-
-    [ViewVariables(VVAccess.ReadWrite)]
     public EntityUid? TrackingEntity { get; set; } = null;
 
     [ViewVariables(VVAccess.ReadWrite)]
@@ -204,6 +213,11 @@ internal sealed class MidiRenderer : IMidiRenderer
 
     [ViewVariables]
     public BitArray FilteredChannels { get; } = new(RobustMidiEvent.MaxChannels);
+
+    [ViewVariables]
+    public byte MinVolume { get => _minVolume; set => _minVolume = value; }
+
+    private byte _minVolume;
 
     [ViewVariables(VVAccess.ReadWrite)]
     public byte? VelocityOverride { get; set; } = null;
@@ -216,6 +230,9 @@ internal sealed class MidiRenderer : IMidiRenderer
         {
             if (value == _master)
                 return;
+
+            if (CheckMasterCycle(value))
+                throw new InvalidOperationException("Tried to set master to a child of this renderer!");
 
             if (_master is { Disposed: false })
             {
@@ -247,13 +264,13 @@ internal sealed class MidiRenderer : IMidiRenderer
     public event Action? OnMidiPlayerFinished;
 
     internal MidiRenderer(Settings settings, SoundFontLoader soundFontLoader, bool mono,
-        IMidiManager midiManager, IClydeAudio clydeAudio, ITaskManager taskManager, ISawmill midiSawmill)
+        IMidiManager midiManager, IAudioInternal clydeAudio, ITaskManager taskManager, ISawmill midiSawmill)
     {
         _midiManager = midiManager;
         _taskManager = taskManager;
         _midiSawmill = midiSawmill;
 
-        Source = clydeAudio.CreateBufferedAudioSource(Buffers, true);
+        Source = clydeAudio.CreateBufferedAudioSource(Buffers, true) ?? DummyBufferedAudioSource.Instance;
         Source.SampleRate = SampleRate;
         _settings = settings;
         _soundFontLoader = soundFontLoader;
@@ -337,6 +354,7 @@ internal sealed class MidiRenderer : IMidiRenderer
                 return false;
             }
 
+            _playerTotalTicks = 0;
             _player?.Dispose();
             _player = new NFluidsynth.Player(_synth);
             _player.SetPlaybackCallback(MidiPlayerEventHandler);
@@ -375,6 +393,7 @@ internal sealed class MidiRenderer : IMidiRenderer
             _player?.Join();
             _player?.Dispose();
             _player = null;
+            _playerTotalTicks = 0;
         }
 
         StopAllNotes();
@@ -419,15 +438,6 @@ internal sealed class MidiRenderer : IMidiRenderer
     public void ClearAllEvents()
     {
         _sequencer.RemoveEvents(SequencerClientId.Wildcard, SequencerClientId.Wildcard, -1);
-    }
-
-    public void LoadSoundfont(string filename, bool resetPresets = true)
-    {
-        lock (_playerStateLock)
-        {
-            _synth.LoadSoundFont(filename, resetPresets);
-            MidiSoundfont = 1;
-        }
     }
 
     void IMidiRenderer.Render()
@@ -488,7 +498,7 @@ internal sealed class MidiRenderer : IMidiRenderer
             }
         }
 
-        if (!Source.IsPlaying) Source.StartPlaying();
+        Source.StartPlaying();
     }
 
     public void ApplyState(MidiRendererState state, bool filterChannels = false)
@@ -534,14 +544,7 @@ internal sealed class MidiRenderer : IMidiRenderer
                     if (velocity <= 0)
                         continue;
 
-                    try
-                    {
-                        _synth.NoteOn(channel, key, velocity);
-                    }
-                    catch (FluidSynthInteropException e)
-                    {
-                        _midiSawmill.Error($"CH:{channel} KEY:{key} VEL:{velocity} {e.ToStringBetter()}");
-                    }
+                    _synth.TryNoteOn(channel, key, velocity);
                 }
             }
 
@@ -569,19 +572,32 @@ internal sealed class MidiRenderer : IMidiRenderer
                 {
                     case RobustMidiCommand.NoteOff:
                         _rendererState.NoteVelocities.AsSpan[midiEvent.Channel].AsSpan[midiEvent.Key] = 0;
-                        _synth.NoteOff(midiEvent.Channel, midiEvent.Key);
-                        break;
+                        _synth.TryNoteOff(midiEvent.Channel, midiEvent.Key);
 
+                        break;
                     case RobustMidiCommand.NoteOn:
+                        // Velocity 0 *can* represent a NoteOff event.
+                        var velocity = midiEvent.Velocity;
+                        if (velocity == 0)
+                        {
+                            _rendererState.NoteVelocities.AsSpan[midiEvent.Channel].AsSpan[midiEvent.Key] = 0;
+                            _synth.TryNoteOn(midiEvent.Channel, midiEvent.Key, velocity);
+
+                            break;
+                        }
+
                         if (FilteredChannels[midiEvent.Channel])
                             break;
 
-                        var velocity = VelocityOverride ?? midiEvent.Velocity;
+                        if (MinVolume > 0)
+                            velocity = (byte)Math.Floor(MathHelper.Lerp(MinVolume, 127, (float)velocity / 127));
+
+                        velocity = VelocityOverride ?? velocity;
 
                         _rendererState.NoteVelocities.AsSpan[midiEvent.Channel].AsSpan[midiEvent.Key] = velocity;
-                        _synth.NoteOn(midiEvent.Channel, midiEvent.Key, velocity);
-                        break;
+                        _synth.TryNoteOn(midiEvent.Channel, midiEvent.Key, velocity);
 
+                        break;
                     case RobustMidiCommand.AfterTouch:
                         _rendererState.NoteVelocities.AsSpan[midiEvent.Channel].AsSpan[midiEvent.Key] = midiEvent.Value;
                         _synth.KeyPressure(midiEvent.Channel, midiEvent.Key, midiEvent.Value);
@@ -717,5 +733,23 @@ internal sealed class MidiRenderer : IMidiRenderer
 
         _synth?.Dispose();
         _player?.Dispose();
+    }
+
+    /// <summary>
+    /// Check that a given renderer is not already a child of this renderer, i.e. it would introduce a cycle if set as master of this renderer.
+    /// </summary>
+    private bool CheckMasterCycle(IMidiRenderer? otherRenderer)
+    {
+        // Doesn't inside drift, cringe.
+
+        while (otherRenderer != null)
+        {
+            if (otherRenderer == this)
+                return true;
+
+            otherRenderer = otherRenderer.Master;
+        }
+
+        return false;
     }
 }

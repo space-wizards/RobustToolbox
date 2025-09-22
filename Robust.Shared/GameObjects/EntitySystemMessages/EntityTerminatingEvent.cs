@@ -4,13 +4,8 @@ namespace Robust.Shared.GameObjects
     /// The children of this entity are about to be deleted.
     /// </summary>
     [ByRefEvent]
-    public readonly struct EntityTerminatingEvent
+    public readonly struct EntityTerminatingEvent(Entity<MetaDataComponent> entity)
     {
-        public readonly EntityUid Entity;
-
-        public EntityTerminatingEvent(EntityUid entity)
-        {
-            Entity = entity;
-        }
+        public readonly Entity<MetaDataComponent> Entity = entity;
     }
 }

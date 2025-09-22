@@ -18,11 +18,5 @@ namespace Robust.Shared
         public SandboxArgumentException(string message, Exception inner) : base(message, inner)
         {
         }
-
-        protected SandboxArgumentException(
-            SerializationInfo info,
-            StreamingContext context) : base(info, context)
-        {
-        }
     }
 }

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Robust.Server.ViewVariables.Traits;
+using Robust.Shared.Audio;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Network.Messages;
@@ -94,7 +96,10 @@ namespace Robust.Server.ViewVariables
             }
 
             if (value is EntityUid uid)
-                return IoCManager.Resolve<IEntityManager>().GetNetEntity(uid);
+                return IoCManager.Resolve<IEntityManager>().GetComponentOrNull<MetaDataComponent>(uid)?.NetEntity ?? NetEntity.Invalid;
+
+            if (value is SoundSpecifier)
+                return value;
 
             var valType = value.GetType();
             if (!valType.IsValueType)
@@ -103,7 +108,7 @@ namespace Robust.Server.ViewVariables
 
                 // We don't blindly send any prototypes, we ONLY send prototypes for valid, registered variants.
                 if (typeof(IPrototype).IsAssignableFrom(valType)
-                    && IoCManager.Resolve<IPrototypeManager>().TryGetVariantFrom(valType, out var variant))
+                    && IoCManager.Resolve<IPrototypeManager>().TryGetKindFrom(valType, out var variant))
                 {
                     return new ViewVariablesBlobMembers.PrototypeReferenceToken()
                     {
@@ -137,6 +142,19 @@ namespace Robust.Server.ViewVariables
                     };
                 }
 
+                // Handle ValueTuples
+                if (typeof(ITuple).IsAssignableFrom(valType))
+                {
+                    var tuple = (ITuple)value;
+                    var items = new object?[tuple.Length];
+                    for (var i = 0; i < tuple.Length; i++)
+                    {
+                        items[i] = MakeValueNetSafe(tuple[i]);
+                    }
+
+                    return new ViewVariablesBlobMembers.ServerTupleToken { Items = items };
+                }
+
                 // Can't send this value type over the wire.
                 return new ViewVariablesBlobMembers.ServerValueTypeToken
                 {
@@ -157,7 +175,7 @@ namespace Robust.Server.ViewVariables
             {
                 var protoMan = IoCManager.Resolve<IPrototypeManager>();
 
-                if (protoMan.TryGetVariantFrom(type, out var variant))
+                if (protoMan.TryGetKindFrom(type, out var variant))
                     return new ViewVariablesBlobMembers.PrototypeReferenceToken()
                     {
                         ID = null, Variant = variant, Stringified = PrettyPrint.PrintUserFacing(null),

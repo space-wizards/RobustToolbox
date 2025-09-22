@@ -66,7 +66,7 @@ public sealed class SpinCommand : LocalizedCommands
         }
 
         var physicsSystem = _entities.System<SharedPhysicsSystem>();
-        physicsSystem.SetAngularDamping(physics, drag);
+        physicsSystem.SetAngularDamping(target.Value, physics, drag);
         physicsSystem.SetAngularVelocity(target.Value, speed, body: physics);
     }
 }

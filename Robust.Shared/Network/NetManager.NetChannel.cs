@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.Net;
+using System.Threading.Channels;
+using System.Threading.Tasks;
 using Lidgren.Network;
 using Robust.Shared.ViewVariables;
 
@@ -35,7 +37,6 @@ namespace Robust.Shared.Network
             public bool IsConnected => _connection.Status == NetConnectionStatus.Connected;
 
             /// <inheritdoc />
-            [ViewVariables]
             public IPEndPoint RemoteEndPoint => _connection.RemoteEndPoint;
 
             /// <summary>
@@ -50,6 +51,11 @@ namespace Robust.Shared.Network
 
             // Only used on server, contains the encryption to use for this channel.
             public NetEncryption? Encryption { get; set; }
+
+            [ViewVariables] public int CurrentMtu => _connection.CurrentMTU;
+
+            public ChannelWriter<EncryptChannelItem>? EncryptionChannel;
+            public Task? EncryptionChannelTask;
 
             /// <summary>
             ///     Creates a new instance of a NetChannel.
@@ -98,7 +104,7 @@ namespace Robust.Shared.Network
 
             public override string ToString()
             {
-                return $"{RemoteEndPoint}/{UserId}";
+                return $"{ConnectionId}/{UserId}";
             }
         }
     }

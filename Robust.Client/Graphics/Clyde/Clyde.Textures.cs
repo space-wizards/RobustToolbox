@@ -305,8 +305,8 @@ namespace Robust.Client.Graphics.Clyde
                 IsSrgb = srgb,
                 Name = name,
                 MemoryPressure = memoryPressure,
-                TexturePixelType = pixType
-                // TextureInstance = new WeakReference<ClydeTexture>(instance)
+                TexturePixelType = pixType,
+                TextureInstance = new WeakReference<ClydeTexture>(instance)
             };
 
             _loadedTextures.Add(id, loaded);
@@ -466,15 +466,15 @@ namespace Robust.Client.Graphics.Clyde
         {
             var white = new Image<Rgba32>(1, 1);
             white[0, 0] = new Rgba32(255, 255, 255, 255);
-            _stockTextureWhite = (ClydeTexture) Texture.LoadFromImage(white);
+            _stockTextureWhite = (ClydeTexture) Texture.LoadFromImage(white, name: "StockTextureWhite");
 
             var black = new Image<Rgba32>(1, 1);
             black[0, 0] = new Rgba32(0, 0, 0, 255);
-            _stockTextureBlack = (ClydeTexture) Texture.LoadFromImage(black);
+            _stockTextureBlack = (ClydeTexture) Texture.LoadFromImage(black, name: "StockTextureBlack");
 
             var blank = new Image<Rgba32>(1, 1);
             blank[0, 0] = new Rgba32(0, 0, 0, 0);
-            _stockTextureTransparent = (ClydeTexture) Texture.LoadFromImage(blank);
+            _stockTextureTransparent = (ClydeTexture) Texture.LoadFromImage(blank, name: "StockTextureTransparent");
         }
 
         /// <summary>
@@ -571,7 +571,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private sealed class LoadedTexture
+        internal sealed class LoadedTexture
         {
             public GLHandle OpenGLObject;
             public int Width;
@@ -582,10 +582,10 @@ namespace Robust.Client.Graphics.Clyde
             public TexturePixelType TexturePixelType;
 
             public Vector2i Size => (Width, Height);
-            // public WeakReference<ClydeTexture> TextureInstance;
+            public required WeakReference<ClydeTexture> TextureInstance;
         }
 
-        private enum TexturePixelType : byte
+        internal enum TexturePixelType : byte
         {
             RenderTarget = 0,
             Rgba32,
@@ -601,7 +601,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private sealed class ClydeTexture : OwnedTexture
+        internal sealed class ClydeTexture : OwnedTexture
         {
             private readonly Clyde _clyde;
             public readonly bool IsSrgb;
@@ -649,24 +649,30 @@ namespace Robust.Client.Graphics.Clyde
                 return $"ClydeTexture: ({TextureId})";
             }
 
-            public override Color GetPixel(int x, int y)
+            public override unsafe Color GetPixel(int x, int y)
             {
                 if (!_clyde._loadedTextures.TryGetValue(TextureId, out var loaded))
                 {
                     throw new DataException("Texture not found");
                 }
 
-                Span<byte> rgba = stackalloc byte[4*this.Size.X*this.Size.Y];
-                unsafe
-                {
-                    fixed (byte* p = rgba)
-                    {
+                var curTexture2D = GL.GetInteger(GetPName.TextureBinding2D);
+                var bufSize = 4 * loaded.Size.X * loaded.Size.Y;
+                var buffer = ArrayPool<byte>.Shared.Rent(bufSize);
 
-                        GL.GetTextureImage(loaded.OpenGLObject.Handle, 0, PF.Rgba, PT.UnsignedByte, 4*this.Size.X*this.Size.Y, (IntPtr) p);
-                    }
+                GL.BindTexture(TextureTarget.Texture2D, loaded.OpenGLObject.Handle);
+
+                fixed (byte* p = buffer)
+                {
+                    GL.GetTexImage(TextureTarget.Texture2D, 0, PF.Rgba, PT.UnsignedByte, (IntPtr) p);
                 }
-                int pixelPos = (this.Size.X*(this.Size.Y-y) + x)*4;
-                return new Color(rgba[pixelPos+0], rgba[pixelPos+1], rgba[pixelPos+2], rgba[pixelPos+3]);
+
+                GL.BindTexture(TextureTarget.Texture2D, curTexture2D);
+
+                var pixelPos = (loaded.Size.X * (loaded.Size.Y - y - 1) + x) * 4;
+                var color = new Color(buffer[pixelPos+0], buffer[pixelPos+1], buffer[pixelPos+2], buffer[pixelPos+3]);
+                ArrayPool<byte>.Shared.Return(buffer);
+                return color;
             }
         }
 
@@ -679,6 +685,17 @@ namespace Robust.Client.Graphics.Clyde
                 ClydeStockTexture.Black => _stockTextureBlack,
                 _ => throw new ArgumentException(nameof(stockTexture))
             };
+        }
+
+        public IEnumerable<(ClydeTexture, LoadedTexture)> GetLoadedTextures()
+        {
+            foreach (var loaded in _loadedTextures.Values)
+            {
+                if (!loaded.TextureInstance.TryGetTarget(out var textureInstance))
+                    continue;
+
+                yield return (textureInstance, loaded);
+            }
         }
     }
 }

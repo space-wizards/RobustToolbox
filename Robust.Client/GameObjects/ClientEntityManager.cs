@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using Prometheus;
 using Robust.Client.GameStates;
 using Robust.Client.Player;
@@ -9,6 +8,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Player;
 using Robust.Shared.Replays;
 using Robust.Shared.Utility;
 
@@ -26,12 +26,29 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IBaseClient _client = default!;
         [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
 
+        internal event Action? AfterStartup;
+        internal event Action? AfterShutdown;
+
         public override void Initialize()
         {
             SetupNetworking();
             ReceivedSystemMessage += (_, systemMsg) => EventBus.RaiseEvent(EventSource.Network, systemMsg);
 
             base.Initialize();
+        }
+
+        public override void Startup()
+        {
+            base.Startup();
+
+            AfterStartup?.Invoke();
+        }
+
+        public override void Shutdown()
+        {
+            base.Shutdown();
+
+            AfterShutdown?.Invoke();
         }
 
         public override void FlushEntities()
@@ -43,19 +60,9 @@ namespace Robust.Client.GameObjects
             base.FlushEntities();
         }
 
-        EntityUid IClientEntityManagerInternal.CreateEntity(string? prototypeName)
+        EntityUid IClientEntityManagerInternal.CreateEntity(string? prototypeName, out MetaDataComponent metadata)
         {
-            return base.CreateEntity(prototypeName);
-        }
-
-        void IClientEntityManagerInternal.InitializeEntity(EntityUid entity, MetaDataComponent? meta)
-        {
-            base.InitializeEntity(entity, meta);
-        }
-
-        void IClientEntityManagerInternal.StartEntity(EntityUid entity)
-        {
-            base.StartEntity(entity);
+            return base.CreateEntity(prototypeName, out metadata);
         }
 
         /// <inheritdoc />
@@ -68,7 +75,7 @@ namespace Robust.Client.GameObjects
 
         public override void QueueDeleteEntity(EntityUid? uid)
         {
-            if (uid == null)
+            if (uid == null || uid == EntityUid.Invalid)
                 return;
 
             if (IsClientSide(uid.Value))
@@ -86,38 +93,96 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public override void Dirty(EntityUid uid, Component component, MetaDataComponent? meta = null)
+        public override void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
         {
-            //  Client only dirties during prediction
-            if (_gameTiming.InPrediction)
-                base.Dirty(uid, component, meta);
+            Dirty(new Entity<IComponent>(uid, component), meta);
         }
 
-        [return: NotNullIfNotNull("uid")]
-        public override EntityStringRepresentation? ToPrettyString(EntityUid? uid)
+        /// <inheritdoc />
+        public override void Dirty<T>(Entity<T> ent, MetaDataComponent? meta = null)
         {
-            if (uid == null)
-                return null;
+            // Client only dirties during prediction
+            if (_gameTiming.InPrediction)
+                base.Dirty(ent, meta);
+        }
 
-            if (_playerManager.LocalPlayer?.ControlledEntity == uid)
-                return base.ToPrettyString(uid).Value with { Session = _playerManager.LocalPlayer.Session };
+        public override void DirtyField<T>(EntityUid uid, T comp, string fieldName, MetaDataComponent? metadata = null)
+        {
+            // TODO Prediction
+            // does the client actually need to dirty the field?
+            // I.e., can't it just dirty the whole component to trigger a reset?
 
-            return base.ToPrettyString(uid);
+            // Client only dirties during prediction
+            if (_gameTiming.InPrediction)
+                base.DirtyField(uid, comp, fieldName, metadata);
+        }
+
+        public override void DirtyFields<T>(EntityUid uid, T comp, MetaDataComponent? meta, params string[] fields)
+        {
+            // TODO Prediction
+            // does the client actually need to dirty the field?
+            // I.e., can't it just dirty the whole component to trigger a reset?
+
+            // Client only dirties during prediction
+            if (_gameTiming.InPrediction)
+                base.DirtyFields(uid, comp, meta, fields);
+        }
+
+        /// <inheritdoc />
+        public override void Dirty<T1, T2>(Entity<T1, T2> ent, MetaDataComponent? meta = null)
+        {
+            if (_gameTiming.InPrediction)
+                base.Dirty(ent, meta);
+        }
+
+        /// <inheritdoc />
+        public override void Dirty<T1, T2, T3>(Entity<T1, T2, T3> ent, MetaDataComponent? meta = null)
+        {
+            if (_gameTiming.InPrediction)
+                base.Dirty(ent, meta);
+        }
+
+        /// <inheritdoc />
+        public override void Dirty<T1, T2, T3, T4>(Entity<T1, T2, T3, T4> ent, MetaDataComponent? meta = null)
+        {
+            if (_gameTiming.InPrediction)
+                base.Dirty(ent, meta);
         }
 
         public override void RaisePredictiveEvent<T>(T msg)
         {
-            var localPlayer = _playerManager.LocalPlayer;
-            DebugTools.AssertNotNull(localPlayer);
+            var session = _playerManager.LocalSession;
+            DebugTools.AssertNotNull(session);
 
             var sequence = _stateMan.SystemMessageDispatched(msg);
             EntityNetManager?.SendSystemNetworkMessage(msg, sequence);
 
-            DebugTools.Assert(!_stateMan.IsPredictionEnabled || _gameTiming.InPrediction && _gameTiming.IsFirstTimePredicted || _client.RunLevel != ClientRunLevel.Connected);
+            if (!_stateMan.IsPredictionEnabled && _client.RunLevel != ClientRunLevel.SinglePlayerGame)
+                return;
 
-            var eventArgs = new EntitySessionEventArgs(localPlayer!.Session);
+            DebugTools.Assert(_gameTiming.InPrediction && _gameTiming.IsFirstTimePredicted || _client.RunLevel == ClientRunLevel.SinglePlayerGame);
+
+            var eventArgs = new EntitySessionEventArgs(session!);
             EventBus.RaiseEvent(EventSource.Local, msg);
             EventBus.RaiseEvent(EventSource.Local, new EntitySessionMessage<T>(eventArgs, msg));
+        }
+
+        /// <inheritdoc />
+        public override void RaiseSharedEvent<T>(T message, EntityUid? user = null)
+        {
+            if (user == null || user != _playerManager.LocalEntity || !_gameTiming.IsFirstTimePredicted)
+                return;
+
+            EventBus.RaiseEvent(EventSource.Local, ref message);
+        }
+
+        /// <inheritdoc />
+        public override void RaiseSharedEvent<T>(T message, ICommonSession? user = null)
+        {
+            if (user == null || user != _playerManager.LocalSession || !_gameTiming.IsFirstTimePredicted)
+                return;
+
+            EventBus.RaiseEvent(EventSource.Local, ref message);
         }
 
         #region IEntityNetworkManager impl
@@ -169,7 +234,7 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public void SendSystemNetworkMessage(EntityEventArgs message, INetChannel channel)
+        public void SendSystemNetworkMessage(EntityEventArgs message, INetChannel? channel)
         {
             throw new NotSupportedException();
         }
@@ -207,7 +272,7 @@ namespace Robust.Client.GameObjects
         public void DispatchReceivedNetworkMsg(EntityEventArgs msg)
         {
             var sessionType = typeof(EntitySessionMessage<>).MakeGenericType(msg.GetType());
-            var sessionMsg = Activator.CreateInstance(sessionType, new EntitySessionEventArgs(_playerManager.LocalPlayer!.Session), msg)!;
+            var sessionMsg = Activator.CreateInstance(sessionType, new EntitySessionEventArgs(_playerManager.LocalSession!), msg)!;
             ReceivedSystemMessage?.Invoke(this, msg);
             ReceivedSystemMessage?.Invoke(this, sessionMsg);
         }
@@ -226,5 +291,54 @@ namespace Robust.Client.GameObjects
             }
         }
         #endregion
+
+        /// <inheritdoc />
+        public override void PredictedDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
+        {
+            if (!MetaQuery.Resolve(ent.Owner, ref ent.Comp1)
+                || ent.Comp1.EntityLifeStage >= EntityLifeStage.Terminating
+                || !TransformQuery.Resolve(ent.Owner, ref ent.Comp2))
+            {
+                return;
+            }
+
+            // So there's 3 scenarios:
+            // 1. Networked entity we just move to nullspace and rely on state handling.
+            // 2. Clientside predicted entity we delete and rely on state handling.
+            // 3. Clientside only entity that actually needs deleting here.
+
+            if (ent.Comp1.NetEntity.IsClientSide())
+            {
+                DeleteEntity(ent, ent.Comp1, ent.Comp2);
+            }
+            else
+            {
+                _xforms.DetachEntity(ent, ent.Comp2);
+            }
+        }
+
+        /// <inheritdoc />
+        public override void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
+        {
+            if (IsQueuedForDeletion(ent.Owner)
+                || !MetaQuery.Resolve(ent.Owner, ref ent.Comp1)
+                || ent.Comp1.EntityLifeStage >= EntityLifeStage.Terminating
+                || !TransformQuery.Resolve(ent.Owner, ref ent.Comp2))
+            {
+                return;
+            }
+
+            if (ent.Comp1.NetEntity.IsClientSide())
+            {
+                // client-side QueueDeleteEntity re-fetches MetadataComp and checks IsClientSide().
+                // base call to skip that.
+                // TODO create override that takes in metadata comp
+                base.QueueDeleteEntity(ent);
+            }
+            else
+            {
+                _xforms.DetachEntity(ent.Owner, ent.Comp2);
+            }
+        }
     }
 }

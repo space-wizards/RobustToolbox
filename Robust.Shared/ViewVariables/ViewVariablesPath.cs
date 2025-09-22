@@ -149,7 +149,7 @@ internal sealed class ViewVariablesFieldOrPropertyPath : ViewVariablesPath
         }
 
         DebugTools.Assert(_object is not Component || ReferenceEquals(ParentComponent.Component, _object));
-        _entMan.Dirty(ParentComponent.Component);
+        _entMan.Dirty(ParentComponent.Owner, ParentComponent.Component);
     }
 
     public override object? Invoke(object?[]? parameters) => null;
@@ -263,11 +263,11 @@ public sealed class ViewVariablesInstancePath : ViewVariablesPath
 
 public sealed class ViewVariablesComponentPath : ViewVariablesPath
 {
-    public readonly Component Component;
+    public readonly IComponent Component;
     public readonly EntityUid Owner;
     public override Type Type => Component?.GetType() ?? typeof(void);
 
-    public ViewVariablesComponentPath(Component component, EntityUid owner)
+    public ViewVariablesComponentPath(IComponent component, EntityUid owner)
     {
         Component = component;
         Owner = owner;

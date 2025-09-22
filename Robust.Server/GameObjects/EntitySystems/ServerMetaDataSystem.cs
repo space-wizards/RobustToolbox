@@ -1,14 +1,10 @@
-using Robust.Server.GameStates;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
+using Robust.Shared.Player;
 
 namespace Robust.Server.GameObjects;
 
 public sealed class ServerMetaDataSystem : MetaDataSystem
 {
-    [Dependency] private readonly PvsSystem _pvsSystem = default!;
-    private EntityQuery<MetaDataComponent> _mQuery;
-
     public override void Initialize()
     {
         base.Initialize();
@@ -17,7 +13,6 @@ public sealed class ServerMetaDataSystem : MetaDataSystem
 
         EntityManager.ComponentAdded += OnComponentAdded;
         EntityManager.ComponentRemoved += OnComponentRemoved;
-        _mQuery = GetEntityQuery<MetaDataComponent>();
     }
 
     public override void Shutdown()

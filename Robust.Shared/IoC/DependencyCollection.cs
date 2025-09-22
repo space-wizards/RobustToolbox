@@ -1,6 +1,6 @@
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
@@ -35,7 +35,7 @@ namespace Robust.Shared.IoC
         /// <remarks>
         /// Immutable and atomically swapped to provide thread safety guarantees.
         /// </remarks>
-        private ImmutableDictionary<Type, object> _services = ImmutableDictionary<Type, object>.Empty;
+        private FrozenDictionary<Type, object> _services = FrozenDictionary<Type, object>.Empty;
 
         // Start fields used for building new services.
 
@@ -109,6 +109,17 @@ namespace Robust.Shared.IoC
         public bool TryResolveType(Type objectType, [MaybeNullWhen(false)] out object instance)
         {
             return TryResolveType(objectType, _services, out instance);
+        }
+
+        private bool TryResolveType(
+            Type objectType,
+            FrozenDictionary<Type, object> services,
+            [MaybeNullWhen(false)] out object instance)
+        {
+            if (!services.TryGetValue(objectType, out instance))
+                return _parentCollection is not null && _parentCollection.TryResolveType(objectType, out instance);
+
+            return true;
         }
 
         private bool TryResolveType(
@@ -256,8 +267,7 @@ namespace Robust.Shared.IoC
                 _pendingResolves.Enqueue(interfaceType);
             }
         }
-
-        [AssertionMethod]
+        
         private void CheckRegisterInterface(Type interfaceType, Type implementationType, bool overwrite)
         {
             lock (_serviceBuildLock)
@@ -310,7 +320,7 @@ namespace Robust.Shared.IoC
                 service.Dispose();
             }
 
-            _services = ImmutableDictionary<Type, object>.Empty;
+            _services = FrozenDictionary<Type, object>.Empty;
 
             lock (_serviceBuildLock)
             {
@@ -394,7 +404,7 @@ namespace Robust.Shared.IoC
                 // List of all objects we need to inject dependencies into.
                 var injectList = new List<object>();
 
-                var newDeps = _services.ToBuilder();
+                var newDeps = _services.ToDictionary();
 
                 // First we build every type we have registered but isn't yet built.
                 // This allows us to run this after the content assembly has been loaded.
@@ -435,14 +445,14 @@ namespace Robust.Shared.IoC
                 // delegates. Also we need to free the delegates because lambdas capture variables.
                 _resolveFactories.Clear();
 
+                // Atomically set the new dict of services.
+                _services = newDeps.ToFrozenDictionary();
+
                 // Graph built, go over ones that need injection.
                 foreach (var implementation in injectList)
                 {
-                    InjectDependenciesReflection(implementation, newDeps);
+                    InjectDependenciesReflection(implementation, _services);
                 }
-
-                // Atomically set the new dict of services.
-                _services = newDeps.ToImmutable();
 
                 foreach (var injectedItem in injectList.OfType<IPostInjectInit>())
                 {
@@ -488,7 +498,7 @@ namespace Robust.Shared.IoC
             InjectDependenciesReflection(obj, _services);
         }
 
-        private void InjectDependenciesReflection(object obj, IReadOnlyDictionary<Type, object> services)
+        private void InjectDependenciesReflection(object obj, FrozenDictionary<Type, object> services)
         {
             var type = obj.GetType();
             foreach (var field in type.GetAllFields())

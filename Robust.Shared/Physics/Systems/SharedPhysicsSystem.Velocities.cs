@@ -1,4 +1,5 @@
 using System.Numerics;
+using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -15,18 +16,60 @@ public abstract partial class SharedPhysicsSystem
     /// <summary>
     /// Gets the linear velocity of a particular body at the specified point.
     /// </summary>
+    [Pure]
+    [PublicAPI]
     public Vector2 GetLinearVelocity(
         EntityUid uid,
         Vector2 point,
         PhysicsComponent? component = null,
         TransformComponent? xform = null)
     {
-        if (!Resolve(uid, ref component, ref xform))
+        if (!PhysicsQuery.Resolve(uid, ref component))
+            return Vector2.Zero;
+
+        if (!XformQuery.Resolve(uid, ref xform))
             return Vector2.Zero;
 
         var velocity = component.LinearVelocity;
         var angVelocity = xform.LocalRotation.RotateVec(Vector2Helpers.Cross(component.AngularVelocity, point - component.LocalCenter));
         return velocity + angVelocity;
+    }
+
+    /// <summary>
+    ///     This is the total rate of change of the coordinate's map position.
+    /// </summary>
+    [Pure]
+    [PublicAPI]
+    public Vector2 GetMapLinearVelocity(EntityCoordinates coordinates)
+    {
+        if (!coordinates.IsValid(EntityManager))
+            return Vector2.Zero;
+
+        var mapUid = _transform.GetMap(coordinates);
+        var parent = coordinates.EntityId;
+        var localPos = coordinates.Position;
+
+        var velocity = Vector2.Zero;
+        var angularComponent = Vector2.Zero;
+
+        while (parent != mapUid && parent.IsValid())
+        {
+            // Could make this a method with the below one but ehh
+            // then you get a method bigger than this block with a billion out args and who wants that.
+            var xform = XformQuery.GetComponent(parent);
+
+            if (PhysicsQuery.TryGetComponent(parent, out var body))
+            {
+                velocity += body.LinearVelocity;
+                angularComponent += Vector2Helpers.Cross(body.AngularVelocity, localPos - body.LocalCenter);
+                angularComponent = xform.LocalRotation.RotateVec(angularComponent);
+            }
+
+            localPos = xform.LocalPosition + xform.LocalRotation.RotateVec(localPos);
+            parent = xform.ParentUid;
+        }
+
+        return velocity;
     }
 
     /// <summary>
@@ -36,31 +79,29 @@ public abstract partial class SharedPhysicsSystem
     /// <remarks>
     ///     Use <see cref="GetMapVelocities"/> if you need linear and angular at the same time.
     /// </remarks>
+    [Pure]
+    [PublicAPI]
     public Vector2 GetMapLinearVelocity(
         EntityUid uid,
         PhysicsComponent? component = null,
-        TransformComponent? xform = null,
-        EntityQuery<TransformComponent>? xformQuery = null,
-        EntityQuery<PhysicsComponent>? physicsQuery = null)
+        TransformComponent? xform = null)
     {
-        if (!Resolve(uid, ref component))
+        if (!XformQuery.Resolve(uid, ref xform))
             return Vector2.Zero;
 
-        xformQuery ??= EntityManager.GetEntityQuery<TransformComponent>();
-        physicsQuery ??= EntityManager.GetEntityQuery<PhysicsComponent>();
+        PhysicsQuery.Resolve(uid, ref component, false);
 
-        xform ??= xformQuery.Value.GetComponent(uid);
         var parent = xform.ParentUid;
         var localPos = xform.LocalPosition;
 
-        var velocity = component.LinearVelocity;
+        var velocity = component?.LinearVelocity ?? Vector2.Zero;
         Vector2 angularComponent = Vector2.Zero;
 
         while (parent != xform.MapUid && parent.IsValid())
         {
-            xform = xformQuery.Value.GetComponent(parent);
+            xform = XformQuery.GetComponent(parent);
 
-            if (physicsQuery.Value.TryGetComponent(parent, out var body))
+            if (PhysicsQuery.TryGetComponent(parent, out var body))
             {
                 // add linear velocity of parent relative to it's own parent (again, in map coordinates)
                 velocity += body.LinearVelocity;
@@ -85,61 +126,59 @@ public abstract partial class SharedPhysicsSystem
     /// <remarks>
     /// Consider using <see cref="GetMapVelocities"/> if you need linear and angular at the same time.
     /// </remarks>
+    [Pure]
+    [PublicAPI]
     public float GetMapAngularVelocity(
         EntityUid uid,
         PhysicsComponent? component = null,
-        TransformComponent? xform = null,
-        EntityQuery<TransformComponent>? xformQuery = null,
-        EntityQuery<PhysicsComponent>? physicsQuery = null)
+        TransformComponent? xform = null)
     {
-        if (!Resolve(uid, ref component))
-            return 0;
+        if (!XformQuery.Resolve(uid, ref xform))
+            return 0f;
 
-        xformQuery ??= EntityManager.GetEntityQuery<TransformComponent>();
-        physicsQuery ??= EntityManager.GetEntityQuery<PhysicsComponent>();
+        PhysicsQuery.Resolve(uid, ref component, false);
 
-        xform ??= xformQuery.Value.GetComponent(uid);
-
-        var angularVelocity = component.AngularVelocity;
+        var angularVelocity = component?.AngularVelocity ?? 0;
 
         while (xform.ParentUid != xform.MapUid && xform.ParentUid.IsValid())
         {
-            if (physicsQuery.Value.TryGetComponent(xform.ParentUid, out var body))
+            if (PhysicsQuery.TryGetComponent(xform.ParentUid, out var body))
                 angularVelocity += body.AngularVelocity;
 
-            xform = xformQuery.Value.GetComponent(xform.ParentUid);
+            xform = XformQuery.GetComponent(xform.ParentUid);
         }
 
         return angularVelocity;
     }
 
+    /// <summary>
+    /// Gets the linear and angular velocity for this entity in map terms.
+    /// </summary>
+    [Pure]
+    [PublicAPI]
     public (Vector2, float) GetMapVelocities(
         EntityUid uid,
         PhysicsComponent? component = null,
-        TransformComponent? xform = null,
-        EntityQuery<TransformComponent>? xformQuery = null,
-        EntityQuery<PhysicsComponent>? physicsQuery = null)
+        TransformComponent? xform = null)
     {
-        if (!Resolve(uid, ref component))
+        if (!XformQuery.Resolve(uid, ref xform))
             return (Vector2.Zero, 0);
 
-        xformQuery ??= EntityManager.GetEntityQuery<TransformComponent>();
-        physicsQuery ??= EntityManager.GetEntityQuery<PhysicsComponent>();
+        PhysicsQuery.Resolve(uid, ref component, false);
 
-        xform ??= xformQuery.Value.GetComponent(uid);
         var parent = xform.ParentUid;
 
         var localPos = xform.LocalPosition;
 
-        var linearVelocity = component.LinearVelocity;
-        var angularVelocity = component.AngularVelocity;
+        var linearVelocity = component?.LinearVelocity ?? Vector2.Zero;
+        var angularVelocity = component?.AngularVelocity ?? 0;
         Vector2 linearVelocityAngularContribution = Vector2.Zero;
 
         while (parent != xform.MapUid && parent.IsValid())
         {
-            xform = xformQuery.Value.GetComponent(parent);
+            xform = XformQuery.GetComponent(parent);
 
-            if (physicsQuery.Value.TryGetComponent(parent, out var body))
+            if (PhysicsQuery.TryGetComponent(parent, out var body))
             {
                 angularVelocity += body.AngularVelocity;
 
@@ -159,7 +198,7 @@ public abstract partial class SharedPhysicsSystem
         return (linearVelocity + linearVelocityAngularContribution, angularVelocity);
     }
 
-    private void HandleParentChangeVelocity(EntityUid uid, PhysicsComponent physics, ref EntParentChangedMessage args, TransformComponent xform)
+    private void HandleParentChangeVelocity(EntityUid uid, PhysicsComponent physics, EntityUid oldParent, TransformComponent xform)
     {
         // If parent changed due to state handling, don't modify velocities. The physics comp state will take care of itself..
         if (_gameTiming.ApplyingState)
@@ -178,15 +217,13 @@ public abstract partial class SharedPhysicsSystem
         // I guess the question becomes, what do you do with conservation of momentum in that case. I guess its the job
         // of the teleporter to select a velocity at the after the parent has changed.
 
-        var xformQuery = GetEntityQuery<TransformComponent>();
-        var physicsQuery = GetEntityQuery<PhysicsComponent>();
         FixturesComponent? manager = null;
 
         // for the new velocities (that need to be updated), we can just use the existing function:
-        var (newLinear, newAngular) = GetMapVelocities(uid, physics, xform, xformQuery, physicsQuery);
+        var (newLinear, newAngular) = GetMapVelocities(uid, physics, xform);
 
         // for the old velocities, we need to re-implement this function while using the old parent and old local position:
-        if (args.OldParent is not { Valid: true } parent)
+        if (oldParent == EntityUid.Invalid)
         {
             // no previous parent --> simple
             // Old velocity + (old velocity - new velocity)
@@ -195,8 +232,9 @@ public abstract partial class SharedPhysicsSystem
             return;
         }
 
-        TransformComponent? parentXform = xformQuery.GetComponent(parent);
-        var localPos = _transform.GetInvWorldMatrix(parentXform).Transform(_transform.GetWorldPosition(xform));
+        var parent = oldParent;
+        TransformComponent? parentXform = XformQuery.GetComponent(parent);
+        var localPos = Vector2.Transform(_transform.GetWorldPosition(xform), _transform.GetInvWorldMatrix(parentXform));
 
         var oldLinear = physics.LinearVelocity;
         var oldAngular = physics.AngularVelocity;
@@ -204,7 +242,7 @@ public abstract partial class SharedPhysicsSystem
 
         do
         {
-            if (physicsQuery.TryGetComponent(parent, out var body))
+            if (PhysicsQuery.TryGetComponent(parent, out var body))
             {
                 oldAngular += body.AngularVelocity;
 
@@ -220,7 +258,7 @@ public abstract partial class SharedPhysicsSystem
             localPos = parentXform.LocalPosition + parentXform.LocalRotation.RotateVec(localPos);
             parent = parentXform.ParentUid;
 
-        } while (parent.IsValid() && xformQuery.TryGetComponent(parent, out parentXform));
+        } while (parent.IsValid() && XformQuery.TryGetComponent(parent, out parentXform));
 
         oldLinear += linearAngularContribution;
 

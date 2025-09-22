@@ -185,6 +185,21 @@ public abstract partial class Joint : IEquatable<Joint>
     // serializer.DataField(this, x => x.BodyA, "bodyA", EntityUid.Invalid);
     // serializer.DataField(this, x => x.BodyB, "bodyB", Ent);
 
+    /// <summary>
+    /// Gets the other entity on this joint or throws if it's not related.
+    /// </summary>
+    public EntityUid GetOther(EntityUid uid)
+    {
+        if (BodyAUid == uid)
+            return BodyBUid;
+
+        if (BodyBUid == uid)
+            return BodyAUid;
+
+        // Should return EntityUid.Invalid but larger joints refactor first so we can actually log it properly here.
+        throw new ArgumentOutOfRangeException($"EntityUid {uid} unrelated to joint");
+    }
+
     protected internal void Dirty(IEntityManager? entMan = null)
     {
         // TODO: move dirty & setter functions to a system.

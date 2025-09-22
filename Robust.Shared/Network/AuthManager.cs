@@ -15,17 +15,23 @@ namespace Robust.Shared.Network
         string? Token { get; set; }
         string? PubKey { get; set; }
 
+        /// <summary>
+        /// If true, the user allows HWID information to be provided to servers.
+        /// </summary>
+        bool AllowHwid { get; set; }
+
         void LoadFromEnv();
     }
 
     internal sealed class AuthManager : IAuthManager
     {
-        public const string DefaultAuthServer = "https://central.spacestation14.io/auth/";
+        public const string DefaultAuthServer = "https://auth.spacestation14.com/";
 
         public NetUserId? UserId { get; set; }
         public string? Server { get; set; } = DefaultAuthServer;
         public string? Token { get; set; }
         public string? PubKey { get; set; }
+        public bool AllowHwid { get; set; } = true;
 
         public void LoadFromEnv()
         {
@@ -47,6 +53,11 @@ namespace Robust.Shared.Network
             if (TryGetVar("ROBUST_AUTH_TOKEN", out var token))
             {
                 Token = token;
+            }
+
+            if (TryGetVar("ROBUST_AUTH_ALLOW_HWID", out var allowHwid))
+            {
+                AllowHwid = allowHwid.Trim() == "1";
             }
 
             static bool TryGetVar(string var, [NotNullWhen(true)] out string? val)

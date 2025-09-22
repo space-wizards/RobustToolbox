@@ -50,7 +50,7 @@ public sealed class ReplayData
     /// <summary>
     /// The length of this recording.
     /// </summary>
-    public readonly TimeSpan Duration;
+    public readonly TimeSpan? Duration;
 
     /// <summary>
     /// Array of checkpoint states. These are full game states that make it faster to jump around in time.
@@ -95,7 +95,7 @@ public sealed class ReplayData
         TimeSpan[] replayTime,
         GameTick tickOffset,
         TimeSpan startTime,
-        TimeSpan duration,
+        TimeSpan? duration,
         CheckpointState[] checkpointStates,
         ReplayMessage? initData,
         bool clientSideRecording,
@@ -112,7 +112,7 @@ public sealed class ReplayData
         ClientSideRecording = clientSideRecording;
         YamlData = yamlData;
 
-        if (YamlData.TryGet(new ValueDataNode(ReplayConstants.MetaKeyRecordedBy), out ValueDataNode? node)
+        if (YamlData.TryGet(ReplayConstants.MetaKeyRecordedBy, out ValueDataNode? node)
             && Guid.TryParse(node.Value, out var guid))
         {
             Recorder = new NetUserId(guid);

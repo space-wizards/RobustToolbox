@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Robust.Client.Graphics;
@@ -8,6 +9,7 @@ using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Input;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface;
@@ -19,9 +21,10 @@ internal partial class UserInterfaceManager
     private bool _needUpdateActiveCursor;
     [ViewVariables] public Control? KeyboardFocused { get; private set; }
 
-    [ViewVariables] public Control? CurrentlyHovered { get; private set; } = default!;
+    [ViewVariables] public Control? CurrentlyHovered { get; private set; }
 
     private Control? _controlFocused;
+
     [ViewVariables]
     public Control? ControlFocused
     {
@@ -32,6 +35,7 @@ internal partial class UserInterfaceManager
                 return;
             _controlFocused?.ControlFocusExited();
             _controlFocused = value;
+            _needUpdateActiveCursor = true;
         }
     }
 
@@ -40,6 +44,7 @@ internal partial class UserInterfaceManager
     private bool _showingTooltip;
     private Control? _suppliedTooltip;
     private const float TooltipDelay = 0.25f;
+    private readonly Dictionary<BoundKeyFunction, Control> _focusedControls = new();
 
     private WindowRoot? _focusedRoot;
 
@@ -109,16 +114,16 @@ internal partial class UserInterfaceManager
             args.Handle();
         }
 
+        _focusedControls[args.Function] = control;
+
         OnKeyBindDown?.Invoke(control);
     }
 
     public void KeyBindUp(BoundKeyEventArgs args)
     {
-        var control = ControlFocused ?? KeyboardFocused ?? MouseGetControl(args.PointerLocation);
-        if (control == null)
-        {
+        // Only raise keybind-up for the control on which we previously raised keybind-down
+        if (!_focusedControls.Remove(args.Function, out var control) || !control.VisibleInTree)
             return;
-        }
 
         var guiArgs = new GUIBoundKeyEventArgs(args.Function, args.State, args.PointerLocation, args.CanFocus,
             args.PointerLocation.Position / control.UIScale - control.GlobalPosition,
@@ -137,25 +142,9 @@ internal partial class UserInterfaceManager
         _resetTooltipTimer();
         // Update which control is considered hovered.
         var newHovered = MouseGetControl(mouseMoveEventArgs.Position);
-        if (newHovered != CurrentlyHovered)
-        {
-            _clearTooltip();
-            CurrentlyHovered?.MouseExited();
-            CurrentlyHovered = newHovered;
-            CurrentlyHovered?.MouseEntered();
-            if (CurrentlyHovered != null)
-            {
-                _tooltipDelay = CurrentlyHovered.TooltipDelay ?? TooltipDelay;
-            }
-            else
-            {
-                _tooltipDelay = null;
-            }
+        SetHovered(newHovered);
 
-            _needUpdateActiveCursor = true;
-        }
-
-        var target = ControlFocused ?? newHovered;
+        var target = ControlFocused ?? CurrentlyHovered;
         if (target != null)
         {
             var pos = mouseMoveEventArgs.Position.Position;
@@ -167,6 +156,33 @@ internal partial class UserInterfaceManager
 
             _doMouseGuiInput(target, guiArgs, (c, ev) => c.MouseMove(ev));
         }
+    }
+
+    public void UpdateHovered()
+    {
+        var ctrl = MouseGetControl(_inputManager.MouseScreenPosition);
+        SetHovered(ctrl);
+    }
+
+    public void SetHovered(Control? control)
+    {
+        if (control == CurrentlyHovered)
+            return;
+
+        _clearTooltip();
+        CurrentlyHovered?.MouseExited();
+        CurrentlyHovered = control;
+        CurrentlyHovered?.MouseEntered();
+        if (CurrentlyHovered != null)
+        {
+            _tooltipDelay = CurrentlyHovered.TooltipDelay ?? TooltipDelay;
+        }
+        else
+        {
+            _tooltipDelay = null;
+        }
+
+        _needUpdateActiveCursor = true;
     }
 
     private void UpdateActiveCursor()
@@ -186,7 +202,14 @@ internal partial class UserInterfaceManager
             return;
         }
 
-        var shape = cursorTarget.DefaultCursorShape switch
+        var shape = MapCursorShape(cursorTarget.DefaultCursorShape);
+
+        _clyde.SetCursor(_clyde.GetStandardCursor(shape));
+    }
+
+    private static StandardCursorShape MapCursorShape(Control.CursorShape shape)
+    {
+        return shape switch
         {
             Control.CursorShape.Arrow => StandardCursorShape.Arrow,
             Control.CursorShape.IBeam => StandardCursorShape.IBeam,
@@ -194,10 +217,21 @@ internal partial class UserInterfaceManager
             Control.CursorShape.Crosshair => StandardCursorShape.Crosshair,
             Control.CursorShape.VResize => StandardCursorShape.VResize,
             Control.CursorShape.HResize => StandardCursorShape.HResize,
+            Control.CursorShape.Progress => StandardCursorShape.Progress,
+            Control.CursorShape.NWSEResize => StandardCursorShape.NWSEResize,
+            Control.CursorShape.NESWResize => StandardCursorShape.NESWResize,
+            Control.CursorShape.Move => StandardCursorShape.Move,
+            Control.CursorShape.NotAllowed => StandardCursorShape.NotAllowed,
+            Control.CursorShape.NWResize => StandardCursorShape.NWResize,
+            Control.CursorShape.NResize => StandardCursorShape.NResize,
+            Control.CursorShape.NEResize => StandardCursorShape.NEResize,
+            Control.CursorShape.EResize => StandardCursorShape.EResize,
+            Control.CursorShape.SEResize => StandardCursorShape.SEResize,
+            Control.CursorShape.SResize => StandardCursorShape.SResize,
+            Control.CursorShape.SWResize => StandardCursorShape.SWResize,
+            Control.CursorShape.WResize => StandardCursorShape.WResize,
             _ => StandardCursorShape.Arrow
         };
-
-        _clyde.SetCursor(_clyde.GetStandardCursor(shape));
     }
 
     public void MouseWheel(MouseWheelEventArgs args)
@@ -292,16 +326,18 @@ internal partial class UserInterfaceManager
 
     private void _clearTooltip()
     {
-        if (!_showingTooltip) return;
+        _resetTooltipTimer();
+
+        if (!_showingTooltip)
+            return;
 
         if (_suppliedTooltip != null)
         {
-            PopupRoot.RemoveChild(_suppliedTooltip);
+            _suppliedTooltip.Orphan();
             _suppliedTooltip = null;
         }
 
         CurrentlyHovered?.PerformHideTooltip();
-        _resetTooltipTimer();
         _showingTooltip = false;
     }
 
@@ -502,7 +538,7 @@ internal partial class UserInterfaceManager
         if (_showingTooltip) return;
         _showingTooltip = true;
         var hovered = CurrentlyHovered;
-        if (hovered == null)
+        if (hovered == null || hovered.Root == null)
         {
             return;
         }
@@ -527,7 +563,7 @@ internal partial class UserInterfaceManager
         if (_suppliedTooltip == null)
             return;
 
-        PopupRoot.AddChild(_suppliedTooltip);
+        hovered.Root.PopupRoot.AddChild(_suppliedTooltip);
         Tooltips.PositionTooltip(_suppliedTooltip);
         hovered.PerformShowTooltip();
     }

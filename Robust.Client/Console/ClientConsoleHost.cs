@@ -13,7 +13,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -47,7 +47,8 @@ namespace Robust.Client.Console
     }
 
     /// <inheritdoc cref="IClientConsoleHost" />
-    internal sealed partial class ClientConsoleHost : ConsoleHost, IClientConsoleHost, IConsoleHostInternal, IPostInjectInit
+    [Virtual]
+    internal partial class ClientConsoleHost : ConsoleHost, IClientConsoleHost, IConsoleHostInternal, IPostInjectInit
     {
         [Dependency] private readonly IClientConGroupController _conGroup = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
@@ -187,11 +188,19 @@ namespace Robust.Client.Console
             }
 
             args.RemoveAt(0);
-            var shell = new ConsoleShell(this, session ?? _player.LocalPlayer?.Session, session == null);
+            var shell = new ConsoleShell(this, session ?? _player.LocalSession, session == null);
             var cmdArgs = args.ToArray();
 
-            AnyCommandExecuted?.Invoke(shell, commandName, command, cmdArgs);
-            cmd.Execute(shell, command, cmdArgs);
+            try
+            {
+                AnyCommandExecuted?.Invoke(shell, commandName, command, cmdArgs);
+                cmd.Execute(shell, command, cmdArgs);
+            }
+            catch (Exception e)
+            {
+                _conLogger.Error($"ExecuteError - {command}:\n{e}");
+                shell.WriteError($"There was an error while executing the command: {e}");
+            }
         }
 
         private bool CanExecute(string cmdName)
@@ -199,8 +208,7 @@ namespace Robust.Client.Console
             // When not connected to a server, you can run all local commands.
             // When connected to a server, you can only run commands according to the con group controller.
 
-            return _player.LocalPlayer == null
-                   || _player.LocalPlayer.Session.Status <= SessionStatus.Connecting
+            return _player.LocalSession is not { Status: > SessionStatus.Connecting }
                    || _conGroup.CanCommand(cmdName);
         }
 

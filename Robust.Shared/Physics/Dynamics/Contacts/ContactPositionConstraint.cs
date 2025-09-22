@@ -21,8 +21,8 @@
 */
 
 using System.Numerics;
-using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Dynamics.Contacts
 {
@@ -38,7 +38,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// </summary>
         public int IndexB { get; set; }
 
-        public Vector2[] LocalPoints;
+        internal FixedArray2<Vector2> LocalPoints;
 
         public Vector2 LocalNormal;
 

@@ -10,8 +10,11 @@ using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp.PixelFormats;
 using TerraFX.Interop.Windows;
+using TerraFX.Interop.Xlib;
 using GlfwImage = OpenToolkit.GraphicsLibraryFramework.Image;
 using Monitor = OpenToolkit.GraphicsLibraryFramework.Monitor;
+using Window = OpenToolkit.GraphicsLibraryFramework.Window;
+using X11Window = TerraFX.Interop.Xlib.Window;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -81,12 +84,26 @@ namespace Robust.Client.Graphics.Clyde
                 );
             }
 
+            public void WindowSetSize(WindowReg window, Vector2i size)
+            {
+                var reg = (GlfwWindowReg) window;
+
+                SendCmd(new CmdWinSetSize((nint) reg.GlfwWindow, size.X, size.Y));
+            }
+
             public void WindowSetVisible(WindowReg window, bool visible)
             {
                 var reg = (GlfwWindowReg) window;
                 reg.IsVisible = visible;
 
                 SendCmd(new CmdWinSetVisible((nint) reg.GlfwWindow, visible));
+            }
+
+            private void WinThreadWinSetSize(CmdWinSetSize cmd)
+            {
+                var win = (Window*) cmd.Window;
+
+                GLFW.SetWindowSize(win, cmd.W, cmd.H);
             }
 
             private void WinThreadWinSetVisible(CmdWinSetVisible cmd)
@@ -451,6 +468,8 @@ namespace Robust.Client.Graphics.Clyde
                 GLFW.WindowHint(WindowHintInt.AlphaBits, 8);
                 GLFW.WindowHint(WindowHintInt.StencilBits, 8);
 
+                GLFW.WindowHint(WindowHintBool.Decorated, (parameters.Styles & OSWindowStyles.NoTitleBar) == 0);
+
                 var window = GLFW.CreateWindow(
                     parameters.Width, parameters.Height,
                     parameters.Title,
@@ -473,13 +492,20 @@ namespace Robust.Client.Graphics.Clyde
                     if (OperatingSystem.IsWindows())
                     {
                         var hWnd = (HWND) GLFW.GetWin32Window(window);
-                        DebugTools.Assert(hWnd != HWND.NULL);
-
-                        Windows.SetWindowLongPtrW(
-                            hWnd,
-                            GWL.GWL_STYLE,
-                            // Cast to long here to work around a bug in rider with nint bitwise operators.
-                            (nint)((long)Windows.GetWindowLongPtrW(hWnd, GWL.GWL_STYLE) & ~WS.WS_SYSMENU));
+                        WsiShared.SetWindowStyleNoTitleOptionsWindows(hWnd);
+                    }
+                    else if (OperatingSystem.IsLinux())
+                    {
+                        try
+                        {
+                            var x11Window = (X11Window)GLFW.GetX11Window(window);
+                            var x11Display = (Display*) GLFW.GetX11Display(window);
+                            WsiShared.SetWindowStyleNoTitleOptionsX11(x11Display, x11Window);
+                        }
+                        catch (EntryPointNotFoundException)
+                        {
+                            _sawmill.Warning("OSWindowStyles.NoTitleOptions not implemented on this windowing manager");
+                        }
                     }
                     else
                     {
@@ -499,6 +525,25 @@ namespace Robust.Client.Graphics.Clyde
                             hWnd,
                             GWLP.GWLP_HWNDPARENT,
                             ownerHWnd);
+                    }
+                    else if (OperatingSystem.IsLinux())
+                    {
+                        try
+                        {
+                            var x11Display = (Display*) GLFW.GetX11Display(window);
+                            var thisWindow = (X11Window)GLFW.GetX11Window(window);
+                            var parentWindow = (X11Window)GLFW.GetX11Window(ownerWindow);
+                            DebugTools.Assert(thisWindow != X11Window.NULL);
+                            DebugTools.Assert(parentWindow != X11Window.NULL);
+
+#pragma warning disable CA1806
+                            Xlib.XSetTransientForHint(x11Display, thisWindow, parentWindow);
+#pragma warning restore CA1806
+                        }
+                        catch (EntryPointNotFoundException)
+                        {
+                            _sawmill.Warning("owner windows not implemented on this windowing manager");
+                        }
                     }
                     else
                     {
@@ -573,16 +618,16 @@ namespace Robust.Client.Graphics.Clyde
                 return reg;
             }
 
-            private WindowReg? FindWindow(nint window) => FindWindow((Window*) window);
+            private GlfwWindowReg? FindWindow(nint window) => FindWindow((Window*) window);
 
-            private WindowReg? FindWindow(Window* window)
+            private GlfwWindowReg? FindWindow(Window* window)
             {
                 foreach (var windowReg in _clyde._windows)
                 {
                     var glfwReg = (GlfwWindowReg) windowReg;
                     if (glfwReg.GlfwWindow == window)
                     {
-                        return windowReg;
+                        return glfwReg;
                     }
                 }
 
@@ -598,7 +643,7 @@ namespace Robust.Client.Graphics.Clyde
 
             private static void WinThreadGetClipboard(CmdGetClipboard cmd)
             {
-                var clipboard = GLFW.GetClipboardString((Window*) cmd.Window);
+                var clipboard = GLFW.GetClipboardString((Window*) cmd.Window) ?? "";
                 // Don't have to care about synchronization I don't think so just fire this immediately.
                 cmd.Tcs.TrySetResult(clipboard);
             }
@@ -616,6 +661,10 @@ namespace Robust.Client.Graphics.Clyde
             public void LoadWindowIcon(Window* window)
             {
                 var icons = _clyde.LoadWindowIcons().ToArray();
+
+                // Done if no icon (e.g., macOS)
+                if (icons.Length == 0)
+                    return;
 
                 // Turn each image into a byte[] so we can actually pin their contents.
                 // Wish I knew a clean way to do this without allocations.
@@ -669,23 +718,23 @@ namespace Robust.Client.Graphics.Clyde
                 return (void*) GLFW.GetProcAddress(procName);
             }
 
-            public void TextInputSetRect(UIBox2i rect)
+            public void TextInputSetRect(WindowReg reg, UIBox2i rect, int cursor)
             {
                 // Not supported on GLFW.
             }
 
-            public void TextInputStart()
+            public void TextInputStart(WindowReg reg)
             {
                 // Not properly supported on GLFW.
 
-                _textInputActive = true;
+                ((GlfwWindowReg)reg).TextInputActive = true;
             }
 
-            public void TextInputStop()
+            public void TextInputStop(WindowReg reg)
             {
                 // Not properly supported on GLFW.
 
-                _textInputActive = false;
+                ((GlfwWindowReg)reg).TextInputActive = false;
             }
 
             private void CheckWindowDisposed(WindowReg reg)
@@ -700,6 +749,10 @@ namespace Robust.Client.Graphics.Clyde
 
                 // Kept around to avoid it being GCd.
                 public CursorImpl? Cursor;
+
+                // While GLFW does not provide proper IME APIs, we can at least emulate SDL3's StartTextInput() system.
+                // This will ensure some level of consistency between the backends.
+                public bool TextInputActive;
             }
         }
     }

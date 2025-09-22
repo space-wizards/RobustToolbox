@@ -9,7 +9,7 @@ level = 1
 enabled = false
 
 [net]
-tickrate = 60
+tickrate = 30
 port = 1212
 bindto = "::,0.0.0.0"
 max_connections = 256
@@ -52,7 +52,7 @@ tags = ""
 # Must be in the form of an ss14:// or ss14s:// URI pointing to the status API.
 server_url = ""
 # Comma-separated list of URLs of hub servers to advertise to.
-hub_urls = "https://central.spacestation14.io/hub/"
+hub_urls = "https://hub.spacestation14.com/"
 
 [build]
 # *Absolutely all of these can be supplied using a "build.json" file*
@@ -98,5 +98,5 @@ hub_urls = "https://central.spacestation14.io/hub/"
 
 # You should probably never EVER need to touch this, but if you need a custom auth server,
 # (the auth server being the one which manages Space Station 14 accounts), you change it here.
-# server = https://central.spacestation14.io/auth/
+# server = https://auth.spacestation14.com/
 

@@ -22,7 +22,7 @@ namespace Robust.Client.Graphics
         ///     If set to true, <see cref="ScreenTexture"/> will be set to the current frame (at the moment before the overlay is rendered). This can be costly to performance, but
         ///     some shaders will require it as a passed in uniform to operate.
         /// </summary>
-        public virtual bool RequestScreenTexture => false;
+        public virtual bool RequestScreenTexture { get; set; } = false;
 
         /// <summary>
         ///     If <see cref="RequestScreenTexture"> is true, then this will be set to the texture corresponding to the current frame. If false, it will always be null.

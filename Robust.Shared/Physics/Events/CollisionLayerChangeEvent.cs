@@ -9,9 +9,9 @@ namespace Robust.Shared.Physics.Events
     [ByRefEvent]
     public readonly struct CollisionLayerChangeEvent
     {
-        public readonly PhysicsComponent Body;
+        public readonly Entity<PhysicsComponent> Body;
 
-        public CollisionLayerChangeEvent(PhysicsComponent body)
+        public CollisionLayerChangeEvent(Entity<PhysicsComponent> body)
         {
             Body = body;
         }

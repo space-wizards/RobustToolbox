@@ -46,8 +46,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
+using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.Player;
@@ -79,6 +79,14 @@ namespace Robust.Client.Debugging
         internal int PointCount;
 
         [Dependency] private readonly SharedPhysicsSystem _physics = default!;
+        [Dependency] private readonly EntityLookupSystem _entityLookup = default!;
+        [Dependency] private readonly TransformSystem _transform = default!;
+        [Dependency] private readonly IOverlayManager _overlay = default!;
+        [Dependency] private readonly IEyeManager _eye = default!;
+        [Dependency] private readonly IInputManager _input = default!;
+        [Dependency] private readonly IMapManager _map = default!;
+        [Dependency] private readonly IPlayerManager _player = default!;
+        [Dependency] private readonly IResourceCache _resourceCache = default!;
 
         internal ContactPoint[] Points = new ContactPoint[MaxContactPoints];
 
@@ -90,20 +98,21 @@ namespace Robust.Client.Debugging
                 if (value == _flags) return;
 
                 if (_flags == PhysicsDebugFlags.None)
-                    IoCManager.Resolve<IOverlayManager>().AddOverlay(
+                    _overlay.AddOverlay(
                         new PhysicsDebugOverlay(
                             EntityManager,
-                            IoCManager.Resolve<IEyeManager>(),
-                            IoCManager.Resolve<IInputManager>(),
-                            IoCManager.Resolve<IMapManager>(),
-                            IoCManager.Resolve<IPlayerManager>(),
-                            IoCManager.Resolve<IResourceCache>(),
+                            _eye,
+                            _input,
+                            _map,
+                            _player,
+                            _resourceCache,
                             this,
-                            Get<EntityLookupSystem>(),
-                            Get<SharedPhysicsSystem>()));
+                            _entityLookup,
+                            _physics,
+                            _transform));
 
                 if (value == PhysicsDebugFlags.None)
-                    IoCManager.Resolve<IOverlayManager>().RemoveOverlay(typeof(PhysicsDebugOverlay));
+                    _overlay.RemoveOverlay(typeof(PhysicsDebugOverlay));
 
                 _flags = value;
             }
@@ -199,6 +208,7 @@ namespace Robust.Client.Debugging
         private readonly DebugPhysicsSystem _debugPhysicsSystem;
         private readonly EntityLookupSystem _lookup;
         private readonly SharedPhysicsSystem _physicsSystem;
+        private readonly SharedTransformSystem _transformSystem;
 
         public override OverlaySpace Space => OverlaySpace.WorldSpace | OverlaySpace.ScreenSpace;
 
@@ -207,8 +217,9 @@ namespace Robust.Client.Debugging
         private readonly Font _font;
 
         private HashSet<Joint> _drawnJoints = new();
+        private List<Entity<MapGridComponent>> _grids = new();
 
-        public PhysicsDebugOverlay(IEntityManager entityManager, IEyeManager eyeManager, IInputManager inputManager, IMapManager mapManager, IPlayerManager playerManager, IResourceCache cache, DebugPhysicsSystem system, EntityLookupSystem lookup, SharedPhysicsSystem physicsSystem)
+        public PhysicsDebugOverlay(IEntityManager entityManager, IEyeManager eyeManager, IInputManager inputManager, IMapManager mapManager, IPlayerManager playerManager, IResourceCache cache, DebugPhysicsSystem system, EntityLookupSystem lookup, SharedPhysicsSystem physicsSystem, SharedTransformSystem transformSystem)
         {
             _entityManager = entityManager;
             _eyeManager = eyeManager;
@@ -218,6 +229,7 @@ namespace Robust.Client.Debugging
             _debugPhysicsSystem = system;
             _lookup = lookup;
             _physicsSystem = physicsSystem;
+            _transformSystem = transformSystem;
             _font = new VectorFont(cache.GetResource<FontResource>("/EngineFonts/NotoSans/NotoSans-Regular.ttf"), 10);
         }
 
@@ -225,38 +237,39 @@ namespace Robust.Client.Debugging
         {
             var viewBounds = args.WorldBounds;
             var viewAABB = args.WorldAABB;
-            var mapId = _eyeManager.CurrentMap;
+            var mapId = args.MapId;
 
             if ((_debugPhysicsSystem.Flags & PhysicsDebugFlags.Shapes) != 0)
             {
                 foreach (var physBody in _physicsSystem.GetCollidingEntities(mapId, viewBounds))
                 {
-                    if (_entityManager.HasComponent<MapGridComponent>(physBody.Owner)) continue;
+                    if (_entityManager.HasComponent<MapGridComponent>(physBody)) continue;
 
-                    var xform = _physicsSystem.GetPhysicsTransform(physBody.Owner);
+                    var xform = _physicsSystem.GetPhysicsTransform(physBody);
+                    var comp = physBody.Comp;
 
                     const float AlphaModifier = 0.2f;
 
-                    foreach (var fixture in _entityManager.GetComponent<FixturesComponent>(physBody.Owner).Fixtures.Values)
+                    foreach (var fixture in _entityManager.GetComponent<FixturesComponent>(physBody).Fixtures.Values)
                     {
                         // Invalid shape - Box2D doesn't check for IsSensor but we will for sanity.
-                        if (physBody.BodyType == BodyType.Dynamic && fixture.Density == 0f && fixture.Hard)
+                        if (comp.BodyType == BodyType.Dynamic && fixture.Density == 0f && fixture.Hard)
                         {
                             DrawShape(worldHandle, fixture, xform, Color.Red.WithAlpha(AlphaModifier));
                         }
-                        else if (!physBody.CanCollide)
+                        else if (!comp.CanCollide)
                         {
                             DrawShape(worldHandle, fixture, xform, new Color(0.5f, 0.5f, 0.3f).WithAlpha(AlphaModifier));
                         }
-                        else if (physBody.BodyType == BodyType.Static)
+                        else if (comp.BodyType == BodyType.Static)
                         {
                             DrawShape(worldHandle, fixture, xform, new Color(0.5f, 0.9f, 0.5f).WithAlpha(AlphaModifier));
                         }
-                        else if ((physBody.BodyType & (BodyType.Kinematic | BodyType.KinematicController)) != 0x0)
+                        else if ((comp.BodyType & (BodyType.Kinematic | BodyType.KinematicController)) != 0x0)
                         {
                             DrawShape(worldHandle, fixture, xform, new Color(0.5f, 0.5f, 0.9f).WithAlpha(AlphaModifier));
                         }
-                        else if (!physBody.Awake)
+                        else if (!comp.Awake)
                         {
                             DrawShape(worldHandle, fixture, xform, new Color(0.6f, 0.6f, 0.6f).WithAlpha(AlphaModifier));
                         }
@@ -275,15 +288,18 @@ namespace Robust.Client.Debugging
                 foreach (var physBody in _physicsSystem.GetCollidingEntities(mapId, viewBounds))
                 {
                     var color = Color.Purple.WithAlpha(Alpha);
-                    var transform = _physicsSystem.GetPhysicsTransform(physBody.Owner);
-                    worldHandle.DrawCircle(Transform.Mul(transform, physBody.LocalCenter), 0.2f, color);
+                    var transform = _physicsSystem.GetPhysicsTransform(physBody);
+                    worldHandle.DrawCircle(Transform.Mul(transform, physBody.Comp.LocalCenter), 0.2f, color);
                 }
 
-                foreach (var grid in _mapManager.FindGridsIntersecting(mapId, viewBounds))
+                _grids.Clear();
+                _mapManager.FindGridsIntersecting(mapId, viewBounds, ref _grids);
+
+                foreach (var grid in _grids)
                 {
-                    var physBody = _entityManager.GetComponent<PhysicsComponent>(grid.Owner);
+                    var physBody = _entityManager.GetComponent<PhysicsComponent>(grid);
                     var color = Color.Orange.WithAlpha(Alpha);
-                    var transform = _physicsSystem.GetPhysicsTransform(grid.Owner);
+                    var transform = _physicsSystem.GetPhysicsTransform(grid);
                     worldHandle.DrawCircle(Transform.Mul(transform, physBody.LocalCenter), 1f, color);
                 }
             }
@@ -292,14 +308,14 @@ namespace Robust.Client.Debugging
             {
                 foreach (var physBody in _physicsSystem.GetCollidingEntities(mapId, viewBounds))
                 {
-                    if (_entityManager.HasComponent<MapGridComponent>(physBody.Owner)) continue;
+                    if (_entityManager.HasComponent<MapGridComponent>(physBody)) continue;
 
-                    var xform = _physicsSystem.GetPhysicsTransform(physBody.Owner);
+                    var xform = _physicsSystem.GetPhysicsTransform(physBody);
 
                     const float AlphaModifier = 0.2f;
                     Box2? aabb = null;
 
-                    foreach (var fixture in _entityManager.GetComponent<FixturesComponent>(physBody.Owner).Fixtures.Values)
+                    foreach (var fixture in _entityManager.GetComponent<FixturesComponent>(physBody).Fixtures.Values)
                     {
                         for (var i = 0; i < fixture.Shape.ChildCount; i++)
                         {
@@ -318,11 +334,12 @@ namespace Robust.Client.Debugging
             {
                 _drawnJoints.Clear();
 
-                foreach (var jointComponent in _entityManager.EntityQuery<JointComponent>(true))
+                var query = _entityManager.AllEntityQueryEnumerator<JointComponent>();
+                while (query.MoveNext(out var uid, out var jointComponent))
                 {
                     if (jointComponent.JointCount == 0 ||
-                        !_entityManager.TryGetComponent(jointComponent.Owner, out TransformComponent? xf1) ||
-                        !viewAABB.Contains(xf1.WorldPosition)) continue;
+                        !_entityManager.TryGetComponent(uid, out TransformComponent? xf1) ||
+                        !viewAABB.Contains(_transformSystem.GetWorldPosition(xf1))) continue;
 
                     foreach (var (_, joint) in jointComponent.Joints)
                     {
@@ -361,37 +378,44 @@ namespace Robust.Client.Debugging
 
                 _debugPhysicsSystem.PointCount = 0;
             }
+
+            worldHandle.UseShader(null);
+            worldHandle.SetTransform(Matrix3x2.Identity);
         }
 
         private void DrawScreen(DrawingHandleScreen screenHandle, OverlayDrawArgs args)
         {
-            var mapId = _eyeManager.CurrentMap;
+            var mapId = args.MapId;
             var mousePos = _inputManager.MouseScreenPosition;
 
             if ((_debugPhysicsSystem.Flags & PhysicsDebugFlags.ShapeInfo) != 0x0)
             {
-                var hoverBodies = new List<PhysicsComponent>();
+                var hoverBodies = new List<Entity<PhysicsComponent>>();
                 var bounds = Box2.UnitCentered.Translated(_eyeManager.PixelToMap(mousePos.Position).Position);
 
                 foreach (var physBody in _physicsSystem.GetCollidingEntities(mapId, bounds))
                 {
-                    if (_entityManager.HasComponent<MapGridComponent>(physBody.Owner)) continue;
-                    hoverBodies.Add(physBody);
+                    var uid = physBody.Owner;
+                    if (_entityManager.HasComponent<MapGridComponent>(uid)) continue;
+                    hoverBodies.Add((uid, physBody));
                 }
 
                 var lineHeight = _font.GetLineHeight(1f);
                 var drawPos = mousePos.Position + new Vector2(20, 0) + new Vector2(0, -(hoverBodies.Count * 4 * lineHeight / 2f));
                 int row = 0;
 
-                foreach (var body in hoverBodies)
+                foreach (var bodyEnt in hoverBodies)
                 {
-                    if (body != hoverBodies[0])
+                    if (bodyEnt != hoverBodies[0])
                     {
                         screenHandle.DrawString(_font, drawPos + new Vector2(0, row * lineHeight), "------");
                         row++;
                     }
 
-                    screenHandle.DrawString(_font, drawPos + new Vector2(0, row * lineHeight), $"Ent: {body.Owner}");
+                    var body = bodyEnt.Comp;
+                    var meta = _entityManager.GetComponent<MetaDataComponent>(bodyEnt);
+
+                    screenHandle.DrawString(_font, drawPos + new Vector2(0, row * lineHeight), $"Ent: {bodyEnt.Owner} ({meta.EntityName})");
                     row++;
                     screenHandle.DrawString(_font, drawPos + new Vector2(0, row * lineHeight), $"Layer: {Convert.ToString(body.CollisionLayer, 2)}");
                     row++;
@@ -409,7 +433,7 @@ namespace Robust.Client.Debugging
                 if (mapPos.MapId != args.MapId)
                     return;
 
-                var player = _playerManager.LocalPlayer?.ControlledEntity;
+                var player = _playerManager.LocalEntity;
 
                 if (!_entityManager.TryGetComponent<TransformComponent>(player, out var playerXform) ||
                     playerXform.MapID != args.MapId)
@@ -430,6 +454,9 @@ namespace Robust.Client.Debugging
                     }
                 }
             }
+
+            screenHandle.UseShader(null);
+            screenHandle.SetTransform(Matrix3x2.Identity);
         }
 
         protected internal override void Draw(in OverlayDrawArgs args)
@@ -451,11 +478,26 @@ namespace Robust.Client.Debugging
         {
             switch (fixture.Shape)
             {
+                case ChainShape cShape:
+                {
+                    var count = cShape.Count;
+                    var vertices = cShape.Vertices;
+
+                    var v1 = Transform.Mul(xform, vertices[0]);
+                    for (var i = 1; i < count; ++i)
+                    {
+                        var v2 = Transform.Mul(xform, vertices[i]);
+                        worldHandle.DrawLine(v1, v2, color);
+                        v1 = v2;
+                    }
+                }
+                    break;
                 case PhysShapeCircle circle:
                     var center = Transform.Mul(xform, circle.Position);
                     worldHandle.DrawCircle(center, circle.Radius, color);
                     break;
                 case EdgeShape edge:
+                {
                     var v1 = Transform.Mul(xform, edge.Vertex1);
                     var v2 = Transform.Mul(xform, edge.Vertex2);
                     worldHandle.DrawLine(v1, v2, color);
@@ -465,6 +507,7 @@ namespace Robust.Client.Debugging
                         worldHandle.DrawCircle(v1, 0.1f, color);
                         worldHandle.DrawCircle(v2, 0.1f, color);
                     }
+                }
 
                     break;
                 case PolygonShape poly:
@@ -487,22 +530,22 @@ namespace Robust.Client.Debugging
             if (!_entityManager.TryGetComponent(joint.BodyAUid, out TransformComponent? xform1) ||
                 !_entityManager.TryGetComponent(joint.BodyBUid, out TransformComponent? xform2)) return;
 
-            var matrix1 = xform1.WorldMatrix;
-            var matrix2 = xform2.WorldMatrix;
+            var matrix1 = _transformSystem.GetWorldMatrix(xform1);
+            var matrix2 = _transformSystem.GetWorldMatrix(xform2);
 
-            var xf1 = new Vector2(matrix1.R0C2, matrix1.R1C2);
-            var xf2 = new Vector2(matrix2.R0C2, matrix2.R1C2);
+            var xf1 = new Vector2(matrix1.M31, matrix1.M32);
+            var xf2 = new Vector2(matrix2.M31, matrix2.M32);
 
-            var p1 = matrix1.Transform(joint.LocalAnchorA);
-            var p2 = matrix2.Transform(joint.LocalAnchorB);
+            var p1 = Vector2.Transform(joint.LocalAnchorA, matrix1);
+            var p2 = Vector2.Transform(joint.LocalAnchorB, matrix2);
 
-            var xfa = new Transform(xf1, xform1.WorldRotation);
-            var xfb = new Transform(xf2, xform2.WorldRotation);
+            var xfa = new Transform(xf1, _transformSystem.GetWorldRotation(xform1));
+            var xfb = new Transform(xf2, _transformSystem.GetWorldRotation(xform2));
 
             switch (joint)
             {
                 case DistanceJoint:
-                    worldHandle.DrawLine(xf1, xf2, JointColor);
+                    worldHandle.DrawLine(p1, p2, JointColor);
                     break;
                 case PrismaticJoint prisma:
                     var pA = Transform.Mul(xfa, joint.LocalAnchorA);

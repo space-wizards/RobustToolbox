@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map.Enumerators;
 
@@ -27,32 +28,33 @@ public struct GridTileEnumerator
 
     public bool MoveNext([NotNullWhen(true)] out TileRef? tileRef)
     {
-        if (_index == _chunkSize * _chunkSize)
+        while (true)
         {
-            if (!_chunkEnumerator.MoveNext())
+            if (_index == _chunkSize * _chunkSize)
             {
-                tileRef = null;
-                return false;
+                if (!_chunkEnumerator.MoveNext())
+                {
+                    tileRef = null;
+                    return false;
+                }
+
+                _index = 0;
             }
 
-            _index = 0;
+            var (chunkOrigin, chunk) = _chunkEnumerator.Current;
+            DebugTools.Assert(chunk.FilledTiles > 0, $"Encountered empty chunk while enumerating tiles");
+            var x = (ushort) (_index / _chunkSize);
+            var y = (ushort) (_index % _chunkSize);
+            var tile = chunk.GetTile(x, y);
+            _index++;
+
+            if (_ignoreEmpty && tile.IsEmpty)
+                continue;
+
+            var gridX = x + chunkOrigin.X * _chunkSize;
+            var gridY = y + chunkOrigin.Y * _chunkSize;
+            tileRef = new TileRef(_gridUid, gridX, gridY, tile);
+            return true;
         }
-
-        var (chunkOrigin, chunk) = _chunkEnumerator.Current;
-
-        var x = (ushort) (_index / _chunkSize);
-        var y = (ushort) (_index % _chunkSize);
-        var tile = chunk.GetTile(x, y);
-        _index++;
-
-        if (_ignoreEmpty && tile.IsEmpty)
-        {
-            return MoveNext(out tileRef);
-        }
-
-        var gridX = x + chunkOrigin.X * _chunkSize;
-        var gridY = y + chunkOrigin.Y * _chunkSize;
-        tileRef = new TileRef(_gridUid, gridX, gridY, tile);
-        return true;
     }
 }

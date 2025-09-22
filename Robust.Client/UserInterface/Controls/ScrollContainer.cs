@@ -20,8 +20,37 @@ namespace Robust.Client.UserInterface.Controls
 
         private bool _suppressScrollValueChanged;
 
+        /// <summary>
+        /// If true then if we have a y-axis scroll it will convert it to an x-axis scroll.
+        /// </summary>
+        public bool FallbackDeltaScroll { get; set; } = true;
+
         public int ScrollSpeedX { get; set; } = 50;
         public int ScrollSpeedY { get; set; } = 50;
+
+        public float VScroll
+        {
+            get => _vScrollBar.Value;
+            set => _vScrollBar.Value = value;
+        }
+
+        public float VScrollTarget
+        {
+            get => _vScrollBar.ValueTarget;
+            set => _vScrollBar.ValueTarget = value;
+        }
+
+        public float HScroll
+        {
+            get => _hScrollBar.Value;
+            set => _hScrollBar.Value = value;
+        }
+
+        public float HScrollTarget
+        {
+            get => _hScrollBar.ValueTarget;
+            set => _hScrollBar.ValueTarget = value;
+        }
 
         private bool _reserveScrollbarSpace;
         public bool ReserveScrollbarSpace
@@ -118,10 +147,10 @@ namespace Robust.Client.UserInterface.Controls
             if (!ReturnMeasure)
                 return Vector2.Zero;
 
-            if (_vScrollEnabled)
+            if (_vScrollEnabled && size.Y >= availableSize.Y)
                 size.X += _vScrollBar.DesiredSize.X;
 
-            if (_hScrollEnabled)
+            if (_hScrollEnabled && size.X >= availableSize.X)
                 size.Y += _hScrollBar.DesiredSize.Y;
 
             return size;
@@ -246,8 +275,18 @@ namespace Robust.Client.UserInterface.Controls
 
             if (_hScrollEnabled)
             {
-                _hScrollBar.ValueTarget += args.Delta.X * ScrollSpeedX;
+                var delta =
+                    args.Delta.X == 0f &&
+                    !_vScrollEnabled &&
+                    FallbackDeltaScroll ?
+                        -args.Delta.Y :
+                        args.Delta.X;
+
+                _hScrollBar.ValueTarget += delta * ScrollSpeedX;
             }
+
+            if (!_vScrollVisible && !_hScrollVisible)
+                return;
 
             args.Handle();
         }

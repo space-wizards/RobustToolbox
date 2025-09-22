@@ -1,10 +1,11 @@
 using System;
-using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Numerics;
-using System.Runtime.InteropServices;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.RichText;
+using Robust.Shared.Collections;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -16,19 +17,35 @@ namespace Robust.Client.UserInterface.Controls
     [Virtual]
     public class OutputPanel : Control
     {
+        public const string StyleClassOutputPanelScrollDownButton = "outputPanelScrollDownButton";
+
         [Dependency] private readonly MarkupTagManager _tagManager = default!;
 
         public const string StylePropertyStyleBox = "stylebox";
 
-        private readonly List<RichTextEntry> _entries = new();
+        public bool ShowScrollDownButton
+        {
+            get => _showScrollDownButton;
+            set
+            {
+                _showScrollDownButton = value;
+                _updateScrollButtonVisibility();
+            }
+        }
+        private bool _showScrollDownButton;
+
+        private readonly RingBufferList<RichTextEntry> _entries = new();
         private bool _isAtBottom = true;
 
         private int _totalContentHeight;
         private bool _firstLine = true;
         private StyleBox? _styleBoxOverride;
         private VScrollBar _scrollBar;
+        private Button _scrollDownButton;
 
         public bool ScrollFollowing { get; set; } = true;
+
+        private bool _invalidOnVisible;
 
         public OutputPanel()
         {
@@ -42,8 +59,28 @@ namespace Robust.Client.UserInterface.Controls
                 HorizontalAlignment = HAlignment.Right
             };
             AddChild(_scrollBar);
-            _scrollBar.OnValueChanged += _ => _isAtBottom = _scrollBar.IsAtEnd;
+
+            AddChild(_scrollDownButton = new Button()
+            {
+                Name = "scrollLiveBtn",
+                StyleClasses = { StyleClassOutputPanelScrollDownButton },
+                VerticalAlignment = VAlignment.Bottom,
+                HorizontalAlignment = HAlignment.Center,
+                Text = String.Format("⬇    {0}    ⬇", Loc.GetString("output-panel-scroll-down-button-text")),
+                MaxWidth = 300,
+                Visible = false,
+            });
+
+            _scrollDownButton.OnPressed += _ => ScrollToBottom();
+
+            _scrollBar.OnValueChanged += _ =>
+            {
+                _isAtBottom = _scrollBar.IsAtEnd;
+                _updateScrollButtonVisibility();
+            };
         }
+
+        public int EntryCount => _entries.Count;
 
         public StyleBox? StyleBoxOverride
         {
@@ -59,15 +96,27 @@ namespace Robust.Client.UserInterface.Controls
         public void Clear()
         {
             _firstLine = true;
+
+            foreach (var entry in _entries)
+            {
+                entry.RemoveControls();
+            }
+
             _entries.Clear();
             _totalContentHeight = 0;
             _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
             _scrollBar.Value = 0;
         }
 
+        public FormattedMessage GetMessage(Index index)
+        {
+            return new FormattedMessage(_entries[index].Message);
+        }
+
         public void RemoveEntry(Index index)
         {
             var entry = _entries[index];
+            entry.RemoveControls();
             _entries.RemoveAt(index.GetOffset(_entries.Count));
 
             var font = _getFont();
@@ -91,10 +140,40 @@ namespace Robust.Client.UserInterface.Controls
         {
             var entry = new RichTextEntry(message, this, _tagManager, null);
 
-            entry.Update(_getFont(), _getContentBox().Width, UIScale);
+            entry.Update(_tagManager, _getFont(), _getContentBox().Width, UIScale);
 
             _entries.Add(entry);
             var font = _getFont();
+            AddNewItemHeight(font, entry);
+
+            _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
+            if (_isAtBottom && ScrollFollowing)
+            {
+                _scrollBar.MoveToEnd();
+            }
+        }
+
+        public void SetMessage(Index index, FormattedMessage message, Type[]? tagsAllowed = null, Color? defaultColor = null)
+        {
+            var atBottom = !_scrollDownButton.Visible;
+            var oldEntry = _entries[index];
+            var font = _getFont();
+            _totalContentHeight -= oldEntry.Height + font.GetLineSeparation(UIScale);
+            _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
+
+            var entry = new RichTextEntry(message, this, _tagManager, tagsAllowed, defaultColor);
+            entry.Update(_tagManager, _getFont(), _getContentBox().Width, UIScale);
+            _entries[index] = entry;
+
+            AddNewItemHeight(font, in entry);
+
+            _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
+            if (atBottom)
+                _scrollBar.Value = _scrollBar.MaxValue;
+        }
+
+        private void AddNewItemHeight(Font font, in RichTextEntry entry)
+        {
             _totalContentHeight += entry.Height;
             if (_firstLine)
             {
@@ -103,12 +182,6 @@ namespace Robust.Client.UserInterface.Controls
             else
             {
                 _totalContentHeight += font.GetLineSeparation(UIScale);
-            }
-
-            _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
-            if (_isAtBottom && ScrollFollowing)
-            {
-                _scrollBar.MoveToEnd();
             }
         }
 
@@ -124,6 +197,7 @@ namespace Robust.Client.UserInterface.Controls
 
             var style = _getStyleBox();
             var font = _getFont();
+            var lineSeparation = font.GetLineSeparation(UIScale);
             style?.Draw(handle, PixelSizeBox, UIScale);
             var contentBox = _getContentBox();
 
@@ -134,22 +208,33 @@ namespace Robust.Client.UserInterface.Controls
             // So when a new color tag gets hit this stack gets the previous color pushed on.
             var context = new MarkupDrawingContext(2);
 
-            foreach (ref var entry in CollectionsMarshal.AsSpan(_entries))
+            foreach (ref var entry in _entries)
             {
                 if (entryOffset + entry.Height < 0)
                 {
-                    entryOffset += entry.Height + font.GetLineSeparation(UIScale);
+                    // Controls within the entry are the children of this control, which means they are drawn separately
+                    // after this Draw call, so we have to mark them as invisible to prevent them from being drawn.
+                    //
+                    // An alternative option is to ensure that the control position updating logic in entry.Draw is always
+                    // run, and then setting RectClipContent = true to use scissor box testing to handle the controls
+                    // visibility
+                    entry.HideControls();
+                    entryOffset += entry.Height + lineSeparation;
                     continue;
                 }
 
                 if (entryOffset > contentBox.Height)
                 {
-                    break;
+                    entry.HideControls();
+
+                    // We know that every subsequent entry will also fail the test, but we also need to
+                    // hide all the controls, so we cannot simply break out of the loop
+                    continue;
                 }
 
-                entry.Draw(handle, font, contentBox, entryOffset, context, UIScale);
+                entry.Draw(_tagManager, handle, font, contentBox, entryOffset, context, UIScale);
 
-                entryOffset += entry.Height + font.GetLineSeparation(UIScale);
+                entryOffset += entry.Height + lineSeparation;
             }
         }
 
@@ -172,6 +257,7 @@ namespace Robust.Client.UserInterface.Controls
             var styleBoxSize = _getStyleBox()?.MinimumSize.Y ?? 0;
 
             _scrollBar.Page = UIScale * (Height - styleBoxSize);
+            _updateScrollButtonVisibility();
             _invalidateEntries();
         }
 
@@ -185,9 +271,9 @@ namespace Robust.Client.UserInterface.Controls
             _totalContentHeight = 0;
             var font = _getFont();
             var sizeX = _getContentBox().Width;
-            foreach (ref var entry in CollectionsMarshal.AsSpan(_entries))
+            foreach (ref var entry in _entries)
             {
-                entry.Update(font, sizeX, UIScale);
+                entry.Update(_tagManager, font, sizeX, UIScale);
                 _totalContentHeight += entry.Height + font.GetLineSeparation(UIScale);
             }
 
@@ -198,7 +284,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        [System.Diagnostics.Contracts.Pure]
+        [Pure]
         private Font _getFont()
         {
             if (TryGetStyleProperty<Font>("font", out var font))
@@ -209,7 +295,7 @@ namespace Robust.Client.UserInterface.Controls
             return UserInterfaceManager.ThemeDefaults.DefaultFont;
         }
 
-        [System.Diagnostics.Contracts.Pure]
+        [Pure]
         private StyleBox? _getStyleBox()
         {
             if (StyleBoxOverride != null)
@@ -221,14 +307,14 @@ namespace Robust.Client.UserInterface.Controls
             return box;
         }
 
-        [System.Diagnostics.Contracts.Pure]
+        [Pure]
         private float _getScrollSpeed()
         {
             // The scroll speed depends on the UI scale because the scroll bar is working with physical pixels.
             return GetScrollSpeed(_getFont(), UIScale);
         }
 
-        [System.Diagnostics.Contracts.Pure]
+        [Pure]
         private UIBox2 _getContentBox()
         {
             var style = _getStyleBox();
@@ -239,7 +325,13 @@ namespace Robust.Client.UserInterface.Controls
 
         protected internal override void UIScaleChanged()
         {
-            _invalidateEntries();
+            // If this control isn't visible, don't invalidate entries immediately.
+            // This saves invalidating the debug console if it's hidden,
+            // which is a huge boon as auto-scaling changes UI scale a lot in that scenario.
+            if (!VisibleInTree)
+                _invalidOnVisible = true;
+            else
+                _invalidateEntries();
 
             base.UIScaleChanged();
         }
@@ -256,6 +348,20 @@ namespace Robust.Client.UserInterface.Controls
             // e.g. the control has not had its UI scale set and the messages were added, but the
             // existing ones were valid when the UI scale was set.
             _invalidateEntries();
+        }
+
+        protected override void VisibilityChanged(bool newVisible)
+        {
+            if (newVisible && _invalidOnVisible)
+            {
+                _invalidateEntries();
+                _invalidOnVisible = false;
+            }
+        }
+
+        private void _updateScrollButtonVisibility()
+        {
+            _scrollDownButton.Visible = ShowScrollDownButton && !_isAtBottom;
         }
     }
 }

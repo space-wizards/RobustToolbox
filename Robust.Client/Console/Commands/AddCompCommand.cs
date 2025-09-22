@@ -26,10 +26,7 @@ namespace Robust.Client.Console.Commands
             var entity = _entityManager.GetEntity(netEntity);
             var componentName = args[1];
 
-            var component = (Component) _componentFactory.GetComponent(componentName);
-
-            component.Owner = entity;
-
+            var component = _componentFactory.GetComponent(componentName);
             _entityManager.AddComponent(entity, component);
         }
     }

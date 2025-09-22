@@ -32,7 +32,12 @@ namespace Robust.Client.GameStates
         /// <summary>
         ///     Number of applicable game states currently in the state buffer.
         /// </summary>
-        int CurrentBufferSize { get; }
+        int GetApplicableStateCount();
+
+        /// <summary>
+        ///     Total number of game states currently in the state buffer.
+        /// </summary>
+        int StateCount { get; }
 
         /// <summary>
         ///     If the buffer size is this many states larger than the target buffer size,
@@ -77,6 +82,8 @@ namespace Robust.Client.GameStates
         /// </summary>
         IEnumerable<NetEntity> ApplyGameState(GameState curState, GameState? nextState);
 
+        void MergeImplicitData();
+
         /// <summary>
         ///     Resets any entities that have changed while predicting future ticks.
         /// </summary>
@@ -91,7 +98,7 @@ namespace Robust.Client.GameStates
         /// <summary>
         ///     Requests a full state from the server. This should override even implicit entity data.
         /// </summary>
-        void RequestFullState(NetEntity? missingEntity = null);
+        void RequestFullState(NetEntity? missingEntity = null, GameTick? tick = null);
 
         uint SystemMessageDispatched<T>(T message) where T : EntityEventArgs;
 
@@ -105,7 +112,7 @@ namespace Robust.Client.GameStates
         /// <summary>
         /// Returns the full collection of cached game states that are used to reset predicted entities.
         /// </summary>
-        Dictionary<NetEntity, Dictionary<ushort, ComponentState>> GetFullRep();
+        Dictionary<NetEntity, Dictionary<ushort, IComponentState?>> GetFullRep();
 
         /// <summary>
         /// This will perform some setup in order to reset the game to an earlier state. To fully reset the state

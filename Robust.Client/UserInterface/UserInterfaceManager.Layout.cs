@@ -4,9 +4,10 @@ using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
-using Robust.Shared.Log;
+using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface;
 internal sealed partial class UserInterfaceManager
@@ -53,14 +54,47 @@ internal sealed partial class UserInterfaceManager
             }
         }
 
-        public void Popup(string contents, string title = "Alert!")
+        public void Popup(string contents, string? title = null, bool clipboardButton = true)
         {
             var popup = new DefaultWindow
             {
-                Title = title
+                Title = string.IsNullOrEmpty(title) ? Loc.GetString("popup-title") : title,
             };
 
-            popup.Contents.AddChild(new Label {Text = contents});
+            var label = new RichTextLabel { Text = $"[color=white]{FormattedMessage.EscapeText(contents)}[/color]" };
+
+            var vBox = new BoxContainer
+            {
+                Orientation = BoxContainer.LayoutOrientation.Vertical,
+            };
+
+            vBox.AddChild(label);
+
+            if (clipboardButton)
+            {
+                var copyButton = new Button
+                {
+                    Text = Loc.GetString("popup-copy-button"),
+                    HorizontalExpand = true,
+                };
+
+                copyButton.OnPressed += _ =>
+                {
+                    _clipboard.SetText(contents);
+                };
+
+                var hBox = new BoxContainer
+                {
+                    Orientation = BoxContainer.LayoutOrientation.Horizontal,
+                    HorizontalAlignment = Control.HAlignment.Right,
+                };
+
+                hBox.AddChild(copyButton);
+                vBox.AddChild(hBox);
+            }
+
+            popup.Contents.AddChild(vBox);
+
             popup.OpenCentered();
         }
 
@@ -77,15 +111,12 @@ internal sealed partial class UserInterfaceManager
 
             ReleaseKeyboardFocus(control);
             RemoveModal(control);
-            if (control == CurrentlyHovered)
-            {
-                control.MouseExited();
-                CurrentlyHovered = null;
-                _clearTooltip();
-            }
 
-            if (control != ControlFocused) return;
-            ControlFocused = null;
+            if (control == ControlFocused)
+                ControlFocused = null;
+
+            if (control == CurrentlyHovered)
+                UpdateHovered();
         }
 
         public void PushModal(Control modal)
@@ -132,9 +163,10 @@ internal sealed partial class UserInterfaceManager
             try
             {
                 var total = 0;
-                _render(renderHandle, ref total, root, Vector2i.Zero, Color.White, null);
                 var drawingHandle = renderHandle.DrawingHandleScreen;
-                drawingHandle.SetTransform(Vector2.Zero, Angle.Zero, Vector2.One);
+                drawingHandle.SetTransform(Matrix3x2.Identity);
+                RenderControl(renderHandle, ref total, root, Vector2i.Zero, Color.White, null, Matrix3x2.Identity);
+                drawingHandle.SetTransform(Matrix3x2.Identity);
                 OnPostDrawUIRoot?.Invoke(new PostDrawUIRootEventArgs(root, drawingHandle));
 
                 _prof.WriteValue("Controls rendered", ProfData.Int32(total));

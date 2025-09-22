@@ -1,61 +1,97 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 
-namespace Robust.Shared.Physics.Components
+namespace Robust.Shared.Physics.Components;
+
+/// <summary>
+/// Average use-case of only linear velocity update
+/// </summary>
+[Serializable, NetSerializable]
+public record struct PhysicsLinearVelocityDeltaState : IComponentDeltaState<PhysicsComponentState>
 {
-    [Serializable, NetSerializable]
-    public sealed class PhysicsComponentState : ComponentState
+    public Vector2 LinearVelocity;
+
+    public void ApplyToFullState(PhysicsComponentState fullState)
     {
-        public readonly bool CanCollide;
-        public readonly bool SleepingAllowed;
-        public readonly bool FixedRotation;
-        public readonly BodyStatus Status;
+        fullState.LinearVelocity = LinearVelocity;
+    }
 
-        public readonly Vector2 LinearVelocity;
-        public readonly float AngularVelocity;
-        public readonly BodyType BodyType;
-
-        public float Friction;
-        public float LinearDamping;
-        public float AngularDamping;
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="canCollide"></param>
-        /// <param name="sleepingAllowed"></param>
-        /// <param name="fixedRotation"></param>
-        /// <param name="status"></param>
-        /// <param name="linearVelocity">Current linear velocity of the entity in meters per second.</param>
-        /// <param name="angularVelocity">Current angular velocity of the entity in radians per sec.</param>
-        /// <param name="bodyType"></param>
-        public PhysicsComponentState(
-            bool canCollide,
-            bool sleepingAllowed,
-            bool fixedRotation,
-            BodyStatus status,
-            Vector2 linearVelocity,
-            float angularVelocity,
-            BodyType bodyType,
-            float friction,
-            float linearDamping,
-            float angularDamping)
+    public PhysicsComponentState CreateNewFullState(PhysicsComponentState fullState)
+    {
+        var copy = new PhysicsComponentState(fullState)
         {
-            CanCollide = canCollide;
-            SleepingAllowed = sleepingAllowed;
-            FixedRotation = fixedRotation;
-            Status = status;
+            LinearVelocity = LinearVelocity,
+        };
+        return copy;
+    }
+}
 
-            LinearVelocity = linearVelocity;
-            AngularVelocity = angularVelocity;
-            BodyType = bodyType;
+/// <summary>
+/// 2nd-most typical usecase of just velocity updates
+/// </summary>
+[Serializable, NetSerializable]
+public record struct PhysicsVelocityDeltaState : IComponentDeltaState<PhysicsComponentState>
+{
+    public Vector2 LinearVelocity;
+    public float AngularVelocity;
 
-            Friction = friction;
-            LinearDamping = linearDamping;
-            AngularDamping = angularDamping;
-        }
+    public void ApplyToFullState(PhysicsComponentState fullState)
+    {
+        fullState.LinearVelocity = LinearVelocity;
+        fullState.AngularVelocity = AngularVelocity;
+    }
+
+    public PhysicsComponentState CreateNewFullState(PhysicsComponentState fullState)
+    {
+        var copy = new PhysicsComponentState(fullState)
+        {
+            LinearVelocity = LinearVelocity,
+            AngularVelocity = AngularVelocity
+        };
+        return copy;
+    }
+}
+
+[Serializable, NetSerializable]
+public sealed class PhysicsComponentState : IComponentState
+{
+    public bool CanCollide;
+    public bool SleepingAllowed;
+    public bool FixedRotation;
+    public BodyStatus Status;
+
+    public Vector2 LinearVelocity;
+    public float AngularVelocity;
+    public BodyType BodyType;
+
+    public float Friction;
+    public float LinearDamping;
+    public float AngularDamping;
+
+    public Vector2 Force;
+    public float Torque;
+
+    public PhysicsComponentState() {}
+
+    public PhysicsComponentState(PhysicsComponentState existing)
+    {
+        CanCollide = existing.CanCollide;
+        SleepingAllowed = existing.SleepingAllowed;
+        FixedRotation = existing.FixedRotation;
+        Status = existing.Status;
+
+        LinearVelocity = existing.LinearVelocity;
+        AngularVelocity = existing.AngularVelocity;
+        BodyType = existing.BodyType;
+
+        Friction = existing.Friction;
+        LinearDamping = existing.LinearDamping;
+        AngularDamping = existing.AngularDamping;
+
+        Force = existing.Force;
+        Torque = existing.Torque;
     }
 }

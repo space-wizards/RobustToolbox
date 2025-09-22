@@ -36,6 +36,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             container.Register<IConfigurationManager, ServerNetConfigurationManager>();
             container.Register<IConfigurationManagerInternal, ServerNetConfigurationManager>();
             container.Register<INetManager, NetManager>();
+            container.Register<IHWId, DummyHWId>();
             container.Register<IReflectionManager, ServerReflectionManager>();
             container.Register<IRobustSerializer, ServerRobustSerializer>();
             container.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
@@ -69,7 +70,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                     new NetEntity(64),
                     new []
                     {
-                        new ComponentChange(0, new MapGridComponentState(16, chunkData: null), default)
+                        new ComponentChange(0, new MapGridComponentDeltaState(16, chunkData: null, default), default)
                     }, default);
 
                 serializer.Serialize(stream, payload);

@@ -34,23 +34,5 @@ namespace Robust.Shared.IoC.Exceptions
             TargetType = target.AssemblyQualifiedName;
             FieldName = fieldName;
         }
-
-        protected UnregisteredDependencyException(
-          SerializationInfo info,
-          StreamingContext context) : base(info, context)
-        {
-            OwnerType = info.GetString("OwnerType");
-            TargetType = info.GetString("TargetType");
-            FieldName = info.GetString("FieldName");
-        }
-
-        public override void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            base.GetObjectData(info, context);
-
-            info.AddValue("OwnerType", OwnerType);
-            info.AddValue("TargetType", TargetType);
-            info.AddValue("FieldName", FieldName);
-        }
     }
 }

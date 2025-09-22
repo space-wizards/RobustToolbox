@@ -57,7 +57,7 @@ namespace Robust.Client.UserInterface
                 toRemove.Add(key);
             }
 
-            foreach (var key in toRemove)
+            foreach (var key in toRemove.Span)
             {
                 _playingAnimations.Remove(key);
                 AnimationCompleted?.Invoke(key);

@@ -3,7 +3,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     /// The life stages of an ECS Entity.
     /// </summary>
-    public enum EntityLifeStage
+    public enum EntityLifeStage : byte
     {
         /// <summary>
         /// The entity has just been created, and needs to be initialized.

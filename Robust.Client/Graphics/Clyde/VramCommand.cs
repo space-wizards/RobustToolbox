@@ -36,7 +36,7 @@ namespace Robust.Client.Graphics.Clyde
                 adapter->Release();
                 ThrowIfFailed("GetDesc", adapter3->GetDesc2(&desc));
 
-                var descString = new ReadOnlySpan<char>(desc.Description, 128).TrimEnd('\0');
+                var descString = ((ReadOnlySpan<char>)desc.Description).TrimEnd('\0');
                 shell.WriteLine(descString.ToString());
 
                 DXGI_QUERY_VIDEO_MEMORY_INFO memInfo;

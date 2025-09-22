@@ -19,17 +19,5 @@ namespace Robust.Shared.IoC.Exceptions
         {
             TypeName = type.AssemblyQualifiedName;
         }
-
-        protected UnregisteredTypeException(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
-            TypeName = info.GetString("TypeName");
-        }
-
-        public override void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            base.GetObjectData(info, context);
-
-            info.AddValue("TypeName", TypeName);
-        }
     }
 }

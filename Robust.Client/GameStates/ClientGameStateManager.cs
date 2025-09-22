@@ -6,12 +6,14 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
 using JetBrains.Annotations;
+using Microsoft.Extensions.ObjectPool;
 using Robust.Client.GameObjects;
 using Robust.Client.Input;
 using Robust.Client.Physics;
 using Robust.Client.Player;
 using Robust.Client.Timing;
 using Robust.Shared;
+using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.Containers;
@@ -22,11 +24,8 @@ using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
-using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
-using Robust.Shared.Physics;
-using Robust.Shared.Physics.Components;
 using Robust.Shared.Profiling;
 using Robust.Shared.Replays;
 using Robust.Shared.Timing;
@@ -36,28 +35,50 @@ namespace Robust.Client.GameStates
 {
     /// <inheritdoc />
     [UsedImplicitly]
-    public sealed class ClientGameStateManager : IClientGameStateManager, IPostInjectInit
+    public sealed class ClientGameStateManager : IClientGameStateManager
     {
         private GameStateProcessor _processor = default!;
 
         private uint _nextInputCmdSeq = 1;
         private readonly Queue<FullInputCmdMessage> _pendingInputs = new();
 
-        private readonly Queue<(uint sequence, GameTick sourceTick, EntityEventArgs msg, object sessionMsg)>
+        private readonly Queue<(uint sequence, GameTick sourceTick, object msg, object sessionMsg)>
             _pendingSystemMessages
                 = new();
 
         // Game state dictionaries that get used every tick.
-        private readonly Dictionary<EntityUid, (NetEntity NetEntity, MetaDataComponent Meta, bool EnteringPvs, GameTick LastApplied, EntityState? curState, EntityState? nextState)> _toApply = new();
-        private readonly Dictionary<NetEntity, EntityState> _toCreate = new();
-        private readonly Dictionary<ushort, (IComponent Component, ComponentState? curState, ComponentState? nextState)> _compStateWork = new();
+        private readonly Dictionary<EntityUid, StateData> _toApply = new();
+        private StateData[] _toApplySorted = default!;
+        private readonly Dictionary<ushort, (IComponent Component, IComponentState? curState, IComponentState? nextState)> _compStateWork = new();
         private readonly Dictionary<EntityUid, HashSet<Type>> _pendingReapplyNetStates = new();
+        private readonly HashSet<NetEntity> _stateEnts = new();
+        private readonly List<EntityUid> _toDelete = new();
+        private readonly List<IComponent> _toRemove = new();
+        private readonly Dictionary<NetEntity, Dictionary<ushort, IComponentState?>> _outputData = new();
+        private readonly List<(EntityUid, TransformComponent)> _queuedBroadphaseUpdates = new();
+        private readonly HashSet<EntityUid> _sorted = new();
+        private readonly List<NetEntity> _created = new();
+        private readonly List<NetEntity> _detached = new();
+
+        private readonly record struct StateData(
+            EntityUid Uid,
+            NetEntity NetEntity,
+            MetaDataComponent Meta,
+            bool Created,
+            bool EnteringPvs,
+            GameTick LastApplied,
+            EntityState? CurState,
+            EntityState? NextState,
+            HashSet<Type>? PendingReapply);
+
+        private readonly ObjectPool<Dictionary<ushort, IComponentState?>> _compDataPool =
+            new DefaultObjectPool<Dictionary<ushort, IComponentState?>>(new DictPolicy<ushort, IComponentState?>(), 256);
 
         private uint _metaCompNetId;
+        private uint _xformCompNetId;
 
         [Dependency] private readonly IReplayRecordingManager _replayRecording = default!;
         [Dependency] private readonly IComponentFactory _compFactory = default!;
-        [Dependency] private readonly IClientEntityManagerInternal _entities = default!;
         [Dependency] private readonly IPlayerManager _players = default!;
         [Dependency] private readonly IClientNetManager _network = default!;
         [Dependency] private readonly IBaseClient _client = default!;
@@ -65,13 +86,20 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly INetConfigurationManager _config = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
         [Dependency] private readonly IConsoleHost _conHost = default!;
-        [Dependency] private readonly ClientEntityManager _entityManager = default!;
+        [Dependency] private readonly ClientEntityManager _entities = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly ProfManager _prof = default!;
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
         [Dependency] private readonly ILogManager _logMan = default!;
 
         private ISawmill _sawmill = default!;
+
+        /// <summary>
+        /// If we are waiting for a full game state from the server, we will automatically re-send full state requests
+        /// if they do not arrive in time. Ideally this should never happen, this here just in case a client gets
+        /// stuck waiting for a full state that the server doesn't know the client even wants.
+        /// </summary>
+        public static readonly TimeSpan FullStateTimeout = TimeSpan.FromSeconds(10);
 
         /// <inheritdoc />
         public int MinBufferSize => _processor.MinBufferSize;
@@ -80,7 +108,8 @@ namespace Robust.Client.GameStates
         public int TargetBufferSize => _processor.TargetBufferSize;
 
         /// <inheritdoc />
-        public int CurrentBufferSize => _processor.CalculateBufferSize(_timing.LastRealTick);
+        public int GetApplicableStateCount() => _processor.GetApplicableStateCount();
+        public int StateCount => _processor.StateCount;
 
         public bool IsPredictionEnabled { get; private set; }
         public bool PredictionNeedsResetting { get; private set; }
@@ -102,10 +131,23 @@ namespace Robust.Client.GameStates
 
         public event Action<MsgStateLeavePvs>? PvsLeave;
 
+#if DEBUG
+        /// <summary>
+        /// If true, this will cause received game states to be ignored. Used by integration tests.
+        /// </summary>
+        public bool DropStates;
+#endif
+
+        private bool _resettingPredictedEntities;
+        private readonly List<EntityUid> _brokenEnts = new();
+
         /// <inheritdoc />
         public void Initialize()
         {
-            _processor = new GameStateProcessor(_timing);
+            _sawmill = _logMan.GetSawmill("state");
+            _sawmill.Level = LogLevel.Info;
+
+            _processor = new GameStateProcessor(this, _timing, _sawmill);
 
             _network.RegisterNetMessage<MsgState>(HandleStateMessage);
             _network.RegisterNetMessage<MsgStateLeavePvs>(HandlePvsLeaveMessage);
@@ -121,6 +163,7 @@ namespace Robust.Client.GameStates
             _config.OnValueChanged(CVars.NetPredictLagBias, i => PredictLagBias = i, true);
             _config.OnValueChanged(CVars.NetStateBufMergeThreshold, i => StateBufferMergeThreshold = i, true);
             _config.OnValueChanged(CVars.NetPVSEntityExitBudget, i => _pvsDetachBudget = i, true);
+            _config.OnValueChanged(CVars.NetMaxBufferSize, i => _processor.MaxBufferSize = i, true);
 
             _processor.Interpolation = _config.GetCVar(CVars.NetInterp);
             _processor.BufferSize = _config.GetCVar(CVars.NetBufferSize);
@@ -135,11 +178,38 @@ namespace Robust.Client.GameStates
             _conHost.RegisterCommand("localdelete", Loc.GetString("cmd-local-delete-desc"), Loc.GetString("cmd-local-delete-help"), LocalDeleteEntCommand);
             _conHost.RegisterCommand("fullstatereset", Loc.GetString("cmd-full-state-reset-desc"), Loc.GetString("cmd-full-state-reset-help"), (_,_,_) => RequestFullState());
 
+            _entities.ComponentAdded += OnComponentAdded;
+
             var metaId = _compFactory.GetRegistration(typeof(MetaDataComponent)).NetID;
             if (!metaId.HasValue)
                 throw new InvalidOperationException("MetaDataComponent does not have a NetId.");
 
             _metaCompNetId = metaId.Value;
+
+            var xformId = _compFactory.GetRegistration(typeof(TransformComponent)).NetID;
+            if (!xformId.HasValue)
+                throw new InvalidOperationException("TransformComponent does not have a NetId.");
+
+            _xformCompNetId = xformId.Value;
+        }
+
+        private void OnComponentAdded(AddedComponentEventArgs args)
+        {
+            if (!_resettingPredictedEntities)
+                return;
+
+            var comp = args.ComponentType;
+            if (comp.NetID == null)
+                return;
+
+            if (_entities.IsClientSide(args.BaseArgs.Owner))
+                return;
+
+            _sawmill.Error($"""
+                Added component {comp.Name} to entity {_entities.ToPrettyString(args.BaseArgs.Owner)} while resetting predicted entities.
+                Stack trace:
+                {Environment.StackTrace}
+                """);
         }
 
         /// <inheritdoc />
@@ -183,9 +253,9 @@ namespace Robust.Client.GameStates
                 return default;
             }
 
-            DebugTools.AssertNotNull(_players.LocalPlayer);
+            DebugTools.Assert(_players.LocalSession != null);
 
-            var evArgs = new EntitySessionEventArgs(_players.LocalPlayer!.Session);
+            var evArgs = new EntitySessionEventArgs(_players.LocalSession);
             _pendingSystemMessages.Enqueue((_nextInputCmdSeq, _timing.CurTick, message,
                 new EntitySessionMessage<T>(evArgs, message)));
 
@@ -194,6 +264,10 @@ namespace Robust.Client.GameStates
 
         private void HandleStateMessage(MsgState message)
         {
+#if DEBUG
+            if (DropStates)
+                return;
+#endif
             // We ONLY ack states that are definitely going to get applied. Otherwise the sever might assume that we
             // applied a state containing entity-creation information, which it would then no longer send to us when
             // we re-encounter this entity
@@ -204,7 +278,7 @@ namespace Robust.Client.GameStates
         public void UpdateFullRep(GameState state, bool cloneDelta = false)
             => _processor.UpdateFullRep(state, cloneDelta);
 
-        public Dictionary<NetEntity, Dictionary<ushort, ComponentState>> GetFullRep()
+        public Dictionary<NetEntity, Dictionary<ushort, IComponentState?>> GetFullRep()
             => _processor.GetFullRep();
 
         private void HandlePvsLeaveMessage(MsgStateLeavePvs message)
@@ -225,9 +299,19 @@ namespace Robust.Client.GameStates
         /// <inheritdoc />
         public void ApplyGameState()
         {
+            // If we have been waiting for a full state for a long time, re-request a full state.
+            if (_processor.WaitingForFull
+                && _processor.LastFullStateRequested is {} last
+                && DateTime.UtcNow - last.Time > FullStateTimeout)
+            {
+                // Re-request a full state.
+                // We use the previous from-tick, just in case the full state is already on the way,
+                RequestFullState(null, last.Tick);
+            }
+
             // Calculate how many states we need to apply this tick.
             // Always at least one, but can be more based on StateBufferMergeThreshold.
-            var curBufSize = CurrentBufferSize;
+            var curBufSize = GetApplicableStateCount();
             var targetBufSize = TargetBufferSize;
 
             var bufferOverflow = curBufSize - targetBufSize - StateBufferMergeThreshold;
@@ -268,30 +352,30 @@ namespace Robust.Client.GameStates
                     continue;
                 }
 
-                if (PredictionNeedsResetting)
+                try
                 {
-                    try
-                    {
-                        ResetPredictedEntities();
-                    }
-                    catch (Exception e)
-                    {
-                        // avoid exception spam from repeatedly trying to reset the same entity.
-                        _entitySystemManager.GetEntitySystem<ClientDirtySystem>().Reset();
-                        _runtimeLog.LogException(e, "ResetPredictedEntities");
-                    }
+                    ResetPredictedEntities();
+                }
+                catch (Exception e)
+                {
+                    // avoid exception spam from repeatedly trying to reset the same entity.
+                    _entitySystemManager.GetEntitySystem<ClientDirtySystem>().Reset();
+                    _runtimeLog.LogException(e, "ResetPredictedEntities");
                 }
 
                 // If we were waiting for a new state, we are now applying it.
-                if (_processor.LastFullStateRequested.HasValue)
+                if (curState.FromSequence == GameTick.Zero)
                 {
-                    _processor.LastFullStateRequested = null;
+                    _processor.OnFullStateReceived();
                     _timing.LastProcessedTick = curState.ToSequence;
                     DebugTools.Assert(curState.FromSequence == GameTick.Zero);
                     PartialStateReset(curState, true);
                 }
                 else
+                {
+                    DebugTools.Assert(!_processor.WaitingForFull);
                     _timing.LastProcessedTick += 1;
+                }
 
                 _timing.CurTick = _timing.LastRealTick = _timing.LastProcessedTick;
 
@@ -301,7 +385,6 @@ namespace Robust.Client.GameStates
                     _processor.UpdateFullRep(curState);
                 }
 
-                IEnumerable<NetEntity> createdEntities;
                 using (_prof.Group("ApplyGameState"))
                 {
                     if (_timing.LastProcessedTick < targetProcessedTick && nextState != null)
@@ -320,7 +403,7 @@ namespace Robust.Client.GameStates
                     try
                     {
 #endif
-                    createdEntities = ApplyGameState(curState, nextState);
+                    ApplyGameState(curState, nextState);
 #if EXCEPTION_TOLERANCE
                     }
                     catch (MissingMetadataException e)
@@ -334,7 +417,7 @@ namespace Robust.Client.GameStates
 
                 using (_prof.Group("MergeImplicitData"))
                 {
-                    MergeImplicitData(createdEntities);
+                    MergeImplicitData();
                 }
 
                 if (_lastProcessedInput < curState.LastProcessedInput)
@@ -350,7 +433,7 @@ namespace Robust.Client.GameStates
             if (_processor.WaitingForFull)
                 _timing.TickTimingAdjustment = 0f;
             else
-                _timing.TickTimingAdjustment = (CurrentBufferSize - (float)TargetBufferSize) * 0.10f;
+                _timing.TickTimingAdjustment = (GetApplicableStateCount() - (float)TargetBufferSize) * 0.10f;
 
             // If we are about to process an another tick in the same frame, lets not bother unnecessarily running prediction ticks
             // Really the main-loop ticking just needs to be more specialized for clients.
@@ -391,15 +474,15 @@ namespace Robust.Client.GameStates
 
             using (_prof.Group("Tick"))
             {
-                _entities.TickUpdate((float) _timing.TickPeriod.TotalSeconds, noPredictions: !IsPredictionEnabled);
+                _entities.TickUpdate((float) _timing.TickPeriod.TotalSeconds, noPredictions: !IsPredictionEnabled, histogram: null);
             }
         }
 
-        public void RequestFullState(NetEntity? missingEntity = null)
+        public void RequestFullState(NetEntity? missingEntity = null, GameTick? tick = null)
         {
             _sawmill.Info("Requesting full server state");
             _network.ClientSendMessage(new MsgStateRequestFull { Tick = _timing.LastRealTick , MissingEntity = missingEntity ?? NetEntity.Invalid });
-            _processor.RequestFullState();
+            _processor.OnFullStateRequested(tick ?? _timing.LastRealTick);
         }
 
         public void PredictTicks(GameTick predictionTarget)
@@ -439,9 +522,7 @@ namespace Robust.Client.GameStates
 
                 while (hasPendingMessage && pendingMessagesEnumerator.Current.sourceTick <= _timing.CurTick)
                 {
-                    var msg = pendingMessagesEnumerator.Current.msg;
-
-                    _entities.EventBus.RaiseEvent(EventSource.Local, msg);
+                    _entities.EventBus.RaiseEvent(EventSource.Local, pendingMessagesEnumerator.Current.msg);
                     _entities.EventBus.RaiseEvent(EventSource.Local, pendingMessagesEnumerator.Current.sessionMsg);
                     hasPendingMessage = pendingMessagesEnumerator.MoveNext();
                 }
@@ -468,19 +549,35 @@ namespace Robust.Client.GameStates
 
         public void ResetPredictedEntities()
         {
-            PredictionNeedsResetting = false;
-
             using var _ = _prof.Group("ResetPredictedEntities");
             using var __ = _timing.StartStateApplicationArea();
 
+            // This is terrible, and I hate it. This also needs to run even when prediction is disabled.
+            _entitySystemManager.GetEntitySystem<TransformSystem>().Reset();
+
+            if (!PredictionNeedsResetting)
+                return;
+
+            PredictionNeedsResetting = false;
             var countReset = 0;
             var system = _entitySystemManager.GetEntitySystem<ClientDirtySystem>();
-            var metaQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
-            RemQueue<Component> toRemove = new();
+            var metaQuery = _entities.GetEntityQuery<MetaDataComponent>();
+            RemQueue<IComponent> toRemove = new();
 
-            // This is terrible, and I hate it.
-            _entitySystemManager.GetEntitySystem<SharedGridTraversalSystem>().QueuedEvents.Clear();
-            _entitySystemManager.GetEntitySystem<TransformSystem>().Reset();
+            // Handle predicted entity spawns.
+            var predicted = new ValueList<EntityUid>();
+            var predictedQuery = _entities.AllEntityQueryEnumerator<PredictedSpawnComponent>();
+
+            while (predictedQuery.MoveNext(out var uid, out var _))
+            {
+                predicted.Add(uid);
+            }
+
+            // Entity will get re-created as part of the tick.
+            foreach (var ent in predicted)
+            {
+                _entities.DeleteEntity(ent);
+            }
 
             foreach (var entity in system.DirtyEntities)
             {
@@ -498,40 +595,54 @@ namespace Robust.Client.GameStates
 
                 countReset += 1;
 
-                foreach (var (netId, comp) in meta.NetComponents)
+                try
                 {
-                    if (!comp.NetSyncEnabled)
-                        continue;
+                    _resettingPredictedEntities = true;
 
-                    // Was this component added during prediction?
-                    if (comp.CreationTick > _timing.LastRealTick)
+                    foreach (var (netId, comp) in meta.NetComponents)
                     {
-                        if (last.ContainsKey(netId))
+                        if (!comp.NetSyncEnabled)
+                            continue;
+
+                        // Was this component added during prediction?
+                        if (comp.CreationTick > _timing.LastRealTick)
                         {
-                            // Component was probably removed and then re-addedd during a single prediction run
-                            // Just reset state as normal.
-                            comp.ClearCreationTick();
+                            if (last.ContainsKey(netId))
+                            {
+                                // Component was probably removed and then re-addedd during a single prediction run
+                                // Just reset state as normal.
+                                comp.ClearCreationTick();
+                            }
+                            else
+                            {
+                                toRemove.Add(comp);
+                                if (_sawmill.Level <= LogLevel.Debug)
+                                    _sawmill.Debug($"  A new component was added: {comp.GetType()}");
+                                continue;
+                            }
                         }
-                        else
+
+                        if (comp.LastModifiedTick <= _timing.LastRealTick ||
+                            !last.TryGetValue(netId, out var compState))
                         {
-                            toRemove.Add(comp);
-                            if (_sawmill.Level <= LogLevel.Debug)
-                                _sawmill.Debug($"  A new component was added: {comp.GetType()}");
                             continue;
                         }
+
+                        if (_sawmill.Level <= LogLevel.Debug)
+                            _sawmill.Debug($"  A component was dirtied: {comp.GetType()}");
+
+                        if ((meta.Flags & MetaDataFlags.Detached) == 0 && compState != null)
+                        {
+                            var handleState = new ComponentHandleState(compState, null);
+                            _entities.EventBus.RaiseComponentEvent(entity, comp, ref handleState);
+                        }
+
+                        comp.LastModifiedTick = _timing.LastRealTick;
                     }
-
-                    if (comp.LastModifiedTick <= _timing.LastRealTick || !last.TryGetValue(netId, out var compState))
-                    {
-                        continue;
-                    }
-
-                    if (_sawmill.Level <= LogLevel.Debug)
-                        _sawmill.Debug($"  A component was dirtied: {comp.GetType()}");
-
-                    var handleState = new ComponentHandleState(compState, null);
-                    _entities.EventBus.RaiseComponentEvent(comp, ref handleState);
-                    comp.LastModifiedTick = _timing.LastRealTick;
+                }
+                finally
+                {
+                    _resettingPredictedEntities = false;
                 }
 
                 // Remove predicted component additions
@@ -552,13 +663,17 @@ namespace Robust.Client.GameStates
                         if (!last.TryGetValue(netId, out var state))
                             continue;
 
-                        var comp = _entityManager.AddComponent(entity, netId, meta);
+                        var comp = _entities.AddComponent(entity, netId, meta);
 
                         if (_sawmill.Level <= LogLevel.Debug)
                             _sawmill.Debug($"  A component was removed: {comp.GetType()}");
 
-                        var stateEv = new ComponentHandleState(state, null);
-                        _entities.EventBus.RaiseComponentEvent(comp, ref stateEv);
+                        if (state != null)
+                        {
+                            var stateEv = new ComponentHandleState(state, null);
+                            _entities.EventBus.RaiseComponentEvent(entity, comp, ref stateEv);
+                        }
+
                         comp.ClearCreationTick(); // don't undo the re-adding.
                         comp.LastModifiedTick = _timing.LastRealTick;
                     }
@@ -568,7 +683,7 @@ namespace Robust.Client.GameStates
                 meta.EntityLastModifiedTick = _timing.LastRealTick;
             }
 
-            _entityManager.System<PhysicsSystem>().ResetContacts();
+            _entities.System<PhysicsSystem>().ResetContacts();
 
             // TODO maybe reset more of physics?
             // E.g., warm impulses for warm starting?
@@ -585,31 +700,47 @@ namespace Robust.Client.GameStates
         ///     Whenever a new entity is created, the server doesn't send full state data, given that much of the data
         ///     can simply be obtained from the entity prototype information. This function basically creates a fake
         ///     initial server state for any newly created entity. It does this by simply using the standard <see
-        ///     cref="IEntityManager.GetComponentState(IEventBus, IComponent)"/>.
+        ///     cref="IEntityManager.GetComponentState"/>.
         /// </remarks>
-        private void MergeImplicitData(IEnumerable<NetEntity> createdEntities)
+        public void MergeImplicitData()
         {
-            var outputData = new Dictionary<NetEntity, Dictionary<ushort, ComponentState>>();
-            var bus = _entityManager.EventBus;
+            var bus = _entities.EventBus;
 
-            foreach (var netEntity in createdEntities)
+            foreach (var netEntity in _created)
             {
-                var (createdEntity, meta) = _entityManager.GetEntityData(netEntity);
-                var compData = new Dictionary<ushort, ComponentState>();
-                outputData.Add(netEntity, compData);
+                if (!_entities.TryGetEntityData(netEntity, out _, out var meta))
+                {
+                    _sawmill.Error($"Encountered deleted entity while merging implicit data! NetEntity: {netEntity}");
+
+#if !EXCEPTION_TOLERANCE
+                    throw new KeyNotFoundException();
+#else
+                    continue;
+#endif
+                }
+
+                var compData = _compDataPool.Get();
+                _outputData.Add(netEntity, compData);
 
                 foreach (var (netId, component) in meta.NetComponents)
                 {
-                    if (!component.NetSyncEnabled)
-                        continue;
+                    DebugTools.Assert(component.NetSyncEnabled);
 
-                    var state = _entityManager.GetComponentState(bus, component, null, GameTick.Zero);
-                    DebugTools.Assert(state is not IComponentDeltaState delta || delta.FullState);
+                    var state = _entities.GetComponentState(bus, component, null, GameTick.Zero);
+                    DebugTools.Assert(state is not IComponentDeltaState);
                     compData.Add(netId, state);
                 }
             }
 
-            _processor.MergeImplicitData(outputData);
+            _created.Clear();
+            _processor.MergeImplicitData(_outputData);
+
+            foreach (var data in _outputData.Values)
+            {
+                _compDataPool.Return(data);
+            }
+
+            _outputData.Clear();
         }
 
         private void AckGameState(GameTick sequence)
@@ -621,7 +752,7 @@ namespace Robust.Client.GameStates
         {
             using var _ = _timing.StartStateApplicationArea();
 
-            // TODO repays optimize this.
+            // TODO replays optimize this.
             // This currently just saves game states as they are applied.
             // However this is inefficient and may have redundant data.
             // E.g., we may record states: [10 to 15] [11 to 16] *error* [0 to 18] [18 to 19] [18 to 20] ...
@@ -637,26 +768,25 @@ namespace Robust.Client.GameStates
                 _config.TickProcessMessages();
             }
 
-            (IEnumerable<NetEntity> Created, List<NetEntity> Detached) output;
             using (_prof.Group("Entity"))
             {
-                output = ApplyEntityStates(curState, nextState);
+                ApplyEntityStates(curState, nextState);
             }
 
             using (_prof.Group("Player"))
             {
-                _players.ApplyPlayerStates(curState.PlayerStates.Value ?? Array.Empty<PlayerState>());
+                _players.ApplyPlayerStates(curState.PlayerStates.Value ?? Array.Empty<SessionState>());
             }
 
             using (_prof.Group("Callback"))
             {
-                GameStateApplied?.Invoke(new GameStateAppliedArgs(curState, output.Detached));
+                GameStateApplied?.Invoke(new GameStateAppliedArgs(curState, _detached));
             }
 
-            return output.Created;
+            return _created;
         }
 
-        private (IEnumerable<NetEntity> Created, List<NetEntity> Detached) ApplyEntityStates(GameState curState, GameState? nextState)
+        private void ApplyEntityStates(GameState curState, GameState? nextState)
         {
             var metas = _entities.GetEntityQuery<MetaDataComponent>();
             var xforms = _entities.GetEntityQuery<TransformComponent>();
@@ -664,96 +794,74 @@ namespace Robust.Client.GameStates
 
             var enteringPvs = 0;
             _toApply.Clear();
-            _toCreate.Clear();
+            _created.Clear();
             _pendingReapplyNetStates.Clear();
             var curSpan = curState.EntityStates.Span;
 
             // Create new entities
             // This is done BEFORE state application to ensure any new parents exist before existing children have their states applied, otherwise, we may have issues with entity transforms!
-            {
-                using var _ = _prof.Group("Create uninitialized entities");
-                var count = 0;
 
+            using (_prof.Group("Create uninitialized entities"))
+            {
+                var created = 0;
                 foreach (var es in curSpan)
                 {
-                    if (_entityManager.TryGetEntity(es.NetEntity, out var nUid))
+                    if (_entities.TryGetEntity(es.NetEntity, out var nUid))
                     {
-                        DebugTools.Assert(_entityManager.EntityExists(nUid));
+                        DebugTools.Assert(_entities.EntityExists(nUid));
                         continue;
                     }
 
-                    count++;
-                    var metaState = (MetaDataComponentState?)es.ComponentChanges.Value?.FirstOrDefault(c => c.NetID == _metaCompNetId).State;
-                    if (metaState == null)
-                        throw new MissingMetadataException(es.NetEntity);
-
-                    var uid = _entities.CreateEntity(metaState.PrototypeId);
-                    _toCreate.Add(es.NetEntity, es);
-                    var newMeta = metas.GetComponent(uid);
-                    _toApply.Add(uid, (es.NetEntity, newMeta, false, GameTick.Zero, es, null));
-
-
-                    // Client creates a client-side net entity for the newly created entity.
-                    // We need to clear this mapping before assigning the real net id.
-                    // TODO NetEntity Jank: prevent the client from creating this in the first place.
-                    _entityManager.ClearNetEntity(newMeta.NetEntity);
-
-                    _entityManager.SetNetEntity(uid, es.NetEntity, newMeta);
-                    newMeta.LastStateApplied = curState.ToSequence;
-
-                    // Check if there's any component states awaiting this entity.
-                    if (_entityManager.PendingNetEntityStates.TryGetValue(es.NetEntity, out var value))
-                    {
-                        foreach (var (type, owner) in value)
-                        {
-                            var pending = _pendingReapplyNetStates.GetOrNew(owner);
-                            pending.Add(type);
-                        }
-
-                        _entityManager.PendingNetEntityStates.Remove(es.NetEntity);
-                    }
+                    created++;
+                    CreateNewEntity(es, curState.ToSequence);
                 }
 
-                _prof.WriteValue("Count", ProfData.Int32(count));
+                _prof.WriteValue("Count", ProfData.Int32(created));
             }
 
+            // Add entity entities that aren't new to _toCreate.
+            // In the process, we also check if these entities are re-entering PVS range.
             foreach (var es in curSpan)
             {
-                if (_toCreate.ContainsKey(es.NetEntity))
+                if (!_entities.TryGetEntityData(es.NetEntity, out var uid, out var meta))
                     continue;
 
-                var uid = _entityManager.GetEntity(es.NetEntity);
-
-                if (!metas.TryGetComponent(uid, out var meta))
-                    continue;
-
-                bool isEnteringPvs = (meta.Flags & MetaDataFlags.Detached) != 0;
+                var isEnteringPvs = (meta.Flags & MetaDataFlags.Detached) != 0;
                 if (isEnteringPvs)
                 {
+                    // _toApply already contains newly created entities, but these should never be "entering PVS"
+                    DebugTools.Assert(!_toApply.ContainsKey(uid.Value));
+
                     meta.Flags &= ~MetaDataFlags.Detached;
                     enteringPvs++;
                 }
                 else if (meta.LastStateApplied >= es.EntityLastModified && meta.LastStateApplied != GameTick.Zero)
                 {
+                    // _toApply already contains newly created entities, but for those this set should have no effect
+                    DebugTools.Assert(!_toApply.ContainsKey(uid.Value) || meta.LastStateApplied == curState.ToSequence);
+
                     meta.LastStateApplied = curState.ToSequence;
                     continue;
                 }
 
-                _toApply.Add(uid, (es.NetEntity, meta, isEnteringPvs, meta.LastStateApplied, es, null));
+                // Any newly created entities already added to _toApply should've already been caught by the previous continue
+                DebugTools.Assert(!_toApply.ContainsKey(uid.Value));
+
+                _toApply.Add(uid.Value, new(uid.Value, es.NetEntity, meta, false, isEnteringPvs, meta.LastStateApplied, es, null, null));
                 meta.LastStateApplied = curState.ToSequence;
             }
 
             // Detach entities to null space
             var containerSys = _entitySystemManager.GetEntitySystem<ContainerSystem>();
             var lookupSys = _entitySystemManager.GetEntitySystem<EntityLookupSystem>();
-            var detached = ProcessPvsDeparture(curState.ToSequence, metas, xforms, xformSys, containerSys, lookupSys);
+            ProcessPvsDeparture(curState.ToSequence, metas, xforms, xformSys, containerSys, lookupSys);
 
             // Check next state (AFTER having created new entities introduced in curstate)
             if (nextState != null)
             {
                 foreach (var es in nextState.EntityStates.Span)
                 {
-                    if (!_entityManager.TryGetEntityData(es.NetEntity, out var uid, out var meta))
+                    if (!_entities.TryGetEntityData(es.NetEntity, out var uid, out var meta))
                         continue;
 
                     // Does the next state actually have any future information about this entity that could be used for interpolation?
@@ -762,52 +870,54 @@ namespace Robust.Client.GameStates
 
                     ref var state = ref CollectionsMarshal.GetValueRefOrAddDefault(_toApply, uid.Value, out var exists);
 
-                    if (exists)
-                        state = (es.NetEntity, meta, state.EnteringPvs, state.LastApplied, state.curState, es);
-                    else
-                        state = (es.NetEntity, meta, false, GameTick.Zero, null, es);
+                    state = exists
+                        ? state with {NextState = es}
+                        : new(uid.Value, es.NetEntity, meta, false, false, GameTick.Zero, null, es, null);
                 }
             }
 
             // Check pending states and see if we need to force any entities to re-run component states.
-            foreach (var uid in _pendingReapplyNetStates.Keys)
+            foreach (var (uid, pending) in _pendingReapplyNetStates)
             {
                 // Original entity referencing the NetEntity may have been deleted.
                 if (!metas.TryGetComponent(uid, out var meta))
                     continue;
 
-                // State already being re-applied so don't bulldoze it.
+                // It may also have been queued for deletion, in which case its last server state entry has already been removed.
+                // I love me some spaghetti order-of-operation dependent code
+
+                if (!_processor._lastStateFullRep.ContainsKey(meta.NetEntity))
+                {
+                    DebugTools.Assert(curState.EntityDeletions.Value.Contains(meta.NetEntity));
+                    continue;
+                }
+
+                DebugTools.Assert(!curState.EntityDeletions.Value.Contains(meta.NetEntity));
+
                 ref var state = ref CollectionsMarshal.GetValueRefOrAddDefault(_toApply, uid, out var exists);
 
-                if (exists)
-                    continue;
-
-                state = (meta.NetEntity, meta, false, GameTick.Zero, null, null);
+                state = exists
+                    ? state with {PendingReapply = pending}
+                    : new(uid, meta.NetEntity, meta, false, false, GameTick.Zero, null, null, pending);
             }
 
-            var queuedBroadphaseUpdates = new List<(EntityUid, TransformComponent)>(enteringPvs);
+            _queuedBroadphaseUpdates.Clear();
+
+            using (_prof.Group("Sort States"))
+            {
+                SortStates(_toApply);
+            }
 
             // Apply entity states.
             using (_prof.Group("Apply States"))
             {
-                foreach (var (entity, data) in _toApply)
+                var span = _toApplySorted.AsSpan(0, _toApply.Count);
+                foreach (ref var data in span)
                 {
-                    HandleEntityState(entity, data.NetEntity, data.Meta, _entities.EventBus, data.curState,
-                        data.nextState, data.LastApplied, curState.ToSequence, data.EnteringPvs);
-
-                    if (!data.EnteringPvs)
-                        continue;
-
-                    // Now that things like collision data, fixtures, and positions have been updated, we queue a
-                    // broadphase update. However, if this entity is parented to some other entity also re-entering PVS,
-                    // we only need to update it's parent (as it recursively updates children anyways).
-                    var xform = xforms.GetComponent(entity);
-                    DebugTools.Assert(xform.Broadphase == BroadphaseData.Invalid);
-                    xform.Broadphase = null;
-                    if (!_toApply.TryGetValue(xform.ParentUid, out var parent) || !parent.EnteringPvs)
-                        queuedBroadphaseUpdates.Add((entity, xform));
+                    ApplyEntState(data, curState.ToSequence);
                 }
 
+                Array.Clear(_toApplySorted, 0, _toApply.Count);
                 _prof.WriteValue("Count", ProfData.Int32(_toApply.Count));
             }
 
@@ -816,7 +926,7 @@ namespace Robust.Client.GameStates
             {
                 try
                 {
-                    foreach (var (uid, xform) in queuedBroadphaseUpdates)
+                    foreach (var (uid, xform) in _queuedBroadphaseUpdates)
                     {
                         lookupSys.FindAndAddToEntityTree(uid, true, xform);
                     }
@@ -842,14 +952,168 @@ namespace Robust.Client.GameStates
                 }
             }
 
-            // Initialize and start the newly created entities.
-            if (_toCreate.Count > 0)
-                InitializeAndStart(_toCreate);
+            // Delete any entities that failed to properly initialize/start
+            foreach (var entity in _brokenEnts)
+            {
+                _entities.DeleteEntity(entity);
+            }
+
+            _brokenEnts.Clear();
 
             _prof.WriteValue("State Size", ProfData.Int32(curSpan.Length));
             _prof.WriteValue("Entered PVS", ProfData.Int32(enteringPvs));
+        }
 
-            return (_toCreate.Keys, detached);
+        private void ApplyEntState(in StateData data, GameTick toTick)
+        {
+            try
+            {
+                HandleEntityState(data, _entities.EventBus, toTick);
+            }
+            catch (Exception e)
+            {
+                _sawmill.Error($"Caught exception while applying entity state. Entity: {_entities.ToPrettyString(data.Uid)}. Exception: {e}");
+                _brokenEnts.Add(data.Uid);
+                RequestFullState();
+#if !EXCEPTION_TOLERANCE
+                throw;
+#else
+                return;
+#endif
+            }
+
+            if (data.Created)
+            {
+                try
+                {
+                    _entities.InitializeEntity(data.Uid, data.Meta);
+                    _entities.StartEntity(data.Uid);
+                }
+                catch (Exception e)
+                {
+                    _sawmill.Error(
+                        $"Caught exception while initializing or starting entity: {_entities.ToPrettyString(data.Uid)}. Exception: {e}");
+                    _brokenEnts.Add(data.Uid);
+                    RequestFullState();
+#if !EXCEPTION_TOLERANCE
+                    throw;
+#else
+                    return;
+#endif
+                }
+            }
+
+            if (!data.EnteringPvs)
+                return;
+
+            // Now that things like collision data, fixtures, and positions have been updated, we queue a
+            // broadphase update. However, if this entity is parented to some other entity also re-entering PVS,
+            // we only need to update it's parent (as it recursively updates children anyways).
+            var xform = _entities.TransformQuery.Comp(data.Uid);
+            DebugTools.Assert(xform.Broadphase == BroadphaseData.Invalid);
+            xform.Broadphase = null;
+            if (!_toApply.TryGetValue(xform.ParentUid, out var parent) || !parent.EnteringPvs)
+                _queuedBroadphaseUpdates.Add((data.Uid, xform));
+        }
+
+        private void CreateNewEntity(EntityState state, GameTick toTick)
+        {
+            // TODO GAME STATE
+            // store MetaData & Transform information separately.
+            var metaState =
+                (MetaDataComponentState?) state.ComponentChanges.Value?.FirstOrDefault(c => c.NetID == _metaCompNetId)
+                    .State;
+
+            if (metaState == null)
+                throw new MissingMetadataException(state.NetEntity);
+
+            var uid = _entities.CreateEntity(metaState.PrototypeId, out var newMeta);
+            _toApply.Add(uid, new(uid, state.NetEntity, newMeta, true, false, GameTick.Zero, state, null, null));
+            _created.Add(state.NetEntity);
+
+            // Client creates a client-side net entity for the newly created entity.
+            // We need to clear this mapping before assigning the real net id.
+            // TODO NetEntity Jank: prevent the client from creating this in the first place.
+            _entities.ClearNetEntity(newMeta.NetEntity);
+
+            _entities.SetNetEntity(uid, state.NetEntity, newMeta);
+            newMeta.LastStateApplied = toTick;
+
+            // Check if there's any component states awaiting this entity.
+            if (!_entities.PendingNetEntityStates.Remove(state.NetEntity, out var value))
+                return;
+
+            foreach (var (type, owner) in value)
+            {
+                var pending = _pendingReapplyNetStates.GetOrNew(owner);
+                pending.Add(type);
+            }
+        }
+
+        /// <summary>
+        /// Sort states to ensure that we always apply states, initialize, and start parent entities before any of their
+        /// children.
+        /// </summary>
+        private void SortStates(Dictionary<EntityUid, StateData> toApply)
+        {
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+            if (_toApplySorted == null || _toApplySorted.Length < toApply.Count)
+                Array.Resize(ref _toApplySorted, toApply.Count);
+
+            _sorted.Clear();
+
+            var i = 0;
+            foreach (var (ent, data) in toApply)
+            {
+                AddToSorted(ent, data, ref i);
+            }
+
+            DebugTools.AssertEqual(i, toApply.Count);
+        }
+
+        private void AddToSorted(EntityUid ent, in StateData data, ref int i)
+        {
+            if (!_sorted.Add(ent))
+                return;
+
+            EnsureParentsSorted(ent, data, ref i);
+            _toApplySorted[i++] = data;
+        }
+
+        private void EnsureParentsSorted(EntityUid ent, in StateData data, ref int i)
+        {
+            var parent = GetStateParent(ent, data);
+
+            while (parent != EntityUid.Invalid)
+            {
+                if (_toApply.TryGetValue(parent, out var parentData))
+                {
+                    AddToSorted(parent, parentData, ref i);
+                    // The above method will handle the rest of the transform hierarchy, so we can just return early.
+                    return;
+                }
+
+                parent = _entities.TransformQuery.GetComponent(parent).ParentUid;
+            }
+        }
+
+        /// <summary>
+        /// Get the entity's parent in the game state that is being applies. I.e., if the state contains a new
+        /// transform state, get the parent from that. Otherwise, return the entity's current parent.
+        /// </summary>
+        private EntityUid GetStateParent(EntityUid uid, in StateData data)
+        {
+            // TODO GAME STATE
+            // store MetaData & Transform information separately.
+            if (data.CurState != null
+                && data.CurState.ComponentChanges.Value
+                    .TryFirstOrNull(c => c.NetID == _xformCompNetId, out var found))
+            {
+                var state = (TransformComponentState) found.Value.State!;
+                return _entities.GetEntity(state.ParentID);
+            }
+
+            return _entities.TransformQuery.GetComponent(uid).ParentUid;
         }
 
         /// <inheritdoc />
@@ -870,20 +1134,21 @@ namespace Robust.Client.GameStates
             _sawmill.Info($"Resetting all entity states to tick {state.ToSequence}.");
 
             // Construct hashset for set.Contains() checks.
+            _stateEnts.Clear();
             var entityStates = state.EntityStates.Span;
-            var stateEnts = new HashSet<NetEntity>();
             foreach (var entState in entityStates)
             {
-                stateEnts.Add(entState.NetEntity);
+                _stateEnts.Add(entState.NetEntity);
             }
 
             var xforms = _entities.GetEntityQuery<TransformComponent>();
+            var metas = _entities.GetEntityQuery<MetaDataComponent>();
             var xformSys = _entitySystemManager.GetEntitySystem<SharedTransformSystem>();
 
-            var toDelete = new List<EntityUid>(Math.Max(64, _entities.EntityCount - stateEnts.Count));
+            _toDelete.Clear();
 
             // Client side entities won't need the transform, but that should always be a tiny minority of entities
-            var metaQuery = _entityManager.AllEntityQueryEnumerator<MetaDataComponent, TransformComponent>();
+            var metaQuery = _entities.AllEntityQueryEnumerator<MetaDataComponent, TransformComponent>();
 
             while (metaQuery.MoveNext(out var ent, out var metadata, out var xform))
             {
@@ -891,45 +1156,46 @@ namespace Robust.Client.GameStates
                 if (metadata.NetEntity.IsClientSide())
                 {
                     if (deleteClientEntities)
-                        toDelete.Add(ent);
+                        _toDelete.Add(ent);
+
                     continue;
                 }
 
-                if (stateEnts.Contains(netEnt))
+                if (_stateEnts.Contains(netEnt))
                 {
                     if (resetAllEntities || metadata.LastStateApplied > state.ToSequence)
                         metadata.LastStateApplied = GameTick.Zero; // TODO track last-state-applied for individual components? Is it even worth it?
+
                     continue;
                 }
 
                 // This entity is going to get deleted, but maybe some if its children won't be, so lets detach them to
                 // null. First we will detach the parent in order to reduce the number of broadphase/lookup updates.
-                xformSys.DetachParentToNull(ent, xform);
+                xformSys.DetachEntity(ent, xform);
 
                 // Then detach all children.
-                var childEnumerator = xform.ChildEnumerator;
-                while (childEnumerator.MoveNext(out var child))
+                foreach (var child in xform._children)
                 {
-                    xformSys.DetachParentToNull(child.Value, xforms.GetComponent(child.Value), xform);
+                    xformSys.DetachEntity(child, xforms.Get(child), metas.Get(child), xform);
 
                     if (deleteClientChildren
                         && !deleteClientEntities // don't add duplicates
-                        && _entities.IsClientSide(child.Value))
+                        && _entities.IsClientSide(child))
                     {
-                        toDelete.Add(child.Value);
+                        _toDelete.Add(child);
                     }
                 }
-                toDelete.Add(ent);
+
+                _toDelete.Add(ent);
             }
 
-            foreach (var ent in toDelete)
+            foreach (var ent in _toDelete)
             {
                 _entities.DeleteEntity(ent);
             }
         }
 
-        private void ProcessDeletions(
-            ReadOnlySpan<NetEntity> delSpan,
+        private void ProcessDeletions(ReadOnlySpan<NetEntity> delSpan,
             EntityQuery<TransformComponent> xforms,
             EntityQuery<MetaDataComponent> metas,
             SharedTransformSystem xformSys)
@@ -949,22 +1215,22 @@ namespace Robust.Client.GameStates
             foreach (var netEntity in delSpan)
             {
                 // Don't worry about this for later.
-                _entityManager.PendingNetEntityStates.Remove(netEntity);
+                _entities.PendingNetEntityStates.Remove(netEntity);
 
-                if (!_entityManager.TryGetEntity(netEntity, out var id))
+                if (!_entities.TryGetEntity(netEntity, out var id))
                     continue;
 
                 if (!xforms.TryGetComponent(id, out var xform))
                     continue; // Already deleted? or never sent to us?
 
                 // First, a single recursive map change
-                xformSys.DetachParentToNull(id.Value, xform);
+                xformSys.DetachEntity(id.Value, xform);
 
                 // Then detach all children.
                 var childEnumerator = xform.ChildEnumerator;
                 while (childEnumerator.MoveNext(out var child))
                 {
-                    xformSys.DetachParentToNull(child.Value, xforms.GetComponent(child.Value), xform);
+                    xformSys.DetachEntity(child, xforms.Get(child), metas.Get(child), xform);
                 }
 
                 // Finally, delete the entity.
@@ -981,9 +1247,10 @@ namespace Robust.Client.GameStates
             var containerSys = _entitySystemManager.GetEntitySystem<ContainerSystem>();
             var lookupSys = _entitySystemManager.GetEntitySystem<EntityLookupSystem>();
             Detach(GameTick.MaxValue, null, entities, metas, xforms, xformSys, containerSys, lookupSys);
+            _detached.Clear();
         }
 
-        private List<NetEntity> ProcessPvsDeparture(
+        private void ProcessPvsDeparture(
             GameTick toTick,
             EntityQuery<MetaDataComponent> metas,
             EntityQuery<TransformComponent> xforms,
@@ -992,10 +1259,9 @@ namespace Robust.Client.GameStates
             EntityLookupSystem lookupSys)
         {
             var toDetach = _processor.GetEntitiesToDetach(toTick, _pvsDetachBudget);
-            var detached = new List<NetEntity>();
 
             if (toDetach.Count == 0)
-                return detached;
+                return;
 
             // TODO optimize
             // If an entity is leaving PVS, so are all of its children. If we can preserve the hierarchy we can avoid
@@ -1003,13 +1269,13 @@ namespace Robust.Client.GameStates
 
             using var _ = _prof.Group("Leave PVS");
 
+            _detached.Clear();
             foreach (var (tick, ents) in toDetach)
             {
-                Detach(tick, toTick, ents, metas, xforms, xformSys, containerSys, lookupSys, detached);
+                Detach(tick, toTick, ents, metas, xforms, xformSys, containerSys, lookupSys);
             }
 
-            _prof.WriteValue("Count", ProfData.Int32(detached.Count));
-            return detached;
+            _prof.WriteValue("Count", ProfData.Int32(_detached.Count));
         }
 
         private void Detach(GameTick maxTick,
@@ -1019,14 +1285,11 @@ namespace Robust.Client.GameStates
             EntityQuery<TransformComponent> xforms,
             SharedTransformSystem xformSys,
             ContainerSystem containerSys,
-            EntityLookupSystem lookupSys,
-            List<NetEntity>? detached = null)
+            EntityLookupSystem lookupSys)
         {
             foreach (var netEntity in entities)
             {
-                var ent = _entityManager.GetEntity(netEntity);
-
-                if (!metas.TryGetComponent(ent, out var meta))
+                if (!_entities.TryGetEntityData(netEntity, out var ent, out var meta))
                     continue;
 
                 if (meta.LastStateApplied > maxTick)
@@ -1036,16 +1299,21 @@ namespace Robust.Client.GameStates
                     continue;
                 }
 
-                if ((meta.Flags & MetaDataFlags.Detached) != 0)
+                if ((meta.Flags & (MetaDataFlags.Detached | MetaDataFlags.Undetachable)) != 0)
                     continue;
 
                 if (lastStateApplied.HasValue)
                     meta.LastStateApplied = lastStateApplied.Value;
 
-                var xform = xforms.GetComponent(ent);
+                var xform = xforms.GetComponent(ent.Value);
+
+                // TODO PVS DETACH
+                // Why is this if block here again? If a null-space entity gets sent to a player via some PVS override,
+                // and then later on it gets removed, you would assume that the client marks it as detached?
+                // I.e., modifying the metadata flag & pausing the entity should probably happen outside of this block.
                 if (xform.ParentUid.IsValid())
                 {
-                    lookupSys.RemoveFromEntityTree(ent, xform);
+                    lookupSys.RemoveFromEntityTree(ent.Value, xform);
                     xform.Broadphase = BroadphaseData.Invalid;
 
                     // In some cursed scenarios an entity inside of a container can leave PVS without the container itself leaving PVS.
@@ -1054,149 +1322,95 @@ namespace Robust.Client.GameStates
                     if ((meta.Flags & MetaDataFlags.InContainer) != 0 &&
                         metas.TryGetComponent(xform.ParentUid, out var containerMeta) &&
                         (containerMeta.Flags & MetaDataFlags.Detached) == 0 &&
-                        containerSys.TryGetContainingContainer(xform.ParentUid, ent, out container, null, true))
+                        containerSys.TryGetContainingContainer(xform.ParentUid, ent.Value, out container))
                     {
-                        container.Remove(ent, _entities, xform, meta, false, true);
+                        containerSys.Remove((ent.Value, xform, meta), container, false, true);
                     }
 
                     meta._flags |= MetaDataFlags.Detached;
-                    xformSys.DetachParentToNull(ent, xform);
+                    xformSys.DetachEntity(ent.Value, xform);
                     DebugTools.Assert((meta.Flags & MetaDataFlags.InContainer) == 0);
+
+                    // We mark the entity as paused, without raising a pause-event.
+                    // The entity gets un-paused when the metadata's comp-state is reapplied (which also does not raise
+                    // an un-pause event). The assumption is that game logic that has to handle the pausing should be
+                    // getting networked anyway. And if its some client-side timer on a networked entity, the timer
+                    // shouldn't actually be getting paused just because the entity has left the players view.
+                    meta.PauseTime = TimeSpan.Zero;
 
                     if (container != null)
                         containerSys.AddExpectedEntity(netEntity, container);
                 }
 
-                detached?.Add(netEntity);
+                _detached.Add(netEntity);
             }
         }
 
-        private void InitializeAndStart(Dictionary<NetEntity, EntityState> toCreate)
-        {
-            var metaQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
-
-#if EXCEPTION_TOLERANCE
-            var brokenEnts = new List<EntityUid>();
-#endif
-            using (_prof.Group("Initialize Entity"))
-            {
-                foreach (var netEntity in toCreate.Keys)
-                {
-                    var entity = _entityManager.GetEntity(netEntity);
-#if EXCEPTION_TOLERANCE
-                    try
-                    {
-#endif
-                    _entities.InitializeEntity(entity, metaQuery.GetComponent(entity));
-#if EXCEPTION_TOLERANCE
-                    }
-                    catch (Exception e)
-                    {
-                        _sawmill.Error($"Server entity threw in Init: ent={_entities.ToPrettyString(entity)}");
-                        _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(InitializeAndStart)}");
-                        brokenEnts.Add(entity);
-                        toCreate.Remove(netEntity);
-                    }
-#endif
-                }
-            }
-
-            using (_prof.Group("Start Entity"))
-            {
-                foreach (var netEntity in toCreate.Keys)
-                {
-                    var entity = _entityManager.GetEntity(netEntity);
-#if EXCEPTION_TOLERANCE
-                    try
-                    {
-#endif
-                    _entities.StartEntity(entity);
-#if EXCEPTION_TOLERANCE
-                    }
-                    catch (Exception e)
-                    {
-                        _sawmill.Error($"Server entity threw in Start: ent={_entityManager.ToPrettyString(entity)}");
-                        _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(InitializeAndStart)}");
-                        brokenEnts.Add(entity);
-                        toCreate.Remove(netEntity);
-                    }
-#endif
-                }
-            }
-
-#if EXCEPTION_TOLERANCE
-            foreach (var entity in brokenEnts)
-            {
-                _entityManager.DeleteEntity(entity);
-            }
-#endif
-        }
-
-        private void HandleEntityState(EntityUid uid, NetEntity netEntity, MetaDataComponent meta, IEventBus bus, EntityState? curState,
-            EntityState? nextState, GameTick lastApplied, GameTick toTick, bool enteringPvs)
+        private void HandleEntityState(in StateData data, IEventBus bus, GameTick toTick)
         {
             _compStateWork.Clear();
 
             // First remove any deleted components
-            if (curState?.NetComponents != null)
+            if (data.CurState?.NetComponents is {} netComps)
             {
-                RemQueue<Component> toRemove = new();
-                foreach (var (id, comp) in meta.NetComponents)
+                _toRemove.Clear();
+
+                foreach (var (id, comp) in data.Meta.NetComponents)
                 {
-                    if (comp.NetSyncEnabled && !curState.NetComponents.Contains(id))
-                        toRemove.Add(comp);
+                    DebugTools.Assert(comp.NetSyncEnabled);
+
+                    if (!netComps.Contains(id))
+                        _toRemove.Add(comp);
                 }
 
-                foreach (var comp in toRemove)
+                foreach (var comp in _toRemove)
                 {
-                    _entities.RemoveComponent(uid, comp, meta);
+                    _entities.RemoveComponent(data.Uid, comp, data.Meta);
                 }
             }
 
-            if (enteringPvs)
+            if (data.EnteringPvs)
             {
                 // last-server state has already been updated with new information from curState
                 // --> simply reset to the most recent server state.
                 //
                 // as to why we need to reset: because in the process of detaching to null-space, we will have dirtied
                 // the entity. most notably, all entities will have been ejected from their containers.
-                foreach (var (id, state) in _processor.GetLastServerStates(netEntity))
+                foreach (var (id, state) in _processor.GetLastServerStates(data.NetEntity))
                 {
-                    if (!meta.NetComponents.TryGetValue(id, out var comp))
+                    if (!data.Meta.NetComponents.TryGetValue(id, out var comp))
                     {
-                        comp = (Component) _compFactory.GetComponent(id);
-                        comp.Owner = uid;
-                        _entityManager.AddComponent(uid, comp, true, metadata: meta);
+                        comp = _compFactory.GetComponent(id);
+                        _entities.AddComponent(data.Uid, comp, true, metadata: data.Meta);
                     }
 
                     _compStateWork[id] = (comp, state, null);
                 }
             }
-            else if (curState != null)
+            else if (data.CurState != null)
             {
-                foreach (var compChange in curState.ComponentChanges.Span)
+                foreach (var compChange in data.CurState.ComponentChanges.Span)
                 {
-                    if (!meta.NetComponents.TryGetValue(compChange.NetID, out var comp))
+                    if (!data.Meta.NetComponents.TryGetValue(compChange.NetID, out var comp))
                     {
-                        comp = (Component) _compFactory.GetComponent(compChange.NetID);
-                        comp.Owner = uid;
-                        _entityManager.AddComponent(uid, comp, true, metadata:meta);
+                        comp = _compFactory.GetComponent(compChange.NetID);
+                        _entities.AddComponent(data.Uid, comp, true, metadata: data.Meta);
                     }
-                    else if (compChange.LastModifiedTick <= lastApplied && lastApplied != GameTick.Zero)
+                    else if (compChange.LastModifiedTick <= data.LastApplied && data.LastApplied != GameTick.Zero)
                         continue;
 
                     _compStateWork[compChange.NetID] = (comp, compChange.State, null);
                 }
             }
 
-            if (nextState != null)
+            if (data.NextState != null)
             {
-                foreach (var compState in nextState.ComponentChanges.Span)
+                foreach (var compState in data.NextState.ComponentChanges.Span)
                 {
                     if (compState.LastModifiedTick != toTick + 1)
                         continue;
 
-                    if (!meta.NetComponents.TryGetValue(compState.NetID, out var comp))
+                    if (!data.Meta.NetComponents.TryGetValue(compState.NetID, out var comp))
                     {
                         // The component can be null here due to interp, because the NEXT state will have a new
                         // component, but the component does not yet exist.
@@ -1214,9 +1428,10 @@ namespace Robust.Client.GameStates
             }
 
             // If we have a NetEntity we reference come in then apply their state.
-            if (_pendingReapplyNetStates.TryGetValue(uid, out var reapplyTypes))
+            DebugTools.Assert(_pendingReapplyNetStates.ContainsKey(data.Uid) == (data.PendingReapply != null));
+            if (data.PendingReapply is {} reapplyTypes)
             {
-                var lastState = _processor.GetLastServerStates(netEntity);
+                var lastState = _processor.GetLastServerStates(data.NetEntity);
 
                 foreach (var type in reapplyTypes)
                 {
@@ -1226,7 +1441,7 @@ namespace Robust.Client.GameStates
                     if (netId == null)
                         continue;
 
-                    if (!meta.NetComponents.TryGetValue(netId.Value, out var comp) ||
+                    if (!data.Meta.NetComponents.TryGetValue(netId.Value, out var comp) ||
                         !lastState.TryGetValue(netId.Value, out var lastCompState))
                     {
                         continue;
@@ -1244,21 +1459,11 @@ namespace Robust.Client.GameStates
 
             foreach (var (comp, cur, next) in _compStateWork.Values)
             {
-                try
-                {
-                    var handleState = new ComponentHandleState(cur, next);
-                    bus.RaiseComponentEvent(comp, ref handleState);
-                }
-                catch (Exception e)
-                {
-#if EXCEPTION_TOLERANCE
-                    _sawmill.Error($"Failed to apply comp state: entity={_entities.ToPrettyString(uid)}, comp={comp.GetType()}");
-                    _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(HandleEntityState)}");
-#else
-                    _sawmill.Error($"Failed to apply comp state: entity={_entities.ToPrettyString(uid)}, comp={comp.GetType()}");
-                    throw;
-#endif
-                }
+                if (cur == null && next == null)
+                    continue;
+
+                var handleState = new ComponentHandleState(cur, next);
+                bus.RaiseComponentEvent(data.Uid, comp, ref handleState);
             }
         }
 
@@ -1327,10 +1532,10 @@ namespace Robust.Client.GameStates
                     _entities.TryGetComponent(xform.ParentUid, out MetaDataComponent? containerMeta) &&
                     (containerMeta.Flags & MetaDataFlags.Detached) == 0)
                 {
-                    containerSys.TryGetContainingContainer(xform.ParentUid, uid, out container, null, true);
+                    containerSys.TryGetContainingContainer(xform.ParentUid, uid, out container);
                 }
 
-                _entities.EntitySysManager.GetEntitySystem<TransformSystem>().DetachParentToNull(uid, xform);
+                _entities.EntitySysManager.GetEntitySystem<TransformSystem>().DetachEntity(uid, xform);
 
                 if (container != null)
                     containerSys.AddExpectedEntity(_entities.GetNetEntity(uid), container);
@@ -1353,7 +1558,7 @@ namespace Robust.Client.GameStates
             void _recursiveRemoveState(NetEntity netEntity, TransformComponent xform, EntityQuery<MetaDataComponent> metaQuery, EntityQuery<TransformComponent> xformQuery)
             {
                 _processor._lastStateFullRep.Remove(netEntity);
-                foreach (var child in xform.ChildEntities)
+                foreach (var child in xform._children)
                 {
                     if (xformQuery.TryGetComponent(child, out var childXform) &&
                         metaQuery.TryGetComponent(child, out var childMeta))
@@ -1380,7 +1585,7 @@ namespace Robust.Client.GameStates
         {
             using var _ = _timing.StartStateApplicationArea();
 
-            var query = _entityManager.AllEntityQueryEnumerator<MetaDataComponent>();
+            var query = _entities.AllEntityQueryEnumerator<MetaDataComponent>();
 
             while (query.MoveNext(out var uid, out var meta))
             {
@@ -1405,34 +1610,35 @@ namespace Robust.Client.GameStates
             {
                 if (!meta.NetComponents.TryGetValue(id, out var comp))
                 {
-                    comp = (Component) _compFactory.GetComponent(id);
-                    comp.Owner = uid;
-                    _entityManager.AddComponent(uid, comp, true, meta);
+                    comp = _compFactory.GetComponent(id);
+                    _entities.AddComponent(uid, comp, true, meta);
                 }
 
+                if (state == null)
+                    continue;
+
                 var handleState = new ComponentHandleState(state, null);
-                _entityManager.EventBus.RaiseComponentEvent(comp, ref handleState);
+                _entities.EventBus.RaiseComponentEvent(uid, comp, ref handleState);
             }
 
             // ensure we don't have any extra components
-            RemQueue<Component> toRemove = new();
+            _toRemove.Clear();
+
             foreach (var (id, comp) in meta.NetComponents)
             {
                 if (comp.NetSyncEnabled && !lastState.ContainsKey(id))
-                    toRemove.Add(comp);
+                    _toRemove.Add(comp);
             }
 
-            foreach (var comp in toRemove)
+            foreach (var comp in _toRemove)
             {
                 _entities.RemoveComponent(uid, comp);
             }
         }
         #endregion
 
-        void IPostInjectInit.PostInject()
-        {
-            _sawmill = _logMan.GetSawmill(CVars.NetPredict.Name);
-        }
+        public bool IsQueuedForDetach(NetEntity entity)
+            => _processor.IsQueuedForDetach(entity);
     }
 
     public sealed class GameStateAppliedArgs : EventArgs

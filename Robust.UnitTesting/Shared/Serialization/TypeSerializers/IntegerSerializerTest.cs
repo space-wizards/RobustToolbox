@@ -1,7 +1,5 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using Robust.Shared.Serialization.Markdown.Value;
-
-// ReSharper disable AccessToStaticMemberViaDerivedType
 
 namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
 {
@@ -13,7 +11,6 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         {
             var value = Serialization.Read<int>(new ValueDataNode("5"));
 
-            Assert.NotNull(value);
             Assert.That(value, Is.EqualTo(5));
         }
 
@@ -22,7 +19,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         {
             var nullValue = Serialization.Read<int?>(ValueDataNode.Null());
 
-            Assert.Null(nullValue);
+            Assert.That(nullValue, Is.Null);
 
             var value = Serialization.Read<int?>(new ValueDataNode("5"));
 

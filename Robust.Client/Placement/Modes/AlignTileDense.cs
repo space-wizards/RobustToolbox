@@ -1,6 +1,7 @@
 ﻿using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 
 namespace Robust.Client.Placement.Modes
 {
@@ -15,12 +16,14 @@ namespace Robust.Client.Placement.Modes
         {
             MouseCoords = ScreenToCursorGrid(mouseScreen);
 
+            var transformSys = pManager.EntityManager.System<SharedTransformSystem>();
+
             var tileSize = 1f;
-            var gridIdOpt = MouseCoords.GetGridUid(pManager.EntityManager);
+            var gridIdOpt = transformSys.GetGrid(MouseCoords);
 
             if (gridIdOpt is EntityUid gridId && gridId.IsValid())
             {
-                var mapGrid = pManager.MapManager.GetGrid(gridId);
+                var mapGrid = pManager.EntityManager.GetComponent<MapGridComponent>(gridId);
                 tileSize = mapGrid.TileSize; //convert from ushort to float
             }
 

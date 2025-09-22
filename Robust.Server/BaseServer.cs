@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Threading;
 using Prometheus;
 using Robust.Server.Console;
@@ -28,6 +29,7 @@ using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Player;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
@@ -84,10 +86,10 @@ namespace Robust.Server
         [Dependency] private readonly ITaskManager _taskManager = default!;
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
         [Dependency] private readonly IModLoaderInternal _modLoader = default!;
-        [Dependency] private readonly IWatchdogApi _watchdogApi = default!;
+        [Dependency] private readonly IWatchdogApiInternal _watchdogApi = default!;
         [Dependency] private readonly HubManager _hubManager = default!;
         [Dependency] private readonly IScriptHost _scriptHost = default!;
-        [Dependency] private readonly IMetricsManager _metricsManager = default!;
+        [Dependency] private readonly IMetricsManagerInternal _metricsManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IRobustMappedStringSerializer _stringSerializer = default!;
         [Dependency] private readonly ILocalizationManagerInternal _loc = default!;
@@ -102,6 +104,7 @@ namespace Robust.Server
         [Dependency] private readonly IComponentFactory _componentFactory = default!;
         [Dependency] private readonly IReplayRecordingManagerInternal _replay = default!;
         [Dependency] private readonly IGamePrototypeLoadManager _protoLoadMan = default!;
+        [Dependency] private readonly UploadedContentManager _uploadedContMan = default!;
         [Dependency] private readonly NetworkResourceManager _netResMan = default!;
         [Dependency] private readonly IReflectionManager _refMan = default!;
 
@@ -203,8 +206,6 @@ namespace Robust.Server
 
             ProfileOptSetup.Setup(_config);
 
-            _parallelMgr.Initialize();
-
             //Sets up Logging
             _logHandlerFactory = logHandlerFactory;
 
@@ -222,10 +223,10 @@ namespace Robust.Server
 
                 if (!Path.IsPathRooted(fullPath))
                 {
-                    logPath = PathHelpers.ExecutableRelativeFile(fullPath);
+                    fullPath = PathHelpers.ExecutableRelativeFile(fullPath);
                 }
 
-                logHandler = new FileLogHandler(logPath);
+                logHandler = new FileLogHandler(fullPath);
             }
 
             _log.RootSawmill.Level = _config.GetCVar(CVars.LogLevel);
@@ -267,6 +268,7 @@ namespace Robust.Server
 
             // Has to be done early because this guy's in charge of the main thread Synchronization Context.
             _taskManager.Initialize();
+            _parallelMgr.Initialize();
 
             LoadSettings();
 
@@ -278,12 +280,15 @@ namespace Robust.Server
                 _network.Initialize(true);
                 _network.StartServer();
             }
-            catch (Exception e)
+            catch (SocketException e) when (e.SocketErrorCode == SocketError.AddressAlreadyInUse)
             {
                 var port = _network.Port;
-                _logger.Fatal(
-                    "Unable to setup networking manager. Check port {0} is not already in use and that all binding addresses are correct!\n{1}",
-                    port, e);
+                _logger.Fatal("Unable to setup networking manager. Make sure that you aren't running the server twice and that port {0} is not in use by another application.\n{1}", port, e);
+                return true;
+            }
+            catch (Exception e)
+            {
+                _logger.Fatal("Unable to setup networking manager!\n{0}", e);
                 return true;
             }
 
@@ -292,7 +297,7 @@ namespace Robust.Server
                 : null;
 
             // Set up the VFS
-            _resources.Initialize(dataDir);
+            _resources.Initialize(dataDir, hideUserDataDir: false);
 
             var mountOptions = _commandLineArgs != null
                 ? MountOptions.Merge(_commandLineArgs.MountOptions, Options.MountOptions) : Options.MountOptions;
@@ -306,7 +311,9 @@ namespace Robust.Server
             _modLoader.SetUseLoadContext(!ContentStart);
             _modLoader.SetEnableSandboxing(Options.Sandboxing);
 
-            if (!_modLoader.TryLoadModulesFrom(Options.AssemblyDirectory, Options.ContentModulePrefix))
+            var resourceManifest = ResourceManifestData.LoadResourceManifest(_resources);
+
+            if (!_modLoader.TryLoadModulesFrom(Options.AssemblyDirectory, resourceManifest.AssemblyPrefix ?? Options.ContentModulePrefix))
             {
                 _logger.Fatal("Errors while loading content assemblies.");
                 return true;
@@ -324,6 +331,7 @@ namespace Robust.Server
             // TODO: solve this properly.
             _serializer.Initialize();
 
+            _loc.Initialize();
             _loc.AddLoadedToStringSerializer(_stringSerializer);
 
             //IoCManager.Resolve<IMapLoader>().LoadedMapData +=
@@ -387,6 +395,7 @@ namespace Robust.Server
             _scriptHost.Initialize();
             _protoLoadMan.Initialize();
             _netResMan.Initialize();
+            _uploadedContMan.Initialize();
 
             // String serializer has to be locked before PostInit as content can depend on it (e.g., replays that start
             // automatically recording on startup).
@@ -558,7 +567,7 @@ namespace Robust.Server
             // Don't start the main loop. This only works if a reason is passed to Shutdown(...)
             if (_shutdownReason != null)
             {
-                _logger.Fatal("Shutdown has been requested before the main loop has been started, complying.");
+                _logger.Fatal("Shutdown has been requested before the main loop has been started, complying. Reason: {0}", _shutdownReason);
             }
             else _mainLoop.Run();
 
@@ -578,7 +587,7 @@ namespace Robust.Server
         {
             _config.OnValueChanged(CVars.NetTickrate, i =>
             {
-                var b = (byte) i;
+                var b = (ushort) i;
                 _time.TickRate = b;
 
                 _logger.Info($"Tickrate changed to: {b} on tick {_time.CurTick}");
@@ -586,7 +595,7 @@ namespace Robust.Server
 
             var startOffset = TimeSpan.FromSeconds(_config.GetCVar(CVars.NetTimeStartOffset));
             _time.TimeBase = (startOffset, GameTick.First);
-            _time.TickRate = (byte) _config.GetCVar(CVars.NetTickrate);
+            _time.TickRate = (ushort) _config.GetCVar(CVars.NetTickrate);
 
             _logger.Info($"Name: {ServerName}");
             _logger.Info($"TickRate: {_time.TickRate}({_time.TickPeriod.TotalMilliseconds:0.00}ms)");
@@ -647,8 +656,8 @@ namespace Robust.Server
             _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
 
             // shut down networking, kicking all players.
-            var shutdownReasonWithRedial = NetStructuredDisconnectMessages.Encode($"Server shutting down: {_shutdownReason}", true);
-            _network.Shutdown(shutdownReasonWithRedial);
+            var shutdownReasonWithRedial = new NetDisconnectMessage($"Server shutting down: {_shutdownReason}", true);
+            _network.Shutdown(shutdownReasonWithRedial.Encode());
 
             // shutdown entities
             _entityManager.Cleanup();
@@ -657,10 +666,14 @@ namespace Robust.Server
             {
                 // Write down exception log
                 var logPath = _config.GetCVar(CVars.LogPath);
-                var relPath = PathHelpers.ExecutableRelativeFile(logPath);
-                Directory.CreateDirectory(relPath);
-                var pathToWrite = Path.Combine(relPath,
+                if (!Path.IsPathRooted(logPath))
+                {
+                    logPath = PathHelpers.ExecutableRelativeFile(logPath);
+                }
+
+                var pathToWrite = Path.Combine(logPath,
                     "Runtime-" + DateTime.Now.ToString("yyyy-MM-dd-THH-mm-ss") + ".txt");
+                Directory.CreateDirectory(logPath);
                 File.WriteAllText(pathToWrite, _runtimeLog.Display(), EncodingHelpers.UTF8);
             }
 
@@ -739,6 +752,8 @@ namespace Robust.Server
             _hubManager.Heartbeat();
 
             _modLoader.BroadcastUpdate(ModUpdateLevel.FramePostEngine, frameEventArgs);
+
+            _metricsManager.FrameUpdate();
         }
 
         void IPostInjectInit.PostInject()

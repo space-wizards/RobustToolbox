@@ -4,6 +4,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Timing;
 using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Client.GameObjects.Components
@@ -12,24 +13,20 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
     [TestOf(typeof(TransformComponent))]
     public sealed class TransformComponentTests
     {
-        private static readonly MapId TestMapId = new(1);
-
         private static (ISimulation, EntityUid gridA, EntityUid gridB)  SimulationFactory()
         {
             var sim = RobustServerSimulation
                 .NewSimulation()
                 .InitializeInstance();
 
+            var mapId = sim.Resolve<IEntityManager>().System<SharedMapSystem>().CreateMap();
             var mapManager = sim.Resolve<IMapManager>();
 
-            // Adds the map with id 1, and spawns entity 1 as the map entity.
-            mapManager.CreateMap(TestMapId);
-
             // Adds two grids to use in tests.
-            var gridA = mapManager.CreateGrid(TestMapId);
-            var gridB = mapManager.CreateGrid(TestMapId);
+            var gridA = mapManager.CreateGridEntity(mapId);
+            var gridB = mapManager.CreateGridEntity(mapId);
 
-            return (sim, gridA.Owner, gridB.Owner);
+            return (sim, gridA, gridB);
         }
 
         /// <summary>
@@ -40,35 +37,35 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
         {
             var (sim, gridIdA, gridIdB) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
-            var mapMan = sim.Resolve<IMapManager>();
             var xformSystem = entMan.System<SharedTransformSystem>();
-
-            var gridA = mapMan.GetGrid(gridIdA);
-            var gridB = mapMan.GetGrid(gridIdB);
+            var gridSystem = entMan.System<SharedGridTraversalSystem>();
+            gridSystem.Enabled = false;
 
             // Arrange
-            var initialPos = new EntityCoordinates(gridA.Owner, new Vector2(0, 0));
+            var initialPos = new EntityCoordinates(gridIdA, new Vector2(0, 0));
             var parent = entMan.SpawnEntity(null, initialPos);
             var child = entMan.SpawnEntity(null, initialPos);
             var parentTrans = entMan.GetComponent<TransformComponent>(parent);
             var childTrans = entMan.GetComponent<TransformComponent>(child);
             ComponentHandleState handleState;
 
-            var compState = new TransformComponentState(new Vector2(5, 5), new Angle(0), entMan.GetNetEntity(gridB.Owner), false, false);
+            var compState = new TransformComponentState(new Vector2(5, 5), new Angle(0), entMan.GetNetEntity(gridIdB), false, false);
             handleState = new ComponentHandleState(compState, null);
             xformSystem.OnHandleState(parent, parentTrans, ref handleState);
 
-            compState = new TransformComponentState(new Vector2(6, 6), new Angle(0), entMan.GetNetEntity(gridB.Owner), false, false);
+            compState = new TransformComponentState(new Vector2(6, 6), new Angle(0), entMan.GetNetEntity(gridIdB), false, false);
             handleState = new ComponentHandleState(compState, null);
             xformSystem.OnHandleState(child, childTrans, ref handleState);
             // World pos should be 6, 6 now.
 
             // Act
-            var oldWpos = childTrans.WorldPosition;
+            var oldWpos = xformSystem.GetWorldPosition(childTrans);
             compState = new TransformComponentState(new Vector2(1, 1), new Angle(0), entMan.GetNetEntity(parent), false, false);
             handleState = new ComponentHandleState(compState, null);
             xformSystem.OnHandleState(child, childTrans, ref handleState);
-            var newWpos = childTrans.WorldPosition;
+            var newWpos = xformSystem.GetWorldPosition(childTrans);
+
+            gridSystem.Enabled = true;
 
             // Assert
             Assert.That(newWpos, Is.EqualTo(oldWpos));
@@ -82,15 +79,13 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
         {
             var (sim, gridIdA, gridIdB) = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
-            var mapMan = sim.Resolve<IMapManager>();
             var xformSystem = entMan.System<SharedTransformSystem>();
             var metaSystem = entMan.System<MetaDataSystem>();
-
-            var gridA = mapMan.GetGrid(gridIdA);
-            var gridB = mapMan.GetGrid(gridIdB);
+            var gridSystem = entMan.System<SharedGridTraversalSystem>();
+            gridSystem.Enabled = false;
 
             // Arrange
-            var initalPos = new EntityCoordinates(gridA.Owner, new Vector2(0, 0));
+            var initalPos = new EntityCoordinates(gridIdA, new Vector2(0, 0));
             var node1 = entMan.SpawnEntity(null, initalPos);
             var node2 = entMan.SpawnEntity(null, initalPos);
             var node3 = entMan.SpawnEntity(null, initalPos);
@@ -103,7 +98,7 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             var node2Trans = entMan.GetComponent<TransformComponent>(node2);
             var node3Trans = entMan.GetComponent<TransformComponent>(node3);
 
-            var compState = new TransformComponentState(new Vector2(6, 6), Angle.FromDegrees(135), entMan.GetNetEntity(gridB.Owner), false, false);
+            var compState = new TransformComponentState(new Vector2(6, 6), Angle.FromDegrees(135), entMan.GetNetEntity(gridIdB), false, false);
             var handleState = new ComponentHandleState(compState, null);
             xformSystem.OnHandleState(node1, node1Trans, ref handleState);
 
@@ -116,7 +111,9 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             xformSystem.OnHandleState(node3, node3Trans, ref handleState);
 
             // Act
-            var result = node3Trans.WorldRotation;
+            var result = xformSystem.GetWorldRotation(node3Trans);
+
+            gridSystem.Enabled = true;
 
             // Assert (135 + 45 + 45 = 225)
             Assert.That(result, new ApproxEqualityConstraint(Angle.FromDegrees(225)));

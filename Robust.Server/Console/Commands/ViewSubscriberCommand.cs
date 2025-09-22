@@ -1,9 +1,8 @@
 using Robust.Server.GameObjects;
-using Robust.Server.Player;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 
 namespace Robust.Server.Console.Commands
 {
@@ -17,7 +16,7 @@ namespace Robust.Server.Console.Commands
         {
             var session = shell.Player;
 
-            if (session is not IPlayerSession playerSession)
+            if (session is not { } playerSession)
             {
                 shell.WriteError($"Unable to find {nameof(ICommonSession)} for shell");
                 return;
@@ -54,7 +53,7 @@ namespace Robust.Server.Console.Commands
             {
                 var session = shell.Player;
 
-                if (session is not IPlayerSession playerSession)
+                if (session is not { } playerSession)
                 {
                     shell.WriteError($"Unable to find {nameof(ICommonSession)} for shell");
                     return;

@@ -1,36 +1,38 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
-using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
-using Robust.Shared.Maths;
-using Robust.Shared.Network;
-using Robust.Shared.Network.Messages;
+using Robust.Shared.Map;
 using Robust.Shared.Physics;
-using Robust.Shared.Timing;
 
 namespace Robust.Shared.Debugging;
 
-[Virtual]
 public abstract class SharedDebugRayDrawingSystem : EntitySystem
 {
 #if DEBUG
     private ConcurrentBag<DebugRayData> _rayDataThreadShuntBag = new();
-#endif
 
     public override void FrameUpdate(float frameTime)
     {
-#if DEBUG
-        // Pull rays into main thread for distribution.
+        Process();
+    }
+
+    public override void Update(float frameTime)
+    {
+        Process();
+    }
+
+    private void Process()
+    {
+        if (_rayDataThreadShuntBag.Count == 0)
+            return;
+
         var arr = _rayDataThreadShuntBag.ToArray();
         _rayDataThreadShuntBag.Clear();
+
         foreach (var drd in arr)
         {
             ReceiveLocalRayAtMainThread(drd);
         }
-#endif
     }
 
     /// <summary>
@@ -42,9 +44,7 @@ public abstract class SharedDebugRayDrawingSystem : EntitySystem
     {
         // If not on DEBUG, we're not going to use this anyway.
         // Let the inlining DCE this away.
-#if DEBUG
         _rayDataThreadShuntBag.Add(drd);
-#endif
     }
 
     /// <summary>
@@ -53,5 +53,7 @@ public abstract class SharedDebugRayDrawingSystem : EntitySystem
     /// Note that on release builds (!DEBUG), this function is never called.
     /// </summary>
     protected abstract void ReceiveLocalRayAtMainThread(DebugRayData drd);
-}
 
+    public readonly record struct DebugRayData(Ray Ray, float MaxLength, RayCastResults? Results, bool ServerSide, MapId Map);
+#endif
+}

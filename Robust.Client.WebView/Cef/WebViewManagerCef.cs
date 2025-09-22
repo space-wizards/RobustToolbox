@@ -1,9 +1,11 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Text;
 using Robust.Client.Console;
+using Robust.Client.Utility;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
@@ -23,6 +25,7 @@ namespace Robust.Client.WebView.Cef
 
         [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+        [Dependency] private readonly IGameControllerInternal _gameController = default!;
         [Dependency] private readonly IResourceManagerInternal _resourceManager = default!;
         [Dependency] private readonly IClientConsoleHost _consoleHost = default!;
         [Dependency] private readonly IConfigurationManager _cfg = default!;
@@ -58,9 +61,9 @@ namespace Robust.Client.WebView.Cef
             if (cefResourcesPath == null)
                 throw new InvalidOperationException("Unable to locate cef_resources directory!");
 
-            var cachePath = "";
-            if (_resourceManager.UserData is WritableDirProvider userData)
-                cachePath = userData.GetFullPath(new ResPath("/cef_cache"));
+            var remoteDebugPort = _cfg.GetCVar(WCVars.WebRemoteDebugPort);
+
+            var cachePath = FindAndLockCacheDirectory();
 
             var settings = new CefSettings()
             {
@@ -70,7 +73,7 @@ namespace Robust.Client.WebView.Cef
                 BrowserSubprocessPath = subProcessPath,
                 LocalesDirPath = Path.Combine(cefResourcesPath, "locales"),
                 ResourcesDirPath = cefResourcesPath,
-                RemoteDebuggingPort = 9222,
+                RemoteDebuggingPort = remoteDebugPort,
                 CookieableSchemesList = "usr,res",
                 CachePath = cachePath,
             };
@@ -84,6 +87,10 @@ namespace Robust.Client.WebView.Cef
             _sawmill.Info($"CEF Version: {CefRuntime.ChromeVersion}");
 
             _app = new RobustCefApp(_sawmill);
+
+            var process = Process.GetCurrentProcess();
+            Environment.SetEnvironmentVariable("ROBUST_CEF_BROWSER_PROCESS_ID", process.Id.ToString());
+            Environment.SetEnvironmentVariable("ROBUST_CEF_BROWSER_PROCESS_MODULE", process.MainModule?.FileName ?? "");
 
             // So these arguments look like nonsense, but it turns out CEF is just *like that*.
             // The first argument is literally nonsense, but it needs to be there as otherwise the second argument doesn't apply

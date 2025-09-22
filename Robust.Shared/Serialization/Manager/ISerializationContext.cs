@@ -11,3 +11,15 @@ public interface ISerializationContext
     /// </summary>
     bool WritingReadingPrototypes { get; }
 }
+
+public sealed class EntityDiffContext : ISerializationContext
+{
+    public SerializationManager.SerializerProvider SerializerProvider { get; }
+    public bool WritingReadingPrototypes { get; set; } = true;
+
+    public EntityDiffContext()
+    {
+        SerializerProvider = new();
+        SerializerProvider.RegisterSerializer(this);
+    }
+}

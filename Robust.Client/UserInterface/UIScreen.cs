@@ -69,12 +69,11 @@ public abstract class UIScreen : LayoutContainer
 
     public void RemoveWidget<T>() where T : UIWidget, new()
     {
-        if (_widgets.TryGetValue(typeof(T), out var widget))
-        {
-            RemoveChild(widget);
-        }
+        if (!_widgets.Remove(typeof(T), out var widget))
+            return;
 
-        _widgets.Remove(typeof(T));
+        widget.Parent?.RemoveChild(widget);
+        RemoveChildren(widget);
     }
 
     internal void OnRemoved()
@@ -101,6 +100,14 @@ public abstract class UIScreen : LayoutContainer
     public void AddWidget(UIWidget widget)
     {
         AddChild(widget);
+    }
+
+    public void AddWidgetDirect(UIWidget widget)
+    {
+        if (!_widgets.TryAdd(widget.GetType(), widget))
+            throw new Exception("Tried to add duplicate widget to screen!");
+
+        RegisterChildren(widget);
     }
 
     public T? GetWidget<T>() where T : UIWidget, new()

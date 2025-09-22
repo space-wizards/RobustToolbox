@@ -1,3 +1,4 @@
+using System;
 using System.Numerics;
 using JetBrains.Annotations;
 using NUnit.Framework;
@@ -9,8 +10,6 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Array;
-using Vector3 = Robust.Shared.Maths.Vector3;
-using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.UnitTesting.Shared.Prototypes
 {
@@ -18,19 +17,21 @@ namespace Robust.UnitTesting.Shared.Prototypes
     [TestFixture]
     public sealed class PrototypeManager_Test : RobustUnitTest
     {
+        private const string FakeWrenchProtoId = "wrench";
+        private const string YamlTesterProtoId = "yamltester";
+        private const string MountTesterProtoId = "mounttester";
+        private const string PlacementInheritanceTesterProtoId = "PlaceInheritTester";
         private const string LoadStringTestDummyId = "LoadStringTestDummy";
         private IPrototypeManager manager = default!;
+
+        protected override Type[] ExtraComponents => new[] {typeof(TestBasicPrototypeComponent), typeof(PointLightComponent)};
 
         [OneTimeSetUp]
         public void Setup()
         {
-            var factory = IoCManager.Resolve<IComponentFactory>();
-            factory.RegisterClass<TestBasicPrototypeComponent>();
-            factory.RegisterClass<PointLightComponent>();
-
             IoCManager.Resolve<ISerializationManager>().Initialize();
             manager = IoCManager.Resolve<IPrototypeManager>();
-            manager.RegisterKind(typeof(EntityPrototype));
+            manager.RegisterKind(typeof(EntityPrototype), typeof(EntityCategoryPrototype));
             manager.LoadString(DOCUMENT);
             manager.ResolveResults();
         }
@@ -38,7 +39,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
         [Test]
         public void TestBasicPrototype()
         {
-            var prototype = manager.Index<EntityPrototype>("wrench");
+            var prototype = manager.Index<EntityPrototype>(FakeWrenchProtoId);
             Assert.That(prototype.Name, Is.EqualTo("Not a wrench. Tricked!"));
 
             var mapping = prototype.Components["TestBasicPrototype"].Component as TestBasicPrototypeComponent;
@@ -66,12 +67,12 @@ namespace Robust.UnitTesting.Shared.Prototypes
         [Test]
         public void TestYamlHelpersPrototype()
         {
-            var prototype = manager.Index<EntityPrototype>("yamltester");
+            var prototype = manager.Index<EntityPrototype>(YamlTesterProtoId);
             Assert.That(prototype.Components, Contains.Key("TestBasicPrototype"));
 
             var componentData = prototype.Components["TestBasicPrototype"].Component as TestBasicPrototypeComponent;
 
-            Assert.NotNull(componentData);
+            Assert.That(componentData, Is.Not.Null);
             Assert.That(componentData!.Str, Is.EqualTo("hi!"));
             Assert.That(componentData!.int_field, Is.EqualTo(10));
             Assert.That(componentData!.float_field, Is.EqualTo(10f));
@@ -90,7 +91,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
         [Test]
         public void TestPlacementProperties()
         {
-            var prototype = manager.Index<EntityPrototype>("mounttester");
+            var prototype = manager.Index<EntityPrototype>(MountTesterProtoId);
 
             Assert.That(prototype.MountingPoints, Is.EquivalentTo(new int[] { 1, 2, 3 }));
             Assert.That(prototype.PlacementMode, Is.EqualTo("AlignWall"));
@@ -101,7 +102,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
         [Test]
         public void TestPlacementInheritance()
         {
-            var prototype = manager.Index<EntityPrototype>("PlaceInheritTester");
+            var prototype = manager.Index<EntityPrototype>(PlacementInheritanceTesterProtoId);
 
             Assert.That(prototype.PlacementMode, Is.EqualTo("SnapgridCenter"));
         }
@@ -143,7 +144,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
         }
 
         [Prototype("circle")]
-        private sealed class CircleTestPrototype : IPrototype, IInheritingPrototype
+        private sealed partial class CircleTestPrototype : IPrototype, IInheritingPrototype
         {
             [IdDataField()]
             public string ID { get; private set; } = default!;
@@ -159,9 +160,9 @@ namespace Robust.UnitTesting.Shared.Prototypes
             Bar
         }
 
-        const string DOCUMENT = @"
+        const string DOCUMENT = $@"
 - type: entity
-  id: wrench
+  id: {FakeWrenchProtoId}
   name: Not a wrench. Tricked!
   components:
   - type: TestBasicPrototype
@@ -181,7 +182,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
   parent: wallLight
 
 - type: entity
-  id: yamltester
+  id: {YamlTesterProtoId}
   components:
   - type: TestBasicPrototype
     str: hi!
@@ -199,7 +200,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
     enumb: Bar
 
 - type: entity
-  id: mounttester
+  id: {MountTesterProtoId}
   placement:
     mode: AlignWall
     range: 300
@@ -210,8 +211,8 @@ namespace Robust.UnitTesting.Shared.Prototypes
     - 3
 
 - type: entity
-  id: PlaceInheritTester
-  parent: mounttester
+  id: {PlacementInheritanceTesterProtoId}
+  parent: {MountTesterProtoId}
   placement:
     mode: SnapgridCenter
 ";

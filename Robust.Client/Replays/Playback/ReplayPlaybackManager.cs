@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Client.Audio;
 using Robust.Client.Audio.Midi;
 using Robust.Client.Configuration;
 using Robust.Client.GameObjects;
@@ -10,8 +11,10 @@ using Robust.Client.Player;
 using Robust.Client.Timing;
 using Robust.Client.Upload;
 using Robust.Shared;
+using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
@@ -27,7 +30,7 @@ internal sealed partial class ReplayPlaybackManager : IReplayPlaybackManager
     [Dependency] private readonly IBaseClient _client = default!;
     [Dependency] private readonly IMidiManager _midi = default!;
     [Dependency] private readonly IPlayerManager _player = default!;
-    [Dependency] private readonly IClydeAudio _clydeAudio = default!;
+    [Dependency] private readonly IAudioInternal _clydeAudio = default!;
     [Dependency] private readonly IClientGameTiming _timing = default!;
     [Dependency] private readonly IClientNetManager _netMan = default!;
     [Dependency] private readonly IComponentFactory _factory = default!;
@@ -44,10 +47,12 @@ internal sealed partial class ReplayPlaybackManager : IReplayPlaybackManager
     public event Action? ReplayPlaybackStopped;
     public event Action? ReplayPaused;
     public event Action? ReplayUnpaused;
+    public event Action<(GameState Current, GameState? Next)>? BeforeApplyState;
 
     public ReplayData? Replay { get; private set; }
     public NetUserId? Recorder => Replay?.Recorder;
-    private int _checkpointInterval;
+    private int _checkpointMinInterval;
+    private int _replayMaxScrubTime;
     private int _visualEventThreshold;
     public uint? AutoPauseCountdown { get; set; }
     public int? ScrubbingTarget { get; set; }
@@ -89,7 +94,8 @@ internal sealed partial class ReplayPlaybackManager : IReplayPlaybackManager
         _initialized = true;
         _sawmill = _logMan.GetSawmill("replay");
         _metaId = _factory.GetRegistration(typeof(MetaDataComponent)).NetID!.Value;
-        _confMan.OnValueChanged(CVars.CheckpointInterval, (value) => _checkpointInterval = value, true);
+        _confMan.OnValueChanged(CVars.CheckpointMinInterval, (value) => _checkpointMinInterval = value, true);
+        _confMan.OnValueChanged(CVars.ReplayMaxScrubTime, (value) => _replayMaxScrubTime = value, true);
         _confMan.OnValueChanged(CVars.ReplaySkipThreshold, (value) => _visualEventThreshold = value, true);
         _client.RunLevelChanged += OnRunLevelChanged;
     }

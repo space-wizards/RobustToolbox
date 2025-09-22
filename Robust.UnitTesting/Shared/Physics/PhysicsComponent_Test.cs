@@ -24,7 +24,6 @@ namespace Robust.UnitTesting.Shared.Physics
             var server = StartServer();
             await server.WaitIdleAsync();
             var entManager = server.ResolveDependency<IEntityManager>();
-            var mapManager = server.ResolveDependency<IMapManager>();
             var fixtureSystem = server.ResolveDependency<IEntitySystemManager>()
                 .GetEntitySystem<FixtureSystem>();
             var physicsSystem = server.ResolveDependency<IEntitySystemManager>()
@@ -32,7 +31,7 @@ namespace Robust.UnitTesting.Shared.Physics
 
             await server.WaitAssertion(() =>
             {
-                var mapId = mapManager.CreateMap();
+                entManager.System<SharedMapSystem>().CreateMap(out var mapId);
                 var boxEnt = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
                 var box = entManager.AddComponent<PhysicsComponent>(boxEnt);
                 var poly = new PolygonShape();

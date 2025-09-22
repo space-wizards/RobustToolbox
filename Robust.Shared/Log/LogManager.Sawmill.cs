@@ -71,10 +71,21 @@ namespace Robust.Shared.Log
                 }
             }
 
+            public bool IsLogLevelEnabled(LogLevel level)
+            {
+                return level >= GetPracticalLevel();
+            }
+
             public void Log(LogLevel level, Exception? exception, string message, params object?[] args)
             {
-                _sLogger.BindMessageTemplate(message, args, out var parsedTemplate, out var properties);
+                if (!_sLogger.BindMessageTemplate(message, args, out var parsedTemplate, out var properties))
+                    return;
+
                 var msg = new LogEvent(DateTimeOffset.Now, level.ToSerilog(), exception, parsedTemplate, properties);
+
+                if (!IsLogLevelEnabled(level))
+                    return;
+
                 LogInternal(Name, msg);
             }
 
@@ -97,11 +108,6 @@ namespace Robust.Shared.Log
 
             private void LogInternal(string sourceSawmill, LogEvent message)
             {
-                if (message.Level.ToRobust() < GetPracticalLevel())
-                {
-                    return;
-                }
-
                 _handlerLock.EnterReadLock();
                 try
                 {

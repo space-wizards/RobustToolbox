@@ -4,7 +4,7 @@ using Robust.Shared.Serialization;
 namespace Robust.Shared.Network
 {
     [Serializable, NetSerializable]
-    public struct NetUserId : IEquatable<NetUserId>
+    public struct NetUserId : IEquatable<NetUserId>, ISelfSerialize
     {
         public readonly Guid UserId;
 
@@ -32,5 +32,15 @@ namespace Robust.Shared.Network
 
         public static implicit operator Guid(NetUserId id) => id.UserId;
         public static explicit operator NetUserId(Guid id) => new(id);
+
+        void ISelfSerialize.Deserialize(string value)
+        {
+            this = (NetUserId) Guid.Parse(value);
+        }
+
+        string ISelfSerialize.Serialize()
+        {
+            return ToString();
+        }
     }
 }

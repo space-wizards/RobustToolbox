@@ -41,8 +41,10 @@ internal static class ProgramShared
 
     internal static void PrintRuntimeInfo(ISawmill sawmill)
     {
-        sawmill.Debug($"Runtime: {RuntimeInformation.FrameworkDescription} {RuntimeInformation.RuntimeIdentifier}");
-        sawmill.Debug($"OS: {RuntimeInformation.OSDescription} {RuntimeInformation.OSArchitecture}");
+        foreach (var line in RuntimeInformationPrinter.GetInformationDump())
+        {
+            sawmill.Debug(line);
+        }
     }
 
     internal static void DoMounts(IResourceManagerInternal res, MountOptions? options, string contentBuildDir, ResPath assembliesPath, bool loadContentResources = true,

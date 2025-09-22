@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -536,17 +537,17 @@ namespace Robust.Client.Graphics
         }
 
         [SuppressMessage("ReSharper", "StringLiteralTypo")]
-        private static readonly Dictionary<string, ShaderPrecisionQualifier> _shaderTypePrecisionMap =
-            new()
+        private static readonly FrozenDictionary<string, ShaderPrecisionQualifier> _shaderTypePrecisionMap =
+            new Dictionary<string, ShaderPrecisionQualifier>()
             {
                 {"lowp", ShaderPrecisionQualifier.Low},
                 {"mediump", ShaderPrecisionQualifier.Medium},
                 {"highp", ShaderPrecisionQualifier.High}
-            };
+            }.ToFrozenDictionary();
 
         [SuppressMessage("ReSharper", "StringLiteralTypo")]
-        private static readonly Dictionary<string, ShaderDataType> _shaderTypeMap =
-            new()
+        private static readonly FrozenDictionary<string, ShaderDataType> _shaderTypeMap =
+            new Dictionary<string, ShaderDataType>()
             {
                 {"void", ShaderDataType.Void},
                 {"bool", ShaderDataType.Bool},
@@ -571,7 +572,7 @@ namespace Robust.Client.Graphics
                 {"sampler2D", ShaderDataType.Sampler2D},
                 {"isampler2D", ShaderDataType.ISampler2D},
                 {"usampler2D", ShaderDataType.USampler2D},
-            };
+            }.ToFrozenDictionary();
 
         [PublicAPI]
         internal readonly struct TextFileRange

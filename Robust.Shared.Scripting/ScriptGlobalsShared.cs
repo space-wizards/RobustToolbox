@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Text;
@@ -10,7 +9,8 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
-using Robust.Shared.Players;
+using Robust.Shared.Network;
+using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Toolshed;
 using Robust.Shared.Toolshed.Errors;
@@ -67,12 +67,12 @@ namespace Robust.Shared.Scripting
 
         public MapGridComponent getgrid(int i)
         {
-            return map.GetGrid(new EntityUid(i));
+            return ent.GetComponent<MapGridComponent>(new EntityUid(i));
         }
 
         public MapGridComponent getgrid(EntityUid mapId)
         {
-            return map.GetGrid(mapId);
+            return ent.GetComponent<MapGridComponent>(mapId);
         }
 
         public T res<T>()
@@ -87,33 +87,33 @@ namespace Robust.Shared.Scripting
 
         public object? prop(object target, string name)
         {
-            return target.GetType().GetProperty(name, BindingFlags.Instance | BindingFlags.NonPublic)
-                    !.GetValue(target);
+            var prop = (PropertyInfo?) ReflectionGetInstanceMember(target.GetType(), MemberTypes.Property, name);
+            return prop!.GetValue(target);
         }
 
         public void setprop(object target, string name, object? value)
         {
-            target.GetType().GetProperty(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
-                !.SetValue(target, value);
+            var prop = (PropertyInfo?) ReflectionGetInstanceMember(target.GetType(), MemberTypes.Property, name);
+            prop!.SetValue(target, value);
         }
 
         public object? fld(object target, string name)
         {
-            return target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
-                !.GetValue(target);
+            var fld = (FieldInfo?) ReflectionGetInstanceMember(target.GetType(), MemberTypes.Field, name);
+            return fld!.GetValue(target);
         }
 
         public void setfld(object target, string name, object? value)
         {
-            target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
-                !.SetValue(target, value);
+            var fld = (FieldInfo?) ReflectionGetInstanceMember(target.GetType(), MemberTypes.Field, name);
+            fld!.SetValue(target, value);
         }
 
         public object? call(object target, string name, params object[] args)
         {
             var t = target.GetType();
             // TODO: overloads
-            var m = t.GetMethod(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+            var m = (MethodInfo?) ReflectionGetInstanceMember(t, MemberTypes.Method, name);
             return m!.Invoke(target, args);
         }
 
@@ -188,13 +188,13 @@ namespace Robust.Shared.Scripting
         }
 
         #region EntityManager proxy methods
-        public T Comp<T>(EntityUid uid) where T : Component
+        public T Comp<T>(EntityUid uid) where T : IComponent
             => ent.GetComponent<T>(uid);
 
-        public bool TryComp<T>(EntityUid uid, out T? comp) where T : Component
+        public bool TryComp<T>(EntityUid uid, out T? comp) where T : IComponent
             => ent.TryGetComponent(uid, out comp);
 
-        public bool HasComp<T>(EntityUid uid)
+        public bool HasComp<T>(EntityUid uid)  where T : IComponent
             => ent.HasComponent<T>(uid);
 
         public EntityUid Spawn(string? prototype, EntityCoordinates position)
@@ -206,8 +206,11 @@ namespace Robust.Shared.Scripting
         public void Dirty(EntityUid uid)
             => ent.DirtyEntity(uid);
 
+#pragma warning disable CS0618 // Type or member is obsolete
+        // Remove this helper when component.Owner finally gets removed.
         public void Dirty(Component comp)
-            => ent.Dirty(comp);
+            => ent.Dirty(comp.Owner, comp);
+#pragma warning restore CS0618 // Type or member is obsolete
 
         public string Name(EntityUid uid)
             => ent.GetComponent<MetaDataComponent>(uid).EntityName;
@@ -261,6 +264,7 @@ namespace Robust.Shared.Scripting
             return true; // Do as I say!
         }
 
+        public NetUserId? User => null;
         public ICommonSession? Session => null;
 
         public void WriteLine(string line)
@@ -278,10 +282,46 @@ namespace Robust.Shared.Scripting
             return Array.Empty<IConError>();
         }
 
+        public bool HasErrors => false;
+
         public void ClearErrors()
         {
         }
 
-        public Dictionary<string, object?> Variables { get; }  = new();
+        /// <inheritdoc />
+        public object? ReadVar(string name)
+        {
+            return Variables.GetValueOrDefault(name);
+        }
+
+        /// <inheritdoc />
+        public void WriteVar(string name, object? value)
+        {
+            Variables[name] = value;
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<string> GetVars()
+        {
+            return Variables.Keys;
+        }
+
+        public Dictionary<string, object?> Variables { get; } = new();
+
+        private static MemberInfo? ReflectionGetInstanceMember(Type type, MemberTypes memberType, string name)
+        {
+            for (var curType = type; curType != null; curType = curType.BaseType)
+            {
+                var member = curType.GetMember(
+                    name,
+                    memberType,
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+
+                if (member.Length > 0)
+                    return member[0];
+            }
+
+            return null;
+        }
     }
 }

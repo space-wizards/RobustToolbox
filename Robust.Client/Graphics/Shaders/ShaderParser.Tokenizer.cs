@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -637,7 +638,7 @@ namespace Robust.Client.Graphics
             Colon,
         }
 
-        private static readonly Dictionary<Symbols, string> _symbolStringMap = new()
+        private static readonly FrozenDictionary<Symbols, string> _symbolStringMap = new Dictionary<Symbols, string>()
         {
             {Symbols.Semicolon, ";\n"},
             {Symbols.Comma, ","},
@@ -679,6 +680,6 @@ namespace Robust.Client.Graphics
             {Symbols.GreaterOrEq, ">="},
             {Symbols.QuestionMark, "?"},
             {Symbols.Colon, ":"},
-        };
+        }.ToFrozenDictionary();
     }
 }

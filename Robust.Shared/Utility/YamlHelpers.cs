@@ -1,4 +1,4 @@
-﻿using Robust.Shared.Maths;
+using Robust.Shared.Maths;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -8,8 +8,6 @@ using System.Linq;
 using System.Numerics;
 using System.Threading;
 using YamlDotNet.RepresentationModel;
-using Vector3 = Robust.Shared.Maths.Vector3;
-using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.Shared.Utility
 {
@@ -107,41 +105,51 @@ namespace Robust.Shared.Utility
         }
 
         [Pure]
-        public static Matrix3 AsMatrix3(this YamlNode node)
+        public static Matrix3x2 AsMatrix3x2(this YamlNode node)
         {
             string raw = AsString(node);
             string[] args = raw.Split(',');
-            if (args.Length != 12)
+            if (args.Length != 6)
             {
-               throw new ArgumentException(string.Format("Could not parse {0}: '{1}'", nameof(Matrix3), raw));
+               throw new ArgumentException(string.Format("Could not parse {0}: '{1}'", nameof(Matrix3x2), raw));
             }
-            float[] parsedArgs = new float[12];
-            for(var i = 0; i < 12; i += 1) {
+            float[] parsedArgs = new float[6];
+            for(var i = 0; i < 6; i += 1) {
                 parsedArgs[i] = float.Parse(args[i],CultureInfo.InvariantCulture);
             }
-            return new Matrix3(parsedArgs);
+            return new Matrix3x2(parsedArgs[0], parsedArgs[1], parsedArgs[2], parsedArgs[3], parsedArgs[4], parsedArgs[5]);
         }
 
         [Pure]
-        public static Matrix4 AsMatrix4(this YamlNode node)
+        public static Matrix4x4 AsMatrix4(this YamlNode node)
         {
             string raw = AsString(node);
             string[] args = raw.Split(',');
             if (args.Length != 16)
             {
-               throw new ArgumentException(string.Format("Could not parse {0}: '{1}'", nameof(Matrix4), raw));
-            }
-            Vector4[] vectorBlocks = new Vector4[4];
-            for(var i = 0; i < 16; i += 4) {
-                vectorBlocks.Append(new Vector4(
-                    float.Parse(args[0 + i], CultureInfo.InvariantCulture),
-                    float.Parse(args[1 + i], CultureInfo.InvariantCulture),
-                    float.Parse(args[2 + i], CultureInfo.InvariantCulture),
-                    float.Parse(args[3 + i], CultureInfo.InvariantCulture)
-                ));
+               throw new ArgumentException(string.Format("Could not parse {0}: '{1}'", nameof(Matrix4x4), raw));
             }
 
-            return new Matrix4(vectorBlocks[0],vectorBlocks[1],vectorBlocks[2],vectorBlocks[3]);
+            // What, you know a better way to do this?
+
+            var m11 = Parse.Float(args[0]);
+            var m12 = Parse.Float(args[1]);
+            var m13 = Parse.Float(args[2]);
+            var m14 = Parse.Float(args[3]);
+            var m21 = Parse.Float(args[4]);
+            var m22 = Parse.Float(args[5]);
+            var m23 = Parse.Float(args[6]);
+            var m24 = Parse.Float(args[7]);
+            var m31 = Parse.Float(args[8]);
+            var m32 = Parse.Float(args[9]);
+            var m33 = Parse.Float(args[10]);
+            var m34 = Parse.Float(args[11]);
+            var m41 = Parse.Float(args[12]);
+            var m42 = Parse.Float(args[13]);
+            var m43 = Parse.Float(args[14]);
+            var m44 = Parse.Float(args[15]);
+
+            return new Matrix4x4(m11, m12, m13, m14, m21, m22, m23, m24, m31, m32, m33, m34, m41, m42, m43, m44);
         }
 
         [Pure]

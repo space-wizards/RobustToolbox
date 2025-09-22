@@ -1,6 +1,7 @@
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Map.Components;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ComponentTrees;
@@ -13,25 +14,41 @@ namespace Robust.Shared.ComponentTrees;
 /// </remarks>
 internal sealed class RecursiveMoveSystem : EntitySystem
 {
-    [Dependency] private readonly IMapManager _mapManager = default!;
+    [Dependency] private readonly SharedTransformSystem _transform = default!;
 
+    public delegate void TreeRecursiveMoveEventHandler(EntityUid uid, TransformComponent xform);
+
+    public event TreeRecursiveMoveEventHandler? OnTreeRecursiveMove;
+
+    private EntityQuery<MapComponent> _mapQuery;
+    private EntityQuery<MapGridComponent> _gridQuery;
     private EntityQuery<TransformComponent> _xformQuery;
 
-    bool Subscribed = false;
+    private bool _subscribed = false;
 
     public override void Initialize()
     {
         base.Initialize();
+        _gridQuery = GetEntityQuery<MapGridComponent>();
+        _mapQuery = GetEntityQuery<MapComponent>();
         _xformQuery = GetEntityQuery<TransformComponent>();
+    }
+
+    public override void Shutdown()
+    {
+        if (_subscribed)
+            _transform.OnBeforeMoveEvent -= AnythingMoved;
+
+        _subscribed = false;
     }
 
     internal void AddSubscription()
     {
-        if (Subscribed)
+        if (_subscribed)
             return;
 
-        Subscribed = true;
-        SubscribeLocalEvent<MoveEvent>(AnythingMoved);
+        _subscribed = true;
+        _transform.OnBeforeMoveEvent += AnythingMoved;
     }
 
     private void AnythingMoved(ref MoveEvent args)
@@ -39,8 +56,8 @@ internal sealed class RecursiveMoveSystem : EntitySystem
         if (args.Component.MapUid == args.Sender || args.Component.GridUid == args.Sender)
             return;
 
-        DebugTools.Assert(!_mapManager.IsMap(args.Sender));
-        DebugTools.Assert(!_mapManager.IsGrid(args.Sender));
+        DebugTools.Assert(!_mapQuery.HasComp(args.Sender));
+        DebugTools.Assert(!_gridQuery.HasComp(args.Sender));
 
         AnythingMovedSubHandler(args.Sender, args.Component);
     }
@@ -49,20 +66,16 @@ internal sealed class RecursiveMoveSystem : EntitySystem
         EntityUid uid,
         TransformComponent xform)
     {
-        // TODO maybe use a c# event? This event gets raised a lot.
-        // Would probably help with server performance and is also the main bottleneck for replay scrubbing.
-        var ev = new TreeRecursiveMoveEvent(xform);
-        RaiseLocalEvent(uid, ref ev);
+        OnTreeRecursiveMove?.Invoke(uid, xform);
 
         // TODO only enumerate over entities in containers if necessary?
         // annoyingly, containers aren't guaranteed to occlude sprites & lights
         // but AFAIK thats currently unused???
 
-        var childEnumerator = xform.ChildEnumerator;
-        while (childEnumerator.MoveNext(out var child))
+        foreach (var child in xform._children)
         {
-            if (_xformQuery.TryGetComponent(child.Value, out var childXform))
-                AnythingMovedSubHandler(child.Value, childXform);
+            if (_xformQuery.TryGetComponent(child, out var childXform))
+                AnythingMovedSubHandler(child, childXform);
         }
     }
 }

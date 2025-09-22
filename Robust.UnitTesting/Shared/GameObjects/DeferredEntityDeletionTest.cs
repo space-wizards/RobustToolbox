@@ -3,6 +3,7 @@ using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Reflection;
 
 namespace Robust.UnitTesting.Shared.GameObjects;
 
@@ -32,8 +33,8 @@ public sealed partial class DeferredEntityDeletionTest : RobustIntegrationTest
         var server = StartServer(options);
         await server.WaitIdleAsync();
 
-        EntityUid uid1 = default, uid2 = default, uid3 = default;
-        DeferredDeletionTestComponent comp1 = default!, comp2 = default!, comp3 = default!;
+        EntityUid uid1 = default, uid2 = default, uid3 = default, uid4 = default;
+        DeferredDeletionTestComponent comp1 = default!, comp2 = default!, comp3 = default!, comp4 = default!;
         IEntityManager entMan = default!;
 
         await server.WaitAssertion(() =>
@@ -45,14 +46,17 @@ public sealed partial class DeferredEntityDeletionTest : RobustIntegrationTest
             uid1 = entMan.SpawnEntity(null, MapCoordinates.Nullspace);
             uid2 = entMan.SpawnEntity(null, MapCoordinates.Nullspace);
             uid3 = entMan.SpawnEntity(null, MapCoordinates.Nullspace);
+            uid4 = entMan.SpawnEntity(null, MapCoordinates.Nullspace);
 
             comp1 = entMan.AddComponent<DeferredDeletionTestComponent>(uid1);
             comp2 = entMan.AddComponent<DeferredDeletionTestComponent>(uid2);
-            comp3 =entMan.AddComponent<DeferredDeletionTestComponent>(uid3);
+            comp3 = entMan.AddComponent<DeferredDeletionTestComponent>(uid3);
+            comp4 = entMan.AddComponent<DeferredDeletionTestComponent>(uid4);
 
             entMan.AddComponent<OtherDeferredDeletionTestComponent>(uid1);
             entMan.AddComponent<OtherDeferredDeletionTestComponent>(uid2);
             entMan.AddComponent<OtherDeferredDeletionTestComponent>(uid3);
+            entMan.AddComponent<OtherDeferredDeletionTestComponent>(uid4);
         });
 
         await server.WaitRunTicks(1);
@@ -75,20 +79,27 @@ public sealed partial class DeferredEntityDeletionTest : RobustIntegrationTest
             var ev = new DeferredDeletionTestEvent();
             entMan.EventBus.RaiseLocalEvent(uid2, ev);
             entMan.EventBus.RaiseLocalEvent(uid3, ev);
+            entMan.EventBus.RaiseLocalEvent(uid4, ev);
             entMan.DeleteEntity(uid2);
             entMan.QueueDeleteEntity(uid3);
+            entMan.TryQueueDeleteEntity(uid4);
             Assert.That(entMan.Deleted(uid2));
             Assert.That(!entMan.Deleted(uid3));
+            Assert.That(!entMan.Deleted(uid4));
             Assert.That(comp2.LifeStage == ComponentLifeStage.Deleted);
             Assert.That(comp3.LifeStage == ComponentLifeStage.Stopped);
+            Assert.That(comp4.LifeStage == ComponentLifeStage.Stopped);
         });
 
         await server.WaitRunTicks(1);
         Assert.That(comp3.LifeStage == ComponentLifeStage.Deleted);
+        Assert.That(comp4.LifeStage == ComponentLifeStage.Deleted);
         Assert.That(entMan.Deleted(uid3));
+        Assert.That(entMan.Deleted(uid4));
         await server.WaitIdleAsync();
     }
 
+    [Reflect(false)]
     private sealed class DeferredDeletionTestSystem : EntitySystem
     {
         public override void Initialize()
@@ -104,6 +115,7 @@ public sealed partial class DeferredEntityDeletionTest : RobustIntegrationTest
         }
     }
 
+    [Reflect(false)]
     private sealed class OtherDeferredDeletionTestSystem : EntitySystem
     {
         public override void Initialize() => SubscribeLocalEvent<OtherDeferredDeletionTestComponent, DeferredDeletionTestEvent>(OnTestEvent);
@@ -117,10 +129,12 @@ public sealed partial class DeferredEntityDeletionTest : RobustIntegrationTest
     }
 
     [RegisterComponent]
+    [Reflect(false)]
     private sealed partial class DeferredDeletionTestComponent : Component
     {
     }
 
+    [Reflect(false)]
     private sealed partial class OtherDeferredDeletionTestComponent : Component
     {
     }

@@ -1,24 +1,25 @@
 using System.Collections.Generic;
+using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Shared.Console;
-using Robust.Shared.Containers;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics;
-using Robust.Shared.Utility;
 using Color = Robust.Shared.Maths.Color;
 
 namespace Robust.Client.GameObjects;
 
-public sealed class DebugEntityLookupCommand : LocalizedCommands
+public sealed class DebugEntityLookupCommand : LocalizedEntityCommands
 {
+    [Dependency] private readonly DebugEntityLookupSystem _system = default!;
+
     public override string Command => "togglelookup";
 
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
-        EntitySystem.Get<DebugEntityLookupSystem>().Enabled ^= true;
+        _system.Enabled ^= true;
     }
 }
 
@@ -118,7 +119,7 @@ public sealed class EntityLookupOverlay : Overlay
                 //DebugTools.Assert(!ent.IsInContainer(_entityManager));
                 var (entPos, entRot) = _transform.GetWorldPositionRotation(ent);
 
-                var lookupPos = invMatrix.Transform(entPos);
+                var lookupPos = Vector2.Transform(entPos, invMatrix);
                 var lookupRot = entRot - rotation;
 
                 var aabb = _lookup.GetAABB(ent, lookupPos, lookupRot, xform, _xformQuery);
@@ -127,6 +128,6 @@ public sealed class EntityLookupOverlay : Overlay
             }
         });
 
-        worldHandle.SetTransform(Matrix3.Identity);
+        worldHandle.SetTransform(Matrix3x2.Identity);
     }
 }

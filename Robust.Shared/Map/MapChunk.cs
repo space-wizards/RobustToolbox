@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
@@ -37,12 +39,11 @@ namespace Robust.Shared.Map
         /// <summary>
         /// Chunk-local AABB of this chunk.
         /// </summary>
+        [ViewVariables]
         public Box2i CachedBounds { get; set; }
 
-        /// <summary>
-        /// Physics fixtures that make up this grid chunk.
-        /// </summary>
-        public Dictionary<string, Fixture> Fixtures { get; } = new();
+        [ViewVariables]
+        internal HashSet<string> Fixtures = new();
 
         /// <summary>
         /// The last game simulation tick that a tile on this chunk was modified.
@@ -227,34 +228,47 @@ namespace Robust.Shared.Map
             if (yIndex >= Tiles.Length)
                 throw new ArgumentOutOfRangeException(nameof(yIndex), "Tile indices out of bounds.");
 
-            // same tile, no point to continue
-            if (Tiles[xIndex, yIndex] == tile)
+            shapeChanged = false;
+
+            ref var tileRef = ref Tiles[xIndex, yIndex];
+            if (tileRef == tile)
             {
-                oldTile = Tile.Empty;
-                shapeChanged = false;
+                oldTile = default;
                 return false;
             }
 
-            oldTile = Tiles[xIndex, yIndex];
-            var oldFilledTiles = FilledTiles;
-
-            if (oldTile.IsEmpty != tile.IsEmpty)
+            if (tileRef.IsEmpty)
             {
-                if (oldTile.IsEmpty)
+                if (!tile.IsEmpty)
                 {
                     FilledTiles += 1;
-                }
-                else
-                {
-                    FilledTiles -= 1;
+                    shapeChanged = true;
                 }
             }
+            else if (tile.IsEmpty)
+            {
+                FilledTiles -= 1;
+                shapeChanged = true;
+            }
 
-            shapeChanged = oldFilledTiles != FilledTiles;
             DebugTools.Assert(FilledTiles >= 0);
 
-            Tiles[xIndex, yIndex] = tile;
+            oldTile = tileRef;
+            tileRef = tile;
+            ValidateChunk();
             return true;
+        }
+
+        [Conditional("DEBUG")]
+        public void ValidateChunk()
+        {
+            var totalFilled = 0;
+            foreach (var t in Tiles)
+            {
+                if (!t.IsEmpty)
+                    totalFilled += 1;
+            }
+            DebugTools.Assert(totalFilled == FilledTiles);
         }
     }
 

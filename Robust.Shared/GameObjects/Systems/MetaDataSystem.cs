@@ -42,12 +42,21 @@ public abstract class MetaDataSystem : EntitySystem
         component.PauseTime = state.PauseTime;
     }
 
-    public void SetEntityName(EntityUid uid, string value, MetaDataComponent? metadata = null)
+    public void SetEntityName(EntityUid uid, string value, MetaDataComponent? metadata = null, bool raiseEvents = true)
     {
         if (!_metaQuery.Resolve(uid, ref metadata) || value.Equals(metadata.EntityName))
             return;
 
+        var oldName = metadata.EntityName;
+
         metadata._entityName = value;
+
+        if (raiseEvents)
+        {
+            var ev = new EntityRenamedEvent(uid, oldName, value);
+            RaiseLocalEvent(uid, ref ev, true);
+        }
+
         Dirty(uid, metadata, metadata);
     }
 
@@ -123,12 +132,19 @@ public abstract class MetaDataSystem : EntitySystem
         time += paused;
     }
 
-    public void AddFlag(EntityUid uid, MetaDataFlags flags, MetaDataComponent? component = null)
+    public void SetFlag(Entity<MetaDataComponent?> entity, MetaDataFlags flags, bool enabled)
     {
-        if (!_metaQuery.Resolve(uid, ref component)) return;
+        if (!_metaQuery.Resolve(entity, ref entity.Comp))
+            return;
 
-        component.Flags |= flags;
+        if (enabled)
+            entity.Comp.Flags |= flags;
+        else
+            RemoveFlag(entity, flags, entity.Comp);
     }
+
+    public void AddFlag(EntityUid uid, MetaDataFlags flags, MetaDataComponent? comp = null)
+        => SetFlag((uid, comp), flags, true);
 
     /// <summary>
     /// Attempts to remove the specific flag from metadata.
@@ -143,6 +159,8 @@ public abstract class MetaDataSystem : EntitySystem
         if (toRemove == 0x0)
             return;
 
+        // TODO PERF
+        // does this need to be a broadcast event?
         var ev = new MetaFlagRemoveAttemptEvent(toRemove);
         RaiseLocalEvent(uid, ref ev, true);
 

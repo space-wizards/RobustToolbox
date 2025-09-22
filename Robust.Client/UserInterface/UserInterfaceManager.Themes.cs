@@ -2,6 +2,7 @@
 using Robust.Client.UserInterface.Themes;
 using Robust.Shared;
 using Robust.Shared.Log;
+using Robust.Shared.Prototypes;
 
 namespace Robust.Client.UserInterface;
 
@@ -18,11 +19,29 @@ internal partial class UserInterfaceManager
     {
         DefaultTheme = _protoManager.Index<UITheme>(UITheme.DefaultName);
         CurrentTheme = DefaultTheme;
+        ReloadThemes();
+        _configurationManager.OnValueChanged(CVars.InterfaceTheme, SetThemeOrPrevious, true);
+        _protoManager.PrototypesReloaded += OnPrototypesReloaded;
+    }
+
+    private void OnPrototypesReloaded(PrototypesReloadedEventArgs eventArgs)
+    {
+        if (eventArgs.WasModified<UITheme>())
+        {
+            _sawmillUI.Debug("Reloading UI themes due to prototype reload");
+            ReloadThemes();
+        }
+    }
+
+    private void ReloadThemes()
+    {
+        _themes.Clear();
         foreach (var proto in _protoManager.EnumeratePrototypes<UITheme>())
         {
             _themes.Add(proto.ID, proto);
         }
-        _configurationManager.OnValueChanged(CVars.InterfaceTheme, SetThemeOrPrevious, true);
+
+        SetThemeOrPrevious(CurrentTheme.ID);
     }
 
     //Try to set the current theme, if the theme is not found do nothing

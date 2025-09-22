@@ -1,7 +1,9 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
@@ -419,11 +421,18 @@ namespace Robust.Shared.Serialization.Manager
         #region Composition
 
         DataNode PushComposition(Type type, DataNode[] parents, DataNode child, ISerializationContext? context = null);
+        DataNode PushComposition(Type type, DataNode parent, DataNode child, ISerializationContext? context = null);
 
         public TNode PushComposition<TType, TNode>(TNode[] parents, TNode child, ISerializationContext? context = null) where TNode : DataNode
         {
             // ReSharper disable once CoVariantArrayConversion
             return (TNode)PushComposition(typeof(TType), parents, child, context);
+        }
+
+        public TNode PushComposition<TType, TNode>(TNode parent, TNode child, ISerializationContext? context = null)
+            where TNode : DataNode
+        {
+            return (TNode) PushComposition(typeof(TType), parent, child, context);
         }
 
         TNode PushInheritance<TType, TNode>(ITypeInheritanceHandler<TType, TNode> inheritanceHandler, TNode parent, TNode child,
@@ -439,6 +448,20 @@ namespace Robust.Shared.Serialization.Manager
             return (TNode) PushComposition(type, parents, child, context);
         }
 
+        public TNode PushCompositionWithGenericNode<TNode>(Type type, TNode parent, TNode child, ISerializationContext? context = null)
+            where TNode : DataNode
+        {
+            return (TNode) PushComposition(type, parent, child, context);
+        }
+
+        /// <summary>
+        /// Simple <see cref="MappingDataNode"/> inheritance pusher clones data and overrides a parent's values with
+        /// the child's.
+        /// </summary>
+        MappingDataNode CombineMappings(MappingDataNode child, MappingDataNode parent);
+
         #endregion
+
+        public bool TryGetVariableType(Type type, string variableName, [NotNullWhen(true)] out Type? variableType);
     }
 }

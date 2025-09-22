@@ -1,29 +1,47 @@
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
 
 namespace Robust.Server.GameObjects;
 
 public sealed class PointLightSystem : SharedPointLightSystem
 {
+    [Dependency] private readonly MetaDataSystem _metadata = default!;
+
     public override void Initialize()
     {
         base.Initialize();
         SubscribeLocalEvent<PointLightComponent, ComponentGetState>(OnLightGetState);
+        SubscribeLocalEvent<PointLightComponent, ComponentStartup>(OnLightStartup);
+        SubscribeLocalEvent<PointLightComponent, ComponentShutdown>(OnLightShutdown);
+        SubscribeLocalEvent<PointLightComponent, MetaFlagRemoveAttemptEvent>(OnFlagRemoveAttempt);
     }
 
-    private void OnLightGetState(EntityUid uid, PointLightComponent component, ref ComponentGetState args)
+    private void OnLightShutdown(Entity<PointLightComponent> ent, ref ComponentShutdown args)
     {
-        args.State = new PointLightComponentState()
-        {
-            Color = component.Color,
-            Enabled = component.Enabled,
-            Energy = component.Energy,
-            Offset = component.Offset,
-            Radius = component.Radius,
-            Softness = component.Softness,
-            CastShadows = component.CastShadows,
-        };
+        UpdatePriority(ent.Owner, ent.Comp, MetaData(ent.Owner));
+    }
+
+    private void OnFlagRemoveAttempt(Entity<PointLightComponent> ent, ref MetaFlagRemoveAttemptEvent args)
+    {
+        if (IsHighPriority(ent.Comp))
+            args.ToRemove &= ~MetaDataFlags.PvsPriority;
+    }
+
+    private void OnLightStartup(EntityUid uid, PointLightComponent component, ComponentStartup args)
+    {
+        UpdatePriority(uid, component, MetaData(uid));
+    }
+
+    private bool IsHighPriority(SharedPointLightComponent comp)
+    {
+        return comp is {Enabled: true, CastShadows: true, Radius: > 7, LifeStage: <= ComponentLifeStage.Running};
+    }
+
+    protected override void UpdatePriority(EntityUid uid, SharedPointLightComponent comp, MetaDataComponent meta)
+    {
+        _metadata.SetFlag((uid, meta), MetaDataFlags.PvsPriority, IsHighPriority(comp));
     }
 
     public override SharedPointLightComponent EnsureLight(EntityUid uid)

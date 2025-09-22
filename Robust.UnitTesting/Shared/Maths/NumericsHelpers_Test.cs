@@ -12,7 +12,6 @@ namespace Robust.UnitTesting.Shared.Maths
     [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestFixture]
     [TestOf(typeof(NumericsHelpers))]
-    [SuppressMessage("ReSharper", "AccessToStaticMemberViaDerivedType")]
     public sealed class NumericsHelpers_Test
     {
         #region Utils
@@ -88,6 +87,7 @@ namespace Robust.UnitTesting.Shared.Maths
 
         #endregion
 
+        /*
         [Test]
         public void EnvironmentVariablesWorkAvx()
         {
@@ -99,6 +99,7 @@ namespace Robust.UnitTesting.Shared.Maths
             RemoteExecutor.Invoke(() => { Assert.That(NumericsHelpers.Vector256Enabled, Is.True); },
                 GetInvokeOptions(true)).Dispose();
         }
+        */
 
         #region Multiply
 

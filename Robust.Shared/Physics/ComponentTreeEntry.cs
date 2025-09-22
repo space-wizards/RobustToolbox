@@ -1,5 +1,5 @@
-using Robust.Shared.GameObjects;
 using System;
+using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Physics;
 
@@ -9,7 +9,7 @@ namespace Robust.Shared.Physics;
 ///     overriden, such that we can remove entries without needing to fetch the transform component of a possible
 ///     deleted entity.
 /// </summary>
-public readonly struct ComponentTreeEntry<T> : IEquatable<ComponentTreeEntry<T>>, IComparable<ComponentTreeEntry<T>> where T : Component
+public readonly struct ComponentTreeEntry<T> : IEquatable<ComponentTreeEntry<T>>, IComparable<ComponentTreeEntry<T>> where T : IComponent
 {
     public T Component { get; init; }
     public TransformComponent Transform { get; init; }

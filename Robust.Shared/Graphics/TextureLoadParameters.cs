@@ -1,3 +1,4 @@
+using System;
 using JetBrains.Annotations;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
@@ -8,7 +9,7 @@ namespace Robust.Shared.Graphics;
 ///     Flags for loading of textures.
 /// </summary>
 [PublicAPI]
-public struct TextureLoadParameters
+public struct TextureLoadParameters : IEquatable<TextureLoadParameters>
 {
     /// <summary>
     ///     The default sampling parameters for the texture.
@@ -19,6 +20,11 @@ public struct TextureLoadParameters
     ///     If true, the image data will be treated as sRGB.
     /// </summary>
     public bool Srgb { get; set; }
+
+    /// <summary>
+    /// If false, this texture should not be preloaded on game startup.
+    /// </summary>
+    public bool Preload { get; set; }
 
     public static TextureLoadParameters FromYaml(YamlMappingNode yaml)
     {
@@ -33,12 +39,43 @@ public struct TextureLoadParameters
             loadParams.Srgb = srgb.AsBool();
         }
 
+        if (yaml.TryGetNode("preload", out var preload))
+        {
+            loadParams.Preload = preload.AsBool();
+        }
+
         return loadParams;
     }
 
     public static readonly TextureLoadParameters Default = new()
     {
         SampleParameters = TextureSampleParameters.Default,
-        Srgb = true
+        Srgb = true,
+        Preload = true
     };
+
+    public bool Equals(TextureLoadParameters other)
+    {
+        return SampleParameters.Equals(other.SampleParameters) && Srgb == other.Srgb && Preload == other.Preload;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is TextureLoadParameters other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(SampleParameters, Srgb);
+    }
+
+    public static bool operator ==(TextureLoadParameters left, TextureLoadParameters right)
+    {
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(TextureLoadParameters left, TextureLoadParameters right)
+    {
+        return !left.Equals(right);
+    }
 }

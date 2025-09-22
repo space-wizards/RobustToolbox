@@ -1,88 +1,93 @@
-using Robust.Client.Player;
-using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
-using Robust.Shared.Reflection;
 using System;
-using UserInterfaceComponent = Robust.Shared.GameObjects.UserInterfaceComponent;
+using System.Collections.Generic;
+using System.Numerics;
+using Robust.Client.UserInterface;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Utility;
 
-namespace Robust.Client.GameObjects
+namespace Robust.Client.GameObjects;
+
+public sealed class UserInterfaceSystem : SharedUserInterfaceSystem
 {
-    public sealed class UserInterfaceSystem : SharedUserInterfaceSystem
+    private Dictionary<EntityUid, Dictionary<Enum, Vector2>> _savedPositions = new();
+    private Dictionary<BoundUserInterface, Control> _registeredControls = new();
+
+    public override void Initialize()
     {
-        [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        base.Initialize();
+        ProtoManager.PrototypesReloaded += OnProtoReload;
+    }
 
-        public override void Initialize()
+    public override void Shutdown()
+    {
+        base.Shutdown();
+        ProtoManager.PrototypesReloaded -= OnProtoReload;
+    }
+
+    /// <inheritdoc />
+    public override void OpenUi(Entity<UserInterfaceComponent?> entity, Enum key, bool predicted = false)
+    {
+        var player = Player.LocalEntity;
+
+        if (player == null)
+            return;
+
+        OpenUi(entity, key, player.Value, predicted);
+    }
+
+    protected override void SavePosition(BoundUserInterface bui)
+    {
+        if (!_registeredControls.Remove(bui, out var control))
+            return;
+
+        var keyed = _savedPositions[bui.Owner];
+        keyed[bui.UiKey] = control.Position;
+    }
+
+    /// <summary>
+    /// Registers a control so it will later have its position stored by <see cref="SavePosition"/> when the BUI is closed.
+    /// </summary>
+    public void RegisterControl(BoundUserInterface bui, Control control)
+    {
+        DebugTools.Assert(!_registeredControls.ContainsKey(bui));
+        _registeredControls[bui] = control;
+        _savedPositions.GetOrNew(bui.Owner);
+    }
+
+    public override bool TryGetPosition(Entity<UserInterfaceComponent?> entity, Enum key, out Vector2 position)
+    {
+        position = default;
+
+        if (!_savedPositions.TryGetValue(entity.Owner, out var keyed))
         {
-            base.Initialize();
-
-            SubscribeNetworkEvent<BoundUIWrapMessage>(MessageReceived);
+            return false;
         }
 
-        private void MessageReceived(BoundUIWrapMessage ev)
+        if (!keyed.TryGetValue(key, out position))
         {
-            var uid = GetEntity(ev.Entity);
-
-            if (!TryComp<UserInterfaceComponent>(uid, out var cmp))
-                return;
-
-            var uiKey = ev.UiKey;
-            var message = ev.Message;
-            // This should probably not happen at this point, but better make extra sure!
-            if (_playerManager.LocalPlayer != null)
-                message.Session = _playerManager.LocalPlayer.Session;
-
-            message.Entity = GetNetEntity(uid);
-            message.UiKey = uiKey;
-
-            // Raise as object so the correct type is used.
-            RaiseLocalEvent(uid, (object)message, true);
-
-            switch (message)
-            {
-                case OpenBoundInterfaceMessage _:
-                    TryOpenUi(uid, uiKey, cmp);
-                    break;
-
-                case CloseBoundInterfaceMessage _:
-                    TryCloseUi(message.Session, uid, uiKey, remoteCall: true, uiComp: cmp);
-                    break;
-
-                default:
-                    if (cmp.OpenInterfaces.TryGetValue(uiKey, out var bui))
-                        bui.InternalReceiveMessage(message);
-
-                    break;
-            }
+            return false;
         }
 
-        private bool TryOpenUi(EntityUid uid, Enum uiKey, UserInterfaceComponent? uiComp = null)
+        return true;
+    }
+
+    private void OnProtoReload(PrototypesReloadedEventArgs obj)
+    {
+        var player = Player.LocalEntity;
+
+        if (!UserQuery.TryComp(player, out var userComp))
+            return;
+
+        foreach (var uid in userComp.OpenInterfaces.Keys)
         {
-            if (!Resolve(uid, ref uiComp))
-                return false;
+            if (!UIQuery.TryComp(uid, out var uiComp))
+                continue;
 
-            if (uiComp.OpenInterfaces.ContainsKey(uiKey))
-                return false;
-
-            var data = uiComp.MappedInterfaceData[uiKey];
-
-            // TODO: This type should be cached, but I'm too lazy.
-            var type = _reflectionManager.LooseGetType(data.ClientType);
-            var boundInterface =
-                (BoundUserInterface) _dynamicTypeFactory.CreateInstance(type, new object[] {uid, uiKey});
-
-            boundInterface.Open();
-            uiComp.OpenInterfaces[uiKey] = boundInterface;
-
-            var playerSession = _playerManager.LocalPlayer?.Session;
-            if (playerSession != null)
+            foreach (var bui in uiComp.ClientOpenInterfaces.Values)
             {
-                uiComp.Interfaces[uiKey]._subscribedSessions.Add(playerSession);
-                RaiseLocalEvent(uid, new BoundUIOpenedEvent(uiKey, uid, playerSession), true);
+                bui.OnProtoReload(obj);
             }
-
-            return true;
         }
     }
 }

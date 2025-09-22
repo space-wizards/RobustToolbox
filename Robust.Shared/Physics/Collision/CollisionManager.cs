@@ -22,7 +22,9 @@
 
 using System;
 using System.Numerics;
+using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Collision.Shapes;
 
 namespace Robust.Shared.Physics.Collision;
 
@@ -35,6 +37,9 @@ internal sealed partial class CollisionManager : IManifoldManager
      * Farseer had this as a static class with a ThreadStatic DistanceInput
      */
 
+    private ObjectPool<EdgeShape> _edgePool =
+        new DefaultObjectPool<EdgeShape>(new DefaultPooledObjectPolicy<EdgeShape>());
+
     /// <summary>
     ///     Used for debugging contact points.
     /// </summary>
@@ -46,15 +51,18 @@ internal sealed partial class CollisionManager : IManifoldManager
         in Manifold manifold2)
     {
         // Detect persists and removes.
+        var points1 = manifold1.Points.AsSpan;
+        var points2 = manifold2.Points.AsSpan;
+
         for (int i = 0; i < manifold1.PointCount; ++i)
         {
-            ContactID id = manifold1.Points[i].Id;
+            var id = points1[i].Id;
 
             state1[i] = PointState.Remove;
 
             for (int j = 0; j < manifold2.PointCount; ++j)
             {
-                if (manifold2.Points[j].Id.Key == id.Key)
+                if (points2[j].Id.Key == id.Key)
                 {
                     state1[i] = PointState.Persist;
                     break;
@@ -65,13 +73,13 @@ internal sealed partial class CollisionManager : IManifoldManager
         // Detect persists and adds.
         for (int i = 0; i < manifold2.PointCount; ++i)
         {
-            ContactID id = manifold2.Points[i].Id;
+            var id = points2[i].Id;
 
             state2[i] = PointState.Add;
 
-            for (int j = 0; j < manifold1.PointCount; ++j)
+            for (var j = 0; j < manifold1.PointCount; ++j)
             {
-                if (manifold1.Points[j].Id.Key == id.Key)
+                if (points1[j].Id.Key == id.Key)
                 {
                     state2[i] = PointState.Persist;
                     break;
@@ -130,6 +138,16 @@ internal sealed partial class CollisionManager : IManifoldManager
         }
 
         return numOut;
+    }
+
+    public EdgeShape GetContactEdge()
+    {
+        return _edgePool.Get();
+    }
+
+    public void ReturnEdge(EdgeShape edge)
+    {
+        _edgePool.Return(edge);
     }
 }
 

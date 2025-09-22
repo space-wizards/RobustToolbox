@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Pidgin;
 using Robust.Shared.Maths;
 using static Pidgin.Parser;
@@ -15,24 +17,55 @@ public sealed partial class FormattedMessage
     /// <returns>true if the markup is valid</returns>
     public static bool ValidMarkup(string markup)
     {
-        return ParseResult(markup).Success;
+        return TryParse(markup, out _, out _);
     }
+
+    /// <summary>
+    /// Attempts to add markup. If an error occurs, it will do nothing and return an error message.
+    /// This method does NOT fall back to using the permissive parser (which parses invalid markup as text).
+    /// </summary>
+    public bool TryAddMarkup(string markup, [NotNullWhen(false)] out string? error)
+    {
+        if (!TryParse(markup, out var nodes, out error))
+            return false;
+
+        _nodes.AddRange(nodes);
+        return true;
+    }
+
+    [Obsolete("Use AddMarkupOrThrow or TryAddMarkup")]
+    public void AddMarkup(string markup) => AddMarkupOrThrow(markup);
 
     /// <summary>
     /// Parses the given markup and adds the resulting nodes to this formatted message
     /// </summary>
     /// <param name="markup">The markup to parse</param>
-    public void AddMarkup(string markup)
+    /// <exception cref="ParseException">Thrown when an error occurs while trying to parse the markup.</exception>
+    public void AddMarkupOrThrow(string markup)
     {
-        _nodes.AddRange(Parse(markup));
+        _nodes.AddRange(ParseOrThrow(markup));
     }
 
     /// <summary>
-    ///     Same as <see cref="AddMarkup"/> but will parse invalid markup tags as text.
+    ///     Same as <see cref="AddMarkup"/> but will attempt to parse invalid markup tags as text.
     /// </summary>
-    public void AddMarkupPermissive(string markup)
+    /// <exception cref="ParseException">Thrown when an error occurs even when using the permissive parser.</exception>
+    public void AddMarkupPermissive(string markup, out string? error)
     {
-        _nodes.AddRange(ParseSafe(markup));
+        _nodes.AddRange(ParsePermissive(markup, out error));
+    }
+
+    /// <inheritdoc cref="AddMarkupPermissive(string,out string?)"/>
+    public void AddMarkupPermissive(string markup) => AddMarkupPermissive(markup, out _);
+
+    /// <summary>
+    /// Same as <see cref="AddMarkup"/> but adds a newline too.
+    /// </summary>
+    [Obsolete]
+    public void PushMarkup(string markup)
+    {
+        AddMarkup(markup);
+        PushNewline();
     }
 
     // > wtf I love parser combinators now
@@ -43,13 +76,37 @@ public sealed partial class FormattedMessage
     /// This parser doesn't use backtracking by chaining pidgins parsers in such a way that branches that don't apply
     /// always fail on the first character
     /// </summary>
-    private static IEnumerable<MarkupNode> Parse(string input) => ParseNodes.ParseOrThrow(input);
+    private static List<MarkupNode> ParseOrThrow(string input) => ParseNodes.ParseOrThrow(input);
 
     /// <summary>
-    /// Same as <see cref="Parse"/> but uses backtracking once to ensure invalid markup just gets parsed as text
+    /// Attempt to parse the given input. Returns an error message if it fails. Does not fall back to the permissive parser
     /// </summary>
-    private static IEnumerable<MarkupNode> ParseSafe(string input) => ParseNodesSafe.ParseOrThrow(input);
-    private static Result<char, List<MarkupNode>> ParseResult(string input) => ParseNodes.Parse(input);
+    public static bool TryParse(string input, [NotNullWhen(true)] out List<MarkupNode>? nodes, [NotNullWhen(false)] out string? error)
+    {
+        var result = ParseNodes.Parse(input);
+        if (result.Success)
+        {
+            nodes = result.Value;
+            error = null;
+            return true;
+        }
+
+        error = result.Error!.RenderErrorMessage();
+        nodes = null;
+        return false;
+    }
+
+    /// <summary>
+    /// Variant of <see cref="TryParse"/> that falls back to using the permissive parser if an error occurs.
+    /// </summary>
+    /// <exception cref="ParseException">Thrown when an error occurs even when using the permissive parser.</exception>
+    public static List<MarkupNode> ParsePermissive(string input, out string? error)
+    {
+        if (TryParse(input, out var nodes, out error))
+            return nodes;
+
+        return ParseNodesSafe.ParseOrThrow(input);
+    }
 
     //TODO: Make Begin and End a cvar
     // Parser definitions for reserved characters

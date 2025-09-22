@@ -3,6 +3,7 @@ using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -12,7 +13,7 @@ namespace Robust.Shared.GameObjects;
 /// <summary>
 /// Network identifier for entities; used by client and server to refer to the same entity where their local <see cref="EntityUid"/> may differ.
 /// </summary>
-[Serializable, NetSerializable]
+[Serializable, NetSerializable, CopyByRef]
 public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>, ISpanFormattable
 {
     public readonly int Id;
@@ -48,28 +49,45 @@ public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>
     /// </summary>
     public static NetEntity Parse(ReadOnlySpan<char> uid)
     {
+        if (uid.Length == 0)
+            throw new FormatException($"An empty string is not a valid NetEntity");
+
+        // 'c' prefix for client-side entities
         if (uid[0] != 'c')
             return new NetEntity(int.Parse(uid));
 
         if (uid.Length == 1)
             throw new FormatException($"'c' is not a valid NetEntity");
 
-        var id = int.Parse(uid.Slice(1));
+        var id = int.Parse(uid[1..]);
         return new NetEntity(id | ClientEntity);
     }
 
     public static bool TryParse(ReadOnlySpan<char> uid, out NetEntity entity)
     {
-        try
+        entity = Invalid;
+        int id;
+        if (uid.Length == 0)
+            return false;
+
+        // 'c' prefix for client-side entities
+        if (uid[0] != 'c')
         {
-            entity = Parse(uid);
+            if (!int.TryParse(uid, out id))
+                return false;
+
+            entity = new NetEntity(id);
             return true;
         }
-        catch (FormatException)
-        {
-            entity = Invalid;
+
+        if (uid.Length == 1)
             return false;
-        }
+
+        if (!int.TryParse(uid[1..], out id))
+            return false;
+
+        entity = new NetEntity(id | ClientEntity);
+        return true;
     }
 
     /// <summary>
@@ -184,8 +202,11 @@ public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>
         get => MetaData?.EntityName ?? string.Empty;
         set
         {
-            if (MetaData is {} metaData)
-                metaData.EntityName = value;
+            if (MetaData is { } metaData)
+            {
+                var entManager = IoCManager.Resolve<IEntityManager>();
+                entManager.System<MetaDataSystem>().SetEntityName(entManager.GetEntity(this), value, metaData);
+            }
         }
     }
 
@@ -195,8 +216,11 @@ public readonly struct NetEntity : IEquatable<NetEntity>, IComparable<NetEntity>
         get => MetaData?.EntityDescription ?? string.Empty;
         set
         {
-            if (MetaData is {} metaData)
-                metaData.EntityDescription = value;
+            if (MetaData is { } metaData)
+            {
+                var entManager = IoCManager.Resolve<IEntityManager>();
+                entManager.System<MetaDataSystem>().SetEntityDescription(entManager.GetEntity(this), value, metaData);
+            }
         }
     }
 

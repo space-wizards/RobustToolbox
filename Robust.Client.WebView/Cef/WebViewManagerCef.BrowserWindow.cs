@@ -23,6 +23,7 @@ namespace Robust.Client.WebView.Cef
             var info = CefWindowInfo.Create();
             info.Bounds = new CefRectangle(0, 0, createParams.Width, createParams.Height);
             info.SetAsPopup(mainHWnd, "ss14cef");
+             info.RuntimeStyle = CefRuntimeStyle.Alloy;
 
             var impl = new WebViewWindowImpl(this);
 
@@ -150,7 +151,7 @@ namespace Robust.Client.WebView.Cef
             }
         }
 
-        private sealed class WindowCefClient : CefClient
+        private sealed class WindowCefClient : BaseRobustCefClient
         {
             private readonly CefLifeSpanHandler _lifeSpanHandler;
             private readonly CefRequestHandler _requestHandler;

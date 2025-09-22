@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Prometheus;
+using Robust.Server.GameStates;
 using Robust.Server.Player;
 using Robust.Shared;
 using Robust.Shared.Configuration;
@@ -15,6 +15,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Replays;
 using Robust.Shared.Timing;
@@ -26,7 +27,7 @@ namespace Robust.Server.GameObjects
     /// Manager for entities -- controls things like template loading and instantiation
     /// </summary>
     [UsedImplicitly] // DI Container
-    public sealed class ServerEntityManager : EntityManager, IServerEntityManagerInternal
+    public sealed class ServerEntityManager : EntityManager, IServerEntityManager
     {
         private static readonly Gauge EntitiesCount = Metrics.CreateGauge(
             "robust_entities_count",
@@ -42,6 +43,7 @@ namespace Robust.Server.GameObjects
 #endif
 
         private ISawmill _netEntSawmill = default!;
+        private PvsSystem _pvs = default!;
 
         public override void Initialize()
         {
@@ -53,40 +55,21 @@ namespace Robust.Server.GameObjects
             base.Initialize();
         }
 
-        EntityUid IServerEntityManagerInternal.AllocEntity(EntityPrototype? prototype)
+        public override void Startup()
         {
-            return AllocEntity(prototype, out _);
+            base.Startup();
+            _pvs = System<PvsSystem>();
         }
 
-        void IServerEntityManagerInternal.FinishEntityLoad(EntityUid entity, IEntityLoadContext? context)
-        {
-            LoadEntity(entity, context);
-        }
-
-        void IServerEntityManagerInternal.FinishEntityLoad(EntityUid entity, EntityPrototype? prototype, IEntityLoadContext? context)
-        {
-            LoadEntity(entity, context, prototype);
-        }
-
-        void IServerEntityManagerInternal.FinishEntityInitialization(EntityUid entity, MetaDataComponent? meta)
-        {
-            InitializeEntity(entity, meta);
-        }
-
-        void IServerEntityManagerInternal.FinishEntityStartup(EntityUid entity)
-        {
-            StartEntity(entity);
-        }
-
-        private protected override EntityUid CreateEntity(string? prototypeName, IEntityLoadContext? context = null)
+        internal override EntityUid CreateEntity(string? prototypeName, out MetaDataComponent metadata, IEntityLoadContext? context = null)
         {
             if (prototypeName == null)
-                return base.CreateEntity(prototypeName, context);
+                return base.CreateEntity(prototypeName, out metadata, context);
 
             if (!PrototypeManager.TryIndex<EntityPrototype>(prototypeName, out var prototype))
                 throw new EntityCreationException($"Attempted to spawn an entity with an invalid prototype: {prototypeName}");
 
-            var entity = base.CreateEntity(prototype, context);
+            var entity = base.CreateEntity(prototype, out metadata, context);
 
             // At this point in time, all data configure on the entity *should* be purely from the prototype.
             // As such, we can reset the modified ticks to Zero,
@@ -94,6 +77,40 @@ namespace Robust.Server.GameObjects
             // So the initial data for the component or even the creation doesn't have to be sent over the wire.
             ClearTicks(entity, prototype);
             return entity;
+        }
+
+        /// <inheritdoc />
+        public override void RaiseSharedEvent<T>(T message, EntityUid? user = null)
+        {
+            if (user != null)
+            {
+                var filter = Filter.Broadcast().RemoveWhereAttachedEntity(e => e == user.Value);
+                foreach (var session in filter.Recipients)
+                {
+                    EntityNetManager.SendSystemNetworkMessage(message, session.Channel);
+                }
+            }
+            else
+            {
+                EntityNetManager.SendSystemNetworkMessage(message);
+            }
+        }
+
+        /// <inheritdoc />
+        public override void RaiseSharedEvent<T>(T message, ICommonSession? user = null)
+        {
+            if (user != null)
+            {
+                var filter = Filter.Broadcast().RemovePlayer(user);
+                foreach (var session in filter.Recipients)
+                {
+                    EntityNetManager.SendSystemNetworkMessage(message, session.Channel);
+                }
+            }
+            else
+            {
+                EntityNetManager.SendSystemNetworkMessage(message);
+            }
         }
 
         private void ClearTicks(EntityUid entity, EntityPrototype prototype)
@@ -109,15 +126,10 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        [return: NotNullIfNotNull("uid")]
-        public override EntityStringRepresentation? ToPrettyString(EntityUid? uid)
+        internal override void SetLifeStage(MetaDataComponent meta, EntityLifeStage stage)
         {
-            if (uid == null)
-                return null;
-
-            TryGetComponent(uid, out ActorComponent? actor);
-
-            return base.ToPrettyString(uid).Value with { Session = actor?.PlayerSession };
+            base.SetLifeStage(meta, stage);
+            _pvs.SyncMetadata(meta);
         }
 
         #region IEntityNetworkManager impl
@@ -129,7 +141,7 @@ namespace Robust.Server.GameObjects
 
         private readonly PriorityQueue<MsgEntity> _queue = new(new MessageSequenceComparer());
 
-        private readonly Dictionary<IPlayerSession, uint> _lastProcessedSequencesCmd =
+        private readonly Dictionary<ICommonSession, uint> _lastProcessedSequencesCmd =
             new();
 
         private bool _logLateMsgs;
@@ -160,9 +172,9 @@ namespace Robust.Server.GameObjects
             EntitiesCount.Set(Entities.Count);
         }
 
-        public uint GetLastMessageSequence(IPlayerSession session)
+        public uint GetLastMessageSequence(ICommonSession? session)
         {
-            return _lastProcessedSequencesCmd[session];
+            return session == null ? default : _lastProcessedSequencesCmd.GetValueOrDefault(session);
         }
 
         /// <inheritdoc />
@@ -192,19 +204,21 @@ namespace Robust.Server.GameObjects
 
         private void HandleEntityNetworkMessage(MsgEntity message)
         {
-            var msgT = message.SourceTick;
-            var cT = _gameTiming.CurTick;
-
-            if (msgT <= cT)
+            if (_logLateMsgs)
             {
-                if (msgT < cT && _logLateMsgs)
-                {
-                    _netEntSawmill.Warning("Got late MsgEntity! Diff: {0}, msgT: {2}, cT: {3}, player: {1}",
-                        (int) msgT.Value - (int) cT.Value, message.MsgChannel.UserName, msgT, cT);
-                }
+                var msgT = message.SourceTick;
+                var cT = _gameTiming.CurTick;
 
-                DispatchEntityNetworkMessage(message);
-                return;
+                if (msgT < cT)
+                {
+                    _netEntSawmill.Warning(
+                        "Got late MsgEntity! Diff: {0}, msgT: {2}, cT: {3}, player: {1}, msg: {4}",
+                        (int) msgT.Value - (int) cT.Value,
+                        message.MsgChannel.UserName,
+                        msgT,
+                        cT,
+                        message.SystemMessage);
+                }
             }
 
             _queue.Add(message);

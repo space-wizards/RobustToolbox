@@ -6,7 +6,8 @@ namespace Robust.Client.Graphics.Clyde
         {
             ("aPos", 0),
             ("tCoord", 1),
-            ("modulate", 2)
+            ("tCoord2", 2),
+            ("modulate", 3)
         };
 
         private const int UniIModUV = 0;
@@ -20,7 +21,7 @@ namespace Robust.Client.Graphics.Clyde
         private const string UniModelMatrix = "modelMatrix";
         private const string UniTexturePixelSize = "TEXTURE_PIXEL_SIZE";
         private const string UniMainTexture = "TEXTURE";
-        private const string UniLightTexture = "lightMap";
+        private const string UniLightTexture = "lightMap"; // TODO CLYDE consistent shader variable naming
         private const string UniProjViewMatrices = "projectionViewMatrices";
         private const string UniUniformConstants = "uniformConstants";
 

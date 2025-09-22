@@ -5,6 +5,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
+using Robust.Roslyn.Shared;
 using Robust.Shared.Analyzers.Implementation;
 
 namespace Robust.Analyzers

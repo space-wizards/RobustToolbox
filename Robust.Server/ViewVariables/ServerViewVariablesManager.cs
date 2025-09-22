@@ -3,16 +3,17 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Server.Console;
 using Robust.Server.Player;
+using Robust.Shared.Audio;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.ViewVariables
@@ -31,6 +32,8 @@ namespace Robust.Server.ViewVariables
         private readonly Dictionary<uint, ViewVariablesSession>
             _sessions = new();
 
+        private readonly Dictionary<NetUserId, List<uint>> _users = new();
+
         private uint _nextSessionId = 1;
 
         public override void Initialize()
@@ -44,6 +47,22 @@ namespace Robust.Server.ViewVariables
             _netManager.RegisterNetMessage<MsgViewVariablesDenySession>();
             _netManager.RegisterNetMessage<MsgViewVariablesOpenSession>();
             _netManager.RegisterNetMessage<MsgViewVariablesRemoteData>();
+
+            _playerManager.PlayerStatusChanged += OnStatusChanged;
+        }
+
+        private void OnStatusChanged(object? sender, SessionStatusEventArgs e)
+        {
+            if (e.NewStatus != SessionStatus.Disconnected)
+                return;
+
+            if (!_users.TryGetValue(e.Session.UserId, out var vvSessions))
+                return;
+
+            foreach (var id in vvSessions)
+            {
+                _closeSession(id, false);
+            }
         }
 
         private void _msgCloseSession(MsgViewVariablesCloseSession message)
@@ -235,19 +254,13 @@ namespace Robust.Server.ViewVariables
                 _robustSerializer, _entityManager, Sawmill);
 
             _sessions.Add(sessionId, session);
+            _users.GetOrNew(session.PlayerUser).Add(sessionId);
 
             var allowMsg = new MsgViewVariablesOpenSession();
             allowMsg.RequestId = message.RequestId;
             allowMsg.SessionId = session.SessionId;
             _netManager.ServerSendMessage(allowMsg, message.MsgChannel);
 
-            player.PlayerStatusChanged += (_, args) =>
-            {
-                if (args.NewStatus == SessionStatus.Disconnected)
-                {
-                    _closeSession(session.SessionId, false);
-                }
-            };
         }
 
         private void _closeSession(uint sessionId, bool sendMsg)
@@ -266,7 +279,7 @@ namespace Robust.Server.ViewVariables
 
             var closeMsg = new MsgViewVariablesCloseSession();
             closeMsg.SessionId = session.SessionId;
-            _netManager.ServerSendMessage(closeMsg, player.ConnectedClient);
+            _netManager.ServerSendMessage(closeMsg, player.Channel);
         }
 
         private bool TryReinterpretValue(object? input, [NotNullWhen(true)] out object? output)
@@ -284,7 +297,6 @@ namespace Robust.Server.ViewVariables
 
                     output = prototype;
                     return true;
-
                 default:
                     return false;
             }

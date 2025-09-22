@@ -57,7 +57,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                     dependencies
                         .Resolve<ILogManager>()
                         .GetSawmill(SerializationManager.LogCategory)
-                        .Error(SerializationManager.LogCategory, $"Component of type '{compType}' defined twice in prototype!");
+                        .Error($"Component of type '{compType}' defined twice in prototype!");
                     continue;
                 }
 
@@ -100,7 +100,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
             foreach (var sequenceEntry in node.Sequence)
             {
-                var componentMapping = (MappingDataNode)sequenceEntry;
+                if (sequenceEntry is not MappingDataNode componentMapping)
+                {
+                    list.Add(new ErrorNode(sequenceEntry, $"Expected {nameof(MappingDataNode)}"));
+                    continue;
+                }
                 string compType = ((ValueDataNode) componentMapping.Get("type")).Value;
                 // See if type exists to detect errors.
                 switch (factory.GetComponentAvailability(compType))
@@ -203,7 +207,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                     {
                         newCompReg[idx] = serializationManager.PushCompositionWithGenericNode(
                             reg.Type,
-                            new[] { parent[mapping] },
+                            parent[mapping],
                             newCompReg[idx],
                             context);
 

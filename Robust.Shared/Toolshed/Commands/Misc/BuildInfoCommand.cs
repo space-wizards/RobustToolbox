@@ -13,15 +13,18 @@ internal sealed class BuildInfoCommand : ToolshedCommand
     private static readonly string Gold = Color.Gold.ToHex();
 
     [CommandImplementation]
-    public void BuildInfo([CommandInvocationContext] IInvocationContext ctx)
+    public void BuildInfo(IInvocationContext ctx)
     {
         var game = _cfg.GetCVar(CVars.BuildForkId);
-        ctx.WriteLine(FormattedMessage.FromMarkup($"[color={Gold}]Game:[/color] {game}"));
         var buildCommit = _cfg.GetCVar(CVars.BuildHash);
-        ctx.WriteLine(FormattedMessage.FromMarkup($"[color={Gold}]Build commit:[/color] {buildCommit}"));
         var buildManifest = _cfg.GetCVar(CVars.BuildManifestHash);
-        ctx.WriteLine(FormattedMessage.FromMarkup($"[color={Gold}]Manifest hash:[/color] {buildManifest}"));
         var engine = _cfg.GetCVar(CVars.BuildEngineVersion);
-        ctx.WriteLine(FormattedMessage.FromMarkup($"[color={Gold}]Engine ver:[/color] {engine}"));
+
+        ctx.WriteLine(FormattedMessage.FromMarkupOrThrow($"""
+            [color={Gold}]Game:[/color] {game}
+            [color={Gold}]Build commit:[/color] {buildCommit}
+            [color={Gold}]Manifest hash:[/color] {buildManifest}
+            [color={Gold}]Engine ver:[/color] {engine}
+            """));
     }
 }

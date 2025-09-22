@@ -12,7 +12,10 @@ namespace Robust.Shared.Log
         public FileLogHandler(string path)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-            writer = TextWriter.Synchronized(new StreamWriter(path, true, EncodingHelpers.UTF8));
+            writer = TextWriter.Synchronized(
+                new StreamWriter(
+                    new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read | FileShare.Delete),
+                    EncodingHelpers.UTF8));
         }
 
         public void Dispose()

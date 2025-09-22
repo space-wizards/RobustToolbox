@@ -19,26 +19,26 @@ namespace Robust.Shared.GameObjects
         public EntityUid? OldParent { get; }
 
         /// <summary>
-        ///     The map Id that the entity was on before its parent changed.
+        ///     The map that the entity was on before its parent changed.
         /// </summary>
         /// <remarks>
         ///     If the old parent was detached to null without manually updating the map ID of its children, then this
         ///     is required as we cannot simply use the old parent's map ID. Also avoids having to fetch the old
         ///     parent's transform component.
         /// </remarks>
-        public MapId OldMapId { get; }
+        public readonly EntityUid? OldMapId;
 
         public TransformComponent Transform { get; }
 
         /// <summary>
         ///     Creates a new instance of <see cref="EntParentChangedMessage"/>.
         /// </summary>
-        public EntParentChangedMessage(EntityUid entity, EntityUid? oldParent, MapId oldMapId, TransformComponent xform)
+        public EntParentChangedMessage(EntityUid entity, EntityUid? oldParent, EntityUid? oldMapId, TransformComponent xform)
         {
             Entity = entity;
             OldParent = oldParent;
-            OldMapId = oldMapId;
             Transform = xform;
+            OldMapId = oldMapId;
         }
     }
 }

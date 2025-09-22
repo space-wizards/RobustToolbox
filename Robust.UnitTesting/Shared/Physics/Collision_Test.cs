@@ -39,6 +39,30 @@ namespace Robust.UnitTesting.Shared.Physics;
 public sealed class Collision_Test
 {
     [Test]
+    public void TestHardCollidable()
+    {
+        var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
+        var entManager = sim.Resolve<IEntityManager>();
+
+        var fixtures = entManager.System<FixtureSystem>();
+        var physics = entManager.System<SharedPhysicsSystem>();
+
+        var map = sim.CreateMap();
+
+        var bodyAUid = entManager.SpawnAttachedTo(null, new EntityCoordinates(map.Uid, Vector2.Zero));
+        var bodyBUid = entManager.SpawnAttachedTo(null, new EntityCoordinates(map.Uid, Vector2.Zero));
+        var bodyA = entManager.AddComponent<PhysicsComponent>(bodyAUid);
+        var bodyB = entManager.AddComponent<PhysicsComponent>(bodyBUid);
+
+        Assert.That(!physics.IsHardCollidable(bodyAUid, bodyBUid));
+
+        fixtures.CreateFixture(bodyAUid, "fix1", new Fixture(new PhysShapeCircle(0.5f), 1, 1, true));
+        fixtures.CreateFixture(bodyBUid, "fix1", new Fixture(new PhysShapeCircle(0.5f), 1, 1, true));
+
+        Assert.That(physics.IsHardCollidable(bodyAUid, bodyBUid));
+    }
+
+    [Test]
     public void TestCollision()
     {
         var center = new Vector2(100.0f, -50.0f);
@@ -98,12 +122,12 @@ public sealed class Collision_Test
     {
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
-        var mapManager = sim.Resolve<IMapManager>();
         var fixtures = entManager.System<FixtureSystem>();
         var physics = entManager.System<SharedPhysicsSystem>();
         var xformSystem = entManager.System<SharedTransformSystem>();
-        var mapId = mapManager.CreateMap();
-        var mapId2 = mapManager.CreateMap();
+        var mapSystem = entManager.System<SharedMapSystem>();
+        var mapId = sim.CreateMap().MapId;
+        var mapId2 = sim.CreateMap().MapId;
 
         var ent1 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
         var ent2 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
@@ -127,7 +151,7 @@ public sealed class Collision_Test
         Assert.That(body1.ContactCount == 1 && body2.ContactCount == 1);
 
         // Reparent body2 and assert the contact is destroyed
-        xformSystem.SetParent(ent2, mapManager.GetMapEntityId(mapId2));
+        xformSystem.SetParent(ent2, mapSystem.GetMapOrInvalid(mapId2));
         physics.Update(0.01f);
 
         Assert.That(body1.ContactCount == 0 && body2.ContactCount == 0);

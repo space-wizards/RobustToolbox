@@ -1,5 +1,6 @@
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
+using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
@@ -29,8 +30,6 @@ namespace Robust.Shared
             deps.Register<IDynamicTypeFactory, DynamicTypeFactory>();
             deps.Register<IDynamicTypeFactoryInternal, DynamicTypeFactory>();
             deps.Register<IEntitySystemManager, EntitySystemManager>();
-            deps.Register<ILocalizationManager, LocalizationManager>();
-            deps.Register<ILocalizationManagerInternal, LocalizationManager>();
             deps.Register<ILogManager, LogManager>();
             deps.Register<IModLoader, ModLoader>();
             deps.Register<IModLoaderInternal, ModLoader>();
@@ -49,6 +48,8 @@ namespace Robust.Shared
             deps.Register<IParallelManagerInternal, ParallelManager>();
             deps.Register<ToolshedManager>();
             deps.Register<HttpClientHolder>();
+            deps.Register<RobustMemoryManager>();
+            deps.Register<EntityConsoleHost>();
         }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Utility;
@@ -220,14 +221,16 @@ namespace Robust.Client.Graphics
 
         public static bool TypeSupportsArrays(this ShaderDataType type)
         {
-            // TODO: add support for int, and vec3/4 arrays
+            // TODO: add support for int, and vec3 arrays
             return
                 (type == ShaderDataType.Float) ||
-                (type == ShaderDataType.Vec2);
+                (type == ShaderDataType.Vec2) ||
+                (type == ShaderDataType.Bool) ||
+                (type == ShaderDataType.Vec4);
         }
 
         [SuppressMessage("ReSharper", "StringLiteralTypo")]
-        private static readonly Dictionary<ShaderDataType, string> _nativeTypes = new()
+        private static readonly FrozenDictionary<ShaderDataType, string> _nativeTypes = new Dictionary<ShaderDataType, string>()
         {
             {ShaderDataType.Void, "void"},
             {ShaderDataType.Bool, "bool"},
@@ -252,7 +255,7 @@ namespace Robust.Client.Graphics
             {ShaderDataType.Sampler2D, "sampler2D"},
             {ShaderDataType.ISampler2D, "isampler2D"},
             {ShaderDataType.USampler2D, "usampler2D"},
-        };
+        }.ToFrozenDictionary();
     }
 
     internal enum ShaderLightMode : byte

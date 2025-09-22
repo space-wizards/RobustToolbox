@@ -59,6 +59,11 @@ namespace Robust.Client.Graphics
         /// <summary>
         /// Hide title buttons such as close and minimize.
         /// </summary>
-        NoTitleOptions = 1 << 0
+        NoTitleOptions = 1 << 0,
+
+        /// <summary>
+        /// Completely hide the title bar
+        /// </summary>
+        NoTitleBar = 1 << 1,
     }
 }

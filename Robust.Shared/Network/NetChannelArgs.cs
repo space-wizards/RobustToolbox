@@ -1,7 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
-using System.Text.Json;
-using System.Text.Json.Nodes;
 
 namespace Robust.Shared.Network
 {
@@ -31,9 +30,10 @@ namespace Robust.Shared.Network
     /// </summary>
     public sealed class NetConnectingArgs : EventArgs
     {
-        public bool IsDenied => DenyReason != null;
+        public bool IsDenied => DenyReasonData != null;
 
-        public string? DenyReason { get; private set; }
+        public string? DenyReason => DenyReasonData?.Text;
+        public NetDenyReason? DenyReasonData { get; private set; }
 
         public NetUserData UserData { get; }
 
@@ -48,7 +48,12 @@ namespace Robust.Shared.Network
 
         public void Deny(string reason)
         {
-            DenyReason = reason;
+            Deny(new NetDenyReason(reason));
+        }
+
+        public void Deny(NetDenyReason reason)
+        {
+            DenyReasonData = reason;
         }
 
         /// <summary>
@@ -66,11 +71,28 @@ namespace Robust.Shared.Network
     }
 
     /// <summary>
+    /// Contains a reason for denying a client connection to the game server.
+    /// </summary>
+    /// <param name="Text">The textual reason, presented to the user.</param>
+    /// <param name="AdditionalProperties">
+    /// Additional JSON properties that will be included in the <see cref="NetDisconnectMessage"/>.
+    /// Valid value types are: string, int, float, bool.
+    /// </param>
+    /// <seealso cref="NetDisconnectMessage"/>
+    /// <seealso cref="NetConnectingArgs"/>
+    public record NetDenyReason(string Text, Dictionary<string, object> AdditionalProperties)
+    {
+        public NetDenyReason(string Text) : this(Text, new Dictionary<string, object>())
+        {
+        }
+    }
+
+    /// <summary>
     /// Structured reason common interface.
     /// </summary>
     public interface INetStructuredReason
     {
-        JsonObject StructuredReason { get; }
+        NetDisconnectMessage Message { get; }
         string Reason { get; }
         bool RedialFlag { get; }
     }
@@ -80,33 +102,33 @@ namespace Robust.Shared.Network
     /// </summary>
     public sealed class NetConnectFailArgs : EventArgs, INetStructuredReason
     {
-        public NetConnectFailArgs(string reason) : this(NetStructuredDisconnectMessages.Decode(reason))
+        public NetConnectFailArgs(string reason) : this(NetDisconnectMessage.Decode(reason))
         {
         }
 
-        public NetConnectFailArgs(JsonObject reason)
+        internal NetConnectFailArgs(NetDisconnectMessage reason)
         {
-            StructuredReason = reason;
+            Message = reason;
         }
 
-        public JsonObject StructuredReason { get; }
-        public string Reason => NetStructuredDisconnectMessages.ReasonOf(StructuredReason);
-        public bool RedialFlag => NetStructuredDisconnectMessages.RedialFlagOf(StructuredReason);
+        public NetDisconnectMessage Message { get; }
+        public string Reason => Message.Reason;
+        public bool RedialFlag => Message.RedialFlag;
     }
 
     public sealed class NetDisconnectedArgs : NetChannelArgs, INetStructuredReason
     {
-        public NetDisconnectedArgs(INetChannel channel, string reason) : this(channel, NetStructuredDisconnectMessages.Decode(reason))
+        public NetDisconnectedArgs(INetChannel channel, string reason) : this(channel, NetDisconnectMessage.Decode(reason))
         {
         }
 
-        public NetDisconnectedArgs(INetChannel channel, JsonObject reason) : base(channel)
+        internal NetDisconnectedArgs(INetChannel channel, NetDisconnectMessage reason) : base(channel)
         {
-            StructuredReason = reason;
+            Message = reason;
         }
 
-        public JsonObject StructuredReason { get; }
-        public string Reason => NetStructuredDisconnectMessages.ReasonOf(StructuredReason);
-        public bool RedialFlag => NetStructuredDisconnectMessages.RedialFlagOf(StructuredReason);
+        public NetDisconnectMessage Message { get; }
+        public string Reason => Message.Reason;
+        public bool RedialFlag => Message.RedialFlag;
     }
 }

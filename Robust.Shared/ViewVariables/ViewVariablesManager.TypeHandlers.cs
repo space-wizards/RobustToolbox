@@ -14,7 +14,7 @@ internal abstract partial class ViewVariablesManager
         if (_typeHandlers.TryGetValue(typeof(T), out var h))
             return (ViewVariablesTypeHandler<T>)h;
 
-        var handler = new ViewVariablesTypeHandler<T>();
+        var handler = new ViewVariablesTypeHandler<T>(Sawmill);
         _typeHandlers.Add(typeof(T), handler);
         return handler;
     }
@@ -34,7 +34,7 @@ internal abstract partial class ViewVariablesManager
             || !_entMan.TryGetComponent(uid, registration.Idx, out var component))
             return null;
 
-        return new ViewVariablesComponentPath((Component) component, uid);
+        return new ViewVariablesComponentPath(component, uid);
     }
 
     private IEnumerable<string> EntityComponentList(EntityUid uid)

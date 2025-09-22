@@ -8,9 +8,9 @@ using Robust.Shared.Map.Components;
 
 namespace Robust.Shared.Console.Commands;
 
-sealed class AddMapCommand : LocalizedCommands
+sealed class AddMapCommand : LocalizedEntityCommands
 {
-    [Dependency] private readonly IMapManager _map = default!;
+    [Dependency] private readonly SharedMapSystem _mapSystem = default!;
 
     public override string Command => "addmap";
     public override bool RequireServerOrSingleplayer => true;
@@ -22,13 +22,10 @@ sealed class AddMapCommand : LocalizedCommands
 
         var mapId = new MapId(int.Parse(args[0]));
 
-        if (!_map.MapExists(mapId))
+        if (!_mapSystem.MapExists(mapId))
         {
-            _map.CreateMap(mapId);
-            if (args.Length >= 2 && args[1] == "false")
-            {
-                _map.AddUninitializedMap(mapId);
-            }
+            var init = args.Length < 2 || !bool.Parse(args[1]);
+            EntityManager.System<SharedMapSystem>().CreateMap(mapId, runMapInit: init);
 
             shell.WriteLine($"Map with ID {mapId} created.");
             return;
@@ -36,11 +33,25 @@ sealed class AddMapCommand : LocalizedCommands
 
         shell.WriteError($"Map with ID {mapId} already exists!");
     }
+
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    {
+        switch (args.Length)
+        {
+            case 1:
+                var mapId = _mapSystem.GetNextMapId();
+                return CompletionResult.FromHintOptions([ new CompletionOption($"{mapId}")], LocalizationManager.GetString("generic-mapid"));
+            case 2:
+                return CompletionResult.FromHint(LocalizationManager.GetString("cmd-addmap-hint-2"));
+            default:
+                return CompletionResult.Empty;
+        }
+    }
 }
 
-sealed class RemoveMapCommand : LocalizedCommands
+sealed class RemoveMapCommand : LocalizedEntityCommands
 {
-    [Dependency] private readonly IMapManager _map = default!;
+    [Dependency] private readonly IEntitySystemManager _systems = default!;
 
     public override string Command => "rmmap";
     public override bool RequireServerOrSingleplayer => true;
@@ -54,23 +65,29 @@ sealed class RemoveMapCommand : LocalizedCommands
         }
 
         var mapId = new MapId(int.Parse(args[0]));
+        var mapSystem = _systems.GetEntitySystem<SharedMapSystem>();
 
-        if (!_map.MapExists(mapId))
+        if (!mapSystem.MapExists(mapId))
         {
             shell.WriteError($"Map {mapId.Value} does not exist.");
             return;
         }
 
-        _map.DeleteMap(mapId);
+        mapSystem.DeleteMap(mapId);
         shell.WriteLine($"Map {mapId.Value} was removed.");
+    }
+
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    {
+        if (args.Length != 1)
+            return CompletionResult.Empty;
+
+        return CompletionResult.FromHintOptions(CompletionHelper.MapIds(args[0], entManager: EntityManager), LocalizationManager.GetString("generic-map"));
     }
 }
 
-sealed class RemoveGridCommand : LocalizedCommands
+sealed class RemoveGridCommand : LocalizedEntityCommands
 {
-    [Dependency] private readonly IEntityManager _entManager = default!;
-    [Dependency] private readonly IMapManager _map = default!;
-
     public override string Command => "rmgrid";
     public override bool RequireServerOrSingleplayer => true;
 
@@ -84,20 +101,28 @@ sealed class RemoveGridCommand : LocalizedCommands
 
         var gridIdNet = NetEntity.Parse(args[0]);
 
-        if (!_entManager.TryGetEntity(gridIdNet, out var gridId) || !_map.GridExists(gridId))
+        if (!EntityManager.TryGetEntity(gridIdNet, out var gridId) || !EntityManager.HasComponent<MapGridComponent>(gridId))
         {
             shell.WriteError($"Grid {gridId} does not exist.");
             return;
         }
 
-        _map.DeleteGrid(gridId.Value);
+        EntityManager.DeleteEntity(gridId);
         shell.WriteLine($"Grid {gridId} was removed.");
+    }
+
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    {
+        if (args.Length != 1)
+            return CompletionResult.Empty;
+
+        return CompletionResult.FromHintOptions(CompletionHelper.Components<MapGridComponent>(args[0], entManager: EntityManager), LocalizationManager.GetString("generic-grid"));
     }
 }
 
-internal sealed class RunMapInitCommand : LocalizedCommands
+internal sealed class RunMapInitCommand : LocalizedEntityCommands
 {
-    [Dependency] private readonly IMapManager _map = default!;
+    [Dependency] private readonly SharedMapSystem _mapSystem = default!;
 
     public override string Command => "mapinit";
     public override bool RequireServerOrSingleplayer => true;
@@ -113,25 +138,27 @@ internal sealed class RunMapInitCommand : LocalizedCommands
         var arg = args[0];
         var mapId = new MapId(int.Parse(arg, CultureInfo.InvariantCulture));
 
-        if (!_map.MapExists(mapId))
+        if (!_mapSystem.MapExists(mapId))
         {
             shell.WriteError("Map does not exist!");
             return;
         }
 
-        if (_map.IsMapInitialized(mapId))
+        if (_mapSystem.IsInitialized(mapId))
         {
             shell.WriteError("Map is already initialized!");
             return;
         }
 
-        _map.DoMapInitialize(mapId);
+        _mapSystem.InitializeMap(mapId);
     }
 }
 
-internal sealed class ListMapsCommand : LocalizedCommands
+internal sealed class ListMapsCommand : LocalizedEntityCommands
 {
+    [Dependency] private readonly IEntityManager _entManager = default!;
     [Dependency] private readonly IMapManager _map = default!;
+    [Dependency] private readonly SharedMapSystem _mapSystem = default!;
 
     public override string Command => "lsmap";
 
@@ -142,22 +169,29 @@ internal sealed class ListMapsCommand : LocalizedCommands
     {
         var msg = new StringBuilder();
 
-        foreach (var mapId in _map.GetAllMapIds().OrderBy(id => id.Value))
+        foreach (var mapId in _mapSystem.GetAllMapIds().OrderBy(id => id.Value))
         {
-            msg.AppendFormat("{0}: init: {1}, paused: {2}, ent: {3}, grids: {4}\n",
-                mapId, _map.IsMapInitialized(mapId),
-                _map.IsMapPaused(mapId),
-                _map.GetMapEntityId(mapId),
-                string.Join(",", _map.GetAllMapGrids(mapId).Select(grid => grid.Owner)));
+            if (!_mapSystem.TryGetMap(mapId, out var mapUid))
+                continue;
+
+            msg.AppendFormat("{0}: {1}, init: {2}, paused: {3}, nent: {4}, grids: {5}\n",
+                mapId,
+                _entManager.GetComponent<MetaDataComponent>(mapUid.Value).EntityName,
+                _mapSystem.IsInitialized(mapUid),
+                _mapSystem.IsPaused(mapId),
+                _entManager.GetNetEntity(mapUid),
+                string.Join(",", _map.GetAllGrids(mapId).Select(grid => grid.Owner)));
         }
 
-        shell.WriteLine(msg.ToString());
+        // Trim the newline
+        shell.WriteLine(msg.ToString()[..^1]);
     }
 }
 
-internal sealed class ListGridsCommand : LocalizedCommands
+internal sealed class ListGridsCommand : LocalizedEntityCommands
 {
-    [Dependency] private readonly IEntityManager _ent = default!;
+    [Dependency]
+    private readonly SharedTransformSystem _transformSystem = default!;
 
     public override string Command => "lsgrid";
 
@@ -167,20 +201,19 @@ internal sealed class ListGridsCommand : LocalizedCommands
     public override void Execute(IConsoleShell shell, string argStr, string[] args)
     {
         var msg = new StringBuilder();
-        var xformSystem = _ent.System<SharedTransformSystem>();
-        var xformQuery = _ent.GetEntityQuery<TransformComponent>();
-        var grids = _ent.AllComponentsList<MapGridComponent>();
+        var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+        var grids = EntityManager.AllComponentsList<MapGridComponent>();
         grids.Sort((x, y) => x.Uid.CompareTo(y.Uid));
 
-        foreach (var (uid, grid) in grids)
+        foreach (var (uid, _) in grids)
         {
             var xform = xformQuery.GetComponent(uid);
-            var worldPos = xformSystem.GetWorldPosition(xform);
+            var worldPos = _transformSystem.GetWorldPosition(xform);
 
             msg.AppendFormat("{0}: map: {1}, ent: {2}, pos: {3:0.0},{4:0.0} \n",
                 uid, xform.MapID, uid, worldPos.X, worldPos.Y);
         }
 
-        shell.WriteLine(msg.ToString());
+        shell.WriteLine(msg.ToString()[..^1]);
     }
 }

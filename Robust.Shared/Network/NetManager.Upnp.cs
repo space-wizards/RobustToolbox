@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Threading;
 using Lidgren.Network;
 using Robust.Shared.Log;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Network;
 
@@ -32,6 +33,7 @@ public partial class NetManager
                     // The answer is that the relevant UPnP service for IPv6 is "WANIPv6FirewallControl".
                     // My router doesn't support it, so I can't test or implement it.
                     var upnp = peer.UPnP;
+                    DebugTools.Assert(upnp != null);
                     while (upnp.Status == UPnPStatus.Discovering)
                     {
                         // Sleep while the network thread does the work

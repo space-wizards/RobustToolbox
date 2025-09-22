@@ -1,12 +1,10 @@
-using System.Collections.Generic;
-using Robust.Server.Player;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Timing;
+using Robust.Shared.Player;
 
 namespace Robust.Server.GameObjects
 {
     public interface IServerEntityNetworkManager : IEntityNetworkManager
     {
-        uint GetLastMessageSequence(IPlayerSession session);
+        uint GetLastMessageSequence(ICommonSession session);
     }
 }

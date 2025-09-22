@@ -13,11 +13,11 @@ internal sealed class DoCommand : ToolshedCommand
 
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public IEnumerable<T> Do<T>(
-        [CommandInvocationContext] IInvocationContext ctx,
+        IInvocationContext ctx,
         [PipedArgument] IEnumerable<T> input,
-        [CommandArgument] string command)
+        string command)
     {
-        if (ctx is not OldShellInvocationContext { } reqCtx)
+        if (ctx is not OldShellInvocationContext { } reqCtx || reqCtx.Shell == null)
         {
             throw new NotImplementedException("do can only be executed in a shell invocation context. Some commands like emplace provide their own context.");
         }

@@ -38,11 +38,10 @@ namespace Robust.Shared.GameObjects
     [Serializable, NetSerializable]
     public readonly struct ComponentChange
     {
-        // 15ish bytes to create a component (strings are big), 5 bytes to remove one
-
+        /// <summary>
         /// State data for the created/modified component, if any.
         /// </summary>
-        public readonly ComponentState State;
+        public readonly IComponentState? State;
 
         /// <summary>
         ///     The Network ID of the component to remove.
@@ -51,7 +50,7 @@ namespace Robust.Shared.GameObjects
 
         public readonly GameTick LastModifiedTick;
 
-        public ComponentChange(ushort netId, ComponentState state, GameTick lastModifiedTick)
+        public ComponentChange(ushort netId, IComponentState? state, GameTick lastModifiedTick)
         {
             State = state;
             NetID = netId;

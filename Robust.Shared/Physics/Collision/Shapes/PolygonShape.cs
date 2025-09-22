@@ -23,9 +23,11 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Shapes;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -61,18 +63,12 @@ namespace Robust.Shared.Physics.Collision.Shapes
         /// <summary>
         /// The radius of this polygon.
         /// </summary>
-        [DataField("radius"), Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
+        [DataField, Access(typeof(SharedPhysicsSystem), Friend = AccessPermissions.ReadWriteExecute, Other = AccessPermissions.Read)]
         public float Radius { get; set; } = PhysicsConstants.PolygonRadius;
 
         public bool Set(List<Vector2> vertices)
         {
-            Span<Vector2> verts = stackalloc Vector2[vertices.Count];
-
-            for (var i = 0; i < vertices.Count; i++)
-            {
-                verts[i] = vertices[i];
-            }
-
+            var verts = CollectionsMarshal.AsSpan(vertices);
             return Set(verts, vertices.Count);
         }
 
@@ -80,7 +76,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
         {
             DebugTools.Assert(count is >= 3 and <= PhysicsConstants.MaxPolygonVertices);
 
-            var hull = PhysicsHull.ComputeHull(vertices, count);
+            var hull = InternalPhysicsHull.ComputeHull(vertices, count);
 
             if (hull.Count < 3)
             {
@@ -91,7 +87,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
             return true;
         }
 
-        public void Set(PhysicsHull hull)
+        internal void Set(InternalPhysicsHull hull)
         {
             DebugTools.Assert(hull.Count >= 3);
             var vertexCount = hull.Count;
@@ -123,14 +119,14 @@ namespace Robust.Shared.Physics.Collision.Shapes
             if (count is < 3 or > PhysicsConstants.MaxPolygonVertices)
                 return false;
 
-            var hull = new PhysicsHull();
+            var hull = new InternalPhysicsHull();
             for (var i = 0; i < count; i++)
             {
                 hull.Points[i] = Vertices[i];
             }
 
             hull.Count = count;
-            return PhysicsHull.ValidateHull(hull);
+            return InternalPhysicsHull.ValidateHull(hull);
         }
 
         private static Vector2 ComputeCentroid(Vector2[] vs, int count)
@@ -177,6 +173,28 @@ namespace Robust.Shared.Physics.Collision.Shapes
         {
         }
 
+        internal PolygonShape(SlimPolygon poly)
+        {
+            Vertices = new Vector2[poly.VertexCount];
+            Normals = new Vector2[poly.VertexCount];
+
+            poly._vertices.AsSpan[..VertexCount].CopyTo(Vertices);
+            poly._normals.AsSpan[..VertexCount].CopyTo(Normals);
+
+            Centroid = poly.Centroid;
+        }
+
+        internal PolygonShape(Polygon poly)
+        {
+            Vertices = new Vector2[poly.VertexCount];
+            Normals = new Vector2[poly.VertexCount];
+
+            poly._vertices.AsSpan[..VertexCount].CopyTo(Vertices);
+            poly._normals.AsSpan[..VertexCount].CopyTo(Normals);
+
+            Centroid = poly.Centroid;
+        }
+
         public PolygonShape(float radius)
         {
             Radius = radius;
@@ -186,6 +204,36 @@ namespace Robust.Shared.Physics.Collision.Shapes
         {
             // TODO: Someday don't need this.
             Set(Vertices.AsSpan(), VertexCount);
+        }
+
+        public void Set(Box2Rotated bounds)
+        {
+            Span<Vector2> verts = stackalloc Vector2[4];
+            verts[0] = bounds.BottomLeft;
+            verts[1] = bounds.BottomRight;
+            verts[2] = bounds.TopRight;
+            verts[3] = bounds.TopLeft;
+
+            var hull = new InternalPhysicsHull(verts, 4);
+            Set(hull);
+        }
+
+        public void SetAsBox(Box2 box)
+        {
+            Array.Resize(ref Vertices, 4);
+            Array.Resize(ref Normals, 4);
+
+            Vertices[0] = box.BottomLeft;
+            Vertices[1] = box.BottomRight;
+            Vertices[2] = box.TopRight;
+            Vertices[3] = box.TopLeft;
+
+            Normals[0] = new Vector2(0.0f, -1.0f);
+            Normals[1] = new Vector2(1.0f, 0.0f);
+            Normals[2] = new Vector2(0.0f, 1.0f);
+            Normals[3] = new Vector2(-1.0f, 0.0f);
+
+            Centroid = box.Center;
         }
 
         public void SetAsBox(float halfWidth, float halfHeight)

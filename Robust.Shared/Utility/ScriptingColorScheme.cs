@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using Robust.Shared.Maths;
 
@@ -20,7 +21,7 @@ namespace Robust.Shared.Utility
         public const string StructName = "struct name";
         public const string Default = "default";
 
-        public static readonly Dictionary<string, Color> ColorScheme = new()
+        public static readonly FrozenDictionary<string, Color> ColorScheme = new Dictionary<string, Color>()
         {
             {ClassName, Color.FromHex("#4EC9B0")},
             {Comment, Color.FromHex("#57A64A")},
@@ -36,6 +37,6 @@ namespace Robust.Shared.Utility
             {StringLiteral, Color.FromHex("#D69D85")},
             {StructName, Color.FromHex("#4EC9B0")},
             {Default, Color.FromHex("#D4D4D4")},
-        };
+        }.ToFrozenDictionary();
     }
 }

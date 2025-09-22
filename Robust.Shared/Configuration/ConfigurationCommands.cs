@@ -8,6 +8,58 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Configuration
 {
+    public static class CVarCommandUtil
+    {
+        /// <summary>
+        /// Parses a string into an object of the given type.
+        /// </summary>
+        /// <exception cref="FormatException">Thrown if the string could not be parsed into the given type.</exception>
+        /// <exception cref="NotSupportedException">Thrown if the type is not supported.</exception>
+        public static object ParseObject(Type type, string input)
+        {
+            if (type == typeof(bool))
+            {
+                if (bool.TryParse(input, out var val))
+                    return val;
+
+                if (Parse.TryInt32(input, out var intVal))
+                {
+                    if (intVal == 0) return false;
+                    if (intVal == 1) return true;
+                }
+
+                throw new FormatException($"Could not parse bool value: {input}");
+            }
+
+            if (type == typeof(string))
+            {
+                return input;
+            }
+
+            if (type == typeof(int))
+            {
+                return Parse.Int32(input);
+            }
+
+            if (type == typeof(float))
+            {
+                return Parse.Float(input);
+            }
+
+            if (type == typeof(long))
+            {
+                return long.Parse(input);
+            }
+
+            if (type == typeof(ushort))
+            {
+                return ushort.Parse(input);
+            }
+
+            throw new NotSupportedException();
+        }
+    }
+
     [SuppressMessage("ReSharper", "StringLiteralTypo")]
     internal sealed class CVarCommand : LocalizedCommands
     {
@@ -51,7 +103,7 @@ namespace Robust.Shared.Configuration
                 var type = _cfg.GetCVarType(name);
                 try
                 {
-                    var parsed = ParseObject(type, value);
+                    var parsed = CVarCommandUtil.ParseObject(type, value);
                     _cfg.SetCVar(name, parsed);
                 }
                 catch (FormatException)
@@ -83,7 +135,7 @@ namespace Robust.Shared.Configuration
             return CompletionResult.FromHint($"<{type.Name}>");
         }
 
-        private static string GetCVarValueHint(IConfigurationManager cfg, string cVar)
+        private string GetCVarValueHint(IConfigurationManager cfg, string cVar)
         {
             var flags = cfg.GetCVarFlags(cVar);
             if ((flags & CVar.CONFIDENTIAL) != 0)
@@ -95,44 +147,48 @@ namespace Robust.Shared.Configuration
 
             return value;
         }
+    }
 
-        private static object ParseObject(Type type, string input)
+    internal sealed class CVarSubsCommand : LocalizedCommands
+    {
+        [Dependency] private readonly IConfigurationManager _cfg = default!;
+
+        public override string Command => "cvar_subs";
+
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            if (type == typeof(bool))
+            if (args.Length < 1)
             {
-                if (bool.TryParse(input, out var val))
-                    return val;
-
-                if (Parse.TryInt32(input, out var intVal))
-                {
-                    if (intVal == 0) return false;
-                    if (intVal == 1) return true;
-                }
-
-                throw new FormatException($"Could not parse bool value: {input}");
+                shell.WriteError(Loc.GetString("cmd-cvar_subs-invalid-args"));
+                return;
             }
 
-            if (type == typeof(string))
+            var name = args[0];
+            var subs = ((ConfigurationManager)_cfg).GetSubs(name);
+
+            foreach (var @delegate in subs)
             {
-                return input;
+                shell.WriteLine(ShowDelegateInfo(@delegate));
+            }
+        }
+
+        private static string ShowDelegateInfo(Delegate del)
+        {
+            return $"{del}: {del.Method} -> {del.Target}";
+        }
+
+        public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+        {
+            if (args.Length == 1)
+            {
+                return CompletionResult.FromHintOptions(
+                    _cfg.GetRegisteredCVars()
+                        .Select(c => new CompletionOption(c))
+                        .OrderBy(c => c.Value),
+                    Loc.GetString("cmd-cvar_subs-arg-name"));
             }
 
-            if (type == typeof(int))
-            {
-                return Parse.Int32(input);
-            }
-
-            if (type == typeof(float))
-            {
-                return Parse.Float(input);
-            }
-
-            if (type == typeof(long))
-            {
-                return long.Parse(input);
-            }
-
-            throw new NotSupportedException();
+            return CompletionResult.Empty;
         }
     }
 }

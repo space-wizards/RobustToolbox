@@ -4,8 +4,8 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.RichText;
 
-[Prototype("font")]
-public sealed class FontPrototype : IPrototype
+[Prototype]
+public sealed partial class FontPrototype : IPrototype
 {
     [IdDataField]
     public string ID { get; private set; } = default!;

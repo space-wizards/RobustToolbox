@@ -5,8 +5,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Robust.Shared.Collections;
 
@@ -48,6 +51,41 @@ public struct ValueList<T> : IEnumerable<T>
     {
         _items = capacity == 0 ? null : new T[capacity];
         Count = 0;
+    }
+
+    /// <summary>
+    /// Creates a list by copying the contents of the source list.
+    /// </summary>
+    public ValueList(List<T> list) : this(list, 0, list.Count)
+    {
+    }
+
+    /// <summary>
+    /// Creates a list by copying the contents of the source list.
+    /// </summary>
+    public ValueList(List<T> list, int start, int count)
+    {
+        _items = new T[count];
+
+        var liSpan = CollectionsMarshal.AsSpan(list)[start..(start + count)];
+        liSpan.CopyTo(_items);
+
+        Count = count;
+    }
+
+    /// <summary>
+    /// Creates a list by copying the contents of the source list.
+    /// </summary>
+    public ValueList(IReadOnlyCollection<T> list)
+    {
+        var count = list.Count;
+        _items = new T[count];
+
+        foreach (var entry in list)
+        {
+            var size = Count;
+            AddNoResize(entry, size);
+        }
     }
 
     /// <summary>
@@ -157,17 +195,23 @@ public struct ValueList<T> : IEnumerable<T>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Add(T item)
     {
-        var array = _items;
         var size = Count;
         if ((uint)size < (uint)Capacity)
         {
-            Count = size + 1;
-            array![size] = item;
+            AddNoResize(item, size);
         }
         else
         {
             AddWithResize(item);
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void AddNoResize(T item, int size)
+    {
+        var array = _items;
+        Count = size + 1;
+        array![size] = item;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -250,6 +294,9 @@ public struct ValueList<T> : IEnumerable<T>
 
         if (Capacity < capacity)
             Grow(capacity);
+
+        if (capacity == 0)
+            return capacity;
 
         return _items!.Length;
     }
@@ -521,5 +568,129 @@ public struct ValueList<T> : IEnumerable<T>
         this[index] = replacement;
         RemoveAt(Count - 1);
         return old;
+    }
+
+    /// <summary>
+    /// Adds a range of values from the source list.
+    /// </summary>
+    public void AddRange(ValueList<T> list)
+    {
+        var liSpan = list.Span;
+        AddRange(liSpan);
+    }
+
+    /// <summary>
+    /// Adds a range of values from the source list.
+    /// </summary>
+    public void AddRange(List<T> list)
+    {
+        var liSpan = CollectionsMarshal.AsSpan(list);
+        AddRange(liSpan);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AddRange(Span<T> span)
+    {
+        AddRange((ReadOnlySpan<T>) span);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AddRange(ReadOnlySpan<T> span)
+    {
+        var spanCount = span.Length;
+        EnsureCapacity(Count + spanCount);
+        var target = new Span<T>(_items, Count, spanCount);
+        span.CopyTo(target);
+        Count += spanCount;
+    }
+
+    /// <summary>
+    /// Fills this with default data up to the specified count.
+    /// </summary>
+    public void EnsureLength(int newCount)
+    {
+        if (Count > newCount)
+            return;
+
+        EnsureCapacity(newCount);
+        var region = new Span<T>(_items, Count, (newCount - Count));
+        region.Clear();
+        Count = newCount;
+    }
+
+    public void AddRange(IEnumerable<T> select)
+    {
+        foreach (var result in select)
+        {
+            Add(result);
+        }
+    }
+
+    /// <summary>
+    /// Push a value onto the end of this list. This is equivalent to <see cref="Add"/>.
+    /// </summary>
+    /// <remarks>
+    /// This method is added to provide completeness with other stack-like functions.
+    /// </remarks>
+    /// <param name="item">The item to add to the list.</param>
+    public void Push(T item)
+    {
+        Add(item);
+    }
+
+    /// <summary>
+    /// Remove and return the value at the end of the list.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown if the list is empty.</exception>
+    public T Pop()
+    {
+        if (!TryPop(out var value))
+            throw new InvalidOperationException("List is empty");
+
+        return value;
+    }
+
+    /// <summary>
+    /// Return the value at the end of the list, but do not remove it.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown if the list is empty.</exception>
+    public T Peek()
+    {
+        if (!TryPeek(out var value))
+            throw new InvalidOperationException("List is empty");
+
+        return value;
+    }
+
+    /// <summary>
+    /// Remove and return the value at the end of the list, only if the list is not empty.
+    /// </summary>
+    /// <returns>True if the list was not empty and an item was removed.</returns>
+    public bool TryPop([MaybeNullWhen(false)] out T value)
+    {
+        if (Count == 0)
+        {
+            value = default;
+            return false;
+        }
+
+        value = _items![--Count];
+        return true;
+    }
+
+    /// <summary>
+    /// Remove and return the value at the end of the list, only if the list is not empty.
+    /// </summary>
+    /// <returns>True if the list was not empty and an item was removed.</returns>
+    public bool TryPeek([MaybeNullWhen(false)] out T value)
+    {
+        if (Count == 0)
+        {
+            value = default;
+            return false;
+        }
+
+        value = _items![Count];
+        return true;
     }
 }

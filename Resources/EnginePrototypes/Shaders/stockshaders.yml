@@ -4,6 +4,12 @@
   kind: canvas
   light_mode: unshaded
 
+# Simple mix blend
+- type: shader
+  id: Mix
+  kind: canvas
+  blend_mode: Mix
+
 - type: shader
   id: shaded
   kind: canvas
@@ -12,3 +18,8 @@
   id: bgra
   kind: source
   path: "/Shaders/Internal/bgra.swsl"
+
+- type: shader
+  id: ColorPicker
+  kind: source
+  path: "/Shaders/color_picker.swsl"

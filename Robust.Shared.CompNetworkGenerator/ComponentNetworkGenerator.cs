@@ -1,11 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
+using static Microsoft.CodeAnalysis.SymbolDisplayFormat;
+using static Microsoft.CodeAnalysis.SymbolDisplayMiscellaneousOptions;
+using Robust.Roslyn.Shared;
+
+// Yes dude I know this source generator isn't incremental, I'll fix it eventually.
+#pragma warning disable RS1035
 
 namespace Robust.Shared.CompNetworkGenerator
 {
@@ -14,23 +17,40 @@ namespace Robust.Shared.CompNetworkGenerator
     {
         private const string ClassAttributeName = "Robust.Shared.Analyzers.AutoGenerateComponentStateAttribute";
         private const string MemberAttributeName = "Robust.Shared.Analyzers.AutoNetworkedFieldAttribute";
+
         private const string GlobalEntityUidName = "global::Robust.Shared.GameObjects.EntityUid";
         private const string GlobalNullableEntityUidName = "global::Robust.Shared.GameObjects.EntityUid?";
+
+        private const string GlobalNetEntityName = "global::Robust.Shared.GameObjects.NetEntity";
+        private const string GlobalNetEntityNullableName = "global::Robust.Shared.GameObjects.NetEntity?";
+
         private const string GlobalEntityCoordinatesName = "global::Robust.Shared.Map.EntityCoordinates";
         private const string GlobalNullableEntityCoordinatesName = "global::Robust.Shared.Map.EntityCoordinates?";
-        private const string GlobalEntityUidSetName = "global::System.Collections.Generic.HashSet<global::Robust.Shared.GameObjects.EntityUid>";
-        private const string GlobalNetEntityUidSetName = "global::System.Collections.Generic.HashSet<global::Robust.Shared.GameObjects.NetEntity>";
-        private const string GlobalEntityUidListName = "global::System.Collections.Generic.List<global::Robust.Shared.GameObjects.EntityUid>";
-        private const string GlobalNetEntityUidListName = "global::System.Collections.Generic.List<global::Robust.Shared.GameObjects.NetEntity>";
 
-        private static string GenerateSource(in GeneratorExecutionContext context, INamedTypeSymbol classSymbol, CSharpCompilation comp, bool raiseAfterAutoHandle)
+        private const string GlobalEntityUidSetName = "global::System.Collections.Generic.HashSet<global::Robust.Shared.GameObjects.EntityUid>";
+        private const string GlobalNetEntityUidSetName = $"global::System.Collections.Generic.HashSet<{GlobalNetEntityName}>";
+
+        private const string GlobalEntityUidListName = "global::System.Collections.Generic.List<global::Robust.Shared.GameObjects.EntityUid>";
+        private const string GlobalNetEntityUidListName = $"global::System.Collections.Generic.List<{GlobalNetEntityName}>";
+
+        private const string GlobalDictionaryName = "global::System.Collections.Generic.Dictionary<TKey, TValue>";
+        private const string GlobalHashSetName = "global::System.Collections.Generic.HashSet<T>";
+        private const string GlobalListName = "global::System.Collections.Generic.List<T>";
+        private const string GlobalIRobustCloneableName = "global::Robust.Shared.Serialization.IRobustCloneable";
+
+        private static readonly SymbolDisplayFormat FullNullableFormat =
+            FullyQualifiedFormat.WithMiscellaneousOptions(IncludeNullableReferenceTypeModifier);
+
+        private static string? GenerateSource(in GeneratorExecutionContext context, INamedTypeSymbol classSymbol, CSharpCompilation comp,
+            bool raiseAfterAutoHandle,
+            bool fieldDeltas)
         {
             var nameSpace = classSymbol.ContainingNamespace.ToDisplayString();
             var componentName = classSymbol.Name;
             var stateName = $"{componentName}_AutoState";
 
-            var members = classSymbol.GetMembers();
-            var fields = new List<(ITypeSymbol Type, string FieldName, AttributeData Attribute)>();
+            var members = TypeSymbolHelper.GetAllMembersIncludingInherited(classSymbol);
+            var fields = new List<(ITypeSymbol Type, string FieldName)>();
             var fieldAttr = comp.GetTypeByMetadataName(MemberAttributeName);
 
             foreach (var mem in members)
@@ -47,7 +67,7 @@ namespace Robust.Shared.CompNetworkGenerator
                 switch (mem)
                 {
                     case IFieldSymbol field:
-                        fields.Add((field.Type, field.Name, attribute));
+                        fields.Add((field.Type, field.Name));
                         break;
                     case IPropertySymbol prop:
                     {
@@ -83,7 +103,7 @@ namespace Robust.Shared.CompNetworkGenerator
                             continue;
                         }
 
-                        fields.Add((prop.Type, prop.Name, attribute));
+                        fields.Add((prop.Type, prop.Name));
                         break;
                     }
                 }
@@ -121,132 +141,507 @@ namespace Robust.Shared.CompNetworkGenerator
             //            component.Count = state.Count;
             var handleStateSetters = new StringBuilder();
 
-            foreach (var (type, name, attribute) in fields)
+            // Builds the string for duplicating a full component state, in preparation for applying a delta state state
+            // without modifying the original. Note that this will not do a proper clone of any collections, under the
+            // assumption that nothing should ever try to modify them. Applying the delta state should just override the
+            // referenced collection, not modify it.
+            var shallowClone = new StringBuilder();
+
+            // Delta field states
+            var deltaGetFields = new StringBuilder();
+
+            var deltaHandleFields = new StringBuilder();
+
+            // Apply the delta field to the full state.
+            var deltaApply = new List<string>();
+
+            var index = -1;
+
+            var fieldsStr = new StringBuilder();
+            var fieldStates = new StringBuilder();
+
+            var networkedTypes = new List<string>();
+
+            foreach (var (type, name) in fields)
             {
-                var typeDisplayStr = type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                index++;
+
+                if (index == 0)
+                {
+                    fieldsStr.Append(@$"""{name}""");
+                }
+                else
+                {
+                    fieldsStr.Append(@$", ""{name}""");
+                }
+
+                var typeDisplayStr = type.ToDisplayString(FullNullableFormat);
                 var nullable = type.NullableAnnotation == NullableAnnotation.Annotated;
                 var nullableAnnotation = nullable ? "?" : string.Empty;
+
+                string deltaStateName = $"{name}_FieldComponentState";
+
+                // The type used for networking, e.g. EntityUid -> NetEntity
+                string networkedType;
+
+                string getField;
+                string? cast;
+                // TODO: Uhh I just need casts or something.
+                var castString = typeDisplayStr.Substring(8);
+
+                deltaGetFields.Append(@$"
+                    case {Math.Pow(2, index)}:
+                        args.State = new {deltaStateName}()
+                        {{
+                        ");
+
+                deltaHandleFields.Append(@$"
+                case {deltaStateName} {deltaStateName}_State:
+                {{");
+
+                var fieldHandleValue = $"{deltaStateName}_State.{name}!";
 
                 switch (typeDisplayStr)
                 {
                     case GlobalEntityUidName:
                     case GlobalNullableEntityUidName:
-                        stateFields.Append($@"
-        public NetEntity{nullableAnnotation} {name} = default!;");
+                        networkedType = $"NetEntity{nullableAnnotation}";
 
-                        getStateInit.Append($@"
-                {name} = GetNetEntity(component.{name}),");
+                        stateFields.Append($@"
+        public {networkedType} {name} = default!;");
+
+                        getField = $"GetNetEntity(component.{name})";
+                        cast = $"(NetEntity{nullableAnnotation})";
+
                         handleStateSetters.Append($@"
             component.{name} = EnsureEntity<{componentName}>(state.{name}, uid);");
+
+                        deltaHandleFields.Append($@"
+                    component.{name} = EnsureEntity<{componentName}>({cast} {fieldHandleValue}, uid);");
+
+                        shallowClone.Append($@"
+                {name} = this.{name},");
+
+                        deltaApply.Add($"fullState.{name} = {name};");
 
                         break;
                     case GlobalEntityCoordinatesName:
                     case GlobalNullableEntityCoordinatesName:
-                        stateFields.Append($@"
-        public NetCoordinates{nullableAnnotation} {name} = default!;");
+                        networkedType = $"NetCoordinates{nullableAnnotation}";
 
-                        getStateInit.Append($@"
-                {name} = GetNetCoordinates(component.{name}),");
+                        stateFields.Append($@"
+        public {networkedType} {name} = default!;");
+
+                        getField = $"GetNetCoordinates(component.{name})";
+                        cast = $"(NetCoordinates{nullableAnnotation})";
+
                         handleStateSetters.Append($@"
             component.{name} = EnsureCoordinates<{componentName}>(state.{name}, uid);");
 
-                        break;
-                    default:
-                        stateFields.Append($@"
-        public {typeDisplayStr} {name} = default!;");
+                        deltaHandleFields.Append($@"
+                    component.{name} = EnsureCoordinates<{componentName}>({cast} {fieldHandleValue}, uid);");
 
-                        if (attribute.ConstructorArguments[0].Value is bool val && val)
-                        {
-                            // get first ctor arg of the field attribute, which determines whether the field should be cloned
-                            // (like if its a dict or list)
-                            getStateInit.Append($@"
-                {name} = component.{name},");
+                        shallowClone.Append($@"
+                {name} = this.{name},");
 
-                            handleStateSetters.Append($@"
-            if (state.{name} != null)
-                component.{name} = new(state.{name});");
-                        }
-                        else
-                        {
-                            getStateInit.Append($@"
-                {name} = component.{name},");
-
-                            handleStateSetters.Append($@"
-            component.{name} = state.{name};");
-                        }
+                        deltaApply.Add($@"fullState.{name} = {name};");
 
                         break;
                     case GlobalEntityUidSetName:
-                        stateFields.Append($@"
-        public {GlobalNetEntityUidSetName} {name} = default!;");
+                        networkedType = $"{GlobalNetEntityUidSetName}";
 
-                        getStateInit.Append($@"
-                {name} = GetNetEntitySet(component.{name}),");
+                        stateFields.Append($@"
+        public {networkedType} {name} = default!;");
+
+                        getField = $"GetNetEntitySet(component.{name})";
+                        cast = $"({GlobalNetEntityUidSetName})";
+
                         handleStateSetters.Append($@"
-            component.{name} = EnsureEntitySet<{componentName}>(state.{name}, uid);");
+            EnsureEntitySet<{componentName}>(state.{name}, uid, component.{name});");
+
+                        deltaHandleFields.Append($@"
+                    EnsureEntitySet<{componentName}>({cast} {fieldHandleValue}, uid, component.{name});");
+
+                        shallowClone.Append($@"
+                {name} = this.{name},");
+
+                        deltaApply.Add($@"fullState.{name} = {name};");
 
                         break;
                     case GlobalEntityUidListName:
-                        stateFields.Append($@"
-        public {GlobalNetEntityUidListName} {name} = default!;");
+                        networkedType = $"{GlobalNetEntityUidListName}";
 
-                        getStateInit.Append($@"
-                {name} = GetNetEntityList(component.{name}),");
+                        stateFields.Append($@"
+                        public {networkedType} {name} = default!;");
+
+                        getField = $"GetNetEntityList(component.{name})";
+                        cast = $"({GlobalNetEntityUidListName})";
+
                         handleStateSetters.Append($@"
-            component.{name} = EnsureEntityList<{componentName}>(state.{name}, uid);");
+            EnsureEntityList<{componentName}>(state.{name}, uid, component.{name});");
+
+                        deltaHandleFields.Append($@"
+                    EnsureEntityList<{componentName}>({cast} {fieldHandleValue}, uid, component.{name});");
+
+                        shallowClone.Append($@"
+                {name} = this.{name},");
+
+                        deltaApply.Add($@"fullState.{name} = {name};");
+
+                        break;
+                    default:
+                        if (type is INamedTypeSymbol { TypeArguments.Length: 2 } named &&
+                            named.ConstructedFrom.ToDisplayString(FullyQualifiedFormat) == GlobalDictionaryName)
+                        {
+                            var key = named.TypeArguments[0].ToDisplayString(FullNullableFormat);
+                            var keyNullable = key.EndsWith("?");
+
+                            var value = named.TypeArguments[1].ToDisplayString(FullNullableFormat);
+                            var valueNullable = value.EndsWith("?");
+
+                            if (key is GlobalEntityUidName or GlobalNullableEntityUidName)
+                            {
+                                key = keyNullable ? GlobalNetEntityNullableName : GlobalNetEntityName;
+
+                                var ensureGeneric = $"{componentName}, {value}";
+                                if (value is GlobalEntityUidName or GlobalNullableEntityUidName)
+                                {
+                                    value = valueNullable ? GlobalNetEntityNullableName : GlobalNetEntityName;
+                                    ensureGeneric = componentName;
+                                }
+
+                                networkedType = $"Dictionary<{key}, {value}>";
+
+                                stateFields.Append($@"
+        public {networkedType} {name} = default!;");
+
+                                getField = $"GetNetEntityDictionary(component.{name})";
+
+                                if (valueNullable && value is not GlobalNetEntityName and not GlobalNetEntityNullableName)
+                                {
+                                    cast = $"(Dictionary<{key}, {value}>)";
+
+                                    handleStateSetters.Append($@"
+            EnsureEntityDictionaryNullableValue<{componentName}, {value}>(state.{name}, uid, component.{name});");
+
+                                    deltaHandleFields.Append($@"
+                    EnsureEntityDictionaryNullableValue<{componentName}, {value}>({cast} {fieldHandleValue}, uid, component.{name});");
+                                }
+                                else
+                                {
+                                    cast = $"({castString})";
+
+                                    handleStateSetters.Append($@"
+            EnsureEntityDictionary<{ensureGeneric}>(state.{name}, uid, component.{name});");
+
+                                    deltaHandleFields.Append($@"
+                    EnsureEntityDictionary<{ensureGeneric}>({cast} {fieldHandleValue}, uid, component.{name});");
+                                }
+
+                                shallowClone.Append($@"
+                {name} = this.{name},");
+
+                                deltaApply.Add($@"fullState.{name} = {name};");
+
+                                break;
+                            }
+
+                            if (value is GlobalEntityUidName or GlobalNullableEntityUidName)
+                            {
+                                value = valueNullable ? GlobalNetEntityNullableName : GlobalNetEntityName;
+                                networkedType = $"Dictionary<{key}, {value}>";
+
+                                stateFields.Append($@"
+        public {networkedType} {name} = default!;");
+
+                                getField = $"GetNetEntityDictionary(component.{name})";
+                                cast = $"(Dictionary<{key}, {value}>)";
+
+                                handleStateSetters.Append($@"
+            EnsureEntityDictionary<{componentName}, {key}>(state.{name}, uid, component.{name});");
+
+                                deltaHandleFields.Append($@"
+                    EnsureEntityDictionary<{componentName}, {key}>({cast} {fieldHandleValue}, uid, component.{name});");
+
+                                shallowClone.Append($@"
+                {name} = this.{name},");
+
+                                deltaApply.Add($@"fullState.{name} = {name};");
+
+                                break;
+                            }
+                        }
+
+                        networkedType = $"{typeDisplayStr}";
+
+                        stateFields.Append($@"
+        public {networkedType} {name} = default!;");
+
+                        if (ImplementsInterface(type, GlobalIRobustCloneableName))
+                        {
+                            getField = $"component.{name}";
+                            cast = $"({castString})";
+
+                            var nullCast = nullable ? castString.Substring(0, castString.Length - 1) : castString;
+
+                            if (nullable)
+                            {
+                                handleStateSetters.Append($@"
+            component.{name} = state.{name} == null ? null! : state.{name}.Clone();");
+                                deltaHandleFields.Append($@"
+                    var {name}Value = {cast} {fieldHandleValue};
+                    if ({name}Value == null)
+                        component.{name} = null!;
+                    else
+                        component.{name} = {nullCast}({name}Value.Clone());");
+                                shallowClone.Append($@"
+                {name} = this.{name},");
+                                deltaApply.Add($"fullState.{name} = {name} == null ? null! : {name}.Clone();");
+                            }
+                            else
+                            {
+                                handleStateSetters.Append($@"
+            component.{name} = state.{name}.Clone();");
+                                deltaHandleFields.Append($@"
+                    component.{name} = {cast}({fieldHandleValue}.Clone());");
+                                shallowClone.Append($@"
+                {name} = this.{name},");
+                                deltaApply.Add($"fullState.{name} = {name}.Clone();");
+                            }
+                        }
+                        else if (IsCloneType(type))
+                        {
+                            getField = $"component.{name}";
+                            cast = $"({castString})";
+
+                            var nullCast = nullable ? castString.Substring(0, castString.Length - 1) : castString;
+
+                            handleStateSetters.Append($@"
+            component.{name} = state.{name} == null ? null! : new(state.{name});");
+
+                            deltaHandleFields.Append($@"
+                    var {name}Value = {cast} {fieldHandleValue};
+                    if ({name}Value == null)
+                        component.{name} = null!;
+                    else
+                        component.{name} = new {nullCast}({name}Value);");
+
+                            shallowClone.Append($@"
+                {name} = this.{name},");
+
+                            deltaApply.Add($"fullState.{name} = {name} == null ? null! : new({name});");
+                        }
+                        else
+                        {
+                            getField = $"component.{name}";
+                            cast = $"({castString})";
+
+                            handleStateSetters.Append($@"
+            component.{name} = state.{name};");
+
+                            deltaHandleFields.Append($@"
+                    component.{name} = {cast} {fieldHandleValue};");
+
+                            shallowClone.Append($@"
+                {name} = this.{name},");
+
+                            deltaApply.Add($"fullState.{name} = {name};");
+                        }
 
                         break;
                 }
+
+                /*
+                 * End loop stuff
+                 */
+
+                networkedTypes.Add(networkedType);
+
+                getStateInit.Append($@"
+                {name} = {getField},");
+
+                deltaGetFields.Append(@$"    {name} = {getField}
+                        }};
+                        return;");
+
+                deltaHandleFields.Append(@"
+                    break;
+                }
+");
             }
 
-            var eventRaise = "";
-            if (raiseAfterAutoHandle)
+            var deltaGetState = "";
+            var deltaInterface = "";
+            var deltaCompFields = "";
+            var deltaNetRegister = "";
+
+            var cloneMethod = "";
+            if (fieldDeltas)
             {
-                eventRaise = @"
+                cloneMethod = $@"
+        public {stateName} ShallowClone()
+        {{
+            return new {stateName}()
+            {{{shallowClone}
+            }};
+        }}
+";
+
+                for (var i = 0; i < fields.Count; i++)
+                {
+                    var name = fields[i].FieldName;
+                    string deltaStateName = $"{name}_FieldComponentState";
+                    var networkedType = networkedTypes[i];
+                    var apply = deltaApply[i];
+
+                    // Creates a state per field
+                    fieldStates.Append($@"
+    [Serializable, NetSerializable]
+    public sealed class {deltaStateName} : IComponentDeltaState<{stateName}>
+    {{
+        public {networkedType} {name} = default!;
+
+        public void ApplyToFullState({stateName} fullState)
+        {{
+            {apply}
+        }}
+
+        public {stateName} CreateNewFullState({stateName} fullState)
+        {{
+            var newState = fullState.ShallowClone();
+            ApplyToFullState(newState);
+            return newState;
+        }}
+    }}
+");
+                }
+
+                deltaNetRegister = $@"EntityManager.ComponentFactory.RegisterNetworkedFields<{classSymbol}>({fieldsStr});";
+
+                deltaGetState = @$"// Delta state
+            if (component is IComponentDelta delta && args.FromTick > component.CreationTick && delta.LastFieldUpdate >= args.FromTick)
+            {{
+                var fields = EntityManager.GetModifiedFields(component, args.FromTick);
+
+                // Try and get a matching delta state for the relevant dirty fields, otherwise fall back to full state.
+                switch (fields)
+                {{{deltaGetFields}
+                    default:
+                        break;
+                }}
+            }}";
+
+                deltaInterface = " : IComponentDelta";
+
+                deltaCompFields = @$"/// <inheritdoc />
+    public GameTick LastFieldUpdate {{ get; set; }} = GameTick.Zero;
+
+    /// <inheritdoc />
+    public GameTick[] LastModifiedFields {{ get; set; }} = Array.Empty<GameTick>();";
+            }
+
+            string handleState;
+            if (!fieldDeltas)
+            {
+                var eventRaise = "";
+                if (raiseAfterAutoHandle)
+                {
+                    eventRaise = @"
+
             var ev = new AfterAutoHandleStateEvent(args.Current);
-            EntityManager.EventBus.RaiseComponentEvent(component, ref ev);";
+            EntityManager.EventBus.RaiseComponentEvent(uid, component, ref ev);";
+                }
+
+                handleState = $@"
+            if (args.Current is not {stateName} state)
+                return;
+{handleStateSetters}{eventRaise}";
+            }
+            else
+            {
+                // Re-indent handleStateSetters so it aligns with the switch block
+                var stateSetters = handleStateSetters.ToString();
+                stateSetters = stateSetters.Replace("            ", "                    ");
+
+
+                var eventRaise = "";
+                if (raiseAfterAutoHandle)
+                {
+                    eventRaise = @"
+
+            if (args.Current is not {} current)
+                return;
+
+            var ev = new AfterAutoHandleStateEvent(current);
+            EntityManager.EventBus.RaiseComponentEvent(uid, component, ref ev);";
+                }
+
+                handleState = $@"
+            switch(args.Current)
+            {{{deltaHandleFields}
+                case {stateName} state:
+                {{{stateSetters}
+                    break;
+                }}
+
+                default:
+                    return;
+            }}{eventRaise}";
             }
 
             return $@"// <auto-generated />
+#nullable enable
 using System;
 using Robust.Shared.GameStates;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Analyzers;
+using Robust.Shared.Collections;
 using Robust.Shared.Serialization;
 using Robust.Shared.Map;
+using Robust.Shared.Timing;
+using Robust.Shared.Utility;
+using System.Collections.Generic;
 
 namespace {nameSpace};
 
-public partial class {componentName}
+public partial class {componentName}{deltaInterface}
 {{
+    {deltaCompFields}
+
     [System.Serializable, NetSerializable]
-    public class {stateName} : ComponentState
+    [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+    public sealed class {stateName} : IComponentState
     {{{stateFields}
+{cloneMethod}
     }}
 
     [RobustAutoGenerated]
-    public class {componentName}_AutoNetworkSystem : EntitySystem
+    [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]
+    public sealed class {componentName}_AutoNetworkSystem : EntitySystem
     {{
         public override void Initialize()
         {{
+            {deltaNetRegister}
             SubscribeLocalEvent<{componentName}, ComponentGetState>(OnGetState);
             SubscribeLocalEvent<{componentName}, ComponentHandleState>(OnHandleState);
         }}
 
         private void OnGetState(EntityUid uid, {componentName} component, ref ComponentGetState args)
         {{
+            {deltaGetState}
+
+            // Get full state
             args.State = new {stateName}
             {{{getStateInit}
             }};
         }}
 
         private void OnHandleState(EntityUid uid, {componentName} component, ref ComponentHandleState args)
-        {{
-            if (args.Current is not {stateName} state)
-                return;
-{handleStateSetters}{eventRaise}
+        {{{handleState}
         }}
     }}
+
+    {fieldStates}
 }}
 ";
         }
@@ -269,13 +664,15 @@ public partial class {componentName}
                 {
                     var attr = type.Attribute;
                     var raiseEv = false;
-                    if (attr.ConstructorArguments.Length == 1 && attr.ConstructorArguments[0].Value != null)
+                    var fieldDeltas = false;
+                    if (attr.ConstructorArguments is [{Value: bool raise}, {Value: bool fields}])
                     {
                         // Get the afterautohandle bool, which is first constructor arg
-                        raiseEv = (bool) attr.ConstructorArguments[0].Value;
+                        raiseEv = raise;
+                        fieldDeltas = fields;
                     }
 
-                    var source = GenerateSource(context, type.Type, comp, raiseEv);
+                    var source = GenerateSource(context, type.Type, comp, raiseEv, fieldDeltas);
                     // can be null if no members marked with network field, which already has a diagnostic, so
                     // just continue
                     if (source == null)
@@ -304,6 +701,8 @@ public partial class {componentName}
         {
             var symbols = new List<(INamedTypeSymbol, AttributeData)>();
             var attributeSymbol = comp.GetTypeByMetadataName(ClassAttributeName);
+            var fieldAttr = comp.GetTypeByMetadataName(MemberAttributeName);
+
             foreach (var candidateClass in receiver.CandidateClasses)
             {
                 var model = comp.GetSemanticModel(candidateClass.SyntaxTree);
@@ -312,8 +711,33 @@ public partial class {componentName}
                     attr.AttributeClass != null &&
                     attr.AttributeClass.Equals(attributeSymbol, SymbolEqualityComparer.Default));
 
+                if (typeSymbol == null)
+                    continue;
+
                 if (relevantAttribute == null)
                 {
+                    foreach (var mem in TypeSymbolHelper.GetAllMembersIncludingInherited(typeSymbol))
+                    {
+                        var attribute = mem.GetAttributes().FirstOrDefault(a =>
+                            a.AttributeClass != null &&
+                            a.AttributeClass.Equals(fieldAttr, SymbolEqualityComparer.Default));
+
+                        if (attribute == null)
+                            continue;
+
+                        var msg = "Field is marked with [AutoNetworkedField], but its class has no [AutoGenerateComponentState] attribute.";
+                        context.ReportDiagnostic(
+                            Diagnostic.Create(
+                                new DiagnosticDescriptor(
+                                    "RXN0007",
+                                    msg,
+                                    msg,
+                                    "Usage",
+                                    DiagnosticSeverity.Error,
+                                    true),
+                                candidateClass.Keyword.GetLocation()));
+                    }
+
                     continue;
                 }
 
@@ -352,6 +776,35 @@ public partial class {componentName}
                 //Debugger.Launch();
             }
             context.RegisterForSyntaxNotifications(() => new NameReferenceSyntaxReceiver());
+        }
+
+        private static bool IsCloneType(ITypeSymbol type)
+        {
+            if (type is not INamedTypeSymbol named || !named.IsGenericType)
+            {
+                return false;
+            }
+
+            var constructed = named.ConstructedFrom.ToDisplayString(FullyQualifiedFormat);
+            return constructed switch
+            {
+                GlobalDictionaryName or GlobalHashSetName or GlobalListName => true,
+                _ => false
+            };
+        }
+
+        private static bool ImplementsInterface(ITypeSymbol type, string interfaceName)
+        {
+            foreach (var interfaceType in type.AllInterfaces)
+            {
+                if (interfaceType.ToDisplayString(FullyQualifiedFormat).Contains(interfaceName)
+                    || interfaceType.ConstructedFrom.ToDisplayString(FullyQualifiedFormat).Contains(interfaceName))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

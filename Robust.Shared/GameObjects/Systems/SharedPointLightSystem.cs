@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.GameStates;
 using Robust.Shared.Maths;
 
 namespace Robust.Shared.GameObjects;
@@ -13,13 +14,19 @@ public abstract class SharedPointLightSystem : EntitySystem
 
     public abstract bool RemoveLightDeferred(EntityUid uid);
 
-    public void SetCastShadows(EntityUid uid, bool value, SharedPointLightComponent? comp = null)
+    protected abstract void UpdatePriority(EntityUid uid, SharedPointLightComponent comp, MetaDataComponent meta);
+
+    public void SetCastShadows(EntityUid uid, bool value, SharedPointLightComponent? comp = null, MetaDataComponent? meta = null)
     {
         if (!ResolveLight(uid, ref comp) || value == comp.CastShadows)
             return;
 
         comp.CastShadows = value;
-        Dirty(uid, comp);
+        if (!Resolve(uid, ref meta))
+            return;
+
+        Dirty(uid, comp, meta);
+        UpdatePriority(uid, comp, meta);
     }
 
     public void SetColor(EntityUid uid, Color value, SharedPointLightComponent? comp = null)
@@ -31,14 +38,24 @@ public abstract class SharedPointLightSystem : EntitySystem
         Dirty(uid, comp);
     }
 
-    public virtual void SetEnabled(EntityUid uid, bool enabled, SharedPointLightComponent? comp = null)
+    public virtual void SetEnabled(EntityUid uid, bool enabled, SharedPointLightComponent? comp = null, MetaDataComponent? meta = null)
     {
         if (!ResolveLight(uid, ref comp) || enabled == comp.Enabled)
             return;
 
+        var attempt = new AttemptPointLightToggleEvent(enabled);
+        RaiseLocalEvent(uid, ref attempt);
+
+        if (attempt.Cancelled)
+            return;
+
         comp.Enabled = enabled;
         RaiseLocalEvent(uid, new PointLightToggleEvent(comp.Enabled));
-        Dirty(uid, comp);
+        if (!Resolve(uid, ref meta))
+            return;
+
+        Dirty(uid, comp, meta);
+        UpdatePriority(uid, comp, meta);
     }
 
     public void SetEnergy(EntityUid uid, float value, SharedPointLightComponent? comp = null)
@@ -50,13 +67,17 @@ public abstract class SharedPointLightSystem : EntitySystem
         Dirty(uid, comp);
     }
 
-    public virtual void SetRadius(EntityUid uid, float radius, SharedPointLightComponent? comp = null)
+    public virtual void SetRadius(EntityUid uid, float radius, SharedPointLightComponent? comp = null, MetaDataComponent? meta = null)
     {
         if (!ResolveLight(uid, ref comp) || MathHelper.CloseToPercent(comp.Radius, radius))
             return;
 
         comp.Radius = radius;
-        Dirty(uid, comp);
+        if (!Resolve(uid, ref meta))
+            return;
+
+        Dirty(uid, comp, meta);
+        UpdatePriority(uid, comp, meta);
     }
 
     public void SetSoftness(EntityUid uid, float value, SharedPointLightComponent? comp = null)
@@ -66,5 +87,42 @@ public abstract class SharedPointLightSystem : EntitySystem
 
         comp.Softness = value;
         Dirty(uid, comp);
+    }
+
+    public void SetFalloff(EntityUid uid, float value, SharedPointLightComponent? comp = null)
+    {
+        if (!ResolveLight(uid, ref comp) || MathHelper.CloseToPercent(comp.Falloff, value))
+            return;
+
+        comp.Falloff = value;
+        Dirty(uid, comp);
+    }
+
+    public void SetCurveFactor(EntityUid uid, float value, SharedPointLightComponent? comp = null)
+    {
+        if (!ResolveLight(uid, ref comp) || MathHelper.CloseToPercent(comp.CurveFactor, value))
+            return;
+
+        comp.CurveFactor = value;
+        Dirty(uid, comp);
+    }
+
+    protected static void OnLightGetState(
+        EntityUid uid,
+        SharedPointLightComponent component,
+        ref ComponentGetState args)
+    {
+        args.State = new PointLightComponentState()
+        {
+            Color = component.Color,
+            Enabled = component.Enabled,
+            Energy = component.Energy,
+            Offset = component.Offset,
+            Radius = component.Radius,
+            Softness = component.Softness,
+            Falloff = component.Falloff,
+            CurveFactor = component.CurveFactor,
+            CastShadows = component.CastShadows,
+        };
     }
 }

@@ -1,5 +1,7 @@
 ﻿### Localization for engine console commands
 
+cmd-hint-float = [float]
+
 ## generic command errors
 
 cmd-invalid-arg-number-error = Invalid number of arguments.
@@ -9,7 +11,11 @@ cmd-parse-failure-float = {$arg} is not a valid float.
 cmd-parse-failure-bool = {$arg} is not a valid bool.
 cmd-parse-failure-uid = {$arg} is not a valid entity UID.
 cmd-parse-failure-mapid = {$arg} is not a valid MapId.
+cmd-parse-failure-enum = {$arg} is not a {$enum} Enum.
+cmd-parse-failure-grid = {$arg} is not a valid grid.
+cmd-parse-failure-cultureinfo = "{$arg}" is not valid CultureInfo.
 cmd-parse-failure-entity-exist = UID {$arg} does not correspond to an existing entity.
+cmd-parse-failure-session = There is no session with username: {$username}
 
 cmd-error-file-not-found = Could not find file: {$file}.
 cmd-error-dir-not-found = Could not find directory: {$dir}.
@@ -17,15 +23,15 @@ cmd-error-dir-not-found = Could not find directory: {$dir}.
 cmd-failure-no-attached-entity = There is no entity attached to this shell.
 
 ## 'help' command
-cmd-oldhelp-desc = Display general help or help text for a specific command
-cmd-oldhelp-help = Usage: help [command name]
+cmd-help-desc = Display general help or help text for a specific command
+cmd-help-help = Usage: help [command name]
     When no command name is provided, displays general-purpose help text. If a command name is provided, displays help text for that command.
 
-cmd-oldhelp-no-args = To display help for a specific command, write 'help <command>'. To list all available commands, write 'list'. To search for commands, use 'list <filter>'.
-cmd-oldhelp-unknown = Unknown command: { $command }
-cmd-oldhelp-top = { $command } - { $description }
-cmd-oldhelp-invalid-args = Invalid amount of arguments.
-cmd-oldhelp-arg-cmdname = [command name]
+cmd-help-no-args = To display help for a specific command, write 'help <command>'. To list all available commands, write 'list'. To search for commands, use 'list <filter>'.
+cmd-help-unknown = Unknown command: { $command }
+cmd-help-top = { $command } - { $description }
+cmd-help-invalid-args = Invalid amount of arguments.
+cmd-help-arg-cmdname = [command name]
 
 ## 'cvar' command
 cmd-cvar-desc = Gets or sets a CVar.
@@ -40,6 +46,13 @@ cmd-cvar-parse-error = Input value is in incorrect format for type { $type }
 cmd-cvar-compl-list = List available CVars
 cmd-cvar-arg-name = <name | ?>
 cmd-cvar-value-hidden = <value hidden>
+
+## 'cvar_subs' command
+cmd-cvar_subs-desc = Lists the OnValueChanged subscriptions for a CVar.
+cmd-cvar_subs-help = Usage: cvar_subs <name>
+
+cmd-cvar_subs-invalid-args = Must provide exactly one argument.
+cmd-cvar_subs-arg-name = <name>
 
 ## 'list' command
 cmd-list-desc = Lists available commands, with optional search filter
@@ -146,6 +159,7 @@ cmd-savemap-not-exist = Target map does not exist.
 cmd-savemap-init-warning = Attempted to save a post-init map without forcing the save.
 cmd-savemap-attempt = Attempting to save map {$mapId} to {$path}.
 cmd-savemap-success = Map successfully saved.
+cmd-savemap-error = Could not save map! See server log for details.
 cmd-hint-savemap-id = <MapID>
 cmd-hint-savemap-path = <Path>
 cmd-hint-savemap-force = [bool]
@@ -243,9 +257,6 @@ cmd-bind-arg-command = <InputCommand>
 cmd-net-draw-interp-desc = Toggles the debug drawing of the network interpolation.
 cmd-net-draw-interp-help = Usage: net_draw_interp
 
-cmd-net-draw-interp-desc = Toggles the debug drawing of the network interpolation.
-cmd-net-draw-interp-help = Usage: net_draw_interp
-
 cmd-net-watch-ent-desc = Dumps all network updates for an EntityId to the console.
 cmd-net-watch-ent-help = Usage: net_watchent <0|EntityUid>
 
@@ -286,7 +297,7 @@ cmd-lsgrid-desc = Lists grids.
 cmd-lsgrid-help = lsgrid
 
 cmd-addmap-desc = Adds a new empty map to the round. If the mapID already exists, this command does nothing.
-cmd-addmap-help = addmap <mapID> [initialize]
+cmd-addmap-help = addmap <mapID> [pre-init]
 
 cmd-rmmap-desc = Removes a map from the world. You cannot remove nullspace.
 cmd-rmmap-help = rmmap <mapId>
@@ -297,15 +308,8 @@ cmd-savegrid-help = savegrid <gridID> <Path>
 cmd-testbed-desc = Loads a physics testbed on the specified map.
 cmd-testbed-help = testbed <mapid> <test>
 
-cmd-saveconfig-desc = Saves the client configuration to the config file.
-cmd-saveconfig-help = saveconfig
-
 ## 'flushcookies' command
 # Note: the flushcookies command is from Robust.Client.WebView, it's not in the main engine code.
-
-cmd-flushcookies-desc = Flush CEF cookie storage to disk
-cmd-flushcookies-help = This ensure cookies are properly saved to disk in the event of unclean shutdowns.
-    Note that the actual operation is asynchronous.
 
 ## 'addcomp' command
 cmd-addcomp-desc = Adds a component to an entity.
@@ -382,9 +386,9 @@ cmd-tp-desc = Teleports a player to any location in the round.
 cmd-tp-help = tp <x> <y> [<mapID>]
 
 cmd-tpto-desc = Teleports the current player or the specified players/entities to the location of the first player/entity.
-cmd-tpto-help = tpto <username|uid> [username|uid]...
-cmd-tpto-destination-hint = destination (uid or username)
-cmd-tpto-victim-hint = entity to teleport (uid or username)
+cmd-tpto-help = tpto <username|uid> [username|NetEntity]...
+cmd-tpto-destination-hint = destination (NetEntity or username)
+cmd-tpto-victim-hint = entity to teleport (NetEntity or username)
 cmd-tpto-parse-error = Cant resolve entity or player: {$str}
 
 cmd-listplayers-desc = Lists all players currently connected.
@@ -407,9 +411,6 @@ cmd-spawn-help = spawn <prototype> OR spawn <prototype> <relative entity ID> OR 
 cmd-cspawn-desc = Spawns a client-side entity with specific type at your feet.
 cmd-cspawn-help = cspawn <entity type>
 
-cmd-scale-desc = Increases or decreases an entity's size naively.
-cmd-scale-help = scale <entityUid> <float>
-
 cmd-dumpentities-desc = Dump entity list.
 cmd-dumpentities-help = Dumps entity list of UIDs and prototype.
 
@@ -427,10 +428,19 @@ cmd-entfo-help = Usage: entfo <entityuid>
     The entity UID can be prefixed with 'c' to convert it to a client entity UID.
 
 cmd-fuck-desc = Throws an exception
-cmd-fuck-help = Throws an exception
+cmd-fuck-help = Usage: fuck
 
-cmd-showpos-desc = Enables debug drawing over all entity positions in the game.
+cmd-showpos-desc = Show the position of all entities on the screen.
 cmd-showpos-help = Usage: showpos
+
+cmd-showrot-desc = Show the rotation of all entities on the screen.
+cmd-showrot-help = Usage: showrot
+
+cmd-showvel-desc = Show the local velocity of all entites on the screen.
+cmd-showvel-help = Usage: showvel
+
+cmd-showangvel-desc = Show the angular velocity of all entities on the screen.
+cmd-showangvel-help = Usage: showangvel
 
 cmd-sggcell-desc = Lists entities on a snap grid cell.
 cmd-sggcell-help = Usage: sggcell <gridID> <vector2i>\nThat vector2i param is in the form x<int>,y<int>.
@@ -443,9 +453,6 @@ cmd-showanchored-help = Usage: showanchored
 
 cmd-dmetamem-desc = Dumps a type's members in a format suitable for the sandbox configuration file.
 cmd-dmetamem-help = Usage: dmetamem <type>
-
-cmd-dmetamem-desc = Displays chunk bounds for the purposes of rendering.
-cmd-dmetamem-help = Usage: showchunkbb <type>
 
 cmd-launchauth-desc = Load authentication tokens from launcher data to aid in testing of live servers.
 cmd-launchauth-help = Usage: launchauth <account name>
@@ -489,7 +496,7 @@ cmd-net_entityreport-help = Usage: net_entityreport
 cmd-net_refresh-desc = Requests a full server state.
 cmd-net_refresh-help = Usage: net_refresh
 
-cmd-net_graph-desc = Toggles the net statistics pannel.
+cmd-net_graph-desc = Toggles the net statistics panel.
 cmd-net_graph-help = Usage: net_graph
 
 cmd-net_watchent-desc = Dumps all network updates for an EntityId to the console.
@@ -513,9 +520,6 @@ cmd-profsnap-help = Usage: profsnap
 cmd-devwindow-desc = Dev Window
 cmd-devwindow-help = Usage: devwindow
 
-cmd-devwindow-desc = Open file
-cmd-devwindow-help = Usage: testopenfile
-
 cmd-scene-desc = Immediately changes the UI scene/state.
 cmd-scene-help = Usage: scene <className>
 
@@ -526,13 +530,10 @@ cmd-hwid-desc = Returns the current HWID (HardWare ID).
 cmd-hwid-help = Usage: hwid
 
 cmd-vvread-desc = Retrieve a path's value using VV (View Variables).
-cmd-vvread-desc = Usage: vvread <path>
+cmd-vvread-help = Usage: vvread <path>
 
 cmd-vvwrite-desc = Modify a path's value using VV (View Variables).
 cmd-vvwrite-help = Usage: vvwrite <path>
-
-cmd-vv-desc = Opens View Variables (VV).
-cmd-vv-help = Usage: vv <path|entity ID|guihover>
 
 cmd-vvinvoke-desc = Invoke/Call a path with arguments using VV.
 cmd-vvinvoke-help = Usage: vvinvoke <path> [arguments...]
@@ -561,3 +562,20 @@ cmd-vfs_ls-hint-path = <path>
 
 cmd-reloadtiletextures-desc = Reloads the tile texture atlas to allow hot reloading tile sprites
 cmd-reloadtiletextures-help = Usage: reloadtiletextures
+
+cmd-audio_length-desc = Shows the length of an audio file
+cmd-audio_length-help = Usage: audio_length { cmd-audio_length-arg-file-name }
+cmd-audio_length-arg-file-name = <file name>
+
+## PVS
+cmd-pvs-override-info-desc = Prints information about any PVS overrides associated with an entity.
+cmd-pvs-override-info-empty = Entity {$nuid} has no PVS overrides.
+cmd-pvs-override-info-global = Entity {$nuid} has a global override.
+cmd-pvs-override-info-clients = Entity {$nuid} has a session override for {$clients}.
+
+cmd-localization_set_culture-desc = Set DefaultCulture for the client LocalizationManager
+cmd-localization_set_culture-help = Usage: localization_set_culture <cultureName>
+cmd-localization_set_culture-culture-name = <cultureName>
+cmd-localization_set_culture-changed = Localization changed to { $code } ({ $nativeName } / { $englishName })
+
+cmd-addmap-hint-2 = runMapInit [true / false]

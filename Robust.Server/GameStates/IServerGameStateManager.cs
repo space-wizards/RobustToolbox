@@ -1,6 +1,6 @@
 using System;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Timing;
 
 namespace Robust.Server.GameStates

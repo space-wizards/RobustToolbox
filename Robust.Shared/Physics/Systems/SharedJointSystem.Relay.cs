@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Physics.Components;
-using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
@@ -44,15 +43,17 @@ public abstract partial class SharedJointSystem
         if (args.Current is not JointRelayComponentState state)
             return;
 
-        component.Relayed.Clear();
-        component.Relayed.UnionWith(EnsureEntitySet<JointRelayTargetComponent>(state.Entities, uid));
+        EnsureEntitySet<JointRelayTargetComponent>(state.Entities, uid, component.Relayed);
     }
 
     private void OnRelayShutdown(EntityUid uid, JointRelayTargetComponent component, ComponentShutdown args)
     {
+        if (_gameTiming.ApplyingState)
+            return;
+
         foreach (var relay in component.Relayed)
         {
-            if (Deleted(relay) || !_jointsQuery.TryGetComponent(relay, out var joint))
+            if (TerminatingOrDeleted(relay) || !_jointsQuery.TryGetComponent(relay, out var joint))
                 continue;
 
             RefreshRelay(relay, component: joint);
@@ -72,15 +73,27 @@ public abstract partial class SharedJointSystem
         if (_container.TryGetOuterContainer(uid, Transform(uid), out var container))
         {
             relay = container.Owner;
+
+            // Validate that the relay target is not being set to our own container.
+            foreach (var joint in component.Joints.Values)
+            {
+                var other = joint.GetOther(uid);
+
+                if (other == relay)
+                {
+                    SetRelay(uid, null, component);
+                    return;
+                }
+            }
         }
 
-        RefreshRelay(uid, relay, component);
+        SetRelay(uid, relay, component);
     }
 
     /// <summary>
     /// Refreshes the joint relay for this entity.
     /// </summary>
-    public void RefreshRelay(EntityUid uid, EntityUid? relay, JointComponent? component = null)
+    public void SetRelay(EntityUid uid, EntityUid? relay, JointComponent? component = null)
     {
         if (!Resolve(uid, ref component, false))
             return;
@@ -92,7 +105,11 @@ public abstract partial class SharedJointSystem
         {
             if (relayTarget.Relayed.Remove(uid))
             {
-                // TODO: Comp cleanup.
+                if (relayTarget.Relayed.Count == 0)
+                {
+                    RemCompDeferred<JointRelayTargetComponent>(component.Relay.Value);
+                }
+
                 Dirty(component.Relay.Value, relayTarget);
             }
         }
@@ -110,5 +127,29 @@ public abstract partial class SharedJointSystem
         }
 
         Dirty(uid, component);
+
+#if DEBUG
+        if (component.Relay == null)
+            return;
+
+        if (TryComp(uid, out JointComponent? jointComp))
+        {
+            foreach (var joint in jointComp.Joints.Values)
+            {
+                DebugTools.AssertNotEqual(joint.BodyAUid, component.Relay);
+                DebugTools.AssertNotEqual(joint.BodyBUid, component.Relay);
+
+            }
+        }
+
+        if (TryComp(component.Relay, out JointComponent? relayJointComp))
+        {
+            foreach (var joint in relayJointComp.Joints.Values)
+            {
+                DebugTools.AssertNotEqual(joint.BodyAUid, uid);
+                DebugTools.AssertNotEqual(joint.BodyBUid, uid);
+            }
+        }
+#endif
     }
 }

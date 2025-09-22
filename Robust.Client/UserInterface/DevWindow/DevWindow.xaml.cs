@@ -8,6 +8,7 @@ using Robust.Client.UserInterface.Stylesheets;
 using Robust.Client.UserInterface.XAML;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 
 namespace Robust.Client.UserInterface
 {
@@ -26,6 +27,8 @@ namespace Robust.Client.UserInterface
             TabContainer.SetTabTitle(DebugConsole, "Debug Console");
             TabContainer.SetTabTitle(UI, "User Interface");
             TabContainer.SetTabTitle(Perf, "Profiling");
+            TabContainer.SetTabTitle(Textures, Loc.GetString("dev-window-tab-textures-title"));
+            TabContainer.SetTabTitle(RenderTargets, Loc.GetString("dev-window-tab-render-targets-title"));
 
             Stylesheet =
                 new DefaultStylesheet(IoCManager.Resolve<IResourceCache>(), IoCManager.Resolve<IUserInterfaceManager>()).Stylesheet;
@@ -39,26 +42,14 @@ namespace Robust.Client.UserInterface
 
         public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var clyde = IoCManager.Resolve<IClyde>();
-            var monitor = clyde.EnumerateMonitors().First();
-            if (args.Length > 0)
+            var window = new OSWindow
             {
-                var id = int.Parse(args[0]);
-                monitor = clyde.EnumerateMonitors().Single(m => m.Id == id);
-            }
-
-            var window = clyde.CreateWindow(new WindowCreateParameters
-            {
-                //Maximized = true,
                 Title = "Robust Debug Window",
-                //Monitor = monitor,
-            });
-            var root = IoCManager.Resolve<IUserInterfaceManager>().CreateWindowRoot(window);
-            window.DisposeOnClose = true;
-
+            };
             var control = new DevWindow();
+            window.AddChild(control);
 
-            root.AddChild(control);
+            window.Show();
         }
     }
 }

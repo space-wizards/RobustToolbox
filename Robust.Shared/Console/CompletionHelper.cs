@@ -1,13 +1,15 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
+using Robust.Shared.Audio;
+using Robust.Shared.Collections;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 
@@ -25,7 +27,34 @@ public static class CompletionHelper
     public static IEnumerable<CompletionOption> Booleans => new[]
         { new CompletionOption(bool.FalseString), new CompletionOption(bool.TrueString) };
 
-    public static IEnumerable<CompletionOption> ContentFilePath(string arg, IResourceManager res)
+    /// <summary>
+    /// Special-cased file handler for audio that accounts for serverside completion.
+    /// </summary>
+    public static IEnumerable<CompletionOption> AudioFilePath(string arg, IPrototypeManager protoManager,
+        IResourceManager res)
+    {
+        var resPath = GetUpdatedPath(arg);
+        var paths = new HashSet<string>();
+
+        foreach (var path in res.ContentGetDirectoryEntries(resPath))
+        {
+            paths.Add(path);
+        }
+
+        foreach (var audioProto in protoManager.EnumeratePrototypes<AudioMetadataPrototype>())
+        {
+            var hero = new ResPath(audioProto.ID);
+
+            if (!hero.TryRelativeTo(resPath, out _))
+                continue;
+
+            paths.Add(hero.GetNextSegment(resPath).ToString());
+        }
+
+        return GetPaths(resPath, paths, res);
+    }
+
+    private static ResPath GetUpdatedPath(string arg)
     {
         var curPath = arg;
         if (!curPath.StartsWith("/"))
@@ -33,12 +62,18 @@ public static class CompletionHelper
 
         var resPath = new ResPath(curPath);
 
-        if (!curPath.EndsWith("/")){
+        if (!curPath.EndsWith("/"))
+        {
             resPath /= "..";
             resPath = resPath.Clean();
         }
 
-        var options = res.ContentGetDirectoryEntries(resPath)
+        return resPath;
+    }
+
+    private static IEnumerable<CompletionOption> GetPaths(ResPath resPath, IEnumerable<string> inputs, IResourceManager res)
+    {
+        var options = inputs
             .OrderBy(c => c)
             .Select(c =>
             {
@@ -51,6 +86,12 @@ public static class CompletionHelper
             });
 
         return options;
+    }
+
+    public static IEnumerable<CompletionOption> ContentFilePath(string arg, IResourceManager res)
+    {
+        var resPath = GetUpdatedPath(arg);
+        return GetPaths(resPath, res.ContentGetDirectoryEntries(resPath), res);
     }
 
     public static IEnumerable<CompletionOption> ContentDirPath(string arg, IResourceManager res)
@@ -115,7 +156,7 @@ public static class CompletionHelper
     ///     Returns a completion list for all prototype IDs of the given type.
     /// </summary>
     /// <remarks>
-    ///     Don't use this for prototypes types that likely have a large number of entries, like <see cref="EntityPrototype"/>.
+    ///     Don't use this for prototypes types that likely have a large number of entries, like <see cref="EntityPrototype"/>, use <see cref="PrototypeIdsLimited{T}"/> instead.
     /// </remarks>
     public static IEnumerable<CompletionOption> PrototypeIDs<T>(bool sorted = true, IPrototypeManager? proto = null)
         where T: class, IPrototype
@@ -124,6 +165,36 @@ public static class CompletionHelper
 
         var protoOptions = proto.EnumeratePrototypes<T>().Select(p => new CompletionOption(p.ID));
         return sorted ? protoOptions.OrderBy(o => o.Value) : protoOptions;
+    }
+
+    /// <summary>
+    /// Returns a completion list for all prototype IDs of the given type, limited to avoid performance problems.
+    /// </summary>
+    /// <remarks>
+    /// This is a limited alternative to <see cref="PrototypeIDs{T}"/>.
+    /// The limit is applied before sorting of results, so the unfiltered results are somewhat arbitrary.
+    /// </remarks>
+    /// <param name="currentArgument">The argument being currently typed for the completion.</param>
+    /// <param name="proto">The <see cref="IPrototypeManager"/>.</param>
+    /// <param name="sorted">Whether to sort the results or not.</param>
+    /// <param name="maxCount">The maximum amount of results to return at once.</param>
+    /// <typeparam name="T">The type of prototype to search through.</typeparam>
+    /// <returns></returns>
+    public static IEnumerable<CompletionOption> PrototypeIdsLimited<T>(
+        string currentArgument,
+        IPrototypeManager proto,
+        bool sorted = true,
+        int maxCount = 30) where T : class, IPrototype
+    {
+        var protoOptions = proto.EnumeratePrototypes<T>()
+            .Where(p => p.ID.StartsWith(currentArgument, StringComparison.OrdinalIgnoreCase))
+            .Take(maxCount)
+            .Select(p => new CompletionOption(p.ID));
+
+        if (sorted)
+            protoOptions = protoOptions.OrderBy(o => o.Value);
+
+        return protoOptions;
     }
 
     /// <summary>
@@ -137,59 +208,71 @@ public static class CompletionHelper
         return sorted ? playerOptions.OrderBy(o => o.Value) : playerOptions;
     }
 
+    public static IEnumerable<CompletionOption> MapIds(string text, IEntityManager entManager)
+    {
+        return GetComponents<MapComponent>(text, entManager: entManager).Select(o => new CompletionOption(o.Component.MapId.ToString(), o.EntityName));
+    }
+
     public static IEnumerable<CompletionOption> MapIds(IEntityManager? entManager = null)
     {
         IoCManager.Resolve(ref entManager);
 
-        return entManager.EntityQuery<MapComponent>(true).Select(o => new CompletionOption(o.MapId.ToString()));
+        return entManager.EntityQuery<MapComponent, MetaDataComponent>(true).Select(o => new CompletionOption(o.Item1.MapId.ToString(), o.Item2.EntityName));
     }
 
     public static IEnumerable<CompletionOption> MapUids(IEntityManager? entManager = null)
     {
         IoCManager.Resolve(ref entManager);
 
-        var query = entManager.AllEntityQueryEnumerator<MapComponent>();
-        while (query.MoveNext(out var uid, out _))
-        {
-            yield return new CompletionOption(uid.ToString());
-        }
+        return Components<MapComponent>(string.Empty, entManager, limit: 128);
     }
 
-    public static IEnumerable<CompletionOption> NetEntities(string text, IEntityManager? entManager = null)
+    /// <summary>
+    /// Return all existing entities as possible completions. You should generally avoid using this unless you need to.
+    /// </summary>
+    public static IEnumerable<CompletionOption> NetEntities(string text, IEntityManager? entManager = null, int limit = 20)
     {
+        if (text != string.Empty && !NetEntity.TryParse(text, out _))
+            yield break;
+
         IoCManager.Resolve(ref entManager);
+        var query = entManager.AllEntityQueryEnumerator<MetaDataComponent>();
 
-        foreach (var ent in entManager.GetEntities())
+        var i = 0;
+        while (i < limit && query.MoveNext(out var metadata))
         {
-            if (!entManager.TryGetNetEntity(ent, out var netEntity))
-                continue;
-
-            var netString = netEntity.Value.ToString();
-
+            var netString = metadata.NetEntity.ToString();
             if (!netString.StartsWith(text))
                 continue;
 
-            yield return new CompletionOption(netString);
+            i++;
+            yield return new CompletionOption(netString, metadata.EntityName);
         }
     }
 
-    public static IEnumerable<CompletionOption> Components<T>(string text, IEntityManager? entManager = null) where T : Component
+    private static IEnumerable<(T Component, string NetString, string EntityName)> GetComponents<T>(string text, IEntityManager entManager, int limit = 20)
+        where T : IComponent
     {
-        IoCManager.Resolve(ref entManager);
+        if (text != string.Empty && !NetEntity.TryParse(text, out _))
+            yield break;
 
         var query = entManager.AllEntityQueryEnumerator<T, MetaDataComponent>();
 
-        while (query.MoveNext(out var uid, out _, out var metadata))
+        var i = 0;
+        while (i < limit && query.MoveNext(out var comp, out var metadata))
         {
-            if (!entManager.TryGetNetEntity(uid, out var netEntity, metadata: metadata))
-                continue;
-
-            var netString = netEntity.Value.ToString();
-
+            var netString = metadata.NetEntity.ToString();
             if (!netString.StartsWith(text))
                 continue;
 
-            yield return new CompletionOption(netString);
+            i++;
+            yield return (comp, netString, metadata.EntityName);
         }
+    }
+
+    public static IEnumerable<CompletionOption> Components<T>(string text, IEntityManager? entManager = null, int limit = 20) where T : IComponent
+    {
+        IoCManager.Resolve(ref entManager);
+        return GetComponents<T>(text, entManager, limit).Select(o => new CompletionOption(o.NetString, o.EntityName));
     }
 }

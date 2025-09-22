@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using Robust.Client.Player;
+using Robust.Shared.Collections;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Physics;
@@ -24,72 +24,72 @@ namespace Robust.Client.Physics
             SimulateWorld(frameTime, _gameTiming.InPrediction);
         }
 
-        protected override void Cleanup(PhysicsMapComponent component, float frameTime)
+        protected override void Cleanup(float frameTime)
         {
-            var toRemove = new List<PhysicsComponent>();
+            var toRemove = new ValueList<Entity<PhysicsComponent, TransformComponent>>();
 
             // Because we're not predicting 99% of bodies its sleep timer never gets incremented so we'll just do it ourselves.
             // (and serializing it over the network isn't necessary?)
             // This is a client-only problem.
             // Also need to suss out having the client build the island anyway and just... not solving it?
-            foreach (var body in component.AwakeBodies)
+            foreach (var ent in AwakeBodies)
             {
+                var body = ent.Comp1;
+
                 if (!body.SleepingAllowed || body.LinearVelocity.Length() > LinearToleranceSqr / 2f || body.AngularVelocity * body.AngularVelocity > AngularToleranceSqr / 2f) continue;
                 body.SleepTime += frameTime;
                 if (body.SleepTime > TimeToSleep)
                 {
-                    toRemove.Add(body);
+                    toRemove.Add(ent);
                 }
             }
 
             foreach (var body in toRemove)
             {
-                SetAwake(body.Owner, body, false);
+                SetAwake(body, false);
             }
 
-            base.Cleanup(component, frameTime);
+            base.Cleanup(frameTime);
         }
 
-        protected override void UpdateLerpData(PhysicsMapComponent component, List<PhysicsComponent> bodies, EntityQuery<TransformComponent> xformQuery)
+        protected override void UpdateLerpData(List<Entity<PhysicsComponent, TransformComponent>> bodies)
         {
-            foreach (var body in bodies)
+            foreach (var bodyEnt in bodies)
             {
+                var body = bodyEnt.Comp1;
+                var xform = bodyEnt.Comp2;
+
                 if (body.BodyType == BodyType.Static ||
-                    component.LerpData.TryGetValue(body.Owner, out var lerpData) ||
-                    !xformQuery.TryGetComponent(body.Owner, out var xform) ||
-                    lerpData.ParentUid == xform.ParentUid)
+                    LerpData.TryGetValue(bodyEnt, out var lerpData) ||
+                    lerpData == xform.ParentUid)
                 {
                     continue;
                 }
 
-                component.LerpData[xform.Owner] = (xform.ParentUid, xform.LocalPosition, xform.LocalRotation);
+                LerpData[bodyEnt.Owner] = xform.ParentUid;
             }
         }
 
         /// <summary>
         /// Flush all of our lerping data.
         /// </summary>
-        protected override void FinalStep(PhysicsMapComponent component)
+        protected override void FinalStep()
         {
-            base.FinalStep(component);
-            var xformQuery = GetEntityQuery<TransformComponent>();
+            base.FinalStep();
 
-            foreach (var (uid, (parentUid, position, rotation)) in component.LerpData)
+            foreach (var (uid, parentUid) in LerpData)
             {
-                if (!xformQuery.TryGetComponent(uid, out var xform) ||
-                    !parentUid.IsValid())
+                // Can't just re-use xform from before as movement events may cause event subs to fire.
+                if (!XformQuery.TryGetComponent(uid, out var xform) || !parentUid.IsValid())
                 {
                     continue;
                 }
 
-                xform.PrevPosition = position;
-                xform.PrevRotation = rotation;
-                xform.LerpParent = parentUid;
-                xform.NextPosition = xform.LocalPosition;
-                xform.NextRotation = xform.LocalRotation;
+                // Transform system will handle lerping.
+                _transform.SetLocalPositionRotation(uid, xform.LocalPosition, xform.LocalRotation, xform);
             }
 
-            component.LerpData.Clear();
+            LerpData.Clear();
         }
     }
 }

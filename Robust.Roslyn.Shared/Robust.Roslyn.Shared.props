@@ -1,0 +1,38 @@
+<Project>
+  <!--
+  I wanted to make a Robust.Roslyn.Shared library project,
+  but doing that causes various random library load failures in practice.
+
+  Instead, you'll get this vomit. Enjoy.
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>12</LangVersion>
+    <Nullable>enable</Nullable>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <PolySharpIncludeGeneratedTypes>System.Index;System.Diagnostics.CodeAnalysis.NotNullWhenAttribute;System.Runtime.CompilerServices.IsExternalInit;System.Diagnostics.CodeAnalysis.DoesNotReturnAttribute</PolySharpIncludeGeneratedTypes>
+    <NoWarn>RS2008;RS1038</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" />
+
+    <PackageReference Include="PolySharp">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Robust.Roslyn.Shared\**\*.cs">
+      <Link>Robust.Roslyn.Shared\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Remove="..\Robust.Roslyn.Shared\obj\**\*.cs" />
+  </ItemGroup>
+</Project>

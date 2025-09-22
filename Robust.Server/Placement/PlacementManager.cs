@@ -15,6 +15,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Placement;
+using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 
 namespace Robust.Server.Placement
@@ -30,6 +31,10 @@ namespace Robust.Server.Placement
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
 
+        private EntityLookupSystem _lookup => _entityManager.System<EntityLookupSystem>();
+        private SharedMapSystem _maps => _entityManager.System<SharedMapSystem>();
+        private SharedTransformSystem _xformSystem => _entityManager.System<SharedTransformSystem>();
+
         //TO-DO: Expand for multiple permission per mob?
         //       Add support for multi-use placeables (tiles etc.).
         public List<PlacementInformation> BuildPermissions { get; set; } = new();
@@ -44,6 +49,7 @@ namespace Robust.Server.Placement
 
         public void Initialize()
         {
+            // Someday PlacementManagerSystem my beloved.
             _sawmill = _logManager.GetSawmill("placement");
 
             _networkManager.RegisterNetMessage<MsgPlacement>(HandleNetMessage);
@@ -134,15 +140,15 @@ namespace Robust.Server.Placement
             {
                 // Replace existing entities if relevant.
                 if (msg.Replacement && _prototype.Index<EntityPrototype>(entityTemplateName).Components.TryGetValue(
-                        _factory.GetComponentName(typeof(PlacementReplacementComponent)), out var compRegistry))
+                        _factory.GetComponentName<PlacementReplacementComponent>(), out var compRegistry))
                 {
                     var key = ((PlacementReplacementComponent)compRegistry.Component).Key;
-                    var gridUid = coordinates.GetGridUid(_entityManager);
+                    var gridUid = _xformSystem.GetGrid(coordinates);
 
                     if (_entityManager.TryGetComponent<MapGridComponent>(gridUid, out var grid))
                     {
                         var replacementQuery = _entityManager.GetEntityQuery<PlacementReplacementComponent>();
-                        var anc = grid.GetAnchoredEntitiesEnumerator(grid.LocalToTile(coordinates));
+                        var anc = _maps.GetAnchoredEntitiesEnumerator(gridUid.Value, grid, _maps.LocalToTile(gridUid.Value, grid, coordinates));
                         var toDelete = new ValueList<EntityUid>();
 
                         while (anc.MoveNext(out var ent))
@@ -166,44 +172,45 @@ namespace Robust.Server.Placement
                     }
                 }
 
-                var created = _entityManager.SpawnEntity(entityTemplateName, coordinates);
+                var created = _entityManager.SpawnAttachedTo(entityTemplateName, coordinates, rotation: dirRcv.ToAngle());
 
                 var placementCreateEvent = new PlacementEntityEvent(created, coordinates, PlacementEventAction.Create, msg.MsgChannel.UserId);
                 _entityManager.EventBus.RaiseEvent(EventSource.Local, placementCreateEvent);
-
-                _entityManager.GetComponent<TransformComponent>(created).LocalRotation = dirRcv.ToAngle();
             }
             else
             {
-                PlaceNewTile(tileType, coordinates, msg.MsgChannel.UserId);
+                if (_tileDefinitionManager[tileType].AllowRotationMirror)
+                    PlaceNewTile(tileType, coordinates, msg.MsgChannel.UserId, Tile.DirectionToByte(dirRcv), msg.Mirrored);
+                else
+                    PlaceNewTile(tileType, coordinates, msg.MsgChannel.UserId, Tile.DirectionToByte(Direction.South), false);
             }
         }
 
-        private void PlaceNewTile(int tileType, EntityCoordinates coordinates, NetUserId placingUserId)
+        private void PlaceNewTile(int tileType, EntityCoordinates coordinates, NetUserId placingUserId, byte direction, bool mirrored)
         {
             if (!coordinates.IsValid(_entityManager)) return;
 
             MapGridComponent? grid;
 
-            _mapManager.TryGetGrid(coordinates.EntityId, out grid);
-
-            if (grid == null)
-                _mapManager.TryFindGridAt(coordinates.ToMap(_entityManager), out _, out grid);
-
-            if (grid != null)  // stick to existing grid
+            EntityUid gridId = coordinates.EntityId;
+            if (_entityManager.TryGetComponent(coordinates.EntityId, out grid)
+                || _mapManager.TryFindGridAt(_xformSystem.ToMapCoordinates(coordinates), out gridId, out grid))
             {
-                grid.SetTile(coordinates, new Tile(tileType));
+                _maps.SetTile(gridId, grid, coordinates, new Tile(tileType, rotationMirroring: (byte)(direction + (mirrored ? 4 : 0))));
 
                 var placementEraseEvent = new PlacementTileEvent(tileType, coordinates, placingUserId);
                 _entityManager.EventBus.RaiseEvent(EventSource.Local, placementEraseEvent);
             }
             else if (tileType != 0) // create a new grid
             {
-                var newGrid = _mapManager.CreateGrid(coordinates.GetMapId(_entityManager));
-                var newGridXform = _entityManager.GetComponent<TransformComponent>(newGrid.Owner);
-                newGridXform.WorldPosition = coordinates.Position - newGrid.TileSizeHalfVector; // assume bottom left tile origin
-                var tilePos = newGrid.WorldToTile(coordinates.Position);
-                newGrid.SetTile(tilePos, new Tile(tileType));
+                var newGrid = _mapManager.CreateGridEntity(_xformSystem.GetMapId(coordinates));
+                var newGridXform = new Entity<TransformComponent>(
+                    newGrid.Owner,
+                    _entityManager.GetComponent<TransformComponent>(newGrid));
+
+                _xformSystem.SetWorldPosition(newGridXform, coordinates.Position - newGrid.Comp.TileSizeHalfVector); // assume bottom left tile origin
+                var tilePos = _maps.WorldToTile(newGrid.Owner, newGrid.Comp, coordinates.Position);
+                _maps.SetTile(newGrid.Owner, newGrid.Comp, tilePos, new Tile(tileType, rotationMirroring: (byte)(direction + (mirrored ? 4 : 0))));
 
                 var placementEraseEvent = new PlacementTileEvent(tileType, coordinates, placingUserId);
                 _entityManager.EventBus.RaiseEvent(EventSource.Local, placementEraseEvent);
@@ -227,11 +234,16 @@ namespace Robust.Server.Placement
         {
             EntityCoordinates start = _entityManager.GetCoordinates(msg.NetCoordinates);
             Vector2 rectSize = msg.RectSize;
-            foreach (EntityUid entity in EntitySystem.Get<EntityLookupSystem>().GetEntitiesIntersecting(start.GetMapId(_entityManager),
+            foreach (var entity in _lookup.GetEntitiesIntersecting(_xformSystem.GetMapId(start),
                 new Box2(start.Position, start.Position + rectSize)))
             {
-                if (_entityManager.Deleted(entity) || _entityManager.HasComponent<MapGridComponent>(entity) || _entityManager.HasComponent<ActorComponent>(entity))
+                if (_entityManager.Deleted(entity) ||
+                    _entityManager.HasComponent<MapGridComponent>(entity) ||
+                    _entityManager.HasComponent<ActorComponent>(entity))
+                {
                     continue;
+                }
+
                 var placementEraseEvent = new PlacementEntityEvent(entity, _entityManager.GetComponent<TransformComponent>(entity).Coordinates, PlacementEventAction.Erase, msg.MsgChannel.UserId);
                 _entityManager.EventBus.RaiseEvent(EventSource.Local, placementEraseEvent);
                 _entityManager.DeleteEntity(entity);
@@ -243,19 +255,19 @@ namespace Robust.Server.Placement
         /// </summary>
         public void SendPlacementBegin(EntityUid mob, int range, string objectType, string alignOption)
         {
-            if (!_entityManager.TryGetComponent<ActorComponent?>(mob, out var actor))
+            if (!_entityManager.TryGetComponent(mob, out ActorComponent? actor))
                 return;
 
-            var playerConnection = actor.PlayerSession.ConnectedClient;
-            if (playerConnection == null)
-                return;
+            var playerConnection = actor.PlayerSession.Channel;
 
-            var message = new MsgPlacement();
-            message.PlaceType = PlacementManagerMessage.StartPlacement;
-            message.Range = range;
-            message.IsTile = false;
-            message.ObjType = objectType;
-            message.AlignOption = alignOption;
+            var message = new MsgPlacement
+            {
+                PlaceType = PlacementManagerMessage.StartPlacement,
+                Range = range,
+                IsTile = false,
+                ObjType = objectType,
+                AlignOption = alignOption
+            };
             _networkManager.ServerSendMessage(message, playerConnection);
         }
 
@@ -264,19 +276,19 @@ namespace Robust.Server.Placement
         /// </summary>
         public void SendPlacementBeginTile(EntityUid mob, int range, string tileType, string alignOption)
         {
-            if (!_entityManager.TryGetComponent<ActorComponent?>(mob, out var actor))
+            if (!_entityManager.TryGetComponent(mob, out ActorComponent? actor))
                 return;
 
-            var playerConnection = actor.PlayerSession.ConnectedClient;
-            if (playerConnection == null)
-                return;
+            var playerConnection = actor.PlayerSession.Channel;
 
-            var message = new MsgPlacement();
-            message.PlaceType = PlacementManagerMessage.StartPlacement;
-            message.Range = range;
-            message.IsTile = true;
-            message.ObjType = tileType;
-            message.AlignOption = alignOption;
+            var message = new MsgPlacement
+            {
+                PlaceType = PlacementManagerMessage.StartPlacement,
+                Range = range,
+                IsTile = true,
+                ObjType = tileType,
+                AlignOption = alignOption
+            };
             _networkManager.ServerSendMessage(message, playerConnection);
         }
 
@@ -285,15 +297,15 @@ namespace Robust.Server.Placement
         /// </summary>
         public void SendPlacementCancel(EntityUid mob)
         {
-            if (!_entityManager.TryGetComponent<ActorComponent?>(mob, out var actor))
+            if (!_entityManager.TryGetComponent(mob, out ActorComponent? actor))
                 return;
 
-            var playerConnection = actor.PlayerSession.ConnectedClient;
-            if (playerConnection == null)
-                return;
+            var playerConnection = actor.PlayerSession.Channel;
 
-            var message = new MsgPlacement();
-            message.PlaceType = PlacementManagerMessage.CancelPlacement;
+            var message = new MsgPlacement
+            {
+                PlaceType = PlacementManagerMessage.CancelPlacement
+            };
             _networkManager.ServerSendMessage(message, playerConnection);
         }
 

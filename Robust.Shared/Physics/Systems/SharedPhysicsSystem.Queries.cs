@@ -1,12 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Robust.Shared.Collections;
 using Robust.Shared.Debugging;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Physics.Collision;
+using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Utility;
@@ -18,7 +21,10 @@ namespace Robust.Shared.Physics.Systems
      */
     public partial class SharedPhysicsSystem
     {
+#pragma warning disable CS0414
         [Dependency] private readonly SharedDebugRayDrawingSystem _sharedDebugRaySystem = default!;
+        [Dependency] private readonly INetManager _netMan = default!;
+#pragma warning restore CS0414
 
         /// <summary>
         /// Checks to see if the specified collision rectangle collides with any of the physBodies under management.
@@ -32,36 +38,46 @@ namespace Robust.Shared.Physics.Systems
         {
             var state = (collider, mapId, found: false);
 
-            foreach (var (uid, broadphase) in _broadphase.GetBroadphases(mapId, collider))
-            {
-                var gridCollider = _transform.GetInvWorldMatrix(uid).TransformBox(collider);
-
-                broadphase.StaticTree.QueryAabb(ref state, (ref (Box2 collider, MapId map, bool found) state, in FixtureProxy proxy) =>
+            _broadphase.GetBroadphases(mapId,
+                collider,
+                broadphase =>
                 {
-                    if (proxy.Fixture.CollisionLayer == 0x0)
-                        return true;
+                    var gridCollider = _transform.GetInvWorldMatrix(broadphase).TransformBox(collider);
 
-                    if (proxy.AABB.Intersects(gridCollider))
-                    {
-                        state.found = true;
-                        return false;
-                    }
-                    return true;
-                }, gridCollider, approximate);
+                    broadphase.Comp.StaticTree.QueryAabb(ref state,
+                        (ref (Box2 collider, MapId map, bool found) state, in FixtureProxy proxy) =>
+                        {
+                            if (proxy.Fixture.CollisionLayer == 0x0)
+                                return true;
 
-                broadphase.DynamicTree.QueryAabb(ref state, (ref (Box2 collider, MapId map, bool found) state, in FixtureProxy proxy) =>
-                {
-                    if (proxy.Fixture.CollisionLayer == 0x0)
-                        return true;
+                            if (proxy.AABB.Intersects(gridCollider))
+                            {
+                                state.found = true;
+                                return false;
+                            }
 
-                    if (proxy.AABB.Intersects(gridCollider))
-                    {
-                        state.found = true;
-                        return false;
-                    }
-                    return true;
-                }, gridCollider, approximate);
-            }
+                            return true;
+                        },
+                        gridCollider,
+                        approximate);
+
+                    broadphase.Comp.DynamicTree.QueryAabb(ref state,
+                        (ref (Box2 collider, MapId map, bool found) state, in FixtureProxy proxy) =>
+                        {
+                            if (proxy.Fixture.CollisionLayer == 0x0)
+                                return true;
+
+                            if (proxy.AABB.Intersects(gridCollider))
+                            {
+                                state.found = true;
+                                return false;
+                            }
+
+                            return true;
+                        },
+                        gridCollider,
+                        approximate);
+                });
 
             return state.found;
         }
@@ -123,26 +139,32 @@ namespace Robust.Shared.Physics.Systems
         /// <summary>
         /// Get all entities colliding with a certain body.
         /// </summary>
+        [Obsolete("Use EntityLookupSystem")]
         public IEnumerable<PhysicsComponent> GetCollidingEntities(MapId mapId, in Box2 worldAABB)
         {
             if (mapId == MapId.Nullspace) return Array.Empty<PhysicsComponent>();
 
+            var aabb = worldAABB;
             var bodies = new HashSet<PhysicsComponent>();
+            var state = (_transform, bodies, aabb);
 
-            foreach (var (uid, broadphase) in _broadphase.GetBroadphases(mapId, worldAABB))
-            {
-                var gridAABB = _transform.GetInvWorldMatrix(uid).TransformBox(worldAABB);
-
-                foreach (var proxy in broadphase.StaticTree.QueryAabb(gridAABB, false))
+            _broadphase.GetBroadphases(mapId, worldAABB, ref state, static
+                (
+                    Entity<BroadphaseComponent> entity,
+                    ref (SharedTransformSystem _transform, HashSet<PhysicsComponent> bodies, Box2 aabb) tuple) =>
                 {
-                    bodies.Add(proxy.Body);
-                }
+                    var gridAABB = tuple._transform.GetInvWorldMatrix(entity.Owner).TransformBox(tuple.aabb);
 
-                foreach (var proxy in broadphase.DynamicTree.QueryAabb(gridAABB, false))
-                {
-                    bodies.Add(proxy.Body);
-                }
-            }
+                    foreach (var proxy in entity.Comp.StaticTree.QueryAabb(gridAABB, false))
+                    {
+                        tuple.bodies.Add(proxy.Body);
+                    }
+
+                    foreach (var proxy in entity.Comp.DynamicTree.QueryAabb(gridAABB, false))
+                    {
+                        tuple.bodies.Add(proxy.Body);
+                    }
+                });
 
             return bodies;
         }
@@ -150,58 +172,60 @@ namespace Robust.Shared.Physics.Systems
         /// <summary>
         /// Get all entities colliding with a certain body.
         /// </summary>
-        public IEnumerable<PhysicsComponent> GetCollidingEntities(MapId mapId, in Box2Rotated worldBounds)
+        [Obsolete("Use EntityLookupSystem")]
+        public IEnumerable<Entity<PhysicsComponent>> GetCollidingEntities(MapId mapId, in Box2Rotated worldBounds)
         {
-            if (mapId == MapId.Nullspace) return Array.Empty<PhysicsComponent>();
+            if (mapId == MapId.Nullspace)
+                return Array.Empty<Entity<PhysicsComponent>>();
 
-            var bodies = new HashSet<PhysicsComponent>();
+            var bodies = new HashSet<Entity<PhysicsComponent>>();
 
-            foreach (var (uid, broadphase) in _broadphase.GetBroadphases(mapId, worldBounds.CalcBoundingBox()))
-            {
-                var gridAABB = _transform.GetInvWorldMatrix(uid).TransformBox(worldBounds);
+            var state = (_transform, bodies, worldBounds);
 
-                foreach (var proxy in broadphase.StaticTree.QueryAabb(gridAABB, false))
+            _broadphase.GetBroadphases(mapId, worldBounds.CalcBoundingBox(), ref state,
+                static (
+                    Entity<BroadphaseComponent> entity,
+                    ref (SharedTransformSystem _transform, HashSet<Entity<PhysicsComponent>> bodies, Box2Rotated
+                        worldBounds
+                        ) tuple) =>
                 {
-                    bodies.Add(proxy.Body);
-                }
+                    var gridAABB = tuple._transform.GetInvWorldMatrix(entity.Owner).TransformBox(tuple.worldBounds);
 
-                foreach (var proxy in broadphase.DynamicTree.QueryAabb(gridAABB, false))
-                {
-                    bodies.Add(proxy.Body);
-                }
-            }
+                    foreach (var proxy in entity.Comp.StaticTree.QueryAabb(gridAABB, false))
+                    {
+                        tuple.bodies.Add((proxy.Entity, proxy.Body));
+                    }
+
+                    foreach (var proxy in entity.Comp.DynamicTree.QueryAabb(gridAABB, false))
+                    {
+                        tuple.bodies.Add((proxy.Entity, proxy.Body));
+                    }
+                });
 
             return bodies;
         }
 
-
-        [Obsolete("Use override that takes in a entity Uid")]
-        public HashSet<EntityUid> GetContactingEntities(PhysicsComponent body, bool approximate = false)
+        public void GetContactingEntities(Entity<PhysicsComponent?> ent, HashSet<EntityUid> contacting, bool approximate = false)
         {
-            return GetContactingEntities(body.Owner, body);
-        }
+            if (!Resolve(ent.Owner, ref ent.Comp))
+                return;
 
-        public HashSet<EntityUid> GetContactingEntities(EntityUid uid, PhysicsComponent? body = null, bool approximate = false)
-        {
-            // HashSet to ensure that we only return each entity once, instead of once per colliding fixture.
-            var result = new HashSet<EntityUid>();
-
-            if (!Resolve(uid, ref body))
-                return result;
-
-            var node = body.Contacts.First;
+            var node = ent.Comp.Contacts.First;
 
             while (node != null)
             {
                 var contact = node.Value;
                 node = node.Next;
 
-                if (!approximate && !contact.IsTouching)
-                    continue;
-
-                result.Add(uid == contact.EntityA ? contact.EntityB : contact.EntityA);
+                if (approximate || contact.IsTouching)
+                    contacting.Add(ent.Owner == contact.EntityA ? contact.EntityB : contact.EntityA);
             }
+        }
 
+        public HashSet<EntityUid> GetContactingEntities(EntityUid uid, PhysicsComponent? body = null, bool approximate = false)
+        {
+            var result = new HashSet<EntityUid>();
+            GetContactingEntities((uid, body), result, approximate);
             return result;
         }
 
@@ -266,73 +290,98 @@ namespace Robust.Shared.Physics.Systems
             var rayBox = new Box2(Vector2.Min(ray.Position, endPoint),
                 Vector2.Max(ray.Position, endPoint));
 
-            foreach (var (uid, broadphase) in _broadphase.GetBroadphases(mapId, rayBox))
-            {
-                var (_, rot, matrix, invMatrix) = _transform.GetWorldPositionRotationMatrixWithInv(uid);
-
-                var position = invMatrix.Transform(ray.Position);
-                var gridRot = new Angle(-rot.Theta);
-                var direction = gridRot.RotateVec(ray.Direction);
-
-                var gridRay = new CollisionRay(position, direction, ray.CollisionMask);
-
-                broadphase.StaticTree.QueryRay((in FixtureProxy proxy, in Vector2 point, float distFromOrigin) =>
+            _broadphase.GetBroadphases(mapId,
+                rayBox,
+                broadphase =>
                 {
-                    if (returnOnFirstHit && results.Count > 0)
-                        return true;
+                    var (_, rot, matrix, invMatrix) =
+                        _transform.GetWorldPositionRotationMatrixWithInv(broadphase.Owner);
 
-                    if (distFromOrigin > maxLength)
-                        return true;
+                    var position = Vector2.Transform(ray.Position, invMatrix);
+                    var gridRot = new Angle(-rot.Theta);
+                    var direction = gridRot.RotateVec(ray.Direction);
 
-                    if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
-                        return true;
+                    var gridRay = new CollisionRay(position, direction, ray.CollisionMask);
 
-                    if (!proxy.Body.Hard)
-                        return true;
+                    broadphase.Comp.StaticTree.QueryRay(
+                        (in FixtureProxy proxy, in Vector2 point, float distFromOrigin) =>
+                        {
+                            if (returnOnFirstHit && results.Count > 0)
+                                return true;
 
-                    if (predicate.Invoke(proxy.Entity, state) == true)
-                        return true;
+                            if (distFromOrigin > maxLength)
+                                return true;
 
-                    // TODO: Shape raycast here
+                            if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
+                                return true;
 
-                    // Need to convert it back to world-space.
-                    var result = new RayCastResults(distFromOrigin, matrix.Transform(point), proxy.Entity);
-                    results.Add(result);
-                    _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new DebugRayData(ray, maxLength, result));
-                    return true;
-                }, gridRay);
+                            if (!proxy.Fixture.Hard)
+                                return true;
 
-                broadphase.DynamicTree.QueryRay((in FixtureProxy proxy, in Vector2 point, float distFromOrigin) =>
-                {
-                    if (returnOnFirstHit && results.Count > 0)
-                        return true;
+                            if (predicate.Invoke(proxy.Entity, state) == true)
+                                return true;
 
-                    if (distFromOrigin > maxLength)
-                        return true;
+                            // TODO: Shape raycast here
 
-                    if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
-                        return true;
+                            // Need to convert it back to world-space.
+                            var result = new RayCastResults(distFromOrigin,
+                                Vector2.Transform(point, matrix),
+                                proxy.Entity);
+                            results.Add(result);
+#if DEBUG
+                            _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new(ray,
+                                maxLength,
+                                result,
+                                _netMan.IsServer,
+                                mapId));
+#endif
+                            return true;
+                        },
+                        gridRay);
 
-                    if (!proxy.Body.Hard)
-                        return true;
+                    broadphase.Comp.DynamicTree.QueryRay(
+                        (in FixtureProxy proxy, in Vector2 point, float distFromOrigin) =>
+                        {
+                            if (returnOnFirstHit && results.Count > 0)
+                                return true;
 
-                    if (predicate.Invoke(proxy.Entity, state) == true)
-                        return true;
+                            if (distFromOrigin > maxLength)
+                                return true;
 
-                    // TODO: Shape raycast here
+                            if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
+                                return true;
 
-                    // Need to convert it back to world-space.
-                    var result = new RayCastResults(distFromOrigin, matrix.Transform(point), proxy.Entity);
-                    results.Add(result);
-                    _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new DebugRayData(ray, maxLength, result));
-                    return true;
-                }, gridRay);
-            }
+                            if (!proxy.Fixture.Hard)
+                                return true;
 
+                            if (predicate.Invoke(proxy.Entity, state) == true)
+                                return true;
+
+                            // TODO: Shape raycast here
+
+                            // Need to convert it back to world-space.
+                            var result = new RayCastResults(distFromOrigin,
+                                Vector2.Transform(point, matrix),
+                                proxy.Entity);
+                            results.Add(result);
+#if DEBUG
+                            _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new(ray,
+                                maxLength,
+                                result,
+                                _netMan.IsServer,
+                                mapId));
+#endif
+                            return true;
+                        },
+                        gridRay);
+                });
+
+#if DEBUG
             if (results.Count == 0)
             {
-                _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new DebugRayData(ray, maxLength, null));
+                    _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new(ray, maxLength, null, _netMan.IsServer, mapId));
             }
+#endif
 
             results.Sort((a, b) => a.Distance.CompareTo(b.Distance));
             return results;
@@ -371,57 +420,73 @@ namespace Robust.Shared.Physics.Systems
             var rayBox = new Box2(Vector2.Min(ray.Position, endPoint),
                 Vector2.Max(ray.Position, endPoint));
 
-            foreach (var (uid, broadphase) in _broadphase.GetBroadphases(mapId, rayBox))
-            {
-                var (_, rot, invMatrix) = _transform.GetWorldPositionRotationInvMatrix(uid);
-
-                var position = invMatrix.Transform(ray.Position);
-                var gridRot = new Angle(-rot.Theta);
-                var direction = gridRot.RotateVec(ray.Direction);
-
-                var gridRay = new CollisionRay(position, direction, ray.CollisionMask);
-
-                broadphase.StaticTree.QueryRay((in FixtureProxy proxy, in Vector2 point, float distFromOrigin) =>
+            _broadphase.GetBroadphases(mapId,
+                rayBox,
+                broadphase =>
                 {
-                    if (distFromOrigin > maxLength || proxy.Entity == ignoredEnt)
-                        return true;
+                    var (_, rot, invMatrix) = _transform.GetWorldPositionRotationInvMatrix(broadphase);
 
-                    if (!proxy.Fixture.Hard)
-                        return true;
+                    var position = Vector2.Transform(ray.Position, invMatrix);
+                    var gridRot = new Angle(-rot.Theta);
+                    var direction = gridRot.RotateVec(ray.Direction);
 
-                    if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
-                        return true;
+                    var gridRay = new CollisionRay(position, direction, ray.CollisionMask);
 
-                    if (new Ray(point + gridRay.Direction * proxy.AABB.Size.Length() * 2, -gridRay.Direction).Intersects(
-                            proxy.AABB, out _, out var exitPoint))
-                    {
-                        penetration += (point - exitPoint).Length();
-                    }
-                    return true;
-                }, gridRay);
+                    broadphase.Comp.StaticTree.QueryRay(
+                        (in FixtureProxy proxy, in Vector2 point, float distFromOrigin) =>
+                        {
+                            if (distFromOrigin > maxLength || proxy.Entity == ignoredEnt)
+                                return true;
 
-                broadphase.DynamicTree.QueryRay((in FixtureProxy proxy, in Vector2 point, float distFromOrigin) =>
-                {
-                    if (distFromOrigin > maxLength || proxy.Entity == ignoredEnt)
-                        return true;
+                            if (!proxy.Fixture.Hard)
+                                return true;
 
-                    if (!proxy.Fixture.Hard)
-                        return true;
+                            if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
+                                return true;
 
-                    if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
-                        return true;
+                            if (new Ray(point + gridRay.Direction * proxy.AABB.Size.Length() * 2, -gridRay.Direction)
+                                .Intersects(
+                                    proxy.AABB,
+                                    out _,
+                                    out var exitPoint))
+                            {
+                                penetration += (point - exitPoint).Length();
+                            }
 
-                    if (new Ray(point + gridRay.Direction * proxy.AABB.Size.Length() * 2, -gridRay.Direction).Intersects(
-                            proxy.AABB, out _, out var exitPoint))
-                    {
-                        penetration += (point - exitPoint).Length();
-                    }
-                    return true;
-                }, gridRay);
-            }
+                            return true;
+                        },
+                        gridRay);
+
+                    broadphase.Comp.DynamicTree.QueryRay(
+                        (in FixtureProxy proxy, in Vector2 point, float distFromOrigin) =>
+                        {
+                            if (distFromOrigin > maxLength || proxy.Entity == ignoredEnt)
+                                return true;
+
+                            if (!proxy.Fixture.Hard)
+                                return true;
+
+                            if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
+                                return true;
+
+                            if (new Ray(point + gridRay.Direction * proxy.AABB.Size.Length() * 2, -gridRay.Direction)
+                                .Intersects(
+                                    proxy.AABB,
+                                    out _,
+                                    out var exitPoint))
+                            {
+                                penetration += (point - exitPoint).Length();
+                            }
+
+                            return true;
+                        },
+                        gridRay);
+                });
 
             // This hid rays that didn't penetrate something. Don't hide those because that causes rays to disappear that shouldn't.
-            _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new DebugRayData(ray, maxLength, null));
+#if DEBUG
+            _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new(ray, maxLength, null, _netMan.IsServer, mapId));
+#endif
 
             return penetration;
         }
@@ -475,11 +540,12 @@ namespace Robust.Shared.Physics.Systems
             }
 
             distance = float.MaxValue;
-            var input = new DistanceInput();
-
-            input.TransformA = xfA;
-            input.TransformB = xfB;
-            input.UseRadii = true;
+            var input = new DistanceInput
+            {
+                TransformA = xfA,
+                TransformB = xfB,
+                UseRadii = true
+            };
 
             // No requirement on collision being enabled so chainshapes will fail
             foreach (var fixtureA in managerA.Fixtures.Values)
@@ -487,24 +553,28 @@ namespace Robust.Shared.Physics.Systems
                 if (bodyA.Hard && !fixtureA.Hard)
                     continue;
 
-                DebugTools.Assert(fixtureA.ProxyCount <= 1);
-
-                foreach (var fixtureB in managerB.Fixtures.Values)
+                for (var i = 0; i < fixtureA.Shape.ChildCount; i++)
                 {
-                    if (bodyB.Hard && !fixtureB.Hard)
-                        continue;
+                    input.ProxyA.Set(fixtureA.Shape, i);
 
-                    DebugTools.Assert(fixtureB.ProxyCount <= 1);
-                    input.ProxyA.Set(fixtureA.Shape, 0);
-                    input.ProxyB.Set(fixtureB.Shape, 0);
-                    DistanceManager.ComputeDistance(out var output, out _, input);
+                    foreach (var fixtureB in managerB.Fixtures.Values)
+                    {
+                        if (bodyB.Hard && !fixtureB.Hard)
+                            continue;
 
-                    if (distance < output.Distance)
-                        continue;
+                        for (var j = 0; j < fixtureB.Shape.ChildCount; j++)
+                        {
+                            input.ProxyB.Set(fixtureB.Shape, j);
+                            DistanceManager.ComputeDistance(out var output, out _, input);
 
-                    pointA = output.PointA;
-                    pointB = output.PointB;
-                    distance = output.Distance;
+                            if (distance < output.Distance)
+                                continue;
+
+                            pointA = output.PointA;
+                            pointB = output.PointB;
+                            distance = output.Distance;
+                        }
+                    }
                 }
             }
 
@@ -515,8 +585,67 @@ namespace Robust.Shared.Physics.Systems
         /// Gets the nearest points in map terms and the distance between them.
         /// If a body is hard it only considers hard fixtures.
         /// </summary>
+        public bool TryGetNearest(EntityUid uid, MapCoordinates coordinates,
+            out Vector2 point, out float distance,
+            TransformComponent? xformA = null, FixturesComponent? manager = null, PhysicsComponent? body = null)
+        {
+            if (!Resolve(uid, ref xformA) ||
+                xformA.MapID != coordinates.MapId)
+            {
+                point = Vector2.Zero;
+                distance = 0f;
+                return false;
+            }
+
+            point = Vector2.Zero;
+
+            if (!Resolve(uid, ref manager, ref body) ||
+                manager.FixtureCount == 0)
+            {
+                distance = 0f;
+                return false;
+            }
+
+            var xfA = GetPhysicsTransform(uid, xformA);
+            var xfB = new Transform(coordinates.Position, Angle.Zero);
+
+            distance = float.MaxValue;
+            var input = new DistanceInput();
+
+            input.TransformA = xfA;
+            input.TransformB = xfB;
+            input.UseRadii = true;
+            var pointShape = new PhysShapeCircle(10 * float.Epsilon, Vector2.Zero);
+
+            // No requirement on collision being enabled so chainshapes will fail
+            foreach (var fixtureA in manager.Fixtures.Values)
+            {
+                // We ignore non-hard fixtures if there is at least one hard fixture (i.e., if the body is hard)
+                if (body.Hard && !fixtureA.Hard)
+                    continue;
+
+                DebugTools.Assert(fixtureA.ProxyCount <= 1);
+
+                input.ProxyA.Set(fixtureA.Shape, 0);
+                input.ProxyB.Set(pointShape, 0);
+                DistanceManager.ComputeDistance(out var output, out _, input);
+
+                if (distance < output.Distance)
+                    continue;
+
+                point = output.PointA;
+                distance = output.Distance;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Gets the nearest points in map terms and the distance between them.
+        /// If a body is hard it only considers hard fixtures.
+        /// </summary>
         public bool TryGetNearest(EntityUid uidA, EntityUid uidB,
-            out Vector2 pointA,
+            out Vector2 point,
             out Vector2 pointB,
             out float distance,
             TransformComponent? xformA = null, TransformComponent? xformB = null,
@@ -526,17 +655,16 @@ namespace Robust.Shared.Physics.Systems
             if (!Resolve(uidA, ref xformA) || !Resolve(uidB, ref xformB) ||
                 xformA.MapID != xformB.MapID)
             {
-                pointA = Vector2.Zero;
+                point = Vector2.Zero;
                 pointB = Vector2.Zero;
                 distance = 0f;
                 return false;
             }
 
-            var xformQuery = GetEntityQuery<TransformComponent>();
-            var xfA = GetPhysicsTransform(uidA, xformA, xformQuery);
-            var xfB = GetPhysicsTransform(uidB, xformB, xformQuery);
+            var xfA = GetPhysicsTransform(uidA, xformA);
+            var xfB = GetPhysicsTransform(uidB, xformB);
 
-            return TryGetNearest(uidA, uidB, out pointA, out pointB, out distance, xfA, xfB, managerA, managerB, bodyA, bodyB);
+            return TryGetNearest(uidA, uidB, out point, out pointB, out distance, xfA, xfB, managerA, managerB, bodyA, bodyB);
         }
 
         #endregion

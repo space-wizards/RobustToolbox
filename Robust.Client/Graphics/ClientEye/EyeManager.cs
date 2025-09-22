@@ -64,29 +64,22 @@ namespace Robust.Client.Graphics
         /// <inheritdoc />
         public Box2 GetWorldViewport()
         {
-            var vpSize = _displayManager.ScreenSize;
-
-            var topLeft = ScreenToMap(Vector2.Zero);
-            var topRight = ScreenToMap(new Vector2(vpSize.X, 0));
-            var bottomRight = ScreenToMap(vpSize);
-            var bottomLeft = ScreenToMap(new Vector2(0, vpSize.Y));
-
-            var left = MathHelper.Min(topLeft.X, topRight.X, bottomRight.X, bottomLeft.X);
-            var bottom = MathHelper.Min(topLeft.Y, topRight.Y, bottomRight.Y, bottomLeft.Y);
-            var right = MathHelper.Max(topLeft.X, topRight.X, bottomRight.X, bottomLeft.X);
-            var top = MathHelper.Max(topLeft.Y, topRight.Y, bottomRight.Y, bottomLeft.Y);
-
-            return new Box2(left, bottom, right, top);
+            return GetWorldViewbounds().CalcBoundingBox();
         }
 
         /// <inheritdoc />
         public Box2Rotated GetWorldViewbounds()
         {
-            var vpSize = _displayManager.ScreenSize;
+            // This is an inefficient and roundabout way of geting the viewport.
+            // But its a method that shouldn't get used much.
+
+            var vp = MainViewport as Control;
+            var vpSize = vp?.PixelSize ?? _displayManager.ScreenSize;
 
             var topRight = ScreenToMap(new Vector2(vpSize.X, 0)).Position;
             var bottomLeft = ScreenToMap(new Vector2(0, vpSize.Y)).Position;
 
+            // This assumes the main viewports eye and the main eye are the same.
             var rotation = new Angle(CurrentEye.Rotation);
             var center = (bottomLeft + topRight) / 2;
 
@@ -108,18 +101,16 @@ namespace Robust.Client.Graphics
         }
 
         /// <inheritdoc />
-        public void GetScreenProjectionMatrix(out Matrix3 projMatrix)
+        public void GetScreenProjectionMatrix(out Matrix3x2 projMatrix)
         {
-            Matrix3 result = default;
+            Matrix3x2 result = default;
 
-            result.R0C0 = PixelsPerMeter;
-            result.R1C1 = -PixelsPerMeter;
+            result.M11 = PixelsPerMeter;
+            result.M22 = -PixelsPerMeter;
 
             var screenSize = _displayManager.ScreenSize;
-            result.R0C2 = screenSize.X / 2f;
-            result.R1C2 = screenSize.Y / 2f;
-
-            result.R2C2 = 1;
+            result.M31 = screenSize.X / 2f;
+            result.M32 = screenSize.Y / 2f;
 
             /* column major
              Sx 0 Tx
@@ -132,7 +123,8 @@ namespace Robust.Client.Graphics
         /// <inheritdoc />
         public ScreenCoordinates CoordinatesToScreen(EntityCoordinates point)
         {
-            return MapToScreen(point.ToMap(_entityManager, _entityManager.System<SharedTransformSystem>()));
+            var transformSystem = _entityManager.System<SharedTransformSystem>();
+            return MapToScreen(transformSystem.ToMapCoordinates(point));
         }
 
         public ScreenCoordinates MapToScreen(MapCoordinates point)

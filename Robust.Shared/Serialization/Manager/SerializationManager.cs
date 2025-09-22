@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -18,7 +19,7 @@ namespace Robust.Shared.Serialization.Manager
 {
     public sealed partial class SerializationManager : ISerializationManager
     {
-        [IoC.Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
         public IReflectionManager ReflectionManager => _reflectionManager;
 
@@ -70,7 +71,7 @@ namespace Robust.Shared.Serialization.Manager
                 {
                     foreach (var child in _reflectionManager.GetAllChildren(type))
                     {
-                        if (child.IsAbstract || child.IsGenericTypeDefinition)
+                        if (child.IsAbstract || child.IsGenericTypeDefinition || child.IsInterface)
                             continue;
 
                         yield return child;
@@ -172,10 +173,68 @@ namespace Robust.Shared.Serialization.Manager
                 throw new ArgumentException($"Invalid Types used for include fields:\n{invalidIncludes}");
             }
 
+            // We want to ensure that all the fields marked with a DataFieldAttribute in some DataDefinition are
+            // actually serializable. Problem is that I have NFI how to do that, and all of this serialization code is
+            // such convoluted spaghetti that this is the best way I could think of.
+            //
+            // The only alternative Idea I had was to try brute force this by repeatedly trying to call ValidateNode
+            // with either a value, mapping, or sequence data node and checking that at least one of them doesn't throw
+            // an exception due to the type having no serializer/validator. But that still fails, because things like
+            // EntityUid aren't actually serializable without the mapping context which provides the serializer.
+            // TODO SERIALIZATION REFACTOR Somehow validate that data-fields are serializable.
+            // So for now, This will just do a very basic blacklist check.
+
+            var forbidden = _reflectionManager.FindTypesWithAttribute<NotYamlSerializableAttribute>()
+                .ToFrozenSet();
+
+            foreach (var def in _dataDefinitions.Values)
+            {
+                foreach (var field in def.BaseFieldDefinitions)
+                {
+                    if (field.FieldType.ContainsGenericParameters)
+                        continue; // This just isn't supported yet, can't validate it so just skip it.
+
+                    if (field.Attribute.CustomTypeSerializer != null)
+                        continue; // Assume that anything with a custom type serializer can be handled.
+
+                    if (!ValidateIsSerializable(field.FieldType, forbidden))
+                        sawmill.Error($"Data-field of type {field.FieldType} in {def} is not serializable");
+                }
+            }
+
             _copyByRefRegistrations[typeof(Type)] = 0;
 
             _initialized = true;
             _initializing = false;
+        }
+
+        /// <summary>
+        /// Check if the given type is, or contains instances of, any forbidden types.
+        /// This is not at all a thorough check, but should help prevent people from accidentally using the
+        /// <see cref="DataFieldAttribute"/> on invalid / unserializable fields.
+        /// </summary>
+        private bool ValidateIsSerializable(Type type, FrozenSet<Type> forbidden)
+        {
+            if (type.IsArray)
+                return ValidateIsSerializable(type.GetElementType()!, forbidden);
+
+            if (!type.IsGenericType)
+                return !forbidden.Contains(type);
+
+            var genDef = type.GetGenericTypeDefinition();
+            if (forbidden.Contains(genDef))
+                return false;
+
+            if (genDef == typeof(List<>) || genDef == typeof(HashSet<>) || genDef == typeof(Nullable<>))
+                return ValidateIsSerializable(type.GetGenericArguments()[0], forbidden);
+
+            if (genDef == typeof(Dictionary<,>))
+            {
+                var args = type.GetGenericArguments();
+                return ValidateIsSerializable(args[0], forbidden) && ValidateIsSerializable(args[1], forbidden);
+            }
+
+            return true;
         }
 
         private void CollectAttributedTypes(
@@ -262,6 +321,26 @@ namespace Robust.Shared.Serialization.Manager
         {
             dataDefinition = GetDefinition(type);
             return dataDefinition != null;
+        }
+
+        public bool TryGetVariableType(Type type, string variableName, [NotNullWhen(true)] out Type? variableType)
+        {
+            if (!TryGetDefinition(type, out var definition))
+            {
+                variableType = null;
+                return false;
+            }
+            var foundFieldDef = definition.BaseFieldDefinitions.FirstOrDefault(fieldDef => fieldDef?.Attribute is DataFieldAttribute attr && attr.Tag==variableName, null);
+            if(foundFieldDef != null)
+            {
+                variableType = foundFieldDef.BackingField.FieldType;
+                return true;
+            }
+            else
+            {
+                variableType = null;
+                return false;
+            }
         }
 
         private Type ResolveConcreteType(Type baseType, string typeName)

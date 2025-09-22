@@ -23,17 +23,18 @@ public sealed class RecursiveUpdateTest
         var entManager = sim.Resolve<IEntityManager>();
         var mapManager = sim.Resolve<IMapManager>();
         var xforms = entManager.System<SharedTransformSystem>();
+        var mapSystem = entManager.System<SharedMapSystem>();
         var containers = entManager.System<ContainerSystem>();
 
-        var mapId = mapManager.CreateMap();
-        var grid = mapManager.CreateGrid(mapId);
+        var mapId = sim.CreateMap().MapId;
+        var grid = mapManager.CreateGridEntity(mapId);
         var guid = grid.Owner;
-        grid.SetTile(Vector2i.Zero, new Tile(1));
+        mapSystem.SetTile(grid, Vector2i.Zero, new Tile(1));
         Assert.That(entManager.HasComponent<BroadphaseComponent>(guid));
 
         var broadphase = entManager.GetComponent<BroadphaseComponent>(guid);
         var coords = new EntityCoordinates(guid, new Vector2(0.5f, 0.5f));
-        var broadData = new BroadphaseData(guid, EntityUid.Invalid, false, false);
+        var broadData = new BroadphaseData(guid, false, false);
 
         var container = entManager.SpawnEntity(null, coords);
         var containerXform = entManager.GetComponent<TransformComponent>(container);
@@ -58,7 +59,7 @@ public sealed class RecursiveUpdateTest
 
         // Insert into container.
         var slot = containers.EnsureContainer<ContainerSlot>(container, "test");
-        slot.Insert(contained);
+        containers.Insert(contained, slot);
 
         // Attach child B after having inserted.
         xforms.SetCoordinates(childB, childBXform, new EntityCoordinates(contained, Vector2.Zero));
@@ -98,7 +99,7 @@ public sealed class RecursiveUpdateTest
         Assert.That(childBXform.ParentUid, Is.EqualTo(contained));
 
         // Remove from container.
-        slot.Remove(contained);
+        containers.Remove(contained, slot);
 
         Assert.That(broadphase.SundriesTree, Does.Contain(container));
         Assert.That(broadphase.SundriesTree, Does.Contain(contained));
@@ -116,7 +117,7 @@ public sealed class RecursiveUpdateTest
         Assert.That(childBXform.ParentUid, Is.EqualTo(contained));
 
         // Insert back into container.
-        slot.Insert(contained);
+        containers.Insert(contained, slot);
 
         Assert.That(broadphase.SundriesTree, Does.Contain(container));
         Assert.That(broadphase.SundriesTree, Does.Not.Contain(contained));
@@ -134,7 +135,7 @@ public sealed class RecursiveUpdateTest
         Assert.That(childBXform.ParentUid, Is.EqualTo(contained));
 
         // re-remove from container, but this time WITHOUT changing parent.
-        slot.Remove(contained, reparent: false);
+        containers.Remove(contained, slot, reparent: false);
 
         Assert.That(broadphase.SundriesTree, Does.Contain(container));
         Assert.That(broadphase.SundriesTree, Does.Contain(contained));
@@ -161,15 +162,16 @@ public sealed class RecursiveUpdateTest
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
         var mapManager = sim.Resolve<IMapManager>();
+        var mapSystem = entManager.EntitySysManager.GetEntitySystem<SharedMapSystem>();
         var transforms = entManager.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
         var lookup = entManager.EntitySysManager.GetEntitySystem<EntityLookupSystem>();
 
-        var mapId = mapManager.CreateMap();
-        var map = mapManager.GetMapEntityId(mapId);
+        var mapId = sim.CreateMap().MapId;
+        var map = mapSystem.GetMapOrInvalid(mapId);
         var mapBroadphase = entManager.GetComponent<BroadphaseComponent>(map);
 
         var coords = new EntityCoordinates(map, new Vector2(0.5f, 0.5f));
-        var mapBroadData = new BroadphaseData(map, EntityUid.Invalid, false, false);
+        var mapBroadData = new BroadphaseData(map, false, false);
 
         // Set up parent & child
         var parent = entManager.SpawnEntity(null, coords);
@@ -214,11 +216,11 @@ public sealed class RecursiveUpdateTest
         Assert.That(ents, Does.Contain(child));
 
         // Try again, but this time with a parent change.
-        var grid = mapManager.CreateGrid(mapId);
+        var grid = mapManager.CreateGridEntity(mapId);
         var guid = grid.Owner;
-        grid.SetTile(Vector2i.Zero, new Tile(1));
+        mapSystem.SetTile(grid, Vector2i.Zero, new Tile(1));
         var gridBroadphase = entManager.GetComponent<BroadphaseComponent>(guid);
-        var gridBroadData = new BroadphaseData(guid, EntityUid.Invalid, false, false);
+        var gridBroadData = new BroadphaseData(guid, false, false);
 
         var gridCoords = new EntityCoordinates(map, new Vector2(-100f, -100f));
         transforms.SetCoordinates(guid, gridCoords);

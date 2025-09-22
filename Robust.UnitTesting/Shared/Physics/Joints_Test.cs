@@ -21,17 +21,13 @@ public sealed class Joints_Test
     public void JointsRelayTest()
     {
         var factory = RobustServerSimulation.NewSimulation();
-        factory.RegisterComponents(fac =>
-        {
-            fac.RegisterClass<CollideOnAnchorComponent>();
-        });
         var sim = factory.InitializeInstance();
 
         var entManager = sim.Resolve<IEntityManager>();
-        var mapManager = sim.Resolve<IMapManager>();
         var jointSystem = entManager.System<SharedJointSystem>();
+        var mapSystem = entManager.System<SharedMapSystem>();
 
-        var mapId = mapManager.CreateMap();
+        var mapId = sim.CreateMap().MapId;
 
         var uidA = entManager.SpawnEntity(null, new MapCoordinates(0f, 0f, mapId));
         var uidB = entManager.SpawnEntity(null, new MapCoordinates(0f, 0f, mapId));
@@ -41,22 +37,23 @@ public sealed class Joints_Test
         entManager.AddComponent<PhysicsComponent>(uidB);
         entManager.AddComponent<PhysicsComponent>(uidC);
 
-        var container = entManager.System<SharedContainerSystem>().EnsureContainer<Container>(uidC, "weh");
-        var joint = jointSystem.CreateDistanceJoint(uidA, uidB);
+        var containerSys = entManager.System<SharedContainerSystem>();
+        var container = containerSys.EnsureContainer<Container>(uidC, "weh");
+        jointSystem.CreateDistanceJoint(uidA, uidB);
         jointSystem.Update(0.016f);
 
-        container.Insert(uidA, entManager);
+        containerSys.Insert(uidA, container);
         Assert.Multiple(() =>
         {
             Assert.That(container.Contains(uidA));
             Assert.That(entManager.HasComponent<JointRelayTargetComponent>(uidC));
             Assert.That(entManager.GetComponent<JointComponent>(uidA).Relay, Is.EqualTo(uidC));
 
-            container.Remove(uidA);
+            containerSys.Remove(uidA, container);
             Assert.That(entManager.GetComponent<JointRelayTargetComponent>(uidC).Relayed, Is.Empty);
             Assert.That(entManager.GetComponent<JointComponent>(uidA).Relay, Is.EqualTo(null));
         });
-        mapManager.DeleteMap(mapId);
+        mapSystem.DeleteMap(mapId);
     }
 
     /// <summary>
@@ -68,13 +65,14 @@ public sealed class Joints_Test
         var factory = RobustServerSimulation.NewSimulation();
         var server = factory.InitializeInstance();
         var entManager = server.Resolve<IEntityManager>();
-        var mapManager = server.Resolve<IMapManager>();
         var fixtureSystem = entManager.EntitySysManager.GetEntitySystem<FixtureSystem>();
         var jointSystem = entManager.EntitySysManager.GetEntitySystem<JointSystem>();
         var broadphaseSystem = entManager.EntitySysManager.GetEntitySystem<SharedBroadphaseSystem>();
         var physicsSystem = server.Resolve<IEntitySystemManager>().GetEntitySystem<SharedPhysicsSystem>();
+        var mapSystem = entManager.System<SharedMapSystem>();
 
-        var mapId = mapManager.CreateMap();
+        var map = server.CreateMap();
+        var mapId = map.MapId;
 
         var ent1 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
         var ent2 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
@@ -96,7 +94,7 @@ public sealed class Joints_Test
         Assert.That(entManager.HasComponent<JointComponent>(ent1), Is.EqualTo(true));
 
         // We should have a contact in both situations.
-        broadphaseSystem.FindNewContacts(mapId);
+        broadphaseSystem.FindNewContacts();
         Assert.That(body1.Contacts, Has.Count.EqualTo(1));
 
         // Alright now try the other way
@@ -106,9 +104,9 @@ public sealed class Joints_Test
         jointSystem.Update(0.016f);
         Assert.That(entManager.HasComponent<JointComponent>(ent1));
 
-        broadphaseSystem.FindNewContacts(mapId);
+        broadphaseSystem.FindNewContacts();
         Assert.That(body1.Contacts, Has.Count.EqualTo(1));
 
-        mapManager.DeleteMap(mapId);
+        mapSystem.DeleteMap(mapId);
     }
 }

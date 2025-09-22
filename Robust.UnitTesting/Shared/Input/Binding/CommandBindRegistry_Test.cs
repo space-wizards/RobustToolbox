@@ -5,7 +5,7 @@ using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
-using Robust.Shared.Players;
+using Robust.Shared.Player;
 
 namespace Robust.UnitTesting.Shared.Input.Binding
 {
@@ -84,7 +84,7 @@ namespace Robust.UnitTesting.Shared.Input.Binding
                 var expectedHandlers = bkfToExpectedHandlers.Value;
                 HashSet<InputCmdHandler> returnedHandlers = registry.GetHandlers(bkf).ToHashSet();
 
-                CollectionAssert.AreEqual(returnedHandlers, expectedHandlers);
+                Assert.That(expectedHandlers, Is.EqualTo(returnedHandlers).AsCollection);
             }
 
             // type b stuff should no longer fire
@@ -96,7 +96,7 @@ namespace Robust.UnitTesting.Shared.Input.Binding
                 var expectedHandlers = bkfToExpectedHandlers.Value;
                 expectedHandlers.RemoveAll(handler => ((TestInputCmdHandler) handler).ForType == typeof(TypeB));
                 HashSet<InputCmdHandler> returnedHandlers = registry.GetHandlers(bkf).ToHashSet();
-                CollectionAssert.AreEqual(returnedHandlers, expectedHandlers);
+                Assert.That(expectedHandlers, Is.EqualTo(returnedHandlers).AsCollection);
             }
         }
 
@@ -188,7 +188,7 @@ namespace Robust.UnitTesting.Shared.Input.Binding
                 }
                 else if (returnedHandler == aHandler2)
                 {
-                    Assert.True(foundB1 && foundB2 && foundC1 && foundC2, "bind registry didn't respect" +
+                    Assert.That(foundB1 && foundB2 && foundC1 && foundC2, "bind registry didn't respect" +
                                                                           " handler dependency order");
                 }
             }
@@ -198,7 +198,7 @@ namespace Robust.UnitTesting.Shared.Input.Binding
             var returnedHandlerSet = new HashSet<InputCmdHandler>(returnedHandlers);
             foreach (var expectedHandler in expectedHandlers)
             {
-                Assert.True(returnedHandlerSet.Contains(expectedHandler));
+                Assert.That(returnedHandlerSet.Contains(expectedHandler));
             }
         }
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Robust.Client.Input;
@@ -101,6 +102,10 @@ namespace Robust.Client.Graphics.Clyde
 
             _windowingThread = Thread.CurrentThread;
 
+            // Default to SDL3 on ARM64. GLFW is not feature complete there (lacking file dialog implementation)
+            if (RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
+                _cfg.SetCVar(CVars.DisplayWindowingApi, "sdl3");
+
             var windowingApi = _cfg.GetCVar(CVars.DisplayWindowingApi);
             IWindowingImpl winImpl;
 
@@ -109,8 +114,8 @@ namespace Robust.Client.Graphics.Clyde
                 case "glfw":
                     winImpl = new GlfwWindowingImpl(this, _deps);
                     break;
-                case "sdl2":
-                    winImpl = new Sdl2WindowingImpl(this, _deps);
+                case "sdl3":
+                    winImpl = new Sdl3WindowingImpl(this, _deps);
                     break;
                 default:
                     _logManager.GetSawmill("clyde.win").Log(
@@ -188,7 +193,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     if (!TryInitMainWindow(glSpec, out lastError))
                     {
-                        Logger.DebugS("clyde.win", $"OpenGL {glSpec.OpenGLVersion} unsupported: {lastError}");
+                        _sawmillWin.Debug($"OpenGL {glSpec.OpenGLVersion} unsupported: {lastError}");
                         continue;
                     }
 
@@ -199,7 +204,7 @@ namespace Robust.Client.Graphics.Clyde
             else
             {
                 if (!TryInitMainWindow(null, out lastError))
-                    Logger.DebugS("clyde.win", $"Failed to create window: {lastError}");
+                    _sawmillWin.Debug($"Failed to create window: {lastError}");
                 else
                     succeeded = true;
             }
@@ -224,14 +229,13 @@ namespace Robust.Client.Graphics.Clyde
                     fixed (char* pCaption = "RobustToolbox: Failed to create window")
                     {
                         Windows.MessageBoxW(HWND.NULL,
-                            (ushort*) pText,
-                            (ushort*) pCaption,
+                            pText,
+                            pCaption,
                             MB.MB_OK | MB.MB_ICONERROR);
                     }
                 }
 
-                Logger.FatalS("clyde.win",
-                    "Failed to create main game window! " +
+                _sawmillWin.Fatal("Failed to create main game window! " +
                     "This probably means your GPU is too old to run the game. " +
                     $"That or update your graphics drivers. {lastError}");
 
@@ -260,14 +264,14 @@ namespace Robust.Client.Graphics.Clyde
                 yield break;
             }
 
-            foreach (var file in _resourceCache.ContentFindFiles(_windowIconPath))
+            foreach (var file in _resManager.ContentFindFiles(_windowIconPath))
             {
                 if (file.Extension != "png")
                 {
                     continue;
                 }
 
-                using var stream = _resourceCache.ContentFileRead(file);
+                using var stream = _resManager.ContentFileRead(file);
                 yield return Image.Load<Rgba32>(stream);
             }
         }
@@ -344,19 +348,23 @@ namespace Robust.Client.Graphics.Clyde
                 if (isMain)
                     _mainWindow = reg;
 
+                reg.IsVisible = parameters.Visible;
+
                 _windows.Add(reg);
                 _windowHandles.Add(reg.Handle);
 
                 var rtId = AllocRid();
+                var renderTarget = new RenderWindow(this, rtId);
                 _renderTargets.Add(rtId, new LoadedRenderTarget
                 {
                     Size = reg.FramebufferSize,
                     IsWindow = true,
                     WindowId = reg.Id,
-                    IsSrgb = true
+                    IsSrgb = true,
+                    Instance = new WeakReference<RenderTargetBase>(renderTarget),
                 });
 
-                reg.RenderTarget = new RenderWindow(this, rtId);
+                reg.RenderTarget = renderTarget;
 
                 _glContext!.WindowCreated(glSpec, reg);
             }
@@ -372,6 +380,8 @@ namespace Robust.Client.Graphics.Clyde
 
             if (reg.IsDisposed)
                 return;
+
+            _sawmillWin.Debug($"Destroying window {reg.Id}");
 
             reg.IsDisposed = true;
 
@@ -397,10 +407,17 @@ namespace Robust.Client.Graphics.Clyde
             _glContext?.SwapAllBuffers();
         }
 
-        private void VSyncChanged(bool newValue)
+        public bool VsyncEnabled
         {
-            _vSync = newValue;
-            _glContext?.UpdateVSync();
+            get => _vSync;
+            set
+            {
+                if (_vSync == value)
+                    return;
+
+                _vSync = value;
+                _glContext?.UpdateVSync();
+            }
         }
 
         private void WindowModeChanged(int mode)
@@ -445,6 +462,12 @@ namespace Robust.Client.Graphics.Clyde
             _windowing!.CursorSet(_mainWindow!, cursor);
         }
 
+        private void SetWindowSize(WindowReg reg, Vector2i size)
+        {
+            DebugTools.AssertNotNull(_windowing);
+
+            _windowing!.WindowSetSize(reg, size);
+        }
 
         private void SetWindowVisible(WindowReg reg, bool visible)
         {
@@ -460,26 +483,7 @@ namespace Robust.Client.Graphics.Clyde
             _windowing!.RunOnWindowThread(a);
         }
 
-        public void TextInputSetRect(UIBox2i rect)
-        {
-            DebugTools.AssertNotNull(_windowing);
-
-            _windowing!.TextInputSetRect(rect);
-        }
-
-        public void TextInputStart()
-        {
-            DebugTools.AssertNotNull(_windowing);
-
-            _windowing!.TextInputStart();
-        }
-
-        public void TextInputStop()
-        {
-            DebugTools.AssertNotNull(_windowing);
-
-            _windowing!.TextInputStop();
-        }
+        public IFileDialogManagerImplementation? FileDialogImpl => _windowing as IFileDialogManagerImplementation;
 
         private abstract class WindowReg
         {
@@ -534,7 +538,11 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde.DoDestroyWindow(Reg);
             }
 
-            public Vector2i Size => Reg.FramebufferSize;
+            public Vector2i Size
+            {
+                get => Reg.FramebufferSize;
+                set => _clyde.SetWindowSize(Reg, value);
+            }
 
             public IRenderTarget RenderTarget => Reg.RenderTarget;
 
@@ -577,6 +585,27 @@ namespace Robust.Client.Graphics.Clyde
             {
                 add => Reg.Resized += value;
                 remove => Reg.Resized -= value;
+            }
+
+            public void TextInputSetRect(UIBox2i rect, int cursor)
+            {
+                DebugTools.AssertNotNull(_clyde._windowing);
+
+                _clyde._windowing!.TextInputSetRect(Reg, rect, cursor);
+            }
+
+            public void TextInputStart()
+            {
+                DebugTools.AssertNotNull(_clyde._windowing);
+
+                _clyde._windowing!.TextInputStart(Reg);
+            }
+
+            public void TextInputStop()
+            {
+                DebugTools.AssertNotNull(_clyde._windowing);
+
+                _clyde._windowing!.TextInputStop(Reg);
             }
 
             public nint? WindowsHWnd => _clyde._windowing!.WindowGetWin32Window(Reg);

@@ -43,11 +43,11 @@ namespace Robust.Client.UserInterface.CustomControls
         /// <remarks>
         ///     This is generally just be a combination of <see cref="IClydeViewport.GetWorldToLocalMatrix"/> and <see cref="GetLocalToScreenMatrix"/>
         /// </remarks>
-        Matrix3 GetWorldToScreenMatrix();
+        Matrix3x2 GetWorldToScreenMatrix();
 
         /// <summary>
         ///     Returns a matrix that can be used to transform from view-port local to screen coordinates.
         /// </summary>
-        Matrix3 GetLocalToScreenMatrix();
+        Matrix3x2 GetLocalToScreenMatrix();
     }
 }

@@ -1,0 +1,11 @@
+﻿<DevWindowTabUIPopup xmlns="https://spacestation14.io"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                x:Class="Robust.Client.UserInterface.DevWindowTabUIPopup"
+                xmlns:gfx="clr-namespace:Robust.Client.Graphics">
+    <PanelContainer>
+        <PanelContainer.PanelOverride>
+            <gfx:StyleBoxFlat BackgroundColor="#40404C" />
+        </PanelContainer.PanelOverride>
+    </PanelContainer>
+    <Label Name="TextLabel" />
+</DevWindowTabUIPopup>

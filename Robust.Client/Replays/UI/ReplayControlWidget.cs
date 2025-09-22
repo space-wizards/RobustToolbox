@@ -90,6 +90,7 @@ public sealed partial class ReplayControlWidget : UIWidget // AKA Tardis - The f
         var maxIndex = Math.Max(1, replay.States.Count - 1);
         var state = replay.States[index];
         var replayTime = TimeSpan.FromSeconds(TickSlider.Value);
+        var end = replay.Duration == null ? "N/A" : replay.Duration.Value.ToString(TimeFormat);
 
         IndexLabel.Text = Loc.GetString("replay-time-box-index-label",
             ("current", index), ("total", maxIndex), ("percentage", percentage));
@@ -98,10 +99,10 @@ public sealed partial class ReplayControlWidget : UIWidget // AKA Tardis - The f
             ("current", state.ToSequence), ("total", replay.States[^1].ToSequence), ("percentage", percentage));
 
         TimeLabel.Text = Loc.GetString("replay-time-box-replay-time-label",
-            ("current", replayTime.ToString(TimeFormat)), ("end", replay.Duration.ToString(TimeFormat)), ("percentage", percentage));
+            ("current", replayTime.ToString(TimeFormat)), ("end", end), ("percentage", percentage));
 
         var serverTime = (replayTime + replay.StartTime).ToString(TimeFormat);
-        var duration = (replay.Duration + replay.StartTime).ToString(TimeFormat);
+        string duration = replay.Duration == null ? "N/A" : (replay.Duration + replay.StartTime).Value.ToString(TimeFormat);
         ServerTimeLabel.Text = Loc.GetString("replay-time-box-server-time-label",
             ("current", serverTime), ("end", duration), ("percentage", percentage));
 

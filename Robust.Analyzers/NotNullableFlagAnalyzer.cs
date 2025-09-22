@@ -3,6 +3,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
+using Robust.Roslyn.Shared;
 
 namespace Robust.Analyzers;
 
@@ -31,7 +32,7 @@ public sealed class NotNullableFlagAnalyzer : DiagnosticAnalyzer
 
     private static readonly DiagnosticDescriptor InvalidNotNullableImplementationRule = new (
         Diagnostics.IdInvalidNotNullableFlagImplementation,
-        "Invalid NotNullable flag implementation.",
+        "Invalid NotNullable flag implementation",
         "NotNullable flag is either not typed as bool, or does not have a default value equaling false",
         "Usage",
         DiagnosticSeverity.Error,
@@ -41,7 +42,7 @@ public sealed class NotNullableFlagAnalyzer : DiagnosticAnalyzer
     private static readonly DiagnosticDescriptor InvalidNotNullableTypeRule = new (
         Diagnostics.IdInvalidNotNullableFlagType,
         "Failed to resolve type parameter",
-        "Failed to resolve type parameter \"{0}\".",
+        "Failed to resolve type parameter \"{0}\"",
         "Usage",
         DiagnosticSeverity.Error,
         true,
@@ -49,7 +50,7 @@ public sealed class NotNullableFlagAnalyzer : DiagnosticAnalyzer
 
     private static readonly DiagnosticDescriptor NotNullableFlagValueTypeRule = new (
         Diagnostics.IdNotNullableFlagValueType,
-        "NotNullable flag not supported for value types.",
+        "NotNullable flag not supported for value types",
         "Value types as generic arguments are not supported for NotNullable flags",
         "Usage",
         DiagnosticSeverity.Error,

@@ -9,7 +9,6 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Localization;
 using Robust.Shared.Maths;
-using Robust.Shared.Prototypes;
 
 namespace Robust.Shared.Localization
 {

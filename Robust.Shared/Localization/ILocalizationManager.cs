@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using JetBrains.Annotations;
-using Robust.Shared.GameObjects.Components.Localization;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Localization

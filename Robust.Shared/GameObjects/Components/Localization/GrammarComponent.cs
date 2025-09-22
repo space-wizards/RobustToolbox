@@ -10,6 +10,7 @@ using Robust.Shared.Localization;
 
 namespace Robust.Shared.GameObjects.Components.Localization;
 
+/// <summary>
 ///     Overrides grammar attributes specified in prototypes or localization files.
 /// </summary>
 [RegisterComponent, NetworkedComponent, AutoGenerateComponentState]

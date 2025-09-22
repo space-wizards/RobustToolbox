@@ -4,7 +4,6 @@ using System.Globalization;
 using JetBrains.Annotations;
 using Linguini.Bundle;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components.Localization;
 using Robust.Shared.IoC;
 
 namespace Robust.Shared.Localization

@@ -389,11 +389,10 @@ namespace Robust.Shared.Localization
 
             var context = new LocContext(bundle, this);
 
-            if (args.Options.TryGetValue("wrapper", out var argWrapper) && argWrapper is LocValueString or LocValueLocId)
+            if (args.Options.TryGetValue("wrapper", out var argWrapper) && argWrapper is LocValueString)
             {
                 LocId locId = argWrapper switch {
                     LocValueString str => str.Value,
-                    LocValueLocId loc => loc.Value,
                 };
 
                 Func<ILocValue, string> formatter = item =>
@@ -562,7 +561,6 @@ namespace Robust.Shared.Localization
                 FluentNone => new LocValueNone(""),
                 FluentNumber number => new LocValueNumber(number),
                 FluentString str => new LocValueString(str),
-                FluentReference msg => new LocValueLocId(msg.AsString()),
                 FluentLocWrapperType value => value.WrappedValue,
                 _ => throw new ArgumentOutOfRangeException(nameof(arg)),
             };
@@ -577,7 +575,6 @@ namespace Robust.Shared.Localization
                 IFluentEntityUid entity => new FluentLocWrapperType(new LocValueEntity(entity.FluentOwner), context),
                 DateTime dateTime => new FluentLocWrapperType(new LocValueDateTime(dateTime), context),
                 TimeSpan timeSpan => new FluentLocWrapperType(new LocValueTimeSpan(timeSpan), context),
-                LocId msg => new FluentLocWrapperType(new LocValueLocId(msg), context),
                 Color color => (FluentString)color.ToHex(),
                 bool or Enum => (FluentString)obj.ToString()!.ToLowerInvariant(),
                 string str => (FluentString)str,

@@ -19,13 +19,14 @@ namespace Robust.Shared.Localization
         private void AddBuiltInFunctions(FluentBundle bundle)
         {
             // Grammatical gender / pronouns
-            AddCtxFunction(bundle, "GENDER", FuncGender);
+            AddCtxFunction(bundle, "GENDER", args => FuncGender(bundle, args));
             AddCtxFunction(bundle, "SUBJECT", FuncSubject);
             AddCtxFunction(bundle, "OBJECT", FuncObject);
             AddCtxFunction(bundle, "DAT-OBJ", FuncDatObj);
             AddCtxFunction(bundle, "GENITIVE", FuncGenitive);
             AddCtxFunction(bundle, "POSS-ADJ", FuncPossAdj);
             AddCtxFunction(bundle, "POSS-PRONOUN", FuncPossPronoun);
+            AddCtxFunction(bundle, "RECIPROCAL", FuncReciprocal);
             AddCtxFunction(bundle, "REFLEXIVE", FuncReflexive);
             AddCtxFunction(bundle, "COUNTER", FuncCounter);
 
@@ -40,8 +41,12 @@ namespace Robust.Shared.Localization
 
             // Misc
             AddCtxFunction(bundle, "ATTRIB", args => FuncAttrib(bundle, args));
-            AddCtxFunction(bundle, "CAPITALIZE", FuncCapitalize);
-            AddCtxFunction(bundle, "INDEFINITE", FuncIndefinite);
+            AddCtxFunction(bundle, "CAPITALIZE", args => FuncCapitalize(bundle, args));
+            AddCtxFunction(bundle, "INDEFINITE", args => FuncIndefinite(bundle, args));
+
+            // Lists
+            AddCtxFunction(bundle, "COUNT", FuncCount);
+            AddCtxFunction(bundle, "LIST", args => FuncList(bundle, args));
         }
 
         /// <summary>
@@ -55,9 +60,9 @@ namespace Robust.Shared.Localization
         /// <summary>
         /// Returns the string passed in, with the first letter capitalized.
         /// </summary>
-        private ILocValue FuncCapitalize(LocArgs args)
+        private ILocValue FuncCapitalize(FluentBundle bundle, LocArgs args)
         {
-            var input = args.Args[0].Format(new LocContext());
+            var input = args.Args[0].Format(new LocContext(bundle, this));
             if (!String.IsNullOrEmpty(input))
                 return new LocValueString(input[0].ToString().ToUpper() + input.Substring(1));
             else return new LocValueString("");
@@ -83,7 +88,7 @@ namespace Robust.Shared.Localization
 
         private static readonly char[] IndefVowels = { 'a', 'e', 'i', 'o', 'u' };
 
-        private ILocValue FuncIndefinite(LocArgs args)
+        private ILocValue FuncIndefinite(FluentBundle bundle, LocArgs args)
         {
             ILocValue val = args.Args[0];
             if (val.Value == null)
@@ -100,7 +105,7 @@ namespace Robust.Shared.Localization
             }
             else
             {
-                input = val.Format(new LocContext());
+                input = val.Format(new LocContext(bundle, this));
             }
 
             if (String.IsNullOrEmpty(input))
@@ -163,28 +168,73 @@ namespace Robust.Shared.Localization
             return IndefRegexY.IsMatch(wordi) ? an : a;
         }
 
-        /// <summary>
-        /// Returns the gender of the entity passed in; either Male, Female, Neuter or Epicene.
-        /// </summary>
-        private ILocValue FuncGender(LocArgs args)
+        private string ValueGender(FluentBundle bundle, ILocValue value)
         {
-            if (args.Args.Count < 1) return new LocValueString(nameof(Gender.Neuter));
-
-            ILocValue entity0 = args.Args[0];
-            if (entity0.Value is EntityUid entity)
+            switch (value)
             {
-                if (_entMan.TryGetComponent(entity, out GrammarComponent? grammar) && grammar.Gender.HasValue)
+                case LocValueEntity entity:
                 {
-                    return new LocValueString(grammar.Gender.Value.ToString().ToLowerInvariant());
-                }
+                    if (_entMan.TryGetComponent(entity.Value, out GrammarComponent? grammar) && grammar.Gender.HasValue)
+                    {
+                        return grammar.Gender.Value.ToString().ToLowerInvariant();
+                    }
 
-                if (TryGetEntityLocAttrib(entity, "gender", out var gender))
+                    if (TryGetEntityLocAttrib(entity.Value, "gender", out var gender))
+                    {
+                        return gender.ToLowerInvariant();
+                    }
+
+                    break;
+                }
+                case LocValueList list:
                 {
-                    return new LocValueString(gender);
+                    if (list.Value.Count < 1)
+                        return nameof(Gender.Epicene).ToLowerInvariant();
+
+                    if (list.Value.Count == 1)
+                        return ValueGender(bundle, list.Value[0]);
+
+                    var behaviour = ResolvePersonListGender(bundle.Culture);
+
+                    switch (behaviour)
+                    {
+                        case CldrPersonListGender.Neutral:
+                            return nameof(Gender.Epicene).ToLowerInvariant();
+
+                        case CldrPersonListGender.MixedNeutral:
+                        {
+                            var distinct = list.Value.DistinctBy(value => ValueGender(bundle, value)).Count();
+                            if (distinct != 1)
+                                return nameof(Gender.Epicene).ToLowerInvariant();
+
+                            return ValueGender(bundle, list.Value[0]);
+                        }
+
+                        case CldrPersonListGender.MaleTaints:
+                        {
+                            var distinct = list.Value.DistinctBy(value => ValueGender(bundle, value)).Count();
+                            if (distinct != 1)
+                                return nameof(Gender.Male).ToLowerInvariant();
+
+                            return ValueGender(bundle, list.Value[0]);
+                        }
+                    }
+
+                    break;
                 }
             }
 
-            return new LocValueString(nameof(Gender.Neuter));
+            return nameof(Gender.Neuter);
+        }
+
+        /// <summary>
+        /// Returns the gender of the entity passed in; either Male, Female, Neuter or Epicene.
+        /// </summary>
+        private ILocValue FuncGender(FluentBundle bundle, LocArgs args)
+        {
+            if (args.Args.Count < 1) return new LocValueString(nameof(Gender.Neuter).ToLowerInvariant());
+
+            return new LocValueString(ValueGender(bundle, args.Args[0]));
         }
 
         /// <summary>
@@ -239,6 +289,14 @@ namespace Robust.Shared.Localization
         }
 
         /// <summary>
+        /// Returns the respective reciprocal pronoun (each other) for the entity.
+        /// </summary>
+        private ILocValue FuncReciprocal(LocArgs args)
+        {
+            return new LocValueString(GetString("zzzz-reciprocal-pronoun", ("ent", args.Args[0])));
+        }
+
+        /// <summary>
         /// Returns the respective reflexive pronoun (himself, herself, themselves, itself) for the entity's gender.
         /// </summary>
         private ILocValue FuncReflexive(LocArgs args)
@@ -282,6 +340,82 @@ namespace Robust.Shared.Localization
         }
 
         /// <summary>
+        /// Returns how many items are in the provided list
+        /// </summary>
+        private ILocValue FuncCount(LocArgs args)
+        {
+            if (args.Args[0] is not LocValueList list)
+                return new LocValueNumber(1);
+
+            return new LocValueNumber(list.Value.Count);
+        }
+
+        private static readonly LocValueString TypeAnd = new LocValueString("and");
+        private static readonly LocValueString TypeOr = new LocValueString("or");
+        private static readonly LocValueString TypeUnit = new LocValueString("unit");
+
+        private static readonly LocValueString WidthWide = new LocValueString("wide");
+        private static readonly LocValueString WidthShort = new LocValueString("short");
+        private static readonly LocValueString WidthNarrow = new LocValueString("narrow");
+
+        /// <summary>
+        /// Formats a list with CLDR patterns
+        /// </summary>
+        private ILocValue FuncList(FluentBundle bundle, LocArgs args)
+        {
+            var list = (LocValueList)args.Args[0];
+
+            ListType type = ListType.And;
+            ListWidth width = ListWidth.Wide;
+            if (args.Options.TryGetValue("type", out var argType) && argType is LocValueString typeString)
+            {
+                if (typeString == TypeAnd)
+                    type = ListType.And;
+                else if (typeString == TypeOr)
+                    type = ListType.Or;
+                else if (typeString == TypeUnit)
+                    type = ListType.Unit;
+            }
+
+            if (args.Options.TryGetValue("width", out var argWidth) && argWidth is LocValueString widthString)
+            {
+                if (widthString == WidthWide)
+                    width = ListWidth.Wide;
+                else if (widthString == WidthShort)
+                    width = ListWidth.Short;
+                else if (widthString == WidthNarrow)
+                    width = ListWidth.Narrow;
+            }
+
+            var context = new LocContext(bundle, this);
+
+            if (args.Options.TryGetValue("wrapper", out var argWrapper) && argWrapper is LocValueString or LocValueLocId)
+            {
+                LocId locId = argWrapper switch {
+                    LocValueString str => str.Value,
+                    LocValueLocId loc => loc.Value,
+                };
+
+                Func<ILocValue, string> formatter = item =>
+                {
+                    var args = new Dictionary<string, IFluentType>
+                    {
+                        { "item", item.FluentFromVal(context) }
+                    };
+
+                    if (TryGetString(locId, out var value, args, bundle, bundle.Culture))
+                        return value;
+
+                    return GetString(locId, ("item", item));
+                };
+
+                return new LocValueString(FormatList(list.Value.Select(formatter).ToList(), type, width, bundle.Culture));
+            }
+
+            return new LocValueString(FormatList(list.Value.Select(item => item.Format(context)).ToList(), type, width, bundle.Culture));
+        }
+
+        /// <summary>
         /// Returns the basic conjugated form of a verb. The first string argument is the base verb, the second string argument is the form
         /// for he/she/it.
         /// e.g. run -> he runs/she runs/they run/it runs
@@ -301,7 +435,7 @@ namespace Robust.Shared.Localization
             if (entity0.Value is EntityUid entity)
             {
                 ILocValue attrib0 = args.Args[1];
-                if (TryGetEntityLocAttrib(entity, attrib0.Format(new LocContext(bundle)), out var attrib))
+                if (TryGetEntityLocAttrib(entity, attrib0.Format(new LocContext(bundle, this)), out var attrib))
                 {
                     return new LocValueString(attrib);
                 }
@@ -359,15 +493,15 @@ namespace Robust.Shared.Localization
             }
 
             var argStruct = new LocArgs(args, options);
-            return function.Invoke(argStruct).FluentFromVal(new LocContext(bundle));
+            return function.Invoke(argStruct).FluentFromVal(new LocContext(bundle, this));
         }
 
         public void AddFunction(CultureInfo culture, string name, LocFunction function)
         {
             var bundle = _contexts[culture];
 
-            bundle.AddFunctionOverriding(name, (args, options)
-                => CallFunction(function, bundle, args, options));
+            bundle.Item1.AddFunctionOverriding(name, (args, options)
+                => CallFunction(function, bundle.Item1, args, options));
         }
     }
 
@@ -428,6 +562,7 @@ namespace Robust.Shared.Localization
                 FluentNone => new LocValueNone(""),
                 FluentNumber number => new LocValueNumber(number),
                 FluentString str => new LocValueString(str),
+                FluentReference msg => new LocValueLocId(msg.AsString()),
                 FluentLocWrapperType value => value.WrappedValue,
                 _ => throw new ArgumentOutOfRangeException(nameof(arg)),
             };
@@ -442,6 +577,7 @@ namespace Robust.Shared.Localization
                 IFluentEntityUid entity => new FluentLocWrapperType(new LocValueEntity(entity.FluentOwner), context),
                 DateTime dateTime => new FluentLocWrapperType(new LocValueDateTime(dateTime), context),
                 TimeSpan timeSpan => new FluentLocWrapperType(new LocValueTimeSpan(timeSpan), context),
+                LocId msg => new FluentLocWrapperType(new LocValueLocId(msg), context),
                 Color color => (FluentString)color.ToHex(),
                 bool or Enum => (FluentString)obj.ToString()!.ToLowerInvariant(),
                 string str => (FluentString)str,
@@ -455,6 +591,7 @@ namespace Robust.Shared.Localization
                 ulong num => (FluentNumber)num,
                 double dbl => (FluentNumber)dbl,
                 float dbl => (FluentNumber)dbl,
+                System.Collections.IEnumerable collection => new FluentLocWrapperType(new LocValueList(collection.Cast<object>().Select(item => FluentFromObject(item, context).ToLocValue()).ToList()), context),
                 _ => (FluentString)obj.ToString()!,
             };
         }

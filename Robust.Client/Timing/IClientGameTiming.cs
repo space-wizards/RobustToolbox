@@ -12,13 +12,6 @@ namespace Robust.Client.Timing
         /// </summary>
         GameTick LastProcessedTick { get; set; }
 
-        /// <summary>
-        /// The last real non-extrapolated server state that was applied. Without networking issues, this tick should
-        /// always correspond to <see cref="LastRealTick"/>, however if there is a missing states or the buffer has run
-        /// out, this value may be smaller..
-        /// </summary>
-        GameTick LastRealTick { get; set; }
-
         void StartPastPrediction();
         void EndPastPrediction();
 

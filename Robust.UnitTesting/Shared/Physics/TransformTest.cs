@@ -1,5 +1,6 @@
 using System;
 using System.Numerics;
+using System.Runtime.Intrinsics;
 using NUnit.Framework;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -25,5 +26,15 @@ public sealed class TransformTest
     {
         var result = Transform.Mul(dat.T, dat.V);
         Assert.That(result, Is.Approximately(dat.Exp, 0.001f));
+    }
+
+    [Test]
+    public void TestVectorMulSimd([ValueSource(nameof(_vecMulData))] (Vector2 V, Transform T, Vector2 Exp) dat)
+    {
+        var x = Vector128.Create(dat.V.X);
+        var y = Vector128.Create(dat.V.Y);
+        Transform.MulSimd(dat.T, x, y, out var xOut, out var yOut);
+        Assert.That(xOut, Is.Approximately(Vector128.Create(dat.Exp[0]), 0.001f));
+        Assert.That(yOut, Is.Approximately(Vector128.Create(dat.Exp[1]), 0.001f));
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using NUnit.Framework;
@@ -6,7 +7,7 @@ using Robust.Shared.Physics;
 using Robust.Shared.Physics.Shapes;
 using Robust.UnitTesting.Shared.Maths;
 
-namespace Robust.UnitTesting.Shared.Physics;
+namespace Robust.UnitTesting.Shared.Physics.Shapes;
 
 [TestFixture]
 [TestOf(typeof(SlimPolygon))]
@@ -95,5 +96,30 @@ public sealed class SlimPolygonTest
         Assert.That(shape._vertices._02, Is.Approximately(dat.baseBox.TopRight, 0.0001f));
         Assert.That(shape._vertices._03, Is.Approximately(dat.baseBox.TopLeft, 0.0001f));
         Assert.That(dat.baseBox, Is.Approximately(bounds, 0.0001f));
+    }
+
+    [Test]
+    public void TestComputeAABB()
+    {
+        var box = new Box2Rotated(Box2.UnitCentered, Angle.FromDegrees(45), Vector2.One);
+        var shape = new SlimPolygon(box);
+        Assert.That(shape._vertices._00, Is.Approximately(box.BottomLeft, 0.0001f));
+        Assert.That(shape._vertices._01, Is.Approximately(box.BottomRight, 0.0001f));
+        Assert.That(shape._vertices._02, Is.Approximately(box.TopRight, 0.0001f));
+        Assert.That(shape._vertices._03, Is.Approximately(box.TopLeft, 0.0001f));
+
+        // AABB of a 45 degree rotated unit box will be enlarged by a factor of sqrt(2)
+        var transform = Transform.Empty;
+        var expected = Box2.UnitCentered.Translated(new Vector2(1, 1 - MathF.Sqrt(2))).Scale(Vector2.One * MathF.Sqrt(2));
+        var aabb = shape.ComputeAABB(transform, 0);
+        Assert.That(aabb, Is.Approximately(expected, 0.0001f));
+        Assert.That(aabb.Size, Is.Approximately(Vector2.One * MathF.Sqrt(2), 0.0001f));
+
+        // But if we pass a 45 degree rotation into ComputeAABB, the box will not be enlarged.
+        transform = new Transform(Vector2.Zero, Angle.FromDegrees(45));
+        expected = Box2.UnitCentered.Translated(new Vector2(1, MathF.Sqrt(2) - 1));
+        aabb = shape.ComputeAABB(transform, 0);
+        Assert.That(aabb, Is.Approximately(expected, 0.0001f));
+        Assert.That(aabb.Size, Is.Approximately(Vector2.One, 0.0001f));
     }
 }

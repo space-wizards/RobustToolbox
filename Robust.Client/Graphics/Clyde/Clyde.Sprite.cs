@@ -164,7 +164,7 @@ internal partial class Clyde
     /// This is effectively a specialized combination of a <see cref="Matrix3Helpers.TransformBox(Matrix3x2, in Box2)"/>.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static unsafe Box2 TransformCenteredBox(in Box2 box, float angle, in Vector2 offset, in Vector2 scale)
+    internal static unsafe Box2 TransformCenteredBox(in Box2 box, float angle, in Vector2 offset, in Vector2 scale)
     {
         var boxVec = Unsafe.As<Box2, Vector128<float>>(ref Unsafe.AsRef(in box));
         var sin = Vector128.Create(MathF.Sin(angle));
@@ -186,6 +186,7 @@ internal partial class Clyde
         scaleVec = Vector128.Shuffle(scaleVec, Vector128.Create(0, 1, 0, 1));
 
         // offset and scale box.
+        // note that the scaling here is scaling the whole space, not jut the box. I.e., the centre of the box is changing
         lbrt = (lbrt + offsetVec) * scaleVec;
         return Unsafe.As<Vector128<float>, Box2>(ref lbrt);
     }

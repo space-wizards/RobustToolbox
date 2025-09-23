@@ -215,3 +215,18 @@ public sealed class TestNestedEnumerableCommand : ToolshedCommand
     [CommandImplementation]
     public IEnumerable<ProtoId<EntityCategoryPrototype>> Impl() => _arr.OrderByDescending(x => x.Id);
 }
+
+[ToolshedCommand]
+public sealed class TestImplicitImplCommand : ToolshedCommand
+{
+    public int Impl() => 1;
+}
+
+[ToolshedCommand]
+public sealed class TestExplicitImplCommand : ToolshedCommand
+{
+    public int Impl() => 1;
+
+    [CommandImplementation]
+    public int Impl2() => 2;
+}

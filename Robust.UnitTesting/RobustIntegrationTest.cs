@@ -765,6 +765,8 @@ namespace Robust.UnitTesting
                     (CVars.ResCheckBadFileExtensions.Name, "false")
                 });
 
+                cfg.SetVirtualConfig();
+
                 server.ContentStart = Options?.ContentStart ?? false;
                 var logHandler = Options?.OverrideLogHandler ?? (() => new TestLogHandler(cfg, "SERVER", _testOut));
                 if (server.Start(serverOptions, logHandler))
@@ -1033,6 +1035,8 @@ namespace Robust.UnitTesting
                     (CVars.ResCheckBadFileExtensions.Name, "false")
                 });
 
+                cfg.SetVirtualConfig();
+
                 GameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>(),
                     _fromInstanceWriter, _toInstanceReader);
 
@@ -1099,6 +1103,7 @@ namespace Robust.UnitTesting
             public bool SingleStep { get; set; }
             public bool Running { get; set; }
             public int MaxQueuedTicks { get; set; }
+            public TimeSpan LimitMinFrameTime { get; set; }
             public SleepMode SleepMode { get; set; }
 
             public IntegrationGameLoop(IGameTiming gameTiming, ChannelWriter<object> channelWriter,

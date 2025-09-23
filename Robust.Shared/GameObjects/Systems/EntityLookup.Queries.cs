@@ -406,11 +406,11 @@ public sealed partial class EntityLookupSystem
     {
         var broadphaseInv = _transform.GetInvWorldMatrix(lookupUid);
 
-        var localBounds = broadphaseInv.TransformBounds(worldBounds);
-        var polygon = new SlimPolygon(localBounds);
+        var localAABB = broadphaseInv.TransformBox(worldBounds);
+        var polygon = new SlimPolygon(localAABB);
         var result = AnyEntitiesIntersecting(lookupUid,
             polygon,
-            localBounds.CalcBoundingBox(),
+            localAABB,
             Physics.Transform.Empty,
             flags,
             ignored);
@@ -768,10 +768,10 @@ public sealed partial class EntityLookupSystem
         if (!_broadQuery.TryGetComponent(gridId, out var lookup))
             return;
 
-        var localBounds = _transform.GetInvWorldMatrix(gridId).TransformBounds(worldBounds);
-        var polygon = new SlimPolygon(localBounds);
+        var localAABB = _transform.GetInvWorldMatrix(gridId).TransformBox(worldBounds);
+        var polygon = new SlimPolygon(localAABB);
 
-        AddEntitiesIntersecting(gridId, intersecting, polygon, localBounds.CalcBoundingBox(), Physics.Transform.Empty, flags, lookup);
+        AddEntitiesIntersecting(gridId, intersecting, polygon, localAABB, Physics.Transform.Empty, flags, lookup);
         AddContained(intersecting, flags);
     }
 

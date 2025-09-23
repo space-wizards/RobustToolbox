@@ -47,11 +47,11 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* `IResourceManager.GetContentRoots()` has been obsoleted and returns no more results.
 
 ### Internal
 
-*None yet*
+* `IResourceManager.GetContentRoots()` has been replaced with a similar method on `IResourceManagerInternal`. This new method returns `string`s instead of `ResPath`s, and usage code has been updated to use these paths correctly.
 
 
 ## 267.1.0

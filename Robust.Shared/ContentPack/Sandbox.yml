@@ -305,6 +305,32 @@ Types:
   SixLabors.ImageSharp.Formats:
     IImageEncoder: { All: True }
     PixelTypeInfo: { All: True }
+  SixLabors.ImageSharp.Processing:
+    ResizeExtensions:
+      Methods:
+      - "SixLabors.ImageSharp.Processing.IImageProcessingContext Resize(SixLabors.ImageSharp.Processing.IImageProcessingContext, SixLabors.ImageSharp.Size)"
+      - "SixLabors.ImageSharp.Processing.IImageProcessingContext Resize(SixLabors.ImageSharp.Processing.IImageProcessingContext, SixLabors.ImageSharp.Size, bool)"
+      - "SixLabors.ImageSharp.Processing.IImageProcessingContext Resize(SixLabors.ImageSharp.Processing.IImageProcessingContext, int, int)"
+      - "SixLabors.ImageSharp.Processing.IImageProcessingContext Resize(SixLabors.ImageSharp.Processing.IImageProcessingContext, int, int, bool)"
+      - "SixLabors.ImageSharp.Processing.IImageProcessingContext Resize(SixLabors.ImageSharp.Processing.IImageProcessingContext, int, int, SixLabors.ImageSharp.Processing.Processors.Transforms.IResampler)"
+      - "SixLabors.ImageSharp.Processing.IImageProcessingContext Resize(SixLabors.ImageSharp.Processing.IImageProcessingContext, SixLabors.ImageSharp.Size, SixLabors.ImageSharp.Processing.Processors.Transforms.IResampler, bool)"
+      - "SixLabors.ImageSharp.Processing.IImageProcessingContext Resize(SixLabors.ImageSharp.Processing.IImageProcessingContext, int, int, SixLabors.ImageSharp.Processing.Processors.Transforms.IResampler, bool)"
+      - "SixLabors.ImageSharp.Processing.IImageProcessingContext Resize(SixLabors.ImageSharp.Processing.IImageProcessingContext, int, int, SixLabors.ImageSharp.Processing.Processors.Transforms.IResampler, SixLabors.ImageSharp.Rectangle, SixLabors.ImageSharp.Rectangle, bool)"
+      - "SixLabors.ImageSharp.Processing.IImageProcessingContext Resize(SixLabors.ImageSharp.Processing.IImageProcessingContext, int, int, SixLabors.ImageSharp.Processing.Processors.Transforms.IResampler, SixLabors.ImageSharp.Rectangle, bool)"
+      - "SixLabors.ImageSharp.Processing.IImageProcessingContext Resize(SixLabors.ImageSharp.Processing.IImageProcessingContext, SixLabors.ImageSharp.Processing.ResizeOptions)"
+    ProcessingExtensions:
+      Methods:
+      - "SixLabors.ImageSharp.Image Clone(SixLabors.ImageSharp.Image, System.Action`1<SixLabors.ImageSharp.Processing.IImageProcessingContext>)"
+      - "SixLabors.ImageSharp.Image Clone(SixLabors.ImageSharp.Image, SixLabors.ImageSharp.Configuration, System.Action`1<SixLabors.ImageSharp.Processing.IImageProcessingContext>)"
+      - "SixLabors.ImageSharp.Image`1<!!0> Clone<>(SixLabors.ImageSharp.Image`1<!!0>, System.Action`1<SixLabors.ImageSharp.Processing.IImageProcessingContext>)"
+      - "SixLabors.ImageSharp.Image`1<!!0> Clone<>(SixLabors.ImageSharp.Image`1<!!0>, SixLabors.ImageSharp.Configuration, System.Action`1<SixLabors.ImageSharp.Processing.IImageProcessingContext>)"
+      - "SixLabors.ImageSharp.Image`1<!!0> Clone<>(SixLabors.ImageSharp.Image`1<!!0>, SixLabors.ImageSharp.Processing.Processors.IImageProcessor[])"
+      - "SixLabors.ImageSharp.Image`1<!!0> Clone<>(SixLabors.ImageSharp.Image`1<!!0>, SixLabors.ImageSharp.Configuration, SixLabors.ImageSharp.Processing.Processors.IImageProcessor[])"
+    CropExtensions:
+      Methods:
+      - "SixLabors.ImageSharp.Processing.IImageProcessingContext Crop(SixLabors.ImageSharp.Processing.IImageProcessingContext, int, int)"
+      - "SixLabors.ImageSharp.Processing.IImageProcessingContext Crop(SixLabors.ImageSharp.Processing.IImageProcessingContext, SixLabors.ImageSharp.Rectangle)"
+    IImageProcessingContext: { }
   SixLabors.ImageSharp.PixelFormats:
     A8: { All: True }
     Argb32: { All: True }
@@ -382,6 +408,7 @@ Types:
       - "void SaveAsPng(SixLabors.ImageSharp.Image, System.IO.Stream, SixLabors.ImageSharp.Formats.Png.PngEncoder)"
       - "void SaveAsTga(SixLabors.ImageSharp.Image, System.IO.Stream)"
       - "void SaveAsTga(SixLabors.ImageSharp.Image, System.IO.Stream, SixLabors.ImageSharp.Formats.Tga.TgaEncoder)"
+    Rectangle: {All: True}
     Size: { All: True }
     SizeF: { All: True }
   System.Buffers:

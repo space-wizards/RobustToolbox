@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed `CollectionExtensions.TryGetValue` throwing an exception when given a negative list index.
 
 ### Other
 

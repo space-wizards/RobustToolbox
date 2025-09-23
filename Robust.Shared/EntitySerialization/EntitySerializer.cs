@@ -966,6 +966,12 @@ public sealed class EntitySerializer : ISerializationContext,
             return InvalidNode;
         }
 
+        if (ErroringEntities.Contains(value))
+        {
+            // Referenced entity already logged an error, so we just silently fail.
+            return new ValueDataNode("invalid");
+        }
+
         if (value == EntityUid.Invalid)
         {
             if (Options.MissingEntityBehaviour != MissingEntityBehaviour.Ignore)

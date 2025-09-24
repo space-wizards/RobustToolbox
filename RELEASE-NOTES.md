@@ -39,19 +39,19 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Sprites and Sprite layers have a new `Loop` data field that can be set to false to automatically pause animations once they have finished.
 
 ### Bugfixes
 
-*None yet*
+* Fixed `CollectionExtensions.TryGetValue` throwing an exception when given a negative list index.
 
 ### Other
 
-*None yet*
+* `IResourceManager.GetContentRoots()` has been obsoleted and returns no more results.
 
 ### Internal
 
-*None yet*
+* `IResourceManager.GetContentRoots()` has been replaced with a similar method on `IResourceManagerInternal`. This new method returns `string`s instead of `ResPath`s, and usage code has been updated to use these paths correctly.
 
 
 ## 267.1.0

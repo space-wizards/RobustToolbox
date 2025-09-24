@@ -19,7 +19,7 @@ internal sealed class ReloadManager : IReloadManager
     [Dependency] private readonly IClyde _clyde = default!;
     [Dependency] private readonly IConfigurationManager _cfg = default!;
     [Dependency] private readonly ILogManager _logMan = default!;
-    [Dependency] private readonly IResourceManager _res = default!;
+    [Dependency] private readonly IResourceManagerInternal _res = default!;
 #pragma warning disable CS0414
     [Dependency] private readonly ITaskManager _tasks = default!;
 #pragma warning restore CS0414
@@ -72,7 +72,7 @@ internal sealed class ReloadManager : IReloadManager
 
     public void Register(ResPath directory, string filter)
     {
-        Register(directory.ToString(), filter);
+        Register(directory.ToRelativeSystemPath(), filter);
     }
 
     public void Register(string directory, string filter)
@@ -83,7 +83,7 @@ internal sealed class ReloadManager : IReloadManager
 #if TOOLS
         foreach (var root in _res.GetContentRoots())
         {
-            var path = root + directory;
+            var path = Path.Join(root, directory);
 
             if (!Directory.Exists(path))
             {
@@ -128,17 +128,17 @@ internal sealed class ReloadManager : IReloadManager
 
             _tasks.RunOnMainThread(() =>
             {
-                var fullPath = args.FullPath.Replace(Path.DirectorySeparatorChar, '/');
-                var file = new ResPath(fullPath);
-
                 foreach (var rootIter in _res.GetContentRoots())
                 {
-                    if (!file.TryRelativeTo(rootIter, out var relative))
+                    var relPath = Path.GetRelativePath(rootIter, args.FullPath);
+                    if (relPath == args.FullPath)
                     {
+                        // Not relative.
                         continue;
                     }
 
-                    _reloadQueue.Add(relative.Value);
+                    var file = ResPath.FromRelativeSystemPath(relPath);
+                    _reloadQueue.Add(file);
                 }
             });
         }

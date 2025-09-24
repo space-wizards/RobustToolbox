@@ -1,8 +1,6 @@
 ﻿using System.Collections.Immutable;
-using System.IO.MemoryMappedFiles;
 using System.Text;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Robust.Roslyn.Shared;
 using Robust.Roslyn.Shared.Helpers;
@@ -11,7 +9,7 @@ using static Robust.Shared.EntitySystemSubscriptionsGenerator.KnownTypes;
 namespace Robust.Shared.EntitySystemSubscriptionsGenerator;
 
 [Generator(LanguageNames.CSharp)]
-public class SubGen : IIncrementalGenerator
+public class EntitySystemSubscriptionGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -89,6 +87,7 @@ using Robust.Shared.GameObjects;
                 partialTypeInfo.WriteHeader(builder);
                 builder.AppendLine($@"
 {{
+    /// <inheritdoc />
     [MustCallBase]
     public override void Initialize()
     {{
@@ -247,134 +246,4 @@ using Robust.Shared.GameObjects;
     private sealed record SubscriptionInfo(string MethodName, SubscriptionType Type, EquatableArray<string> TypeArgs);
 
     private sealed record PostSubscriptionInfo(string MethodName);
-}
-
-[Generator(LanguageNames.CSharp)]
-public class SubGenErrors : IIncrementalGenerator
-{
-    public void Initialize(IncrementalGeneratorInitializationContext context)
-    {
-        VerifyAnnotatedMethodIsInPartialIEntitySystem(context, AllSubscriptionMemberAttributeName);
-        VerifyAnnotatedMethodIsInPartialIEntitySystem(context, NetworkSubscriptionMemberAttributeName);
-        VerifyAnnotatedMethodIsInPartialIEntitySystem(context, LocalSubscriptionMemberAttributeName);
-        VerifyAnnotatedMethodIsInPartialIEntitySystem(context, CallAfterSubscriptionsAttributeName);
-
-
-        VerifyAnnotatedMethodHasCorrectSignature(
-            context,
-            AllSubscriptionMemberAttributeName,
-            m => (SubGen.TryParseEntityEventHandler(m) ?? SubGen.TryParseEntitySessionEventHandler(m)) is not null,
-            NonComponentSubscriptionHandlerTypes
-        );
-        VerifyAnnotatedMethodHasCorrectSignature(
-            context,
-            NetworkSubscriptionMemberAttributeName,
-            m => (SubGen.TryParseEntityEventHandler(m) ?? SubGen.TryParseEntitySessionEventHandler(m)) is not null,
-            NonComponentSubscriptionHandlerTypes
-        );
-        VerifyAnnotatedMethodHasCorrectSignature(
-            context,
-            LocalSubscriptionMemberAttributeName,
-            m => (
-                SubGen.TryParseEntityEventHandler(m) ??
-                SubGen.TryParseEntitySessionEventHandler(m) ??
-                SubGen.TryParseComponentEventHandler(m) ??
-                SubGen.TryParseEntityEventRefHandler(m)
-            ) is not null,
-            string.Join(", ", NonComponentSubscriptionHandlerTypes, ComponentSubscriptionHandlerTypes)
-        );
-        VerifyAnnotatedMethodHasCorrectSignature(
-            context,
-            CallAfterSubscriptionsAttributeName,
-            SubGen.TakesNoParameters,
-            CallAfterSubscriptionsHandlerTypes
-        );
-
-
-        // TODO Complain when:
-        //  - Annotations are in a class which already has an `Initialize` (Maybe? Maybe just let the compiler choke on this one)
-    }
-
-    private static void RegisterDiagnosticReporting(
-        IncrementalGeneratorInitializationContext context,
-        IncrementalValuesProvider<Diagnostic?> diagnostics
-    )
-    {
-        context.RegisterSourceOutput(
-            diagnostics.Where(it => it is not null),
-            (productionContext, diagnostic) => productionContext.ReportDiagnostic(diagnostic!)
-        );
-    }
-
-    private static void VerifyAnnotatedMethodIsInPartialIEntitySystem(
-        IncrementalGeneratorInitializationContext context,
-        string annotationName
-    )
-    {
-        var diagnostics = context.SyntaxProvider.ForAttributeWithMetadataName(
-            annotationName,
-            (node, _) => node is MethodDeclarationSyntax,
-            (syntaxContext, _) =>
-            {
-                var diagnostics = ImmutableArray.CreateBuilder<Diagnostic>();
-
-                if (syntaxContext.TargetSymbol.ContainingType is not { } containingSymbol ||
-                    !TypeSymbolHelper.ImplementsInterface(containingSymbol, IEntitySystemTypeName))
-                {
-                    diagnostics.Add(Diagnostic.Create(
-                        Diagnostics.NotIEntitySystem,
-                        syntaxContext.TargetSymbol.Locations[0],
-                        syntaxContext.TargetSymbol.ContainingType?.Name ?? "<unknown>"
-                    ));
-                }
-
-                if (syntaxContext.TargetNode.Parent is not TypeDeclarationSyntax containingSyntax ||
-                    !containingSyntax.Modifiers.Any(x => x.IsKind(SyntaxKind.PartialKeyword)))
-                {
-                    diagnostics.Add(Diagnostic.Create(
-                        Diagnostics.NotPartial,
-                        syntaxContext.TargetSymbol.Locations[0]
-                    ));
-                }
-
-                return diagnostics.ToImmutable().AsEquatableArray();
-            }
-        );
-
-        RegisterDiagnosticReporting(
-            context,
-            diagnostics.SelectMany((array, _) => array as IEnumerable<Diagnostic?>)
-        );
-    }
-
-    private static void VerifyAnnotatedMethodHasCorrectSignature(
-        IncrementalGeneratorInitializationContext context,
-        string annotationName,
-        Func<IMethodSymbol, bool> hasCorrectParameters,
-        string acceptableHandlerTypes
-    )
-    {
-        var diagnostics = context.SyntaxProvider.ForAttributeWithMetadataName(
-            annotationName,
-            (node, _) => node is MethodDeclarationSyntax,
-            (syntaxContext, _) =>
-            {
-                if (syntaxContext.TargetSymbol is not IMethodSymbol method ||
-                    !method.ReturnsVoid ||
-                    !hasCorrectParameters(method))
-                {
-                    return Diagnostic.Create(
-                        Diagnostics.BadMethodSignature,
-                        syntaxContext.TargetSymbol.Locations[0],
-                        annotationName,
-                        acceptableHandlerTypes
-                    );
-                }
-
-                return null;
-            }
-        );
-
-        RegisterDiagnosticReporting(context, diagnostics);
-    }
 }

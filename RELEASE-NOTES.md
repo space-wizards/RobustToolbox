@@ -48,6 +48,7 @@ END TEMPLATE-->
 ### Other
 
 * `IResourceManager.GetContentRoots()` has been obsoleted and returns no more results.
+* The default values of the `toolshed.nearby_limit` and `toolshed.nearby_entities_limit` have been swapped.
 
 ### Internal
 

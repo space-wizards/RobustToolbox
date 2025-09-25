@@ -1883,14 +1883,14 @@ namespace Robust.Shared
         ///     Any higher value will cause an exception.
         /// </summary>
         public static readonly CVarDef<int> ToolshedNearbyLimit =
-            CVarDef.Create("toolshed.nearby_limit", 200, CVar.SERVER | CVar.REPLICATED);
+            CVarDef.Create("toolshed.nearby_limit", 5, CVar.SERVER | CVar.REPLICATED);
 
         /// <summary>
         ///     The max amount of entities that can be passed to the nearby toolshed command.
         ///     Any higher value will cause an exception.
         /// </summary>
         public static readonly CVarDef<int> ToolshedNearbyEntitiesLimit =
-            CVarDef.Create("toolshed.nearby_entities_limit", 5, CVar.SERVER | CVar.REPLICATED);
+            CVarDef.Create("toolshed.nearby_entities_limit", 200, CVar.SERVER | CVar.REPLICATED);
 
         /// <summary>
         ///     The max amount of prototype ids that can be sent to the client when autocompleting prototype ids.

@@ -55,8 +55,8 @@ internal sealed class ToolshedCommandImplementor
             .Select(x => new CommandMethod(x, this))
             .ToArray();
 
-        LocName = Owner.Name.All(char.IsAsciiLetterOrDigit)
-            ? Owner.Name
+        LocName = Owner.Name.All(x => char.IsAsciiLetterOrDigit(x) || x == '_')
+            ? Owner.Name.Replace('_', '-')
             : Owner.GetType().PrettyName();
 
         if (SubCommand != null)

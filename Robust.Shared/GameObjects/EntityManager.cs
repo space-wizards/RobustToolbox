@@ -694,7 +694,7 @@ namespace Robust.Shared.GameObjects
             EntityQueueDeleted?.Invoke(uid.Value);
         }
 
-        public bool IsQueuedForDeletion(EntityUid uid) => QueuedDeletionsSet.Contains(uid);
+        public virtual bool IsQueuedForDeletion(EntityUid uid) => QueuedDeletionsSet.Contains(uid);
 
         /// <inheritdoc />
         public virtual void PredictedDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
@@ -712,20 +712,32 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
+        public virtual void PredictedQueueDeleteEntity(Entity<MetaDataComponent?> ent)
         {
-            QueueDeleteEntity(ent.Owner);
+            QueueDeleteEntity(ent);
         }
 
         /// <inheritdoc />
-        public virtual void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?>? ent)
+        public void PredictedQueueDeleteEntity(Entity<MetaDataComponent?>? ent)
         {
-            if (ent == null)
-                return;
-
-            PredictedQueueDeleteEntity(ent.Value);
+            if (ent != null)
+                PredictedQueueDeleteEntity(ent.Value);
         }
 
+        /// <inheritdoc />
+        [Obsolete("Use variant without transform component")]
+        public void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
+        {
+            PredictedQueueDeleteEntity(new Entity<MetaDataComponent?>(ent.Owner, ent.Comp1));
+        }
+
+        /// <inheritdoc />
+        [Obsolete("Use variant without transform component")]
+        public void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?>? ent)
+        {
+            if (ent != null)
+                PredictedQueueDeleteEntity(new Entity<MetaDataComponent?>(ent.Value.Owner, ent.Value.Comp1));
+        }
         public bool EntityExists(EntityUid uid)
         {
             return MetaQuery.HasComponentInternal(uid);

@@ -29,8 +29,8 @@ namespace Robust.Client.GameObjects
         internal event Action? AfterStartup;
         internal event Action? AfterShutdown;
 
-        protected readonly Queue<EntityUid> QueuedPredictedDeletions = new();
-        protected readonly HashSet<EntityUid> QueuedPredictedDeletionsSet = new();
+        private readonly Queue<EntityUid> _queuedPredictedDeletions = new();
+        private readonly HashSet<EntityUid> _queuedPredictedDeletionsSet = new();
 
         public override void Initialize()
         {
@@ -218,12 +218,21 @@ namespace Robust.Client.GameObjects
 
             using (histogram?.WithLabels("PredictedQueueDel").NewTimer())
             {
-                while (QueuedPredictedDeletions.TryDequeue(out var uid))
+                while (_queuedPredictedDeletions.TryDequeue(out var uid))
                 {
-                    PredictedDeleteEntity(uid);
+                    if (!MetaQuery.TryGetComponentInternal(uid, out var meta))
+                        continue;
+
+                    if (meta.EntityLifeStage >= EntityLifeStage.Terminating)
+                        continue;
+
+                    if (meta.NetEntity.IsClientSide())
+                        DeleteEntity(uid, meta, TransformQuery.GetComponentInternal(uid));
+                    else
+                        _xforms.DetachEntity(uid, TransformQuery.GetComponentInternal(uid));
                 }
 
-                QueuedPredictedDeletionsSet.Clear();
+                _queuedPredictedDeletionsSet.Clear();
             }
 
             base.TickUpdate(frameTime, noPredictions, histogram);
@@ -330,19 +339,23 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        /// <inheritdoc />
-        public override void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
-        {
-            if (IsQueuedForDeletion(ent.Owner)
-                || !MetaQuery.Resolve(ent.Owner, ref ent.Comp1)
-                || ent.Comp1.EntityLifeStage >= EntityLifeStage.Terminating
-                || !TransformQuery.Resolve(ent.Owner, ref ent.Comp2)
-                || QueuedPredictedDeletionsSet.Contains(ent.Owner))
-            {
-                return;
-            }
+        public override bool IsQueuedForDeletion(EntityUid uid)
+            => QueuedDeletionsSet.Contains(uid) || _queuedPredictedDeletions.Contains(uid);
 
-            if (ent.Comp1.NetEntity.IsClientSide())
+        /// <inheritdoc />
+        public override void PredictedQueueDeleteEntity(Entity<MetaDataComponent?> ent)
+        {
+            // Some UIs get disposed after entity-manager has shut down and already deleted all entities.
+            if (!Started)
+                return;
+
+            if (IsQueuedForDeletion(ent.Owner))
+                return;
+
+            if (!MetaQuery.Resolve(ent.Owner, ref ent.Comp, false))
+                return;
+
+            if (ent.Comp.NetEntity.IsClientSide())
             {
                 // client-side QueueDeleteEntity re-fetches MetadataComp and checks IsClientSide().
                 // base call to skip that.
@@ -351,10 +364,10 @@ namespace Robust.Client.GameObjects
             }
             else
             {
-                if (!QueuedPredictedDeletionsSet.Add(ent.Owner))
+                if (!_queuedPredictedDeletionsSet.Add(ent.Owner))
                     return;
 
-                QueuedPredictedDeletions.Enqueue(ent.Owner);
+                _queuedPredictedDeletions.Enqueue(ent.Owner);
             }
         }
     }

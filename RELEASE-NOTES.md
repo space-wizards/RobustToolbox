@@ -44,6 +44,9 @@ END TEMPLATE-->
 ### Bugfixes
 
 * Fixed `CollectionExtensions.TryGetValue` throwing an exception when given a negative list index.
+* Fixed `EntityManager.PredictedQueueDeleteEntity()` not deferring changes for networked entities until the end of the tick. 
+* Fixed `EntityManager.IsQueuedForDeletion` not returning true foe entities getting deleted via `PredictedQueueDeleteEntity()`
+
 
 ### Other
 

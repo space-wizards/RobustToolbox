@@ -226,10 +226,19 @@ namespace Robust.Client.GameObjects
                     if (meta.EntityLifeStage >= EntityLifeStage.Terminating)
                         continue;
 
+                    var xform = TransformQuery.GetComponentInternal(uid);
                     if (meta.NetEntity.IsClientSide())
-                        DeleteEntity(uid, meta, TransformQuery.GetComponentInternal(uid));
+                    {
+                        DeleteEntity(uid, meta, xform);
+                    }
                     else
-                        _xforms.DetachEntity(uid, TransformQuery.GetComponentInternal(uid));
+                    {
+                        _xforms.DetachEntity(uid, xform, meta, null);
+                        // base call bypasses IGameTiming.InPrediction check
+                        // This is pretty janky and there should be a way for the client to dirty an entity outside of prediction
+                        // TODO PREDICTION
+                        base.Dirty(uid, xform, meta);
+                    }
                 }
 
                 _queuedPredictedDeletionsSet.Clear();

@@ -40,11 +40,14 @@ END TEMPLATE-->
 ### New features
 
 * Sprites and Sprite layers have a new `Loop` data field that can be set to false to automatically pause animations once they have finished.
+* Added `IReplayFileWriter.WriteYaml()`, for writing yaml documents to a replay zip file.
 
 ### Bugfixes
 
 * Fixed `CollectionExtensions.TryGetValue` throwing an exception when given a negative list index.
-
+* `ActorComponent` now has the `UnsavedComponentAttribute`
+  * Previously it was unintentionally get serialized to yaml, which could result in NREs when deserializing.
+  
 ### Other
 
 * `IResourceManager.GetContentRoots()` has been obsoleted and returns no more results.

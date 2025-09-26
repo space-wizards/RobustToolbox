@@ -179,10 +179,19 @@ namespace Robust.Shared.GameObjects
         void PredictedQueueDeleteEntity(Entity<MetaDataComponent?>? ent);
 
         /// <inheritdoc cref="PredictedQueueDeleteEntity(Entity{MetaDataComponent?})"/>
+        [Obsolete("use variant without TransformComponent")]
         void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent);
 
         /// <inheritdoc cref="PredictedQueueDeleteEntity(Entity{MetaDataComponent?})"/>
+        [Obsolete("use variant without TransformComponent")]
         void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?>? ent);
+
+        // The following 2 methods exist to handle ambiguous implicit casts.
+        // They should probably be removed whenever the transform variants are removed
+        /// <inheritdoc cref="PredictedQueueDeleteEntity(Entity{MetaDataComponent?})"/>
+        void PredictedQueueDeleteEntity(EntityUid ent);
+        /// <inheritdoc cref="PredictedQueueDeleteEntity(Entity{MetaDataComponent?})"/>
+        void PredictedQueueDeleteEntity(EntityUid? ent);
 
         /// <summary>
         /// Shuts-down and removes the entity with the given <see cref="Robust.Shared.GameObjects.EntityUid"/>. This is also broadcast to all clients.

@@ -725,19 +725,33 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        [Obsolete("Use variant without transform component")]
+        [Obsolete("use variant without TransformComponent")]
         public void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?> ent)
         {
             PredictedQueueDeleteEntity(new Entity<MetaDataComponent?>(ent.Owner, ent.Comp1));
         }
 
         /// <inheritdoc />
-        [Obsolete("Use variant without transform component")]
+        [Obsolete("use variant without TransformComponent")]
         public void PredictedQueueDeleteEntity(Entity<MetaDataComponent?, TransformComponent?>? ent)
         {
             if (ent != null)
                 PredictedQueueDeleteEntity(new Entity<MetaDataComponent?>(ent.Value.Owner, ent.Value.Comp1));
         }
+
+        /// <inheritdoc />
+        public void PredictedQueueDeleteEntity(EntityUid uid)
+        {
+            PredictedQueueDeleteEntity(new Entity<MetaDataComponent?>(uid, null));
+        }
+
+        /// <inheritdoc />
+        public void PredictedQueueDeleteEntity(EntityUid? uid)
+        {
+            if (uid != null)
+                PredictedQueueDeleteEntity(new Entity<MetaDataComponent?>(uid.Value, null));
+        }
+
         public bool EntityExists(EntityUid uid)
         {
             return MetaQuery.HasComponentInternal(uid);

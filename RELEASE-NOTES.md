@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added `IUserInterfaceManager.ControlSawmill` and `Control.Log` properties so that controls can easily use logging without using static methods.
 
 ### Bugfixes
 
@@ -59,7 +59,6 @@ END TEMPLATE-->
 ### New features
 
 * Sprites and Sprite layers have a new `Loop` data field that can be set to false to automatically pause animations once they have finished.
-* Added `IUserInterfaceManager.ControlSawmill` and `Control.Log` properties so that controls can easily use logging without using static methods.
 
 ### Bugfixes
 

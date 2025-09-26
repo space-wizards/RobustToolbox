@@ -15,6 +15,10 @@ WhitelistedNamespaces:
 - Content
 - OpenDreamShared
 
+AllowedAssemblyPrefixes:
+- OpenDream
+- Content
+
 # The type whitelist does NOT care about which assembly types come from.
 # This is because types switch assembly all the time.
 # Just look up stuff like StreamReader on https://apisof.net.

@@ -510,19 +510,25 @@ internal sealed class ToolshedCommandImplementor
     {
         var dis = new CommandDiscriminator(args.PipedType, args.TypeArguments);
         if (!Implementations.TryGetValue(dis, out var impl))
-            Implementations[dis] = impl = GetImplementationInternal(args, method);
+            Implementations[dis] = impl = GetImplementationInternal(args.PipedType, method);
 
         return impl;
     }
 
-    internal Func<CommandInvocationArguments, object?> GetImplementationInternal(CommandArgumentBundle cmdArgs, ConcreteCommandMethod method)
+    internal Func<CommandInvocationArguments, object?> GetImplementationInternal(Type? pipedType, ConcreteCommandMethod method)
     {
+        // args is a class that bundles up the parsed or piped command arguments that are used to invoke the command's method.
         var args = Expression.Parameter(typeof(CommandInvocationArguments));
-        var paramList = new List<Expression>();
 
+        // For each of the method argument, get the data from the "args" bundle that is needed to invoke the method.
+        // I.e., a method like Foo(int bar, float baz) should become something equivalent to:
+        // foo((int)args.Arguments["bar"], (float)args.Arguments["baz"])
+        // Though to be more precise, it uses the ValueRef<T>.EvaluateParameter() helper function to cast the type or
+        // deal with toolshed variables & blocks.
+        var paramList = new List<Expression>();
         foreach (var param in method.Info.GetParameters())
         {
-            paramList.Add(GetParamExpr(param, cmdArgs.PipedType, args));
+            paramList.Add(GetParamExpr(param, pipedType, args));
         }
 
         Expression partialShim = Expression.Call(Expression.Constant(Owner), method.Info, paramList);
@@ -567,6 +573,8 @@ internal sealed class ToolshedCommandImplementor
         return GetArgExpr(param, args);
     }
 
+    // Used to get an expression that is equivalent to:
+    // ValueRef<T>.EvaluateParameter(args.Arguments[param.Name], args.Context)
     private Expression GetArgExpr(ParameterInfo param, ParameterExpression args)
     {
         // args.Arguments[param.Name]
@@ -596,6 +604,7 @@ internal sealed class ToolshedCommandImplementor
                 .GetMethod(nameof(ValueRef<int>.EvaluateParameter), BindingFlags.Static | BindingFlags.NonPublic)!;
         }
 
+        // ValueRef<T>.EvaluateParameter(args.Arguments[param.Name], args.Context)
         return Expression.Call(evalMethod, argValue, ctx);
     }
 

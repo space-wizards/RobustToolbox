@@ -50,6 +50,7 @@ namespace Robust.Client.Graphics.Clyde
         [Dependency] private readonly ILocalizationManager _loc = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly ClientEntityManager _entityManager = default!;
+        [Dependency] private readonly ParticlesManager _particlesManager = default!;
         [Dependency] private readonly IPrototypeManager _proto = default!;
         [Dependency] private readonly IReloadManager _reloads = default!;
 

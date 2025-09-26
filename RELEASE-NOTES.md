@@ -35,23 +35,157 @@ END TEMPLATE-->
 
 ### Breaking changes
 
+*None yet*
+
+### New features
+
+* Sprites and Sprite layers have a new `Loop` data field that can be set to false to automatically pause animations once they have finished.
+
+### Bugfixes
+
+* Fixed `CollectionExtensions.TryGetValue` throwing an exception when given a negative list index.
+
+### Other
+
+* `IResourceManager.GetContentRoots()` has been obsoleted and returns no more results.
+
+### Internal
+
+* `IResourceManager.GetContentRoots()` has been replaced with a similar method on `IResourceManagerInternal`. This new method returns `string`s instead of `ResPath`s, and usage code has been updated to use these paths correctly.
+
+
+## 267.1.0
+
+### New features
+
+* Animation:
+  * `AnimationTrackProperty.KeyFrame` can now have easings functions applied.
+* Graphics:
+  * `PointLightComponent` now has two fields, `falloff` and `curveFactor`, for controlling light falloff and the shape of the light attenuation curve.
+  * `IClydeViewport` now has an `Id` and `ClearCachedResources` event. Together, these allow you to properly cache rendering resources per viewport.
+* Miscellaneous:
+  * Added `display.max_fps` CVar.
+  * Added `IGameTiming.FrameStartTime`.
+* Sandbox:
+  * Added `System.WeakReference<T>`.
+  * Added `SpaceWizards.Sodium.CryptoGenericHashBlake2B.Hash()`.
+  * Added `System.Globalization.UnicodeCategory`.
+* Serialization:
+  * Added a new entity yaml deserialization option (`SerializationOptions.EntityExceptionBehaviour`) that can optionally make deserialization more exception tolerant.
+* Tooling:
+  * `devwindow` now has a tab listing active `IRenderTarget`s, allowing insight into resource consumption.
+  * `loadgrid` now creates a map if passed an invalid map ID.
+  * Added game version information to F3 overlay.
+  * Added completions to more map commands.
+* UI system:
+  * `Control.OrderedChildCollection` (gotten from `.Children`) now implements `IReadOnlyList<Control>`, allowing it to be indexed directly.
+    * Added `WrapContainer` control. This lays out multiple elements along an axis, wrapping them if there's not enough space. It comes with many options and can handle multiple axes.
+  * Popups/modals now work in secondary windows. This entails putting roots for these on each UI root.
+  * If you are not using `OSWindow` and are instead creating secondary windows manually, you need to call `WindowRoot.CreateRootControls()` manually for this to work.
+  * Added `Axis` enum, `IAxisImplementation` interface and axis implementations. These allow writing general-purpose UI layout code that can work on multiple axis at once.
+* WebView:
+  * Added `web.remote_debug_port` CVar to change Chromium's remote debug port.
+
+### Bugfixes
+
+* Audio:
+  * Fix audio occlusion & velocity being calculated with the audio entity instead of the source entity.
+* Bound UI:
+  * Try to fix an assert related to `UserInterfaceComponent` delta states.
+* Configuration:
+  * The client no longer tries to send `CLIENT | REPLICATED` CVars when not connected to a server. This could cause test failures.
+* Math:
+  * Fixed `Matrix3Helpers.TransformBounds()` returning an incorrect result. Now it effectively behaves like `Matrix3Helpers.TransformBox()` and has been marked as obsolete.
+* Physics:
+  * Work around an undiagnosed crash processing entities without parents.
+* Serialization:
+  * Fix `[DataRecord]`s with computed get-only properties.
+* Resources:
+  * Fix some edge case broken path joining in `DirLoader` and `WritableDirProvider`.
+* Tests:
+  * Fix `PlacementManager.CurrentMousePosition` in integration tests.
+* UI system:
+  * Animations for the debug console and scrolling are no longer framerate dependent.
+  * Fix `OutputPanel.SetMessage` triggering a scrolling animation when editing messages other than the last one.
+  * Fix word wrapping with two-`char` runes in `RichTextLabel` and `OutputPanel`.
+* WebView:
+  * Multiple clients with WebView can now run at the same time, thanks to better CEF cache management.
+
+### Other
+
+* Audio:
+  * Improved error logging for invalid file names in `SharedAudioSystem`.
+* Configuration:
+  * Fix crash if more than 255 `REPLICATED` CVars exist. Also increased the max size of the CVar replication message.
+* Entities:
+  * Transform:
+    * `AnchorEntity` logs instead of using an assert for invalid arguments.
+  * Containers:
+    * `SharedContainerSystem.CleanContainer` now uses `PredictedDel()` instead.
+* Networking:
+  * The client now logs an error when attempting to send a network message without server connection. Previously, it would be silently dropped.
+  * `net.interp` and `net.buffer_size` CVars are now `REPLICATED`.
+* Graphics:
+  * The function used for pointlight attenuation has been modified to be c1 continuous as opposed to simply c0 continuous, resulting in smoother boundary behavior.
+  * RSI validator no longer allows empty (`""`) state names.
+* Packaging:
+  * Server packaging now excludes all files in the `Audio/` directory.
+  * Server packaging now excludes engine resources `EngineFonts/` and `Midi/`.
+  * ACZ explicitly specifies manifest charset as UTF-8.
+* Serialization:
+  * `CurTime`-relative `TimeSpan` values that are `MaxValue` now deserialize without overflow.
+  * `SpriteSpecifier.Texture` will now fail to validate if the path is inside a `.rsi`. Use RSI sprite specifiers instead.
+* Resources:
+  * `IWritableDirProvider.RootDir` is now null on clients.
+* WebView:
+  * CEF cache is no longer in the content-accessible user data directory.
+
+### Internal
+
+* Added some debug commands for debugging viewport resource management: `vp_clear_all_cached` & `vp_test_finalize`
+* `uitest` command now supports command argument for tab selection, like `uitest2`.
+* Rewrote `BoxContainer` implementation to make use of new axis system.
+* Moved `uitest2` and `devwindow` to use the `OSWindow` control.
+* SDL3 binding has been moved to `SpaceWizards.Sdl` NuGet package.
+* `dmetamem` command has been moved from `DEBUG` to `TOOLS`.
+* Consolidate `AttachToGridOrMap` with `TryGetMapOrGridCoordinates`.
+* Secondary window render targets have clear names specified.
+* Updated `SpaceWizards.NFluidsynth` to `0.2.2`.
+* `Robust.Client.WebView.Cef.Program` is now internal.
+* `download_manifest_file.py` script in repo now always decodes as UTF-8 correctly.
+* Added a new debug assert to game state processing.
+
+## 267.0.0
+
+### Breaking changes
+
 * When a player disconnects, the relevant callbacks are now fired *after* removing the channel from `INetManager`.
 
 ### New features
 
-*None yet*
+* Engine builds are now published for ARM64 & FreeBSD.
+* CPU model names are now detected on Windows & Linux ARM64.
+* Toolshed's `spawn:in` command now works on entities without `Physics` component.
 
 ### Bugfixes
 
-*None yet*
+* SDL3 windowing backend fixes:
+  * Avoid macOS freezes with multiple windows.
+  * Fix macOS rendering breaking when closing secondary windows.
+  * File dialogs properly associate parent windows.
+  * Fix IME positions not working with UI scaling properly.
+  * Properly specify library names for loading native library.
+
+* WinBit threads don't permanently stay stuck when their window closes.
+* Checking for the "`null`" literal in serialization is now culture invariant.
 
 ### Other
 
 * Compat mode on the client now defaults to on for Windows Snapdragon devices, to work around driver bugs.
-
-### Internal
-
-*None yet*
+* Update various libraries & natives. This enables out-of-the-box ARM64 support on all platforms and is a long-overdue modernization.
+* Key name displays now use proper Unicode symbols for macOS ⌥ and ⌘.
+* Automated CI for RobustToolbox runs on macOS again.
+* Autocompletions for `ProtoId<T>` in Toolshed now use `PrototypeIdsLimited` instead of arbitrarily cutting out if more than 256 of a prototype exists.
 
 
 ## 266.0.0

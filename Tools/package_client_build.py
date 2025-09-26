@@ -54,7 +54,7 @@ RID_OSX_ARM64 = f"{PLATFORM_OSX}-arm64"
 RID_FREEBSD_X64 = f"{PLATFORM_FREEBSD}-x64"
 RID_FREEBSD_ARM64 = f"{PLATFORM_FREEBSD}-arm64"
 
-DEFAULT_RIDS = [RID_WIN_X64, RID_LINUX_X64, RID_OSX_X64, RID_FREEBSD_X64]
+DEFAULT_RIDS = [RID_WIN_X64, RID_WIN_ARM64, RID_LINUX_X64, RID_LINUX_ARM64, RID_OSX_X64, RID_OSX_ARM64, RID_FREEBSD_X64, RID_FREEBSD_ARM64]
 ALL_RIDS = [RID_WIN_X64, RID_WIN_ARM64, RID_LINUX_X64, RID_LINUX_ARM64, RID_OSX_X64, RID_OSX_ARM64, RID_FREEBSD_X64, RID_FREEBSD_ARM64]
 
 IGNORED_RESOURCES = {
@@ -82,7 +82,10 @@ IGNORED_FILES_WINDOWS = {
     "zstd.dll",
     "zstd.pdb",
     "libsodium.dll",
-    "zlib1.dll"
+    "zlib1.dll",
+    "SDL3.dll",
+    "OpenAL32.dll",
+    "libfluidsynth-3.dll"
 }
 
 IGNORED_FILES_MACOS = {
@@ -93,6 +96,10 @@ IGNORED_FILES_MACOS = {
     "libswnfd.dylib",
     "zstd.dylib",
     "libsodium.dylib",
+    "libopenal.1.dylib",
+    "libSDL3.0.dylib",
+    "libfluidsynth.3.dylib"
+    "libzstd.1.dylib"
 }
 
 IGNORED_FILES_LINUX = {
@@ -102,7 +109,11 @@ IGNORED_FILES_LINUX = {
     "Robust.Client",
     "libswnfd.so",
     "zstd.so",
-    "libsodium.so"
+    "libsodium.so",
+    "libopenal.so.1",
+    "libSDL3.so.0",
+    "libfluidsynth.so.3"
+    "libzstd.so.1"
 }
 
 def main() -> None:
@@ -224,7 +235,8 @@ def publish_client(runtime: str, target_os: TargetOS) -> None:
         "--no-self-contained",
         "-c", "Release",
         f"/p:TargetOS={target_os}",
-        "/p:FullRelease=True"
+        "/p:FullRelease=True",
+        "/p:UseAppHost=False"
     ]
 
     subprocess.run(base + ["Robust.Client/Robust.Client.csproj"], check=True)

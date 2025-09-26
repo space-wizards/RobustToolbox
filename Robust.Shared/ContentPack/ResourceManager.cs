@@ -41,13 +41,13 @@ namespace Robust.Shared.ContentPack
         public IWritableDirProvider UserData { get; private set; } = default!;
 
         /// <inheritdoc />
-        public virtual void Initialize(string? userData)
+        public virtual void Initialize(string? userData, bool hideRootDir)
         {
             Sawmill = _logManager.GetSawmill("res");
 
             if (userData != null)
             {
-                UserData = new WritableDirProvider(Directory.CreateDirectory(userData));
+                UserData = new WritableDirProvider(Directory.CreateDirectory(userData), hideRootDir);
             }
             else
             {
@@ -371,16 +371,19 @@ namespace Robust.Shared.ContentPack
             AddRoot(ResPath.Root, loader);
         }
 
-        public IEnumerable<ResPath> GetContentRoots()
+        IEnumerable<ResPath> IResourceManager.GetContentRoots()
+        {
+            return [];
+        }
+
+        public IEnumerable<string> GetContentRoots()
         {
             foreach (var (_, root) in _contentRoots)
             {
-                if (root is DirLoader loader)
-                {
-                    var rootDir = loader.GetPath(new ResPath(@"/"));
+                if (root is not DirLoader loader)
+                    continue;
 
-                    yield return new ResPath(rootDir);
-                }
+                yield return loader.GetPath(ResPath.Root);
             }
         }
 

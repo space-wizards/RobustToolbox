@@ -132,13 +132,13 @@ namespace Robust.Shared
         /// Whether to interpolate between server game states for render frames on the client.
         /// </summary>
         public static readonly CVarDef<bool> NetInterp =
-            CVarDef.Create("net.interp", true, CVar.ARCHIVE | CVar.CLIENTONLY);
+            CVarDef.Create("net.interp", true, CVar.ARCHIVE | CVar.CLIENT | CVar.REPLICATED);
 
         /// <summary>
         /// The target number of game states to keep buffered up to smooth out network inconsistency.
         /// </summary>
         public static readonly CVarDef<int> NetBufferSize =
-            CVarDef.Create("net.buffer_size", 2, CVar.ARCHIVE | CVar.CLIENTONLY);
+            CVarDef.Create("net.buffer_size", 2, CVar.ARCHIVE | CVar.CLIENT | CVar.REPLICATED);
 
         /// <summary>
         /// The maximum size of the game state buffer. If this is exceeded the client will request a full game state.
@@ -1001,6 +1001,15 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> DisplayVSync =
             CVarDef.Create("display.vsync", true, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Maximum framerate the client should run at. Set to 0 to have no limit.
+        /// </summary>
+        /// <remarks>
+        /// This is ignored if <see cref="DisplayVSync"/> is enabled.
+        /// </remarks>
+        public static readonly CVarDef<int> DisplayMaxFPS =
+            CVarDef.Create("display.max_fps", 0, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
         /// Window mode for the main game window. 0 = windowed, 1 = fullscreen.

@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using System.Numerics;
+using NUnit.Framework;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
@@ -47,6 +48,23 @@ public sealed partial class DataRecordTest : SerializationTest
 
     [DataRecord]
     public record struct DataRecordStruct(IntStruct Struct, string String, int Integer);
+
+    [DataRecord]
+    public record struct DataRecordWithProperties
+    {
+        public Vector2 Position;
+        public int Foo { get; }
+        public int Bar { get; set; }
+        public float X => Position.X;
+    }
+
+    [DataRecord]
+    public readonly record struct ReadonlyDataRecord
+    {
+        public readonly Vector2 Position;
+        public int Foo { get; }
+        public float X => Position.X;
+    }
 
     [Test]
     public void TwoIntRecordTest()
@@ -242,6 +260,69 @@ public sealed partial class DataRecordTest : SerializationTest
 
             Assert.That(newMapping.TryGet<ValueDataNode>("integer", out var integerNode));
             Assert.That(integerNode!.Value, Is.EqualTo("2"));
+        });
+    }
+
+    [Test]
+    public void DataRecordWithPropertiesTest()
+    {
+        var mapping = new MappingDataNode
+        {
+            ["foo"] = new ValueDataNode("1"),
+            ["bar"] = new ValueDataNode("2"),
+            ["position"] = new ValueDataNode("3, .4"),
+        };
+        var val = Serialization.Read<DataRecordWithProperties>(mapping);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(val.Foo, Is.EqualTo(1));
+            Assert.That(val.Bar, Is.EqualTo(2));
+            Assert.That(val.Position, Is.EqualTo(new Vector2(3, .4f)));
+        });
+
+        var newMapping = Serialization.WriteValueAs<MappingDataNode>(val);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(newMapping, Has.Count.EqualTo(3));
+            Assert.That(newMapping.TryGet<ValueDataNode>("foo", out var node));
+            Assert.That(node!.Value, Is.EqualTo("1"));
+
+            Assert.That(newMapping.TryGet<ValueDataNode>("bar", out node));
+            Assert.That(node!.Value, Is.EqualTo("2"));
+
+            Assert.That(newMapping.TryGet<ValueDataNode>("position", out node));
+            Assert.That(node!.Value, Is.EqualTo("3,0.4"));
+        });
+    }
+
+    [Test]
+    public void ReadonlyDataRecordTest()
+    {
+        var mapping = new MappingDataNode
+        {
+            ["foo"] = new ValueDataNode("1"),
+            ["position"] = new ValueDataNode("3, .4"),
+        };
+        var val = Serialization.Read<ReadonlyDataRecord>(mapping);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(val.Foo, Is.EqualTo(1));
+            Assert.That(val.Position, Is.EqualTo(new Vector2(3, .4f)));
+        });
+
+        var newMapping = Serialization.WriteValueAs<MappingDataNode>(val);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(newMapping, Has.Count.EqualTo(2));
+            Assert.That(newMapping.TryGet<ValueDataNode>("foo", out var node));
+            Assert.That(node!.Value, Is.EqualTo("1"));
+
+            Assert.That(newMapping.TryGet<ValueDataNode>("position", out node));
+            Assert.That(node!.Value, Is.EqualTo("3,0.4"));
         });
     }
 }

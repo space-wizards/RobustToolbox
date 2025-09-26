@@ -44,6 +44,7 @@ END TEMPLATE-->
 ### Bugfixes
 
 * Fixed `CollectionExtensions.TryGetValue` throwing an exception when given a negative list index.
+* Fixed `PredictedQueueDeleteEntity()` not deferring changes for networked entities until the end of the tick. 
 
 ### Other
 

@@ -5,6 +5,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Prototypes;
 
 namespace Robust.Client.GameObjects
 {
@@ -12,6 +13,7 @@ namespace Robust.Client.GameObjects
     {
         [Dependency] private readonly IResourceCache _resourceCache = default!;
         [Dependency] private readonly LightTreeSystem _lightTree = default!;
+        [Dependency] private readonly IPrototypeManager _proto = default!;
 
         public override void Initialize()
         {
@@ -35,6 +37,7 @@ namespace Robust.Client.GameObjects
             component.Energy = state.Energy;
             component.Radius = state.Radius;
             component.Color = state.Color;
+            component.ContainerOccluded = state.ContainerOccluded;
 
             _lightTree.QueueTreeUpdate(uid, component);
         }
@@ -77,23 +80,26 @@ namespace Robust.Client.GameObjects
 
         private void HandleInit(EntityUid uid, PointLightComponent component, ComponentInit args)
         {
-            SetMask(component.MaskPath, component);
+            SetMask(component.LightMask, component);
         }
 
-        public void SetMask(string? maskPath, PointLightComponent component)
+        public void SetMask(ProtoId<LightMaskPrototype>? lightMask, PointLightComponent component)
         {
-            if (maskPath is not null)
-                component.Mask = _resourceCache.GetResource<TextureResource>(maskPath);
+            if (_proto.TryIndex(lightMask, out var mask))
+                component.Mask = _resourceCache.GetResource<TextureResource>(mask.MaskPath);
+
             else
                 component.Mask = null;
         }
 
         #region Setters
 
-        public void SetContainerOccluded(EntityUid uid, bool occluded, SharedPointLightComponent? comp = null)
+        public override void SetContainerOccluded(EntityUid uid, bool occluded, SharedPointLightComponent? comp = null)
         {
             if (!ResolveLight(uid, ref comp) || occluded == comp.ContainerOccluded || comp is not PointLightComponent clientComp)
                 return;
+
+            //base.SetContainerOccluded(uid, occluded, comp);
 
             comp.ContainerOccluded = occluded;
             Dirty(uid, comp);

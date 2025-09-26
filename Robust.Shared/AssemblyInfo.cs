@@ -16,3 +16,7 @@
 #if NET5_0_OR_GREATER
 [module: SkipLocalsInit]
 #endif
+
+#if DEVELOPMENT
+[assembly: InternalsVisibleTo("Content.Benchmarks")]
+#endif

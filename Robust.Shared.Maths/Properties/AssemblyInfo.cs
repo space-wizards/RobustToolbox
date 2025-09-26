@@ -6,3 +6,7 @@
 
 [assembly: InternalsVisibleTo("Robust.Client")]
 [assembly: InternalsVisibleTo("Robust.UnitTesting")]
+
+#if DEVELOPMENT
+[assembly: InternalsVisibleTo("Content.Benchmarks")]
+#endif

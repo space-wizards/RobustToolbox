@@ -122,6 +122,16 @@ namespace Robust.Shared.ContentPack
                 return false;
             }
 
+#pragma warning disable RA0004
+            var loadedConfig = _config.Result;
+#pragma warning restore RA0004
+
+            if (!loadedConfig.AllowedAssemblyPrefixes.Any(allowedNamePrefix => asmName.StartsWith(allowedNamePrefix)))
+            {
+                _sawmill.Error($"Assembly name '{asmName}' is not allowed for a content assembly");
+                return false;
+            }
+
             if (VerifyIL)
             {
                 if (!DoVerifyIL(asmName, resolver, peReader, reader))
@@ -169,10 +179,6 @@ namespace Robust.Shared.ContentPack
             {
                 return true;
             }
-
-#pragma warning disable RA0004
-            var loadedConfig = _config.Result;
-#pragma warning restore RA0004
 
             // We still do explicit type reference scanning, even though the actual whitelists work with raw members.
             // This is so that we can simplify handling of generic type specifications during member checking:

@@ -26,7 +26,6 @@ using Robust.Client.WebViewHook;
 using Robust.LoaderApi;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
-using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
@@ -45,7 +44,6 @@ using Robust.Shared.Threading;
 using Robust.Shared.Timing;
 using Robust.Shared.Upload;
 using Robust.Shared.Utility;
-using YamlDotNet.RepresentationModel;
 
 namespace Robust.Client
 {

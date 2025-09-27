@@ -1,5 +1,5 @@
 using System;
-using JetBrains.Annotations;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 
 namespace Robust.Shared.Timing
@@ -89,6 +89,15 @@ namespace Robust.Shared.Timing
         TimeSpan LastTick { get; set; }
 
         /// <summary>
+        ///     The last real non-extrapolated server state that was applied. Without networking issues, this tick should
+        ///     always correspond to <see cref="LastRealTick"/>, however if there is a missing states or the buffer has run
+        ///     out, this value may be smaller.
+        ///     On the server, this value is not changed. See <see cref="GameStateSystem.GetLastRealTick"/> if you
+        ///     need a specific client's last real tick from the server or shared code.
+        /// </summary>
+        GameTick LastRealTick { get; set; }
+
+        /// <summary>
         ///     The target ticks/second of the simulation.
         /// </summary>
         ushort TickRate { get; set; }
@@ -147,7 +156,7 @@ namespace Robust.Shared.Timing
         bool IsFirstTimePredicted { get; }
 
         /// <summary>
-        /// True if CurTick is ahead of LastRealTick, and <see cref="ApplyingState"/> is false.
+        /// True if CurTick is ahead of <see cref="LastRealTick"/>, and <see cref="ApplyingState"/> is false.
         /// </summary>
         bool InPrediction { get; }
 

@@ -31,6 +31,11 @@ public readonly struct ComponentTreeEntry<T> : IEquatable<ComponentTreeEntry<T>>
         xform = Transform;
     }
 
+    public static implicit operator Entity<T, TransformComponent>(ComponentTreeEntry<T> entry)
+    {
+        return new(entry.Uid, entry.Component, entry.Transform);
+    }
+
     public static implicit operator ComponentTreeEntry<T>((T, TransformComponent) tuple)
     {
         return new ComponentTreeEntry<T>()

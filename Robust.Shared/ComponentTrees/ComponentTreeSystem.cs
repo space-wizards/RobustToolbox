@@ -25,6 +25,7 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
     [Dependency] protected readonly SharedTransformSystem XformSystem = default!;
     [Dependency] private readonly IMapManager _mapManager = default!;
     [Dependency] private readonly SharedMapSystem _mapSystem = default!;
+    [Dependency] private readonly MetaDataSystem _meta = default!;
 
     private readonly Queue<ComponentTreeEntry<TComp>> _updateQueue = new();
     private readonly HashSet<EntityUid> _updated = new();
@@ -51,6 +52,8 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
     /// </summary>
     protected abstract bool Recursive { get; }
 
+    private bool _recursive;
+
     public override void Initialize()
     {
         base.Initialize();
@@ -63,18 +66,20 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         SubscribeLocalEvent<GridInitializeEvent>(MapManagerOnGridCreated);
 
         SubscribeLocalEvent<TComp, ComponentStartup>(OnCompStartup);
+        SubscribeLocalEvent<TComp, ComponentInit>(OnCompInit);
+        SubscribeLocalEvent<TComp, MetaFlagRemoveAttemptEvent>(OnFlagRemoveAttempt);
         SubscribeLocalEvent<TComp, ComponentRemove>(OnCompRemoved);
 
-        if (Recursive)
+        _recursive = Recursive;
+        if (_recursive)
         {
-            _recursiveMoveSys.OnTreeRecursiveMove += HandleRecursiveMove;
             _recursiveMoveSys.AddSubscription();
+            _recursiveMoveSys.OnRecursiveMove += HandleRecursiveMove;
+            SubscribeLocalEvent<TComp, HasRecursiveTreeCompEvent>(OnHasComp);
         }
         else
         {
-            // TODO EXCEPTION TOLERANCE
-            // Ensure lookup trees update before content code handles move events.
-            SubscribeLocalEvent<TComp, MoveEvent>(HandleMove);
+            _recursiveMoveSys.OnCompMoved += HandleMove;
         }
 
         SubscribeLocalEvent<TTreeComp, EntityTerminatingEvent>(OnTerminating);
@@ -86,22 +91,28 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
 
     public override void Shutdown()
     {
-        if (Recursive)
-        {
-            _recursiveMoveSys.OnTreeRecursiveMove -= HandleRecursiveMove;
-        }
+        if (_recursive)
+            _recursiveMoveSys.OnRecursiveMove -= HandleRecursiveMove;
+        else
+            _recursiveMoveSys.OnCompMoved -= HandleMove;
     }
 
     #region Queue Update
 
-    private void HandleRecursiveMove(EntityUid uid, TransformComponent xform)
+    private void HandleMove(EntityUid uid, TransformComponent xform)
     {
-        if (Query.TryGetComponent(uid, out var component))
+        if (Query.TryGetComponentInternal(uid, out var component))
             QueueTreeUpdate(uid, component, xform);
     }
 
-    private void HandleMove(EntityUid uid, TComp component, ref MoveEvent args)
-        => QueueTreeUpdate(uid, component, args.Component);
+    private void HandleRecursiveMove(ReadOnlySpan<EntityUid> entities)
+    {
+        foreach (var uid in entities)
+        {
+            if (Query.TryGetComponentInternal(uid, out var component))
+                QueueTreeUpdate(uid, component, Transform(uid));
+        }
+    }
 
     public void QueueTreeUpdate(EntityUid uid, TComp component, TransformComponent? xform = null)
     {
@@ -119,11 +130,40 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
     #endregion
 
     #region Component Management
+    protected virtual void OnCompInit(Entity<TComp> ent, ref ComponentInit args)
+    {
+        QueueTreeUpdate(ent.Owner, ent.Comp);
+
+        if (Recursive)
+            _recursiveMoveSys.OnCompAdded(ent.Owner);
+        else
+            _meta.AddFlag(ent.Owner, MetaDataFlags.CompTree);
+    }
+
     protected virtual void OnCompStartup(EntityUid uid, TComp component, ComponentStartup args)
-        => QueueTreeUpdate(uid, component);
+    {
+    }
 
     protected virtual void OnCompRemoved(EntityUid uid, TComp component, ComponentRemove args)
-        => RemoveFromTree(component);
+    {
+        if (Recursive)
+            _recursiveMoveSys.OnCompRemoved(uid);
+        else
+            _meta.RemoveFlag(uid, MetaDataFlags.CompTree);
+        RemoveFromTree(component);
+    }
+
+    private void OnHasComp(Entity<TComp> ent, ref HasRecursiveTreeCompEvent args)
+    {
+        if (ent.Comp is {LifeStage: <= ComponentLifeStage.Running})
+            args.Result = true;
+    }
+
+    protected virtual void OnFlagRemoveAttempt(Entity<TComp> ent, ref MetaFlagRemoveAttemptEvent args)
+    {
+        if (ent.Comp is {LifeStage: <= ComponentLifeStage.Running})
+            args.ToRemove &= ~MetaDataFlags.CompTree;
+    }
 
     protected virtual void OnTreeAdd(EntityUid uid, TTreeComp component, ComponentAdd args)
     {

@@ -39,7 +39,9 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Sprite layer keys now use a new LayerKey struct instead of string, enum, or object keys.
+  * The struct is backed by either a string or enum key, and supports implicit casts from those types.
+  * Arbitrary object keys are no longer supported.
 
 ### Bugfixes
 

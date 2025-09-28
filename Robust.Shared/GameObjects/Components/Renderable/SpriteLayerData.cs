@@ -4,6 +4,7 @@ using System.Numerics;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Sprite;
 
 namespace Robust.Shared.GameObjects;
 
@@ -26,7 +27,7 @@ public sealed partial class PrototypeLayerData
     [DataField("offset")] public Vector2? Offset;
     [DataField("visible")] public bool? Visible;
     [DataField("color")] public Color? Color;
-    [DataField("map")] public HashSet<string>? MapKeys;
+    [DataField("map")] public HashSet<string>? MapKeys; // TODO SPRITE repalce with LayerKey
     [DataField("renderingStrategy")] public LayerRenderingStrategy? RenderingStrategy;
 
     /// <summary>
@@ -61,7 +62,7 @@ public sealed partial class PrototypeCopyToShaderParameters
     /// <summary>
     /// The map key of the layer that will have its shader modified.
     /// </summary>
-    [DataField(required: true)] public string LayerKey;
+    [DataField(required: true)] public LayerKey LayerKey;
 
     /// <summary>
     /// The name of the shader parameter that will receive the actual selected texture.

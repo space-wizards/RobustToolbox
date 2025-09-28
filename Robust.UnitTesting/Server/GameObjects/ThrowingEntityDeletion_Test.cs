@@ -50,7 +50,10 @@ namespace Robust.UnitTesting.Server.GameObjects
             Assert.That(() => entMan.SpawnEntity(prototypeName, new MapCoordinates(0, 0, map)),
                 Throws.TypeOf<EntityCreationException>());
 
+            // The exception is immediately rethrown before the entity is deleted when EXCEPTION_TOLERANCE is disabled.
+#if EXCEPTION_TOLERANCE
             Assert.That(entMan.GetEntities().Where(p => entMan.GetComponent<MetaDataComponent>(p).EntityPrototype?.ID == prototypeName), Is.Empty);
+#endif
         }
     }
 }

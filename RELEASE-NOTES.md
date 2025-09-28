@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fixed yaml hot reloading throwing invalid path exceptions.
 
 ### Other
 

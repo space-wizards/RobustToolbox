@@ -68,7 +68,11 @@ namespace Robust.Shared.ContentPack
         internal static string SafeGetResourcePath(string baseDir, ResPath path)
         {
             var relSysPath = path.ToRelativeSystemPath();
-            if (relSysPath.Contains("\\..") || relSysPath.Contains("/.."))
+
+            // This also blocks files like "..foo.yml". But whatever, I CBF fixing that.
+            if (relSysPath.Contains("\\..")
+                || relSysPath.Contains("/..")
+                || relSysPath.StartsWith(".."))
             {
                 // Hard cap on any exploit smuggling a .. in there.
                 // Since that could allow leaving sandbox.

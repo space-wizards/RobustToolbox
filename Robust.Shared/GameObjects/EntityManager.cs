@@ -968,12 +968,11 @@ namespace Robust.Shared.GameObjects
             }
             catch (Exception e)
             {
-#if !EXCEPTION_TOLERANCE
-                throw;
-#endif
+#if EXCEPTION_TOLERANCE
                 // Exception during entity loading.
                 // Need to delete the entity to avoid corrupt state causing crashes later.
                 DeleteEntity(entity);
+#endif
                 throw new EntityCreationException($"Exception inside CreateEntity with prototype {prototype.ID}", e);
             }
         }
@@ -999,10 +998,9 @@ namespace Robust.Shared.GameObjects
             }
             catch (Exception e)
             {
-#if !EXCEPTION_TOLERANCE
-                throw;
-#endif
+#if EXCEPTION_TOLERANCE
                 DeleteEntity(entity);
+#endif
                 throw new EntityCreationException("Exception inside InitializeAndStartEntity", e);
             }
         }

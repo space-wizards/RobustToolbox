@@ -4,6 +4,7 @@ using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
+using Robust.Shared.Sprite;
 using Robust.Shared.Utility;
 using static Robust.Client.GameObjects.SpriteComponent;
 using static Robust.Client.Graphics.RSI;
@@ -19,19 +20,13 @@ public sealed partial class SpriteSystem
 
     public void LayerSetData(Entity<SpriteComponent?> sprite, int index, PrototypeLayerData data)
     {
-        if (TryGetLayer(sprite, index, out var layer, true))
+        if (ResolveLayer(sprite, index, out var layer))
             LayerSetData(layer, data);
     }
 
-    public void LayerSetData(Entity<SpriteComponent?> sprite, string key, PrototypeLayerData data)
+    public void LayerSetData(Entity<SpriteComponent?> sprite, LayerKey key, PrototypeLayerData data)
     {
-        if (TryGetLayer(sprite, key, out var layer, true))
-            LayerSetData(layer, data);
-    }
-
-    public void LayerSetData(Entity<SpriteComponent?> sprite, Enum key, PrototypeLayerData data)
-    {
-        if (TryGetLayer(sprite, key, out var layer, true))
+        if (ResolveLayer(sprite, key, out var layer))
             LayerSetData(layer, data);
     }
 
@@ -50,19 +45,13 @@ public sealed partial class SpriteSystem
 
     public void LayerSetSprite(Entity<SpriteComponent?> sprite, int index, SpriteSpecifier specifier)
     {
-        if (TryGetLayer(sprite, index, out var layer, true))
+        if (ResolveLayer(sprite, index, out var layer))
             LayerSetSprite(layer, specifier);
     }
 
-    public void LayerSetSprite(Entity<SpriteComponent?> sprite, string key, SpriteSpecifier specifier)
+    public void LayerSetSprite(Entity<SpriteComponent?> sprite, LayerKey key, SpriteSpecifier specifier)
     {
-        if (TryGetLayer(sprite, key, out var layer, true))
-            LayerSetSprite(layer, specifier);
-    }
-
-    public void LayerSetSprite(Entity<SpriteComponent?> sprite, Enum key, SpriteSpecifier specifier)
-    {
-        if (TryGetLayer(sprite, key, out var layer, true))
+        if (ResolveLayer(sprite, key, out var layer))
             LayerSetSprite(layer, specifier);
     }
 
@@ -89,19 +78,13 @@ public sealed partial class SpriteSystem
 
     public void LayerSetTexture(Entity<SpriteComponent?> sprite, int index, Texture? texture)
     {
-        if (TryGetLayer(sprite, index, out var layer, true))
+        if (ResolveLayer(sprite, index, out var layer))
             LayerSetTexture(layer, texture);
     }
 
-    public void LayerSetTexture(Entity<SpriteComponent?> sprite, string key, Texture? texture)
+    public void LayerSetTexture(Entity<SpriteComponent?> sprite, LayerKey key, Texture? texture)
     {
-        if (TryGetLayer(sprite, key, out var layer, true))
-            LayerSetTexture(layer, texture);
-    }
-
-    public void LayerSetTexture(Entity<SpriteComponent?> sprite, Enum key, Texture? texture)
-    {
-        if (TryGetLayer(sprite, key, out var layer, true))
+        if (ResolveLayer(sprite, key, out var layer))
             LayerSetTexture(layer, texture);
     }
 
@@ -113,19 +96,13 @@ public sealed partial class SpriteSystem
 
     public void LayerSetTexture(Entity<SpriteComponent?> sprite, int index, ResPath path)
     {
-        if (TryGetLayer(sprite, index, out var layer, true))
+        if (ResolveLayer(sprite, index, out var layer))
             LayerSetTexture(layer, path);
     }
 
-    public void LayerSetTexture(Entity<SpriteComponent?> sprite, string key, ResPath path)
+    public void LayerSetTexture(Entity<SpriteComponent?> sprite, LayerKey key, ResPath path)
     {
-        if (TryGetLayer(sprite, key, out var layer, true))
-            LayerSetTexture(layer, path);
-    }
-
-    public void LayerSetTexture(Entity<SpriteComponent?> sprite, Enum key, ResPath path)
-    {
-        if (TryGetLayer(sprite, key, out var layer, true))
+        if (ResolveLayer(sprite, key, out var layer))
             LayerSetTexture(layer, path);
     }
 
@@ -147,19 +124,13 @@ public sealed partial class SpriteSystem
 
     public void LayerSetRsiState(Entity<SpriteComponent?> sprite, int index, StateId state)
     {
-        if (TryGetLayer(sprite, index, out var layer, true))
+        if (ResolveLayer(sprite, index, out var layer))
             LayerSetRsiState(layer, state);
     }
 
-    public void LayerSetRsiState(Entity<SpriteComponent?> sprite, string key, StateId state)
+    public void LayerSetRsiState(Entity<SpriteComponent?> sprite, LayerKey key, StateId state)
     {
-        if (TryGetLayer(sprite, key, out var layer, true))
-            LayerSetRsiState(layer, state);
-    }
-
-    public void LayerSetRsiState(Entity<SpriteComponent?> sprite, Enum key, StateId state)
-    {
-        if (TryGetLayer(sprite, key, out var layer, true))
+        if (ResolveLayer(sprite, key, out var layer))
             LayerSetRsiState(layer, state);
     }
 
@@ -186,19 +157,13 @@ public sealed partial class SpriteSystem
 
     public void LayerSetRsi(Entity<SpriteComponent?> sprite, int index, RSI? rsi, StateId? state = null)
     {
-        if (TryGetLayer(sprite, index, out var layer, true))
+        if (ResolveLayer(sprite, index, out var layer))
             LayerSetRsi(layer, rsi, state);
     }
 
-    public void LayerSetRsi(Entity<SpriteComponent?> sprite, string key, RSI? rsi, StateId? state = null)
+    public void LayerSetRsi(Entity<SpriteComponent?> sprite, LayerKey key, RSI? rsi, StateId? state = null)
     {
-        if (TryGetLayer(sprite, key, out var layer, true))
-            LayerSetRsi(layer, rsi, state);
-    }
-
-    public void LayerSetRsi(Entity<SpriteComponent?> sprite, Enum key, RSI? rsi, StateId? state = null)
-    {
-        if (TryGetLayer(sprite, key, out var layer, true))
+        if (ResolveLayer(sprite, key, out var layer))
             LayerSetRsi(layer, rsi, state);
     }
 
@@ -210,19 +175,13 @@ public sealed partial class SpriteSystem
 
     public void LayerSetRsi(Entity<SpriteComponent?> sprite, int index, ResPath rsi, StateId? state = null)
     {
-        if (TryGetLayer(sprite, index, out var layer, true))
+        if (ResolveLayer(sprite, index, out var layer))
             LayerSetRsi(layer, rsi, state);
     }
 
-    public void LayerSetRsi(Entity<SpriteComponent?> sprite, string key, ResPath rsi, StateId? state = null)
+    public void LayerSetRsi(Entity<SpriteComponent?> sprite, LayerKey key, ResPath rsi, StateId? state = null)
     {
-        if (TryGetLayer(sprite, key, out var layer, true))
-            LayerSetRsi(layer, rsi, state);
-    }
-
-    public void LayerSetRsi(Entity<SpriteComponent?> sprite, Enum key, ResPath rsi, StateId? state = null)
-    {
-        if (TryGetLayer(sprite, key, out var layer, true))
+        if (ResolveLayer(sprite, key, out var layer))
             LayerSetRsi(layer, rsi, state);
     }
 
@@ -240,19 +199,13 @@ public sealed partial class SpriteSystem
 
     public void LayerSetScale(Entity<SpriteComponent?> sprite, int index, Vector2 value)
     {
-        if (TryGetLayer(sprite, index, out var layer, true))
+        if (ResolveLayer(sprite, index, out var layer))
             LayerSetScale(layer, value);
     }
 
-    public void LayerSetScale(Entity<SpriteComponent?> sprite, string key, Vector2 value)
+    public void LayerSetScale(Entity<SpriteComponent?> sprite, LayerKey key, Vector2 value)
     {
-        if (TryGetLayer(sprite, key, out var layer, true))
-            LayerSetScale(layer, value);
-    }
-
-    public void LayerSetScale(Entity<SpriteComponent?> sprite, Enum key, Vector2 value)
-    {
-        if (TryGetLayer(sprite, key, out var layer, true))
+        if (ResolveLayer(sprite, key, out var layer))
             LayerSetScale(layer, value);
     }
 
@@ -281,19 +234,13 @@ public sealed partial class SpriteSystem
 
     public void LayerSetRotation(Entity<SpriteComponent?> sprite, int index, Angle value)
     {
-        if (TryGetLayer(sprite, index, out var layer, true))
+        if (ResolveLayer(sprite, index, out var layer))
             LayerSetRotation(layer, value);
     }
 
-    public void LayerSetRotation(Entity<SpriteComponent?> sprite, string key, Angle value)
+    public void LayerSetRotation(Entity<SpriteComponent?> sprite, LayerKey key, Angle value)
     {
-        if (TryGetLayer(sprite, key, out var layer, true))
-            LayerSetRotation(layer, value);
-    }
-
-    public void LayerSetRotation(Entity<SpriteComponent?> sprite, Enum key, Angle value)
-    {
-        if (TryGetLayer(sprite, key, out var layer, true))
+        if (ResolveLayer(sprite, key, out var layer))
             LayerSetRotation(layer, value);
     }
 
@@ -319,19 +266,13 @@ public sealed partial class SpriteSystem
 
     public void LayerSetOffset(Entity<SpriteComponent?> sprite, int index, Vector2 value)
     {
-        if (TryGetLayer(sprite, index, out var layer, true))
+        if (ResolveLayer(sprite, index, out var layer))
             LayerSetOffset(layer, value);
     }
 
-    public void LayerSetOffset(Entity<SpriteComponent?> sprite, string key, Vector2 value)
+    public void LayerSetOffset(Entity<SpriteComponent?> sprite, LayerKey key, Vector2 value)
     {
-        if (TryGetLayer(sprite, key, out var layer, true))
-            LayerSetOffset(layer, value);
-    }
-
-    public void LayerSetOffset(Entity<SpriteComponent?> sprite, Enum key, Vector2 value)
-    {
-        if (TryGetLayer(sprite, key, out var layer, true))
+        if (ResolveLayer(sprite, key, out var layer))
             LayerSetOffset(layer, value);
     }
 
@@ -357,19 +298,13 @@ public sealed partial class SpriteSystem
 
     public void LayerSetVisible(Entity<SpriteComponent?> sprite, int index, bool value)
     {
-        if (TryGetLayer(sprite, index, out var layer, true))
+        if (ResolveLayer(sprite, index, out var layer))
             LayerSetVisible(layer, value);
     }
 
-    public void LayerSetVisible(Entity<SpriteComponent?> sprite, string key, bool value)
+    public void LayerSetVisible(Entity<SpriteComponent?> sprite, LayerKey key, bool value)
     {
-        if (TryGetLayer(sprite, key, out var layer, true))
-            LayerSetVisible(layer, value);
-    }
-
-    public void LayerSetVisible(Entity<SpriteComponent?> sprite, Enum key, bool value)
-    {
-        if (TryGetLayer(sprite, key, out var layer, true))
+        if (ResolveLayer(sprite, key, out var layer))
             LayerSetVisible(layer, value);
     }
 
@@ -394,19 +329,13 @@ public sealed partial class SpriteSystem
 
     public void LayerSetColor(Entity<SpriteComponent?> sprite, int index, Color value)
     {
-        if (TryGetLayer(sprite, index, out var layer, true))
+        if (ResolveLayer(sprite, index, out var layer))
             LayerSetColor(layer, value);
     }
 
-    public void LayerSetColor(Entity<SpriteComponent?> sprite, string key, Color value)
+    public void LayerSetColor(Entity<SpriteComponent?> sprite, LayerKey key, Color value)
     {
-        if (TryGetLayer(sprite, key, out var layer, true))
-            LayerSetColor(layer, value);
-    }
-
-    public void LayerSetColor(Entity<SpriteComponent?> sprite, Enum key, Color value)
-    {
-        if (TryGetLayer(sprite, key, out var layer, true))
+        if (ResolveLayer(sprite, key, out var layer))
             LayerSetColor(layer, value);
     }
 
@@ -425,19 +354,13 @@ public sealed partial class SpriteSystem
 
     public void LayerSetDirOffset(Entity<SpriteComponent?> sprite, int index, DirectionOffset value)
     {
-        if (TryGetLayer(sprite, index, out var layer, true))
+        if (ResolveLayer(sprite, index, out var layer))
             LayerSetDirOffset(layer, value);
     }
 
-    public void LayerSetDirOffset(Entity<SpriteComponent?> sprite, string key, DirectionOffset value)
+    public void LayerSetDirOffset(Entity<SpriteComponent?> sprite, LayerKey key, DirectionOffset value)
     {
-        if (TryGetLayer(sprite, key, out var layer, true))
-            LayerSetDirOffset(layer, value);
-    }
-
-    public void LayerSetDirOffset(Entity<SpriteComponent?> sprite, Enum key, DirectionOffset value)
-    {
-        if (TryGetLayer(sprite, key, out var layer, true))
+        if (ResolveLayer(sprite, key, out var layer))
             LayerSetDirOffset(layer, value);
     }
 
@@ -456,19 +379,13 @@ public sealed partial class SpriteSystem
 
     public void LayerSetAnimationTime(Entity<SpriteComponent?> sprite, int index, float value)
     {
-        if (TryGetLayer(sprite, index, out var layer, true))
+        if (ResolveLayer(sprite, index, out var layer))
             LayerSetAnimationTime(layer, value);
     }
 
-    public void LayerSetAnimationTime(Entity<SpriteComponent?> sprite, string key, float value)
+    public void LayerSetAnimationTime(Entity<SpriteComponent?> sprite, LayerKey key, float value)
     {
-        if (TryGetLayer(sprite, key, out var layer, true))
-            LayerSetAnimationTime(layer, value);
-    }
-
-    public void LayerSetAnimationTime(Entity<SpriteComponent?> sprite, Enum key, float value)
-    {
-        if (TryGetLayer(sprite, key, out var layer, true))
+        if (ResolveLayer(sprite, key, out var layer))
             LayerSetAnimationTime(layer, value);
     }
 
@@ -509,19 +426,13 @@ public sealed partial class SpriteSystem
 
     public void LayerSetAutoAnimated(Entity<SpriteComponent?> sprite, int index, bool value)
     {
-        if (TryGetLayer(sprite, index, out var layer, true))
+        if (ResolveLayer(sprite, index, out var layer))
             LayerSetAutoAnimated(layer, value);
     }
 
-    public void LayerSetAutoAnimated(Entity<SpriteComponent?> sprite, string key, bool value)
+    public void LayerSetAutoAnimated(Entity<SpriteComponent?> sprite, LayerKey key, bool value)
     {
-        if (TryGetLayer(sprite, key, out var layer, true))
-            LayerSetAutoAnimated(layer, value);
-    }
-
-    public void LayerSetAutoAnimated(Entity<SpriteComponent?> sprite, Enum key, bool value)
-    {
-        if (TryGetLayer(sprite, key, out var layer, true))
+        if (ResolveLayer(sprite, key, out var layer))
             LayerSetAutoAnimated(layer, value);
     }
 
@@ -544,19 +455,13 @@ public sealed partial class SpriteSystem
 
     public void LayerSetRenderingStrategy(Entity<SpriteComponent?> sprite, int index, LayerRenderingStrategy value)
     {
-        if (TryGetLayer(sprite, index, out var layer, true))
+        if (ResolveLayer(sprite, index, out var layer))
             LayerSetRenderingStrategy(layer, value);
     }
 
-    public void LayerSetRenderingStrategy(Entity<SpriteComponent?> sprite, string key, LayerRenderingStrategy value)
+    public void LayerSetRenderingStrategy(Entity<SpriteComponent?> sprite, LayerKey key, LayerRenderingStrategy value)
     {
-        if (TryGetLayer(sprite, key, out var layer, true))
-            LayerSetRenderingStrategy(layer, value);
-    }
-
-    public void LayerSetRenderingStrategy(Entity<SpriteComponent?> sprite, Enum key, LayerRenderingStrategy value)
-    {
-        if (TryGetLayer(sprite, key, out var layer, true))
+        if (ResolveLayer(sprite, key, out var layer))
             LayerSetRenderingStrategy(layer, value);
     }
 

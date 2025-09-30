@@ -5,6 +5,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map
@@ -12,7 +13,7 @@ namespace Robust.Shared.Map
     /// <summary>
     ///     A set of coordinates relative to another entity.
     /// </summary>
-    [PublicAPI]
+    [PublicAPI, DataRecord]
     public readonly struct EntityCoordinates : IEquatable<EntityCoordinates>, ISpanFormattable
     {
         public static readonly EntityCoordinates Invalid = new(EntityUid.Invalid, Vector2.Zero);

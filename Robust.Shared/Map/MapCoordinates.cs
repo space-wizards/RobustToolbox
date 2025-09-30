@@ -3,6 +3,7 @@ using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map
@@ -10,7 +11,7 @@ namespace Robust.Shared.Map
     /// <summary>
     ///     Coordinates relative to a specific map.
     /// </summary>
-    [PublicAPI]
+    [PublicAPI, DataRecord]
     [Serializable, NetSerializable]
     public readonly struct MapCoordinates : IEquatable<MapCoordinates>, ISpanFormattable
     {

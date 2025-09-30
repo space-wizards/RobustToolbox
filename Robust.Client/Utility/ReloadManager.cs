@@ -58,13 +58,11 @@ internal sealed class ReloadManager : IReloadManager
     {
         foreach (var file in _reloadQueue)
         {
-            var rootedFile = file.ToRootedPath();
-
-            if (!_res.ContentFileExists(rootedFile))
+            if (!_res.ContentFileExists(file))
                 continue;
 
-            _sawmill.Info($"Reloading {rootedFile}");
-            OnChanged?.Invoke(rootedFile);
+            _sawmill.Info($"Reloading {file}");
+            OnChanged?.Invoke(file);
         }
 
         _reloadQueue.Clear();
@@ -133,12 +131,13 @@ internal sealed class ReloadManager : IReloadManager
                     var relPath = Path.GetRelativePath(rootIter, args.FullPath);
                     if (relPath == args.FullPath)
                     {
-                        // Not relative.
+                        // Different root (i.e., "C:/" and "D:/")
                         continue;
                     }
 
-                    var file = ResPath.FromRelativeSystemPath(relPath);
-                    _reloadQueue.Add(file);
+                    var file = ResPath.FromRelativeSystemPath(relPath).ToRootedPath();
+                    if (!file.CanonPath.Contains("/../"))
+                        _reloadQueue.Add(file);
                 }
             });
         }

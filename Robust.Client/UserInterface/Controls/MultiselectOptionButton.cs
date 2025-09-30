@@ -121,11 +121,14 @@ namespace Robust.Client.UserInterface.Controls
         {
             if (show)
             {
+                if (Root == null)
+                    throw new InvalidOperationException("No UI root! We can't pop up!");
+
                 var globalPos = GlobalPosition;
                 _popupVBox.Measure(Vector2Helpers.Infinity);
                 var (minX, minY) = _popupVBox.DesiredSize;
                 var box = UIBox2.FromDimensions(globalPos, new Vector2(Math.Max(minX, Width), minY));
-                UserInterfaceManager.ModalRoot.AddChild(_popup);
+                Root.ModalRoot.AddChild(_popup);
                 _popup.Open(box);
             }
             else
@@ -136,7 +139,7 @@ namespace Robust.Client.UserInterface.Controls
 
         private void OnPopupHide()
         {
-            UserInterfaceManager.ModalRoot.RemoveChild(_popup);
+            _popup.Orphan();
         }
 
 

@@ -56,25 +56,6 @@ namespace Robust.UnitTesting.Shared.Maths
                 (new Box2(-1, 1, 1, 2), new Vector2(0, 0), -Math.PI/2, new Box2(1, -1, 2, 1)),
             };
 
-        private static TestCaseData[] MatrixCases = new[]
-        {
-            new TestCaseData(Matrix3x2.Identity,
-                Box2Rotated.UnitCentered,
-                Box2Rotated.UnitCentered),
-            new TestCaseData(Matrix3x2.CreateRotation(MathF.PI),
-                Box2Rotated.UnitCentered,
-                new Box2Rotated(new Vector2(0.5f, 0.5f), new Vector2(-0.5f, -0.5f))),
-            new TestCaseData(Matrix3x2.CreateTranslation(Vector2.One),
-                Box2Rotated.UnitCentered,
-                new Box2Rotated(new Vector2(0.5f, 0.5f), new Vector2(1.5f, 1.5f))),
-        };
-
-        [Test, TestCaseSource(nameof(MatrixCases))]
-        public void TestBox2RotatedMatrices(Matrix3x2 matrix, Box2Rotated bounds, Box2Rotated result)
-        {
-            Assert.That(matrix.TransformBounds(bounds), Is.EqualTo(result));
-        }
-
         private static TestCaseData[] MatrixBox2Cases = new[]
         {
             new TestCaseData(Matrix3x2.Identity,

@@ -796,8 +796,37 @@ public partial class EntitySystem
         EntityManager.PredictedDeleteEntity(ent);
     }
 
-    /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid)" />
+    /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void PredictedQueueDel(Entity<MetaDataComponent?> ent)
+    {
+        EntityManager.PredictedQueueDeleteEntity(ent);
+    }
+
+    /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid?)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void PredictedQueueDel(Entity<MetaDataComponent?>? ent)
+    {
+        EntityManager.PredictedQueueDeleteEntity(ent);
+    }
+
+    /// <inheritdoc cref="IEntityManager.DeleteEntity(EntityUid?)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void PredictedQueueDel(EntityUid uid)
+    {
+        EntityManager.PredictedQueueDeleteEntity(uid);
+    }
+
+    /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid?)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void PredictedQueueDel(EntityUid? uid)
+    {
+        EntityManager.PredictedQueueDeleteEntity(uid);
+    }
+
+    /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid?)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [Obsolete("use variant without TransformComponent")]
     protected void PredictedQueueDel(Entity<MetaDataComponent?, TransformComponent?> ent)
     {
         EntityManager.PredictedQueueDeleteEntity(ent);
@@ -805,6 +834,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [Obsolete("use variant without TransformComponent")]
     protected void PredictedQueueDel(Entity<MetaDataComponent?, TransformComponent?>? ent)
     {
         EntityManager.PredictedQueueDeleteEntity(ent);

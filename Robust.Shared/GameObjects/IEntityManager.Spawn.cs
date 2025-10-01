@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Linguini.Syntax.Ast;
 using Robust.Shared.Collections;
 using Robust.Shared.Containers;
 using Robust.Shared.Map;
@@ -60,6 +61,14 @@ public partial interface IEntityManager
         ContainerManagerComponent? containerComp = null,
         ComponentRegistry? overrides = null);
 
+    /// <inheritdoc cref="TrySpawnInContainer(string?,EntityUid,string,out EntityUid?,ContainerManagerComponent?,ComponentRegistry?)"/>
+    bool TrySpawnInContainer(
+        string? protoName,
+        BaseContainer container,
+        [NotNullWhen(true)] out EntityUid? uid,
+        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null);
+
     /// <summary>
     /// Attempts to spawn an entity inside of a container. If it fails to insert into the container, it will
     /// instead drop the entity next to the target (see <see cref="SpawnNextToOrDrop"/>).
@@ -77,6 +86,23 @@ public partial interface IEntityManager
         string? protoName,
         EntityUid containerUid,
         string containerId,
+        out bool inserted,
+        TransformComponent? xform = null,
+        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null);
+
+    /// <inheritdoc cref="SpawnInContainerOrDrop(string?,Robust.Shared.GameObjects.EntityUid,string,Robust.Shared.GameObjects.TransformComponent?,Robust.Shared.Containers.ContainerManagerComponent?,Robust.Shared.Prototypes.ComponentRegistry?)"/>
+    EntityUid SpawnInContainerOrDrop(
+        string? protoName,
+        BaseContainer container,
+        TransformComponent? xform = null,
+        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null);
+
+    /// <inheritdoc cref="SpawnInContainerOrDrop(string?,Robust.Shared.GameObjects.EntityUid,string,Robust.Shared.GameObjects.TransformComponent?,Robust.Shared.Containers.ContainerManagerComponent?,Robust.Shared.Prototypes.ComponentRegistry?)"/>
+    EntityUid SpawnInContainerOrDrop(
+        string? protoName,
+        BaseContainer container,
         out bool inserted,
         TransformComponent? xform = null,
         ContainerManagerComponent? containerComp = null,

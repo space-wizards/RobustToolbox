@@ -76,9 +76,9 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             // Short path to render only the splash.
-            if (_drawingSplash)
+            if (_drawingLoadingScreen)
             {
-                DrawSplash(_renderHandle);
+                DrawLoadingScreen(_renderHandle);
                 FlushRenderQueue();
                 SwapAllBuffers();
                 return;
@@ -430,18 +430,11 @@ namespace Robust.Client.Graphics.Clyde
             FlushRenderQueue();
         }
 
-        private void DrawSplash(IRenderHandle handle)
+        private void DrawLoadingScreen(IRenderHandle handle)
         {
-            // Clear screen to black for splash.
             ClearFramebuffer(Color.Black);
 
-            var splashTex = _cfg.GetCVar(CVars.DisplaySplashLogo);
-            if (string.IsNullOrEmpty(splashTex))
-                return;
-
-            var texture = _resourceCache.GetResource<TextureResource>(splashTex).Texture;
-
-            handle.DrawingHandleScreen.DrawTexture(texture, (ScreenSize - texture.Size) / 2);
+            _loadingScreenManager.DrawLoadingScreen(handle, ScreenSize);
         }
 
         private void RenderInRenderTarget(RenderTargetBase rt, Action a, Color? clearColor=default)

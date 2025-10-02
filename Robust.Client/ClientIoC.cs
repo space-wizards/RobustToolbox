@@ -108,6 +108,7 @@ namespace Robust.Client
             deps.Register<IReloadManager, ReloadManager>();
             deps.Register<ILocalizationManager, ClientLocalizationManager>();
             deps.Register<ILocalizationManagerInternal, ClientLocalizationManager>();
+            deps.Register<LoadingScreenManager>();
 
             switch (mode)
             {

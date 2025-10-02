@@ -13,9 +13,6 @@ namespace Robust.Client.Timing
         public override bool InPrediction => !ApplyingState && CurTick > LastRealTick;
 
         /// <inheritdoc />
-        public GameTick LastRealTick { get; set; }
-
-        /// <inheritdoc />
         public GameTick LastProcessedTick { get; set; }
 
         public override TimeSpan ServerTime

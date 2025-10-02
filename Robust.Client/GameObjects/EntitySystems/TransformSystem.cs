@@ -4,6 +4,7 @@ using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -24,11 +25,36 @@ namespace Robust.Client.GameObjects
         private const float MinInterpolationDistance = 0.001f;
         private const float MinInterpolationDistanceSquared = MinInterpolationDistance * MinInterpolationDistance;
 
+        private bool currentlySolvingPhysics = false;
+
         [Dependency] private readonly IGameTiming _gameTiming = default!;
 
         // Only keep track of transforms actively lerping.
         // Much faster than iterating 3000+ transforms every frame.
         [ViewVariables] private readonly List<Entity<TransformComponent>> _lerpingTransforms = new();
+
+        public void Initialize()
+        {
+            base.Initialize();
+            //SubscribeLocalEvent<PhysicsUpdateBeforeSolveEvent>(SetSolving);
+            //SubscribeLocalEvent<PhysicsUpdateAfterSolveEvent>(DoneSolving);
+        }
+
+        public void SetSolving(PhysicsUpdateBeforeSolveEvent ev)
+        {
+            currentlySolvingPhysics = true;
+            foreach (var lerper in _lerpingTransforms)
+            {
+                if (lerper.Comp.NextPosition is null)
+                    return;
+                SetLocalPositionNoLerp(lerper.Owner, lerper.Comp.NextPosition.Value);
+            }
+        }
+
+        public void DoneSolving(PhysicsUpdateAfterSolveEvent ev)
+        {
+            currentlySolvingPhysics = false;
+        }
 
         public void Reset()
         {
@@ -69,8 +95,8 @@ namespace Robust.Client.GameObjects
             // server state a->b, then predicted b->c, lerp b->c
             // server state a->b, then predicted b->c, then predict d, lerp b->c
 
-            if (MetaData(uid).NetEntity.IsClientSide())
-                return;
+            //if (MetaData(uid).NetEntity.IsClientSide())
+            //    return;
 
             if (_gameTiming.ApplyingState)
             {
@@ -122,6 +148,9 @@ namespace Robust.Client.GameObjects
         public override void FrameUpdate(float frameTime)
         {
             base.FrameUpdate(frameTime);
+            // dont do position changes during physics
+            if (currentlySolvingPhysics)
+                return;
 
             var step = (float) (_gameTiming.TickRemainder.TotalSeconds / _gameTiming.TickPeriod.TotalSeconds);
 

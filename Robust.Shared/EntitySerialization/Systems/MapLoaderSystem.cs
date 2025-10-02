@@ -135,6 +135,10 @@ public sealed partial class MapLoaderSystem : EntitySystem
         {
             Del(uid);
         }
-    }
 
+        foreach (var uid in result.NullspaceEntities)
+        {
+            Del(uid);
+        }
+    }
 }

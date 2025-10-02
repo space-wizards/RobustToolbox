@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Robust.Shared.Utility;
@@ -69,5 +70,7 @@ namespace Robust.Shared.ContentPack
         /// </para>
         /// </remarks>
         bool TryGetDiskFilePath(ResPath path, [NotNullWhen(true)] out string? diskPath);
+
+        new IEnumerable<string> GetContentRoots();
     }
 }

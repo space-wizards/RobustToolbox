@@ -345,7 +345,7 @@ public abstract partial class SharedTransformSystem
 
         // I hate this too. Once again, required for shit like containers because they CBF doing their own init logic
         // and rely on parent changed messages instead. Might also be used by broadphase stuff?
-        var parentEv = new EntParentChangedMessage(uid, null, null, xform);
+        var parentEv = new EntParentChangedMessage(uid, null, null, xform, MetaData(uid));
         RaiseLocalEvent(uid, ref parentEv, true);
 
         var ev = new TransformStartupEvent((uid, xform));

@@ -39,7 +39,8 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Sandbox:
+  * Added `System.DateOnly` and `System.TimeOnly`.
 
 ### Bugfixes
 

@@ -1,3 +1,4 @@
+using Microsoft.CodeAnalysis.Elfie.Diagnostics;
 using Robust.Server.ComponentTrees;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -8,22 +9,28 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
+using Robust.Shared.ContentPack;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
-using TerraFX.Interop.Windows;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 
 namespace Robust.Server.GameObjects;
 
 public sealed class LightSensitiveSystem : SharedLightSensitiveSystem
 {
     [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private readonly IResourceManager _resource = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
     [Dependency] private readonly LightTreeSystem _lightTreeSystem = default!;
     [Dependency] private readonly IPrototypeManager _proto = default!;
     [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
     private const float DefaultCooldown = 1f;
+
+    private const float LightingHeight = 1.0f;
 
     public override void Update(float frameTime)
     {
@@ -85,7 +92,6 @@ public sealed class LightSensitiveSystem : SharedLightSensitiveSystem
     /// <param name="uid">Entity UID to check.</param>
     /// <param name="component">The LightSensitiveComponent of the entity</param>
     /// <param name="entityXform">The TransformComponent of the entity</param>
-    /// <returns>If the component existed in the entity.</returns>
     private void ProcessNearbyLights(EntityUid uid, LightSensitiveComponent component, TransformComponent entityXform)
     {
         var illumination = 0f;
@@ -95,71 +101,91 @@ public sealed class LightSensitiveSystem : SharedLightSensitiveSystem
         var ourMapPos = new MapCoordinates(ourPos, entityXform.MapID);
         var queryResult = _lightTreeSystem.QueryAabb(ourMapPos.MapId, ourBounds);
 
-        foreach (var val in queryResult)
+        foreach (var entry in queryResult)
         {
-            var (lightComp, lightXform) = val;
+            illumination += CalculateLightLevel(entry, uid, ourMapPos, entityXform);
+        }
+        SetIllumination(uid, illumination, component);
+    }
 
-            var (lightPos, lightRot) = _transform.GetWorldPositionRotation(lightXform);
-            lightPos += lightRot.RotateVec(lightComp.Offset);
+    public float CalculateLightLevel(ComponentTreeEntry<PointLightComponent> treeEntry, EntityUid uid, MapCoordinates entityPos,
+        TransformComponent entityXform)
+    {
+        var calculatedLight = 0f;
+        var (lightComp, lightXform) = treeEntry;
 
-            var lightPosition = new MapCoordinates(lightPos, lightXform.MapID);
+        var (lightPos, lightRot) = _transform.GetWorldPositionRotation(lightXform);
+        lightPos += lightRot.RotateVec(lightComp.Offset);
 
-            if (!InRangeUnOccluded(lightPosition, ourMapPos, lightComp.Radius, null))
-                continue;
+        var lightPosition = new MapCoordinates(lightPos, lightXform.MapID);
 
-            // entityXform.Coordinates.TryDistance(EntityManager, lightXform.Coordinates, out var dist);
-            var dist = ourMapPos.Position - lightPosition.Position;
-            //var deltaLength = delta.Length();
-
-            var denom = dist.Length() / lightComp.Radius;
-            /// A slight modification of standard inverse square falloff that incorperates the radius of the light to make it more forgiving
-            var attenuation = 1 - (denom * denom);
-
-            var calculatedLight = 0f;
-            if (_proto.TryIndex(lightComp.LightMask, out var mask))
-            {
-                var angleToTarget = GetAngle(val.Uid, lightXform, lightComp, uid, entityXform);
-
-                foreach (var cone in mask.LightCones)
-                {
-                    var coneLight = 0f;
-                    var angleAttenuation = (float)Math.Min((float)Math.Max(cone.OuterWidth - angleToTarget, 0f), cone.InnerWidth) / cone.OuterWidth;
-                    var absAngle = Math.Abs(angleToTarget.Degrees);
-
-                    // Target is outside the cone's outer width angle, so ignore
-                    if (absAngle - Math.Abs(cone.Direction) > cone.OuterWidth)
-                    {
-                        continue;
-                    }
-                    // Target is outside the inner cone, but inside the outer cone, so reduce the light level
-                    else if (
-                        absAngle - cone.Direction > cone.InnerWidth &&
-                        absAngle - cone.Direction < cone.OuterWidth
-                        )
-                    {
-                        coneLight = lightComp.Energy * attenuation * attenuation * angleAttenuation;
-                    }
-                    // Target is inside the inner cone, so the light level will use standard falloff.
-                    else
-                    {
-                        coneLight = lightComp.Energy * attenuation * attenuation;
-                    }
-                    calculatedLight = Math.Max(calculatedLight, coneLight);
-                }
-            }
-            // No mask, use normal falloff
-            else
-            {
-                calculatedLight = lightComp.Energy * attenuation * attenuation;
-            }
-
-            // We only care about the strongest light level being applied to the entity. 
-            // I really don't want to deal with multiplicative or additive illumination
-            illumination = Math.Max(illumination, calculatedLight);
+        if (!_occluder.InRangeUnOccluded(lightPosition, entityPos, lightComp.Radius, null))
+        {
+            return calculatedLight;
         }
 
-        SetIllumination(uid, illumination, component);
+        var dist = entityPos.Position - lightPosition.Position;
+
+        // Calculate the light level the same way as in light_shared.swsl. The problem with this implementation is that
+        // values used for rendering are very different from the sort of percentage based values we aim to use in game.
+        // // this implementation of light attenuation primarily adapted from
+        // // https://lisyarus.github.io/blog/posts/point-light-attenuation.html
+        var sqr_dist = Vector2.Dot(dist, dist) + LightingHeight;
+        var s = Math.Clamp(MathF.Sqrt(sqr_dist) / lightComp.Radius, 0.0f, 1.0f);
+        var s2 = s * s;
+        var curveFactor = MathHelper.Lerp(s, s2, Math.Clamp(lightComp.CurveFactor, 0.0f, 1.0f));
+        var lightVal = Math.Clamp(((1.0f - s2) * (1.0f - s2)) / (1.0f + lightComp.Falloff * curveFactor), 0.0f, 1.0f);
+        var colorBrightness = MathF.Max(lightComp.Color.R, MathF.Max(lightComp.Color.G, lightComp.Color.B));
+        var energyLightVal = lightComp.Energy * lightVal;
+        var finalLightVal = Math.Clamp(energyLightVal * colorBrightness, 0.0f, 1.0f);
+
+
+        if (_proto.TryIndex(lightComp.LightMask, out var mask))
+        {
+            var angleToTarget = GetAngle(treeEntry.Uid, lightXform, lightComp, uid, entityXform);
+
+            // TODO: read the mask image into a buffer of pixels and sample the returned color to multiply against the light level before final calculation
+            // var stream = _resource.ContentFileRead(mask.MaskPath);
+            // var image = Image.Load<Rgba32>(stream);
+            // Rgba32[] pixelArray = new Rgba32[image.Width * image.Height];
+            // image.CopyPixelDataTo(pixelArray);
+
+            foreach (var cone in mask.LightCones)
+            {
+                var coneLight = 0f;
+                var angleAttenuation = (float)Math.Min((float)Math.Max(cone.OuterWidth - angleToTarget, 0f), cone.InnerWidth) / cone.OuterWidth;
+                var absAngle = Math.Abs(angleToTarget.Degrees);
+
+                // Target is outside the cone's outer width angle, so ignore
+                if (absAngle - Math.Abs(cone.Direction) > cone.OuterWidth)
+                {
+                    continue;
+                }
+                // Target is outside the inner cone, but inside the outer cone, so reduce the light level
+                else if (
+                    absAngle - cone.Direction > cone.InnerWidth &&
+                    absAngle - cone.Direction < cone.OuterWidth
+                    )
+                {
+                    coneLight = finalLightVal * angleAttenuation;
+                }
+                // Target is inside the inner cone, so the light level will use standard falloff.
+                else
+                {
+                    coneLight = finalLightVal;
+                }
+                // There might be multiple overlapping cones in the future so why not just default to adding them now
+                calculatedLight += coneLight;
+            }
+        }
+        //No mask, just use the final light level
+        else
+        {
+            calculatedLight = finalLightVal;
+        }
         
+
+        return calculatedLight;
     }
 
     public Box2 GetWorldAABB(EntityUid uid, out Vector2 worldPos, out Angle worldRot, FixturesComponent? manager = null, PhysicsComponent? body = null, TransformComponent? xform = null)

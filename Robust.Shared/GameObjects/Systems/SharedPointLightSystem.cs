@@ -132,6 +132,7 @@ public abstract class SharedPointLightSystem : EntitySystem
             Falloff = component.Falloff,
             CurveFactor = component.CurveFactor,
             CastShadows = component.CastShadows,
+            ContainerOccluded = component.ContainerOccluded,
         };
     }
 }

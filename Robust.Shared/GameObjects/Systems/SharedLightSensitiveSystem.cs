@@ -8,12 +8,19 @@ using Robust.Shared.Physics;
 
 namespace Robust.Shared.GameObjects
 {
-
+    /// <summary>
+    ///     Handles the calculations of light sensitivity for entities with the <see cref="LightSensitiveComponent"/>. 
+    ///     Due to the potential performance impact of calculating the illumination of an unspecified number of entities of varying importance and tick rates,
+    ///     this system will not be enabled by default and even when enabled will not execute until entites exist with the corresponding Component and 
+    ///     specifically request updates.
+    ///     I did my best to optimize this but use and implement cautiously.
+    /// </summary>
     public abstract class SharedLightSensitiveSystem : EntitySystem
     {
         [Dependency] private readonly SharedTransformSystem _transform = default!;
-        [Dependency] private readonly OccluderSystem _occluder = default!;
+        [Dependency] protected readonly OccluderSystem _occluder = default!;
 
+        /// Default range to be used when raycasting. This value might need changing in the future but hopefully should be enough to handle most cases.
         protected const float MaxRaycastRange = 100;
         public delegate bool Ignored(EntityUid entity);
 
@@ -31,79 +38,18 @@ namespace Robust.Shared.GameObjects
             if (!ResolveComp(uid, ref comp))
                 return;
 
-            comp.LightLevel = value;
-            Dirty(uid, comp);
-        }
-
-
-        public virtual bool InRangeUnOccluded<TState>(MapCoordinates origin, MapCoordinates other, float range,
-            TState state, Func<EntityUid, TState, bool> predicate, bool ignoreInsideBlocker = true, IEntityManager? entMan = null)
-        {
-            if (other.MapId != origin.MapId ||
-                other.MapId == MapId.Nullspace) return false;
-
-            var dir = other.Position - origin.Position;
-            var length = dir.Length();
-
-            if (range > 0f && length > range + 0.01f) return false;
-
-            if (MathHelper.CloseTo(length, 0)) return true;
-
-            if (length > MaxRaycastRange)
+            if (comp.LightLevel != value)
             {
-                Log.Warning("InRangeUnOccluded check performed over extreme range. Limiting CollisionRay size.");
-                length = MaxRaycastRange;
+                comp.LightLevel = value;
+                Dirty(uid, comp);
             }
-
-            var ray = new Ray(origin.Position, dir.Normalized());
-            bool Ignored(EntityUid entity, TState ts) => TryComp<OccluderComponent>(entity, out var o) && !o.Enabled;
-
-            var rayResults = _occluder.IntersectRayWithPredicate(origin.MapId, ray, length, state, predicate: Ignored, false);
-
-            if (rayResults.Count == 0) return true;
-
-            if (!ignoreInsideBlocker) return false;
-
-            foreach (var result in rayResults)
-            {
-                if (!TryComp(result.HitEntity, out OccluderComponent? o))
-                {
-                    continue;
-                }
-
-                var bBox = o.BoundingBox;
-                bBox = bBox.Translated(_transform.GetWorldPosition(result.HitEntity));
-
-                if (bBox.Contains(origin.Position) || bBox.Contains(other.Position))
-                {
-                    continue;
-                }
-
-                return false;
-            }
-
-            return true;
         }
 
-        public virtual bool InRangeUnOccluded(EntityUid origin, EntityUid other, float range = 3f, Ignored? predicate = null, bool ignoreInsideBlocker = true)
-        {
-
-            var originPos = _transform.GetMapCoordinates(origin);
-            var otherPos = _transform.GetMapCoordinates(other);
-
-            return InRangeUnOccluded(originPos, otherPos, range, predicate, ignoreInsideBlocker);
-        }
-
-        public virtual bool InRangeUnOccluded(MapCoordinates origin, MapCoordinates other, float range, Ignored? predicate, bool ignoreInsideBlocker = true, IEntityManager? entMan = null)
-        {
-            // No, rider. This is better.
-            // ReSharper disable once ConvertToLocalFunction
-            var wrapped = (EntityUid uid, Ignored? wrapped)
-                => wrapped != null && wrapped(uid);
-
-            return InRangeUnOccluded(origin, other, range, predicate, wrapped, ignoreInsideBlocker, entMan);
-        }
-
+        /// <summary>
+        /// For use with masks and directional lights. We need the angle from the direction the PointLightComponent is facing to the target
+        /// </summary>
+        /// <returns>The <see cref="Angle"/> between the light and the target. In the event the light is parented to the target,
+        /// (i.e. the angle of a flashlight to the person holding it) the default angle is 0</returns>
         public Angle GetAngle(EntityUid lightUid, TransformComponent lightXform, SharedPointLightComponent lightComp, EntityUid targetUid, TransformComponent targetXform)
         {
             var (lightPos, lightRot) = _transform.GetWorldPositionRotation(lightXform);
@@ -123,6 +69,12 @@ namespace Robust.Shared.GameObjects
 
             return angle;
         }
+
+        // TODO calculate mask coefficient from the image itself to multiply against the light value of the PointLight
+        // public float ApplyMask()
+        // {
+
+        // }
 
     }
 }

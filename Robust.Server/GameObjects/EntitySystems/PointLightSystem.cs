@@ -67,6 +67,8 @@ namespace Robust.Server.GameObjects;
             Offset = component.Offset,
             Radius = component.Radius,
             Softness = component.Softness,
+            Falloff = component.Falloff,
+            CurveFactor = component.CurveFactor,
             CastShadows = component.CastShadows,
             ContainerOccluded = component.ContainerOccluded,
         };

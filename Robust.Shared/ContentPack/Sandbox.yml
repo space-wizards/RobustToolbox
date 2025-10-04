@@ -1426,7 +1426,7 @@ Types:
       - "void CopyTo(int, char[], int, int)"
     StringComparison: { } # Enum
     StringSplitOptions: { } # Enum
-    TimeOnly: { all: True }
+    TimeOnly: { All: True }
     TimeSpan: { All: True }
     Type:
       # COM, marshalling, interop, etc... stuff omitted.

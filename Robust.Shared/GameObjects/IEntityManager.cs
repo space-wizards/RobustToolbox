@@ -104,7 +104,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="prototypeName">Name of the <see cref="EntityPrototype"/> to spawn.</param>
         /// <param name="coordinates">Coordinates to place the newly spawned entity.</param>
         /// <param name="overrides">Overrides to add or remove components that differ from the prototype.</param>
-        /// <param name="rotation">Map rotation to set the newly spawned entity to.</param>
+        /// <param name="rotation">Local rotation to set the newly spawned entity to.</param>
         /// <returns>A new uninitialized entity.</returns>
         /// <remarks>If there is a grid at the <paramref name="coordinates"/>, the entity will be parented to the grid.
         /// Otherwise, it will be parented to the map.</remarks>

@@ -1093,7 +1093,7 @@ Types:
       - "string ToHexString(System.ReadOnlySpan`1<byte>)"
 
     Converter`2: { All: True } # Delegate
-    DateOnly: { all: True }
+    DateOnly: { All: True }
     DateTime: { All: True }
     DateTimeKind: { } # Enum
     DateTimeOffset: { All: True }

@@ -9,7 +9,7 @@ namespace Robust.Shared.Toolshed;
 ///     Used to mark a class so that <see cref="ToolshedManager"/> automatically discovers and registers it.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
-[MeansImplicitUse]
+[MeansImplicitUse(ImplicitUseTargetFlags.WithMembers)]
 public sealed class ToolshedCommandAttribute : Attribute
 {
     public string? Name = null;
@@ -46,8 +46,9 @@ public sealed class PipedArgumentAttribute : Attribute;
 [MeansImplicitUse]
 public sealed class CommandArgumentAttribute : Attribute
 {
-    public CommandArgumentAttribute(Type? customParser = null)
+    public CommandArgumentAttribute(Type? customParser = null, bool unparseable = false)
     {
+        Unparseable = unparseable;
         if (customParser == null)
             return;
 
@@ -55,6 +56,13 @@ public sealed class CommandArgumentAttribute : Attribute
         DebugTools.Assert(customParser.IsCustomParser(),
             $"Custom parser {customParser.PrettyName()} does not inherit from {typeof(CustomTypeParser<>).PrettyName()}");
     }
+
+    /// <summary>
+    /// Command initialization will validate that all of a command's arguments are parseable (i.e., have a type parser).
+    /// In some niche situations you might want to have a command that accepts unparseable arguments that must be
+    /// supplied via a toolshed variable or command block, in which case the check can be disabled via this property.
+    /// </summary>
+    public bool Unparseable { get; }
 
     public Type? CustomParser { get; }
 }

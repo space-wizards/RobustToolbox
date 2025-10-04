@@ -994,6 +994,9 @@ namespace Robust.Client.UserInterface
 
         internal int DoFrameUpdateRecursive(FrameEventArgs args)
         {
+            if (!Visible)
+                return 0;
+
             var total = 1;
             FrameUpdate(args);
 
@@ -1046,7 +1049,7 @@ namespace Robust.Client.UserInterface
             Ignore = 2,
         }
 
-        public sealed class OrderedChildCollection : ICollection<Control>, IReadOnlyCollection<Control>
+        public sealed class OrderedChildCollection : ICollection<Control>, IReadOnlyList<Control>
         {
             private readonly Control Owner;
 
@@ -1098,6 +1101,7 @@ namespace Robust.Client.UserInterface
 
             int ICollection<Control>.Count => Owner.ChildCount;
             int IReadOnlyCollection<Control>.Count => Owner.ChildCount;
+            public Control this[int index] => Owner._orderedChildren[index];
 
             public bool IsReadOnly => false;
 

@@ -11,7 +11,7 @@ namespace Robust.Client.Graphics.Clyde
         ///     Basically just a handle around the integer object handles returned by OpenGL.
         /// </summary>
         [PublicAPI]
-        private struct GLHandle : IEquatable<GLHandle>
+        internal struct GLHandle : IEquatable<GLHandle>
         {
             public readonly uint Handle;
 

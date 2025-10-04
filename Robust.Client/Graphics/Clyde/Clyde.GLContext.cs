@@ -1,6 +1,5 @@
 ﻿using System;
 using Robust.Shared;
-using Robust.Shared.Log;
 
 namespace Robust.Client.Graphics.Clyde
 {

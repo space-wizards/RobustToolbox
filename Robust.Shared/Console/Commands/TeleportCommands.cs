@@ -127,19 +127,20 @@ public sealed class TeleportToCommand : LocalizedEntityCommands
         {
             foreach (var victim in args)
             {
-                if (victim == target)
+                if (!TryGetTransformFromUidOrUsername(victim, shell, out var uid, out var victimTransform))
                     continue;
 
-                if (!TryGetTransformFromUidOrUsername(victim, shell, out var uid, out var victimTransform))
+                if (uid == targetUid)
                     continue;
 
                 victims.Add((uid.Value, victimTransform));
             }
         }
 
+        var targetMapCoords = _transform.ToMapCoordinates(targetCoords);
         foreach (var victim in victims)
         {
-            _transform.SetCoordinates(victim.Entity, targetCoords);
+            _transform.SetMapCoordinates(victim.Entity, targetMapCoords);
             _transform.AttachToGridOrMap(victim.Entity, victim.Transform);
         }
     }

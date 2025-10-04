@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 using Robust.Shared.Collections;
 using Robust.Shared.Console;
+using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Player;
@@ -19,6 +20,7 @@ public sealed partial class ParserContext
 {
     public readonly ToolshedManager Toolshed;
     public readonly ToolshedEnvironment Environment;
+    public ILocalizationManager Loc => Toolshed.Loc;
 
     /// <summary>
     /// The parser to use when trying autocomplete variable names or to infer the type of a variable.

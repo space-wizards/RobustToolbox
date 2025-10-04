@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Robust.Server.Player;
@@ -9,7 +7,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Player;
-using Robust.Shared.Toolshed;
 using Robust.Shared.Utility;
 
 namespace Robust.Server.Console
@@ -18,14 +15,10 @@ namespace Robust.Server.Console
     [Virtual]
     internal class ServerConsoleHost : ConsoleHost, IServerConsoleHost, IConsoleHostInternal
     {
-        [Dependency] private readonly IConGroupController _groupController = default!;
         [Dependency] private readonly IPlayerManager _players = default!;
         [Dependency] private readonly ISystemConsoleManager _systemConsole = default!;
-        [Dependency] private readonly ToolshedManager _toolshed = default!;
 
         public ServerConsoleHost() : base(isServer: true) {}
-
-        public override event ConAnyCommandCallback? AnyCommandExecuted;
 
         /// <inheritdoc />
         public override void ExecuteCommand(ICommonSession? session, string command)
@@ -68,9 +61,10 @@ namespace Robust.Server.Console
 
         public bool IsCmdServer(IConsoleCommand cmd) => true;
 
-        /// <inheritdoc />
-        public void Initialize()
+        public override void Initialize()
         {
+            base.Initialize();
+
             RegisterCommand("sudo", "sudo make me a sandwich", "sudo <command>", (shell, argStr, _) =>
             {
                 var localShell = shell.ConsoleHost.LocalShell;
@@ -82,7 +76,7 @@ namespace Robust.Server.Console
                 var sudoShell = new SudoShell(this, localShell, shell);
 
 #pragma warning disable CA2012
-                return CalcCompletionsOrEmpty(sudoShell, args, argStr);
+                return CalcCompletions(sudoShell, args, argStr);
 #pragma warning restore CA2012
             });
 
@@ -97,102 +91,26 @@ namespace Robust.Server.Console
             NetManager.RegisterNetMessage<MsgConCompletionResp>();
         }
 
-        private void ExecuteInShell(IConsoleShell shell, string command)
-        {
-            try
-            {
-                var args = new List<string>();
-                CommandParsing.ParseArguments(command, args);
-
-                // missing cmdName
-                if (args.Count == 0)
-                    return;
-
-                string? cmdName = args[0];
-
-                if (RegisteredCommands.TryGetValue(cmdName, out var conCmd)) // command registered
-                {
-                    args.RemoveAt(0);
-                    var cmdArgs = args.ToArray();
-                    if (!ShellCanExecute(shell, cmdName))
-                    {
-                        shell.WriteError($"Unknown command: '{cmdName}'");
-                        return;
-                    }
-
-                    AnyCommandExecuted?.Invoke(shell, cmdName, command, cmdArgs);
-                    conCmd.Execute(shell, command, cmdArgs);
-                }
-                else
-                {
-                    // toolshed time
-                    _toolshed.InvokeCommand(shell, command, null, out var res, out var ctx);
-
-                    bool anyErrors = false;
-                    foreach (var err in ctx.GetErrors())
-                    {
-                        anyErrors = true;
-                        ctx.WriteLine(err.Describe());
-                    }
-
-                    // why does ctx not have any write-error support?
-                    if (anyErrors)
-                        shell.WriteError($"Failed to execute toolshed command");
-
-                    shell.WriteLine(FormattedMessage.FromMarkupPermissive(_toolshed.PrettyPrintType(res, out var more, moreUsed: true)));
-                    ctx.WriteVar("more", more);
-                }
-            }
-            catch (Exception e)
-            {
-                LogManager.GetSawmill(SawmillName)
-                    .Error($"{FormatPlayerString(shell.Player)}: ExecuteError - {command}:\n{e}");
-                shell.WriteError($"There was an error while executing the command: {e}");
-            }
-        }
-
-        private bool ShellCanExecute(IConsoleShell shell, string cmdName)
-        {
-            return shell.Player == null || _groupController.CanCommand(shell.Player, cmdName);
-        }
-
         private void HandleRegistrationRequest(INetChannel senderConnection)
         {
             var message = new MsgConCmdReg();
 
-            var toolshedCommands = _toolshed.DefaultEnvironment.AllCommands();
-            message.Commands = new List<MsgConCmdReg.Command>(AvailableCommands.Count + toolshedCommands.Count);
+            message.Commands = new List<MsgConCmdReg.Command>(RegisteredCommands.Count);
             var commands = new HashSet<string>();
 
-            foreach (var command in AvailableCommands.Values)
+            foreach (var command in RegisteredCommands.Values)
             {
-                if (!commands.Add(command.Command))
+                var cmdName = command.Command;
+                if (!commands.Add(cmdName))
                 {
-                    Sawmill.Error($"Duplicate command: {command.Command}");
+                    Sawmill.Error($"Duplicate command: {cmdName}");
                     continue;
                 }
                 message.Commands.Add(new MsgConCmdReg.Command
                 {
-                    Name = command.Command,
+                    Name = cmdName,
                     Description = command.Description,
                     Help = command.Help
-                });
-            }
-
-            foreach (var spec in toolshedCommands)
-            {
-                var name = spec.FullName();
-                if (!commands.Add(name))
-                {
-                    Sawmill.Warning($"Duplicate toolshed command: {name}");
-                    continue;
-                }
-
-                message.Commands.Add(new MsgConCmdReg.Command
-                {
-                    Name = name,
-                    Description = spec.Cmd.Description(spec.SubCommand),
-                    Help = spec.Cmd.GetHelp(spec.SubCommand)
                 });
             }
 
@@ -201,12 +119,10 @@ namespace Robust.Server.Console
 
         private void ProcessCommand(MsgConCmd message)
         {
-            string? text = message.Text;
+            var text = message.Text;
             var sender = message.MsgChannel;
             var session = _players.GetSessionByChannel(sender);
-
-            LogManager.GetSawmill(SawmillName).Info($"{FormatPlayerString(session)}:{text}");
-
+            Sawmill.Info($"{FormatPlayerString(session)}:{text}");
             ExecuteCommand(session, text);
         }
 
@@ -231,29 +147,8 @@ namespace Robust.Server.Console
         private async void HandleConCompletions(MsgConCompletion message)
         {
             var session = _players.GetSessionByChannel(message.MsgChannel);
-
             var shell = new ConsoleShell(this, session, false);
-
             var result = await CalcCompletions(shell, message.Args, message.ArgString);
-
-            if ((result == null) || message.Args.Length <= 1)
-            {
-                var shedRes = _toolshed.GetCompletions(shell, message.ArgString);
-                if (shedRes == null)
-                    goto done;
-
-                IEnumerable<CompletionOption> options = result?.Options ?? Array.Empty<CompletionOption>();
-
-                options = options.Concat(shedRes.Options);
-
-                var hints = result?.Hint ?? shedRes.Hint;
-
-                result = new CompletionResult(options.ToArray(), hints);
-            }
-
-            done:
-
-            result ??= CompletionResult.Empty;
 
             var msg = new MsgConCompletionResp
             {
@@ -267,34 +162,9 @@ namespace Robust.Server.Console
             NetManager.ServerSendMessage(msg, message.MsgChannel);
         }
 
-        private async ValueTask<CompletionResult> CalcCompletionsOrEmpty(IConsoleShell shell, string[] args, string argStr)
+        private async ValueTask<CompletionResult> CalcCompletions(IConsoleShell shell, string[] args, string argStr)
         {
-            return await CalcCompletions(shell, args, argStr) ?? CompletionResult.Empty;
-        }
-
-        /// <summary>
-        /// Get completions. Non-null results imply that the command was handled. If it is empty, it implies that
-        /// there are no completions for this command.
-        /// </summary>
-        private async ValueTask<CompletionResult?> CalcCompletions(IConsoleShell shell, string[] args, string argStr)
-        {
-            // Logger.Debug(string.Join(", ", args));
-
-            if (args.Length <= 1)
-            {
-                // Typing out command name, handle this ourselves.
-                return CompletionResult.FromOptions(
-                    AvailableCommands.Values.Where(c => ShellCanExecute(shell, c.Command)).Select(c => new CompletionOption(c.Command, c.Description)));
-            }
-
-            var cmdName = args[0];
-            if (!RegisteredCommands.TryGetValue(cmdName, out var cmd))
-                return null;
-
-            if (!ShellCanExecute(shell, cmdName))
-                return CompletionResult.Empty;
-
-            return await cmd.GetCompletionAsync(shell, args[1..], argStr, CancellationToken.None);
+            return await CalcCompletions(shell, args, argStr, CancellationToken.None);
         }
 
         private sealed class SudoShell : IConsoleShell

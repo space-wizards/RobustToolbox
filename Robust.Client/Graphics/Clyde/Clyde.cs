@@ -1,6 +1,5 @@
 using System;
 using System.Threading;
-using OpenToolkit;
 using Robust.Client.GameObjects;
 using Robust.Client.Input;
 using Robust.Client.Map;

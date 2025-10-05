@@ -24,13 +24,7 @@ public sealed class MapIdSerializer : ITypeSerializer<MapId, ValueDataNode>
         IDependencyCollection dependencies,
         ISerializationContext? context = null)
     {
-        if (node.Value == "invalid")
-            return new ValidatedValueNode(node);
-
-        if (!int.TryParse(node.Value, out _))
-            return new ErrorNode(node, "Invalid NetEntity");
-
-        return new ValidatedValueNode(node);
+        return serializationManager.ValidateNode<EntityUid>(node, context);
     }
 
     public MapId Read(
@@ -41,7 +35,7 @@ public sealed class MapIdSerializer : ITypeSerializer<MapId, ValueDataNode>
         ISerializationContext? context = null,
         ISerializationManager.InstantiationDelegate<MapId>? instanceProvider = null)
     {
-        if (context is not EntitySerializer entSerializer)
+        if (context is not EntityDeserializer entSerializer)
             return MapId.Nullspace;
 
         var uid = serializationManager.Read<EntityUid>(node, context);
@@ -58,10 +52,7 @@ public sealed class MapIdSerializer : ITypeSerializer<MapId, ValueDataNode>
         bool alwaysWrite = false,
         ISerializationContext? context = null)
     {
-        if (context is not EntitySerializer entSerializer)
-            return serializationManager.WriteValue(EntityUid.Invalid, alwaysWrite, context);
-
-        var uid = entSerializer.EntMan.System<SharedMapSystem>().GetMap(value);
+        var uid = dependencies.Resolve<IEntityManager>().System<SharedMapSystem>().GetMap(value);
         return serializationManager.WriteValue(uid, alwaysWrite, context);
     }
 }

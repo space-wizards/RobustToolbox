@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.Serialization;
-using JetBrains.Annotations;
 using Robust.Shared.EntitySerialization.Components;
 using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.GameObjects;
@@ -33,7 +30,8 @@ namespace Robust.Shared.EntitySerialization;
 public sealed class EntityDeserializer :
     ISerializationContext,
     ITypeSerializer<EntityUid, ValueDataNode>,
-    ITypeSerializer<NetEntity, ValueDataNode>
+    ITypeSerializer<NetEntity, ValueDataNode>,
+    ITypeSerializer<MapId, ValueDataNode>
 {
     // See the comments around EntitySerializer's version const for information about the different versions.
     // TBH version three isn't even really fully supported anymore, simply due to changes in engine component serialization.
@@ -187,7 +185,8 @@ public sealed class EntityDeserializer :
         AllocateEntities();
 
         // Assign a map id to each map entity. This is required to de-serialize map coordinates & map ids
-        AllocateMapIds();
+        if (Options.AssignMapIds)
+            AllocateMapIds();
 
         // Load the prototype data onto entities, e.g. transform parents, etc.
         LoadEntities();
@@ -201,7 +200,7 @@ public sealed class EntityDeserializer :
         // Assign MapSaveTileMapComponent to all read grids. This is used to avoid large file diffs if the tile map changes.
         StoreGridTileMap();
 
-        if (Options.AssignMapids)
+        if (Options.AssignMapIds)
             AssignMapIds();
 
         CheckCategory();
@@ -228,6 +227,15 @@ public sealed class EntityDeserializer :
         InitializeMaps();
 
         ProcessDeletions();
+
+        if (!Options.AssignMapIds)
+            return;
+
+        foreach (var yamlId in MapYamlIds)
+        {
+            if (AllocatedMapIds.TryGetValue(yamlId, out var alloc))
+                DebugTools.AssertEqual(_map.GetMap(alloc), UidMap[yamlId]);
+        }
     }
 
     private void ReadMetadata()
@@ -705,7 +713,6 @@ public sealed class EntityDeserializer :
             {
                 Result.Maps.Add((uid, map));
                 EntMan.EnsureComponent<LoadedMapComponent>(uid);
-                DebugTools.AssertEqual(AllocatedMapIds.GetValueOrDefault(yamlId), map.MapId);
             }
             else
                 _log.Error($"Missing map entity: {EntMan.ToPrettyString(uid)}. YamlId: {yamlId}");
@@ -1237,6 +1244,49 @@ public sealed class EntityDeserializer :
         return value.IsValid()
             ? new ValueDataNode(value.Id.ToString(CultureInfo.InvariantCulture))
             : new ValueDataNode("invalid");
+    }
+
+    ValidationNode ITypeValidator<MapId, ValueDataNode>.Validate(
+        ISerializationManager seri,
+        ValueDataNode node,
+        IDependencyCollection deps,
+        ISerializationContext? context)
+    {
+        return seri.ValidateNode<EntityUid>(node, context);
+    }
+
+    MapId ITypeReader<MapId, ValueDataNode>.Read(
+        ISerializationManager seri,
+        ValueDataNode node,
+        IDependencyCollection deps,
+        SerializationHookContext hookCtx,
+        ISerializationContext? ctx,
+        ISerializationManager.InstantiationDelegate<MapId>? instanceProvider)
+    {
+        if (!Options.AssignMapIds || Result.Version < 7)
+        {
+            _log.Error("Cannot deserialize map ids without pre-allocated ids");
+            return MapId.Nullspace;
+        }
+
+        if (int.TryParse(node.Value, out var val) && AllocatedMapIds.TryGetValue(val, out var map))
+            return map;
+
+        var msg = CurrentReadingEntity is not { } ent
+            ? "Encountered unknown yaml map id"
+            : $"Encountered unknown yaml map id wile reading entity {ent.YamlId}, component: {CurrentComponent}";
+        _log.Error(msg);
+        return MapId.Nullspace;
+    }
+
+    DataNode ITypeWriter<MapId>.Write(
+        ISerializationManager seri,
+        MapId value,
+        IDependencyCollection deps,
+        bool alwaysWrite,
+        ISerializationContext? ctx)
+    {
+        return seri.WriteValue(_map.GetMap(value), alwaysWrite, ctx);
     }
 
     #endregion

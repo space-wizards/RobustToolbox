@@ -134,7 +134,10 @@ public abstract partial class SharedMapSystem
     /// </summary>
     internal MapId AllocateMapId(EntityUid ent)
     {
-        return _reserved[ent] = TakeNextMapId();
+        var id = _reserved[ent] = TakeNextMapId();
+        Maps.Add(id, ent);
+        UsedIds.Add(id);
+        return id;
     }
 
     internal void AssignMapId(Entity<MapComponent> map, MapId? id = null)

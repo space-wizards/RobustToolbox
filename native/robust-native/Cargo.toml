@@ -1,0 +1,19 @@
+[package]
+name = "robust-native"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+mimalloc = "0.1.48"
+sdl3-sys = "0.5.7"
+
+[dependencies.wgpu-native]
+#git = "https://github.com/eliemichel/wgpu-native.git"
+#rev = "b5594e2c6d1abe7af3d93804af38ee83b1038812"
+path = "E:\\Projects\\wgpu-native"
+
+[dependencies.wesl-c]
+path = "E:\\Projects\\wesl-rs\\crates\\wesl-c"

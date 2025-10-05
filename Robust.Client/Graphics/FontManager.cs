@@ -10,7 +10,6 @@ using Robust.Shared.Utility;
 using SharpFont;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using TerraFX.Interop.Windows;
 
 namespace Robust.Client.Graphics
 {
@@ -114,7 +113,7 @@ namespace Robust.Client.Graphics
 
             if (bitmap.Pitch != 0)
             {
-                Image<A8> img;
+                Image<Rgba32> img;
                 switch (bitmap.PixelMode)
                 {
                     case PixelMode.Mono:
@@ -131,13 +130,13 @@ namespace Robust.Client.Graphics
                             span = new ReadOnlySpan<A8>((void*) bitmap.Buffer, bitmap.Pitch * bitmap.Rows);
                         }
 
-                        img = new Image<A8>(bitmap.Width, bitmap.Rows);
+                        img = new Image<Rgba32>(bitmap.Width, bitmap.Rows);
 
-                        span.Blit(
+                        BlitA8ToRgba32(
+                            span,
                             bitmap.Pitch,
                             UIBox2i.FromDimensions(0, 0, bitmap.Pitch, bitmap.Rows),
-                            img,
-                            (0, 0));
+                            img);
 
                         break;
                     }
@@ -199,14 +198,14 @@ namespace Robust.Client.Graphics
 
             OwnedTexture GenSheet()
             {
-                var sheet = _clyde.CreateBlankTexture<A8>((SheetWidth, SheetHeight),
+                var sheet = _clyde.CreateBlankTexture<Rgba32>((SheetWidth, SheetHeight),
                     $"font-{face.FamilyName}-{instance.Size}-{(uint) (_baseFontDpi * scale)}-sheet{scaled.AtlasTextures.Count}");
                 scaled.AtlasTextures.Add(sheet);
                 return sheet;
             }
         }
 
-        private static Image<A8> MonoBitMapToImage(FTBitmap bitmap)
+        private static Image<Rgba32> MonoBitMapToImage(FTBitmap bitmap)
         {
             DebugTools.Assert(bitmap.PixelMode == PixelMode.Mono);
             DebugTools.Assert(bitmap.Pitch > 0);
@@ -217,7 +216,7 @@ namespace Robust.Client.Graphics
                 span = new ReadOnlySpan<byte>((void*) bitmap.Buffer, bitmap.Rows * bitmap.Pitch);
             }
 
-            var bitmapImage = new Image<A8>(bitmap.Width, bitmap.Rows);
+            var bitmapImage = new Image<Rgba32>(bitmap.Width, bitmap.Rows);
             for (var y = 0; y < bitmap.Rows; y++)
             {
                 for (var x = 0; x < bitmap.Width; x++)
@@ -226,11 +225,37 @@ namespace Robust.Client.Graphics
                     var bitIndex = x % 8;
 
                     var bit = (span[byteIndex] & (1 << (7 - bitIndex))) != 0;
-                    bitmapImage[x, y] = new A8(bit ? byte.MaxValue : byte.MinValue);
+                    bitmapImage[x, y] = new Rgba32(255, 255, 255, bit ? byte.MaxValue : byte.MinValue);
                 }
             }
 
             return bitmapImage;
+        }
+
+        private static void BlitA8ToRgba32(
+            ReadOnlySpan<A8> source,
+            int sourceWidth,
+            UIBox2i sourceRect,
+            Image<Rgba32> destination)
+        {
+            var dstSpan = ImageOps.GetPixelSpan(destination);
+            var dstWidth = destination.Width;
+            var srcHeight = sourceRect.Height;
+            var srcWidth = sourceRect.Width;
+
+            for (var y = 0; y < srcHeight; y++)
+            {
+                var sourceRowOffset = sourceWidth * (y + sourceRect.Top) + sourceRect.Left;
+                var destRowOffset = dstWidth * y;
+
+                var srcRow = source[sourceRowOffset..(sourceRowOffset + srcWidth)];
+                var dstRow = dstSpan[destRowOffset..(destRowOffset + srcWidth)];
+
+                for (var i = 0; i < srcRow.Length; i++)
+                {
+                    dstRow[i] = new Rgba32(255, 255, 255, srcRow[i].PackedValue);
+                }
+            }
         }
 
         private sealed class FontFaceHandle : IFontFaceHandle

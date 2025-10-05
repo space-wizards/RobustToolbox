@@ -240,41 +240,40 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            public nint? WindowGetWin32Window(WindowReg window)
+            // GLFW doesn't have the Metal view/layer API that SDL2 does.
+            // It might be possible though.
+            public nint? WindowGetMetalLayer(WindowReg window) => null;
+
+            public HWND WindowGetWin32Window(WindowReg window)
             {
                 if (!OperatingSystem.IsWindows())
-                    return null;
+                    return default;
 
                 var reg = (GlfwWindowReg) window;
                 try
                 {
-                    return GLFW.GetWin32Window(reg.GlfwWindow);
+                    return (HWND) GLFW.GetWin32Window(reg.GlfwWindow);
                 }
                 catch (EntryPointNotFoundException)
                 {
-                    return null;
+                    return default;
                 }
             }
 
+            public HINSTANCE WindowGetWin32Instance(WindowReg window)
+            {
+                throw new NotImplementedException();
+            }
+
             public (WindowReg?, string? error) WindowCreate(
-                GLContextSpec? spec,
                 WindowCreateParameters parameters,
-                WindowReg? share,
                 WindowReg? owner)
             {
-                Window* sharePtr = null;
-                if (share is GlfwWindowReg glfwReg)
-                    sharePtr = glfwReg.GlfwWindow;
-
                 Window* ownerPtr = null;
                 if (owner is GlfwWindowReg glfwOwnerReg)
                     ownerPtr = glfwOwnerReg.GlfwWindow;
 
-                var task = SharedWindowCreate(
-                    spec,
-                    parameters,
-                    sharePtr,
-                    ownerPtr);
+                var task = SharedWindowCreate(parameters, ownerPtr);
 
                 // Block the main thread (to avoid stuff like texture uploads being problematic).
                 WaitWindowCreate(task);
@@ -308,10 +307,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            private Task<GlfwWindowCreateResult> SharedWindowCreate(
-                GLContextSpec? glSpec,
-                WindowCreateParameters parameters,
-                Window* share, Window* owner)
+            private Task<GlfwWindowCreateResult> SharedWindowCreate(WindowCreateParameters parameters, Window* owner)
             {
                 //
                 // IF YOU'RE WONDERING WHY THIS IS TASK-BASED:
@@ -331,9 +327,7 @@ namespace Robust.Client.Graphics.Clyde
                 // Yes we ping-pong this TCS through the window thread and back, deal with it.
                 var tcs = new TaskCompletionSource<GlfwWindowCreateResult>();
                 SendCmd(new CmdWinCreate(
-                    glSpec,
                     parameters,
-                    (nint) share,
                     (nint) owner,
                     tcs));
 
@@ -349,9 +343,9 @@ namespace Robust.Client.Graphics.Clyde
 
             private void WinThreadWinCreate(CmdWinCreate cmd)
             {
-                var (glSpec, parameters, share, owner, tcs) = cmd;
+                var (parameters, owner, tcs) = cmd;
 
-                var window = CreateGlfwWindowForRenderer(glSpec, parameters, (Window*) share, (Window*) owner);
+                var window = CreateGlfwWindowForRenderer(parameters, (Window*) owner);
 
                 if (window == null)
                 {
@@ -394,57 +388,14 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             private Window* CreateGlfwWindowForRenderer(
-                GLContextSpec? spec,
                 WindowCreateParameters parameters,
-                Window* contextShare,
                 Window* ownerWindow)
             {
                 GLFW.WindowHint(WindowHintString.X11ClassName, "RobustToolbox");
                 GLFW.WindowHint(WindowHintString.X11InstanceName, "RobustToolbox");
                 GLFW.WindowHint(WindowHintBool.ScaleToMonitor, true);
 
-                if (spec == null)
-                {
-                    // No OpenGL context requested.
-                    GLFW.WindowHint(WindowHintClientApi.ClientApi, ClientApi.NoApi);
-                }
-                else
-                {
-                    var s = spec.Value;
-
-#if DEBUG
-                    GLFW.WindowHint(WindowHintBool.OpenGLDebugContext, true);
-#endif
-
-                    GLFW.WindowHint(WindowHintInt.ContextVersionMajor, s.Major);
-                    GLFW.WindowHint(WindowHintInt.ContextVersionMinor, s.Minor);
-                    GLFW.WindowHint(WindowHintBool.OpenGLForwardCompat, s.Profile != GLContextProfile.Compatibility);
-                    GLFW.WindowHint(WindowHintBool.SrgbCapable, true);
-
-                    switch (s.Profile)
-                    {
-                        case GLContextProfile.Compatibility:
-                            GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Any);
-                            GLFW.WindowHint(WindowHintClientApi.ClientApi, ClientApi.OpenGlApi);
-                            break;
-                        case GLContextProfile.Core:
-                            GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Core);
-                            GLFW.WindowHint(WindowHintClientApi.ClientApi, ClientApi.OpenGlApi);
-                            break;
-                        case GLContextProfile.Es:
-                            GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Any);
-                            GLFW.WindowHint(WindowHintClientApi.ClientApi, ClientApi.OpenGlEsApi);
-                            break;
-                    }
-
-                    GLFW.WindowHint(WindowHintContextApi.ContextCreationApi,
-                        s.CreationApi == GLContextCreationApi.Egl
-                            ? ContextApi.EglContextApi
-                            : ContextApi.NativeContextApi);
-
-                    if (s.CreationApi == GLContextCreationApi.Egl)
-                        WsiShared.EnsureEglAvailable();
-                }
+                GLFW.WindowHint(WindowHintClientApi.ClientApi, ClientApi.NoApi);
 
                 Monitor* monitor = null;
                 if (parameters.Monitor != null &&
@@ -474,7 +425,7 @@ namespace Robust.Client.Graphics.Clyde
                     parameters.Width, parameters.Height,
                     parameters.Title,
                     parameters.Fullscreen ? monitor : null,
-                    contextShare);
+                    null);
 
                 // Check if window failed to create.
                 if (window == null)
@@ -690,32 +641,6 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     handle.Free();
                 }
-            }
-
-            public void GLMakeContextCurrent(WindowReg? window)
-            {
-                if (window != null)
-                {
-                    CheckWindowDisposed(window);
-
-                    var reg = (GlfwWindowReg)window;
-
-                    GLFW.MakeContextCurrent(reg.GlfwWindow);
-                }
-                else
-                {
-                    GLFW.MakeContextCurrent(null);
-                }
-            }
-
-            public void GLSwapInterval(WindowReg reg, int interval)
-            {
-                GLFW.SwapInterval(interval);
-            }
-
-            public void* GLGetProcAddress(string procName)
-            {
-                return (void*) GLFW.GetProcAddress(procName);
             }
 
             public void TextInputSetRect(WindowReg reg, UIBox2i rect, int cursor)

@@ -3,8 +3,8 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Threading;
-using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
+using Robust.Client.Graphics.Clyde.Rhi;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared;
@@ -15,6 +15,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Clyde
@@ -34,9 +35,55 @@ namespace Robust.Client.Graphics.Clyde
 
         private List<Overlay> _overlays = new();
 
+        private SpriteBatch? _spriteBatch;
+
+        private void RenderInit()
+        {
+            LoadStockTextures();
+
+            _spriteBatch = new SpriteBatch(this, Rhi);
+            _renderHandle = new RenderHandle(this, _entityManager, _spriteBatch);
+        }
+
+        private void DrawSplash()
+        {
+            var splashTex = _cfg.GetCVar(CVars.DisplaySplashLogo);
+            if (string.IsNullOrEmpty(splashTex))
+                return;
+
+            var backbuffer = _mainWindow!.CurSwapchainView!;
+
+            var size = _mainWindow!.FramebufferSize;
+
+            _spriteBatch!.Start();
+            _spriteBatch.BeginPass(size, backbuffer);
+
+            var texture = _resourceCache.GetResource<TextureResource>(splashTex).Texture;
+
+            var pos = (size - texture.Size) / 2;
+
+            _spriteBatch.Draw((ClydeTexture) texture, pos, Color.White);
+
+            _spriteBatch.EndPass();
+            _spriteBatch.Finish();
+        }
+
         public void Render()
         {
-            CheckTransferringScreenshots();
+            AcquireSwapchainTextures();
+
+            try
+            {
+                RenderCore();
+            }
+            finally
+            {
+                // wgpu will be very annoyed if we don't do the present state machine correctly.
+                // So make sure we ALWAYS present.
+                PresentWindows();
+            }
+
+            /*CheckTransferringScreenshots();
 
             var allMinimized = true;
             foreach (var windowReg in _windows)
@@ -118,7 +165,20 @@ namespace Robust.Client.Graphics.Clyde
                 _prof.WriteValue("Lights", ProfData.Int32(_debugStats.TotalLights));
                 _prof.WriteValue("Shadow Lights", ProfData.Int32(_debugStats.ShadowLights));
                 _prof.WriteValue("Occluders", ProfData.Int32(_debugStats.Occluders));
+            }*/
+        }
+
+        private void RenderCore()
+        {
+            if (_drawingSplash)
+            {
+                DrawSplash();
+                return;
             }
+
+            _spriteBatch!.Start();
+            _userInterfaceManager.Render(_renderHandle);
+            _spriteBatch.Finish();
         }
 
         public void RenderNow(IRenderTarget renderTarget, Action<IRenderHandle> callback)
@@ -134,6 +194,7 @@ namespace Robust.Client.Graphics.Clyde
                 null);
         }
 
+        /*
         private void RenderSingleWorldOverlay(Overlay overlay, Viewport vp, OverlaySpace space, in Box2 worldBox, in Box2Rotated worldBounds)
         {
             // Check that entity manager has started.
@@ -616,5 +677,6 @@ namespace Robust.Client.Graphics.Clyde
 
             return new Box2Rotated(aabb, rotation, aabb.Center);
         }
+        */
     }
 }

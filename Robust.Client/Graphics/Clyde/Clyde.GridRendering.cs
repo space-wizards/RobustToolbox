@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -16,6 +15,8 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
+        /*
+
         private readonly Dictionary<EntityUid, Dictionary<Vector2i, MapChunkData>> _mapChunkData =
             new();
 
@@ -528,5 +529,6 @@ namespace Robust.Client.Graphics.Clyde
             {
             }
         }
+    */
     }
 }

@@ -6,7 +6,7 @@ using System.Data;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
-using OpenToolkit.Graphics.OpenGL4;
+using Robust.Client.Graphics.Clyde.Rhi;
 using Robust.Client.Utility;
 using Robust.Shared.Graphics;
 using Robust.Shared.IoC;
@@ -15,10 +15,6 @@ using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Color = Robust.Shared.Maths.Color;
-using OGLTextureWrapMode = OpenToolkit.Graphics.OpenGL.TextureWrapMode;
-using PIF = OpenToolkit.Graphics.OpenGL4.PixelInternalFormat;
-using PF = OpenToolkit.Graphics.OpenGL4.PixelFormat;
-using PT = OpenToolkit.Graphics.OpenGL4.PixelType;
 using TextureWrapMode = Robust.Shared.Graphics.TextureWrapMode;
 
 namespace Robust.Client.Graphics.Clyde
@@ -33,7 +29,9 @@ namespace Robust.Client.Graphics.Clyde
 
         private readonly ConcurrentQueue<ClydeHandle> _textureDisposeQueue = new();
 
-        public OwnedTexture LoadTextureFromPNGStream(Stream stream, string? name = null,
+        public OwnedTexture LoadTextureFromPNGStream(
+            Stream stream,
+            string? name = null,
             TextureLoadParameters? loadParams = null)
         {
             DebugTools.Assert(_gameThread == Thread.CurrentThread);
@@ -44,82 +42,240 @@ namespace Robust.Client.Graphics.Clyde
             return LoadTextureFromImage(image, name, loadParams);
         }
 
-        public OwnedTexture LoadTextureFromImage<T>(Image<T> image, string? name = null,
-            TextureLoadParameters? loadParams = null) where T : unmanaged, IPixel<T>
+        public OwnedTexture LoadTextureFromImage<T>(
+            Image<T> image,
+            string? name = null,
+            TextureLoadParameters? loadParams = null)
+            where T : unmanaged, IPixel<T>
         {
             DebugTools.Assert(_gameThread == Thread.CurrentThread);
 
-            var actualParams = loadParams ?? TextureLoadParameters.Default;
-            var pixelType = typeof(T);
-
-            if (!_hasGLTextureSwizzle)
-            {
-                // If texture swizzle isn't available we have to pre-process the images to apply it ourselves
-                // and then upload as RGBA8.
-                // Yes this is inefficient but the alternative is modifying the shaders,
-                // which I CBA to do.
-                // Even 8 year old iGPUs support texture swizzle.
-                if (pixelType == typeof(A8))
-                {
-                    // Disable sRGB so stuff doesn't get interpreter wrong.
-                    actualParams.Srgb = false;
-                    using var img = ApplyA8Swizzle((Image<A8>) (object) image);
-                    return LoadTextureFromImage(img, name, loadParams);
-                }
-
-                if (pixelType == typeof(L8) && !actualParams.Srgb)
-                {
-                    using var img = ApplyL8Swizzle((Image<L8>) (object) image);
-                    return LoadTextureFromImage(img, name, loadParams);
-                }
-            }
+            var (instance, loaded) = CreateBlankTextureCore<T>((image.Width, image.Height), name, loadParams);
 
             // Flip image because OpenGL reads images upside down.
             using var copy = FlipClone(image);
 
-            var texture = CreateBaseTextureInternal<T>(image.Width, image.Height, actualParams, name);
-
             unsafe
             {
                 var span = copy.GetPixelSpan();
-                fixed (T* ptr = span)
-                {
-                    // Still bound.
-                    DoTexUpload(copy.Width, copy.Height, actualParams.Srgb, ptr);
-                }
+                Rhi.Queue.WriteTexture(
+                    new RhiImageCopyTexture
+                    {
+                        Texture = loaded.RhiTexture,
+                        Aspect = RhiTextureAspect.All,
+                        Origin = new RhiOrigin3D(),
+                        MipLevel = 0
+                    },
+                    MemoryMarshal.Cast<T, byte>(span),
+                    new RhiImageDataLayout(0, (uint) (sizeof(T) * image.Width), (uint) image.Height),
+                    new RhiExtent3D(image.Width, image.Height)
+                );
             }
 
-            return texture;
+            return instance;
         }
 
-        public unsafe OwnedTexture CreateBlankTexture<T>(
+        public OwnedTexture CreateBlankTexture<T>(
             Vector2i size,
             string? name = null,
             in TextureLoadParameters? loadParams = null)
             where T : unmanaged, IPixel<T>
         {
-            var actualParams = loadParams ?? TextureLoadParameters.Default;
-            if (!_hasGLTextureSwizzle)
-            {
-                // Actually create RGBA32 texture if missing texture swizzle.
-                // This is fine (TexturePixelType that's stored) because all other APIs do the same.
-                if (typeof(T) == typeof(A8) || typeof(T) == typeof(L8))
-                {
-                    return CreateBlankTexture<Rgba32>(size, name, loadParams);
-                }
-            }
-
-            var texture = CreateBaseTextureInternal<T>(
-                size.X, size.Y,
-                actualParams,
-                name);
-
-            // Texture still bound, run glTexImage2D with null data param to specify bounds.
-            DoTexUpload<T>(size.X, size.Y, actualParams.Srgb, null);
-
-            return texture;
+            var (instance, _) = CreateBlankTextureCore<T>(size, name, loadParams);
+            return instance;
         }
 
+        private (ClydeTexture, LoadedTexture) CreateBlankTextureCore<T>(
+            Vector2i size,
+            string? name = null,
+            in TextureLoadParameters? loadParams = null)
+            where T : unmanaged, IPixel<T>
+        {
+            DebugTools.Assert(_gameThread == Thread.CurrentThread);
+
+            var actualParams = loadParams ?? TextureLoadParameters.Default;
+            var srgb = actualParams.Srgb;
+
+            var format = GetPixelTextureFormat<T>(srgb);
+
+            return CreateBlankTextureCore(size, name, format, actualParams.SampleParameters, srgb);
+        }
+
+        private (ClydeTexture, LoadedTexture) CreateBlankTextureCore(
+            Vector2i size,
+            string? name,
+            RhiTextureFormat format,
+            TextureSampleParameters sampleParams,
+            bool srgb)
+        {
+            var rhiTexture = Rhi.CreateTexture(new RhiTextureDescriptor(
+                new RhiExtent3D(size.X, size.Y),
+                format,
+                RhiTextureUsage.TextureBinding | RhiTextureUsage.CopySrc | RhiTextureUsage.CopyDst,
+                Label: name
+            ));
+
+            var rhiTextureView = rhiTexture.CreateView(new RhiTextureViewDescriptor
+            {
+                Aspect = RhiTextureAspect.All,
+                Dimension = RhiTextureViewDimension.Dim2D,
+                Format = format,
+                Label = name,
+                MipLevelCount = 1,
+                ArrayLayerCount = 1,
+                BaseArrayLayer = 0,
+                BaseMipLevel = 0
+            });
+
+            var addressMode = sampleParams.WrapMode switch
+            {
+                TextureWrapMode.None => RhiAddressMode.ClampToEdge,
+                TextureWrapMode.Repeat => RhiAddressMode.Repeat,
+                TextureWrapMode.MirroredRepeat => RhiAddressMode.MirrorRepeat,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            var filter = sampleParams.Filter ? RhiFilterMode.Linear : RhiFilterMode.Nearest;
+
+            // TODO: Cache samplers somewhere, we can't actually make infinite of these and they're simple enough.
+            var rhiSampler = Rhi.CreateSampler(new RhiSamplerDescriptor(
+                AddressModeU: addressMode,
+                AddressModeV: addressMode,
+                MagFilter: filter,
+                MinFilter: filter,
+                Label: name
+            ));
+
+            var (width, height) = size;
+
+            var id = AllocRid();
+            var instance = new ClydeTexture(id, size, srgb, this);
+            var loaded = new LoadedTexture
+            {
+                RhiTexture = rhiTexture,
+                DefaultRhiView = rhiTextureView,
+                RhiSampler = rhiSampler,
+                Width = width,
+                Height = height,
+                Format = format,
+                Name = name,
+            };
+
+            _loadedTextures.Add(id, loaded);
+
+            return (instance, loaded);
+        }
+
+        private static RhiTextureFormat GetPixelTextureFormat<T>(bool srgb) where T : unmanaged, IPixel<T>
+        {
+            return default(T) switch
+            {
+                Rgba32 => srgb ? RhiTextureFormat.RGBA8UnormSrgb : RhiTextureFormat.RGBA8Unorm,
+                _ => throw new ArgumentException("Unsupported pixel format")
+            };
+        }
+
+        private void TextureSetSubImage<T>(
+            ClydeTexture clydeTexture,
+            Vector2i topLeft,
+            Image<T> sourceImage,
+            in UIBox2i sourceRegion)
+            where T : unmanaged, IPixel<T>
+        {
+            if (sourceRegion.Left < 0 ||
+                sourceRegion.Top < 0 ||
+                sourceRegion.Right > sourceRegion.Width ||
+                sourceRegion.Bottom > sourceRegion.Height)
+            {
+                throw new ArgumentOutOfRangeException(nameof(sourceRegion), "Source rectangle out of bounds.");
+            }
+
+            var size = sourceRegion.Width * sourceRegion.Height;
+
+            T[]? pooled = null;
+            // C# won't let me use an if due to the stackalloc.
+            var copyBuffer = size < 16 * 16
+                ? stackalloc T[size]
+                : (pooled = ArrayPool<T>.Shared.Rent(size)).AsSpan(0, size);
+
+            var srcSpan = sourceImage.GetPixelSpan();
+            var w = sourceImage.Width;
+            FlipCopySubRegion(sourceRegion, w, srcSpan, copyBuffer);
+
+            SetSubImageImpl<T>(clydeTexture, topLeft, (sourceRegion.Width, sourceRegion.Height), copyBuffer);
+
+            if (pooled != null)
+                ArrayPool<T>.Shared.Return(pooled);
+        }
+
+        private void TextureSetSubImage<T>(
+            ClydeTexture clydeTexture,
+            Vector2i topLeft,
+            Vector2i size,
+            ReadOnlySpan<T> buffer)
+            where T : unmanaged, IPixel<T>
+        {
+            T[]? pooled = null;
+            // C# won't let me use an if due to the stackalloc.
+            var copyBuffer = buffer.Length < 16 * 16
+                ? stackalloc T[buffer.Length]
+                : (pooled = ArrayPool<T>.Shared.Rent(buffer.Length)).AsSpan(0, buffer.Length);
+
+            FlipCopy(buffer, copyBuffer, size.X, size.Y);
+
+            SetSubImageImpl<T>(clydeTexture, topLeft, size, copyBuffer);
+
+            if (pooled != null)
+                ArrayPool<T>.Shared.Return(pooled);
+        }
+
+
+        private unsafe void SetSubImageImpl<T>(
+            ClydeTexture texture,
+            Vector2i dstTl,
+            Vector2i size,
+            ReadOnlySpan<T> buf)
+            where T : unmanaged, IPixel<T>
+        {
+            var loaded = _loadedTextures[texture.TextureId];
+            var format = GetPixelTextureFormat<T>(loaded.IsSrgb);
+
+            if (format != loaded.Format)
+            {
+                // TODO:
+                //if (loaded.TexturePixelType == TexturePixelType.RenderTarget)
+                //    throw new InvalidOperationException("Cannot modify texture for render target directly.");
+
+                throw new InvalidOperationException("Mismatching pixel type for texture.");
+            }
+
+            if (loaded.Width < dstTl.X + size.X || loaded.Height < dstTl.Y + size.Y)
+                throw new ArgumentOutOfRangeException(nameof(size), "Destination rectangle out of bounds.");
+
+            var dstY = loaded.Height - dstTl.Y - size.Y;
+
+            Rhi.Queue.WriteTexture(
+                new RhiImageCopyTexture(
+                    loaded.RhiTexture,
+                    0,
+                    new RhiOrigin3D(dstTl.X, dstY)
+                ),
+                buf,
+                new RhiImageDataLayout(0, (uint) (size.X * sizeof(T)), (uint) size.Y),
+                new RhiExtent3D(size.X, size.Y)
+            );
+
+            // GL.TexSubImage2D(
+            //     TextureTarget.Texture2D,
+            //     0,
+            //     dstTl.X, dstY,
+            //     size.X, size.Y,
+            //     pf, pt,
+            //     (IntPtr) aPtr);
+            // CheckGlError();
+        }
+
+        /*
         private unsafe void DoTexUpload<T>(int width, int height, bool srgb, T* ptr) where T : unmanaged, IPixel<T>
         {
             if (sizeof(T) < 4)
@@ -256,7 +412,9 @@ namespace Robust.Client.Graphics.Clyde
 
             CheckGlError();
         }
+        */
 
+        /*
         private (PIF pif, PF pf, PT pt) PixelEnums<T>(bool srgb)
             where T : unmanaged, IPixel<T>
         {
@@ -279,7 +437,9 @@ namespace Robust.Client.Graphics.Clyde
                 _ => throw new NotSupportedException("Unsupported pixel type."),
             };
         }
+        */
 
+        /*
         private ClydeTexture GenTexture(
             GLHandle glHandle,
             Vector2i size,
@@ -314,9 +474,11 @@ namespace Robust.Client.Graphics.Clyde
 
             return instance;
         }
+        */
 
         private void DeleteTexture(ClydeHandle textureHandle)
         {
+            /*
             if (!_loadedTextures.TryGetValue(textureHandle, out var loadedTexture))
             {
                 // Already deleted I guess.
@@ -327,154 +489,22 @@ namespace Robust.Client.Graphics.Clyde
             CheckGlError();
             _loadedTextures.Remove(textureHandle);
             //GC.RemoveMemoryPressure(loadedTexture.MemoryPressure);
-        }
-
-        private unsafe void SetSubImage<T>(
-            ClydeTexture texture,
-            Vector2i dstTl,
-            Image<T> img,
-            in UIBox2i srcBox)
-            where T : unmanaged, IPixel<T>
-        {
-            if (srcBox.Left < 0 ||
-                srcBox.Top < 0 ||
-                srcBox.Right > srcBox.Width ||
-                srcBox.Bottom > srcBox.Height)
-            {
-                throw new ArgumentOutOfRangeException(nameof(srcBox), "Source rectangle out of bounds.");
-            }
-
-            var size = srcBox.Width * srcBox.Height;
-
-            T[]? pooled = null;
-            // C# won't let me use an if due to the stackalloc.
-            var copyBuffer = size < 16 * 16
-                ? stackalloc T[size]
-                : (pooled = ArrayPool<T>.Shared.Rent(size)).AsSpan(0, size);
-
-            var srcSpan = img.GetPixelSpan();
-            var w = img.Width;
-            FlipCopySubRegion(srcBox, w, srcSpan, copyBuffer);
-
-            SetSubImageImpl<T>(texture, dstTl, (srcBox.Width, srcBox.Height), copyBuffer);
-
-            if (pooled != null)
-                ArrayPool<T>.Shared.Return(pooled);
-        }
-
-        private unsafe void SetSubImage<T>(
-            ClydeTexture texture,
-            Vector2i dstTl,
-            Vector2i size,
-            ReadOnlySpan<T> buf)
-            where T : unmanaged, IPixel<T>
-        {
-            T[]? pooled = null;
-            // C# won't let me use an if due to the stackalloc.
-            var copyBuffer = buf.Length < 16 * 16
-                ? stackalloc T[buf.Length]
-                : (pooled = ArrayPool<T>.Shared.Rent(buf.Length)).AsSpan(0, buf.Length);
-
-            FlipCopy(buf, copyBuffer, size.X, size.Y);
-
-            SetSubImageImpl<T>(texture, dstTl, size, copyBuffer);
-
-            if (pooled != null)
-                ArrayPool<T>.Shared.Return(pooled);
-        }
-
-        private unsafe void SetSubImageImpl<T>(
-            ClydeTexture texture,
-            Vector2i dstTl,
-            Vector2i size,
-            ReadOnlySpan<T> buf)
-            where T : unmanaged, IPixel<T>
-        {
-            if (!_hasGLTextureSwizzle && (typeof(T) == typeof(A8) || typeof(T) == typeof(L8)))
-            {
-                var swizzleBuf = ArrayPool<Rgba32>.Shared.Rent(buf.Length);
-
-                var destSpan = swizzleBuf.AsSpan(0, buf.Length);
-                if (typeof(T) == typeof(A8))
-                    ApplyA8Swizzle(MemoryMarshal.Cast<T, A8>(buf), destSpan);
-                else if (typeof(T) == typeof(L8))
-                    ApplyL8Swizzle(MemoryMarshal.Cast<T, L8>(buf), destSpan);
-
-                SetSubImageImpl<Rgba32>(texture, dstTl, size, destSpan);
-                ArrayPool<Rgba32>.Shared.Return(swizzleBuf);
-                return;
-            }
-
-            var loaded = _loadedTextures[texture.TextureId];
-            var pixType = GetTexturePixelType<T>();
-
-            if (pixType != loaded.TexturePixelType)
-            {
-                if (loaded.TexturePixelType == TexturePixelType.RenderTarget)
-                    throw new InvalidOperationException("Cannot modify texture for render target directly.");
-
-                throw new InvalidOperationException("Mismatching pixel type for texture.");
-            }
-
-            if (loaded.Width < dstTl.X + size.X || loaded.Height < dstTl.Y + size.Y)
-                throw new ArgumentOutOfRangeException(nameof(size), "Destination rectangle out of bounds.");
-
-            if (sizeof(T) != 4)
-            {
-                GL.PixelStore(PixelStoreParameter.UnpackAlignment, 1);
-                CheckGlError();
-            }
-
-            // sRGB doesn't matter since that only changes the internalFormat, which we don't need here.
-            var (_, pf, pt) = PixelEnums<T>(srgb: false);
-
-            GL.BindTexture(TextureTarget.Texture2D, loaded.OpenGLObject.Handle);
-            CheckGlError();
-
-            fixed (T* aPtr = buf)
-            {
-                var dstY = loaded.Height - dstTl.Y - size.Y;
-                GL.TexSubImage2D(
-                    TextureTarget.Texture2D,
-                    0,
-                    dstTl.X, dstY,
-                    size.X, size.Y,
-                    pf, pt,
-                    (IntPtr) aPtr);
-                CheckGlError();
-            }
-
-            if (sizeof(T) != 4)
-            {
-                GL.PixelStore(PixelStoreParameter.UnpackAlignment, 4);
-                CheckGlError();
-            }
-        }
-
-        private static TexturePixelType GetTexturePixelType<T>() where T : unmanaged, IPixel<T>
-        {
-            return default(T) switch
-            {
-                Rgba32 => TexturePixelType.Rgba32,
-                L8 => TexturePixelType.L8,
-                A8 => TexturePixelType.A8,
-                _ => throw new NotSupportedException("Unsupported pixel type."),
-            };
+        */
         }
 
         private void LoadStockTextures()
         {
             var white = new Image<Rgba32>(1, 1);
             white[0, 0] = new Rgba32(255, 255, 255, 255);
-            _stockTextureWhite = (ClydeTexture) Texture.LoadFromImage(white, name: "StockTextureWhite");
+            _stockTextureWhite = (ClydeTexture)LoadTextureFromImage(white, name: "Stock Texture: white");
 
             var black = new Image<Rgba32>(1, 1);
             black[0, 0] = new Rgba32(0, 0, 0, 255);
-            _stockTextureBlack = (ClydeTexture) Texture.LoadFromImage(black, name: "StockTextureBlack");
+            _stockTextureBlack = (ClydeTexture)LoadTextureFromImage(black, name: "Stock Texture: black");
 
             var blank = new Image<Rgba32>(1, 1);
             blank[0, 0] = new Rgba32(0, 0, 0, 0);
-            _stockTextureTransparent = (ClydeTexture) Texture.LoadFromImage(blank, name: "StockTextureTransparent");
+            _stockTextureTransparent = (ClydeTexture)LoadTextureFromImage(blank, name: "Stock Texture: transparent");
         }
 
         /// <summary>
@@ -573,32 +603,27 @@ namespace Robust.Client.Graphics.Clyde
 
         internal sealed class LoadedTexture
         {
-            public GLHandle OpenGLObject;
+            public RhiTexture RhiTexture = default!;
+            public RhiTextureView DefaultRhiView = default!;
+            public RhiSampler RhiSampler = default!;
+
             public int Width;
             public int Height;
-            public bool IsSrgb;
+            public RhiTextureFormat Format;
             public string? Name;
-            public long MemoryPressure;
-            public TexturePixelType TexturePixelType;
 
             public Vector2i Size => (Width, Height);
             public required WeakReference<ClydeTexture> TextureInstance;
-        }
 
-        internal enum TexturePixelType : byte
-        {
-            RenderTarget = 0,
-            Rgba32,
-            A8,
-            L8,
+            public bool IsSrgb => Format is RhiTextureFormat.BGRA8UnormSrgb or RhiTextureFormat.RGBA8UnormSrgb;
         }
 
         private void FlushTextureDispose()
         {
-            while (_textureDisposeQueue.TryDequeue(out var handle))
+            /*while (_textureDisposeQueue.TryDequeue(out var handle))
             {
                 DeleteTexture(handle);
-            }
+            }*/
         }
 
         internal sealed class ClydeTexture : OwnedTexture
@@ -610,17 +635,17 @@ namespace Robust.Client.Graphics.Clyde
 
             public override void SetSubImage<T>(Vector2i topLeft, Image<T> sourceImage, in UIBox2i sourceRegion)
             {
-                _clyde.SetSubImage(this, topLeft, sourceImage, sourceRegion);
+                _clyde.TextureSetSubImage(this, topLeft, sourceImage, sourceRegion);
             }
 
             public override void SetSubImage<T>(Vector2i topLeft, Vector2i size, ReadOnlySpan<T> buffer)
             {
-                _clyde.SetSubImage(this, topLeft, size, buffer);
+                _clyde.TextureSetSubImage(this, topLeft, size, buffer);
             }
 
             protected override void Dispose(bool disposing)
             {
-                if (_clyde.IsMainThread())
+                /*if (_clyde.IsMainThread())
                 {
                     // Main thread, do direct GL deletion.
                     _clyde.DeleteTexture(TextureId);
@@ -629,7 +654,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     // Finalizer thread
                     _clyde._textureDisposeQueue.Enqueue(TextureId);
-                }
+                }*/
             }
 
             internal ClydeTexture(ClydeHandle id, Vector2i size, bool srgb, Clyde clyde) : base(size)
@@ -647,32 +672,6 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 return $"ClydeTexture: ({TextureId})";
-            }
-
-            public override unsafe Color GetPixel(int x, int y)
-            {
-                if (!_clyde._loadedTextures.TryGetValue(TextureId, out var loaded))
-                {
-                    throw new DataException("Texture not found");
-                }
-
-                var curTexture2D = GL.GetInteger(GetPName.TextureBinding2D);
-                var bufSize = 4 * loaded.Size.X * loaded.Size.Y;
-                var buffer = ArrayPool<byte>.Shared.Rent(bufSize);
-
-                GL.BindTexture(TextureTarget.Texture2D, loaded.OpenGLObject.Handle);
-
-                fixed (byte* p = buffer)
-                {
-                    GL.GetTexImage(TextureTarget.Texture2D, 0, PF.Rgba, PT.UnsignedByte, (IntPtr) p);
-                }
-
-                GL.BindTexture(TextureTarget.Texture2D, curTexture2D);
-
-                var pixelPos = (loaded.Size.X * (loaded.Size.Y - y - 1) + x) * 4;
-                var color = new Color(buffer[pixelPos+0], buffer[pixelPos+1], buffer[pixelPos+2], buffer[pixelPos+3]);
-                ArrayPool<byte>.Shared.Return(buffer);
-                return color;
             }
         }
 
@@ -695,6 +694,21 @@ namespace Robust.Client.Graphics.Clyde
                     continue;
 
                 yield return (textureInstance, loaded);
+            }
+        }
+
+        private sealed class DummyTexture : OwnedTexture
+        {
+            public DummyTexture(Vector2i size) : base(size)
+            {
+            }
+
+            public override void SetSubImage<T>(Vector2i topLeft, Image<T> sourceImage, in UIBox2i sourceRegion)
+            {
+            }
+
+            public override void SetSubImage<T>(Vector2i topLeft, Vector2i size, ReadOnlySpan<T> buffer)
+            {
             }
         }
     }

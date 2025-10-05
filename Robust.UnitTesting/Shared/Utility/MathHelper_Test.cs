@@ -323,5 +323,27 @@ namespace Robust.UnitTesting.Shared.Utility
         {
             return MathHelper.CeilMultipleOfPowerOfTwo(value, powerOfTwo);
         }
+
+        [Test]
+        [TestCase(5, 1, ExpectedResult = 5)]
+        [TestCase(1, 4, ExpectedResult = 4)]
+        [TestCase(4, 4, ExpectedResult = 4)]
+        [TestCase(5, 4, ExpectedResult = 8)]
+        [TestCase(19, 4, ExpectedResult = 20)]
+        public int TestCeilingPowerOfTwoInt(int value, int power)
+        {
+            return MathHelper.CeilingPowerOfTwo(value, power);
+        }
+
+        [Test]
+        [TestCase(5, 1, ExpectedResult = 5)]
+        [TestCase(1, 4, ExpectedResult = 4)]
+        [TestCase(4, 4, ExpectedResult = 4)]
+        [TestCase(5, 4, ExpectedResult = 8)]
+        [TestCase(19, 4, ExpectedResult = 20)]
+        public short TestCeilingPowerOfTwoGeneric(short value, short power)
+        {
+            return MathHelper.CeilingPowerOfTwo(value, power);
+        }
     }
 }

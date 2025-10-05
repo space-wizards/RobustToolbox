@@ -6,6 +6,7 @@ using System.Numerics;
 using System.Threading.Tasks;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
+using Robust.Client.Graphics.Clyde.Rhi;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -17,6 +18,8 @@ namespace Robust.Client.Graphics
 
     public interface IClyde
     {
+        RhiBase Rhi { get; }
+
         IClydeWindow MainWindow { get; }
         IRenderTarget MainWindowRenderTarget => MainWindow.RenderTarget;
 

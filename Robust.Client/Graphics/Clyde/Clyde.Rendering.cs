@@ -1,21 +1,18 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using OpenToolkit.Graphics.OpenGL4;
-using Robust.Client.GameObjects;
 using Robust.Client.Utility;
 using Robust.Shared.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
-using TKStencilOp = OpenToolkit.Graphics.OpenGL4.StencilOp;
 
 namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
+        /*
         // The amount of quads we can render with ushort indices, leaving open 65536 for primitive restart.
         private const ushort MaxBatchQuads = (2 << 13) - 1; // In human terms: (2**16/4)-1 = 16383
 
@@ -825,7 +822,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 _batchLoadedTexture = null;
             }
-            */
+            #1#
         }
 
         private void FinishBatch()
@@ -1145,16 +1142,6 @@ namespace Robust.Client.Graphics.Clyde
                 GLCaps = glcaps;
             }
         }
-
-        [Flags]
-        private enum GLCaps : ushort
-        {
-            // If you add flags here make sure to update PopRenderState!
-            None = 0,
-
-            Blending = 1 << 0,
-
-            Stencilling = 1 << 2,
-        }
+    */
     }
 }

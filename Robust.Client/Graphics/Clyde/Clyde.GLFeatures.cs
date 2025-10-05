@@ -1,12 +1,8 @@
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using OpenToolkit.Graphics.OpenGL4;
-
 namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
-        // OpenGL feature detection go here.
+        /*// OpenGL feature detection go here.
 
         private bool _hasGLKhrDebug;
         private bool _glDebuggerPresent;
@@ -224,6 +220,6 @@ namespace Robust.Client.Graphics.Clyde
                 _sawmillOgl.Debug("OpenGL Extensions: {0}", extensions);
                 return new HashSet<string>(extensions.Split(' '));
             }
-        }
+        }*/
     }
 }

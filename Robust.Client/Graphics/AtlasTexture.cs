@@ -32,14 +32,5 @@ namespace Robust.Client.Graphics
         ///     Our sub region within our source, in pixel coordinates.
         /// </summary>
         public UIBox2 SubRegion { get; }
-
-        public override Color GetPixel(int x, int y)
-        {
-            DebugTools.Assert(x < SubRegion.Right);
-            DebugTools.Assert(y < SubRegion.Top);
-            int xTranslated = x + (int) SubRegion.Left;
-            int yTranslated = y + (int) SubRegion.Top;
-            return this.SourceTexture[xTranslated, yTranslated];
-        }
     }
 }

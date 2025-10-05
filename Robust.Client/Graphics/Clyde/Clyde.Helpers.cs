@@ -1,17 +1,8 @@
-using System;
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using OpenToolkit.Graphics.OpenGL4;
-using Robust.Shared.Graphics;
-using Robust.Shared.Maths;
-using Robust.Shared.Utility;
-using ES20 = OpenToolkit.Graphics.ES20;
-
 namespace Robust.Client.Graphics.Clyde
 {
     internal sealed partial class Clyde
     {
+        /*
         private void GLClearColor(Color color)
         {
             GL.ClearColor(color.R, color.G, color.B, color.A);
@@ -290,5 +281,7 @@ namespace Robust.Client.Graphics.Clyde
 
             return proc;
         }
+    */
+
     }
 }

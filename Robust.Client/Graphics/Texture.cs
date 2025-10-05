@@ -32,12 +32,10 @@ public abstract class Texture : IRsiStateLike
     /// </summary>
     public Vector2i Size { get; /*protected set;*/ }
 
-    public Color this[int x, int y] => this.GetPixel(x, y);
-
-    protected Texture(Vector2i size)
-    {
-        Size = size;
-    }
+        protected Texture(Vector2i size)
+        {
+            Size = size;
+        }
 
     Texture IDirectionalTextureProvider.Default => this;
 

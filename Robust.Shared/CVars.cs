@@ -1038,134 +1038,10 @@ namespace Robust.Shared
         // Clyde related enums are in Clyde.Constants.cs.
 
         /// <summary>
-        /// Which renderer to use to render the game.
-        /// </summary>
-        public static readonly CVarDef<int> DisplayRenderer =
-            CVarDef.Create("display.renderer", 0, CVar.CLIENTONLY);
-
-        /// <summary>
-        /// Whether to use compatibility mode.
-        /// </summary>
-        /// <remarks>
-        /// This can change certain behaviors like GL version selection to try to avoid driver crashes/bugs.
-        /// </remarks>
-        public static readonly CVarDef<bool> DisplayCompat =
-            CVarDef.Create("display.compat", false, CVar.CLIENTONLY);
-
-        /// <summary>
-        /// Which OpenGL version to use for the OpenGL renderer.
-        /// Values correspond to the (private) RendererOpenGLVersion enum in Clyde.
-        /// </summary>
-        public static readonly CVarDef<int> DisplayOpenGLVersion =
-            CVarDef.Create("display.opengl_version", 0, CVar.CLIENTONLY);
-
-        /// <summary>
-        /// On Windows, use ANGLE as OpenGL implementation.
-        /// </summary>
-        public static readonly CVarDef<bool> DisplayAngle =
-            CVarDef.Create("display.angle", false, CVar.CLIENTONLY);
-
-        /// <summary>
-        /// Use a custom DXGI swap chain when using ANGLE.
-        /// Should improve performance and fixes main window sRGB handling with ANGLE.
-        /// </summary>
-        public static readonly CVarDef<bool> DisplayAngleCustomSwapChain =
-            CVarDef.Create("display.angle_custom_swap_chain", true, CVar.CLIENTONLY);
-
-        /// <summary>
-        /// Force ANGLE to create a GLES2 context (not a compatible GLES3 context).
-        /// </summary>
-        public static readonly CVarDef<bool> DisplayAngleForceEs2 =
-            CVarDef.Create("display.angle_force_es2", false, CVar.CLIENTONLY);
-
-        /// <summary>
-        /// Force ANGLE to create a context from a D3D11 FL 10_0 device.
-        /// </summary>
-        public static readonly CVarDef<bool> DisplayAngleForce10_0 =
-            CVarDef.Create("display.angle_force_10_0", false, CVar.CLIENTONLY);
-
-        /// <summary>
-        /// Force usage of DXGI 1.1 when using custom swap chain setup.
-        /// </summary>
-        public static readonly CVarDef<bool> DisplayAngleDxgi1 =
-            CVarDef.Create("display.angle_dxgi1", false, CVar.CLIENTONLY);
-
-        /// <summary>
-        /// Try to use the display adapter with this name, if the current renderer supports selecting it.
-        /// </summary>
-        public static readonly CVarDef<string> DisplayAdapter =
-            CVarDef.Create("display.adapter", "", CVar.CLIENTONLY);
-
-        /// <summary>
-        /// What type of GPU to prefer when creating a graphics context, for things such as hybrid GPU laptops.
-        /// </summary>
-        /// <remarks>
-        /// This setting is not always respect depending on platform and rendering API used.
-        /// Values are:
-        /// 0 = unspecified (DXGI_GPU_PREFERENCE_UNSPECIFIED)
-        /// 1 = minimum power (DXGI_GPU_PREFERENCE_MINIMUM_POWER)
-        /// 2 = high performance (DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE)
-        /// </remarks>
-        public static readonly CVarDef<int> DisplayGpuPreference =
-            CVarDef.Create("display.gpu_preference", 2, CVar.CLIENTONLY);
-
-        /// <summary>
-        /// Use EGL to create GL context instead of GLFW, if possible.
-        /// </summary>
-        /// <remarks>
-        /// This only tries to use EGL if on a platform like X11 or Windows (w/ ANGLE) where it is possible.
-        /// </remarks>
-        public static readonly CVarDef<bool> DisplayEgl =
-            CVarDef.Create("display.egl", false, CVar.CLIENTONLY);
-
-        /// <summary>
-        /// Enable allowES3OnFL10_0 on ANGLE.
-        /// </summary>
-        public static readonly CVarDef<bool> DisplayAngleEs3On10_0 =
-            CVarDef.Create("display.angle_es3_on_10_0", true, CVar.CLIENTONLY);
-
-        /// <summary>
         /// Base DPI to render fonts at. This can be further scaled based on <c>display.uiScale</c>.
         /// </summary>
         public static readonly CVarDef<int> DisplayFontDpi =
             CVarDef.Create("display.fontdpi", 96, CVar.CLIENTONLY);
-
-        /// <summary>
-        /// Override detected OpenGL version, for testing.
-        /// </summary>
-        public static readonly CVarDef<string> DisplayOGLOverrideVersion =
-            CVarDef.Create("display.ogl_override_version", string.Empty, CVar.CLIENTONLY);
-
-        /// <summary>
-        /// Run <c>glCheckError()</c> after (almost) every GL call.
-        /// </summary>
-        public static readonly CVarDef<bool> DisplayOGLCheckErrors =
-            CVarDef.Create("display.ogl_check_errors", false, CVar.CLIENTONLY);
-
-        /// <summary>
-        ///     Forces synchronization of multi-window rendering with <c>glFinish</c> when GL fence sync is unavailable.
-        /// </summary>
-        /// <remarks>
-        ///     If this is disabled multi-window rendering on GLES2 might run better, dunno.
-        ///     It technically causes UB thanks to the OpenGL spec with cross-context sync. Hope that won't happen.
-        ///     Let's be real the OpenGL specification is basically just a suggestion to drivers anyways so who cares.
-        /// </remarks>
-        public static readonly CVarDef<bool> DisplayForceSyncWindows =
-            CVarDef.Create<bool>("display.force_sync_windows", true, CVar.CLIENTONLY);
-
-        /// <summary>
-        /// Use a separate thread for multi-window blitting.
-        /// </summary>
-        public static readonly CVarDef<bool> DisplayThreadWindowBlit =
-            CVarDef.Create("display.thread_window_blit", true, CVar.CLIENTONLY);
-
-        /// <summary>
-        /// Diagnostic flag for testing. When using a separate thread for multi-window blitting,
-        /// should the worker be unblocked before the SwapBuffers(). Setting to true may improve
-        /// performance but may cause crashes or rendering errors.
-        /// </summary>
-        public static readonly CVarDef<bool> DisplayThreadUnlockBeforeSwap =
-            CVarDef.Create("display.thread_unlock_before_swap", false, CVar.CLIENTONLY);
 
         /// <summary>
         /// Buffer size of input command channel from windowing thread to main game thread.
@@ -1218,6 +1094,37 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> DisplayThreadWindowApi =
             CVarDef.Create("display.thread_window_api", false, CVar.CLIENTONLY);
+
+        public static readonly CVarDef<string> DisplayRhi =
+            CVarDef.Create("display.rhi", "webGpu", CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Comma-separated list of backends to try to use, if using WebGPU RHI with wgpu.
+        /// </summary>
+        /// <remarks>
+        /// If set to "all", all backends will be tried.
+        /// </remarks>
+        public static readonly CVarDef<string> DisplayWgpuBackends =
+            CVarDef.Create("display.wgpu_backends", "all", CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Try to use the display adapter with this name, if the current renderer supports selecting it.
+        /// </summary>
+        public static readonly CVarDef<string> DisplayAdapter =
+            CVarDef.Create("display.adapter", "", CVar.CLIENTONLY);
+
+        /// <summary>
+        /// What type of GPU to prefer when creating a graphics context, for things such as hybrid GPU laptops.
+        /// </summary>
+        /// <remarks>
+        /// This setting is not always respect depending on platform and rendering API used.
+        /// Values are:
+        /// 0 = unspecified
+        /// 1 = low power
+        /// 2 = high performance
+        /// </remarks>
+        public static readonly CVarDef<int> DisplayGpuPowerPreference =
+            CVarDef.Create("display.gpu_power_preference", 2, CVar.CLIENTONLY);
 
         /*
          * AUDIO

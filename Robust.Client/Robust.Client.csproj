@@ -13,11 +13,12 @@
     <PackageReference Include="DiscordRichPresence" PrivateAssets="compile" />
     <PackageReference Include="JetBrains.Annotations" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Data.Sqlite.Core" PrivateAssets="compile" />
+    <PackageReference Include="Silk.NET.WebGPU" PrivateAssets="compile" />
+    <PackageReference Include="Silk.NET.WebGPU.Extensions.WGPU" PrivateAssets="compile" />
     <PackageReference Include="SQLitePCLRaw.provider.sqlite3" Condition="'$(UseSystemSqlite)' == 'True'" PrivateAssets="compile" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Condition="'$(UseSystemSqlite)' != 'True'" PrivateAssets="compile" />
     <PackageReference Include="SpaceWizards.NFluidsynth" PrivateAssets="compile" />
     <PackageReference Include="SixLabors.ImageSharp" />
-    <PackageReference Include="OpenToolkit.Graphics" PrivateAssets="compile" />
     <PackageReference Include="OpenTK.Audio.OpenAL" PrivateAssets="compile" />
     <PackageReference Include="SpaceWizards.SharpFont" PrivateAssets="compile" />
     <PackageReference Include="SpaceWizards.Sdl" PrivateAssets="compile" />

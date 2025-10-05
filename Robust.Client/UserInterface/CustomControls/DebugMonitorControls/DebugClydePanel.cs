@@ -40,15 +40,14 @@ namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
 
             _textBuilder.Clear();
 
+            var rhi = _clydeInternal.Rhi;
             var info = _clydeInternal.DebugInfo;
             var stats = _clydeInternal.DebugStats;
 
-            _textBuilder.AppendLine($@"Renderer: {info.Renderer}
-Vendor: {info.Vendor}
-Version: {info.VersionString}");
-
-            if (info.Overriding)
-                _textBuilder.Append($"Version override: {info.OpenGLVersion}\n");
+            _textBuilder.AppendLine($@"RHI: {rhi.Description}
+Adapter: {rhi.AdapterProperties.Name}
+Vendor: {rhi.AdapterProperties.VendorName} ({rhi.AdapterProperties.VendorID})
+Driver: {rhi.AdapterProperties.Driver}");
 
             _textBuilder.Append($"Windowing: {info.WindowingApi}\n");
 

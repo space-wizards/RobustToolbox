@@ -221,10 +221,7 @@ internal partial class Clyde
 
         private sealed class CmdWinCreate : CmdBase
         {
-            public required GLContextSpec? GLSpec;
             public required WindowCreateParameters Parameters;
-            public required nint ShareWindow;
-            public required nint ShareContext;
             public required nint OwnerWindow;
             public required TaskCompletionSource<Sdl3WindowCreateResult> Tcs;
         }
@@ -232,6 +229,7 @@ internal partial class Clyde
         private sealed class CmdWinDestroy : CmdBase
         {
             public nint Window;
+            public nint MetalView;
             public bool HadOwner;
         }
 
@@ -240,7 +238,6 @@ internal partial class Clyde
             public Sdl3WindowReg? Reg;
             public string? Error;
         }
-
         private sealed class CmdRunAction : CmdBase
         {
             public required Action Action;

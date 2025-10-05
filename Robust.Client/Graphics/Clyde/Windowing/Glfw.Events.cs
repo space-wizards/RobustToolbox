@@ -264,7 +264,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 // As far as I can tell, sometimes entering fullscreen just disables vsync.
                 // Hilarious!
-                _clyde._glContext?.UpdateVSync();
+                // _clyde._glContext?.UpdateVSync();
             }
         }
     }

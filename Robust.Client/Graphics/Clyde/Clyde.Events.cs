@@ -6,7 +6,6 @@ using Robust.Shared.Log;
 #endif
 
 using System.Collections.Generic;
-using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Input;
 using Robust.Shared.Maths;
 
@@ -112,10 +111,10 @@ namespace Robust.Client.Graphics.Clyde
             if (!reg.IsVisible) // Only send this for open windows
                 return;
 
-            var loaded = RtToLoaded(reg.RenderTarget);
-            loaded.Size = reg.FramebufferSize;
+            // var loaded = RtToLoaded(reg.RenderTarget);
+            // loaded.Size = reg.FramebufferSize;
 
-            _glContext!.WindowResized(reg, oldSize);
+            Rhi.WindowRecreateSwapchain(reg);
 
             var eventArgs = new WindowResizedEventArgs(
                 oldSize,

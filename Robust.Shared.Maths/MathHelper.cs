@@ -13,6 +13,7 @@
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 
@@ -757,6 +758,39 @@ namespace Robust.Shared.Maths
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Rounds <paramref name="value"/> up to a multiple of <paramref name="power"/>,
+        /// where <paramref name="power"/> is a power of two.
+        /// </summary>
+        /// <param name="value">The value to round up.</param>
+        /// <param name="power">The value to round up to a multiple of. Must be a power of two.</param>
+        /// <typeparam name="T">The type of integer to operate on.</typeparam>
+        [Pure]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T CeilingPowerOfTwo<T>(T value, T power)
+            where T : IBinaryInteger<T>
+        {
+            Debug.Assert((power & (power - T.One)) == T.Zero, "Power must be a power of two");
+
+            return (value + (power - T.One)) & ~(power - T.One);
+        }
+
+        // Non-generic function has less overhead without compiler optimizations.
+        /// <summary>
+        /// Rounds <paramref name="value"/> up to a multiple of <paramref name="power"/>,
+        /// where <paramref name="power"/> is a power of two.
+        /// </summary>
+        /// <param name="value">The value to round up.</param>
+        /// <param name="power">The value to round up to a multiple of. Must be a power of two.</param>
+        [Pure]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int CeilingPowerOfTwo(int value, int power)
+        {
+            Debug.Assert(BitOperations.IsPow2(power), "Power must be a power of two");
+
+            return (value + (power - 1)) & ~(power - 1);
         }
 
         #endregion Public Members

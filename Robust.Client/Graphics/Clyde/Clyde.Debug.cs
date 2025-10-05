@@ -3,14 +3,9 @@ namespace Robust.Client.Graphics.Clyde
     internal sealed partial class Clyde
     {
         private readonly ClydeDebugStats _debugStats = new();
+        private ClydeDebugInfo? _debugInfo;
 
-        private sealed record ClydeDebugInfo(
-            OpenGLVersion OpenGLVersion,
-            string Renderer,
-            string Vendor,
-            string VersionString,
-            bool Overriding,
-            string WindowingApi) : IClydeDebugInfo;
+        private sealed record ClydeDebugInfo(string WindowingApi) : IClydeDebugInfo;
 
         private sealed class ClydeDebugStats : IClydeDebugStats
         {

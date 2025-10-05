@@ -32,7 +32,7 @@ namespace Robust.Client.Graphics.Clyde
                     name: $"{name}-MainRenderTarget")
             };
 
-            RegenLightRts(viewport);
+            // RegenLightRts(viewport);
 
             _viewports.Add(handle, new WeakReference<Viewport>(viewport));
 
@@ -143,7 +143,7 @@ namespace Robust.Client.Graphics.Clyde
 
             void IClydeViewport.Render()
             {
-                _clyde.RenderViewport(this);
+                // _clyde.RenderViewport(this);
             }
 
             public MapCoordinates LocalToWorld(Vector2 point)
@@ -198,7 +198,7 @@ namespace Robust.Client.Graphics.Clyde
                 IViewportControl control,
                 in UIBox2i viewportBounds)
             {
-                _clyde.RenderOverlaysDirect(this, control, handle, OverlaySpace.ScreenSpaceBelowWorld, viewportBounds);
+                // _clyde.RenderOverlaysDirect(this, control, handle, OverlaySpace.ScreenSpaceBelowWorld, viewportBounds);
             }
 
             public void RenderScreenOverlaysAbove(
@@ -206,7 +206,7 @@ namespace Robust.Client.Graphics.Clyde
                 IViewportControl control,
                 in UIBox2i viewportBounds)
             {
-                _clyde.RenderOverlaysDirect(this, control, handle, OverlaySpace.ScreenSpace, viewportBounds);
+                // _clyde.RenderOverlaysDirect(this, control, handle, OverlaySpace.ScreenSpace, viewportBounds);
             }
 
             ~Viewport()
@@ -217,12 +217,12 @@ namespace Robust.Client.Graphics.Clyde
             public void Dispose()
             {
                 GC.SuppressFinalize(this);
-
+                // TODO: These shouldn't be ?. disposes. Temporary thing for WebGPU.
                 RenderTarget.Dispose();
-                LightRenderTarget.Dispose();
-                WallMaskRenderTarget.Dispose();
-                WallBleedIntermediateRenderTarget1.Dispose();
-                WallBleedIntermediateRenderTarget2.Dispose();
+                LightRenderTarget?.Dispose();
+                WallMaskRenderTarget?.Dispose();
+                WallBleedIntermediateRenderTarget1?.Dispose();
+                WallBleedIntermediateRenderTarget2?.Dispose();
 
                 _clyde.DisposeViewport(DisposeData(referenceSelf: false));
             }

@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using OpenToolkit.Graphics.OpenGL4;
-using Robust.Client.Audio;
 using Robust.Client.Graphics;
 using Robust.Client.Utility;
 using Robust.Shared;
@@ -216,7 +214,7 @@ namespace Robust.Client.ResourceManagement
             // The array must be sorted from biggest to smallest first.
             Array.Sort(atlasList, (b, a) => a.AtlasSheet.Height.CompareTo(b.AtlasSheet.Height));
 
-            var maxSize = Math.Min(GL.GetInteger(GetPName.MaxTextureSize), _configurationManager.GetCVar(CVars.ResRSIAtlasSize));
+            var maxSize = _configurationManager.GetCVar(CVars.ResRSIAtlasSize);
 
             // THIS IS NOT GUARANTEED TO HAVE ANY PARTICULARLY LOGICAL ORDERING.
             // E.G you could have atlas 1 RSIs appear *before* you're done seeing atlas 2 RSIs.

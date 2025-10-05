@@ -1,17 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Buffers;
+using Robust.Client.GameObjects;
 using System.Diagnostics.Contracts;
 using System.Numerics;
-using OpenToolkit.Graphics.OpenGL4;
-using Robust.Client.GameObjects;
 using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
-using TKStencilOp = OpenToolkit.Graphics.OpenGL4.StencilOp;
 using Robust.Shared.Physics;
 using Robust.Shared.Enums;
 using Robust.Shared.Graphics;
@@ -28,6 +27,7 @@ namespace Robust.Client.Graphics.Clyde
 
     internal partial class Clyde
     {
+        /*
         // Horizontal width, in pixels, of the shadow maps used to render regular lights.
         private const int ShadowMapSize = 512;
 
@@ -93,12 +93,14 @@ namespace Robust.Client.Graphics.Clyde
         private ClydeTexture ShadowTexture => _shadowRenderTarget.Texture;
 
         private (PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot)[] _lightsToRenderList = default!;
+        */
 
         private LightCapacityComparer _lightCap = new();
         private ShadowCapacityComparer _shadowCap = new ShadowCapacityComparer();
 
         private float _maxLightRadius;
 
+        /*
         private unsafe void InitLighting()
         {
             _cfg.OnValueChanged(CVars.MaxLightRadius, val => { _maxLightRadius = val;}, true);
@@ -1271,5 +1273,6 @@ namespace Robust.Client.Graphics.Clyde
             _lightsToRenderList = new (PointLightComponent, Vector2, float , Angle)[value];
             DebugTools.Assert(_maxLights >= _maxShadowcastingLights);
         }
+    */
     }
 }

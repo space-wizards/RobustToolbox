@@ -5,6 +5,7 @@ using System.Numerics;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
+using Robust.Client.Graphics.Clyde.Rhi;
 using Robust.Client.Input;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
@@ -26,6 +27,8 @@ namespace Robust.Client.Graphics.Clyde
     [UsedImplicitly]
     internal sealed class ClydeHeadless : IClydeInternal
     {
+        public RhiBase Rhi => throw new NotImplementedException();
+
         // Would it make sense to report a fake resolution like 720p here so code doesn't break? idk.
         public IClydeWindow MainWindow { get; }
         public Vector2i ScreenSize => (1280, 720);
@@ -349,11 +352,6 @@ namespace Robust.Client.Graphics.Clyde
             {
                 // Just do nothing on mutate.
             }
-
-            public override Color GetPixel(int x, int y)
-            {
-                return Color.Black;
-            }
         }
 
         private sealed class DummyShaderInstance : ShaderInstance
@@ -491,11 +489,6 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class DummyDebugInfo : IClydeDebugInfo
         {
-            public OpenGLVersion OpenGLVersion { get; } = new(3, 3, isES: false, isCore: true);
-            public string Renderer => "ClydeHeadless";
-            public string Vendor => "Space Wizards Federation";
-            public string VersionString { get; } = $"3.3.0 WIZARDS {typeof(DummyDebugInfo).Assembly.GetName().Version}";
-            public bool Overriding => false;
             public string WindowingApi => "The vast abyss";
         }
 

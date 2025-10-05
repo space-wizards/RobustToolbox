@@ -4,12 +4,13 @@ using Robust.Client.Input;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using TerraFX.Interop.Windows;
 
 namespace Robust.Client.Graphics.Clyde
 {
     partial class Clyde
     {
-        private interface IWindowingImpl
+        internal interface IWindowingImpl
         {
             // Lifecycle stuff
             bool Init();
@@ -31,9 +32,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // Window API.
             (WindowReg?, string? error) WindowCreate(
-                GLContextSpec? spec,
                 WindowCreateParameters parameters,
-                WindowReg? share,
                 WindowReg? owner);
 
             void WindowDestroy(WindowReg reg);
@@ -45,7 +44,9 @@ namespace Robust.Client.Graphics.Clyde
             void WindowSwapBuffers(WindowReg window);
             uint? WindowGetX11Id(WindowReg window);
             nint? WindowGetX11Display(WindowReg window);
-            nint? WindowGetWin32Window(WindowReg window);
+            nint? WindowGetMetalLayer(WindowReg window);
+            HWND WindowGetWin32Window(WindowReg window);
+            HINSTANCE WindowGetWin32Instance(WindowReg window);
 
             // Keyboard
             string? KeyGetName(Keyboard.Key key);
@@ -55,12 +56,6 @@ namespace Robust.Client.Graphics.Clyde
             void ClipboardSetText(WindowReg mainWindow, string text);
 
             void UpdateMainWindowMode();
-
-            // OpenGL-related stuff.
-            // Note: you should probably go through GLContextBase instead, which calls these functions.
-            void GLMakeContextCurrent(WindowReg? reg);
-            void GLSwapInterval(WindowReg reg, int interval);
-            unsafe void* GLGetProcAddress(string procName);
 
             // Misc
             void RunOnWindowThread(Action a);

@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\MSBuild\Robust.Engine.props" />
+
+  <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ImplicitUsings>true</ImplicitUsings>
+    <SkipRobustAnalyzer>true</SkipRobustAnalyzer>
+  </PropertyGroup>
+
+  <Import Project="..\MSBuild\Robust.Properties.targets" />
+</Project>

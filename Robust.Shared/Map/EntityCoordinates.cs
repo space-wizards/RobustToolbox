@@ -14,7 +14,7 @@ namespace Robust.Shared.Map
     ///     A set of coordinates relative to another entity.
     /// </summary>
     [PublicAPI, DataRecord]
-    public readonly struct EntityCoordinates : IEquatable<EntityCoordinates>, ISpanFormattable
+    public readonly record struct EntityCoordinates : ISpanFormattable
     {
         public static readonly EntityCoordinates Invalid = new(EntityUid.Invalid, Vector2.Zero);
 
@@ -313,44 +313,6 @@ namespace Robust.Shared.Map
             delta = mapCoordinates.Position - otherMapCoordinates.Position;
             return true;
         }
-
-        #region IEquatable
-
-        /// <inheritdoc />
-        public bool Equals(EntityCoordinates other)
-        {
-            return EntityId.Equals(other.EntityId) && Position.Equals(other.Position);
-        }
-
-        /// <inheritdoc />
-        public override bool Equals(object? obj)
-        {
-            return obj is EntityCoordinates other && Equals(other);
-        }
-
-        /// <inheritdoc />
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(EntityId, Position);
-        }
-
-        /// <summary>
-        ///     Check for equality by value between two objects.
-        /// </summary>
-        public static bool operator ==(EntityCoordinates left, EntityCoordinates right)
-        {
-            return left.Equals(right);
-        }
-
-        /// <summary>
-        ///     Check for inequality by value between two objects.
-        /// </summary>
-        public static bool operator !=(EntityCoordinates left, EntityCoordinates right)
-        {
-            return !left.Equals(right);
-        }
-
-        #endregion
 
         #region Operators
 

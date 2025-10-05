@@ -13,7 +13,7 @@ namespace Robust.Shared.Map
     /// </summary>
     [PublicAPI, DataRecord]
     [Serializable, NetSerializable]
-    public readonly struct MapCoordinates : IEquatable<MapCoordinates>, ISpanFormattable
+    public readonly record struct MapCoordinates : ISpanFormattable
     {
         public static readonly MapCoordinates Nullspace = new(Vector2.Zero, MapId.Nullspace);
 
@@ -95,46 +95,6 @@ namespace Robust.Shared.Map
 
             return (otherCoords.Position - Position).LengthSquared() < range * range;
         }
-
-        /// <inheritdoc />
-        public bool Equals(MapCoordinates other)
-        {
-            return Position.Equals(other.Position) && MapId.Equals(other.MapId);
-        }
-
-        /// <inheritdoc />
-        public override bool Equals(object? obj)
-        {
-            if (ReferenceEquals(null, obj))
-                return false;
-            return obj is MapCoordinates other && Equals(other);
-        }
-
-        /// <inheritdoc />
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                return (Position.GetHashCode() * 397) ^ MapId.GetHashCode();
-            }
-        }
-
-        /// <summary>
-        ///     Check for equality by value between two objects.
-        /// </summary>
-        public static bool operator ==(MapCoordinates a, MapCoordinates b)
-        {
-            return a.Equals(b);
-        }
-
-        /// <summary>
-        ///     Check for inequality by value between two objects.
-        /// </summary>
-        public static bool operator !=(MapCoordinates a, MapCoordinates b)
-        {
-            return !a.Equals(b);
-        }
-
 
         /// <summary>
         /// Used to deconstruct this object into a tuple.

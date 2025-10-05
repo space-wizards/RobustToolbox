@@ -13,6 +13,7 @@ namespace Robust.Shared.GameObjects;
 public abstract partial class SharedMapSystem
 {
     protected int LastMapId;
+    private Dictionary<EntityUid, MapId> _reserved = new();
 
     private void InitializeMap()
     {
@@ -128,6 +129,14 @@ public abstract partial class SharedMapSystem
         EnsureComp<GridTreeComponent>(uid);
     }
 
+    /// <summary>
+    /// Generate & reserve a map-id for a map-entity before it is actually given the component.
+    /// </summary>
+    internal MapId AllocateMapId(EntityUid ent)
+    {
+        return _reserved[ent] = TakeNextMapId();
+    }
+
     internal void AssignMapId(Entity<MapComponent> map, MapId? id = null)
     {
         if (map.Comp.MapId != MapId.Nullspace)
@@ -145,6 +154,15 @@ public abstract partial class SharedMapSystem
             }
 
             DebugTools.Assert(UsedIds.Contains(map.Comp.MapId));
+            return;
+        }
+
+        if (_reserved.TryGetValue(map.Owner, out var reserved))
+        {
+            DebugTools.AssertNull(id);
+            DebugTools.AssertEqual(Maps[reserved], map.Owner);
+            DebugTools.Assert(UsedIds.Contains(reserved));
+            map.Comp.MapId = reserved;
             return;
         }
 

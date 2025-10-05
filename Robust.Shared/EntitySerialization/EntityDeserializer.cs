@@ -93,6 +93,7 @@ public sealed class EntityDeserializer :
     public readonly LoadResult Result = new();
     public readonly Dictionary<int, string> TileMap = new();
     public readonly Dictionary<int, EntityUid> UidMap = new();
+    public readonly Dictionary<int, MapId> AllocatedMapIds = new();
     public readonly List<int> MapYamlIds = new();
     public readonly List<int> GridYamlIds = new();
     public readonly List<int> OrphanYamlIds = new();
@@ -184,6 +185,9 @@ public sealed class EntityDeserializer :
     {
         // Alloc entities, and populate the yaml uid -> EntityUid maps
         AllocateEntities();
+
+        // Assign a map id to each map entity. This is required to de-serialize map coordinates & map ids
+        AllocateMapIds();
 
         // Load the prototype data onto entities, e.g. transform parents, etc.
         LoadEntities();
@@ -520,6 +524,18 @@ public sealed class EntityDeserializer :
         _log.Debug($"Allocated {Entities.Count} entities in {_stopwatch.Elapsed}");
     }
 
+    private void AllocateMapIds()
+    {
+        if (Result.Version < 7)
+            return; // MapYamlIds is not populated untill later in older versions
+
+        foreach (var yamlMapId in MapYamlIds)
+        {
+            var mapUid = UidMap[yamlMapId];
+            AllocatedMapIds[yamlMapId] = _map.AllocateMapId(mapUid);
+        }
+    }
+
     private void ReadMapsAndGrids()
     {
         if (Result.Version < 7)
@@ -689,6 +705,7 @@ public sealed class EntityDeserializer :
             {
                 Result.Maps.Add((uid, map));
                 EntMan.EnsureComponent<LoadedMapComponent>(uid);
+                DebugTools.AssertEqual(AllocatedMapIds.GetValueOrDefault(yamlId), map.MapId);
             }
             else
                 _log.Error($"Missing map entity: {EntMan.ToPrettyString(uid)}. YamlId: {yamlId}");

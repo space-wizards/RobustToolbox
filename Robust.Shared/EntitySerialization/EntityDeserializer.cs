@@ -233,7 +233,7 @@ public sealed class EntityDeserializer :
 
         foreach (var yamlId in MapYamlIds)
         {
-            if (AllocatedMapIds.TryGetValue(yamlId, out var alloc))
+            if (AllocatedMapIds.TryGetValue(yamlId, out var alloc) && EntMan.EntityExists(UidMap[yamlId]))
                 DebugTools.AssertEqual(_map.GetMap(alloc), UidMap[yamlId]);
         }
     }

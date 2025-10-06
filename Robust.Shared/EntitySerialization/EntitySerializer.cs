@@ -38,7 +38,8 @@ namespace Robust.Shared.EntitySerialization;
 /// </remarks>
 public sealed class EntitySerializer : ISerializationContext,
     ITypeSerializer<EntityUid, ValueDataNode>,
-    ITypeSerializer<NetEntity, ValueDataNode>
+    ITypeSerializer<NetEntity, ValueDataNode>,
+    ITypeSerializer<MapId, ValueDataNode>
 {
     public const int MapFormatVersion = 7;
     // v6->v7: PR #5572 - Added more metadata, List maps/grids/orphans, include some life-stage information
@@ -56,11 +57,11 @@ public sealed class EntitySerializer : ISerializationContext,
     [Dependency] private readonly ITileDefinitionManager _tileDef = default!;
     [Dependency] private readonly IConfigurationManager _conf = default!;
     [Dependency] private readonly ILogManager _logMan = default!;
+    [Dependency] private readonly SharedMapSystem _map = default!;
 
     private readonly ISawmill _log;
     public readonly Dictionary<EntityUid, int> YamlUidMap = new();
     public readonly HashSet<int> YamlIds = new();
-
 
     public string? CurrentComponent { get; private set; }
     public Entity<MetaDataComponent>? CurrentEntity { get; private set; }
@@ -939,7 +940,6 @@ public sealed class EntitySerializer : ISerializationContext,
         if (YamlUidMap.TryGetValue(value, out var yamlId))
             return new ValueDataNode(yamlId.ToString(CultureInfo.InvariantCulture));
 
-
         if (CurrentComponent == _xformName)
         {
             if (value == EntityUid.Invalid)
@@ -1050,6 +1050,42 @@ public sealed class EntitySerializer : ISerializationContext,
     {
         var uid = EntMan.GetEntity(value);
         return serializationManager.WriteValue(uid, alwaysWrite, context);
+    }
+
+    ValidationNode ITypeValidator<MapId, ValueDataNode>.Validate(
+        ISerializationManager seri,
+        ValueDataNode node,
+        IDependencyCollection deps,
+        ISerializationContext? context)
+    {
+        return seri.ValidateNode<EntityUid>(node, context);
+    }
+
+    MapId ITypeReader<MapId, ValueDataNode>.Read(
+        ISerializationManager seri,
+        ValueDataNode node,
+        IDependencyCollection deps,
+        SerializationHookContext hookCtx,
+        ISerializationContext? ctx,
+        ISerializationManager.InstantiationDelegate<MapId>? instanceProvider)
+    {
+        return EntMan.TryGetComponent(seri.Read<EntityUid>(node, ctx), out MapComponent? mapComp)
+            ? mapComp.MapId
+            : MapId.Nullspace;
+    }
+
+    DataNode ITypeWriter<MapId>.Write(
+        ISerializationManager seri,
+        MapId value,
+        IDependencyCollection deps,
+        bool alwaysWrite,
+        ISerializationContext? ctx)
+    {
+        if (_map.TryGetMap(value, out var uid))
+            return seri.WriteValue(uid, alwaysWrite, ctx);
+
+        _log.Error($"Attempted to serialize invalid map id {value} while serializing component '{CurrentComponent}' on entity '{EntMan.ToPrettyString(uid)}'");
+        return new ValueDataNode("invalid");
     }
 
     #endregion

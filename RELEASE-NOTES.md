@@ -41,6 +41,7 @@ END TEMPLATE-->
 
 * Sandbox:
   * Added `System.DateOnly` and `System.TimeOnly`.
+* `MapId`, `MapCoordinates`, and `EntityCoordinates` are now yaml serialisable
 
 ### Bugfixes
 

@@ -1081,7 +1081,11 @@ public sealed class EntitySerializer : ISerializationContext,
         bool alwaysWrite,
         ISerializationContext? ctx)
     {
-        return seri.WriteValue(_map.GetMap(value), alwaysWrite, ctx);
+        if (_map.TryGetMap(value, out var uid))
+            return seri.WriteValue(uid, alwaysWrite, ctx);
+
+        _log.Error($"Attempted to serialize invalid map id {value} while serializing component '{CurrentComponent}' on entity '{EntMan.ToPrettyString(uid)}'");
+        return new ValueDataNode("invalid");
     }
 
     #endregion

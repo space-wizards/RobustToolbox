@@ -1286,7 +1286,7 @@ public sealed class EntityDeserializer :
         bool alwaysWrite,
         ISerializationContext? ctx)
     {
-        return seri.WriteValue(_map.GetMap(value), alwaysWrite, ctx);
+        return seri.WriteValue(_map.GetMapOrInvalid(value), alwaysWrite, ctx);
     }
 
     #endregion

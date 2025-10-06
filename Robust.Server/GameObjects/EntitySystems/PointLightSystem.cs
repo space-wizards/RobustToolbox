@@ -9,7 +9,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Server.GameObjects;
 
-    public sealed class PointLightSystem : SharedPointLightSystem
+public sealed class PointLightSystem : SharedPointLightSystem
 {
     [Dependency] private readonly MetaDataSystem _metadata = default!;
     [Dependency] private readonly LightTreeSystem _lightTree = default!;
@@ -44,7 +44,7 @@ namespace Robust.Server.GameObjects;
 
     private bool IsHighPriority(SharedPointLightComponent comp)
     {
-        return comp is {Enabled: true, CastShadows: true, Radius: > 7, LifeStage: <= ComponentLifeStage.Running};
+        return comp is { Enabled: true, CastShadows: true, Radius: > 7, LifeStage: <= ComponentLifeStage.Running };
     }
 
     private void OnInserted(EntityUid uid, PointLightComponent component, EntGotInsertedIntoContainerMessage args)

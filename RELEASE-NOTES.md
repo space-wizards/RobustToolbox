@@ -46,6 +46,7 @@ END TEMPLATE-->
 ### Bugfixes
 
 * Fixed yaml hot reloading throwing invalid path exceptions.
+* The `EntityManager.CreateEntityUninitialized` overload that uses MapCoordinates now actually attaches entities to a grid if one is present at those coordinates, as was stated in it's documentation.
 
 ### Other
 

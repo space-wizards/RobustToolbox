@@ -174,9 +174,6 @@ internal sealed unsafe partial class RhiWebGpu : RhiBase
         requiredLimits.minStorageBufferOffsetAlignment = 256;
         requiredLimits.minUniformBufferOffsetAlignment = 256;
 
-        requiredLimits.maxTextureDimension1D = 8192;
-        requiredLimits.maxTextureDimension2D = 8192;
-        requiredLimits.maxTextureDimension3D = 2048;
         requiredLimits.maxTextureArrayLayers = 256;
         requiredLimits.maxBindGroups = 4;
         requiredLimits.maxBindingsPerBindGroup = 1000;
@@ -196,6 +193,10 @@ internal sealed unsafe partial class RhiWebGpu : RhiBase
         // Custom limits
         // Take as low UBO alignment as we can get.
         requiredLimits.minUniformBufferOffsetAlignment = adapterLimits.minUniformBufferOffsetAlignment;
+        // Take as large textures as we can get.
+        requiredLimits.maxTextureDimension1D = adapterLimits.maxTextureDimension1D;
+        requiredLimits.maxTextureDimension2D = adapterLimits.maxTextureDimension2D;
+        requiredLimits.maxTextureDimension3D = adapterLimits.maxTextureDimension3D;
 
         // TODO: clear this.
         var errorGCHandle = GCHandle.Alloc(this);

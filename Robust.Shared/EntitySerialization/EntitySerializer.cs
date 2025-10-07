@@ -275,6 +275,7 @@ public sealed class EntitySerializer : ISerializationContext,
             var ents = new HashSet<EntityUid>();
             RecursivelyIncludeChildren(root, ents);
             entities.Add((root, ents));
+            allEntities.UnionWith(ents);
         }
 
         ReserveYamlIds(allEntities);

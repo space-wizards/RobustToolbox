@@ -36,6 +36,7 @@
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />
     <ProjectReference Include="..\NetSerializer\NetSerializer\NetSerializer.csproj" />
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
+    <ProjectReference Include="..\Robust.Shared.Utility\Robust.Shared.Utility.csproj" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Utility\TypeAbbreviations.yaml">

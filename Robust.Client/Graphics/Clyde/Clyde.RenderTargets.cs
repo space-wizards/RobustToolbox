@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Graphics;
 using Robust.Shared.Map;
-using Robust.Client.Graphics.Clyde.Rhi;
+using Robust.Client.Graphics.Rhi;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp.PixelFormats;
@@ -108,7 +108,7 @@ namespace Robust.Client.Graphics.Clyde
                 TextureHandle = textureObject.TextureId,
                 ColorFormat = format.ColorFormat,
                 DepthStencilTexture = depthStencilTexture,
-                DepthSencilTextureView = depthStencilTextureView
+                DepthSencilTextureView = depthStencilTextureView,
                 MemoryPressure = pressure,
                 SampleParameters = sampleParameters,
                 Instance = new WeakReference<RenderTargetBase>(renderTarget),

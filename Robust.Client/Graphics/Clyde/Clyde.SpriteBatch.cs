@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using Robust.Client.Graphics.Clyde.Rhi;
+using Robust.Client.Graphics.Rhi;
 using Robust.Shared.Collections;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using RhiBase = Robust.Client.Graphics.Rhi.RhiBase;
 using RVector2 = Robust.Shared.Maths.Vector2;
 using RVector4 = Robust.Shared.Maths.Vector4;
 using SVector2 = System.Numerics.Vector2;

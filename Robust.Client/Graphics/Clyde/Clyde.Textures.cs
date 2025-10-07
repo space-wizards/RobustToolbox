@@ -6,7 +6,7 @@ using System.Data;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
-using Robust.Client.Graphics.Clyde.Rhi;
+using Robust.Client.Graphics.Rhi;
 using Robust.Client.Utility;
 using Robust.Shared.Graphics;
 using Robust.Shared.IoC;

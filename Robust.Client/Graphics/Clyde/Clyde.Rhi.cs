@@ -1,7 +1,9 @@
 using System;
-using Robust.Client.Graphics.Clyde.Rhi;
+using Robust.Client.Graphics.Rhi;
+using Robust.Client.Graphics.Rhi.WebGpu;
 using Robust.Shared;
 using Robust.Shared.Utility;
+using RhiBase = Robust.Client.Graphics.Rhi.RhiBase;
 
 namespace Robust.Client.Graphics.Clyde;
 
@@ -19,11 +21,15 @@ internal sealed partial class Clyde
 
         Rhi = graphicsApi switch
         {
-            "webGpu" => new RhiWebGpu(this, _deps),
+            "webGpu" => new RhiWebGpu(_deps),
             _ => throw new Exception($"Unknown RHI: {graphicsApi}")
         };
 
-        Rhi.Init();
+        Rhi.Init(new RhiBase.RhiInitParams
+        {
+            Backends = _cfg.GetCVar(CVars.DisplayWgpuBackends),
+            PowerPreference = (RhiPowerPreference)_cfg.GetCVar(CVars.DisplayGpuPowerPreference)
+        });
     }
 
     private void AcquireSwapchainTextures()

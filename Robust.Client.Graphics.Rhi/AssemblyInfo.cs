@@ -1,5 +1,4 @@
 ﻿using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Robust.Client")]
-[assembly: InternalsVisibleTo("Robust.Client.Graphics.Rhi")]
 [module: SkipLocalsInit]

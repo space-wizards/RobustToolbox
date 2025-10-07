@@ -2,4 +2,5 @@
 
 [assembly: InternalsVisibleTo("Robust.Client")]
 [assembly: InternalsVisibleTo("Robust.Client.Graphics.Rhi")]
-[module: SkipLocalsInit]
+[assembly: InternalsVisibleTo("Robust.Server")]
+[assembly: InternalsVisibleTo("Robust.Shared")]

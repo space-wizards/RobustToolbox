@@ -6,11 +6,11 @@ using System.Numerics;
 using System.Threading.Tasks;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics;
-using Robust.Client.Graphics.Clyde.Rhi;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Color = Robust.Shared.Maths.Color;
+using RhiBase = Robust.Client.Graphics.Rhi.RhiBase;
 
 namespace Robust.Client.Graphics
 {

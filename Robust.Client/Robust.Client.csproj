@@ -13,8 +13,6 @@
     <PackageReference Include="DiscordRichPresence" PrivateAssets="compile" />
     <PackageReference Include="JetBrains.Annotations" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Data.Sqlite.Core" PrivateAssets="compile" />
-    <PackageReference Include="Silk.NET.WebGPU" PrivateAssets="compile" />
-    <PackageReference Include="Silk.NET.WebGPU.Extensions.WGPU" PrivateAssets="compile" />
     <PackageReference Include="SQLitePCLRaw.provider.sqlite3" Condition="'$(UseSystemSqlite)' == 'True'" PrivateAssets="compile" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Condition="'$(UseSystemSqlite)' != 'True'" PrivateAssets="compile" />
     <PackageReference Include="SpaceWizards.NFluidsynth" PrivateAssets="compile" />
@@ -44,6 +42,7 @@
     <ProjectReference Include="..\Avalonia.Base\Avalonia.Base.csproj" />
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />
     <ProjectReference Include="..\Robust.Client.Interop.RobustNative\Robust.Client.Interop.RobustNative.csproj" />
+    <ProjectReference Include="..\Robust.Client.Graphics.Rhi\Robust.Client.Graphics.Rhi.csproj" />
     <ProjectReference Include="..\Robust.LoaderApi\Robust.LoaderApi\Robust.LoaderApi.csproj" />
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
     <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />

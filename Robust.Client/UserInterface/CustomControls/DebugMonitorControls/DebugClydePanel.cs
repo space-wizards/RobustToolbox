@@ -45,9 +45,9 @@ namespace Robust.Client.UserInterface.CustomControls.DebugMonitorControls
             var stats = _clydeInternal.DebugStats;
 
             _textBuilder.AppendLine($@"RHI: {rhi.Description}
-Adapter: {rhi.AdapterProperties.Name}
-Vendor: {rhi.AdapterProperties.VendorName} ({rhi.AdapterProperties.VendorID})
-Driver: {rhi.AdapterProperties.Driver}");
+Adapter: {rhi.AdapterInfo.Name}
+Vendor: {rhi.AdapterInfo.VendorName} ({rhi.AdapterInfo.VendorID})
+Driver: {rhi.AdapterInfo.Driver}");
 
             _textBuilder.Append($"Windowing: {info.WindowingApi}\n");
 

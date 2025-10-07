@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\MSBuild\Robust.Engine.props" />
+  
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Robust.Shared</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <SkipRobustSerializationGenerator>true</SkipRobustSerializationGenerator>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" PrivateAssets="All" />
+    <PackageReference Include="Serilog" />
+  </ItemGroup>
+  
+  <Import Project="..\MSBuild\Robust.Properties.targets" />
+</Project>

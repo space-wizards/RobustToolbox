@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Robust.Client.Graphics.Clyde.Rhi;
+using Robust.Client.Graphics.Rhi;
 using Robust.Shared.Collections;
 using Robust.Shared.Exceptions;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using RhiBase = Robust.Client.Graphics.Rhi.RhiBase;
 
 namespace Robust.Client.Graphics.Clyde;
 

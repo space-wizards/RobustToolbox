@@ -2,7 +2,7 @@ using System;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using Robust.Client.GameObjects;
-using Robust.Client.Graphics.Clyde.Rhi;
+using Robust.Client.Graphics.Rhi;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Vector2 = Robust.Shared.Maths.Vector2;

@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Threading;
 using Robust.Client.GameObjects;
-using Robust.Client.Graphics.Clyde.Rhi;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared;

@@ -5,7 +5,6 @@ using System.Numerics;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
-using Robust.Client.Graphics.Clyde.Rhi;
 using Robust.Client.Input;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
@@ -18,6 +17,7 @@ using Robust.Shared.Timing;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Color = Robust.Shared.Maths.Color;
+using RhiBase = Robust.Client.Graphics.Rhi.RhiBase;
 
 namespace Robust.Client.Graphics.Clyde
 {

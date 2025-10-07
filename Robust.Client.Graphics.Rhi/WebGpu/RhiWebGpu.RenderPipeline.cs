@@ -80,7 +80,9 @@ internal sealed unsafe partial class RhiWebGpu
             {
                 ref var bufferLayout = ref pipelineDesc.vertex.buffers[i];
                 bufferLayout.arrayStride = buffers[i].ArrayStride;
-                bufferLayout.stepMode = (WGPUVertexStepMode)buffers[i].StepMode;
+                bufferLayout.stepMode = buffers[i].StepMode == RhiVertexStepMode.Instance
+                    ? WGPUVertexStepMode.WGPUVertexStepMode_Instance
+                    : WGPUVertexStepMode.WGPUVertexStepMode_Vertex;
 
                 var attributes = buffers[i].Attributes;
                 bufferLayout.attributeCount = (uint)attributes.Length;

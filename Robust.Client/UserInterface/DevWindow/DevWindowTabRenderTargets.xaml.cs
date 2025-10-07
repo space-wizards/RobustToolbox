@@ -112,14 +112,14 @@ internal sealed partial class DevWindowTabRenderTargets : Control
 
             if (loaded.Name != null)
                 AddColumnText(loaded.Name);
-            else if (loaded.WindowId != WindowId.Invalid)
-                AddColumnText(loaded.WindowId.ToString());
+            else if (loaded.Window != null)
+                AddColumnText(loaded.Window.Id.ToString());
             else
                 AddColumnText(_loc.GetString("dev-window-tab-render-targets-value-null"));
 
             AddColumnText(loaded.Size.ToString());
             var type = loaded.ColorFormat.ToString();
-            if (loaded.DepthStencilHandle != default)
+            if (loaded.DepthStencilTexture != null)
                 type += "+DS";
             AddColumnText(type);
             AddColumnText(ByteHelpers.FormatBytes(loaded.MemoryPressure));

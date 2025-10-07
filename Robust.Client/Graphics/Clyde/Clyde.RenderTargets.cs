@@ -22,7 +22,7 @@ namespace Robust.Client.Graphics.Clyde
 
         public IRenderTexture CreateLightRenderTarget(Vector2i size, string? name = null, bool depthStencil = true)
         {
-            var lightMapColorFormat = _hasGLFloatFramebuffers
+            var lightMapColorFormat = true // _hasGLFloatFramebuffers
                 ? RTCF.R11FG11FB10F
                 : RTCF.Rgba8;
             var lightMapSampleParameters = new TextureSampleParameters { Filter = true };
@@ -109,13 +109,12 @@ namespace Robust.Client.Graphics.Clyde
                 ColorFormat = format.ColorFormat,
                 DepthStencilTexture = depthStencilTexture,
                 DepthSencilTextureView = depthStencilTextureView,
-                MemoryPressure = pressure,
+                MemoryPressure = 0, // pressure,
                 SampleParameters = sampleParameters,
                 Instance = new WeakReference<RenderTargetBase>(renderTarget),
                 Name = name,
             };
 
-            var renderTarget = new RenderTexture(size, textureObject, this, handle);
             _renderTargets.Add(handle, data);
             return renderTarget;
         }
@@ -171,6 +170,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             public bool IsWindow;
             public WindowReg? Window;
+            public string? Name;
 
             public Vector2i Size;
             public bool IsSrgb;
@@ -186,6 +186,11 @@ namespace Robust.Client.Graphics.Clyde
             // Depth/stencil attachment.
             public RhiTexture? DepthStencilTexture;
             public RhiTextureView? DepthSencilTextureView;
+
+            public TextureSampleParameters? SampleParameters;
+            public required WeakReference<RenderTargetBase> Instance;
+
+            public long MemoryPressure;
         }
 
         internal abstract class RenderTargetBase : IRenderTarget

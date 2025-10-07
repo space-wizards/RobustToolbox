@@ -30,7 +30,7 @@ public abstract partial class RhiBase
     /// </summary>
     internal abstract void WindowRecreateSwapchain(RhiWebGpu.WindowData reg, Vector2i size);
 
-    internal abstract RhiTexture CreateTextureViewForWindow(RhiWebGpu.WindowData reg);
+    internal abstract RhiTexture GetSurfaceTextureForWindow(RhiWebGpu.WindowData reg);
     internal abstract void WindowPresent(RhiWebGpu.WindowData reg);
 
     //

@@ -19,6 +19,8 @@ using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
+
 namespace Robust.Client.Graphics.Clyde
 {
     /// <summary>
@@ -26,7 +28,6 @@ namespace Robust.Client.Graphics.Clyde
     /// </summary>
     internal sealed partial class Clyde : IClydeInternal, IPostInjectInit, IEntityEventSubscriber
     {
-        [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IClydeTileDefinitionManager _tileDefinitionManager = default!;
         [Dependency] private readonly ILightManager _lightManager = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
@@ -56,6 +57,9 @@ namespace Robust.Client.Graphics.Clyde
 
         private Thread? _gameThread;
 
+        private ISawmill _sawmillWin = default!;
+        private ISawmill _clydeSawmill = default!;
+
         private bool _threadWindowApi;
 
         public Clyde()
@@ -76,7 +80,7 @@ namespace Robust.Client.Graphics.Clyde
             _proto.PrototypesReloaded += OnProtoReload;
 
 
-            _cfg.OnValueChanged(CVars.DisplayVSync, VSyncChanged, true);
+            _cfg.OnValueChanged(CVars.DisplayVSync, b => VsyncEnabled = b, true);
             _cfg.OnValueChanged(CVars.DisplayWindowMode, WindowModeChanged, true);
             /*
             _cfg.OnValueChanged(CVars.LightResolutionScale, LightResolutionScaleChanged, true);
@@ -189,9 +193,9 @@ namespace Robust.Client.Graphics.Clyde
 
         public void RegisterGridEcsEvents()
         {
-            _entityManager.EventBus.SubscribeEvent<TileChangedEvent>(EventSource.Local, this, _updateTileMapOnUpdate);
-            _entityManager.EventBus.SubscribeEvent<GridStartupEvent>(EventSource.Local, this, _updateOnGridCreated);
-            _entityManager.EventBus.SubscribeEvent<GridRemovalEvent>(EventSource.Local, this, _updateOnGridRemoved);
+            // _entityManager.EventBus.SubscribeEvent<TileChangedEvent>(EventSource.Local, this, _updateTileMapOnUpdate);
+            // _entityManager.EventBus.SubscribeEvent<GridStartupEvent>(EventSource.Local, this, _updateOnGridCreated);
+            // _entityManager.EventBus.SubscribeEvent<GridRemovalEvent>(EventSource.Local, this, _updateOnGridRemoved);
         }
 
         public void ShutdownGridEcsEvents()

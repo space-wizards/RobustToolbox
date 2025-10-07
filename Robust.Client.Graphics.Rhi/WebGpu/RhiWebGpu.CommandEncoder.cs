@@ -49,6 +49,7 @@ internal sealed unsafe partial class RhiWebGpu
             pAttachment->clearValue = WgpuColor(attachment.ClearValue);
             pAttachment->loadOp = (WGPULoadOp)attachment.LoadOp;
             pAttachment->storeOp = (WGPUStoreOp)attachment.StoreOp;
+            pAttachment->depthSlice = WGPU_DEPTH_SLICE_UNDEFINED;
         }
 
         if (descriptor.DepthStencilAttachment is { } depthStencilAttachment)

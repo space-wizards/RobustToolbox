@@ -89,10 +89,11 @@ internal sealed unsafe partial class RhiWebGpu
         var swapChainDesc = new WGPUSurfaceConfiguration
         {
             format = format,
-            height = (uint)size.X,
-            width = (uint)size.Y,
+            width = (uint)size.X,
+            height = (uint)size.Y,
             usage = WGPUTextureUsage_RenderAttachment,
-            presentMode = WGPUPresentMode.WGPUPresentMode_Fifo
+            presentMode = WGPUPresentMode.WGPUPresentMode_Fifo,
+            device = _wgpuDevice
         };
 
         wgpuSurfaceConfigure(window.Surface, &swapChainDesc);

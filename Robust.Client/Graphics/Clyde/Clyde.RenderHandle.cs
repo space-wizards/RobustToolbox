@@ -5,7 +5,6 @@ using Robust.Client.GameObjects;
 using Robust.Client.Graphics.Rhi;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
-using Vector2 = Robust.Shared.Maths.Vector2;
 using Robust.Shared.Graphics;
 
 namespace Robust.Client.Graphics.Clyde
@@ -38,13 +37,12 @@ namespace Robust.Client.Graphics.Clyde
 
             public void SetModelTransform(in Matrix3x2 matrix)
             {
-                matrix.Transpose(out var transposed);
-                _spriteBatch.SetModelTransform((Matrix3x2)transposed);
+                _spriteBatch.SetModelTransform(matrix);
             }
 
             public Matrix3x2 GetModelTransform()
             {
-                return _clyde.DrawGetModelTransform();
+                return _spriteBatch.GetModelTransform();
             }
 
             public void SetProjView(in Matrix3x2 proj, in Matrix3x2 view)
@@ -145,7 +143,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 if (loaded.IsWindow)
                 {
-                    targetTexture = loaded.Window!.CurSwapchainView!;
+                    targetTexture = loaded.Window!.CurSurfaceTextureView!;
                     targetSize = loaded.Window!.FramebufferSize;
                 }
                 else
@@ -284,9 +282,10 @@ namespace Robust.Client.Graphics.Clyde
 
             public ShaderInstance? GetShader()
             {
-                return _clyde._queuedShaderInstance == _clyde._defaultShader
-                    ? null
-                    : _clyde._queuedShaderInstance;
+                throw new NotImplementedException();
+                // return _clyde._queuedShaderInstance == _clyde._defaultShader
+                //     ? null
+                //     : _clyde._queuedShaderInstance;
             }
 
             public void Viewport(Box2i viewport)

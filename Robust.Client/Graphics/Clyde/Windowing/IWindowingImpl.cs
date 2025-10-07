@@ -41,12 +41,6 @@ namespace Robust.Client.Graphics.Clyde
             void WindowSetSize(WindowReg window, Vector2i size);
             void WindowSetVisible(WindowReg window, bool visible);
             void WindowRequestAttention(WindowReg window);
-            void WindowSwapBuffers(WindowReg window);
-            uint? WindowGetX11Id(WindowReg window);
-            nint? WindowGetX11Display(WindowReg window);
-            nint? WindowGetMetalLayer(WindowReg window);
-            HWND WindowGetWin32Window(WindowReg window);
-            HINSTANCE WindowGetWin32Instance(WindowReg window);
 
             // Keyboard
             string? KeyGetName(Keyboard.Key key);

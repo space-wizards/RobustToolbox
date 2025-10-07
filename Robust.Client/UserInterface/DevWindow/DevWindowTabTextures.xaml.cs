@@ -92,7 +92,7 @@ internal sealed partial class DevWindowTabTextures : Control
         SelectedTextureInfo.Text = _loc.GetString("dev-window-tab-textures-info",
             ("width", loaded.Width),
             ("height", loaded.Height),
-            ("pixelType", loaded.TexturePixelType),
+            ("pixelType", loaded.Format),
             ("srgb", loaded.IsSrgb),
             ("name", loaded.Name ?? ""),
             ("bytes", ByteHelpers.FormatBytes(loaded.MemoryPressure)));

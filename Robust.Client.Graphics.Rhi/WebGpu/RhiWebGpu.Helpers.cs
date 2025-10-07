@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -85,12 +86,18 @@ internal sealed unsafe partial class RhiWebGpu
         return format;
     }
 
-    private static RhiTextureDimension ValidateTextureDimension(RhiTextureDimension dimension)
+    private static WGPUTextureDimension ValidateTextureDimension(RhiTextureDimension dimension)
     {
         if (dimension > RhiTextureDimension.Dim3D)
             throw new ArgumentException($"Invalid {nameof(RhiTextureDimension)}");
 
-        return dimension;
+        return dimension switch
+        {
+            RhiTextureDimension.Dim1D => WGPUTextureDimension.WGPUTextureDimension_1D,
+            RhiTextureDimension.Dim2D => WGPUTextureDimension.WGPUTextureDimension_2D,
+            RhiTextureDimension.Dim3D => WGPUTextureDimension.WGPUTextureDimension_3D,
+            _ => throw new UnreachableException()
+        };
     }
 
     private static RhiTextureUsage ValidateTextureUsage(RhiTextureUsage usage)

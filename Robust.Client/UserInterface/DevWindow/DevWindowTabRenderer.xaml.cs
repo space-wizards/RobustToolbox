@@ -32,9 +32,9 @@ public sealed partial class DevWindowTabRenderer : Control
 
         var adapter = rhi.AdapterInfo;
 
-        Add("Adapter name", adapter.Name);
-        Add("Adapter vendor", $"{adapter.VendorName} ({adapter.VendorID})");
-        Add("Adapter driver", $"{adapter.Driver}");
+        Add("Adapter name", adapter.Device);
+        Add("Adapter vendor", $"{adapter.Vendor} ({adapter.VendorID})");
+        Add("Adapter driver", $"{adapter.Description}");
         Add("Adapter architecture", $"{adapter.Architecture}");
         Add("Adapter backend", $"{adapter.BackendType}");
         Add("Adapter type", $"{adapter.AdapterType}");
@@ -70,7 +70,6 @@ public sealed partial class DevWindowTabRenderer : Control
         Add("MaxBufferSize",                             limits.MaxBufferSize);
         Add("MaxVertexAttributes",                       limits.MaxVertexAttributes);
         Add("MaxVertexBufferArrayStride",                limits.MaxVertexBufferArrayStride);
-        Add("MaxInterStageShaderComponents",             limits.MaxInterStageShaderComponents);
         Add("MaxInterStageShaderVariables",              limits.MaxInterStageShaderVariables);
         Add("MaxColorAttachments",                       limits.MaxColorAttachments);
         Add("MaxColorAttachmentBytesPerSample",          limits.MaxColorAttachmentBytesPerSample);

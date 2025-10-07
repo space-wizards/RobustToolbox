@@ -69,6 +69,5 @@ namespace Robust.Client.Graphics
 
     public interface IClydeWindowInternal : IClydeWindow
     {
-        nint? WindowsHWnd { get; }
     }
 }

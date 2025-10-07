@@ -111,10 +111,7 @@ namespace Robust.Client.Graphics.Clyde
             if (!reg.IsVisible) // Only send this for open windows
                 return;
 
-            // var loaded = RtToLoaded(reg.RenderTarget);
-            // loaded.Size = reg.FramebufferSize;
-
-            Rhi.WindowRecreateSwapchain(reg);
+            reg.NeedSurfaceReconfigure = true;
 
             var eventArgs = new WindowResizedEventArgs(
                 oldSize,

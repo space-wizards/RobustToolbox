@@ -63,9 +63,6 @@ namespace Robust.Client.Graphics
 
         void Shutdown();
 
-        /// <returns>Null if not running on X11.</returns>
-        uint? GetX11WindowId();
-
         void RegisterGridEcsEvents();
 
         void ShutdownGridEcsEvents();

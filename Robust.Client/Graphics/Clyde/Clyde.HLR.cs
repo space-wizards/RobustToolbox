@@ -50,7 +50,7 @@ namespace Robust.Client.Graphics.Clyde
             if (string.IsNullOrEmpty(splashTex))
                 return;
 
-            var backbuffer = _mainWindow!.CurSwapchainView!;
+            var backbuffer = _mainWindow!.CurSurfaceTextureView!;
 
             var size = _mainWindow!.FramebufferSize;
 
@@ -182,7 +182,7 @@ namespace Robust.Client.Graphics.Clyde
 
         public void RenderNow(IRenderTarget renderTarget, Action<IRenderHandle> callback)
         {
-            ClearRenderState();
+            // ClearRenderState();
 
             _renderHandle.RenderInRenderTarget(
                 renderTarget,

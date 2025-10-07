@@ -159,6 +159,7 @@ namespace Robust.Client.Graphics.Clyde
                 Height = height,
                 Format = format,
                 Name = name,
+                TextureInstance = new WeakReference<ClydeTexture>(instance),
             };
 
             _loadedTextures.Add(id, loaded);
@@ -609,6 +610,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public int Width;
             public int Height;
+            public long MemoryPressure;
             public RhiTextureFormat Format;
             public string? Name;
 

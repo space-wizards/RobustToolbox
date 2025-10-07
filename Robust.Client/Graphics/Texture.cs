@@ -64,8 +64,6 @@ public abstract class Texture : IRsiStateLike
         return this;
     }
 
-    public abstract Color GetPixel(int x, int y);
-
     public static Texture Transparent =>
                 IoCManager.Resolve<IClydeInternal>().GetStockTexture(ClydeStockTexture.Transparent);
 

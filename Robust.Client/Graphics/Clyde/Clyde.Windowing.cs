@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Robust.Client.Graphics.Rhi;
@@ -10,7 +9,6 @@ using Robust.Client.Graphics.Rhi.WebGpu;
 using Robust.Client.Input;
 using Robust.Client.UserInterface;
 using Robust.Shared;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -77,11 +75,6 @@ namespace Robust.Client.Graphics.Clyde
 
                 return new ScreenCoordinates(window.LastMousePos, window.Id);
             }
-        }
-
-        public uint? GetX11WindowId()
-        {
-            return _windowing?.WindowGetX11Id(_mainWindow!) ?? null;
         }
 
         private bool InitWindowing()
@@ -288,7 +281,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     Size = reg.FramebufferSize,
                     IsWindow = true,
-                    WindowId = reg.Id,
+                    Window = reg,
                     IsSrgb = true,
                     Instance = new WeakReference<RenderTargetBase>(renderTarget),
                 });
@@ -296,7 +289,7 @@ namespace Robust.Client.Graphics.Clyde
                 reg.RenderTarget = renderTarget;
 
                 if (!isMain)
-                    Rhi.WindowCreated(reg);
+                    Rhi.WindowCreated(in reg.SurfaceParams, reg.FramebufferSize);
             }
 
             // Pass through result whether successful or not, caller handles it.
@@ -315,7 +308,7 @@ namespace Robust.Client.Graphics.Clyde
 
             reg.IsDisposed = true;
 
-            Rhi.WindowDestroy(reg);
+            Rhi.WindowDestroy(reg.RhiWebGpuData!);
 
             _windowing!.WindowDestroy(reg);
 
@@ -424,9 +417,13 @@ namespace Robust.Client.Graphics.Clyde
             public IClydeWindow? Owner;
 
             public RhiWebGpu.WindowData? RhiWebGpuData;
-            public RhiTextureView? CurSwapchainView;
+            public RhiTexture? CurSurfaceTexture;
+            public RhiTextureView? CurSurfaceTextureView;
 
             public bool DisposeOnClose;
+
+            public bool NeedSurfaceReconfigure;
+            public RhiBase.RhiWindowSurfaceParams SurfaceParams;
 
             public bool IsMainWindow;
             public WindowHandle Handle = default!;
@@ -529,8 +526,6 @@ namespace Robust.Client.Graphics.Clyde
 
                 _clyde._windowing!.TextInputStop(Reg);
             }
-
-            public nint? WindowsHWnd => _clyde._windowing!.WindowGetWin32Window(Reg);
         }
 
         private sealed class MonitorHandle : IClydeMonitor

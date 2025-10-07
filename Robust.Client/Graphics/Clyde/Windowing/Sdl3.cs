@@ -112,6 +112,7 @@ internal partial class Clyde
             {
                 "windows" => SdlVideoDriver.Windows,
                 "x11" => SdlVideoDriver.X11,
+                "wayland" => SdlVideoDriver.Wayland,
                 _ => SdlVideoDriver.Other,
             };
         }
@@ -137,29 +138,6 @@ internal partial class Clyde
         public void FlushDispose()
         {
             // Not currently used
-        }
-
-        public void GLMakeContextCurrent(WindowReg? reg)
-        {
-            SDL.SDLBool res;
-            if (reg is Sdl3WindowReg sdlReg)
-                res = SDL.SDL_GL_MakeCurrent(sdlReg.Sdl3Window, sdlReg.GlContext);
-            else
-                res = SDL.SDL_GL_MakeCurrent(IntPtr.Zero, IntPtr.Zero);
-
-            if (!res)
-                _sawmill.Error("SDL_GL_MakeCurrent failed: {error}", SDL.SDL_GetError());
-        }
-
-        public void GLSwapInterval(WindowReg reg, int interval)
-        {
-            ((Sdl3WindowReg)reg).SwapInterval = interval;
-            SDL.SDL_GL_SetSwapInterval(interval);
-        }
-
-        public unsafe void* GLGetProcAddress(string procName)
-        {
-            return (void*) SDL.SDL_GL_GetProcAddress(procName);
         }
 
         public string GetDescription()
@@ -224,7 +202,8 @@ internal partial class Clyde
             // These are the ones we need to be able to check against.
             Other,
             Windows,
-            X11
+            X11,
+            Wayland
         }
     }
 }

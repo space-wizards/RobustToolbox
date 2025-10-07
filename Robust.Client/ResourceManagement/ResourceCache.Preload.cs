@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Robust.Client.Audio;
 using Robust.Client.Graphics;
 using Robust.Client.Utility;
 using Robust.Shared;
@@ -23,7 +24,6 @@ namespace Robust.Client.ResourceManagement
     internal partial class ResourceCache
     {
         [field: Dependency] public IClyde Clyde { get; } = default!;
-        [field: Dependency] public IAudioInternal ClydeAudio { get; } = default!;
         [Dependency] private readonly IResourceManager _manager = default!;
         [field: Dependency] public IFontManager FontManager { get; } = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
@@ -215,6 +215,7 @@ namespace Robust.Client.ResourceManagement
             Array.Sort(atlasList, (b, a) => a.AtlasSheet.Height.CompareTo(b.AtlasSheet.Height));
 
             var maxSize = _configurationManager.GetCVar(CVars.ResRSIAtlasSize);
+            maxSize = Math.Min((int)Clyde.Rhi.DeviceLimits.MaxTextureDimension2D, maxSize);
 
             // THIS IS NOT GUARANTEED TO HAVE ANY PARTICULARLY LOGICAL ORDERING.
             // E.G you could have atlas 1 RSIs appear *before* you're done seeing atlas 2 RSIs.

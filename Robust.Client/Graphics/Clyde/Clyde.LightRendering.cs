@@ -603,6 +603,7 @@ namespace Robust.Client.Graphics.Clyde
 
             return true;
         }
+        */
 
         private sealed class LightCapacityComparer : IComparer<(PointLightComponent light, Vector2 pos, float distanceSquared, Angle rot)>
         {
@@ -625,6 +626,8 @@ namespace Robust.Client.Graphics.Clyde
                 return x.distanceSquared.CompareTo(y.distanceSquared);
             }
         }
+
+        /*
 
         private (int count, Box2 expandedBounds) GetLightsToRender(
             MapId map,
@@ -676,6 +679,7 @@ namespace Robust.Client.Graphics.Clyde
 
             return (state.count, expandedBounds);
         }
+        */
 
         /// <inheritdoc/>
         [Pure]
@@ -684,6 +688,18 @@ namespace Robust.Client.Graphics.Clyde
             return _entityManager.GetComponentOrNull<MapLightComponent>(mapUid)?.AmbientLightColor ??
                 MapLightComponent.DefaultColor;
         }
+
+        public void BlurRenderTarget(
+            IClydeViewport viewport,
+            IRenderTarget target,
+            IRenderTarget blurBuffer,
+            IEye eye,
+            float multiplier)
+        {
+            throw new NotImplementedException();
+        }
+
+        /*
 
         /// <inheritdoc/>
         public void BlurRenderTarget(IClydeViewport viewport, IRenderTarget target, IRenderTarget blurBuffer, IEye eye, float multiplier)

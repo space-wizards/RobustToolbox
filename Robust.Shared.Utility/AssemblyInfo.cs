@@ -4,3 +4,4 @@
 [assembly: InternalsVisibleTo("Robust.Client.Graphics.Rhi")]
 [assembly: InternalsVisibleTo("Robust.Server")]
 [assembly: InternalsVisibleTo("Robust.Shared")]
+[assembly: InternalsVisibleTo("Robust.UnitTesting")]

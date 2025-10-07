@@ -7,7 +7,7 @@ struct UniformConstants {
 
 // Group 1: parameters that change infrequently in a draw pass.
 struct UniformView {
-    projViewMatrix: mat3x2f,
+    projViewMatrix: mat2x3f,
     screenPixelSize: vec2f
 }
 
@@ -35,7 +35,7 @@ struct VertexOutput {
 
 @vertex
 fn vs_main(input: VertexInput) -> VertexOutput {
-    var transformed = View.projViewMatrix * vec3(input.position, 1.0);
+    var transformed = vec3(input.position, 1.0) * View.projViewMatrix;
 
     transformed += 1.0;
     transformed /= View.screenPixelSize * 2.0;

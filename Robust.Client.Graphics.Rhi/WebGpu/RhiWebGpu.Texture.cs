@@ -10,10 +10,9 @@ internal sealed unsafe partial class RhiWebGpu
     public override RhiTexture CreateTexture(in RhiTextureDescriptor descriptor)
     {
         var format = descriptor.Format;
-        var dimension = descriptor.Dimension;
         var usage = descriptor.Usage;
         ValidateTextureFormat(format);
-        ValidateTextureDimension(dimension);
+        var dimension = ValidateTextureDimension(descriptor.Dimension);
         ValidateTextureUsage(usage);
 
         // TODO: Copy to stackalloc instead.
@@ -36,7 +35,7 @@ internal sealed unsafe partial class RhiWebGpu
             {
                 sampleCount = descriptor.SampleCount,
                 mipLevelCount = descriptor.MipLevelCount,
-                dimension = (WGPUTextureDimension) dimension,
+                dimension = dimension,
                 format = (WGPUTextureFormat) format,
                 label = new WGPUStringView
                 {
@@ -112,7 +111,7 @@ internal sealed unsafe partial class RhiWebGpu
         _textureViewRegistry.Remove(textureView.Handle);
     }
 
-    internal override RhiTexture CreateTextureViewForWindow(WindowData reg)
+    internal override RhiTexture GetSurfaceTextureForWindow(WindowData reg)
     {
         // TODO: Thread safety
 

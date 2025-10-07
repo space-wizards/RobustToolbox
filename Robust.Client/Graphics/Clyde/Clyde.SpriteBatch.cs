@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Robust.Client.Graphics.Rhi;
 using Robust.Shared.Collections;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using RhiBase = Robust.Client.Graphics.Rhi.RhiBase;
-using RVector2 = Robust.Shared.Maths.Vector2;
-using RVector4 = Robust.Shared.Maths.Vector4;
-using SVector2 = System.Numerics.Vector2;
-using SVector4 = System.Numerics.Vector4;
 
 namespace Robust.Client.Graphics.Clyde;
 
@@ -18,10 +15,10 @@ internal partial class Clyde
     // Implementation of a sprite batch on the new RHI.
     // Basically, the old rendering API.
 
-    private sealed class SpriteBatch
+    internal sealed class SpriteBatch
     {
         private const int VertexSize = 32;
-        private const int UniformPassSize = 32;
+        private const int UniformPassSize = 64;
 
         private const uint BindGroup0 = 0;
         private const uint BindGroup1 = 1;
@@ -83,7 +80,7 @@ internal partial class Clyde
 
             var uniformPoolSize = MathHelper.CeilingPowerOfTwo(
                 UniformPassSize,
-                (int)_rhi.DeviceLimits.MinUniformBufferOffsetAlignment
+                Math.Max((int)_rhi.DeviceLimits.MinUniformBufferOffsetAlignment, UniformPassSize)
             ) * 20;
 
             _uniformPassPool = new GpuExpansionBuffer(
@@ -118,7 +115,7 @@ internal partial class Clyde
                     new RhiBindGroupLayoutEntry(
                         0,
                         RhiShaderStage.Vertex | RhiShaderStage.Fragment,
-                        new RhiBufferBindingLayout(MinBindingSize: 32)
+                        new RhiBufferBindingLayout(MinBindingSize: UniformPassSize)
                     )
                 },
                 "SpriteBatch bind group 1 (view)"
@@ -216,8 +213,8 @@ internal partial class Clyde
 
             uniformPass[0] = new UniformView
             {
-                ProjViewMatrix = ShaderMat3x2F.Transpose(projView),
-                ScreenPixelSize = new SVector2(1f / size.X, 1f / size.Y)
+                ProjViewMatrix = ShaderMat2x3F.FromMatrix(projView),
+                ScreenPixelSize = new Vector2(1f / size.X, 1f / size.Y)
             };
 
             var rhiClearColor = clearColor == null ? new RhiColor(0, 0, 0, 1) : Color.FromSrgb(clearColor.Value);
@@ -279,7 +276,7 @@ internal partial class Clyde
             Clear();
         }
 
-        public void Draw(ClydeTexture texture, RVector2 position, Color color)
+        public void Draw(ClydeTexture texture, Vector2 position, Color color)
         {
             var textureHandle = texture.TextureId;
 
@@ -291,24 +288,24 @@ internal partial class Clyde
             var width = texture.Width;
             var height = texture.Height;
 
-            var bl = (SVector2)(position);
-            var br = (SVector2)(position + (width, 0));
-            var tr = (SVector2)(position + (width, height));
-            var tl = (SVector2)(position + (0, height));
+            var bl = (position);
+            var br = (position + new Vector2(width, 0));
+            var tr = (position + new Vector2(width, height));
+            var tl = (position + new Vector2(0, height));
 
-            var sBl = SVector2.Transform(bl, _modelTransform);
-            var sBr = SVector2.Transform(br, _modelTransform);
-            var sTl = SVector2.Transform(tl, _modelTransform);
-            var sTr = SVector2.Transform(tr, _modelTransform);
+            var sBl = Vector2.Transform(bl, _modelTransform);
+            var sBr = Vector2.Transform(br, _modelTransform);
+            var sTl = Vector2.Transform(tl, _modelTransform);
+            var sTr = Vector2.Transform(tr, _modelTransform);
 
-            var asColor = Unsafe.As<Color, SVector4>(ref color);
+            var asColor = Unsafe.As<Color, Vector4>(ref color);
 
-            vertices[0] = new Vertex2D(sBl, new SVector2(0, 1), asColor);
-            vertices[1] = new Vertex2D(sBr, new SVector2(1, 1), asColor);
-            vertices[2] = new Vertex2D(sTr, new SVector2(1, 0), asColor);
-            vertices[3] = new Vertex2D(sTr, new SVector2(1, 0), asColor);
-            vertices[4] = new Vertex2D(sTl, new SVector2(0, 0), asColor);
-            vertices[5] = new Vertex2D(sBl, new SVector2(0, 1), asColor);
+            vertices[0] = new Vertex2D(sBl, new Vector2(0, 1), asColor);
+            vertices[1] = new Vertex2D(sBr, new Vector2(1, 1), asColor);
+            vertices[2] = new Vertex2D(sTr, new Vector2(1, 0), asColor);
+            vertices[3] = new Vertex2D(sTr, new Vector2(1, 0), asColor);
+            vertices[4] = new Vertex2D(sTl, new Vector2(0, 0), asColor);
+            vertices[5] = new Vertex2D(sBl, new Vector2(0, 1), asColor);
 
             _vertexStartIndex += 6;
             _curBatchSize += 6;
@@ -316,7 +313,7 @@ internal partial class Clyde
 
         public void Draw(
             ClydeTexture texture,
-            RVector2 bl, RVector2 br, RVector2 tl, RVector2 tr,
+            Vector2 bl, Vector2 br, Vector2 tl, Vector2 tr,
             in Color color,
             in Box2 region)
         {
@@ -327,18 +324,18 @@ internal partial class Clyde
 
             var vertices = AllocateVertexSpace(6);
 
-            var asColor = Unsafe.As<Color, SVector4>(ref Unsafe.AsRef(color));
+            var asColor = Unsafe.As<Color, Vector4>(ref Unsafe.AsRef(color));
 
-            var sBl = SVector2.Transform((SVector2)bl, _modelTransform);
-            var sBr = SVector2.Transform((SVector2)br, _modelTransform);
-            var sTl = SVector2.Transform((SVector2)tl, _modelTransform);
-            var sTr = SVector2.Transform((SVector2)tr, _modelTransform);
+            var sBl = Vector2.Transform((Vector2)bl, _modelTransform);
+            var sBr = Vector2.Transform((Vector2)br, _modelTransform);
+            var sTl = Vector2.Transform((Vector2)tl, _modelTransform);
+            var sTr = Vector2.Transform((Vector2)tr, _modelTransform);
 
-            vertices[0] = new Vertex2D(sBl, (SVector2)region.BottomLeft, asColor);
-            vertices[1] = new Vertex2D(sBr, (SVector2)region.BottomRight, asColor);
-            vertices[2] = new Vertex2D(sTr, (SVector2)region.TopRight, asColor);
+            vertices[0] = new Vertex2D(sBl, (Vector2)region.BottomLeft, asColor);
+            vertices[1] = new Vertex2D(sBr, (Vector2)region.BottomRight, asColor);
+            vertices[2] = new Vertex2D(sTr, (Vector2)region.TopRight, asColor);
             vertices[3] = vertices[2];
-            vertices[4] = new Vertex2D(sTl, (SVector2)region.TopLeft, asColor);
+            vertices[4] = new Vertex2D(sTl, (Vector2)region.TopLeft, asColor);
             vertices[5] = vertices[0];
 
             _vertexStartIndex += 6;
@@ -515,6 +512,11 @@ internal partial class Clyde
             _modelTransform = matrix;
         }
 
+        public Matrix3x2 GetModelTransform()
+        {
+            return _modelTransform;
+        }
+
         private RhiBindGroup AllocTempBindGroup(in RhiBindGroupDescriptor descriptor)
         {
             var bindGroup = _rhi.CreateBindGroup(descriptor);
@@ -524,11 +526,11 @@ internal partial class Clyde
 
         private struct Vertex2D
         {
-            public SVector2 Position;
-            public SVector2 TexCoord;
-            public SVector4 Color;
+            public Vector2 Position;
+            public Vector2 TexCoord;
+            public Vector4 Color;
 
-            public Vertex2D(SVector2 position, SVector2 texCoord, SVector4 color)
+            public Vertex2D(Vector2 position, Vector2 texCoord, Vector4 color)
             {
                 Position = position;
                 TexCoord = texCoord;
@@ -536,10 +538,13 @@ internal partial class Clyde
             }
         }
 
+        [StructLayout(LayoutKind.Explicit)]
         private struct UniformView
         {
-            public ShaderMat3x2F ProjViewMatrix;
-            public SVector2 ScreenPixelSize;
+            [FieldOffset(0)]
+            public ShaderMat2x3F ProjViewMatrix;
+            [FieldOffset(32)]
+            public Vector2 ScreenPixelSize;
         }
 
         [Flags]

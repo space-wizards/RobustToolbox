@@ -589,37 +589,47 @@ public record struct RhiVertexAttribute(RhiVertexFormat Format, ulong Offset, ui
 
 public enum RhiVertexFormat : byte
 {
-    Undefined = 0x00000000,
-    Uint8x2 = 0x00000001,
-    Uint8x4 = 0x00000002,
-    Sint8x2 = 0x00000003,
-    Sint8x4 = 0x00000004,
-    Unorm8x2 = 0x00000005,
-    Unorm8x4 = 0x00000006,
-    Snorm8x2 = 0x00000007,
-    Snorm8x4 = 0x00000008,
-    Uint16x2 = 0x00000009,
-    Uint16x4 = 0x0000000A,
-    Sint16x2 = 0x0000000B,
-    Sint16x4 = 0x0000000C,
-    Unorm16x2 = 0x0000000D,
-    Unorm16x4 = 0x0000000E,
-    Snorm16x2 = 0x0000000F,
-    Snorm16x4 = 0x00000010,
-    Float16x2 = 0x00000011,
-    Float16x4 = 0x00000012,
-    Float32 = 0x00000013,
-    Float32x2 = 0x00000014,
-    Float32x3 = 0x00000015,
-    Float32x4 = 0x00000016,
-    Uint32 = 0x00000017,
-    Uint32x2 = 0x00000018,
-    Uint32x3 = 0x00000019,
-    Uint32x4 = 0x0000001A,
-    Sint32 = 0x0000001B,
-    Sint32x2 = 0x0000001C,
-    Sint32x3 = 0x0000001D,
-    Sint32x4 = 0x0000001E,
+    Uint8 = 0x00000001,
+    Uint8x2 = 0x00000002,
+    Uint8x4 = 0x00000003,
+    Sint8 = 0x00000004,
+    Sint8x2 = 0x00000005,
+    Sint8x4 = 0x00000006,
+    Unorm8 = 0x00000007,
+    Unorm8x2 = 0x00000008,
+    Unorm8x4 = 0x00000009,
+    Snorm8 = 0x0000000A,
+    Snorm8x2 = 0x0000000B,
+    Snorm8x4 = 0x0000000C,
+    Uint16 = 0x0000000D,
+    Uint16x2 = 0x0000000E,
+    Uint16x4 = 0x0000000F,
+    Sint16 = 0x00000010,
+    Sint16x2 = 0x00000011,
+    Sint16x4 = 0x00000012,
+    Unorm16 = 0x00000013,
+    Unorm16x2 = 0x00000014,
+    Unorm16x4 = 0x00000015,
+    Snorm16 = 0x00000016,
+    Snorm16x2 = 0x00000017,
+    Snorm16x4 = 0x00000018,
+    Float16 = 0x00000019,
+    Float16x2 = 0x0000001A,
+    Float16x4 = 0x0000001B,
+    Float32 = 0x0000001C,
+    Float32x2 = 0x0000001D,
+    Float32x3 = 0x0000001E,
+    Float32x4 = 0x0000001F,
+    Uint32 = 0x00000020,
+    Uint32x2 = 0x00000021,
+    Uint32x3 = 0x00000022,
+    Uint32x4 = 0x00000023,
+    Sint32 = 0x00000024,
+    Sint32x2 = 0x00000025,
+    Sint32x3 = 0x00000026,
+    Sint32x4 = 0x00000027,
+    Unorm10_10_10_2 = 0x00000028,
+    Unorm8x4BGRA = 0x00000029,
     Final
 }
 
@@ -638,11 +648,11 @@ public record struct RhiPrimitiveState(
 
 public enum RhiPrimitiveTopology : byte
 {
-    PointList = 0x00000000,
-    LineList = 0x00000001,
-    LineStrip = 0x00000002,
-    TriangleList = 0x00000003,
-    TriangleStrip = 0x00000004,
+    PointList = 0x00000001,
+    LineList = 0x00000002,
+    LineStrip = 0x00000003,
+    TriangleList = 0x00000004,
+    TriangleStrip = 0x00000005,
     Final
 }
 
@@ -747,29 +757,31 @@ public record struct RhiBlendComponent(
 
 public enum RhiBlendOperation : byte
 {
-    Add = 0x00000000,
-    Subtract = 0x00000001,
-    ReverseSubtract = 0x00000002,
-    Min = 0x00000003,
-    Max = 0x00000004,
+    Undefined = 0x00000000,
+    Add = 0x00000001,
+    Subtract = 0x00000002,
+    ReverseSubtract = 0x00000003,
+    Min = 0x00000004,
+    Max = 0x00000005,
     Final
 }
 
 public enum RhiBlendFactor : byte
 {
-    Zero = 0x00000000,
-    One = 0x00000001,
-    Src = 0x00000002,
-    OneMinusSrc = 0x00000003,
-    SrcAlpha = 0x00000004,
-    OneMinusSrcAlpha = 0x00000005,
-    Dst = 0x00000006,
-    OneMinusDst = 0x00000007,
-    DstAlpha = 0x00000008,
-    OneMinusDstAlpha = 0x00000009,
-    SrcAlphaSaturated = 0x0000000A,
-    Constant = 0x0000000B,
-    OneMinusConstant = 0x0000000C,
+    Undefined = 0x00000000,
+    Zero = 0x00000001,
+    One = 0x00000002,
+    Src = 0x00000003,
+    OneMinusSrc = 0x00000004,
+    SrcAlpha = 0x00000005,
+    OneMinusSrcAlpha = 0x00000006,
+    Dst = 0x00000007,
+    OneMinusDst = 0x00000008,
+    DstAlpha = 0x00000009,
+    OneMinusDstAlpha = 0x0000000A,
+    SrcAlphaSaturated = 0x0000000B,
+    Constant = 0x0000000C,
+    OneMinusConstant = 0x0000000D,
     Final
 }
 
@@ -847,23 +859,23 @@ public record struct RhiSamplerDescriptor(
 
 public enum RhiAddressMode : byte
 {
-    Repeat = 0,
-    MirrorRepeat = 1,
-    ClampToEdge = 2,
+    ClampToEdge = 1,
+    Repeat = 2,
+    MirrorRepeat = 3,
     Final
 }
 
 public enum RhiFilterMode : byte
 {
-    Nearest = 0,
-    Linear = 1,
+    Nearest = 1,
+    Linear = 2,
     Final
 }
 
 public enum RhiMipmapFilterMode : byte
 {
-    Nearest = 0,
-    Linear = 1,
+    Nearest = 1,
+    Linear = 2,
     Final
 }
 

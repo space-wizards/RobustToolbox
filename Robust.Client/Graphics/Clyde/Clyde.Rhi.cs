@@ -1,6 +1,7 @@
 using System;
 using Robust.Client.Graphics.Rhi;
 using Robust.Client.Graphics.Rhi.WebGpu;
+using Robust.Client.Interop.RobustNative.Webgpu;
 using Robust.Shared;
 using Robust.Shared.Utility;
 using RhiBase = Robust.Client.Graphics.Rhi.RhiBase;
@@ -26,10 +27,13 @@ internal sealed partial class Clyde
         };
 
         Rhi.Init(new RhiBase.RhiInitParams
-        {
-            Backends = _cfg.GetCVar(CVars.DisplayWgpuBackends),
-            PowerPreference = (RhiPowerPreference)_cfg.GetCVar(CVars.DisplayGpuPowerPreference)
-        });
+            {
+                Backends = _cfg.GetCVar(CVars.DisplayWgpuBackends),
+                PowerPreference = (RhiPowerPreference)_cfg.GetCVar(CVars.DisplayGpuPowerPreference),
+                MainWindowSize = _mainWindow!.FramebufferSize,
+                MainWindowSurfaceParams = _mainWindow.SurfaceParams
+            },
+            out _mainWindow.RhiWebGpuData);
     }
 
     private void AcquireSwapchainTextures()
@@ -41,13 +45,29 @@ internal sealed partial class Clyde
 
         foreach (var window in _windows)
         {
-            window.CurSwapchainView?.Dispose();
-            window.CurSwapchainView = Rhi.CreateTextureViewForWindow(window);
+            window.CurSurfaceTexture?.Dispose();
+            window.CurSurfaceTextureView?.Dispose();
+
+            if (window.NeedSurfaceReconfigure)
+            {
+                Rhi.WindowRecreateSwapchain(window.RhiWebGpuData!, window.FramebufferSize);
+                window.NeedSurfaceReconfigure = false;
+            }
+
+            window.CurSurfaceTexture = Rhi.GetSurfaceTextureForWindow(window.RhiWebGpuData!);
+            window.CurSurfaceTextureView = window.CurSurfaceTexture.CreateView(new RhiTextureViewDescriptor
+            {
+                Dimension = RhiTextureViewDimension.Dim2D,
+                Format = RhiTextureFormat.BGRA8UnormSrgb,
+                ArrayLayerCount = 1,
+                MipLevelCount = 1,
+                Aspect = RhiTextureAspect.All,
+            });
 
             var pass = encoder.BeginRenderPass(new RhiRenderPassDescriptor(
                 new[]
                 {
-                    new RhiRenderPassColorAttachment(window.CurSwapchainView, RhiLoadOp.Clear, RhiStoreOp.Store)
+                    new RhiRenderPassColorAttachment(window.CurSurfaceTextureView, RhiLoadOp.Clear, RhiStoreOp.Store)
                 }
             ));
 
@@ -61,13 +81,16 @@ internal sealed partial class Clyde
     {
         foreach (var window in _windows)
         {
-            if (window.CurSwapchainView == null)
+            if (window.CurSurfaceTexture == null)
                 return;
 
-            window.CurSwapchainView.Dispose();
-            window.CurSwapchainView = null;
+            window.CurSurfaceTexture.Dispose();
+            window.CurSurfaceTexture = null;
 
-            Rhi.WindowPresent(window);
+            window.CurSurfaceTextureView!.Dispose();
+            window.CurSurfaceTextureView = null;
+
+            Rhi.WindowPresent(window.RhiWebGpuData!);
         }
     }
 }

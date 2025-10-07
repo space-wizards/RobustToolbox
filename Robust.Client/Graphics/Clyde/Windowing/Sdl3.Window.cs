@@ -2,16 +2,12 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Robust.Client.Graphics.Rhi;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using SDL3;
 using TerraFX.Interop.Windows;
 using TerraFX.Interop.Xlib;
-#if WINDOWS
-using BOOL = TerraFX.Interop.Windows.BOOL;
-using Windows = TerraFX.Interop.Windows.Windows;
-#endif
-using GLAttr = SDL3.SDL.SDL_GLAttr;
 using X11Window = TerraFX.Interop.Xlib.Window;
 
 namespace Robust.Client.Graphics.Clyde;
@@ -23,24 +19,14 @@ internal partial class Clyde
         private int _nextWindowId = 1;
 
         public (WindowReg?, string? error) WindowCreate(
-            GLContextSpec? spec,
             WindowCreateParameters parameters,
-            WindowReg? share,
             WindowReg? owner)
         {
-            nint shareWindow = 0;
-            nint shareContext = 0;
-            if (share is Sdl3WindowReg shareReg)
-            {
-                shareWindow = shareReg.Sdl3Window;
-                shareContext = shareReg.GlContext;
-            }
-
             nint ownerPtr = 0;
             if (owner is Sdl3WindowReg ownerReg)
                 ownerPtr = ownerReg.Sdl3Window;
 
-            var task = SharedWindowCreate(spec, parameters, shareWindow, shareContext, ownerPtr);
+            var task = SharedWindowCreate(parameters, ownerPtr);
 
             // Block the main thread (to avoid stuff like texture uploads being problematic).
             WaitWindowCreate(task);
@@ -68,10 +54,7 @@ internal partial class Clyde
         }
 
         private Task<Sdl3WindowCreateResult> SharedWindowCreate(
-            GLContextSpec? glSpec,
             WindowCreateParameters parameters,
-            nint shareWindow,
-            nint shareContext,
             nint owner)
         {
             //
@@ -93,10 +76,7 @@ internal partial class Clyde
             var tcs = new TaskCompletionSource<Sdl3WindowCreateResult>();
             SendCmd(new CmdWinCreate
             {
-                GLSpec = glSpec,
                 Parameters = parameters,
-                ShareWindow = shareWindow,
-                ShareContext = shareContext,
                 OwnerWindow = owner,
                 Tcs = tcs
             });
@@ -110,12 +90,7 @@ internal partial class Clyde
 
         private void WinThreadWinCreate(CmdWinCreate cmd)
         {
-            var (window, context) = CreateSdl3WindowForRenderer(
-                cmd.GLSpec,
-                cmd.Parameters,
-                cmd.ShareWindow,
-                cmd.ShareContext,
-                cmd.OwnerWindow);
+            var window = CreateSdl3WindowForRenderer(cmd.Parameters, cmd.OwnerWindow);
 
             if (window == 0)
             {
@@ -135,7 +110,7 @@ internal partial class Clyde
             // * it'd not be synchronized to other incoming window events correctly which might be icky.
             // So we send the TCS back to the game thread
             // which processes events in the correct order and has better control of stuff during init.
-            var reg = WinThreadSetupWindow(window, context);
+            var reg = WinThreadSetupWindow(window);
 
             SendEvent(new EventWindowCreate
             {
@@ -152,66 +127,14 @@ internal partial class Clyde
 #endif
         }
 
-        private (nint window, nint context) CreateSdl3WindowForRenderer(
-            GLContextSpec? spec,
+        private nint CreateSdl3WindowForRenderer(
             WindowCreateParameters parameters,
-            nint shareWindow,
-            nint shareContext,
             nint ownerWindow)
         {
             var createProps = SDL.SDL_CreateProperties();
             SDL.SDL_SetBooleanProperty(createProps, SDL.SDL_PROP_WINDOW_CREATE_HIDDEN_BOOLEAN, true);
             SDL.SDL_SetBooleanProperty(createProps, SDL.SDL_PROP_WINDOW_CREATE_RESIZABLE_BOOLEAN, true);
             SDL.SDL_SetBooleanProperty(createProps, SDL.SDL_PROP_WINDOW_CREATE_HIGH_PIXEL_DENSITY_BOOLEAN, true);
-
-            if (spec is { } s)
-            {
-                SDL.SDL_SetBooleanProperty(createProps, SDL.SDL_PROP_WINDOW_CREATE_OPENGL_BOOLEAN, true);
-
-                SDL.SDL_GL_SetAttribute(GLAttr.SDL_GL_RED_SIZE, 8);
-                SDL.SDL_GL_SetAttribute(GLAttr.SDL_GL_GREEN_SIZE, 8);
-                SDL.SDL_GL_SetAttribute(GLAttr.SDL_GL_BLUE_SIZE, 8);
-                SDL.SDL_GL_SetAttribute(GLAttr.SDL_GL_ALPHA_SIZE, 8);
-                SDL.SDL_GL_SetAttribute(GLAttr.SDL_GL_STENCIL_SIZE, 8);
-                SDL.SDL_GL_SetAttribute(
-                    GLAttr.SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
-                    s.Profile == GLContextProfile.Es ? 0 : 1);
-                int ctxFlags = 0;
-#if DEBUG
-                ctxFlags |= SDL.SDL_GL_CONTEXT_DEBUG_FLAG;
-#endif
-                if (s.Profile == GLContextProfile.Core)
-                    ctxFlags |= SDL.SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG;
-
-                SDL.SDL_GL_SetAttribute(GLAttr.SDL_GL_CONTEXT_FLAGS, (int)ctxFlags);
-
-                if (shareContext != 0)
-                {
-                    SDL.SDL_GL_MakeCurrent(shareWindow, shareContext);
-                    SDL.SDL_GL_SetAttribute(GLAttr.SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
-                }
-                else
-                {
-                    SDL.SDL_GL_SetAttribute(GLAttr.SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 0);
-                }
-
-                var profile = s.Profile switch
-                {
-                    GLContextProfile.Compatibility => SDL.SDL_GL_CONTEXT_PROFILE_COMPATIBILITY,
-                    GLContextProfile.Core => SDL.SDL_GL_CONTEXT_PROFILE_CORE,
-                    GLContextProfile.Es => SDL.SDL_GL_CONTEXT_PROFILE_ES,
-                    _ => SDL.SDL_GL_CONTEXT_PROFILE_COMPATIBILITY,
-                };
-
-                SDL.SDL_GL_SetAttribute(GLAttr.SDL_GL_CONTEXT_PROFILE_MASK, profile);
-                SDL.SDL_SetHint(SDL.SDL_HINT_OPENGL_ES_DRIVER, s.CreationApi == GLContextCreationApi.Egl ? "1" : "0");
-
-                SDL.SDL_GL_SetAttribute(GLAttr.SDL_GL_CONTEXT_MAJOR_VERSION, s.Major);
-                SDL.SDL_GL_SetAttribute(GLAttr.SDL_GL_CONTEXT_MINOR_VERSION, s.Minor);
-
-                if (s.CreationApi == GLContextCreationApi.Egl)
-                    WsiShared.EnsureEglAvailable();
-            }
 
             if (parameters.Fullscreen)
                 SDL.SDL_SetBooleanProperty(createProps, SDL.SDL_PROP_WINDOW_CREATE_FULLSCREEN_BOOLEAN, true);
@@ -251,13 +174,6 @@ internal partial class Clyde
             if (window == 0)
                 return default;
 
-            nint glContext = SDL.SDL_GL_CreateContext(window);
-            if (glContext == 0)
-            {
-                SDL.SDL_DestroyWindow(window);
-                return default;
-            }
-
             if ((parameters.Styles & OSWindowStyles.NoTitleOptions) != 0)
             {
                 var props = SDL.SDL_GetWindowProperties(window);
@@ -295,44 +211,24 @@ internal partial class Clyde
 
             // TODO: Monitors, window maximize.
 
-            // Make sure window thread doesn't keep hold of the GL context.
-            SDL.SDL_GL_MakeCurrent(IntPtr.Zero, IntPtr.Zero);
-
             if (parameters.Visible)
                 SDL.SDL_ShowWindow(window);
 
-            return (window, glContext);
+            return window;
         }
 
-        private Sdl3WindowReg WinThreadSetupWindow(nint window, nint context)
+        private Sdl3WindowReg WinThreadSetupWindow(nint window)
         {
             var reg = new Sdl3WindowReg
             {
                 Sdl3Window = window,
-                GlContext = context,
                 WindowId = SDL.SDL_GetWindowID(window),
                 Id = new WindowId(_nextWindowId++)
             };
             var handle = new WindowHandle(_clyde, reg);
             reg.Handle = handle;
 
-            var windowProps = SDL.SDL_GetWindowProperties(window);
-            switch (_videoDriver)
-            {
-                case SdlVideoDriver.Windows:
-                    reg.WindowsHwnd = SDL.SDL_GetPointerProperty(
-                        windowProps,
-                        SDL.SDL_PROP_WINDOW_WIN32_HWND_POINTER,
-                        0);
-                    break;
-                case SdlVideoDriver.X11:
-                    reg.X11Display = SDL.SDL_GetPointerProperty(
-                        windowProps,
-                        SDL.SDL_PROP_WINDOW_X11_DISPLAY_POINTER,
-                        0);
-                    reg.X11Id = (uint)SDL.SDL_GetNumberProperty(windowProps, SDL.SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0);
-                    break;
-            }
+            reg.SurfaceParams = GetSurfaceParams(window);
 
             AssignWindowIconToWindow(window);
 
@@ -461,95 +357,6 @@ internal partial class Clyde
                 _sawmill.Error("Failed to flash window: {error}", SDL.SDL_GetError());
         }
 
-        public unsafe void WindowSwapBuffers(WindowReg window)
-        {
-            var reg = (Sdl3WindowReg)window;
-            var windowPtr = WinPtr(reg);
-
-#if WINDOWS
-            // On Windows, SwapBuffers does not correctly sync to the DWM compositor.
-            // This means OpenGL vsync is effectively broken by default on Windows.
-            // We manually sync via DwmFlush(). GLFW does this automatically, SDL3 does not.
-            //
-            // Windows DwmFlush logic partly taken from:
-            // https://github.com/love2d/love/blob/5175b0d1b599ea4c7b929f6b4282dd379fa116b8/src/modules/window/sdl/Window.cpp#L1018
-            // https://github.com/glfw/glfw/blob/d3ede7b6847b66cf30b067214b2b4b126d4c729b/src/wgl_context.c#L321-L340
-            // See also: https://github.com/libsdl-org/SDL/issues/5797
-
-            var dwmFlush = false;
-            var swapInterval = 0;
-
-            if (!reg.Fullscreen && reg.SwapInterval > 0)
-            {
-                BOOL compositing;
-                // 6.2 is Windows 8
-                // https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/ns-wdm-_osversioninfoexw
-                if (OperatingSystem.IsWindowsVersionAtLeast(6, 2)
-                    || Windows.SUCCEEDED(Windows.DwmIsCompositionEnabled(&compositing)) && compositing)
-                {
-                    var curCtx = SDL.SDL_GL_GetCurrentContext();
-                    var curWin = SDL.SDL_GL_GetCurrentWindow();
-
-                    if (curCtx != reg.GlContext || curWin != reg.Sdl3Window)
-                        throw new InvalidOperationException("Window context must be current!");
-
-                    SDL.SDL_GL_SetSwapInterval(0);
-                    dwmFlush = true;
-                    swapInterval = reg.SwapInterval;
-                }
-            }
-#endif
-
-            //_sawmill.Debug($"Swapping: {window.Id} @ {_clyde._gameTiming.CurFrame}");
-            SDL.SDL_GL_SwapWindow(windowPtr);
-
-#if WINDOWS
-            if (dwmFlush)
-            {
-                var i = swapInterval;
-                while (i-- > 0)
-                {
-                    Windows.DwmFlush();
-                }
-
-                SDL.SDL_GL_SetSwapInterval(swapInterval);
-            }
-#endif
-        }
-
-        public uint? WindowGetX11Id(WindowReg window)
-        {
-            CheckWindowDisposed(window);
-
-            if (_videoDriver != SdlVideoDriver.X11)
-                return null;
-
-            var reg = (Sdl3WindowReg)window;
-            return reg.X11Id;
-        }
-
-        public nint? WindowGetX11Display(WindowReg window)
-        {
-            CheckWindowDisposed(window);
-
-            if (_videoDriver != SdlVideoDriver.X11)
-                return null;
-
-            var reg = (Sdl3WindowReg)window;
-            return reg.X11Display;
-        }
-
-        public nint? WindowGetWin32Window(WindowReg window)
-        {
-            CheckWindowDisposed(window);
-
-            if (_videoDriver != SdlVideoDriver.Windows)
-                return null;
-
-            var reg = (Sdl3WindowReg)window;
-            return reg.WindowsHwnd;
-        }
-
         public void RunOnWindowThread(Action a)
         {
             SendCmd(new CmdRunAction { Action = a });
@@ -643,23 +450,56 @@ internal partial class Clyde
             return null;
         }
 
+        private unsafe RhiBase.RhiWindowSurfaceParams GetSurfaceParams(nint sdlWindow)
+        {
+            var props = SDL.SDL_GetWindowProperties(sdlWindow);
+#if WINDOWS
+            return new RhiBase.RhiWindowSurfaceParams()
+            {
+                HInstance = (void*)SDL.SDL_GetPointerProperty(props, SDL.SDL_PROP_WINDOW_WIN32_INSTANCE_POINTER, 0),
+                HWnd = (void*)SDL.SDL_GetPointerProperty(props, SDL.SDL_PROP_WINDOW_WIN32_HWND_POINTER, 0),
+            };
+#elif LINUX
+            if (_videoDriver == SdlVideoDriver.Wayland)
+            {
+                return new RhiBase.RhiWindowSurfaceParams
+                {
+                    X11Display = SDL.SDL_GetPointerProperty(windowProps, SDL.SDL_PROP_WINDOW_X11_DISPLAY_POINTER, 0),
+                    X11Id = SDL.SDL_GetPointerProperty(windowProps, SDL.SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0),
+                };
+            }
+            else
+            {
+                Debug.Assert(_videoDriver == _sdlVideoDriver.X11);
+                return new RhiBase.RhiWindowSurfaceParams
+                {
+                    Wayland = true,
+                    WaylandDisplay = SDL.SDL_GetPointerProperty(
+                        windowProps,
+                        SDL.SDL_PROP_WINDOW_WAYLAND_DISPLAY_POINTER,
+                        0),
+                    WaylandSurface = SDL.SDL_GetPointerProperty(
+                        windowProps,
+                        SDL.SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER,
+                        0),
+                };
+            }
+#else
+            throw new NotImplementedException();
+#endif
+        }
+
 
         private sealed class Sdl3WindowReg : WindowReg
         {
             public nint Sdl3Window;
             public uint WindowId;
-            public nint GlContext;
 #pragma warning disable CS0649
             public bool Fullscreen;
 #pragma warning restore CS0649
-            public int SwapInterval;
 
             // Kept around to avoid it being GCd.
             public CursorImpl? Cursor;
-
-            public nint WindowsHwnd;
-            public nint X11Display;
-            public uint X11Id;
         }
     }
 }

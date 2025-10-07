@@ -39,7 +39,8 @@ namespace Robust.Shared.EntitySerialization;
 public sealed class EntitySerializer : ISerializationContext,
     ITypeSerializer<EntityUid, ValueDataNode>,
     ITypeSerializer<NetEntity, ValueDataNode>,
-    ITypeSerializer<MapId, ValueDataNode>
+    ITypeSerializer<MapId, ValueDataNode>,
+    ITypeSerializer<WeakEntityReference, ValueDataNode>
 {
     public const int MapFormatVersion = 7;
     // v6->v7: PR #5572 - Added more metadata, List maps/grids/orphans, include some life-stage information
@@ -1088,5 +1089,48 @@ public sealed class EntitySerializer : ISerializationContext,
         return new ValueDataNode("invalid");
     }
 
+    #endregion
+
+    #region WeakEntityReference
+    ValidationNode ITypeValidator<WeakEntityReference, ValueDataNode>.Validate(
+        ISerializationManager seri,
+        ValueDataNode node,
+        IDependencyCollection deps,
+        ISerializationContext? context)
+    {
+        if (node.Value == "invalid")
+            return new ValidatedValueNode(node);
+
+        if (!int.TryParse(node.Value, out _))
+            return new ErrorNode(node, "Invalid WeakEntityReference");
+
+        return new ValidatedValueNode(node);
+    }
+
+    WeakEntityReference ITypeReader<WeakEntityReference, ValueDataNode>.Read(
+        ISerializationManager seri,
+        ValueDataNode node,
+        IDependencyCollection deps,
+        SerializationHookContext hookCtx,
+        ISerializationContext? ctx,
+        ISerializationManager.InstantiationDelegate<WeakEntityReference>? instanceProvider)
+    {
+        return node.Value == "invalid"
+            ? WeakEntityReference.Invalid
+            : new(EntityUid.Parse(node.Value));
+    }
+
+    DataNode ITypeWriter<WeakEntityReference>.Write(
+        ISerializationManager seri,
+        WeakEntityReference value,
+        IDependencyCollection deps,
+        bool alwaysWrite,
+        ISerializationContext? ctx)
+    {
+        if (YamlUidMap.TryGetValue(value.Entity, out var yamlId))
+            return new ValueDataNode(yamlId.ToString(CultureInfo.InvariantCulture));
+
+        return new ValueDataNode("invalid");
+    }
     #endregion
 }

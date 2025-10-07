@@ -15,7 +15,8 @@ internal sealed class YamlValidationContext :
     ISerializationContext,
     ITypeSerializer<EntityUid, ValueDataNode>,
     ITypeSerializer<NetEntity, ValueDataNode>,
-    ITypeSerializer<MapId, ValueDataNode>
+    ITypeSerializer<MapId, ValueDataNode>,
+    ITypeSerializer<WeakEntityReference, ValueDataNode>
 {
     public SerializationManager.SerializerProvider SerializerProvider { get; } = new();
     public bool WritingReadingPrototypes => true;
@@ -129,5 +130,32 @@ internal sealed class YamlValidationContext :
             return new ValueDataNode("invalid");
 
         return new ValueDataNode(value.Value.ToString(CultureInfo.InvariantCulture));
+    }
+
+    public WeakEntityReference Read(
+        ISerializationManager serializationManager,
+        ValueDataNode node,
+        IDependencyCollection dependencies,
+        SerializationHookContext hookCtx,
+        ISerializationContext? context = null,
+        ISerializationManager.InstantiationDelegate<WeakEntityReference>? instanceProvider = null)
+    {
+        if (node.Value == "invalid")
+            return WeakEntityReference.Invalid;
+
+        return WeakEntityReference.Parse(node.Value);
+    }
+
+    public DataNode Write(
+        ISerializationManager serializationManager,
+        WeakEntityReference value,
+        IDependencyCollection dependencies,
+        bool alwaysWrite = false,
+        ISerializationContext? context = null)
+    {
+        if (!value.Entity.Valid)
+            return new ValueDataNode("invalid");
+
+        return new ValueDataNode(value.Id.ToString(CultureInfo.InvariantCulture));
     }
 }

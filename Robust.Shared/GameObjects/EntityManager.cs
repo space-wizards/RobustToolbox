@@ -1032,6 +1032,17 @@ namespace Robust.Shared.GameObjects
             EventBus.RaiseLocalEvent(entity, MapInitEventInstance);
         }
 
+        public bool TryGetEntity(WeakEntityReference weakRef, [NotNullWhen(true)] out EntityUid? entity)
+        {
+            entity = null;
+            if (weakRef.Entity == EntityUid.Invalid
+                || !EntityExists(weakRef.Entity))
+                return false;
+
+            entity = weakRef.Entity;
+            return true;
+        }
+
         /// <inheritdoc />
         [return: NotNullIfNotNull("uid")]
         public EntityStringRepresentation? ToPrettyString(EntityUid? uid, MetaDataComponent? metadata = null)

@@ -289,7 +289,7 @@ namespace Robust.Client.Graphics.Clyde
                 reg.RenderTarget = renderTarget;
 
                 if (!isMain)
-                    Rhi.WindowCreated(in reg.SurfaceParams, reg.FramebufferSize);
+                    reg.RhiWebGpuData = Rhi.WindowCreated(in reg.SurfaceParams, reg.FramebufferSize);
             }
 
             // Pass through result whether successful or not, caller handles it.

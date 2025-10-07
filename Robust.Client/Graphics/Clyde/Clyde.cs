@@ -69,6 +69,9 @@ namespace Robust.Client.Graphics.Clyde
 
         public bool InitializePreWindowing()
         {
+            _clydeSawmill = _logManager.GetSawmill("clyde");
+            _sawmillWin = _logManager.GetSawmill("clyde.win");
+
             _reloads.Register("/Shaders", "*.swsl");
             _reloads.Register("/Textures/Shaders", "*.swsl");
             _reloads.Register("/Textures", "*.jpg");

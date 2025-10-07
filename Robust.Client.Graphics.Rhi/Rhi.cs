@@ -118,22 +118,22 @@ public sealed record RhiAdapterInfo(
 
 public enum RhiAdapterType : byte
 {
-    DiscreteGpu = 0,
-    IntegratedCpu = 1,
-    Cpu = 2,
-    Unknown = 3
+    DiscreteGpu = 1,
+    IntegratedCpu = 2,
+    Cpu = 3,
+    Unknown = 4
 }
 
 public enum RhiBackendType : byte
 {
-    Null = 0,
-    WebGpu = 1,
-    D3D11 = 2,
-    D3D12 = 3,
-    Metal = 4,
-    Vulkan = 5,
-    OpenGL = 6,
-    OpenGles = 7,
+    Null = 1,
+    WebGpu = 2,
+    D3D11 = 3,
+    D3D12 = 4,
+    Metal = 5,
+    Vulkan = 6,
+    OpenGL = 7,
+    OpenGles = 8,
 }
 
 public sealed class RhiBuffer : RhiObject
@@ -272,9 +272,9 @@ public enum RhiMapModeFlags : byte
 
 public enum RhiBufferMapState : byte
 {
-    Unmapped = 0,
-    Pending = 1,
-    Mapped = 2
+    Unmapped = 1,
+    Pending = 2,
+    Mapped = 3
 }
 
 [Flags]
@@ -354,11 +354,11 @@ public enum RhiBufferBindingType : byte
 
 public enum RhiTextureSampleType : byte
 {
-    Float = 0x00000001,
-    UnfilterableFloat = 0x00000002,
-    Depth = 0x00000003,
-    Sint = 0x00000004,
-    Uint = 0x00000005,
+    Float = 0x00000002,
+    UnfilterableFloat = 0x00000003,
+    Depth = 0x00000004,
+    Sint = 0x00000005,
+    Uint = 0x00000006,
     Final
 }
 
@@ -658,16 +658,16 @@ public enum RhiPrimitiveTopology : byte
 
 public enum RhiFrontFace : byte
 {
-    Ccw = 0,
-    Cw = 1,
+    Ccw = 1,
+    Cw = 2,
     Final
 }
 
 public enum RhiCullMode : byte
 {
-    None = 0,
-    Front = 1,
-    Back = 2,
+    None = 1,
+    Front = 2,
+    Back = 3,
     Final
 }
 
@@ -707,14 +707,14 @@ public record struct RhiStencilFaceState(
 
 public enum RhiStencilOperation : byte
 {
-    Keep = 0x00000000,
-    Zero = 0x00000001,
-    Replace = 0x00000002,
-    Invert = 0x00000003,
-    IncrementClamp = 0x00000004,
-    DecrementClamp = 0x00000005,
-    IncrementWrap = 0x00000006,
-    DecrementWrap = 0x00000007,
+    Keep = 0x00000001,
+    Zero = 0x00000002,
+    Replace = 0x00000003,
+    Invert = 0x00000004,
+    IncrementClamp = 0x00000005,
+    DecrementClamp = 0x00000006,
+    IncrementWrap = 0x00000007,
+    DecrementWrap = 0x00000008,
     Final
 }
 
@@ -1169,9 +1169,9 @@ public enum RhiTextureUsage : byte
 
 public enum RhiTextureAspect : byte
 {
-    All = 0,
-    StencilOnly = 1,
-    DepthOnly = 2,
+    All = 1,
+    StencilOnly = 2,
+    DepthOnly = 3,
     Final
 }
 

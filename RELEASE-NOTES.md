@@ -42,7 +42,7 @@ END TEMPLATE-->
 * Sandbox:
   * Added `System.DateOnly` and `System.TimeOnly`.
 * `MapId`, `MapCoordinates`, and `EntityCoordinates` are now yaml serialisable
-
+* Added a new `WeakEntityReference` struct that is intended to be used by component data-fields to refer to entities that may or may not still exist.
 ### Bugfixes
 
 * Fixed yaml hot reloading throwing invalid path exceptions.

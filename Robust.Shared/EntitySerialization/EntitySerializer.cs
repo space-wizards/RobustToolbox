@@ -253,6 +253,41 @@ public sealed class EntitySerializer : ISerializationContext,
         Truncate = EntityUid.Invalid;
     }
 
+    /// <summary>
+    /// Serializes several entities and all of their children. Note that this will not automatically serialize the
+    /// entity's parents.
+    /// </summary>
+    public void SerializeEntityRecursive(HashSet<EntityUid> roots)
+    {
+        if (roots.Count == 0)
+            return;
+
+        InitializeTileMap(roots.First());
+
+        HashSet<EntityUid> allEntities = new();
+        List<(EntityUid Root, HashSet<EntityUid> Children)> entities = new();
+
+        foreach(var root in roots)
+        {
+            if (!IsSerializable(root))
+                throw new Exception($"{EntMan.ToPrettyString(root)} is not serializable");
+
+            var ents = new HashSet<EntityUid>();
+            RecursivelyIncludeChildren(root, ents);
+            entities.Add((root, ents));
+        }
+
+        ReserveYamlIds(allEntities);
+
+        foreach (var (root, children) in entities)
+        {
+            Truncate = _xformQuery.GetComponent(root).ParentUid;
+            Truncated.Add(Truncate);
+            SerializeEntitiesInternal(children);
+            Truncate = EntityUid.Invalid;
+        }
+    }
+
     #endregion
 
     /// <summary>

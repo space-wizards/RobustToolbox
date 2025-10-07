@@ -27,6 +27,11 @@ public enum FileCategory : byte
     Map,
 
     /// <summary>
+    /// File should contain one or more maps, their children, and maybe some null-space entities.
+    /// </summary>
+    MultiMap,
+
+    /// <summary>
     /// File is a full game save, and will likely contain at least one map and a few null-space entities.
     /// </summary>
     /// <remarks>

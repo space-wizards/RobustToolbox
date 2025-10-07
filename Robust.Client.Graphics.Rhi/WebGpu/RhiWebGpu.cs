@@ -154,6 +154,8 @@ internal sealed unsafe partial class RhiWebGpu : RhiBase
             (RhiBackendType) adapterProps.backendType
         );
 
+        _description += $", backend: {_adapterProperties.BackendType}";
+
         // Default limits, from WebGPU spec.
         var requiredLimits = new WGPULimits();
         if (false)

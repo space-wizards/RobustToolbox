@@ -219,6 +219,9 @@ public abstract partial class SharedContainerSystem
 
     internal void RecursivelyUpdateJoints(Entity<TransformComponent> entity)
     {
+        if (_timing.ApplyingState)
+            return;
+
         if (JointQuery.TryGetComponent(entity, out var jointComp))
         {
             // TODO: This is going to be going up while joints going down, although these aren't too common

@@ -24,14 +24,18 @@ namespace Robust.Shared.CompNetworkGenerator
         private const string GlobalNetEntityName = "global::Robust.Shared.GameObjects.NetEntity";
         private const string GlobalNetEntityNullableName = "global::Robust.Shared.GameObjects.NetEntity?";
 
+        private const string GlobalWeakEntityReferenceName = "global::Robust.Shared.GameObjects.WeakEntityReference";
+
         private const string GlobalEntityCoordinatesName = "global::Robust.Shared.Map.EntityCoordinates";
         private const string GlobalNullableEntityCoordinatesName = "global::Robust.Shared.Map.EntityCoordinates?";
 
         private const string GlobalEntityUidSetName = "global::System.Collections.Generic.HashSet<global::Robust.Shared.GameObjects.EntityUid>";
         private const string GlobalNetEntityUidSetName = $"global::System.Collections.Generic.HashSet<{GlobalNetEntityName}>";
+        private const string GlobalWeakEntityReferenceSetName = $"global::System.Collections.Generic.HashSet<{GlobalWeakEntityReferenceName}>";
 
         private const string GlobalEntityUidListName = "global::System.Collections.Generic.List<global::Robust.Shared.GameObjects.EntityUid>";
         private const string GlobalNetEntityUidListName = $"global::System.Collections.Generic.List<{GlobalNetEntityName}>";
+        private const string GlobalWeakEntityReferenceListName = $"global::System.Collections.Generic.List<{GlobalWeakEntityReferenceName}>";
 
         private const string GlobalDictionaryName = "global::System.Collections.Generic.Dictionary<TKey, TValue>";
         private const string GlobalHashSetName = "global::System.Collections.Generic.HashSet<T>";
@@ -218,6 +222,27 @@ namespace Robust.Shared.CompNetworkGenerator
 
                         deltaHandleFields.Append($@"
                     component.{name} = EnsureEntity<{componentName}>({cast} {fieldHandleValue}, uid);");
+
+                        shallowClone.Append($@"
+                {name} = this.{name},");
+
+                        deltaApply.Add($"fullState.{name} = {name};");
+
+                        break;
+                    case GlobalWeakEntityReferenceName:
+                        networkedType = $"NetEntity?";
+
+                        stateFields.Append($@"
+        public {networkedType} {name} = default!;");
+
+                        getField = $"TryGetEntity(component.{name}, out var temp{name}) ? GetNetEntity(temp{name}) : NetEntity.Invalid";
+                        cast = $"(NetEntity?)";
+
+                        handleStateSetters.Append($@"
+            component.{name} = TryGetEntity(state.{name}, out var {name}) ? {name}.Value : WeakEntityReference.Invalid;");
+
+                        deltaHandleFields.Append($@"
+                    component.{name} = TryGetEntity({cast} {fieldHandleValue}, out var {name}) ? {name}.Value : WeakEntityReference.Invalid;");
 
                         shallowClone.Append($@"
                 {name} = this.{name},");

@@ -96,6 +96,13 @@ public partial class EntitySystem
         return !uid.HasValue || Deleted(uid.Value);
     }
 
+    /// <inheritdoc cref="IEntityManager.TryGetEntity(WeakEntityReference, out EntityUid?)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TryGetEntity(WeakEntityReference weakRef, [NotNullWhen(true)] out EntityUid? entity)
+    {
+        return EntityManager.TryGetEntity(weakRef, out entity);
+    }
+
     /// <inheritdoc cref="MetaDataComponent.EntityLifeStage" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityLifeStage LifeStage(EntityUid uid, MetaDataComponent? metaData = null)

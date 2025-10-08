@@ -45,6 +45,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
+* Fixed `MapLoaderSystem.SerializeEntitiesRecursive()` not properly serialising when given multiple root entities (e.g., multiple maps)
 * Fixed yaml hot reloading throwing invalid path exceptions.
 * The `EntityManager.CreateEntityUninitialized` overload that uses MapCoordinates now actually attaches entities to a grid if one is present at those coordinates, as was stated in it's documentation.
 * Fixed physics joint relays not being properly updated when an entity is removed from a container.

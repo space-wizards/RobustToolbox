@@ -1,7 +1,9 @@
 using System.Numerics;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Physics;
 
 namespace Robust.Shared.ComponentTrees;
@@ -9,12 +11,15 @@ namespace Robust.Shared.ComponentTrees;
 public abstract class LightTreeSystem : ComponentTreeSystem<LightTreeComponent, SharedPointLightComponent>
 {
     [Dependency] private readonly SharedPointLightSystem _pointLight = default!;
+    [Dependency] private readonly IConfigurationManager _cfg = default!;
+    [Dependency] private readonly INetManager _net = default!;
 
     #region Component Tree Overrides
     protected override bool DoFrameUpdate => true;
     protected override bool DoTickUpdate => false;
     protected override bool Recursive => true;
     protected override int InitialCapacity => 128;
+    protected override bool Enabled => _net.IsClient || _cfg.GetCVar(CVars.LookupEnableServerLightTree);
 
     protected override void OnCompStartup(EntityUid uid, SharedPointLightComponent component, ComponentStartup args)
     {

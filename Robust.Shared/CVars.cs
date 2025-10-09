@@ -891,6 +891,13 @@ namespace Robust.Shared
         public static readonly CVarDef<float> LookupEnlargementRange =
             CVarDef.Create("lookup.enlargement_range", 10.0f, CVar.ARCHIVE | CVar.REPLICATED | CVar.CHEAT);
 
+        /// <summary>
+        /// Whether to enable the server-side point light lookup tree. To help with performance, this should only be
+        /// enabled if the server needs to be able to compute light levels.
+        /// </summary>
+        public static readonly CVarDef<bool> LookupEnableServerLightTree =
+            CVarDef.Create("lookup.enable_server_light_tree", false, CVar.ARCHIVE | CVar.SERVERONLY);
+
         /*
          * LOKI
          */

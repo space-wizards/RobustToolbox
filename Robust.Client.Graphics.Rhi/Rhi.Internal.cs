@@ -18,7 +18,7 @@ public abstract partial class RhiBase
     /// <remarks>
     /// Does not get called for the main window.
     /// </remarks>
-    internal abstract RhiWebGpu.WindowData WindowCreated(in RhiWindowSurfaceParams surfaceParams, Vector2i size);
+    internal abstract RhiWebGpu.WindowData WindowCreated(in RhiWindowSurfaceParams surfaceParams, Vector2i size, bool vsync);
 
     /// <summary>
     /// A window is about to be destroyed by Clyde. Clean up resources for it.
@@ -28,7 +28,7 @@ public abstract partial class RhiBase
     /// <summary>
     /// Recreate the native swap chain, in case it has become suboptimal (e.g. due to window resizing).
     /// </summary>
-    internal abstract void WindowRecreateSwapchain(RhiWebGpu.WindowData reg, Vector2i size);
+    internal abstract void WindowRecreateSwapchain(RhiWebGpu.WindowData reg, Vector2i size, bool vsyncEnabled);
 
     internal abstract RhiTexture GetSurfaceTextureForWindow(RhiWebGpu.WindowData reg);
     internal abstract void WindowPresent(RhiWebGpu.WindowData reg);
@@ -107,7 +107,6 @@ public abstract partial class RhiBase
     {
         public required string Backends;
         public required RhiPowerPreference PowerPreference;
-        public required Vector2i MainWindowSize;
         public required RhiWindowSurfaceParams MainWindowSurfaceParams;
     }
 

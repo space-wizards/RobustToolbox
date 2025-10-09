@@ -289,7 +289,7 @@ namespace Robust.Client.Graphics.Clyde
                 reg.RenderTarget = renderTarget;
 
                 if (!isMain)
-                    reg.RhiWebGpuData = Rhi.WindowCreated(in reg.SurfaceParams, reg.FramebufferSize);
+                    reg.RhiWebGpuData = Rhi.WindowCreated(in reg.SurfaceParams, reg.FramebufferSize, VsyncEnabled);
             }
 
             // Pass through result whether successful or not, caller handles it.
@@ -329,7 +329,15 @@ namespace Robust.Client.Graphics.Clyde
         public bool VsyncEnabled
         {
             get => _vSync;
-            set => _vSync = value;
+            set
+            {
+                _vSync = value;
+
+                foreach (var window in _windows)
+                {
+                    window.NeedSurfaceReconfigure = true;
+                }
+            }
         }
 
         private void WindowModeChanged(int mode)
@@ -422,7 +430,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public bool DisposeOnClose;
 
-            public bool NeedSurfaceReconfigure;
+            public bool NeedSurfaceReconfigure = true;
             public RhiBase.RhiWindowSurfaceParams SurfaceParams;
 
             public bool IsMainWindow;

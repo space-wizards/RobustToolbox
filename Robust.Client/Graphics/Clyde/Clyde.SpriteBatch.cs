@@ -166,7 +166,7 @@ internal partial class Clyde
                     new[]
                     {
                         new RhiColorTargetState(
-                            RhiTextureFormat.BGRA8UnormSrgb,
+                            rhi.MainTextureFormat,
                             new RhiBlendState(
                                 new RhiBlendComponent(
                                     RhiBlendOperation.Add,

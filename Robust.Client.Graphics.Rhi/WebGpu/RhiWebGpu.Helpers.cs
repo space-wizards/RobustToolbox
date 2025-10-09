@@ -76,12 +76,17 @@ internal sealed unsafe partial class RhiWebGpu
         return Encoding.UTF8.GetString(span);
     }
 
-    private static RhiTextureFormat ValidateTextureFormat(RhiTextureFormat format)
+    private static RhiTextureFormat ToRhiFormat(WGPUTextureFormat format)
+    {
+        return (RhiTextureFormat)format;
+    }
+
+    private static WGPUTextureFormat ValidateTextureFormat(RhiTextureFormat format)
     {
         if (format is 0 or >= RhiTextureFormat.Final)
             throw new ArgumentException($"Invalid {nameof(RhiTextureFormat)}");
 
-        return format;
+        return (WGPUTextureFormat)format;
     }
 
     private static WGPUTextureDimension ValidateTextureDimension(RhiTextureDimension dimension)

@@ -52,8 +52,7 @@ internal sealed unsafe partial class RhiWebGpu : RhiBase
         _sawmill.Debug("WebGPU main surface created!");
 
         InitAdapterAndDevice(in initParams, windowData.Surface);
-
-        ConfigureSurface(windowData, initParams.MainWindowSize);
+        DecideMainTextureFormat(windowData);
     }
 
     private void InitInstance(in RhiInitParams initParams)

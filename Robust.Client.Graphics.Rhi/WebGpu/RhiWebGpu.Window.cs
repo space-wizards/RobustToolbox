@@ -4,6 +4,11 @@ namespace Robust.Client.Graphics.Rhi.WebGpu;
 
 internal sealed unsafe partial class RhiWebGpu
 {
+    private RhiTextureFormat _mainTextureFormat;
+    private WGPUPresentMode[] _availPresentModes = [];
+
+    public override RhiTextureFormat MainTextureFormat => _mainTextureFormat;
+
     public sealed class WindowData
     {
         public WGPUSurface Surface;
@@ -68,15 +73,46 @@ internal sealed unsafe partial class RhiWebGpu
         };
     }
 
-    private void ConfigureSurface(WindowData window, Vector2i size)
+    private void DecideMainTextureFormat(WindowData mainWindow)
     {
-        // TODO: Safety
-        var format = WGPUTextureFormat.WGPUTextureFormat_BGRA8UnormSrgb;
-        _sawmill.Debug($"Preferred surface format is {format}");
+        WGPUSurfaceCapabilities surfaceCaps;
+        var res = wgpuSurfaceGetCapabilities(mainWindow.Surface, _wgpuAdapter, &surfaceCaps);
+        if (res != WGPUStatus.WGPUStatus_Success)
+            throw new RhiException("wgpuSurfaceGetCapabilities failed");
 
+        var modes = new Span<WGPUPresentMode>(surfaceCaps.presentModes, (int)surfaceCaps.presentModeCount);
+        _availPresentModes = modes.ToArray();
+        _sawmill.Debug($"Available present modes: {string.Join(", ", _availPresentModes)}");
+
+        var formats = new Span<WGPUTextureFormat>(surfaceCaps.formats, (int)surfaceCaps.formatCount);
+
+        var found = false;
+        foreach (var format in formats)
+        {
+            if (format == WGPUTextureFormat.WGPUTextureFormat_BGRA8UnormSrgb ||
+                format == WGPUTextureFormat.WGPUTextureFormat_RGBA8UnormSrgb)
+            {
+                found = true;
+                _mainTextureFormat = ToRhiFormat(format);
+                break;
+            }
+        }
+
+        _sawmill.Debug($"Available surface formats: {string.Join(", ", formats.ToArray())}");
+
+        if (!found)
+            throw new RhiException("Unable to find suitable surface format for main window!");
+
+        _sawmill.Debug($"Preferred surface format is {_mainTextureFormat}");
+
+        wgpuSurfaceCapabilitiesFreeMembers(surfaceCaps);
+    }
+
+    private void ConfigureSurface(WindowData window, Vector2i size, bool vsync)
+    {
         var swapChainDesc = new WGPUSurfaceConfiguration
         {
-            format = format,
+            format = ValidateTextureFormat(_mainTextureFormat),
             width = (uint)size.X,
             height = (uint)size.Y,
             usage = WGPUTextureUsage_RenderAttachment,
@@ -84,15 +120,23 @@ internal sealed unsafe partial class RhiWebGpu
             device = _wgpuDevice
         };
 
+        if (!vsync)
+        {
+            if (_availPresentModes.Contains(WGPUPresentMode.WGPUPresentMode_Immediate))
+                swapChainDesc.presentMode = WGPUPresentMode.WGPUPresentMode_Immediate;
+            else if (_availPresentModes.Contains(WGPUPresentMode.WGPUPresentMode_Mailbox))
+                swapChainDesc.presentMode = WGPUPresentMode.WGPUPresentMode_Mailbox;
+        }
+
         wgpuSurfaceConfigure(window.Surface, &swapChainDesc);
 
-        _sawmill.Debug("WebGPU Surface created!");
+        _sawmill.Verbose("WebGPU Surface reconfigured!");
     }
 
-    internal override WindowData WindowCreated(in RhiWindowSurfaceParams surfaceParams, Vector2i size)
+    internal override WindowData WindowCreated(in RhiWindowSurfaceParams surfaceParams, Vector2i size, bool vsync)
     {
         var windowData = CreateSurfaceForWindow(in surfaceParams);
-        ConfigureSurface(windowData, size);
+        ConfigureSurface(windowData, size, vsync);
         return windowData;
     }
 
@@ -102,9 +146,9 @@ internal sealed unsafe partial class RhiWebGpu
         wgpuSurfaceRelease(reg.Surface);
     }
 
-    internal override void WindowRecreateSwapchain(WindowData reg, Vector2i size)
+    internal override void WindowRecreateSwapchain(WindowData reg, Vector2i size, bool vsyncEnabled)
     {
-        ConfigureSurface(reg, size);
+        ConfigureSurface(reg, size, vsyncEnabled);
     }
 
     internal override void WindowPresent(WindowData reg)

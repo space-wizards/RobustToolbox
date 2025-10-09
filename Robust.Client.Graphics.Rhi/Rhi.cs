@@ -33,6 +33,8 @@ public abstract partial class RhiBase
     public abstract RhiAdapterInfo AdapterInfo { get; }
     public abstract string Description { get; }
 
+    public abstract RhiTextureFormat MainTextureFormat { get; }
+
     public abstract RhiTexture CreateTexture(in RhiTextureDescriptor descriptor);
 
     public abstract RhiSampler CreateSampler(in RhiSamplerDescriptor descriptor);

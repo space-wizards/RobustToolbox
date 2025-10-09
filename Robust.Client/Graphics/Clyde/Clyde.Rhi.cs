@@ -30,7 +30,6 @@ internal sealed partial class Clyde
             {
                 Backends = _cfg.GetCVar(CVars.DisplayWgpuBackends),
                 PowerPreference = (RhiPowerPreference)_cfg.GetCVar(CVars.DisplayGpuPowerPreference),
-                MainWindowSize = _mainWindow!.FramebufferSize,
                 MainWindowSurfaceParams = _mainWindow.SurfaceParams
             },
             out _mainWindow.RhiWebGpuData);
@@ -50,7 +49,7 @@ internal sealed partial class Clyde
 
             if (window.NeedSurfaceReconfigure)
             {
-                Rhi.WindowRecreateSwapchain(window.RhiWebGpuData!, window.FramebufferSize);
+                Rhi.WindowRecreateSwapchain(window.RhiWebGpuData!, window.FramebufferSize, VsyncEnabled);
                 window.NeedSurfaceReconfigure = false;
             }
 
@@ -58,7 +57,7 @@ internal sealed partial class Clyde
             window.CurSurfaceTextureView = window.CurSurfaceTexture.CreateView(new RhiTextureViewDescriptor
             {
                 Dimension = RhiTextureViewDimension.Dim2D,
-                Format = RhiTextureFormat.BGRA8UnormSrgb,
+                Format = Rhi.MainTextureFormat,
                 ArrayLayerCount = 1,
                 MipLevelCount = 1,
                 Aspect = RhiTextureAspect.All,

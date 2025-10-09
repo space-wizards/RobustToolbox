@@ -2,22 +2,15 @@ using System;
 using System.Numerics;
 using Robust.Shared.ComponentTrees;
 using Robust.Shared.GameStates;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Utility;
 
-
 namespace Robust.Shared.GameObjects;
-
 public abstract class OccluderSystem : ComponentTreeSystem<OccluderTreeComponent, OccluderComponent>
 {
-    [Dependency] private readonly SharedTransformSystem _transform = default!;
-
-    public delegate bool Ignored(EntityUid entity);
-
-    protected const float MaxRaycastRange = 100;
+    public const float MaxRaycastRange = 100f;
 
     public override void Initialize()
     {
@@ -81,84 +74,83 @@ public abstract class OccluderSystem : ComponentTreeSystem<OccluderTreeComponent
     }
     #endregion
 
+    #region InRangeUnoccluded
+
     /// <summary>
-    /// Checks if an entity is both in range and has an unobstructed line of sight of another entity. 
-    /// Obstruction is caused by the raycast hitting an <see cref="OccluderComponent"/>
+    /// Returns true if two points are within the specified range and there are no occluders between them that aren't
+    /// ignored by the predicate.
     /// </summary>
-    /// <typeparam name="TState"></typeparam>
-    /// <param name="origin">Where the raycast will begin from when checking for obstructions</param>
-    /// <param name="other">Target the raycast is pointed at</param>
-    /// <param name="range">The range the raycast will project through the game world to check for obstructions by occluders</param>
-    /// <param name="state">A reference to the state of the query</param>
-    /// <param name="predicate">Conditional callback that will be used during the query to determine if an occluder should be ignored</param>
-    /// <param name="ignoreInsideBlocker">Ignore occluder if the target is inside the occluder</param>
-    /// <param name="entMan">The entity manager used for the check, by default will use the current entity manager</param>
-    /// <returns>True if the other entity is both in range and has an unobstructed line of sight. Otherwise False</returns>
-    public virtual bool InRangeUnOccluded<TState>(MapCoordinates origin, MapCoordinates other, float range,
-            TState state, Func<EntityUid, TState, bool> predicate, bool ignoreInsideBlocker = true, IEntityManager? entMan = null)
+    public bool InRangeUnoccluded<TState>(
+        MapCoordinates origin,
+        MapCoordinates other,
+        float range,
+        TState state,
+        Func<Entity<OccluderComponent, TransformComponent>, TState, bool> ignore)
     {
-        if (other.MapId != origin.MapId ||
-            other.MapId == MapId.Nullspace) return false;
+        if (!GetUnoccludedRay(origin, other, range, out var length, out var ray))
+            return false;
+
+        if (MathHelper.CloseTo(length, 0))
+            return true;
+
+        var result = IntersectRay(origin.MapId, ray, length, state, ignore);
+        return result == null;
+    }
+
+    /// <summary>
+    /// Returns true if two points are within the specified range and there are no occluders between them.
+    /// </summary>
+    /// <param name="ignoreTouching">If true, this will use <see cref="IsTouchingEndpoint"/> as a predicate to ignore \
+    /// occluders that are touching the start or end point.</param>
+    public bool InRangeUnoccluded(MapCoordinates origin, MapCoordinates other, float range, bool ignoreTouching)
+    {
+        if (!GetUnoccludedRay(origin, other, range, out var length, out var ray))
+            return false;
+
+        if (MathHelper.CloseTo(length, 0))
+            return true;
+
+        if (!ignoreTouching)
+            return IntersectRay(origin.MapId, ray, length) == null;
+
+        var state = (XformSystem, origin.Position, other.Position);
+        return IntersectRay(origin.MapId, ray, length, state, IsTouchingEndpoint) == null;
+    }
+
+    private bool GetUnoccludedRay(MapCoordinates origin, MapCoordinates other, float range, out float length, out Ray ray)
+    {
+        ray = default;
+        length = default;
+        if (other.MapId != origin.MapId || other.MapId == MapId.Nullspace)
+            return false;
 
         var dir = other.Position - origin.Position;
-        var length = dir.Length();
+        length = dir.Length();
+        var normalized = dir / length;
 
-        if (range > 0f && length > range + 0.01f) return false;
-
-        if (MathHelper.CloseTo(length, 0)) return true;
+        if (range > 0f && length > range + 0.01f)
+            return false;
 
         if (length > MaxRaycastRange)
         {
-            Log.Warning("InRangeUnOccluded check performed over extreme range. Limiting CollisionRay size.");
+            Log.Warning($"{nameof(InRangeUnoccluded)} check performed over extreme range. Limiting range.");
             length = MaxRaycastRange;
         }
 
-        var ray = new Ray(origin.Position, dir.Normalized());
-        bool Ignored(EntityUid entity, TState ts) => TryComp<OccluderComponent>(entity, out var o) && !o.Enabled;
-
-        var rayResults = IntersectRayWithPredicate(origin.MapId, ray, length, state, predicate: Ignored, false);
-
-        if (rayResults.Count == 0) return true;
-
-        if (!ignoreInsideBlocker) return false;
-
-        foreach (var result in rayResults)
-        {
-            if (!TryComp(result.HitEntity, out OccluderComponent? o))
-            {
-                continue;
-            }
-
-            var bBox = o.BoundingBox;
-            bBox = bBox.Translated(_transform.GetWorldPosition(result.HitEntity));
-
-            if (bBox.Contains(origin.Position) || bBox.Contains(other.Position))
-            {
-                continue;
-            }
-
-            return false;
-        }
-
+        ray = new Ray(origin.Position, normalized);
         return true;
     }
 
-    public virtual bool InRangeUnOccluded(EntityUid origin, EntityUid other, float range = 3f, Ignored? predicate = null, bool ignoreInsideBlocker = true)
+    /// <summary>
+    /// Simple predicate for use with <see cref="InRangeUnoccluded"/> that will ignore any occluders that intersect the
+    /// start and end points.
+    /// </summary>
+    public static bool IsTouchingEndpoint(Entity<OccluderComponent, TransformComponent> ent, (SharedTransformSystem Sys, Vector2 Start, Vector2 End) state)
     {
-
-        var originPos = _transform.GetMapCoordinates(origin);
-        var otherPos = _transform.GetMapCoordinates(other);
-
-        return InRangeUnOccluded(originPos, otherPos, range, predicate, ignoreInsideBlocker);
+        var occluderBox = ent.Comp1.BoundingBox;
+        occluderBox = occluderBox.Translated(state.Sys.GetWorldPosition(ent.Comp2));
+        return occluderBox.Contains(state.Start) || occluderBox.Contains(state.End);
     }
 
-    public virtual bool InRangeUnOccluded(MapCoordinates origin, MapCoordinates other, float range, Ignored? predicate, bool ignoreInsideBlocker = true, IEntityManager? entMan = null)
-    {
-        // No, rider. This is better.
-        // ReSharper disable once ConvertToLocalFunction
-        var wrapped = (EntityUid uid, Ignored? wrapped)
-            => wrapped != null && wrapped(uid);
-
-        return InRangeUnOccluded(origin, other, range, predicate, wrapped, ignoreInsideBlocker, entMan);
-    }
+    #endregion
 }

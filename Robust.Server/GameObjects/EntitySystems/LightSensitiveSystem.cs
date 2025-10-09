@@ -1,32 +1,22 @@
-using Microsoft.CodeAnalysis.Elfie.Diagnostics;
-using Robust.Server.ComponentTrees;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Components;
-using Robust.Shared.Physics.Systems;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
-using Robust.Shared.ContentPack;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
 
 namespace Robust.Server.GameObjects;
 
 public sealed class LightSensitiveSystem : SharedLightSensitiveSystem
 {
     [Dependency] private readonly IGameTiming _gameTiming = default!;
-    [Dependency] private readonly IResourceManager _resource = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Dependency] private readonly LightTreeSystem _lightTreeSystem = default!;
     [Dependency] private readonly IPrototypeManager _proto = default!;
-    [Dependency] private readonly SharedPhysicsSystem _physics = default!;
 
     private const float DefaultCooldown = 1f;
 
@@ -51,7 +41,7 @@ public sealed class LightSensitiveSystem : SharedLightSensitiveSystem
     ///     If you're designing a system that depends on the light level of an entity, you should create a const variable that the system will
     ///     use for the cooldown. I anticipate as time goes on, more systems will use this same function for potentially reasons and all have different cooldowns.
     ///     I really hope I don't have to deal with the fallout of this design choice.
-    /// <remarks>
+    /// </remarks>
     /// <param name="uid">Entity UID to check.</param>
     /// <param name="lightLevel">A float value to be treated as a percentage.</param>
     /// <param name="cooldown">A float value to that a light level dependent system should set for how frequent of a recalculation in light level it should need.
@@ -88,7 +78,7 @@ public sealed class LightSensitiveSystem : SharedLightSensitiveSystem
     /// <remarks>
     ///     This method is probably going to be very performance inefficient, so try not to use it too often. We store recent light level calculations
     ///     in the LightSensitiveComponent, so it's not necessary to calculate them every single tick.
-    /// <remarks>
+    /// </remarks>
     /// <param name="uid">Entity UID to check.</param>
     /// <param name="component">The LightSensitiveComponent of the entity</param>
     /// <param name="entityXform">The TransformComponent of the entity</param>
@@ -99,7 +89,7 @@ public sealed class LightSensitiveSystem : SharedLightSensitiveSystem
         //var ourPosition = _transform.GetMapCoordinates(uid);
         var ourBounds = GetWorldAABB(uid, out var ourPos, out var ourRot);
         var ourMapPos = new MapCoordinates(ourPos, entityXform.MapID);
-        var queryResult = _lightTreeSystem.QueryAabb(ourMapPos.MapId, ourBounds);
+        var queryResult = LightTree.QueryAabb(ourMapPos.MapId, ourBounds);
 
         foreach (var entry in queryResult)
         {
@@ -108,7 +98,7 @@ public sealed class LightSensitiveSystem : SharedLightSensitiveSystem
         SetIllumination(uid, illumination, component);
     }
 
-    public float CalculateLightLevel(ComponentTreeEntry<PointLightComponent> treeEntry, EntityUid uid, MapCoordinates entityPos,
+    public float CalculateLightLevel(ComponentTreeEntry<SharedPointLightComponent> treeEntry, EntityUid uid, MapCoordinates entityPos,
         TransformComponent entityXform)
     {
         var calculatedLight = 0f;
@@ -119,10 +109,8 @@ public sealed class LightSensitiveSystem : SharedLightSensitiveSystem
 
         var lightPosition = new MapCoordinates(lightPos, lightXform.MapID);
 
-        if (!_occluder.InRangeUnOccluded(lightPosition, entityPos, lightComp.Radius, null))
-        {
+        if (!Occluder.InRangeUnoccluded(lightPosition, entityPos, lightComp.Radius, ignoreTouching: false))
             return calculatedLight;
-        }
 
         var dist = entityPos.Position - lightPosition.Position;
 
@@ -183,7 +171,6 @@ public sealed class LightSensitiveSystem : SharedLightSensitiveSystem
         {
             calculatedLight = finalLightVal;
         }
-        
 
         return calculatedLight;
     }

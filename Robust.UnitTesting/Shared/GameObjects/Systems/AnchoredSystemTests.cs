@@ -196,10 +196,8 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var ent1 = sim.SpawnEntity(null, coordinates); // this raises MoveEvent, subscribe after
 
             // Act
-            sim.System<MoveEventTestSystem>().ResetCounters();
-            sim.Transform(ent1).Anchored = true;
+            xformSys.AnchorEntity(ent1);
             Assert.That(sim.Transform(ent1).ParentUid, Is.EqualTo(grid.Owner));
-            sim.System<MoveEventTestSystem>().AssertMoved();
             traversal.Enabled = true;
         }
 
@@ -497,7 +495,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             // Act
             sim.System<MoveEventTestSystem>().FailOnMove = true;
             xformSys.Unanchor(ent1);
-            Assert.That(sim.Transform(ent1).ParentUid, Is.EqualTo(mapSys.GetMap(coordinates.MapId)));
+            Assert.That(sim.Transform(ent1).ParentUid, Is.EqualTo(grid.Owner));
             sim.System<MoveEventTestSystem>().FailOnMove = false;
             traversal.Enabled = true;
         }

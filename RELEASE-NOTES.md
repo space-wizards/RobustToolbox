@@ -39,19 +39,50 @@ END TEMPLATE-->
 
 ### New features
 
-* Sprites and Sprite layers have a new `Loop` data field that can be set to false to automatically pause animations once they have finished.
+* Sandbox:
+  * Added `System.DateOnly` and `System.TimeOnly`.
+* `MapId`, `MapCoordinates`, and `EntityCoordinates` are now yaml serialisable
+* The base component tree lookup system has new methods including several new `QueryAabb()` overloads that take in a collection and various new `IntersectRay()` overloads that should replace `IntersectRayWithPredicate`.
+ * Added `OccluderSystem.InRangeUnoccluded()` for checking for occluders that lie between two points.
 
 ### Bugfixes
 
-*None yet*
+* Fixed `MapLoaderSystem.SerializeEntitiesRecursive()` not properly serialising when given multiple root entities (e.g., multiple maps)
+* Fixed yaml hot reloading throwing invalid path exceptions.
+* The `EntityManager.CreateEntityUninitialized` overload that uses MapCoordinates now actually attaches entities to a grid if one is present at those coordinates, as was stated in it's documentation.
+* Fixed physics joint relays not being properly updated when an entity is removed from a container.
 
 ### Other
 
-*None yet*
+* Updated natives again to attempt to fix issues caused by the previous update.
 
 ### Internal
 
 *None yet*
+
+
+## 267.2.1
+
+
+## 267.2.0
+
+### New features
+
+* Sprites and Sprite layers have a new `Loop` data field that can be set to false to automatically pause animations once they have finished.
+
+### Bugfixes
+
+* Fixed `CollectionExtensions.TryGetValue` throwing an exception when given a negative list index.
+* Fixed `EntityManager.PredictedQueueDeleteEntity()` not deferring changes for networked entities until the end of the tick.
+* Fixed `EntityManager.IsQueuedForDeletion` not returning true foe entities getting deleted via `PredictedQueueDeleteEntity()`
+
+### Other
+
+* `IResourceManager.GetContentRoots()` has been obsoleted and returns no more results.
+
+### Internal
+
+* `IResourceManager.GetContentRoots()` has been replaced with a similar method on `IResourceManagerInternal`. This new method returns `string`s instead of `ResPath`s, and usage code has been updated to use these paths correctly.
 
 
 ## 267.1.0

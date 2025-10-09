@@ -4,7 +4,7 @@ using Robust.Shared.GameObjects;
 
 namespace Robust.Server.ComponentTrees;
 
-public sealed class ServerLightTreeSystem : LightTreeSystem
+public sealed class LightTreeSystem : SharedLightTreeSystem
 {
     public override void Initialize()
     {

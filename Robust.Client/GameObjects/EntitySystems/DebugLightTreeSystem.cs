@@ -30,7 +30,7 @@ namespace Robust.Client.GameObjects
                         EntityManager.System<EntityLookupSystem>(),
                         IoCManager.Resolve<IEyeManager>(),
                         IoCManager.Resolve<IMapManager>(),
-                        EntityManager.System<LightTreeSystem>());
+                        EntityManager.System<SharedLightTreeSystem>());
 
                     overlayManager.AddOverlay(_lightOverlay);
                 }
@@ -50,7 +50,7 @@ namespace Robust.Client.GameObjects
             private IEyeManager _eyeManager;
             private IMapManager _mapManager;
 
-            private LightTreeSystem _trees;
+            private SharedLightTreeSystem _trees;
 
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 

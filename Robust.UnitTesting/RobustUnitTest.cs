@@ -4,7 +4,6 @@ using System.Reflection;
 using NUnit.Framework;
 using Robust.Client.ComponentTrees;
 using Robust.Client.GameObjects;
-using Robust.Server.ComponentTrees;
 using Robust.Server.Debugging;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
@@ -31,7 +30,6 @@ using Robust.Shared.Threading;
 using Robust.Shared.Utility;
 using AppearanceSystem = Robust.Client.GameObjects.AppearanceSystem;
 using InputSystem = Robust.Server.GameObjects.InputSystem;
-using LightTreeComponent = Robust.Shared.ComponentTrees.LightTreeComponent;
 using MapSystem = Robust.Server.GameObjects.MapSystem;
 using PointLightComponent = Robust.Client.GameObjects.PointLightComponent;
 
@@ -140,12 +138,12 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<Robust.Client.Debugging.DebugPhysicsSystem>();
                 systems.LoadExtraSystemType<Robust.Client.GameObjects.MapSystem>();
                 systems.LoadExtraSystemType<Robust.Client.GameObjects.PointLightSystem>();
+                systems.LoadExtraSystemType<LightTreeSystem>();
                 systems.LoadExtraSystemType<RecursiveMoveSystem>();
                 systems.LoadExtraSystemType<SpriteSystem>();
                 systems.LoadExtraSystemType<SpriteTreeSystem>();
                 systems.LoadExtraSystemType<AppearanceSystem>();
                 systems.LoadExtraSystemType<GridChunkBoundsDebugSystem>();
-                systems.LoadExtraSystemType<ClientLightTreeSystem>();
             }
             else
             {
@@ -162,7 +160,7 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<InputSystem>();
                 systems.LoadExtraSystemType<PvsOverrideSystem>();
                 systems.LoadExtraSystemType<MapSystem>();
-                systems.LoadExtraSystemType<ServerLightTreeSystem>();
+                systems.LoadExtraSystemType<Robust.Server.ComponentTrees.LightTreeSystem>();
             }
 
             var entMan = deps.Resolve<IEntityManager>();

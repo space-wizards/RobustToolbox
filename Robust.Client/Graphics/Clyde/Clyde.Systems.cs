@@ -1,6 +1,5 @@
 ﻿using Robust.Client.ComponentTrees;
 using Robust.Client.GameObjects;
-using Robust.Shared.ComponentTrees;
 
 namespace Robust.Client.Graphics.Clyde;
 

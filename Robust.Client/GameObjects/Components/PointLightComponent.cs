@@ -14,6 +14,5 @@ public sealed partial class PointLightComponent : SharedPointLightComponent
     [ViewVariables(VVAccess.ReadWrite)]
     internal Texture? Mask;
     // TODO POINT LIGHT
-    // just make this an object? on the shared comp
-    // I the server-client component split is such a headache
+    // Just make this an object? on the shared comp. The server-client component split is such a pain.
 }

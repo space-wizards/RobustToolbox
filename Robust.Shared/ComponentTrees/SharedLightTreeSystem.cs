@@ -8,7 +8,7 @@ using Robust.Shared.Physics;
 
 namespace Robust.Shared.ComponentTrees;
 
-public abstract class LightTreeSystem : ComponentTreeSystem<LightTreeComponent, SharedPointLightComponent>
+public abstract class SharedLightTreeSystem : ComponentTreeSystem<LightTreeComponent, SharedPointLightComponent>
 {
     [Dependency] private readonly SharedPointLightSystem _pointLight = default!;
     [Dependency] private readonly IConfigurationManager _cfg = default!;

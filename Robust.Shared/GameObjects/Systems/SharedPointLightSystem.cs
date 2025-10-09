@@ -8,7 +8,7 @@ namespace Robust.Shared.GameObjects;
 
 public abstract class SharedPointLightSystem : EntitySystem
 {
-    [Dependency] protected readonly LightTreeSystem LightTree = default!;
+    [Dependency] protected readonly SharedLightTreeSystem LightTree = default!;
 
     public abstract SharedPointLightComponent EnsureLight(EntityUid uid);
 

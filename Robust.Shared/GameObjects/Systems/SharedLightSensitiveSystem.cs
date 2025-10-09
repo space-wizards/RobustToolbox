@@ -16,7 +16,7 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly SharedTransformSystem _transform = default!;
         [Dependency] protected readonly OccluderSystem Occluder = default!;
-        [Dependency] protected readonly LightTreeSystem LightTree = default!;
+        [Dependency] protected readonly SharedLightTreeSystem LightTree = default!;
 
         public virtual bool ResolveComp(EntityUid uid, [NotNullWhen(true)] ref LightSensitiveComponent? component)
         {

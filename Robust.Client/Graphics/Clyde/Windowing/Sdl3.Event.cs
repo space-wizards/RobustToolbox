@@ -81,11 +81,6 @@ internal partial class Clyde
                 case EventQuit:
                     ProcessEventQuit();
                     break;
-#if MACOS
-                case EventWindowDestroyed:
-                    ProcessEventWindowDestroyed();
-                    break;
-#endif
                 default:
                     _sawmill.Error($"Unknown SDL3 event type: {evb.GetType().Name}");
                     break;
@@ -260,15 +255,5 @@ internal partial class Clyde
         {
             _clyde.SendInputModeChanged();
         }
-
-#if MACOS
-        private void ProcessEventWindowDestroyed()
-        {
-            // For some reason, on macOS, closing a secondary window
-            // causes the GL context on the primary thread to crap itself.
-            // Rebinding it seems to fix it.
-            GLMakeContextCurrent(_clyde._mainWindow);
-        }
-#endif
     }
 }

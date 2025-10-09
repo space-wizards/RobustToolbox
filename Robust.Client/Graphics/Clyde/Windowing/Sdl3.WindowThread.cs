@@ -229,7 +229,9 @@ internal partial class Clyde
         private sealed class CmdWinDestroy : CmdBase
         {
             public nint Window;
+#if MACOS
             public nint MetalView;
+#endif
             public bool HadOwner;
         }
 

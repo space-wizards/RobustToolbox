@@ -116,7 +116,7 @@ public abstract partial class RhiBase
 #if WINDOWS
         public void* HInstance;
         public void* HWnd;
-#elif OSX
+#elif MACOS
         public void* MetalLayer;
 #elif LINUX
         public bool Wayland; // False = X11

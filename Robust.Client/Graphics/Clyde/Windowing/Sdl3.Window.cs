@@ -121,10 +121,10 @@ internal partial class Clyde
 
         private void WinThreadWinDestroy(CmdWinDestroy cmd)
         {
-            SDL.SDL_DestroyWindow(cmd.Window);
 #if MACOS
-            SendEvent(new EventWindowDestroyed());
+            SDL.SDL_Metal_DestroyView(cmd.MetalView);
 #endif
+            SDL.SDL_DestroyWindow(cmd.Window);
         }
 
         private nint CreateSdl3WindowForRenderer(
@@ -228,7 +228,14 @@ internal partial class Clyde
             var handle = new WindowHandle(_clyde, reg);
             reg.Handle = handle;
 
-            reg.SurfaceParams = GetSurfaceParams(window);
+#if MACOS
+            unsafe
+            {
+                reg.MetalView = (void*) SDL.SDL_Metal_CreateView(window);
+            }
+#endif
+
+            reg.SurfaceParams = GetSurfaceParams(reg, window);
 
             AssignWindowIconToWindow(window);
 
@@ -249,12 +256,15 @@ internal partial class Clyde
             return reg;
         }
 
-        public void WindowDestroy(WindowReg window)
+        public unsafe void WindowDestroy(WindowReg window)
         {
             var reg = (Sdl3WindowReg)window;
             SendCmd(new CmdWinDestroy
             {
                 Window = reg.Sdl3Window,
+#if MACOS
+                MetalView = (nint) reg.MetalView,
+#endif
                 HadOwner = window.Owner != null
             });
         }
@@ -450,8 +460,14 @@ internal partial class Clyde
             return null;
         }
 
-        private unsafe RhiBase.RhiWindowSurfaceParams GetSurfaceParams(nint sdlWindow)
+        private unsafe RhiBase.RhiWindowSurfaceParams GetSurfaceParams(Sdl3WindowReg reg, nint sdlWindow)
         {
+#if MACOS
+            return new RhiBase.RhiWindowSurfaceParams
+            {
+                MetalLayer = (void*)SDL.SDL_Metal_GetLayer((nint)reg.MetalView)
+            };
+#else
             var props = SDL.SDL_GetWindowProperties(sdlWindow);
 #if WINDOWS
             return new RhiBase.RhiWindowSurfaceParams()
@@ -484,8 +500,7 @@ internal partial class Clyde
                         0),
                 };
             }
-#else
-            throw new NotImplementedException();
+#endif
 #endif
         }
 
@@ -500,6 +515,10 @@ internal partial class Clyde
 
             // Kept around to avoid it being GCd.
             public CursorImpl? Cursor;
+
+#if MACOS
+            public unsafe void* MetalView;
+#endif
         }
     }
 }

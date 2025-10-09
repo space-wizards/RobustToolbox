@@ -26,30 +26,18 @@ internal sealed unsafe partial class RhiWebGpu
 
         surfaceDesc.nextInChain = (WGPUChainedStruct*)(&surfaceDescHwnd);
 
-#elif OSX
-        // TODO: macOS surface creation
-        WGPUSurfaceSourceMetalLayer surfaceDescMetal;
-        /*
-        var metalLayer = _clyde._windowing.WindowGetMetalLayer(window);
-
-        if (metalLayer != null)
+#elif MACOS
+        var surfaceDescMetal = new WGPUSurfaceSourceMetalLayer
         {
-            surfaceDescMetal = new WGPUSurfaceSourceMetalLayer
+            chain =
             {
-                chain =
-                {
-                    sType = WGPUSType.WGPUSType_SurfaceSourceMetalLayer
-                },
-                layer = ((IntPtr)metalLayer.Value).ToPointer()
-            };
+                sType = WGPUSType.WGPUSType_SurfaceSourceMetalLayer
+            },
+            layer = surfaceParams.MetalLayer
+        };
 
-            surfaceDesc.nextInChain = (WGPUChainedStruct*)(&surfaceDescMetal);
-        }
-        else
-        {
-            throw new NotImplementedException();
-        }
-        */
+        surfaceDesc.nextInChain = (WGPUChainedStruct*)(&surfaceDescMetal);
+
 #elif LINUX
         // TODO: Linux surface creation
         /*

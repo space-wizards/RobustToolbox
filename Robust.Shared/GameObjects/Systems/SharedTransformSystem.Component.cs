@@ -1508,10 +1508,22 @@ public abstract partial class SharedTransformSystem
         => DetachEntity(uid, xform);
 
     /// <inheritdoc cref="DetachEntityInternal"/>
-    public void DetachEntity(EntityUid uid, TransformComponent xform)
+    public void DetachEntity(EntityUid uid, TransformComponent? xform = null)
     {
+        if (!XformQuery.Resolve(uid, ref xform))
+            return;
         XformQuery.TryGetComponent(xform.ParentUid, out var oldXform);
         DetachEntity(uid, xform, MetaData(uid), oldXform);
+    }
+
+    /// <inheritdoc cref="DetachEntityInternal"/>
+    public void DetachEntity(Entity<TransformComponent?> ent)
+    {
+        if (!XformQuery.Resolve(ent.Owner, ref ent.Comp))
+            return;
+
+        XformQuery.TryGetComponent(ent.Comp.ParentUid, out var oldXform);
+        DetachEntity(ent.Owner, ent.Comp, MetaData(ent.Owner), oldXform);
     }
 
     /// <inheritdoc cref="DetachEntityInternal"/>

@@ -33,10 +33,13 @@ namespace Robust.UnitTesting.Client.Graphics
                     new Angle(-Math.PI)
                 })
                 {
+
+                    eyeManager.CurrentEye.Rotation = angle;
+
                     var worldAABB = eyeManager.GetWorldViewport();
                     var worldPort = eyeManager.GetWorldViewbounds();
-
-                    Assert.That(worldAABB.EqualsApprox(worldPort.CalcBoundingBox()), $"Invalid EyeRotation bounds found for {angle}: Expected {worldAABB} and received {worldPort.CalcBoundingBox()}");
+                    Assert.That(worldAABB.EqualsApprox(worldPort.CalcBoundingBox()),
+                        $"Invalid EyeRotation bounds found for {angle}: Expected {worldAABB} and received {worldPort.CalcBoundingBox()}");
                 }
             });
         }

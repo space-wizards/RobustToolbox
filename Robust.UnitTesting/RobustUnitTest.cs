@@ -4,6 +4,7 @@ using System.Reflection;
 using NUnit.Framework;
 using Robust.Client.ComponentTrees;
 using Robust.Client.GameObjects;
+using Robust.Server.ComponentTrees;
 using Robust.Server.Debugging;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
@@ -125,7 +126,6 @@ namespace Robust.UnitTesting
             systems.LoadExtraSystemType<SharedGridTraversalSystem>();
             systems.LoadExtraSystemType<FixtureSystem>();
             systems.LoadExtraSystemType<CollisionWakeSystem>();
-            systems.LoadExtraSystemType<LightTreeSystem>();
 
             if (Project == UnitTestProject.Client)
             {
@@ -145,6 +145,7 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<SpriteTreeSystem>();
                 systems.LoadExtraSystemType<AppearanceSystem>();
                 systems.LoadExtraSystemType<GridChunkBoundsDebugSystem>();
+                systems.LoadExtraSystemType<ClientLightTreeSystem>();
             }
             else
             {
@@ -161,6 +162,7 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<InputSystem>();
                 systems.LoadExtraSystemType<PvsOverrideSystem>();
                 systems.LoadExtraSystemType<MapSystem>();
+                systems.LoadExtraSystemType<ServerLightTreeSystem>();
             }
 
             var entMan = deps.Resolve<IEntityManager>();

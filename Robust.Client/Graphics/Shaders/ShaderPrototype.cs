@@ -140,7 +140,7 @@ namespace Robust.Client.Graphics
 
                 case "canvas":
                     Kind = ShaderKind.Canvas;
-                    _source = IoCManager.Resolve<IResourceCache>().GetResource<ShaderSourceResource>("/EngineShaders/Internal/default-sprite.swsl");
+                    _source = IoCManager.Resolve<IResourceCache>().GetResource<ShaderSourceResource>("/Shaders/Internal/default-sprite.swsl");
                     break;
 
                 default:

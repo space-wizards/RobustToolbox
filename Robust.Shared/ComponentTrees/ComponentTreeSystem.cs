@@ -130,6 +130,9 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
 
     public void QueueTreeUpdate(EntityUid uid, TComp component, TransformComponent? xform = null)
     {
+        if (!_initialized)
+            return;
+
         if (component.TreeUpdateQueued || !Resolve(uid, ref xform))
             return;
 
@@ -188,9 +191,6 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
     {
         if (DoTickUpdate && _initialized)
             UpdateTreePositions();
-
-        if (!_initialized)
-            _updateQueue.Clear();
     }
 
     public override void FrameUpdate(float frameTime)

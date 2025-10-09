@@ -83,10 +83,10 @@ public record struct DeserializationOptions()
     public bool LogInvalidEntities = true;
 
     /// <summary>
-    /// Whether or not to automatically assign map ids to any deserialized map entities.
+    /// Whether to automatically assign map ids to any deserialized map entities.
     /// If false, maps need to be manually given ids before entities are initialized.
     /// </summary>
-    public bool AssignMapids = true;
+    public bool AssignMapIds = true;
 }
 
 /// <summary>

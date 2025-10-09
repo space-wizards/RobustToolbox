@@ -4,13 +4,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Map.Events;
 using Robust.Shared.Maths;
-using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Utility;
 
@@ -97,7 +95,7 @@ public sealed partial class MapLoaderSystem
         var opts = options ?? MapLoadOptions.Default;
 
         // If we are forcing a map id, we cannot auto-assign ids.
-        opts.DeserializationOptions.AssignMapids = opts.ForceMapId == null;
+        opts.DeserializationOptions.AssignMapIds = opts.ForceMapId == null;
 
         if (opts.MergeMap is { } targetId && !_mapSystem.MapExists(targetId))
             throw new Exception($"Target map {targetId} does not exist");

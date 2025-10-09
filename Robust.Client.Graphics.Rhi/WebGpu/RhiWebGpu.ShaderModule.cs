@@ -10,8 +10,17 @@ internal sealed unsafe partial class RhiWebGpu
     {
         var codeBytes = Encoding.UTF8.GetBytes(descriptor.Code);
 
+        return CreateShaderModule(new RhiShaderModuleDescriptorUtf8
+        {
+            Code = codeBytes,
+            Label = descriptor.Label
+        });
+    }
+
+    public override RhiShaderModule CreateShaderModule(in RhiShaderModuleDescriptorUtf8 descriptor)
+    {
         WGPUShaderModule shaderModule;
-        fixed (byte* pCode = codeBytes)
+        fixed (byte* pCode = descriptor.Code)
         fixed (byte* pLabel = MakeLabel(descriptor.Label))
         {
             var descWgsl = new WGPUShaderSourceWGSL();

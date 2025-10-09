@@ -14,6 +14,9 @@ internal static unsafe partial class Wesl
     public static extern WeslResult wesl_compile([NativeTypeName("const WeslStringMap *")] WeslStringMap* files, [NativeTypeName("const char *")] sbyte* root, [NativeTypeName("const WeslCompileOptions *")] WeslCompileOptions* options, [NativeTypeName("const WeslStringArray *")] WeslStringArray* keep, [NativeTypeName("const WeslBoolMap *")] WeslBoolMap* features);
 
     [DllImport("robust-native", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+    public static extern WeslParseResult wesl_parse([NativeTypeName("const char *")] sbyte* source);
+
+    [DllImport("robust-native", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
     public static extern WeslResult wesl_eval([NativeTypeName("const WeslStringMap *")] WeslStringMap* files, [NativeTypeName("const char *")] sbyte* root, [NativeTypeName("const char *")] sbyte* expression, [NativeTypeName("const WeslCompileOptions *")] WeslCompileOptions* options, [NativeTypeName("const WeslBoolMap *")] WeslBoolMap* features);
 
     [DllImport("robust-native", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
@@ -27,6 +30,9 @@ internal static unsafe partial class Wesl
 
     [DllImport("robust-native", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
     public static extern void wesl_free_exec_result(WeslExecResult* result);
+
+    [DllImport("robust-native", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+    public static extern void wesl_free_translation_unit(WeslTranslationUnit* unit);
 
     [DllImport("robust-native", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
     [return: NativeTypeName("const char *")]

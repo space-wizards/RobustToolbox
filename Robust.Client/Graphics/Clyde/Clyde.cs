@@ -46,6 +46,7 @@ namespace Robust.Client.Graphics.Clyde
         [Dependency] private readonly ClientEntityManager _entityManager = default!;
         [Dependency] private readonly IPrototypeManager _proto = default!;
         [Dependency] private readonly IReloadManager _reloads = default!;
+        [Dependency] private readonly IShaderCompiler _shaderCompiler = default!;
 
         private bool _drawingSplash = true;
 

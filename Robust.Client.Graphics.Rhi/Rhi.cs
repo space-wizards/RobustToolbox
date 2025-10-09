@@ -38,6 +38,7 @@ public abstract partial class RhiBase
     public abstract RhiSampler CreateSampler(in RhiSamplerDescriptor descriptor);
 
     public abstract RhiShaderModule CreateShaderModule(in RhiShaderModuleDescriptor descriptor);
+    public abstract RhiShaderModule CreateShaderModule(in RhiShaderModuleDescriptorUtf8 descriptor);
 
     public abstract RhiPipelineLayout CreatePipelineLayout(in RhiPipelineLayoutDescriptor descriptor);
 
@@ -800,6 +801,13 @@ public record struct RhiShaderModuleDescriptor(
     // TODO: Hints
     // TODO: source map ?
     string Code,
+    string? Label
+);
+
+public record struct RhiShaderModuleDescriptorUtf8(
+    // TODO: Hints
+    // TODO: source map ?
+    byte[] Code,
     string? Label
 );
 

@@ -1,6 +1,6 @@
 namespace Robust.Client.Interop.RobustNative.Wesl.Gen;
 
-internal partial struct WeslCompileOptions
+internal unsafe partial struct WeslCompileOptions
 {
     public WeslManglerKind mangler;
 
@@ -36,4 +36,6 @@ internal partial struct WeslCompileOptions
 
     [NativeTypeName("_Bool")]
     public byte mangle_root;
+
+    public WeslResolverOptions* resolver;
 }

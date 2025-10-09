@@ -1422,6 +1422,7 @@ dependencies = [
 name = "wesl-c"
 version = "0.2.0"
 dependencies = [
+ "bindgen",
  "wesl",
 ]
 

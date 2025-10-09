@@ -99,6 +99,7 @@ namespace Robust.Client
             deps.Register<IUserInterfaceManager, UserInterfaceManager>();
             deps.Register<IUserInterfaceManagerInternal, UserInterfaceManager>();
             deps.Register<ILightManager, LightManager>();
+            deps.Register<IShaderCompiler, ShaderCompiler>();
             deps.Register<IDiscordRichPresence, DiscordRichPresence>();
             deps.Register<IMidiManager, MidiManager>();
             deps.Register<IAuthManager, AuthManager>();

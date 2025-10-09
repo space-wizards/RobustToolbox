@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -89,12 +90,13 @@ internal partial class Clyde
                 RhiBufferUsageFlags.Uniform | RhiBufferUsageFlags.CopyDst,
                 label: "_uniformPassBuffer");
 
-            var res = clyde._resourceCache;
-            var shaderSource = res.ContentFileReadAllText("/Shaders/Internal/default-sprite.wgsl");
+            var compileResult = clyde._shaderCompiler.CompileToWgsl(
+                new ResPath("/EngineShaders/Internal/default_sprite.wgsl"),
+                ImmutableDictionary<string, bool>.Empty);
 
-            using var shader = _rhi.CreateShaderModule(new RhiShaderModuleDescriptor(
-                shaderSource,
-                "default-sprite.wgsl"
+            using var shader = _rhi.CreateShaderModule(new RhiShaderModuleDescriptorUtf8(
+                compileResult.Code,
+                "default_sprite.wgsl"
             ));
 
             _group0Layout = _rhi.CreateBindGroupLayout(new RhiBindGroupLayoutDescriptor(

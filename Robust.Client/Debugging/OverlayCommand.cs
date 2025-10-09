@@ -7,7 +7,6 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Debugging;
 
-// Must be internal, due to CreateInstanceUnchecked
 [ToolshedCommand]
 internal sealed class OverlayCommand : ToolshedCommand
 {
@@ -39,7 +38,6 @@ internal sealed class OverlayCommand : ToolshedCommand
             return;
 
         // TODO OVERLAYS Give overlays the ContentAccessAllowedAttribute?
-        // Then this doesn't need to be unchecked.
         var instance = (Overlay) _factory.CreateInstanceUnchecked(overlay, oneOff: true);
         if (instance is IPostInjectInit init)
             init.PostInject();

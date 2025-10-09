@@ -49,6 +49,7 @@ public sealed partial class PrototypeLayerData
     [DataField] public PrototypeCopyToShaderParameters? CopyToShaderParameters;
 
     [DataField] public bool Cycle;
+    [DataField] public bool Loop = true;
 }
 
 /// <summary>

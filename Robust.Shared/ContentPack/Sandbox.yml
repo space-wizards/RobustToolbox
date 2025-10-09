@@ -17,6 +17,10 @@ WhitelistedNamespaces:
 - Content
 - OpenDreamShared
 
+AllowedAssemblyPrefixes:
+- OpenDream
+- Content
+
 # The type whitelist does NOT care about which assembly types come from.
 # This is because types switch assembly all the time.
 # Just look up stuff like StreamReader on https://apisof.net.
@@ -1089,6 +1093,7 @@ Types:
       - "string ToHexString(System.ReadOnlySpan`1<byte>)"
 
     Converter`2: { All: True } # Delegate
+    DateOnly: { All: True }
     DateTime: { All: True }
     DateTimeKind: { } # Enum
     DateTimeOffset: { All: True }
@@ -1421,6 +1426,7 @@ Types:
       - "void CopyTo(int, char[], int, int)"
     StringComparison: { } # Enum
     StringSplitOptions: { } # Enum
+    TimeOnly: { All: True }
     TimeSpan: { All: True }
     Type:
       # COM, marshalling, interop, etc... stuff omitted.

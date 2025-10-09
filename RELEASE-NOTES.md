@@ -42,6 +42,8 @@ END TEMPLATE-->
 * Sandbox:
   * Added `System.DateOnly` and `System.TimeOnly`.
 * `MapId`, `MapCoordinates`, and `EntityCoordinates` are now yaml serialisable
+* The base component tree lookup system has new methods including several new `QueryAabb()` overloads that take in a collection and various new `IntersectRay()` overloads that should replace `IntersectRayWithPredicate`.
+ * Added `OccluderSystem.InRangeUnoccluded()` for checking for occluders that lie between two points.
 
 ### Bugfixes
 

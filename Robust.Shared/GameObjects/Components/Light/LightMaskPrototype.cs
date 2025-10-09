@@ -18,25 +18,23 @@ using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects;
-
-[Prototype("lightMask")]
+[Prototype]
 public sealed partial class LightMaskPrototype : IPrototype
 {
-    [ViewVariables(VVAccess.ReadWrite)]
-    [IdDataField] 
+    [IdDataField]
     public string ID { get; private set; } = default!;
 
     /// <summary>
     /// File path to the mask image that will be applied to the light for rendering.
     /// </summary>
-    [ViewVariables(VVAccess.ReadWrite), DataField("maskPath", required: true)]
+    [DataField(required: true)]
     public ResPath MaskPath;
 
     /// <summary>
     /// Light of light cones that correspond to the light mask.
     /// </summary>
-    [ViewVariables(VVAccess.ReadWrite), DataField("lightCones", required: true)]
-    public List<LightConeData> LightCones = default!;
+    [DataField(required: true)]
+    public List<LightConeData> LightCones = new();
 
 }
 
@@ -44,27 +42,34 @@ public sealed partial class LightMaskPrototype : IPrototype
 /// Container class that holds data for a light cone.
 /// This Data is used by <see cref="LightSensitiveSystem"/>
 /// </summary>
-[Serializable, NetSerializable]
 [DataDefinition]
-public sealed partial class LightConeData
+[Serializable, NetSerializable]
+public partial record struct LightConeData
 {
     /// <summary>
     ///     The angle offset of the cone in degrees, relative to the light it belongs to.
     ///     0 is forward, 90 is to the right, etc.
     /// </summary>
-    [DataField("direction", required: true)]
-    public float Direction = default!;
+    [DataField]
+    public float Direction;
 
     /// <summary>
     ///     Angle limit of the cone to be within the full brightness of the light.
     /// </summary>
-    [DataField("innerWidth", required: true)]
-    public float InnerWidth = default!;
+    [DataField]
+    public float InnerWidth;
 
     /// <summary>
     ///     Angle limit of the cone to be within the reduced light. Beyond this angle, you are considered out of the light.
     /// </summary>
-    [DataField("outerWidth", required: true)]
-    public float OuterWidth = default!;
+    [DataField]
+    public float OuterWidth;
+
+    public LightConeData(float direction, float innerWidth, float outerWidth)
+    {
+        Direction = direction;
+        InnerWidth = innerWidth;
+        OuterWidth = outerWidth;
+    }
 
 }

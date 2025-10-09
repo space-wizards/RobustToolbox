@@ -1,11 +1,15 @@
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.ComponentTrees;
 using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 
 namespace Robust.Shared.GameObjects;
 
 public abstract class SharedPointLightSystem : EntitySystem
 {
+    [Dependency] protected readonly LightTreeSystem LightTree = default!;
+
     public abstract SharedPointLightComponent EnsureLight(EntityUid uid);
 
     public abstract bool ResolveLight(EntityUid uid, [NotNullWhen(true)] ref SharedPointLightComponent? component);
@@ -15,6 +19,12 @@ public abstract class SharedPointLightSystem : EntitySystem
     public abstract bool RemoveLightDeferred(EntityUid uid);
 
     protected abstract void UpdatePriority(EntityUid uid, SharedPointLightComponent comp, MetaDataComponent meta);
+
+    public void UpdatePriority(Entity<SharedPointLightComponent?, MetaDataComponent?> ent)
+    {
+        if (Resolve(ent.Owner, ref ent.Comp1, ref ent.Comp2))
+            UpdatePriority(ent.Owner, ent.Comp1, ent.Comp2);
+    }
 
     public void SetCastShadows(EntityUid uid, bool value, SharedPointLightComponent? comp = null, MetaDataComponent? meta = null)
     {
@@ -38,16 +48,18 @@ public abstract class SharedPointLightSystem : EntitySystem
         Dirty(uid, comp);
     }
 
-    public virtual void SetContainerOccluded(EntityUid uid, bool occluded, SharedPointLightComponent? comp = null)
+    public void SetContainerOccluded(EntityUid uid, bool occluded, SharedPointLightComponent? comp = null)
     {
         if (!ResolveLight(uid, ref comp) || occluded == comp.ContainerOccluded)
             return;
 
         comp.ContainerOccluded = occluded;
         Dirty(uid, comp);
+        if (comp.Enabled)
+            LightTree.QueueTreeUpdate(uid, comp);
     }
 
-    public virtual void SetEnabled(EntityUid uid, bool enabled, SharedPointLightComponent? comp = null, MetaDataComponent? meta = null)
+    public void SetEnabled(EntityUid uid, bool enabled, SharedPointLightComponent? comp = null, MetaDataComponent? meta = null)
     {
         if (!ResolveLight(uid, ref comp) || enabled == comp.Enabled)
             return;
@@ -59,6 +71,9 @@ public abstract class SharedPointLightSystem : EntitySystem
             return;
 
         comp.Enabled = enabled;
+        if (!comp.ContainerOccluded)
+            LightTree.QueueTreeUpdate(uid, comp);
+
         RaiseLocalEvent(uid, new PointLightToggleEvent(comp.Enabled));
         if (!Resolve(uid, ref meta))
             return;
@@ -76,12 +91,15 @@ public abstract class SharedPointLightSystem : EntitySystem
         Dirty(uid, comp);
     }
 
-    public virtual void SetRadius(EntityUid uid, float radius, SharedPointLightComponent? comp = null, MetaDataComponent? meta = null)
+    public void SetRadius(EntityUid uid, float radius, SharedPointLightComponent? comp = null, MetaDataComponent? meta = null)
     {
         if (!ResolveLight(uid, ref comp) || MathHelper.CloseToPercent(comp.Radius, radius))
             return;
 
         comp.Radius = radius;
+        if (comp.AddToTree)
+            LightTree.QueueTreeUpdate(uid, comp);
+
         if (!Resolve(uid, ref meta))
             return;
 

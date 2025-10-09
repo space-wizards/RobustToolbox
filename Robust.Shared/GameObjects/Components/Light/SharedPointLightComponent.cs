@@ -1,10 +1,11 @@
 using System;
 using System.Numerics;
-
 using Robust.Shared.Animations;
+using Robust.Shared.ComponentTrees;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
@@ -12,7 +13,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.GameObjects
 {
     [NetworkedComponent, Access(typeof(SharedPointLightSystem))]
-    public abstract partial class SharedPointLightComponent : Component
+    public abstract partial class SharedPointLightComponent : Component, IComponentTreeEntry<SharedPointLightComponent>
     {
         [ViewVariables(VVAccess.ReadWrite)]
         [DataField("color")]
@@ -127,6 +128,26 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         [DataField("lightMask")]
         public ProtoId<LightMaskPrototype>? LightMask;
+
+        #region Component Tree
+
+        /// <inheritdoc />
+        [ViewVariables]
+        public EntityUid? TreeUid { get; set; }
+
+        /// <inheritdoc />
+        [ViewVariables]
+        public DynamicTree<ComponentTreeEntry<SharedPointLightComponent>>? Tree { get; set; }
+
+        /// <inheritdoc />
+        [ViewVariables]
+        public bool AddToTree => Enabled && !ContainerOccluded;
+
+        /// <inheritdoc />
+        [ViewVariables]
+        public bool TreeUpdateQueued { get; set; }
+
+        #endregion
     }
 
     /// <summary>

@@ -1,10 +1,7 @@
-using System;
 using System.Diagnostics.CodeAnalysis;
-
+using Robust.Shared.ComponentTrees;
 using Robust.Shared.IoC;
-using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 
 namespace Robust.Shared.GameObjects
 {
@@ -18,7 +15,8 @@ namespace Robust.Shared.GameObjects
     public abstract class SharedLightSensitiveSystem : EntitySystem
     {
         [Dependency] private readonly SharedTransformSystem _transform = default!;
-        [Dependency] protected readonly OccluderSystem _occluder = default!;
+        [Dependency] protected readonly OccluderSystem Occluder = default!;
+        [Dependency] protected readonly LightTreeSystem LightTree = default!;
 
         public virtual bool ResolveComp(EntityUid uid, [NotNullWhen(true)] ref LightSensitiveComponent? component)
         {

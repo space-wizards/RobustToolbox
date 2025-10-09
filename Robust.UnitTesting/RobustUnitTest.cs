@@ -30,6 +30,7 @@ using Robust.Shared.Threading;
 using Robust.Shared.Utility;
 using AppearanceSystem = Robust.Client.GameObjects.AppearanceSystem;
 using InputSystem = Robust.Server.GameObjects.InputSystem;
+using LightTreeComponent = Robust.Shared.ComponentTrees.LightTreeComponent;
 using MapSystem = Robust.Server.GameObjects.MapSystem;
 using PointLightComponent = Robust.Client.GameObjects.PointLightComponent;
 
@@ -124,6 +125,7 @@ namespace Robust.UnitTesting
             systems.LoadExtraSystemType<SharedGridTraversalSystem>();
             systems.LoadExtraSystemType<FixtureSystem>();
             systems.LoadExtraSystemType<CollisionWakeSystem>();
+            systems.LoadExtraSystemType<LightTreeSystem>();
 
             if (Project == UnitTestProject.Client)
             {
@@ -138,7 +140,6 @@ namespace Robust.UnitTesting
                 systems.LoadExtraSystemType<Robust.Client.Debugging.DebugPhysicsSystem>();
                 systems.LoadExtraSystemType<Robust.Client.GameObjects.MapSystem>();
                 systems.LoadExtraSystemType<Robust.Client.GameObjects.PointLightSystem>();
-                systems.LoadExtraSystemType<LightTreeSystem>();
                 systems.LoadExtraSystemType<RecursiveMoveSystem>();
                 systems.LoadExtraSystemType<SpriteSystem>();
                 systems.LoadExtraSystemType<SpriteTreeSystem>();

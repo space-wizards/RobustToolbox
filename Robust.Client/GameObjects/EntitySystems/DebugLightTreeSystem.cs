@@ -1,6 +1,7 @@
 #if DEBUG
 using Robust.Client.ComponentTrees;
 using Robust.Client.Graphics;
+using Robust.Shared.ComponentTrees;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;

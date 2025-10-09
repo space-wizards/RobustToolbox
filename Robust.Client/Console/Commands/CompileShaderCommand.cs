@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Text;
 using Robust.Client.Graphics;
 using Robust.Shared.Console;
@@ -21,7 +22,32 @@ internal sealed class CompileShaderCommand : IConsoleCommand
     {
         var path = args[0];
 
-        var x = _shaderCompiler.CompileToWgsl(new ResPath(path), ImmutableDictionary<string, bool>.Empty);
+        var features = new Dictionary<string, bool>();
+        for (var i = 1; i < args.Length; i++)
+        {
+            var split = args[i].Split('=', 2);
+            var value = split[1].Trim();
+            if (!bool.TryParse(value, out var boolValue))
+            {
+                if (value == "0")
+                {
+                    boolValue = false;
+                }
+                else if (value == "1")
+                {
+                    boolValue = true;
+                }
+                else
+                {
+                    shell.WriteError($"Invalid feature value: '{value}'");
+                    return;
+                }
+            }
+
+            features.Add(split[0].Trim(), boolValue);
+        }
+
+        var x = _shaderCompiler.CompileToWgsl(new ResPath(path), features);
         if (!x.Success)
         {
             shell.WriteError("Compilation failed");
@@ -41,6 +67,7 @@ internal sealed class CompileShaderCommand : IConsoleCommand
                 "<path>");
         }
 
-        return CompletionResult.Empty;
+        // Features.
+        return CompletionResult.FromHint("<feature>=<1|0>");
     }
 }

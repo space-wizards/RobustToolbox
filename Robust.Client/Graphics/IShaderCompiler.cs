@@ -5,6 +5,7 @@ namespace Robust.Client.Graphics;
 
 public interface IShaderCompiler
 {
+    ShaderCompileResultWgsl CompileToWgsl(ResPath path);
     ShaderCompileResultWgsl CompileToWgsl(ResPath path, IReadOnlyDictionary<string, bool> features);
 }
 

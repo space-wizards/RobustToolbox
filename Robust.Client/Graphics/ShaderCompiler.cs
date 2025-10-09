@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -34,6 +35,11 @@ internal sealed class ShaderCompiler : IShaderCompiler, IDisposable
         RegisterPackage(new ResPath("/Shaders"), "Content");
     }
 
+    public ShaderCompileResultWgsl CompileToWgsl(ResPath path)
+    {
+        return CompileToWgsl(path, ImmutableDictionary<string, bool>.Empty);
+    }
+
     public unsafe ShaderCompileResultWgsl CompileToWgsl(ResPath path, IReadOnlyDictionary<string, bool> features)
     {
         using var _ = _rwLock.ReadGuard();
@@ -53,10 +59,22 @@ internal sealed class ShaderCompiler : IShaderCompiler, IDisposable
 
         byte[] modulePathNullTerminated = [.. Encoding.UTF8.GetBytes(modulePath), 0];
 
+        void* freeBoolMap = null;
+        WeslBoolMap* boolMap = null;
         WeslResult result;
+        if (features.Count > 0)
+        {
+            if (!TryWriteBoolMap(stackalloc byte[1024], features, out boolMap))
+            {
+                var heapBuffer = FfiHelper.CreateHeapBumpAllocateBuffer(16384, out freeBoolMap);
+                if (!TryWriteBoolMap(heapBuffer, features, out boolMap))
+                    throw new ArgumentException("Too many features specified!");
+            }
+        }
+
         fixed (byte* pPath = modulePathNullTerminated)
         {
-            result = Wesl.wesl_compile(null, (sbyte*)pPath, &compileOptions, null, null);
+            result = Wesl.wesl_compile(null, (sbyte*)pPath, &compileOptions, null, boolMap);
         }
 
         try
@@ -74,7 +92,44 @@ internal sealed class ShaderCompiler : IShaderCompiler, IDisposable
         finally
         {
             Wesl.wesl_free_result(&result);
+
+            if (freeBoolMap != null)
+                NativeMemory.Free(freeBoolMap);
         }
+    }
+
+    private static unsafe bool TryWriteBoolMap(
+        Span<byte> buffer,
+        IReadOnlyDictionary<string, bool> map,
+        out WeslBoolMap* ptr)
+    {
+        if (!FfiHelper.TryBumpAllocate(ref buffer, out ptr))
+            return false;
+
+        var count = map.Count;
+        if (!FfiHelper.TryBumpAllocate(ref buffer, count, out Ptr<byte>* strings, out var stringsSpan))
+            return false;
+
+        if (!FfiHelper.TryBumpAllocate(ref buffer, count, out bool* bools, out var boolSpan))
+            return false;
+
+        var i = 0;
+        foreach (var (key, value) in map)
+        {
+            boolSpan[i] = value;
+            if (!FfiHelper.TryBumpAllocateUtf8(ref buffer, key, out var stringPtr))
+                return false;
+
+            stringsSpan[i] = stringPtr;
+
+            i += 1;
+        }
+
+        ptr->values = bools;
+        ptr->keys = (sbyte**)strings;
+        ptr->len = (UIntPtr)count;
+
+        return true;
     }
 
     private unsafe WeslResolverOptions MakeResolverOptions()

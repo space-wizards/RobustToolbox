@@ -1,9 +1,7 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
-using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics.Rhi.WebGpu;
 
@@ -180,64 +178,6 @@ internal sealed unsafe partial class RhiWebGpu
         return Encoding.UTF8.GetBytes(label);
     }
 
-    /// <param name="buf">Must be pinned memory or I WILL COME TO YOUR HOUSE!!</param>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void* BumpAllocate(ref Span<byte> buf, int size)
-    {
-        // Round up to 8 to make sure everything stays aligned inside.
-        var alignedSize = MathHelper.CeilingPowerOfTwo(size, 8);
-        if (buf.Length < alignedSize)
-            ThrowBumpAllocOutOfSpace();
-
-        var ptr = Unsafe.AsPointer(ref MemoryMarshal.AsRef<byte>(buf));
-        buf = buf[alignedSize..];
-        return ptr;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static T* BumpAllocate<T>(ref Span<byte> buf) where T : unmanaged
-    {
-        var ptr = (T*)BumpAllocate(ref buf, sizeof(T));
-        // Yeah I don't trust myself.
-        *ptr = default;
-        return ptr;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static T* BumpAllocate<T>(ref Span<byte> buf, int count) where T : unmanaged
-    {
-        var size = checked(sizeof(T) * count);
-        var ptr = BumpAllocate(ref buf, size);
-        // Yeah I don't trust myself.
-        new Span<byte>(ptr, size).Clear();
-        return (T*)ptr;
-    }
-
-    // Workaround for C# not having pointers in generics.
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static T** BumpAllocatePtr<T>(ref Span<byte> buf, int count) where T : unmanaged
-    {
-        var size = checked(sizeof(T*) * count);
-        var ptr = BumpAllocate(ref buf, size);
-        // Yeah I don't trust myself.
-        new Span<byte>(ptr, size).Clear();
-        return (T**)ptr;
-    }
-
-    private static byte* BumpAllocateUtf8(ref Span<byte> buf, string? str)
-    {
-        if (str == null)
-            return null;
-
-        var byteCount = Encoding.UTF8.GetByteCount(str) + 1;
-        var ptr = BumpAllocate(ref buf, byteCount);
-        var dstSpan = new Span<byte>(ptr, byteCount);
-        Encoding.UTF8.GetBytes(str, dstSpan);
-        dstSpan[^1] = 0;
-
-        return (byte*) ptr;
-    }
-
     private static WGPUStringView BumpAllocateStringView(ref Span<byte> buf, string? str)
     {
         if (str == null)
@@ -255,12 +195,6 @@ internal sealed unsafe partial class RhiWebGpu
         };
     }
 
-    [DoesNotReturn]
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void ThrowBumpAllocOutOfSpace()
-    {
-        throw new InvalidOperationException("Out of bump allocator space!");
-    }
 
     private sealed class WgpuPromise<TResult> : IDisposable
     {

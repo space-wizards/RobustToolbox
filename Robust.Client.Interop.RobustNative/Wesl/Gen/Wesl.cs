@@ -32,6 +32,9 @@ internal static unsafe partial class Wesl
     public static extern void wesl_free_exec_result(WeslExecResult* result);
 
     [DllImport("robust-native", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
+    public static extern void wesl_free_parse_result(WeslParseResult* result);
+
+    [DllImport("robust-native", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]
     public static extern void wesl_free_translation_unit(WeslTranslationUnit* unit);
 
     [DllImport("robust-native", CallingConvention = CallingConvention.Cdecl, ExactSpelling = true)]

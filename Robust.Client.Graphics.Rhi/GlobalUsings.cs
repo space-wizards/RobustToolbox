@@ -1,6 +1,7 @@
 ﻿global using Robust.Client.Interop.RobustNative.Webgpu;
 
 global using static Robust.Client.Interop.RobustNative.Webgpu.Wgpu;
+global using static Robust.Shared.Utility.FfiHelper;
 
 global using unsafe WGPUTexture = Robust.Client.Interop.RobustNative.Webgpu.WGPUTextureImpl*;
 global using unsafe WGPUDevice = Robust.Client.Interop.RobustNative.Webgpu.WGPUDeviceImpl*;

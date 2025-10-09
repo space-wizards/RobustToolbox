@@ -12,6 +12,10 @@
     <PackageReference Include="JetBrains.Annotations" PrivateAssets="All" />
     <PackageReference Include="Serilog" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
+  </ItemGroup>
   
   <Import Project="..\MSBuild\Robust.Properties.targets" />
 </Project>

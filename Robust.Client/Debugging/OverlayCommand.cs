@@ -7,6 +7,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Debugging;
 
+// Must be internal, due to CreateInstanceUnchecked
 [ToolshedCommand]
 internal sealed class OverlayCommand : ToolshedCommand
 {
@@ -14,7 +15,7 @@ internal sealed class OverlayCommand : ToolshedCommand
     [Dependency] private readonly IDynamicTypeFactoryInternal _factory = default!;
 
     [CommandImplementation("toggle")]
-    public void Toggle([CommandArgument(customParser:typeof(ReflectionTypeParser<Overlay>))] Type overlay)
+    internal void Toggle([CommandArgument(customParser:typeof(ReflectionTypeParser<Overlay>))] Type overlay)
     {
         if (!overlay.IsSubclassOf(typeof(Overlay)))
             throw new ArgumentException("Type must be a subclass of overlay");
@@ -26,7 +27,7 @@ internal sealed class OverlayCommand : ToolshedCommand
     }
 
     [CommandImplementation("add")]
-    public void Add([CommandArgument(customParser: typeof(ReflectionTypeParser<Overlay>))] Type overlay)
+    internal void Add([CommandArgument(customParser: typeof(ReflectionTypeParser<Overlay>))] Type overlay)
     {
         if (!overlay.IsSubclassOf(typeof(Overlay)))
             throw new ArgumentException("Type must be a subclass of overlay");
@@ -37,6 +38,8 @@ internal sealed class OverlayCommand : ToolshedCommand
         if (_overlay.HasOverlay(overlay))
             return;
 
+        // TODO OVERLAYS Give overlays the ContentAccessAllowedAttribute?
+        // Then this doesn't need to be unchecked.
         var instance = (Overlay) _factory.CreateInstanceUnchecked(overlay, oneOff: true);
         if (instance is IPostInjectInit init)
             init.PostInject();

@@ -51,7 +51,7 @@ public sealed class LightSensitiveSystem : SharedLightSensitiveSystem
     ///     If you're designing a system that depends on the light level of an entity, you should create a const variable that the system will
     ///     use for the cooldown. I anticipate as time goes on, more systems will use this same function for potentially reasons and all have different cooldowns.
     ///     I really hope I don't have to deal with the fallout of this design choice.
-    /// <remarks>
+    /// </remarks>
     /// <param name="uid">Entity UID to check.</param>
     /// <param name="lightLevel">A float value to be treated as a percentage.</param>
     /// <param name="cooldown">A float value to that a light level dependent system should set for how frequent of a recalculation in light level it should need.
@@ -88,7 +88,7 @@ public sealed class LightSensitiveSystem : SharedLightSensitiveSystem
     /// <remarks>
     ///     This method is probably going to be very performance inefficient, so try not to use it too often. We store recent light level calculations
     ///     in the LightSensitiveComponent, so it's not necessary to calculate them every single tick.
-    /// <remarks>
+    /// </remarks>
     /// <param name="uid">Entity UID to check.</param>
     /// <param name="component">The LightSensitiveComponent of the entity</param>
     /// <param name="entityXform">The TransformComponent of the entity</param>
@@ -119,10 +119,8 @@ public sealed class LightSensitiveSystem : SharedLightSensitiveSystem
 
         var lightPosition = new MapCoordinates(lightPos, lightXform.MapID);
 
-        if (!_occluder.InRangeUnOccluded(lightPosition, entityPos, lightComp.Radius, null))
-        {
+        if (!_occluder.InRangeUnoccluded(lightPosition, entityPos, lightComp.Radius, ignoreTouching: false))
             return calculatedLight;
-        }
 
         var dist = entityPos.Position - lightPosition.Position;
 
@@ -183,7 +181,6 @@ public sealed class LightSensitiveSystem : SharedLightSensitiveSystem
         {
             calculatedLight = finalLightVal;
         }
-        
 
         return calculatedLight;
     }

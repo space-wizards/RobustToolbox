@@ -9,9 +9,9 @@ using Robust.Shared.Physics;
 namespace Robust.Shared.GameObjects
 {
     /// <summary>
-    ///     Handles the calculations of light sensitivity for entities with the <see cref="LightSensitiveComponent"/>. 
+    ///     Handles the calculations of light sensitivity for entities with the <see cref="LightSensitiveComponent"/>.
     ///     Due to the potential performance impact of calculating the illumination of an unspecified number of entities of varying importance and tick rates,
-    ///     this system will not be enabled by default and even when enabled will not execute until entites exist with the corresponding Component and 
+    ///     this system will not be enabled by default and even when enabled will not execute until entites exist with the corresponding Component and
     ///     specifically request updates.
     ///     I did my best to optimize this but use and implement cautiously.
     /// </summary>
@@ -19,10 +19,6 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly SharedTransformSystem _transform = default!;
         [Dependency] protected readonly OccluderSystem _occluder = default!;
-
-        /// Default range to be used when raycasting. This value might need changing in the future but hopefully should be enough to handle most cases.
-        protected const float MaxRaycastRange = 100;
-        public delegate bool Ignored(EntityUid entity);
 
         public virtual bool ResolveComp(EntityUid uid, [NotNullWhen(true)] ref LightSensitiveComponent? component)
         {

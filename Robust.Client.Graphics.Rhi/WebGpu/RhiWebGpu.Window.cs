@@ -44,26 +44,38 @@ internal sealed unsafe partial class RhiWebGpu
         surfaceDesc.nextInChain = (WGPUChainedStruct*)(&surfaceDescMetal);
 
 #elif LINUX
-        // TODO: Linux surface creation
-        /*
+        WGPUSurfaceSourceWaylandSurface surfaceDescWayland;
         WGPUSurfaceSourceXlibWindow surfaceDescX11;
-        var xDisplay = _clyde._windowing.WindowGetX11Display(window);
-        var xWindow = _clyde._windowing.WindowGetX11Id(window);
 
-        if (xDisplay != null && xWindow != null)
+        if (surfaceParams.Wayland)
         {
-            surfaceDescX11 = new WGPUSurfaceSourceXlibWindow
+            surfaceDescWayland = new WGPUSurfaceSourceWaylandSurface
+            {
+                chain =
+                {
+                    sType = WGPUSType.WGPUSType_SurfaceSourceWaylandSurface
+                },
+                display = surfaceParams.WaylandDisplay,
+                surface = surfaceParams.WaylandSurface,
+            };
+
+            surfaceDesc.nextInChain = (WGPUChainedStruct*)(&surfaceDescWayland);
+        }
+        else
+        {
+            surfaceDescX11 = new WGPUSurfaceSourceXlibWindow()
             {
                 chain =
                 {
                     sType = WGPUSType.WGPUSType_SurfaceSourceXlibWindow
                 },
-                display = ((IntPtr)xDisplay.Value).ToPointer(),
-                window = xWindow.Value
+                display = surfaceParams.X11Display,
+                // TODO "Oh my god x11 support might be a nightmare this is outside of your ability to deal with -pjb"
+                // window = surfaceParams.X11Window,
             };
 
-            surfaceDesc.nextInChain = (WGPUChainedStruct*)(&surfaceDescX11);
-        */
+            surfaceDesc.nextInChain =  (WGPUChainedStruct*)(&surfaceDescX11);
+        }
 #endif
 
         var surface = wgpuInstanceCreateSurface(_wgpuInstance, &surfaceDesc);

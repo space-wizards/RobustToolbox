@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -480,24 +481,27 @@ internal partial class Clyde
             {
                 return new RhiBase.RhiWindowSurfaceParams
                 {
-                    X11Display = SDL.SDL_GetPointerProperty(windowProps, SDL.SDL_PROP_WINDOW_X11_DISPLAY_POINTER, 0),
-                    X11Id = SDL.SDL_GetPointerProperty(windowProps, SDL.SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0),
+                    Wayland = true,
+                    WaylandDisplay = (void*)SDL.SDL_GetPointerProperty(
+                        props,
+                        SDL.SDL_PROP_WINDOW_WAYLAND_DISPLAY_POINTER,
+                        0),
+                    WaylandSurface = (void*)SDL.SDL_GetPointerProperty(props,
+                        SDL.SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER,
+                        0),
                 };
             }
             else
             {
-                Debug.Assert(_videoDriver == _sdlVideoDriver.X11);
                 return new RhiBase.RhiWindowSurfaceParams
                 {
-                    Wayland = true,
-                    WaylandDisplay = SDL.SDL_GetPointerProperty(
-                        windowProps,
-                        SDL.SDL_PROP_WINDOW_WAYLAND_DISPLAY_POINTER,
+                    X11Display = (void*)SDL.SDL_GetPointerProperty(props,
+                        SDL.SDL_PROP_WINDOW_X11_DISPLAY_POINTER,
                         0),
-                    WaylandSurface = SDL.SDL_GetPointerProperty(
-                        windowProps,
-                        SDL.SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER,
-                        0),
+                    // TODO "Oh my god x11 support might be a nightmare this is outside of your ability to deal with -pjb"
+                    // X11Window = SDL.SDL_GetPointerProperty(props,
+                    //     SDL.SDL_PROP_WINDOW_X11_WINDOW_NUMBER,
+                    //     0),
                 };
             }
 #endif

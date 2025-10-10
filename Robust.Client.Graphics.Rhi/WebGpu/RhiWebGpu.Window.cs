@@ -39,33 +39,36 @@ internal sealed unsafe partial class RhiWebGpu
         surfaceDesc.nextInChain = (WGPUChainedStruct*)(&surfaceDescMetal);
 
 #elif LINUX
-        var surfaceDescWayland = new WGPUSurfaceSourceWaylandSurface
-        {
-            chain =
-            {
-                sType = WGPUSType.WGPUSType_SurfaceSourceWaylandSurface
-            },
-            display = surfaceParams.WaylandDisplay,
-            surface = surfaceParams.WaylandSurface,
-        };
-
-        var surfaceDescX11 = new WGPUSurfaceSourceXlibWindow()
-        {
-            chain =
-            {
-                sType = WGPUSType.WGPUSType_SurfaceSourceXlibWindow
-            },
-            display = surfaceParams.X11Display,
-            // TODO "Oh my god x11 support might be a nightmare this is outside of your ability to deal with -pjb"
-            // window = surfaceParams.X11Window,
-        };
+        WGPUSurfaceSourceWaylandSurface surfaceDescWayland;
+        WGPUSurfaceSourceXlibWindow surfaceDescX11;
 
         if (surfaceParams.Wayland)
         {
+            surfaceDescWayland = new WGPUSurfaceSourceWaylandSurface
+            {
+                chain =
+                {
+                    sType = WGPUSType.WGPUSType_SurfaceSourceWaylandSurface
+                },
+                display = surfaceParams.WaylandDisplay,
+                surface = surfaceParams.WaylandSurface,
+            };
+
             surfaceDesc.nextInChain = (WGPUChainedStruct*)(&surfaceDescWayland);
         }
         else
         {
+            surfaceDescX11 = new WGPUSurfaceSourceXlibWindow()
+            {
+                chain =
+                {
+                    sType = WGPUSType.WGPUSType_SurfaceSourceXlibWindow
+                },
+                display = surfaceParams.X11Display,
+                // TODO "Oh my god x11 support might be a nightmare this is outside of your ability to deal with -pjb"
+                // window = surfaceParams.X11Window,
+            };
+
             surfaceDesc.nextInChain =  (WGPUChainedStruct*)(&surfaceDescX11);
         }
 #endif

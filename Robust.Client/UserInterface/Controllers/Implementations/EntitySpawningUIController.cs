@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Robust.Client.GameObjects;
+using Content.Shared.Tag;
 using Robust.Client.Placement;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.Controls;
@@ -11,6 +12,7 @@ using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
@@ -28,6 +30,8 @@ public sealed class EntitySpawningUIController : UIController
     private EntitySpawnWindow? _window;
     private readonly List<EntityPrototype> _shownEntities = new();
     private bool _init;
+    private string[]? Tags;
+    private string SelectedTag { get; set; } =  string.Empty;
 
     public override void Initialize()
     {
@@ -90,6 +94,8 @@ public sealed class EntitySpawningUIController : UIController
 
         _window = UIManager.CreateWindow<EntitySpawnWindow>();
         LayoutContainer.SetAnchorPreset(_window,LayoutContainer.LayoutPreset.CenterLeft);
+        PopulateCategories();
+
         _window.OnClose += WindowClosed;
         _window.ReplaceButton.Pressed = _placement.Replacement;
         _window.ReplaceButton.OnToggled += OnEntityReplaceToggled;
@@ -100,6 +106,8 @@ public sealed class EntitySpawningUIController : UIController
         _window.ClearButton.OnPressed += OnEntityClearPressed;
         _window.PrototypeScrollContainer.OnScrolled += UpdateVisiblePrototypes;
         _window.OnResized += UpdateVisiblePrototypes;
+        _window.OptionTags.OnItemSelected += OnTagSelect;
+
         BuildEntityList();
     }
 
@@ -162,6 +170,63 @@ public sealed class EntitySpawningUIController : UIController
         }
     }
 
+
+    private void PopulateCategories()
+    {
+        var uniqueTags = new HashSet<string>();
+
+        foreach (var prototype in _prototypes.EnumeratePrototypes<EntityPrototype>())
+        {
+            if (prototype.Abstract)
+                continue;
+
+            if(!prototype.TryGetComponent<TagComponent>(out var tags))
+                continue;
+
+            foreach (var tag in tags.Tags)
+            {
+                uniqueTags.Add(tag.ToString());
+            }
+        }
+
+        var tagsArray = new string[uniqueTags.Count + 1];
+        var sortedProtoCategories = uniqueTags.OrderBy(Loc.GetString);
+
+        var indx = 0;
+        tagsArray[indx++] = "All tags";
+
+        foreach (var tag in sortedProtoCategories)
+        {
+            tagsArray[indx++] = tag;
+        }
+
+        _window?.OptionTags.Clear();
+
+        for(int i = 0; i < tagsArray.Length; i++)
+        {
+            _window?.OptionTags.AddItem(tagsArray[i], i);
+        }
+
+        Tags = tagsArray;
+    }
+
+    private void OnTagSelect(OptionButton.ItemSelectedEventArgs args)
+    {
+        if (_window == null || _window.Disposed)
+            return;
+
+        _window.OptionTags.SelectId(args.Id);
+
+        if (args.Id == 0)
+            SelectedTag = String.Empty;
+        else if(Tags != null)
+            SelectedTag = Tags[args.Id];
+
+        _window.SearchBar.Clear();
+        _placement.Clear();
+        BuildEntityList("");
+    }
+
     private void OnEntitySearchChanged(LineEditEventArgs args)
     {
         if (_window == null || _window.Disposed)
@@ -218,6 +283,15 @@ public sealed class EntitySpawningUIController : UIController
             if (searchStr != null && !DoesEntityMatchSearch(prototype, searchStr))
             {
                 continue;
+            }
+
+            if (SelectedTag != string.Empty)
+            {
+                if (!prototype.TryGetComponent<TagComponent>(out var tagComponent))
+                    continue;
+
+                if (tagComponent.Tags.All(tag => tag.ToString() != SelectedTag))
+                    continue;
             }
 
             _shownEntities.Add(prototype);

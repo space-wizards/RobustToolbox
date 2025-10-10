@@ -39,34 +39,33 @@ internal sealed unsafe partial class RhiWebGpu
         surfaceDesc.nextInChain = (WGPUChainedStruct*)(&surfaceDescMetal);
 
 #elif LINUX
-        // Prioritise wayland
+        var surfaceDescWayland = new WGPUSurfaceSourceWaylandSurface
+        {
+            chain =
+            {
+                sType = WGPUSType.WGPUSType_SurfaceSourceWaylandSurface
+            },
+            display = surfaceParams.WaylandDisplay,
+            surface = surfaceParams.WaylandSurface,
+        };
+
+        var surfaceDescX11 = new WGPUSurfaceSourceXlibWindow()
+        {
+            chain =
+            {
+                sType = WGPUSType.WGPUSType_SurfaceSourceXlibWindow
+            },
+            display = surfaceParams.X11Display,
+            // TODO "Oh my god x11 support might be a nightmare this is outside of your ability to deal with -pjb"
+            // window = surfaceParams.X11Window,
+        };
+
         if (surfaceParams.Wayland)
         {
-            var surfaceDescWayland = new WGPUSurfaceSourceWaylandSurface
-            {
-                chain =
-                {
-                    sType = WGPUSType.WGPUSType_SurfaceSourceWaylandSurface
-                },
-                display = surfaceParams.WaylandDisplay,
-                surface = surfaceParams.WaylandSurface,
-            };
-
             surfaceDesc.nextInChain = (WGPUChainedStruct*)(&surfaceDescWayland);
         }
         else
         {
-            var surfaceDescX11 = new WGPUSurfaceSourceXlibWindow()
-            {
-                chain =
-                {
-                    sType = WGPUSType.WGPUSType_SurfaceSourceXlibWindow
-                },
-                display = surfaceParams.X11Display,
-                // TODO "Oh my god x11 support might be a nightmare this is outside of your ability to deal with -pjb"
-                // window = surfaceParams.X11Window,
-            };
-
             surfaceDesc.nextInChain =  (WGPUChainedStruct*)(&surfaceDescX11);
         }
 #endif

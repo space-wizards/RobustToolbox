@@ -76,8 +76,13 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         SubscribeLocalEvent<MapCreatedEvent>(MapManagerOnMapCreated);
         SubscribeLocalEvent<GridInitializeEvent>(MapManagerOnGridCreated);
 
-        SubscribeLocalEvent<TComp, ComponentStartup>(OnCompStartup);
-        SubscribeLocalEvent<TComp, ComponentRemove>(OnCompRemoved);
+        // Yipeee point light
+        if (!typeof(TComp).IsAbstract)
+        {
+            SubscribeLocalEvent<TComp, ComponentStartup>(OnCompStartup);
+            SubscribeLocalEvent<TComp, ComponentRemove>(OnCompRemoved);
+            Query = GetEntityQuery<TComp>();
+        }
 
         if (Recursive)
         {
@@ -94,8 +99,6 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         SubscribeLocalEvent<TTreeComp, EntityTerminatingEvent>(OnTerminating);
         SubscribeLocalEvent<TTreeComp, ComponentAdd>(OnTreeAdd);
         SubscribeLocalEvent<TTreeComp, ComponentRemove>(OnTreeRemove);
-
-        Query = GetEntityQuery<TComp>();
     }
 
     public override void Shutdown()

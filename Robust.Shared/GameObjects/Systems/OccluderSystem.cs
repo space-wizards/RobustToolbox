@@ -87,14 +87,10 @@ public abstract class OccluderSystem : ComponentTreeSystem<OccluderTreeComponent
         TState state,
         Func<Entity<OccluderComponent, TransformComponent>, TState, bool> ignore)
     {
-        if (!GetUnoccludedRay(origin, other, range, out var length, out var ray))
-            return false;
+        if (!GetRay(origin, other, range, out var length, out var ray, out var result))
+            return result;
 
-        if (MathHelper.CloseTo(length, 0))
-            return true;
-
-        var result = IntersectRay(origin.MapId, ray, length, state, ignore);
-        return result == null;
+        return IntersectRay(origin.MapId, ray, length, state, ignore) == null;
     }
 
     /// <summary>
@@ -104,11 +100,8 @@ public abstract class OccluderSystem : ComponentTreeSystem<OccluderTreeComponent
     /// occluders that are touching the start or end point.</param>
     public bool InRangeUnoccluded(MapCoordinates origin, MapCoordinates other, float range, bool ignoreTouching)
     {
-        if (!GetUnoccludedRay(origin, other, range, out var length, out var ray))
-            return false;
-
-        if (MathHelper.CloseTo(length, 0))
-            return true;
+        if (!GetRay(origin, other, range, out var length, out var ray, out var result))
+            return result;
 
         if (!ignoreTouching)
             return IntersectRay(origin.MapId, ray, length) == null;
@@ -117,15 +110,22 @@ public abstract class OccluderSystem : ComponentTreeSystem<OccluderTreeComponent
         return IntersectRay(origin.MapId, ray, length, state, IsTouchingEndpoint) == null;
     }
 
-    private bool GetUnoccludedRay(MapCoordinates origin, MapCoordinates other, float range, out float length, out Ray ray)
+    private bool GetRay(MapCoordinates origin, MapCoordinates other, float range, out float length, out Ray ray, out bool result)
     {
         ray = default;
         length = default;
+        result = false;
         if (other.MapId != origin.MapId || other.MapId == MapId.Nullspace)
             return false;
 
         var dir = other.Position - origin.Position;
         length = dir.Length();
+        if (MathHelper.CloseTo(length, 0))
+        {
+            result = true;
+            return false;
+        }
+
         var normalized = dir / length;
 
         if (range > 0f && length > range + 0.01f)

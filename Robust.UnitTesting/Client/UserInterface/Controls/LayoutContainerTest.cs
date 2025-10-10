@@ -186,7 +186,7 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
             parent.AddChild(child);
             parent.Arrange(new UIBox2(0, 0, 100, 100));
 
-            // Child should be at -100,0.
+            // Child should be at 0,0.
             Assert.That(child.Position, Is.EqualTo(new Vector2(0, 0)));
 
             child.MinSize = new Vector2(100, 100);

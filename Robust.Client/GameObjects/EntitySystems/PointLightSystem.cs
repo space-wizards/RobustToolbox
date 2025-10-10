@@ -17,7 +17,6 @@ namespace Robust.Client.GameObjects
         {
             base.Initialize();
             SubscribeLocalEvent<PointLightComponent, ComponentGetState>(OnLightGetState);
-            SubscribeLocalEvent<PointLightComponent, ComponentInit>(HandleInit);
             SubscribeLocalEvent<PointLightComponent, ComponentHandleState>(OnLightHandleState);
         }
 
@@ -73,11 +72,6 @@ namespace Robust.Client.GameObjects
 
         protected override void UpdatePriority(EntityUid uid, SharedPointLightComponent comp, MetaDataComponent meta)
         {
-        }
-
-        private void HandleInit(EntityUid uid, PointLightComponent component, ComponentInit args)
-        {
-            SetMask(component.MaskPath, component);
         }
 
         public void SetMask(string? maskPath, PointLightComponent component)

@@ -2,9 +2,10 @@
 using Robust.Shared.Toolshed;
 using Robust.Shared.Toolshed.Errors;
 
-namespace Robust.Server.Console
+namespace Robust.Shared.Console
 {
-    internal sealed class ConGroupController : IConGroupController, IPermissionController
+    [Virtual]
+    public class ConGroupController : IConGroupController
     {
         public IConGroupControllerImplementation? Implementation { get; set; }
 

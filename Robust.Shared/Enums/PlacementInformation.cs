@@ -10,6 +10,11 @@ public sealed class PlacementInformation
     public string? EntityType { get; set; }
 
     /// <summary>
+    /// Entity prototype to be placed in addition to the regular one.
+    /// </summary>
+    public string? AdditionalSpawn { get; set; }
+
+    /// <summary>
     /// Indiciates if the entity prototype to be placed is in fact a tile
     /// </summary>
     public bool IsTile { get; set; }
@@ -30,7 +35,7 @@ public sealed class PlacementInformation
     public int Range { get; set; }
 
     /// <summary>
-    /// 
+    ///
     /// </summary>
     public int TileType { get; set; }
 

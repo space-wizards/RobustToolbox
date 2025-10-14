@@ -294,18 +294,23 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
         => GetIntersectingTrees(mapId, worldBounds.CalcBoundingBox());
 
     public IEnumerable<(EntityUid Uid, TTreeComp Comp)> GetIntersectingTrees(MapId mapId, Box2 worldAABB)
+        => GetIntersectingTreesInternal(mapId, worldAABB);
+
+    internal ValueList<(EntityUid Uid, TTreeComp Comp)> GetIntersectingTreesInternal(MapId mapId, Box2 worldAABB)
     {
         if (!CheckEnabled())
             return [];
         // Anything that queries these trees should only do so if there are no queued updates, otherwise it can lead to
-        // errors. Currently there is no easy way to enforce this, but this should work as long as nothing queries the
+        // errors. Currently, there is no easy way to enforce this, but this should work as long as nothing queries the
         // trees directly:
         UpdateTreePositions();
+
         var trees = new ValueList<(EntityUid Uid, TTreeComp Comp)>();
 
         if (mapId == MapId.Nullspace)
             return trees;
 
+        // TODO LOOKUPS pass in entity query, not entity manager.
         var state = (EntityManager, trees);
 
         _mapManager.FindGridsIntersecting(mapId, worldAABB, ref state,
@@ -320,7 +325,9 @@ public abstract class ComponentTreeSystem<TTreeComp, TComp> : EntitySystem
                 return true;
             }, includeMap: false);
 
-        if (_mapSystem.TryGetMap(mapId, out var mapUid) && TryComp(mapUid, out TTreeComp? mapTreeComp))
+        if (_mapSystem.TryGetMap(mapId, out var mapUid)
+            && TryComp(mapUid, out TTreeComp? mapTreeComp)
+            && mapTreeComp.Tree.Count != 0) // TODO LOOKUPS why does space have an occluder tree?
         {
             state.trees.Add((mapUid.Value, mapTreeComp));
         }

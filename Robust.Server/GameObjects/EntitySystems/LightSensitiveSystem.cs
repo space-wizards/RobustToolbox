@@ -1,14 +1,9 @@
-using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
-using Robust.Shared.Map;
-using Robust.Shared.Maths;
-using Robust.Shared.Physics;
-using Robust.Shared.Physics.Components;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Timing;
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Numerics;
+using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
+using Robust.Shared.Light;
+using Robust.Shared.Timing;
 
 namespace Robust.Server.GameObjects;
 
@@ -16,11 +11,9 @@ public sealed class LightSensitiveSystem : SharedLightSensitiveSystem
 {
     [Dependency] private readonly IGameTiming _gameTiming = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
-    [Dependency] private readonly IPrototypeManager _proto = default!;
+    [Dependency] private readonly LightLevelSystem _level = default!;
 
     private const float DefaultCooldown = 1f;
-
-    private const float LightingHeight = 1.0f;
 
     public override void Update(float frameTime)
     {
@@ -84,120 +77,8 @@ public sealed class LightSensitiveSystem : SharedLightSensitiveSystem
     /// <param name="entityXform">The TransformComponent of the entity</param>
     private void ProcessNearbyLights(EntityUid uid, LightSensitiveComponent component, TransformComponent entityXform)
     {
-        var illumination = 0f;
-
-        //var ourPosition = _transform.GetMapCoordinates(uid);
-        var ourBounds = GetWorldAABB(uid, out var ourPos, out var ourRot);
-        var ourMapPos = new MapCoordinates(ourPos, entityXform.MapID);
-        var queryResult = LightTree.QueryAabb(ourMapPos.MapId, ourBounds);
-
-        foreach (var entry in queryResult)
-        {
-            illumination += CalculateLightLevel(entry, uid, ourMapPos, entityXform);
-        }
+        var pos = _transform.GetMapCoordinates(uid);
+        var illumination = _level.CalculateLightLevel(pos);
         SetIllumination(uid, illumination, component);
-    }
-
-    public float CalculateLightLevel(ComponentTreeEntry<SharedPointLightComponent> treeEntry, EntityUid uid, MapCoordinates entityPos,
-        TransformComponent entityXform)
-    {
-        var calculatedLight = 0f;
-        var (lightComp, lightXform) = treeEntry;
-
-        var (lightPos, lightRot) = _transform.GetWorldPositionRotation(lightXform);
-        lightPos += lightRot.RotateVec(lightComp.Offset);
-
-        var lightPosition = new MapCoordinates(lightPos, lightXform.MapID);
-
-        if (!Occluder.InRangeUnoccluded(lightPosition, entityPos, lightComp.Radius, ignoreTouching: false))
-            return calculatedLight;
-
-        var dist = entityPos.Position - lightPosition.Position;
-
-        // Calculate the light level the same way as in light_shared.swsl. The problem with this implementation is that
-        // values used for rendering are very different from the sort of percentage based values we aim to use in game.
-        // // this implementation of light attenuation primarily adapted from
-        // // https://lisyarus.github.io/blog/posts/point-light-attenuation.html
-        var sqr_dist = Vector2.Dot(dist, dist) + LightingHeight;
-        var s = Math.Clamp(MathF.Sqrt(sqr_dist) / lightComp.Radius, 0.0f, 1.0f);
-        var s2 = s * s;
-        var curveFactor = MathHelper.Lerp(s, s2, Math.Clamp(lightComp.CurveFactor, 0.0f, 1.0f));
-        var lightVal = Math.Clamp(((1.0f - s2) * (1.0f - s2)) / (1.0f + lightComp.Falloff * curveFactor), 0.0f, 1.0f);
-        var colorBrightness = MathF.Max(lightComp.Color.R, MathF.Max(lightComp.Color.G, lightComp.Color.B));
-        var energyLightVal = lightComp.Energy * lightVal;
-        var finalLightVal = Math.Clamp(energyLightVal * colorBrightness, 0.0f, 1.0f);
-
-
-        if (_proto.TryIndex(lightComp.LightMask, out var mask))
-        {
-            var angleToTarget = GetAngle(treeEntry.Uid, lightXform, lightComp, uid, entityXform);
-
-            // TODO: read the mask image into a buffer of pixels and sample the returned color to multiply against the light level before final calculation
-            // var stream = _resource.ContentFileRead(mask.MaskPath);
-            // var image = Image.Load<Rgba32>(stream);
-            // Rgba32[] pixelArray = new Rgba32[image.Width * image.Height];
-            // image.CopyPixelDataTo(pixelArray);
-
-            foreach (var cone in mask.LightCones)
-            {
-                var coneLight = 0f;
-                var angleAttenuation = (float)Math.Min((float)Math.Max(cone.OuterWidth - angleToTarget, 0f), cone.InnerWidth) / cone.OuterWidth;
-                var absAngle = Math.Abs(angleToTarget.Degrees);
-
-                // Target is outside the cone's outer width angle, so ignore
-                if (absAngle - Math.Abs(cone.Direction) > cone.OuterWidth)
-                {
-                    continue;
-                }
-                // Target is outside the inner cone, but inside the outer cone, so reduce the light level
-                else if (
-                    absAngle - cone.Direction > cone.InnerWidth &&
-                    absAngle - cone.Direction < cone.OuterWidth
-                    )
-                {
-                    coneLight = finalLightVal * angleAttenuation;
-                }
-                // Target is inside the inner cone, so the light level will use standard falloff.
-                else
-                {
-                    coneLight = finalLightVal;
-                }
-                // There might be multiple overlapping cones in the future so why not just default to adding them now
-                calculatedLight += coneLight;
-            }
-        }
-        //No mask, just use the final light level
-        else
-        {
-            calculatedLight = finalLightVal;
-        }
-
-        return calculatedLight;
-    }
-
-    public Box2 GetWorldAABB(EntityUid uid, out Vector2 worldPos, out Angle worldRot, FixturesComponent? manager = null, PhysicsComponent? body = null, TransformComponent? xform = null)
-    {
-        worldPos = default;
-        worldRot = default;
-
-        if (!Resolve(uid, ref manager, ref body, ref xform))
-            return new Box2();
-
-        (worldPos, worldRot) = _transform.GetWorldPositionRotation(xform);
-
-        var transform = new Transform(worldPos, (float)worldRot.Theta);
-
-        var bounds = new Box2(transform.Position, transform.Position);
-
-        foreach (var fixture in manager.Fixtures.Values)
-        {
-            for (var i = 0; i < fixture.Shape.ChildCount; i++)
-            {
-                var boundy = fixture.Shape.ComputeAABB(transform, i);
-                bounds = bounds.Union(boundy);
-            }
-        }
-
-        return bounds;
     }
 }

@@ -898,6 +898,22 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> LookupEnableServerLightTree =
             CVarDef.Create("lookup.enable_server_light_tree", false, CVar.ARCHIVE | CVar.SERVERONLY);
 
+        // TODO LIGHTLEVEL
+        // maybe these should be in a separate cvar category?
+        // they are kind of entity lookup related, and using light.* might cause confusion with light rendering.
+
+        /// <summary>
+        /// If true, this will only consider shadow-casting lights when computing light levels via the light lookup tree.
+        /// </summary>
+        public static readonly CVarDef<bool> LookupShadowcastingOnly =
+            CVarDef.Create("lookup.shadowcasting_only", true, CVar.ARCHIVE | CVar.SERVER | CVar.REPLICATED);
+
+        /// <summary>
+        /// The range used to search for light-trees when computing light levels
+        /// </summary>
+        public static readonly CVarDef<float> LookupLightTreeRange =
+            CVarDef.Create("lookup.light_tree_range", 15f, CVar.ARCHIVE | CVar.SERVER | CVar.REPLICATED);
+
         /*
          * LOKI
          */

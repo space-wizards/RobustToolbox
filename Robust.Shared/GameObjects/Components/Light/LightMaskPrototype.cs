@@ -1,21 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-
-using Robust.Shared.Audio;
-using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
-using Robust.Shared.Localization;
-using Robust.Shared.Map;
+using Robust.Shared.Light;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
-using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.Markdown.Mapping;
-using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Array;
 using Robust.Shared.Utility;
-using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects;
 [Prototype]
@@ -34,42 +24,33 @@ public sealed partial class LightMaskPrototype : IPrototype
     /// Light of light cones that correspond to the light mask.
     /// </summary>
     [DataField(required: true)]
-    public List<LightConeData> LightCones = new();
-
+    public List<LightConeData> LightCones = default!;
 }
 
 /// <summary>
 /// Container class that holds data for a light cone.
-/// This Data is used by <see cref="LightSensitiveSystem"/>
+/// This Data is used by <see cref="LightLevelSystem"/>
 /// </summary>
-[DataDefinition]
-[Serializable, NetSerializable]
-public partial record struct LightConeData
+[Serializable, NetSerializable, DataRecord]
+public readonly struct LightConeData
 {
     /// <summary>
     ///     The angle offset of the cone in degrees, relative to the light it belongs to.
     ///     0 is forward, 90 is to the right, etc.
     /// </summary>
-    [DataField]
-    public float Direction;
+    [DataField(required: true)]
+    public readonly Angle Direction;
 
     /// <summary>
     ///     Angle limit of the cone to be within the full brightness of the light.
     /// </summary>
-    [DataField]
-    public float InnerWidth;
+    [DataField(required: true)]
+    public readonly Angle InnerWidth;
 
     /// <summary>
     ///     Angle limit of the cone to be within the reduced light. Beyond this angle, you are considered out of the light.
     /// </summary>
-    [DataField]
-    public float OuterWidth;
-
-    public LightConeData(float direction, float innerWidth, float outerWidth)
-    {
-        Direction = direction;
-        InnerWidth = innerWidth;
-        OuterWidth = outerWidth;
-    }
+    [DataField(required: true)]
+    public readonly Angle OuterWidth;
 
 }

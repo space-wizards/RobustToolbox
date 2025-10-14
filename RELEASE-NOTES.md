@@ -39,11 +39,31 @@ END TEMPLATE-->
 
 ### New features
 
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 267.3.0
+
+### New features
+
 * Sandbox:
   * Added `System.DateOnly` and `System.TimeOnly`.
 * `MapId`, `MapCoordinates`, and `EntityCoordinates` are now yaml serialisable
 * The base component tree lookup system has new methods including several new `QueryAabb()` overloads that take in a collection and various new `IntersectRay()` overloads that should replace `IntersectRayWithPredicate`.
  * Added `OccluderSystem.InRangeUnoccluded()` for checking for occluders that lie between two points.
+* `LocalizedCommands` now pass the command name as an argument to the localized help text.
 
 ### Bugfixes
 
@@ -55,10 +75,6 @@ END TEMPLATE-->
 ### Other
 
 * Updated natives again to attempt to fix issues caused by the previous update.
-
-### Internal
-
-*None yet*
 
 
 ## 267.2.1

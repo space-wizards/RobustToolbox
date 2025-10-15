@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added two new custom yaml serializers `CustomListSerializer` and `CustomArraySerializer`.
 
 ### Bugfixes
 

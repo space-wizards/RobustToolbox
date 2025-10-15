@@ -54,8 +54,6 @@ command-description-ent =
     Returns the provided entity ID.
 command-description-entities =
     Returns all entities on the server.
-command-description-nudge =
-    Moves an entity locally.
 command-description-nudge-up =
     Moves an entity up.
 command-description-nudge-right =
@@ -64,10 +62,8 @@ command-description-nudge-down =
     Moves an entity down.
 command-description-nudge-left =
     Moves an entity left.
-command-description-nudge-xpiped =
-    Moves an entity right by every number that was piped.
-command-description-nudge-ypiped =
-    Moves an entity up by every number that was piped.
+command-description-nudge-xy =
+    Moves an entity.
 command-description-paused =
     Filters the input entities by whether or not they are paused.
 command-description-with =

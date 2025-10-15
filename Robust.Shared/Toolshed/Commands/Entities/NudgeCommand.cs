@@ -28,26 +28,16 @@ internal sealed class NudgeCommand : ToolshedCommand
     [CommandImplementation("left")]
     void NudgeLeftPiped([PipedArgument] IEnumerable<EntityUid> input, float deltaX) => Nudge(input, -deltaX, 0);
 
-    [CommandImplementation("xpiped")]
-    // I struggle to find a use case for this but someone might try making a turing machine or some shit idk
-    public void NudgeXPiped(int entity, [PipedArgument] IEnumerable<float> deltaX)
-    {
-        foreach (var dX in deltaX)
-        {
-            Nudge(entity, dX, 0);
-        }
-    }
-    
-    [CommandImplementation("ypiped")]
-    public void NudgeYPiped(int entity, [PipedArgument] IEnumerable<float> deltaY)
-    {
-        foreach (var dY in deltaY)
-        {
-            Nudge(entity, 0, dY);
-        }
-    }
+    [CommandImplementation("up")]
+    void NudgeUpPiped(int entity, float deltaY) => Nudge(entity, 0, deltaY);
+    [CommandImplementation("right")]
+    void NudgeRightPiped(int entity, float deltaX) => Nudge(entity, deltaX, 0);
+    [CommandImplementation("down")]
+    void NudgeDownPiped(int entity, float deltaY) => Nudge(entity, 0, -deltaY);
+    [CommandImplementation("left")]
+    void NudgeLeftPiped(int entity, float deltaX) => Nudge(entity, -deltaX, 0);
 
-    [CommandImplementation]
+    [CommandImplementation("xy")]
     public void Nudge([PipedArgument] IEnumerable<EntityUid> input, float deltaX, float deltaY)
     {
         foreach (var entityUid in input)
@@ -56,7 +46,7 @@ internal sealed class NudgeCommand : ToolshedCommand
         }
     }
 
-    [CommandImplementation]
+    [CommandImplementation("xy")]
     public void Nudge(int entity, float deltaX, float deltaY)
     {
         if (!NetEntity.TryParse(entity.ToString(), out var netEntity)

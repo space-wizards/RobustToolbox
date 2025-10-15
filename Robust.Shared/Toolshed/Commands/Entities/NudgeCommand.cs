@@ -37,6 +37,7 @@ internal sealed class NudgeCommand : ToolshedCommand
             Nudge(entity, dX, 0);
         }
     }
+    
     [CommandImplementation("ypiped")]
     public void NudgeYPiped(int entity, [PipedArgument] IEnumerable<float> deltaY)
     {
@@ -46,6 +47,7 @@ internal sealed class NudgeCommand : ToolshedCommand
         }
     }
 
+    [CommandImplementation]
     public void Nudge([PipedArgument] IEnumerable<EntityUid> input, float deltaX, float deltaY)
     {
         foreach (var entityUid in input)
@@ -54,6 +56,7 @@ internal sealed class NudgeCommand : ToolshedCommand
         }
     }
 
+    [CommandImplementation]
     public void Nudge(int entity, float deltaX, float deltaY)
     {
         if (!NetEntity.TryParse(entity.ToString(), out var netEntity)

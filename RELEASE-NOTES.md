@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix `Menu` and `NumpadDecimal` key codes on SDL3.
 
 ### Other
 

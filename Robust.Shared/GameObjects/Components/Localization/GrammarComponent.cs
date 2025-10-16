@@ -5,6 +5,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
+using Robust.Shared.Prototypes;
 
 namespace Robust.Shared.GameObjects.Components.Localization;
 
@@ -25,6 +26,14 @@ public sealed partial class GrammarComponent : Component
         [Obsolete("Use GrammarSystem.SetGender instead")]
         set => IoCManager.Resolve<IEntityManager>().System<GrammarSystem>().SetGender((Owner, this), value);
     }
+
+    /// <summary>
+    ///     Optional list of custom pronouns for an entity, as well as the tense they belong to.
+    ///     If this list does not contain a pronoun for a desired tense,
+    ///     the gender's pronoun will be used as a fallback.
+    /// </summary>
+    [DataField, AutoNetworkedField]
+    public Dictionary<ProtoId<PronounTensePrototype>, string> Pronouns = [];
 
     [ViewVariables]
     public bool? ProperNoun

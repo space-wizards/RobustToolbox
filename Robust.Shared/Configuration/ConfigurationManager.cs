@@ -307,12 +307,31 @@ namespace Robust.Shared.Configuration
 
             try
             {
-                // Always write if it was present when reading from the config file, otherwise:
-                // Don't write if Archive flag is not set.
-                // Don't write if the cVar is the default value.
-                var cvars = _configVars.Where(x => x.Value.ConfigModified
-                                                   || ((x.Value.Flags & CVar.ARCHIVE) != 0 && x.Value.Value != null &&
-                                                       !x.Value.Value.Equals(x.Value.DefaultValue))).Select(x => x.Key);
+                var cvars = new List<string>();
+
+                foreach (var cvar in _configVars)
+                {
+                    // Always write if it was present when reading from the config file, otherwise:
+                    // Don't write if Archive flag is not set.
+                    // Don't write if the cVar is the default value.
+                    if (!cvar.Value.ConfigModified
+                        && !((cvar.Value.Flags & CVar.ARCHIVE) != 0 &&
+                            cvar.Value.Value != null
+                            && !cvar.Value.Value.Equals(cvar.Value.DefaultValue)))
+                    {
+                        continue;
+                    }
+
+                    // If cVar for other assembly then discard
+                    // If it's set for both then we'll just let it through.
+                    if (((cvar.Value.Flags & (CVar.CLIENT | CVar.SERVER)) == CVar.SERVER && !_isServer)
+                        || ((cvar.Value.Flags & (CVar.CLIENT | CVar.SERVER)) == CVar.CLIENT && _isServer))
+                    {
+                        continue;
+                    }
+
+                    cvars.Add(cvar.Key);
+                }
 
                 // Write in-memory to avoid bulldozing config file on exception.
                 var memoryStream = new MemoryStream();

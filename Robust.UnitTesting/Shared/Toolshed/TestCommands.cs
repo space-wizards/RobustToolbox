@@ -11,27 +11,27 @@ namespace Robust.UnitTesting.Shared.Toolshed;
 
 // This file just contains a collection of various test commands for use in other tests.
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "testvoid")]
 public sealed class TestVoidCommand : ToolshedCommand
 {
     [CommandImplementation] public void Impl() {}
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "testint")]
 public sealed class TestIntCommand : ToolshedCommand
 {
     [CommandImplementation] public int Impl() => 1;
 }
 
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "testtypearg")]
 public sealed class TestTypeArgCommand : ToolshedCommand
 {
     public override Type[] TypeParameterParsers => [typeof(TypeTypeParser)];
     [CommandImplementation] public string Impl<T>() => typeof(T).Name;
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "testmultitypearg")]
 public sealed class TestMultiTypeArgCommand : ToolshedCommand
 {
     public override Type[] TypeParameterParsers => [typeof(TypeTypeParser), typeof(TypeTypeParser)];
@@ -39,19 +39,19 @@ public sealed class TestMultiTypeArgCommand : ToolshedCommand
         => $"{typeof(T1).Name}, {typeof(T2).Name}, {i}";
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "testintstrarg")]
 public sealed class TestIntStrArgCommand : ToolshedCommand
 {
     [CommandImplementation] public int Impl(int i, string str) => i;
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "testpipedint")]
 public sealed class TestPipedIntCommand : ToolshedCommand
 {
     [CommandImplementation] public int Impl([PipedArgument] int i) => i;
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "testcustomvarrefparser")]
 public sealed class TestCustomVarRefParserCommand : ToolshedCommand
 {
     [CommandImplementation]
@@ -78,7 +78,7 @@ public sealed class TestCustomVarRefParserCommand : ToolshedCommand
     }
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "testoptionalargs")]
 public sealed class TestOptionalArgsCommand : ToolshedCommand
 {
     [CommandImplementation]
@@ -86,7 +86,7 @@ public sealed class TestOptionalArgsCommand : ToolshedCommand
         => [x, y, z];
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "testparamscollection")]
 public sealed class TestParamsCollectionCommand : ToolshedCommand
 {
     [CommandImplementation]
@@ -94,7 +94,7 @@ public sealed class TestParamsCollectionCommand : ToolshedCommand
         => [x, y, ..others];
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "testparamsonly")]
 public sealed class TestParamsOnlyCommand : ToolshedCommand
 {
     [CommandImplementation]
@@ -102,7 +102,7 @@ public sealed class TestParamsOnlyCommand : ToolshedCommand
         => others;
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "testcustomparser")]
 public sealed class TestCustomParserCommand : ToolshedCommand
 {
     [CommandImplementation]
@@ -116,28 +116,28 @@ public sealed class TestCustomParserCommand : ToolshedCommand
     }
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "testenumerableinfer")]
 public sealed class TestEnumerableInferCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public Type Impl<T>([PipedArgument] IEnumerable<T> x, T y) => typeof(T);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "testlistinfer")]
 public sealed class TestListInferCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public Type Impl<T>([PipedArgument] List<T> x, T y) => typeof(T);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "testarrayinfer")]
 public sealed class TestArrayInferCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
     public Type Impl<T>([PipedArgument] T[] x, T y) => typeof(T);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "testnestedenumerableinfer")]
 public sealed class TestNestedEnumerableInferCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -148,7 +148,7 @@ public sealed class TestNestedEnumerableInferCommand : ToolshedCommand
     }
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "testnestedlistinfer")]
 public sealed class TestNestedListInferCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -159,7 +159,7 @@ public sealed class TestNestedListInferCommand : ToolshedCommand
     }
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "testnestedarrayinfer")]
 public sealed class TestNestedArrayInferCommand : ToolshedCommand
 {
     [CommandImplementation, TakesPipedTypeAsGeneric]
@@ -170,21 +170,21 @@ public sealed class TestNestedArrayInferCommand : ToolshedCommand
     }
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "testarray")]
 public sealed class TestArrayCommand : ToolshedCommand
 {
     [CommandImplementation]
     public int[] Impl() => Array.Empty<int>();
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "testlist")]
 public sealed class TestListCommand : ToolshedCommand
 {
     [CommandImplementation]
     public List<int> Impl() => new();
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "testenumerable")]
 public sealed class TestEnumerableCommand : ToolshedCommand
 {
     private static int[] _arr = {1, 3, 3};
@@ -193,21 +193,21 @@ public sealed class TestEnumerableCommand : ToolshedCommand
     public IEnumerable<int> Impl() => _arr.Select(x => 2 * x);
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "testnestedarray")]
 public sealed class TestNestedArrayCommand : ToolshedCommand
 {
     [CommandImplementation]
     public ProtoId<EntityCategoryPrototype>[] Impl() => [];
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "testnestedlist")]
 public sealed class TestNestedListCommand : ToolshedCommand
 {
     [CommandImplementation]
     public List<ProtoId<EntityCategoryPrototype>> Impl() => new();
 }
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "testnestedenumerable")]
 public sealed class TestNestedEnumerableCommand : ToolshedCommand
 {
     private static ProtoId<EntityCategoryPrototype>[] _arr = [];

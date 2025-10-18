@@ -4,7 +4,7 @@ using Robust.Shared.IoC;
 
 namespace Robust.Shared.Toolshed.Commands.Misc;
 
-[ToolshedCommand]
+[ToolshedCommand(Name = "ioc")]
 internal sealed class IoCCommand : ToolshedCommand
 {
     [CommandImplementation("registered")]

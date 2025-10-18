@@ -1,13 +1,14 @@
 ﻿using System;
+using Robust.Shared.Console;
 
 namespace Robust.Client.Console
 {
-    public sealed class ClientConGroupController : IClientConGroupController
+    public sealed class ClientConGroupController : ConGroupController, IClientConGroupController
     {
         private IClientConGroupImplementation? _implementation;
         public event Action? ConGroupUpdated;
 
-        public IClientConGroupImplementation? Implementation
+        IClientConGroupImplementation? IClientConGroupController.Implementation
         {
             set
             {

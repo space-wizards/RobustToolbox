@@ -12,11 +12,13 @@ public sealed class MarkupTagManager
 {
     [Dependency] private readonly IReflectionManager _reflectionManager = default!;
     [Dependency] private readonly ISandboxHelper _sandboxHelper = default!;
+    [Dependency] private readonly IDependencyCollection _deps = default!;
 
     /// <summary>
     /// Tags defined in engine need to be instantiated here because of sandboxing
     /// </summary>
-    private readonly Dictionary<string, IMarkupTagHandler> _markupTagTypes = new IMarkupTagHandler[] {
+    private readonly Dictionary<string, IMarkupTagHandler> _markupTagTypes = new IMarkupTagHandler[]
+    {
         new BoldItalicTag(),
         new BoldTag(),
         new BulletTag(),
@@ -50,13 +52,13 @@ public sealed class MarkupTagManager
             if (_engineTypes.Contains(type))
                 continue;
 
-            var instance = (IMarkupTagHandler)_sandboxHelper.CreateInstance(type);
+            var instance = (IMarkupTagHandler) _sandboxHelper.CreateInstance(type);
             _markupTagTypes[instance.Name.ToLower()] = instance;
         }
 
-        foreach (var (_, tag) in _markupTagTypes)
+        foreach (var tag in _markupTagTypes.Values)
         {
-            IoCManager.InjectDependencies(tag);
+            _deps.InjectDependencies(tag);
         }
     }
 

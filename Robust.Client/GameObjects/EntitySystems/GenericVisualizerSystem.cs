@@ -10,7 +10,7 @@ namespace Robust.Client.GameObjects;
 /// </summary>
 public sealed class GenericVisualizerSystem : VisualizerSystem<GenericVisualizerComponent>
 {
-    [Dependency] private readonly IReflectionManager _refMan = default!;
+    [Dependency] private readonly SpriteSystem _sprite = default!;
     [Dependency] private readonly SharedAppearanceSystem _appearanceSys = default!;
 
     protected override void OnAppearanceChange(EntityUid uid, GenericVisualizerComponent component, ref AppearanceChangeEvent args)
@@ -18,6 +18,7 @@ public sealed class GenericVisualizerSystem : VisualizerSystem<GenericVisualizer
         if (args.Sprite == null)
             return;
 
+        var ent = new Entity<SpriteComponent?>(uid, args.Sprite);
         foreach (var (appearanceKey, layerDict) in component.Visuals)
         {
             if (!_appearanceSys.TryGetData(uid, appearanceKey, out object? obj, args.Component))
@@ -27,17 +28,13 @@ public sealed class GenericVisualizerSystem : VisualizerSystem<GenericVisualizer
             if (string.IsNullOrEmpty(appearanceValue))
                 continue;
 
-            foreach (var (layerKeyRaw, layerDataDict) in layerDict)
+            foreach (var (key, layerDataDict) in layerDict)
             {
                 if (!layerDataDict.TryGetValue(appearanceValue, out var layerData))
                     continue;
 
-                object layerKey = _refMan.TryParseEnumReference(layerKeyRaw, out var @enum)
-                    ? @enum
-                    : layerKeyRaw;
-
-                var layerIndex = args.Sprite.LayerMapReserveBlank(layerKey);
-                args.Sprite.LayerSetData(layerIndex, layerData);
+                var index = _sprite.LayerMapReserve(ent, key);
+                _sprite.LayerSetData(ent, index, layerData);
             }
         }
     }

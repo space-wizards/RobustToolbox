@@ -839,12 +839,10 @@ public abstract partial class SharedPhysicsSystem
 
 public record struct ContactEnumerator
 {
-    public static readonly ContactEnumerator Empty = new(null);
-
     private Dictionary<string, Fixture>.ValueCollection.Enumerator _fixtureEnumerator;
     private Dictionary<Fixture, Contact>.ValueCollection.Enumerator _contactEnumerator;
 
-    private bool IsEmpty;
+    private bool _empty;
 
     /// <summary>
     /// Also include deleting contacts.
@@ -858,7 +856,7 @@ public record struct ContactEnumerator
 
         if (fixtures == null || fixtures.Fixtures.Count == 0)
         {
-            this = Empty;
+            _empty = true;
             return;
         }
 
@@ -869,8 +867,7 @@ public record struct ContactEnumerator
 
     public bool MoveNext([NotNullWhen(true)] out Contact? contact)
     {
-
-        if (IsEmpty)
+        if (_empty)
         {
             contact = null;
             return false;

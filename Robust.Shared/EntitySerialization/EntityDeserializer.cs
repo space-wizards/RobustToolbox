@@ -991,7 +991,7 @@ public sealed class EntityDeserializer :
         if (entData.Components == null)
             return;
 
-        foreach (var component in metadata.NetComponents.Values)
+        foreach (var (component, _) in metadata.NetComponents.Values)
         {
             var compName = _factory.GetComponentName(component.GetType());
 

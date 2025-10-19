@@ -36,6 +36,11 @@ public sealed class ComponentRegistration
     public ushort? NetID { get; internal set; }
 
     /// <summary>
+    /// Component state networking restrictions. These are taken from the <see cref="NetworkedComponentAttribute"/>
+    /// </summary>
+    public StateRestriction Restriction { get; internal set; }
+
+    /// <summary>
     /// The type that will be instantiated if this component is created.
     /// </summary>
     public Type Type { get; }

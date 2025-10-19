@@ -599,7 +599,7 @@ namespace Robust.Client.GameStates
                 {
                     _resettingPredictedEntities = true;
 
-                    foreach (var (netId, comp) in meta.NetComponents)
+                    foreach (var (netId, (comp, _)) in meta.NetComponents)
                     {
                         if (!comp.NetSyncEnabled)
                             continue;
@@ -722,7 +722,7 @@ namespace Robust.Client.GameStates
                 var compData = _compDataPool.Get();
                 _outputData.Add(netEntity, compData);
 
-                foreach (var (netId, component) in meta.NetComponents)
+                foreach (var (netId, (component, _)) in meta.NetComponents)
                 {
                     DebugTools.Assert(component.NetSyncEnabled);
 
@@ -1355,7 +1355,7 @@ namespace Robust.Client.GameStates
             {
                 _toRemove.Clear();
 
-                foreach (var (id, comp) in data.Meta.NetComponents)
+                foreach (var (id, (comp, _)) in data.Meta.NetComponents)
                 {
                     DebugTools.Assert(comp.NetSyncEnabled);
 
@@ -1378,7 +1378,7 @@ namespace Robust.Client.GameStates
                 // the entity. most notably, all entities will have been ejected from their containers.
                 foreach (var (id, state) in _processor.GetLastServerStates(data.NetEntity))
                 {
-                    if (!data.Meta.NetComponents.TryGetValue(id, out var comp))
+                    if (!TryGetNetComp(data.Meta, id, out var comp))
                     {
                         comp = _compFactory.GetComponent(id);
                         _entities.AddComponent(data.Uid, comp, true, metadata: data.Meta);
@@ -1391,7 +1391,7 @@ namespace Robust.Client.GameStates
             {
                 foreach (var compChange in data.CurState.ComponentChanges.Span)
                 {
-                    if (!data.Meta.NetComponents.TryGetValue(compChange.NetID, out var comp))
+                    if (!TryGetNetComp(data.Meta, compChange.NetID, out var comp))
                     {
                         comp = _compFactory.GetComponent(compChange.NetID);
                         _entities.AddComponent(data.Uid, comp, true, metadata: data.Meta);
@@ -1421,9 +1421,9 @@ namespace Robust.Client.GameStates
                         ref CollectionsMarshal.GetValueRefOrAddDefault(_compStateWork, compState.NetID, out var exists);
 
                     if (exists)
-                        state = (comp, state.curState, compState.State);
+                        state = (comp.Item1, state.curState, compState.State);
                     else
-                        state = (comp, null, compState.State);
+                        state = (comp.Item1, null, compState.State);
                 }
             }
 
@@ -1441,7 +1441,7 @@ namespace Robust.Client.GameStates
                     if (netId == null)
                         continue;
 
-                    if (!data.Meta.NetComponents.TryGetValue(netId.Value, out var comp) ||
+                    if (!TryGetNetComp(data.Meta, netId.Value, out var comp) ||
                         !lastState.TryGetValue(netId.Value, out var lastCompState))
                     {
                         continue;
@@ -1608,7 +1608,7 @@ namespace Robust.Client.GameStates
 
             foreach (var (id, state) in lastState)
             {
-                if (!meta.NetComponents.TryGetValue(id, out var comp))
+                if (!TryGetNetComp(meta, id, out var comp))
                 {
                     comp = _compFactory.GetComponent(id);
                     _entities.AddComponent(uid, comp, true, meta);
@@ -1624,7 +1624,7 @@ namespace Robust.Client.GameStates
             // ensure we don't have any extra components
             _toRemove.Clear();
 
-            foreach (var (id, comp) in meta.NetComponents)
+            foreach (var (id, (comp, _)) in meta.NetComponents)
             {
                 if (comp.NetSyncEnabled && !lastState.ContainsKey(id))
                     _toRemove.Add(comp);
@@ -1639,6 +1639,18 @@ namespace Robust.Client.GameStates
 
         public bool IsQueuedForDetach(NetEntity entity)
             => _processor.IsQueuedForDetach(entity);
+
+        private bool TryGetNetComp(MetaDataComponent meta, ushort netId, [NotNullWhen(true)] out IComponent? component)
+        {
+            if (!meta.NetComponents.TryGetValue(netId, out var tuple))
+            {
+                component = null;
+                return false;
+            }
+
+            component = tuple.Item1;
+            return true;
+        }
     }
 
     public sealed class GameStateAppliedArgs : EventArgs

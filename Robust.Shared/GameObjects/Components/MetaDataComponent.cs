@@ -68,7 +68,7 @@ namespace Robust.Shared.GameObjects
         /// The components attached to the entity that are currently networked.
         /// </summary>
         [ViewVariables]
-        internal readonly Dictionary<ushort, IComponent> NetComponents = new();
+        internal readonly Dictionary<ushort, (IComponent, StateRestriction)> NetComponents = new();
 
         /// <summary>
         /// Network identifier for this entity.

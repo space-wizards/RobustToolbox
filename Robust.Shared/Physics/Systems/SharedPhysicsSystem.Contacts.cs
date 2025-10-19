@@ -844,6 +844,8 @@ public record struct ContactEnumerator
     private Dictionary<string, Fixture>.ValueCollection.Enumerator _fixtureEnumerator;
     private Dictionary<Fixture, Contact>.ValueCollection.Enumerator _contactEnumerator;
 
+    private bool IsEmpty;
+
     /// <summary>
     /// Also include deleting contacts.
     /// This typically includes the current contact if you're invoking this in the eventbus for an EndCollideEvent.
@@ -867,6 +869,13 @@ public record struct ContactEnumerator
 
     public bool MoveNext([NotNullWhen(true)] out Contact? contact)
     {
+
+        if (IsEmpty)
+        {
+            contact = null;
+            return false;
+        }
+
         if (!_contactEnumerator.MoveNext())
         {
             if (!_fixtureEnumerator.MoveNext())

@@ -210,6 +210,9 @@ namespace Robust.Shared.GameObjects
                 catch (Exception e)
                 {
                     _sawmill.Error($"Failed to serialize {compName} component of entity prototype {prototype.ID}. Exception: {e.Message}");
+#if !EXCEPTION_TOLERANCE
+                    throw;
+#endif
                     return false;
                 }
 
@@ -601,6 +604,9 @@ namespace Robust.Shared.GameObjects
             catch (Exception e)
             {
                 _sawmill.Error($"Caught exception while raising event {nameof(EntityTerminatingEvent)} on entity {ToPrettyString(uid, metadata)}\n{e}");
+#if !EXCEPTION_TOLERANCE
+                throw;
+#endif
             }
 
             foreach (var child in xform._children)
@@ -643,6 +649,9 @@ namespace Robust.Shared.GameObjects
                 catch(Exception e)
                 {
                     _sawmill.Error($"Caught exception while trying to recursively delete child entity '{ToPrettyString(child)}' of '{ToPrettyString(uid, metadata)}'\n{e}");
+#if !EXCEPTION_TOLERANCE
+                    throw;
+#endif
                 }
             }
 
@@ -661,6 +670,9 @@ namespace Robust.Shared.GameObjects
                     catch (Exception e)
                     {
                         _sawmill.Error($"Caught exception while trying to call shutdown on component of entity '{ToPrettyString(uid, metadata)}'\n{e}");
+#if !EXCEPTION_TOLERANCE
+                        throw;
+#endif
                     }
                 }
             }
@@ -676,6 +688,9 @@ namespace Robust.Shared.GameObjects
             catch (Exception e)
             {
                 _sawmill.Error($"Caught exception while invoking event {nameof(EntityDeleted)} on '{ToPrettyString(uid, metadata)}'\n{e}");
+#if !EXCEPTION_TOLERANCE
+                throw;
+#endif
             }
 
             _eventBus.OnEntityDeleted(uid);

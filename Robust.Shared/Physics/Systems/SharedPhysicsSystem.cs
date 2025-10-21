@@ -163,8 +163,14 @@ namespace Robust.Shared.Physics.Systems
 
         internal void OnParentChange(Entity<TransformComponent, MetaDataComponent> ent, EntityUid oldParent, EntityUid? oldMap)
 {
+    // We do not have a directed/body subscription, because the entity changing parents may not have a physics component, but one of its children might.
     var (uid, xform, meta) = ent;
 
+    // If this entity has yet to be initialized, then we can skip this as equivalent code will get run during
+    // init anyways. HOWEVER: it is possible that one of the children of this entity are already post-init, in
+    // which case they still need to handle map changes. This frequently happens when clients receives a server
+    // state where a known/old entity gets attached to a new, previously unknown, entity. The new entity will be
+    // uninitialized but have an initialized child.
     if (xform.ChildCount == 0 && meta.EntityLifeStage < EntityLifeStage.Initialized)
         return;
 

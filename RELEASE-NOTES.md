@@ -44,6 +44,7 @@ END TEMPLATE-->
 ### Bugfixes
 
 * Fix `Menu` and `NumpadDecimal` key codes on SDL3.
+* Fix Fixtures now correctly initialize on static physics bodies.
 
 ### Other
 

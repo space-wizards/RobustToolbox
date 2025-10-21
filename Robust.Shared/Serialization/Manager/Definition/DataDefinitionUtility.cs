@@ -2,7 +2,7 @@ using System;
 
 namespace Robust.Shared.Serialization.Manager.Definition;
 
-public class DataDefinitionUtility
+public static class DataDefinitionUtility
 {
     public static string AutoGenerateTag(string name)
     {

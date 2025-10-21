@@ -13,10 +13,9 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Graphics.RSI;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.TypeSerializers.Implementations;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using static Robust.Client.GameObjects.SpriteComponent;
@@ -30,12 +29,22 @@ namespace Robust.Client.GameObjects
     public sealed partial class SpriteSystem : EntitySystem
     {
         [Dependency] private readonly IConfigurationManager _cfg = default!;
+        [Dependency] private readonly IEyeManager _eye = default!;
         [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] private readonly IPrototypeManager _proto = default!;
         [Dependency] private readonly IResourceCache _resourceCache = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private readonly IComponentFactory _factory = default!;
 
+        // Note that any new system dependencies have to be added to RobustUnitTest.BaseSetup()
+        [Dependency] private readonly SharedTransformSystem _xforms = default!;
+        [Dependency] private readonly SpriteTreeSystem _tree = default!;
+        [Dependency] private readonly AppearanceSystem _appearance = default!;
+
+        public static readonly ProtoId<ShaderPrototype> UnshadedId = "unshaded";
         private readonly Queue<SpriteComponent> _inertUpdateQueue = new();
+
+        public static readonly ResPath TextureRoot = SpriteSpecifierSerializer.TextureRoot;
 
         /// <summary>
         ///     Entities that require a sprite frame update.
@@ -43,14 +52,7 @@ namespace Robust.Client.GameObjects
         private readonly HashSet<EntityUid> _queuedFrameUpdate = new();
 
         private ISawmill _sawmill = default!;
-
-        internal void Render(EntityUid uid, SpriteComponent sprite, DrawingHandleWorld drawingHandle, Angle eyeRotation, in Angle worldRotation, in Vector2 worldPosition)
-        {
-            if (!sprite.IsInert)
-                _queuedFrameUpdate.Add(uid);
-
-            sprite.RenderInternal(drawingHandle, eyeRotation, worldRotation, worldPosition, sprite.EnableDirectionOverride ? sprite.DirectionOverride : null);
-        }
+        private EntityQuery<SpriteComponent> _query;
 
         public override void Initialize()
         {
@@ -59,11 +61,11 @@ namespace Robust.Client.GameObjects
             UpdatesAfter.Add(typeof(SpriteTreeSystem));
 
             SubscribeLocalEvent<PrototypesReloadedEventArgs>(OnPrototypesReloaded);
-            SubscribeLocalEvent<SpriteComponent, SpriteUpdateInertEvent>(QueueUpdateInert);
             SubscribeLocalEvent<SpriteComponent, ComponentInit>(OnInit);
 
             Subs.CVar(_cfg, CVars.RenderSpriteDirectionBias, OnBiasChanged, true);
             _sawmill = _logManager.GetSawmill("sprite");
+            _query = GetEntityQuery<SpriteComponent>();
         }
 
         public bool IsVisible(Layer layer)
@@ -80,18 +82,6 @@ namespace Robust.Client.GameObjects
         private void OnBiasChanged(double value)
         {
             SpriteComponent.DirectionBias = value;
-        }
-
-        private void QueueUpdateInert(EntityUid uid, SpriteComponent sprite, ref SpriteUpdateInertEvent ev)
-            => QueueUpdateInert(uid, sprite);
-
-        public void QueueUpdateInert(EntityUid uid, SpriteComponent sprite)
-        {
-            if (sprite._inertUpdateQueued)
-                return;
-
-            sprite._inertUpdateQueued = true;
-            _inertUpdateQueue.Enqueue(sprite);
         }
 
         private void DoUpdateIsInert(SpriteComponent component)

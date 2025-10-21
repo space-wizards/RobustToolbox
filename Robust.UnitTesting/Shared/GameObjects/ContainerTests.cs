@@ -4,15 +4,14 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Client.GameObjects;
 using Robust.Client.Timing;
-using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared.Containers;
+using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Timing;
-
-// ReSharper disable AccessToStaticMemberViaDerivedType
+using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting.Shared.GameObjects
 {
@@ -34,7 +33,6 @@ namespace Robust.UnitTesting.Shared.GameObjects
              var cEntManager = client.ResolveDependency<IEntityManager>();
              var clientNetManager = client.ResolveDependency<IClientNetManager>();
 
-             var sMapManager = server.ResolveDependency<IMapManager>();
              var sEntManager = server.ResolveDependency<IEntityManager>();
              var sPlayerManager = server.ResolveDependency<IPlayerManager>();
 
@@ -91,7 +89,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  Assert.That(sContainerSys.Insert(itemUid, container));
 
                  // Modify visibility layer so that the item does not get sent ot the player
-                 sEntManager.System<VisibilitySystem>().AddLayer(itemUid, 10 );
+                 sEntManager.System<SharedVisibilitySystem>().AddLayer(itemUid, 10 );
              });
 
              // Needs minimum 4 to sync to client because buffer size is 3
@@ -119,7 +117,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
              await server.WaitAssertion(() =>
              {
                  // Modify visibility layer so it now gets sent to the client
-                 sEntManager.System<VisibilitySystem>().RemoveLayer(itemUid, 10 );
+                 sEntManager.System<SharedVisibilitySystem>().RemoveLayer(itemUid, 10 );
              });
 
              await server.WaitRunTicks(1);
@@ -140,6 +138,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  Assert.That(!cContainerSys.ExpectedEntities.ContainsKey(sEntManager.GetNetEntity(itemUid)));
                  Assert.That(cContainerSys.ExpectedEntities, Is.Empty);
              });
+
+             await client.WaitPost(() => clientNetManager.ClientDisconnect(""));
+             await server.WaitRunTicks(5);
+             await client.WaitRunTicks(5);
          }
 
          /// <summary>
@@ -219,7 +221,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  sContainerSys.Insert(sItemUid, container);
 
                  // Modify visibility layer so that the item does not get sent ot the player
-                 sEntManager.System<VisibilitySystem>().AddLayer(sItemUid, 10 );
+                 sEntManager.System<SharedVisibilitySystem>().AddLayer(sItemUid, 10 );
              });
 
             await server.WaitRunTicks(1);
@@ -279,6 +281,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  Assert.That(!cContainerSys.ExpectedEntities.ContainsKey(netEnt));
                  Assert.That(cContainerSys.ExpectedEntities.Count, Is.EqualTo(0));
              });
+
+             await client.WaitPost(() => clientNetManager.ClientDisconnect(""));
+             await server.WaitRunTicks(5);
+             await client.WaitRunTicks(5);
         }
 
         /// <summary>
@@ -293,15 +299,16 @@ namespace Robust.UnitTesting.Shared.GameObjects
             await Task.WhenAll(server.WaitIdleAsync());
 
             var sEntManager = server.ResolveDependency<IEntityManager>();
-            var mapManager = server.ResolveDependency<IMapManager>();
+            var mapSys = sEntManager.System<SharedMapSystem>();
             var sContainerSys = sEntManager.System<SharedContainerSystem>();
             var sMetadataSys = sEntManager.System<MetaDataSystem>();
+            var path = new ResPath("container_test.yml");
 
             await server.WaitAssertion(() =>
             {
                 // build the map
                 sEntManager.System<SharedMapSystem>().CreateMap(out var mapIdOne);
-                Assert.That(mapManager.IsMapInitialized(mapIdOne), Is.True);
+                Assert.That(mapSys.IsInitialized(mapIdOne), Is.True);
 
                 var containerEnt = sEntManager.SpawnEntity(null, new MapCoordinates(1, 1, mapIdOne));
                 sMetadataSys.SetEntityName(containerEnt, "ContainerEnt");
@@ -317,8 +324,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 // save the map
                 var mapLoader = sEntManager.EntitySysManager.GetEntitySystem<MapLoaderSystem>();
 
-                mapLoader.SaveMap(mapIdOne, "container_test.yml");
-                mapManager.DeleteMap(mapIdOne);
+                Assert.That(mapLoader.TrySaveMap(mapIdOne, path));
+                mapSys.DeleteMap(mapIdOne);
             });
 
             // A few moments later...
@@ -327,11 +334,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
             await server.WaitAssertion(() =>
             {
                 var mapLoader = sEntManager.System<MapLoaderSystem>();
-                sEntManager.System<SharedMapSystem>().CreateMap(out var mapIdTwo);
 
                 // load the map
-                mapLoader.Load(mapIdTwo, "container_test.yml");
-                Assert.That(mapManager.IsMapInitialized(mapIdTwo), Is.True); // Map Initialize-ness is saved in the map file.
+                Assert.That(mapLoader.TryLoadMap(path, out var map, out _));
+                Assert.That(mapSys.IsInitialized(map), Is.True); // Map Initialize-ness is saved in the map file.
             });
 
             await server.WaitRunTicks(1);

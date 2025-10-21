@@ -91,44 +91,44 @@ public interface IPrototypeManager
     /// <summary>
     /// Index for a <see cref="IPrototype"/> by ID.
     /// </summary>
-    /// <exception cref="KeyNotFoundException">
+    /// <exception cref="UnknownPrototypeException">
     /// Thrown if the type of prototype is not registered.
     /// </exception>
-    T Index<T>(string id) where T : class, IPrototype;
+    T Index<T>([ForbidLiteral] string id) where T : class, IPrototype;
 
     /// <inheritdoc cref="Index{T}(string)"/>
-    EntityPrototype Index(EntProtoId id);
+    EntityPrototype Index([ForbidLiteral] EntProtoId id);
 
     /// <inheritdoc cref="Index{T}(string)"/>
-    T Index<T>(ProtoId<T> id) where T : class, IPrototype;
+    T Index<T>([ForbidLiteral] ProtoId<T> id) where T : class, IPrototype;
 
     /// <summary>
     /// Index for a <see cref="IPrototype"/> by ID.
     /// </summary>
-    /// <exception cref="KeyNotFoundException">
+    /// <exception cref="UnknownPrototypeException">
     /// Thrown if the ID does not exist or the kind of prototype is not registered.
     /// </exception>
-    IPrototype Index(Type kind, string id);
+    IPrototype Index(Type kind, [ForbidLiteral] string id);
 
     /// <summary>
     ///     Returns whether a prototype of type <typeparamref name="T"/> with the specified <param name="id"/> exists.
     /// </summary>
-    bool HasIndex<T>(string id) where T : class, IPrototype;
+    bool HasIndex<T>([ForbidLiteral] string id) where T : class, IPrototype;
 
     /// <inheritdoc cref="HasIndex{T}(string)"/>
-    bool HasIndex(EntProtoId id);
+    bool HasIndex([ForbidLiteral] EntProtoId id);
 
     /// <inheritdoc cref="HasIndex{T}(string)"/>
-    bool HasIndex<T>(ProtoId<T> id) where T : class, IPrototype;
+    bool HasIndex<T>([ForbidLiteral] ProtoId<T> id) where T : class, IPrototype;
 
     /// <inheritdoc cref="HasIndex{T}(string)"/>
-    bool HasIndex(EntProtoId? id);
+    bool HasIndex([ForbidLiteral] EntProtoId? id);
 
     /// <inheritdoc cref="HasIndex{T}(string)"/>
-    bool HasIndex<T>(ProtoId<T>? id) where T : class, IPrototype;
+    bool HasIndex<T>([ForbidLiteral] ProtoId<T>? id) where T : class, IPrototype;
 
-    bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
-    bool TryIndex(Type kind, string id, [NotNullWhen(true)] out IPrototype? prototype);
+    bool TryIndex<T>([ForbidLiteral] string id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
+    bool TryIndex(Type kind, [ForbidLiteral] string id, [NotNullWhen(true)] out IPrototype? prototype);
 
     /// <summary>
     /// Attempts to get a dictionary containing all current instances of a given prototype kind.
@@ -143,78 +143,271 @@ public interface IPrototypeManager
     /// </summary>
     FrozenDictionary<string, T> GetInstances<T>() where T : IPrototype;
 
-    /// <inheritdoc cref="TryIndex{T}(ProtoId{T}, out T, bool)"/>
-    bool TryIndex(EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype,  bool logError = true);
+    // For obsolete APIs.
+    // ReSharper disable MethodOverloadWithOptionalParameter
 
     /// <summary>
-    /// Attempt to retrieve the prototype corresponding to the given prototype id.
-    /// Unless otherwise specified, this will log an error if the id does not match any known prototype.
+    /// Resolve an <see cref="EntityPrototype"/> by ID, logging an error if it does not exist.
     /// </summary>
-    bool TryIndex<T>(ProtoId<T> id, [NotNullWhen(true)] out T? prototype,  bool logError = true) where T : class, IPrototype;
+    /// <remarks>
+    /// <para>
+    /// This method does not throw if the prototype does not exist, and instead simply logs an error and returns false.
+    /// </para>
+    /// <para>
+    /// This method can be used if an invalid prototype ID indicates a programming error somewhere else,
+    /// acting as a convenient function to make code more defensive.
+    /// Ideally such errors should also have some other way of being validated, however (e.g. static field validation).
+    /// </para>
+    /// <para>
+    /// This method should not be used when handling IDs that are expected to be invalid, such as user input.
+    /// Use <see cref="TryIndex(EntProtoId,out EntityPrototype?)"/> instead for those.
+    /// </para>
+    /// </remarks>
+    /// <param name="id">The prototype ID to look up.</param>
+    /// <param name="prototype">The prototype that was resolved, null if it does not exist.</param>
+    /// <returns>True if the prototype exists, false if it does not.</returns>
+    /// <seealso cref="TryIndex(EntProtoId,out EntityPrototype?)"/>
+    bool Resolve([ForbidLiteral] EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype);
 
-    /// <inheritdoc cref="TryIndex{T}(ProtoId{T}, out T, bool)"/>
-    bool TryIndex(EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype,  bool logError = true);
+    /// <summary>
+    /// Retrieve an <see cref="EntityPrototype"/> by ID, optionally logging an error if it does not exist.
+    /// </summary>
+    /// <param name="id">The prototype ID to look up.</param>
+    /// <param name="prototype">The prototype that was resolved, null if it does not exist.</param>
+    /// <param name="logError">If true (default), log an error if the prototype does not exist.</param>
+    /// <returns>True if the prototype exists, false if it does not.</returns>
+    [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
+    bool TryIndex(
+        [ForbidLiteral] EntProtoId id,
+        [NotNullWhen(true)] out EntityPrototype? prototype,
+        bool logError = true);
 
-    /// <inheritdoc cref="TryIndex{T}(ProtoId{T}, out T, bool)"/>
-    bool TryIndex<T>(ProtoId<T>? id, [NotNullWhen(true)] out T? prototype, bool logError = true) where T : class, IPrototype;
+    /// <summary>
+    /// Resolve an <see cref="EntityPrototype"/> by ID.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This method does not throw if the prototype does not exist, and instead simply returns false.
+    /// </para>
+    /// <para>
+    /// It is appropriate to use this method when handling IDs from external sources
+    /// (user input, old save records, etc.), where it is expected that data may be invalid.
+    /// </para>
+    /// <para>
+    /// It is not necessarily appropriate to use this method if an invalid ID indicates a programming error,
+    /// such as an invalid ID specified in a YAML prototype. In this scenario,
+    /// usage of this method should always be combined with proper error logging and other methods of validation
+    /// (e.g. static field validation).
+    /// <see cref="Resolve(EntProtoId,out EntityPrototype?)"/> can be used as a convenient helper in this scenario.
+    /// </para>
+    /// </remarks>
+    /// <param name="id">The prototype ID to look up.</param>
+    /// <param name="prototype">The prototype that was resolved, null if it does not exist.</param>
+    /// <returns>True if the prototype exists, false if it does not.</returns>
+    /// <seealso cref="Resolve(EntProtoId,out EntityPrototype?)"/>
+    bool TryIndex([ForbidLiteral] EntProtoId id, [NotNullWhen(true)] out EntityPrototype? prototype);
+
+    /// <summary>
+    /// Resolve a prototype by ID, logging an error if it does not exist.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This method does not throw if the prototype does not exist, and instead simply logs an error and returns false.
+    /// </para>
+    /// <para>
+    /// This method can be used if an invalid prototype ID indicates a programming error somewhere else,
+    /// acting as a convenient function to make code more defensive.
+    /// Ideally such errors should also have some other way of being validated, however (e.g. static field validation).
+    /// </para>
+    /// <para>
+    /// This method should not be used when handling IDs that are expected to be invalid, such as user input.
+    /// Use <see cref="TryIndex{T}(ProtoId{T},out T?)"/> instead for those.
+    /// </para>
+    /// </remarks>
+    /// <param name="id">The prototype ID to look up.</param>
+    /// <param name="prototype">The prototype that was resolved, null if it does not exist.</param>
+    /// <returns>True if the prototype exists, false if it does not.</returns>
+    /// <seealso cref="TryIndex{T}(ProtoId{T},out T?)"/>
+    bool Resolve<T>([ForbidLiteral] ProtoId<T> id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
+
+    /// <summary>
+    /// Retrieve a prototype by ID, optionally logging an error if it does not exist.
+    /// </summary>
+    /// <param name="id">The prototype ID to look up.</param>
+    /// <param name="prototype">The prototype that was resolved, null if it does not exist.</param>
+    /// <param name="logError">If true (default), log an error if the prototype does not exist.</param>
+    /// <returns>True if the prototype exists, false if it does not.</returns>
+    [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
+    bool TryIndex<T>([ForbidLiteral] ProtoId<T> id, [NotNullWhen(true)] out T? prototype, bool logError = true)
+        where T : class, IPrototype;
+
+    /// <summary>
+    /// Resolve a prototype by ID.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This method does not throw if the prototype does not exist, and instead simply returns false.
+    /// </para>
+    /// <para>
+    /// It is appropriate to use this method when handling IDs from external sources
+    /// (user input, old save records, etc.), where it is expected that data may be invalid.
+    /// </para>
+    /// <para>
+    /// It is not necessarily appropriate to use this method if an invalid ID indicates a programming error,
+    /// such as an invalid ID specified in a YAML prototype. In this scenario,
+    /// usage of this method should always be combined with proper error logging and other methods of validation
+    /// (e.g. static field validation).
+    /// <see cref="Resolve{T}(ProtoId{T},out T?)"/> can be used as a convenient helper in this scenario.
+    /// </para>
+    /// </remarks>
+    /// <param name="id">The prototype ID to look up.</param>
+    /// <param name="prototype">The prototype that was resolved, null if it does not exist.</param>
+    /// <returns>True if the prototype exists, false if it does not.</returns>
+    /// <seealso cref="Resolve{T}(ProtoId{T},out T?)"/>
+    bool TryIndex<T>([ForbidLiteral] ProtoId<T> id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
+
+    /// <summary>
+    /// Resolve an <see cref="EntityPrototype"/> by ID, gracefully handling null,
+    /// and logging an error if it does not exist.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This method does not throw if the prototype is invalid, and instead simply logs an error and returns false.
+    /// No error is reported if the ID is simply null.
+    /// </para>
+    /// <para>
+    /// This method can be used if an invalid prototype ID indicates a programming error somewhere else,
+    /// acting as a convenient function to make code more defensive.
+    /// Ideally such errors should also have some other way of being validated, however (e.g. static field validation).
+    /// </para>
+    /// <para>
+    /// This method should not be used when handling IDs that are expected to be invalid, such as user input.
+    /// Use <see cref="TryIndex(EntProtoId?,out EntityPrototype?)"/> instead for those.
+    /// </para>
+    /// </remarks>
+    /// <param name="id">The prototype ID to look up. May be null.</param>
+    /// <param name="prototype">
+    /// The prototype that was resolved, null if <paramref name="id"/> was null or did not exist.
+    /// </param>
+    /// <returns>True if the prototype exists, false if <paramref name="id"/> was null, or it does not exist.</returns>
+    /// <seealso cref="TryIndex(EntProtoId?,out EntityPrototype?)"/>
+    bool Resolve([ForbidLiteral] EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype);
+
+    /// <summary>
+    /// Retrieve an <see cref="EntityPrototype"/> by ID, gracefully handling null,
+    /// and optionally logging an error if it does not exist.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// No error is logged if <paramref name="id"/> is null.
+    /// </para>
+    /// </remarks>
+    /// <param name="id">The prototype ID to look up.</param>
+    /// <param name="prototype">The prototype that was resolved, null if it does not exist.</param>
+    /// <param name="logError">If true (default), log an error if the prototype does not exist.</param>
+    /// <returns>True if the prototype exists, false if <paramref name="id"/> was null, or it does not exist.</returns>
+    [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
+    bool TryIndex(
+        [ForbidLiteral] EntProtoId? id,
+        [NotNullWhen(true)] out EntityPrototype? prototype,
+        bool logError = true);
+
+    /// <summary>
+    /// Resolve an <see cref="EntityPrototype"/> by ID, gracefully handling null.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This method does not throw if the prototype does not exist or is null, and instead simply returns false.
+    /// </para>
+    /// <para>
+    /// It is appropriate to use this method when handling IDs from external sources
+    /// (user input, old save records, etc.), where it is expected that data may be invalid.
+    /// </para>
+    /// <para>
+    /// It is not necessarily appropriate to use this method if an invalid ID indicates a programming error,
+    /// such as an invalid ID specified in a YAML prototype. In this scenario,
+    /// usage of this method should always be combined with proper error logging and other methods of validation
+    /// (e.g. static field validation).
+    /// <see cref="Resolve(EntProtoId?,out EntityPrototype?)"/> can be used as a convenient helper in this scenario.
+    /// </para>
+    /// </remarks>
+    /// <param name="id">The prototype ID to look up.</param>
+    /// <param name="prototype">The prototype that was resolved, null if it does not exist.</param>
+    /// <returns>True if the prototype exists, false if it does not.</returns>
+    /// <seealso cref="Resolve(EntProtoId?,out EntityPrototype?)"/>
+    bool TryIndex([ForbidLiteral] EntProtoId? id, [NotNullWhen(true)] out EntityPrototype? prototype);
+
+    /// <summary>
+    /// Resolve a prototype by ID, gracefully handling null, and logging an error if it does not exist.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This method does not throw if the prototype is invalid, and instead simply logs an error and returns false.
+    /// No error is reported if the ID is simply null.
+    /// </para>
+    /// <para>
+    /// This method can be used if an invalid prototype ID indicates a programming error somewhere else,
+    /// acting as a convenient function to make code more defensive.
+    /// Ideally such errors should also have some other way of being validated, however (e.g. static field validation).
+    /// </para>
+    /// <para>
+    /// This method should not be used when handling IDs that are expected to be invalid, such as user input.
+    /// Use <see cref="TryIndex{T}(ProtoId{T}?,out T?)"/> instead for those.
+    /// </para>
+    /// </remarks>
+    /// <param name="id">The prototype ID to look up. May be null.</param>
+    /// <param name="prototype">
+    /// The prototype that was resolved, null if <paramref name="id"/> was null or did not exist.
+    /// </param>
+    /// <returns>True if the prototype exists, false if <paramref name="id"/> was null, or it does not exist.</returns>
+    /// <seealso cref="TryIndex{T}(ProtoId{T}?,out T?)"/>
+    bool Resolve<T>([ForbidLiteral] ProtoId<T>? id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
+
+    /// <summary>
+    /// Retrieve a prototype by ID, gracefully handling null,
+    /// and optionally logging an error if it does not exist.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// No error is logged if <paramref name="id"/> is null.
+    /// </para>
+    /// </remarks>
+    /// <param name="id">The prototype ID to look up.</param>
+    /// <param name="prototype">The prototype that was resolved, null if it does not exist.</param>
+    /// <param name="logError">If true (default), log an error if the prototype does not exist.</param>
+    /// <returns>True if the prototype exists, false if <paramref name="id"/> was null, or it does not exist.</returns>
+    [Obsolete("Use Resolve() if you want to get a prototype without throwing but while still logging an error.")]
+    bool TryIndex<T>([ForbidLiteral] ProtoId<T>? id, [NotNullWhen(true)] out T? prototype, bool logError = true) where T : class, IPrototype;
+
+    /// <summary>
+    /// Resolve a prototype by ID, gracefully handling null.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This method does not throw if the prototype does not exist or is null, and instead simply returns false.
+    /// </para>
+    /// <para>
+    /// It is appropriate to use this method when handling IDs from external sources
+    /// (user input, old save records, etc.), where it is expected that data may be invalid.
+    /// </para>
+    /// <para>
+    /// It is not necessarily appropriate to use this method if an invalid ID indicates a programming error,
+    /// such as an invalid ID specified in a YAML prototype. In this scenario,
+    /// usage of this method should always be combined with proper error logging and other methods of validation
+    /// (e.g. static field validation).
+    /// <see cref="Resolve{T}(ProtoId{T}?,out T?)"/> can be used as a convenient helper in this scenario.
+    /// </para>
+    /// </remarks>
+    /// <param name="id">The prototype ID to look up.</param>
+    /// <param name="prototype">The prototype that was resolved, null if it does not exist.</param>
+    /// <returns>True if the prototype exists, false if it does not.</returns>
+    /// <seealso cref="Resolve{T}(ProtoId{T}?,out T?)"/>
+    bool TryIndex<T>([ForbidLiteral] ProtoId<T>? id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
+
+    // ReSharper restore MethodOverloadWithOptionalParameter
 
     bool HasMapping<T>(string id);
     bool TryGetMapping(Type kind, string id, [NotNullWhen(true)] out MappingDataNode? mappings);
-
-    /// <summary>
-    ///     Returns whether a prototype variant <param name="variant"/> exists.
-    /// </summary>
-    /// <param name="variant">Identifier for the prototype variant.</param>
-    /// <returns>Whether the prototype variant exists.</returns>
-    [Obsolete("Variant is outdated naming, use *kind* functions instead")]
-    bool HasVariant(string variant);
-
-    /// <summary>
-    ///     Returns the Type for a prototype variant.
-    /// </summary>
-    /// <param name="variant">Identifier for the prototype variant.</param>
-    /// <returns>The specified prototype Type.</returns>
-    /// <exception cref="KeyNotFoundException">
-    ///     Thrown when the specified prototype variant isn't registered or doesn't exist.
-    /// </exception>
-    [Obsolete("Variant is outdated naming, use *kind* functions instead")]
-    Type GetVariantType(string variant);
-
-    /// <summary>
-    ///     Attempts to get the Type for a prototype variant.
-    /// </summary>
-    /// <param name="variant">Identifier for the prototype variant.</param>
-    /// <param name="prototype">The specified prototype Type, or null.</param>
-    /// <returns>Whether the prototype type was found and <see cref="prototype"/> isn't null.</returns>
-    [Obsolete("Variant is outdated naming, use *kind* functions instead")]
-    bool TryGetVariantType(string variant, [NotNullWhen(true)] out Type? prototype);
-
-    /// <summary>
-    ///     Attempts to get a prototype's variant.
-    /// </summary>
-    /// <param name="type"></param>
-    /// <param name="variant"></param>
-    /// <returns></returns>
-    [Obsolete("Variant is outdated naming, use *kind* functions instead")]
-    bool TryGetVariantFrom(Type type, [NotNullWhen(true)] out string? variant);
-
-    /// <summary>
-    ///     Attempts to get a prototype's variant.
-    /// </summary>
-    /// <param name="prototype">The prototype in question.</param>
-    /// <param name="variant">Identifier for the prototype variant, or null.</param>
-    /// <returns>Whether the prototype variant was successfully retrieved.</returns>
-    [Obsolete("Variant is outdated naming, use *kind* functions instead")]
-    bool TryGetVariantFrom(IPrototype prototype, [NotNullWhen(true)] out string? variant);
-
-    /// <summary>
-    ///     Attempts to get a prototype's variant.
-    /// </summary>
-    /// <param name="variant">Identifier for the prototype variant, or null.</param>
-    /// <typeparam name="T">The prototype in question.</typeparam>
-    /// <returns>Whether the prototype variant was successfully retrieved.</returns>
-    [Obsolete("Variant is outdated naming, use *kind* functions instead")]
-    bool TryGetVariantFrom<T>([NotNullWhen(true)] out string? variant) where T : class, IPrototype;
 
     /// <summary>
     ///     Returns whether a prototype kind <param name="kind"/> exists.
@@ -339,15 +532,21 @@ public interface IPrototypeManager
     void LoadDefaultPrototypes(Dictionary<Type, HashSet<string>>? loaded = null);
 
     /// <summary>
-    /// Syncs all inter-prototype data. Call this when operations adding new prototypes are done.
+    /// Call this when operations adding new prototypes are done.
+    /// This will handle prototype inheritance, instance creation, and update entity categories.
+    /// When loading extra prototypes, or reloading a subset of existing prototypes, you should probably use
+    /// <see cref="ReloadPrototypes"/> instead.
     /// </summary>
     void ResolveResults();
 
     /// <summary>
-    /// Invokes <see cref="PrototypesReloaded"/> with information about the modified prototypes.
-    /// When built with development tools, this will also push inheritance for reloaded prototypes/
+    /// This should be called after new or updated prototypes ahve been loaded.
+    /// This will handle prototype inheritance, instance creation, and update entity categories.
+    /// It will also invoke <see cref="PrototypesReloaded"/> and raise a <see cref="PrototypesReloadedEventArgs"/>
+    /// event with information about the modified prototypes.
     /// </summary>
-    void ReloadPrototypes(Dictionary<Type, HashSet<string>> modified,
+    void ReloadPrototypes(
+        Dictionary<Type, HashSet<string>> modified,
         Dictionary<Type, HashSet<string>>? removed = null);
 
     /// <summary>
@@ -356,12 +555,9 @@ public interface IPrototypeManager
     void RegisterIgnore(string name);
 
     /// <summary>
-    /// Loads a single prototype class type into the manager.
+    /// Checks whether the given gind name has been marked as ignored via <see cref="RegisterIgnore"/>
     /// </summary>
-    /// <param name="protoClass">A prototype class type that implements IPrototype. This type also
-    /// requires a <see cref="PrototypeAttribute"/> with a non-empty class string.</param>
-    [Obsolete("Prototype type is outdated naming, use *king* functions instead")]
-    void RegisterType(Type protoClass);
+    bool IsIgnored(string name);
 
     /// <summary>
     /// Loads several prototype kinds into the manager. Note that this will re-build a frozen dictionary and should be avoided if possible.

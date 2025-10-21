@@ -7,6 +7,8 @@ using Robust.Client.Placement;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
@@ -19,9 +21,9 @@ namespace Robust.Client.UserInterface.Controllers.Implementations;
 
 public sealed class EntitySpawningUIController : UIController
 {
+    [Dependency] private readonly IConfigurationManager _cfg = default!;
     [Dependency] private readonly IPlacementManager _placement = default!;
     [Dependency] private readonly IPrototypeManager _prototypes = default!;
-    [Dependency] private readonly IResourceCache _resources = default!;
 
     private EntitySpawnWindow? _window;
     private readonly List<EntityPrototype> _shownEntities = new();
@@ -149,7 +151,7 @@ public sealed class EntitySpawningUIController : UIController
         {
             var newObjInfo = new PlacementInformation
             {
-                PlacementOption = EntitySpawnWindow.InitOpts[args.Id],
+                PlacementOption = _placement.AllModeNames[args.Id],
                 EntityType = _placement.CurrentPermission!.EntityType,
                 Range = 2,
                 IsTile = _placement.CurrentPermission.IsTile
@@ -193,6 +195,9 @@ public sealed class EntitySpawningUIController : UIController
         _window.SelectedButton = null;
         searchStr = searchStr?.ToLowerInvariant();
 
+        var categoryFilter = _cfg.GetCVar(CVars.EntitiesCategoryFilter);
+        _prototypes.TryIndex<EntityCategoryPrototype>(categoryFilter, out var filter);
+
         foreach (var prototype in _prototypes.EnumeratePrototypes<EntityPrototype>())
         {
             if (prototype.Abstract)
@@ -201,6 +206,11 @@ public sealed class EntitySpawningUIController : UIController
             }
 
             if (prototype.HideSpawnMenu)
+            {
+                continue;
+            }
+
+            if (filter is not null && !prototype.Categories.Contains(filter))
             {
                 continue;
             }
@@ -354,10 +364,11 @@ public sealed class EntitySpawningUIController : UIController
         _window.SelectedButton = null;
         _window.SelectedPrototype = null;
 
-        var overrideMode = EntitySpawnWindow.InitOpts[_window.OverrideMenu.SelectedId];
+
+        var overrideMode = _placement.AllModeNames[_window.OverrideMenu.SelectedId];
         var newObjInfo = new PlacementInformation
         {
-            PlacementOption = overrideMode != "Default" ? overrideMode : item.Prototype.PlacementMode,
+            PlacementOption = overrideMode != IPlacementManager.DefaultModeName ? overrideMode : item.Prototype.PlacementMode,
             EntityType = item.PrototypeID,
             Range = 2,
             IsTile = false

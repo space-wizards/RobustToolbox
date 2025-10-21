@@ -13,9 +13,10 @@ namespace Robust.Client.GameStates
 {
     internal sealed class NetInterpOverlay : Overlay
     {
+        private static readonly ProtoId<ShaderPrototype> UnshadedShader = "unshaded";
+
         [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         private readonly EntityLookupSystem _lookup;
 
@@ -33,7 +34,7 @@ namespace Robust.Client.GameStates
         {
             IoCManager.InjectDependencies(this);
             _lookup = lookup;
-            _shader = _prototypeManager.Index<ShaderPrototype>("unshaded").Instance();
+            _shader = _prototypeManager.Index(UnshadedShader).Instance();
             _container = _entityManager.System<SharedContainerSystem>();
             _xform = _entityManager.System<SharedTransformSystem>();
         }

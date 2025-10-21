@@ -19,6 +19,7 @@ using Robust.Client.State;
 using Robust.Client.Upload;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.RichText;
+using Robust.Client.UserInterface.XAML.Proxy;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
 using Robust.Client.WebViewHook;
@@ -30,6 +31,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
@@ -53,6 +55,8 @@ namespace Robust.Client
         [Dependency] private readonly IResourceCacheInternal _resourceCache = default!;
         [Dependency] private readonly IResourceManagerInternal _resManager = default!;
         [Dependency] private readonly IRobustSerializer _serializer = default!;
+        [Dependency] private readonly IXamlProxyManager _xamlProxyManager = default!;
+        [Dependency] private readonly IXamlHotReloadManager _xamlHotReloadManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         [Dependency] private readonly IClientNetManager _networkManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
@@ -90,6 +94,8 @@ namespace Robust.Client
         [Dependency] private readonly IReplayPlaybackManager _replayPlayback = default!;
         [Dependency] private readonly IReplayRecordingManagerInternal _replayRecording = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IReloadManager _reload = default!;
+        [Dependency] private readonly ILocalizationManager _loc = default!;
         [Dependency] private readonly ISystemFontManagerInternal _systemFontManager = default!;
 
         private IWebViewManagerHook? _webViewHook;
@@ -105,9 +111,26 @@ namespace Robust.Client
 
         private ResourceManifestData? _resourceManifest;
 
+        private DisplayMode _displayMode;
+
         public void SetCommandLineArgs(CommandLineArgs args)
         {
             _commandLineArgs = args;
+        }
+
+        public string GameTitle()
+        {
+            return Options.DefaultWindowTitle ?? _resourceManifest!.DefaultWindowTitle ?? "RobustToolbox";
+        }
+
+        public string WindowIconSet()
+        {
+            return Options.WindowIconSet?.ToString() ?? _resourceManifest!.WindowIconSet ?? "";
+        }
+
+        public string SplashLogo()
+        {
+            return Options.SplashLogo?.ToString() ?? _resourceManifest!.SplashLogo ?? "";
         }
 
         internal bool StartupContinue(DisplayMode displayMode)
@@ -116,8 +139,7 @@ namespace Robust.Client
 
             _clyde.InitializePostWindowing();
             _audio.InitializePostWindowing();
-            _clyde.SetWindowTitle(
-                Options.DefaultWindowTitle ?? _resourceManifest!.DefaultWindowTitle ?? "RobustToolbox");
+            _clyde.SetWindowTitle(GameTitle());
 
             _taskManager.Initialize();
             _parallelMgr.Initialize();
@@ -142,6 +164,7 @@ namespace Robust.Client
             }
 
             _serializationManager.Initialize();
+            _loc.Initialize();
 
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
@@ -170,9 +193,12 @@ namespace Robust.Client
             // before prototype load.
             ProgramShared.FinishCheckBadFileExtensions(checkBadExtensions);
 
+            _reload.Initialize();
             _reflectionManager.Initialize();
             _prototypeManager.Initialize();
             _prototypeManager.LoadDefaultPrototypes();
+            _xamlProxyManager.Initialize();
+            _xamlHotReloadManager.Initialize();
             _userInterfaceManager.Initialize();
             _eyeManager.Initialize();
             _entityManager.Initialize();
@@ -250,6 +276,9 @@ namespace Robust.Client
                     Update(args);
                 }
             };
+
+            _configurationManager.OnValueChanged(CVars.DisplayMaxFPS, _ => UpdateVsyncConfig());
+            _configurationManager.OnValueChanged(CVars.DisplayVSync, _ => UpdateVsyncConfig(), invokeImmediately: true);
 
             _clyde.Ready();
 
@@ -365,7 +394,7 @@ namespace Robust.Client
 
             _prof.Initialize();
 
-            _resManager.Initialize(Options.LoadConfigAndUserData ? userDataDir : null);
+            _resManager.Initialize(Options.LoadConfigAndUserData ? userDataDir : null, hideUserDataDir: true);
 
             var mountOptions = _commandLineArgs != null
                 ? MountOptions.Merge(_commandLineArgs.MountOptions, Options.MountOptions)
@@ -396,10 +425,8 @@ namespace Robust.Client
                 // Handle GameControllerOptions implicit CVar overrides.
                 _configurationManager.OverrideConVars(new[]
                 {
-                    (CVars.DisplayWindowIconSet.Name,
-                        options.WindowIconSet?.ToString() ?? _resourceManifest.WindowIconSet ?? ""),
-                    (CVars.DisplaySplashLogo.Name,
-                        options.SplashLogo?.ToString() ?? _resourceManifest.SplashLogo ?? "")
+                    (CVars.DisplayWindowIconSet.Name, WindowIconSet()),
+                    (CVars.DisplaySplashLogo.Name, SplashLogo())
                 });
             }
 
@@ -688,6 +715,30 @@ namespace Robust.Client
             return UserDataDir.GetUserDataDir(this);
         }
 
+
+        private void UpdateVsyncConfig()
+        {
+            if (_displayMode == DisplayMode.Headless)
+                return;
+
+            var vsync = _configurationManager.GetCVar(CVars.DisplayVSync);
+            var maxFps = Math.Clamp(_configurationManager.GetCVar(CVars.DisplayMaxFPS), 0, 10_000);
+
+            _clyde.VsyncEnabled = vsync;
+
+            if (_mainLoop == null)
+                return;
+
+            if (vsync || maxFps == 0)
+            {
+                _mainLoop.SleepMode = SleepMode.None;
+            }
+            else
+            {
+                _mainLoop.SleepMode = SleepMode.Limit;
+                _mainLoop.LimitMinFrameTime = TimeSpan.FromSeconds(1.0 / maxFps);
+            }
+        }
 
         internal enum DisplayMode : byte
         {

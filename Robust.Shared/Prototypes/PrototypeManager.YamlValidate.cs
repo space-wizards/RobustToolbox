@@ -13,6 +13,11 @@ namespace Robust.Shared.Prototypes;
 
 public partial class PrototypeManager
 {
+    // Characters that we don't allow in prototype IDs. Spaces and periods both
+    // break generated localization strings for entity prototypes, so we just
+    // disallow them for all prototypes.
+    private static readonly char[] DisallowedIdChars = [' ', '.'];
+
     public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path) => ValidateDirectory(path, out _);
 
     public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path,
@@ -56,6 +61,13 @@ public partial class PrototypeManager
                     var data = new PrototypeValidationData(id, mapping, resourcePath.ToString());
                     mapping.Remove("type");
 
+                    if (DisallowedIdChars.TryFirstOrNull(c => id.Contains(c), out var letter))
+                    {
+                        dict.GetOrNew(data.File)
+                            .Add(new ErrorNode(mapping, $"Prototype '{id}' ({type}) contains disallowed "
+                                                        + $"character '{letter}'."));
+                    }
+
                     if (prototypes.GetOrNew(type).TryAdd(id, data))
                         continue;
 
@@ -69,7 +81,6 @@ public partial class PrototypeManager
         var errors = new List<ErrorNode>();
         foreach (var (type, instances) in prototypes)
         {
-            var defaultErrorOccurred = false;
             foreach (var (id, data) in instances)
             {
                 errors.Clear();

@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Map.Components;
@@ -11,6 +13,7 @@ namespace Robust.Shared.GameObjects;
 public abstract partial class SharedMapSystem
 {
     protected int LastMapId;
+    private Dictionary<EntityUid, MapId> _reserved = new();
 
     private void InitializeMap()
     {
@@ -70,14 +73,15 @@ public abstract partial class SharedMapSystem
         if (component.MapId == MapId.Nullspace)
         {
             if (state.MapId == MapId.Nullspace)
-                throw new Exception($"Received invalid map state? {ToPrettyString(uid)}");
+                throw new Exception($"Received invalid map state for {ToPrettyString(uid)}");
 
-            component.MapId = state.MapId;
-            Maps.Add(component.MapId, uid);
+            AssignMapId((uid, component), state.MapId);
             RecursiveMapIdUpdate(uid, uid, component.MapId);
         }
 
-        DebugTools.AssertEqual(component.MapId, state.MapId);
+        if (component.MapId != state.MapId)
+            throw new Exception($"Received invalid map state for {ToPrettyString(uid)}");
+
         component.LightingEnabled = state.LightingEnabled;
         component.MapInitialized = state.Initialized;
 
@@ -109,36 +113,111 @@ public abstract partial class SharedMapSystem
         args.State = new MapComponentState(component.MapId, component.LightingEnabled, component.MapPaused, component.MapInitialized);
     }
 
-    protected abstract MapId GetNextMapId();
+    protected MapId TakeNextMapId()
+    {
+        var id = GetNextMapId();
+        LastMapId = id.Value;
+        return id;
+    }
+
+    [Pure]
+    internal abstract MapId GetNextMapId();
 
     private void OnComponentAdd(EntityUid uid, MapComponent component, ComponentAdd args)
     {
         // ordered startups when
-        EnsureComp<PhysicsMapComponent>(uid);
         EnsureComp<GridTreeComponent>(uid);
-        EnsureComp<MovedGridsComponent>(uid);
     }
 
-    private void OnCompInit(EntityUid uid, MapComponent component, ComponentInit args)
+    /// <summary>
+    /// Generate & reserve a map-id for a map-entity before it is actually given the component.
+    /// </summary>
+    internal MapId AllocateMapId(EntityUid ent)
     {
-        if (component.MapId == MapId.Nullspace)
-            component.MapId = GetNextMapId();
+        var id = _reserved[ent] = TakeNextMapId();
+        Maps.Add(id, ent);
+        UsedIds.Add(id);
+        return id;
+    }
 
-        DebugTools.AssertEqual(component.MapId.IsClientSide, IsClientSide(uid));
-        if (!Maps.TryAdd(component.MapId, uid))
+    internal void AssignMapId(Entity<MapComponent> map, MapId? id = null)
+    {
+        if (map.Comp.MapId != MapId.Nullspace)
         {
-            if (Maps[component.MapId] != uid)
-                throw new Exception($"Attempted to initialize a map {ToPrettyString(uid)} with a duplicate map id {component.MapId}");
+            if (id != null && map.Comp.MapId != id)
+            {
+                QueueDel(map.Owner);
+                throw new Exception($"Map entity {ToPrettyString(map.Owner)} has already been assigned an id");
+            }
+
+            if (!Maps.TryGetValue(map.Comp.MapId, out var existing) || existing != map.Owner)
+            {
+                QueueDel(map.Owner);
+                throw new Exception($"Map entity {ToPrettyString(map.Owner)} was improperly assigned a map id?");
+            }
+
+            DebugTools.Assert(UsedIds.Contains(map.Comp.MapId));
+            return;
         }
 
-        var msg = new MapChangedEvent(uid, component.MapId, true);
-        RaiseLocalEvent(uid, msg, true);
+        if (_reserved.TryGetValue(map.Owner, out var reserved))
+        {
+            DebugTools.AssertNull(id);
+            DebugTools.AssertEqual(Maps[reserved], map.Owner);
+            DebugTools.Assert(UsedIds.Contains(reserved));
+            map.Comp.MapId = reserved;
+            return;
+        }
+
+        map.Comp.MapId = id ?? TakeNextMapId();
+
+        if (IsClientSide(map) != map.Comp.MapId.IsClientSide)
+            throw new Exception($"Attempting to assign a client-side map id to a networked entity or vice-versa");
+
+        if (!UsedIds.Add(map.Comp.MapId))
+            Log.Warning($"Re-using a previously used map id ({map.Comp.MapId}) for map entity {ToPrettyString(map)}");
+
+        if (Maps.TryAdd(map.Comp.MapId, map.Owner))
+            return;
+
+        if (Maps[map.Comp.MapId] == map.Owner)
+            return;
+
+        QueueDel(map);
+        throw new Exception(
+            $"Attempted to assign an existing mapId {map.Comp} to a map entity {ToPrettyString(map.Owner)}");
+    }
+
+    private void OnCompInit(Entity<MapComponent> map, ref ComponentInit args)
+    {
+        AssignMapId(map);
+
+#pragma warning disable CS0618 // Type or member is obsolete
+        var msg = new MapChangedEvent(map, map.Comp.MapId, true);
+#pragma warning restore CS0618 // Type or member is obsolete
+        RaiseLocalEvent(map, msg, true);
+        var ev = new MapCreatedEvent(map, map.Comp.MapId);
+        RaiseLocalEvent(map, ev, true);
+    }
+
+    private void OnMapInit(EntityUid uid, MapComponent component, MapInitEvent args)
+    {
+        DebugTools.Assert(!component.MapInitialized);
+        component.MapInitialized = true;
+        Dirty(uid, component);
     }
 
     private void OnCompStartup(EntityUid uid, MapComponent component, ComponentStartup args)
     {
-        if (component.MapPaused)
-            RecursiveSetPaused(uid, true);
+        // un-initialized maps are always paused.
+        component.MapPaused |= !component.MapInitialized;
+
+        if (!component.MapPaused)
+            return;
+
+        // Recursively pause all entities on the map
+        component.MapPaused = false;
+        SetPaused(uid, true);
     }
 
     private void OnMapRemoved(EntityUid uid, MapComponent component, ComponentShutdown args)
@@ -146,8 +225,13 @@ public abstract partial class SharedMapSystem
         DebugTools.Assert(component.MapId != MapId.Nullspace);
         Maps.Remove(component.MapId);
 
+#pragma warning disable CS0618 // Type or member is obsolete
         var msg = new MapChangedEvent(uid, component.MapId, false);
+#pragma warning restore CS0618 // Type or member is obsolete
         RaiseLocalEvent(uid, msg, true);
+
+        var ev = new MapRemovedEvent(uid, component.MapId);
+        RaiseLocalEvent(uid, ev, true);
     }
 
     /// <summary>
@@ -155,7 +239,7 @@ public abstract partial class SharedMapSystem
     /// </summary>
     public EntityUid CreateMap(out MapId mapId, bool runMapInit = true)
     {
-        mapId = GetNextMapId();
+        mapId = TakeNextMapId();
         var uid = CreateMap(mapId, runMapInit);
         return uid;
     }
@@ -181,19 +265,17 @@ public abstract partial class SharedMapSystem
         if (_netManager.IsClient && _netManager.IsConnected && !mapId.IsClientSide)
             throw new ArgumentException($"Attempted to create a client-side map entity with a non client-side map ID?");
 
-        var uid = EntityManager.CreateEntityUninitialized(null);
-        var map = _factory.GetComponent<MapComponent>();
-        map.MapId = mapId;
-        AddComp(uid, map);
+        if (UsedIds.Contains(mapId))
+            Log.Warning($"Re-using MapId: {mapId}");
 
-        // Give the entity a name, mainly for debugging. Content can always override this with a localized name.
-        var meta = MetaData(uid);
-        _meta.SetEntityName(uid, $"Map Entity", meta);
+        var (uid, map, meta) = CreateUninitializedMap();
+        DebugTools.AssertEqual(map.MapId, MapId.Nullspace);
+        AssignMapId((uid, map), mapId);
 
         // Initialize components. this should add the map id to the collections.
-        EntityManager.InitializeComponents(uid, meta);
-        EntityManager.StartComponents(uid);
-        DebugTools.Assert(Maps[mapId] == uid);
+        EntityManager.InitializeEntity(uid, meta);
+        EntityManager.StartEntity(uid);
+        DebugTools.AssertEqual(Maps[mapId], uid);
 
         if (runMapInit)
             InitializeMap((uid, map));
@@ -201,5 +283,35 @@ public abstract partial class SharedMapSystem
             SetPaused((uid, map), true);
 
         return uid;
+    }
+
+    public Entity<MapComponent, MetaDataComponent> CreateUninitializedMap()
+    {
+        var uid = EntityManager.CreateEntityUninitialized(null, out var meta);
+        _meta.SetEntityName(uid, $"Map Entity", meta);
+        return (uid, AddComp<MapComponent>(uid), meta);
+    }
+
+    /// <summary>
+    /// Deletes a map with the specified map id.
+    /// </summary>
+    public void DeleteMap(MapId mapId)
+    {
+        if (TryGetMap(mapId, out var uid))
+            Del(uid);
+    }
+
+    /// <summary>
+    /// Deletes a map with the specified map id in the next tick.
+    /// </summary>
+    public void QueueDeleteMap(MapId mapId)
+    {
+        if (TryGetMap(mapId, out var uid))
+            QueueDel(uid);
+    }
+
+    public IEnumerable<MapId> GetAllMapIds()
+    {
+        return Maps.Keys;
     }
 }

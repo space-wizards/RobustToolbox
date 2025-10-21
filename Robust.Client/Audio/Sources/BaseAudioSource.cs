@@ -1,7 +1,6 @@
 using System;
 using System.Numerics;
 using OpenTK.Audio.OpenAL;
-using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
 using Robust.Client.Audio.Effects;
 using Robust.Shared.Audio.Effects;
 using Robust.Shared.Audio.Sources;
@@ -82,9 +81,9 @@ public abstract class BaseAudioSource : IAudioSource
         get
         {
             _checkDisposed();
-            var state = AL.GetSourceState(SourceHandle);
+            var state = AL.GetSource(SourceHandle, ALGetSourcei.SourceState);
             Master._checkAlError();
-            return state == ALSourceState.Playing;
+            return state == (int)ALSourceState.Playing;
         }
         set
         {
@@ -208,6 +207,12 @@ public abstract class BaseAudioSource : IAudioSource
         }
         set
         {
+            if (float.IsNaN(value))
+            {
+                Master.LogError($"Tried to set NaN gain, setting audio source to 0f: {Environment.StackTrace}");
+                value = 0f;
+            }
+
             _checkDisposed();
             var priorOcclusion = 1f;
             if (!IsEfxSupported)
@@ -356,11 +361,11 @@ public abstract class BaseAudioSource : IAudioSource
 
         if (audio is AuxiliaryAudio impAudio)
         {
-            EFX.Source(SourceHandle, EFXSourceInteger3.AuxiliarySendFilter, impAudio.Handle, 0, 0);
+            ALC.EFX.Source(SourceHandle, EFXSourceInteger3.AuxiliarySendFilter, impAudio.Handle, 0, 0);
         }
         else
         {
-            EFX.Source(SourceHandle, EFXSourceInteger3.AuxiliarySendFilter, 0, 0, 0);
+            ALC.EFX.Source(SourceHandle, EFXSourceInteger3.AuxiliarySendFilter, 0, 0, 0);
         }
 
         Master._checkAlError();
@@ -370,12 +375,12 @@ public abstract class BaseAudioSource : IAudioSource
     {
         if (FilterHandle == 0)
         {
-            FilterHandle = EFX.GenFilter();
-            EFX.Filter(FilterHandle, FilterInteger.FilterType, (int) FilterType.Lowpass);
+            FilterHandle = ALC.EFX.GenFilter();
+            ALC.EFX.Filter(FilterHandle, FilterInteger.FilterType, (int) FilterType.Lowpass);
         }
 
-        EFX.Filter(FilterHandle, FilterFloat.LowpassGain, gain);
-        EFX.Filter(FilterHandle, FilterFloat.LowpassGainHF, cutoff);
+        ALC.EFX.Filter(FilterHandle, FilterFloat.LowpassGain, gain);
+        ALC.EFX.Filter(FilterHandle, FilterFloat.LowpassGainHF, cutoff);
         AL.Source(SourceHandle, ALSourcei.EfxDirectFilter, FilterHandle);
     }
 

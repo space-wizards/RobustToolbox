@@ -47,12 +47,14 @@ public abstract class MetaDataSystem : EntitySystem
         if (!_metaQuery.Resolve(uid, ref metadata) || value.Equals(metadata.EntityName))
             return;
 
+        var oldName = metadata.EntityName;
+
         metadata._entityName = value;
 
         if (raiseEvents)
         {
-            var ev = new EntityRenamedEvent(value);
-            RaiseLocalEvent(uid, ref ev);
+            var ev = new EntityRenamedEvent(uid, oldName, value);
+            RaiseLocalEvent(uid, ref ev, true);
         }
 
         Dirty(uid, metadata, metadata);
@@ -157,6 +159,8 @@ public abstract class MetaDataSystem : EntitySystem
         if (toRemove == 0x0)
             return;
 
+        // TODO PERF
+        // does this need to be a broadcast event?
         var ev = new MetaFlagRemoveAttemptEvent(toRemove);
         RaiseLocalEvent(uid, ref ev, true);
 

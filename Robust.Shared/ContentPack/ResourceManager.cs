@@ -41,13 +41,13 @@ namespace Robust.Shared.ContentPack
         public IWritableDirProvider UserData { get; private set; } = default!;
 
         /// <inheritdoc />
-        public virtual void Initialize(string? userData)
+        public virtual void Initialize(string? userData, bool hideRootDir)
         {
             Sawmill = _logManager.GetSawmill("res");
 
             if (userData != null)
             {
-                UserData = new WritableDirProvider(Directory.CreateDirectory(userData));
+                UserData = new WritableDirProvider(Directory.CreateDirectory(userData), hideRootDir);
             }
             else
             {
@@ -273,8 +273,6 @@ namespace Robust.Shared.ContentPack
 
         public IEnumerable<string> ContentGetDirectoryEntries(ResPath path)
         {
-            ArgumentNullException.ThrowIfNull(path, nameof(path));
-
             if (!path.IsRooted)
                 throw new ArgumentException("Path is not rooted", nameof(path));
 
@@ -373,14 +371,19 @@ namespace Robust.Shared.ContentPack
             AddRoot(ResPath.Root, loader);
         }
 
-        public IEnumerable<ResPath> GetContentRoots()
+        IEnumerable<ResPath> IResourceManager.GetContentRoots()
+        {
+            return [];
+        }
+
+        public IEnumerable<string> GetContentRoots()
         {
             foreach (var (_, root) in _contentRoots)
             {
-                if (root is DirLoader loader)
-                {
-                    yield return new ResPath(loader.GetPath(new ResPath(@"/")));
-                }
+                if (root is not DirLoader loader)
+                    continue;
+
+                yield return loader.GetPath(ResPath.Root);
             }
         }
 

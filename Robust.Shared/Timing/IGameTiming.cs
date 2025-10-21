@@ -31,6 +31,11 @@ namespace Robust.Shared.Timing
         TimeSpan RealTime { get; }
 
         /// <summary>
+        /// The time (on the <see cref="RealTime"/> scale) when the current frame started.
+        /// </summary>
+        TimeSpan FrameStartTime { get; }
+
+        /// <summary>
         ///     The <see cref="RealTime"/> of the server.
         /// </summary>
         /// <remarks>
@@ -86,7 +91,7 @@ namespace Robust.Shared.Timing
         /// <summary>
         ///     The target ticks/second of the simulation.
         /// </summary>
-        byte TickRate { get; set; }
+        ushort TickRate { get; set; }
 
         /// <summary>
         /// The baseline time value that CurTime is calculated relatively to.
@@ -167,7 +172,7 @@ namespace Robust.Shared.Timing
         void ResetSimTime();
         void ResetSimTime((TimeSpan, GameTick) timeBase);
 
-        void SetTickRateAt( byte tickRate, GameTick atTick);
+        void SetTickRateAt(ushort tickRate, GameTick atTick);
 
         TimeSpan RealLocalToServer(TimeSpan local);
         TimeSpan RealServerToLocal(TimeSpan server);

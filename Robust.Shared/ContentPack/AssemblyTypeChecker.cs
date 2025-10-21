@@ -131,6 +131,16 @@ namespace Robust.Shared.ContentPack
                 return false;
             }
 
+#pragma warning disable RA0004
+            var loadedConfig = _config.Result;
+#pragma warning restore RA0004
+
+            if (!loadedConfig.AllowedAssemblyPrefixes.Any(allowedNamePrefix => asmName.StartsWith(allowedNamePrefix)))
+            {
+                _sawmill.Error($"Assembly name '{asmName}' is not allowed for a content assembly");
+                return false;
+            }
+
             if (VerifyIL)
             {
                 if (!DoVerifyIL(asmName, resolver, peReader, reader))
@@ -178,10 +188,6 @@ namespace Robust.Shared.ContentPack
             {
                 return true;
             }
-
-#pragma warning disable RA0004
-            var loadedConfig = _config.Result;
-#pragma warning restore RA0004
 
             var badRefs = new ConcurrentBag<EntityHandle>();
 
@@ -244,7 +250,7 @@ namespace Robust.Shared.ContentPack
             Parallel.ForEach(partitioner.GetPartitions(Environment.ProcessorCount), handle =>
             {
                 var ver = new Verifier(resolver);
-                ver.SetSystemModuleName(new AssemblyName(SystemAssemblyName));
+                ver.SetSystemModuleName(new AssemblyNameInfo(SystemAssemblyName));
                 while (handle.MoveNext())
                 {
                     foreach (var result in ver.Verify(peReader, handle.Current, verifyMethods: true))
@@ -926,12 +932,12 @@ namespace Robust.Shared.ContentPack
                 return null;
             }
 
-            public PEReader? ResolveAssembly(AssemblyName assemblyName)
+            public PEReader? ResolveAssembly(AssemblyNameInfo assemblyName)
             {
                 return _dictionary.GetOrAdd(assemblyName.Name!, ResolveCore);
             }
 
-            public PEReader? ResolveModule(AssemblyName referencingAssembly, string fileName)
+            public PEReader? ResolveModule(AssemblyNameInfo referencingAssembly, string fileName)
             {
                 throw new NotSupportedException();
             }

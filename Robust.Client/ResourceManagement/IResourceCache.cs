@@ -48,7 +48,10 @@ public interface IResourceCache : IResourceManager
     event Action<TextureLoadedEventArgs> OnRawTextureLoaded;
     event Action<RsiLoadedEventArgs> OnRsiLoaded;
 
+    [Obsolete("Fetch these through IoC directly instead")]
     IClyde Clyde { get; }
+
+    [Obsolete("Fetch these through IoC directly instead")]
     IFontManager FontManager { get; }
 }
 

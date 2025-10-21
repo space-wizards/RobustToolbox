@@ -5,6 +5,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map
@@ -12,8 +13,8 @@ namespace Robust.Shared.Map
     /// <summary>
     ///     A set of coordinates relative to another entity.
     /// </summary>
-    [PublicAPI]
-    public readonly struct EntityCoordinates : IEquatable<EntityCoordinates>, ISpanFormattable
+    [PublicAPI, DataRecord]
+    public readonly record struct EntityCoordinates : ISpanFormattable
     {
         public static readonly EntityCoordinates Invalid = new(EntityUid.Invalid, Vector2.Zero);
 
@@ -77,21 +78,9 @@ namespace Robust.Shared.Map
         }
 
         [Obsolete("Use SharedTransformSystem.ToMapCoordinates()")]
-        public MapCoordinates ToMap(IEntityManager entityManager)
-        {
-            return ToMap(entityManager, entityManager.System<SharedTransformSystem>());
-        }
-
-        [Obsolete("Use SharedTransformSystem.ToMapCoordinates()")]
         public MapCoordinates ToMap(IEntityManager entityManager, SharedTransformSystem transformSystem)
         {
             return transformSystem.ToMapCoordinates(this);
-        }
-
-        [Obsolete("Use SharedTransformSystem.ToMapCoordinates()")]
-        public Vector2 ToMapPos(IEntityManager entityManager)
-        {
-            return ToMap(entityManager, entityManager.System<SharedTransformSystem>()).Position;
         }
 
         [Obsolete("Use SharedTransformSystem.ToMapCoordinates()")]
@@ -101,34 +90,15 @@ namespace Robust.Shared.Map
         }
 
         [Obsolete("Use SharedTransformSystem.ToCoordinates()")]
-        public static EntityCoordinates FromMap(EntityUid entity, MapCoordinates coordinates, IEntityManager? entMan = null)
-        {
-            IoCManager.Resolve(ref entMan);
-            return FromMap(entity, coordinates, entMan.System<SharedTransformSystem>(), entMan);
-        }
-
-        [Obsolete("Use SharedTransformSystem.ToCoordinates()")]
         public static EntityCoordinates FromMap(EntityUid entity, MapCoordinates coordinates, SharedTransformSystem transformSystem, IEntityManager? entMan = null)
         {
             return transformSystem.ToCoordinates(entity, coordinates);
         }
 
         [Obsolete("Use SharedTransformSystem.ToCoordinates()")]
-        public static EntityCoordinates FromMap(IEntityManager entityManager, EntityUid entityUid, MapCoordinates coordinates)
-        {
-            return FromMap(entityUid, coordinates, entityManager.System<SharedTransformSystem>(), entityManager);
-        }
-
-        [Obsolete("Use SharedTransformSystem.ToCoordinates()")]
         public static EntityCoordinates FromMap(IMapManager mapManager, MapCoordinates coordinates)
         {
             return IoCManager.Resolve<IEntityManager>().System<SharedTransformSystem>().ToCoordinates(coordinates);
-        }
-
-        [Obsolete("Use overload with TransformSystem")]
-        public Vector2i ToVector2i(IEntityManager entityManager, IMapManager mapManager)
-        {
-            return ToVector2i(entityManager, mapManager, entityManager.System<SharedTransformSystem>());
         }
 
         /// <summary>
@@ -343,44 +313,6 @@ namespace Robust.Shared.Map
             delta = mapCoordinates.Position - otherMapCoordinates.Position;
             return true;
         }
-
-        #region IEquatable
-
-        /// <inheritdoc />
-        public bool Equals(EntityCoordinates other)
-        {
-            return EntityId.Equals(other.EntityId) && Position.Equals(other.Position);
-        }
-
-        /// <inheritdoc />
-        public override bool Equals(object? obj)
-        {
-            return obj is EntityCoordinates other && Equals(other);
-        }
-
-        /// <inheritdoc />
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(EntityId, Position);
-        }
-
-        /// <summary>
-        ///     Check for equality by value between two objects.
-        /// </summary>
-        public static bool operator ==(EntityCoordinates left, EntityCoordinates right)
-        {
-            return left.Equals(right);
-        }
-
-        /// <summary>
-        ///     Check for inequality by value between two objects.
-        /// </summary>
-        public static bool operator !=(EntityCoordinates left, EntityCoordinates right)
-        {
-            return !left.Equals(right);
-        }
-
-        #endregion
 
         #region Operators
 

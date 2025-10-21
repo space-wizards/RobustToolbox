@@ -162,9 +162,10 @@ namespace Robust.Client.WebView.Cef
                 }
             }
 
+            public bool IsOpen => _data != null;
             public bool IsLoading => _data?.Browser.IsLoading ?? false;
 
-            public void EnteredTree()
+            public void StartBrowser()
             {
                 DebugTools.AssertNull(_data);
 
@@ -195,7 +196,7 @@ namespace Robust.Client.WebView.Cef
                 _data = new LiveData(texture, client, browser, renderer);
             }
 
-            public void ExitedTree()
+            public void CloseBrowser()
             {
                 DebugTools.AssertNotNull(_data);
 
@@ -484,27 +485,27 @@ namespace Robust.Client.WebView.Cef
             public void FocusEntered()
             {
                 if (_textInputActive)
-                    _clyde.TextInputStart();
+                    Owner.Root?.Window?.TextInputStart();
             }
 
             public void FocusExited()
             {
                 if (_textInputActive)
-                    _clyde.TextInputStop();
+                    Owner.Root?.Window?.TextInputStop();
             }
 
             public void TextInputStart()
             {
                 _textInputActive = true;
                 if (Owner.HasKeyboardFocus())
-                    _clyde.TextInputStart();
+                    Owner.Root?.Window?.TextInputStart();
             }
 
             public void TextInputStop()
             {
                 _textInputActive = false;
                 if (Owner.HasKeyboardFocus())
-                    _clyde.TextInputStop();
+                    Owner.Root?.Window?.TextInputStop();
             }
 
             private sealed class LiveData
@@ -587,8 +588,11 @@ namespace Robust.Client.WebView.Cef
                 }
             }
 
-            protected override void OnAcceleratedPaint(CefBrowser browser, CefPaintElementType type,
-                CefRectangle[] dirtyRects, IntPtr sharedHandle)
+            protected override void OnAcceleratedPaint(
+                CefBrowser browser,
+                CefPaintElementType type,
+                CefRectangle[] dirtyRects,
+                in CefAcceleratedPaintInfo info)
             {
                 // Unused, but we're forced to implement it so.. NOOP.
             }

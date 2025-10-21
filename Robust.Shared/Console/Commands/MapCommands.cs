@@ -33,11 +33,25 @@ sealed class AddMapCommand : LocalizedEntityCommands
 
         shell.WriteError($"Map with ID {mapId} already exists!");
     }
+
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    {
+        switch (args.Length)
+        {
+            case 1:
+                var mapId = _mapSystem.GetNextMapId();
+                return CompletionResult.FromHintOptions([ new CompletionOption($"{mapId}")], LocalizationManager.GetString("generic-mapid"));
+            case 2:
+                return CompletionResult.FromHint(LocalizationManager.GetString("cmd-addmap-hint-2"));
+            default:
+                return CompletionResult.Empty;
+        }
+    }
 }
 
-sealed class RemoveMapCommand : LocalizedCommands
+sealed class RemoveMapCommand : LocalizedEntityCommands
 {
-    [Dependency] private readonly IMapManager _map = default!;
+    [Dependency] private readonly IEntitySystemManager _systems = default!;
 
     public override string Command => "rmmap";
     public override bool RequireServerOrSingleplayer => true;
@@ -51,15 +65,24 @@ sealed class RemoveMapCommand : LocalizedCommands
         }
 
         var mapId = new MapId(int.Parse(args[0]));
+        var mapSystem = _systems.GetEntitySystem<SharedMapSystem>();
 
-        if (!_map.MapExists(mapId))
+        if (!mapSystem.MapExists(mapId))
         {
             shell.WriteError($"Map {mapId.Value} does not exist.");
             return;
         }
 
-        _map.DeleteMap(mapId);
+        mapSystem.DeleteMap(mapId);
         shell.WriteLine($"Map {mapId.Value} was removed.");
+    }
+
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    {
+        if (args.Length != 1)
+            return CompletionResult.Empty;
+
+        return CompletionResult.FromHintOptions(CompletionHelper.MapIds(args[0], entManager: EntityManager), LocalizationManager.GetString("generic-map"));
     }
 }
 
@@ -86,6 +109,14 @@ sealed class RemoveGridCommand : LocalizedEntityCommands
 
         EntityManager.DeleteEntity(gridId);
         shell.WriteLine($"Grid {gridId} was removed.");
+    }
+
+    public override CompletionResult GetCompletion(IConsoleShell shell, string[] args)
+    {
+        if (args.Length != 1)
+            return CompletionResult.Empty;
+
+        return CompletionResult.FromHintOptions(CompletionHelper.Components<MapGridComponent>(args[0], entManager: EntityManager), LocalizationManager.GetString("generic-grid"));
     }
 }
 
@@ -138,7 +169,7 @@ internal sealed class ListMapsCommand : LocalizedEntityCommands
     {
         var msg = new StringBuilder();
 
-        foreach (var mapId in _map.GetAllMapIds().OrderBy(id => id.Value))
+        foreach (var mapId in _mapSystem.GetAllMapIds().OrderBy(id => id.Value))
         {
             if (!_mapSystem.TryGetMap(mapId, out var mapUid))
                 continue;
@@ -152,7 +183,8 @@ internal sealed class ListMapsCommand : LocalizedEntityCommands
                 string.Join(",", _map.GetAllGrids(mapId).Select(grid => grid.Owner)));
         }
 
-        shell.WriteLine(msg.ToString());
+        // Trim the newline
+        shell.WriteLine(msg.ToString()[..^1]);
     }
 }
 
@@ -182,6 +214,6 @@ internal sealed class ListGridsCommand : LocalizedEntityCommands
                 uid, xform.MapID, uid, worldPos.X, worldPos.Y);
         }
 
-        shell.WriteLine(msg.ToString());
+        shell.WriteLine(msg.ToString()[..^1]);
     }
 }

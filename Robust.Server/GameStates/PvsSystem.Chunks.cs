@@ -166,11 +166,11 @@ internal sealed partial class PvsSystem
         var session = pvsSession.Session;
         if (session.Status != SessionStatus.InGame)
         {
-            pvsSession.Viewers  = Array.Empty<Entity<TransformComponent, EyeComponent?>>();
+            pvsSession.Viewers = Array.Empty<Entity<TransformComponent, EyeComponent?>>();
             return;
         }
 
-        // Fast path
+        // The majority of players will have no view subscriptions
         if (session.ViewSubscriptions.Count == 0)
         {
             if (session.AttachedEntity is not {} attached)
@@ -184,22 +184,30 @@ internal sealed partial class PvsSystem
             return;
         }
 
-        int i = 0;
+        var count = session.ViewSubscriptions.Count;
+        var i = 0;
         if (session.AttachedEntity is { } local)
         {
-            DebugTools.Assert(!session.ViewSubscriptions.Contains(local));
-            Array.Resize(ref pvsSession.Viewers, session.ViewSubscriptions.Count + 1);
+            if (!session.ViewSubscriptions.Contains(local))
+                count += 1;
+
+            Array.Resize(ref pvsSession.Viewers, count);
+
+            // Attached entity is always the first viewer, to prioritize it and help reduce pop-in for the "main" eye.
             pvsSession.Viewers[i++] = (local, Transform(local), _eyeQuery.CompOrNull(local));
         }
         else
         {
-            Array.Resize(ref pvsSession.Viewers, session.ViewSubscriptions.Count);
+            Array.Resize(ref pvsSession.Viewers, count);
         }
 
         foreach (var ent in session.ViewSubscriptions)
         {
-            pvsSession.Viewers[i++] =  (ent, Transform(ent), _eyeQuery.CompOrNull(ent));
+            if (ent != session.AttachedEntity)
+                pvsSession.Viewers[i++] =  (ent, Transform(ent), _eyeQuery.CompOrNull(ent));
         }
+
+        DebugTools.AssertEqual(i, pvsSession.Viewers.Length);
     }
 
     private void ProcessVisibleChunks()
@@ -232,6 +240,7 @@ internal sealed partial class PvsSystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void AddEntityToChunk(EntityUid uid, MetaDataComponent meta, PvsChunkLocation location)
     {
+        DebugTools.Assert(meta.EntityLifeStage < EntityLifeStage.Terminating);
         ref var chunk = ref CollectionsMarshal.GetValueRefOrAddDefault(_chunks, location, out var existing);
         if (!existing)
         {
@@ -240,7 +249,7 @@ internal sealed partial class PvsSystem
             {
                 chunk.Initialize(location, _metaQuery, _xformQuery);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 _chunks.Remove(location);
                 throw;
@@ -302,11 +311,8 @@ internal sealed partial class PvsSystem
         RemoveRoot(ev.EntityUid);
     }
 
-    private void OnMapChanged(MapChangedEvent ev)
+    private void OnMapChanged(MapRemovedEvent ev)
     {
-        if (!ev.Destroyed)
-            return;
-
         RemoveRoot(ev.Uid);
     }
 

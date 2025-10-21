@@ -8,8 +8,6 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.UnitTesting.Server;
 
-// ReSharper disable AccessToStaticMemberViaDerivedType
-
 namespace Robust.UnitTesting.Shared.Physics;
 
 [TestFixture]
@@ -25,17 +23,18 @@ public sealed class RecursiveUpdateTest
         var entManager = sim.Resolve<IEntityManager>();
         var mapManager = sim.Resolve<IMapManager>();
         var xforms = entManager.System<SharedTransformSystem>();
+        var mapSystem = entManager.System<SharedMapSystem>();
         var containers = entManager.System<ContainerSystem>();
 
         var mapId = sim.CreateMap().MapId;
         var grid = mapManager.CreateGridEntity(mapId);
         var guid = grid.Owner;
-        grid.Comp.SetTile(Vector2i.Zero, new Tile(1));
+        mapSystem.SetTile(grid, Vector2i.Zero, new Tile(1));
         Assert.That(entManager.HasComponent<BroadphaseComponent>(guid));
 
         var broadphase = entManager.GetComponent<BroadphaseComponent>(guid);
         var coords = new EntityCoordinates(guid, new Vector2(0.5f, 0.5f));
-        var broadData = new BroadphaseData(guid, EntityUid.Invalid, false, false);
+        var broadData = new BroadphaseData(guid, false, false);
 
         var container = entManager.SpawnEntity(null, coords);
         var containerXform = entManager.GetComponent<TransformComponent>(container);
@@ -163,15 +162,16 @@ public sealed class RecursiveUpdateTest
         var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
         var entManager = sim.Resolve<IEntityManager>();
         var mapManager = sim.Resolve<IMapManager>();
+        var mapSystem = entManager.EntitySysManager.GetEntitySystem<SharedMapSystem>();
         var transforms = entManager.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
         var lookup = entManager.EntitySysManager.GetEntitySystem<EntityLookupSystem>();
 
         var mapId = sim.CreateMap().MapId;
-        var map = mapManager.GetMapEntityId(mapId);
+        var map = mapSystem.GetMapOrInvalid(mapId);
         var mapBroadphase = entManager.GetComponent<BroadphaseComponent>(map);
 
         var coords = new EntityCoordinates(map, new Vector2(0.5f, 0.5f));
-        var mapBroadData = new BroadphaseData(map, EntityUid.Invalid, false, false);
+        var mapBroadData = new BroadphaseData(map, false, false);
 
         // Set up parent & child
         var parent = entManager.SpawnEntity(null, coords);
@@ -218,9 +218,9 @@ public sealed class RecursiveUpdateTest
         // Try again, but this time with a parent change.
         var grid = mapManager.CreateGridEntity(mapId);
         var guid = grid.Owner;
-        grid.Comp.SetTile(Vector2i.Zero, new Tile(1));
+        mapSystem.SetTile(grid, Vector2i.Zero, new Tile(1));
         var gridBroadphase = entManager.GetComponent<BroadphaseComponent>(guid);
-        var gridBroadData = new BroadphaseData(guid, EntityUid.Invalid, false, false);
+        var gridBroadData = new BroadphaseData(guid, false, false);
 
         var gridCoords = new EntityCoordinates(map, new Vector2(-100f, -100f));
         transforms.SetCoordinates(guid, gridCoords);

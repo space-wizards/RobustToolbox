@@ -83,7 +83,7 @@ namespace Robust.Client.UserInterface.CustomControls
             _consoleHost.ClearText += OnClearText;
             _cfg.OnValueChanged(CVars.ConMaxEntries, MaxEntriesChanged, true);
 
-            UserInterfaceManager.ModalRoot.AddChild(_compPopup);
+            Root!.ModalRoot.AddChild(_compPopup);
         }
 
         protected override void ExitedTree()
@@ -95,7 +95,7 @@ namespace Robust.Client.UserInterface.CustomControls
             _consoleHost.ClearText -= OnClearText;
             _cfg.UnsubValueChanged(CVars.ConMaxEntries, MaxEntriesChanged);
 
-            UserInterfaceManager.ModalRoot.RemoveChild(_compPopup);
+            _compPopup.Orphan();
         }
 
         private void MaxEntriesChanged(int value)

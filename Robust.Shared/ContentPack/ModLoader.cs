@@ -77,7 +77,7 @@ namespace Robust.Shared.ContentPack
             var paths = new List<ResPath>();
 
             foreach (var filePath in _res.ContentFindRelativeFiles(mountPath)
-                         .Where(p => !p.ToString().Contains('/') && p.Filename.StartsWith(filterPrefix) &&
+                         .Where(p => p.Filename.StartsWith(filterPrefix) &&
                                      p.Extension == "dll"))
             {
                 var fullPath = mountPath / filePath;
@@ -93,19 +93,23 @@ namespace Robust.Shared.ContentPack
         {
             var sw = Stopwatch.StartNew();
             Sawmill.Debug("LOADING modules");
-            var files = new Dictionary<string, (ResPath Path, string[] references)>();
+            var files = new Dictionary<string, (ResPath Path, MemoryStream data, string[] references)>();
 
             // Find all modules we want to load.
             foreach (var fullPath in paths)
             {
                 using var asmFile = _res.ContentFileRead(fullPath);
-                var refData = GetAssemblyReferenceData(asmFile);
+                var ms = new MemoryStream();
+                asmFile.CopyTo(ms);
+
+                ms.Position = 0;
+                var refData = GetAssemblyReferenceData(ms);
                 if (refData == null)
                     continue;
 
                 var (asmRefs, asmName) = refData.Value;
 
-                if (!files.TryAdd(asmName, (fullPath, asmRefs)))
+                if (!files.TryAdd(asmName, (fullPath, ms, asmRefs)))
                 {
                     Sawmill.Error("Found multiple modules with the same assembly name " +
                                   $"'{asmName}', A: {files[asmName].Path}, B: {fullPath}.");
@@ -122,10 +126,10 @@ namespace Robust.Shared.ContentPack
 
                 Parallel.ForEach(files, pair =>
                 {
-                    var (name, (path, _)) = pair;
+                    var (name, (_, data, _)) = pair;
 
-                    using var stream = _res.ContentFileRead(path);
-                    if (!typeChecker.CheckAssembly(stream, resolver))
+                    data.Position = 0;
+                    if (!typeChecker.CheckAssembly(data, resolver))
                     {
                         throw new TypeCheckFailedException($"Assembly {name} failed type checks.");
                     }
@@ -137,14 +141,15 @@ namespace Robust.Shared.ContentPack
             var nodes = TopologicalSort.FromBeforeAfter(
                 files,
                 kv => kv.Key,
-                kv => kv.Value.Path,
+                kv => kv.Value,
                 _ => Array.Empty<string>(),
                 kv => kv.Value.references,
                 allowMissing: true); // missing refs would be non-content assemblies so allow that.
 
             // Actually load them in the order they depend on each other.
-            foreach (var path in TopologicalSort.Sort(nodes))
+            foreach (var item in TopologicalSort.Sort(nodes))
             {
+                var (path, memory, _) = item;
                 Sawmill.Debug($"Loading module: '{path}'");
                 try
                 {
@@ -156,9 +161,9 @@ namespace Robust.Shared.ContentPack
                     }
                     else
                     {
-                        using var assemblyStream = _res.ContentFileRead(path);
+                        memory.Position = 0;
                         using var symbolsStream = _res.ContentFileReadOrNull(path.WithExtension("pdb"));
-                        LoadGameAssembly(assemblyStream, symbolsStream, skipVerify: true);
+                        LoadGameAssembly(memory, symbolsStream, skipVerify: true);
                     }
                 }
                 catch (Exception e)
@@ -174,7 +179,7 @@ namespace Robust.Shared.ContentPack
 
         private (string[] refs, string name)? GetAssemblyReferenceData(Stream stream)
         {
-            using var reader = ModLoader.MakePEReader(stream);
+            using var reader = ModLoader.MakePEReader(stream, leaveOpen: true);
             var metaReader = reader.GetMetadataReader();
 
             var name = metaReader.GetString(metaReader.GetAssemblyDefinition().Name);

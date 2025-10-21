@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Channels;
@@ -102,6 +102,8 @@ namespace Robust.Client.Graphics.Clyde
             {
                 var data = _windowData[reg.Id];
                 data.BlitDoneEvent?.Set();
+                // Set events so blit thread properly wakes up and notices it needs to shut down.
+                data.BlitStartEvent?.Set();
 
                 _windowData.Remove(reg.Id);
             }
@@ -176,6 +178,7 @@ namespace Robust.Client.Graphics.Clyde
                         window.BlitDoneEvent!.Reset();
                         window.BlitStartEvent!.Set();
                         window.BlitDoneEvent.Wait();
+                        window.UnlockBeforeSwap = Clyde._cfg.GetCVar(CVars.DisplayThreadUnlockBeforeSwap);
                     }
                 }
                 else
@@ -212,8 +215,15 @@ namespace Robust.Client.Graphics.Clyde
                 GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
                 Clyde.CheckGlError();
 
-                window.BlitDoneEvent?.Set();
+                if (window.UnlockBeforeSwap)
+                {
+                    window.BlitDoneEvent?.Set();
+                }
                 Clyde._windowing!.WindowSwapBuffers(window.Reg);
+                if (!window.UnlockBeforeSwap)
+                {
+                    window.BlitDoneEvent?.Set();
+                }
             }
 
             private unsafe void BlitThreadInit(WindowData reg)
@@ -318,11 +328,14 @@ namespace Robust.Client.Graphics.Clyde
             {
                 reg.RenderTexture?.Dispose();
 
-                reg.RenderTexture = Clyde.CreateRenderTarget(reg.Reg.FramebufferSize, new RenderTargetFormatParameters
-                {
-                    ColorFormat = RenderTargetColorFormat.Rgba8Srgb,
-                    HasDepthStencil = true
-                });
+                reg.RenderTexture = Clyde.CreateRenderTarget(
+                    reg.Reg.FramebufferSize,
+                    new RenderTargetFormatParameters
+                    {
+                        ColorFormat = RenderTargetColorFormat.Rgba8Srgb,
+                        HasDepthStencil = true
+                    },
+                    name: $"{reg.Reg.Id}-RenderTexture");
                 // Necessary to correctly sync multi-context blitting.
                 reg.RenderTexture.MakeGLFence = true;
             }
@@ -336,6 +349,7 @@ namespace Robust.Client.Graphics.Clyde
                 public Thread? BlitThread;
                 public ManualResetEventSlim? BlitStartEvent;
                 public ManualResetEventSlim? BlitDoneEvent;
+                public bool UnlockBeforeSwap;
             }
         }
     }

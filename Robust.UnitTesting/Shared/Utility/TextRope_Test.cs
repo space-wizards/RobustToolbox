@@ -8,7 +8,6 @@ namespace Robust.UnitTesting.Shared.Utility;
 [TestFixture]
 [TestOf(typeof(Rope))]
 [Parallelizable(ParallelScope.All)]
-[SuppressMessage("ReSharper", "AccessToStaticMemberViaDerivedType")]
 public static class TextRope_Test
 {
     [Test]

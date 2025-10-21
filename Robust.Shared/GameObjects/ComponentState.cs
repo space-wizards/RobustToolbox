@@ -40,17 +40,17 @@ public interface IComponentDeltaState<TState> : IComponentDeltaState where TStat
 
     void IComponentDeltaState.ApplyToFullState(IComponentState fullState)
     {
-        if (fullState is TState state)
-            ApplyToFullState(state);
-        else
-            throw new Exception($"Unexpected type. Expected {nameof(TState)} but got {fullState.GetType().Name}");
+        if (fullState is not TState state)
+            throw new Exception($"Unexpected type. Expected {typeof(TState).Name} but got {fullState.GetType().Name}");
+
+        ApplyToFullState(state);
     }
 
     IComponentState IComponentDeltaState.CreateNewFullState(IComponentState fullState)
     {
-        if (fullState is TState state)
-            return CreateNewFullState(state);
-        else
-            throw new Exception($"Unexpected type. Expected {nameof(TState)} but got {fullState.GetType().Name}");
+        if (fullState is not TState state)
+            throw new Exception($"Unexpected type. Expected {typeof(TState).Name} but got {fullState.GetType().Name}");
+
+        return CreateNewFullState(state);
     }
 }

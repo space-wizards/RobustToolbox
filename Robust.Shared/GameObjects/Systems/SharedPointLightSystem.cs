@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.GameStates;
 using Robust.Shared.Maths;
 
 namespace Robust.Shared.GameObjects;
@@ -42,6 +43,12 @@ public abstract class SharedPointLightSystem : EntitySystem
         if (!ResolveLight(uid, ref comp) || enabled == comp.Enabled)
             return;
 
+        var attempt = new AttemptPointLightToggleEvent(enabled);
+        RaiseLocalEvent(uid, ref attempt);
+
+        if (attempt.Cancelled)
+            return;
+
         comp.Enabled = enabled;
         RaiseLocalEvent(uid, new PointLightToggleEvent(comp.Enabled));
         if (!Resolve(uid, ref meta))
@@ -80,5 +87,42 @@ public abstract class SharedPointLightSystem : EntitySystem
 
         comp.Softness = value;
         Dirty(uid, comp);
+    }
+
+    public void SetFalloff(EntityUid uid, float value, SharedPointLightComponent? comp = null)
+    {
+        if (!ResolveLight(uid, ref comp) || MathHelper.CloseToPercent(comp.Falloff, value))
+            return;
+
+        comp.Falloff = value;
+        Dirty(uid, comp);
+    }
+
+    public void SetCurveFactor(EntityUid uid, float value, SharedPointLightComponent? comp = null)
+    {
+        if (!ResolveLight(uid, ref comp) || MathHelper.CloseToPercent(comp.CurveFactor, value))
+            return;
+
+        comp.CurveFactor = value;
+        Dirty(uid, comp);
+    }
+
+    protected static void OnLightGetState(
+        EntityUid uid,
+        SharedPointLightComponent component,
+        ref ComponentGetState args)
+    {
+        args.State = new PointLightComponentState()
+        {
+            Color = component.Color,
+            Enabled = component.Enabled,
+            Energy = component.Energy,
+            Offset = component.Offset,
+            Radius = component.Radius,
+            Softness = component.Softness,
+            Falloff = component.Falloff,
+            CurveFactor = component.CurveFactor,
+            CastShadows = component.CastShadows,
+        };
     }
 }

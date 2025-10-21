@@ -6,6 +6,7 @@ using Robust.Shared.Audio.Midi;
 using Robust.Shared.Audio.Sources;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Audio.Midi;
 
@@ -32,12 +33,6 @@ public interface IMidiRenderer : IDisposable
     ///     This controls whether the midi file being played will loop or not.
     /// </summary>
     bool LoopMidi { get; set; }
-
-    /// <summary>
-    ///     This increases all note on velocities to 127.
-    /// </summary>
-    [Obsolete($"Use {nameof(VelocityOverride)} instead, you can set it to 127 to achieve the same effect.")]
-    bool VolumeBoost { get; set; }
 
     /// <summary>
     ///     The midi program (instrument) the renderer is using.
@@ -162,7 +157,12 @@ public interface IMidiRenderer : IDisposable
     /// <summary>
     ///     Loads a new soundfont into the renderer.
     /// </summary>
+    [Obsolete("Use LoadSoundfontResource or LoadSoundfontUser instead")]
     void LoadSoundfont(string filename, bool resetPresets = false);
+
+    void LoadSoundfontResource(ResPath path, bool resetPresets = false);
+
+    void LoadSoundfontUser(ResPath path, bool resetPresets = false);
 
     /// <summary>
     ///     Invoked whenever a new midi event is registered.
@@ -213,4 +213,6 @@ public interface IMidiRenderer : IDisposable
     ///     Actually disposes of this renderer. Do NOT use outside the MIDI thread.
     /// </summary>
     internal void InternalDispose();
+
+    byte MinVolume { get; set; }
 }

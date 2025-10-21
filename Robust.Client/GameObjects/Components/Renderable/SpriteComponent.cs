@@ -5,10 +5,12 @@ using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Text;
+using Robust.Client.ComponentTrees;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Clyde;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
+using Robust.Shared;
 using Robust.Shared.Animations;
 using Robust.Shared.ComponentTrees;
 using Robust.Shared.GameObjects;
@@ -25,23 +27,22 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
-using static Robust.Client.ComponentTrees.SpriteTreeSystem;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 using static Robust.Shared.Serialization.TypeSerializers.Implementations.SpriteSpecifierSerializer;
 using Direction = Robust.Shared.Maths.Direction;
-using Vector4 = Robust.Shared.Maths.Vector4;
+#pragma warning disable CS0618 // Type or member is obsolete
 
 namespace Robust.Client.GameObjects
 {
     [RegisterComponent]
     public sealed partial class SpriteComponent : Component, IComponentDebug, ISerializationHooks, IComponentTreeEntry<SpriteComponent>, IAnimationProperties
     {
+        public const string LogCategory = "go.comp.sprite";
+
         [Dependency] private readonly IResourceCache resourceCache = default!;
         [Dependency] private readonly IPrototypeManager prototypes = default!;
-        [Dependency] private readonly IEntityManager entities = default!;
+        [Dependency] private readonly EntityManager entities = default!;
         [Dependency] private readonly IReflectionManager reflection = default!;
-        [Dependency] private readonly IEyeManager eyeManager = default!;
-        [Dependency] private readonly IComponentFactory factory = default!;
 
         /// <summary>
         ///     See <see cref="CVars.RenderSpriteDirectionBias"/>.
@@ -52,31 +53,32 @@ namespace Robust.Client.GameObjects
         ///     Whether the layers have independant drawing strategies, e.g some may snap to cardinals while others won't.
         ///     The sprite should still set its global rendering method (e.g NoRot or SnapCardinals), this only gives finer control over how layers are rendered internally.
         /// </summary>
-        [DataField("granularLayersRendering")]
+        [DataField] // TODO Sprite access restrict.
         public bool GranularLayersRendering = false;
 
         [DataField("visible")]
-        private bool _visible = true;
+        internal bool _visible = true;
 
         // VV convenience variable to examine layer objects using layer keys
+        // ReSharper disable once UnusedMember.Local
         [ViewVariables]
-        private Dictionary<object, Layer> _mappedLayers => LayerMap.ToDictionary(x => x.Key, x => Layers[x.Value]);
+        private Dictionary<object, Layer> MappedLayers => LayerMap.ToDictionary(x => x.Key, x => Layers[x.Value]);
 
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Visible
         {
             get => _visible;
-            set
-            {
-                if (_visible == value) return;
-                _visible = value;
-
-                QueueUpdateRenderTree();
-            }
+            [Obsolete("Use SpriteSystem.SetVisible() instead.")]
+            set => Sys.SetVisible((Owner, this), value);
         }
 
+        private SpriteSystem? _sys;
+        private SpriteTreeSystem? _treeSys;
+        private SpriteSystem Sys => _sys ??= (entities.Started ? entities.System<SpriteSystem>() : null)!;
+        private SpriteTreeSystem TreeSys => _treeSys ??= (entities.Started ? entities.System<SpriteTreeSystem>() : null)!;
+
         [DataField("drawdepth", customTypeSerializer: typeof(ConstantSerializer<DrawDepthTag>))]
-        private int drawDepth = DrawDepthTag.Default;
+        internal int drawDepth = DrawDepthTag.Default;
 
         /// <summary>
         ///     Z-index for drawing.
@@ -85,11 +87,12 @@ namespace Robust.Client.GameObjects
         public int DrawDepth
         {
             get => drawDepth;
-            set => drawDepth = value;
+            [Obsolete("Use SpriteSystem.SetDrawDepth() instead.")]
+            set => Sys.SetDrawDepth((Owner, this), value);
         }
 
-        [DataField("scale")]
-        private Vector2 scale = Vector2.One;
+        [DataField("scale")] // Explicit name, in case this field ever gets renamed
+        internal Vector2 scale = Vector2.One;
 
         /// <summary>
         ///     A scale applied to all layers.
@@ -99,38 +102,24 @@ namespace Robust.Client.GameObjects
         public Vector2 Scale
         {
             get => scale;
-            set
-            {
-                if (MathF.Abs(value.X) < 0.005f || MathF.Abs(value.Y) < 0.005f)
-                {
-                    // Scales of ~0.0025 or lower can lead to singular matrices due to rounding errors.
-                    Logger.Error($"Attempted to set layer sprite scale to very small values. Entity: {entities.ToPrettyString(Owner)}. Scale: {value}");
-                    return;
-                }
-
-                _bounds = _bounds.Scale(value / scale);
-                scale = value;
-                UpdateLocalMatrix();
-            }
+            [Obsolete("Use SpriteSystem.SetScale() instead.")]
+            set => Sys.SetScale((Owner, this), value);
         }
 
-        [DataField("rotation")]
-        private Angle rotation = Angle.Zero;
+        [DataField("rotation")] // Explicit name, in case this field ever gets renamed
+        internal Angle rotation = Angle.Zero;
 
         [Animatable]
         [ViewVariables(VVAccess.ReadWrite)]
         public Angle Rotation
         {
             get => rotation;
-            set
-            {
-                rotation = value;
-                UpdateLocalMatrix();
-            }
+            [Obsolete("Use SpriteSystem.SetRotation() instead.")]
+            set => Sys.SetRotation((Owner, this), value);
         }
 
-        [DataField("offset")]
-        private Vector2 offset = Vector2.Zero;
+        [DataField("offset")] // Explicit name, in case this field ever gets renamed
+        internal Vector2 offset = Vector2.Zero;
 
         /// <summary>
         ///     Offset applied to all layers.
@@ -140,25 +129,23 @@ namespace Robust.Client.GameObjects
         public Vector2 Offset
         {
             get => offset;
-            set
-            {
-                offset = value;
-                UpdateLocalMatrix();
-            }
+            [Obsolete("Use SpriteSystem.SetOffset() instead.")]
+            set => Sys.SetOffset((Owner, this), value);
         }
 
-        [DataField("color")]
-        private Color color = Color.White;
-
-        public Matrix3x2 LocalMatrix = Matrix3x2.Identity;
+        [DataField("color")] // Explicit name, in case this field ever gets renamed
+        internal Color color = Color.White;
 
         [Animatable]
         [ViewVariables(VVAccess.ReadWrite)]
         public Color Color
         {
             get => color;
-            set => color = value;
+            [Obsolete("Use SpriteSystem.SetColor() instead.")]
+            set => Sys.SetColor((Owner, this), value);
         }
+
+        public Matrix3x2 LocalMatrix = Matrix3x2.Identity;
 
         [ViewVariables]
         public DynamicTree<ComponentTreeEntry<SpriteComponent>>? Tree { get; set; }
@@ -169,51 +156,21 @@ namespace Robust.Client.GameObjects
 
         public bool TreeUpdateQueued { get; set; }
 
-        private RSI? _baseRsi;
+        internal RSI? _baseRsi;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public RSI? BaseRSI
         {
             get => _baseRsi;
-            set
-            {
-                if (value == _baseRsi)
-                    return;
-
-                _baseRsi = value;
-                if (value == null)
-                    return;
-
-                for (var i = 0; i < Layers.Count; i++)
-                {
-                    var layer = Layers[i];
-                    if (!layer.State.IsValid || layer.RSI != null)
-                    {
-                        continue;
-                    }
-
-                    layer.UpdateActualState();
-
-                    if (value.TryGetState(layer.State, out var state))
-                    {
-                        layer.AnimationTimeLeft = state.GetDelay(0);
-                    }
-                    else
-                    {
-                        Logger.ErrorS(LogCategory,
-                            "Layer '{0}'no longer has state '{1}' due to base RSI change. Trace:\n{2}",
-                            i, layer.State, Environment.StackTrace);
-                        layer.Texture = null;
-                    }
-                }
-            }
+            [Obsolete("Use SpriteSystem.SetBaseRSI() instead.")]
+            set => Sys.SetBaseRsi((Owner, this), value);
         }
 
         [DataField("sprite", readOnly: true)] private string? rsi;
         [DataField("layers", readOnly: true)] private List<PrototypeLayerData> layerDatums = new();
 
-        [DataField("state", readOnly: true)] private string? state;
-        [DataField("texture", readOnly: true)] private string? texture;
+        [DataField(readOnly: true)] private string? state;
+        [DataField(readOnly: true)] private string? texture;
 
         /// <summary>
         ///     Should this entity show up in containers regardless of whether the container can show contents?
@@ -226,23 +183,21 @@ namespace Robust.Client.GameObjects
         public bool ContainerOccluded
         {
             get => _containerOccluded && !OverrideContainerOcclusion;
-            set
-            {
-                if (_containerOccluded == value) return;
-                _containerOccluded = value;
-                QueueUpdateRenderTree();
-            }
+            [Obsolete("Use SpriteSystem.SetContainerOccluded() instead.")]
+            set => Sys.SetContainerOccluded((Owner, this), value);
         }
 
-        private bool _containerOccluded;
-
-        private Box2 _bounds;
+        internal bool _containerOccluded;
 
         /// <summary>
-        ///     The bounds of the sprite. This does factor in the sprite's <see cref="Scale"/> but not the
-        ///     <see cref="Rotation"/> and <see cref="Offset"/>
+        /// Whether or not the sprite's local bounding box is dirty and need to be rebuilt.
         /// </summary>
-        public Box2 Bounds => _bounds;
+        internal bool BoundsDirty = true;
+
+        internal Box2 _bounds;
+
+        [Obsolete("Use SpriteSystem.GetLocalBounds() instead.")]
+        public Box2 Bounds => Sys.GetLocalBounds((Owner, this));
 
         [ViewVariables(VVAccess.ReadWrite)] internal bool _inertUpdateQueued;
 
@@ -250,61 +205,57 @@ namespace Robust.Client.GameObjects
         ///     Shader instance to use when drawing the final sprite to the world.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public ShaderInstance? PostShader { get; set; }
+        public ShaderInstance? PostShader
+        {
+            get;
+            // This will get obsoleted, but I only want to mark it as obsolete when multi-shader support is added, so
+            // that people can use the appropriate method and don't migrate to an incorrect new method that wont
+            // be obsoleted.
+            set;
+        }
 
         /// <summary>
-        ///     Whether or not to pass the screen texture to the <see cref="PostShader"/>.
+        ///     Whether to pass the screen texture to the <see cref="PostShader"/>.
         /// </summary>
         /// <remarks>
         ///     Should be false unless you really need it.
         /// </remarks>
-        [DataField("getScreenTexture")]
-        [ViewVariables(VVAccess.ReadWrite)]
-        private bool _getScreenTexture = false;
-        public bool GetScreenTexture
-        {
-            get => _getScreenTexture && PostShader != null;
-            set => _getScreenTexture = value;
-        }
+        [DataField]
+        public bool GetScreenTexture;
 
         /// <summary>
         ///     If true, this raise a entity system event before rendering this sprite, allowing systems to modify the
         ///     shader parameters. Usually this can just be done via a frame-update, but some shaders require
         ///     information about the viewport / eye.
         /// </summary>
-        [DataField("raiseShaderEvent")]
-        [ViewVariables(VVAccess.ReadWrite)]
-        public bool RaiseShaderEvent = false;
+        [DataField]
+        public bool RaiseShaderEvent;
 
-        [ViewVariables] private Dictionary<object, int> LayerMap = new();
-        [ViewVariables] private bool _layerMapShared;
+        [ViewVariables] internal Dictionary<object, int> LayerMap { get; set; } = new();
         [ViewVariables] internal List<Layer> Layers = new();
 
         [ViewVariables(VVAccess.ReadWrite)] public uint RenderOrder { get; set; }
 
-        public const string LogCategory = "go.comp.sprite";
-
         [ViewVariables(VVAccess.ReadWrite)] public bool IsInert { get; internal set; }
+
+        public ISpriteLayer this[int layer] => Layers[layer];
+        public ISpriteLayer this[Index layer] => Layers[layer];
+        public ISpriteLayer this[object layerKey] => this[LayerMap[layerKey]];
+        public IEnumerable<ISpriteLayer> AllLayers => Layers;
 
         void ISerializationHooks.AfterDeserialization()
         {
             // Please somebody burn this to the ground. There is so much spaghetti.
+            // Why has no one answered my prayers.
 
             IoCManager.InjectDependencies(this);
-
+            if (!string.IsNullOrWhiteSpace(rsi))
             {
-                if (!string.IsNullOrWhiteSpace(rsi))
-                {
-                    var rsiPath = TextureRoot / rsi;
-                    if(resourceCache.TryGetResource(rsiPath, out RSIResource? resource))
-                    {
-                        BaseRSI = resource.RSI;
-                    }
-                    else
-                    {
-                        Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'.", rsiPath);
-                    }
-                }
+                var rsiPath = TextureRoot / rsi;
+                if (resourceCache.TryGetResource(rsiPath, out RSIResource? resource))
+                    _baseRsi = resource.RSI;
+                else
+                    Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'.", rsiPath);
             }
 
             if (layerDatums.Count == 0)
@@ -332,72 +283,45 @@ namespace Robust.Client.GameObjects
                 Layers.Clear();
                 foreach (var datum in layerDatums)
                 {
-                    AddLayer(datum);
+                    var layer = new Layer((Owner, this), Layers.Count);
+                    Layers.Add(layer);
+                    LayerSetData(layer, datum);
                 }
 
-                _layerMapShared = true;
-
-                QueueUpdateRenderTree();
-                QueueUpdateIsInert();
             }
 
-            UpdateLocalMatrix();
+            BoundsDirty = true;
+            LocalMatrix = Matrix3Helpers.CreateTransform(in offset, in rotation, in scale);
         }
+
+        /// <summary>
+        /// If false, this will prevent any of this sprite's animated layers from looping their animation.
+        /// This will set <see cref="Layer.AutoAnimated"/> whenever any layer's animation finishes.
+        /// </summary>
+        /// <remarks>
+        /// If this is false, this effectively overrides each layer's own <see cref="Layer.Loop"/>.
+        /// </remarks>
+        [DataField]
+        public bool Loop = true;
 
         /// <summary>
         /// Update this sprite component to visibly match the current state of other at the time
         /// this is called. Does not keep them perpetually in sync.
         /// This does some deep copying thus exerts some gc pressure, so avoid this for hot code paths.
         /// </summary>
+        [Obsolete("Use SpriteSystem.CopySprite() instead.")]
         public void CopyFrom(SpriteComponent other)
         {
-            //deep copying things to avoid entanglement
-            _baseRsi = other._baseRsi;
-            _bounds = other._bounds;
-            _visible = other._visible;
-            _layerMapShared = other._layerMapShared;
-            color = other.color;
-            offset = other.offset;
-            rotation = other.rotation;
-            scale = other.scale;
-            UpdateLocalMatrix();
-            drawDepth = other.drawDepth;
-            _screenLock = other._screenLock;
-            DirectionOverride = other.DirectionOverride;
-            EnableDirectionOverride = other.EnableDirectionOverride;
-            Layers = new List<Layer>(other.Layers.Count);
-            foreach (var otherLayer in other.Layers)
-            {
-                Layers.Add(new Layer(otherLayer, this));
-            }
-            IsInert = other.IsInert;
-            LayerMap = other.LayerMap.ToDictionary(entry => entry.Key,
-                entry => entry.Value);
-            if (other.PostShader != null)
-            {
-                // only need to copy the shader if it's mutable
-                PostShader = other.PostShader.Mutable ? other.PostShader.Duplicate() : other.PostShader;
-            }
-            else
-            {
-                PostShader = null;
-            }
-
-            RenderOrder = other.RenderOrder;
-            GranularLayersRendering = other.GranularLayersRendering;
+            Sys.CopySprite((other.Owner, other), (Owner, this));
         }
 
-        internal void UpdateLocalMatrix()
-        {
-            LocalMatrix = Matrix3Helpers.CreateTransform(in offset, in rotation, in scale);
-        }
-
+        [Obsolete("Use LocalMatrix")]
         public Matrix3x2 GetLocalMatrix()
         {
             return LocalMatrix;
         }
 
-        /// <inheritdoc />
+        [Obsolete("Use SpriteSystem.LayerMapSet() instead.")]
         public void LayerMapSet(object key, int layer)
         {
             if (layer < 0 || layer >= Layers.Count)
@@ -405,24 +329,22 @@ namespace Robust.Client.GameObjects
                 throw new ArgumentOutOfRangeException();
             }
 
-            _layerMapEnsurePrivate();
             LayerMap.Add(key, layer);
         }
 
-        /// <inheritdoc />
+        [Obsolete("Use SpriteSystem.LayerMapRemove() instead.")]
         public void LayerMapRemove(object key)
         {
-            _layerMapEnsurePrivate();
             LayerMap.Remove(key);
         }
 
-        /// <inheritdoc />
+        [Obsolete("Use SpriteSystem.LayerMapGet() instead.")]
         public int LayerMapGet(object key)
         {
             return LayerMap[key];
         }
 
-        /// <inheritdoc />
+        [Obsolete("Use SpriteSystem.LayerMapTryGet() instead.")]
         public bool LayerMapTryGet(object key, out int layer, bool logError = false)
         {
             var result = LayerMap.TryGetValue(key, out layer);
@@ -436,38 +358,18 @@ namespace Robust.Client.GameObjects
             return result;
         }
 
+        [Obsolete("Use SpriteSystem.TryGetLayer() instead.")]
         public bool TryGetLayer(int index, [NotNullWhen(true)] out Layer? layer, bool logError = false)
-        {
-            if (index < Layers.Count)
-            {
-                layer = Layers[index];
-                return true;
-            }
+            => Sys.TryGetLayer((Owner, this), index, out layer, logError);
 
-            if (logError)
-            {
-                Logger.ErrorS(LogCategory, "{0} - Layer index '{1}' does not exist! Trace:\n{2}",
-                    entities.ToPrettyString(Owner), index, Environment.StackTrace);
-            }
+        [Obsolete("Use SpriteSystem.LayerExists() instead.")]
+        public bool LayerExists(int layer, bool logError = true)
+            => Sys.LayerExists((Owner, this), layer);
 
-            layer = null;
-            return false;
-        }
-
-        public bool LayerExists(int layer, bool logError = true) => TryGetLayer(layer, out _, logError);
+        [Obsolete("Use SpriteSystem.LayerExists() instead.")]
         public bool LayerExists(object key, bool logError = false) => LayerMapTryGet(key, out _, logError);
 
-        private void _layerMapEnsurePrivate()
-        {
-            if (!_layerMapShared)
-            {
-                return;
-            }
-
-            LayerMap = LayerMap.ShallowClone();
-            _layerMapShared = false;
-        }
-
+        [Obsolete("Use SpriteSystem.LayerMapReserve() instead.")]
         public int LayerMapReserveBlank(object key)
         {
             if (LayerMapTryGet(key, out var index))
@@ -481,186 +383,79 @@ namespace Robust.Client.GameObjects
             return index;
         }
 
+        [Obsolete("Use SpriteSystem.AddBlankLayer() instead.")]
         public int AddBlankLayer(int? newIndex = null)
-        {
-            var layer = new Layer(this);
-            return AddLayer(layer, newIndex);
-        }
+            => Sys.AddBlankLayer((Owner, this), newIndex).Index;
 
-        /// <summary>
-        ///     Add a new layer based on some <see cref="PrototypeLayerData"/>.
-        /// </summary>
+        [Obsolete("Use SpriteSystem.AddLayer() instead.")]
         public int AddLayer(PrototypeLayerData layerDatum, int? newIndex = null)
-        {
-            var layer = new Layer(this);
+            => Sys.AddLayer((Owner, this), layerDatum, newIndex);
 
-            var index = AddLayer(layer, newIndex);
-
-            LayerSetData(index, layerDatum);
-            return index;
-        }
-
+        [Obsolete("Use SpriteSystem.AddTextureLayer() instead.")]
         public int AddLayer(string texturePath, int? newIndex = null)
         {
             return AddLayer(new ResPath(texturePath), newIndex);
         }
 
+        [Obsolete("Use SpriteSystem.AddTextureLayer() instead.")]
         public int AddLayer(ResPath texturePath, int? newIndex = null)
-        {
-            if (!resourceCache.TryGetResource<TextureResource>(TextureRoot / texturePath, out var texture))
-            {
-                if (texturePath.Extension == "rsi")
-                {
-                    Logger.ErrorS(LogCategory,
-                        "Expected texture but got rsi '{0}', did you mean 'sprite:' instead of 'texture:'?",
-                        texturePath);
-                }
+            => Sys.AddTextureLayer((Owner, this), texturePath, newIndex);
 
-                Logger.ErrorS(LogCategory, "Unable to load texture '{0}'. Trace:\n{1}", texturePath,
-                    Environment.StackTrace);
-            }
-
-            return AddLayer(texture?.Texture, newIndex);
-        }
-
+        [Obsolete("Use SpriteSystem.AddTextureLayer() instead.")]
         public int AddLayer(Texture? texture, int? newIndex = null)
-        {
-            var layer = new Layer(this) { Texture = texture };
-            return AddLayer(layer, newIndex);
-        }
+            => Sys.AddTextureLayer((Owner, this), texture, newIndex);
 
+        [Obsolete("Use SpriteSystem.AddRsiLayer() instead.")]
         public int AddLayer(RSI.StateId stateId, int? newIndex = null)
-        {
-            var layer = new Layer(this) { State = stateId };
-            if (BaseRSI != null && BaseRSI.TryGetState(stateId, out var state))
-            {
-                layer.AnimationTimeLeft = state.GetDelay(0);
-            }
-            else
-            {
-                Logger.ErrorS(LogCategory, "State does not exist in RSI: '{0}'. Trace:\n{1}", stateId,
-                    Environment.StackTrace);
-            }
+            => Sys.AddRsiLayer((Owner, this), stateId, null, newIndex);
 
-            return AddLayer(layer, newIndex);
-        }
-
+        [Obsolete("Use SpriteSystem.AddRsiLayer() instead.")]
         public int AddLayerState(string stateId, int? newIndex = null)
         {
             return AddLayer(new RSI.StateId(stateId), newIndex);
         }
 
+        [Obsolete("Use SpriteSystem.AddRsiLayer() instead.")]
         public int AddLayer(RSI.StateId stateId, string rsiPath, int? newIndex = null)
         {
             return AddLayer(stateId, new ResPath(rsiPath), newIndex);
         }
 
+        [Obsolete("Use SpriteSystem.AddRsiLayer() instead.")]
         public int AddLayerState(string stateId, string rsiPath, int? newIndex = null)
         {
             return AddLayer(new RSI.StateId(stateId), rsiPath, newIndex);
         }
 
+        [Obsolete("Use SpriteSystem.AddRsiLayer() instead.")]
         public int AddLayer(RSI.StateId stateId, ResPath rsiPath, int? newIndex = null)
-        {
-            if (!resourceCache.TryGetResource<RSIResource>(TextureRoot / rsiPath, out var res))
-            {
-                Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, Environment.StackTrace);
-            }
+            => Sys.AddRsiLayer((Owner, this), stateId, rsiPath, newIndex);
 
-            return AddLayer(stateId, res?.RSI, newIndex);
-        }
-
+        [Obsolete("Use SpriteSystem.AddRsiLayer() instead.")]
         public int AddLayerState(string stateId, ResPath rsiPath, int? newIndex = null)
         {
             return AddLayer(new RSI.StateId(stateId), rsiPath, newIndex);
         }
 
+        [Obsolete("Use SpriteSystem.AddRsiLayer() instead.")]
         public int AddLayer(RSI.StateId stateId, RSI? rsi, int? newIndex = null)
-        {
-            var layer = new Layer(this) { State = stateId, RSI = rsi };
-            if (rsi != null && rsi.TryGetState(stateId, out var state))
-            {
-                layer.AnimationTimeLeft = state.GetDelay(0);
-            }
-            else
-            {
-                Logger.ErrorS(LogCategory, "State does not exist in RSI: '{0}'. Trace:\n{1}", stateId,
-                    Environment.StackTrace);
-            }
+            => Sys.AddRsiLayer((Owner, this), stateId, rsi, newIndex);
 
-            return AddLayer(layer, newIndex);
-        }
-
+        [Obsolete("Use SpriteSystem.AddRsiLayer() instead.")]
         public int AddLayerState(string stateId, RSI rsi, int? newIndex = null)
         {
             return AddLayer(new RSI.StateId(stateId), rsi, newIndex);
         }
 
+        [Obsolete("Use SpriteSystem.AddLayer() instead.")]
         public int AddLayer(SpriteSpecifier specifier, int? newIndex = null)
-        {
-            switch (specifier)
-            {
-                case SpriteSpecifier.Texture tex:
-                    return AddLayer(tex.TexturePath, newIndex);
+            => Sys.AddLayer((Owner, this), specifier, newIndex);
 
-                case SpriteSpecifier.Rsi rsi:
-                    return AddLayerState(rsi.RsiState, rsi.RsiPath, newIndex);
-
-                default:
-                    throw new NotImplementedException();
-            }
-        }
-
-        private int AddLayer(Layer layer, int? newIndex)
-        {
-            int index;
-            if (newIndex.HasValue)
-            {
-                Layers.Insert(newIndex.Value, layer);
-                foreach (var kv in LayerMap)
-                {
-                    if (kv.Value >= newIndex.Value)
-                    {
-                        LayerMap[kv.Key] = kv.Value + 1;
-                    }
-                }
-
-                index = newIndex.Value;
-            }
-            else
-            {
-                Layers.Add(layer);
-                index = Layers.Count - 1;
-            }
-
-            RebuildBounds();
-            QueueUpdateIsInert();
-            return index;
-        }
-
+        [Obsolete("Use SpriteSystem.RemoveLayer() instead.")]
         public void RemoveLayer(int layer)
-        {
-            if (!LayerExists(layer))
-                return;
+            => Sys.RemoveLayer((Owner, this), layer);
 
-            Layers.RemoveAt(layer);
-            foreach (var kv in LayerMap)
-            {
-                if (kv.Value == layer)
-                {
-                    LayerMap.Remove(kv.Key);
-                }
-
-                else if (kv.Value > layer)
-                {
-                    LayerMap[kv.Key] = kv.Value - 1;
-                }
-            }
-
-            RebuildBounds();
-            QueueUpdateIsInert();
-        }
-
+        [Obsolete("Use SpriteSystem.RemoveLayer() instead.")]
         public void RemoveLayer(object layerKey)
         {
             if (!LayerMapTryGet(layerKey, out var layer, true))
@@ -669,26 +464,47 @@ namespace Robust.Client.GameObjects
             RemoveLayer(layer);
         }
 
-        private void RebuildBounds()
-        {
-            _bounds = new Box2();
-            foreach (var layer in Layers)
-            {
-                if (!layer.Visible || layer.Blank) continue;
+        [DataField("snapCardinals")]
+        internal bool _snapCardinals = false;
 
-                _bounds = _bounds.Union(layer.CalculateBoundingBox());
-            }
-            _bounds = _bounds.Scale(Scale);
-            QueueUpdateRenderTree();
+        /// <summary>
+        /// If the sprite only has 1 direction should it snap at cardinals if rotated.
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool SnapCardinals
+        {
+            get => _snapCardinals;
+            [Obsolete("Use SpriteSystem.SnapCardinals() instead.")]
+            set => Sys.SetSnapCardinals((Owner, this), value);
         }
 
         /// <summary>
-        ///     Fills in a layer's values using some <see cref="PrototypeLayerData"/>.
+        /// If true, the sprite will always be rendered as if its world rotation relative to the screen's eye is 0.
+        /// Note for 4- or 8- directional sprites, the relative rotation is still used to choose the RSI state.
         /// </summary>
+        /// <remarks>
+        /// E.g., this is used to ensure that players/mobs are always standing upright, but the sprite will still change
+        /// based on the direction that a mob is looking in.
+        /// </remarks>
+        [DataField("noRot")]
+        public bool NoRotation;
+
+        // TODO SPRITE
+        // When refactoring, make this nullable and remove EnableDirectionOverride
+        [DataField("overrideDir")]
+        public Direction DirectionOverride = Direction.East;
+
+        [DataField("enableOverrideDir")]
+        public bool EnableDirectionOverride;
+
+        [Obsolete("Use SpriteSystem.LayerSetData() instead.")]
         public void LayerSetData(int index, PrototypeLayerData layerDatum)
+            => Sys.LayerSetData((Owner, this), index, layerDatum);
+
+        [Obsolete("Use SpriteSystem.LayerSetData() instead.")]
+        internal void LayerSetData(Layer layer, PrototypeLayerData layerDatum)
         {
-            if (!TryGetLayer(index, out var layer))
-                return;
+            DebugTools.AssertEqual(layer, layer.Owner.Comp.Layers[layer.Index]);
 
             if (!string.IsNullOrWhiteSpace(layerDatum.RsiPath))
             {
@@ -753,12 +569,20 @@ namespace Robust.Client.GameObjects
                 if (layerDatum.Shader == string.Empty)
                 {
                     layer.ShaderPrototype = null;
+                    layer.UnShaded = false;
+                    layer.Shader = null;
+                }
+                else if (layerDatum.Shader == SpriteSystem.UnshadedId.Id)
+                {
+                    layer.ShaderPrototype = SpriteSystem.UnshadedId;
+                    layer.UnShaded = true;
                     layer.Shader = null;
                 }
                 else if (prototypes.TryIndex<ShaderPrototype>(layerDatum.Shader, out var prototype))
                 {
                     layer.ShaderPrototype = layerDatum.Shader;
                     layer.Shader = prototype.Instance();
+                    layer.UnShaded = false;
                 }
                 else
                 {
@@ -776,18 +600,18 @@ namespace Robust.Client.GameObjects
 
                     if (LayerMap.TryGetValue(key, out var mappedIndex))
                     {
-                        if (mappedIndex != index)
+                        if (mappedIndex != layer.Index)
                             Logger.ErrorS(LogCategory, "Duplicate layer map key definition: {0}", key);
                         continue;
                     }
 
-                    _layerMapEnsurePrivate();
-                    LayerMap[key] = index;
+                    LayerMap[key] = layer.Index;
                 }
             }
 
             layer.RenderingStrategy = layerDatum.RenderingStrategy ?? layer.RenderingStrategy;
             layer.Cycle = layerDatum.Cycle;
+            layer.Loop = layerDatum.Loop;
 
             layer.Color = layerDatum.Color ?? layer.Color;
             layer._rotation = layerDatum.Rotation ?? layer._rotation;
@@ -811,7 +635,11 @@ namespace Robust.Client.GameObjects
                 layer.CopyToShaderParameters = null;
             }
 
-            RebuildBounds();
+            BoundsDirty = true;
+            layer.BoundsDirty = true;
+            // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+            if (Owner != EntityUid.Invalid)
+                TreeSys?.QueueTreeUpdate((Owner, this));
         }
 
         private object ParseKey(string keyString)
@@ -822,6 +650,7 @@ namespace Robust.Client.GameObjects
             return keyString;
         }
 
+        [Obsolete("Use SpriteSystem.LayerSetData() instead.")]
         public void LayerSetData(object layerKey, PrototypeLayerData data)
         {
             if (!LayerMapTryGet(layerKey, out var layer, true))
@@ -830,11 +659,306 @@ namespace Robust.Client.GameObjects
             LayerSetData(layer, data);
         }
 
+        [Obsolete("Use SpriteSystem.LayerSetSprite() instead.")]
+        public void LayerSetSprite(int layer, SpriteSpecifier specifier)
+            => Sys.LayerSetSprite((Owner, this), layer, specifier);
+
+        [Obsolete("Use SpriteSystem.LayerSetSprite() instead.")]
+        public void LayerSetSprite(object layerKey, SpriteSpecifier specifier)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer, true))
+                return;
+
+            LayerSetSprite(layer, specifier);
+        }
+
+        [Obsolete("Use SpriteSystem.LayerSetTexture() instead.")]
+        public void LayerSetTexture(int layer, Texture? texture)
+            => Sys.LayerSetTexture((Owner, this), layer, texture);
+
+        [Obsolete("Use SpriteSystem.LayerSetTexture() instead.")]
+        public void LayerSetTexture(object layerKey, Texture texture)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer, true))
+                return;
+
+            LayerSetTexture(layer, texture);
+        }
+
+        [Obsolete("Use SpriteSystem.LayerSetTexture() instead.")]
+        public void LayerSetTexture(int layer, string texturePath)
+        {
+            LayerSetTexture(layer, new ResPath(texturePath));
+        }
+
+        [Obsolete("Use SpriteSystem.LayerSetTexture() instead.")]
+        public void LayerSetTexture(object layerKey, string texturePath)
+        {
+            LayerSetTexture(layerKey, new ResPath(texturePath));
+        }
+
+        [Obsolete("Use SpriteSystem.LayerSetTexture() instead.")]
+        public void LayerSetTexture(int layer, ResPath texturePath)
+            => Sys.LayerSetTexture((Owner, this), layer, texturePath);
+
+        [Obsolete("Use SpriteSystem.LayerSetTexture() instead.")]
+        public void LayerSetTexture(object layerKey, ResPath texturePath)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer, true))
+                return;
+
+            LayerSetTexture(layer, texturePath);
+        }
+
+        [Obsolete("Use SpriteSystem.LayerSetRsiState() instead.")]
+        public void LayerSetState(int layer, RSI.StateId stateId)
+            => Sys.LayerSetRsiState((Owner, this), layer, stateId);
+
+        [Obsolete("Use SpriteSystem.LayerSetRsiState() instead.")]
+        public void LayerSetState(object layerKey, RSI.StateId stateId)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer, true))
+                return;
+
+            LayerSetState(layer, stateId);
+        }
+
+        [Obsolete("Use SpriteSystem.LayerSetRsi() instead.")]
+        public void LayerSetState(int layer, RSI.StateId stateId, RSI? rsi)
+            => Sys.LayerSetRsi((Owner, this), layer, rsi, stateId);
+
+        [Obsolete("Use SpriteSystem.LayerSetRsi() instead.")]
+        public void LayerSetState(object layerKey, RSI.StateId stateId, RSI rsi)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer, true))
+                return;
+
+            LayerSetState(layer, stateId, rsi);
+        }
+
+        [Obsolete("Use SpriteSystem.LayerSetRsiState() instead.")]
+        public void LayerSetState(int layer, RSI.StateId stateId, string rsiPath)
+        {
+            LayerSetState(layer, stateId, new ResPath(rsiPath));
+        }
+
+        [Obsolete("Use SpriteSystem.LayerSetRsi() instead.")]
+        public void LayerSetState(object layerKey, RSI.StateId stateId, string rsiPath)
+        {
+            LayerSetState(layerKey, stateId, new ResPath(rsiPath));
+        }
+
+        [Obsolete("Use SpriteSystem.LayerSetRsi() instead.")]
+        public void LayerSetState(int layer, RSI.StateId stateId, ResPath rsiPath)
+            => Sys.LayerSetRsi((Owner, this), layer, rsiPath, stateId);
+
+        [Obsolete("Use SpriteSystem.LayerSetRsi() instead.")]
+        public void LayerSetState(object layerKey, RSI.StateId stateId, ResPath rsiPath)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer, true))
+                return;
+
+            LayerSetState(layer, stateId, rsiPath);
+        }
+
+        [Obsolete("Use SpriteSystem.LayerSetRsi() instead.")]
+        public void LayerSetRSI(int layer, RSI? rsi)
+            => Sys.LayerSetRsi((Owner, this), layer, rsi);
+
+        [Obsolete("Use SpriteSystem.LayerSetRsi() instead.")]
+        public void LayerSetRSI(object layerKey, RSI rsi)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer, true))
+                return;
+
+            LayerSetRSI(layer, rsi);
+        }
+
+        [Obsolete("Use SpriteSystem.LayerSetRsi() instead.")]
+        public void LayerSetRSI(int layer, string rsiPath)
+        {
+            LayerSetRSI(layer, new ResPath(rsiPath));
+        }
+
+        [Obsolete("Use SpriteSystem.LayerSetRsi() instead.")]
+        public void LayerSetRSI(object layerKey, string rsiPath)
+        {
+            LayerSetRSI(layerKey, new ResPath(rsiPath));
+        }
+
+        [Obsolete("Use SpriteSystem.LayerSetRsi() instead.")]
+        public void LayerSetRSI(int layer, ResPath rsiPath)
+            => Sys.LayerSetRsi((Owner, this), layer, rsiPath);
+
+        [Obsolete("Use SpriteSystem.LayerSetRsi() instead.")]
+        public void LayerSetRSI(object layerKey, ResPath rsiPath)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer, true))
+                return;
+
+            LayerSetRSI(layer, rsiPath);
+        }
+
+        [Obsolete("Use SpriteSystem.LayerSetScale() instead.")]
+        public void LayerSetScale(int layer, Vector2 scale)
+            => Sys.LayerSetScale((Owner, this), layer, scale);
+
+        [Obsolete("Use SpriteSystem.LayerSetScale() instead.")]
+        public void LayerSetScale(object layerKey, Vector2 scale)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer, true))
+                return;
+
+            LayerSetScale(layer, scale);
+        }
+
+        [Obsolete("Use SpriteSystem.LayerSetRotation() instead.")]
+        public void LayerSetRotation(int layer, Angle rotation)
+            => Sys.LayerSetRotation((Owner, this), layer, rotation);
+
+        [Obsolete("Use SpriteSystem.LayerSetRotation() instead.")]
+        public void LayerSetRotation(object layerKey, Angle rotation)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer, true))
+                return;
+
+            LayerSetRotation(layer, rotation);
+        }
+
+        [Obsolete("Use SpriteSystem.LayerSetOffset() instead.")]
+        public void LayerSetOffset(int layer, Vector2 layerOffset)
+            => Sys.LayerSetOffset((Owner, this), layer, layerOffset);
+
+        [Obsolete("Use SpriteSystem.LayerSetOffset() instead.")]
+        public void LayerSetOffset(object layerKey, Vector2 layerOffset)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer, true))
+                return;
+
+            LayerSetOffset(layer, layerOffset);
+        }
+
+        [Obsolete("Use SpriteSystem.LayerSetVisible() instead.")]
+        public void LayerSetVisible(int layer, bool visible)
+            => Sys.LayerSetVisible((Owner, this), layer, visible);
+
+        [Obsolete("Use SpriteSystem.LayerSetVisible() instead.")]
+        public void LayerSetVisible(object layerKey, bool visible)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer, true))
+                return;
+
+            LayerSetVisible(layer, visible);
+        }
+
+        [Obsolete("Use SpriteSystem.LayerSetColor() instead.")]
+        public void LayerSetColor(int layer, Color color)
+            => Sys.LayerSetColor((Owner, this), layer, color);
+
+        [Obsolete("Use SpriteSystem.LayerSetColor() instead.")]
+        public void LayerSetColor(object layerKey, Color color)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer, true))
+                return;
+
+            LayerSetColor(layer, color);
+        }
+
+        [Obsolete("Use SpriteSystem.LayerSetDirOffset() instead.")]
+        public void LayerSetDirOffset(int layer, DirectionOffset offset)
+            => Sys.LayerSetDirOffset((Owner, this), layer, offset);
+
+        [Obsolete("Use SpriteSystem.LayerSetDirOffset() instead.")]
+        public void LayerSetDirOffset(object layerKey, DirectionOffset offset)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer, true))
+                return;
+
+            LayerSetDirOffset(layer, offset);
+        }
+
+        [Obsolete("Use SpriteSystem.LayerSetAnimationTime() instead.")]
+        public void LayerSetAnimationTime(int layer, float animationTime)
+            => Sys.LayerSetAnimationTime((Owner, this), layer, animationTime);
+
+        [Obsolete("Use SpriteSystem.LayerSetAnimationTime() instead.")]
+        public void LayerSetAnimationTime(object layerKey, float animationTime)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer, true))
+                return;
+
+            LayerSetAnimationTime(layer, animationTime);
+        }
+
+        [Obsolete("Use SpriteSystem.LayerSetAutoAnimated() instead.")]
+        public void LayerSetAutoAnimated(int layer, bool autoAnimated)
+            => Sys.LayerSetAutoAnimated((Owner, this), layer, autoAnimated);
+
+        [Obsolete("Use SpriteSystem.LayerSetAutoAnimated() instead.")]
+        public void LayerSetAutoAnimated(object layerKey, bool autoAnimated)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer, true))
+                return;
+
+            LayerSetAutoAnimated(layer, autoAnimated);
+        }
+
+        [Obsolete("Use SpriteSystem.LayerSetRenderingStrategy() instead.")]
+        public void LayerSetRenderingStrategy(int layer, LayerRenderingStrategy renderingStrategy)
+            => Sys.LayerSetRenderingStrategy((Owner, this), layer, renderingStrategy);
+
+        [Obsolete("Use SpriteSystem.LayerSetRenderingStrategy() instead.")]
+        public void LayerSetRenderingStrategy(object layerKey, LayerRenderingStrategy renderingStrategy)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer, true))
+                return;
+
+            LayerSetRenderingStrategy(layer, renderingStrategy);
+        }
+
+        [Obsolete("Use SpriteSystem.LayerGetRsiState() instead.")]
+        public RSI.StateId LayerGetState(int layer)
+        {
+            if (!TryGetLayer(layer, out var theLayer, true))
+                return default;
+
+            return theLayer.State;
+        }
+
+        [Obsolete("Use SpriteSystem.LayerGetEffectiveRsi() instead.")]
+        public RSI? LayerGetActualRSI(int layer)
+        {
+            return this[layer].ActualRsi;
+        }
+
+        [Obsolete("Use SpriteSystem.LayerGetEffectiveRsi() instead.")]
+        public RSI? LayerGetActualRSI(object layerKey)
+        {
+            return this[layerKey].ActualRsi;
+        }
+
         public void LayerSetShader(int layer, ShaderInstance? shader, string? prototype = null)
         {
             if (!TryGetLayer(layer, out var theLayer, true))
                 return;
 
+            if (shader == null)
+            {
+                theLayer.UnShaded = false;
+                theLayer.Shader = null;
+                theLayer.ShaderPrototype = null;
+                return;
+            }
+
+            if (prototype == SpriteSystem.UnshadedId.Id)
+            {
+                theLayer.UnShaded = true;
+                theLayer.ShaderPrototype = SpriteSystem.UnshadedId;
+                theLayer.Shader = null;
+                return;
+            }
+
+            theLayer.UnShaded = false;
             theLayer.Shader = shader;
             theLayer.ShaderPrototype = prototype;
         }
@@ -851,7 +975,9 @@ namespace Robust.Client.GameObjects
         {
             if (!prototypes.TryIndex<ShaderPrototype>(shaderName, out var prototype))
             {
-                Logger.ErrorS(LogCategory, "Shader prototype '{0}' does not exist. Trace:\n{1}", shaderName,
+                Logger.ErrorS(LogCategory,
+                    "Shader prototype '{0}' does not exist. Trace:\n{1}",
+                    shaderName,
                     Environment.StackTrace);
 
                 LayerSetShader(layer, null, null);
@@ -869,488 +995,14 @@ namespace Robust.Client.GameObjects
             LayerSetShader(layer, shaderName);
         }
 
-        public void LayerSetSprite(int layer, SpriteSpecifier specifier)
-        {
-            switch (specifier)
-            {
-                case SpriteSpecifier.Texture tex:
-                    LayerSetTexture(layer, tex.TexturePath);
-                    break;
-                case SpriteSpecifier.Rsi rsi:
-                    LayerSetState(layer, rsi.RsiState, rsi.RsiPath);
-                    break;
-                default:
-                    throw new NotImplementedException();
-            }
-        }
-
-        public void LayerSetSprite(object layerKey, SpriteSpecifier specifier)
-        {
-            if (!LayerMapTryGet(layerKey, out var layer, true))
-                return;
-
-            LayerSetSprite(layer, specifier);
-        }
-
-        public void LayerSetTexture(int layer, Texture? texture)
-        {
-            if (!TryGetLayer(layer, out var theLayer, true))
-                return;
-            theLayer.SetTexture(texture);
-
-            QueueUpdateIsInert();
-            RebuildBounds();
-        }
-
-        public void LayerSetTexture(object layerKey, Texture texture)
-        {
-            if (!LayerMapTryGet(layerKey, out var layer, true))
-                return;
-
-            LayerSetTexture(layer, texture);
-        }
-
-        public void LayerSetTexture(int layer, string texturePath)
-        {
-            LayerSetTexture(layer, new ResPath(texturePath));
-        }
-
-        public void LayerSetTexture(object layerKey, string texturePath)
-        {
-            LayerSetTexture(layerKey, new ResPath(texturePath));
-        }
-
-        public void LayerSetTexture(int layer, ResPath texturePath)
-        {
-            if (!resourceCache.TryGetResource<TextureResource>(TextureRoot / texturePath, out var texture))
-            {
-                if (texturePath.Extension == "rsi")
-                {
-                    Logger.ErrorS(LogCategory,
-                        "Expected texture but got rsi '{0}', did you mean 'sprite:' instead of 'texture:'?",
-                        texturePath);
-                }
-
-                Logger.ErrorS(LogCategory, "Unable to load texture '{0}'. Trace:\n{1}", texturePath,
-                    Environment.StackTrace);
-            }
-
-            LayerSetTexture(layer, texture?.Texture);
-        }
-
-        public void LayerSetTexture(object layerKey, ResPath texturePath)
-        {
-            if (!LayerMapTryGet(layerKey, out var layer, true))
-                return;
-
-            LayerSetTexture(layer, texturePath);
-        }
-
-        public void LayerSetState(int layer, RSI.StateId stateId)
-        {
-            if (!TryGetLayer(layer, out var theLayer, true))
-                return;
-            theLayer.SetState(stateId);
-            RebuildBounds();
-        }
-
-        public void LayerSetState(object layerKey, RSI.StateId stateId)
-        {
-            if (!LayerMapTryGet(layerKey, out var layer, true))
-                return;
-
-            LayerSetState(layer, stateId);
-        }
-
-        public void LayerSetState(int layer, RSI.StateId stateId, RSI? rsi)
-        {
-            if (!TryGetLayer(layer, out var theLayer, true))
-                return;
-            theLayer.State = stateId;
-            theLayer.RSI = rsi;
-            var actualRsi = theLayer.RSI ?? BaseRSI;
-            if (actualRsi == null)
-            {
-                Logger.ErrorS(LogCategory, "No RSI to pull new state from! Trace:\n{0}", Environment.StackTrace);
-                theLayer.Texture = null;
-            }
-            else
-            {
-                if (actualRsi.TryGetState(stateId, out var state))
-                {
-                    theLayer.AnimationFrame = 0;
-                    theLayer.AnimationTime = 0;
-                    theLayer.AnimationTimeLeft = state.GetDelay(0);
-                }
-                else
-                {
-                    Logger.ErrorS(LogCategory, "State '{0}' does not exist in RSI {1}. Trace:\n{2}", stateId,
-                        actualRsi.Path, Environment.StackTrace);
-                    theLayer.Texture = null;
-                }
-            }
-
-            QueueUpdateIsInert();
-            RebuildBounds();
-        }
-
-        public void LayerSetState(object layerKey, RSI.StateId stateId, RSI rsi)
-        {
-            if (!LayerMapTryGet(layerKey, out var layer, true))
-                return;
-
-            LayerSetState(layer, stateId, rsi);
-        }
-
-        public void LayerSetState(int layer, RSI.StateId stateId, string rsiPath)
-        {
-            LayerSetState(layer, stateId, new ResPath(rsiPath));
-        }
-
-        public void LayerSetState(object layerKey, RSI.StateId stateId, string rsiPath)
-        {
-            LayerSetState(layerKey, stateId, new ResPath(rsiPath));
-        }
-
-        public void LayerSetState(int layer, RSI.StateId stateId, ResPath rsiPath)
-        {
-            if (!resourceCache.TryGetResource<RSIResource>(TextureRoot / rsiPath, out var res))
-            {
-                Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, Environment.StackTrace);
-            }
-
-            LayerSetState(layer, stateId, res?.RSI);
-        }
-
-        public void LayerSetState(object layerKey, RSI.StateId stateId, ResPath rsiPath)
-        {
-            if (!LayerMapTryGet(layerKey, out var layer, true))
-                return;
-
-            LayerSetState(layer, stateId, rsiPath);
-        }
-
-        public void LayerSetRSI(int layer, RSI? rsi)
-        {
-            if (!TryGetLayer(layer, out var theLayer, true))
-                return;
-            theLayer.SetRsi(rsi);
-            RebuildBounds();
-        }
-
-        public void LayerSetRSI(object layerKey, RSI rsi)
-        {
-            if (!LayerMapTryGet(layerKey, out var layer, true))
-                return;
-
-            LayerSetRSI(layer, rsi);
-        }
-
-        public void LayerSetRSI(int layer, string rsiPath)
-        {
-            LayerSetRSI(layer, new ResPath(rsiPath));
-        }
-
-        public void LayerSetRSI(object layerKey, string rsiPath)
-        {
-            LayerSetRSI(layerKey, new ResPath(rsiPath));
-        }
-
-        public void LayerSetRSI(int layer, ResPath rsiPath)
-        {
-            if (!resourceCache.TryGetResource<RSIResource>(TextureRoot / rsiPath, out var res))
-            {
-                Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, Environment.StackTrace);
-            }
-
-            LayerSetRSI(layer, res?.RSI);
-        }
-
-        public void LayerSetRSI(object layerKey, ResPath rsiPath)
-        {
-            if (!LayerMapTryGet(layerKey, out var layer, true))
-                return;
-
-            LayerSetRSI(layer, rsiPath);
-        }
-
-        public void LayerSetScale(int layer, Vector2 scale)
-        {
-            if (!TryGetLayer(layer, out var theLayer, true))
-                return;
-            theLayer.Scale = scale;
-            RebuildBounds();
-        }
-
-        public void LayerSetScale(object layerKey, Vector2 scale)
-        {
-            if (!LayerMapTryGet(layerKey, out var layer, true))
-                return;
-
-            LayerSetScale(layer, scale);
-        }
-
-
-        public void LayerSetRotation(int layer, Angle rotation)
-        {
-            if (!TryGetLayer(layer, out var theLayer, true))
-                return;
-            theLayer.Rotation = rotation;
-            RebuildBounds();
-        }
-
-        public void LayerSetRotation(object layerKey, Angle rotation)
-        {
-            if (!LayerMapTryGet(layerKey, out var layer, true))
-                return;
-
-            LayerSetRotation(layer, rotation);
-        }
-
-        public void LayerSetVisible(int layer, bool visible)
-        {
-            if (!TryGetLayer(layer, out var theLayer, true))
-                return;
-
-            theLayer.Visible = visible;
-        }
-
-        public void LayerSetVisible(object layerKey, bool visible)
-        {
-            if (!LayerMapTryGet(layerKey, out var layer, true))
-                return;
-
-            LayerSetVisible(layer, visible);
-        }
-
-        public void LayerSetColor(int layer, Color color)
-        {
-            if (!TryGetLayer(layer, out var theLayer, true))
-                return;
-
-            theLayer.Color = color;
-
-            RebuildBounds();
-        }
-
-        public void LayerSetColor(object layerKey, Color color)
-        {
-            if (!LayerMapTryGet(layerKey, out var layer, true))
-                return;
-
-            LayerSetColor(layer, color);
-        }
-
-        public void LayerSetDirOffset(int layer, DirectionOffset offset)
-        {
-            if (!TryGetLayer(layer, out var theLayer, true))
-                return;
-
-            theLayer.DirOffset = offset;
-
-            RebuildBounds();
-        }
-
-        public void LayerSetDirOffset(object layerKey, DirectionOffset offset)
-        {
-            if (!LayerMapTryGet(layerKey, out var layer, true))
-                return;
-
-            LayerSetDirOffset(layer, offset);
-        }
-
-        public void LayerSetAnimationTime(int layer, float animationTime)
-        {
-            if (!TryGetLayer(layer, out var theLayer, true))
-                return;
-
-            theLayer.SetAnimationTime(animationTime);
-        }
-
-        public void LayerSetAnimationTime(object layerKey, float animationTime)
-        {
-            if (!LayerMapTryGet(layerKey, out var layer, true))
-                return;
-
-            LayerSetAnimationTime(layer, animationTime);
-        }
-
-        public void LayerSetAutoAnimated(int layer, bool autoAnimated)
-        {
-            if (!TryGetLayer(layer, out var theLayer, true))
-                return;
-
-            theLayer.AutoAnimated = autoAnimated;
-        }
-
-        public void LayerSetAutoAnimated(object layerKey, bool autoAnimated)
-        {
-            if (!LayerMapTryGet(layerKey, out var layer, true))
-                return;
-
-            LayerSetAutoAnimated(layer, autoAnimated);
-        }
-
-        public void LayerSetOffset(int layer, Vector2 layerOffset)
-        {
-            if (!TryGetLayer(layer, out var theLayer, true))
-                return;
-
-            theLayer.Offset = layerOffset;
-
-            RebuildBounds();
-        }
-
-        public void LayerSetOffset(object layerKey, Vector2 layerOffset)
-        {
-            if (!LayerMapTryGet(layerKey, out var layer, true))
-                return;
-
-            LayerSetOffset(layer, layerOffset);
-        }
-
-        public void LayerSetRenderingStrategy(int layer, LayerRenderingStrategy renderingStrategy)
-        {
-            if (!TryGetLayer(layer, out var theLayer, true))
-                return;
-
-            theLayer.RenderingStrategy = renderingStrategy;
-        }
-
-        public void LayerSetRenderingStrategy(object layerKey, LayerRenderingStrategy renderingStrategy)
-        {
-            if (!LayerMapTryGet(layerKey, out var layer, true))
-                return;
-
-            LayerSetRenderingStrategy(layer, renderingStrategy);
-        }
-
-        /// <inheritdoc />
-        public RSI.StateId LayerGetState(int layer)
-        {
-            if (!TryGetLayer(layer, out var theLayer, true))
-                return default;
-
-            return theLayer.State;
-        }
-
-        public RSI? LayerGetActualRSI(int layer)
-        {
-            return this[layer].ActualRsi;
-        }
-
-        public RSI? LayerGetActualRSI(object layerKey)
-        {
-            return this[layerKey].ActualRsi;
-        }
-
-        public ISpriteLayer this[int layer] => Layers[layer];
-        public ISpriteLayer this[Index layer] => Layers[layer];
-        public ISpriteLayer this[object layerKey] => this[LayerMap[layerKey]];
-        public IEnumerable<ISpriteLayer> AllLayers => Layers;
-
         // Lobby SpriteView rendering path
+        [Obsolete("Use SpriteSystem.Render() instead.")]
         public void Render(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Direction? overrideDirection = null, Vector2 position = default)
         {
-            RenderInternal(drawingHandle, eyeRotation, worldRotation, position, overrideDirection);
+            Sys.RenderSprite((Owner, this), drawingHandle, eyeRotation, worldRotation, position, overrideDirection);
         }
 
-        [DataField("noRot")] private bool _screenLock = false;
-
-        /// <summary>
-        /// If the sprite only has 1 direction should it snap at cardinals if rotated.
-        /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public bool SnapCardinals
-        {
-            get => _snapCardinals;
-            set
-            {
-                if (value == _snapCardinals)
-                    return;
-
-                _snapCardinals = value;
-                RebuildBounds();
-            }
-        }
-
-        [DataField("snapCardinals")]
-        private bool _snapCardinals = false;
-
-        [DataField("overrideDir")]
-        [ViewVariables(VVAccess.ReadWrite)]
-        public Direction DirectionOverride = Direction.East;
-
-        [DataField("enableOverrideDir")]
-        [ViewVariables(VVAccess.ReadWrite)]
-        public bool EnableDirectionOverride;
-
-        /// <inheritdoc />
-        [ViewVariables(VVAccess.ReadWrite)]
-        public bool NoRotation { get => _screenLock; set => _screenLock = value; }
-
-        internal void RenderInternal(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Vector2 worldPosition, Direction? overrideDirection)
-        {
-            var angle = worldRotation + eyeRotation; // angle on-screen. Used to decide the direction of 4/8 directional RSIs
-            angle = angle.Reduced().FlipPositive();  // Reduce the angles to fix math shenanigans
-
-            var cardinal = Angle.Zero;
-
-            // If we have a 1-directional sprite then snap it to try and always face it south if applicable.
-            if (!NoRotation && SnapCardinals)
-            {
-                cardinal = angle.GetCardinalDir().ToAngle();
-            }
-
-            // worldRotation + eyeRotation should be the angle of the entity on-screen. If no-rot is enabled this is just set to zero.
-            // However, at some point later the eye-matrix is applied separately, so we subtract -eye rotation for now:
-            var entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, NoRotation ? -eyeRotation : worldRotation - cardinal);
-
-            var transformSprite = Matrix3x2.Multiply(LocalMatrix, entityMatrix);
-
-            if (GranularLayersRendering)
-            {
-                //Default rendering
-                entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, worldRotation);
-                var transformDefault = Matrix3x2.Multiply(LocalMatrix, entityMatrix);
-                //Snap to cardinals
-                entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, worldRotation - angle.GetCardinalDir().ToAngle());
-                var transformSnap = Matrix3x2.Multiply(LocalMatrix, entityMatrix);
-                //No rotation
-                entityMatrix = Matrix3Helpers.CreateTransform(worldPosition, -eyeRotation);
-                var transformNoRot = Matrix3x2.Multiply(LocalMatrix, entityMatrix);
-
-                foreach (var layer in Layers) {
-                    switch (layer.RenderingStrategy)
-                    {
-                        case LayerRenderingStrategy.NoRotation:
-                            layer.Render(drawingHandle, ref transformNoRot, angle, overrideDirection);
-                            break;
-                        case LayerRenderingStrategy.SnapToCardinals:
-                            layer.Render(drawingHandle, ref transformSnap, angle, overrideDirection);
-                            break;
-                        case LayerRenderingStrategy.Default:
-                            layer.Render(drawingHandle, ref transformDefault, angle, overrideDirection);
-                            break;
-                        case LayerRenderingStrategy.UseSpriteStrategy:
-                            layer.Render(drawingHandle, ref transformSprite, angle, overrideDirection);
-                            break;
-                        default:
-                            Logger.Error($"Tried to render a layer with unknown rendering stragegy: {layer.RenderingStrategy}");
-                            break;
-                    }
-                }
-            }
-
-            else
-            {
-                foreach (var layer in Layers)
-                {
-                    layer.Render(drawingHandle, ref transformSprite, angle, overrideDirection);
-                }
-            }
-        }
-
+        [Obsolete("Use SpriteSystem.LayerGetDirectionCount() instead.")]
         public int GetLayerDirectionCount(ISpriteLayer layer)
         {
             if (!layer.RsiState.IsValid)
@@ -1360,7 +1012,7 @@ namespace Robust.Client.GameObjects
             var rsi = layer.Rsi ?? BaseRSI;
             if (rsi == null || !rsi.TryGetState(layer.RsiState, out var state))
             {
-                state = GetFallbackState(resourceCache);
+                state = Sys.GetFallbackState();
             }
 
             return state.RsiDirections switch
@@ -1372,41 +1024,11 @@ namespace Robust.Client.GameObjects
             };
         }
 
-        private void QueueUpdateRenderTree()
-        {
-            if (TreeUpdateQueued || !Owner.IsValid())
-                return;
-
-            // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
-            var ev = new QueueSpriteTreeUpdateEvent(entities.GetComponent<TransformComponent>(Owner));
-            entities.EventBus.RaiseComponentEvent(Owner, this, ref ev);
-        }
-
-        private void QueueUpdateIsInert()
-        {
-            if (_inertUpdateQueued || !Owner.IsValid())
-                return;
-
-            // TODO whenever sprite comp gets ECS'd , just make this a direct method call.
-            var ev = new SpriteUpdateInertEvent();
-            entities.EventBus.RaiseComponentEvent(Owner, this, ref ev);
-        }
-
-        [Obsolete("Use SpriteSystem instead.")]
-        internal static RSI.State GetFallbackState(IResourceCache cache)
-        {
-            var rsi = cache.GetResource<RSIResource>("/Textures/error.rsi").RSI;
-            return rsi["error"];
-        }
-
         public string GetDebugString()
         {
             var builder = new StringBuilder();
-            builder.AppendFormat(
-                "vis/depth/scl/rot/ofs/col/norot/override/dir: {0}/{1}/{2}/{3}/{4}/{5}/{6}/{8}/{7}\n",
-                Visible, DrawDepth, Scale, Rotation, Offset,
-                Color, NoRotation, entities.GetComponent<TransformComponent>(Owner).WorldRotation.ToRsiDirection(RsiDirectionType.Dir8),
-                DirectionOverride
+            builder.Append(
+                $"vis/depth/scl/rot/ofs/col/norot/override: {Visible}/{DrawDepth}/{Scale}/{Rotation}/{Offset}/{Color}/{NoRotation}/{DirectionOverride}/\n"
             );
 
             foreach (var layer in Layers)
@@ -1415,52 +1037,28 @@ namespace Robust.Client.GameObjects
                     "shad/tex/rsi/state/ant/anf/scl/rot/vis/col/dofs/renderstrat: {0}/{1}/{2}/{3}/{4}/{5}/{6}/{7}/{8}/{9}/{10}/{11}\n",
                     // These are references and don't include useful data for knowing where they came from, sadly.
                     // "is one set" is better than nothing at least.
-                    layer.Shader != null, layer.Texture != null, layer.RSI != null,
+                    layer.Shader != null,
+                    layer.Texture != null,
+                    layer.RSI != null,
                     layer.State,
-                    layer.AnimationTimeLeft, layer.AnimationFrame, layer.Scale, layer.Rotation, layer.Visible,
-                    layer.Color, layer.DirOffset, layer.RenderingStrategy
+                    layer.AnimationTimeLeft,
+                    layer.AnimationFrame,
+                    layer.Scale,
+                    layer.Rotation,
+                    layer.Visible,
+                    layer.Color,
+                    layer.DirOffset,
+                    layer.RenderingStrategy
                 );
             }
 
             return builder.ToString();
         }
 
-        /// <inheritdoc/>
+        [Obsolete("Use SpriteSystem.CalculateBounds() instead.")]
         public Box2Rotated CalculateRotatedBoundingBox(Vector2 worldPosition, Angle worldRotation, Angle eyeRot)
         {
-            // fast check for empty sprites
-            if (!Visible || Layers.Count == 0)
-            {
-                return new Box2Rotated(new Box2(worldPosition, worldPosition), Angle.Zero, worldPosition);
-            }
-
-            // We need to modify world rotation so that it lies between 0 and 2pi.
-            // This matters for 4 or 8 directional sprites deciding which quadrant (octant?) they lie in.
-            // the 0->2pi convention is set by the sprite-rendering code that selects the layers.
-            // See RenderInternal().
-
-            worldRotation = worldRotation.Reduced();
-            if (worldRotation.Theta < 0)
-                worldRotation = new Angle(worldRotation.Theta + Math.Tau);
-
-            // Next, what we do is take the box2 and apply the sprite's transform, and then the entity's transform. We
-            // could do this via Matrix3.TransformBox, but that only yields bounding boxes. So instead we manually
-            // transform our box by the combination of these matrices:
-
-            Angle finalRotation = NoRotation
-                ? Rotation - eyeRot
-                : Rotation + worldRotation;
-
-            // slightly faster path if offset == 0 (true for 99.9% of sprites)
-            if (Offset == Vector2.Zero)
-                return new Box2Rotated(Bounds.Translated(worldPosition), finalRotation, worldPosition);
-
-            var adjustedOffset = NoRotation
-                ? (-eyeRot).RotateVec(Offset)
-                : worldRotation.RotateVec(Offset);
-
-            Vector2 position = adjustedOffset + worldPosition;
-            return new Box2Rotated(Bounds.Translated(position), finalRotation, position);
+            return Sys.CalculateBounds((Owner, this), worldPosition, worldRotation, eyeRot);
         }
 
         /// <summary>
@@ -1491,36 +1089,64 @@ namespace Robust.Client.GameObjects
 
         public sealed class Layer : ISpriteLayer, ISerializationHooks
         {
-            [ViewVariables] private readonly SpriteComponent _parent;
+            internal SpriteComponent _parent => Owner.Comp;
 
-            [ViewVariables] public string? ShaderPrototype;
+            /// <summary>
+            /// The entity that this layer belongs to.
+            /// </summary>
+            [Access(typeof(SpriteSystem), typeof(SpriteComponent))]
+            [ViewVariables] internal Entity<SpriteComponent> Owner;
+            // Internal, because I might want to change this in future W/O breaking changes.
+            // Also, it's possible for SpriteComponent to be null if it is not currently attached to a sprite.
+
+            /// <summary>
+            /// The index of the layer within its layer collection (usually a SpriteComponent).
+            /// </summary>
+            [Access(typeof(SpriteSystem), typeof(SpriteComponent))]
+            [ViewVariables] internal int Index;
+            // Internal, because I might want to change this in future W/O breaking changes.
+
+            [ViewVariables] public ProtoId<ShaderPrototype>? ShaderPrototype;
             [ViewVariables] public ShaderInstance? Shader;
             [ViewVariables] public Texture? Texture;
 
-            private RSI? _rsi;
+            internal RSI? _rsi;
+
+            /// <summary>
+            /// If true, then this layer is drawn without lighting applied.
+            /// Unshaded layers are given special treatment and don't just use the unshaded-shader to avoid having to
+            /// unnecessarily swap out the light texture. This helps the number of batches that need to be sent to the
+            /// GPU while drawing sprites.
+            /// </summary>
+            [ViewVariables] internal bool UnShaded;
+
             [ViewVariables] public RSI? RSI
             {
                 get => _rsi;
+                [Obsolete("Use SpriteSystem.LayerSetRsi() instead.")]
                 set
                 {
                     if (_rsi == value)
                         return;
 
+                    BoundsDirty = true;
+                    Owner.Comp.BoundsDirty = true;
                     _rsi = value;
                     UpdateActualState();
                 }
             }
 
-            private RSI.StateId _state;
+            internal RSI.StateId StateId;
             [ViewVariables] public RSI.StateId State
             {
-                get => _state;
+                get => StateId;
+                [Obsolete("Use SpriteSystem.LayerSetRsiState() instead.")]
                 set
                 {
-                    if (_state == value)
+                    if (StateId == value)
                         return;
 
-                    _state = value;
+                    StateId = value;
                     UpdateActualState();
                 }
             }
@@ -1542,15 +1168,27 @@ namespace Robust.Client.GameObjects
             /// </remarks>
             [ViewVariables] public bool Cycle;
 
-            private RSI.State? _actualState;
+            /// <summary>
+            /// If false, this will prevent the layer's animation from looping.
+            /// This will set <see cref="AutoAnimated"/> to false once the animation finishes.
+            /// </summary>
+            /// <remarks>
+            /// This may be overriden by the parent's loop property.
+            /// </remarks>
+            [ViewVariables] public bool Loop = true;
+
+            // TODO SPRITE ACCESS
+            internal RSI.State? _actualState;
             [ViewVariables] public RSI.State? ActualState => _actualState;
 
+            // TODO SPRITE ACCESS
             public Matrix3x2 LocalMatrix = Matrix3x2.Identity;
 
             [ViewVariables(VVAccess.ReadWrite)]
             public Vector2 Scale
             {
                 get => _scale;
+                [Obsolete("Use SpriteSystem.LayerSetScale() instead.")]
                 set
                 {
                     if (_scale.EqualsApprox(value)) return;
@@ -1564,7 +1202,9 @@ namespace Robust.Client.GameObjects
 
                     _scale = value;
                     UpdateLocalMatrix();
-                    _parent.RebuildBounds();
+                    BoundsDirty = true;
+                    Owner.Comp.BoundsDirty = true;
+                    Owner.Comp.TreeSys.QueueTreeUpdate(Owner);
                 }
             }
             internal Vector2 _scale = Vector2.One;
@@ -1573,30 +1213,43 @@ namespace Robust.Client.GameObjects
             public Angle Rotation
             {
                 get => _rotation;
+                [Obsolete("Use SpriteSystem.LayerSetRotation() instead.")]
                 set
                 {
                     if (_rotation.EqualsApprox(value)) return;
 
                     _rotation = value;
                     UpdateLocalMatrix();
-                    _parent.RebuildBounds();
+                    BoundsDirty = true;
+                    Owner.Comp.BoundsDirty = true;
+                    Owner.Comp.TreeSys.QueueTreeUpdate(Owner);
                 }
             }
             internal Angle _rotation = Angle.Zero;
 
-            private bool _visible = true;
+            // Is the layer actually drawn / does it contribute to the sprites bounding box?
+            internal bool Drawn => _visible && !Blank && CopyToShaderParameters == null;
+
+            internal bool _visible = true;
             [ViewVariables(VVAccess.ReadWrite)]
             public bool Visible
             {
                 get => _visible;
+                [Obsolete("Use SpriteSystem.LayerSetVisible() instead.")]
                 set
                 {
                     if (_visible == value)
                         return;
                     _visible = value;
 
-                    _parent.QueueUpdateIsInert();
-                    _parent.RebuildBounds();
+                    Owner.Comp.BoundsDirty = true;
+
+                    // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+                    if (_parent.Owner != EntityUid.Invalid)
+                        Owner.Comp.Sys?.QueueUpdateIsInert(Owner);
+
+                    if (_parent.Owner != EntityUid.Invalid)
+                        Owner.Comp.TreeSys.QueueTreeUpdate(Owner);
                 }
             }
 
@@ -1606,17 +1259,20 @@ namespace Robust.Client.GameObjects
             [ViewVariables(VVAccess.ReadWrite)]
             public Color Color { get; set; } = Color.White;
 
-            private bool _autoAnimated = true;
+            internal bool _autoAnimated = true;
             [ViewVariables(VVAccess.ReadWrite)]
             public bool AutoAnimated
             {
                 get => _autoAnimated;
+                [Obsolete("Use SpriteSystem.LayerSetAutoAnimated() instead.")]
                 set
                 {
                     if (_autoAnimated == value)
                         return;
                     _autoAnimated = value;
-                    _parent.QueueUpdateIsInert();
+                    // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+                    if (_parent.Owner != EntityUid.Invalid)
+                        _parent.Sys?.QueueUpdateIsInert((_parent.Owner, _parent));
                 }
             }
 
@@ -1624,13 +1280,19 @@ namespace Robust.Client.GameObjects
             public Vector2 Offset
             {
                 get => _offset;
+                [Obsolete("Use SpriteSystem.LayerSetOffset() instead.")]
                 set
                 {
                     if (_offset.EqualsApprox(value)) return;
 
+                    BoundsDirty = true;
+                    Owner.Comp.BoundsDirty = true;
+
                     _offset = value;
                     UpdateLocalMatrix();
-                    _parent.RebuildBounds();
+                    // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+                    if (_parent.Owner != EntityUid.Invalid)
+                        Owner.Comp.TreeSys.QueueTreeUpdate(Owner);
                 }
             }
 
@@ -1646,23 +1308,37 @@ namespace Robust.Client.GameObjects
             ///    Whether the current layer have a specific rendering method (e.g no rotation or snap to cardinal)
             ///    The sprite GranularLayersRendering var must be set to true for this to have any effect.
             /// </summary>
-            [ViewVariables]
+            [ViewVariables] // TODO SPRITE ACCESS
             public LayerRenderingStrategy RenderingStrategy = LayerRenderingStrategy.UseSpriteStrategy;
 
+            // TODO SPRITE ACCESS
+            // If someone sets this, it stops the actual layer from being drawn, which should change the sprites bounds.
             [ViewVariables(VVAccess.ReadWrite)]
             public CopyToShaderParameters? CopyToShaderParameters;
 
+            [Obsolete("Use SpriteSystem.AddBlankLayer")]
             public Layer(SpriteComponent parent)
             {
-                _parent = parent;
+                Owner = (parent.Owner, parent);
             }
 
-            public Layer(Layer toClone, SpriteComponent parentSprite)
+            internal Layer()
             {
-                _parent = parentSprite;
+            }
+
+            internal Layer(Entity<SpriteComponent> owner, int index)
+            {
+                Owner = owner;
+                Index = index;
+            }
+
+            [Obsolete] // This should be internal to SpriteSystem
+            public Layer(Layer toClone, SpriteComponent parent) : this(parent)
+            {
                 if (toClone.Shader != null)
                 {
                     Shader = toClone.Shader.Mutable ? toClone.Shader.Duplicate() : toClone.Shader;
+                    UnShaded = toClone.UnShaded;
                     ShaderPrototype = toClone.ShaderPrototype;
                 }
                 Texture = toClone.Texture;
@@ -1680,10 +1356,14 @@ namespace Robust.Client.GameObjects
                 DirOffset = toClone.DirOffset;
                 _autoAnimated = toClone._autoAnimated;
                 RenderingStrategy = toClone.RenderingStrategy;
+                Cycle = toClone.Cycle;
+                Loop = toClone.Loop;
                 if (toClone.CopyToShaderParameters is { } copyToShaderParameters)
                     CopyToShaderParameters = new CopyToShaderParameters(copyToShaderParameters);
             }
 
+            // TODO SPRITE
+            // Is Layer even serializable?
             void ISerializationHooks.AfterDeserialization()
             {
                 UpdateLocalMatrix();
@@ -1767,6 +1447,7 @@ namespace Robust.Client.GameObjects
                 }
             }
 
+            [Obsolete("Use SpriteSystem.LayerSetAnimationTime")]
             public void SetAnimationTime(float animationTime)
             {
                 if (!State.IsValid)
@@ -1798,13 +1479,15 @@ namespace Robust.Client.GameObjects
                 AdvanceFrameAnimation(state);
             }
 
+            [Obsolete("Use SpriteSystem.LayerSetAutoAnimated")]
             public void SetAutoAnimated(bool value)
             {
                 AutoAnimated = value;
 
-                _parent.QueueUpdateIsInert();
+                _parent.Sys.QueueUpdateIsInert((_parent.Owner, _parent));
             }
 
+            [Obsolete("Use SpriteSystem.LayerSetRsi")]
             public void SetRsi(RSI? rsi)
             {
                 RSI = rsi;
@@ -1834,10 +1517,14 @@ namespace Robust.Client.GameObjects
                     }
                 }
 
-                _parent.QueueUpdateRenderTree();
-                _parent.QueueUpdateIsInert();
+                BoundsDirty = true;
+                Owner.Comp.BoundsDirty = true;
+
+                _parent.TreeSys.QueueTreeUpdate((_parent.Owner, _parent));
+                _parent.Sys.QueueUpdateIsInert((_parent.Owner, _parent));
             }
 
+            [Obsolete("Use SpriteSystem.LayerSetRsiState")]
             public void SetState(RSI.StateId stateId)
             {
                 if (State == stateId)
@@ -1850,14 +1537,14 @@ namespace Robust.Client.GameObjects
                 var rsi = ActualRsi;
                 if (rsi == null)
                 {
-                    state = GetFallbackState(_parent.resourceCache);
+                    state = _parent.Sys.GetFallbackState();
                     Logger.ErrorS(LogCategory, "No RSI to pull new state from! Trace:\n{0}", Environment.StackTrace);
                 }
                 else
                 {
                     if (!rsi.TryGetState(stateId, out state))
                     {
-                        state = GetFallbackState(_parent.resourceCache);
+                        state = _parent.Sys.GetFallbackState();
                         Logger.ErrorS(LogCategory, "State '{0}' does not exist in RSI. Trace:\n{1}", stateId,
                             Environment.StackTrace);
                     }
@@ -1867,16 +1554,20 @@ namespace Robust.Client.GameObjects
                 AnimationTime = 0;
                 AnimationTimeLeft = state.GetDelay(0);
 
-                _parent.QueueUpdateIsInert();
+                _parent.Sys.QueueUpdateIsInert((_parent.Owner, _parent));
             }
 
+            [Obsolete("Use SpriteSystem.LayerSetTexture")]
             public void SetTexture(Texture? texture)
             {
                 State = default;
                 Texture = texture;
 
-                _parent.QueueUpdateRenderTree();
-                _parent.QueueUpdateIsInert();
+                BoundsDirty = true;
+                Owner.Comp.BoundsDirty = true;
+
+                _parent.TreeSys.QueueTreeUpdate((_parent.Owner, _parent));
+                _parent.Sys.QueueUpdateIsInert((_parent.Owner, _parent));
             }
 
             /// <inheritdoc/>
@@ -1898,53 +1589,22 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            /// <inheritdoc/>
-            public Box2 CalculateBoundingBox()
-            {
-                var textureSize = (Vector2) PixelSize / EyeManager.PixelsPerMeter;
-                var longestSide = MathF.Max(textureSize.X, textureSize.Y);
-                var longestRotatedSide = Math.Max(longestSide, (textureSize.X + textureSize.Y) / MathF.Sqrt(2));
+            /// <summary>
+            /// Whether or not the layers's local bounding box is dirty and need to be rebuilt.
+            /// </summary>
+            internal bool BoundsDirty = true;
+            internal Box2 Bounds;
 
-                Vector2 size;
-
-                // If this layer has any form of arbitrary rotation, return a bounding box big enough to cover
-                // any possible rotation.
-                if (_rotation != 0)
-                {
-                    size = new Vector2(longestRotatedSide, longestRotatedSide);
-                }
-                else if (_parent.SnapCardinals && (!_parent.GranularLayersRendering || RenderingStrategy == LayerRenderingStrategy.UseSpriteStrategy)
-                         || _parent.GranularLayersRendering && RenderingStrategy == LayerRenderingStrategy.SnapToCardinals)
-                {
-                    DebugTools.Assert(_actualState == null || _actualState.RsiDirections == RsiDirectionType.Dir1);
-                    size = new Vector2(longestSide, longestSide);
-                }
-                else
-                {
-                    // Build the bounding box based on how many directions the sprite has
-                    size = (_actualState?.RsiDirections) switch
-                    {
-                        // If we have four cardinal directions, take the longest side of our texture and square it, then turn that into our bounding box.
-                        // This accounts for all possible rotations.
-                        RsiDirectionType.Dir4 => new Vector2(longestSide, longestSide),
-
-                        // If we have eight directions, find the maximum length of the texture (accounting for rotation), then square it to make
-                        RsiDirectionType.Dir8 => new Vector2(longestRotatedSide, longestRotatedSide),
-
-                        // If we have only one direction or an invalid RSI state, create a simple bounding box with the size of the texture.
-                        _ => textureSize
-                    };
-                }
-
-                return Box2.CenteredAround(Offset, size * _scale);
-            }
+            [Obsolete("Use SpriteSystem.GetLocalBounds()")]
+            public Box2 CalculateBoundingBox() => Owner.Comp.Sys.GetLocalBounds(this);
 
             /// <summary>
             ///     Update Cached RSI state. State is cached to avoid calling this every time an entity gets drawn.
             /// </summary>
             internal void UpdateActualState()
             {
-                _parent.QueueUpdateIsInert();
+                // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+                _parent.Sys?.QueueUpdateIsInert((_parent.Owner, _parent));
                 if (!State.IsValid)
                 {
                     _actualState = null;
@@ -1955,28 +1615,36 @@ namespace Robust.Client.GameObjects
                 var rsi = RSI ?? _parent.BaseRSI;
                 if (rsi == null || !rsi.TryGetState(State, out _actualState))
                 {
-                    _actualState = GetFallbackState(_parent.resourceCache);
+                    _actualState = _parent.Sys?.GetFallbackState();
                 }
             }
 
-            /// <summary>
-            ///     Given the apparent rotation of an entity on screen (world + eye rotation), get layer's matrix for drawing &
-            ///     relevant RSI direction.
-            /// </summary>
             public void GetLayerDrawMatrix(RsiDirection dir, out Matrix3x2 layerDrawMatrix)
             {
-                if (_parent.NoRotation || dir == RsiDirection.South)
+                GetLayerDrawMatrix(dir, out layerDrawMatrix, Owner.Comp.NoRotation);
+            }
+
+            /// <summary>
+            /// Given the apparent rotation of an entity on screen (world + eye rotation), get layer's matrix for drawing &
+            /// relevant RSI direction.
+            /// </summary>
+            internal void GetLayerDrawMatrix(RsiDirection dir, out Matrix3x2 layerDrawMatrix, bool noRot)
+            {
+                // TODO RENDERING
+                // Consider changing the RSI format (or at least modify the loaded textures) to remove this
+                // unnecessary matrix transformation. This transform is completely unnecessary for 4- and
+                // 1-directional sprites. Its only really required for 8-directional sprites.
+
+                if (dir == RsiDirection.South || noRot)
                     layerDrawMatrix = LocalMatrix;
                 else
-                {
-                    layerDrawMatrix = Matrix3x2.Multiply(_rsiDirectionMatrices[(int)dir], LocalMatrix);
-                }
+                    layerDrawMatrix = Matrix3x2.Multiply(_rsiDirectionMatrices[(int) dir], LocalMatrix);
             }
 
             private static Matrix3x2[] _rsiDirectionMatrices = new Matrix3x2[]
             {
                 // array order chosen such that this array can be indexed by casing an RSI direction to an int
-                Matrix3x2.Identity, // should probably just avoid matrix multiplication altogether if the direction is south.
+                Matrix3x2.Identity,
                 Matrix3Helpers.CreateRotation(-Direction.North.ToAngle()),
                 Matrix3Helpers.CreateRotation(-Direction.East.ToAngle()),
                 Matrix3Helpers.CreateRotation(-Direction.West.ToAngle()),
@@ -1994,7 +1662,8 @@ namespace Robust.Client.GameObjects
             {
                 if (dirType == RsiDirectionType.Dir1)
                     return RsiDirection.South;
-                else if (dirType == RsiDirectionType.Dir8)
+
+                if (dirType == RsiDirectionType.Dir8)
                     return angle.GetDir().Convert(dirType);
 
                 // For 4-directional sprites, as entities are often moving & facing diagonally, we will slightly bias the
@@ -2014,100 +1683,27 @@ namespace Robust.Client.GameObjects
                 };
             }
 
-            /// <summary>
-            ///     Render a layer. This assumes that the input angle is between 0 and 2pi.
-            /// </summary>
-            internal void Render(DrawingHandleWorld drawingHandle, ref Matrix3x2 spriteMatrix, Angle angle, Direction? overrideDirection)
-            {
-                if (!Visible || Blank)
-                    return;
-
-                var dir = _actualState == null ? RsiDirection.South : GetDirection(_actualState.RsiDirections, angle);
-
-                // Set the drawing transform for this layer
-                GetLayerDrawMatrix(dir, out var layerMatrix);
-
-                // The direction used to draw the sprite can differ from the one that the angle would naively suggest,
-                // due to direction overrides or offsets.
-                if (overrideDirection != null && _actualState != null)
-                    dir = overrideDirection.Value.Convert(_actualState.RsiDirections);
-                dir = dir.OffsetRsiDir(DirOffset);
-
-                // Get the correct directional texture from the state, and draw it!
-                var texture = GetRenderTexture(_actualState, dir);
-
-                if (CopyToShaderParameters == null)
-                {
-                    // Set the drawing transform for this layer
-                    var transformMatrix = Matrix3x2.Multiply(layerMatrix, spriteMatrix);
-                    drawingHandle.SetTransform(in transformMatrix);
-
-                    RenderTexture(drawingHandle, texture);
-                }
-                else
-                {
-                    // Multiple atrocities to god being committed right here.
-                    var otherLayerIdx = _parent.LayerMap[CopyToShaderParameters.LayerKey!];
-                    var otherLayer = _parent.Layers[otherLayerIdx];
-                    if (otherLayer.Shader is not { } shader)
-                    {
-                        // No shader set apparently..?
-                        return;
-                    }
-
-                    if (!shader.Mutable)
-                        otherLayer.Shader = shader = shader.Duplicate();
-
-                    var clydeTexture = Clyde.RenderHandle.ExtractTexture(texture, null, out var csr);
-                    var sr = Clyde.RenderHandle.WorldTextureBoundsToUV(clydeTexture, csr);
-
-                    if (CopyToShaderParameters.ParameterTexture is { } paramTexture)
-                        shader.SetParameter(paramTexture, clydeTexture);
-
-                    if (CopyToShaderParameters.ParameterUV is { } paramUV)
-                    {
-                        var uv = new Vector4(sr.Left, sr.Bottom, sr.Right, sr.Top);
-                        shader.SetParameter(paramUV, uv);
-                    }
-                }
-            }
-
-            private void RenderTexture(DrawingHandleWorld drawingHandle, Texture texture)
-            {
-                if (Shader != null)
-                    drawingHandle.UseShader(Shader);
-
-                var layerColor = _parent.color * Color;
-                var textureSize = texture.Size / (float)EyeManager.PixelsPerMeter;
-                var quad = Box2.FromDimensions(textureSize/-2, textureSize);
-
-                drawingHandle.DrawTextureRectRegion(texture, quad, layerColor);
-
-                if (Shader != null)
-                    drawingHandle.UseShader(null);
-            }
-
-            private Texture GetRenderTexture(RSI.State? state, RsiDirection dir)
-            {
-                if (state == null)
-                    return Texture ?? _parent.resourceCache.GetFallback<TextureResource>().Texture;
-
-                return state.GetFrame(dir, AnimationFrame);
-            }
-
             internal void AdvanceFrameAnimation(RSI.State state)
             {
-                // Can't advance frames without more than 1 delay which is already checked above.
                 var delayCount = state.DelayCount;
+
                 while (AnimationTimeLeft < 0)
                 {
                     if (Reversed)
                     {
                         AnimationFrame -= 1;
 
-                        // Animation finished, do we cycle back to positive or reset.
                         if (AnimationFrame < 0)
                         {
+                            if (!Loop || !_parent.Loop)
+                            {
+                                // stop at first frame
+                                AnimationFrame = 0;
+                                AnimationTimeLeft = 0;
+                                AutoAnimated = false;
+                                return;
+                            }
+
                             if (Cycle)
                             {
                                 AnimationFrame = 1;
@@ -2125,9 +1721,17 @@ namespace Robust.Client.GameObjects
                     {
                         AnimationFrame += 1;
 
-                        // Animation finished, do we reverse or reset.
                         if (AnimationFrame >= delayCount)
                         {
+                            if (!Loop || !_parent.Loop)
+                            {
+                                // stop at last frame
+                                AnimationFrame = delayCount - 1;
+                                AnimationTimeLeft = 0;
+                                AutoAnimated = false;
+                                return;
+                            }
+
                             if (Cycle)
                             {
                                 AnimationFrame = delayCount - 2;
@@ -2145,6 +1749,7 @@ namespace Robust.Client.GameObjects
                     AnimationTimeLeft += state.GetDelay(AnimationFrame);
                 }
             }
+
         }
 
         /// <summary>
@@ -2209,100 +1814,31 @@ namespace Robust.Client.GameObjects
                 var rsi = layer.RSI ?? BaseRSI;
                 if (rsi == null || !rsi.TryGetState(layer.State, out var state))
                 {
-                    state = GetFallbackState(resourceCache);
+                    state = Sys?.GetFallbackState();
                 }
 
                 return state;
             }
         }
 
+        [Obsolete("Use SpriteSystem.GetPrototypeTextures() instead")]
         public static IEnumerable<IDirectionalTextureProvider> GetPrototypeTextures(EntityPrototype prototype, IResourceCache resourceCache)
         {
             return GetPrototypeTextures(prototype, resourceCache, out var _);
         }
 
+        [Obsolete("Use SpriteSystem.GetPrototypeTextures() instead")]
         public static IEnumerable<IDirectionalTextureProvider> GetPrototypeTextures(EntityPrototype prototype, IResourceCache resourceCache, out bool noRot)
         {
-            var results = new List<IDirectionalTextureProvider>();
-            noRot = false;
-
-            // TODO when moving to a non-static method in a system, pass in IComponentFactory
-            if (prototype.TryGetComponent(out IconComponent? icon))
-            {
-                var sys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
-                results.Add(sys.GetIcon(icon));
-                return results;
-            }
-
-            if (!prototype.Components.TryGetValue("Sprite", out _))
-            {
-                results.Add(resourceCache.GetFallback<TextureResource>().Texture);
-                return results;
-            }
-
-            var entityManager = IoCManager.Resolve<IEntityManager>();
-            var dummy = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace);
-            var spriteComponent = entityManager.EnsureComponent<SpriteComponent>(dummy);
-            EntitySystem.Get<AppearanceSystem>().OnChangeData(dummy, spriteComponent);
-
-            foreach (var layer in spriteComponent.AllLayers)
-            {
-                if (!layer.Visible) continue;
-
-                if (layer.Texture != null)
-                {
-                    results.Add(layer.Texture);
-                    continue;
-                }
-
-                if (!layer.RsiState.IsValid) continue;
-
-                var rsi = layer.Rsi ?? spriteComponent.BaseRSI;
-                if (rsi == null ||
-                    !rsi.TryGetState(layer.RsiState, out var state))
-                    continue;
-
-                results.Add(state);
-            }
-
-            noRot = spriteComponent.NoRotation;
-
-            entityManager.DeleteEntity(dummy);
-
-            if (results.Count == 0)
-                results.Add(resourceCache.GetFallback<TextureResource>().Texture);
-
-            return results;
+            var sys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
+            return sys.GetPrototypeTextures(prototype, out noRot);
         }
 
-        [Obsolete("Use SpriteSystem")]
+        [Obsolete("Use SpriteSystem.GetPrototypeIcon() instead")]
         public static IRsiStateLike GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
         {
-            // TODO when moving to a non-static method in a system, pass in IComponentFactory
-            if (prototype.TryGetComponent(out IconComponent? icon))
-            {
-                var sys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
-                return sys.GetIcon(icon);
-            }
-
-            if (!prototype.Components.ContainsKey("Sprite"))
-            {
-                return GetFallbackState(resourceCache);
-            }
-
-            var entityManager = IoCManager.Resolve<IEntityManager>();
-            var dummy = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace);
-            var spriteComponent = entityManager.EnsureComponent<SpriteComponent>(dummy);
-            var result = spriteComponent.Icon ?? GetFallbackState(resourceCache);
-            entityManager.DeleteEntity(dummy);
-
-            return result;
+            var sys = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SpriteSystem>();
+            return sys.GetPrototypeIcon(prototype);
         }
-    }
-
-
-    [ByRefEvent]
-    internal struct SpriteUpdateInertEvent
-    {
     }
 }

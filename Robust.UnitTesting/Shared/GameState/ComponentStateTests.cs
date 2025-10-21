@@ -38,7 +38,11 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
         server.Post(() => server.CfgMan.SetCVar(CVars.NetPVS, true));
 
         // Set up map.
-        var map = server.System<SharedMapSystem>().CreateMap();
+        EntityUid map = default;
+        server.Post(() =>
+        {
+            map = server.System<SharedMapSystem>().CreateMap();
+        });
 
         await RunTicks();
 
@@ -134,6 +138,10 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
                 await client!.WaitRunTicks(1);
             }
         }
+
+        await client.WaitPost(() => netMan.ClientDisconnect(""));
+        await server.WaitRunTicks(5);
+        await client.WaitRunTicks(5);
     }
 
     /// <summary>
@@ -157,7 +165,11 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
         server.Post(() => server.CfgMan.SetCVar(CVars.NetPVS, true));
 
         // Set up map.
-        var map = server.System<SharedMapSystem>().CreateMap();
+        EntityUid map = default;
+        server.Post(() =>
+        {
+            map = server.System<SharedMapSystem>().CreateMap();
+        });
 
         await RunTicks();
 
@@ -268,6 +280,10 @@ public sealed partial class ComponentStateTests : RobustIntegrationTest
                 await client!.WaitRunTicks(1);
             }
         }
+
+        await client.WaitPost(() => netMan.ClientDisconnect(""));
+        await server.WaitRunTicks(5);
+        await client.WaitRunTicks(5);
     }
 }
 

@@ -1,7 +1,6 @@
 using System;
 using System.Numerics;
 using OpenTK.Audio.OpenAL;
-using OpenTK.Audio.OpenAL.Extensions.Creative.EFX;
 using Robust.Shared.Audio;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -13,7 +12,7 @@ internal sealed class AudioSource : BaseAudioSource
     /// <summary>
     /// Underlying stream to the audio.
     /// </summary>
-    private readonly AudioStream _sourceStream;
+    internal readonly AudioStream SourceStream;
 
 #if DEBUG
     private bool _didPositionWarning;
@@ -21,7 +20,7 @@ internal sealed class AudioSource : BaseAudioSource
 
     public AudioSource(AudioManager master, int sourceHandle, AudioStream sourceStream) : base(master, sourceHandle)
     {
-        _sourceStream = sourceStream;
+        SourceStream = sourceStream;
     }
 
     /// <inheritdoc />
@@ -47,13 +46,13 @@ internal sealed class AudioSource : BaseAudioSource
 #if DEBUG
             // OpenAL doesn't seem to want to play stereo positionally.
             // Log a warning if people try to.
-            if (_sourceStream.ChannelCount > 1 && !_didPositionWarning)
+            if (SourceStream.ChannelCount > 1 && !_didPositionWarning)
             {
                 _didPositionWarning = true;
                 Master.OpenALSawmill.Warning("Attempting to set position on audio source with multiple audio channels! Stream: '{0}'.  Make sure the audio is MONO, not stereo.",
-                    _sourceStream.Name);
+                    SourceStream.Name);
                 // warning isn't enough, people just ignore it :(
-                DebugTools.Assert(false, $"Attempting to set position on audio source with multiple audio channels! Stream: '{_sourceStream.Name}'. Make sure the audio is MONO, not stereo.");
+                DebugTools.Assert(false, $"Attempting to set position on audio source with multiple audio channels! Stream: '{SourceStream.Name}'. Make sure the audio is MONO, not stereo.");
             }
 #endif
 
@@ -77,7 +76,7 @@ internal sealed class AudioSource : BaseAudioSource
         else
         {
             if (FilterHandle != 0)
-                EFX.DeleteFilter(FilterHandle);
+                ALC.EFX.DeleteFilter(FilterHandle);
 
             AL.DeleteSource(SourceHandle);
             Master.RemoveAudioSource(SourceHandle);

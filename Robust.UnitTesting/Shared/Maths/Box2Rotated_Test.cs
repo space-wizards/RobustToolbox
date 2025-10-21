@@ -56,6 +56,28 @@ namespace Robust.UnitTesting.Shared.Maths
                 (new Box2(-1, 1, 1, 2), new Vector2(0, 0), -Math.PI/2, new Box2(1, -1, 2, 1)),
             };
 
+        private static TestCaseData[] MatrixBox2Cases = new[]
+        {
+            new TestCaseData(Matrix3x2.Identity,
+                Box2Rotated.UnitCentered,
+                Box2Rotated.UnitCentered.CalcBoundingBox()),
+            new TestCaseData(Matrix3x2.CreateRotation(MathF.PI),
+                Box2Rotated.UnitCentered,
+                new Box2Rotated(new Vector2(0.5f, 0.5f), new Vector2(-0.5f, -0.5f)).CalcBoundingBox()),
+            new TestCaseData(Matrix3x2.CreateTranslation(Vector2.One),
+                Box2Rotated.UnitCentered,
+                new Box2Rotated(new Vector2(0.5f, 0.5f), new Vector2(1.5f, 1.5f)).CalcBoundingBox()),
+        };
+
+        /// <summary>
+        /// Tests that transforming a Box2Rotated into a Box2 works.
+        /// </summary>
+        [Test, TestCaseSource(nameof(MatrixBox2Cases))]
+        public void TestBox2Matrices(Matrix3x2 matrix, Box2Rotated bounds, Box2 result)
+        {
+            Assert.That(matrix.TransformBox(bounds), Is.EqualTo(result));
+        }
+
         [Test]
         public void TestCalcBoundingBox([ValueSource(nameof(CalcBoundingBoxData))]
             (Box2 baseBox, Vector2 origin, Angle rotation, Box2 expected) dat)

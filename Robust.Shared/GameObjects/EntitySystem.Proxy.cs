@@ -141,21 +141,51 @@ public partial class EntitySystem
         EntityManager.DirtyEntity(uid, meta);
     }
 
-    /// <summary>
-    ///     Marks a component as dirty. This also implicitly dirties the entity this component belongs to.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [Obsolete("Use Dirty(EntityUid, Component, MetaDataComponent?")]
-    protected void Dirty(IComponent component, MetaDataComponent? meta = null)
-    {
-        EntityManager.Dirty(component.Owner, component, meta);
-    }
-
     /// <inheritdoc cref="Dirty{T}"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
     {
         EntityManager.Dirty(uid, component, meta);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void DirtyField(EntityUid uid, IComponentDelta delta, string fieldName, MetaDataComponent? meta = null)
+    {
+        EntityManager.DirtyField(uid, delta, fieldName, meta);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void DirtyField<T>(Entity<T?> entity, string fieldName, MetaDataComponent? meta = null)
+        where T : IComponentDelta
+    {
+        if (!Resolve(entity.Owner, ref entity.Comp))
+            return;
+
+        EntityManager.DirtyField(entity.Owner, entity.Comp, fieldName, meta);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void DirtyField<T>(EntityUid uid, T component, string fieldName, MetaDataComponent? meta = null)
+        where T : IComponentDelta
+    {
+        EntityManager.DirtyField(uid, component, fieldName, meta);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void DirtyFields<T>(EntityUid uid, T comp, MetaDataComponent? meta, params string[] fields)
+        where T : IComponentDelta
+    {
+        EntityManager.DirtyFields(uid, comp, meta, fields);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void DirtyFields<T>(Entity<T?> ent, MetaDataComponent? meta, params string[] fields)
+        where T : IComponentDelta
+    {
+        if (!Resolve(ent, ref ent.Comp))
+            return;
+
+        EntityManager.DirtyFields(ent, ent.Comp, meta, fields);
     }
 
     /// <summary>
@@ -545,6 +575,52 @@ public partial class EntitySystem
 
     #endregion
 
+    #region Component Copy
+
+    /// <inheritdoc cref="IEntityManager.TryCopyComponent"/>
+    protected bool TryCopyComponent<T>(
+        EntityUid source,
+        EntityUid target,
+        ref T? sourceComponent,
+        [NotNullWhen(true)] out T? targetComp,
+        MetaDataComponent? meta = null) where T : IComponent
+    {
+        return EntityManager.TryCopyComponent(source, target, ref sourceComponent, out targetComp, meta);
+    }
+
+    /// <inheritdoc cref="IEntityManager.TryCopyComponents"/>
+    protected bool TryCopyComponents(
+        EntityUid source,
+        EntityUid target,
+        MetaDataComponent? meta = null,
+        params Type[] sourceComponents)
+    {
+        return EntityManager.TryCopyComponents(source, target, meta, sourceComponents);
+    }
+
+    /// <inheritdoc cref="IEntityManager.CopyComponent"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected IComponent CopyComp(EntityUid source, EntityUid target, IComponent sourceComponent, MetaDataComponent? meta = null)
+    {
+        return EntityManager.CopyComponent(source, target, sourceComponent, meta);
+    }
+
+    /// <inheritdoc cref="IEntityManager.CopyComponent{T}"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected T CopyComp<T>(EntityUid source, EntityUid target, T sourceComponent, MetaDataComponent? meta = null) where T : IComponent
+    {
+        return EntityManager.CopyComponent(source, target, sourceComponent, meta);
+    }
+
+    /// <inheritdoc cref="IEntityManager.CopyComponents"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void CopyComps(EntityUid source, EntityUid target, MetaDataComponent? meta = null, params IComponent[] sourceComponents)
+    {
+        EntityManager.CopyComponents(source, target, meta, sourceComponents);
+    }
+
+    #endregion
+
     #region Component Has
 
     /// <summary>
@@ -589,7 +665,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.AddComponent&lt;T&gt;(EntityUid)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected T AddComp<T>(EntityUid uid) where T :  Component, new()
+    protected T AddComp<T>(EntityUid uid) where T :  IComponent, new()
     {
         return EntityManager.AddComponent<T>(uid);
     }
@@ -706,6 +782,64 @@ public partial class EntitySystem
         EntityManager.QueueDeleteEntity(uid);
     }
 
+    /// <inheritdoc cref="IEntityManager.DeleteEntity(EntityUid?)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void PredictedDel(Entity<MetaDataComponent?, TransformComponent?> ent)
+    {
+        EntityManager.PredictedDeleteEntity(ent);
+    }
+
+    /// <inheritdoc cref="IEntityManager.DeleteEntity(EntityUid?)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void PredictedDel(Entity<MetaDataComponent?, TransformComponent?>? ent)
+    {
+        EntityManager.PredictedDeleteEntity(ent);
+    }
+
+    /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid?)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void PredictedQueueDel(Entity<MetaDataComponent?> ent)
+    {
+        EntityManager.PredictedQueueDeleteEntity(ent);
+    }
+
+    /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid?)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void PredictedQueueDel(Entity<MetaDataComponent?>? ent)
+    {
+        EntityManager.PredictedQueueDeleteEntity(ent);
+    }
+
+    /// <inheritdoc cref="IEntityManager.DeleteEntity(EntityUid?)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void PredictedQueueDel(EntityUid uid)
+    {
+        EntityManager.PredictedQueueDeleteEntity(uid);
+    }
+
+    /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid?)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void PredictedQueueDel(EntityUid? uid)
+    {
+        EntityManager.PredictedQueueDeleteEntity(uid);
+    }
+
+    /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid?)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [Obsolete("use variant without TransformComponent")]
+    protected void PredictedQueueDel(Entity<MetaDataComponent?, TransformComponent?> ent)
+    {
+        EntityManager.PredictedQueueDeleteEntity(ent);
+    }
+
+    /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid?)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [Obsolete("use variant without TransformComponent")]
+    protected void PredictedQueueDel(Entity<MetaDataComponent?, TransformComponent?>? ent)
+    {
+        EntityManager.PredictedQueueDeleteEntity(ent);
+    }
+
     /// <inheritdoc cref="IEntityManager.TryQueueDeleteEntity(EntityUid?)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected bool TryQueueDel(EntityUid? uid)
@@ -736,8 +870,8 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.SpawnAttachedTo" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected EntityUid SpawnAttachedTo(string? prototype, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
-        => EntityManager.SpawnAttachedTo(prototype, coordinates, overrides);
+    protected EntityUid SpawnAttachedTo(string? prototype, EntityCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default)
+        => EntityManager.SpawnAttachedTo(prototype, coordinates, overrides, rotation);
 
     /// <inheritdoc cref="IEntityManager.SpawnAtPosition" />
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -791,6 +925,74 @@ public partial class EntitySystem
         ComponentRegistry? overrides = null)
     {
         return EntityManager.SpawnInContainerOrDrop(protoName, containerUid, containerId, xform, container, overrides);
+    }
+
+    #endregion
+
+    #region PredictedSpawning
+
+    protected void FlagPredicted(Entity<MetaDataComponent?> ent)
+    {
+        EntityManager.FlagPredicted(ent);
+    }
+
+    /// <inheritdoc cref="IEntityManager.SpawnAttachedTo" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid PredictedSpawnAttachedTo(string? prototype, EntityCoordinates coordinates, ComponentRegistry? overrides = null, Angle rotation = default)
+        => EntityManager.PredictedSpawnAttachedTo(prototype, coordinates, overrides, rotation);
+
+    /// <inheritdoc cref="IEntityManager.SpawnAtPosition" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid PredictedSpawnAtPosition(string? prototype, EntityCoordinates coordinates, ComponentRegistry? overrides = null)
+        => EntityManager.PredictedSpawnAtPosition(prototype, coordinates, overrides);
+
+    /// <inheritdoc cref="IEntityManager.TrySpawnInContainer" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool PredictedTrySpawnInContainer(
+        string? protoName,
+        EntityUid containerUid,
+        string containerId,
+        [NotNullWhen(true)] out EntityUid? uid,
+        ContainerManagerComponent? containerComp = null,
+        ComponentRegistry? overrides = null)
+    {
+        return EntityManager.PredictedTrySpawnInContainer(protoName, containerUid, containerId, out uid, containerComp, overrides);
+    }
+
+    /// <inheritdoc cref="IEntityManager.TrySpawnNextTo" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool PredictedTrySpawnNextTo(
+        string? protoName,
+        EntityUid target,
+        [NotNullWhen(true)] out EntityUid? uid,
+        TransformComponent? xform = null,
+        ComponentRegistry? overrides = null)
+    {
+        return EntityManager.PredictedTrySpawnNextTo(protoName, target, out uid, xform, overrides);
+    }
+
+    /// <inheritdoc cref="IEntityManager.SpawnNextToOrDrop" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid PredictedSpawnNextToOrDrop(
+        string? protoName,
+        EntityUid target,
+        TransformComponent? xform = null,
+        ComponentRegistry? overrides = null)
+    {
+        return EntityManager.PredictedSpawnNextToOrDrop(protoName, target, xform, overrides);
+    }
+
+    /// <inheritdoc cref="IEntityManager.SpawnInContainerOrDrop" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid PredictedSpawnInContainerOrDrop(
+        string? protoName,
+        EntityUid containerUid,
+        string containerId,
+        TransformComponent? xform = null,
+        ContainerManagerComponent? container = null,
+        ComponentRegistry? overrides = null)
+    {
+        return EntityManager.PredictedSpawnInContainerOrDrop(protoName, containerUid, containerId, xform, container, overrides);
     }
 
     #endregion

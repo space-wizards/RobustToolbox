@@ -37,7 +37,10 @@ public sealed partial class NoSharedReferencesTest : RobustIntegrationTest
         client.Post(() => netMan.ClientConnect(null!, 0, null!));
 
         // Set up map.
-        var map = server.System<SharedMapSystem>().CreateMap();
+        server.Post(() =>
+        {
+            server.System<SharedMapSystem>().CreateMap();
+        });
 
         await RunTicks();
 
@@ -96,6 +99,10 @@ public sealed partial class NoSharedReferencesTest : RobustIntegrationTest
                 await client.WaitRunTicks(1);
             }
         }
+
+        await client.WaitPost(() => netMan.ClientDisconnect(""));
+        await server.WaitRunTicks(5);
+        await client.WaitRunTicks(5);
     }
 }
 

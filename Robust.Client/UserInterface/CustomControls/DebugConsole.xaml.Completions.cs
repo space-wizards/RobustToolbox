@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Threading;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared;
@@ -224,10 +225,13 @@ public sealed partial class DebugConsole
 
         if (_compPopup.Contents.ChildCount != 0)
         {
-            _compPopup.Open(
-                UIBox2.FromDimensions(
-                    offset - _compPopup.Contents.Margin.Left, CommandBar.GlobalPosition.Y + CommandBar.Height + 2,
-                    5, 5));
+            var box = UIBox2.FromDimensions(
+                offset - _compPopup.Contents.Margin.Left,
+                CommandBar.GlobalPosition.Y + CommandBar.Height + 2,
+                5,
+                5);
+            var altPosUp = new Vector2(offset - _compPopup.Contents.Margin.Left, CommandBar.GlobalPosition.Y);
+            _compPopup.Open(box, altPosUp: altPosUp);
         }
     }
 
@@ -276,10 +280,14 @@ public sealed partial class DebugConsole
                 // This means that letter casing will match the completion suggestion.
                 CommandBar.CursorPosition = lastRange.end;
                 CommandBar.SelectionStart = lastRange.start;
-                var insertValue = CommandParsing.Escape(completion);
+
+                var insertValue = (completionFlags & CompletionOptionFlags.NoEscape) == 0
+                    ? CommandParsing.Escape(completion)
+                    : completion;
 
                 // If the replacement contains a space, we must quote it to treat it as a single argument.
-                var mustQuote = insertValue.Contains(' ');
+                var mustQuote = (completionFlags & CompletionOptionFlags.NoQuote) == 0 && insertValue.Contains(' ');
+
                 if ((completionFlags & CompletionOptionFlags.PartialCompletion) == 0)
                 {
                     if (mustQuote)

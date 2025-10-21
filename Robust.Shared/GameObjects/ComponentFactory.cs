@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -8,7 +8,9 @@ using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
+using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -18,6 +20,7 @@ namespace Robust.Shared.GameObjects
     internal class ComponentFactory(
             IDynamicTypeFactoryInternal _typeFactory,
             IReflectionManager _reflectionManager,
+            ISerializationManager _serManager,
             ILogManager logManager) : IComponentFactory
     {
         private readonly ISawmill _sawmill = logManager.GetSawmill("ent.componentFactory");
@@ -172,6 +175,41 @@ namespace Robust.Shared.GameObjects
             return name;
         }
 
+        /// <inheritdoc />
+        public void RegisterNetworkedFields<T>(params string[] fields) where T : IComponent
+        {
+            var compReg = GetRegistration(CompIdx.Index<T>());
+            RegisterNetworkedFields(compReg, fields);
+        }
+
+        /// <inheritdoc />
+        public void RegisterNetworkedFields(ComponentRegistration compReg, params string[] fields)
+        {
+            // Nothing to do.
+            if (compReg.NetworkedFields.Length > 0 || fields.Length == 0)
+                return;
+
+            DebugTools.Assert(fields.Length <= 32);
+
+            if (fields.Length > 32)
+            {
+                throw new NotSupportedException(
+                    "Components with more than 32 networked fields unsupported! Consider splitting it up or making a pr for 64-bit flags");
+            }
+
+            compReg.NetworkedFields = fields;
+            var lookup = new Dictionary<string, int>(fields.Length);
+            var i = 0;
+
+            foreach (var field in fields)
+            {
+                lookup[field] = i;
+                i++;
+            }
+
+            compReg.NetworkedFieldLookup = lookup.ToFrozenDictionary();
+        }
+
         public void IgnoreMissingComponents(string postfix = "")
         {
             if (_ignoreMissingComponentPostfix != null && _ignoreMissingComponentPostfix != postfix)
@@ -179,6 +217,13 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException("Ignoring multiple prefixes is not supported");
             }
             _ignoreMissingComponentPostfix = postfix ?? throw new ArgumentNullException(nameof(postfix));
+        }
+
+        public IComponent GetComponent(EntityPrototype.ComponentRegistryEntry entry)
+        {
+            var copy = GetComponent(entry.Component.GetType());
+            _serManager.CopyTo(entry.Component, ref copy, notNullableOverride: true);
+            return copy;
         }
 
         public void RegisterIgnore(params string[] names)
@@ -228,11 +273,11 @@ namespace Robust.Shared.GameObjects
 
         public IComponent GetComponent(Type componentType)
         {
-            if (!_types.ContainsKey(componentType))
+            if (!_types.TryGetValue(componentType, out var value))
             {
                 throw new InvalidOperationException($"{componentType} is not a registered component.");
             }
-            return _typeFactory.CreateInstanceUnchecked<IComponent>(_types[componentType].Type);
+            return _typeFactory.CreateInstanceUnchecked<IComponent>(value.Type);
         }
 
         public IComponent GetComponent(CompIdx componentType)
@@ -242,11 +287,11 @@ namespace Robust.Shared.GameObjects
 
         public T GetComponent<T>() where T : IComponent, new()
         {
-            if (!_types.ContainsKey(typeof(T)))
+            if (!_types.TryGetValue(typeof(T), out var reg))
             {
                 throw new InvalidOperationException($"{typeof(T)} is not a registered component.");
             }
-            return _typeFactory.CreateInstanceUnchecked<T>(_types[typeof(T)].Type);
+            return _typeFactory.CreateInstanceUnchecked<T>(reg.Type);
         }
 
         public IComponent GetComponent(ComponentRegistration reg)

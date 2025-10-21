@@ -147,9 +147,10 @@ namespace Robust.Shared.GameObjects
         ///     The current lifetime stage of this entity. You can use this to check
         ///     if the entity is initialized or being deleted.
         /// </summary>
-        [ViewVariables]
+        [ViewVariables, Access(typeof(EntityManager), Other = AccessPermissions.ReadExecute)]
         public EntityLifeStage EntityLifeStage { get; internal set; }
 
+        [ViewVariables(VVAccess.ReadOnly)]
         public MetaDataFlags Flags
         {
             get => _flags;
@@ -204,7 +205,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Offset into internal PVS data.
         /// </summary>
-        internal PvsIndex PvsData;
+        internal PvsIndex PvsData = PvsIndex.Invalid;
     }
 
     [Flags]
@@ -238,6 +239,11 @@ namespace Robust.Shared.GameObjects
         /// a grid or map.
         /// </summary>
         PvsPriority = 1 << 4,
+
+        /// <summary>
+        /// If set, transform system will raise events directed at this entity whenever the GridUid or MapUid are modified.
+        /// </summary>
+        ExtraTransformEvents = 1 << 5,
     }
 
     /// <summary>
@@ -254,5 +260,8 @@ namespace Robust.Shared.GameObjects
         /// An invalid index. This is also used as a marker value in the free list.
         /// </summary>
         public static readonly PvsIndex Invalid = new PvsIndex(-1);
+        // TODO PVS
+        // Consider making 0 an invalid value.
+        // it prevents default structs from accidentally being used.
     }
 }

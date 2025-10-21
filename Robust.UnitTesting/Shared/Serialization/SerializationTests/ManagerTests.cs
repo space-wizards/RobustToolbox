@@ -69,10 +69,10 @@ public sealed partial class ManagerTests : SerializationTest
             }, //ISelfSerialize
             new object[]
             {
-                new MappingDataNode(new Dictionary<DataNode, DataNode>
+                new MappingDataNode(new Dictionary<string, DataNode>
                 {
-                    { new ValueDataNode("one"), new ValueDataNode("valueOne") },
-                    { new ValueDataNode("two"), new SequenceDataNode("2", "3") },
+                    { "one", new ValueDataNode("valueOne") },
+                    { "two", new SequenceDataNode("2", "3") },
                 }){Tag = $"!type:{nameof(DataDefClass)}"},
                 () => (IDataDefBaseInterface)new DataDefClass
                 {
@@ -112,10 +112,10 @@ public sealed partial class ManagerTests : SerializationTest
         }, //array
         new object[]
         {
-            new MappingDataNode(new Dictionary<DataNode, DataNode>
+            new MappingDataNode(new Dictionary<string, DataNode>
             {
-                { new ValueDataNode("one"), new ValueDataNode("valueOne") },
-                { new ValueDataNode("two"), new SequenceDataNode("2", "3") },
+                { "one", new ValueDataNode("valueOne") },
+                { "two", new SequenceDataNode("2", "3") },
             }),
             () => new DataDefClass
             {
@@ -137,8 +137,8 @@ public sealed partial class ManagerTests : SerializationTest
         new object[]
         {
             SerializerRanDataNode,
-            SerializerClass.SerializerReturn,
-            SerializerClass.SerializerReturnAlt,
+            (object)SerializerClass.SerializerReturn,
+            (object)SerializerClass.SerializerReturnAlt,
             false,
             new Func<SerializerClass, object>[]
             {
@@ -149,8 +149,8 @@ public sealed partial class ManagerTests : SerializationTest
         new object[]
         {
             SerializerRanCustomDataNode,
-            SerializerClass.SerializerCustomReturn,
-            SerializerClass.SerializerCustomReturnAlt,
+            (object)SerializerClass.SerializerCustomReturn,
+            (object)SerializerClass.SerializerCustomReturnAlt,
             true,
             new Func<SerializerClass, object>[]
             {
@@ -204,10 +204,10 @@ public sealed partial class ManagerTests : SerializationTest
     {
         new object[]
         {
-            new MappingDataNode(new Dictionary<DataNode, DataNode>()
+            new MappingDataNode(new Dictionary<string, DataNode>()
             {
-                { new ValueDataNode("one"), new ValueDataNode("valueOne") },
-                { new ValueDataNode("two"), new SequenceDataNode("2", "3") },
+                { "one", new ValueDataNode("valueOne") },
+                { "two", new SequenceDataNode("2", "3") },
             }),
             () => new DataDefStruct
             {
@@ -229,8 +229,8 @@ public sealed partial class ManagerTests : SerializationTest
         new object[]
         {
             SerializerRanDataNode,
-            SerializerStruct.SerializerReturn,
-            SerializerStruct.SerializerReturnAlt,
+            (object)SerializerStruct.SerializerReturn,
+            (object)SerializerStruct.SerializerReturnAlt,
             false,
             new Func<SerializerStruct, object>[]
             {
@@ -241,8 +241,8 @@ public sealed partial class ManagerTests : SerializationTest
         new object[]
         {
             SerializerRanCustomDataNode,
-            SerializerStruct.SerializerCustomReturn,
-            SerializerStruct.SerializerCustomReturnAlt,
+            (object)SerializerStruct.SerializerCustomReturn,
+            (object)SerializerStruct.SerializerCustomReturnAlt,
             true,
             new Func<SerializerStruct, object>[]
             {

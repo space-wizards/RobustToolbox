@@ -1,3 +1,4 @@
+using System.Diagnostics.Contracts;
 using System.Linq;
 using Robust.Server.GameStates;
 using Robust.Shared;
@@ -18,13 +19,15 @@ namespace Robust.Server.GameObjects
 
         private bool _deleteEmptyGrids;
 
-        protected override MapId GetNextMapId()
+        [Pure]
+        internal override MapId GetNextMapId()
         {
-            var id = new MapId(++LastMapId);
-            while (MapManager.MapExists(id))
+            var id = new MapId(LastMapId + 1);
+            while (MapExists(id) || UsedIds.Contains(id))
             {
-                id = new MapId(++LastMapId);
+                id = new MapId(id.Value + 1);
             }
+
             return id;
         }
 
@@ -53,20 +56,21 @@ namespace Robust.Server.GameObjects
                 var query = AllEntityQuery<MapGridComponent>();
                 while (query.MoveNext(out var uid, out var grid))
                 {
-                    if (!GridEmpty(grid)) continue;
+                    if (!GridEmpty((uid, grid)))
+                        continue;
                     toDelete.Add(uid);
                 }
 
                 foreach (var uid in toDelete)
                 {
-                    MapManager.DeleteGrid(uid);
+                    Del(uid);
                 }
             }
         }
 
-        private bool GridEmpty(MapGridComponent grid)
+        private bool GridEmpty(Entity<MapGridComponent> entity)
         {
-            return !(grid.GetAllTiles().Any());
+            return !(GetAllTiles(entity, entity).Any());
         }
 
         private void HandleGridEmpty(EntityUid uid, MapGridComponent component, EmptyGridEvent args)
@@ -74,7 +78,7 @@ namespace Robust.Server.GameObjects
             if (!_deleteEmptyGrids || TerminatingOrDeleted(uid) || HasComp<MapComponent>(uid))
                 return;
 
-            MapManager.DeleteGrid(args.GridId);
+            Del(args.GridId);
         }
     }
 }

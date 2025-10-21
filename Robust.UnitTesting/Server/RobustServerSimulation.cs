@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using JetBrains.Annotations;
 using Moq;
+using Robust.Client.HWId;
 using Robust.Server;
 using Robust.Server.Configuration;
 using Robust.Server.Console;
@@ -10,6 +11,7 @@ using Robust.Server.Containers;
 using Robust.Server.Debugging;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
+using Robust.Server.Localization;
 using Robust.Server.Physics;
 using Robust.Server.Player;
 using Robust.Server.Prototypes;
@@ -75,6 +77,32 @@ namespace Robust.UnitTesting.Server
         (EntityUid Uid, MapId MapId) CreateMap();
         EntityUid SpawnEntity(string? protoId, EntityCoordinates coordinates);
         EntityUid SpawnEntity(string? protoId, MapCoordinates coordinates);
+    }
+
+    /// <summary>
+    /// Helper methods for working with <see cref="ISimulation"/>.
+    /// </summary>
+    internal static class SimulationExtensions
+    {
+        public static T System<T>(this ISimulation simulation) where T : IEntitySystem
+        {
+            return simulation.Resolve<IEntitySystemManager>().GetEntitySystem<T>();
+        }
+
+        public static bool HasComp<T>(this ISimulation simulation, EntityUid entity) where T : IComponent
+        {
+            return simulation.Resolve<IEntityManager>().HasComponent<T>(entity);
+        }
+
+        public static T Comp<T>(this ISimulation simulation, EntityUid entity) where T : IComponent
+        {
+            return simulation.Resolve<IEntityManager>().GetComponent<T>(entity);
+        }
+
+        public static TransformComponent Transform(this ISimulation simulation, EntityUid entity)
+        {
+            return simulation.Comp<TransformComponent>(entity);
+        }
     }
 
     public delegate void DiContainerDelegate(IDependencyCollection diContainer);
@@ -165,13 +193,14 @@ namespace Robust.UnitTesting.Server
             container.Register<INetConfigurationManagerInternal, ServerNetConfigurationManager>();
             container.Register<IDynamicTypeFactory, DynamicTypeFactory>();
             container.Register<IDynamicTypeFactoryInternal, DynamicTypeFactory>();
-            container.Register<ILocalizationManager, LocalizationManager>();
+            container.Register<ILocalizationManager, ServerLocalizationManager>();
             container.Register<IModLoader, TestingModLoader>();
             container.Register<IModLoaderInternal, TestingModLoader>();
             container.Register<ProfManager, ProfManager>();
             container.RegisterInstance<ITaskManager>(new Mock<ITaskManager>().Object);
             container.Register<HttpClientHolder>();
             container.Register<IHttpClientHolder, HttpClientHolder>();
+            container.Register<IHWId, DummyHWId>();
 
             var realReflection = new ServerReflectionManager();
             realReflection.LoadAssemblies(new List<Assembly>(2)
@@ -270,16 +299,13 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<JointComponent>();
             compFactory.RegisterClass<EyeComponent>();
             compFactory.RegisterClass<GridTreeComponent>();
-            compFactory.RegisterClass<MovedGridsComponent>();
             compFactory.RegisterClass<JointRelayTargetComponent>();
             compFactory.RegisterClass<BroadphaseComponent>();
             compFactory.RegisterClass<ContainerManagerComponent>();
-            compFactory.RegisterClass<PhysicsMapComponent>();
             compFactory.RegisterClass<FixturesComponent>();
             compFactory.RegisterClass<CollisionWakeComponent>();
             compFactory.RegisterClass<OccluderComponent>();
             compFactory.RegisterClass<OccluderTreeComponent>();
-            compFactory.RegisterClass<Gravity2DComponent>();
             compFactory.RegisterClass<CollideOnAnchorComponent>();
             compFactory.RegisterClass<ActorComponent>();
 
@@ -293,7 +319,6 @@ namespace Robust.UnitTesting.Server
             var entitySystemMan = container.Resolve<IEntitySystemManager>();
 
             entitySystemMan.LoadExtraSystemType<PhysicsSystem>();
-            entitySystemMan.LoadExtraSystemType<Gravity2DController>();
             entitySystemMan.LoadExtraSystemType<SharedGridTraversalSystem>();
             entitySystemMan.LoadExtraSystemType<ContainerSystem>();
             entitySystemMan.LoadExtraSystemType<JointSystem>();

@@ -57,6 +57,7 @@ internal sealed partial class PvsSystem
         foreach (ref var ent in span)
         {
             ref var meta = ref _metadataMemory.GetRef(ent.Ptr.Index);
+            meta.Validate(ent.Meta);
             if ((mask & meta.VisMask) == meta.VisMask)
                 AddEntity(session, ref ent, ref meta, fromTick);
         }
@@ -78,8 +79,7 @@ internal sealed partial class PvsSystem
 
         if (meta.LifeStage >= EntityLifeStage.Terminating)
         {
-            Log.Error($"Attempted to send deleted entity: {ToPrettyString(ent.Uid)}");
-            EntityManager.QueueDeleteEntity(ent.Uid);
+            Log.Error($"Attempted to send deleted entity: {ToPrettyString(ent.Uid)}, Meta lifestage: {ent.Meta.EntityLifeStage}, PVS lifestage: {meta.LifeStage}.\n{Environment.StackTrace}");
             return;
         }
 
@@ -142,17 +142,31 @@ internal sealed partial class PvsSystem
 
         if (meta.EntityLifeStage >= EntityLifeStage.Terminating)
         {
-            var rep = new EntityStringRepresentation(entity);
-            Log.Error($"Attempted to add a deleted entity to PVS send set: '{rep}'. Deletion queued: {EntityManager.IsQueuedForDeletion(uid)}. Trace:\n{Environment.StackTrace}");
-
             // This can happen if some entity was some removed from it's parent while that parent was being deleted.
             // As a result the entity was marked for deletion but was never actually properly deleted.
-            EntityManager.QueueDeleteEntity(uid);
+
+            bool queued;
+            lock (_toDelete)
+            {
+                queued = EntityManager.IsQueuedForDeletion(uid) || _toDelete.Contains(uid);
+                if (!queued)
+                    _toDelete.Add(uid);
+            }
+
+            var rep = new EntityStringRepresentation(entity);
+            Log.Error($"Attempted to add a deleted entity to PVS send set: '{rep}'. Deletion queued: {queued}. Trace:\n{Environment.StackTrace}");
             return false;
         }
 
         data.LastSeen = _gameTiming.CurTick;
         session.ToSend!.Add(entity.Comp.PvsData);
+
+        // TODO PVS PERFORMANCE
+        // Investigate whether its better to defer actually creating the entity state & populating session.States here?
+        // I.e., should be be constructing the to-send list & to-get-states lists, and then separately getting all states
+        // after we have gotten all entities? If the CPU can focus on only processing data in session.DataMemory without
+        // having to access miscellaneous component info, maybe it will be faster?
+        // Though for that to work I guess it also has to avoid accessing the metadata component's lifestage?
 
         if (session.RequestedFull)
         {

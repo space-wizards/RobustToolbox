@@ -7,7 +7,7 @@ using Robust.Shared.Serialization;
 namespace Robust.Shared.Utility;
 
 [Serializable, NetSerializable]
-public sealed class MarkupNode : IComparable<MarkupNode>
+public sealed class MarkupNode : IComparable<MarkupNode>, IEquatable<MarkupNode>
 {
     public readonly string? Name;
     public readonly MarkupParameter Value;
@@ -43,7 +43,7 @@ public sealed class MarkupNode : IComparable<MarkupNode>
             attributesString += $"{k}{v}";
         }
 
-        return $"[{(Closing ? "/" : "")}{Name}{Value.ToString().ReplaceLineEndings("\\n") ?? ""}{attributesString}]";
+        return $"[{(Closing ? "/" : "")}{Name}{Value.ToString().ReplaceLineEndings("\\n")}{attributesString}]";
     }
 
     public override bool Equals(object? obj)
@@ -51,14 +51,38 @@ public sealed class MarkupNode : IComparable<MarkupNode>
         return obj is MarkupNode node && Equals(node);
     }
 
-    public bool Equals(MarkupNode node)
+    public bool Equals(MarkupNode? node)
     {
-        var equal = Name == node.Name;
-        equal &= Value.Equals(node.Value);
-        equal &= Attributes.Count == 0 && node.Attributes.Count == 0 || Attributes.Equals(node.Attributes);
-        equal &= Closing == node.Closing;
+        if (node is null)
+            return false;
 
-        return equal;
+        if (Name != node.Name)
+            return false;
+
+        if (!Value.Equals(node.Value))
+            return false;
+
+        if (Closing != node.Closing)
+            return false;
+
+        if (Attributes.Count != node.Attributes.Count)
+            return false;
+
+        foreach (var (key, value) in Attributes)
+        {
+            if (!node.Attributes.TryGetValue(key, out var nodeValue))
+                return false;
+
+            if (!value.Equals(nodeValue))
+                return false;
+        }
+
+        return true;
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Name, Value, Closing);
     }
 
     public int CompareTo(MarkupNode? other)
@@ -69,7 +93,10 @@ public sealed class MarkupNode : IComparable<MarkupNode>
             return 1;
 
         var nameComparison = string.Compare(Name, other.Name, StringComparison.Ordinal);
-        return nameComparison != 0 ? nameComparison : Closing.CompareTo(other.Closing);
+        if (nameComparison != 0)
+            return nameComparison;
+
+        return Closing.CompareTo(other.Closing);
     }
 }
 

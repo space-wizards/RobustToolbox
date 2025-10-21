@@ -1,8 +1,6 @@
 using NUnit.Framework;
 using Robust.Shared.Serialization.Markdown.Value;
 
-// ReSharper disable AccessToStaticMemberViaDerivedType
-
 namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
 {
     [TestFixture]

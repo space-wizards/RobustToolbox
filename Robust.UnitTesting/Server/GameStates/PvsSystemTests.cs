@@ -30,6 +30,7 @@ public sealed class PvsSystemTests : RobustIntegrationTest
         var confMan = server.ResolveDependency<IConfigurationManager>();
         var sPlayerMan = server.ResolveDependency<ISharedPlayerManager>();
         var xforms = sEntMan.System<SharedTransformSystem>();
+        var maps = sEntMan.System<SharedMapSystem>();
 
         var cEntMan = client.ResolveDependency<IEntityManager>();
         var netMan = client.ResolveDependency<IClientNetManager>();
@@ -52,7 +53,7 @@ public sealed class PvsSystemTests : RobustIntegrationTest
         {
             map = server.System<SharedMapSystem>().CreateMap(out var mapId);
             var gridComp = mapMan.CreateGridEntity(mapId);
-            gridComp.Comp.SetTile(Vector2i.Zero, new Tile(1));
+            maps.SetTile(gridComp, Vector2i.Zero, new Tile(1));
             grid = gridComp.Owner;
         });
 
@@ -120,6 +121,10 @@ public sealed class PvsSystemTests : RobustIntegrationTest
             await server.WaitRunTicks(1);
             await client.WaitRunTicks(1);
         }
+
+        await client.WaitPost(() => netMan.ClientDisconnect(""));
+        await server.WaitRunTicks(5);
+        await client.WaitRunTicks(5);
     }
 }
 

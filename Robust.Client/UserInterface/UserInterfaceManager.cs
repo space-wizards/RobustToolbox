@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.Numerics;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
-using Robust.Client.Player;
 using Robust.Client.ResourceManagement;
 using Robust.Client.State;
-using Robust.Client.Timing;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.UserInterface.CustomControls.DebugMonitorControls;
@@ -20,9 +18,7 @@ using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Network;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
@@ -37,13 +33,9 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly IFontManager _fontManager = default!;
         [Dependency] private readonly IClydeInternal _clyde = default!;
-        [Dependency] private readonly IClientGameTiming _gameTiming = default!;
         [Dependency] private readonly IResourceCache _resourceCache = default!;
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IStateManager _stateManager = default!;
-        [Dependency] private readonly IClientNetManager _netManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IPrototypeManager _protoManager = default!;
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager = default!;
         [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
@@ -86,10 +78,10 @@ namespace Robust.Client.UserInterface
 
         [ViewVariables] public ViewportContainer MainViewport { get; private set; } = default!;
         [ViewVariables] public LayoutContainer StateRoot { get; private set; } = default!;
-        [ViewVariables] public PopupContainer ModalRoot { get; private set; } = default!;
+        [ViewVariables] public PopupContainer ModalRoot => RootControl.ModalRoot;
         [ViewVariables] public WindowRoot RootControl { get; private set; } = default!;
         [ViewVariables] public LayoutContainer WindowRoot { get; private set; } = default!;
-        [ViewVariables] public LayoutContainer PopupRoot { get; private set; } = default!;
+        [ViewVariables] public LayoutContainer PopupRoot => RootControl.PopupRoot;
         [ViewVariables] public DropDownDebugConsole DebugConsole { get; private set; } = default!;
         [ViewVariables] public IDebugMonitors DebugMonitors => _debugMonitors;
         private DebugMonitors _debugMonitors = default!;
@@ -117,10 +109,11 @@ namespace Robust.Client.UserInterface
 
             DebugConsole = new DropDownDebugConsole();
             RootControl.AddChild(DebugConsole);
-            DebugConsole.SetPositionInParent(ModalRoot.GetPositionInParent());
+            DebugConsole.SetPositionInParent(RootControl.ModalRoot.GetPositionInParent());
 
-            _debugMonitors = new DebugMonitors(_gameTiming, _playerManager, _eyeManager, _inputManager, _stateManager,
-                _clyde, _netManager, _mapManager);
+            _debugMonitors = new DebugMonitors();
+            _rootDependencies.InjectDependencies(_debugMonitors);
+            _debugMonitors.Init();
             DebugConsole.BelowConsole.AddChild(_debugMonitors);
 
             _inputManager.SetInputCommand(EngineKeyFunctions.ShowDebugConsole,
@@ -177,19 +170,7 @@ namespace Robust.Client.UserInterface
             };
             RootControl.AddChild(WindowRoot);
 
-            ModalRoot = new PopupContainer
-            {
-                Name = "ModalRoot",
-                MouseFilter = Control.MouseFilterMode.Ignore,
-            };
-            RootControl.AddChild(ModalRoot);
-
-            PopupRoot = new LayoutContainer
-            {
-                Name = "PopupRoot",
-                MouseFilter = Control.MouseFilterMode.Ignore
-            };
-            RootControl.AddChild(PopupRoot);
+            RootControl.CreateRootControls();
         }
 
         public void InitializeTesting()
@@ -215,6 +196,9 @@ namespace Robust.Client.UserInterface
         {
             using (_prof.Group("Update"))
             {
+                // Update hovered. Can't rely upon mouse movement due to New controls potentially coming up.
+                UpdateHovered();
+
                 foreach (var root in _roots)
                 {
                     CheckRootUIScaleUpdate(root);
@@ -332,6 +316,30 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        public void RenderControl(in Control.ControlRenderArguments args, Control control)
+        {
+            var _ = 0;
+            RenderControl(args.Handle,
+                ref _,
+                control,
+                args.Position,
+                args.Modulate,
+                args.ScissorBox,
+                args.CoordinateTransform);
+        }
+
+        public void RenderControl(IRenderHandle handle, Control control, Vector2i position)
+        {
+            var _ = 0;
+            RenderControl(handle,
+                ref _,
+                control,
+                position,
+                Color.White,
+                null,
+                Matrix3x2.Identity);
+        }
+
         public void RenderControl(IRenderHandle renderHandle, ref int total, Control control, Vector2i position, Color modulate,
             UIBox2i? scissorBox, Matrix3x2 coordinateTransform)
         {
@@ -390,7 +398,7 @@ namespace Robust.Client.UserInterface
                 // Handle modulation with care.
                 var oldMod = handle.Modulate;
                 handle.Modulate = modulate * control.ActualModulateSelf;
-                control.DrawInternal(renderHandle);
+                control.Draw(renderHandle);
                 handle.Modulate = oldMod;
                 handle.UseShader(null);
             }
@@ -406,10 +414,11 @@ namespace Robust.Client.UserInterface
 
             control.PreRenderChildren(ref args);
 
-            foreach (var child in control.Children)
+            for (var index = 0; index < control.ChildCount; index++)
             {
+                var child = control.GetChild(index);
                 var pos = position + (Vector2i)Vector2.Transform(child.PixelPosition, coordinateTransform);
-                control.RenderChildOverride(ref args, child.GetPositionInParent(), pos);
+                control.RenderChildOverride(ref args, index, pos);
             }
 
             control.PostRenderChildren(ref args);

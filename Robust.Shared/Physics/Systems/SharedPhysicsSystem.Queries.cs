@@ -423,6 +423,7 @@ namespace Robust.Shared.Physics.Systems
             var filter = new QueryFilter();
             filter.MaskBits = ray.CollisionMask;
             filter.Flags &= ~QueryFlags.Sensors;
+            filter.IsIgnored = val => val == ignoredEnt;
             var startResults = new Dictionary<(EntityUid, string), int>();
             var endResults = new Dictionary<(EntityUid, string), int>();
 

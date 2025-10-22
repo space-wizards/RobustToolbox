@@ -413,12 +413,18 @@ namespace Robust.Shared.Physics.Systems
         /// <param name="maxLength">Maximum length of the ray in meters.</param>
         /// <param name="ignoredEnt">A single entity that can be ignored by the RayCast. Useful if the ray starts inside the body of an entity.</param>
         /// <returns>The distance the ray traveled while colliding with entities</returns>
-        public float IntersectRayPenetration(MapId mapId, CollisionRay ray, float maxLength, EntityUid? ignoredEnt = null)
+        public float IntersectRayPenetration(MapId mapId, CollisionRay ray, EntityUid? ignoredEnt = null)
         {
             var penetration = 0f;
-            var endPoint = ray.Position + ray.Direction.Normalized() * maxLength;
+            var endPoint = ray.Position + ray.Direction;
             var rayBox = new Box2(Vector2.Min(ray.Position, endPoint),
                 Vector2.Max(ray.Position, endPoint));
+
+            var filter = new QueryFilter();
+            filter.MaskBits = ray.CollisionMask;
+            filter.Flags &= ~QueryFlags.Sensors;
+            var startResults = new Dictionary<(EntityUid, string), int>();
+            var endResults = new Dictionary<(EntityUid, string), int>();
 
             _broadphase.GetBroadphases(mapId,
                 rayBox,
@@ -429,63 +435,61 @@ namespace Robust.Shared.Physics.Systems
                     var position = Vector2.Transform(ray.Position, invMatrix);
                     var gridRot = new Angle(-rot.Theta);
                     var direction = gridRot.RotateVec(ray.Direction);
+                    var localEnd = position + direction;
 
-                    var gridRay = new CollisionRay(position, direction, ray.CollisionMask);
+                    var result = new RayResult();
+                    // We raycast from both directions so we can get the difference in start and end locations for hits.
 
-                    broadphase.Comp.StaticTree.QueryRay(
-                        (in FixtureProxy proxy, in Vector2 point, float distFromOrigin) =>
-                        {
-                            if (distFromOrigin > maxLength || proxy.Entity == ignoredEnt)
-                                return true;
+                    _raycast.CastRay((broadphase.Owner, broadphase.Comp), ref result, position, direction, filter, sorted: false);
 
-                            if (!proxy.Fixture.Hard)
-                                return true;
+                    // There shouldn't be any in the other direction so we can early out.
+                    if (!result.Hit)
+                        return;
 
-                            if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
-                                return true;
+                    var reverse = new RayResult();
 
-                            if (new Ray(point + gridRay.Direction * proxy.AABB.Size.Length() * 2, -gridRay.Direction)
-                                .Intersects(
-                                    proxy.AABB,
-                                    out _,
-                                    out var exitPoint))
-                            {
-                                penetration += (point - exitPoint).Length();
-                            }
+                    // Need to raycast from the other side to know where the raycast starts and ends
+                    // as the shapes are convex we can guarantee there's no hollow parts inside.
+                    _raycast.CastRay((broadphase.Owner, broadphase.Comp), ref reverse, localEnd, -direction, filter, sorted: false);
 
-                            return true;
-                        },
-                        gridRay);
+                    // TODO: Assert length count when raycasts actually count what they're inside.
 
-                    broadphase.Comp.DynamicTree.QueryRay(
-                        (in FixtureProxy proxy, in Vector2 point, float distFromOrigin) =>
-                        {
-                            if (distFromOrigin > maxLength || proxy.Entity == ignoredEnt)
-                                return true;
+                    startResults.Clear();
+                    endResults.Clear();
 
-                            if (!proxy.Fixture.Hard)
-                                return true;
+                    for (var i = 0; i < result.Results.Count; i++)
+                    {
+                        var cast = result.Results[i];
+                        startResults.Add((cast.Entity, cast.FixtureId), i);
+                    }
 
-                            if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
-                                return true;
+                    for (var i = 0; i < reverse.Results.Count; i++)
+                    {
+                        var cast = reverse.Results[i];
+                        endResults.Add((cast.Entity, cast.FixtureId), i);
+                    }
 
-                            if (new Ray(point + gridRay.Direction * proxy.AABB.Size.Length() * 2, -gridRay.Direction)
-                                .Intersects(
-                                    proxy.AABB,
-                                    out _,
-                                    out var exitPoint))
-                            {
-                                penetration += (point - exitPoint).Length();
-                            }
+                    foreach (var (entry, index) in startResults)
+                    {
+                        var (uid, fid) = entry;
 
-                            return true;
-                        },
-                        gridRay);
+                        if (!endResults.TryGetValue((uid, fid), out var otherIndex))
+                            continue;
+
+                        // These points are broadphase local but they're both in the same frame of reference.
+                        var startHit = result.Results[index].Point;
+                        var endHit = reverse.Results[otherIndex].Point;
+
+                        // Note: if you want materials with different penetration amounts (you can find them easily enough online)
+                        // Insert some kind of trycomp here for it.
+                        var diff = endHit - startHit;
+                        penetration += diff.Length();
+                    }
                 });
 
             // This hid rays that didn't penetrate something. Don't hide those because that causes rays to disappear that shouldn't.
 #if DEBUG
-            _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new(ray, maxLength, null, _netMan.IsServer, mapId));
+            _sharedDebugRaySystem.ReceiveLocalRayFromAnyThread(new(ray, ray.Direction.Length(), null, _netMan.IsServer, mapId));
 #endif
 
             return penetration;

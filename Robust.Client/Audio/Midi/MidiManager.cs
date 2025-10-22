@@ -383,7 +383,7 @@ internal sealed partial class MidiManager : IMidiManager
         renderer.Source.Position = mapPosition;
         renderer.Source.Velocity = _physics.GetMapLinearVelocity(renderer.TrackingEntity.Value);
         renderer.Source.Occlusion =
-            _audioSys.GetOcclusion(listener, listenerDelta, listenerDeltaLength, renderer.TrackingEntity);
+            _audioSys.GetOcclusion(listener, listenerDelta, renderer.TrackingEntity);
     }
 
     private void UpdateGlobalRenderer(IMidiRenderer renderer)

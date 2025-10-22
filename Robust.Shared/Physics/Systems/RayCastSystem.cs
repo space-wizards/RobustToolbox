@@ -395,11 +395,26 @@ public record struct RayResult()
     public static readonly RayResult Empty = new();
 }
 
-public record struct RayHit(EntityUid Entity, Vector2 LocalNormal, float Fraction)
+public record struct RayHit(EntityUid Entity, string FixtureId, Vector2 LocalNormal, float Fraction)
 {
     public readonly EntityUid Entity = Entity;
+
+    public readonly string FixtureId = FixtureId;
+
     public readonly Vector2 LocalNormal = LocalNormal;
     public readonly float Fraction = Fraction;
+
+    /// <summary>
+    /// Gets the h
+    /// </summary>
+    /// <param name="origin"></param>
+    /// <param name="translation"></param>
+    /// <returns></returns>
+    [Pure]
+    public Vector2 GetHit(Vector2 origin, Vector2 translation)
+    {
+        return origin + (translation.Normalized() * Fraction);
+    }
 
     // When this point gets added it's in broadphase terms, then the caller handles whether it gets turned into map-terms.
 

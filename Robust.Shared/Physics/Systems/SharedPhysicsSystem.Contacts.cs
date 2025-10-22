@@ -577,62 +577,66 @@ public abstract partial class SharedPhysicsSystem
                 continue;
             }
 
-            switch (status[i])
-            {
-                case ContactStatus.StartTouching:
-                {
-                    if (!contact.IsTouching) continue;
-
-                    var fixtureA = contact.FixtureA!;
-                    var fixtureB = contact.FixtureB!;
-                    var bodyA = contact.BodyA!;
-                    var bodyB = contact.BodyB!;
-                    var uidA = contact.EntityA;
-                    var uidB = contact.EntityB;
-                    var worldPoint = worldPoints[i];
-                    var points = new FixedArray2<Vector2>(worldPoint._00, worldPoint._01);
-                    var worldNormal = worldPoint._02;
-
-                    var ev1 = new StartCollideEvent(uidA, uidB, contact.FixtureAId, contact.FixtureBId, fixtureA, fixtureB, bodyA, bodyB, points, contact.Manifold.PointCount, worldNormal);
-                    var ev2 = new StartCollideEvent(uidB, uidA, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA, points, contact.Manifold.PointCount, worldNormal);
-
-                    RaiseLocalEvent(uidA, ref ev1, true);
-                    RaiseLocalEvent(uidB, ref ev2, true);
-                    break;
-                }
-                case ContactStatus.Touching:
-                    break;
-                case ContactStatus.EndTouching:
-                {
-                    var fixtureA = contact.FixtureA;
-                    var fixtureB = contact.FixtureB;
-
-                    // If something under StartCollideEvent potentially nukes other contacts (e.g. if the entity is deleted)
-                    // then we'll just skip the EndCollide.
-                    if (fixtureA == null || fixtureB == null) continue;
-
-                    var bodyA = contact.BodyA!;
-                    var bodyB = contact.BodyB!;
-                    var uidA = contact.EntityA;
-                    var uidB = contact.EntityB;
-
-                    var ev1 = new EndCollideEvent(uidA, uidB, contact.FixtureAId, contact.FixtureBId, fixtureA, fixtureB, bodyA, bodyB);
-                    var ev2 = new EndCollideEvent(uidB, uidA, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA);
-
-                    RaiseLocalEvent(uidA, ref ev1);
-                    RaiseLocalEvent(uidB, ref ev2);
-                    break;
-                }
-                case ContactStatus.NoContact:
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            RunContactEvents(status[i], contact, worldPoints[i]);
         }
 
         ArrayPool<Contact>.Shared.Return(contacts);
         ArrayPool<ContactStatus>.Shared.Return(status);
         ArrayPool<FixedArray4<Vector2>>.Shared.Return(worldPoints);
+    }
+
+    internal void RunContactEvents(ContactStatus status, Contact contact, FixedArray4<Vector2> worldPoint)
+    {
+        switch (status)
+        {
+            case ContactStatus.StartTouching:
+            {
+                if (!contact.IsTouching) return;
+
+                var fixtureA = contact.FixtureA!;
+                var fixtureB = contact.FixtureB!;
+                var bodyA = contact.BodyA!;
+                var bodyB = contact.BodyB!;
+                var uidA = contact.EntityA;
+                var uidB = contact.EntityB;
+                var points = new FixedArray2<Vector2>(worldPoint._00, worldPoint._01);
+                var worldNormal = worldPoint._02;
+
+                var ev1 = new StartCollideEvent(uidA, uidB, contact.FixtureAId, contact.FixtureBId, fixtureA, fixtureB, bodyA, bodyB, points, contact.Manifold.PointCount, worldNormal);
+                var ev2 = new StartCollideEvent(uidB, uidA, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA, points, contact.Manifold.PointCount, worldNormal);
+
+                RaiseLocalEvent(uidA, ref ev1, true);
+                RaiseLocalEvent(uidB, ref ev2, true);
+                break;
+            }
+            case ContactStatus.Touching:
+                break;
+            case ContactStatus.EndTouching:
+            {
+                var fixtureA = contact.FixtureA;
+                var fixtureB = contact.FixtureB;
+
+                // If something under StartCollideEvent potentially nukes other contacts (e.g. if the entity is deleted)
+                // then we'll just skip the EndCollide.
+                if (fixtureA == null || fixtureB == null) return;
+
+                var bodyA = contact.BodyA!;
+                var bodyB = contact.BodyB!;
+                var uidA = contact.EntityA;
+                var uidB = contact.EntityB;
+
+                var ev1 = new EndCollideEvent(uidA, uidB, contact.FixtureAId, contact.FixtureBId, fixtureA, fixtureB, bodyA, bodyB);
+                var ev2 = new EndCollideEvent(uidB, uidA, contact.FixtureBId, contact.FixtureAId, fixtureB, fixtureA, bodyB, bodyA);
+
+                RaiseLocalEvent(uidA, ref ev1);
+                RaiseLocalEvent(uidB, ref ev2);
+                break;
+            }
+            case ContactStatus.NoContact:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
     }
 
     private void BuildManifolds(Contact[] contacts, int count, ContactStatus[] status, FixedArray4<Vector2>[] worldPoints)

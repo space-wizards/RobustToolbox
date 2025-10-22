@@ -1,5 +1,6 @@
 using System.Buffers;
 using System.Collections.Generic;
+using System.Numerics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Maths;
@@ -206,7 +207,19 @@ public sealed partial class PhysicsSystem
             var uidB = contact.EntityB;
             var bodyATransform = GetPhysicsTransform(uidA, xformQuery.GetComponent(uidA));
             var bodyBTransform = GetPhysicsTransform(uidB, xformQuery.GetComponent(uidB));
+            var wasTouching = contact.IsTouching;
+
             contact.UpdateIsTouching(bodyATransform, bodyBTransform);
+            var points = new FixedArray4<Vector2>();
+
+            if (!wasTouching && contact.IsTouching)
+            {
+                contact.GetWorldManifold(bodyATransform, bodyBTransform, out var worldNormal, points.AsSpan);
+                // Use the 3rd Vector2 as the world normal, 4th is blank.
+                points._02 = worldNormal;
+            }
+
+            RunContactEvents(Contact.GetContactStatus(contact, wasTouching), contact, points);
         }
 
         ArrayPool<Contact>.Shared.Return(contacts);

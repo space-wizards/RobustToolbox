@@ -47,7 +47,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Add pure to some SharedTransformSystem methods.
 
 ### Internal
 

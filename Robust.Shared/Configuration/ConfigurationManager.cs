@@ -495,7 +495,7 @@ namespace Robust.Shared.Configuration
 
         public void LoadCVarsFromType(Type containingType)
         {
-            foreach (var defField in containingType.GetFields(BindingFlags.Public | BindingFlags.Static))
+            foreach (var defField in containingType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static))
             {
                 var fieldType = defField.FieldType;
                 if (!fieldType.IsGenericType || fieldType.GetGenericTypeDefinition() != typeof(CVarDef<>))

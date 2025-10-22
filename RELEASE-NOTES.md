@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* CVars defined in `[CVarDefs]` can now be private or internal.
 
 ### Bugfixes
 

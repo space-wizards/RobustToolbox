@@ -212,6 +212,7 @@ public sealed partial class PhysicsSystem
             contact.UpdateIsTouching(bodyATransform, bodyBTransform);
             var points = new FixedArray4<Vector2>();
 
+            // Need to re-run the event otherwise we skip the StartCollideEvent running again later in the physics step.
             if (!wasTouching && contact.IsTouching)
             {
                 contact.GetWorldManifold(bodyATransform, bodyBTransform, out var worldNormal, points.AsSpan);

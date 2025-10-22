@@ -361,6 +361,9 @@ namespace Robust.Client.GameStates
                     // avoid exception spam from repeatedly trying to reset the same entity.
                     _entitySystemManager.GetEntitySystem<ClientDirtySystem>().Reset();
                     _runtimeLog.LogException(e, "ResetPredictedEntities");
+#if !EXCEPTION_TOLERANCE
+                    throw;
+#endif
                 }
 
                 // If we were waiting for a new state, we are now applying it.
@@ -954,6 +957,9 @@ namespace Robust.Client.GameStates
                 {
                     _sawmill.Error($"Caught exception while deleting entities");
                     _runtimeLog.LogException(e, $"{nameof(ClientGameStateManager)}.{nameof(ApplyEntityStates)}");
+#if !EXCEPTION_TOLERANCE
+                    throw;
+#endif
                 }
             }
 

@@ -44,7 +44,7 @@ END TEMPLATE-->
 ### Bugfixes
 
 * Fix `Menu` and `NumpadDecimal` key codes on SDL3.
-* client-side predictied entity deletion ( `EntityManager.PredictedQueueDeleteEntity`) now behaves more like it does on the server. In particular, entities will be deleted on the same tick after all system have been updated. Previously, it would process deletions at the beginning of the next tick.
+* client-side predicted entity deletion ( `EntityManager.PredictedQueueDeleteEntity`) now behaves more like it does on the server. In particular, entities will be deleted on the same tick after all system have been updated. Previously, it would process deletions at the beginning of the next tick.
 
 ### Other
 

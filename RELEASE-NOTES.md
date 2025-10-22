@@ -39,6 +39,8 @@ END TEMPLATE-->
 
 ### New features
 
+* CVars defined in `[CVarDefs]` can now be private or internal.
+* Added config rollback system to `IConfigurationManager`. This enables CVars to be snapshot and rolled back, even in the event of client crash.
 * The engine can now load system fonts.
   * At the moment only available on Windows.
   * See `ISystemFontManager` for API.

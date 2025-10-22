@@ -541,6 +541,11 @@ namespace Robust.Client.GameStates
                     {
                         ((IBroadcastEventBusInternal)_entities.EventBus).ProcessEventQueue();
                     }
+
+                    using (_prof.Group("QueueDel"))
+                    {
+                        _entities.ProcessQueueudDeletions();
+                    }
                 }
 
                 _prof.WriteGroupEnd(groupStart, "Prediction tick", ProfData.Int64(_timing.CurTick.Value));

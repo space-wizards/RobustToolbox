@@ -285,12 +285,7 @@ namespace Robust.Shared.GameObjects
             using (histogram?.WithLabels("QueuedDeletion").NewTimer())
             using (_prof.Group("QueueDel"))
             {
-                while (QueuedDeletions.TryDequeue(out var uid))
-                {
-                    DeleteEntity(uid);
-                }
-
-                QueuedDeletionsSet.Clear();
+                ProcessQueueudDeletions();
             }
 
             using (histogram?.WithLabels("ComponentCull").NewTimer())
@@ -298,6 +293,16 @@ namespace Robust.Shared.GameObjects
             {
                 CullRemovedComponents();
             }
+        }
+
+        internal virtual void ProcessQueueudDeletions()
+        {
+            while (QueuedDeletions.TryDequeue(out var uid))
+            {
+                DeleteEntity(uid);
+            }
+
+            QueuedDeletionsSet.Clear();
         }
 
         public virtual void FrameUpdate(float frameTime)

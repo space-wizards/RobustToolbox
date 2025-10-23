@@ -19,6 +19,9 @@ namespace Robust.Shared.GameStates
         public string Name { get; set; }
 
         [ViewVariables]
+        public string DisplayName { get; set; }
+
+        [ViewVariables]
         public SessionStatus Status { get; set; }
 
         // TODO PlayerManager
@@ -37,6 +40,7 @@ namespace Robust.Shared.GameStates
             {
                 UserId = UserId,
                 Name = Name,
+                DisplayName = DisplayName,
                 Status = Status,
                 ControlledEntity = ControlledEntity
             };

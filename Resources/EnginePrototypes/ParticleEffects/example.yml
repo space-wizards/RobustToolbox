@@ -1,0 +1,57 @@
+- type: particles
+  id: example
+  #The width and height of the drawing surface for the particles - this is the size of the texture that the particles are drawn on.
+  width: 64
+  height: 64
+  #Maximum number of particles in this system
+  count: 1000
+  #Maximum number of particles spawned per second
+  spawning: 100
+  #Texture that the particles have. This is a list of paths to textures, and the particle system will randomly choose one of them for each particle. If blank, the particle will be a 1px white dot.
+  texture: []
+  #Maximum lifespan of the partcles in seconds
+  lifespan:
+    #these values are set by a generator specified here. Constant is a constant value, uniform is a random value between two values, and normal is a random value from a normal distribution.
+    type: constant
+    value: 50
+  fadein:
+    type: uniform
+    low: 0
+    high: 10
+  fadeout:
+    type: constant
+    value: 5
+  #Color of the particles. This can either be a list of a colours, or a gradient that the particles will interpolate between over their lifespan.
+  color: ["#FF0000", "#00FF00", "#0000FF"]
+  #Starting position of the particles. X,Y,Z. The Z co-ordinate determines layering order.
+  spawn_position:
+    type: uniform
+    low: [-64, 0, 0]
+    high: [64, 0, 0]
+  #Starting velocity of the particles
+  spawn_velocity:
+    type: uniform
+    low: [0, 5, 0]
+    high: [0, 10, 0]
+  #Acceleration applied to the particles per second
+  acceleration:
+    type: constant
+    value: [0, 0, 0]
+  #Scaling applied to the particles in (x,y)
+  scale:
+    type: constant
+    value: [2,2]
+  #Rotation applied to the particles in degrees
+  rotation:
+    type: constant
+    value: 0
+  #Increase in scale per second
+  growth:
+    type: constant
+    value: [0,0]
+  #Change in rotation per second
+  spin:
+    type: constant
+    value: 0
+
+

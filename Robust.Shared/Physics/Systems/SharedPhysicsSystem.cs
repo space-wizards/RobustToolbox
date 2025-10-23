@@ -162,86 +162,64 @@ namespace Robust.Shared.Physics.Systems
         }
 
         internal void OnParentChange(Entity<TransformComponent, MetaDataComponent> ent, EntityUid oldParent, EntityUid? oldMap)
-{
-    // We do not have a directed/body subscription, because the entity changing parents may not have a physics component, but one of its children might.
-    var (uid, xform, meta) = ent;
-
-    // If this entity has yet to be initialized, then we can skip this as equivalent code will get run during
-    // init anyways. HOWEVER: it is possible that one of the children of this entity are already post-init, in
-    // which case they still need to handle map changes. This frequently happens when clients receives a server
-    // state where a known/old entity gets attached to a new, previously unknown, entity. The new entity will be
-    // uninitialized but have an initialized child.
-    if (xform.ChildCount == 0 && meta.EntityLifeStage < EntityLifeStage.Initialized)
-        return;
-
-    if (oldMap == null && xform.MapUid == null)
-        return;
-
-    var body = PhysicsQuery.CompOrNull(uid);
-
-    if (oldMap != xform.MapUid)
-    {
-        var enteringMap = oldMap == null && xform.MapUid != null;
-        var leavingMap = oldMap != null && xform.MapUid == null;
-        HandleMapChange(uid, xform, body, enteringMap, leavingMap);
-        return;
-    }
-
-    if (body != null)
-        HandleParentChangeVelocity(uid, body, oldParent, xform);
-}
-
-/// <summary>
-///     Recursively add/remove from awake bodies, clear joints, remove from move buffer, and update broadphase.
-/// </summary>
-private void HandleMapChange(EntityUid uid, TransformComponent xform, PhysicsComponent? body, bool enteringMap, bool leavingMap)
-{
-    RecursiveMapUpdate(uid, xform, body, enteringMap, leavingMap);
-}
-
-/// <summary>
-///     Recursively add/remove from awake bodies, clear joints, remove from move buffer, and update broadphase.
-/// </summary>
-private void RecursiveMapUpdate(EntityUid uid, TransformComponent xform, PhysicsComponent? body, bool enteringMap, bool leavingMap)
-{
-    DebugTools.Assert(!Deleted(uid));
-    _joints.ClearJoints(uid);
-
-    if (enteringMap)
-    {
-        if (body != null)
         {
-            var fixtures = _fixturesQuery.CompOrNull(uid);
-            SetCanCollide(uid, true, manager: fixtures, body: body);
-            WakeBody(uid, body: body);
-        }
-        else if (_fixturesQuery.HasComponent(uid))
-        {
-            body = EnsureComp<PhysicsComponent>(uid);
-            var fixtures = _fixturesQuery.CompOrNull(uid);
-            SetCanCollide(uid, true, manager: fixtures, body: body);
-            WakeBody(uid, body: body);
-        }
-    }
-    else if (leavingMap)
-    {
-        if (body != null)
-        {
-            var fixtures = _fixturesQuery.CompOrNull(uid);
-            SetCanCollide(uid, false, manager: fixtures, body: body);
-            DestroyContacts(body);
-        }
-    }
+            // We do not have a directed/body subscription, because the entity changing parents may not have a physics component, but one of its children might.
+            var (uid, xform, meta) = ent;
 
-    foreach (var child in xform._children)
-    {
-        if (XformQuery.TryGetComponent(child, out var childXform))
-        {
-            PhysicsQuery.TryGetComponent(child, out var childBody);
-            RecursiveMapUpdate(child, childXform, childBody, enteringMap, leavingMap);
+            // If this entity has yet to be initialized, then we can skip this as equivalent code will get run during
+            // init anyways. HOWEVER: it is possible that one of the children of this entity are already post-init, in
+            // which case they still need to handle map changes. This frequently happens when clients receives a server
+            // state where a known/old entity gets attached to a new, previously unknown, entity. The new entity will be
+            // uninitialized but have an initialized child.
+            if (xform.ChildCount == 0 && meta.EntityLifeStage < EntityLifeStage.Initialized)
+                return;
+
+            // Is this entity getting recursively detached after it's parent was already detached to null?
+            if (oldMap == null && xform.MapUid == null)
+                return;
+
+            var body = PhysicsQuery.CompOrNull(uid);
+
+            // Handle map changes
+            if (oldMap != xform.MapUid)
+            {
+                // This will also handle broadphase updating & joint clearing.
+                HandleMapChange(uid, xform, body);
+                return;
+            }
+
+            if (body != null)
+                HandleParentChangeVelocity(uid, body, oldParent, xform);
         }
-    }
-}
+
+        /// <summary>
+        ///     Recursively add/remove from awake bodies, clear joints, remove from move buffer, and update broadphase.
+        /// </summary>
+        private void HandleMapChange(EntityUid uid, TransformComponent xform, PhysicsComponent? body)
+        {
+            RecursiveMapUpdate(uid, xform, body);
+        }
+
+        /// <summary>
+        ///     Recursively add/remove from awake bodies, clear joints, remove from move buffer, and update broadphase.
+        /// </summary>
+        private void RecursiveMapUpdate(
+            EntityUid uid,
+            TransformComponent xform,
+            PhysicsComponent? body)
+        {
+            DebugTools.Assert(!Deleted(uid));
+            _joints.ClearJoints(uid);
+
+            foreach (var child in xform._children)
+            {
+                if (XformQuery.TryGetComponent(child, out var childXform))
+                {
+                    PhysicsQuery.TryGetComponent(child, out var childBody);
+                    RecursiveMapUpdate(child, childXform, childBody);
+                }
+            }
+        }
 
         private void OnGridAdd(GridAddEvent ev)
         {

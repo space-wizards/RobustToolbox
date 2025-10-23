@@ -120,7 +120,7 @@ namespace Robust.Client.Graphics.Clyde
                 default:
                     _logManager.GetSawmill("clyde.win").Log(
                         LogLevel.Error, "Unknown windowing API: {name}. Falling back to GLFW.", windowingApi);
-                    goto case "glfw";
+                    goto case "sdl3";
             }
 
             _windowing = winImpl;

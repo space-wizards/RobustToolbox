@@ -228,14 +228,8 @@ private void RecursiveMapUpdate(EntityUid uid, TransformComponent xform, Physics
         if (body != null)
         {
             var fixtures = _fixturesQuery.CompOrNull(uid);
-            SetCanCollide(uid, true, manager: fixtures, body: body);
-
-            if (fixtures != null)
-            {
-                foreach (var fixture in fixtures.Fixtures.Values)
-                    _broadphase.TouchProxies(fixture);
-            }
-
+            SetCanCollide(uid, false, manager: fixtures, body: body);
+            DestroyContacts(body);
         }
     }
 

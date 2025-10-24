@@ -289,17 +289,18 @@ namespace Robust.Shared.GameObjects
 
                 if (oldWasNullspace && newMap != null)
                 {
-                    //  Makes sure entities moved from nullspace have the physics component.
-                    if (!EntityManager.TryGetComponent(ent, out PhysicsComponent? phys))
-                        phys = EntityManager.EnsureComponent<PhysicsComponent>(ent);
+                    // Make sure entities moved from nullspace have the physics component.
+                    var uid = ent.Owner;
 
-                    if (!EntityManager.HasComponent<FixturesComponent>(ent))
-                        EntityManager.EnsureComponent<FixturesComponent>(ent);
+                    if (!EntityManager.TryGetComponent(uid, out PhysicsComponent? phys))
+                        phys = EntityManager.EnsureComponent<PhysicsComponent>(uid);
 
-                    _physics.SetCanCollide(ent, true, manager: null, body: phys);
-                    _physics.WakeBody(ent, body: phys);
+                    if (!EntityManager.HasComponent<FixturesComponent>(uid))
+                        EntityManager.EnsureComponent<FixturesComponent>(uid);
+
+                    _physics.SetCanCollide(uid, true, manager: null, body: phys);
+                    _physics.WakeBody(uid, body: phys);
                 }
-
                 _physics.OnParentChange(ent, oldParent, oldMap);
                 OnBeforeMoveEvent?.Invoke(ref ev);
                 var entParentChangedMessage = new EntParentChangedMessage(ev.Sender, oldParent, oldMap, ev.Component);

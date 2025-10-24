@@ -289,9 +289,9 @@ namespace Robust.Shared.GameObjects
 
                 if (oldWasNullspace && newMap != null)
                 {
-                    // Make sure entities moved from nullspace have the physics component.
                     var uid = ent.Owner;
 
+                    // Makes sure entities moved from nullspace have the physics component.
                     if (!EntityManager.TryGetComponent(uid, out PhysicsComponent? phys))
                         phys = EntityManager.EnsureComponent<PhysicsComponent>(uid);
 
@@ -301,15 +301,21 @@ namespace Robust.Shared.GameObjects
                     _physics.SetCanCollide(uid, true, manager: null, body: phys);
                     _physics.WakeBody(uid, body: phys);
                 }
-                _physics.OnParentChange(ent, oldParent, oldMap);
+                _physics.OnParentChange(ent!, oldParent, oldMap);
                 OnBeforeMoveEvent?.Invoke(ref ev);
-                var entParentChangedMessage = new EntParentChangedMessage(ev.Sender, oldParent, oldMap, ev.Component);
+
+                var entParentChangedMessage = new EntParentChangedMessage(
+                    ev.Sender, oldParent, oldMap, ev.Component);
+
                 RaiseLocalEvent(ev.Sender, ref entParentChangedMessage, true);
             }
             else
             {
                 OnBeforeMoveEvent?.Invoke(ref ev);
             }
+
+            RaiseLocalEvent(ev.Sender, ref ev);
+            OnGlobalMoveEvent?.Invoke(ref ev);
 
             RaiseLocalEvent(ev.Sender, ref ev);
             OnGlobalMoveEvent?.Invoke(ref ev);

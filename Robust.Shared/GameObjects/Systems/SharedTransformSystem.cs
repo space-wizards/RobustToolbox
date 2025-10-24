@@ -289,6 +289,7 @@ namespace Robust.Shared.GameObjects
 
                 if (oldWasNullspace && newMap != null)
                 {
+                    //  Makes sure entities moved from nullspace have the physics component.
                     if (!EntityManager.TryGetComponent(ent, out PhysicsComponent? phys))
                         phys = EntityManager.EnsureComponent<PhysicsComponent>(ent);
 
@@ -296,6 +297,7 @@ namespace Robust.Shared.GameObjects
                         EntityManager.EnsureComponent<FixturesComponent>(ent);
 
                     _physics.SetCanCollide(ent, true, manager: null, body: phys);
+                    _physics.WakeBody(ent, body: phys);
                 }
 
                 _physics.OnParentChange(ent, oldParent, oldMap);

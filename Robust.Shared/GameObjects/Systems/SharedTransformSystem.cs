@@ -13,7 +13,7 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
-
+using Robust.Shared.Physics.Components;
 namespace Robust.Shared.GameObjects
 {
     public abstract partial class SharedTransformSystem : EntitySystem
@@ -283,6 +283,21 @@ namespace Robust.Shared.GameObjects
 
             if (oldParent != ent.Comp1._parent)
             {
+                var xform = ent.Comp1;
+                var oldWasNullspace = oldMap == null;
+                var newMap = xform.MapUid;
+
+                if (oldWasNullspace && newMap != null)
+                {
+                    if (!EntityManager.TryGetComponent(ent, out PhysicsComponent? phys))
+                        phys = EntityManager.EnsureComponent<PhysicsComponent>(ent);
+
+                    if (!EntityManager.HasComponent<FixturesComponent>(ent))
+                        EntityManager.EnsureComponent<FixturesComponent>(ent);
+
+                    _physics.SetCanCollide(ent, true, manager: null, body: phys);
+                }
+
                 _physics.OnParentChange(ent, oldParent, oldMap);
                 OnBeforeMoveEvent?.Invoke(ref ev);
                 var entParentChangedMessage = new EntParentChangedMessage(ev.Sender, oldParent, oldMap, ev.Component);

@@ -185,7 +185,7 @@ internal sealed partial class MidiManager : IMidiManager
             _settings["player.timing-source"].StringValue = "sample";
             _settings["synth.lock-memory"].IntValue = 0;
             _settings["synth.threadsafe-api"].IntValue = 1;
-            _settings["synth.gain"].DoubleValue = 1.0d;
+            _settings["synth.gain"].DoubleValue = 2.5d;
             _settings["synth.midi-channels"].IntValue = 16;
             _settings["synth.overflow.age"].DoubleValue = 3000;
             _settings["audio.driver"].StringValue = "file";

@@ -13,7 +13,7 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
-
+using Robust.Shared.Physics.Components;
 namespace Robust.Shared.GameObjects
 {
     public abstract partial class SharedTransformSystem : EntitySystem
@@ -283,15 +283,39 @@ namespace Robust.Shared.GameObjects
 
             if (oldParent != ent.Comp1._parent)
             {
-                _physics.OnParentChange(ent, oldParent, oldMap);
+                var xform = ent.Comp1;
+                var oldWasNullspace = oldMap == null;
+                var newMap = xform.MapUid;
+
+                if (oldWasNullspace && newMap != null)
+                {
+                    var uid = ent.Owner;
+
+                    // Makes sure entities moved from nullspace have the physics component.
+                    if (!EntityManager.TryGetComponent(uid, out PhysicsComponent? phys))
+                        phys = EntityManager.EnsureComponent<PhysicsComponent>(uid);
+
+                    if (!EntityManager.HasComponent<FixturesComponent>(uid))
+                        EntityManager.EnsureComponent<FixturesComponent>(uid);
+
+                    _physics.SetCanCollide(uid, true, manager: null, body: phys);
+                    _physics.WakeBody(uid, body: phys);
+                }
+                _physics.OnParentChange(ent!, oldParent, oldMap);
                 OnBeforeMoveEvent?.Invoke(ref ev);
-                var entParentChangedMessage = new EntParentChangedMessage(ev.Sender, oldParent, oldMap, ev.Component);
+
+                var entParentChangedMessage = new EntParentChangedMessage(
+                    ev.Sender, oldParent, oldMap, ev.Component);
+
                 RaiseLocalEvent(ev.Sender, ref entParentChangedMessage, true);
             }
             else
             {
                 OnBeforeMoveEvent?.Invoke(ref ev);
             }
+
+            RaiseLocalEvent(ev.Sender, ref ev);
+            OnGlobalMoveEvent?.Invoke(ref ev);
 
             RaiseLocalEvent(ev.Sender, ref ev);
             OnGlobalMoveEvent?.Invoke(ref ev);

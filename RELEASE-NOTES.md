@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Adjusted `GetOcclusion` so it uses the raycast's direction as the distance rather than a separate argument. It will also now consider shapes accurately and not use AABBs.
 
 ### New features
 

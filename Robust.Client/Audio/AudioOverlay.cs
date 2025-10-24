@@ -69,7 +69,7 @@ public sealed class AudioOverlay : Overlay
 
             var screenPos = args.ViewportControl.WorldToScreen(audioPos);
             var distance = audioPos - listenerPos.Position;
-            var posOcclusion = _audio.GetOcclusion(listenerPos, distance, distance.Length(), uid);
+            var posOcclusion = _audio.GetOcclusion(listenerPos, distance, uid);
 
             output.Clear();
             output.AppendLine("Audio Source");
@@ -84,7 +84,11 @@ public sealed class AudioOverlay : Overlay
             var outputText = output.ToString().Trim();
             var dimensions = screenHandle.GetDimensions(_font, outputText, 1f);
             var buffer = new Vector2(3f, 3f);
-            screenHandle.DrawRect(new UIBox2(screenPos - buffer, screenPos + dimensions + buffer), new Color(39, 39, 48));
+
+            var textBox = new UIBox2(screenPos - buffer, screenPos + dimensions + buffer);
+
+            screenHandle.DrawRect(textBox, Color.Green, filled: false);
+            screenHandle.DrawRect(textBox, new Color(39, 39, 48).WithAlpha(0.5f));
             screenHandle.DrawString(_font, screenPos, outputText);
         }
     }

@@ -216,35 +216,36 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            using (histogram?.WithLabels("PredictedQueueDel").NewTimer())
+            base.TickUpdate(frameTime, noPredictions, histogram);
+        }
+
+        internal override void ProcessQueueudDeletions()
+        {
+            base.ProcessQueueudDeletions();
+            while (_queuedPredictedDeletions.TryDequeue(out var uid))
             {
-                while (_queuedPredictedDeletions.TryDequeue(out var uid))
+                if (!MetaQuery.TryGetComponentInternal(uid, out var meta))
+                    continue;
+
+                if (meta.EntityLifeStage >= EntityLifeStage.Terminating)
+                    continue;
+
+                var xform = TransformQuery.GetComponentInternal(uid);
+                if (meta.NetEntity.IsClientSide())
                 {
-                    if (!MetaQuery.TryGetComponentInternal(uid, out var meta))
-                        continue;
-
-                    if (meta.EntityLifeStage >= EntityLifeStage.Terminating)
-                        continue;
-
-                    var xform = TransformQuery.GetComponentInternal(uid);
-                    if (meta.NetEntity.IsClientSide())
-                    {
-                        DeleteEntity(uid, meta, xform);
-                    }
-                    else
-                    {
-                        _xforms.DetachEntity(uid, xform, meta, null);
-                        // base call bypasses IGameTiming.InPrediction check
-                        // This is pretty janky and there should be a way for the client to dirty an entity outside of prediction
-                        // TODO PREDICTION
-                        base.Dirty(uid, xform, meta);
-                    }
+                    DeleteEntity(uid, meta, xform);
                 }
-
-                _queuedPredictedDeletionsSet.Clear();
+                else
+                {
+                    _xforms.DetachEntity(uid, xform, meta, null);
+                    // base call bypasses IGameTiming.InPrediction check
+                    // This is pretty janky and there should be a way for the client to dirty an entity outside of prediction
+                    // TODO PREDICTION Is actually needed after the current predicted deletion fix?
+                    base.Dirty(uid, xform, meta);
+                }
             }
 
-            base.TickUpdate(frameTime, noPredictions, histogram);
+            _queuedPredictedDeletionsSet.Clear();
         }
 
         /// <inheritdoc />

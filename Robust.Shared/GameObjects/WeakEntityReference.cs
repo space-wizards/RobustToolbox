@@ -29,7 +29,7 @@ public readonly struct WeakEntityReference(EntityUid uid) : IEquatable<WeakEntit
 
     /// <summary>
     /// The underlying entity this reference is pointing to.
-    /// You should not be accessing this directly!
+    /// Accessed via <see cref="EntityManager.TryGetEntity(WeakEntityReference, out EntityUid?)"/>
     /// </summary>
     internal EntityUid Entity => new(Id);
 

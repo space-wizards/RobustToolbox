@@ -293,6 +293,26 @@ namespace Robust.Shared.CompNetworkGenerator
                         deltaApply.Add($@"fullState.{name} = {name};");
 
                         break;
+                    case GlobalWeakEntityReferenceSetName:
+                        networkedType = GlobalNetEntityUidSetName;
+
+                        stateFields.Append($@"
+                        public {networkedType} {name} = default!;");
+
+                        getField = $"GetNetEntitySet(Resolve(component.{name}))";
+                        cast = $"({GlobalNetEntityUidSetName})";
+
+                        handleStateSetters.Append($@"
+            component.{name} = GetWeakReferenceSet(GetEntitySet(state.{name}));");
+
+                        deltaHandleFields.Append($@"
+                    component.{name} = GetWeakReferenceSet(GetEntitySet({cast} {fieldHandleValue}))");
+
+                        shallowClone.Append($@"
+                {name} = this.{name},");
+
+                        deltaApply.Add($@"fullState.{name} = {name};");
+                        break;
                     case GlobalEntityUidListName:
                         networkedType = $"{GlobalNetEntityUidListName}";
 
@@ -313,6 +333,26 @@ namespace Robust.Shared.CompNetworkGenerator
 
                         deltaApply.Add($@"fullState.{name} = {name};");
 
+                        break;
+                    case GlobalWeakEntityReferenceListName:
+                        networkedType = $"{GlobalNetEntityUidListName}";
+
+                        stateFields.Append($@"
+                        public {networkedType} {name} = default!;");
+
+                        getField = $"GetNetEntityList(Resolve(component.{name}))";
+                        cast = $"({GlobalNetEntityUidListName})";
+
+                        handleStateSetters.Append($@"
+            component.{name} = GetWeakReferenceList(GetEntityList(state.{name}));");
+
+                        deltaHandleFields.Append($@"
+                    component.{name} = GetWeakReferenceList(GetEntityList({cast} {fieldHandleValue}))");
+
+                        shallowClone.Append($@"
+                {name} = this.{name},");
+
+                        deltaApply.Add($@"fullState.{name} = {name};");
                         break;
                     default:
                         if (type is INamedTypeSymbol { TypeArguments.Length: 2 } named &&

@@ -8,7 +8,7 @@ using Robust.Shared.Player;
 
 namespace Robust.UnitTesting.Shared.EntitySerialization;
 
-public sealed partial class WeakEntityReferenceTest : RobustIntegrationTest
+public sealed class WeakEntityReferenceTest : RobustIntegrationTest
 {
     [Test]
     public async Task TestWeakEntityReference()

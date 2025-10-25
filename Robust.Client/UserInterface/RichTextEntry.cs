@@ -66,6 +66,10 @@ namespace Robust.Client.UserInterface
                 // store state information and return the same control for each rich text entry.
                 DebugTools.Assert(handler.TryCreateControl(node, out var other) && other != control);
 
+                // Avoid children stretching to fill space after manual layout
+                control.HorizontalAlignment = Control.HAlignment.Left;
+                control.VerticalAlignment = Control.VAlignment.Top;
+
                 parent.Children.Add(control);
                 tagControls ??= new Dictionary<int, Control>();
                 tagControls.Add(nodeIndex, control);

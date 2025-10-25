@@ -96,6 +96,7 @@ namespace Robust.Client
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IReloadManager _reload = default!;
         [Dependency] private readonly ILocalizationManager _loc = default!;
+        [Dependency] private readonly ISystemFontManagerInternal _systemFontManager = default!;
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -143,6 +144,7 @@ namespace Robust.Client
             _taskManager.Initialize();
             _parallelMgr.Initialize();
             _fontManager.SetFontDpi((uint)_configurationManager.GetCVar(CVars.DisplayFontDpi));
+            _systemFontManager.Initialize();
 
             // Load optional Robust modules.
             LoadOptionalRobustModules(displayMode, _resourceManifest!);

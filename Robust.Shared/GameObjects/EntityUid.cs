@@ -116,6 +116,12 @@ namespace Robust.Shared.GameObjects
             return self.Id;
         }
 
+        /// <summary>
+        ///     Implicit conversion to WeakEntityReference for easy assignment.
+        ///     Note that conversion from WeakEntityReference -> EntityUid is explicit through <see cref="IEntityManager.TryGetEntity(WeakEntityReference, out EntityUid?)"/>
+        /// </summary>
+        public static implicit operator WeakEntityReference(EntityUid self) => new(self);
+
         /// <inheritdoc />
         public override string ToString()
         {

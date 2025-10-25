@@ -54,7 +54,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// This event only supports a single invocation target.
     /// </remarks>
     [PublicAPI]
-    public event Action<EntityUid, AudioComponent, TransformComponent, MapCoordinates>? ProcessStreamOverride;
+    public static event Action<EntityUid, AudioComponent, TransformComponent, MapCoordinates>? ProcessStreamOverride;
 
     /// <summary>
     /// An optional method that, if provided, will override the behavior of <see cref="GetOcclusion"/>.
@@ -64,7 +64,7 @@ public sealed partial class AudioSystem : SharedAudioSystem
     /// This event only supports a single invocation target.
     /// </remarks>
     [PublicAPI]
-    public event Func<MapCoordinates, Vector2, float, EntityUid?, float>? GetOcclusionOverride;
+    public static event Func<MapCoordinates, Vector2, float, EntityUid?, float>? GetOcclusionOverride;
 
     /// <summary>
     /// Per-tick cache of relevant streams.

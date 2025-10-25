@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
@@ -427,7 +427,6 @@ namespace Robust.Client.UserInterface
 
     // Temporarily hidden due to performance concerns.
     // Like seriously this thing is awful performance wise.
-    // Also, you can't just enable it. The code is here but AddChild etc only do restyles one level deep.
     internal sealed class SelectorDescendant : Selector
     {
         public SelectorDescendant([NotNull] Selector ascendant, [NotNull] Selector descendant)
@@ -468,7 +467,10 @@ namespace Robust.Client.UserInterface
         }
     }
 
-    // Temporarily hidden due to performance concerns.
+    /// <summary>
+    ///     Given a pair of selectors, will match the element described by the child selector
+    ///     when the child is an immediate child of parent.
+    /// </summary>
     public sealed class SelectorChild : Selector
     {
         public SelectorChild(Selector parent, Selector child)

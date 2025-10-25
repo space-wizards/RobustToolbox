@@ -361,6 +361,16 @@ public partial class EntityManager
         }
     }
 
+    public void EnsureEntitySet<T>(HashSet<NetEntity> netEntities, EntityUid callerEntity, HashSet<WeakEntityReference> entities)
+    {
+        entities.Clear();
+        entities.EnsureCapacity(netEntities.Count);
+        foreach (var netEntity in netEntities)
+        {
+            entities.Add(EnsureEntity<T>(netEntity, callerEntity));
+        }
+    }
+
     /// <inheritdoc />
     public List<EntityUid> EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity)
     {
@@ -375,6 +385,16 @@ public partial class EntityManager
     }
 
     public void EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity, List<EntityUid> entities)
+    {
+        entities.Clear();
+        entities.EnsureCapacity(netEntities.Count);
+        foreach (var netEntity in netEntities)
+        {
+            entities.Add(EnsureEntity<T>(netEntity, callerEntity));
+        }
+    }
+
+    public void EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity, List<WeakEntityReference> entities)
     {
         entities.Clear();
         entities.EnsureCapacity(netEntities.Count);
@@ -515,6 +535,18 @@ public partial class EntityManager
         return newSet;
     }
 
+    public HashSet<NetEntity> GetNetEntitySet(HashSet<WeakEntityReference> entities)
+    {
+        var newSet = new HashSet<NetEntity>(entities.Count);
+
+        foreach (var weakEntity in entities)
+        {
+            newSet.Add(TryGetEntity(weakEntity, out var ent) ? GetNetEntity(ent.Value) : NetEntity.Invalid);
+        }
+
+        return newSet;
+    }
+
     /// <inheritdoc />
     public List<NetEntity> GetNetEntityList(List<EntityUid> entities)
     {
@@ -549,6 +581,19 @@ public partial class EntityManager
         foreach (var netEntity in entities)
         {
             netEntities.Add(GetNetEntity(netEntity));
+        }
+
+        return netEntities;
+    }
+
+    /// <inheritdoc />
+    public List<NetEntity> GetNetEntityList(IReadOnlyList<WeakEntityReference> entities)
+    {
+        var netEntities = new List<NetEntity>(entities.Count);
+
+        foreach (var weakEntity in entities)
+        {
+            netEntities.Add(TryGetEntity(weakEntity, out var ent) ? GetNetEntity(ent.Value) : NetEntity.Invalid);
         }
 
         return netEntities;

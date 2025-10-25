@@ -1079,6 +1079,15 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        public EntityStringRepresentation ToPrettyString(WeakEntityReference weakEntityRef)
+        {
+            if (!TryGetEntity(weakEntityRef, out var entity))
+                return new EntityStringRepresentation(EntityUid.Invalid, NetEntity.Invalid, true);
+
+            return ToPrettyString(entity.Value);
+        }
+
+        /// <inheritdoc />
         [return: NotNullIfNotNull("netEntity")]
         public EntityStringRepresentation? ToPrettyString(NetEntity? netEntity)
         {

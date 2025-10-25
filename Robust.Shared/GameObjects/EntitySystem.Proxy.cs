@@ -1265,6 +1265,12 @@ public partial class EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void EnsureEntitySet<T>(HashSet<NetEntity> netEntities, EntityUid callerEntity, HashSet<WeakEntityReference> entities)
+    {
+        EntityManager.EnsureEntitySet<T>(netEntities, callerEntity, entities);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected List<EntityUid> EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity)
     {
         return EntityManager.EnsureEntityList<T>(netEntities, callerEntity);
@@ -1272,6 +1278,12 @@ public partial class EntitySystem
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity, List<EntityUid> entities)
+    {
+        EntityManager.EnsureEntityList<T>(netEntities, callerEntity, entities);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity, List<WeakEntityReference> entities)
     {
         EntityManager.EnsureEntityList<T>(netEntities, callerEntity, entities);
     }
@@ -1340,6 +1352,15 @@ public partial class EntitySystem
     }
 
     /// <summary>
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected HashSet<NetEntity> GetNetEntitySet(HashSet<WeakEntityReference> uids)
+    {
+        return EntityManager.GetNetEntitySet(uids);
+    }
+
+    /// <summary>
     ///     Returns the <see cref="EntityUid"/> versions of the supplied <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1362,6 +1383,15 @@ public partial class EntitySystem
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected List<NetEntity> GetNetEntityList(IReadOnlyList<EntityUid> uids)
+    {
+        return EntityManager.GetNetEntityList(uids);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected List<NetEntity> GetNetEntityList(IReadOnlyList<WeakEntityReference> uids)
     {
         return EntityManager.GetNetEntityList(uids);
     }

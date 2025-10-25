@@ -51,10 +51,10 @@ public sealed partial class WeakEntityReferenceTestComponent : Component
     public WeakEntityReference Entity;
 
     [DataField, AutoNetworkedField]
-    public List<WeakEntityReference> EntityList;
+    public List<WeakEntityReference> EntityList = new();
 
     [DataField, AutoNetworkedField]
-    public HashSet<WeakEntityReference> EntitySet;
+    public HashSet<WeakEntityReference> EntitySet = new();
 }
 
 /// <summary>

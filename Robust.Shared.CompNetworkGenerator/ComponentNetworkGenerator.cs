@@ -294,24 +294,25 @@ namespace Robust.Shared.CompNetworkGenerator
 
                         break;
                     case GlobalWeakEntityReferenceSetName:
-                        networkedType = GlobalNetEntityUidSetName;
+                        networkedType = $"{GlobalNetEntityUidSetName}";
 
                         stateFields.Append($@"
-                        public {networkedType} {name} = default!;");
+        public {networkedType} {name} = default!;");
 
-                        getField = $"GetNetEntitySet(Resolve(component.{name}))";
+                        getField = $"GetNetEntitySet(component.{name})";
                         cast = $"({GlobalNetEntityUidSetName})";
 
                         handleStateSetters.Append($@"
-            component.{name} = GetWeakReferenceSet(GetEntitySet(state.{name}));");
+            EnsureEntitySet<{componentName}>(state.{name}, uid, component.{name});");
 
                         deltaHandleFields.Append($@"
-                    component.{name} = GetWeakReferenceSet(GetEntitySet({cast} {fieldHandleValue}))");
+                    EnsureEntitySet<{componentName}>({cast} {fieldHandleValue}, uid, component.{name});");
 
                         shallowClone.Append($@"
                 {name} = this.{name},");
 
                         deltaApply.Add($@"fullState.{name} = {name};");
+
                         break;
                     case GlobalEntityUidListName:
                         networkedType = $"{GlobalNetEntityUidListName}";
@@ -340,14 +341,14 @@ namespace Robust.Shared.CompNetworkGenerator
                         stateFields.Append($@"
                         public {networkedType} {name} = default!;");
 
-                        getField = $"GetNetEntityList(Resolve(component.{name}))";
+                        getField = $"GetNetEntityList(component.{name})";
                         cast = $"({GlobalNetEntityUidListName})";
 
                         handleStateSetters.Append($@"
-            component.{name} = GetWeakReferenceList(GetEntityList(state.{name}));");
+            EnsureEntityList<{componentName}>(state.{name}, uid, component.{name});");
 
                         deltaHandleFields.Append($@"
-                    component.{name} = GetWeakReferenceList(GetEntityList({cast} {fieldHandleValue}))");
+                    EnsureEntityList<{componentName}>({cast} {fieldHandleValue}, uid, component.{name});");
 
                         shallowClone.Append($@"
                 {name} = this.{name},");

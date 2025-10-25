@@ -39,22 +39,44 @@ END TEMPLATE-->
 
 ### New features
 
-* Sandbox:
-  * Added `System.DateOnly` and `System.TimeOnly`.
-* `MapId`, `MapCoordinates`, and `EntityCoordinates` are now yaml serialisable
-* Added a new `WeakEntityReference` struct that is intended to be used by component data-fields to refer to entities that may or may not still exist.
+* CVars defined in `[CVarDefs]` can now be private or internal.
+* Added config rollback system to `IConfigurationManager`. This enables CVars to be snapshot and rolled back, even in the event of client crash.
+
 ### Bugfixes
 
-* Fixed yaml hot reloading throwing invalid path exceptions.
-* The `EntityManager.CreateEntityUninitialized` overload that uses MapCoordinates now actually attaches entities to a grid if one is present at those coordinates, as was stated in it's documentation.
+* Fix `Menu` and `NumpadDecimal` key codes on SDL3.
 
 ### Other
 
-* Updated natives again to attempt to fix issues caused by the previous update.
+* Add pure to some SharedTransformSystem methods.
 
 ### Internal
 
 *None yet*
+
+
+## 267.3.0
+
+### New features
+
+* Sandbox:
+  * Added `System.DateOnly` and `System.TimeOnly`.
+* `MapId`, `MapCoordinates`, and `EntityCoordinates` are now yaml serialisable
+* The base component tree lookup system has new methods including several new `QueryAabb()` overloads that take in a collection and various new `IntersectRay()` overloads that should replace `IntersectRayWithPredicate`.
+ * Added `OccluderSystem.InRangeUnoccluded()` for checking for occluders that lie between two points.
+* `LocalizedCommands` now pass the command name as an argument to the localized help text.
+* Added a new `WeakEntityReference` struct that is intended to be used by component data-fields to refer to entities that may or may not still exist.
+
+### Bugfixes
+
+* Fixed `MapLoaderSystem.SerializeEntitiesRecursive()` not properly serialising when given multiple root entities (e.g., multiple maps)
+* Fixed yaml hot reloading throwing invalid path exceptions.
+* The `EntityManager.CreateEntityUninitialized` overload that uses MapCoordinates now actually attaches entities to a grid if one is present at those coordinates, as was stated in it's documentation.
+* Fixed physics joint relays not being properly updated when an entity is removed from a container.
+
+### Other
+
+* Updated natives again to attempt to fix issues caused by the previous update.
 
 
 ## 267.2.1

@@ -48,10 +48,11 @@ END TEMPLATE-->
 ### Bugfixes
 
 * Fix `Menu` and `NumpadDecimal` key codes on SDL3.
+* Fix modifying `Label.FontOverride` not causing a layout update.
 
 ### Other
 
-*None yet*
+* Add pure to some SharedTransformSystem methods.
 
 ### Internal
 

@@ -273,26 +273,6 @@ namespace Robust.Shared.CompNetworkGenerator
 
                         break;
                     case GlobalEntityUidSetName:
-                        networkedType = $"{GlobalNetEntityUidSetName}";
-
-                        stateFields.Append($@"
-        public {networkedType} {name} = default!;");
-
-                        getField = $"GetNetEntitySet(component.{name})";
-                        cast = $"({GlobalNetEntityUidSetName})";
-
-                        handleStateSetters.Append($@"
-            EnsureEntitySet<{componentName}>(state.{name}, uid, component.{name});");
-
-                        deltaHandleFields.Append($@"
-                    EnsureEntitySet<{componentName}>({cast} {fieldHandleValue}, uid, component.{name});");
-
-                        shallowClone.Append($@"
-                {name} = this.{name},");
-
-                        deltaApply.Add($@"fullState.{name} = {name};");
-
-                        break;
                     case GlobalWeakEntityReferenceSetName:
                         networkedType = $"{GlobalNetEntityUidSetName}";
 
@@ -315,26 +295,6 @@ namespace Robust.Shared.CompNetworkGenerator
 
                         break;
                     case GlobalEntityUidListName:
-                        networkedType = $"{GlobalNetEntityUidListName}";
-
-                        stateFields.Append($@"
-                        public {networkedType} {name} = default!;");
-
-                        getField = $"GetNetEntityList(component.{name})";
-                        cast = $"({GlobalNetEntityUidListName})";
-
-                        handleStateSetters.Append($@"
-            EnsureEntityList<{componentName}>(state.{name}, uid, component.{name});");
-
-                        deltaHandleFields.Append($@"
-                    EnsureEntityList<{componentName}>({cast} {fieldHandleValue}, uid, component.{name});");
-
-                        shallowClone.Append($@"
-                {name} = this.{name},");
-
-                        deltaApply.Add($@"fullState.{name} = {name};");
-
-                        break;
                     case GlobalWeakEntityReferenceListName:
                         networkedType = $"{GlobalNetEntityUidListName}";
 
@@ -354,6 +314,7 @@ namespace Robust.Shared.CompNetworkGenerator
                 {name} = this.{name},");
 
                         deltaApply.Add($@"fullState.{name} = {name};");
+
                         break;
                     default:
                         if (type is INamedTypeSymbol { TypeArguments.Length: 2 } named &&

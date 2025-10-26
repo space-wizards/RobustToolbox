@@ -266,7 +266,7 @@ namespace Robust.Client.UserInterface.Controls
             return _getStyleBox()?.MinimumSize ?? Vector2.Zero;
         }
 
-        private void _invalidateEntries()
+        internal void _invalidateEntries()
         {
             _totalContentHeight = 0;
             var font = _getFont();
@@ -334,6 +334,14 @@ namespace Robust.Client.UserInterface.Controls
                 _invalidateEntries();
 
             base.UIScaleChanged();
+        }
+
+        protected override void StylePropertiesChanged()
+        {
+            base.StylePropertiesChanged();
+
+            // Font may have changed.
+            _invalidateEntries();
         }
 
         internal static float GetScrollSpeed(Font font, float scale)

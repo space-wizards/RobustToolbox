@@ -42,6 +42,7 @@ END TEMPLATE-->
 * CVars defined in `[CVarDefs]` can now be private or internal.
 * Added config rollback system to `IConfigurationManager`. This enables CVars to be snapshot and rolled back, even in the event of client crash.
 * `OptionButton` now has a `Filterable` property that gives it a text box to filter options.
+* Added `FontTagHijackHolder` to replace fonts resolved by `FontTag`.
 * The engine can now load system fonts.
   * At the moment only available on Windows.
   * See `ISystemFontManager` for API.
@@ -51,6 +52,7 @@ END TEMPLATE-->
 * Fix `Menu` and `NumpadDecimal` key codes on SDL3.
 * Fix modifying `Label.FontOverride` not causing a layout update.
 * Controls created by rich-text tags now get arranged to a proper size.
+* Fix `OutputPanel` scrollbar breaking if a style update changes the font size.
 
 ### Other
 

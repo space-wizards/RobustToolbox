@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.ViewVariables;
@@ -50,6 +50,9 @@ namespace Robust.Client.UserInterface
         // _actualStylesheetCached needs update.
         private bool _stylesheetUpdateNeeded;
         internal int RestyleGeneration;
+        // Cached value to determine if child Controls may need
+        // to be restyled when this element's style changes
+        internal bool RestyleChildElements { get; private set; }
 
         private string? _styleIdentifier;
 
@@ -152,6 +155,7 @@ namespace Robust.Client.UserInterface
         public void DoStyleUpdate()
         {
             _styleProperties.Clear();
+            RestyleChildElements = false;
 
             if (_stylesheetUpdateNeeded)
             {
@@ -184,6 +188,10 @@ namespace Robust.Client.UserInterface
                 if (rule.Selector.Matches(this))
                 {
                     ruleList.Add((index, rule));
+                }
+                if (!RestyleChildElements && rule.Selector.PotentialChildMatch(this))
+                {
+                    RestyleChildElements = true;
                 }
             }
 

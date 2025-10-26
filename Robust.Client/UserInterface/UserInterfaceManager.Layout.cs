@@ -186,9 +186,12 @@ internal sealed partial class UserInterfaceManager
             /// Request children to be restyled, which will recursively enqueue style updates
             /// for all descendent child Controls. This is to propogate changed styles to any
             /// controls which use a MutableSelectorChild rule based on the input control.
-            foreach (var child in control.Children)
+            if (control.RestyleChildElements)
             {
-                child.Restyle();
+                foreach (var child in control.Children)
+                {
+                    child.Restyle();
+                }
             }
         }
 

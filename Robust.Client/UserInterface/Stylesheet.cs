@@ -314,7 +314,24 @@ namespace Robust.Client.UserInterface
 
     public abstract class Selector
     {
+        /// <summary>
+        ///     Returns true if this selector should apply to input control
+        /// </summary>
         public abstract bool Matches(Control control);
+
+        /// <summary>
+        ///     Returns true if this selector might apply to children of this
+        ///     control. This should assume variable properties such as style
+        ///     classes or pseudo classes match, and only return false if this
+        ///     selector does not match invariable properties such as the element
+        ///     type.
+        /// </summary>
+        public abstract bool PotentialChildMatch(Control control);
+
+        /// <summary>
+        ///     Return a specificity to determine which rule should apply
+        ///     to a control when multiple Selectors match
+        /// </summary>
         public abstract StyleSpecificity CalculateSpecificity();
     }
 
@@ -405,6 +422,16 @@ namespace Robust.Client.UserInterface
             return true;
         }
 
+        public override bool PotentialChildMatch(Control control)
+        {
+            if (ElementType != null)
+            {
+                return ElementType.IsInstanceOfType(control);
+            }
+
+            return false;
+        }
+
         public override StyleSpecificity CalculateSpecificity()
         {
             var countId = ElementId == null ? 0 : 1;
@@ -461,6 +488,20 @@ namespace Robust.Client.UserInterface
             return found;
         }
 
+        public override bool PotentialChildMatch(Control control)
+        {
+            var cur = control;
+            while (cur != null)
+            {
+                if (Ascendant.PotentialChildMatch(cur))
+                {
+                    return true;
+                }
+                cur = cur.Parent;
+            }
+            return Descendant.PotentialChildMatch(control);
+        }
+
         public override StyleSpecificity CalculateSpecificity()
         {
             return Ascendant.CalculateSpecificity() + Descendant.CalculateSpecificity();
@@ -490,6 +531,12 @@ namespace Robust.Client.UserInterface
             }
 
             return Parent.Matches(control.Parent) && Child.Matches(control);
+        }
+
+        public override bool PotentialChildMatch(Control control)
+        {
+            // We need to check both Parent and Child, as this may be used in a chain of Selectors
+            return Parent.PotentialChildMatch(control) || Child.PotentialChildMatch(control);
         }
 
         public override StyleSpecificity CalculateSpecificity()

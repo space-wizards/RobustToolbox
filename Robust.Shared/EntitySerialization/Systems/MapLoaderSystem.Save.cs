@@ -230,45 +230,4 @@ public sealed partial class MapLoaderSystem
         Write(path, data);
         return true;
     }
-
-    /// <summary>
-    /// Serialize all initialized maps to a yaml file, producing a full game-state that then can be reloaded.
-    /// </summary>
-    public bool TrySaveGame(
-        ResPath path,
-        out FileCategory category,
-        SerializationOptions? options = null)
-    {
-        category = FileCategory.Save;
-        if (EntityManager.EntityCount == 0)
-            return false;
-
-        var opts = options ?? new SerializationOptions { MissingEntityBehaviour = MissingEntityBehaviour.AutoInclude };
-        opts.Category = category;
-
-        var entities = new HashSet<EntityUid>();
-
-        var query = AllEntityQuery<TransformComponent>();
-        while (query.MoveNext(out var uid, out var xform))
-        {
-            if (Deleted(uid) || xform.ParentUid != EntityUid.Invalid)
-                continue;
-
-            entities.Add(uid);
-        }
-
-        MappingDataNode data;
-        try
-        {
-            (data, category) = SerializeEntitiesRecursive(entities, opts);
-        }
-        catch (Exception e)
-        {
-            Log.Error($"Caught exception while trying to serialize entities:\n{e}");
-            return false;
-        }
-
-        Write(path, data);
-        return true;
-    }
 }

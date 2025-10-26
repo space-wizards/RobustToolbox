@@ -5,6 +5,7 @@ using Robust.Shared.ContentPack;
 using Robust.Shared.EntitySerialization;
 using Robust.Shared.EntitySerialization.Systems;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameSaves;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Map;
@@ -362,7 +363,7 @@ namespace Robust.Server.Console.Commands
             }
 
             shell.WriteLine(Loc.GetString("cmd-savegame-attempt", ("path", args[0])));
-            bool saveSuccess = _system.GetEntitySystem<MapLoaderSystem>().TrySaveGame(new ResPath(args[0]), out _);
+            bool saveSuccess = _system.GetEntitySystem<GameSavesSystem>().TrySaveGame(new ResPath(args[0]));
             if(saveSuccess)
             {
                 shell.WriteLine(Loc.GetString("cmd-savegame-success"));

@@ -278,30 +278,6 @@ public sealed partial class MapLoaderSystem
         return true;
     }
 
-    /// <summary>
-    /// Tries to load the full game save state from a file.
-    /// Handles only loading, doesn't actually flush any entities.
-    /// </summary>
-    public bool TryLoadGame(
-        ResPath path,
-        DeserializationOptions? options = null)
-    {
-        var opts = new MapLoadOptions
-        {
-            DeserializationOptions = options ?? DeserializationOptions.Default,
-            ExpectedCategory = FileCategory.Save
-        };
-
-        if (!TryLoadGeneric(path, out var result, opts))
-            return false;
-
-        if (result.Entities.Count + result.NullspaceEntities.Count != 0) // Make sure we loaded at least some entities
-            return true;
-
-        Delete(result);
-        return false;
-    }
-
     private void ApplyTransform(EntityDeserializer deserializer, MapLoadOptions opts)
     {
         if (opts.Rotation == Angle.Zero && opts.Offset == Vector2.Zero)

@@ -328,11 +328,14 @@ namespace Robust.Client.Graphics.Clyde
             {
                 reg.RenderTexture?.Dispose();
 
-                reg.RenderTexture = Clyde.CreateRenderTarget(reg.Reg.FramebufferSize, new RenderTargetFormatParameters
-                {
-                    ColorFormat = RenderTargetColorFormat.Rgba8Srgb,
-                    HasDepthStencil = true
-                });
+                reg.RenderTexture = Clyde.CreateRenderTarget(
+                    reg.Reg.FramebufferSize,
+                    new RenderTargetFormatParameters
+                    {
+                        ColorFormat = RenderTargetColorFormat.Rgba8Srgb,
+                        HasDepthStencil = true
+                    },
+                    name: $"{reg.Reg.Id}-RenderTexture");
                 // Necessary to correctly sync multi-context blitting.
                 reg.RenderTexture.MakeGLFence = true;
             }

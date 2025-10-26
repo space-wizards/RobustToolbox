@@ -16,7 +16,7 @@ public sealed partial class MapLoaderSystem
     public event EntitySerializer.IsSerializableDelegate? OnIsSerializable;
 
     /// <summary>
-    /// Recursively serialize the given entity and its children.
+    /// Recursively serialize the given entities and all of their children.
     /// </summary>
     public (MappingDataNode Node, FileCategory Category) SerializeEntitiesRecursive(
         HashSet<EntityUid> entities,
@@ -41,12 +41,7 @@ public sealed partial class MapLoaderSystem
 
         var serializer = new EntitySerializer(_dependency, opts);
         serializer.OnIsSerializeable += OnIsSerializable;
-
-        foreach (var ent in entities)
-        {
-            serializer.SerializeEntityRecursive(ent);
-        }
-
+        serializer.SerializeEntityRecursive(entities);
         var data = serializer.Write();
         var cat = serializer.GetCategory();
 

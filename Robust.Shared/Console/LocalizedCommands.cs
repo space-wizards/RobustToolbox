@@ -19,7 +19,7 @@ public abstract class LocalizedCommands : IConsoleCommand
     public virtual string Description => LocalizationManager.TryGetString($"cmd-{Command}-desc", out var val) ? val : "";
 
     /// <inheritdoc />
-    public virtual string Help => LocalizationManager.TryGetString($"cmd-{Command}-help", out var val) ? val : "";
+    public virtual string Help => LocalizationManager.TryGetString($"cmd-{Command}-help", out var val, ("command", Command)) ? val : "";
 
     /// <inheritdoc />
     public virtual bool RequireServerOrSingleplayer => false;

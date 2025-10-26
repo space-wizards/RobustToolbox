@@ -132,13 +132,13 @@ namespace Robust.Shared
         /// Whether to interpolate between server game states for render frames on the client.
         /// </summary>
         public static readonly CVarDef<bool> NetInterp =
-            CVarDef.Create("net.interp", true, CVar.ARCHIVE | CVar.CLIENTONLY);
+            CVarDef.Create("net.interp", true, CVar.ARCHIVE | CVar.CLIENT | CVar.REPLICATED);
 
         /// <summary>
         /// The target number of game states to keep buffered up to smooth out network inconsistency.
         /// </summary>
         public static readonly CVarDef<int> NetBufferSize =
-            CVarDef.Create("net.buffer_size", 2, CVar.ARCHIVE | CVar.CLIENTONLY);
+            CVarDef.Create("net.buffer_size", 2, CVar.ARCHIVE | CVar.CLIENT | CVar.REPLICATED);
 
         /// <summary>
         /// The maximum size of the game state buffer. If this is exceeded the client will request a full game state.
@@ -1003,6 +1003,15 @@ namespace Robust.Shared
             CVarDef.Create("display.vsync", true, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /// <summary>
+        /// Maximum framerate the client should run at. Set to 0 to have no limit.
+        /// </summary>
+        /// <remarks>
+        /// This is ignored if <see cref="DisplayVSync"/> is enabled.
+        /// </remarks>
+        public static readonly CVarDef<int> DisplayMaxFPS =
+            CVarDef.Create("display.max_fps", 0, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
         /// Window mode for the main game window. 0 = windowed, 1 = fullscreen.
         /// </summary>
         public static readonly CVarDef<int> DisplayWindowMode =
@@ -1195,7 +1204,7 @@ namespace Robust.Shared
             CVarDef.Create("display.use_US_QWERTY_hotkeys", false, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         public static readonly CVarDef<string> DisplayWindowingApi =
-            CVarDef.Create("display.windowing_api", "glfw", CVar.CLIENTONLY);
+            CVarDef.Create("display.windowing_api", "sdl3", CVar.CLIENTONLY);
 
         /// <summary>
         /// If true and on Windows 11 Build 22000,
@@ -1826,6 +1835,15 @@ namespace Robust.Shared
         /// and will complain if anything unknown is found (probably indicating a typo of some kind).
         /// </remarks>
         public static readonly CVarDef<bool> CfgCheckUnused = CVarDef.Create("cfg.check_unused", true);
+
+        /// <summary>
+        /// Storage for CVars that should be rolled back next client startup.
+        /// </summary>
+        /// <remarks>
+        /// This CVar is utilized through <see cref="IConfigurationManager"/>'s rollback functionality.
+        /// </remarks>
+        internal static readonly CVarDef<string>
+            CfgRollbackData = CVarDef.Create("cfg.rollback_data", "", CVar.ARCHIVE);
 
         /*
         * Network Resource Manager

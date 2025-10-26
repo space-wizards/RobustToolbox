@@ -119,8 +119,8 @@ namespace Robust.Client.Graphics.Clyde
                     break;
                 default:
                     _logManager.GetSawmill("clyde.win").Log(
-                        LogLevel.Error, "Unknown windowing API: {name}. Falling back to GLFW.", windowingApi);
-                    goto case "glfw";
+                        LogLevel.Error, "Unknown windowing API: {name}. Falling back to SDL3.", windowingApi);
+                    goto case "sdl3";
             }
 
             _windowing = winImpl;
@@ -354,15 +354,17 @@ namespace Robust.Client.Graphics.Clyde
                 _windowHandles.Add(reg.Handle);
 
                 var rtId = AllocRid();
+                var renderTarget = new RenderWindow(this, rtId);
                 _renderTargets.Add(rtId, new LoadedRenderTarget
                 {
                     Size = reg.FramebufferSize,
                     IsWindow = true,
                     WindowId = reg.Id,
-                    IsSrgb = true
+                    IsSrgb = true,
+                    Instance = new WeakReference<RenderTargetBase>(renderTarget),
                 });
 
-                reg.RenderTarget = new RenderWindow(this, rtId);
+                reg.RenderTarget = renderTarget;
 
                 _glContext!.WindowCreated(glSpec, reg);
             }
@@ -405,10 +407,17 @@ namespace Robust.Client.Graphics.Clyde
             _glContext?.SwapAllBuffers();
         }
 
-        private void VSyncChanged(bool newValue)
+        public bool VsyncEnabled
         {
-            _vSync = newValue;
-            _glContext?.UpdateVSync();
+            get => _vSync;
+            set
+            {
+                if (_vSync == value)
+                    return;
+
+                _vSync = value;
+                _glContext?.UpdateVSync();
+            }
         }
 
         private void WindowModeChanged(int mode)

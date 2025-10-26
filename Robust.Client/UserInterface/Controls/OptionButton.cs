@@ -205,6 +205,11 @@ namespace Robust.Client.UserInterface.Controls
             SelectedId = 0;
         }
 
+        public string GetItemText(int idx)
+        {
+            return _buttonData[idx].Text;
+        }
+
         public int GetItemId(int idx)
         {
             return _buttonData[idx].Id;

@@ -47,6 +47,7 @@ END TEMPLATE-->
 
 * Fix `Menu` and `NumpadDecimal` key codes on SDL3.
 * Fix modifying `Label.FontOverride` not causing a layout update.
+* Controls created by rich-text tags now get arranged to a proper size.
 
 ### Other
 

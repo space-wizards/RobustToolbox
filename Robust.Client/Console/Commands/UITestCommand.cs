@@ -3,6 +3,7 @@ using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
+using Robust.Client.UserInterface.RichText;
 using Robust.Shared.Console;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -207,7 +208,10 @@ Suspendisse hendrerit blandit urna ut laoreet. Suspendisse ac elit at erat males
     private Control TabRichText()
     {
         var label = new RichTextLabel();
-        label.SetMessage(FormattedMessage.FromMarkupOrThrow(Lipsum));
+        var msg = FormattedMessage.FromMarkupOrThrow(Lipsum);
+        msg.AddMarkupOrThrow("\n\nWAWWAAWAWWAWA [cmdlink=\"DOES IT WORK\" command=\"help\" /] DOES IT WORK");
+
+        label.SetMessage(msg, [typeof(CommandLinkTag)]);
 
         TabContainer.SetTabTitle(label, "RichText");
         return label;

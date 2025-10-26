@@ -679,6 +679,8 @@ Types:
     MethodInfo: { }
     TypeAttributes: { } # Enum
     TypeInfo: { }
+  System.Reflection.Metadata:
+    MetadataUpdateHandlerAttribute: { All: True }
   System.Runtime.CompilerServices:
     AsyncStateMachineAttribute: { All: True }
     AsyncTaskMethodBuilder: { All: True }

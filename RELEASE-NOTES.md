@@ -45,6 +45,7 @@ END TEMPLATE-->
 * Added `FontTagHijackHolder` to replace fonts resolved by `FontTag`.
 * Sandbox:
   * Exposed `System.Reflection.Metadata.MetadataUpdateHandlerAttribute`.
+  * Exposed more overloads on `StringBuilder`.
 
 ### Bugfixes
 

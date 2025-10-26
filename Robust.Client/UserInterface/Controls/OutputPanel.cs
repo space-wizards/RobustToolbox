@@ -336,6 +336,14 @@ namespace Robust.Client.UserInterface.Controls
             base.UIScaleChanged();
         }
 
+        protected override void StylePropertiesChanged()
+        {
+            base.StylePropertiesChanged();
+
+            // Font may have changed.
+            _invalidateEntries();
+        }
+
         internal static float GetScrollSpeed(Font font, float scale)
         {
             return font.GetLineHeight(scale) * 2;

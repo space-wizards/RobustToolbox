@@ -60,7 +60,7 @@ END TEMPLATE-->
 
 ### Internal
 
-*None yet*
+* The `dmetamem` command now sorts its output, and doesn't output to log anymore to avoid output interleaving.
 
 
 ## 267.3.0

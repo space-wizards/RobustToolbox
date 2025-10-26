@@ -51,6 +51,7 @@ END TEMPLATE-->
 ### Other
 
 * Add pure to some SharedTransformSystem methods.
+* `Control.Stylesheet` does not do any work if assigning the value it already has.
 
 ### Internal
 

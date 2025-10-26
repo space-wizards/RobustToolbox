@@ -266,7 +266,7 @@ namespace Robust.Client.UserInterface.Controls
             return _getStyleBox()?.MinimumSize ?? Vector2.Zero;
         }
 
-        private void _invalidateEntries()
+        internal void _invalidateEntries()
         {
             _totalContentHeight = 0;
             var font = _getFont();

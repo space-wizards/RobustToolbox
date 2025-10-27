@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
-using System.IO.MemoryMappedFiles;
+using System.Reflection.Metadata;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Log;
@@ -20,38 +20,18 @@ namespace Robust.Client.Graphics.FontManagement;
 /// <summary>
 /// Implementation of <see cref="ISystemFontManager"/> that uses DirectWrite on Windows.
 /// </summary>
-internal sealed unsafe class SystemFontManagerDirectWrite : ISystemFontManagerInternal
+internal sealed unsafe class SystemFontManagerDirectWrite : SystemFontManagerBase, ISystemFontManagerInternal
 {
     // For future implementors of other platforms:
     // a significant amount of code in this file will be shareable with that of other platforms,
     // so some refactoring is warranted.
 
-    /// <summary>
-    /// The "standard" locale used when looking up the PostScript name of a font face.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// Font files allow the PostScript name to be localized, however in practice
-    /// we would really like to have a language-unambiguous identifier to refer to a font file.
-    /// We use this locale (en-US) to look up teh PostScript font name, if there are multiple provided.
-    /// This matches the behavior of the Local Font Access web API:
-    /// https://wicg.github.io/local-font-access/#concept-font-representation
-    /// </para>
-    /// </remarks>
-    private static readonly CultureInfo StandardLocale = new("en-US", false);
-
     private readonly IConfigurationManager _cfg;
-    private readonly IFontManagerInternal _fontManager;
-    private readonly ISawmill _sawmill;
-
-    private readonly object _lock = new();
-    private readonly List<Handle> _fonts = [];
 
     private IDWriteFactory3* _dWriteFactory;
     private IDWriteFontSet* _systemFontSet;
 
     public bool IsSupported => true;
-    public IEnumerable<ISystemFontFace> SystemFontFaces { get; }
 
     /// <summary>
     /// Implementation of <see cref="ISystemFontManager"/> that uses DirectWrite on Windows.
@@ -60,12 +40,9 @@ internal sealed unsafe class SystemFontManagerDirectWrite : ISystemFontManagerIn
         ILogManager logManager,
         IConfigurationManager cfg,
         IFontManagerInternal fontManager)
+        : base(logManager, fontManager)
     {
         _cfg = cfg;
-        _fontManager = fontManager;
-        _sawmill = logManager.GetSawmill("font.system");
-
-        SystemFontFaces = _fonts.AsReadOnly();
     }
 
     public void Initialize()
@@ -74,7 +51,7 @@ internal sealed unsafe class SystemFontManagerDirectWrite : ISystemFontManagerIn
 
         _systemFontSet = GetSystemFontSet(_dWriteFactory);
 
-        lock (_lock)
+        lock (Lock)
         {
             var fontCount = _systemFontSet->GetFontCount();
             for (var i = 0u; i < fontCount; i++)
@@ -83,7 +60,7 @@ internal sealed unsafe class SystemFontManagerDirectWrite : ISystemFontManagerIn
             }
         }
 
-        _sawmill.Verbose($"Loaded {_fonts.Count} fonts");
+        Sawmill.Verbose($"Loaded {Fonts.Count} fonts");
     }
 
     public void Shutdown()
@@ -94,14 +71,14 @@ internal sealed unsafe class SystemFontManagerDirectWrite : ISystemFontManagerIn
         _dWriteFactory->Release();
         _dWriteFactory = null;
 
-        lock (_lock)
+        lock (Lock)
         {
-            foreach (var systemFont in _fonts)
+            foreach (var systemFont in Fonts)
             {
-                systemFont.FontFace->Release();
+                ((Handle)systemFont).FontFace->Release();
             }
 
-            _fonts.Clear();
+            Fonts.Clear();
         }
     }
 
@@ -144,7 +121,7 @@ internal sealed unsafe class SystemFontManagerDirectWrite : ISystemFontManagerIn
             Width = parsedWidth
         };
 
-        _fonts.Add(handle);
+        Fonts.Add(handle);
     }
 
     private static FontWeight ParseFontWeight(DWriteLocalizedString[]? strings)
@@ -191,7 +168,7 @@ internal sealed unsafe class SystemFontManagerDirectWrite : ISystemFontManagerIn
         var result = factory->QueryInterface(__uuidof<IDWriteFactory6>(), (void**)&factory6);
         if (result.SUCCEEDED)
         {
-            _sawmill.Verbose("IDWriteFactory6 available, using newer GetSystemFontSet");
+            Sawmill.Verbose("IDWriteFactory6 available, using newer GetSystemFontSet");
 
             result = factory6->GetSystemFontSet(
                 _cfg.GetCVar(CVars.FontWindowsDownloadable),
@@ -201,7 +178,7 @@ internal sealed unsafe class SystemFontManagerDirectWrite : ISystemFontManagerIn
         }
         else
         {
-            _sawmill.Verbose("IDWriteFactory6 not available");
+            Sawmill.Verbose("IDWriteFactory6 not available");
 
             result = factory->GetSystemFontSet(&fontSet);
         }
@@ -210,8 +187,9 @@ internal sealed unsafe class SystemFontManagerDirectWrite : ISystemFontManagerIn
         return fontSet;
     }
 
-    private IFontFaceHandle LoadFontFace(IDWriteFontFaceReference* fontFace)
+    protected override IFontFaceHandle LoadFontFace(BaseHandle handle)
     {
+        var fontFace = ((Handle)handle).FontFace;
         IDWriteFontFile* file = null;
         IDWriteFontFileLoader* loader = null;
 
@@ -231,7 +209,7 @@ internal sealed unsafe class SystemFontManagerDirectWrite : ISystemFontManagerIn
             result = loader->QueryInterface(__uuidof<IDWriteLocalFontFileLoader>(), (void**)&localLoader);
             if (result.SUCCEEDED)
             {
-                _sawmill.Verbose("Loading font face via memory mapped file...");
+                Sawmill.Verbose("Loading font face via memory mapped file...");
 
                 // We can get the local file path on disk. This means we can directly load it via mmap.
                 uint filePathLength;
@@ -254,11 +232,11 @@ internal sealed unsafe class SystemFontManagerDirectWrite : ISystemFontManagerIn
 
                 localLoader->Release();
 
-                return _fontManager.Load(new MemoryMappedFontMemoryHandle(path));
+                return FontManager.Load(new MemoryMappedFontMemoryHandle(path));
             }
             else
             {
-                _sawmill.Verbose("Loading font face via stream...");
+                Sawmill.Verbose("Loading font face via stream...");
 
                 // DirectWrite doesn't give us anything to go with for this file, read it into regular memory.
                 // If the font file has multiple faces, which is possible, then this approach will duplicate memory.
@@ -270,7 +248,7 @@ internal sealed unsafe class SystemFontManagerDirectWrite : ISystemFontManagerIn
                 ThrowIfFailed(result, "IDWriteFontFileLoader::CreateStreamFromKey");
 
                 using var streamObject = new DirectWriteStream(stream);
-                return _fontManager.Load(streamObject, (int)fontFace->GetFontFaceIndex());
+                return FontManager.Load(streamObject, (int)fontFace->GetFontFaceIndex());
             }
         }
         finally
@@ -406,74 +384,9 @@ internal sealed unsafe class SystemFontManagerDirectWrite : ISystemFontManagerIn
         return new LocalizedStringSet { Primary = strings[0].LocaleName, Values = dict };
     }
 
-    private static string GetLocalizedForLocaleOrFirst(LocalizedStringSet set, CultureInfo culture)
+    private sealed class Handle(SystemFontManagerDirectWrite parent, IDWriteFontFaceReference* fontFace) : BaseHandle(parent)
     {
-        var matchCulture = culture;
-        while (!Equals(matchCulture, CultureInfo.InvariantCulture))
-        {
-            if (set.Values.TryGetValue(culture.Name, out var value))
-                return value;
-
-            matchCulture = matchCulture.Parent;
-        }
-
-        return set.Values[set.Primary];
-    }
-
-    private sealed class Handle(SystemFontManagerDirectWrite parent, IDWriteFontFaceReference* fontFace) : ISystemFontFace
-    {
-        private IFontFaceHandle? _cachedFont;
-
-        public required LocalizedStringSet FullNames;
-        public required LocalizedStringSet FamilyNames;
-        public required LocalizedStringSet FaceNames;
         public readonly IDWriteFontFaceReference* FontFace = fontFace;
-
-        public required string PostscriptName { get; init; }
-        public string FullName => GetLocalizedFullName(CultureInfo.CurrentCulture);
-        public string FamilyName => GetLocalizedFamilyName(CultureInfo.CurrentCulture);
-        public string FaceName => GetLocalizedFaceName(CultureInfo.CurrentCulture);
-
-        public string GetLocalizedFullName(CultureInfo culture)
-        {
-            return GetLocalizedForLocaleOrFirst(FullNames, culture);
-        }
-
-        public string GetLocalizedFamilyName(CultureInfo culture)
-        {
-            return GetLocalizedForLocaleOrFirst(FamilyNames, culture);
-        }
-
-        public string GetLocalizedFaceName(CultureInfo culture)
-        {
-            return GetLocalizedForLocaleOrFirst(FaceNames, culture);
-        }
-
-        public required FontWeight Weight { get; init; }
-        public required FontSlant Slant { get; init; }
-        public required FontWidth Width { get; init; }
-
-        public Font Load(int size)
-        {
-            var handle = GetFaceHandle();
-
-            var instance = parent._fontManager.MakeInstance(handle, size);
-
-            return new VectorFont(instance, size);
-        }
-
-        private IFontFaceHandle GetFaceHandle()
-        {
-            lock (parent._lock)
-            {
-                if (_cachedFont != null)
-                    return _cachedFont;
-
-                parent._sawmill.Verbose($"Loading system font face: {PostscriptName}");
-
-                return _cachedFont = parent.LoadFontFace(FontFace);
-            }
-        }
     }
 
     /// <summary>
@@ -587,50 +500,4 @@ internal sealed unsafe class SystemFontManagerDirectWrite : ISystemFontManagerIn
     }
 
     private record struct DWriteLocalizedString(string Value, string LocaleName);
-
-    private struct LocalizedStringSet
-    {
-        /// <summary>
-        /// The first locale to appear in the list of localized strings.
-        /// Used as fallback if the desired locale is not provided.
-        /// </summary>
-        public required string Primary;
-        public required Dictionary<string, string> Values;
-    }
-
-    private sealed class MemoryMappedFontMemoryHandle : IFontMemoryHandle
-    {
-        private readonly MemoryMappedFile _mappedFile;
-        private readonly MemoryMappedViewAccessor _accessor;
-
-        public MemoryMappedFontMemoryHandle(string filePath)
-        {
-            _mappedFile = MemoryMappedFile.CreateFromFile(
-                filePath,
-                FileMode.Open,
-                null,
-                0,
-                MemoryMappedFileAccess.Read);
-
-            _accessor = _mappedFile.CreateViewAccessor(0, 0, MemoryMappedFileAccess.Read);
-        }
-
-        public byte* GetData()
-        {
-            byte* pointer = null;
-            _accessor.SafeMemoryMappedViewHandle.AcquirePointer(ref pointer);
-            return pointer;
-        }
-
-        public nint GetDataSize()
-        {
-            return (nint)_accessor.Capacity;
-        }
-
-        public void Dispose()
-        {
-            _accessor.Dispose();
-            _mappedFile.Dispose();
-        }
-    }
 }

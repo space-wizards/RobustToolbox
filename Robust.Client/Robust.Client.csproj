@@ -27,6 +27,7 @@
     <PackageReference Include="SpaceWizards.Sodium" PrivateAssets="compile" />
     <PackageReference Include="Microsoft.NET.ILLink.Tasks" />
     <PackageReference Include="TerraFX.Interop.Xlib" />
+    <PackageReference Include="SpaceWizards.Fontconfig.Interop" />
 
     <!-- Needed to pin transitive dependency versions. -->
     <PackageReference Include="System.Text.Json" />

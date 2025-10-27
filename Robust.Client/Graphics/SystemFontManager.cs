@@ -69,6 +69,9 @@ internal sealed class SystemFontManager : ISystemFontManagerInternal, IPostInjec
         if (OperatingSystem.IsWindows())
             return new SystemFontManagerDirectWrite(_logManager, _cfg, _fontManager);
 
+        if (OperatingSystem.IsLinux() || OperatingSystem.IsFreeBSD())
+            return new SystemFontManagerFontconfig(_logManager, _fontManager);
+
         // TODO: Linux and macOS implementations.
 
         return new SystemFontManagerFallback();

@@ -307,14 +307,14 @@ public abstract partial class SharedPhysicsSystem
     /// <summary>
     ///     Go through the cached broadphase movement and update contacts.
     /// </summary>
-    internal void AddPair(string fixtureAId, string fixtureBId, in FixtureProxy proxyA, in FixtureProxy proxyB)
+    internal void AddPair(string fixtureAId, string fixtureBId, in FixtureProxy proxyA, in FixtureProxy proxyB, ContactFlags flags = ContactFlags.None)
     {
         AddPair((proxyA.Entity, proxyA.Body, proxyA.Xform),
             (proxyB.Entity, proxyB.Body, proxyB.Xform),
             fixtureAId, fixtureBId,
             proxyA.Fixture, proxyA.ChildIndex,
             proxyB.Fixture, proxyB.ChildIndex,
-            proxyA.Body, proxyB.Body);
+            proxyA.Body, proxyB.Body, flags: flags);
     }
 
     internal static bool ShouldCollide(Fixture fixtureA, Fixture fixtureB)
@@ -726,7 +726,7 @@ public abstract partial class SharedPhysicsSystem
         // Does a joint prevent collision?
         // if one of them doesn't have jointcomp then they can't share a common joint.
         // otherwise, only need to iterate over the joints of one component as they both store the same joint.
-        if (JointQuery.Resolve(entA.Owner, ref entA.Comp) && JointQuery.HasComp(entB))
+        if (JointQuery.Resolve(entA.Owner, ref entA.Comp, false) && JointQuery.HasComp(entB))
         {
             foreach (var joint in entA.Comp.Joints.Values)
             {
@@ -742,7 +742,7 @@ public abstract partial class SharedPhysicsSystem
     /// <summary>
     ///     Used to prevent bodies from colliding; may lie depending on joints.
     /// </summary>
-    private bool ShouldCollideSlow(
+    internal bool ShouldCollideSlow(
         EntityUid uid,
         EntityUid other,
         PhysicsComponent body,

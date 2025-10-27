@@ -1836,6 +1836,15 @@ namespace Robust.Shared
         /// </remarks>
         public static readonly CVarDef<bool> CfgCheckUnused = CVarDef.Create("cfg.check_unused", true);
 
+        /// <summary>
+        /// Storage for CVars that should be rolled back next client startup.
+        /// </summary>
+        /// <remarks>
+        /// This CVar is utilized through <see cref="IConfigurationManager"/>'s rollback functionality.
+        /// </remarks>
+        internal static readonly CVarDef<string>
+            CfgRollbackData = CVarDef.Create("cfg.rollback_data", "", CVar.ARCHIVE);
+
         /*
         * Network Resource Manager
         */

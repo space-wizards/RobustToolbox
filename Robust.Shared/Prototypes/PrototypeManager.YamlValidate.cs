@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Utility;
@@ -18,25 +21,14 @@ public partial class PrototypeManager
     // disallow them for all prototypes.
     private static readonly char[] DisallowedIdChars = [' ', '.'];
 
-    public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path) => ValidateDirectory(path, out _);
-
-    public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path,
-        out Dictionary<Type, HashSet<string>> protos)
+    // FIXME name and make named tuple or something
+    private IEnumerable<(Type, MappingDataNode, ResPath)> PrototypesForValidation(IEnumerable<ResPath> streams)
     {
-        var streams = Resources.ContentFindFiles(path).ToList().AsParallel()
-            .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."));
-
-        var dict = new Dictionary<string, HashSet<ErrorNode>>();
-        var prototypes = new Dictionary<Type, Dictionary<string, PrototypeValidationData>>();
-
-        foreach (var resourcePath in streams)
+        foreach (var resPath in streams)
         {
-            using var reader = ReadFile(resourcePath);
-
+            using var reader = ReadFile(resPath);
             if (reader == null)
-            {
                 continue;
-            }
 
             var yamlStream = new YamlStream();
             yamlStream.Load(reader);
@@ -44,9 +36,10 @@ public partial class PrototypeManager
             foreach (var doc in yamlStream.Documents)
             {
                 var rootNode = (YamlSequenceNode)doc.RootNode;
-                foreach (YamlMappingNode node in rootNode.Cast<YamlMappingNode>())
+                foreach (var node in rootNode.Cast<YamlMappingNode>())
                 {
                     var typeId = node.GetNode("type").AsString();
+                    // TODO maybe bool flag for this check
                     if (_ignoredPrototypeTypes.Contains(typeId))
                         continue;
 
@@ -56,31 +49,53 @@ public partial class PrototypeManager
                     }
 
                     var mapping = node.ToDataNodeCast<MappingDataNode>();
-                    var id = mapping.Get<ValueDataNode>("id").Value;
-
-                    var data = new PrototypeValidationData(id, mapping, resourcePath.ToString());
-                    mapping.Remove("type");
-
-                    if (DisallowedIdChars.TryFirstOrNull(c => id.Contains(c), out var letter))
-                    {
-                        dict.GetOrNew(data.File)
-                            .Add(new ErrorNode(mapping, $"Prototype '{id}' ({type}) contains disallowed "
-                                                        + $"character '{letter}'."));
-                    }
-
-                    if (prototypes.GetOrNew(type).TryAdd(id, data))
-                        continue;
-
-                    var error = new ErrorNode(mapping, $"Found dupe prototype ID of {id} for {type}");
-                    dict.GetOrNew(data.File).Add(error);
+                    yield return (type, mapping, resPath);
                 }
             }
+        }
+    }
+
+    public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path) => ValidateDirectory(path, out _);
+
+    public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path,
+        out Dictionary<Type, HashSet<string>> protos)
+    {
+        var streams = Resources.ContentFindFiles(path)
+            .ToList()
+            .AsParallel()
+            .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith('.'));
+
+        var dict = new Dictionary<string, HashSet<ErrorNode>>();
+        var prototypes = new Dictionary<Type, Dictionary<string, PrototypeValidationData>>();
+
+        foreach (var (type, mapping, resourcePath) in PrototypesForValidation(streams))
+        {
+            var id = mapping.Get<ValueDataNode>("id").Value;
+
+            var data = new PrototypeValidationData(id, mapping, resourcePath.ToString());
+            mapping.Remove("type");
+
+            if (DisallowedIdChars.TryFirstOrNull(c => id.Contains(c), out var letter))
+            {
+                dict.GetOrNew(data.File)
+                    .Add(new ErrorNode(mapping,
+                        $"Prototype '{id}' ({type}) contains disallowed character '{letter}'."));
+            }
+
+            if (prototypes.GetOrNew(type).TryAdd(id, data))
+                continue;
+
+            var error = new ErrorNode(mapping, $"Found dupe prototype ID of {id} for {type}");
+            dict.GetOrNew(data.File).Add(error);
         }
 
         var ctx = new YamlValidationContext();
         var errors = new List<ErrorNode>();
+        var saveProto = !path.FilenameWithoutExtension.Contains("Engine") && _net.IsServer;
+        var dir = Directory.CreateDirectory("prototypes");
         foreach (var (type, instances) in prototypes)
         {
+            Dictionary<string, DataNode> allThings = [];
             foreach (var (id, data) in instances)
             {
                 errors.Clear();
@@ -95,6 +110,30 @@ public partial class PrototypeManager
                 errors.AddRange(_serializationManager.ValidateNode(type, data.Mapping).GetErrors());
                 if (errors.Count > 0)
                     dict.GetOrNew(data.File).UnionWith(errors);
+
+                if (saveProto)
+                {
+                    var mapSorted = data.Mapping.OrderByDescending(x => x.Key == "id")
+                        .ThenBy(x => x.Key)
+                        .ToDictionary();
+
+                    if (mapSorted.TryGetValue("components", out var compNode)
+                        && compNode is SequenceDataNode comps)
+                    {
+                        mapSorted["components"] = new SequenceDataNode(comps
+                            .Where(x => x is MappingDataNode)
+                            .Cast<MappingDataNode>()
+                            .Select(x => new MappingDataNode(x
+                                .OrderByDescending(y => y.Key == "type")
+                                .ThenBy(y => y.Key)
+                                .ToDictionary()))
+                            .OrderBy(x => x["type"].ToString())
+                            .Cast<DataNode>()
+                            .ToList());
+                    }
+
+                    allThings.Add(id, new MappingDataNode(mapSorted));
+                }
 
                 // Create instance & re-serialize it, to validate the default values of data-fields. We still validate
                 // the yaml directly just in case reading & writing the fields somehow modifies their values.
@@ -111,6 +150,16 @@ public partial class PrototypeManager
                     errors.Add(new ErrorNode(new ValueDataNode(), $"Caught Exception while validating {type} prototype {id}. Exception: {ex}"));
                 }
             }
+
+            if (allThings.Count <= 0)
+                continue;
+
+            var nodes = new SequenceDataNode(allThings
+                .OrderBy(x => x.Key)
+                .Select(x => x.Value)
+                .ToList());
+            using var writer = new StreamWriter($"{dir.Name}/{type.Name}.yml", true);
+            nodes.Write(writer);
         }
 
         protos = new(prototypes.Count);
@@ -181,6 +230,7 @@ public partial class PrototypeManager
         }
     }
 
+    // TODO rename
     private sealed class PrototypeValidationData
     {
         public readonly string Id;

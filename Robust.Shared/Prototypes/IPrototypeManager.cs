@@ -504,6 +504,9 @@ public interface IPrototypeManager
     /// empty, everything was successfully validated.</returns>
     Dictionary<Type, Dictionary<string, HashSet<ErrorNode>>> ValidateAllPrototypesSerializable(ISerializationContext? ctx);
 
+    // TODO docs
+    void SaveEntityPrototypes(ResPath searchPath);
+
     void LoadFromStream(TextReader stream, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null);
 
     void LoadString(string str, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null);

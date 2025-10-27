@@ -50,6 +50,7 @@ END TEMPLATE-->
 ### Other
 
 * Add pure to some SharedTransformSystem methods.
+* Significantly optimised collision detection in SharedBroadphaseSystem.
 
 ### Internal
 

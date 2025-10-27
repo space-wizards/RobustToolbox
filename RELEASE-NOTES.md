@@ -50,6 +50,7 @@ END TEMPLATE-->
 ### Bugfixes
 
 * Fix `Menu` and `NumpadDecimal` key codes on SDL3.
+* client-side predicted entity deletion ( `EntityManager.PredictedQueueDeleteEntity`) now behaves more like it does on the server. In particular, entities will be deleted on the same tick after all system have been updated. Previously, it would process deletions at the beginning of the next tick.
 * Fix modifying `Label.FontOverride` not causing a layout update.
 * Controls created by rich-text tags now get arranged to a proper size.
 * Fix `OutputPanel` scrollbar breaking if a style update changes the font size.

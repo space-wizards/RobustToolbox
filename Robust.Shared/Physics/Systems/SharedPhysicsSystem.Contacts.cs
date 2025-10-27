@@ -793,8 +793,6 @@ public abstract partial class SharedPhysicsSystem
         return true;
     }
 
-
-
     /// <summary>
     /// Will destroy all contacts and queue for rebuild.
     /// Useful if you have one that may no longer be relevant and don't want to destroy it directly.

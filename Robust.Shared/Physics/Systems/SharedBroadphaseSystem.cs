@@ -187,7 +187,7 @@ namespace Robust.Shared.Physics.Systems
             HandleGridCollisions(movedGrids);
 
             // EZ
-            if (moveBuffer.Count == 0 && _contactJob.Pairs.Count == 0)
+            if (moveBuffer.Count == 0)
                 return;
 
             _contactJob.MoveBuffer.Clear();
@@ -217,6 +217,7 @@ namespace Robust.Shared.Physics.Systems
                     _physicsSystem.WakeBody(proxyB.Entity, force: true, body: otherBody);
                 }
 
+                // TODO: Actually implement this for grids, atm they have their own skrungly fixture handling which prevents this.
                 if ((PairFlag.Grid & flags) == PairFlag.Grid)
                 {
                     contactFlags |= ContactFlags.Grid;
@@ -421,10 +422,8 @@ namespace Robust.Shared.Physics.Systems
                 // We give priority to whoever has the lower entity ID.
                 if (tuple.proxy.Entity.Id > other.Entity.Id)
                 {
-                    var otherMoved = tuple.moveBuffer.Contains(other);
-
                     // Let the other fixture handle it.
-                    if (otherMoved)
+                    if (tuple.moveBuffer.Contains(other))
                         return true;
                 }
 
@@ -591,16 +590,15 @@ namespace Robust.Shared.Physics.Systems
 
             public EntityQuery<TransformComponent> XformQuery;
 
-            public List<FixtureProxy> MoveBuffer = new();
+            public readonly List<FixtureProxy> MoveBuffer = new();
 
-            /// <summary>
-            /// Byte is for any flags we need
-            /// </summary>
             public List<(FixtureProxy, FixtureProxy, PairFlag)> Pairs = new(64);
 
             public float FrameTime;
 
-            public int BatchSize => 32;
+            // Box2D uses 64 but we have to do grid queries for each fixtureproxy which will add a fair bit of overhead.
+            // Plus we also run events + trycomp for joints on top.
+            public int BatchSize => 16;
 
             public void Execute(int index)
             {
@@ -610,7 +608,7 @@ namespace Robust.Shared.Physics.Systems
 
                 var mapUid = XformQuery.GetComponent(proxy.Entity).MapUid ?? EntityUid.Invalid;
 
-                var broadphaseExpand = proxy.Body.LinearVelocity.Length() * 1.5f * FrameTime;
+                var broadphaseExpand = System.GetBroadphaseExpand(proxy.Body, FrameTime);
 
                 var proxyBody = proxy.Body;
                 DebugTools.Assert(!proxyBody.Deleted);

@@ -505,6 +505,7 @@ public interface IPrototypeManager
     Dictionary<Type, Dictionary<string, HashSet<ErrorNode>>> ValidateAllPrototypesSerializable(ISerializationContext? ctx);
 
     // TODO docs
+    // currently will just dump all inherited yml
     void SaveEntityPrototypes(ResPath searchPath);
 
     void LoadFromStream(TextReader stream, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null);

@@ -16,7 +16,21 @@ public partial class PrototypeManager
 
     public void SaveEntityPrototypes(ResPath searchPath)
     {
-        var streams = Resources.ContentFindFiles(searchPath)
+        // mild shitcode.
+        // TODO clean up reused code into actual methods
+        var outStreams = Resources.ContentFindFiles(searchPath)
+            .ToList()
+            .AsParallel()
+            .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith('.'));
+
+        List<string> outProtos = [];
+        foreach (var (_, mapping, _) in PrototypesForValidation(outStreams)
+            .Where(x => x.Item1 == typeof(EntityPrototype)))
+        {
+            outProtos.Add(mapping.Get<ValueDataNode>("id").Value);
+        }
+
+        var streams = Resources.ContentFindFiles("/Prototypes")
             .ToList()
             .AsParallel()
             .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith('.'));
@@ -35,6 +49,9 @@ public partial class PrototypeManager
         foreach (var (id, data) in entityProtos.OrderBy(x => x.Key))
         {
             EnsurePushed(data, entityProtos, typeof(EntityPrototype));
+
+            if (!outProtos.Contains(data.Id))
+                continue;
 
             if (data.Mapping.TryGet("abstract", out ValueDataNode? abstractNode)
                 && bool.Parse(abstractNode.Value))

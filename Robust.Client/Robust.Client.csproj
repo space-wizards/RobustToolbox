@@ -27,7 +27,6 @@
     <PackageReference Include="SpaceWizards.Sodium" PrivateAssets="compile" />
     <PackageReference Include="Microsoft.NET.ILLink.Tasks" />
     <PackageReference Include="TerraFX.Interop.Xlib" />
-    <PackageReference Include="SpaceWizards.Fontconfig.Interop" />
 
     <!-- Needed to pin transitive dependency versions. -->
     <PackageReference Include="System.Text.Json" />
@@ -70,6 +69,11 @@
   </ItemGroup>
 
   <Import Project="..\MSBuild\Robust.Properties.targets" />
+
+  <ItemGroup Condition="'$(IsFreedesktop)' == 'True'">
+    <PackageReference Include="SpaceWizards.Fontconfig.Interop" />
+    <RobustLinkAssemblies Include="SpaceWizards.Fontconfig.Interop" />
+  </ItemGroup>
 
   <Import Project="..\MSBuild\XamlIL.targets" />
 

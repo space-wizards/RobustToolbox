@@ -1,3 +1,4 @@
+#if FREEDESKTOP
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -231,3 +232,4 @@ internal sealed unsafe class SystemFontManagerFontconfig : SystemFontManagerBase
         public required int FileIndex;
     }
 }
+#endif

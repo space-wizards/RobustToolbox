@@ -1,10 +1,9 @@
+#if WINDOWS
 using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.IO;
-using System.Reflection.Metadata;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Log;
@@ -501,3 +500,4 @@ internal sealed unsafe class SystemFontManagerDirectWrite : SystemFontManagerBas
 
     private record struct DWriteLocalizedString(string Value, string LocaleName);
 }
+#endif

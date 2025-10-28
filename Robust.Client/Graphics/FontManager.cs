@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using JetBrains.Annotations;
 using Robust.Client.Utility;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SharpFont;
@@ -19,6 +20,7 @@ namespace Robust.Client.Graphics
         private const int SheetHeight = 256;
 
         private readonly IClyde _clyde;
+        private readonly ISawmill _sawmill;
 
         private uint _baseFontDpi = 96;
 
@@ -27,10 +29,11 @@ namespace Robust.Client.Graphics
         private readonly Dictionary<(FontFaceHandle, int fontSize), FontInstanceHandle> _loadedInstances =
             new();
 
-        public FontManager(IClyde clyde)
+        public FontManager(IClyde clyde, ILogManager logManager)
         {
             _clyde = clyde;
             _library = new Library();
+            _sawmill = logManager.GetSawmill("font");
         }
 
         public IFontFaceHandle Load(Stream stream, int index = 0)
@@ -41,11 +44,39 @@ namespace Robust.Client.Graphics
             return Load(new ArrayMemoryHandle(fontData), index);
         }
 
-        public unsafe IFontFaceHandle Load(IFontMemoryHandle memory, int index = 0)
+        public IFontFaceHandle Load(IFontMemoryHandle memory, int index = 0)
         {
-            var face = new Face(_library, (nint) memory.GetData(), checked((int)memory.GetDataSize()), index);
+            var face = FaceLoad(memory, index);
             var handle = new FontFaceHandle(face, memory);
             return handle;
+        }
+
+        public IFontFaceHandle LoadWithPostscriptName(IFontMemoryHandle memory, string postscriptName)
+        {
+            var numFaces = 1;
+
+            for (var i = 0; i < numFaces; i++)
+            {
+                var face = FaceLoad(memory, i);
+                numFaces = face.FaceCount;
+
+                if (face.GetPostscriptName() == postscriptName)
+                    return new FontFaceHandle(face, memory);
+
+                face.Dispose();
+            }
+
+            // Fallback, load SOMETHING.
+            _sawmill.Warning($"Failed to load correct font via postscript name! {postscriptName}");
+            return new FontFaceHandle(FaceLoad(memory, 0), memory);
+        }
+
+        private unsafe Face FaceLoad(IFontMemoryHandle memory, int index)
+        {
+            return new Face(_library,
+                (nint)memory.GetData(),
+                checked((int)memory.GetDataSize()),
+                index);
         }
 
         void IFontManagerInternal.SetFontDpi(uint fontDpi)

@@ -1924,5 +1924,21 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<string> XamlHotReloadMarkerName =
             CVarDef.Create("ui.xaml_hot_reload_marker_name", "SpaceStation14.sln", CVar.CLIENTONLY);
+
+        /*
+         * FONT
+         */
+
+        /// <summary>
+        /// If false, disable system font support.
+        /// </summary>
+        public static readonly CVarDef<bool> FontSystem =
+            CVarDef.Create("font.system", true, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// If true, allow Windows "downloadable" fonts to be exposed to the system fonts API.
+        /// </summary>
+        public static readonly CVarDef<bool> FontWindowsDownloadable =
+            CVarDef.Create("font.windows_downloadable", false, CVar.CLIENTONLY | CVar.ARCHIVE);
     }
 }

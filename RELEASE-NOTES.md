@@ -47,6 +47,9 @@ END TEMPLATE-->
 * Sandbox:
   * Exposed `System.Reflection.Metadata.MetadataUpdateHandlerAttribute`.
   * Exposed more overloads on `StringBuilder`.
+* The engine can now load system fonts.
+  * At the moment only available on Windows.
+  * See `ISystemFontManager` for API.
 
 ### Bugfixes
 

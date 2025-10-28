@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
@@ -21,8 +20,22 @@ public partial class PrototypeManager
     // disallow them for all prototypes.
     private static readonly char[] DisallowedIdChars = [' ', '.'];
 
-    // FIXME name and make named tuple or something
-    private IEnumerable<(Type, MappingDataNode, ResPath)> PrototypesForValidation(IEnumerable<ResPath> streams)
+    private IEnumerable<ResPath> GetYamlStreams(ResPath path)
+    {
+        return Resources.ContentFindFiles(path)
+            .ToList()
+            .AsParallel()
+            .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith('.'));
+    }
+
+    /// <summary>
+    ///     Validate all prototypes defined in given yaml files.
+    /// </summary>
+    /// <remarks>Only used for YAML diffs currently, could be made more generic. TODO</remarks>
+    /// <param name="streams">List of .yml files to validate contents of.</param>
+    /// <returns>Entity prototype and validation data.</returns>
+    /// <exception cref="PrototypeLoadException"></exception>
+    private IEnumerable<(Type, PrototypeValidationData)> ValidateStreams(IEnumerable<ResPath> streams)
     {
         foreach (var resPath in streams)
         {
@@ -49,7 +62,9 @@ public partial class PrototypeManager
                     }
 
                     var mapping = node.ToDataNodeCast<MappingDataNode>();
-                    yield return (type, mapping, resPath);
+                    var id = mapping.Get<ValueDataNode>("id").Value;
+
+                    yield return (type, new(id, mapping, resPath.ToString()));
                 }
             }
         }
@@ -60,32 +75,26 @@ public partial class PrototypeManager
     public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResPath path,
         out Dictionary<Type, HashSet<string>> protos)
     {
-        var streams = Resources.ContentFindFiles(path)
-            .ToList()
-            .AsParallel()
-            .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith('.'));
+        var streams = GetYamlStreams(path);
 
         var dict = new Dictionary<string, HashSet<ErrorNode>>();
         var prototypes = new Dictionary<Type, Dictionary<string, PrototypeValidationData>>();
 
-        foreach (var (type, mapping, resourcePath) in PrototypesForValidation(streams))
+        foreach (var (type, data) in ValidateStreams(streams))
         {
-            var id = mapping.Get<ValueDataNode>("id").Value;
+            data.Mapping.Remove("type");
 
-            var data = new PrototypeValidationData(id, mapping, resourcePath.ToString());
-            mapping.Remove("type");
-
-            if (DisallowedIdChars.TryFirstOrNull(c => id.Contains(c), out var letter))
+            if (DisallowedIdChars.TryFirstOrNull(c => data.Id.Contains(c), out var letter))
             {
                 dict.GetOrNew(data.File)
-                    .Add(new ErrorNode(mapping,
-                        $"Prototype '{id}' ({type}) contains disallowed character '{letter}'."));
+                    .Add(new ErrorNode(data.Mapping,
+                        $"Prototype '{data.Id}' ({type}) contains disallowed character '{letter}'."));
             }
 
-            if (prototypes.GetOrNew(type).TryAdd(id, data))
+            if (prototypes.GetOrNew(type).TryAdd(data.Id, data))
                 continue;
 
-            var error = new ErrorNode(mapping, $"Found dupe prototype ID of {id} for {type}");
+            var error = new ErrorNode(data.Mapping, $"Found dupe prototype ID of {data.Id} for {type}");
             dict.GetOrNew(data.File).Add(error);
         }
 

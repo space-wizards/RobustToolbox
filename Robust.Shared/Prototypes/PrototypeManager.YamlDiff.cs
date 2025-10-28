@@ -14,35 +14,33 @@ public partial class PrototypeManager
     private static readonly List<string> FieldOrder =
         ["type", "id", "parent", "categories", "name", "suffix", "description"];
 
+    /// <summary>
+    ///     AKA yaml dumper 9000.
+    ///     Scans through a provided directory for EntityPrototypes and outputs them all as a single file.
+    ///     Includes information on inherited components through parent entities.
+    /// </summary>
+    /// <param name="searchPath">The directory to save prototypes from.</param>
     public void SaveEntityPrototypes(ResPath searchPath)
     {
         // mild shitcode.
         // TODO clean up reused code into actual methods
-        var outStreams = Resources.ContentFindFiles(searchPath)
-            .ToList()
-            .AsParallel()
-            .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith('.'));
+        var outStreams = GetYamlStreams(searchPath);
+        var streams = GetYamlStreams(new("/Prototypes"));
 
         List<string> outProtos = [];
-        foreach (var (_, mapping, _) in PrototypesForValidation(outStreams)
-            .Where(x => x.Item1 == typeof(EntityPrototype)))
-        {
-            outProtos.Add(mapping.Get<ValueDataNode>("id").Value);
-        }
-
-        var streams = Resources.ContentFindFiles("/Prototypes")
-            .ToList()
-            .AsParallel()
-            .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith('.'));
-
         Dictionary<string, PrototypeValidationData> entityProtos = [];
 
-        foreach (var (_, mapping, path) in PrototypesForValidation(streams)
+        foreach (var data in ValidateStreams(outStreams)
+            .Where(x => x.Item1 == typeof(EntityPrototype)))
+        {
+            outProtos.Add(data.Item2.Id);
+        }
+
+        foreach (var data in ValidateStreams(streams)
                      .Where(x => x.Item1 == typeof(EntityPrototype)))
         {
-            var id = mapping.Get<ValueDataNode>("id").Value;
-            mapping.Remove("type");
-            entityProtos[id] = new PrototypeValidationData(id, mapping, path.ToString());
+            data.Item2.Mapping.Remove("type");
+            entityProtos[data.Item2.Id] = data.Item2;
         }
 
         Dictionary<string, DataNode> normalizedPrototypes = [];

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Robust.Client.Graphics.FontManagement;
+using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -66,6 +67,9 @@ internal sealed class SystemFontManager : ISystemFontManagerInternal, IPostInjec
 
     private ISystemFontManagerInternal GetImplementation()
     {
+        if (!_cfg.GetCVar(CVars.FontSystem))
+            return new SystemFontManagerFallback();
+
 #if WINDOWS
         return new SystemFontManagerDirectWrite(_logManager, _cfg, _fontManager);
 #elif FREEDESKTOP

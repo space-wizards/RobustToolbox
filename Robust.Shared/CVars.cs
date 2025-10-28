@@ -1930,6 +1930,12 @@ namespace Robust.Shared
          */
 
         /// <summary>
+        /// If false, disable system font support.
+        /// </summary>
+        public static readonly CVarDef<bool> FontSystem =
+            CVarDef.Create("font.system", true, CVar.CLIENTONLY);
+
+        /// <summary>
         /// If true, allow Windows "downloadable" fonts to be exposed to the system fonts API.
         /// </summary>
         public static readonly CVarDef<bool> FontWindowsDownloadable =

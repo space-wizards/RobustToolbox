@@ -269,6 +269,9 @@ public abstract partial class ToolshedCommand
     }
 }
 
+/// <summary>
+/// Bundle of method arguments that are used to actually invoke the method associated with a command.
+/// </summary>
 internal sealed class CommandInvocationArguments
 {
     public required object? PipedArgument;

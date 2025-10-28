@@ -21,6 +21,7 @@ using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Timing;
+using Robust.Shared.Toolshed;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
@@ -45,6 +46,7 @@ namespace Robust.Shared.GameObjects
         [IoC.Dependency] private readonly INetManager _netMan = default!;
         [IoC.Dependency] private readonly IReflectionManager _reflection = default!;
         [IoC.Dependency] private readonly EntityConsoleHost _entityConsoleHost = default!;
+        [IoC.Dependency] private readonly ToolshedManager _toolshed = default!;
 
         // I feel like PJB might shed me for putting a system dependency here, but its required for setting entity
         // positions on spawn....
@@ -241,7 +243,10 @@ namespace Robust.Shared.GameObjects
             TransformQuery = GetEntityQuery<TransformComponent>();
             _physicsQuery = GetEntityQuery<PhysicsComponent>();
             _actorQuery = GetEntityQuery<ActorComponent>();
+
+            // Raise startup event?
             _entityConsoleHost.Startup();
+            _toolshed.Startup();
         }
 
         public virtual void Shutdown()
@@ -253,7 +258,10 @@ namespace Robust.Shared.GameObjects
             ClearComponents();
             ShuttingDown = false;
             Started = false;
+
+            // Raise shutdown event?
             _entityConsoleHost.Shutdown();
+            _toolshed.Shutdown();
         }
 
         public virtual void Cleanup()

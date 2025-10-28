@@ -7,9 +7,5 @@ namespace Robust.Server.Console
     /// </summary>
     public interface IServerConsoleHost : IConsoleHost
     {
-        /// <summary>
-        /// Initializes the ConsoleShell service.
-        /// </summary>
-        void Initialize();
     }
 }

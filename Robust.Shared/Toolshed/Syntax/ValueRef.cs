@@ -25,7 +25,7 @@ public abstract class ValueRef<T>
         {
             null => default,
             T cast => cast,
-            ValueRef<T> @ref => @ref.Evaluate(ctx),
+            ValueRef<T> @ref => @ref.Evaluate(ctx), // Toolshed variable or command-block
             _ => throw new Exception(
                 $"Failed to parse command parameter. This likely is a toolshed bug and should be reported.\n" +
                 $"Target type: {typeof(T).PrettyName()}.\n" +

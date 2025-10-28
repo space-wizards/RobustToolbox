@@ -20,7 +20,7 @@ namespace Robust.Client.Log
 
         public void Log(string sawmillName, LogEvent message)
         {
-            if (sawmillName == "CON")
+            if (sawmillName == ClientConsoleHost.ConsoleSawmill)
                 return;
 
             var formatted = new FormattedMessage(8);

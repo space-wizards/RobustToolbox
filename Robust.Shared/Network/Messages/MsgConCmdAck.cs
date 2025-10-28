@@ -17,10 +17,11 @@ namespace Robust.Shared.Network.Messages
 
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
-            int length = buffer.ReadVariableInt32();
+            var length = buffer.ReadVariableInt32();
             using var stream = RobustMemoryManager.GetMemoryStream(length);
             buffer.ReadAlignedMemory(stream, length);
             Text = serializer.Deserialize<FormattedMessage>(stream);
+            Error = buffer.ReadBoolean();
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
@@ -31,6 +32,7 @@ namespace Robust.Shared.Network.Messages
 
             buffer.WriteVariableInt32((int)stream.Length);
             buffer.Write(stream.AsSpan());
+            buffer.Write(Error);
         }
     }
 }

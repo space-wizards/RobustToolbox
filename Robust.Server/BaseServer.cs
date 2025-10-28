@@ -107,6 +107,7 @@ namespace Robust.Server
         [Dependency] private readonly UploadedContentManager _uploadedContMan = default!;
         [Dependency] private readonly NetworkResourceManager _netResMan = default!;
         [Dependency] private readonly IReflectionManager _refMan = default!;
+        [Dependency] private readonly ToolshedManager _toolshed = default!;
 
         private readonly Stopwatch _uptimeStopwatch = new();
 
@@ -380,7 +381,7 @@ namespace Robust.Server
             _prototype.LoadDefaultPrototypes();
             _refMan.Initialize();
 
-            IoCManager.Resolve<ToolshedManager>().Initialize();
+            _toolshed.Initialize();
             _consoleHost.Initialize();
             _entityManager.Startup();
             _mapManager.Startup();

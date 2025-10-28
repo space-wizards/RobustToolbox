@@ -131,8 +131,11 @@ public sealed class ParsedCommand
         // to send the client a list of all players.
         if (!ctx.CheckInvokable(implementor.Spec))
         {
-            if (ctx.GenerateCompletions)
-                ctx.Completions = CompletionResult.FromHint($"Insufficient permissions for command: {implementor.FullName}");
+            if (!ctx.GenerateCompletions)
+                return false;
+
+            var hint = ctx.Loc.GetString("cmd-insufficient-permissions", ("cmd", (implementor.FullName)));
+            ctx.Completions = CompletionResult.FromHint(hint);
             return false;
         }
 
@@ -253,6 +256,8 @@ public sealed class ParsedCommand
 
         // TODO: This optimization might be dangerous if blocks can be passed to other people through vars.
         // Or not if it can only be done deliberately, but social engineering is a thing.
+        // This also doesn't take into account that the command itself might be actively modifying the user's permissions.
+        // But thats probably fine?
         _passedInvokeTest = true;
 
         try

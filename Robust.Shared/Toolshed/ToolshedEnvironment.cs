@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Console;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Reflection;
@@ -16,7 +17,7 @@ public sealed class ToolshedEnvironment
     [Dependency] private readonly IReflectionManager _reflection = default!;
     [Dependency] private readonly ILogManager _logManager = default!;
     [Dependency] private readonly ToolshedManager _toolshedManager = default!;
-    [Dependency] private readonly IDependencyCollection _dependency = default!;
+    [Dependency] private readonly EntityManager _entMan = default!;
 
     // Dictionary of commands, not including sub-commands
     private readonly Dictionary<string, ToolshedCommand> _commands = new();
@@ -84,42 +85,61 @@ public sealed class ToolshedEnvironment
         var watch = new Stopwatch();
         watch.Start();
 
+        if (!_entMan.Started)
+            throw new Exception("EntityManager & Systems need to be started first");
+
         foreach (var ty in commands)
         {
-            if (!ty.IsAssignableTo(typeof(ToolshedCommand)))
-            {
-                _log.Error($"The type {ty.AssemblyQualifiedName} has {nameof(ToolshedCommandAttribute)} without being a child of {nameof(ToolshedCommand)}");
-                continue;
-            }
-
-            var cmd = (ToolshedCommand)Activator.CreateInstance(ty)!;
-            _dependency.InjectDependencies(cmd, oneOff: true);
-            cmd.Init();
-            _commands.Add(cmd.Name, cmd);
-
-            var list = new List<CommandSpec>();
-            _commandTypeMap.Add(ty, list);
-
-            foreach (var impl in cmd.CommandImplementors.Values)
-            {
-                list.Add(impl.Spec);
-                _allCommands.Add(impl.Spec);
-
-                foreach (var method in impl.Methods)
-                {
-                    var piped = method.PipeArg?.ParameterType ?? typeof(void);
-
-                    GetTypeImplList(piped).Add(impl.Spec);
-                    var invList = GetCommandRetValuesInternal(impl.Spec);
-                    if (cmd.TryGetReturnType(impl.SubCommand, piped, null, out var retType) || method.Info.ReturnType.Constructable())
-                    {
-                        invList.Add((retType ?? method.Info.ReturnType));
-                    }
-                }
-            }
+            RegisterCommandInternal(ty);
         }
 
         _log.Info($"Initialized new toolshed context in {watch.Elapsed}");
+    }
+
+    public void RegisterCommand<T>() where T : ToolshedCommand, new()
+    {
+        if (!_entMan.Started)
+            throw new Exception("EntityManager & Systems need to be started first");
+
+        RegisterCommandInternal(typeof(T));
+        _commandTypeCache.Clear();
+        _commandCompletionCache.Clear();
+    }
+
+    private void RegisterCommandInternal(Type ty)
+    {
+        if (!ty.IsAssignableTo(typeof(ToolshedCommand)))
+        {
+            _log.Error($"The type {ty.AssemblyQualifiedName} has {nameof(ToolshedCommandAttribute)} without being a child of {nameof(ToolshedCommand)}");
+            return;
+        }
+
+        var cmd = (ToolshedCommand) Activator.CreateInstance(ty)!;
+        _entMan.EntitySysManager.DependencyCollection.InjectDependencies(cmd, oneOff: true);
+        cmd.Init();
+        _commands.Add(cmd.Name, cmd);
+
+        var list = new List<CommandSpec>();
+        _commandTypeMap.Add(ty, list);
+
+        foreach (var impl in cmd.CommandImplementors.Values)
+        {
+            list.Add(impl.Spec);
+            _allCommands.Add(impl.Spec);
+
+            foreach (var method in impl.Methods)
+            {
+                var piped = method.PipeArg?.ParameterType ?? typeof(void);
+
+                GetTypeImplList(piped).Add(impl.Spec);
+                var invList = GetCommandRetValuesInternal(impl.Spec);
+                if (cmd.TryGetReturnType(impl.SubCommand, piped, null, out var retType)
+                    || method.Info.ReturnType.Constructable())
+                {
+                    invList.Add((retType ?? method.Info.ReturnType));
+                }
+            }
+        }
     }
 
     public bool TryGetCommands<T>([NotNullWhen(true)] out IReadOnlyList<CommandSpec>? commands)
@@ -172,6 +192,9 @@ public sealed class ToolshedEnvironment
     // actual command executes fine. E.g.: "i 1 iota iterate { take 1 } 3" works as spected
     public CompletionResult CommandCompletionsForType(Type? t)
     {
+        // TODO TOOLSHED
+        // reload this when locales are reloaded or changed.
+
         t ??= typeof(void);
         if (!_commandCompletionCache.TryGetValue(t, out var arr))
             arr = _commandCompletionCache[t] = CommandsTakingType(t).Select(x => x.AsCompletion()).ToArray();

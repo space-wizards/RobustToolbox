@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Robust.Shared.Enums;
@@ -11,6 +12,7 @@ using Robust.Shared.Network;
 using Robust.Shared.Player;
 using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
+using Robust.Shared.Toolshed;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -22,21 +24,29 @@ namespace Robust.Shared.Console
         protected const string SawmillName = "con";
 
         [Dependency] protected readonly ILogManager LogManager = default!;
-        [Dependency] private readonly IReflectionManager ReflectionManager = default!;
+        [Dependency] protected readonly IReflectionManager ReflectionManager = default!;
         [Dependency] protected readonly INetManager NetManager = default!;
         [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
         [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] protected readonly ILocalizationManager LocalizationManager = default!;
+        [Dependency] private readonly IConGroupController _controller = default!;
 
-        [ViewVariables] protected readonly Dictionary<string, IConsoleCommand> RegisteredCommands = new();
+        protected readonly Dictionary<string, IConsoleCommand> RegisteredCommands = new();
+        protected readonly Dictionary<string, IConsoleCommand> AvailableCommands = new();
+        protected readonly Dictionary<string, IConsoleCommand> RemoteCommands = new();
+
+        [ViewVariables]
+        IReadOnlyDictionary<string, IConsoleCommand> IConsoleHost.RegisteredCommands => RegisteredCommands;
+
+        [ViewVariables]
+        IReadOnlyDictionary<string, IConsoleCommand> IConsoleHost.AvailableCommands => AvailableCommands;
+
         [ViewVariables] private readonly HashSet<string> _autoRegisteredCommands = [];
-
         private bool _isInRegistrationRegion;
 
-        private readonly CommandBuffer _commandBuffer = new CommandBuffer();
+        private readonly CommandBuffer _commandBuffer = new();
 
-        // TODO add Initialize() method.
-        protected ISawmill Sawmill => LogManager.GetSawmill(SawmillName);
+        protected ISawmill Sawmill = default!;
 
         /// <inheritdoc />
         public bool IsServer { get; }
@@ -44,10 +54,8 @@ namespace Robust.Shared.Console
         /// <inheritdoc />
         public IConsoleShell LocalShell { get; }
 
-        /// <inheritdoc />
-        public virtual IReadOnlyDictionary<string, IConsoleCommand> AvailableCommands => RegisteredCommands;
-
-        public abstract event ConAnyCommandCallback? AnyCommandExecuted;
+        public event ConAnyCommandCallback? AnyCommandExecuted;
+        public event EventHandler? ClearText;
 
         protected ConsoleHost(bool isServer)
         {
@@ -55,8 +63,11 @@ namespace Robust.Shared.Console
             LocalShell = new ConsoleShell(this, null, true);
         }
 
-        /// <inheritdoc />
-        public event EventHandler? ClearText;
+        public virtual void Initialize()
+        {
+            Sawmill = LogManager.GetSawmill(SawmillName);
+
+        }
 
         /// <inheritdoc />
         public void LoadConsoleCommands()
@@ -81,8 +92,22 @@ namespace Robust.Shared.Console
             }
         }
 
-        protected virtual void UpdateAvailableCommands()
+        public void UpdateAvailableCommands()
         {
+            AvailableCommands.Clear();
+            AvailableCommands.EnsureCapacity(RegisteredCommands.Count + RemoteCommands.Count);
+
+            foreach (var (name, cmd) in RegisteredCommands)
+            {
+                if (IsAvailable(cmd))
+                    AvailableCommands.Add(name, cmd);
+            }
+
+            foreach (var (name, cmd) in RemoteCommands)
+            {
+                DebugTools.Assert(IsAvailable(cmd));
+                AvailableCommands.TryAdd(name, cmd);
+            }
         }
 
         public void BeginRegistrationRegion()
@@ -95,6 +120,9 @@ namespace Robust.Shared.Console
 
         public void EndRegistrationRegion()
         {
+            // TODO ServerConsoleHost should re-send list of available commands to all players
+            // I.e., re-send MsgConCmdReg
+
             if (!_isInRegistrationRegion)
                 throw new InvalidOperationException("Was not in registration region.");
 
@@ -269,6 +297,103 @@ namespace Robust.Shared.Console
             }
         }
 
+        internal bool ExecuteInShell(IConsoleShell shell, string command)
+        {
+            var args = new List<string>();
+            CommandParsing.ParseArguments(command, args);
+
+            if (args.Count == 0)
+                return false;
+
+            var cmdName = args[0];
+            var cmdArgs = args.Skip(1).ToArray();
+
+            // If we have a locally registered command with the given name, we just try to execute that directly.
+            if (!AvailableCommands.TryGetValue(cmdName, out var cmd))
+            {
+                var error = LocalizationManager.GetString("cmd-unknown-command", ("cmd", cmdName));
+                shell.WriteError(error);
+
+                // Log when clients try to remote execute invalid commands
+                if (IsServer && !shell.IsLocal)
+                    Sawmill.Warning($"{shell.Player.Name}: {error}");
+                return false;
+            }
+
+            if (!ShellCanExecute(shell, cmd))
+            {
+                var error = LocalizationManager.GetString("cmd-insufficient-permissions", ("cmd", cmdName));
+                shell.WriteError(error);
+
+                // Log when clients try to remote execute commands without permissions
+                if (IsServer && !shell.IsLocal)
+                    Sawmill.Warning($"{shell.Player.Name}: {error}");
+
+                return false;
+            }
+
+            try
+            {
+                AnyCommandExecuted?.Invoke(shell, cmdName, command, cmdArgs);
+                cmd.Execute(shell, command, cmdArgs);
+            }
+            catch (Exception e)
+            {
+                Sawmill.Error($"{shell.Player?.Name ?? "LOCAL"}: ExecuteError - {command}:\n{e}");
+                shell.WriteError($"There was an error while executing the command: {e}");
+                return false;
+            }
+
+            return true;
+        }
+
+        protected virtual bool ShellCanExecute(IConsoleShell shell, IConsoleCommand cmd)
+        {
+            if (shell.Player == null)
+                return true;
+
+            if (cmd is ToolshedProxyCommand proxy)
+                return _controller.CheckInvokable(proxy.Spec, shell.Player, out _);
+
+            return _controller.CanCommand(shell.Player, cmd.Command);
+        }
+
+        internal async Task<CompletionResult> CalcCompletions(
+            IConsoleShell shell,
+            IList<string> args,
+            string argStr,
+            CancellationToken cancel)
+        {
+            if (args.Count <= 1)
+            {
+                // Typing out command name
+                var options = AvailableCommands.Values
+                    .Where(c => ShellCanExecute(shell, c))
+                    .Select(x => new CompletionOption(x.Command, x.Description))
+                    .OrderBy(c => c.Value);
+
+                return CompletionResult.FromOptions(options);
+            }
+
+            var cmdName = args[0];
+            if (!AvailableCommands.TryGetValue(cmdName, out var cmd))
+                return CompletionResult.Empty;
+
+            if (!ShellCanExecute(shell, cmd))
+                return CompletionResult.Empty;
+
+            try
+            {
+                return await cmd.GetCompletionAsync(shell, args.Skip(1).ToArray(), argStr, cancel);
+            }
+            catch (Exception e) when (e is not TaskCanceledException)
+            {
+                Sawmill.Error($"Caught exception while getting completions for command {cmdName}: {e}");
+            }
+
+            return CompletionResult.Empty;
+        }
+
         /// <summary>
         /// A console command that was registered inline through <see cref="IConsoleHost"/>.
         /// </summary>
@@ -380,6 +505,19 @@ namespace Robust.Shared.Console
             {
                 return CompletionCallback?.Invoke(shell, args) ?? CompletionResult.Empty;
             }
+
+            // Sandboxing prevents MethodInfo, but content uses attributes for command permissions.
+            public IEnumerable<T> GetCustomAttributes<T>() where T : Attribute
+            {
+                return Callback.Method.GetAttributes<T>();
+            }
+
+            public bool HasCustomAttribute<T>() where T : Attribute
+            {
+                return Callback.Method.HasCustomAttribute<T>();
+            }
         }
+
+        protected virtual bool IsAvailable(IConsoleCommand cmd) => true;
     }
 }

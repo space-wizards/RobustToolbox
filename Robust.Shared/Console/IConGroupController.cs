@@ -1,4 +1,4 @@
-﻿namespace Robust.Server.Console
+﻿namespace Robust.Shared.Console
 {
     public interface IConGroupController : IConGroupControllerImplementation
     {

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Player;
 using Robust.Shared.Utility;
 
@@ -22,6 +23,7 @@ namespace Robust.Shared.Console
         /// <summary>
         /// Is the shell running in a local context (no remote peer session)?.
         /// </summary>
+        [MemberNotNullWhen(false, nameof(Player))]
         bool IsLocal { get; }
 
         /// <summary>

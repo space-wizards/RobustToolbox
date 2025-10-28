@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Robust.Shared;
@@ -13,38 +12,15 @@ internal partial class ClientConsoleHost
     private readonly Dictionary<int, PendingCompletion> _completionsPending = new();
     private int _completionSeq;
 
-
     public async Task<CompletionResult> GetCompletions(List<string> args, string argStr, CancellationToken cancel)
     {
         // Last element is the command currently being typed. May be empty.
-
-        // _logger.Debug($"Running completions: {string.Join(", ", args)}");
-
         var delay = _cfg.GetCVar(CVars.ConCompletionDelay);
         if (delay > 0)
             await Task.Delay((int)(delay * 1000), cancel);
 
-        return await CalcCompletions(args, argStr, cancel);
-    }
-
-    private Task<CompletionResult> CalcCompletions(List<string> args, string argStr, CancellationToken cancel)
-    {
-        if (args.Count == 1)
-        {
-            // Typing out command name, handle this ourselves.
-            var cmdOptions = CompletionResult.FromOptions(
-                AvailableCommands.Values
-                    .Where(c => CanExecute(c.Command))
-                    .OrderBy(c => c.Command)
-                    .Select(c => new CompletionOption(c.Command, c.Description)));
-
-            return Task.FromResult(cmdOptions);
-        }
-
-        if (!AvailableCommands.TryGetValue(args[0], out var cmd))
-            return Task.FromResult(CompletionResult.Empty);
-
-        return cmd.GetCompletionAsync(LocalShell, args.ToArray()[1..], argStr, cancel).AsTask();
+        var shell = new ConsoleShell(this, _player.LocalSession, true);
+        return await CalcCompletions(shell, args, argStr, cancel);
     }
 
     private Task<CompletionResult> DoServerCompletions(List<string> args, string argStr, CancellationToken cancel)

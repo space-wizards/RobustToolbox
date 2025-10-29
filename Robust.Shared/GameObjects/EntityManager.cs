@@ -210,6 +210,9 @@ namespace Robust.Shared.GameObjects
                 catch (Exception e)
                 {
                     _sawmill.Error($"Failed to serialize {compName} component of entity prototype {prototype.ID}. Exception: {e.Message}");
+#if !EXCEPTION_TOLERANCE
+                    throw;
+#endif
                     return false;
                 }
 
@@ -285,12 +288,7 @@ namespace Robust.Shared.GameObjects
             using (histogram?.WithLabels("QueuedDeletion").NewTimer())
             using (_prof.Group("QueueDel"))
             {
-                while (QueuedDeletions.TryDequeue(out var uid))
-                {
-                    DeleteEntity(uid);
-                }
-
-                QueuedDeletionsSet.Clear();
+                ProcessQueueudDeletions();
             }
 
             using (histogram?.WithLabels("ComponentCull").NewTimer())
@@ -298,6 +296,16 @@ namespace Robust.Shared.GameObjects
             {
                 CullRemovedComponents();
             }
+        }
+
+        internal virtual void ProcessQueueudDeletions()
+        {
+            while (QueuedDeletions.TryDequeue(out var uid))
+            {
+                DeleteEntity(uid);
+            }
+
+            QueuedDeletionsSet.Clear();
         }
 
         public virtual void FrameUpdate(float frameTime)
@@ -601,6 +609,9 @@ namespace Robust.Shared.GameObjects
             catch (Exception e)
             {
                 _sawmill.Error($"Caught exception while raising event {nameof(EntityTerminatingEvent)} on entity {ToPrettyString(uid, metadata)}\n{e}");
+#if !EXCEPTION_TOLERANCE
+                throw;
+#endif
             }
 
             foreach (var child in xform._children)
@@ -643,6 +654,9 @@ namespace Robust.Shared.GameObjects
                 catch(Exception e)
                 {
                     _sawmill.Error($"Caught exception while trying to recursively delete child entity '{ToPrettyString(child)}' of '{ToPrettyString(uid, metadata)}'\n{e}");
+#if !EXCEPTION_TOLERANCE
+                    throw;
+#endif
                 }
             }
 
@@ -661,6 +675,9 @@ namespace Robust.Shared.GameObjects
                     catch (Exception e)
                     {
                         _sawmill.Error($"Caught exception while trying to call shutdown on component of entity '{ToPrettyString(uid, metadata)}'\n{e}");
+#if !EXCEPTION_TOLERANCE
+                        throw;
+#endif
                     }
                 }
             }
@@ -676,6 +693,9 @@ namespace Robust.Shared.GameObjects
             catch (Exception e)
             {
                 _sawmill.Error($"Caught exception while invoking event {nameof(EntityDeleted)} on '{ToPrettyString(uid, metadata)}'\n{e}");
+#if !EXCEPTION_TOLERANCE
+                throw;
+#endif
             }
 
             _eventBus.OnEntityDeleted(uid);

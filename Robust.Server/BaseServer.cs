@@ -166,7 +166,11 @@ namespace Robust.Server
         public bool Start(ServerOptions options, Func<ILogHandler>? logHandlerFactory = null)
         {
             Options = options;
+
             _config.Initialize(true);
+
+            _config.LoadCVarsFromAssembly(typeof(BaseServer).Assembly); // Robust.Server
+            _config.LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Robust.Shared
 
             if (Options.LoadConfigAndUserData)
             {
@@ -191,9 +195,6 @@ namespace Robust.Server
                     _config.SetSaveFile(path);
                 }
             }
-
-            _config.LoadCVarsFromAssembly(typeof(BaseServer).Assembly); // Robust.Server
-            _config.LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Robust.Shared
 
             CVarDefaultOverrides.OverrideServer(_config);
 

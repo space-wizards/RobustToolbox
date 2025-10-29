@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.Configuration;
@@ -7,13 +8,32 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
+using Stopwatch = Robust.Shared.Timing.Stopwatch;
 
 namespace Robust.Client.Graphics;
+
+public interface ILoadingScreenManager
+{
+    void BeginLoadingSection(string sectionName);
+
+    /// <summary>
+    /// Start a loading bar "section" for the given method.
+    /// Must be ended with EndSection.
+    /// </summary>
+    void BeginLoadingSection(object method);
+
+    void EndLoadingSection();
+
+    /// <summary>
+    /// Will run the giving function and add a custom "section" for it on the loading screen.
+    /// </summary>
+    void LoadingStep(Action action, object method);
+}
 
 /// <summary>
 /// Manager that creates and displays a basic splash screen and loading bar.
 /// </summary>
-public sealed class LoadingScreenManager
+internal sealed class LoadingScreenManager : ILoadingScreenManager
 {
     [Dependency] private readonly IResourceCache _resourceCache = default!;
     [Dependency] private readonly IClydeInternal _clyde = default!;
@@ -246,4 +266,3 @@ public sealed class LoadingScreenManager
 
     #endregion // Drawing functions
 }
-

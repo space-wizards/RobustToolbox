@@ -12,7 +12,7 @@ using Stopwatch = Robust.Shared.Timing.Stopwatch;
 
 namespace Robust.Client.Graphics;
 
-public interface ILoadingScreenManager
+internal interface ILoadingScreenManager
 {
     void BeginLoadingSection(string sectionName);
 

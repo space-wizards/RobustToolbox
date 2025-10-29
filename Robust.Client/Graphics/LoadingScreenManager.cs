@@ -13,7 +13,7 @@ namespace Robust.Client.Graphics;
 /// <summary>
 /// Manager that creates and displays a basic splash screen and loading bar.
 /// </summary>
-public sealed partial class LoadingScreenManager
+public sealed class LoadingScreenManager
 {
     [Dependency] private readonly IResourceCache _resourceCache = default!;
     [Dependency] private readonly IClydeInternal _clyde = default!;

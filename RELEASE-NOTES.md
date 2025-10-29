@@ -39,19 +39,82 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* Added two new custom yaml serializers `CustomListSerializer` and `CustomArraySerializer`.
+* CVars defined in `[CVarDefs]` can now be private or internal.
+* Added config rollback system to `IConfigurationManager`. This enables CVars to be snapshot and rolled back, even in the event of client crash.
+* `OptionButton` now has a `Filterable` property that gives it a text box to filter options.
+* Added `FontTagHijackHolder` to replace fonts resolved by `FontTag`.
+* Sandbox:
+  * Exposed `System.Reflection.Metadata.MetadataUpdateHandlerAttribute`.
+  * Exposed more overloads on `StringBuilder`.
+* The engine can now load system fonts.
+  * At the moment only available on Windows.
+  * See `ISystemFontManager` for API.
 
 ### Bugfixes
 
-*None yet*
+* Fix `Menu` and `NumpadDecimal` key codes on SDL3.
+* client-side predicted entity deletion ( `EntityManager.PredictedQueueDeleteEntity`) now behaves more like it does on the server. In particular, entities will be deleted on the same tick after all system have been updated. Previously, it would process deletions at the beginning of the next tick.
+* Fix modifying `Label.FontOverride` not causing a layout update.
+* Controls created by rich-text tags now get arranged to a proper size.
+* Fix `OutputPanel` scrollbar breaking if a style update changes the font size.
 
 ### Other
 
-*None yet*
+* ComponentNameSerializer will now ignore any components that have been ignored via `IComponentFactory.RegisterIgnore`.
+* Add pure to some SharedTransformSystem methods.
+* `Control.Stylesheet` does not do any work if assigning the value it already has.
 
 ### Internal
 
-*None yet*
+* The `dmetamem` command now sorts its output, and doesn't output to log anymore to avoid output interleaving.
+
+
+## 267.3.0
+
+### New features
+
+* Sandbox:
+  * Added `System.DateOnly` and `System.TimeOnly`.
+* `MapId`, `MapCoordinates`, and `EntityCoordinates` are now yaml serialisable
+* The base component tree lookup system has new methods including several new `QueryAabb()` overloads that take in a collection and various new `IntersectRay()` overloads that should replace `IntersectRayWithPredicate`.
+ * Added `OccluderSystem.InRangeUnoccluded()` for checking for occluders that lie between two points.
+* `LocalizedCommands` now pass the command name as an argument to the localized help text.
+
+### Bugfixes
+
+* Fixed `MapLoaderSystem.SerializeEntitiesRecursive()` not properly serialising when given multiple root entities (e.g., multiple maps)
+* Fixed yaml hot reloading throwing invalid path exceptions.
+* The `EntityManager.CreateEntityUninitialized` overload that uses MapCoordinates now actually attaches entities to a grid if one is present at those coordinates, as was stated in it's documentation.
+* Fixed physics joint relays not being properly updated when an entity is removed from a container.
+
+### Other
+
+* Updated natives again to attempt to fix issues caused by the previous update.
+
+
+## 267.2.1
+
+
+## 267.2.0
+
+### New features
+
+* Sprites and Sprite layers have a new `Loop` data field that can be set to false to automatically pause animations once they have finished.
+
+### Bugfixes
+
+* Fixed `CollectionExtensions.TryGetValue` throwing an exception when given a negative list index.
+* Fixed `EntityManager.PredictedQueueDeleteEntity()` not deferring changes for networked entities until the end of the tick.
+* Fixed `EntityManager.IsQueuedForDeletion` not returning true foe entities getting deleted via `PredictedQueueDeleteEntity()`
+
+### Other
+
+* `IResourceManager.GetContentRoots()` has been obsoleted and returns no more results.
+
+### Internal
+
+* `IResourceManager.GetContentRoots()` has been replaced with a similar method on `IResourceManagerInternal`. This new method returns `string`s instead of `ResPath`s, and usage code has been updated to use these paths correctly.
 
 
 ## 267.1.0

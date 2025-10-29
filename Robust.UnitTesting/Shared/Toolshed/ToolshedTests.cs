@@ -60,6 +60,10 @@ public sealed class ToolshedTests : ToolshedTest
             Assert.Throws<AssertionException>(() => ParseError<OutOfInputError>("i 2"));
             Assert.That(ExpectedErrors.Count, Is.EqualTo(1));
             ExpectedErrors.Clear();
+
+            // Check that the CommandImplementationAttibute is optional when the type only defines one method.
+            AssertResult("testimplicitimpl", 1);
+            AssertResult("testexplicitimpl", 2);
         });
     }
 

@@ -1207,7 +1207,7 @@ namespace Robust.Shared
             CVarDef.Create("display.use_US_QWERTY_hotkeys", false, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         public static readonly CVarDef<string> DisplayWindowingApi =
-            CVarDef.Create("display.windowing_api", "glfw", CVar.CLIENTONLY);
+            CVarDef.Create("display.windowing_api", "sdl3", CVar.CLIENTONLY);
 
         /// <summary>
         /// If true and on Windows 11 Build 22000,
@@ -1839,6 +1839,15 @@ namespace Robust.Shared
         /// </remarks>
         public static readonly CVarDef<bool> CfgCheckUnused = CVarDef.Create("cfg.check_unused", true);
 
+        /// <summary>
+        /// Storage for CVars that should be rolled back next client startup.
+        /// </summary>
+        /// <remarks>
+        /// This CVar is utilized through <see cref="IConfigurationManager"/>'s rollback functionality.
+        /// </remarks>
+        internal static readonly CVarDef<string>
+            CfgRollbackData = CVarDef.Create("cfg.rollback_data", "", CVar.ARCHIVE);
+
         /*
         * Network Resource Manager
         */
@@ -1918,5 +1927,21 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<string> XamlHotReloadMarkerName =
             CVarDef.Create("ui.xaml_hot_reload_marker_name", "SpaceStation14.sln", CVar.CLIENTONLY);
+
+        /*
+         * FONT
+         */
+
+        /// <summary>
+        /// If false, disable system font support.
+        /// </summary>
+        public static readonly CVarDef<bool> FontSystem =
+            CVarDef.Create("font.system", true, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// If true, allow Windows "downloadable" fonts to be exposed to the system fonts API.
+        /// </summary>
+        public static readonly CVarDef<bool> FontWindowsDownloadable =
+            CVarDef.Create("font.windows_downloadable", false, CVar.CLIENTONLY | CVar.ARCHIVE);
     }
 }

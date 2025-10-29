@@ -96,6 +96,7 @@ namespace Robust.Client
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IReloadManager _reload = default!;
         [Dependency] private readonly ILocalizationManager _loc = default!;
+        [Dependency] private readonly ISystemFontManagerInternal _systemFontManager = default!;
         [Dependency] private readonly LoadingScreenManager _loadscr = default!;
 
         private IWebViewManagerHook? _webViewHook;
@@ -152,6 +153,7 @@ namespace Robust.Client
             _loadscr.LoadingStep(_taskManager.Initialize, _taskManager);
             _loadscr.LoadingStep(_parallelMgr.Initialize, _parallelMgr);
             _fontManager.SetFontDpi((uint)_configurationManager.GetCVar(CVars.DisplayFontDpi));
+            _systemFontManager.Initialize();
 
             // Load optional Robust modules.
             LoadOptionalRobustModules(displayMode, _resourceManifest!);
@@ -376,9 +378,6 @@ namespace Robust.Client
             var userDataDir = GetUserDataDir();
 
             _configurationManager.Initialize(false);
-
-            // MUST load cvars before loading from config file so the cfg manager is aware of secure cvars.
-            // So SECURE CVars are blacklisted from config.
             _configurationManager.LoadCVarsFromAssembly(typeof(GameController).Assembly); // Client
             _configurationManager.LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Shared
 

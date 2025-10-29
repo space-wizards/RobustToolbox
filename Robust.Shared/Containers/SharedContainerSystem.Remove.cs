@@ -95,10 +95,7 @@ public abstract partial class SharedContainerSystem
             _lookup.FindAndAddToEntityTree(toRemove, xform: xform);
         }
 
-        if (TryComp<JointComponent>(toRemove, out var jointComp))
-        {
-            _joint.RefreshRelay(toRemove, jointComp);
-        }
+        RecursivelyUpdateJoints((toRemove, xform));
 
         // Raise container events (after re-parenting and internal remove).
         RaiseLocalEvent(container.Owner, new EntRemovedFromContainerMessage(toRemove, container), true);

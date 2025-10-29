@@ -8,6 +8,7 @@ using Robust.Client.GameObjects;
 using Robust.Client.GameStates;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Clyde;
+using Robust.Client.Graphics.FontManagement;
 using Robust.Client.HWId;
 using Robust.Client.Input;
 using Robust.Client.Localization;
@@ -67,6 +68,7 @@ namespace Robust.Client
             deps.Register<IMapManagerInternal, NetworkedMapManager>();
             deps.Register<INetworkedMapManager, NetworkedMapManager>();
             deps.Register<IEntityManager, ClientEntityManager>();
+            deps.Register<FontTagHijackHolder>();
             deps.Register<IReflectionManager, ClientReflectionManager>();
             deps.Register<IConsoleHost, ClientConsoleHost>();
             deps.Register<IClientConsoleHost, ClientConsoleHost>();
@@ -121,6 +123,8 @@ namespace Robust.Client
                     deps.Register<IInputManager, InputManager>();
                     deps.Register<IFileDialogManager, DummyFileDialogManager>();
                     deps.Register<IUriOpener, UriOpenerDummy>();
+                    deps.Register<ISystemFontManager, SystemFontManagerFallback>();
+                    deps.Register<ISystemFontManagerInternal, SystemFontManagerFallback>();
                     break;
                 case GameController.DisplayMode.Clyde:
                     deps.Register<IClyde, Clyde>();
@@ -131,6 +135,8 @@ namespace Robust.Client
                     deps.Register<IInputManager, ClydeInputManager>();
                     deps.Register<IFileDialogManager, FileDialogManager>();
                     deps.Register<IUriOpener, UriOpener>();
+                    deps.Register<ISystemFontManager, SystemFontManager>();
+                    deps.Register<ISystemFontManagerInternal, SystemFontManager>();
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

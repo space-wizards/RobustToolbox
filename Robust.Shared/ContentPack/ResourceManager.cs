@@ -371,20 +371,19 @@ namespace Robust.Shared.ContentPack
             AddRoot(ResPath.Root, loader);
         }
 
-        public IEnumerable<ResPath> GetContentRoots()
+        IEnumerable<ResPath> IResourceManager.GetContentRoots()
+        {
+            return [];
+        }
+
+        public IEnumerable<string> GetContentRoots()
         {
             foreach (var (_, root) in _contentRoots)
             {
-                if (root is DirLoader loader)
-                {
-                    var rootDir = loader.GetPath(new ResPath(@"/"));
+                if (root is not DirLoader loader)
+                    continue;
 
-                    // TODO: GET RID OF THIS.
-                    // This code shouldn't be passing OS disk paths through ResPath.
-                    rootDir = rootDir.Replace(Path.DirectorySeparatorChar, '/');
-
-                    yield return new ResPath(rootDir);
-                }
+                yield return loader.GetPath(ResPath.Root);
             }
         }
 

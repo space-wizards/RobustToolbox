@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Robust.Client.ResourceManagement;
+using Robust.Client.UserInterface;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
@@ -179,47 +180,55 @@ internal sealed class LoadingScreenManager : ILoadingScreenManager
         if (_finished)
             return;
 
+        var scale = UserInterfaceManager.CalculateUIScale(_clyde.MainWindow.ContentScale.X, _cfg);
+
         // Start at the center!
         var location = screenSize / 2;
 
-        DrawSplash(handle, ref location);
+        DrawSplash(handle, ref location, scale);
 
-        DrawLoadingBar(handle, ref location);
+        DrawLoadingBar(handle, ref location, scale);
 
         if (_showDebug)
         {
-            DrawCurrentLoading(handle, ref location);
+            DrawCurrentLoading(handle, ref location, scale);
 
-            DrawTopTimes(handle, ref location);
+            DrawTopTimes(handle, ref location, scale);
         }
     }
 
-    private void DrawSplash(IRenderHandle handle, ref Vector2i startLocation)
+    private void DrawSplash(IRenderHandle handle, ref Vector2i startLocation, float scale)
     {
         if (!_resourceCache.TryGetResource<TextureResource>(_splashLogo, out var textureResource))
             return;
 
-        handle.DrawingHandleScreen.DrawTexture(textureResource.Texture, startLocation - textureResource.Texture.Size / 2);
-        startLocation += Vector2i.Up * textureResource.Texture.Size.Y / 2;
+        var drawSize = textureResource.Texture.Size * scale;
+
+        handle.DrawingHandleScreen.DrawTextureRect(textureResource.Texture, UIBox2.FromDimensions(startLocation - drawSize / 2, drawSize));
+        startLocation += Vector2i.Up * (int) drawSize.Y / 2;
     }
 
-    private void DrawLoadingBar(IRenderHandle handle, ref Vector2i location)
+    private void DrawLoadingBar(IRenderHandle handle, ref Vector2i location, float scale)
     {
+        var barWidth = (int)(LoadingBarWidth * scale);
+        var barHeight = (int)(LoadingBarHeight * scale);
+        var outlineOffset = (int)(LoadingBarOutlineOffset * scale);
+
         // Always do the offsets, it looks a lot better!
-        location += Vector2i.Left * LoadingBarWidth / 2;
-        location += LogoLoadingBarOffset;
+        location.X -= barWidth / 2;
+        location += (Vector2i) (LogoLoadingBarOffset * scale);
 
         if (!_showLoadingBar)
             return;
 
-        var sectionWidth = LoadingBarWidth / _numberOfLoadingSections;
+        var sectionWidth = barWidth / _numberOfLoadingSections;
 
         var barTopLeft = location;
-        var barBottomRight = new Vector2i(_currentSection * sectionWidth % LoadingBarWidth, LoadingBarHeight);
-        var barBottomRightMax = new Vector2i(LoadingBarWidth, LoadingBarHeight);
+        var barBottomRight = new Vector2i(_currentSection * sectionWidth % barWidth, barHeight);
+        var barBottomRightMax = new Vector2i(barWidth, barHeight);
 
-        var outlinePosition = barTopLeft + Vector2i.DownLeft * LoadingBarOutlineOffset;
-        var outlineSize = barBottomRightMax + Vector2i.UpRight * 2 * LoadingBarOutlineOffset;
+        var outlinePosition = barTopLeft + Vector2i.DownLeft * outlineOffset;
+        var outlineSize = barBottomRightMax + Vector2i.UpRight * 2 * outlineOffset;
 
         // Outline
         handle.DrawingHandleScreen.DrawRect(UIBox2.FromDimensions(outlinePosition, outlineSize), LoadingBarColor, false);
@@ -231,22 +240,22 @@ internal sealed class LoadingScreenManager : ILoadingScreenManager
     }
 
     // Draw the currently loading section to the screen.
-    private void DrawCurrentLoading(IRenderHandle handle, ref Vector2i location)
+    private void DrawCurrentLoading(IRenderHandle handle, ref Vector2i location, float scale)
     {
         if (_font == null || _currentSectionName == null)
             return;
 
-        handle.DrawingHandleScreen.DrawString(_font, location, _currentSectionName);
-        location += Vector2i.Up * _font.GetLineHeight(1.0f);
+        handle.DrawingHandleScreen.DrawString(_font, location, _currentSectionName, scale, Color.White);
+        location += Vector2i.Up * _font.GetLineHeight(scale);
     }
 
     // Draw the slowest loading times to the screen.
-    private void DrawTopTimes(IRenderHandle handle, ref Vector2i location)
+    private void DrawTopTimes(IRenderHandle handle, ref Vector2i location, float scale)
     {
         if (_font == null)
             return;
 
-        location += LoadTimesIndent;
+        location += (Vector2i)(LoadTimesIndent * scale);
 
         var offset = 0;
         var x = 0;
@@ -258,8 +267,8 @@ internal sealed class LoadingScreenManager : ILoadingScreenManager
                 break;
 
             var entry = $"{val.LoadTime.TotalSeconds:F2} - {val.Name}";
-            handle.DrawingHandleScreen.DrawString(_font, location + new Vector2i(0, offset), entry);
-            offset += _font.GetLineHeight(1.0f);
+            handle.DrawingHandleScreen.DrawString(_font, location + new Vector2i(0, offset), entry, scale, Color.White);
+            offset += _font.GetLineHeight(scale);
             x++;
         }
 

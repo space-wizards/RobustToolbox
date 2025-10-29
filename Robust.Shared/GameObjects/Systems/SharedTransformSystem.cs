@@ -317,9 +317,6 @@ namespace Robust.Shared.GameObjects
             RaiseLocalEvent(ev.Sender, ref ev);
             OnGlobalMoveEvent?.Invoke(ref ev);
 
-            RaiseLocalEvent(ev.Sender, ref ev);
-            OnGlobalMoveEvent?.Invoke(ref ev);
-
             // Finally, handle grid traversal. This is handled separately to avoid out-of-order move events.
             // I.e., if the traversal raises its own move event, this ensures that all the old move event handlers
             // have finished running first. Ideally this shouldn't be required, but this is here just in case

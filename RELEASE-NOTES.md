@@ -50,6 +50,7 @@ END TEMPLATE-->
 * The engine can now load system fonts.
   * At the moment only available on Windows.
   * See `ISystemFontManager` for API.
+* The client now display a loading screen during startup.
 
 ### Bugfixes
 

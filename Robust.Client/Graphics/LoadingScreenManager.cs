@@ -185,11 +185,9 @@ internal sealed class LoadingScreenManager : ILoadingScreenManager
 
         DrawLoadingBar(handle, ref location);
 
-#if DEBUG
         DrawCurrentLoading(handle, ref location);
 
         DrawTopTimes(handle, ref location);
-#endif
     }
 
     private void DrawSplash(IRenderHandle handle, ref Vector2i startLocation)
@@ -229,6 +227,7 @@ internal sealed class LoadingScreenManager : ILoadingScreenManager
     }
 
     // Draw the currently loading section to the screen.
+    [Conditional("TOOLS")]
     private void DrawCurrentLoading(IRenderHandle handle, ref Vector2i location)
     {
         if (_font == null || _currentSectionName == null)
@@ -239,6 +238,7 @@ internal sealed class LoadingScreenManager : ILoadingScreenManager
     }
 
     // Draw the slowest loading times to the screen.
+    [Conditional("TOOLS")]
     private void DrawTopTimes(IRenderHandle handle, ref Vector2i location)
     {
         if (_font == null)

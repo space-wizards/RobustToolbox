@@ -143,20 +143,23 @@ namespace Robust.Client
         {
             DebugTools.AssertNotNull(_resourceManifest);
 
-            _loadscr.Initialize(34);
+            _loadscr.Initialize(42);
 
+            _loadscr.BeginLoadingSection("Init graphics", dontRender: true);
             _clyde.InitializePostWindowing();
             _clyde.SetWindowTitle(GameTitle());
+            _loadscr.EndLoadingSection();
 
-            _loadscr.LoadingStep(_audio.InitializePostWindowing, _audio);
+            _loadscr.LoadingStep(_audio.InitializePostWindowing, "Init audio");
 
             _loadscr.LoadingStep(_taskManager.Initialize, _taskManager);
             _loadscr.LoadingStep(_parallelMgr.Initialize, _parallelMgr);
             _fontManager.SetFontDpi((uint)_configurationManager.GetCVar(CVars.DisplayFontDpi));
-            _systemFontManager.Initialize();
+
+            _loadscr.LoadingStep(_systemFontManager.Initialize, "System fonts");
 
             // Load optional Robust modules.
-            LoadOptionalRobustModules(displayMode, _resourceManifest!);
+            _loadscr.LoadingStep(() => LoadOptionalRobustModules(displayMode, _resourceManifest!), "Robust Modules");
 
             _loadscr.BeginLoadingSection(_modLoader);
             // Disable load context usage on content start.
@@ -178,13 +181,17 @@ namespace Robust.Client
             _loadscr.LoadingStep(_loc.Initialize, _loc);
 
             // Call Init in game assemblies.
-            _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
+            _loadscr.LoadingStep(() => _modLoader.BroadcastRunLevel(ModRunLevel.PreInit), "Content PreInit");
 
-            // Finish initialization of WebView if loaded.
-            if (_webViewHook != null)
-                _loadscr.LoadingStep(_webViewHook.Initialize, _webViewHook);
+            _loadscr.LoadingStep(() =>
+                {
+                    // Finish initialization of WebView if loaded.
+                    if (_webViewHook != null)
+                        _loadscr.LoadingStep(_webViewHook.Initialize, _webViewHook);
+                },
+                "WebView init");
 
-            _modLoader.BroadcastRunLevel(ModRunLevel.Init);
+            _loadscr.LoadingStep(() => _modLoader.BroadcastRunLevel(ModRunLevel.Init), "Content Init");
 
             // Start bad file extensions check after content init,
             // in case content screws with the VFS.
@@ -193,7 +200,7 @@ namespace Robust.Client
                 _configurationManager,
                 _logManager.GetSawmill("res"));
 
-            _loadscr.LoadingStep(_resourceCache.PreloadTextures, _resourceCache);
+            _loadscr.LoadingStep(_resourceCache.PreloadTextures, "Texture preload");
             _loadscr.LoadingStep(() => { _networkManager.Initialize(false); }, _networkManager);
             _loadscr.LoadingStep(_configurationManager.SetupNetworking, _configurationManager);
             _loadscr.LoadingStep(_serializer.Initialize, _serializer);
@@ -203,7 +210,9 @@ namespace Robust.Client
             // Make sure this is done before we try to load prototypes,
             // avoid any possibility of race conditions causing the check to not finish
             // before prototype load.
-            ProgramShared.FinishCheckBadFileExtensions(checkBadExtensions);
+            _loadscr.LoadingStep(
+                () => ProgramShared.FinishCheckBadFileExtensions(checkBadExtensions),
+                "Check bad file extensions");
 
             _loadscr.LoadingStep(_reload.Initialize, _reload);
             _loadscr.LoadingStep(_reflectionManager.Initialize, _reflectionManager);
@@ -213,7 +222,7 @@ namespace Robust.Client
             _loadscr.EndLoadingSection();
             _loadscr.LoadingStep(_xamlProxyManager.Initialize, _xamlProxyManager);
             _loadscr.LoadingStep(_xamlHotReloadManager.Initialize, _xamlHotReloadManager);
-            _loadscr.LoadingStep(_userInterfaceManager.Initialize, _userInterfaceManager);
+            _loadscr.LoadingStep(_userInterfaceManager.Initialize, "UI init");
             _loadscr.LoadingStep(_eyeManager.Initialize, _eyeManager);
             _loadscr.LoadingStep(_entityManager.Initialize, _entityManager);
             _loadscr.LoadingStep(_mapManager.Initialize, _mapManager);
@@ -229,12 +238,13 @@ namespace Robust.Client
             _loadscr.LoadingStep(_replayLoader.Initialize, _replayLoader);
             _loadscr.LoadingStep(_replayPlayback.Initialize, _replayPlayback);
             _loadscr.LoadingStep(_replayRecording.Initialize, _replayRecording);
-            _loadscr.LoadingStep(_userInterfaceManager.PostInitialize, _userInterfaceManager);
+            _loadscr.LoadingStep(_userInterfaceManager.PostInitialize, "UI postinit");
 
             // Init stuff before this if at all possible.
-            _loadscr.Finish();
 
-            _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
+            _loadscr.LoadingStep(() => _modLoader.BroadcastRunLevel(ModRunLevel.PostInit), "Content PostInit");
+
+            _loadscr.Finish();
 
             if (_commandLineArgs?.Username != null)
             {

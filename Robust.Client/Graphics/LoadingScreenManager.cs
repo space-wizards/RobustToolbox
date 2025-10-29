@@ -105,7 +105,8 @@ internal sealed class LoadingScreenManager : ILoadingScreenManager
             _sawmill.Error($"Could not load font: {FontLocation}");
     }
 
-    public void BeginLoadingSection(string sectionName)
+    public void BeginLoadingSection(string sectionName) => BeginLoadingSection(sectionName, false);
+    public void BeginLoadingSection(string sectionName, bool dontRender)
     {
         if (_finished)
             return;
@@ -116,10 +117,18 @@ internal sealed class LoadingScreenManager : ILoadingScreenManager
         _currentlyInSection = true;
 
         _currentSectionName = sectionName;
-        // This ensures that if the screen was resized or something the new size is properly updated to clyde.
-        _clyde.ProcessInput(new FrameEventArgs((float) _sw.Elapsed.TotalSeconds));
-        _sw.Restart();
-        _clyde.Render();
+
+        if (!dontRender)
+        {
+            // This ensures that if the screen was resized or something the new size is properly updated to clyde.
+            _clyde.ProcessInput(new FrameEventArgs((float)_sw.Elapsed.TotalSeconds));
+            _sw.Restart();
+            _clyde.Render();
+        }
+        else
+        {
+            _sw.Restart();
+        }
     }
 
     /// <summary>
@@ -154,7 +163,7 @@ internal sealed class LoadingScreenManager : ILoadingScreenManager
         if (_finished)
             return;
 
-        BeginLoadingSection(method.GetType().Name);
+        BeginLoadingSection(method as string ?? method.GetType().Name);
         action();
         EndLoadingSection();
     }
@@ -288,7 +297,8 @@ internal sealed class ShowTopLoadingTimesCommand : IConsoleCommand
 
     public void Execute(IConsoleShell shell, string argStr, string[] args)
     {
-        foreach (var (name, time) in _mgr.Times.OrderByDescending(x => x.LoadTime))
+        var sorted = _mgr.Times.Where(x => x.LoadTime > TimeSpan.FromSeconds(0.01)).OrderByDescending(x => x.LoadTime);
+        foreach (var (name, time) in sorted)
         {
             shell.WriteLine($"{time.TotalSeconds:F2} - {name}");
         }

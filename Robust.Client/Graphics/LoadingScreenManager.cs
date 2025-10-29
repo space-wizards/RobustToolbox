@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
 using Robust.Shared;
 using Robust.Shared.Configuration;
+using Robust.Shared.Console;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
@@ -74,7 +76,7 @@ internal sealed class LoadingScreenManager : ILoadingScreenManager
     private int _numberOfLoadingSections;
 
     // The name of the section and how much time it took to load
-    private readonly List<(string Name, TimeSpan LoadTime)> _times = [];
+    internal readonly List<(string Name, TimeSpan LoadTime)> Times = [];
 
     private int _currentSection;
     private string? _currentSectionName;
@@ -139,7 +141,7 @@ internal sealed class LoadingScreenManager : ILoadingScreenManager
 
         var time = _sw.Elapsed;
         if (_currentSectionName != null)
-            _times.Add((_currentSectionName, time));
+            Times.Add((_currentSectionName, time));
         _currentSection++;
         _currentlyInSection = false;
     }
@@ -257,14 +259,14 @@ internal sealed class LoadingScreenManager : ILoadingScreenManager
 
         var offset = 0;
         var x = 0;
-        _times.Sort((a, b) => b.LoadTime.CompareTo(a.LoadTime));
+        Times.Sort((a, b) => b.LoadTime.CompareTo(a.LoadTime));
 
-        foreach (var val in _times)
+        foreach (var (name, time) in Times)
         {
             if (x >= NumLongestLoadTimes)
                 break;
 
-            var entry = $"{val.LoadTime.TotalSeconds:F2} - {val.Name}";
+            var entry = $"{time.TotalSeconds:F2} - {name}";
             handle.DrawingHandleScreen.DrawString(_font, location + new Vector2i(0, offset), entry, scale, Color.White);
             offset += _font.GetLineHeight(scale);
             x++;
@@ -274,4 +276,21 @@ internal sealed class LoadingScreenManager : ILoadingScreenManager
     }
 
     #endregion // Drawing functions
+}
+
+internal sealed class ShowTopLoadingTimesCommand : IConsoleCommand
+{
+    [Dependency] private readonly LoadingScreenManager _mgr = default!;
+
+    public string Command => "loading_top";
+    public string Description => "";
+    public string Help => "";
+
+    public void Execute(IConsoleShell shell, string argStr, string[] args)
+    {
+        foreach (var (name, time) in _mgr.Times.OrderByDescending(x => x.LoadTime))
+        {
+            shell.WriteLine($"{time.TotalSeconds:F2} - {name}");
+        }
+    }
 }

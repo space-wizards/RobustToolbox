@@ -162,8 +162,6 @@ internal sealed class LoadingScreenManager : ILoadingScreenManager
         if (_finished)
             return;
 
-        _clyde.VsyncEnabled = _cfg.GetCVar(CVars.DisplayVSync);
-
         if (_currentSection != _numberOfLoadingSections)
             _sawmill.Error($"The number of seen loading sections isn't equal to the total number of loading sections! Seen: {_currentSection}, Total: {_numberOfLoadingSections}");
 

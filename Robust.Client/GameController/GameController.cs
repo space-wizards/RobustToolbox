@@ -507,10 +507,18 @@ namespace Robust.Client
 
         public void Shutdown(string? reason = null)
         {
-            DebugTools.AssertNotNull(_mainLoop);
+            if (_mainLoop == null)
+            {
+                if (!_dontStart)
+                {
+                    _logger.Info($"Shutdown called before client init completed: {reason ?? "No reason provided"}");
+                    _dontStart = true;
+                }
+                return;
+            }
 
             // Already got shut down I assume,
-            if (!_mainLoop!.Running)
+            if (!_mainLoop.Running)
             {
                 return;
             }

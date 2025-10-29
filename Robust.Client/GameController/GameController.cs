@@ -136,7 +136,7 @@ namespace Robust.Client
 
         public bool ShowLoadingBar()
         {
-            return _resourceManifest!.ShowLoadingBar ?? _configurationManager.GetCVar(CVars.DisplayShowLoadingBar);
+            return _resourceManifest!.ShowLoadingBar ?? _configurationManager.GetCVar(CVars.LoadingShowBar);
         }
 
         internal bool StartupContinue(DisplayMode displayMode)
@@ -442,7 +442,7 @@ namespace Robust.Client
                 {
                     (CVars.DisplayWindowIconSet.Name, WindowIconSet()),
                     (CVars.DisplaySplashLogo.Name, SplashLogo()),
-                    (CVars.DisplayShowLoadingBar.Name, ShowLoadingBar().ToString()),
+                    (CVars.LoadingShowBar.Name, ShowLoadingBar().ToString()),
                 });
             }
 

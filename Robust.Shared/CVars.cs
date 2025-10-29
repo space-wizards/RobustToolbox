@@ -1197,9 +1197,6 @@ namespace Robust.Shared
         public static readonly CVarDef<string> DisplaySplashLogo =
             CVarDef.Create("display.splash_logo", "", CVar.CLIENTONLY);
 
-        public static readonly CVarDef<bool> DisplayShowLoadingBar =
-            CVarDef.Create("display.show_loading_bar", true, CVar.CLIENTONLY);
-
         /// <summary>
         /// Use US QWERTY hotkeys for reported key names.
         /// </summary>
@@ -1943,5 +1940,27 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> FontWindowsDownloadable =
             CVarDef.Create("font.windows_downloadable", false, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        /*
+         * LOADING
+         */
+
+        /// <summary>
+        /// Whether to show explicit loading bar during client initialization.
+        /// </summary>
+        public static readonly CVarDef<bool> LoadingShowBar =
+            CVarDef.Create("loading.show_bar", true, CVar.CLIENTONLY);
+
+#if TOOLS
+        private const bool DefaultShowDebug = true;
+#else
+        private const bool DefaultShowDebug = false;
+#endif
+
+        /// <summary>
+        /// Whether to show "debug" info in the loading screen.
+        /// </summary>
+        public static readonly CVarDef<bool> LoadingShowDebug =
+            CVarDef.Create("loading.show_debug", DefaultShowDebug, CVar.CLIENTONLY);
     }
 }

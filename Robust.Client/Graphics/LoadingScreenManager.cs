@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.Configuration;
@@ -60,8 +59,9 @@ internal sealed class LoadingScreenManager : ILoadingScreenManager
 
     #region Cvars
 
-    private string SplashLogo = "";
-    private bool ShowLoadingBar;
+    private string _splashLogo = "";
+    private bool _showLoadingBar;
+    private bool _showDebug;
 
     #endregion
 
@@ -92,8 +92,9 @@ internal sealed class LoadingScreenManager : ILoadingScreenManager
 
         _sawmill = _logManager.GetSawmill("loading");
 
-        SplashLogo = _cfg.GetCVar(CVars.DisplaySplashLogo);
-        ShowLoadingBar = _cfg.GetCVar(CVars.DisplayShowLoadingBar);
+        _splashLogo = _cfg.GetCVar(CVars.DisplaySplashLogo);
+        _showLoadingBar = _cfg.GetCVar(CVars.LoadingShowBar);
+        _showDebug = _cfg.GetCVar(CVars.LoadingShowDebug);
 
         if (_resourceCache.TryGetResource<FontResource>(FontLocation, out var fontResource))
             _font = new VectorFont(fontResource, FontSize);
@@ -185,14 +186,17 @@ internal sealed class LoadingScreenManager : ILoadingScreenManager
 
         DrawLoadingBar(handle, ref location);
 
-        DrawCurrentLoading(handle, ref location);
+        if (_showDebug)
+        {
+            DrawCurrentLoading(handle, ref location);
 
-        DrawTopTimes(handle, ref location);
+            DrawTopTimes(handle, ref location);
+        }
     }
 
     private void DrawSplash(IRenderHandle handle, ref Vector2i startLocation)
     {
-        if (!_resourceCache.TryGetResource<TextureResource>(SplashLogo, out var textureResource))
+        if (!_resourceCache.TryGetResource<TextureResource>(_splashLogo, out var textureResource))
             return;
 
         handle.DrawingHandleScreen.DrawTexture(textureResource.Texture, startLocation - textureResource.Texture.Size / 2);
@@ -205,7 +209,7 @@ internal sealed class LoadingScreenManager : ILoadingScreenManager
         location += Vector2i.Left * LoadingBarWidth / 2;
         location += LogoLoadingBarOffset;
 
-        if (!ShowLoadingBar)
+        if (!_showLoadingBar)
             return;
 
         var sectionWidth = LoadingBarWidth / _numberOfLoadingSections;
@@ -227,7 +231,6 @@ internal sealed class LoadingScreenManager : ILoadingScreenManager
     }
 
     // Draw the currently loading section to the screen.
-    [Conditional("TOOLS")]
     private void DrawCurrentLoading(IRenderHandle handle, ref Vector2i location)
     {
         if (_font == null || _currentSectionName == null)
@@ -238,7 +241,6 @@ internal sealed class LoadingScreenManager : ILoadingScreenManager
     }
 
     // Draw the slowest loading times to the screen.
-    [Conditional("TOOLS")]
     private void DrawTopTimes(IRenderHandle handle, ref Vector2i location)
     {
         if (_font == null)

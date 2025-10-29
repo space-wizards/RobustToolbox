@@ -107,7 +107,7 @@ internal sealed class LoadingScreenManager : ILoadingScreenManager
             return;
 
         if (_currentlyInSection)
-            throw new Exception("You cannot begin more than one section at a time!");
+            throw new InvalidOperationException("You cannot begin more than one section at a time!");
 
         _currentlyInSection = true;
 

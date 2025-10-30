@@ -232,6 +232,11 @@ namespace Robust.Shared.GameObjects
         void RunMapInit(EntityUid entity, MetaDataComponent meta);
 
         /// <summary>
+        /// Attempts to retrieve an entity from a weak entity reference, failing if the referenced entity no longer exists.
+        /// </summary>
+        bool TryGetEntity(WeakEntityReference weakRef, [NotNullWhen(true)] out EntityUid? entity);
+
+        /// <summary>
         /// Returns a string representation of an entity with various information regarding it.
         /// </summary>
         EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent? metadata);
@@ -245,6 +250,11 @@ namespace Robust.Shared.GameObjects
         /// Returns a string representation of an entity with various information regarding it.
         /// </summary>
         EntityStringRepresentation ToPrettyString(NetEntity netEntity);
+
+        /// <summary>
+        /// Returns a string representation of an entity with various information regarding it.
+        /// </summary>
+        EntityStringRepresentation ToPrettyString(WeakEntityReference weakEntityRef);
 
         /// <summary>
         /// Returns a string representation of an entity with various information regarding it.

@@ -59,6 +59,7 @@ END TEMPLATE-->
 * Fix modifying `Label.FontOverride` not causing a layout update.
 * Controls created by rich-text tags now get arranged to a proper size.
 * Fix `OutputPanel` scrollbar breaking if a style update changes the font size.
+* Fix Physic bodies not being properly woken upon being moved from nullspace
 
 ### Other
 

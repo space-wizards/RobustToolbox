@@ -1,6 +1,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using DiffPlex.DiffBuilder;
+using DiffPlex.DiffBuilder.Model;
+using DiffPlex.Renderer;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
@@ -20,10 +23,9 @@ public partial class PrototypeManager
     ///     Includes information on inherited components through parent entities.
     /// </summary>
     /// <param name="searchPath">The directory to save prototypes from.</param>
-    public void SaveEntityPrototypes(ResPath searchPath)
+    public void SaveEntityPrototypes(ResPath searchPath, bool includeAbstract = false)
     {
         // mild shitcode.
-        // TODO clean up reused code into actual methods
         var outStreams = GetYamlStreams(searchPath);
         var streams = GetYamlStreams(new("/Prototypes"));
 
@@ -37,7 +39,7 @@ public partial class PrototypeManager
         }
 
         foreach (var data in ValidateStreams(streams)
-                     .Where(x => x.Item1 == typeof(EntityPrototype)))
+            .Where(x => x.Item1 == typeof(EntityPrototype)))
         {
             data.Item2.Mapping.Remove("type");
             entityProtos[data.Item2.Id] = data.Item2;
@@ -52,14 +54,63 @@ public partial class PrototypeManager
                 continue;
 
             if (data.Mapping.TryGet("abstract", out ValueDataNode? abstractNode)
-                && bool.Parse(abstractNode.Value))
+                && bool.Parse(abstractNode.Value)
+                && !includeAbstract)
                 continue;
 
             normalizedPrototypes[id] = NormalizeDataNode(data.Mapping);
         }
 
+        // TODO: probably dont want to use streamwriter here.
+        // instead we should return our output so this can be used in other apps.
+        // maybe make this a bool?
         using var writer = new StreamWriter("entity-prototypes.yml", false);
         normalizedPrototypes.Values.ToSequenceDataNode().Write(writer);
+    }
+
+    public void GenerateDiff(ResPath before, ResPath after)
+    {
+        string beforeString = File.ReadAllText(before.CanonPath);
+        string afterString = File.ReadAllText(after.CanonPath);
+
+        var diff = InlineDiffBuilder.Diff(beforeString, afterString);
+
+        // TODO: probably dont want to use streamwriter here.
+        // instead we should return our output so this can be used in other apps.
+        // maybe make this a bool?
+        using var writer = new StreamWriter("prototype-diff.yml", false);
+        foreach (var line in diff.Lines)
+        {
+            switch (line.Type)
+            {
+                case ChangeType.Inserted:
+                    writer.WriteLine("+ ");
+                    break;
+                case ChangeType.Deleted:
+                    writer.WriteLine("- ");
+                    break;
+                default:
+                    writer.WriteLine("  ");
+                    break;
+            }
+            writer.WriteLine(line.Text);
+        }
+    }
+
+    public void GenerateUniDiff(ResPath before, ResPath after)
+    {
+        string beforeString = File.ReadAllText(before.CanonPath);
+        string afterString = File.ReadAllText(after.CanonPath);
+
+        string diff = UnidiffRenderer.GenerateUnidiff(
+            beforeString,
+            afterString);
+
+        // TODO: probably dont want to use streamwriter here.
+        // instead we should return our output so this can be used in other apps.
+        // maybe make this a bool?
+        using var writer = new StreamWriter("prototype-unidiff.yml", false);
+        writer.WriteLine(diff);
     }
 
     private DataNode NormalizeDataNode(DataNode node)

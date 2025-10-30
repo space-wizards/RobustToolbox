@@ -1925,6 +1925,13 @@ namespace Robust.Shared
         public static readonly CVarDef<string> XamlHotReloadMarkerName =
             CVarDef.Create("ui.xaml_hot_reload_marker_name", "SpaceStation14.sln", CVar.CLIENTONLY);
 
+        /// <summary>
+        /// If true, all XAML UIs will be JITed for hot reload on client startup.
+        /// If false, they will be JITed on demand.
+        /// </summary>
+        public static readonly CVarDef<bool> UIXamlJitPreload =
+            CVarDef.Create("ui.xaml_jit_preload", false, CVar.CLIENTONLY);
+
         /*
          * FONT
          */

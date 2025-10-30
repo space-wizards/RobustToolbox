@@ -216,12 +216,12 @@ namespace Robust.Client
 
             _loadscr.LoadingStep(_reload.Initialize, _reload);
             _loadscr.LoadingStep(_reflectionManager.Initialize, _reflectionManager);
+            _loadscr.LoadingStep(_xamlProxyManager.Initialize, _xamlProxyManager);
+            _loadscr.LoadingStep(_xamlHotReloadManager.Initialize, _xamlHotReloadManager);
             _loadscr.BeginLoadingSection(_prototypeManager);
             _prototypeManager.Initialize();
             _prototypeManager.LoadDefaultPrototypes();
             _loadscr.EndLoadingSection();
-            _loadscr.LoadingStep(_xamlProxyManager.Initialize, _xamlProxyManager);
-            _loadscr.LoadingStep(_xamlHotReloadManager.Initialize, _xamlHotReloadManager);
             _loadscr.LoadingStep(_userInterfaceManager.Initialize, "UI init");
             _loadscr.LoadingStep(_eyeManager.Initialize, _eyeManager);
             _loadscr.LoadingStep(_entityManager.Initialize, _entityManager);

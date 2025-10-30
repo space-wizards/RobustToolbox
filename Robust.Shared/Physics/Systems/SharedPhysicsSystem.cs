@@ -43,6 +43,7 @@ namespace Robust.Shared.Physics.Systems
         [Dependency] private readonly IManifoldManager _manifoldManager = default!;
         [Dependency] private readonly IParallelManager _parallel = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
+        [Dependency] private readonly RayCastSystem _raycast = default!;
         [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
         [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
         [Dependency] private readonly SharedDebugPhysicsSystem _debugPhysics = default!;

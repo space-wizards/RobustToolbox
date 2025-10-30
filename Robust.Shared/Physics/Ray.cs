@@ -31,8 +31,7 @@ namespace Robust.Shared.Physics
             Position = position;
             Direction = direction;
 
-            DebugTools.Assert(MathHelper.CloseToPercent(Direction.LengthSquared(), 1));
-
+            DebugTools.Assert(direction != Vector2.Zero);
         }
 
         #region Intersect Tests

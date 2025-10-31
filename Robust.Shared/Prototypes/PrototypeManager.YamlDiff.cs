@@ -63,7 +63,7 @@ public partial class PrototypeManager
         // otherwise, we output results to the out
         if (saveFile)
         {
-            using var writer = new StreamWriter("entity-prototypes.yml", false);
+            using var writer = new StreamWriter(new ResPath("entity-prototypes.yml").CanonPath, false);
             normalizedPrototypes.Values.ToSequenceDataNode().Write(writer);
         }
 
@@ -72,7 +72,7 @@ public partial class PrototypeManager
 
     public void GenerateDiff(ResPath beforePath, string after)
     {
-        string before = File.ReadAllText(beforePath.CanonPath);
+        string before = File.ReadAllText(beforePath.ToRelativeSystemPath());
         string diff = UnidiffRenderer.GenerateUnidiff(before, after);
 
         // TODO: probably dont want to use streamwriter here.

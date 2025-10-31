@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using DiffPlex.Renderer;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
@@ -15,27 +14,18 @@ public partial class PrototypeManager
     private static readonly List<string> FieldOrder =
         ["type", "id", "parent", "categories", "name", "suffix", "description"];
 
+    private static readonly ResPath DefaultPath = new("/Prototypes");
+
     /// <summary>
     ///     AKA yaml dumper 9000.
     ///     Scans through a provided directory for EntityPrototypes and outputs them all as a single file.
     ///     Includes information on inherited components through parent entities.
     /// </summary>
     /// <param name="searchPath">The directory to save prototypes from.</param>
-    public void SaveEntityPrototypes(ResPath searchPath,  out string output, bool includeAbstract = false, bool saveFile = false)
+    public void SaveEntityPrototypes(ResPath searchPath, out string output, bool includeAbstract = false, bool saveFile = false)
     {
-        // mild shitcode.
-        var outStreams = GetYamlStreams(searchPath);
-        var streams = GetYamlStreams(new("/Prototypes"));
-
-        List<string> outProtos = [];
         Dictionary<string, PrototypeValidationData> entityProtos = [];
-
-        foreach (var data in ValidateStreams(outStreams)
-            .Where(x => x.Item1 == typeof(EntityPrototype)))
-        {
-            outProtos.Add(data.Item2.Id);
-        }
-
+        var streams = GetYamlStreams(DefaultPath);
         foreach (var data in ValidateStreams(streams)
             .Where(x => x.Item1 == typeof(EntityPrototype)))
         {
@@ -43,12 +33,28 @@ public partial class PrototypeManager
             entityProtos[data.Item2.Id] = data.Item2;
         }
 
+        // if using a custom path, we also need to load parents to validate these correctly.
+        // TODO this can probably all be done more optimally
+        bool usingDefaultPath = searchPath == DefaultPath;
+
+        List<string> outProtos = [];
+        if (!usingDefaultPath)
+        {
+            var outStreams = GetYamlStreams(searchPath);
+            foreach (var data in ValidateStreams(outStreams)
+                .Where(x => x.Item1 == typeof(EntityPrototype)))
+            {
+                outProtos.Add(data.Item2.Id);
+            }
+        }
+
         Dictionary<string, DataNode> normalizedPrototypes = [];
         foreach (var (id, data) in entityProtos.OrderBy(x => x.Key))
         {
             EnsurePushed(data, entityProtos, typeof(EntityPrototype));
 
-            if (!outProtos.Contains(data.Id))
+            if (!outProtos.Contains(data.Id)
+                || usingDefaultPath)
                 continue;
 
             if (data.Mapping.TryGet("abstract", out ValueDataNode? abstractNode)
@@ -68,18 +74,6 @@ public partial class PrototypeManager
         }
 
         output = normalizedPrototypes.Values.ToSequenceDataNode().ToString();
-    }
-
-    public void GenerateDiff(ResPath beforePath, string after)
-    {
-        string before = File.ReadAllText(beforePath.ToRelativeSystemPath());
-        string diff = UnidiffRenderer.GenerateUnidiff(before, after);
-
-        // TODO: probably dont want to use streamwriter here.
-        // instead we should return our output so this can be used in other apps.
-        // maybe make this a bool?
-        using var writer = new StreamWriter("prototype-diff.yml", false);
-        writer.WriteLine(diff);
     }
 
     private DataNode NormalizeDataNode(DataNode node)

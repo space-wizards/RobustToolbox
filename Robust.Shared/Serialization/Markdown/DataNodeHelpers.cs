@@ -53,10 +53,15 @@ public static class DataNodeHelpers
         yield return node;
     }
 
-    // TODO docs
+    /// <summary>
+    ///     Converts provided DataNodes to an unordered MappingDataNode dictionary.
+    /// </summary>
     public static MappingDataNode ToMappingDataNode(this IEnumerable<KeyValuePair<string, DataNode>> entries)
         => new(entries.ToDictionary());
 
+    /// <summary>
+    ///     Converts provided DataNodes to an ordered SequenceDataNode list.
+    /// </summary>
     public static SequenceDataNode ToSequenceDataNode(this IEnumerable<DataNode> entries)
         => new(entries.ToList());
 }

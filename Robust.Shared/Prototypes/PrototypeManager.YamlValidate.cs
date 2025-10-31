@@ -20,6 +20,10 @@ public partial class PrototypeManager
     // disallow them for all prototypes.
     private static readonly char[] DisallowedIdChars = [' ', '.'];
 
+    /// <summary>
+    ///     Returns an IEnum list of .yml files from a given ResPath.
+    /// </summary>
+    /// <param name="path">ResPath to search for .yml files.</param>
     private IEnumerable<ResPath> GetYamlStreams(ResPath path)
     {
         return Resources.ContentFindFiles(path)
@@ -29,9 +33,8 @@ public partial class PrototypeManager
     }
 
     /// <summary>
-    ///     Validate all prototypes defined in given yaml files.
+    ///     Validate all prototypes in given .yml files.
     /// </summary>
-    /// <remarks>Only used for YAML diffs currently, could be made more generic. TODO</remarks>
     /// <param name="streams">List of .yml files to validate contents of.</param>
     /// <returns>Entity prototype and validation data.</returns>
     /// <exception cref="PrototypeLoadException"></exception>

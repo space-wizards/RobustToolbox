@@ -15,7 +15,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
-using Robust.Shared.Network;
 using Robust.Shared.Random;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;

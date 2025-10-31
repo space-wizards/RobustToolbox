@@ -506,10 +506,9 @@ public interface IPrototypeManager
 
     // TODO docs
     // currently will just dump all inherited yml
-    void SaveEntityPrototypes(ResPath searchPath, bool includeAbstract = false);
+    void SaveEntityPrototypes(ResPath searchPath,  out string output, bool includeAbstract = false, bool saveFile = false);
     // ALSO TODO & probably need to move this somewhere Better
-    void GenerateDiff(ResPath before, ResPath after);
-    void GenerateUniDiff(ResPath before, ResPath after);
+    void GenerateDiff(ResPath beforePath, string after);
 
     void LoadFromStream(TextReader stream, bool overwrite = false, Dictionary<Type, HashSet<string>>? changed = null);
 

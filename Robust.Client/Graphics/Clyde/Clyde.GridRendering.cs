@@ -324,7 +324,7 @@ namespace Robust.Client.Graphics.Clyde
                                 continue;
 
                             var direction = new Vector2i(nx, ny).AsDirection().GetOpposite();
-                            var regionMaybe = _tileDefinitionManager.TileAtlasRegion(neighborTile.TypeId, direction);
+                            var regionMaybe = _tileDefinitionManager.TileAtlasRegion(neighborTile.TypeId, direction, neighborTile.IsEmpty);
 
                             if (regionMaybe == null)
                                 continue;

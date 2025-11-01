@@ -11,6 +11,7 @@ using Robust.Shared.Physics;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
@@ -32,6 +33,7 @@ namespace Robust.Shared.GameObjects
         private EntityQuery<MetaDataComponent> _metaQuery;
         private EntityQuery<TransformComponent> _xformQuery;
 
+        [ViewVariables]
         internal Dictionary<MapId, EntityUid> Maps { get; } = new();
 
         /// <summary>
@@ -39,6 +41,7 @@ namespace Robust.Shared.GameObjects
         /// Loading a map with a specific id (e.g., the various mapping commands) may still result in an id being
         /// reused.
         /// </summary>
+        [ViewVariables]
         protected HashSet<MapId> UsedIds = new();
 
         public override void Initialize()

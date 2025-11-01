@@ -639,7 +639,7 @@ namespace Robust.Client.UserInterface
             var children = new List<Control>(Children);
             foreach (var child in children)
             {
-                child.Dispose();
+                child.Orphan();
             }
         }
 

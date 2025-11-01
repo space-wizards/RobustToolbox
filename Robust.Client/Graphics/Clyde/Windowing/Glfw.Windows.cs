@@ -99,6 +99,11 @@ namespace Robust.Client.Graphics.Clyde
                 SendCmd(new CmdWinSetVisible((nint) reg.GlfwWindow, visible));
             }
 
+            public void WindowSetOpacity(WindowReg reg, float value)
+            {
+                // Not implemented on GLFW.
+            }
+
             private void WinThreadWinSetSize(CmdWinSetSize cmd)
             {
                 var win = (Window*) cmd.Window;

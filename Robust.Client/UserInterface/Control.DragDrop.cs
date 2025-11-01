@@ -1,4 +1,5 @@
-﻿using Robust.Shared.Maths;
+﻿using System;
+using System.Numerics;
 
 namespace Robust.Client.UserInterface;
 
@@ -47,7 +48,7 @@ public sealed class DragDropEventArgs : BaseDragEventArgs
 
 public sealed class DragMoveEventArgs : BaseDragEventArgs
 {
-    public DragMoveEventArgs(DragDropOperation operation) : base(operation)
+    internal DragMoveEventArgs(DragDropOperation operation) : base(operation)
     {
     }
 }
@@ -58,6 +59,9 @@ public partial class Control
     public event Action<DragLeaveEventArgs>? OnDragLeave;
     public event Action<DragDropEventArgs>? OnDragDrop;
     public event Action<DragMoveEventArgs>? OnDragMove;
+
+    // TODO: See about renaming these.
+    // TODO: MustCallBase?
 
     public virtual void DragEnter(DragEnterEventArgs eventArgs)
     {

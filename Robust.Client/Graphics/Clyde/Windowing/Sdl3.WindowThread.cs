@@ -101,6 +101,10 @@ internal partial class Clyde
                     WinThreadWinSetVisible(cmd);
                     break;
 
+                case CmdWinSetOpacity cmd:
+                    WinThreadWinSetOpacity(cmd);
+                    break;
+
                 case CmdCursorCreate cmd:
                     WinThreadCursorCreate(cmd);
                     break;
@@ -272,6 +276,12 @@ internal partial class Clyde
         {
             public nint Window;
             public bool Visible;
+        }
+
+        private sealed class CmdWinSetOpacity : CmdBase
+        {
+            public nint Window;
+            public float Opacity;
         }
 
         private sealed class CmdWinSetTitle : CmdBase

@@ -38,6 +38,6 @@ public partial class EditorTab : Control
 
     private DragDropDetectResult DragDetected(GUIBoundKeyEventArgs _)
     {
-        return DragDropDetectResult.Start(this, new EditorTabDragDrop(Panel));
+        return DragDropDetectResult.Start(this, new EditorTabDragDrop(Panel, TabBar.Owner));
     }
 }

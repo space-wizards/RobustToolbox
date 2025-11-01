@@ -1,4 +1,5 @@
-﻿using Robust.Client.Graphics;
+﻿using System.Numerics;
+using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Shared.Maths;
 
@@ -19,19 +20,19 @@ internal sealed class EditorTabDropOverlay : Control
 
         var margin = MarginSize * UIScale;
 
-        handle.DrawLine((0, 0), (sizeX, 0), Color.White);
-        handle.DrawLine((sizeX, 0), (sizeX, sizeY), Color.White);
-        handle.DrawLine((sizeX, sizeY), (0, sizeY), Color.White);
-        handle.DrawLine((0, sizeY), (0, 0), Color.White);
+        handle.DrawLine(new Vector2(0, 0), new Vector2(sizeX, 0), Color.White);
+        handle.DrawLine(new Vector2(sizeX, 0), new Vector2(sizeX, sizeY), Color.White);
+        handle.DrawLine(new Vector2(sizeX, sizeY), new Vector2(0, sizeY), Color.White);
+        handle.DrawLine(new Vector2(0, sizeY), new Vector2(0, 0), Color.White);
 
-        handle.DrawLine((margin, margin), (sizeX - margin, margin), Color.White);
-        handle.DrawLine((sizeX - margin, margin), (sizeX - margin, sizeY - margin), Color.White);
-        handle.DrawLine((sizeX - margin, sizeY - margin), (margin, sizeY - margin), Color.White);
-        handle.DrawLine((margin, sizeY - margin), (margin, margin), Color.White);
+        handle.DrawLine(new Vector2(margin, margin), new Vector2(sizeX - margin, margin), Color.White);
+        handle.DrawLine(new Vector2(sizeX - margin, margin), new Vector2(sizeX - margin, sizeY - margin), Color.White);
+        handle.DrawLine(new Vector2(sizeX - margin, sizeY - margin), new Vector2(margin, sizeY - margin), Color.White);
+        handle.DrawLine(new Vector2(margin, sizeY - margin), new Vector2(margin, margin), Color.White);
 
-        handle.DrawLine((0, 0), (margin, margin), Color.White);
-        handle.DrawLine((sizeX, 0), (sizeX - margin, margin), Color.White);
-        handle.DrawLine((sizeX, sizeY), (sizeX - margin, sizeY - margin), Color.White);
-        handle.DrawLine((0, sizeY), (margin, sizeY - margin), Color.White);
+        handle.DrawLine(new Vector2(0, 0), new Vector2(margin, margin), Color.White);
+        handle.DrawLine(new Vector2(sizeX, 0), new Vector2(sizeX - margin, margin), Color.White);
+        handle.DrawLine(new Vector2(sizeX, sizeY), new Vector2(sizeX - margin, sizeY - margin), Color.White);
+        handle.DrawLine(new Vector2(0, sizeY), new Vector2(margin, sizeY - margin), Color.White);
     }
 }

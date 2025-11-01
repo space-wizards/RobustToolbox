@@ -326,6 +326,11 @@ namespace Robust.Client.Graphics.Clyde
         {
         }
 
+        public void SetKeepMouseCaptured(bool keep)
+        {
+            // Nada.
+        }
+
         private sealed class DummyCursor : ICursor
         {
             public void Dispose()
@@ -577,6 +582,7 @@ namespace Robust.Client.Graphics.Clyde
             public bool IsMinimized => false;
             public bool IsVisible { get; set; } = true;
             public Vector2 ContentScale => Vector2.One;
+            public float Opacity { get; set; }
             public bool DisposeOnClose { get; set; }
             public event Action<WindowRequestClosedEventArgs>? RequestClosed { add { } remove { } }
             public event Action<WindowDestroyedEventArgs>? Destroyed;

@@ -8,4 +8,9 @@ public abstract class DragDropOperation
     public virtual void Drop()
     {
     }
+
+    public virtual void AfterDrop()
+    {
+
+    }
 }

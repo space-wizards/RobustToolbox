@@ -257,6 +257,7 @@ namespace Robust.Client.Graphics.Clyde
                     return;
 
                 windowReg.IsFocused = ev.Focused;
+                windowReg.LastFocusStamp = ++_clyde._focusCounter;
                 _clyde.SendWindowFocus(new WindowFocusedEventArgs(ev.Focused, windowReg.Handle));
             }
 

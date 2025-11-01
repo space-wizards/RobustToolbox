@@ -25,14 +25,14 @@ public sealed class EditorDebugCommand : IConsoleCommand
     {
         [Dependency] private readonly IUserInterfaceManager _uiMgr = default!;
 
-        public override void Startup()
+        protected override void Startup()
         {
             var control = new EditorDebugControl();
             LayoutContainer.SetAnchorPreset(control, LayoutContainer.LayoutPreset.Wide);
             _uiMgr.StateRoot.AddChild(control);
         }
 
-        public override void Shutdown()
+        protected override void Shutdown()
         {
         }
     }

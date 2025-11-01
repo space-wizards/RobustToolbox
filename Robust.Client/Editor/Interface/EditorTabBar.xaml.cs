@@ -23,7 +23,7 @@ public partial class EditorTabBar : Control
         if (eventArgs.Operation is EditorTabDragDrop tabDrop)
         {
             Logger.DebugS("ui.editor", "LEAVING");
-            Owner.RemovePanel(tabDrop.Panel);
+            Owner.RemovePanel(tabDrop.Panel, destroy: false);
         }
     }
 

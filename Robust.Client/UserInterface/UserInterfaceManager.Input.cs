@@ -117,10 +117,13 @@ internal partial class UserInterfaceManager
         _focusedControls[args.Function] = control;
 
         OnKeyBindDown?.Invoke(control);
+        StartDragDetect(guiArgs);
     }
 
     public void KeyBindUp(BoundKeyEventArgs args)
     {
+        EndDragKeyUp(args);
+
         // Only raise keybind-up for the control on which we previously raised keybind-down
         if (!_focusedControls.Remove(args.Function, out var control) || !control.VisibleInTree)
             return;
@@ -140,6 +143,8 @@ internal partial class UserInterfaceManager
     public void MouseMove(MouseMoveEventArgs mouseMoveEventArgs)
     {
         _resetTooltipTimer();
+        MouseMoveCheckDrag(mouseMoveEventArgs);
+
         // Update which control is considered hovered.
         var newHovered = MouseGetControl(mouseMoveEventArgs.Position);
         SetHovered(newHovered);

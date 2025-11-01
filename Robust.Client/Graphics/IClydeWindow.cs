@@ -20,6 +20,8 @@ namespace Robust.Client.Graphics
         bool IsVisible { get; set; }
         Vector2 ContentScale { get; }
 
+        float Opacity { get; set; }
+
         /// <summary>
         ///     If set to true, the user closing the window will also <see cref="IDisposable.Dispose"/> it.
         /// </summary>
@@ -70,5 +72,12 @@ namespace Robust.Client.Graphics
     public interface IClydeWindowInternal : IClydeWindow
     {
         nint? WindowsHWnd { get; }
+
+        long LastFocusStamp { get; }
+
+        /// <summary>
+        /// Window position in the OS.
+        /// </summary>
+        Vector2 WindowPosition { get; }
     }
 }

@@ -128,6 +128,7 @@ internal partial class Clyde
                     break;
                 case ET.SDL_EVENT_WINDOW_FOCUS_GAINED:
                     window.IsFocused = true;
+                    window.LastFocusStamp = ++_clyde._focusCounter;
                     _clyde.SendWindowFocus(new WindowFocusedEventArgs(true, window.Handle));
                     break;
                 case ET.SDL_EVENT_WINDOW_FOCUS_LOST:

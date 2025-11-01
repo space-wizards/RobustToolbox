@@ -436,6 +436,12 @@ internal partial class Clyde
             SendCmd(new CmdWinSetVisible { Window = WinPtr(window), Visible = visible });
         }
 
+        public void WindowSetOpacity(WindowReg window, float value)
+        {
+            window.Opacity = value;
+            SendCmd(new CmdWinSetOpacity { Window = WinPtr(window), Opacity = value });
+        }
+
         private static void WinThreadWinSetSize(CmdWinSetSize cmd)
         {
             SDL.SDL_SetWindowSize(cmd.Window, cmd.W, cmd.H);
@@ -447,6 +453,11 @@ internal partial class Clyde
                 SDL.SDL_ShowWindow(cmd.Window);
             else
                 SDL.SDL_HideWindow(cmd.Window);
+        }
+
+        private static void WinThreadWinSetOpacity(CmdWinSetOpacity cmd)
+        {
+            SDL.SDL_SetWindowOpacity(cmd.Window, cmd.Opacity);
         }
 
         public void WindowRequestAttention(WindowReg window)

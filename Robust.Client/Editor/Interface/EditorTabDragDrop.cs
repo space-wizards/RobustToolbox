@@ -5,12 +5,14 @@ namespace Robust.Client.Editor.Interface;
 
 public sealed class EditorTabDragDrop : DragDropOperation
 {
-    public EditorTabDragDrop(EditorPanel panel)
+    internal EditorTabDragDrop(EditorPanel panel, EditorTabPanel originatingTabPanel)
     {
         Panel = panel;
+        OriginatingTabPanel = originatingTabPanel;
     }
 
     public EditorPanel Panel { get; }
+    public EditorTabPanel OriginatingTabPanel { get; }
 
     public override void Drop()
     {
@@ -19,5 +21,10 @@ public sealed class EditorTabDragDrop : DragDropOperation
         docker.AddPanel(Panel);
         window.AddChild(docker);
         window.Show();
+    }
+
+    public override void AfterDrop()
+    {
+        OriginatingTabPanel.ConfirmRemoval();
     }
 }

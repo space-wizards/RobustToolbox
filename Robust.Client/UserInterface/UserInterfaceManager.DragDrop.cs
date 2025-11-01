@@ -1,4 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using Robust.Client.Graphics;
+using Robust.Client.Input;
 using Robust.Shared.Input;
 using Robust.Shared.Map;
 
@@ -46,6 +49,7 @@ internal sealed partial class UserInterfaceManager
     // Controls tree "slice" for the current set of controls we're over.
     // [0] is tree leaf, [count] is UI root.
     private readonly List<Control> _currentlyDraggingOver = new();
+    private ScreenCoordinates _lastDragCoordinates;
 
     private void StartDragDetect(GUIBoundKeyEventArgs eventArgs)
     {
@@ -54,7 +58,7 @@ internal sealed partial class UserInterfaceManager
 
         if (_dragState != DragState.None)
         {
-            _sawmill.Warning("Tried to start drag detection, " +
+            _sawmillUI.Warning("Tried to start drag detection, " +
                              "but we already have another drag operation/detection in progress. Ignoring");
             return;
         }
@@ -76,11 +80,19 @@ internal sealed partial class UserInterfaceManager
         switch (_dragState)
         {
             case DragState.Dragging:
-                _sawmill.Debug("Ending drag");
+                _sawmillUI.Debug("Ending drag");
 
                 // TODO: Clean up this coordinate conversion code. This is crap.
-                var uiScale = _currentlyDraggingOver[0].UIScale;
-                var scaledPos = eventArgs.PointerLocation.Position / uiScale;
+                var uiScale = _currentlyDraggingOver.Count == 0 ? 1 : _currentlyDraggingOver[0].UIScale;
+                var pointerPos = eventArgs.PointerLocation;
+                if (!pointerPos.IsValid)
+                {
+                    // When dragging between two windows, the drop event does not receive a meaningful mouse position.
+                    // So we use the position from the last mouse move event instead.
+                    pointerPos = _lastDragCoordinates;
+                }
+
+                var scaledPos = pointerPos.Position / uiScale;
 
                 var handled = false;
 
@@ -111,12 +123,14 @@ internal sealed partial class UserInterfaceManager
                     control.DragLeave(new DragLeaveEventArgs(_dragOperation!));
                 }
 
+                _dragOperation!.AfterDrop();
+
                 _currentlyDraggingOver.Clear();
                 _dragOperation = null;
                 goto case DragState.Detecting;
 
             case DragState.Detecting:
-                _sawmill.Debug("Ending drag detection");
+                _sawmillUI.Debug("Ending drag detection");
                 CancelDragDetect();
                 break;
         }
@@ -139,7 +153,7 @@ internal sealed partial class UserInterfaceManager
                 // TODO: DPI.
                 var diff = _dragStart.Position - mouseMoveEventArgs.Position.Position;
                 var startDrag = _dragStart.Window != mouseMoveEventArgs.Position.Window
-                                || diff.LengthSquared > _dragThresholdSquared;
+                                || diff.LengthSquared() > _dragThresholdSquared;
 
                 if (!startDrag)
                     return;
@@ -149,12 +163,12 @@ internal sealed partial class UserInterfaceManager
 
                 if (result.Result == null)
                 {
-                    _sawmill.Debug("Drag cancelled");
+                    _sawmillUI.Debug("Drag cancelled");
                     CancelDragDetect();
                     return;
                 }
 
-                _sawmill.Debug("Starting drag");
+                _sawmillUI.Debug("Starting drag");
                 var (srcControl, op) = result.Result.Value;
 
                 _dragOperation = op;
@@ -180,8 +194,11 @@ internal sealed partial class UserInterfaceManager
             case DragState.Dragging:
             {
                 // TODO: DPI?
-                var curControl = MouseGetControl(mouseMoveEventArgs.Position);
-                _sawmill.Debug($"A: {Control.GetDebugPath(curControl)}");
+                var resolvedCoords = ResolveCrossWindowCoordinates(mouseMoveEventArgs.Position);
+                var curControl = MouseGetControl(resolvedCoords);
+                _lastDragCoordinates = resolvedCoords;
+                //_sawmillUI.Debug($"A: {Control.GetDebugPath(curControl)}");
+                _sawmillUI.Debug($"A: {mouseMoveEventArgs.Position}");
                 var newOverSet = new HashSet<Control>();
                 var oldOverSet = new HashSet<Control>(_currentlyDraggingOver);
 
@@ -216,6 +233,57 @@ internal sealed partial class UserInterfaceManager
 
                 break;
             }
+        }
+    }
+
+    private ScreenCoordinates ResolveCrossWindowCoordinates(ScreenCoordinates coordinates)
+    {
+        // When dragging a control between two windows, the OS will give us coordinates relative
+        // to the originating window.
+        // We will try to use OS window coordinates to guess where we are over other windows.
+        // This is not 100% reliable as it relies on us second-guessing the OS, but doing it "properly" involves
+        // platform-specific APIs that I'd rather not deal with.
+        // This approach is... probably good enough.
+
+        var originatorWindow = (IClydeWindowInternal?) _clyde.AllWindows.SingleOrDefault(x => x.Id == coordinates.Window);
+        if (originatorWindow == null)
+            return ScreenCoordinates.Invalid;
+
+        var globalCoords = coordinates.Position + originatorWindow.WindowPosition;
+
+        // Find highest (in z-order) window that contains these global OS coordinates.
+        // We don't really have a cross-platform way to figure out Z order, so we uh, have to guess
+        // based on focus interactions.
+        // Can this be broken? Yes. Do we care? No.
+        // TODO: Handle owned windows which always overlap their parent.
+
+        var hitWindow = _clyde.AllWindows
+            .Select(win =>
+            {
+                var winInternal = (IClydeWindowInternal) win;
+                var localCoords = globalCoords - winInternal.WindowPosition;
+                // System.Console.WriteLine($"Test window @ {winInternal.WindowPosition}: {localCoords} x { win.Id }");
+                return new { win = winInternal, localCoords };
+            })
+            .Where(obj =>
+            {
+                if (obj.localCoords.X < 0 || obj.localCoords.X >= obj.win.Size.X)
+                    return false;
+
+                if (obj.localCoords.Y < 0 || obj.localCoords.Y >= obj.win.Size.Y)
+                    return false;
+
+                return true;
+            })
+            .MaxBy(obj => obj.win.LastFocusStamp);
+
+        if (hitWindow == null)
+        {
+            return ScreenCoordinates.Invalid;
+        }
+        else
+        {
+            return new ScreenCoordinates(hitWindow.localCoords, hitWindow.win.Id);
         }
     }
 

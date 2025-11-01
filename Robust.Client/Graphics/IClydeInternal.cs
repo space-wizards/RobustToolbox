@@ -88,5 +88,7 @@ namespace Robust.Client.Graphics
 #endif // TOOLS
 
         void RenderNow(IRenderTarget renderTarget, Action<IRenderHandle> callback);
+
+        void SetKeepMouseCaptured(bool keep);
     }
 }

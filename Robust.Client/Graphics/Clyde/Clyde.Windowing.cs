@@ -42,6 +42,7 @@ namespace Robust.Client.Graphics.Clyde
         private WindowReg? _currentHoveredWindow;
         private bool _threadWindowBlit;
         private bool EffectiveThreadWindowBlit => _threadWindowBlit && !_isGLES;
+        private long _focusCounter;
 
         public event Action<TextEnteredEventArgs>? TextEntered;
         public event Action<TextEditingEventArgs>? TextEditing;
@@ -420,6 +421,11 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
+        public void SetKeepMouseCaptured(bool keep)
+        {
+            throw new NotImplementedException();
+        }
+
         private void WindowModeChanged(int mode)
         {
             _windowMode = (WindowMode) mode;
@@ -499,10 +505,12 @@ namespace Robust.Client.Graphics.Clyde
             public Vector2i PrevWindowPos;
             public Vector2 LastMousePos;
             public bool IsFocused;
+            public long LastFocusStamp;
             public bool IsMinimized;
             public string Title = "";
             public bool IsVisible;
             public IClydeWindow? Owner;
+            public float Opacity;
 
             public bool DisposeOnClose;
 
@@ -563,6 +571,18 @@ namespace Robust.Client.Graphics.Clyde
 
             public Vector2 ContentScale => Reg.WindowScale;
 
+            public float Opacity
+            {
+                get => Reg.Opacity;
+                set
+                {
+                    ArgumentOutOfRangeException.ThrowIfNegative(value, nameof(value));
+                    ArgumentOutOfRangeException.ThrowIfGreaterThan(value, 1, nameof(value));
+
+                    _clyde._windowing!.WindowSetOpacity(Reg, value);
+                }
+            }
+
             public bool DisposeOnClose
             {
                 get => Reg.DisposeOnClose;
@@ -609,6 +629,8 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public nint? WindowsHWnd => _clyde._windowing!.WindowGetWin32Window(Reg);
+            public long LastFocusStamp => Reg.LastFocusStamp;
+            public Vector2 WindowPosition => Reg.WindowPos;
         }
 
         private sealed class MonitorHandle : IClydeMonitor

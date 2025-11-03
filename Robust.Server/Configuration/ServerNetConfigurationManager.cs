@@ -177,8 +177,6 @@ internal sealed class ServerNetConfigurationManager : NetConfigurationManager, I
     /// <inheritdoc />
     public override void OnClientCVarChanges<T>(string name, Action<T, ICommonSession> onValueChanged)
     {
-        base.OnClientCVarChanges(name, onValueChanged);
-
         using (Lock.WriteGuard())
         {
             if (!_replicatedInvoke.TryGetValue(name, out var invoke))
@@ -198,8 +196,6 @@ internal sealed class ServerNetConfigurationManager : NetConfigurationManager, I
     /// <inheritdoc />
     public override void UnsubClientCVarChanges<T>(string name, Action<T, ICommonSession> onValueChanged)
     {
-        base.UnsubClientCVarChanges(name, onValueChanged);
-
         using (Lock.WriteGuard())
         {
             if (!_replicatedInvoke.TryGetValue(name, out var invoke))

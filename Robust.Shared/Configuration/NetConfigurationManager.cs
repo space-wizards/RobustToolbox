@@ -236,8 +236,8 @@ namespace Robust.Shared.Configuration
         /// <inheritdoc />
         public abstract T GetClientCVar<T>(INetChannel channel, string name);
 
-        public virtual void OnClientCVarChanges<T>(string name, Action<T, ICommonSession> onChanged) where T : notnull { }
+        public abstract void OnClientCVarChanges<T>(string name, Action<T, ICommonSession> onChanged) where T : notnull;
 
-        public virtual void UnsubClientCVarChanges<T>(string name, Action<T, ICommonSession> onChanged) where T : notnull { }
+        public abstract void UnsubClientCVarChanges<T>(string name, Action<T, ICommonSession> onChanged) where T : notnull;
     }
 }

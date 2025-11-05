@@ -65,7 +65,7 @@ namespace Robust.Shared.Configuration
         /// <typeparam name="T">CVar type.</typeparam>
         /// <param name="name">Name of the CVar.</param>
         /// <param name="onChanged">The delegate to run when the cvar was changed.</param>
-        void OnClientCVarChanges<T>(string name, Action<T, ICommonSession> onChanged) where T : notnull;
+        void OnClientCVarChanges<T>(string name, Action<T, ICommonSession> onChanged, Action<ICommonSession>? onDisconnect) where T : notnull;
 
         /// <summary>
         /// Listen for an event for if the config value changes on client changes. Does nothing on client side
@@ -73,8 +73,8 @@ namespace Robust.Shared.Configuration
         /// <typeparam name="T">CVar type.</typeparam>
         /// <param name="definition">The CVar.</param>
         /// <param name="onChanged">The delegate to run when the cvar was changed.</param>
-        void OnClientCVarChanges<T>(CVarDef<T> definition, Action<T, ICommonSession> onChanged) where T : notnull
-         => OnClientCVarChanges(definition.Name, onChanged);
+        void OnClientCVarChanges<T>(CVarDef<T> definition, Action<T, ICommonSession> onChanged, Action<ICommonSession>? onDisconnect) where T : notnull
+         => OnClientCVarChanges(definition.Name, onChanged, onDisconnect);
 
         /// <summary>
         /// Unsubscribe an event previously registered with <see cref="OnClientCVarChanges{T}(string,System.Action{T})"/>.
@@ -82,7 +82,7 @@ namespace Robust.Shared.Configuration
         /// <typeparam name="T">CVar type.</typeparam>
         /// <param name="name">Name of the CVar.</param>
         /// <param name="onChanged">The delegate to run when the cvar was changed.</param>
-        void UnsubClientCVarChanges<T>(string name, Action<T, ICommonSession> onChanged) where T : notnull;
+        void UnsubClientCVarChanges<T>(string name, Action<T, ICommonSession> onChanged, Action<ICommonSession>? onDisconnect) where T : notnull;
 
         /// <summary>
         /// Unsubscribe an event previously registered with <see cref="OnClientCVarChanges{T}(string,System.Action{T})"/>.
@@ -90,8 +90,8 @@ namespace Robust.Shared.Configuration
         /// <typeparam name="T">CVar type.</typeparam>
         /// <param name="definition">The CVar.</param>
         /// <param name="onChanged">The delegate to run when the cvar was changed.</param>
-        void UnsubClientCVarChanges<T>(CVarDef<T> definition, Action<T, ICommonSession> onChanged) where T : notnull
-         => UnsubClientCVarChanges(definition.Name, onChanged);
+        void UnsubClientCVarChanges<T>(CVarDef<T> definition, Action<T, ICommonSession> onChanged, Action<ICommonSession>? onDisconnect) where T : notnull
+         => UnsubClientCVarChanges(definition.Name, onChanged, onDisconnect);
 
     }
 
@@ -236,8 +236,8 @@ namespace Robust.Shared.Configuration
         /// <inheritdoc />
         public abstract T GetClientCVar<T>(INetChannel channel, string name);
 
-        public abstract void OnClientCVarChanges<T>(string name, Action<T, ICommonSession> onChanged) where T : notnull;
+        public abstract void OnClientCVarChanges<T>(string name, Action<T, ICommonSession> onChanged, Action<ICommonSession>? onDisconnect) where T : notnull;
 
-        public abstract void UnsubClientCVarChanges<T>(string name, Action<T, ICommonSession> onChanged) where T : notnull;
+        public abstract void UnsubClientCVarChanges<T>(string name, Action<T, ICommonSession> onChanged, Action<ICommonSession>? onDisconnect) where T : notnull;
     }
 }

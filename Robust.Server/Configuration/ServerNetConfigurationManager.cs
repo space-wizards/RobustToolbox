@@ -1,15 +1,16 @@
+using System;
+using System.Collections.Generic;
+using Robust.Server.Player;
+using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
+using Robust.Shared.Enums;
+using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Player;
+using Robust.Shared.Replays;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
-using System.Collections.Generic;
-using Robust.Shared.IoC;
-using Robust.Shared.Replays;
-using System;
-using Robust.Shared.Player;
-using Robust.Shared.Collections;
-using Robust.Server.Player;
 
 namespace Robust.Server.Configuration;
 
@@ -175,7 +176,7 @@ internal sealed class ServerNetConfigurationManager : NetConfigurationManager, I
     }
 
     /// <inheritdoc />
-    public override void OnClientCVarChanges<T>(string name, Action<T, ICommonSession> onValueChanged)
+    public override void OnClientCVarChanges<T>(string name, Action<T, ICommonSession> onValueChanged, Action<ICommonSession>? onDisconnect)
     {
         using (Lock.WriteGuard())
         {
@@ -188,14 +189,29 @@ internal sealed class ServerNetConfigurationManager : NetConfigurationManager, I
             }
             else
             {
-                invoke.AddInPlace((object value, ICommonSession session, in CVarChangeInfo _) => onValueChanged((T)value, session),onValueChanged);
+                invoke.AddInPlace((object value, ICommonSession session, in CVarChangeInfo _) => onValueChanged((T)value, session), onValueChanged);
             }
         }
+
+        if (onDisconnect is null)
+            return;
+
+        _playerManager.PlayerStatusChanged += (_, args) =>
+        {
+            if (args.NewStatus == SessionStatus.Disconnected)
+                onDisconnect?.Invoke(args.Session);
+        };
     }
 
     /// <inheritdoc />
-    public override void UnsubClientCVarChanges<T>(string name, Action<T, ICommonSession> onValueChanged)
+    public override void UnsubClientCVarChanges<T>(string name, Action<T, ICommonSession> onValueChanged, Action<ICommonSession>? onDisconnect)
     {
+        _playerManager.PlayerStatusChanged -= (_, args) =>
+        {
+            if (args.NewStatus == SessionStatus.Disconnected)
+                onDisconnect?.Invoke(args.Session);
+        };
+
         using (Lock.WriteGuard())
         {
             if (!_replicatedInvoke.TryGetValue(name, out var invoke))
@@ -206,5 +222,14 @@ internal sealed class ServerNetConfigurationManager : NetConfigurationManager, I
 
             invoke.RemoveInPlace(onValueChanged);
         }
+
+        if (onDisconnect is null)
+            return;
+
+        _playerManager.PlayerStatusChanged += (_, args) =>
+        {
+            if (args.NewStatus == SessionStatus.Disconnected)
+                onDisconnect?.Invoke(args.Session);
+        };
     }
 }

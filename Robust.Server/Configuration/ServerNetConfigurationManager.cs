@@ -22,19 +22,25 @@ internal sealed class ServerNetConfigurationManager : NetConfigurationManager, I
 
     private readonly Dictionary<INetChannel, Dictionary<string, object>> _replicatedCVars = new();
 
-    private readonly Dictionary<string, InvokeList<ClientValueChangedDelegate>> _replicatedInvoke = new();
+    private readonly Dictionary<string, ReplicatedCVarInvokes> _replicatedInvokes = new();
+
 
     public override void SetupNetworking()
     {
         base.SetupNetworking();
         NetManager.Connected += PeerConnected;
         NetManager.Disconnect += PeerDisconnected;
+        _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
     }
 
     public override void Shutdown()
     {
         base.Shutdown();
+
+        _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
+
         _replicatedCVars.Clear();
+        _replicatedInvokes.Clear();
     }
 
     private void PeerConnected(object? sender, NetChannelArgs e)
@@ -45,6 +51,27 @@ internal sealed class ServerNetConfigurationManager : NetConfigurationManager, I
     private void PeerDisconnected(object? sender, NetDisconnectedArgs e)
     {
         _replicatedCVars.Remove(e.Channel);
+    }
+
+    private void OnPlayerStatusChanged(object? _, SessionStatusEventArgs args)
+    {
+        if (args.NewStatus != SessionStatus.Disconnected)
+            return;
+
+        foreach (var (_, cVarInvoke) in _replicatedInvokes)
+        {
+            foreach (var entry in cVarInvoke.DisconnectDelegate.Entries)
+            {
+                try
+                {
+                    entry.Value!.Invoke(args.Session);
+                }
+                catch (Exception e)
+                {
+                    Sawmill.Error($"Error while running {nameof(DisconnectDelegate)} for replicated CVars callback: {e}");
+                }
+            }
+        }
     }
 
     /// <inheritdoc />
@@ -159,10 +186,10 @@ internal sealed class ServerNetConfigurationManager : NetConfigurationManager, I
             return;
         }
 
-        if (!_replicatedInvoke.TryGetValue(info.Name, out var invokeList))
+        if (!_replicatedInvokes.TryGetValue(info.Name, out var cVarInvokes))
             return;
 
-        foreach (var entry in invokeList.Entries)
+        foreach (var entry in cVarInvokes.ClientChangeInvoke.Entries)
         {
             try
             {
@@ -170,7 +197,7 @@ internal sealed class ServerNetConfigurationManager : NetConfigurationManager, I
             }
             catch (Exception e)
             {
-                Sawmill.Error($"Error while running InvokeClientCvarChange callback: {e}");
+                Sawmill.Error($"Error while running {nameof(ClientValueChangedDelegate)} for replicated CVars callback: {e}");
             }
         }
     }
@@ -180,56 +207,50 @@ internal sealed class ServerNetConfigurationManager : NetConfigurationManager, I
     {
         using (Lock.WriteGuard())
         {
-            if (!_replicatedInvoke.TryGetValue(name, out var invoke))
+            if (!_replicatedInvokes.TryGetValue(name, out var cVarInvokes))
             {
-                InvokeList<ClientValueChangedDelegate> invokeList = new();
-                invokeList.AddInPlace((object value, ICommonSession session, in CVarChangeInfo _) => onValueChanged((T)value, session), onValueChanged);
+                cVarInvokes = new ReplicatedCVarInvokes { };
+                cVarInvokes.ClientChangeInvoke.AddInPlace((object value, ICommonSession session, in CVarChangeInfo _) => onValueChanged((T)value, session), onValueChanged);
 
-                _replicatedInvoke.Add(name, invokeList);
+                _replicatedInvokes.Add(name, cVarInvokes);
             }
             else
             {
-                invoke.AddInPlace((object value, ICommonSession session, in CVarChangeInfo _) => onValueChanged((T)value, session), onValueChanged);
+                cVarInvokes.ClientChangeInvoke.AddInPlace((object value, ICommonSession session, in CVarChangeInfo _) => onValueChanged((T)value, session), onValueChanged);
             }
+
+            if (onDisconnect is null)
+                return;
+
+            cVarInvokes.DisconnectDelegate.AddInPlace(session => onDisconnect(session), onDisconnect);
         }
-
-        if (onDisconnect is null)
-            return;
-
-        _playerManager.PlayerStatusChanged += (_, args) =>
-        {
-            if (args.NewStatus == SessionStatus.Disconnected)
-                onDisconnect?.Invoke(args.Session);
-        };
     }
 
     /// <inheritdoc />
     public override void UnsubClientCVarChanges<T>(string name, Action<T, ICommonSession> onValueChanged, Action<ICommonSession>? onDisconnect)
     {
-        _playerManager.PlayerStatusChanged -= (_, args) =>
-        {
-            if (args.NewStatus == SessionStatus.Disconnected)
-                onDisconnect?.Invoke(args.Session);
-        };
-
         using (Lock.WriteGuard())
         {
-            if (!_replicatedInvoke.TryGetValue(name, out var invoke))
+            if (!_replicatedInvokes.TryGetValue(name, out var cVarInvokes))
             {
-                Sawmill.Error($"Trying to unsubscribe for cvar {name} changes that dont have any subscriptions at all!");
+                Sawmill.Warning($"Trying to unsubscribe for cvar {name} changes that dont have any subscriptions at all!");
                 return;
             }
 
-            invoke.RemoveInPlace(onValueChanged);
+            cVarInvokes.ClientChangeInvoke.RemoveInPlace(onValueChanged);
+
+            if (onDisconnect is null)
+                return;
+
+            cVarInvokes.DisconnectDelegate.RemoveInPlace(onDisconnect);
         }
+    }
 
-        if (onDisconnect is null)
-            return;
+    private delegate void DisconnectDelegate(ICommonSession session);
 
-        _playerManager.PlayerStatusChanged += (_, args) =>
-        {
-            if (args.NewStatus == SessionStatus.Disconnected)
-                onDisconnect?.Invoke(args.Session);
-        };
+    private sealed class ReplicatedCVarInvokes
+    {
+        public InvokeList<ClientValueChangedDelegate> ClientChangeInvoke = new();
+        public InvokeList<DisconnectDelegate> DisconnectDelegate = new();
     }
 }

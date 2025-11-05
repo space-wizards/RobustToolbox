@@ -6,13 +6,14 @@ using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using Robust.Shared.Containers;
 using Robust.Shared.Map.Components;
 using Robust.Shared.Network;
 using Robust.Shared.Physics.Systems;
 using Robust.Shared.Timing;
-
+using Robust.Shared.Physics.Components;
 namespace Robust.Shared.GameObjects
 {
     public abstract partial class SharedTransformSystem : EntitySystem
@@ -142,8 +143,12 @@ namespace Robust.Shared.GameObjects
 
             return xform.GridUid == null
                 ? new EntityCoordinates(xform.MapUid ?? xform.ParentUid, worldPos)
-                : new EntityCoordinates(xform.GridUid.Value,
-                    Vector2.Transform(worldPos, XformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix));
+                : new EntityCoordinates(xform.GridUid.Value, Vector2.Transform(worldPos, XformQuery.GetComponent(xform.GridUid.Value).InvLocalMatrix));
+        }
+
+        public EntityCoordinates GetMoverCoordinates(EntityCoordinates coordinates, EntityQuery<TransformComponent> xformQuery)
+        {
+            return GetMoverCoordinates(coordinates);
         }
 
         /// <summary>
@@ -163,7 +168,13 @@ namespace Robust.Shared.GameObjects
             if (!parentXform._gridInitialized)
                 InitializeGridUid(parentUid, parentXform);
 
-            if (parentXform.GridUid == parentUid || parentXform.MapUid == parentUid)
+            // Is the entity directly parented to the grid?
+            if (parentXform.GridUid == parentUid)
+                return coordinates;
+
+            // Is the entity directly parented to the map?
+            var mapId = parentXform.MapUid;
+            if (mapId == parentUid)
                 return coordinates;
 
             DebugTools.Assert(!HasComp<MapGridComponent>(parentUid) && !HasComp<MapComponent>(parentUid));
@@ -172,9 +183,8 @@ namespace Robust.Shared.GameObjects
             var worldPos = Vector2.Transform(coordinates.Position, GetWorldMatrix(parentXform, XformQuery));
 
             return parentXform.GridUid == null
-                ? new EntityCoordinates(parentXform.MapUid ?? parentUid, worldPos)
-                : new EntityCoordinates(parentXform.GridUid.Value,
-                    Vector2.Transform(worldPos, XformQuery.GetComponent(parentXform.GridUid.Value).InvLocalMatrix));
+                ? new EntityCoordinates(mapId ?? parentUid, worldPos)
+                : new EntityCoordinates(parentXform.GridUid.Value, Vector2.Transform(worldPos, XformQuery.GetComponent(parentXform.GridUid.Value).InvLocalMatrix));
         }
 
         /// <summary>
@@ -274,7 +284,26 @@ namespace Robust.Shared.GameObjects
 
             if (oldParent != ent.Comp1._parent)
             {
+                var xform = ent.Comp1;
+                var newMap = xform.MapUid;
+                var movedFromNullspaceToMap = (oldMap == null && newMap != null);
+
                 OnBeforeMoveEvent?.Invoke(ref ev);
+
+                if (movedFromNullspaceToMap)
+                {
+                    var uid = ent.Owner;
+
+                    if (!EntityManager.TryGetComponent(uid, out PhysicsComponent? phys))
+                        phys = EntityManager.EnsureComponent<PhysicsComponent>(uid);
+
+                    // Makes sure the entity actually had a body
+                    if (!EntityManager.HasComponent<FixturesComponent>(uid))
+                        EntityManager.EnsureComponent<FixturesComponent>(uid);
+
+                    _physics.SetCanCollide(uid, true, manager: null, body: phys);
+                    _physics.WakeBody(uid, body: phys);
+                }
 
                 _physics.OnParentChange(ent, oldParent, oldMap);
 
@@ -291,9 +320,6 @@ namespace Robust.Shared.GameObjects
             RaiseLocalEvent(ev.Sender, ref ev);
             OnGlobalMoveEvent?.Invoke(ref ev);
 
-            // Finally, handle grid traversal. This is handled separately to avoid out-of-order move events.
-            // I.e., if the traversal raises its own move event, this ensures that all the old move event handlers
-            // have finished running first. Ideally this shouldn't be required, but this is here just in case
             if (checkTraversal)
                 _traversal.CheckTraverse(ent);
         }

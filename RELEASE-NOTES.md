@@ -64,6 +64,7 @@ END TEMPLATE-->
 
 * ComponentNameSerializer will now ignore any components that have been ignored via `IComponentFactory.RegisterIgnore`.
 * Add pure to some SharedTransformSystem methods.
+* Significantly optimised collision detection in SharedBroadphaseSystem.
 * `Control.Stylesheet` does not do any work if assigning the value it already has.
 * XAML hot reload now JITs UIs when first opened rather than doing every single one at client startup. This reduces dev startup overhead significantly and probably helps with memory usage too.
 

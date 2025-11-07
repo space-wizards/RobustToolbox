@@ -263,16 +263,13 @@ public abstract partial class SharedPhysicsSystem
         // Broadphase has already done the faster check for collision mask / layers
         // so no point duplicating
 
-        // Does a contact already exist?
-        if (fixtureA.Contacts.ContainsKey(fixtureB))
-            return;
-
+        DebugTools.Assert(!fixtureA.Contacts.ContainsKey(fixtureB));
         DebugTools.Assert(!fixtureB.Contacts.ContainsKey(fixtureA));
         var xformA = entA.Comp2;
         var xformB = entB.Comp2;
 
         // Does a joint override collision? Is at least one body dynamic?
-        if (!ShouldCollide(entA.Owner, entB.Owner, bodyA, bodyB, fixtureA, fixtureB, xformA, xformB))
+        if (!ShouldCollideSlow(entA.Owner, entB.Owner, bodyA, bodyB, fixtureA, fixtureB, xformA, xformB))
             return;
 
         // Call the factory.
@@ -310,14 +307,14 @@ public abstract partial class SharedPhysicsSystem
     /// <summary>
     ///     Go through the cached broadphase movement and update contacts.
     /// </summary>
-    internal void AddPair(string fixtureAId, string fixtureBId, in FixtureProxy proxyA, in FixtureProxy proxyB)
+    internal void AddPair(string fixtureAId, string fixtureBId, in FixtureProxy proxyA, in FixtureProxy proxyB, ContactFlags flags = ContactFlags.None)
     {
         AddPair((proxyA.Entity, proxyA.Body, proxyA.Xform),
             (proxyB.Entity, proxyB.Body, proxyB.Xform),
             fixtureAId, fixtureBId,
             proxyA.Fixture, proxyA.ChildIndex,
             proxyB.Fixture, proxyB.ChildIndex,
-            proxyA.Body, proxyB.Body);
+            proxyA.Body, proxyB.Body, flags: flags);
     }
 
     internal static bool ShouldCollide(Fixture fixtureA, Fixture fixtureB)
@@ -447,7 +444,8 @@ public abstract partial class SharedPhysicsSystem
             {
                 // Check default filtering
                 if (!ShouldCollide(fixtureA, fixtureB) ||
-                    !ShouldCollide(uidA, uidB, bodyA, bodyB, fixtureA, fixtureB, xformA, xformB))
+                    !ShouldCollideSlow(uidA, uidB, bodyA, bodyB, fixtureA, fixtureB, xformA, xformB) ||
+                    !ShouldCollideJoints(uidA, uidB))
                 {
                     DestroyContact(contact);
                     continue;
@@ -721,9 +719,30 @@ public abstract partial class SharedPhysicsSystem
     }
 
     /// <summary>
+    /// Is there a joint blocking collision between these bodies.
+    /// </summary>
+    internal bool ShouldCollideJoints(Entity<JointComponent?> entA, Entity<JointComponent?> entB)
+    {
+        // Does a joint prevent collision?
+        // if one of them doesn't have jointcomp then they can't share a common joint.
+        // otherwise, only need to iterate over the joints of one component as they both store the same joint.
+        if (JointQuery.Resolve(entA.Owner, ref entA.Comp, false) && JointQuery.HasComp(entB))
+        {
+            foreach (var joint in entA.Comp.Joints.Values)
+            {
+                // Check if either: the joint even allows collisions OR the other body on the joint is actually the other body we're checking.
+                if (!joint.CollideConnected && (entB.Owner == joint.BodyAUid || entB.Owner == joint.BodyBUid))
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
     ///     Used to prevent bodies from colliding; may lie depending on joints.
     /// </summary>
-    protected bool ShouldCollide(
+    internal bool ShouldCollideSlow(
         EntityUid uid,
         EntityUid other,
         PhysicsComponent body,
@@ -757,18 +776,7 @@ public abstract partial class SharedPhysicsSystem
                 return false;
         }
 
-        // Does a joint prevent collision?
-        // if one of them doesn't have jointcomp then they can't share a common joint.
-        // otherwise, only need to iterate over the joints of one component as they both store the same joint.
-        if (TryComp(uid, out JointComponent? jointComponentA) && HasComp<JointComponent>(other))
-        {
-            foreach (var joint in jointComponentA.Joints.Values)
-            {
-                // Check if either: the joint even allows collisions OR the other body on the joint is actually the other body we're checking.
-                if (!joint.CollideConnected && (other == joint.BodyAUid || other == joint.BodyBUid))
-                    return false;
-            }
-        }
+        // Joints already handled before the contact pair is made.
 
         var preventCollideMessage = new PreventCollideEvent(uid, other, body, otherBody, fixture, otherFixture);
         RaiseLocalEvent(uid, ref preventCollideMessage);

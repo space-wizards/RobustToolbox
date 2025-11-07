@@ -29,6 +29,11 @@ namespace Robust.Client.UserInterface
 {
     internal sealed partial class UserInterfaceManager : IUserInterfaceManagerInternal
     {
+        /// <summary>
+        /// A type that will always be instantiated anyways.
+        /// </summary>
+        public static readonly Type XamlHotReloadWarmupType = typeof(DropDownDebugConsole);
+
         [Dependency] private readonly IDependencyCollection _rootDependencies = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly IFontManager _fontManager = default!;

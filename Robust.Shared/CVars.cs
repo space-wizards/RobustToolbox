@@ -1917,5 +1917,50 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<string> XamlHotReloadMarkerName =
             CVarDef.Create("ui.xaml_hot_reload_marker_name", "SpaceStation14.sln", CVar.CLIENTONLY);
+
+        /// <summary>
+        /// If true, all XAML UIs will be JITed for hot reload on client startup.
+        /// If false, they will be JITed on demand.
+        /// </summary>
+        public static readonly CVarDef<bool> UIXamlJitPreload =
+            CVarDef.Create("ui.xaml_jit_preload", false, CVar.CLIENTONLY);
+
+        /*
+         * FONT
+         */
+
+        /// <summary>
+        /// If false, disable system font support.
+        /// </summary>
+        public static readonly CVarDef<bool> FontSystem =
+            CVarDef.Create("font.system", true, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// If true, allow Windows "downloadable" fonts to be exposed to the system fonts API.
+        /// </summary>
+        public static readonly CVarDef<bool> FontWindowsDownloadable =
+            CVarDef.Create("font.windows_downloadable", false, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        /*
+         * LOADING
+         */
+
+        /// <summary>
+        /// Whether to show explicit loading bar during client initialization.
+        /// </summary>
+        public static readonly CVarDef<bool> LoadingShowBar =
+            CVarDef.Create("loading.show_bar", true, CVar.CLIENTONLY);
+
+#if TOOLS
+        private const bool DefaultShowDebug = true;
+#else
+        private const bool DefaultShowDebug = false;
+#endif
+
+        /// <summary>
+        /// Whether to show "debug" info in the loading screen.
+        /// </summary>
+        public static readonly CVarDef<bool> LoadingShowDebug =
+            CVarDef.Create("loading.show_debug", DefaultShowDebug, CVar.CLIENTONLY);
     }
 }

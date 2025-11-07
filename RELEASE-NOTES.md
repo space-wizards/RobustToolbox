@@ -39,22 +39,38 @@ END TEMPLATE-->
 
 ### New features
 
+* Added two new custom yaml serializers `CustomListSerializer` and `CustomArraySerializer`.
 * CVars defined in `[CVarDefs]` can now be private or internal.
 * Added config rollback system to `IConfigurationManager`. This enables CVars to be snapshot and rolled back, even in the event of client crash.
+* `OptionButton` now has a `Filterable` property that gives it a text box to filter options.
+* Added `FontTagHijackHolder` to replace fonts resolved by `FontTag`.
+* Sandbox:
+  * Exposed `System.Reflection.Metadata.MetadataUpdateHandlerAttribute`.
+  * Exposed more overloads on `StringBuilder`.
+* The engine can now load system fonts.
+  * At the moment only available on Windows.
+  * See `ISystemFontManager` for API.
+* The client now display a loading screen during startup.
 
 ### Bugfixes
 
 * Fix `Menu` and `NumpadDecimal` key codes on SDL3.
+* client-side predicted entity deletion ( `EntityManager.PredictedQueueDeleteEntity`) now behaves more like it does on the server. In particular, entities will be deleted on the same tick after all system have been updated. Previously, it would process deletions at the beginning of the next tick.
 * Fix modifying `Label.FontOverride` not causing a layout update.
+* Controls created by rich-text tags now get arranged to a proper size.
+* Fix `OutputPanel` scrollbar breaking if a style update changes the font size.
 
 ### Other
 
+* ComponentNameSerializer will now ignore any components that have been ignored via `IComponentFactory.RegisterIgnore`.
 * Add pure to some SharedTransformSystem methods.
 * Significantly optimised collision detection in SharedBroadphaseSystem.
+* `Control.Stylesheet` does not do any work if assigning the value it already has.
+* XAML hot reload now JITs UIs when first opened rather than doing every single one at client startup. This reduces dev startup overhead significantly and probably helps with memory usage too.
 
 ### Internal
 
-*None yet*
+* The `dmetamem` command now sorts its output, and doesn't output to log anymore to avoid output interleaving.
 
 
 ## 267.3.0

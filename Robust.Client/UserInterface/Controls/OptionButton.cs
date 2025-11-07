@@ -9,7 +9,7 @@ using static Robust.Client.UserInterface.Controls.BoxContainer;
 namespace Robust.Client.UserInterface.Controls
 {
     [Virtual]
-    public class OptionButton : ContainerButton
+    public class OptionButton : PushButton
     {
         public const string StyleClassOptionButton = "optionButton";
         public const string StyleClassPopup = "optionButtonPopup";
@@ -66,7 +66,6 @@ namespace Robust.Client.UserInterface.Controls
         public OptionButton()
         {
             OptionStyleClasses = new List<string>();
-            AddStyleClass(StyleClassButton);
             OnPressed += OnPressedInternal;
 
             var hBox = new BoxContainer

@@ -15,7 +15,7 @@ namespace Robust.Client.UserInterface.Controls
     /// <typeparam name="TKey">type to use as the unique key for each option. Functions similarly
     /// to dictionary key, so the type should make sure to respect dictionary key semantics.</typeparam>
     [Virtual]
-    public class MultiselectOptionButton<TKey> : ContainerButton where TKey : notnull
+    public class MultiselectOptionButton<TKey> : PushButton where TKey : notnull
     {
         public const string StyleClassOptionButton = "optionButton";
         public const string StyleClassOptionTriangle = "optionTriangle";
@@ -61,7 +61,6 @@ namespace Robust.Client.UserInterface.Controls
 
         public MultiselectOptionButton()
         {
-            AddStyleClass(StyleClassButton);
             OnPressed += OnPressedInternal;
 
             var hBox = new BoxContainer

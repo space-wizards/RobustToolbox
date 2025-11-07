@@ -33,7 +33,7 @@ namespace Robust.Client.UserInterface.Controls
             Orientation = LayoutOrientation.Vertical;
         }
 
-        public Collapsible(CollapsibleHeading header, CollapsibleBody body) : this()
+        public Collapsible(BaseButton header, CollapsibleBody body) : this()
         {
             AddChild(header);
             AddChild(body);

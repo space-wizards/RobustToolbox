@@ -532,7 +532,7 @@ namespace Robust.Client.UserInterface
         public Control()
         {
             UserInterfaceManagerInternal = IoCManager.Resolve<IUserInterfaceManagerInternal>();
-            StyleClasses = new StyleClassCollection(this);
+            _styleClasses = new StyleClassCollection(this);
             Children = new OrderedChildCollection(this);
             Theme = UserInterfaceManagerInternal.CurrentTheme;
             XamlChildren = Children;

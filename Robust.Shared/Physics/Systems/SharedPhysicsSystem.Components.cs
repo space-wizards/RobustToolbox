@@ -61,7 +61,7 @@ public partial class SharedPhysicsSystem
         }
 
         // Gets added to broadphase via fixturessystem
-        _fixtures.OnPhysicsInit(uid, manager, component);
+        _fixtureSystem.OnPhysicsInit(uid, manager, component);
 
         if (manager.FixtureCount == 0)
             component.CanCollide = false;

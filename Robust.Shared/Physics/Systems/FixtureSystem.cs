@@ -104,6 +104,7 @@ namespace Robust.Shared.Physics.Systems
                 throw new InvalidOperationException($"Tried to create a fixture without an ID!");
             }
 
+            _physics.AddWorldFixture(fixture);
             manager.Fixtures.Add(fixtureId, fixture);
             fixture.Owner = uid;
 
@@ -207,6 +208,12 @@ namespace Robust.Shared.Physics.Systems
                 _lookup.DestroyProxies(uid, fixtureId, fixture, xform, broadphase);
             }
 
+            // Pair keys should be empty so nothing to update there.
+            DebugTools.Assert(fixture.Id > 0);
+            var moved = _physics.Fixtures.RemoveSwap(fixture.Id);
+            // Moved fixture gets the new ID.
+            moved.Id = fixture.Id;
+
             if (updates)
             {
                 var resetMass = fixture.Density > 0f;
@@ -224,6 +231,10 @@ namespace Robust.Shared.Physics.Systems
             {
                 foreach (var (id, fixture) in component.Fixtures)
                 {
+                    // Grid moment yayyy
+                    if (fixture.Id == 0)
+                        _physics.AddWorldFixture(fixture);
+
                     if (string.IsNullOrEmpty(id))
                     {
                         throw new InvalidOperationException($"Tried to setup fixture on init for {ToPrettyString(uid)} with no ID!");
@@ -274,6 +285,7 @@ namespace Robust.Shared.Physics.Systems
 
             foreach (var (id, fixture) in state.Fixtures)
             {
+                // ID gets set below.
                 var newFixture = new Fixture();
                 fixture.CopyTo(newFixture);
                 newFixtures.Add(id, newFixture);

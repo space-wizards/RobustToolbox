@@ -10,7 +10,44 @@ namespace Robust.Shared.Physics.Systems;
 
 public abstract partial class SharedPhysicsSystem
 {
-    [Dependency] private readonly FixtureSystem _fixtures = default!;
+    // Will get expanded as v3 gets ported but for now just handles fixture tracking.
+    internal Fixture AddWorldFixture()
+    {
+        var fixture = new Fixture();
+        AddWorldFixture(fixture);
+        return fixture;
+    }
+
+    internal void AddWorldFixture(Fixture fixture)
+    {
+        DebugTools.Assert(fixture.Id == 0);
+        // Yes I want it offset by 1
+        Fixtures.Add(fixture);
+        fixture.Id = Fixtures.Count;
+    }
+
+    public bool HasContact(Fixture fixtureA, Fixture fixtureB)
+    {
+        if (fixtureB.Id < fixtureA.Id)
+        {
+            (fixtureB, fixtureA) = (fixtureA, fixtureB);
+        }
+
+        var pairKey = GetPairKey(fixtureA.Id, fixtureB.Id);
+        return _pairKeys.Contains(pairKey);
+    }
+
+    internal ulong GetPairKey(int idA, int idB)
+    {
+        DebugTools.Assert(idA > 0 && idB > 0);
+
+        if (idA < idB)
+        {
+            return (ulong)idA << 32 | (uint)idB;
+        }
+
+        return (ulong)idB << 32 | (uint)idA;
+    }
 
     public void SetDensity(EntityUid uid, string fixtureId, Fixture fixture, float value, bool update = true, FixturesComponent? manager = null)
     {
@@ -25,7 +62,7 @@ public abstract partial class SharedPhysicsSystem
         fixture.Density = value;
 
         if (update)
-            _fixtures.FixtureUpdate(uid, manager: manager);
+            _fixtureSystem.FixtureUpdate(uid, manager: manager);
     }
 
     public void SetFriction(EntityUid uid, string fixtureId, Fixture fixture, float value, bool update = true, FixturesComponent? manager = null)
@@ -41,7 +78,7 @@ public abstract partial class SharedPhysicsSystem
         fixture.Friction = value;
 
         if (update)
-            _fixtures.FixtureUpdate(uid, manager: manager);
+            _fixtureSystem.FixtureUpdate(uid, manager: manager);
     }
 
     public void SetHard(EntityUid uid, Fixture fixture, bool value, FixturesComponent? manager = null)
@@ -53,7 +90,7 @@ public abstract partial class SharedPhysicsSystem
             return;
 
         fixture.Hard = value;
-        _fixtures.FixtureUpdate(uid, manager: manager);
+        _fixtureSystem.FixtureUpdate(uid, manager: manager);
         WakeBody(uid);
     }
 
@@ -70,7 +107,7 @@ public abstract partial class SharedPhysicsSystem
         fixture.Restitution = value;
 
         if (update)
-            _fixtures.FixtureUpdate(uid, manager: manager);
+            _fixtureSystem.FixtureUpdate(uid, manager: manager);
     }
 
     /// <summary>
@@ -194,7 +231,7 @@ public abstract partial class SharedPhysicsSystem
 
         if (body != null || TryComp(uid, out body))
         {
-            _fixtures.FixtureUpdate(uid, manager: manager, body: body);
+            _fixtureSystem.FixtureUpdate(uid, manager: manager, body: body);
         }
 
         _broadphase.Refilter(uid, fixture);
@@ -212,7 +249,7 @@ public abstract partial class SharedPhysicsSystem
 
         if (body != null || TryComp(uid, out body))
         {
-            _fixtures.FixtureUpdate(uid, manager: manager, body: body);
+            _fixtureSystem.FixtureUpdate(uid, manager: manager, body: body);
         }
 
         _broadphase.Refilter(uid, fixture);
@@ -230,7 +267,7 @@ public abstract partial class SharedPhysicsSystem
 
         if (body != null || TryComp(uid, out body))
         {
-            _fixtures.FixtureUpdate(uid, manager: manager, body: body);
+            _fixtureSystem.FixtureUpdate(uid, manager: manager, body: body);
         }
 
         _broadphase.Refilter(uid, fixture);
@@ -248,7 +285,7 @@ public abstract partial class SharedPhysicsSystem
 
         if (body != null || TryComp(uid, out body))
         {
-            _fixtures.FixtureUpdate(uid, manager: manager, body: body);
+            _fixtureSystem.FixtureUpdate(uid, manager: manager, body: body);
         }
 
         _broadphase.Refilter(uid, fixture);
@@ -266,7 +303,7 @@ public abstract partial class SharedPhysicsSystem
 
         if (body != null || TryComp(uid, out body))
         {
-            _fixtures.FixtureUpdate(uid, manager: manager, body: body);
+            _fixtureSystem.FixtureUpdate(uid, manager: manager, body: body);
         }
 
         _broadphase.Refilter(uid, fixture);
@@ -281,7 +318,7 @@ public abstract partial class SharedPhysicsSystem
 
         if (body != null || TryComp(uid, out body))
         {
-            _fixtures.FixtureUpdate(uid, manager: manager, body: body);
+            _fixtureSystem.FixtureUpdate(uid, manager: manager, body: body);
         }
 
         _broadphase.Refilter(uid, fixture);

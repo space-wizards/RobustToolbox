@@ -282,6 +282,10 @@ public abstract partial class SharedPhysicsSystem
         var bodA = contact.BodyA!;
         var bodB = contact.BodyB!;
 
+        var pairKey = GetPairKey(fixtureA.Id, fixtureB.Id);
+
+        _pairKeys.Add(pairKey);
+
         // Insert into world
         _activeContacts.AddLast(contact.MapNode);
 
@@ -373,6 +377,10 @@ public abstract partial class SharedPhysicsSystem
 
         // Remove from the world
         _activeContacts.Remove(contact.MapNode);
+
+        var pairKey = GetPairKey(fixtureA.Id, fixtureB.Id);
+        DebugTools.Assert(_pairKeys.Contains(pairKey));
+        _pairKeys.Remove(pairKey);
 
         // Remove from body 1
         DebugTools.Assert(fixtureA.Contacts.ContainsKey(fixtureB));

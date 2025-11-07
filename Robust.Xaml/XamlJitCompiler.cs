@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using XamlX.IL;
 using XamlX.Parsers;
+using XamlX.TypeSystem;
 
 namespace Robust.Xaml;
 
@@ -125,20 +126,20 @@ internal sealed class XamlJitCompiler
 
         xaml.ILCompiler.Transform(document);
         xaml.ILCompiler.Compile(
-            document,
-            contextClass,
-            xaml.ILCompiler.DefinePopulateMethod(
+            doc: document,
+            contextType: contextClass,
+            populateMethod: xaml.ILCompiler.DefinePopulateMethod(
                 populateClassBuilder,
                 document,
                 populateName,
-                true
+                XamlVisibility.Public
             ),
-            null,
-            null,
-            (closureName, closureBaseType) =>
-                contextClassBuilder.DefineSubType(closureBaseType, closureName, false),
-            uri.ToString(),
-            xaml.CreateFileSource(filePath, Encoding.UTF8.GetBytes(contents))
+            populateDeclaringType: populateClassBuilder,
+            buildMethod: null,
+            buildDeclaringType: null,
+            namespaceInfoBuilder: null,
+            baseUri: uri.ToString(),
+            fileSource: xaml.CreateFileSource(filePath, Encoding.UTF8.GetBytes(contents))
         );
 
         contextClassBuilder.CreateType();

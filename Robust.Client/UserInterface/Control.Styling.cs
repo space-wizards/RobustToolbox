@@ -28,7 +28,15 @@ namespace Robust.Client.UserInterface
         }
 
         [ViewVariables]
-        public ICollection<string> StyleClasses { get; }
+        public StyleClassCollection StyleClasses
+        {
+            get => _styleClasses;
+            set
+            {
+                _styleClasses = new(value);
+                _styleClasses._owner = this;
+            }
+        }
 
         [ViewVariables(VVAccess.ReadOnly)]
         public IReadOnlyCollection<string> StylePseudoClass => _stylePseudoClass;
@@ -45,7 +53,7 @@ namespace Robust.Client.UserInterface
         }
 
         private readonly Dictionary<string, object> _styleProperties = new();
-        private readonly HashSet<string> _styleClasses = new();
+        private StyleClassCollection _styleClasses;
         private readonly HashSet<string> _stylePseudoClass = new();
 
         // Styling needs to be updated.
@@ -102,20 +110,17 @@ namespace Robust.Client.UserInterface
         public void AddStyleClass(string className)
         {
             _styleClasses.Add(className);
-            Restyle();
         }
 
         public void RemoveStyleClass(string className)
         {
             _styleClasses.Remove(className);
-            Restyle();
         }
 
         public void SetOnlyStyleClass(string className)
         {
             _styleClasses.Clear();
             _styleClasses.Add(className);
-            Restyle();
         }
 
         internal void Restyle()
@@ -276,18 +281,37 @@ namespace Robust.Client.UserInterface
             return defaultValue;
         }
 
-        private sealed class StyleClassCollection : ICollection<string>, IReadOnlyCollection<string>
+        public sealed class StyleClassCollection : ICollection<string>, IReadOnlyCollection<string>
         {
-            private readonly Control _owner;
+            internal Control? _owner;
+            private readonly HashSet<string> _values;
 
-            public StyleClassCollection(Control owner)
+            internal StyleClassCollection(Control control)
             {
-                _owner = owner;
+                _owner = control;
+                _values = new();
             }
+
+            public StyleClassCollection()
+            {
+                _values = new();
+            }
+
+            public StyleClassCollection(IEnumerable<string> items)
+            {
+                _values = new(items);
+            }
+
+            public StyleClassCollection(params string[] items)
+            {
+                _values = new(items);
+            }
+
+            public static StyleClassCollection Parse(string s) => new(s.Split(' '));
 
             public IEnumerator<string> GetEnumerator()
             {
-                return _owner._styleClasses.GetEnumerator();
+                return _values.GetEnumerator();
             }
 
             IEnumerator IEnumerable.GetEnumerator()
@@ -297,39 +321,40 @@ namespace Robust.Client.UserInterface
 
             public void Add(string item)
             {
-                _owner.AddStyleClass(item);
+                _values.Add(item);
+                _owner?.Restyle();
             }
 
             public void Clear()
             {
-                _owner._styleClasses.Clear();
-                _owner.Restyle();
+                _values.Clear();
+                _owner?.Restyle();
             }
 
             public bool Contains(string item)
             {
-                return _owner._styleClasses.Contains(item);
+                return _values.Contains(item);
             }
 
             public void CopyTo(string[] array, int arrayIndex)
             {
-                _owner._styleClasses.CopyTo(array, arrayIndex);
+                _values.CopyTo(array, arrayIndex);
             }
 
             public bool Remove(string item)
             {
-                var ret = _owner._styleClasses.Remove(item);
+                var ret = _values.Remove(item);
                 if (ret)
                 {
-                    _owner.Restyle();
+                    _owner?.Restyle();
                 }
 
                 return ret;
             }
 
-            int ICollection<string>.Count => _owner._styleClasses.Count;
+            int ICollection<string>.Count => _values.Count;
             public bool IsReadOnly => false;
-            int IReadOnlyCollection<string>.Count => _owner._styleClasses.Count;
+            int IReadOnlyCollection<string>.Count => _values.Count;
         }
     }
 }

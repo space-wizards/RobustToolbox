@@ -290,6 +290,16 @@ namespace Robust.Shared.ContentPack
                         var type = GetTypeFromDefinition(reader, res.Type);
                         msg = $"{msg}, type: {type}";
                     }
+
+                    foreach (var argument in res.ErrorArguments)
+                    {
+                        if (argument.Name == "Token" && argument.Value is int token)
+                            msg = $"{msg}, {argument.Name} 0x{token:X8}";
+                        else if (argument.Name == "Offset" && argument.Value is int offset)
+                            msg = $"{msg}, {argument.Name} IL_{offset:X4}";
+                        else
+                            msg = $"{msg}, {argument.Name} {argument.Value}";
+                    }
                 }
                 catch (UnsupportedMetadataException e)
                 {

@@ -6,7 +6,7 @@
 	url = https://github.com/space-wizards/lidgren-network-gen3.git
 [submodule "XamlX"]
 	path = XamlX
-	url = https://github.com/space-wizards/XamlX
+	url = https://github.com/kekekeks/XamlX
 [submodule "Robust.LoaderApi"]
 	path = Robust.LoaderApi
 	url = https://github.com/space-wizards/Robust.LoaderApi.git

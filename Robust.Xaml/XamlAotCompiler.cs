@@ -49,7 +49,7 @@ internal partial class XamlAotCompiler
             .Where(r => !r.ToLowerInvariant().EndsWith("robust.build.tasks.dll"))
             .Concat(new[] { input }), input);
 
-        var asm = typeSystem.TargetAssemblyDefinition;
+        var asm = typeSystem.TargetAssemblyDefinition!;
 
         if (asm.MainModule.GetType("CompiledRobustXaml", "XamlIlContext") != null)
         {
@@ -85,10 +85,10 @@ internal partial class XamlAotCompiler
     /// <returns>true if compilation succeeded in every case</returns>
     static bool CompileCore(IBuildEngine engine, CecilTypeSystem typeSystem)
     {
-        var asm = typeSystem.TargetAssemblyDefinition;
+        var asm = typeSystem.TargetAssemblyDefinition!;
         var embrsc = new EmbeddedResources(asm);
 
-        var xaml = new XamlCustomizations(typeSystem, typeSystem.TargetAssembly);
+        var xaml = new XamlCustomizations(typeSystem, typeSystem.TargetAssembly!);
         var lowLevel = new LowLevelCustomizations(typeSystem);
 
         var contextDef = new TypeDefinition("CompiledRobustXaml", "XamlIlContext",
@@ -129,24 +129,29 @@ internal partial class XamlAotCompiler
                         classname = res.Name.Replace(".xaml","");
                     }
 
-                    var classType = typeSystem.TargetAssembly.FindType(classname);
+                    var classType = typeSystem.TargetAssembly!.FindType(classname);
                     if (classType == null)
                         throw new InvalidProgramException($"Unable to find type '{classname}'");
 
                     xaml.ILCompiler.Transform(parsed);
 
                     var populateName = $"Populate:{res.Name}";
+                    var buildName = $"Build:{res.Name}";
 
                     var classTypeDefinition = typeSystem.GetTypeReference(classType).Resolve()!;
                     var populateBuilder = typeSystem.CreateTypeBuilder(classTypeDefinition);
+                    var buildBuilder = typeSystem.CreateTypeBuilder(classTypeDefinition);
 
-                    xaml.ILCompiler.Compile(parsed, contextClass,
-                        xaml.ILCompiler.DefinePopulateMethod(populateBuilder, parsed, populateName, true),
-                        null,
-                        null,
-                        (closureName, closureBaseType) =>
-                            populateBuilder.DefineSubType(closureBaseType, closureName, false),
-                        res.Uri, res
+                    xaml.ILCompiler.Compile(
+                        doc: parsed,
+                        contextType: contextClass,
+                        populateMethod: xaml.ILCompiler.DefinePopulateMethod(populateBuilder, parsed, populateName, XamlVisibility.Public),
+                        populateDeclaringType: typeSystem.CreateTypeBuilder(classTypeDefinition, compilerGeneratedType: false),
+                        buildMethod: xaml.ILCompiler.DefineBuildMethod(buildBuilder, parsed, buildName, XamlVisibility.Public),
+                        buildDeclaringType: typeSystem.CreateTypeBuilder(classTypeDefinition, compilerGeneratedType: false),
+                        namespaceInfoBuilder: null,
+                        baseUri: res.Uri,
+                        fileSource: res
                     );
 
                     var compiledPopulateMethod = typeSystem.GetTypeReference(populateBuilder).Resolve().Methods

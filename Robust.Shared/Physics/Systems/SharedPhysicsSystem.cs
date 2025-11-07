@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Prometheus;
+using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
@@ -55,7 +56,13 @@ namespace Robust.Shared.Physics.Systems
 
         private readonly HashSet<ulong> _pairKeys = new();
 
-        internal readonly List<Fixture> Fixtures = new();
+        internal readonly List<Fixture?> Fixtures = new();
+
+        /*
+         * Pools
+         */
+
+        private IdPool _shapesPool = new();
 
         private int _substeps;
 

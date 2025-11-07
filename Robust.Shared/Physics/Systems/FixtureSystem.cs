@@ -208,11 +208,7 @@ namespace Robust.Shared.Physics.Systems
                 _lookup.DestroyProxies(uid, fixtureId, fixture, xform, broadphase);
             }
 
-            // Pair keys should be empty so nothing to update there.
-            DebugTools.Assert(fixture.Id > 0);
-            var moved = _physics.Fixtures.RemoveSwap(fixture.Id);
-            // Moved fixture gets the new ID.
-            moved.Id = fixture.Id;
+            _physics.DestroyWorldFixture(fixture);
 
             if (updates)
             {

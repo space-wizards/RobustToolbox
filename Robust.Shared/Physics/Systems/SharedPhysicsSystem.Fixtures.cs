@@ -13,6 +13,12 @@ public abstract partial class SharedPhysicsSystem
     // Will get expanded as v3 gets ported but for now just handles fixture tracking.
     internal Fixture AddWorldFixture()
     {
+        // P1 id pool + fixtures and figuring out a way to do it.
+        //
+
+        // TODO: Addddd solver sets
+        // - Port cancollide
+
         var fixture = new Fixture();
         AddWorldFixture(fixture);
         return fixture;
@@ -21,9 +27,29 @@ public abstract partial class SharedPhysicsSystem
     internal void AddWorldFixture(Fixture fixture)
     {
         DebugTools.Assert(fixture.Id == 0);
-        // Yes I want it offset by 1
-        Fixtures.Add(fixture);
-        fixture.Id = Fixtures.Count;
+        var id = _shapesPool.AllocId();
+
+        if (id == Fixtures.Count)
+        {
+            Fixtures.Add(fixture);
+        }
+        else
+        {
+            DebugTools.Assert(Fixtures[id] == null);
+            Fixtures[id] = fixture;
+        }
+
+        // Offset by 1 as slot 0 is also the default int (funny that).
+        fixture.Id = id + 1;
+    }
+
+    internal void DestroyWorldFixture(Fixture fixture)
+    {
+        DebugTools.Assert(fixture.Id > 0);
+        var id = fixture.Id - 1;
+        Fixtures[id] = null;
+        _shapesPool.FreeId(id);
+        fixture.Id = 0;
     }
 
     public bool HasContact(Fixture fixtureA, Fixture fixtureB)

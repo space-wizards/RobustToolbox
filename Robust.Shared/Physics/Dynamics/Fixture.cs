@@ -46,12 +46,6 @@ namespace Robust.Shared.Physics.Dynamics
         [ViewVariables, NonSerialized]
         internal int Id;
 
-        /// <summary>
-        /// Generation of this fixture in its slot.
-        /// </summary>
-        [ViewVariables, NonSerialized]
-        ushort Generation;
-
         [ViewVariables]
         [field: NonSerialized]
         public FixtureProxy[] Proxies { get; set; } = Array.Empty<FixtureProxy>();

@@ -352,7 +352,9 @@ public abstract partial class SharedPhysicsSystem
         var aUid = contact.EntityA;
         var bUid = contact.EntityB;
         contact.Flags |= ContactFlags.Deleting;
+        // At least for now we get this here in case either fixture is touched during the event (until we get deferred events).
         DebugTools.Assert(fixtureA.Id > 0 && fixtureB.Id > 0);
+        var pairKey = GetPairKey(fixtureA.Id, fixtureB.Id);
 
         if (contact.IsTouching)
         {
@@ -379,7 +381,6 @@ public abstract partial class SharedPhysicsSystem
         // Remove from the world
         _activeContacts.Remove(contact.MapNode);
 
-        var pairKey = GetPairKey(fixtureA.Id, fixtureB.Id);
         DebugTools.Assert(_pairKeys.Contains(pairKey));
         _pairKeys.Remove(pairKey);
 
@@ -431,6 +432,7 @@ public abstract partial class SharedPhysicsSystem
             var bodyB = contact.BodyB!;
             var uidA = contact.EntityA;
             var uidB = contact.EntityB;
+            DebugTools.Assert(fixtureA.Id > 0 && fixtureB.Id > 0);
 
             // Do not try to collide disabled bodies
             if (!bodyA.CanCollide || !bodyB.CanCollide)

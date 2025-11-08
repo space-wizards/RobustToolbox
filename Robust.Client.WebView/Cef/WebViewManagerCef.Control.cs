@@ -17,11 +17,13 @@ namespace Robust.Client.WebView.Cef
 {
     internal partial class WebViewManagerCef
     {
+        private readonly List<ControlImpl> _activeControls = new();
+
         public IWebViewControlImpl MakeControlImpl(WebViewControl owner)
         {
             var shader = _prototypeManager.Index<ShaderPrototype>("bgra");
             var shaderInstance = shader.Instance();
-            var impl =  new ControlImpl(owner, shaderInstance);
+            var impl =  new ControlImpl(this, owner, shaderInstance);
             _dependencyCollection.InjectDependencies(impl);
             return impl;
         }
@@ -133,11 +135,13 @@ namespace Robust.Client.WebView.Cef
             [Dependency] private readonly IClyde _clyde = default!;
             [Dependency] private readonly IInputManager _inputMgr = default!;
 
+            private readonly WebViewManagerCef _manager;
             public readonly WebViewControl Owner;
             private readonly ShaderInstance _shaderInstance;
 
-            public ControlImpl(WebViewControl owner, ShaderInstance shaderInstance)
+            public ControlImpl(WebViewManagerCef manager, WebViewControl owner, ShaderInstance shaderInstance)
             {
+                _manager = manager;
                 Owner = owner;
                 _shaderInstance = shaderInstance;
             }
@@ -194,6 +198,7 @@ namespace Robust.Client.WebView.Cef
                 var texture = _clyde.CreateBlankTexture<Rgba32>(Vector2i.One);
 
                 _data = new LiveData(texture, client, browser, renderer);
+                _manager._activeControls.Add(this);
             }
 
             public void CloseBrowser()
@@ -203,6 +208,8 @@ namespace Robust.Client.WebView.Cef
                 _data!.Texture.Dispose();
                 _data.Browser.GetHost().CloseBrowser(true);
                 _data = null;
+
+                _manager._activeControls.Remove(this);
             }
 
             public void MouseMove(GUIMouseMoveEventArgs args)
@@ -279,6 +286,7 @@ namespace Robust.Client.WebView.Cef
 
                     // Logger.Debug($"{guiRawEvent.Action} {guiRawEvent.Key} {guiRawEvent.ScanCode} {vkKey}");
 
+#if !MACOS
                     var lParam = 0;
                     lParam |= (guiRawEvent.ScanCode & 0xFF) << 16;
                     if (guiRawEvent.Action != RawKeyAction.Down)
@@ -286,7 +294,9 @@ namespace Robust.Client.WebView.Cef
 
                     if (guiRawEvent.Action == RawKeyAction.Up)
                         lParam |= 1 << 31;
-
+#else
+                    var lParam = guiRawEvent.RawCode;
+#endif
                     var modifiers = CalcModifiers(guiRawEvent.Key);
 
                     host.SendKeyEvent(new CefKeyEvent
@@ -307,7 +317,7 @@ namespace Robust.Client.WebView.Cef
                         host.SendKeyEvent(new CefKeyEvent
                         {
                             EventType = CefKeyEventType.Char,
-                            WindowsKeyCode = '\r',
+                            WindowsKeyCode = '\b',
                             NativeKeyCode = lParam,
                             Modifiers = modifiers
                         });

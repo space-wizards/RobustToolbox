@@ -299,7 +299,8 @@ namespace Robust.Client.Input
                 args.Key,
                 args.ScanCode,
                 action,
-                (Vector2i) (mousePos ?? Vector2.Zero));
+                (Vector2i) (mousePos ?? Vector2.Zero),
+                args.RawCode);
 
             var block = rawInput.RawKeyEvent(keyEvent);
             return block;

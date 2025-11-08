@@ -87,14 +87,12 @@ public abstract partial class SharedPhysicsSystem
        }
    };
 
-    private int ContactCount => _activeContacts.Count;
+    private int ContactCount => _contacts.Count;
 
     private const int ContactPoolInitialSize = 128;
     private const int ContactsPerThread = 32;
 
     private ObjectPool<Contact> _contactPool = default!;
-
-    private readonly LinkedList<Contact> _activeContacts = new();
 
     private sealed class ContactPoolPolicy : IPooledObjectPolicy<Contact>
     {
@@ -287,7 +285,7 @@ public abstract partial class SharedPhysicsSystem
         _pairKeys.Add(pairKey);
 
         // Insert into world
-        _activeContacts.AddLast(contact.MapNode);
+        _contacts.Add(contact);
 
         // Connect to body A
         DebugTools.Assert(!fixA.Contacts.ContainsKey(fixB));
@@ -377,7 +375,15 @@ public abstract partial class SharedPhysicsSystem
         next = node?.Next;
 
         // Remove from the world
-        _activeContacts.Remove(contact.MapNode);
+        var slotContact = _contacts.RemoveSwap(contact.ContactId);
+        DebugTools.Assert(slotContact.ContactId == contact.ContactId);
+
+        // Update the moved one's slot.
+        if (slotContact.ContactId > 0)
+        {
+            var moved = _contacts[slotContact.ContactId];
+            moved.ContactId = slotContact.ContactId;
+        }
 
         var pairKey = GetPairKey(fixtureA.Id, fixtureB.Id);
         DebugTools.Assert(_pairKeys.Contains(pairKey));
@@ -406,16 +412,8 @@ public abstract partial class SharedPhysicsSystem
         var contacts = ArrayPool<Contact>.Shared.Rent(ContactCount);
         var index = 0;
 
-        // Can be changed while enumerating
-        // TODO: check for null instead?
-        // Work out which contacts are still valid before we decide to update manifolds.
-        var node = _activeContacts.First;
-
-        while (node != null)
+        foreach (var contact in _contacts)
         {
-            var contact = node.Value;
-            node = node.Next;
-
             // It's possible the contact was destroyed by content in which case we just skip it.
             if (!contact.Enabled)
                 continue;

@@ -11,6 +11,7 @@ using Robust.Shared.Map.Components;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Threading;
 using Robust.Shared.Timing;
@@ -54,8 +55,13 @@ namespace Robust.Shared.Physics.Systems
         [Dependency] private readonly SharedTransformSystem _transform = default!;
         [Dependency] private readonly CollisionWakeSystem _wakeSystem = default!;
 
+        /*
+         * Physics data
+         */
+
         private readonly HashSet<ulong> _pairKeys = new();
 
+        private readonly List<Contact> _contacts = new();
         internal readonly List<Fixture?> Fixtures = new();
 
         /*

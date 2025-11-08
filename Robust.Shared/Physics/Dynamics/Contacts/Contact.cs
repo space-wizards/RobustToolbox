@@ -54,9 +54,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         // trying to find it.
 
         /// <summary>
-        /// The node of this contact on the map.
+        /// Index of this contact into the contact list.
         /// </summary>
-        public readonly LinkedListNode<Contact> MapNode;
+        internal int ContactId;
 
         /// <summary>
         /// The node of this contact on body A.

@@ -26,6 +26,7 @@ public abstract partial class SharedPhysicsSystem
 
     internal void AddWorldFixture(Fixture fixture)
     {
+        DebugTools.Assert(fixture.Contacts.Count == 0);
         DebugTools.Assert(fixture.Id == 0);
         var id = _shapesPool.AllocId();
 
@@ -63,7 +64,7 @@ public abstract partial class SharedPhysicsSystem
         return _pairKeys.Contains(pairKey);
     }
 
-    internal ulong GetPairKey(int idA, int idB)
+    private static ulong GetPairKey(int idA, int idB)
     {
         DebugTools.Assert(idA > 0 && idB > 0);
 

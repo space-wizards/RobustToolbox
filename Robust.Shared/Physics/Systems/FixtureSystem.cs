@@ -51,7 +51,16 @@ namespace Robust.Shared.Physics.Systems
                 return;
 
             // Can't just get physicscomp on shutdown as it may be touched completely independently.
-            _physics.DestroyContacts(body);
+            foreach (var fixture in component.Fixtures.Values)
+            {
+                // Also destroys contacts here
+                foreach (var contact in fixture.Contacts.Values.ToArray())
+                {
+                    _physics.DestroyContact(contact);
+                }
+
+                _physics.DestroyWorldFixture(fixture);
+            }
         }
 
         #region Public

@@ -352,6 +352,7 @@ public abstract partial class SharedPhysicsSystem
         var aUid = contact.EntityA;
         var bUid = contact.EntityB;
         contact.Flags |= ContactFlags.Deleting;
+        DebugTools.Assert(fixtureA.Id > 0 && fixtureB.Id > 0);
 
         if (contact.IsTouching)
         {

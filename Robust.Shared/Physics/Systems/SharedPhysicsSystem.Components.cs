@@ -458,16 +458,20 @@ public partial class SharedPhysicsSystem
 
         body.Awake = value;
 
-        if (value)
+        // Bandaid for now
+        if (!Terminating(uid))
         {
-            var ev = new PhysicsWakeEvent(uid, body);
-            RaiseLocalEvent(uid, ref ev, true);
-        }
-        else
-        {
-            var ev = new PhysicsSleepEvent(uid, body);
-            RaiseLocalEvent(uid, ref ev, true);
-            ResetDynamics(ent, body, dirty: false);
+            if (value)
+            {
+                var ev = new PhysicsWakeEvent(uid, body);
+                RaiseLocalEvent(uid, ref ev, true);
+            }
+            else
+            {
+                var ev = new PhysicsSleepEvent(uid, body);
+                RaiseLocalEvent(uid, ref ev, true);
+                ResetDynamics(ent, body, dirty: false);
+            }
         }
 
         // Update wake system last, if sleeping but still colliding.
@@ -564,6 +568,7 @@ public partial class SharedPhysicsSystem
         bool dirty = true,
         bool force = false,
         FixturesComponent? manager = null,
+        MetaDataComponent? metadata = null,
         PhysicsComponent? body = null)
     {
         if (!PhysicsQuery.Resolve(uid, ref body))
@@ -594,7 +599,9 @@ public partial class SharedPhysicsSystem
         body.CanCollide = value;
 
         if (!value)
+        {
             SetAwake((uid, body), false);
+        }
 
         if (body.Initialized)
         {
@@ -603,7 +610,7 @@ public partial class SharedPhysicsSystem
         }
 
         if (dirty)
-            DirtyField(uid, body, nameof(PhysicsComponent.CanCollide));
+            DirtyField(uid, body, nameof(PhysicsComponent.CanCollide), meta: metadata);
 
         return value;
     }

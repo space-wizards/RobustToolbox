@@ -39,6 +39,25 @@ END TEMPLATE-->
 
 ### New features
 
+*None yet*
+
+### Bugfixes
+
+*None yet*
+
+### Other
+
+*None yet*
+
+### Internal
+
+*None yet*
+
+
+## 267.4.0
+
+### New features
+
 * Added two new custom yaml serializers `CustomListSerializer` and `CustomArraySerializer`.
 * CVars defined in `[CVarDefs]` can now be private or internal.
 * Added config rollback system to `IConfigurationManager`. This enables CVars to be snapshot and rolled back, even in the event of client crash.

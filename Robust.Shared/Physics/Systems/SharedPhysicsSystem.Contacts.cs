@@ -321,10 +321,15 @@ public abstract partial class SharedPhysicsSystem
             proxyA.Body, proxyB.Body, flags: flags);
     }
 
-    internal static bool ShouldCollide(Fixture fixtureA, Fixture fixtureB)
+    internal static bool ShouldCollide(PhysicsComponent bodyA, Fixture fixtureA, PhysicsComponent bodyB, Fixture fixtureB)
     {
-        return !((fixtureA.CollisionMask & fixtureB.CollisionLayer) == 0x0 &&
-                 (fixtureB.CollisionMask & fixtureA.CollisionLayer) == 0x0);
+        if ((fixtureA.CollisionMask & fixtureB.CollisionLayer) == 0x0 &&
+            (fixtureB.CollisionMask & fixtureA.CollisionLayer) == 0x0)
+        {
+            return false;
+        }
+
+        return bodyA.CanCollide && bodyB.CanCollide;
     }
 
     public void DestroyContact(Contact contact)
@@ -454,7 +459,7 @@ public abstract partial class SharedPhysicsSystem
             if ((contact.Flags & ContactFlags.Filter) != 0x0)
             {
                 // Check default filtering
-                if (!ShouldCollide(fixtureA, fixtureB) ||
+                if (!ShouldCollide(bodyA, fixtureA, bodyB, fixtureB) ||
                     !ShouldCollideSlow(uidA, uidB, bodyA, bodyB, fixtureA, fixtureB, xformA, xformB) ||
                     !ShouldCollideJoints(uidA, uidB))
                 {

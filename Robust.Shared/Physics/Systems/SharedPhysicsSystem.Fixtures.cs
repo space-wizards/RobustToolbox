@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Physics.Collision.Shapes;
@@ -175,6 +176,20 @@ public abstract partial class SharedPhysicsSystem
             }
         }
     }
+
+    internal void AddToMoveBuffer(FixtureProxy proxy)
+    {
+        DebugTools.Assert(proxy.Body.CanCollide);
+        _moveBuffer.Add(proxy);
+    }
+
+    internal void RemoveFromMoveBuffer(FixtureProxy proxy)
+    {
+        _moveBuffer.Remove(proxy);
+    }
+
+    // Just to deter us from calling the field directly so it's more easier to debug add / removals.
+    internal HashSet<FixtureProxy> GetMoveBuffer() => _moveBuffer;
 
     #region Collision Masks & Layers
 

@@ -80,6 +80,7 @@ namespace Robust.Shared.Physics.Systems
         {
             component.StaticTree.Rebuild(fullBuild);
             component.DynamicTree.Rebuild(fullBuild);
+            component.KinematicTree.Rebuild(fullBuild);
             component.StaticSundriesTree._b2Tree.Rebuild(fullBuild);
         }
 
@@ -87,6 +88,7 @@ namespace Robust.Shared.Physics.Systems
         {
             component.StaticTree.RebuildBottomUp();
             component.DynamicTree.RebuildBottomUp();
+            component.KinematicTree.RebuildBottomUp();
             component.StaticSundriesTree._b2Tree.RebuildBottomUp();
         }
 
@@ -95,8 +97,9 @@ namespace Robust.Shared.Physics.Systems
             switch (type)
             {
                 case BodyType.Dynamic:
-                    return component.DynamicTree;
+                // TODO: Temporary until new character solver
                 case BodyType.KinematicController:
+                    return component.DynamicTree;
                 case BodyType.Kinematic:
                     return component.KinematicTree;
                 case BodyType.Static:
@@ -118,7 +121,7 @@ namespace Robust.Shared.Physics.Systems
 
             // This is so that if we're on a broadphase that's moving (e.g. a grid) we need to make sure anything
             // we move over is getting checked for collisions, and putting it on the movebuffer is the easiest way to do so.
-            var moveBuffer = _physicsSystem.MoveBuffer;
+            var moveBuffer = _physicsSystem.GetMoveBuffer();
             _gridMoveBuffer.Clear();
 
             foreach (var gridUid in movedGrids)
@@ -135,6 +138,7 @@ namespace Robust.Shared.Physics.Systems
                 var state = (moveBuffer, _gridMoveBuffer);
 
                 QueryMapBroadphase(mapBroadphase.DynamicTree, ref state, enlargedAABB);
+                QueryMapBroadphase(mapBroadphase.KinematicTree, ref state, enlargedAABB);
                 QueryMapBroadphase(mapBroadphase.StaticTree, ref state, enlargedAABB);
             }
 
@@ -182,7 +186,7 @@ namespace Robust.Shared.Physics.Systems
             _contactJob.FrameTime = _frameTime;
             _contactJob.Pairs.Clear();
 
-            var moveBuffer = _physicsSystem.MoveBuffer;
+            var moveBuffer = _physicsSystem.GetMoveBuffer();
             var movedGrids = _physicsSystem.MovedGrids;
 
             // Find any entities being driven over that might need to be considered
@@ -210,6 +214,7 @@ namespace Robust.Shared.Physics.Systems
             {
                 DebugTools.Assert(_xformQuery.GetComponent(proxy.Entity).Broadphase?.Uid != null);
                 _contactJob.MoveBuffer.Add(proxy);
+                DebugTools.Assert(proxy.Body.CanCollide);
             }
 
             var count = moveBuffer.Count;
@@ -240,6 +245,8 @@ namespace Robust.Shared.Physics.Systems
                 _physicsSystem.AddPair(proxyA.FixtureId, proxyB.FixtureId, proxyA, proxyB, flags: contactFlags);
             }
 
+            // need to do this after as we check movebuffer above in the parallel collision checker to determine
+            // which entity has authority over the collision.
             moveBuffer.Clear();
             movedGrids.Clear();
         }
@@ -378,8 +385,6 @@ namespace Robust.Shared.Physics.Systems
             EntityUid broadphase,
             List<(FixtureProxy, FixtureProxy, PairFlag)> pairBuffer)
         {
-            DebugTools.Assert(proxy.Body.CanCollide);
-
             // Broadphase can't intersect with entities on itself so skip.
             if (proxy.Entity == broadphase || !_xformQuery.TryGetComponent(proxy.Entity, out var xform))
             {
@@ -407,14 +412,16 @@ namespace Robust.Shared.Physics.Systems
             }
 
             var broadphaseComp = _broadphaseQuery.GetComponent(broadphase);
-            var state = (pairBuffer, _physicsSystem.MoveBuffer, this, _physicsSystem, proxy);
+            var state = (pairBuffer, _physicsSystem.GetMoveBuffer(), this, _physicsSystem, proxy);
 
+            if (proxy.Body.BodyType is BodyType.Dynamic or BodyType.KinematicController)
+            {
+                QueryBroadphase(broadphaseComp.StaticTree, state, aabb);
+                QueryBroadphase(broadphaseComp.KinematicTree, state, aabb);
+            }
+
+            // All bodies collide with dynamic
             QueryBroadphase(broadphaseComp.DynamicTree, state, aabb);
-
-            if ((proxy.Body.BodyType & BodyType.Static) != 0x0)
-                return;
-
-            QueryBroadphase(broadphaseComp.StaticTree, state, aabb);
         }
 
         private void QueryBroadphase(IBroadPhase broadPhase, (List<(FixtureProxy, FixtureProxy, PairFlag)>, HashSet<FixtureProxy> MoveBuffer, SharedBroadphaseSystem Broadphase, SharedPhysicsSystem PhysicsSystem, FixtureProxy) state, Box2 aabb)
@@ -423,11 +430,9 @@ namespace Robust.Shared.Physics.Systems
                 ref (List<(FixtureProxy, FixtureProxy, PairFlag)> pairs, HashSet<FixtureProxy> moveBuffer, SharedBroadphaseSystem broadphase, SharedPhysicsSystem physicsSystem, FixtureProxy proxy) tuple,
                 in FixtureProxy other) =>
             {
-                DebugTools.Assert(other.Body.CanCollide);
-                // Logger.DebugS("physics", $"Checking {proxy.Entity} against {other.Fixture.Body.Owner} at {aabb}");
-
+                // Most of the time it's the same proxy
                 if (tuple.proxy.Entity == other.Entity ||
-                    !SharedPhysicsSystem.ShouldCollide(tuple.proxy.Fixture, other.Fixture))
+                    !SharedPhysicsSystem.ShouldCollide(tuple.proxy.Body, tuple.proxy.Fixture, other.Body, other.Fixture))
                 {
                     return true;
                 }
@@ -498,41 +503,35 @@ namespace Robust.Shared.Physics.Systems
 
             foreach (var fixture in entity.Comp2.Fixtures.Values)
             {
-                TouchProxies(fixture);
+                TouchProxies(entity.Comp1, fixture);
             }
         }
 
-        internal void TouchProxies(Fixture fixture)
+        internal void TouchProxies(PhysicsComponent body, Fixture fixture)
         {
+            if (!body.CanCollide)
+                return;
+
             foreach (var proxy in fixture.Proxies)
             {
-                AddToMoveBuffer(proxy);
+                _physicsSystem.AddToMoveBuffer(proxy);
             }
         }
 
-        private void AddToMoveBuffer(FixtureProxy proxy)
-        {
-            DebugTools.Assert(proxy.Body.CanCollide);
-            _physicsSystem.MoveBuffer.Add(proxy);
-        }
-
-        public void Refilter(EntityUid uid, Fixture fixture, TransformComponent? xform = null)
+        public void Refilter(EntityUid uid, Fixture fixture, PhysicsComponent? body = null, TransformComponent? xform = null)
         {
             foreach (var contact in fixture.Contacts.Values)
             {
                 contact.Flags |= ContactFlags.Filter;
             }
 
-            if (!Resolve(uid, ref xform))
+            if (!Resolve(uid, ref body, ref xform))
                 return;
 
             if (xform.MapUid == null)
                 return;
 
-            if (!_xformQuery.TryGetComponent(xform.Broadphase?.Uid, out var broadphase))
-                return;
-
-            TouchProxies(fixture);
+            TouchProxies(body, fixture);
         }
 
         internal void GetBroadphases(MapId mapId, Box2 aabb, BroadphaseCallback callback)

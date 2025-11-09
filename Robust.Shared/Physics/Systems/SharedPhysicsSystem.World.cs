@@ -42,7 +42,7 @@ public partial class SharedPhysicsSystem
     /// Keep a buffer of everything that moved in a tick. This will be used to check for physics contacts.
     /// </summary>
     [ViewVariables]
-    internal readonly HashSet<FixtureProxy> MoveBuffer = new();
+    private readonly HashSet<FixtureProxy> _moveBuffer = new();
 
     /// <summary>
     /// Track moved grids to know if we need to run checks for them driving over entities.

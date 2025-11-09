@@ -68,6 +68,16 @@ public partial class SharedPhysicsSystem
 
         var ev = new CollisionChangeEvent(uid, component, component.CanCollide);
         RaiseLocalEvent(ref ev);
+
+#if DEBUG
+        foreach (var fixture in manager.Fixtures.Values)
+        {
+            foreach (var proxy in fixture.Proxies)
+            {
+                DebugTools.Assert(!_moveBuffer.Contains(proxy));
+            }
+        }
+#endif
     }
 
     private void OnPhysicsGetState(EntityUid uid, PhysicsComponent component, ref ComponentGetState args)

@@ -140,7 +140,7 @@ public sealed partial class PhysicsSystem
 
             if ((contact.Flags & ContactFlags.Filter) != 0x0)
             {
-                if (!ShouldCollide(fixtureA, fixtureB) ||
+                if (!ShouldCollide(bodyA, fixtureA, bodyB, fixtureB) ||
                     !ShouldCollideSlow(uidA, uidB, bodyA, bodyB, fixtureA, fixtureB, xformA, xformB) ||
                     !ShouldCollideJoints(uidA, uidB))
                 {

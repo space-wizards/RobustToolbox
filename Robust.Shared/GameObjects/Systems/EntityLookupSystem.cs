@@ -371,12 +371,11 @@ public sealed partial class EntityLookupSystem : EntitySystem
 
     private void DestroyProxies(Fixture fixture, IBroadPhase tree)
     {
-        var buffer = _physics.MoveBuffer;
         for (var i = 0; i < fixture.ProxyCount; i++)
         {
             var proxy = fixture.Proxies[i];
             tree.RemoveProxy(proxy.ProxyId);
-            buffer.Remove(proxy);
+            _physics.RemoveFromMoveBuffer(proxy);
         }
 
         fixture.ProxyCount = 0;
@@ -429,8 +428,6 @@ public sealed partial class EntityLookupSystem : EntitySystem
         IBroadPhase tree,
         Transform broadphaseTransform)
     {
-        var moveBuffer = _physics.MoveBuffer;
-
         // Moving
         if (fixture.ProxyCount > 0)
         {
@@ -440,7 +437,9 @@ public sealed partial class EntityLookupSystem : EntitySystem
                 var proxy = fixture.Proxies[i];
                 tree.MoveProxy(proxy.ProxyId, bounds);
                 proxy.AABB = bounds;
-                moveBuffer.Add(proxy);
+
+                if (ent.Comp1.CanCollide)
+                    _physics.AddToMoveBuffer(proxy);
             }
 
             return;
@@ -456,7 +455,8 @@ public sealed partial class EntityLookupSystem : EntitySystem
             proxy.ProxyId = tree.AddProxy(ref proxy);
             proxy.AABB = bounds;
             proxies[i] = proxy;
-            moveBuffer.Add(proxy);
+            if (ent.Comp1.CanCollide)
+                _physics.AddToMoveBuffer(proxy);
         }
 
         fixture.Proxies = proxies;
@@ -620,7 +620,7 @@ public sealed partial class EntityLookupSystem : EntitySystem
             return;
         }
 
-        if (!_physicsQuery.TryGetComponent(uid, out var body) || !body.CanCollide)
+        if (!_physicsQuery.TryGetComponent(uid, out var body))
         {
             // TODO optimize this. This function iterates UP through parents, while we are currently iterating down.
             var (coordinates, rotation) = _transform.GetMoverCoordinateRotation(uid, xform);

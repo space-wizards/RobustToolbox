@@ -150,6 +150,17 @@ namespace Robust.Shared.Physics.Systems
 
         private void OnCollisionChange(ref CollisionChangeEvent ev)
         {
+            if (!ev.CanCollide && _fixturesQuery.TryComp(ev.BodyUid, out var manager))
+            {
+                foreach (var fixture in manager.Fixtures.Values)
+                {
+                    foreach (var proxy in fixture.Proxies)
+                    {
+                        RemoveFromMoveBuffer(proxy);
+                    }
+                }
+            }
+
             var uid = ev.BodyUid;
             var mapId = Transform(uid).MapID;
 

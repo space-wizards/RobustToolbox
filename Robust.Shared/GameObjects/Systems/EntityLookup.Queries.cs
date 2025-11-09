@@ -148,7 +148,7 @@ public sealed partial class EntityLookupSystem
             lookup.StaticTree.QueryAabb(ref state, PhysicsQuery, localAABB, true);
         }
 
-        if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
+        if ((flags & LookupFlags.Sundries) == LookupFlags.Sundries)
         {
             lookup.StaticSundriesTree.QueryAabb(ref state, SundriesQuery, localAABB, true);
         }
@@ -157,6 +157,12 @@ public sealed partial class EntityLookupSystem
 
         static bool PhysicsQuery(ref EntityQueryState<T> state, in FixtureProxy value)
         {
+            if ((state.Flags & LookupFlags.Enabled) != 0x0 &&
+                !value.Body.CanCollide)
+            {
+                return true;
+            }
+
             var sensors = (state.Flags & LookupFlags.Sensors) != 0x0;
 
             if (!sensors && !value.Fixture.Hard)
@@ -316,7 +322,7 @@ public sealed partial class EntityLookupSystem
                 return true;
         }
 
-        if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
+        if ((flags & LookupFlags.Sundries) == LookupFlags.Sundries)
         {
             lookup.StaticSundriesTree.QueryAabb(ref state, SundriesQuery, localAABB, true);
 

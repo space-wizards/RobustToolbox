@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Robust.Shared.Containers;
@@ -14,13 +13,12 @@ using Robust.Shared.Physics.Components;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Events;
 using Robust.Shared.Physics.Systems;
-using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
 [Flags]
-public enum LookupFlags : byte
+public enum LookupFlags : ushort
 {
     None = 0,
 
@@ -56,11 +54,20 @@ public enum LookupFlags : byte
     /// </summary>
     Sensors = 1 << 7,
 
-    Uncontained = Dynamic | Static | Sensors,
+    /// <summary>
+    /// Should we only query for enabled physics bodies. Does nothing for <see cref="StaticSundries"/> tree.
+    /// </summary>
+    /// <remarks>
+    /// If you don't want to return non-collidable bodies then exclude <see cref="Sundries"/> as well.
+    /// </remarks>
+    Enabled = 1 << 8,
+
+    // Contained entities don't have collision so can skip those ones.
+    Uncontained = Dynamic | Static | Sensors | Enabled | Sundries,
 
     StaticSundries = Static | Sundries,
 
-    All = Contained | Dynamic | Static | Sensors
+    All = Contained | Dynamic | Static | Sensors | Sundries
 }
 
 /// <summary>
@@ -76,7 +83,6 @@ public sealed partial class EntityLookupSystem : EntitySystem
 {
     [Dependency] private readonly IManifoldManager _manifoldManager = default!;
     [Dependency] private readonly IMapManager _mapManager = default!;
-    [Dependency] private readonly IGameTiming _timing = default!;
     [Dependency] private readonly INetManager _netMan = default!;
     [Dependency] private readonly SharedContainerSystem _container = default!;
     [Dependency] private readonly FixtureSystem _fixtures = default!;

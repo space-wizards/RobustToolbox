@@ -23,7 +23,6 @@ public sealed class JointDeletion_Test : RobustIntegrationTest
         await server.WaitIdleAsync();
 
         var entManager = server.ResolveDependency<IEntityManager>();
-        var mapManager = server.ResolveDependency<IMapManager>();
         var susManager = server.ResolveDependency<IEntitySystemManager>();
         var jointSystem = susManager.GetEntitySystem<SharedJointSystem>();
         var broadphase = susManager.GetEntitySystem<SharedBroadphaseSystem>();
@@ -48,7 +47,6 @@ public sealed class JointDeletion_Test : RobustIntegrationTest
             body2 = entManager.AddComponent<PhysicsComponent>(ent2);
             var manager1 = entManager.EnsureComponent<FixturesComponent>(ent1);
             var manager2 = entManager.EnsureComponent<FixturesComponent>(ent2);
-            entManager.AddComponent<CollisionWakeComponent>(ent2);
 
             physicsSystem.SetBodyType(ent1, BodyType.Dynamic, manager: manager1, body: body1);
             physicsSystem.SetBodyType(ent2, BodyType.Dynamic, manager: manager2, body: body2);

@@ -14,7 +14,7 @@ namespace Robust.UnitTesting.Shared.Physics;
 public sealed class RecursiveUpdateTest
 {
     /// <summary>
-    /// Check that the broadphase updates if a an entity is a child of an entity that is in a container.
+    /// Check that the broadphase updates if an entity is a child of an entity that is in a container.
     /// </summary>
     [Test]
     public void ContainerRecursiveUpdateTest()
@@ -34,11 +34,11 @@ public sealed class RecursiveUpdateTest
 
         var broadphase = entManager.GetComponent<BroadphaseComponent>(guid);
         var coords = new EntityCoordinates(guid, new Vector2(0.5f, 0.5f));
-        var broadData = new BroadphaseData(guid, false, false);
+        var broadData = new BroadphaseData(guid, null);
 
         var container = entManager.SpawnEntity(null, coords);
         var containerXform = entManager.GetComponent<TransformComponent>(container);
-        Assert.That(broadphase.SundriesTree, Does.Contain(container));
+        Assert.That(broadphase.StaticSundriesTree, Does.Contain(container));
         Assert.That(containerXform.Broadphase, Is.EqualTo(broadData));
 
         var contained = entManager.SpawnEntity(null, coords);
@@ -49,12 +49,12 @@ public sealed class RecursiveUpdateTest
         var childAXform = entManager.GetComponent<TransformComponent>(childA);
         var childBXform = entManager.GetComponent<TransformComponent>(childB);
 
-        Assert.That(broadphase.SundriesTree, Does.Contain(contained));
+        Assert.That(broadphase.StaticSundriesTree, Does.Contain(contained));
         Assert.That(containedXform.Broadphase, Is.EqualTo(broadData));
 
         // Attach child A before inserting.
         xforms.SetCoordinates(childA, childAXform, new EntityCoordinates(contained, Vector2.Zero));
-        Assert.That(broadphase.SundriesTree, Does.Contain(childA));
+        Assert.That(broadphase.StaticSundriesTree, Does.Contain(childA));
         Assert.That(childAXform.Broadphase, Is.EqualTo(broadData));
 
         // Insert into container.
@@ -64,10 +64,10 @@ public sealed class RecursiveUpdateTest
         // Attach child B after having inserted.
         xforms.SetCoordinates(childB, childBXform, new EntityCoordinates(contained, Vector2.Zero));
 
-        Assert.That(broadphase.SundriesTree, Does.Contain(container));
-        Assert.That(broadphase.SundriesTree, Does.Not.Contain(contained));
-        Assert.That(broadphase.SundriesTree, Does.Not.Contain(childA));
-        Assert.That(broadphase.SundriesTree, Does.Not.Contain(childB));
+        Assert.That(broadphase.StaticSundriesTree, Does.Contain(container));
+        Assert.That(broadphase.StaticSundriesTree, Does.Not.Contain(contained));
+        Assert.That(broadphase.StaticSundriesTree, Does.Not.Contain(childA));
+        Assert.That(broadphase.StaticSundriesTree, Does.Not.Contain(childB));
 
         Assert.That(containerXform.Broadphase, Is.EqualTo(broadData));
         Assert.That(containedXform.Broadphase, Is.EqualTo(null));
@@ -83,10 +83,10 @@ public sealed class RecursiveUpdateTest
         var newCoords = new EntityCoordinates(guid, new Vector2(0.25f, 0.25f));
         xforms.SetCoordinates(container, newCoords);
 
-        Assert.That(broadphase.SundriesTree, Does.Contain(container));
-        Assert.That(broadphase.SundriesTree, Does.Not.Contain(contained));
-        Assert.That(broadphase.SundriesTree, Does.Not.Contain(childA));
-        Assert.That(broadphase.SundriesTree, Does.Not.Contain(childB));
+        Assert.That(broadphase.StaticSundriesTree, Does.Contain(container));
+        Assert.That(broadphase.StaticSundriesTree, Does.Not.Contain(contained));
+        Assert.That(broadphase.StaticSundriesTree, Does.Not.Contain(childA));
+        Assert.That(broadphase.StaticSundriesTree, Does.Not.Contain(childB));
 
         Assert.That(containerXform.Broadphase, Is.EqualTo(broadData));
         Assert.That(containedXform.Broadphase, Is.EqualTo(null));
@@ -101,10 +101,10 @@ public sealed class RecursiveUpdateTest
         // Remove from container.
         containers.Remove(contained, slot);
 
-        Assert.That(broadphase.SundriesTree, Does.Contain(container));
-        Assert.That(broadphase.SundriesTree, Does.Contain(contained));
-        Assert.That(broadphase.SundriesTree, Does.Contain(childA));
-        Assert.That(broadphase.SundriesTree, Does.Contain(childB));
+        Assert.That(broadphase.StaticSundriesTree, Does.Contain(container));
+        Assert.That(broadphase.StaticSundriesTree, Does.Contain(contained));
+        Assert.That(broadphase.StaticSundriesTree, Does.Contain(childA));
+        Assert.That(broadphase.StaticSundriesTree, Does.Contain(childB));
 
         Assert.That(containerXform.Broadphase, Is.EqualTo(broadData));
         Assert.That(containedXform.Broadphase, Is.EqualTo(broadData));
@@ -119,10 +119,10 @@ public sealed class RecursiveUpdateTest
         // Insert back into container.
         containers.Insert(contained, slot);
 
-        Assert.That(broadphase.SundriesTree, Does.Contain(container));
-        Assert.That(broadphase.SundriesTree, Does.Not.Contain(contained));
-        Assert.That(broadphase.SundriesTree, Does.Not.Contain(childA));
-        Assert.That(broadphase.SundriesTree, Does.Not.Contain(childB));
+        Assert.That(broadphase.StaticSundriesTree, Does.Contain(container));
+        Assert.That(broadphase.StaticSundriesTree, Does.Not.Contain(contained));
+        Assert.That(broadphase.StaticSundriesTree, Does.Not.Contain(childA));
+        Assert.That(broadphase.StaticSundriesTree, Does.Not.Contain(childB));
 
         Assert.That(containerXform.Broadphase, Is.EqualTo(broadData));
         Assert.That(containedXform.Broadphase, Is.EqualTo(null));
@@ -137,10 +137,10 @@ public sealed class RecursiveUpdateTest
         // re-remove from container, but this time WITHOUT changing parent.
         containers.Remove(contained, slot, reparent: false);
 
-        Assert.That(broadphase.SundriesTree, Does.Contain(container));
-        Assert.That(broadphase.SundriesTree, Does.Contain(contained));
-        Assert.That(broadphase.SundriesTree, Does.Contain(childA));
-        Assert.That(broadphase.SundriesTree, Does.Contain(childB));
+        Assert.That(broadphase.StaticSundriesTree, Does.Contain(container));
+        Assert.That(broadphase.StaticSundriesTree, Does.Contain(contained));
+        Assert.That(broadphase.StaticSundriesTree, Does.Contain(childA));
+        Assert.That(broadphase.StaticSundriesTree, Does.Contain(childB));
 
         Assert.That(containerXform.Broadphase, Is.EqualTo(broadData));
         Assert.That(containedXform.Broadphase, Is.EqualTo(broadData));
@@ -171,7 +171,7 @@ public sealed class RecursiveUpdateTest
         var mapBroadphase = entManager.GetComponent<BroadphaseComponent>(map);
 
         var coords = new EntityCoordinates(map, new Vector2(0.5f, 0.5f));
-        var mapBroadData = new BroadphaseData(map, false, false);
+        var mapBroadData = new BroadphaseData(map, null);
 
         // Set up parent & child
         var parent = entManager.SpawnEntity(null, coords);
@@ -182,8 +182,8 @@ public sealed class RecursiveUpdateTest
         // Check correct broadphase
         Assert.That(parentXform.ParentUid, Is.EqualTo(map));
         Assert.That(childXform.ParentUid, Is.EqualTo(parent));
-        Assert.That(mapBroadphase.SundriesTree, Does.Contain(parent));
-        Assert.That(mapBroadphase.SundriesTree, Does.Contain(child));
+        Assert.That(mapBroadphase.StaticSundriesTree, Does.Contain(parent));
+        Assert.That(mapBroadphase.StaticSundriesTree, Does.Contain(child));
         Assert.That(parentXform.Broadphase, Is.EqualTo(mapBroadData));
         Assert.That(childXform.Broadphase, Is.EqualTo(mapBroadData));
 
@@ -200,8 +200,8 @@ public sealed class RecursiveUpdateTest
         // broadphases have not changed
         Assert.That(parentXform.ParentUid, Is.EqualTo(map));
         Assert.That(childXform.ParentUid, Is.EqualTo(parent));
-        Assert.That(mapBroadphase.SundriesTree, Does.Contain(parent));
-        Assert.That(mapBroadphase.SundriesTree, Does.Contain(child));
+        Assert.That(mapBroadphase.StaticSundriesTree, Does.Contain(parent));
+        Assert.That(mapBroadphase.StaticSundriesTree, Does.Contain(child));
         Assert.That(parentXform.Broadphase, Is.EqualTo(mapBroadData));
         Assert.That(childXform.Broadphase, Is.EqualTo(mapBroadData));
 
@@ -220,7 +220,7 @@ public sealed class RecursiveUpdateTest
         var guid = grid.Owner;
         mapSystem.SetTile(grid, Vector2i.Zero, new Tile(1));
         var gridBroadphase = entManager.GetComponent<BroadphaseComponent>(guid);
-        var gridBroadData = new BroadphaseData(guid, false, false);
+        var gridBroadData = new BroadphaseData(guid, null);
 
         var gridCoords = new EntityCoordinates(map, new Vector2(-100f, -100f));
         transforms.SetCoordinates(guid, gridCoords);
@@ -232,10 +232,10 @@ public sealed class RecursiveUpdateTest
         // broadphases have now changed to be on the grids broadphase
         Assert.That(parentXform.ParentUid, Is.EqualTo(guid));
         Assert.That(childXform.ParentUid, Is.EqualTo(parent));
-        Assert.That(gridBroadphase.SundriesTree, Does.Contain(parent));
-        Assert.That(gridBroadphase.SundriesTree, Does.Contain(child));
-        Assert.That(mapBroadphase.SundriesTree, Does.Not.Contain(parent));
-        Assert.That(mapBroadphase.SundriesTree, Does.Not.Contain(child));
+        Assert.That(gridBroadphase.StaticSundriesTree, Does.Contain(parent));
+        Assert.That(gridBroadphase.StaticSundriesTree, Does.Contain(child));
+        Assert.That(mapBroadphase.StaticSundriesTree, Does.Not.Contain(parent));
+        Assert.That(mapBroadphase.StaticSundriesTree, Does.Not.Contain(child));
         Assert.That(parentXform.Broadphase, Is.EqualTo(gridBroadData));
         Assert.That(childXform.Broadphase, Is.EqualTo(gridBroadData));
 

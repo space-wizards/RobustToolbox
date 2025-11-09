@@ -40,7 +40,7 @@ namespace Robust.Shared.Physics.Systems
          * Okay so Box2D has its own "MoveProxy" stuff so you can easily find new contacts when required.
          * Our problem is that we have nested broadphases (rather than being on separate maps) which makes this
          * not feasible because a body could be intersecting 2 broadphases.
-         * Hence we need to check which broadphases it does intersect and checkar for colliding bodies.
+         * Hence we need to check which broadphases it does intersect and check for colliding bodies.
          */
 
         private BroadphaseContactJob _contactJob;
@@ -80,7 +80,6 @@ namespace Robust.Shared.Physics.Systems
         {
             component.StaticTree.Rebuild(fullBuild);
             component.DynamicTree.Rebuild(fullBuild);
-            component.SundriesTree._b2Tree.Rebuild(fullBuild);
             component.StaticSundriesTree._b2Tree.Rebuild(fullBuild);
         }
 
@@ -88,8 +87,23 @@ namespace Robust.Shared.Physics.Systems
         {
             component.StaticTree.RebuildBottomUp();
             component.DynamicTree.RebuildBottomUp();
-            component.SundriesTree._b2Tree.RebuildBottomUp();
             component.StaticSundriesTree._b2Tree.RebuildBottomUp();
+        }
+
+        internal IBroadPhase GetTree(BroadphaseComponent component, BodyType type)
+        {
+            switch (type)
+            {
+                case BodyType.Dynamic:
+                    return component.DynamicTree;
+                case BodyType.KinematicController:
+                case BodyType.Kinematic:
+                    return component.KinematicTree;
+                case BodyType.Static:
+                    return component.StaticTree;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         #region Find Contacts

@@ -474,10 +474,6 @@ public partial class SharedPhysicsSystem
             }
         }
 
-        // Update wake system last, if sleeping but still colliding.
-        if (!value && body.CanCollide)
-            _wakeSystem.UpdateCanCollide(ent, checkTerminating: false, dirty: false);
-
         if (updateSleepTime)
             SetSleepTime(body, 0);
 

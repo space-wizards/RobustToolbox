@@ -110,7 +110,7 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
         var cPlayerXform = cEntMan.GetComponent<TransformComponent>(cEntMan.GetEntity(playerNet));
 
         // Client initially has correct transform data.
-        var broadphase = new BroadphaseData(grid1, true, false);
+        var broadphase = new BroadphaseData(grid1, BodyType.Dynamic);
         var grid1Net = sEntMan.GetNetEntity(grid1);
 
         Assert.That(cPlayerXform.GridUid, Is.EqualTo(cEntMan.GetEntity(grid1Net)));
@@ -119,8 +119,7 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
         Assert.That(sPlayerXform.MapUid, Is.EqualTo(map1));
 
         Assert.That(cPlayerXform.Broadphase?.Uid, Is.EqualTo(cEntMan.GetEntity(sEntMan.GetNetEntity(broadphase.Uid))));
-        Assert.That(cPlayerXform.Broadphase?.Static, Is.EqualTo(broadphase.Static));
-        Assert.That(cPlayerXform.Broadphase?.CanCollide, Is.EqualTo(broadphase.CanCollide));
+        Assert.That(cPlayerXform.Broadphase?.BodyType, Is.EqualTo(broadphase.BodyType));
         Assert.That(sPlayerXform.Broadphase, Is.EqualTo(broadphase));
 
         // Set up maps 2 & grid 2 and move the player there (in the same tick).
@@ -150,15 +149,14 @@ public sealed class BroadphaseNetworkingTest : RobustIntegrationTest
         }
 
         // Player & server xforms should match.
-        broadphase = new BroadphaseData(grid2, true, false);
+        broadphase = new BroadphaseData(grid2, BodyType.Dynamic);
         Assert.That(cEntMan.GetNetEntity(cPlayerXform.GridUid), Is.EqualTo(grid2Net));
         Assert.That(sPlayerXform.GridUid, Is.EqualTo(grid2));
         Assert.That(cEntMan.GetNetEntity(cPlayerXform.MapUid), Is.EqualTo(map2Net));
         Assert.That(sPlayerXform.MapUid, Is.EqualTo(map2));
 
         Assert.That(cPlayerXform.Broadphase?.Uid, Is.EqualTo(cEntMan.GetEntity(sEntMan.GetNetEntity(broadphase.Uid))));
-        Assert.That(cPlayerXform.Broadphase?.Static, Is.EqualTo(broadphase.Static));
-        Assert.That(cPlayerXform.Broadphase?.CanCollide, Is.EqualTo(broadphase.CanCollide));
+        Assert.That(cPlayerXform.Broadphase?.BodyType, Is.EqualTo(broadphase.BodyType));
         Assert.That(sPlayerXform.Broadphase, Is.EqualTo(broadphase));
 
         await client.WaitPost(() => netMan.ClientDisconnect(""));

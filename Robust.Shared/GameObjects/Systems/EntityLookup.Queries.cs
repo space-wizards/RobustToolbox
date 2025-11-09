@@ -138,6 +138,11 @@ public sealed partial class EntityLookupSystem
             lookup.DynamicTree.QueryAabb(ref state, PhysicsQuery, localAABB, true);
         }
 
+        if ((flags & LookupFlags.Kinematic) != 0x0)
+        {
+            lookup.KinematicTree.QueryAabb(ref state, PhysicsQuery, localAABB, true);
+        }
+
         if ((flags & LookupFlags.Static) != 0x0)
         {
             lookup.StaticTree.QueryAabb(ref state, PhysicsQuery, localAABB, true);
@@ -146,11 +151,6 @@ public sealed partial class EntityLookupSystem
         if ((flags & LookupFlags.StaticSundries) == LookupFlags.StaticSundries)
         {
             lookup.StaticSundriesTree.QueryAabb(ref state, SundriesQuery, localAABB, true);
-        }
-
-        if ((flags & LookupFlags.Sundries) != 0x0)
-        {
-            lookup.SundriesTree.QueryAabb(ref state, SundriesQuery, localAABB, true);
         }
 
         return;
@@ -300,6 +300,14 @@ public sealed partial class EntityLookupSystem
                 return true;
         }
 
+        if ((flags & LookupFlags.Kinematic) != 0x0)
+        {
+            lookup.KinematicTree.QueryAabb(ref state, PhysicsQuery, localAABB, true);
+
+            if (state.Found)
+                return true;
+        }
+
         if ((flags & LookupFlags.Static) != 0x0)
         {
             lookup.StaticTree.QueryAabb(ref state, PhysicsQuery, localAABB, true);
@@ -314,11 +322,6 @@ public sealed partial class EntityLookupSystem
 
             if (state.Found)
                 return true;
-        }
-
-        if ((flags & LookupFlags.Sundries) != 0x0)
-        {
-            lookup.SundriesTree.QueryAabb(ref state, SundriesQuery, localAABB, true);
         }
 
         return state.Found;

@@ -303,7 +303,6 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<BroadphaseComponent>();
             compFactory.RegisterClass<ContainerManagerComponent>();
             compFactory.RegisterClass<FixturesComponent>();
-            compFactory.RegisterClass<CollisionWakeComponent>();
             compFactory.RegisterClass<OccluderComponent>();
             compFactory.RegisterClass<OccluderTreeComponent>();
             compFactory.RegisterClass<CollideOnAnchorComponent>();
@@ -326,7 +325,6 @@ namespace Robust.UnitTesting.Server
             entitySystemMan.LoadExtraSystemType<DebugPhysicsSystem>();
             entitySystemMan.LoadExtraSystemType<DebugRayDrawingSystem>();
             entitySystemMan.LoadExtraSystemType<BroadPhaseSystem>();
-            entitySystemMan.LoadExtraSystemType<CollisionWakeSystem>();
             entitySystemMan.LoadExtraSystemType<FixtureSystem>();
             entitySystemMan.LoadExtraSystemType<GridFixtureSystem>();
             entitySystemMan.LoadExtraSystemType<TransformSystem>();

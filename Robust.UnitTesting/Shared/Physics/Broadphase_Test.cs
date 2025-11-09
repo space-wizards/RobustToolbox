@@ -90,15 +90,15 @@ public sealed class Broadphase_Test
 
         var ent = entManager.SpawnEntity(null, new EntityCoordinates(grid, new Vector2(0.5f, 0.5f)));
         var xform = entManager.GetComponent<TransformComponent>(ent);
-        Assert.That(broadphase.SundriesTree, Does.Contain(ent));
+        Assert.That(broadphase.StaticSundriesTree, Does.Contain(ent));
 
         var broadphaseData = xform.Broadphase;
         Assert.That(broadphaseData!.Value.Uid, Is.EqualTo(grid.Owner));
 
         xformSys.SetCoordinates(ent, new EntityCoordinates(mapEnt, Vector2.One));
-        Assert.That(broadphase.SundriesTree, Does.Not.Contain(ent));
+        Assert.That(broadphase.StaticSundriesTree, Does.Not.Contain(ent));
 
-        Assert.That(entManager.GetComponent<BroadphaseComponent>(mapEnt).SundriesTree, Does.Contain(ent));
+        Assert.That(entManager.GetComponent<BroadphaseComponent>(mapEnt).StaticSundriesTree, Does.Contain(ent));
         broadphaseData = xform.Broadphase;
         Assert.That(broadphaseData!.Value.Uid, Is.EqualTo(mapEnt));
     }
@@ -274,7 +274,6 @@ public sealed class Broadphase_Test
         var child = entManager.SpawnEntity(null, new EntityCoordinates(parent, Vector2.Zero));
         var childXform = entManager.GetComponent<TransformComponent>(child);
         var childBody = entManager.AddComponent<PhysicsComponent>(child);
-        var childFixtures = entManager.GetComponent<FixturesComponent>(child);
 
         // enable collision for the child
         var shape = new PolygonShape();
@@ -292,8 +291,8 @@ public sealed class Broadphase_Test
             Assert.That(childXform.MapUid == map);
             Assert.That(lookup.FindBroadphase(parent), Is.EqualTo(broadphase));
             Assert.That(lookup.FindBroadphase(child), Is.EqualTo(broadphase));
-            Assert.That(parentXform.Broadphase == new BroadphaseData(map, false, false));
-            Assert.That(childXform.Broadphase == new BroadphaseData(map, true, true));
+            Assert.That(parentXform.Broadphase == new BroadphaseData(map, null));
+            Assert.That(childXform.Broadphase == new BroadphaseData(map, childBody.BodyType));
         };
         AssertMap(mapA, mapB, new Vector2(200, 200));
 
@@ -323,8 +322,8 @@ public sealed class Broadphase_Test
             Assert.That(childXform.MapUid == map);
             Assert.That(lookup.FindBroadphase(parent), Is.EqualTo(broadphase));
             Assert.That(lookup.FindBroadphase(child), Is.EqualTo(broadphase));
-            Assert.That(parentXform.Broadphase == new BroadphaseData(grid, false, false));
-            Assert.That(childXform.Broadphase == new BroadphaseData(grid, true, true));
+            Assert.That(parentXform.Broadphase == new BroadphaseData(grid, null));
+            Assert.That(childXform.Broadphase == new BroadphaseData(grid, childBody.BodyType));
         };
         AssertGrid(gridA, mapA, mapB, Vector2.Zero);
 

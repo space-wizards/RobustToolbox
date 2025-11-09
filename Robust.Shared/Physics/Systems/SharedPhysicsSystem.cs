@@ -52,7 +52,6 @@ namespace Robust.Shared.Physics.Systems
         [Dependency] private readonly SharedDebugPhysicsSystem _debugPhysics = default!;
         [Dependency] private readonly SharedJointSystem _joints = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
-        [Dependency] private readonly CollisionWakeSystem _wakeSystem = default!;
 
         private readonly HashSet<ulong> _pairKeys = new();
 
